@@ -1,0 +1,121 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Englisch (USA) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Englisch (USA) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Französisch (Frankreich) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
+#ifdef _WIN32
+LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_ILMGUARDSWITCH      BITMAP  DISCARDABLE     "ilmguardswitch.bmp"
+IDB_HORIZON             BITMAP  DISCARDABLE     "Horizon.bmp"
+IDB_NEEDLE1             BITMAP  DISCARDABLE     "Needle1.bmp"
+IDB_DIGITAL             BITMAP  DISCARDABLE     "digitaldisp.bmp"
+IDB_HORIZON2            BITMAP  DISCARDABLE     "Horizon2.bmp"
+IDB_SWITCHUP            BITMAP  DISCARDABLE     "SwitchUP.bmp"
+IDB_ILMSWITCHUP         BITMAP  DISCARDABLE     "ilmswitchup.bmp"
+IDB_SWLEVER             BITMAP  DISCARDABLE     "switch_lever.bmp"
+IDB_ILMSWLEVER          BITMAP  DISCARDABLE     "ilmswitch_lever.bmp"
+IDB_SECSWITCH           BITMAP  DISCARDABLE     "PSwitch.bmp"
+IDB_ILMSECSWITCH        BITMAP  DISCARDABLE     "ilmpswitch.bmp"
+IDB_LV_ENG              BITMAP  DISCARDABLE     "LV_ENG.bmp"
+IDB_ILM_LV_ENG          BITMAP  DISCARDABLE     "ilmlv_eng.bmp"
+IDB_LAUNCH              BITMAP  DISCARDABLE     "LaunchLight.bmp"
+IDB_ILMLAUNCH           BITMAP  DISCARDABLE     "ilmlaunchlight.bmp"
+IDB_ABORT               BITMAP  DISCARDABLE     "Abort.bmp"
+IDB_ANNUN               BITMAP  DISCARDABLE     "Annonciators.bmp"
+IDB_ILMANNUN            BITMAP  DISCARDABLE     "ilmAnnonciators.bmp"
+IDB_LIGHTS2             BITMAP  DISCARDABLE     "lights2.bmp"
+IDB_ILMLIGHTS2          BITMAP  DISCARDABLE     "ilmlights2.bmp"
+IDB_ANLG_ALT            BITMAP  DISCARDABLE     "Altimeter.bmp"
+IDB_ANLG_GMETER         BITMAP  DISCARDABLE     "Gmeter.bmp"
+IDB_THRUST              BITMAP  DISCARDABLE     "Thrustmeter.bmp"
+IDB_MAINPANEL           BITMAP  DISCARDABLE     "Panel1.bmp"
+IDB_MASTER_ALARM        BITMAP  DISCARDABLE     "masteralarm.bmp"
+IDB_ILMMASTER_ALARM     BITMAP  DISCARDABLE     "ilmmasteralarm.bmp"
+IDB_MASTER_ALARM_BRIGHT BITMAP  DISCARDABLE     "masteralarmbright.bmp"
+IDB_DSKY_LIGHTS         BITMAP  DISCARDABLE     "dsky_1.bmp"
+IDB_ILMDSKY_LIGHTS      BITMAP  DISCARDABLE     "ilmdsky_1.bmp"
+IDB_ILMPANEL            BITMAP  DISCARDABLE     "PanelCSM-ILM.bmp"
+IDB_ILMABORT            BITMAP  DISCARDABLE     "ilmabort.bmp"
+IDB_ILMDCKPANEL         BITMAP  DISCARDABLE     "docking_ilm.bmp"
+IDB_MAINDCKPANEL        BITMAP  DISCARDABLE     "docking.bmp"
+IDB_FCSM                BITMAP  DISCARDABLE     "FCSM.bmp"
+IDB_GUARDSWITCH         BITMAP  DISCARDABLE     "guardswitch.bmp"
+IDB_ALLROUND            BITMAP  DISCARDABLE     "allround.bmp"
+IDB_ILMALLROUND         BITMAP  DISCARDABLE     "ilmallround.bmp"
+IDB_THREEPOSSWITCH      BITMAP  DISCARDABLE     "threeposswitch.bmp"
+IDB_ILMFCSM             BITMAP  DISCARDABLE     "ilmFCSM.bmp"
+IDB_ILMTHREEPOSSWITCH   BITMAP  DISCARDABLE     "ilmthreeposswitch.bmp"
+#endif    // Französisch (Frankreich) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,18 @@
+A little word about sources...
+
+Theses source files contains material from SDK, from other Add-On public.
+
+Any part of these source can be reused freely in any orbiter projects. 
+
+This code is made public to let NASSP Add-on live is life while I suffer from lack of time to continue the effort by myself.
+
+So First Good luck, I'm not quite a "clean programmer" and most of the source can be optimized.
+
+Ideally NASSP 4.1 modifications should be submitted to me before public release (Yes, that mean I'm not opposed to the publications of enhancements, that's the goal :)), the code should be included.
+Main reason is I'd like to keep the project coherent and I wann be able to oublish my own mods...
+
+Best Regards
+Jean-Luc Rocca-Serra (Joe_BAR)
+spacebarjoe@free.fr
+
+

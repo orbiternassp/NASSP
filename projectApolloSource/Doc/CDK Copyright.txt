@@ -1,0 +1,21 @@
+COPYRIGHT INFORMATION
+---------------------
+The source code is yours to freely use, modify, and redistribute, under the following 
+conditions:
+
+1) An attribution must be included within your source code/documentation.
+2) Any source code that is used in other projects must be provided to subsequent users.  
+   The obvious (and preferable, in my opinion) way is to simply provide the source code 
+   to your project.  However, I respect the right of programmers to maintain closed source
+   if they so desire.  In that case, simply provide a copy of my source files and this 
+   Copyright notice with your project.
+3) Any "for profit" use must receive prior approval from me. 
+
+Also, though not required, a simple e-mail just to let me know that my code is being used
+would be appericiated - it's always nice to know that you've made a useful contribution :-)
+
+If you have any questions, please feel free to contact me.
+
+Chris Knestrick
+cknestri@vt.edu
+ 

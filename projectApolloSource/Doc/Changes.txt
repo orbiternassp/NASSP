@@ -1,0 +1,63 @@
+
+6.2:
+----
+
+Save light state to scenario file to support real operation as documented.
+Hopefully the LV engine lights now work correctly as documented.
+Turn off liftoff light as per documentation.
+Added flags to sounds (in this case, specifying to only play at 1x time acceleration or less)
+Changed CSM/LEM setup interface to pass a structure full of data rather than lots of parameters.
+Added AUTOSLOW option for unmanned flights to stop time acceleration at important events.
+Added lunar ascent sound to ascent autopilot, and made it a mission-specific sound for NEP. Renamed it lunar-ascent.wav for consistency.
+In ascent autopilot, make sure that apogee is greater than perigee and both are at least 18km.
+Added more automation for unmanned flights. You can now fly an Apollo 4 or 6 flight under automatic control.
+Moved program 63 to lemautoland.cpp.
+Changed sound to use NCPP directory rather than NASSP.
+Rationalised soundlib sound loading functions so we now know exactly what each one does :).
+Rewrote sound library interface to eliminate pointers in high-level code: less pointers means less places we can CTD.
+Fixed click on HUD-mode toggle switches.
+Fixed some missing mission sounds.
+Disable ATC playback throughout the launch stage, so we can do our own playback instead.
+
+6.1:
+----
+
+Added code for automated separation of CSM from SIVB in unmanned flights.
+Improved positioning of SLA panels in CSM/SIVB separation: still not perfect yet.
+New vessel configs for SIVB with different payloads: this may invalidate old saved scenarios docked to the SIVB!
+Added SIVBPayload variable specifying what payload we're carrying (LEM or empty only for now).
+Added Crewed variable so we know if the launch is unmanned, and removed the crew from the VC if it is unmanned.
+Updated TCP values in scenarios to approximate values for the moment.
+Added help file to config.
+Hacky fix for the LEM being inside the SIVB when seperated.
+LEM was updated to VESSEL2 but is now no longer a real VESSEL2 as I can't get it to work!
+If cabin fans are enabled, turn the sound on after loading the scenario data.
+Disable default launch sounds for LEM.
+Added LEM ascent autopilot code.
+Now expects all sound files to be in the NASSP directory, and doesn't use any from the Vessel sound directory.
+Added basic multi-language support to soundlib.
+Added AudioLanguage string to CSM and LEM and pass it to soundlib.
+Use the mission time for LEM AGC timestep, not simulator time!
+Moved various nouns from the CSM computer to the generic apollo guidance computer.
+Added 'extended' parameter as an option to sound-loading calls, and set some to be audible internal-only.
+Split out more of the Saturn 1b code into seperate files.
+Split up LEM code into seperate files.
+Initialised more soundlib variables to zero, for safety.
+Try to prevent time acceleration during the first few seconds of launch, as the autopilot can't handle it.
+Added new file for Saturn hardware systems emulation and started moving some of the 'decision' code from the main files into there.
+AGC now calls DSKY through reference rather than pointer to reduce chances of calling through duff pointer.
+DSKY now calls AGC through reference rather than pointer to reduce chances of calling through duff pointer.
+Properly fixed loading of scenarios saved during 'recovery': added setting of touchdown points.
+
+6.0:
+----
+
+Saturn 5/1b are now VESSEL2 class.
+Fixed Saturn 1b SIVB autopilot.
+Fixed virtual cockpit.
+Hopefully full support for virtual cockpit for Saturn V.
+Prevent view rotation in normal cockpit views.
+Added display of 'erasable memory' in AGC.
+Split out autopilot code into seperate files for easier maintenance.
+Tried to fix loading of scenarios saved during 'recovery'.
+Added general jostling of virtual cockpit view based on acceleration.
