@@ -7,6 +7,8 @@ Renamed sound directory again from NCPP to ProjectApollo.
 Wired in new Apollo-13 sounds.
 Reduced volume of SIVB APS sounds and made them internal-only.
 Moved time of course correction burn into header file to make it easy to change.
+Realistic entry aerodynamics are added, documentation will follow soon.
+Splashdown stage is no longer "underwater".
 
 6.2:
 ----
