@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/03/09 22:04:16  tschachim
+  *	Better docking camera offset from Yogenfrutz
+  *	
   *	Revision 1.2  2005/03/03 17:52:47  tschachim
   *	camera offset for docking panel
   *	
@@ -113,7 +116,7 @@ void Saturn::SetView(double offset)
 	CurrentViewOffset = offset;
 
 	if (InPanel && (PanelId == 2 || PanelId == 3)) {
-		v = _V(-1.045, 1.025, offset - 3.0);
+		v = _V(-1.015, 1.055, offset - 3.0);
 	} else {
 		switch (viewpos) {
 			case SATVIEW_CDR:
