@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/02/19 00:01:57  movieman523
+  *	Added more comments and course correction time setting.
+  *	
   *	Revision 1.2  2005/02/12 13:27:03  movieman523
   *	Updated version number
   *	
@@ -30,7 +33,7 @@
   *	
   **************************************************************************/
 
-#define NASSP_VERSION 60003
+#define NASSP_VERSION 60040
 #define REALISM_DEFAULT 5
 
 typedef struct {
