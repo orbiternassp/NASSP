@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -40,6 +43,7 @@
 
 #include "landervessel.h"
 #include "sat5_lmpkd.h"
+#include "saturn5_leva.h"
 
 static MESHHANDLE hLMPKD ;
 static MESHHANDLE hLMVessel ;
@@ -52,8 +56,8 @@ static MESHHANDLE hAstro1 ;
 void sat5_lmpkd::ToggleEVA()
 
 {
-	ToggleEva=false;
-
+	ToggleEva=false;	
+	
 	if (EVA_IP){
 		EVA_IP =false;
 		ClearMeshes();
@@ -88,9 +92,17 @@ void sat5_lmpkd::ToggleEVA()
 		ClearAttExhaustRefs();
 		VECTOR3 mesh_dir=_V(-0.08,-0.15,-4.3);
 		AddMesh (hLMVessel, &mesh_dir);
-		oapiSetFocusObject(hLEVA);
 
-		SLEVA.play(NOLOOP,255);
+		SwitchFocusToLeva = 10;
+
+		Saturn5_LEVA *leva = (Saturn5_LEVA *) oapiGetVesselInterface(hLEVA);
+
+		if (leva) {
+			EVASettings evas;
+
+			evas.MissionNo = agc.GetApolloNo();
+			leva->SetEVAStats(evas);
+		}
 	}
 }
 
@@ -113,7 +125,7 @@ void sat5_lmpkd::SetupEVA()
 
 void sat5_lmpkd::SetLmVesselDockStage()
 
-{
+{	
 	ClearThrusterDefinitions();
 	agc.SetVesselStats(DPS_ISP, DPS_THRUST, true);
 	SetSize (6);
@@ -124,7 +136,7 @@ void sat5_lmpkd::SetLmVesselDockStage()
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0);
+	SetLiftCoeffFunc (0); 
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
@@ -132,7 +144,7 @@ void sat5_lmpkd::SetLmVesselDockStage()
 
 	VECTOR3 mesh_dir=_V(0.0,-0.2,0);//
 	AddMesh (hLMPKD, &mesh_dir);
-    if (!ph_Dsc)
+    if (!ph_Dsc)  
 		ph_Dsc  = CreatePropellantResource(8165); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
@@ -184,30 +196,30 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0);
+	SetLiftCoeffFunc (0); 
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	SetTouchdownPoints (_V(0,5,10), _V(-1,5,-10), _V(1,5,-10));
 	VECTOR3 mesh_dir=_V(0.0,0,0);
 	AddMesh (hLMVessel, &mesh_dir);
-
-	if (!ph_Dsc)
+    
+	if (!ph_Dsc)  
 		ph_Dsc  = CreatePropellantResource(8165); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 	if (!ph_rcslm0){
 		ph_rcslm0 = CreatePropellantResource(100);
 	}
-
+	
 	// orbiter main thrusters
 	th_hover[0] = CreateThruster (_V( 0,-2.5,0), _V( 0,1,0), 44910, ph_Dsc, 3107);
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
 	AddExhaust (th_hover[0], 15.0, 0.65);//
-
+	
 	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
-
+	
 	SetCameraOffset (_V(-1,1.0,0.0));
 	status = 1;
 	stage = 1;
@@ -247,14 +259,14 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0);
+	SetLiftCoeffFunc (0); 
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	SetTouchdownPoints (_V(0,0,10), _V(-1,0,-10), _V(1,0,-10));
 	VECTOR3 mesh_dir=_V(-0.25,0.0,+0.38);
 	AddMesh (hLMAscent, &mesh_dir);
-    if (!ph_Asc)
+    if (!ph_Asc)  
 		ph_Asc  = CreatePropellantResource(2345); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Asc); // display 2nd stage propellant level in generic HUD
 	if (!ph_rcslm1){
@@ -314,7 +326,7 @@ void sat5_lmpkd::SeparateStage (UINT stage)
 		vs1.rvel.x = rvel1.x+rofs1.x;
 		vs1.rvel.y = rvel1.y+rofs1.y;
 		vs1.rvel.z = rvel1.z+rofs1.z;
-	    vs1.vrot.x = 0.0;
+	    vs1.vrot.x = 0.0;	
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		GetStatus (vs1);
