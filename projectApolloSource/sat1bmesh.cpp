@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/03/06 03:23:26  chode99
+  *	Relocated and redirected the SIVB ullage thrusters to coincide with the mesh.
+  *	
   *	Revision 1.2  2005/02/19 19:45:37  chode99
   *	Moved 1 line of code (VECTOR3 mesh_dir=...) to allow compilation in .NET 2003
   *	
@@ -141,11 +144,11 @@ void Saturn1b::SetFirstStage ()
 
 	// And the Crew
 	if (Crewed) {
-		mesh_dir=_V(0,0.15,34.25);
+		mesh_dir=_V(0,0.15,35.2);
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0.15,34.25);
+		mesh_dir=_V(0,0.15,35.2);
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
@@ -153,6 +156,8 @@ void Saturn1b::SetFirstStage ()
 	mesh_dir=_V(0,0,40.35);
 	meshidx = AddMesh (hsat5tower, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	SetView(35.2);
 
 	Offset1st = -28.5;
 	SetCameraOffset (_V(-1,1.0,35.15));
@@ -264,6 +269,22 @@ void Saturn1b::SetSecondStage ()
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+	
+	// And the Crew
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,22.95);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0.15,22.95);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	
+    SetView(22.95);
+
+
 	//Don't Forget the Hatch
 	mesh_dir=_V(0.02,1.35,35.415-12.25);
 	meshidx = AddMesh (hFHC, &mesh_dir);
@@ -353,6 +374,22 @@ void Saturn1b::SetSecondStage1 ()
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+	// And the Crew
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,22.95);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0.15,22.95);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	
+    SetView(22.95);
+
+
+
 	//Don't Forget the Hatch
 	mesh_dir=_V(0.02,1.35,35.415-12.25);
 	meshidx = AddMesh (hFHC, &mesh_dir);
@@ -437,6 +474,22 @@ void Saturn1b::SetSecondStage2 ()
 	mesh_dir=_V(0,0,35.4-12.25);
 	UINT meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	// And the Crew
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,22.95);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0.15,22.95);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	
+    SetView(22.95);
+
+
 
 	//Don't Forget the Hatch
 	mesh_dir=_V(0.02,1.35,35.530-12.25);
