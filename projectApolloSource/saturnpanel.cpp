@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/03/14 17:46:27  yogenfrutz
+  *	Added changes for "light off" docking panel MFD,yogenfrutz
+  *	
   *	Revision 1.8  2005/03/13 21:23:02  chode99
   *	G-gauge displays the new calculation of g (aZAcc).
   *	
@@ -545,8 +548,7 @@ bool Saturn::clbkLoadPanel (int id)
 
 	MFDSPEC mfds_left  = {{1012, 730, 1291, 1009}, 6, 6, 41, 27};
 	MFDSPEC mfds_right = {{1305, 730, 1584, 1009}, 6, 6, 41, 27};
-	MFDSPEC mfds_dock = {{892, 626, 1111, 841}, 6, 6, 31, 31};;
-//	MFDSPEC mfds_dock_ilm = {{892, 626, 1111, 841}, 6, 6, 31, 31};;
+	MFDSPEC mfds_dock = {{893, 627, 1112, 842}, 6, 6, 31, 31};;
 
 	switch (id) {
 	case 0: // main panel
@@ -661,9 +663,9 @@ bool Saturn::clbkLoadPanel (int id)
     case 3:
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		oapiRegisterMFD (MFD_RIGHT, mfds_dock);	// MFD_USER1
-		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 850,  612, 1151      ,  863     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 851,  613, 1152      ,  864     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 635,  845,  655      ,  860     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SM_RCS_MODE, _R( 718,  791,  718 + 133,  791 + 73), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SM_RCS_MODE, _R( 719,  791,  719 + 133,  791 + 73), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		
 		
 		break;
