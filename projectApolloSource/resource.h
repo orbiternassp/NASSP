@@ -247,6 +247,10 @@
 #define AID_PANEL4_SWITCH4              481
 #define AID_EMS_KNOB					482
 #define AID_EMS_DISPLAY					483
+#define AID_MFDDOCK_BBUTTONS            484
+#define AID_MFDDOCK_LBUTTONS            485
+#define AID_MFDDOCK_RBUTTONS            486
+
 
 // Next default values for new objects
 // 
