@@ -27,11 +27,15 @@
 
 test test
 
-orbiterSound -d Sound orbiterSound
-
 projectApolloConfig -d Config projectApolloConfig
 projectApolloMeshes -d Meshes projectApolloMeshes
 projectApolloTextures -d Textures projectApolloTextures
-projectApolloSound -d Sound/NASSP projectApolloSound
 
-projectApollo -a projectApolloConfig projectApolloMeshes projectApolloTextures orbiterSound projectApolloSound
+# orbiterSound -d Sound orbiterSound
+# projectApolloSound -d Sound/NASSP projectApolloSound
+# projectApollo -a projectApolloConfig projectApolloMeshes projectApolloTextures orbiterSound projectApolloSound
+
+projectApolloSound -a orbiterSound projectApolloSoundNASSP
+projectApolloSoundNASSP -d NASSP projectApolloSound
+orbiterSound -d Sound orbiterSound &projectApolloSoundNASSP
+projectApollo -a projectApolloConfig projectApolloMeshes projectApolloTextures projectApolloSound
