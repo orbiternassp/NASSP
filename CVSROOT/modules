@@ -30,6 +30,8 @@ test test
 projectApolloConfig -d Config projectApolloConfig
 projectApolloMeshes -d Meshes projectApolloMeshes
 projectApolloTextures -d Textures projectApolloTextures
+
 # projectApolloSoundNASSP -d x projectApolloSound
 # projectApolloSound -d a/b/c/d &projectApolloSoundNASSP
-projectApolloSound -l -d a/b/c/d projectApolloSound
+# projectApolloSound -l -d a/b/c/d projectApolloSound
+projectApolloSound -a a/b/c/projectApolloSound
