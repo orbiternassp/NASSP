@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/02/19 00:03:57  movieman523
+  *	Reduced volume of APS sound playback.
+  *	
   *	Revision 1.2  2005/02/18 00:43:07  movieman523
   *	Added new Apollo 13 sound support.
   *	
@@ -223,6 +226,7 @@ void Saturn::initSaturn()
 	ViewOffsetz = 0;
 
 	InVC = false;
+	InPanel = false;
 
 	//
 	// Save the last view offset set.
@@ -458,7 +462,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "DOCKSTATE", dockstate);
-	oapiWriteScenario_int (scn, "PANEL_ID", PanelID);
+	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
 	oapiWriteScenario_float (scn, "TOAPO", agc.GetDesiredApogee());
 	oapiWriteScenario_float (scn, "TOPER", agc.GetDesiredPerigee());
 	oapiWriteScenario_float (scn, "TOHDG", agc.GetDesiredAzimuth());
@@ -695,6 +699,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	int n;
 	double tohdg = 45;
 
+	// default panel
+	PanelId = 1;
+
 	//
 	// If the name of the spacecraft is "AS-xxx" then get the vehicle
 	// number from that.
@@ -739,8 +746,8 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp (line, "BUILDSTATUS", 11)) {
 			sscanf (line+11, "%d", &buildstatus);
-		}else if (!strnicmp (line, "PANEL_ID", 11)) {
-			sscanf (line+8, "%d", &PanelID);
+		}else if (!strnicmp (line, "PANEL_ID", 8)) {
+			sscanf (line+8, "%d", &PanelId);
 		}else if (!strnicmp (line, "STAGESTATUS", 11)) {
 			sscanf (line+11, "%d", &StageState);
 		}
@@ -1138,7 +1145,6 @@ void Saturn::GenericTimestep(double simt)
 			habort = NULL;
 		}
 	}
-
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
