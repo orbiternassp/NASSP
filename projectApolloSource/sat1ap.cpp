@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -46,8 +49,8 @@
 #include "saturn1b.h"
 
 #define N_entries	16	// flight plan table size
-const double met[N_entries]    = { 0,  58, 75, 80,  90, 110, 130,   160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double cpitch[N_entries] = {90,  82, 65, 55,  48,  45,  35,    35,   35, 35,    25,   25, 25 , 25, 25,25};	// Commanded pitch in °
+const double met[N_entries]    = { 0,  58, 75, 80,  90, 110, 140,   160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
+const double cpitch[N_entries] = {90,  72, 65, 58,  53,  45,  35,    35,   35, 30,    20,   20, 20 , 20, 20,20};	// Commanded pitch in °
 
 //#define N	13	// flight plan table size
 //const double met[N]    = { 0, 25, 60, 95, 130, 145, 152, 165, 200, 235, 270, 305, 330};   // MET in sec
@@ -144,6 +147,7 @@ void Saturn1b::AttitudeLaunch1()
 //**************************************************************
 // Sets thrust vectors by simply adding up all the axis deflection vectors and the
 // "neutral" default vector
+	/*
 	SetThrusterDir(th_main[0],pitchvectorm+yawvectorm+rollvectorl+_V( 0,0,1));//4
 	SetThrusterDir(th_main[1],pitchvectorm+yawvectorm-rollvectorl+_V( 0,0,1));//2
 	SetThrusterDir(th_main[2],pitchvectorm+yawvectorm+_V( 0,0,1));//1
@@ -152,6 +156,11 @@ void Saturn1b::AttitudeLaunch1()
 	SetThrusterDir(th_main[5],pitchvectorm+yawvectorm+_V( 0,0,1));//5
 	SetThrusterDir(th_main[6],pitchvectorm+yawvectorm+_V( 0,0,1));//5
 	SetThrusterDir(th_main[7],pitchvectorm+yawvectorm+_V( 0,0,1));//5
+	*/
+	SetThrusterDir(th_main[0],pitchvectorm+yawvectorm+rollvectorl+_V( 0,0,1));
+	SetThrusterDir(th_main[1],pitchvectorm+yawvectorm+_V( 0,0,1));
+	SetThrusterDir(th_main[2],pitchvectorm+yawvectorm-rollvectorl+_V( 0,0,1));
+	SetThrusterDir(th_main[3],pitchvectorm+yawvectorm+_V( 0,0,1));
 
 	// sprintf (oapiDebugString(), "pitch vector: %f, roll vel: %f", tempR, ang_vel.z);
 }
@@ -245,6 +254,8 @@ void Saturn1b::AutoPilot(double autoT)
 	double pitch_c;
 	double heading;
 	double bank;
+	VECTOR3 rhoriz;
+
 
 	double TO_HDG = agc.GetDesiredAzimuth();
 	char current_key=0;
@@ -263,6 +274,10 @@ void Saturn1b::AutoPilot(double autoT)
 	// Shut down the engines when we reach the desired
 	// orbit.
 	//
+	// This vector rotation will be used to tell if heads up (rhoriz.z<0) or heads down.
+
+	HorizonRot(_V(1,0,0),rhoriz);
+
 
 	if (altitude >= 120000 && CheckForLaunchShutdown())
 		return;
@@ -278,8 +293,9 @@ void Saturn1b::AutoPilot(double autoT)
 
 	if (GetAltitude() < 250  && GetAltitude() > 150 ){
 		//sprintf(oapiDebugString(), "Autopilot initial Pitch DEG %d", (int)fabs(pitch));
-		if (pitch >88){
-			AtempP = 0.8;
+		if (pitch >86){
+			AtempP = 0.4;
+			if (rhoriz.z>0)AtempP = -0.4;
 			AtempR = 0.0;
 			AtempY = 0.0;
 		}else{
@@ -290,6 +306,11 @@ void Saturn1b::AutoPilot(double autoT)
 	}else if (GetAltitude() < 1200  && GetAltitude() > 250)	{
 		oapiGetFocusBank(&bank);
 		bank = bank*180./PI;
+		if(bank > 90) bank = bank - 180;
+		else if(bank < -90) bank = bank + 180;
+
+//		sprintf(oapiDebugString(), "bank =  %d", (int)bank);
+
 		if (fabs(bank+(90-TO_HDG)) <15  && StopRot){
 				AtempP = 0.0;
 				AtempR = 0.0;
@@ -306,11 +327,13 @@ void Saturn1b::AutoPilot(double autoT)
 		if (bank > -(90-TO_HDG)+0.5){
 			AtempR = -fabs((90-TO_HDG)-bank);
 			if (AtempR < -1)AtempR = -1;
+//			if(rhoriz.z>0) AtempR = -AtempR;
 			AtempP = 0.0;
 			AtempY = 0.0;
 		}else if (bank < -(90-TO_HDG)-0.5){
 			AtempR = fabs((90-TO_HDG)-bank);
 			if (AtempR > 1)AtempR = 1;
+//			if(rhoriz.z>0) AtempR = -AtempR;
 			AtempP = 0.0;
 			AtempY = 0.0;
 		}else {
@@ -324,6 +347,8 @@ void Saturn1b::AutoPilot(double autoT)
 		//sprintf(oapiDebugString(), "Autopilot Heading Mode DEG %f", heading);
 		oapiGetFocusBank(&bank);
 		bank = bank*180./PI;
+		if(bank > 90) bank = bank - 180;
+		else if(bank < -90) bank = bank + 180;
 
 		if (fabs(heading-TO_HDG) <10 && StopRot) {
 			AtempP = 0.0;
@@ -337,29 +362,53 @@ void Saturn1b::AutoPilot(double autoT)
 		}
 		else if (heading > (TO_HDG +0.5) && TO_HDG <90) {
 			AtempP = heading - TO_HDG ;
-			if (AtempP > 1.0) AtempP = 1.0;
-			AtempR = -1.0;
+//			if (AtempP > 1.0) AtempP = 1.0;
+			if (AtempP > 0.15) AtempP = 0.15;
+			AtempR = -0.2;
+			if(rhoriz.z>0) 
+			{
+//				AtempR = -AtempR;
+				AtempP = -AtempP;
+			}
 			AtempY = 0.0;
 			//vessel->SetAttitudeRotLevel(0, -1);
 		}
 		else if (heading < (TO_HDG -0.5) && TO_HDG <90) {
 			AtempP = heading  - TO_HDG;
-			if (AtempP<-1.0) AtempP = -1.0;
+//			if (AtempP < -1.0) AtempP = -1.0;
+			if (AtempP < -0.15) AtempP = -0.15;
 			AtempR = 0.2;
+			if(rhoriz.z>0) 
+			{
+//				AtempR = -AtempR;
+				AtempP = -AtempP;
+			}
 			AtempY = 0.0;
 			//vessel->SetAttitudeRotLevel(0, 1);
 		}
 		else if (heading > (TO_HDG +0.5) && TO_HDG >90) {
 			AtempP = -(heading - TO_HDG) ;
-			if (AtempP<-1.0) AtempP = -1.0;
+//			if (AtempP < -1.0) AtempP = -1.0;
+			if (AtempP < -0.15) AtempP = -0.15;
 			AtempR = -0.2;
+			if(rhoriz.z>0) 
+			{
+//				AtempR = -AtempR;
+				AtempP = -AtempP;
+			}
 			AtempY = 0.0;
 			//vessel->SetAttitudeRotLevel(0, -1);
 		}
 		else if (heading < (TO_HDG -0.5) && TO_HDG >90) {
 			AtempP = -(heading  - TO_HDG);
-			if (AtempP > 1.0) AtempP = 1.0;
-			AtempR = 1.0;
+//			if (AtempP > 1.0) AtempP = 1.0;
+			if (AtempP > 0.15) AtempP = 0.15;
+			AtempR = 0.2;
+			if(rhoriz.z>0) 
+			{
+//				AtempR = -AtempR;
+				AtempP = -AtempP;
+			}
 			AtempY = 0.0;
 			//vessel->SetAttitudeRotLevel(0, 1);
 		}
@@ -372,6 +421,8 @@ void Saturn1b::AutoPilot(double autoT)
 	else if (GetAltitude() < 4500  && GetAltitude() > 2800) {
 		oapiGetFocusBank(&bank);
 		bank = bank*180./PI;
+		if(bank > 90) bank = bank - 180;
+		else if(bank < -90) bank = bank + 180;
 		oapiGetHeading(GetHandle(),&heading);
 		heading = heading*180./PI;
 
@@ -385,6 +436,7 @@ void Saturn1b::AutoPilot(double autoT)
 			//vessel->SetAttitudeRotLevel(2,-1 );//bank/30
 		}else if (bank > 0 && fabs(vsp.vrot.z) < 0.11) {
 			AtempR = -1.0;
+//			if(rhoriz.z>0)AtempR = -AtempR;
 			//vessel->SetAttitudeRotLevel(2, 1);
 		}else {
 			AtempP = 0.0;
@@ -426,7 +478,8 @@ void Saturn1b::AutoPilot(double autoT)
 			level = pitch_c - pitch;
 		}else{
 			if (stage >= LAUNCH_STAGE_SIVB){
-				pitch_c = 35;
+//				pitch_c = 35;
+				pitch_c = GetCPitch(autoT);
 			}
 			else{
 				pitch_c = GetCPitch(autoT);
@@ -448,12 +501,13 @@ void Saturn1b::AutoPilot(double autoT)
 	}
 	else if (level>0 && fabs(vsp.vrot.z) < 0.09){
 		AtempP = -(fabs(level)/10);
-		if (AtempP < -1.0)
-			AtempP = -1.0;
+		if (AtempP < -1.0)AtempP = -1.0;
+		if(rhoriz.z>0)AtempP = -AtempP;
 	}
 	else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
 		AtempP = (fabs(level)/10);
 		if (AtempP > 1.0) AtempP = 1.0;
+		if(rhoriz.z>0)AtempP = -AtempP;
 	}
 	else{
 		AtempP = 0.0;
