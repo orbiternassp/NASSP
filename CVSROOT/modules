@@ -40,7 +40,7 @@ projectApolloSound -d Sound orbiterSound &projectApolloSoundNASSP
 projectApolloSourceNASSP -d samples/ProjectApollo projectApolloSource
 projectApolloSource -d Orbitersdk orbiterSource &projectApolloSourceNASSP
 
-projectApolloScenarios_ -d Project\ Apollo projectApolloScenarios
+projectApolloScenarios_ -d ProjectApollo projectApolloScenarios
 projectApolloScenarios -d Scenarios orbiterScenarios &projectApolloScenarios_
 
 projectApollo -a projectApolloConfig projectApolloGraphics projectApolloSound projectApolloSource
