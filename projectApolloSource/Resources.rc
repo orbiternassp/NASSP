@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// Englisch (USA) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -46,12 +46,12 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // English (U.S.) resources
+#endif    // Englisch (USA) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// French (France) resources
+// Französisch (Frankreich) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 #ifdef _WIN32
@@ -112,7 +112,8 @@ IDB_MAINPANEL_LEFT      BITMAP  DISCARDABLE     "Panel1_L.bmp"
 IDB_MAINPANEL_RIGHT     BITMAP  DISCARDABLE     "Panel1_R.bmp"
 IDB_ILMMAINPANEL_LEFT   BITMAP  DISCARDABLE     "panelCSM-ILM_L.bmp"
 IDB_ILMMAINPANEL_RIGHT  BITMAP  DISCARDABLE     "panelCSM-ILM_R.bmp"
-#endif    // French (France) resources
+IDB_ROTATIONALSWITCH    BITMAP  DISCARDABLE     "RotationalSwitch.bmp"
+#endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
