@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/03/15 12:53:32  yogenfrutz
+  *	Corrected position and size of lem ascent and descent main thruster exhaust flames
+  *	
   *	Revision 1.3  2005/03/04 20:36:22  chode99
   *	Fixed touchdown points on ascent stage so it doesn't fall when released.
   *	
@@ -147,8 +150,8 @@ void sat5_lmpkd::SetLmVesselDockStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	SetTouchdownPoints (_V(0,0,10), _V(-1,0,-10), _V(1,0,-10));
+	VECTOR3 mesh_dir=_V(0.0,-0.2,0.045);
 
-	VECTOR3 mesh_dir=_V(0.0,-0.2,0);//
 	AddMesh (hLMPKD, &mesh_dir);
     if (!ph_Dsc)  
 		ph_Dsc  = CreatePropellantResource(8165); //2nd stage Propellant
@@ -218,7 +221,7 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	}
 	
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V( 0,-3.3,0), _V( 0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[0] = CreateThruster (_V( 0.035,-3.3,-0.02), _V( 0,1,0), 44910, ph_Dsc, 3107);
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
@@ -270,7 +273,8 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
-	VECTOR3 mesh_dir=_V(-0.25,0.0,+0.38);
+	VECTOR3 mesh_dir=_V(-0.19,0.0,+0.09);
+	
 	AddMesh (hLMAscent, &mesh_dir);
     if (!ph_Asc)  
 		ph_Asc  = CreatePropellantResource(2345); //2nd stage Propellant
@@ -279,7 +283,7 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 		ph_rcslm1 = CreatePropellantResource(100);
 	}
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V( 0,-2.5,0), _V( 0,1,0), 15880, ph_Asc, 2921);
+	th_hover[0] = CreateThruster (_V( 0.015,-2.5,-0.29), _V( 0,1,0), 15880, ph_Asc, 2921);
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
