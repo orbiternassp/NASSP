@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -669,7 +672,7 @@ void Saturn1b::StageStartSIVB(double simt)
 	case 0:
 //		if (hstg2)
 //			Ullage2(hstg2,5);
-		SepS.play(LOOP,255);
+		SepS.play(LOOP, 130);
 		SetThrusterGroupLevel(thg_ver,1.0);
 		NextMissionEventTime = MissionTime + 2.0;
 		StageState++;

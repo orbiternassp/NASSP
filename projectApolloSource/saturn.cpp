@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/18 00:43:07  movieman523
+  *	Added new Apollo 13 sound support.
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -2067,7 +2070,7 @@ void Saturn::StageOrbitSIVB(double simt)
 
 			if (MissionTime >= NextMissionEventTime) {
 				SetThrusterGroupLevel(thg_aps, 1.0);
-				SepS.play(LOOP,255);
+				SepS.play(LOOP, 130);
 				NextMissionEventTime += 16.7;
 				StageState++;
 			}
