@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -1219,7 +1222,7 @@ void Saturn::SetSplashStage()
 	SetCrossSections (_V(2.8,2.8,7.0));
 	SetCW (0.5, 1.5, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
-	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+	SetTouchdownPoints (_V(0,-1.0,-2.0), _V(-.7,.7,-2.0), _V(.7,.7,-2.0));
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
