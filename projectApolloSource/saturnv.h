@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/18 00:38:44  movieman523
+  *	Moved sounds into generic Saturn class from Saturn V.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -54,8 +57,8 @@ private:
 	void SetSecondStage1 ();
 	void SetSecondStage2 ();
 	void SetThirdStage ();
-	void Ullage(OBJHANDLE hvessel,double gaz);
-	void Ullage2(OBJHANDLE hvessel,double gaz);
+	void Retro1(OBJHANDLE hvessel,double gaz);
+	void Retro2(OBJHANDLE hvessel,double gaz);
 	void setupS4B(OBJHANDLE hvessel);
 	void AttitudeLaunch1();
 	void AttitudeLaunch2();
@@ -128,12 +131,6 @@ protected:
 	//
 
 	double gaz;
-
-	int UllageID6;
-	int UllageID7;
-	int UllageID8;
-	int UllageID9;
-
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
 	//
