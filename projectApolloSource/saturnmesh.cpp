@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/02/20 20:20:45  chode99
+  *	Changed touchdown points for recovery stage so it is also "above water".
+  *	
   *	Revision 1.3  2005/02/20 05:24:58  chode99
   *	Changes to implement realistic CM aerodynamics. Created callback function "CoeffFunc" in Saturn1b.cpp and Saturn5.cpp. Substituted CreateAirfoil for older lift functions.
   *	
@@ -1418,5 +1421,7 @@ bool Saturn::clbkLoadGenericCockpit ()
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 	InVC = false;
+	InPanel = false;
+	SetView();
 	return true;
 }
