@@ -5,6 +5,19 @@ Revised LEVA code, with 'flag planting' sound support.
 Fixed up the LEM to work around missing sound if we switch to the lunar astronaut immediately after creating them.
 Adjusted astronaut mesh position to make the walk closer to the moon's surface.
 Turned more sounds into mission-specific sounds for NEP.
+Added reentry documentation, cleaned up and added checklists.
+Changed name of help file to Project_Apollo and changed help references in config files.
+Fixed bug that caused CTD when pressing Shift-~.
+Fixed touchdown points on LM ascent stage so it doesn't fall when released.
+Made changes so that the Saturn V launches "heads-down". Scenarios changed as well.
+Moved Pad 39A so it registers better with the tile.
+Added the roads and tanks mesh to Pad 39B.
+Rotated and moved towers so they are to the north.
+Added retro rockets to SII stage.
+Fixed bug that caused the parachute drag to be too low.
+Corrected the position of the ullage rockets for the SIVB when separating from the SIB.
+Fixed bug that caused the CSM RCS flames to be in the wrong positions late in the mission.
+Now calculate the axial G force so that the panel gauge works like the real one.
 
 6.3:
 ----
