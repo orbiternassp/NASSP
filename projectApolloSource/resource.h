@@ -164,6 +164,9 @@
 #define IDB_ILMECSG                     257
 #define IDB_ILMFCSM                     268
 #define IDB_ILMTHREEPOSSWITCH           269
+#define IDB_MFDFRAME                    270
+#define IDB_MFDPOWER                    271
+#define IDB_DOCKINGSWITCHES             272
 #define AID_FUEL_DIGITD                 301
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
@@ -245,18 +248,16 @@
 #define AID_PANEL4_SWITCH2              479
 #define AID_PANEL4_SWITCH3              480
 #define AID_PANEL4_SWITCH4              481
-#define AID_EMS_KNOB					482
-#define AID_EMS_DISPLAY					483
-#define AID_MFDDOCK_BBUTTONS            484
-#define AID_MFDDOCK_LBUTTONS            485
-#define AID_MFDDOCK_RBUTTONS            486
-
+#define AID_EMS_KNOB                    482
+#define AID_EMS_DISPLAY                 483
+#define AID_MFDDOCK                     484
+#define AID_MFDDOCK_POWER               485
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        270
+#define _APS_NEXT_RESOURCE_VALUE        273
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           10001

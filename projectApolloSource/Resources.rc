@@ -104,6 +104,9 @@ IDB_ILMALLROUND         BITMAP  DISCARDABLE     "ilmallround.bmp"
 IDB_THREEPOSSWITCH      BITMAP  DISCARDABLE     "threeposswitch.bmp"
 IDB_ILMFCSM             BITMAP  DISCARDABLE     "ilmFCSM.bmp"
 IDB_ILMTHREEPOSSWITCH   BITMAP  DISCARDABLE     "ilmthreeposswitch.bmp"
+IDB_MFDFRAME            BITMAP  DISCARDABLE     "MFDFrame.bmp"
+IDB_MFDPOWER            BITMAP  DISCARDABLE     "MFDPower.bmp"
+IDB_DOCKINGSWITCHES     BITMAP  DISCARDABLE     "DockingSwitches.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
