@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/03/09 22:09:02  tschachim
+  *	Docking panel camera without changing direction from Yogenfrutz
+  *	Switchable docking panel MFD
+  *	
   *	Revision 1.4  2005/03/05 02:03:40  tschachim
   *	Docking MFD is now the right MFD,
   *	button click sound added
@@ -647,7 +651,7 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterMFD (MFD_RIGHT, mfds_dock);	// MFD_USER1
 		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 850,  612, 1151      ,  863     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 635,  845,  655      ,  860     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SM_RCS_MODE, _R( 719,  791,  719 + 133,  791 + 73), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SM_RCS_MODE, _R( 718,  791,  718 + 133,  791 + 73), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		break;
 	}
 
