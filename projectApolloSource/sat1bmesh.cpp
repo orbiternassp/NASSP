@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/03/24 01:42:40  chode99
+  *	Moved first stage thrusters,  added practice target for Apollo 7.
+  *	
   *	Revision 1.4  2005/03/16 13:31:58  yogenfrutz
   *	added missing setview and crew,so that virtual cockpit does now display correctly
   *	
@@ -623,6 +626,29 @@ void Saturn1b::AddStageOneInterstage()
 		VESSEL *stg1vessel = oapiGetVesselInterface(hstg1);
 		VECTOR3 mesh_dir = _V(0, 0, 16.2);
 		stg1vessel->AddMesh (hSat1intstg, &mesh_dir);
+
+		VECTOR3 m_exhaust_pos2= {-2.5,-2.5, 20.2};
+		VECTOR3 m_exhaust_pos3= {-2.5,2.5, 20.2};
+		VECTOR3 m_exhaust_pos4= {2.5,-2.5, 20.2};
+		VECTOR3 m_exhaust_pos5= {2.5,2.5, 20.2};
+
+		ph_retro1 = stg1vessel->CreatePropellantResource(200);
+
+		double thrust = 100000;
+
+		if (!th_retro1[0]) {
+			th_retro1[0] = stg1vessel->CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro1, 4000);
+			th_retro1[1] = stg1vessel->CreateThruster (m_exhaust_pos3, _V(0.1, -0.1, -0.9), thrust, ph_retro1, 4000);
+			th_retro1[2] = stg1vessel->CreateThruster (m_exhaust_pos4, _V(-0.1, 0.1, -0.9), thrust, ph_retro1, 4000);
+			th_retro1[3] = stg1vessel->CreateThruster (m_exhaust_pos5, _V(-0.1, -0.1, -0.9), thrust, ph_retro1, 4000);
+		}
+
+		thg_retro1 = stg1vessel->CreateThrusterGroup(th_retro1, 4, THGROUP_RETRO);
+
+		for (int i = 0; i < 4; i++)
+			stg1vessel->AddExhaust (th_retro1[i], 8.0, 0.2);
+
+		stg1vessel->SetThrusterGroupLevel(thg_retro1, 1.0);
 	}
 }
 
