@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -51,7 +54,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundli
 	// VESSELSOUND **********************************************************************
 	// initialisation
 
-	soundlib.InitSoundLib(hObj, "ProjectApollo");
+	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 }
 
 Saturn::~Saturn()
@@ -555,14 +558,7 @@ typedef union {
 		unsigned CryoStir:1;
 		unsigned viewpos:2;
 		unsigned LEMdatatransfer:1;
-		unsigned Engind0:1;
-		unsigned Engind1:1;
-		unsigned Engind2:1;
-		unsigned Engind3:1;
-		unsigned Engind4:1;
-		unsigned Engind5:1;
-		unsigned Engind6:1;
-		unsigned Engind7:1;
+		unsigned KranzPlayed:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -587,6 +583,7 @@ int Saturn::GetMainState()
 	state.u.CryoStir = CryoStir;
 	state.u.viewpos = viewpos;
 	state.u.LEMdatatransfer = LEMdatatransfer;
+	state.u.KranzPlayed = KranzPlayed;
 
 	return state.word;
 }
@@ -610,6 +607,7 @@ void Saturn::SetMainState(int s)
 	CryoStir = state.u.CryoStir;
 	viewpos = state.u.viewpos;
 	LEMdatatransfer = state.u.LEMdatatransfer;
+	KranzPlayed = (state.u.KranzPlayed != 0);
 }
 
 
@@ -1684,13 +1682,43 @@ void Saturn::GenericLoadStateSetup()
 	}
 
 	if (stage < CSM_LEM_STAGE) {
-		soundlib.LoadSound(SepS, SEPMOTOR_SOUND);
+		soundlib.LoadSound(SepS, SEPMOTOR_SOUND, INTERNAL_ONLY);
+	}
+
+	if (stage <= CSM_LEM_STAGE) {
+		soundlib.LoadMissionSound(SMJetS, SM_SEP_SOUND, DEFAULT_SM_SEP_SOUND);
 	}
 
 	if (stage == CM_RECOVERY_STAGE)
 	{
 		soundlib.LoadSound(Swater, WATERLOOP_SOUND);
 	}
+
+	//
+	// Load Apollo-13 specific sounds.
+	//
+
+	if (ApolloNo == 13) {
+		if (!KranzPlayed)
+			soundlib.LoadMissionSound(SKranz, A13_KRANZ, NULL, INTERNAL_ONLY);
+		if (!CryoStir)
+			soundlib.LoadMissionSound(SApollo13, A13_CRYO_STIR, NULL);
+		if (!ApolloExploded)
+			soundlib.LoadMissionSound(SExploded, A13_PROBLEM, NULL);
+
+		if (stage <= CSM_LEM_STAGE) {
+			soundlib.LoadMissionSound(SSMSepExploded, A13_SM_SEP_SOUND, NULL);
+		}
+
+		SApollo13.setFlags(SOUNDFLAG_1XORLESS);
+		SExploded.setFlags(SOUNDFLAG_1XORLESS);
+	}
+
+	//
+	// Turn of the timer display on launch.
+	//
+
+	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 }
 
 void Saturn::UllageSM(OBJHANDLE hvessel,double gaz1, double time)
@@ -1930,7 +1958,7 @@ void Saturn::LoadDefaultSounds()
 	// mission path hasn't been set up!
 	//
 
-	soundlib.LoadSound(SeparationS, "Separation.wav");
+	soundlib.LoadSound(SeparationS, SEPARATION_SOUND);
 	soundlib.LoadSound(Sctdw, COUNT10_SOUND);
 	soundlib.LoadSound(Sclick, CLICK_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(Bclick, BUTTON_SOUND, INTERNAL_ONLY);
@@ -1938,9 +1966,8 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(Psound, PROBE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(CabinFans, CMCABIN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(SMasterAlarm, MASTERALARM_SOUND, INTERNAL_ONLY);
-	soundlib.LoadSound(SplashS, "Splash.wav");
+	soundlib.LoadSound(SplashS, SPLASH_SOUND);
 	soundlib.LoadSound(StageS, "Stagesep.wav");
-	soundlib.LoadSound(SMJetS, "SMJetison.wav");
 	soundlib.LoadSound(CrashBumpS, "Crash.wav");
 
 	Sctdw.setFlags(SOUNDFLAG_1XONLY);
