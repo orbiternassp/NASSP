@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/24 00:26:35  movieman523
+  *	Revised to delay switch to LEVA to work around Orbitersound getting upset if we switch immediately after creation.
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -263,7 +266,7 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
-	SetTouchdownPoints (_V(0,0,10), _V(-1,0,-10), _V(1,0,-10));
+	SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
 	VECTOR3 mesh_dir=_V(-0.25,0.0,+0.38);
 	AddMesh (hLMAscent, &mesh_dir);
     if (!ph_Asc)  
