@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include <stdio.h>
@@ -54,6 +57,8 @@ bool Saturn::clbkLoadVC (int id)
 	case 0:
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 		InVC = true;
+		InPanel = false;
+		SetView();
 		return true;
 
 	default:
@@ -104,27 +109,31 @@ void Saturn::SetView(double offset)
 
 	CurrentViewOffset = offset;
 
-	switch (viewpos)
-	{
-		case SATVIEW_CDR:
-		v = _V(-0.6,0.7,offset);
-		break;
+	if (InPanel && (PanelId == 2 || PanelId == 3)) {
+		v = _V(-1.05, 1.02, offset - 3.0);
 
-		case SATVIEW_CMP:
-		v = _V(0,0.7,offset);
-		break;
+	} else {
+		switch (viewpos) {
+			case SATVIEW_CDR:
+			v = _V(-0.6,0.7,offset);
+			break;
 
-		case SATVIEW_DMP:
-		v = _V(0.6,0.7,offset);
-		break;
+			case SATVIEW_CMP:
+			v = _V(0,0.7,offset);
+			break;
 
-		case SATVIEW_DOCK:
-		if (dockstate==13) {
-			v = _V(0,0,2.5 + offset);
-		}else{
-			v = _V(-0.65,1.05,0.25 + offset);
+			case SATVIEW_DMP:
+			v = _V(0.6,0.7,offset);
+			break;
+
+			case SATVIEW_DOCK:
+			if (dockstate==13) {
+				v = _V(0,0,2.5 + offset);
+			}else{
+				v = _V(-0.65,1.05,0.25 + offset);
+			}
+			break;
 		}
-		break;
 	}
 
 	if (InVC) {
