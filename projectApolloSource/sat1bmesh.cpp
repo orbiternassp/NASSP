@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/03/26 01:46:30  chode99
+  *	Added retros to first stage.
+  *	
   *	Revision 1.5  2005/03/24 01:42:40  chode99
   *	Moved first stage thrusters,  added practice target for Apollo 7.
   *	
@@ -69,7 +72,7 @@ static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
 static MESHHANDLE hastp;
 static MESHHANDLE hastp2;
-static MESHHANDLE hTarget;
+static MESHHANDLE hCOAStarget;
 
 PARTICLESTREAMSPEC srb_contrail = {
 	0, 12.0, 1, 50.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
@@ -98,14 +101,18 @@ void Saturn1b::SetS4B()
 	targetvessel->ClearMeshes();
 	VECTOR3 mesh_dir=_V(0,0,0);
 	targetvessel->AddMesh (hSat1stg2, &mesh_dir);
-	if(ApolloNo==7){
+	if(SIVBPayload == PAYLOAD_TARGET){
 		mesh_dir=_V(-1.0,-1.1,13.3);
-		targetvessel->AddMesh (hTarget, &mesh_dir);
+		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
 	}
-	mesh_dir=_V(0,4,-4.2);
-	//targetvessel->AddMesh (hapsl, &mesh_dir);
-	mesh_dir=_V(0,-4,-4.2);
-	//targetvessel->AddMesh (hapsh, &mesh_dir);
+	else if(SIVBPayload == PAYLOAD_ASTP){
+		mesh_dir=_V(0,0,13.3);
+		targetvessel->AddMesh (hastp, &mesh_dir);
+	}
+	else if(SIVBPayload == PAYLOAD_LM1){
+		mesh_dir=_V(0,0,13.3);
+		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
+	}
 }
 
 void Saturn1b::SetFirstStage ()
@@ -753,16 +760,24 @@ void Saturn1b::DockStage (UINT dockstatus)
 		targetvessel=oapiGetVesselInterface(hs4bM);
 		targetvessel->ClearMeshes();
 		targetvessel->AddMesh (hSat1stg2, &mesh_dir);
-		mesh_dir=_V(0,4,-4.2);
-		//targetvessel->AddMesh (hapsl, &mesh_dir);
-		mesh_dir=_V(0,-4,-4.2);
-		//targetvessel->AddMesh (hapsh, &mesh_dir);
-		//Release of Slaved Stage
+	if(SIVBPayload == PAYLOAD_TARGET){
+		mesh_dir=_V(-1.0,-1.1,13.3);
+		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
+	}
+	else if(SIVBPayload == PAYLOAD_ASTP){
+		mesh_dir=_V(0,0,13.3);
+		targetvessel->AddMesh (hastp, &mesh_dir);
+	}
+	else if(SIVBPayload == PAYLOAD_LM1){
+		mesh_dir=_V(0,0,13.3);
+		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
+	}
 		targetvessel->SetDockParams(_V(0.0,0.0,0.0),_V(0.0,0.0,0.0),_V(0.0,0.0,18.0));
 		//Time to hear the Stage separation
 		SMJetS.play();
 		//Now Lets reconfigure Apollo for the DM.
-		SetASTPStage ();
+		if (ASTPMission)
+			SetASTPStage ();
 		dockstate=3;
 		bManualUnDock= false;
 		SetAttitudeLinLevel(2,-1);
@@ -782,9 +797,11 @@ void Saturn1b::DockStage (UINT dockstatus)
 	vs4b.vrot.x = 0.0;
 	vs4b.vrot.y = 0.0;
 	vs4b.vrot.z = 0.0;
-	strcpy (VName2, GetName()); strcat (VName2, "-ASTPDM");
-	VESSEL::Create (VName2, "nSat1astp2", vs4b);
-	hAstpDM=oapiGetVesselByName(VName2);
+	if(ASTPMission){
+		strcpy (VName2, GetName()); strcat (VName2, "-ASTPDM");
+		VESSEL::Create (VName2, "nSat1astp2", vs4b);
+		hAstpDM=oapiGetVesselByName(VName2);
+	}
 		if (ProbeJetison){
 			SetCSM2Stage ();
 			StageS.play();
@@ -810,7 +827,6 @@ void Saturn1b::DockStage (UINT dockstatus)
 		//
 		   	SetASTPStage ();
 			DestroyAstp=true;
-
 	   }
 	   break;
 	case 5:
@@ -830,5 +846,5 @@ void Saturn1bLoadMeshes()
 	hSat1stg24 = oapiLoadMeshGlobal ("nsat1stg24");
 	hastp = oapiLoadMeshGlobal ("nASTP3");
 	hastp2 = oapiLoadMeshGlobal ("nASTP2");
-	hTarget = oapiLoadMeshGlobal ("sat_target");
+	hCOAStarget = oapiLoadMeshGlobal ("sat_target");
 }
