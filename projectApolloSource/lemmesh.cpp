@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/03/04 20:36:22  chode99
+  *	Fixed touchdown points on ascent stage so it doesn't fall when released.
+  *	
   *	Revision 1.2  2005/02/24 00:26:35  movieman523
   *	Revised to delay switch to LEVA to work around Orbitersound getting upset if we switch immediately after creation.
   *	
@@ -156,12 +159,12 @@ void sat5_lmpkd::SetLmVesselDockStage()
 	}
 
 	// orbiter main thrusters
-	th_hover[0] =CreateThruster (_V( 0,-2.5,0), _V( 0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[0] =CreateThruster (_V( 0,-3.3,0), _V( 0,1,0), 44910, ph_Dsc, 3107);
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
 
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	AddExhaust (th_hover[0], 15.0, 0.65);//
+	AddExhaust (th_hover[0], 8.0, 0.65);//
 
 	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
 	SetCameraOffset (_V(-1,1.0,0.0));
@@ -215,11 +218,11 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	}
 	
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V( 0,-2.5,0), _V( 0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[0] = CreateThruster (_V( 0,-3.3,0), _V( 0,1,0), 44910, ph_Dsc, 3107);
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	AddExhaust (th_hover[0], 15.0, 0.65);//
+	AddExhaust (th_hover[0], 8.0, 0.65);//
 	
 	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
 	
@@ -276,11 +279,11 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 		ph_rcslm1 = CreatePropellantResource(100);
 	}
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V( 0,-0.9,0), _V( 0,1,0), 15880, ph_Asc, 2921);
+	th_hover[0] = CreateThruster (_V( 0,-2.5,0), _V( 0,1,0), 15880, ph_Asc, 2921);
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	AddExhaust (th_hover[0], 15.0, 0.65);//
+	AddExhaust (th_hover[0], 5.0, 0.47);//
 
 	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
 	SetCameraOffset (_V(-1,1.0,0.0));
