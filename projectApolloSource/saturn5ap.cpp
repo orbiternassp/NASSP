@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include <stdio.h>
@@ -334,6 +337,7 @@ void SaturnV::AutoPilot(double autoT)
 	double pitch_c;
 	double heading;
 	double bank;
+	VECTOR3 rhoriz;
 
 	double TO_HDG = agc.GetDesiredAzimuth();
 
@@ -359,6 +363,13 @@ void SaturnV::AutoPilot(double autoT)
 	pitch = GetPitch();
 	pitch = pitch*180./PI;
 	altitude = GetAltitude();
+	oapiGetHeading(GetHandle(),&heading);
+	heading = heading*180./PI;
+
+	// This vector rotation will be used to tell if heads up (rhoriz.z<0) or heads down.
+
+	HorizonRot(_V(1,0,0),rhoriz);
+
 
 	//sprintf(oapiDebugString(), "Autopilot %f", altitude);
  // guidance
@@ -368,7 +379,10 @@ void SaturnV::AutoPilot(double autoT)
 	if ((altitude < 250)  && (altitude > 150)) {
 	//	sprintf(oapiDebugString(), "Autopilot initial Pitch DEG %d", (int)fabs(pitch));
 		if (pitch >84){
-			AtempP = 2.8;
+			if (rhoriz.z>0)
+				AtempP = -2.8;
+			else
+				AtempP = 2.8;
 			AtempR = 0.0;
 			AtempY = 0.0;
 		}
@@ -399,6 +413,7 @@ void SaturnV::AutoPilot(double autoT)
 			AtempR = -fabs((90-TO_HDG)-bank);
 			if (AtempR < -1)
 				AtempR = -1;
+			if(rhoriz.z>0) AtempR = -AtempR;
 			AtempP = 0.0;
 			AtempY = 0.0;
 		}
@@ -406,6 +421,7 @@ void SaturnV::AutoPilot(double autoT)
 			AtempR = fabs((90-TO_HDG)-bank);
 			if (AtempR > 1)
 				AtempR = 1;
+			if(rhoriz.z>0)AtempR = -AtempR;
 			AtempP = 0.0;
 			AtempY = 0.0;
 		}
@@ -415,8 +431,6 @@ void SaturnV::AutoPilot(double autoT)
 
 	}
 	else if (altitude < 2800  && altitude > 750){
-		oapiGetHeading(GetHandle(),&heading);
-		heading = heading*180./PI;
 		bank = GetBank();
 //		oapiGetFocusBank(&bank);
 		bank = bank*180./PI;
@@ -437,6 +451,7 @@ void SaturnV::AutoPilot(double autoT)
 		else if (heading > (TO_HDG +0.15) && TO_HDG <90) {
 			AtempP = heading - TO_HDG ;
 			if (AtempP > 4.0) AtempP = 4.0;
+			if(rhoriz.z>0) AtempP = -AtempP;
 			AtempR = 0.0;
 			AtempY = AtempP/35;
 			//SetAttitudeRotLevel(0, -1);
@@ -444,8 +459,9 @@ void SaturnV::AutoPilot(double autoT)
 
 		}
 		else if (heading < (TO_HDG -0.15) && TO_HDG <90) {
-			AtempP = (heading  - TO_HDG);
-			if (AtempP<-4.0) AtempP = -4.0;
+			AtempP = heading  - TO_HDG;
+			if (AtempP < -4.0) AtempP = -4.0;
+			if(rhoriz.z>0)AtempP = -AtempP;
 			AtempR = 0.0;
 			AtempY = AtempP/35;
 			//SetAttitudeRotLevel(0, 1);
@@ -453,7 +469,8 @@ void SaturnV::AutoPilot(double autoT)
 		}
 		else if (heading > (TO_HDG +0.15) && TO_HDG >90) {
 			AtempP = -(heading - TO_HDG) ;
-			if (AtempP<-2.0) AtempP = -2.0;
+			if (AtempP < -2.0) AtempP = -2.0;
+			if(rhoriz.z>0) AtempP= -AtempP;
 			AtempR = 0.0;
 			AtempY = -AtempP/35;
 			//SetAttitudeRotLevel(0, -1);
@@ -463,6 +480,7 @@ void SaturnV::AutoPilot(double autoT)
 		else if (heading < (TO_HDG -0.15) && TO_HDG >90) {
 			AtempP = -(heading  - TO_HDG);
 			if (AtempP > 2.0) AtempP = 2.0;
+			if(rhoriz.z>0) AtempP= -AtempP;
 			AtempR = 0.0;
 			AtempY = -AtempP/35;
 			//SetAttitudeRotLevel(0, 1);
@@ -480,8 +498,6 @@ void SaturnV::AutoPilot(double autoT)
 //		oapiGetFocusBank(&bank);
 		bank = GetBank();
 		bank = bank*180./PI;
-		oapiGetHeading(GetHandle(),&heading);
-		heading = heading*180./PI;
 
 		if (fabs(bank) < 0.5) {
 			AtempP = 0.0;
@@ -491,10 +507,12 @@ void SaturnV::AutoPilot(double autoT)
 		}
 		else if (bank < 0 && fabs(vsp.vrot.z) < 0.11) {
 			AtempR = 1.0;
+			if(rhoriz.z>0)AtempR=-1.0;
 			//SetAttitudeRotLevel(2,-1 );//bank/30
 		}
 		else if (bank > 0 && fabs(vsp.vrot.z) < 0.11) {
 			AtempR = -1.0;
+			if(rhoriz.z>0)AtempR=1.0;
 			//SetAttitudeRotLevel(2, 1);
 		}
 		else {
@@ -560,10 +578,12 @@ void SaturnV::AutoPilot(double autoT)
 	}else if (level>0 && fabs(vsp.vrot.z) < 0.09) {
 		AtempP = -(fabs(level)/10);
 		if (AtempP < -1.0) AtempP = -1.0;
+		if(rhoriz.z>0)AtempP= -AtempP;
 	}
 	else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
 		AtempP = (fabs(level)/10);
 		if (AtempP > 1.0) AtempP = 1.0;
+		if(rhoriz.z>0)AtempP = -AtempP;
 	}
 	else{
 		AtempP = 0.0;
@@ -582,10 +602,11 @@ void SaturnV::AutoPilot(double autoT)
 			pitch_c=GetCPitch(autoT);
 
 			AtempP = (pitch - pitch_c);
+			if(rhoriz.z>0)AtempP= -AtempP;
 			if (AtempP > 1.0)
 				AtempP = 1.0;
 			if (AtempP < (-1.0))
-				AtempP = (-1.0);
+				AtempP = -1.0;
 
 			AttitudeLaunch1();
 		break;
