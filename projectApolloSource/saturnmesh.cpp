@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/02/20 05:24:58  chode99
+  *	Changes to implement realistic CM aerodynamics. Created callback function "CoeffFunc" in Saturn1b.cpp and Saturn5.cpp. Substituted CreateAirfoil for older lift functions.
+  *	
   *	Revision 1.2  2005/02/19 19:32:55  chode99
   *	Adjusted touchdown points in splashdown stage so it is no longer "underwater".
   *	
@@ -503,7 +506,7 @@ void Saturn::SetRecovery()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+	SetTouchdownPoints (_V(0,-1.0,-2.0), _V(-.7,.7,-2.0), _V(.7,.7,-2.0));
 	SetView(-1.35);
 }
 
