@@ -35,7 +35,8 @@ projectApolloTextures -d Textures projectApolloTextures
 # projectApolloSound -d Sound/NASSP projectApolloSound
 # projectApollo -a projectApolloConfig projectApolloMeshes projectApolloTextures orbiterSound projectApolloSound
 
-projectApolloSound -a orbiterSound projectApolloSoundNASSP
+#projectApolloSound -a orbiterSound
 projectApolloSoundNASSP -d NASSP projectApolloSound
-orbiterSound -d Sound orbiterSound &projectApolloSoundNASSP
+#orbiterSound -d Sound orbiterSound &projectApolloSoundNASSP
+projectApolloSound -d Sound orbiterSound &projectApolloSoundNASSP
 projectApollo -a projectApolloConfig projectApolloMeshes projectApolloTextures projectApolloSound
