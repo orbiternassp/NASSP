@@ -42,4 +42,7 @@ projectApolloSource -d Orbitersdk orbiterSource &util.projectApolloSource
 
 projectApolloScenarios -d Scenarios projectApolloScenarios
 
-projectApollo -a projectApolloConfig projectApolloGraphics projectApolloSound projectApolloSource projectApolloScenarios
+projectApolloDoc -d Doc projectApolloDoc
+
+projectApollo -a projectApolloConfig projectApolloGraphics projectApolloSound \
+                 projectApolloSource projectApolloScenarios projectApolloDoc
