@@ -170,6 +170,10 @@
 #define IDB_MFDFRAME_ILM                273
 #define IDB_MFDPOWER_ILM                274
 #define IDB_DOCKINGSWITCHES_ILM         275
+#define IDB_ILMMAINPANEL_LEFT           276
+#define IDB_ILMMAINPANEL_RIGHT          277
+#define IDB_MAINPANEL_LEFT              278
+#define IDB_MAINPANEL_RIGHT             279
 #define AID_FUEL_DIGITD                 301
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
@@ -260,7 +264,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        276
+#define _APS_NEXT_RESOURCE_VALUE        280
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           10001
