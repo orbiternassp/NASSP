@@ -1,0 +1,2313 @@
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2005 Jean-Luc Rocca-Serra, Mark Grant, Matthias Müller
+
+  ORBITER vessel module: generic Saturn base class
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************** Revision History ****************************
+  *	$Log$
+  **************************************************************************/
+
+#include "Orbitersdk.h"
+#include <stdio.h>
+#include <math.h>
+#include "OrbiterSoundSDK3.h"
+#include "soundlib.h"
+
+#include "resource.h"
+
+#include "nasspdefs.h"
+#include "nasspsound.h"
+
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "dsky.h"
+#include "csmcomputer.h"
+
+#include "saturn.h"
+
+Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky), dsky(soundlib, agc)
+
+{
+	autopilot = false;
+	LastTimestep = 0;
+
+	// VESSELSOUND **********************************************************************
+	// initialisation
+
+	soundlib.InitSoundLib(hObj, "ProjectApollo");
+}
+
+Saturn::~Saturn()
+
+{
+	//
+	// Nothing for now.
+	//
+}
+
+void Saturn::initSaturn()
+
+{
+	//
+	// Default to the latest model Saturn
+	//
+
+	VehicleNo = 600;
+	ApolloNo = 0;
+
+	TCPO = 0.0;
+
+	InitSwitches();
+
+	masterAlarmLit = false;
+	masterAlarmCycleTime = 0;
+
+	FirstTimestep = true;
+	GenericFirstTimestep = true;
+	TLICapableBooster = false;
+
+	bAbort = false;
+	ABORT_IND = false;
+	LEM_DISPLAY=false;
+	bManualUnDock = false;
+	bManualSeparate = false;
+	ASTPMission = false;
+	probeOn = true;
+	bToggleHatch = false;
+
+	AutoSlow = false;
+	Crewed = true;
+	SIVBPayload = PAYLOAD_LEM;
+	CSMSepSet = false;
+	CSMSepTime = 0.0;
+
+	CMSepSet = false;
+	CMSepTime = 0.0;
+
+	SIVBBurn = false;
+	SIVBBurnStart = 0.0;
+	SIVBApogee = 0.0;
+
+	CSMBurn = false;
+	CSMBurnStart = 0.0;
+	CSMApogee = 0.0;
+	CSMPerigee = 0.0;
+
+	HatchOpen=false;
+	FIRSTCSM=false;
+	ProbeJetison=false;
+	LEMdatatransfer = false;
+
+	buildstatus = 8;
+	ThrustAdjust = 1.0;
+	DockAngle = 0;
+
+	AtempP  = 0;
+	AtempY  = 0;
+	AtempR  = 0;
+
+	StopRot = false;
+	SMSep = false;
+	bStartS4B =false;
+
+	refSaturn1B = 0;
+	refPREV = 0;
+	AltitudePREV = 0;
+
+	hstg1 = 0;
+	hstg2 = 0;
+	hintstg = 0;
+	hesc1 = 0;
+	hPROBE = 0;
+	hs4bM = 0;
+	hs4b1 = 0;
+	hs4b2 = 0;
+	hs4b3 = 0;
+	hs4b4 = 0;
+	habort = 0;
+	hSMJet = 0;
+
+	//
+	// Default mission time to an hour prior to launch.
+	//
+
+	MissionTime = (-3600);
+	NextMissionEventTime = 0;
+	LastMissionEventTime = 0;
+
+	abortTimer=0;
+	release_time = 0;
+	ignition_SMtime = 0;
+
+	//
+	// Defaults.
+	//
+
+	agc.SetDesiredApogee(220);
+	agc.SetDesiredPerigee(215);
+	agc.SetDesiredAzimuth(45);
+	agc.SetVesselStats(SPS_ISP, SPS_THRUST, false);
+
+	//
+	// Configure AGC and DSKY.
+	//
+
+	agc.ControlVessel(this);
+	dsky.Init();
+
+	//
+	// Default masses.
+	//
+
+	CM_EmptyMass = 5440;
+	CM_FuelMass = 123;
+
+	SM_EmptyMass = 3110;
+	SM_FuelMass = 18413 + 3000;
+
+	LEM_Mass = 14696;
+
+	Abort_Mass = 4050;
+
+	//
+	// Propellant handles.
+	//
+
+	ph_1st = 0;
+	ph_2nd = 0;
+	ph_3rd = 0;
+	ph_rcs0 = 0;
+	ph_rcs1 = 0;
+	ph_sps = 0;
+	ph_retro1 = 0;
+
+	//
+	// Thruster groups.
+	//
+
+	thg_main = 0;
+	thg_ull = 0;
+	thg_ver = 0;
+	thg_retro1 = 0;
+	thg_aps = 0;
+
+	//
+	// Random virtual cockpit motion.
+	//
+
+	ViewOffsetx = 0;
+	ViewOffsety = 0;
+	ViewOffsetz = 0;
+
+	InVC = false;
+
+	//
+	// Save the last view offset set.
+	//
+
+	CurrentViewOffset = 0;
+
+	//
+	// Zeroing arrays for safety.
+	//
+
+	int i;
+
+	for (i = 1; i < 6; i++){
+		ClearEngineIndicator(i);
+	}
+
+	ClearAutopilotLight();
+
+	for (i = 0; i < 8; i++) {
+		LAUNCHIND[i] = false;
+	}
+
+	for (i = 0; i < nsurf; i++) {
+		srf[i] = 0;
+	}
+
+	for (i = 0; i < 5; i++) {
+		th_main[i] = 0;
+	}
+
+	for (i = 0; i < 8; i++) {
+		th_ull[i] = 0;
+	}
+
+	for (i = 0; i < 3; i++) {
+		th_ver[i] = 0;
+	}
+
+	for (i = 0; i < 12; i++) {
+		th_att_cm[i] = 0;
+	}
+
+	for (i = 0; i < 4; i++) {
+		th_retro1[i] = 0;
+	}
+
+	th_sps[0] = 0;
+
+	for (i = 0; i < 24; i++) {
+		th_att_rot[i] = 0;
+		th_att_lin[i] = 0;
+	}
+
+	UseATC = false;
+	Realism = REALISM_DEFAULT;
+
+	SIISepState = false;
+	masterAlarm = false;
+	autoDISP = false;
+	bRecovery = false;
+	ActivateLEM = false;
+	ActivateS4B = false;
+	RCS_Full = true;
+	ReadyAstp = false;
+	Abort_Locked = false;
+
+	stage = 0;
+	dockstate = 0;
+
+	KEY1=false;
+	KEY2=false;
+	KEY3=false;
+	KEY4=false;
+	KEY5=false;
+	KEY6=false;
+	KEY7=false;
+	KEY8=false;
+	KEY9=false;
+
+	actualVEL = 0;
+	actualALT = 0;
+	actualFUEL = 0;
+	aVAcc = 0;
+	aVSpeed = 0;
+	aHAcc = 0;
+	ALTN1 = 0;
+	SPEEDN1 = 0;
+	VSPEEDN1 = 0;
+	aTime = 0;
+
+	viewpos = SATVIEW_CDR;
+
+	probeidx = 0;
+	ToggleEva = false;
+	ActivateASTP = false;
+
+	//
+	// LM landing data.
+	//
+
+	LMLandingLatitude = 0;
+	LMLandingLongitude = 0;
+	LMLandingAltitude = 0;
+
+	//
+	// Earth landing data.
+	//
+
+	EarthLandingLatitude = 0;
+	EarthLandingLongitude = 0;
+
+	//
+	// Load textures that are used a lot. Should these be global
+	// variables?
+	//
+
+	SMExhaustTex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
+	SMMETex = oapiRegisterExhaustTexture ("Exhaust_atsme");//"Exhaust2"
+	CMTex =oapiRegisterReentryTexture("reentry");
+
+	strncpy(AudioLanguage, "English", 64);
+
+	hEVA = 0;
+}
+
+bool Saturn::SIVBStart()
+
+{
+	return false;
+}
+
+void Saturn::SIVBStop()
+
+{
+}
+
+void Saturn::UpdateLaunchTime(double t)
+
+{
+	if (t < 0)
+		return;
+
+	if (MissionTime < 0) {
+		MissionTime = (-t);
+	}
+}
+
+
+double Saturn::SetPitchApo()
+
+{
+	double cpitch;
+	double SatApo1;
+	double DiffApo;
+
+	GetApDist(SatApo1);
+	DiffApo = SatApo1 - ((agc.GetDesiredApogee()+ERADIUS)*1000);
+	cpitch=(GetPitch()*DEG)-aVAcc-(aVSpeed/50)+((agc.GetDesiredApogee()*1000-GetAltitude())/8000) ;
+
+	if (cpitch>35){
+		cpitch=35;
+	}
+	else if(cpitch<-35){
+		cpitch=-35;
+	}
+
+	//sprintf(oapiDebugString(), "diff %f", cpitch );
+	return cpitch;
+}
+
+void Saturn::KillDist(OBJHANDLE &hvessel)
+
+{
+	VECTOR3 posr  = {0,0,0};
+	double dist = 0.0;
+
+	oapiGetRelativePos (GetHandle() ,hvessel, &posr);
+	dist = (posr.x * posr.x + posr.y * posr.y + posr.z * posr.z);
+
+	if (dist > (5000 * 5000)){
+		oapiDeleteVessel(hvessel, GetHandle());
+		hvessel = 0;
+	}
+}
+
+void Saturn::KillAlt(OBJHANDLE &hvessel, double altVS)
+
+{
+	int getit = oapiGetAltitude(hvessel, &altVS);
+
+	if ((altVS < 90) && altVS >= 0 ){
+		oapiDeleteVessel(hvessel, GetHandle());
+		hvessel = 0;
+	}
+}
+
+
+void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
+{
+
+}
+
+void Saturn::clbkPreStep(double simt, double simdt, double mjd)
+
+{
+	//
+	// You'll also die horribly if you set time acceleration at all in the
+	// early parts of the launch.
+	//
+
+	if (stage == LAUNCH_STAGE_ONE && MissionTime < 50 &&
+		oapiGetTimeAcceleration() > 1.0) {
+		oapiSetTimeAcceleration(1.0);
+	}
+}
+
+void Saturn::clbkPostStep (double simt, double simdt, double mjd)
+
+{
+	Timestep(simt);
+}
+
+void Saturn::clbkSaveState(FILEHANDLE scn)
+
+{
+	VESSEL2::clbkSaveState (scn);
+
+	int i = 1;
+
+	oapiWriteScenario_int (scn, "NASSPVER", NASSP_VERSION);
+	oapiWriteScenario_int (scn, "STAGE", stage);
+	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
+	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
+	oapiWriteScenario_int (scn, "DOCKSTATE", dockstate);
+	oapiWriteScenario_int (scn, "PANEL_ID", PanelID);
+	oapiWriteScenario_float (scn, "TOAPO", agc.GetDesiredApogee());
+	oapiWriteScenario_float (scn, "TOPER", agc.GetDesiredPerigee());
+	oapiWriteScenario_float (scn, "TOHDG", agc.GetDesiredAzimuth());
+	oapiWriteScenario_float (scn, "TCP", TCPO);
+	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
+	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
+	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
+
+
+	if (Realism != REALISM_DEFAULT) {
+		oapiWriteScenario_int (scn, "REALISM", Realism);
+	}
+
+	if (buildstatus < 8) {
+		oapiWriteScenario_int (scn, "BUILDSTATUS", buildstatus);
+	}
+
+	oapiWriteScenario_int(scn, "STAGESTATUS", StageState);
+
+	if (LEM_DISPLAY) {
+		oapiWriteScenario_int (scn, "LEM_DISPLAY", int(LEM_DISPLAY));
+	}
+
+	oapiWriteScenario_int (scn, "MAINSTATE",  GetMainState());
+	oapiWriteScenario_int (scn, "LIGHTSTATE",  GetLightState());
+	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
+	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
+	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
+	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
+	oapiWriteScenario_int (scn, "CPSWITCH", GetCPSwitchState());
+	oapiWriteScenario_int (scn, "CP2SWITCH", GetCP2SwitchState());
+	oapiWriteScenario_int (scn, "CP3SWITCH", GetCP3SwitchState());
+	oapiWriteScenario_int (scn, "CP4SWITCH", GetCP4SwitchState());
+	oapiWriteScenario_int (scn, "CP5SWITCH", GetCP5SwitchState());
+
+	if (stage < LAUNCH_STAGE_ONE)
+		oapiWriteScenario_int (scn, "PRELAUNCHATC",  int(UseATC));
+
+	if (!LEMdatatransfer && isTLICapable()) {
+		oapiWriteScenario_float (scn, "MOONLAT", LMLandingLatitude);
+		oapiWriteScenario_float (scn, "MOONLONG", LMLandingLongitude);
+		oapiWriteScenario_float (scn, "MOONALT", LMLandingAltitude);
+	}
+
+	if (!Crewed) {
+		oapiWriteScenario_int (scn, "UNMANNED", 1);
+
+		if (CSMSepSet && (CSMSepTime >= MissionTime))
+		{
+			oapiWriteScenario_float (scn, "CSMSEP", CSMSepTime);
+		}
+
+		if (CMSepSet && (CMSepTime >= MissionTime))
+		{
+			oapiWriteScenario_float (scn, "CMSEP", CMSepTime);
+		}
+
+		if (SIVBBurn && (stage <= CSM_LEM_STAGE)) {
+			oapiWriteScenario_float (scn, "S4APO", SIVBApogee);
+			oapiWriteScenario_float (scn, "S4BURN", SIVBBurnStart);
+		}
+
+		if (CSMBurn && (stage <= CM_STAGE)) {
+			oapiWriteScenario_float (scn, "CSMAPO", CSMApogee);
+			oapiWriteScenario_float (scn, "CSMPER", CSMPerigee);
+			oapiWriteScenario_float (scn, "CSMBURN", CSMBurnStart);
+		}
+
+		if (AutoSlow) {
+			oapiWriteScenario_int (scn, "AUTOSLOW", 1);
+		}
+	}
+
+	if (SIVBPayload != PAYLOAD_LEM) {
+		oapiWriteScenario_int (scn, "S4PL", SIVBPayload);
+	}
+
+	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
+
+	dsky.SaveState(scn);
+	agc.SaveState(scn);
+}
+
+//
+// Scenario state functions.
+//
+
+typedef union {
+	struct {
+		unsigned masterAlarm:1;
+		unsigned SIISepState:1;
+		unsigned autopilot:1;
+		unsigned TLIBurnDone:1;
+		unsigned Scorrec:1;
+		unsigned ApolloExploded:1;
+		unsigned Burned:1;
+		unsigned EVA_IP:1;
+		unsigned ABORT_IND:1;
+		unsigned HatchOpen:1;
+		unsigned CryoStir:1;
+		unsigned viewpos:2;
+		unsigned LEMdatatransfer:1;
+		unsigned Engind0:1;
+		unsigned Engind1:1;
+		unsigned Engind2:1;
+		unsigned Engind3:1;
+		unsigned Engind4:1;
+		unsigned Engind5:1;
+		unsigned Engind6:1;
+		unsigned Engind7:1;
+	} u;
+	unsigned long word;
+} MainState;
+
+
+int Saturn::GetMainState()
+
+{
+	MainState state;
+
+	state.word = 0;
+	state.u.masterAlarm = masterAlarm;
+	state.u.SIISepState = SIISepState;
+	state.u.autopilot = autopilot;
+	state.u.TLIBurnDone = TLIBurnDone;
+	state.u.Scorrec = Scorrec;
+	state.u.ApolloExploded = ApolloExploded;
+	state.u.Burned = Burned;
+	state.u.EVA_IP = EVA_IP;
+	state.u.ABORT_IND = ABORT_IND;
+	state.u.HatchOpen = HatchOpen;
+	state.u.CryoStir = CryoStir;
+	state.u.viewpos = viewpos;
+	state.u.LEMdatatransfer = LEMdatatransfer;
+
+	return state.word;
+}
+
+void Saturn::SetMainState(int s)
+
+{
+	MainState state;
+
+	state.word = s;
+	masterAlarm = state.u.masterAlarm;
+	SIISepState = state.u.SIISepState;
+	autopilot = state.u.autopilot;
+	TLIBurnDone = state.u.TLIBurnDone;
+	Scorrec = state.u.Scorrec;
+	ApolloExploded = state.u.ApolloExploded;
+	Burned = state.u.Burned;
+	EVA_IP = state.u.EVA_IP;
+	ABORT_IND = state.u.ABORT_IND;
+	HatchOpen = state.u.HatchOpen;
+	CryoStir = state.u.CryoStir;
+	viewpos = state.u.viewpos;
+	LEMdatatransfer = state.u.LEMdatatransfer;
+}
+
+
+typedef union {
+	struct {
+		unsigned Engind0:1;
+		unsigned Engind1:1;
+		unsigned Engind2:1;
+		unsigned Engind3:1;
+		unsigned Engind4:1;
+		unsigned Engind5:1;
+		unsigned Autopilot:1;
+		unsigned Launchind0:1;
+		unsigned Launchind1:1;
+		unsigned Launchind2:1;
+		unsigned Launchind3:1;
+		unsigned Launchind4:1;
+		unsigned Launchind5:1;
+		unsigned Launchind6:1;
+		unsigned Launchind7:1;
+	} u;
+	unsigned long word;
+} LightState;
+
+int Saturn::GetLightState()
+
+{
+	LightState state;
+
+	state.word = 0;
+	state.u.Engind0 = ENGIND[0];
+	state.u.Engind1 = ENGIND[1];
+	state.u.Engind2 = ENGIND[2];
+	state.u.Engind3 = ENGIND[3];
+	state.u.Engind4 = ENGIND[4];
+	state.u.Engind5 = ENGIND[5];
+	state.u.Autopilot = AutopilotLight;
+	state.u.Launchind0 = LAUNCHIND[0];
+	state.u.Launchind1 = LAUNCHIND[1];
+	state.u.Launchind2 = LAUNCHIND[2];
+	state.u.Launchind3 = LAUNCHIND[3];
+	state.u.Launchind4 = LAUNCHIND[4];
+	state.u.Launchind5 = LAUNCHIND[5];
+	state.u.Launchind6 = LAUNCHIND[6];
+	state.u.Launchind7 = LAUNCHIND[7];
+
+	return state.word;
+}
+
+void Saturn::SetLightState(int s)
+
+{
+	LightState state;
+
+	state.word = s;
+	ENGIND[0] = (state.u.Engind0 != 0);
+	ENGIND[1] = (state.u.Engind1 != 0);
+	ENGIND[2] = (state.u.Engind2 != 0);
+	ENGIND[3] = (state.u.Engind3 != 0);
+	ENGIND[4] = (state.u.Engind4 != 0);
+	ENGIND[5] = (state.u.Engind5 != 0);
+	AutopilotLight = (state.u.Autopilot != 0);
+	LAUNCHIND[0] = (state.u.Launchind0 != 0);
+	LAUNCHIND[1] = (state.u.Launchind1 != 0);
+	LAUNCHIND[2] = (state.u.Launchind2 != 0);
+	LAUNCHIND[3] = (state.u.Launchind3 != 0);
+	LAUNCHIND[4] = (state.u.Launchind4 != 0);
+	LAUNCHIND[5] = (state.u.Launchind5 != 0);
+	LAUNCHIND[6] = (state.u.Launchind6 != 0);
+	LAUNCHIND[7] = (state.u.Launchind7 != 0);
+}
+
+void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
+
+{
+    char VNameApollo[256];
+	char *line;
+	float ftcp;
+	double autopTime;
+	int SwitchState = 0;
+	int nasspver = 0, status = 0;
+	int n;
+	double tohdg = 45;
+
+	//
+	// If the name of the spacecraft is "AS-xxx" then get the vehicle
+	// number from that.
+	//
+
+	strncpy (VNameApollo, GetName(), 255);
+	if (!strnicmp (VNameApollo, "AS-", 3)) {
+		sscanf(VNameApollo+3, "%d", &n);
+		if (n > 500) {
+			VehicleNo = n;
+			SetVehicleStats();
+		}
+	}
+
+	//
+	// Seed the random number generator with whatever junk we can
+	// find.
+	//
+
+	srand(VehicleNo + (int) vstatus);
+
+	while (oapiReadScenario_nextline (scn, line)) {
+        if (!strnicmp (line, "CONFIGURATION", 13)) {
+            sscanf (line+13, "%d", &status);
+		}
+		else if (!strnicmp (line, "NASSPVER", 8)) {
+			sscanf (line + 8, "%d", &nasspver);
+		}
+		else if (!strnicmp (line, "TOALT", 5)) {
+            int toalt;
+			sscanf (line+5, "%d", &toalt);
+			agc.SetDesiredApogee(toalt);
+			agc.SetDesiredPerigee(toalt * 0.98);
+		}
+		else if (!strnicmp (line, "TOAPO", 5)) {
+            sscanf (line+5, "%f", &ftcp);
+			agc.SetDesiredApogee(ftcp);
+		}
+		else if (!strnicmp (line, "TOPER", 5)) {
+            sscanf (line+5, "%f", &ftcp);
+			agc.SetDesiredPerigee(ftcp);
+		}
+		else if (!strnicmp (line, "BUILDSTATUS", 11)) {
+			sscanf (line+11, "%d", &buildstatus);
+		}else if (!strnicmp (line, "PANEL_ID", 11)) {
+			sscanf (line+8, "%d", &PanelID);
+		}else if (!strnicmp (line, "STAGESTATUS", 11)) {
+			sscanf (line+11, "%d", &StageState);
+		}
+		else if (!strnicmp (line, "DOCKANGLE", 9)) {
+			sscanf (line+5, "%g", &ftcp);
+			DockAngle = ftcp;
+		}
+		else if (!strnicmp (line, "STAGE", 5)) {
+			sscanf (line+5, "%d", &stage);
+		}
+		else if (!strnicmp (line, "TOHDG", 5)) {
+			sscanf (line+5, "%g", &ftcp);
+			tohdg = ftcp;
+		}
+		else if (!strnicmp (line, "VECHNO", 6)) {
+            int numb;
+			sscanf (line+6, "%d", &numb);
+			VehicleNo = numb;
+			SetVehicleStats();
+		}
+		else if (!strnicmp (line, "TCP", 3)) {
+            sscanf (line+3, "%f", &ftcp);
+			TCPO=ftcp;
+		}
+		else if (!strnicmp (line, "LEM_DISPLAY", 11)) {
+			LEM_DISPLAY = true;
+		}
+		else if (!strnicmp (line, "MAINSTATE", 9)) {
+            SwitchState = 0;
+			sscanf (line+9, "%d", &SwitchState);
+			SetMainState(SwitchState);
+		}
+		else if (!strnicmp (line, "LIGHTSTATE", 10)) {
+            SwitchState = 0;
+			sscanf (line+10, "%d", &SwitchState);
+			SetLightState(SwitchState);
+		}
+		else if (!strnicmp (line, "REALISM", 7)) {
+			sscanf (line+7, "%d", &Realism);
+		}
+		else if (!strnicmp (line, "CSWITCH", 7)) {
+            SwitchState = 0;
+			sscanf (line+7, "%d", &SwitchState);
+			SetCSwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "SSWITCH", 7)) {
+            SwitchState = 0;
+			sscanf (line+7, "%d", &SwitchState);
+			SetSSwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "LPSWITCH", 8)) {
+            SwitchState = 0;
+			sscanf (line+8, "%d", &SwitchState);
+			SetLPSwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "RPSWITCH", 9)) {
+            SwitchState = 0;
+			sscanf (line+9, "%d", &SwitchState);
+			SetRPSwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "APOLLONO", 8)) {
+            SwitchState = 0;
+			sscanf (line+8, "%d", &ApolloNo);
+			SetSSwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "CPSWITCH", 8)) {
+            SwitchState = 0;
+			sscanf (line+8, "%d", &SwitchState);
+			SetCPSwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "CP2SWITCH", 9)) {
+            SwitchState = 0;
+			sscanf (line+9, "%d", &SwitchState);
+			SetCP2SwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "CP3SWITCH", 9)) {
+            SwitchState = 0;
+			sscanf (line+9, "%d", &SwitchState);
+			SetCP3SwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "CP4SWITCH", 9)) {
+            SwitchState = 0;
+			sscanf (line+9, "%d", &SwitchState);
+			SetCP4SwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "CP5SWITCH", 9)) {
+            SwitchState = 0;
+			sscanf (line+9, "%d", &SwitchState);
+			SetCP5SwitchState(SwitchState);
+		}
+		else if (!strnicmp (line, "DOCKSTATE", 9)) {
+            sscanf (line+9, "%d", &dockstate);
+		}
+		else if (!strnicmp (line, "AUTOTIMER", 9)) {
+            sscanf (line+9, "%f", &ftcp);
+			autopTime = ftcp;
+		}
+		else if (!strnicmp(line, "MISSNTIME", 9)) {
+            sscanf (line+9, "%f", &ftcp);
+			MissionTime = ftcp;
+		}
+		else if (!strnicmp(line, "NMISSNTIME", 10)) {
+            sscanf (line+10, "%f", &ftcp);
+			NextMissionEventTime = ftcp;
+		}
+		else if (!strnicmp(line, "LMISSNTIME", 10)) {
+            sscanf (line+10, "%f", &ftcp);
+			LastMissionEventTime = ftcp;
+		}
+		else if (!strnicmp(line, "SIFUELMASS", 10)) {
+            sscanf (line+10, "%f", &ftcp);
+			SI_FuelMass = ftcp;
+		}
+		else if (!strnicmp(line, "SIIFUELMASS", 11)) {
+            sscanf (line+11, "%f", &ftcp);
+			SII_FuelMass = ftcp;
+		}
+		else if (!strnicmp(line, "S4FUELMASS", 10)) {
+            sscanf (line+10, "%f", &ftcp);
+			S4B_FuelMass = ftcp;
+		}
+		else if (!strnicmp(line, "PRELAUNCHATC", 12)) {
+			int i;
+			sscanf (line +12, "%d", &i);
+			UseATC = (i != 0);
+		}
+		else if (!strnicmp(line, "MOONLAT", 7)) {
+			sscanf(line + 7, "%f", &ftcp);
+			LMLandingLatitude = ftcp;
+		}
+		else if (!strnicmp(line, "MOONLONG", 8)) {
+			sscanf(line + 8, "%f", &ftcp);
+			LMLandingLongitude = ftcp;
+		}
+		else if (!strnicmp(line, "MOONALT", 7)) {
+			sscanf(line + 7, "%f", &ftcp);
+			LMLandingAltitude = ftcp;
+		}
+		else if (!strnicmp(line, "UNMANNED", 8)) {
+			int i;
+			sscanf(line + 8, "%d", &i);
+			Crewed = (i == 0);
+		}
+		else if (!strnicmp(line, "AUTOSLOW", 8)) {
+			int i;
+			sscanf(line + 8, "%d", &i);
+			AutoSlow = (i != 0);
+		}
+		else if (!strnicmp(line, "S4PL", 4)) {
+			sscanf(line + 4, "%d", &SIVBPayload);
+		}
+		else if (!strnicmp(line, "CSMSEP", 6)) {
+			sscanf(line + 6, "%f", &ftcp);
+			CSMSepTime = ftcp;
+			CSMSepSet = true;
+		}
+		else if (!strnicmp(line, "CMSEP", 5)) {
+			sscanf(line + 5, "%f", &ftcp);
+			CMSepTime = ftcp;
+			CMSepSet = true;
+		}
+		else if (!strnicmp(line, "S4APO", 5)) {
+			sscanf(line + 5, "%f", &ftcp);
+			SIVBApogee = ftcp;
+		}
+		else if (!strnicmp(line, "S4BURN", 6)) {
+			sscanf(line + 6, "%f", &ftcp);
+			SIVBBurnStart = ftcp;
+		}
+		else if (!strnicmp(line, "CSMAPO", 6)) {
+			sscanf(line + 6, "%f", &ftcp);
+			CSMApogee = ftcp;
+		}
+		else if (!strnicmp(line, "CSMPER", 6)) {
+			sscanf(line + 6, "%f", &ftcp);
+			CSMPerigee = ftcp;
+		}
+		else if (!strnicmp(line, "CSMBURN", 7)) {
+			sscanf(line + 7, "%f", &ftcp);
+			CSMBurnStart = ftcp;
+		}
+		else if (!strnicmp(line, "LANG", 4)) {
+			strncpy (AudioLanguage, line + 5, 64);
+		}
+		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
+			dsky.LoadState(scn);
+		}
+		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
+			agc.LoadState(scn);
+		}
+		else {
+			ParseScenarioLineEx (line, vstatus);
+        }
+    }
+
+	if (!Crewed && (SIVBApogee > 0.0) && (SIVBBurnStart > 0) && (stage < CSM_LEM_STAGE)) {
+		SIVBBurn = true;
+	}
+
+	if (!Crewed && (CSMApogee > 0.0) && (CSMBurnStart > 0) && (stage < CM_STAGE)) {
+		CSMBurn = true;
+	}
+
+	soundlib.SetLanguage(AudioLanguage);
+	LoadDefaultSounds();
+
+	//
+	// Recalculate stage masses.
+	//
+
+	CalculateStageMass ();
+
+	//
+	// Tell the AGC the heading we want.
+	//
+
+	agc.SetDesiredAzimuth(tohdg);
+	agc.SetApolloNo(ApolloNo);
+}
+
+
+void Saturn::SetStage(int s)
+
+{
+	stage = s;
+	StageState = 0;
+}
+
+void Saturn::DoLaunch(double simt)
+
+{
+	MissionTime = 0;
+	SetLiftoffLight();
+
+	SetStage(LAUNCH_STAGE_ONE);
+
+	//
+	// Tell the AGC that we've lifted off.
+	//
+
+	agc.Liftoff(simt);
+
+	//
+	// Set full thrust.
+	//
+
+	SetThrusterGroupLevel(thg_main, 1.0);
+
+	if (LaunchS.isValid() && !LaunchS.isPlaying()){
+		LaunchS.play(NOLOOP,255);
+		LaunchS.done();
+	}
+}
+
+void Saturn::GenericTimestep(double simt)
+
+{
+	//
+	// Update mission time.
+	//
+
+	if (GenericFirstTimestep) {
+		//
+		// Do any generic setup.
+		//
+
+		if (CabinFansActive()) {
+			CabinFanSound();
+		}
+
+		GenericFirstTimestep = false;
+	}
+
+	MissionTime = MissionTime + oapiGetSimStep();
+
+	//
+	// Reduce jostle.
+	//
+
+	ViewOffsetx *= 0.95;
+	ViewOffsety *= 0.95;
+	ViewOffsetz *= 0.95;
+
+	//
+	// And update for acceleration.
+	//
+
+	double amt = fabs(aHAcc / 25.0) - 0.1;
+	if (amt > 0.25)
+		amt = 0.25;
+
+	if (amt > 0)
+		JostleViewpoint(amt);
+
+	VECTOR3 RVEL = _V(0.0,0.0,0.0);
+	GetRelativeVel(GetGravityRef(),RVEL);
+
+	double velMS = sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z);
+
+	actualVEL = (velMS / 1000 * 3600);
+	actualALT = GetAltitude();
+
+	actualFUEL = ((GetFuelMass()*100)/GetMaxFuelMass());
+
+	double aSpeed, DV, aALT, DVV, DVA;
+
+	aSpeed = actualVEL/3600*1000;
+	aALT = actualALT;
+
+	dTime = simt - aTime;
+	if(dTime > 0.1) {
+		DV= aSpeed - SPEEDN1;
+		aHAcc= (DV / dTime);
+		DVV = aALT - ALTN1;
+		aVSpeed = DVV / dTime;
+		DVA = aVSpeed- VSPEEDN1;
+
+		aVAcc = (DVA/dTime);
+		aTime = simt;
+		VSPEEDN1 = aVSpeed;
+		ALTN1 = aALT;
+		SPEEDN1= aSpeed;
+	}
+
+	//
+	// Update parameters for AGC processing? Should these be here?
+	//
+
+	agc.SetFuel(actualFUEL);
+	agc.SetRVel(velMS);
+
+	SystemsTimestep(simt);
+
+	if (stage < CSM_LEM_STAGE && AutopilotActive())
+	{
+		SetAutopilotLight();
+	}
+	else{
+		ClearAutopilotLight();
+	}
+
+	if(stage < LAUNCH_STAGE_SIVB) {
+		if (GetNavmodeState(NAVMODE_KILLROT)) {
+			DeactivateNavmode(NAVMODE_KILLROT);
+		}
+	}
+
+	//
+	// We die horribly if you set 100x or higher acceleration during launch.
+	//
+
+	if (stage >= LAUNCH_STAGE_ONE && stage <= LAUNCH_STAGE_SIVB &&
+		oapiGetTimeAcceleration() > 10.0) {
+		oapiSetTimeAcceleration(10.0);
+	}
+
+	//
+	// And you'll also die horribly if you set time acceleration at all in the
+	// early parts of the launch.
+	//
+
+	if (stage == LAUNCH_STAGE_ONE && MissionTime < 50 &&
+		oapiGetTimeAcceleration() > 1.0) {
+		oapiSetTimeAcceleration(1.0);
+	}
+
+	//
+	// Only the SM has linear thrusters.
+	//
+
+	if (stage != CSM_LEM_STAGE) {
+		if (GetAttitudeMode() == ATTMODE_LIN){
+			SetAttitudeMode(ATTMODE_ROT);
+		}
+	}
+
+	if (GetAltitude() < 1470) {
+		actualVEL = actualVEL-1470+GetAltitude();
+	}
+
+	if (GroundContact()) {
+		actualVEL = 0;
+	}
+
+
+
+	if (habort) {
+		double altabort;
+		int getIT;
+
+		getIT = oapiGetAltitude(habort,&altabort);
+
+		if (altabort < 100 && getIT > 0){
+			oapiDeleteVessel(habort,GetHandle());
+			habort = NULL;
+		}
+	}
+
+}
+
+void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
+{
+	VECTOR3 rofs, rvel = {vs->rvel.x, vs->rvel.y, vs->rvel.z};
+
+	rofs.x = 0;
+	rofs.y = 0;
+	rofs.z = 0;
+
+	// Staging Velocity represents
+	// Need to do some transforms to get the correct vector to eject the stage
+
+	vessel->Local2Rel (ofs, vs->rpos);
+	vessel->GlobalRot (vel, rofs);
+	vs->rvel.x = rvel.x+rofs.x;
+	vs->rvel.y = rvel.y+rofs.y;
+	vs->rvel.z = rvel.z+rofs.z;
+}
+
+int Saturn::clbkConsumeDirectKey(char *keystate)
+
+{
+	if (KEYMOD_SHIFT (keystate))
+	{
+		return 0;
+	}
+	else if (KEYMOD_CONTROL (keystate))
+	{
+	}
+	else
+	{
+		if (KEYDOWN (keystate, OAPI_KEY_R)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_R, 1.0)) {
+				{
+					if (stage == CM_ENTRY_STAGE_SEVEN && HatchOpen) {
+						bRecovery = true;
+					}
+				}
+			return 1;
+			}
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_5)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_5, 1.0)){
+				if (ActivateLEM){
+					ActivateLEM=false;
+				}
+				return 1;
+			}
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_S)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_S, 1.0)){
+				if (!autoDISP){
+					autoDISP = true;
+				}else{
+					autoDISP = false;
+				}
+			return 1;
+			}
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_9) && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_9, 1.0)) {
+				viewpos = SATVIEW_DOCK;
+				SetView();
+			}
+			return 1;
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_8)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_8, 1.0)) {
+				viewpos = SATVIEW_DMP;
+				SetView();
+			}
+			return 1;
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_7)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_7, 1.0)) {
+				viewpos = SATVIEW_CMP;
+				SetView();
+			}
+			return 1;
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_6)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_6, 1.0)) {
+				viewpos = SATVIEW_CDR;
+				SetView();
+			}
+			return 1;
+		}
+
+	}
+	return 0;
+}
+
+void Saturn::AddRCSJets(double TRANZ,double MaxThrust)
+{
+	int i;
+	const double ATTCOOR = 0;
+	const double ATTCOOR2 = 2.15;
+	const double ATTZ = 2.85;
+	const double TRANCOOR = 0;
+	const double TRANCOOR2 = 0.1;
+	const double ATTWIDTH=.2;
+	const double ATTHEIGHT=.5;
+	const double TRANWIDTH=.2;
+	const double TRANHEIGHT=1;
+	const double RCSOFFSET=0.6;
+	const double RCSOFFSET2=0.10;
+	const double RCSOFFSETM=0.30;
+	const double RCSOFFSETM2=0.40;
+
+	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,-0.1,1),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(0.1,0,1),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(-0.1,0,1),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET), _V(0,-0.1,-1),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET), _V(0.1,0,-1),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET), _V(-0.1,0,-1),MaxThrust, ph_rcs0,15000, 15000);
+
+	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
+	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
+	CreateThrusterGroup (th_att_rot,   2, THGROUP_ATT_PITCHDOWN);
+	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_PITCHUP);
+	CreateThrusterGroup (th_att_rot+4,   2, THGROUP_ATT_YAWRIGHT);
+	CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
+
+	for (i = 0; i < 8; i++)
+		AddExhaust (th_att_lin[i], 1.2, 0.18, SMExhaustTex);
+
+	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(-0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[10]=CreateThruster (_V(-0.2,ATTCOOR2,-TRANZ-RCSOFFSETM), _V(1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[11]=CreateThruster (_V(-0.2,-ATTCOOR2,-TRANZ-RCSOFFSETM2), _V(1,0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+
+	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[14]=CreateThruster (_V(0.2,ATTCOOR2,-TRANZ-RCSOFFSETM2), _V(-1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[15]=CreateThruster (_V(0.2,-ATTCOOR2,-TRANZ-RCSOFFSETM), _V(-1,0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+
+	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,-0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[18]=CreateThruster (_V(ATTCOOR2,-0.2,-TRANZ-RCSOFFSETM2), _V(-0.1,1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[19]=CreateThruster (_V(-ATTCOOR2,-0.2,-TRANZ-RCSOFFSETM), _V(-0.1,1,0),MaxThrust, ph_rcs0,15000, 15000);
+
+	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[22]=CreateThruster (_V(ATTCOOR2,0.2,-TRANZ-RCSOFFSETM), _V(-0.1,-1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[23]=CreateThruster (_V(-ATTCOOR2,0.2,-TRANZ-RCSOFFSETM2), _V(0.1,-1,0),MaxThrust, ph_rcs0,15000, 15000);
+
+	CreateThrusterGroup (th_att_lin+8,   4, THGROUP_ATT_RIGHT);
+	CreateThrusterGroup (th_att_lin+12, 4, THGROUP_ATT_LEFT);
+	CreateThrusterGroup (th_att_lin+16,   4, THGROUP_ATT_UP);
+	CreateThrusterGroup (th_att_lin+20,   4, THGROUP_ATT_DOWN);
+	CreateThrusterGroup (th_att_rot+8,   8, THGROUP_ATT_BANKLEFT);
+	CreateThrusterGroup (th_att_rot+16,   8, THGROUP_ATT_BANKRIGHT);
+
+	for (i = 8; i < 24; i++)
+		AddExhaust (th_att_rot[i], 1.2, 0.18, SMExhaustTex);
+}
+
+void Saturn::AddRCS_S4B()
+
+{
+	const double ATTCOOR = -10;
+	const double ATTCOOR2 = 3.61;
+	const double TRANCOOR = 0;
+	const double TRANCOOR2 = 0.1;
+	const double TRANZ=-2.1-STG2O;
+	const double ATTWIDTH=.2;
+	const double ATTHEIGHT=.5;
+	const double TRANWIDTH=.2;
+	const double TRANHEIGHT=1;
+	const double RCSOFFSET=0.75;
+	const double RCSOFFSETM=0.30;
+	const double RCSOFFSETM2=0.47;
+	const double RCSX=0.35;
+	VECTOR3 m_exhaust_pos2= {0,ATTCOOR2,TRANZ};
+	VECTOR3 m_exhaust_pos3= {0,-ATTCOOR2,TRANZ};
+	VECTOR3 m_exhaust_pos4= {-ATTCOOR2,0,TRANZ};
+	VECTOR3 m_exhaust_pos5= {ATTCOOR2,0,TRANZ};
+	VECTOR3 m_exhaust_ref2 = {0,0.1,-1};
+	VECTOR3 m_exhaust_ref3 = {0,-0.1,-1};
+	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
+	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
+
+	th_att_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.15), _V(0, -1,0), 20740.0, ph_3rd,5000000, 4000000);
+	th_att_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.15), _V(0,1,0),20740.0, ph_3rd,5000000, 4000000);
+
+	AddExhaust (th_att_rot[0], 0.6, 0.078);
+	AddExhaust (th_att_rot[1], 0.6, 0.078);
+	CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
+	CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
+
+
+	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
+	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
+
+	AddExhaust (th_att_rot[2], 0.6, 0.078);
+	AddExhaust (th_att_rot[3], 0.6, 0.078);
+	AddExhaust (th_att_rot[4], 0.6, 0.078);
+	AddExhaust (th_att_rot[5], 0.6, 0.078);
+	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_BANKLEFT);
+	CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
+
+
+	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
+
+	AddExhaust (th_att_rot[6], 0.6, 0.078);
+	AddExhaust (th_att_rot[7], 0.6, 0.078);
+	AddExhaust (th_att_rot[8], 0.6, 0.078);
+	AddExhaust (th_att_rot[9], 0.6, 0.078);
+
+	CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
+	CreateThrusterGroup (th_att_rot+8, 2, THGROUP_ATT_YAWRIGHT);
+
+	//
+	// APS thrusters are only 320N (72 pounds) thrust
+	//
+
+	th_att_lin[0] = CreateThruster (_V(0,ATTCOOR2-0.15,TRANZ-.25), _V(0,0,1), 320.0, ph_3rd,250000, 240000);
+	th_att_lin[1] = CreateThruster (_V(0,-ATTCOOR2+.15,TRANZ-.25), _V(0,0,1), 320.0, ph_3rd,250000, 240000);
+	AddExhaust (th_att_lin[0], 7, 0.15);
+	AddExhaust (th_att_lin[1], 7, 0.15);
+
+	thg_aps = CreateThrusterGroup (th_att_lin,   2, THGROUP_ATT_FORWARD);
+}
+
+// ==============================================================
+// DLL entry point
+// ==============================================================
+
+BOOL WINAPI DllMain (HINSTANCE hModule,
+					 DWORD ul_reason_for_call,
+					 LPVOID lpReserved)
+{
+	switch (ul_reason_for_call) {
+	case DLL_PROCESS_ATTACH:
+		SetupgParam(hModule);
+		break;
+
+	case DLL_PROCESS_DETACH:
+		DeletegParam();
+		break;
+	}
+	return TRUE;
+}
+
+void Saturn::LaunchCountdown(double simt)
+{
+	if (GetEngineLevel(ENGINE_MAIN) > 0 && MissionTime <= (-8.9)) {
+		SetThrusterGroupLevel(thg_main, 0);
+	}
+
+	if (oapiGetTimeAcceleration() > 100)
+		oapiSetTimeAcceleration(100);
+
+	if (MissionTime >= 0) {
+		DoLaunch(simt);
+		return;
+	}
+
+	switch (StageState) {
+
+	case 0:
+		if (MissionTime >= -((4 * 60) + 10)) {
+			//
+			// Engine lights on.
+			//
+
+			for (int i = 0; i < 5; i++) {
+				ENGIND[i] = true;
+			}
+			StageState++;
+		}
+		break;
+
+	case 1:
+
+		//
+		// Reset time acceleration to normal at
+		// 20 seconds, and reconnect the fuel to
+		// the main engines.
+		//
+
+		if (MissionTime >= -20.0) {
+			oapiSetTimeAcceleration (1);
+			for (int i = 0; i < 5; i++) {
+				SetThrusterResource(th_main[i], ph_1st);
+			}
+			StageState++;
+		}
+		break;
+
+	case 2:
+
+		//
+		// Play the countdown sound at 10 seconds,
+		//
+
+		if (MissionTime >= -10.9) {
+			if (!UseATC && Scount.isValid()) {
+				Scount.play();
+				Scount.done();
+			}
+			StageState++;
+		}
+		break;
+
+	case 3:
+		if (MissionTime >= -8.9) {
+			StageState++;
+		}
+		break;
+
+	case 4:
+		//
+		// Build up engine thrust. Slower at first so we don't
+		// leave the ground before we should.
+		//
+
+		double thrst;
+
+		if (MissionTime > (-1.0)) {
+			thrst = 0.7 + (0.3 * (MissionTime + 1.0));
+
+			//
+			// Engine lights off.
+			//
+
+			for (int i = 0; i < 5; i++) {
+				ENGIND[i] = false;
+			}
+		}
+		else {
+			thrst = (0.7 / 8.9) * (MissionTime + 8.9);
+		}
+		SetThrusterGroupLevel(thg_main, thrst);
+
+
+		double amt = (thrst) * 0.1;
+		JostleViewpoint(amt);
+
+		break;
+	}
+}
+
+void Saturn::GenericTimestepStage(double simt)
+
+{
+	//
+	// Do stage-specific processing.
+	//
+
+	switch (stage) {
+
+	case PRELAUNCH_STAGE:
+		LaunchCountdown(simt);
+		break;
+
+	case CM_STAGE:
+		if (GetAtmPressure() > 38000)
+			StageEight(simt);
+		else
+			StageSeven(simt);
+		break;
+
+	case CM_ENTRY_STAGE:
+		if (GetAtmPressure() > 37680)
+			StageEight(simt);
+		break;
+
+	case CM_ENTRY_STAGE_TWO:
+		if (GetAtmPressure() > 39000) {
+			SetChuteStage1();
+			LAUNCHIND[3] = true;
+			SetStage(CM_ENTRY_STAGE_THREE);
+		}
+		break;
+
+	case CM_ENTRY_STAGE_THREE:
+		if (GetAtmPressure() > 66000) {
+			SetChuteStage2();
+			SetStage(CM_ENTRY_STAGE_FOUR);
+		}
+		break;
+
+	case CM_ENTRY_STAGE_FOUR:
+		if (GetAtmPressure() > 68000) {
+			SetChuteStage3();
+			SetStage(CM_ENTRY_STAGE_FIVE);
+		}
+		break;
+
+	case CM_ENTRY_STAGE_FIVE:
+		if (GetAtmPressure() > 69000) {
+			SetChuteStage4();
+			SetStage(CM_ENTRY_STAGE_SIX);
+			LAUNCHIND[5] = true;
+		}
+		break;
+
+	case CM_ENTRY_STAGE_SIX:
+		if (GetAltitude() < 2) {
+			SplashS.play(NOLOOP, 180);
+			SplashS.done();
+			SetSplashStage();
+			SetStage(CM_ENTRY_STAGE_SEVEN);
+		}
+		break;
+
+	case CM_ENTRY_STAGE_SEVEN:
+		if(RPswitch13 && !HatchOpen){
+			bToggleHatch = true;
+		}
+		else if(!RPswitch13 && HatchOpen){
+			bToggleHatch = true;
+		}
+		if (RPswitch14 && HatchOpen){
+			bRecovery = true;
+		}
+
+		if (!Swater.isPlaying())
+			Swater.play(LOOP,190);
+
+		if (bToggleHatch){
+			ToggelHatch2();
+			bToggleHatch=false;
+		}
+
+		if (bRecovery){
+			SetRecovery();
+			bRecovery = false;
+			soundlib.LoadSound(Swater, WATERLOOP_SOUND);
+			SetStage(CM_RECOVERY_STAGE);
+		}
+		break;
+	}
+}
+
+void Saturn::GenericLoadStateSetup()
+
+{
+	//
+	// Some switches only work in the CSM/LEM stage. Disable them
+	// otherwise.
+	//
+
+	if (stage != CSM_LEM_STAGE) {
+		LPswitch5.SetActive(false);
+	}
+	else {
+		LPswitch5.SetActive(true);
+	}
+
+	//
+	// Disable cabin fans.
+	//
+
+	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
+
+	//
+	// We do our own countdown, so ignore the standard one.
+	//
+
+	if (!UseATC)
+		soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
+
+	//
+	// Load mission-based sound files. Some of these are just being
+	// preloaded here for the CSM computer.
+	//
+
+	char MissionName[24];
+
+	_snprintf(MissionName, 23, "Apollo%d", ApolloNo);
+	soundlib.SetSoundLibMissionPath(MissionName);
+
+	//
+	// Set up options for prelaunch stage.
+	//
+
+	if (MissionTime < 0) {
+		agc.SetBurnTime(0);
+
+		//
+		// Open the countdown sound file.
+		//
+
+		if (!UseATC) {
+			soundlib.LoadMissionSound(Scount, LAUNCH_COUNT_10_SOUND, DEFAULT_LAUNCH_COUNT_SOUND);
+			soundlib.LoadMissionSound(LaunchS, LAUNCH_SOUND, LAUNCH_SOUND);
+			Scount.setFlags(SOUNDFLAG_1XORLESS);
+			LaunchS.setFlags(SOUNDFLAG_1XORLESS);
+		}
+	}
+
+	//
+	// Only the CSM and LEM have translational thrusters, so disable the message
+	// telling us that they're being switched in other stages.
+	//
+
+	if (stage != CSM_LEM_STAGE) {
+		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
+	}
+	else {
+		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
+	}
+
+	if (stage < PRELAUNCH_STAGE) {
+		dsky.BlankAll();
+	}
+
+	if (stage < LAUNCH_STAGE_TWO) {
+		soundlib.LoadMissionSound(SShutS, SI_CUTOFF_SOUND, SISHUTDOWN_SOUND);
+	}
+
+	if (stage < LAUNCH_STAGE_TWO_TWR_JET) {
+		soundlib.LoadSound(TowerJS, TOWERJET_SOUND);
+	}
+
+	if (stage < STAGE_ORBIT_SIVB) {
+
+		//
+		// We'll do our own radio playback during launch.
+		//
+
+		if (!UseATC)
+			soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
+
+		soundlib.LoadMissionSound(SwindowS, WINDOW_SOUND, POST_TOWER_JET_SOUND);
+		soundlib.LoadMissionSound(S2ShutS, SII_CUTOFF_SOUND, SIISHUTDOWN_SOUND);
+		soundlib.LoadMissionSound(S4CutS, GO_FOR_ORBIT_SOUND, SIVBSHUTDOWN_SOUND);
+	}
+
+	if (stage < CSM_LEM_STAGE) {
+		soundlib.LoadSound(SepS, SEPMOTOR_SOUND);
+	}
+
+	if (stage == CM_RECOVERY_STAGE)
+	{
+		soundlib.LoadSound(Swater, WATERLOOP_SOUND);
+	}
+}
+
+void Saturn::UllageSM(OBJHANDLE hvessel,double gaz1, double time)
+
+{
+	if (ignition_SMtime == 0 && !SMSep) {
+		setupSM(hvessel);
+		ignition_SMtime=time;
+		SMSep = true;
+	}
+
+	VESSEL *stg1vessel = oapiGetVesselInterface(hvessel);
+
+	if (gaz1 >0) {
+		stg1vessel->SetAttitudeLinLevel(2,-1);
+		if (time > ignition_SMtime+5){
+			stg1vessel->SetAttitudeRotLevel(2,-1);
+		}
+		if (time > ignition_SMtime+7){
+			stg1vessel->SetAttitudeRotLevel(2,0);
+		}
+	}
+	else {
+		stg1vessel->SetAttitudeLinLevel(2,0);
+		stg1vessel->SetAttitudeRotLevel(2,0);
+		stg1vessel->SetAttitudeRotLevel(1,0);
+	}
+}
+
+bool Saturn::CheckForLaunchShutdown()
+
+{
+	//
+	// Shut down the engine when we're close to the desired apogee and perigee.
+	//
+
+	GetElements(elemSaturn1B, refSaturn1B);
+
+	double apogee = ((elemSaturn1B.a * (1.0 + elemSaturn1B.e)) / 1000) - ERADIUS;
+	double perigee = ((elemSaturn1B.a * (1.0 - elemSaturn1B.e)) / 1000) - ERADIUS;
+
+	if ((refSaturn1B - refPREV) >= 0 &&
+		(stage == LAUNCH_STAGE_SIVB) &&
+		((elemSaturn1B.e > elemPREV.e && elemSaturn1B.e < 0.03) ||
+		(apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee())) &&
+		(SCswitch||CMCswitch))
+	{
+		if (GetEngineLevel(ENGINE_MAIN) > 0){
+			SetEngineLevel(ENGINE_MAIN,0);
+			if (oapiGetTimeAcceleration() > 1.0)
+				oapiSetTimeAcceleration(1.0);
+
+			S4CutS.play(NOLOOP, 255);
+			S4CutS.done();
+
+			ActivateNavmode(NAVMODE_KILLROT);
+
+			agc.LaunchShutdown();
+		}
+		return true;
+	}
+
+	elemPREV = elemSaturn1B;
+	refPREV = refSaturn1B;
+
+	return false;
+}
+
+void Saturn::SetGenericStageState()
+
+{
+	switch(stage) {
+
+	case CM_STAGE:
+		SetCSMStage();
+		SetReentryStage();
+		break;
+
+	case CM_ENTRY_STAGE_TWO:
+		SetCSMStage();
+		SetReentryStage();
+		break;
+
+	case CM_ENTRY_STAGE_THREE:
+		SetCSMStage();
+		SetChuteStage1();
+		break;
+
+	case CM_ENTRY_STAGE_FOUR:
+		SetCSMStage();
+		SetChuteStage2();
+		break;
+
+	case CM_ENTRY_STAGE_FIVE:
+		SetCSMStage();
+		SetChuteStage3();
+		break;
+
+	case CM_ENTRY_STAGE_SIX:
+		SetCSMStage();
+		SetChuteStage4();
+		break;
+
+	case CM_ENTRY_STAGE_SEVEN:
+		SetCSMStage();
+		SetSplashStage();
+		break;
+
+	case CM_RECOVERY_STAGE:
+		SetRecovery();
+		break;
+
+	case CM_ENTRY_STAGE:
+		SetCSMStage();
+		SetReentryStage();
+		break;
+
+	case CSM_ABORT_STAGE:
+		//SetCSMStage();
+		SetAbortStage();
+		break;
+
+	}
+}
+
+void Saturn::SIVBBoiloff()
+
+{
+	if (Realism < 2)
+		return;
+
+	//
+	// The SIVB stage boils off a small amount of fuel while in orbit.
+	//
+	// For the time being we'll ignore any thrust created by the venting
+	// of this fuel.
+	//
+
+	double FuelMass = GetPropellantMass(ph_3rd) * 0.99998193;
+	SetPropellantMass(ph_3rd, FuelMass);
+}
+
+//
+// Set thruster state based on panel switches.
+//
+
+void Saturn::SetSIVBThrusters()
+
+{
+	if (GetNavmodeState(NAVMODE_KILLROT)){
+		if (GetThrusterLevel(th_att_rot[2]) == 0 &&
+			GetThrusterLevel(th_att_rot[4]) == 0 &&
+			!RPswitch1 && !RPswitch2){
+			DeactivateNavmode(NAVMODE_KILLROT);
+		}
+	}
+
+	if(RPswitch1) {
+		SetThrusterResource(th_att_rot[0],ph_3rd);
+		SetThrusterResource(th_att_rot[1],ph_3rd);
+	}
+	else{
+		SetThrusterResource(th_att_rot[0],NULL);
+		SetThrusterResource(th_att_rot[1],NULL);
+	}
+
+	if(RPswitch3){
+		SetThrusterResource(th_att_rot[2],ph_3rd);
+		SetThrusterResource(th_att_rot[3],ph_3rd);
+		SetThrusterResource(th_att_rot[4],ph_3rd);
+		SetThrusterResource(th_att_rot[5],ph_3rd);
+	}
+	else{
+		SetThrusterResource(th_att_rot[2],NULL);
+		SetThrusterResource(th_att_rot[3],NULL);
+		SetThrusterResource(th_att_rot[4],NULL);
+		SetThrusterResource(th_att_rot[5],NULL);
+	}
+
+	if(RPswitch2){
+		SetThrusterResource(th_att_rot[7],ph_3rd);
+		SetThrusterResource(th_att_rot[6],ph_3rd);
+		SetThrusterResource(th_att_rot[8],ph_3rd);
+		SetThrusterResource(th_att_rot[9],ph_3rd);
+	}
+	else{
+		SetThrusterResource(th_att_rot[6],NULL);
+		SetThrusterResource(th_att_rot[7],NULL);
+		SetThrusterResource(th_att_rot[8],NULL);
+		SetThrusterResource(th_att_rot[9],NULL);
+	}
+}
+
+//
+// Thrusters can't turn more than five degrees from straight ahead. Check for that,
+// and alarm if they try to go beyond it.
+//
+
+void Saturn::LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir)
+
+{
+	VECTOR3 realdir = dir;
+	bool alarm = false;
+
+	if (realdir.x > 0.1) {
+		realdir.x = 0.1;
+		alarm = true;
+	}
+
+	if (realdir.x < (-0.1)) {
+		realdir.x = -0.1;
+		alarm = true;
+	}
+
+	if (realdir.y > 0.1) {
+		realdir.y = 0.1;
+		alarm = true;
+	}
+
+	if (realdir.y < (-0.1)) {
+		realdir.y = (-0.1);
+		alarm = true;
+	}
+
+	if (alarm && autopilot) {
+		MasterAlarm();
+	}
+
+	SetThrusterDir(th, realdir);
+}
+
+void Saturn::LoadDefaultSounds()
+
+{
+	//
+	// Remember that you can't load mission sounds at this point as the
+	// mission path hasn't been set up!
+	//
+
+	soundlib.LoadSound(SeparationS, "Separation.wav");
+	soundlib.LoadSound(Sctdw, COUNT10_SOUND);
+	soundlib.LoadSound(Sclick, CLICK_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(Bclick, BUTTON_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(Gclick, GUARD_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(Psound, PROBE_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(CabinFans, CMCABIN_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(SMasterAlarm, MASTERALARM_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(SplashS, "Splash.wav");
+	soundlib.LoadSound(StageS, "Stagesep.wav");
+	soundlib.LoadSound(SMJetS, "SMJetison.wav");
+	soundlib.LoadSound(CrashBumpS, "Crash.wav");
+
+	Sctdw.setFlags(SOUNDFLAG_1XONLY);
+}
+
+void Saturn::StageOrbitSIVB(double simt)
+
+{
+	//
+	// Post-shutdown, pre-TLI code goes here.
+	//
+	AttitudeLaunchSIVB();
+	if(TLIswitch && TLICapableBooster) {
+		(void) SIVBStart();
+	}
+
+	if (GetEngineLevel(ENGINE_MAIN) > 0.65 ){
+		LAUNCHIND[7] = true;
+		ENGIND[5] = true;
+	}
+	else{
+		ENGIND[5] = false;
+		LAUNCHIND[7] = false;
+	}
+
+	if(TLICapableBooster){
+		switch (StageState) {
+
+		case 0:
+
+			//
+			// Enable random ATC chatter.
+			//
+
+			if (!UseATC)
+				soundlib.SoundOptionOnOff(PLAYRADIOATC, TRUE);
+
+			if (Crewed || !SIVBBurn) {
+				StageState = 100;
+			}
+			else {
+				NextMissionEventTime = SIVBBurnStart - 100.0;
+				StageState++;
+			}
+			break;
+
+		case 1:
+			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+				ActivateS4RCS();
+				StageState++;
+			}
+			break;
+
+		case 2:
+			ActivateNavmode(NAVMODE_PROGRADE);
+			NextMissionEventTime = SIVBBurnStart;
+			StageState++;
+			break;
+
+		case 3:
+			if (MissionTime >= NextMissionEventTime) {
+				ActivateNavmode(NAVMODE_PROGRADE);
+				SIVBStart();
+				StageState = 100;
+			}
+			break;
+
+		case 100:
+			if (bStartS4B && TLICapableBooster) {
+				SetAttitudeLinLevel(2,1);
+
+				//
+				// We'll treat the switch at the command to start the ullage engines.
+				//
+
+				NextMissionEventTime = MissionTime + 1.0;
+				StageState++;
+			}
+
+			//
+			// Fuel boiloff every ten seconds.
+			//
+
+			if (MissionTime >= NextMissionEventTime) {
+				if(TLICapableBooster){
+					SIVBBoiloff();
+				}
+				NextMissionEventTime = MissionTime + 10.0;
+			}
+			break;
+
+		case 101:
+			//
+			// Start ullage engines after 1 second.
+			//
+
+			if (MissionTime >= NextMissionEventTime) {
+				SetThrusterGroupLevel(thg_aps, 1.0);
+				SepS.play(LOOP,255);
+				NextMissionEventTime += 16.7;
+				StageState++;
+			}
+			break;
+
+		case 102:
+
+			//
+			// Ullage cutoff after 17.7 seconds.
+			//
+
+			if (MissionTime >= NextMissionEventTime) {
+				SetThrusterGroupLevel(thg_aps, 0.0);
+				SepS.stop();
+				SepS.done();
+				NextMissionEventTime += 4.8;
+				StageState++;
+			}
+			break;
+
+		case 103:
+			if (MissionTime >= NextMissionEventTime) {
+				if (Realism)
+					SetThrusterResource(th_main[0], ph_3rd);
+				LastMissionEventTime = NextMissionEventTime;
+				NextMissionEventTime += 2.5;
+				StageState++;
+			}
+			break;
+
+		case 104:
+
+			//
+			// Engine ramps up to 90% thrust from 22.5 to 25 seconds.
+			//
+			if (MissionTime < NextMissionEventTime) {
+				double deltat = (MissionTime - LastMissionEventTime);
+				SetThrusterLevel(th_main[0], (0.9 * deltat) * 0.4);
+			}
+			else {
+				LastMissionEventTime = NextMissionEventTime;
+				NextMissionEventTime += 0.5;
+				StageState++;
+			}
+			break;
+
+		case 105:
+
+			//
+			// Then up to 100%.
+			//
+
+			if (MissionTime < NextMissionEventTime) {
+				double deltat = (MissionTime - LastMissionEventTime);
+				SetThrusterLevel(th_main[0], 0.9 + (deltat * 0.2));
+			}
+			else {
+				NextMissionEventTime += 0.5;
+				StageState++;
+			}
+			break;
+
+		case 106:
+
+			//
+			// Engine will be at 100% thrust after around 26 seconds.
+			//
+
+			if (MissionTime >= NextMissionEventTime) {
+				TLIswitch = false;
+				SetThrusterLevel(th_main[0], 1.0);
+				SetThrusterGroupLevel(thg_ver, 0.0);
+				bStartS4B = false;
+				SetAttitudeLinLevel(2,0);
+				if (!SIVBBurn || Crewed) {
+					StageState = 200;
+				}
+				else {
+					StageState = 150;
+				}
+			}
+			break;
+
+		//
+		// Wait for the right apogee.
+		//
+
+		case 150:
+			if (MissionTime >= NextMissionEventTime) {
+				OBJHANDLE hPlanet = GetGravityRef();
+				double prad = oapiGetSize(hPlanet);
+				double ap;
+				GetApDist(ap);
+
+				ActivateNavmode(NAVMODE_PROGRADE);
+
+				//
+				// Burn until the orbit is about right or we're out of fuel.
+				//
+
+				if ((ap >= (prad + (SIVBApogee * 1000.0))) || (actualFUEL <= 0.1)) {
+					StageState = 200;
+					SIVBBurn = false;
+					SIVBStop();
+					DeactivateNavmode(NAVMODE_PROGRADE);
+					DeactivateS4RCS();
+				}
+
+				NextMissionEventTime = MissionTime + 0.25;
+			}
+			break;
+
+		case 200:
+
+			//
+			// Wait for shutdown and disable thrust.
+			//
+
+			if (GetEngineLevel(ENGINE_MAIN) <= 0) {
+				if (Realism)
+					SetThrusterResource(th_main[0], NULL);
+				NextMissionEventTime = MissionTime + 10.0;
+				StageState++;
+			}
+			break;
+
+		case 201:
+
+			if (Realism < 2)
+				StageState = 100;
+			else
+				StageState++;
+			break;
+
+		case 202:
+
+			//
+			// Engine is now dead. Just boil off the remaining
+			// fuel.
+			//
+
+			if (MissionTime >= NextMissionEventTime) {
+				SIVBBoiloff();
+				NextMissionEventTime = MissionTime + 10.0;
+			}
+			break;
+		}
+	}
+	else{
+		if (GetEngineLevel(ENGINE_MAIN) <= 0) {
+			if (Realism)
+				SetThrusterResource(th_main[0], NULL);
+		}
+	}
+
+	if (thg_ver && GetThrusterGroupLevel(thg_ver) > 0) {
+		LAUNCHIND[6] = true;
+	}
+	else {
+		LAUNCHIND[6] = false;
+	}
+
+	//
+	// For unmanned launches, seperate the CSM on timer.
+	//
+
+	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime)) {
+		SlowIfDesired();
+		bManualSeparate = true;
+		CSMSepSet = false;
+	}
+
+	if (Sswitch5) {
+		bManualSeparate = true;
+	}
+
+	if (bManualSeparate || bAbort)
+	{
+		bManualSeparate = false;
+		SeparateStage(stage);
+		SetStage(CSM_LEM_STAGE);
+		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
+		if (bAbort) {
+			SPSswitch.SetState(true);
+			ABORT_IND = true;
+			SetThrusterGroupLevel(thg_main, 1.0);
+			bAbort = false;
+			autopilot= false;
+		}
+		return;
+	}
+
+	SetSIVBThrusters();
+}
+
+void Saturn::SlowIfDesired()
+
+{
+	if (!Crewed && AutoSlow && (oapiGetTimeAcceleration() > 1.0)) {
+		oapiSetTimeAcceleration(1.0);
+	}
+}
+
+
+//
+// Most of this calculation code is lifted from the Soyuz guidance MFD.
+//
+
+extern double AbsOfVector(const VECTOR3 &Vec);
+
+double Saturn::CalculateApogeeTime()
+
+{
+	OBJHANDLE hSetGbody;
+	double GbodyMass, GbodySize;
+	double p, v, R, RDotV, Mu_Planet, J2000, E, Me, T, tsp;
+	double TtPeri, TtApo;
+	double OrbitApo;
+	VECTOR3 RelPosition, RelVelocity;
+	ELEMENTS Elements;
+
+	// Planet parameters
+	hSetGbody = GetApDist(OrbitApo);
+	GbodyMass = oapiGetMass(hSetGbody);
+	GbodySize = oapiGetSize(hSetGbody) / 1000;
+	Mu_Planet = GK * GbodyMass;
+
+	// Get eccentricity and orbital radius
+	GetElements(Elements, J2000);
+	GetRelativePos(hSetGbody, RelPosition);
+	GetRelativeVel(hSetGbody, RelVelocity);
+
+	R = AbsOfVector(RelPosition) / 1000;
+
+	// Calculate semi-latus rectum and true anomaly
+	p = Elements.a/1000 *(1 - Elements.e*Elements.e);
+	v = acos((1/Elements.e)*(p/R - 1));
+
+	RDotV = dotp(RelVelocity, RelPosition);
+	if (RDotV < 0)
+	{
+		v = 2*PI - v;
+	}
+
+	// Determine the time since periapsis
+	//   - Eccentric anomaly
+	E = 2 * atan(sqrt((1-Elements.e)/(1+Elements.e))*tan(v/2));
+	//   - Mean anomaly
+	Me = E - Elements.e*sin(E);
+	//   - Period of orbit
+	T = 2*PI*sqrt((Elements.a*Elements.a*Elements.a/1e9)/Mu_Planet);
+
+	// Time since periapsis is
+	tsp = Me/(2*PI)*T;
+
+	// Time to next periapsis & apoapsis
+	TtPeri = T - tsp;
+	if (RDotV < 0) {
+		TtPeri = -1 * tsp;
+	}
+
+	if (TtPeri > (T / 2)) {
+		TtApo = fabs((T/2) - TtPeri);
+	}
+	else {
+		TtApo = fabs(TtPeri + (T/2));
+	}
+
+	return TtApo;
+}

@@ -1,0 +1,1408 @@
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2005 Jean-Luc Rocca-Serra, Mark Grant
+
+  ORBITER vessel module: generic Saturn base class
+  Saturn mesh code
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************** Revision History ****************************
+  *	$Log$
+  **************************************************************************/
+
+#include "Orbitersdk.h"
+#include <stdio.h>
+#include <math.h>
+#include "OrbiterSoundSDK3.h"
+#include "soundlib.h"
+
+#include "resource.h"
+
+#include "nasspdefs.h"
+#include "nasspsound.h"
+
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "dsky.h"
+#include "csmcomputer.h"
+
+#include "saturn.h"
+
+MESHHANDLE hSM;
+MESHHANDLE hSMhga;
+MESHHANDLE hCM;
+MESHHANDLE hCM2;
+MESHHANDLE hCMP;
+MESHHANDLE hCREW;
+MESHHANDLE hFHO;
+MESHHANDLE hFHC;
+MESHHANDLE hCM2B;
+MESHHANDLE hprobe;
+MESHHANDLE hCMBALLOON;
+MESHHANDLE hCRB;
+MESHHANDLE hApollochute;
+MESHHANDLE hCMB;
+MESHHANDLE hChute30;
+MESHHANDLE hChute31;
+MESHHANDLE hChute32;
+MESHHANDLE hFHC2;
+MESHHANDLE hsat5tower;
+MESHHANDLE hFHO2;
+MESHHANDLE hCMPEVA;
+
+extern double LiftCoeff (double aoa);
+
+#define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
+
+void SaturnInitMeshes()
+
+{
+	LOAD_MESH(hSM, "nSaturn1_SM");
+	LOAD_MESH(hSMhga, "nsat1SMHGA");
+	LOAD_MESH(hCM, "sat5CM");
+	LOAD_MESH(hCM2, "sat5CM2");
+	LOAD_MESH(hCMP, "SAT5CMP");
+	LOAD_MESH(hCREW, "SAT5CREW");
+	LOAD_MESH(hFHC, "SAT5HC");
+	LOAD_MESH(hFHO, "SAT5HO");
+	LOAD_MESH(hCM2B, "SAT5CM2B");
+	LOAD_MESH(hprobe, "sat5probe");
+	LOAD_MESH(hCMBALLOON, "nsat1CMBN");
+	LOAD_MESH(hCRB, "nSATURN1_CRB");
+	LOAD_MESH(hCMB, "SAT5CMB");
+	LOAD_MESH(hChute30, "Apollo_2chute");
+	LOAD_MESH(hChute31, "Apollo_3chuteEX");
+	LOAD_MESH(hChute32, "Apollo_3chuteHD");
+	LOAD_MESH(hApollochute, "Apollo_3chute");
+	LOAD_MESH(hFHC2, "SAT5HC2");
+	LOAD_MESH(hsat5tower, "sat5BPC");
+	LOAD_MESH(hFHO2, "SAT5HO2");
+	LOAD_MESH(hCMPEVA, "nSATURN1_CMP_EVA");
+}
+
+void Saturn::AddRCS_CM(double MaxThrust)
+
+{
+	UINT atthand;
+	const double ATTCOOR = 0.95;
+	const double ATTCOOR2 = 1.92;
+	const double TRANCOOR = 0;
+	const double TRANCOOR2 = 0.1;
+	const double TRANZ=-0.65;
+	const double ATTWIDTH=.15;
+	const double ATTHEIGHT=.2;
+	const double TRANWIDTH=.2;
+	const double TRANHEIGHT=.6;
+	const double RCSOFFSET=0.75;
+	const double RCSOFFSETM=0.30;
+	const double RCSOFFSETM2=0.47;
+	VECTOR3 m_exhaust_pos2= {0,ATTCOOR2,TRANZ};
+	VECTOR3 m_exhaust_pos3= {0,-ATTCOOR2,TRANZ};
+	VECTOR3 m_exhaust_pos4= {-ATTCOOR2,0,TRANZ};
+	VECTOR3 m_exhaust_pos5= {ATTCOOR2,0,TRANZ};
+	VECTOR3 m_exhaust_ref2 = {0,0.1,-1};
+	VECTOR3 m_exhaust_ref3 = {0,-0.1,-1};
+	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
+	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
+
+	//MaxThrust=120;
+
+	th_att_cm[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),120, ph_rcs1,15000, 15000);
+	th_att_cm[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),120, ph_rcs1,15000, 15000);
+	th_att_cm[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs1,15000, 15000);
+
+	CreateThrusterGroup (th_att_cm,   4, THGROUP_ATT_YAWLEFT);
+	CreateThrusterGroup (th_att_cm+4,   4, THGROUP_ATT_YAWRIGHT);
+
+	th_att_cm[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcs1,15000, 15000);
+	th_att_cm[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcs1,15000, 15000);
+	th_att_cm[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1,15000, 15000);
+
+	th_att_cm[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
+
+	CreateThrusterGroup (th_att_cm+12,   4, THGROUP_ATT_PITCHDOWN);
+	CreateThrusterGroup (th_att_cm+8,   4, THGROUP_ATT_PITCHUP);
+
+	th_att_cm[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcs1,15000, 15000);
+	th_att_cm[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcs1,15000, 15000);
+	th_att_cm[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_cm[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
+
+	CreateThrusterGroup (th_att_cm+20,   4, THGROUP_ATT_BANKLEFT);
+	CreateThrusterGroup (th_att_cm+16,   4, THGROUP_ATT_BANKRIGHT);
+
+	//Rot up
+
+	m_exhaust_pos2= _V(0.1,ATTCOOR2,TRANZ +0.05);
+	m_exhaust_ref2 = _V(0,1,1);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
+
+	//Rot down
+	m_exhaust_pos3= _V(0.1,ATTCOOR-0.2,TRANZ+1.4);
+	m_exhaust_ref3 = _V(0,1,1);
+	atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
+
+	//Rot left
+
+	m_exhaust_pos2= _V(ATTCOOR2,0.1,TRANZ);
+	m_exhaust_ref2 = _V(0.5,0.1,0);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
+
+	//Rot right
+	m_exhaust_pos2= _V(-ATTCOOR2,0.1,TRANZ);
+	m_exhaust_ref2 = _V(-0.5,0.1,0);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
+
+
+	//Roll left
+
+	m_exhaust_pos2= _V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ);
+	m_exhaust_ref2 = _V(1,-0.5,0);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
+
+	//Roll right
+	m_exhaust_pos2= _V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ);
+	m_exhaust_ref2 = _V(-1,-0.5,0);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
+}
+
+void Saturn::SetRCS_CM()
+
+{
+	if(P113switch){
+		SetThrusterResource(th_att_cm[0],ph_rcs1);
+		SetThrusterResource(th_att_cm[1],ph_rcs1);
+		SetThrusterResource(th_att_cm[2],ph_rcs1);
+		SetThrusterResource(th_att_cm[3],ph_rcs1);
+	}
+	else{
+		SetThrusterResource(th_att_cm[0],NULL);
+		SetThrusterResource(th_att_cm[1],NULL);
+		SetThrusterResource(th_att_cm[2],NULL);
+		SetThrusterResource(th_att_cm[3],NULL);
+	}
+	if(P113switch){
+		SetThrusterResource(th_att_cm[4],ph_rcs1);
+		SetThrusterResource(th_att_cm[5],ph_rcs1);
+		SetThrusterResource(th_att_cm[7],ph_rcs1);
+		SetThrusterResource(th_att_cm[6],ph_rcs1);
+	}
+	else{
+		SetThrusterResource(th_att_cm[4],NULL);
+		SetThrusterResource(th_att_cm[5],NULL);
+		SetThrusterResource(th_att_cm[6],NULL);
+		SetThrusterResource(th_att_cm[7],NULL);
+	}
+	if(P113switch){
+		SetThrusterResource(th_att_cm[8],ph_rcs1);
+		SetThrusterResource(th_att_cm[9],ph_rcs1);
+		SetThrusterResource(th_att_cm[10],ph_rcs1);
+		SetThrusterResource(th_att_cm[11],ph_rcs1);
+	}
+	else{
+		SetThrusterResource(th_att_cm[8],NULL);
+		SetThrusterResource(th_att_cm[9],NULL);
+		SetThrusterResource(th_att_cm[10],NULL);
+		SetThrusterResource(th_att_cm[11],NULL);
+	}
+}
+void Saturn::ToggelHatch()
+
+{
+	ClearMeshes();
+
+	UINT meshidx;
+	VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
+	meshidx = AddMesh (hSM, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+	AddMesh (hSMhga, &mesh_dir);
+
+	mesh_dir=_V(0,0,34.4-12.25-21.5);
+	meshidx = AddMesh (hCM, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	//Don't Forget the Hatch
+	if (HatchOpen){
+		mesh_dir =_V(0.02,1.35,34.54-12.25-21.5);
+		meshidx = AddMesh(hFHC, &mesh_dir);
+		HatchOpen = false;
+	}
+	else{
+		mesh_dir =_V(-0.7,1.75,34.85-12.25-21.5);
+		meshidx = AddMesh(hFHO, &mesh_dir);
+		HatchOpen = true;
+	}
+
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	if (dockstate <=4 ){
+		mesh_dir =_V(0,0,35.90-12.25-21.5);
+		probeidx = AddMesh (hprobe, &mesh_dir);
+	}
+}
+
+void Saturn::ToggelHatch2()
+
+{
+	ClearMeshes();
+	UINT meshidx ;
+	VECTOR3 mesh_dir=_V(0,0,-1.2);
+	if (Burned){
+		meshidx = AddMesh (hCM2B, &mesh_dir);
+	}else{
+		meshidx = AddMesh (hCM2, &mesh_dir);
+	}
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	mesh_dir=_V(0,-0.1,-0.2);
+	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,-1.35);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0.15,-1.35);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	//Don't Forget the Hatch
+	if (HatchOpen){
+		mesh_dir=_V(0.02,1.35,-1.06);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		HatchOpen= false;
+	}else{
+		mesh_dir=_V(-0.7,1.75,0.45-1.2);
+		meshidx = AddMesh (hFHO, &mesh_dir);
+		HatchOpen= true;
+	}
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+}
+
+void Saturn::ToggleEVA()
+
+{
+	UINT meshidx;
+
+	//
+	// EVA does nothing if we're unmanned.
+	//
+
+	if (!Crewed)
+		return;
+
+	ToggleEva = false;
+
+	if (EVA_IP){
+		EVA_IP =false;
+
+		ClearMeshes();
+		VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
+		AddMesh (hSM, &mesh_dir);
+		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		AddMesh (hSMhga, &mesh_dir);
+
+		mesh_dir=_V(0,0,34.4-12.25-21.5);
+		meshidx = AddMesh (hCM, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+
+		//Don't Forget the Hatch
+		mesh_dir=_V(-0.7,1.75,34.85-12.25-21.5);
+		meshidx = AddMesh (hFHO, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		HatchOpen = true;
+		if (dockstate <=4 ){
+			mesh_dir=_V(0,0,35.90-12.25-21.5);
+			probeidx = AddMesh (hprobe, &mesh_dir);
+		}
+	}
+	else{
+		EVA_IP = true;
+
+		ClearMeshes();
+		VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
+		AddMesh (hSM, &mesh_dir);
+		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		AddMesh (hSMhga, &mesh_dir);
+
+		mesh_dir=_V(0,0,34.4-12.25-21.5);
+		meshidx = AddMesh (hCM, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+
+		//Don't Forget the Hatch
+		mesh_dir =_V(-0.7,1.75,34.85-12.25-21.5);
+		meshidx = AddMesh (hFHO, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		HatchOpen= true;
+
+		if (dockstate <=4 ){
+			mesh_dir=_V(0,0,35.90-12.25-21.5);
+			probeidx=AddMesh (hprobe, &mesh_dir);
+		}
+
+		VESSELSTATUS vs1;
+		GetStatus(vs1);
+		VECTOR3 ofs1 = _V(0,0.15,34.25-12.25-21.5);
+		VECTOR3 vel1 = _V(0,0,0);
+		VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
+		Local2Rel (ofs1, vs1.rpos);
+		GlobalRot (vel1, rofs1);
+		vs1.rvel.x = rvel1.x+rofs1.x;
+		vs1.rvel.y = rvel1.y+rofs1.y;
+		vs1.rvel.z = rvel1.z+rofs1.z;
+		char VName[256]="";
+		strcpy (VName, GetName()); strcat (VName, "-EVA");
+		hEVA = oapiCreateVessel(VName,"Saturn5_EVA",vs1);
+		oapiSetFocusObject(hEVA);
+	}
+}
+
+void Saturn::SetupEVA()
+
+{
+	UINT meshidx;
+
+	if (EVA_IP){
+		EVA_IP =true;
+
+		ClearMeshes();
+		VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
+		AddMesh (hSM, &mesh_dir);
+		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		AddMesh (hSMhga, &mesh_dir);
+
+		mesh_dir=_V(0,0,34.4-12.25-21.5);
+		meshidx = AddMesh (hCM, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+
+		//Don't Forget the Hatch
+		mesh_dir=_V(-0.7,1.75,34.85-12.25-21.5);
+		meshidx = AddMesh (hFHO, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		HatchOpen = true;
+
+		if (dockstate <=4 ){
+			mesh_dir =_V(0,0,35.90-12.25-21.5);
+			probeidx = AddMesh (hprobe, &mesh_dir);
+		}
+	}
+}
+
+void Saturn::SetRecovery()
+
+{
+	ClearMeshes();
+	UINT meshidx;
+
+	VECTOR3 mesh_dir=_V(0,0,-1.2);
+	if (Burned){
+		meshidx = AddMesh (hCM2B, &mesh_dir);
+	}
+	else{
+		meshidx = AddMesh (hCM2, &mesh_dir);
+	}
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	mesh_dir=_V(-0.7,1.75,0.45-1.2);
+	meshidx = AddMesh (hFHO, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	HatchOpen = true;
+	mesh_dir =_V(0,-0.1,-0.2);
+	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	if (Crewed) {
+		mesh_dir =_V(2.7,1.8,-1.5);
+		meshidx = AddMesh (hCRB, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+	SetView(-1.35);
+}
+
+void Saturn::SetCSMStage ()
+{
+	ClearMeshes();
+    ClearThrusterDefinitions();
+	if(ph_3rd)
+		DelPropellantResource(ph_3rd);
+
+	SetSize (20);
+	SetCOG_elev (3.5);
+	SetEmptyMass (13000);
+	// ************************* propellant specs **********************************
+	if (!ph_rcs0)
+		ph_rcs0  = CreatePropellantResource(500); //RCS stage Propellant
+
+	if (!ph_sps) {
+		if (ASTPMission){
+			ph_sps  = CreatePropellantResource(20500,10500); //SPS stage Propellant
+		}
+		else{
+			ph_sps  = CreatePropellantResource(20500,20500); //SPS stage Propellant
+		}
+	}
+
+	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
+
+	// *********************** thruster definitions ********************************
+
+
+	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
+	// orbiter main thrusters
+	th_main[0] = CreateThruster (_V( 0,0,-6.5), _V( 0,0,1),100552.5 , ph_sps, 3778.5);
+	DelThrusterGroup(THGROUP_MAIN,true);
+	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+
+	AddExhaust (th_main[0], 20.0, 2.25, SMExhaustTex);
+	SetPMI (_V(12,12,7));
+	SetCrossSections (_V(40,40,14));
+	SetCW (0.1, 0.3, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,0.3));
+	SetPitchMomentScale (0);
+	SetBankMomentScale (0);
+	SetLiftCoeffFunc (0);
+	ShiftCentreOfMass (_V(0,0,21.5));
+	if (FIRSTCSM){
+		//sprintf(oapiDebugString(), "shift %f", gaz);
+		ShiftCentreOfMass (_V(0,0,21.5));
+		FIRSTCSM=false;
+	}
+	else if (bManualUnDock){
+		dockstate = 4;
+	}
+	VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
+	AddMesh (hSM, &mesh_dir);
+
+	mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+	AddMesh (hSMhga, &mesh_dir);
+	mesh_dir=_V(0,0,34.4-12.25-21.5);
+
+	UINT meshidx;
+	meshidx = AddMesh (hCM, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	//Don't Forget the Hatch
+	mesh_dir=_V(0.02,1.35,34.54-12.25-21.5);
+	meshidx = AddMesh (hFHC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	// And the Crew
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+
+		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+	}
+
+	mesh_dir=_V(0,0,35.90-12.25-21.5);
+	probeidx=AddMesh (hprobe, &mesh_dir);
+
+	VECTOR3 dockpos = {0,0,35.90-12.25-21.5};
+	VECTOR3 dockdir = {0,0,1};
+	VECTOR3 dockrot = {0,1,0};
+	SetDockParams(dockpos, dockdir, dockrot);
+
+	AddRCSJets(-13.30,1990);
+
+	SetView(0.4);
+	// **************************** NAV radios *************************************
+
+	InitNavRadios (4);
+	SetEnableFocus(true);
+	EnableTransponder (true);
+
+	LPswitch5.SetActive(true);
+
+	ThrustAdjust = 1.0;
+	ActivateASTP = false;
+}
+
+void Saturn::SetCSM2Stage ()
+{	ClearMeshes();
+	DelThrusterGroup(THGROUP_MAIN,true);
+    ClearThrusterDefinitions();
+	if(ph_3rd)
+		DelPropellantResource(ph_3rd);
+
+	SetSize (7);
+	SetCOG_elev (3.5);
+	SetEmptyMass (13000);
+	// ************************* propellant specs **********************************
+	if (!ph_rcs0)
+		ph_rcs0  = CreatePropellantResource(500); //RCS stage Propellant
+
+	if (!ph_sps) {
+		if (ASTPMission){
+			ph_sps = CreatePropellantResource(20500,10500); //SPS stage Propellant
+		}
+		else{
+			ph_sps = CreatePropellantResource(20500,20500); //SPS stage Propellant
+		}
+	}
+
+	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
+
+	// *********************** thruster definitions ********************************
+
+
+	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
+	// orbiter main thrusters
+	th_main[0] = CreateThruster (_V( 0,0,-6.5), _V( 0,0,1),100552.5 , ph_sps, 3778.5);
+	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+
+	AddExhaust (th_main[0], 20.0, 2.25, SMExhaustTex);
+	SetEngineLevel(ENGINE_MAIN, 0.0);
+	SetPMI (_V(12,12,7));
+	SetCrossSections (_V(40,40,14));
+	SetCW (0.1, 0.3, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,0.3));
+	SetPitchMomentScale (0);
+	SetBankMomentScale (0);
+	SetLiftCoeffFunc (0);
+
+	UINT meshidx;
+	VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
+	AddMesh (hSM, &mesh_dir);
+
+	mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+	AddMesh (hSMhga, &mesh_dir);
+
+	mesh_dir=_V(0,0,34.4-12.25-21.5);
+	meshidx = AddMesh (hCM, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	//Don't Forget the Hatch
+	mesh_dir=_V(0.02,1.35,34.54-12.25-21.5);
+	meshidx = AddMesh (hFHC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	// And the Crew
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	SetEngineLevel(ENGINE_MAIN, 0.0);
+
+	AddRCSJets(3.30,1990);
+
+	SetView(0.4);
+
+	EnableTransponder (true);
+
+	// **************************** NAV radios *************************************
+
+	InitNavRadios (4);
+	probeOn = false;
+	probeidx=0;
+
+	SetEnableFocus(true);
+
+	LPswitch5.SetActive(true);
+
+	ThrustAdjust = 1.0;
+	ActivateASTP = false;
+}
+
+void Saturn::SetReentryStage ()
+
+{
+	ClearMeshes();
+    ClearThrusterDefinitions();
+	SetSize (6.0);
+	SetCOG_elev (2.0);
+	SetEmptyMass (5500);
+	SetPMI (_V(12,12,7));
+	//SetPMI (_V(1.5,1.35,1.35));
+	SetCrossSections (_V(9.17,7.13,7.0));
+	SetCW (5.5, 0.1, 3.4, 3.4);
+	SetRotDrag (_V(0.07,0.07,0.003));
+	if (GetFlightModel() >= 1)
+	{
+		SetPitchMomentScale (-1e-5);
+		SetBankMomentScale (-1e-5);
+		SetLiftCoeffFunc (LiftCoeff);
+    }
+  	ShiftCentreOfMass (_V(0,0,0.5));
+
+	UINT meshidx;
+	VECTOR3 mesh_dir=_V(0,0,0);
+	meshidx = AddMesh (hCM, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	mesh_dir = _V(0.02,1.35,0.14);
+	meshidx = AddMesh (hFHC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	// And the Crew
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,-.15);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir = _V(0,0.15,-.15);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	SetView(-0.15);
+
+	if (ph_sps) DelPropellantResource(ph_sps);
+	if (ph_rcs0) DelPropellantResource(ph_rcs0);
+	if (ph_rcs1) DelPropellantResource(ph_rcs1);
+
+	if (!ph_rcs1) ph_rcs1  = CreatePropellantResource(500); //rcs stage Propellant
+	SetDefaultPropellantResource (ph_rcs1); // display rcs stage propellant level in generic HUD
+
+	DelThrusterGroup(THGROUP_MAIN,true);
+	//DelThruster(th_main[0]);
+	//CMTex =oapiRegisterReentryTexture("reentry");
+	if (CMTex) SetReentryTexture(CMTex,1e6,5,0.7);
+	AddRCS_CM(240);
+
+	VECTOR3 dockpos = {0,0,1.5};
+	VECTOR3 dockdir = {0,0,1};
+	VECTOR3 dockrot = {0,1,0};
+
+	SetDockParams(dockpos, dockdir, dockrot);
+}
+
+void Saturn::StageSeven(double simt)
+
+{
+	ClearAutopilotLight();
+
+	if (Sswitch1){
+		Undock(0);
+	}
+
+	if (!Crewed) {
+		switch (StageState) {
+		case 0:
+			if (GetAltitude() < 145000) {
+				SlowIfDesired();
+				ActivateNavmode(NAVMODE_RETROGRADE);
+				StageState++;
+			}
+			break;
+		}
+	}
+
+	if (GetAtmPressure() > 300) { // We 're looking wether the CM has burned or not
+		ClearMeshes();
+
+		UINT meshidx;
+		VECTOR3 mesh_dir=_V(0,0,0);
+		meshidx = AddMesh (hCMB, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,0.14);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,-.15);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,-.15);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+
+		SetStage(CM_ENTRY_STAGE);
+		Burned = true;
+
+		SetView(-0.15);
+	}
+}
+
+void Saturn::StageEight(double simt)
+
+{
+	DelPropellantResource(ph_rcs1);
+	ClearMeshes();
+
+	UINT meshidx;
+	VECTOR3 mesh_dir=_V(0,0,-1);
+
+	if (Burned) {
+		ClearMeshes();
+		mesh_dir=_V(0,0,34.40-12.25-21.5);
+		meshidx = AddMesh (hCM2B, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+	else{
+		ClearMeshes();
+		VECTOR3 mesh_dir=_V(0,0,34.40-12.25-21.5);
+		meshidx = AddMesh (hCM2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+
+	SetView(0.5);
+
+	if (!Crewed) {
+		switch (StageState) {
+		case 0:
+			if (GetAltitude() < 50000) {
+				SlowIfDesired();
+				DeactivateNavmode(NAVMODE_RETROGRADE);
+				StageState++;
+			}
+			break;
+		}
+	}
+
+	LAUNCHIND[1]=true;
+	SetStage(CM_ENTRY_STAGE_TWO);
+}
+
+void Saturn::SetChuteStage1()
+{
+	UINT meshidx;
+	SetSize (15);
+	SetCOG_elev (1);
+	SetEmptyMass (5500);
+	SetMaxFuelMass (100);
+	SetFuelMass (0);
+	SetMaxThrust (ENGINE_MAIN,  0);
+	SetMaxThrust (ENGINE_RETRO, 0);
+	SetMaxThrust (ENGINE_HOVER, 0);
+	SetMaxThrust (ENGINE_ATTITUDE, 0);
+	SetEngineLevel(ENGINE_ATTITUDE,0);
+	SetEngineLevel(ENGINE_MAIN, 0.0);
+	SetPMI (_V(20,20,12));
+	SetCrossSections (_V(2.8,2.8,50.0));
+	SetCW (0.5, 1.5, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,1.2));
+	if (GetFlightModel() >= 1)
+	{
+		SetPitchMomentScale (-5e-3);
+		SetBankMomentScale (-5e-3);
+	}
+	SetLiftCoeffFunc (0);
+    ClearMeshes();
+    ClearExhaustRefs();
+    ClearAttExhaustRefs();
+	//ShiftCentreOfMass (_V(0,0,6.25));
+
+	VECTOR3 mesh_dir=_V(0,0,34.40-12.25-16.5-6.5-6.25);
+	if (Burned){
+		ClearMeshes();
+		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
+		meshidx = AddMesh (hCM2B, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5-7.75);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+	else {
+		ClearMeshes();
+		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
+		meshidx = AddMesh (hCM2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5-7.75);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir =_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+	mesh_dir=_V(0,0,44.00-12.25-21.5-7.75);
+	meshidx = AddMesh (hChute30, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
+	SetView(-7.25);
+	DeactivateNavmode(NAVMODE_KILLROT);
+	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+	LAUNCHIND[3]=true;
+	LAUNCHIND[1]=true;
+}
+
+void Saturn::SetChuteStage2()
+{
+	UINT meshidx;
+
+	SetCOG_elev (1);
+	SetEmptyMass (5500);
+	SetMaxFuelMass (100);
+	SetFuelMass (0);
+	SetMaxThrust (ENGINE_MAIN,  0);
+	SetMaxThrust (ENGINE_RETRO, 0);
+	SetMaxThrust (ENGINE_HOVER, 0);
+	SetMaxThrust (ENGINE_ATTITUDE, 0);
+	SetEngineLevel(ENGINE_ATTITUDE,0);
+	SetEngineLevel(ENGINE_MAIN, 0.0);
+	SetPMI (_V(20,20,12));
+	SetCrossSections (_V(2.8,2.8,120.0));
+	SetCW (0.5, 1.5, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,1.2));
+	if (GetFlightModel() >= 1)
+	{
+		SetPitchMomentScale (-5e-3);
+		SetBankMomentScale (-5e-3);
+	}
+	SetLiftCoeffFunc (0);
+    ClearMeshes();
+    ClearExhaustRefs();
+    ClearAttExhaustRefs();
+	//ShiftCentreOfMass (_V(0,0,6.25));
+
+	VECTOR3 mesh_dir=_V(0,0,34.40-12.25-16.5-6.5-6.25);
+
+	if (Burned) {
+		ClearMeshes();
+		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
+		meshidx = AddMesh (hCM2B, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5-7.75);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+	else{
+		ClearMeshes();
+		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
+		meshidx = AddMesh (hCM2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5-7.75);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+
+	mesh_dir=_V(0,-0.25,39.7-12.25-21.5-7.75);
+	meshidx=AddMesh (hChute31, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
+	SetView(-7.25);
+	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+	LAUNCHIND[3]=true;
+	LAUNCHIND[1]=true;
+}
+
+void Saturn::SetChuteStage3()
+{
+	UINT meshidx;
+	SetSize (12);
+	SetCOG_elev (1);
+	SetEmptyMass (5500);
+	SetMaxFuelMass (100);
+	SetFuelMass (0);
+	SetMaxThrust (ENGINE_MAIN,  0);
+	SetMaxThrust (ENGINE_RETRO, 0);
+	SetMaxThrust (ENGINE_HOVER, 0);
+	SetMaxThrust (ENGINE_ATTITUDE, 0);
+	SetEngineLevel(ENGINE_ATTITUDE,0);
+	SetEngineLevel(ENGINE_MAIN, 0.0);
+	SetPMI (_V(20,20,12));
+	SetCrossSections (_V(2.8,2.8,480.0));
+	SetCW (0.5, 1.5, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,1.2));
+	if (GetFlightModel() >= 1)
+	{
+		SetPitchMomentScale (-5e-3);
+		SetBankMomentScale (-5e-3);
+	}
+	SetLiftCoeffFunc (0);
+    ClearMeshes();
+    ClearExhaustRefs();
+    ClearAttExhaustRefs();
+	//ShiftCentreOfMass (_V(0,0,6.25));
+	VECTOR3 mesh_dir=_V(0,0,34.40-12.25-16.5-6.5-6.25);
+	if (Burned){
+		ClearMeshes();
+		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
+		meshidx = AddMesh (hCM2B, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5-7.75);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+	else{
+		ClearMeshes();
+		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
+		meshidx = AddMesh (hCM2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5-7.75);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+
+	mesh_dir=_V(0,-1.3,17);
+	meshidx = AddMesh (hChute32, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
+	SetView(-7.25);
+	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+	LAUNCHIND[3]=true;
+	LAUNCHIND[1]=true;
+}
+
+void Saturn::SetChuteStage4()
+{
+	UINT meshidx;
+	SetSize (12);
+	SetCOG_elev (1);
+	SetEmptyMass (5500);
+	SetMaxFuelMass (500);
+	SetFuelMass (0);
+	SetTouchdownPoints (_V(0,0.0,0), _V(-1,0,0), _V(1,0,0));
+	SetPMI (_V(20,20,12));
+	SetCrossSections (_V(2.8,2.8,3280.0));
+	SetCW (0.5, 1.5, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,1.2));
+	if (GetFlightModel() >= 1)
+	{
+		SetPitchMomentScale (-5e-3);
+		SetBankMomentScale (-5e-3);
+	}
+	SetLiftCoeffFunc (0);
+    ClearMeshes();
+    ClearExhaustRefs();
+    ClearAttExhaustRefs();
+	//ShiftCentreOfMass (_V(0,0,6.25));
+	VECTOR3 mesh_dir=_V(0,0,34.40-12.25-16.5-6.5-6.25);
+	if (Burned){
+		ClearMeshes();
+		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
+		meshidx = AddMesh (hCM2B, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5-7.75);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+	else{
+		ClearMeshes();
+		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
+		meshidx = AddMesh (hCM2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,34.54-12.25-21.5-7.75);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		// And the Crew
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,34.25-12.25-21.5-7.75);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+	mesh_dir = OFS_MAINCHUTE;
+	meshidx=AddMesh (hApollochute, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
+	SetView(-7.25);
+	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+	LAUNCHIND[5]=true;
+	LAUNCHIND[3]=true;
+	LAUNCHIND[1]=true;
+}
+
+void Saturn::SetSplashStage()
+{
+	UINT meshidx;
+	SetSize (4);
+	SetCOG_elev (2);
+	SetEmptyMass (5500);
+	SetMaxFuelMass (0);
+	SetFuelMass (0);
+	SetMaxThrust (ENGINE_MAIN,  0);
+	SetMaxThrust (ENGINE_ATTITUDE, 0);
+	SetEngineLevel(ENGINE_ATTITUDE,0);
+	SetEngineLevel(ENGINE_MAIN, 0.0);
+	SetPMI (_V(20,20,12));
+	SetCrossSections (_V(2.8,2.8,7.0));
+	SetCW (0.5, 1.5, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,1.2));
+	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+	if (GetFlightModel() >= 1)
+	{
+		SetPitchMomentScale (-5e-3);
+		SetBankMomentScale (-5e-3);
+	}
+	SetLiftCoeffFunc (0);
+    ClearMeshes();
+    ClearExhaustRefs();
+    ClearAttExhaustRefs();
+	//ShiftCentreOfMass (_V(0,0,6.25));
+
+	VECTOR3 mesh_dir=_V(0,0,-1.2);
+	if (Burned){
+		meshidx = AddMesh (hCM2B, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,-1.06);
+		meshidx = AddMesh (hFHC2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+	else {
+		meshidx = AddMesh (hCM2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0.02,1.35,-1.06);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	mesh_dir=_V(0,-0.1,-0.2);
+	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,-1.35);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0.15,-1.35);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	SetView(-1.35);
+}
+
+void Saturn::SetAbortStage ()
+{
+
+	ClearMeshes();
+    ClearThrusterDefinitions();
+	UINT meshidx;
+	SetSize (8);
+	SetCOG_elev (2.0);
+	SetEmptyMass (6718);
+	SetPMI (_V(12,12,7));
+	//SetPMI (_V(1.5,1.35,1.35));
+	SetCrossSections (_V(9.17,7.13,7.0));
+	SetCW (5.5, 0.1, 3.4, 3.4);
+	SetRotDrag (_V(0.07,0.07,0.003));
+	if (GetFlightModel() >= 1)
+	{
+		SetPitchMomentScale (-1e-5);
+		SetBankMomentScale (-1e-5);
+		SetLiftCoeffFunc (LiftCoeff);
+    }
+	ShiftCentreOfMass (_V(0,0,1.5));
+	VECTOR3 mesh_dir=_V(0,0,33.0-12.25-21.5-1.5+1);
+	meshidx = AddMesh (hCM, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	mesh_dir=_V(0,0,38.0-12.25-21.5-1.5+1);
+	meshidx = AddMesh (hsat5tower, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	//Don't Forget the Hatch
+	mesh_dir=_V(0.02,1.35,34.54-12.25-21.5-1.5+1);
+	meshidx = AddMesh (hFHC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	// And the Crew
+	if (Crewed) {
+		mesh_dir=_V(0,0.15,34.25-12.25-21.5-1.5+1);
+		meshidx = AddMesh (hCMP, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+
+		mesh_dir=_V(0,0.15,34.25-12.25-21.5-1.5+1);
+		meshidx = AddMesh (hCREW, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+	}
+
+	//VECTOR3 bdir = _V(0,0,1);
+	//ReEntryID = AddExhaustRef(EXHAUST_CUSTOM,_V(0,0,-0.5), 0, 0, &bdir);
+	if (ph_3rd)  {
+		DelPropellantResource(ph_3rd); //SPS stage Propellant
+		ph_3rd = 0;
+	}
+	if(ph_1st) {
+		DelPropellantResource(ph_1st);
+		ph_1st = 0;
+	}
+	if(ph_2nd) {
+		DelPropellantResource(ph_2nd);
+		ph_1st = 0;
+	}
+
+	if (!ph_rcs1)
+		ph_rcs1  = CreatePropellantResource(500); //RCS stage Propellant
+	if (ph_sps)
+		DelPropellantResource(ph_sps); //SPS stage Propellant
+		ph_sps = 0;
+	if (!ph_sps)
+		ph_sps  = CreatePropellantResource(2500); //SPS stage Propellant
+	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
+	AddRCS_CM(540);
+	// *********************** thruster definitions ********************************
+
+	// orbiter main thrusters
+	th_main[0] = CreateThruster (_V( 0,0,-6.5), _V( 0,0,1),721035 , ph_sps, 900);
+	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+
+	SetThrusterLevel(th_main[0], 1.0);
+
+	VECTOR3 m_exhaust_pos1= {0.4,0.0,1.6};
+    VECTOR3 m_exhaust_pos2= {-0.4,0.0,1.6};
+	VECTOR3 m_exhaust_pos3= {0.0,0.1,6.8};
+	VECTOR3 m_exhaust_pos4= {0.0,0.4,1.6};
+	VECTOR3 m_exhaust_pos5= {0.0,-0.4,1.6};
+	VECTOR3 m_exhaust_ref1 = {0.65,0,-1};
+	VECTOR3 m_exhaust_ref2 = {-0.65,0,-1};
+	VECTOR3 m_exhaust_ref3 = {0,0.5,-1};
+	VECTOR3 m_exhaust_ref4 = {0.0,0.65,-1};
+	VECTOR3 m_exhaust_ref5 = {0.0,-0.65,-1};
+
+	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos1, 5.0, 0.15, &m_exhaust_ref1);
+	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos2, 5.0, 0.15, &m_exhaust_ref2);
+	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos3, 3.0, 0.10, &m_exhaust_ref3);
+	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos4, 5.0, 0.15, &m_exhaust_ref4);
+	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos5, 5.0, 0.15, &m_exhaust_ref5);
+
+	//AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos4, 5.0, 0.25, &m_exhaust_ref4);
+
+	SetView(0.0);
+
+	ABORT_IND = true;
+
+	LPswitch1.SetState(false);
+	LPswitch2.SetState(false);
+	LPswitch3.SetState(false);
+	LPswitch4.SetState(false);
+	LPswitch5.SetState(false);
+	LPswitch6.SetState(false);
+
+}
+
+void Saturn::setupSM(OBJHANDLE hvessel)
+
+{
+	VESSEL *stg1vessel = oapiGetVesselInterface(hvessel);
+
+	stg1vessel->SetSize (4.0);
+	stg1vessel->SetCOG_elev (3.5);
+	stg1vessel->SetEmptyMass (10318);
+	stg1vessel->SetMaxFuelMass (2222);
+	stg1vessel->SetFuelMass(2222);
+	stg1vessel->SetISP (3083);
+	stg1vessel->SetMaxThrust (ENGINE_ATTITUDE, 10980);
+	stg1vessel->SetPMI (_V(30,30,15.5));
+	stg1vessel->SetRotDrag (_V(0.7,0.7,0.3));
+	stg1vessel->ClearMeshes();
+	VECTOR3 mesh_dir=_V(0,SMVO,0);
+	stg1vessel->AddMesh (hSM, &mesh_dir);
+
+	mesh_dir=_V(-2.2,-1.7,-1.6);
+	stg1vessel->AddMesh (hSMhga, &mesh_dir);
+	//Roll left
+}
+
+bool Saturn::clbkLoadGenericCockpit ()
+
+{
+	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+	InVC = false;
+	return true;
+}
