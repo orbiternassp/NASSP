@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/13 02:43:09  movieman523
+  *	Added new sound definitions and moved some hard-coded strings into the file.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -63,5 +66,6 @@
 #define DEFAULT_SM_SEP_SOUND		"SMJetison.wav"
 #define SEPARATION_SOUND			"Separation.wav"
 #define SPLASH_SOUND				"Splash.wav"
+#define LUNARCONTACT_SOUND			"contact.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"
