@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/02/20 05:24:57  chode99
+  *	Changes to implement realistic CM aerodynamics. Created callback function "CoeffFunc" in Saturn1b.cpp and Saturn5.cpp. Substituted CreateAirfoil for older lift functions.
+  *	
   *	Revision 1.2  2005/02/19 00:02:38  movieman523
   *	Reduced volume of APS sound playback.
   *	
@@ -366,6 +369,7 @@ void Saturn1b::SeparateStage (int stage)
 
 		hesc1 = oapiCreateVessel(VName,"nsat1btower",vs1);
 		SetSecondStage2 ();
+		AddRCS_S4B();
 	}
 
 	if (stage == LAUNCH_STAGE_SIVB)
