@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/03/13 21:23:02  chode99
+  *	G-gauge displays the new calculation of g (aZAcc).
+  *	
   *	Revision 1.7  2005/03/11 17:54:00  tschachim
   *	Introduced GuardedToggleSwitch and GuardedThreePosSwitch
   *	
@@ -395,7 +398,8 @@ void Saturn::InitPanel (int panel)
 {
 	switch (panel) {
 
-	case 0: // ilumination panel
+	case 0:// ilumination panel
+    case 2:
 		srf[0] = oapiCreateSurface (LOADBMP (IDB_ILMFCSM));
 		srf[1] = oapiCreateSurface (LOADBMP (IDB_ILMINDICATORS1));
 		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
@@ -420,6 +424,9 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_DSKY] = oapiCreateSurface (LOADBMP (IDB_ILMDSKY_LIGHTS));
 		srf[22] = oapiCreateSurface (LOADBMP (IDB_ILMALLROUND));
 		srf[23] = oapiCreateSurface (LOADBMP (IDB_ILMTHREEPOSSWITCH));
+		srf[24] = oapiCreateSurface (LOADBMP (IDB_MFDFRAME_ILM));
+		srf[25] = oapiCreateSurface (LOADBMP (IDB_MFDPOWER_ILM));
+		srf[26] = oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES_ILM));
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3], 0);
 		oapiSetSurfaceColourKey (srf[5], g_Param.col[5]);
@@ -539,6 +546,7 @@ bool Saturn::clbkLoadPanel (int id)
 	MFDSPEC mfds_left  = {{1012, 730, 1291, 1009}, 6, 6, 41, 27};
 	MFDSPEC mfds_right = {{1305, 730, 1584, 1009}, 6, 6, 41, 27};
 	MFDSPEC mfds_dock = {{892, 626, 1111, 841}, 6, 6, 31, 31};;
+//	MFDSPEC mfds_dock_ilm = {{892, 626, 1111, 841}, 6, 6, 31, 31};;
 
 	switch (id) {
 	case 0: // main panel
@@ -650,17 +658,17 @@ bool Saturn::clbkLoadPanel (int id)
 		break;
 
 	case 2: // docking panel
+    case 3:
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
-		break;
-
-	case 3:
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
-
 		oapiRegisterMFD (MFD_RIGHT, mfds_dock);	// MFD_USER1
 		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 850,  612, 1151      ,  863     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 635,  845,  655      ,  860     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SM_RCS_MODE, _R( 718,  791,  718 + 133,  791 + 73), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
+		
+		
 		break;
+    
+
 	}
 
 	InitPanel (id);
@@ -736,7 +744,7 @@ void Saturn::SetSwitches(int panel)
 	LPswitch2.Init(68, 7, 23, 20, srf[6], SRP1Row, this, soundlib);
 	LPswitch3.Init(04, 7, 23, 20, srf[6], SRP1Row, this, soundlib);
 
-	if (panel == 3) {
+	if (panel == 3 ||panel == 2) {
 		LPswitch4.Init(55, 33, 23, 20, srf[6], P14Row, this, soundlib);
 		LPswitch5.Init(87, 33, 23, 20, srf[6], P14Row, this, soundlib);
 	} else {
@@ -2568,7 +2576,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	//
 
 	if (id == AID_SM_RCS_MODE) {
-		if (PanelId == 3) {
+		if (PanelId == 3 || PanelId == 2) {
 			if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
 				oapiBlt(surf, srf[26], 0, 0, 0, 0, 133, 73);
 				LPswitch4.SetVisible(true);
@@ -2581,6 +2589,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			LPswitch4.SetVisible(true);
 			LPswitch5.SetVisible(true);
 		}
+
 	}
 
 	if (MainPanel.DrawRow(id, surf))
