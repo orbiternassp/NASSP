@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/03/27 03:37:56  chode99
+  *	Support for new type of test article payload (Apollo 8).
+  *	
   *	Revision 1.6  2005/03/09 22:01:31  tschachim
   *	nsurf = 27
   *	
@@ -139,4 +142,5 @@ const double GKSI = 6.67259e-20 * 1e9;
 #define PAYLOAD_LTA		2
 #define PAYLOAD_LM1		3
 #define PAYLOAD_LTA8	4
+#define PAYLOAD_TARGET	5
 
