@@ -37,10 +37,9 @@ projectApolloGraphics -a projectApolloMeshes projectApolloTextures
 util.projectApolloSound -d NASSP projectApolloSound
 projectApolloSound -d Sound orbiterSound &util.projectApolloSound
 
-projectApolloSourceNASSP -d samples/ProjectApollo projectApolloSource
-projectApolloSource -d Orbitersdk orbiterSource &projectApolloSourceNASSP
+util.projectApolloSource -d samples/ProjectApollo projectApolloSource
+projectApolloSource -d Orbitersdk orbiterSource &util.projectApolloSource
 
-projectApolloScenarios_ -d ProjectApollo projectApolloScenarios
-projectApolloScenarios -d Scenarios orbiterScenarios &projectApolloScenarios_
+projectApolloScenarios -d Scenarios projectApolloScenarios
 
-projectApollo -a projectApolloConfig projectApolloGraphics projectApolloSound projectApolloSource
+projectApollo -a projectApolloConfig projectApolloGraphics projectApolloSound projectApolloSource projectApolloScenarios
