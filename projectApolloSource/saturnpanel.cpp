@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -475,8 +478,8 @@ bool Saturn::clbkLoadPanel (int id)
 
 	}
 
-	MFDSPEC mfds_left  = {1012, 730, 1290, 1008};
-	MFDSPEC mfds_right = {1305, 730, 1583, 1008};
+	MFDSPEC mfds_left  = {{1012, 730, 1291, 1009}, 6, 6, 41, 27};
+	MFDSPEC mfds_right = {{1305, 730, 1584, 1009}, 6, 6, 41, 27};
 
 	switch (id) {
 	case 0: // main panel
