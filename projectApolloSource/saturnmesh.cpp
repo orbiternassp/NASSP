@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/03/09 05:05:00  chode99
+  *	Fixed CSM thruster positions in SetCSM2Stage
+  *	
   *	Revision 1.5  2005/03/03 17:58:43  tschachim
   *	panel handling for generic cockpit
   *	
@@ -903,6 +906,7 @@ void Saturn::SetChuteStage1()
 	SetEmptyMass (5500);
 	SetMaxFuelMass (100);
 	SetFuelMass (0);
+	ClearAirfoilDefinitions();
 	SetMaxThrust (ENGINE_MAIN,  0);
 	SetMaxThrust (ENGINE_RETRO, 0);
 	SetMaxThrust (ENGINE_HOVER, 0);
@@ -910,8 +914,8 @@ void Saturn::SetChuteStage1()
 	SetEngineLevel(ENGINE_ATTITUDE,0);
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 	SetPMI (_V(20,20,12));
-	SetCrossSections (_V(2.8,2.8,50.0));
-	SetCW (0.5, 1.5, 1.4, 1.4);
+	SetCrossSections (_V(2.8,2.8,80.0));
+	SetCW (1.0, 1.5, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	if (GetFlightModel() >= 1)
 	{
@@ -993,8 +997,8 @@ void Saturn::SetChuteStage2()
 	SetEngineLevel(ENGINE_ATTITUDE,0);
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 	SetPMI (_V(20,20,12));
-	SetCrossSections (_V(2.8,2.8,120.0));
-	SetCW (0.5, 1.5, 1.4, 1.4);
+	SetCrossSections (_V(2.8,2.8,140.0));
+	SetCW (1.0, 1.5, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	if (GetFlightModel() >= 1)
 	{
@@ -1078,7 +1082,7 @@ void Saturn::SetChuteStage3()
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 	SetPMI (_V(20,20,12));
 	SetCrossSections (_V(2.8,2.8,480.0));
-	SetCW (0.5, 1.5, 1.4, 1.4);
+	SetCW (0.7, 1.5, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	if (GetFlightModel() >= 1)
 	{
@@ -1155,7 +1159,7 @@ void Saturn::SetChuteStage4()
 	SetTouchdownPoints (_V(0,0.0,0), _V(-1,0,0), _V(1,0,0));
 	SetPMI (_V(20,20,12));
 	SetCrossSections (_V(2.8,2.8,3280.0));
-	SetCW (0.5, 1.5, 1.4, 1.4);
+	SetCW (0.7, 1.5, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	if (GetFlightModel() >= 1)
 	{
