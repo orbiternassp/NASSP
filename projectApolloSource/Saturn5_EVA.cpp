@@ -1,6 +1,28 @@
-// ==============================================================
-// ORBITER vessel module: Saturn5_EVA
-// ==============================================================
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2005
+
+  ORBITER vessel module: Saturn5_EVA
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************** Revision History ****************************
+  *	$Log$
+  **************************************************************************/
 
 #include "orbitersdk.h"
 #include "stdio.h"
@@ -25,7 +47,7 @@ static OBJHANDLE hMaster;
 static int refcount = 0;
 static MESHHANDLE hCMPEVA;
 
-Saturn5_EVA::Saturn5_EVA(OBJHANDLE hObj, int fmodel) 
+Saturn5_EVA::Saturn5_EVA(OBJHANDLE hObj, int fmodel)
 : VESSEL (hObj, fmodel)
 {
 	init();
@@ -45,7 +67,7 @@ void Saturn5_EVA::init ()
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0); 
+	SetLiftCoeffFunc (0);
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
@@ -79,23 +101,23 @@ DLLCLBK int ovcConsumeKey (VESSEL *vessel, const char *keystate)
 int Saturn5_EVA::ConsumeKey (const char *keystate)
 
 {
-	if (KEYMOD_SHIFT (keystate)) 
+	if (KEYMOD_SHIFT (keystate))
 	{
-		return 0; 
+		return 0;
 	}
-	else if (KEYMOD_CONTROL (keystate)) 
+	else if (KEYMOD_CONTROL (keystate))
 	{
-	
+
 	}
-	else 
-	{ 
+	else
+	{
 		if (KEYDOWN (keystate, OAPI_KEY_E)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_E, 1.0)){				
-				GoDock1 = true;			
+			if (oapiAcceptDelayedKey (OAPI_KEY_E, 1.0)){
+				GoDock1 = true;
 				return 1;
 			}
 		}
-		
+
 	}
 	return 0;
 }
@@ -112,7 +134,7 @@ void Saturn5_EVA::Timestep (double simt)
 	char EVAName[256]="";
 	char CSMName[256]="";
 	char MSName[256]="";
-	
+
 	strcpy(EVAName,GetName());
 	double VessCount;
 	int i=0;
@@ -125,7 +147,7 @@ void Saturn5_EVA::Timestep (double simt)
 			i=int(VessCount);
 		}
 	}
-	sprintf(oapiDebugString(), "EVA Cable Attached to %s", MSName);				
+	sprintf(oapiDebugString(), "EVA Cable Attached to %s", MSName);
 	VESSELSTATUS csmV;
 	VESSELSTATUS evaV;
 	VESSEL *csmvessel;
@@ -135,7 +157,7 @@ void Saturn5_EVA::Timestep (double simt)
 	VECTOR3 RelRot  = {0,0,0};
 	double dist = 0.0;
 	double Vel = 0.0;
-	 	
+
 	if (hMaster){
 		csmvessel = oapiGetVesselInterface(hMaster);
 		oapiGetRelativePos (GetHandle() ,hMaster, &posr);
@@ -155,7 +177,7 @@ void Saturn5_EVA::Timestep (double simt)
 			csmvessel->GetStatus(csmV);
 			evaV.rvel = csmV.rvel + rvel;
 			DefSetState(&evaV);
-		}	
+		}
 		if (GoDock1){
 			sprintf(oapiDebugString(), "EVA Back CSM Mode Relative Distance M/s %f", dist);
 			if (dist <= 0.55 && dist>=0.50 ){
@@ -164,7 +186,7 @@ void Saturn5_EVA::Timestep (double simt)
 				oapiDeleteVessel(GetHandle());
 			}
 		}
-		
+
 	}
 }
 
