@@ -34,7 +34,7 @@ projectApolloMeshes -d Meshes projectApolloMeshes
 projectApolloTextures -d Textures projectApolloTextures
 projectApolloGraphics -a projectApolloMeshes projectApolloTextures
 
-util.projectApolloSound -d NASSP projectApolloSound
+util.projectApolloSound -d ProjectApollo projectApolloSound
 projectApolloSound -d Sound orbiterSound &util.projectApolloSound
 
 util.projectApolloSource -d samples/ProjectApollo projectApolloSource
