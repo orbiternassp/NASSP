@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/03/12 20:51:30  chode99
+  *	Reentry airfoil is now deleted when first drogue opens.
+  *	By not deleting, the aerodynamics of the chutes were ignored.
+  *	Also tweaked the drag of the chutes a bit to match the real velocities.
+  *	
   *	Revision 1.6  2005/03/09 05:05:00  chode99
   *	Fixed CSM thruster positions in SetCSM2Stage
   *	
@@ -590,11 +595,11 @@ void Saturn::SetCSMStage ()
 	if (Crewed) {
 		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
 		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
 		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	mesh_dir=_V(0,0,35.90-12.25-21.5);
@@ -1328,11 +1333,11 @@ void Saturn::SetAbortStage ()
 	if (Crewed) {
 		mesh_dir=_V(0,0.15,34.25-12.25-21.5-1.5+1);
 		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		mesh_dir=_V(0,0.15,34.25-12.25-21.5-1.5+1);
 		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	//VECTOR3 bdir = _V(0,0,1);
