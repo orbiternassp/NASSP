@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/03/25 21:27:17  chode99
+  *	Added retro rockets to SIB first stage (interstage).
+  *	
   *	Revision 1.3  2005/02/20 05:24:57  chode99
   *	Changes to implement realistic CM aerodynamics. Created callback function "CoeffFunc" in Saturn1b.cpp and Saturn5.cpp. Substituted CreateAirfoil for older lift functions.
   *	
@@ -62,6 +65,8 @@
 GDIParams g_Param;
 
 static int refcount = 0;
+static MESHHANDLE hCOAStarget;
+static MESHHANDLE hastp;
 
 const double N   = 1.0;
 const double kN  = 1000.0;
@@ -197,6 +202,7 @@ void Saturn1b::SetupUnDockedmode(OBJHANDLE hTarget)
 void Saturn1b::SetupStage(OBJHANDLE hTarget)
 {
 	VESSEL *targetvessel;
+	VECTOR3 mesh_dir;
 	targetvessel=oapiGetVesselInterface(hTarget);
 
 	targetvessel->SetEmptyMass (17000);
@@ -212,6 +218,18 @@ void Saturn1b::SetupStage(OBJHANDLE hTarget)
 	targetvessel->SetPitchMomentScale (0);
 	targetvessel->SetBankMomentScale (0);
 	targetvessel->SetLiftCoeffFunc (0);
+/*	if(SIVBPayload == PAYLOAD_TARGET){
+		mesh_dir=_V(-1.0,-1.1,13.3);
+		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
+	}
+	else if(SIVBPayload == PAYLOAD_ASTP){
+		mesh_dir=_V(0,0,13.3);
+		targetvessel->AddMesh (hastp, &mesh_dir);
+	}
+	else if(SIVBPayload == PAYLOAD_LM1){
+		mesh_dir=_V(0,0,13.3);
+		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
+	}*/
 }
 
 void Saturn1b::SeparateStage (int stage)
@@ -384,6 +402,8 @@ void Saturn1b::SeparateStage (int stage)
 		char VName2[256]="";
 		char VName3[256]="";
 		char VName4[256]="";
+		VECTOR3 mesh_dir;
+		VESSEL *targetvessel;
 
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -401,10 +421,27 @@ void Saturn1b::SeparateStage (int stage)
 		vs5.vrot.y = 0.1;
 		vs5.vrot.z = 0.0;
 		strcpy (VName, GetName()); strcat (VName, "-S4BSTG");
-		hs4bM = oapiCreateVessel(VName, "nsat1astp", vs1);
-		if(ASTPMission) {
-			SetupStage(hs4bM);
+		if(ASTPMission)
+			hs4bM = oapiCreateVessel(VName, "nsat1astp", vs1);
+		else
+			hs4bM = oapiCreateVessel(VName, "nsat1stg2", vs1);
+
+		targetvessel=oapiGetVesselInterface(hs4bM);
+		if(SIVBPayload == PAYLOAD_TARGET){
+			mesh_dir=_V(-1.0,-1.1,13.3);
+			targetvessel->AddMesh (hCOAStarget, &mesh_dir);
 		}
+		else if(SIVBPayload == PAYLOAD_ASTP){
+			mesh_dir=_V(0,0,13.3);
+			targetvessel->AddMesh (hastp, &mesh_dir);
+		}
+		else if(SIVBPayload == PAYLOAD_LM1){
+			mesh_dir=_V(0,0,13.3);
+			targetvessel->AddMesh (hCOAStarget, &mesh_dir);
+		}
+
+		SetupStage(hs4bM);
+
 		strcpy (VName1, GetName()); strcat (VName1, "-S4B1");
 		hs4b1 = oapiCreateVessel(VName1, "nsat1stg21", vs2);
 		strcpy (VName2, GetName()); strcat (VName2, "-S4B2");
@@ -417,13 +454,10 @@ void Saturn1b::SeparateStage (int stage)
 		//oapiDeleteVessel(hesc1,vessel->GetHandle());
 		ShiftCentreOfMass (_V(0,0,21.5));
 		SetCSMStage ();
-		if(ASTPMission){
-			SetupStage(hs4bM);
+		if(ASTPMission)
 			dockstate = 1;
-		}
-		else{
+		else
 			dockstate = 4;
-		}
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -895,19 +929,23 @@ void Saturn1b::Timestep (double simt)
 		}
 		if (GetDockStatus(GetDockHandle(0)) == hAstpDM ){
 			if(dockstate == 4){
-			ReadyAstp1=true;
+				if(ASTPMission)
+					ReadyAstp1=true;
 			bManualUnDock = true;
 			}
 		}
 	}else{
-		char VName[256];
-		strcpy (VName, GetName()); strcat (VName, "-ASTPDM");
-		hAstpDM = oapiGetVesselByName(VName);
+		if(ASTPMission){
+			char VName[256];
+			strcpy (VName, GetName()); strcat (VName, "-ASTPDM");
+			hAstpDM = oapiGetVesselByName(VName);
+		}
 	}
 
 	if (hs4bM){
 		if (GetDockStatus(GetDockHandle(0)) == hs4bM){
-			ReadyAstp=true;
+			if(ASTPMission)
+				ReadyAstp=true;
 			dockstate=2;
 				//	sprintf(oapiDebugString() ,"S4B %f");
 		}
@@ -915,15 +953,16 @@ void Saturn1b::Timestep (double simt)
 			ReadyAstp=false;
 				//	sprintf(oapiDebugString() ,"NOT S4B %f");
 		}
-		if (dockstate>=3 && !S4BASTP){
+		if (dockstate>=2 && !S4BASTP){
 			SetS4B();
-			S4BASTP=true;
+			if(ASTPMission)
+				S4BASTP=true;
 		}
 	}else{
 		char VName[256];
 
-	strcpy (VName, GetName()); strcat (VName, "-S4BSTG");
-	hs4bM = oapiGetVesselByName(VName);
+		strcpy (VName, GetName()); strcat (VName, "-S4BSTG");
+		hs4bM = oapiGetVesselByName(VName);
 
 	}
 
@@ -1264,7 +1303,8 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		case 2:
 				break;
 		case 3:
-			SetASTPStage();
+			if(ASTPMission)
+				SetASTPStage();
 			break;
 		case 4:
 			break;
