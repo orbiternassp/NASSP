@@ -26,3 +26,5 @@
 # spread out over the entire source repository.
 
 test test
+
+projectApolloConfig -d Config projectApolloConfig
