@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/18 00:41:54  movieman523
+  *	Wired in new Apollo 13 sounds and set Scorrec so you can use time acceleration again after course correction!
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -598,7 +601,7 @@ void SaturnV::StageTwo(double simt)
 	case 0:
 		if (SII_UllageNum) {
 			SetThrusterGroupLevel(thg_ull, 1.0);
-			SepS.play(LOOP, 255);
+			SepS.play(LOOP, 130);
 		}
 
 		if (hstg1) {
@@ -910,6 +913,11 @@ void SaturnV::StageSix(double simt)
 			CrashBumpS.play(NOLOOP,150);
 		}
 	}
+
+	//
+	// Should we be turning off these lights here?
+	//
+
 	for (int i=0 ;i<6;i++){
 		LAUNCHIND[i]=false;
 	}
@@ -942,23 +950,32 @@ void SaturnV::StageSix(double simt)
 			ActivateS4B=false;
 		}
 	}
+
 	if (Sswitch2){
 		Undock(0);
 	}
+
 	if (Sswitch1){
 		if (ActivateLEM){
 			ProbeJetison=true;
 			bManualUnDock = true;
 		}
 	}
+
 	if (Sswitch3 && Sswitch4){
-			bManualSeparate=true;
+		bManualSeparate=true;
 	}
+
 	if (RPswitch16){
-			bManualUnDock = true;
+		bManualUnDock = true;
 	}
 
 	if (ApolloNo == 13) {
+
+		//
+		// Play cryo-stir audio.
+		//
+
 		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 30))
 		{
 			double TimeW = oapiGetTimeAcceleration ();
@@ -969,6 +986,10 @@ void SaturnV::StageSix(double simt)
 			SApollo13.play(NOLOOP, 255);
 			CryoStir = true;
 		}
+
+		//
+		// Play explosion audio.
+		//
 
 		if (CryoStir && !ApolloExploded && MissionTime >= APOLLO_13_EXPLOSION_TIME) {
 			double TimeW = oapiGetTimeAcceleration ();
@@ -986,6 +1007,7 @@ void SaturnV::StageSix(double simt)
 			MasterAlarm();
 
 			ApolloExploded = true;
+
 			SetPropellantMass(ph_rcs0,0);
 			SetPropellantMass(ph_sps,0);
 
@@ -995,6 +1017,10 @@ void SaturnV::StageSix(double simt)
 			vs13.vrot = _V(-1,-1,-1);
 			DefSetState(&vs13);
 		}
+
+		//
+		// Play Kranz comments in the background.
+		//
 
 		if (!KranzPlayed && (MissionTime >= APOLLO_13_EXPLOSION_TIME + 30)) {
 
@@ -1010,10 +1036,14 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (MissionTime >= 219400 && !Scorrec && MissionTime < 228e3){
+	//
+	// Check for course correction time and shut down time acceleration if appropriate.
+	//
+
+	if (!Scorrec && MissionTime >= COURSE_CORRECTION_START_TIME && MissionTime < COURSE_CORRECTION_END_TIME){
 		double TimeW = oapiGetTimeAcceleration ();
-		if (TimeW > 1){
-			oapiSetTimeAcceleration (1);
+		if (TimeW > 1.0){
+			oapiSetTimeAcceleration (1.0);
 		}
 		SCorrection.play(NOLOOP,255);
 		SCorrection.done();
@@ -1040,6 +1070,10 @@ void SaturnV::StageSix(double simt)
 		ToggelHatch();
 		bToggleHatch=false;
 	}
+
+	//
+	// Handle automation of unmanned launches.
+	//
 
 	if (!Crewed) {
 		switch (StageState)
@@ -1282,6 +1316,10 @@ void SaturnV::StageSix(double simt)
 		AddRCSJets(-1.80,1990);
 		RCS_Full=true;
 	}
+
+	//
+	// Enable or disable SPS.
+	//
 
 	if (SPSswitch){
 		SetThrusterResource(th_main[0],ph_sps);
@@ -1814,7 +1852,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 		SetThrusterResource(th_main[0], ph_3rd);
 		if (hstg2)
 			Ullage2(hstg2,5);
-		SepS.play(LOOP,255);
+		SepS.play(LOOP, 130);
 		SetThrusterGroupLevel(thg_ver,1.0);
 		NextMissionEventTime = MissionTime + 2.0;
 		StageState++;
@@ -1873,7 +1911,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 
 			SetEngineIndicator(1);
 			SetThrusterGroupLevel(thg_aps, 1.0);
-			SepS.play(LOOP,255);
+			SepS.play(LOOP, 130);
 			NextMissionEventTime = MissionTime + 10.0;
 			StageState++;
 		}
@@ -1902,7 +1940,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 	case 6:
 		if (MissionTime < NextMissionEventTime) {
 			if (!SepS.isPlaying()) {
-				SepS.play(LOOP,255);
+				SepS.play(LOOP, 130);
 				SetThrusterGroupLevel(thg_aps, 1.0);
 			}
 		}
