@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/03/03 17:54:58  tschachim
+  *	new font
+  *	
   *	Revision 1.4  2005/02/24 00:10:05  movieman523
   *	Updated to version 6.4 and added extra digit to support more sub-versions up to x.x.9
   *	
@@ -80,7 +83,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 24; // number of bitmap handles
+const int nsurf = 27; // number of bitmap handles
 
 #define SRF_DSKY	21
 #define SRF_DSKYNUM	22
