@@ -15,9 +15,10 @@ Added the roads and tanks mesh to Pad 39B.
 Rotated and moved towers so they are to the north.
 Added retro rockets to SII stage.
 Fixed bug that caused the parachute drag to be too low.
-Corrected the position of the ullage rockets for the SIVB when separating from the SIB.
+Corrected the position of the separation rockets for the SIVB when separating from the SIB.
 Fixed bug that caused the CSM RCS flames to be in the wrong positions late in the mission.
 Now calculate the axial G force so that the panel gauge works like the real one.
+Fixed the positions of the SIVB RCS thrusters in Saturn V and Saturn IB.
 
 6.3:
 ----
