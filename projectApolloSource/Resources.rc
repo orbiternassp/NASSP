@@ -108,8 +108,8 @@ IDB_MFDFRAME            BITMAP  DISCARDABLE     "MFDFrame.bmp"
 IDB_MFDPOWER            BITMAP  DISCARDABLE     "MFDPower.bmp"
 IDB_DOCKINGSWITCHES     BITMAP  DISCARDABLE     "DockingSwitches.bmp"
 IDB_MFDFRAME_ILM        BITMAP  DISCARDABLE     "MFDFrame-ilm.bmp"
-IDB_DOCKINGSWITCHES_ILM BITMAP  DISCARDABLE     "DockingSwitches-ilm.bmp"
 IDB_MFDPOWER_ILM        BITMAP  DISCARDABLE     "MFDPower-ilm.bmp"
+IDB_DOCKINGSWITCHES_ILM BITMAP  DISCARDABLE     "DockingSwitches-ilm.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
