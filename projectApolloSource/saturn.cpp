@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/03/14 01:40:30  chode99
+  *	Fixed the positions of the SIVB RCS thrusters in Saturn V and Saturn IB
+  *	
   *	Revision 1.6  2005/03/13 21:17:20  chode99
   *	Added code to compute accurate axial g force for panel display.
   *	
@@ -822,9 +825,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			sscanf (line+8, "%d", &SwitchState);
 			SetLPSwitchState(SwitchState);
 		}
-		else if (!strnicmp (line, "RPSWITCH", 9)) {
+		else if (!strnicmp (line, "RPSWITCH", 8)) {
             SwitchState = 0;
-			sscanf (line+9, "%d", &SwitchState);
+			sscanf (line+8, "%d", &SwitchState);
 			SetRPSwitchState(SwitchState);
 		}
 		else if (!strnicmp (line, "APOLLONO", 8)) {
