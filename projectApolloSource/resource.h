@@ -174,6 +174,7 @@
 #define IDB_ILMMAINPANEL_RIGHT          277
 #define IDB_MAINPANEL_LEFT              278
 #define IDB_MAINPANEL_RIGHT             279
+#define IDB_ROTATIONALSWITCH            280
 #define AID_FUEL_DIGITD                 301
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
@@ -259,12 +260,13 @@
 #define AID_EMS_DISPLAY                 483
 #define AID_MFDDOCK                     484
 #define AID_MFDDOCK_POWER               485
+#define AID_RCS_INDICATORS				486
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        280
+#define _APS_NEXT_RESOURCE_VALUE        281
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           10001
