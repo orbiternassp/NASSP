@@ -5,6 +5,8 @@
 Fixed bug preventing time acceleration for a few hours after course correction burn.
 Renamed sound directory again from NCPP to ProjectApollo.
 Wired in new Apollo-13 sounds.
+Reduced volume of SIVB APS sounds and made them internal-only.
+Moved time of course correction burn into header file to make it easy to change.
 
 6.2:
 ----
