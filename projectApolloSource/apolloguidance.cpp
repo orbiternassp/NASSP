@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/10 21:22:00  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -55,6 +58,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display) : soundlib(s), dsky(d
 
 	BurnTime = 0;
 	BurnStartTime = 0;
+	BurnEndTime = 0;
 	CutOffVel = 0;
 	NextEventTime = 0;
 	BankSumNum = 1;
