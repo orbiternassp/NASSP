@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include <stdio.h>
@@ -82,7 +85,7 @@ const double BASE_SII_MASS = 42400 + 3490 - BODGE_FACTOR;		// Stage + SII/SIVB i
 GDIParams g_Param;
 
 //
-// SaturnV constructor, derived from basic VESSEL class.
+// SaturnV constructor, derived from basic Saturn class.
 //
 
 SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
@@ -152,6 +155,7 @@ void SaturnV::initSaturnV()
 
 	ApolloExploded =false;
 	CryoStir = false;
+	KranzPlayed = false;
 
 	EVA_IP=false;
 	gaz=0;
@@ -193,7 +197,6 @@ void SaturnV::initSaturnV()
 	soundlib.LoadSound(DockS, "docking.wav");
 	soundlib.LoadSound(SCorrection, "Correction.wav");
 
-	soundlib.LoadSound(SLEVA, "LEVA.wav");
 	soundlib.LoadSound(SRover, "LRover.WAV");
 
 	LongestTimestep = 0;
@@ -955,36 +958,28 @@ void SaturnV::StageSix(double simt)
 			bManualUnDock = true;
 	}
 
-	if ((ApolloNo == 13) && !CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 30))
-	{
-		double TimeW = oapiGetTimeAcceleration ();
-		if (TimeW > 1){
-			oapiSetTimeAcceleration (1);
-		}
+	if (ApolloNo == 13) {
+		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 30))
+		{
+			double TimeW = oapiGetTimeAcceleration ();
+			if (TimeW > 1){
+				oapiSetTimeAcceleration (1);
+			}
 
-		if (!SApollo13.isValid()) {
-			soundlib.LoadMissionSound(SApollo13, A13_CRYO_STIR, NULL);
-		}
-		else {
 			SApollo13.play(NOLOOP, 255);
 			CryoStir = true;
 		}
-	}
 
-	if ((ApolloNo == 13) && CryoStir && !ApolloExploded && MissionTime >= APOLLO_13_EXPLOSION_TIME) {
-		double TimeW = oapiGetTimeAcceleration ();
-		if (TimeW > 1){
-			oapiSetTimeAcceleration (1);
-		}
+		if (CryoStir && !ApolloExploded && MissionTime >= APOLLO_13_EXPLOSION_TIME) {
+			double TimeW = oapiGetTimeAcceleration ();
+			if (TimeW > 1){
+				oapiSetTimeAcceleration (1);
+			}
 
-		if (SApollo13.isValid()) {
-			SApollo13.done();
-		}
+			if (SApollo13.isValid()) {
+				SApollo13.done();
+			}
 
-		if (!SExploded.isValid()) {
-			soundlib.LoadMissionSound(SExploded, A13_PROBLEM, NULL);
-		}
-		else {
 			SExploded.play(NOLOOP,255);
 			SExploded.done();
 
@@ -1000,6 +995,19 @@ void SaturnV::StageSix(double simt)
 			vs13.vrot = _V(-1,-1,-1);
 			DefSetState(&vs13);
 		}
+
+		if (!KranzPlayed && (MissionTime >= APOLLO_13_EXPLOSION_TIME + 30)) {
+
+			if (SExploded.isValid()) {
+				SExploded.stop();
+				SExploded.done();
+			}
+
+			SKranz.play(NOLOOP, 150);
+			SKranz.done();
+
+			KranzPlayed = true;
+		}
 	}
 
 	if (MissionTime >= 219400 && !Scorrec && MissionTime < 228e3){
@@ -1009,6 +1017,7 @@ void SaturnV::StageSix(double simt)
 		}
 		SCorrection.play(NOLOOP,255);
 		SCorrection.done();
+		Scorrec = true;
 	}
 
 	if (EVA_IP){
@@ -1287,7 +1296,6 @@ void SaturnV::StageSix(double simt)
 			SeparateStage (stage);
 			ignition_SMtime = simt;
 			bManualSeparate = false;
-			SeparationS.play(NOLOOP,245);
 			setupSM(hSMJet);
 			SetStage(CM_STAGE);
 		}
