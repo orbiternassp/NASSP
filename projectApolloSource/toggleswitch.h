@@ -22,12 +22,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/03/11 17:54:00  tschachim
+  *	Introduced GuardedToggleSwitch and GuardedThreePosSwitch
+  *
   *	Revision 1.2  2005/03/09 21:59:30  tschachim
   *	Introduced visible flag
-  *	
+  *
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
-  *	
+  *
   **************************************************************************/
 
 class SwitchRow;
@@ -93,6 +96,7 @@ protected:
 	Sound Sclick;
 
 	ToggleSwitch *next;
+	//SwitchRow *switchRow;
 };
 
 class AttitudeToggle: public ToggleSwitch {
@@ -103,7 +107,7 @@ public:
 
 	//
 	// I don't understand why this isn't inherited properly from ToggleSwitch?
-	// Answer from the language reference: 
+	// Answer from the language reference:
 	// All overloaded operators except assignment (operator=) are inherited by derived classes.
 	unsigned operator=(const unsigned b) { state = (b != 0); return (unsigned)state; };
 };
@@ -147,7 +151,7 @@ public:
 	GuardedToggleSwitch();
 	virtual ~GuardedToggleSwitch();
 
-	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, 
+	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 				   SoundLib &s, int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
@@ -174,7 +178,7 @@ public:
 	GuardedThreePosSwitch();
 	virtual ~GuardedThreePosSwitch();
 
-	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, 
+	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 				   SoundLib &s, int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
@@ -195,6 +199,64 @@ protected:
 	Sound guardClick;
 };
 
+
+typedef struct {
+	double angle;
+	int xOffset;
+	int yOffset;
+} RotationalSwitchBitmap;
+
+const int RotationalSwitchBitmapCount = 20;
+
+
+class RotationalSwitchPosition {
+
+public:
+	RotationalSwitchPosition(int v, double a);
+	virtual ~RotationalSwitchPosition();
+	void SetNext(RotationalSwitchPosition *p) { next = p; };
+	RotationalSwitchPosition *GetNext() { return next; };
+	double GetAngle() { return angle; };
+	int GetValue() { return value; };
+
+protected:
+	int value;
+	double angle;
+	RotationalSwitchPosition* next;
+};
+
+class RotationalSwitch {
+
+public:
+	RotationalSwitch();
+	virtual ~RotationalSwitch();
+
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
+	void AddPosition(int value, double angle);
+	void SetNext(RotationalSwitch *s) { next = s; };
+	RotationalSwitch *GetNext() { return next; };
+	void DrawSwitch(SURFHANDLE drawSurface);
+	bool CheckMouseClick(int event, int mx, int my);
+	int operator=(const int b);
+	operator int();
+
+protected:
+	int	x;
+	int y;
+	int width;
+	int height;
+	RotationalSwitchPosition* position;
+	RotationalSwitchPosition* positionList;
+	SURFHANDLE switchSurface;
+	Sound sclick;
+	RotationalSwitch *next;
+	RotationalSwitchBitmap bitmaps[RotationalSwitchBitmapCount];
+
+	double AngleDiff(double a1, double a2);
+	void DeletePositions();
+};
+
+
 class PanelSwitches;
 
 class SwitchRow {
@@ -206,15 +268,20 @@ public:
 	bool CheckMouseClick(int id, int event, int mx, int my);
 	bool DrawRow(int id, SURFHANDLE DrawSurface);
 	void AddSwitch(ToggleSwitch *s) { s->SetNext(SwitchList); SwitchList = s; };
+	void AddRotationalSwitch(RotationalSwitch *s) { s->SetNext(RotationalSwitchList); RotationalSwitchList = s; };
 	void Init(int area, PanelSwitches &panel);
 	SwitchRow *GetNext() { return RowList; };
 	void SetNext(SwitchRow *s) { RowList = s; };
 
 protected:
 	ToggleSwitch *SwitchList;
+	RotationalSwitch *RotationalSwitchList;
 	SwitchRow *RowList;
 	int PanelArea;
+	PanelSwitches *panelSwitches;
 
+	friend class ToggleSwitch;
+	friend class RotationalSwitch;
 };
 
 class PanelSwitches {
@@ -224,10 +291,14 @@ public:
 	bool CheckMouseClick(int id, int event, int mx, int my);
 	bool DrawRow(int id, SURFHANDLE DrawSurface);
 	void AddRow(SwitchRow *s) { s->SetNext(RowList); RowList = s; };
-	void Init(int id) { PanelID = id; RowList = 0; };
+	void Init(int id, VESSEL *v, SoundLib *s) { PanelID = id; RowList = 0; vessel = v; soundlib = s; };
 
 protected:
+	VESSEL *vessel;
+	SoundLib *soundlib;
 	int	PanelID;
 	SwitchRow *RowList;
 
+	friend class ToggleSwitch;
+	friend class RotationalSwitch;
 };
