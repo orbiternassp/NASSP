@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 class SaturnV: public Saturn {
@@ -162,9 +165,6 @@ protected:
 
 	Sound SCorrection;
 	Sound S5P100;
-	Sound SExploded;
-	Sound SLEVA;
-	Sound SApollo13;
 
 	Sound SRover;
 	Sound SPUShiftS;
