@@ -2,7 +2,9 @@
 6.3:
 ----
 
+Fixed bug preventing time acceleration for a few hours after course correction burn.
 Renamed sound directory again from NCPP to ProjectApollo.
+Wired in new Apollo-13 sounds.
 
 6.2:
 ----
