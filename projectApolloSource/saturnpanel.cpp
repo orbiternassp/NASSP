@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/03/16 16:04:58  yogenfrutz
+  *	changed for splitted csm panel (resolves ATI bug)
+  *	
   *	Revision 1.10  2005/03/16 13:39:06  yogenfrutz
   *	changed position of docking panel MFD by 1pixel lower and 1 pixel right for better look
   *	
@@ -572,10 +575,10 @@ bool Saturn::clbkLoadPanel (int id)
 
 	
 //changed for splitted panel
-	MFDSPEC mfds_left_l  = {1012, 770, 1290, 1048};
-	MFDSPEC mfds_right_l = {1305, 770, 1583, 1048};
-	MFDSPEC mfds_left_r  = {253, 770, 531, 1048};
-	MFDSPEC mfds_right_r = {546, 770, 824, 1048};
+	MFDSPEC mfds_left_l  = {{1012, 770, 1290, 1048}, 6, 6, 41, 27};
+	MFDSPEC mfds_right_l = {{1305, 770, 1583, 1048}, 6, 6, 41, 27};
+	MFDSPEC mfds_left_r  = {{253, 770, 531, 1048}, 6, 6, 41, 27};
+	MFDSPEC mfds_right_r = {{546, 770, 824, 1048}, 6, 6, 41, 27};
 
 	MFDSPEC mfds_dock = {{893, 627, 1112, 842}, 6, 6, 31, 31};;
 
