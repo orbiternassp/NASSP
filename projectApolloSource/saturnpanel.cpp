@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/03/11 17:54:00  tschachim
+  *	Introduced GuardedToggleSwitch and GuardedThreePosSwitch
+  *	
   *	Revision 1.6  2005/03/10 19:06:24  tschachim
   *	fixed "one pixel" bug
   *	
@@ -98,11 +101,13 @@ void Saturn::RedrawPanel_G (SURFHANDLE surf)
 	double alpha;
 	double range;
 
-	alpha = fabs(aHAcc/G);
+	alpha = aZAcc/G;
 
 	//sprintf(oapiDebugString(), "Accel %f", alpha);
 	if (alpha > 15)
 		alpha = 15;
+	if (alpha < -1)
+		alpha = -1;
 
 	range = 235 * RAD;
 	range = range / 15;
