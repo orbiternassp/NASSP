@@ -15,13 +15,16 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with yaAGC; if not, write to the Free Software
+  along with Project Apollo; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   See http://nassp.sourceforge.net/license/ for more details
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/02/03 23:14:54  tschachim
+  *	stuff seen
+  *
   *	Revision 1.3  2005/02/03 22:38:10  movieman523
   *	Added line
   *
