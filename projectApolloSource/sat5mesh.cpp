@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/03/09 00:22:53  chode99
+  *	Added 4 SII retrorockets.
+  *	Corrected placement of SIC retros.
+  *	
   *	Revision 1.3  2005/02/19 19:45:07  chode99
   *	Moved 1 line of code (VECTOR3 mesh_dir=...) to allow compilation in .NET 2003
   *	
@@ -1377,20 +1381,20 @@ void SaturnV::Retro1(OBJHANDLE hvessel, double gaz)
 
 	VESSEL *stg1vessel = oapiGetVesselInterface(hvessel);
 
-	VECTOR3 m_exhaust_pos2= {-5.5,0, -16};
-	VECTOR3 m_exhaust_pos3= {5.5,0, -16};
-	VECTOR3 m_exhaust_pos4= {0,-5.5, -16};
-	VECTOR3 m_exhaust_pos5= {0,5.5, -16};
+	VECTOR3 m_exhaust_pos2= {-4,-4, -14};
+	VECTOR3 m_exhaust_pos3= {-4,4, -14};
+	VECTOR3 m_exhaust_pos4= {4,-4, -14};
+	VECTOR3 m_exhaust_pos5= {4,4, -14};
 
 	ph_retro1 = stg1vessel->CreatePropellantResource(51.6 * SI_RetroNum);
 
 	double thrust = 382000;
 
 	if (!th_retro1[0]) {
-		th_retro1[0] = stg1vessel->CreateThruster (m_exhaust_pos2, _V(0.14, 0, -0.9), thrust, ph_retro1, 4000);
-		th_retro1[1] = stg1vessel->CreateThruster (m_exhaust_pos3, _V(-0.14, 0, -0.9), thrust, ph_retro1, 4000);
-		th_retro1[2] = stg1vessel->CreateThruster (m_exhaust_pos4, _V(0, 0.14, -0.9), thrust, ph_retro1, 4000);
-		th_retro1[3] = stg1vessel->CreateThruster (m_exhaust_pos5, _V(0,-0.14, -0.9), thrust, ph_retro1, 4000);
+		th_retro1[0] = stg1vessel->CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro1, 4000);
+		th_retro1[1] = stg1vessel->CreateThruster (m_exhaust_pos3, _V(0.1, -0.1, -0.9), thrust, ph_retro1, 4000);
+		th_retro1[2] = stg1vessel->CreateThruster (m_exhaust_pos4, _V(-0.1, 0.1, -0.9), thrust, ph_retro1, 4000);
+		th_retro1[3] = stg1vessel->CreateThruster (m_exhaust_pos5, _V(-0.1, -0.1, -0.9), thrust, ph_retro1, 4000);
 	}
 
 	thg_retro1 = stg1vessel->CreateThrusterGroup(th_retro1, 4, THGROUP_RETRO);
