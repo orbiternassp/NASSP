@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/03/09 00:26:15  chode99
+  *	Added code to support SII retros.
+  *	
   *	Revision 1.4  2005/03/03 17:57:37  tschachim
   *	panel handling
   *	
@@ -322,9 +325,13 @@ void Saturn::initSaturn()
 	aVAcc = 0;
 	aVSpeed = 0;
 	aHAcc = 0;
+	aZAcc = 0;
 	ALTN1 = 0;
 	SPEEDN1 = 0;
 	VSPEEDN1 = 0;
+	XSPEEDN1 = 0;
+	YSPEEDN1 = 0;
+	ZSPEEDN1 = 0;
 	aTime = 0;
 
 	viewpos = SATVIEW_CDR;
@@ -1061,13 +1068,19 @@ void Saturn::GenericTimestep(double simt)
 
 	actualFUEL = ((GetFuelMass()*100)/GetMaxFuelMass());
 
-	double aSpeed, DV, aALT, DVV, DVA;
+	double aSpeed, DV, aALT, DVV, DVA, DVX, DVY, DVZ;
+	VECTOR3 globalV;
+	double agrav,radius,mass,localVz,calpha,salpha,cbeta,sbeta,radius2;
+	OBJHANDLE hPlanet;
+	VESSELSTATUS status;
 
 	aSpeed = actualVEL/3600*1000;
 	aALT = actualALT;
 
 	dTime = simt - aTime;
-	if(dTime > 0.1) {
+
+	if(dTime > 0.2) {
+
 		DV= aSpeed - SPEEDN1;
 		aHAcc= (DV / dTime);
 		DVV = aALT - ALTN1;
@@ -1079,6 +1092,30 @@ void Saturn::GenericTimestep(double simt)
 		VSPEEDN1 = aVSpeed;
 		ALTN1 = aALT;
 		SPEEDN1= aSpeed;
+
+//  This stuff is to compute the component of the total acceleration
+//		 along the z axis. This supports the "G-gauge" on the panel.
+
+		GetStatus(status);
+		calpha = cos(status.arot.x);
+		cbeta = cos(status.arot.y);
+		salpha = sin(status.arot.x);
+		sbeta = sin(status.arot.y);
+		DVX = status.rvel.x - XSPEEDN1;
+		DVY = status.rvel.y - YSPEEDN1;
+		DVZ = status.rvel.z - ZSPEEDN1;
+		DVZ = cbeta*(DVY*salpha+DVZ*calpha)-DVX*sbeta;
+		aZAcc = (DVZ / dTime);
+		hPlanet = GetSurfaceRef();
+		mass = oapiGetMass(hPlanet);
+		radius2 = status.rpos.x*status.rpos.x+status.rpos.y*status.rpos.y+status.rpos.z*status.rpos.z;
+		radius = sqrt(radius2);
+		agrav = cbeta*(status.rpos.y*salpha+status.rpos.z*calpha)-status.rpos.x*sbeta;
+		agrav *= 6.672e-11 * mass/(radius * radius2);
+		aZAcc += agrav;
+		XSPEEDN1 = status.rvel.x;
+		YSPEEDN1 = status.rvel.y;
+		ZSPEEDN1 = status.rvel.z;
 	}
 
 	//
