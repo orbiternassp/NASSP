@@ -22,7 +22,16 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
+
+typedef struct {
+
+	int MissionNo;
+
+} EVASettings;
 
 class Saturn5_LEVA: public VESSEL {
 
@@ -37,20 +46,34 @@ public:
 	void LoadState(FILEHANDLE scn, VESSELSTATUS *vs);
 	void SaveState(FILEHANDLE scn);
 
+	//
+	// Virtual so it can be called from the LEM without needing to link in all the code
+	// to process the function.
+	//
+
+	virtual void SetEVAStats(EVASettings &evas);
+
 private:
 
 	void ScanMotherShip();
 	void MoveEVA();
 	void SetFlag();
+	void SetMissionPath();
+	void DoFirstTimestep();
+	void SetMainState(int s);
+	int GetMainState();
 
 protected:
+
+	int ApolloNo;
+	int StepCount;
 
 	OBJHANDLE hMaster;
 	bool GoDock1;
 	bool GoHover;
 	bool starthover;
 	bool GoRover;
-	bool Astro;
+	bool Astro;						
 	bool MotherShip;
 	char EVAName[256];
 	char CSMName[256];
@@ -63,7 +86,15 @@ protected:
 	bool KEY6;
 	bool KEY7;
 	bool KEY8;
-	bool KEY9;
-	bool GoFlag;
-	bool Flagtrue;
+	bool KEY9;		
+	bool GoFlag;		 
+	bool FlagPlanted;
+
+	bool FirstTimestep;
+	bool SLEVAPlayed;
+	bool StateSet;
+
+	SoundLib soundlib;
+	Sound FlagSound;
+	Sound SLEVA;
 };
