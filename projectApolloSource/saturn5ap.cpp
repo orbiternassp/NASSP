@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/03/11 18:18:18  chode99
+  *	Changed launch autopilot to allow for "heads-down" launch.
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -50,8 +53,8 @@
 
 #define N	16
 
-const double met[N]    = { 0,  58, 70, 80,  90, 110, 130,   160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double cpitch[N] = {90,  75, 60, 50,  45,  40,  35,    30,   30, 30,    25,   20, 10 , 5, -2,0};	// Commanded pitch in °
+const double met[N]    = { 0,  58, 70, 80,  90, 110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
+const double cpitch[N] = {90,  75, 60, 50,  45,  40,  35,  30,  30,  30,  25,  20, 10 ,   5,  -2,   0};	// Commanded pitch in °
 
 static double GetCPitch(double t)
 {
@@ -396,6 +399,11 @@ void SaturnV::AutoPilot(double autoT)
 		bank = GetBank();
 //		oapiGetFocusBank(&bank);
 		bank = bank*180./PI;
+		if(bank > 90) bank = bank - 180;
+		else if(bank < -90) bank = bank + 180;
+
+//		sprintf (oapiDebugString(), "bank = %d", (int)bank);
+
 		if (fabs(bank+(90-TO_HDG)) <15  && StopRot){
 			AtempP = 0.0;
 			AtempR = 0.0;
@@ -413,7 +421,6 @@ void SaturnV::AutoPilot(double autoT)
 			AtempR = -fabs((90-TO_HDG)-bank);
 			if (AtempR < -1)
 				AtempR = -1;
-			if(rhoriz.z>0) AtempR = -AtempR;
 			AtempP = 0.0;
 			AtempY = 0.0;
 		}
@@ -421,7 +428,6 @@ void SaturnV::AutoPilot(double autoT)
 			AtempR = fabs((90-TO_HDG)-bank);
 			if (AtempR > 1)
 				AtempR = 1;
-			if(rhoriz.z>0)AtempR = -AtempR;
 			AtempP = 0.0;
 			AtempY = 0.0;
 		}
@@ -434,6 +440,11 @@ void SaturnV::AutoPilot(double autoT)
 		bank = GetBank();
 //		oapiGetFocusBank(&bank);
 		bank = bank*180./PI;
+		if(bank > 90) bank = bank - 180;
+		else if(bank < -90) bank = bank + 180;
+
+//		sprintf (oapiDebugString(), "bank = %d", (int)bank);
+
 		int etat;
 		if (fabs(heading-TO_HDG) <10 && StopRot) {
 			AtempP = 0.0;
@@ -498,6 +509,10 @@ void SaturnV::AutoPilot(double autoT)
 //		oapiGetFocusBank(&bank);
 		bank = GetBank();
 		bank = bank*180./PI;
+		if(bank > 90) bank = bank - 180;
+		else if(bank < -90) bank = bank + 180;
+
+//		sprintf (oapiDebugString(), "bank = %d", (int)bank);
 
 		if (fabs(bank) < 0.5) {
 			AtempP = 0.0;
@@ -507,12 +522,10 @@ void SaturnV::AutoPilot(double autoT)
 		}
 		else if (bank < 0 && fabs(vsp.vrot.z) < 0.11) {
 			AtempR = 1.0;
-			if(rhoriz.z>0)AtempR=-1.0;
 			//SetAttitudeRotLevel(2,-1 );//bank/30
 		}
 		else if (bank > 0 && fabs(vsp.vrot.z) < 0.11) {
 			AtempR = -1.0;
-			if(rhoriz.z>0)AtempR=1.0;
 			//SetAttitudeRotLevel(2, 1);
 		}
 		else {
