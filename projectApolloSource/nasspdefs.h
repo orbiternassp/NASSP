@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/12 13:27:03  movieman523
+  *	Updated version number
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -77,12 +80,16 @@ const int nsurf = 24; // number of bitmap handles
 #define SRF_DSKYNUM	22
 
 //
-// Earth radius.
+// Earth radius and gravity constants.
 //
 
 static const double ERADIUS = 6371.0;
 const double GK = 6.67259e-20 ;//  Gravitational constant (km^3/(kg sec^2))
 const double GKSI = 6.67259e-20 * 1e9;
+
+//
+// Engine information.
+//
 
 #define SPS_THRUST		100552.5
 #define SPS_ISP			3778.5
@@ -91,9 +98,29 @@ const double GKSI = 6.67259e-20 * 1e9;
 #define DPS_THRUST		44910
 #define DPS_ISP			3107
 
+//
+// Mission times for specific events.
+//
+
 #define APOLLO_13_EXPLOSION_TIME	229400
 
+//
+// We include a sizeable overlap here for the course correction earliest and latest times,
+// to allow for people using high time accelerations.
+//
+
+#define COURSE_CORRECTION_START_TIME	219400
+#define COURSE_CORRECTION_END_TIME	(COURSE_CORRECTION_START_TIME + 10000)
+
+//
+// Flags to show the mesh is visible externally and in the virtual cockpit.
+//
+
 #define MESHVIS_VCEXTERNAL	(MESHVIS_EXTERNAL|MESHVIS_VC)
+
+//
+// SIVB payloads.
+//
 
 #define PAYLOAD_LEM		0
 #define PAYLOAD_ASTP	1
