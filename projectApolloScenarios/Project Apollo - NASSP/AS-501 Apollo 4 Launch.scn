@@ -1,0 +1,63 @@
+BEGIN_DESC
+The Saturn V makes its first flight to test itself and carry an unmanned CSM into orbit on Nov 9 1967. This mission is fully computer-controlled, flying a pre-programmed launch, 'TLI' and re-entry trajectory.
+
+While not a perfect simulation, this does give a basic idea of what happened on the flight.
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System Sol_NASSP5
+  Date MJD 39803.5000115741
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AS-501
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AS-501
+  MODE Extern
+  POS 2.44 178.95 57.37
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Launch
+END_MFD
+
+
+BEGIN_SHIPS
+AS-501:saturn5nasp
+  STATUS Landed Earth
+  BASE Cape Canaveral:11
+  HEADING 90.00
+  FUEL 1.000
+  APOLLONO 4
+  NASSPVER 60002
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -3600
+  TOAPO 192
+  TOPER 184
+  TOHDG 72
+  TCP -8.5
+  LANG English
+  UNMANNED 1
+  S4PL 2
+  S4APO 17000.0
+  S4BURN 11000.0
+  CSMSEP 13200.0
+  CSMAPO 18000.0
+  CSMPER 66.0
+  CSMBURN 14800.0
+  CMSEP 30200.0
+  AUTOSLOW 1
+END
+END_SHIPS

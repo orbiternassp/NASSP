@@ -1,0 +1,52 @@
+BEGIN_DESC
+Join Frank Borman James Lovell and Bill Anders on Mankind's first trek a quater 
+of a million miles to the moon. Dec 21 1968
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System Sol_NASSP5
+  Date MJD 40211.49375
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AS-503
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AS-503
+  MODE Extern
+  POS 2.44 178.95 57.37
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Launch
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+AS-503:saturn5nasp
+  STATUS Landed Earth
+  BASE Cape Canaveral:11
+  HEADING 90.00
+  FUEL 1.000
+  APOLLONO 8
+  NASSPVER 50001
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -3600
+  TOAPO 185.181
+  TOPER 184.403
+  TOHDG 72.124
+END
+END_SHIPS
