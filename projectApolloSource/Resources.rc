@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Englisch (USA) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -46,12 +46,12 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Englisch (USA) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Französisch (Frankreich) resources
+// French (France) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 #ifdef _WIN32
@@ -107,7 +107,10 @@ IDB_ILMTHREEPOSSWITCH   BITMAP  DISCARDABLE     "ilmthreeposswitch.bmp"
 IDB_MFDFRAME            BITMAP  DISCARDABLE     "MFDFrame.bmp"
 IDB_MFDPOWER            BITMAP  DISCARDABLE     "MFDPower.bmp"
 IDB_DOCKINGSWITCHES     BITMAP  DISCARDABLE     "DockingSwitches.bmp"
-#endif    // Französisch (Frankreich) resources
+IDB_MFDFRAME_ILM        BITMAP  DISCARDABLE     "MFDFrame-ilm.bmp"
+IDB_DOCKINGSWITCHES_ILM BITMAP  DISCARDABLE     "DockingSwitches-ilm.bmp"
+IDB_MFDPOWER_ILM        BITMAP  DISCARDABLE     "MFDPower-ilm.bmp"
+#endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
