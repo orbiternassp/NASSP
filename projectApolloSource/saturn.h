@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/03/13 21:20:12  chode99
+  *	Added support for accurate g-gauge calculations.
+  *	
   *	Revision 1.6  2005/03/11 17:54:00  tschachim
   *	Introduced GuardedToggleSwitch and GuardedThreePosSwitch
   *	
@@ -427,6 +430,9 @@ protected:
 	ThreePosSwitch P347switch;
 
 	ThreePosSwitch RPswitch15;
+
+	SwitchRow RCSIndicatorsSwitchRow;
+	RotationalSwitch RCSIndicatorsSwitch;
 
 	//
 	// stage is the main stage of the flight. StageState is the current state within
