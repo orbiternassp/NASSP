@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/03/11 17:54:00  tschachim
+  *	Introduced GuardedToggleSwitch and GuardedThreePosSwitch
+  *	
   *	Revision 1.5  2005/03/09 22:09:02  tschachim
   *	Docking panel camera without changing direction from Yogenfrutz
   *	Switchable docking panel MFD
@@ -472,9 +475,13 @@ protected:
 	double aVAcc;
 	double aVSpeed;
 	double aHAcc;
+	double aZAcc;
 	double ALTN1;
 	double SPEEDN1;
 	double VSPEEDN1;
+	double XSPEEDN1;
+	double YSPEEDN1;
+	double ZSPEEDN1;
 	double aTime;
 	double dTime;
 
