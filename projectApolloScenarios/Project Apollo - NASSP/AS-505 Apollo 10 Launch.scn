@@ -37,7 +37,7 @@ END_PANEL
 BEGIN_SHIPS
 AS-505:saturn5nasp
   STATUS Landed Earth
-  BASE Cape Canaveral:1
+  BASE Cape Canaveral:11
   HEADING 90.00
   FUEL 1.000
   APOLLONO 10
