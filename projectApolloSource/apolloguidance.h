@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 class DSKY;
@@ -75,6 +78,7 @@ public:
 	void SetVesselStats(double ISP, double Thrust, bool MainIsHover);
 	void ControlVessel(VESSEL *v) { OurVessel = v; };
 	void SetApolloNo(int flight) { ApolloNo = flight; };
+	int GetApolloNo() { return ApolloNo; };
 	void SetDesiredLanding(double latitude, double longitude, double altitude);
 
 	void Startup();
