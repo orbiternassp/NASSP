@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/03/02 01:19:03  chode99
+  *	Changed MFDSPEC lines to be same size as LM, and added button definitions, like the LM.
+  *	For some unknown reason, this seems to prevent the CTDs that were occuring when issuing certain MFD commands.
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -332,6 +336,23 @@ void Saturn::RedrawPanel_Horizon (SURFHANDLE surf)
 	oapiBlt (surf, srf[5], 0, 0, 0, 0, 96, 96, SURF_PREDEF_CK);
 }
 
+void Saturn::RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side) {
+
+	HDC hDC = oapiGetDC (surf);
+	SelectObject (hDC, g_Param.font[2]);
+	SetTextColor (hDC, RGB(196, 196, 196));
+	SetTextAlign (hDC, TA_CENTER);
+	SetBkMode (hDC, TRANSPARENT);
+	const char *label;
+	for (int bt = 0; bt < 6; bt++) {
+		if (label = oapiMFDButtonLabel (mfd, bt+side*6))
+			TextOut (hDC, 10, 3+31*bt, label, strlen(label));
+		else break;
+	}
+	oapiReleaseDC (surf, hDC);
+}
+
+
 //
 // Free all allocated surfaces.
 //
@@ -390,6 +411,7 @@ void Saturn::InitPanel (int panel)
 		break;
 
 	case 1: // panel
+	case 3:
 		srf[0] = oapiCreateSurface (LOADBMP (IDB_FCSM));
 		srf[1] = oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
 		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
@@ -434,6 +456,19 @@ bool Saturn::clbkLoadPanel (int id)
 	static HBITMAP hBmpFlat = 0;
 	static HBITMAP hBmpDckLit = 0;
 	static HBITMAP hBmpDckFlat = 0;
+	static bool recursion;
+
+	// avoid recursive calls
+	if (recursion) return true;
+	recursion = true;
+
+	if (!InPanel && id != PanelId) {
+		// sometimes clbkLoadPanel is called inside oapiSetPanel, 
+		// sometimes not, so ignore the recursive call
+		oapiSetPanel(PanelId);
+		id = PanelId;
+	}
+	recursion = false;
 
 	ReleaseSurfaces();
 
@@ -480,6 +515,7 @@ bool Saturn::clbkLoadPanel (int id)
 
 	MFDSPEC mfds_left  = {{1012, 730, 1291, 1009}, 6, 6, 41, 27};
 	MFDSPEC mfds_right = {{1305, 730, 1584, 1009}, 6, 6, 41, 27};
+	MFDSPEC mfds_dock = {{892, 626, 1111, 841}, 6, 6, 31, 31};;
 
 	switch (id) {
 	case 0: // main panel
@@ -590,17 +626,39 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelArea (AID_EMS_DISPLAY,							_R( 545, 224,  647,  329), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		break;
 
-	case 2: // bottom panel
+	case 2: // docking panel
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+		break;
+
 	case 3:
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+
+		oapiRegisterMFD (MFD_USER1, mfds_dock);
+		oapiRegisterPanelArea (AID_MFDDOCK_BBUTTONS, _R( 899,  847, 1103,  861), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN); // bottom button row
+		oapiRegisterPanelArea (AID_MFDDOCK_LBUTTONS, _R( 858,  651,  877,  820), PANEL_REDRAW_USER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND); // left button column
+		oapiRegisterPanelArea (AID_MFDDOCK_RBUTTONS, _R(1125,  651, 1144,  820), PANEL_REDRAW_USER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND); // right button column
+
+		oapiRegisterPanelArea (AID_SM_RCS_MODE, _R( 770, 817,  832,  850), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+
 		break;
 	}
 
 	InitPanel (id);
 
-	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
-	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+	if (id == 2 || id == 3) {
+		VECTOR3 defDir = _V(0.19, 0.02, 1.0);
+		SetCameraDefaultDirection(defDir / length(defDir));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+		//SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+	} else {
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+	}
+
 	InVC = false;
+	InPanel = true;
+	PanelId = id;
+	SetView();
 
 	return hBmp != NULL;
 }
@@ -1468,6 +1526,7 @@ void SetupgParam(HINSTANCE hModule)
 	// allocate GDI resources
 	g_Param.font[0]  = CreateFont (-13, 0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
 	g_Param.font[1]  = CreateFont (-10, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
+	g_Param.font[2]  = CreateFont (-8, 0, 0, 0, 400, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
 	g_Param.brush[0] = CreateSolidBrush (RGB(0,255,0));    // green
 	g_Param.brush[1] = CreateSolidBrush (RGB(255,0,0));    // red
 	g_Param.brush[2] = CreateSolidBrush (RGB(154,154,154));  // Grey
@@ -1484,7 +1543,7 @@ void DeletegParam()
 	int i;
 
 	// deallocate GDI resources
-	for (i = 0; i < 2; i++) DeleteObject (g_Param.font[i]);
+	for (i = 0; i < 3; i++) DeleteObject (g_Param.font[i]);
 	for (i = 0; i < 4; i++) DeleteObject (g_Param.brush[i]);
 	for (i = 0; i < 4; i++) DeleteObject (g_Param.pen[i]);
 }
@@ -2352,7 +2411,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-		case AID_EMS_KNOB:
+	case AID_EMS_KNOB:
 		if (my >=1 && my <=34 ){
 			if (mx > 1 && mx < 67 && !EMSKswitch){
 				SwitchClick();
@@ -2367,6 +2426,20 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
+	// panel 3 events:
+	case AID_MFDDOCK_BBUTTONS:
+		if (mx < 19)                    oapiToggleMFD_on (MFD_USER1);
+		else if (mx >= 162 && mx < 180) oapiSendMFDKey (MFD_USER1, OAPI_KEY_F1);
+		else if (mx > 184)              oapiSendMFDKey (MFD_USER1, OAPI_KEY_GRAVE);
+		return true;
+
+	case AID_MFDDOCK_LBUTTONS:
+	case AID_MFDDOCK_RBUTTONS:
+		if (my%31 < 14) {
+			int bt = my/31 + (id == AID_MFDDOCK_LBUTTONS ? 0 : 6);
+			oapiProcessMFDButton (MFD_USER1, bt, event);
+			return true;
+		}
 		break;
 
 	}
@@ -3571,8 +3644,28 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[12],50,3,126,3,20,20);
 		}
 		return true;
+
+	// panel 3 events
+	case AID_MFDDOCK_LBUTTONS:
+		RedrawPanel_MFDButton (surf, MFD_USER1, 0);
+		return true;
+
+	case AID_MFDDOCK_RBUTTONS:
+		RedrawPanel_MFDButton (surf, MFD_USER1, 1);
+		return true;
+
 	}
 	return false;
+}
+
+void Saturn::clbkMFDMode (int mfd, int mode) {
+
+	switch (mfd) {
+	case MFD_USER1:
+		oapiTriggerPanelRedrawArea (3, AID_MFDDOCK_LBUTTONS);
+		oapiTriggerPanelRedrawArea (3, AID_MFDDOCK_RBUTTONS);
+		break;
+	}
 }
 
 //
