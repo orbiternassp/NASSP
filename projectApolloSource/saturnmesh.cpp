@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/03/03 17:58:43  tschachim
+  *	panel handling for generic cockpit
+  *	
   *	Revision 1.4  2005/02/20 20:20:45  chode99
   *	Changed touchdown points for recovery stage so it is also "above water".
   *	
@@ -686,7 +689,7 @@ void Saturn::SetCSM2Stage ()
 
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 
-	AddRCSJets(3.30,1990);
+	AddRCSJets(-13.30,1990);
 
 	SetView(0.4);
 
