@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/03/09 19:08:37  chode99
+  *	SIC retrorockets moved back into main rocket motor fairings, made more visible by moving out and forward a bit.
+  *	
   *	Revision 1.4  2005/03/09 00:22:53  chode99
   *	Added 4 SII retrorockets.
   *	Corrected placement of SIC retros.
@@ -85,6 +88,7 @@ static MESHHANDLE hCONE;
 static MESHHANDLE hApollocsm;
 
 static MESHHANDLE hLMPKD;
+static MESHHANDLE hapollo8lta;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -100,6 +104,7 @@ void LoadSat5Meshes()
 	LOAD_MESH(hsat5stg33, "sat5stg33");
 	LOAD_MESH(hsat5stg34, "sat5stg34");
 	LOAD_MESH(hLMPKD, "LM_Parked");
+	LOAD_MESH(hapollo8lta, "apollo8_lta");
 	LOAD_MESH(hCRAWL, "CRAWLER");
 }
 
@@ -758,17 +763,19 @@ void SaturnV::SetPayloadMesh(VESSEL *s4b)
 
 {
 	VECTOR3 mesh_dir;
+	VECTOR3 dockpos = {0,0,-2.2};
+	VECTOR3 dockdir = {0,0,1};
+	VECTOR3 dockrot = {-0.705,-0.705,0};
 
 	switch (SIVBPayload) {
 	case PAYLOAD_LEM:
 		mesh_dir=_V(-0.0,0,-4.7);
 		s4b->AddMesh (hLMPKD, &mesh_dir);
 
-		VECTOR3 dockpos = {0,0,-2.2};
-		VECTOR3 dockdir = {0,0,1};
-		VECTOR3 dockrot = {-0.705,-0.705,0};
 		s4b->SetDockParams(dockpos, dockdir, dockrot);
-
+	case PAYLOAD_LTA:
+		mesh_dir=_V(0.0,0,-5.7);
+		s4b->AddMesh (hapollo8lta, &mesh_dir);
 		break;
 	}
 }
@@ -1039,7 +1046,8 @@ void SaturnV::SeparateStage (int stage)
 			break;
 
 		case PAYLOAD_LTA:
-			s4bconfig = "sat5stg3lta";
+//			s4bconfig = "sat5stg3lta";
+			s4bconfig = "sat5stg3lem";
 			break;
 
 		//
