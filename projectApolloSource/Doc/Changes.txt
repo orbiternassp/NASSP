@@ -4,6 +4,7 @@
 Revised LEVA code, with 'flag planting' sound support.
 Fixed up the LEM to work around missing sound if we switch to the lunar astronaut immediately after creating them.
 Adjusted astronaut mesh position to make the walk closer to the moon's surface.
+Turned more sounds into mission-specific sounds for NEP.
 
 6.3:
 ----
