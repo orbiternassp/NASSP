@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/02/20 05:24:58  chode99
+  *	Changes to implement realistic CM aerodynamics. Created callback function "CoeffFunc" in Saturn1b.cpp and Saturn5.cpp. Substituted CreateAirfoil for older lift functions.
+  *	
   *	Revision 1.3  2005/02/19 00:03:28  movieman523
   *	Reduced volume of APS sound playback, and changed course correction logic to use times from header file, not hard-coded in C++ code.
   *	
@@ -610,7 +613,7 @@ void SaturnV::StageTwo(double simt)
 		}
 
 		if (hstg1) {
-			Ullage(hstg1, 5);
+			Retro1(hstg1, 5);
 		}
 
 		NextMissionEventTime = MissionTime + 1.4;
@@ -1856,7 +1859,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 	case 0:
 		SetThrusterResource(th_main[0], ph_3rd);
 		if (hstg2)
-			Ullage2(hstg2,5);
+			Retro2(hstg2,5);
 		SepS.play(LOOP, 130);
 		SetThrusterGroupLevel(thg_ver,1.0);
 		NextMissionEventTime = MissionTime + 2.0;

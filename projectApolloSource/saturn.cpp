@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/03/03 17:57:37  tschachim
+  *	panel handling
+  *	
   *	Revision 1.3  2005/02/19 00:03:57  movieman523
   *	Reduced volume of APS sound playback.
   *	
@@ -206,6 +209,7 @@ void Saturn::initSaturn()
 	ph_rcs1 = 0;
 	ph_sps = 0;
 	ph_retro1 = 0;
+	ph_retro2 = 0;
 
 	//
 	// Thruster groups.
@@ -215,6 +219,7 @@ void Saturn::initSaturn()
 	thg_ull = 0;
 	thg_ver = 0;
 	thg_retro1 = 0;
+	thg_retro2 = 0;
 	thg_aps = 0;
 
 	//
@@ -272,6 +277,10 @@ void Saturn::initSaturn()
 
 	for (i = 0; i < 4; i++) {
 		th_retro1[i] = 0;
+	}
+
+	for (i = 0; i < 4; i++) {
+		th_retro2[i] = 0;
 	}
 
 	th_sps[0] = 0;
