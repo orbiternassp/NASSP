@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/03/09 22:01:31  tschachim
+  *	nsurf = 27
+  *	
   *	Revision 1.5  2005/03/03 17:54:58  tschachim
   *	new font
   *	
@@ -135,3 +138,5 @@ const double GKSI = 6.67259e-20 * 1e9;
 #define PAYLOAD_ASTP	1
 #define PAYLOAD_LTA		2
 #define PAYLOAD_LM1		3
+#define PAYLOAD_LTA8	4
+
