@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/18 00:44:06  movieman523
+  *	Added new Apollo 13 sounds, removed unused MESHHANDLEs.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -68,6 +71,8 @@ public:
 	bool clbkLoadGenericCockpit ();
 	bool clbkPanelMouseEvent(int id, int event, int mx, int my);
 	bool clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf);
+	void clbkMFDMode (int mfd, int mode);
+
 	virtual void Timestep(double simt) = 0;
 	int clbkConsumeDirectKey(char *keystate);
 
@@ -463,7 +468,6 @@ protected:
 	double actualVEL;
 	double actualALT;
 	double actualFUEL;
-	int PanelID;
 
 	double ThrustAdjust;
 
@@ -630,6 +634,8 @@ protected:
 	bool RCS_Full;
 	bool LEMdatatransfer;
 	bool InVC;
+	bool InPanel;
+	int  PanelId;
 	bool KranzPlayed;
 
 	OBJHANDLE hEVA;
@@ -691,6 +697,7 @@ protected:
 	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
+	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side);
 	double SetPitchApo();
 	void SetStage(int s);
 	void setupSM(OBJHANDLE hvessel);
