@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/18 00:40:17  movieman523
+  *	Play appropriate seperation sound at SM sep.
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -1232,6 +1235,8 @@ void SaturnV::DockStage (UINT dockstatus)
 	vs5.rvel.y = rvel5.y+rofs5.y;
 	vs5.rvel.z = rvel5.z+rofs5.z;
 
+    VECTOR3 mesh_dir = _V(0,0,-14.1);
+
    switch (dockstatus)	{
 
    case 1:
@@ -1250,7 +1255,6 @@ void SaturnV::DockStage (UINT dockstatus)
 		//time to free LM from SIVB
 		targetvessel->ClearMeshes();
 
-		VECTOR3 mesh_dir = _V(0,0,-14.1);
 		targetvessel->AddMesh (hsat5stg3, &mesh_dir);
 //		targetvessel->ShiftCentreOfMass(_V(0,0,-14.1));
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -637,6 +640,8 @@ void Saturn1b::DockStage (UINT dockstatus)
 	VECTOR3 ofs = _V(0,0,0);
 	VECTOR3 vel = _V(0,0,0.6);
 
+	VECTOR3 mesh_dir=_V(0,0,0);
+
    switch (dockstatus)	{
 
    case 2:
@@ -645,7 +650,6 @@ void Saturn1b::DockStage (UINT dockstatus)
 		Undock(0);
 		targetvessel=oapiGetVesselInterface(hs4bM);
 		targetvessel->ClearMeshes();
-		VECTOR3 mesh_dir=_V(0,0,0);
 		targetvessel->AddMesh (hSat1stg2, &mesh_dir);
 		mesh_dir=_V(0,4,-4.2);
 		//targetvessel->AddMesh (hapsl, &mesh_dir);
