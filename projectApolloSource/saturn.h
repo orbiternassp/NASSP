@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/03/09 22:09:02  tschachim
+  *	Docking panel camera without changing direction from Yogenfrutz
+  *	Switchable docking panel MFD
+  *	
   *	Revision 1.4  2005/03/09 00:24:15  chode99
   *	Added header stuff for SII retrorockets.
   *	
@@ -210,8 +214,11 @@ protected:
 	bool TJ2switch;
 	bool TJ2Cswitch;
 
-	bool IMUswitch;
-	bool IMUCswitch;
+	//bool IMUswitch;
+	//bool IMUCswitch;
+	SwitchRow IMUswitchRow;
+	GuardedToggleSwitch IMUswitch;
+	//GuardedThreePosSwitch IMUswitch;
 
 	bool LVSswitch;
 	bool LVSCswitch;

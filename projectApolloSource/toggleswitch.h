@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/03/09 21:59:30  tschachim
+  *	Introduced visible flag
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -100,8 +103,8 @@ public:
 
 	//
 	// I don't understand why this isn't inherited properly from ToggleSwitch?
-	//
-
+	// Answer from the language reference: 
+	// All overloaded operators except assignment (operator=) are inherited by derived classes.
 	unsigned operator=(const unsigned b) { state = (b != 0); return (unsigned)state; };
 };
 
@@ -136,6 +139,60 @@ public:
 	bool IsUp() { return (state == 2); };
 
 	int operator=(const int b) { state = b; return state; };
+};
+
+class GuardedToggleSwitch: public ToggleSwitch {
+
+public:
+	GuardedToggleSwitch();
+	virtual ~GuardedToggleSwitch();
+
+	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, 
+				   SoundLib &s, int xOffset = 0, int yOffset = 0);
+	void DrawSwitch(SURFHANDLE DrawSurface);
+	bool CheckMouseClick(int event, int mx, int my);
+	int GetGuardState() { return guardState; };
+	void SetGuardState(bool s) { guardState = s; };
+
+	int operator=(const int b) { state = b; return state; };
+
+protected:
+	int	guardX;
+	int guardY;
+	int guardWidth;
+	int guardHeight;
+	int guardState;
+	SURFHANDLE guardSurface;
+	int guardXOffset;
+	int guardYOffset;
+	Sound guardClick;
+};
+
+class GuardedThreePosSwitch: public ThreePosSwitch {
+
+public:
+	GuardedThreePosSwitch();
+	virtual ~GuardedThreePosSwitch();
+
+	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, 
+				   SoundLib &s, int xOffset = 0, int yOffset = 0);
+	void DrawSwitch(SURFHANDLE DrawSurface);
+	bool CheckMouseClick(int event, int mx, int my);
+	int GetGuardState() { return guardState; };
+	void SetGuardState(bool s) { guardState = s; };
+
+	int operator=(const int b) { state = b; return state; };
+
+protected:
+	int	guardX;
+	int guardY;
+	int guardWidth;
+	int guardHeight;
+	int guardState;
+	SURFHANDLE guardSurface;
+	int guardXOffset;
+	int guardYOffset;
+	Sound guardClick;
 };
 
 class PanelSwitches;

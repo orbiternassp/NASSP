@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/03/09 21:59:30  tschachim
+  *	Introduced visible flag
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -207,8 +210,7 @@ void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib 
 
 	if (!Sclick.isValid())
 		s.LoadSound(Sclick, CLICK_SOUND);
-};
-
+}
 
 void ToggleSwitch::SetActive(bool s)
 
@@ -447,5 +449,142 @@ bool PanelSwitches::DrawRow(int id, SURFHANDLE DrawSurface)
 		row = row->GetNext();
 	}
 
+	return false;
+}
+
+//
+// Guarded toggle switch.
+//
+
+GuardedToggleSwitch::GuardedToggleSwitch() {
+	
+	guardX = 0;
+	guardY = 0;
+	guardWidth = 0;
+	guardHeight = 0;
+	guardSurface = 0;
+	guardState = 0;
+}
+
+GuardedToggleSwitch::~GuardedToggleSwitch() {
+	guardClick.done();
+}
+
+void GuardedToggleSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, 
+									SoundLib &s, int xOffset, int yOffset) {
+	guardX = xp;
+	guardY = yp;
+	guardWidth = w;
+	guardHeight = h;
+	guardSurface = surf;
+	guardXOffset = xOffset;
+	guardYOffset = yOffset;
+
+	if (!guardClick.isValid())
+		s.LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
+}
+
+void GuardedToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
+
+	if (!visible) return;
+
+	if(guardState) {
+		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight);
+		DoDrawSwitch(DrawSurface);
+	} else {
+		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight);
+	}
+}
+
+bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	if (!visible) return false;
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+		if (mx >= guardX && mx <= guardX + guardHeight) {			
+			if (guardState) {
+				guardState = 0;
+				if (Active && state) SwitchToggled = true;
+				state = 0;
+			} else {
+				guardState = 1;
+			}
+			guardClick.play();
+			return true;
+		}
+	} else if (event & PANEL_MOUSE_LBDOWN) {
+		if (guardState) {
+			return ToggleSwitch::CheckMouseClick(event, mx, my);
+		}
+	}
+	return false;
+}
+
+
+//
+// Guarded three pos switch.
+//
+
+GuardedThreePosSwitch::GuardedThreePosSwitch() {
+	
+	guardX = 0;
+	guardY = 0;
+	guardWidth = 0;
+	guardHeight = 0;
+	guardSurface = 0;
+	guardState = 0;
+}
+
+GuardedThreePosSwitch::~GuardedThreePosSwitch() {
+	guardClick.done();
+}
+
+void GuardedThreePosSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, 
+									SoundLib &s, int xOffset, int yOffset) {
+	guardX = xp;
+	guardY = yp;
+	guardWidth = w;
+	guardHeight = h;
+	guardSurface = surf;
+	guardXOffset = xOffset;
+	guardYOffset = yOffset;
+
+	if (!guardClick.isValid())
+		s.LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
+}
+
+void GuardedThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
+
+	if (!visible) return;
+
+	if(guardState) {
+		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight);
+		ThreePosSwitch::DrawSwitch(DrawSurface);
+	} else {
+		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight);
+	}
+}
+
+bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	if (!visible) return false;
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+		if (mx >= guardX && mx <= guardX + guardHeight) {			
+			if (guardState) {
+				guardState = 0;
+				if (Active && state) SwitchToggled = true;
+				state = 0;
+			} else {
+				guardState = 1;
+			}
+			guardClick.play();
+			return true;
+		}
+	} else if (event & PANEL_MOUSE_LBDOWN) {
+		if (guardState) {
+			return ThreePosSwitch::CheckMouseClick(event, mx, my);
+		}
+	}
 	return false;
 }

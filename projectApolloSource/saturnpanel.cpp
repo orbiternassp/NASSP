@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/03/10 19:06:24  tschachim
+  *	fixed "one pixel" bug
+  *	
   *	Revision 1.5  2005/03/09 22:09:02  tschachim
   *	Docking panel camera without changing direction from Yogenfrutz
   *	Switchable docking panel MFD
@@ -891,7 +894,12 @@ void Saturn::SetSwitches(int panel)
 
 	RPswitch15.Init(0, 0, 23, 20, srf[23], LPSRow, this, soundlib);
 
+	IMUswitchRow.Init(AID_IMU_SWITCH, MainPanel);
+	IMUswitch.Init( 1, 16, 23, 20, srf[6], IMUswitchRow, this, soundlib);	// ToggleSwitch
+	//IMUswitch.Init( 1, 16, 23, 20, srf[23], IMUswitchRow, this, soundlib);	// ThreePosSwitch
+	IMUswitch.InitGuard(0, 0, 25, 45, srf[8], soundlib);
 }
+
 //
 // Scenario state functions.
 //
@@ -957,7 +965,7 @@ int Saturn::GetCSwitchState()
 	state.u.ELSCswitch = ELSCswitch;
 	state.u.CMDCswitch = CMDCswitch;
 	state.u.CMPCswitch = CMPCswitch;
-	state.u.IMUCswitch = IMUCswitch;
+	state.u.IMUCswitch = IMUswitch.GetGuardState(); // IMUCswitch;
 	state.u.MRswitch = MRswitch;
 	state.u.MRCswitch = MRCswitch;
 	state.u.TJ1switch = TJ1switch;
@@ -995,7 +1003,7 @@ void Saturn::SetCSwitchState(int s)
 	ELSCswitch = state.u.ELSCswitch;
 	CMDCswitch = state.u.CMDCswitch;
 	CMPCswitch = state.u.CMPCswitch;
-	IMUCswitch = state.u.IMUCswitch;
+	IMUswitch.SetGuardState(state.u.IMUCswitch);   //IMUCswitch = state.u.IMUCswitch;
 	MRswitch = state.u.MRswitch;
 	MRCswitch = state.u.MRCswitch;
 	TJ1switch = state.u.TJ1switch;
@@ -1689,7 +1697,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_IMU_SWITCH:
+/*	case AID_IMU_SWITCH:
 		if(event & PANEL_MOUSE_RBDOWN){
 			if(mx <25 ){
 				IMUCswitch = !IMUCswitch;
@@ -1707,7 +1715,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 		}
 		return true;
-
+*/
 	case AID_MAIN_RELEASE_SWITCH:
 		if(event & PANEL_MOUSE_RBDOWN){
 			if(mx <25 ){
@@ -2670,7 +2678,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_IMU_SWITCH:
+/*	case AID_IMU_SWITCH:
 			if(IMUCswitch){
 			oapiBlt(surf,srf[8],0,0,25,0,25,45);
 			if(IMUswitch){
@@ -2683,7 +2691,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			IMUswitch=false;
 		}
 		return true;
-
+*/
 	case AID_MAIN_RELEASE_SWITCH:
 			if(MRCswitch){
 			oapiBlt(surf,srf[8],0,0,25,0,25,45);
@@ -3811,7 +3819,8 @@ void Saturn::InitSwitches()
 	CMPCswitch = false;
 
 	IMUswitch = false;
-	IMUCswitch = false;
+	IMUswitch.SetGuardState(false);
+	//IMUCswitch = false;
 
 	P111switch = false;
 	P112switch = false;
