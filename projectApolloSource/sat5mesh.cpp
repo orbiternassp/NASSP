@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include <stdio.h>
@@ -1072,7 +1075,19 @@ void SaturnV::SeparateStage (int stage)
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 
-		SMJetS.play();
+		//
+		// Play appropriate sound for SM seperation.
+		//
+
+		if (ApolloExploded && SSMSepExploded.isValid()) {
+			SSMSepExploded.play(NOLOOP, 200);
+		}
+		else {
+			SMJetS.play();
+		}
+
+		SMJetS.done();
+		SSMSepExploded.done();
 
 		if(dockstate != 5){
 			VECTOR3 ofs = OFS_DOCKING2;
