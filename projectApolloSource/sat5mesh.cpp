@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/03/26 01:48:39  chode99
+  *	Added the LTA for Apollo 8, need scenario file with line "S4PL 2" to use it as a payload instead of the LM.
+  *	
   *	Revision 1.5  2005/03/09 19:08:37  chode99
   *	SIC retrorockets moved back into main rocket motor fairings, made more visible by moving out and forward a bit.
   *	
@@ -89,6 +92,7 @@ static MESHHANDLE hApollocsm;
 
 static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
+static MESHHANDLE hlta_2r;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -105,6 +109,7 @@ void LoadSat5Meshes()
 	LOAD_MESH(hsat5stg34, "sat5stg34");
 	LOAD_MESH(hLMPKD, "LM_Parked");
 	LOAD_MESH(hapollo8lta, "apollo8_lta");
+	LOAD_MESH(hlta_2r, "LTA_2R");
 	LOAD_MESH(hCRAWL, "CRAWLER");
 }
 
@@ -771,9 +776,13 @@ void SaturnV::SetPayloadMesh(VESSEL *s4b)
 	case PAYLOAD_LEM:
 		mesh_dir=_V(-0.0,0,-4.7);
 		s4b->AddMesh (hLMPKD, &mesh_dir);
-
 		s4b->SetDockParams(dockpos, dockdir, dockrot);
+		break;
 	case PAYLOAD_LTA:
+		mesh_dir=_V(0.0,0,-4.9);
+		s4b->AddMesh (hlta_2r, &mesh_dir);
+		break;
+	case PAYLOAD_LTA8:
 		mesh_dir=_V(0.0,0,-5.7);
 		s4b->AddMesh (hapollo8lta, &mesh_dir);
 		break;
@@ -1044,10 +1053,11 @@ void SaturnV::SeparateStage (int stage)
 		case PAYLOAD_LEM:
 			s4bconfig = "sat5stg3lem";
 			break;
-
 		case PAYLOAD_LTA:
-//			s4bconfig = "sat5stg3lta";
-			s4bconfig = "sat5stg3lem";
+			s4bconfig = "sat5stg3lta";
+			break;
+		case PAYLOAD_LTA8:
+			s4bconfig = "sat5stg3lta";
 			break;
 
 		//
