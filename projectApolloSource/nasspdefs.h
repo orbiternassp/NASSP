@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/03/28 05:48:42  chode99
+  *	Added new payload type (Apollo 7 COAS target).
+  *	
   *	Revision 1.7  2005/03/27 03:37:56  chode99
   *	Support for new type of test article payload (Apollo 8).
   *	
@@ -89,7 +92,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 27; // number of bitmap handles
+const int nsurf = 28; // number of bitmap handles
 
 #define SRF_DSKY	21
 #define SRF_DSKYNUM	22
