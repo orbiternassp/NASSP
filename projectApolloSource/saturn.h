@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/03/09 00:24:15  chode99
+  *	Added header stuff for SII retrorockets.
+  *	
   *	Revision 1.3  2005/03/03 17:54:13  tschachim
   *	new panel and MFD variables
   *	
@@ -692,7 +695,7 @@ protected:
 	void SetRecovery();
 	void UllageSM(OBJHANDLE hvessel,double gaz1, double time);
 	void InitPanel(int panel);
-	void SetSwitches();
+	void SetSwitches(int panel);
 	void ReleaseSurfaces();
 	void KillDist(OBJHANDLE &hvessel);
 	void KillAlt(OBJHANDLE &hvessel,double altVS);
@@ -700,7 +703,7 @@ protected:
 	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
-	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side);
+	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	double SetPitchApo();
 	void SetStage(int s);
 	void setupSM(OBJHANDLE hvessel);

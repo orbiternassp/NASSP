@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/03/05 02:03:40  tschachim
+  *	Docking MFD is now the right MFD,
+  *	button click sound added
+  *	
   *	Revision 1.3  2005/03/03 18:00:18  tschachim
   *	docking panel and MFD
   *	
@@ -339,7 +343,7 @@ void Saturn::RedrawPanel_Horizon (SURFHANDLE surf)
 	oapiBlt (surf, srf[5], 0, 0, 0, 0, 96, 96, SURF_PREDEF_CK);
 }
 
-void Saturn::RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side) {
+void Saturn::RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
 
 	HDC hDC = oapiGetDC (surf);
 	SelectObject (hDC, g_Param.font[2]);
@@ -349,7 +353,7 @@ void Saturn::RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side) {
 	const char *label;
 	for (int bt = 0; bt < 6; bt++) {
 		if (label = oapiMFDButtonLabel (mfd, bt+side*6))
-			TextOut (hDC, 10, 3+31*bt, label, strlen(label));
+			TextOut (hDC, 10 + xoffset, 3 + 31 * bt + yoffset, label, strlen(label));
 		else break;
 	}
 	oapiReleaseDC (surf, hDC);
@@ -439,6 +443,10 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_DSKY] = oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
 		srf[22] = oapiCreateSurface (LOADBMP (IDB_ALLROUND));
 		srf[23] = oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH));
+		srf[24] = oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
+		srf[25] = oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
+		srf[26] = oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
+				
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3], 0);
 		oapiSetSurfaceColourKey (srf[5], g_Param.col[5]);
@@ -449,7 +457,7 @@ void Saturn::InitPanel (int panel)
 		break;
 	}
 
-	SetSwitches();
+	SetSwitches(panel);
 }
 
 bool Saturn::clbkLoadPanel (int id)
@@ -637,27 +645,16 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		oapiRegisterMFD (MFD_RIGHT, mfds_dock);	// MFD_USER1
-		oapiRegisterPanelArea (AID_MFDDOCK_BBUTTONS, _R( 899,  847, 1103,  861), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN); // bottom button row
-		oapiRegisterPanelArea (AID_MFDDOCK_LBUTTONS, _R( 858,  651,  877,  820), PANEL_REDRAW_USER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND); // left button column
-		oapiRegisterPanelArea (AID_MFDDOCK_RBUTTONS, _R(1125,  651, 1144,  820), PANEL_REDRAW_USER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND); // right button column
-
-		oapiRegisterPanelArea (AID_SM_RCS_MODE, _R( 770, 817,  832,  850), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-
+		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 850,  612, 1151      ,  863     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 635,  845,  655      ,  860     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SM_RCS_MODE, _R( 719,  791,  719 + 133,  791 + 73), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		break;
 	}
 
 	InitPanel (id);
 
-	if (id == 2 || id == 3) {
-		VECTOR3 defDir = _V(0.19, 0.02, 1.0);
-		SetCameraDefaultDirection(defDir / length(defDir));
-		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
-		//SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-	} else {
-		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
-		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
-		//SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-	}
+	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 
 	InVC = false;
 	InPanel = true;
@@ -674,7 +671,7 @@ bool Saturn::clbkLoadPanel (int id)
 // state..
 //
 
-void Saturn::SetSwitches()
+void Saturn::SetSwitches(int panel)
 
 {
 	MainPanel.Init(0);
@@ -727,8 +724,13 @@ void Saturn::SetSwitches()
 	LPswitch2.Init(68, 7, 23, 20, srf[6], SRP1Row, this, soundlib);
 	LPswitch3.Init(04, 7, 23, 20, srf[6], SRP1Row, this, soundlib);
 
-	LPswitch4.Init(  4, 7, 23, 20, srf[6], P14Row, this, soundlib);
-	LPswitch5.Init( 36, 7, 23, 20, srf[6], P14Row, this, soundlib);
+	if (panel == 3) {
+		LPswitch4.Init(55, 33, 23, 20, srf[6], P14Row, this, soundlib);
+		LPswitch5.Init(87, 33, 23, 20, srf[6], P14Row, this, soundlib);
+	} else {
+		LPswitch4.Init(  4, 7, 23, 20, srf[6], P14Row, this, soundlib);
+		LPswitch5.Init( 36, 7, 23, 20, srf[6], P14Row, this, soundlib);
+	}
 
 	LPswitch6.Init( 45, 7, 23, 20, srf[6], P15Row, this, soundlib);
 	P15switch.Init(  9, 7, 23, 20, srf[6], P15Row, this, soundlib);
@@ -2431,29 +2433,42 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	// panel 3 events:
-	case AID_MFDDOCK_BBUTTONS:
-		if (mx < 19) {
-			ButtonClick();
-			oapiToggleMFD_on (MFD_RIGHT);	// MFD_USER1
-		} else if (mx >= 162 && mx < 180) {
-			ButtonClick();
-			oapiSendMFDKey (MFD_RIGHT, OAPI_KEY_F1);		// MFD_USER1
-		} else if (mx > 184) {
-			ButtonClick();
-			oapiSendMFDKey (MFD_RIGHT, OAPI_KEY_GRAVE);		// MFD_USER1
+	case AID_MFDDOCK:
+		if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
+			if (my > 234 && my < 249) {	//&& event == PANEL_MOUSE_LBDOWN
+				if (mx > 47 && mx < 68) {
+					ButtonClick();
+					oapiToggleMFD_on (MFD_RIGHT);	// MFD_USER1
+				} else if (mx > 208 && mx < 229) {
+					ButtonClick();
+					oapiSendMFDKey (MFD_RIGHT, OAPI_KEY_F1);		// MFD_USER1
+				} else if (mx > 239 && mx < 252) {
+					ButtonClick();
+					oapiSendMFDKey (MFD_RIGHT, OAPI_KEY_GRAVE);		// MFD_USER1
+				}
+			} else if (mx > 5 && mx < 26 && my > 38 && my < 208) {
+				if ((my - 38) % 31 < 14) {
+					int bt = (my - 38) / 31 + 0;
+					ButtonClick();
+					oapiProcessMFDButton (MFD_RIGHT, bt, event);	// MFD_USER1
+				}
+			} else if (mx > 273 && mx < 294 && my > 38 && my < 208) {
+				if ((my - 38) % 31 < 14) {
+					int bt = (my - 38) / 31 + 6;
+					ButtonClick();
+					oapiProcessMFDButton (MFD_RIGHT, bt, event);	// MFD_USER1
+				}
+			}
 		}
 		return true;
 
-	case AID_MFDDOCK_LBUTTONS:
-	case AID_MFDDOCK_RBUTTONS:
-		if (my%31 < 14) {
-			int bt = my/31 + (id == AID_MFDDOCK_LBUTTONS ? 0 : 6);
+	case AID_MFDDOCK_POWER:
+		if (oapiGetMFDMode(MFD_RIGHT) == MFD_NONE) {	// MFD_USER1
 			ButtonClick();
-			oapiProcessMFDButton (MFD_RIGHT, bt, event);				// MFD_USER1
-			return true;
+			oapiToggleMFD_on (MFD_RIGHT);	// MFD_USER1
 		}
+		return true;
 		break;
-
 	}
 	return false;
 }
@@ -2534,6 +2549,22 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	//
 	// Process all the generic switches.
 	//
+
+	if (id == AID_SM_RCS_MODE) {
+		if (PanelId == 3) {
+			if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
+				oapiBlt(surf, srf[26], 0, 0, 0, 0, 133, 73);
+				LPswitch4.SetVisible(true);
+				LPswitch5.SetVisible(true);
+			} else {
+				LPswitch4.SetVisible(false);
+				LPswitch5.SetVisible(false);
+			}
+		} else {
+			LPswitch4.SetVisible(true);
+			LPswitch5.SetVisible(true);
+		}
+	}
 
 	if (MainPanel.DrawRow(id, surf))
 		return true;
@@ -3658,14 +3689,20 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	// panel 3 events
-	case AID_MFDDOCK_LBUTTONS:
-		RedrawPanel_MFDButton (surf, MFD_RIGHT, 0);	// MFD_USER1
+	case AID_MFDDOCK:
+		if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
+			oapiBlt(surf,srf[24], 0, 0, 0, 0, 301, 251);
+
+			RedrawPanel_MFDButton (surf, MFD_RIGHT, 0, 7, 38);	// MFD_USER1
+			RedrawPanel_MFDButton (surf, MFD_RIGHT, 1, 274, 38);	// MFD_USER1
+		}
 		return true;
 
-	case AID_MFDDOCK_RBUTTONS:
-		RedrawPanel_MFDButton (surf, MFD_RIGHT, 1);	// MFD_USER1
+	case AID_MFDDOCK_POWER:
+		if (oapiGetMFDMode(MFD_RIGHT) == MFD_NONE) {	// MFD_USER1
+			oapiBlt(surf, srf[25], 0, 0, 0, 0, 20, 15);
+		}
 		return true;
-
 	}
 	return false;
 }
@@ -3674,8 +3711,7 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
 	case MFD_RIGHT:		// MFD_USER1
-		oapiTriggerPanelRedrawArea (3, AID_MFDDOCK_LBUTTONS);
-		oapiTriggerPanelRedrawArea (3, AID_MFDDOCK_RBUTTONS);
+		oapiTriggerPanelRedrawArea (3, AID_MFDDOCK);
 		break;
 	}
 }
