@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/02/19 19:45:07  chode99
+  *	Moved 1 line of code (VECTOR3 mesh_dir=...) to allow compilation in .NET 2003
+  *	
   *	Revision 1.2  2005/02/18 00:40:17  movieman523
   *	Play appropriate seperation sound at SM sep.
   *	
@@ -995,7 +998,7 @@ void SaturnV::SeparateStage (int stage)
 		char VName[256];
 		strcpy (VName, GetName()); strcat (VName, "-STG2");
 		hstg2 = oapiCreateVessel(VName,"sat5stg2",vs1);
-		Ullage2(hstg2,5);
+		Retro2(hstg2,5);
 		SetThirdStage ();
 	}
 
@@ -1360,10 +1363,10 @@ void SaturnV::DockStage (UINT dockstatus)
 
 }
 
-void SaturnV::Ullage(OBJHANDLE hvessel, double gaz)
+void SaturnV::Retro1(OBJHANDLE hvessel, double gaz)
 
 {
-	TRACESETUP("Ullage");
+	TRACESETUP("Retro1");
 
 	//
 	// Just in case someone removes all the retros, do nothing.
@@ -1374,20 +1377,20 @@ void SaturnV::Ullage(OBJHANDLE hvessel, double gaz)
 
 	VESSEL *stg1vessel = oapiGetVesselInterface(hvessel);
 
-	VECTOR3 m_exhaust_pos2= {-3.9,-3.9, -16};
-	VECTOR3 m_exhaust_pos3= {3.9, 3.9, -16};
-	VECTOR3 m_exhaust_pos4= {-3.9, 3.9, -16};
-	VECTOR3 m_exhaust_pos5= {3.9, -3.9, -16};
+	VECTOR3 m_exhaust_pos2= {-5.5,0, -16};
+	VECTOR3 m_exhaust_pos3= {5.5,0, -16};
+	VECTOR3 m_exhaust_pos4= {0,-5.5, -16};
+	VECTOR3 m_exhaust_pos5= {0,5.5, -16};
 
-	ph_retro1 = stg1vessel->CreatePropellantResource((650 * SI_RetroNum) / 8.0);
+	ph_retro1 = stg1vessel->CreatePropellantResource(51.6 * SI_RetroNum);
 
-	double thrust = (788000 * SI_RetroNum) / 8.0;
+	double thrust = 382000;
 
 	if (!th_retro1[0]) {
-		th_retro1[0] = stg1vessel->CreateThruster (m_exhaust_pos2, _V(.1,.1, -0.9), thrust, ph_retro1, 4000);
-		th_retro1[1] = stg1vessel->CreateThruster (m_exhaust_pos3, _V(-.1,-.1, -0.9), thrust, ph_retro1, 4000);
-		th_retro1[2] = stg1vessel->CreateThruster (m_exhaust_pos4, _V(.1,-.1, -0.9), thrust, ph_retro1, 4000);
-		th_retro1[3] = stg1vessel->CreateThruster (m_exhaust_pos5, _V(-.1,.1, -0.9), thrust, ph_retro1, 4000);
+		th_retro1[0] = stg1vessel->CreateThruster (m_exhaust_pos2, _V(0.14, 0, -0.9), thrust, ph_retro1, 4000);
+		th_retro1[1] = stg1vessel->CreateThruster (m_exhaust_pos3, _V(-0.14, 0, -0.9), thrust, ph_retro1, 4000);
+		th_retro1[2] = stg1vessel->CreateThruster (m_exhaust_pos4, _V(0, 0.14, -0.9), thrust, ph_retro1, 4000);
+		th_retro1[3] = stg1vessel->CreateThruster (m_exhaust_pos5, _V(0,-0.14, -0.9), thrust, ph_retro1, 4000);
 	}
 
 	thg_retro1 = stg1vessel->CreateThrusterGroup(th_retro1, 4, THGROUP_RETRO);
@@ -1399,39 +1402,40 @@ void SaturnV::Ullage(OBJHANDLE hvessel, double gaz)
 }
 
 //
-// This now seems to be used for the SIVB ullage thrusters.
+// This is now the SII retro thrusters.
 //
 
-void SaturnV::Ullage2(OBJHANDLE hvessel,double gaz)
+void SaturnV::Retro2(OBJHANDLE hvessel,double gaz)
 
 {
-	TRACESETUP("Ullage2");
+	TRACESETUP("Retro2");
 	VESSEL *stg2vessel = oapiGetVesselInterface(hvessel);
 
-	VECTOR3 m_exhaust_pos2= {0,-4,12.2};
-	VECTOR3 m_exhaust_pos3= {0,4,12.2};
-	VECTOR3 m_exhaust_ref2 = {0,-0.35,1};
-	VECTOR3 m_exhaust_ref3 = {0,0.35,1};
-	VECTOR3 m_exhaust_pos4= {-4,0,12.2};
-	VECTOR3 m_exhaust_pos5= {4,0,12.2};
-	VECTOR3 m_exhaust_ref4 = {-0.35,0,1};
-	VECTOR3 m_exhaust_ref5 = {0.35,0,1};
+	VECTOR3 m_exhaust_pos2= {-2.83,-2.83,11.2};
+	VECTOR3 m_exhaust_pos3= {-2.83,2.83,11.2};
+	VECTOR3 m_exhaust_ref2 = {0.1,0.1,-1};
+	VECTOR3 m_exhaust_ref3 = {0.1,-0.1,-1};
+	VECTOR3 m_exhaust_pos4= {2.83,-2.83,11.2};
+	VECTOR3 m_exhaust_pos5= {2.83,2.83,11.2};
+	VECTOR3 m_exhaust_ref4 = {-0.1,0.1,-1};
+	VECTOR3 m_exhaust_ref5 = {-0.1,-0.1,-1};
 
-	if (!UllageID7){
-		UllageID6=stg2vessel ->AddExhaustRef (EXHAUST_CUSTOM, m_exhaust_pos2, 5.0, 0.15, &m_exhaust_ref2);
-		UllageID7=stg2vessel ->AddExhaustRef (EXHAUST_CUSTOM, m_exhaust_pos3, 5.0, 0.15, &m_exhaust_ref3);
-		UllageID8=stg2vessel ->AddExhaustRef (EXHAUST_CUSTOM, m_exhaust_pos4, 5.0, 0.15, &m_exhaust_ref4);
-		UllageID9=stg2vessel ->AddExhaustRef (EXHAUST_CUSTOM, m_exhaust_pos5, 5.0, 0.15, &m_exhaust_ref5);
-	}
-	stg2vessel ->SetExhaustScales (EXHAUST_CUSTOM, UllageID6, gaz, 0.15);
-	stg2vessel ->SetExhaustScales (EXHAUST_CUSTOM, UllageID7, gaz, 0.15);
-	stg2vessel ->SetExhaustScales (EXHAUST_CUSTOM, UllageID8, gaz, 0.15);
-	stg2vessel ->SetExhaustScales (EXHAUST_CUSTOM, UllageID9, gaz, 0.15);
+	ph_retro2 = stg2vessel->CreatePropellantResource(264);
 
-	//sprintf(oapiDebugString(), "Reentry %f", gaz);
-	if (gaz  > 0){
-		stg2vessel->SetAttitudeLinLevel(2,-1);
-	}else{
-		stg2vessel->SetAttitudeLinLevel(2,0);
+	double thrust = 175500 ;
+
+	if (!th_retro2[0]) {
+		th_retro2[0] = stg2vessel->CreateThruster (m_exhaust_pos2, m_exhaust_ref2, thrust, ph_retro2, 4000);
+		th_retro2[1] = stg2vessel->CreateThruster (m_exhaust_pos3, m_exhaust_ref3, thrust, ph_retro2, 4000);
+		th_retro2[2] = stg2vessel->CreateThruster (m_exhaust_pos4, m_exhaust_ref4, thrust, ph_retro2, 4000);
+		th_retro2[3] = stg2vessel->CreateThruster (m_exhaust_pos5, m_exhaust_ref5, thrust, ph_retro2, 4000);
 	}
+
+	thg_retro2 = stg2vessel->CreateThrusterGroup(th_retro2, 4, THGROUP_RETRO);
+
+	for (int i = 0; i < 4; i++)
+		stg2vessel->AddExhaust (th_retro2[i], 8.0, 0.2);
+
+	stg2vessel->SetThrusterGroupLevel(thg_retro2, 1.0);
+
 }
