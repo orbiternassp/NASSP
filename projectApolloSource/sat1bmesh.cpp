@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/03/16 13:31:58  yogenfrutz
+  *	added missing setview and crew,so that virtual cockpit does now display correctly
+  *	
   *	Revision 1.3  2005/03/06 03:23:26  chode99
   *	Relocated and redirected the SIVB ullage thrusters to coincide with the mesh.
   *	
@@ -63,6 +66,7 @@ static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
 static MESHHANDLE hastp;
 static MESHHANDLE hastp2;
+static MESHHANDLE hTarget;
 
 PARTICLESTREAMSPEC srb_contrail = {
 	0, 12.0, 1, 50.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
@@ -91,6 +95,10 @@ void Saturn1b::SetS4B()
 	targetvessel->ClearMeshes();
 	VECTOR3 mesh_dir=_V(0,0,0);
 	targetvessel->AddMesh (hSat1stg2, &mesh_dir);
+	if(ApolloNo==7){
+		mesh_dir=_V(-1.0,-1.1,13.3);
+		targetvessel->AddMesh (hTarget, &mesh_dir);
+	}
 	mesh_dir=_V(0,4,-4.2);
 	//targetvessel->AddMesh (hapsl, &mesh_dir);
 	mesh_dir=_V(0,-4,-4.2);
@@ -171,7 +179,7 @@ void Saturn1b::SetFirstStage ()
 
 	Offset1st = -80.1;//+STG0O;
 	VECTOR3 m_exhaust_ref = {0,0,-1};
-    VECTOR3 m_exhaust_pos5= {1,1,Offset1st+55};
+/*    VECTOR3 m_exhaust_pos5= {1,1,Offset1st+55};
     VECTOR3 m_exhaust_pos6= {-1,-1,Offset1st+55};
 	VECTOR3 m_exhaust_pos7= {-1,1,Offset1st+55};
 	VECTOR3 m_exhaust_pos8= {1,-1,Offset1st+55};
@@ -179,6 +187,16 @@ void Saturn1b::SetFirstStage ()
     VECTOR3 m_exhaust_pos2= {-3,0,Offset1st+55};
 	VECTOR3 m_exhaust_pos3= {0,3,Offset1st+55};
 	VECTOR3 m_exhaust_pos4= {0,-3,Offset1st+55};
+	*/
+	VECTOR3 m_exhaust_pos5= {0,1.414,Offset1st+55};
+    VECTOR3 m_exhaust_pos6= {1.414,0,Offset1st+55};
+	VECTOR3 m_exhaust_pos7= {0,-1.414,Offset1st+55};
+	VECTOR3 m_exhaust_pos8= {-1.414,0,Offset1st+55};
+	VECTOR3 m_exhaust_pos1= {2.12,2.12,Offset1st+55};
+    VECTOR3 m_exhaust_pos2= {2.12,-2.12,Offset1st+55};
+	VECTOR3 m_exhaust_pos3= {-2.12,-2.12,Offset1st+55};
+	VECTOR3 m_exhaust_pos4= {-2.12,2.12,Offset1st+55};
+
 	// orbiter main thrusters
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), 981000 , ph_1st, 2755);
 	th_main[1] = CreateThruster (m_exhaust_pos2, _V( 0,0,1), 981000 , ph_1st, 2755);
@@ -786,4 +804,5 @@ void Saturn1bLoadMeshes()
 	hSat1stg24 = oapiLoadMeshGlobal ("nsat1stg24");
 	hastp = oapiLoadMeshGlobal ("nASTP3");
 	hastp2 = oapiLoadMeshGlobal ("nASTP2");
+	hTarget = oapiLoadMeshGlobal ("sat_target");
 }
