@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 //
@@ -332,6 +335,8 @@ protected:
 	int status;
 
 	int Realism;
+
+	int SwitchFocusToLeva;
 
 	DSKY dsky;
 	LEMcomputer agc;
