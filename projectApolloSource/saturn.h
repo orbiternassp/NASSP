@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 class Saturn: public VESSEL2 {
@@ -627,6 +630,7 @@ protected:
 	bool RCS_Full;
 	bool LEMdatatransfer;
 	bool InVC;
+	bool KranzPlayed;
 
 	OBJHANDLE hEVA;
 
@@ -816,6 +820,10 @@ protected:
 	Sound Psound;
 	Sound CabinFans;
 	Sound SwindowS;
+	Sound SKranz;
+	Sound SExploded;
+	Sound SApollo13;
+	Sound SSMSepExploded;
 
 	//
 	// General engine resources.
@@ -890,20 +898,6 @@ extern MESHHANDLE hSMhga;
 extern MESHHANDLE hprobe;
 extern MESHHANDLE hsat5tower;
 extern MESHHANDLE hFHO2;
-
-#if 0
-extern MESHHANDLE hCM2;
-extern MESHHANDLE hFHO;
-extern MESHHANDLE hCM2B;
-extern MESHHANDLE hCMBALLOON;
-extern MESHHANDLE hCRB;
-extern MESHHANDLE hApollochute;
-extern MESHHANDLE hCMB;
-extern MESHHANDLE hChute30;
-extern MESHHANDLE hChute31;
-extern MESHHANDLE hChute32;
-extern MESHHANDLE hFHC2;
-#endif
 
 extern void SetupgParam(HINSTANCE hModule);
 extern void DeletegParam();
