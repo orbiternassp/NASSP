@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -76,7 +79,7 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel), dsky
 	// VESSELSOUND **********************************************************************
 	// initialisation
 
-	soundlib.InitSoundLib(hObj, "ProjectApollo");
+	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	Init();
 }
@@ -95,7 +98,7 @@ void sat5_lmpkd::Init()
 	//bAbort =false;
 	RCS_Full=true;
 	Eds=true;
-
+	
 	toggleRCS =false;
 
 	InitPanel();
@@ -124,6 +127,8 @@ void sat5_lmpkd::Init()
 
 	MissionTime = 0;
 	FirstTimestep = true;
+
+	SwitchFocusToLeva = 0;
 
 	agc.ControlVessel(this);
 	dsky.Init();
@@ -154,6 +159,11 @@ void sat5_lmpkd::DoFirstTimestep()
 	if (CabinFansActive()) {
 		CabinFans.play(LOOP,255);
 	}
+
+	char VName10[256]="";
+
+	strcpy (VName10, GetName()); strcat (VName10, "-LEVA");
+	hLEVA=oapiGetVesselByName(VName10);
 }
 
 void sat5_lmpkd::LoadDefaultSounds()
@@ -165,8 +175,7 @@ void sat5_lmpkd::LoadDefaultSounds()
 
 	soundlib.LoadMissionSound(LunarAscent, LUNARASCENT_SOUND, LUNARASCENT_SOUND);
 	soundlib.LoadSound(StageS, "Stagesep.wav");
-	soundlib.LoadSound(SLEVA, "LEVA.wav");
-	soundlib.LoadSound(Scontact, "contact.wav");
+	soundlib.LoadMissionSound(Scontact, LUNARCONTACT_SOUND, LUNARCONTACT_SOUND);
 	soundlib.LoadSound(Sclick, CLICK_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(Bclick, "button.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(Gclick, "guard.wav", INTERNAL_ONLY);
@@ -183,7 +192,7 @@ void sat5_lmpkd::AttitudeLaunch1()
 	// Modification for NASSP specific needs by JL Rocca-Serra
 	VECTOR3 ang_vel;
 	GetAngularVel(ang_vel);// gets current angular velocity for stabilizer and rate control
-// variables to store each component deflection vector
+// variables to store each component deflection vector	
 	VECTOR3 rollvectorl={0.0,0.0,0.0};
 	VECTOR3 rollvectorr={0.0,0.0,0.0};
 	VECTOR3 pitchvector={0.0,0.0,0.0};
@@ -194,24 +203,24 @@ void sat5_lmpkd::AttitudeLaunch1()
 // variables to store Manual control levels for each axis
 	double tempP = 0.0;
 	double tempY = 0.0;
-	double tempR = 0.0;
+	double tempR = 0.0; 
 //************************************************************
 // Variables to store correction factors for rate control
 	double rollcorrect = 0.0;
 	double yawcorrect= 0.0;
 	double pitchcorrect = 0.0;
 //************************************************************
-// gets manual control levels in each axis, this code copied directly from Rob Conley's Mercury Atlas
+// gets manual control levels in each axis, this code copied directly from Rob Conley's Mercury Atlas	
 	if (GMBLswitch){
 		tempP = GetManualControlLevel(THGROUP_ATT_PITCHDOWN, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_PITCHUP, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
 	}
 	if (GMBLswitch){
 		tempR = GetManualControlLevel(THGROUP_ATT_BANKLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_BANKRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
 	}
-
-
+	
+	
 	//sprintf (oapiDebugString(), "roll input: %f, roll vel: %f,pitch input: %f, pitch vel: %f", tempR, ang_vel.z,tempP, ang_vel.x);
-
+	
 //*************************************************************
 //Creates correction factors for rate control in each axis as a function of input level
 // and current angular velocity. Varies from 1 to 0 as angular velocity approaches command level
@@ -228,8 +237,8 @@ void sat5_lmpkd::AttitudeLaunch1()
 						pitchcorrect = 1;
 					}
 	}
-
-//*************************************************************
+	
+//*************************************************************	
 // Create deflection vectors in each axis
 	pitchvector = _V(0.0,0.0,0.05*tempP*pitchcorrect);
 	pitchvectorm = _V(0.0,0.0,-0.2*tempP*pitchcorrect);
@@ -244,12 +253,12 @@ void sat5_lmpkd::AttitudeLaunch1()
 		pitchvectorm=_V(0.0,0.0,-0.8*ang_vel.x*3);
 	}
 	if(tempR==0.0 && GMBLswitch) {
-
+		
 		rollvectorr=_V(0.8*ang_vel.z*3,0.0,0.0);
 	}
-
-//**************************************************************
-// Sets thrust vectors by simply adding up all the axis deflection vectors and the
+	
+//**************************************************************	
+// Sets thrust vectors by simply adding up all the axis deflection vectors and the 
 // "neutral" default vector
 	SetThrusterDir(th_hover[0],pitchvectorm+rollvectorr+_V( 0,1,0));//4
 //	sprintf (oapiDebugString(), "pitch vector: %f, roll vel: %f", tempP, ang_vel.z);
@@ -289,8 +298,8 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	if (!refcount++) {
 		LEMLoadMeshes();
 	}
-
-	// VESSELSOUND
+	
+	// VESSELSOUND 
 
 	lem = new sat5_lmpkd(hvessel, flightmodel);
 	return (VESSEL *) lem;
@@ -299,16 +308,16 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 int sat5_lmpkd::ConsumeDirectKey (const char *keystate)
 
 {
-	if (KEYMOD_SHIFT (keystate))
+	if (KEYMOD_SHIFT (keystate)) 
 	{
-		return 0;
+		return 0; 
 	}
-	else if (KEYMOD_CONTROL (keystate))
+	else if (KEYMOD_CONTROL (keystate)) 
 	{
-
+	
 	}
-	else
-	{
+	else 
+	{ 
 		if (KEYDOWN (keystate, OAPI_KEY_J)) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_J, 1.0)){
 			if (status !=0)
@@ -319,22 +328,22 @@ int sat5_lmpkd::ConsumeDirectKey (const char *keystate)
 		if (KEYDOWN (keystate, OAPI_KEY_K)) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_K, 1.0)){
 				bToggleHatch = true;
-
+				
 			return 1;
 			}
 		}
-
+		
 		if (KEYDOWN (keystate, OAPI_KEY_1)) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_1, 1.0)){
-
+				
 			return 1;
 			}
 		}
 		if (KEYDOWN (keystate, OAPI_KEY_2)) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_2, 1.0)){
-
-
-
+				
+				
+				
 			return 1;
 			}
 		}
@@ -342,9 +351,9 @@ int sat5_lmpkd::ConsumeDirectKey (const char *keystate)
 			if (oapiAcceptDelayedKey (OAPI_KEY_3, 1.0)){
 			}
 			return 1;
-
+			
 		}
-
+		
 		if (KEYDOWN (keystate, OAPI_KEY_E)) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_E, 1.0)){
 		if (status==1){
@@ -364,7 +373,7 @@ int sat5_lmpkd::ConsumeDirectKey (const char *keystate)
 				cdrview = true;
 			return 1;
 		}
-
+		
 	}
 	return 0;
 }
@@ -376,20 +385,6 @@ int sat5_lmpkd::ConsumeDirectKey (const char *keystate)
 void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 
 {
-	char VName[256]="";
-	char VName1[256]="";
-	char VName2[256]="";
-	char VName3[256]="";
-	char VName4[256]="";
-	char VName5[256]="";
-	char VName6[256]="";
-	char VName7[256]="";
-	char VName8[256]="";
-	char VName9[256]="";
-	char VName10[256]="";
-	char VName11[256]="";
-	char VName12[256]="";
-
 	if (FirstTimestep)
 	{
 		DoFirstTimestep();
@@ -397,22 +392,29 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		return;
 	}
 
-	strcpy (VName10, GetName()); strcat (VName10, "-LEVA");
-	hLEVA=oapiGetVesselByName(VName10);
+	//
+	// If we switch focus to the astronaut immediately after creation, Orbitersound doesn't
+	// play any sounds, or plays LEM sounds rather than astronauts sounds. We need to delay
+	// the focus switch a few timesteps to allow it to initialise properly in the background.
+	//
+
+	if (SwitchFocusToLeva > 0 && hLEVA) {
+		SwitchFocusToLeva--;
+		if (!SwitchFocusToLeva) {
+			oapiSetFocusObject(hLEVA);
+		}
+	}
 
 	SetView();
-
+	
 	VECTOR3 RVEL = _V(0.0,0.0,0.0);
 	GetRelativeVel(GetGravityRef(),RVEL);
 
 	MissionTime = MissionTime + oapiGetSimStep();
 
-		//if(LPswitch6) LPswitch1 = false;
-		//if(LPswitch7) LPswitch3 = false;
-
 	agc.Timestep(MissionTime);
 	dsky.Timestep(MissionTime);
-
+	
 	actualVEL = (sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z)/1000*3600);
 	actualALT = GetAltitude() ;
 	if (actualALT < 1470){
@@ -424,7 +426,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 	if (status !=0 && Sswitch2){
 				bManualSeparate = true;
 	}
-	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;
+	actualFUEL = GetFuelMass()/GetMaxFuelMass()*100;	
 	double dTime,aSpeed,DV,aALT,DVV,DVA;//aVAcc;aHAcc;ALTN1;SPEEDN1;aTime aVSpeed;
 		aSpeed = actualVEL/3600*1000;
 		aALT=actualALT;
@@ -435,7 +437,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 			DVV = aALT - ALTN1;
 			aVSpeed = DVV / dTime;
 			DVA = aVSpeed- VSPEEDN1;
-
+			
 
 			aVAcc=(DVA/ dTime);
 			aTime = simt;
@@ -477,7 +479,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		else{
 			SetThrusterResource(th_hover[0],NULL);
 		}
-
+		
 		if(!AFEED1switch && !AFEED2switch && !AFEED3switch && !AFEED4switch){
 			SetRCS(ph_rcslm0);
 		}
@@ -514,7 +516,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		if (ToggleEva && GroundContact()){
 			ToggleEVA();
 		}
-
+		
 		if (bToggleHatch){
 			VESSELSTATUS vs;
 			GetStatus(vs);
@@ -543,7 +545,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 			ToggleEva = true;
 			EVAswitch = false;
 		}
-
+		
 		if (GetPropellantMass(ph_Dsc)<=50 && actualALT > 10){
 			Abortswitch=true;
 			SeparateStage(stage);
@@ -601,7 +603,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		}
 	}
 	else if (stage == 4)
-	{
+	{	
 	}
 }
 
@@ -630,19 +632,19 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
     char *line;
 	int	SwitchState;
 	float ftcp;
-
+	
 	while (oapiReadScenario_nextline (scn, line)) {
         if (!strnicmp (line, "CONFIGURATION", 13)) {
             sscanf (line+13, "%d", &status);
 		}
 		else if (!strnicmp (line, "EVA", 3)) {
 			EVA_IP = true;
-		}
+		} 
 		else if (!strnicmp (line, "CSWITCH", 7)) {
             SwitchState = 0;
 			sscanf (line+7, "%d", &SwitchState);
 			SetCSwitchState(SwitchState);
-		}
+		} 
 		else if (!strnicmp (line, "SSWITCH", 7)) {
             SwitchState = 0;
 			sscanf (line+7, "%d", &SwitchState);
@@ -669,14 +671,14 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp (line, "REALISM", 7)) {
 			sscanf (line+7, "%d", &Realism);
-		}
+		} 
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn);
 		}
 		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
 			agc.LoadState(scn);
 		}
-		else
+		else 
 		{
             ParseScenarioLineEx (line, vs);
         }
@@ -733,7 +735,7 @@ void sat5_lmpkd::SetStateEx(const void *status)
 void sat5_lmpkd::SaveState (FILEHANDLE scn)
 
 {
-	SaveDefaultState (scn);
+	SaveDefaultState (scn);	
 	oapiWriteScenario_int (scn, "CONFIGURATION", status);
 	if (EVA_IP){
 		oapiWriteScenario_int (scn, "EVA", int(TO_EVA));
