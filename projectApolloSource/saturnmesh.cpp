@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/19 19:32:55  chode99
+  *	Adjusted touchdown points in splashdown stage so it is no longer "underwater".
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -68,7 +71,8 @@ MESHHANDLE hsat5tower;
 MESHHANDLE hFHO2;
 MESHHANDLE hCMPEVA;
 
-extern double LiftCoeff (double aoa);
+extern void CoeffFunc(double aoa, double M, double Re ,double *cl ,double *cm  ,double *cd);
+//extern double LiftCoeff (double aoa);
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -711,9 +715,11 @@ void Saturn::SetReentryStage ()
 	SetRotDrag (_V(0.07,0.07,0.003));
 	if (GetFlightModel() >= 1)
 	{
-		SetPitchMomentScale (-1e-5);
-		SetBankMomentScale (-1e-5);
-		SetLiftCoeffFunc (LiftCoeff);
+//		SetPitchMomentScale (-1e-5);
+//		SetBankMomentScale (-1e-5);
+//		SetLiftCoeffFunc (LiftCoeff); 
+//		CreateAirfoil(LIFT_VERTICAL, _V(-0.014,0.107,0.75), CoeffFunc, 3.5 ,11.95, 1.0);
+		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.16,1.12), CoeffFunc, 3.5 ,11.95, 1.0);
     }
   	ShiftCentreOfMass (_V(0,0,0.5));
 
@@ -1285,9 +1291,11 @@ void Saturn::SetAbortStage ()
 	SetRotDrag (_V(0.07,0.07,0.003));
 	if (GetFlightModel() >= 1)
 	{
-		SetPitchMomentScale (-1e-5);
-		SetBankMomentScale (-1e-5);
-		SetLiftCoeffFunc (LiftCoeff);
+//		SetPitchMomentScale (-1e-5);
+//		SetBankMomentScale (-1e-5);
+//		SetLiftCoeffFunc (LiftCoeff); 
+//		CreateAirfoil(LIFT_VERTICAL, _V(-0.014,0.107,0.75), CoeffFunc, 3.5 ,11.95, 1.0);
+		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.16,1.12), CoeffFunc, 3.5 ,11.95, 1.0);
     }
 	ShiftCentreOfMass (_V(0,0,1.5));
 	VECTOR3 mesh_dir=_V(0,0,33.0-12.25-21.5-1.5+1);

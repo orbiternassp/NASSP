@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/02/19 00:03:28  movieman523
+  *	Reduced volume of APS sound playback, and changed course correction logic to use times from header file, not hard-coded in C++ code.
+  *	
   *	Revision 1.2  2005/02/18 00:41:54  movieman523
   *	Wired in new Apollo 13 sounds and set Scorrec so you can use time acceleration again after course correction!
   *	
@@ -229,26 +232,28 @@ void SaturnV::CalculateStageMass ()
 	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass;
 }
 
-double LiftCoeff (double aoa)
-
+void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
 
 {
-	const int nlift = 9;
+	const int nlift = 11;
+	const double factor=0.0;
 	static const double AOA[nlift] =
-		{-180*RAD,-155*RAD,-154*RAD,-34*RAD,0*RAD,34*RAD,154*RAD,155*RAD,180*RAD};
-//static const double CL[nlift]  = {0.06375,  0.375,       0,      0,    0,
-//0,      0,      0.1275, 0.06375};
-	static const double CL[nlift]  = {-0.0275,  -0.002575,       0.75,      1.15,
-		1.15,      0.75, -0.002575, -0.0275};
-	static const double SCL[nlift] = {(CL[1]-CL[0])/(AOA[1]-AOA[0]),
-		(CL[2]-CL[1])/(AOA[2]-AOA[1]),
-                              (CL[3]-CL[2])/(AOA[3]-AOA[2]),
-		(CL[4]-CL[3])/(AOA[4]-AOA[3]),
-		  (CL[5]-CL[4])/(AOA[5]-AOA[4]), (CL[6]-CL[5])/(AOA[6]-AOA[5]),
-		  (CL[7]-CL[6])/(AOA[7]-AOA[6]), (CL[8]-CL[7])/(AOA[8]-AOA[7])};
-
+		{-180*RAD,-160*RAD,-150*RAD,-120*RAD,-90*RAD,0*RAD,90*RAD,120*RAD,150*RAD,160*RAD,180*RAD};
+	static const double CL[nlift]  = {0.0,-0.3,-0.425,-0.215,0.0,0.0,0.0,0.215,0.425,0.3,0.0};
+	static const double CM[nlift]  = {0.0,0.004,0.006,0.012,0.015,0.0,-0.015,-0.012,-0.006,-0.004,0.};
+	static const double CD[nlift]  = {1.6,1.4,1.0,0.6,0.75,0,0.75,0.6,1.0,1.4,1.6};
+	static double SCL[nlift-1];
+	static double SCM[nlift-1];
+	static double SCD[nlift-1];
+	for(int j = 0; j < nlift-1; j++){
+		SCL[j]= (CL[j+1]-CL[j])/(AOA[j+1]-AOA[j]);
+		SCM[j]= (CM[j+1]-CM[j])/(AOA[j+1]-AOA[j]);
+		SCD[j]= (CD[j+1]-CD[j])/(AOA[j+1]-AOA[j]);
+	}
 	for (int i = 0; i < nlift-1 && AOA[i+1] < aoa; i++);
-	return -(CL[i] + (aoa-AOA[i])*SCL[i]);
+	*cl = (CL[i] + (aoa-AOA[i])*SCL[i]);
+	*cm = factor*(CM[i] + (aoa-AOA[i])*SCM[i]);
+	*cd = (CD[i] + (aoa-AOA[i])*SCD[i]);
 }
 
 void SetS4B(OBJHANDLE hS4B)

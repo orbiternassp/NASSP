@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/19 00:02:38  movieman523
+  *	Reduced volume of APS sound playback.
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -115,7 +118,29 @@ void Saturn1b::initSaturn1b()
 		ASTPMission = true;
 	}
 }
+void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
 
+{
+	const int nlift = 11;
+	const double factor=0.0;
+	static const double AOA[nlift] =
+		{-180*RAD,-160*RAD,-150*RAD,-120*RAD,-90*RAD,0*RAD,90*RAD,120*RAD,150*RAD,160*RAD,180*RAD};
+	static const double CL[nlift]  = {0.0,-0.3,-0.425,-0.215,0.0,0.0,0.0,0.215,0.425,0.3,0.0};
+	static const double CM[nlift]  = {0.0,0.004,0.006,0.012,0.015,0.0,-0.015,-0.012,-0.006,-0.004,0.};
+	static const double CD[nlift]  = {1.6,1.4,1.0,0.6,0.75,0,0.75,0.6,1.0,1.4,1.6};
+	static double SCL[nlift-1];
+	static double SCM[nlift-1];
+	static double SCD[nlift-1];
+	for(int j = 0; j < nlift-1; j++){
+		SCL[j]= (CL[j+1]-CL[j])/(AOA[j+1]-AOA[j]);
+		SCM[j]= (CM[j+1]-CM[j])/(AOA[j+1]-AOA[j]);
+		SCD[j]= (CD[j+1]-CD[j])/(AOA[j+1]-AOA[j]);
+	}
+	for (int i = 0; i < nlift-1 && AOA[i+1] < aoa; i++);
+	*cl = (CL[i] + (aoa-AOA[i])*SCL[i]);
+	*cm = factor*(CM[i] + (aoa-AOA[i])*SCM[i]);
+	*cd = (CD[i] + (aoa-AOA[i])*SCD[i]);
+}
 double LiftCoeff (double aoa)
 {
 	const int nlift = 9;
