@@ -44,5 +44,8 @@ projectApolloScenarios -d Scenarios projectApolloScenarios
 
 projectApolloDoc -d Doc projectApolloDoc
 
+projectApolloHtml -d Html projectApolloHtml
+
 projectApollo -a projectApolloConfig projectApolloGraphics projectApolloSound \
-                 projectApolloSource projectApolloScenarios projectApolloDoc
+                 projectApolloSource projectApolloScenarios projectApolloDoc \
+                 projectApolloHtml
