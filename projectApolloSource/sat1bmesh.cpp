@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/19 19:45:37  chode99
+  *	Moved 1 line of code (VECTOR3 mesh_dir=...) to allow compilation in .NET 2003
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -286,17 +289,18 @@ void Saturn1b::SetSecondStage ()
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
 
-	// attitude - this is temporary
+//  Ullage rockets (3)
+
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 
 	SetCameraOffset (_V(-1,1.0,31.15-STG1O));
-	VECTOR3	m_exhaust_pos6= _V(0,3.3,-2-STG1O+9);
-	VECTOR3 m_exhaust_pos7= _V(2.0,-2.2,-2-STG1O+9);
-	VECTOR3	m_exhaust_pos8= _V(-2.0,-2.0,-2-STG1O+9);
+	VECTOR3	m_exhaust_pos6= _V(3.27,0.46,-2-STG1O+9);
+	VECTOR3 m_exhaust_pos7= _V(-1.65,2.86,-2-STG1O+9);
+	VECTOR3	m_exhaust_pos8= _V(-1.65,-2.86,-2-STG1O+9);
 	int i;
-	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( 0.0,-0.45,1),725 , ph_3rd, 45790.85);
-	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( -0.45,0.45,1),725 , ph_3rd, 45790.85);
-	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( 0.45,0.45,1),725 , ph_3rd, 45790.85);
+	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( -0.45,0.0,1),725 , ph_3rd, 45790.85);
+	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( 0.23,-0.39,1),725 , ph_3rd, 45790.85);
+	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( 0.23,0.39,1),725 , ph_3rd, 45790.85);
 	for (i = 0; i < 3; i++)
 		AddExhaust (th_ver[i], 11.0, 0.25);
 	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
@@ -375,16 +379,17 @@ void Saturn1b::SetSecondStage1 ()
 
 	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
 
-	// attitude - this is temporary
-	// attitude adjustment during launch phase should really be done via ENGINE gimbaling
 	SetEngineLevel(ENGINE_MAIN, 0.0);;
-	VECTOR3	m_exhaust_pos6= _V(0,3.3,-2-STG1O+9);
-	VECTOR3 m_exhaust_pos7= _V(2.0,-2.2,-2-STG1O+9);
-	VECTOR3	m_exhaust_pos8= _V(-2.0,-2.0,-2-STG1O+9);
+
+//  Ullage rockets (3)
+
+	VECTOR3	m_exhaust_pos6= _V(3.27,0.46,-2-STG1O+9);
+	VECTOR3 m_exhaust_pos7= _V(-1.65,2.86,-2-STG1O+9);
+	VECTOR3	m_exhaust_pos8= _V(-1.65,-2.86,-2-STG1O+9);
 	int i;
-	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( 0.0,-0.45,1),725 , ph_3rd, 45790.85);
-	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( -0.45,0.45,1),725 , ph_3rd, 45790.85);
-	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( 0.45,0.45,1),725 , ph_3rd, 45790.85);
+	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( -0.45,0.0,1),725 , ph_3rd, 45790.85);
+	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( 0.23,-0.39,1),725 , ph_3rd, 45790.85);
+	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( 0.23,0.39,1),725 , ph_3rd, 45790.85);
 	for (i = 0; i < 3; i++)
 		AddExhaust (th_ver[i], 11.0, 0.25);
 	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
