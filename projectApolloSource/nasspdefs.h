@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/02/24 00:10:05  movieman523
+  *	Updated to version 6.4 and added extra digit to support more sub-versions up to x.x.9
+  *	
   *	Revision 1.3  2005/02/19 00:01:57  movieman523
   *	Added more comments and course correction time setting.
   *	
@@ -38,7 +41,7 @@
 
 typedef struct {
 	HINSTANCE hDLL;
-	HFONT font[2];
+	HFONT font[3];
 	DWORD col[6];
 	HBRUSH brush[4];
 	HPEN pen[4];
