@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/03/03 18:00:18  tschachim
+  *	docking panel and MFD
+  *	
   *	Revision 1.2  2005/03/02 01:19:03  chode99
   *	Changed MFDSPEC lines to be same size as LM, and added button definitions, like the LM.
   *	For some unknown reason, this seems to prevent the CTDs that were occuring when issuing certain MFD commands.
@@ -633,7 +636,7 @@ bool Saturn::clbkLoadPanel (int id)
 	case 3:
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		oapiRegisterMFD (MFD_USER1, mfds_dock);
+		oapiRegisterMFD (MFD_RIGHT, mfds_dock);	// MFD_USER1
 		oapiRegisterPanelArea (AID_MFDDOCK_BBUTTONS, _R( 899,  847, 1103,  861), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN); // bottom button row
 		oapiRegisterPanelArea (AID_MFDDOCK_LBUTTONS, _R( 858,  651,  877,  820), PANEL_REDRAW_USER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND); // left button column
 		oapiRegisterPanelArea (AID_MFDDOCK_RBUTTONS, _R(1125,  651, 1144,  820), PANEL_REDRAW_USER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND); // right button column
@@ -653,6 +656,7 @@ bool Saturn::clbkLoadPanel (int id)
 	} else {
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+		//SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 	}
 
 	InVC = false;
@@ -2428,16 +2432,24 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 	// panel 3 events:
 	case AID_MFDDOCK_BBUTTONS:
-		if (mx < 19)                    oapiToggleMFD_on (MFD_USER1);
-		else if (mx >= 162 && mx < 180) oapiSendMFDKey (MFD_USER1, OAPI_KEY_F1);
-		else if (mx > 184)              oapiSendMFDKey (MFD_USER1, OAPI_KEY_GRAVE);
+		if (mx < 19) {
+			ButtonClick();
+			oapiToggleMFD_on (MFD_RIGHT);	// MFD_USER1
+		} else if (mx >= 162 && mx < 180) {
+			ButtonClick();
+			oapiSendMFDKey (MFD_RIGHT, OAPI_KEY_F1);		// MFD_USER1
+		} else if (mx > 184) {
+			ButtonClick();
+			oapiSendMFDKey (MFD_RIGHT, OAPI_KEY_GRAVE);		// MFD_USER1
+		}
 		return true;
 
 	case AID_MFDDOCK_LBUTTONS:
 	case AID_MFDDOCK_RBUTTONS:
 		if (my%31 < 14) {
 			int bt = my/31 + (id == AID_MFDDOCK_LBUTTONS ? 0 : 6);
-			oapiProcessMFDButton (MFD_USER1, bt, event);
+			ButtonClick();
+			oapiProcessMFDButton (MFD_RIGHT, bt, event);				// MFD_USER1
 			return true;
 		}
 		break;
@@ -3647,11 +3659,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	// panel 3 events
 	case AID_MFDDOCK_LBUTTONS:
-		RedrawPanel_MFDButton (surf, MFD_USER1, 0);
+		RedrawPanel_MFDButton (surf, MFD_RIGHT, 0);	// MFD_USER1
 		return true;
 
 	case AID_MFDDOCK_RBUTTONS:
-		RedrawPanel_MFDButton (surf, MFD_USER1, 1);
+		RedrawPanel_MFDButton (surf, MFD_RIGHT, 1);	// MFD_USER1
 		return true;
 
 	}
@@ -3661,7 +3673,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 void Saturn::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
-	case MFD_USER1:
+	case MFD_RIGHT:		// MFD_USER1
 		oapiTriggerPanelRedrawArea (3, AID_MFDDOCK_LBUTTONS);
 		oapiTriggerPanelRedrawArea (3, AID_MFDDOCK_RBUTTONS);
 		break;
