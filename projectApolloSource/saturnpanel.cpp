@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/03/16 19:40:42  tschachim
+  *	Rechanged MFDSPEC lines as in revision 1.2
+  *	
   *	Revision 1.11  2005/03/16 16:04:58  yogenfrutz
   *	changed for splitted csm panel (resolves ATI bug)
   *	
@@ -476,6 +479,7 @@ void Saturn::InitPanel (int panel)
 		srf[24] = oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
 		srf[25] = oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
 		srf[26] = oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
+		srf[27] = oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
 				
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3], 0);
@@ -484,6 +488,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[15], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[16], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[22], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[27], g_Param.col[4]);
 		break;
 	}
 
@@ -583,8 +588,8 @@ bool Saturn::clbkLoadPanel (int id)
 	MFDSPEC mfds_dock = {{893, 627, 1112, 842}, 6, 6, 31, 31};;
 
 	switch (id) {
-	case 0: // main panel
-	case 1: // ilm panel
+	case 0: // ilm left panel
+	case 1: // left panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[5]);
 		//oapiSetPanelNeighbours (-1,-1,1,2);
 
@@ -691,13 +696,15 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelArea (AID_CABIN_GAUGES,						_R(1693, 483, 1857,  571), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EMS_KNOB,							_R( 442, 248,  510,  316), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EMS_DISPLAY,							_R( 545, 264,  647,  369), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-		
-        break;
+		if (id == 1) {
+			oapiRegisterPanelArea (AID_RCS_INDICATORS,					_R(1327, 371, 1392,  436), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);		
+        }
+		break;
 
 //added for splitted panel
 
-	    case 4: // main panel right
-        case 5: // main panel right ilm
+	    case 4: // ilm right panel
+        case 5: // right panel
 
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[5]);
 		//oapiSetPanelNeighbours (-1,-1,1,2);
@@ -804,11 +811,10 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelArea (AID_CABIN_GAUGES,						_R(934, 483, 1098,  571), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_EMS_KNOB,							_R( 442, 248,  510,  316), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_EMS_DISPLAY,							_R( 545, 264,  647,  369), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-
-	    break;
-
-
-
+		if (id == 5) {
+			oapiRegisterPanelArea (AID_RCS_INDICATORS,					_R( 568, 371,  633,  436), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);		
+		}
+		break;
 
 
 	case 2: // docking panel
@@ -817,12 +823,8 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterMFD (MFD_RIGHT, mfds_dock);	// MFD_USER1
 		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 851,  613, 1152      ,  864     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 635,  845,  655      ,  860     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SM_RCS_MODE, _R( 719,  791,  719 + 133,  791 + 73), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
-		
-		
-		break;
-    
-
+		oapiRegisterPanelArea (AID_SM_RCS_MODE,     _R( 719,  791,  719 + 133,  791 + 73), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);				
+		break;    
 	}
 
 	InitPanel (id);
@@ -848,7 +850,7 @@ bool Saturn::clbkLoadPanel (int id)
 void Saturn::SetSwitches(int panel)
 
 {
-	MainPanel.Init(0);
+	MainPanel.Init(0, this, &soundlib);
 
 	SPSRow.Init(AID_SPS, MainPanel);
 	EDSRow.Init(AID_EDS, MainPanel);
@@ -1065,6 +1067,9 @@ void Saturn::SetSwitches(int panel)
 	IMUswitch.Init( 1, 16, 23, 20, srf[6], IMUswitchRow, this, soundlib);	// ToggleSwitch
 	//IMUswitch.Init( 1, 16, 23, 20, srf[23], IMUswitchRow, this, soundlib);	// ThreePosSwitch
 	IMUswitch.InitGuard(0, 0, 25, 45, srf[8], soundlib);
+
+	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
+	RCSIndicatorsSwitch.Init(0, 0, 64, 64, srf[27], RCSIndicatorsSwitchRow);
 }
 
 //
@@ -4185,4 +4190,13 @@ void Saturn::InitSwitches()
 	EMSswitch = 1;
 
 	EMSKswitch = false;
+
+	RCSIndicatorsSwitch.AddPosition(1, 20);
+	RCSIndicatorsSwitch.AddPosition(2, 45);
+	RCSIndicatorsSwitch.AddPosition(3, 90);	
+	RCSIndicatorsSwitch.AddPosition(4, 270);	
+	RCSIndicatorsSwitch.AddPosition(5, 315);	
+	RCSIndicatorsSwitch.AddPosition(6, 340);
+	RCSIndicatorsSwitch = 1;
+
 }
