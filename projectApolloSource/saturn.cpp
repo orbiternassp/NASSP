@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/03/13 21:17:20  chode99
+  *	Added code to compute accurate axial g force for panel display.
+  *	
   *	Revision 1.5  2005/03/09 00:26:15  chode99
   *	Added code to support SII retros.
   *	
@@ -1069,8 +1072,7 @@ void Saturn::GenericTimestep(double simt)
 	actualFUEL = ((GetFuelMass()*100)/GetMaxFuelMass());
 
 	double aSpeed, DV, aALT, DVV, DVA, DVX, DVY, DVZ;
-	VECTOR3 globalV;
-	double agrav,radius,mass,localVz,calpha,salpha,cbeta,sbeta,radius2;
+	double agrav,radius,mass,calpha,salpha,cbeta,sbeta,radius2;
 	OBJHANDLE hPlanet;
 	VESSELSTATUS status;
 
@@ -1364,7 +1366,7 @@ void Saturn::AddRCS_S4B()
 	const double ATTCOOR2 = 3.61;
 	const double TRANCOOR = 0;
 	const double TRANCOOR2 = 0.1;
-	const double TRANZ=-2.1-STG2O;
+	const double TRANZ=-3.2-STG2O;
 	const double ATTWIDTH=.2;
 	const double ATTHEIGHT=.5;
 	const double TRANWIDTH=.2;
@@ -1381,20 +1383,23 @@ void Saturn::AddRCS_S4B()
 	VECTOR3 m_exhaust_ref3 = {0,-0.1,-1};
 	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
+	double offset;
+	offset = 0.0;
+	if((ApolloNo<8)&&(ApolloNo!=6)&&(ApolloNo!=4))offset=7.7;
 
-	th_att_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.15), _V(0, -1,0), 20740.0, ph_3rd,5000000, 4000000);
-	th_att_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.15), _V(0,1,0),20740.0, ph_3rd,5000000, 4000000);
-
+	th_att_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.25+offset), _V(0, -1,0), 20740.0, ph_3rd,5000000, 4000000);
+	th_att_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.25+offset), _V(0,1,0),20740.0, ph_3rd,5000000, 4000000);
+	
 	AddExhaust (th_att_rot[0], 0.6, 0.078);
 	AddExhaust (th_att_rot[1], 0.6, 0.078);
 	CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
 	CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
 
 
-	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
-	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
+	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
+	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
 
 	AddExhaust (th_att_rot[2], 0.6, 0.078);
 	AddExhaust (th_att_rot[3], 0.6, 0.078);
@@ -1404,10 +1409,10 @@ void Saturn::AddRCS_S4B()
 	CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
 
 
-	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
-	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
+	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(-1,0,0), 17400.0, ph_3rd,250000, 240000);
 
 	AddExhaust (th_att_rot[6], 0.6, 0.078);
 	AddExhaust (th_att_rot[7], 0.6, 0.078);
@@ -1421,8 +1426,8 @@ void Saturn::AddRCS_S4B()
 	// APS thrusters are only 320N (72 pounds) thrust
 	//
 
-	th_att_lin[0] = CreateThruster (_V(0,ATTCOOR2-0.15,TRANZ-.25), _V(0,0,1), 320.0, ph_3rd,250000, 240000);
-	th_att_lin[1] = CreateThruster (_V(0,-ATTCOOR2+.15,TRANZ-.25), _V(0,0,1), 320.0, ph_3rd,250000, 240000);
+	th_att_lin[0] = CreateThruster (_V(0,ATTCOOR2-0.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_3rd,250000, 240000);
+	th_att_lin[1] = CreateThruster (_V(0,-ATTCOOR2+.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_3rd,250000, 240000);
 	AddExhaust (th_att_lin[0], 7, 0.15);
 	AddExhaust (th_att_lin[1], 7, 0.15);
 
