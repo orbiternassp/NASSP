@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 class SwitchRow;
@@ -41,6 +44,7 @@ public:
 	ToggleSwitch *GetNext() { return next; };
 	int GetState() { return state; };
 	void SetActive(bool s);
+	void SetVisible(bool v) {visible = v; };
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
 	virtual bool IsUp() { return (state == 1); };
@@ -79,6 +83,7 @@ protected:
 	int state;
 	bool Active;
 	bool SwitchToggled;
+	bool visible;
 
 	SURFHANDLE SwitchSurface;
 	VESSEL *OurVessel;

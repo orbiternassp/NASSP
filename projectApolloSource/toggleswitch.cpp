@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -55,6 +58,7 @@ ToggleSwitch::ToggleSwitch()
 	SwitchSurface = 0;
 	OurVessel = 0;
 	Active = true;
+	visible = true;
 }
 
 ToggleSwitch::~ToggleSwitch()
@@ -105,7 +109,10 @@ bool ToggleSwitch::DoCheckMouseClick(int mx, int my)
 bool ToggleSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
-	return DoCheckMouseClick(mx, my);
+	if (visible)
+		return DoCheckMouseClick(mx, my);
+	else
+		return false;
 }
 
 bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my)
@@ -169,7 +176,8 @@ void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 void ToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 
 {
-	DoDrawSwitch(DrawSurface);
+	if (visible) 
+		DoDrawSwitch(DrawSurface);
 }
 
 void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, VESSEL *v, SoundLib &s)
@@ -217,6 +225,9 @@ bool AttitudeToggle::CheckMouseClick(int event, int mx, int my)
 {
 	int OldState = state;
 
+	if (!visible)
+		return false;
+
 	if (!DoCheckMouseClick(mx, my))
 		return false;
 
@@ -236,6 +247,9 @@ bool AttitudeToggle::CheckMouseClick(int event, int mx, int my)
 void AttitudeToggle::DrawSwitch(SURFHANDLE DrawSurface)
 
 {
+	if (!visible)
+		return;
+	
 	if (Active) {
 		if (OurVessel->GetAttitudeMode() == ATTMODE_ROT) {
 			state = true;
