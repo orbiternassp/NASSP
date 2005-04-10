@@ -261,6 +261,13 @@
 #define AID_MFDDOCK                     484
 #define AID_MFDDOCK_POWER               485
 #define AID_RCS_INDICATORS				486
+#define IDB_CSM_MAIN_PANEL				487		
+#define IDB_CSM_LEFT_PANEL				488
+#define IDB_CSM_RIGHT_PANEL				489
+#define IDB_CSM_LEFT_RNDZ_WINDOW		490
+#define IDB_CSM_RIGHT_RNDZ_WINDOW		491
+#define IDB_CSM_HATCH_WINDOW			492
+#define IDB_CSM_LOWER_PANEL				493
 
 // Next default values for new objects
 // 
