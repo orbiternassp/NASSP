@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/04/10 01:52:04  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.13  2005/04/01 15:32:51  tschachim
   *	Added RCSIndicatorsSwitch
   *	
@@ -604,7 +607,6 @@ bool Saturn::clbkLoadPanel (int id)
 
         //oapiRegisterPanelArea (AID_ALTITUDE1,							_R( 547, 425,  643,  440), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_ALTIMETER,							_R( 626, 109,  717,  199), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_CLOCK,								_R(1370, 266, 1460,  281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_MASTER_ALARM,						_R( 345, 409,  378,  436), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 		//oapiRegisterPanelArea (AID_MASTER_ALARM,						_R(2199, 524, 2232,  551), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 		//oapiRegisterPanelArea (AID_GMETER,                              _R( 301, 491,  357,  548), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -718,7 +720,7 @@ bool Saturn::clbkLoadPanel (int id)
 	case 1: // main instrument panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		//new areas to be added soon...
+		oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835, 305, 1973,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		
 		break;    
 
@@ -3185,7 +3187,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiBlt(surf,srf[4],70,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		return true;
 
-	case AID_CLOCK:
+	case AID_MISSION_CLOCK:
 		int TmpCLKHR;
 		int TmpCLKMNT;
 		int TmpCLKsec;
@@ -3202,29 +3204,29 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		// Hour display on three digit
 		Curdigit=TmpCLKHR/100;
 		Curdigit2=TmpCLKHR/1000;
-		oapiBlt(surf,srf[4],0,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[4],0,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
 		Curdigit=TmpCLKHR/10;
 		Curdigit2=TmpCLKHR/100;
-		oapiBlt(surf,srf[4],0+10,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[4],0+17,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
 		Curdigit=TmpCLKHR;
 		Curdigit2=TmpCLKHR/10;
-		oapiBlt(surf,srf[4],0+20,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
-		oapiBlt(surf,srf[4],0+30,0, 140,0,10,15);
+		oapiBlt(surf,srf[4],0+34,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		oapiBlt(surf,srf[4],0+54,0, 192,0,4,19);
 		// Minute display on five digit
 		Curdigit=TmpCLKMNT/10;
 		Curdigit2=TmpCLKMNT/100;
-		oapiBlt(surf,srf[4],0+40,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[4],0+61,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
 		Curdigit=TmpCLKMNT;
 		Curdigit2=TmpCLKMNT/10;
-		oapiBlt(surf,srf[4],0+50,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
-		oapiBlt(surf,srf[4],0+60,0, 140,0,10,15);
+		oapiBlt(surf,srf[4],0+78,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		oapiBlt(surf,srf[4],0+98,0, 192,0,4,19);
 		// second display on five digit
 		Curdigit=TmpCLKsec/10;
 		Curdigit2=TmpCLKsec/100;
-		oapiBlt(surf,srf[4],0+70,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[4],0+105,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
 		Curdigit=TmpCLKsec;
 		Curdigit2=TmpCLKsec/10;
-		oapiBlt(surf,srf[4],0+80,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[4],0+122,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
 
 		return true;
 

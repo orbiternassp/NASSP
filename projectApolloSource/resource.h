@@ -19,7 +19,7 @@
 #define AID_EDS                         31
 #define AID_DSKY                        32
 #define AID_VSI                         33
-#define AID_CLOCK                       34
+#define AID_MISSION_CLOCK               34
 #define AID_DSKY_KEY                    35
 #define AID_ABORT                       36
 #define AID_SWITCH_SEP                  40
