@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -998,12 +1001,12 @@ void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 
 	if (Str[0] != ' ') {
 		Curdigit = Str[0] - '0';
-		oapiBlt(surf,digits,dstx,dsty,10*Curdigit,0,10,15);
+		oapiBlt(surf,digits,dstx,dsty,16*Curdigit,0,16,19);
 	}
 
 	if (Str[1] != ' ') {
 		Curdigit = Str[1] - '0';
-		oapiBlt(surf,digits,dstx+10,dsty,10*Curdigit,0,10,15);
+		oapiBlt(surf,digits,dstx+16,dsty,16*Curdigit,0,16,19);
 	}
 }
 
@@ -1014,16 +1017,16 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	int i;
 
 	if (Str[0] == '-') {
-		oapiBlt(surf,digits,dstx,dsty,100,0,10,15);
+		oapiBlt(surf,digits,dstx,dsty,161,0,10,19);
 	}
 	else if (Str[0] == '+') {
-		oapiBlt(surf,digits,dstx,dsty,110,0,10,15);
+		oapiBlt(surf,digits,dstx,dsty,174,0,12,19);
 	}
 
 	for (i = 1; i < 6; i++) {
 		if (Str[i] != ' ') {
 			Curdigit = Str[i] - '0';
-			oapiBlt(surf, digits, dstx + (10*i), dsty, 10*Curdigit, 0, 10, 15);
+			oapiBlt(surf, digits, dstx + (16*i), dsty, 16*Curdigit, 0, 16,19);
 		}
 		else {
 //			oapiBlt(surf, digits, dstx + (10*i), dsty, 440, 6, 10, 15);
@@ -1037,22 +1040,22 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits)
 		char DSKYString[10];
 
 		ProgDisplay(DSKYString);
-		RenderTwoDigitDisplay(surf, digits, 53, 11, DSKYString);
+		RenderTwoDigitDisplay(surf, digits, 67, 18, DSKYString);
 		VerbDisplay(DSKYString);
-		RenderTwoDigitDisplay(surf, digits, 7, 37, DSKYString);
+		RenderTwoDigitDisplay(surf, digits, 8, 52, DSKYString);
 		NounDisplay(DSKYString);
-		RenderTwoDigitDisplay(surf, digits, 53, 37, DSKYString);
+		RenderTwoDigitDisplay(surf, digits, 67, 52, DSKYString);
 
 		//
 		// Register contents.
 		//
 
 		R1Display(DSKYString);
-		RenderSixDigitDisplay(surf, digits, 7, 62, DSKYString);
+		RenderSixDigitDisplay(surf, digits, 3, 85, DSKYString);
 		R2Display(DSKYString);
-		RenderSixDigitDisplay(surf, digits, 7, 87, DSKYString);
+		RenderSixDigitDisplay(surf, digits, 3, 119, DSKYString);
 		R3Display(DSKYString);
-		RenderSixDigitDisplay(surf, digits, 7, 112, DSKYString);
+		RenderSixDigitDisplay(surf, digits, 3, 153, DSKYString);
 }
 
 typedef union

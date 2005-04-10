@@ -17,7 +17,7 @@
 #define AID_THRUSTMETER                 29
 #define AID_SPS                         30
 #define AID_EDS                         31
-#define AID_DSKY                        32
+#define AID_DSKY_DISPLAY                32
 #define AID_VSI                         33
 #define AID_MISSION_CLOCK               34
 #define AID_DSKY_KEY                    35
@@ -51,7 +51,7 @@
 #define AID_FCSM_SWITCH                 71
 #define AID_P19                         72
 #define AID_DIRECT_ULLAGE_THRUST_ON_LIGHT 73
-#define AID_LV_ENGINE_INDICATOR         74
+#define AID_LV_ENGINE_LIGHTS			74
 #define AID_LV_TANK_GAUGES              75
 #define AID_GDC_BUTTON                  76
 #define AID_EMS                         77

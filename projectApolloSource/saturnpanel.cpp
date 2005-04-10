@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/04/10 14:29:41  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.15  2005/04/10 03:00:47  flydba
   *	*** empty log message ***
   *	
@@ -643,10 +646,8 @@ bool Saturn::clbkLoadPanel (int id)
 		//oapiRegisterPanelArea (AID_FCSM_SWITCH,                         _R( 515, 970,  584,  1004), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P19,                                 _R( 247, 970,  436,  1002), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_DIRECT_ULLAGE_THRUST_ON_LIGHT,		_R( 273, 808,  303,  878), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_LV_ENGINE_INDICATOR,					_R( 626, 586,  701,  693), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_LIGHTS_LAUNCHER,						_R( 612, 727,  718,  817), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_LV_TANK_GAUGES,                      _R( 466, 728,  589,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_DSKY,								_R( 920, 475,  997,  606), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_DSKY_LIGHTS,							_R( 813, 479,  887,  567), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_GDC_BUTTON,                          _R( 217, 909,  243,  935), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_THRUSTMETER,                         _R( 374, 727,  436,  787), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
@@ -715,7 +716,7 @@ bool Saturn::clbkLoadPanel (int id)
 	case 0: // guidance & navigation lower equipment bay
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		//new areas to be added soon...
+		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1582, 341, 1687,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		
 		break;    
 	
@@ -724,6 +725,8 @@ bool Saturn::clbkLoadPanel (int id)
 		
 		oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835, 305, 1973,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862, 600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843, 735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239, 589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		
 		break;    
 
@@ -3237,7 +3240,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		dsky.RenderLights(surf, srf[SRF_DSKY]);
 		return true;
 
-	case AID_DSKY:
+	case AID_DSKY_DISPLAY:
 		dsky.RenderData(surf, srf[4]);
 		return true;
 
@@ -3762,46 +3765,46 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_LV_ENGINE_INDICATOR:
+	case AID_LV_ENGINE_LIGHTS:
 		if (ENGIND[0]){
-			oapiBlt(surf,srf[12],41,33,41,33,20,20);
+			oapiBlt(surf,srf[12],55,44,55,44,27,27);
 		}else{
-			oapiBlt(surf,srf[12],41,33,117,33,20,20);
+			oapiBlt(surf,srf[12],55,44,157,44,27,27);
 		}
 		if (ENGIND[1]){
-			oapiBlt(surf,srf[12],41,73,41,73,20,20);
+			oapiBlt(surf,srf[12],55,98,55,98,27,27);
 		}else{
-			oapiBlt(surf,srf[12],41,73,117,73,20,20);
+			oapiBlt(surf,srf[12],55,98,157,98,27,27);
 		}
 		if (ENGIND[2]){
-			oapiBlt(surf,srf[12],15,73,15,73,20,20);
+			oapiBlt(surf,srf[12],20,98,20,98,27,27);
 		}else{
-			oapiBlt(surf,srf[12],15,73,91,73,20,20);
+			oapiBlt(surf,srf[12],20,98,122,98,27,27);
 		}
 		if (ENGIND[3]){
-			oapiBlt(surf,srf[12],15,33,15,33,20,20);
+			oapiBlt(surf,srf[12],20,44,20,44,27,27);
 		}else{
-			oapiBlt(surf,srf[12],15,33,91,33,20,20);
+			oapiBlt(surf,srf[12],20,44,122,44,27,27);
 		}
 		if (ENGIND[4]){
-			oapiBlt(surf,srf[12],27,53,27,53,20,20);
+			oapiBlt(surf,srf[12],37,71,37,71,27,27);
 		}else{
-			oapiBlt(surf,srf[12],27,53,103,53,20,20);
+			oapiBlt(surf,srf[12],37,71,140,71,27,27);
 		}
 		if (ENGIND[5]) {
-			oapiBlt(surf,srf[12],5,3,5,3,20,20);
+			oapiBlt(surf,srf[12],6,4,6,4,27,27);
 		}else{
-			oapiBlt(surf,srf[12],5,3,81,3,20,20);
+			oapiBlt(surf,srf[12],6,4,108,4,27,27);
 		}
 		if (SIISepState) {
-			oapiBlt(surf,srf[12],28,3,28,3,20,20);
+			oapiBlt(surf,srf[12],37,4,37,4,27,27);
 		}else{
-			oapiBlt(surf,srf[12],28,3,104,3,20,20);
+			oapiBlt(surf,srf[12],37,4,139,4,27,27);
 		}
 		if (AutopilotLight) {
-			oapiBlt(surf,srf[12],50,3,50,3,20,20);
+			oapiBlt(surf,srf[12],69,4,69,4,27,27);
 		}else{
-			oapiBlt(surf,srf[12],50,3,126,3,20,20);
+			oapiBlt(surf,srf[12],69,4,171,4,27,27);
 		}
 		return true;
 
