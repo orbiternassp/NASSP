@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/04/10 03:00:47  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.14  2005/04/10 01:52:04  flydba
   *	*** empty log message ***
   *	
@@ -647,7 +650,6 @@ bool Saturn::clbkLoadPanel (int id)
 		//oapiRegisterPanelArea (AID_DSKY_LIGHTS,							_R( 813, 479,  887,  567), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_GDC_BUTTON,                          _R( 217, 909,  243,  935), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_THRUSTMETER,                         _R( 374, 727,  436,  787), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_ABORT_BUTTON,						_R( 639, 484,  688,  510), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_DSKY_KEY,                            _R( 799, 622, 1010,  711), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_SWITCH_JET,                          _R( 841, 739,  964,  784), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_EDS,                                 _R( 808, 752,  831,  772), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -721,6 +723,7 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
 		oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835, 305, 1973,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862, 600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		
 		break;    
 
@@ -2342,7 +2345,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	case AID_ABORT_BUTTON:
-		if (mx > 1 && mx < 48 && my > 1 && my < 25){
+		if (mx > 1 && mx < 62 && my > 1 && my < 31){
 			bAbort =true;
 			ButtonClick();
 		}
@@ -3720,9 +3723,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_ABORT_BUTTON:
 		if (ABORT_IND){
-		oapiBlt(surf,srf[9],1,1,48,0,47,24);
+		oapiBlt(surf,srf[9],0,0,62,0,62,31);
 		}else{
-		oapiBlt(surf,srf[9],1,1,0,0,47,24);
+		oapiBlt(surf,srf[9],0,0,0,0,62,31);
 		}
 		return true;
 
