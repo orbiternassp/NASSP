@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/04/10 16:05:43  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -664,10 +667,10 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 
 {
 	if (lit) {
-		oapiBlt(surf, lights, dstx, dsty, dstx + 81, dsty + 0, 35, 16);
+		oapiBlt(surf, lights, dstx, dsty, dstx + 101, dsty + 0, 49, 23);
 	}
 	else {
-		oapiBlt(surf, lights, dstx, dsty, dstx + 0, dsty + 0, 35, 16);
+		oapiBlt(surf, lights, dstx, dsty, dstx + 0, dsty + 0, 49, 23);
 	}
 }
 
@@ -678,17 +681,17 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 	// Check the lights.
 	//
 
-	DSKYLightBlt(surf, lights, 0, 0, UplinkLit());
-	DSKYLightBlt(surf, lights, 0, 18, NoAttLit());
-	DSKYLightBlt(surf, lights, 0, 37, StbyLit());
-	DSKYLightBlt(surf, lights, 0, 55, KbRelLit());
-	DSKYLightBlt(surf, lights, 0, 72, OprErrLit());
+	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit());
+	DSKYLightBlt(surf, lights, 0, 25, NoAttLit());
+	DSKYLightBlt(surf, lights, 0, 49, StbyLit());
+	DSKYLightBlt(surf, lights, 0, 73, KbRelLit());
+	DSKYLightBlt(surf, lights, 0, 97, OprErrLit());
 
-	DSKYLightBlt(surf, lights, 39, 0, TempLit());
-	DSKYLightBlt(surf, lights, 39, 18, GimbalLockLit());
-	DSKYLightBlt(surf, lights, 39, 37, ProgLit());
-	DSKYLightBlt(surf, lights, 39, 55, RestartLit());
-	DSKYLightBlt(surf, lights, 39, 72, TrackerLit());
+	DSKYLightBlt(surf, lights, 52, 0,  TempLit());
+	DSKYLightBlt(surf, lights, 52, 25, GimbalLockLit());
+	DSKYLightBlt(surf, lights, 52, 49, ProgLit());
+	DSKYLightBlt(surf, lights, 52, 73, RestartLit());
+	DSKYLightBlt(surf, lights, 52, 97, TrackerLit());
 }
 
 
