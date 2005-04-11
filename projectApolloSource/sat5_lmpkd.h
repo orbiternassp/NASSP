@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/24 00:27:28  movieman523
+  *	Revisions to make LEVA sounds work.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -70,7 +73,7 @@ public:
 	virtual void SetLanderData(LemSettings &ls);
 
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc, ph_rcslm0,ph_rcslm1; // handles for propellant resources
-	THRUSTER_HANDLE th_hover[1];               // handles for orbiter main engines
+	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 
@@ -342,6 +345,8 @@ protected:
 	LEMcomputer agc;
 
 	bool InVC;
+	bool InPanel; //yogen
+	int  PanelId; //yogen
 
 	SoundLib soundlib;
 
