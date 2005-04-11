@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/03/17 16:21:46  yogenfrutz
+  *	corrected a mistake i did in my previous version,sorry
+  *	
   *	Revision 1.5  2005/03/17 06:41:28  yogenfrutz
   *	corrected wrongly placed docking positions,and adjusted once more the position of main engine exhaust flames
   *	
@@ -153,7 +156,7 @@ void sat5_lmpkd::SetLmVesselDockStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	SetTouchdownPoints (_V(0,0,10), _V(-1,0,-10), _V(1,0,-10));
-	VECTOR3 mesh_dir=_V(0.0,0.0,0.0);
+    VECTOR3 mesh_dir=_V(0.0,-0.2,0.03);
 
 	AddMesh (hLMPKD, &mesh_dir);
     if (!ph_Dsc)  
@@ -165,23 +168,27 @@ void sat5_lmpkd::SetLmVesselDockStage()
 	}
 
 	// orbiter main thrusters
-	th_hover[0] =CreateThruster (_V( 0,-3.3,-0.045), _V( 0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[0] = CreateThruster (_V( 0.0,-3.3,0.0), _V( 0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[1] = CreateThruster (_V( 0.01,-3.3,-0.03), _V( 0,1,0), 0, ph_Dsc, 0);//this is a "virtual engine",no thrust and no fuel
+	                                                                              //needed for visual gimbaling for corrected engine flames
+
 	DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
+	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
 
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	AddExhaust (th_hover[0], 8.0, 0.65);//
+	AddExhaust (th_hover[1], 8.0, 0.65);//
+
 
 	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
 	SetCameraOffset (_V(-1,1.0,0.0));
 	SetEngineLevel(ENGINE_HOVER,0);
-	AddRCS_LMH(-1.90);
+	AddRCS_LMH(-1.85);
 	status = 0;
 	stage = 0;
 	bModeDocked=true;
 
-	VECTOR3 dockpos = {0.0 ,2.4, -0.045};
-	VECTOR3 dockdir = {0,1,0};
+	VECTOR3 dockpos = {0.0 ,2.4, 0.0};
+    VECTOR3 dockdir = {0,1,0};
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
 	InitNavRadios (4);
@@ -213,7 +220,7 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	SetTouchdownPoints (_V(0,5,10), _V(-1,5,-10), _V(1,5,-10));
-	VECTOR3 mesh_dir=_V(0.0,0,0);
+	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);
 	AddMesh (hLMVessel, &mesh_dir);
     
 	if (!ph_Dsc)  
@@ -224,11 +231,15 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	}
 	
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V( 0.0,-3.3,-0.045), _V( 0,1,0), 44910, ph_Dsc, 3107);
-	DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
+	th_hover[0] = CreateThruster (_V( 0.0,-3.3,0.0), _V( 0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[1] = CreateThruster (_V( 0.013,-3.3,-0.034), _V( 0,1,0), 0, ph_Dsc, 0);//this is a "virtual engine",no thrust and no fuel
+	                                                                                //needed for visual gimbaling for corrected engine flames
+
+    DelThrusterGroup(THGROUP_HOVER,true);
+	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	AddExhaust (th_hover[0], 8.0, 0.65);//
+	AddExhaust (th_hover[1], 8.0, 0.65);//
+
 	
 	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
 	
@@ -236,9 +247,9 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	status = 1;
 	stage = 1;
 	SetEngineLevel(ENGINE_HOVER,0);
-	AddRCS_LMH(-1.90);
+	AddRCS_LMH(-1.85);
 	bModeHover=true;
-	VECTOR3 dockpos = {0.0 ,2.4, -0.045};
+	VECTOR3 dockpos = {0.0 ,2.4, 0.0};
 	VECTOR3 dockdir = {0,1,0};
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
@@ -276,7 +287,7 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
-	VECTOR3 mesh_dir=_V(-0.25,0.0,+0.38);
+	VECTOR3 mesh_dir=_V(-0.191,-0.02,+0.383);//
 
 	
 	AddMesh (hLMAscent, &mesh_dir);
@@ -287,18 +298,23 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 		ph_rcslm1 = CreatePropellantResource(100);
 	}
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V( -0.05,-2.5,0.0), _V( 0,1,0), 15880, ph_Asc, 2921);
-	DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
+    th_hover[0] = CreateThruster (_V( 0.0,-2.5,0.0), _V( 0,1,0), 15880, ph_Asc, 2921);
+	th_hover[1] = CreateThruster (_V( 0.01,-2.5,0.0), _V( 0,1,0), 0, ph_Asc, 0);//this is a "virtual engine",no thrust and no fuel
+	                                                                              //needed for visual gimbaling for corrected engine flames
+
+	
+    DelThrusterGroup(THGROUP_HOVER,true);
+	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	AddExhaust (th_hover[0], 5.0, 0.47);//
+	AddExhaust (th_hover[1], 5.0, 0.47);//
+
 
 	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
 	SetCameraOffset (_V(-1,1.0,0.0));
 	status = 2;
 	stage = 2;
 	SetEngineLevel(ENGINE_HOVER,0);
-	AddRCS_LMH2(-1.90);
+	AddRCS_LMH2(-1.86);
 	bModeHover=true;
 
 	if(ph_Dsc){
@@ -309,8 +325,10 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 		DelPropellantResource(ph_rcslm0);
 	}
 
-	VECTOR3 dockpos = {-0.05 ,0.6, -0.01};
-    VECTOR3 dockdir = {0,1,0};
+	
+	VECTOR3 dockpos = {0.0 ,0.58, 0.0};
+	VECTOR3 dockdir = {0,1,0};
+
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
 	InitNavRadios (4);
