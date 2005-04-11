@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -418,6 +421,8 @@ void sat5_lmpkd::InitPanel (int panel)
 {
 	switch (panel) {
 	case 0: // ilm panel
+    case 2: //added for splitted panel 
+    case 4: //added for splitted panel 
 		srf[0] = oapiCreateSurface (LOADBMP (IDB_ILMECSG));
 		srf[1] = oapiCreateSurface (LOADBMP (IDB_ILMINDICATORS1));
 		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
@@ -443,6 +448,8 @@ void sat5_lmpkd::InitPanel (int panel)
 		break;
 
 	case 1: // main panel
+    case 3: //added for splitted panel 
+    case 5: //added for splitted panel 
 		srf[0] = oapiCreateSurface (LOADBMP (IDB_ECSG));
 		srf[1] = oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
 		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
@@ -485,30 +492,85 @@ bool sat5_lmpkd::LoadPanel (int id)
 
 	HBITMAP hBmp;
 
+
+      static bool recursion;   //yogen 
+ 
+      // avoid recursive calls
+      if (recursion) return true;
+      recursion = true;
+ 
+      if (!InPanel && id != PanelId) {
+      // sometimes clbkLoadPanel is called inside oapiSetPanel, 
+      // sometimes not, so ignore the recursive call
+      oapiSetPanel(PanelId);
+      id = PanelId;
+	  }
+
+ recursion = false;
+
+
+
 	switch(id) {
 
-	case 0:
-		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_ILMLEMPANEL));
-		oapiSetPanelNeighbours(1, 1, 1, 1);
+	
+     // case 2,3,4and 5 added for splitted panel and new leftwindow
+
+
+    case 0:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_ILMLEMPANEL_LEFT));
+		oapiSetPanelNeighbours(4, 2, 1, -1);
 		break;
 
 	case 1:
-		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEMPANEL));
-		oapiSetPanelNeighbours(0, 0, 0, 0);
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEMPANEL_LEFT));
+		oapiSetPanelNeighbours(5, 3, -1, 0);
 		break;
+
+    case 2:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_ILMLEMPANEL_RIGHT));
+		oapiSetPanelNeighbours(0, -1, 3, -1);
+		break;
+
+    case 3:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEMPANEL_RIGHT));
+		oapiSetPanelNeighbours(1, -1, -1, 2);
+		break;
+        
+    case 4:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_ILMLEMLEFTWINDOW));
+		oapiSetPanelNeighbours(-1, 0, 5, -1);
+		break;
+
+    case 5:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEMLEFTWINDOW));
+		oapiSetPanelNeighbours(-1, 1, -1, 4);
+		break;
+
+
+
 
 	}
 
-	MFDSPEC mfds_left  = {{ 850, 944, 1129, 1223}, 6, 6, 41, 27};
-	MFDSPEC mfds_right = {{1525, 944, 1804, 1223}, 6, 6, 41, 27};
+
+
+
+	MFDSPEC mfds_left_l  = {{ 850, 944, 1129, 1223}, 6, 6, 41, 27};
+	MFDSPEC mfds_right_l = {{1525, 944, 1804, 1223}, 6, 6, 41, 27};
+	MFDSPEC mfds_left_r  = {{ 15, 944, 294, 1223}, 6, 6, 41, 27};
+	MFDSPEC mfds_right_r = {{690, 944, 969, 1223}, 6, 6, 41, 27};
+
+
 
 	switch (id) {
 	case 0: // main panel
 	case 1:
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);//
 		//oapiSetPanelNeighbours (-1,-1,1,2);
-		oapiRegisterMFD (MFD_LEFT,  mfds_left);
-		oapiRegisterMFD (MFD_RIGHT, mfds_right);
+		
+
+		oapiRegisterMFD (MFD_LEFT,  mfds_left_l);
+		oapiRegisterMFD (MFD_RIGHT, mfds_right_l);
+
 
 		oapiRegisterPanelArea (AID_CLOCK,						_R( 908,  163, 1007,  178), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146,  135, 1183,  150), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
@@ -542,7 +604,7 @@ bool sat5_lmpkd::LoadPanel (int id)
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,					_R(1236,  963, 1310, 1051), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CRSFD_SWITCH,				_R(1361,  525, 1384,  584), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CABIN_FAN_SWITCH,			_R(1616,  655, 1639,  685), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PTT_SWITCH,					_R(2609, 1052, 2632, 1072), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_PTT_SWITCH,				    _R(2609, 1052, 2632, 1072), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RCS_SYS_AB,					_R(1468,  820, 1537,  899), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_XPOINTER_SWITCH,				_R(1074,  311, 1098,  332), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL1_1,					_R( 894,  433,  917,  511), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -563,8 +625,8 @@ bool sat5_lmpkd::LoadPanel (int id)
 		oapiRegisterPanelArea (AID_PANEL4_SWITCH2,				_R(1488,  996, 1511,  1026), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL4_SWITCH3,				_R(1488, 1091, 1511,  1121), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL4_SWITCH4,				_R(1144, 1092, 1167,  1122), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_AUDIO_CONT_SWITCH,			_R(2413, 1060, 2436,  1080), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_RELAY_AUDIO_SWITCH,			_R(2609,  998, 2632,  1028), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_AUDIO_CONT_SWITCH,			    _R(2413, 1060, 2436,  1080), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_RELAY_AUDIO_SWITCH,		    _R(2609,  998, 2632,  1028), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CABIN_PRESS_SWITCH,			_R(1616,  578, 1639,   608), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_HATCH_SWITCH,				_R( 263, 1044,  286,  1074), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EVA_SWITCH,					_R( 263, 1103,  286,  1133), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -573,12 +635,103 @@ bool sat5_lmpkd::LoadPanel (int id)
 		oapiRegisterPanelArea (AID_ABORT,						_R(1210,  528, 1304,   572), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 
 		break;
-	}
-	InitPanel (id);
+
+
+
+        case 2: 
+	    case 3:
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);//
+		//oapiSetPanelNeighbours (-1,-1,1,2);
+		
+
+		oapiRegisterMFD (MFD_LEFT,  mfds_left_r);
+		oapiRegisterMFD (MFD_RIGHT, mfds_right_r);
+
+
+		oapiRegisterPanelArea (AID_CLOCK,						_R( 908-835,  163, 1007-835,  178), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146-835,  135, 1183-835,  150), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146-835,  169, 1183-835,  184), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUEL_DIGIT2,					_R(1232-835,  163, 1285-835,  178), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DESCENT_HE,					_R(1090-835,  638, 1158-835,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ENG_ARM,						_R( 972-835,  660,  995-835,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LGC_THRUSTER_QUADS,			_R(1360-835,  351, 1520-835,  490), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_SYSTEMA_SYSTEMB,			_R(1361-835,  255, 1518-835,  318), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MAIN_SOV_SWITCHES,			_R(1435-835,  525, 1513-835,  585), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_LANDING_GEAR_SWITCH,			_R(  36, 1059,   61, 1126), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_EXPLOSIVE_DEVICES1,			_R( 102, 1027,  219, 1125), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_SWITCH_SEP,					_R(  26, 1160,   51, 1205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_SWITCH_JET,					_R(  55, 1160,   80, 1205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ENGINE_GIMBAL_SWITCH,		_R( 922-835,  750,  945-835,  780), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCENT_HE,					_R(1089-835,  555, 1158-835,  608), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_EXPLOSIVE_DEVICES2,			_R( 102, 1165,  219, 1195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ATTITUDE_CONTROL_SWITCHES,	_R(1185-835,  813, 1322-835,  833), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ENG_FUEL_TEMP,				_R(1199-835,  271, 1235-835,  331), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ENG_FUEL_PRESS,				_R(1257-835,  256, 1293-835,  331), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_TEMP,					_R(1362-835,  157, 1398-835,  213), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_PRESS,					_R(1420-835,  139, 1456-835,  213), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_QTY,						_R(1478-835,  139, 1514-835,  213), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ENG_THRUST,					_R(1141-835,  256, 1177-835,  331), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTACT,						_R(1069-835,  249, 1099-835,  279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTACT,						_R(1715-835,  749, 1745-835,  779), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FDAI,						_R( 979-835,  401, 1075-835,  497), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+		oapiRegisterPanelArea (AID_FDAI,						_R(1581-835,  401, 1677-835,  497), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+		oapiRegisterPanelArea (AID_DSKY_KEY,					_R(1222-835, 1106, 1433-835, 1195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY,						_R(1343-835,  959, 1420-835, 1090), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_LIGHTS,					_R(1236-835,  963, 1310-835, 1051), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CRSFD_SWITCH,				_R(1361-835,  525, 1384-835,  584), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABIN_FAN_SWITCH,			_R(1616-835,  655, 1639-835,  685), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PTT_SWITCH,			    	_R(2609-835, 1052, 2632-835, 1072), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_SYS_AB,					_R(1468-835,  820, 1537-835,  899), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_XPOINTER_SWITCH,				_R(1074-835,  311, 1098-835,  332), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL1_1,					_R( 894-835,  433,  917-835,  511), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GUID_CONT_SWITCH,			_R(1282-835,  367, 1306-835,  397), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ALT_RNG_MON,					_R(1282-835,  483, 1305-835,  503), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SHIFT_SWITCH,				_R( 951-835,  582,  974-835,  602), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ENGINE_THRUST_CONT,			_R( 997-835,  607, 1072-835,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PROP_MON_SWITCHES,			_R(1167-835,  612, 1204-835,  687), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ACA_PROP_SWITCH,				_R(1490-835,  618, 1513-835,  648), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL2_1,					_R(1739-835,  433, 1762-835,  511), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DESCENT_ENGINE_SWITCH,		_R( 916-835,  811,  939-835,  841), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SLEW_RATE_SWITCH,			_R(1038-835,  837, 1061-835,  857), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DEAD_BAND_SWITCH,			_R(1185-835,  754, 1208-835,  774), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_IMU_CAGE_SWITCH,				_R(1302-835,  875, 1325-835,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SIDE_PANEL_SWITCH,			_R(1582-835,  752, 1605-835,  772), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_XPOINTER2_SWITCH,			_R(1723-835,  813, 1746-835,  833), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL4_SWITCH1,				_R(1144-835,  996, 1167-835,  1026), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL4_SWITCH2,				_R(1488-835,  996, 1511-835,  1026), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL4_SWITCH3,				_R(1488-835, 1091, 1511-835,  1121), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL4_SWITCH4,				_R(1144-835, 1092, 1167-835,  1122), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_AUDIO_CONT_SWITCH,			_R(2413-835, 1060, 2436-835,  1080), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RELAY_AUDIO_SWITCH,		    _R(2609-835,  998, 2632-835,  1028), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABIN_PRESS_SWITCH,			_R(1616-835,  578, 1639-835,   608), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_HATCH_SWITCH,				    _R( 263, 1044,  286,  1074), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_EVA_SWITCH,					_R( 263, 1103,  286,  1133), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECS_GAUGES,					_R(1578-835,  139, 1723-835,   212), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_COAS,						    _R( 334,  165,  639,   466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ABORT,						_R(1210-835,  528, 1304-835,   572), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+
+		break;
+
+    case 5:
+    case 4:
+
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_ATTACH_RIGHT,  g_Param.col[4]);//
+	    
+		break;
+
+
+
+   }
+	
+   
+   InitPanel (id);
 
 	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	InVC = false;
+	InPanel = true; //yogen
+    PanelId = id;  //yogen
+
 
 	return hBmp != NULL;
 }
@@ -1632,7 +1785,7 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		Curdigit=(int) actualFUEL/10;
 		Curdigit2=(int) actualFUEL/100;
 		oapiBlt(surf,srf[4],13,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=(int) actualFUEL;
+   	    Curdigit=(int) actualFUEL;
 		Curdigit2=(int) actualFUEL/10;
 		oapiBlt(surf,srf[4],26,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 
