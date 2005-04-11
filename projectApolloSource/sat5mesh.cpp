@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/03/27 03:40:14  chode99
+  *	Added support for LTA payloads (LM test articles) for Apollo 4, 6, 8.
+  *	
   *	Revision 1.6  2005/03/26 01:48:39  chode99
   *	Added the LTA for Apollo 8, need scenario file with line "S4PL 2" to use it as a payload instead of the LM.
   *	
@@ -768,7 +771,8 @@ void SaturnV::SetPayloadMesh(VESSEL *s4b)
 
 {
 	VECTOR3 mesh_dir;
-	VECTOR3 dockpos = {0,0,-2.2};
+//	VECTOR3 dockpos = {0,0,-2.2};
+	VECTOR3 dockpos = {0,0.03,-2.1};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {-0.705,-0.705,0};
 
