@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/24 00:27:56  movieman523
+  *	Revised to make LEVA sounds work with Orbitersound 3.
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -261,6 +264,8 @@ void sat5_lmpkd::AttitudeLaunch1()
 // Sets thrust vectors by simply adding up all the axis deflection vectors and the 
 // "neutral" default vector
 	SetThrusterDir(th_hover[0],pitchvectorm+rollvectorr+_V( 0,1,0));//4
+	SetThrusterDir(th_hover[1],pitchvectorm+rollvectorr+_V( 0,1,0));
+
 //	sprintf (oapiDebugString(), "pitch vector: %f, roll vel: %f", tempP, ang_vel.z);
 
 }
@@ -632,6 +637,9 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
     char *line;
 	int	SwitchState;
 	float ftcp;
+
+		// default panel
+	PanelId = 1;
 	
 	while (oapiReadScenario_nextline (scn, line)) {
         if (!strnicmp (line, "CONFIGURATION", 13)) {
@@ -678,6 +686,9 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
 			agc.LoadState(scn);
 		}
+		else if (!strnicmp (line, "PANEL_ID", 8)) { 
+			sscanf (line+8, "%d", &PanelId);
+		} 
 		else 
 		{
             ParseScenarioLineEx (line, vs);
@@ -747,6 +758,7 @@ void sat5_lmpkd::SaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
+	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
 
 	if (Realism != REALISM_DEFAULT) {
 		oapiWriteScenario_int (scn, "REALISM", Realism);
@@ -766,6 +778,7 @@ bool sat5_lmpkd::LoadGenericCockpit ()
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 	InVC = false;
+	InPanel = false;
 	return true;
 }
 
