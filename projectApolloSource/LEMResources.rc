@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Englisch (USA) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -46,12 +46,12 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // Englisch (USA) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Französisch (Frankreich) resources
+// French (France) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 #ifdef _WIN32
@@ -90,8 +90,6 @@ IDB_MASTER_ALARM        BITMAP  DISCARDABLE     "masteralarm.bmp"
 IDB_ILMMASTER_ALARM     BITMAP  DISCARDABLE     "ilmmasteralarm.bmp"
 IDB_MASTER_ALARM_BRIGHT BITMAP  DISCARDABLE     "masteralarmbright.bmp"
 IDB_DSKY_LIGHTS         BITMAP  DISCARDABLE     "dsky_lights.bmp"
-IDB_LEMPANEL            BITMAP  DISCARDABLE     "PanelLM.bmp"
-IDB_ILMLEMPANEL         BITMAP  DISCARDABLE     "ilmpanellm.bmp"
 IDB_LEMSWITCH1          BITMAP  DISCARDABLE     "switch1.bmp"
 IDB_ILMLEMSWITCH1       BITMAP  DISCARDABLE     "ilmswitch1.bmp"
 IDB_ILMLEMSWITCH2       BITMAP  DISCARDABLE     "ilmlemswitch2.bmp"
@@ -101,7 +99,13 @@ IDB_ILMLEMSWITCH3       BITMAP  DISCARDABLE     "ilmswitchup3.bmp"
 IDB_FDAI                BITMAP  DISCARDABLE     "FDAI.bmp"
 IDB_ECSG                BITMAP  DISCARDABLE     "ecs.bmp"
 IDB_ILMECSG             BITMAP  DISCARDABLE     "ilmecs.bmp"
-#endif    // Französisch (Frankreich) resources
+IDB_LEMPANEL_LEFT       BITMAP  DISCARDABLE     "PanelLM-left.bmp"
+IDB_LEMPANEL_RIGHT      BITMAP  DISCARDABLE     "PanelLM-right.bmp"
+IDB_ILMLEMPANEL_LEFT    BITMAP  DISCARDABLE     "ilmpanellm-left.bmp"
+IDB_ILMLEMPANEL_RIGHT   BITMAP  DISCARDABLE     "ilmpanellm-right.bmp"
+IDB_LEMLEFTWINDOW       BITMAP  DISCARDABLE     "lemleftwindow.bmp"
+IDB_ILMLEMLEFTWINDOW    BITMAP  DISCARDABLE     "lemleftwindow-ilm.bmp"
+#endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
