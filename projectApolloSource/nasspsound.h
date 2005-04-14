@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/02/24 00:27:01  movieman523
+  *	Moved more sound file names here from hard-coded files.
+  *	
   *	Revision 1.2  2005/02/13 02:43:09  movieman523
   *	Added new sound definitions and moved some hard-coded strings into the file.
   *	
@@ -67,5 +70,6 @@
 #define SEPARATION_SOUND			"Separation.wav"
 #define SPLASH_SOUND				"Splash.wav"
 #define LUNARCONTACT_SOUND			"contact.wav"
+#define POSTSPLASHDOWN_SOUND		"post-splash.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"
