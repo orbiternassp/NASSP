@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/04/01 14:12:40  tschachim
+  *	nsurf = 28
+  *	
   *	Revision 1.8  2005/03/28 05:48:42  chode99
   *	Added new payload type (Apollo 7 COAS target).
   *	
@@ -48,7 +51,7 @@
   *	
   **************************************************************************/
 
-#define NASSP_VERSION 60040
+#define NASSP_VERSION 60050
 #define REALISM_DEFAULT 5
 
 typedef struct {
