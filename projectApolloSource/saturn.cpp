@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/03/19 03:39:13  chode99
+  *	Fixed bug that prevented some switch states from being set by the scenario file.
+  *	
   *	Revision 1.7  2005/03/14 01:40:30  chode99
   *	Fixed the positions of the SIVB RCS thrusters in Saturn V and Saturn IB
   *	
@@ -135,6 +138,7 @@ void Saturn::initSaturn()
 	FIRSTCSM=false;
 	ProbeJetison=false;
 	LEMdatatransfer = false;
+	PostSplashdownPlayed = false;
 
 	buildstatus = 8;
 	ThrustAdjust = 1.0;
@@ -588,6 +592,7 @@ typedef union {
 		unsigned viewpos:2;
 		unsigned LEMdatatransfer:1;
 		unsigned KranzPlayed:1;
+		unsigned PostSplashdownPlayed:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -613,6 +618,7 @@ int Saturn::GetMainState()
 	state.u.viewpos = viewpos;
 	state.u.LEMdatatransfer = LEMdatatransfer;
 	state.u.KranzPlayed = KranzPlayed;
+	state.u.PostSplashdownPlayed = PostSplashdownPlayed;
 
 	return state.word;
 }
@@ -637,6 +643,7 @@ void Saturn::SetMainState(int s)
 	viewpos = state.u.viewpos;
 	LEMdatatransfer = state.u.LEMdatatransfer;
 	KranzPlayed = (state.u.KranzPlayed != 0);
+	PostSplashdownPlayed = (state.u.PostSplashdownPlayed != 0);
 }
 
 
@@ -1643,7 +1650,17 @@ void Saturn::GenericTimestepStage(double simt)
 			SetRecovery();
 			bRecovery = false;
 			soundlib.LoadSound(Swater, WATERLOOP_SOUND);
+			soundlib.LoadMissionSound(PostSplashdownS, POSTSPLASHDOWN_SOUND, POSTSPLASHDOWN_SOUND);
+			NextMissionEventTime = MissionTime + 10.0;
 			SetStage(CM_RECOVERY_STAGE);
+		}
+		break;
+
+	case CM_RECOVERY_STAGE:
+		if (!PostSplashdownPlayed && MissionTime >= NextMissionEventTime) {
+			PostSplashdownS.play();
+			PostSplashdownS.done();
+			PostSplashdownPlayed = true;
 		}
 		break;
 	}
@@ -1755,6 +1772,7 @@ void Saturn::GenericLoadStateSetup()
 	if (stage == CM_RECOVERY_STAGE)
 	{
 		soundlib.LoadSound(Swater, WATERLOOP_SOUND);
+		soundlib.LoadMissionSound(PostSplashdownS, POSTSPLASHDOWN_SOUND, POSTSPLASHDOWN_SOUND);
 	}
 
 	//

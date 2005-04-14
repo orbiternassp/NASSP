@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/04/01 14:22:00  tschachim
+  *	Added RCSIndicatorsSwitch
+  *	
   *	Revision 1.7  2005/03/13 21:20:12  chode99
   *	Added support for accurate g-gauge calculations.
   *	
@@ -663,6 +666,7 @@ protected:
 	bool InPanel;
 	int  PanelId;
 	bool KranzPlayed;
+	bool PostSplashdownPlayed;
 
 	OBJHANDLE hEVA;
 
@@ -840,6 +844,7 @@ protected:
 	Sound Scount;
 	Sound SplashS;
 	Sound Swater;
+	Sound PostSplashdownS;
 	Sound TowerJS;
 	Sound StageS;
 	Sound Sctdw;
