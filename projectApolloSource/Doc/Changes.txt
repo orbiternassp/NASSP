@@ -1,3 +1,9 @@
+6.5:
+----
+
+Added support for post-splashdown audio (e.g. Presidential congratulations).
+Fixed compiler warning in saturn1b.cpp.
+
 6.4:
 ----
 
