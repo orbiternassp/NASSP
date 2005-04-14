@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/03/28 05:50:08  chode99
+  *	Added support for varying payloads as in the Saturn V.
+  *	
   *	Revision 1.4  2005/03/25 21:27:17  chode99
   *	Added retro rockets to SIB first stage (interstage).
   *	
@@ -202,7 +205,6 @@ void Saturn1b::SetupUnDockedmode(OBJHANDLE hTarget)
 void Saturn1b::SetupStage(OBJHANDLE hTarget)
 {
 	VESSEL *targetvessel;
-	VECTOR3 mesh_dir;
 	targetvessel=oapiGetVesselInterface(hTarget);
 
 	targetvessel->SetEmptyMass (17000);
