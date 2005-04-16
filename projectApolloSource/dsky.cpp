@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/04/10 19:25:33  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.2  2005/04/10 16:05:43  flydba
   *	*** empty log message ***
   *	
@@ -377,7 +380,7 @@ void DSKY::VerbPressed()
 
 void DSKY::NounPressed()
 
-{
+{	
 	if (!agc.OutOfReset() || agc.OnStandby())
 		return;
 
@@ -702,7 +705,127 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 void DSKY::ProcessKeypress(int mx, int my)
 
 {
-	if (mx > 0 && mx < 26){
+
+	bool KeyDown_Verb;
+	bool KeyDown_Noun;
+	bool KeyDown_Plus;
+	bool KeyDown_Minus;
+	bool KeyDown_0;
+	bool KeyDown_1;
+	bool KeyDown_2;
+	bool KeyDown_3;
+	bool KeyDown_4;
+	bool KeyDown_5;
+	bool KeyDown_6;
+	bool KeyDown_7;
+	bool KeyDown_8;
+	bool KeyDown_9;
+	bool KeyDown_Clear;
+	bool KeyDown_Prog;
+	bool KeyDown_KeyRel;
+	bool KeyDown_Enter;
+	bool KeyDown_Reset;
+
+	if (mx > 2 && mx < 39) {
+		if (my > 21 && my < 59) {
+			KeyDown_Verb = true;
+			VerbPressed();
+		}
+
+		if (my > 61 && my < 99) {
+			KeyDown_Noun = true;
+			NounPressed();
+		}
+	}
+
+	if (mx > 2+1*41 && mx < 39+1*41) {
+		if (my > 1 && my < 39) {
+			KeyDown_Plus = true;
+			PlusPressed();
+		}
+		if (my > 41 && my < 79) {
+			KeyDown_Minus = true;
+			MinusPressed();
+		}
+		if (my > 81 && my < 119) {
+			KeyDown_0 = true;
+			NumberPressed(0);
+		}
+	}
+
+	if (mx > 2+2*41 && mx < 39+2*41) {
+		if (my > 1 && my < 39) {
+			KeyDown_7 = true;
+			NumberPressed(7);
+		}
+		if (my > 41 && my < 79) {
+			KeyDown_4 = true;
+			NumberPressed(4);
+		}
+		if (my > 81 && my < 119) {
+			KeyDown_1 = true;
+			NumberPressed(1);
+		}
+	}
+
+	if (mx > 2+3*41 && mx < 39+3*41) {
+		if (my > 1 && my < 39) {
+			KeyDown_8 = true;
+			NumberPressed(8);
+		}
+		if (my > 41 && my < 79) {
+			KeyDown_5 = true;
+			NumberPressed(5);
+		}
+		if (my > 81 && my < 119) {
+			KeyDown_2 = true;
+			NumberPressed(2);
+		}
+	}
+
+	if (mx > 2+4*41 && mx < 39+4*41) {
+		if (my > 1 && my < 39) {
+			KeyDown_9 = true;
+			NumberPressed(9);
+		}
+		if (my > 41 && my < 79) {
+			KeyDown_6 = true;
+			NumberPressed(6);
+		}
+		if (my > 81 && my < 119) {
+			KeyDown_3 = true;
+			NumberPressed(3);
+		}
+	}
+
+	if (mx > 2+5*41 && mx < 39+5*41) {
+		if (my > 1 && my < 39) {
+			KeyDown_Clear = true;
+			ClearPressed();
+		}
+		if (my > 41 && my < 79) {
+			KeyDown_Prog = true;
+			ProgPressed();
+		}
+		if (my > 81 && my < 119) {
+			KeyDown_KeyRel = true;
+			KeyRel();
+		}
+	}
+
+	if (mx > 2+6*41 && mx < 39+6*41) {
+		if (my > 21 && my < 59) {
+			KeyDown_Enter= true;
+			EnterPressed();
+		}
+
+		if (my > 61 && my < 99) {
+			KeyDown_Reset = true;
+			ResetPressed();
+		}
+	}
+
+/*	if (mx > 0 && mx < 26){
 		if (my > 13 && my < 39){
 			VerbPressed();
 		}
@@ -766,7 +889,7 @@ void DSKY::ProcessKeypress(int mx, int my)
 		if (my > 60 && my < 85){
 			KeyRel();
 		}
-	}
+	}*/
 }
 
 void DSKY::ProgDisplay(char *ProgStr)

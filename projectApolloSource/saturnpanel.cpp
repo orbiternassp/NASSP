@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/04/10 19:27:04  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.17  2005/04/10 16:01:40  flydba
   *	*** empty log message ***
   *	
@@ -423,7 +426,8 @@ void Saturn::ReleaseSurfaces ()
 void Saturn::InitPanel (int panel)
 
 {
-	switch (panel) {
+// Panel dependency temporary disabled because of the new panels	
+/*	switch (panel) {
 
 	case 0:// ilumination panel left
     case 2:
@@ -467,7 +471,7 @@ void Saturn::InitPanel (int panel)
 	case 1: // panel
 	case 3:
     case 5://added for splitted panel
-		srf[0] = oapiCreateSurface (LOADBMP (IDB_FCSM));
+*/		srf[0] = oapiCreateSurface (LOADBMP (IDB_FCSM));
 		srf[1] = oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
 		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
 		srf[3] = oapiCreateSurface (LOADBMP (IDB_HORIZON));
@@ -504,9 +508,9 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[16], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[22], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[27], g_Param.col[4]);
-		break;
+/*		break;
 	}
-
+*/
 	SetSwitches(panel);
 }
 
@@ -720,6 +724,7 @@ bool Saturn::clbkLoadPanel (int id)
 		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1582, 341, 1687,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1438, 346, 1540,  466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1418, 536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		
 		break;    
 	
@@ -730,10 +735,10 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862, 600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843, 735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		
-		// display & keypad (DSKY):
-		
+		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239, 589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095, 594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075, 784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		
 		break;    
 
