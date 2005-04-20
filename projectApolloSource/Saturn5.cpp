@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/03/09 00:26:50  chode99
+  *	Added code to support SII retros.
+  *	
   *	Revision 1.4  2005/02/20 05:24:58  chode99
   *	Changes to implement realistic CM aerodynamics. Created callback function "CoeffFunc" in Saturn1b.cpp and Saturn5.cpp. Substituted CreateAirfoil for older lift functions.
   *	
@@ -1014,6 +1017,12 @@ void SaturnV::StageSix(double simt)
 
 			MasterAlarm();
 
+			//
+			// AGC restarted as the explosion occured.
+			//
+
+			agc.ForceRestart();
+
 			ApolloExploded = true;
 
 			SetPropellantMass(ph_rcs0,0);
@@ -1782,6 +1791,10 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 			soundlib.LoadMissionSound(SPUShiftS, PUSHIFT_SOUND, PUSHIFT_SOUND);
 		}
 	}
+
+	if (bStartS4B && !TLIBurnDone) {
+		soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
+	}
 }
 
 bool SaturnV::SIVBStart()
@@ -1798,6 +1811,8 @@ bool SaturnV::SIVBStart()
 	if (Realism)
 		SetThrusterResource(th_main[0], ph_3rd);
 
+	soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
+
 	return true;
 }
 
@@ -1811,6 +1826,9 @@ void SaturnV::SIVBStop()
 
 	if (Realism)
 		SetThrusterResource(th_main[0], 0);
+
+	SecoSound.play();
+	SecoSound.done();
 
 	TLIBurnDone = true;
 }
