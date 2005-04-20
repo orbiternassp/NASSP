@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/24 00:24:10  movieman523
+  *	Added function to get Apollo mission number from AGC.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -81,6 +84,7 @@ public:
 	int GetApolloNo() { return ApolloNo; };
 	void SetDesiredLanding(double latitude, double longitude, double altitude);
 
+	void ForceRestart();
 	void Startup();
 	void GoStandby();
 	bool OnStandby() { return Standby; };

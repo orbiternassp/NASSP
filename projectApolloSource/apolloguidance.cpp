@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/03/03 17:36:27  tschachim
+  *	initialized BurnEndTime
+  *	
   *	Revision 1.1  2005/02/10 21:22:00  tschachim
   *	Initial version
   *	
@@ -152,6 +155,17 @@ void ApolloGuidance::Startup()
 		dsky.SetVerb(37);
 		dsky.SetVerbFlashing();
 	}
+}
+
+//
+// Force a hardware restart.
+//
+
+void ApolloGuidance::ForceRestart()
+
+{
+	Reset = false;
+	ProgState = 0;
 }
 
 //
@@ -1206,6 +1220,7 @@ void ApolloGuidance::ResetProg(double simt)
 	switch (ProgState) {
 
 	case 0:
+		dsky.BlankAll();
 		NextEventTime = simt;
 		ProgState++;
 		break;
