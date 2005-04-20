@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/04/14 23:07:21  movieman523
+  *	Added post-splashdown sound.
+  *	
   *	Revision 1.3  2005/02/24 00:27:01  movieman523
   *	Moved more sound file names here from hard-coded files.
   *	
@@ -71,5 +74,6 @@
 #define SPLASH_SOUND				"Splash.wav"
 #define LUNARCONTACT_SOUND			"contact.wav"
 #define POSTSPLASHDOWN_SOUND		"post-splash.wav"
+#define SECO_SOUND					"seco.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"
