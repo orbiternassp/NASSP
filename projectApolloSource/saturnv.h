@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/03/09 00:25:28  chode99
+  *	Added header stuff for SII retros.
+  *	
   *	Revision 1.2  2005/02/18 00:38:44  movieman523
   *	Moved sounds into generic Saturn class from Saturn V.
   *	
@@ -165,6 +168,8 @@ protected:
 
 	Sound SRover;
 	Sound SPUShiftS;
+
+	Sound SecoSound;
 
 	//
 	// Obsolete variables... currently in for backward compatibility, and
