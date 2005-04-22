@@ -100,7 +100,7 @@
 #define AID_INDICATOR2                  162
 #define IDB_ROT_KNOB                    163
 #define IDB_INDICATORS1                 164
-#define IDB_NEEDLE1                     165
+#define IDB_NEEDLE                      165
 #define IDB_DIGITAL                     166
 #define IDB_HORIZON2                    170
 #define IDB_SWITCHUP                    171
@@ -189,10 +189,10 @@
 #define AID_SPS_HELIUM_SWITCHES         407
 #define AID_P33                         408
 #define AID_P34                         409
-#define AID_FUEL_CELL_SWITCHES          410
+#define AID_FUELCELLREACTANTSSWITCHES   410
 #define AID_P35                         411
 #define AID_P36                         412
-#define AID_CABIN_FAN_SWITCHES          413
+#define AID_CYROTANKSWITCHES            413
 #define AID_CM_RCS_LOGIC                414
 #define AID_CW                          415
 #define AID_SMRCS_FUEL                  416
@@ -261,16 +261,26 @@
 #define AID_MFDDOCK                     484
 #define AID_MFDDOCK_POWER               485
 #define AID_RCS_INDICATORS				486
-#define IDB_CSM_MAIN_PANEL				487		
+#define IDB_CSM_MAIN_PANEL				487
 #define IDB_CSM_LEFT_PANEL				488
 #define IDB_CSM_RIGHT_PANEL				489
 #define IDB_CSM_LEFT_RNDZ_WINDOW		490
 #define IDB_CSM_RIGHT_RNDZ_WINDOW		491
 #define IDB_CSM_HATCH_WINDOW			492
 #define IDB_CSM_LOWER_PANEL				493
+#define AID_CYROTANKINDICATORS		    494
+#define IDB_NEEDLE1						495
+#define IDB_ILMLEMPANEL_LEFT			496
+#define IDB_LEMPANEL_LEFT			    497
+#define IDB_ILMLEMPANEL_RIGHT		    498
+#define IDB_LEMPANEL_RIGHT			    499
+#define IDB_ILMLEMLEFTWINDOW		    500
+#define IDB_LEMLEFTWINDOW			    501
+
+
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        281
