@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/04/14 23:12:44  movieman523
+  *	Added post-splashdown audio support. Unfortunately I can't test this at the moment as the control panel switches for getting out of the CM after splashdown aren't working :).
+  *	
+  *	However, it's pretty simple code, so 90+% likely to work.
+  *	
   *	Revision 1.8  2005/04/01 14:22:00  tschachim
   *	Added RCSIndicatorsSwitch
   *	
@@ -50,7 +55,9 @@
   *	
   **************************************************************************/
 
-class Saturn: public VESSEL2 {
+#include "PanelSDK/PanelSDK.h"
+
+class Saturn: public VESSEL2, public SwitchListener {
 
 public:
 	Saturn(OBJHANDLE hObj, int fmodel);
@@ -96,6 +103,8 @@ public:
 	int clbkConsumeDirectKey(char *keystate);
 
 	bool clbkLoadVC (int id);
+
+	void SwitchToggled(ToggleSwitch *s);
 
 protected:
 
@@ -278,8 +287,17 @@ protected:
 	bool FCswitch5;
 	bool FCswitch6;
 
-	bool CFswitch1;
-	bool CFswitch2;
+	ToggleSwitch   CabinFan1Switch;
+	ToggleSwitch   CabinFan2Switch;
+	ThreePosSwitch H2Heater1Switch; // TODO state saving/loading
+	ThreePosSwitch H2Heater2Switch;
+	ThreePosSwitch O2Heater1Switch;
+	ThreePosSwitch O2Heater2Switch;	
+	ToggleSwitch   O2PressIndSwitch;	
+
+	ThreePosSwitch FuelCellReactants1Switch; // TODO state saving/loading
+	ThreePosSwitch FuelCellReactants2Switch;
+	ThreePosSwitch FuelCellReactants3Switch;
 
 	bool P113switch;
 
@@ -532,6 +550,9 @@ protected:
 	NavModeToggle NavToggleHAlt;
 	NavModeToggle NavToggleHLevel;
 
+	SwitchRow CryoTankRow;
+	SwitchRow FuelCellReactantsRow;
+
 	SwitchRow LPRow;
 	SwitchRow HUDRow;
 	SwitchRow SPSRow;
@@ -620,9 +641,9 @@ protected:
 	bool ActivateS4B;
 	bool ToggleEva;
 
-#define SATVIEW_CDR	0
-#define SATVIEW_DMP	1
-#define SATVIEW_CMP	2
+#define SATVIEW_CDR		0
+#define SATVIEW_DMP		1
+#define SATVIEW_CMP		2
 #define SATVIEW_DOCK	3
 
 	unsigned int	viewpos;
@@ -664,6 +685,15 @@ protected:
 	bool LEMdatatransfer;
 	bool InVC;
 	bool InPanel;
+
+#define SATPANEL_LOWER				0
+#define SATPANEL_MAIN				1
+#define SATPANEL_LEFT				2
+#define SATPANEL_RIGHT				3
+#define SATPANEL_LEFT_RNDZ_WINDOW	4
+#define SATPANEL_RIGHT_RNDZ_WINDOW	5
+#define SATPANEL_HATCH_WINDOW		6
+
 	int  PanelId;
 	bool KranzPlayed;
 	bool PostSplashdownPlayed;
@@ -728,6 +758,10 @@ protected:
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
+	void RedrawPanel_CryoTankIndicators (SURFHANDLE surf);
+	void RedrawPanel_O2CryoTankPressureIndicator(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle);
+	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
+	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start);
 	double SetPitchApo();
 	void SetStage(int s);
 	void setupSM(OBJHANDLE hvessel);
@@ -744,6 +778,7 @@ protected:
 	void MasterAlarm();
 	void StopMasterAlarm();
 	void GenericTimestep(double simt);
+	void SystemsInit();
 	void SystemsTimestep(double simt);
 	void SIVBBoiloff();
 	void SetSIVBThrusters();
@@ -917,6 +952,16 @@ protected:
 	//
 
 	char AudioLanguage[64];
+
+	//
+	// PanelSDK functions as a interface between the
+	// actual System & Panel SDK and VESSEL class
+	//
+    PanelSDK Panelsdk;
+	// FILE *PanelsdkLogFile;
+
+	// InitSaturn is called twice, but some things must run only once
+	bool InitSaturnCalled;
 };
 
 extern void BaseInit();
