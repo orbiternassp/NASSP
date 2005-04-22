@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE DISCARDABLE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE DISCARDABLE
 BEGIN
     "\r\n"
     "\0"
@@ -66,7 +66,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 
 IDB_ILMGUARDSWITCH      	BITMAP  DISCARDABLE     "ilmguardswitch.bmp"
 IDB_HORIZON             	BITMAP  DISCARDABLE     "Horizon.bmp"
-IDB_NEEDLE1             	BITMAP  DISCARDABLE     "Needle1.bmp"
+IDB_NEEDLE	             	BITMAP  DISCARDABLE     "Needle.bmp"
 IDB_DIGITAL             	BITMAP  DISCARDABLE     "digitaldisp.bmp"
 IDB_HORIZON2            	BITMAP  DISCARDABLE     "Horizon2.bmp"
 IDB_SWITCHUP            	BITMAP  DISCARDABLE     "SwitchUP.bmp"
@@ -106,13 +106,13 @@ IDB_MFDFRAME_ILM        	BITMAP  DISCARDABLE     "MFDFrame-ilm.bmp"
 IDB_MFDPOWER_ILM        	BITMAP  DISCARDABLE     "MFDPower-ilm.bmp"
 IDB_DOCKINGSWITCHES_ILM 	BITMAP  DISCARDABLE     "DockingSwitches-ilm.bmp"
 IDB_ROTATIONALSWITCH    	BITMAP  DISCARDABLE     "RotationalSwitch.bmp"
-IDB_CSM_MAIN_PANEL		BITMAP  DISCARDABLE	"csm_main_panel.bmp"
-IDB_CSM_LEFT_PANEL		BITMAP  DISCARDABLE	"csm_left_panel.bmp"
-IDB_CSM_RIGHT_PANEL		BITMAP  DISCARDABLE	"csm_right_panel.bmp"
-IDB_CSM_LEFT_RNDZ_WINDOW	BITMAP  DISCARDABLE	"csm_left_rndz_window.bmp"
-IDB_CSM_RIGHT_RNDZ_WINDOW	BITMAP  DISCARDABLE	"csm_right_rndz_window.bmp"
-IDB_CSM_HATCH_WINDOW		BITMAP  DISCARDABLE	"csm_hatch_window.bmp"
-IDB_CSM_LOWER_PANEL		BITMAP  DISCARDABLE	"gn_lower_equip_bay.bmp"
+IDB_CSM_MAIN_PANEL			BITMAP  DISCARDABLE		"csm_main_panel.bmp"
+IDB_CSM_LEFT_PANEL			BITMAP  DISCARDABLE		"csm_left_panel.bmp"
+IDB_CSM_RIGHT_PANEL			BITMAP  DISCARDABLE		"csm_right_panel.bmp"
+IDB_CSM_LEFT_RNDZ_WINDOW	BITMAP  DISCARDABLE		"csm_left_rndz_window.bmp"
+IDB_CSM_RIGHT_RNDZ_WINDOW	BITMAP  DISCARDABLE		"csm_right_rndz_window.bmp"
+IDB_CSM_HATCH_WINDOW		BITMAP  DISCARDABLE		"csm_hatch_window.bmp"
+IDB_CSM_LOWER_PANEL			BITMAP  DISCARDABLE		"gn_lower_equip_bay.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
