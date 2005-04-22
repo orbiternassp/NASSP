@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/04/16 00:14:10  tschachim
+  *	fixed dsky keyboard and g&n panel lights
+  *	
   *	Revision 1.18  2005/04/10 19:27:04  flydba
   *	*** empty log message ***
   *	
@@ -388,7 +391,7 @@ void Saturn::RedrawPanel_Horizon (SURFHANDLE surf)
 	oapiBlt (surf, srf[5], 0, 0, 0, 0, 96, 96, SURF_PREDEF_CK);
 }
 
-void Saturn::RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
+void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
 
 	HDC hDC = oapiGetDC (surf);
 	SelectObject (hDC, g_Param.font[2]);
@@ -404,6 +407,80 @@ void Saturn::RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoff
 	oapiReleaseDC (surf, hDC);
 }
 
+void Saturn::RedrawPanel_O2CryoTankPressureIndicator(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle) {
+
+	if (value < 100.0)
+		oapiBlt(surf, needle, xOffset, 110, xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+
+	else if (value <= 500.0) 
+		oapiBlt(surf, needle, xOffset, 110 - (int)((value - 100.0) * 0.065), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+
+	else if (value <= 850.0)
+		oapiBlt(surf, needle, xOffset, 84 - (int)((value - 500.0) * 0.07714), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+
+	else if (value <= 900.0)
+		oapiBlt(surf, needle, xOffset, 57 - (int)((value - 850.0) * 0.38), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+
+	else if (value <= 950.0)
+		oapiBlt(surf, needle, xOffset, 38 - (int)((value - 900.0) * 0.42), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+
+	else if (value <= 1050.0)
+		oapiBlt(surf, needle, xOffset, 17 - (int)((value - 950.0) * 0.13), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+
+	else
+		oapiBlt(surf, needle, xOffset, 4, xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+
+}
+
+void Saturn::RedrawPanel_CryoTankIndicators(SURFHANDLE surf) {
+
+	// H2Tank1 pressure
+	double value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:PRESS") * PSI;
+	if (value < 0.0) value = 0.0;
+	if (value > 400.0) value = 400.0;
+	oapiBlt(surf, srf[SRF_NEEDLE],  0, (110 - (int)(value / 400.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+
+	// H2Tank2 pressure
+	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:PRESS") * PSI;
+	if (value < 0.0) value = 0.0;
+	if (value > 400.0) value = 400.0;
+	oapiBlt(surf, srf[SRF_NEEDLE], 53, (110 - (int)(value / 400.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+
+	// O2Tank1 / O2SurgeTank pressure
+	if (O2PressIndSwitch)  
+		value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:PRESS") * PSI;
+	else
+		value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS") * PSI;
+	RedrawPanel_O2CryoTankPressureIndicator(surf, srf[SRF_NEEDLE], value, 86, 0);
+
+	// O2Tank2 pressure
+	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:PRESS") * PSI;
+	RedrawPanel_O2CryoTankPressureIndicator(surf, srf[SRF_NEEDLE], value, 139, 10);
+
+	// H2Tank1 quantity
+	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:MASS") / CSM_H2TANK_CAPACITY ;
+	if (value < 0.0) value = 0.0;
+	if (value > 1.0) value = 1.0;
+	oapiBlt(surf, srf[SRF_NEEDLE],  172, (110 - (int)(value * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+
+	// H2Tank2 quantity
+	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:MASS") / CSM_H2TANK_CAPACITY ;
+	if (value < 0.0) value = 0.0;
+	if (value > 1.0) value = 1.0;
+	oapiBlt(surf, srf[SRF_NEEDLE],  225, (110 - (int)(value * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+
+	// O2Tank1 quantity
+	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:MASS") / CSM_O2TANK_CAPACITY ;
+	if (value < 0.0) value = 0.0;
+	if (value > 1.0) value = 1.0;
+	oapiBlt(surf, srf[SRF_NEEDLE],  258, (110 - (int)(value * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+
+	// O2Tank2 quantity
+	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:MASS") / CSM_O2TANK_CAPACITY ;
+	if (value < 0.0) value = 0.0;
+	if (value > 1.0) value = 1.0;
+	oapiBlt(surf, srf[SRF_NEEDLE],  311, (110 - (int)(value * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+}
 
 //
 // Free all allocated surfaces.
@@ -471,43 +548,43 @@ void Saturn::InitPanel (int panel)
 	case 1: // panel
 	case 3:
     case 5://added for splitted panel
-*/		srf[0] = oapiCreateSurface (LOADBMP (IDB_FCSM));
-		srf[1] = oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
-		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
-		srf[3] = oapiCreateSurface (LOADBMP (IDB_HORIZON));
-		srf[4] = oapiCreateSurface (LOADBMP (IDB_DIGITAL));
-		srf[5] = oapiCreateSurface (LOADBMP (IDB_HORIZON2));
-		srf[6] = oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
-		srf[7] = oapiCreateSurface (LOADBMP (IDB_SWLEVER));
-		srf[8] = oapiCreateSurface (LOADBMP (IDB_SECSWITCH));
-		srf[9] = oapiCreateSurface (LOADBMP (IDB_ABORT));
-		srf[10] = oapiCreateSurface (LOADBMP (IDB_ANNUN));
-		srf[11] = oapiCreateSurface (LOADBMP (IDB_LAUNCH));
-		srf[12] = oapiCreateSurface (LOADBMP (IDB_LV_ENG));
-		srf[13] = oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
-		srf[14] = oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
-		srf[15] = oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
-		srf[16] = oapiCreateSurface (LOADBMP (IDB_THRUST));
-		srf[17] = oapiCreateSurface (LOADBMP (IDB_GUARDSWITCH));
-		srf[18] = oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
-		srf[19] = oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
-		//srf[20] = oapiCreateSurface (LOADBMP (IDB_BUTTON));
-		srf[SRF_DSKY] = oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
-		srf[22] = oapiCreateSurface (LOADBMP (IDB_ALLROUND));
-		srf[23] = oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH));
-		srf[24] = oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
-		srf[25] = oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
-		srf[26] = oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
-		srf[27] = oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
+*/		srf[0]						= oapiCreateSurface (LOADBMP (IDB_FCSM));
+		srf[1]						= oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
+		srf[SRF_NEEDLE]				= oapiCreateSurface (LOADBMP (IDB_NEEDLE));
+		srf[3]						= oapiCreateSurface (LOADBMP (IDB_HORIZON));
+		srf[4]						= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
+		srf[5]						= oapiCreateSurface (LOADBMP (IDB_HORIZON2));
+		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
+		srf[7]						= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
+		srf[8]						= oapiCreateSurface (LOADBMP (IDB_SECSWITCH));
+		srf[9]						= oapiCreateSurface (LOADBMP (IDB_ABORT));
+		srf[10]						= oapiCreateSurface (LOADBMP (IDB_ANNUN));
+		srf[11]						= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
+		srf[12]						= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
+		srf[13]						= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
+		srf[14]						= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
+		srf[15]						= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
+		srf[16]						= oapiCreateSurface (LOADBMP (IDB_THRUST));
+		srf[17]						= oapiCreateSurface (LOADBMP (IDB_GUARDSWITCH));
+		srf[18]						= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
+		srf[19]						= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
+		//srf[20]				    = oapiCreateSurface (LOADBMP (IDB_BUTTON));
+		srf[SRF_DSKY]				= oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
+		srf[22]						= oapiCreateSurface (LOADBMP (IDB_ALLROUND));
+		srf[SRF_THREEPOSSWITCH]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH));
+		srf[24]						= oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
+		srf[25]						= oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
+		srf[26]						= oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
+		srf[27]						= oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
 				
-		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[3], 0);
-		oapiSetSurfaceColourKey (srf[5], g_Param.col[5]);
-		oapiSetSurfaceColourKey (srf[14], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[15], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[16], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[22], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[27], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],	g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[3],			0);
+		oapiSetSurfaceColourKey (srf[5],			g_Param.col[5]);
+		oapiSetSurfaceColourKey (srf[14],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[15],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[16],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[22],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[27],			g_Param.col[4]);
 /*		break;
 	}
 */
@@ -539,7 +616,6 @@ bool Saturn::clbkLoadPanel (int id)
 	recursion = false;
 
 	ReleaseSurfaces();
-
 	HBITMAP hBmp;
 
 	//
@@ -550,58 +626,55 @@ bool Saturn::clbkLoadPanel (int id)
 		return false;
 
 	switch(id) {
-
-//case 4 and 5 added for splitted panel and changed neighbours
-
-	case 0:
+	case SATPANEL_LOWER:
 //		if (!hBmpLower)
 			hBmpLower = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL));
 		hBmp = hBmpLower;
-		oapiSetPanelNeighbours(-1, -1, 1, -1);
+		oapiSetPanelNeighbours(-1, -1, SATPANEL_MAIN, -1);
 		break;
 
-	case 1:
+	case SATPANEL_MAIN:
 //		if (!hBmpMain)
 			hBmpMain = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_PANEL));
 		hBmp = hBmpMain;
-		oapiSetPanelNeighbours(2, 3, 6, 0);
+		oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER);
 
 		break;
 
-	case 2:
+	case SATPANEL_LEFT:
 //		if (!hBmpLeft)
 			hBmpLeft = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_PANEL));
 		hBmp = hBmpLeft;
-		oapiSetPanelNeighbours(-1, 1, -1, -1);
+		oapiSetPanelNeighbours(-1, SATPANEL_MAIN, -1, -1);
 
 		break;
 
-	case 3:
+	case SATPANEL_RIGHT:
 //		if (!hBmpRight)
 			hBmpRight = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_PANEL));
 		hBmp = hBmpRight;
-		oapiSetPanelNeighbours(1, -1, -1, -1);
+		oapiSetPanelNeighbours(SATPANEL_MAIN, -1, -1, -1);
 		break;
 
-	case 4:
+	case SATPANEL_LEFT_RNDZ_WINDOW:
 //		if (!hBmpRNDZ_Left)
 			hBmpRNDZ_Left = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW));
 		hBmp = hBmpRNDZ_Left;
-		oapiSetPanelNeighbours(-1, 6, -1, 1);
+		oapiSetPanelNeighbours(-1, SATPANEL_HATCH_WINDOW, -1, SATPANEL_MAIN);
 		break;
 
-	case 5:
+	case SATPANEL_RIGHT_RNDZ_WINDOW:
 //		if (!hBmpRNDZ_Right)
 			hBmpRNDZ_Right = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_RNDZ_WINDOW));
 		hBmp = hBmpRNDZ_Right;
-		oapiSetPanelNeighbours(6, -1, -1, 1);
+		oapiSetPanelNeighbours(SATPANEL_HATCH_WINDOW, -1, -1, SATPANEL_MAIN);
 		break;
 
-	case 6:
+	case SATPANEL_HATCH_WINDOW:
 //		if (!hBmpHatch)
 			hBmpHatch = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW));
 		hBmp = hBmpHatch;
-		oapiSetPanelNeighbours(4, 5, -1, 1);
+		oapiSetPanelNeighbours(SATPANEL_LEFT_RNDZ_WINDOW, SATPANEL_RIGHT_RNDZ_WINDOW, -1, SATPANEL_MAIN);
 		break;
 
 	}
@@ -719,56 +792,59 @@ bool Saturn::clbkLoadPanel (int id)
 	
 	switch (id) {
 	
-	case 0: // guidance & navigation lower equipment bay
+	case SATPANEL_LOWER: // guidance & navigation lower equipment bay
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1582, 341, 1687,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1438, 346, 1540,  466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1418, 536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1582,  341, 1687,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1438,  346, 1540,  466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1418,  536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
 		
 		break;    
 	
-	case 1: // main instrument panel
+	case SATPANEL_MAIN: // main instrument panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835, 305, 1973,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862, 600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843, 735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835,  305, 1973,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862,  600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843,  735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1912,  490, 2488,  520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173,  315, 2495,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2757,  955, 3131,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
 		
 		// display & keyboard (DSKY):		
-		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239, 589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095, 594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075, 784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
 		
 		break;    
 
-	case 2: // left instrument panel
+	case SATPANEL_LEFT: // left instrument panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
 		//new areas to be added soon...
 		
 		break;    
 
-	case 3: // right instrument panel
+	case SATPANEL_RIGHT: // right instrument panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
 		//new areas to be added soon...
 		
 		break;    
 
-	case 4: // left rendezvous window
+	case SATPANEL_LEFT_RNDZ_WINDOW: // left rendezvous window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
 		//the new animated COAS has to be added soon...
 		
 		break;    
 
-	case 5: // right rendezvous window
+	case SATPANEL_RIGHT_RNDZ_WINDOW: // right rendezvous window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
 		break;    
 
-	case 6: // hatch window
+	case SATPANEL_HATCH_WINDOW: // hatch window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
 		break;    	
@@ -797,7 +873,10 @@ bool Saturn::clbkLoadPanel (int id)
 void Saturn::SetSwitches(int panel)
 
 {
-	MainPanel.Init(0, this, &soundlib);
+	MainPanel.Init(0, this, &soundlib, this);
+
+	CryoTankRow.Init(AID_CYROTANKSWITCHES, MainPanel);
+	FuelCellReactantsRow.Init(AID_FUELCELLREACTANTSSWITCHES, MainPanel); 
 
 	SPSRow.Init(AID_SPS, MainPanel);
 	EDSRow.Init(AID_EDS, MainPanel);
@@ -840,25 +919,37 @@ void Saturn::SetSwitches(int panel)
 
 	LPSRow.Init(AID_LEM_POWER_SWITCH, MainPanel);
 
-	SPSswitch.Init(0, 0, 30, 39, srf[7], SPSRow, this, soundlib);
-	EDSswitch.Init(0, 0, 23, 20, srf[6], EDSRow, this, soundlib);
+	CabinFan1Switch.Init (  0, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow); 
+	CabinFan2Switch.Init ( 59, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow);
+	H2Heater1Switch.Init (114, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	H2Heater2Switch.Init (157, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	O2Heater1Switch.Init (200, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	O2Heater2Switch.Init (250, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	O2PressIndSwitch.Init(293, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow); 
 
-	LPswitch1.Init(36, 7, 23, 20, srf[6], SRP1Row, this, soundlib);
-	LPswitch2.Init(68, 7, 23, 20, srf[6], SRP1Row, this, soundlib);
-	LPswitch3.Init(04, 7, 23, 20, srf[6], SRP1Row, this, soundlib);
+	FuelCellReactants1Switch.Init( 43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsRow); 
+	FuelCellReactants2Switch.Init( 86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsRow); 
+	FuelCellReactants3Switch.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsRow); 
 
-	if (panel == 3 ||panel == 2) {
-		LPswitch4.Init(55, 33, 23, 20, srf[6], P14Row, this, soundlib);
-		LPswitch5.Init(87, 33, 23, 20, srf[6], P14Row, this, soundlib);
+	SPSswitch.Init(0, 0, 30, 39, srf[7], SPSRow);
+	EDSswitch.Init(0, 0, 23, 20, srf[6], EDSRow);
+
+	LPswitch1.Init(36, 7, 23, 20, srf[6], SRP1Row);
+	LPswitch2.Init(68, 7, 23, 20, srf[6], SRP1Row);
+	LPswitch3.Init(04, 7, 23, 20, srf[6], SRP1Row);
+
+	if (panel == SATPANEL_LEFT_RNDZ_WINDOW) {
+		LPswitch4.Init(55, 33, 23, 20, srf[6], P14Row);
+		LPswitch5.Init(87, 33, 23, 20, srf[6], P14Row);
 	} else {
-		LPswitch4.Init(  4, 7, 23, 20, srf[6], P14Row, this, soundlib);
-		LPswitch5.Init( 36, 7, 23, 20, srf[6], P14Row, this, soundlib);
+		LPswitch4.Init(  4, 7, 23, 20, srf[6], P14Row);
+		LPswitch5.Init( 36, 7, 23, 20, srf[6], P14Row);
 	}
 
-	LPswitch6.Init( 45, 7, 23, 20, srf[6], P15Row, this, soundlib);
-	P15switch.Init(  9, 7, 23, 20, srf[6], P15Row, this, soundlib);
-	LPswitch7.Init(119, 7, 23, 20, srf[6], P15Row, this, soundlib);
-	P16switch.Init( 83, 7, 23, 20, srf[6], P15Row, this, soundlib);
+	LPswitch6.Init( 45, 7, 23, 20, srf[6], P15Row);
+	P15switch.Init(  9, 7, 23, 20, srf[6], P15Row);
+	LPswitch7.Init(119, 7, 23, 20, srf[6], P15Row);
+	P16switch.Init( 83, 7, 23, 20, srf[6], P15Row);
 
 	HUDswitch1.Init(  4, 7, 23, 20, srf[6], HUDRow, HUD_DOCKING, soundlib);
 	HUDswitch2.Init( 36, 7, 23, 20, srf[6], HUDRow, HUD_SURFACE, soundlib);
@@ -873,146 +964,146 @@ void Saturn::SetSwitches(int panel)
 	NavToggleHLevel.Init(2, 4, 23, 20, srf[6], NAVRow2, this, NAVMODE_HLEVEL, soundlib);
 	NavToggleHAlt.Init(31, 4, 23, 20, srf[6], NAVRow2, this, NAVMODE_HOLDALT, soundlib);
 
-	P11switch.Init( 0, 0, 23, 20, srf[6], P11Row, this, soundlib);
+	P11switch.Init( 0, 0, 23, 20, srf[6], P11Row);
 
-	P12switch.Init( 3, 7, 23, 20, srf[6], P12Row, this, soundlib);
+	P12switch.Init( 3, 7, 23, 20, srf[6], P12Row);
 
-	P13switch.Init( 4, 7, 23, 20, srf[6], P13Row, this, soundlib);
-	P14switch.Init(36, 7, 23, 20, srf[6], P13Row, this, soundlib);
+	P13switch.Init( 4, 7, 23, 20, srf[6], P13Row);
+	P14switch.Init(36, 7, 23, 20, srf[6], P13Row);
 
-	P111switch.Init(0, 0, 23, 20, srf[6], P17Row, this, soundlib);
+	P111switch.Init(0, 0, 23, 20, srf[6], P17Row);
 
-	P112switch.Init(0, 0, 23, 20, srf[6], P18Row, this, soundlib);
+	P112switch.Init(0, 0, 23, 20, srf[6], P18Row);
 
-	ROTPswitch.Init(0, 0, 23, 20, srf[23], P16Row, this, soundlib);
+	ROTPswitch.Init(0, 0, 23, 20, srf[23], P16Row);
 
-	P114switch.Init(  4, 6, 23, 20, srf[6], P19Row, this, soundlib);
-	P115switch.Init( 36, 6, 23, 20, srf[6], P19Row, this, soundlib);
-	P116switch.Init( 67, 6, 23, 20, srf[6], P19Row, this, soundlib);
-	P117switch.Init( 99, 6, 23, 20, srf[6], P19Row, this, soundlib);
-	P118switch.Init(131, 6, 23, 20, srf[23], P19Row, this, soundlib);
-	P119switch.Init(163, 6, 23, 20, srf[23], P19Row, this, soundlib);
+	P114switch.Init(  4, 6, 23, 20, srf[6], P19Row);
+	P115switch.Init( 36, 6, 23, 20, srf[6], P19Row);
+	P116switch.Init( 67, 6, 23, 20, srf[6], P19Row);
+	P117switch.Init( 99, 6, 23, 20, srf[6], P19Row);
+	P118switch.Init(131, 6, 23, 20, srf[23], P19Row);
+	P119switch.Init(163, 6, 23, 20, srf[23], P19Row);
 
-	P21switch.Init(04, 6, 23, 20, srf[6], ABTRow, this, soundlib);
-	P22switch.Init(40, 6, 23, 20, srf[6], ABTRow, this, soundlib);
-	P23switch.Init(86, 6, 23, 20, srf[6], ABTRow, this, soundlib);
+	P21switch.Init(04, 6, 23, 20, srf[6], ABTRow);
+	P22switch.Init(40, 6, 23, 20, srf[6], ABTRow);
+	P23switch.Init(86, 6, 23, 20, srf[6], ABTRow);
 
-	P24switch.Init(  3, 7, 23, 20, srf[23], P21Row, this, soundlib);
-	P25switch.Init( 35, 7, 23, 20, srf[23], P21Row, this, soundlib);
-	P26switch.Init( 67, 7, 23, 20, srf[23], P21Row, this, soundlib);
-	P27switch.Init(110, 7, 23, 20, srf[23], P21Row, this, soundlib);
-	P28switch.Init(150, 7, 23, 20, srf[23], P21Row, this, soundlib);
+	P24switch.Init(  3, 7, 23, 20, srf[23], P21Row);
+	P25switch.Init( 35, 7, 23, 20, srf[23], P21Row);
+	P26switch.Init( 67, 7, 23, 20, srf[23], P21Row);
+	P27switch.Init(110, 7, 23, 20, srf[23], P21Row);
+	P28switch.Init(150, 7, 23, 20, srf[23], P21Row);
 
-	P29switch.Init( 3, 7, 23, 20, srf[6], P22Row, this, soundlib);
-	P210switch.Init(36, 7, 23, 20, srf[6], P22Row, this, soundlib);
+	P29switch.Init( 3, 7, 23, 20, srf[6], P22Row);
+	P210switch.Init(36, 7, 23, 20, srf[6], P22Row);
 
-	P211switch.Init(0, 1, 23, 20, srf[6], P23Row, this, soundlib);
+	P211switch.Init(0, 1, 23, 20, srf[6], P23Row);
 
-	P212switch.Init( 3, 7, 23, 20, srf[23], P24Row, this, soundlib);
-	P213switch.Init(35, 7, 23, 20, srf[23], P24Row, this, soundlib);
-	P214switch.Init(67, 7, 23, 20, srf[23], P24Row, this, soundlib);
-	P215switch.Init(99, 7, 23, 20, srf[23], P24Row, this, soundlib);
+	P212switch.Init( 3, 7, 23, 20, srf[23], P24Row);
+	P213switch.Init(35, 7, 23, 20, srf[23], P24Row);
+	P214switch.Init(67, 7, 23, 20, srf[23], P24Row);
+	P215switch.Init(99, 7, 23, 20, srf[23], P24Row);
 
-	P216switch.Init( 3, 7, 23, 20, srf[23], P25Row, this, soundlib);
-	P217switch.Init(35, 7, 23, 20, srf[23], P25Row, this, soundlib);
+	P216switch.Init( 3, 7, 23, 20, srf[23], P25Row);
+	P217switch.Init(35, 7, 23, 20, srf[23], P25Row);
 
-	P218switch.Init(  3, 7, 23, 20, srf[23], P26Row, this, soundlib);
-	P219switch.Init( 40, 7, 23, 20, srf[23], P26Row, this, soundlib);
-	P220switch.Init( 75, 7, 23, 20, srf[23], P26Row, this, soundlib);
-	P221switch.Init(107, 7, 23, 20, srf[6], P26Row, this, soundlib);
+	P218switch.Init(  3, 7, 23, 20, srf[23], P26Row);
+	P219switch.Init( 40, 7, 23, 20, srf[23], P26Row);
+	P220switch.Init( 75, 7, 23, 20, srf[23], P26Row);
+	P221switch.Init(107, 7, 23, 20, srf[6], P26Row);
 
-	P222switch.Init(  3, 7, 23, 20, srf[23], P27Row, this, soundlib);
-	P223switch.Init( 35, 7, 23, 20, srf[23], P27Row, this, soundlib);
-	P224switch.Init( 67, 7, 23, 20, srf[23], P27Row, this, soundlib);
-	P225switch.Init(104, 7, 23, 20, srf[23], P27Row, this, soundlib);
-	P226switch.Init(136, 7, 23, 20, srf[23], P27Row, this, soundlib);
-	P227switch.Init(178, 7, 23, 20, srf[23], P27Row, this, soundlib);
-	P228switch.Init(226, 7, 23, 20, srf[23], P27Row, this, soundlib);
-	P229switch.Init(274, 7, 23, 20, srf[23], P27Row, this, soundlib);
-	P230switch.Init(320, 7, 23, 20, srf[23], P27Row, this, soundlib);
+	P222switch.Init(  3, 7, 23, 20, srf[23], P27Row);
+	P223switch.Init( 35, 7, 23, 20, srf[23], P27Row);
+	P224switch.Init( 67, 7, 23, 20, srf[23], P27Row);
+	P225switch.Init(104, 7, 23, 20, srf[23], P27Row);
+	P226switch.Init(136, 7, 23, 20, srf[23], P27Row);
+	P227switch.Init(178, 7, 23, 20, srf[23], P27Row);
+	P228switch.Init(226, 7, 23, 20, srf[23], P27Row);
+	P229switch.Init(274, 7, 23, 20, srf[23], P27Row);
+	P230switch.Init(320, 7, 23, 20, srf[23], P27Row);
 
-	P231switch.Init( 10, 6, 23, 20, srf[23], P28Row, this, soundlib);
-	P232switch.Init( 48, 6, 23, 20, srf[23], P28Row, this, soundlib);
-	P233switch.Init( 85, 6, 23, 20, srf[23], P28Row, this, soundlib);
-	P234switch.Init(122, 6, 23, 20, srf[23], P28Row, this, soundlib);
-	P235switch.Init(154, 6, 23, 20, srf[23], P28Row, this, soundlib);
-	P236switch.Init(  4, 84, 23, 20, srf[23], P28Row, this, soundlib);
-	P237switch.Init( 36, 84, 23, 20, srf[23], P28Row, this, soundlib);
-	P238switch.Init( 68, 84, 23, 20, srf[23], P28Row, this, soundlib);
-	P239switch.Init(100, 84, 23, 20, srf[23], P28Row, this, soundlib);
-	P240switch.Init(132, 84, 23, 20, srf[23], P28Row, this, soundlib);
-	P241switch.Init(168, 84, 23, 20, srf[23], P28Row, this, soundlib);
-	P242switch.Init(204, 84, 23, 20, srf[23], P28Row, this, soundlib);
-	P243switch.Init(236, 84, 23, 20, srf[23], P28Row, this, soundlib);
-	P244switch.Init(275, 84, 23, 20, srf[23], P28Row, this, soundlib);
+	P231switch.Init( 10, 6, 23, 20, srf[23], P28Row);
+	P232switch.Init( 48, 6, 23, 20, srf[23], P28Row);
+	P233switch.Init( 85, 6, 23, 20, srf[23], P28Row);
+	P234switch.Init(122, 6, 23, 20, srf[23], P28Row);
+	P235switch.Init(154, 6, 23, 20, srf[23], P28Row);
+	P236switch.Init(  4, 84, 23, 20, srf[23], P28Row);
+	P237switch.Init( 36, 84, 23, 20, srf[23], P28Row);
+	P238switch.Init( 68, 84, 23, 20, srf[23], P28Row);
+	P239switch.Init(100, 84, 23, 20, srf[23], P28Row);
+	P240switch.Init(132, 84, 23, 20, srf[23], P28Row);
+	P241switch.Init(168, 84, 23, 20, srf[23], P28Row);
+	P242switch.Init(204, 84, 23, 20, srf[23], P28Row);
+	P243switch.Init(236, 84, 23, 20, srf[23], P28Row);
+	P244switch.Init(275, 84, 23, 20, srf[23], P28Row);
 
-	P246switch.Init( 3, 6, 23, 20, srf[23], P29Row, this, soundlib);
-	P247switch.Init(36, 6, 23, 20, srf[23], P29Row, this, soundlib);
+	P246switch.Init( 3, 6, 23, 20, srf[23], P29Row);
+	P247switch.Init(36, 6, 23, 20, srf[23], P29Row);
 
-	P248switch.Init( 3, 6, 23, 20, srf[23], P30Row, this, soundlib);
-	P249switch.Init(35, 6, 23, 20, srf[23], P30Row, this, soundlib);
+	P248switch.Init( 3, 6, 23, 20, srf[23], P30Row);
+	P249switch.Init(35, 6, 23, 20, srf[23], P30Row);
 
-	P31switch.Init( 3,  8, 23, 20, srf[6], P31Row, this, soundlib);
-	P32switch.Init(35,  8, 23, 20, srf[6], P31Row, this, soundlib);
-	P33switch.Init(67,  8, 23, 20, srf[6], P31Row, this, soundlib);
-	P34switch.Init( 2, 98, 23, 20, srf[23], P31Row, this, soundlib);
-	P35switch.Init(33, 98, 23, 20, srf[23], P31Row, this, soundlib);
-	P36switch.Init(66, 98, 23, 20, srf[23], P31Row, this, soundlib);
+	P31switch.Init( 3,  8, 23, 20, srf[6], P31Row);
+	P32switch.Init(35,  8, 23, 20, srf[6], P31Row);
+	P33switch.Init(67,  8, 23, 20, srf[6], P31Row);
+	P34switch.Init( 2, 98, 23, 20, srf[23], P31Row);
+	P35switch.Init(33, 98, 23, 20, srf[23], P31Row);
+	P36switch.Init(66, 98, 23, 20, srf[23], P31Row);
 
-	P37switch.Init(0, 0, 23, 20, srf[23], P32Row, this, soundlib);
+	P37switch.Init(0, 0, 23, 20, srf[23], P32Row);
 
-	P38switch.Init( 3, 7, 23, 20, srf[23], P33Row, this, soundlib);
-	P39switch.Init(61, 7, 23, 20, srf[23], P33Row, this, soundlib);
+	P38switch.Init( 3, 7, 23, 20, srf[23], P33Row);
+	P39switch.Init(61, 7, 23, 20, srf[23], P33Row);
 
-	P310switch.Init(0, 0, 23, 20, srf[23], P34Row, this, soundlib);
+	P310switch.Init(0, 0, 23, 20, srf[23], P34Row);
 
-	P311switch.Init(  3, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P312switch.Init( 36, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P313switch.Init( 67, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P314switch.Init(112, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P315switch.Init(143, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P316switch.Init(175, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P317switch.Init(214, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P318switch.Init(254, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P319switch.Init(293, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P320switch.Init(333, 6, 23, 20, srf[23], P35Row, this, soundlib);
-	P321switch.Init(  3, 84, 23, 20, srf[23], P35Row, this, soundlib);
-	P322switch.Init( 35, 84, 23, 20, srf[23], P35Row, this, soundlib);
-	P323switch.Init(185, 82, 23, 20, srf[23], P35Row, this, soundlib);
-	P324switch.Init(224, 82, 23, 20, srf[23], P35Row, this, soundlib);
-	P325switch.Init(261, 82, 23, 20, srf[23], P35Row, this, soundlib);
-	P326switch.Init(293, 82, 23, 20, srf[23], P35Row, this, soundlib);
-	P327switch.Init(325, 82, 23, 20, srf[23], P35Row, this, soundlib);
+	P311switch.Init(  3, 6, 23, 20, srf[23], P35Row);
+	P312switch.Init( 36, 6, 23, 20, srf[23], P35Row);
+	P313switch.Init( 67, 6, 23, 20, srf[23], P35Row);
+	P314switch.Init(112, 6, 23, 20, srf[23], P35Row);
+	P315switch.Init(143, 6, 23, 20, srf[23], P35Row);
+	P316switch.Init(175, 6, 23, 20, srf[23], P35Row);
+	P317switch.Init(214, 6, 23, 20, srf[23], P35Row);
+	P318switch.Init(254, 6, 23, 20, srf[23], P35Row);
+	P319switch.Init(293, 6, 23, 20, srf[23], P35Row);
+	P320switch.Init(333, 6, 23, 20, srf[23], P35Row);
+	P321switch.Init(  3, 84, 23, 20, srf[23], P35Row);
+	P322switch.Init( 35, 84, 23, 20, srf[23], P35Row);
+	P323switch.Init(185, 82, 23, 20, srf[23], P35Row);
+	P324switch.Init(224, 82, 23, 20, srf[23], P35Row);
+	P325switch.Init(261, 82, 23, 20, srf[23], P35Row);
+	P326switch.Init(293, 82, 23, 20, srf[23], P35Row);
+	P327switch.Init(325, 82, 23, 20, srf[23], P35Row);
 
-	P328switch.Init(  4, 6, 23, 20, srf[6], P36Row, this, soundlib);
-	P329switch.Init( 35, 6, 23, 20, srf[6], P36Row, this, soundlib);
-	P330switch.Init(185, 6, 23, 20, srf[23], P36Row, this, soundlib);
-	P331switch.Init(218, 6, 23, 20, srf[23], P36Row, this, soundlib);
-	P332switch.Init(249, 6, 23, 20, srf[23], P36Row, this, soundlib);
-	P333switch.Init(282, 6, 23, 20, srf[23], P36Row, this, soundlib);
-	P334switch.Init(313, 6, 23, 20, srf[23], P36Row, this, soundlib);
-	P335switch.Init(345, 6, 23, 20, srf[23], P36Row, this, soundlib);
-	P336switch.Init(377, 6, 23, 20, srf[23], P36Row, this, soundlib);
+	P328switch.Init(  4, 6, 23, 20, srf[6], P36Row);
+	P329switch.Init( 35, 6, 23, 20, srf[6], P36Row);
+	P330switch.Init(185, 6, 23, 20, srf[23], P36Row);
+	P331switch.Init(218, 6, 23, 20, srf[23], P36Row);
+	P332switch.Init(249, 6, 23, 20, srf[23], P36Row);
+	P333switch.Init(282, 6, 23, 20, srf[23], P36Row);
+	P334switch.Init(313, 6, 23, 20, srf[23], P36Row);
+	P335switch.Init(345, 6, 23, 20, srf[23], P36Row);
+	P336switch.Init(377, 6, 23, 20, srf[23], P36Row);
 
-	P337switch.Init( 3,   6, 23, 20, srf[23], P37Row, this, soundlib);
-	P338switch.Init(50,   6, 23, 20, srf[23], P37Row, this, soundlib);
-	P339switch.Init(96,   6, 23, 20, srf[23], P37Row, this, soundlib);
-	P340switch.Init( 3,  81, 23, 20, srf[23], P37Row, this, soundlib);
-	P341switch.Init(35,  81, 23, 20, srf[23], P37Row, this, soundlib);
-	P342switch.Init(67,  81, 23, 20, srf[23], P37Row, this, soundlib);
-	P343switch.Init(99,  81, 23, 20, srf[23], P37Row, this, soundlib);
-	P344switch.Init( 3, 155, 23, 20, srf[23], P37Row, this, soundlib);
-	P345switch.Init(35, 155, 23, 20, srf[23], P37Row, this, soundlib);
-	P346switch.Init(67, 155, 23, 20, srf[23], P37Row, this, soundlib);
-	P347switch.Init(99, 155, 23, 20, srf[23], P37Row, this, soundlib);
+	P337switch.Init( 3,   6, 23, 20, srf[23], P37Row);
+	P338switch.Init(50,   6, 23, 20, srf[23], P37Row);
+	P339switch.Init(96,   6, 23, 20, srf[23], P37Row);
+	P340switch.Init( 3,  81, 23, 20, srf[23], P37Row);
+	P341switch.Init(35,  81, 23, 20, srf[23], P37Row);
+	P342switch.Init(67,  81, 23, 20, srf[23], P37Row);
+	P343switch.Init(99,  81, 23, 20, srf[23], P37Row);
+	P344switch.Init( 3, 155, 23, 20, srf[23], P37Row);
+	P345switch.Init(35, 155, 23, 20, srf[23], P37Row);
+	P346switch.Init(67, 155, 23, 20, srf[23], P37Row);
+	P347switch.Init(99, 155, 23, 20, srf[23], P37Row);
 
-	EMSswitch.Init(4, 6, 23, 20, srf[23], EMS1Row, this, soundlib);
+	EMSswitch.Init(4, 6, 23, 20, srf[23], EMS1Row);
 
-	RPswitch15.Init(0, 0, 23, 20, srf[23], LPSRow, this, soundlib);
+	RPswitch15.Init(0, 0, 23, 20, srf[23], LPSRow);
 
 	IMUswitchRow.Init(AID_IMU_SWITCH, MainPanel);
-	IMUswitch.Init( 1, 16, 23, 20, srf[6], IMUswitchRow, this, soundlib);	// ToggleSwitch
-	//IMUswitch.Init( 1, 16, 23, 20, srf[23], IMUswitchRow, this, soundlib);	// ThreePosSwitch
+	IMUswitch.Init( 1, 16, 23, 20, srf[6], IMUswitchRow);	// ToggleSwitch
+	//IMUswitch.Init( 1, 16, 23, 20, srf[23], IMUswitchRow);	// ThreePosSwitch
 	IMUswitch.InitGuard(0, 0, 25, 45, srf[8], soundlib);
 
 	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
@@ -1488,8 +1579,8 @@ int Saturn::GetCP2SwitchState()
 	state.u.SP3switch = SP3switch;
 	state.u.SP4switch = SP4switch;
 	state.u.P221switch = P221switch;
-	state.u.CFswitch1 = CFswitch1;
-	state.u.CFswitch2 = CFswitch2;
+	state.u.CFswitch1 = CabinFan1Switch;
+	state.u.CFswitch2 = CabinFan2Switch;
 
 	return state.word;
 }
@@ -1507,8 +1598,8 @@ void Saturn::SetCP2SwitchState(int s)
 	SP3switch = state.u.SP3switch;
 	SP4switch = state.u.SP4switch;
 	P221switch = state.u.P221switch;
-	CFswitch1 = state.u.CFswitch1;
-	CFswitch2 = state.u.CFswitch2;
+	CabinFan1Switch = state.u.CFswitch1;
+	CabinFan2Switch = state.u.CFswitch2;
 
 }
 
@@ -1691,11 +1782,9 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 	static int ctrl = 0;
 
 	if (MainPanel.CheckMouseClick(id, event, mx, my))
-		return 1;
+		return true;
 
 	switch (id) {
-	// panel 0 events:
-
 	case AID_MASTER_ALARM:
 		StopMasterAlarm();
 		ButtonClick();
@@ -2464,7 +2553,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_FUEL_CELL_SWITCHES:
+/*	case AID_FUEL_CELL_SWITCHES:
 		if (my >=49 && my <=60 ){
 			if (mx > 9 && mx < 21 && !FCswitch1){
 				SwitchClick();
@@ -2507,7 +2596,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 		}
 		return true;
-
+*/
 	case AID_CM_RCS_LOGIC:
 		if (my >=7 && my <=18 ){
 			if (mx > 9 && mx < 21 && !P113switch){
@@ -2518,32 +2607,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			if (mx > 9 && mx < 21 && P113switch){
 				SwitchClick();
 				P113switch=false;
-			}
-		}
-		return true;
-
-	case AID_CABIN_FAN_SWITCHES:
-		if (my >=7 && my <=18 ){
-			if (mx > 10 && mx < 22 && !CFswitch1){
-				SwitchClick();
-				CabinFanSound();
-				CFswitch1=true;
-			}else if (mx > 54 && mx < 66 && !CFswitch2){
-				SwitchClick();
-				CabinFanSound();
-				CFswitch2=true;
-			}
-		}
-		else if (my >=17 && my <=28 ){
-			if (mx > 10 && mx < 22 && CFswitch1){
-				SwitchClick();
-				StopCabinFanSound();
-				CFswitch1=false;
-			}
-			else if (mx > 54 && mx < 66 && CFswitch2){
-				SwitchClick();
-				StopCabinFanSound();
-				CFswitch2=false;
 			}
 		}
 		return true;
@@ -2563,7 +2626,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	// panel 3 events:
 	case AID_MFDDOCK:
 		if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
 			if (my > 234 && my < 249) {	//&& event == PANEL_MOUSE_LBDOWN
@@ -2604,6 +2666,70 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 	return false;
 }
 
+void Saturn::SwitchToggled(ToggleSwitch *s) {
+
+	int *handle = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:START");
+	if (s == &CabinFan1Switch && CabinFan1Switch.IsUp()) *handle = -1;
+	if (s == &CabinFan2Switch && CabinFan2Switch.IsUp()) *handle = 1;
+
+	if (s == &CabinFan1Switch || s == &CabinFan2Switch) {
+		if (CabinFansActive()) {
+			CabinFanSound();
+		} else {
+			StopCabinFanSound();
+		}
+
+	} else if (s == &O2Heater1Switch) {
+		CryoTankHeaterSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:O2TANK1HEATER:PUMP"));
+
+	} else if (s == &O2Heater2Switch) {
+		CryoTankHeaterSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:O2TANK2HEATER:PUMP"));
+
+	} else if (s == &H2Heater1Switch) {
+		CryoTankHeaterSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:H2TANK1HEATER:PUMP"));
+
+	} else if (s == &H2Heater2Switch) {
+		CryoTankHeaterSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:H2TANK2HEATER:PUMP"));
+
+	} else if (s == &FuelCellReactants1Switch) {
+		FuelCellReactantsSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:START"));
+	
+	} else if (s == &FuelCellReactants2Switch) {
+		FuelCellReactantsSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:START"));
+	
+	} else if (s == &FuelCellReactants3Switch) {
+		FuelCellReactantsSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:START"));
+	
+	}
+}
+
+void Saturn::CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
+
+	if (s->IsUp())
+		*pump = SP_PUMP_AUTO;
+	else if (s->IsCenter())
+		*pump = SP_PUMP_OFF;
+	else if (s->IsDown())
+		*pump = SP_PUMP_ON;
+}
+
+void Saturn::FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start) {
+
+	if (s->IsUp())
+		*start = SP_FUELCELL_START;
+	else if (s->IsCenter())
+		*start = SP_FUELCELL_NONE;
+	else if (s->IsDown())
+		*start = SP_FUELCELL_STOP;
+
+}
 void Saturn::SwitchClick()
 
 {
@@ -2682,7 +2808,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	//
 
 	if (id == AID_SM_RCS_MODE) {
-		if (PanelId == 3 || PanelId == 2) {
+		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
 			if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
 				oapiBlt(surf, srf[26], 0, 0, 0, 0, 133, 73);
 				LPswitch4.SetVisible(true);
@@ -2706,8 +2832,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	//
 
 	switch (id) {
+	case AID_CYROTANKINDICATORS:
+		RedrawPanel_CryoTankIndicators(surf);
+		return true;
 
-	// panel 0 events:
+
+	
 	case AID_HORIZON:
 		RedrawPanel_Horizon (surf);
 		return true;
@@ -3570,7 +3700,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_FUEL_CELL_SWITCHES:
+/*	case AID_FUEL_CELL_SWITCHES:
 		if(FCswitch1){
 			oapiBlt(surf,srf[6],3,49,0,0,23,20);
 			oapiBlt(surf,srf[13],19,0,0,0,19,20);
@@ -3614,7 +3744,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[13],177,0,38,0,19,20);
 		}
 		return true;
-
+*/
 	case AID_CW:
 		if(P221switch){
 			oapiBlt(surf,srf[22],0,0,165,0,349,84);
@@ -3676,19 +3806,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[6],3,7,0,0,23,20);
 		}else{
 			oapiBlt(surf,srf[6],3,7,23,0,23,20);
-		}
-		return true;
-
-	case AID_CABIN_FAN_SWITCHES:
-		if(CFswitch1){
-			oapiBlt(surf,srf[6],4,7,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],4,7,23,0,23,20);
-		}
-		if(CFswitch2){
-			oapiBlt(surf,srf[6],48,7,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],48,7,23,0,23,20);
 		}
 		return true;
 
@@ -3820,7 +3937,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	// panel 3 events
 	case AID_MFDDOCK:
 		if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
 			oapiBlt(surf,srf[24], 0, 0, 0, 0, 301, 251);
@@ -3843,7 +3959,7 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
 	case MFD_RIGHT:		// MFD_USER1
-		oapiTriggerPanelRedrawArea (3, AID_MFDDOCK);
+		oapiTriggerPanelRedrawArea (SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
 		break;
 	}
 }
@@ -4126,8 +4242,17 @@ void Saturn::InitSwitches()
 	SRHswitch1 = true;
 	SRHswitch2 = true;
 
-	CFswitch1 = false;
-	CFswitch2 = false;
+	CabinFan1Switch = false;
+	CabinFan2Switch = false;
+	H2Heater1Switch = THREEPOSSWITCH_UP;
+	H2Heater2Switch = THREEPOSSWITCH_UP;
+	O2Heater1Switch = THREEPOSSWITCH_UP;
+	O2Heater2Switch = THREEPOSSWITCH_UP;
+	O2PressIndSwitch = true;
+
+	FuelCellReactants1Switch = THREEPOSSWITCH_CENTER;
+	FuelCellReactants2Switch = THREEPOSSWITCH_CENTER;
+	FuelCellReactants3Switch = THREEPOSSWITCH_CENTER;
 
 	CMRHDswitch = false;
 	CMRHGswitch = false;
