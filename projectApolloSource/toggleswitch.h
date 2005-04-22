@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/04/01 15:38:34  tschachim
+  *	Introduced RotationalSwitch
+  *	
   *	Revision 1.3  2005/03/11 17:54:00  tschachim
   *	Introduced GuardedToggleSwitch and GuardedThreePosSwitch
   *
@@ -33,6 +36,14 @@
   *
   **************************************************************************/
 
+#define TOGGLESWITCH_DOWN		0
+#define TOGGLESWITCH_UP			1
+
+#define THREEPOSSWITCH_DOWN		0
+#define THREEPOSSWITCH_CENTER	1
+#define THREEPOSSWITCH_UP		2
+
+
 class SwitchRow;
 
 class ToggleSwitch {
@@ -42,7 +53,7 @@ public:
 	virtual ~ToggleSwitch();
 
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib &s);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, VESSEL *v, SoundLib &s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
 	void SetSize(int w, int h) { width = w; height = h; };
 	void SetPosition(int xp, int yp) { x = xp; y = yp; };
 	void SetState(bool s) { state = s; };
@@ -96,7 +107,7 @@ protected:
 	Sound Sclick;
 
 	ToggleSwitch *next;
-	//SwitchRow *switchRow;
+	SwitchRow *switchRow;
 };
 
 class AttitudeToggle: public ToggleSwitch {
@@ -245,8 +256,8 @@ protected:
 	int y;
 	int width;
 	int height;
-	RotationalSwitchPosition* position;
-	RotationalSwitchPosition* positionList;
+	RotationalSwitchPosition *position;
+	RotationalSwitchPosition *positionList;
 	SURFHANDLE switchSurface;
 	Sound sclick;
 	RotationalSwitch *next;
@@ -281,7 +292,14 @@ protected:
 	PanelSwitches *panelSwitches;
 
 	friend class ToggleSwitch;
+	friend class ThreePosSwitch;
 	friend class RotationalSwitch;
+};
+
+class SwitchListener {
+
+public:
+	virtual void SwitchToggled(ToggleSwitch *s) = 0;
 };
 
 class PanelSwitches {
@@ -291,14 +309,16 @@ public:
 	bool CheckMouseClick(int id, int event, int mx, int my);
 	bool DrawRow(int id, SURFHANDLE DrawSurface);
 	void AddRow(SwitchRow *s) { s->SetNext(RowList); RowList = s; };
-	void Init(int id, VESSEL *v, SoundLib *s) { PanelID = id; RowList = 0; vessel = v; soundlib = s; };
+	void Init(int id, VESSEL *v, SoundLib *s, SwitchListener *l) { PanelID = id; RowList = 0; vessel = v; soundlib = s; listener = l; };
 
 protected:
 	VESSEL *vessel;
 	SoundLib *soundlib;
+	SwitchListener *listener;
 	int	PanelID;
 	SwitchRow *RowList;
 
 	friend class ToggleSwitch;
+	friend class ThreePosSwitch;
 	friend class RotationalSwitch;
 };
