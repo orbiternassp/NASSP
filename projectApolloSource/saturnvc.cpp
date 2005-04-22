@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/04/11 23:49:32  yogenfrutz
+  *	once more:corrected docking view position
+  *	
   *	Revision 1.4  2005/03/17 06:43:26  yogenfrutz
   *	adjusted cameraoffset for docking alignment,this was necessary due to the correction of the docking positions of the LEM
   *	
@@ -118,7 +121,7 @@ void Saturn::SetView(double offset)
 
 	CurrentViewOffset = offset;
 
-	if (InPanel && (PanelId == 2 || PanelId == 3)) {
+	if (InPanel && (PanelId == SATPANEL_LEFT_RNDZ_WINDOW)) {
 		v = _V(-1.022, 1.046, offset - 3.0);
 	} else {
 		switch (viewpos) {
