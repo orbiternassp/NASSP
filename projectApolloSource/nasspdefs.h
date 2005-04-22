@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/04/14 23:15:22  movieman523
+  *	Increased version number to 6.5.
+  *	
   *	Revision 1.9  2005/04/01 14:12:40  tschachim
   *	nsurf = 28
   *	
@@ -97,16 +100,20 @@ typedef struct {
 
 const int nsurf = 28; // number of bitmap handles
 
-#define SRF_DSKY	21
-#define SRF_DSKYNUM	22
+#define SRF_NEEDLE			 2
+#define SRF_SWITCHUP		 6
+#define SRF_DSKY			21
+#define SRF_DSKYNUM			22
+#define SRF_THREEPOSSWITCH	23
 
 //
 // Earth radius and gravity constants.
 //
 
 static const double ERADIUS = 6371.0;
-const double GK = 6.67259e-20 ;//  Gravitational constant (km^3/(kg sec^2))
+const double GK   = 6.67259e-20 ;			//  Gravitational constant (km^3/(kg sec^2))
 const double GKSI = 6.67259e-20 * 1e9;
+const double PSI  = 0.000145038;			// Pa to PSI
 
 //
 // Engine information.
@@ -150,3 +157,9 @@ const double GKSI = 6.67259e-20 * 1e9;
 #define PAYLOAD_LTA8	4
 #define PAYLOAD_TARGET	5
 
+//
+// Internal systems.
+//
+
+#define CSM_H2TANK_CAPACITY  12700.0		// in g, 28 lb
+#define CSM_O2TANK_CAPACITY 145149.0		// in g, 320 lb
