@@ -23,6 +23,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/04/22 14:10:03  tschachim
+  *	PanelSDK introduced
+  *	Panel id defines
+  *	New switches and indicators
+  *	ToggleSwitch.Init changed
+  *	SwitchListener introduced
+  *	
   *	Revision 1.19  2005/04/16 00:14:10  tschachim
   *	fixed dsky keyboard and g&n panel lights
   *	
@@ -2667,10 +2674,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 }
 
 void Saturn::SwitchToggled(ToggleSwitch *s) {
-
-	int *handle = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:START");
-	if (s == &CabinFan1Switch && CabinFan1Switch.IsUp()) *handle = -1;
-	if (s == &CabinFan2Switch && CabinFan2Switch.IsUp()) *handle = 1;
 
 	if (s == &CabinFan1Switch || s == &CabinFan2Switch) {
 		if (CabinFansActive()) {
