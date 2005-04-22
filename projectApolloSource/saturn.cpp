@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/04/14 23:12:43  movieman523
+  *	Added post-splashdown audio support. Unfortunately I can't test this at the moment as the control panel switches for getting out of the CM after splashdown aren't working :).
+  *	
+  *	However, it's pretty simple code, so 90+% likely to work.
+  *	
   *	Revision 1.8  2005/03/19 03:39:13  chode99
   *	Fixed bug that prevented some switch states from being set by the scenario file.
   *	
@@ -69,6 +74,7 @@
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky), dsky(soundlib, agc)
 
 {
+	InitSaturnCalled = false;
 	autopilot = false;
 	LastTimestep = 0;
 
@@ -84,6 +90,7 @@ Saturn::~Saturn()
 	//
 	// Nothing for now.
 	//
+	// fclose(PanelsdkLogFile);
 }
 
 void Saturn::initSaturn()
@@ -98,7 +105,10 @@ void Saturn::initSaturn()
 
 	TCPO = 0.0;
 
-	InitSwitches();
+	// call only once because of RotationalSwitch
+	if (!InitSaturnCalled) {
+		InitSwitches();
+	}
 
 	masterAlarmLit = false;
 	masterAlarmCycleTime = 0;
@@ -377,6 +387,13 @@ void Saturn::initSaturn()
 	strncpy(AudioLanguage, "English", 64);
 
 	hEVA = 0;
+
+	// call only once 
+	if (!InitSaturnCalled) {
+		SystemsInit();
+	}
+
+	InitSaturnCalled = true;
 }
 
 bool Saturn::SIVBStart()
@@ -570,6 +587,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	dsky.SaveState(scn);
 	agc.SaveState(scn);
+
+	Panelsdk.Save(scn);	//also save the internal systems 
 }
 
 //
@@ -729,7 +748,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	double tohdg = 45;
 
 	// default panel
-	PanelId = 1;
+	PanelId = SATPANEL_MAIN;
 
 	//
 	// If the name of the spacecraft is "AS-xxx" then get the vehicle
@@ -966,6 +985,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
 			agc.LoadState(scn);
+		}
+        else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
+			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
 		else {
 			ParseScenarioLineEx (line, vstatus);
