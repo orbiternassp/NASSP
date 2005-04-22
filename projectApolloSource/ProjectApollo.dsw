@@ -1,9 +1,9 @@
 Microsoft Developer Studio Workspace File, Format Version 6.00
-# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+# WARNUNG: DIESE ARBEITSBEREICHSDATEI DARF NICHT BEARBEITET ODER GELÖSCHT WERDEN!
 
 ###############################################################################
 
-Project: "Sat5_LMPKD"=".\Sat5_LMPKD\Sat5_LMPKD.dsp" - Package Owner=<4>
+Project: "PanelSDK"=".\PanelSDK\PanelSDK.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -11,12 +11,18 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name Saturn5NASP
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name Saturn5_LEVA
-    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "SAT5_LMPKD"=".\Sat5_LMPKD\Sat5_LMPKD.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
@@ -51,7 +57,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Saturn5_LEVA"=".\Saturn5_LEVA\Saturn5_LEVA.dsp" - Package Owner=<4>
+Project: "Saturn1b"=".\Saturn1b\Saturn1b.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -59,6 +65,9 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name PanelSDK
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -71,6 +80,9 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name PanelSDK
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -90,7 +102,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Saturn1b"=".\Saturn1b\Saturn1b.dsp" - Package Owner=<4>
+Project: "Saturn5_LEVA"=".\Saturn5_LEVA\Saturn5_LEVA.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
