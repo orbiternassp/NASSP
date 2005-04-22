@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/04/01 15:38:34  tschachim
+  *	Introduced RotationalSwitch
+  *	
   *	Revision 1.3  2005/03/11 17:54:00  tschachim
   *	Introduced GuardedToggleSwitch and GuardedThreePosSwitch
   *	
@@ -106,9 +109,12 @@ bool ToggleSwitch::DoCheckMouseClick(int mx, int my)
 		}
 	}
 
-	if (Active && (state != OldState))
+	if (Active && (state != OldState)) {
 		SwitchToggled = true;
-
+		if (switchRow)
+			if (switchRow->panelSwitches->listener) 
+				switchRow->panelSwitches->listener->SwitchToggled(this);
+	}
 	return true;
 }
 
@@ -154,9 +160,12 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my)
 		}
 	}
 
-	if (Active && (state != OldState))
+	if (Active && (state != OldState)) {
 		SwitchToggled = true;
-
+		if (switchRow)
+			if (switchRow->panelSwitches->listener) 
+				switchRow->panelSwitches->listener->SwitchToggled(this);
+	}
 	return true;
 }
 
@@ -186,7 +195,7 @@ void ToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 		DoDrawSwitch(DrawSurface);
 }
 
-void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, VESSEL *v, SoundLib &s)
+void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row)
 
 {
 	x = xp;
@@ -197,7 +206,7 @@ void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow
 	SwitchToggled = false;
 	
 	row.AddSwitch(this);
-	//switchRow = &row;
+	switchRow = &row;
 
 	//OurVessel = v;
 	OurVessel = row.panelSwitches->vessel;
@@ -329,7 +338,7 @@ void NavModeToggle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRo
 
 {
 	NAVMode = mode;
-	ToggleSwitch::Init(xp, yp, w, h, surf, row, v, s);
+	ToggleSwitch::Init(xp, yp, w, h, surf, row);
 }
 
 void NavModeToggle::DrawSwitch(SURFHANDLE DrawSurface)
