@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:54  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 //
@@ -209,6 +212,7 @@ protected:
 	double CalcTFF(double vy, double r0, double g);
 	double CurrentG();
 	bool OrbitCalculationsValid();
+	void DisplayBankSum();
 
 	//
 	// Programs we can run.

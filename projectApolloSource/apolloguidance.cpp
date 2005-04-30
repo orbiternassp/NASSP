@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/04/20 17:44:48  movieman523
+  *	Added call to force restart of the AGC.
+  *	
   *	Revision 1.2  2005/03/03 17:36:27  tschachim
   *	initialized BurnEndTime
   *	
@@ -392,7 +395,7 @@ void ApolloGuidance::ProcessCommonVerbNoun(int verb, int noun)
 	//
 
 	case 91:
-		BankSumNum = 1;
+		BankSumNum = 0;
 		dsky.BlankData();
 		DisplayBankSum();
 		break;
@@ -408,12 +411,12 @@ void ApolloGuidance::DisplayBankSum()
 
 {
 	if (BankSumNum > 8)
-		BankSumNum = 1;
+		BankSumNum = 0;
 
 	if (BankSumNum & 1)
 		dsky.SetR1Octal(BankSumNum);
 	else
-		dsky.SetR1Octal(0100000 -BankSumNum);
+		dsky.SetR1Octal(077777 -BankSumNum);
 
 	dsky.SetR2Octal(BankSumNum);
 	dsky.SetR3Octal((BankSumNum * 10000 + 4223) & 077777);
@@ -471,9 +474,6 @@ void ApolloGuidance::DisplayOrbitCalculations()
 
 	if (apogee < 0)
 		apogee = 0;
-
-	if (perigee < 0)
-		perigee = 0;
 
 	dsky.SetR1((int)DisplayAlt(apogee) / 1000);
 	dsky.SetR2((int)DisplayAlt(perigee) / 1000);
@@ -1397,6 +1397,11 @@ bool ApolloGuidance::GenericProgPressed(int R1, int R2, int R3)
 		DisplayEMEM(R2);
 	case 11:
 		CurrentEMEMAddr = R2;
+		return true;
+
+	case 91:
+		BankSumNum++;
+		DisplayBankSum();
 		return true;
 	}
 

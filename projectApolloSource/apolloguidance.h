@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/04/20 17:44:48  movieman523
+  *	Added call to force restart of the AGC.
+  *	
   *	Revision 1.2  2005/02/24 00:24:10  movieman523
   *	Added function to get Apollo mission number from AGC.
   *	
@@ -142,7 +145,7 @@ protected:
 	void KillAllThrusters();
 	void OrientForOrbitBurn();
 	void BurnMainEngine(double thrust);
-	void DisplayBankSum();
+	virtual void DisplayBankSum();
 	void DisplayEMEM(unsigned int addr);
 	virtual bool OrbitCalculationsValid() = 0;
 	void DisplayOrbitCalculations();

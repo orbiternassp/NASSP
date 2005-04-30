@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:05  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -178,11 +181,8 @@ void CSMcomputer::DisplayNounData(int noun)
 			if (apogee < 0)
 				apogee = 0;
 
-			if (perigee < 0)
-				perigee = 0;
-
-			dsky.SetR1((int)DisplayAlt(apogee) / 1000);
-			dsky.SetR2((int)DisplayAlt(perigee) / 1000);
+			dsky.SetR1((int)DisplayAlt(apogee) / 100);
+			dsky.SetR2((int)DisplayAlt(perigee) / 100);
 
 			//
 			// Adjust gravity to take into account our current velocity parallel to the planet's
@@ -1210,6 +1210,66 @@ void CSMcomputer::WriteMemory(unsigned int loc, int val)
 		GenericWriteMemory(loc, val);
 		break;
 	}
+}
+
+//
+// Bank checksums.
+//
+
+static unsigned int BankSums[] =
+{
+	077777, 063743,
+	000001, 074057,
+	000002, 050032,
+	000003, 060757,
+	000004, 077375,
+	000005, 043705,
+	077771, 005143,
+	000007, 063337,
+	000010, 050763,
+	000011, 045337,
+	000012, 063341,
+	000013, 074774,
+	000014, 056404,
+	000015, 052523,
+	000016, 042460,
+	000017, 042700,
+	000020, 077316,
+	000021, 061425,
+	000022, 075664,
+	077754, 016525,
+	000024, 072000,
+	000025, 060227,
+	000026, 053053,
+	000027, 066445,
+	000030, 072005,
+	000031, 040224,
+	000032, 060374,
+	000033, 071456,
+	000034, 077620,
+	000035, 054100,
+	000036, 040555,
+	077740, 011751,
+	000040, 057252,
+	000041, 064667,
+	000042, 042661,
+	077734, 000152,
+};
+
+void CSMcomputer::DisplayBankSum()
+
+{
+	int	R1, R3;
+
+	if (BankSumNum > 043)
+		BankSumNum = 0;
+
+	R1 = BankSums[BankSumNum * 2];
+	R3 = BankSums[(BankSumNum * 2) + 1];
+
+	dsky.SetR1Octal(R1);
+	dsky.SetR2Octal(BankSumNum);
+	dsky.SetR3Octal(R3);
 }
 
 //
