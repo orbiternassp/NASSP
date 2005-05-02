@@ -1,0 +1,167 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Project Apollo - Panel reference</title><link type="text/css" href="../styles.css" rel="stylesheet"><meta content="DocBook XSL Stylesheets V1.29" name="generator"><link rel="home" href="../index.html" title="Virtual Apollo"><link rel="up" href="ch01.html" title="Chapter  Introduction"><link rel="previous" href="ch01s02.html" title="Installation"><link rel="next" href="ch01s06.html" title="Authors and contributors">
+<style type="text/css">
+<!--
+.style1 {color: #FFFFFF}
+-->
+</style>
+</head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><table height="65" cellspacing="0" cellpadding="0" border="0"><tr height="65"><td rowspan="2"><a href="../"><img border="0" height="79" width="432" src="../images/jboss.gif"></a></td><td valign="top" align="right" width="100%" background="../images/gbar.gif" rowspan="2">&nbsp;</td>
+</tr><tr></tr></table><div class="section"><a name="N1005E"></a><div class="titlepage"><div>
+  <h2 class="title" style="clear: all"><a name="N1005E"></a><span class="title">Panel controls and displays reference</span></h2>
+</div></div>
+  <div class="section">
+    <p>This section is a reference of each working switch and each display on the Project Apollo panels. It's intended mainly as a developer reference but of course it's also useful for users just in case they are curious about all these switches.</p>
+    <p>Controls and displays are presented in form of a tabulated list in numerical order by panel and area number. These tables are stronly related to the Apollo Operations Handbook, see <a href="#aoh">below</a> for more details. Each spacecraft has it's own reference table. The following is a detailed explanation of the columnar data presented in the tabulated lists:</p>
+    <table width="100%"  border="0" cellpadding="1" cellspacing="3">
+      <tr>
+        <td width="17%" height="80" valign="top"><strong>Name</strong></td>
+        <td width="51%" valign="top"><p>Given the exact nomenclature of a particular control or display. The name of the switch or control in the C++ code should be similar like shown in the following example: The name of the CABIN FAN switches in the code are CabinFan1Switch and CabinFan2Switch.</p>
+        </td>
+        <td width="32%" rowspan="2" align="right"><a href="aoh-panelfigures.pdf"><img src="../images/aoh-panellocator.gif" width="308" height="206" border="0"></a></td>
+      </tr>
+      <tr>
+        <td valign="top"><strong>Panel Locator </strong></td>
+        <td valign="top">The panel locator provides the &quot;coordinates&quot; of the display or control. Please klick on the image to the right to get the related figures from the Apollo Operations Handbook. Firstly there is the panel number, larger panels are further divided into areas. In most instances, the area correlates to a specific spacecraft system. Panels 1 through 16 have grid reference numerical marks horizontally and alphabetic marks vertically on the drawing.</td>
+      </tr>
+      <tr>
+        <td><strong>Function</strong></td>
+        <td>Describes the function of the switch or display.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr>
+        <td><strong>Remarks</strong></td>
+        <td>Any useful comment. Please notice especially differences to the original function, bugs or other issues.</td>
+        <td>&nbsp;</td>
+      </tr>
+    </table>
+    <h3>Command and Service Module (CSM) </h3>
+    <p>The following table describes the displays and controls on the command module panels: </p>
+    <table width="100%"  border="1" cellspacing="0">
+      <tr bgcolor="#023C8C">
+        <th width="25%" rowspan="2" bgcolor="#023C8C" scope="col"><span class="style1">Name</span></th>
+        <th colspan="3" bgcolor="#023C8C" scope="col"><div align="center" class="style1">Panel Locator</div></th>
+        <th width="36%" rowspan="2" bgcolor="#023C8C" scope="col"><span class="style1">Function</span></th>
+        <th width="26%" rowspan="2" bgcolor="#023C8C" scope="col"><span class="style1">Remarks</span></th>
+      </tr>
+     <tr bgcolor="#023C8C">
+        <th width="4%" scope="col"><div align="center" class="style1">Panel</div></th>
+        <th width="4%" scope="col"><div align="center" class="style1">Area</div></th>
+        <th width="5%" scope="col"><div align="center" class="style1">Grid</div></th>
+      </tr>	  
+      <tr valign="top">
+        <td>DSKY (all switches and diplays) </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">C</div></td>
+        <td>
+          <div align="center">-</div></td>
+        <td>&nbsp;</td>
+        <td>See user documentation for more informations. </td>
+      </tr>
+      <tr valign="top">
+        <td>MISSION TIMER Indicator</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">N</div></td>
+        <td><div align="center">E-34</div></td>
+        <td>Shows mission elapsed time </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>CABIN FAN 1/2 switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">G-34</div></td>
+        <td>Cabin fan sound goes on if one switch is ON </td>
+        <td>Not connected to the internal systems</td>
+      </tr>
+      <tr valign="top">
+        <td>H<sub>2</sub> PRESSURE 1/2 Indicators </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">F-37</div></td>
+        <td>Displays H<sub>2</sub> tanks No. 1 and No. 2 pressure in psi </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>O<sub>2</sub> PRESSURE 1 Indicator</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">F-38</div></td>
+        <td>Displays pressure in psi of O<sub>2</sub> tank No. 1 or ECS surge tank as selected by O<sub>2</sub> PRESS IND switch </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>O<sub>2</sub> PRESSURE 1 Indicator</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">F-38</div></td>
+        <td>Displays O<sub>2</sub> tank No. 2 pressure in psi </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>H<sub>2</sub> QUANTITY 1/2 Indicators </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">F-39</div></td>
+        <td>Displays quantity (% remaining) of H<sub>2</sub> in tank No.1 and No. 2 </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>O<sub>2</sub> QUANTITY 1/2 Indicators </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">F-40</div></td>
+        <td>Displays quantity (% remaining) of O<sub>2</sub> in tank No.1 and No. 2 </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>H<sub>2</sub> HEATERS 1/2 Switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">G-35</div></td>
+        <td>Controls power to H<sub>2</sub> tanks No. 1 and No. 2 heater elements. When switched to AUTO, heaters are turned on at 225 psi and turned off at 260 psi. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>O<sub>2</sub> HEATERS 1/2 Switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">G-37</div></td>
+        <td>Controls power to O<sub>2</sub> tanks No. 1 and No. 2 heater elements. When switched to AUTO, heaters are turned on at 865 psi and turned off at 935 psi. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>O<sub>2</sub> PRESS IND switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">G-37</div></td>
+        <td>Connects O<sub>2</sub> tank No. 1 pressure transducer or ECS SURGE TANK pressure transducer to O<sub>2</sub> tank No. 1 TANK PRESSURE indicator. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>FUEL CELL REACTANTS 1/2/3 Switches </td>
+        <td><div align="center">3</div></td>
+        <td><div align="center">E</div></td>
+        <td><div align="center">M-45</div></td>
+        <td>Momentary switch position ON/OFF opens or closes fuel cell H<sub>2</sub> and O<sub>2</sub> valves, that means the fuel cell is turned on or off. </td>
+        <td>Unlike in reality the fuel cells are restartable. </td>
+      </tr>
+    </table>
+    <h3>Lunar Module (LM) </h3>
+    <p>Coming soon...</p>
+	    <h3><a name="aoh"></a>Apollo Operations Handbook</h3>
+
+    <p>The controls and displays reference tables above are similar and an addition to the controls and displays section of the Apollo Operations Handbook available here: <a href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohindex.htm</a>. If you never seen it, here is an example explaining the H<sub>2</sub> HEATERS switches:</p>
+	    <p><img src="../images/aoh-h2heaters.gif" width="875" height="356"></p>
+	    <p>So as you can see it's often useful to have a look at the Apollo Operaions Handbook, since the descriptions are often more detailed and comprehensive.</p>
+  </div></div>
+<table height="65" cellspacing="0" cellpadding="0" border="0">
+<tr height="65">
+<td rowspan="2"><img height="79" width="432" src="../images/gbar.gif"></td>
+<td valign="top" align="right" width="100%" background="../images/gbar.gif" rowspan="2">
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=129726&amp;type=4" alt="SourceForge.net Logo" width="125" height="37" vspace="10" border="0" hspace="10"/></a>
+
+
+</td>
+
+
+</tr><tr></tr></table>
+										</body></html>
