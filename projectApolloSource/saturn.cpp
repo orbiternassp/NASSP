@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/04/22 13:58:19  tschachim
+  *	Introduced PanelSDK
+  *	Some changes because of the new panels
+  *	
   *	Revision 1.9  2005/04/14 23:12:43  movieman523
   *	Added post-splashdown audio support. Unfortunately I can't test this at the moment as the control panel switches for getting out of the CM after splashdown aren't working :).
   *	
@@ -71,6 +75,8 @@
 
 #include "saturn.h"
 
+//extern FILE *PanelsdkLogFile;
+
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky), dsky(soundlib, agc)
 
 {
@@ -90,7 +96,7 @@ Saturn::~Saturn()
 	//
 	// Nothing for now.
 	//
-	// fclose(PanelsdkLogFile);
+	//fclose(PanelsdkLogFile);
 }
 
 void Saturn::initSaturn()
