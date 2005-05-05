@@ -25,6 +25,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/04/22 14:12:39  tschachim
+  *	ToggleSwitch.Init changed
+  *	SwitchListener introduced
+  *	
   *	Revision 1.4  2005/04/01 15:38:34  tschachim
   *	Introduced RotationalSwitch
   *	
@@ -111,9 +115,10 @@ bool ToggleSwitch::DoCheckMouseClick(int mx, int my)
 
 	if (Active && (state != OldState)) {
 		SwitchToggled = true;
-		if (switchRow)
+		if (switchRow) {
 			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->SwitchToggled(this);
+				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+		}
 	}
 	return true;
 }
@@ -162,9 +167,10 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my)
 
 	if (Active && (state != OldState)) {
 		SwitchToggled = true;
-		if (switchRow)
+		if (switchRow) {
 			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->SwitchToggled(this);
+				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+		}
 	}
 	return true;
 }
@@ -208,11 +214,9 @@ void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow
 	row.AddSwitch(this);
 	switchRow = &row;
 
-	//OurVessel = v;
 	OurVessel = row.panelSwitches->vessel;
 
 	if (!Sclick.isValid()) {
-		//s.LoadSound(Sclick, CLICK_SOUND);
 		row.panelSwitches->soundlib->LoadSound(Sclick, CLICK_SOUND);
 	}
 }
@@ -385,7 +389,6 @@ SwitchRow::SwitchRow()
 
 {
 	SwitchList = 0;
-	RotationalSwitchList = 0;
 	RowList = 0;
 	PanelArea = (-1);
 }
@@ -401,18 +404,11 @@ bool SwitchRow::CheckMouseClick(int id, int event, int mx, int my)
 	if (id != PanelArea)
 		return false;
 
-	ToggleSwitch *s = SwitchList;
+	PanelSwitchItem *s = SwitchList;
 	while (s) {
 		if (s->CheckMouseClick(event, mx, my))
 			return true;
 		s = s->GetNext();
-	}
-
-	RotationalSwitch *r = RotationalSwitchList;
-	while (r) {
-		if (r->CheckMouseClick(event, mx, my))
-			return true;
-		r = r->GetNext();
 	}
 	return false;
 }
@@ -421,7 +417,6 @@ void SwitchRow::Init(int area, PanelSwitches &panel)
 
 {
 	SwitchList = 0;
-	RotationalSwitchList = 0;
 	RowList = 0;
 	PanelArea = area;
 	panelSwitches = &panel;
@@ -435,16 +430,10 @@ bool SwitchRow::DrawRow(int id, SURFHANDLE DrawSurface)
 	if (id != PanelArea)
 		return false;
 
-	ToggleSwitch *s = SwitchList;
+	PanelSwitchItem *s = SwitchList;
 	while (s) {
 		s->DrawSwitch(DrawSurface);
 		s = s->GetNext();
-	}
-
-	RotationalSwitch *r = RotationalSwitchList;
-	while (r) {
-		r->DrawSwitch(DrawSurface);
-		r = r->GetNext();
 	}
 	return true;
 }
@@ -625,8 +614,6 @@ bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 // Rotational Switch
 //
 
-
-
 RotationalSwitch::RotationalSwitch() {
 
 	x = 0;
@@ -733,8 +720,7 @@ void RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switc
 	height = h;
 	switchSurface = surf;
 	
-	row.AddRotationalSwitch(this);
-	//OurVessel = row.panelSwitches->vessel;
+	row.AddSwitch(this);
 
 	if (!sclick.isValid()) {
 		row.panelSwitches->soundlib->LoadSound(sclick, CLICK_SOUND);
@@ -849,4 +835,57 @@ RotationalSwitchPosition::RotationalSwitchPosition(int v, double a) {
 }
 
 RotationalSwitchPosition::~RotationalSwitchPosition() {
+}
+
+
+//
+// Indicator Switch
+//
+
+IndicatorSwitch::IndicatorSwitch() {
+
+	state = false;
+	displayState = 0.0;
+	x = 0;
+	y = 0;
+	width = 0;
+	height = 0;
+	switchSurface = 0;
+	switchRow = 0;
+}
+
+IndicatorSwitch::~IndicatorSwitch() {
+}
+
+void IndicatorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row) {
+
+	x = xp;
+	y = yp;
+	width = w;
+	height = h;
+	switchSurface = surf;
+	
+	row.AddSwitch(this);
+	switchRow = &row;
+}
+
+bool IndicatorSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	return false;
+}
+
+void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
+
+	if (switchRow) {
+		if (switchRow->panelSwitches->listener) 
+			switchRow->panelSwitches->listener->PanelIndicatorSwitchStateRequested(this);
+	}
+
+	if (state && displayState < 3.0)
+		displayState += 0.5;
+
+	if (!state && displayState > 0.0) 
+		displayState -= 0.5;
+
+	oapiBlt(drawSurface, switchSurface, x, y, width * (int)displayState, 0, width, height);
 }
