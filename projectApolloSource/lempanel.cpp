@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/04/22 14:00:53  tschachim
+  *	Fixed renamed surfaces
+  *	
   *	Revision 1.2  2005/04/11 23:45:04  yogenfrutz
   *	splitted panel + panel_id
   *	
@@ -427,7 +430,7 @@ void sat5_lmpkd::InitPanel (int panel)
     case 2: //added for splitted panel 
     case 4: //added for splitted panel 
 		srf[0] = oapiCreateSurface (LOADBMP (IDB_ILMECSG));
-		srf[1] = oapiCreateSurface (LOADBMP (IDB_ILMINDICATORS1));
+		//srf[1] = oapiCreateSurface (LOADBMP (IDB_ILMINDICATORS1));
 		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
 		srf[3] = oapiCreateSurface (LOADBMP (IDB_HORIZON));
 		srf[4] = oapiCreateSurface (LOADBMP (IDB_DIGITAL));
@@ -454,7 +457,7 @@ void sat5_lmpkd::InitPanel (int panel)
     case 3: //added for splitted panel 
     case 5: //added for splitted panel 
 		srf[0] = oapiCreateSurface (LOADBMP (IDB_ECSG));
-		srf[1] = oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
+		//srf[1] = oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
 		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
 		srf[3] = oapiCreateSurface (LOADBMP (IDB_HORIZON));
 		srf[4] = oapiCreateSurface (LOADBMP (IDB_DIGITAL));
