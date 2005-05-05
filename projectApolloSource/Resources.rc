@@ -113,6 +113,7 @@ IDB_CSM_LEFT_RNDZ_WINDOW	BITMAP  DISCARDABLE		"csm_left_rndz_window.bmp"
 IDB_CSM_RIGHT_RNDZ_WINDOW	BITMAP  DISCARDABLE		"csm_right_rndz_window.bmp"
 IDB_CSM_HATCH_WINDOW		BITMAP  DISCARDABLE		"csm_hatch_window.bmp"
 IDB_CSM_LOWER_PANEL			BITMAP  DISCARDABLE		"gn_lower_equip_bay.bmp"
+IDB_INDICATOR				BITMAP  DISCARDABLE		"Indicator.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
