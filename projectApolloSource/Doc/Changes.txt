@@ -3,6 +3,8 @@
 
 Added support for post-splashdown audio (e.g. Presidential congratulations).
 Fixed compiler warning in saturn1b.cpp.
+Updated CSM AGC banksums to match real data from Yaagc. Also, PRO key steps through sums, as well as VERB 33.
+Launch apogee/perigee display now shows negative perigee, rather than zero, as per real AGC. Also apogee and perigee in 1/10 km.
 
 6.4:
 ----
