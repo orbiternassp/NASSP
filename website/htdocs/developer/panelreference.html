@@ -10,7 +10,7 @@
 </div></div>
   <div class="section">
     <p>This section is a reference of each working switch and each display on the Project Apollo panels. It's intended mainly as a developer reference but of course it's also useful for users just in case they are curious about all these switches.</p>
-    <p>Controls and displays are presented in form of a tabulated list in numerical order by panel and area number. These tables are stronly related to the Apollo Operations Handbook, see <a href="#aoh">below</a> for more details. Each spacecraft has it's own reference table. The following is a detailed explanation of the columnar data presented in the tabulated lists:</p>
+    <p>Controls and displays are presented in form of a tabulated list in numerical order by panel and area number. These tables are strongly related to the Apollo Operations Handbook, see <a href="#aoh">below</a> for more details. Each spacecraft has it's own reference table. The following is a detailed explanation of the columnar data presented in the tabulated lists:</p>
     <table width="100%"  border="0" cellpadding="1" cellspacing="3">
       <tr>
         <td width="17%" height="80" valign="top"><strong>Name</strong></td>
@@ -20,7 +20,7 @@
       </tr>
       <tr>
         <td valign="top"><strong>Panel Locator </strong></td>
-        <td valign="top">The panel locator provides the &quot;coordinates&quot; of the display or control. Please klick on the image to the right to get the related figures from the Apollo Operations Handbook. Firstly there is the panel number, larger panels are further divided into areas. In most instances, the area correlates to a specific spacecraft system. Panels 1 through 16 have grid reference numerical marks horizontally and alphabetic marks vertically on the drawing.</td>
+        <td valign="top">The panel locator provides the &quot;coordinates&quot; of the display or control. Please click on the image to the right to download the related figures from the Apollo Operations Handbook. Firstly there is the panel number, larger panels are further divided into areas. In most instances, the area correlates to a specific spacecraft system. Panels 1 through 16 have grid reference numerical marks horizontally and alphabetic marks vertically on the drawing.</td>
       </tr>
       <tr>
         <td><strong>Function</strong></td>
@@ -48,13 +48,37 @@
         <th width="5%" scope="col"><div align="center" class="style1">Grid</div></th>
       </tr>	  
       <tr valign="top">
+        <td>S-II SEP Light </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">K-22</div></td>
+        <td>Illuminates to indicate first-stage jettison and extinguishes when second-stage interstage is jettisoned . </td>
+        <td>Should illuminate red, not yellow. </td>
+      </tr>
+      <tr valign="top">
+        <td>LV GUID Light </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">K-22</div></td>
+        <td>Illuminates yellow when the Saturn autopilot is active. </td>
+        <td>Should illuminate red when LV guidance attitude reference gets lost. </td>
+      </tr>
+      <tr valign="top">
+        <td>LV ENGINES 1-5 Lights </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">K-22</div></td>
+        <td>Illuminates yellow when the corresponding engine is operating below it's predeterminated level of thrust. </td>
+        <td>See also: <a href="http://www.hq.nasa.gov/office/pao/History/ap15fj/pdf/a15csmlc.pdf">Apollo 15 CSM Launch Checklist</a></td>
+      </tr>
+      <tr valign="top">
         <td>DSKY (all switches and diplays) </td>
         <td><div align="center">2</div></td>
         <td><div align="center">C</div></td>
         <td>
           <div align="center">-</div></td>
+        <td>(See user documentation for more informations)</td>
         <td>&nbsp;</td>
-        <td>See user documentation for more informations. </td>
       </tr>
       <tr valign="top">
         <td>MISSION TIMER Indicator</td>
@@ -73,6 +97,30 @@
         <td>Not connected to the internal systems</td>
       </tr>
       <tr valign="top">
+        <td>CABIN TEMP Indicator </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-39</div></td>
+        <td>Provides average temperature indication of cabin atmosphere in &deg;F.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>CABIN PRESS Indicator</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-40</div></td>
+        <td>Provides pressure indication of cabin atmosphere in psi.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>PART PRESS CO<sub>2</sub> Indicator </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-42</div></td>
+        <td>Provides partial pressure indication of CO<sub>2</sub> in suit circuit atmosphere in mmHg.</td>
+        <td>At the moment cabin atmosphere is used. </td>
+      </tr>
+      <tr valign="top">
         <td>H<sub>2</sub> PRESSURE 1/2 Indicators </td>
         <td><div align="center">2</div></td>
         <td><div align="center">Q</div></td>
@@ -89,7 +137,7 @@
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
-        <td>O<sub>2</sub> PRESSURE 1 Indicator</td>
+        <td>O<sub>2</sub> PRESSURE 2 Indicator</td>
         <td><div align="center">2</div></td>
         <td><div align="center">Q</div></td>
         <td><div align="center">F-38</div></td>
@@ -137,6 +185,30 @@
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
+        <td>H<sub>2</sub> FANS 1/2 Switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">G-38</div></td>
+        <td>Controls power to H<sub>2</sub> tanks No. 1 and No. 2 fans motors. When switched to AUTO, fans are turned on at 225 psi and turned off at 260 psi. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>O<sub>2</sub> FANS 1/2 Switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">Q</div></td>
+        <td><div align="center">G-40</div></td>
+        <td>Controls power to O<sub>2</sub> tanks No. 1 and No. 2 fans motors. When switched to AUTO, fans are turned on at 865 psi and turned off at 935 psi. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>FUEL CELL REACTANTS 1/2/3 Indicators </td>
+        <td><div align="center">3</div></td>
+        <td><div align="center">E</div></td>
+        <td><div align="center">L-45</div></td>
+        <td>Indicates if the fuel cell H<sub>2</sub> and O<sub>2</sub> valves are closed (striped-line) or open (gray). </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
         <td>FUEL CELL REACTANTS 1/2/3 Switches </td>
         <td><div align="center">3</div></td>
         <td><div align="center">E</div></td>
@@ -151,7 +223,7 @@
 
     <p>The controls and displays reference tables above are similar and an addition to the controls and displays section of the Apollo Operations Handbook available here: <a href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohindex.htm</a>. If you never seen it, here is an example explaining the H<sub>2</sub> HEATERS switches:</p>
 	    <p><img src="../images/aoh-h2heaters.gif" width="875" height="356"></p>
-	    <p>So as you can see it's often useful to have a look at the Apollo Operaions Handbook, since the descriptions are often more detailed and comprehensive.</p>
+	    <p>So as you can see it's  useful to have a look at the Apollo Operaions Handbook, since the descriptions are often more detailed and comprehensive.</p>
   </div></div>
 <table height="65" cellspacing="0" cellpadding="0" border="0">
 <tr height="65">
