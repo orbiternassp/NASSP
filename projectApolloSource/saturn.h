@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/04/22 13:59:46  tschachim
+  *	Introduced PanelSDK
+  *	Panelid defines
+  *	New switches
+  *	
   *	Revision 1.9  2005/04/14 23:12:44  movieman523
   *	Added post-splashdown audio support. Unfortunately I can't test this at the moment as the control panel switches for getting out of the CM after splashdown aren't working :).
   *	
@@ -57,7 +62,7 @@
 
 #include "PanelSDK/PanelSDK.h"
 
-class Saturn: public VESSEL2, public SwitchListener {
+class Saturn: public VESSEL2, public PanelSwitchListener {
 
 public:
 	Saturn(OBJHANDLE hObj, int fmodel);
@@ -104,7 +109,8 @@ public:
 
 	bool clbkLoadVC (int id);
 
-	void SwitchToggled(ToggleSwitch *s);
+	void PanelSwitchToggled(ToggleSwitch *s);
+	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 
 protected:
 
@@ -294,6 +300,14 @@ protected:
 	ThreePosSwitch O2Heater1Switch;
 	ThreePosSwitch O2Heater2Switch;	
 	ToggleSwitch   O2PressIndSwitch;	
+	ThreePosSwitch H2Fan1Switch; 
+	ThreePosSwitch H2Fan2Switch; 
+	ThreePosSwitch O2Fan1Switch; 
+	ThreePosSwitch O2Fan2Switch; 
+
+	IndicatorSwitch FuelCellReactants1Indicator;
+	IndicatorSwitch FuelCellReactants2Indicator;
+	IndicatorSwitch FuelCellReactants3Indicator;
 
 	ThreePosSwitch FuelCellReactants1Switch; // TODO state saving/loading
 	ThreePosSwitch FuelCellReactants2Switch;
@@ -551,7 +565,8 @@ protected:
 	NavModeToggle NavToggleHLevel;
 
 	SwitchRow CryoTankRow;
-	SwitchRow FuelCellReactantsRow;
+	SwitchRow FuelCellReactantsIndicatorsRow;
+	SwitchRow FuelCellReactantsSwitchesRow;
 
 	SwitchRow LPRow;
 	SwitchRow HUDRow;
@@ -759,6 +774,7 @@ protected:
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	void RedrawPanel_CryoTankIndicators (SURFHANDLE surf);
+	void RedrawPanel_CabinIndicators (SURFHANDLE surf);
 	void RedrawPanel_O2CryoTankPressureIndicator(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start);
