@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/04/22 14:02:25  tschachim
+  *	Surface defines
+  *	Systems constants
+  *	
   *	Revision 1.10  2005/04/14 23:15:22  movieman523
   *	Increased version number to 6.5.
   *	
@@ -100,6 +104,7 @@ typedef struct {
 
 const int nsurf = 28; // number of bitmap handles
 
+#define SRF_INDICATOR		 1
 #define SRF_NEEDLE			 2
 #define SRF_SWITCHUP		 6
 #define SRF_DSKY			21
@@ -114,6 +119,11 @@ static const double ERADIUS = 6371.0;
 const double GK   = 6.67259e-20 ;			//  Gravitational constant (km^3/(kg sec^2))
 const double GKSI = 6.67259e-20 * 1e9;
 const double PSI  = 0.000145038;			// Pa to PSI
+const double MMHG = 0.00750064;				// Pa to mmHg
+
+inline double KelvinToFahrenheit(double kelvin) {
+	return kelvin * 1.8 - 459.67;
+}
 
 //
 // Engine information.
@@ -163,3 +173,4 @@ const double PSI  = 0.000145038;			// Pa to PSI
 
 #define CSM_H2TANK_CAPACITY  12700.0		// in g, 28 lb
 #define CSM_O2TANK_CAPACITY 145149.0		// in g, 320 lb
+
