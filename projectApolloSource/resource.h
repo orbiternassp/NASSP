@@ -94,12 +94,12 @@
 #define IDB_VYAW                        156
 #define IDB_LEVER1                      157
 #define AID_PILOT1                      158
-#define AID_INDICATOR1                  159
+//#define AID_INDICATOR1                  159
 #define AID_GAUGES1                     160
 #define AID_VELOCITY1                   161
-#define AID_INDICATOR2                  162
+//#define AID_INDICATOR2                  162
 #define IDB_ROT_KNOB                    163
-#define IDB_INDICATORS1                 164
+//#define IDB_INDICATORS1                 164
 #define IDB_NEEDLE                      165
 #define IDB_DIGITAL                     166
 #define IDB_HORIZON2                    170
@@ -127,7 +127,7 @@
 #define IDB_DSKY_LIGHTS                 205
 #define IDB_DSKY_NUMBERS                206
 #define IDB_ILMPANEL                    207
-#define IDB_ILMINDICATORS1              208
+//#define IDB_ILMINDICATORS1              208
 #define IDB_ILMSWLEVER                  209
 #define IDB_ILMSECSWITCH                210
 #define IDB_ILM_LV_ENG                  211
@@ -206,7 +206,7 @@
 #define AID_CMRCS_HE_DUMP_SWITCH        424
 #define AID_BUS_LIGHT                   425
 #define AID_CABIN_LIGHT                 426
-#define AID_CABIN_GAUGES                427
+#define AID_CABININDICATORS             427
 #define AID_FUEL_DIGIT2                 428
 #define AID_DESCENT_HE                  429
 #define AID_ENG_ARM                     430
@@ -276,6 +276,7 @@
 #define IDB_LEMPANEL_RIGHT			    499
 #define IDB_ILMLEMLEFTWINDOW		    500
 #define IDB_LEMLEFTWINDOW			    501
+#define AID_FUELCELLREACTANTSINDICATORS 502
 
 
 
