@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/05/05 21:38:51  tschachim
+  *	some new constants
+  *	
   *	Revision 1.11  2005/04/22 14:02:25  tschachim
   *	Surface defines
   *	Systems constants
@@ -140,7 +143,7 @@ inline double KelvinToFahrenheit(double kelvin) {
 // Mission times for specific events.
 //
 
-#define APOLLO_13_EXPLOSION_TIME	229400
+#define APOLLO_13_EXPLOSION_TIME	(55.0 * 3600 + 55.0 + 10.0)
 
 //
 // We include a sizeable overlap here for the course correction earliest and latest times,
