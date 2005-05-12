@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/05/05 21:40:56  tschachim
+  *	Introduced cryo fans, fuel cell indicators and cabin indicators
+  *	
   *	Revision 1.21  2005/04/22 16:01:54  tschachim
   *	Removed fuel cell test-code
   *	
@@ -489,6 +492,22 @@ void Saturn::RedrawPanel_CryoTankIndicators(SURFHANDLE surf) {
 	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:MASS") / CSM_O2TANK_CAPACITY ;
 	if (value < 0.0) value = 0.0;
 	if (value > 1.0) value = 1.0;
+
+	//
+	// Apollo 13 O2 tank 2 quantity display failed offscale high around 46:45.
+	//
+
+#define O2FAILURETIME	(46.0 * 3600.0 + 45.0 * 60.0)
+
+	if (ApolloNo == 13) {
+		if (MissionTime >= (O2FAILURETIME + 5.0)) {
+			value = 1.05;
+		}
+		else if (MissionTime >= O2FAILURETIME) {
+			value += (1.05 - value) * ((MissionTime - O2FAILURETIME) / 5.0);
+		}
+	}
+
 	oapiBlt(surf, srf[SRF_NEEDLE],  311, (110 - (int)(value * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
 
@@ -3062,7 +3081,8 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[8],0,0,125,0,25,45);
 			if(TJ2switch){
 				oapiBlt(surf,srf[6],1,16,0,0,23,20);
-			}else{
+			}
+			else{
 				oapiBlt(surf,srf[6],1,16,23,0,23,20);
 			}
 		}else{
@@ -3072,14 +3092,16 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_IU_GUIDANCE_SWITCH:
-			if(IUCswitch){
+		if(IUCswitch){
 			oapiBlt(surf,srf[8],0,0,25,0,25,45);
 			if(IUswitch){
 				oapiBlt(surf,srf[6],1,16,0,0,23,20);
-			}else{
+			}
+			else{
 				oapiBlt(surf,srf[6],1,16,23,0,23,20);
 			}
-		}else{
+		}
+		else{
 			oapiBlt(surf,srf[8],0,0,0,0,25,45);
 			IUswitch=false;
 		}
