@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/04/20 17:57:16  movieman523
+  *	Added AGC restart to Apollo 13.
+  *	
   *	Revision 1.5  2005/03/09 00:26:50  chode99
   *	Added code to support SII retros.
   *	
@@ -233,7 +236,7 @@ void SaturnV::CalculateStageMass ()
 	SM_Mass = SM_EmptyMass + SM_FuelMass;
 	CM_Mass = CM_EmptyMass + CM_FuelMass;
 
-	Stage3Mass = S4B_EmptyMass + LEM_Mass + SM_Mass + CM_Mass;
+	Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
 	Stage2Mass = Stage3Mass + SII_EmptyMass + S4B_FuelMass + Abort_Mass + Interstage_Mass;
 	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass;
 }

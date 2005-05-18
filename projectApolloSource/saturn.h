@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/05/05 21:33:46  tschachim
+  *	Introduced cryo fans and fuel cell indicators
+  *	Renamed some toggleswitch interfaces and functions
+  *	
   *	Revision 1.10  2005/04/22 13:59:46  tschachim
   *	Introduced PanelSDK
   *	Panelid defines
@@ -492,7 +496,7 @@ protected:
 	double SM_Mass;
 	double SM_EmptyMass;
 	double SM_FuelMass;
-	double LEM_Mass;
+	double S4PL_Mass;
 	double Abort_Mass;
 	double Interstage_Mass;
 	double S4B_Mass;
@@ -806,6 +810,7 @@ protected:
 	void JostleViewpoint(double amount);
 	double CalculateApogeeTime();
 	void SlowIfDesired();
+	void UpdatePayloadMass();
 
 	//
 	// Systems functions.

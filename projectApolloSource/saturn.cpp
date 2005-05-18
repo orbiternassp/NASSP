@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/05/02 12:55:02  tschachim
+  *	PanelsdkLogFile test code
+  *	
   *	Revision 1.10  2005/04/22 13:58:19  tschachim
   *	Introduced PanelSDK
   *	Some changes because of the new panels
@@ -223,7 +226,7 @@ void Saturn::initSaturn()
 	SM_EmptyMass = 3110;
 	SM_FuelMass = 18413 + 3000;
 
-	LEM_Mass = 14696;
+	S4PL_Mass = 14696;
 
 	Abort_Mass = 4050;
 
@@ -1015,6 +1018,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// Recalculate stage masses.
 	//
 
+	UpdatePayloadMass();
 	CalculateStageMass ();
 
 	//
@@ -1023,6 +1027,49 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 	agc.SetDesiredAzimuth(tohdg);
 	agc.SetApolloNo(ApolloNo);
+}
+
+//
+// Set the appropriate mass based on the SIVB payload. I believe these are roughly the
+// correct numbers.
+//
+
+void Saturn::UpdatePayloadMass()
+
+{
+	switch (SIVBPayload) {
+	case PAYLOAD_LEM:
+		// default, do nothing.
+		break;
+
+	case PAYLOAD_ASTP:
+		S4PL_Mass = 2012;
+		break;
+
+	case PAYLOAD_LTA:
+		S4PL_Mass = 13381;
+		break;
+
+	case PAYLOAD_LTA6:
+		S4PL_Mass = 11794;
+		break;
+
+	case PAYLOAD_LM1:
+		S4PL_Mass = 14360;
+		break;
+
+	case PAYLOAD_LTA8:
+		S4PL_Mass = 9026;
+		break;
+
+	case PAYLOAD_TARGET:
+		S4PL_Mass = 1000; // Guess
+		break;
+
+	default:
+		S4PL_Mass = 0;
+		break;
+	}
 }
 
 

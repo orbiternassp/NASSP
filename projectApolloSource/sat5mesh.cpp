@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/04/11 23:48:45  yogenfrutz
+  *	correctes SIVB parked lem docking position
+  *	
   *	Revision 1.7  2005/03/27 03:40:14  chode99
   *	Added support for LTA payloads (LM test articles) for Apollo 4, 6, 8.
   *	
@@ -783,6 +786,7 @@ void SaturnV::SetPayloadMesh(VESSEL *s4b)
 		s4b->SetDockParams(dockpos, dockdir, dockrot);
 		break;
 	case PAYLOAD_LTA:
+	case PAYLOAD_LTA6:
 		mesh_dir=_V(0.0,0,-4.9);
 		s4b->AddMesh (hlta_2r, &mesh_dir);
 		break;
@@ -1058,6 +1062,7 @@ void SaturnV::SeparateStage (int stage)
 			s4bconfig = "sat5stg3lem";
 			break;
 		case PAYLOAD_LTA:
+		case PAYLOAD_LTA6:
 			s4bconfig = "sat5stg3lta";
 			break;
 		case PAYLOAD_LTA8:

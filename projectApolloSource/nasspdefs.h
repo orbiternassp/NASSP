@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/05/12 00:16:51  movieman523
+  *	Updated Apollo 13 explosion time.
+  *	
   *	Revision 1.12  2005/05/05 21:38:51  tschachim
   *	some new constants
   *	
@@ -169,6 +172,7 @@ inline double KelvinToFahrenheit(double kelvin) {
 #define PAYLOAD_LM1		3
 #define PAYLOAD_LTA8	4
 #define PAYLOAD_TARGET	5
+#define PAYLOAD_LTA6	6
 
 //
 // Internal systems.
