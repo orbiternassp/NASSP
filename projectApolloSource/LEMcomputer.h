@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:54  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 //
@@ -135,11 +138,8 @@ protected:
 	//	Ascent Auto-Pilot Data
 	//
 
-	void Prog10(double simt);
-	void Prog11(double simt);
 	void Prog12(double simt);
-	void Prog10Pressed(int R1, int R2, int R3);
-	void Prog11Pressed(int R1, int R2, int R3);
+	void Prog12Pressed(int R1, int R2, int R3);
 	double iba;							//		Misc stuff, disregard
 
 	Sound LunarAscent;

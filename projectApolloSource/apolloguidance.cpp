@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/04/30 23:09:15  movieman523
+  *	Revised CSM banksums and apogee/perigee display to match the real AGC.
+  *	
   *	Revision 1.3  2005/04/20 17:44:48  movieman523
   *	Added call to force restart of the AGC.
   *	
@@ -83,12 +86,19 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display) : soundlib(s), dsky(d
 	TargetRoll = 0;
 	TargetYaw = 0;
 
-	DesiredApogee = 0;
-	DesiredPerigee = 0;
-	DesiredDeltaV = 0;
-	DesiredAzimuth = 0;
+	DesiredApogee = 0.0;
+	DesiredPerigee = 0.0;
+	DesiredDeltaV = 0.0;
+	DesiredAzimuth = 0.0;
 
-	DeltaPitchRate = 0;
+	DesiredDeltaVx = 0.0;
+	DesiredDeltaVy = 0.0;
+	DesiredDeltaVz = 0.0;
+
+	DesiredPlaneChange = 0.0;
+	DesiredLAN = 0.0;
+
+	DeltaPitchRate = 0.0;
 
 	//
 	// Alarm codes.
@@ -511,7 +521,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		dsky.SetR1Octal(Alarm01);
 		dsky.SetR2Octal(Alarm02);
 		dsky.SetR3Octal(Alarm03);
-		break;
+		return true;
 
 	//
 	// 16: desired attitude.
@@ -521,7 +531,41 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		dsky.SetR1((int)(TargetRoll * 100));
 		dsky.SetR2((int)(TargetPitch * 100));
 		dsky.SetR3((int)(TargetYaw * 100));
-		break;
+		return true;
+
+	//
+	// 17: Current attitude w.r.t equatorial plane
+	//
+
+	case 17:
+		double bank, pitch, hdg;
+
+		oapiGetFocusHeading(&hdg);
+		bank  = OurVessel->GetBank();
+		pitch = OurVessel->GetPitch();		
+		bank  *= DEG;
+		pitch *= DEG;
+		hdg   *= DEG;
+
+		dsky.SetR1((int)(bank * 100));
+		dsky.SetR2((int)(pitch * 100));
+		dsky.SetR3((int)(hdg * 100));
+		return true;
+
+	//
+	// 28: Current attitude w.r.t airspeed vector
+	//
+
+	case 28:
+		double alpha, slip;
+
+		alpha = OurVessel->GetAOA() * DEG;
+		slip  = OurVessel->GetSlipAngle() * DEG;
+		
+		dsky.SetR1((int)(alpha * 100));
+		dsky.SetR2((int)(slip * 100));
+		dsky.BlankR3();
+		return true;
 
 	//
 	// 29: launch azimuth.
@@ -529,7 +573,55 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 
 	case 29:
 		dsky.SetR1((int)(DesiredAzimuth * 100));
-		break;
+		return true;
+
+	//
+	// 32: Time from periapsis
+	//
+
+	case 32:
+		{
+			OBJHANDLE gBody;
+			ELEMENTS Elements;
+			VECTOR3 Rp;
+			VECTOR3 Rv;
+			double GMass, GSize, Mu, mjd_ref, Me;
+			double E, T, tsp, RDotV, R, p, v, apd;		
+			int tsph, tspm, tsps;
+			
+			gBody = OurVessel->GetApDist(apd);
+			GMass = oapiGetMass(gBody);
+			GSize = oapiGetSize(gBody) / 1000;
+			Mu    = GK * GMass;	
+			
+			OurVessel->GetElements(Elements, mjd_ref);
+			OurVessel->GetRelativePos(gBody, Rp);
+			OurVessel->GetRelativeVel(gBody, Rv);	
+			R = sqrt(pow(Rp.x,2) + pow(Rp.y,2) + pow(Rp.z,2)) / 1000;		
+			p = Elements.a / 1000 * (1 - Elements.e * Elements.e);
+			v = acos((1 / Elements.e) * (p / R - 1));
+		
+			RDotV = dotp(Rv, Rp);
+			if (RDotV < 0) 
+			{
+				v = 2 * PI - v;
+			}				
+			
+			E   = 2 * atan(sqrt((1 - Elements.e)/(1 + Elements.e)) * tan(v / 2));//		Ecc anomaly
+			Me  = E - Elements.e * sin(E);										 //		Mean anomaly
+			T   = 2 * PI * sqrt((pow(Elements.a,3) / 1e9) / Mu);			     //		Orbit period			
+			tsp = Me / (2 * PI) * T;											 //		Time from ped
+
+			tsph = ((int)tsp) / 3600;
+			tspm = ((int)tsp - (3600 * tsph)) / 60;
+			tsps = ((int)(tsp * 100)) % 6000;
+
+			dsky.SetR1(tsph);
+			dsky.SetR2(tspm);
+			dsky.SetR3(tsps);
+		}
+		return true;
+
 
 	//
 	// 33: time to burn.
@@ -551,7 +643,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 			dsky.SetR2(m);
 			dsky.SetR3(s);
 		}
-		break;
+		return true;
 
 	//
 	// 34: time of next event.
@@ -587,6 +679,32 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 
 		DisplayTime(LastTimestep - ResetTime);
 		return true;
+
+	//
+	// 42: Apocenter, Pericenter, Accumulated DeltaV
+	//
+
+	case 42:
+		{
+			OBJHANDLE gBody;
+			double apd, ped, dv, GSize;
+
+			gBody = OurVessel->GetApDist(apd);			
+			GSize = oapiGetSize(gBody);
+			
+			OurVessel->GetPeDist(ped);
+
+			apd -= GSize;
+			ped -= GSize;
+
+			dv = sqrt(pow(DesiredDeltaVx,2) + pow(DesiredDeltaVy,2) + pow(DesiredDeltaVz,2));
+
+			dsky.SetR1((int)(apd / 10));
+			dsky.SetR2((int)(ped / 10));
+			dsky.SetR3((int)dv);
+		}
+		return true;
+
 
 	//
 	// 43: latitude, longitude, altitude.
@@ -640,6 +758,64 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		return true;
 
 	//
+	// 46: Target DeltaV, DeltaV so far, Time to burn (used by P30)
+	//
+
+	case 46:
+		{
+			double dv, dt;
+
+			dv = sqrt(pow(DesiredDeltaVx,2) + pow(DesiredDeltaVy,2) + pow(DesiredDeltaVz,2));			
+
+			dt   = BurnStartTime - CurrentTimestep;			
+			
+			int min = (int) (dt / 60.0);
+			int	sec = ((int) dt) - (min * 60);
+
+			if (min > 99)
+				min = 99;
+
+			dsky.SetR1((int)dv);
+			dsky.SetR2((int)DesiredDeltaV);
+			dsky.SetR3(min * 1000 + sec);
+			dsky.SetR3Format("XXX XX");
+		}			
+		return true;
+
+
+	//
+	// 73: altitude, velocity, AoA
+	//
+
+	case 73:
+		GetPosVel();
+
+		dsky.SetR1((int)(DisplayAlt(CurrentAlt) / 1000));
+		dsky.SetR2((int)DisplayVel(CurrentVel));
+		dsky.SetR3((int)(OurVessel->GetAOA() * 5729.57795));
+		return true;
+
+	//
+	// 81: Desired DeltaV components in Local Vertical (LV) coordinates (X left, Y up, Z front)
+	//
+
+	case 81:
+		dsky.SetR1((int)DesiredDeltaVx);
+		dsky.SetR2((int)DesiredDeltaVy);
+		dsky.SetR3((int)DesiredDeltaVz);
+		return true;
+
+	//
+	// 82: Desired DeltaV in horizon coordinates
+	//
+
+	case 82:
+		dsky.SetR1((int)(DesiredDeltaVx));
+		dsky.SetR2((int)(DesiredDeltaVy));
+		dsky.SetR3((int)(DesiredDeltaVz));
+		return true; 
+
+	//
 	// 95: time to ignition, expected deltav and accumulated deltav
 	//
 
@@ -667,7 +843,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		dsky.SetR1Format(TwoSpaceTwoFormat);
 		dsky.SetR2((int)DisplayVel(R2));
 		dsky.SetR3((int)DisplayVel(R3));
-		break;
+		return true;
 	}
 
 	return false;
@@ -1788,6 +1964,27 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 		val = (int) (LastEventTime * 100.0);
 		return true;
 
+	case 020:
+		val = (int) (DesiredDeltaVx * 100.0);
+		return true;
+
+	case 021:
+		val = (int) (DesiredDeltaVy * 100.0);
+		return true;
+
+	case 022:
+		val = (int) (DesiredDeltaVz * 100.0);
+		return true;
+
+	case 023:
+		val = (int) (DesiredPlaneChange * 100.0);
+		return true;
+
+	case 024:
+		val = (int) (DesiredLAN * 100.0);
+		return true;
+
+
 	case 025:
 		val = ((TIME1 / 16) & 077777);
 		return true;
@@ -1864,6 +2061,26 @@ void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)
 
 	case 017:
 		LastEventTime = ((double) val) / 100.0;
+		break;
+
+	case 020:
+		DesiredDeltaVx = ((double) val) / 100.0;
+		break;
+
+	case 021:
+		DesiredDeltaVy = ((double) val) / 100.0;
+		break;
+
+	case 022:
+		DesiredDeltaVz = ((double) val) / 100.0;
+		break;
+
+	case 023:
+		DesiredPlaneChange = ((double) val) / 100.0;
+		break;
+
+	case 024:
+		DesiredLAN = ((double) val) / 100.0;
 		break;
 
 	case 025:

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -32,7 +35,6 @@
 #include "soundlib.h"
 
 #include "nasspdefs.h"
-#include "nasspsound.h"
 
 #include "apolloguidance.h"
 #include "dsky.h"
@@ -40,40 +42,50 @@
 
 #include "sat5_lmpkd.h"
 
-void LEMcomputer::Prog10Pressed(int R1, int R2, int R3)
+void LEMcomputer::Prog12Pressed(int R1, int R2, int R3)
 {
 	switch(ProgState)
 	{
-	case 1:
-		if (R1 < 1800 || R2 < 1800) {
+	case 2:
+		if (R1 < 0 || R2 < 0) 
+		{
 			dsky.LightOprErr();
 			return;
 		}
 
-		if (R2 >= R1) {
+		if (R3 < 0 || R3 >= 36000)
+		{
 			dsky.LightOprErr();
 			return;
 		}
+		
+		double hdg; 
+		DesiredAzimuth = R3 / 100.0;
+		oapiGetHeading(OurVessel->GetHandle(), &hdg);		
+		hdg *= DEG;
 
-		if (R3 < 0 || R3 >= 36000) {
-			dsky.LightOprErr();
-			return;
-		}
+		//
+		//	Since we have time to yaw only 26 degrees to either side before pitchover starts,
+		//	we need to adjust the desired azimuth to fit within the limits, if it doesn't
+		//
+				
+		if(DesiredAzimuth > (hdg + 26))
+			DesiredAzimuth = hdg + 26;
 
-		DesiredApogee = ((double) R1) / 100.0;			//		Set final apoapsis distance
-		DesiredPerigee = ((double) R2) / 100.0;			//		Set final periapsis distance
-		DesiredAzimuth = ((double) R3) / 100.0;				//		Set final heading
-		ProgState++;
+		if(DesiredAzimuth < (hdg - 26))
+			DesiredAzimuth = hdg - 26;	
+		
+		ProgState++;		
 		return;
 
-	case 3:
+	case 4:
 		UpdateBurnTime(R1, R2, R3);
 		BurnStartTime = BurnTime;
 		ProgState++;
 		return;
 
-	case 5:
-	case 9:
+	case  6:
+	case 10:
 		//
 		// Do nothing, just step on through the program.
 		//
@@ -83,50 +95,104 @@ void LEMcomputer::Prog10Pressed(int R1, int R2, int R3)
 	dsky.LightOprErr();
 }
 
-void LEMcomputer::Prog11Pressed(int R1, int R2, int R3)
+void LEMcomputer::Prog12 (double simt)
 {
-	switch(ProgState)
+	//
+	//	This program inserts us into a preliminary orbit, called the insertion orbit. Periapsis
+	//	fixed at 17.5 km and apoapsis close to 87 km. Actual results may vary by a small amount
+	//	due to the weak moon's gravity, which make small velocity changes have a considerable 
+	//	effect on the orbit geometry.
+	//
+
+	OBJHANDLE gBody;			//		Handle for the gravity body (in our case, the moon)	
+	VECTOR3 horizonvel;			//		Velocity vector relative to the horizon plane
+	VECTOR3 PMI;				//		Vector to store the moments if inertia
+	VECTOR3 angvel;				//		Angular velocity
+
+	double ts, sb, currentapo, currentper, burntime, remainbt, residualV;
+	double hdg, alt, pitch, Mass, Size, Thrust, MaxThrust, hveltogain;
+	double moonrad, Level, npitch, alpha, insertionalt, newaccangle;
+	double remalt, vvelcalc, vveldiff, vcalcacc, hcalcacc, absvel;
+	double moong, cmoong;
+	int thdir;
+
+	moong = 1.62;				//		Moon gravity acceleration (m/sec/sec)
+
+	ts = simt - LastTimestep;	//		Get Time Step	
+	burntime = 410;				//		Engine burntime, secs (total is 431)
+	insertionalt = 18000;		//		Insertion altitude (meters) - Lower to allow for error
+
+	//
+	//	These are our insertion velocities. They are just like the real ones, fixed.
+	//	The values below are the ones from Apollo 11.
+	//	
+		
+	//
+	//	Let's gather all the data we need from Orbiter itself
+	//
+			
+	oapiGetHeading(OurVessel->GetHandle(),&hdg);
+	OurVessel->GetAngularVel(angvel);
+	OurVessel->GetHorizonAirspeedVector(horizonvel);
+	OurVessel->GetApDist(currentapo);
+	OurVessel->GetPeDist(currentper);
+	OurVessel->GetPMI(PMI);
+	
+	gBody	   = OurVessel->GetGravityRef();
+	moonrad	   = oapiGetSize(gBody);
+	currentapo -= moonrad;
+	currentper -= moonrad;
+	
+	MaxThrust = OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
+	Mass	  = OurVessel->GetMass();
+	Size	  = OurVessel->GetSize();
+	alt		  = OurVessel->GetAltitude();
+	pitch	  = OurVessel->GetPitch();
+	alpha	  = OurVessel->GetAOA();
+	alpha     *= DEG;
+	pitch	  *= DEG;
+	hdg		  *= DEG;
+	
+	absvel	   = sqrt(pow(horizonvel.x,2) + pow(horizonvel.y,2) + pow(horizonvel.z,2));
+
+	switch (ProgState)
 	{
-	case 4:
-		//
-		// Do nothing, just step on through the program.
-		//
-		ProgState++;
-		return;
-	}
-	dsky.LightOprErr();
-}
-
-void LEMcomputer::Prog10(double simt)
-{
-	//
-	//	In this mode, we insert the final orbit data for the auto-pilot,
-	//
-
-	switch (ProgState) {
 	case 0:
-		SetVerbNounAndFlash(6, 44);
+		//
+		//	Set program defaults
+		//
+
+		DesiredDeltaVx = 1687;		//		Downrange velocity (horizontal)		
+		DesiredDeltaVy = 9;			//		Radial velocity (vertical)
+		DesiredAzimuth = 270;		//		Default launch azimuth
+
 		ProgState++;
 		break;
 
-	case 2:
+	case 1:
+		SetVerbNounAndFlash(6, 76);
+		ProgState++;
+		break;
+
+	case 3:
 		SetVerbNounAndFlash(6, 33);
 		ProgState++;
 		break;
 
-	case 4:
+	case 5:
 		Checklist(0203);
 		ProgState++;
 		break;
 
-	case 6:
+	case 7:
 		SetVerbNoun(6, 74);
 		NextEventTime = BurnStartTime - 35.0;
 		ProgState++;
 		break;
 
-	case 7:
-		if (simt >= NextEventTime) {
+	case 8:
+		if (simt >= NextEventTime) 
+		{
 			dsky.BlankAll();
 
 			VerbRunning = 0;
@@ -137,407 +203,276 @@ void LEMcomputer::Prog10(double simt)
 		}
 		break;
 
-	case 8:
-		if (simt >= NextEventTime) {
+	case 9:
+		if (simt >= NextEventTime) 
+		{
 			dsky.UnBlankAll();
 			SetVerbNoun(6, 74);
 			SetVerbNounAndFlash(99, 74);
-			soundlib.LoadMissionSound(LunarAscent, LUNARASCENT_SOUND, LUNARASCENT_SOUND);
 			ProgState++;
 		}
 		break;
 
-	case 10:
-		if (simt >= BurnStartTime) {
+	case 11:
+		if (simt >= BurnStartTime) 
+		{
 			AwaitProgram();
 			ProgState = 100;
 			break;
 		}
-
-		NextEventTime = BurnStartTime - 10.0;
 		SetVerbNoun(16, 74);
 		ProgState++;
 		break;
 
-	case 11:
-		if (simt >= NextEventTime) {
-			if (simt < (BurnStartTime - 9.0))
-				LunarAscent.play();
-			NextEventTime = BurnStartTime;
+	case 12:
+		if (simt >= BurnStartTime) 
+		{
+			sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+
+			lem->StartAscent();				
+			LastEventTime = simt;
+			NextEventTime = simt + 0.1;
 			ProgState++;
 		}
 		break;
 
-	case 12:
-		if (simt >= NextEventTime) {
-			sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+	//
+	//	Up to here, all we did was process the input data an wait for the lift off time (TIG).
+	//	Now, TIG has occured and we are to control the LM through it's ascent.
+	//
 
-			lem->StartAscent();
+	case 13:
+		//
+		//	Wait 2 seconds before any maneuvering, to clear the Descent Stage
+		//
 
-			LunarAscent.done();
-			NextEventTime = simt + 0.1;
+		if(simt >= (LastEventTime + 2))
+		{
 			LastEventTime = simt;
-			RunProgram(11);
+			ProgState++;
 		}
 		break;
-	}
 
-}
-
-void LEMcomputer::Prog11(double simt)
-{
-	//
-	//	This is our ascent program. This is the first stage of the ascent. Here we will be inserted
-	//  into an orbit that has a pre-fixed periapsis and an apoapsis equal to the periapsis of the final orbit.
-	//  Later, in Prog12, we will raise the periapsis of this first stage orbit to the apoapsis of the final
-	//	orbit.
-	//
-
-	VECTOR3 vh;				//		Velocity vector relative to the horizon
-	VECTOR3 PMI;			//		Store the moments of inertia
-	VECTOR3 avel;			//		Angular velocity
-
-	double alt, pitch, cpd, cap, dap, papo, tap, sb;
-	double tinsalt, adjpr, Thrust, thl, npitch;
-	double MaxThrust, Mass, Size, Level, ts, hdg;
-	int thdir;
-
-	//
-	// Run the cycle ten times a second.
-	//
-
-#if 0
-	if (simt < NextEventTime)
-		return;
-
-	NextEventTime = simt + 0.1;
-#endif
-
-	ts = simt - LastEventTime;	//		Get Time Step
-
-	//
-	// Target apoapsis,  (meters).
-	//
-	// For the first stage of the launch this is actually the periapsis, we then
-	// rase the apoapsis later.
-	//
-
-	tap = DesiredPerigee * 1000.0;
-
-	OBJHANDLE hPlanet = OurVessel->GetGravityRef();
-	double moonrad = oapiGetSize(hPlanet);
-
-	//
-	//	Let's gather all the data we need from Orbiter itself
-	//
-
-	oapiGetHeading(OurVessel->GetHandle(),&hdg);
-	OurVessel->GetAngularVel(avel);
-	OurVessel->GetHorizonAirspeedVector(vh);
-	OurVessel->GetApDist(cap);
-	OurVessel->GetPeDist(cpd);
-	OurVessel->GetPMI(PMI);
-
-	MaxThrust = OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
-	Mass	  = OurVessel->GetMass();
-	Size	  = OurVessel->GetSize();
-	alt		  = OurVessel->GetAltitude();
-	pitch	  = OurVessel->GetPitch();
-	pitch	  *= DEG;
-	hdg		  *= DEG;
-
-	//
-	//	Here's the ascent guidance algorithm. It's so simple!!
-	//
-
-	tinsalt = 18350 / vh.y;					//		Time to insertion altitude
-	adjpr	= (90 / (tinsalt * 0.58)) * ts;	//		Adjusted pitch rate
-	DeltaPitchRate += adjpr;					//		Delta pitch rate
-	npitch	= 0 - DeltaPitchRate;						//		New pitch
-
-	papo = tap + moonrad;
-
-	switch (ProgState) {
-
-	case 0:
-
+	case 14:
 		//
-		// Set variables to defaults.
+		//	Yaw to desired azimuth
 		//
 
-		DeltaPitchRate	= 0;		//		Delta pitch
-
-		//
-		// Initiate launch display.
-		//
-
-		SetVerbNoun(16, 50);
-
-		ProgState++;
-		break;
-
-	//
-	//	Before we start our pitching program, let's yaw to the correct heading
-	//
-
-	case 1:
-		sb     = (DesiredAzimuth - hdg) / fabs(DesiredAzimuth - hdg);
-		Thrust = (Mass * PMI.data[1] * (DesiredAzimuth - hdg)) / (Size);
+		if((DesiredAzimuth - hdg) > 0)
+			Thrust = (Mass * PMI.data[1] * (DesiredAzimuth - hdg)) / (Size);
+		if((DesiredAzimuth - hdg) < 0)
+			Thrust = (Mass * PMI.data[1] * -(DesiredAzimuth - hdg)) / (Size);
+		
+		sb     = (DesiredAzimuth - hdg) / fabs(DesiredAzimuth - hdg);		
 		Level = min((Thrust/MaxThrust), 1);
 		Level = max(Level, -1);
-		if(fabs(avel.y) > 0.06)
+		if(fabs(angvel.y) > 0.05)
 			Level = 0;
-		if(fabs(DesiredAzimuth - hdg) < 1.8)
+		if(fabs(DesiredAzimuth - hdg) < 0.8)
 		{
 			Level = 0;
 			OurVessel->ActivateNavmode(NAVMODE_KILLROT);
+			LastEventTime = simt;
 			ProgState++;
 		}
 		OurVessel->SetAttitudeRotLevel(1, -(Level * sb));
 		break;
 
-	//
-	//	Now that we are in the correct heading, let's start pitching
-	//
+	case 15:
+		//
+		//	Wait 2 seconds for yaw rate to null out
+		//
 
-	case 2:
-		if(pitch < -1 && pitch > -2)
-			OurVessel->DeactivateNavmode(NAVMODE_KILLROT);
-
-		if(npitch <= -82)		//		Don't pitch lower than 82 degs
+		if(simt >= (LastEventTime + 2))
 		{
-			OurVessel->ActivateNavmode(NAVMODE_KILLROT);
-			npitch = -82;
+			LastEventTime = simt;
+			OurVessel->DeactivateNavmode(NAVMODE_KILLROT);
+			ProgState++;
 		}
+		break;
+
+	case 16:
+		//
+		//	Check if our vertical velocity is at the pitchover level
+		//
+		
+		if(horizonvel.y > 15.5)
+		{
+			ProgState++;
+		}
+		break;
+
+	case 17:
+		//
+		//	Pitchover. Here we aim for a pitch of -52 degrees 
+		//
+
+		npitch = -52;
+		
+		Thrust = (Mass * PMI.data[0] * (npitch - pitch)) / (Size);
+		Level = min((Thrust/MaxThrust), 1);
+		Level = max(Level, -1);
+		if(fabs(angvel.x) > 0.15)
+			Level = 0;
+		if(fabs(pitch) > 52)
+		{
+			Level = 0;			
+			LastEventTime = simt;
+			ProgState++;
+		}
+		OurVessel->SetAttitudeRotLevel(0, Level);		
+		break;
+
+	case 18:
+		//
+		//	Proceed onto pitch hold
+		//
+
+		ProgState++;
+
+		break;
+
+	case 19:
+		//
+		//	Let's hold -52 pitch until our vertical velocity reaches 80 m/s
+		//
+
+		npitch = -52;
 
 		if (npitch != pitch)
 		{
 			Thrust = (Mass * PMI.data[0] * (npitch - pitch)) / (Size);
-			Level = min((Thrust/MaxThrust), 1.0);
-			Level = max(Level, -1.0);
-			OurVessel->SetAttitudeRotLevel(0, Level);
-		}
-
-		if(cap > (papo - 500))							//		Cutoff main engines
-		{
-			OurVessel->SetThrusterGroupLevel(THGROUP_HOVER, 0);
-			ProgState++;
-		}
-		break;
-
-	//
-	//	Now, let's fine tune our apoapsis with linear thrusters
-	//
-
-	case 3:
-		if((cap - papo) > 0)
-			thdir = -1;				//		If we've passed, let's go back a bit
-		if((cap - papo) < 0)
-			thdir = 1;				//		If we're short, let's push forward a little
-
-		dap = (cap - papo) * thdir;
-		thl = 0.5 * thdir;			//		Thruster level
-		OurVessel->SetAttitudeLinLevel(1, thl);
-
-		if (fabs(dap) < 5)			//		Allow a 5 meter tolerance
-		{
-			OurVessel->SetAttitudeRotLevel(0, 0);
-			OurVessel->SetAttitudeLinLevel(1, 0);
-			OurVessel->ActivateNavmode(NAVMODE_KILLROT);
-
-			DeltaPitchRate		  = 0;
-
-			SetVerbNounAndFlash(6, 44);
-			ProgState++;
-		}
-		break;
-
-	case 5:
-		RunProgram(12);			//		Run the the second stage ascent program
-		break;
-	}
-
-	LastEventTime = simt;
-}
-
-void LEMcomputer::Prog12(double simt)
-{
-	//
-	//	This is the second stage of the ascent program. It corrects the first stage orbit by
-	//	raising it's periapsis to the final orbit apoapsis.
-	//
-
-	VECTOR3 velh;
-	VECTOR3 PMI;
-	VECTOR3 avel;
-
-	double pd, ap, bank, Thrust;
-	double MaxThrust, Mass, Size, Level;
-	double pitch, dap, thl, npitch, ts;
-	double alt, fmr, aps, pds, sb;
-	int thdir;
-
-	//
-	// Run the cycle ten times a second.
-	//
-#if 0
-	if (simt < NextEventTime)
-		return;
-
-	NextEventTime = simt + 0.1;
-#endif
-
-	ts = simt - LastEventTime;	//		Get Time Step
-
-	OurVessel->GetPeDist(pd);
-	OurVessel->GetApDist(ap);
-	OurVessel->GetPMI(PMI);
-	OurVessel->GetHorizonAirspeedVector(velh);
-	bank	  = OurVessel->GetBank();
-	pitch	  = OurVessel->GetPitch();
-	MaxThrust = OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
-	Mass	  = OurVessel->GetMass();
-	Size	  = OurVessel->GetSize();
-	pitch	  *= DEG;
-	bank	  *= DEG;
-
-	OBJHANDLE hPlanet = OurVessel->GetGravityRef();
-	double moonrad = oapiGetSize(hPlanet);
-
-	fmr = OurVessel->GetFuelMass() / OurVessel->GetMaxFuelMass();
-	alt = OurVessel->GetAltitude();
-	aps = ap - moonrad;
-	pds = pd - moonrad;
-
-	switch (ProgState)
-	{
-	case 0:
-		SetVerbNoun(16, 94);
-		ProgState++;
-		break;
-
-	//
-	//	Here we begin setting apropriate attitude for the burn. Since the LM uses hover engines
-	//	it's a bit more complicated than just turning prograde
-	//
-
-	case 1:
-		if (alt > (aps - 700))		//		Turn Prograde 700m before apoapsis
-		{
-			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
-			ProgState++;
-		}
-		break;
-
-	case 2:
-		if (alt > (aps - 300))		//		Deactivate Prograde 400m before apoapsis
-		{
-			OurVessel->DeactivateNavmode(NAVMODE_PROGRADE);
-			iba = bank;
-			ProgState++;
-		}
-		break;
-
-	case 3:
-		OurVessel->GetAngularVel(avel);
-
-		if (bank != 0)
-		{
-			sb = (fabs(bank) / bank) * (fabs(0 - bank) / (0 - bank));
-			Thrust = (Mass * PMI.data[2] * (0 - bank)) / (Size);
 			Level = min((Thrust/MaxThrust), 1);
-			if(fabs(bank) < (iba / 2))
-				sb *= -1;
-			OurVessel->SetAttitudeRotLevel(2, (Level * sb));
-			if(fabs(bank) < 1)
-				OurVessel->ActivateNavmode(NAVMODE_KILLROT);
+			Level = max(Level, -1);
+			OurVessel->SetAttitudeRotLevel(0, Level);	
 		}
-		if (fabs(bank) < 1 && fabs(avel.z) < 0.1)
-		{
-			OurVessel->SetAttitudeRotLevel(2,0);
-			OurVessel->ActivateNavmode(NAVMODE_KILLROT);
+
+		if(horizonvel.y > 80)
 			ProgState++;
-		}
 		break;
 
-	case 4:
-
+	case 20:
 		//
-		//		Start our pitching program
+		//	Here we adjust our pitch to maintain the correct acceleration. Both downrange and
+		//	radial.
 		//
 
-		DeltaPitchRate  = DeltaPitchRate + (5 * ts);
-		npitch = 0 - DeltaPitchRate;
+		remainbt   = burntime - (simt - BurnStartTime);				//		Remaining burntime
+		hveltogain = DesiredDeltaVx - fabs(horizonvel.x);			//		Horizontal vel to be gained
+		hcalcacc   = hveltogain / remainbt;							//		Calculated horizontal acceleration
 
-		if (npitch <= -86)				//		Don't pitch lower than 86 degrees
-		{
-			OurVessel->SetAttitudeRotLevel(0, 0);
-			OurVessel->ActivateNavmode(NAVMODE_KILLROT);
-			npitch = -86;
-		}
+		remalt   = insertionalt - alt;								//		Remaining altitude
+		vvelcalc = (remalt / (remainbt - 55)) + DesiredDeltaVy;		//		Calculated vertical velocity
+		vveldiff = vvelcalc - horizonvel.y;							//		Vertical velocity difference
+		vcalcacc = vveldiff / remainbt;								//		Calculated vertical acceleration
+		
+		cmoong	 = (moong * ts) * ((fabs(vcalcacc) / vcalcacc) * -1);
 
-		if (pitch != npitch)
+		newaccangle = atan((vcalcacc + cmoong) / hcalcacc) * DEG;
+		npitch      = pitch + newaccangle;		
+		
+		if(pitch != npitch)
 		{
 			Thrust = (Mass * PMI.data[0] * (npitch - pitch)) / (Size);
 			Level = min((Thrust/MaxThrust), 1);
-			OurVessel->SetAttitudeRotLevel(0, Level);
+			Level = max(Level, -1);
+			OurVessel->SetAttitudeRotLevel(0, Level);		
 		}
 
-		if (bank != 0.1)
-		{
-			sb = (fabs(bank) / bank) * (fabs(0 - bank) / (0 - bank));
-			Thrust = (Mass * PMI.data[2] * (0.1 - bank)) / (Size);
-			Level = min((Thrust/MaxThrust), 1);
-			OurVessel->SetAttitudeRotLevel(2, (Level * sb));
-		}
-
-		if (alt > (aps - 5))				//		Turn the engine on 5 meters before apoapsis
-		{
-			OurVessel->SetThrusterGroupLevel(THGROUP_HOVER, 1);
+		if(npitch < - 89.5)
 			ProgState++;
-		}
+
 		break;
 
-	case 5:
-		if (aps > ((DesiredApogee * 1000.0) - 100.0))			//		Cut off the engine
+	case 21:
+		//
+		//	Here we maintain a horizontal attitude until the end of the burn. 
+		//
+
+		remainbt = burntime - (simt - BurnStartTime);				//		Remaining burntime
+		npitch = -89.5;												//		Not -90 tp avoid errors
+
+
+		if(pitch != npitch)
+		{
+			Thrust = (Mass * PMI.data[0] * (npitch - pitch)) / (Size);
+			Level = min((Thrust/MaxThrust), 1);
+			Level = max(Level, -1);
+			OurVessel->SetAttitudeRotLevel(0, Level);		
+		}
+		
+		//
+		//	If we have reached the insertion speed, cutoff the engine
+		//
+
+		if(fabs(horizonvel.x) >= (DesiredDeltaVx - 0.5))
 		{
 			OurVessel->SetThrusterGroupLevel(THGROUP_HOVER, 0);
+			OurVessel->SetAttitudeRotLevel(0, 0);
+			OurVessel->ActivateNavmode(NAVMODE_KILLROT);
+			LastEventTime = simt;
+			
 			ProgState++;
 		}
 		break;
-
-	case 6:
-
+		
+	case 22:
 		//
-		//	Make final correction with linear thrusters
+		//	Wait 2 seconds for any maneuver rate to null out
 		//
 
-		if((aps - (DesiredApogee * 1000.0)) > 0)
-			thdir = -1;				//		If we've passed, let's go back a bit
-		if((aps - (DesiredApogee * 1000.0)) < 0)
-			thdir = 1;				//		If we're short, let's push forward a little
+		if(simt > (LastEventTime + 2))
+			ProgState++;
 
-		dap = (aps - (DesiredApogee * 1000.0)) * thdir;
-		thl = 0.7 * thdir;			//		Thruster level
-		OurVessel->SetAttitudeLinLevel(1, thl);
+		break;			
 
-		if(fabs(dap) < 5)			//		Allow a 5 meter tolerance
+	case 23:
+		//
+		//	First trim any residual vertical velocity, using linear RCS thrusters
+		//
+
+		if(fabs(horizonvel.y) > DesiredDeltaVy)
+			thdir = 1;							//		If we've passed, let's slow down a bit
+
+		if(fabs(horizonvel.y) < DesiredDeltaVy)		
+			thdir = -1;							//		If we're short, let's accelerate a bit
+
+		OurVessel->SetAttitudeLinLevel(2, (0.9 * thdir));
+
+		residualV = fabs(horizonvel.y) - DesiredDeltaVy;
+
+		if(fabs(residualV) < 0.1)
 		{
-			OurVessel->SetAttitudeRotLevel(0, 0);
-			OurVessel->SetAttitudeRotLevel(2, 0);
-			OurVessel->SetAttitudeLinLevel(1, 0);
-			OurVessel->ActivateNavmode(NAVMODE_KILLROT);
+			OurVessel->SetAttitudeLinLevel(2,0);			
+			ProgState++;
+		}	
+		break;
 
-			VerbRunning = 0;
-			NounRunning = 0;
+	case 24:
+		//
+		//	Then trim any residual horizontal speed using linear RCS thrusters
+		//
 
-			SetVerbNoun(6, 50);
+		if(fabs(horizonvel.x) > DesiredDeltaVx)
+			thdir = -1;							//		If we've passed, let's brake a bit
+
+		if(fabs(horizonvel.x) < DesiredDeltaVx)		
+			thdir = 1;							//		If we're short, let's accelerate a bit
+
+		OurVessel->SetAttitudeLinLevel(1, (0.5 * thdir));
+
+		residualV = fabs(horizonvel.x) - DesiredDeltaVx;
+	
+		if(fabs(residualV) < 0.1)
+		{
+			OurVessel->SetAttitudeLinLevel(1,0);
+			OurVessel->DeactivateNavmode(NAVMODE_KILLROT);
+			
+			SetVerbNounAndFlash(37,0);
 			AwaitProgram();
 			ProgState++;
-		}
+		}		
 		break;
-	}
-
-	LastEventTime = simt;
+	}	
+	//sprintf(oapiDebugString(), "newwaccangle %f npitch %f vvelcalc %f hveltogain %f vcalcacc %f hcalcacc %f remainbt %f", newaccangle, npitch, vvelcalc, hveltogain, (vcalcacc + cmoong), hcalcacc, remainbt);		
 }
-

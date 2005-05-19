@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -93,6 +96,77 @@ void LEMcomputer::DisplayNounData(int noun)
 	switch (noun) {
 
 	//
+	// 11: Time to iginition (TIG) of CSI / Time to apoapsis
+	//
+
+	case 11:
+		{
+			OBJHANDLE gBody;
+			ELEMENTS Elements;
+			VECTOR3 Rp;
+			VECTOR3 Rv;
+			double GMass, GSize, Mu, mjd_ref, Me, TtPeri;
+			double E, T, tsp, RDotV, R, p, v, apd, TtApo;
+			int tsph, tspm, tsps;
+			
+			gBody = OurVessel->GetApDist(apd);
+			GMass = oapiGetMass(gBody);
+			GSize = oapiGetSize(gBody) / 1000;
+			Mu    = GK * GMass;	
+			
+			OurVessel->GetElements(Elements, mjd_ref);
+			OurVessel->GetRelativePos(gBody, Rp);
+			OurVessel->GetRelativeVel(gBody, Rv);	
+			R = sqrt(pow(Rp.x,2) + pow(Rp.y,2) + pow(Rp.z,2)) / 1000;		
+			p = Elements.a / 1000 * (1 - Elements.e * Elements.e);
+			v = acos((1 / Elements.e) * (p / R - 1));
+		
+			RDotV = dotp(Rv, Rp);
+			if (RDotV < 0) 
+			{
+				v = 2 * PI - v;
+			}				
+		
+			E   = 2 * atan(sqrt((1 - Elements.e)/(1 + Elements.e)) * tan(v / 2));//		Ecc anomaly
+			Me  = E - Elements.e * sin(E);										 //		Mean anomaly
+			T   = 2 * PI * sqrt((pow(Elements.a,3) / 1e9) / Mu);			     //		Orbit period			
+			tsp = Me / (2 * PI) * T;											 //		Time from ped
+
+			// Time to next periapsis & apoapsis
+			TtPeri = T - tsp;
+			if (RDotV < 0) {
+				TtPeri = -1 * tsp;
+			}
+
+			if (TtPeri > (T / 2)) {
+				TtApo = fabs((T/2) - TtPeri);
+			} 
+			else 
+			{
+				TtApo = fabs(TtPeri + (T/2));
+			}
+	
+			tsph = ((int)TtApo) / 3600;
+			tspm = ((int)TtApo - (3600 * tsph)) / 60;
+			tsps = ((int)(TtApo * 100)) % 6000;
+
+			dsky.SetR1(tsph);
+			dsky.SetR2(tspm);
+			dsky.SetR3(tsps);
+		}
+		break;
+
+	//
+	// 45: Plane change angle, target LAN (Used by P32)
+	//
+
+	case 45:		
+		dsky.SetR1((int)(DesiredPlaneChange * 100));		
+		dsky.SetR2((int)(DesiredLAN));		
+		dsky.BlankR3();
+		break;
+
+	//
 	// 50: apogee, perigee, fuel
 	//
 
@@ -105,12 +179,18 @@ void LEMcomputer::DisplayNounData(int noun)
 		break;
 
 	//
-	// 74: time to launch, apogee, heading.
+	// 74: time to launch, yaw angle, heading.
 	//
 
 	case 74:
 		{
-			double dt = BurnStartTime - CurrentTimestep;
+			double dt, hdga, yaw;
+			
+			oapiGetFocusHeading(&hdga);			
+			dt   = BurnStartTime - CurrentTimestep;			
+			hdga *= DEG;
+			yaw  = DesiredAzimuth - hdga;
+
 			int min = (int) (dt / 60.0);
 			int	sec = ((int) dt) - (min * 60);
 
@@ -119,9 +199,40 @@ void LEMcomputer::DisplayNounData(int noun)
 
 			dsky.SetR1(min * 1000 + sec);
 			dsky.SetR1Format("XXX XX");
-			dsky.SetR2((int) (DesiredApogee * 100.0));
-			dsky.SetR3((int) (DesiredAzimuth * 100.0));
+			dsky.SetR2((int)(yaw * 100.0));
+			dsky.SetR3((int)(DesiredAzimuth * 100.0));
 		}
+		break;
+
+	//
+	// 75: Time to CSI burn, DesiredDeltaV, DesiredPlaneChange
+	//
+
+	case 75:
+		{
+			double dt = (BurnStartTime - 10) - CurrentTimestep;
+			
+			int min = (int) (dt / 60.0);
+			int	sec = ((int) dt) - (min * 60);
+
+			if (min > 99)
+				min = 99;
+
+			dsky.SetR1(min * 1000 + sec);
+			dsky.SetR1Format("XXX XX");
+			dsky.SetR2((int)DesiredLAN);
+			dsky.SetR3((int)(DesiredPlaneChange * 100));
+		}		
+		break;
+
+	//
+	// 76: Desired, downrange and radial velocity and azimuth
+	//
+
+	case 76:		
+		dsky.SetR1((int)DesiredDeltaVx);			//		Insertion hoiriozontal speed, fixed
+		dsky.SetR2((int)DesiredDeltaVy);			//		Insertion vertical velocity, also fixed
+		dsky.SetR3((int)DesiredAzimuth * 100);		//		Launch azimuth, can be defined
 		break;
 
 	//
@@ -236,24 +347,8 @@ void LEMcomputer::Timestep(double simt)
 	case 0:
 		break;
 
-    //
-	//	10: Guidance data input
 	//
-
-	case 10:
-		Prog10(simt);
-		break;
-
-	//
-	//	11: Ascent first phase
-	//
-
-	case 11:
-		Prog11(simt);
-		break;
-
-	//
-	//	12: Ascent second phase
+	//	12: Ascent program
 	//
 
 	case 12:
@@ -291,13 +386,10 @@ void LEMcomputer::ProgPressed(int R1, int R2, int R3)
 		return;
 
 	switch (ProgRunning) {
-	case 10:
-		Prog10Pressed(R1, R2, R3);
-		return;
 
-	case 11:
-		Prog11Pressed(R1, R2, R3);
-		return;
+	case 12:
+		Prog12Pressed(R1, R2, R3);
+		return;	
 
 	case 63:
 		Prog63Pressed(R1, R2, R3);

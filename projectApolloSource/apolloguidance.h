@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/04/30 23:09:15  movieman523
+  *	Revised CSM banksums and apogee/perigee display to match the real AGC.
+  *	
   *	Revision 1.3  2005/04/20 17:44:48  movieman523
   *	Added call to force restart of the AGC.
   *	
@@ -233,6 +236,13 @@ protected:
 
 	double MaxThrust;
 	double VesselISP;
+
+	double DesiredDeltaVx;
+	double DesiredDeltaVy;
+	double DesiredDeltaVz;
+
+	double DesiredPlaneChange;
+	double DesiredLAN;
 
 	unsigned int BankSumNum;
 	unsigned int CurrentEMEMAddr;
