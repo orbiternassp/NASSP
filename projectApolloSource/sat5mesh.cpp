@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/05/18 23:34:23  movieman523
+  *	Added roughly correct masses for the various Saturn payloads.
+  *	
   *	Revision 1.8  2005/04/11 23:48:45  yogenfrutz
   *	correctes SIVB parked lem docking position
   *	
@@ -1334,6 +1337,7 @@ void SaturnV::DockStage (UINT dockstatus)
 		strncpy (ls.language, AudioLanguage, 63);
 		ls.MissionNo = ApolloNo;
 		ls.MissionTime = MissionTime;
+		ls.Realism = Realism;
 
 		lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hLMV);
 		lmvessel->SetLanderData(ls);

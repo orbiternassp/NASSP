@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/04/11 23:46:17  yogenfrutz
+  *	added InPanel and Panel_ID
+  *	
   *	Revision 1.2  2005/02/24 00:27:28  movieman523
   *	Revisions to make LEVA sounds work.
   *	
@@ -44,6 +47,7 @@ typedef struct {
 	char language[64];
 	bool Crewed;
 	bool AutoSlow;
+	int Realism;
 
 } LemSettings;
 

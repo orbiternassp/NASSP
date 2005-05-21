@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/04/11 23:43:21  yogenfrutz
+  *	Added LEM Panel_ID
+  *	
   *	Revision 1.2  2005/02/24 00:27:56  movieman523
   *	Revised to make LEVA sounds work with Orbitersound 3.
   *	
@@ -143,6 +146,8 @@ void sat5_lmpkd::Init()
 	ph_Asc = 0;
 	ph_rcslm0 = 0;
 	ph_rcslm1 = 0;
+
+	Realism = REALISM_DEFAULT;
 
 	strncpy(AudioLanguage, "English", 64);
 	soundlib.SetLanguage(AudioLanguage);
@@ -794,8 +799,10 @@ void sat5_lmpkd::SetLanderData(LemSettings &ls)
 	agc.SetApolloNo(ls.MissionNo);
 	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
+	soundlib.SetLanguage(AudioLanguage);
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
+	Realism = ls.Realism;
 }
 
 // ==============================================================
