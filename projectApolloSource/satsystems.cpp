@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/05/05 21:49:40  tschachim
+  *	Added some (disabled) debug code
+  *	
   *	Revision 1.3  2005/05/02 12:56:24  tschachim
   *	various debug prints added for testing only
   *	
@@ -145,7 +148,15 @@ void Saturn::SystemsTimestep(double simt)
 	double *tempO2MainReg=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:TEMP");
 	double *pressO2MainReg=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:PRESS");
 
-	double *tempRad=(double*)Panelsdk.GetPointerByString("HYDRAULIC:RAD:TEMP");
+	double *tempRad1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:TEMP");
+	double *tempRad2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:TEMP");
+	double *tempRad3=(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:TEMP");
+	double *tempRad4=(double*)Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR4:TEMP");
+	double tempRad = (*tempRad1 + *tempRad2 + *tempRad3 + *tempRad4) / 4.0;
+
+	double *tempFCC1=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING:TEMP");
+	double *tempFCC2=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2COOLING:TEMP");
+	double *tempFCC3=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3COOLING:TEMP");
 
 	double *massH2Tank1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:MASS");
 	double *tempH2Tank1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:TEMP");
@@ -177,6 +188,9 @@ void Saturn::SystemsTimestep(double simt)
 	double *h2flowFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:H2FLOW");
 	double *o2flowFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:O2FLOW");
 
+	double *tempFC2=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:TEMP");
+	double *tempFC3=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP");
+	//double *ison=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING:ISON");
 
 	// Cabin O2 supply
 /*	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f p %.1f O2T2-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f CAB-m %.1f T %.1f p %.1f CO2PP %.2f RAD-T %.1f", 
@@ -189,6 +203,18 @@ void Saturn::SystemsTimestep(double simt)
 */
 
 	// Fuel Cell, flow in lb/h
+/*	sprintf(oapiDebugString(), "FC1-T %.1f FC2-T %.1f FC3-T %.1f FC1-V %.2f A %.2f H2Flow %.3f O2Flow %.3f AvgRad-T %.1f FCC1-T %.1f FCC2-T %.1f FCC3-T %.1f", 
+		*tempFC, *tempFC2, *tempFC3, *voltFC, *ampFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665,
+		tempRad, *tempFCC1, *tempFCC2, *tempFCC3);  
+*/
+
+/*	sprintf(oapiDebugString(), "FC2-T %.1f FC3-T %.1f FC1-T %.1f V %.2f A %.2f H2Flow %.3f O2Flow %.3f Rad1-T %.1f Rad2-T %.1f Rad3-T %.1f Rad4-T %.1f FC1C-T %.1f p %.1f", 
+		*tempFC2, *tempFC3, *tempFC, *voltFC, *ampFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665,
+		*tempRad1, *tempRad2, *tempRad3, *tempRad4,
+		*tempFC1Cond, *pressFC1Cond * 0.000145038);
+*/		
+
+	// Fuel Cell with tanks, flow in lb/h
 /*	sprintf(oapiDebugString(), "O2T1-m %.2f vm %.2f T %.1f p %.1f H2T2-m %.2f vm %.2f T %.1f p %.1f FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f H2FCM %.1f T %.1f p %6.1f", 
 		*massO2Tank1, *vapormassO2Tank1, *tempO2Tank1, *pressO2Tank1 * 0.000145038,
 		*massH2Tank2, *vapormassH2Tank2, *tempH2Tank2, *pressH2Tank2 * 0.000145038,
@@ -383,4 +409,28 @@ void Saturn::ClearEngineIndicator(int i)
 		return;
 
 	ENGIND[i - 1] = false;
+}
+
+void Saturn::FuelCellCoolingBypass(int fuelcell, bool bypassed) {
+
+	// Bypass Radiator 2 and 4
+	char buffer[100];
+
+	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:2:BYPASSED", fuelcell);
+	bool *bp = (bool *) Panelsdk.GetPointerByString(buffer);
+	*bp = bypassed;
+
+	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:4:BYPASSED", fuelcell);
+	bp = (bool *) Panelsdk.GetPointerByString(buffer);
+	*bp = bypassed;
+}
+
+bool Saturn::FuelCellCoolingBypassed(int fuelcell) {
+
+	// It's bypassed when Radiator 2 is bypassed
+	char buffer[100];
+
+	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:2:BYPASSED", fuelcell);
+	bool *bypassed = (bool *) Panelsdk.GetPointerByString(buffer);
+	return *bypassed;
 }
