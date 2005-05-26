@@ -15,9 +15,42 @@ href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohi
     <h3>Command and Service Module (CSM) </h3>
     <p>The following diagram shows the internal systems of the Command and Service Module (CSM) as modelled with the PanelSDK. These components are defined in the &quot;saturncsmsystems.cfg&quot; file in the config folder.</p>
     <p><img src="../images/csmhydraulicsystems.gif" width="630" height="434"></p>
-    <p>More detailled informations about that will follow soon.... 
-</p>
-  </div></div>
+    <h3>Operational Procedures</h3>
+    <p>This section provides step-by-step examples and instructions how to use the internal systems. Hopefully the user gets a better feeling how to work with the EPS and ECS. It is assumed that the spacecraft is in a &quot;stable condition&quot; without flying manoeuvers, for example during Trans Lunar Coast and you can use time acceleration up to 1000 so that the internal systems have reasonable reaction times.</p>
+    <h4>CSM cryogenic tank and fuel cell check </h4>
+    <p>During normal operations the cryo tanks and fuel cells should operate as descriped in the original Apollo documentation. The following procedures are from the <em>Apollo-Soyuz test project. Operations handbook command/service/docking modules 
+(CSM 119/DM 1): Operational procedures reference issue</em> (<A href="http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19750004933_1975004933.pdf">http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19750004933_1975004933.pdf</A>) </p>
+    <p><img src="../images/aoh-cyroandfccheck.gif" width="630" height="425"></p>
+    <h4>CSM H<sub>2</sub> cryogenic tank pressurization</h4>
+    <p>During normal operations cryogenic hydrogen from the cryo tanks is consumed by the fuel cells, so for this procedure it is necessary that the fuel cells are turned on and all cryo tank heaters and fans are switched to AUTO. The cyro tank fans and heaters then maintain the pressure in the tanks.</p>
+    <ul>
+      <li>Switch to time acceleration 1000. Monitor the H<sub>2</sub> PRESSURE 1/2 meters, they should slowly drop to 225 psi, then increase to 260 psi and so forth. <p></li>
+      <li>Switch the H<sub>2</sub> HEATERS 2 switch and the H<sub>2</sub> FANS 2 switch to OFF (center position). After a couple of hours you can see that the H<sub>2</sub> tank 1 gets still repressurized while the pressure in H<sub>2</sub> tank 2 decreases below 200 psi. Furthermore the spacecraft consumes more hydrogen from tank 1 because of the higher pressure so the H<sub>2</sub> QUANTITY 1 meter decreases faster than the H<sub>2</sub> QUANTITY 2 meter.<p></li>
+      <li>Switch the H<sub>2</sub> FANS 2 switch to ON (down position). The pressure in H<sub>2</sub> tank 2 increases continuously without stopping, so you can overpressure the tank (but it doesn't explode at the moment...). Switch the H<sub>2</sub> FANS 2 switch back to OFF if you have enough pressure.<p></li>
+      <li>Switch the H<sub>2</sub> HEATERS 2 switch and the H<sub>2</sub> FANS 2 switch back to AUTO (up position). Now the tanks are operated automatically again. Please notice that they now doesn't operate &quot;synchronously&quot; as before. </li>
+    </ul>
+    <h4>CSM fuel cell shutdown and restart </h4>
+    <p>During normal operations all fuel cells are running and  have  a load of about 20 A at the moment. Unlike in reality we can shutdown and restart the fuel cells at any time. </p>
+    <ul>
+      <li>Switch to time acceleration 100. Switch the FUEL CELL INDICATOR to position 1. You can monitor a hydrogen and oxygen flow above 0 lb/hr on the FUEL CELL FLOW H<sub>2</sub>/O<sub>2</sub>meters and a FUEL CELL MODULE SKIN TEMP of above 400 &deg;F.<p></li>
+      <li>Switch the FUEL CELL REACTANTS 1 switch to OFF (down position) and back to center position. Now fuel cell 1 is down, the FUEL CELL REACTANTS 1 indicator changes to striped-line indication, both flows are 0 lb/hr, but the fuel cell skin temperature remains almost unchanged because the fuel cell temperature is still maintained by the fuel cell heaters.<p></li>
+      <li>Switch the FUEL CELL HEATERS 1 switch to OFF (down position). The fuel cell skin (and condenser exhaust) temperature decreases slowly. Wait until it drops below 300 &deg;F (time acceleration 1000, if you are impatient...). 
+        <p></li>
+      <li>Switch the FUEL CELL REACTANTS 1 switch to ON (up position). Unfortunatly the fuel cell does not start, because the skin temperature is below 300 &deg;F.<p></li>
+      <li>Switch the FUEL CELL HEATERS 1 switch to up position. The fuel cell skin  temperature increases slowly. After 300 &deg;F are reached, the fuel cell turns on, the flows are normal again and the skin temperature increases quickly to the old value. The fuel cell is running normally again, switch the FUEL CELL REACTANTS 1 switch back to center position. </li>
+    </ul>
+    <h4>CSM fuel cell radiator emergency bypass </h4>
+    <p>During normal operations no fuel cell emergency bypass is necessary. But if only one fuel cell is running at a load of about 20 A, you have to bypass some of the radiators so that the coolant temperature is not too low.</p>
+    <ul>
+      <li>Switch to time acceleration 100. Switch the FUEL CELL INDICATOR to position 1. Switch the FUEL CELL REACTANTS 2 and 3 switches to OFF (down position). The FUEL CELL REACTANTS 2 and 3 indicators change to striped-line indication.
+        <p></li>
+      <li>Wait some time (time acceleration 1000, if you are impatient...), then the FC RAD TEMP LOW indicator changes to striped-line  indicating a coolant temperature below -30&deg;F.<p></li>
+      <li>Switch the FUEL CELL RADIATORS 1 switch to EMER BYPASS (down position) and back to center position. The FUEL CELL RADIATORS 1 indicator changes to striped-line indication. After a short time the FC RAD TEMP LOW indicator changes back to gray indicating a normal coolant temperature. You are now in &quot;emergency mode&quot;.<p></li>
+      <li>Monitor fuel cell 2 and 3 by switching the FUEL CELL INDICATOR to position 2 and 3. The flows are 0 lb/hr of course and the FC RAD TEMP LOW indicator shows  striped-line  indication because the radiators of the other fuel cells are not bypassed. Switch the FUEL CELL INDICATOR back to position 1.<p></li>
+      <li>Switch the FUEL CELL RADIATORS 1 switch to NORMAL (up position) and back to center position. Switch the FUEL CELL REACTANTS 2 and 3 switches to ON (up position) and then back to center position. You are now back in &quot;normal mode&quot;. The FC RAD TEMP LOW indicator should show gray indication again. </li>
+    </ul>
+  </div>
+</div>
 <table height="65" cellspacing="0" cellpadding="0" border="0">
 <tr height="65">
 <td rowspan="2"><img height="79" width="432" src="../images/gbar.gif"></td>
