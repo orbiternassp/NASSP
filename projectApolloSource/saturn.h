@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/05/18 23:34:23  movieman523
+  *	Added roughly correct masses for the various Saturn payloads.
+  *	
   *	Revision 1.11  2005/05/05 21:33:46  tschachim
   *	Introduced cryo fans and fuel cell indicators
   *	Renamed some toggleswitch interfaces and functions
@@ -162,6 +165,46 @@ protected:
 
 	double TCPO;
 
+	//
+	// Switches
+	//
+
+	ToggleSwitch   CabinFan1Switch;
+	ToggleSwitch   CabinFan2Switch;
+	ThreePosSwitch H2Heater1Switch; // TODO state saving/loading
+	ThreePosSwitch H2Heater2Switch;
+	ThreePosSwitch O2Heater1Switch;
+	ThreePosSwitch O2Heater2Switch;	
+	ToggleSwitch   O2PressIndSwitch;	
+	ThreePosSwitch H2Fan1Switch; 
+	ThreePosSwitch H2Fan2Switch; 
+	ThreePosSwitch O2Fan1Switch; 
+	ThreePosSwitch O2Fan2Switch; 
+
+	IndicatorSwitch FuelCellPhIndicator;
+	IndicatorSwitch FuelCellRadTempIndicator;
+
+	IndicatorSwitch FuelCellRadiators1Indicator;
+	IndicatorSwitch FuelCellRadiators2Indicator;
+	IndicatorSwitch FuelCellRadiators3Indicator;
+	ThreePosSwitch FuelCellRadiators1Switch;	// TODO state saving/loading
+	ThreePosSwitch FuelCellRadiators2Switch;
+	ThreePosSwitch FuelCellRadiators3Switch;
+
+	RotationalSwitch FuelCellIndicatorsSwitch;	// TODO state saving/loading
+
+	ToggleSwitch FuelCellHeater1Switch;		// TODO state saving/loading
+	ToggleSwitch FuelCellHeater2Switch;
+	ToggleSwitch FuelCellHeater3Switch;
+
+	IndicatorSwitch FuelCellReactants1Indicator;
+	IndicatorSwitch FuelCellReactants2Indicator;
+	IndicatorSwitch FuelCellReactants3Indicator;
+	ThreePosSwitch FuelCellReactants1Switch; // TODO state saving/loading
+	ThreePosSwitch FuelCellReactants2Switch;
+	ThreePosSwitch FuelCellReactants3Switch;
+
+	// old stuff begin
 	bool Cswitch1;
 	bool Cswitch2;
 	bool Cswitch3;
@@ -296,26 +339,6 @@ protected:
 	bool FCswitch4;
 	bool FCswitch5;
 	bool FCswitch6;
-
-	ToggleSwitch   CabinFan1Switch;
-	ToggleSwitch   CabinFan2Switch;
-	ThreePosSwitch H2Heater1Switch; // TODO state saving/loading
-	ThreePosSwitch H2Heater2Switch;
-	ThreePosSwitch O2Heater1Switch;
-	ThreePosSwitch O2Heater2Switch;	
-	ToggleSwitch   O2PressIndSwitch;	
-	ThreePosSwitch H2Fan1Switch; 
-	ThreePosSwitch H2Fan2Switch; 
-	ThreePosSwitch O2Fan1Switch; 
-	ThreePosSwitch O2Fan2Switch; 
-
-	IndicatorSwitch FuelCellReactants1Indicator;
-	IndicatorSwitch FuelCellReactants2Indicator;
-	IndicatorSwitch FuelCellReactants3Indicator;
-
-	ThreePosSwitch FuelCellReactants1Switch; // TODO state saving/loading
-	ThreePosSwitch FuelCellReactants2Switch;
-	ThreePosSwitch FuelCellReactants3Switch;
 
 	bool P113switch;
 
@@ -472,6 +495,7 @@ protected:
 
 	SwitchRow RCSIndicatorsSwitchRow;
 	RotationalSwitch RCSIndicatorsSwitch;
+	// old stuff end
 
 	//
 	// stage is the main stage of the flight. StageState is the current state within
@@ -555,6 +579,16 @@ protected:
 
 	PanelSwitches MainPanel;
 
+	SwitchRow CryoTankRow;
+	SwitchRow FuelCellPhRadTempIndicatorsRow;
+	SwitchRow FuelCellRadiatorsIndicatorsRow;
+	SwitchRow FuelCellRadiatorsSwitchesRow;
+	SwitchRow FuelCellIndicatorsSwitchRow;
+	SwitchRow FuelCellHeatersSwitchesRow;
+	SwitchRow FuelCellReactantsIndicatorsRow;
+	SwitchRow FuelCellReactantsSwitchesRow;
+
+	// old stuff begin
 	HUDToggle HUDswitch1;
 	HUDToggle HUDswitch2;
 	HUDToggle HUDswitch3;
@@ -567,10 +601,6 @@ protected:
 
 	NavModeToggle NavToggleHAlt;
 	NavModeToggle NavToggleHLevel;
-
-	SwitchRow CryoTankRow;
-	SwitchRow FuelCellReactantsIndicatorsRow;
-	SwitchRow FuelCellReactantsSwitchesRow;
 
 	SwitchRow LPRow;
 	SwitchRow HUDRow;
@@ -619,6 +649,7 @@ protected:
 	SwitchRow EMS1Row;
 
 	SwitchRow LPSRow;
+	// old stuff end
 
 	bool masterAlarmLit;
 	double masterAlarmCycleTime;
@@ -780,7 +811,9 @@ protected:
 	void RedrawPanel_CryoTankIndicators (SURFHANDLE surf);
 	void RedrawPanel_CabinIndicators (SURFHANDLE surf);
 	void RedrawPanel_O2CryoTankPressureIndicator(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle);
+	void RedrawPanel_FuelCellIndicators (SURFHANDLE surf);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
+	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start);
 	double SetPitchApo();
 	void SetStage(int s);
@@ -825,6 +858,8 @@ protected:
 	void ActivateSPS();
 	void DeactivateSPS();
 	void ActivateCMRCS();
+	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
+	bool FuelCellCoolingBypassed(int fuelcell);
 
 	//
 	// Save/Load support functions.
