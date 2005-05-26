@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/05/12 00:26:58  movieman523
+  *	Added O2 tank quantity failure on Apollo 13.
+  *	
   *	Revision 1.22  2005/05/05 21:40:56  tschachim
   *	Introduced cryo fans, fuel cell indicators and cabin indicators
   *	
@@ -543,6 +546,66 @@ void Saturn::RedrawPanel_CabinIndicators (SURFHANDLE surf) {
 
 }
 
+void Saturn::RedrawPanel_FuelCellIndicators (SURFHANDLE surf) {
+
+	double h2flow, o2flow, temp, condenserTemp;
+
+	// read values of the selected fuel cell
+	if (FuelCellIndicatorsSwitch == 1) {
+		h2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:H2FLOW") * LBH;
+		o2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:O2FLOW") * LBH;
+		temp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:TEMP"));
+		condenserTemp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:CONDENSERTEMP"));
+
+	} else if (FuelCellIndicatorsSwitch == 2) {
+		h2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:H2FLOW") * LBH;
+		o2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:O2FLOW") * LBH;
+		temp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:TEMP"));
+		condenserTemp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:CONDENSERTEMP"));
+
+	} else {
+		h2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:H2FLOW") * LBH;
+		o2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:O2FLOW") * LBH;
+		temp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP"));
+		condenserTemp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:CONDENSERTEMP"));
+	}
+
+	// Fuel Cell H2 flow
+	if (h2flow < 0.0) h2flow = 0.0;
+	if (h2flow > 0.2) h2flow = 0.2;
+	if (h2flow < 0.05)
+		oapiBlt(surf, srf[SRF_NEEDLE],  0, (111 - (int)(h2flow / 0.05 * 21.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	else if (h2flow < 0.15)
+		oapiBlt(surf, srf[SRF_NEEDLE],  0, (90 - (int)((h2flow - 0.05) / 0.1 * 65.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	else
+		oapiBlt(surf, srf[SRF_NEEDLE],  0, (25 - (int)((h2flow - 0.15) / 0.05 * 21.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+
+	// Fuel Cell O2 flow
+	if (o2flow < 0.0) o2flow = 0.0;
+	if (o2flow > 1.6) o2flow = 1.6;
+	if (o2flow < 0.4)
+		oapiBlt(surf, srf[SRF_NEEDLE],  53, (111 - (int)(o2flow / 0.4 * 21.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	else if (o2flow < 1.2)
+		oapiBlt(surf, srf[SRF_NEEDLE],  53, (90 - (int)((o2flow - 0.4) / 0.8 * 65.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	else
+		oapiBlt(surf, srf[SRF_NEEDLE],  53, (25 - (int)((o2flow - 1.2) / 0.4 * 21.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+
+	// Fuel Cell skin temperature
+	if (temp < 100.0) temp = 100.0;
+	if (temp > 550.0) temp = 550.0;
+	if (temp < 400.0)
+		oapiBlt(surf, srf[SRF_NEEDLE],  86, (109 - (int)((temp - 100.0) / 300.0 * 53.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	else if (temp < 500.0)
+		oapiBlt(surf, srf[SRF_NEEDLE],  86, (56 - (int)((temp - 400.0) / 100.0 * 40.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	else
+		oapiBlt(surf, srf[SRF_NEEDLE],  86, (16 - (int)((temp - 500.0) / 50.0 * 12.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+
+	// Fuel Cell condenser exhaust temperature
+	if (condenserTemp < 150.0) condenserTemp = 150.0;
+	if (condenserTemp > 250.0) condenserTemp = 250.0;
+	oapiBlt(surf, srf[SRF_NEEDLE],  139, (109 - (int)((condenserTemp - 150.0) / 100.0 * 103.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+}
+
 
 //
 // Free all allocated surfaces.
@@ -637,16 +700,16 @@ void Saturn::InitPanel (int panel)
 		srf[24]						= oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
 		srf[25]						= oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
 		srf[26]						= oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
-		srf[27]						= oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
+		srf[SRF_ROTATIONALSWITCH]	= oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
 				
-		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],	g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[3],			0);
-		oapiSetSurfaceColourKey (srf[5],			g_Param.col[5]);
-		oapiSetSurfaceColourKey (srf[14],			g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[15],			g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[16],			g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[22],			g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[27],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[3],					0);
+		oapiSetSurfaceColourKey (srf[5],					g_Param.col[5]);
+		oapiSetSurfaceColourKey (srf[14],					g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[15],					g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[16],					g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[22],					g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_ROTATIONALSWITCH],	g_Param.col[4]);
 /*		break;
 	}
 */
@@ -872,8 +935,14 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1912,  490, 2488,  520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173,  315, 2495,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CABININDICATORS,        						_R(2278,  593, 2504,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2757,  955, 3131,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLINDICATORS,		    				_R(2763,  319, 2913,  443), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_FUELCELLPHRADTEMPINDICATORS,	  				_R(2822,  490, 3019,  513), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLRADIATORSINDICATORS,    				_R(2822,  539, 2931,  562), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLRADIATORSSWITCHES,    				_R(2816,  607, 2937,  637), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLINDICATORSSWITCH,    				_R(3029,  629, 3117,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLHEATERSSWITCHES,	    				_R(2817,  695, 2938,  725), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLREACTANTSINDICATORS,    				_R(2823,  893, 3061,  917), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2757,  955, 3131,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
 		
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
@@ -934,14 +1003,57 @@ bool Saturn::clbkLoadPanel (int id)
 // state..
 //
 
-void Saturn::SetSwitches(int panel)
+void Saturn::SetSwitches(int panel) {
 
-{
 	MainPanel.Init(0, this, &soundlib, this);
 
 	CryoTankRow.Init(AID_CYROTANKSWITCHES, MainPanel);
+	CabinFan1Switch.Init (  0, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow); 
+	CabinFan2Switch.Init ( 59, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow);
+	H2Heater1Switch.Init (114, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	H2Heater2Switch.Init (157, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	O2Heater1Switch.Init (200, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	O2Heater2Switch.Init (250, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	O2PressIndSwitch.Init(293, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow); 
+	H2Fan1Switch.Init    (349, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	H2Fan2Switch.Init    (413, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	O2Fan1Switch.Init    (478, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	O2Fan2Switch.Init    (541, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+
+	FuelCellPhRadTempIndicatorsRow.Init(AID_FUELCELLPHRADTEMPINDICATORS, MainPanel);
+	FuelCellPhIndicator.Init     (  0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
+	FuelCellRadTempIndicator.Init(174, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
+
+	FuelCellRadiatorsIndicatorsRow.Init(AID_FUELCELLRADIATORSINDICATORS, MainPanel);
+	FuelCellRadiators1Indicator.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellRadiatorsIndicatorsRow);
+	FuelCellRadiators2Indicator.Init(43, 0, 23, 23, srf[SRF_INDICATOR], FuelCellRadiatorsIndicatorsRow);
+	FuelCellRadiators3Indicator.Init(86, 0, 23, 23, srf[SRF_INDICATOR], FuelCellRadiatorsIndicatorsRow);
+	
+	FuelCellRadiatorsSwitchesRow.Init(AID_FUELCELLRADIATORSSWITCHES, MainPanel); 
+	FuelCellRadiators1Switch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellRadiatorsSwitchesRow); 
+	FuelCellRadiators2Switch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellRadiatorsSwitchesRow); 
+	FuelCellRadiators3Switch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellRadiatorsSwitchesRow); 
+
+	FuelCellIndicatorsSwitchRow.Init(AID_FUELCELLINDICATORSSWITCH, MainPanel);
+	FuelCellIndicatorsSwitch.Init(0, 0, 86, 86, srf[SRF_ROTATIONALSWITCH], FuelCellIndicatorsSwitchRow);
+
+	FuelCellHeatersSwitchesRow.Init(AID_FUELCELLHEATERSSWITCHES, MainPanel);
+	FuelCellHeater1Switch.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellHeatersSwitchesRow); 
+	FuelCellHeater2Switch.Init(43, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellHeatersSwitchesRow); 
+	FuelCellHeater3Switch.Init(86, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellHeatersSwitchesRow); 
+
 	FuelCellReactantsIndicatorsRow.Init(AID_FUELCELLREACTANTSINDICATORS, MainPanel);
+	FuelCellReactants1Indicator.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
+	FuelCellReactants2Indicator.Init(43, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
+	FuelCellReactants3Indicator.Init(86, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
+
 	FuelCellReactantsSwitchesRow.Init(AID_FUELCELLREACTANTSSWITCHES, MainPanel); 
+	FuelCellReactants1Switch.Init( 43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow); 
+	FuelCellReactants2Switch.Init( 86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow); 
+	FuelCellReactants3Switch.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow); 
+
+
+	// old stuff
 
 	SPSRow.Init(AID_SPS, MainPanel);
 	EDSRow.Init(AID_EDS, MainPanel);
@@ -983,26 +1095,6 @@ void Saturn::SetSwitches(int panel)
 	EMS1Row.Init(AID_EMS_SWITCH, MainPanel);
 
 	LPSRow.Init(AID_LEM_POWER_SWITCH, MainPanel);
-
-	CabinFan1Switch.Init (  0, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow); 
-	CabinFan2Switch.Init ( 59, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow);
-	H2Heater1Switch.Init (114, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	H2Heater2Switch.Init (157, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2Heater1Switch.Init (200, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2Heater2Switch.Init (250, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2PressIndSwitch.Init(293, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow); 
-	H2Fan1Switch.Init    (349, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	H2Fan2Switch.Init    (413, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2Fan1Switch.Init    (478, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2Fan2Switch.Init    (541, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-
-	FuelCellReactants1Indicator.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
-	FuelCellReactants2Indicator.Init(43, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
-	FuelCellReactants3Indicator.Init(86, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
-
-	FuelCellReactants1Switch.Init( 43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow); 
-	FuelCellReactants2Switch.Init( 86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow); 
-	FuelCellReactants3Switch.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow); 
 
 	SPSswitch.Init(0, 0, 30, 39, srf[7], SPSRow);
 	EDSswitch.Init(0, 0, 23, 20, srf[6], EDSRow);
@@ -2554,7 +2646,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_FUEL_CELL_RADIATORS:
+/*	case AID_FUEL_CELL_RADIATORS:
 		if (my >=53 && my <=64 ){
 			if (mx > 9 && mx < 21 && !FCRswitch1){
 				SwitchClick();
@@ -2579,7 +2671,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 		}
 		return true;
-
+*/
 	case AID_FUEL_CELL_BUS_SWITCHES:
 		if (my >=47 && my <=58 ){
 			if (mx > 9 && mx < 21 && !FCBswitch1){
@@ -2739,6 +2831,9 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 	return false;
 }
 
+
+#include "PanelSDK/Internals/Esystems.h"
+
 void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
 	if (s == &CabinFan1Switch || s == &CabinFan2Switch) {
@@ -2747,6 +2842,25 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 		} else {
 			StopCabinFanSound();
 		}
+
+		// TEST
+		/*if (s == &CabinFan1Switch) {
+			FCell *fc = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1");
+			if (CabinFan1Switch) {
+				fc->PLOAD(20.0);
+			} else {
+				fc->PUNLOAD(20.0);
+			}
+		}
+
+		if (s == &CabinFan2Switch) {
+			FCell *fc = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2");
+			if (CabinFan2Switch) {
+				fc->PLOAD(40.0);
+			} else {
+				fc->PUNLOAD(40.0);
+			}
+		}*/
 
 	} else if (s == &O2Heater1Switch) {
 		CryoTankHeaterSwitchToggled(s, 
@@ -2780,6 +2894,39 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 		CryoTankHeaterSwitchToggled(s, 
 			(int*) Panelsdk.GetPointerByString("ELECTRIC:H2TANK2FAN:PUMP"));
 
+
+	} else if (s == &FuelCellRadiators1Switch) {
+		if (FuelCellRadiators1Switch.IsUp())
+			FuelCellCoolingBypass(1, false);
+		else if (FuelCellRadiators1Switch.IsDown())
+			FuelCellCoolingBypass(1, true);
+
+	} else if (s == &FuelCellRadiators2Switch) {
+		if (FuelCellRadiators2Switch.IsUp())
+			FuelCellCoolingBypass(2, false);
+		else if (FuelCellRadiators2Switch.IsDown())
+			FuelCellCoolingBypass(2, true);
+
+	} else if (s == &FuelCellRadiators3Switch) {
+		if (FuelCellRadiators3Switch.IsUp())
+			FuelCellCoolingBypass(3, false);
+		else if (FuelCellRadiators3Switch.IsDown())
+			FuelCellCoolingBypass(3, true);
+		
+
+	} else if (s == &FuelCellHeater1Switch) {
+		FuelCellHeaterSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1HEATER:PUMP"));
+
+	} else if (s == &FuelCellHeater2Switch) {
+		FuelCellHeaterSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2HEATER:PUMP"));
+
+	} else if (s == &FuelCellHeater3Switch) {
+		FuelCellHeaterSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3HEATER:PUMP"));
+
+
 	} else if (s == &FuelCellReactants1Switch) {
 		FuelCellReactantsSwitchToggled(s, 
 			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:START"));
@@ -2799,17 +2946,48 @@ void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 	double *running;
 
-	if (s == &FuelCellReactants1Indicator) {
+	if (s == &FuelCellPhIndicator) {
+		FuelCellPhIndicator = true;	// Not simulated at the moment
+
+	} else if (s == &FuelCellRadTempIndicator) {
+		double *temp;
+		if (FuelCellIndicatorsSwitch == 1)
+			temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING:TEMP");
+		else if (FuelCellIndicatorsSwitch == 2)
+			temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2COOLING:TEMP");
+		else if (FuelCellIndicatorsSwitch == 3)
+			temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3COOLING:TEMP");
+
+		if (KelvinToFahrenheit(*temp) <= -30.0)	// indication if temperature below -30°F 
+			FuelCellRadTempIndicator = false;
+		else
+			FuelCellRadTempIndicator = true;
+			
+
+	} else if (s == &FuelCellRadiators1Indicator) {
+		FuelCellRadiators1Indicator = !FuelCellCoolingBypassed(1);
+
+	} else if (s == &FuelCellRadiators2Indicator) {
+		FuelCellRadiators2Indicator = !FuelCellCoolingBypassed(2);
+
+	} else if (s == &FuelCellRadiators3Indicator) {
+		FuelCellRadiators3Indicator = !FuelCellCoolingBypassed(3);
+
+
+	} else if (s == &FuelCellReactants1Indicator) {
 		running = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:RUNNING");
-		if (*running) FuelCellReactants1Indicator = false; else FuelCellReactants1Indicator = true;
+		if (*running) FuelCellReactants1Indicator = false; 
+		         else FuelCellReactants1Indicator = true;
 
 	} else if (s == &FuelCellReactants2Indicator) {
 		running = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:RUNNING");
-		if (*running) FuelCellReactants2Indicator = false; else FuelCellReactants2Indicator = true;
+		if (*running) FuelCellReactants2Indicator = false; 
+		         else FuelCellReactants2Indicator = true;
 
 	} else if (s == &FuelCellReactants3Indicator) {
 		running = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:RUNNING");
-		if (*running) FuelCellReactants3Indicator = false; else FuelCellReactants3Indicator = true;
+		if (*running) FuelCellReactants3Indicator = false; 
+		         else FuelCellReactants3Indicator = true;
 	} 
 }
 
@@ -2821,6 +2999,14 @@ void Saturn::CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
 		*pump = SP_PUMP_OFF;
 	else if (s->IsDown())
 		*pump = SP_PUMP_ON;
+}
+
+void Saturn::FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
+
+	if (s->IsUp())
+		*pump = SP_PUMP_AUTO;
+	else 
+		*pump = SP_PUMP_OFF;
 }
 
 void Saturn::FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start) {
@@ -2903,12 +3089,7 @@ void Saturn::StopMasterAlarm()
 	}
 }
 
-bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
-
-{
-	//
-	// Process all the generic switches.
-	//
+bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 
 	if (id == AID_SM_RCS_MODE) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
@@ -2927,6 +3108,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	}
 
+	//
+	// Process all the generic switches.
+	//
+
 	if (MainPanel.DrawRow(id, surf))
 		return true;
 
@@ -2941,6 +3126,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_CABININDICATORS:
 		RedrawPanel_CabinIndicators(surf);
+		return true;
+
+	case AID_FUELCELLINDICATORS:
+		RedrawPanel_FuelCellIndicators(surf);
 		return true;
 
 	
@@ -3743,7 +3932,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[22],0,0,0,0,164,88);
 		}
 		return true;
-*/
+
 	case AID_FUEL_CELL_RADIATORS:
 		if(FCRswitch1){
 			oapiBlt(surf,srf[6],3,53,0,0,23,20);
@@ -3767,7 +3956,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[13],69,0,38,0,19,20);
 		}
 		return true;
-
+*/
 	case AID_FUEL_CELL_BUS_SWITCHES:
 		if(FCBswitch1){
 			oapiBlt(surf,srf[6],3,47,0,0,23,20);
@@ -4077,9 +4266,49 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 // Set switches to default state.
 //
 
-void Saturn::InitSwitches()
+void Saturn::InitSwitches() {
 
-{
+	CabinFan1Switch = false;
+	CabinFan2Switch = false;
+	H2Heater1Switch = THREEPOSSWITCH_UP;
+	H2Heater2Switch = THREEPOSSWITCH_UP;
+	O2Heater1Switch = THREEPOSSWITCH_UP;
+	O2Heater2Switch = THREEPOSSWITCH_UP;
+	O2PressIndSwitch = true;
+	H2Fan1Switch = THREEPOSSWITCH_UP;
+	H2Fan2Switch = THREEPOSSWITCH_UP;
+	O2Fan1Switch = THREEPOSSWITCH_UP;
+	O2Fan2Switch = THREEPOSSWITCH_UP;
+
+	FuelCellPhIndicator = false;
+	FuelCellRadTempIndicator = false;
+
+	FuelCellRadiators1Indicator = false;
+	FuelCellRadiators2Indicator = false;
+	FuelCellRadiators3Indicator = false;
+	FuelCellRadiators1Switch = THREEPOSSWITCH_CENTER;
+	FuelCellRadiators2Switch = THREEPOSSWITCH_CENTER;
+	FuelCellRadiators3Switch = THREEPOSSWITCH_CENTER;
+
+	FuelCellIndicatorsSwitch.AddPosition(1, 330);
+	FuelCellIndicatorsSwitch.AddPosition(2,   0);
+	FuelCellIndicatorsSwitch.AddPosition(3,  30);
+	FuelCellIndicatorsSwitch = 1;
+
+	FuelCellHeater1Switch = true;
+	FuelCellHeater2Switch = true;
+	FuelCellHeater3Switch = true;
+
+	FuelCellReactants1Indicator = false;
+	FuelCellReactants2Indicator = false;
+	FuelCellReactants3Indicator = false;
+	FuelCellReactants1Switch = THREEPOSSWITCH_CENTER;
+	FuelCellReactants2Switch = THREEPOSSWITCH_CENTER;
+	FuelCellReactants3Switch = THREEPOSSWITCH_CENTER;
+
+
+	// old stuff
+
 	Cswitch1=false;
 	Cswitch2=false;
 	Cswitch3=false;
@@ -4350,26 +4579,6 @@ void Saturn::InitSwitches()
 
 	SRHswitch1 = true;
 	SRHswitch2 = true;
-
-	CabinFan1Switch = false;
-	CabinFan2Switch = false;
-	H2Heater1Switch = THREEPOSSWITCH_UP;
-	H2Heater2Switch = THREEPOSSWITCH_UP;
-	O2Heater1Switch = THREEPOSSWITCH_UP;
-	O2Heater2Switch = THREEPOSSWITCH_UP;
-	O2PressIndSwitch = true;
-	H2Fan1Switch = THREEPOSSWITCH_UP;
-	H2Fan2Switch = THREEPOSSWITCH_UP;
-	O2Fan1Switch = THREEPOSSWITCH_UP;
-	O2Fan2Switch = THREEPOSSWITCH_UP;
-
-	FuelCellReactants1Indicator = false;
-	FuelCellReactants2Indicator = false;
-	FuelCellReactants3Indicator = false;
-
-	FuelCellReactants1Switch = THREEPOSSWITCH_CENTER;
-	FuelCellReactants2Switch = THREEPOSSWITCH_CENTER;
-	FuelCellReactants3Switch = THREEPOSSWITCH_CENTER;
 
 	CMRHDswitch = false;
 	CMRHGswitch = false;
