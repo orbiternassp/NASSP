@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/05/18 23:34:23  movieman523
+  *	Added roughly correct masses for the various Saturn payloads.
+  *	
   *	Revision 1.13  2005/05/12 00:16:51  movieman523
   *	Updated Apollo 13 explosion time.
   *	
@@ -110,12 +113,13 @@ typedef struct {
 
 const int nsurf = 28; // number of bitmap handles
 
-#define SRF_INDICATOR		 1
-#define SRF_NEEDLE			 2
-#define SRF_SWITCHUP		 6
-#define SRF_DSKY			21
-#define SRF_DSKYNUM			22
-#define SRF_THREEPOSSWITCH	23
+#define SRF_INDICATOR			 1
+#define SRF_NEEDLE				 2
+#define SRF_SWITCHUP			 6
+#define SRF_DSKY				21
+#define SRF_DSKYNUM				22
+#define SRF_THREEPOSSWITCH		23
+#define SRF_ROTATIONALSWITCH	27
 
 //
 // Earth radius and gravity constants.
@@ -126,6 +130,7 @@ const double GK   = 6.67259e-20 ;			//  Gravitational constant (km^3/(kg sec^2))
 const double GKSI = 6.67259e-20 * 1e9;
 const double PSI  = 0.000145038;			// Pa to PSI
 const double MMHG = 0.00750064;				// Pa to mmHg
+const double LBH  = 7.93665;				// g/s to lb/h
 
 inline double KelvinToFahrenheit(double kelvin) {
 	return kelvin * 1.8 - 459.67;
