@@ -182,7 +182,7 @@
 #define AID_P30                         400
 #define AID_CABIN_PRESS                 401
 #define AID_ROT_PWR                     402
-#define AID_FUEL_CELL_RADIATORS         403
+#define AID_FUELCELLRADIATORSINDICATORS 403
 #define AID_P31                         404
 #define AID_FUEL_CELL_BUS_SWITCHES      405
 #define AID_P32                         406
@@ -277,8 +277,11 @@
 #define IDB_ILMLEMLEFTWINDOW		    500
 #define IDB_LEMLEFTWINDOW			    501
 #define AID_FUELCELLREACTANTSINDICATORS 502
-
-
+#define AID_FUELCELLINDICATORS			503
+#define AID_FUELCELLINDICATORSSWITCH	504
+#define AID_FUELCELLHEATERSSWITCHES 	505
+#define AID_FUELCELLRADIATORSSWITCHES   506
+#define AID_FUELCELLPHRADTEMPINDICATORS	507
 
 // Next default values for new objects
 //
