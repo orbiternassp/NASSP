@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/05/05 21:31:56  tschachim
+  *	removed unused srf[1]
+  *	
   *	Revision 1.3  2005/04/22 14:00:53  tschachim
   *	Fixed renamed surfaces
   *	
@@ -1584,12 +1587,13 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 		if (mx > 0 && mx < 44 && my > 0 && my < 44){
 				ButtonClick();
 				AbortFire();
-				Abortswitch=true;
+				Abortswitch = true;
 				SeparateStage(stage);
-				SetEngineLevel(ENGINE_HOVER,1);
-				SetThrusterResource(th_hover[0],ph_Asc);
+				SetEngineLevel(ENGINE_HOVER, 1);
+				SetThrusterResource(th_hover[0], ph_Asc);
+				SetThrusterResource(th_hover[1], ph_Asc);
 				stage = 2;
-				startimer=false;
+				startimer = false;
 		}else if (mx > 53 && mx < 91 && my > 7 && my < 37){
 				ButtonClick();
 				Abortswitch = false;

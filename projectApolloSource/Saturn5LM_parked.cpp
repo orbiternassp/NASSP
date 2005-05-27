@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/05/21 16:14:36  movieman523
+  *	Pass Realism and AudioLanguage correctly from CSM to LEM.
+  *	
   *	Revision 1.3  2005/04/11 23:43:21  yogenfrutz
   *	Added LEM Panel_ID
   *	
@@ -477,27 +480,25 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		Undock(0);
 		}
 	if (GetNavmodeState(NAVMODE_KILLROT)&& !ATT2switch && !ATT3switch){
-			if (GetThrusterLevel(th_att_rot[10]) <0.00001 && GetThrusterLevel(th_att_rot[18]) <0.00001 ){
+		if (GetThrusterLevel(th_att_rot[10]) <0.00001 && GetThrusterLevel(th_att_rot[18]) <0.00001 ){
 			DeactivateNavmode(NAVMODE_KILLROT);
-			}
 		}
-	if (stage == 0)
-	{
+	}
+	if (stage == 0)	{
 		if (ENGARMswitch && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
-			SetThrusterResource(th_hover[0],ph_Dsc);
-		}
-		else{
-			SetThrusterResource(th_hover[0],NULL);
+			SetThrusterResource(th_hover[0], ph_Dsc);
+			SetThrusterResource(th_hover[1], ph_Dsc);
+		} else {
+			SetThrusterResource(th_hover[0], NULL);
+			SetThrusterResource(th_hover[1], NULL);
 		}
 		
 		if(!AFEED1switch && !AFEED2switch && !AFEED3switch && !AFEED4switch){
 			SetRCS(ph_rcslm0);
-		}
-		else{
+		} else {
 			SetRCS(ph_rcslm1);
 		}
-	}else if (stage == 1||stage == 5)
-	{
+	}else if (stage == 1 || stage == 5)	{
 		if(!AFEED1switch && !AFEED2switch && !AFEED3switch && !AFEED4switch){
 			SetRCS(ph_rcslm0);
 		}
@@ -505,10 +506,11 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 			SetRCS(ph_rcslm1);
 		}
 		if (ENGARMswitch && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
-			SetThrusterResource(th_hover[0],ph_Dsc);
-		}
-		else{
-			SetThrusterResource(th_hover[0],NULL);
+			SetThrusterResource(th_hover[0], ph_Dsc);
+			SetThrusterResource(th_hover[1], ph_Dsc);
+		} else {
+			SetThrusterResource(th_hover[0], NULL);
+			SetThrusterResource(th_hover[1], NULL);
 		}
 		if (EVA_IP){
 			if(!hLEVA){
@@ -584,12 +586,13 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		}
 		//sprintf (oapiDebugString(),"FUEL %d",GetPropellantMass(ph_Dsc));
 	}
-	else if (stage == 2){
-		if (AscentEngineArmed()){
-			SetThrusterResource(th_hover[0],ph_Asc);
-		}
-		else{
-			SetThrusterResource(th_hover[0],NULL);
+	else if (stage == 2) {
+		if (AscentEngineArmed()) {
+			SetThrusterResource(th_hover[0], ph_Asc);
+			SetThrusterResource(th_hover[1], ph_Asc);
+		} else {
+			SetThrusterResource(th_hover[0], NULL);
+			SetThrusterResource(th_hover[1], NULL);
 		}
 		if (!AscentRCSArmed()) {
 			SetRCS(NULL);
@@ -600,10 +603,11 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 	}
 	else if (stage == 3){
 		if (AscentEngineArmed()) {
-			SetThrusterResource(th_hover[0],ph_Asc);
-		}
-		else{
-			SetThrusterResource(th_hover[0],NULL);
+			SetThrusterResource(th_hover[0], ph_Asc);
+			SetThrusterResource(th_hover[1], ph_Asc);
+		} else {
+			SetThrusterResource(th_hover[0], NULL);
+			SetThrusterResource(th_hover[1], NULL);
 		}
 		if(!AscentRCSArmed()){
 			SetRCS(NULL);
