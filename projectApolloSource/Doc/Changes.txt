@@ -1,7 +1,7 @@
 6.5:
 ----
 
-Added variables for pre-entry CSM acceleration for unmanned flights (though currently not wired up).
+Added variables for pre-entry CSM acceleration for unmanned flights (though currently not fully wired up).
 Updated timings in Apollo 4 scenario to match those in the Mission Report document. Though they were already close!
 Fixed passing of Realism value and audio language from CSM to LEM.
 Added Rmaia's AGC 2.0 changes (e.g. new LEM ascent autopilot)

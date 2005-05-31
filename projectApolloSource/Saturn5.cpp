@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/05/18 23:34:23  movieman523
+  *	Added roughly correct masses for the various Saturn payloads.
+  *	
   *	Revision 1.6  2005/04/20 17:57:16  movieman523
   *	Added AGC restart to Apollo 13.
   *	
@@ -1121,6 +1124,7 @@ void SaturnV::StageSix(double simt)
 
 		case 3:
 			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
 				ActivateSPS();
 				SetThrusterGroupLevel(thg_main, 1.0);
 				NextMissionEventTime = MissionTime + 0.25;
@@ -1212,6 +1216,72 @@ void SaturnV::StageSix(double simt)
 			break;
 
 		case 9:
+			if (MissionTime >= NextMissionEventTime) {
+				DeactivateNavmode(NAVMODE_PROGRADE);
+				DeactivateNavmode(NAVMODE_KILLROT);
+				DeactivateCSMRCS();
+				StageState++;
+			}
+			break;
+
+			//
+			// Final acceleration burn prior to entry.
+			//
+
+		case 10:
+			if (CSMAccelSet) {
+				NextMissionEventTime = CSMAccelTime - 180;
+				StageState++;
+			}
+			break;
+
+		case 11:
+			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+				ActivateCSMRCS();
+				ActivateNavmode(NAVMODE_PROGRADE);
+				NextMissionEventTime = CSMAccelTime;
+				StageState++;
+			}
+			break;
+
+		//
+		// What we really need to do here is ensure that we stay pitched down at the appropriate
+		// level relative to the local horizon. Currently this code will leave us with a perigee
+		// that's way too high, so disable it for now.
+		//
+
+		case 12:
+			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+				ActivateNavmode(NAVMODE_PROGRADE);
+				ActivateSPS();
+//				SetThrusterGroupLevel(thg_main, 1.0);
+				NextMissionEventTime = CSMAccelEnd;
+				StageState++;
+			}
+			break;
+
+		case 13:
+			if (MissionTime >= NextMissionEventTime) {
+				ActivateNavmode(NAVMODE_PROGRADE);
+				SetThrusterGroupLevel(thg_main, 0.0);
+				DeactivateSPS();
+				CSMAccelSet = false;
+				NextMissionEventTime = MissionTime + 10.0;
+				StageState++;
+			}
+			break;
+
+		case 14:
+			if (MissionTime >= NextMissionEventTime) {
+				ActivateNavmode(NAVMODE_KILLROT);
+				NextMissionEventTime = MissionTime + 10.0;
+				StageState++;
+			}
+			break;
+
+		case 15:
 			if (MissionTime >= NextMissionEventTime) {
 				DeactivateNavmode(NAVMODE_PROGRADE);
 				DeactivateNavmode(NAVMODE_KILLROT);

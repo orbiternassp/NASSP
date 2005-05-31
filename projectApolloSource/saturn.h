@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/05/31 00:17:33  movieman523
+  *	Added CSMACCEL variables for unmanned flights which made burns just before re-entry to raise velocity to levels similar to a return from the moon.
+  *	
   *	Revision 1.13  2005/05/26 15:51:11  tschachim
   *	New fuel cell displays and controls
   *	
@@ -698,12 +701,13 @@ protected:
 	double CSMPerigee;
 
 	//
-	// Pre-entry CSM acceleration and velocity for unmanned flights.
+	// Pre-entry CSM acceleration and end time for unmanned flights.
 	//
 
 	bool CSMAccelSet;
 	double CSMAccelTime;
-	double CSMAccelVel;
+	double CSMAccelEnd;
+	double CSMAccelPitch;
 
 	bool TLICapableBooster;
 	bool bAbort;
