@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/05/18 23:34:23  movieman523
+  *	Added roughly correct masses for the various Saturn payloads.
+  *	
   *	Revision 1.11  2005/05/02 12:55:02  tschachim
   *	PanelsdkLogFile test code
   *	
@@ -143,6 +146,10 @@ void Saturn::initSaturn()
 
 	CMSepSet = false;
 	CMSepTime = 0.0;
+
+	CSMAccelSet = false;
+	CSMAccelTime = 0.0;
+	CSMAccelVel = 0.0;
 
 	SIVBBurn = false;
 	SIVBBurnStart = 0.0;
@@ -583,6 +590,12 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 			oapiWriteScenario_float (scn, "CSMBURN", CSMBurnStart);
 		}
 
+		if (CSMAccelSet && (stage <= CM_STAGE))
+		{
+			oapiWriteScenario_float (scn, "CSMACCEL", CSMAccelTime);
+			oapiWriteScenario_float (scn, "CSMACCVEL", CSMAccelVel);
+		}
+
 		if (AutoSlow) {
 			oapiWriteScenario_int (scn, "AUTOSLOW", 1);
 		}
@@ -985,6 +998,15 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "CSMBURN", 7)) {
 			sscanf(line + 7, "%f", &ftcp);
 			CSMBurnStart = ftcp;
+		}
+		else if (!strnicmp(line, "CSMACCEL", 8)) {
+			sscanf(line + 8, "%f", &ftcp);
+			CSMAccelSet = true;
+			CSMAccelTime = ftcp;
+		}
+		else if (!strnicmp(line, "CSMACCVEL", 9)) {
+			sscanf(line + 9, "%f", &ftcp);
+			CSMAccelVel = ftcp;
 		}
 		else if (!strnicmp(line, "LANG", 4)) {
 			strncpy (AudioLanguage, line + 5, 64);

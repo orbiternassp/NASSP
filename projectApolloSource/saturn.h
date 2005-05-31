@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/05/26 15:51:11  tschachim
+  *	New fuel cell displays and controls
+  *	
   *	Revision 1.12  2005/05/18 23:34:23  movieman523
   *	Added roughly correct masses for the various Saturn payloads.
   *	
@@ -667,19 +670,40 @@ protected:
 	bool AutoSlow;
 
 	int SIVBPayload;
+
+	//
+	// CSM seperation info for unmanned flights.
+	//
+
 	bool CSMSepSet;
 	double CSMSepTime;
 	bool CMSepSet;
 	double CMSepTime;
 
+	//
+	// SIVB burn info for unmanned flights.
+	//
+
 	bool SIVBBurn;
 	double SIVBBurnStart;
 	double SIVBApogee;
+
+	//
+	// CSM burn information in unmanned flights.
+	//
 
 	bool CSMBurn;
 	double CSMBurnStart;
 	double CSMApogee;
 	double CSMPerigee;
+
+	//
+	// Pre-entry CSM acceleration and velocity for unmanned flights.
+	//
+
+	bool CSMAccelSet;
+	double CSMAccelTime;
+	double CSMAccelVel;
 
 	bool TLICapableBooster;
 	bool bAbort;
