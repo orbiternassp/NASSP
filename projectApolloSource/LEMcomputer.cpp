@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/05/19 20:26:52  movieman523
+  *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -155,6 +158,56 @@ void LEMcomputer::DisplayNounData(int noun)
 			dsky.SetR3(tsps);
 		}
 		break;
+	//
+	// 18: pitch, roll and yaw angles
+	//
+
+	case 18:
+		{
+		double pitch, roll, yaw;
+		pitch=CurrentVelX;
+		roll=CurrentVelY;
+		yaw=CurrentVelZ;
+		dsky.SetR1((int) pitch);
+		dsky.SetR2((int) roll);
+		dsky.SetR3((int) yaw);
+		}
+		break;
+
+
+	//
+	// 33: Time of ignition  hh-mm-ss
+	//
+
+	case 33:
+		{
+		double dmjd=oapiGetSimMJD();
+		int mjd=(int)dmjd;
+		double times=BurnStartTime-CurrentTimestep+(dmjd-mjd)*86400.;
+//		sprintf(oapiDebugString(),"bst=%.1f cts=%.1f time=%.1f",
+//			BurnStartTime, CurrentTimestep, times);
+		int hou=(int) (times/3600.);
+		times=(int)(times-hou*3600.);
+		int min=(int)(times/60.);
+		times=(int)(times-min*60.);
+		int sec=(int)(times*100.);
+		dsky.SetR1(hou);
+		dsky.SetR2(min);
+		dsky.SetR3(sec);
+		}
+		break;
+
+	//
+	// 43: latitude, longitude, altitude
+	//
+
+	case 43:
+		{
+		dsky.SetR1((int) (LandingLatitude * 100.0));
+		dsky.SetR2((int) (LandingLongitude * 100.0));
+		dsky.SetR3((int) (CurrentAlt/1000.0));
+		}
+		break;
 
 	//
 	// 45: Plane change angle, target LAN (Used by P32)
@@ -175,6 +228,120 @@ void LEMcomputer::DisplayNounData(int noun)
 		{
 			DisplayOrbitCalculations();
 			dsky.SetR3((int)((OurVessel->GetFuelMass() / OurVessel->GetMaxFuelMass()) * 10000.0));
+		}
+		break;
+	//
+	// 60: fwd velocity, Altitude rate, Altitude
+	//
+
+	case 60:
+		{
+			dsky.SetR1((int)(CutOffVel));
+			dsky.SetR2((int)(DesiredApogee));
+			dsky.SetR3((int)(CurrentAlt));
+		}
+		break;
+
+	//
+	// 61: time to go, time from ignition, crossrange distance
+	//
+
+	case 61:
+		{
+			// time to go for braking phase...
+			double dt = BurnTime;
+			double brake=CurrentTimestep-(BurnStartTime+26);
+			if(brake > 0) dt=BurnEndTime-CurrentTimestep;
+//			if(BurnStartTime < 0.0) dt=BurnTime+BurnStartTime;
+			int min = (int) (dt / 60.0);
+			int	sec = ((int) dt) - (min * 60);
+
+			if (min > 99)
+				min = 99;
+
+			dsky.SetR1(min * 1000 + sec);
+			dsky.SetR1Format("XXX XX");
+
+			// time from ignition
+			dt=CurrentTimestep-BurnStartTime;
+			min = (int) (dt / 60.0);
+			sec = ((int) dt) - (min * 60);
+
+			if (min > 99)
+				min = 99;
+
+			dsky.SetR2(min * 1000 + sec);
+			dsky.SetR2Format("XXX XX");
+
+			dsky.SetR3((int) (DesiredDeltaV ));
+		}
+		break;
+
+	//
+	// 62: Velocity, time from ignition, Accumulated deltav
+	//
+	case 62:
+		{
+			dsky.SetR1((int)(CurrentVel*10.0));
+
+			// time from ignition
+			double dt=CurrentTimestep-BurnStartTime;
+			int min = (int) (dt / 60.0);
+			int sec = ((int) dt) - (min * 60);
+
+			if (min > 99)
+				min = 99;
+
+			dsky.SetR2(min * 1000 + sec);
+			dsky.SetR2Format("XXX XX");
+
+			dsky.SetR3((int)(CurrentRVel*10.0));
+		}
+		break;
+
+	//
+	// 63: delta altitude, altitude rate, altitude
+	//
+
+	case 63:
+		{
+			dsky.SetR1((int)((CurrentAlt-15384.0)));
+			dsky.SetR2((int)(DesiredApogee));
+			dsky.SetR3((int)(CurrentAlt));
+		}
+		break;
+
+	//
+	// 64: LPD time, LPD, Altitude rate, Altitude
+	//
+
+	case 64:
+		{
+			dsky.SetR1((int)(CutOffVel));
+			dsky.SetR1Format("XXX XX");
+			dsky.SetR2((int)(DesiredApogee));
+			dsky.SetR3((int)(CurrentAlt));
+		}
+		break;
+
+	//
+	// 68: Distance to landing site, time-to-go until P64, velocity
+	//
+
+	case 68:
+		{
+			dsky.SetR1((int)(DeltaPitchRate/100.0));
+
+			double dt=BurnEndTime-CurrentTimestep;
+			int min = (int) (dt / 60.0);
+			int sec = ((int) dt) - (min * 60);
+
+			if (min > 99)
+				min = 99;
+
+			dsky.SetR2(min * 1000 + sec);
+			dsky.SetR2Format("XXX XX");
+			dsky.SetR3((int)(CurrentVel));
 		}
 		break;
 
@@ -239,8 +406,8 @@ void LEMcomputer::DisplayNounData(int noun)
 	// 89: for now, landing site definition.
 	//
 	case 89:
-		dsky.SetR1((int) (LandingLatitude * 100.0));
-		dsky.SetR2((int) (LandingLongitude * 100.0));
+		dsky.SetR1((int) (LandingLatitude * 1000.0));
+		dsky.SetR2((int) (LandingLongitude * 500.0));
 		dsky.SetR3((int) DisplayAlt(LandingAltitude));
 		break;
 
@@ -324,6 +491,18 @@ bool LEMcomputer::ValidateProgram(int prog)
 		return true;
 
 	//
+	// 64: Approach phase
+	//
+	case 64:
+		return true;
+
+	//
+	// 65: Landing Phase - Automatic
+	//
+	case 65:
+		return true;
+
+	//
 	// 68: landing confirmation.
 	//
 	case 68:
@@ -361,6 +540,22 @@ void LEMcomputer::Timestep(double simt)
 
 	case 63:
 		Prog63(simt);
+		break;
+
+	//
+	// 64: Approach
+	//
+
+	case 64:
+		Prog64(simt);
+		break;
+
+	//
+	// 65: Landing Phase
+	//
+
+	case 65:
+		Prog65(simt);
 		break;
 
 	//
@@ -513,11 +708,11 @@ bool LEMcomputer::ReadMemory(unsigned int loc, int &val)
 	switch (loc)
 	{
 	case 0110:
-		val = (int) (LandingLatitude * 100.0);
+		val = (int) (LandingLatitude * 1000.0);
 		return true;
 
 	case 0111:
-		val = (int) (LandingLongitude * 100.0);
+		val = (int) (LandingLongitude * 1000.0);
 		return true;
 
 	case 0112:
@@ -543,11 +738,11 @@ void LEMcomputer::WriteMemory(unsigned int loc, int val)
 
 	switch (loc) {
 	case 0110:
-		LandingLatitude = ((double) val) / 100.0;
+		LandingLatitude = ((double) val) / 1000.0;
 		break;
 
 	case 0111:
-		LandingLongitude = ((double) val) / 100.0;
+		LandingLongitude = ((double) val) / 1000.0;
 		break;
 
 	case 0112:
