@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/05/19 20:26:52  movieman523
+  *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
+  *	
   *	Revision 1.1  2005/02/11 12:17:54  tschachim
   *	Initial version
   *	
@@ -122,10 +125,14 @@ protected:
 	void ProgPressed(int R1, int R2, int R3);
 	void ProceedNoData();
 	void TerminateProgram();
+	// Descent routines
 	void Prog63(double simt);
+	void Prog64(double simt);
+	void Prog65(double simt);
 	void Prog68(double simt);
 	void Prog63Pressed(int R1, int R2, int R3);
 	void Prog68Pressed(int R1, int R2, int R3) { ProgState++; };
+	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt);
 	bool OrbitCalculationsValid();
 	bool DescentPhase();
 	bool AscentPhase();
