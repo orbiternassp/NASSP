@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/05/26 15:58:40  tschachim
+  *	New fuel cell displays and controls
+  *	Some code moved for better readability
+  *	
   *	Revision 1.23  2005/05/12 00:26:58  movieman523
   *	Added O2 tank quantity failure on Apollo 13.
   *	
@@ -681,8 +685,8 @@ void Saturn::InitPanel (int panel)
 		srf[5]						= oapiCreateSurface (LOADBMP (IDB_HORIZON2));
 		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		srf[7]						= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
-		srf[8]						= oapiCreateSurface (LOADBMP (IDB_SECSWITCH));
-		srf[9]						= oapiCreateSurface (LOADBMP (IDB_ABORT));
+		srf[SRF_SWITCHGUARDS]		= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDS));
+		srf[SRF_ABORT]				= oapiCreateSurface (LOADBMP (IDB_ABORT));
 		srf[10]						= oapiCreateSurface (LOADBMP (IDB_ANNUN));
 		srf[11]						= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
 		srf[12]						= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
@@ -690,7 +694,7 @@ void Saturn::InitPanel (int panel)
 		srf[14]						= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
 		srf[15]						= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
 		srf[16]						= oapiCreateSurface (LOADBMP (IDB_THRUST));
-		srf[17]						= oapiCreateSurface (LOADBMP (IDB_GUARDSWITCH));
+		srf[SRF_SEQUENCERSWITCHES]	= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
 		srf[18]						= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
 		srf[19]						= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
 		//srf[20]				    = oapiCreateSurface (LOADBMP (IDB_BUTTON));
@@ -702,14 +706,18 @@ void Saturn::InitPanel (int panel)
 		srf[26]						= oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
 		srf[SRF_ROTATIONALSWITCH]	= oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
 				
-		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],			g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[3],					0);
-		oapiSetSurfaceColourKey (srf[5],					g_Param.col[5]);
-		oapiSetSurfaceColourKey (srf[14],					g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[15],					g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[16],					g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[22],					g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[SRF_ROTATIONALSWITCH],	g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[3],						0);
+		oapiSetSurfaceColourKey (srf[5],						g_Param.col[5]);
+		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SWITCHGUARDS],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[14],						g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[15],						g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[16],						g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SEQUENCERSWITCHES],	g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[22],						g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_ROTATIONALSWITCH],		g_Param.col[4]);
 /*		break;
 	}
 */
@@ -918,36 +926,38 @@ bool Saturn::clbkLoadPanel (int id)
 	switch (id) {
 	
 	case SATPANEL_LOWER: // guidance & navigation lower equipment bay
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1582,  341, 1687,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1438,  346, 1540,  466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1418,  536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1582,  341, 1687,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1438,  346, 1540,  466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1418,  536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		break;    
 	
 	case SATPANEL_MAIN: // main instrument panel
-		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835,  305, 1973,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862,  600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843,  735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1912,  490, 2488,  520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173,  315, 2495,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CABININDICATORS,        						_R(2278,  593, 2504,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLINDICATORS,		    				_R(2763,  319, 2913,  443), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);		
-		oapiRegisterPanelArea (AID_FUELCELLPHRADTEMPINDICATORS,	  				_R(2822,  490, 3019,  513), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLRADIATORSINDICATORS,    				_R(2822,  539, 2931,  562), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLRADIATORSSWITCHES,    				_R(2816,  607, 2937,  637), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLINDICATORSSWITCH,    				_R(3029,  629, 3117,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLHEATERSSWITCHES,	    				_R(2817,  695, 2938,  725), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLREACTANTSINDICATORS,    				_R(2823,  893, 3061,  917), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2757,  955, 3131,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862,  600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SEQUENCERSWITCHES,							_R( 802,  918,  990, 1100), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843,  735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SEPARATIONSWITCHES,		    				_R(1087,  942, 1340, 1004), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835,  305, 1973,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1912,  490, 2488,  520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173,  315, 2495,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABININDICATORS,        						_R(2278,  593, 2504,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLINDICATORS,		    				_R(2763,  319, 2913,  443), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_FUELCELLPHRADTEMPINDICATORS,	  				_R(2822,  490, 3019,  513), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLRADIATORSINDICATORS,    				_R(2822,  539, 2931,  562), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLRADIATORSSWITCHES,    				_R(2816,  607, 2937,  637), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLINDICATORSSWITCH,    				_R(3029,  629, 3117,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLHEATERSSWITCHES,	    				_R(2817,  695, 2938,  725), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLREACTANTSINDICATORS,    				_R(2823,  893, 3061,  917), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2757,  955, 3131,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		// display & keyboard (DSKY):		
-		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		break;    
 
@@ -1007,18 +1017,39 @@ void Saturn::SetSwitches(int panel) {
 
 	MainPanel.Init(0, this, &soundlib, this);
 
-	CryoTankRow.Init(AID_CYROTANKSWITCHES, MainPanel);
-	CabinFan1Switch.Init (  0, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow); 
-	CabinFan2Switch.Init ( 59, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow);
-	H2Heater1Switch.Init (114, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	H2Heater2Switch.Init (157, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2Heater1Switch.Init (200, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2Heater2Switch.Init (250, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2PressIndSwitch.Init(293, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankRow); 
-	H2Fan1Switch.Init    (349, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	H2Fan2Switch.Init    (413, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2Fan1Switch.Init    (478, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
-	O2Fan2Switch.Init    (541, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankRow);
+	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
+	LiftoffNoAutoAbortSwitch.Init     ( 20, 2, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 81);
+	LiftoffNoAutoAbortSwitch.InitGuard(  0, 0, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
+	CsmLvSepSwitch.Init				  ( 20, 142, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 195);
+	CsmLvSepSwitch.InitGuard		  (  0, 140, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
+	CmRcsHeDumpSwitch.Init			  (127, 142, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 347);
+	CmRcsHeDumpSwitch.InitGuard		  ( 94, 140, 92, 40, srf[SRF_SEQUENCERSWITCHES], 0, 40);
+	 
+	SeparationSwitchesRow.Init(AID_SEPARATIONSWITCHES, MainPanel);
+	EDSSwitch.Init				  (  0,	16, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
+	CsmLmFinalSep1Switch.Init	  ( 44, 19, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
+	CsmLmFinalSep1Switch.InitGuard( 44,  0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	CsmLmFinalSep2Switch.Init	  ( 87, 19, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
+	CsmLmFinalSep2Switch.InitGuard( 87,  0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	CmSmSep1Switch.Init			  (131, 19, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
+	CmSmSep1Switch.InitGuard      (131,  0, 34, 61, srf[SRF_SWITCHGUARDS], 68);
+	CmSmSep2Switch.Init			  (175, 19, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
+	CmSmSep2Switch.InitGuard      (175,  0, 34, 61, srf[SRF_SWITCHGUARDS], 68);
+	SivbLmSepSwitch.Init		  (219, 19, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
+	SivbLmSepSwitch.InitGuard     (219,  0, 34, 61, srf[SRF_SWITCHGUARDS]);
+
+	CryoTankSwitchesRow.Init(AID_CYROTANKSWITCHES, MainPanel);
+	CabinFan1Switch.Init (  0, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankSwitchesRow); 
+	CabinFan2Switch.Init ( 59, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankSwitchesRow);
+	H2Heater1Switch.Init (114, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
+	H2Heater2Switch.Init (157, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
+	O2Heater1Switch.Init (200, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
+	O2Heater2Switch.Init (250, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
+	O2PressIndSwitch.Init(293, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankSwitchesRow); 
+	H2Fan1Switch.Init    (349, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
+	H2Fan2Switch.Init    (413, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
+	O2Fan1Switch.Init    (478, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
+	O2Fan2Switch.Init    (541, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
 
 	FuelCellPhRadTempIndicatorsRow.Init(AID_FUELCELLPHRADTEMPINDICATORS, MainPanel);
 	FuelCellPhIndicator.Init     (  0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
@@ -1056,7 +1087,7 @@ void Saturn::SetSwitches(int panel) {
 	// old stuff
 
 	SPSRow.Init(AID_SPS, MainPanel);
-	EDSRow.Init(AID_EDS, MainPanel);
+	//EDSRow.Init(AID_EDS, MainPanel);
 	LPRow.Init(AID_SWITCH_PANEL_LEFT, MainPanel);
 	HUDRow.Init(AID_SWITCH_HUD, MainPanel);
 	NAVRow1.Init(AID_SWITCH_AUTO, MainPanel);
@@ -1097,7 +1128,7 @@ void Saturn::SetSwitches(int panel) {
 	LPSRow.Init(AID_LEM_POWER_SWITCH, MainPanel);
 
 	SPSswitch.Init(0, 0, 30, 39, srf[7], SPSRow);
-	EDSswitch.Init(0, 0, 23, 20, srf[6], EDSRow);
+	//EDSswitch.Init(0, 0, 23, 20, srf[6], EDSRow);
 
 	LPswitch1.Init(36, 7, 23, 20, srf[6], SRP1Row);
 	LPswitch2.Init(68, 7, 23, 20, srf[6], SRP1Row);
@@ -1269,647 +1300,10 @@ void Saturn::SetSwitches(int panel) {
 	IMUswitchRow.Init(AID_IMU_SWITCH, MainPanel);
 	IMUswitch.Init( 1, 16, 23, 20, srf[6], IMUswitchRow);	// ToggleSwitch
 	//IMUswitch.Init( 1, 16, 23, 20, srf[23], IMUswitchRow);	// ThreePosSwitch
-	IMUswitch.InitGuard(0, 0, 25, 45, srf[8], soundlib);
+	IMUswitch.InitGuard(0, 0, 25, 45, srf[8]);
 
 	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
 	RCSIndicatorsSwitch.Init(0, 0, 64, 64, srf[27], RCSIndicatorsSwitchRow);
-}
-
-//
-// Scenario state functions.
-//
-
-//
-// The switch functions just pack the different switch areas from the control panel
-// into 32-bit integers and unpack them from those integers. This provides a much more
-// compact means of storing the switch states in the scenario file than saving them as
-// individual values for each switch.
-//
-
-typedef union {
-	struct {
-		unsigned Cswitch1:1;
-		unsigned Cswitch2:1;
-		unsigned Cswitch3:1;
-		unsigned Cswitch4:1;
-		unsigned Cswitch5:1;
-		unsigned Cswitch6:1;
-		unsigned Cswitch7:1;
-		unsigned Cswitch8:1;
-		unsigned Cswitch9:1;
-		unsigned DVCswitch:1;
-		unsigned DVBCswitch:1;
-		unsigned ELSCswitch:1;
-		unsigned CMDCswitch:1;
-		unsigned CMPCswitch:1;
-		unsigned IMUCswitch:1;
-		unsigned MRswitch:1;
-		unsigned MRCswitch:1;
-		unsigned TJ1switch:1;
-		unsigned TJ1Cswitch:1;
-		unsigned TJ2switch:1;
-		unsigned TJ2Cswitch:1;
-		unsigned IUswitch:1;
-		unsigned IUCswitch:1;
-		unsigned LVSswitch:1;
-		unsigned LVSCswitch:1;
-		unsigned DPswitch:1;
-		unsigned DPCswitch:1;
-		unsigned CMRHGswitch:1;
-	} u;
-	unsigned long word;
-} CSwitchState;
-
-int Saturn::GetCSwitchState()
-
-{
-	CSwitchState state;
-
-	state.word = 0;
-	state.u.Cswitch1 = Cswitch1;
-	state.u.Cswitch2 = Cswitch2;
-	state.u.Cswitch3 = Cswitch3;
-	state.u.Cswitch4 = Cswitch4;
-	state.u.Cswitch5 = Cswitch5;
-	state.u.Cswitch6 = Cswitch6;
-	state.u.Cswitch7 = Cswitch7;
-	state.u.Cswitch8 = Cswitch8;
-	state.u.Cswitch9 = Cswitch9;
-	state.u.DVCswitch = DVCswitch;
-	state.u.DVBCswitch = DVBCswitch;
-	state.u.ELSCswitch = ELSCswitch;
-	state.u.CMDCswitch = CMDCswitch;
-	state.u.CMPCswitch = CMPCswitch;
-	state.u.IMUCswitch = IMUswitch.GetGuardState(); // IMUCswitch;
-	state.u.MRswitch = MRswitch;
-	state.u.MRCswitch = MRCswitch;
-	state.u.TJ1switch = TJ1switch;
-	state.u.TJ1Cswitch = TJ1Cswitch;
-	state.u.TJ2switch = TJ2switch;
-	state.u.TJ2Cswitch = TJ2Cswitch;
-	state.u.IUswitch = IUswitch;
-	state.u.IUCswitch = IUCswitch;
-	state.u.LVSswitch = LVSswitch;
-	state.u.LVSCswitch = LVSCswitch;
-	state.u.DPswitch = DPswitch;
-	state.u.DPCswitch = DPCswitch;
-	state.u.CMRHGswitch = CMRHGswitch;
-
-	return state.word;
-}
-
-void Saturn::SetCSwitchState(int s)
-
-{
-	CSwitchState state;
-
-	state.word = s;
-	Cswitch1 = state.u.Cswitch1;
-	Cswitch2 = state.u.Cswitch2;
-	Cswitch3 = state.u.Cswitch3;
-	Cswitch4 = state.u.Cswitch4;
-	Cswitch5 = state.u.Cswitch5;
-	Cswitch6 = state.u.Cswitch6;
-	Cswitch7 = state.u.Cswitch7;
-	Cswitch8 = state.u.Cswitch8;
-	Cswitch9 = state.u.Cswitch9;
-	DVCswitch = state.u.DVCswitch;
-	DVBCswitch = state.u.DVBCswitch;
-	ELSCswitch = state.u.ELSCswitch;
-	CMDCswitch = state.u.CMDCswitch;
-	CMPCswitch = state.u.CMPCswitch;
-	IMUswitch.SetGuardState(state.u.IMUCswitch);   //IMUCswitch = state.u.IMUCswitch;
-	MRswitch = state.u.MRswitch;
-	MRCswitch = state.u.MRCswitch;
-	TJ1switch = state.u.TJ1switch;
-	TJ1Cswitch = state.u.TJ1Cswitch;
-	TJ2switch = state.u.TJ2switch;
-	TJ2Cswitch = state.u.TJ2Cswitch;
-	IUswitch = state.u.IUswitch;
-	IUCswitch = state.u.IUCswitch;
-	LVSswitch = state.u.LVSswitch;
-	LVSCswitch = state.u.LVSCswitch;
-	DPswitch = state.u.DPswitch;
-	DPCswitch = state.u.DPCswitch;
-	CMRHGswitch = state.u.CMRHGswitch;
-}
-
-typedef union {
-	struct {
-		unsigned Sswitch1:1;
-		unsigned Sswitch2:1;
-		unsigned Sswitch3:1;
-		unsigned Sswitch4:1;
-		unsigned Sswitch5:1;
-		unsigned Sswitch6:1;
-		unsigned Sswitch7:1;
-		unsigned Sswitch8:1;
-		unsigned Sswitch9:1;
-		unsigned DVAswitch:1;
-		unsigned DVBswitch:1;
-		unsigned ELSswitch:1;
-		unsigned CMDswitch:1;
-		unsigned CMPswitch:1;
-		unsigned IMUswitch:1;
-		unsigned CMRHDswitch:1;
-	} u;
-	unsigned long word;
-} SSwitchState;
-
-int Saturn::GetSSwitchState()
-
-{
-	SSwitchState state;
-
-	state.word = 0;
-	state.u.Sswitch1 = Sswitch1;
-	state.u.Sswitch2 = Sswitch2;
-	state.u.Sswitch3 = Sswitch3;
-	state.u.Sswitch4 = Sswitch4;
-	state.u.Sswitch5 = Sswitch5;
-	state.u.Sswitch6 = Sswitch6;
-	state.u.Sswitch7 = Sswitch7;
-	state.u.Sswitch8 = Sswitch8;
-	state.u.Sswitch9 = Sswitch9;
-	state.u.DVAswitch = DVAswitch;
-	state.u.DVBswitch = DVBswitch;
-	state.u.ELSswitch = ELSswitch;
-	state.u.CMDswitch = CMDswitch;
-	state.u.CMPswitch = CMPswitch;
-	state.u.IMUswitch = IMUswitch;
-	state.u.CMRHDswitch = CMRHDswitch;
-
-	return state.word;
-}
-
-void Saturn::SetSSwitchState(int s)
-
-{
-	SSwitchState state;
-
-	state.word = s;
-	Sswitch1 = state.u.Sswitch1;
-	Sswitch2 = state.u.Sswitch2;
-	Sswitch3 = state.u.Sswitch3;
-	Sswitch4 = state.u.Sswitch4;
-	Sswitch5 = state.u.Sswitch5;
-	Sswitch6 = state.u.Sswitch6;
-	Sswitch7 = state.u.Sswitch7;
-	Sswitch8 = state.u.Sswitch8;
-	Sswitch9 = state.u.Sswitch9;
-	DVAswitch = state.u.DVAswitch;
-	DVBswitch = state.u.DVBswitch;
-	ELSswitch = state.u.ELSswitch;
-	CMDswitch = state.u.CMDswitch;
-	CMPswitch = state.u.CMPswitch;
-	IMUswitch = state.u.IMUswitch;
-	CMRHDswitch = state.u.CMRHDswitch;
-}
-
-typedef union {
-	struct {
-		unsigned LPswitch1:1;
-		unsigned LPswitch2:1;
-		unsigned LPswitch3:1;
-		unsigned LPswitch4:1;
-		unsigned LPswitch5:1;
-		unsigned LPswitch6:1;
-		unsigned LPswitch7:1;
-		unsigned SPSswitch:1;
-		unsigned EDSswitch:1;
-		unsigned P11switch:1;
-		unsigned P12switch:1;
-		unsigned P13switch:1;
-		unsigned P14switch:1;
-		unsigned P15switch:1;
-		unsigned P16switch:1;
-		unsigned SCswitch:1;
-		unsigned TLIswitch:1;
-		unsigned P111switch:1;
-		unsigned P112switch:1;
-		unsigned P113switch:1;
-		unsigned FCSMswitch:1;
-		unsigned EMSKswitch:1;
-	} u;
-	unsigned long word;
-} LPSwitchState;
-
-int Saturn::GetLPSwitchState()
-
-{
-	LPSwitchState state;
-
-	state.word = 0;
-	state.u.LPswitch1 = LPswitch1;
-	state.u.LPswitch2 = LPswitch2;
-	state.u.LPswitch3 = LPswitch3;
-	state.u.LPswitch4 = LPswitch4;
-	state.u.LPswitch5 = LPswitch5;
-	state.u.LPswitch6 = LPswitch6;
-	state.u.LPswitch7 = LPswitch7;
-	state.u.SPSswitch = SPSswitch;
-	state.u.EDSswitch = EDSswitch;
-	state.u.P11switch = P11switch;
-	state.u.P12switch = P12switch;
-	state.u.P13switch = P13switch;
-	state.u.P14switch = P14switch;
-	state.u.P15switch = P15switch;
-	state.u.P16switch = P16switch;
-	state.u.SCswitch = SCswitch;
-	state.u.TLIswitch = TLIswitch;
-	state.u.P111switch = P111switch;
-	state.u.P112switch = P112switch;
-	state.u.P113switch = P113switch;
-	state.u.FCSMswitch = FCSMswitch;
-	state.u.EMSKswitch = EMSKswitch;
-
-	return state.word;
-}
-
-void Saturn::SetLPSwitchState(int s)
-
-{
-	LPSwitchState state;
-
-	state.word = s;
-	LPswitch1 = state.u.LPswitch1;
-	LPswitch2 = state.u.LPswitch2;
-	LPswitch3 = state.u.LPswitch3;
-	LPswitch4 = state.u.LPswitch4;
-	LPswitch5 = state.u.LPswitch5;
-	LPswitch6 = state.u.LPswitch6;
-	LPswitch7 = state.u.LPswitch7;
-	SPSswitch = state.u.SPSswitch;
-	EDSswitch = state.u.EDSswitch;
-	P11switch = state.u.P11switch;
-	P12switch = state.u.P12switch;
-	P13switch = state.u.P13switch;
-	P14switch = state.u.P14switch;
-	P15switch = state.u.P15switch;
-	P16switch = state.u.P16switch;
-	SCswitch = state.u.SCswitch;
-	TLIswitch = state.u.TLIswitch;
-	P111switch = state.u.P111switch;
-	P112switch = state.u.P112switch;
-	P113switch = state.u.P113switch;
-	FCSMswitch = state.u.FCSMswitch;
-	EMSKswitch = state.u.EMSKswitch;
-}
-
-typedef union {
-	struct {
-		unsigned RPswitch1:1;
-		unsigned RPswitch2:1;
-		unsigned RPswitch3:1;
-		unsigned RPswitch4:1;
-		unsigned RPswitch5:1;
-		unsigned RPswitch6:1;
-		unsigned RPswitch7:1;
-		unsigned RPswitch8:1;
-		unsigned RPswitch9:1;
-		unsigned RPswitch10:1;
-		unsigned RPswitch11:1;
-		unsigned RPswitch12:1;
-		unsigned RPswitch13:1;
-		unsigned RPswitch14:1;
-		unsigned RPswitch16:1;
-		unsigned RPCswitch:1;
-		unsigned CMRswitch:1;
-		unsigned CMRCswitch:1;
-		unsigned CMCswitch:1;
-	} u;
-	unsigned long word;
-} RPSwitchState;
-
-int Saturn::GetRPSwitchState()
-
-{
-	RPSwitchState state;
-
-	state.word = 0;
-	state.u.RPswitch1 = RPswitch1;
-	state.u.RPswitch2 = RPswitch2;
-	state.u.RPswitch3 = RPswitch3;
-	state.u.RPswitch4 = RPswitch4;
-	state.u.RPswitch5 = RPswitch5;
-	state.u.RPswitch6 = RPswitch6;
-	state.u.RPswitch7 = RPswitch7;
-	state.u.RPswitch8 = RPswitch8;
-	state.u.RPswitch9 = RPswitch9;
-	state.u.RPswitch10 = RPswitch10;
-	state.u.RPswitch11 = RPswitch11;
-	state.u.RPswitch12 = RPswitch12;
-	state.u.RPswitch13 = RPswitch13;
-	state.u.RPswitch14 = RPswitch14;
-	state.u.RPswitch16 = RPswitch16;
-	state.u.RPCswitch = RPCswitch;
-	state.u.CMRswitch = CMRswitch;
-	state.u.CMRCswitch = CMRCswitch;
-	state.u.CMCswitch = CMCswitch;
-
-	return state.word;
-}
-
-void Saturn::SetRPSwitchState(int s)
-
-{
-	RPSwitchState state;
-
-	state.word = s;
-	RPswitch1 = state.u.RPswitch1;
-	RPswitch2 = state.u.RPswitch2;
-	RPswitch3 = state.u.RPswitch3;
-	RPswitch4 = state.u.RPswitch4;
-	RPswitch5 = state.u.RPswitch5;
-	RPswitch6 = state.u.RPswitch6;
-	RPswitch7 = state.u.RPswitch7;
-	RPswitch8 = state.u.RPswitch8;
-	RPswitch9 = state.u.RPswitch9;
-	RPswitch10 = state.u.RPswitch10;
-	RPswitch11 = state.u.RPswitch11;
-	RPswitch12 = state.u.RPswitch12;
-	RPswitch13 = state.u.RPswitch13;
-	RPswitch14 = state.u.RPswitch14;
-	RPswitch16 = state.u.RPswitch16;
-	RPCswitch = state.u.RPCswitch;
-	CMRswitch = state.u.CMRswitch;
-	CMRCswitch = state.u.CMRCswitch;
-	CMCswitch = state.u.CMCswitch;
-}
-
-typedef union {
-	struct {
-		unsigned RH11switch:1;
-		unsigned RH12switch:1;
-		unsigned RH13switch:1;
-		unsigned RH14switch:1;
-		unsigned RH21switch:1;
-		unsigned RH22switch:1;
-		unsigned RH23switch:1;
-		unsigned RH24switch:1;
-		unsigned PP1switch:1;
-		unsigned PP2switch:1;
-		unsigned PP3switch:1;
-		unsigned PP4switch:1;
-		unsigned P21switch:1;
-		unsigned P22switch:1;
-		unsigned P23switch:1;
-		unsigned P29switch:1;
-		unsigned P210switch:1;
-		unsigned P211switch:1;
-	} u;
-	unsigned long word;
-} CPSwitchState;
-
-int Saturn::GetCPSwitchState()
-
-{
-	CPSwitchState state;
-
-	state.word = 0;
-	state.u.RH11switch = RH11switch;
-	state.u.RH12switch = RH12switch;
-	state.u.RH13switch = RH13switch;
-	state.u.RH14switch = RH14switch;
-	state.u.RH21switch = RH21switch;
-	state.u.RH22switch = RH22switch;
-	state.u.RH23switch = RH23switch;
-	state.u.RH24switch = RH24switch;
-	state.u.PP1switch = PP1switch;
-	state.u.PP2switch = PP2switch;
-	state.u.PP3switch = PP3switch;
-	state.u.PP4switch = PP4switch;
-	state.u.P21switch = P21switch;
-	state.u.P22switch = P22switch;
-	state.u.P23switch = P23switch;
-	state.u.P29switch = P29switch;
-	state.u.P210switch = P210switch;
-	state.u.P211switch = P211switch;
-
-	return state.word;
-}
-
-void Saturn::SetCPSwitchState(int s)
-
-{
-	CPSwitchState state;
-
-	state.word = s;
-	RH11switch = state.u.RH11switch;
-	RH12switch = state.u.RH12switch;
-	RH13switch = state.u.RH13switch;
-	RH14switch = state.u.RH14switch;
-	RH21switch = state.u.RH21switch;
-	RH22switch = state.u.RH22switch;
-	RH23switch = state.u.RH23switch;
-	RH24switch = state.u.RH24switch;
-	PP1switch = state.u.PP1switch;
-	PP2switch = state.u.PP2switch;
-	PP3switch = state.u.PP3switch;
-	PP4switch = state.u.PP4switch;
-	P21switch = state.u.P21switch;
-	P22switch = state.u.P22switch;
-	P23switch = state.u.P23switch;
-	P29switch = state.u.P29switch;
-	P210switch = state.u.P210switch;
-	P211switch = state.u.P211switch;
-
-}
-
-typedef union {
-	struct {
-		unsigned CR1switch:1;
-		unsigned CR2switch:1;
-		unsigned SP1switch:1;
-		unsigned SP2switch:1;
-		unsigned SP3switch:1;
-		unsigned SP4switch:1;
-		unsigned P221switch:1;
-		unsigned CFswitch1:1;
-		unsigned CFswitch2:1;
-	} u;
-	unsigned long word;
-} CP2SwitchState;
-
-int Saturn::GetCP2SwitchState()
-
-{
-	CP2SwitchState state;
-
-	state.word = 0;
-	state.u.CR1switch = CR1switch;
-	state.u.CR2switch = CR2switch;
-	state.u.SP1switch = SP1switch;
-	state.u.SP2switch = SP2switch;
-	state.u.SP3switch = SP3switch;
-	state.u.SP4switch = SP4switch;
-	state.u.P221switch = P221switch;
-	state.u.CFswitch1 = CabinFan1Switch;
-	state.u.CFswitch2 = CabinFan2Switch;
-
-	return state.word;
-}
-
-void Saturn::SetCP2SwitchState(int s)
-
-{
-	CP2SwitchState state;
-
-	state.word = s;
-	CR1switch = state.u.CR1switch;
-	CR2switch = state.u.CR2switch;
-	SP1switch = state.u.SP1switch;
-	SP2switch = state.u.SP2switch;
-	SP3switch = state.u.SP3switch;
-	SP4switch = state.u.SP4switch;
-	P221switch = state.u.P221switch;
-	CabinFan1Switch = state.u.CFswitch1;
-	CabinFan2Switch = state.u.CFswitch2;
-
-}
-
-typedef union {
-	struct {
-		unsigned P31switch:1;
-		unsigned P32switch:1;
-		unsigned P33switch:1;
-		unsigned FCRswitch1:1;
-		unsigned FCRswitch2:1;
-		unsigned FCRswitch3:1;
-		unsigned FCBswitch1:1;
-		unsigned FCBswitch2:1;
-		unsigned FCBswitch3:1;
-	} u;
-	unsigned long word;
-} CP3SwitchState;
-
-int Saturn::GetCP3SwitchState()
-
-{
-	CP3SwitchState state;
-
-	state.word = 0;
-	state.u.P31switch = P31switch;
-	state.u.P32switch = P32switch;
-	state.u.P33switch = P33switch;
-	state.u.FCRswitch1 = FCRswitch1;
-	state.u.FCRswitch2 = FCRswitch2;
-	state.u.FCRswitch3 = FCRswitch3;
-	state.u.FCBswitch1 = FCBswitch1;
-	state.u.FCBswitch2 = FCBswitch2;
-	state.u.FCBswitch3 = FCBswitch3;
-
-	return state.word;
-}
-
-void Saturn::SetCP3SwitchState(int s)
-
-{
-	CP3SwitchState state;
-
-	state.word = s;
-	P31switch = state.u.P31switch;
-	P32switch = state.u.P32switch;
-	P33switch = state.u.P33switch;
-	FCRswitch1 = state.u.FCRswitch1;
-	FCRswitch2 = state.u.FCRswitch2;
-	FCRswitch3 = state.u.FCRswitch3;
-	FCBswitch1 = state.u.FCBswitch1;
-	FCBswitch2 = state.u.FCBswitch2;
-	FCBswitch3 = state.u.FCBswitch3;
-
-}
-
-typedef union {
-	struct {
-		unsigned SRHswitch1:1;
-		unsigned SRHswitch2:1;
-		unsigned FCswitch1:1;
-		unsigned FCswitch2:1;
-		unsigned FCswitch3:1;
-		unsigned FCswitch4:1;
-		unsigned FCswitch5:1;
-		unsigned FCswitch6:1;
-		unsigned P114switch:1;
-		unsigned P115switch:1;
-		unsigned P116switch:1;
-		unsigned P117switch:1;
-	} u;
-	unsigned long word;
-} CP4SwitchState;
-
-int Saturn::GetCP4SwitchState()
-
-{
-	CP4SwitchState state;
-
-	state.word = 0;
-	state.u.SRHswitch1 = SRHswitch1;
-	state.u.SRHswitch2 = SRHswitch2;
-	state.u.FCswitch1 = FCswitch1;
-	state.u.FCswitch2 = FCswitch2;
-	state.u.FCswitch3 = FCswitch3;
-	state.u.FCswitch4 = FCswitch4;
-	state.u.FCswitch5 = FCswitch5;
-	state.u.FCswitch6 = FCswitch6;
-	state.u.P114switch = P114switch;
-	state.u.P115switch = P115switch;
-	state.u.P116switch = P116switch;
-	state.u.P117switch = P117switch;
-
-	return state.word;
-}
-
-void Saturn::SetCP4SwitchState(int s)
-
-{
-	CP4SwitchState state;
-
-	state.word = s;
-	SRHswitch1 = state.u.SRHswitch1;
-	SRHswitch2 = state.u.SRHswitch2;
-	FCswitch1 = state.u.FCswitch1;
-	FCswitch2 = state.u.FCswitch2;
-	FCswitch3 = state.u.FCswitch3;
-	FCswitch4 = state.u.FCswitch4;
-	FCswitch5 = state.u.FCswitch5;
-	FCswitch6 = state.u.FCswitch6;
-	P114switch = state.u.P114switch;
-	P115switch = state.u.P115switch;
-	P116switch = state.u.P116switch;
-	P117switch = state.u.P117switch;
-
-}
-
-typedef union {
-	struct {
-		unsigned P328switch:1;
-		unsigned P329switch:1;
-	} u;
-	unsigned long word;
-} CP5SwitchState;
-
-int Saturn::GetCP5SwitchState()
-
-{
-	CP5SwitchState state;
-
-	state.word = 0;
-	state.u.P328switch = P328switch;
-	state.u.P329switch = P329switch;
-
-	return state.word;
-}
-
-void Saturn::SetCP5SwitchState(int s)
-
-{
-	CP5SwitchState state;
-
-	state.word = s;
-	P328switch = state.u.P328switch;
-	P329switch = state.u.P329switch;
-
 }
 
 void SetupgParam(HINSTANCE hModule)
@@ -2372,7 +1766,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_CSM_SIVB_SEP_SWITCH:
+/*	case AID_CSM_SIVB_SEP_SWITCH:
 		if(event & PANEL_MOUSE_RBDOWN){
 			if(mx <69 ){
 				Cswitch5 = !Cswitch5;
@@ -2489,7 +1883,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 		}
 		return true;
-
+*/
 	case AID_TLI_SWITCH:
 	if (my >=0 && my <=10 ){
 			    if (mx > 7 && mx < 18 && !TLIswitch){
@@ -2832,7 +2226,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 }
 
 
-#include "PanelSDK/Internals/Esystems.h"
+//#include "PanelSDK/Internals/Esystems.h"
 
 void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
@@ -3091,6 +2485,24 @@ void Saturn::StopMasterAlarm()
 
 bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 
+	//
+	// Special handling illuminated "sequencer switches"
+	//
+
+	if (LAUNCHIND[0]){
+		if (EDSSwitch.GetState())
+			LiftoffNoAutoAbortSwitch.SetOffset(78, 81);
+		else
+			LiftoffNoAutoAbortSwitch.SetOffset(234, 81);
+
+	} else {
+		LiftoffNoAutoAbortSwitch.SetOffset(0, 81);
+	}
+
+	//
+	// Special handling for docking panel
+	//
+
 	if (id == AID_SM_RCS_MODE) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
 			if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
@@ -3120,6 +2532,22 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 	//
 
 	switch (id) {
+	case AID_DSKY_LIGHTS:
+		dsky.RenderLights(surf, srf[SRF_DSKY]);
+		return true;
+
+	case AID_DSKY_DISPLAY:
+		dsky.RenderData(surf, srf[4]);
+		return true;
+
+	case AID_ABORT_BUTTON:
+		if (ABORT_IND) {
+			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
+		} else {
+			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
+		}
+		return true;
+
 	case AID_CYROTANKINDICATORS:
 		RedrawPanel_CryoTankIndicators(surf);
 		return true;
@@ -3132,7 +2560,94 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		RedrawPanel_FuelCellIndicators(surf);
 		return true;
 
-	
+	case AID_LV_ENGINE_LIGHTS:
+		if (ENGIND[0]) {
+			oapiBlt(surf,srf[12],55,44,55,44,27,27);
+		} else {
+			oapiBlt(surf,srf[12],55,44,157,44,27,27);
+		}
+		if (ENGIND[1]) {
+			oapiBlt(surf,srf[12],55,98,55,98,27,27);
+		} else {
+			oapiBlt(surf,srf[12],55,98,157,98,27,27);
+		}
+		if (ENGIND[2]) {
+			oapiBlt(surf,srf[12],20,98,20,98,27,27);
+		} else {
+			oapiBlt(surf,srf[12],20,98,122,98,27,27);
+		}
+		if (ENGIND[3]) {
+			oapiBlt(surf,srf[12],20,44,20,44,27,27);
+		} else {
+			oapiBlt(surf,srf[12],20,44,122,44,27,27);
+		}
+		if (ENGIND[4]) {
+			oapiBlt(surf,srf[12],37,71,37,71,27,27);
+		} else {
+			oapiBlt(surf,srf[12],37,71,140,71,27,27);
+		}
+		if (ENGIND[5]) {
+			oapiBlt(surf,srf[12],6,4,6,4,27,27);
+		} else {
+			oapiBlt(surf,srf[12],6,4,108,4,27,27);
+		}
+		if (SIISepState) {
+			oapiBlt(surf,srf[12],37,4,37,4,27,27);
+		} else {
+			oapiBlt(surf,srf[12],37,4,139,4,27,27);
+		}
+		if (AutopilotLight) {
+			oapiBlt(surf,srf[12],69,4,69,4,27,27);
+		} else {
+			oapiBlt(surf,srf[12],69,4,171,4,27,27);
+		}
+		return true;
+
+	case AID_MISSION_CLOCK:
+		int TmpCLKHR, TmpCLKMNT, TmpCLKsec;
+		int Curdigit, Curdigit2;
+		double cTime;
+
+		cTime = MissionTime;
+		if (cTime < 0)
+			cTime = (-cTime);
+
+		TmpCLKHR = (int)(cTime/3600.0);
+		TmpCLKMNT = (((int)cTime-(TmpCLKHR*3600))/60);
+		TmpCLKsec = (((int)cTime-((TmpCLKHR*3600)+TmpCLKMNT*60)));
+
+		// Hour display on three digit
+		Curdigit=TmpCLKHR/100;
+		Curdigit2=TmpCLKHR/1000;
+		oapiBlt(surf,srf[4],0,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		Curdigit=TmpCLKHR/10;
+		Curdigit2=TmpCLKHR/100;
+		oapiBlt(surf,srf[4],0+17,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		Curdigit=TmpCLKHR;
+		Curdigit2=TmpCLKHR/10;
+		oapiBlt(surf,srf[4],0+34,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		oapiBlt(surf,srf[4],0+54,0, 192,0,4,19);
+		// Minute display on five digit
+		Curdigit=TmpCLKMNT/10;
+		Curdigit2=TmpCLKMNT/100;
+		oapiBlt(surf,srf[4],0+61,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		Curdigit=TmpCLKMNT;
+		Curdigit2=TmpCLKMNT/10;
+		oapiBlt(surf,srf[4],0+78,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		oapiBlt(surf,srf[4],0+98,0, 192,0,4,19);
+		// second display on five digit
+		Curdigit=TmpCLKsec/10;
+		Curdigit2=TmpCLKsec/100;
+		oapiBlt(surf,srf[4],0+105,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+		Curdigit=TmpCLKsec;
+		Curdigit2=TmpCLKsec/10;
+		oapiBlt(surf,srf[4],0+122,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
+
+		return true;
+		
+
+
+	// old stuff
 	case AID_HORIZON:
 		RedrawPanel_Horizon (surf);
 		return true;
@@ -3332,7 +2847,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		}
 		return true;
 
-	case AID_CSM_SIVB_SEP_SWITCH:
+/*	case AID_CSM_SIVB_SEP_SWITCH:
 			if(Cswitch5){
 			oapiBlt(surf,srf[17],0,0,0,32,69,30);
 			if(Sswitch5){
@@ -3421,7 +2936,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		}
 		return true;
 
-/*	case AID_INDICATOR1:
+	case AID_INDICATOR1:
 		if(stage < CSM_LEM_STAGE){
 			if (autopilot){
 				oapiBlt(surf,srf[1],0,0,105,0,105,18);
@@ -3592,8 +3107,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		return true;
 
 	case AID_ALTITUDE1:
-		int Curdigit;
-		int Curdigit2;
 		int TmpALT;
 		double tmpALTdec;
 		int tmpalt2;
@@ -3631,57 +3144,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		Curdigit=tmpalt2 ;
 		Curdigit2=tmpalt2 /10;
 		oapiBlt(surf,srf[4],70,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		return true;
-
-	case AID_MISSION_CLOCK:
-		int TmpCLKHR;
-		int TmpCLKMNT;
-		int TmpCLKsec;
-		double cTime;
-
-		cTime = MissionTime;
-		if (cTime < 0)
-			cTime = (-cTime);
-
-		TmpCLKHR = (int)(cTime/3600.0);
-		TmpCLKMNT = (((int)cTime-(TmpCLKHR*3600))/60);
-		TmpCLKsec = (((int)cTime-((TmpCLKHR*3600)+TmpCLKMNT*60)));
-
-		// Hour display on three digit
-		Curdigit=TmpCLKHR/100;
-		Curdigit2=TmpCLKHR/1000;
-		oapiBlt(surf,srf[4],0,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		Curdigit=TmpCLKHR/10;
-		Curdigit2=TmpCLKHR/100;
-		oapiBlt(surf,srf[4],0+17,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		Curdigit=TmpCLKHR;
-		Curdigit2=TmpCLKHR/10;
-		oapiBlt(surf,srf[4],0+34,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		oapiBlt(surf,srf[4],0+54,0, 192,0,4,19);
-		// Minute display on five digit
-		Curdigit=TmpCLKMNT/10;
-		Curdigit2=TmpCLKMNT/100;
-		oapiBlt(surf,srf[4],0+61,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		Curdigit=TmpCLKMNT;
-		Curdigit2=TmpCLKMNT/10;
-		oapiBlt(surf,srf[4],0+78,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		oapiBlt(surf,srf[4],0+98,0, 192,0,4,19);
-		// second display on five digit
-		Curdigit=TmpCLKsec/10;
-		Curdigit2=TmpCLKsec/100;
-		oapiBlt(surf,srf[4],0+105,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		Curdigit=TmpCLKsec;
-		Curdigit2=TmpCLKsec/10;
-		oapiBlt(surf,srf[4],0+122,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-
-		return true;
-
-	case AID_DSKY_LIGHTS:
-		dsky.RenderLights(surf, srf[SRF_DSKY]);
-		return true;
-
-	case AID_DSKY_DISPLAY:
-		dsky.RenderData(surf, srf[4]);
 		return true;
 
 	case AID_TLI_SWITCH:
@@ -4151,15 +3613,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		}
 		return true;
 
-	case AID_ABORT_BUTTON:
-		if (ABORT_IND){
-		oapiBlt(surf,srf[9],0,0,62,0,62,31);
-		}else{
-		oapiBlt(surf,srf[9],0,0,0,0,62,31);
-		}
-		return true;
-
-	case AID_LIGHTS_LAUNCHER:
+/*	case AID_LIGHTS_LAUNCHER:
 		if (LAUNCHIND[0]){
 			oapiBlt(surf,srf[11],0,0,56,0,27,22);
 		}else{
@@ -4191,50 +3645,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		oapiBlt(surf,srf[11],79,68,28,46,27,22);
 		}
 		return true;
-
-	case AID_LV_ENGINE_LIGHTS:
-		if (ENGIND[0]){
-			oapiBlt(surf,srf[12],55,44,55,44,27,27);
-		}else{
-			oapiBlt(surf,srf[12],55,44,157,44,27,27);
-		}
-		if (ENGIND[1]){
-			oapiBlt(surf,srf[12],55,98,55,98,27,27);
-		}else{
-			oapiBlt(surf,srf[12],55,98,157,98,27,27);
-		}
-		if (ENGIND[2]){
-			oapiBlt(surf,srf[12],20,98,20,98,27,27);
-		}else{
-			oapiBlt(surf,srf[12],20,98,122,98,27,27);
-		}
-		if (ENGIND[3]){
-			oapiBlt(surf,srf[12],20,44,20,44,27,27);
-		}else{
-			oapiBlt(surf,srf[12],20,44,122,44,27,27);
-		}
-		if (ENGIND[4]){
-			oapiBlt(surf,srf[12],37,71,37,71,27,27);
-		}else{
-			oapiBlt(surf,srf[12],37,71,140,71,27,27);
-		}
-		if (ENGIND[5]) {
-			oapiBlt(surf,srf[12],6,4,6,4,27,27);
-		}else{
-			oapiBlt(surf,srf[12],6,4,108,4,27,27);
-		}
-		if (SIISepState) {
-			oapiBlt(surf,srf[12],37,4,37,4,27,27);
-		}else{
-			oapiBlt(surf,srf[12],37,4,139,4,27,27);
-		}
-		if (AutopilotLight) {
-			oapiBlt(surf,srf[12],69,4,69,4,27,27);
-		}else{
-			oapiBlt(surf,srf[12],69,4,171,4,27,27);
-		}
-		return true;
-
+*/
 	case AID_MFDDOCK:
 		if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
 			oapiBlt(surf,srf[24], 0, 0, 0, 0, 301, 251);
@@ -4268,61 +3679,79 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 
 void Saturn::InitSwitches() {
 
-	CabinFan1Switch = false;
-	CabinFan2Switch = false;
-	H2Heater1Switch = THREEPOSSWITCH_UP;
-	H2Heater2Switch = THREEPOSSWITCH_UP;
-	O2Heater1Switch = THREEPOSSWITCH_UP;
-	O2Heater2Switch = THREEPOSSWITCH_UP;
-	O2PressIndSwitch = true;
-	H2Fan1Switch = THREEPOSSWITCH_UP;
-	H2Fan2Switch = THREEPOSSWITCH_UP;
-	O2Fan1Switch = THREEPOSSWITCH_UP;
-	O2Fan2Switch = THREEPOSSWITCH_UP;
+	LiftoffNoAutoAbortSwitch.Register(PSH, "LiftoffNoAutoAbortSwitch", false, false);
+	CsmLvSepSwitch = false;						// saved in SSwitchState.Sswitch5
+	CsmLvSepSwitch.SetGuardState(false);		// saved in CSwitchState.Cswitch5
+	CmRcsHeDumpSwitch = false;					// saved in SSwitchState.CMRHDswitch
+	CmRcsHeDumpSwitch.SetGuardState(false);		// saved in CSwitchState.CMRHGswitch
 
-	FuelCellPhIndicator = false;
-	FuelCellRadTempIndicator = false;
+	EDSSwitch = true;							// saved in LPSwitchState.EDSswitch
+	CsmLmFinalSep1Switch = false;				// saved in SSwitchState.Sswitch1
+	CsmLmFinalSep1Switch.SetGuardState(false);	// saved in CSwitchState.Cswitch1
+	CsmLmFinalSep2Switch = false;				// saved in SSwitchState.Sswitch2
+	CsmLmFinalSep2Switch.SetGuardState(false);	// saved in CSwitchState.Cswitch2
+	CmSmSep1Switch = false;						// saved in SSwitchState.Sswitch3
+	CmSmSep1Switch.SetGuardState(false);		// saved in CSwitchState.Cswitch3
+	CmSmSep2Switch = false;						// saved in SSwitchState.Sswitch4
+	CmSmSep2Switch.SetGuardState(false);		// saved in CSwitchState.Cswitch4
+	SivbLmSepSwitch = false;					// saved in RPSwitchState.RPswitch16
+	SivbLmSepSwitch.SetGuardState(false);		// saved in RPSwitchState.RPCswitch
 
-	FuelCellRadiators1Indicator = false;
-	FuelCellRadiators2Indicator = false;
-	FuelCellRadiators3Indicator = false;
-	FuelCellRadiators1Switch = THREEPOSSWITCH_CENTER;
-	FuelCellRadiators2Switch = THREEPOSSWITCH_CENTER;
-	FuelCellRadiators3Switch = THREEPOSSWITCH_CENTER;
+	CabinFan1Switch = false;					// saved in CP2SwitchState.CFswitch1
+	CabinFan2Switch = false;					// saved in CP2SwitchState.CFswitch2
+	H2Heater1Switch.Register(PSH, "H2Heater1Switch", THREEPOSSWITCH_UP);
+	H2Heater2Switch.Register(PSH, "H2Heater2Switch", THREEPOSSWITCH_UP);
+	O2Heater1Switch.Register(PSH, "O2Heater1Switch", THREEPOSSWITCH_UP);
+	O2Heater2Switch.Register(PSH, "O2Heater2Switch", THREEPOSSWITCH_UP);
+	O2PressIndSwitch.Register(PSH, "O2PressIndSwitch", true);
+	H2Fan1Switch.Register(PSH, "H2Fan1Switch", THREEPOSSWITCH_UP);
+	H2Fan2Switch.Register(PSH, "H2Fan2Switch", THREEPOSSWITCH_UP);
+	O2Fan1Switch.Register(PSH, "O2Fan1Switch", THREEPOSSWITCH_UP);
+	O2Fan2Switch.Register(PSH, "O2Fan2Switch", THREEPOSSWITCH_UP);
+
+	FuelCellPhIndicator.Register(PSH, "FuelCellPhIndicator", false);
+	FuelCellRadTempIndicator.Register(PSH, "FuelCellRadTempIndicator", false);
+
+	FuelCellRadiators1Indicator.Register(PSH, "FuelCellRadiators1Indicator", false);
+	FuelCellRadiators2Indicator.Register(PSH, "FuelCellRadiators2Indicator", false);
+	FuelCellRadiators3Indicator.Register(PSH, "FuelCellRadiators3Indicator", false);
+	FuelCellRadiators1Switch.Register(PSH, "FuelCellRadiators1Switch", THREEPOSSWITCH_CENTER); 
+	FuelCellRadiators2Switch.Register(PSH, "FuelCellRadiators2Switch", THREEPOSSWITCH_CENTER); 
+	FuelCellRadiators3Switch.Register(PSH, "FuelCellRadiators3Switch", THREEPOSSWITCH_CENTER); 
 
 	FuelCellIndicatorsSwitch.AddPosition(1, 330);
 	FuelCellIndicatorsSwitch.AddPosition(2,   0);
 	FuelCellIndicatorsSwitch.AddPosition(3,  30);
-	FuelCellIndicatorsSwitch = 1;
+	FuelCellIndicatorsSwitch.Register(PSH, "FuelCellIndicatorsSwitch", 1);
 
-	FuelCellHeater1Switch = true;
-	FuelCellHeater2Switch = true;
-	FuelCellHeater3Switch = true;
+	FuelCellHeater1Switch.Register(PSH, "FuelCellHeater1Switch", true);
+	FuelCellHeater2Switch.Register(PSH, "FuelCellHeater2Switch", true);
+	FuelCellHeater3Switch.Register(PSH, "FuelCellHeater3Switch", true);
 
-	FuelCellReactants1Indicator = false;
-	FuelCellReactants2Indicator = false;
-	FuelCellReactants3Indicator = false;
-	FuelCellReactants1Switch = THREEPOSSWITCH_CENTER;
-	FuelCellReactants2Switch = THREEPOSSWITCH_CENTER;
-	FuelCellReactants3Switch = THREEPOSSWITCH_CENTER;
+	FuelCellReactants1Indicator.Register(PSH, "FuelCellReactants1Indicator", false);
+	FuelCellReactants2Indicator.Register(PSH, "FuelCellReactants2Indicator", false);
+	FuelCellReactants3Indicator.Register(PSH, "FuelCellReactants3Indicator", false);
+	FuelCellReactants1Switch.Register(PSH, "FuelCellReactants1Switch", THREEPOSSWITCH_CENTER);
+	FuelCellReactants2Switch.Register(PSH, "FuelCellReactants2Switch", THREEPOSSWITCH_CENTER);
+	FuelCellReactants3Switch.Register(PSH, "FuelCellReactants3Switch", THREEPOSSWITCH_CENTER);
 
 
 	// old stuff
 
-	Cswitch1=false;
-	Cswitch2=false;
-	Cswitch3=false;
-	Cswitch4=false;
-	Cswitch5=false;
+	//Cswitch1=false;
+	//Cswitch2=false;
+	//Cswitch3=false;
+	//Cswitch4=false;
+	//Cswitch5=false;
 	Cswitch6=false;
 	Cswitch7=false;
 	Cswitch8=false;
 	Cswitch9=false;
-	Sswitch1=false;
-	Sswitch2=false;
-	Sswitch3=false;
-	Sswitch4=false;
-	Sswitch5=false;
+	//Sswitch1=false;
+	//Sswitch2=false;
+	//Sswitch3=false;
+	//Sswitch4=false;
+	//Sswitch5=false;
 	Sswitch6=false;
 	Sswitch7=false;
 	Sswitch8=false;
@@ -4345,9 +3774,9 @@ void Saturn::InitSwitches() {
 	RPswitch13=false;
 	RPswitch14=false;
 	RPswitch15=1;
-	RPswitch16=false;
+	//RPswitch16=false;
 	RPswitch17 = false;
-	RPCswitch=false;
+	//RPCswitch=false;
 
 	DPSwitch1 = false;
 	DPSwitch2 = false;
@@ -4370,7 +3799,7 @@ void Saturn::InitSwitches() {
 	LPswitch5.SetActive(false);
 
 	SPSswitch = false;
-	EDSswitch = true;
+	//EDSswitch = true;
 
 	P11switch = false;
 	P12switch = false;
@@ -4580,8 +4009,8 @@ void Saturn::InitSwitches() {
 	SRHswitch1 = true;
 	SRHswitch2 = true;
 
-	CMRHDswitch = false;
-	CMRHGswitch = false;
+	//CMRHDswitch = false;
+	//CMRHGswitch = false;
 
 	CMCswitch = true;
 
@@ -4596,5 +4025,642 @@ void Saturn::InitSwitches() {
 	RCSIndicatorsSwitch.AddPosition(5, 315);	
 	RCSIndicatorsSwitch.AddPosition(6, 340);
 	RCSIndicatorsSwitch = 1;
+
+}
+
+//
+// Scenario state functions.
+//
+
+//
+// The switch functions just pack the different switch areas from the control panel
+// into 32-bit integers and unpack them from those integers. This provides a much more
+// compact means of storing the switch states in the scenario file than saving them as
+// individual values for each switch.
+//
+
+typedef union {
+	struct {
+		unsigned Cswitch1:1;
+		unsigned Cswitch2:1;
+		unsigned Cswitch3:1;
+		unsigned Cswitch4:1;
+		unsigned Cswitch5:1;
+		unsigned Cswitch6:1;
+		unsigned Cswitch7:1;
+		unsigned Cswitch8:1;
+		unsigned Cswitch9:1;
+		unsigned DVCswitch:1;
+		unsigned DVBCswitch:1;
+		unsigned ELSCswitch:1;
+		unsigned CMDCswitch:1;
+		unsigned CMPCswitch:1;
+		unsigned IMUCswitch:1;
+		unsigned MRswitch:1;
+		unsigned MRCswitch:1;
+		unsigned TJ1switch:1;
+		unsigned TJ1Cswitch:1;
+		unsigned TJ2switch:1;
+		unsigned TJ2Cswitch:1;
+		unsigned IUswitch:1;
+		unsigned IUCswitch:1;
+		unsigned LVSswitch:1;
+		unsigned LVSCswitch:1;
+		unsigned DPswitch:1;
+		unsigned DPCswitch:1;
+		unsigned CMRHGswitch:1;
+	} u;
+	unsigned long word;
+} CSwitchState;
+
+int Saturn::GetCSwitchState()
+
+{
+	CSwitchState state;
+
+	state.word = 0;
+	state.u.Cswitch1 = CsmLmFinalSep1Switch.GetGuardState();
+	state.u.Cswitch2 = CsmLmFinalSep2Switch.GetGuardState();
+	state.u.Cswitch3 = CmSmSep1Switch.GetGuardState();
+	state.u.Cswitch4 = CmSmSep2Switch.GetGuardState();
+	state.u.Cswitch5 = CsmLvSepSwitch.GetGuardState();
+	state.u.Cswitch6 = Cswitch6;
+	state.u.Cswitch7 = Cswitch7;
+	state.u.Cswitch8 = Cswitch8;
+	state.u.Cswitch9 = Cswitch9;
+	state.u.DVCswitch = DVCswitch;
+	state.u.DVBCswitch = DVBCswitch;
+	state.u.ELSCswitch = ELSCswitch;
+	state.u.CMDCswitch = CMDCswitch;
+	state.u.CMPCswitch = CMPCswitch;
+	state.u.IMUCswitch = IMUswitch.GetGuardState(); 
+	state.u.MRswitch = MRswitch;
+	state.u.MRCswitch = MRCswitch;
+	state.u.TJ1switch = TJ1switch;
+	state.u.TJ1Cswitch = TJ1Cswitch;
+	state.u.TJ2switch = TJ2switch;
+	state.u.TJ2Cswitch = TJ2Cswitch;
+	state.u.IUswitch = IUswitch;
+	state.u.IUCswitch = IUCswitch;
+	state.u.LVSswitch = LVSswitch;
+	state.u.LVSCswitch = LVSCswitch;
+	state.u.DPswitch = DPswitch;
+	state.u.DPCswitch = DPCswitch;
+	state.u.CMRHGswitch = CmRcsHeDumpSwitch.GetGuardState();
+
+	return state.word;
+}
+
+void Saturn::SetCSwitchState(int s)
+
+{
+	CSwitchState state;
+
+	state.word = s;
+	CsmLmFinalSep1Switch.SetGuardState(state.u.Cswitch1);
+	CsmLmFinalSep2Switch.SetGuardState(state.u.Cswitch2);
+	CmSmSep1Switch.SetGuardState(state.u.Cswitch3);
+	CmSmSep2Switch.SetGuardState(state.u.Cswitch4);
+	CsmLvSepSwitch.SetGuardState(state.u.Cswitch5);
+	Cswitch6 = state.u.Cswitch6;
+	Cswitch7 = state.u.Cswitch7;
+	Cswitch8 = state.u.Cswitch8;
+	Cswitch9 = state.u.Cswitch9;
+	DVCswitch = state.u.DVCswitch;
+	DVBCswitch = state.u.DVBCswitch;
+	ELSCswitch = state.u.ELSCswitch;
+	CMDCswitch = state.u.CMDCswitch;
+	CMPCswitch = state.u.CMPCswitch;
+	IMUswitch.SetGuardState(state.u.IMUCswitch);
+	MRswitch = state.u.MRswitch;
+	MRCswitch = state.u.MRCswitch;
+	TJ1switch = state.u.TJ1switch;
+	TJ1Cswitch = state.u.TJ1Cswitch;
+	TJ2switch = state.u.TJ2switch;
+	TJ2Cswitch = state.u.TJ2Cswitch;
+	IUswitch = state.u.IUswitch;
+	IUCswitch = state.u.IUCswitch;
+	LVSswitch = state.u.LVSswitch;
+	LVSCswitch = state.u.LVSCswitch;
+	DPswitch = state.u.DPswitch;
+	DPCswitch = state.u.DPCswitch;
+	CmRcsHeDumpSwitch.SetGuardState(state.u.CMRHGswitch);
+}
+
+typedef union {
+	struct {
+		unsigned Sswitch1:1;
+		unsigned Sswitch2:1;
+		unsigned Sswitch3:1;
+		unsigned Sswitch4:1;
+		unsigned Sswitch5:1;
+		unsigned Sswitch6:1;
+		unsigned Sswitch7:1;
+		unsigned Sswitch8:1;
+		unsigned Sswitch9:1;
+		unsigned DVAswitch:1;
+		unsigned DVBswitch:1;
+		unsigned ELSswitch:1;
+		unsigned CMDswitch:1;
+		unsigned CMPswitch:1;
+		unsigned IMUswitch:1;
+		unsigned CMRHDswitch:1;
+	} u;
+	unsigned long word;
+} SSwitchState;
+
+int Saturn::GetSSwitchState()
+
+{
+	SSwitchState state;
+
+	state.word = 0;
+	state.u.Sswitch1 = CsmLmFinalSep1Switch;
+	state.u.Sswitch2 = CsmLmFinalSep2Switch;
+	state.u.Sswitch3 = CmSmSep1Switch;
+	state.u.Sswitch4 = CmSmSep2Switch;
+	state.u.Sswitch5 = CsmLvSepSwitch;
+	state.u.Sswitch6 = Sswitch6;
+	state.u.Sswitch7 = Sswitch7;
+	state.u.Sswitch8 = Sswitch8;
+	state.u.Sswitch9 = Sswitch9;
+	state.u.DVAswitch = DVAswitch;
+	state.u.DVBswitch = DVBswitch;
+	state.u.ELSswitch = ELSswitch;
+	state.u.CMDswitch = CMDswitch;
+	state.u.CMPswitch = CMPswitch;
+	state.u.IMUswitch = IMUswitch;
+	state.u.CMRHDswitch = CmRcsHeDumpSwitch;
+
+	return state.word;
+}
+
+void Saturn::SetSSwitchState(int s)
+
+{
+	SSwitchState state;
+
+	state.word = s;
+	CsmLmFinalSep1Switch = state.u.Sswitch1;
+	CsmLmFinalSep2Switch = state.u.Sswitch2;
+	CmSmSep1Switch = state.u.Sswitch3;
+	CmSmSep2Switch = state.u.Sswitch4;
+	CsmLvSepSwitch = state.u.Sswitch5;
+	Sswitch6 = state.u.Sswitch6;
+	Sswitch7 = state.u.Sswitch7;
+	Sswitch8 = state.u.Sswitch8;
+	Sswitch9 = state.u.Sswitch9;
+	DVAswitch = state.u.DVAswitch;
+	DVBswitch = state.u.DVBswitch;
+	ELSswitch = state.u.ELSswitch;
+	CMDswitch = state.u.CMDswitch;
+	CMPswitch = state.u.CMPswitch;
+	IMUswitch = state.u.IMUswitch;
+	CmRcsHeDumpSwitch = state.u.CMRHDswitch;
+}
+
+typedef union {
+	struct {
+		unsigned LPswitch1:1;
+		unsigned LPswitch2:1;
+		unsigned LPswitch3:1;
+		unsigned LPswitch4:1;
+		unsigned LPswitch5:1;
+		unsigned LPswitch6:1;
+		unsigned LPswitch7:1;
+		unsigned SPSswitch:1;
+		unsigned EDSswitch:1;
+		unsigned P11switch:1;
+		unsigned P12switch:1;
+		unsigned P13switch:1;
+		unsigned P14switch:1;
+		unsigned P15switch:1;
+		unsigned P16switch:1;
+		unsigned SCswitch:1;
+		unsigned TLIswitch:1;
+		unsigned P111switch:1;
+		unsigned P112switch:1;
+		unsigned P113switch:1;
+		unsigned FCSMswitch:1;
+		unsigned EMSKswitch:1;
+	} u;
+	unsigned long word;
+} LPSwitchState;
+
+int Saturn::GetLPSwitchState()
+
+{
+	LPSwitchState state;
+
+	state.word = 0;
+	state.u.LPswitch1 = LPswitch1;
+	state.u.LPswitch2 = LPswitch2;
+	state.u.LPswitch3 = LPswitch3;
+	state.u.LPswitch4 = LPswitch4;
+	state.u.LPswitch5 = LPswitch5;
+	state.u.LPswitch6 = LPswitch6;
+	state.u.LPswitch7 = LPswitch7;
+	state.u.SPSswitch = SPSswitch;
+	state.u.EDSswitch = EDSSwitch;
+	state.u.P11switch = P11switch;
+	state.u.P12switch = P12switch;
+	state.u.P13switch = P13switch;
+	state.u.P14switch = P14switch;
+	state.u.P15switch = P15switch;
+	state.u.P16switch = P16switch;
+	state.u.SCswitch = SCswitch;
+	state.u.TLIswitch = TLIswitch;
+	state.u.P111switch = P111switch;
+	state.u.P112switch = P112switch;
+	state.u.P113switch = P113switch;
+	state.u.FCSMswitch = FCSMswitch;
+	state.u.EMSKswitch = EMSKswitch;
+
+	return state.word;
+}
+
+void Saturn::SetLPSwitchState(int s)
+
+{
+	LPSwitchState state;
+
+	state.word = s;
+	LPswitch1 = state.u.LPswitch1;
+	LPswitch2 = state.u.LPswitch2;
+	LPswitch3 = state.u.LPswitch3;
+	LPswitch4 = state.u.LPswitch4;
+	LPswitch5 = state.u.LPswitch5;
+	LPswitch6 = state.u.LPswitch6;
+	LPswitch7 = state.u.LPswitch7;
+	SPSswitch = state.u.SPSswitch;
+	EDSSwitch = state.u.EDSswitch;
+	P11switch = state.u.P11switch;
+	P12switch = state.u.P12switch;
+	P13switch = state.u.P13switch;
+	P14switch = state.u.P14switch;
+	P15switch = state.u.P15switch;
+	P16switch = state.u.P16switch;
+	SCswitch = state.u.SCswitch;
+	TLIswitch = state.u.TLIswitch;
+	P111switch = state.u.P111switch;
+	P112switch = state.u.P112switch;
+	P113switch = state.u.P113switch;
+	FCSMswitch = state.u.FCSMswitch;
+	EMSKswitch = state.u.EMSKswitch;
+}
+
+typedef union {
+	struct {
+		unsigned RPswitch1:1;
+		unsigned RPswitch2:1;
+		unsigned RPswitch3:1;
+		unsigned RPswitch4:1;
+		unsigned RPswitch5:1;
+		unsigned RPswitch6:1;
+		unsigned RPswitch7:1;
+		unsigned RPswitch8:1;
+		unsigned RPswitch9:1;
+		unsigned RPswitch10:1;
+		unsigned RPswitch11:1;
+		unsigned RPswitch12:1;
+		unsigned RPswitch13:1;
+		unsigned RPswitch14:1;
+		unsigned RPswitch16:1;
+		unsigned RPCswitch:1;
+		unsigned CMRswitch:1;
+		unsigned CMRCswitch:1;
+		unsigned CMCswitch:1;
+	} u;
+	unsigned long word;
+} RPSwitchState;
+
+int Saturn::GetRPSwitchState()
+
+{
+	RPSwitchState state;
+
+	state.word = 0;
+	state.u.RPswitch1 = RPswitch1;
+	state.u.RPswitch2 = RPswitch2;
+	state.u.RPswitch3 = RPswitch3;
+	state.u.RPswitch4 = RPswitch4;
+	state.u.RPswitch5 = RPswitch5;
+	state.u.RPswitch6 = RPswitch6;
+	state.u.RPswitch7 = RPswitch7;
+	state.u.RPswitch8 = RPswitch8;
+	state.u.RPswitch9 = RPswitch9;
+	state.u.RPswitch10 = RPswitch10;
+	state.u.RPswitch11 = RPswitch11;
+	state.u.RPswitch12 = RPswitch12;
+	state.u.RPswitch13 = RPswitch13;
+	state.u.RPswitch14 = RPswitch14;
+	state.u.RPswitch16 = SivbLmSepSwitch;
+	state.u.RPCswitch = SivbLmSepSwitch.GetGuardState();
+	state.u.CMRswitch = CMRswitch;
+	state.u.CMRCswitch = CMRCswitch;
+	state.u.CMCswitch = CMCswitch;
+
+	return state.word;
+}
+
+void Saturn::SetRPSwitchState(int s)
+
+{
+	RPSwitchState state;
+
+	state.word = s;
+	RPswitch1 = state.u.RPswitch1;
+	RPswitch2 = state.u.RPswitch2;
+	RPswitch3 = state.u.RPswitch3;
+	RPswitch4 = state.u.RPswitch4;
+	RPswitch5 = state.u.RPswitch5;
+	RPswitch6 = state.u.RPswitch6;
+	RPswitch7 = state.u.RPswitch7;
+	RPswitch8 = state.u.RPswitch8;
+	RPswitch9 = state.u.RPswitch9;
+	RPswitch10 = state.u.RPswitch10;
+	RPswitch11 = state.u.RPswitch11;
+	RPswitch12 = state.u.RPswitch12;
+	RPswitch13 = state.u.RPswitch13;
+	RPswitch14 = state.u.RPswitch14;
+	SivbLmSepSwitch = state.u.RPswitch16;
+	SivbLmSepSwitch.SetGuardState(state.u.RPCswitch);
+	CMRswitch = state.u.CMRswitch;
+	CMRCswitch = state.u.CMRCswitch;
+	CMCswitch = state.u.CMCswitch;
+}
+
+typedef union {
+	struct {
+		unsigned RH11switch:1;
+		unsigned RH12switch:1;
+		unsigned RH13switch:1;
+		unsigned RH14switch:1;
+		unsigned RH21switch:1;
+		unsigned RH22switch:1;
+		unsigned RH23switch:1;
+		unsigned RH24switch:1;
+		unsigned PP1switch:1;
+		unsigned PP2switch:1;
+		unsigned PP3switch:1;
+		unsigned PP4switch:1;
+		unsigned P21switch:1;
+		unsigned P22switch:1;
+		unsigned P23switch:1;
+		unsigned P29switch:1;
+		unsigned P210switch:1;
+		unsigned P211switch:1;
+	} u;
+	unsigned long word;
+} CPSwitchState;
+
+int Saturn::GetCPSwitchState()
+
+{
+	CPSwitchState state;
+
+	state.word = 0;
+	state.u.RH11switch = RH11switch;
+	state.u.RH12switch = RH12switch;
+	state.u.RH13switch = RH13switch;
+	state.u.RH14switch = RH14switch;
+	state.u.RH21switch = RH21switch;
+	state.u.RH22switch = RH22switch;
+	state.u.RH23switch = RH23switch;
+	state.u.RH24switch = RH24switch;
+	state.u.PP1switch = PP1switch;
+	state.u.PP2switch = PP2switch;
+	state.u.PP3switch = PP3switch;
+	state.u.PP4switch = PP4switch;
+	state.u.P21switch = P21switch;
+	state.u.P22switch = P22switch;
+	state.u.P23switch = P23switch;
+	state.u.P29switch = P29switch;
+	state.u.P210switch = P210switch;
+	state.u.P211switch = P211switch;
+
+	return state.word;
+}
+
+void Saturn::SetCPSwitchState(int s)
+
+{
+	CPSwitchState state;
+
+	state.word = s;
+	RH11switch = state.u.RH11switch;
+	RH12switch = state.u.RH12switch;
+	RH13switch = state.u.RH13switch;
+	RH14switch = state.u.RH14switch;
+	RH21switch = state.u.RH21switch;
+	RH22switch = state.u.RH22switch;
+	RH23switch = state.u.RH23switch;
+	RH24switch = state.u.RH24switch;
+	PP1switch = state.u.PP1switch;
+	PP2switch = state.u.PP2switch;
+	PP3switch = state.u.PP3switch;
+	PP4switch = state.u.PP4switch;
+	P21switch = state.u.P21switch;
+	P22switch = state.u.P22switch;
+	P23switch = state.u.P23switch;
+	P29switch = state.u.P29switch;
+	P210switch = state.u.P210switch;
+	P211switch = state.u.P211switch;
+
+}
+
+typedef union {
+	struct {
+		unsigned CR1switch:1;
+		unsigned CR2switch:1;
+		unsigned SP1switch:1;
+		unsigned SP2switch:1;
+		unsigned SP3switch:1;
+		unsigned SP4switch:1;
+		unsigned P221switch:1;
+		unsigned CFswitch1:1;
+		unsigned CFswitch2:1;
+	} u;
+	unsigned long word;
+} CP2SwitchState;
+
+int Saturn::GetCP2SwitchState()
+
+{
+	CP2SwitchState state;
+
+	state.word = 0;
+	state.u.CR1switch = CR1switch;
+	state.u.CR2switch = CR2switch;
+	state.u.SP1switch = SP1switch;
+	state.u.SP2switch = SP2switch;
+	state.u.SP3switch = SP3switch;
+	state.u.SP4switch = SP4switch;
+	state.u.P221switch = P221switch;
+	state.u.CFswitch1 = CabinFan1Switch;
+	state.u.CFswitch2 = CabinFan2Switch;
+
+	return state.word;
+}
+
+void Saturn::SetCP2SwitchState(int s)
+
+{
+	CP2SwitchState state;
+
+	state.word = s;
+	CR1switch = state.u.CR1switch;
+	CR2switch = state.u.CR2switch;
+	SP1switch = state.u.SP1switch;
+	SP2switch = state.u.SP2switch;
+	SP3switch = state.u.SP3switch;
+	SP4switch = state.u.SP4switch;
+	P221switch = state.u.P221switch;
+	CabinFan1Switch = state.u.CFswitch1;
+	CabinFan2Switch = state.u.CFswitch2;
+
+}
+
+typedef union {
+	struct {
+		unsigned P31switch:1;
+		unsigned P32switch:1;
+		unsigned P33switch:1;
+		unsigned FCRswitch1:1;
+		unsigned FCRswitch2:1;
+		unsigned FCRswitch3:1;
+		unsigned FCBswitch1:1;
+		unsigned FCBswitch2:1;
+		unsigned FCBswitch3:1;
+	} u;
+	unsigned long word;
+} CP3SwitchState;
+
+int Saturn::GetCP3SwitchState()
+
+{
+	CP3SwitchState state;
+
+	state.word = 0;
+	state.u.P31switch = P31switch;
+	state.u.P32switch = P32switch;
+	state.u.P33switch = P33switch;
+	state.u.FCRswitch1 = FCRswitch1;
+	state.u.FCRswitch2 = FCRswitch2;
+	state.u.FCRswitch3 = FCRswitch3;
+	state.u.FCBswitch1 = FCBswitch1;
+	state.u.FCBswitch2 = FCBswitch2;
+	state.u.FCBswitch3 = FCBswitch3;
+
+	return state.word;
+}
+
+void Saturn::SetCP3SwitchState(int s)
+
+{
+	CP3SwitchState state;
+
+	state.word = s;
+	P31switch = state.u.P31switch;
+	P32switch = state.u.P32switch;
+	P33switch = state.u.P33switch;
+	FCRswitch1 = state.u.FCRswitch1;
+	FCRswitch2 = state.u.FCRswitch2;
+	FCRswitch3 = state.u.FCRswitch3;
+	FCBswitch1 = state.u.FCBswitch1;
+	FCBswitch2 = state.u.FCBswitch2;
+	FCBswitch3 = state.u.FCBswitch3;
+
+}
+
+typedef union {
+	struct {
+		unsigned SRHswitch1:1;
+		unsigned SRHswitch2:1;
+		unsigned FCswitch1:1;
+		unsigned FCswitch2:1;
+		unsigned FCswitch3:1;
+		unsigned FCswitch4:1;
+		unsigned FCswitch5:1;
+		unsigned FCswitch6:1;
+		unsigned P114switch:1;
+		unsigned P115switch:1;
+		unsigned P116switch:1;
+		unsigned P117switch:1;
+	} u;
+	unsigned long word;
+} CP4SwitchState;
+
+int Saturn::GetCP4SwitchState()
+
+{
+	CP4SwitchState state;
+
+	state.word = 0;
+	state.u.SRHswitch1 = SRHswitch1;
+	state.u.SRHswitch2 = SRHswitch2;
+	state.u.FCswitch1 = FCswitch1;
+	state.u.FCswitch2 = FCswitch2;
+	state.u.FCswitch3 = FCswitch3;
+	state.u.FCswitch4 = FCswitch4;
+	state.u.FCswitch5 = FCswitch5;
+	state.u.FCswitch6 = FCswitch6;
+	state.u.P114switch = P114switch;
+	state.u.P115switch = P115switch;
+	state.u.P116switch = P116switch;
+	state.u.P117switch = P117switch;
+
+	return state.word;
+}
+
+void Saturn::SetCP4SwitchState(int s)
+
+{
+	CP4SwitchState state;
+
+	state.word = s;
+	SRHswitch1 = state.u.SRHswitch1;
+	SRHswitch2 = state.u.SRHswitch2;
+	FCswitch1 = state.u.FCswitch1;
+	FCswitch2 = state.u.FCswitch2;
+	FCswitch3 = state.u.FCswitch3;
+	FCswitch4 = state.u.FCswitch4;
+	FCswitch5 = state.u.FCswitch5;
+	FCswitch6 = state.u.FCswitch6;
+	P114switch = state.u.P114switch;
+	P115switch = state.u.P115switch;
+	P116switch = state.u.P116switch;
+	P117switch = state.u.P117switch;
+
+}
+
+typedef union {
+	struct {
+		unsigned P328switch:1;
+		unsigned P329switch:1;
+	} u;
+	unsigned long word;
+} CP5SwitchState;
+
+int Saturn::GetCP5SwitchState()
+
+{
+	CP5SwitchState state;
+
+	state.word = 0;
+	state.u.P328switch = P328switch;
+	state.u.P329switch = P329switch;
+
+	return state.word;
+}
+
+void Saturn::SetCP5SwitchState(int s)
+
+{
+	CP5SwitchState state;
+
+	state.word = s;
+	P328switch = state.u.P328switch;
+	P329switch = state.u.P329switch;
 
 }
