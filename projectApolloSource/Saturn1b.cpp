@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/04/14 23:10:03  movieman523
+  *	Fixed compiler warning (mesh_dir not used).
+  *	
   *	Revision 1.5  2005/03/28 05:50:08  chode99
   *	Added support for varying payloads as in the Saturn V.
   *	
@@ -630,7 +633,7 @@ void Saturn1b::StageOne(double simt)
 		ENGIND[5] = false;
 	}
 
-	if (GetEngineLevel(ENGINE_MAIN) <0.3 && MissionTime <100 && EDSswitch.GetState() && MissionTime > 10){
+	if (GetEngineLevel(ENGINE_MAIN) < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10){
 		bAbort = true;
 	}
 
@@ -794,7 +797,7 @@ void Saturn1b::StageStartSIVB(double simt)
 		return;
 	}
 
-	if(Sswitch5) {
+	if(CsmLvSepSwitch.GetState()) {
 		bManualSeparate =true;
 	}
 
@@ -856,7 +859,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		break;
 	}
 
-	if(Sswitch5) {
+	if(CsmLvSepSwitch.GetState()) {
 		bManualSeparate = true;
 	}
 
@@ -996,27 +999,26 @@ void Saturn1b::Timestep (double simt)
 			bToggleHatch = true;
 		}
 
-		if (RPswitch15 && RPswitch16){
-			if (ASTPMission){
+		if (RPswitch15.GetState() && SivbLmSepSwitch.GetState()){
+			if (ASTPMission) {
 				//sprintf(oapiDebugString() ,"click %f");
-			RPswitch16=false;
-				if (ReadyAstp||ReadyAstp1||dockstate==3){
-				bManualUnDock = true;
-
-				RPswitch15=false;
+				SivbLmSepSwitch = false;
+				if (ReadyAstp||ReadyAstp1||dockstate==3) {
+					bManualUnDock = true;
+					RPswitch15 = false;
 				}
 			}
 		}
-		if (Sswitch2){
+		if (CsmLmFinalSep2Switch.GetState()) {
 			Undock(0);
 		}
-		if (Sswitch1){
-			if (dockstate==3){
-				ProbeJetison=true;
+		if (CsmLmFinalSep1Switch.GetState()) {
+			if (dockstate == 3) {
+				ProbeJetison = true;
 				bManualUnDock = true;
 			}
 		}
-		if (Sswitch3 && Sswitch4){
+		if (CmSmSep1Switch.GetState() && CmSmSep2Switch.GetState()) {
 			bManualSeparate=true;
 		}
 		if (RPswitch14 && HatchOpen){
