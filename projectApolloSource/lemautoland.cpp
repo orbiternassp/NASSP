@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/06/04 20:23:43  lazyd
+  *	Added code to land the LM on the moon
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -84,6 +87,7 @@ void LEMcomputer::Prog63(double simt)
 			BurnTime=480;
 			OurVessel->GetHorizonAirspeedVector(vel);
 			OurVessel->GetEquPos(vlon, vlat, vrad);
+			// used for altitude rate * 10
 			DesiredApogee=vel.y*10.0;
 			CurrentAlt=vrad-bradius;
 			if(vel.x < 0) {
@@ -103,6 +107,7 @@ void LEMcomputer::Prog63(double simt)
 			DeltaPitchRate=sbdis;
 	//sbdis is spherical distance to base position
 			hvel=sqrt(vel.x*vel.x+vel.z*vel.z);
+			if(ProgState == 6) CutOffVel=hvel;
 			CurrentVel=hvel;
 			CurrentRVel=CutOffVel-hvel;
 			if(sbdis > BRAKDIST) BurnStartTime=simt+(sbdis-PDIDIST)/hvel;
@@ -352,6 +357,7 @@ void LEMcomputer::Prog63(double simt)
 
 //display time of ignition hhmmssss
 	case 3:
+		BurnTime=BurnStartTime;
 		SetVerbNounAndFlash(6, 33);
 		break;
 
@@ -370,7 +376,7 @@ void LEMcomputer::Prog63(double simt)
 		if(dt <= 35) {
 			dsky.BlankData();
 			NextEventTime=simt+5;
-			CutOffVel=hvel;
+//			CutOffVel=hvel;
 			ProgState++;
 		}
 		break;
@@ -436,7 +442,7 @@ void LEMcomputer::Prog63(double simt)
 			NextEventTime=simt;
 			ProgState=0;
 			oapiGetHeading(OurVessel->GetHandle(), &heading);
-			TargetYaw=heading;
+			BurnTime=heading;
 			RunProgram(64);
 		}
 		break;
@@ -537,7 +543,7 @@ void LEMcomputer::Prog64(double simt)
 		actatt.x=OurVessel->GetPitch();
 		actatt.z=-OurVessel->GetBank();
 		oapiGetHeading(OurVessel->GetHandle(), &heading);
-		actatt.y=TargetYaw-heading;
+		actatt.y=BurnTime-heading;
 		DesiredApogee=vel.y*10.0;
 		CurrentAlt=vrad-bradius;
 		if(vel.x < 0) {
@@ -556,7 +562,7 @@ void LEMcomputer::Prog64(double simt)
 	//sbdis is spherical distance to base position
 		hvel=sqrt(vel.x*vel.x+vel.z*vel.z);
 		CurrentVel=hvel;
-		CurrentRVel=CutOffVel-hvel;
+//		CurrentRVel=CutOffVel-hvel;
 		tbrg = atan2(sin(vlon - blon) * cos(blat), 
 				cos(vlat) * sin(blat) - sin(vlat) * 
 				cos(blat) * cos(vlon - blon));
@@ -603,6 +609,8 @@ void LEMcomputer::Prog64(double simt)
 		if(ttg > -30.0) {
 		//run P65
 			ProgState=0;
+//			TargetYaw=heading;
+			BurnTime=heading;
 			RunProgram(65);
 		}
 		BurnEndTime=simt-ttg-60.0;
@@ -709,7 +717,7 @@ void LEMcomputer::Prog65(double simt)
 		actatt.z=-OurVessel->GetBank();
 		oapiGetHeading(OurVessel->GetHandle(), &heading);
 		CutOffVel=-vel.x*10.0;
-		actatt.y=TargetYaw-heading;
+		actatt.y=BurnTime-heading;
 		DesiredApogee=vel.y*10.0;
 		CurrentAlt=vrad-bradius;
 		if (CurrentAlt < 1.5 ) {
@@ -717,8 +725,6 @@ void LEMcomputer::Prog65(double simt)
 			OurVessel->SetAttitudeRotLevel(zero);
 //			sprintf(oapiDebugString(),"lat=%.6f %.6f lon=%.6f %.6f",
 //				LandingLatitude, vlat*DEG, LandingLongitude, vlon*DEG);
-			LandingLatitude=vlat*DEG;
-			LandingLongitude=vlon*DEG;
 			RunProgram(68);
 //			ProgState++;
 			return;
@@ -736,7 +742,6 @@ void LEMcomputer::Prog65(double simt)
 		aa = pow(sin(dlat/2), 2) + cos(blat) * cos (vlat) * pow(sin(dlon/2), 2);
 		cc = 2 * atan2(sqrt(aa), sqrt(1 - aa));
 		sbdis=bradius*cc;
-//		Distance=sbdis;
 	//sbdis is spherical distance to base position
 		hvel=sqrt(vel.x*vel.x+vel.z*vel.z);
 		CurrentVel=hvel;
@@ -771,7 +776,6 @@ void LEMcomputer::Prog65(double simt)
 
 		Mass=OurVessel->GetMass();
 		grav=(GRAVITY*bmass)/((bradius+position.y)*(bradius+position.y));
-//		areq=areq+grav;
 
 		yinit=80;
 //X logic...
@@ -784,9 +788,9 @@ void LEMcomputer::Prog65(double simt)
 				ax=(-position.x/fabs(position.x))*grav*0.17;
 			}
 		}
-//		if(tts < -100) ax=dvel.x/10;
 		if(tts < -100) ax=(-position.x/fabs(position.x))*grav*0.17;
 		ax=ax*1.3;
+		acc.x=ax;
 
 
 //Z logic
@@ -797,7 +801,7 @@ void LEMcomputer::Prog65(double simt)
 			az=-position.z/100;
 		}
 		az=az*1.3;
-		acc.x=ax;
+		acc.z=az;
 // Y logic
 		yrate=(position.y/yinit)*(-3.5);
 		if(fabs(position.x) < position.y) {
@@ -811,8 +815,8 @@ void LEMcomputer::Prog65(double simt)
 			yrate=yrate*0.3;
 		}
 		if(position.y < 60.) {
-			yrate=-1.5;
-			if(position.y < 10*fabs(position.x)) yrate=-0.2;
+			yrate=-2.5;
+			if(position.y < 10*fabs(position.x)) yrate=-0.5;
 		}
 		if(position.y < 10.) {
 			if(fabs(position.x) < 1.0) {
@@ -822,9 +826,8 @@ void LEMcomputer::Prog65(double simt)
 			}
 		}
 
-		acc.y=grav+(yrate-velocity.y)/5.0*DELTAT;
+		acc.y=grav+((yrate-velocity.y)/5.0)*DELTAT;
 		
-		acc.z=az;
 
 
 
@@ -847,7 +850,8 @@ void LEMcomputer::Prog65(double simt)
 		maxacc=vthrust/vmass;
 
 		cthrust=acctot/maxacc;
-		if(cthrust > 0.6772) cthrust=0.6772;
+//		if(cthrust > 0.6772) cthrust=0.6772;
+		if(cthrust > 0.5) cthrust=0.5;
 
 		tgtatt.z=-asin(acc.z/acctot);
 		tgtatt.y=0.0;
