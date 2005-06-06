@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/05/31 02:12:08  movieman523
+  *	Updated pre-entry burn variables and wrote most of the code to handle them.
+  *	
   *	Revision 1.7  2005/05/18 23:34:23  movieman523
   *	Added roughly correct masses for the various Saturn payloads.
   *	
@@ -505,7 +508,7 @@ void SaturnV::StageOne(double simt)
 		MoveEVA();
 	}
 
-	if (GetEngineLevel(ENGINE_MAIN) <0.3 && MissionTime <100 && EDSswitch.GetState() && MissionTime > 10){
+	if (GetEngineLevel(ENGINE_MAIN) <0.3 && MissionTime <100 && EDSSwitch.GetState() && MissionTime > 10){
 		bAbort = true;
 	}
 
@@ -968,22 +971,22 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (Sswitch2){
+	if (CsmLmFinalSep2Switch.GetState()) {
 		Undock(0);
 	}
 
-	if (Sswitch1){
-		if (ActivateLEM){
-			ProbeJetison=true;
+	if (CsmLmFinalSep1Switch.GetState()) {
+		if (ActivateLEM) {
+			ProbeJetison = true;
 			bManualUnDock = true;
 		}
 	}
 
-	if (Sswitch3 && Sswitch4){
+	if (CmSmSep1Switch.GetState() && CmSmSep2Switch.GetState()) {
 		bManualSeparate=true;
 	}
 
-	if (RPswitch16){
+	if (SivbLmSepSwitch.GetState()){
 		bManualUnDock = true;
 	}
 
@@ -2064,7 +2067,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 		return;
 	}
 
-	if(Sswitch5){
+	if(CsmLvSepSwitch.GetState()){
 		bManualSeparate =true;
 	}
 
