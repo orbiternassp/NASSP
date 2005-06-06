@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/05/26 16:02:30  tschachim
+  *	Added fuel cell cooling functions and some (disabled) test code
+  *	
   *	Revision 1.4  2005/05/05 21:49:40  tschachim
   *	Added some (disabled) debug code
   *	
@@ -63,13 +66,13 @@ void Saturn::SystemsInit() {
 	Panelsdk.InitFromFile("saturncsmsystems");
 
 	// start Fuelcells 
-	int *handle = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:START");
+/*	int *handle = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:START");
 	*handle = SP_FUELCELL_START;
 	handle = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:START");
 	*handle = SP_FUELCELL_START;
 	handle = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:START");
 	*handle = SP_FUELCELL_START;
-
+*/
 	//PanelsdkLogFile = fopen("NASSP-Systems.log", "w");  
 }
 
@@ -203,15 +206,9 @@ void Saturn::SystemsTimestep(double simt)
 */
 
 	// Fuel Cell, flow in lb/h
-/*	sprintf(oapiDebugString(), "FC1-T %.1f FC2-T %.1f FC3-T %.1f FC1-V %.2f A %.2f H2Flow %.3f O2Flow %.3f AvgRad-T %.1f FCC1-T %.1f FCC2-T %.1f FCC3-T %.1f", 
-		*tempFC, *tempFC2, *tempFC3, *voltFC, *ampFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665,
-		tempRad, *tempFCC1, *tempFCC2, *tempFCC3);  
-*/
-
-/*	sprintf(oapiDebugString(), "FC2-T %.1f FC3-T %.1f FC1-T %.1f V %.2f A %.2f H2Flow %.3f O2Flow %.3f Rad1-T %.1f Rad2-T %.1f Rad3-T %.1f Rad4-T %.1f FC1C-T %.1f p %.1f", 
+/*	sprintf(oapiDebugString(), "FC2-T %.1f FC3-T %.1f FC1-T %.1f V %.2f A %.2f H2Flow %.3f O2Flow %.3f Rad1-T %.1f Rad2-T %.1f Rad3-T %.1f Rad4-T %.1f", 
 		*tempFC2, *tempFC3, *tempFC, *voltFC, *ampFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665,
-		*tempRad1, *tempRad2, *tempRad3, *tempRad4,
-		*tempFC1Cond, *pressFC1Cond * 0.000145038);
+		*tempRad1, *tempRad2, *tempRad3, *tempRad4);
 */		
 
 	// Fuel Cell with tanks, flow in lb/h
@@ -220,6 +217,13 @@ void Saturn::SystemsTimestep(double simt)
 		*massH2Tank2, *vapormassH2Tank2, *tempH2Tank2, *pressH2Tank2 * 0.000145038,
 		*voltFC, *ampFC, *tempFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665, 
 		*massH2FCM, *tempH2FCM, *pressH2FCM * 0.000145038);
+*/
+
+	// Fuel Cell with manifolds, flow in lb/h
+/*	sprintf(oapiDebugString(), "FC-V %.2f A %.2f T %.1f H2Flow %.3f O2Flow %.3f H2FCM %.1f T %.1f p %6.1f O2FCM %.1f T %.1f p %6.1f", 
+		*voltFC, *ampFC, *tempFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665, 
+		*massH2FCM, *tempH2FCM, *pressH2FCM * 0.000145038,
+		*massO2FCM, *tempO2FCM, *pressO2FCM * 0.000145038);
 */
 
 	// Fuel Cell H2
