@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/05/05 21:36:41  tschachim
+  *	Introduced PanelSwitchItem and IndicatorSwitch
+  *	
   *	Revision 1.5  2005/04/22 14:05:15  tschachim
   *	Init functions changed
   *	SwitchListener introduced
@@ -48,22 +51,33 @@
 #define THREEPOSSWITCH_CENTER	1
 #define THREEPOSSWITCH_UP		2
 
+#define PANELSWITCH_START_STRING	"PANELSWITCHES_BEGIN"
+#define PANELSWITCH_END_STRING		"PANELSWITCHES_END"
+
 
 class SwitchRow;
+class PanelSwitchScenarioHandler;
 
 class PanelSwitchItem {
 
 public:
 	void SetNext(PanelSwitchItem *s) { next = s; };
 	PanelSwitchItem *GetNext() { return next; };
+	void SetNextForScenario(PanelSwitchItem *s) { nextForScenario = s; };
+	PanelSwitchItem *GetNextForScenario() { return nextForScenario; };
+	//char *GetName() { return name; }
 
 	virtual bool CheckMouseClick(int event, int mx, int my) = 0;
 	virtual void DrawSwitch(SURFHANDLE DrawSurface) = 0;
+	virtual void SaveState(FILEHANDLE scn) = 0;
+	virtual void LoadState(char *line) = 0;
 
 protected:
+	char *name;
 	PanelSwitchItem *next;
-
+	PanelSwitchItem *nextForScenario;
 };
+
 
 class ToggleSwitch: public PanelSwitchItem {
 
@@ -71,11 +85,15 @@ public:
 	ToggleSwitch();
 	virtual ~ToggleSwitch();
 
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib &s);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib &s,
+		      int xoffset = 0, int yoffset = 0);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row,
+		      int xoffset = 0, int yoffset = 0);
 	void SetSize(int w, int h) { width = w; height = h; };
 	void SetPosition(int xp, int yp) { x = xp; y = yp; };
 	void SetState(bool s) { state = s; };
+	void SetOffset(int xo, int yo) {xOffset = xo; yOffset = yo; };
 	int GetState() { return state; };
 	void SetActive(bool s);
 	void SetVisible(bool v) {visible = v; };
@@ -87,6 +105,8 @@ public:
 
 	virtual void DrawSwitch(SURFHANDLE DrawSurface);
 	virtual bool CheckMouseClick(int event, int mx, int my);
+	virtual void SaveState(FILEHANDLE scn);
+	virtual void LoadState(char *line);
 
 	//
 	// Operator overloads so we don't need to call GetState() and SetState() all
@@ -105,7 +125,7 @@ public:
 	operator unsigned() { return (unsigned) state; };
 
 protected:
-
+	virtual void InitSound(SoundLib *s);
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
 	bool DoCheckMouseClick(int mx, int my);
 
@@ -113,6 +133,8 @@ protected:
 	int y;
 	int width;
 	int height;
+	int xOffset;
+	int yOffset;
 
 	int state;
 	bool Active;
@@ -125,6 +147,7 @@ protected:
 
 	SwitchRow *switchRow;
 };
+
 
 class AttitudeToggle: public ToggleSwitch {
 
@@ -150,6 +173,7 @@ protected:
 	int NAVMode;
 };
 
+
 class HUDToggle: public ToggleSwitch {
 
 public:
@@ -160,6 +184,7 @@ public:
 protected:
 	int	HUDMode;
 };
+
 
 class ThreePosSwitch: public ToggleSwitch {
 
@@ -172,16 +197,32 @@ public:
 	int operator=(const int b) { state = b; return state; };
 };
 
+
+class PushSwitch: public ToggleSwitch {
+
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+
+	int operator=(const int b) { state = b; return state; };
+
+protected:
+	virtual void InitSound(SoundLib *s);
+};
+
+
 class GuardedToggleSwitch: public ToggleSwitch {
 
 public:
 	GuardedToggleSwitch();
 	virtual ~GuardedToggleSwitch();
 
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
-				   SoundLib &s, int xOffset = 0, int yOffset = 0);
+				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
 
@@ -199,16 +240,51 @@ protected:
 	Sound guardClick;
 };
 
+
+class GuardedPushSwitch: public PushSwitch {
+
+public:
+	GuardedPushSwitch();
+	virtual ~GuardedPushSwitch();
+
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState);
+	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
+				   int xOffset = 0, int yOffset = 0);
+	void DrawSwitch(SURFHANDLE DrawSurface);
+	bool CheckMouseClick(int event, int mx, int my);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+	int GetGuardState() { return guardState; };
+	void SetGuardState(bool s) { guardState = s; };
+
+	int operator=(const int b) { state = b; return state; };
+
+protected:
+	int	guardX;
+	int guardY;
+	int guardWidth;
+	int guardHeight;
+	int guardState;
+	SURFHANDLE guardSurface;
+	int guardXOffset;
+	int guardYOffset;
+	Sound guardClick;
+};
+
+
 class GuardedThreePosSwitch: public ThreePosSwitch {
 
 public:
 	GuardedThreePosSwitch();
 	virtual ~GuardedThreePosSwitch();
 
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 				   SoundLib &s, int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
 
@@ -252,16 +328,20 @@ protected:
 	RotationalSwitchPosition* next;
 };
 
+
 class RotationalSwitch: public PanelSwitchItem {
 
 public:
 	RotationalSwitch();
 	virtual ~RotationalSwitch();
 
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultValue);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
 	void AddPosition(int value, double angle);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
 	int operator=(const int b);
 	operator int();
 
@@ -276,6 +356,7 @@ protected:
 	Sound sclick;
 	RotationalSwitchBitmap bitmaps[RotationalSwitchBitmapCount];
 
+	void SetValue(int newValue);
 	double AngleDiff(double a1, double a2);
 	void DeletePositions();
 };
@@ -286,9 +367,12 @@ public:
 	IndicatorSwitch();
 	virtual ~IndicatorSwitch();
 
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, bool defaultState);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
 	int operator=(const bool b) { state = b; return state; };
 	operator bool() {return state; };
 
@@ -326,6 +410,9 @@ protected:
 
 	friend class ToggleSwitch;
 	friend class ThreePosSwitch;
+	friend class PushSwitch;
+	friend class GuardedToggleSwitch;
+	friend class GuardedPushSwitch;
 	friend class RotationalSwitch;
 	friend class IndicatorSwitch;
 };
@@ -355,6 +442,23 @@ protected:
 
 	friend class ToggleSwitch;
 	friend class ThreePosSwitch;
+	friend class PushSwitch;
+	friend class GuardedToggleSwitch;
+	friend class GuardedPushSwitch;
 	friend class RotationalSwitch;
 	friend class IndicatorSwitch;
 };
+
+
+class PanelSwitchScenarioHandler {
+
+public:
+	PanelSwitchScenarioHandler() { switchList = 0; };
+	void RegisterSwitch(PanelSwitchItem *s);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+protected:
+	PanelSwitchItem *switchList;
+};
+
