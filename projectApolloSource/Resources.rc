@@ -93,7 +93,7 @@ IDB_DSKY_LIGHTS         	BITMAP  DISCARDABLE     "dsky_lights.bmp"
 IDB_ILMDCKPANEL         	BITMAP  DISCARDABLE     "docking_ilm.bmp"
 IDB_MAINDCKPANEL        	BITMAP  DISCARDABLE     "docking.bmp"
 IDB_FCSM                	BITMAP  DISCARDABLE     "FCSM.bmp"
-IDB_GUARDSWITCH         	BITMAP  DISCARDABLE     "guardswitch.bmp"
+IDB_SEQUENCERSWITCHES      	BITMAP  DISCARDABLE     "SequencerSwitches.bmp"
 IDB_ALLROUND            	BITMAP  DISCARDABLE     "allround.bmp"
 IDB_ILMALLROUND         	BITMAP  DISCARDABLE     "ilmallround.bmp"
 IDB_THREEPOSSWITCH      	BITMAP  DISCARDABLE     "threeposswitch.bmp"
@@ -114,6 +114,7 @@ IDB_CSM_RIGHT_RNDZ_WINDOW	BITMAP  DISCARDABLE		"csm_right_rndz_window.bmp"
 IDB_CSM_HATCH_WINDOW		BITMAP  DISCARDABLE		"csm_hatch_window.bmp"
 IDB_CSM_LOWER_PANEL			BITMAP  DISCARDABLE		"gn_lower_equip_bay.bmp"
 IDB_INDICATOR				BITMAP  DISCARDABLE		"Indicator.bmp"
+IDB_SWITCHGUARDS			BITMAP  DISCARDABLE		"SwitchGuards.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
