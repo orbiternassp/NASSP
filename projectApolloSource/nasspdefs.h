@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/05/26 16:00:31  tschachim
+  *	New SRF constants, new physics constant
+  *	
   *	Revision 1.14  2005/05/18 23:34:23  movieman523
   *	Added roughly correct masses for the various Saturn payloads.
   *	
@@ -116,6 +119,9 @@ const int nsurf = 28; // number of bitmap handles
 #define SRF_INDICATOR			 1
 #define SRF_NEEDLE				 2
 #define SRF_SWITCHUP			 6
+#define SRF_SWITCHGUARDS		 8
+#define SRF_ABORT				 9
+#define SRF_SEQUENCERSWITCHES	17
 #define SRF_DSKY				21
 #define SRF_DSKYNUM				22
 #define SRF_THREEPOSSWITCH		23
