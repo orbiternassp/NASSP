@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/05/31 02:12:08  movieman523
+  *	Updated pre-entry burn variables and wrote most of the code to handle them.
+  *	
   *	Revision 1.13  2005/05/31 00:17:33  movieman523
   *	Added CSMACCEL variables for unmanned flights which made burns just before re-entry to raise velocity to levels similar to a return from the moon.
   *	
@@ -120,7 +123,7 @@ void Saturn::initSaturn()
 
 	TCPO = 0.0;
 
-	// call only once because of RotationalSwitch
+	// call only once
 	if (!InitSaturnCalled) {
 		InitSwitches();
 	}
@@ -614,8 +617,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	dsky.SaveState(scn);
 	agc.SaveState(scn);
-
-	Panelsdk.Save(scn);	//also save the internal systems 
+	Panelsdk.Save(scn);	// save the internal systems 
+	PSH.SaveState(scn);	// save the state of the switches
 }
 
 //
@@ -1028,6 +1031,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
+		}
+        else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
+			PSH.LoadState(scn);	
 		}
 		else {
 			ParseScenarioLineEx (line, vstatus);
@@ -2427,7 +2433,7 @@ void Saturn::StageOrbitSIVB(double simt)
 		CSMSepSet = false;
 	}
 
-	if (Sswitch5) {
+	if (CsmLvSepSwitch.GetState()) {
 		bManualSeparate = true;
 	}
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/05/31 02:12:08  movieman523
+  *	Updated pre-entry burn variables and wrote most of the code to handle them.
+  *	
   *	Revision 1.14  2005/05/31 00:17:33  movieman523
   *	Added CSMACCEL variables for unmanned flights which made burns just before re-entry to raise velocity to levels similar to a return from the moon.
   *	
@@ -174,7 +177,17 @@ protected:
 	//
 	// Switches
 	//
+	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
+	GuardedPushSwitch CsmLvSepSwitch;
+	GuardedPushSwitch CmRcsHeDumpSwitch;
 
+	ToggleSwitch	    EDSSwitch;				// TODO state saving/loading
+	GuardedToggleSwitch CsmLmFinalSep1Switch;
+	GuardedToggleSwitch CsmLmFinalSep2Switch;
+	GuardedToggleSwitch CmSmSep1Switch;
+	GuardedToggleSwitch CmSmSep2Switch;
+	GuardedToggleSwitch SivbLmSepSwitch;
+	
 	ToggleSwitch   CabinFan1Switch;
 	ToggleSwitch   CabinFan2Switch;
 	ThreePosSwitch H2Heater1Switch; // TODO state saving/loading
@@ -211,21 +224,21 @@ protected:
 	ThreePosSwitch FuelCellReactants3Switch;
 
 	// old stuff begin
-	bool Cswitch1;
-	bool Cswitch2;
-	bool Cswitch3;
-	bool Cswitch4;
-	bool Cswitch5;
+	//bool Cswitch1;
+	//bool Cswitch2;
+	//bool Cswitch3;
+	//bool Cswitch4;
+	//bool Cswitch5;
 	bool Cswitch6;
 	bool Cswitch7;
 	bool Cswitch8;
 	bool Cswitch9;
 
-	bool Sswitch1;
-	bool Sswitch2;
-	bool Sswitch3;
-	bool Sswitch4;
-	bool Sswitch5;
+	//bool Sswitch1;
+	//bool Sswitch2;
+	//bool Sswitch3;
+	//bool Sswitch4;
+	//bool Sswitch5;
 	bool Sswitch6;
 	bool Sswitch7;
 	bool Sswitch8;
@@ -247,8 +260,8 @@ protected:
 	bool RPswitch12;
 	bool RPswitch13;
 	bool RPswitch14;
-	bool RPswitch16;
-	bool RPCswitch;
+	//bool RPswitch16;
+	//bool RPCswitch;
 	bool RPswitch17;
 	bool DPSwitch1;
 	bool DPSwitch2;
@@ -348,8 +361,8 @@ protected:
 
 	bool P113switch;
 
-	bool CMRHDswitch;
-	bool CMRHGswitch;
+	//bool CMRHDswitch;
+	//bool CMRHGswitch;
 
 	bool EMSKswitch;
 
@@ -362,7 +375,7 @@ protected:
 	ToggleSwitch LPswitch7;
 
 	ToggleSwitch SPSswitch;
-	ToggleSwitch EDSswitch;
+	//ToggleSwitch EDSswitch;
 
 	ToggleSwitch P11switch;
 	ToggleSwitch P12switch;
@@ -584,8 +597,11 @@ protected:
 	bool GenericFirstTimestep;
 
 	PanelSwitches MainPanel;
+	PanelSwitchScenarioHandler PSH;
 
-	SwitchRow CryoTankRow;
+	SwitchRow SequencerSwitchesRow;
+	SwitchRow SeparationSwitchesRow;
+	SwitchRow CryoTankSwitchesRow;
 	SwitchRow FuelCellPhRadTempIndicatorsRow;
 	SwitchRow FuelCellRadiatorsIndicatorsRow;
 	SwitchRow FuelCellRadiatorsSwitchesRow;
@@ -611,7 +627,7 @@ protected:
 	SwitchRow LPRow;
 	SwitchRow HUDRow;
 	SwitchRow SPSRow;
-	SwitchRow EDSRow;
+	//SwitchRow EDSRow;
 	SwitchRow NAVRow1;
 	SwitchRow NAVRow2;
 
