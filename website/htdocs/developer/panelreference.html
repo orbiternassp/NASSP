@@ -48,12 +48,28 @@
         <th width="5%" scope="col"><div align="center" class="style1">Grid</div></th>
       </tr>	  
       <tr valign="top">
+        <td>ABORT light </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">I-22</div></td>
+        <td>When pressed, an abort is requested and the light illuminates yellow. </td>
+        <td>Should illuminate red to indicate an abort requested by ground control, not pressable. </td>
+      </tr>
+      <tr valign="top">
+        <td>LV RATE light </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">K-22</div></td>
+        <td>Illuminates yellow when LV thrust level is above 65%. </td>
+        <td>Should illuminate red when LV angular rates exceed predeterminated limits. </td>
+      </tr>
+      <tr valign="top">
         <td>S-II SEP light </td>
         <td><div align="center">1</div></td>
         <td><div align="center">I</div></td>
         <td><div align="center">K-22</div></td>
-        <td>Illuminates to indicate first-stage jettison and extinguishes when second-stage interstage is jettisoned . </td>
-        <td>Should illuminate red, not yellow. </td>
+        <td>Illuminates yellow to indicate first-stage jettison and extinguishes when second-stage interstage is jettisoned . </td>
+        <td>Should illuminate red.</td>
       </tr>
       <tr valign="top">
         <td>LV GUID light </td>
@@ -72,6 +88,32 @@
         <td>See also: <a href="http://www.hq.nasa.gov/office/pao/History/ap15fj/pdf/a15csmlc.pdf">Apollo 15 CSM Launch Checklist</a></td>
       </tr>
       <tr valign="top">
+        <td>LIFT-OFF and NO AUTO ABORT switch-lights</td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">L-21</div></td>
+        <td><p>LIFT-OFF illuminates white at lift-off and will be extinguished at commencement of first stage staging.<br>
+          NO AUTO ABORT illuminates red when lift-off illuminates and the EDS switch is turned off. </p>
+        </td>
+        <td>Pressing the button has no function yet. </td>
+      </tr>
+      <tr valign="top">
+        <td>CSM/LV SEP switch </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">N-21</div></td>
+        <td>Switch for normal CSM/LV separation after ascent phase of mission. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>CM RCS He DUMP switch </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">K</div></td>
+        <td><div align="center">N-23</div></td>
+        <td>-</td>
+        <td>No function yet. </td>
+      </tr>
+      <tr valign="top">
         <td>DSKY (all switches and diplays) </td>
         <td><div align="center">2</div></td>
         <td><div align="center">C</div></td>
@@ -79,6 +121,45 @@
           <div align="center">-</div></td>
         <td>(See user documentation for more informations)</td>
         <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>EDS switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">M-24</div></td>
+        <td>When switched to AUTO, an automatic abort is triggered when the LV thrust level is below 30% between 10s and 100s after liftoff. </td>
+        <td>Should enable/disable the LV auto abort system, details about that are not known at the moment. </td>
+      </tr>
+      <tr valign="top">
+        <td height="30">CSM/LM FINAL SEP 1 switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">M-26</div></td>
+        <td>Separates the LM from the CSM irreversibly including the docking probe. </td>
+        <td rowspan="2">Either switch initiates abandonment of LM or jettisons the docking probe and ring subsequent to SPS abort. Reversible undocking of the LM should be done with the DOCKING PROBE EXTD/REL switch. </td>
+      </tr>
+      <tr valign="top">
+        <td>CSM/LM FINAL SEP 2 switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">M-26</div></td>
+        <td>Separates the LM from the CSM reversibly so you can dock again. </td>
+      </tr>
+      <tr valign="top">
+        <td>CM/SM SEP 1/2 switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">M-26</div></td>
+        <td>If both switches are ON (up), the CM is separated from the SM. </td>
+        <td>Either switch activates CM-SM separation (and a few other systems). </td>
+      </tr>
+      <tr valign="top">
+        <td>S-IVB/LM SEP switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">M-27</div></td>
+        <td>Initiates separation of LM from S-IVB stage. </td>
+        <td>The switch should be spring-loaded to down position. </td>
       </tr>
       <tr valign="top">
         <td>MISSION TIMER indicator</td>
@@ -89,7 +170,7 @@
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
-        <td>CABIN FAN 1/2 switch</td>
+        <td>CABIN FAN 1/2 switches</td>
         <td><div align="center">2</div></td>
         <td><div align="center">P</div></td>
         <td><div align="center">G-34</div></td>
@@ -287,7 +368,7 @@
 
     <p>The controls and displays reference tables above are similar and an addition to the controls and displays section of the Apollo Operations Handbook available here: <a href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohindex.htm</a>. If you never seen it, here is an example explaining the H<sub>2</sub> HEATERS switches:</p>
 	    <p><img src="../images/aoh-h2heaters.gif" width="875" height="356"></p>
-	    <p>So as you can see it's  useful to have a look at the Apollo Operaions Handbook, since the descriptions are often more detailed and comprehensive.</p>
+	    <p>So as you can see it's  useful to have a look at the Apollo Operations Handbook, since the descriptions are often more detailed and comprehensive.</p>
   </div></div>
 <table height="65" cellspacing="0" cellpadding="0" border="0">
 <tr height="65">
