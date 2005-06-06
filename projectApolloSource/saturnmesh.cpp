@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/03/16 17:30:41  yogenfrutz
+  *	corrected missing crew in csm stage
+  *	
   *	Revision 1.7  2005/03/12 20:51:30  chode99
   *	Reentry airfoil is now deleted when first drogue opens.
   *	By not deleting, the aerodynamics of the chutes were ignored.
@@ -787,7 +790,7 @@ void Saturn::StageSeven(double simt)
 {
 	ClearAutopilotLight();
 
-	if (Sswitch1){
+	if (CsmLmFinalSep1Switch.GetState()){
 		Undock(0);
 	}
 
