@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/06/04 20:24:57  lazyd
+  *	Added nouns and programs specific to landing
+  *	
   *	Revision 1.2  2005/05/19 20:26:52  movieman523
   *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
   *	
@@ -93,9 +96,11 @@ bool LEMcomputer::ValidateVerbNoun(int verb, int noun)
 void LEMcomputer::DisplayNounData(int noun)
 
 {
+	//LazyD added this to bypass noun 33 in common nouns
+	if(noun != 33) {
 	if (DisplayCommonNounData(noun))
 		return;
-
+	}
 	switch (noun) {
 
 	//
@@ -174,18 +179,17 @@ void LEMcomputer::DisplayNounData(int noun)
 		}
 		break;
 
+// this is in common nouns in apolloguidance.cpp, but I think this is correct...
 
 	//
-	// 33: Time of ignition  hh-mm-ss
+	// 33: Time of ignition  hh-mm-ss time of day
 	//
 
 	case 33:
 		{
 		double dmjd=oapiGetSimMJD();
 		int mjd=(int)dmjd;
-		double times=BurnStartTime-CurrentTimestep+(dmjd-mjd)*86400.;
-//		sprintf(oapiDebugString(),"bst=%.1f cts=%.1f time=%.1f",
-//			BurnStartTime, CurrentTimestep, times);
+		double times=BurnTime-CurrentTimestep+(dmjd-mjd)*86400;
 		int hou=(int) (times/3600.);
 		times=(int)(times-hou*3600.);
 		int min=(int)(times/60.);
@@ -194,18 +198,6 @@ void LEMcomputer::DisplayNounData(int noun)
 		dsky.SetR1(hou);
 		dsky.SetR2(min);
 		dsky.SetR3(sec);
-		}
-		break;
-
-	//
-	// 43: latitude, longitude, altitude
-	//
-
-	case 43:
-		{
-		dsky.SetR1((int) (LandingLatitude * 100.0));
-		dsky.SetR2((int) (LandingLongitude * 100.0));
-		dsky.SetR3((int) (CurrentAlt/1000.0));
 		}
 		break;
 
