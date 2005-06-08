@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/06/06 22:25:41  lazyd
+  *	Small hack to display my own Noun 33
+  *	
   *	Revision 1.3  2005/06/04 20:24:57  lazyd
   *	Added nouns and programs specific to landing
   *	
@@ -710,6 +713,14 @@ bool LEMcomputer::ReadMemory(unsigned int loc, int &val)
 	case 0112:
 		val = (int) LandingAltitude;
 		return true;
+
+	case 0113:
+		val = (int)(LandingLatitude*100000000-((int) (LandingLatitude * 1000.0))*100000);
+		return true;
+
+	case 0114:
+		val = (int)(LandingLongitude*100000000-((int) (LandingLongitude * 1000.0))*100000);
+		return true;
 	}
 
 	return GenericReadMemory(loc, val);
@@ -739,6 +750,14 @@ void LEMcomputer::WriteMemory(unsigned int loc, int val)
 
 	case 0112:
 		LandingAltitude = (double) val;
+		break;
+
+	case 0113:
+		LandingLatitude = LandingLatitude+((double) val) / 100000000.0;
+		break;
+
+	case 0114:
+		LandingLongitude = LandingLongitude+((double) val) / 100000000.0;
 		break;
 
 	default:
