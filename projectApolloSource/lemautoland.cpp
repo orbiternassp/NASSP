@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/06/06 22:24:34  lazyd
+  *	Save/Resore now works without any additional variables
+  *	
   *	Revision 1.2  2005/06/04 20:23:43  lazyd
   *	Added code to land the LM on the moon
   *	
@@ -50,6 +53,7 @@
 #define DELTAT		2.0
 #define LEADTIME	2.2
 #define A15DELCO	true
+#define LOGFILE		false
 
 //
 // Code goes here
@@ -408,6 +412,7 @@ void LEMcomputer::Prog63(double simt)
 	case 10:
 		SetVerbNoun(6,62);
 		if(dt <= 0.0) {
+//			OurVessel->SetGimbal(false);
 			OurVessel->SetEngineLevel(ENGINE_HOVER, 0.1);
 			ProgState++;
 		}
@@ -469,11 +474,11 @@ void LEMcomputer::Prog63Pressed(int R1, int R2, int R3)
 		//check longitude/2 between -90 and +90
 		if (R2 > 90000 || R2 < -90000)
 			break;
-
-		LandingLatitude = (double) R1 / 1000.0;
-		LandingLongitude = (double) R2 / 500.0;
-		LandingAltitude = (double) R3;
-//		sprintf(oapiDebugString(),"Lat= %.3f Lon=%.3f Alt=%.2f",
+// don't mess with this for now...
+//		LandingLatitude = (double) R1 / 1000.0;
+//		LandingLongitude = (double) R2 / 500.0;
+//		LandingAltitude = (double) R3;
+//		sprintf(oapiDebugString(),"Lat= %.8f Lon=%.8f Alt=%.2f",
 //			LandingLatitude, LandingLongitude, LandingAltitude);
 		ProgState++;
 		return;
@@ -526,7 +531,7 @@ void LEMcomputer::Prog64(double simt)
 	VECTOR3 vel, actatt, tgtatt, acc, position, velocity;
 	double vlon, vlat, vrad, prograde, blat, blon, dlat, dlon, aa, cc, sbdis, hvel, 
 		tbrg, cbrg, rbrg, heading, jfz, ttg, ttg2, ttg3, ttg4, ttgl,
-		ttgl2, dtg, grav, acctot, vmass, vthrust, maxacc, cthrust, accx;
+		ttgl2, dtg, grav, acctot, vmass, vthrust, maxacc, cthrust, accx, cgelev;
 	if(ProgState==0) {
 		BurnStartTime=simt;
 		BurnEndTime=BurnStartTime+100.0;
@@ -545,7 +550,8 @@ void LEMcomputer::Prog64(double simt)
 		oapiGetHeading(OurVessel->GetHandle(), &heading);
 		actatt.y=BurnTime-heading;
 		DesiredApogee=vel.y*10.0;
-		CurrentAlt=vrad-bradius;
+		cgelev=OurVessel->GetCOG_elev();
+		CurrentAlt=vrad-bradius-cgelev;
 		if(vel.x < 0) {
 			prograde=-1;
 		} else {
@@ -688,9 +694,14 @@ void LEMcomputer::Prog65(double simt)
 	const double GRAVITY=6.67259e-11; // Gravitational constant
 	double yrate, az, tts, ax, ttgz, acctot, Mass, heading, yinit, grav, 
 		sbdis, rbrg, cbrg, tbrg, vlon, vlat, vrad, prograde, blat, blon, dlat, dlon, aa, 
-		cc, hvel, cthrust, maxacc, vmass, vthrust; 
+		cc, hvel, cthrust, maxacc, vmass, vthrust, cgelev;
 
-	if(ProgState == 2) return;
+	if(ProgState > 2) return;
+
+	if(ProgState == 2) {
+		RunProgram(68);
+		return;
+	}
 	if(OurVessel->GroundContact()) {
 		ProgState++;
 		OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
@@ -699,6 +710,12 @@ void LEMcomputer::Prog65(double simt)
 		return;
 	}
 	if(ProgState == 0) {
+		if(LOGFILE) {
+			char fname[8];
+			sprintf(fname,"llog.txt");
+			outstr=fopen(fname,"w");
+			fprintf(outstr, "Landing mode beginning: \n");
+		}
 		ProgState++;
 		NextEventTime=simt;
 		// initialize...
@@ -719,14 +736,22 @@ void LEMcomputer::Prog65(double simt)
 		CutOffVel=-vel.x*10.0;
 		actatt.y=BurnTime-heading;
 		DesiredApogee=vel.y*10.0;
-		CurrentAlt=vrad-bradius;
-		if (CurrentAlt < 1.5 ) {
+		cgelev=OurVessel->GetCOG_elev();
+		CurrentAlt=vrad-bradius-cgelev;
+		if (CurrentAlt <= 0.0 ) {
 			OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
 			OurVessel->SetAttitudeRotLevel(zero);
+			ProgState++;
+			if (LOGFILE) {
+				fprintf(outstr,"Actual Lat=%.8f Lon=%.8f \n",vlat*DEG, vlon*DEG);
+				fprintf(outstr,"Target Lat=%.8f Lon=%.8f \n",
+					LandingLatitude, LandingLongitude);
+				fprintf(outstr, "Contact: Close file.");
+				fclose(outstr);
+			}
 //			sprintf(oapiDebugString(),"lat=%.6f %.6f lon=%.6f %.6f",
 //				LandingLatitude, vlat*DEG, LandingLongitude, vlon*DEG);
-			RunProgram(68);
-//			ProgState++;
+//			RunProgram(68);
 			return;
 		}
 		if(vel.x < 0) {
@@ -772,24 +797,35 @@ void LEMcomputer::Prog65(double simt)
 		velocity.x=hvel*cos(cbrg-heading);
 		velocity.y=vel.y;
 		velocity.z=-hvel*sin(cbrg-heading);
+		if(LOGFILE) {
+			fprintf(outstr,"Target Lat=%.8f Lon=%.8f \n",blat*DEG, blon*DEG);
+			fprintf(outstr,"Actual Lat=%.8f Lon=%.8f \n",vlat*DEG, vlon*DEG);
+			fprintf(outstr,"cbrg: %.3f tbrg:%.3f rbrg:%.3f hdg:%.3f time:%.2f\n",
+				cbrg*DEG, tbrg*DEG, rbrg*DEG, heading*DEG, simt);
+			fprintf(outstr,"Pos: %.3f %.3f %.3f \n", position);
+			fprintf(outstr,"Vel: %.3f %.3f %.3f \n", velocity);
+		}
+
 		grav=(GRAVITY*bmass)/((bradius+position.y)*(bradius+position.y));
 
 		Mass=OurVessel->GetMass();
 		grav=(GRAVITY*bmass)/((bradius+position.y)*(bradius+position.y));
 
-		yinit=80;
+		yinit=100;
 //X logic...
 		ax=(fabs(velocity.x)*velocity.x)/(2*(position.x));
+		if(fabs(position.x) < 1.0) {
+			if(fabs(ax) > 0.02) ax=0.0;
+		}
+//		if(fabs(ax) > fabs(velocity.x)) ax=-velocity.x/2.0;
 		if(position.x > 0) ax=-ax;
 		tts=position.x/velocity.x;
 		if(tts > 0) {
-			ax=-position.x/100;
-			if(fabs(ax) > (grav*0.17)) {
-				ax=(-position.x/fabs(position.x))*grav*0.17;
-			}
+//			ax=-position.x/(100.0*DELTAT);
+			ax=-position.x/(50.0*DELTAT);
 		}
-		if(tts < -100) ax=(-position.x/fabs(position.x))*grav*0.17;
-		ax=ax*1.3;
+//		ax=ax*1.3;
+		ax=ax*1.5;
 		acc.x=ax;
 
 
@@ -803,28 +839,30 @@ void LEMcomputer::Prog65(double simt)
 		az=az*1.3;
 		acc.z=az;
 // Y logic
-		yrate=(position.y/yinit)*(-3.5);
-		if(fabs(position.x) < position.y) {
-			yrate=yrate*2.0;
-		}
-//		if(yrate > -0.5) {
+		yrate=-0.5+(position.y/yinit)*(-2.5);
+		if(position.y < 20.0) yrate=-1.0;
+		if(position.y < 10.0) yrate=-(position.y+10.0)/20.0;
+//		if(fabs(position.x) < position.y) {
+//			yrate=yrate*2.0;
+//		}
 		if(velocity.y > -0.5) {
 			yrate=-0.5;
 		}
-		if(position.y < 5*fabs(position.x)) {
-			yrate=yrate*0.3;
-		}
-		if(position.y < 60.) {
-			yrate=-2.5;
-			if(position.y < 10*fabs(position.x)) yrate=-0.5;
-		}
-		if(position.y < 10.) {
-			if(fabs(position.x) < 1.0) {
-				yrate=-0.5;
-			} else {
-				if(position.y > 5) yrate=-0.5;
-			}
-		}
+//		if(position.y < 5*fabs(position.x)) {
+//			yrate=yrate*0.3;
+//		}
+//		if(position.y < 60.) {
+//			yrate=-2.5;
+//			if(position.y < 10*fabs(position.x)) yrate=-0.5;
+//		}
+//		if(position.y < 10.) {
+//			if(fabs(position.x) < 1.0) {
+//				yrate=-1.0;
+//			} else {
+//				yrate-0.8;
+//				if(position.y > 5) yrate=-0.5;
+//			}
+//		}
 
 		acc.y=grav+((yrate-velocity.y)/5.0)*DELTAT;
 		
@@ -833,7 +871,6 @@ void LEMcomputer::Prog65(double simt)
 
 // end of landing mode guidance...
 		acctot=sqrt(acc.x*acc.x+acc.y*acc.y+acc.z*acc.z);
-//		tgtatt.z=asin(acc.z/acctot);
 		if(acc.x == 0.0) {
 		//prevent zerodivide..
 			tgtatt.x=0;
@@ -850,13 +887,19 @@ void LEMcomputer::Prog65(double simt)
 		maxacc=vthrust/vmass;
 
 		cthrust=acctot/maxacc;
-//		if(cthrust > 0.6772) cthrust=0.6772;
 		if(cthrust > 0.5) cthrust=0.5;
 
 		tgtatt.z=-asin(acc.z/acctot);
 		tgtatt.y=0.0;
 //		tgtatt.x=(PI/2.0-atan(acc.y/acc.x)*(fabs(acc.x)/acc.x));
 		OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
+		if(LOGFILE) {
+			fprintf(outstr,"acc: %.6f %.6f %.6f \n", acc);
+			fprintf(outstr,"tgt: %.3f %.3f %.3f \n", tgtatt*DEG);
+			fprintf(outstr,"act: %.3f %.3f %.3f \n", actatt*DEG);
+			fprintf(outstr,"thr: %.3f yrate: %.3f\n", cthrust*100., yrate);
+		}
+			
 //		sprintf(oapiDebugString(),
 //			"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f ",
 //			acc, tgtatt*DEG, actatt*DEG, cthrust);
@@ -885,7 +928,7 @@ void LEMcomputer :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 //	const double RATE_FINE = RAD*(0.01);
 //	const double DEADBAND_LOW = RAD*(0.05);
 //	const double RATE_FINE = RAD*(0.005);
-	const double DEADBAND_LOW = RAD*(0.02);
+	const double DEADBAND_LOW = RAD*(0.01);
 	const double RATE_FINE = RAD*(0.005);
 
 	const double RATE_NULL = RAD*(0.0001);
