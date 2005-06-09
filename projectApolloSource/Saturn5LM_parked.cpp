@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/05/27 15:43:08  tschachim
+  *	Fixed bug: virtual engines are always on
+  *	
   *	Revision 1.4  2005/05/21 16:14:36  movieman523
   *	Pass Realism and AudioLanguage correctly from CSM to LEM.
   *	
@@ -619,6 +622,15 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 	else if (stage == 4)
 	{	
 	}
+}
+
+//
+// Set GMBLswitch
+//
+
+void sat5_lmpkd::SetGimbal(bool setting)
+{
+	GMBLswitch=setting;
 }
 
 //
