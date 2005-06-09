@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/06/04 20:25:42  lazyd
+  *	Added routines for landing
+  *	
   *	Revision 1.2  2005/05/19 20:26:52  movieman523
   *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
   *	
@@ -140,6 +143,11 @@ protected:
 	LEMFlagWord0 FlagWord0;
 	LEMFlagWord1 FlagWord1;
 	LEMFlagWord2 FlagWord2;
+
+	//
+	// log file for autoland debugging
+	//
+	FILE *outstr;
 
 	//
 	//	Ascent Auto-Pilot Data
