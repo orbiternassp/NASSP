@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/05/21 16:14:36  movieman523
+  *	Pass Realism and AudioLanguage correctly from CSM to LEM.
+  *	
   *	Revision 1.3  2005/04/11 23:46:17  yogenfrutz
   *	added InPanel and Panel_ID
   *	
@@ -73,6 +76,7 @@ public:
 	void SetLmVesselDockStage();
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
+	void SetGimbal(bool setting);
 	void StartAscent();
 	virtual void SetLanderData(LemSettings &ls);
 
