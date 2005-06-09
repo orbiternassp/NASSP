@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/06/08 22:40:48  lazyd
+  *	Using Emem 075 and 76 to save more lat/lon precision
+  *	Final hover part of landing is much smoother
+  *	
   *	Revision 1.3  2005/06/06 22:24:34  lazyd
   *	Save/Resore now works without any additional variables
   *	
@@ -39,10 +43,12 @@
 #include "math.h"
 #include "OrbiterSoundSDK3.h"
 #include "soundlib.h"
+#include "nasspdefs.h"
 
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "lemcomputer.h"
+#include "sat5_lmpkd.h"
 
 #define MAXOFFPLANE	44000
 #define BRAKDIST	425000
@@ -395,6 +401,8 @@ void LEMcomputer::Prog63(double simt)
 	case 7:
 		SetVerbNoun(6, 62);
 		if(dt <= 7.0) {
+			sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+			lem->SetGimbal(false);
 			OurVessel->SetAttitudeLinLevel(1,1.0);
 			ProgState++;
 		}
