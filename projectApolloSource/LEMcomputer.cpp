@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/06/08 22:42:06  lazyd
+  *	Added new EMEM code for lat/lon
+  *	
   *	Revision 1.4  2005/06/06 22:25:41  lazyd
   *	Small hack to display my own Noun 33
   *	
@@ -231,8 +234,23 @@ void LEMcomputer::DisplayNounData(int noun)
 
 	case 60:
 		{
-			dsky.SetR1((int)(CutOffVel));
-			dsky.SetR2((int)(DesiredApogee));
+			VECTOR3 velocity;
+			double cgelev, vlat, vlon, vrad, heading, hvel, cbrg;
+			OBJHANDLE hbody=OurVessel->GetGravityRef();
+			double bradius=oapiGetSize(hbody);
+			OurVessel->GetEquPos(vlon, vlat, vrad);
+			OurVessel->GetHorizonAirspeedVector(velocity);
+			oapiGetHeading(OurVessel->GetHandle(), &heading);
+			hvel=sqrt(velocity.x*velocity.x+velocity.z*velocity.z);
+			cbrg=atan2(velocity.x,velocity.z);
+			if(velocity.x < 0.0) {
+			//retrograde
+				cbrg+=2*PI;
+			} 
+			cgelev=OurVessel->GetCOG_elev();
+			CurrentAlt=vrad-bradius-cgelev;
+			dsky.SetR1((int)(hvel*cos(cbrg-heading)*10.0));
+			dsky.SetR2((int)(velocity.y*10.0));
 			dsky.SetR3((int)(CurrentAlt));
 		}
 		break;
@@ -498,6 +516,12 @@ bool LEMcomputer::ValidateProgram(int prog)
 		return true;
 
 	//
+	// 66: Attitude hold, ROD mode
+	//
+	case 66:
+		return true;
+
+	//
 	// 68: landing confirmation.
 	//
 	case 68:
@@ -551,6 +575,14 @@ void LEMcomputer::Timestep(double simt)
 
 	case 65:
 		Prog65(simt);
+		break;
+
+	//
+	// 66: Attitude hold, ROD mode
+	//
+
+	case 66:
+		Prog66(simt);
 		break;
 
 	//
