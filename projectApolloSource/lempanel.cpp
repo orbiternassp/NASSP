@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/05/27 16:54:42  tschachim
+  *	"ugly but working" DSKY on the left LM panel
+  *	
   *	Revision 1.5  2005/05/27 15:43:08  tschachim
   *	Fixed bug: virtual engines are always on
   *	
@@ -740,8 +743,14 @@ bool sat5_lmpkd::LoadPanel (int id)
 	
    
    InitPanel (id);
-
-	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+   //
+   // Changed camera direction for "landing panel"
+   //
+   if(id == 5) {
+		SetCameraDefaultDirection(_V(0.0, -0.70710678, 0.70710678));
+   } else {
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+   }
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	InVC = false;
 	InPanel = true; //yogen
