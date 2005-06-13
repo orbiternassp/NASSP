@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/06/09 14:16:31  lazyd
+  *	Added code to turn off engine gimballing prior to powered descent
+  *	
   *	Revision 1.4  2005/06/08 22:40:48  lazyd
   *	Using Emem 075 and 76 to save more lat/lon precision
   *	Final hover part of landing is much smoother
@@ -80,7 +83,7 @@ void LEMcomputer::Prog63(double simt)
 	const double GRAVITY=6.67259e-11;
 	int nit;
 	VECTOR3 vel, actatt, tgtatt, relpos, relvel, plvec, vnorm, zerogl, xgl, ygl, zgl, 
-		upproj, lrproj, position, velocity, acc, qacc;
+		upproj, lrproj, position, velocity, acc;
 	double vlat, vlon, vrad, prograde, dlat, dlon, aa, cc, sbdis, tbrg, cbrg, rbrg, hvel,
 		blat, blon, tgo, centrip, grav, cthrust, accx, acctot, vmass, vthrust, 
 		maxacc, down, ttg, ttg2, ttg3, ttg4, ttgl, ttgl2, dtg, jfz, heading;
@@ -269,7 +272,7 @@ void LEMcomputer::Prog63(double simt)
 					acc.z=ahi.z+(6.0*(velocity.z+vhi.z))/ttg - (12.0*(position.z-rhi.z))/ttg2;
 				}
 
-				qacc=acc;
+//				qacc=acc;
 //				sprintf(oapiDebugString(),
 //					"tgo, acc= %.1f %.1f %.1f %.1f %.1f %.1f",tgo, acc, centrip, grav);
 //				sprintf(oapiDebugString(),
@@ -321,9 +324,6 @@ void LEMcomputer::Prog63(double simt)
 					}
 				}
 				acctot=Mag(acc);
-//				sprintf(oapiDebugString(),
-//				"tgo=%.1f qacc=%.1f %.1f %.1f acc=%.1f %.1f %.1f mq=%.3f ma=%.3f max=%.3f th=%.3f%%",
-//					ttg, qacc, acc, Mag(qacc), acctot, maxacc, cthrust*93.0);
 //				sprintf(oapiDebugString()," acc=%.3f %.3f %.3f %.3f ", 
 //					acc,acctot);
 				// now let's convert the accelerations to attitude for the vessel...
@@ -420,7 +420,6 @@ void LEMcomputer::Prog63(double simt)
 	case 10:
 		SetVerbNoun(6,62);
 		if(dt <= 0.0) {
-//			OurVessel->SetGimbal(false);
 			OurVessel->SetEngineLevel(ENGINE_HOVER, 0.1);
 			ProgState++;
 		}
@@ -543,8 +542,20 @@ void LEMcomputer::Prog64(double simt)
 	if(ProgState==0) {
 		BurnStartTime=simt;
 		BurnEndTime=BurnStartTime+100.0;
+		ProgFlag01=false;
 		ProgState++;
 	}
+	if(ProgFlag01) {
+		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+		lem->SetGimbal(true);
+		ProgState=0;
+		OurVessel->GetHorizonAirspeedVector(vel);
+		DesiredDeltaVy=vel.y;
+		NextEventTime=simt;
+		RunProgram(66);
+		return;
+	}
+
 //	sprintf(oapiDebugString(),"state= %d", ProgState);
 	if(simt > NextEventTime) {
 		NextEventTime=simt+DELTAT;
@@ -598,13 +609,20 @@ void LEMcomputer::Prog64(double simt)
 			rbrg-=2*PI;
 		}
 
+		position.x=-sbdis*cos(tbrg-heading);
+		position.y=CurrentAlt;
+		position.z=sbdis*sin(tbrg-heading);
+		velocity.x=hvel*cos(cbrg-heading);
+		velocity.y=vel.y;
+		velocity.z=-hvel*sin(cbrg-heading);
+/*
 		position.x=-sbdis*cos(rbrg);
 		position.y=CurrentAlt;
 		position.z=-sin(rbrg)*sbdis;
 		velocity.x=hvel*cos(rbrg);
 		velocity.y=vel.y;
 		velocity.z=-hvel*sin(rbrg);
-
+*/
 		grav=(GRAVITY*bmass)/((bradius+position.y)*(bradius+position.y));
 //solve for time-to-go
 		jfz=0.01328;
@@ -674,8 +692,7 @@ void LEMcomputer::Prog64(double simt)
 			}
 			cthrust=0.6772;
 		}
-		tgtatt.z=asin(acc.z/acctot);
-//		tgtatt.z=-asin(acc.z/acctot);
+		tgtatt.z=-asin(acc.z/acctot);
 		tgtatt.y=0.0;
 		tgtatt.x=(PI/2.0-atan(acc.y/acc.x)*(fabs(acc.x)/acc.x));
 		// the LPD time and LPD angle are calculated and put into CutOffVel for N64 display
@@ -704,6 +721,7 @@ void LEMcomputer::Prog65(double simt)
 		sbdis, rbrg, cbrg, tbrg, vlon, vlat, vrad, prograde, blat, blon, dlat, dlon, aa, 
 		cc, hvel, cthrust, maxacc, vmass, vthrust, cgelev;
 
+//	sprintf(oapiDebugString(),"ProgState=%d", ProgState);
 	if(ProgState > 2) return;
 
 	if(ProgState == 2) {
@@ -717,7 +735,21 @@ void LEMcomputer::Prog65(double simt)
 		RunProgram(68);
 		return;
 	}
+	if(ProgFlag01) {
+		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+		lem->SetGimbal(true);
+		if(LOGFILE) {
+			fprintf(outstr, "P66: Close file.");
+			fclose(outstr);
+		}
+		OurVessel->GetHorizonAirspeedVector(vel);
+		DesiredDeltaVy=vel.y;
+		NextEventTime=simt;
+		RunProgram(66);
+		return;
+	}
 	if(ProgState == 0) {
+		ProgFlag01=false;
 		if(LOGFILE) {
 			char fname[8];
 			sprintf(fname,"llog.txt");
@@ -726,7 +758,6 @@ void LEMcomputer::Prog65(double simt)
 		}
 		ProgState++;
 		NextEventTime=simt;
-		// initialize...
 	}
 
 
@@ -801,7 +832,7 @@ void LEMcomputer::Prog65(double simt)
 		}
 		position.x=-sbdis*cos(tbrg-heading);
 		position.y=CurrentAlt;
-		position.z=-sbdis*sin(tbrg-heading);
+		position.z=sbdis*sin(tbrg-heading);
 		velocity.x=hvel*cos(cbrg-heading);
 		velocity.y=vel.y;
 		velocity.z=-hvel*sin(cbrg-heading);
@@ -814,7 +845,6 @@ void LEMcomputer::Prog65(double simt)
 			fprintf(outstr,"Vel: %.3f %.3f %.3f \n", velocity);
 		}
 
-		grav=(GRAVITY*bmass)/((bradius+position.y)*(bradius+position.y));
 
 		Mass=OurVessel->GetMass();
 		grav=(GRAVITY*bmass)/((bradius+position.y)*(bradius+position.y));
@@ -825,15 +855,12 @@ void LEMcomputer::Prog65(double simt)
 		if(fabs(position.x) < 1.0) {
 			if(fabs(ax) > 0.02) ax=0.0;
 		}
-//		if(fabs(ax) > fabs(velocity.x)) ax=-velocity.x/2.0;
 		if(position.x > 0) ax=-ax;
 		tts=position.x/velocity.x;
 		if(tts > 0) {
-//			ax=-position.x/(100.0*DELTAT);
 			ax=-position.x/(50.0*DELTAT);
 		}
-//		ax=ax*1.3;
-		ax=ax*1.5;
+		ax=ax*1.4;
 		acc.x=ax;
 
 
@@ -847,31 +874,18 @@ void LEMcomputer::Prog65(double simt)
 		az=az*1.3;
 		acc.z=az;
 // Y logic
-		yrate=-0.5+(position.y/yinit)*(-2.5);
+//this works very well landing from low gate in 62 seconds or so
+/*		yrate=-0.5+(position.y/yinit)*(-2.5);
 		if(position.y < 20.0) yrate=-1.0;
 		if(position.y < 10.0) yrate=-(position.y+10.0)/20.0;
-//		if(fabs(position.x) < position.y) {
-//			yrate=yrate*2.0;
-//		}
 		if(velocity.y > -0.5) {
 			yrate=-0.5;
 		}
-//		if(position.y < 5*fabs(position.x)) {
-//			yrate=yrate*0.3;
-//		}
-//		if(position.y < 60.) {
-//			yrate=-2.5;
-//			if(position.y < 10*fabs(position.x)) yrate=-0.5;
-//		}
-//		if(position.y < 10.) {
-//			if(fabs(position.x) < 1.0) {
-//				yrate=-1.0;
-//			} else {
-//				yrate-0.8;
-//				if(position.y > 5) yrate=-0.5;
-//			}
-//		}
-
+		//ax=ax*1.5
+*/
+// this gets down in 47 seconds, even faster than Gene Cernan..
+		double curve=(yinit-position.y)/yinit;
+		yrate=-3.5+(curve*curve*3.0);
 		acc.y=grav+((yrate-velocity.y)/5.0)*DELTAT;
 		
 
@@ -899,7 +913,6 @@ void LEMcomputer::Prog65(double simt)
 
 		tgtatt.z=-asin(acc.z/acctot);
 		tgtatt.y=0.0;
-//		tgtatt.x=(PI/2.0-atan(acc.y/acc.x)*(fabs(acc.x)/acc.x));
 		OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
 		if(LOGFILE) {
 			fprintf(outstr,"acc: %.6f %.6f %.6f \n", acc);
@@ -920,6 +933,111 @@ void LEMcomputer::Prog65(double simt)
 	
 }
 
+
+void LEMcomputer::Prog66(double simt)
+{
+	static VECTOR3 zero={0.0, 0.0, 0.0};
+	const double GRAVITY=6.67259e-11; // Gravitational constant
+	double vmass, vthrust, maxacc, cthrust, acctot, actattx, actattz, grav, 
+		vlon, vlat, vrad, cgelev, accy;
+	VECTOR3 velocity;
+	if(ProgState > 1) return;
+
+	if(ProgState == 1) {
+		RunProgram(68);
+		return;
+	}
+	if(simt > NextEventTime) {
+		NextEventTime=simt+0.5;
+		OBJHANDLE hbody=OurVessel->GetGravityRef();
+		double bradius=oapiGetSize(hbody);
+		double bmass=oapiGetMass(hbody);
+		OurVessel->GetEquPos(vlon, vlat, vrad);
+		OurVessel->GetHorizonAirspeedVector(velocity);
+		cgelev=OurVessel->GetCOG_elev();
+		CurrentAlt=vrad-bradius-cgelev;
+		if (CurrentAlt <= 0.0 ) {
+			OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
+			OurVessel->SetAttitudeRotLevel(zero);
+			ProgState++;
+		}
+		DesiredApogee=velocity.y*10.0;
+		CutOffVel=velocity.x;
+		grav=(GRAVITY*bmass)/((bradius+CurrentAlt)*(bradius+CurrentAlt));
+		actattx=OurVessel->GetPitch();
+		actattz=-OurVessel->GetBank();
+		accy=grav+((DesiredDeltaVy-velocity.y)/2.0);
+		vmass=OurVessel->GetMass();
+		vthrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
+		maxacc=vthrust/vmass;
+		acctot=accy/(cos(actattx)*cos(actattz));
+		cthrust=acctot/maxacc;
+		if(cthrust > 0.5) cthrust=0.5;
+//		sprintf(oapiDebugString(),"acc=%.3f tot=%.3f thr=%.1f ddy=%.3f dy=%.3f",
+//			accy,acctot, cthrust*100, DesiredDeltaVy, velocity.y);
+		OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
+	}
+	SetVerbNounAndFlash(6, 60);
+}
+
+void LEMcomputer::ChangeDescentRate(double delta) 
+{
+	static VECTOR3 zero={0.0, 0.0, 0.0};
+	VECTOR3 vel;
+	if(ProgFlag01 == false) {
+		OurVessel->SetAttitudeRotLevel(zero);
+		ProgFlag01=true;
+		OurVessel->GetHorizonAirspeedVector(vel);
+		DesiredDeltaVy=vel.y;
+		return;
+	}
+	DesiredDeltaVy+=delta;
+//	sprintf(oapiDebugString(),"Descent rate=%.3f", DesiredDeltaVy);
+}
+
+void LEMcomputer::RedesignateTarget(int axis, double direction)
+{
+	double xoffset, zoffset, vlon, vlat, vrad, blat, blon, dlat, dlon, aa, cc, distance, 
+		alpd, cgelev, newlat, newlon;
+	if(ProgRunning != 64) return;
+	OBJHANDLE hbody=OurVessel->GetGravityRef();
+	double bradius=oapiGetSize(hbody);
+	// if there is no LPD time remaining, do nothing...
+	if(CutOffVel < 1000.0) return;
+	OurVessel->GetEquPos(vlon, vlat, vrad);
+	cgelev=OurVessel->GetCOG_elev();
+	CurrentAlt=vrad-bradius-cgelev;
+// spherical calcs
+	blat=LandingLatitude*RAD;
+	blon=LandingLongitude*RAD;
+	dlat=vlat-blat;
+	dlon=vlon-blon;
+	aa = pow(sin(dlat/2), 2) + cos(blat) * cos (vlat) * pow(sin(dlon/2), 2);
+	cc = 2 * atan2(sqrt(aa), sqrt(1 - aa));
+	distance=bradius*cc;
+	if(axis == 0) {
+	// move the landing site close or further 1/2 degree
+		alpd=atan(CurrentAlt/fabs(distance));
+		xoffset=direction*(distance-(CurrentAlt/tan(alpd+0.5*RAD)));
+		zoffset=0.0;
+	} else {
+	// move the landing site left or right 2 degrees
+		//yaw our vessel so we are pointing to the site..
+		BurnTime=BurnTime-direction*2.0*RAD;
+		zoffset=direction*(distance/30.0);
+		xoffset=0.0;
+	}
+	//now update our landing latitude and longitude
+	newlat=blat+(zoffset/bradius)*sin(BurnTime)+
+		(xoffset/bradius)*cos(BurnTime);
+	newlon=blon-(zoffset/(bradius*cos(blat)))*cos(BurnTime)+
+		(xoffset/(bradius*cos(blat)))*sin(BurnTime);
+	LandingLatitude=newlat*DEG;
+	LandingLongitude=newlon*DEG;
+//	sprintf(oapiDebugString(),"New Lat=%.8f Lon=%.8f xoff=%.1f zoff=%.1f", 
+//		LandingLatitude, LandingLongitude, xoffset, zoffset);
+}
+
 // This is adapted from Chris Knestrick's Control.cpp, which wouldn't work right here
 // The main differences are rates are a linear function of delta angle, rather than a 
 // step function, and we do all three axes at once
@@ -932,10 +1050,6 @@ void LEMcomputer :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 	const double RATE_MID = RAD*(0.5);
 	const double DEADBAND_MID = RAD*(1.0);
 	const double RATE_LOW = RAD*(0.25);
-//	const double DEADBAND_LOW = RAD*(0.15);
-//	const double RATE_FINE = RAD*(0.01);
-//	const double DEADBAND_LOW = RAD*(0.05);
-//	const double RATE_FINE = RAD*(0.005);
 	const double DEADBAND_LOW = RAD*(0.01);
 	const double RATE_FINE = RAD*(0.005);
 
