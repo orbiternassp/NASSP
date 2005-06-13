@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/06/09 12:07:46  lazyd
+  *	Added a File variable for making a log file for debugging
+  *	
   *	Revision 1.3  2005/06/04 20:25:42  lazyd
   *	Added routines for landing
   *	
@@ -119,6 +122,8 @@ public:
 	void SetFlagWord(int num, unsigned int val);
 	bool ReadMemory(unsigned int loc, int &val);
 	void WriteMemory(unsigned int loc, int val);
+	void ChangeDescentRate(double delta);
+	void RedesignateTarget(int axis, double direction);
 
 	void Timestep(double simt);
 
@@ -132,6 +137,7 @@ protected:
 	void Prog63(double simt);
 	void Prog64(double simt);
 	void Prog65(double simt);
+	void Prog66(double simt);
 	void Prog68(double simt);
 	void Prog63Pressed(int R1, int R2, int R3);
 	void Prog68Pressed(int R1, int R2, int R3) { ProgState++; };
