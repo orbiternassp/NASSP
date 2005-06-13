@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/06/09 14:18:23  lazyd
+  *	Added code for function SetGimbal which sets the value of GMBLswitch
+  *	
   *	Revision 1.5  2005/05/27 15:43:08  tschachim
   *	Fixed bug: virtual engines are always on
   *	
@@ -389,7 +392,56 @@ int sat5_lmpkd::ConsumeDirectKey (const char *keystate)
 				cdrview = true;
 			return 1;
 		}
+
+		//
+		// keys used by LM landing programs P64 and P66
+		//
 		
+		if (KEYDOWN (keystate, OAPI_KEY_MINUS)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_MINUS, 1.0)) {
+				agc.ChangeDescentRate(-0.3077);
+			}
+			return 1;
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_EQUALS)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_EQUALS, 1.0)) {
+				agc.ChangeDescentRate(0.3077);
+			}
+			return 1;
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_HOME)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_HOME, 1.0))
+				//move the landing site downrange
+				agc.RedesignateTarget(0,1.0);
+			return 1;
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_END)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_END, 1.0))
+				//move the landing site closer
+				agc.RedesignateTarget(0,-1.0);
+			return 1;
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_DELETE)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_DELETE, 1.0))
+				// move landing site left
+				agc.RedesignateTarget(1,1.0);
+			return 1;
+		}
+
+		if (KEYDOWN (keystate, OAPI_KEY_INSERT)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_INSERT, 1.0))
+				// move landing site right
+				agc.RedesignateTarget(1,-1.0);
+			return 1;
+		}
+
+		//
+		// end of keys used by LM landing programs P64 and P66
+		//
 	}
 	return 0;
 }
