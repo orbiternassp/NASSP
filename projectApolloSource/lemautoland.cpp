@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/06/13 18:43:09  lazyd
+  *	Added P66 and target redesignation to P64
+  *	
   *	Revision 1.5  2005/06/09 14:16:31  lazyd
   *	Added code to turn off engine gimballing prior to powered descent
   *	
@@ -700,6 +703,7 @@ void LEMcomputer::Prog64(double simt)
 		if(secs < 0) secs=0;
 		CutOffVel=1000.0*secs+(atan(position.y/fabs(position.x))+actatt.x)*DEG;
 		OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
+		sprintf (oapiDebugString(), "LPD angle %.1f", (atan(position.y/fabs(position.x))+actatt.x)*DEG);
 //		sprintf(oapiDebugString(),
 //			"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f tgo=%.1f cut=%.1f",
 //			acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60., CutOffVel);
