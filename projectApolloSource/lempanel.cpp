@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/06/13 21:12:11  lazyd
+  *	Changed camera direction in left panel to 45 degrees down for landing
+  *	
   *	Revision 1.6  2005/05/27 16:54:42  tschachim
   *	"ugly but working" DSKY on the left LM panel
   *	
@@ -747,7 +750,7 @@ bool sat5_lmpkd::LoadPanel (int id)
    // Changed camera direction for "landing panel"
    //
    if(id == 5) {
-		SetCameraDefaultDirection(_V(0.0, -0.70710678, 0.70710678));
+		SetCameraDefaultDirection(_V(0.0, -0.544639, 0.838671));
    } else {
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
    }
