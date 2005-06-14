@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/06/14 13:11:30  henryhallam
+  *	changed left window panel direction to be better for LPD
+  *	
   *	Revision 1.7  2005/06/13 21:12:11  lazyd
   *	Changed camera direction in left panel to 45 degrees down for landing
   *	
@@ -61,6 +64,8 @@
 
 #include "landervessel.h"
 #include "sat5_lmpkd.h"
+
+#define VIEWANGLE 30
 
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
@@ -749,8 +754,9 @@ bool sat5_lmpkd::LoadPanel (int id)
    //
    // Changed camera direction for "landing panel"
    //
-   if(id == 5) {
-		SetCameraDefaultDirection(_V(0.0, -0.544639, 0.838671));
+   if(id >= 4) {
+
+		SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE*RAD), cos(VIEWANGLE*RAD)));
    } else {
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
    }
