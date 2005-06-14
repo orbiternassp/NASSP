@@ -54,4 +54,9 @@ AS-506:ProjectApollo\Saturn5
   TCP -8.5
   LANG English
 END
+AS-506-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6522159 28.5795627
+  HEADING 127.20
+  NAVFREQ 0 0
 END_SHIPS
