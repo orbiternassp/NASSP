@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/06/14 14:31:52  lazyd
+  *	Changed view angle for leftwindow and ilmleftwindow to 30 degrees down
+  *	Recoded view vector generation in a simpler way
+  *	
   *	Revision 1.8  2005/06/14 13:11:30  henryhallam
   *	changed left window panel direction to be better for LPD
   *	
@@ -65,7 +69,7 @@
 #include "landervessel.h"
 #include "sat5_lmpkd.h"
 
-#define VIEWANGLE 30
+#define VIEWANGLE 34
 
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
