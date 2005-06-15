@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/06/13 18:48:44  lazyd
+  *	Added code to catch key hits for autoland P64 and P66
+  *	
   *	Revision 1.6  2005/06/09 14:18:23  lazyd
   *	Added code for function SetGimbal which sets the value of GMBLswitch
   *	
@@ -115,6 +118,7 @@ void sat5_lmpkd::Init()
 	Eds=true;
 	
 	toggleRCS =false;
+	InFOV=true;
 
 	InitPanel();
 
