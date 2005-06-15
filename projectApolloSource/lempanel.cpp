@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/06/15 15:58:00  lazyd
+  *	Change FOV to 70 degrees for left window panel - back to 60 for other panels
+  *	This is a temporary thing until I figure out how do deal with generic panel etc.
+  *	
   *	Revision 1.10  2005/06/14 15:41:58  henryhallam
   *	temporarily added LPD angle display
   *	
@@ -762,13 +766,19 @@ bool sat5_lmpkd::LoadPanel (int id)
    // Changed camera direction for "landing panel"
    //
    if(id >= 4) {
-	   //save current FOV
-//		DesiredDeltaVx=oapiCameraAperture();
+	   // if this is the first time we've been here, save the current FOV
+		if(InFOV) {
+		   SaveFOV=oapiCameraAperture();
+		   InFOV=false;
+		}
 		//set FOV to 70 degrees
 		oapiCameraSetAperture(RAD*35.0);
 		SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE*RAD), cos(VIEWANGLE*RAD)));
    } else {
-		oapiCameraSetAperture(30.0*RAD);
+		 if(InFOV == false) {
+		   oapiCameraSetAperture(SaveFOV);
+		   InFOV=true;
+		}
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
    }
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
