@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/06/14 15:43:14  henryhallam
+  *	*** empty log message ***
+  *	
   *	Revision 1.6  2005/06/13 18:43:09  lazyd
   *	Added P66 and target redesignation to P64
   *	
@@ -537,7 +540,7 @@ void LEMcomputer::Prog64(double simt)
 	//Acceleration targets for low gate
 	static VECTOR3 alow= {   -0.1812, 0.0237, 0.0};
 	const double GRAVITY=6.67259e-11;
-	int nit;
+	int nit, lpd;
 	VECTOR3 vel, actatt, tgtatt, acc, position, velocity;
 	double vlon, vlat, vrad, prograde, blat, blon, dlat, dlon, aa, cc, sbdis, hvel, 
 		tbrg, cbrg, rbrg, heading, jfz, ttg, ttg2, ttg3, ttg4, ttgl,
@@ -701,9 +704,11 @@ void LEMcomputer::Prog64(double simt)
 		// the LPD time and LPD angle are calculated and put into CutOffVel for N64 display
 		int secs=(int)(-ttg-45);
 		if(secs < 0) secs=0;
-		CutOffVel=1000.0*secs+(atan(position.y/fabs(position.x))+actatt.x)*DEG;
+		lpd=(int)((atan(position.y/fabs(position.x))+actatt.x)*DEG+0.5);
+		CutOffVel=1000.0*secs+lpd;
+		sprintf(oapiDebugString(),"LPD time=%d  LPD angle=%d",secs, lpd);
 		OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
-		sprintf (oapiDebugString(), "LPD angle %.1f", (atan(position.y/fabs(position.x))+actatt.x)*DEG);
+//		sprintf (oapiDebugString(), "LPD angle %.1f", (atan(position.y/fabs(position.x))+actatt.x)*DEG);
 //		sprintf(oapiDebugString(),
 //			"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f tgo=%.1f cut=%.1f",
 //			acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60., CutOffVel);
@@ -840,6 +845,8 @@ void LEMcomputer::Prog65(double simt)
 		velocity.x=hvel*cos(cbrg-heading);
 		velocity.y=vel.y;
 		velocity.z=-hvel*sin(cbrg-heading);
+		sprintf(oapiDebugString(),"Forward velocity=%.1f Descent rate=%.1f Altitude=%.0f",
+			velocity.x, vel.y, CurrentAlt);
 		if(LOGFILE) {
 			fprintf(outstr,"Target Lat=%.8f Lon=%.8f \n",blat*DEG, blon*DEG);
 			fprintf(outstr,"Actual Lat=%.8f Lon=%.8f \n",vlat*DEG, vlon*DEG);
@@ -943,7 +950,7 @@ void LEMcomputer::Prog66(double simt)
 	static VECTOR3 zero={0.0, 0.0, 0.0};
 	const double GRAVITY=6.67259e-11; // Gravitational constant
 	double vmass, vthrust, maxacc, cthrust, acctot, actattx, actattz, grav, 
-		vlon, vlat, vrad, cgelev, accy;
+		vlon, vlat, vrad, cgelev, accy, heading, hvel, cbrg;
 	VECTOR3 velocity;
 	if(ProgState > 1) return;
 
@@ -967,6 +974,17 @@ void LEMcomputer::Prog66(double simt)
 		}
 		DesiredApogee=velocity.y*10.0;
 		CutOffVel=velocity.x;
+		//
+			oapiGetHeading(OurVessel->GetHandle(), &heading);
+			hvel=sqrt(velocity.x*velocity.x+velocity.z*velocity.z);
+			cbrg=atan2(velocity.x,velocity.z);
+			if(velocity.x < 0.0) {
+			//retrograde
+				cbrg+=2*PI;
+			} 
+			sprintf(oapiDebugString(),"Forward velocity=%.1f Descent rate=%.1f Altitude=%.0f",
+				(hvel*cos(cbrg-heading)), velocity.y, CurrentAlt);
+		//
 		grav=(GRAVITY*bmass)/((bradius+CurrentAlt)*(bradius+CurrentAlt));
 		actattx=OurVessel->GetPitch();
 		actattz=-OurVessel->GetBank();
