@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/06/14 15:41:58  henryhallam
+  *	temporarily added LPD angle display
+  *	
   *	Revision 1.9  2005/06/14 14:31:52  lazyd
   *	Changed view angle for leftwindow and ilmleftwindow to 30 degrees down
   *	Recoded view vector generation in a simpler way
@@ -759,9 +762,13 @@ bool sat5_lmpkd::LoadPanel (int id)
    // Changed camera direction for "landing panel"
    //
    if(id >= 4) {
-
+	   //save current FOV
+//		DesiredDeltaVx=oapiCameraAperture();
+		//set FOV to 70 degrees
+		oapiCameraSetAperture(RAD*35.0);
 		SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE*RAD), cos(VIEWANGLE*RAD)));
    } else {
+		oapiCameraSetAperture(30.0*RAD);
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
    }
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
