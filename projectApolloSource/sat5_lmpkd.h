@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/06/09 14:17:22  lazyd
+  *	Added SetGimbal function declaration
+  *	
   *	Revision 1.4  2005/05/21 16:14:36  movieman523
   *	Pass Realism and AudioLanguage correctly from CSM to LEM.
   *	
@@ -354,7 +357,9 @@ protected:
 
 	bool InVC;
 	bool InPanel; //yogen
+	bool InFOV;  //LazyD
 	int  PanelId; //yogen
+	double SaveFOV; //LazyD
 
 	SoundLib soundlib;
 
