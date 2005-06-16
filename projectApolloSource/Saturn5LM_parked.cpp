@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/06/15 20:33:51  lazyd
+  *	Added code to initialize InFOV
+  *	
   *	Revision 1.7  2005/06/13 18:48:44  lazyd
   *	Added code to catch key hits for autoland P64 and P66
   *	
@@ -402,35 +405,35 @@ int sat5_lmpkd::ConsumeDirectKey (const char *keystate)
 		//
 		
 		if (KEYDOWN (keystate, OAPI_KEY_MINUS)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_MINUS, 1.0)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_MINUS, 0.05)) {
 				agc.ChangeDescentRate(-0.3077);
 			}
 			return 1;
 		}
 
 		if (KEYDOWN (keystate, OAPI_KEY_EQUALS)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_EQUALS, 1.0)) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_EQUALS, 0.05)) {
 				agc.ChangeDescentRate(0.3077);
 			}
 			return 1;
 		}
 
 		if (KEYDOWN (keystate, OAPI_KEY_HOME)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_HOME, 1.0))
+			if (oapiAcceptDelayedKey (OAPI_KEY_HOME, 0.05))
 				//move the landing site downrange
 				agc.RedesignateTarget(0,1.0);
 			return 1;
 		}
 
 		if (KEYDOWN (keystate, OAPI_KEY_END)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_END, 1.0))
+			if (oapiAcceptDelayedKey (OAPI_KEY_END, 0.05))
 				//move the landing site closer
 				agc.RedesignateTarget(0,-1.0);
 			return 1;
 		}
 
 		if (KEYDOWN (keystate, OAPI_KEY_DELETE)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_DELETE, 1.0))
+			if (oapiAcceptDelayedKey (OAPI_KEY_DELETE, 0.05))
 				// move landing site left
 				agc.RedesignateTarget(1,1.0);
 			return 1;
