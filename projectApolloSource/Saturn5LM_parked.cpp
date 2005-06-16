@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/06/16 13:13:10  lazyd
+  *	Speed up response to ROD and redesignation key hits
+  *	
   *	Revision 1.8  2005/06/15 20:33:51  lazyd
   *	Added code to initialize InFOV
   *	
@@ -440,7 +443,7 @@ int sat5_lmpkd::ConsumeDirectKey (const char *keystate)
 		}
 
 		if (KEYDOWN (keystate, OAPI_KEY_INSERT)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_INSERT, 1.0))
+			if (oapiAcceptDelayedKey (OAPI_KEY_INSERT, 0.05))
 				// move landing site right
 				agc.RedesignateTarget(1,-1.0);
 			return 1;
