@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/06/15 20:30:47  lazyd
+  *	Added code to save original FOV correctly the first time leftwindow panel is used and to restore the original FOV and view direction for any other panel
+  *	
   *	Revision 1.11  2005/06/15 15:58:00  lazyd
   *	Change FOV to 70 degrees for left window panel - back to 60 for other panels
   *	This is a temporary thing until I figure out how do deal with generic panel etc.
@@ -753,7 +756,10 @@ bool sat5_lmpkd::LoadPanel (int id)
     case 4:
 
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_ATTACH_RIGHT,  g_Param.col[4]);//
-	    
+		oapiRegisterPanelArea (AID_FDAI,						_R(532,  170, 629,  267), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+		oapiRegisterPanelArea (AID_XPOINTER,					_R(460,  20,  549,   99), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+		oapiRegisterPanelArea (AID_CONTACT,						_R(588,  23,  618,   53), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		
 		break;
 
 
@@ -2487,6 +2493,27 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[8],0,0,50,0,25,45);
 			Sswitch2=false;
 		}
+		return true;
+
+	case AID_XPOINTER:
+		int ix, iy;
+		double vx, vy;
+		//draw the crosspointers
+		agc.GetHorizVelocity(vx, vy);
+		ix=(int)(-3.9*vx);
+		if(ix < -39) ix=-39;
+		if(ix > 39) ix=39;
+		iy=(int)(3.9*vy);
+		if(iy < -39) iy=-39;
+		if(iy > 39 ) iy=39;
+        oapiColourFill(surf, oapiGetColour(255, 255, 255), 0, 0, 79, 79);
+		HDC hDC=oapiGetDC(surf);
+		SelectObject(hDC, GetStockObject(BLACK_PEN));
+		MoveToEx(hDC, 0, 40+ix, NULL);
+		LineTo(hDC, 80, 40+ix);
+		MoveToEx(hDC, 40+iy, 0, NULL);
+		LineTo(hDC, 40+iy, 80);
+		oapiReleaseDC(surf, hDC);
 		return true;
 	}
 
