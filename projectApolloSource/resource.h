@@ -284,6 +284,7 @@
 #define AID_FUELCELLRADIATORSSWITCHES   506
 #define AID_FUELCELLPHRADTEMPINDICATORS	507
 #define AID_SEPARATIONSWITCHES			508
+#define AID_XPOINTER					509
 
 // Next default values for new objects
 //
