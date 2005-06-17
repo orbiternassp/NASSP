@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/06/13 18:47:03  lazyd
+  *	Added declarations for ChangeDescentRate and RedesignateTarget for autoland
+  *	
   *	Revision 1.4  2005/06/09 12:07:46  lazyd
   *	Added a File variable for making a log file for debugging
   *	
@@ -124,6 +127,7 @@ public:
 	void WriteMemory(unsigned int loc, int val);
 	void ChangeDescentRate(double delta);
 	void RedesignateTarget(int axis, double direction);
+	void GetHorizVelocity(double &forward, double &lateral);
 
 	void Timestep(double simt);
 
