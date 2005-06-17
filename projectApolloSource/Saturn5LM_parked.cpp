@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/06/16 13:33:03  lazyd
+  *	Fixed mistake on right redesignation
+  *	
   *	Revision 1.9  2005/06/16 13:13:10  lazyd
   *	Speed up response to ROD and redesignation key hits
   *	
@@ -945,3 +948,9 @@ DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
 	lem->SaveState(scn);
 }
 
+DLLCLBK bool ovcGenericCockpit (VESSEL *vessel) { 
+
+	sat5_lmpkd *lm = (sat5_lmpkd *)vessel; 
+	lm->SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+	return lm->LoadGenericCockpit(); 
+}
