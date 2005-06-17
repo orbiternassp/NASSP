@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/06/15 15:52:01  lazyd
+  *	Added DebugString to P64, P65 and P66 for left window panel
+  *	
   *	Revision 1.7  2005/06/14 15:43:14  henryhallam
   *	*** empty log message ***
   *	
@@ -278,12 +281,6 @@ void LEMcomputer::Prog63(double simt)
 					acc.z=ahi.z+(6.0*(velocity.z+vhi.z))/ttg - (12.0*(position.z-rhi.z))/ttg2;
 				}
 
-//				qacc=acc;
-//				sprintf(oapiDebugString(),
-//					"tgo, acc= %.1f %.1f %.1f %.1f %.1f %.1f",tgo, acc, centrip, grav);
-//				sprintf(oapiDebugString(),
-//					"r,v,a tgt= %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f",
-//					PositionTarget, VelocityTarget, AccelerationTarget, tgo);
 				acctot=Mag(acc);
 				vmass=OurVessel->GetMass();
 				vthrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
@@ -301,7 +298,7 @@ void LEMcomputer::Prog63(double simt)
 					cthrust=acctot/maxacc;
 					maxacc=maxacc*0.6772;
 					if (cthrust > 0.6772) {
-						// can't throttle up after throttledown, let x take the slack
+						// can't throttle up after throttledown, let downrange take the slack
 						accx=maxacc*maxacc-acc.y*acc.y-acc.z*acc.z;
 						if(acc.x > 0.0) {
 							acc.x=sqrt(fabs(accx));
@@ -621,14 +618,6 @@ void LEMcomputer::Prog64(double simt)
 		velocity.x=hvel*cos(cbrg-heading);
 		velocity.y=vel.y;
 		velocity.z=-hvel*sin(cbrg-heading);
-/*
-		position.x=-sbdis*cos(rbrg);
-		position.y=CurrentAlt;
-		position.z=-sin(rbrg)*sbdis;
-		velocity.x=hvel*cos(rbrg);
-		velocity.y=vel.y;
-		velocity.z=-hvel*sin(rbrg);
-*/
 		grav=(GRAVITY*bmass)/((bradius+position.y)*(bradius+position.y));
 //solve for time-to-go
 		jfz=0.01328;
@@ -1059,18 +1048,45 @@ void LEMcomputer::RedesignateTarget(int axis, double direction)
 //	sprintf(oapiDebugString(),"New Lat=%.8f Lon=%.8f xoff=%.1f zoff=%.1f", 
 //		LandingLatitude, LandingLongitude, xoffset, zoffset);
 }
+void LEMcomputer::GetHorizVelocity(double &forward, double &lateral)
+{
+		VECTOR3 velocity;
+		double vlat, vlon, vrad, heading, hvel, cbrg;
+		forward=0.0;
+		lateral=0.0;
+		if(ProgRunning < 64) return;
+		if(ProgRunning > 66) return;
+		OBJHANDLE hbody=OurVessel->GetGravityRef();
+		double bradius=oapiGetSize(hbody);
+		OurVessel->GetEquPos(vlon, vlat, vrad);
+		OurVessel->GetHorizonAirspeedVector(velocity);
+		oapiGetHeading(OurVessel->GetHandle(), &heading);
+		hvel=sqrt(velocity.x*velocity.x+velocity.z*velocity.z);
+		cbrg=atan2(velocity.x,velocity.z);
+		if(velocity.x < 0.0) {
+		//retrograde
+			cbrg+=2*PI;
+		} 
+		forward=hvel*cos(cbrg-heading);
+		lateral=hvel*sin(cbrg-heading);
+}
 
 // This is adapted from Chris Knestrick's Control.cpp, which wouldn't work right here
 // The main differences are rates are a linear function of delta angle, rather than a 
 // step function, and we do all three axes at once
 void LEMcomputer :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 {
-	const double RATE_MAX = RAD*(5.0);
-	const double DEADBAND_MAX = RAD*(10.0);
-	const double RATE_HIGH = RAD*(1.0);
-	const double DEADBAND_HIGH = RAD*(3.0);
-	const double RATE_MID = RAD*(0.5);
-	const double DEADBAND_MID = RAD*(1.0);
+	const double RATE_MAX = RAD*(8.0);
+//	const double RATE_MAX = RAD*(5.0);
+	const double DEADBAND_MAX = RAD*(16.0);
+//	const double RATE_HIGH = RAD*(1.0);
+	const double RATE_HIGH = RAD*(3.0);
+//	const double DEADBAND_HIGH = RAD*(3.0);
+	const double DEADBAND_HIGH = RAD*(6.0);
+//	const double RATE_MID = RAD*(0.5);
+	const double RATE_MID = RAD*(1.0);
+//	const double DEADBAND_MID = RAD*(1.0);
+	const double DEADBAND_MID = RAD*(2.0);
 	const double RATE_LOW = RAD*(0.25);
 	const double DEADBAND_LOW = RAD*(0.01);
 	const double RATE_FINE = RAD*(0.005);
