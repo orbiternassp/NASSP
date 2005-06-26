@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/04/11 23:47:42  yogenfrutz
+  *	once more: fixed docking positions and flames position
+  *	
   *	Revision 1.6  2005/03/17 16:21:46  yogenfrutz
   *	corrected a mistake i did in my previous version,sorry
   *	
@@ -141,10 +144,17 @@ void sat5_lmpkd::SetupEVA()
 void sat5_lmpkd::SetLmVesselDockStage()
 
 {	
+	double fuelmass;
 	ClearThrusterDefinitions();
 	agc.SetVesselStats(DPS_ISP, DPS_THRUST, true);
+	if(agc.GetApolloNo() < 15) {
+		SetEmptyMass(6651.0);
+		fuelmass=8375.;
+	} else {
+		SetEmptyMass(7481.0);
+		fuelmass=8891.;
+	}
 	SetSize (6);
-	SetEmptyMass (6431.0);
 	SetPMI (_V(2.8,2.29,2.37));
 	SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -160,7 +170,7 @@ void sat5_lmpkd::SetLmVesselDockStage()
 
 	AddMesh (hLMPKD, &mesh_dir);
     if (!ph_Dsc)  
-		ph_Dsc  = CreatePropellantResource(8165); //2nd stage Propellant
+		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
 	if (!ph_rcslm0) {
@@ -205,10 +215,17 @@ void sat5_lmpkd::SetLmVesselDockStage()
 
 void sat5_lmpkd::SetLmVesselHoverStage()
 {
+	double fuelmass;
 	ClearThrusterDefinitions();
 	agc.SetVesselStats(DPS_ISP, DPS_THRUST, true);
+	if(agc.GetApolloNo() < 15) {
+		SetEmptyMass(6651.0);
+		fuelmass=8375.;
+	} else {
+		SetEmptyMass(7481.0);
+		fuelmass=8891.;
+	}
 	SetSize (7);
-	SetEmptyMass (6431.0);
 	SetPMI (_V(2.8,2.29,2.37));
 	SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -224,7 +241,7 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	AddMesh (hLMVessel, &mesh_dir);
     
 	if (!ph_Dsc)  
-		ph_Dsc  = CreatePropellantResource(8165); //2nd stage Propellant
+		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 	if (!ph_rcslm0){
 		ph_rcslm0 = CreatePropellantResource(100);
