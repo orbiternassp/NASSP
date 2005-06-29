@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/06/14 16:14:41  tschachim
+  *	File header inserted.
+  *	
   **************************************************************************/
 
 #include "orbitersdk.h"
@@ -41,14 +44,19 @@ public:
 	void clbkSetClassCaps(FILEHANDLE cfg);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	void clbkSaveState(FILEHANDLE scn);
-	int clbkConsumeDirectKey (char *kstate);
+	int clbkConsumeDirectKey(char *kstate);
+	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep (double simt, double simdt, double mjd);
 
 protected:
 	double velocity;
+	double targetHeading;
 	double touchdownPointHeight;
-	bool firstTimestepDone;
+	bool reverseDirection;
+	bool useForce;
+	//double lastForceChange;
 
+	bool firstTimestepDone;
 	bool keyAccelerate;
 	bool keyBrake;
 	bool keyLeft;
@@ -56,9 +64,17 @@ protected:
 	bool keyUp;
 	bool keyDown;
 
+	OBJHANDLE hML;
+	OBJHANDLE hLV;
+	
 	SoundLib soundlib;
 	Sound soundEngine;
 
 	void DoFirstTimestep();
 	void SetTouchdownPoint();
+	bool IsMLAttached();
+	void AttachML();
+	void DetachML();
+	void AttachLV();
+	void ToggleDirection();
 };
