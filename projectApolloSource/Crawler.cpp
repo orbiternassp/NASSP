@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/06/29 11:01:17  tschachim
+  *	new dynamics, added attachment management
+  *	
   *	Revision 1.2  2005/06/14 16:14:41  tschachim
   *	File header inserted.
   *	
@@ -59,6 +62,7 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	touchdownPointHeight = -0.0001;
 	firstTimestepDone = false;
 	useForce = false;
+	standalone = false;
 	reverseDirection = false;
 
 	keyAccelerate = false;
@@ -113,8 +117,11 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 
 	if (IsMLAttached()) maxVelocity = maxVelocity / 2.0;
 
-	if (simdt > 1) useForce = false; 
-	if (simdt < 0.3) useForce = true; 
+	bool uf = useForce;
+	if (uf) {
+		if (simdt > 1) uf = false; 
+		if (simdt < 0.3) uf = true; 
+	}
 
 	double head;
 	oapiGetHeading(GetHandle(), &head);
@@ -130,7 +137,7 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 		keyBrake = false;
 	}
 
-	if (!useForce) {
+	if (!uf) {
 		VESSELSTATUS vs;
 		GetStatus(vs);
 
@@ -174,7 +181,7 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	GetShipAirspeedVector(vv);
 	double v = length(vv);
 
-	if (useForce) {
+	if (uf) {
 		if (keyLeft || keyRight) {
 			double r = 40.0 + v * 10.0;
 			double dheading = sqrt(vv.x * vv.x + vv.z * vv.z) * simdt / r;
@@ -226,7 +233,7 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	else
 		soundEngine.stop();
 
-	sprintf(oapiDebugString(), "Force %i simdt %f vv.z %f", useForce, simdt, vv.z);
+	//sprintf(oapiDebugString(), "Force %i simdt %f vv.z %f", uf, simdt, vv.z);
 
 	/*
 	OBJHANDLE hML = oapiGetVesselByName("AS-506-ML");
@@ -258,28 +265,29 @@ void Crawler::DoFirstTimestep() {
 	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
-	// find the Mobile Launcher and the Launch Vehicle
-	char nameML[256], nameLV[256], buffer[256];
-	strncpy(nameML, GetName(), strlen(GetName()) - 3);
-	nameML[strlen(GetName()) - 3] = '\0';
-	strcpy(nameLV, nameML);
-	strcat(nameML, "-ML");
+	if (!standalone) {
+		// find the Mobile Launcher and the Launch Vehicle
+		char nameML[256], nameLV[256], buffer[256];
+		strncpy(nameML, GetName(), strlen(GetName()) - 3);
+		nameML[strlen(GetName()) - 3] = '\0';
+		strcpy(nameLV, nameML);
+		strcat(nameML, "-ML");
 
-	double vcount = oapiGetVesselCount();
-	for (int i = 0; i < vcount; i++)	{
-		OBJHANDLE h = oapiGetVesselByIndex(i);
-		oapiGetObjectName(h, buffer, 256);
-		if (!strcmp(nameML, buffer)){
-			hML = h;
-		} else if (!strcmp(nameLV, buffer)){
-			hLV = h;
+		double vcount = oapiGetVesselCount();
+		for (int i = 0; i < vcount; i++)	{
+			OBJHANDLE h = oapiGetVesselByIndex(i);
+			oapiGetObjectName(h, buffer, 256);
+			if (!strcmp(nameML, buffer)){
+				hML = h;
+			} else if (!strcmp(nameLV, buffer)){
+				hLV = h;
+			}
 		}
+
+		// re-attach the ML to setup the meshes
+		if (IsMLAttached()) AttachML(); else DetachML();
+		//AttachLV();
 	}
-
-	// re-attach the ML to setup the meshes
-	if (IsMLAttached()) AttachML(); else DetachML();
-	//AttachLV();
-
 	firstTimestepDone = true;
 }
 
@@ -290,6 +298,8 @@ void Crawler::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp (line, "USEFORCE", 8)) {
 			sscanf (line + 8, "%i", &useForce);
+		} else if (!strnicmp (line, "STANDALONE", 10)) {
+			sscanf (line + 10, "%i", &standalone);
 		} else {
 			ParseScenarioLineEx (line, status);
 		}
@@ -300,6 +310,7 @@ void Crawler::clbkSaveState(FILEHANDLE scn) {
 	
 	VESSEL2::clbkSaveState (scn);
 	oapiWriteScenario_int (scn, "USEFORCE", useForce);
+	oapiWriteScenario_int (scn, "STANDALONE", standalone);
 }
 
 int Crawler::clbkConsumeDirectKey(char *kstate) {
@@ -362,17 +373,12 @@ int Crawler::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		ToggleDirection();
 		return 1;
 	}
-
-/*	if (key == OAPI_KEY_NUMPAD7 && down == true) {
-		useForce = !useForce;
-		return 1;
-	}
-*/
 	return 0;
 }
 
 void Crawler::AttachML() {
 
+	if (standalone) return;
 	if (velocity != 0) return;
 
 	ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 0);
@@ -396,6 +402,7 @@ void Crawler::AttachML() {
 
 void Crawler::DetachML() {
 
+	if (standalone) return;
 	if (velocity != 0) return;
 
 	ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 0);
@@ -450,6 +457,8 @@ void Crawler::DetachML() {
 
 bool Crawler::IsMLAttached() {
 
+	if (standalone) return false;
+
 	ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 0);
 	return (GetAttachmentStatus(ah) != NULL);
 }
@@ -471,6 +480,8 @@ void Crawler::ToggleDirection() {
 }
 
 void Crawler::AttachLV() {
+
+	if (standalone) return;
 
 	VESSEL *ml = oapiGetVesselInterface(hML);
 	VESSEL *lv = oapiGetVesselInterface(hLV);

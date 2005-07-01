@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/06/29 11:01:18  tschachim
+  *	new dynamics, added attachment management
+  *	
   *	Revision 1.2  2005/06/14 16:14:41  tschachim
   *	File header inserted.
   *	
@@ -54,7 +57,7 @@ protected:
 	double touchdownPointHeight;
 	bool reverseDirection;
 	bool useForce;
-	//double lastForceChange;
+	bool standalone;
 
 	bool firstTimestepDone;
 	bool keyAccelerate;
