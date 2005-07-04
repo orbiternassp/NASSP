@@ -22,10 +22,14 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:15:50  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "orbitersdk.h"
 #include "stdio.h"
+#include "astp.h"
 
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -8.935};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, 9.25-12.25};
@@ -42,40 +46,55 @@ static MESHHANDLE hapsh;
 static MESHHANDLE hapsl;
 
 
-void SetSecondStage (VESSEL *vessel)
+ASTP::ASTP (OBJHANDLE hObj, int fmodel)
+: VESSEL (hObj, fmodel)
+
 {
-	vessel->SetSize (15);
-	vessel->SetCOG_elev (15.225);
-	vessel->SetEmptyMass (23500);
-	vessel->SetPMI (_V(94,94,20));
-	vessel->SetCrossSections (_V(267,267,97));
-	vessel->SetCW (0.1, 0.3, 1.4, 1.4);
-	vessel->SetRotDrag (_V(0.7,0.7,1.2));
-	vessel->SetPitchMomentScale (0);
-	vessel->SetBankMomentScale (0);
-	vessel->SetLiftCoeffFunc (0);
-    vessel->ClearMeshes();
-    vessel->ClearExhaustRefs();
-    vessel->ClearAttExhaustRefs();
+	init();
+}
+
+ASTP::~ASTP ()
+
+{
+	// Nothing for now.
+}
+
+void ASTP::init()
+
+{
+}
+
+void ASTP::Setup()
+
+{
+	SetSize (15);
+	SetCOG_elev (15.225);
+	SetEmptyMass (23500);
+	SetPMI (_V(94,94,20));
+	SetCrossSections (_V(267,267,97));
+	SetCW (0.1, 0.3, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,1.2));
+	SetPitchMomentScale (0);
+	SetBankMomentScale (0);
+	SetLiftCoeffFunc (0);
+    ClearMeshes();
+    ClearExhaustRefs();
+    ClearAttExhaustRefs();
     VECTOR3 mesh_dir=_V(0,0,0);
-    vessel->AddMesh (hSat1stg2, &mesh_dir);
+    AddMesh (hSat1stg2, &mesh_dir);
 	mesh_dir=_V(0,4,-4.2);
     //vessel->AddMesh (hapsl, &mesh_dir);
 	mesh_dir=_V(0,-4,-4.2);
     //vessel->AddMesh (hapsh, &mesh_dir);
 	mesh_dir=_V(0,0,13.3);
-	vessel->AddMesh (hastp, &mesh_dir);
+	AddMesh (hastp, &mesh_dir);
 
 	VECTOR3 dockpos = {0.0, 0.0, -2.2};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {0,1,0};
 
-	vessel->SetDockParams(dockpos, dockdir, dockrot);
+	SetDockParams(dockpos, dockdir, dockrot);
 }
-
-
-
-
 
 // ==============================================================
 // API interface
@@ -90,12 +109,14 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hapsh = oapiLoadMeshGlobal ("napshigh");
 		hapsl = oapiLoadMeshGlobal ("napslow");
 	}
-	return new VESSEL (hvessel, flightmodel);
+	return new ASTP (hvessel, flightmodel);
 }
 
 
 DLLCLBK void ovcSetClassCaps (VESSEL *vessel, FILEHANDLE cfg)
 {
-	SetSecondStage(vessel);
+	ASTP *sv = (ASTP *) vessel;
+	sv->init();
+	sv->Setup();
 }
 

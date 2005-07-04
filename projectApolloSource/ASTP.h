@@ -22,7 +22,24 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.1  2005/02/11 12:15:50  tschachim
-  *	Initial version
+  *	Revision 1.1  2005/07/04 23:50:57  movieman523
+  *	Initial ASTP header file (currently a placeholder).
   *	
   **************************************************************************/
+
+class ASTP: public VESSEL {
+
+public:
+
+	ASTP (OBJHANDLE hObj, int fmodel);
+	virtual ~ASTP();
+	void init();
+	void Setup();
+
+protected:
+
+	//
+	// No variables needed for now.
+	//
+
+};
