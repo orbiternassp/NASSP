@@ -1,10 +1,9 @@
 BEGIN_DESC
-Neil Armstrong Mike Collins and Buzz Aldrin change history forever. The first manned Lunar
-Landing. July 16, 1969
+Neil Armstrong Mike Collins and Buzz Aldrin change history forever. The first manned Lunar Landing. July 16, 1969
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo\Sol
   Date MJD 40418.52222222
 END_ENVIRONMENT
 
@@ -27,16 +26,17 @@ BEGIN_MFD Left
 END_MFD
 
 BEGIN_MFD Right
-  TYPE Launch
+  TYPE Surface
+  SPDMODE 1
 END_MFD
 
 BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-506:saturn5nasp
+AS-506:ProjectApollo\Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+  BASE Cape Canaveral:2
   HEADING 270.00
   FUEL 1.000
   APOLLONO 11
@@ -51,7 +51,19 @@ AS-506:saturn5nasp
   MOONLAT 23.43
   MOONLONG 0.69
   MOONALT 0.0
-  TCP -8.5
+  TCP 2.5
   LANG English
+END
+AS-506-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+END
+AS-506-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6081642 28.6009997
+  HEADING 90.0
 END
 END_SHIPS
