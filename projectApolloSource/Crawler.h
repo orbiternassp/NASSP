@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/07/01 12:23:48  tschachim
+  *	Introduced standalone flag
+  *	
   *	Revision 1.3  2005/06/29 11:01:18  tschachim
   *	new dynamics, added attachment management
   *	
@@ -55,9 +58,10 @@ protected:
 	double velocity;
 	double targetHeading;
 	double touchdownPointHeight;
-	bool reverseDirection;
-	bool useForce;
-	bool standalone;
+	int reverseDirection;
+	int useForce;
+	int standalone;
+	int padIndex;
 
 	bool firstTimestepDone;
 	bool keyAccelerate;
@@ -80,4 +84,5 @@ protected:
 	void DetachML();
 	void AttachLV();
 	void ToggleDirection();
+	void SetView();
 };

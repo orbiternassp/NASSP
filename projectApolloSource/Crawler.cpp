@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/07/01 12:23:48  tschachim
+  *	Introduced standalone flag
+  *	
   *	Revision 1.3  2005/06/29 11:01:17  tschachim
   *	new dynamics, added attachment management
   *	
@@ -64,6 +67,7 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	useForce = false;
 	standalone = false;
 	reverseDirection = false;
+	padIndex = 1;	// default pad
 
 	keyAccelerate = false;
 	keyBrake= false;
@@ -102,22 +106,20 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
     int icr = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler"), &meshoffset);
 	SetMeshVisibilityMode(icr, MESHVIS_ALWAYS);
 
-	SetTouchdownPoint();
-	SetCameraOffset(_V(16.5, 5.2, 18.25));
-
 	CreateAttachment(false, _V(6.0, 10.0, 2.0), _V(0, 1, 0), _V(1, 0, 0), "ML", false);
+	SetTouchdownPoint();
 }
 
 
 void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 
-	double maxVelocity = 0.894; //0.894; //30; //5.0e-6; // 1.0e-6;
+	double maxVelocity = 0.894;
 
 	if (!firstTimestepDone) DoFirstTimestep(); 
 
 	if (IsMLAttached()) maxVelocity = maxVelocity / 2.0;
 
-	bool uf = useForce;
+	int uf = useForce;
 	if (uf) {
 		if (simdt > 1) uf = false; 
 		if (simdt < 0.3) uf = true; 
@@ -243,8 +245,9 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	*/
 }
 
-
 void Crawler::SetTouchdownPoint() {
+
+	if (touchdownPointHeight > -0.0001) touchdownPointHeight = -0.0001;
 
 	SetTouchdownPoints(_V(  0, touchdownPointHeight,  20), 
 					   _V(-10, touchdownPointHeight, -20), 
@@ -253,6 +256,9 @@ void Crawler::SetTouchdownPoint() {
 
 
 void Crawler::DoFirstTimestep() {
+
+	SetTouchdownPoint();
+	SetView();
 
 	oapiGetHeading(GetHandle(), &targetHeading);
 	
@@ -286,7 +292,6 @@ void Crawler::DoFirstTimestep() {
 
 		// re-attach the ML to setup the meshes
 		if (IsMLAttached()) AttachML(); else DetachML();
-		//AttachLV();
 	}
 	firstTimestepDone = true;
 }
@@ -296,21 +301,45 @@ void Crawler::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	char *line;
 	
 	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp (line, "USEFORCE", 8)) {
+		if (!strnicmp (line, "VELOCITY", 8)) {
+			sscanf (line + 8, "%lf", &velocity);
+		} else if (!strnicmp (line, "TARGETHEADING", 13)) {
+			sscanf (line + 13, "%lf", &targetHeading);
+		} else if (!strnicmp (line, "TOUCHDOWNPOINTHEIGHT", 20)) {
+			sscanf (line + 20, "%lf", &touchdownPointHeight);
+		} else if (!strnicmp (line, "REVERSEDIRECTION", 16)) {
+			sscanf (line + 16, "%i", &reverseDirection);
+		} else if (!strnicmp (line, "USEFORCE", 8)) {
 			sscanf (line + 8, "%i", &useForce);
 		} else if (!strnicmp (line, "STANDALONE", 10)) {
 			sscanf (line + 10, "%i", &standalone);
+		} else if (!strnicmp (line, "PADINDEX", 8)) {
+			sscanf (line + 8, "%i", &padIndex);
 		} else {
 			ParseScenarioLineEx (line, status);
 		}
 	}
 }
 
+void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %lf", item, d);
+	oapiWriteLine(scn, buffer);
+}
+
 void Crawler::clbkSaveState(FILEHANDLE scn) {
 	
 	VESSEL2::clbkSaveState (scn);
+
+	WriteScenario_double (scn, "VELOCITY", velocity);
+	WriteScenario_double (scn, "TARGETHEADING", targetHeading);
+	WriteScenario_double (scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
+	oapiWriteScenario_int (scn, "REVERSEDIRECTION", reverseDirection);
 	oapiWriteScenario_int (scn, "USEFORCE", useForce);
 	oapiWriteScenario_int (scn, "STANDALONE", standalone);
+	oapiWriteScenario_int (scn, "PADINDEX", padIndex);
 }
 
 int Crawler::clbkConsumeDirectKey(char *kstate) {
@@ -407,6 +436,7 @@ void Crawler::DetachML() {
 
 	ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 0);
 	VESSEL *ml = oapiGetVesselInterface(hML);
+	ATTACHMENTHANDLE ahml = ml->GetAttachmentHandle(false, 0);
 
 	if (GetAttachmentStatus(ah) != NULL) {
 		// Is the crawler near launch pad?
@@ -416,29 +446,23 @@ void Crawler::DetachML() {
 		OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 		OBJHANDLE hCanaveral = oapiGetBaseByName(hEarth, "Cape Canaveral");
 		double padlng, padlat, padrad, lng, lat, rad;
-		// TODO pad index config
-		oapiGetBasePadEquPos(hCanaveral, 1, &padlng, &padlat, &padrad);
+		oapiGetBasePadEquPos(hCanaveral, padIndex, &padlng, &padlat, &padrad);
 
 		GetEquPos(lng, lat, rad);
 		double dlng = (padlng - lng) * 6371010.0;
 		double dlat = (padlat - lat) * 6371010.0;
 
 		if (dlng > -5 && dlng < 5 && dlat > -8 && dlat < 2) {
-
-			ATTACHMENTHANDLE ahml = ml->GetAttachmentHandle(false, 0);
 			if (GetAttachmentStatus(ahml) != NULL) {
 				ml->DetachChild(ahml);
 			}
 			DetachChild(ah);
 
-			ml->SetTouchdownPoints(_V(  0, -87.0,  10), 
-				  			       _V(-10, -87.0, -10), 
-							       _V( 10, -87.0, -10));
 			VESSELSTATUS vs;
 			ml->GetStatus(vs);
 			vs.vdata[0].x = -80.6081642;
 			vs.vdata[0].y = 28.6009997;
-			vs.vdata[0].z = 89.85;
+			vs.vdata[0].z = 90.0; 
 			ml->DefSetState(&vs);
 		
 		} else {
@@ -453,6 +477,13 @@ void Crawler::DetachML() {
 	ml->AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Saturn5ML"));
 	VECTOR3 meshoffset = _V(0, -67, -5.5);
 	ml->AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Saturn5MLPedestals"), &meshoffset);
+
+	// set touchdown points if LV is detached
+	if (GetAttachmentStatus(ahml) == NULL) {
+		ml->SetTouchdownPoints(_V(  0, -87.0,  10), 
+				  			   _V(-10, -87.0, -10), 
+							   _V( 10, -87.0, -10));
+	}
 }
 
 bool Crawler::IsMLAttached() {
@@ -467,16 +498,20 @@ void Crawler::ToggleDirection() {
 
 	if (velocity != 0) return;
 
-	if (reverseDirection) {
-		SetCameraOffset(_V(16.5, 5.2, 18.5));
-		SetCameraDefaultDirection(_V(0, 0, 1));
-		reverseDirection = false;
+	reverseDirection = !reverseDirection;
+	SetView();
+}
 
-	} else {
+void Crawler::SetView() {
+
+	if (reverseDirection) {
 		SetCameraOffset(_V(-15.0, 5.2, -15.0));
 		SetCameraDefaultDirection(_V(0, 0, -1));
-		reverseDirection = true;
-	} 
+
+	} else {
+		SetCameraOffset(_V(16.5, 5.2, 18.5));
+		SetCameraDefaultDirection(_V(0, 0, 1));
+	}
 }
 
 void Crawler::AttachLV() {
