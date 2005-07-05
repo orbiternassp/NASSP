@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/06/06 12:09:31  tschachim
+  *	New switches
+  *	
   *	Revision 1.8  2005/05/31 02:12:08  movieman523
   *	Updated pre-entry burn variables and wrote most of the code to handle them.
   *	
@@ -982,7 +985,7 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (CmSmSep1Switch.GetState() && CmSmSep2Switch.GetState()) {
+	if (CmSmSep1Switch.GetState() || CmSmSep2Switch.GetState()) {
 		bManualSeparate=true;
 	}
 

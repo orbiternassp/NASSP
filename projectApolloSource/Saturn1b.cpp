@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/06/06 12:19:46  tschachim
+  *	New switches
+  *	
   *	Revision 1.6  2005/04/14 23:10:03  movieman523
   *	Fixed compiler warning (mesh_dir not used).
   *	
@@ -1018,7 +1021,7 @@ void Saturn1b::Timestep (double simt)
 				bManualUnDock = true;
 			}
 		}
-		if (CmSmSep1Switch.GetState() && CmSmSep2Switch.GetState()) {
+		if (CmSmSep1Switch.GetState() || CmSmSep2Switch.GetState()) {
 			bManualSeparate=true;
 		}
 		if (RPswitch14 && HatchOpen){
