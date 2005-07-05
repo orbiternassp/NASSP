@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/06/06 12:31:29  tschachim
+  *	New switches, PanelSwitchScenarioHandler
+  *	
   *	Revision 1.24  2005/05/26 15:58:40  tschachim
   *	New fuel cell displays and controls
   *	Some code moved for better readability
@@ -940,7 +943,7 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelArea (AID_ABORT_BUTTON,								_R( 862,  600,  924,  631), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SEQUENCERSWITCHES,							_R( 802,  918,  990, 1100), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843,  735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SEPARATIONSWITCHES,		    				_R(1087,  942, 1340, 1004), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SEPARATIONSWITCHES,		    				_R(1087,  942, 1340, 1004), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835,  305, 1973,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1912,  490, 2488,  520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173,  315, 2495,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -948,11 +951,11 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelArea (AID_FUELCELLINDICATORS,		    				_R(2763,  319, 2913,  443), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_FUELCELLPHRADTEMPINDICATORS,	  				_R(2822,  490, 3019,  513), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLRADIATORSINDICATORS,    				_R(2822,  539, 2931,  562), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLRADIATORSSWITCHES,    				_R(2816,  607, 2937,  637), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLRADIATORSSWITCHES,    				_R(2816,  607, 2937,  637), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLINDICATORSSWITCH,    				_R(3029,  629, 3117,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLHEATERSSWITCHES,	    				_R(2817,  695, 2938,  725), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLREACTANTSINDICATORS,    				_R(2823,  893, 3061,  917), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2757,  955, 3131,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2757,  955, 3131,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -3688,14 +3691,19 @@ void Saturn::InitSwitches() {
 	EDSSwitch = true;							// saved in LPSwitchState.EDSswitch
 	CsmLmFinalSep1Switch = false;				// saved in SSwitchState.Sswitch1
 	CsmLmFinalSep1Switch.SetGuardState(false);	// saved in CSwitchState.Cswitch1
+	CsmLmFinalSep1Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
 	CsmLmFinalSep2Switch = false;				// saved in SSwitchState.Sswitch2
 	CsmLmFinalSep2Switch.SetGuardState(false);	// saved in CSwitchState.Cswitch2
+	CsmLmFinalSep2Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
 	CmSmSep1Switch = false;						// saved in SSwitchState.Sswitch3
 	CmSmSep1Switch.SetGuardState(false);		// saved in CSwitchState.Cswitch3
+	CmSmSep1Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
 	CmSmSep2Switch = false;						// saved in SSwitchState.Sswitch4
 	CmSmSep2Switch.SetGuardState(false);		// saved in CSwitchState.Cswitch4
+	CmSmSep2Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
 	SivbLmSepSwitch = false;					// saved in RPSwitchState.RPswitch16
 	SivbLmSepSwitch.SetGuardState(false);		// saved in RPSwitchState.RPCswitch
+	SivbLmSepSwitch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
 
 	CabinFan1Switch = false;					// saved in CP2SwitchState.CFswitch1
 	CabinFan2Switch = false;					// saved in CP2SwitchState.CFswitch2
@@ -3715,9 +3723,9 @@ void Saturn::InitSwitches() {
 	FuelCellRadiators1Indicator.Register(PSH, "FuelCellRadiators1Indicator", false);
 	FuelCellRadiators2Indicator.Register(PSH, "FuelCellRadiators2Indicator", false);
 	FuelCellRadiators3Indicator.Register(PSH, "FuelCellRadiators3Indicator", false);
-	FuelCellRadiators1Switch.Register(PSH, "FuelCellRadiators1Switch", THREEPOSSWITCH_CENTER); 
-	FuelCellRadiators2Switch.Register(PSH, "FuelCellRadiators2Switch", THREEPOSSWITCH_CENTER); 
-	FuelCellRadiators3Switch.Register(PSH, "FuelCellRadiators3Switch", THREEPOSSWITCH_CENTER); 
+	FuelCellRadiators1Switch.Register(PSH, "FuelCellRadiators1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER); 
+	FuelCellRadiators2Switch.Register(PSH, "FuelCellRadiators2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER); 
+	FuelCellRadiators3Switch.Register(PSH, "FuelCellRadiators3Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER); 
 
 	FuelCellIndicatorsSwitch.AddPosition(1, 330);
 	FuelCellIndicatorsSwitch.AddPosition(2,   0);
@@ -3731,9 +3739,9 @@ void Saturn::InitSwitches() {
 	FuelCellReactants1Indicator.Register(PSH, "FuelCellReactants1Indicator", false);
 	FuelCellReactants2Indicator.Register(PSH, "FuelCellReactants2Indicator", false);
 	FuelCellReactants3Indicator.Register(PSH, "FuelCellReactants3Indicator", false);
-	FuelCellReactants1Switch.Register(PSH, "FuelCellReactants1Switch", THREEPOSSWITCH_CENTER);
-	FuelCellReactants2Switch.Register(PSH, "FuelCellReactants2Switch", THREEPOSSWITCH_CENTER);
-	FuelCellReactants3Switch.Register(PSH, "FuelCellReactants3Switch", THREEPOSSWITCH_CENTER);
+	FuelCellReactants1Switch.Register(PSH, "FuelCellReactants1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	FuelCellReactants2Switch.Register(PSH, "FuelCellReactants2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	FuelCellReactants3Switch.Register(PSH, "FuelCellReactants3Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
 
 	// old stuff
