@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/06/06 12:30:27  tschachim
+  *	Introduced PushSwitch, GuardedPushSwitch, PanelScenarioHandler
+  *	
   *	Revision 1.6  2005/05/05 21:38:04  tschachim
   *	Introduced PanelSwitchItem and IndicatorSwitch
   *	Renamed some interfaces and functions
@@ -68,6 +71,7 @@ ToggleSwitch::ToggleSwitch() {
 	width = 0;
 	height = 0;
 	state = 0;
+	springLoaded = SPRINGLOADEDSWITCH_NONE;
 
 	next = 0;
 
@@ -81,10 +85,11 @@ ToggleSwitch::~ToggleSwitch() {
 	Sclick.done();
 }
 
-void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState) {
+void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded) {
 
 	name = n;
 	state = defaultState;
+	springLoaded = springloaded;
 	scnh.RegisterSwitch(this);
 }
 
@@ -126,7 +131,7 @@ void ToggleSwitch::InitSound(SoundLib *s) {
 }
 
 
-bool ToggleSwitch::DoCheckMouseClick(int mx, int my) {
+bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 
 	int OldState = state;
 
@@ -145,18 +150,24 @@ bool ToggleSwitch::DoCheckMouseClick(int mx, int my) {
 	// off click.
 	//
 
-	if (my > (y + (height / 2))) {
-		if (state) {
-			state = 0;
-			Sclick.play();
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (my > (y + (height / 2.0))) {
+			if (state) {
+				state = 0;
+				Sclick.play();
+			}
 		}
-	}
-	else {
-		if (!state) {
-			state = 1;
-			Sclick.play();
+		else {
+			if (!state) {
+				state = 1;
+				Sclick.play();
+			}
 		}
+	} else if (springLoaded != SPRINGLOADEDSWITCH_NONE && event == PANEL_MOUSE_LBUP) {
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
 	}
+
 
 	if (Active && (state != OldState)) {
 		SwitchToggled = true;
@@ -171,7 +182,7 @@ bool ToggleSwitch::DoCheckMouseClick(int mx, int my) {
 bool ToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	if (visible)
-		return DoCheckMouseClick(mx, my);
+		return DoCheckMouseClick(event, mx, my);
 	else
 		return false;
 }
@@ -234,17 +245,23 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	// off click.
 	//
 
-	if (my > (y + (height / 2))) {
-		if (state > 0) {
-			state--;
-			Sclick.play();
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (my > (y + (height / 2.0))) {
+			if (state > 0) {
+				state--;
+				Sclick.play();
+			}
 		}
-	}
-	else {
-		if (state < 2) {
-			state++;
-			Sclick.play();
+		else {
+			if (state < 2) {
+				state++;
+				Sclick.play();
+			}
 		}
+	} else if (springLoaded != SPRINGLOADEDSWITCH_NONE && event == PANEL_MOUSE_LBUP) {
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;
 	}
 
 	if (Active && (state != OldState)) {
@@ -310,7 +327,7 @@ bool AttitudeToggle::CheckMouseClick(int event, int mx, int my)
 	if (!visible)
 		return false;
 
-	if (!DoCheckMouseClick(mx, my))
+	if (!DoCheckMouseClick(event, mx, my))
 		return false;
 
 	if (!Active || state == OldState)
@@ -376,7 +393,7 @@ bool HUDToggle::CheckMouseClick(int event, int mx, int my)
 {
 	int OldState = state;
 
-	if (!DoCheckMouseClick(mx, my))
+	if (!DoCheckMouseClick(event, mx, my))
 		return false;
 
 	if (!Active || state == OldState)
@@ -423,7 +440,7 @@ bool NavModeToggle::CheckMouseClick(int event, int mx, int my)
 {
 	int OldState = state;
 
-	if (!DoCheckMouseClick(mx, my))
+	if (!DoCheckMouseClick(event, mx, my))
 		return false;
 
 	if (!Active || state == OldState)
@@ -589,7 +606,7 @@ bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 			guardClick.play();
 			return true;
 		}
-	} else if (event & PANEL_MOUSE_LBDOWN) {
+	} else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
 		if (guardState) {
 			return ToggleSwitch::CheckMouseClick(event, mx, my);
 		}
@@ -782,7 +799,7 @@ bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 			guardClick.play();
 			return true;
 		}
-	} else if (event & PANEL_MOUSE_LBDOWN) {
+	} else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
 		if (guardState) {
 			return ThreePosSwitch::CheckMouseClick(event, mx, my);
 		}

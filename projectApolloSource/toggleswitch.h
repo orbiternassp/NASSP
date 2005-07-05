@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/06/06 12:29:44  tschachim
+  *	Introduced PushSwitch, GuardedPushSwitch, PanelScenarioHandler
+  *	
   *	Revision 1.6  2005/05/05 21:36:41  tschachim
   *	Introduced PanelSwitchItem and IndicatorSwitch
   *	
@@ -50,6 +53,11 @@
 #define THREEPOSSWITCH_DOWN		0
 #define THREEPOSSWITCH_CENTER	1
 #define THREEPOSSWITCH_UP		2
+
+#define SPRINGLOADEDSWITCH_NONE		0
+#define SPRINGLOADEDSWITCH_DOWN		1
+#define SPRINGLOADEDSWITCH_CENTER	2
+#define SPRINGLOADEDSWITCH_UP		3
 
 #define PANELSWITCH_START_STRING	"PANELSWITCHES_BEGIN"
 #define PANELSWITCH_END_STRING		"PANELSWITCHES_END"
@@ -85,7 +93,7 @@ public:
 	ToggleSwitch();
 	virtual ~ToggleSwitch();
 
-	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_NONE);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib &s,
 		      int xoffset = 0, int yoffset = 0);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row,
@@ -94,6 +102,7 @@ public:
 	void SetPosition(int xp, int yp) { x = xp; y = yp; };
 	void SetState(bool s) { state = s; };
 	void SetOffset(int xo, int yo) {xOffset = xo; yOffset = yo; };
+	void SetSpringLoaded(int springloaded) { springLoaded = springloaded; }; 
 	int GetState() { return state; };
 	void SetActive(bool s);
 	void SetVisible(bool v) {visible = v; };
@@ -127,7 +136,7 @@ public:
 protected:
 	virtual void InitSound(SoundLib *s);
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
-	bool DoCheckMouseClick(int mx, int my);
+	bool DoCheckMouseClick(int event, int mx, int my);
 
 	int	x;
 	int y;
@@ -137,6 +146,7 @@ protected:
 	int yOffset;
 
 	int state;
+	int springLoaded;
 	bool Active;
 	bool SwitchToggled;
 	bool visible;
