@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/06/06 11:58:52  tschachim
+  *	New switches, PanelSwitchScenarioHandler
+  *	
   *	Revision 1.15  2005/05/31 02:12:08  movieman523
   *	Updated pre-entry burn variables and wrote most of the code to handle them.
   *	
@@ -178,7 +181,12 @@ protected:
 	// Switches
 	//
 	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
+	GuardedPushSwitch LesMotorFireSwitch;
+	GuardedPushSwitch CanardDeploySwitch;
 	GuardedPushSwitch CsmLvSepSwitch;
+	GuardedPushSwitch ApexCoverJettSwitch;
+	GuardedPushSwitch DrogueDeploySwitch;
+	GuardedPushSwitch MainDeploySwitch;
 	GuardedPushSwitch CmRcsHeDumpSwitch;
 
 	ToggleSwitch	    EDSSwitch;				// TODO state saving/loading

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/07/05 17:56:59  tschachim
+  *	Fixed some switches because of spring-load
+  *	
   *	Revision 1.25  2005/06/06 12:31:29  tschachim
   *	New switches, PanelSwitchScenarioHandler
   *	
@@ -1021,12 +1024,22 @@ void Saturn::SetSwitches(int panel) {
 	MainPanel.Init(0, this, &soundlib, this);
 
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
-	LiftoffNoAutoAbortSwitch.Init     ( 20, 2, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 81);
-	LiftoffNoAutoAbortSwitch.InitGuard(  0, 0, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
-	CsmLvSepSwitch.Init				  ( 20, 142, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 195);
-	CsmLvSepSwitch.InitGuard		  (  0, 140, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
-	CmRcsHeDumpSwitch.Init			  (127, 142, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 347);
-	CmRcsHeDumpSwitch.InitGuard		  ( 94, 140, 92, 40, srf[SRF_SEQUENCERSWITCHES], 0, 40);
+	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 81);
+	LiftoffNoAutoAbortSwitch.InitGuard(  0,   1, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
+	LesMotorFireSwitch.Init			  ( 20,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 119);
+	LesMotorFireSwitch.InitGuard      (  0,  47, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
+	CanardDeploySwitch.Init           ( 20,  95, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 157);
+	CanardDeploySwitch.InitGuard      (  0,  93, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
+	CsmLvSepSwitch.Init				  ( 20, 141, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 195);
+	CsmLvSepSwitch.InitGuard		  (  0, 139, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
+	ApexCoverJettSwitch.Init          (127,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 233);
+	ApexCoverJettSwitch.InitGuard     ( 94,   1, 92, 40, srf[SRF_SEQUENCERSWITCHES], 0, 40);
+	DrogueDeploySwitch.Init			  (127,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 271);
+	DrogueDeploySwitch.InitGuard      ( 94,  47, 92, 40, srf[SRF_SEQUENCERSWITCHES], 0, 40);
+	MainDeploySwitch.Init             (127,  95, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 309);
+	MainDeploySwitch.InitGuard        ( 94,  93, 92, 40, srf[SRF_SEQUENCERSWITCHES], 0, 40);		
+	CmRcsHeDumpSwitch.Init			  (127, 141, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 347);
+	CmRcsHeDumpSwitch.InitGuard		  ( 94, 139, 92, 40, srf[SRF_SEQUENCERSWITCHES], 0, 40);
 	 
 	SeparationSwitchesRow.Init(AID_SEPARATIONSWITCHES, MainPanel);
 	EDSSwitch.Init				  (  0,	16, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
@@ -3683,8 +3696,13 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 void Saturn::InitSwitches() {
 
 	LiftoffNoAutoAbortSwitch.Register(PSH, "LiftoffNoAutoAbortSwitch", false, false);
+	LesMotorFireSwitch.Register(PSH, "LesMotorFireSwitch", false, false);
+	CanardDeploySwitch.Register(PSH, "CanardDeploySwitch", false, false);
 	CsmLvSepSwitch = false;						// saved in SSwitchState.Sswitch5
 	CsmLvSepSwitch.SetGuardState(false);		// saved in CSwitchState.Cswitch5
+	ApexCoverJettSwitch.Register(PSH, "ApexCoverJettSwitch", false, false);
+	DrogueDeploySwitch.Register(PSH, "DrogueDeploySwitch", false, false);
+	MainDeploySwitch.Register(PSH, "MainDeploySwitch", false, false);
 	CmRcsHeDumpSwitch = false;					// saved in SSwitchState.CMRHDswitch
 	CmRcsHeDumpSwitch.SetGuardState(false);		// saved in CSwitchState.CMRHGswitch
 
