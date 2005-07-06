@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/06/17 18:26:14  lazyd
+  *	Added GetHorizVelocity function for crosspointers etc.
+  *	
   *	Revision 1.8  2005/06/15 15:52:01  lazyd
   *	Added DebugString to P64, P65 and P66 for left window panel
   *	
@@ -64,13 +67,23 @@
 
 #define MAXOFFPLANE	44000
 #define BRAKDIST	425000
-#define PDIDIST		470000
-#define	MINDIST		661000
+#define PDIDIST		494000
+//#define PDIDIST		504000
+#define PDIDISTJ    508000
 #define ULLAGESEC	7
 #define OFFSET		60
 #define DELTAT		2.0
 #define LEADTIME	2.2
+#define BRAKTIME	480.0
+#define BRAKTIMEJ	540.0
+#define LOCRIT      0.57
+#define LOCRITJ     0.59369
+#define HICRIT      0.63
+#define HICRITJ		0.65618
+#define MAXTHROT	0.93053
+#define MAXTHROTJ   0.96895
 #define A15DELCO	true
+#define P64LOG		false
 #define LOGFILE		false
 
 //
@@ -85,28 +98,32 @@ void LEMcomputer::Prog63(double simt)
 	static VECTOR3 xloc={1.0, 0.0, 0.0};
 	static VECTOR3 yloc={0.0, 1.0, 0.0};
 	static VECTOR3 zloc={0.0, 0.0, 1.0};
+	//A11-A14 aim points
+	static VECTOR3 rhii= {-3401.75, -959.49, 0.0};
+	static VECTOR3 vhii= {    2.87, -60.45, 0.0};
+	static VECTOR3 ahii= {   -2.2677, -0.221, 0.0};
 	//quadratic guidance aim points from A15Delco...
-	static VECTOR3 rhi= {-3612.75, -959.49, 0.0};
-	static VECTOR3 vhi= {  -51.308, -60.45, 0.0};
-	static VECTOR3 ahi= {   -2.554, -0.221, 0.0};
+	static VECTOR3 rhij= {-3612.75, -959.49, 0.0};
+	static VECTOR3 vhij= {  -51.308, -60.45, 0.0};
+	static VECTOR3 ahij= {   -2.554, -0.221, 0.0};
 	const double GRAVITY=6.67259e-11;
 	int nit;
 	VECTOR3 vel, actatt, tgtatt, relpos, relvel, plvec, vnorm, zerogl, xgl, ygl, zgl, 
-		upproj, lrproj, position, velocity, acc;
+		upproj, lrproj, position, velocity, acc, rhi, vhi, ahi;
 	double vlat, vlon, vrad, prograde, dlat, dlon, aa, cc, sbdis, tbrg, cbrg, rbrg, hvel,
-		blat, blon, tgo, centrip, grav, cthrust, accx, acctot, vmass, vthrust, 
-		maxacc, down, ttg, ttg2, ttg3, ttg4, ttgl, ttgl2, dtg, jfz, heading;
+		blat, blon, tgo, centrip, grav, cthrust, accx, acctot, vmass, vthrust, pdidis, 
+		maxacc, down, ttg, ttg2, ttg3, ttg4, ttgl, ttgl2, dtg, jfz, heading, maxthr, 
+		locr, hicr, braktim;
 	// go through guidance calcs every 2 seconds
-	tgo=-540.0-(BurnStartTime-simt);
+//	tgo=-540.0-(BurnStartTime-simt);
 	if(simt > NextEventTime) {
 //		sprintf(oapiDebugString(),"ProgState= %d  simt=%.1f ", ProgState, simt);
 		OBJHANDLE hbody=OurVessel->GetGravityRef();
 		double bradius=oapiGetSize(hbody);
 		double bmass=oapiGetMass(hbody);
-		if(ProgState >=2) {
+		if(ProgState >=0) {
 		//do the guidance calculations here...
 			if(ProgState != 6) NextEventTime=simt+DELTAT;
-			BurnTime=480;
 			OurVessel->GetHorizonAirspeedVector(vel);
 			OurVessel->GetEquPos(vlon, vlat, vrad);
 			// used for altitude rate * 10
@@ -127,12 +144,38 @@ void LEMcomputer::Prog63(double simt)
 			sbdis=bradius*cc;
 			//Downrange distance for noun 68
 			DeltaPitchRate=sbdis;
+			if(ProgState == 0) return;
 	//sbdis is spherical distance to base position
 			hvel=sqrt(vel.x*vel.x+vel.z*vel.z);
 			if(ProgState == 6) CutOffVel=hvel;
 			CurrentVel=hvel;
 			CurrentRVel=CutOffVel-hvel;
-			if(sbdis > BRAKDIST) BurnStartTime=simt+(sbdis-PDIDIST)/hvel;
+			if(ApolloNo > 14) {
+				//A15Delco
+				jfz=0.004652;
+				rhi=rhij;
+				vhi=vhij;
+				ahi=ahij;
+				braktim=BRAKTIMEJ;
+				pdidis=PDIDISTJ;
+				maxthr=MAXTHROTJ;
+				locr=LOCRITJ;
+				hicr=HICRITJ;
+			} else {
+				//A11-14
+				jfz=0.0101568;
+				rhi=rhii;
+				vhi=vhii;
+				ahi=ahii;
+				braktim=BRAKTIME;
+				pdidis=PDIDIST;
+				maxthr=MAXTHROT;
+				locr=LOCRIT;
+				hicr=HICRIT;
+			}
+			tgo=-braktim-OFFSET-(BurnStartTime-simt);
+			BurnTime=braktim;
+			if(sbdis > BRAKDIST) BurnStartTime=simt+(sbdis-pdidis)/hvel;
 			if(ProgState <= 4) BurnEndTime=BurnStartTime+BurnTime;
 			tbrg = atan2(sin(vlon - blon) * cos(blat), 
 					cos(vlat) * sin(blat) - sin(vlat) * 
@@ -209,7 +252,7 @@ void LEMcomputer::Prog63(double simt)
 			velocity.y=vel.y;
 			velocity.z=-hvel*sin(rbrg);
 			if(ProgState == 13) {
-				tgo=-480.0;
+				tgo=-braktim;
 				ProgFlag01=false;
 				ProgState++;
 			}
@@ -238,11 +281,10 @@ void LEMcomputer::Prog63(double simt)
 // Try this from A15Delco...
 				ttg=tgo;
 //solve for ttg
-				jfz=0.004652;
 				//calculate time-to-go
 				for (nit=0; nit<8; nit++) {
-				ttg2=ttg*ttg;
-				ttg3=ttg2*ttg;
+					ttg2=ttg*ttg;
+					ttg3=ttg2*ttg;
 
 					dtg=-(jfz*ttg3+6.0*ahi.x*ttg2+(18.0*vhi.x+6.0*velocity.x)*ttg+
 						24.0*(rhi.x-position.x))/(3.0*jfz*ttg2+12.0*ahi.x*ttg+
@@ -250,9 +292,9 @@ void LEMcomputer::Prog63(double simt)
 					if(fabs(dtg) < 0.01) break;
 					ttg=ttg+dtg;
 				}
+//				sprintf(oapiDebugString(),"ttg=%.1f",ttg);
 				BurnEndTime=simt-ttg-60.0;
 				ttg2=ttg*ttg;
-//				sprintf(oapiDebugString(),"nit=%d tgo=%.1f ttg=%.1f dtg=%.4f", nit,tgo,ttg,dtg);
 				if(A15DELCO) {
 					ttgl=ttg+LEADTIME;
 					ttgl2=ttgl*ttgl;
@@ -284,7 +326,8 @@ void LEMcomputer::Prog63(double simt)
 				acctot=Mag(acc);
 				vmass=OurVessel->GetMass();
 				vthrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
-				maxacc=vthrust/vmass;
+//				sprintf(oapiDebugString(),"mass=%.1f %.1f %.1f %.1f", vmass, rhi);
+				maxacc=MAXTHROT*vthrust/vmass;
 
 				// limit z acceleration to yield < 15 degree roll
 				double zfrac=acc.z/(maxacc);
@@ -296,8 +339,8 @@ void LEMcomputer::Prog63(double simt)
 				if(ProgFlag01) {
 				// after throttledown...
 					cthrust=acctot/maxacc;
-					maxacc=maxacc*0.6772;
-					if (cthrust > 0.6772) {
+					maxacc=maxacc*hicr;
+					if (cthrust > hicr) {
 						// can't throttle up after throttledown, let downrange take the slack
 						accx=maxacc*maxacc-acc.y*acc.y-acc.z*acc.z;
 						if(acc.x > 0.0) {
@@ -305,7 +348,7 @@ void LEMcomputer::Prog63(double simt)
 						} else {
 							acc.x=-sqrt(accx);
 						}
-						cthrust=0.6772;
+						cthrust=hicr;
 					}
 				} else {
 					// if quad is asking for more or less acceleration than we can do,
@@ -318,9 +361,9 @@ void LEMcomputer::Prog63(double simt)
 					} else {
 						acc.x=-sqrt(accx);
 					}
-					cthrust=1.0;
+					cthrust=maxthr;
 				// before throttledown
-					if ( acctot/maxacc <= 0.6127) {
+					if ( acctot/maxacc <= locr) {
 					//  set the throttledown flag to true
 						ProgFlag01=true;
 						cthrust=acctot/maxacc;
@@ -536,6 +579,7 @@ void LEMcomputer::Prog64(double simt)
 	static VECTOR3 vlow= {  -0.0077,  -1.086, 0.0};
 	//Acceleration targets for low gate
 	static VECTOR3 alow= {   -0.1812, 0.0237, 0.0};
+	static VECTOR3 pdvec= { 0.5, 0.866, 0.0 };
 	const double GRAVITY=6.67259e-11;
 	int nit, lpd;
 	VECTOR3 vel, actatt, tgtatt, acc, position, velocity;
@@ -543,6 +587,18 @@ void LEMcomputer::Prog64(double simt)
 		tbrg, cbrg, rbrg, heading, jfz, ttg, ttg2, ttg3, ttg4, ttgl,
 		ttgl2, dtg, grav, acctot, vmass, vthrust, maxacc, cthrust, accx, cgelev;
 	if(ProgState==0) {
+		if(P64LOG) {
+			char fname[8];
+			sprintf(fname,"P64log.txt");
+			outstr=fopen(fname,"w");
+			fprintf(outstr, "Approach mode beginning: \n");
+		}
+
+//        sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel; 
+//		OurVessel->SetThrusterDir(lem->th_hover[0], pdvec);
+//		OurVessel->SetThrusterDir(lem->th_hover[1], pdvec);
+//		OurVessel->GetThrusterDir(lem->th_hover[0],vel);
+//		sprintf(oapiDebugString(),"hover  %.3f %.3f %.3f", vel);
 		BurnStartTime=simt;
 		BurnEndTime=BurnStartTime+100.0;
 		ProgFlag01=false;
@@ -551,6 +607,10 @@ void LEMcomputer::Prog64(double simt)
 	if(ProgFlag01) {
 		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
 		lem->SetGimbal(true);
+		if (P64LOG) {
+			fprintf(outstr, "Run P66: Close file.");
+			fclose(outstr);
+		}
 		ProgState=0;
 		OurVessel->GetHorizonAirspeedVector(vel);
 		DesiredDeltaVy=vel.y;
@@ -570,7 +630,7 @@ void LEMcomputer::Prog64(double simt)
 		actatt.x=OurVessel->GetPitch();
 		actatt.z=-OurVessel->GetBank();
 		oapiGetHeading(OurVessel->GetHandle(), &heading);
-		actatt.y=BurnTime-heading;
+//		actatt.y=BurnTime-heading;
 		DesiredApogee=vel.y*10.0;
 		cgelev=OurVessel->GetCOG_elev();
 		CurrentAlt=vrad-bradius-cgelev;
@@ -611,6 +671,8 @@ void LEMcomputer::Prog64(double simt)
 		if(fabs(rbrg) > PI) {
 			rbrg-=2*PI;
 		}
+		actatt.y=tbrg-heading;
+		BurnTime=heading;
 
 		position.x=-sbdis*cos(tbrg-heading);
 		position.y=CurrentAlt;
@@ -633,14 +695,18 @@ void LEMcomputer::Prog64(double simt)
 			if(fabs(dtg) < 0.01) break;
 			ttg=ttg+dtg;
 		}
-		if(ttg > -30.0) {
+//		if(ttg > -30.0) {
+		if(ttg > -12.0) {
+			if(P64LOG) {
+				fprintf(outstr, "Start P65: Close file.");
+				fclose(outstr);
+			}
 		//run P65
 			ProgState=0;
-//			TargetYaw=heading;
 			BurnTime=heading;
 			RunProgram(65);
 		}
-		BurnEndTime=simt-ttg-60.0;
+		BurnEndTime=simt-ttg-10.0;
 		ttg2=ttg*ttg;
 //		sprintf(oapiDebugString(),"nit=%d  ttg=%.1f dtg=%.6f", nit,ttg,dtg);
 		if(A15DELCO) {
@@ -691,8 +757,10 @@ void LEMcomputer::Prog64(double simt)
 		tgtatt.y=0.0;
 		tgtatt.x=(PI/2.0-atan(acc.y/acc.x)*(fabs(acc.x)/acc.x));
 		// the LPD time and LPD angle are calculated and put into CutOffVel for N64 display
-		int secs=(int)(-ttg-45);
+//		int secs=(int)(-ttg-45);
+		int secs=(int)(-ttg-25);
 		if(secs < 0) secs=0;
+		if(secs > 99) secs=99;
 		lpd=(int)((atan(position.y/fabs(position.x))+actatt.x)*DEG+0.5);
 		CutOffVel=1000.0*secs+lpd;
 		sprintf(oapiDebugString(),"LPD time=%d  LPD angle=%d",secs, lpd);
@@ -702,6 +770,15 @@ void LEMcomputer::Prog64(double simt)
 //			"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f tgo=%.1f cut=%.1f",
 //			acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60., CutOffVel);
 		ComAttitude(actatt, tgtatt);
+		if(P64LOG) {
+			fprintf(outstr,"Time-to-go= %.1f\n",ttg);
+			fprintf(outstr,"Target Lat=%.8f Lon=%.8f \n",blat*DEG, blon*DEG);
+			fprintf(outstr,"Actual Lat=%.8f Lon=%.8f \n",vlat*DEG, vlon*DEG);
+			fprintf(outstr,"cbrg: %.3f tbrg:%.3f rbrg:%.3f hdg:%.3f time:%.2f\n",
+				cbrg*DEG, tbrg*DEG, rbrg*DEG, heading*DEG, simt);
+			fprintf(outstr,"Pos: %.3f %.3f %.3f \n", position);
+			fprintf(outstr,"Vel: %.3f %.3f %.3f \n", velocity);
+		}
 
 	}
 //end of 2-sec guidance calcs
@@ -849,7 +926,8 @@ void LEMcomputer::Prog65(double simt)
 		Mass=OurVessel->GetMass();
 		grav=(GRAVITY*bmass)/((bradius+position.y)*(bradius+position.y));
 
-		yinit=100;
+//		yinit=100;
+		yinit=60;
 //X logic...
 		ax=(fabs(velocity.x)*velocity.x)/(2*(position.x));
 		if(fabs(position.x) < 1.0) {
@@ -883,9 +961,9 @@ void LEMcomputer::Prog65(double simt)
 		}
 		//ax=ax*1.5
 */
-// this gets down in 47 seconds, even faster than Gene Cernan..
 		double curve=(yinit-position.y)/yinit;
-		yrate=-3.5+(curve*curve*3.0);
+//		yrate=-3.5+(curve*curve*3.0);
+		yrate=-2.0+(curve*curve*1.5);
 		acc.y=grav+((yrate-velocity.y)/5.0)*DELTAT;
 		
 
@@ -1009,7 +1087,7 @@ void LEMcomputer::ChangeDescentRate(double delta)
 void LEMcomputer::RedesignateTarget(int axis, double direction)
 {
 	double xoffset, zoffset, vlon, vlat, vrad, blat, blon, dlat, dlon, aa, cc, distance, 
-		alpd, cgelev, newlat, newlon;
+		alpd, cgelev;
 	if(ProgRunning != 64) return;
 	OBJHANDLE hbody=OurVessel->GetGravityRef();
 	double bradius=oapiGetSize(hbody);
@@ -1029,7 +1107,7 @@ void LEMcomputer::RedesignateTarget(int axis, double direction)
 	if(axis == 0) {
 	// move the landing site close or further 1/2 degree
 		alpd=atan(CurrentAlt/fabs(distance));
-		xoffset=direction*(distance-(CurrentAlt/tan(alpd+0.5*RAD)));
+		xoffset=-direction*(distance-(CurrentAlt/tan(alpd+0.5*RAD)));
 		zoffset=0.0;
 	} else {
 	// move the landing site left or right 2 degrees
@@ -1039,12 +1117,16 @@ void LEMcomputer::RedesignateTarget(int axis, double direction)
 		xoffset=0.0;
 	}
 	//now update our landing latitude and longitude
-	newlat=blat+(zoffset/bradius)*sin(BurnTime)+
+	dlat=(zoffset/bradius)*sin(BurnTime)+
 		(xoffset/bradius)*cos(BurnTime);
-	newlon=blon-(zoffset/(bradius*cos(blat)))*cos(BurnTime)+
+	dlon=-(zoffset/(bradius*cos(blat)))*cos(BurnTime)+
 		(xoffset/(bradius*cos(blat)))*sin(BurnTime);
-	LandingLatitude=newlat*DEG;
-	LandingLongitude=newlon*DEG;
+	if(P64LOG) {
+		fprintf(outstr,"Redesignate x=%.1f z=%.1f dlat=%.8f dlon=%.8f hdg=%.2f\n", 
+			xoffset, zoffset, dlat*DEG, dlon*DEG, BurnTime*DEG);
+	}
+	LandingLatitude=(blat+dlat)*DEG;
+	LandingLongitude=(blon+dlon)*DEG;
 //	sprintf(oapiDebugString(),"New Lat=%.8f Lon=%.8f xoff=%.1f zoff=%.1f", 
 //		LandingLatitude, LandingLongitude, xoffset, zoffset);
 }
@@ -1077,19 +1159,10 @@ void LEMcomputer::GetHorizVelocity(double &forward, double &lateral)
 void LEMcomputer :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 {
 	const double RATE_MAX = RAD*(8.0);
-//	const double RATE_MAX = RAD*(5.0);
-	const double DEADBAND_MAX = RAD*(16.0);
-//	const double RATE_HIGH = RAD*(1.0);
-	const double RATE_HIGH = RAD*(3.0);
-//	const double DEADBAND_HIGH = RAD*(3.0);
-	const double DEADBAND_HIGH = RAD*(6.0);
-//	const double RATE_MID = RAD*(0.5);
-	const double RATE_MID = RAD*(1.0);
-//	const double DEADBAND_MID = RAD*(1.0);
-	const double DEADBAND_MID = RAD*(2.0);
-	const double RATE_LOW = RAD*(0.25);
+//	const double RATE_MAX = RAD*(10.0);
 	const double DEADBAND_LOW = RAD*(0.01);
-	const double RATE_FINE = RAD*(0.005);
+//	const double RATE_FINE = RAD*(0.005);
+	const double RATE_FINE = RAD*(0.01);
 
 	const double RATE_NULL = RAD*(0.0001);
 
@@ -1160,7 +1233,7 @@ void LEMcomputer :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 			Level.y = min((Thrust/MaxThrust), 1);
 		}
 	} else {
-		Rate.y=fabs(delatt.y)/3.0;
+		Rate.y=RATE_FINE+fabs(delatt.y)/3.0;
 		if(Rate.y < RATE_FINE) Rate.y=RATE_FINE;
 		if (Rate.y > RATE_MAX ) Rate.y=RATE_MAX;
 		Rdead=min(Rate.y/2,RATE_FINE);
@@ -1200,7 +1273,7 @@ void LEMcomputer :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 			Level.z = min((Thrust/MaxThrust), 1);
 		}
 	} else {
-		Rate.z=fabs(delatt.z)/3.0;
+		Rate.z=RATE_FINE+fabs(delatt.z)/3.0;
 		if(Rate.z < RATE_FINE) Rate.z=RATE_FINE;
 		if (Rate.z > RATE_MAX ) Rate.z=RATE_MAX;
 		Rdead=min(Rate.z/2,RATE_FINE);
