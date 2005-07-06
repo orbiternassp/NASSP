@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/06/15 20:32:32  lazyd
+  *	Added two variables: bool InFOV and SaveFOV for save/restore of original view and FOV
+  *	
   *	Revision 1.5  2005/06/09 14:17:22  lazyd
   *	Added SetGimbal function declaration
   *	
@@ -66,7 +69,7 @@ public:
 	void Init();
 	void LoadStateEx (FILEHANDLE scn, void *vs);
 	void SaveState (FILEHANDLE scn);
-	int ConsumeDirectKey (const char *keystate);
+	int ConsumeDirectKey (DWORD key);
 	void PostStep(double simt, double simdt, double mjd);
 	bool PanelMouseEvent (int id, int event, int mx, int my);
 	bool PanelRedrawEvent (int id, int event, SURFHANDLE surf);
