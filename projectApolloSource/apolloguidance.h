@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/05/19 20:26:52  movieman523
+  *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
+  *	
   *	Revision 1.4  2005/04/30 23:09:15  movieman523
   *	Revised CSM banksums and apogee/perigee display to match the real AGC.
   *	
@@ -146,7 +149,9 @@ protected:
 	void SetVerbNoun(int Verb, int Noun);
 	double NewVelocity_AorP(double Mu_Planet, double &Rapo, double &Rperi, double &Rnew);
 	void KillAllThrusters();
-	void OrientForOrbitBurn();
+	void OrientForOrbitBurn(double simt);
+	void GetHoverAttitude( VECTOR3 &actatt);
+	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt);
 	void BurnMainEngine(double thrust);
 	virtual void DisplayBankSum();
 	void DisplayEMEM(unsigned int addr);
