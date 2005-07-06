@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/06/17 18:32:52  lazyd
+  *	Tried to fix generic cockpit view, doesn't work
+  *	
   *	Revision 1.10  2005/06/16 13:33:03  lazyd
   *	Fixed mistake on right redesignation
   *	
@@ -337,126 +340,60 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	return (VESSEL *) lem;
 }
 
-int sat5_lmpkd::ConsumeDirectKey (const char *keystate)
-
+// rewrote to get key events rather than monitor key state - LazyD
+int sat5_lmpkd::ConsumeDirectKey (DWORD key)
 {
-	if (KEYMOD_SHIFT (keystate)) 
-	{
-		return 0; 
-	}
-	else if (KEYMOD_CONTROL (keystate)) 
-	{
-	
-	}
-	else 
-	{ 
-		if (KEYDOWN (keystate, OAPI_KEY_J)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_J, 1.0)){
-			if (status !=0)
-			//bManualSeparate = true;
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_K)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_K, 1.0)){
-				bToggleHatch = true;
-				
-			return 1;
-			}
-		}
-		
-		if (KEYDOWN (keystate, OAPI_KEY_1)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_1, 1.0)){
-				
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_2)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_2, 1.0)){
-				
-				
-				
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_3)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_3, 1.0)){
-			}
-			return 1;
-			
-		}
-		
-		if (KEYDOWN (keystate, OAPI_KEY_E)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_E, 1.0)){
-		if (status==1){
-					//ToggleEva = true;
-				}
-			return 1;
-			}
-		}
+	switch (key) {
 
-		if (KEYDOWN (keystate, OAPI_KEY_7)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_7, 1.0))
-				lmpview = true;
-			return 1;
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_6)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_6, 1.0))
-				cdrview = true;
-			return 1;
-		}
+	case OAPI_KEY_K:
+		bToggleHatch = true;
+		return 1;
 
-		//
-		// keys used by LM landing programs P64 and P66
-		//
-		
-		if (KEYDOWN (keystate, OAPI_KEY_MINUS)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_MINUS, 0.05)) {
-				agc.ChangeDescentRate(-0.3077);
-			}
-			return 1;
-		}
+	case OAPI_KEY_6:
+		cdrview = true;
+		return 1;
 
-		if (KEYDOWN (keystate, OAPI_KEY_EQUALS)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_EQUALS, 0.05)) {
-				agc.ChangeDescentRate(0.3077);
-			}
-			return 1;
-		}
+	//
+	// Used by P64
+	//
 
-		if (KEYDOWN (keystate, OAPI_KEY_HOME)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_HOME, 0.05))
-				//move the landing site downrange
-				agc.RedesignateTarget(0,1.0);
-			return 1;
-		}
 
-		if (KEYDOWN (keystate, OAPI_KEY_END)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_END, 0.05))
-				//move the landing site closer
-				agc.RedesignateTarget(0,-1.0);
-			return 1;
-		}
+	case OAPI_KEY_COMMA:
+		// move landing site left
+		agc.RedesignateTarget(1,1.0);
+		return 1;
 
-		if (KEYDOWN (keystate, OAPI_KEY_DELETE)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_DELETE, 0.05))
-				// move landing site left
-				agc.RedesignateTarget(1,1.0);
-			return 1;
-		}
+	case OAPI_KEY_PERIOD:
+		// move landing site right
+		agc.RedesignateTarget(1,-1.0);
+		return 1;
 
-		if (KEYDOWN (keystate, OAPI_KEY_INSERT)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_INSERT, 0.05))
-				// move landing site right
-				agc.RedesignateTarget(1,-1.0);
-			return 1;
-		}
+	case OAPI_KEY_HOME:
+		//move the landing site downrange
+		agc.RedesignateTarget(0,-1.0);
+		return 1;
 
-		//
-		// end of keys used by LM landing programs P64 and P66
-		//
+	case OAPI_KEY_END:
+		//move the landing site closer
+		agc.RedesignateTarget(0,1.0);
+		return 1;
+
+	//
+	// Used by P66
+	//
+
+	case OAPI_KEY_MINUS:
+		//increase descent rate
+		agc.ChangeDescentRate(-0.3077);
+		return 1;
+
+	case OAPI_KEY_EQUALS:
+		//decrease descent rate
+		agc.ChangeDescentRate(0.3077);
+		return 1;
 	}
 	return 0;
+
 }
 
 //
@@ -914,11 +851,14 @@ DLLCLBK bool ovcPanelRedrawEvent (VESSEL *vessel, int id, int event, SURFHANDLE 
 	return lem->PanelRedrawEvent(id, event, surf);
 }
 
-DLLCLBK int ovcConsumeKey (VESSEL *vessel, const char *keystate)
+DLLCLBK int ovcConsumeBufferedKey (VESSEL *vessel, DWORD key, bool down, const char *keystate)
 
 {
-	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-	return lem->ConsumeDirectKey(keystate);
+	if(down) {
+		sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
+		return lem->ConsumeDirectKey(key);
+	}
+	return 0;
 }
 
 DLLCLBK void ovcTimestep (VESSEL *vessel, double simt)
