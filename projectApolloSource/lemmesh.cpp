@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/06/26 21:40:23  lazyd
+  *	Added code to make LM mass and fuel mass correct for mission
+  *	
   *	Revision 1.7  2005/04/11 23:47:42  yogenfrutz
   *	once more: fixed docking positions and flames position
   *	
@@ -145,13 +148,20 @@ void sat5_lmpkd::SetLmVesselDockStage()
 
 {	
 	double fuelmass;
+	int mnumber;
 	ClearThrusterDefinitions();
 	agc.SetVesselStats(DPS_ISP, DPS_THRUST, true);
-	if(agc.GetApolloNo() < 15) {
-		SetEmptyMass(6651.0);
+	//
+	// Changed to reflect mission-specific empty and fuel mass
+	//
+	// From "Apollo by the Numbers"
+	//
+	mnumber=agc.GetApolloNo();
+	if(mnumber < 15) {
+		SetEmptyMass(7113.6);
 		fuelmass=8375.;
 	} else {
-		SetEmptyMass(7481.0);
+		SetEmptyMass(7762);
 		fuelmass=8891.;
 	}
 	SetSize (6);
