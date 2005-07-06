@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/05/19 20:26:52  movieman523
+  *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
+  *	
   *	Revision 1.4  2005/04/30 23:09:15  movieman523
   *	Revised CSM banksums and apogee/perigee display to match the real AGC.
   *	
@@ -258,10 +261,10 @@ bool ApolloGuidance::ValidateCommonProgram(int prog)
 	case 33:
 		// For now this won't be allowed for the LEM, since that code doesn't
 		// work yet.
-		if (MainThrusterIsHover)
-			return false;
-		if (!InOrbit)
-			return false;
+//		if (MainThrusterIsHover)
+//			return false;
+//		if (!InOrbit)
+//			return false;
 
 		return true;
 
@@ -1163,12 +1166,20 @@ void ApolloGuidance::DoOrbitBurnCalcs(double simt)
 	}
 }
 
-void ApolloGuidance::OrientForOrbitBurn()
+void ApolloGuidance::OrientForOrbitBurn(double simt)
 
 {
 	if (RetroFlag) {
 		if (MainThrusterIsHover) {
-//			AttitudeControllerPitchRoll(90.0 * RAD, 0.0);
+			if(simt > NextEventTime) {
+				NextEventTime=simt+1.0;
+				VECTOR3 actatt;
+				GetHoverAttitude(actatt);
+				VECTOR3 tgtatt=_V(-PI/2.0, 0.0, 0.0);
+				ComAttitude(actatt, tgtatt);
+//				sprintf(oapiDebugString(),"retro act=%.3f %.3f %.3f tgt=%.3f %.3f %.3f",
+//					actatt*DEG, tgtatt*DEG);
+			}
 		}
 		else {
 			OurVessel->ActivateNavmode(NAVMODE_RETROGRADE);
@@ -1176,19 +1187,208 @@ void ApolloGuidance::OrientForOrbitBurn()
 	}
 	else {
 		if (MainThrusterIsHover) {
-//			AttitudeControllerPitchRoll(-90.0 * RAD, 0.0);
-//			AttitudeControllerRollYaw(90.0 * RAD, 90.0 * RAD);
-			VECTOR3	v = {0.0, 1.0, 0.0};
-			VECTOR3 gv;
-
-			OurVessel->Local2Global(v, gv);
-//			AttitudeController(v);
+			if(simt > NextEventTime) {
+				NextEventTime=simt+1.0;
+				VECTOR3 actatt;
+				GetHoverAttitude(actatt);
+				VECTOR3 tgtatt=_V(PI/2.0, 0.0, 0.0);
+				ComAttitude(actatt, tgtatt);
+//				sprintf(oapiDebugString(),"pro act=%.3f %.3f %.3f tgt=%.3f %.3f %.3f",
+//					actatt*DEG, tgtatt*DEG);
+			}
 		}
 		else {
 			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
 		}
 	}
 }
+
+void ApolloGuidance::GetHoverAttitude( VECTOR3 &actatt)
+
+{
+	static VECTOR3 zero={0.0, 0.0, 0.0};
+	static VECTOR3 xloc={1.0, 0.0, 0.0};
+	static VECTOR3 yloc={0.0, 1.0, 0.0};
+	static VECTOR3 zloc={0.0, 0.0, 1.0};
+	double dir;
+	VECTOR3 relpos, relvel, plvec, vperp, zerogl, xgl, ygl, zgl;
+	OBJHANDLE hbody=OurVessel->GetGravityRef();
+	OurVessel->GetRelativePos(hbody, relpos);
+	OurVessel->GetRelativeVel(hbody, relvel);
+	plvec=CrossProduct(relvel, relpos);
+	//plvec is normal to orbital plane...
+	plvec=Normalize(plvec);
+	relvel=Normalize(relvel);
+	vperp=CrossProduct(relvel, plvec);
+	vperp=Normalize(vperp);
+	OurVessel->Local2Global(zero, zerogl);
+	OurVessel->Local2Global(xloc, xgl);
+	OurVessel->Local2Global(yloc, ygl);
+	OurVessel->Local2Global(zloc, zgl);
+	xgl=xgl-zerogl;
+	ygl=ygl-zerogl;
+	zgl=zgl-zerogl;
+	dir=relvel*ygl;
+	if(dir > 0.0) {
+		dir=1.0;
+	} else {
+		dir=-1.0;
+	}
+	actatt.x=dir*(PI/2.0-asin(vperp*ygl));
+	actatt.y=asin(plvec*zgl);
+	actatt.z=-asin(plvec*ygl);
+}
+
+// This is adapted from Chris Knestrick's Control.cpp, which wouldn't work right here
+// The main differences are rates are a linear function of delta angle, rather than a 
+// step function, and we do all three axes at once
+void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
+{
+	const double RATE_MAX = RAD*(5.0);
+	const double DEADBAND_LOW = RAD*(0.01);
+//	const double RATE_FINE = RAD*(0.005);
+	const double RATE_FINE = RAD*(0.01);
+
+	const double RATE_NULL = RAD*(0.0001);
+
+	VECTOR3 PMI, Level, Drate, delatt, Rate;
+	double Mass, Size, MaxThrust, Thrust, Rdead;
+
+	VESSELSTATUS status2;
+	OurVessel->GetStatus(status2);
+	OurVessel->GetPMI(PMI);
+	Mass=OurVessel->GetMass();
+	Size=OurVessel->GetSize();
+	MaxThrust=OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
+
+	Rate.x=17.374;
+	Rate.y=17.374;
+	Rate.z=17.374;
+	delatt=tgtatt - actatt;
+//X axis
+	Drate.x=17.374;
+	if (fabs(delatt.x) < DEADBAND_LOW) {
+		if(fabs(status2.vrot.x) < RATE_NULL) {
+		// set level to zero
+			Level.x=0;
+		} else {
+		// null the rate
+			Thrust=-(Mass*PMI.x*status2.vrot.x)/Size;
+			Level.x = min((Thrust/MaxThrust), 1);
+		}
+	} else {
+		Rate.x=RATE_FINE+fabs(delatt.x)/3.0;
+		if(Rate.x < RATE_FINE) Rate.x=RATE_FINE;
+		if (Rate.x > RATE_MAX ) Rate.x=RATE_MAX;
+		Rdead=min(Rate.x/2,RATE_FINE);
+		if(delatt.x < 0) {
+			Rate.x=-Rate.x;
+			Rdead=-Rdead;
+		}
+		Drate.x=Rate.x-status2.vrot.x;
+		Thrust=(Mass*PMI.x*Drate.x)/Size;
+		if(delatt.x > 0) {
+			if(Drate.x > Rdead) {
+				Level.x=min((Thrust/MaxThrust),1);
+			} else if (Drate.x < -Rdead) {
+				Level.x=max((Thrust/MaxThrust),-1);
+			} else {
+				Level.x=0;
+			}
+		} else {
+			if(Drate.x < Rdead) {
+				Level.x=max((Thrust/MaxThrust),-1);
+			} else if (Drate.x > -Rdead) {
+				Level.x=min((Thrust/MaxThrust),1);
+			} else {
+				Level.x=0;
+			}
+		}
+	}
+
+//Y-axis
+	Drate.y=17.374;
+	if (fabs(delatt.y) < DEADBAND_LOW) {
+		if(fabs(status2.vrot.y) < RATE_NULL) {
+		// set level to zero
+			Level.y=0;
+		} else {
+		// null the rate
+			Thrust=-(Mass*PMI.y*status2.vrot.y)/Size;
+			Level.y = min((Thrust/MaxThrust), 1);
+		}
+	} else {
+		Rate.y=RATE_FINE+fabs(delatt.y)/3.0;
+		if(Rate.y < RATE_FINE) Rate.y=RATE_FINE;
+		if (Rate.y > RATE_MAX ) Rate.y=RATE_MAX;
+		Rdead=min(Rate.y/2,RATE_FINE);
+		if(delatt.y < 0) {
+			Rate.y=-Rate.y;
+			Rdead=-Rdead;
+		}
+		Drate.y=Rate.y-status2.vrot.y;
+		Thrust=(Mass*PMI.y*Drate.y)/Size;
+		if(delatt.y > 0) {
+			if(Drate.y > Rdead) {
+				Level.y=min((Thrust/MaxThrust),1);
+			} else if (Drate.y < -Rdead) {
+				Level.y=max((Thrust/MaxThrust),-1);
+			} else {
+				Level.y=0;
+			}
+		} else {
+			if(Drate.y < Rdead) {
+				Level.y=max((Thrust/MaxThrust),-1);
+			} else if (Drate.y > -Rdead) {
+				Level.y=min((Thrust/MaxThrust),1);
+			} else {
+				Level.y=0;
+			}
+		}
+	}
+//Z axis
+	Drate.z=17.374;
+	if (fabs(delatt.z) < DEADBAND_LOW) {
+		if(fabs(status2.vrot.z) < RATE_NULL) {
+		// set level to zero
+			Level.z=0;
+		} else {
+		// null the rate
+			Thrust=-(Mass*PMI.z*status2.vrot.z)/Size;
+			Level.z = min((Thrust/MaxThrust), 1);
+		}
+	} else {
+		Rate.z=RATE_FINE+fabs(delatt.z)/3.0;
+		if(Rate.z < RATE_FINE) Rate.z=RATE_FINE;
+		if (Rate.z > RATE_MAX ) Rate.z=RATE_MAX;
+		Rdead=min(Rate.z/2,RATE_FINE);
+		if(delatt.z< 0) {
+			Rate.z=-Rate.z;
+			Rdead=-Rdead;
+		}
+		Drate.z=Rate.z-status2.vrot.z;
+		Thrust=(Mass*PMI.z*Drate.z)/Size;
+		if(delatt.z > 0) {
+			if(Drate.z > Rdead) {
+				Level.z=min((Thrust/MaxThrust),1);
+			} else if (Drate.z < -Rdead) {
+				Level.z=max((Thrust/MaxThrust),-1);
+			} else {
+				Level.z=0;
+			}
+		} else {
+			if(Drate.z < Rdead) {
+				Level.z=max((Thrust/MaxThrust),-1);
+			} else if (Drate.z > -Rdead) {
+				Level.z=min((Thrust/MaxThrust),1);
+			} else {
+				Level.z=0;
+			}
+		}
+	}
+	OurVessel->SetAttitudeRotLevel(Level);
+}
+
 
 void ApolloGuidance::BurnMainEngine(double thrust)
 
@@ -1268,7 +1468,8 @@ void ApolloGuidance::Prog33(double simt)
 
 	case 5:
 	case 55:
-		OrientForOrbitBurn();
+		NextEventTime=0.0;
+		OrientForOrbitBurn(simt);
 		if (simt >= BurnStartTime)
 			ProgState++;
 		break;
@@ -1280,7 +1481,7 @@ void ApolloGuidance::Prog33(double simt)
 	case 6:
 	case 56:
 		if (simt >= BurnStartTime) {
-			OrientForOrbitBurn();
+			OrientForOrbitBurn(simt);
 			BurnMainEngine(1.0);
 			NextEventTime = simt + 0.5;
 			ProgState++;
@@ -1297,7 +1498,7 @@ void ApolloGuidance::Prog33(double simt)
 		double CurrentAp, CurrentPer;
 		OBJHANDLE hPlanet;
 
-		OrientForOrbitBurn();
+		OrientForOrbitBurn(simt);
 		BurnMainEngine(1.0);
 
 		//
