@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/07/06 14:35:03  lazyd
+  *	Rewrote key-handler to get key events
+  *	
   *	Revision 1.11  2005/06/17 18:32:52  lazyd
   *	Tried to fix generic cockpit view, doesn't work
   *	
@@ -698,7 +701,7 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 			Crewed = (i == 0);
 		}
 		else if (!strnicmp (line, "LANG", 4)) {
-			strncpy (AudioLanguage, line + 4, 64);
+			strncpy (AudioLanguage, line + 5, 64);
 		}
 		else if (!strnicmp (line, "REALISM", 7)) {
 			sscanf (line+7, "%d", &Realism);
