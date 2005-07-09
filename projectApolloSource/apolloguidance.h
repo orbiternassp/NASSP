@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/07/06 21:58:09  lazyd
+  *	Added function defs for GetHoverAttitiude and ComAttitude
+  *	
   *	Revision 1.5  2005/05/19 20:26:52  movieman523
   *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
   *	
@@ -151,7 +154,7 @@ protected:
 	void KillAllThrusters();
 	void OrientForOrbitBurn(double simt);
 	void GetHoverAttitude( VECTOR3 &actatt);
-	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt);
+	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast);
 	void BurnMainEngine(double thrust);
 	virtual void DisplayBankSum();
 	void DisplayEMEM(unsigned int addr);
