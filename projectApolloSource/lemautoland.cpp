@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/07/06 14:32:25  lazyd
+  *	Added code to make landing profile mission dependent.
+  *	Changed window-pointing logic in P64
+  *	
   *	Revision 1.9  2005/06/17 18:26:14  lazyd
   *	Added GetHorizVelocity function for crosspointers etc.
   *	
@@ -260,13 +264,14 @@ void LEMcomputer::Prog63(double simt)
 				centrip=hvel*hvel/(bradius+position.y);
 				grav=(GRAVITY*bmass)/((bradius+position.y)*(bradius+position.y));
 				//do the quadratic guidance - compute acceleration vector
-
+				ProgFlag03=false;
 				if(ProgState == 15) {
 					if(tgo > -354.0) OurVessel->SetAttitudeRotLevel(1,0.0);
 					if(tgo > -350.0) {
-						if(fabs(actatt.y) < 0.35) {
+						if(fabs(actatt.y) < 0.45) {
 							ProgState++;
 							ProgFlag02=true;
+							ProgFlag03=true;
 						}
 					}
 				}
@@ -391,7 +396,7 @@ void LEMcomputer::Prog63(double simt)
 //					"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f tgo=%.1f",
 //					acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60.);
 			}
-			if(ProgFlag02) ComAttitude(actatt, tgtatt);
+			if(ProgFlag02) ComAttitude(actatt, tgtatt, ProgFlag03);
 		}
 		//end of 2-second interval guidance calcs
 	}
@@ -427,6 +432,7 @@ void LEMcomputer::Prog63(double simt)
 		SetVerbNoun(6,18);
 		//Turn on Attitude control
 		ProgFlag02=true;
+		ProgFlag03=false;
 //		sprintf(oapiDebugString(),"t=%.1f ", dt);
 // 35 seconds from ignition, blank the DSKY for 5 seconds
 		if(dt <= 35) {
@@ -587,6 +593,7 @@ void LEMcomputer::Prog64(double simt)
 		tbrg, cbrg, rbrg, heading, jfz, ttg, ttg2, ttg3, ttg4, ttgl,
 		ttgl2, dtg, grav, acctot, vmass, vthrust, maxacc, cthrust, accx, cgelev;
 	if(ProgState==0) {
+
 		if(P64LOG) {
 			char fname[8];
 			sprintf(fname,"P64log.txt");
@@ -769,7 +776,7 @@ void LEMcomputer::Prog64(double simt)
 //		sprintf(oapiDebugString(),
 //			"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f tgo=%.1f cut=%.1f",
 //			acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60., CutOffVel);
-		ComAttitude(actatt, tgtatt);
+		ComAttitude(actatt, tgtatt, true);
 		if(P64LOG) {
 			fprintf(outstr,"Time-to-go= %.1f\n",ttg);
 			fprintf(outstr,"Target Lat=%.8f Lon=%.8f \n",blat*DEG, blon*DEG);
@@ -1002,7 +1009,7 @@ void LEMcomputer::Prog65(double simt)
 //		sprintf(oapiDebugString(),
 //			"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f ",
 //			acc, tgtatt*DEG, actatt*DEG, cthrust);
-		ComAttitude(actatt, tgtatt);
+		ComAttitude(actatt, tgtatt, true);
 //		sprintf(oapiDebugString(),
 //		"pos= %.2f %.2f %.2f vel= %.2f %.2f %.2f acc=%.2f %.2f %.2f att=%.2f %.2f %.2f th=%.1f",
 //			position,velocity, acc, tgtatt*DEG, cthrust*100.);
@@ -1152,155 +1159,3 @@ void LEMcomputer::GetHorizVelocity(double &forward, double &lateral)
 		forward=hvel*cos(cbrg-heading);
 		lateral=hvel*sin(cbrg-heading);
 }
-
-// This is adapted from Chris Knestrick's Control.cpp, which wouldn't work right here
-// The main differences are rates are a linear function of delta angle, rather than a 
-// step function, and we do all three axes at once
-void LEMcomputer :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
-{
-	const double RATE_MAX = RAD*(8.0);
-//	const double RATE_MAX = RAD*(10.0);
-	const double DEADBAND_LOW = RAD*(0.01);
-//	const double RATE_FINE = RAD*(0.005);
-	const double RATE_FINE = RAD*(0.01);
-
-	const double RATE_NULL = RAD*(0.0001);
-
-	VECTOR3 PMI, Level, Drate, delatt, Rate;
-	double Mass, Size, MaxThrust, Thrust, Rdead;
-
-	VESSELSTATUS status2;
-	OurVessel->GetStatus(status2);
-	OurVessel->GetPMI(PMI);
-	Mass=OurVessel->GetMass();
-	Size=OurVessel->GetSize();
-	MaxThrust=OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
-
-	Rate.x=17.374;
-	Rate.y=17.374;
-	Rate.z=17.374;
-	delatt=tgtatt - actatt;
-//X axis
-	Drate.x=17.374;
-	if (fabs(delatt.x) < DEADBAND_LOW) {
-		if(fabs(status2.vrot.x) < RATE_NULL) {
-		// set level to zero
-			Level.x=0;
-		} else {
-		// null the rate
-			Thrust=-(Mass*PMI.x*status2.vrot.x)/Size;
-			Level.x = min((Thrust/MaxThrust), 1);
-		}
-	} else {
-		Rate.x=RATE_FINE+fabs(delatt.x)/3.0;
-		if(Rate.x < RATE_FINE) Rate.x=RATE_FINE;
-		if (Rate.x > RATE_MAX ) Rate.x=RATE_MAX;
-		Rdead=min(Rate.x/2,RATE_FINE);
-		if(delatt.x < 0) {
-			Rate.x=-Rate.x;
-			Rdead=-Rdead;
-		}
-		Drate.x=Rate.x-status2.vrot.x;
-		Thrust=(Mass*PMI.x*Drate.x)/Size;
-		if(delatt.x > 0) {
-			if(Drate.x > Rdead) {
-				Level.x=min((Thrust/MaxThrust),1);
-			} else if (Drate.x < -Rdead) {
-				Level.x=max((Thrust/MaxThrust),-1);
-			} else {
-				Level.x=0;
-			}
-		} else {
-			if(Drate.x < Rdead) {
-				Level.x=max((Thrust/MaxThrust),-1);
-			} else if (Drate.x > -Rdead) {
-				Level.x=min((Thrust/MaxThrust),1);
-			} else {
-				Level.x=0;
-			}
-		}
-	}
-
-//Y-axis
-	Drate.y=17.374;
-	if (fabs(delatt.y) < DEADBAND_LOW) {
-		if(fabs(status2.vrot.y) < RATE_NULL) {
-		// set level to zero
-			Level.y=0;
-		} else {
-		// null the rate
-			Thrust=-(Mass*PMI.y*status2.vrot.y)/Size;
-			Level.y = min((Thrust/MaxThrust), 1);
-		}
-	} else {
-		Rate.y=RATE_FINE+fabs(delatt.y)/3.0;
-		if(Rate.y < RATE_FINE) Rate.y=RATE_FINE;
-		if (Rate.y > RATE_MAX ) Rate.y=RATE_MAX;
-		Rdead=min(Rate.y/2,RATE_FINE);
-		if(delatt.y < 0) {
-			Rate.y=-Rate.y;
-			Rdead=-Rdead;
-		}
-		Drate.y=Rate.y-status2.vrot.y;
-		Thrust=(Mass*PMI.y*Drate.y)/Size;
-		if(delatt.y > 0) {
-			if(Drate.y > Rdead) {
-				Level.y=min((Thrust/MaxThrust),1);
-			} else if (Drate.y < -Rdead) {
-				Level.y=max((Thrust/MaxThrust),-1);
-			} else {
-				Level.y=0;
-			}
-		} else {
-			if(Drate.y < Rdead) {
-				Level.y=max((Thrust/MaxThrust),-1);
-			} else if (Drate.y > -Rdead) {
-				Level.y=min((Thrust/MaxThrust),1);
-			} else {
-				Level.y=0;
-			}
-		}
-	}
-//Z axis
-	Drate.z=17.374;
-	if (fabs(delatt.z) < DEADBAND_LOW) {
-		if(fabs(status2.vrot.z) < RATE_NULL) {
-		// set level to zero
-			Level.z=0;
-		} else {
-		// null the rate
-			Thrust=-(Mass*PMI.z*status2.vrot.z)/Size;
-			Level.z = min((Thrust/MaxThrust), 1);
-		}
-	} else {
-		Rate.z=RATE_FINE+fabs(delatt.z)/3.0;
-		if(Rate.z < RATE_FINE) Rate.z=RATE_FINE;
-		if (Rate.z > RATE_MAX ) Rate.z=RATE_MAX;
-		Rdead=min(Rate.z/2,RATE_FINE);
-		if(delatt.z< 0) {
-			Rate.z=-Rate.z;
-			Rdead=-Rdead;
-		}
-		Drate.z=Rate.z-status2.vrot.z;
-		Thrust=(Mass*PMI.z*Drate.z)/Size;
-		if(delatt.z > 0) {
-			if(Drate.z > Rdead) {
-				Level.z=min((Thrust/MaxThrust),1);
-			} else if (Drate.z < -Rdead) {
-				Level.z=max((Thrust/MaxThrust),-1);
-			} else {
-				Level.z=0;
-			}
-		} else {
-			if(Drate.z < Rdead) {
-				Level.z=max((Thrust/MaxThrust),-1);
-			} else if (Drate.z > -Rdead) {
-				Level.z=min((Thrust/MaxThrust),1);
-			} else {
-				Level.z=0;
-			}
-		}
-	}
-	OurVessel->SetAttitudeRotLevel(Level);
-}
-
