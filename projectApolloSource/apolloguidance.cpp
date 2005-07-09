@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/07/06 21:57:15  lazyd
+  *	Added code to orient the hover engine to prograde or retrograde
+  *	
   *	Revision 1.5  2005/05/19 20:26:52  movieman523
   *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
   *	
@@ -259,10 +262,6 @@ bool ApolloGuidance::ValidateCommonProgram(int prog)
 	//
 
 	case 33:
-		// For now this won't be allowed for the LEM, since that code doesn't
-		// work yet.
-//		if (MainThrusterIsHover)
-//			return false;
 //		if (!InOrbit)
 //			return false;
 
@@ -1044,7 +1043,7 @@ void ApolloGuidance::DoOrbitBurnCalcs(double simt)
 
 {
 	OBJHANDLE hSetGbody;
-	double GbodyMass, GbodySize;
+	double GbodyMass, GbodySize, pcthrust;
 	double p, v, R, RDotV, Mu_Planet, J2000, E, Me, T, tsp;
 	double TtPeri, TtApo;
 	double OrbitApo, OrbitPeri, AnsOne, AnsTwo, Orbit1StaticR;
@@ -1140,9 +1139,11 @@ void ApolloGuidance::DoOrbitBurnCalcs(double simt)
 
 	// Burn times
 	VesselMass = OurVessel->GetMass();
+	pcthrust=1.0;
+	if(MainThrusterIsHover) pcthrust=0.1;
 
 	double massrequired = VesselMass * (1 - exp(-(fabs(DesiredDeltaV) / VesselISP)));
-	double deltaT = massrequired / (MaxThrust / VesselISP);
+	double deltaT = massrequired / (MaxThrust*pcthrust / VesselISP);
 
 	if (TtApo < TtPeri) {
 		BurnTime = simt + TtApo;
@@ -1176,9 +1177,7 @@ void ApolloGuidance::OrientForOrbitBurn(double simt)
 				VECTOR3 actatt;
 				GetHoverAttitude(actatt);
 				VECTOR3 tgtatt=_V(-PI/2.0, 0.0, 0.0);
-				ComAttitude(actatt, tgtatt);
-//				sprintf(oapiDebugString(),"retro act=%.3f %.3f %.3f tgt=%.3f %.3f %.3f",
-//					actatt*DEG, tgtatt*DEG);
+				ComAttitude(actatt, tgtatt, false);
 			}
 		}
 		else {
@@ -1192,9 +1191,7 @@ void ApolloGuidance::OrientForOrbitBurn(double simt)
 				VECTOR3 actatt;
 				GetHoverAttitude(actatt);
 				VECTOR3 tgtatt=_V(PI/2.0, 0.0, 0.0);
-				ComAttitude(actatt, tgtatt);
-//				sprintf(oapiDebugString(),"pro act=%.3f %.3f %.3f tgt=%.3f %.3f %.3f",
-//					actatt*DEG, tgtatt*DEG);
+				ComAttitude(actatt, tgtatt, false);
 			}
 		}
 		else {
@@ -1242,17 +1239,15 @@ void ApolloGuidance::GetHoverAttitude( VECTOR3 &actatt)
 // This is adapted from Chris Knestrick's Control.cpp, which wouldn't work right here
 // The main differences are rates are a linear function of delta angle, rather than a 
 // step function, and we do all three axes at once
-void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
+void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast)
 {
-	const double RATE_MAX = RAD*(5.0);
+	const double RATE_MAX = RAD*(15.0);
 	const double DEADBAND_LOW = RAD*(0.01);
-//	const double RATE_FINE = RAD*(0.005);
-	const double RATE_FINE = RAD*(0.01);
-
+	const double RATE_FINE = RAD*(0.005);
 	const double RATE_NULL = RAD*(0.0001);
 
 	VECTOR3 PMI, Level, Drate, delatt, Rate;
-	double Mass, Size, MaxThrust, Thrust, Rdead;
+	double Mass, Size, MaxThrust, Thrust, Rdead, factor, tacc;
 
 	VESSELSTATUS status2;
 	OurVessel->GetStatus(status2);
@@ -1261,12 +1256,16 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 	Size=OurVessel->GetSize();
 	MaxThrust=OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
 
-	Rate.x=17.374;
-	Rate.y=17.374;
-	Rate.z=17.374;
+	if(fast) {
+		factor=PI;
+	} else {
+		factor=1.0;
+	}
+	tacc=oapiGetTimeAcceleration();
+	if(tacc > 1) factor=1;
+
 	delatt=tgtatt - actatt;
 //X axis
-	Drate.x=17.374;
 	if (fabs(delatt.x) < DEADBAND_LOW) {
 		if(fabs(status2.vrot.x) < RATE_NULL) {
 		// set level to zero
@@ -1277,7 +1276,7 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 			Level.x = min((Thrust/MaxThrust), 1);
 		}
 	} else {
-		Rate.x=RATE_FINE+fabs(delatt.x)/3.0;
+		Rate.x=fabs(delatt.x)/3.0;
 		if(Rate.x < RATE_FINE) Rate.x=RATE_FINE;
 		if (Rate.x > RATE_MAX ) Rate.x=RATE_MAX;
 		Rdead=min(Rate.x/2,RATE_FINE);
@@ -1286,7 +1285,7 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 			Rdead=-Rdead;
 		}
 		Drate.x=Rate.x-status2.vrot.x;
-		Thrust=(Mass*PMI.x*Drate.x)/Size;
+		Thrust=factor*(Mass*PMI.x*Drate.x)/Size;
 		if(delatt.x > 0) {
 			if(Drate.x > Rdead) {
 				Level.x=min((Thrust/MaxThrust),1);
@@ -1305,9 +1304,10 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 			}
 		}
 	}
+//	sprintf(oapiDebugString(),"datt=%.3f rate=%.3f lvl=%.3f drat=%.3f dead=%.3f thr=%.3f act=%.3f",
+//		delatt.x*DEG, Rate.x*DEG, Level.x, Drate.x*DEG, Rdead*DEG, Thrust, status2.vrot.x*DEG);
 
 //Y-axis
-	Drate.y=17.374;
 	if (fabs(delatt.y) < DEADBAND_LOW) {
 		if(fabs(status2.vrot.y) < RATE_NULL) {
 		// set level to zero
@@ -1318,7 +1318,7 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 			Level.y = min((Thrust/MaxThrust), 1);
 		}
 	} else {
-		Rate.y=RATE_FINE+fabs(delatt.y)/3.0;
+		Rate.y=fabs(delatt.y)/3.0;
 		if(Rate.y < RATE_FINE) Rate.y=RATE_FINE;
 		if (Rate.y > RATE_MAX ) Rate.y=RATE_MAX;
 		Rdead=min(Rate.y/2,RATE_FINE);
@@ -1327,7 +1327,7 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 			Rdead=-Rdead;
 		}
 		Drate.y=Rate.y-status2.vrot.y;
-		Thrust=(Mass*PMI.y*Drate.y)/Size;
+		Thrust=factor*(Mass*PMI.y*Drate.y)/Size;
 		if(delatt.y > 0) {
 			if(Drate.y > Rdead) {
 				Level.y=min((Thrust/MaxThrust),1);
@@ -1347,7 +1347,6 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 		}
 	}
 //Z axis
-	Drate.z=17.374;
 	if (fabs(delatt.z) < DEADBAND_LOW) {
 		if(fabs(status2.vrot.z) < RATE_NULL) {
 		// set level to zero
@@ -1358,7 +1357,7 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 			Level.z = min((Thrust/MaxThrust), 1);
 		}
 	} else {
-		Rate.z=RATE_FINE+fabs(delatt.z)/3.0;
+		Rate.z=fabs(delatt.z)/3.0;
 		if(Rate.z < RATE_FINE) Rate.z=RATE_FINE;
 		if (Rate.z > RATE_MAX ) Rate.z=RATE_MAX;
 		Rdead=min(Rate.z/2,RATE_FINE);
@@ -1367,7 +1366,7 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt)
 			Rdead=-Rdead;
 		}
 		Drate.z=Rate.z-status2.vrot.z;
-		Thrust=(Mass*PMI.z*Drate.z)/Size;
+		Thrust=factor*(Mass*PMI.z*Drate.z)/Size;
 		if(delatt.z > 0) {
 			if(Drate.z > Rdead) {
 				Level.z=min((Thrust/MaxThrust),1);
@@ -1409,6 +1408,8 @@ void ApolloGuidance::BurnMainEngine(double thrust)
 void ApolloGuidance::Prog33(double simt)
 
 {
+	double pcthrust;
+
 	switch (ProgState)
 	{
 	case 0:
@@ -1482,7 +1483,9 @@ void ApolloGuidance::Prog33(double simt)
 	case 56:
 		if (simt >= BurnStartTime) {
 			OrientForOrbitBurn(simt);
-			BurnMainEngine(1.0);
+			pcthrust=1.0;
+			if(MainThrusterIsHover) pcthrust=0.1;
+			BurnMainEngine(pcthrust);
 			NextEventTime = simt + 0.5;
 			ProgState++;
 		}
@@ -1499,7 +1502,9 @@ void ApolloGuidance::Prog33(double simt)
 		OBJHANDLE hPlanet;
 
 		OrientForOrbitBurn(simt);
-		BurnMainEngine(1.0);
+		pcthrust=1.0;
+		if(MainThrusterIsHover) pcthrust=0.1;
+		BurnMainEngine(pcthrust);
 
 		//
 		// Get the current and target values.
@@ -1518,10 +1523,11 @@ void ApolloGuidance::Prog33(double simt)
 			// is actually greater than the current apogee we need to compare it
 			// to that, not to the current perigee.
 			//
-			if (TargetAlt > CurrentAp)
+			if (TargetAlt > CurrentAp) {
 				CurrentAlt = CurrentAp;
-			else
+			} else {
 				CurrentAlt = CurrentPer;
+			}
 		}
 		else {
 			TargetAlt = oapiGetSize(hPlanet) + (DesiredApogee * 1000.0);
@@ -1530,10 +1536,11 @@ void ApolloGuidance::Prog33(double simt)
 			// is lower than the current apogee, then we need to compare it
 			// to the current perigee, not the current apogee.
 			//
-			if (TargetAlt < CurrentAp)
+			if (TargetAlt < CurrentAp) {
 				CurrentAlt = CurrentPer;
-			else
+			} else {
 				CurrentAlt = CurrentAp;
+			}
 		}
 
 		//
@@ -1543,13 +1550,11 @@ void ApolloGuidance::Prog33(double simt)
 		bool DoShutdown;
 
 		DoShutdown = false;
-
 		if (RetroFlag) {
-			if (CurrentAlt <= (TargetAlt + 50))
+			if (CurrentAlt <= (TargetAlt + 10))
 				DoShutdown = true;
-		}
-		else {
-			if (CurrentAlt >= (TargetAlt - 50))
+		} else {
+			if (CurrentAlt >= (TargetAlt - 10))
 				DoShutdown = true;
 		}
 
