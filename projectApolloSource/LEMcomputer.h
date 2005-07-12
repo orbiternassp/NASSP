@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/06/17 18:27:02  lazyd
+  *	Added declaration for GetHorizVelocity
+  *	
   *	Revision 1.5  2005/06/13 18:47:03  lazyd
   *	Added declarations for ChangeDescentRate and RedesignateTarget for autoland
   *	
@@ -143,9 +146,11 @@ protected:
 	void Prog65(double simt);
 	void Prog66(double simt);
 	void Prog68(double simt);
+//	void Prog70(double simt);
+//	void Prog71(double simt);
+//	void AbortAscent(double simt);
 	void Prog63Pressed(int R1, int R2, int R3);
 	void Prog68Pressed(int R1, int R2, int R3) { ProgState++; };
-	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt);
 	bool OrbitCalculationsValid();
 	bool DescentPhase();
 	bool AscentPhase();
