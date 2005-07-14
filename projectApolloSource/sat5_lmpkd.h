@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/07/06 14:33:56  lazyd
+  *	Changed ConsumeDirectKey to get key events
+  *	
   *	Revision 1.6  2005/06/15 20:32:32  lazyd
   *	Added two variables: bool InFOV and SaveFOV for save/restore of original view and FOV
   *	
@@ -380,6 +383,7 @@ protected:
 	Sound CabinFans;
 	Sound Vox;
 	Sound Afire;
+	Sound Slanding;
 
 	char AudioLanguage[64];
 };

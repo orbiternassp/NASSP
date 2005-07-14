@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/07/12 12:21:52  lazyd
+  *	*** empty log message ***
+  *	
   *	Revision 1.6  2005/06/17 18:27:02  lazyd
   *	Added declaration for GetHorizVelocity
   *	
@@ -134,6 +137,15 @@ public:
 
 	void Timestep(double simt);
 
+    int  GetStatus(double *simtime,
+		                 int    *mode,
+						 double *timeremaining,
+						 double *timeafterpdi);
+	int  SetStatus(double simtime,
+                         int    mode,
+				         double timeremaining,
+					     double timeafterpdi);
+
 protected:
 
 	void DisplayNounData(int noun);
@@ -173,5 +185,13 @@ protected:
 	double iba;							//		Misc stuff, disregard
 
 	Sound LunarAscent;
+
+// Modif x15 status variable used for landing sound management	
+	double simcomputert;
+    int    mode;
+	double timeremaining;
+	double timeafterpdi;
+	int    flags;
+
 
 };

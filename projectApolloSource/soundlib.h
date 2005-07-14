@@ -22,7 +22,18 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
+
+// X15 direct sound include to add landing sound
+#ifdef DIRECTSOUNDENABLED
+typedef DWORD *DWORD_PTR;
+#include "dsound.h"
+#endif
+
+
 
 class SoundData {
 
@@ -88,6 +99,10 @@ public:
 	void SoundOptionOnOff(int option, int onoff);
 	void SetLanguage(char *language);
 
+	char basepath[256];
+	char missionpath[256];
+
+
 protected:
 
 	SoundData *DoLoadSound(char *SoundPath, EXTENDEDPLAY extended);
@@ -104,9 +119,56 @@ protected:
 
 	SoundData sounds[MAX_SOUNDS+1];
 
-	char basepath[256];
-	char missionpath[256];
 	char languagepath[256];
 	bool OrbiterSoundActive;
 	int SoundlibId;
 };
+
+// MODIF x15  managing landing sound
+
+#ifdef DIRECTSOUNDENABLED
+class SoundEvent {
+
+public:
+	SoundEvent();
+	virtual ~SoundEvent();
+	int  isValid();
+	int  makeInvalid();
+
+	bool AlreadyPlayed();
+	int  play(SoundLib soundlib,
+		      VESSEL   *vessel,
+		      Sound    &s,
+			  char * names,
+		      double simcomputert,
+			  double simt,
+			  int mode,double timeremaining,double timeafterpdi,
+		      int flags = NOLOOP, int volume = 255);
+	int  Stop();
+	int  Done();
+    int  LoadMissionLandingSoundArray(SoundLib soundlib,char *soundname);
+    int  InitDirectSound(SoundLib soundlib);
+    int  PlaySound( char *filenames);
+    int SoundEvent::IsPlaying();
+
+
+	double altitude  ;
+	int    mode      ;
+	int    met       ;
+	bool   played    ;
+	char   filenames[255] ;
+	double timetoignition;
+	double timeafterignition;
+	int    mandatory ;
+	
+	SoundLib soundlib;
+	LPDIRECTSOUND8  m_pDS;
+	LPDIRECTSOUNDBUFFER pDSBPrimary;
+    LPDIRECTSOUNDBUFFER* apDSBuffer;
+
+    VOID*   pDSLockedBuffer     ;
+    DWORD   dwDSLockedBufferSize;
+
+
+};
+#endif
