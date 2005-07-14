@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/07/09 18:32:09  lazyd
+  *	Changed Attitude control calls to allow faster rates/time acceleration
+  *	
   *	Revision 1.10  2005/07/06 14:32:25  lazyd
   *	Added code to make landing profile mission dependent.
   *	Changed window-pointing logic in P64
@@ -397,7 +400,27 @@ void LEMcomputer::Prog63(double simt)
 //					acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60.);
 			}
 			if(ProgFlag02) ComAttitude(actatt, tgtatt, ProgFlag03);
-		}
+
+			int current_mode=0;
+			double timetoignition=0;
+			double timesincepdi=0;
+
+
+			current_mode = 0;
+			if(ProgState > 13)
+			{
+				current_mode = 1;
+				timesincepdi = simt-BurnStartTime;
+			}
+			else timetoignition = BurnStartTime-simt;
+
+
+
+            SetStatus(simt,
+                      current_mode,
+				      timetoignition,
+					  timesincepdi);					  		
+        }
 		//end of 2-second interval guidance calcs
 	}
 //	sprintf(oapiDebugString(),"ProgState, Time, Next= %d %.1f %.1f", ProgState, 
@@ -628,8 +651,8 @@ void LEMcomputer::Prog64(double simt)
 
 //	sprintf(oapiDebugString(),"state= %d", ProgState);
 	if(simt > NextEventTime) {
-		NextEventTime=simt+DELTAT;
 		OBJHANDLE hbody=OurVessel->GetGravityRef();
+		NextEventTime=simt+DELTAT;
 		double bradius=oapiGetSize(hbody);
 		double bmass=oapiGetMass(hbody);
 		OurVessel->GetHorizonAirspeedVector(vel);
@@ -790,6 +813,11 @@ void LEMcomputer::Prog64(double simt)
 	}
 //end of 2-sec guidance calcs
 		SetVerbNounAndFlash(6, 64);
+
+		SetStatus(simt,
+                           2,
+		                   0,
+			               0);
 
 }
 
@@ -1015,6 +1043,11 @@ void LEMcomputer::Prog65(double simt)
 //			position,velocity, acc, tgtatt*DEG, cthrust*100.);
 	}
 		SetVerbNounAndFlash(6, 60);
+
+		SetStatus(simt,
+                           2,
+		                   0,
+			               0);
 	
 }
 

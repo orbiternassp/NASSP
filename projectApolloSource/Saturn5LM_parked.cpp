@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/07/07 23:47:12  movieman523
+  *	Fixed bug when saving audio language to scenario file.
+  *	
   *	Revision 1.12  2005/07/06 14:35:03  lazyd
   *	Rewrote key-handler to get key events
   *	
@@ -77,6 +80,12 @@
 #include "landervessel.h"
 #include "sat5_lmpkd.h"
 
+#include "tracer.h"
+
+
+char trace_file[] = "NASP-trace.txt";
+
+
 // ==============================================================
 // Global parameters
 // ==============================================================
@@ -97,6 +106,12 @@ const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85,24.5-12.25};
 const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 
 const int TO_EVA=1;
+
+
+// Modif x15 to manage landing sound
+static SoundEvent sevent        ;
+static double NextEventTime = 0.0;
+
 
 //Begin code
 
@@ -191,6 +206,7 @@ void sat5_lmpkd::DoFirstTimestep()
 	if (!SoundsLoaded) {
 		LoadDefaultSounds();
 	}
+	NextEventTime = 0.0;
 
 	if (CabinFansActive()) {
 		CabinFans.play(LOOP,255);
@@ -205,6 +221,9 @@ void sat5_lmpkd::DoFirstTimestep()
 void sat5_lmpkd::LoadDefaultSounds()
 
 {
+
+    char buffers[80];
+
 	//
 	// load sounds now that the audio language has been set up.
 	//
@@ -219,7 +238,16 @@ void sat5_lmpkd::LoadDefaultSounds()
 	soundlib.LoadSound(Vox, "vox.wav");
 	soundlib.LoadSound(Afire, "des_abort.wav");
 
+// MODIF X15 manage landing sound
+
+	sprintf(buffers, "Apollo%d",agc.GetApolloNo());
+// TRACE (buffers);
+    soundlib.SetSoundLibMissionPath(buffers);
+    sevent.LoadMissionLandingSoundArray(soundlib,"sound.csv");
+    sevent.InitDirectSound(soundlib);
+
 	SoundsLoaded = true;
+
 }
 
 void sat5_lmpkd::AttitudeLaunch1()
@@ -556,7 +584,8 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		}
 
 		if (actualALT < 5.3 && !ContactOK && actualALT > 5.0){
-			Scontact.play();
+			if (!sevent.isValid())
+				Scontact.play();
 			SetEngineLevel(ENGINE_HOVER,0);
 			ContactOK = true;
 
@@ -626,6 +655,38 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 	}
 	else if (stage == 4)
 	{	
+	}
+
+    // x15 landing sound management
+
+    double     simtime       ;
+	int        mode          ;
+	double     timeremaining ;
+	double     timeafterpdi  ;
+	char names [255]         ;
+	int        todo;
+
+	
+	if(simt >NextEventTime)
+	{
+        NextEventTime=simt+1.0;
+	    agc.GetStatus(&simtime,&mode,&timeremaining,&timeafterpdi);
+    	todo = sevent.play(soundlib,
+			    this,
+		        Slanding,
+				names,
+		        simtime,
+				MissionTime,
+				mode,
+				timeremaining,
+				timeafterpdi,
+				NOLOOP,
+				255);
+        if (todo)
+		{
+
+           sevent.PlaySound( names);
+		}
 	}
 }
 
@@ -816,11 +877,15 @@ bool sat5_lmpkd::LoadGenericCockpit ()
 void sat5_lmpkd::SetLanderData(LemSettings &ls)
 
 {
+    char buffers[80];
+
 	MissionTime = ls.MissionTime;
 	agc.SetApolloNo(ls.MissionNo);
 	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
 	soundlib.SetLanguage(AudioLanguage);
+	sprintf(buffers, "Apollo%d",ls.MissionNo);
+    soundlib.SetSoundLibMissionPath(buffers);
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
 	Realism = ls.Realism;

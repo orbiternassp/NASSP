@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/06/13 18:45:26  lazyd
+  *	Added call to P66 and recoded noun 60
+  *	
   *	Revision 1.5  2005/06/08 22:42:06  lazyd
   *	Added new EMEM code for lat/lon
   *	
@@ -62,6 +65,12 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display) : ApolloGuidance(s, display
 	DesiredAzimuth = 270.0;
 
 	InOrbit = 1;
+
+    mode = -1;
+	simcomputert = -1.;
+    timeremaining = 99999.;
+	timeafterpdi = -1.;
+
 }
 
 LEMcomputer::~LEMcomputer()
@@ -842,3 +851,29 @@ bool LEMcomputer::OrbitCalculationsValid()
 	return DescentPhase() || AscentPhase();
 }
 
+
+int LEMcomputer::GetStatus(double *simcomputert,
+                    int    *mode,
+				    double *timeremaining,
+					double *timeafterpdi)
+				
+{
+	*simcomputert = this->simcomputert;
+	*mode = this->mode;
+	*timeremaining = this->timeremaining;
+	*timeafterpdi = this->timeafterpdi;
+	return true;
+}
+
+int LEMcomputer::SetStatus(double simcomputert,
+                       int    mode,
+				       double timeremaining,
+					   double timeafterpdi)
+					   
+{
+	this->simcomputert = simcomputert;
+	this->mode = mode;
+	this->timeremaining = timeremaining;
+	this->timeafterpdi = timeafterpdi;
+	return true;
+}
