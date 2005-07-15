@@ -24,6 +24,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/07/14 10:06:14  spacex15
+  *	Added full apollo11 landing sound
+  *	initial release
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -579,6 +583,13 @@ int SoundEvent::play(SoundLib soundlib,
 //		TRACE("EN TRAIN DE JOUER");
         return(false);
 	}
+
+
+//  no more sounds to be played just return
+
+	if(soundevents[lastplayed+1].met == 0)
+		return(false);
+
 
 //	sprintf(buffers,"ENTREE PLAY MODE %d timeremaining %f timeafterpdi %f altitude %f",
 //		mode,timeremaining,timeafterpdi,altitude);
