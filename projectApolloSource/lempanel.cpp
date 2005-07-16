@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/06/17 18:28:46  lazyd
+  *	Added crosspointer instrument, FDAI and contact light to leftwindow panel
+  *	
   *	Revision 1.12  2005/06/15 20:30:47  lazyd
   *	Added code to save original FOV correctly the first time leftwindow panel is used and to restore the original FOV and view direction for any other panel
   *	
@@ -1636,6 +1639,17 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 
 	case AID_ABORT:
 		if (mx > 0 && mx < 44 && my > 0 && my < 44){
+			// This is the "ABORT" button
+				ButtonClick();
+				AbortFire();
+				SetEngineLevel(ENGINE_HOVER, 1);
+//				SetThrusterResource(th_hover[0], ph_Asc);
+//				SetThrusterResource(th_hover[1], ph_Asc);
+//				stage = 2;
+				startimer = false;
+				agc.RunProgram(70);
+		}else if (mx > 53 && mx < 91 && my > 7 && my < 37){
+			// This is the "ABORT STAGE" button
 				ButtonClick();
 				AbortFire();
 				Abortswitch = true;
@@ -1645,10 +1659,8 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 				SetThrusterResource(th_hover[1], ph_Asc);
 				stage = 2;
 				startimer = false;
-		}else if (mx > 53 && mx < 91 && my > 7 && my < 37){
-				ButtonClick();
-				Abortswitch = false;
-
+				Abortswitch = true;
+				agc.RunProgram(71);
 		}
 		return true;
 
