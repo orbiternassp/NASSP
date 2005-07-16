@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/07/14 10:06:14  spacex15
+  *	Added full apollo11 landing sound
+  *	initial release
+  *	
   *	Revision 1.13  2005/07/07 23:47:12  movieman523
   *	Fixed bug when saving audio language to scenario file.
   *	
@@ -594,14 +598,18 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 			ToggleEva = true;
 			EVAswitch = false;
 		}
-		
+		//
+		// This does an abort stage if the descent stage runs out of fuel,
+		// probably should start P71
+		//
 		if (GetPropellantMass(ph_Dsc)<=50 && actualALT > 10){
 			Abortswitch=true;
 			SeparateStage(stage);
 			SetEngineLevel(ENGINE_HOVER,1);
-			ActivateNavmode(NAVMODE_HLEVEL);
+//			ActivateNavmode(NAVMODE_HLEVEL);
 			stage = 2;
 			AbortFire();
+			agc.RunProgram(71);
 		}
 		if (bManualSeparate && !startimer){
 			VESSELSTATUS vs;
@@ -697,6 +705,16 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 void sat5_lmpkd::SetGimbal(bool setting)
 {
 	GMBLswitch=setting;
+}
+
+//
+// Get Mission Time
+//
+
+void sat5_lmpkd::GetMissionTime(double &Met)
+{
+	Met=MissionTime;
+	return;
 }
 
 //
