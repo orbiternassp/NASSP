@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/07/14 10:06:14  spacex15
+  *	Added full apollo11 landing sound
+  *	initial release
+  *	
   *	Revision 1.7  2005/07/06 14:33:56  lazyd
   *	Changed ConsumeDirectKey to get key events
   *	
@@ -86,6 +90,7 @@ public:
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
 	void SetGimbal(bool setting);
+	void GetMissionTime(double &Met);
 	void StartAscent();
 	virtual void SetLanderData(LemSettings &ls);
 
