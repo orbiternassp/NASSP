@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/07/14 10:06:14  spacex15
+  *	Added full apollo11 landing sound
+  *	initial release
+  *	
   *	Revision 1.11  2005/07/09 18:32:09  lazyd
   *	Changed Attitude control calls to allow faster rates/time acceleration
   *	
@@ -90,6 +94,7 @@
 #define MAXTHROT	0.93053
 #define MAXTHROTJ   0.96895
 #define A15DELCO	true
+#define ABORTLOG	true
 #define P64LOG		false
 #define LOGFILE		false
 
@@ -1191,4 +1196,183 @@ void LEMcomputer::GetHorizVelocity(double &forward, double &lateral)
 		} 
 		forward=hvel*cos(cbrg-heading);
 		lateral=hvel*sin(cbrg-heading);
+}
+
+void LEMcomputer::Prog70(double simt)
+{
+	AbortAscent(simt);
+}
+void LEMcomputer::Prog71(double simt)
+{
+	AbortAscent(simt);
+}
+
+void LEMcomputer::AbortAscent(double simt)
+{
+	static VECTOR3 zero={0.0, 0.0, 0.0};
+	static VECTOR3 yloc={0.0, 1.0, 0.0};
+	static VECTOR3 zloc={0.0, 0.0, 1.0};
+	const double GRAVITY=6.67259e-11;
+	VECTOR3 csmpos, csmvel, csmnor, lmpos, lmvel, lmcsm, hvel, csmhvel, actatt, tgtatt,
+		vec1, vec2, acc, lmnor, zerogl, ygl, zgl, lmdown;
+	double crossrange, distance, delta, fuelflow, heading, Mass, totvel, altitude,
+		tgo, velexh, veltbg, cbrg, phase, tau, A, B, C, D, D12, D21, E, L, crossvel,
+		centrip, grav, acctot, vthrust;
+	char line[10];
+
+	if(ProgState == 0) {
+//		if(ABORTLOG) {
+//			char fname[8];
+//			sprintf(fname,"asclog.txt");
+//			outstr=fopen(fname,"w");
+//			fprintf(outstr, "Abort ascent beginning: ProgState=%d\n", ProgState);
+//		}
+		OurVessel->SetAttitudeRotLevel(zero);
+		NextEventTime=simt+DELTAT;
+		ProgState++;
+		return;
+	}
+	if(ProgState == 3) {
+		if(simt > BurnEndTime) {
+			OurVessel->SetEngineLevel(ENGINE_HOVER, 0.0);
+			OurVessel->SetAttitudeRotLevel(zero);
+			RunProgram(0);
+			return;
+		}
+	}
+
+	if(simt >= NextEventTime) {
+		OBJHANDLE hbody=OurVessel->GetGravityRef();
+		double bradius=oapiGetSize(hbody);
+		double bmass=oapiGetMass(hbody);
+		NextEventTime=simt+DELTAT;
+		strncpy(line, OurVessel->GetName(), 10);
+		line[6]=0;
+		OBJHANDLE hcsm=oapiGetVesselByName(line);
+		VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
+		CSMVessel->GetRelativePos(hbody, csmpos);
+		CSMVessel->GetRelativeVel(hbody, csmvel);
+		CSMVessel->GetHorizonAirspeedVector(csmhvel);
+		cbrg=atan2(csmhvel.x,csmhvel.z);
+		if(csmhvel.x < 0.0) {
+		//retrograde
+			cbrg+=2*PI;
+		} 
+		csmnor=CrossProduct(csmvel, csmpos);
+		// this is the vector called Q
+		csmnor=Normalize(csmnor);
+		OurVessel->GetRelativePos(hbody, lmpos);
+		OurVessel->GetRelativeVel(hbody, lmvel);
+		lmdown=Normalize(-lmpos);
+		lmnor=CrossProduct(lmvel, lmpos);
+		lmnor=Normalize(lmnor);
+		OurVessel->GetHorizonAirspeedVector(hvel);
+		altitude=OurVessel->GetAltitude();
+		crossrange=lmpos*csmnor;
+		crossvel=lmvel*csmnor;
+		vec1=Normalize(csmpos);
+		vec2=Normalize(lmpos);
+		phase=acos(vec1*vec2);
+		lmcsm=csmpos-lmpos;
+		distance=Mag(lmcsm);
+		lmcsm=csmvel-lmvel;
+		delta=Mag(lmcsm);
+		Mass=OurVessel->GetMass();
+		vthrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
+		fuelflow=OurVessel->GetFuelRate();
+//		fprintf(outstr,"ProgState=%d fuelflow=%.3f thrust=%.3f\n", ProgState, fuelflow, vthrust);
+//		velexh=OurVessel->GetISP();
+		velexh=2921.0;
+		totvel=Mag(lmvel);
+		veltbg=1687-totvel;
+		CurrentVel=totvel;
+		CurrentVelX=1687.0-sqrt(totvel*totvel-crossvel*crossvel-hvel.y*hvel.y);
+		CurrentVelZ=crossvel;
+		tau=Mass/fuelflow;
+		//estimate time-to-go
+		tgo=tau*(1.0-exp(-(veltbg/velexh)));
+		BurnEndTime=simt+tgo;
+		//now compute the linear guidance coefficients
+		L=log(1.0-tgo/tau);
+		D12=tau+tgo/L;
+		D21=tgo-D12;
+		E=tgo/2.0-D21;
+		B=(D21*(5.5714-hvel.y)-(18461.15-altitude-hvel.y*tgo))/(tgo*E);
+		D=(D21*(-crossvel)-(-crossrange-crossvel*tgo))/(tgo*E);
+		A=-D12*B-(5.5714-hvel.y)/L;
+		C=-D12*D-(-crossvel)/L;
+		centrip=(hvel.x*hvel.x+hvel.z*hvel.z)/(bradius+altitude);
+		grav=(GRAVITY*bmass)/((bradius+altitude)*(bradius+altitude));
+		acctot=vthrust/Mass;
+		acc.y=(1.0/tau)*(A+B)-centrip+grav;
+		acc.z=(1.0/tau)*(C+D);
+//		fprintf(outstr,"D12=%.3f D21=%.3f A=%.3f B=%.3f C=%.3f D=%.3f E=%.3f L=%.3f tau=%.3f\n",
+//			D12, D21, A,B,C,D,E,L, tau);
+
+		if(fabs(acc.z) > 1.0) {
+			acc.z=1.0*(acc.z/fabs(acc.z));
+		}
+		acc.x=sqrt(acctot*acctot-acc.y*acc.y-acc.z*acc.z);
+		TargetPitch=atan(acc.y/acc.x)-PI/2.0;
+//		fprintf(outstr,"acc=%.3f %.3f %.3f cvel=%.3f\n",acc, crossvel);
+
+		if(totvel < 50.0) {
+			// use surface orientation for liftoff...
+			actatt.x=OurVessel->GetPitch();
+			actatt.z=-OurVessel->GetBank();
+			oapiGetHeading(OurVessel->GetHandle(), &heading);
+			actatt.y=cbrg-heading;
+		} else {
+			// once we have enough velocity, construct orbital reference orientation
+			OurVessel->Local2Global(zero, zerogl);
+			OurVessel->Local2Global(yloc, vec1);
+			OurVessel->Local2Global(zloc, vec2);
+			ygl=vec1-zerogl;
+			zgl=vec2-zerogl;
+			actatt.x=OurVessel->GetPitch();
+			if(fabs(actatt.x) > 80.0*RAD) actatt.x=-PI/2.0-asin(lmdown*ygl);
+			actatt.z=-asin(ygl*csmnor);
+			actatt.y=asin(zgl*csmnor);
+//			fprintf(outstr,"bank calc=%.3f %.3f cv=%.1f\n", 
+//				actatt.z*DEG, OurVessel->GetBank()*DEG, crossvel);
+		}
+
+//		fprintf(outstr,"cross=%.1f dis=%.1f dv=%.1f tgo=%.1f f=%.1f m=%.1f p=%.1f\n",
+//			crossrange, distance, delta, tgo, fuelflow, Mass, phase*DEG);
+		// Vertical rise phase
+		if(ProgState == 1) {
+			if(hvel.y > 12.30) {
+				tgtatt.x=TargetPitch;
+				tgtatt.y=0.0;
+				tgtatt.z=0.0;
+				ProgState++;
+			} else {
+				tgtatt.x=0.0;
+				tgtatt.y=0.0;
+				tgtatt.z=0.0;
+			}
+		}
+
+		if(ProgState == 2) {
+			tgtatt.x=TargetPitch;
+			tgtatt.y=0.0;
+			tgtatt.z=-asin(acc.z/acctot);
+			if(tgo < 2.0) {
+				ProgState++;
+			}
+
+		}
+
+		if (ProgState < 4) {
+			// for large pitch changes, make sure we pitch keeping thrust 
+			// in the UP direction...
+			if((actatt.x-tgtatt.x) > 20.0*RAD ) tgtatt.x=actatt.x-20.0*RAD;
+			ComAttitude(actatt, tgtatt, false);
+//			fprintf(outstr, "tgt=%.3f %.3f %.3f act=%.3f %.3f %.3f \n",
+//				tgtatt*DEG, actatt*DEG);
+		}
+	}
+
+	if (ProgState == 1) SetVerbNoun(16, 77);
+
 }
