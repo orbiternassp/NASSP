@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/07/09 18:30:17  lazyd
+  *	Changed attitude-control code to allow faster rates
+  *	P33 changed to use 10% throttle for hover thrusters
+  *	
   *	Revision 1.6  2005/07/06 21:57:15  lazyd
   *	Added code to orient the hover engine to prograde or retrograde
   *	
@@ -631,7 +635,10 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 
 	case 33:
 		{
+//			double Met;
 			double TimeToBurn = 0.0;
+//			sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+//			lem->GetMissionTime(Met);
 
 			if (BurnTime > LastTimestep) {
 				TimeToBurn = BurnTime - LastTimestep;
