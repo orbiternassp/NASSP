@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/07/14 10:06:14  spacex15
+  *	Added full apollo11 landing sound
+  *	initial release
+  *	
   *	Revision 1.6  2005/06/13 18:45:26  lazyd
   *	Added call to P66 and recoded noun 60
   *	
@@ -52,6 +56,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "lemcomputer.h"
+#include "sat5_lmpkd.h"
 
 LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display) : ApolloGuidance(s, display)
 
@@ -197,14 +202,19 @@ void LEMcomputer::DisplayNounData(int noun)
 // this is in common nouns in apolloguidance.cpp, but I think this is correct...
 
 	//
-	// 33: Time of ignition  hh-mm-ss time of day
+	// 33: Time of ignition  hh-mm-ss Mission Elapsed Time
 	//
 
 	case 33:
 		{
-		double dmjd=oapiGetSimMJD();
-		int mjd=(int)dmjd;
-		double times=BurnTime-CurrentTimestep+(dmjd-mjd)*86400;
+//		double dmjd=oapiGetSimMJD();
+//		int mjd=(int)dmjd;
+//		double times=BurnTime-CurrentTimestep+(dmjd-mjd)*86400;
+		double Met;
+		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+		lem->GetMissionTime(Met);
+//		sprintf(oapiDebugString(),"met=%.1f",Met);
+		double times=Met+BurnTime-CurrentTimestep;
 		int hou=(int) (times/3600.);
 		times=(int)(times-hou*3600.);
 		int min=(int)(times/60.);
@@ -425,6 +435,27 @@ void LEMcomputer::DisplayNounData(int noun)
 		break;
 
 	//
+	// 77: Time to Cutoff, Velocity normal to CSM plane, total velocity
+	//
+
+	case 77:
+		{
+		// time from Cutoff
+		double dt=BurnEndTime-CurrentTimestep;
+		int min = (int) (dt / 60.0);
+		int sec = ((int) dt) - (min * 60);
+
+		if (min > 99) min = 99;
+
+		dsky.SetR1(min * 1000 + sec);
+		dsky.SetR1Format("XXX XX");
+		dsky.SetR2((int)CurrentVelZ);
+		dsky.SetR3((int)CurrentVel);
+		}
+		break;
+	
+
+	//
 	// 89: for now, landing site definition.
 	//
 	case 89:
@@ -435,7 +466,16 @@ void LEMcomputer::DisplayNounData(int noun)
 
 	case 94:
 		{
-			double ap;
+			double altitude;
+			VECTOR3 hvel;
+			OurVessel->GetHorizonAirspeedVector(hvel);
+			altitude=OurVessel->GetAltitude();
+
+			dsky.SetR1((int)CurrentVelX*10.0);
+			dsky.SetR2((int)hvel.y*10.0);
+			dsky.SetR3((int)altitude);
+
+/*			double ap;
 			OurVessel->GetApDist(ap);
 
 			OBJHANDLE hPlanet = OurVessel->GetGravityRef();
@@ -444,6 +484,7 @@ void LEMcomputer::DisplayNounData(int noun)
 			dsky.SetR1((int)(aps  / 10));		//		Display current apoapsis (will be periapsis)
 			dsky.SetR2((int)(OurVessel->GetAltitude()  / 10));		//		Display current altitude
 			dsky.SetR3((int)(DesiredApogee * 100.0));		//		Display target apoapsis
+*/
 		}
 		break;
 	}
@@ -535,6 +576,19 @@ bool LEMcomputer::ValidateProgram(int prog)
 	//
 	case 68:
 		return true;
+
+	//
+	// 70: DPS Abort
+	//
+	case 70:
+		return true;
+
+	//
+	// 71: APS Abort
+	//
+	case 71:
+		return true;
+
 	}
 	return false;
 }
@@ -601,6 +655,23 @@ void LEMcomputer::Timestep(double simt)
 	case 68:
 		Prog68(simt);
 		break;
+
+	//
+	// 70: DPS Abort
+	//
+
+	case 70:
+		Prog70(simt);
+		break;
+
+	//
+	// 71: APS Abort
+	//
+
+	case 71:
+		Prog71(simt);
+		break;
+
 	}
 
 	switch (VerbRunning) {
