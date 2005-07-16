@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/07/14 10:06:14  spacex15
+  *	Added full apollo11 landing sound
+  *	initial release
+  *	
   *	Revision 1.7  2005/07/12 12:21:52  lazyd
   *	*** empty log message ***
   *	
@@ -158,9 +162,9 @@ protected:
 	void Prog65(double simt);
 	void Prog66(double simt);
 	void Prog68(double simt);
-//	void Prog70(double simt);
-//	void Prog71(double simt);
-//	void AbortAscent(double simt);
+	void Prog70(double simt);
+	void Prog71(double simt);
+	void AbortAscent(double simt);
 	void Prog63Pressed(int R1, int R2, int R3);
 	void Prog68Pressed(int R1, int R2, int R3) { ProgState++; };
 	bool OrbitCalculationsValid();
