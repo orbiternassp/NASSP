@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/07/06 14:30:41  lazyd
+  *	Added code to make vessel mass and fuel mass mission dependent
+  *	
   *	Revision 1.8  2005/06/26 21:40:23  lazyd
   *	Added code to make LM mass and fuel mass correct for mission
   *	
@@ -246,7 +249,7 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
-	SetTouchdownPoints (_V(0,5,10), _V(-1,5,-10), _V(1,5,-10));
+	SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);
 	AddMesh (hLMVessel, &mesh_dir);
     
