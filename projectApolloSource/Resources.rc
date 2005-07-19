@@ -115,6 +115,8 @@ IDB_CSM_HATCH_WINDOW		BITMAP  DISCARDABLE		"csm_hatch_window.bmp"
 IDB_CSM_LOWER_PANEL			BITMAP  DISCARDABLE		"gn_lower_equip_bay.bmp"
 IDB_INDICATOR				BITMAP  DISCARDABLE		"Indicator.bmp"
 IDB_SWITCHGUARDS			BITMAP  DISCARDABLE		"SwitchGuards.bmp"
+IDB_SUITCABINDELTAPMETER	BITMAP  DISCARDABLE		"SuitCabinDeltaPMeter.bmp"
+IDB_THREEPOSSWITCH305   	BITMAP  DISCARDABLE		"threeposswitch305.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
