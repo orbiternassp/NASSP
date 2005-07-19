@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/06/06 12:33:37  tschachim
+  *	Fuel cells are no longer started, some disabled debug prints
+  *	
   *	Revision 1.5  2005/05/26 16:02:30  tschachim
   *	Added fuel cell cooling functions and some (disabled) test code
   *	
@@ -63,23 +66,13 @@
 void Saturn::SystemsInit() {
 
 	Panelsdk.RegisterVessel(this);
-	Panelsdk.InitFromFile("saturncsmsystems");
+	Panelsdk.InitFromFile("ProjectApollo\\SaturnSystems");
 
-	// start Fuelcells 
-/*	int *handle = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:START");
-	*handle = SP_FUELCELL_START;
-	handle = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:START");
-	*handle = SP_FUELCELL_START;
-	handle = (int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:START");
-	*handle = SP_FUELCELL_START;
-*/
 	//PanelsdkLogFile = fopen("NASSP-Systems.log", "w");  
 }
 
+void Saturn::SystemsTimestep(double simt) {
 
-void Saturn::SystemsTimestep(double simt)
-
-{
 	//
 	// Don't clock the computer unless we're actually at the pad.
 	//
@@ -102,7 +95,7 @@ void Saturn::SystemsTimestep(double simt)
 	}
 
 	//
-	// Lastly, each timestep is passed to the SP SDK
+	// Lastly, each timestep is passed to the SPSDK
 	// to perform internal computations on the 
 	// systems.
 	//
@@ -113,11 +106,22 @@ void Saturn::SystemsTimestep(double simt)
 
 
 //-----------------------
+// various debug prints
 	double *massCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *tempCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
 	double *pressCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
 	double *pressCabinCO2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS");
-	double *co2removalrate=(double*)Panelsdk.GetPointerByString("ELECTRIC:CO2ABSORBER:CO2REMOVALRATE");
+	double *co2removalrate=(double*)Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:CO2REMOVALRATE");
+
+	double *flowCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW");
+
+	double *pressSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
+	double *tempSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
+	double *pressSuitCO2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
+	double *pressSuitCRV=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS");
+
+	double *tempCabinRad1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINRADIATOR1:TEMP");
+	double *tempCabinRad2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINRADIATOR2:TEMP");
 
 	double *voltageA=(double*)Panelsdk.GetPointerByString("ELECTRIC:DC_A:VOLTS");
 	double *amperageA=(double*)Panelsdk.GetPointerByString("ELECTRIC:DC_A:AMPS");
@@ -195,6 +199,14 @@ void Saturn::SystemsTimestep(double simt)
 	double *tempFC3=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP");
 	//double *ison=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING:ISON");
 
+	// ECS Pressure
+/*	sprintf(oapiDebugString(), "SuitCompDp %.3f SuitCabinDp %.3f, O2Flow %.3f, Cabin-p %.3f T %.1f Suit-p %.3f T %.1f co2pp %.3f SuitCRV-p %.3f CabinRad-T %.1f %.1f", 
+		(*pressSuit - *pressSuitCRV) * 0.000145038, (*pressSuitCRV - *pressCabin) * INH2O,
+		*flowCabin * LBH,
+		*pressCabin * 0.000145038, *tempCabin,
+		*pressSuit * 0.000145038, *tempSuit, *pressSuitCO2 * 0.00750064,
+		*pressSuitCRV * 0.000145038, *tempCabinRad1, *tempCabinRad2);
+*/
 	// Cabin O2 supply
 /*	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f p %.1f O2T2-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f CAB-m %.1f T %.1f p %.1f CO2PP %.2f RAD-T %.1f", 
 		*massO2Tank1 / 1000.0, *tempO2Tank1, *pressO2Tank1 * 0.000145038,
