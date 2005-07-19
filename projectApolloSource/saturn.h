@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/07/06 22:11:31  tschachim
+  *	Finished SequencerSwitchesRow, no functionality yet
+  *	
   *	Revision 1.16  2005/06/06 11:58:52  tschachim
   *	New switches, PanelSwitchScenarioHandler
   *	
@@ -189,7 +192,7 @@ protected:
 	GuardedPushSwitch MainDeploySwitch;
 	GuardedPushSwitch CmRcsHeDumpSwitch;
 
-	ToggleSwitch	    EDSSwitch;				// TODO state saving/loading
+	ToggleSwitch	    EDSSwitch;				
 	GuardedToggleSwitch CsmLmFinalSep1Switch;
 	GuardedToggleSwitch CsmLmFinalSep2Switch;
 	GuardedToggleSwitch CmSmSep1Switch;
@@ -198,7 +201,7 @@ protected:
 	
 	ToggleSwitch   CabinFan1Switch;
 	ToggleSwitch   CabinFan2Switch;
-	ThreePosSwitch H2Heater1Switch; // TODO state saving/loading
+	ThreePosSwitch H2Heater1Switch;
 	ThreePosSwitch H2Heater2Switch;
 	ThreePosSwitch O2Heater1Switch;
 	ThreePosSwitch O2Heater2Switch;	
@@ -214,22 +217,38 @@ protected:
 	IndicatorSwitch FuelCellRadiators1Indicator;
 	IndicatorSwitch FuelCellRadiators2Indicator;
 	IndicatorSwitch FuelCellRadiators3Indicator;
-	ThreePosSwitch FuelCellRadiators1Switch;	// TODO state saving/loading
+	ThreePosSwitch FuelCellRadiators1Switch;
 	ThreePosSwitch FuelCellRadiators2Switch;
 	ThreePosSwitch FuelCellRadiators3Switch;
 
-	RotationalSwitch FuelCellIndicatorsSwitch;	// TODO state saving/loading
+	RotationalSwitch FuelCellIndicatorsSwitch;
 
-	ToggleSwitch FuelCellHeater1Switch;		// TODO state saving/loading
+	ToggleSwitch FuelCellHeater1Switch;
 	ToggleSwitch FuelCellHeater2Switch;
 	ToggleSwitch FuelCellHeater3Switch;
+
+	ThreePosSwitch FuelCellPurge1Switch;
+	ThreePosSwitch FuelCellPurge2Switch;
+	ThreePosSwitch FuelCellPurge3Switch;
 
 	IndicatorSwitch FuelCellReactants1Indicator;
 	IndicatorSwitch FuelCellReactants2Indicator;
 	IndicatorSwitch FuelCellReactants3Indicator;
-	ThreePosSwitch FuelCellReactants1Switch; // TODO state saving/loading
+	ThreePosSwitch FuelCellReactants1Switch;
 	ThreePosSwitch FuelCellReactants2Switch;
 	ThreePosSwitch FuelCellReactants3Switch;
+
+	ToggleSwitch FCReacsValvesSwitch;
+	ToggleSwitch H2PurgeLineSwitch;
+
+	ThreePosSwitch FuelCellPumps1Switch;
+	ThreePosSwitch FuelCellPumps2Switch;
+	ThreePosSwitch FuelCellPumps3Switch;
+
+	ThreePosSwitch SuitCompressor1Switch;
+	ThreePosSwitch SuitCompressor2Switch;
+
+
 
 	// old stuff begin
 	//bool Cswitch1;
@@ -615,8 +634,12 @@ protected:
 	SwitchRow FuelCellRadiatorsSwitchesRow;
 	SwitchRow FuelCellIndicatorsSwitchRow;
 	SwitchRow FuelCellHeatersSwitchesRow;
+	SwitchRow FuelCellPurgeSwitchesRow;
 	SwitchRow FuelCellReactantsIndicatorsRow;
 	SwitchRow FuelCellReactantsSwitchesRow;
+	SwitchRow FuelCellLatchSwitchesRow;
+	SwitchRow FuelCellPumpsSwitchesRow;
+	SwitchRow SuitCompressorSwitchesRow;
 
 	// old stuff begin
 	HUDToggle HUDswitch1;
@@ -860,13 +883,17 @@ protected:
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
+	void RedrawPanel_SuitCabinDeltaPMeter (SURFHANDLE surf);
 	void RedrawPanel_CryoTankIndicators (SURFHANDLE surf);
+	void RedrawPanel_SuitComprDeltaPMeter (SURFHANDLE surf);
 	void RedrawPanel_CabinIndicators (SURFHANDLE surf);
 	void RedrawPanel_O2CryoTankPressureIndicator(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle);
 	void RedrawPanel_FuelCellIndicators (SURFHANDLE surf);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
+	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start);
+	void FuelCellPumpsSwitchToggled(ToggleSwitch *s, int *pump);
 	double SetPitchApo();
 	void SetStage(int s);
 	void setupSM(OBJHANDLE hvessel);
