@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/06/06 12:02:45  tschachim
+  *	New switches, PanelSwitchScenarioHandler
+  *	
   *	Revision 1.14  2005/05/31 02:12:08  movieman523
   *	Updated pre-entry burn variables and wrote most of the code to handle them.
   *	
@@ -1302,8 +1305,6 @@ void Saturn::GenericTimestep(double simt)
 		actualVEL = 0;
 	}
 
-
-
 	if (habort) {
 		double altabort;
 		int getIT;
@@ -1314,6 +1315,13 @@ void Saturn::GenericTimestep(double simt)
 			oapiDeleteVessel(habort,GetHandle());
 			habort = NULL;
 		}
+	}
+
+	// Docking radar sound only for CSM_LEM_STAGE
+	if (stage == CSM_LEM_STAGE) {
+		soundlib.SoundOptionOnOff(PLAYRADARBIP, TRUE);
+	} else {
+		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 	}
 }
 
