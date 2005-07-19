@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/07/05 17:55:29  tschachim
+  *	Fixed behavior of the CmSmSep1/2Switches
+  *	
   *	Revision 1.9  2005/06/06 12:09:31  tschachim
   *	New switches
   *	
@@ -1460,6 +1463,13 @@ void SaturnV::DoFirstTimestep(double simt)
 		if (Realism && (StageState == 0 || StageState == 8)) {
 			SetThrusterResource(th_main[0], 0);
 		}
+
+		//
+		// Always enable SIVB RCS for now, once we hit orbit.
+		//
+
+		RPswitch1 = true;
+		RPswitch2 = true;
 		break;
 	}
 
@@ -1828,6 +1838,12 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	case STAGE_ORBIT_SIVB:
 		SetThirdStage();
 		AddRCS_S4B();
+		//
+		// Always enable SIVB RCS for now, once we hit orbit.
+		//
+
+		RPswitch1 = true;
+		RPswitch2 = true;
 		break;
 
 	case CSM_LEM_STAGE:
