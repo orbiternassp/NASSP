@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/07/06 22:11:31  tschachim
+  *	Finished SequencerSwitchesRow, no functionality yet
+  *	
   *	Revision 1.26  2005/07/05 17:56:59  tschachim
   *	Fixed some switches because of spring-load
   *	
@@ -133,11 +136,9 @@
 
 extern GDIParams g_Param;
 
-void BaseInit()
+void BaseInit() {
 
-{
 	// need to init device-dependent resources here in case the screen mode has changed
-
 	g_Param.col[2] = oapiGetColour(154, 154, 154);
 	g_Param.col[3] = oapiGetColour(3, 3, 3);
 	g_Param.col[4] = oapiGetColour(255, 0, 255);
@@ -272,6 +273,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 	}
 	oapiBlt (surf, srf[14], 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
+
 void Saturn::RedrawPanel_Horizon (SURFHANDLE surf)
 {
 	POINT pt[4];
@@ -433,6 +435,51 @@ void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffs
 	oapiReleaseDC (surf, hDC);
 }
 
+void Saturn::RedrawPanel_SuitCabinDeltaPMeter (SURFHANDLE surf) {
+
+	// Suit cabin pressure difference
+	double scdp = (*(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS") -
+			       *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS")) * INH2O;
+	scdp = scdp / 5.0 * 60.0;
+	if (scdp > 90) scdp = 90;
+	if (scdp < -90) scdp = -90;
+
+	// O2 main regulator output flow 
+	double cf = *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW") * LBH;
+	cf = (cf - .6) / .4 * 60.0;
+	if (cf > 90) cf = 90;
+	if (cf < -90) cf = -90;
+
+	HDC hDC = oapiGetDC (surf);
+	DrawNeedle (hDC,  0, 22, 20.0, scdp * RAD, g_Param.pen[4], g_Param.pen[4]);
+	DrawNeedle (hDC, 45, 22, 20.0, (180.0 - cf) * RAD, g_Param.pen[4], g_Param.pen[4]);
+	oapiReleaseDC (surf, hDC);
+
+	oapiBlt (surf, srf[SRF_SUITCABINDELTAPMETER], 0, 13, 0, 0, 46, 18, SURF_PREDEF_CK);
+}
+
+void Saturn::RedrawPanel_SuitComprDeltaPMeter (SURFHANDLE surf) {
+
+	// O2 main regulator output flow 
+	// TODO: Is this the correct flow for that meter? No documentation found yet...
+	double cf = *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW") * LBH;
+	cf = (cf - .6) / .4 * 60.0;
+	if (cf > 90) cf = 90;
+	if (cf < -90) cf = -90;
+	
+	// Suit compressor pressure difference
+	double scdp = (*(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS") -
+			       *(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS")) * PSI;
+	scdp = (scdp - .5) / .5 * 60.0;
+	if (scdp > 90) scdp = 90;
+	if (scdp < -90) scdp = -90;
+
+	HDC hDC = oapiGetDC (surf);
+	DrawNeedle (hDC,  0, 22, 20.0, cf * RAD, g_Param.pen[4], g_Param.pen[4]);
+	DrawNeedle (hDC, 45, 22, 20.0, (180.0 - scdp) * RAD, g_Param.pen[4], g_Param.pen[4]);
+	oapiReleaseDC (surf, hDC);
+}
+
 void Saturn::RedrawPanel_O2CryoTankPressureIndicator(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle) {
 
 	if (value < 100.0)
@@ -520,17 +567,31 @@ void Saturn::RedrawPanel_CryoTankIndicators(SURFHANDLE surf) {
 			value += (1.05 - value) * ((MissionTime - O2FAILURETIME) / 5.0);
 		}
 	}
-
 	oapiBlt(surf, srf[SRF_NEEDLE],  311, (110 - (int)(value * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 void Saturn::RedrawPanel_CabinIndicators (SURFHANDLE surf) {
 
+	// Suit temperature
+	double value = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP"));
+	if (value < 20.0) value = 20.0;
+	if (value > 95.0) value = 95.0;
+	oapiBlt(surf, srf[SRF_NEEDLE],  1, (110 - (int)((value - 20.0) / 75.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+
 	// Cabin temperature
-	double value = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP"));
+	value = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP"));
 	if (value < 40.0) value = 40.0;
 	if (value > 120.0) value = 120.0;
 	oapiBlt(surf, srf[SRF_NEEDLE],  53, (110 - (int)((value - 40.0) / 80.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+
+	// Suit pressure
+	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS") * PSI;
+	if (value < 0.0) value = 0.0;
+	if (value > 16.0) value = 16.0;
+	if (value < 6.0)
+		oapiBlt(surf, srf[SRF_NEEDLE],  101, (108 - (int)(value / 6.0 * 55.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	else
+		oapiBlt(surf, srf[SRF_NEEDLE],  101, (53 - (int)((value - 6.0) / 10.0 * 45.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 
 	// Cabin pressure
 	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS") * PSI;
@@ -542,7 +603,7 @@ void Saturn::RedrawPanel_CabinIndicators (SURFHANDLE surf) {
 		oapiBlt(surf, srf[SRF_NEEDLE],  153, (53 - (int)((value - 6.0) / 10.0 * 45.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 
 	// Cabin CO2 partial pressure
-	value = *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS") * MMHG;
+	value = *(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS") * MMHG;
 	if (value < 0.0) value = 0.0;
 	if (value > 30.0) value = 30.0;	
 	if (value < 10.0)
@@ -683,34 +744,36 @@ void Saturn::InitPanel (int panel)
 	case 1: // panel
 	case 3:
     case 5://added for splitted panel
-*/		srf[0]						= oapiCreateSurface (LOADBMP (IDB_FCSM));
-		srf[SRF_INDICATOR]			= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
-		srf[SRF_NEEDLE]				= oapiCreateSurface (LOADBMP (IDB_NEEDLE));
-		srf[3]						= oapiCreateSurface (LOADBMP (IDB_HORIZON));
-		srf[4]						= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
-		srf[5]						= oapiCreateSurface (LOADBMP (IDB_HORIZON2));
-		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
-		srf[7]						= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
-		srf[SRF_SWITCHGUARDS]		= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDS));
-		srf[SRF_ABORT]				= oapiCreateSurface (LOADBMP (IDB_ABORT));
-		srf[10]						= oapiCreateSurface (LOADBMP (IDB_ANNUN));
-		srf[11]						= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
-		srf[12]						= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
-		srf[13]						= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
-		srf[14]						= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
-		srf[15]						= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
-		srf[16]						= oapiCreateSurface (LOADBMP (IDB_THRUST));
-		srf[SRF_SEQUENCERSWITCHES]	= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
-		srf[18]						= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
-		srf[19]						= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
-		//srf[20]				    = oapiCreateSurface (LOADBMP (IDB_BUTTON));
-		srf[SRF_DSKY]				= oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
-		srf[22]						= oapiCreateSurface (LOADBMP (IDB_ALLROUND));
-		srf[SRF_THREEPOSSWITCH]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH));
-		srf[24]						= oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
-		srf[25]						= oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
-		srf[26]						= oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
-		srf[SRF_ROTATIONALSWITCH]	= oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
+*/		srf[0]							= oapiCreateSurface (LOADBMP (IDB_FCSM));
+		srf[SRF_INDICATOR]				= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
+		srf[SRF_NEEDLE]					= oapiCreateSurface (LOADBMP (IDB_NEEDLE));
+		srf[3]							= oapiCreateSurface (LOADBMP (IDB_HORIZON));
+		srf[4]							= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
+		srf[5]							= oapiCreateSurface (LOADBMP (IDB_HORIZON2));
+		srf[SRF_SWITCHUP]				= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
+		srf[7]							= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
+		srf[SRF_SWITCHGUARDS]			= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDS));
+		srf[SRF_ABORT]					= oapiCreateSurface (LOADBMP (IDB_ABORT));
+		srf[10]							= oapiCreateSurface (LOADBMP (IDB_ANNUN));
+		srf[11]							= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
+		srf[12]							= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
+		srf[13]							= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
+		srf[14]							= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
+		srf[15]							= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
+		srf[16]							= oapiCreateSurface (LOADBMP (IDB_THRUST));
+		srf[SRF_SEQUENCERSWITCHES]		= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
+		srf[18]							= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
+		srf[19]							= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
+		//srf[20]					    = oapiCreateSurface (LOADBMP (IDB_BUTTON));
+		srf[SRF_DSKY]					= oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
+		srf[22]							= oapiCreateSurface (LOADBMP (IDB_ALLROUND));
+		srf[SRF_THREEPOSSWITCH]			= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH));
+		srf[24]							= oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
+		srf[25]							= oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
+		srf[26]							= oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
+		srf[SRF_ROTATIONALSWITCH]		= oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
+		srf[SRF_SUITCABINDELTAPMETER]	= oapiCreateSurface (LOADBMP (IDB_SUITCABINDELTAPMETER));
+		srf[SRF_THREEPOSSWITCH305]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH305));
 				
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -724,15 +787,16 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[22],						g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_ROTATIONALSWITCH],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SUITCABINDELTAPMETER],	g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH305],	g_Param.col[4]);
 /*		break;
 	}
 */
 	SetSwitches(panel);
 }
 
-bool Saturn::clbkLoadPanel (int id)
+bool Saturn::clbkLoadPanel (int id) {
 
-{
 	static HBITMAP hBmpMain = 0;
 	static HBITMAP hBmpLeft = 0;
 	static HBITMAP hBmpRight = 0;
@@ -938,6 +1002,7 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1438,  346, 1540,  466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1418,  536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;    
 	
 	case SATPANEL_MAIN: // main instrument panel
@@ -947,24 +1012,29 @@ bool Saturn::clbkLoadPanel (int id)
 		oapiRegisterPanelArea (AID_SEQUENCERSWITCHES,							_R( 802,  918,  990, 1100), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LV_ENGINE_LIGHTS,							_R( 843,  735,  944,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SEPARATIONSWITCHES,		    				_R(1087,  942, 1340, 1004), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUITCABINDELTAPMETER,	    				_R(1445,  106, 1491,  150), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1835,  305, 1973,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1912,  490, 2488,  520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173,  315, 2495,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUITCOMPRDELTAPMETER,       					_R(2069,  726, 2115,  770), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_CABININDICATORS,        						_R(2278,  593, 2504,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLINDICATORS,		    				_R(2763,  319, 2913,  443), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_FUELCELLPHRADTEMPINDICATORS,	  				_R(2822,  490, 3019,  513), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLRADIATORSINDICATORS,    				_R(2822,  539, 2931,  562), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLRADIATORSSWITCHES,    				_R(2816,  607, 2937,  637), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLINDICATORSSWITCH,    				_R(3029,  629, 3117,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLHEATERSSWITCHES,	    				_R(2817,  695, 2938,  725), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLHEATERSSWITCHES,	    				_R(2817,  695, 2938,  725), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_FUELCELLPURGESWITCHES,	    				_R(2815,  817, 3123,  846), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLREACTANTSINDICATORS,    				_R(2823,  893, 3061,  917), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2757,  955, 3131,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLLATCHSWITCHES,	    				_R(2593, 1251, 2670, 1280), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;    
 
 	case SATPANEL_LEFT: // left instrument panel
@@ -972,36 +1042,41 @@ bool Saturn::clbkLoadPanel (int id)
 		
 		//new areas to be added soon...
 		
+		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0)); // TODO ???
 		break;    
 
 	case SATPANEL_RIGHT: // right instrument panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		//new areas to be added soon...
+		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 451,  881,  937,  911), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 965, 1428, 1041, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
+		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;    
 
 	case SATPANEL_LEFT_RNDZ_WINDOW: // left rendezvous window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
 		//the new animated COAS has to be added soon...
-		
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;    
 
 	case SATPANEL_RIGHT_RNDZ_WINDOW: // right rendezvous window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;    
 
 	case SATPANEL_HATCH_WINDOW: // hatch window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0)); // TODO
 		break;    	
 	}
 
 	InitPanel (id);
 
-	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 
 	InVC = false;
@@ -1023,6 +1098,7 @@ void Saturn::SetSwitches(int panel) {
 
 	MainPanel.Init(0, this, &soundlib, this);
 
+	// SATPANEL_MAIN
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
 	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 81);
 	LiftoffNoAutoAbortSwitch.InitGuard(  0,   1, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
@@ -1089,6 +1165,11 @@ void Saturn::SetSwitches(int panel) {
 	FuelCellHeater2Switch.Init(43, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellHeatersSwitchesRow); 
 	FuelCellHeater3Switch.Init(86, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellHeatersSwitchesRow); 
 
+	FuelCellPurgeSwitchesRow.Init(AID_FUELCELLPURGESWITCHES, MainPanel);
+	FuelCellPurge1Switch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow); 
+	FuelCellPurge2Switch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow); 
+	FuelCellPurge3Switch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow); 
+
 	FuelCellReactantsIndicatorsRow.Init(AID_FUELCELLREACTANTSINDICATORS, MainPanel);
 	FuelCellReactants1Indicator.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
 	FuelCellReactants2Indicator.Init(43, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
@@ -1099,9 +1180,24 @@ void Saturn::SetSwitches(int panel) {
 	FuelCellReactants2Switch.Init( 86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow); 
 	FuelCellReactants3Switch.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow); 
 
+	FuelCellLatchSwitchesRow.Init(AID_FUELCELLLATCHSWITCHES, MainPanel);
+	FCReacsValvesSwitch.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellLatchSwitchesRow); 
+	H2PurgeLineSwitch.Init  (43, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellLatchSwitchesRow); 
+
+
+	// SATPANEL_RIGHT
+	FuelCellPumpsSwitchesRow.Init(AID_FUELCELLPUMPSSWITCHES, MainPanel);
+	FuelCellPumps1Switch.Init(  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPumpsSwitchesRow); 
+	FuelCellPumps2Switch.Init( 65, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPumpsSwitchesRow); 
+	FuelCellPumps3Switch.Init(130, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPumpsSwitchesRow); 
+
+	SuitCompressorSwitchesRow.Init(AID_SUITCOMPRESSORSWITCHES, MainPanel);
+	SuitCompressor1Switch.Init(  0, 58, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
+	SuitCompressor2Switch.Init( 41,  0, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
+
+
 
 	// old stuff
-
 	SPSRow.Init(AID_SPS, MainPanel);
 	//EDSRow.Init(AID_EDS, MainPanel);
 	LPRow.Init(AID_SWITCH_PANEL_LEFT, MainPanel);
@@ -1322,9 +1418,8 @@ void Saturn::SetSwitches(int panel) {
 	RCSIndicatorsSwitch.Init(0, 0, 64, 64, srf[27], RCSIndicatorsSwitchRow);
 }
 
-void SetupgParam(HINSTANCE hModule)
+void SetupgParam(HINSTANCE hModule) {
 
-{
 	g_Param.hDLL = hModule;
 	// allocate GDI resources
 	g_Param.font[0]  = CreateFont (-13, 0, 0, 0, 700, 0, 0, 0, 0, 0, 0, 0, 0, "Arial");
@@ -1334,21 +1429,21 @@ void SetupgParam(HINSTANCE hModule)
 	g_Param.brush[1] = CreateSolidBrush (RGB(255,0,0));    // red
 	g_Param.brush[2] = CreateSolidBrush (RGB(154,154,154));  // Grey
 	g_Param.brush[3] = CreateSolidBrush (RGB(3,3,3));  // Black
-	g_Param.pen[0] = CreatePen (PS_SOLID, 1, RGB(224,224,224));
-	g_Param.pen[1] = CreatePen (PS_SOLID, 3, RGB(164,164,164));
-	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB(77,77,77));
-	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB(77,77,77));
+	g_Param.pen[0] = CreatePen (PS_SOLID, 1, RGB(224, 224, 224));
+	g_Param.pen[1] = CreatePen (PS_SOLID, 3, RGB(164, 164, 164));
+	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB( 77,  77,  77));
+	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB( 77,  77,  77));
+	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(  0,   0,   0));
 }
 
-void DeletegParam()
+void DeletegParam() {
 
-{
 	int i;
 
 	// deallocate GDI resources
 	for (i = 0; i < 3; i++) DeleteObject (g_Param.font[i]);
 	for (i = 0; i < 4; i++) DeleteObject (g_Param.brush[i]);
-	for (i = 0; i < 4; i++) DeleteObject (g_Param.pen[i]);
+	for (i = 0; i < 5; i++) DeleteObject (g_Param.pen[i]);
 }
 
 bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
@@ -2337,6 +2432,21 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3HEATER:PUMP"));
 
 
+	} else if (s == &FuelCellPurge1Switch || s == &FuelCellPurge2Switch || s == &FuelCellPurge3Switch || s == &H2PurgeLineSwitch) {
+		if (s == &FuelCellPurge1Switch || s == &H2PurgeLineSwitch) {
+			FuelCellPurgeSwitchToggled(&FuelCellPurge1Switch, 
+				(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:PURGE"));		
+		} 
+		if (s == &FuelCellPurge2Switch || s == &H2PurgeLineSwitch) {
+			FuelCellPurgeSwitchToggled(&FuelCellPurge2Switch, 
+				(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:PURGE"));		
+		} 
+		if (s == &FuelCellPurge3Switch || s == &H2PurgeLineSwitch) {
+			FuelCellPurgeSwitchToggled(&FuelCellPurge3Switch, 
+				(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:PURGE"));
+		}
+
+
 	} else if (s == &FuelCellReactants1Switch) {
 		FuelCellReactantsSwitchToggled(s, 
 			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:START"));
@@ -2348,7 +2458,28 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 	} else if (s == &FuelCellReactants3Switch) {
 		FuelCellReactantsSwitchToggled(s, 
 			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:START"));
-	
+
+
+	} else if (s == &FuelCellPumps1Switch) {
+		FuelCellPumpsSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING:PUMP"));
+		
+	} else if (s == &FuelCellPumps2Switch) {
+		FuelCellPumpsSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2COOLING:PUMP"));
+
+	} else if (s == &FuelCellPumps3Switch) {
+		FuelCellPumpsSwitchToggled(s, 
+			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3COOLING:PUMP"));
+
+		
+	} else if (s == &SuitCompressor1Switch || s == & SuitCompressor2Switch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:PUMP");
+		// No busses at the moment
+		if (SuitCompressor1Switch.IsCenter() && SuitCompressor2Switch.IsCenter())
+			*pump = SP_PUMP_OFF;
+		else
+			*pump = SP_PUMP_AUTO;
 	}
 }
 
@@ -2421,14 +2552,39 @@ void Saturn::FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
 
 void Saturn::FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start) {
 
+	// Is the reactants valve latched?
+	if (!FCReacsValvesSwitch) return;
+
 	if (s->IsUp())
 		*start = SP_FUELCELL_START;
 	else if (s->IsCenter())
 		*start = SP_FUELCELL_NONE;
 	else if (s->IsDown())
 		*start = SP_FUELCELL_STOP;
-
 }
+
+void Saturn::FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start) {
+
+	if (s->IsUp()) {
+		if (H2PurgeLineSwitch.GetState())
+			*start = SP_FUELCELL_H2PURGE;
+		else 
+			*start = SP_FUELCELL_NOPURGE;
+	} else if (s->IsCenter())
+		*start = SP_FUELCELL_NOPURGE;
+	else if (s->IsDown())
+		*start = SP_FUELCELL_O2PURGE;
+}
+
+void Saturn::FuelCellPumpsSwitchToggled(ToggleSwitch *s, int *pump) {
+
+	// No busses at the moment
+	if (s->IsUp() || s->IsDown())
+		*pump = SP_PUMP_AUTO;
+	else if (s->IsCenter())
+		*pump = SP_PUMP_OFF;
+}
+
 void Saturn::SwitchClick()
 
 {
@@ -2564,8 +2720,15 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		}
 		return true;
 
+	case AID_SUITCABINDELTAPMETER:
+		RedrawPanel_SuitCabinDeltaPMeter(surf);
+
 	case AID_CYROTANKINDICATORS:
 		RedrawPanel_CryoTankIndicators(surf);
+		return true;
+
+	case AID_SUITCOMPRDELTAPMETER:
+		RedrawPanel_SuitComprDeltaPMeter(surf);
 		return true;
 
 	case AID_CABININDICATORS:
@@ -3754,6 +3917,10 @@ void Saturn::InitSwitches() {
 	FuelCellHeater2Switch.Register(PSH, "FuelCellHeater2Switch", true);
 	FuelCellHeater3Switch.Register(PSH, "FuelCellHeater3Switch", true);
 
+	FuelCellPurge1Switch.Register(PSH, "FuelCellPurge1Switch", THREEPOSSWITCH_CENTER);
+	FuelCellPurge2Switch.Register(PSH, "FuelCellPurge2Switch", THREEPOSSWITCH_CENTER);
+	FuelCellPurge3Switch.Register(PSH, "FuelCellPurge3Switch", THREEPOSSWITCH_CENTER);
+
 	FuelCellReactants1Indicator.Register(PSH, "FuelCellReactants1Indicator", false);
 	FuelCellReactants2Indicator.Register(PSH, "FuelCellReactants2Indicator", false);
 	FuelCellReactants3Indicator.Register(PSH, "FuelCellReactants3Indicator", false);
@@ -3761,6 +3928,16 @@ void Saturn::InitSwitches() {
 	FuelCellReactants2Switch.Register(PSH, "FuelCellReactants2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	FuelCellReactants3Switch.Register(PSH, "FuelCellReactants3Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
+	FCReacsValvesSwitch.Register(PSH, "FCReacsValvesSwitch", true);
+	H2PurgeLineSwitch.Register  (PSH, "H2PurgeLineSwitch",   false);
+
+	FuelCellPumps1Switch.Register(PSH, "FuelCellPumps1Switch", THREEPOSSWITCH_UP); 
+	FuelCellPumps2Switch.Register(PSH, "FuelCellPumps2Switch", THREEPOSSWITCH_UP); 
+	FuelCellPumps3Switch.Register(PSH, "FuelCellPumps3Switch", THREEPOSSWITCH_UP); 
+
+	SuitCompressor1Switch.Register(PSH, "SuitCompressor1Switch", THREEPOSSWITCH_UP);   
+	SuitCompressor2Switch.Register(PSH, "SuitCompressor2Switch", THREEPOSSWITCH_UP);   
+	
 
 	// old stuff
 
