@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/06/06 12:10:21  tschachim
+  *	New SRF_ defines
+  *	
   *	Revision 1.15  2005/05/26 16:00:31  tschachim
   *	New SRF constants, new physics constant
   *	
@@ -78,7 +81,7 @@ typedef struct {
 	HFONT font[3];
 	DWORD col[6];
 	HBRUSH brush[4];
-	HPEN pen[4];
+	HPEN pen[5];
 } GDIParams;
 
 //
@@ -114,29 +117,32 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 28; // number of bitmap handles
+const int nsurf = 30; // number of bitmap handles
 
-#define SRF_INDICATOR			 1
-#define SRF_NEEDLE				 2
-#define SRF_SWITCHUP			 6
-#define SRF_SWITCHGUARDS		 8
-#define SRF_ABORT				 9
-#define SRF_SEQUENCERSWITCHES	17
-#define SRF_DSKY				21
-#define SRF_DSKYNUM				22
-#define SRF_THREEPOSSWITCH		23
-#define SRF_ROTATIONALSWITCH	27
+#define SRF_INDICATOR				 1
+#define SRF_NEEDLE					 2
+#define SRF_SWITCHUP				 6
+#define SRF_SWITCHGUARDS			 8
+#define SRF_ABORT					 9
+#define SRF_SEQUENCERSWITCHES		17
+#define SRF_DSKY					21
+#define SRF_DSKYNUM					22
+#define SRF_THREEPOSSWITCH			23
+#define SRF_ROTATIONALSWITCH		27
+#define SRF_SUITCABINDELTAPMETER	28
+#define SRF_THREEPOSSWITCH305   	29
 
 //
 // Earth radius and gravity constants.
 //
 
 static const double ERADIUS = 6371.0;
-const double GK   = 6.67259e-20 ;			//  Gravitational constant (km^3/(kg sec^2))
-const double GKSI = 6.67259e-20 * 1e9;
-const double PSI  = 0.000145038;			// Pa to PSI
-const double MMHG = 0.00750064;				// Pa to mmHg
-const double LBH  = 7.93665;				// g/s to lb/h
+const double GK    = 6.67259e-20 ;			//  Gravitational constant (km^3/(kg sec^2))
+const double GKSI  = 6.67259e-20 * 1e9;
+const double PSI   = 0.000145038;			// Pa to PSI
+const double MMHG  = 0.00750064;			// Pa to mmHg
+const double INH2O = 0.00401474;			// Pa to in H2O
+const double LBH   = 7.93665;				// g/s to lb/h
 
 inline double KelvinToFahrenheit(double kelvin) {
 	return kelvin * 1.8 - 459.67;
