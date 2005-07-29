@@ -51,6 +51,7 @@ AS-511:saturn5nasp
   MOONLAT 15.50
   MOONLONG -8.98
   MOONALT 0.0
+  SIIPUT 494.8
   TCP -8.5
   LANG English
 END

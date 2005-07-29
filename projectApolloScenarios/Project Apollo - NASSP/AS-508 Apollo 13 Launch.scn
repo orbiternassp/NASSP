@@ -51,6 +51,7 @@ AS-508:saturn5nasp
   MOONLAT -17.47
   MOONLONG -3.64
   MOONALT 0.0
+  SIICSHUT 330.0
   TCP -8.5
   LANG English
 END
