@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/03/24 00:14:14  chode99
+  *	Fixed a bug in the "heads-down" autopilot.
+  *	
   *	Revision 1.2  2005/03/11 18:18:18  chode99
   *	Changed launch autopilot to allow for "heads-down" launch.
   *	
@@ -540,7 +543,8 @@ void SaturnV::AutoPilot(double autoT)
 			StopRot=false;
 		}
 
-	}else if (altitude >= 4500)	{
+	}
+	else if (altitude >= 4500)	{
 
 	// navigation
 //	oapiGetFocusPitch(&pitch);
@@ -549,14 +553,12 @@ void SaturnV::AutoPilot(double autoT)
 	altitude = GetAltitude();
 //	oapiGetFocusAltitude(&altitude);
 
- // guidance
-	pitch_c=GetCPitch(autoT);
-
  // control
 	double SatApo;
 	GetApDist(SatApo);
 
-	if (SatApo >= ((agc.GetDesiredApogee() *.80) + ERADIUS)*1000) {
+	if (SatApo >= ((agc.GetDesiredApogee() *.80) + ERADIUS)*1000) 
+	{
 		double TimeW=0;
 		TimeW = oapiGetTimeAcceleration ();
 		if (TimeW>1){
@@ -564,31 +566,26 @@ void SaturnV::AutoPilot(double autoT)
 		//oapiSetTimeAcceleration (1);
 		}
 		pitch_c = SetPitchApo();
-		level = pitch_c - pitch;
 	}
-	else if(MissionTime < 150) {
-		level = pitch_c - pitch;
+	else
+	{
+		pitch_c = GetCPitch(autoT);
 	}
-	else{
-		if (stage >= LAUNCH_STAGE_TWO_ISTG_JET) {
-			pitch_c = 35;
-		}
-		else{
-			pitch_c = GetCPitch(autoT);
-		}
-		level = pitch_c - pitch;
-	}
-	if (fabs(level)<10 && StopRot){	// above atmosphere, soft correction
+
+	level = pitch_c - pitch;
+
+	if (fabs(level)<10 && StopRot) {	// above atmosphere, soft correction
 		AtempP = 0.0;
 		AtempR = 0.0;
 		AtempY = 0.0;
 		StopRot = false;
 	}
-	if (fabs(level)<0.05){	// above atmosphere, soft correction
+	if (fabs(level)<0.05) {	// above atmosphere, soft correction
 		AtempP = 0.0;
 		AtempR = 0.0;
 		AtempY = 0.0;
-	}else if (level>0 && fabs(vsp.vrot.z) < 0.09) {
+	}
+	else if (level>0 && fabs(vsp.vrot.z) < 0.09) {
 		AtempP = -(fabs(level)/10);
 		if (AtempP < -1.0) AtempP = -1.0;
 		if(rhoriz.z>0)AtempP= -AtempP;
