@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 class Saturn1b: public Saturn {
@@ -56,7 +59,6 @@ protected:
 	void SetupUnDockedmode(OBJHANDLE hTarget);
 	void ToggleRCS();
 	void MemoVessel(OBJHANDLE hTarget);
-	double GetCPitch(double t);
 	void AttitudeLaunch1();
 	void AttitudeLaunch4();
 	void AutoPilot(double autoT);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/07/19 16:21:56  tschachim
+  *	Docking radar sound only for CSM_LEM_STAGE
+  *	
   *	Revision 1.15  2005/06/06 12:02:45  tschachim
   *	New switches, PanelSwitchScenarioHandler
   *	
@@ -170,9 +173,9 @@ void Saturn::initSaturn()
 	CSMApogee = 0.0;
 	CSMPerigee = 0.0;
 
-	HatchOpen=false;
-	FIRSTCSM=false;
-	ProbeJetison=false;
+	HatchOpen = false;
+	FIRSTCSM = false;
+	ProbeJetison = false;
 	LEMdatatransfer = false;
 	PostSplashdownPlayed = false;
 
@@ -213,7 +216,7 @@ void Saturn::initSaturn()
 	NextMissionEventTime = 0;
 	LastMissionEventTime = 0;
 
-	abortTimer=0;
+	abortTimer = 0;
 	release_time = 0;
 	ignition_SMtime = 0;
 
@@ -225,6 +228,19 @@ void Saturn::initSaturn()
 	agc.SetDesiredPerigee(215);
 	agc.SetDesiredAzimuth(45);
 	agc.SetVesselStats(SPS_ISP, SPS_THRUST, false);
+
+	//
+	// Typical center engine shutdown times.
+	//
+
+	FirstStageCentreShutdownTime = 135.0;
+	SecondStageCentreShutdownTime = 460.0;
+
+	//
+	// PU shift time. Default to 8:15
+	//
+
+	SecondStagePUShiftTime = 495.0;
 
 	//
 	// Configure AGC and DSKY.
@@ -444,6 +460,32 @@ void Saturn::UpdateLaunchTime(double t)
 	}
 }
 
+//
+// Pitch program.
+//
+
+double Saturn::GetCPitch(double t)
+{
+	int i = 1;
+
+	//
+	// Make sure we don't run off the end.
+	//
+
+	if (t>met[PITCH_TABLE_SIZE - 1]) return cpitch[PITCH_TABLE_SIZE - 1];
+
+	//
+	// Find the first MET that's greater than our current time.
+	//
+
+	while (met[i]<t) i++;
+
+	//
+	// And calculate pitch as appropriate between those two times.
+	//
+
+	return cpitch[i-1]+(cpitch[i]-cpitch[i-1])/(met[i]-met[i-1])*(t-met[i-1]);
+}
 
 double Saturn::SetPitchApo()
 
@@ -569,6 +611,29 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	if (stage < LAUNCH_STAGE_ONE)
 		oapiWriteScenario_int (scn, "PRELAUNCHATC",  int(UseATC));
+
+	if (stage < LAUNCH_STAGE_TWO)
+		oapiWriteScenario_float (scn, "SICSHUT", FirstStageCentreShutdownTime);
+
+	if (stage < LAUNCH_STAGE_SIVB) {
+		oapiWriteScenario_float (scn, "SIICSHUT", SecondStageCentreShutdownTime);
+		oapiWriteScenario_float (scn, "SIIPUT", SecondStagePUShiftTime);
+	}
+
+	if (stage < STAGE_ORBIT_SIVB) {
+		char fname[64];
+
+		//
+		// Save pitch program.
+		//
+
+		for (i = 0; i < PITCH_TABLE_SIZE; i++) {
+			sprintf(fname, "PMET%03d", i);
+			oapiWriteScenario_float (scn, fname, met[i]);
+			sprintf(fname, "CPITCH%03d", i);
+			oapiWriteScenario_float (scn, fname, cpitch[i]);
+		}
+	}
 
 	if (!LEMdatatransfer && isTLICapable()) {
 		oapiWriteScenario_float (scn, "MOONLAT", LMLandingLatitude);
@@ -853,6 +918,18 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
             sscanf (line+3, "%f", &ftcp);
 			TCPO=ftcp;
 		}
+		else if (!strnicmp (line, "SICSHUT", 7)) {
+			sscanf (line + 7, "%f", &ftcp);
+			FirstStageCentreShutdownTime = ftcp;
+		}
+		else if (!strnicmp (line, "SIICSHUT", 8)) {
+			sscanf (line + 8, "%f", &ftcp);
+			SecondStageCentreShutdownTime = ftcp;
+		}
+		else if (!strnicmp (line, "SIIPUT", 6)) {
+			sscanf (line + 6, "%f", &ftcp);
+			SecondStagePUShiftTime = ftcp;
+		}
 		else if (!strnicmp (line, "LEM_DISPLAY", 11)) {
 			LEM_DISPLAY = true;
 		}
@@ -954,6 +1031,20 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			int i;
 			sscanf (line +12, "%d", &i);
 			UseATC = (i != 0);
+		}
+		else if (!strnicmp (line, "PMET", 4)) {
+			sscanf(line+4, "%d", &n);
+			sscanf(line+8, "%f", &ftcp);
+			if (n >= 0 && n < PITCH_TABLE_SIZE) {
+				met[n] = ftcp;
+			}
+		}
+		else if (!strnicmp (line, "CPITCH", 6)) {
+			sscanf(line+6, "%d", &n);
+			sscanf(line+10, "%f", &ftcp);
+			if (n >= 0 && n < PITCH_TABLE_SIZE) {
+				cpitch[n] = ftcp;
+			}
 		}
 		else if (!strnicmp(line, "MOONLAT", 7)) {
 			sscanf(line + 7, "%f", &ftcp);

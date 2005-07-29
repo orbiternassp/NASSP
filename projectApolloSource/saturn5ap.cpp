@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/07/29 20:37:42  movieman523
+  *	Fixed the weird pitching after the SII interstage jettison.
+  *	
   *	Revision 1.3  2005/03/24 00:14:14  chode99
   *	Fixed a bug in the "heads-down" autopilot.
   *	
@@ -54,34 +57,6 @@
 #include "saturnv.h"
 #include "tracer.h"
 
-#define N	16
-
-const double met[N]    = { 0,  58, 70, 80,  90, 110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double cpitch[N] = {90,  75, 60, 50,  45,  40,  35,  30,  30,  30,  25,  20, 10 ,   5,  -2,   0};	// Commanded pitch in °
-
-static double GetCPitch(double t)
-{
-	int i = 1;
-
-	//
-	// Make sure we don't run off the end.
-	//
-
-	if (t>met[N-1]) return cpitch[N-1];
-
-	//
-	// Find the first MET that's greater than our current time.
-	//
-
-	while (met[i]<t) i++;
-
-	//
-	// And calculate pitch as appropriate between those two times.
-	//
-
-	return cpitch[i-1]+(cpitch[i]-cpitch[i-1])/(met[i]-met[i-1])*(t-met[i-1]);
-}
-
 void SaturnV::AttitudeLaunch2()
 {
 	TRACESETUP("AttitudeLaunch2");
@@ -109,7 +84,8 @@ void SaturnV::AttitudeLaunch2()
 // gets manual control levels in each axis, this code copied directly from Rob Conley's Mercury Atlas
 	if(AutopilotActive()){
 		tempP =AtempP ;tempR =AtempR ;tempY =AtempY ;
-	}else{
+	}
+	else{
 		tempP = GetManualControlLevel(THGROUP_ATT_PITCHDOWN, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_PITCHUP, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
 		tempY = GetManualControlLevel(THGROUP_ATT_YAWLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_YAWRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
 		tempR = GetManualControlLevel(THGROUP_ATT_BANKLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_BANKRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);

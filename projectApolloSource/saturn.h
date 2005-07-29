@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/07/19 15:58:57  tschachim
+  *	new switches
+  *	
   *	Revision 1.17  2005/07/06 22:11:31  tschachim
   *	Finished SequencerSwitchesRow, no functionality yet
   *	
@@ -155,11 +158,19 @@ protected:
 
 	int buildstatus;
 
+	//
+	// Current mission time and mission times for stage events.
+	//
+
 	double MissionTime;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
 
 	bool masterAlarm;
+
+	double FirstStageCentreShutdownTime;
+	double SecondStageCentreShutdownTime;
+	double SecondStagePUShiftTime;
 
 	bool LEM_DISPLAY;
 
@@ -179,6 +190,15 @@ protected:
 	bool CryoStir;
 
 	double TCPO;
+
+	//
+	// Pitch table.
+	//
+
+#define PITCH_TABLE_SIZE	16
+
+	double met[PITCH_TABLE_SIZE];
+	double cpitch[PITCH_TABLE_SIZE];
 
 	//
 	// Switches
@@ -923,6 +943,7 @@ protected:
 	double CalculateApogeeTime();
 	void SlowIfDesired();
 	void UpdatePayloadMass();
+	double GetCPitch(double t);
 
 	//
 	// Systems functions.

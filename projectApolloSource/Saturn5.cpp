@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/07/19 19:25:09  movieman523
+  *	For now, always enable SIVB RCS by default when we're in orbit since we don't have switches to do so at the moment :).
+  *	
   *	Revision 1.10  2005/07/05 17:55:29  tschachim
   *	Fixed behavior of the CmSmSep1/2Switches
   *	
@@ -110,6 +113,13 @@ static int refcount = 0;
 const double BASE_SII_MASS = 42400 + 3490 - BODGE_FACTOR;		// Stage + SII/SIVB interstage
 
 GDIParams g_Param;
+
+//
+// Default pitch program.
+//
+
+const double default_met[PITCH_TABLE_SIZE]    = { 0,  58, 70, 80,  90, 110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
+const double default_cpitch[PITCH_TABLE_SIZE] = {90,  75, 60, 50,  45,  40,  35,  30,  30,  30,  25,  20, 10 ,   5,  -2,   0};	// Commanded pitch in °
 
 //
 // SaturnV constructor, derived from basic Saturn class.
@@ -229,6 +239,15 @@ void SaturnV::initSaturnV()
 	LongestTimestep = 0;
 	LongestTimestepLength = 0.0;
 	CurrentTimestep = 0;
+
+	//
+	// Pitch program.
+	//
+
+	for (int i = 0; i < PITCH_TABLE_SIZE; i++) {
+		met[i] = default_met[i];
+		cpitch[i] = default_cpitch[i];
+	}
 }
 
 SaturnV::~SaturnV()
@@ -523,11 +542,11 @@ void SaturnV::StageOne(double simt)
 	case 0:
 
 		//
-		// Shut down center engine at 8% fuel or if acceleration goes
-		// over 3.98g.
+		// Shut down center engine at 6% fuel or if acceleration goes
+		// over 3.98g, or at planned shutdown time.
 		//
 
-		if ((actualFUEL <= 8)) {
+		if ((actualFUEL <= 6) || (MissionTime >= FirstStageCentreShutdownTime)) {
 			//
 			// Set center engine light.
 			//
@@ -538,16 +557,15 @@ void SaturnV::StageOne(double simt)
 			//
 			ClearLiftoffLight();
 			SetThrusterResource(th_main[4], NULL);
+			NextMissionEventTime = MissionTime + 1.0;
 			StageState++;
 		}
 		break;
 
 	case 1:
-		if (actualFUEL <= 7) {
-			if (SShutS.isValid()) {
-				SShutS.play(NOLOOP,235);
-				SShutS.done();
-			}
+		if (MissionTime >= NextMissionEventTime) {
+			SShutS.play(NOLOOP,235);
+			SShutS.done();
 			StageState++;
 		}
 		break;
@@ -557,7 +575,7 @@ void SaturnV::StageOne(double simt)
 		// Begin shutdown countdown at 5% fuel.
 		//
 
-		if ((actualFUEL <= 5)){
+		if ((actualFUEL <= 5)) {
 			Sctdw.play(NOLOOP, 245);
 			StageState++;
 		}
@@ -575,9 +593,6 @@ void SaturnV::StageOne(double simt)
 		if (MissionTime >= NextMissionEventTime) {
 			SetEngineLevel(ENGINE_MAIN, 0.0);
 			SetEngineIndicators();
-			if (SShutS.isValid()) {
-				SShutS.done();
-			}
 			SeparateStage (stage);
 			bManualSeparate = false;
 			SeparationS.play(NOLOOP, 245);
@@ -777,41 +792,25 @@ void SaturnV::StageFour(double simt)
 
 	case 0:
 		if (VehicleNo < 505) {
-			StageState = 3;
-		}
-		else if (ApolloNo == 13) {
-			StageState = 1;
-		}
-		else {
 			StageState = 2;
 		}
+		else {
+			StageState = 1;
+		}
 
-		SwindowS.play();
-		SwindowS.done();
+		if (Crewed) {
+			SwindowS.play();
+			SwindowS.done();
+		}
 		break;
 
 	case 1:
 
 		//
-		// Apollo 13 engine shut down early at 5:30 into the mission.
+		// Shut down center engine on Apollo 10 and later.
 		//
 
-		if (MissionTime >= 330.0) {
-			SetThrusterResource(th_main[4],NULL);
-			S2ShutS.play(NOLOOP, 235);
-			S2ShutS.done();
-			SetEngineIndicator(5);
-			StageState = 3;
-		}
-		break;
-
-	case 2:
-
-		//
-		// Shut down center engine at 20% fuel.on Apollo 10 and later.
-		//
-
-		if ((actualFUEL < 20)) {
+		if ((actualFUEL < 15) || (MissionTime >= SecondStageCentreShutdownTime)) {
 			SetThrusterResource(th_main[4],NULL);
 			S2ShutS.play(NOLOOP,235);
 			S2ShutS.done();
@@ -820,14 +819,13 @@ void SaturnV::StageFour(double simt)
 		}
 		break;
 
-	case 3:
+	case 2:
 
 		//
-		// Change mixture ratio to ensure full fuel burn. This is
-		// arbitrarily set here to happen at 15% fuel.
+		// Change mixture ratio to ensure full fuel burn.
 		//
 
-		if (actualFUEL < 15) {
+		if ((actualFUEL < 5) || (MissionTime >= SecondStagePUShiftTime)) {
 			SetSIICMixtureRatio (4.5);
 			if (Crewed) {
 				SPUShiftS.play();
@@ -837,7 +835,7 @@ void SaturnV::StageFour(double simt)
 		}
 		break;
 
-	case 4:
+	case 3:
 		//
 		// Begin shutdown countdown at 1.7% fuel.
 		//
@@ -848,7 +846,7 @@ void SaturnV::StageFour(double simt)
 		}
 		break;
 
-	case 5:
+	case 4:
 		if (GetFuelMass() <= 0) {
 			SetEngineIndicators();
 			NextMissionEventTime = MissionTime + 2.0;
@@ -856,7 +854,7 @@ void SaturnV::StageFour(double simt)
 		}
 		break;
 
-	case 6:
+	case 5:
 		if (MissionTime >= NextMissionEventTime) {
 			S2ShutS.done();
 			SPUShiftS.done();

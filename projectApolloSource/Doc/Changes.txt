@@ -1,6 +1,9 @@
 6.5:
 ----
 
+Added pitch program to scenario file.
+Added SIC and SII center engine shutdown time to scenario file.
+Added PU shift time to scenario file.
 Fixed weird pitch maneuver after interstage seperation.
 Added variables for pre-entry CSM acceleration for unmanned flights (though currently not fully wired up).
 Updated timings in Apollo 4 scenario to match those in the Mission Report document. Though they were already close!
