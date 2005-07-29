@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/07/29 22:44:05  movieman523
+  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
+  *	
   *	Revision 1.4  2005/07/29 20:37:42  movieman523
   *	Fixed the weird pitching after the SII interstage jettison.
   *	
@@ -484,7 +487,7 @@ void SaturnV::AutoPilot(double autoT)
 		}
 		//sprintf(oapiDebugString(), "Autopilot Heading Mode DEG %f %f %d", heading, AtempP,etat);
 	}
-	else if (altitude < 4500  && altitude > 2800){
+	else if (altitude < 4500  && altitude > 2800) {
 //		oapiGetFocusBank(&bank);
 		bank = GetBank();
 		bank = bank*180./PI;
@@ -523,59 +526,53 @@ void SaturnV::AutoPilot(double autoT)
 	else if (altitude >= 4500)	{
 
 	// navigation
-//	oapiGetFocusPitch(&pitch);
-	pitch = GetPitch();
-	pitch=pitch*180./PI;
-	altitude = GetAltitude();
-//	oapiGetFocusAltitude(&altitude);
+		pitch = GetPitch();
+		pitch=pitch*180./PI;
+		altitude = GetAltitude();
 
- // control
-	double SatApo;
-	GetApDist(SatApo);
-
-	if (SatApo >= ((agc.GetDesiredApogee() *.80) + ERADIUS)*1000) 
-	{
-		double TimeW=0;
-		TimeW = oapiGetTimeAcceleration ();
-		if (TimeW>1){
-		//TimeW = 1;
-		//oapiSetTimeAcceleration (1);
+	 // control
+		if (IGMEnabled)
+		{
+			pitch_c = SetPitchApo();
 		}
-		pitch_c = SetPitchApo();
-	}
-	else
-	{
-		pitch_c = GetCPitch(autoT);
-	}
+		else
+		{
+			double SatApo;
+			GetApDist(SatApo);
 
-	level = pitch_c - pitch;
+			pitch_c = GetCPitch(autoT);
+			if (SatApo >= ((agc.GetDesiredApogee() *.80) + ERADIUS)*1000 || (MissionTime >= IGMStartTime))
+				IGMEnabled = true;
+		}
 
-	if (fabs(level)<10 && StopRot) {	// above atmosphere, soft correction
-		AtempP = 0.0;
-		AtempR = 0.0;
-		AtempY = 0.0;
-		StopRot = false;
-	}
-	if (fabs(level)<0.05) {	// above atmosphere, soft correction
-		AtempP = 0.0;
-		AtempR = 0.0;
-		AtempY = 0.0;
-	}
-	else if (level>0 && fabs(vsp.vrot.z) < 0.09) {
-		AtempP = -(fabs(level)/10);
-		if (AtempP < -1.0) AtempP = -1.0;
-		if(rhoriz.z>0)AtempP= -AtempP;
-	}
-	else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
-		AtempP = (fabs(level)/10);
-		if (AtempP > 1.0) AtempP = 1.0;
-		if(rhoriz.z>0)AtempP = -AtempP;
-	}
-	else{
-		AtempP = 0.0;
-		AtempR = 0.0;
-		AtempY = 0.0;
-	}
+		level = pitch_c - pitch;
+
+		if (fabs(level)<10 && StopRot) {	// above atmosphere, soft correction
+			AtempP = 0.0;
+			AtempR = 0.0;
+			AtempY = 0.0;
+			StopRot = false;
+		}
+		if (fabs(level)<0.05) {	// above atmosphere, soft correction
+			AtempP = 0.0;
+			AtempR = 0.0;
+			AtempY = 0.0;
+		}
+		else if (level>0 && fabs(vsp.vrot.z) < 0.09) {
+			AtempP = -(fabs(level)/10);
+			if (AtempP < -1.0) AtempP = -1.0;
+			if(rhoriz.z>0)AtempP= -AtempP;
+		}
+		else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
+			AtempP = (fabs(level)/10);
+			if (AtempP > 1.0) AtempP = 1.0;
+			if(rhoriz.z>0)AtempP = -AtempP;
+		}
+		else {
+			AtempP = 0.0;
+			AtempR = 0.0;
+			AtempY = 0.0;
+		}
 	}
 
 	if (CMCswitch){
