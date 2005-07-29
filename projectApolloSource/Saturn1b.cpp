@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/07/05 17:55:29  tschachim
+  *	Fixed behavior of the CmSmSep1/2Switches
+  *	
   *	Revision 1.7  2005/06/06 12:19:46  tschachim
   *	New switches
   *	
@@ -107,6 +110,18 @@ Saturn1b::~Saturn1b()
 	ReleaseSurfaces();
 }
 
+//
+// Default pitch program.
+//
+
+const double default_met[PITCH_TABLE_SIZE]    = { 0,  58, 75, 80,  90, 110, 140,   160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
+const double default_cpitch[PITCH_TABLE_SIZE] = {90,  72, 65, 58,  53,  45,  35,    35,   35, 30,    20,   20, 20 , 20, 20,20};	// Commanded pitch in °
+
+//#define N	13	// flight plan table size
+//const double met[N]    = { 0, 25, 60, 95, 130, 145, 152, 165, 200, 235, 270, 305, 330};   // MET in sec
+//const double cpitch[N] = {90, 90, 80, 70,  60,  55,  55,  50,  40,  30,  20,  10,   0};	// Commanded pitch in °
+
+
 void Saturn1b::initSaturn1b()
 
 {
@@ -134,7 +149,17 @@ void Saturn1b::initSaturn1b()
 	if (strcmp(GetName(), "AS-211")==0) {
 		ASTPMission = true;
 	}
+
+	//
+	// Pitch program.
+	//
+
+	for (int i = 0; i < PITCH_TABLE_SIZE; i++) {
+		met[i] = default_met[i];
+		cpitch[i] = default_cpitch[i];
+	}
 }
+
 void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
 
 {

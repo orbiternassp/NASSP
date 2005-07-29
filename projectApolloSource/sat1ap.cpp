@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/03/24 01:44:05  chode99
+  *	Made changes required by correcting thruster positions. Allow for "heads-down" launch.
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -47,23 +50,6 @@
 #include "saturn.h"
 
 #include "saturn1b.h"
-
-#define N_entries	16	// flight plan table size
-const double met[N_entries]    = { 0,  58, 75, 80,  90, 110, 140,   160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double cpitch[N_entries] = {90,  72, 65, 58,  53,  45,  35,    35,   35, 30,    20,   20, 20 , 20, 20,20};	// Commanded pitch in °
-
-//#define N	13	// flight plan table size
-//const double met[N]    = { 0, 25, 60, 95, 130, 145, 152, 165, 200, 235, 270, 305, 330};   // MET in sec
-//const double cpitch[N] = {90, 90, 80, 70,  60,  55,  55,  50,  40,  30,  20,  10,   0};	// Commanded pitch in °
-
-double Saturn1b::GetCPitch(double t)
-{
-	int i;
-	if (t>met[N_entries-1]) return cpitch[N_entries-1];
-	i=1;
-	while (met[i]<t) i++;
-	return cpitch[i-1]+(cpitch[i]-cpitch[i-1])/(met[i]-met[i-1])*(t-met[i-1]);
-}
 
 void Saturn1b::AttitudeLaunch1()
 {
