@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/07/29 22:44:05  movieman523
+  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
+  *	
   *	Revision 1.16  2005/07/19 16:21:56  tschachim
   *	Docking radar sound only for CSM_LEM_STAGE
   *	
@@ -189,7 +192,8 @@ void Saturn::initSaturn()
 
 	StopRot = false;
 	SMSep = false;
-	bStartS4B =false;
+	bStartS4B = false;
+	IGMEnabled = false;
 
 	refSaturn1B = 0;
 	refPREV = 0;
@@ -228,6 +232,8 @@ void Saturn::initSaturn()
 	agc.SetDesiredPerigee(215);
 	agc.SetDesiredAzimuth(45);
 	agc.SetVesselStats(SPS_ISP, SPS_THRUST, false);
+
+	IGMStartTime = 196.0;
 
 	//
 	// Typical center engine shutdown times.
@@ -633,6 +639,12 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 			sprintf(fname, "CPITCH%03d", i);
 			oapiWriteScenario_float (scn, fname, cpitch[i]);
 		}
+
+		//
+		// IGM start time.
+		//
+
+		oapiWriteScenario_float (scn, "IGMST", IGMStartTime);
 	}
 
 	if (!LEMdatatransfer && isTLICapable()) {
@@ -710,6 +722,7 @@ typedef union {
 		unsigned LEMdatatransfer:1;
 		unsigned KranzPlayed:1;
 		unsigned PostSplashdownPlayed:1;
+		unsigned IGMEnabled:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -736,6 +749,7 @@ int Saturn::GetMainState()
 	state.u.LEMdatatransfer = LEMdatatransfer;
 	state.u.KranzPlayed = KranzPlayed;
 	state.u.PostSplashdownPlayed = PostSplashdownPlayed;
+	state.u.IGMEnabled = IGMEnabled;
 
 	return state.word;
 }
@@ -761,6 +775,7 @@ void Saturn::SetMainState(int s)
 	LEMdatatransfer = state.u.LEMdatatransfer;
 	KranzPlayed = (state.u.KranzPlayed != 0);
 	PostSplashdownPlayed = (state.u.PostSplashdownPlayed != 0);
+	IGMEnabled = (state.u.IGMEnabled != 0);
 }
 
 
@@ -929,6 +944,10 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp (line, "SIIPUT", 6)) {
 			sscanf (line + 6, "%f", &ftcp);
 			SecondStagePUShiftTime = ftcp;
+		}
+		else if (!strnicmp (line, "IGMST", 5)) {
+			sscanf (line + 5, "%f", &ftcp);
+			IGMStartTime = ftcp;
 		}
 		else if (!strnicmp (line, "LEM_DISPLAY", 11)) {
 			LEM_DISPLAY = true;

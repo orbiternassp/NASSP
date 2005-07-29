@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/07/29 22:44:05  movieman523
+  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
+  *	
   *	Revision 1.18  2005/07/19 15:58:57  tschachim
   *	new switches
   *	
@@ -168,9 +171,27 @@ protected:
 
 	bool masterAlarm;
 
+	//
+	// Center engine shutdown times for first and
+	// second stage.
+	//
+
 	double FirstStageCentreShutdownTime;
 	double SecondStageCentreShutdownTime;
+
+	//
+	// Mixture-ratio shift time for second stage.
+	//
+
 	double SecondStagePUShiftTime;
+
+	//
+	// Iterative Guidance Mode start time, when we stop following the pitch program and start aiming for
+	// the correct orbit.
+	//
+
+	double IGMStartTime;
+	bool IGMEnabled;
 
 	bool LEM_DISPLAY;
 
