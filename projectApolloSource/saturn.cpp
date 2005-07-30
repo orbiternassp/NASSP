@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/07/30 02:05:48  movieman523
+  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
+  *	
   *	Revision 1.18  2005/07/29 23:05:38  movieman523
   *	Added Inertial Guidance Mode start time to scenario file.
   *	
@@ -700,8 +703,13 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	dsky.SaveState(scn);
 	agc.SaveState(scn);
-	Panelsdk.Save(scn);	// save the internal systems 
-	PSH.SaveState(scn);	// save the state of the switches
+
+	// save the internal systems 
+	oapiWriteScenario_int (scn, "SYSTEMSSTATE", systemsState);
+	Panelsdk.Save(scn);	
+
+	// save the state of the switches
+	PSH.SaveState(scn);	
 }
 
 //
@@ -1145,6 +1153,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
 			agc.LoadState(scn);
 		}
+		else if (!strnicmp (line, "SYSTEMSSTATE", 12)) {
+			sscanf (line + 12, "%d", &systemsState);
+		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -1367,11 +1378,9 @@ void Saturn::GenericTimestep(double simt)
 
 	SystemsTimestep(simt);
 
-	if (stage < CSM_LEM_STAGE && AutopilotActive())
-	{
+	if (stage < CSM_LEM_STAGE && AutopilotActive())	{
 		SetAutopilotLight();
-	}
-	else{
+	} else {
 		ClearAutopilotLight();
 	}
 
