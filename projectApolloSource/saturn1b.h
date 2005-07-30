@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/07/29 22:44:05  movieman523
+  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -81,6 +84,7 @@ protected:
 	void SetVehicleStats();
 	void CalculateStageMass ();
 	void AddStageOneInterstage();
+	void SetSIVBMixtureRatio(double ratio);
 };
 
 

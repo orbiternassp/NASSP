@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/07/29 23:05:38  movieman523
+  *	Added Inertial Guidance Mode start time to scenario file.
+  *	
   *	Revision 1.19  2005/07/29 22:44:05  movieman523
   *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
   *	
@@ -903,6 +906,20 @@ protected:
 	OBJHANDLE hSMJet;
 
 	//
+	// ISP and thrust values, which vary depending on vehicle number.
+	//
+
+	double ISP_FIRST_SL;
+	double ISP_FIRST_VAC;
+	double ISP_SECOND_SL;//300*G;
+	double ISP_SECOND_VAC;//421*G;
+	double ISP_THIRD_VAC;//421*G;
+
+	double THRUST_FIRST_VAC;
+	double THRUST_SECOND_VAC;//115200*G;
+	double THRUST_THIRD_VAC;
+
+	//
 	// Generic functions shared between SaturnV and Saturn1B
 	//
 
@@ -965,6 +982,7 @@ protected:
 	void SlowIfDesired();
 	void UpdatePayloadMass();
 	double GetCPitch(double t);
+	double GetJ2ISP(double ratio);
 
 	//
 	// Systems functions.
@@ -1074,6 +1092,7 @@ protected:
 	Sound SExploded;
 	Sound SApollo13;
 	Sound SSMSepExploded;
+	Sound SPUShiftS;
 
 	//
 	// General engine resources.

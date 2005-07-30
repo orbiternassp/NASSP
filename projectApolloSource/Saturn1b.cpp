@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/07/29 22:44:05  movieman523
+  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
+  *	
   *	Revision 1.8  2005/07/05 17:55:29  tschachim
   *	Fixed behavior of the CmSmSep1/2Switches
   *	
@@ -88,14 +91,6 @@ const double KG  = 1.0;
 const double  CSM_THRUST_ATT   = 200.34*KGF;
 const double  CSM_ISP          = 773*SEC;
 
-
-const double ISP_FIRST_SL    = 262*G;
-const double ISP_FIRST_VAC   = 292*G;
-const double ISP_SECOND_SL   = 300*G;//300*G;
-const double ISP_SECOND_VAC  = 421*G;//421*G;
-const double THRUST_FIRST_VAC	= 840426*G;
-const double THRUST_SECOND_VAC  = 85200*G;//115200*G;
-
 Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel)
 : Saturn (hObj, fmodel)
 
@@ -114,12 +109,11 @@ Saturn1b::~Saturn1b()
 // Default pitch program.
 //
 
-const double default_met[PITCH_TABLE_SIZE]    = { 0,  58, 75, 80,  90, 110, 140,   160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90,  72, 65, 58,  53,  45,  35,    35,   35, 30,    20,   20, 20 , 20, 20,20};	// Commanded pitch in °
+const double default_met[PITCH_TABLE_SIZE]    = { 0,  50, 75, 80,  90, 110, 140,   160, 170,  205, 450, 480, 490, 500, 535, 700};   // MET in sec
+const double default_cpitch[PITCH_TABLE_SIZE] = {90,  80, 70, 60,  53,  45,  40,    35,   35,  35,  20,  20,  20,  20,  20,  20};	// Commanded pitch in °
 
-//#define N	13	// flight plan table size
-//const double met[N]    = { 0, 25, 60, 95, 130, 145, 152, 165, 200, 235, 270, 305, 330};   // MET in sec
-//const double cpitch[N] = {90, 90, 80, 70,  60,  55,  55,  50,  40,  30,  20,  10,   0};	// Commanded pitch in °
+//const double default_met[PITCH_TABLE_SIZE]    = { 0, 25, 60, 95, 130, 145, 152, 165, 200, 235, 270, 305, 330, 450, 500, 700};   // MET in sec
+//const double default_cpitch[PITCH_TABLE_SIZE] = {90, 90, 80, 70,  60,  55,  55,  50,  40,  30,  20,  10,   0,   0,   0,   0};	// Commanded pitch in °
 
 
 void Saturn1b::initSaturn1b()
@@ -158,6 +152,42 @@ void Saturn1b::initSaturn1b()
 		met[i] = default_met[i];
 		cpitch[i] = default_cpitch[i];
 	}
+
+	//
+	// Typical center engine shutdown time.
+	//
+
+	FirstStageCentreShutdownTime = 140.0;
+
+	//
+	// PU shift time.
+	//
+
+	SecondStagePUShiftTime = 450.0;
+
+	//
+	// IGM Start time.
+	//
+
+	IGMStartTime = 170;
+
+	//
+	// Default ISP and thrust values.
+	//
+
+
+	ISP_FIRST_SL    = 262*G;
+	ISP_FIRST_VAC   = 292*G;
+	THRUST_FIRST_VAC	= 1000000;
+
+	ISP_SECOND_SL   = 300*G;//300*G;
+	ISP_SECOND_VAC  = 418*G;//421*G;
+
+	//
+	// Note: thrust values are _per engine_, not per stage.
+	//
+
+	THRUST_SECOND_VAC  = 1023000;
 }
 
 void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
@@ -183,6 +213,7 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 	*cm = factor*(CM[i] + (aoa-AOA[i])*SCM[i]);
 	*cd = (CD[i] + (aoa-AOA[i])*SCD[i]);
 }
+
 double LiftCoeff (double aoa)
 {
 	const int nlift = 9;
@@ -670,41 +701,29 @@ void Saturn1b::StageOne(double simt)
 	case 0:
 
 		//
-		// Shut down center engine at 8% fuel or if acceleration goes
-		// over 3.98g.
+		// Shut down center engine at 2% fuel or if acceleration goes
+		// over 3.98g, or at specified time.
 		//
 
-		if ((actualFUEL <= 8)) { // || (aHAcc > (3.98*G)))) {
+		if ((actualFUEL <= 2) || (MissionTime >= FirstStageCentreShutdownTime)) { // || (aHAcc > (3.98*G)))) {
 			SetEngineIndicator(5);
 			SetThrusterResource(th_main[4],NULL);
 			SetThrusterResource(th_main[5],NULL);
 			SetThrusterResource(th_main[6],NULL);
 			SetThrusterResource(th_main[7],NULL);
 			ClearLiftoffLight();
-			StageState++;
-		}
-		break;
-
-	case 1:
-		if (actualFUEL <= 7) {
 			SShutS.play(NOLOOP,235);
 			SShutS.done();
 			StageState++;
 		}
 		break;
 
-	case 2:
-		//
-		// Begin shutdown countdown at 5% fuel.
-		//
+	//
+	// We don't actually have time here to play the countdown before seperation after the center
+	// engine shuts down: with the Saturn 1 there are only a few seconds between the two events.
+	//
 
-		if ((actualFUEL <= 3.7)){
-			Sctdw.play(NOLOOP, 245);
-			StageState++;
-		}
-		break;
-
-	case 3:
+	case 1:
 		if (GetFuelMass() == 0 || bManualSeparate)
 		{
 			NextMissionEventTime = MissionTime + 0.7;
@@ -713,7 +732,7 @@ void Saturn1b::StageOne(double simt)
 		}
 		break;
 
-	case 4:
+	case 2:
 		if (MissionTime >= NextMissionEventTime){
 			SShutS.done();
 			ClearEngineIndicators();
@@ -872,16 +891,30 @@ void Saturn1b::StageLaunchSIVB(double simt)
 
 	case 0:
 		SetThrusterLevel(th_main[0], 1.0);
-		SwindowS.play();
+		if (Crewed)
+			SwindowS.play();
 		SwindowS.done();
 		StageState++;
 		break;
 
 	case 1:
+		if (MissionTime >= SecondStagePUShiftTime) {
+			if (Crewed) {
+				SPUShiftS.play();
+				SPUShiftS.done();
+			}
+			SetSIVBMixtureRatio(4.5);
+			StageState++;
+		}
+		break;
+
+	case 2:
 		if (GetEngineLevel(ENGINE_MAIN) <= 0) {
 			NextMissionEventTime = MissionTime + 10.0;
+			S4CutS.play();
+			S4CutS.done();
 			S2ShutS.done();
-			SwindowS.done();
+			ThrustAdjust = 1.0;
 			SetStage(STAGE_ORBIT_SIVB);
 		}
 		break;
@@ -908,6 +941,27 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		}
 		return;
 	}
+}
+
+//
+// Adjust the mixture ratio of the engine on the SIVB stage. This occured late in
+// the flight to ensure that the fuel was fully burnt before the stage was dropped.
+//
+
+void Saturn1b::SetSIVBMixtureRatio (double ratio)
+
+{
+	double isp;
+
+	isp = GetJ2ISP(ratio);
+
+	//
+	// For simplicity assume no ISP change at sea-level: SII stage should always
+	// be in near-vacuum anyway.
+	//
+
+	SetThrusterIsp (th_main[0], isp, ISP_SECOND_SL);
+	SetThrusterMax0 (th_main[0], THRUST_SECOND_VAC * ThrustAdjust);
 }
 
 void Saturn1b::Timestep (double simt)
@@ -1357,6 +1411,12 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 	GenericLoadStateSetup();
 	FirstTimestep = true;
+
+	if (stage < STAGE_ORBIT_SIVB) {
+		if (Crewed) {
+			soundlib.LoadMissionSound(SPUShiftS, PUSHIFT_SOUND, PUSHIFT_SOUND);
+		}
+	}
 }
 
 

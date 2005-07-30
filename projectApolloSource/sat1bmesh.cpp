@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/03/28 05:52:44  chode99
+  *	Support for defining SIVB payloads in the scenario like the Saturn V.
+  *	e.g. S4PL 5 is the Apollo 7 COAS target, 1 is the ASTP docking module.
+  *	
   *	Revision 1.6  2005/03/26 01:46:30  chode99
   *	Added retros to first stage.
   *	
@@ -208,14 +212,14 @@ void Saturn1b::SetFirstStage ()
 	VECTOR3 m_exhaust_pos4= {-2.12,2.12,Offset1st+55};
 
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), 981000 , ph_1st, 2755);
-	th_main[1] = CreateThruster (m_exhaust_pos2, _V( 0,0,1), 981000 , ph_1st, 2755);
-	th_main[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), 981000 , ph_1st, 2755);
-	th_main[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), 981000 , ph_1st, 2755);
-	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), 981000 , ph_1st, 2755);
-	th_main[5] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), 981000 , ph_1st, 2755);
-	th_main[6] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), 981000 , ph_1st, 2755);
-	th_main[7] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), 981000 , ph_1st, 2755);
+	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[1] = CreateThruster (m_exhaust_pos2, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[5] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[6] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[7] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), THRUST_FIRST_VAC , ph_1st, ISP_FIRST_VAC, ISP_FIRST_SL);
 
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
 	thg_main = CreateThrusterGroup (th_main, 8, THGROUP_MAIN);
@@ -262,7 +266,7 @@ void Saturn1b::SetSecondStage ()
 	UINT meshidx;
 	SetSize (22);
 	SetCOG_elev (15.225);
-	SetEmptyMass (40000);
+	SetEmptyMass (25000);
 	SetPMI (_V(94,94,20));
 	SetCrossSections (_V(267,267,97));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -334,7 +338,7 @@ void Saturn1b::SetSecondStage ()
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG1O+9};
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), 1251725, ph_3rd, 5259.5);
+	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
 
@@ -370,7 +374,7 @@ void Saturn1b::SetSecondStage1 ()
 	UINT meshidx;
 	SetSize (25);
 	SetCOG_elev (15.225);
-	SetEmptyMass (40000);
+	SetEmptyMass (25000);
 	SetPMI (_V(94,94,20));
 	SetCrossSections (_V(267,267,97));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -416,8 +420,6 @@ void Saturn1b::SetSecondStage1 ()
 	
     SetView(22.95);
 
-
-
 	//Don't Forget the Hatch
 	mesh_dir=_V(0.02,1.35,35.415-12.25);
 	meshidx = AddMesh (hFHC, &mesh_dir);
@@ -439,7 +441,7 @@ void Saturn1b::SetSecondStage1 ()
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG1O+9};
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), 1251725, ph_3rd, 5259.5);
+	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
 	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
@@ -470,7 +472,7 @@ void Saturn1b::SetSecondStage2 ()
 	}
 	SetSize (25);
 	SetCOG_elev (15.225);
-	SetEmptyMass (40000);
+	SetEmptyMass (25000);
 	SetPMI (_V(94,94,20));
 	SetCrossSections (_V(267,267,97));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -514,10 +516,7 @@ void Saturn1b::SetSecondStage2 ()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	
     SetView(22.95);
-
-
 
 	//Don't Forget the Hatch
 	mesh_dir=_V(0.02,1.35,35.530-12.25);
@@ -537,7 +536,7 @@ void Saturn1b::SetSecondStage2 ()
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG1O+9};
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1),1251725 , ph_3rd, 5259.5);
+	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
 	thg_ver = 0;

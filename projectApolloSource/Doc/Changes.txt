@@ -1,6 +1,7 @@
 6.5:
 ----
 
+Brought Saturn 1b mass and performance closer to reality.
 Added Inertial Guidance Mode start time to scenario file.
 Added pitch program to scenario file.
 Added SIC and SII center engine shutdown time to scenario file.
