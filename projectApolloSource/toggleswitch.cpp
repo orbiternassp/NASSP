@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/07/05 17:59:00  tschachim
+  *	Introduced spring-loaded switches
+  *	
   *	Revision 1.7  2005/06/06 12:30:27  tschachim
   *	Introduced PushSwitch, GuardedPushSwitch, PanelScenarioHandler
   *	
@@ -130,6 +133,18 @@ void ToggleSwitch::InitSound(SoundLib *s) {
 		s->LoadSound(Sclick, CLICK_SOUND);
 }
 
+void ToggleSwitch::SwitchTo(int newState) {
+
+	if (Active && (state != newState)) {
+		state = newState;
+		Sclick.play();
+		SwitchToggled = true;
+		if (switchRow) {
+			if (switchRow->panelSwitches->listener) 
+				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+		}
+	}
+}
 
 bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 
