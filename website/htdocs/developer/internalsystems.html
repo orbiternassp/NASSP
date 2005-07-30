@@ -1,26 +1,116 @@
 <html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Project Apollo - Internal systems</title><link type="text/css" href="../styles.css" rel="stylesheet"><meta content="DocBook XSL Stylesheets V1.29" name="generator"><link rel="home" href="../index.html" title="Virtual Apollo"><link rel="up" href="ch01.html" title="Chapter  Introduction"><link rel="previous" href="ch01s02.html" title="Installation"><link rel="next" href="ch01s06.html" title="Authors and contributors">
+<style type="text/css">
+<!--
+.style1 {color: #FFFFFF}
+-->
+</style>
 </head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><table height="65" cellspacing="0" cellpadding="0" border="0"><tr height="65"><td rowspan="2"><a href="../"><img border="0" height="79" width="432" src="../images/jboss.gif"></a></td><td valign="top" align="right" width="100%" background="../images/gbar.gif" rowspan="2">&nbsp;</td>
 </tr><tr></tr></table><div class="section"><a name="N1005E"></a><div class="titlepage"><div>
   <h2 class="title" style="clear: all"><a name="N1005E"></a><span class="title">Internal systems</span></h2>
 </div></div>
   <div class="section">
-    <p>The internal systems in Project Apollo are simulated with Radu Poenaru's System &amp; Panel SDK, but only the &quot;system&quot; part is used, not the panel part. The panels are still managed by the Project Apollo spacecrafts themself together with the toggleswitch library (toggleswitch.cpp). Only a few hydraulical and electrical systems of the CSM EPS (Electrical Power System) and ECS (Environmental Control System) are integrated at the moment. </p>
-    <p>The following documentation describes the systems and components as they are modelled in Project Apollo with the PanelSDK. It's no documentation of the real Apollo systems. Of course both systems are similar and should behave identical as much as possible, but there are differences in internal details. </p>
-    <p>Most of the informations used for the internal systems came from the following references:</p>
-    <ul>
-      <li><I>Apollo Operations Handbook Block II Spacecraft - Volume 1 Spacecraft Description</I>. SM2A-03-Block II. October 15, 1969. <A 
-href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohindex.htm</A></li>
-      <li><em>Apollo Command Module News Reference.</em> 1968. North American Aviation. <a href="http://www.jdkbph.com/histdocs/apollo/ApolloNewsRefCM1968.pdf">http://www.jdkbph.com/histdocs/apollo/ApolloNewsRefCM1968.pdf</a>.</li>
-    </ul>
-    <h3>Command and Service Module (CSM) </h3>
-    <p>The following diagram shows the internal systems of the Command and Service Module (CSM) as modelled with the PanelSDK. These components are defined in the &quot;saturncsmsystems.cfg&quot; file in the config folder.</p>
-    <p><img src="../images/csmhydraulicsystems.gif" width="630" height="434"></p>
+    <p>In order to make Project Apollo more realistic, some of it's mechanical, hydraulical and electrical devices, the &quot;internal systems&quot;, are simulated. The internal systems affects the displays and controls of the panels and the behavior of the spacecrafts 
+
+themselves. In terms of the real Apollo project these systems are mainly the EPS (Electrical Power System) and ECS (Environmental Control System). </p>
+    <p>At the moment only a few system components are integrated. This is an ongoing development, so check out this site occasionally for new features and improvements.</p>
+    <p>The internal systems in Project Apollo are simulated with a slightly modified version of Radu Poenaru's System &amp; Panel SDK, which can be found here: <a href="http://217.10.196.198/Orbiter/main.html">http://217.10.196.198/Orbiter/main.html</a>. But only the &quot;system&quot; part of the PanelSDK is used, not the panel part. The panels are still managed by the Project Apollo toggleswitch library. </p>
+    <p>The following documentation describes the systems and components as they are modelled in Project Apollo with the PanelSDK. It's no documentation of the real Apollo systems. Of course both systems are similar and should behave identical as much as possible, but of course there are some differences and simplifications. </p>
+    <p>For additional informations please also take a look at the forum topic about the internal systems here: <a href="http://www.ibiblio.org/mscorbit/phpBB2/viewtopic.php?t=132">http://www.ibiblio.org/mscorbit/phpBB2/viewtopic.php?t=132</a>.</p>
+    <h3>Command and Service Module (CSM) Systems </h3>
+    <p>The following diagram shows the components of the internal systems of the Command and Service Module (CSM) as they are modelled with the PanelSDK. These components are defined in the &quot;SaturnSystems.cfg&quot; file in the Config\ProjectApollo folder.</p>
+    <p><img src="../images/csmhydraulicsystems.gif" width="640" height="436"></p>
+    <h3>Flight Plan</h3>
+    <p>In the  flight plan the sequence of events related to the internal systems during an Apollo mission is shown. At the moment these events are controlled automatically, in later versions perhaps there will be a checklist or different 
+    <span class="postbody">&quot;levels of realism&quot; will be available. </span></p>
+    <p><span class="postbody">But of course you can control the internal systems by yourself and so change the </span>system state and the sequence of events. For example if you turn off the suit compressors after crew ingress, your suit compressor delta pressure reading will drop below 0 psi you'll get more than 7.6 mmHg CO<sub>2</sub> partial pressure in about 10 minutes, which is obviously not the normal system state. </p>
+    <table width="100%"  border="1" cellspacing="0">
+      <tr bgcolor="#023C8C">
+        <th width="18%" scope="col"><span class="style1">Misson Elapsed Time </span></th>
+        <th width="47%" scope="col"><span class="style1">Event</span></th>
+        <th width="35%" scope="col"><span class="style1">Remarks</span></th>
+      </tr>
+      <tr>
+        <td valign="top">(Initial state)</td>
+        <td valign="top"><p>H<sub>2</sub> tanks 1/2 100% quantity<br>
+          O<sub>2</sub> tanks 1/2 100% quantity          <br>
+          Fuel cells 1/2/3 running normally</p>
+        <p>Cabin pressure 14.7 psi<br>
+          Cabin temperature 70-80 &deg;F<br>
+  Suit pressure 14.9 psi <br>
+  Suit temperature 45-55 &deg;F<br>
+            CO<sub>2</sub> partial pressure 0 mmHg <br>
+          Suit cabin &#916;P approx. +5.5 inH<sub>2</sub>O </p>
+        <p>Suit compressors turned off<br>
+          Suit compressor &#916;P 0 psi <br>
+        O<sub>2</sub> flow 0 lb/hr</p>
+        </td>
+        <td valign="top"> <p>After the start of a prelaunch scenario it takes about 5 minutes until the measured values settled down. </p>
+        <p>No crew at this moment. </p></td>
+      </tr>
+      <tr>
+        <td valign="top">-1 h 40 min </td>
+        <td valign="top"><p>Crew ingress (3 persons) and cabin closeout</p>
+        <p>CO<sub>2</sub> partial pressure approx. 1 mmHg <br>
+Suit cabin &#916;P &gt; +2 inH<sub>2</sub>O </p>
+        <p>Suit compressor 1 turned on<br>
+Suit compressor &#916;P 0.7 - 0.9 psi <br>
+O<sub>2</sub> flow 0.6 - 0.8 lb/hr</p></td>
+        <td valign="top">It takes about 5 minutes until the  measured values settled down. </td>
+      </tr>
+      <tr>
+        <td valign="top">0h 0 min </td>
+        <td valign="top">Lift-off</td>
+        <td valign="top">&nbsp;</td>
+      </tr>
+      <tr>
+        <td valign="top">+0h 1 min </td>
+        <td valign="top">Cabin and suit pressure begins to decrease. </td>
+        <td valign="top">&nbsp;</td>
+      </tr>
+      <tr>
+        <td valign="top">+0h 3 min </td>
+        <td valign="top">Cabin and suit pressure approx. 10 psi. </td>
+        <td valign="top">&nbsp;</td>
+      </tr>
+      <tr>
+        <td valign="top">+0h 9 min </td>
+        <td valign="top">Cabin and suit pressure approx. 5 psi. </td>
+        <td valign="top">&nbsp;</td>
+      </tr>
+      <tr>
+        <td valign="top">+0h 30 min </td>
+        <td valign="top"><p>CSM systems are in &quot;flight configuration&quot;:</p>
+        <p>Cabin pressure 5 psi<br>
+Suit pressure 5 psi<br>
+CO<sub>2</sub> partial pressure approx. 2 mmHg<br>
+Suit cabin &#916;P -1.0 to -3.5 inH<sub>2</sub>O</p>
+        <p> Suit compressor &#916;P 0.3 - 0.4 psi <br>
+            O<sub>2</sub> flow 0.2 to 0.45 lb/hr</p>
+        </td>
+        <td valign="top">This ECS configuration is maintained until reentry, except EVAs, of course. </td>
+      </tr>
+    </table>
     <h3>Operational Procedures</h3>
-    <p>This section provides step-by-step examples and instructions how to use the internal systems. Hopefully the user gets a better feeling how to work with the EPS and ECS. It is assumed that the spacecraft is in a &quot;stable condition&quot; without flying manoeuvers, for example during Trans Lunar Coast and you can use time acceleration up to 1000 so that the internal systems have reasonable reaction times.</p>
+    <p>This section provides step-by-step examples and instructions how to use the internal systems. Hopefully you get a better feeling how to work with the EPS and ECS. It is assumed that the spacecraft is in a &quot;stable condition&quot; without flying manoeuvers with ECS in &quot;flight configuration&quot;, for example during Trans Lunar Coast and you can use time acceleration up to 1000 so that all of the internal systems have reasonable reaction times.</p>
+    <h4>CSM ECS monitoring check</h4>
+    <p>This is the part of the original Apollo documentation used for regular checking the most important ECS components. At the moment not all displays and controls are simulated. These  procedures are from the <em>Apollo-Soyuz test project Operations handbook reference issue </em>(see <a href="#references">below</a>)<em>. </em></p>
+    <p><img src="../images/aoh-ecscheck.gif" width="640" height="863"></p>
+    <h4>CSM suit compressor shutdown and restart</h4>
+    <p>During normal operations suit compressor 1 is turned on in order to drive  the suit atmosphere regeneration systems, which  remove CO<sub>2</sub>, water and other unwanted substances. Suit compressor 2 is redundant and turned off. The following procedure demonstrates the necessity of the suit compressor.</p>
+    <ul>
+      <li>At the beginning the suit compressor should work normally so the SUIT COMPRESSOR 1 switch is in AC1 position (that means on) and the SUIT COMPRESSOR 2 switch is in OFF position. The SUIT COMPR &#916;P meter shows  0.3 - 0.4 psi, the PART PRESS CO<sub>2</sub> meter shows appox. 2 mmHg, which is far below the CO<sub>2</sub> PP HI value of 7.6 mmHg, so the suit compressor is working properly.
+        <p></li>
+      <li>Switch the SUIT COMPRESSOR 1 switch to OFF (center position). The SUIT COMPR &#916;P meter drops to 0 psi within a few seconds indicating that the compressors stopped working. The PART PRESS CO<sub>2</sub> meter begins to increase.<p></li>
+      <li> After about 10 minutes the  PART PRESS CO<sub>2</sub> meter shows a pressure of 7.6 mmHg or higher, the suit atmosphere gets seriously poisoned. The O<sub>2</sub> FLOW meter shows a decreased flow because the suit circuit is no longer supplied with fresh oxygen.<p></li>
+      <li>Switch the SUIT COMPRESSOR 1 switch back to AC1. The SUIT COMPR &#916;P meter goes back to 0.3 - 0.4 psi, the PART PRESS CO<sub>2</sub> meter slowly begins to decrease.<p></li>
+      <li>After about 1 hour the PART PRESS CO<sub>2</sub> meter should show approx. 2 mmHg and is normal again. </li>
+    </ul>
     <h4>CSM cryogenic tank and fuel cell check </h4>
-    <p>During normal operations the cryo tanks and fuel cells should operate as descriped in the original Apollo documentation. The following procedures are from the <em>Apollo-Soyuz test project. Operations handbook command/service/docking modules 
-(CSM 119/DM 1): Operational procedures reference issue</em> (<A href="http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19750004933_1975004933.pdf">http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19750004933_1975004933.pdf</A>) </p>
+    <p>During normal operations the cryo tanks and fuel cells should operate as descriped in the original Apollo documentation. The following procedures are from the <em>Apollo-Soyuz test project Operations handbook reference issue </em>(see <a href="#references">below</a>)<em>. </em></p>
     <p><img src="../images/aoh-cyroandfccheck.gif" width="630" height="425"></p>
+    <h4>CSM fuel cell purging</h4>
+    <p>To keep the fuel cells working properly, it's necessary to do fuel cell purging from time to time. Unlike shown in the original Apollo documentation below in Project Apollo it's not necessary to wait after switching the H<sub>2</sub> PURGE LINE switch to HTR, but to do on  H<sub>2</sub> purging it's necessary to turn on the H<sub>2</sub> purge line heater. The  procedures are from the <em>Apollo-Soyuz test project Operations handbook reference issue </em>(see <a href="#references">below</a>)<em>. </em></p>
+    <p><img src="../images/aoh-fcpurging.gif" width="640" height="332"></p>
     <h4>CSM H<sub>2</sub> cryogenic tank pressurization</h4>
     <p>During normal operations cryogenic hydrogen from the cryo tanks is consumed by the fuel cells, so for this procedure it is necessary that the fuel cells are turned on and all cryo tank heaters and fans are switched to AUTO. The cyro tank fans and heaters then maintain the pressure in the tanks.</p>
     <ul>
@@ -33,7 +123,7 @@ href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohi
     <p>During normal operations all fuel cells are running and  have  a load of about 20 A at the moment. Unlike in reality we can shutdown and restart the fuel cells at any time. </p>
     <ul>
       <li>Switch to time acceleration 100. Switch the FUEL CELL INDICATOR to position 1. You can monitor a hydrogen and oxygen flow above 0 lb/hr on the FUEL CELL FLOW H<sub>2</sub>/O<sub>2</sub>meters and a FUEL CELL MODULE SKIN TEMP of above 400 &deg;F.<p></li>
-      <li>Switch the FUEL CELL REACTANTS 1 switch to OFF (down position). The switch is spring-loaded and flips back to  to center position. Now fuel cell 1 is down, the FUEL CELL REACTANTS 1 indicator changes to striped-line indication, both flows are 0 lb/hr, but the fuel cell skin temperature remains almost unchanged because the fuel cell temperature is still maintained by the fuel cell heaters.
+      <li>Make sure that the FC REACS VALVES switch is in NORM position, otherwise you cannot operate the fuel cell reactants valves. Switch the FUEL CELL REACTANTS 1 switch to OFF (down position). The switch is spring-loaded and flips back to  to center position. Now fuel cell 1 is down, the FUEL CELL REACTANTS 1 indicator changes to striped-line indication, both flows are 0 lb/hr, but the fuel cell skin temperature remains almost unchanged because the fuel cell temperature is still maintained by the fuel cell heaters.
         <p></li>
       <li>Switch the FUEL CELL HEATERS 1 switch to OFF (down position). The fuel cell skin (and condenser exhaust) temperature decreases slowly. Wait until it drops below 300 &deg;F (use time acceleration 1000, if you are impatient...). 
         <p></li>
@@ -43,7 +133,7 @@ href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohi
     <h4>CSM fuel cell radiator emergency bypass </h4>
     <p>During normal operations no fuel cell emergency bypass is necessary. But if only one fuel cell is running at a load of about 20 A, you have to bypass some of the radiators so that the coolant temperature is not too low.</p>
     <ul>
-      <li>Switch to time acceleration 100. Switch the FUEL CELL INDICATOR to position 1. Switch the FUEL CELL REACTANTS 2 and 3 switches to OFF (down position). The FUEL CELL REACTANTS 2 and 3 indicators change to striped-line indication.
+      <li>Switch to time acceleration 100. Switch the FUEL CELL INDICATOR to position 1. Make sure that the FC REACS VALVES switch is in NORM position. Switch the FUEL CELL REACTANTS 2 and 3 switches to OFF (down position). The FUEL CELL REACTANTS 2 and 3 indicators change to striped-line indication.
         <p></li>
       <li>Wait some time (use time acceleration 1000, if you are impatient...), then the FC RAD TEMP LOW indicator changes to striped-line  indicating a coolant temperature below -30&deg;F.
         <p></li>
@@ -52,6 +142,21 @@ href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohi
       <li>Monitor fuel cell 2 and 3 by switching the FUEL CELL INDICATOR to position 2 and 3. The flows are 0 lb/hr of course and the FC RAD TEMP LOW indicator shows  striped-line  indication because the radiators of the other fuel cells are not bypassed. Switch the FUEL CELL INDICATOR back to position 1.<p></li>
       <li>Switch the FUEL CELL RADIATORS 1 switch to NORMAL (up position). Switch the FUEL CELL REACTANTS 2 and 3 switches to ON (up position). You are now back in &quot;normal mode&quot;. The FC RAD TEMP LOW indicator should show gray indication again. </li>
     </ul>
+    <h3><a name="references"></a>References</h3>
+	<p>The following documents are used to gather most of the informations needed for the internal systems:</p>
+	<ul>
+      <li><I>Apollo Operations Handbook Block II Spacecraft - Volume 1 Spacecraft Description</I>. SM2A-03-Block II. October 15, 1969. <br>
+      <A 
+href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohindex.htm</A><p></li>
+      <li><em>Apollo Command Module News Reference.</em> 1968. North American Aviation. <br>
+      <a href="http://www.jdkbph.com/histdocs/apollo/ApolloNewsRefCM1968.pdf">http://www.jdkbph.com/histdocs/apollo/ApolloNewsRefCM1968.pdf</a><p></li>
+      <li><em>Apollo-Soyuz test project. Operations handbook command/service/docking modules (CSM 119/DM 1): Operational procedures reference issue</em>. 
+      July 15, 1974.<br><A href="http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19750004933_1975004933.pdf">
+      http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19750004933_1975004933.pdf</A><p></li>
+      <li> <em>Command/service module systems handbook (CSM 104).</em> November 1, 1968.<br>
+      <a href="http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19730060780_1973060780.pdf">http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19730060780_1973060780.pdf</a> 
+      </li>
+	</ul>
 	<p align="right"><a href="http://nassp.sourceforge.net">Back</a></p>	
   </div>
 </div>
