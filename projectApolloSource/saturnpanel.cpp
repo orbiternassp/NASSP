@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/07/19 16:25:43  tschachim
+  *	New switches
+  *	
   *	Revision 1.27  2005/07/06 22:11:31  tschachim
   *	Finished SequencerSwitchesRow, no functionality yet
   *	
@@ -445,7 +448,9 @@ void Saturn::RedrawPanel_SuitCabinDeltaPMeter (SURFHANDLE surf) {
 	if (scdp < -90) scdp = -90;
 
 	// O2 main regulator output flow 
-	double cf = *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW") * LBH;
+	double cf =  *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW") * LBH;
+		   cf += *(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOW") * LBH;
+		   cf += *(double*)Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE:FLOW") * LBH;
 	cf = (cf - .6) / .4 * 60.0;
 	if (cf > 90) cf = 90;
 	if (cf < -90) cf = -90;
@@ -462,7 +467,9 @@ void Saturn::RedrawPanel_SuitComprDeltaPMeter (SURFHANDLE surf) {
 
 	// O2 main regulator output flow 
 	// TODO: Is this the correct flow for that meter? No documentation found yet...
-	double cf = *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW") * LBH;
+	double cf =  *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW") * LBH;
+		   cf += *(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOW") * LBH;
+		   cf += *(double*)Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE:FLOW") * LBH;
 	cf = (cf - .6) / .4 * 60.0;
 	if (cf > 90) cf = 90;
 	if (cf < -90) cf = -90;
@@ -3935,8 +3942,8 @@ void Saturn::InitSwitches() {
 	FuelCellPumps2Switch.Register(PSH, "FuelCellPumps2Switch", THREEPOSSWITCH_UP); 
 	FuelCellPumps3Switch.Register(PSH, "FuelCellPumps3Switch", THREEPOSSWITCH_UP); 
 
-	SuitCompressor1Switch.Register(PSH, "SuitCompressor1Switch", THREEPOSSWITCH_UP);   
-	SuitCompressor2Switch.Register(PSH, "SuitCompressor2Switch", THREEPOSSWITCH_UP);   
+	SuitCompressor1Switch.Register(PSH, "SuitCompressor1Switch", THREEPOSSWITCH_CENTER);   
+	SuitCompressor2Switch.Register(PSH, "SuitCompressor2Switch", THREEPOSSWITCH_CENTER);   
 	
 
 	// old stuff
