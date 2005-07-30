@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/07/29 23:05:38  movieman523
+  *	Added Inertial Guidance Mode start time to scenario file.
+  *	
   *	Revision 1.17  2005/07/29 22:44:05  movieman523
   *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
   *	
@@ -2582,6 +2585,35 @@ void Saturn::SlowIfDesired()
 	}
 }
 
+//
+// Get the J2 ISP from the mixture ratio and calculate the thrust adjustment.
+//
+
+double Saturn::GetJ2ISP(double ratio)
+
+{
+	double isp;
+
+	// From Usenet:
+	// It had roughly three stops. 178,000 lbs at 425s Isp and an O/F of 4.5,
+	// 207,000 lbs at 421s Isp and an O/F of 5.0, and 230,500 lbs at 418s Isp
+	// and an O/F of 5.5.
+
+	if (ratio >= 5.5) {
+		isp = 418*G;
+		ThrustAdjust = 1.0;
+	}
+	else if (ratio >= 5.0) {
+		isp = 421*G;
+		ThrustAdjust = 0.898;
+	}
+	else {
+		isp = 425*G;
+		ThrustAdjust = 0.772;
+	}
+
+	return isp;
+}
 
 //
 // Most of this calculation code is lifted from the Soyuz guidance MFD.

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/07/29 22:44:05  movieman523
+  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
+  *	
   *	Revision 1.11  2005/07/19 19:25:09  movieman523
   *	For now, always enable SIVB RCS by default when we're in orbit since we don't have switches to do so at the moment :).
   *	
@@ -318,23 +321,7 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 {
 	double isp;
 
-	// From Usenet:
-	// It had roughly three stops. 178,000 lbs at 425s Isp and an O/F of 4.5,
-	// 207,000 lbs at 421s Isp and an O/F of 5.0, and 230,500 lbs at 418s Isp
-	// and an O/F of 5.5.
-
-	if (ratio >= 5.5) {
-		isp = 418*G;
-		ThrustAdjust = 1.0;
-	}
-	else if (ratio >= 5.0) {
-		isp = 421*G;
-		ThrustAdjust = 0.898;
-	}
-	else {
-		isp = 425*G;
-		ThrustAdjust = 0.772;
-	}
+	isp = GetJ2ISP(ratio);
 
 	//
 	// For simplicity assume no ISP change at sea-level: SII stage should always
@@ -350,8 +337,6 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 void SaturnV::AccelS4B(OBJHANDLE hvessel, double time)
 
 {
-	TRACESETUP("AccelS4B");
-
 	VESSEL *stg1vessel = oapiGetVesselInterface(hvessel);
 
 	if (ignition_S4time == 0 && !S4Sep){
@@ -800,8 +785,8 @@ void SaturnV::StageFour(double simt)
 
 		if (Crewed) {
 			SwindowS.play();
-			SwindowS.done();
 		}
+		SwindowS.done();
 		break;
 
 	case 1:
@@ -829,8 +814,8 @@ void SaturnV::StageFour(double simt)
 			SetSIICMixtureRatio (4.5);
 			if (Crewed) {
 				SPUShiftS.play();
-				SPUShiftS.done();
 			}
+			SPUShiftS.done();
 			StageState++;
 		}
 		break;

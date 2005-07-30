@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/04/22 13:55:31  tschachim
+  *	Added SecoSound otherwise I can't build
+  *	
   *	Revision 1.3  2005/03/09 00:25:28  chode99
   *	Added header stuff for SII retros.
   *	
@@ -134,19 +137,6 @@ protected:
 	//
 
 	double gaz;
-	//
-	// ISP and thrust values, which vary depending on vehicle number.
-	//
-
-	double ISP_FIRST_SL;
-	double ISP_FIRST_VAC;
-	double ISP_SECOND_SL;//300*G;
-	double ISP_SECOND_VAC;//421*G;
-	double ISP_THIRD_VAC;//421*G;
-
-	double THRUST_FIRST_VAC;
-	double THRUST_SECOND_VAC;//115200*G;
-	double THRUST_THIRD_VAC;
 
 	int SI_RetroNum;
 	int SII_UllageNum;
@@ -167,7 +157,6 @@ protected:
 	Sound S5P100;
 
 	Sound SRover;
-	Sound SPUShiftS;
 
 	Sound SecoSound;
 

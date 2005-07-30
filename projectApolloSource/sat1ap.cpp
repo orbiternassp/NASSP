@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/07/29 22:44:05  movieman523
+  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
+  *	
   *	Revision 1.2  2005/03/24 01:44:05  chode99
   *	Made changes required by correcting thruster positions. Allow for "heads-down" launch.
   *	
@@ -253,7 +256,7 @@ void Saturn1b::AutoPilot(double autoT)
 	totalRot=vsp.vrot.x+vsp.vrot.y+vsp.vrot.z;
 
 	if (fabs(totalRot) >= 0.0025){
-		StopRot=true;
+		StopRot = true;
 	}
 
 	//
@@ -264,33 +267,33 @@ void Saturn1b::AutoPilot(double autoT)
 
 	HorizonRot(_V(1,0,0),rhoriz);
 
-
 	if (altitude >= 120000 && CheckForLaunchShutdown())
 		return;
 
  // navigation
-	oapiGetFocusPitch(&pitch);
+	pitch = GetPitch();
 	pitch = pitch*180./PI;
-	oapiGetFocusAltitude(&altitude);
 	//sprintf(oapiDebugString(), "Autopilot %f", altitude);
  // guidance
-	pitch_c = GetCPitch(altitude);
+	pitch_c = GetCPitch(autoT);
  // control
 
-	if (GetAltitude() < 250  && GetAltitude() > 150 ){
+	if ((altitude < 250)  && (altitude > 150)) {
 		//sprintf(oapiDebugString(), "Autopilot initial Pitch DEG %d", (int)fabs(pitch));
-		if (pitch >86){
+		if (pitch >86) {
 			AtempP = 0.4;
 			if (rhoriz.z>0)AtempP = -0.4;
 			AtempR = 0.0;
 			AtempY = 0.0;
-		}else{
+		}
+		else {
 			AtempP = 0.0;
 			AtempR = 0.0;
 			AtempY = 0.0;
 		}
-	}else if (GetAltitude() < 1200  && GetAltitude() > 250)	{
-		oapiGetFocusBank(&bank);
+	}
+	else if (altitude < 1200  && altitude > 250)	{
+		bank = GetBank();
 		bank = bank*180./PI;
 		if(bank > 90) bank = bank - 180;
 		else if(bank < -90) bank = bank + 180;
@@ -316,22 +319,24 @@ void Saturn1b::AutoPilot(double autoT)
 //			if(rhoriz.z>0) AtempR = -AtempR;
 			AtempP = 0.0;
 			AtempY = 0.0;
-		}else if (bank < -(90-TO_HDG)-0.5){
+		}
+		else if (bank < -(90-TO_HDG)-0.5){
 			AtempR = fabs((90-TO_HDG)-bank);
 			if (AtempR > 1)AtempR = 1;
 //			if(rhoriz.z>0) AtempR = -AtempR;
 			AtempP = 0.0;
 			AtempY = 0.0;
-		}else {
+		}
+		else {
 			AtempR = 0.0;
 		}
 	}
-	else if (GetAltitude() < 2800  && GetAltitude() > 1200){
+	else if (altitude < 2800  && altitude > 1200){
 
 		oapiGetHeading(GetHandle(),&heading);
 		heading = heading*180./PI;
 		//sprintf(oapiDebugString(), "Autopilot Heading Mode DEG %f", heading);
-		oapiGetFocusBank(&bank);
+		bank = GetBank();
 		bank = bank*180./PI;
 		if(bank > 90) bank = bank - 180;
 		else if(bank < -90) bank = bank + 180;
@@ -404,11 +409,13 @@ void Saturn1b::AutoPilot(double autoT)
 			AtempY = 0.0;
 		}
 	}
-	else if (GetAltitude() < 4500  && GetAltitude() > 2800) {
-		oapiGetFocusBank(&bank);
+	else if (altitude < 4500  && altitude > 2800) {
+		bank = GetBank();
 		bank = bank*180./PI;
-		if(bank > 90) bank = bank - 180;
-		else if(bank < -90) bank = bank + 180;
+		if(bank > 90) 
+			bank = bank - 180;
+		else if(bank < -90) 
+			bank = bank + 180;
 		oapiGetHeading(GetHandle(),&heading);
 		heading = heading*180./PI;
 
@@ -417,14 +424,17 @@ void Saturn1b::AutoPilot(double autoT)
 			AtempR = 0.0;
 			AtempY = 0.0;
 
-		}else if (bank < 0 && fabs(vsp.vrot.z) < 0.11) {
+		}
+		else if (bank < 0 && fabs(vsp.vrot.z) < 0.11) {
 			AtempR = 1.0;
 			//vessel->SetAttitudeRotLevel(2,-1 );//bank/30
-		}else if (bank > 0 && fabs(vsp.vrot.z) < 0.11) {
+		}
+		else if (bank > 0 && fabs(vsp.vrot.z) < 0.11) {
 			AtempR = -1.0;
 //			if(rhoriz.z>0)AtempR = -AtempR;
 			//vessel->SetAttitudeRotLevel(2, 1);
-		}else {
+		}
+		else {
 			AtempP = 0.0;
 			AtempR = 0.0;
 			AtempY = 0.0;
@@ -436,69 +446,55 @@ void Saturn1b::AutoPilot(double autoT)
 			StopRot=false;
 		}
 	}
-	else if (GetAltitude() > 4500)	{
+	else if (altitude > 4500) {
 
 		// navigation
-		oapiGetFocusPitch(&pitch);
+		pitch = GetPitch();
 		pitch = pitch*180./PI;
-		oapiGetFocusAltitude(&altitude);
 
-	 // guidance
-		pitch_c = GetCPitch(autoT);
-
-	 // control
-		double SatApo;
-		GetApDist(SatApo);
-
-		if (SatApo >= ((agc.GetDesiredApogee() *.90) + ERADIUS)*1000){
-			double TimeW=0;
-			TimeW = oapiGetTimeAcceleration ();
-			if (TimeW>1){
-			//TimeW = 1;
-			//oapiSetTimeAcceleration (1);
-			}
+		if (IGMEnabled) {
 			pitch_c = SetPitchApo();
-			level = pitch_c - pitch;
 		}
-		else if (MissionTime < 150){
-			level = pitch_c - pitch;
-		}else{
-			if (stage >= LAUNCH_STAGE_SIVB){
-//				pitch_c = 35;
-				pitch_c = GetCPitch(autoT);
-			}
-			else{
-				pitch_c = GetCPitch(autoT);
-			}
+		else {
+			 // guidance
+			pitch_c = GetCPitch(autoT);
+
+			 // control
+			double SatApo;
+			GetApDist(SatApo);
+
+			if ((SatApo >= ((agc.GetDesiredApogee() *.90) + ERADIUS)*1000) || MissionTime >= IGMStartTime)
+				IGMEnabled = true;
+		}
 		level = pitch_c - pitch;
-	}
+
 	//sprintf(oapiDebugString(), "Autopilot Pitch Mode%f", elemSaturn1B.a );
 
-	if (fabs(level)<10 && StopRot){	// above atmosphere, soft correction
-		AtempP = 0.0;
-		AtempR = 0.0;
-		AtempY = 0.0;
-		StopRot = false;
-	}
-	if (fabs(level)<0.05){	// above atmosphere, soft correction
-		AtempP = 0.0;
-		AtempR = 0.0;
-		AtempY = 0.0;
-	}
-	else if (level>0 && fabs(vsp.vrot.z) < 0.09){
-		AtempP = -(fabs(level)/10);
-		if (AtempP < -1.0)AtempP = -1.0;
-		if(rhoriz.z>0)AtempP = -AtempP;
-	}
-	else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
-		AtempP = (fabs(level)/10);
-		if (AtempP > 1.0) AtempP = 1.0;
-		if(rhoriz.z>0)AtempP = -AtempP;
-	}
-	else{
-		AtempP = 0.0;
-		AtempR = 0.0;
-		AtempY = 0.0;
+		if (fabs(level)<10 && StopRot){	// above atmosphere, soft correction
+			AtempP = 0.0;
+			AtempR = 0.0;
+			AtempY = 0.0;
+			StopRot = false;
+		}
+		if (fabs(level)<0.05){	// above atmosphere, soft correction
+			AtempP = 0.0;
+			AtempR = 0.0;
+			AtempY = 0.0;
+		}
+		else if (level>0 && fabs(vsp.vrot.z) < 0.09){
+			AtempP = -(fabs(level)/10);
+			if (AtempP < -1.0)AtempP = -1.0;
+			if(rhoriz.z>0)AtempP = -AtempP;
+		}
+		else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
+			AtempP = (fabs(level)/10);
+			if (AtempP > 1.0) AtempP = 1.0;
+			if(rhoriz.z>0)AtempP = -AtempP;
+		}
+		else {
+			AtempP = 0.0;
+			AtempR = 0.0;
+			AtempY = 0.0;
 		}
 	}
 
