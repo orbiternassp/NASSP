@@ -34,7 +34,8 @@
       </tr>
     </table>
     <h3>Command and Service Module (CSM) </h3>
-    <p>The following table describes the displays and controls on the command module panels: </p>
+    <p>The following table describes the displays and controls on the command module panels.</p>
+    <h4>Main Panel </h4>
     <table width="100%"  border="1" cellspacing="0">
       <tr bgcolor="#023C8C">
         <th width="25%" rowspan="2" bgcolor="#023C8C" scope="col"><span class="style1">Name</span></th>
@@ -218,11 +219,27 @@
         <td>Not connected to the internal systems</td>
       </tr>
       <tr valign="top">
+        <td>SUIT TEMP meter </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P </div></td>
+        <td><div align="center">I-38</div></td>
+        <td>Provides  temperature indication of suit circuit atmosphere in &deg;F.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
         <td>CABIN TEMP meter </td>
         <td><div align="center">2</div></td>
         <td><div align="center">P</div></td>
         <td><div align="center">I-39</div></td>
         <td>Provides average temperature indication of cabin atmosphere in &deg;F.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>SUIT PRESS meter </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-39</div></td>
+        <td>Provides pressure indication of suit circuit atmosphere in psi. </td>
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
@@ -239,7 +256,15 @@
         <td><div align="center">P</div></td>
         <td><div align="center">I-42</div></td>
         <td>Provides partial pressure indication of CO<sub>2</sub> in suit circuit atmosphere in mmHg.</td>
-        <td>At the moment cabin atmosphere is used. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>SUIT COMPR &#916;P meter </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">J-36</div></td>
+        <td>Displays differential pressure between the compressor inlet and outlet manifolds in psi. </td>
+        <td>The purpose of the left meter is unkown, it shows also the O<sub>2</sub> flow in lb/hr at the moment. </td>
       </tr>
       <tr valign="top">
         <td>H<sub>2</sub> PRESSURE 1/2 meters</td>
@@ -322,6 +347,38 @@
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
+        <td>SUIT CAB &#916;P meter </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">S</div></td>
+        <td><div align="center">C-28</div></td>
+        <td>Displays difference in pressure between suit circuit and cabin in inH<sub>2</sub>O.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>O<sub>2</sub> FLOW meter </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">S</div></td>
+        <td><div align="center">C-29</div></td>
+        <td>Provides total rate of flow indication of oxygen supplied to ECS downstream of main regulator in lb/hr.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>FC REACS VALVES switch </td>
+        <td><div align="center">3</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">P-42</div></td>
+        <td>When switched to NORM enables the FUEL CELL REACTANTS 1/2/3 switches are enabled. When switched to LATCH operating the  FUEL CELL REACTANTS 1/2/3 switches has no effect, the valves are latched. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>H<sub>2</sub> PURGE LINE  switch </td>
+        <td><div align="center">3</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">P-42</div></td>
+        <td>When switched to HTR power is applied to the hydrogen purge line heaters.</td>
+        <td>The switch has to be in HTR position to do H<sub>2</sub>  fuel cell purging.</td>
+      </tr>
+      <tr valign="top">
         <td>FUEL CELL FLOW H<sub>2</sub>/O<sub>2</sub>meters</td>
         <td><div align="center">3</div></td>
         <td><div align="center">E</div></td>
@@ -386,6 +443,14 @@
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
+        <td>FUEL CELL PURGE 1/2/3 switches </td>
+        <td><div align="center">3</div></td>
+        <td><div align="center">E</div></td>
+        <td><div align="center">K-45</div></td>
+        <td>Switching to H<sub>2</sub> PURGE opens the H<sub>2</sub> purge valve, O<sub>2</sub> PURGE opens the O<sub>2</sub> purge valve, CENTER closes all purge valves (normal switch position). </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
         <td>FUEL CELL REACTANTS 1/2/3 indicators </td>
         <td><div align="center">3</div></td>
         <td><div align="center">E</div></td>
@@ -400,6 +465,44 @@
         <td><div align="center">M-45</div></td>
         <td>Momentary switch position ON/OFF opens or closes fuel cell H<sub>2</sub> and O<sub>2</sub> valves, that means the fuel cell is turned on or off. </td>
         <td>Unlike in reality the fuel cells are restartable. Spring-loaded to center position. </td>
+      </tr>
+    </table>
+    <h4>Right Panel </h4>
+    <table width="100%"  border="1" cellspacing="0">
+      <tr bgcolor="#023C8C">
+        <th width="25%" rowspan="2" bgcolor="#023C8C" scope="col"><span class="style1">Name</span></th>
+        <th colspan="3" bgcolor="#023C8C" scope="col"><div align="center" class="style1">Panel Locator</div></th>
+        <th width="36%" rowspan="2" bgcolor="#023C8C" scope="col"><span class="style1">Function</span></th>
+        <th width="26%" rowspan="2" bgcolor="#023C8C" scope="col"><span class="style1">Remarks</span></th>
+      </tr>
+      <tr bgcolor="#023C8C">
+        <th width="4%" scope="col"><div align="center" class="style1">Panel</div></th>
+        <th width="4%" scope="col"><div align="center" class="style1">Area</div></th>
+        <th width="5%" scope="col"><div align="center" class="style1">Grid</div></th>
+      </tr>
+      <tr valign="top">
+        <td>SUIT COMPRESSOR 2 switch</td>
+        <td><div align="center">4</div></td>
+        <td><div align="center">C</div></td>
+        <td><div align="center">N-60</div></td>
+        <td>Switch position AC1/2 applies power to suit compressor 2 from AC bus 1/2, switch position OFF turns off the suit compressor. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>SUIT COMPRESSOR 1 switch</td>
+        <td><div align="center">4</div></td>
+        <td><div align="center">C</div></td>
+        <td><div align="center">O-60</div></td>
+        <td>Switch position AC1/2 applies power to suit compressor 1 from AC bus 1/2, switch position OFF turns off the suit compressor. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>FUEL CELL PUMPS 1/2/3 switches </td>
+        <td><div align="center">5</div></td>
+        <td><div align="center">A</div></td>
+        <td><div align="center">H-54</div></td>
+        <td>Switch position AC1/2 applies power to fuel cell 1/2/3 cooling pumps from AC bus 1/2, switch position OFF turns off the fuel cell cooling. </td>
+        <td>The fuel cells cannot be damaged because of overheating at the moment. </td>
       </tr>
     </table>
     <h3>Lunar Module (LM) </h3>
