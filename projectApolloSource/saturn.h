@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/07/30 02:05:55  movieman523
+  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
+  *	
   *	Revision 1.20  2005/07/29 23:05:38  movieman523
   *	Added Inertial Guidance Mode start time to scenario file.
   *	
@@ -594,6 +597,14 @@ protected:
 
 	int stage;
 	int StageState;
+
+#define SATSYSTEMS_NONE				 0
+#define SATSYSTEMS_PRELAUNCH		10
+#define SATSYSTEMS_CABINCLOSEOUT	20
+#define SATSYSTEMS_CABINVENTING		30
+#define SATSYSTEMS_FLIGHT			40
+
+	int systemsState;
 
 	//
 	// End saved state.
