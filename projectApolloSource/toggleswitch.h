@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/07/05 17:58:03  tschachim
+  *	Introduced spring-loaded switches
+  *	
   *	Revision 1.7  2005/06/06 12:29:44  tschachim
   *	Introduced PushSwitch, GuardedPushSwitch, PanelScenarioHandler
   *	
@@ -108,10 +111,12 @@ public:
 	void SetVisible(bool v) {visible = v; };
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
+	
 	virtual bool IsUp() { return (state == 1); };
 	virtual bool IsDown() { return (state == 0); };
 	virtual bool IsCenter() { return false; };
 
+	virtual void SwitchTo(int newState);
 	virtual void DrawSwitch(SURFHANDLE DrawSurface);
 	virtual bool CheckMouseClick(int event, int mx, int my);
 	virtual void SaveState(FILEHANDLE scn);
