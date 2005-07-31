@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/07/30 02:05:47  movieman523
+  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
+  *	
   *	Revision 1.9  2005/07/29 22:44:05  movieman523
   *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
   *	
@@ -178,16 +181,28 @@ void Saturn1b::initSaturn1b()
 
 	ISP_FIRST_SL    = 262*G;
 	ISP_FIRST_VAC   = 292*G;
-	THRUST_FIRST_VAC	= 1000000;
+	THRUST_FIRST_VAC	= 1030200;
 
 	ISP_SECOND_SL   = 300*G;//300*G;
-	ISP_SECOND_VAC  = 418*G;//421*G;
+	ISP_SECOND_VAC  = 419*G;//421*G;
 
 	//
 	// Note: thrust values are _per engine_, not per stage.
 	//
 
-	THRUST_SECOND_VAC  = 1023000;
+	THRUST_SECOND_VAC  = 1001000;
+
+	SM_EmptyMass = 6100;
+	SM_FuelMass = 2800;
+
+	CM_EmptyMass = 5700;
+	CM_FuelMass = 75;
+
+	SII_EmptyMass = 12900;
+	SII_FuelMass = 105900;
+
+	SI_EmptyMass = 41594;
+	SI_FuelMass = 407100;
 }
 
 void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
@@ -1428,4 +1443,12 @@ void Saturn1b::SetVehicleStats()
 void Saturn1b::CalculateStageMass()
 
 {
+	SI_Mass = SI_EmptyMass + SI_FuelMass;
+	SII_Mass = SII_EmptyMass + SII_FuelMass;
+	SM_Mass = SM_EmptyMass + SM_FuelMass;
+	CM_Mass = CM_EmptyMass + CM_FuelMass;
+
+	Stage3Mass = SM_Mass + CM_Mass;
+	Stage2Mass = Stage3Mass + SII_EmptyMass;
+	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass + Abort_Mass;
 }

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/07/30 16:04:55  tschachim
+  *	Added systemsState for the internal systems
+  *	
   *	Revision 1.21  2005/07/30 02:05:55  movieman523
   *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
   *	
@@ -633,6 +636,14 @@ protected:
 	double SI_Mass;
 	double SI_EmptyMass;
 	double SI_FuelMass;
+
+	//
+	// Calculated total stage mass.
+	//
+
+	double Stage1Mass;
+	double Stage2Mass;
+	double Stage3Mass;
 
 	bool ENGIND[6];
 	bool LAUNCHIND[8];

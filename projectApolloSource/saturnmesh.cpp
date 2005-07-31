@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/06/06 12:32:08  tschachim
+  *	New switch
+  *	
   *	Revision 1.8  2005/03/16 17:30:41  yogenfrutz
   *	corrected missing crew in csm stage
   *	
@@ -536,18 +539,13 @@ void Saturn::SetCSMStage ()
 
 	SetSize (20);
 	SetCOG_elev (3.5);
-	SetEmptyMass (13000);
+	SetEmptyMass (CM_Mass + SM_EmptyMass);
 	// ************************* propellant specs **********************************
 	if (!ph_rcs0)
 		ph_rcs0  = CreatePropellantResource(500); //RCS stage Propellant
 
 	if (!ph_sps) {
-		if (ASTPMission){
-			ph_sps  = CreatePropellantResource(20500,10500); //SPS stage Propellant
-		}
-		else{
-			ph_sps  = CreatePropellantResource(20500,20500); //SPS stage Propellant
-		}
+		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage Propellant
 	}
 
 	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
@@ -637,18 +635,13 @@ void Saturn::SetCSM2Stage ()
 
 	SetSize (7);
 	SetCOG_elev (3.5);
-	SetEmptyMass (13000);
+	SetEmptyMass (CM_Mass + SM_EmptyMass);
 	// ************************* propellant specs **********************************
 	if (!ph_rcs0)
 		ph_rcs0  = CreatePropellantResource(500); //RCS stage Propellant
 
 	if (!ph_sps) {
-		if (ASTPMission){
-			ph_sps = CreatePropellantResource(20500,10500); //SPS stage Propellant
-		}
-		else{
-			ph_sps = CreatePropellantResource(20500,20500); //SPS stage Propellant
-		}
+		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage Propellant
 	}
 
 	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD

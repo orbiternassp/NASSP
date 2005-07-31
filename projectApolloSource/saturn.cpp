@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/07/30 16:09:28  tschachim
+  *	Added systemsState for the internal systems
+  *	
   *	Revision 1.19  2005/07/30 02:05:48  movieman523
   *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
   *	
@@ -642,6 +645,9 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		for (i = 0; i < PITCH_TABLE_SIZE; i++) {
 			sprintf(fname, "PMET%03d", i);
 			oapiWriteScenario_float (scn, fname, met[i]);
+		}
+
+		for (i = 0; i < PITCH_TABLE_SIZE; i++) {
 			sprintf(fname, "CPITCH%03d", i);
 			oapiWriteScenario_float (scn, fname, cpitch[i]);
 		}
@@ -652,6 +658,14 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 		oapiWriteScenario_float (scn, "IGMST", IGMStartTime);
 	}
+
+	if (stage < CM_STAGE) {
+		oapiWriteScenario_float (scn, "SMFUELLOAD", SM_FuelMass);
+		oapiWriteScenario_float (scn, "SMMASS", SM_EmptyMass);
+	}
+
+	oapiWriteScenario_float (scn, "CMFUELLOAD", CM_FuelMass);
+	oapiWriteScenario_float (scn, "CMMASS", CM_EmptyMass);
 
 	if (!LEMdatatransfer && isTLICapable()) {
 		oapiWriteScenario_float (scn, "MOONLAT", LMLandingLatitude);
@@ -1143,6 +1157,22 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "CSMACCPITCH", 11)) {
 			sscanf(line + 11, "%f", &ftcp);
 			CSMAccelPitch = ftcp;
+		}
+		else if (!strnicmp(line, "SMFUELLOAD", 10)) {
+			sscanf(line + 10, "%f", &ftcp);
+			SM_FuelMass = ftcp;
+		}
+		else if (!strnicmp(line, "CMFUELLOAD", 10)) {
+			sscanf(line + 10, "%f", &ftcp);
+			CM_FuelMass = ftcp;
+		}
+		else if (!strnicmp(line, "SMMASS", 6)) {
+			sscanf(line + 6, "%f", &ftcp);
+			SM_EmptyMass = ftcp;
+		}
+		else if (!strnicmp(line, "CMMASS", 6)) {
+			sscanf(line + 6, "%f", &ftcp);
+			CM_EmptyMass = ftcp;
 		}
 		else if (!strnicmp(line, "LANG", 4)) {
 			strncpy (AudioLanguage, line + 5, 64);

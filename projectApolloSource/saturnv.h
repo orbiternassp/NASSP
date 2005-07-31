@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/07/30 02:05:55  movieman523
+  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
+  *	
   *	Revision 1.4  2005/04/22 13:55:31  tschachim
   *	Added SecoSound otherwise I can't build
   *	
@@ -140,10 +143,6 @@ protected:
 
 	int SI_RetroNum;
 	int SII_UllageNum;
-
-	double Stage1Mass;
-	double Stage2Mass;
-	double Stage3Mass;
 
 	//
 	// Sounds.
