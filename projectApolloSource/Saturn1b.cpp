@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/07/31 01:43:12  movieman523
+  *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
+  *	
   *	Revision 1.10  2005/07/30 02:05:47  movieman523
   *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
   *	
@@ -805,6 +808,7 @@ void Saturn1b::StageStartSIVB(double simt)
 		SepS.play(LOOP, 130);
 		SetThrusterGroupLevel(thg_ver,1.0);
 		NextMissionEventTime = MissionTime + 2.0;
+		SetSIVBMixtureRatio(5.0);
 		StageState++;
 		break;
 
@@ -816,6 +820,10 @@ void Saturn1b::StageStartSIVB(double simt)
 			StageState++;
 		}
 		break;
+
+	//
+	// Start bringing engine up to power.
+	//
 
 	case 2:
 		if (MissionTime  < NextMissionEventTime) {
@@ -833,6 +841,10 @@ void Saturn1b::StageStartSIVB(double simt)
 		}
 		break;
 
+	//
+	// Bring engine to full power.
+	//
+
 	case 3:
 		if (MissionTime  < NextMissionEventTime) {
 			double deltat = MissionTime - LastMissionEventTime;
@@ -844,12 +856,28 @@ void Saturn1b::StageStartSIVB(double simt)
 			AddRCS_S4B();
 			SetThrusterGroupLevel(thg_ver, 0.0);
 			LAUNCHIND[6] = false;
-			NextMissionEventTime = MissionTime + 20;
+			NextMissionEventTime = MissionTime + 2.05;
 			StageState++;
 		}
 		break;
 
+	//
+	// First mixture ratio shift.
+	//
+
 	case 4:
+		if (MissionTime >= NextMissionEventTime) {
+			SetSIVBMixtureRatio(5.5);
+			NextMissionEventTime = MissionTime + 17.95;
+			StageState++;
+		}
+		break;
+
+	//
+	// Jettison LET and move on.
+	//
+
+	case 5:
 		if (MissionTime > NextMissionEventTime) {
 			SeparateStage(stage);
 			TowerJS.play();
@@ -860,7 +888,7 @@ void Saturn1b::StageStartSIVB(double simt)
 	}
 
 	if(CsmLvSepSwitch.GetState()) {
-		bManualSeparate =true;
+		bManualSeparate = true;
 	}
 
 	if (StageState > 3)
@@ -906,11 +934,17 @@ void Saturn1b::StageLaunchSIVB(double simt)
 
 	case 0:
 		SetThrusterLevel(th_main[0], 1.0);
+		SetSIVBMixtureRatio(5.5);
 		if (Crewed)
 			SwindowS.play();
 		SwindowS.done();
+		NextMissionEventTime = MissionTime + 8.65;
 		StageState++;
 		break;
+
+	//
+	// Second mixture ratio shift.
+	//
 
 	case 1:
 		if (MissionTime >= SecondStagePUShiftTime) {
@@ -923,12 +957,22 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		}
 		break;
 
+	//
+	// Shutdown.
+	//
+
 	case 2:
 		if (GetEngineLevel(ENGINE_MAIN) <= 0) {
 			NextMissionEventTime = MissionTime + 10.0;
 			S4CutS.play();
 			S4CutS.done();
+
+			//
+			// Make sure we clear out any sounds that haven't been played.
+			//
 			S2ShutS.done();
+			SPUShiftS.done();
+
 			ThrustAdjust = 1.0;
 			SetStage(STAGE_ORBIT_SIVB);
 		}
@@ -941,6 +985,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 
 	if (StageState > 3)
 		SetSIVBThrusters();
+
 	if (bManualSeparate || bAbort)
 	{
 		bManualSeparate = false;
