@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/07/31 01:43:13  movieman523
+  *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
+  *	
   *	Revision 1.20  2005/07/30 16:09:28  tschachim
   *	Added systemsState for the internal systems
   *	
@@ -1272,6 +1275,12 @@ void Saturn::SetStage(int s)
 {
 	stage = s;
 	StageState = 0;
+
+	//
+	// Reset thrust.
+	//
+
+	ThrustAdjust = 1.0;
 }
 
 void Saturn::DoLaunch(double simt)
