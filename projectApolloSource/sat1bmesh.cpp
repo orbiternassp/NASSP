@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/07/30 02:05:47  movieman523
+  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
+  *	
   *	Revision 1.7  2005/03/28 05:52:44  chode99
   *	Support for defining SIVB payloads in the scenario like the Saturn V.
   *	e.g. S4PL 5 is the Apollo 7 COAS target, 1 is the ASTP docking module.
@@ -125,7 +128,7 @@ void Saturn1b::SetFirstStage ()
 	UINT meshidx;
 	ClearThrusterDefinitions();
 	SetSize (45);
-	SetEmptyMass (169000.0);
+	SetEmptyMass (Stage1Mass);
 	SetPMI (_V(140,145,28));
 	SetCrossSections (_V(395,380,115));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -186,7 +189,7 @@ void Saturn1b::SetFirstStage ()
 
 	// ************************* propellant specs **********************************
 	if (!ph_1st)
-		ph_1st  = CreatePropellantResource(407100); //1st stage Propellant
+		ph_1st  = CreatePropellantResource(SI_FuelMass); //1st stage Propellant
 	SetDefaultPropellantResource (ph_1st); // display 1st stage propellant level in generic HUD
 
 	// *********************** thruster definitions ********************************
@@ -266,7 +269,7 @@ void Saturn1b::SetSecondStage ()
 	UINT meshidx;
 	SetSize (22);
 	SetCOG_elev (15.225);
-	SetEmptyMass (25000);
+	SetEmptyMass (Stage2Mass + Abort_Mass);
 	SetPMI (_V(94,94,20));
 	SetCrossSections (_V(267,267,97));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -329,7 +332,7 @@ void Saturn1b::SetSecondStage ()
 
 		// ************************* propellant specs **********************************
 	if (!ph_3rd)
-		ph_3rd  = CreatePropellantResource(114000); //2nd stage Propellant
+		ph_3rd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_3rd); // display 3rd stage propellant level in generic HUD
 
 
@@ -374,7 +377,7 @@ void Saturn1b::SetSecondStage1 ()
 	UINT meshidx;
 	SetSize (25);
 	SetCOG_elev (15.225);
-	SetEmptyMass (25000);
+	SetEmptyMass (Stage2Mass);
 	SetPMI (_V(94,94,20));
 	SetCrossSections (_V(267,267,97));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -432,7 +435,7 @@ void Saturn1b::SetSecondStage1 ()
 	SetCameraOffset (_V(-1,1.0,33.15-STG1O));
 		// ************************* propellant specs **********************************
 	if (!ph_3rd)
-		ph_3rd  = CreatePropellantResource(114000); //2nd stage Propellant
+		ph_3rd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_3rd); // display 3rd stage propellant level in generic HUD
 
 
@@ -472,7 +475,7 @@ void Saturn1b::SetSecondStage2 ()
 	}
 	SetSize (25);
 	SetCOG_elev (15.225);
-	SetEmptyMass (25000);
+	SetEmptyMass (Stage2Mass);
 	SetPMI (_V(94,94,20));
 	SetCrossSections (_V(267,267,97));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -527,7 +530,7 @@ void Saturn1b::SetSecondStage2 ()
 	AddMesh (hprobe, &mesh_dir);
 		// ************************* propellant specs **********************************
 	if (!ph_3rd)
-		ph_3rd  = CreatePropellantResource(114000); //2nd stage Propellant
+		ph_3rd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_3rd); // display 3rd stage propellant level in generic HUD
 
 

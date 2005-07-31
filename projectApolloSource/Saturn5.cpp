@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/07/30 02:05:47  movieman523
+  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
+  *	
   *	Revision 1.12  2005/07/29 22:44:05  movieman523
   *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
   *	
@@ -229,6 +232,12 @@ void SaturnV::initSaturnV()
 	SI_EmptyMass = 148000;			// Stage + wasted fuel, approx
 	SI_FuelMass = 2117000;
 	SI_RetroNum = 8;
+
+	SM_EmptyMass = 6100;
+	SM_FuelMass = 20500;
+
+	CM_EmptyMass = 5700;
+	CM_FuelMass = 75;
 
 	CalculateStageMass();
 
