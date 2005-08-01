@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/07/31 01:43:12  movieman523
+  *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
+  *	
   *	Revision 1.13  2005/07/30 02:05:47  movieman523
   *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
   *	
@@ -181,7 +184,6 @@ void SaturnV::initSaturnV()
 
 	TLICapableBooster = true;
 
-	stgSM = false;
 	GoHover=false;
 
 	S4Shoot=false;
@@ -247,10 +249,6 @@ void SaturnV::initSaturnV()
 	soundlib.LoadSound(SCorrection, "Correction.wav");
 
 	soundlib.LoadSound(SRover, "LRover.WAV");
-
-	LongestTimestep = 0;
-	LongestTimestepLength = 0.0;
-	CurrentTimestep = 0;
 
 	//
 	// Pitch program.
@@ -1520,26 +1518,7 @@ void SaturnV::Timestep(double simt)
 		return;
 	}
 
-#if 1 // def TRACK_TIMESTEPS
-	CurrentTimestep++;
-	if (oapiGetSimStep() > LongestTimestep) {
-		LongestTimestep = CurrentTimestep;
-		LongestTimestepLength = oapiGetSimStep();
-	}
-#endif // TRACK_TIMESTEPS
-
 	GenericTimestep(simt);
-
-	if (hSMJet && !ApolloExploded){
-		if ((simt-(20+ignition_SMtime))>=0 && stgSM){
-			UllageSM(hSMJet,0,simt);
-			stgSM = false;
-		}
-		else if (!SMSep){
-			UllageSM(hSMJet,5,simt);
-		}
-		KillAlt(hSMJet,350000);
-	}
 
 	if (hs4bM){
 		if (!S4Bset){
@@ -1566,15 +1545,15 @@ void SaturnV::Timestep(double simt)
 	//
 	// Do stage-specific processing.
 	//
-	if (hstg1){
+	if (hstg1) {
 		KillAlt(hstg1,60);
 	}
 
-	if (hstg2){
+	if (hstg2) {
 		KillAlt(hstg2,60);
 	}
 
-	if (hintstg){
+	if (hintstg) {
 		//
 		// Really we want to model the effect of the engine force on the
 		// interstage, so it spins as it moves away. Currently we just throw

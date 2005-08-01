@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/07/31 11:59:41  movieman523
+  *	Added first mixture ratio shift to Saturn 1b.
+  *	
   *	Revision 1.21  2005/07/31 01:43:13  movieman523
   *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
   *	
@@ -193,6 +196,8 @@ void Saturn::initSaturn()
 	ProbeJetison = false;
 	LEMdatatransfer = false;
 	PostSplashdownPlayed = false;
+
+	stgSM = false;
 
 	buildstatus = 8;
 	ThrustAdjust = 1.0;
@@ -447,6 +452,14 @@ void Saturn::initSaturn()
 	strncpy(AudioLanguage, "English", 64);
 
 	hEVA = 0;
+
+	//
+	// Timestep tracking for debugging.
+	//
+
+	LongestTimestep = 0;
+	LongestTimestepLength = 0.0;
+	CurrentTimestep = 0;
 
 	// call only once 
 	if (!InitSaturnCalled) {
@@ -751,6 +764,7 @@ typedef union {
 		unsigned KranzPlayed:1;
 		unsigned PostSplashdownPlayed:1;
 		unsigned IGMEnabled:1;
+		unsigned stgSM:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -778,6 +792,7 @@ int Saturn::GetMainState()
 	state.u.KranzPlayed = KranzPlayed;
 	state.u.PostSplashdownPlayed = PostSplashdownPlayed;
 	state.u.IGMEnabled = IGMEnabled;
+	state.u.stgSM = stgSM;
 
 	return state.word;
 }
@@ -804,6 +819,7 @@ void Saturn::SetMainState(int s)
 	KranzPlayed = (state.u.KranzPlayed != 0);
 	PostSplashdownPlayed = (state.u.PostSplashdownPlayed != 0);
 	IGMEnabled = (state.u.IGMEnabled != 0);
+	stgSM = (state.u.stgSM != 0);
 }
 
 
@@ -1312,10 +1328,6 @@ void Saturn::DoLaunch(double simt)
 void Saturn::GenericTimestep(double simt)
 
 {
-	//
-	// Update mission time.
-	//
-
 	if (GenericFirstTimestep) {
 		//
 		// Do any generic setup.
@@ -1328,7 +1340,23 @@ void Saturn::GenericTimestep(double simt)
 		GenericFirstTimestep = false;
 	}
 
+	//
+	// Update mission time.
+	//
+
 	MissionTime = MissionTime + oapiGetSimStep();
+
+	//
+	// Timestep tracking.
+	//
+
+#ifdef TRACK_TIMESTEPS
+	CurrentTimestep++;
+	if (oapiGetSimStep() > LongestTimestep) {
+		LongestTimestep = CurrentTimestep;
+		LongestTimestepLength = oapiGetSimStep();
+	}
+#endif // TRACK_TIMESTEPS
 
 	//
 	// Reduce jostle.
@@ -1481,8 +1509,24 @@ void Saturn::GenericTimestep(double simt)
 	// Docking radar sound only for CSM_LEM_STAGE
 	if (stage == CSM_LEM_STAGE) {
 		soundlib.SoundOptionOnOff(PLAYRADARBIP, TRUE);
-	} else {
+	}
+	else {
 		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
+	}
+
+	//
+	// Destroy seperated SM when it drops too low in the atmosphere.
+	//
+
+	if (hSMJet && !ApolloExploded){
+		if ((simt-(20+ignition_SMtime))>=0 && stgSM){
+			UllageSM(hSMJet,0,simt);
+			stgSM = false;
+		}
+		else if (!SMSep){
+			UllageSM(hSMJet,5,simt);
+		}
+		KillAlt(hSMJet,350000);
 	}
 }
 
