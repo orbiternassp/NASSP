@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/07/31 01:43:13  movieman523
+  *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
+  *	
   *	Revision 1.22  2005/07/30 16:04:55  tschachim
   *	Added systemsState for the internal systems
   *	
@@ -689,6 +692,10 @@ protected:
 	bool FirstTimestep;
 	bool GenericFirstTimestep;
 
+	int CurrentTimestep;
+	int LongestTimestep;
+	double LongestTimestepLength;
+
 	PanelSwitches MainPanel;
 	PanelSwitchScenarioHandler PSH;
 
@@ -851,6 +858,7 @@ protected:
 	bool SMSep;
 	bool bStartS4B;
 	bool Abort_Locked;
+	bool stgSM;
 
 	double DockAngle;
 

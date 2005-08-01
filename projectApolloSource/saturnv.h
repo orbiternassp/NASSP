@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/07/31 01:43:13  movieman523
+  *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
+  *	
   *	Revision 1.5  2005/07/30 02:05:55  movieman523
   *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
   *	
@@ -117,11 +120,6 @@ protected:
 	// Class variables.
 	//
 
-	int CurrentTimestep;
-	int LongestTimestep;
-	double LongestTimestepLength;
-
-	bool stgSM;
 	bool GoHover;
 
 	bool Resetjet;

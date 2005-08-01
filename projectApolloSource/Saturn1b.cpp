@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/07/31 11:59:41  movieman523
+  *	Added first mixture ratio shift to Saturn 1b.
+  *	
   *	Revision 1.11  2005/07/31 01:43:12  movieman523
   *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
   *	
@@ -975,6 +978,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 
 			ThrustAdjust = 1.0;
 			SetStage(STAGE_ORBIT_SIVB);
+			SetSIVBThrusters();
 		}
 		break;
 	}
@@ -982,9 +986,6 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	if(CsmLvSepSwitch.GetState()) {
 		bManualSeparate = true;
 	}
-
-	if (StageState > 3)
-		SetSIVBThrusters();
 
 	if (bManualSeparate || bAbort)
 	{
@@ -1025,6 +1026,7 @@ void Saturn1b::SetSIVBMixtureRatio (double ratio)
 }
 
 void Saturn1b::Timestep (double simt)
+
 {
 	//
 	// On the first timestep we just do basic setup
@@ -1041,23 +1043,23 @@ void Saturn1b::Timestep (double simt)
 		return;
 	}
 
-	if (hstg1){
+	if (hstg1) {
 		KillAlt(hstg1,60);
 	}
 
-	if (hesc1){
+	if (hesc1) {
 		KillAlt(hesc1,90);
 	}
-	if (hPROBE){
+	if (hPROBE) {
 		KillDist(hPROBE);
 	}
-	if (hs4b1){
+	if (hs4b1) {
 		KillDist(hs4b1);
 	}
-	if (hs4b2){
+	if (hs4b2) {
 		KillDist(hs4b2);
 	}
-	if (hs4b3){
+	if (hs4b3) {
 		KillDist(hs4b3);
 	}
 	if (hs4b4){
@@ -1067,7 +1069,7 @@ void Saturn1b::Timestep (double simt)
 	GenericTimestep(simt);
 
 	if (hAstpDM){
-		if (DestroyAstp){
+		if (DestroyAstp) {
 			Undock(0);
 			ReadyAstp1 = false;
 			oapiDeleteVessel(hAstpDM);
@@ -1081,8 +1083,9 @@ void Saturn1b::Timestep (double simt)
 			bManualUnDock = true;
 			}
 		}
-	}else{
-		if(ASTPMission){
+	}
+	else{
+		if(ASTPMission) {
 			char VName[256];
 			strcpy (VName, GetName()); strcat (VName, "-ASTPDM");
 			hAstpDM = oapiGetVesselByName(VName);
@@ -1090,7 +1093,7 @@ void Saturn1b::Timestep (double simt)
 	}
 
 	if (hs4bM){
-		if (GetDockStatus(GetDockHandle(0)) == hs4bM){
+		if (GetDockStatus(GetDockHandle(0)) == hs4bM) {
 			if(ASTPMission)
 				ReadyAstp=true;
 			dockstate=2;
@@ -1105,22 +1108,11 @@ void Saturn1b::Timestep (double simt)
 			if(ASTPMission)
 				S4BASTP=true;
 		}
-	}else{
+	}else {
 		char VName[256];
 
 		strcpy (VName, GetName()); strcat (VName, "-S4BSTG");
 		hs4bM = oapiGetVesselByName(VName);
-
-	}
-
-	if (hSMJet){
-		if ((simt-(20+ignition_SMtime))>=0){
-			UllageSM(hSMJet,0,simt);
-		}
-		else if (!SMSep){
-			UllageSM(hSMJet,5,simt);
-		}
-		KillAlt(hSMJet,35000);
 	}
 
 	if (bAbort && stage <= LAUNCH_STAGE_TWO ){
@@ -1225,11 +1217,11 @@ void Saturn1b::Timestep (double simt)
 		}
 		if (bManualUnDock)
 		{
-		release_time = simt;
-		DockStage (dockstate);
-		bManualUnDock=false;
-
+			release_time = simt;
+			DockStage (dockstate);
+			bManualUnDock=false;
 		}
+
 		if(LPswitch1){
 			SetThrusterResource(th_att_lin[0],ph_rcs0);
 			SetThrusterResource(th_att_lin[1],ph_rcs0);
@@ -1259,7 +1251,8 @@ void Saturn1b::Timestep (double simt)
 			SetThrusterResource(th_att_lin[5],ph_rcs0);
 			SetThrusterResource(th_att_lin[7],ph_rcs0);
 			SetThrusterResource(th_att_lin[6],ph_rcs0);
-		}else{
+		}
+		else{
 			SetThrusterResource(th_att_rot[4],NULL);
 			SetThrusterResource(th_att_rot[5],NULL);
 			SetThrusterResource(th_att_rot[6],NULL);
@@ -1269,12 +1262,13 @@ void Saturn1b::Timestep (double simt)
 			SetThrusterResource(th_att_lin[6],NULL);
 			SetThrusterResource(th_att_lin[7],NULL);
 		}
-		if(LPswitch3){
+		if(LPswitch3) {
 			for(int i=8;i<24;i++){
 				SetThrusterResource(th_att_rot[i],ph_rcs0);
 				SetThrusterResource(th_att_lin[i],ph_rcs0);
 			}
-		}else{
+		}
+		else {
 			for(int i=8;i<24;i++){
 				SetThrusterResource(th_att_rot[i],NULL);
 				SetThrusterResource(th_att_lin[i],NULL);
@@ -1282,41 +1276,45 @@ void Saturn1b::Timestep (double simt)
 		}
 
 		if(LPswitch4.GetState() && RCS_Full){
-		for(int i=0;i<24;i++){
-			DelThruster(th_att_rot[i]);
-			DelThruster(th_att_lin[i]);
-			DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-			DelThrusterGroup(THGROUP_ATT_FORWARD,true);
-			DelThrusterGroup(THGROUP_ATT_BACK,true);
-			DelThrusterGroup(THGROUP_ATT_PITCHDOWN,true);
-			DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-			DelThrusterGroup(THGROUP_ATT_YAWRIGHT,true);
-			DelThrusterGroup(THGROUP_ATT_YAWLEFT,true);
+			for(int i=0;i<24;i++){
+				DelThruster(th_att_rot[i]);
+				DelThruster(th_att_lin[i]);
+				DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
+				DelThrusterGroup(THGROUP_ATT_FORWARD,true);
+				DelThrusterGroup(THGROUP_ATT_BACK,true);
+				DelThrusterGroup(THGROUP_ATT_PITCHDOWN,true);
+				DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
+				DelThrusterGroup(THGROUP_ATT_YAWRIGHT,true);
+				DelThrusterGroup(THGROUP_ATT_YAWLEFT,true);
+			}
+			AddRCSJets(-1.80,995);
+			//sprintf(oapiDebugString(), "RCS HALF");
+			RCS_Full=false;
 		}
-		AddRCSJets(-1.80,995);
-		//sprintf(oapiDebugString(), "RCS HALF");
-		RCS_Full=false;
-		}else if (!LPswitch4 && !RCS_Full){
-		for(int i=0;i<24;i++){
-			DelThruster(th_att_rot[i]);
-			DelThruster(th_att_lin[i]);
-			DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-			DelThrusterGroup(THGROUP_ATT_FORWARD,true);
-			DelThrusterGroup(THGROUP_ATT_BACK,true);
-			DelThrusterGroup(THGROUP_ATT_PITCHDOWN,true);
-			DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-			DelThrusterGroup(THGROUP_ATT_YAWRIGHT,true);
-			DelThrusterGroup(THGROUP_ATT_YAWLEFT,true);
+		else if (!LPswitch4 && !RCS_Full) {
+			for(int i=0;i<24;i++){
+				DelThruster(th_att_rot[i]);
+				DelThruster(th_att_lin[i]);
+				DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
+				DelThrusterGroup(THGROUP_ATT_FORWARD,true);
+				DelThrusterGroup(THGROUP_ATT_BACK,true);
+				DelThrusterGroup(THGROUP_ATT_PITCHDOWN,true);
+				DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
+				DelThrusterGroup(THGROUP_ATT_YAWRIGHT,true);
+				DelThrusterGroup(THGROUP_ATT_YAWLEFT,true);
+			}
+			AddRCSJets(-1.80,1990);
+			RCS_Full=true;
+			//sprintf(oapiDebugString(), "RCS FULL");
 		}
-		AddRCSJets(-1.80,1990);
-		RCS_Full=true;
-		//sprintf(oapiDebugString(), "RCS FULL");
-		}
-		if (SPSswitch){
+
+		if (SPSswitch) {
 			SetThrusterResource(th_main[0],ph_sps);
-		}else{
+		}
+		else{
 			SetThrusterResource(th_main[0],NULL);
 		}
+
 		if (bManualSeparate)
 		{
 
@@ -1338,7 +1336,7 @@ void Saturn1b::Timestep (double simt)
 		}
 		if (abortTimer>0){
 			if ((simt-(0.5+abortTimer))>=0){
-			ActivateNavmode(NAVMODE_KILLROT);
+				ActivateNavmode(NAVMODE_KILLROT);
 			}
 
 			if ((simt-(1+abortTimer))>=0){

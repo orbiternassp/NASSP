@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/05/21 16:14:36  movieman523
+  *	Pass Realism and AudioLanguage correctly from CSM to LEM.
+  *	
   *	Revision 1.9  2005/05/18 23:34:23  movieman523
   *	Added roughly correct masses for the various Saturn payloads.
   *	
@@ -1144,7 +1147,6 @@ void SaturnV::SeparateStage (int stage)
 
 		strcpy (VName, GetName()); strcat (VName, "-SM");
 		hSMJet = oapiCreateVessel(VName, "sat1_SM", vs1);
-		stgSM = true;
 		SetReentryStage ();
 	}
 

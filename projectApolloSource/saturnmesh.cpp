@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/07/31 01:43:13  movieman523
+  *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
+  *	
   *	Revision 1.9  2005/06/06 12:32:08  tschachim
   *	New switch
   *	
@@ -776,6 +779,8 @@ void Saturn::SetReentryStage ()
 	VECTOR3 dockrot = {0,1,0};
 
 	SetDockParams(dockpos, dockdir, dockrot);
+
+	stgSM = true;
 }
 
 void Saturn::StageSeven(double simt)
