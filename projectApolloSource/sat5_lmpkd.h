@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/07/16 20:43:01  lazyd
+  *	*** empty log message ***
+  *	
   *	Revision 1.8  2005/07/14 10:06:14  spacex15
   *	Added full apollo11 landing sound
   *	initial release
@@ -91,6 +94,7 @@ public:
 	void SetLmAscentHoverStage();
 	void SetGimbal(bool setting);
 	void GetMissionTime(double &Met);
+	void AbortStage();
 	void StartAscent();
 	virtual void SetLanderData(LemSettings &ls);
 
