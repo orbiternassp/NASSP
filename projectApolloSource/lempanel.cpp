@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/07/16 20:41:26  lazyd
+  *	Made the Abort and Abort Stage buttons run P70 and P71
+  *	
   *	Revision 1.13  2005/06/17 18:28:46  lazyd
   *	Added crosspointer instrument, FDAI and contact light to leftwindow panel
   *	
@@ -1654,13 +1657,15 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 				AbortFire();
 				Abortswitch = true;
 				SeparateStage(stage);
-				SetEngineLevel(ENGINE_HOVER, 1);
 				SetThrusterResource(th_hover[0], ph_Asc);
 				SetThrusterResource(th_hover[1], ph_Asc);
 				stage = 2;
 				startimer = false;
 				Abortswitch = true;
-				agc.RunProgram(71);
+				if(agc.GetProgRunning() > 14 ) {
+					SetEngineLevel(ENGINE_HOVER, 1);
+					agc.RunProgram(71);
+				}
 		}
 		return true;
 
