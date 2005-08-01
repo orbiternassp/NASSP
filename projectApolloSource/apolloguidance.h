@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/07/09 18:30:57  lazyd
+  *	Added argument to ComAttitude function
+  *	
   *	Revision 1.6  2005/07/06 21:58:09  lazyd
   *	Added function defs for GetHoverAttitiude and ComAttitude
   *	
@@ -134,8 +137,8 @@ protected:
 	//
 
 	void ResetProg(double simt);
-	void Prog33(double simt);
-	void Prog33Pressed(int R1, int R2, int R3);
+	void Prog37(double simt);
+	void Prog37Pressed(int R1, int R2, int R3);
 
 	//
 	// Odds and ends.
