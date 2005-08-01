@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/07/16 20:38:59  lazyd
+  *	Added Nouns 77 and 94 for P70 and P71
+  *	
   *	Revision 1.7  2005/07/14 10:06:14  spacex15
   *	Added full apollo11 landing sound
   *	initial release
@@ -117,7 +120,7 @@ void LEMcomputer::DisplayNounData(int noun)
 
 {
 	//LazyD added this to bypass noun 33 in common nouns
-	if(noun != 33) {
+	if(noun != 33 && noun != 81) {
 	if (DisplayCommonNounData(noun))
 		return;
 	}
@@ -214,7 +217,7 @@ void LEMcomputer::DisplayNounData(int noun)
 		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
 		lem->GetMissionTime(Met);
 //		sprintf(oapiDebugString(),"met=%.1f",Met);
-		double times=Met+BurnTime-CurrentTimestep;
+		double times=Met+BurnStartTime-CurrentTimestep;
 		int hou=(int) (times/3600.);
 		times=(int)(times-hou*3600.);
 		int min=(int)(times/60.);
@@ -225,6 +228,39 @@ void LEMcomputer::DisplayNounData(int noun)
 		dsky.SetR3(sec);
 		}
 		break;
+
+
+	case 37:
+		{
+		double Met;
+		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+		lem->GetMissionTime(Met);
+		double times=Met+BurnStartTime-CurrentTimestep;
+		int hou=(int) (times/3600.);
+		times=(int)(times-hou*3600.);
+		int min=(int)(times/60.);
+		times=(int)(times-min*60.);
+		int sec=(int)(times*100.);
+		dsky.SetR1(hou);
+		dsky.SetR2(min);
+		dsky.SetR3(sec);
+		}
+		break;
+
+	case 39:
+		{
+		double times=BurnStartTime-CurrentTimestep;
+		int hou=(int) (times/3600.);
+		times=(int)(times-hou*3600.);
+		int min=(int)(times/60.);
+		times=(int)(times-min*60.);
+		int sec=(int)(times*100.);
+		dsky.SetR1(hou);
+		dsky.SetR2(min);
+		dsky.SetR3(sec);
+		}
+		break;
+
 
 	//
 	// 45: Plane change angle, target LAN (Used by P32)
@@ -385,10 +421,10 @@ void LEMcomputer::DisplayNounData(int noun)
 		{
 			double dt, hdga, yaw;
 			
-			oapiGetFocusHeading(&hdga);			
+//			oapiGetFocusHeading(&hdga);			
 			dt   = BurnStartTime - CurrentTimestep;			
-			hdga *= DEG;
-			yaw  = DesiredAzimuth - hdga;
+//			hdga *= DEG;
+//			yaw  = DesiredAzimuth - hdga;
 
 			int min = (int) (dt / 60.0);
 			int	sec = ((int) dt) - (min * 60);
@@ -398,8 +434,10 @@ void LEMcomputer::DisplayNounData(int noun)
 
 			dsky.SetR1(min * 1000 + sec);
 			dsky.SetR1Format("XXX XX");
-			dsky.SetR2((int)(yaw * 100.0));
-			dsky.SetR3((int)(DesiredAzimuth * 100.0));
+			dsky.SetR2((int)(DesiredAzimuth * 100.0));
+			dsky.SetR3((int)(-54.0 * 100.0));
+//			dsky.SetR2((int)(yaw * 100.0));
+//			dsky.SetR3((int)(DesiredAzimuth * 100.0));
 		}
 		break;
 
@@ -429,9 +467,10 @@ void LEMcomputer::DisplayNounData(int noun)
 	//
 
 	case 76:		
-		dsky.SetR1((int)DesiredDeltaVx);			//		Insertion hoiriozontal speed, fixed
-		dsky.SetR2((int)DesiredDeltaVy);			//		Insertion vertical velocity, also fixed
-		dsky.SetR3((int)DesiredAzimuth * 100);		//		Launch azimuth, can be defined
+		dsky.SetR1((int)(DesiredDeltaVx*10.0));			//		Insertion hoiriozontal speed, fixed
+		dsky.SetR2((int)(DesiredDeltaVy*10.0));			//		Insertion vertical velocity, also fixed
+//		dsky.SetR3((int)DesiredAzimuth * 100);		//		Launch azimuth, can be defined
+		dsky.SetR3((int)(DesiredPlaneChange/100.0));		
 		break;
 
 	//
@@ -453,7 +492,26 @@ void LEMcomputer::DisplayNounData(int noun)
 		dsky.SetR3((int)CurrentVel);
 		}
 		break;
-	
+
+	//
+	// 81: Local Vertical VGX (up), VGY(right), VGZ(forward)
+	//
+
+	case 81:
+		dsky.SetR1((int) (DesiredDeltaVx*10.0));
+		dsky.SetR2((int) (DesiredDeltaVy*10.0));
+		dsky.SetR3((int) (DesiredDeltaVz*10.0));
+		break;	
+
+	//
+	// 85: Body VGX (up), VGY(right), VGZ(forward)
+	//
+
+	case 85:
+		dsky.SetR1((int) (DesiredDeltaVx*10.0));
+		dsky.SetR2((int) (DesiredDeltaVy*10.0));
+		dsky.SetR3((int) (DesiredDeltaVz*10.0));
+		break;	
 
 	//
 	// 89: for now, landing site definition.
@@ -471,9 +529,9 @@ void LEMcomputer::DisplayNounData(int noun)
 			OurVessel->GetHorizonAirspeedVector(hvel);
 			altitude=OurVessel->GetAltitude();
 
-			dsky.SetR1((int)CurrentVelX*10.0);
-			dsky.SetR2((int)hvel.y*10.0);
-			dsky.SetR3((int)altitude);
+			dsky.SetR1((int)(CurrentVelX*10.0));
+			dsky.SetR2((int)(hvel.y*10.0));
+			dsky.SetR3((int)(altitude));
 
 /*			double ap;
 			OurVessel->GetApDist(ap);
@@ -548,6 +606,54 @@ bool LEMcomputer::ValidateProgram(int prog)
 		return true;
 
 	//
+	// 13: Ascent
+	//
+	case 13:
+		return true;
+
+	//
+	// 32: CSI
+	//
+
+	case 32:
+		return true;
+
+	//
+	// 33: CDH
+	//
+
+	case 33:
+		return true;
+
+	//
+	// 34: TPI
+	//
+
+	case 34:
+		return true;
+
+	//
+	// 35: TPM
+	//
+
+	case 35:
+		return true;
+
+	//
+	// 36: TPF
+	//
+
+	case 36:
+		return true;
+
+	//
+	//	41: RCS program
+	//
+
+	case 41:
+		return true;
+
+	//
 	// 63: braking burn.
 	//
 	case 63:
@@ -614,6 +720,62 @@ void LEMcomputer::Timestep(double simt)
 
 	case 12:
 		Prog12(simt);
+		break;
+
+	//
+	//	13: Ascent program
+	//
+
+	case 13:
+		Prog13(simt);
+		break;
+
+	//
+	//  32: Coelliptic Sequence Initiation
+	//
+
+	case 32:
+		Prog32(simt);
+		break;
+
+	//
+	//  33: Constant Delta Height
+	//
+
+	case 33:
+		Prog33(simt);
+		break;
+
+	//
+	//  34: Transfer Phase Initiation
+	//
+
+	case 34:
+		Prog34(simt);
+		break;
+
+	//
+	//  35: Transfer Phase Midcourse
+	//
+
+	case 35:
+		Prog35(simt);
+		break;
+
+	//
+	//  36: Transfer Phase Final (fictitious)
+	//
+
+	case 36:
+		Prog36(simt);
+		break;
+
+	//
+	// 41: RCS program
+	//
+
+	case 41:
+		Prog41(simt);
 		break;
 
 	//
@@ -691,6 +853,18 @@ void LEMcomputer::ProgPressed(int R1, int R2, int R3)
 
 	case 12:
 		Prog12Pressed(R1, R2, R3);
+		return;	
+
+	case 13:
+		Prog13Pressed(R1, R2, R3);
+		return;	
+
+	case 34:
+		Prog34Pressed(R1, R2, R3);
+		return;	
+
+	case 41:
+		Prog41Pressed(R1, R2, R3);
 		return;	
 
 	case 63:

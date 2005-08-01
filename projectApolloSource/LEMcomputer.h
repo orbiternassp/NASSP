@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/07/16 20:40:27  lazyd
+  *	Added function defs for P70 and P71
+  *	
   *	Revision 1.8  2005/07/14 10:06:14  spacex15
   *	Added full apollo11 landing sound
   *	initial release
@@ -138,6 +141,7 @@ public:
 	void ChangeDescentRate(double delta);
 	void RedesignateTarget(int axis, double direction);
 	void GetHorizVelocity(double &forward, double &lateral);
+	int GetProgRunning();
 
 	void Timestep(double simt);
 
@@ -156,7 +160,16 @@ protected:
 	void ProgPressed(int R1, int R2, int R3);
 	void ProceedNoData();
 	void TerminateProgram();
-	// Descent routines
+	// Descent, Abort, Ascent and Rendezvous routines
+	void Prog13(double simt);
+	void Prog32(double simt);
+	void Prog33(double simt);
+	void Prog34(double simt);
+	void Prog35(double simt);
+	void Prog36(double simt);
+	void Prog40(double simt);
+	void Prog41(double simt);
+	void Prog42(double simt);
 	void Prog63(double simt);
 	void Prog64(double simt);
 	void Prog65(double simt);
@@ -165,6 +178,16 @@ protected:
 	void Prog70(double simt);
 	void Prog71(double simt);
 	void AbortAscent(double simt);
+	void PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel, double a, 
+		double Mu, double Time, VECTOR3 &NewPos, VECTOR3 &NewVel, double &NewVelMag);
+	void Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu, 
+						  VECTOR3 &v1, VECTOR3 &v2);
+	void OrientAxis(VECTOR3 &vec, int axis);
+	void OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, double &apo, double &tta, 
+				 double &per, double &ttp);
+	void Prog13Pressed(int R1, int R2, int R3);
+	void Prog34Pressed(int R1, int R2, int R3);
+	void Prog41Pressed(int R1, int R2, int R3);
 	void Prog63Pressed(int R1, int R2, int R3);
 	void Prog68Pressed(int R1, int R2, int R3) { ProgState++; };
 	bool OrbitCalculationsValid();
