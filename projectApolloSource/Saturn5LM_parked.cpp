@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/07/16 20:44:23  lazyd
+  *	Added call to start P71 when the descent stage runs out of fuel
+  *	
   *	Revision 1.14  2005/07/14 10:06:14  spacex15
   *	Added full apollo11 landing sound
   *	initial release
@@ -715,6 +718,23 @@ void sat5_lmpkd::GetMissionTime(double &Met)
 {
 	Met=MissionTime;
 	return;
+}
+
+//
+// Perform the stage separation as done when P12 is running and Abort Stage is pressed
+//
+
+void sat5_lmpkd::AbortStage()
+{
+	ButtonClick();
+	AbortFire();
+	Abortswitch = true;
+	SeparateStage(stage);
+	SetThrusterResource(th_hover[0], ph_Asc);
+	SetThrusterResource(th_hover[1], ph_Asc);
+	stage = 2;
+	startimer = false;
+	Abortswitch = true;
 }
 
 //
