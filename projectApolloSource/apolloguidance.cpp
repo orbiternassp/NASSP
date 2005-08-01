@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/07/16 20:34:52  lazyd
+  *	*** empty log message ***
+  *	
   *	Revision 1.7  2005/07/09 18:30:17  lazyd
   *	Changed attitude-control code to allow faster rates
   *	P33 changed to use 10% throttle for hover thrusters
@@ -900,11 +903,11 @@ bool ApolloGuidance::GenericTimestep(double simt)
 	{
 
 	//
-	// 33: orbit altitude adjustment.
+	// 37: orbit altitude adjustment.
 	//
 
-	case 33:
-		Prog33(simt);
+	case 37:
+		Prog37(simt);
 		break;
 	}
 
@@ -1412,7 +1415,7 @@ void ApolloGuidance::BurnMainEngine(double thrust)
 		BurnFlag = false;
 }
 
-void ApolloGuidance::Prog33(double simt)
+void ApolloGuidance::Prog37(double simt)
 
 {
 	double pcthrust;
@@ -1745,7 +1748,7 @@ void ApolloGuidance::ResetProg(double simt)
 
 }
 
-void ApolloGuidance::Prog33Pressed(int R1, int R2, int R3)
+void ApolloGuidance::Prog37Pressed(int R1, int R2, int R3)
 
 {
 	switch (ProgState)
@@ -1796,8 +1799,8 @@ bool ApolloGuidance::GenericProgPressed(int R1, int R2, int R3)
 
 	switch(ProgRunning) {
 
-	case 33:
-		Prog33Pressed(R1, R2, R3);
+	case 37:
+		Prog37Pressed(R1, R2, R3);
 		return true;
 	}
 
