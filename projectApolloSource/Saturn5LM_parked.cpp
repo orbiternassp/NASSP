@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/01 21:52:06  lazyd
+  *	Added code for AbortStage
+  *	
   *	Revision 1.15  2005/07/16 20:44:23  lazyd
   *	Added call to start P71 when the descent stage runs out of fuel
   *	
@@ -142,9 +145,9 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel), dsky
 sat5_lmpkd::~sat5_lmpkd()
 
 {
-	//
-	// Nothing for now.
-	//
+
+    sevent.Stop();
+	sevent.Done();
 }
 
 void sat5_lmpkd::Init()
@@ -377,6 +380,27 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	lem = new sat5_lmpkd(hvessel, flightmodel);
 	return (VESSEL *) lem;
 }
+
+
+DLLCLBK void ovcExit (VESSEL *vessel)
+
+{
+	TRACESETUP("ovcExit LMPARKED");
+
+	--refcount;
+
+	if (!refcount) {
+		TRACE("refcount == 0");
+
+		//
+		// This code could tidy up allocations when refcount == 0
+		//
+
+	}
+
+	if (vessel) delete (sat5_lmpkd *)vessel;
+}
+
 
 // rewrote to get key events rather than monitor key state - LazyD
 int sat5_lmpkd::ConsumeDirectKey (DWORD key)
@@ -674,29 +698,35 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 	int        mode          ;
 	double     timeremaining ;
 	double     timeafterpdi  ;
+	double     timetoapproach;
 	char names [255]         ;
-	int        todo;
+	int        todo          ;
+	double     offset        ;
+	int        newbuffer     ;
 
 	
 	if(simt >NextEventTime)
 	{
-        NextEventTime=simt+1.0;
-	    agc.GetStatus(&simtime,&mode,&timeremaining,&timeafterpdi);
+        NextEventTime=simt+0.1;
+	    agc.GetStatus(&simtime,&mode,&timeremaining,&timeafterpdi,&timetoapproach);
     	todo = sevent.play(soundlib,
 			    this,
-		        Slanding,
 				names,
+				&offset,
+				&newbuffer,
 		        simtime,
 				MissionTime,
 				mode,
 				timeremaining,
 				timeafterpdi,
+				timetoapproach,
 				NOLOOP,
 				255);
         if (todo)
 		{
-
-           sevent.PlaySound( names);
+           if(offset > 0.)
+                sevent.PlaySound( names,newbuffer,offset);
+		   else sevent.PlaySound( names,true,0);
 		}
 	}
 }

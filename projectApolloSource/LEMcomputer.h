@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/01 21:48:52  lazyd
+  *	Added new programs for ascent and rendezvous
+  *	
   *	Revision 1.9  2005/07/16 20:40:27  lazyd
   *	Added function defs for P70 and P71
   *	
@@ -148,11 +151,13 @@ public:
     int  GetStatus(double *simtime,
 		                 int    *mode,
 						 double *timeremaining,
-						 double *timeafterpdi);
+						 double *timeafterpdi,
+						 double *timetoapproach);
 	int  SetStatus(double simtime,
                          int    mode,
 				         double timeremaining,
-					     double timeafterpdi);
+					     double timeafterpdi,
+						 double timetoapproach);
 
 protected:
 
@@ -218,6 +223,7 @@ protected:
     int    mode;
 	double timeremaining;
 	double timeafterpdi;
+	double timetoapproach;
 	int    flags;
 
 
