@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/08/01 21:48:12  lazyd
+  *	Added new programs for ascent and rendezvous
+  *	
   *	Revision 1.8  2005/07/16 20:38:59  lazyd
   *	Added Nouns 77 and 94 for P70 and P71
   *	
@@ -1100,25 +1103,29 @@ bool LEMcomputer::OrbitCalculationsValid()
 int LEMcomputer::GetStatus(double *simcomputert,
                     int    *mode,
 				    double *timeremaining,
-					double *timeafterpdi)
+					double *timeafterpdi,
+					double *timetoapproach)
 				
 {
 	*simcomputert = this->simcomputert;
 	*mode = this->mode;
 	*timeremaining = this->timeremaining;
 	*timeafterpdi = this->timeafterpdi;
+	*timetoapproach = this->timetoapproach;
 	return true;
 }
 
 int LEMcomputer::SetStatus(double simcomputert,
                        int    mode,
 				       double timeremaining,
-					   double timeafterpdi)
+					   double timeafterpdi,
+					   double timetoapproach)
 					   
 {
 	this->simcomputert = simcomputert;
 	this->mode = mode;
 	this->timeremaining = timeremaining;
 	this->timeafterpdi = timeafterpdi;
+	this->timetoapproach = timetoapproach;
 	return true;
 }

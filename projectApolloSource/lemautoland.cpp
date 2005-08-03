@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/01 21:47:20  lazyd
+  *	Added Ascent and Rendezvous programs
+  *	
   *	Revision 1.13  2005/07/16 20:37:17  lazyd
   *	Added P70 and P71 for Aborts
   *	
@@ -419,6 +422,7 @@ void LEMcomputer::Prog63(double simt)
 			{
 				current_mode = 1;
 				timesincepdi = simt-BurnStartTime;
+				timetoapproach = BurnEndTime-simt;
 			}
 			else timetoignition = BurnStartTime-simt;
 
@@ -427,7 +431,8 @@ void LEMcomputer::Prog63(double simt)
             SetStatus(simt,
                       current_mode,
 				      timetoignition,
-					  timesincepdi);					  		
+					  timesincepdi,
+					  timetoapproach);					  		
         }
 		//end of 2-second interval guidance calcs
 	}
@@ -830,7 +835,8 @@ void LEMcomputer::Prog64(double simt)
 		SetStatus(simt,
                            2,
 		                   0,
-			               0);
+			               0,
+						   0);
 
 }
 
@@ -1060,7 +1066,8 @@ void LEMcomputer::Prog65(double simt)
 		SetStatus(simt,
                            2,
 		                   0,
-			               0);
+			               0,
+						   0);
 	
 }
 

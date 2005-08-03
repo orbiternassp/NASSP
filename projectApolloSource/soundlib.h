@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/07/14 10:06:14  spacex15
+  *	Added full apollo11 landing sound
+  *	initial release
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -138,18 +142,21 @@ public:
 	bool AlreadyPlayed();
 	int  play(SoundLib soundlib,
 		      VESSEL   *vessel,
-		      Sound    &s,
-			  char * names,
-		      double simcomputert,
-			  double simt,
-			  int mode,double timeremaining,double timeafterpdi,
+			  char     *names,
+			  double   *offset,
+			  int      *newbuffer,
+		      double   simcomputert,
+			  double   simt,
+			  int mode,double timeremaining,double timeafterpdi,double timetoapproach,
 		      int flags = NOLOOP, int volume = 255);
 	int  Stop();
 	int  Done();
     int  LoadMissionLandingSoundArray(SoundLib soundlib,char *soundname);
     int  InitDirectSound(SoundLib soundlib);
-    int  PlaySound( char *filenames);
+    int  PlaySound(char *filenames,int newbuffer,double offset);
     int SoundEvent::IsPlaying();
+	int SoundEvent::Finish(double offsetfinish);
+
 
 
 	double altitude  ;
@@ -157,8 +164,10 @@ public:
 	int    met       ;
 	bool   played    ;
 	char   filenames[255] ;
+	int    offset    ;
 	double timetoignition;
 	double timeafterignition;
+	double timetoapproach;
 	int    mandatory ;
 	
 	SoundLib soundlib;

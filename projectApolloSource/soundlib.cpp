@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/07/15 07:58:54  spacex15
+  *	fixed CTD short while after landing
+  *	
   *	Revision 1.2  2005/07/14 10:06:14  spacex15
   *	Added full apollo11 landing sound
   *	initial release
@@ -46,8 +49,7 @@
 
 #ifdef DIRECTSOUNDENABLED
 // MODIF PG
-static Sound Slanding;
-static int   lastplayed=0;
+static int   lastplayed=-1;
 static reallyplayed;
 static int   tobeplayed = -1;
 #define MAX_SOUND_EVENT 90
@@ -520,7 +522,7 @@ SoundEvent::SoundEvent()
 	mode     = -1 ;
 	played   = false;
 	filenames[0] = 0;
-	lastplayed=0;
+	lastplayed=-1;
     SoundEventLoaded =false;
 }
 
@@ -549,15 +551,18 @@ int SoundEvent::makeInvalid()
 
 int SoundEvent::play(SoundLib soundlib,
 					 VESSEL   *Vessel,
-					  Sound   &Slanding,
 					  char    *names ,
+					  double  *offset,
+					  int     *newbuffer,
 					  double  simcomputert,
 					  double  simt,
 					  int     mode,
 					  double  timeremaining,
 					  double  timeafterpdi,
+					  double  timetoapproach,
 					  int     flags,
 					  int     volume)
+
 
 {
 	int kk;
@@ -568,6 +573,7 @@ int SoundEvent::play(SoundLib soundlib,
 
     double timetopdi;
 	double timesincepdi;
+	double deltaoffset =0.;
 
     if (!this->isValid())
 		return(false);
@@ -577,11 +583,27 @@ int SoundEvent::play(SoundLib soundlib,
 
     TRACESETUP("SOUNDEVENT PLAY");
 
-
-	if (IsPlaying())
+	if(lastplayed >= 0)
 	{
-//		TRACE("EN TRAIN DE JOUER");
-        return(false);
+        if(soundevents[lastplayed].offset == -1)
+		{
+	        if (IsPlaying())
+			{ 
+            //		TRACE("EN TRAIN DE JOUER");
+                return(false);
+			}
+		}
+		else if (IsPlaying())
+		{
+			if (soundevents[lastplayed+1].offset > soundevents[lastplayed].offset)
+			{
+			    if(Finish((double) soundevents[lastplayed+1].offset - 0.1))
+				{
+				}
+				else
+				    return(false);
+			}
+		}
 	}
 
 
@@ -597,9 +619,9 @@ int SoundEvent::play(SoundLib soundlib,
 
 	timetopdi = timeremaining  -(simt - simcomputert);
 	timesincepdi = timeafterpdi +(simt - simcomputert);
+	timetoapproach = timetoapproach -(simt -simcomputert);
     if (mode == 0)
 	{ 
-		kk = lastplayed+1;
 /*		sprintf(buffers,"AVANT PDI IGNIT %f %f %f ",
 					   timetopdi, simt, simcomputert);
 		sprintf(oapiDebugString(),"%s",buffers);
@@ -618,7 +640,6 @@ int SoundEvent::play(SoundLib soundlib,
 		altitude=vrad-bradius-cgelev;
 
 							
-		kk = lastplayed+1;
 /*		sprintf(buffers,"AFTER PDI : TIMEAFTER %f ALTITUDE %f",
 			        timesincepdi,altitude);
 		sprintf(oapiDebugString(),"%s",buffers);
@@ -651,13 +672,14 @@ int SoundEvent::play(SoundLib soundlib,
 	        kk++;
         if (soundevents[kk].timetoignition < timetopdi)
 			return 0;
+		deltaoffset = soundevents[kk].timetoignition - timetopdi;
 	}
-	else if (mode >= 1)
+	else if (mode == 1)
 	{
 sprintf(buffers,"TIME AFTER PDI %f", timesincepdi);
 TRACE(buffers);
         
-		if ((mode == 1) &&(timeafterpdi < 160))
+		if ((timeafterpdi < 160))
 		{
         TRACE("TIME AFTER");
 		sprintf(buffers,"TIME AFTER %f %f",soundevents[kk].timeafterignition,
@@ -681,6 +703,29 @@ TRACE(buffers);
 		}
         else
 		{
+        TRACE("TIME TO APPROACH");
+		sprintf(buffers,"TIME TO APP %f %f",soundevents[kk].timetoapproach,
+			                                                     timetoapproach);
+		TRACE(buffers);
+
+		sprintf(buffers,"TEST TO APPROACH NEXTEVENT %d %f %s VERSUS %f",kk,
+			        soundevents[kk].timetoapproach,soundevents[kk].filenames,
+					   timetoapproach);
+//		sprintf(oapiDebugString(),"%s",buffers);
+
+		while (    (soundevents[kk].timetoapproach > timetoapproach)
+			    && (soundevents[kk+1].timetoapproach > timetoapproach)
+				&& (!soundevents[kk].mandatory)
+			  )
+	        kk++;
+
+        if (soundevents[kk].timetoapproach<timetoapproach)
+		    return 0;
+
+		}
+	}
+	else if (mode == 2)
+	{
         TRACE("TEST ALTITUDE");
 		sprintf(buffers,"ALT %d %f %f",mode,soundevents[kk].altitude,altitude);
 		TRACE(buffers);
@@ -704,17 +749,32 @@ TRACE(buffers);
 
         if (soundevents[kk].altitude<altitude)
 		    return 0;
-		}
 	}
 	else return 0;
  
 
-	TRACE("ON VA JOUER");
+	TRACE("ON VA JOUER ");
 	TRACE(soundevents[kk].filenames);
+	
 
 	strcpy(names,soundevents[kk].filenames);
 
+
+	*offset = (double) soundevents[kk].offset + deltaoffset;
+
+	*newbuffer = true;
+
+	if(lastplayed >= 0)
+	{
+	    if (!strcmp(soundevents[kk].filenames,soundevents[lastplayed].filenames))
+	        *newbuffer = false;
+    }
+
 	lastplayed = kk;
+
+
+	sprintf(buffers,"SON %d NEW %d OFFSET %f", kk, *newbuffer,*offset);
+	TRACE(buffers);
 
 	return 1;
 }
@@ -741,12 +801,16 @@ int SoundEvent::LoadMissionLandingSoundArray(SoundLib soundlib,char *soundname)
     int  ii,jj,kk;
 	bool done;
 	int time1,time2;
+
+	int type2 ;
+	int oldnumeroi;
+	int oldmet;
 	
 	if(SoundEventLoaded)
 		return true;
 
  
-	lastplayed =0;
+	lastplayed =-1;
 	TRACESETUP("LOAD MISSION SOUND ARRAY");
 
 //	if (!OrbiterSoundActive)
@@ -764,6 +828,15 @@ TRACE(SoundPath);
 
 
 	fgets(basefilenames,255,fp);
+
+    type2 = (strncmp(basefilenames,"type2",5) == 0);
+
+	if (type2)
+    {
+		oldnumeroi = 0;
+	    fgets(basefilenames,255,fp);
+	}
+
 
     buff2 = strchr(basefilenames,';');
 	nchar = buff2 - basefilenames;
@@ -813,6 +886,24 @@ TRACE(SoundPath);
 	    strncpy(buffers,buff,nchar);
 
 		numeroi = atoi(buffers);
+
+		if (type2)
+		{
+		    if (numeroi != oldnumeroi)
+			{
+				oldnumeroi = numeroi;
+				oldmet = soundevents[indice].met;
+                offset = 0;
+			}
+			else 
+			{
+				offset = soundevents[indice].met 
+					      - oldmet;
+			}
+		}
+		else offset = -1;
+
+		soundevents[indice].offset = offset;
 
 		strcpy(soundevents[indice].filenames,rootfilenames);
 		sprintf(buffers,"%02d",numeroi);
@@ -908,6 +999,35 @@ TRACE(SoundPath);
 		{
 		    soundevents[indice].mandatory = false;
 		}
+
+
+		buff = buff2 +1;
+	    buff2 = strchr(buff,';');
+	    nchar = buff2 - buff;
+	    memset(buffers,0,sizeof(buffers));
+	    strncpy(buffers,buff,nchar);
+
+		/* decode P64 time*/
+		memset(hours,0,sizeof(hours));
+		strncpy(hours,buffers,3);
+		soundevents[indice].timetoapproach = 0;
+		soundevents[indice].timetoapproach += atoi(hours)*3600;
+
+		memset(mins,0,sizeof(mins));
+		strncpy(mins,buffers+4,2);
+		soundevents[indice].timetoapproach += atoi(mins)*60;
+
+		memset(secs,0,sizeof(secs));
+		strncpy(secs,buffers+7,2);
+		soundevents[indice].timetoapproach += atoi(secs);
+
+		soundevents[indice].timetoapproach -= soundevents[indice].met;
+
+		sprintf(buffers,"LOADED %d %f %f %s ",indice,
+                    soundevents[indice].timetoignition,
+			        soundevents[indice].timeafterignition,
+					soundevents[indice].filenames);
+		TRACE(buffers);
 		
 
 		indice++;
@@ -1006,7 +1126,7 @@ int SoundEvent::InitDirectSound(SoundLib soundlib)
     return(true);
 }
 
-int SoundEvent::PlaySound(char *filenames)
+int SoundEvent::PlaySound(char *filenames,int newbuffer, double offset)
 {
 
 
@@ -1014,7 +1134,9 @@ int SoundEvent::PlaySound(char *filenames)
     HRESULT hr;
 
     TRACESETUP("PLAYSOUND");
-	
+
+	if(newbuffer)
+	{
 
 	m_hmmio = mmioOpen( filenames, NULL, MMIO_ALLOCBUF | MMIO_READ );
 
@@ -1287,12 +1409,12 @@ TRACE ("APPEL CREATE SOUND BUFFER");
             {
                 if( 0 != mmioAdvance( m_hmmio, &mmioinfoIn, MMIO_READ ) )
                          TRACE ("ERROR DIRECTSOUND MMIOADVANCE")
-                  	else TRACE ("DIRECTSOUND MMIOADVANCE OK");
+                  	else /* TRACE ("DIRECTSOUND MMIOADVANCE OK")*/;
 
 
                 if( mmioinfoIn.pchNext == mmioinfoIn.pchEndRead )
                      TRACE ("ERROR DIRECTSOUND READ FIC")
-	            else TRACE ("DIRECTSOUND READ FIC OK");
+	            else /* TRACE ("DIRECTSOUND READ FIC OK") */;
             }
 
             // Actual copy.
@@ -1307,11 +1429,36 @@ TRACE ("APPEL CREATE SOUND BUFFER");
     mmioClose( m_hmmio, 0 );
 
     dwWavDataRead = cbDataIn;
+    } // end of newbuffer part
 
-    // Unlock the buffer, we don't need it anymore.
-//    apDSBuffer[0]->Unlock( pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0 );
 
-    apDSBuffer[0]->Play( 0, 0, 0L );
+//  Unlock the buffer, we don't need it anymore.
+//  apDSBuffer[0]->Unlock( pDSLockedBuffer, dwDSLockedBufferSize, NULL, 0 );
+
+
+    if (offset > 0.)
+    {
+         DWORD curplay,curwrite;
+		 char buffers[80];
+
+         apDSBuffer[0]->GetCurrentPosition(&curplay,&curwrite);
+         sprintf(buffers, "POS CURPLAY AVT %d", curplay);
+         TRACE(buffers);
+
+         curplay = DWORD (offset * 8000.);
+	     hr = apDSBuffer[0]->SetCurrentPosition(curplay);
+         if (hr != DS_OK)
+		     TRACE ("ERROR DIRECTSOUND SETCURRENT")
+	     else TRACE ("DIRECTSOUND SETCURRENT OK");
+
+         apDSBuffer[0]->GetCurrentPosition(&curplay,&curwrite);
+         sprintf(buffers, "POS CURPLAY APS %d", curplay);
+         TRACE(buffers);
+	}
+
+
+//    if (newbuffer)
+        apDSBuffer[0]->Play( 0, 0, 0L );
 
 
     return(true);  
@@ -1327,6 +1474,34 @@ int SoundEvent::IsPlaying()
     return( ( dwStatus & DSBSTATUS_PLAYING ) != 0 );
 
 }
+
+int SoundEvent::Finish(double offsetfinish)
+{
+
+TRACESETUP("FINISH");
+
+    DWORD curplay,curwrite;
+	char buffers[80];
+
+	if (apDSBuffer == NULL)
+		return(false);
+
+
+	apDSBuffer[0]->GetCurrentPosition(&curplay,&curwrite);
+    sprintf(buffers, "POS CURPLAY  %f %f", curplay/8000.,offsetfinish);
+    TRACE(buffers);
+
+
+	if ((curplay/8000.) > offsetfinish)
+	{
+        apDSBuffer[0]->Stop();
+		TRACE("STOPPED");
+		return(true);
+	}
+
+	return(false);
+}
+
 
 
 int SoundEvent::Stop()
