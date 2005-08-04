@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/03 10:44:33  spacex15
+  *	improved audio landing synchro
+  *	
   *	Revision 1.9  2005/08/01 21:48:12  lazyd
   *	Added new programs for ascent and rendezvous
   *	
@@ -204,6 +207,45 @@ void LEMcomputer::DisplayNounData(int noun)
 		dsky.SetR3((int) yaw);
 		}
 		break;
+
+	//
+	// 31: time from ignition mm ss, secs to end of burn, dv to go (fictitious)
+	//
+
+	case 31:
+		{
+			int min, sec;
+			double secs, sect, dvr, dt;
+			VECTOR3 dv;
+
+			// time from ignition
+			dt=CurrentTimestep-BurnStartTime;
+			min = (int) (dt / 60.0);
+			sec = ((int) dt) - (min * 60);
+
+			if (min > 99)
+				min = 99;
+
+			dsky.SetR1(min * 1000 + sec);
+			dsky.SetR1Format("XXX XX");
+			sect=BurnEndTime-BurnStartTime;
+			if(dt > 0.0) {
+				secs=BurnEndTime-CurrentTimestep;
+				dsky.SetR2((int) secs);
+			} else {
+				secs=sect;
+				dsky.SetR2((int) sect);
+			}
+
+			dv.x=DesiredDeltaVx;
+			dv.y=DesiredDeltaVy;
+			dv.z=DesiredDeltaVz;
+			dvr=Mag(dv)*(secs/sect);
+			dsky.SetR3((int) (dvr*10.0));
+		}
+		break;
+
+
 
 // this is in common nouns in apolloguidance.cpp, but I think this is correct...
 
@@ -655,6 +697,12 @@ bool LEMcomputer::ValidateProgram(int prog)
 
 	case 41:
 		return true;
+	//
+	//	42: APS program
+	//
+
+	case 42:
+		return true;
 
 	//
 	// 63: braking burn.
@@ -779,6 +827,14 @@ void LEMcomputer::Timestep(double simt)
 
 	case 41:
 		Prog41(simt);
+		break;
+
+	//
+	// 42: APS program
+	//
+
+	case 42:
+		Prog42(simt);
 		break;
 
 	//
