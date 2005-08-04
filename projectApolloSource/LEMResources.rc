@@ -99,12 +99,9 @@ IDB_ILMLEMSWITCH3       BITMAP  DISCARDABLE     "ilmswitchup3.bmp"
 IDB_FDAI                BITMAP  DISCARDABLE     "FDAI.bmp"
 IDB_ECSG                BITMAP  DISCARDABLE     "ecs.bmp"
 IDB_ILMECSG             BITMAP  DISCARDABLE     "ilmecs.bmp"
-IDB_LEMPANEL_LEFT       BITMAP  DISCARDABLE     "PanelLM-left.bmp"
-IDB_LEMPANEL_RIGHT      BITMAP  DISCARDABLE     "PanelLM-right.bmp"
-IDB_ILMLEMPANEL_LEFT    BITMAP  DISCARDABLE     "ilmpanellm-left.bmp"
-IDB_ILMLEMPANEL_RIGHT   BITMAP  DISCARDABLE     "ilmpanellm-right.bmp"
-IDB_LEMLEFTWINDOW       BITMAP  DISCARDABLE     "lemleftwindow.bmp"
-IDB_ILMLEMLEFTWINDOW    BITMAP  DISCARDABLE     "lemleftwindow-ilm.bmp"
+IDB_LEM_MAIN_PANEL	BITMAP  DISCARDABLE     "lem_main_panel.bmp"
+IDB_LEM_RIGHT_WINDOW	BITMAP  DISCARDABLE     "lem_right_window.bmp"
+IDB_LEM_LEFT_WINDOW	BITMAP  DISCARDABLE     "lem_left_window.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 

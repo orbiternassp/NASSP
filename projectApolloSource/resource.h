@@ -115,7 +115,7 @@
 #define IDB_ANLG_ALT                    180
 #define IDB_ANLG_GMETER                 181
 #define IDB_THRUST                      182
-#define IDB_LEMPANEL                    183
+#define IDB_LEM_MAIN_PANEL              183
 #define IDB_CONTACT                     184
 #define IDB_ABORTSWITCH                 185
 #define IDB_LIGHTSWITCH                 186
@@ -271,12 +271,6 @@
 #define IDB_CSM_LOWER_PANEL				493
 #define AID_CYROTANKINDICATORS		    494
 #define IDB_NEEDLE1						495
-#define IDB_ILMLEMPANEL_LEFT			496
-#define IDB_LEMPANEL_LEFT			    497
-#define IDB_ILMLEMPANEL_RIGHT		    498
-#define IDB_LEMPANEL_RIGHT			    499
-#define IDB_ILMLEMLEFTWINDOW		    500
-#define IDB_LEMLEFTWINDOW			    501
 #define AID_FUELCELLREACTANTSINDICATORS 502
 #define AID_FUELCELLINDICATORS			503
 #define AID_FUELCELLINDICATORSSWITCH	504
@@ -293,6 +287,9 @@
 #define AID_FUELCELLPUMPSSWITCHES		515
 #define IDB_THREEPOSSWITCH305           516
 #define AID_SUITCOMPRESSORSWITCHES      517
+#define IDB_LEM_RIGHT_WINDOW            518
+#define IDB_LEM_LEFT_WINDOW				519
+#define AID_SBAND_NORMAL_SWITCHES		520
 
 // Next default values for new objects
 //
