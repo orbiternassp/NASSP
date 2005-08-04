@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/01 19:07:47  movieman523
+  *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
+  *	
   *	Revision 1.23  2005/07/31 01:43:13  movieman523
   *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
   *	
@@ -301,7 +304,12 @@ protected:
 	ThreePosSwitch SuitCompressor1Switch;
 	ThreePosSwitch SuitCompressor2Switch;
 
-
+	ThreePosSwitch SBandNormalXPDRSwitch;
+	ThreePosSwitch SBandNormalPwrAmpl1Switch;
+	ThreePosSwitch SBandNormalPwrAmpl2Switch;
+	ThreePosSwitch SBandNormalMode1Switch;
+	ThreePosSwitch SBandNormalMode2Switch;
+	ToggleSwitch SBandNormalMode3Switch;
 
 	// old stuff begin
 	//bool Cswitch1;
@@ -713,6 +721,8 @@ protected:
 	SwitchRow FuelCellLatchSwitchesRow;
 	SwitchRow FuelCellPumpsSwitchesRow;
 	SwitchRow SuitCompressorSwitchesRow;
+
+	SwitchRow SBandNormalSwitchesRow;
 
 	// old stuff begin
 	HUDToggle HUDswitch1;
