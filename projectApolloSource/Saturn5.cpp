@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/01 19:07:46  movieman523
+  *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
+  *	
   *	Revision 1.14  2005/07/31 01:43:12  movieman523
   *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
   *	
@@ -1510,7 +1513,7 @@ void SaturnV::Timestep(double simt)
 	// engines in a wacky direction and then not be
 	// called again for several seconds.
 	//
-
+	
 	if (FirstTimestep) {
 		DoFirstTimestep(simt);
 		LastTimestep = simt;
@@ -1773,8 +1776,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	case PRELAUNCH_STAGE:
 		if (buildstatus < 8){
 			BuildFirstStage(buildstatus);
-			double TCP=-101.5+STG0O+12;//-TCPO;
-			SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
 		}
 		else{
 			SetFirstStage();
@@ -2078,5 +2079,37 @@ void SaturnV::StageLaunchSIVB(double simt)
 			autopilot=false;
 		}
 	}
+}
+
+int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
+
+	if (FirstTimestep) return 0;
+
+	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
+		return 0; 
+	}
+
+	if (stage == ROLLOUT_STAGE) {
+		if (key == OAPI_KEY_B && down == true && buildstatus < 7) {
+			buildstatus++;
+			BuildFirstStage(buildstatus);
+			return 1;
+		}
+		if (key == OAPI_KEY_U && down == true && buildstatus > 0) {
+			buildstatus--;
+			BuildFirstStage(buildstatus);
+			return 1;
+		}
+
+	}
+	return 0;
+}
+
+void SaturnV::LaunchVesselRolloutEnd() {
+	// called by crawler after arrival on launch pad
+
+	SetFirstStage();
+	ShiftCentreOfMass (_V(0,0,STG0O));
+	SetStage(PRELAUNCH_STAGE);
 }
 
