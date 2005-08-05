@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/01 19:07:46  movieman523
+  *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
+  *	
   *	Revision 1.10  2005/05/21 16:14:36  movieman523
   *	Pass Realism and AudioLanguage correctly from CSM to LEM.
   *	
@@ -132,8 +135,8 @@ void SaturnV::BuildFirstStage (int bstate)
 
 	SetSize (59.5);
 	SetEmptyMass (Stage1Mass);
-	SetMaxFuelMass (SI_FuelMass);
-	SetFuelMass(0);
+	//SetMaxFuelMass (SI_FuelMass);
+	//SetFuelMass(0);
 	SetPMI (_V(1147,1147,216.68));
 	SetCrossSections (_V(1129,1133,52.4));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -145,7 +148,7 @@ void SaturnV::BuildFirstStage (int bstate)
 	ClearMeshes();
 	VECTOR3 m_exhaust_pos1= {3,3,Offset1st};
 	VECTOR3 mesh_dir=_V(0,0,-80.0+STG0O);
-	AddMesh (hCRAWL, &mesh_dir);
+	//AddMesh (hCRAWL, &mesh_dir);		// Crawler and Mobile Launcher are separate vessels now
 	mesh_dir=_V(0,0,-54.0+STG0O);
 	AddMesh (hsat5stg1, &mesh_dir);
 	if (bstate >=1){
@@ -194,6 +197,9 @@ void SaturnV::BuildFirstStage (int bstate)
 	}
 	Offset1st = -60.1+STG0O;
 	SetCameraOffset (_V(-1,1.0,23.1+STG0O));
+
+	double TCP=-101.5+STG0O-TCPO;
+	SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
 }
 
 void SaturnV::SetFirstStage ()
@@ -1476,3 +1482,4 @@ void SaturnV::Retro2(OBJHANDLE hvessel,double gaz)
 	stg2vessel->SetThrusterGroupLevel(thg_retro2, 1.0);
 
 }
+
