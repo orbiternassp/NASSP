@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/08/04 01:06:04  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.29  2005/07/30 16:12:13  tschachim
   *	Bugfix O2 FLOW meter
   *	
@@ -1053,14 +1056,14 @@ bool Saturn::clbkLoadPanel (int id) {
 		
 		//new areas to be added soon...
 		
-		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0)); // TODO ???
+		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0)); 
 		break;    
 
 	case SATPANEL_RIGHT: // right instrument panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 311,  881,  475,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 825, 1428,  901, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 451,  881,  680,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 965, 1428, 1041, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;    
@@ -3962,9 +3965,9 @@ void Saturn::InitSwitches() {
 	SBandNormalXPDRSwitch.Register(PSH, "SBandNormalXPDRSwitch", THREEPOSSWITCH_CENTER);
 	SBandNormalPwrAmpl1Switch.Register(PSH, "SBandNormalPwrAmpl1Switch", THREEPOSSWITCH_CENTER);
 	SBandNormalPwrAmpl2Switch.Register(PSH, "SBandNormalPwrAmpl2Switch", THREEPOSSWITCH_CENTER);
-	SBandNormalMode1Switch.Register(PSH, "SBandNormalMode1Switch;Register", THREEPOSSWITCH_CENTER);
-	SBandNormalMode2Switch.Register(PSH, "SBandNormalMode2Switch;Register", THREEPOSSWITCH_CENTER);
-	SBandNormalMode3Switch.Register(PSH, "SBandNormalMode3Switch;Register", false);
+	SBandNormalMode1Switch.Register(PSH, "SBandNormalMode1Switch", THREEPOSSWITCH_CENTER);
+	SBandNormalMode2Switch.Register(PSH, "SBandNormalMode2Switch", THREEPOSSWITCH_CENTER);
+	SBandNormalMode3Switch.Register(PSH, "SBandNormalMode3Switch", false);
 	
 	
 	// old stuff
