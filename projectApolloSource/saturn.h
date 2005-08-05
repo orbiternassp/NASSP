@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/08/04 01:06:03  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.24  2005/08/01 19:07:47  movieman523
   *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
   *	
@@ -154,6 +157,9 @@ public:
 
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
+
+	// called by crawler after arrival on launch pad
+	virtual void LaunchVesselRolloutEnd() {};
 
 protected:
 
