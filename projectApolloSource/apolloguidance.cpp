@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/08/01 21:45:41  lazyd
+  *	Changed Program 33 to Program 37 to avoid conflict with rendezvous
+  *	
   *	Revision 1.8  2005/07/16 20:34:52  lazyd
   *	*** empty log message ***
   *	
@@ -139,6 +142,17 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display) : soundlib(s), dsky(d
 	//
 
 	TIME1 = 0;
+
+	//
+	// Clear channels.
+	//
+
+	int i;
+
+	for (i = 0; i <= MAX_OUTPUT_CHANNELS; i++)
+		OutputChannel[i] = 0;
+	for (i = 0; i <= MAX_INPUT_CHANNELS; i++)
+		InputChannel[i] = 0;
 }
 
 ApolloGuidance::~ApolloGuidance()
@@ -1872,6 +1886,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 {
 	char fname[32];
+	int i;
 	int val;
 
 	oapiWriteLine(scn, AGC_START_STRING);
@@ -1912,9 +1927,29 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	// Write out any non-zero EMEM state.
 	//
 
-	for (unsigned int i = 0; i < EMEM_ENTRIES; i++) {
+	for (i = 0; i < EMEM_ENTRIES; i++) {
 		if (ReadMemory(i, val) && val != 0) {
 			sprintf(fname, "EMEM%03d", i);
+			oapiWriteScenario_int (scn, fname, val);
+		}
+	}
+
+	//
+	// And non-zero I/O state.
+	//
+
+	for (i = 0; i <= MAX_INPUT_CHANNELS; i++) {
+		val = GetInputChannel(i);
+		if (val != 0) {
+			sprintf(fname, "ICHAN%03d", i);
+			oapiWriteScenario_int (scn, fname, val);
+		}
+	}
+
+	for (i = 0; i <= MAX_OUTPUT_CHANNELS; i++) {
+		val = GetOutputChannel(i);
+		if (val != 0) {
+			sprintf(fname, "OCHAN%03d", i);
 			oapiWriteScenario_int (scn, fname, val);
 		}
 	}
@@ -2009,6 +2044,20 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			sscanf(line+8, "%d", &val);
 			WriteMemory(num, val);
 		}
+		else if (!strnicmp (line, "ICHAN", 5)) {
+			int num;
+			unsigned int val;
+			sscanf(line+5, "%d", &num);
+			sscanf(line+9, "%d", &val);
+			SetInputChannel(num, val);
+		}
+		else if (!strnicmp (line, "OCHAN", 5)) {
+			int num;
+			unsigned int val;
+			sscanf(line+5, "%d", &num);
+			sscanf(line+9, "%d", &val);
+			SetOutputChannel(num, val);
+		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			AGCState state;
 			sscanf (line+5, "%d", &state.word);
@@ -2022,6 +2071,96 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			sscanf (line+5, "%d", &Yaagc);
 		}
 	}
+}
+
+//
+// I/O channel support code.
+//
+
+bool ApolloGuidance::GetOutputChannelBit(int channel, int bit)
+
+{
+	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
+		return false;
+
+	return (OutputChannel[channel] & (1 << bit)) != 0;
+}
+
+unsigned int ApolloGuidance::GetOutputChannel(int channel)
+
+{
+	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
+		return 0;
+
+	return OutputChannel[channel];
+}
+
+void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
+
+{
+	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
+		return;
+
+	InputChannel[channel] = val;
+}
+
+void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
+
+{
+	unsigned int mask = (1 << bit);
+
+	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
+		return;
+
+	if (val) {
+		InputChannel[channel] |= mask;
+	}
+	else {
+		InputChannel[channel] &= ~mask;
+	}
+}
+
+void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
+
+{
+	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
+		return;
+
+	OutputChannel[channel] = val;
+}
+
+void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
+
+{
+	unsigned int mask = (1 << bit);
+
+	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
+		return;
+
+	if (val) {
+		OutputChannel[channel] |= mask;
+	}
+	else {
+		OutputChannel[channel] &= ~mask;
+	}
+}
+
+bool ApolloGuidance::GetInputChannelBit(int channel, int bit)
+
+{
+	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
+		return false;
+
+	return (InputChannel[channel] & (1 << bit)) != 0;
+}
+
+unsigned int ApolloGuidance::GetInputChannel(int channel)
+
+{
+	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
+		return 0;
+
+	return InputChannel[channel];
 }
 
 //

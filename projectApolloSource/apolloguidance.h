@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/08/01 21:46:18  lazyd
+  *	Changed Program 33 to Program 37
+  *	
   *	Revision 1.7  2005/07/09 18:30:57  lazyd
   *	Added argument to ComAttitude function
   *	
@@ -130,6 +133,15 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
+	//
+	// I/O channels.
+	//
+
+	virtual bool GetOutputChannelBit(int channel, int bit);
+	virtual unsigned int GetOutputChannel(int channel);
+	virtual void SetInputChannel(int channel, unsigned int val);
+	virtual void SetInputChannelBit(int channel, int bit, bool val);
+
 protected:
 
 	//
@@ -164,6 +176,10 @@ protected:
 	virtual bool OrbitCalculationsValid() = 0;
 	void DisplayOrbitCalculations();
 	void UpdateBurnTime(int R1, int R2, int R3);
+	void SetOutputChannel(int channel, unsigned int val);
+	void SetOutputChannelBit(int channel, int bit, bool val);
+	bool GetInputChannelBit(int channel, int bit);
+	unsigned int GetInputChannel(int channel);
 
 	bool Standby;
 	bool Reset;
@@ -257,6 +273,12 @@ protected:
 
 	unsigned int BankSumNum;
 	unsigned int CurrentEMEMAddr;
+
+#define MAX_INPUT_CHANNELS	0100
+#define MAX_OUTPUT_CHANNELS	020
+
+	unsigned int InputChannel[MAX_INPUT_CHANNELS + 1];
+	unsigned int OutputChannel[MAX_OUTPUT_CHANNELS + 1];
 
 	//
 	// The Vessel we're controlling.
