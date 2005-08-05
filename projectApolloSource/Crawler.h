@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/07/05 17:23:11  tschachim
+  *	Scenario saving/loading
+  *	
   *	Revision 1.4  2005/07/01 12:23:48  tschachim
   *	Introduced standalone flag
   *	
@@ -64,6 +67,7 @@ protected:
 	int padIndex;
 
 	bool firstTimestepDone;
+	bool doAfterLVDetached;
 	bool keyAccelerate;
 	bool keyBrake;
 	bool keyLeft;
@@ -82,7 +86,9 @@ protected:
 	bool IsMLAttached();
 	void AttachML();
 	void DetachML();
+	void AfterLVDetached();
 	void AttachLV();
 	void ToggleDirection();
 	void SetView();
+	void SlowIfDesired(double timeAcceleration);
 };

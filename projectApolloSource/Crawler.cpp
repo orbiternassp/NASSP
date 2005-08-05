@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/07/05 17:23:11  tschachim
+  *	Scenario saving/loading
+  *	
   *	Revision 1.4  2005/07/01 12:23:48  tschachim
   *	Introduced standalone flag
   *	
@@ -36,6 +39,13 @@
 #define ORBITER_MODULE
 
 #include "Crawler.h"
+
+#include "nasspdefs.h"
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "dsky.h"
+#include "csmcomputer.h"
+#include "saturn.h"
 
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo-Crawler-trace.txt";
@@ -64,6 +74,7 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	targetHeading = 0;
 	touchdownPointHeight = -0.0001;
 	firstTimestepDone = false;
+	doAfterLVDetached = false;
 	useForce = false;
 	standalone = false;
 	reverseDirection = false;
@@ -234,6 +245,8 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 		soundEngine.play(LOOP, (int)(127.5 + 127.5 * velocity / maxVelocity));
 	else
 		soundEngine.stop();
+
+	if (doAfterLVDetached) AfterLVDetached();
 
 	//sprintf(oapiDebugString(), "Force %i simdt %f vv.z %f", uf, simdt, vv.z);
 
@@ -439,10 +452,9 @@ void Crawler::DetachML() {
 	ATTACHMENTHANDLE ahml = ml->GetAttachmentHandle(false, 0);
 
 	if (GetAttachmentStatus(ah) != NULL) {
-		// Is the crawler near launch pad?
-		VESSEL *ml = oapiGetVesselInterface(hML);
-		VESSEL *lv = oapiGetVesselInterface(hLV);
+		SlowIfDesired(1.0);
 
+		// Is the crawler near launch pad?
 		OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 		OBJHANDLE hCanaveral = oapiGetBaseByName(hEarth, "Cape Canaveral");
 		double padlng, padlat, padrad, lng, lat, rad;
@@ -453,18 +465,26 @@ void Crawler::DetachML() {
 		double dlat = (padlat - lat) * 6371010.0;
 
 		if (dlng > -5 && dlng < 5 && dlat > -8 && dlat < 2) {
+			// Detach the launch vessel from the ML
 			if (GetAttachmentStatus(ahml) != NULL) {
 				ml->DetachChild(ahml);
 			}
 			DetachChild(ah);
 
+			// Move ML to pad, KSC Pad 39A is hardcoded!
 			VESSELSTATUS vs;
 			ml->GetStatus(vs);
 			vs.vdata[0].x = -80.6081642;
 			vs.vdata[0].y = 28.6009997;
 			vs.vdata[0].z = 90.0; 
 			ml->DefSetState(&vs);
-		
+
+			// Notify Saturn that we're on pad
+			Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
+			lav->LaunchVesselRolloutEnd();
+
+			doAfterLVDetached = true;
+			
 		} else {
 			DetachChild(ah);
 			ml->SetTouchdownPoints(_V(  0, touchdownPointHeight - 70.0,  10), 
@@ -484,6 +504,21 @@ void Crawler::DetachML() {
 				  			   _V(-10, -87.0, -10), 
 							   _V( 10, -87.0, -10));
 	}
+}
+
+void Crawler::AfterLVDetached() {
+
+	// Move LV to pad, KSC Pad 39A is hardcoded!
+	VESSEL *lv = oapiGetVesselInterface(hLV);
+
+	VESSELSTATUS vs;
+	lv->GetStatus(vs);
+	vs.vdata[0].x =-80.6081878; 
+	vs.vdata[0].y = 28.6008343;
+	vs.vdata[0].z = 270.0; 
+	lv->DefSetState(&vs);
+
+	doAfterLVDetached = false;
 }
 
 bool Crawler::IsMLAttached() {
@@ -526,3 +561,11 @@ void Crawler::AttachLV() {
 		ml->AttachChild(hLV, ah, lv->GetAttachmentHandle(true, 0));
 	}
 }
+
+void Crawler::SlowIfDesired(double timeAcceleration) {
+
+	if (oapiGetTimeAcceleration() > timeAcceleration) {
+		oapiSetTimeAcceleration(timeAcceleration);
+	}
+}
+
