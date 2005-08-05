@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/07/30 16:10:44  tschachim
+  *	Added SwitchTo function to simulate switch usage.
+  *	
   *	Revision 1.8  2005/07/05 17:59:00  tschachim
   *	Introduced spring-loaded switches
   *	
@@ -80,6 +83,7 @@ ToggleSwitch::ToggleSwitch() {
 
 	SwitchSurface = 0;
 	OurVessel = 0;
+	switchRow = 0;
 	Active = true;
 	visible = true;
 }
@@ -1155,10 +1159,10 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 	}
 
 	if (state && displayState < 3.0)
-		displayState += oapiGetSimStep() * 5.0;
+		displayState += oapiGetSimStep() * 8.0;
 
 	if (!state && displayState > 0.0) 
-		displayState -= oapiGetSimStep() * 5.0;
+		displayState -= oapiGetSimStep() * 8.0;
 
 	if (displayState > 3.0) displayState = 3.0;
 	if (displayState < 0.0) displayState = 0.0;
