@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/07/30 16:13:49  tschachim
+  *	Added systemsState handling.
+  *	
   *	Revision 1.7  2005/07/19 16:43:19  tschachim
   *	Some disabled debug prints
   *	
@@ -81,15 +84,6 @@ void Saturn::SystemsInit() {
 void Saturn::SystemsTimestep(double simt) {
 
 	//
-	// Don't clock the computer unless we're actually at the pad.
-	//
-
-	if (stage >= PRELAUNCH_STAGE) {
-		dsky.Timestep(MissionTime);
-		agc.Timestep(MissionTime);
-	}
-
-	//
 	// MasterAlarm
 	//
 
@@ -102,145 +96,155 @@ void Saturn::SystemsTimestep(double simt) {
 	}
 
 	//
-	// Each timestep is passed to the SPSDK
-	// to perform internal computations on the 
-	// systems.
+	// Don't clock the computer and the internal systems unless we're actually at the pad.
 	//
 
-	Panelsdk.Timestep(simt);
+	if (stage >= PRELAUNCH_STAGE) {
 
-	//
-	// Systems state handling
-	//
+		dsky.Timestep(MissionTime);
+		agc.Timestep(MissionTime);
 
-	double *pMax, *fancap, pCabin, pSuit;
-	float *size;
-	int *open, *number;
 
-	switch (systemsState) {
+		// Each timestep is passed to the SPSDK
+		// to perform internal computations on the 
+		// systems.
 
-	case SATSYSTEMS_NONE:
-		
-		// No crew 
-		number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
-		*number = 0; 
+		Panelsdk.Timestep(simt);
 
-		// No leak
-		open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
-		*open = SP_VALVE_CLOSE;
 
-		// Cabin pressure regulator to 14.7 psi
-		pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:PRESSMAX");
-		*pMax = 14.7 / PSI;	
-		open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
-		*open = SP_VALVE_OPEN;
+		//
+		// Systems state handling
+		//
 
-		// O2 demand regulator to 5.5 inH2O higher than cabin pressure
-		pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:PRESSMAX");
-		*pMax = 14.7 / PSI + 5.5 / INH2O;	
-		open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
-		*open = SP_VALVE_OPEN;
+		double *pMax, *fancap, pCabin, pSuit;
+		float *size;
+		int *open, *number;
 
-		// Close cabin to suit circuit return value
-		open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
-		*open = SP_VALVE_CLOSE;
+		switch (systemsState) {
 
-		// Turn off suit compressor
-		SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-		SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-
-		// Next state
-		systemsState = SATSYSTEMS_PRELAUNCH;
-		break;
-
-	case SATSYSTEMS_PRELAUNCH:
-		if (MissionTime >= -6000) {	// 1h 40min before launch
-			// Crew ingress
-			number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
-			*number = 3; 
-
-			// Cabin leak
-			size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-			*size = (float)0.0005;
-			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
-			*open = SP_VALVE_OPEN;
-
-			// O2 demand regulator to 2.5 inH2O higher than cabin pressure
-			pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:PRESSMAX");
-			*pMax = 14.7 / PSI + 2.5 / INH2O;
-			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
-			*open = SP_VALVE_OPEN;
-
-			// Turn on suit compressor 1, prelaunch configuration
-			SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
-			SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-			fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
-			*fancap = 110000.0;
-
-			// Next state
-			systemsState = SATSYSTEMS_CABINCLOSEOUT;
-		}	
-		break;
-
-	case SATSYSTEMS_CABINCLOSEOUT:
-		if (GetAtmPressure() <= 6.0 / PSI) {
-			// Cabin pressure relieve
-			size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-			*size = (float)0.25;
+		case SATSYSTEMS_NONE:
 			
-			// Cabin pressure regulator to 5 psi
+			// No crew 
+			number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
+			*number = 0; 
+
+			// No leak
+			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
+			*open = SP_VALVE_CLOSE;
+
+			// Cabin pressure regulator to 14.7 psi
 			pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:PRESSMAX");
-			*pMax = 5.0 / PSI;
+			*pMax = 14.7 / PSI;	
+			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
+			*open = SP_VALVE_OPEN;
 
-			// Close O2 demand regulator 
+			// O2 demand regulator to 5.5 inH2O higher than cabin pressure
+			pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:PRESSMAX");
+			*pMax = 14.7 / PSI + 5.5 / INH2O;	
 			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
-			*open = SP_VALVE_CLOSE;
+			*open = SP_VALVE_OPEN;
 
-			// Open cabin to suit circuit return value
+			// Close cabin to suit circuit return value
 			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
-			*open = SP_VALVE_OPEN;
-
-			// Open suit pressure relieve
-			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
-			*open = SP_VALVE_OPEN;
-
-			// Open direct O2 valve
-			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:LEAK:OPEN");
-			*open = SP_VALVE_OPEN;
-
-			// Suit compressor to flight configuration
-			fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
-			*fancap = 60000.0;	
-
-			// Next state
-			systemsState = SATSYSTEMS_CABINVENTING;
-		}		
-		break;
-
-	case SATSYSTEMS_CABINVENTING:
-		pCabin = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS") * PSI;
-		pSuit = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS") * PSI;
-
-		size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-		open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
-
-		if (pCabin <= 5.0) {
-			// cabin leak
-			*size = (float)0.001;	
-		}
-		if (pSuit <= 5.0) {
-			// Close suit pressure relieve
 			*open = SP_VALVE_CLOSE;
 
-			// Close direct O2 valve
-			*(int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:LEAK:OPEN") = SP_VALVE_CLOSE;
-		}
+			// Turn off suit compressor
+			SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+			SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
 
-		if (*size == (float)0.001 && *open == SP_VALVE_CLOSE) {
 			// Next state
-			systemsState = SATSYSTEMS_FLIGHT;
+			systemsState = SATSYSTEMS_PRELAUNCH;
+			break;
+
+		case SATSYSTEMS_PRELAUNCH:
+			if (MissionTime >= -6000) {	// 1h 40min before launch
+				// Crew ingress
+				number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
+				*number = 3; 
+
+				// Cabin leak
+				size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
+				*size = (float)0.0005;
+				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
+				*open = SP_VALVE_OPEN;
+
+				// O2 demand regulator to 2.5 inH2O higher than cabin pressure
+				pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:PRESSMAX");
+				*pMax = 14.7 / PSI + 2.5 / INH2O;
+				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
+				*open = SP_VALVE_OPEN;
+
+				// Turn on suit compressor 1, prelaunch configuration
+				SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
+				SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+				fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
+				*fancap = 110000.0;
+
+				// Next state
+				systemsState = SATSYSTEMS_CABINCLOSEOUT;
+			}	
+			break;
+
+		case SATSYSTEMS_CABINCLOSEOUT:
+			if (GetAtmPressure() <= 6.0 / PSI) {
+				// Cabin pressure relieve
+				size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
+				*size = (float)0.25;
+				
+				// Cabin pressure regulator to 5 psi
+				pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:PRESSMAX");
+				*pMax = 5.0 / PSI;
+
+				// Close O2 demand regulator 
+				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
+				*open = SP_VALVE_CLOSE;
+
+				// Open cabin to suit circuit return value
+				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
+				*open = SP_VALVE_OPEN;
+
+				// Open suit pressure relieve
+				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
+				*open = SP_VALVE_OPEN;
+
+				// Open direct O2 valve
+				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:LEAK:OPEN");
+				*open = SP_VALVE_OPEN;
+
+				// Suit compressor to flight configuration
+				fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
+				*fancap = 60000.0;	
+
+				// Next state
+				systemsState = SATSYSTEMS_CABINVENTING;
+			}		
+			break;
+
+		case SATSYSTEMS_CABINVENTING:
+			pCabin = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS") * PSI;
+			pSuit = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS") * PSI;
+
+			size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
+			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
+
+			if (pCabin <= 5.0) {
+				// cabin leak
+				*size = (float)0.001;	
+			}
+			if (pSuit <= 5.0) {
+				// Close suit pressure relieve
+				*open = SP_VALVE_CLOSE;
+
+				// Close direct O2 valve
+				*(int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:LEAK:OPEN") = SP_VALVE_CLOSE;
+			}
+
+			if (*size == (float)0.001 && *open == SP_VALVE_CLOSE) {
+				// Next state
+				systemsState = SATSYSTEMS_FLIGHT;
+			}
+			break;
 		}
-		break;
 	}
 
 
