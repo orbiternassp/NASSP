@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/04 01:06:03  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.15  2005/08/01 21:50:03  lazyd
   *	Added call to check which AGC program is running
   *	
@@ -626,6 +629,7 @@ bool sat5_lmpkd::LoadPanel (int id)
 		//oapiRegisterPanelArea (AID_ECS_GAUGES,					_R(1578,  139, 1723,   212), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_COAS,						_R( 334,  165,  639,   466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_ABORT,						_R(1210,  528, 1304,   572), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ABORT,						_R(555,  880, 695,   930), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		
 		// DSKY
 		
@@ -1536,7 +1540,7 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	case AID_ABORT:
-		if (mx > 0 && mx < 44 && my > 0 && my < 44){
+		if (mx > 0 && mx < 80 && my > 0 && my < 50){
 			// This is the "ABORT" button
 				ButtonClick();
 				AbortFire();
@@ -1546,7 +1550,7 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 //				stage = 2;
 				startimer = false;
 				agc.RunProgram(70);
-		}else if (mx > 53 && mx < 91 && my > 7 && my < 37){
+		}else if (mx > 85 && mx < 130 && my > 0 && my < 50){
 			// This is the "ABORT STAGE" button
 				ButtonClick();
 				AbortFire();
@@ -1655,7 +1659,7 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	// panel 0 events:
 	case AID_ABORT:
 		if (Abortswitch){
-			oapiBlt(surf,srf[0],0,0,0,73,94,44);
+			oapiBlt(surf,srf[9],0,0,0,73,94,44);
 		}
 		return true;
 
