@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/01 19:07:47  movieman523
+  *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
+  *	
   *	Revision 1.22  2005/07/31 11:59:41  movieman523
   *	Added first mixture ratio shift to Saturn 1b.
   *	
@@ -146,11 +149,6 @@ void Saturn::initSaturn()
 	ApolloNo = 0;
 
 	TCPO = 0.0;
-
-	// call only once
-	if (!InitSaturnCalled) {
-		InitSwitches();
-	}
 
 	masterAlarmLit = false;
 	masterAlarmCycleTime = 0;
@@ -463,6 +461,15 @@ void Saturn::initSaturn()
 
 	// call only once 
 	if (!InitSaturnCalled) {
+
+		// Initialize the panel
+		PanelId = SATPANEL_MAIN; 		// default panel
+		InitSwitches();
+
+		// "dummy" SetSwitches to enable the panel event handling
+		SetSwitches(PanelId);
+
+		// Initialize the internal systems
 		SystemsInit();
 	}
 
@@ -903,9 +910,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	int nasspver = 0, status = 0;
 	int n;
 	double tohdg = 45;
-
-	// default panel
-	PanelId = SATPANEL_MAIN;
 
 	//
 	// If the name of the spacecraft is "AS-xxx" then get the vehicle
