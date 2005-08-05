@@ -1,6 +1,7 @@
 6.5:
 ----
 
+Added I/O channel simulation to AGC to make Virtual AGC implementation easier.
 Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
 Brought Saturn 1b mass and performance closer to reality.
 Added Inertial Guidance Mode start time to scenario file.

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/03 10:44:33  spacex15
+  *	improved audio landing synchro
+  *	
   *	Revision 1.16  2005/08/01 21:52:06  lazyd
   *	Added code for AbortStage
   *	
@@ -208,6 +211,12 @@ void sat5_lmpkd::Init()
 	SoundsLoaded = false;
 
 	SetLmVesselDockStage();
+
+	//
+	// Default channel setup.
+	//
+
+	agc.SetInputChannelBit(030, 15, true);
 }
 
 void sat5_lmpkd::DoFirstTimestep()
