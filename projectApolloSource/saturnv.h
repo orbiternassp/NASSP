@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/01 19:07:47  movieman523
+  *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
+  *	
   *	Revision 1.6  2005/07/31 01:43:13  movieman523
   *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
   *	
@@ -55,8 +58,12 @@ public:
 	void Timestep(double simt);
 	void clbkLoadStateEx (FILEHANDLE scn, void *status);
 	void clbkSetClassCaps (FILEHANDLE cfg);
+	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 
 	void initSaturnV();
+
+	// called by crawler after arrival on launch pad
+	void LaunchVesselRolloutEnd();
 
 	//
 	// Functions that external code shouldn't need to access.
