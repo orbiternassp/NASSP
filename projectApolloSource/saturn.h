@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/08/05 13:02:54  tschachim
+  *	Added crawler callback function LaunchVesselRolloutEnd
+  *	
   *	Revision 1.25  2005/08/04 01:06:03  flydba
   *	*** empty log message ***
   *	
@@ -1042,6 +1045,7 @@ protected:
 	void DeactivateCSMRCS();
 	void ActivateSPS();
 	void DeactivateSPS();
+	void CheckSPSState();
 	void ActivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);

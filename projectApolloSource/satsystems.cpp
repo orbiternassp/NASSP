@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/08/05 13:12:19  tschachim
+  *	No systems during rollout
+  *	
   *	Revision 1.8  2005/07/30 16:13:49  tschachim
   *	Added systemsState handling.
   *	
@@ -504,6 +507,19 @@ void Saturn::DeactivateCSMRCS()
 	SP2switch = false;
 	SP3switch = false;
 	SP4switch = false;
+}
+
+void Saturn::CheckSPSState()
+
+{
+	if (SPSswitch){
+		SetThrusterResource(th_main[0],ph_sps);
+		agc.SetInputChannelBit(030, 3, true);
+	}
+	else{
+		SetThrusterResource(th_main[0],NULL);
+		agc.SetInputChannelBit(030, 3, false);
+	}
 }
 
 void Saturn::ActivateSPS()

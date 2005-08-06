@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/04/30 23:09:14  movieman523
+  *	Revised CSM banksums and apogee/perigee display to match the real AGC.
+  *	
   *	Revision 1.1  2005/02/11 12:54:05  tschachim
   *	Initial version
   *	
@@ -614,6 +617,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 0:
 		FlagWord2.u.STEERSW = 0;
+		SetOutputChannelBit(012, 9, true);
 		BurnTime = 0;
 		SetVerbNounAndFlash(6, 33);
 		ProgState++;
@@ -778,19 +782,15 @@ void CSMcomputer::Prog15(double simt)
 	case 14:
 		if (simt > BurnStartTime) {
 			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
-			Saturn *sat = (Saturn *)OurVessel;
-			if (sat->SIVBStart()) {
-				FlagWord2.u.STEERSW = 1;
-				FlagWord5.u.ENGONBIT = 1;
-				LastAlt = CurrentAlt;
-				ProgState++;
-			}
-			else {
-				ProgState = 0;
-			}
+			SetOutputChannelBit(012, 13, true);
+			ProgState++;
 			NextEventTime = simt + 1;
 		}
 		break;
+
+	//
+	// We should really wait for the output channel bit to be cleared here.
+	//
 
 	//
 	// Ignition!
@@ -833,7 +833,9 @@ void CSMcomputer::Prog15(double simt)
 
 			if (CurrentRVel >= CutOffVel) {
 				Saturn *sat = (Saturn *)OurVessel;
-				sat->SIVBStop();
+				SetOutputChannelBit(012, 13, false);
+				SetOutputChannelBit(012, 14, true);
+				SetVerbNoun(6, 95);
 				sat->SetEngineIndicator(1);
 				OurVessel->DeactivateNavmode(NAVMODE_PROGRADE);
 				NextEventTime = simt + 2.0;
@@ -855,7 +857,6 @@ void CSMcomputer::Prog15(double simt)
 			ProgState++;
 		}
 		break;
-
 	}
 }
 
@@ -1288,5 +1289,21 @@ void CSMcomputer::Liftoff(double simt)
 
 	if (!dsky.KBCheck()) {
 		dsky.UnBlankAll();
+	}
+}
+
+void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
+
+{
+	ApolloGuidance::SetInputChannelBit(channel, bit, val);
+
+	switch (channel)
+	{
+	case 030:
+		if (bit == 5 && val) {
+			Liftoff(CurrentTimestep);	// Liftoff signal
+			break;
+		}
+		break;
 	}
 }

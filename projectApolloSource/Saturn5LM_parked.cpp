@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/06 00:03:48  movieman523
+  *	Beginnings of support for AGC I/O channels in LEM.
+  *	
   *	Revision 1.18  2005/08/05 23:37:21  movieman523
   *	Added AGC I/O channel simulation to make integrating Virtual AGC easier.
   *	
@@ -244,7 +247,6 @@ void sat5_lmpkd::DoFirstTimestep()
 void sat5_lmpkd::LoadDefaultSounds()
 
 {
-
     char buffers[80];
 
 	//
@@ -270,7 +272,6 @@ void sat5_lmpkd::LoadDefaultSounds()
     sevent.InitDirectSound(soundlib);
 
 	SoundsLoaded = true;
-
 }
 
 void sat5_lmpkd::AttitudeLaunch1()
@@ -969,7 +970,7 @@ void sat5_lmpkd::SetLanderData(LemSettings &ls)
     char buffers[80];
 
 	MissionTime = ls.MissionTime;
-	agc.SetApolloNo(ls.MissionNo);
+	agc.SetMissionInfo(ls.MissionNo, ls.Realism);
 	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
 	soundlib.SetLanguage(AudioLanguage);

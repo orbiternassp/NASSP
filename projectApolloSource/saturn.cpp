@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/05 13:04:25  tschachim
+  *	Fixed panel initialization
+  *	
   *	Revision 1.23  2005/08/01 19:07:47  movieman523
   *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
   *	
@@ -1243,7 +1246,12 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	//
 
 	agc.SetDesiredAzimuth(tohdg);
-	agc.SetApolloNo(ApolloNo);
+
+	//
+	// And pass it the mission number and realism settings.
+	//
+
+	agc.SetMissionInfo(ApolloNo, Realism);
 }
 
 //
@@ -1315,7 +1323,7 @@ void Saturn::DoLaunch(double simt)
 	// Tell the AGC that we've lifted off.
 	//
 
-	agc.Liftoff(simt);
+	agc.SetInputChannelBit(030, 5, true);
 
 	//
 	// Set full thrust.
@@ -2390,8 +2398,15 @@ void Saturn::StageOrbitSIVB(double simt)
 	// Post-shutdown, pre-TLI code goes here.
 	//
 	AttitudeLaunchSIVB();
-	if(TLIswitch && TLICapableBooster) {
-		(void) SIVBStart();
+
+	if (TLICapableBooster && !(bStartS4B || TLIBurnDone)) {
+		if (TLIswitch) {
+			(void) SIVBStart();
+		}
+		if (agc.GetOutputChannelBit(012, 13)) {
+			if (SIVBStart())
+				agc.SetOutputChannelBit(012, 13, false);
+		}
 	}
 
 	if (GetEngineLevel(ENGINE_MAIN) > 0.65 ){
@@ -2595,6 +2610,11 @@ void Saturn::StageOrbitSIVB(double simt)
 			//
 			// Wait for shutdown and disable thrust.
 			//
+
+			if (agc.GetOutputChannelBit(012, 14)) {
+				agc.SetOutputChannelBit(012, 14, false);
+				SIVBStop();
+			}
 
 			if (GetEngineLevel(ENGINE_MAIN) <= 0) {
 				if (Realism)

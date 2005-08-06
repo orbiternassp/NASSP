@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/05 13:08:35  tschachim
+  *	Added crawler callback function LaunchVesselRolloutEnd,
+  *	added keyboard handling for BuildFirstStage (B and U keys)
+  *	
   *	Revision 1.15  2005/08/01 19:07:46  movieman523
   *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
   *	
@@ -1413,12 +1417,7 @@ void SaturnV::StageSix(double simt)
 	// Enable or disable SPS.
 	//
 
-	if (SPSswitch){
-		SetThrusterResource(th_main[0],ph_sps);
-	}
-	else{
-		SetThrusterResource(th_main[0],NULL);
-	}
+	CheckSPSState();
 
 	if (bManualSeparate)
 	{

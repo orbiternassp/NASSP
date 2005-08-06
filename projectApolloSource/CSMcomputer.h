@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/04/30 23:09:15  movieman523
+  *	Revised CSM banksums and apogee/perigee display to match the real AGC.
+  *	
   *	Revision 1.1  2005/02/11 12:17:54  tschachim
   *	Initial version
   *	
@@ -204,6 +207,8 @@ public:
 	void SetDesiredPerigee(double val) { DesiredPerigee = val; };
 	void SetDesiredAzimuth(double val) { DesiredAzimuth = val; };
 	void SetBurnTime(double val) { BurnTime = val; };
+
+	void SetInputChannelBit(int channel, int bit, bool val);
 
 protected:
 
