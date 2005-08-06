@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.10  2005/08/05 23:37:21  movieman523
   *	Added AGC I/O channel simulation to make integrating Virtual AGC easier.
   *	
@@ -981,11 +984,18 @@ void ApolloGuidance::VerbNounEntered(int verb, int noun)
 
 void ApolloGuidance::SetMissionInfo(int MissionNo, int RealismValue) 
 
-{ 
-	ApolloNo = MissionNo; 
-	Realism = RealismValue; 
-}
+{
+	Realism = RealismValue;
 
+	//
+	// Older scenarios saved the mission number in the AGC. For backwards
+	// compatibility we'll only let the new number overwrite the saved value
+	// if it's zero.
+	//
+
+	if (!ApolloNo)
+		ApolloNo = MissionNo; 
+}
 
 //
 // Run the reset program on startup.

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.24  2005/08/05 13:04:25  tschachim
   *	Fixed panel initialization
   *	
@@ -1037,9 +1040,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			SetRPSwitchState(SwitchState);
 		}
 		else if (!strnicmp (line, "APOLLONO", 8)) {
-            SwitchState = 0;
 			sscanf (line+8, "%d", &ApolloNo);
-			SetSSwitchState(SwitchState);
 		}
 		else if (!strnicmp (line, "CPSWITCH", 8)) {
             SwitchState = 0;

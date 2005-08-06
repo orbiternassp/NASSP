@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/01 21:51:11  lazyd
+  *	Added code for Abort Stage
+  *	
   *	Revision 1.9  2005/07/16 20:43:01  lazyd
   *	*** empty log message ***
   *	
@@ -364,6 +367,7 @@ protected:
 	int status;
 
 	int Realism;
+	int ApolloNo;
 
 	int SwitchFocusToLeva;
 

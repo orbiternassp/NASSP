@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.19  2005/08/06 00:03:48  movieman523
   *	Beginnings of support for AGC I/O channels in LEM.
   *	
@@ -210,6 +213,7 @@ void sat5_lmpkd::Init()
 	ph_rcslm1 = 0;
 
 	Realism = REALISM_DEFAULT;
+	ApolloNo = 0;
 
 	strncpy(AudioLanguage, "English", 64);
 	soundlib.SetLanguage(AudioLanguage);
@@ -265,7 +269,7 @@ void sat5_lmpkd::LoadDefaultSounds()
 
 // MODIF X15 manage landing sound
 
-	sprintf(buffers, "Apollo%d",agc.GetApolloNo());
+	sprintf(buffers, "Apollo%d", agc.GetApolloNo());
 // TRACE (buffers);
     soundlib.SetSoundLibMissionPath(buffers);
     sevent.LoadMissionLandingSoundArray(soundlib,"sound.csv");
@@ -856,7 +860,10 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp (line, "REALISM", 7)) {
 			sscanf (line+7, "%d", &Realism);
-		} 
+		}
+		else if (!strnicmp (line, "APOLLONO", 8)) {
+			sscanf (line+8, "%d", &ApolloNo);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn);
 		}
@@ -898,6 +905,12 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 
 	soundlib.SetLanguage(AudioLanguage);
 	LoadDefaultSounds();
+
+	//
+	// Pass on the mission number and realism setting to the AGC.
+	//
+
+	agc.SetMissionInfo(ApolloNo, Realism);
 }
 
 void sat5_lmpkd::SetClassCaps (FILEHANDLE cfg)
@@ -941,6 +954,8 @@ void sat5_lmpkd::SaveState (FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "REALISM", Realism);
 	}
 
+	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
+
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
 	}
@@ -970,15 +985,19 @@ void sat5_lmpkd::SetLanderData(LemSettings &ls)
     char buffers[80];
 
 	MissionTime = ls.MissionTime;
-	agc.SetMissionInfo(ls.MissionNo, ls.Realism);
 	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
-	soundlib.SetLanguage(AudioLanguage);
-	sprintf(buffers, "Apollo%d",ls.MissionNo);
-    soundlib.SetSoundLibMissionPath(buffers);
+
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
 	Realism = ls.Realism;
+	ApolloNo = ls.MissionNo;
+
+	agc.SetMissionInfo(ApolloNo, Realism);
+
+	soundlib.SetLanguage(AudioLanguage);
+	sprintf(buffers, "Apollo%d", ApolloNo);
+    soundlib.SetSoundLibMissionPath(buffers);
 }
 
 // ==============================================================
