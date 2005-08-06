@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/07/17 17:40:20  spacex15
+  *	fixed lm sinking below the moon surface when landing
+  *	
   *	Revision 1.9  2005/07/06 14:30:41  lazyd
   *	Added code to make vessel mass and fuel mass mission dependent
   *	
@@ -139,8 +142,9 @@ void sat5_lmpkd::SetupEVA()
 		ClearMeshes();
 		VECTOR3 mesh_dir=_V(-0.08,-0.15,-4.3);
 		AddMesh (hLMVessel, &mesh_dir);
-	if(high){
-		}else{
+		if(high){
+		}
+		else{
 			high=true;
 			SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
 		}
@@ -224,6 +228,9 @@ void sat5_lmpkd::SetLmVesselDockStage()
 	AFEED2switch=false;
 	AFEED3switch=false;
 	AFEED4switch=false;
+
+	// Descent stage attached.
+	agc.SetInputChannelBit(030, 2, true);
 }
 
 void sat5_lmpkd::SetLmVesselHoverStage()
@@ -294,6 +301,9 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	AFEED2switch=false;
 	AFEED3switch=false;
 	AFEED4switch=false;
+
+	// Descent stage attached.
+	agc.SetInputChannelBit(030, 2, true);
 }
 
 
@@ -368,6 +378,9 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 	AFEED2switch=true;
 	AFEED3switch=true;
 	AFEED4switch=true;
+
+	// Descent stage detached.
+	agc.SetInputChannelBit(030, 2, false);
 }
 
 void sat5_lmpkd::SeparateStage (UINT stage)

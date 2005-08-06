@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/03 10:44:33  spacex15
+  *	improved audio landing synchro
+  *	
   *	Revision 1.10  2005/08/01 21:48:52  lazyd
   *	Added new programs for ascent and rendezvous
   *	
@@ -158,6 +161,12 @@ public:
 				         double timeremaining,
 					     double timeafterpdi,
 						 double timetoapproach);
+
+	//
+	// I/O channels.
+	//
+
+	void SetInputChannelBit(int channel, int bit, bool val);
 
 protected:
 

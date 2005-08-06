@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/05 23:37:21  movieman523
+  *	Added AGC I/O channel simulation to make integrating Virtual AGC easier.
+  *	
   *	Revision 1.17  2005/08/03 10:44:33  spacex15
   *	improved audio landing synchro
   *	
@@ -216,7 +219,8 @@ void sat5_lmpkd::Init()
 	// Default channel setup.
 	//
 
-	agc.SetInputChannelBit(030, 15, true);
+	agc.SetInputChannelBit(030, 2, true);	// Descent stage attached.
+	agc.SetInputChannelBit(030, 15, true);	// Temperature in limits.
 }
 
 void sat5_lmpkd::DoFirstTimestep()
@@ -564,9 +568,11 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		if (ENGARMswitch && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
+			agc.SetInputChannelBit(030, 3, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
+			agc.SetInputChannelBit(030, 3, false);
 		}
 		
 		if(!AFEED1switch && !AFEED2switch && !AFEED3switch && !AFEED4switch){
@@ -584,9 +590,11 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		if (ENGARMswitch && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
+			agc.SetInputChannelBit(030, 3, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
+			agc.SetInputChannelBit(030, 3, false);
 		}
 		if (EVA_IP){
 			if(!hLEVA){
@@ -642,10 +650,9 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 			Abortswitch=true;
 			SeparateStage(stage);
 			SetEngineLevel(ENGINE_HOVER,1);
-//			ActivateNavmode(NAVMODE_HLEVEL);
 			stage = 2;
 			AbortFire();
-			agc.RunProgram(71);
+			agc.SetInputChannelBit(030, 4, true); // Abort with ascent stage.
 		}
 		if (bManualSeparate && !startimer){
 			VESSELSTATUS vs;
@@ -671,9 +678,11 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		if (AscentEngineArmed()) {
 			SetThrusterResource(th_hover[0], ph_Asc);
 			SetThrusterResource(th_hover[1], ph_Asc);
+			agc.SetInputChannelBit(030, 3, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
+			agc.SetInputChannelBit(030, 3, false);
 		}
 		if (!AscentRCSArmed()) {
 			SetRCS(NULL);
@@ -686,9 +695,11 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		if (AscentEngineArmed()) {
 			SetThrusterResource(th_hover[0], ph_Asc);
 			SetThrusterResource(th_hover[1], ph_Asc);
+			agc.SetInputChannelBit(030, 3, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
+			agc.SetInputChannelBit(030, 3, false);
 		}
 		if(!AscentRCSArmed()){
 			SetRCS(NULL);
@@ -746,7 +757,8 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 
 void sat5_lmpkd::SetGimbal(bool setting)
 {
-	GMBLswitch=setting;
+	agc.SetInputChannelBit(032, 9, setting);
+	GMBLswitch = setting;
 }
 
 //
@@ -755,7 +767,7 @@ void sat5_lmpkd::SetGimbal(bool setting)
 
 void sat5_lmpkd::GetMissionTime(double &Met)
 {
-	Met=MissionTime;
+	Met = MissionTime;
 	return;
 }
 

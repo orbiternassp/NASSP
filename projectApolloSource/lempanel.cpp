@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/05 21:45:48  spacex15
+  *	reactivation of Abort and Abort stage buttons
+  *	
   *	Revision 1.16  2005/08/04 01:06:03  flydba
   *	*** empty log message ***
   *	
@@ -1481,38 +1484,34 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 
 
 	case AID_SWITCH_JET:
-	if(event & PANEL_MOUSE_RBDOWN){
-
+		if(event & PANEL_MOUSE_RBDOWN){
 			Cswitch2 = !Cswitch2;
 			GuardClick();
-
-		}else if(event & PANEL_MOUSE_LBDOWN){
-
-
-				if(my >15 && my <26 && !Sswitch2){
+		}
+		else if(event & PANEL_MOUSE_LBDOWN){
+			if(my >15 && my <26 && !Sswitch2){
 				Sswitch2 = true;
 				SwitchClick();
-		}else if(my >26 && my <38 && Sswitch2 && Cswitch2){
+			}
+			else if(my >26 && my <38 && Sswitch2 && Cswitch2){
 				Sswitch2 = false;
 				SwitchClick();
-				}
+			}
 		}
-
 		return true;
 
 	case AID_ENGINE_GIMBAL_SWITCH:
 		if (my >=0 && my <=16 ){
 			if (mx > 0 && mx < 24 && !GMBLswitch){
 				SwitchClick();
-				GMBLswitch=true;
+				SetGimbal(true);
 			}
 		}else if (my >=15 && my <=31 ){
 		if (mx > 0 && mx < 24 && GMBLswitch){
 				SwitchClick();
-				GMBLswitch=false;
+				SetGimbal(false);
 			}
 		}
-
 		return true;
 
 	case AID_ASCENT_HE:
@@ -1549,8 +1548,9 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 //				SetThrusterResource(th_hover[1], ph_Asc);
 //				stage = 2;
 				startimer = false;
-				agc.RunProgram(70);
-		}else if (mx > 85 && mx < 130 && my > 0 && my < 50){
+				agc.SetInputChannelBit(030, 1, true);
+		}
+		else if (mx > 85 && mx < 130 && my > 0 && my < 50){
 			// This is the "ABORT STAGE" button
 				ButtonClick();
 				AbortFire();
@@ -1563,29 +1563,26 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 				Abortswitch = true;
 				if(agc.GetProgRunning() > 14 ) {
 					SetEngineLevel(ENGINE_HOVER, 1);
-					agc.RunProgram(71);
+					agc.SetInputChannelBit(030, 4, true);
 				}
 		}
 		return true;
 
 	case AID_SWITCH_SEP:
 		if(event & PANEL_MOUSE_RBDOWN){
-
 			Cswitch1 = !Cswitch1;
 			GuardClick();
-
-		}else if(event & PANEL_MOUSE_LBDOWN){
-
-
-				if(my >15 && my <26 && !Sswitch1){
+		}
+		else if(event & PANEL_MOUSE_LBDOWN){
+			if(my >15 && my <26 && !Sswitch1){
 				Sswitch1 = true;
 				SwitchClick();
-				}else if(my >26 && my <38 && Sswitch1 && Cswitch1){
+			}
+			else if(my >26 && my <38 && Sswitch1 && Cswitch1){
 				Sswitch1 = false;
 				SwitchClick();
-				}
+			}
 		}
-
 		return true;
 
 		case AID_EXPLOSIVE_DEVICES2:
