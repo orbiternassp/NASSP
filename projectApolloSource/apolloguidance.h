@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/08/05 23:37:21  movieman523
+  *	Added AGC I/O channel simulation to make integrating Virtual AGC easier.
+  *	
   *	Revision 1.8  2005/08/01 21:46:18  lazyd
   *	Changed Program 33 to Program 37
   *	
@@ -82,7 +85,6 @@ public:
 	virtual void SetFlagWord(int num, unsigned int val) = 0;
 	virtual bool ReadMemory(unsigned int loc, int &val) = 0;
 	virtual void WriteMemory(unsigned int loc, int val) = 0;
-
 
 	void RSetPressed();
 
@@ -141,6 +143,13 @@ public:
 	virtual unsigned int GetOutputChannel(int channel);
 	virtual void SetInputChannel(int channel, unsigned int val);
 	virtual void SetInputChannelBit(int channel, int bit, bool val);
+	virtual void SetOutputChannelBit(int channel, int bit, bool val);
+
+	//
+	// Generally useful setup.
+	//
+
+	void SetMissionInfo(int MissonNo, int RealismValue);
 
 protected:
 
@@ -177,7 +186,6 @@ protected:
 	void DisplayOrbitCalculations();
 	void UpdateBurnTime(int R1, int R2, int R3);
 	void SetOutputChannel(int channel, unsigned int val);
-	void SetOutputChannelBit(int channel, int bit, bool val);
 	bool GetInputChannelBit(int channel, int bit);
 	unsigned int GetInputChannel(int channel);
 
@@ -220,6 +228,7 @@ protected:
 
 	int ResetCount;
 	int ApolloNo;
+	int Realism;
 	int Yaagc;
 
 	double ResetTime;

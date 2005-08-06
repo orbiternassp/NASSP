@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/05 13:05:55  tschachim
+  *	Fixed BuildFirstStage
+  *	
   *	Revision 1.11  2005/08/01 19:07:46  movieman523
   *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
   *	
@@ -1154,6 +1157,12 @@ void SaturnV::SeparateStage (int stage)
 		strcpy (VName, GetName()); strcat (VName, "-SM");
 		hSMJet = oapiCreateVessel(VName, "sat1_SM", vs1);
 		SetReentryStage ();
+
+		//
+		// Tell AGC the CM has seperated from the SM.
+		//
+
+		agc.SetInputChannelBit(030, 2, true);
 	}
 
 	if (stage == CM_STAGE)

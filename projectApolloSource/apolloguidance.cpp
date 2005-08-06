@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/05 23:37:21  movieman523
+  *	Added AGC I/O channel simulation to make integrating Virtual AGC easier.
+  *	
   *	Revision 1.9  2005/08/01 21:45:41  lazyd
   *	Changed Program 33 to Program 37 to avoid conflict with rendezvous
   *	
@@ -129,6 +132,8 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display) : soundlib(s), dsky(d
 	//
 
 	ApolloNo = 0;
+
+	Realism = REALISM_DEFAULT;
 
 	//
 	// Default to meters per second for
@@ -973,6 +978,14 @@ void ApolloGuidance::VerbNounEntered(int verb, int noun)
 
 	dsky.LightOprErr();
 }
+
+void ApolloGuidance::SetMissionInfo(int MissionNo, int RealismValue) 
+
+{ 
+	ApolloNo = MissionNo; 
+	Realism = RealismValue; 
+}
+
 
 //
 // Run the reset program on startup.
@@ -2339,9 +2352,12 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 		val = (int) (DesiredLAN * 100.0);
 		return true;
 
-
 	case 025:
 		val = ((TIME1 / 16) & 077777);
+		return true;
+
+	case 026:
+		val = Realism;
 		return true;
 	}
 
@@ -2442,6 +2458,9 @@ void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)
 		TIME1 = val * 16;
 		break;
 
+	case 026:
+		Realism = val;
+		break;
 	}
 }
 
