@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/06 01:25:27  movieman523
+  *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
+  *	
   *	Revision 1.11  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -2099,6 +2102,9 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 //
 // I/O channel support code.
 //
+// Note that the AGC 'bit 1' is actually 'bit 0' in today's terminology, so we have
+// to adjust the bit number here to match the real AGC.
+//
 
 bool ApolloGuidance::GetOutputChannelBit(int channel, int bit)
 
@@ -2106,7 +2112,7 @@ bool ApolloGuidance::GetOutputChannelBit(int channel, int bit)
 	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
 		return false;
 
-	return (OutputChannel[channel] & (1 << bit)) != 0;
+	return (OutputChannel[channel] & (1 << (bit - 1))) != 0;
 }
 
 unsigned int ApolloGuidance::GetOutputChannel(int channel)
@@ -2130,7 +2136,7 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 {
-	unsigned int mask = (1 << bit);
+	unsigned int mask = (1 << (bit - 1));
 
 	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
 		return;
@@ -2155,7 +2161,7 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 
 {
-	unsigned int mask = (1 << bit);
+	unsigned int mask = (1 << (bit - 1));
 
 	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
 		return;
@@ -2174,7 +2180,7 @@ bool ApolloGuidance::GetInputChannelBit(int channel, int bit)
 	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
 		return false;
 
-	return (InputChannel[channel] & (1 << bit)) != 0;
+	return (InputChannel[channel] & (1 << (bit - 1))) != 0;
 }
 
 unsigned int ApolloGuidance::GetInputChannel(int channel)
