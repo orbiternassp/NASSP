@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/04 19:55:15  lazyd
+  *	Added function def for OrbitalParameters
+  *	
   *	Revision 1.10  2005/08/03 10:44:33  spacex15
   *	improved audio landing synchro
   *	
@@ -1145,6 +1148,28 @@ void LEMcomputer::Prog68(double simt)
 	case 2:
 		AwaitProgram();
 		ProgState++;
+		break;
+	}
+}
+
+//
+// Special case handling of I/O channel changes.
+//
+
+void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
+
+{
+	ApolloGuidance::SetInputChannelBit(channel, bit, val);
+
+	switch (channel)
+	{
+	case 030:
+		if ((bit == 1) && val) {
+			RunProgram(70);			// Abort with descent stage
+		}
+		else if ((bit == 4) && val) {
+			RunProgram(71);			// Abort with ascent stage.
+		}
 		break;
 	}
 }
