@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/04 19:53:26  lazyd
+  *	Fixed P33 problem and added code for direct rendezvous
+  *	
   *	Revision 1.15  2005/08/03 10:44:33  spacex15
   *	improved audio landing synchro
   *	
@@ -106,6 +109,7 @@
 #define ABORTLOG	true
 #define P64LOG		false
 #define LOGFILE		false
+#define TRTHRUST	1780.0
 
 //
 // Code goes here
@@ -283,7 +287,8 @@ void LEMcomputer::Prog63(double simt)
 				//do the quadratic guidance - compute acceleration vector
 				ProgFlag03=false;
 				if(ProgState == 15) {
-					if(tgo > -354.0) OurVessel->SetAttitudeRotLevel(1,0.0);
+//					if(tgo > -354.0) OurVessel->SetAttitudeRotLevel(1,0.0); //for old RCS thrust
+					if(tgo > -358.0) OurVessel->SetAttitudeRotLevel(1,0.0);
 					if(tgo > -350.0) {
 						if(fabs(actatt.y) < 0.45) {
 							ProgState++;
@@ -531,6 +536,8 @@ void LEMcomputer::Prog63(double simt)
 		if(dt <= -26.0) {
 //			sprintf(oapiDebugString(),"Throttle Up");
 			OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
+			DesiredLAN=0.0;
+			DesiredPlaneChange=simt;
 			NextEventTime=simt;
 			ProgState++;
 		}
@@ -1618,10 +1625,13 @@ void LEMcomputer::OrientAxis(VECTOR3 &vec, int axis)
 
 void LEMcomputer::Prog13(double simt)
 {
-	double distance, radius, rlm, vel, time, cbrg;
+	const double GRAVITY=6.67259e-11;
+	double distance, radius, rlm, vel, time, cbrg, vh, csmapo, csmtta, csmper, csmttp, 
+		csmperiod, a, mu;
 	VECTOR3 csmpos, csmvel, lmpos, csmnor, csmhvel;
 	char line[10];
 	OBJHANDLE hbody=OurVessel->GetGravityRef();
+	vh=1687.0;
 
 	if(ProgState == 0) {
 		strncpy(line, OurVessel->GetName(), 10);
@@ -1649,12 +1659,24 @@ void LEMcomputer::Prog13(double simt)
 	if(simt > NextEventTime) {
 		NextEventTime=simt+1.0;
 		if(ProgState >= 1) {
+			OBJHANDLE hbody=OurVessel->GetGravityRef();
+			double bradius=oapiGetSize(hbody);
+			double bmass=oapiGetMass(hbody);
+			mu=GRAVITY*bmass;
 			strncpy(line, OurVessel->GetName(), 10);
 			line[6]=0;
 			OBJHANDLE hcsm=oapiGetVesselByName(line);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			CSMVessel->GetRelativeVel(hbody, csmvel);
+
+			// aim for an orbit apo 25806 m lower than CSM apo
+			OrbitParams(csmpos, csmvel, csmperiod, csmapo, csmtta, csmper, csmttp);
+			a=(csmper+csmapo+2.0*bradius)/2.0;
+			DesiredLAN=sqrt(mu*((2.0/(csmapo+bradius-26806.0))-1.0/a));
+//			sprintf(oapiDebugString(), "vh=%.3f", DesiredLAN);
+			DesiredLAN=1687;
+
 			OurVessel->GetRelativePos(hbody, lmpos);
 			csmnor=CrossProduct(csmvel, csmpos);
 			csmnor=Normalize(csmnor);
@@ -1677,8 +1699,8 @@ void LEMcomputer::Prog13(double simt)
 					BurnTime=simt+time+70.0;
 				} else {
 //					BurnTime=simt+time-50.0;  // TPI 10 min after insertion
-					BurnTime=simt+time-40.0;  // TPI 13 min
-//					BurnTime=simt+time-35.0;  // TPI 53 min
+//					BurnTime=simt+time-40.0;  // TPI 13 min
+					BurnTime=simt+time-35.0;  // TPI 53 min
 //					BurnTime=simt+time-30.0;  // TPI 57 min
 				}
 				BurnStartTime=BurnTime;
@@ -1759,10 +1781,39 @@ void LEMcomputer::Prog13Pressed(int R1, int R2, int R3)
 
 void LEMcomputer::Prog70(double simt)
 {
+	if(DesiredLAN == 0.0) {
+		// from NASA MSC 69-FM-46
+		double t, vh;
+		double k1=5644.2;
+		double k2=0.09613;
+		double k3=-0.0009345;
+		double k4=0.0000006857;
+		t=simt-DesiredPlaneChange;
+		vh=(k1+k2*t+k3*t*t+k4*t*t*t)/3.25;
+		if(vh < 1695.0) vh=1695.0;
+//		sprintf(oapiDebugString(), "t=%.1f vh=%.3f", t, vh);
+		DesiredLAN=vh;
+		OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
+	}
 	AbortAscent(simt);
 }
 void LEMcomputer::Prog71(double simt)
 {
+	if(DesiredLAN == 0.0) {
+		// from 69-FM-46
+		double t, vh;
+		double k1=5646.6;
+		double k2=0.05157;
+		double k3=-0.0007615;
+		double k4=0.00000048214;
+		t=simt-DesiredPlaneChange;
+		vh=(k1+k2*t+k3*t*t+k4*t*t*t)/3.25;
+		if(vh < 1695.0) vh=1695.0;
+//		sprintf(oapiDebugString(), "t=%.1f vh=%.3f", t, vh);
+		DesiredLAN=vh;
+		OurVessel->DeactivateNavmode(NAVMODE_KILLROT);
+		OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
+	}
 	AbortAscent(simt);
 }
 
@@ -1779,7 +1830,8 @@ void LEMcomputer::AbortAscent(double simt)
 		centrip, grav, acctot, vthrust, velo;
 	char line[10];
 
-	velo=1687.0;
+//	velo=1687.0;
+	velo=DesiredLAN;
 	if(ProgState == 0) {
 //		if(ABORTLOG) {
 //			char fname[8];
@@ -2019,7 +2071,7 @@ void LEMcomputer::Prog32(double simt)
 			avel=Normalize(avel)*dv;
 //			sprintf(oapiDebugString(), "tta=%.1f ttp=%.1f ra=%.1f vc=%.1f va=%.1f dv=%.3f", 
 //				tta, ttp, rapo, velm, vapo, dv);
-			t12=((vmass/480.0)*dv)/2.0;
+			t12=((vmass/TRTHRUST)*dv)/2.0;
 			BurnTime=simt+tta-t12;
 			BurnStartTime=BurnTime;
 			BurnEndTime=BurnStartTime+2.0*t12;
@@ -2145,7 +2197,7 @@ void LEMcomputer::Prog33(double simt)
 			if(csmtta < csmttp) avel=-avel;
 //			sprintf(oapiDebugString(), "tta=%.1f ttp=%.1f ra=%.1f vc=%.1f va=%.1f dv=%.3f", 
 //				tta, ttp, rapo, velm, vapo, dv);
-			t12=((vmass/480.0)*fabs(ddv))/2.0;
+			t12=((vmass/TRTHRUST)*fabs(ddv))/2.0;
 			BurnTime=t12*2.0;
 			if(BurnTime < 1.0) {
 				DesiredPlaneChange=0.1;
@@ -2206,8 +2258,8 @@ void LEMcomputer::Prog34(double simt)
 {
 	const double GRAVITY=6.67259e-11;
 	VECTOR3 csmpos, csmvel, lmpos, lmvel, renpos, renvel, stpos, stvel, v1, v2, dv1,
-		rpos, rvel, h, n, ve, acc, s, vec;
-	double mu, a, al, vel, r, e, time, angle, dt, delta, t,
+		rpos, rvel, h, n, ve, acc, s, vec, cstpos, cstvel, uu, ul, up;
+	double mu, a, al, vel, r, e, time, angle, dt, delta, t, q, ea,
 		velm, dis,  p, ee, i, om, w, v, u, l, tpitime, to, ao, elev, dadt, dd, vmass,
 		visp, thrust, fmass, csmperiod, csmapo, csmtta, csmper, csmttp, lmperiod, lmapo, 
 		lmtta, lmper, lmttp, phase, vdotr, adh, theta;
@@ -2251,7 +2303,7 @@ void LEMcomputer::Prog34(double simt)
 			e=(vel*vel)/2.0-mu/r;
 			al=-mu/(2.0*e);
 			elev=26.0*RAD;  //target elevation
-//			if(ApolloNo > 12) elev=23.3*RAD;  //target elevation for direct rendezvous
+			if(ApolloNo > 12) elev=23.3*RAD;  //target elevation for direct rendezvous
 			time=tpitime;
 //			fprintf(outstr, "St time=%.1f\n", time);
 			for (k=0; k<30; k++) {
@@ -2305,9 +2357,10 @@ void LEMcomputer::Prog34(double simt)
 			double bmass=oapiGetMass(hbody);
 			mu=GRAVITY*bmass;
 			if(ApolloNo < 14) {
-				thrust=480.0;
+				thrust=TRTHRUST;
 			} else {
 				thrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
+				BurnTime=33.0*60.0+simt;
 			}
 			visp=OurVessel->GetISP();
 			strncpy(line, OurVessel->GetName(), 10);
@@ -2345,6 +2398,23 @@ void LEMcomputer::Prog34(double simt)
 			// predict where the lm will be at TPI time
 			PredictPosVelVectors(lmpos, lmvel, a, mu, time, stpos, stvel, velm);
 			dis=Mag(stpos-lmpos);
+
+			// compute elevation angle at TPI
+			vel=Mag(csmvel);
+			r=Mag(csmpos);
+			e=(vel*vel)/2.0-mu/r;
+			a=-mu/(2.0*e);
+			//predict csm pos and vel at TPI time
+			PredictPosVelVectors(csmpos, csmvel, a, mu, time, cstpos, cstvel, velm);
+			ul=Normalize(cstpos-stpos);
+			uu=Normalize(CrossProduct(stpos, stvel));
+//			up=Normalize((ul-stpos*(ul*stpos))/(Mag(stpos)*Mag(stpos)));
+			up=Normalize(CrossProduct(uu, stpos));
+			q=Normalize(stpos)*ul;
+			q=q/fabs(q);
+			ea=acos((ul*up)*q);
+//			sprintf(oapiDebugString(), "elev=%.3f q=%.1f", ea*DEG, q);
+			// end of elevation calc
 //			fprintf(outstr, "LM TPI  pos=%.1f %.1f %.1f vel=%.1f %.1f %.1f dis=%.1f time=%.1f\n", 
 //				stpos, stvel, dis, simt+tpitime);
 			DesiredApogee=stpos.x;
@@ -2374,7 +2444,8 @@ void LEMcomputer::Prog34(double simt)
 			OrbitParams(stpos+s, v1, lmperiod, lmapo, lmtta, lmper, lmttp);
 			// do some sanity checking - if transfer hits the moon, don't do it
 			if(lmttp < lmtta) {
-				if (lmper < 1000.0) {
+				if (lmper < 18461.0) {
+					// need to do a program alarm here...
 					RunProgram(0);
 					return;
 				}
@@ -2490,6 +2561,10 @@ void LEMcomputer::Prog34Pressed(int R1, int R2, int R3)
 	dsky.LightOprErr();
 }
 
+//
+//	TPM - Terminal Phase Midcourse program
+//
+
 void LEMcomputer::Prog35(double simt)
 {
 	const double GRAVITY=6.67259e-11;
@@ -2557,7 +2632,7 @@ void LEMcomputer::Prog35(double simt)
 			DesiredDeltaVx=dv.x;
 			DesiredDeltaVy=dv.y;
 			DesiredDeltaVz=dv.z;
-			BurnTime=((vmass/480.0)*Mag(dv));
+			BurnTime=((vmass/TRTHRUST)*Mag(dv));
 			if(BurnTime < 1.0) {
 				DesiredPlaneChange=0.1;
 				BurnTime=10.0*BurnTime;
@@ -2643,7 +2718,7 @@ void LEMcomputer::Prog36(double simt)
 			}
 			dv=vel-DesiredDeltaVz;
 			if(dv > 0.0) {
-				BurnTime=((vmass/240.0)*dv);
+				BurnTime=((vmass/(TRTHRUST/2.0))*dv);
 				BurnEndTime=simt+BurnTime;
 			}
 			axis=2;
@@ -2669,29 +2744,40 @@ void LEMcomputer::Prog36(double simt)
 					yo=15.0;
 				}
 				if(fabs(vlcl.x) > 0.0001) {
-					level.x=-(((rlcl.x/10.0)+vlcl.x)*vmass)/(DELTAT*480.0);
+					level.x=-(((rlcl.x/10.0)+vlcl.x)*vmass)/(TRTHRUST*DELTAT);
 					if(level.x > 1.0)  level.x=1.0;
 					if(level.x < -1.0) level.x=-1.0;
 				} else {
 					level.x=0.0;
 				}
 				if(fabs(vlcl.y) > 0.0001) {
-					level.y=-((((rlcl.y+yo)/10.0)+vlcl.y)*vmass)/(480.0*DELTAT);
+					level.y=-((((rlcl.y+yo)/10.0)+vlcl.y)*vmass)/(TRTHRUST*DELTAT);
 					if(level.y > 1.0)  level.y=1.0;
 					if(level.y < -1.0) level.y=-1.0;
 				} else {
 					level.y=0.0;
+				}
+				if(ProgState == 2) {
+					if(simt < BurnTime) {
+						level.x=0.0;
+						level.y=0.0;
+					}
 				}
 				OurVessel->SetAttitudeLinLevel(0,level.x);
 				OurVessel->SetAttitudeLinLevel(1,level.y);
 				level.z=0.0;
 				if(ProgFlag02) {
 					if(fabs(vlcl.z) > 0.0001) {
-						level.z=-((((rlcl.z+zo)/10.0)+vlcl.z)*vmass)/(480.0*DELTAT);
+						level.z=-((((rlcl.z+zo)/10.0)+vlcl.z)*vmass)/(TRTHRUST*DELTAT);
 						if(level.z > 1.0)  level.z=1.0;
 						if(level.z < -1.0) level.z=-1.0;
 					} else {
 						level.z=0.0;
+					}
+					if(ProgState == 2) {
+						if(simt < BurnTime) {
+							level.z=0.0;
+						}
 					}
 					OurVessel->SetAttitudeLinLevel(2,level.z);
 					if((fabs(rlcl.z+15.0) < 0.01) && fabs(vlcl.z) < 0.001) {
