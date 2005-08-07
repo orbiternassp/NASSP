@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/07/19 16:23:11  tschachim
+  *	New pen, surfaces and constants
+  *	
   *	Revision 1.16  2005/06/06 12:10:21  tschachim
   *	New SRF_ defines
   *	
@@ -154,8 +157,10 @@ inline double KelvinToFahrenheit(double kelvin) {
 
 #define SPS_THRUST		100552.5
 #define SPS_ISP			3778.5
-#define APS_ISP			2921
-#define APS_THRUST		15880
+//#define APS_THRUST		15880
+//#define APS_ISP			2921
+#define APS_THRUST		15600
+#define APS_ISP			2840
 #define DPS_THRUST		44910
 #define DPS_ISP			3107
 
