@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/06 00:03:48  movieman523
+  *	Beginnings of support for AGC I/O channels in LEM.
+  *	
   *	Revision 1.10  2005/07/17 17:40:20  spacex15
   *	fixed lm sinking below the moon surface when landing
   *	
@@ -335,10 +338,12 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 		ph_Asc  = CreatePropellantResource(2345); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Asc); // display 2nd stage propellant level in generic HUD
 	if (!ph_rcslm1){
-		ph_rcslm1 = CreatePropellantResource(100);
+//		ph_rcslm1 = CreatePropellantResource(100);
+		ph_rcslm1 = CreatePropellantResource(287);
 	}
 	// orbiter main thrusters
-    th_hover[0] = CreateThruster (_V( 0.0,-2.5,0.0), _V( 0,1,0), 15880, ph_Asc, 2921);
+//    th_hover[0] = CreateThruster (_V( 0.0,-2.5,0.0), _V( 0,1,0), 15880, ph_Asc, 2921);
+    th_hover[0] = CreateThruster (_V( 0.0,-2.5,0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
 	th_hover[1] = CreateThruster (_V( 0.01,-2.5,0.0), _V( 0,1,0), 0, ph_Asc, 0);//this is a "virtual engine",no thrust and no fuel
 	                                                                              //needed for visual gimbaling for corrected engine flames
 
