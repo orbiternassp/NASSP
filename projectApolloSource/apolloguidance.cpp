@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/06 01:51:14  movieman523
+  *	Fixed stupid error in bit numbering for I/O channels. The real AGC's 'bit 1' is actually our 'bit 0'.
+  *	
   *	Revision 1.12  2005/08/06 01:25:27  movieman523
   *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
   *	
@@ -1305,6 +1308,8 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast)
 	Mass=OurVessel->GetMass();
 	Size=OurVessel->GetSize();
 	MaxThrust=OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
+//	THGROUP_HANDLE GetThrusterGroupHandle(THGROUP_TYPE THGROUP_ATT_PITCHUP);
+//	MaxThrust=GetThrusterMax0(?);
 
 	if(fast) {
 		factor=PI;
