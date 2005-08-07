@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -287,75 +290,78 @@ UINT atthand;
 	const double RCSOFFSETM2=0.47;
 	const double LM2VOFS=0.28;
 
-	int MaxThrust=120;
+//	int MaxThrust=120;
+//	double RCSISP=15000;
+	double MaxThrust=445.0;
+	double RCSISP=2840.0;
 
-	th_att_lin[0]=CreateThruster (_V(2,2,-2), _V(1,0,1),120, ph_rcslm1,15000, 15000);
-	th_att_lin[1]=CreateThruster (_V(-2,2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[2]=CreateThruster (_V(2,-2,-2), _V(1,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[3]=CreateThruster (_V(-2,-2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[4]=CreateThruster (_V(2,2,2), _V(1,0,-1),120, ph_rcslm1,15000, 15000);
-	th_att_lin[5]=CreateThruster (_V(-2,2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[6]=CreateThruster (_V(2,-2,2), _V(1,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[7]=CreateThruster (_V(-2,-2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_lin[0]=CreateThruster (_V(2,2,-2), _V(1,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[1]=CreateThruster (_V(-2,2,-2), _V(-1,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[2]=CreateThruster (_V(2,-2,-2), _V(1,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[3]=CreateThruster (_V(-2,-2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[4]=CreateThruster (_V(2,2,2), _V(1,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[5]=CreateThruster (_V(-2,2,2), _V(-1,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[6]=CreateThruster (_V(2,-2,2), _V(1,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[7]=CreateThruster (_V(-2,-2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
 
-	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),120, ph_rcslm1,15000, 15000);
-	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),120, ph_rcslm1,15000, 15000);
-	th_att_rot[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 	CreateThrusterGroup (th_att_rot,   4, THGROUP_ATT_YAWLEFT);
 	CreateThrusterGroup (th_att_rot+4,   4, THGROUP_ATT_YAWRIGHT);
 
-	th_att_lin[8]=CreateThruster (_V(2,2,2), _V(-1,0,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[9]=CreateThruster (_V(2,-2,2), _V(-1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[10]=CreateThruster (_V(2,2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[11]=CreateThruster (_V(2,-2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[12]=CreateThruster (_V(-2,2,2), _V(1,0,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[13]=CreateThruster (_V(-2,2,-2), _V(1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[14]=CreateThruster (_V(-2,-2,2), _V(1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[15]=CreateThruster (_V(-2,-2,-2), _V(1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_lin[8]=CreateThruster (_V(2,2,2), _V(-1,0,0),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[9]=CreateThruster (_V(2,-2,2), _V(-1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[10]=CreateThruster (_V(2,2,-2), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[11]=CreateThruster (_V(2,-2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[12]=CreateThruster (_V(-2,2,2), _V(1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[13]=CreateThruster (_V(-2,2,-2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[14]=CreateThruster (_V(-2,-2,2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[15]=CreateThruster (_V(-2,-2,-2), _V(1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
-	th_att_lin[16]=CreateThruster (_V(2,-2,2), _V(0,1,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[17]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[18]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[20]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[21]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[22]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[23]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_lin[16]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[17]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[18]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[20]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[21]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[22]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[23]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_lin+16,   4, THGROUP_ATT_UP);
 	CreateThrusterGroup (th_att_lin+20,   4, THGROUP_ATT_DOWN);
 	CreateThrusterGroup (th_att_lin+12,  4 , THGROUP_ATT_RIGHT);
 	CreateThrusterGroup (th_att_lin+8, 4, THGROUP_ATT_LEFT);
 
-	th_att_rot[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[12]=CreateThruster (_V(2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
-	th_att_rot[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_rot+12,   4, THGROUP_ATT_PITCHDOWN);
 	CreateThrusterGroup (th_att_rot+8,   4, THGROUP_ATT_PITCHUP);
 
-	th_att_rot[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_rot+20,   4, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_rot+16,   4, THGROUP_ATT_BANKRIGHT);
@@ -588,74 +594,77 @@ void sat5_lmpkd::AddRCS_LMH(double TRANZ)
 	const double RCSOFFSETM=0.30;
 	const double RCSOFFSETM2=0.47;
 
-	int MaxThrust=120;
+//	int MaxThrust=120;
+//	double RCSISP=15000;
+	double MaxThrust=445.0;
+	double RCSISP=2840.0;
 
-	th_att_lin[0]=CreateThruster (_V(2,2,-2), _V(1,0,1),120, ph_rcslm1,15000, 15000);
-	th_att_lin[1]=CreateThruster (_V(-2,2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[2]=CreateThruster (_V(2,-2,-2), _V(1,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[3]=CreateThruster (_V(-2,-2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[4]=CreateThruster (_V(2,2,2), _V(1,0,-1),120, ph_rcslm1,15000, 15000);
-	th_att_lin[5]=CreateThruster (_V(-2,2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[6]=CreateThruster (_V(2,-2,2), _V(1,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[7]=CreateThruster (_V(-2,-2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_lin[0]=CreateThruster (_V(2,2,-2), _V(1,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[1]=CreateThruster (_V(-2,2,-2), _V(-1,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[2]=CreateThruster (_V(2,-2,-2), _V(1,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[3]=CreateThruster (_V(-2,-2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[4]=CreateThruster (_V(2,2,2), _V(1,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[5]=CreateThruster (_V(-2,2,2), _V(-1,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[6]=CreateThruster (_V(2,-2,2), _V(1,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[7]=CreateThruster (_V(-2,-2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
 
-	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),120, ph_rcslm1,15000, 15000);
-	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),120, ph_rcslm1,15000, 15000);
-	th_att_rot[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 	CreateThrusterGroup (th_att_rot,   4, THGROUP_ATT_YAWLEFT);
 	CreateThrusterGroup (th_att_rot+4,   4, THGROUP_ATT_YAWRIGHT);
 
-	th_att_lin[8]=CreateThruster (_V(2,2,2), _V(-1,0,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[9]=CreateThruster (_V(2,-2,2), _V(-1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[10]=CreateThruster (_V(2,2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[11]=CreateThruster (_V(2,-2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[12]=CreateThruster (_V(-2,2,2), _V(1,0,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[13]=CreateThruster (_V(-2,2,-2), _V(1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[14]=CreateThruster (_V(-2,-2,2), _V(1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[15]=CreateThruster (_V(-2,-2,-2), _V(1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_lin[8]=CreateThruster (_V(2,2,2), _V(-1,0,0),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[9]=CreateThruster (_V(2,-2,2), _V(-1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[10]=CreateThruster (_V(2,2,-2), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[11]=CreateThruster (_V(2,-2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[12]=CreateThruster (_V(-2,2,2), _V(1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[13]=CreateThruster (_V(-2,2,-2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[14]=CreateThruster (_V(-2,-2,2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[15]=CreateThruster (_V(-2,-2,-2), _V(1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
-	th_att_lin[16]=CreateThruster (_V(2,-2,2), _V(0,1,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[17]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[18]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[20]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[21]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[22]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[23]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_lin[16]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[17]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[18]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[20]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[21]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[22]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[23]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_lin+16,   4, THGROUP_ATT_UP);
 	CreateThrusterGroup (th_att_lin+20,   4, THGROUP_ATT_DOWN);
 	CreateThrusterGroup (th_att_lin+12,  4 , THGROUP_ATT_RIGHT);
 	CreateThrusterGroup (th_att_lin+8, 4, THGROUP_ATT_LEFT);
 
-	th_att_rot[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
-	th_att_rot[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_rot+12,   4, THGROUP_ATT_PITCHDOWN);
 	CreateThrusterGroup (th_att_rot+8,   4, THGROUP_ATT_PITCHUP);
 
-	th_att_rot[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_rot+20,   4, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_rot+16,   4, THGROUP_ATT_BANKRIGHT);
@@ -891,74 +900,77 @@ void sat5_lmpkd::AddRCS_LMH2(double TRANZ)
 	const double RCSOFFSETM=0.30;
 	const double RCSOFFSETM2=0.47;
 
-	int MaxThrust=120;
+//	int MaxThrust=120;
+//	double RCSISP=15000;
+	double MaxThrust=445.0;
+	double RCSISP=2840.0;
 
-	th_att_lin[0]=CreateThruster (_V(2,2,-2), _V(1,0,1),120, ph_rcslm1,15000, 15000);
-	th_att_lin[1]=CreateThruster (_V(-2,2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[2]=CreateThruster (_V(2,-2,-2), _V(1,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[3]=CreateThruster (_V(-2,-2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[4]=CreateThruster (_V(2,2,2), _V(1,0,-1),120, ph_rcslm1,15000, 15000);
-	th_att_lin[5]=CreateThruster (_V(-2,2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[6]=CreateThruster (_V(2,-2,2), _V(1,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[7]=CreateThruster (_V(-2,-2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_lin[0]=CreateThruster (_V(2,2,-2), _V(1,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[1]=CreateThruster (_V(-2,2,-2), _V(-1,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[2]=CreateThruster (_V(2,-2,-2), _V(1,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[3]=CreateThruster (_V(-2,-2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[4]=CreateThruster (_V(2,2,2), _V(1,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[5]=CreateThruster (_V(-2,2,2), _V(-1,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[6]=CreateThruster (_V(2,-2,2), _V(1,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[7]=CreateThruster (_V(-2,-2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
 
-	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),120, ph_rcslm1,15000, 15000);
-	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),120, ph_rcslm1,15000, 15000);
-	th_att_rot[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 	CreateThrusterGroup (th_att_rot,   4, THGROUP_ATT_YAWLEFT);
 	CreateThrusterGroup (th_att_rot+4,   4, THGROUP_ATT_YAWRIGHT);
 
-	th_att_lin[8]=CreateThruster (_V(2,2,2), _V(-1,0,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[9]=CreateThruster (_V(2,-2,2), _V(-1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[10]=CreateThruster (_V(2,2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[11]=CreateThruster (_V(2,-2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[12]=CreateThruster (_V(-2,2,2), _V(1,0,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[13]=CreateThruster (_V(-2,2,-2), _V(1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[14]=CreateThruster (_V(-2,-2,2), _V(1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[15]=CreateThruster (_V(-2,-2,-2), _V(1,0,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_lin[8]=CreateThruster (_V(2,2,2), _V(-1,0,0),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[9]=CreateThruster (_V(2,-2,2), _V(-1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[10]=CreateThruster (_V(2,2,-2), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[11]=CreateThruster (_V(2,-2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[12]=CreateThruster (_V(-2,2,2), _V(1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[13]=CreateThruster (_V(-2,2,-2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[14]=CreateThruster (_V(-2,-2,2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[15]=CreateThruster (_V(-2,-2,-2), _V(1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
-	th_att_lin[16]=CreateThruster (_V(2,-2,2), _V(0,1,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[17]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[18]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[20]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_lin[21]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[22]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_lin[23]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_lin[16]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[17]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[18]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[20]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[21]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[22]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_lin[23]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_lin+16,   4, THGROUP_ATT_UP);
 	CreateThrusterGroup (th_att_lin+20,   4, THGROUP_ATT_DOWN);
 	CreateThrusterGroup (th_att_lin+12,  4 , THGROUP_ATT_RIGHT);
 	CreateThrusterGroup (th_att_lin+8, 4, THGROUP_ATT_LEFT);
 
-	th_att_rot[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
-	th_att_rot[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_rot+12,   4, THGROUP_ATT_PITCHDOWN);
 	CreateThrusterGroup (th_att_rot+8,   4, THGROUP_ATT_PITCHUP);
 
-	th_att_rot[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcslm1,15000, 15000);
-	th_att_rot[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1,15000, 15000);
-	th_att_rot[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcslm1,15000, 15000);
+	th_att_rot[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	th_att_rot[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 
 	CreateThrusterGroup (th_att_rot+20,   4, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_rot+16,   4, THGROUP_ATT_BANKRIGHT);
