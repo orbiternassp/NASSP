@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.9  2005/08/05 23:37:21  movieman523
   *	Added AGC I/O channel simulation to make integrating Virtual AGC easier.
   *	
@@ -221,6 +224,12 @@ protected:
 	unsigned int TIME1;
 
 	MeasurementUnits DisplayUnits;
+
+	//
+	// Program data.
+	//
+
+	double LastAlt;
 
 	//
 	// Various program internal state variables.

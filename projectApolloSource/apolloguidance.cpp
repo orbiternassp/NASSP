@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/07 19:25:23  lazyd
+  *	No change
+  *	
   *	Revision 1.13  2005/08/06 01:51:14  movieman523
   *	Fixed stupid error in bit numbering for I/O channels. The real AGC's 'bit 1' is actually our 'bit 0'.
   *	
@@ -513,7 +516,6 @@ void ApolloGuidance::DisplayOrbitCalculations()
 	hPlanet = OurVessel->GetGravityRef();
 	rad = oapiGetSize(hPlanet);
 
-	GetPosVel();
 	OurVessel->GetElements(el, mjd_ref);
 
 	double apogee = (el.a * (1.0 + el.e)) - rad;
@@ -828,8 +830,6 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 	//
 
 	case 73:
-		GetPosVel();
-
 		dsky.SetR1((int)(DisplayAlt(CurrentAlt) / 1000));
 		dsky.SetR2((int)DisplayVel(CurrentVel));
 		dsky.SetR3((int)(OurVessel->GetAOA() * 5729.57795));
@@ -869,8 +869,6 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 			R2 = CutOffVel - CurrentRVel;
 		}
 
-		GetPosVel();
-
 		int	Min = (int)(IgnitionTime / 60);
 		int Sec = ((int)IgnitionTime) % 60;
 
@@ -896,6 +894,12 @@ bool ApolloGuidance::GenericTimestep(double simt)
 	CurrentTimestep = simt;
 
 	TIME1 += (int)((simt - LastTimestep) * 1600.0);
+
+	//
+	// Get position and velocity data since it's generally useful.
+	//
+
+	GetPosVel();
 
 	if (Standby)
 		return true;
@@ -1922,21 +1926,15 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 	oapiWriteLine(scn, AGC_START_STRING);
 
-//
-// Now obsolete values.
-//
-
 	oapiWriteScenario_int (scn, "YAAGC", Yaagc);
 	oapiWriteScenario_float (scn, "BRNTIME", BurnTime);
 	oapiWriteScenario_float (scn, "BRNSTIME", BurnStartTime);
 	oapiWriteScenario_float (scn, "BRNETIME", BurnEndTime);
 	oapiWriteScenario_float (scn, "EVTTIME", NextEventTime);
 	oapiWriteScenario_float (scn, "CUTFVEL", CutOffVel);
-//	oapiWriteScenario_float (scn, "TGTP", TargetPitch);
-//	oapiWriteScenario_float (scn, "TGTR", TargetRoll);
-//	oapiWriteScenario_float (scn, "TGTY", TargetYaw);
 
 	if (InOrbit) {
+		oapiWriteScenario_float (scn, "LALT", LastAlt);
 		oapiWriteScenario_float (scn, "TGTDV", DesiredDeltaV);
 	}
 
@@ -2053,6 +2051,10 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "CUTFVEL", 7)) {
 			sscanf (line+7, "%g", &flt);
 			CutOffVel = flt;
+		}
+		else if (!strnicmp (line, "LALT", 4)) {
+			sscanf (line+4, "%f", &flt);
+			LastAlt = flt;
 		}
 		else if (!strnicmp (line, "TGTA", 4)) {
 			sscanf (line+4, "%f", &flt);
