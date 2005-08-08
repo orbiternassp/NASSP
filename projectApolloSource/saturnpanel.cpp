@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/08/05 13:14:25  tschachim
+  *	Minor fixes
+  *	
   *	Revision 1.30  2005/08/04 01:06:04  flydba
   *	*** empty log message ***
   *	
@@ -2811,7 +2814,16 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		int Curdigit, Curdigit2;
 		double cTime;
 
-		cTime = MissionTime;
+		//
+		// Time display is normally mission time, but can be adjusted by the user
+		// and will be reset on an abort.
+		//
+		// Also, historically, the timer didn't start running until liftoff, so we'll
+		// base our operation on the Realism setting.
+		//
+
+		cTime = MissionTime + TimeDisplayOffset;
+
 		if (cTime < 0)
 			cTime = (-cTime);
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.13  2005/08/01 19:07:46  movieman523
   *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
   *	
@@ -601,8 +604,9 @@ void Saturn1b::StageStartSIVB(double simt)
 		SeparateStage (stage);
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort){
-			SPSswitch.SetState(true);;
+			SPSswitch.SetState(true);
 			ABORT_IND = true;
+			StartAbort();
 			SetThrusterGroupLevel(thg_main, 1.0);
 			bAbort = false;
 			autopilot=false;
@@ -693,6 +697,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		if (bAbort){
 			SPSswitch.SetState(true);
 			ABORT_IND = true;
+			StartAbort();
 			SetThrusterGroupLevel(thg_main, 1.0);
 			bAbort = false;
 			autopilot= false;
@@ -815,6 +820,7 @@ void Saturn1b::Timestep (double simt)
 	if (bAbort && stage <= LAUNCH_STAGE_TWO ){
 		SetEngineLevel(ENGINE_MAIN, 0);
 		SeparateStage (stage);
+		StartAbort();
 		stage = CSM_ABORT_STAGE;
 		bAbort=false;
 		return;

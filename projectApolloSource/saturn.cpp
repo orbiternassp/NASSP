@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/08/06 01:25:27  movieman523
+  *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
+  *	
   *	Revision 1.25  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -240,6 +243,8 @@ void Saturn::initSaturn()
 	MissionTime = (-3600);
 	NextMissionEventTime = 0;
 	LastMissionEventTime = 0;
+
+	TimeDisplayOffset = 0.0;
 
 	abortTimer = 0;
 	release_time = 0;
@@ -625,7 +630,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
-
+	oapiWriteScenario_float (scn, "TDO", TimeDisplayOffset);
+	oapiWriteScenario_float (scn, "ETDO", EventTimerOffset);
 
 	if (Realism != REALISM_DEFAULT) {
 		oapiWriteScenario_int (scn, "REALISM", Realism);
@@ -1077,6 +1083,14 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
 			MissionTime = ftcp;
+		}
+		else if (!strnicmp(line, "TDO", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			TimeDisplayOffset = ftcp;
+		}
+		else if (!strnicmp(line, "ETDO", 4)) {
+            sscanf (line + 4, "%f", &ftcp);
+			EventTimerOffset = ftcp;
 		}
 		else if (!strnicmp(line, "NMISSNTIME", 10)) {
             sscanf (line+10, "%f", &ftcp);
@@ -2256,7 +2270,6 @@ void Saturn::SetGenericStageState()
 		break;
 
 	case CSM_ABORT_STAGE:
-		//SetCSMStage();
 		SetAbortStage();
 		break;
 
@@ -2687,11 +2700,22 @@ void Saturn::StageOrbitSIVB(double simt)
 			SetThrusterGroupLevel(thg_main, 1.0);
 			bAbort = false;
 			autopilot= false;
+			StartAbort();
 		}
 		return;
 	}
 
 	SetSIVBThrusters();
+}
+
+void Saturn::StartAbort()
+
+{
+	//
+	// Event timer resets to zero on abort.
+	//
+
+	EventTimerOffset = (-MissionTime);
 }
 
 void Saturn::SlowIfDesired()

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.16  2005/08/05 13:08:35  tschachim
   *	Added crawler callback function LaunchVesselRolloutEnd,
   *	added keyboard handling for BuildFirstStage (B and U keys)
@@ -890,6 +893,7 @@ void SaturnV::StageFour(double simt)
 	if (bAbort) {
 		SeparateStage (stage);
 		SetEngineIndicators();
+		StartAbort();
 		SetStage(LAUNCH_STAGE_SIVB);
 		ABORT_IND = true;
 		bAbort = true;
@@ -1539,6 +1543,7 @@ void SaturnV::Timestep(double simt)
 	if (bAbort && stage < LAUNCH_STAGE_TWO_TWR_JET){
 		SetEngineLevel(ENGINE_MAIN,0);
 		SeparateStage (stage);
+		StartAbort();
 		SetStage(CSM_ABORT_STAGE);
 		bAbort=false;
 		return;
@@ -2071,7 +2076,8 @@ void SaturnV::StageLaunchSIVB(double simt)
 		SeparateStage (stage);
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort){
-			SPSswitch.SetState(true);;
+			SPSswitch.SetState(true);
+			StartAbort();
 			ABORT_IND = true;
 			SetThrusterGroupLevel(thg_main, 1.0);
 			bAbort = false;
