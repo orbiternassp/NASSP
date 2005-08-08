@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.26  2005/08/05 13:02:54  tschachim
   *	Added crawler callback function LaunchVesselRolloutEnd
   *	
@@ -192,6 +195,18 @@ protected:
 	double MissionTime;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
+
+	//
+	// Offset from mission time for clock display on control
+	// panel, and offset of event timer from mission time.
+	//
+
+	double TimeDisplayOffset;
+	double EventTimerOffset;
+
+	//
+	// Is the master alarm sounding?
+	//
 
 	bool masterAlarm;
 
@@ -1032,6 +1047,7 @@ protected:
 	void UpdatePayloadMass();
 	double GetCPitch(double t);
 	double GetJ2ISP(double ratio);
+	void StartAbort();
 
 	//
 	// Systems functions.
