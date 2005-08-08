@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.2  2005/04/30 23:09:14  movieman523
   *	Revised CSM banksums and apogee/perigee display to match the real AGC.
   *	
@@ -175,7 +178,6 @@ void CSMcomputer::DisplayNounData(int noun)
 			ELEMENTS el;
 			double mjd_ref;
 
-			GetPosVel();
 			OurVessel->GetElements(el, mjd_ref);
 
 			double apogee = (el.a * (1.0 + el.e)) - (ERADIUS * 1000);
@@ -228,8 +230,6 @@ void CSMcomputer::DisplayNounData(int noun)
 	//
 
 	case 62:
-		GetPosVel();
-
 		dsky.SetR1((int)DisplayVel(CurrentVel));
 		dsky.SetR2((int)DisplayVel(CurrentVelY));
 		dsky.SetR3((int)(DisplayAlt(CurrentAlt) / 1000));
@@ -244,8 +244,6 @@ void CSMcomputer::DisplayNounData(int noun)
 			dsky.BlankData();
 			return;
 		}
-
-		GetPosVel();
 
 		dsky.SetR1((int)(DisplayAlt(CurrentAlt) / 1000));
 		dsky.SetR2((int)DisplayVel(CurrentVel));
@@ -784,6 +782,7 @@ void CSMcomputer::Prog15(double simt)
 			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
 			SetOutputChannelBit(012, 13, true);
 			ProgState++;
+			LastAlt = CurrentAlt;
 			NextEventTime = simt + 1;
 		}
 		break;

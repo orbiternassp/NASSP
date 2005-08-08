@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.2  2005/04/30 23:09:15  movieman523
   *	Revised CSM banksums and apogee/perigee display to match the real AGC.
   *	
@@ -246,8 +249,6 @@ protected:
 	//
 	// Program data.
 	//
-
-	double LastAlt;
 
 	//
 	// Sounds.
