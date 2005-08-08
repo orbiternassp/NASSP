@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/05/19 20:26:52  movieman523
+  *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -49,13 +52,13 @@ void LEMcomputer::Prog12Pressed(int R1, int R2, int R3)
 	case 2:
 		if (R1 < 0 || R2 < 0) 
 		{
-			dsky.LightOprErr();
+			LightOprErr();
 			return;
 		}
 
 		if (R3 < 0 || R3 >= 36000)
 		{
-			dsky.LightOprErr();
+			LightOprErr();
 			return;
 		}
 		
@@ -92,7 +95,7 @@ void LEMcomputer::Prog12Pressed(int R1, int R2, int R3)
 		ProgState++;
 		return;
 	}
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 void LEMcomputer::Prog12 (double simt)

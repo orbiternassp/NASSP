@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/06 00:03:48  movieman523
+  *	Beginnings of support for AGC I/O channels in LEM.
+  *	
   *	Revision 1.11  2005/08/04 19:55:15  lazyd
   *	Added function def for OrbitalParameters
   *	
@@ -938,7 +941,7 @@ void LEMcomputer::ProgPressed(int R1, int R2, int R3)
 		return;
 	}
 
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 //
@@ -978,7 +981,7 @@ void LEMcomputer::ProceedNoData()
 	if (CommonProceedNoData())
 		return;
 
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 

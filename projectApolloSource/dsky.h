@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 class DSKY
@@ -40,6 +43,7 @@ public:
 	//
 
 	bool UplinkLit()	{ return UplinkLight; };
+	bool CompActyLit()	{ return CompActy; };
 	bool NoAttLit()		{ return NoAttLight; };
 	bool StbyLit()		{ return StbyLight; };
 	bool KbRelLit()		{ return KbRelLight; };
@@ -54,37 +58,33 @@ public:
 	// Set light status.
 	//
 
-	void LightUplink()		{ UplinkLight = true; };
-	void LightNoAtt()		{ NoAttLight = true; };
 	void LightStby()		{ StbyLight = true; };
-	void LightKbRel()		{ KbRelLight = true; };
-	void LightOprErr()		{ OprErrLight = true; };
-	void LightTemp()		{ TempLight = true; };
-	void LightGimbalLock()	{ GimbalLockLight = true; };
-	void LightProg()		{ ProgLight = true; };
 	void LightRestart()		{ RestartLight = true; };
-	void LightTracker()		{ TrackerLight = true; };
 
-	void ClearUplink()		{ UplinkLight = false; };
-	void ClearNoAtt()		{ NoAttLight = false; };
+	void SetUplink(bool val)		{ UplinkLight = val; };
+	void SetCompActy(bool val)		{ CompActy = val; };
+	void SetNoAtt(bool val)			{ NoAttLight = val; };
+	void SetStby(bool val)			{ StbyLight = val; };
+	void SetKbRel(bool val)			{ KbRelLight = val; };
+	void SetOprErr(bool val)		{ OprErrLight = val; };
+	void SetTemp(bool val)			{ TempLight = val; };
+	void SetGimbalLock(bool val)	{ GimbalLockLight = val; };
+	void SetProg(bool val)			{ ProgLight = val; };
+	void SetRestart(bool val)		{ RestartLight = val; };
+	void SetTracker(bool val)		{ TrackerLight = val; };
+
 	void ClearStby()		{ StbyLight = false; };
-	void ClearKbRel()		{ KbRelLight = false; };
-	void ClearOprErr()		{ OprErrLight = false; };
-	void ClearTemp()		{ TempLight = false; };
-	void ClearGimbalLock()	{ GimbalLockLight = false; };
-	void ClearProg()		{ ProgLight = false; };
 	void ClearRestart()		{ RestartLight = false; };
-	void ClearTracker()		{ TrackerLight = false; };
 
 	//
 	// Flashing status.
 	//
 
-	void SetVerbFlashing()	{ VerbFlashing = true; };
-	void SetNounFlashing()	{ NounFlashing = true; };
+	void SetVerbDisplayFlashing()	{ VerbFlashing = true; };
+	void SetNounDisplayFlashing()	{ NounFlashing = true; };
 
-	void ClearVerbFlashing() { VerbFlashing = false; };
-	void ClearNounFlashing() { NounFlashing = false; };
+	void ClearVerbDisplayFlashing() { VerbFlashing = false; };
+	void ClearNounDisplayFlashing() { NounFlashing = false; };
 
 	//
 	// Timestep to run programs.
@@ -169,6 +169,10 @@ protected:
 	// Lights.
 	//
 
+	void LightOprErrLight()		{ OprErrLight = true; };
+	void ClearOprErrLight()		{ OprErrLight = false; };
+
+	bool CompActy;
 	bool UplinkLight;
 	bool NoAttLight;
 	bool StbyLight;

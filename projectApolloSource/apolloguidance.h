@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/08 21:10:30  movieman523
+  *	Fixed broken TLI program. LastAlt wasn't being set and that screwed up the burn end calculations.
+  *	
   *	Revision 1.10  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -165,6 +168,39 @@ protected:
 	void Prog37Pressed(int R1, int R2, int R3);
 
 	//
+	// DSKY interface.
+	//
+
+	char CharValue(unsigned val);
+
+	void SetChannel10Lights(int bit, bool val);
+
+	void ProcessChannel11(int bit, bool val);
+	void ProcessChannel10();
+
+	void LightUplink();
+	void ClearUplink();
+	void LightCompActy();
+	void ClearCompActy();
+	void LightTemp();
+	void ClearTemp();
+	void LightKbRel();
+	void ClearKbRel();
+	void LightOprErr();
+	void ClearOprErr();
+	void LightNoAtt();
+	void ClearNoAtt();
+	void LightGimbalLock();
+	void ClearGimbalLock();
+	void LightTracker();
+	void ClearTracker();
+	void LightProg();
+	void ClearProg();
+
+	void SetVerbNounFlashing();
+	void ClearVerbNounFlashing();
+
+	//
 	// Odds and ends.
 	//
 
@@ -196,6 +232,12 @@ protected:
 	bool Reset;
 	bool InOrbit;
 	bool MainThrusterIsHover;
+
+	//
+	// DSKY interface.
+	//
+
+	int Chan10Flags;
 
 	//
 	// Generic program flags. Higher
