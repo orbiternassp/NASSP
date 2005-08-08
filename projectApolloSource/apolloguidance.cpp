@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/08 21:10:30  movieman523
+  *	Fixed broken TLI program. LastAlt wasn't being set and that screwed up the burn end calculations.
+  *	
   *	Revision 1.14  2005/08/07 19:25:23  lazyd
   *	No change
   *	
@@ -170,6 +173,8 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display) : soundlib(s), dsky(d
 		OutputChannel[i] = 0;
 	for (i = 0; i <= MAX_INPUT_CHANNELS; i++)
 		InputChannel[i] = 0;
+
+	Chan10Flags = 0;
 }
 
 ApolloGuidance::~ApolloGuidance()
@@ -210,7 +215,7 @@ void ApolloGuidance::Startup()
 		dsky.SetProg(ProgRunning);
 		dsky.BlankData();
 		dsky.SetVerb(37);
-		dsky.SetVerbFlashing();
+		SetVerbNounFlashing();
 	}
 }
 
@@ -233,8 +238,7 @@ void ApolloGuidance::GoStandby()
 
 {
 	dsky.BlankAll();
-	dsky.ClearVerbFlashing();
-	dsky.ClearNounFlashing();
+	ClearVerbNounFlashing();
 	dsky.LightStby();
 	Standby = true;
 }
@@ -989,7 +993,7 @@ void ApolloGuidance::VerbNounEntered(int verb, int noun)
 	// light.
 	//
 
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 void ApolloGuidance::SetMissionInfo(int MissionNo, int RealismValue) 
@@ -1039,8 +1043,7 @@ void ApolloGuidance::SetVerbNounAndFlash(int Verb, int Noun)
 	dsky.BlankData();
 	dsky.SetVerb(VerbRunning);
 	dsky.SetNoun(NounRunning);
-	dsky.SetVerbFlashing();
-	dsky.SetNounFlashing();
+	SetVerbNounFlashing();
 
 	DisplayNounData(NounRunning);
 }
@@ -1055,8 +1058,7 @@ void ApolloGuidance::SetVerbNoun(int Verb, int Noun)
 	dsky.BlankData();
 	dsky.SetVerb(VerbRunning);
 	dsky.SetNoun(NounRunning);
-	dsky.ClearVerbFlashing();
-	dsky.ClearNounFlashing();
+	ClearVerbNounFlashing();
 
 	DisplayNounData(NounRunning);
 }
@@ -1669,21 +1671,20 @@ void ApolloGuidance::ResetProg(double simt)
 	case 2:
 		NextEventTime = simt;
 
-		dsky.LightUplink();
-		dsky.LightNoAtt();
+		LightUplink();
+		LightNoAtt();
 		dsky.LightStby();
-		dsky.LightKbRel();
-		dsky.LightOprErr();
-		dsky.LightTemp();
-		dsky.LightGimbalLock();
+		LightKbRel();
+		LightOprErr();
+		LightTemp();
+		LightGimbalLock();
 		dsky.LightRestart();
-		dsky.LightTracker();
-		dsky.LightProg();
+		LightTracker();
+		LightProg();
 
 		dsky.UnBlankAll();
 
-		dsky.ClearVerbFlashing();
-		dsky.ClearNounFlashing();
+		ClearVerbNounFlashing();
 
 		ResetCount = 9;
 		ResetCountdown();
@@ -1693,14 +1694,14 @@ void ApolloGuidance::ResetProg(double simt)
 
 	case 4:
 		NextEventTime = simt;
-		dsky.ClearUplink();
+		ClearUplink();
 		ResetCountdown();
 		ProgState++;
 		break;
 
 	case 6:
 		NextEventTime = simt;
-		dsky.ClearNoAtt();
+		ClearNoAtt();
 		ResetCountdown();
 		ProgState++;
 		break;
@@ -1714,35 +1715,35 @@ void ApolloGuidance::ResetProg(double simt)
 
 	case 10:
 		NextEventTime = simt;
-		dsky.ClearKbRel();
+		ClearKbRel();
 		ResetCountdown();
 		ProgState++;
 		break;
 
 	case 12:
 		NextEventTime = simt;
-		dsky.ClearOprErr();
+		ClearOprErr();
 		ResetCountdown();
 		ProgState++;
 		break;
 
 	case 14:
 		NextEventTime = simt;
-		dsky.ClearTemp();
+		ClearTemp();
 		ResetCountdown();
 		ProgState++;
 		break;
 
 	case 16:
 		NextEventTime = simt;
-		dsky.ClearGimbalLock();
+		ClearGimbalLock();
 		ResetCountdown();
 		ProgState++;
 		break;
 
 	case 18:
 		NextEventTime = simt;
-		dsky.ClearProg();
+		ClearProg();
 		ResetCountdown();
 		ProgState++;
 		break;
@@ -1752,8 +1753,7 @@ void ApolloGuidance::ResetProg(double simt)
 		dsky.ClearRestart();
 		ResetCountdown();
 
-		dsky.SetVerbFlashing();
-		dsky.SetNounFlashing();
+		SetVerbNounFlashing();
 
 		ProgState++;
 		break;
@@ -1762,7 +1762,7 @@ void ApolloGuidance::ResetProg(double simt)
 		NextEventTime = simt;
 		ResetTime = simt;
 
-		dsky.ClearTracker();
+		ClearTracker();
 		ProgState++;
 
 		//
@@ -1772,8 +1772,7 @@ void ApolloGuidance::ResetProg(double simt)
 		Reset = true;
 
 		dsky.BlankAll();
-		dsky.ClearVerbFlashing();
-		dsky.ClearNounFlashing();
+		ClearVerbNounFlashing();
 
 		//
 		// And drop to standby.
@@ -1809,7 +1808,7 @@ void ApolloGuidance::Prog37Pressed(int R1, int R2, int R3)
 			ProgState++;
 		}
 		else {
-			dsky.LightOprErr();
+			LightOprErr();
 		}
 		break;
 	}
@@ -1868,8 +1867,7 @@ void ApolloGuidance::Checklist(int num)
 	dsky.SetNoun(25);
 	dsky.BlankData();
 	dsky.SetR1Octal(num);
-	dsky.SetVerbFlashing();
-	dsky.SetNounFlashing();
+	SetVerbNounFlashing();
 }
 
 //
@@ -2163,6 +2161,17 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 		return;
 
 	OutputChannel[channel] = val;
+
+	//
+	// Special-case processing.
+	//
+
+	switch (channel)
+	{
+	case 010:
+		ProcessChannel10();
+		break;
+	}
 }
 
 void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
@@ -2178,6 +2187,21 @@ void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 	}
 	else {
 		OutputChannel[channel] &= ~mask;
+	}
+
+	//
+	// Special-case processing.
+	//
+
+	switch (channel)
+	{
+	case 010:
+		ProcessChannel10();
+		break;
+
+	case 011:
+		ProcessChannel11(bit, val);
+		break;
 	}
 }
 
@@ -2207,10 +2231,7 @@ void ApolloGuidance::AwaitProgram()
 
 {
 	if (dsky.KBCheck()) {
-		dsky.SetVerb(37);
-		dsky.SetNoun(0);
-		dsky.SetVerbFlashing();
-		dsky.SetNounFlashing();
+		SetVerbNounAndFlash(37, 0);
 	}
 }
 
@@ -2253,7 +2274,7 @@ void ApolloGuidance::AbortWithError(int ErrNo)
 
 {
 	dsky.BlankData();
-	dsky.LightProg();
+	LightProg();
 	RunProgram(0);
 	RaiseAlarm(ErrNo);
 	SetVerbNounAndFlash(5, 9);
@@ -2382,6 +2403,10 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 	case 026:
 		val = Realism;
 		return true;
+
+	case 027:
+		val = Chan10Flags;
+		return true;
 	}
 
 	val = 0;
@@ -2484,6 +2509,10 @@ void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)
 	case 026:
 		Realism = val;
 		break;
+
+	case 027:
+		Chan10Flags = val;
+		break;
 	}
 }
 
@@ -2491,12 +2520,12 @@ void ApolloGuidance::UpdateBurnTime(int R1, int R2, int R3)
 
 {
 	if (R2 > 59 || R3 > 5999) {
-		dsky.LightOprErr();
+		LightOprErr();
 		return;
 	}
 
 	if (R1 < 0 || R2 < 0 || R3 < 0) {
-		dsky.LightOprErr();
+		LightOprErr();
 		return;
 	}
 

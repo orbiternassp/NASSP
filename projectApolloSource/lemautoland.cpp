@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/08 21:58:31  lazyd
+  *	Fixed a nasty bug in P36 and made P13 injection dependent on CSM orbit
+  *	
   *	Revision 1.17  2005/08/07 19:26:27  lazyd
   *	Changed RCS and ascent parameters to historical
   *	
@@ -460,7 +463,7 @@ void LEMcomputer::Prog63(double simt)
 // display time from ignition and crossrange..
 	case 2:
 		SetVerbNounAndFlash(6, 61);
-		if(fabs(DesiredDeltaV) > MAXOFFPLANE) dsky.LightOprErr();
+		if(fabs(DesiredDeltaV) > MAXOFFPLANE) LightOprErr();
 		break;
 
 //display time of ignition hhmmssss
@@ -628,7 +631,7 @@ void LEMcomputer::Prog63Pressed(int R1, int R2, int R3)
 		return;
 	}
 
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 void LEMcomputer::Prog64(double simt)
@@ -1346,7 +1349,7 @@ void LEMcomputer::Prog41Pressed(int R1, int R2, int R3)
 		ProgState++;
 		return;
 	}
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 void LEMcomputer::Prog42(double simt)
@@ -1785,7 +1788,7 @@ void LEMcomputer::Prog13Pressed(int R1, int R2, int R3)
 		ProgState++;
 		return;
 	}
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 void LEMcomputer::Prog70(double simt)
@@ -2568,7 +2571,7 @@ void LEMcomputer::Prog34Pressed(int R1, int R2, int R3)
 		ProgState++;
 		return;
 	}
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 //

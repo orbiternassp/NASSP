@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/08 21:10:29  movieman523
+  *	Fixed broken TLI program. LastAlt wasn't being set and that screwed up the burn end calculations.
+  *	
   *	Revision 1.3  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -308,11 +311,7 @@ void CSMcomputer::ProcessVerbNoun(int verb, int noun)
 			VerbRunning = 16;
 			NounRunning = 44;
 
-			dsky.SetVerb(VerbRunning);
-			dsky.SetNoun(NounRunning);
-
-			dsky.SetVerbFlashing();
-			dsky.SetNounFlashing();
+			SetVerbNounAndFlash(16, 44);
 		}
 	}
 }
@@ -361,7 +360,7 @@ void CSMcomputer::Prog01(double simt)
 			break;
 		}
 
-		dsky.LightNoAtt();
+		LightNoAtt();
 		NextProgTime = simt + 2.0;
 		ProgState++;
 		break;
@@ -370,7 +369,7 @@ void CSMcomputer::Prog01(double simt)
 		if (simt < NextProgTime)
 			return;
 
-		dsky.ClearNoAtt();
+		ClearNoAtt();
 		RunProgram(2);
 		break;
 	}
@@ -418,7 +417,7 @@ void CSMcomputer::Prog02Pressed(int R1, int R2, int R3)
 		//
 
 		if (R1 < 0 || R1 > 35999) {
-			dsky.LightOprErr();
+			LightOprErr();
 			return;
 		}
 
@@ -454,7 +453,7 @@ void CSMcomputer::Prog02Pressed(int R1, int R2, int R3)
 		// Anything else is an error
 		//
 
-		dsky.LightOprErr();
+		LightOprErr();
 		break;
 	}
 }
@@ -501,8 +500,7 @@ void CSMcomputer::Prog11(double simt)
 		// the launch.
 		//
 
-		dsky.ClearNounFlashing();
-		dsky.ClearVerbFlashing();
+		ClearVerbNounFlashing();
 
 		ProgState++;
 		break;
@@ -642,7 +640,7 @@ void CSMcomputer::Prog15(double simt)
 	case 5:
 		if (simt > NextEventTime) {
 			Saturn *sat = (Saturn *)OurVessel;
-			dsky.LightUplink();
+			LightUplink();
 			sat->SetSIISep();
 			ProgState++;
 			NextEventTime += 10;
@@ -653,7 +651,7 @@ void CSMcomputer::Prog15(double simt)
 		if (simt > NextEventTime) {
 			Saturn *sat = (Saturn *)OurVessel;
 			DoTLICalcs(simt);
-			dsky.ClearUplink();
+			ClearUplink();
 			sat->ClearSIISep();
 			ProgState++;
 			NextEventTime = BurnStartTime - 105;
@@ -883,7 +881,7 @@ void CSMcomputer::Prog15Pressed(int R1, int R2, int R3)
 		//
 
 		if (R1 < 0) {
-			dsky.LightOprErr();
+			LightOprErr();
 			return;
 		}
 
@@ -912,7 +910,7 @@ void CSMcomputer::Prog15Pressed(int R1, int R2, int R3)
 		// Anything else is an error
 		//
 
-		dsky.LightOprErr();
+		LightOprErr();
 		break;
 	}
 }
@@ -1058,7 +1056,7 @@ void CSMcomputer::ProceedNoData()
 		break;
 	}
 
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 //
@@ -1082,7 +1080,7 @@ void CSMcomputer::ProgPressed(int R1, int R2, int R3)
 		return;
 	}
 
-	dsky.LightOprErr();
+	LightOprErr();
 }
 
 //

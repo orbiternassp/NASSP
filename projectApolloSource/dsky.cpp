@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/04/16 00:14:10  tschachim
+  *	fixed dsky keyboard and g&n panel lights
+  *	
   *	Revision 1.3  2005/04/10 19:25:33  flydba
   *	*** empty log message ***
   *	
@@ -248,7 +251,7 @@ void DSKY::UpdateFiveDigitEntry(int n)
 
 	if (EnteringOctal) {
 		if (n > 7) {
-			LightOprErr();
+			LightOprErrLight();
 			return;
 		}
 		EnterVal = EnterVal * 8 + n;
@@ -299,7 +302,7 @@ void DSKY::UpdateTwoDigitEntry(int n)
 
 {
 	if (EnterPos > 1) {
-		LightOprErr();
+		LightOprErrLight();
 		return;
 	}
 
@@ -363,7 +366,7 @@ void DSKY::VerbPressed()
 		return;
 
 	if (EnteringNoun) {
-		LightOprErr();
+		LightOprErrLight();
 		return;
 	}
 
@@ -385,7 +388,7 @@ void DSKY::NounPressed()
 		return;
 
 	if (EnteringVerb) {
-		LightOprErr();
+		LightOprErrLight();
 		return;
 	}
 
@@ -433,7 +436,7 @@ void DSKY::EnterPressed()
 	//
 
 	if (EnteringVerb || EnteringNoun) {
-		LightOprErr();
+		LightOprErrLight();
 		return;
 	}
 
@@ -454,7 +457,7 @@ void DSKY::EnterPressed()
 	case 1:
 	case 11:
 		if (Noun != 2) {
-			LightOprErr();
+			LightOprErrLight();
 			return;
 		}
 
@@ -529,7 +532,7 @@ void DSKY::ClearPressed()
 		strncpy (FiveDigitEntry, "      ", 6);
 	}
 	else {
-		LightOprErr();
+		LightOprErrLight();
 	}
 }
 
@@ -547,7 +550,7 @@ void DSKY::PlusPressed()
 		FiveDigitEntry[0] = '+';
 	}
 	else {
-		LightOprErr();
+		LightOprErrLight();
 	}
 }
 
@@ -565,7 +568,7 @@ void DSKY::MinusPressed()
 		FiveDigitEntry[0] = '-';
 	}
 	else {
-		LightOprErr();
+		LightOprErrLight();
 	}
 }
 
@@ -649,7 +652,7 @@ void DSKY::NumberPressed(int n)
 	KeyClick();
 
 	if (EnteringOctal && n > 7) {
-		LightOprErr();
+		LightOprErrLight();
 		return;
 	}
 
@@ -663,7 +666,7 @@ void DSKY::NumberPressed(int n)
 		return;
 	}
 
-	LightOprErr();
+	LightOprErrLight();
 }
 
 void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit)
@@ -1108,6 +1111,7 @@ void DSKY::BlankR3()
 void DSKY::LightsOff()
 
 {
+	CompActy = false;
 	UplinkLight = false;
 	NoAttLight = false;
 	StbyLight = false;
@@ -1165,6 +1169,12 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits)
 {
 		char DSKYString[10];
 
+		if (CompActy) {
+			//
+			// Do stuff to update Comp Acty light.
+			//
+		}
+
 		ProgDisplay(DSKYString);
 		RenderTwoDigitDisplay(surf, digits, 67, 18, DSKYString);
 		VerbDisplay(DSKYString);
@@ -1217,6 +1227,7 @@ typedef union
 		unsigned EnteringVerb:1;
 		unsigned EnteringNoun:1;
 		unsigned EnteringOctal:1;
+		unsigned CompActy:1;
 	} u;
 	unsigned long word;
 } DSKYState;
@@ -1270,6 +1281,7 @@ void DSKY::SaveState(FILEHANDLE scn)
 	state.u.ProgBlanked = ProgBlanked;
 	state.u.ProgFlashing = ProgFlashing;
 
+	state.u.CompActy = CompActy;
 	state.u.UplinkLight = UplinkLight;
 	state.u.NoAttLight = NoAttLight;
 	state.u.StbyLight = StbyLight;
@@ -1360,6 +1372,7 @@ void DSKY::LoadState(FILEHANDLE scn)
 			ProgBlanked = state.u.ProgBlanked;
 			ProgFlashing = state.u.ProgFlashing;
 
+			CompActy = (state.u.CompActy != 0);
 			UplinkLight = state.u.UplinkLight;
 			NoAttLight = state.u.NoAttLight;
 			StbyLight = state.u.StbyLight;
