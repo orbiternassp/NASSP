@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/07 19:26:27  lazyd
+  *	Changed RCS and ascent parameters to historical
+  *	
   *	Revision 1.16  2005/08/04 19:53:26  lazyd
   *	Fixed P33 problem and added code for direct rendezvous
   *	
@@ -1627,7 +1630,7 @@ void LEMcomputer::Prog13(double simt)
 {
 	const double GRAVITY=6.67259e-11;
 	double distance, radius, rlm, vel, time, cbrg, vh, csmapo, csmtta, csmper, csmttp, 
-		csmperiod, a, mu;
+		csmperiod, a, mu, dapo, dper, dv, dh;
 	VECTOR3 csmpos, csmvel, lmpos, csmnor, csmhvel;
 	char line[10];
 	OBJHANDLE hbody=OurVessel->GetGravityRef();
@@ -1672,10 +1675,16 @@ void LEMcomputer::Prog13(double simt)
 
 			// aim for an orbit apo 25806 m lower than CSM apo
 			OrbitParams(csmpos, csmvel, csmperiod, csmapo, csmtta, csmper, csmttp);
-			a=(csmper+csmapo+2.0*bradius)/2.0;
-			DesiredLAN=sqrt(mu*((2.0/(csmapo+bradius-26806.0))-1.0/a));
+//			a=(csmper+csmapo+2.0*bradius)/2.0;
+			dapo=(csmapo+bradius)-26806.0;
+			dper=bradius+18000.0;
+			a=(dapo+dper)/2.0;
+			dh=dapo-(bradius+87000.0);
+			dv=dh/(((4.0*a*a)/mu)*1687.0);
+//			DesiredLAN=sqrt(mu*((2.0/(csmapo+bradius-26806.0))-1.0/a));
 //			sprintf(oapiDebugString(), "vh=%.3f", DesiredLAN);
-			DesiredLAN=1687;
+			DesiredLAN=1687+dv;
+//			sprintf(oapiDebugString(), "dh=%.1f dv=%.3f v=%.1f", dh, dv, DesiredLAN);
 
 			OurVessel->GetRelativePos(hbody, lmpos);
 			csmnor=CrossProduct(csmvel, csmpos);
@@ -2339,6 +2348,7 @@ void LEMcomputer::Prog34(double simt)
 				}
 			}
 			BurnTime=time+simt;
+			if(ApolloNo > 13) 	BurnTime=33.0*60.0+simt;
 			BurnStartTime=BurnTime;
 			SetVerbNoun(16, 39);
 //			fclose(outstr);
@@ -2360,7 +2370,6 @@ void LEMcomputer::Prog34(double simt)
 				thrust=TRTHRUST;
 			} else {
 				thrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
-				BurnTime=33.0*60.0+simt;
 			}
 			visp=OurVessel->GetISP();
 			strncpy(line, OurVessel->GetName(), 10);
@@ -2442,11 +2451,12 @@ void LEMcomputer::Prog34(double simt)
 //			fprintf(outstr," Lambert r1=%.1f %.1f %.1f r2=%.1f %.1f %.1f \n", stpos+s, renpos);
 //			fprintf(outstr," Lambert v1=%.1f %.1f %.1f v2=%.1f %.1f %.1f \n", v1, v2);
 			OrbitParams(stpos+s, v1, lmperiod, lmapo, lmtta, lmper, lmttp);
-			// do some sanity checking - if transfer hits the moon, don't do it
+			// do some sanity checking - if transfer gets too low, don't do it
 			if(lmttp < lmtta) {
 				if (lmper < 18461.0) {
-					// need to do a program alarm here...
-					RunProgram(0);
+					// try again later...
+					BurnTime=BurnTime+30.0*60.0;
+					ProgState=2;
 					return;
 				}
 			}
@@ -2703,7 +2713,6 @@ void LEMcomputer::Prog36(double simt)
 			vec=Normalize(csmpos-lmpos);
 			vmass=OurVessel->GetMass();
 			acc=(vel*vel)/(2.0*dis);
-//			if(acc < (200.0/vmass)) {
 			if(dis > 4000.0) {
 				DesiredDeltaVz=vel;
 			} else {
@@ -2713,13 +2722,14 @@ void LEMcomputer::Prog36(double simt)
 				if(dis < 923.0) DesiredDeltaVz=6.15;
 				if(dis < 461.5) DesiredDeltaVz=3.076;
 				if(dis < 184.6) DesiredDeltaVz=1.538;
-				if(dis < 30.0 ) DesiredDeltaVz=0.5;
-				if(dis < 20.0) ProgFlag02=true;
+				if(dis < 30.0 ) DesiredDeltaVz=0.75;
+				if(dis < 20.0) 	ProgFlag02=true;
 			}
 			dv=vel-DesiredDeltaVz;
 			if(dv > 0.0) {
+				BurnTime=0.0;
 				BurnTime=((vmass/(TRTHRUST/2.0))*dv);
-				BurnEndTime=simt+BurnTime;
+				BurnEndTime=simt+((vmass/(TRTHRUST/2.0))*dv);
 			}
 			axis=2;
 			if(ProgFlag01) {
@@ -2785,7 +2795,8 @@ void LEMcomputer::Prog36(double simt)
 						ProgFlag01=false;
 						ProgFlag02=false;
 						OurVessel->SetAttitudeLinLevel(zero);
-						BurnEndTime=simt+60.0;
+//						BurnEndTime=simt+60.0;
+						BurnTime=simt+60.0;
 					}
 
 				}
@@ -2795,7 +2806,7 @@ void LEMcomputer::Prog36(double simt)
 			if(ProgState == 2) axis=1;
 			OrientAxis(vec, axis);
 			if(axis == 1) {
-				if(simt > BurnEndTime) {
+				if(simt > BurnTime) {
 					ProgFlag01=true;
 					ProgFlag02=true;
 //					RunProgram(0);
