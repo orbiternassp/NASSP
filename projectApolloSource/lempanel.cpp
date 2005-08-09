@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/06 00:03:48  movieman523
+  *	Beginnings of support for AGC I/O channels in LEM.
+  *	
   *	Revision 1.17  2005/08/05 21:45:48  spacex15
   *	reactivation of Abort and Abort stage buttons
   *	
@@ -87,13 +90,14 @@
 #include "nasspsound.h"
 
 #include "soundlib.h"
+#include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "dsky.h"
 
 #include "landervessel.h"
 #include "sat5_lmpkd.h"
-
+ 
 #define VIEWANGLE 34
 
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
@@ -134,13 +138,18 @@ void FreeGParam()
 	for (i = 0; i < 4; i++) DeleteObject (g_Param.pen[i]);
 }
 
+
 //
 // Initialise panel to default state.
 //
 
-void sat5_lmpkd::InitPanel()
+void sat5_lmpkd::InitPanel() {
 
-{
+	AbortSwitch.Register     (PSH, "AbortSwitch", false);
+	AbortStageSwitch.Register(PSH, "AbortStageSwitch", false);
+	AbortStageSwitchLight = false;
+	
+
 	Cswitch1=false;
 	Cswitch2=false;
 	Cswitch4=false;
@@ -282,8 +291,6 @@ void sat5_lmpkd::InitPanel()
 	EVAswitch=false;
 
 	COASswitch=true;
-
-	Abortswitch=false;
 
 	for (int i = 0; i < nsurf; i++)
 		srf[i] = 0;
@@ -458,6 +465,58 @@ void sat5_lmpkd::RedrawPanel_Thrust (SURFHANDLE surf)
 	oapiBlt(surf,srf[2],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
 }
 
+void sat5_lmpkd::RedrawPanel_XPointer (SURFHANDLE surf) {
+
+	int ix, iy;
+	double vx, vy;
+	HDC hDC;
+
+	//draw the crosspointers
+	agc.GetHorizVelocity(vx, vy);
+	ix = (int)(-3.0 * vx);
+	if(ix < -60) ix = -60;
+	if(ix > 60) ix = 60;
+	iy = (int)(3.0 * vy);
+	if(iy < -60) iy = -60;
+	if(iy > 60 ) iy = 60;
+	hDC = oapiGetDC(surf);
+	SelectObject(hDC, GetStockObject(BLACK_PEN));
+	MoveToEx(hDC, 0, 65 + ix, NULL);
+	LineTo(hDC, 135, 65 + ix);
+	MoveToEx(hDC, 67 + iy, 0, NULL);
+	LineTo(hDC, 67 + iy, 131);
+	oapiReleaseDC(surf, hDC);
+
+}
+
+void sat5_lmpkd::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
+
+	HDC hDC = oapiGetDC (surf);
+	SelectObject (hDC, g_Param.font[1]);
+	SetTextColor (hDC, RGB(255, 255, 255));
+	SetTextAlign (hDC, TA_CENTER);
+	SetBkMode (hDC, TRANSPARENT);
+	const char *label;
+	for (int bt = 0; bt < 6; bt++) {
+		if (label = oapiMFDButtonLabel (mfd, bt+side*6))
+			TextOut (hDC, xoffset, 44 * bt + yoffset, label, strlen(label));
+		else break;
+	}
+	oapiReleaseDC (surf, hDC);
+}
+
+void sat5_lmpkd::MFDMode (int mfd, int mode) {
+
+	switch (mfd) {
+	case MFD_LEFT:		
+		oapiTriggerPanelRedrawArea (LMPANEL_MAIN, AID_MFDLEFT);
+		break;
+	case MFD_RIGHT:		
+		oapiTriggerPanelRedrawArea (LMPANEL_MAIN, AID_MFDRIGHT);
+		break;
+	}
+}
+
 void sat5_lmpkd::ReleaseSurfaces ()
 
 {
@@ -471,9 +530,8 @@ void sat5_lmpkd::ReleaseSurfaces ()
 void sat5_lmpkd::InitPanel (int panel)
 
 {
-
 	switch (panel) {
-	case 0: // LEM Main Panel
+	case LMPANEL_MAIN: // LEM Main Panel
 		srf[0] = oapiCreateSurface (LOADBMP (IDB_ECSG));
 		//srf[1] = oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
 		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
@@ -491,11 +549,13 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[14] = oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
 		srf[15] = oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
 		srf[16] = oapiCreateSurface (LOADBMP (IDB_THRUST));
-		srf[17] = oapiCreateSurface (LOADBMP (IDB_HEADING));
+		//srf[17] = oapiCreateSurface (LOADBMP (IDB_HEADING));
 		srf[18] = oapiCreateSurface (LOADBMP (IDB_CONTACT));
 		srf[19] = oapiCreateSurface (LOADBMP (IDB_LEMSWITCH2));
 		srf[20] = oapiCreateSurface (LOADBMP (IDB_LEMSWITCH3));
 		srf[SRF_DSKY] = oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
+		srf[SRF_LMABORTBUTTON] = oapiCreateSurface (LOADBMP (IDB_LMABORTBUTTON));
+		srf[SRF_LMMFDFRAME] = oapiCreateSurface (LOADBMP (IDB_LMMFDFRAME));
 		
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
@@ -505,71 +565,92 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[15], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[16], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[18], g_Param.col[4]);
-		
+		oapiSetSurfaceColourKey (srf[SRF_LMABORTBUTTON], g_Param.col[4]);
 		break;
 	
-	case 1: // LEM Right Window 
-	case 2: // LEM Left Window 
+	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
+	case LMPANEL_LEFTWINDOW: // LEM Left Window 
 		
 		break;
 
 	}
 
+	SetSwitches(panel);
 }
 
-bool sat5_lmpkd::LoadPanel (int id)
+bool sat5_lmpkd::LoadPanel (int id) {
 
-{
-	ReleaseSurfaces();
-
-	HBITMAP hBmp;
-
-
-      static bool recursion;   //yogen 
+	//
+	// The following code switches the panel to PanelId instead of id,
+	// if we are NOT in panel view. This is used for example to switch to 
+	// the panel id saved in the scenario file
+	//
+    static bool recursion; 
  
       // avoid recursive calls
-      if (recursion) return true;
-      recursion = true;
+    if (recursion) return true;
+    recursion = true;
  
-      if (!InPanel && id != PanelId) {
-      // sometimes clbkLoadPanel is called inside oapiSetPanel, 
-      // sometimes not, so ignore the recursive call
-      oapiSetPanel(PanelId);
-      id = PanelId;
-	  }
+    if (!InPanel && id != PanelId) {
+		// sometimes clbkLoadPanel is called inside oapiSetPanel, 
+		// sometimes not, so ignore the recursive call
+		oapiSetPanel(PanelId);
+		id = PanelId;
+	}
+	recursion = false;
 
- recursion = false;
 
+	//
+	// Release all surfaces
+	//
+ 	ReleaseSurfaces();
+
+	//
+	// Load panel background image
+	//
+	HBITMAP hBmp;
 	switch(id) {
-
-    case 0:
+    case LMPANEL_MAIN:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_MAIN_PANEL));
-		oapiSetPanelNeighbours(2, 1, -1, -1);
+		oapiSetPanelNeighbours(LMPANEL_LEFTWINDOW, LMPANEL_RIGHTWINDOW, -1, -1);
 		break;
 
-	case 1:
+	case LMPANEL_RIGHTWINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_RIGHT_WINDOW));
-		oapiSetPanelNeighbours(0, -1, -1, -1);
+		oapiSetPanelNeighbours(LMPANEL_MAIN, -1, -1, -1);
 		break;
 
-    case 2:
+    case LMPANEL_LEFTWINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_LEFT_WINDOW));
-		oapiSetPanelNeighbours(-1, 0, -1, -1);
+		oapiSetPanelNeighbours(-1, LMPANEL_MAIN, -1, LMPANEL_LPDWINDOW);
 		break;
 
+    case LMPANEL_LPDWINDOW:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_LPD_WINDOW));
+		oapiSetPanelNeighbours(-1, LMPANEL_MAIN, LMPANEL_LEFTWINDOW, -1);
+		break;
 	}
 
-	//MFDSPEC mfds_left_l  = {{ 850, 944, 1129, 1223}, 6, 6, 41, 27};
-	//MFDSPEC mfds_right_l = {{1525, 944, 1804, 1223}, 6, 6, 41, 27};
-	//MFDSPEC mfds_left_r  = {{ 15, 944, 294, 1223}, 6, 6, 41, 27};
-	//MFDSPEC mfds_right_r = {{690, 944, 969, 1223}, 6, 6, 41, 27};
+	MFDSPEC mfds_left  = {{  85, 1577,  395, 1886}, 6, 6, 55, 44};
+	MFDSPEC mfds_right = {{1090, 1577, 1400, 1886}, 6, 6, 55, 44};
 
 	switch (id) {
-	case 0: // LEM Main panel
+	case LMPANEL_MAIN: // LEM Main panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
-		//oapiRegisterMFD (MFD_LEFT,  mfds_left_l);
-		//oapiRegisterMFD (MFD_RIGHT, mfds_right_l);
+		oapiRegisterMFD (MFD_LEFT,  mfds_left);
+		oapiRegisterMFD (MFD_RIGHT, mfds_right);
+
+		oapiRegisterPanelArea (AID_MFDLEFT,						    _R(  27, 1564,  452, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDRIGHT,					    _R(1032, 1564, 1457, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ABORT,							_R( 549,  870,  702,  942), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		
+		// DSKY		
+		oapiRegisterPanelArea (AID_DSKY_DISPLAY,					_R( 762, 1560,  867, 1736), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_LIGHTS,						_R( 618, 1565,  720, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 598, 1755,  886, 1867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 
 		//oapiRegisterPanelArea (AID_MISSION_CLOCK,						_R( 908,  163, 1007,  178), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146,  135, 1183,  150), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
@@ -632,74 +713,136 @@ bool sat5_lmpkd::LoadPanel (int id)
 		//oapiRegisterPanelArea (AID_ECS_GAUGES,					_R(1578,  139, 1723,   212), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_COAS,						_R( 334,  165,  639,   466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_ABORT,						_R(1210,  528, 1304,   572), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ABORT,						_R(555,  880, 695,   930), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		
-		// DSKY
-		
-		oapiRegisterPanelArea (AID_DSKY_DISPLAY,					_R( 762, 1560,  867, 1736), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_LIGHTS,						_R( 618, 1565,  720, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 598, 1755,  886, 1867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		
+		//oapiRegisterPanelArea (AID_ABORT,						_R(555,  880, 695,   930), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		break;	
 		
-		case 1: // LEM Right Window
-			oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
-		
+	case LMPANEL_RIGHTWINDOW: // LEM Right Window
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 
-		case 2: // LEM Left Window
-			oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
-			// Animated LEM COAS will be added here soon...
+	case LMPANEL_LEFTWINDOW: // LEM Left Window
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+		// Animated LEM COAS will be added here soon...
 
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
-   }
-	 
-   InitPanel (id);
-   //
-   // Changed camera direction for the left LEM window
-   //
-   if(id >= 2) {
+
+	case LMPANEL_LPDWINDOW: // LDP window
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+
+		oapiRegisterPanelArea (AID_XPOINTER,		_R(838,  35, 973, 166), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+
+		SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE * RAD), cos(VIEWANGLE * RAD)));			
+		break;
+	}
+
+	//
+	// Initialize surfaces and switches
+	//
+	InitPanel(id);
+
+	//
+	// Change FOV for the LPD window 
+	//
+	if (id == LMPANEL_LPDWINDOW) {
 	   // if this is the first time we've been here, save the current FOV
-		if(InFOV) {
-		   SaveFOV=oapiCameraAperture();
-		   InFOV=false;
+		if (InFOV) {
+			SaveFOV = oapiCameraAperture();
+			InFOV = false;
 		}
 		//set FOV to 70 degrees
-		oapiCameraSetAperture(RAD*35.0);
-		SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE*RAD), cos(VIEWANGLE*RAD)));
-   } else {
-		 if(InFOV == false) {
-		   oapiCameraSetAperture(SaveFOV);
-		   InFOV=true;
+		oapiCameraSetAperture(RAD * 35.0);
 
+	} else {
+		if(InFOV == false) {
+			oapiCameraSetAperture(SaveFOV);
+			InFOV = true;
 		}
 	}
-   //
-   // Changed camera direction for the right LEM window
-   //
-	if(id >= 1) {
-	   // if this is the first time we've been here, save the current FOV
-		if(InFOV) {
-		   SaveFOV=oapiCameraAperture();
-		   InFOV=false;
-		}
-		//set FOV to 70 degrees
-		oapiCameraSetAperture(RAD*35.0);
-		SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE*RAD), cos(VIEWANGLE*RAD)));
-   } else {
-		 if(InFOV == false) {
-		   oapiCameraSetAperture(SaveFOV);
-		   InFOV=true;
-		}
-		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
-   }
+
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	InVC = false;
-	InPanel = true; //yogen
-    PanelId = id;  //yogen
-
+	InPanel = true; 
+    PanelId = id;  
 
 	return hBmp != NULL;
+}
+
+void sat5_lmpkd::SetSwitches(int panel) {
+
+	MainPanel.Init(0, this, &soundlib, this);
+
+	AbortSwitchesRow.Init(AID_ABORT, MainPanel);
+	AbortSwitch.Init     ( 0, 0, 72, 72, srf[SRF_LMABORTBUTTON], AbortSwitchesRow, 0, 64);
+	AbortStageSwitch.Init(78, 4, 75, 64, srf[SRF_LMABORTBUTTON], AbortSwitchesRow);
+}
+
+void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
+
+	if (s == &AbortSwitch) {
+		// This is the "ABORT" button
+		AbortFire();
+		SetEngineLevel(ENGINE_HOVER, 1);
+		//SetThrusterResource(th_hover[0], ph_Asc);
+		//SetThrusterResource(th_hover[1], ph_Asc);
+		//stage = 2;
+		startimer = false;
+		agc.SetInputChannelBit(030, 1, true);
+	
+	} else if (s == &AbortStageSwitch) {
+		// This is the "ABORT STAGE" button
+		AbortFire();
+		AbortStageSwitchLight = true;
+		SeparateStage(stage);
+		SetThrusterResource(th_hover[0], ph_Asc);
+		SetThrusterResource(th_hover[1], ph_Asc);
+		stage = 2;
+		startimer = false;
+		AbortStageSwitchLight = true;
+		if(agc.GetProgRunning() > 14 ) {
+			SetEngineLevel(ENGINE_HOVER, 1);
+			agc.SetInputChannelBit(030, 4, true);
+		}
+	}
+}
+
+void sat5_lmpkd::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
+
+}
+
+void sat5_lmpkd::MousePanel_MFDButton(int mfd, int event, int mx, int my) {
+
+	if (oapiGetMFDMode(mfd) != MFD_NONE) {
+		if (my > 330 && my < 352) {
+			if (mx > 67 && mx < 96) {
+				ButtonClick();
+				oapiToggleMFD_on(mfd);
+			} else if (mx > 295 && mx < 324) {
+				ButtonClick();
+				oapiSendMFDKey(mfd, OAPI_KEY_F1);	
+			} else if (mx > 329 && mx < 356) {
+				ButtonClick();
+				oapiSendMFDKey(mfd, OAPI_KEY_GRAVE);	
+			}
+		} else if (mx > 10 && mx < 38 && my > 53 && my < 294) {
+			if ((my - 53) % 44 < 21) {
+				int bt = (my - 53) / 44 + 0;
+				ButtonClick();
+				oapiProcessMFDButton (mfd, bt, event);
+			}
+		} else if (mx > 386 && mx < 416 && my > 53 && my < 294) {
+			if ((my - 53) % 44 < 21) {
+				int bt = (my - 53) / 44 + 6;
+				ButtonClick();
+				oapiProcessMFDButton (mfd, bt, event);
+			}
+		}
+	} else {
+		ButtonClick();
+		oapiToggleMFD_on(mfd);
+	}
 
 }
 
@@ -744,8 +887,26 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 {
 	static int ctrl = 0;
 
+	if (MainPanel.CheckMouseClick(id, event, mx, my))
+		return true;
+
 	switch (id) {
 	// panel 0 events:
+	case AID_DSKY_KEY:
+		dsky.ProcessKeypress(mx, my);
+		return true;
+
+	case AID_MFDLEFT:
+		MousePanel_MFDButton(MFD_LEFT, event, mx, my);
+		return true;
+
+	case AID_MFDRIGHT:
+		MousePanel_MFDButton(MFD_RIGHT, event, mx, my);
+		return true;
+
+
+
+
 
 	case AID_DESCENT_HE:
 		if (my >=30 && my <=42 ){
@@ -1534,40 +1695,6 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_DSKY_KEY:
-		dsky.ProcessKeypress(mx, my);
-		return true;
-
-	case AID_ABORT:
-		if (mx > 0 && mx < 80 && my > 0 && my < 50){
-			// This is the "ABORT" button
-				ButtonClick();
-				AbortFire();
-				SetEngineLevel(ENGINE_HOVER, 1);
-//				SetThrusterResource(th_hover[0], ph_Asc);
-//				SetThrusterResource(th_hover[1], ph_Asc);
-//				stage = 2;
-				startimer = false;
-				agc.SetInputChannelBit(030, 1, true);
-		}
-		else if (mx > 85 && mx < 130 && my > 0 && my < 50){
-			// This is the "ABORT STAGE" button
-				ButtonClick();
-				AbortFire();
-				Abortswitch = true;
-				SeparateStage(stage);
-				SetThrusterResource(th_hover[0], ph_Asc);
-				SetThrusterResource(th_hover[1], ph_Asc);
-				stage = 2;
-				startimer = false;
-				Abortswitch = true;
-				if(agc.GetProgRunning() > 14 ) {
-					SetEngineLevel(ENGINE_HOVER, 1);
-					agc.SetInputChannelBit(030, 4, true);
-				}
-		}
-		return true;
-
 	case AID_SWITCH_SEP:
 		if(event & PANEL_MOUSE_RBDOWN){
 			Cswitch1 = !Cswitch1;
@@ -1649,16 +1776,62 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 	}
 	return false;
 }
-bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf)
+bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf) {
 
-{
+	//
+	// Special handling illuminated abort stage switch
+	//
+
+	if (AbortStageSwitchLight) {
+		AbortStageSwitch.SetOffset(150, 0);
+	} else {
+		AbortStageSwitch.SetOffset(0, 0);
+	}
+
+	//
+	// Process all the generic switches.
+	//
+
+	if (MainPanel.DrawRow(id, surf))
+		return true;
+
+	//
+	// Now special case the rest.
+	//
 	switch (id) {
 	// panel 0 events:
-	case AID_ABORT:
-		if (Abortswitch){
-			oapiBlt(surf,srf[9],0,0,0,73,94,44);
+	case AID_DSKY_LIGHTS:
+		dsky.RenderLights(surf, srf[SRF_DSKY]);
+		return true;
+
+	case AID_DSKY_DISPLAY:
+		dsky.RenderData(surf, srf[4]);
+		return true;
+
+	case AID_MFDLEFT:
+		if (oapiGetMFDMode(MFD_LEFT) != MFD_NONE) {	
+			oapiBlt(surf, srf[SRF_LMMFDFRAME], 0, 0, 0, 0, 425, 354);
+
+			RedrawPanel_MFDButton (surf, MFD_LEFT, 0, 24, 58);	
+			RedrawPanel_MFDButton (surf, MFD_LEFT, 1, 402, 58);	
 		}
 		return true;
+
+	case AID_MFDRIGHT:
+		if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	
+			oapiBlt(surf, srf[SRF_LMMFDFRAME], 0, 0, 0, 0, 425, 354);
+
+			RedrawPanel_MFDButton (surf, MFD_RIGHT, 0, 24, 58);	
+			RedrawPanel_MFDButton (surf, MFD_RIGHT, 1, 402, 58);	
+		}
+		return true;
+
+	case AID_XPOINTER:
+		RedrawPanel_XPointer(surf);
+		return true;
+
+
+
 
 	case AID_CONTACT:
 		if (GroundContact()&& stage ==1){
@@ -2082,15 +2255,6 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		oapiBlt(surf,srf[2],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
 
-	case AID_DSKY_LIGHTS:
-		dsky.RenderLights(surf, srf[SRF_DSKY]);
-		return true;
-
-
-	case AID_DSKY_DISPLAY:
-		dsky.RenderData(surf, srf[4]);
-		return true;
-
 	case AID_LANDING_GEAR_SWITCH:
 		if(LDGswitch){
 			oapiBlt(surf,srf[19],1,37,0,0,23,30);
@@ -2407,29 +2571,7 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			Sswitch2=false;
 		}
 		return true;
-
-	case AID_XPOINTER:
-		int ix, iy;
-		double vx, vy;
-		//draw the crosspointers
-		agc.GetHorizVelocity(vx, vy);
-		ix=(int)(-3.9*vx);
-		if(ix < -39) ix=-39;
-		if(ix > 39) ix=39;
-		iy=(int)(3.9*vy);
-		if(iy < -39) iy=-39;
-		if(iy > 39 ) iy=39;
-        oapiColourFill(surf, oapiGetColour(255, 255, 255), 0, 0, 79, 79);
-		HDC hDC=oapiGetDC(surf);
-		SelectObject(hDC, GetStockObject(BLACK_PEN));
-		MoveToEx(hDC, 0, 40+ix, NULL);
-		LineTo(hDC, 80, 40+ix);
-		MoveToEx(hDC, 40+iy, 0, NULL);
-		LineTo(hDC, 40+iy, 80);
-		oapiReleaseDC(surf, hDC);
-		return true;
 	}
-
 	return false;
 }
 //
@@ -2510,7 +2652,7 @@ int sat5_lmpkd::GetCSwitchState()
 	state.u.HATCHswitch = HATCHswitch;
 	state.u.EVAswitch = EVAswitch;
 	state.u.COASswitch = COASswitch;
-	state.u.Abortswitch = Abortswitch;
+	state.u.Abortswitch = AbortStageSwitchLight;
 
 	return state.word;
 }
@@ -2550,7 +2692,7 @@ void sat5_lmpkd::SetCSwitchState(int s)
 	HATCHswitch = state.u.HATCHswitch;
 	EVAswitch = state.u.EVAswitch;
 	COASswitch = state.u.COASswitch;
-	Abortswitch = state.u.Abortswitch;
+	AbortStageSwitchLight = state.u.Abortswitch;
 }
 
 typedef union {
