@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
   *	Revision 1.1  2005/08/08 21:46:34  movieman523
   *	Initial version: this file holds the AGC->DSKY interface code.
   *	
@@ -36,6 +39,9 @@
 #include "nasspdefs.h"
 #include "apolloguidance.h"
 #include "dsky.h"
+#include "ioChannels.h"
+
+extern char RegFormat[];
 
 void ApolloGuidance::LightUplink()
 
@@ -109,24 +115,6 @@ void ApolloGuidance::ClearOprErr()
 	SetOutputChannelBit(011, 7, false);
 }
 
-/*
-		dsky.SetProg((out_val.Value & (1 << 8)) != 0);
-*/
-
-//
-// Structure defining AGC channel 010.
-//
-
-typedef union {
-	struct {
-		unsigned d:5;
-		unsigned c:5;
-		unsigned b:1;
-		unsigned a:4;
-	} Bits;
-	unsigned int Value;
-} ChannelValue10;
-
 //
 // Send special commands to set the Channel 10 bits indicating that a light state has
 // changed.
@@ -154,6 +142,18 @@ void ApolloGuidance::SetChannel10Lights(int bit, bool val)
 	SetOutputChannel(010, v.Value);
 }
 
+void ApolloGuidance::LightVel()
+
+{
+	SetChannel10Lights(2, true);
+}
+
+void ApolloGuidance::ClearVel()
+
+{
+	SetChannel10Lights(2, false);
+}
+
 void ApolloGuidance::LightNoAtt()
 
 {
@@ -164,6 +164,18 @@ void ApolloGuidance::ClearNoAtt()
 
 {
 	SetChannel10Lights(3, false);
+}
+
+void ApolloGuidance::LightAlt()
+
+{
+	SetChannel10Lights(4, true);
+}
+
+void ApolloGuidance::ClearAlt()
+
+{
+	SetChannel10Lights(4, false);
 }
 
 void ApolloGuidance::LightGimbalLock()
@@ -202,170 +214,70 @@ void ApolloGuidance::ClearProg()
 	SetChannel10Lights(8, false);
 }
 
-//
-// Convert from AGC output to character codes.
-//
-
-char ApolloGuidance::CharValue(unsigned val)
-
-{
-	switch (val) {
-	case 21:
-		return '0';
-
-	case 3:
-		return '1';
-
-	case 25:
-		return '2';
-
-	case 27:
-		return '3';
-
-	case 15:
-		return '4';
-
-	case 30:
-		return '5';
-	
-	case 28:
-		return '6';
-
-	case 19:
-		return '7';
-
-	case 29:
-		return '8';
-
-	case 31:
-		return '9';
-	}
-	return ' ';
-}
-
 void ApolloGuidance::ProcessChannel10()
 
 {
-	ChannelValue10 out_val;
-	char	C1, C2;
+	dsky.ProcessChannel10(OutputChannel[010]);
+}
 
-	out_val.Value = OutputChannel[010];
+void ApolloGuidance::LightsOff()
 
-	C1 = CharValue(out_val.Bits.c);
-	C2 = CharValue(out_val.Bits.d);
+{
+	ClearCompActy();
+	ClearUplink();
+	ClearNoAtt();
+	dsky.SetStby(false);
+	ClearKbRel();
+	ClearOprErr();
+	ClearTemp();
+	ClearGimbalLock();
+	ClearProg();
+	dsky.SetRestart(false);
+	ClearTracker();
+	ClearAlt();
+	ClearVel();
+}
 
-	switch (out_val.Bits.a) {
-#if 0
-	case 11:
-		Prog[0] = C1;
-		Prog[1] = C2;
-		dsky->SetProg(Prog);
-		break;
+//
+// Convert from character codes to AGC output.
+//
 
-	case 10:
-		Verb[0] = C1;
-		Verb[1] = C2;
-		dsky->SetVerb(Verb);
-		break;
+unsigned ApolloGuidance::CharValue(char val)
 
-	case 9:
-		Noun[0] = C1;
-		Noun[1] = C2;
-		dsky->SetNoun(Noun);
-		break;
-	
-	case 8:
-		R1[1] = C2;
-		dsky->SetR1(R1);
-		break;
+{
+	switch (val) {
+	case '0':
+		return 21;
 
-	case 7:
-		R1[2] = C1;
-		R1[3] = C2;
-		if (out_val.Bits.b) {
-			R1[0] = '+';
-		}
-		else if (R1[0] == '+') {
-			R1[0] = ' ';
-		}
-		dsky->SetR1(R1);
-		break;
+	case '1':
+		return 3;
 
-	case 6:
-		R1[4] = C1;
-		R1[5] = C2;
-		if (out_val.Bits.b) {
-			R1[0] = '-';
-		}
-		else if (R1[0] == '-') {
-			R1[0] = ' ';
-		}
-		dsky->SetR1(R1);
-		break;
+	case '2':
+		return 25;
 
-	case 5:
-		R2[1] = C1;
-		R2[2] = C2;
-		if (out_val.Bits.b) {
-			R2[0] = '+';
-		}
-		else if (R2[0] == '+') {
-			R2[0] = ' ';
-		}
-		dsky->SetR2(R2);
-		break;
+	case '3':
+		return 27;
 
-	case 4:
-		R2[3] = C1;
-		R2[4] = C2;
-		if (out_val.Bits.b) {
-			R2[0] = '-';
-		}
-		else if (R2[0] == '-') {
-			R2[0] = ' ';
-		}
-		dsky->SetR2(R2);
-		break;
+	case '4':
+		return 15;
 
-	case 3:
-		R2[5] = C1;
-		R3[1] = C2;
-		dsky->SetR2(R2);
-		dsky->SetR3(R3);
-		break;
+	case '5':
+		return 30;
 
-	case 2:
-		R3[2] = C1;
-		R3[3] = C2;
-		if (out_val.Bits.b) {
-			R3[0] = '+';
-		}
-		else if (R3[0] == '+') {
-			R3[0] = ' ';
-		}
-		dsky->SetR3(R3);
-		break;
+	case '6':
+		return 28;
 
-	case 1:
-		R3[4] = C1;
-		R3[5] = C2;
-		if (out_val.Bits.b) {
-			R3[0] = '-';
-		}
-		else if (R3[0] == '-') {
-			R3[0] = ' ';
-		}
-		dsky->SetR3(R3);
-		break;
-#endif
-	// 12 - set light states.
-	case 12:
-		dsky.SetNoAtt((out_val.Value & (1 << 3)) != 0);
-		dsky.SetGimbalLock((out_val.Value & (1 << 5)) != 0);
-		dsky.SetTracker((out_val.Value & (1 << 7)) != 0);
-		dsky.SetProg((out_val.Value & (1 << 8)) != 0);
-		break;
+	case '7':
+		return 19;
+
+	case '8':
+		return 29;
+
+	case '9':
+		return 31;
 	}
+
+	return 0;
 }
 
 void ApolloGuidance::ProcessChannel11(int bit, bool val)
@@ -416,3 +328,958 @@ void ApolloGuidance::ProcessChannel11(int bit, bool val)
 	}
 }
 
+void ApolloGuidance::TwoDigitDisplay(char *Str, int val, bool Blanked)
+
+{
+	if (val > 99)
+		val = 99;
+
+	if (Blanked) {
+		strcpy(Str, "  ");
+	}
+	else {
+		Str[0] = '0' + (val / 10);
+		Str[1] = '0' + (val % 10);
+	}
+}
+
+void ApolloGuidance::FiveDigitDisplay(char *Str, int val, bool Blanked, bool Decimal, char *Format)
+
+{
+	int	i;
+	int divisor, dividestep, rval;
+
+	if (Blanked) {
+		strcpy(Str, "      ");
+		return;
+	}
+
+	if (Decimal) {
+		if (val >= 0)
+			Str[0] = '+';
+		else {
+			Str[0] = '-';
+			val = (-val);
+		}
+	}
+	else
+		Str[0] = ' ';
+
+	//
+	// Set up decimal and octal divisors.
+	//
+
+	if (Decimal) {
+		divisor = 10000;
+		dividestep = 10;
+	}
+	else {
+		divisor = 010000;
+		dividestep = 8;
+	}
+
+	//
+	// Limit maximum value.
+	//
+
+	if (val >= (divisor * dividestep)) {
+		val = (divisor * dividestep) - 1;
+	}
+
+	for (i = 1; i < 6; i++) {
+		rval = (val / divisor);
+		Str[i] = '0' + rval;
+		val -= divisor * rval;
+		divisor /= dividestep;
+	}
+
+	//
+	// Update string for formatting, so we can blank out spaces as
+	// appropriate.
+	//
+
+	for (i = 0; i < 6; i++) {
+		if (Format[i] == ' ')
+			Str[i] = ' ';
+	}
+}
+
+void ApolloGuidance::ClearFiveDigitEntry()
+
+{
+	for (int i = 0; i < 6; i++)
+		FiveDigitEntry[i] = ' ';
+}
+
+void ApolloGuidance::StartFiveDigitEntry(bool octal)
+
+{
+	ClearFiveDigitEntry();
+
+	EnterPos = 1;
+	EnterVal = 0;
+
+	EnteringOctal = octal;
+
+	//
+	// Octal entry is always a positive number.
+	//
+
+	if (octal)
+		EnterPositive = true;
+}
+
+void ApolloGuidance::UpdateFiveDigitEntry(int n)
+
+{
+	if (!EnterPos) {
+		StartFiveDigitEntry(true);
+	}
+
+	FiveDigitEntry[EnterPos] = '0' + n;
+
+	if (EnteringOctal) {
+		if (n > 7) {
+			LightOprErr();
+			return;
+		}
+		EnterVal = EnterVal * 8 + n;
+	}
+	else {
+		EnterVal = (EnterVal * 10) + n;
+	}
+
+	//
+	// Update DSKY display.
+	//
+
+	UpdateEntry();
+
+	EnterPos++;
+
+	if (EnterPos > 5) {
+
+		if (!EnterPositive)
+			EnterVal = (-EnterVal);
+
+		switch(EnteringData) {
+
+		case 1:
+			R1 = EnterVal;
+			R1Blanked = false;
+			break;
+
+		case 2:
+			R2 = EnterVal;
+			R2Blanked = false;
+			break;
+
+		case 3:
+			R3 = EnterVal;
+			R3Blanked = false;
+			break;
+
+		}
+
+		EnteringData++;
+		ReleaseKeyboard();
+
+		EnterPos = 0;
+		strncpy (FiveDigitEntry, "      ", 6);
+
+		if (EnteringData > EnterCount) {
+			EnteringData = 0;
+		}
+	}
+}
+
+void ApolloGuidance::StartTwoDigitEntry()
+
+{
+	TwoDigitEntry[0] = TwoDigitEntry[1] = ' ';
+	EnterPos = 0;
+	EnterVal = 0;
+}
+
+void ApolloGuidance::UpdateTwoDigitEntry(int n)
+
+{
+	if (EnterPos > 1) {
+		LightOprErr();
+		return;
+	}
+
+	TwoDigitEntry[EnterPos] = '0' + n;
+
+	if (EnteringVerb)
+		UpdateVerb();
+	if (EnteringNoun)
+		UpdateNoun();
+
+	if (!EnterPos) {
+		EnterVal = n * 10;
+	}
+	else {
+		EnterVal += n;
+
+		if (EnteringVerb) {
+			Verb = EnterVal;
+			EnteringVerb = false;
+		}
+
+		if (EnteringNoun) {
+			Noun = EnterVal;
+			EnteringNoun = false;
+		}
+
+		ReleaseKeyboard();
+	}
+
+	EnterPos++;
+}
+
+//
+// Keyboard interface.
+//
+
+void ApolloGuidance::ProcessInputChannel15(int val)
+
+{
+	//
+	// The DSKY keys (other than Prog) come through on this
+	// channel.
+	//
+
+	switch (val) {
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	case 8:
+	case 9:
+		NumberPressed(val);
+		break;
+
+	case 16:
+		NumberPressed(0);
+		break;
+
+	case 17:
+		VerbPressed();
+		break;
+
+	case 18:
+		ResetPressed();
+		break;
+
+	case 25:
+		KeyRel();
+		break;
+
+	case 26:
+		PlusPressed();
+		break;
+
+	case 27:
+		MinusPressed();
+		break;
+
+	case 28:
+		EnterPressed();
+		break;
+
+	case 30:
+		ClearPressed();
+		break;
+
+	case 31:
+		NounPressed();
+		break;
+	}
+}
+
+void ApolloGuidance::ProcessInputChannel32(int bit, bool val)
+
+{
+	if (bit == 14) {
+		if (val)
+			ProgKeyPressed();
+	}
+}
+
+void ApolloGuidance::ProgKeyPressed()
+
+{
+	//
+	// If AGC is in standby mode, then start it up.
+	//
+
+	if (OnStandby()) {
+		Startup();
+		return;
+	}
+
+	//
+	// Else if program 6 is running, shut it down to
+	// standby mode.
+	//
+
+	if (Prog == 06) {
+		GoStandby();
+		return;
+	}
+
+	//
+	// Now we have a value in R3, we can process verb 1 or 11.
+	//
+
+	if (Verb == 1 || Verb == 11) {
+		VerbNounEntered(Verb, Noun);
+	}
+
+	//
+	// Otherwise tell the AGC that it's been pressed.
+	//
+
+	ProgPressed(R1, R2, R3);
+
+	//
+	// For verb 1, let us enter another address.
+	//
+
+	switch (Verb) {
+	case 1:
+		DataEntryR2();
+		break;
+
+	case 11:
+		ClearVerbNounFlashing();
+		break;
+	}
+}
+
+void ApolloGuidance::ResetPressed()
+
+{
+	RSetPressed();
+
+	UpdateAll();
+	LightsOff();
+}
+
+void ApolloGuidance::ReleaseKeyboard()
+
+{
+	KbInUse = false;
+	ClearKbRel();
+}
+
+void ApolloGuidance::KeyRel()
+
+{
+	ReleaseKeyboard();
+}
+
+void ApolloGuidance::VerbPressed()
+
+{
+	if (EnteringNoun) {
+		LightOprErr();
+		return;
+	}
+
+	ClearVerbNounFlashing();
+	VerbBlanked = false;
+
+	StartTwoDigitEntry();
+
+	KbInUse = true;
+	EnteringVerb = true;
+
+	UpdateVerb();
+}
+
+void ApolloGuidance::NounPressed()
+
+{
+	if (EnteringVerb) {
+		LightOprErr();
+		return;
+	}
+
+	NounBlanked = false;
+
+	StartTwoDigitEntry();
+
+	KbInUse = true;
+	EnteringNoun = true;
+
+	UpdateNoun();
+}
+
+void ApolloGuidance::EnterPressed()
+
+{
+	//
+	// Must complete entering the data before pressing
+	// ENTER.
+	//
+
+	if (EnteringVerb || EnteringNoun) {
+		LightOprErr();
+		return;
+	}
+
+	ReleaseKeyboard();
+
+	ClearVerbNounFlashing();
+
+	switch (Verb) {
+
+	case 21:
+		DataEntryR1();
+		break;
+
+	case 1:
+	case 11:
+		if (Noun != 2) {
+			LightOprErr();
+			return;
+		}
+
+		SetVerbNounFlashing();
+
+		R2Decimal = false;
+		R1Decimal = false;
+		R1Blanked = false;
+
+		//
+		// And fall through to get R2.
+		//
+
+	case 22:
+		DataEntryR2();
+		break;
+
+	case 23:
+		DataEntryR3();
+		break;
+
+	case 24:
+		EnteringData = 1;
+		EnterCount = 2;
+		EnterPos = 0;
+		R1Blanked = true;
+		R2Blanked = true;
+		break;
+
+	case 25:
+		EnteringData = 1;
+		EnterCount = 3;
+		EnterPos = 0;
+		R1Blanked = true;
+		R2Blanked = true;
+		R3Blanked = true;
+		break;
+
+	//
+	// 33: Proceed without data.
+	//
+
+	case 33:
+		ProceedNoData();
+		break;
+
+	//
+	// 34: terminate.
+	//
+
+	case 34:
+		TerminateProgram();
+		break;
+
+	default:
+		VerbNounEntered(Verb, Noun);
+		break;
+	}
+}
+
+void ApolloGuidance::UpdateEntry()
+
+{
+	switch (EnteringData) {
+	case 1:
+		UpdateR1();
+		break;
+
+	case 2:
+		UpdateR2();
+		break;
+
+	case 3:
+		UpdateR3();
+		break;
+	}
+}
+
+void ApolloGuidance::ClearPressed()
+
+{
+	if (EnteringData) {
+		EnterPos = 0;
+		strncpy (FiveDigitEntry, "      ", 6);
+		UpdateEntry();
+	}
+	else {
+		LightOprErr();
+	}
+}
+
+void ApolloGuidance::PlusPressed()
+
+{
+	if (EnteringData && !EnterPos) {
+		EnterPositive = true;
+		StartFiveDigitEntry(false);
+		FiveDigitEntry[0] = '+';
+		UpdateEntry();
+	}
+	else {
+		LightOprErr();
+	}
+}
+
+void ApolloGuidance::MinusPressed()
+
+{
+	if (EnteringData && !EnterPos) {
+		EnterPositive = false;
+		StartFiveDigitEntry(false);
+		FiveDigitEntry[0] = '-';
+		UpdateEntry();
+	}
+	else {
+		LightOprErr();
+	}
+}
+
+
+void ApolloGuidance::NumberPressed(int n)
+
+{
+	if (EnteringOctal && n > 7) {
+		LightOprErr();
+		return;
+	}
+
+	if (EnteringVerb || EnteringNoun) {
+		UpdateTwoDigitEntry(n);
+		return;
+	}
+
+	if (EnteringData) {
+		UpdateFiveDigitEntry(n);
+		return;
+	}
+
+	LightOprErr();
+}
+
+void ApolloGuidance::DataEntryR1()
+
+{
+	ClearFiveDigitEntry();
+	EnteringData = 1;
+	EnterCount = 1;
+	EnterPos = 0;
+	R1Blanked = true;
+	UpdateR1();
+}
+
+void ApolloGuidance::DataEntryR2()
+
+{
+	ClearFiveDigitEntry();
+	EnteringData = 2;
+	EnterCount = 2;
+	EnterPos = 0;
+	R2Blanked = true;
+	UpdateR2();
+}
+
+void ApolloGuidance::DataEntryR3()
+
+{
+	ClearFiveDigitEntry();
+	EnteringData = 3;
+	EnterCount = 3;
+	EnterPos = 0;
+	R3Blanked = true;
+	UpdateR3();
+}
+
+void ApolloGuidance::UpdateR1()
+
+{
+	if (EnteringData == 1)
+		strncpy(RegStr, FiveDigitEntry, 6);
+	else
+		FiveDigitDisplay(RegStr, R1, R1Blanked, R1Decimal, R1Format);
+
+	ChannelValue10	v;
+
+	v.Value = 0;
+	v.Bits.a = 8;
+	v.Bits.d = CharValue(RegStr[1]);
+	SetOutputChannel(010, v.Value);
+
+	v.Bits.a = 7;
+	if (RegStr[0] == '+')
+		v.Bits.b = 1;
+	v.Bits.c = CharValue(RegStr[2]);
+	v.Bits.d = CharValue(RegStr[3]);
+	SetOutputChannel(010, v.Value);
+
+	v.Value = 0;
+	v.Bits.a = 6;
+	if (RegStr[0] == '-')
+		v.Bits.b = 1;
+	v.Bits.c = CharValue(RegStr[4]);
+	v.Bits.d = CharValue(RegStr[5]);
+	SetOutputChannel(010, v.Value);
+}
+
+void ApolloGuidance::UpdateR2()
+
+{
+	char R3Str[7];
+
+	if (EnteringData == 2)
+		strncpy(RegStr, FiveDigitEntry, 6);
+	else
+		FiveDigitDisplay(RegStr, R2, R2Blanked, R2Decimal, R2Format);
+
+	//
+	// Unfortunately we have to send part of R3 in the same words as R2!
+	//
+
+	if (EnteringData == 3)
+		strncpy(R3Str, FiveDigitEntry, 6);
+	else
+		FiveDigitDisplay(R3Str, R3, R3Blanked, R3Decimal, R3Format);
+
+	ChannelValue10	v;
+
+	v.Value = 0;
+	v.Bits.a = 5;
+	if (RegStr[0] == '+')
+		v.Bits.b = 1;
+	v.Bits.c = CharValue(RegStr[1]);
+	v.Bits.d = CharValue(RegStr[2]);
+	SetOutputChannel(010, v.Value);
+
+	v.Value = 0;
+	v.Bits.a = 4;
+	if (RegStr[0] == '-')
+		v.Bits.b = 1;
+	v.Bits.c = CharValue(RegStr[3]);
+	v.Bits.d = CharValue(RegStr[4]);
+	SetOutputChannel(010, v.Value);
+
+	v.Value = 0;
+	v.Bits.a = 3;
+	v.Bits.c = CharValue(RegStr[5]);
+	v.Bits.d = CharValue(R3Str[1]);
+	SetOutputChannel(010, v.Value);
+
+}
+
+void ApolloGuidance::UpdateR3()
+
+{
+	char	R2Str[7];
+
+	if (EnteringData == 3)
+		strncpy(RegStr, FiveDigitEntry, 6);
+	else
+		FiveDigitDisplay(RegStr, R3, R3Blanked, R3Decimal, R3Format);
+
+	//
+	// Unfortunately we have to send part of R2 in the same words as R3!
+	//
+
+	if (EnteringData == 2)
+		strncpy(R2Str, FiveDigitEntry, 6);
+	else
+		FiveDigitDisplay(R2Str, R2, R2Blanked, R2Decimal, R2Format);
+
+	ChannelValue10	v;
+
+	v.Value = 0;
+	v.Bits.a = 3;
+	v.Bits.c = CharValue(R2Str[5]);
+	v.Bits.d = CharValue(RegStr[1]);
+	SetOutputChannel(010, v.Value);
+
+	v.Value = 0;
+	v.Bits.a = 2;
+	if (RegStr[0] == '+')
+		v.Bits.b = 1;
+	v.Bits.c = CharValue(RegStr[2]);
+	v.Bits.d = CharValue(RegStr[3]);
+	SetOutputChannel(010, v.Value);
+
+	v.Value = 0;
+	v.Bits.a = 1;
+	if (RegStr[0] == '-')
+		v.Bits.b = 1;
+	v.Bits.c = CharValue(RegStr[4]);
+	v.Bits.d = CharValue(RegStr[5]);
+	SetOutputChannel(010, v.Value);
+}
+
+void ApolloGuidance::UpdateProg()
+
+{
+	TwoDigitDisplay(RegStr, Prog, ProgBlanked);
+
+	ChannelValue10	v;
+
+	v.Value = 0;
+	v.Bits.a = 11;
+	v.Bits.c = CharValue(RegStr[0]);
+	v.Bits.d = CharValue(RegStr[1]);
+
+	SetOutputChannel(010, v.Value);
+}
+
+void ApolloGuidance::UpdateVerb()
+
+{
+	if (EnteringVerb)
+		strncpy(RegStr, TwoDigitEntry, 2);
+	else
+		TwoDigitDisplay(RegStr, Verb, VerbBlanked);
+
+	ChannelValue10	v;
+
+	v.Value = 0;
+	v.Bits.a = 10;
+	v.Bits.c = CharValue(RegStr[0]);
+	v.Bits.d = CharValue(RegStr[1]);
+
+	SetOutputChannel(010, v.Value);
+}
+
+void ApolloGuidance::UpdateNoun()
+
+{
+	if (EnteringNoun)
+		strncpy(RegStr, TwoDigitEntry, 2);
+	else
+		TwoDigitDisplay(RegStr, Noun, NounBlanked);
+
+	ChannelValue10	v;
+
+	v.Value = 0;
+	v.Bits.a = 9;
+	v.Bits.c = CharValue(RegStr[0]);
+	v.Bits.d = CharValue(RegStr[1]);
+
+	SetOutputChannel(010, v.Value);
+}
+
+void ApolloGuidance::DoSetR1(int val, bool decimal)
+
+{
+	if (KBCheck()) {
+		R1 = val;
+		R1Blanked = false;
+		SetR1Format(RegFormat);
+		R1Decimal = decimal;
+		UpdateR1();
+	}
+}
+
+void ApolloGuidance::DoSetR2(int val, bool decimal)
+
+{
+	if (KBCheck()) {
+		R2 = val;
+		R2Blanked = false;
+		SetR2Format(RegFormat);
+		R2Decimal = decimal;
+		UpdateR2();
+	}
+}
+
+void ApolloGuidance::DoSetR3(int val, bool decimal)
+
+{
+	if (KBCheck()) {
+		R3 = val;
+		R3Blanked = false;
+		SetR3Format(RegFormat);
+		R3Decimal = decimal;
+		UpdateR3();
+	}
+}
+
+void ApolloGuidance::SetR1(int val)
+
+{
+	DoSetR1(val, true);
+}
+
+void ApolloGuidance::SetR2(int val)
+
+{
+	DoSetR2(val, true);
+}
+
+void ApolloGuidance::SetR3(int val)
+
+{
+	DoSetR3(val, true);
+}
+
+void ApolloGuidance::SetR1Octal(int val)
+
+{
+	DoSetR1(val, false);
+}
+
+void ApolloGuidance::SetR2Octal(int val)
+
+{
+	DoSetR2(val, false);
+}
+
+void ApolloGuidance::SetR3Octal(int val)
+
+{
+	DoSetR3(val, false);
+}
+
+void ApolloGuidance::SetProg(int val)
+
+{
+	if (KBCheck()) {
+		Prog = val;
+		ProgBlanked = false;
+		UpdateProg();
+	}
+}
+
+void ApolloGuidance::SetVerb(int val)
+
+{
+	if (KBCheck()) {
+		Verb = val;
+		VerbBlanked = false;
+		UpdateVerb();
+	}
+}
+
+void ApolloGuidance::SetNoun(int val)
+
+{
+	if (KBCheck()) {
+		Noun = val;
+		NounBlanked = false;
+		UpdateNoun();
+	}
+}
+
+void ApolloGuidance::UpdateAll()
+
+{
+	UpdateProg();
+	UpdateVerb();
+	UpdateNoun();
+	UpdateR1();
+	UpdateR2();
+	UpdateR3();
+}
+
+void ApolloGuidance::UnBlankAll()
+
+{
+	ProgBlanked = false;
+	VerbBlanked = false;
+	NounBlanked = false;
+	R1Blanked = false;
+	R2Blanked = false;
+	R3Blanked = false;
+
+	UpdateAll();
+}
+
+void ApolloGuidance::BlankAll()
+
+{
+	ProgBlanked = true;
+	VerbBlanked = true;
+	NounBlanked = true;
+	R1Blanked = true;
+	R2Blanked = true;
+	R3Blanked = true;
+
+	UpdateAll();
+}
+
+void ApolloGuidance::BlankData()
+
+{
+	R1Blanked = true;
+	R2Blanked = true;
+	R3Blanked = true;
+
+	UpdateAll();
+}
+
+void ApolloGuidance::BlankR1()
+
+{
+	if (KBCheck()) {
+		R1Blanked = true;
+		UpdateR1();
+	}
+}
+
+void ApolloGuidance::BlankR2()
+
+{
+	if (KBCheck()) {
+		R2Blanked = true;
+		UpdateR2();
+	}
+}
+
+void ApolloGuidance::BlankR3()
+
+{
+	if (KBCheck()) {
+		R3Blanked = true;
+		UpdateR3();
+	}
+}
+
+//
+// Attempt to set a value into the register, and light the KBD REL
+// light if the keyboard is in use.
+//
+
+bool ApolloGuidance::KBCheck()
+
+{
+	if (KbInUse) {
+		LightKbRel();
+		return false;
+	}
+
+	return true;
+}

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
   *	Revision 1.2  2005/05/19 20:26:52  movieman523
   *	Rmaia's AGC 2.0 changes integrated: can't test properly as the LEM DSKY currently doesn't work!
   *	
@@ -196,7 +199,7 @@ void LEMcomputer::Prog12 (double simt)
 	case 8:
 		if (simt >= NextEventTime) 
 		{
-			dsky.BlankAll();
+			BlankAll();
 
 			VerbRunning = 0;
 			NounRunning = 0;
@@ -209,7 +212,7 @@ void LEMcomputer::Prog12 (double simt)
 	case 9:
 		if (simt >= NextEventTime) 
 		{
-			dsky.UnBlankAll();
+			UnBlankAll();
 			SetVerbNoun(6, 74);
 			SetVerbNounAndFlash(99, 74);
 			ProgState++;

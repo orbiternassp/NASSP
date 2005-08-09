@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
   *	Revision 1.12  2005/08/06 00:03:48  movieman523
   *	Beginnings of support for AGC I/O channels in LEM.
   *	
@@ -193,9 +196,9 @@ void LEMcomputer::DisplayNounData(int noun)
 			tspm = ((int)TtApo - (3600 * tsph)) / 60;
 			tsps = ((int)(TtApo * 100)) % 6000;
 
-			dsky.SetR1(tsph);
-			dsky.SetR2(tspm);
-			dsky.SetR3(tsps);
+			SetR1(tsph);
+			SetR2(tspm);
+			SetR3(tsps);
 		}
 		break;
 	//
@@ -208,9 +211,9 @@ void LEMcomputer::DisplayNounData(int noun)
 		pitch=CurrentVelX;
 		roll=CurrentVelY;
 		yaw=CurrentVelZ;
-		dsky.SetR1((int) pitch);
-		dsky.SetR2((int) roll);
-		dsky.SetR3((int) yaw);
+		SetR1((int) pitch);
+		SetR2((int) roll);
+		SetR3((int) yaw);
 		}
 		break;
 
@@ -232,22 +235,22 @@ void LEMcomputer::DisplayNounData(int noun)
 			if (min > 99)
 				min = 99;
 
-			dsky.SetR1(min * 1000 + sec);
-			dsky.SetR1Format("XXX XX");
+			SetR1(min * 1000 + sec);
+			SetR1Format("XXX XX");
 			sect=BurnEndTime-BurnStartTime;
 			if(dt > 0.0) {
 				secs=BurnEndTime-CurrentTimestep;
-				dsky.SetR2((int) secs);
+				SetR2((int) secs);
 			} else {
 				secs=sect;
-				dsky.SetR2((int) sect);
+				SetR2((int) sect);
 			}
 
 			dv.x=DesiredDeltaVx;
 			dv.y=DesiredDeltaVy;
 			dv.z=DesiredDeltaVz;
 			dvr=Mag(dv)*(secs/sect);
-			dsky.SetR3((int) (dvr*10.0));
+			SetR3((int) (dvr*10.0));
 		}
 		break;
 
@@ -274,9 +277,9 @@ void LEMcomputer::DisplayNounData(int noun)
 		int min=(int)(times/60.);
 		times=(int)(times-min*60.);
 		int sec=(int)(times*100.);
-		dsky.SetR1(hou);
-		dsky.SetR2(min);
-		dsky.SetR3(sec);
+		SetR1(hou);
+		SetR2(min);
+		SetR3(sec);
 		}
 		break;
 
@@ -292,9 +295,9 @@ void LEMcomputer::DisplayNounData(int noun)
 		int min=(int)(times/60.);
 		times=(int)(times-min*60.);
 		int sec=(int)(times*100.);
-		dsky.SetR1(hou);
-		dsky.SetR2(min);
-		dsky.SetR3(sec);
+		SetR1(hou);
+		SetR2(min);
+		SetR3(sec);
 		}
 		break;
 
@@ -306,9 +309,9 @@ void LEMcomputer::DisplayNounData(int noun)
 		int min=(int)(times/60.);
 		times=(int)(times-min*60.);
 		int sec=(int)(times*100.);
-		dsky.SetR1(hou);
-		dsky.SetR2(min);
-		dsky.SetR3(sec);
+		SetR1(hou);
+		SetR2(min);
+		SetR3(sec);
 		}
 		break;
 
@@ -318,9 +321,9 @@ void LEMcomputer::DisplayNounData(int noun)
 	//
 
 	case 45:		
-		dsky.SetR1((int)(DesiredPlaneChange * 100));		
-		dsky.SetR2((int)(DesiredLAN));		
-		dsky.BlankR3();
+		SetR1((int)(DesiredPlaneChange * 100));		
+		SetR2((int)(DesiredLAN));		
+		BlankR3();
 		break;
 
 	//
@@ -331,7 +334,7 @@ void LEMcomputer::DisplayNounData(int noun)
 		if (OrbitCalculationsValid())
 		{
 			DisplayOrbitCalculations();
-			dsky.SetR3((int)((OurVessel->GetFuelMass() / OurVessel->GetMaxFuelMass()) * 10000.0));
+			SetR3((int)((OurVessel->GetFuelMass() / OurVessel->GetMaxFuelMass()) * 10000.0));
 		}
 		break;
 	//
@@ -355,9 +358,9 @@ void LEMcomputer::DisplayNounData(int noun)
 			} 
 			cgelev=OurVessel->GetCOG_elev();
 			CurrentAlt=vrad-bradius-cgelev;
-			dsky.SetR1((int)(hvel*cos(cbrg-heading)*10.0));
-			dsky.SetR2((int)(velocity.y*10.0));
-			dsky.SetR3((int)(CurrentAlt));
+			SetR1((int)(hvel*cos(cbrg-heading)*10.0));
+			SetR2((int)(velocity.y*10.0));
+			SetR3((int)(CurrentAlt));
 		}
 		break;
 
@@ -378,8 +381,8 @@ void LEMcomputer::DisplayNounData(int noun)
 			if (min > 99)
 				min = 99;
 
-			dsky.SetR1(min * 1000 + sec);
-			dsky.SetR1Format("XXX XX");
+			SetR1(min * 1000 + sec);
+			SetR1Format("XXX XX");
 
 			// time from ignition
 			dt=CurrentTimestep-BurnStartTime;
@@ -389,10 +392,10 @@ void LEMcomputer::DisplayNounData(int noun)
 			if (min > 99)
 				min = 99;
 
-			dsky.SetR2(min * 1000 + sec);
-			dsky.SetR2Format("XXX XX");
+			SetR2(min * 1000 + sec);
+			SetR2Format("XXX XX");
 
-			dsky.SetR3((int) (DesiredDeltaV ));
+			SetR3((int) (DesiredDeltaV ));
 		}
 		break;
 
@@ -401,7 +404,7 @@ void LEMcomputer::DisplayNounData(int noun)
 	//
 	case 62:
 		{
-			dsky.SetR1((int)(CurrentVel*10.0));
+			SetR1((int)(CurrentVel*10.0));
 
 			// time from ignition
 			double dt=CurrentTimestep-BurnStartTime;
@@ -411,10 +414,10 @@ void LEMcomputer::DisplayNounData(int noun)
 			if (min > 99)
 				min = 99;
 
-			dsky.SetR2(min * 1000 + sec);
-			dsky.SetR2Format("XXX XX");
+			SetR2(min * 1000 + sec);
+			SetR2Format("XXX XX");
 
-			dsky.SetR3((int)(CurrentRVel*10.0));
+			SetR3((int)(CurrentRVel*10.0));
 		}
 		break;
 
@@ -424,9 +427,9 @@ void LEMcomputer::DisplayNounData(int noun)
 
 	case 63:
 		{
-			dsky.SetR1((int)((CurrentAlt-15384.0)));
-			dsky.SetR2((int)(DesiredApogee));
-			dsky.SetR3((int)(CurrentAlt));
+			SetR1((int)((CurrentAlt-15384.0)));
+			SetR2((int)(DesiredApogee));
+			SetR3((int)(CurrentAlt));
 		}
 		break;
 
@@ -436,10 +439,10 @@ void LEMcomputer::DisplayNounData(int noun)
 
 	case 64:
 		{
-			dsky.SetR1((int)(CutOffVel));
-			dsky.SetR1Format("XXX XX");
-			dsky.SetR2((int)(DesiredApogee));
-			dsky.SetR3((int)(CurrentAlt));
+			SetR1((int)(CutOffVel));
+			SetR1Format("XXX XX");
+			SetR2((int)(DesiredApogee));
+			SetR3((int)(CurrentAlt));
 		}
 		break;
 
@@ -449,7 +452,7 @@ void LEMcomputer::DisplayNounData(int noun)
 
 	case 68:
 		{
-			dsky.SetR1((int)(DeltaPitchRate/100.0));
+			SetR1((int)(DeltaPitchRate/100.0));
 
 			double dt=BurnEndTime-CurrentTimestep;
 			int min = (int) (dt / 60.0);
@@ -458,9 +461,9 @@ void LEMcomputer::DisplayNounData(int noun)
 			if (min > 99)
 				min = 99;
 
-			dsky.SetR2(min * 1000 + sec);
-			dsky.SetR2Format("XXX XX");
-			dsky.SetR3((int)(CurrentVel));
+			SetR2(min * 1000 + sec);
+			SetR2Format("XXX XX");
+			SetR3((int)(CurrentVel));
 		}
 		break;
 
@@ -483,12 +486,12 @@ void LEMcomputer::DisplayNounData(int noun)
 			if (min > 99)
 				min = 99;
 
-			dsky.SetR1(min * 1000 + sec);
-			dsky.SetR1Format("XXX XX");
-			dsky.SetR2((int)(DesiredAzimuth * 100.0));
-			dsky.SetR3((int)(-54.0 * 100.0));
-//			dsky.SetR2((int)(yaw * 100.0));
-//			dsky.SetR3((int)(DesiredAzimuth * 100.0));
+			SetR1(min * 1000 + sec);
+			SetR1Format("XXX XX");
+			SetR2((int)(DesiredAzimuth * 100.0));
+			SetR3((int)(-54.0 * 100.0));
+//			SetR2((int)(yaw * 100.0));
+//			SetR3((int)(DesiredAzimuth * 100.0));
 		}
 		break;
 
@@ -506,10 +509,10 @@ void LEMcomputer::DisplayNounData(int noun)
 			if (min > 99)
 				min = 99;
 
-			dsky.SetR1(min * 1000 + sec);
-			dsky.SetR1Format("XXX XX");
-			dsky.SetR2((int)DesiredLAN);
-			dsky.SetR3((int)(DesiredPlaneChange * 100));
+			SetR1(min * 1000 + sec);
+			SetR1Format("XXX XX");
+			SetR2((int)DesiredLAN);
+			SetR3((int)(DesiredPlaneChange * 100));
 		}		
 		break;
 
@@ -518,10 +521,10 @@ void LEMcomputer::DisplayNounData(int noun)
 	//
 
 	case 76:		
-		dsky.SetR1((int)(DesiredDeltaVx*10.0));			//		Insertion hoiriozontal speed, fixed
-		dsky.SetR2((int)(DesiredDeltaVy*10.0));			//		Insertion vertical velocity, also fixed
-//		dsky.SetR3((int)DesiredAzimuth * 100);		//		Launch azimuth, can be defined
-		dsky.SetR3((int)(DesiredPlaneChange/100.0));		
+		SetR1((int)(DesiredDeltaVx*10.0));			//		Insertion hoiriozontal speed, fixed
+		SetR2((int)(DesiredDeltaVy*10.0));			//		Insertion vertical velocity, also fixed
+//		SetR3((int)DesiredAzimuth * 100);		//		Launch azimuth, can be defined
+		SetR3((int)(DesiredPlaneChange/100.0));		
 		break;
 
 	//
@@ -537,10 +540,10 @@ void LEMcomputer::DisplayNounData(int noun)
 
 		if (min > 99) min = 99;
 
-		dsky.SetR1(min * 1000 + sec);
-		dsky.SetR1Format("XXX XX");
-		dsky.SetR2((int)CurrentVelZ);
-		dsky.SetR3((int)CurrentVel);
+		SetR1(min * 1000 + sec);
+		SetR1Format("XXX XX");
+		SetR2((int)CurrentVelZ);
+		SetR3((int)CurrentVel);
 		}
 		break;
 
@@ -549,9 +552,9 @@ void LEMcomputer::DisplayNounData(int noun)
 	//
 
 	case 81:
-		dsky.SetR1((int) (DesiredDeltaVx*10.0));
-		dsky.SetR2((int) (DesiredDeltaVy*10.0));
-		dsky.SetR3((int) (DesiredDeltaVz*10.0));
+		SetR1((int) (DesiredDeltaVx*10.0));
+		SetR2((int) (DesiredDeltaVy*10.0));
+		SetR3((int) (DesiredDeltaVz*10.0));
 		break;	
 
 	//
@@ -559,18 +562,18 @@ void LEMcomputer::DisplayNounData(int noun)
 	//
 
 	case 85:
-		dsky.SetR1((int) (DesiredDeltaVx*10.0));
-		dsky.SetR2((int) (DesiredDeltaVy*10.0));
-		dsky.SetR3((int) (DesiredDeltaVz*10.0));
+		SetR1((int) (DesiredDeltaVx*10.0));
+		SetR2((int) (DesiredDeltaVy*10.0));
+		SetR3((int) (DesiredDeltaVz*10.0));
 		break;	
 
 	//
 	// 89: for now, landing site definition.
 	//
 	case 89:
-		dsky.SetR1((int) (LandingLatitude * 1000.0));
-		dsky.SetR2((int) (LandingLongitude * 500.0));
-		dsky.SetR3((int) DisplayAlt(LandingAltitude));
+		SetR1((int) (LandingLatitude * 1000.0));
+		SetR2((int) (LandingLongitude * 500.0));
+		SetR3((int) DisplayAlt(LandingAltitude));
 		break;
 
 	case 94:
@@ -580,9 +583,9 @@ void LEMcomputer::DisplayNounData(int noun)
 			OurVessel->GetHorizonAirspeedVector(hvel);
 			altitude=OurVessel->GetAltitude();
 
-			dsky.SetR1((int)(CurrentVelX*10.0));
-			dsky.SetR2((int)(hvel.y*10.0));
-			dsky.SetR3((int)(altitude));
+			SetR1((int)(CurrentVelX*10.0));
+			SetR2((int)(hvel.y*10.0));
+			SetR3((int)(altitude));
 
 /*			double ap;
 			OurVessel->GetApDist(ap);
@@ -621,7 +624,7 @@ void LEMcomputer::ProcessVerbNoun(int verb, int noun)
 		// First blank all for safety.
 		//
 
-		dsky.BlankData();
+		BlankData();
 
 		//
 		// Then display the approprirate data.
@@ -965,7 +968,7 @@ void LEMcomputer::TerminateProgram()
 	VerbRunning = 0;
 	NounRunning = 0;
 
-	dsky.BlankData();
+	BlankData();
 	RunProgram(0);
 	AwaitProgram();
 }
