@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/08/09 02:28:25  movieman523
+  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
+  *	
   *	Revision 1.21  2005/08/06 01:25:27  movieman523
   *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
   *	
@@ -98,6 +101,7 @@
 #include "nasspsound.h"
 
 #include "soundlib.h"
+#include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "dsky.h"
@@ -170,10 +174,8 @@ void sat5_lmpkd::Init()
 {
 	//bAbort =false;
 	RCS_Full=true;
-	Eds=true;
-	
+	Eds=true;	
 	toggleRCS =false;
-	InFOV=true;
 
 	InitPanel();
 
@@ -196,6 +198,20 @@ void sat5_lmpkd::Init()
 	status = 0;
 
 	InVC = false;
+
+	//
+	// TODO WARNING by tschachim
+	// InPanel is temporarily set to true so that LoadPanel does NOT switch to 
+	// the panel id stored in the scenario file during first call of LoadPanel
+	// because this seems to crash Orbiter sometimes. 
+	// We use the same construction in the Saturn without any problems, perhaps because
+	// the Saturn is a VESSEL2? This needs to be investigated and fixed!
+	//
+	InPanel = true;	
+
+	PanelId = LMPANEL_MAIN;	// default panel
+	InFOV = true;
+	SaveFOV = 0;
 	Crewed = true;
 	AutoSlow = false;
 
@@ -255,6 +271,9 @@ void sat5_lmpkd::LoadDefaultSounds()
 {
     char buffers[80];
 
+	sprintf(buffers, "Apollo%d", agc.GetApolloNo());
+    soundlib.SetSoundLibMissionPath(buffers);
+
 	//
 	// load sounds now that the audio language has been set up.
 	//
@@ -270,10 +289,6 @@ void sat5_lmpkd::LoadDefaultSounds()
 	soundlib.LoadSound(Afire, "des_abort.wav");
 
 // MODIF X15 manage landing sound
-
-	sprintf(buffers, "Apollo%d", agc.GetApolloNo());
-// TRACE (buffers);
-    soundlib.SetSoundLibMissionPath(buffers);
     sevent.LoadMissionLandingSoundArray(soundlib,"sound.csv");
     sevent.InitDirectSound(soundlib);
 
@@ -423,8 +438,12 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 
 
 // rewrote to get key events rather than monitor key state - LazyD
-int sat5_lmpkd::ConsumeDirectKey (DWORD key)
-{
+int sat5_lmpkd::ConsumeBufferedKey(DWORD key, bool down, const char *keystate) {
+
+	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate) || !down) {
+		return 0; 
+	}
+
 	switch (key) {
 
 	case OAPI_KEY_K:
@@ -443,21 +462,25 @@ int sat5_lmpkd::ConsumeDirectKey (DWORD key)
 	case OAPI_KEY_COMMA:
 		// move landing site left
 		agc.RedesignateTarget(1,1.0);
+		ButtonClick();
 		return 1;
 
 	case OAPI_KEY_PERIOD:
 		// move landing site right
 		agc.RedesignateTarget(1,-1.0);
+		ButtonClick();
 		return 1;
 
 	case OAPI_KEY_HOME:
 		//move the landing site downrange
 		agc.RedesignateTarget(0,-1.0);
+		ButtonClick();
 		return 1;
 
 	case OAPI_KEY_END:
 		//move the landing site closer
 		agc.RedesignateTarget(0,1.0);
+		ButtonClick();
 		return 1;
 
 	//
@@ -485,6 +508,7 @@ int sat5_lmpkd::ConsumeDirectKey (DWORD key)
 void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 
 {
+
 	if (FirstTimestep)
 	{
 		DoFirstTimestep();
@@ -654,7 +678,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		// probably should start P71
 		//
 		if (GetPropellantMass(ph_Dsc)<=50 && actualALT > 10){
-			Abortswitch=true;
+			AbortStageSwitchLight = true;
 			SeparateStage(stage);
 			SetEngineLevel(ENGINE_HOVER,1);
 			stage = 2;
@@ -786,13 +810,13 @@ void sat5_lmpkd::AbortStage()
 {
 	ButtonClick();
 	AbortFire();
-	Abortswitch = true;
+	AbortStageSwitchLight = true;
 	SeparateStage(stage);
 	SetThrusterResource(th_hover[0], ph_Asc);
 	SetThrusterResource(th_hover[1], ph_Asc);
 	stage = 2;
 	startimer = false;
-	Abortswitch = true;
+	AbortStageSwitchLight = true;
 }
 
 //
@@ -816,13 +840,10 @@ void sat5_lmpkd::StartAscent()
 
 void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 
-{
-    char *line;
+{	
+	char *line;
 	int	SwitchState;
 	float ftcp;
-
-		// default panel
-	PanelId = 1;
 	
 	while (oapiReadScenario_nextline (scn, line)) {
         if (!strnicmp (line, "CONFIGURATION", 13)) {
@@ -875,6 +896,9 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
 		} 
+        else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
+			PSH.LoadState(scn);	
+		}
 		else 
 		{
             ParseScenarioLineEx (line, vs);
@@ -901,22 +925,22 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 	}
 
 	//
+	// Pass on the mission number and realism setting to the AGC.
+	//
+
+	agc.SetMissionInfo(ApolloNo, Realism);
+
+	//
 	// This may not be the best place for loading sounds, but it's the best place available
 	// for now!
 	//
 
 	soundlib.SetLanguage(AudioLanguage);
 	LoadDefaultSounds();
-
-	//
-	// Pass on the mission number and realism setting to the AGC.
-	//
-
-	agc.SetMissionInfo(ApolloNo, Realism);
 }
 
-void sat5_lmpkd::SetClassCaps (FILEHANDLE cfg)
-{
+void sat5_lmpkd::SetClassCaps (FILEHANDLE cfg) {
+
 	SetLmVesselDockStage();
 }
 
@@ -964,6 +988,8 @@ void sat5_lmpkd::SaveState (FILEHANDLE scn)
 
 	dsky.SaveState(scn);
 	agc.SaveState(scn);
+	// save the state of the switches
+	PSH.SaveState(scn);	
 }
 
 bool sat5_lmpkd::LoadGenericCockpit ()
@@ -1009,7 +1035,6 @@ void sat5_lmpkd::SetLanderData(LemSettings &ls)
 DLLCLBK bool ovcLoadPanel (VESSEL *vessel, int id)
 {
 	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-
 	return lem->LoadPanel(id);
 }
 
@@ -1018,7 +1043,6 @@ DLLCLBK bool ovcPanelMouseEvent (VESSEL *vessel, int id, int event, int mx, int 
 
 {
 	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-
 	return lem->PanelMouseEvent(id, event, mx, my);
 }
 
@@ -1031,13 +1055,9 @@ DLLCLBK bool ovcPanelRedrawEvent (VESSEL *vessel, int id, int event, SURFHANDLE 
 }
 
 DLLCLBK int ovcConsumeBufferedKey (VESSEL *vessel, DWORD key, bool down, const char *keystate)
-
 {
-	if(down) {
-		sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-		return lem->ConsumeDirectKey(key);
-	}
-	return 0;
+	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
+	return lem->ConsumeBufferedKey(key, down, keystate);
 }
 
 DLLCLBK void ovcTimestep (VESSEL *vessel, double simt)
@@ -1047,7 +1067,6 @@ DLLCLBK void ovcTimestep (VESSEL *vessel, double simt)
 }
 
 DLLCLBK void ovcLoadStateEx (VESSEL *vessel, FILEHANDLE scn, VESSELSTATUS *vs)
-
 {
 	sat5_lmpkd *lem = (sat5_lmpkd *) vessel;
 	lem->LoadStateEx(scn, (void *) vs);
@@ -1056,7 +1075,6 @@ DLLCLBK void ovcLoadStateEx (VESSEL *vessel, FILEHANDLE scn, VESSELSTATUS *vs)
 DLLCLBK void ovcSetClassCaps (VESSEL *vessel, FILEHANDLE cfg)
 {
 	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-
 	lem->SetClassCaps(cfg);
 }
 
@@ -1070,6 +1088,11 @@ DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
 DLLCLBK bool ovcGenericCockpit (VESSEL *vessel) { 
 
 	sat5_lmpkd *lm = (sat5_lmpkd *)vessel; 
-	lm->SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 	return lm->LoadGenericCockpit(); 
+}
+
+DLLCLBK void ovcMFDmode (VESSEL *vessel, int mfd, int mode) {
+
+	sat5_lmpkd *lm = (sat5_lmpkd *)vessel; 
+	lm->MFDMode(mfd, mode);
 }
