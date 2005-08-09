@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/06 01:25:27  movieman523
+  *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
+  *	
   *	Revision 1.20  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -202,7 +205,6 @@ void sat5_lmpkd::Init()
 	SwitchFocusToLeva = 0;
 
 	agc.ControlVessel(this);
-	dsky.Init();
 
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);

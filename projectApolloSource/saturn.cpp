@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/08/08 20:32:58  movieman523
+  *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
+  *	
   *	Revision 1.26  2005/08/06 01:25:27  movieman523
   *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
   *	
@@ -2088,7 +2091,7 @@ void Saturn::GenericLoadStateSetup()
 	}
 
 	if (stage < PRELAUNCH_STAGE) {
-		dsky.BlankAll();
+		agc.BlankAll();
 	}
 
 	if (stage < LAUNCH_STAGE_TWO) {

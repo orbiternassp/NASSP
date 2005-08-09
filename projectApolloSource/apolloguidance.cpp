@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
   *	Revision 1.15  2005/08/08 21:10:30  movieman523
   *	Fixed broken TLI program. LastAlt wasn't being set and that screwed up the burn end calculations.
   *	
@@ -81,6 +84,7 @@
 #include "dsky.h"
 
 char TwoSpaceTwoFormat[7] = "XXX XX";
+char RegFormat[7] = "XXXXXX";
 
 ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display) : soundlib(s), dsky(display)
 
@@ -175,6 +179,37 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display) : soundlib(s), dsky(d
 		InputChannel[i] = 0;
 
 	Chan10Flags = 0;
+
+	//
+	// Dsky interface.
+	//
+
+	EnteringVerb = false;
+	EnteringNoun = false;
+	EnteringData = 0;
+	EnterPos = 0;
+	EnterCount = 0;
+	EnteringOctal = false;
+	EnterPositive = true;
+
+	R1Decimal = true;
+	R2Decimal = true;
+	R3Decimal = true;
+
+	ProgBlanked = false;
+	VerbBlanked = false;
+	NounBlanked = false;
+	R1Blanked = false;
+	R2Blanked = false;
+	R3Blanked = false;
+	KbInUse = false;
+
+	SetR1Format(RegFormat);
+	SetR2Format(RegFormat);
+	SetR3Format(RegFormat);
+
+	strncpy (TwoDigitEntry, "  ", 2);
+	strncpy (FiveDigitEntry, "      ", 6);
 }
 
 ApolloGuidance::~ApolloGuidance()
@@ -211,10 +246,10 @@ void ApolloGuidance::Startup()
 
 	NounRunning = 37;	// Change program.
 
-	if (dsky.KBCheck()) {
-		dsky.SetProg(ProgRunning);
-		dsky.BlankData();
-		dsky.SetVerb(37);
+	if (KBCheck()) {
+		SetProg(ProgRunning);
+		BlankData();
+		SetVerb(37);
 		SetVerbNounFlashing();
 	}
 }
@@ -237,7 +272,7 @@ void ApolloGuidance::ForceRestart()
 void ApolloGuidance::GoStandby()
 
 {
-	dsky.BlankAll();
+	BlankAll();
 	ClearVerbNounFlashing();
 	dsky.LightStby();
 	Standby = true;
@@ -401,7 +436,7 @@ void ApolloGuidance::ProcessCommonVerbNoun(int verb, int noun)
 		// First blank all for safety.
 		//
 
-		dsky.BlankData();
+		BlankData();
 
 		//
 		// Then display the approprirate data.
@@ -415,11 +450,11 @@ void ApolloGuidance::ProcessCommonVerbNoun(int verb, int noun)
 
 		switch (verb) {
 		case 5:
-			dsky.DisplayR3Octal();
+			DisplayR3Octal();
 		case 4:
-			dsky.DisplayR2Octal();
+			DisplayR2Octal();
 		case 3:
-			dsky.DisplayR1Octal();
+			DisplayR1Octal();
 			break;
 		}
 		break;
@@ -430,7 +465,7 @@ void ApolloGuidance::ProcessCommonVerbNoun(int verb, int noun)
 
 	case 37:
 		RunProgram(noun);
-		dsky.SetProg(ProgRunning);
+		SetProg(ProgRunning);
 		break;
 
 	//
@@ -439,7 +474,7 @@ void ApolloGuidance::ProcessCommonVerbNoun(int verb, int noun)
 
 	case 69:
 		Reset = false;
-		dsky.BlankAll();
+		BlankAll();
 		dsky.LightRestart();
 		RunProgram(0);
 		break;
@@ -450,7 +485,7 @@ void ApolloGuidance::ProcessCommonVerbNoun(int verb, int noun)
 
 	case 91:
 		BankSumNum = 0;
-		dsky.BlankData();
+		BlankData();
 		DisplayBankSum();
 		break;
 
@@ -468,12 +503,12 @@ void ApolloGuidance::DisplayBankSum()
 		BankSumNum = 0;
 
 	if (BankSumNum & 1)
-		dsky.SetR1Octal(BankSumNum);
+		SetR1Octal(BankSumNum);
 	else
-		dsky.SetR1Octal(077777 -BankSumNum);
+		SetR1Octal(077777 -BankSumNum);
 
-	dsky.SetR2Octal(BankSumNum);
-	dsky.SetR3Octal((BankSumNum * 10000 + 4223) & 077777);
+	SetR2Octal(BankSumNum);
+	SetR3Octal((BankSumNum * 10000 + 4223) & 077777);
 }
 
 bool ApolloGuidance::CommonProceedNoData()
@@ -528,8 +563,8 @@ void ApolloGuidance::DisplayOrbitCalculations()
 	if (apogee < 0)
 		apogee = 0;
 
-	dsky.SetR1((int)DisplayAlt(apogee) / 1000);
-	dsky.SetR2((int)DisplayAlt(perigee) / 1000);
+	SetR1((int)DisplayAlt(apogee) / 1000);
+	SetR2((int)DisplayAlt(perigee) / 1000);
 }
 
 //
@@ -546,9 +581,9 @@ void ApolloGuidance::DisplayTime(double t)
 	int m = ((int)t - (3600 * h)) / 60;
 	int s = ((int)(t * 100)) % 6000;
 
-	dsky.SetR1(h);
-	dsky.SetR2(m);
-	dsky.SetR3(s);
+	SetR1(h);
+	SetR2(m);
+	SetR3(s);
 }
 
 bool ApolloGuidance::DisplayCommonNounData(int noun)
@@ -561,9 +596,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 	//
 
 	case 9:
-		dsky.SetR1Octal(Alarm01);
-		dsky.SetR2Octal(Alarm02);
-		dsky.SetR3Octal(Alarm03);
+		SetR1Octal(Alarm01);
+		SetR2Octal(Alarm02);
+		SetR3Octal(Alarm03);
 		return true;
 
 	//
@@ -571,9 +606,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 	//
 
 	case 16:
-		dsky.SetR1((int)(TargetRoll * 100));
-		dsky.SetR2((int)(TargetPitch * 100));
-		dsky.SetR3((int)(TargetYaw * 100));
+		SetR1((int)(TargetRoll * 100));
+		SetR2((int)(TargetPitch * 100));
+		SetR3((int)(TargetYaw * 100));
 		return true;
 
 	//
@@ -590,9 +625,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		pitch *= DEG;
 		hdg   *= DEG;
 
-		dsky.SetR1((int)(bank * 100));
-		dsky.SetR2((int)(pitch * 100));
-		dsky.SetR3((int)(hdg * 100));
+		SetR1((int)(bank * 100));
+		SetR2((int)(pitch * 100));
+		SetR3((int)(hdg * 100));
 		return true;
 
 	//
@@ -605,9 +640,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		alpha = OurVessel->GetAOA() * DEG;
 		slip  = OurVessel->GetSlipAngle() * DEG;
 		
-		dsky.SetR1((int)(alpha * 100));
-		dsky.SetR2((int)(slip * 100));
-		dsky.BlankR3();
+		SetR1((int)(alpha * 100));
+		SetR2((int)(slip * 100));
+		BlankR3();
 		return true;
 
 	//
@@ -615,7 +650,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 	//
 
 	case 29:
-		dsky.SetR1((int)(DesiredAzimuth * 100));
+		SetR1((int)(DesiredAzimuth * 100));
 		return true;
 
 	//
@@ -659,9 +694,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 			tspm = ((int)tsp - (3600 * tsph)) / 60;
 			tsps = ((int)(tsp * 100)) % 6000;
 
-			dsky.SetR1(tsph);
-			dsky.SetR2(tspm);
-			dsky.SetR3(tsps);
+			SetR1(tsph);
+			SetR2(tspm);
+			SetR3(tsps);
 		}
 		return true;
 
@@ -685,9 +720,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 			int m = ((int)TimeToBurn - (3600 * h)) / 60;
 			int s = ((int)(TimeToBurn * 100)) % 6000;
 
-			dsky.SetR1(h);
-			dsky.SetR2(m);
-			dsky.SetR3(s);
+			SetR1(h);
+			SetR2(m);
+			SetR3(s);
 		}
 		return true;
 
@@ -719,7 +754,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		//
 
 		if (!Reset) {
-			dsky.BlankData();
+			BlankData();
 			return true;
 		}
 
@@ -745,9 +780,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 
 			dv = sqrt(pow(DesiredDeltaVx,2) + pow(DesiredDeltaVy,2) + pow(DesiredDeltaVz,2));
 
-			dsky.SetR1((int)(apd / 10));
-			dsky.SetR2((int)(ped / 10));
-			dsky.SetR3((int)dv);
+			SetR1((int)(apd / 10));
+			SetR2((int)(ped / 10));
+			SetR3((int)dv);
 		}
 		return true;
 
@@ -773,9 +808,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		// And display it.
 		//
 
-		dsky.SetR1((int)(latitude * 100.0));
-		dsky.SetR2((int)(longitude * 100.0));
-		dsky.SetR3((int)DisplayAlt(CurrentAlt * 0.01));
+		SetR1((int)(latitude * 100.0));
+		SetR2((int)(longitude * 100.0));
+		SetR3((int)DisplayAlt(CurrentAlt * 0.01));
 
 		return true;
 
@@ -788,17 +823,17 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		if (OrbitCalculationsValid())
 		{
 			DisplayOrbitCalculations();
-			dsky.SetR3((int)DisplayAlt(OurVessel->GetAltitude()) / 1000);
+			SetR3((int)DisplayAlt(OurVessel->GetAltitude()) / 1000);
 		}
 		else if (ProgRunning == 33) {
-			dsky.SetR1((int)(DesiredApogee * 10.0));
-			dsky.SetR2((int)(DesiredPerigee * 10.0));
+			SetR1((int)(DesiredApogee * 10.0));
+			SetR2((int)(DesiredPerigee * 10.0));
 		}
 		else {
-			dsky.SetR1((int)(DesiredApogee * 100.0));
-			dsky.SetR2((int)(DesiredPerigee * 100.0));
+			SetR1((int)(DesiredApogee * 100.0));
+			SetR2((int)(DesiredPerigee * 100.0));
 			if (ProgRunning == 10) {
-				dsky.SetR3((int)(DesiredAzimuth * 100.0));
+				SetR3((int)(DesiredAzimuth * 100.0));
 			}
 		}
 		return true;
@@ -821,10 +856,10 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 			if (min > 99)
 				min = 99;
 
-			dsky.SetR1((int)dv);
-			dsky.SetR2((int)DesiredDeltaV);
-			dsky.SetR3(min * 1000 + sec);
-			dsky.SetR3Format("XXX XX");
+			SetR1((int)dv);
+			SetR2((int)DesiredDeltaV);
+			SetR3(min * 1000 + sec);
+			SetR3Format("XXX XX");
 		}			
 		return true;
 
@@ -834,9 +869,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 	//
 
 	case 73:
-		dsky.SetR1((int)(DisplayAlt(CurrentAlt) / 1000));
-		dsky.SetR2((int)DisplayVel(CurrentVel));
-		dsky.SetR3((int)(OurVessel->GetAOA() * 5729.57795));
+		SetR1((int)(DisplayAlt(CurrentAlt) / 1000));
+		SetR2((int)DisplayVel(CurrentVel));
+		SetR3((int)(OurVessel->GetAOA() * 5729.57795));
 		return true;
 
 	//
@@ -844,9 +879,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 	//
 
 	case 81:
-		dsky.SetR1((int)DesiredDeltaVx);
-		dsky.SetR2((int)DesiredDeltaVy);
-		dsky.SetR3((int)DesiredDeltaVz);
+		SetR1((int)DesiredDeltaVx);
+		SetR2((int)DesiredDeltaVy);
+		SetR3((int)DesiredDeltaVz);
 		return true;
 
 	//
@@ -854,9 +889,9 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 	//
 
 	case 82:
-		dsky.SetR1((int)(DesiredDeltaVx));
-		dsky.SetR2((int)(DesiredDeltaVy));
-		dsky.SetR3((int)(DesiredDeltaVz));
+		SetR1((int)(DesiredDeltaVx));
+		SetR2((int)(DesiredDeltaVy));
+		SetR3((int)(DesiredDeltaVz));
 		return true; 
 
 	//
@@ -881,10 +916,10 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		if (Sec < 0)
 			Sec = 0;
 
-		dsky.SetR1(Min * 1000 + Sec);
-		dsky.SetR1Format(TwoSpaceTwoFormat);
-		dsky.SetR2((int)DisplayVel(R2));
-		dsky.SetR3((int)DisplayVel(R3));
+		SetR1(Min * 1000 + Sec);
+		SetR1Format(TwoSpaceTwoFormat);
+		SetR2((int)DisplayVel(R2));
+		SetR3((int)DisplayVel(R3));
 		return true;
 	}
 
@@ -960,10 +995,10 @@ void ApolloGuidance::RunProgram(int prog)
 	ProgRunning = prog;
 	ProgState = 0;
 	LastProgTime = LastTimestep;
-	dsky.SetProg(prog);
+	SetProg(prog);
 
 	if (prog == 0) {
-		dsky.BlankData();
+		BlankData();
 	}
 }
 
@@ -1021,13 +1056,13 @@ void ApolloGuidance::ResetCountdown()
 	int Val2 = 11 * ResetCount;
 	int	Val5 = 11111 * ResetCount;
 
-	dsky.SetProg(Val2);
-	dsky.SetNoun(Val2);
-	dsky.SetVerb(Val2);
+	SetProg(Val2);
+	SetNoun(Val2);
+	SetVerb(Val2);
 
-	dsky.SetR1(Val5);
-	dsky.SetR2(Val5);
-	dsky.SetR3(Val5);
+	SetR1(Val5);
+	SetR2(Val5);
+	SetR3(Val5);
 
 	if (ResetCount > 0) {
 		ResetCount--;
@@ -1040,9 +1075,9 @@ void ApolloGuidance::SetVerbNounAndFlash(int Verb, int Noun)
 	VerbRunning = Verb;
 	NounRunning = Noun;
 
-	dsky.BlankData();
-	dsky.SetVerb(VerbRunning);
-	dsky.SetNoun(NounRunning);
+	BlankData();
+	SetVerb(VerbRunning);
+	SetNoun(NounRunning);
 	SetVerbNounFlashing();
 
 	DisplayNounData(NounRunning);
@@ -1055,9 +1090,9 @@ void ApolloGuidance::SetVerbNoun(int Verb, int Noun)
 	VerbRunning = Verb;
 	NounRunning = Noun;
 
-	dsky.BlankData();
-	dsky.SetVerb(VerbRunning);
-	dsky.SetNoun(NounRunning);
+	BlankData();
+	SetVerb(VerbRunning);
+	SetNoun(NounRunning);
 	ClearVerbNounFlashing();
 
 	DisplayNounData(NounRunning);
@@ -1474,7 +1509,7 @@ void ApolloGuidance::Prog37(double simt)
 	switch (ProgState)
 	{
 	case 0:
-		dsky.BlankData();
+		BlankData();
 		SetVerbNounAndFlash(6, 44);
 		ProgState++;
 		break;
@@ -1500,7 +1535,7 @@ void ApolloGuidance::Prog37(double simt)
 					RaiseAlarm(0603);
 				}
 				VerbRunning = 0;
-				dsky.BlankAll();
+				BlankAll();
 				NextEventTime = simt + 5.0;
 				ProgState++;
 			}
@@ -1516,7 +1551,7 @@ void ApolloGuidance::Prog37(double simt)
 	case 4:
 	case 54:
 		if (simt >= NextEventTime) {
-			dsky.UnBlankAll();
+			UnBlankAll();
 			SetVerbNounAndFlash(16, 95);
 			ProgState++;
 			NextEventTime = simt + 1.0;
@@ -1663,7 +1698,7 @@ void ApolloGuidance::ResetProg(double simt)
 	switch (ProgState) {
 
 	case 0:
-		dsky.BlankAll();
+		BlankAll();
 		NextEventTime = simt;
 		ProgState++;
 		break;
@@ -1682,7 +1717,7 @@ void ApolloGuidance::ResetProg(double simt)
 		LightTracker();
 		LightProg();
 
-		dsky.UnBlankAll();
+		UnBlankAll();
 
 		ClearVerbNounFlashing();
 
@@ -1771,7 +1806,7 @@ void ApolloGuidance::ResetProg(double simt)
 
 		Reset = true;
 
-		dsky.BlankAll();
+		BlankAll();
 		ClearVerbNounFlashing();
 
 		//
@@ -1820,9 +1855,9 @@ void ApolloGuidance::DisplayEMEM(unsigned int addr)
 	int val;
 
 	if (ReadMemory(addr, val))
-		dsky.SetR1Octal(val);
+		SetR1Octal(val);
 	else
-		dsky.SetR1Octal(077777);
+		SetR1Octal(077777);
 }
 
 //
@@ -1863,10 +1898,10 @@ bool ApolloGuidance::GenericProgPressed(int R1, int R2, int R3)
 void ApolloGuidance::Checklist(int num)
 
 {
-	dsky.SetVerb(50);
-	dsky.SetNoun(25);
-	dsky.BlankData();
-	dsky.SetR1Octal(num);
+	SetVerb(50);
+	SetNoun(25);
+	BlankData();
+	SetR1Octal(num);
 	SetVerbNounFlashing();
 }
 
@@ -1911,6 +1946,20 @@ typedef union
 		unsigned InOrbit:1;
 		unsigned Standby:1;
 		unsigned Units:1;
+		unsigned R1Decimal:1;
+		unsigned R2Decimal:1;
+		unsigned R3Decimal:1;
+		unsigned EnteringVerb:1;
+		unsigned EnteringNoun:1;
+		unsigned EnteringOctal:1;
+		unsigned EnterPositive:1;
+		unsigned ProgBlanked:1;
+		unsigned VerbBlanked:1;
+		unsigned NounBlanked:1;
+		unsigned R1Blanked:1;
+		unsigned R2Blanked:1;
+		unsigned R3Blanked:1;
+		unsigned KbInUse:1;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -1918,7 +1967,7 @@ typedef union
 void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 {
-	char fname[32];
+	char fname[32], str[10];
 	int i;
 	int val;
 
@@ -1936,6 +1985,28 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 		oapiWriteScenario_float (scn, "TGTDV", DesiredDeltaV);
 	}
 
+	oapiWriteScenario_int (scn, "PROG", Prog);
+	oapiWriteScenario_int (scn, "VERB", Verb);
+	oapiWriteScenario_int (scn, "NOUN", Noun);
+	oapiWriteScenario_int (scn, "R1", R1);
+	oapiWriteScenario_int (scn, "R2", R2);
+	oapiWriteScenario_int (scn, "R3", R3);
+	oapiWriteScenario_int (scn, "EPOS", EnterPos);
+	oapiWriteScenario_int (scn, "EVAL", EnterVal);
+	oapiWriteScenario_int (scn, "EDAT", EnteringData);
+	oapiWriteScenario_int (scn, "ECNT", EnterCount);
+
+	memset(str, 0, 10);
+
+	strncpy(str, TwoDigitEntry, 2);
+	oapiWriteScenario_string (scn, "E2", str);
+	strncpy(str, FiveDigitEntry, 6);
+	oapiWriteScenario_string (scn, "E5", str);
+
+	oapiWriteScenario_string(scn, "R1FMT", R1Format);
+	oapiWriteScenario_string(scn, "R2FMT", R2Format);
+	oapiWriteScenario_string(scn, "R3FMT", R3Format);
+
 	//
 	// Copy internal state to the structure.
 	//
@@ -1947,6 +2018,20 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.InOrbit = InOrbit;
 	state.u.Standby = Standby;
 	state.u.Units = (DisplayUnits == UnitImperial);
+	state.u.R1Decimal = R1Decimal;
+	state.u.R2Decimal = R2Decimal;
+	state.u.R3Decimal = R3Decimal;
+	state.u.EnteringVerb = EnteringVerb;
+	state.u.EnteringNoun = EnteringNoun;
+	state.u.EnteringOctal = EnteringOctal;
+	state.u.EnterPositive = EnterPositive;
+	state.u.ProgBlanked = ProgBlanked;
+	state.u.VerbBlanked = VerbBlanked;
+	state.u.NounBlanked = NounBlanked;
+	state.u.R1Blanked = R1Blanked;
+	state.u.R2Blanked = R2Blanked;
+	state.u.R3Blanked = R3Blanked;
+	state.u.KbInUse = KbInUse;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -2097,9 +2182,68 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			InOrbit = state.u.InOrbit;
 			Standby = state.u.Standby;
 			DisplayUnits = state.u.Units ? UnitImperial: UnitMetric;
+			R1Decimal = (state.u.R1Decimal != 0);
+			R2Decimal = (state.u.R2Decimal != 0);
+			R3Decimal = (state.u.R3Decimal != 0);
+			EnteringVerb = (state.u.EnteringVerb != 0);
+			EnteringNoun = (state.u.EnteringNoun != 0);
+			EnteringOctal = (state.u.EnteringOctal != 0);
+			EnterPositive = (state.u.EnterPositive != 0);
+			ProgBlanked = (state.u.ProgBlanked != 0);
+			VerbBlanked = (state.u.VerbBlanked != 0);
+			NounBlanked = (state.u.NounBlanked != 0);
+			R1Blanked = (state.u.R1Blanked != 0);
+			R2Blanked = (state.u.R2Blanked != 0);
+			R3Blanked = (state.u.R3Blanked != 0);
+			KbInUse = (state.u.KbInUse != 0);
 		}
 		else if (!strnicmp (line, "YAAGC", 5)) {
 			sscanf (line+5, "%d", &Yaagc);
+		}
+		else if (!strnicmp (line, "PROG", 4)) {
+			sscanf (line+4, "%d", &Prog);
+		}
+		else if (!strnicmp (line, "VERB", 4)) {
+			sscanf (line+4, "%d", &Verb);
+		}
+		else if (!strnicmp (line, "NOUN", 4)) {
+			sscanf (line+4, "%d", &Noun);
+		}
+		else if (!strnicmp (line, "R1FMT", 5)) {
+			strncpy (R1Format, line + 6, 6);
+		}
+		else if (!strnicmp (line, "R2FMT", 5)) {
+			strncpy (R2Format, line + 6, 6);
+		}
+		else if (!strnicmp (line, "R3FMT", 5)) {
+			strncpy (R3Format, line + 6, 6);
+		}
+		else if (!strnicmp (line, "R1", 2)) {
+			sscanf (line+2, "%d", &R1);
+		}
+		else if (!strnicmp (line, "R2", 2)) {
+			sscanf (line+2, "%d", &R2);
+		}
+		else if (!strnicmp (line, "R3", 2)) {
+			sscanf (line+2, "%d", &R3);
+		}
+		else if (!strnicmp (line, "EPOS", 4)) {
+			sscanf (line+4, "%d", &EnterPos);
+		}
+		else if (!strnicmp (line, "EVAL", 4)) {
+			sscanf (line+4, "%d", &EnterVal);
+		}
+		else if (!strnicmp (line, "EDAT", 4)) {
+			sscanf (line+4, "%d", &EnteringData);
+		}
+		else if (!strnicmp (line, "ECNT", 4)) {
+			sscanf (line+4, "%d", &EnterCount);
+		}
+		else if (!strnicmp (line, "E2", 2)) {
+			strncpy (TwoDigitEntry, line + 3, 2);
+		}
+		else if (!strnicmp (line, "E5", 2)) {
+			strncpy (FiveDigitEntry, line + 3, 6);
 		}
 	}
 }
@@ -2136,6 +2280,12 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 		return;
 
 	InputChannel[channel] = val;
+
+	switch (channel) {
+	case 015:
+		ProcessInputChannel15(val);
+		break;
+	}
 }
 
 void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
@@ -2151,6 +2301,12 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 	}
 	else {
 		InputChannel[channel] &= ~mask;
+	}
+
+	switch (channel) {
+	case 032:
+		ProcessInputChannel32(bit, val);
+		break;
 	}
 }
 
@@ -2230,7 +2386,7 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 void ApolloGuidance::AwaitProgram()
 
 {
-	if (dsky.KBCheck()) {
+	if (KBCheck()) {
 		SetVerbNounAndFlash(37, 0);
 	}
 }
@@ -2273,7 +2429,7 @@ void ApolloGuidance::RaiseAlarm(int AlarmNo)
 void ApolloGuidance::AbortWithError(int ErrNo)
 
 {
-	dsky.BlankData();
+	BlankData();
 	LightProg();
 	RunProgram(0);
 	RaiseAlarm(ErrNo);

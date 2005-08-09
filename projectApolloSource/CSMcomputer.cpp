@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
   *	Revision 1.4  2005/08/08 21:10:29  movieman523
   *	Fixed broken TLI program. LastAlt wasn't being set and that screwed up the burn end calculations.
   *	
@@ -189,8 +192,8 @@ void CSMcomputer::DisplayNounData(int noun)
 			if (apogee < 0)
 				apogee = 0;
 
-			dsky.SetR1((int)DisplayAlt(apogee) / 100);
-			dsky.SetR2((int)DisplayAlt(perigee) / 100);
+			SetR1((int)DisplayAlt(apogee) / 100);
+			SetR2((int)DisplayAlt(perigee) / 100);
 
 			//
 			// Adjust gravity to take into account our current velocity parallel to the planet's
@@ -208,8 +211,8 @@ void CSMcomputer::DisplayNounData(int noun)
 				sec = 59;
 			}
 
-			dsky.SetR3(min * 1000 + sec);
-			dsky.SetR3Format(TwoSpaceTwoFormat);
+			SetR3(min * 1000 + sec);
+			SetR3Format(TwoSpaceTwoFormat);
 			return;
 		}
 		break;
@@ -225,7 +228,7 @@ void CSMcomputer::DisplayNounData(int noun)
 	//
 
 	case 14:
-		dsky.SetR1((int)DisplayVel(DesiredDeltaV));
+		SetR1((int)DisplayVel(DesiredDeltaV));
 		break;
 
 	//
@@ -233,9 +236,9 @@ void CSMcomputer::DisplayNounData(int noun)
 	//
 
 	case 62:
-		dsky.SetR1((int)DisplayVel(CurrentVel));
-		dsky.SetR2((int)DisplayVel(CurrentVelY));
-		dsky.SetR3((int)(DisplayAlt(CurrentAlt) / 1000));
+		SetR1((int)DisplayVel(CurrentVel));
+		SetR2((int)DisplayVel(CurrentVelY));
+		SetR3((int)(DisplayAlt(CurrentAlt) / 1000));
 		break;
 
 	//
@@ -244,13 +247,13 @@ void CSMcomputer::DisplayNounData(int noun)
 
 	case 73:
 		if (!Reset) {
-			dsky.BlankData();
+			BlankData();
 			return;
 		}
 
-		dsky.SetR1((int)(DisplayAlt(CurrentAlt) / 1000));
-		dsky.SetR2((int)DisplayVel(CurrentVel));
-		dsky.SetR3((int)(OurVessel->GetAOA() * 5729.57795));
+		SetR1((int)(DisplayAlt(CurrentAlt) / 1000));
+		SetR2((int)DisplayVel(CurrentVel));
+		SetR3((int)(OurVessel->GetAOA() * 5729.57795));
 		break;
 	}
 }
@@ -308,9 +311,6 @@ void CSMcomputer::ProcessVerbNoun(int verb, int noun)
 
 	case 82:
 		if (ProgRunning == 11) {
-			VerbRunning = 16;
-			NounRunning = 44;
-
 			SetVerbNounAndFlash(16, 44);
 		}
 	}
@@ -492,8 +492,8 @@ void CSMcomputer::Prog11(double simt)
 		VerbRunning = 16;
 		NounRunning = 62;
 
-		dsky.SetVerb(VerbRunning);
-		dsky.SetNoun(NounRunning);
+		SetVerb(VerbRunning);
+		SetNoun(NounRunning);
 
 		//
 		// Clear flash in case this program was auto-started by
@@ -660,7 +660,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 7:
 		if (simt > NextEventTime) {
-			dsky.BlankAll();
+			BlankAll();
 
 			soundlib.LoadMissionSound(STLI, GO_FOR_TLI_SOUND, NULL);
 
@@ -676,7 +676,7 @@ void CSMcomputer::Prog15(double simt)
 		if (simt > NextEventTime) {
 			Saturn *sat = (Saturn *) OurVessel;
 
-			dsky.UnBlankAll();
+			UnBlankAll();
 			SetVerbNounAndFlash(16, 95);
 
 			DoTLICalcs(simt);
@@ -901,7 +901,7 @@ void CSMcomputer::Prog15Pressed(int R1, int R2, int R3)
 		VerbRunning = 0;
 
 		AwaitProgram();
-		dsky.BlankData();
+		BlankData();
 		ProgState++;
 		break;
 
@@ -1023,7 +1023,7 @@ void CSMcomputer::TerminateProgram()
 	VerbRunning = 0;
 	NounRunning = 0;
 
-	dsky.BlankData();
+	BlankData();
 	RunProgram(0);
 	AwaitProgram();
 }
@@ -1265,9 +1265,9 @@ void CSMcomputer::DisplayBankSum()
 	R1 = BankSums[BankSumNum * 2];
 	R3 = BankSums[(BankSumNum * 2) + 1];
 
-	dsky.SetR1Octal(R1);
-	dsky.SetR2Octal(BankSumNum);
-	dsky.SetR3Octal(R3);
+	SetR1Octal(R1);
+	SetR2Octal(BankSumNum);
+	SetR3Octal(R3);
 }
 
 //
@@ -1284,8 +1284,8 @@ void CSMcomputer::Liftoff(double simt)
 
 	RunProgram(11);
 
-	if (!dsky.KBCheck()) {
-		dsky.UnBlankAll();
+	if (!KBCheck()) {
+		UnBlankAll();
 	}
 }
 

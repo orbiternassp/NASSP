@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -53,6 +56,8 @@ public:
 	bool ProgLit()		{ return ProgLight; };
 	bool RestartLit()	{ return RestartLight; };
 	bool TrackerLit()	{ return TrackerLight; };
+	bool VelLit()		{ return VelLight; };
+	bool AltLit()		{ return AltLight; };
 
 	//
 	// Set light status.
@@ -72,6 +77,8 @@ public:
 	void SetProg(bool val)			{ ProgLight = val; };
 	void SetRestart(bool val)		{ RestartLight = val; };
 	void SetTracker(bool val)		{ TrackerLight = val; };
+	void SetVel(bool val)			{ VelLight = val; };
+	void SetAlt(bool val)			{ AltLight = val; };
 
 	void ClearStby()		{ StbyLight = false; };
 	void ClearRestart()		{ RestartLight = false; };
@@ -93,17 +100,6 @@ public:
 	void Timestep(double simt);
 
 	//
-	// Display status.
-	//
-
-	void ProgDisplay(char *ProgStr);
-	void VerbDisplay(char *VerbStr);
-	void NounDisplay(char *NounStr);
-	void R1Display(char *RegStr);
-	void R2Display(char *RegStr);
-	void R3Display(char *RegStr);
-
-	//
 	// Keypad interface.
 	//
 
@@ -121,49 +117,20 @@ public:
 	void ProcessKeypress(int mx, int my);
 	void RenderLights(SURFHANDLE surf, SURFHANDLE lights);
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits);
-
-	//
-	// External event inputs.
-	//
-
-	void Liftoff();
+	void ProcessChannel10(int val);
 
 	//
 	// Helper functions.
 	//
 
-	bool KBCheck();
-	void SetR1(int val);
-	void SetR2(int val);
-	void SetR3(int val);
-	void SetR1Octal(int val);
-	void SetR2Octal(int val);
-	void SetR3Octal(int val);
-	void DisplayR1Octal() { R1Decimal = false; };
-	void DisplayR2Octal() { R2Decimal = false; };
-	void DisplayR3Octal() { R3Decimal = false; };
-	void SetR1Format(char *fmt) { strncpy(R1Format, fmt, 7); };
-	void SetR2Format(char *fmt) { strncpy(R2Format, fmt, 7); };
-	void SetR3Format(char *fmt) { strncpy(R3Format, fmt, 7); };
-	void SetProg(int val);
-	void SetVerb(int val);
-	void SetNoun(int val);
-	void BlankAll();
-	void BlankData();
-	void UnBlankAll();
 	void LightsOff();
-
-	void BlankR1();
-	void BlankR2();
-	void BlankR3();
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
 protected:
 
-	void DataEntryR3();
-	void DataEntryR2();
+	void SendKeyCode(int val);
 
 	//
 	// Lights.
@@ -183,6 +150,8 @@ protected:
 	bool ProgLight;
 	bool RestartLight;
 	bool TrackerLight;
+	bool VelLight;
+	bool AltLight;
 
 	//
 	// Keyboard state.
@@ -201,43 +170,15 @@ protected:
 	// Internal variables.
 	//
 
-	int Prog;
-	bool ProgBlanked;
-	bool ProgFlashing;
-	int Verb;
-	bool VerbBlanked;
+	char Prog[3];
+	char Verb[3];
+	char Noun[3];
+	char R1[7];
+	char R2[7];
+	char R3[7];
+
 	bool VerbFlashing;
-	int Noun;
-	bool NounBlanked;
 	bool NounFlashing;
-	int R1;
-	bool R1Blanked;
-	bool R1Flashing;
-	bool R1Decimal;
-	char R1Format[7];
-	int R2;
-	bool R2Blanked;
-	bool R2Flashing;
-	bool R2Decimal;
-	char R2Format[7];
-	int R3;
-	bool R3Blanked;
-	bool R3Flashing;
-	bool R3Decimal;
-	char R3Format[7];
-
-	//
-	// Data entry status.
-	//
-
-	bool EnteringVerb;
-	bool EnteringNoun;
-	bool EnteringOctal;
-
-	int	EnteringData;
-	int EnterCount;
-
-	bool EnterPositive;
 
 	//
 	// FlashOn tracks whether flashing displays should currently be shown or
@@ -246,12 +187,6 @@ protected:
 
 	bool FlashOn;
 	double LastFlashTime;
-
-	void TwoDigitDisplay(char *Str, int val, bool Blanked, bool Flashing);
-	void FiveDigitDisplay(char *Str, int val, bool Blanked, bool Flashing, bool Decimal, char *Format);
-
-	char TwoDigitEntry[2];
-	char FiveDigitEntry[6];
 
 	int	EnterPos;
 	int EnterVal;
@@ -273,16 +208,11 @@ protected:
 	// Local helper functions.
 	//
 
-	void StartTwoDigitEntry();
-	void StartFiveDigitEntry(bool octal);
-	void UpdateTwoDigitEntry(int n);
-	void UpdateFiveDigitEntry(int n);
-	void ReleaseKeyboard();
+	char ValueChar(unsigned val);
 	void KeyClick();
 
-
 	void DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit);
-	void RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
+	void RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash);
 	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
 };
 

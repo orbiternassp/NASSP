@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
   *	Revision 1.4  2005/04/16 00:14:10  tschachim
   *	fixed dsky keyboard and g&n panel lights
   *	
@@ -46,8 +49,10 @@
 
 #include "apolloguidance.h"
 #include "dsky.h"
+#include "ioChannels.h"
 
-static char RegFormat[7] = "XXXXXX";
+static char TwoSpace[] = "  ";
+static char SixSpace[] = "      ";
 
 DSKY::DSKY(SoundLib &s, ApolloGuidance &computer) : soundlib(s), agc(computer)
 
@@ -58,39 +63,29 @@ DSKY::DSKY(SoundLib &s, ApolloGuidance &computer) : soundlib(s), agc(computer)
 void DSKY::Reset()
 
 {
-	LightsOff();
+	CompActy = false;
+	UplinkLight = false;
+	NoAttLight = false;
+	StbyLight = false;
+	KbRelLight = false;
+	OprErrLight = false;
+	TempLight = false;
+	GimbalLockLight = false;
+	ProgLight = false;
+	RestartLight = false;
+	TrackerLight = false;
+	VelLight = false;
+	AltLight = false;
 
-	KbInUse = false;
+	strncpy (Prog, TwoSpace, 2);
+	strncpy (Verb, TwoSpace, 2);
+	strncpy (Noun, TwoSpace, 2);
+	strncpy (R1, SixSpace, 6);
+	strncpy (R2, SixSpace, 6);
+	strncpy (R3, SixSpace, 6);
 
-	Prog = 0;
-	Verb = 0;
-	Noun = 0;
-	R1 = 0;
-	R2 = 0;
-	R3 = 0;
-
-	UnBlankAll();
-
-	ProgFlashing = false;
 	VerbFlashing = false;
 	NounFlashing = false;
-	R1Flashing = false;
-	R2Flashing = false;
-	R3Flashing = false;
-
-	EnteringVerb = false;
-	EnteringNoun = false;
-	EnteringData = 0;
-	EnterPos = 0;
-	EnteringOctal = false;
-
-	R1Decimal = true;
-	R2Decimal = true;
-	R3Decimal = true;
-
-	SetR1Format(RegFormat);
-	SetR2Format(RegFormat);
-	SetR3Format(RegFormat);
 
 	FlashOn = true;
 
@@ -100,9 +95,6 @@ void DSKY::Reset()
 	//
 
 	LastFlashTime = (-100000);
-
-	strncpy (TwoDigitEntry, "  ", 2);
-	strncpy (FiveDigitEntry, "      ", 6);
 }
 
 DSKY::~DSKY()
@@ -134,218 +126,22 @@ void DSKY::Timestep(double simt)
 	}
 }
 
-void DSKY::TwoDigitDisplay(char *Str, int val, bool Blanked, bool Flashing)
-
-{
-	if (val > 99)
-		val = 99;
-
-	if (Blanked || (Flashing && !FlashOn)) {
-		strcpy(Str, "  ");
-	}
-	else {
-		Str[0] = '0' + (val / 10);
-		Str[1] = '0' + (val % 10);
-	}
-}
-
-void DSKY::FiveDigitDisplay(char *Str, int val, bool Blanked, bool Flashing, bool Decimal, char *Format)
-
-{
-	int	i;
-	int divisor, dividestep, rval;
-
-	if (Blanked || (Flashing && !FlashOn)) {
-		strcpy(Str, "      ");
-		return;
-	}
-
-	if (Decimal) {
-		if (val >= 0)
-			Str[0] = '+';
-		else {
-			Str[0] = '-';
-			val = (-val);
-		}
-	}
-	else
-		Str[0] = ' ';
-
-	//
-	// Set up decimal and octal divisors.
-	//
-
-	if (Decimal) {
-		divisor = 10000;
-		dividestep = 10;
-	}
-	else {
-		divisor = 010000;
-		dividestep = 8;
-	}
-
-	//
-	// Limit maximum value.
-	//
-
-	if (val >= (divisor * dividestep)) {
-		val = (divisor * dividestep) - 1;
-	}
-
-	for (i = 1; i < 6; i++) {
-		rval = (val / divisor);
-		Str[i] = '0' + rval;
-		val -= divisor * rval;
-		divisor /= dividestep;
-	}
-
-	//
-	// Update string for formatting, so we can blank out spaces as
-	// appropriate.
-	//
-
-	for (i = 0; i < 6; i++) {
-		if (Format[i] == ' ')
-			Str[i] = ' ';
-	}
-}
-
-void DSKY::StartTwoDigitEntry()
-
-{
-	TwoDigitEntry[0] = TwoDigitEntry[1] = ' ';
-	EnterPos = 0;
-	EnterVal = 0;
-}
-
-void DSKY::StartFiveDigitEntry(bool octal)
-
-{
-	for (int i = 0; i < 6; i++)
-		FiveDigitEntry[i] = ' ';
-
-	EnterPos = 1;
-	EnterVal = 0;
-
-	EnteringOctal = octal;
-
-	//
-	// Octal entry is always a positive number.
-	//
-
-	if (octal)
-		EnterPositive = true;
-}
-
-void DSKY::UpdateFiveDigitEntry(int n)
-
-{
-	if (!EnterPos) {
-		//
-		// No octal support yet.
-		//
-		StartFiveDigitEntry(true);
-	}
-
-	FiveDigitEntry[EnterPos] = '0' + n;
-
-	if (EnteringOctal) {
-		if (n > 7) {
-			LightOprErrLight();
-			return;
-		}
-		EnterVal = EnterVal * 8 + n;
-	}
-	else {
-		EnterVal = (EnterVal * 10) + n;
-	}
-
-	EnterPos++;
-
-	if (EnterPos > 5) {
-
-		if (!EnterPositive)
-			EnterVal = (-EnterVal);
-
-		switch(EnteringData) {
-
-		case 1:
-			R1 = EnterVal;
-			R1Blanked = false;
-			break;
-
-		case 2:
-			R2 = EnterVal;
-			R2Blanked = false;
-			break;
-
-		case 3:
-			R3 = EnterVal;
-			R3Blanked = false;
-			break;
-
-		}
-
-		EnteringData++;
-		ReleaseKeyboard();
-
-		EnterPos = 0;
-		strncpy (FiveDigitEntry, "      ", 6);
-
-		if (EnteringData > EnterCount) {
-			EnteringData = 0;
-		}
-	}
-}
-
-void DSKY::UpdateTwoDigitEntry(int n)
-
-{
-	if (EnterPos > 1) {
-		LightOprErrLight();
-		return;
-	}
-
-	TwoDigitEntry[EnterPos] = '0' + n;
-
-	if (!EnterPos) {
-		EnterVal = n * 10;
-	}
-	else {
-		EnterVal += n;
-
-		if (EnteringVerb) {
-			Verb = EnterVal;
-			EnteringVerb = false;
-		}
-
-		if (EnteringNoun) {
-			Noun = EnterVal;
-			EnteringNoun = false;
-		}
-
-		ReleaseKeyboard();
-	}
-
-	EnterPos++;
-}
-
-
-//
-// Keyboard interface.
-//
-
-void DSKY::ReleaseKeyboard()
-
-{
-	KbInUse = false;
-	KbRelLight = false;
-}
-
 void DSKY::KeyClick()
 
 {
 	Sclick.play(NOLOOP, 255);
+}
+
+void DSKY::SendKeyCode(int val)
+
+{
+	//
+	// For now, set the channel and then clear it. When we wire in
+	// the virtual AGC we may need to get smarter here.
+	//
+
+	agc.SetInputChannel(015, val);
+	agc.SetInputChannel(015, 0);
 }
 
 void DSKY::KeyRel()
@@ -355,8 +151,7 @@ void DSKY::KeyRel()
 		return;
 
 	KeyClick();
-
-	ReleaseKeyboard();
+	SendKeyCode(25);
 }
 
 void DSKY::VerbPressed()
@@ -365,20 +160,10 @@ void DSKY::VerbPressed()
 	if (!agc.OutOfReset() || agc.OnStandby())
 		return;
 
-	if (EnteringNoun) {
-		LightOprErrLight();
-		return;
-	}
-
 	KeyClick();
 
 	VerbFlashing = false;
-	VerbBlanked = false;
-
-	StartTwoDigitEntry();
-
-	KbInUse = true;
-	EnteringVerb = true;
+	SendKeyCode(17);
 }
 
 void DSKY::NounPressed()
@@ -387,39 +172,10 @@ void DSKY::NounPressed()
 	if (!agc.OutOfReset() || agc.OnStandby())
 		return;
 
-	if (EnteringVerb) {
-		LightOprErrLight();
-		return;
-	}
-
 	KeyClick();
 
 	NounFlashing = false;
-	NounBlanked = false;
-
-	StartTwoDigitEntry();
-
-	KbInUse = true;
-	EnteringNoun = true;
-
-}
-
-void DSKY::DataEntryR2()
-
-{
-	EnteringData = 2;
-	EnterCount = 2;
-	EnterPos = 0;
-	R2Blanked = true;
-}
-
-void DSKY::DataEntryR3()
-
-{
-	EnteringData = 3;
-	EnterCount = 3;
-	EnterPos = 0;
-	R3Blanked = true;
+	SendKeyCode(31);
 }
 
 void DSKY::EnterPressed()
@@ -429,94 +185,7 @@ void DSKY::EnterPressed()
 		return;
 
 	KeyClick();
-
-	//
-	// Must complete entering the data before pressing
-	// ENTER.
-	//
-
-	if (EnteringVerb || EnteringNoun) {
-		LightOprErrLight();
-		return;
-	}
-
-	ReleaseKeyboard();
-
-	VerbFlashing = false;
-	NounFlashing = false;
-
-	switch (Verb) {
-
-	case 21:
-		EnteringData = 1;
-		EnterCount = 1;
-		EnterPos = 0;
-		R1Blanked = true;
-		break;
-
-	case 1:
-	case 11:
-		if (Noun != 2) {
-			LightOprErrLight();
-			return;
-		}
-
-		VerbFlashing = true;
-		NounFlashing = true;
-
-		R2Decimal = false;
-		R1Decimal = false;
-		R1Blanked = false;
-
-		//
-		// And fall through to get R2.
-		//
-
-	case 22:
-		DataEntryR2();
-		break;
-
-	case 23:
-		DataEntryR3();
-		break;
-
-	case 24:
-		EnteringData = 1;
-		EnterCount = 2;
-		EnterPos = 0;
-		R1Blanked = true;
-		R2Blanked = true;
-		break;
-
-	case 25:
-		EnteringData = 1;
-		EnterCount = 3;
-		EnterPos = 0;
-		R1Blanked = true;
-		R2Blanked = true;
-		R3Blanked = true;
-		break;
-
-	//
-	// 33: Proceed without data.
-	//
-
-	case 33:
-		agc.ProceedNoData();
-		break;
-
-	//
-	// 34: terminate.
-	//
-
-	case 34:
-		agc.TerminateProgram();
-		break;
-
-	default:
-		agc.VerbNounEntered(Verb, Noun);
-		break;
-	}
+	SendKeyCode(28);
 }
 
 void DSKY::ClearPressed()
@@ -526,14 +195,7 @@ void DSKY::ClearPressed()
 		return;
 
 	KeyClick();
-
-	if (EnteringData) {
-		EnterPos = 0;
-		strncpy (FiveDigitEntry, "      ", 6);
-	}
-	else {
-		LightOprErrLight();
-	}
+	SendKeyCode(30);
 }
 
 void DSKY::PlusPressed()
@@ -543,15 +205,7 @@ void DSKY::PlusPressed()
 		return;
 
 	KeyClick();
-
-	if (EnteringData && !EnterPos) {
-		EnterPositive = true;
-		StartFiveDigitEntry(false);
-		FiveDigitEntry[0] = '+';
-	}
-	else {
-		LightOprErrLight();
-	}
+	SendKeyCode(26);
 }
 
 void DSKY::MinusPressed()
@@ -561,15 +215,7 @@ void DSKY::MinusPressed()
 		return;
 
 	KeyClick();
-
-	if (EnteringData && !EnterPos) {
-		EnterPositive = false;
-		StartFiveDigitEntry(false);
-		FiveDigitEntry[0] = '-';
-	}
-	else {
-		LightOprErrLight();
-	}
+	SendKeyCode(27);
 }
 
 void DSKY::ProgPressed()
@@ -581,53 +227,12 @@ void DSKY::ProgPressed()
 	KeyClick();
 
 	//
-	// If AGC is in standby mode, then start it up.
+	// For now we immediately indicate that PRO is released after it's pressed.
+	// We'll need to capture the release properly for the virtual AGC.
 	//
 
-	if (agc.OnStandby()) {
-		agc.Startup();
-		return;
-	}
-
-	//
-	// Else if program 6 is running, shut it down to
-	// standby mode.
-	//
-
-	if (Prog == 06) {
-		agc.GoStandby();
-		return;
-	}
-
-	//
-	// Now we have a value in R3, we can tell the agc that
-	// verb 1 or 11 is running.
-	//
-
-	if (Verb == 1 || Verb == 11) {
-		agc.VerbNounEntered(Verb, Noun);
-	}
-
-	//
-	// Otherwise tell the AGC that it's been pressed.
-	//
-
-	agc.ProgPressed(R1, R2, R3);
-
-	//
-	// For verb 1, let us enter another address.
-	//
-
-	switch (Verb) {
-	case 1:
-		DataEntryR2();
-		break;
-
-	case 11:
-		VerbFlashing = false;
-		NounFlashing = false;
-		break;
-	}
+	agc.SetInputChannelBit(032, 14, true);
+	agc.SetInputChannelBit(032, 14, false);
 }
 
 void DSKY::ResetPressed()
@@ -636,37 +241,172 @@ void DSKY::ResetPressed()
 	if (!agc.OutOfReset() || agc.OnStandby())
 		return;
 
-	agc.RSetPressed();
-
 	KeyClick();
-
-	LightsOff();
+	SendKeyCode(18);
 }
 
 void DSKY::NumberPressed(int n)
 
 {
-	if (!agc.OutOfReset() || agc.OnStandby())
-		return;
-
 	KeyClick();
+	if (!n)
+		SendKeyCode(16);
+	else
+		SendKeyCode(n);
+}
 
-	if (EnteringOctal && n > 7) {
-		LightOprErrLight();
-		return;
+//
+// Convert from AGC output to character codes.
+//
+
+char DSKY::ValueChar(unsigned val)
+
+{
+	switch (val) {
+	case 21:
+		return '0';
+
+	case 3:
+		return '1';
+
+	case 25:
+		return '2';
+
+	case 27:
+		return '3';
+
+	case 15:
+		return '4';
+
+	case 30:
+		return '5';
+	
+	case 28:
+		return '6';
+
+	case 19:
+		return '7';
+
+	case 29:
+		return '8';
+
+	case 31:
+		return '9';
 	}
+	return ' ';
+}
 
-	if (EnteringVerb || EnteringNoun) {
-		UpdateTwoDigitEntry(n);
-		return;
+void DSKY::ProcessChannel10(int val)
+
+{
+	ChannelValue10 out_val;
+	char	C1, C2;
+
+	out_val.Value = val;
+
+	C1 = ValueChar(out_val.Bits.c);
+	C2 = ValueChar(out_val.Bits.d);
+
+	switch (out_val.Bits.a) {
+
+	case 11:
+		Prog[0] = C1;
+		Prog[1] = C2;
+		break;
+
+	case 10:
+		Verb[0] = C1;
+		Verb[1] = C2;
+		break;
+
+	case 9:
+		Noun[0] = C1;
+		Noun[1] = C2;
+		break;
+	
+	case 8:
+		R1[1] = C2;
+		break;
+
+	case 7:
+		R1[2] = C1;
+		R1[3] = C2;
+		if (out_val.Bits.b) {
+			R1[0] = '+';
+		}
+		else if (R1[0] == '+') {
+			R1[0] = ' ';
+		}
+		break;
+
+	case 6:
+		R1[4] = C1;
+		R1[5] = C2;
+		if (out_val.Bits.b) {
+			R1[0] = '-';
+		}
+		else if (R1[0] == '-') {
+			R1[0] = ' ';
+		}
+		break;
+
+	case 5:
+		R2[1] = C1;
+		R2[2] = C2;
+		if (out_val.Bits.b) {
+			R2[0] = '+';
+		}
+		else if (R2[0] == '+') {
+			R2[0] = ' ';
+		}
+		break;
+
+	case 4:
+		R2[3] = C1;
+		R2[4] = C2;
+		if (out_val.Bits.b) {
+			R2[0] = '-';
+		}
+		else if (R2[0] == '-') {
+			R2[0] = ' ';
+		}
+		break;
+
+	case 3:
+		R2[5] = C1;
+		R3[1] = C2;
+		break;
+
+	case 2:
+		R3[2] = C1;
+		R3[3] = C2;
+		if (out_val.Bits.b) {
+			R3[0] = '+';
+		}
+		else if (R3[0] == '+') {
+			R3[0] = ' ';
+		}
+		break;
+
+	case 1:
+		R3[4] = C1;
+		R3[5] = C2;
+		if (out_val.Bits.b) {
+			R3[0] = '-';
+		}
+		else if (R3[0] == '-') {
+			R3[0] = ' ';
+		}
+		break;
+
+	// 12 - set light states.
+	case 12:
+		SetNoAtt((out_val.Value & (1 << 3)) != 0);
+		SetGimbalLock((out_val.Value & (1 << 5)) != 0);
+		SetTracker((out_val.Value & (1 << 7)) != 0);
+		SetProg((out_val.Value & (1 << 8)) != 0);
+		break;
 	}
-
-	if (EnteringData) {
-		UpdateFiveDigitEntry(n);
-		return;
-	}
-
-	LightOprErrLight();
 }
 
 void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit)
@@ -698,6 +438,10 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 	DSKYLightBlt(surf, lights, 52, 49, ProgLit());
 	DSKYLightBlt(surf, lights, 52, 73, RestartLit());
 	DSKYLightBlt(surf, lights, 52, 97, TrackerLit());
+
+	//
+	// Need to add the Alt and Vel lights here for the LEM.
+	//
 }
 
 
@@ -708,7 +452,6 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 void DSKY::ProcessKeypress(int mx, int my)
 
 {
-
 	bool KeyDown_Verb;
 	bool KeyDown_Noun;
 	bool KeyDown_Plus;
@@ -895,239 +638,13 @@ void DSKY::ProcessKeypress(int mx, int my)
 	}*/
 }
 
-void DSKY::ProgDisplay(char *ProgStr)
-
-{
-	TwoDigitDisplay(ProgStr, Prog, ProgBlanked, ProgFlashing);
-}
-
-
-void DSKY::VerbDisplay(char *VerbStr)
-
-{
-	if (EnteringVerb) {
-		strncpy(VerbStr, TwoDigitEntry, 2);
-		return;
-	}
-
-	TwoDigitDisplay(VerbStr, Verb, VerbBlanked, VerbFlashing);
-}
-
-void DSKY::NounDisplay(char *NounStr)
-
-{
-	if (EnteringNoun) {
-		strncpy(NounStr, TwoDigitEntry, 2);
-		return;
-	}
-
-	TwoDigitDisplay(NounStr, Noun, NounBlanked, NounFlashing);
-}
-
-void DSKY::R1Display(char *RegStr)
-
-{
-	if (EnteringData == 1) {
-		strncpy(RegStr, FiveDigitEntry, 6);
-		return;
-	}
-
-	FiveDigitDisplay(RegStr, R1, R1Blanked, R1Flashing, R1Decimal, R1Format);
-}
-
-void DSKY::R2Display(char *RegStr)
-
-{
-	if (EnteringData == 2) {
-		strncpy(RegStr, FiveDigitEntry, 6);
-		return;
-	}
-
-	FiveDigitDisplay(RegStr, R2, R2Blanked, R2Flashing, R2Decimal, R2Format);
-}
-
-void DSKY::R3Display(char *RegStr)
-
-{
-	if (EnteringData == 3) {
-		strncpy(RegStr, FiveDigitEntry, 6);
-		return;
-	}
-
-	FiveDigitDisplay(RegStr, R3, R3Blanked, R3Flashing, R3Decimal, R3Format);
-}
-
-//
-// Attempt to set a value into the register, and light the KBD REL
-// light if the keyboard is in use.
-//
-
-bool DSKY::KBCheck()
-
-{
-	if (KbInUse) {
-		KbRelLight = true;
-		return false;
-	}
-
-	return true;
-}
-
-void DSKY::SetR1(int val)
-
-{
-	if (KBCheck()) {
-		R1 = val;
-		R1Blanked = false;
-		SetR1Format(RegFormat);
-		R1Decimal = true;
-	}
-}
-
-void DSKY::SetR2(int val)
-
-{
-	if (KBCheck()) {
-		R2 = val;
-		R2Blanked = false;
-		SetR2Format(RegFormat);
-		R2Decimal = true;
-	}
-}
-
-void DSKY::SetR3(int val)
-
-{
-	if (KBCheck()) {
-		R3 = val;
-		R3Blanked = false;
-		SetR3Format(RegFormat);
-		R3Decimal = true;
-	}
-}
-
-void DSKY::SetR1Octal(int val)
-
-{
-	SetR1(val);
-	R1Decimal = false;
-}
-
-void DSKY::SetR2Octal(int val)
-
-{
-	SetR2(val);
-	R2Decimal = false;
-}
-
-void DSKY::SetR3Octal(int val)
-
-{
-	SetR3(val);
-	R3Decimal = false;
-}
-
-void DSKY::SetProg(int val)
-
-{
-	if (KBCheck()) {
-		Prog = val;
-		ProgBlanked = false;
-	}
-}
-
-void DSKY::SetVerb(int val)
-
-{
-	if (KBCheck()) {
-		Verb = val;
-		VerbBlanked = false;
-	}
-}
-
-void DSKY::SetNoun(int val)
-
-{
-	if (KBCheck()) {
-		Noun = val;
-		NounBlanked = false;
-	}
-}
-
-void DSKY::UnBlankAll()
-
-{
-	ProgBlanked = false;
-	VerbBlanked = false;
-	NounBlanked = false;
-	R1Blanked = false;
-	R2Blanked = false;
-	R3Blanked = false;
-}
-
-void DSKY::BlankAll()
-
-{
-	ProgBlanked = true;
-	VerbBlanked = true;
-	NounBlanked = true;
-	R1Blanked = true;
-	R2Blanked = true;
-	R3Blanked = true;
-}
-
-void DSKY::BlankData()
-
-{
-	R1Blanked = true;
-	R2Blanked = true;
-	R3Blanked = true;
-}
-
-void DSKY::BlankR1()
-
-{
-	if (KBCheck()) {
-		R1Blanked = true;
-	}
-}
-
-void DSKY::BlankR2()
-
-{
-	if (KBCheck()) {
-		R2Blanked = true;
-	}
-}
-
-void DSKY::BlankR3()
-
-{
-	if (KBCheck()) {
-		R3Blanked = true;
-	}
-}
-
-void DSKY::LightsOff()
-
-{
-	CompActy = false;
-	UplinkLight = false;
-	NoAttLight = false;
-	StbyLight = false;
-	KbRelLight = false;
-	OprErrLight = false;
-	TempLight = false;
-	GimbalLockLight = false;
-	ProgLight = false;
-	RestartLight = false;
-	TrackerLight = false;
-}
-
-void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
+void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash)
 
 {
 	int Curdigit;
+
+	if (Flash && !FlashOn)
+		return;
 
 	if (Str[0] != ' ') {
 		Curdigit = Str[0] - '0';
@@ -1167,31 +684,23 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits)
 
 {
-		char DSKYString[10];
-
-		if (CompActy) {
-			//
-			// Do stuff to update Comp Acty light.
-			//
-		}
-
-		ProgDisplay(DSKYString);
-		RenderTwoDigitDisplay(surf, digits, 67, 18, DSKYString);
-		VerbDisplay(DSKYString);
-		RenderTwoDigitDisplay(surf, digits, 8, 52, DSKYString);
-		NounDisplay(DSKYString);
-		RenderTwoDigitDisplay(surf, digits, 67, 52, DSKYString);
-
+	if (CompActy) {
 		//
-		// Register contents.
+		// Do stuff to update Comp Acty light.
 		//
+	}
 
-		R1Display(DSKYString);
-		RenderSixDigitDisplay(surf, digits, 3, 85, DSKYString);
-		R2Display(DSKYString);
-		RenderSixDigitDisplay(surf, digits, 3, 119, DSKYString);
-		R3Display(DSKYString);
-		RenderSixDigitDisplay(surf, digits, 3, 153, DSKYString);
+	RenderTwoDigitDisplay(surf, digits, 67, 18, Prog, false);
+	RenderTwoDigitDisplay(surf, digits, 8, 52, Verb, VerbFlashing);
+	RenderTwoDigitDisplay(surf, digits, 67, 52, Noun, NounFlashing);
+
+	//
+	// Register contents.
+	//
+
+	RenderSixDigitDisplay(surf, digits, 3, 85, R1);
+	RenderSixDigitDisplay(surf, digits, 3, 119, R2);
+	RenderSixDigitDisplay(surf, digits, 3, 153, R3);
 }
 
 typedef union
@@ -1199,10 +708,10 @@ typedef union
 {
 	struct {
 		unsigned R1Blanked:1;
-		unsigned R1Flashing:1;
+		unsigned VelLight:1;
 		unsigned R1Decimal:1;
 		unsigned R2Blanked:1;
-		unsigned R2Flashing:1;
+		unsigned AltLight:1;
 		unsigned R2Decimal:1;
 		unsigned R3Blanked:1;
 		unsigned R3Flashing:1;
@@ -1235,28 +744,13 @@ typedef union
 void DSKY::SaveState(FILEHANDLE scn)
 
 {
-	char	str[10];
-
 	oapiWriteLine(scn, DSKY_START_STRING);
-	oapiWriteScenario_int (scn, "PROG", Prog);
-	oapiWriteScenario_int (scn, "VERB", Verb);
-	oapiWriteScenario_int (scn, "NOUN", Noun);
-	oapiWriteScenario_int (scn, "R1", R1);
-	oapiWriteScenario_int (scn, "R2", R2);
-	oapiWriteScenario_int (scn, "R3", R3);
-	oapiWriteScenario_int (scn, "EPOS", EnterPos);
-	oapiWriteScenario_int (scn, "EVAL", EnterVal);
-
-	memset(str, 0, 10);
-
-	strncpy(str, TwoDigitEntry, 2);
-	oapiWriteScenario_string (scn, "E2", str);
-	strncpy(str, FiveDigitEntry, 6);
-	oapiWriteScenario_string (scn, "E5", str);
-
-	oapiWriteScenario_string(scn, "R1FMT", R1Format);
-	oapiWriteScenario_string(scn, "R2FMT", R2Format);
-	oapiWriteScenario_string(scn, "R3FMT", R3Format);
+	oapiWriteScenario_string (scn, "PROG", Prog);
+	oapiWriteScenario_string (scn, "VERB", Verb);
+	oapiWriteScenario_string (scn, "NOUN", Noun);
+	oapiWriteScenario_string (scn, "R1", R1);
+	oapiWriteScenario_string (scn, "R2", R2);
+	oapiWriteScenario_string (scn, "R3", R3);
 
 	//
 	// Copy internal state to the structure.
@@ -1265,21 +759,8 @@ void DSKY::SaveState(FILEHANDLE scn)
 	DSKYState state;
 
 	state.word = 0;
-	state.u.R1Blanked = R1Blanked;
-	state.u.R1Flashing = R1Flashing;
-	state.u.R1Decimal = R1Decimal;
-	state.u.R2Blanked = R2Blanked;
-	state.u.R2Flashing = R2Flashing;
-	state.u.R2Decimal = R2Decimal;
-	state.u.R3Blanked = R3Blanked;
-	state.u.R3Flashing = R3Flashing;
-	state.u.R3Decimal = R3Decimal;
-	state.u.VerbBlanked = VerbBlanked;
 	state.u.VerbFlashing = VerbFlashing;
-	state.u.NounBlanked = NounBlanked;
 	state.u.NounFlashing = NounFlashing;
-	state.u.ProgBlanked = ProgBlanked;
-	state.u.ProgFlashing = ProgFlashing;
 
 	state.u.CompActy = CompActy;
 	state.u.UplinkLight = UplinkLight;
@@ -1292,12 +773,8 @@ void DSKY::SaveState(FILEHANDLE scn)
 	state.u.ProgLight = ProgLight;
 	state.u.RestartLight = RestartLight;
 	state.u.TrackerLight = TrackerLight;
-
-	state.u.KbInUse = KbInUse;
-
-	state.u.EnteringNoun = EnteringNoun;
-	state.u.EnteringVerb = EnteringVerb;
-	state.u.EnteringOctal = EnteringOctal;
+	state.u.AltLight = AltLight;
+	state.u.VelLight = VelLight;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -1314,63 +791,29 @@ void DSKY::LoadState(FILEHANDLE scn)
 		if (!strnicmp(line, DSKY_END_STRING, sizeof(DSKY_END_STRING)))
 			return;
 		if (!strnicmp (line, "PROG", 4)) {
-			sscanf (line+4, "%d", &Prog);
+			strncpy (Prog, line+5, 2);
 		}
 		else if (!strnicmp (line, "VERB", 4)) {
-			sscanf (line+4, "%d", &Verb);
+			strncpy (Verb, line+5, 2);
 		}
 		else if (!strnicmp (line, "NOUN", 4)) {
-			sscanf (line+4, "%d", &Noun);
-		}
-		else if (!strnicmp (line, "R1FMT", 5)) {
-			strncpy (R1Format, line + 6, 6);
-		}
-		else if (!strnicmp (line, "R2FMT", 5)) {
-			strncpy (R2Format, line + 6, 6);
-		}
-		else if (!strnicmp (line, "R3FMT", 5)) {
-			strncpy (R3Format, line + 6, 6);
+			strncpy (Noun, line+5, 2);
 		}
 		else if (!strnicmp (line, "R1", 2)) {
-			sscanf (line+2, "%d", &R1);
+			strncpy (R1, line+3, 6);
 		}
 		else if (!strnicmp (line, "R2", 2)) {
-			sscanf (line+2, "%d", &R2);
+			strncpy (R2, line+3, 6);
 		}
 		else if (!strnicmp (line, "R3", 2)) {
-			sscanf (line+2, "%d", &R3);
-		}
-		else if (!strnicmp (line, "EPOS", 4)) {
-			sscanf (line+4, "%d", &EnterPos);
-		}
-		else if (!strnicmp (line, "EVAL", 4)) {
-			sscanf (line+4, "%d", &EnterVal);
-		}
-		else if (!strnicmp (line, "E2", 2)) {
-			strncpy (TwoDigitEntry, line + 3, 2);
-		}
-		else if (!strnicmp (line, "E5", 2)) {
-			strncpy (FiveDigitEntry, line + 3, 6);
+			strncpy (R3, line+3, 6);
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			DSKYState state;
 			sscanf (line+5, "%d", &state.word);
 
-			R1Blanked = state.u.R1Blanked;
-			R1Flashing = state.u.R1Flashing;
-			R1Decimal = state.u.R1Decimal;
-			R2Blanked = state.u.R2Blanked;
-			R2Flashing = state.u.R2Flashing;
-			R2Decimal = state.u.R2Decimal;
-			R3Blanked = state.u.R3Blanked;
-			R3Flashing = state.u.R3Flashing;
-			R3Decimal = state.u.R3Decimal;
-			VerbBlanked = state.u.VerbBlanked;
 			VerbFlashing = state.u.VerbFlashing;
-			NounBlanked = state.u.NounBlanked;
 			NounFlashing = state.u.NounFlashing;
-			ProgBlanked = state.u.ProgBlanked;
-			ProgFlashing = state.u.ProgFlashing;
 
 			CompActy = (state.u.CompActy != 0);
 			UplinkLight = state.u.UplinkLight;
@@ -1383,13 +826,8 @@ void DSKY::LoadState(FILEHANDLE scn)
 			ProgLight = state.u.ProgLight;
 			RestartLight = state.u.RestartLight;
 			TrackerLight = state.u.TrackerLight;
-
-			KbInUse = state.u.KbInUse;
-
-			EnteringVerb = state.u.EnteringVerb;
-			EnteringNoun = state.u.EnteringNoun;
-			EnteringOctal = state.u.EnteringOctal;
-
+			AltLight = (state.u.AltLight != 0);
+			VelLight = (state.u.VelLight != 0);
 		}
 	}
 }

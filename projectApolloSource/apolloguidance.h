@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
   *	Revision 1.11  2005/08/08 21:10:30  movieman523
   *	Fixed broken TLI program. LastAlt wasn't being set and that screwed up the burn end calculations.
   *	
@@ -118,6 +121,7 @@ public:
 	bool OutOfReset();
 
 	void Checklist(int num);
+	void BlankAll();
 
 	//
 	// Program helper functions.
@@ -131,7 +135,7 @@ public:
 	double GetVel(double vel);
 
 	//
-	// Externl event handlers.
+	// External event handlers.
 	//
 
 	void SetFuel(double fuel) { CurrentFuel = fuel; };
@@ -171,10 +175,13 @@ protected:
 	// DSKY interface.
 	//
 
-	char CharValue(unsigned val);
+	char ValueChar(unsigned val);
+	unsigned CharValue(char val);
 
 	void SetChannel10Lights(int bit, bool val);
 
+	void ProcessInputChannel15(int val);
+	void ProcessInputChannel32(int bit, bool val);
 	void ProcessChannel11(int bit, bool val);
 	void ProcessChannel10();
 
@@ -196,6 +203,10 @@ protected:
 	void ClearTracker();
 	void LightProg();
 	void ClearProg();
+	void LightVel();
+	void ClearVel();
+	void LightAlt();
+	void ClearAlt();
 
 	void SetVerbNounFlashing();
 	void ClearVerbNounFlashing();
@@ -238,6 +249,117 @@ protected:
 	//
 
 	int Chan10Flags;
+
+	int	Prog;
+	bool ProgBlanked;
+	int Verb;
+	bool VerbBlanked;
+	int Noun;
+	bool NounBlanked;
+	int R1;
+	bool R1Blanked;
+	bool R1Decimal;
+	char R1Format[7];
+	int R2;
+	bool R2Blanked;
+	bool R2Decimal;
+	char R2Format[7];
+	int R3;
+	bool R3Blanked;
+	bool R3Decimal;
+	char R3Format[7];
+
+	char TwoDigitEntry[2];
+	char FiveDigitEntry[6];
+
+	//
+	// Temporary for transferring values to DSKY.
+	//
+
+	char RegStr[8];
+
+	//
+	// Data entry status.
+	//
+
+	bool EnteringVerb;
+	bool EnteringNoun;
+	bool EnteringOctal;
+
+	int	EnterPos;
+	int EnterVal;
+	int	EnteringData;
+	int EnterCount;
+
+	bool EnterPositive;
+
+	bool KbInUse;
+
+	//
+	// DSKY interface functions.
+	//
+
+	void StartTwoDigitEntry();
+	void StartFiveDigitEntry(bool octal);
+	void ClearFiveDigitEntry();
+	void UpdateTwoDigitEntry(int n);
+	void UpdateFiveDigitEntry(int n);
+
+	void TwoDigitDisplay(char *Str, int val, bool Blanked);
+	void FiveDigitDisplay(char *Str, int val, bool Blanked, bool Decimal, char *Format);
+
+	bool KBCheck();
+	void SetR1(int val);
+	void SetR2(int val);
+	void SetR3(int val);
+	void SetR1Octal(int val);
+	void SetR2Octal(int val);
+	void SetR3Octal(int val);
+	void DisplayR1Octal() { R1Decimal = false; UpdateR1(); };
+	void DisplayR2Octal() { R2Decimal = false; UpdateR2(); };
+	void DisplayR3Octal() { R3Decimal = false; UpdateR3(); };
+	void SetR1Format(char *fmt) { strncpy(R1Format, fmt, 7); UpdateR1(); };
+	void SetR2Format(char *fmt) { strncpy(R2Format, fmt, 7); UpdateR2(); };
+	void SetR3Format(char *fmt) { strncpy(R3Format, fmt, 7); UpdateR3(); };
+	void SetProg(int val);
+	void SetVerb(int val);
+	void SetNoun(int val);
+
+	void BlankData();
+	void BlankR1();
+	void BlankR2();
+	void BlankR3();
+	void UnBlankAll();
+		
+	void ReleaseKeyboard();
+	void UpdateProg();
+	void UpdateNoun();
+	void UpdateVerb();
+	void UpdateR1();
+	void UpdateR2();
+	void UpdateR3();
+	void UpdateAll();
+	void UpdateEntry();
+	void KeyRel();
+	void VerbPressed();
+	void NounPressed();
+	void ProgKeyPressed();
+	void ResetPressed();
+	void ClearPressed();
+	void DataEntryR1();
+	void DataEntryR2();
+	void DataEntryR3();
+
+	void DoSetR1(int val, bool decimal);
+	void DoSetR2(int val, bool decimal);
+	void DoSetR3(int val, bool decimal);
+
+	void PlusPressed();
+	void MinusPressed();
+	void EnterPressed();
+	void NumberPressed(int val);
+
+	void LightsOff();
 
 	//
 	// Generic program flags. Higher

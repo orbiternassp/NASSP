@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/08 22:32:49  movieman523
+  *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
+  *	
   *	Revision 1.18  2005/08/08 21:58:31  lazyd
   *	Fixed a nasty bug in P36 and made P13 injection dependent on CSM orbit
   *	
@@ -486,7 +489,7 @@ void LEMcomputer::Prog63(double simt)
 //		sprintf(oapiDebugString(),"t=%.1f ", dt);
 // 35 seconds from ignition, blank the DSKY for 5 seconds
 		if(dt <= 35) {
-			dsky.BlankAll();
+			BlankAll();
 			NextEventTime=simt+5;
 //			CutOffVel=hvel;
 			ProgState++;
@@ -496,7 +499,7 @@ void LEMcomputer::Prog63(double simt)
 	case 6:
 //		sprintf(oapiDebugString(),"Next=%.1f simt=%.1f", NextEventTime, simt);
 		if(simt >= NextEventTime) {
-			dsky.UnBlankAll();
+			UnBlankAll();
 			ProgState++;
 		}
 		break;
@@ -1327,13 +1330,13 @@ void LEMcomputer::Prog41(double simt)
 	}
 
 	if(BurnStartTime-simt < 30.2) {
-		dsky.UnBlankAll();
+		UnBlankAll();
 		SetVerbNoun(16, 31);
 		return;
 	}
 
 	if(BurnStartTime-simt < 35.0) {
-		dsky.BlankAll();
+		BlankAll();
 		return;
 	}
 
@@ -1430,13 +1433,13 @@ void LEMcomputer::Prog42(double simt)
 	}
 
 	if(BurnStartTime-simt < 30.2) {
-		dsky.UnBlankAll();
+		UnBlankAll();
 		SetVerbNoun(16, 31);
 		return;
 	}
 
 	if(BurnStartTime-simt < 35.0) {
-		dsky.BlankAll();
+		BlankAll();
 		return;
 	}
 
@@ -1738,14 +1741,14 @@ void LEMcomputer::Prog13(double simt)
 	if(ProgState == 3 ) {
 		SetVerbNounAndFlash(6,74);
 		if(simt > BurnTime-35.0) {
-			dsky.BlankAll();
+			BlankAll();
 			ProgState++;
 		}
 	}
 
 	if(ProgState == 4 ) {
 		if(simt > BurnTime-30.0) {
-			dsky.UnBlankAll();
+			UnBlankAll();
 			SetVerbNounAndFlash(6,74);
 			ProgState++;
 		}
