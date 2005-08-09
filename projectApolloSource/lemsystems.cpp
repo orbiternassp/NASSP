@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/07 19:28:08  lazyd
+  *	Changed LM RCS and ascent parameters to historical
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -37,6 +40,7 @@
 #include "nasspsound.h"
 
 #include "soundlib.h"
+#include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "dsky.h"
