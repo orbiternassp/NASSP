@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/06 01:25:27  movieman523
+  *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
+  *	
   *	Revision 1.10  2005/08/01 21:51:11  lazyd
   *	Added code for Abort Stage
   *	
@@ -73,7 +76,7 @@ typedef struct {
 
 } LemSettings;
 
-class sat5_lmpkd : public VESSEL {
+class sat5_lmpkd : public VESSEL, public PanelSwitchListener {
 
 public:
 	sat5_lmpkd(OBJHANDLE hObj, int fmodel);
@@ -82,13 +85,14 @@ public:
 	void Init();
 	void LoadStateEx (FILEHANDLE scn, void *vs);
 	void SaveState (FILEHANDLE scn);
-	int ConsumeDirectKey (DWORD key);
+	int ConsumeBufferedKey (DWORD key, bool down, const char *keystate);
 	void PostStep(double simt, double simdt, double mjd);
 	bool PanelMouseEvent (int id, int event, int mx, int my);
 	bool PanelRedrawEvent (int id, int event, SURFHANDLE surf);
 	bool LoadPanel (int id);
 	bool LoadVC (int id);
 	bool LoadGenericCockpit ();
+	void MFDMode (int mfd, int mode);
 	void PostCreation();
 	void SetClassCaps (FILEHANDLE cfg);
 	void SetStateEx(const void *status);
@@ -101,6 +105,9 @@ public:
 	void StartAscent();
 	virtual void SetLanderData(LemSettings &ls);
 
+	void PanelSwitchToggled(ToggleSwitch *s);
+	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
+
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc, ph_rcslm0,ph_rcslm1; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
@@ -108,12 +115,16 @@ public:
 
 protected:
 	void RedrawPanel_Thrust (SURFHANDLE surf);
+	void RedrawPanel_XPointer (SURFHANDLE surf);
+	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
+	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
 	void ResetThrusters();
 	void SetRCS(PROPELLANT_HANDLE ph_prop);
 	void AttitudeLaunch1();
 	void SeparateStage (UINT stage);
 	void InitPanel (int panel);
+	void SetSwitches(int panel);
 	void AddRCS_LM(double TRANZ);
 	void AddRCS_LM2(double TRANZ);
 	void AddRCS_LMH(double TRANZ);
@@ -166,6 +177,17 @@ protected:
 	double AtempY ;
 	double AtempR ;
 	double MissionTime;
+
+	// Panel components
+	PanelSwitches MainPanel;
+	PanelSwitchScenarioHandler PSH;
+
+	SwitchRow AbortSwitchesRow;
+
+	PushSwitch AbortSwitch;
+	PushSwitch AbortStageSwitch;
+	bool AbortStageSwitchLight;
+
 
 	//bool bAbort;
 	bool RCS_Full;
@@ -332,8 +354,6 @@ protected:
 
 	bool COASswitch;
 
-	bool Abortswitch;
-
 	bool FirstTimestep;
 
 	bool LAUNCHIND[8];
@@ -374,11 +394,16 @@ protected:
 	DSKY dsky;
 	LEMcomputer agc;
 
+#define LMPANEL_MAIN			0
+#define LMPANEL_RIGHTWINDOW		1
+#define LMPANEL_LEFTWINDOW		2
+#define LMPANEL_LPDWINDOW		3
+
 	bool InVC;
-	bool InPanel; //yogen
-	bool InFOV;  //LazyD
-	int  PanelId; //yogen
-	double SaveFOV; //LazyD
+	bool InPanel;
+	bool InFOV;  
+	int  PanelId; 
+	double SaveFOV;
 
 	SoundLib soundlib;
 

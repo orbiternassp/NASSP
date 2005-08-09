@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -34,6 +37,7 @@
 #include "nasspsound.h"
 
 #include "soundlib.h"
+#include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "dsky.h"

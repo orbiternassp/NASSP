@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/07 19:27:15  lazyd
+  *	No change
+  *	
   *	Revision 1.11  2005/08/06 00:03:48  movieman523
   *	Beginnings of support for AGC I/O channels in LEM.
   *	
@@ -67,6 +70,7 @@
 #include "nasspsound.h"
 
 #include "soundlib.h"
+#include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "dsky.h"
