@@ -290,6 +290,12 @@
 #define IDB_LEM_RIGHT_WINDOW            518
 #define IDB_LEM_LEFT_WINDOW				519
 #define AID_SBAND_NORMAL_SWITCHES		520
+#define IDB_LMABORTBUTTON				521
+#define IDB_LMMFDFRAME					522
+#define AID_MFDLEFT                     523
+#define AID_MFDRIGHT                    524
+#define IDB_LEM_LPD_WINDOW              525
+
 
 // Next default values for new objects
 //
