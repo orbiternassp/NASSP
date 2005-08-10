@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/09 09:14:31  tschachim
+  *	Introduced toggleswitch lib
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -41,6 +44,7 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "dsky.h"
+#include "IMU.h"
 
 #include "landervessel.h"
 #include "sat5_lmpkd.h"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/10 20:00:55  spacex15
+  *	Activated 3 position lem eng arm switch
+  *	
   *	Revision 1.23  2005/08/09 09:23:26  tschachim
   *	Introduced toggleswitch lib
   *	Added MFDs
@@ -110,6 +113,7 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "dsky.h"
+#include "IMU.h"
 
 #include "landervessel.h"
 #include "sat5_lmpkd.h"
@@ -155,7 +159,7 @@ LanderVessel::LanderVessel(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel)
 	// Nothing special to do.
 }
 
-sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel), dsky(soundlib, agc), agc(soundlib, dsky)
+sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel), dsky(soundlib, agc), agc(soundlib, dsky, imu), imu(agc)
 
 {
 	// VESSELSOUND **********************************************************************
@@ -169,7 +173,6 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel), dsky
 sat5_lmpkd::~sat5_lmpkd()
 
 {
-
     sevent.Stop();
 	sevent.Done();
 }
@@ -226,6 +229,7 @@ void sat5_lmpkd::Init()
 	SwitchFocusToLeva = 0;
 
 	agc.ControlVessel(this);
+	imu.SetVessel(this);
 
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
@@ -543,7 +547,8 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 
 	agc.Timestep(MissionTime);
 	dsky.Timestep(MissionTime);
-	
+	imu.Timestep(MissionTime);
+
 	actualVEL = (sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z)/1000*3600);
 	actualALT = GetAltitude() ;
 	if (actualALT < 1470){
@@ -898,6 +903,9 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
 			agc.LoadState(scn);
 		}
+		else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
+			imu.LoadState(scn);
+		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
 		} 
@@ -993,6 +1001,7 @@ void sat5_lmpkd::SaveState (FILEHANDLE scn)
 
 	dsky.SaveState(scn);
 	agc.SaveState(scn);
+	imu.SaveState(scn);
 	// save the state of the switches
 	PSH.SaveState(scn);	
 }

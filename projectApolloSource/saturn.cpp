@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/08/09 02:28:27  movieman523
+  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
+  *	
   *	Revision 1.27  2005/08/08 20:32:58  movieman523
   *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
   *	
@@ -123,12 +126,13 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "IMU.h"
 
 #include "saturn.h"
 
 //extern FILE *PanelsdkLogFile;
 
-Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky), dsky(soundlib, agc)
+Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, imu), dsky(soundlib, agc), imu(agc)
 
 {
 	InitSaturnCalled = false;
@@ -282,6 +286,7 @@ void Saturn::initSaturn()
 	//
 
 	agc.ControlVessel(this);
+	imu.SetVessel(this);
 	dsky.Init();
 
 	//
@@ -755,6 +760,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	dsky.SaveState(scn);
 	agc.SaveState(scn);
+	imu.SaveState(scn);
 
 	// save the internal systems 
 	oapiWriteScenario_int (scn, "SYSTEMSSTATE", systemsState);
@@ -1226,6 +1232,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
 			agc.LoadState(scn);
+		}
+		else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
+			imu.LoadState(scn);
 		}
 		else if (!strnicmp (line, "SYSTEMSSTATE", 12)) {
 			sscanf (line + 12, "%d", &systemsState);

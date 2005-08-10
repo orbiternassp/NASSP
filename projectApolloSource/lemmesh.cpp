@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/10 20:00:55  spacex15
+  *	Activated 3 position lem eng arm switch
+  *	
   *	Revision 1.13  2005/08/09 09:16:22  tschachim
   *	Introduced toggleswitch lib
   *	
@@ -77,6 +80,7 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "dsky.h"
+#include "IMU.h"
 
 #include "landervessel.h"
 #include "sat5_lmpkd.h"

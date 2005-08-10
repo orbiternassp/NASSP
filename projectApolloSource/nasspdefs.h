@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/10 20:00:55  spacex15
+  *	Activated 3 position lem eng arm switch
+  *	
   *	Revision 1.19  2005/08/09 09:18:24  tschachim
   *	New SRF constants
   *	
@@ -155,6 +158,8 @@ const double PSI   = 0.000145038;			// Pa to PSI
 const double MMHG  = 0.00750064;			// Pa to mmHg
 const double INH2O = 0.00401474;			// Pa to in H2O
 const double LBH   = 7.93665;				// g/s to lb/h
+
+const double TWO_PI= (PI * 2);
 
 inline double KelvinToFahrenheit(double kelvin) {
 	return kelvin * 1.8 - 459.67;

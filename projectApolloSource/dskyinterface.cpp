@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/09 02:28:26  movieman523
+  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
+  *	
   *	Revision 1.2  2005/08/08 22:32:49  movieman523
   *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
   *	
@@ -950,6 +953,11 @@ void ApolloGuidance::UpdateR1()
 	v.Bits.c = CharValue(RegStr[4]);
 	v.Bits.d = CharValue(RegStr[5]);
 	SetOutputChannel(010, v.Value);
+
+	//
+	// Reset to zero at the end for safety.
+	//
+	SetOutputChannel(010, 0);
 }
 
 void ApolloGuidance::UpdateR2()
@@ -995,6 +1003,10 @@ void ApolloGuidance::UpdateR2()
 	v.Bits.d = CharValue(R3Str[1]);
 	SetOutputChannel(010, v.Value);
 
+	//
+	// Reset to zero at the end for safety.
+	//
+	SetOutputChannel(010, 0);
 }
 
 void ApolloGuidance::UpdateR3()
@@ -1039,6 +1051,11 @@ void ApolloGuidance::UpdateR3()
 	v.Bits.c = CharValue(RegStr[4]);
 	v.Bits.d = CharValue(RegStr[5]);
 	SetOutputChannel(010, v.Value);
+
+	//
+	// Reset to zero at the end for safety.
+	//
+	SetOutputChannel(010, 0);
 }
 
 void ApolloGuidance::UpdateProg()
@@ -1054,6 +1071,11 @@ void ApolloGuidance::UpdateProg()
 	v.Bits.d = CharValue(RegStr[1]);
 
 	SetOutputChannel(010, v.Value);
+
+	//
+	// Reset to zero at the end for safety.
+	//
+	SetOutputChannel(010, 0);
 }
 
 void ApolloGuidance::UpdateVerb()
@@ -1072,6 +1094,11 @@ void ApolloGuidance::UpdateVerb()
 	v.Bits.d = CharValue(RegStr[1]);
 
 	SetOutputChannel(010, v.Value);
+
+	//
+	// Reset to zero at the end for safety.
+	//
+	SetOutputChannel(010, 0);
 }
 
 void ApolloGuidance::UpdateNoun()
@@ -1090,6 +1117,11 @@ void ApolloGuidance::UpdateNoun()
 	v.Bits.d = CharValue(RegStr[1]);
 
 	SetOutputChannel(010, v.Value);
+
+	//
+	// Reset to zero at the end for safety.
+	//
+	SetOutputChannel(010, 0);
 }
 
 void ApolloGuidance::DoSetR1(int val, bool decimal)
@@ -1167,11 +1199,9 @@ void ApolloGuidance::SetR3Octal(int val)
 void ApolloGuidance::SetProg(int val)
 
 {
-	if (KBCheck()) {
-		Prog = val;
-		ProgBlanked = false;
-		UpdateProg();
-	}
+	Prog = val;
+	ProgBlanked = false;
+	UpdateProg();
 }
 
 void ApolloGuidance::SetVerb(int val)

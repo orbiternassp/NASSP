@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/09 09:24:34  tschachim
+  *	Introduced toggleswitch lib
+  *	
   *	Revision 1.4  2005/08/09 02:28:26  movieman523
   *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
   *	
@@ -49,6 +52,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "lemcomputer.h"
+#include "IMU.h"
 
 #include "sat5_lmpkd.h"
 

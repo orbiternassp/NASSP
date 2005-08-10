@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/08/08 20:33:00  movieman523
+  *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
+  *	
   *	Revision 1.27  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -166,6 +169,8 @@ public:
 
 	// called by crawler after arrival on launch pad
 	virtual void LaunchVesselRolloutEnd() {};
+
+	int GetStage() { return stage; };
 
 protected:
 
@@ -950,6 +955,7 @@ protected:
 
 	DSKY dsky;
 	CSMcomputer agc;
+	IMU imu;
 
 	//
 	// Vessel handles.

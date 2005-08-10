@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/08/09 02:28:25  movieman523
+  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
+  *	
   *	Revision 1.5  2005/08/08 22:32:49  movieman523
   *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
   *	
@@ -51,13 +54,14 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "IMU.h"
 
 #include "toggleswitch.h"
 #include "saturn.h"
 
 static const double ERADIUS2 = (ERADIUS * ERADIUS * 1000000);
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display) : ApolloGuidance(s, display)
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s, display, im)
 
 {
 	BurnTime = 0;

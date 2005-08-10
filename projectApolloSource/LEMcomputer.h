@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/10 21:19:44  lazyd
+  *	Changed arguments for OrientAxis
+  *	
   *	Revision 1.12  2005/08/06 00:03:48  movieman523
   *	Beginnings of support for AGC I/O channels in LEM.
   *	
@@ -137,7 +140,7 @@ class LEMcomputer: public ApolloGuidance
 {
 public:
 
-	LEMcomputer(SoundLib &s, DSKY &display);
+	LEMcomputer(SoundLib &s, DSKY &display, IMU &im);
 	virtual ~LEMcomputer();
 
 	bool ValidateVerbNoun(int verb, int noun);
