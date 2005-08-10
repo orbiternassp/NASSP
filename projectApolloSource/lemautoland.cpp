@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/08/10 20:00:55  spacex15
+  *	Activated 3 position lem eng arm switch
+  *	
   *	Revision 1.21  2005/08/09 09:25:18  tschachim
   *	Introduced toggleswitch lib
   *	
@@ -150,11 +153,11 @@ void LEMcomputer::Prog63(double simt)
 	const double GRAVITY=6.67259e-11;
 	int nit;
 	VECTOR3 vel, actatt, tgtatt, relpos, relvel, plvec, vnorm, zerogl, xgl, ygl, zgl, 
-		upproj, lrproj, position, velocity, acc, rhi, vhi, ahi;
+		upproj, lrproj, position, velocity, acc, rhi, vhi, ahi, accvec;
 	double vlat, vlon, vrad, prograde, dlat, dlon, aa, cc, sbdis, tbrg, cbrg, rbrg, hvel,
 		blat, blon, tgo, centrip, grav, cthrust, accx, acctot, vmass, vthrust, pdidis, 
 		maxacc, down, ttg, ttg2, ttg3, ttg4, ttgl, ttgl2, dtg, jfz, heading, maxthr, 
-		locr, hicr, braktim;
+		locr, hicr, braktim, sgn;
 	// go through guidance calcs every 2 seconds
 //	tgo=-540.0-(BurnStartTime-simt);
 	if(simt > NextEventTime) {
@@ -244,6 +247,7 @@ void LEMcomputer::Prog63(double simt)
 			DesiredDeltaV=(-sin(rbrg)*sbdis)/100.;
 		}
 		if(ProgState > 4) {
+			accvec=_V(-1.0, 0.0, 0.0);
 		// now we need to calculate attitude...
 			OurVessel->GetRelativePos(hbody, relpos);
 			OurVessel->GetRelativeVel(hbody, relvel);
@@ -277,6 +281,7 @@ void LEMcomputer::Prog63(double simt)
 			//calculate our actual attitude wrt body frame
 			actatt.x=PI/2.0-asin(upproj.y);
 			actatt.y=down*(-prograde)*asin(lrproj.z);
+//			actatt.y=down*(-prograde)*asin(lrproj.z)*acos(upproj.z);
 			actatt.z=down*prograde*asin(lrproj.y);
 
 			CurrentVelX=-actatt.x*DEG*100.;
@@ -305,8 +310,8 @@ void LEMcomputer::Prog63(double simt)
 				if(ProgState == 15) {
 //					if(tgo > -354.0) OurVessel->SetAttitudeRotLevel(1,0.0); //for old RCS thrust
 					if(tgo > -358.0) OurVessel->SetAttitudeRotLevel(1,0.0);
-					if(tgo > -350.0) {
-						if(fabs(actatt.y) < 0.45) {
+					if(tgo > -352.0) {
+						if(fabs(actatt.y) < 0.25) {
 							ProgState++;
 							ProgFlag02=true;
 							ProgFlag03=true;
@@ -318,7 +323,9 @@ void LEMcomputer::Prog63(double simt)
 					if(tgo > -360) {
 						ProgState++;
 						ProgFlag02=false;
-						OurVessel->SetAttitudeRotLevel(1,-0.5);
+						// roll "the short way" to face-up
+						sgn=lrproj.z/fabs(lrproj.z);
+						OurVessel->SetAttitudeRotLevel(1,0.5*sgn);
 					}
 				}
 // Try this from A15Delco...
@@ -428,13 +435,18 @@ void LEMcomputer::Prog63(double simt)
 					//face up...
 					if(ProgState >= 16) tgtatt.x=(PI/2.0-atan(acc.y/acc.x)*(fabs(acc.x)/acc.x));
 				}
+				accvec=Normalize(acc);
 				tgtatt.y=0.0;
 				OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
 //				sprintf(oapiDebugString(),
 //					"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f tgo=%.1f",
 //					acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60.);
 			}
-			if(ProgFlag02) ComAttitude(actatt, tgtatt, ProgFlag03);
+			if(ProgState < 15) {
+				OrientAxis(accvec, 1, 1);
+			} else {
+				if(ProgFlag02) ComAttitude(actatt, tgtatt, ProgFlag03);
+			}
 
 			int current_mode=0;
 			double timetoignition=0;
@@ -1266,7 +1278,7 @@ void LEMcomputer::Prog41(double simt)
 			dvdir.x=DesiredDeltaVx;
 			dvdir.y=DesiredDeltaVy;
 			dvdir.z=DesiredDeltaVz;
-			OrientAxis(dvdir, 1);
+			OrientAxis(dvdir, 1, 0);
 		}
 //		if(ProgFlag01 == false) sprintf(oapiDebugString(),"P41 burn=%.1f end=%.1f lvl=%.1f",
 //			BurnStartTime-simt, BurnEndTime-simt, DesiredPlaneChange);
@@ -1381,7 +1393,7 @@ void LEMcomputer::Prog42(double simt)
 			dvdir.x=DesiredDeltaVx;
 			dvdir.y=DesiredDeltaVy;
 			dvdir.z=DesiredDeltaVz;
-			OrientAxis(dvdir, 1);
+			OrientAxis(dvdir, 1, 0);
 		}
 //		if(ProgFlag01 == false) sprintf(oapiDebugString(),"P41 burn=%.1f end=%.1f lvl=%.1f",
 //			BurnStartTime-simt, BurnEndTime-simt, DesiredPlaneChange);
@@ -1453,7 +1465,7 @@ void LEMcomputer::Prog42(double simt)
 
 }
 
-void LEMcomputer::OrientAxis(VECTOR3 &vec, int axis)
+void LEMcomputer::OrientAxis(VECTOR3 &vec, int axis, int ref)
 {
 	//axis=0=x, 1=y, 2=z
 	//orients a vessel axis with a body-relative normalized vector
@@ -1467,7 +1479,8 @@ void LEMcomputer::OrientAxis(VECTOR3 &vec, int axis)
 	const double RATE_FINE = RAD*(0.005);
 	const double RATE_NULL = RAD*(0.0001);
 
-	VECTOR3 PMI, Level, Drate, delatt, Rate, zerogl, xgl, ygl, zgl, norm;
+	VECTOR3 PMI, Level, Drate, delatt, Rate, zerogl, xgl, ygl, zgl, norm, pos, vel, up,
+		left, forward;
 	double Mass, Size, MaxThrust, Thrust, Rdead, factor, xa, ya, za;
 
 	VESSELSTATUS status2;
@@ -1487,6 +1500,19 @@ void LEMcomputer::OrientAxis(VECTOR3 &vec, int axis)
 	ygl=ygl-zerogl;
 	zgl=zgl-zerogl;
 	norm=Normalize(vec);
+	if(ref == 1) {
+		// vec is in local vertical reference, change to body rel coords
+		// vec.x=forward component
+		// vec.y=up component
+		// vec.z=left component
+		OBJHANDLE hbody=OurVessel->GetGravityRef();
+		OurVessel->GetRelativePos(hbody, pos);
+		OurVessel->GetRelativeVel(hbody, vel);
+		up=Normalize(pos);
+		left=Normalize(CrossProduct(pos, vel));
+		forward=CrossProduct(left, up);
+		norm=forward*vec.x+up*vec.y+left*vec.z;		
+	}
 	if(axis == 0) {
 		xa=acos(norm*xgl);
 		ya=asin(norm*ygl);
@@ -1860,7 +1886,7 @@ void LEMcomputer::AbortAscent(double simt)
 	static VECTOR3 zloc={0.0, 0.0, 1.0};
 	const double GRAVITY=6.67259e-11;
 	VECTOR3 csmpos, csmvel, csmnor, lmpos, lmvel, lmcsm, hvel, csmhvel, actatt, tgtatt,
-		vec1, vec2, acc, lmnor, zerogl, ygl, zgl, lmdown;
+		vec1, vec2, acc, lmnor, zerogl, ygl, zgl, lmdown, accvec;
 	double crossrange, distance, delta, fuelflow, heading, Mass, totvel, altitude,
 		tgo, velexh, veltbg, cbrg, phase, tau, A, B, C, D, D12, D21, E, L, crossvel,
 		centrip, grav, acctot, vthrust, velo;
@@ -1976,6 +2002,7 @@ void LEMcomputer::AbortAscent(double simt)
 			acc.z=1.0*(acc.z/fabs(acc.z));
 		}
 		acc.x=sqrt(acctot*acctot-acc.y*acc.y-acc.z*acc.z);
+		accvec=Normalize(acc);
 		TargetPitch=atan(acc.y/acc.x)-PI/2.0;
 //		fprintf(outstr,"acc=%.3f %.3f %.3f cvel=%.3f\n",acc, crossvel);
 
@@ -2035,7 +2062,13 @@ void LEMcomputer::AbortAscent(double simt)
 			// for large pitch changes, make sure we pitch keeping thrust 
 			// in the UP direction...
 			if((actatt.x-tgtatt.x) > 20.0*RAD ) tgtatt.x=actatt.x-20.0*RAD;
-			ComAttitude(actatt, tgtatt, false);
+//			if(totvel < 100.0) {
+				ComAttitude(actatt, tgtatt, false);
+//			} else {
+//				accvec.z=-accvec.z;
+//				OrientAxis(accvec, 1, 1);
+//				sprintf(oapiDebugString(),"acc=%.3f %.3f %.3f", accvec);
+//			}
 //			fprintf(outstr, "tgt=%.3f %.3f %.3f act=%.3f %.3f %.3f \n",
 //				tgtatt*DEG, actatt*DEG);
 		}
@@ -2133,7 +2166,7 @@ void LEMcomputer::Prog32(double simt)
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			OurVessel->GetRelativePos(hbody, lmpos);
 			vec=Normalize(csmpos-lmpos);
-			OrientAxis(vec, 2);
+			OrientAxis(vec, 2, 0);
 //			sprintf(oapiDebugString(), "CSI time=%.1f", BurnStartTime-simt);
 			if(BurnStartTime-simt < 120.0)	{
 				DesiredLAN=33;
@@ -2270,7 +2303,7 @@ void LEMcomputer::Prog33(double simt)
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			OurVessel->GetRelativePos(hbody, lmpos);
 			vec=Normalize(csmpos-lmpos);
-			OrientAxis(vec, 2);
+			OrientAxis(vec, 2, 0);
 //			sprintf(oapiDebugString(), "CDH start: %.1f end: %.1f lvl: %.1f", 
 //				BurnStartTime-simt, BurnEndTime-simt, DesiredPlaneChange);
 //			sprintf(oapiDebugString(), "vec=%.3f %.3f %.3f State=%d sim=%.1f cdh=%.1f", 
@@ -2565,7 +2598,7 @@ void LEMcomputer::Prog34(double simt)
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			OurVessel->GetRelativePos(hbody, lmpos);
 			vec=Normalize(csmpos-lmpos);
-			OrientAxis(vec, 2);
+			OrientAxis(vec, 2, 0);
 		}
 //		sprintf(oapiDebugString(), "TPI time: %.1f", BurnStartTime-simt);
 		if(simt > BurnStartTime-120.0) {
@@ -2690,7 +2723,7 @@ void LEMcomputer::Prog35(double simt)
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			OurVessel->GetRelativePos(hbody, lmpos);
 			vec=Normalize(csmpos-lmpos);
-			OrientAxis(vec, 2);
+			OrientAxis(vec, 2, 0);
 //			sprintf(oapiDebugString(), "TPM time=%.1f", BurnStartTime-simt);
 			if(BurnStartTime-simt < 120.0)	{
 				RunProgram(41);
@@ -2831,7 +2864,7 @@ void LEMcomputer::Prog36(double simt)
 //					rlcl, vlcl, level);
 			}
 			if(ProgState == 2) axis=1;
-			OrientAxis(vec, axis);
+			OrientAxis(vec, axis, 0);
 			if(axis == 1) {
 				if(simt > BurnTime) {
 					ProgFlag01=true;
