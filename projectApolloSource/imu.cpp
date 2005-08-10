@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -56,9 +59,9 @@ IMU::~IMU()
 void IMU::Init() 
 
 {
-	Operate = 0;
-	TurnedOn = 0;
-	Initialized = 0;
+	Operate = false;
+	TurnedOn = false;
+	Initialized = false;
 	
 	RemainingPIPA.X = 0;
 	RemainingPIPA.Y = 0;
@@ -104,7 +107,7 @@ void IMU::TurnOn()
 	if (!Operate) {
 		agc.SetInputChannelBit(030, 9, true);
 		agc.SetInputChannelBit(030, 14, true);
-		Operate = 1;
+		Operate = true;
 	}
 }
 
@@ -115,9 +118,9 @@ void IMU::TurnOff()
 		agc.SetInputChannelBit(030, 9, false);
 		agc.SetInputChannelBit(030, 14, false);
 
-		Operate = 0;
-		TurnedOn = 0;
-		Initialized = 0;
+		Operate = false;
+		TurnedOn = false;
+		Initialized = false;
 	}
 }
 
@@ -140,7 +143,7 @@ void IMU::ChannelOutput(int address, int value)
 		if (val12.Bits.ISSTurnOnDelayComplete) 
 		{
 			agc.SetOutputChannelBit(030, 14, false);
-			TurnedOn = 1;
+			TurnedOn = true;
 		}
     
     	if (val12.Bits.ZeroIMUCDUs) {
@@ -420,7 +423,7 @@ void IMU::Timestep(double simt)
 		Orbiter.LastAttitude.Z = orbiterAttitudeZ;	
 		
 		LastTime = simt;
-		Initialized = 1;
+		Initialized = true;
 	} 
 	else {
 		deltaTime = (simt - LastTime);
@@ -437,7 +440,7 @@ void IMU::Timestep(double simt)
 		val12.Value = agc.GetInputChannel(012);
 		if (val12.Bits.ZeroIMUCDUs) {
 			ZeroIMUCDUs();
-		} 
+		}
 		else if(val12.Bits.CoarseAlignEnable) {
 			SetOrbiterAttitudeReference();
 		} 
@@ -761,9 +764,9 @@ void IMU::LoadState(FILEHANDLE scn)
 			IMUState state;
 			sscanf (line+5, "%d", &state.word);
 
-			Operate = state.u.Operate;
-			Initialized = state.u.Initialized;
-			TurnedOn = state.u.TurnedOn;
+			Operate = (state.u.Operate != 0);
+			Initialized = (state.u.Initialized != 0);
+			TurnedOn = (state.u.TurnedOn != 0);
 		}
 	}
 }
