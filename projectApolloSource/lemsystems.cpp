@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/09 09:19:12  tschachim
+  *	Introduced toggleswitch lib
+  *	
   *	Revision 1.2  2005/08/07 19:28:08  lazyd
   *	Changed LM RCS and ascent parameters to historical
   *	
@@ -1245,7 +1248,7 @@ bool sat5_lmpkd::CabinFansActive()
 bool sat5_lmpkd::AscentEngineArmed()
 
 {
-	return ENGARMswitch && !ASCHE1switch && !ASCHE2switch && ED1switch && ED6switch && ED7switch && ED8switch;
+	return (EngineArmSwitch.IsUp); //&& !ASCHE1switch && !ASCHE2switch && ED1switch && ED6switch && ED7switch && ED8switch;
 }
 
 bool sat5_lmpkd::AscentRCSArmed()

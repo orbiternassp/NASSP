@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/09 09:13:51  tschachim
+  *	Introduced toggleswitch lib
+  *	Added MFDs
+  *	Added new LPD window with X-Pointer
+  *	
   *	Revision 1.18  2005/08/06 00:03:48  movieman523
   *	Beginnings of support for AGC I/O channels in LEM.
   *	
@@ -148,6 +153,8 @@ void sat5_lmpkd::InitPanel() {
 	AbortSwitch.Register     (PSH, "AbortSwitch", false);
 	AbortStageSwitch.Register(PSH, "AbortStageSwitch", false);
 	AbortStageSwitchLight = false;
+
+	EngineArmSwitch.Register(PSH, "EngineArmSwitch", THREEPOSSWITCH_CENTER);
 	
 
 	Cswitch1=false;
@@ -188,7 +195,7 @@ void sat5_lmpkd::InitPanel() {
 	ATT1switch=false;
 	LPswitch4=false;
 	LPswitch5=false;
-	ENGARMswitch=false;
+//	ENGARMswitch=ENGINE_ARMED_NONE;
 	LDGswitch=true;
 
 	DESHE1switch=true;
@@ -556,6 +563,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_DSKY] = oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
 		srf[SRF_LMABORTBUTTON] = oapiCreateSurface (LOADBMP (IDB_LMABORTBUTTON));
 		srf[SRF_LMMFDFRAME] = oapiCreateSurface (LOADBMP (IDB_LMMFDFRAME));
+		srf[SRF_LMTHREEPOSLEVER]= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
 		
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
@@ -566,6 +574,8 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[16], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[18], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMABORTBUTTON], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSLEVER],		g_Param.col[4]);
+
 		break;
 	
 	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
@@ -644,7 +654,10 @@ bool sat5_lmpkd::LoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MFDLEFT,						    _R(  27, 1564,  452, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDRIGHT,					    _R(1032, 1564, 1457, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ABORT,							_R( 549,  870,  702,  942), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea (AID_ENG_ARM,						_R( 163,  1078,  205,  1118), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+
+
+
 		// DSKY		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,					_R( 762, 1560,  867, 1736), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,						_R( 618, 1565,  720, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
@@ -777,9 +790,14 @@ void sat5_lmpkd::SetSwitches(int panel) {
 	AbortSwitchesRow.Init(AID_ABORT, MainPanel);
 	AbortSwitch.Init     ( 0, 0, 72, 72, srf[SRF_LMABORTBUTTON], AbortSwitchesRow, 0, 64);
 	AbortStageSwitch.Init(78, 4, 75, 64, srf[SRF_LMABORTBUTTON], AbortSwitchesRow);
+
+	EngineArmSwitchesRow.Init(AID_ENG_ARM,MainPanel);
+	EngineArmSwitch.Init (0, 0, 42, 40, srf[SRF_LMTHREEPOSLEVER], EngineArmSwitchesRow);
+
 }
 
 void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
+
 
 	if (s == &AbortSwitch) {
 		// This is the "ABORT" button
@@ -805,8 +823,11 @@ void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
 			SetEngineLevel(ENGINE_HOVER, 1);
 			agc.SetInputChannelBit(030, 4, true);
 		}
-	}
+	} else if (s == &EngineArmSwitch) {
+       // nothing for now
+    }
 }
+
 
 void sat5_lmpkd::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
@@ -927,7 +948,7 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 			}
 		}
 		return true;
-
+/*
 	case AID_ENG_ARM:
 		if (my >=0 && my <=16 ){
 			if (mx > 0 && mx < 23 && !ENGARMswitch){
@@ -941,7 +962,7 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 			}
 		}
 		return true;
-
+*/
 	case AID_LGC_THRUSTER_QUADS:
 		if (my >=35 && my <=47 ){
 			if (mx > 1 && mx < 25 && !QUAD1switch){
@@ -1959,7 +1980,7 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf) {
 			oapiBlt(surf,srf[13],46,0,38,0,19,20);
 		}
 		return true;
-
+/*
 	case AID_ENG_ARM:
 		if(ENGARMswitch){
 			oapiBlt(surf,srf[19],0,0,0,0,23,30);
@@ -1972,7 +1993,7 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf) {
 			oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
-
+*/
 	case AID_LGC_THRUSTER_QUADS:
 		if(QUAD1switch){
 			oapiBlt(surf,srf[6],1,36,0,0,23,20);
@@ -2814,7 +2835,7 @@ typedef union {
 		unsigned LPswitch4:1;
 		unsigned LPswitch5:1;
 		unsigned GMBLswitch:1;
-		unsigned ENGARMswitch:1;
+		unsigned dummy:1;
 		unsigned LDGswitch:1;
 		unsigned QUAD1switch:1;
 		unsigned QUAD2switch:1;
@@ -2854,7 +2875,7 @@ int sat5_lmpkd::GetLPSwitchState()
 	state.u.LPswitch4 = LPswitch4;
 	state.u.LPswitch5 = LPswitch5;
 	state.u.GMBLswitch = GMBLswitch;
-	state.u.ENGARMswitch = ENGARMswitch;
+//	state.u.ENGARMswitch = ENGARMswitch;
 	state.u.LDGswitch = LDGswitch;
 	state.u.QUAD1switch = QUAD1switch;
 	state.u.QUAD2switch = QUAD2switch;
@@ -2894,7 +2915,7 @@ void sat5_lmpkd::SetLPSwitchState(int s)
 	LPswitch4 = state.u.LPswitch4;
 	LPswitch5 = state.u.LPswitch5;
 	GMBLswitch = state.u.GMBLswitch;
-	ENGARMswitch = state.u.ENGARMswitch;
+//	ENGARMswitch = state.u.ENGARMswitch;
 	LDGswitch = state.u.LDGswitch;
 	QUAD1switch = state.u.QUAD1switch;
 	QUAD2switch = state.u.QUAD2switch;

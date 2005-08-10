@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by Resources.rc
+// Used by LEMResources.rc
 //
 #define AID_HORIZON                     11
 #define AID_HORIZON2                    12
@@ -11,7 +11,6 @@
 #define AID_SWITCH_PANEL_RIGHT          23
 #define AID_SWITCH_PANEL_LEFT           24
 #define AID_GAUGES_CENTER               25
-//#define AID_LIGHTS_LAUNCHER             26
 #define AID_ALTIMETER                   27
 #define AID_GMETER                      28
 #define AID_THRUSTMETER                 29
@@ -51,7 +50,7 @@
 #define AID_FCSM_SWITCH                 71
 #define AID_P19                         72
 #define AID_DIRECT_ULLAGE_THRUST_ON_LIGHT 73
-#define AID_LV_ENGINE_LIGHTS			74
+#define AID_LV_ENGINE_LIGHTS            74
 #define AID_LV_TANK_GAUGES              75
 #define AID_GDC_BUTTON                  76
 #define AID_EMS                         77
@@ -63,9 +62,8 @@
 #define AID_LV_STAGE_SWITCH             83
 #define AID_DOCKING_PROBE_SWITCH        84
 #define AID_P21                         85
-#define AID_SEQUENCERSWITCHES	        86
+#define AID_SEQUENCERSWITCHES           86
 #define AID_LEM_POWER_SWITCH            87
-//#define AID_SIVB_LEM_SEP_SWITCH         88
 #define AID_SMRCS_HELIUM1_SWITCHES      89
 #define AID_P22                         90
 #define AID_P23                         91
@@ -94,12 +92,9 @@
 #define IDB_VYAW                        156
 #define IDB_LEVER1                      157
 #define AID_PILOT1                      158
-//#define AID_INDICATOR1                  159
 #define AID_GAUGES1                     160
 #define AID_VELOCITY1                   161
-//#define AID_INDICATOR2                  162
 #define IDB_ROT_KNOB                    163
-//#define IDB_INDICATORS1                 164
 #define IDB_NEEDLE                      165
 #define IDB_DIGITAL                     166
 #define IDB_HORIZON2                    170
@@ -127,7 +122,6 @@
 #define IDB_DSKY_LIGHTS                 205
 #define IDB_DSKY_NUMBERS                206
 #define IDB_ILMPANEL                    207
-//#define IDB_ILMINDICATORS1              208
 #define IDB_ILMSWLEVER                  209
 #define IDB_ILMSECSWITCH                210
 #define IDB_ILM_LV_ENG                  211
@@ -175,7 +169,8 @@
 #define IDB_MAINPANEL_LEFT              278
 #define IDB_MAINPANEL_RIGHT             279
 #define IDB_ROTATIONALSWITCH            280
-#define IDB_SWITCHGUARDS				281
+#define IDB_SWITCHGUARDS                281
+#define IDB_LMTHREEPOSLEVER             287
 #define AID_FUEL_DIGITD                 301
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
@@ -204,7 +199,6 @@
 #define AID_SPS_LIGHT                   421
 #define AID_SPS_INJ_VLV                 422
 #define AID_AUTO_LIGHT                  423
-//#define AID_CMRCS_HE_DUMP_SWITCH        424
 #define AID_BUS_LIGHT                   425
 #define AID_CABIN_LIGHT                 426
 #define AID_CABININDICATORS             427
@@ -261,47 +255,46 @@
 #define AID_EMS_DISPLAY                 483
 #define AID_MFDDOCK                     484
 #define AID_MFDDOCK_POWER               485
-#define AID_RCS_INDICATORS				486
-#define IDB_CSM_MAIN_PANEL				487
-#define IDB_CSM_LEFT_PANEL				488
-#define IDB_CSM_RIGHT_PANEL				489
-#define IDB_CSM_LEFT_RNDZ_WINDOW		490
-#define IDB_CSM_RIGHT_RNDZ_WINDOW		491
-#define IDB_CSM_HATCH_WINDOW			492
-#define IDB_CSM_LOWER_PANEL				493
-#define AID_CYROTANKINDICATORS		    494
-#define IDB_NEEDLE1						495
+#define AID_RCS_INDICATORS              486
+#define IDB_CSM_MAIN_PANEL              487
+#define IDB_CSM_LEFT_PANEL              488
+#define IDB_CSM_RIGHT_PANEL             489
+#define IDB_CSM_LEFT_RNDZ_WINDOW        490
+#define IDB_CSM_RIGHT_RNDZ_WINDOW       491
+#define IDB_CSM_HATCH_WINDOW            492
+#define IDB_CSM_LOWER_PANEL             493
+#define AID_CYROTANKINDICATORS          494
+#define IDB_NEEDLE1                     495
 #define AID_FUELCELLREACTANTSINDICATORS 502
-#define AID_FUELCELLINDICATORS			503
-#define AID_FUELCELLINDICATORSSWITCH	504
-#define AID_FUELCELLHEATERSSWITCHES 	505
+#define AID_FUELCELLINDICATORS          503
+#define AID_FUELCELLINDICATORSSWITCH    504
+#define AID_FUELCELLHEATERSSWITCHES     505
 #define AID_FUELCELLRADIATORSSWITCHES   506
-#define AID_FUELCELLPHRADTEMPINDICATORS	507
-#define AID_SEPARATIONSWITCHES			508
-#define AID_XPOINTER					509
-#define AID_SUITCABINDELTAPMETER		510
-#define IDB_SUITCABINDELTAPMETER		511
-#define AID_SUITCOMPRDELTAPMETER		512
-#define AID_FUELCELLPURGESWITCHES		513
-#define AID_FUELCELLLATCHSWITCHES		514
-#define AID_FUELCELLPUMPSSWITCHES		515
+#define AID_FUELCELLPHRADTEMPINDICATORS 507
+#define AID_SEPARATIONSWITCHES          508
+#define AID_XPOINTER                    509
+#define AID_SUITCABINDELTAPMETER        510
+#define IDB_SUITCABINDELTAPMETER        511
+#define AID_SUITCOMPRDELTAPMETER        512
+#define AID_FUELCELLPURGESWITCHES       513
+#define AID_FUELCELLLATCHSWITCHES       514
+#define AID_FUELCELLPUMPSSWITCHES       515
 #define IDB_THREEPOSSWITCH305           516
 #define AID_SUITCOMPRESSORSWITCHES      517
 #define IDB_LEM_RIGHT_WINDOW            518
-#define IDB_LEM_LEFT_WINDOW				519
-#define AID_SBAND_NORMAL_SWITCHES		520
-#define IDB_LMABORTBUTTON				521
-#define IDB_LMMFDFRAME					522
+#define IDB_LEM_LEFT_WINDOW             519
+#define AID_SBAND_NORMAL_SWITCHES       520
+#define IDB_LMABORTBUTTON               521
+#define IDB_LMMFDFRAME                  522
 #define AID_MFDLEFT                     523
 #define AID_MFDRIGHT                    524
 #define IDB_LEM_LPD_WINDOW              525
 
-
 // Next default values for new objects
-//
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        282
+#define _APS_NEXT_RESOURCE_VALUE        288
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           10001

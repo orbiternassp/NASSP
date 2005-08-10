@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/09 09:17:29  tschachim
+  *	Introduced toggleswitch lib
+  *	
   *	Revision 1.11  2005/08/06 01:25:27  movieman523
   *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
   *	
@@ -148,6 +151,7 @@ protected:
 	bool AscentEngineArmed();
 	bool AscentRCSArmed();
 
+
 	//
 	// Save/Load support functions.
 	//
@@ -187,6 +191,9 @@ protected:
 	PushSwitch AbortSwitch;
 	PushSwitch AbortStageSwitch;
 	bool AbortStageSwitchLight;
+
+	SwitchRow EngineArmSwitchesRow;
+	ThreePosSwitch EngineArmSwitch;
 
 
 	//bool bAbort;
@@ -246,7 +253,8 @@ protected:
 	bool DESHE1switch;
 	bool DESHE2switch;
 
-	bool ENGARMswitch;
+//	int ENGARMswitch;
+	
 
 	bool QUAD1switch;
 	bool QUAD2switch;
