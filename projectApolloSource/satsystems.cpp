@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.10  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -110,14 +113,13 @@ void Saturn::SystemsTimestep(double simt) {
 
 		dsky.Timestep(MissionTime);
 		agc.Timestep(MissionTime);
-
+		imu.Timestep(MissionTime);
 
 		// Each timestep is passed to the SPSDK
 		// to perform internal computations on the 
 		// systems.
 
 		Panelsdk.Timestep(simt);
-
 
 		//
 		// Systems state handling

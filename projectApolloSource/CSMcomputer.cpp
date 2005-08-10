@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.6  2005/08/09 02:28:25  movieman523
   *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
   *	
@@ -365,16 +368,30 @@ void CSMcomputer::Prog01(double simt)
 		}
 
 		LightNoAtt();
+		imu.TurnOn();
 		NextProgTime = simt + 2.0;
 		ProgState++;
 		break;
 
 	case 1:
-		if (simt < NextProgTime)
-			return;
+		if (simt >= NextProgTime) {
+			SetOutputChannelBit(012, 5, true);
+			SetOutputChannelBit(012, 5, false);
+			SetOutputChannelBit(012, 15, true);
+			NextProgTime = simt + 1.0;
+			ProgState++;
+		}
+		break;
 
-		ClearNoAtt();
-		RunProgram(2);
+	case 2:
+		if (simt >= NextProgTime) {
+			if (GetInputChannelBit(030, 9)) {
+				ClearNoAtt();
+				RunProgram(2);
+			}
+			else 
+				NextProgTime = simt + 1.0;
+		}
 		break;
 	}
 }

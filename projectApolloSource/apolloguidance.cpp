@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.18  2005/08/09 13:05:07  spacex15
   *	fixed some initialization bugs in dsky and apolloguidance
   *	
@@ -2352,6 +2355,11 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 	case 010:
 		ProcessChannel10();
 		break;
+
+	case 012:
+	case 014:
+		imu.ChannelOutput(channel, val);
+		break;
 	}
 }
 
@@ -2382,6 +2390,11 @@ void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 
 	case 011:
 		ProcessChannel11(bit, val);
+		break;
+
+	case 012:
+	case 014:
+		imu.ChannelOutput(channel, OutputChannel[channel]);
 		break;
 	}
 }
