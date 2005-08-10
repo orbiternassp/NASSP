@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/09 09:16:22  tschachim
+  *	Introduced toggleswitch lib
+  *	
   *	Revision 1.12  2005/08/07 19:27:15  lazyd
   *	No change
   *	
@@ -422,7 +425,7 @@ void sat5_lmpkd::SeparateStage (UINT stage)
 		hdsc = oapiCreateVessel(VName,"sat5LMDSC",vs1);
 
 		SetLmAscentHoverStage();
-		ENGARMswitch=true;
+//		ENGARMswitch=ENGINE_ARMED_ASCENT;
 		//vessel->SetEngineLevel(ENGINE_HOVER,1);
 	}
 }

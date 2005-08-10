@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE
+2 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE
+3 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "\r\n"
     "\0"
@@ -99,12 +99,13 @@ IDB_ILMLEMSWITCH3       BITMAP  DISCARDABLE     "ilmswitchup3.bmp"
 IDB_FDAI                BITMAP  DISCARDABLE     "FDAI.bmp"
 IDB_ECSG                BITMAP  DISCARDABLE     "ecs.bmp"
 IDB_ILMECSG             BITMAP  DISCARDABLE     "ilmecs.bmp"
-IDB_LEM_MAIN_PANEL		BITMAP  DISCARDABLE     "lem_main_panel.bmp"
-IDB_LEM_RIGHT_WINDOW	BITMAP  DISCARDABLE     "lem_right_window.bmp"
-IDB_LEM_LEFT_WINDOW		BITMAP  DISCARDABLE     "lem_left_window.bmp"
-IDB_LMABORTBUTTON		BITMAP  DISCARDABLE     "LMAbortButton.bmp"
-IDB_LMMFDFRAME			BITMAP  DISCARDABLE     "LMMFDFrame.bmp"
-IDB_LEM_LPD_WINDOW		BITMAP  DISCARDABLE     "lem_lpd_window.bmp"
+IDB_LEM_MAIN_PANEL      BITMAP  DISCARDABLE     "lem_main_panel.bmp"
+IDB_LEM_RIGHT_WINDOW    BITMAP  DISCARDABLE     "lem_right_window.bmp"
+IDB_LEM_LEFT_WINDOW     BITMAP  DISCARDABLE     "lem_left_window.bmp"
+IDB_LMABORTBUTTON       BITMAP  DISCARDABLE     "LMAbortButton.bmp"
+IDB_LMMFDFRAME          BITMAP  DISCARDABLE     "LMMFDFrame.bmp"
+IDB_LEM_LPD_WINDOW      BITMAP  DISCARDABLE     "lem_lpd_window.bmp"
+IDB_LMTHREEPOSLEVER     BITMAP  DISCARDABLE     "lemswitch3.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 

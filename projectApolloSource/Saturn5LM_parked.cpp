@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/09 09:23:26  tschachim
+  *	Introduced toggleswitch lib
+  *	Added MFDs
+  *	Bugfix soundlib missionpath initialization
+  *	
   *	Revision 1.22  2005/08/09 02:28:25  movieman523
   *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
   *	
@@ -596,7 +601,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		}
 	}
 	if (stage == 0)	{
-		if (ENGARMswitch && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
+		if ((EngineArmSwitch.IsDown())  && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
 			agc.SetInputChannelBit(030, 3, true);
@@ -618,7 +623,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 		else{
 			SetRCS(ph_rcslm1);
 		}
-		if (ENGARMswitch && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
+		if ((EngineArmSwitch.IsDown() )&& !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
 			agc.SetInputChannelBit(030, 3, true);

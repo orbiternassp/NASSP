@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/09 09:25:18  tschachim
+  *	Introduced toggleswitch lib
+  *	
   *	Revision 1.20  2005/08/09 02:28:26  movieman523
   *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
   *	
@@ -1800,6 +1803,13 @@ void LEMcomputer::Prog13Pressed(int R1, int R2, int R3)
 
 void LEMcomputer::Prog70(double simt)
 {
+	SetStatus(simt,
+               -1,
+	            0,
+	            0,
+			   0);
+
+	
 	if(DesiredLAN == 0.0) {
 		// from NASA MSC 69-FM-46
 		double t, vh;
@@ -1818,6 +1828,13 @@ void LEMcomputer::Prog70(double simt)
 }
 void LEMcomputer::Prog71(double simt)
 {
+	SetStatus(simt,
+               -1,
+	            0,
+	            0,
+			   0);
+
+
 	if(DesiredLAN == 0.0) {
 		// from 69-FM-46
 		double t, vh;

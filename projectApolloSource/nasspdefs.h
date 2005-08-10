@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/09 09:18:24  tschachim
+  *	New SRF constants
+  *	
   *	Revision 1.18  2005/08/07 19:32:28  lazyd
   *	Changed ascent parameters to historical
   *	
@@ -123,7 +126,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 32; // number of bitmap handles
+const int nsurf = 33; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -139,6 +142,7 @@ const int nsurf = 32; // number of bitmap handles
 #define SRF_THREEPOSSWITCH305   	29
 #define SRF_LMABORTBUTTON			30
 #define SRF_LMMFDFRAME				31
+#define SRF_LMTHREEPOSLEVER         32
 
 //
 // Earth radius and gravity constants.
