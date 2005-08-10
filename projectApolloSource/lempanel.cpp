@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/10 20:00:55  spacex15
+  *	Activated 3 position lem eng arm switch
+  *	
   *	Revision 1.19  2005/08/09 09:13:51  tschachim
   *	Introduced toggleswitch lib
   *	Added MFDs
@@ -824,7 +827,8 @@ void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
 			agc.SetInputChannelBit(030, 4, true);
 		}
 	} else if (s == &EngineArmSwitch) {
-       // nothing for now
+		    if (!s->IsCenter())
+ 			    agc.SetInputChannelBit(030, 3, true);
     }
 }
 
