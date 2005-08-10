@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.12  2005/08/05 13:05:55  tschachim
   *	Fixed BuildFirstStage
   *	
@@ -76,6 +79,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "lemcomputer.h"
+#include "IMU.h"
 
 #include "landervessel.h"
 #include "saturn.h"

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/10 21:18:59  lazyd
+  *	Changed OrientAxis and P63 now allows any yaw attitude until P64 -360 sec
+  *	
   *	Revision 1.22  2005/08/10 20:00:55  spacex15
   *	Activated 3 position lem eng arm switch
   *	
@@ -105,6 +108,8 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "lemcomputer.h"
+#include "IMU.h"
+
 #include "sat5_lmpkd.h"
 
 #define MAXOFFPLANE	44000

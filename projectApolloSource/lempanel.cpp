@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/10 20:29:49  spacex15
+  *	added Agc input signal when eng arm switch changes
+  *	
   *	Revision 1.20  2005/08/10 20:00:55  spacex15
   *	Activated 3 position lem eng arm switch
   *	
@@ -101,6 +104,7 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
+#include "IMU.h"
 #include "dsky.h"
 
 #include "landervessel.h"

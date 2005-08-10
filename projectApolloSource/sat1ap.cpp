@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/07/30 02:05:47  movieman523
+  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
+  *	
   *	Revision 1.3  2005/07/29 22:44:05  movieman523
   *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
   *	
@@ -49,6 +52,7 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "dsky.h"
+#include "IMU.h"
 
 #include "saturn.h"
 

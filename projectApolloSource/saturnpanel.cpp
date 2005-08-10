@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/08/08 20:33:00  movieman523
+  *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
+  *	
   *	Revision 1.31  2005/08/05 13:14:25  tschachim
   *	Minor fixes
   *	
@@ -143,6 +146,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "IMU.h"
 
 #include "saturn.h"
 

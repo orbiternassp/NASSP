@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/06 01:12:52  movieman523
+  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
+  *	
   *	Revision 1.9  2005/07/31 01:43:12  movieman523
   *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
   *	
@@ -68,6 +71,7 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "dsky.h"
+#include "IMU.h"
 
 #include "saturn.h"
 

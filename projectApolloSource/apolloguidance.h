@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/09 02:28:25  movieman523
+  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
+  *	
   *	Revision 1.12  2005/08/08 22:32:49  movieman523
   *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
   *	
@@ -65,6 +68,7 @@
   **************************************************************************/
 
 class DSKY;
+class IMU;
 
 #include "control.h"
 
@@ -78,7 +82,7 @@ class ApolloGuidance
 
 {
 public:
-	ApolloGuidance(SoundLib &s, DSKY &display);
+	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im);
 	virtual ~ApolloGuidance();
 
 	void RunProgram(int prog);
@@ -154,6 +158,16 @@ public:
 	virtual void SetInputChannel(int channel, unsigned int val);
 	virtual void SetInputChannelBit(int channel, int bit, bool val);
 	virtual void SetOutputChannelBit(int channel, int bit, bool val);
+
+	bool GetInputChannelBit(int channel, int bit);
+	unsigned int GetInputChannel(int channel);
+
+	//
+	// Virtual AGC memory access.
+	//
+
+	int GetErasable(int bank, int address);
+	void SetErasable(int bank, int address, int value);
 
 	//
 	// Generally useful setup.
@@ -236,8 +250,6 @@ protected:
 	void DisplayOrbitCalculations();
 	void UpdateBurnTime(int R1, int R2, int R3);
 	void SetOutputChannel(int channel, unsigned int val);
-	bool GetInputChannelBit(int channel, int bit);
-	unsigned int GetInputChannel(int channel);
 
 	bool Standby;
 	bool Reset;
@@ -250,7 +262,7 @@ protected:
 
 	int Chan10Flags;
 
-	int	Prog;
+	int Prog;
 	bool ProgBlanked;
 	int Verb;
 	bool VerbBlanked;
@@ -375,6 +387,7 @@ protected:
 	bool BurnFlag;
 
 	DSKY &dsky;
+	IMU &imu;
 
 	int ProgRunning;
 	int VerbRunning;
@@ -456,8 +469,8 @@ protected:
 	unsigned int BankSumNum;
 	unsigned int CurrentEMEMAddr;
 
-#define MAX_INPUT_CHANNELS	0100
-#define MAX_OUTPUT_CHANNELS	020
+#define MAX_INPUT_CHANNELS	0200
+#define MAX_OUTPUT_CHANNELS	0200
 
 	unsigned int InputChannel[MAX_INPUT_CHANNELS + 1];
 	unsigned int OutputChannel[MAX_OUTPUT_CHANNELS + 1];

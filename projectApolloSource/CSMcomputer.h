@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/08 21:10:30  movieman523
+  *	Fixed broken TLI program. LastAlt wasn't being set and that screwed up the burn end calculations.
+  *	
   *	Revision 1.3  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -177,7 +180,7 @@ class CSMcomputer: public ApolloGuidance
 {
 public:
 
-	CSMcomputer(SoundLib &s, DSKY &display);
+	CSMcomputer(SoundLib &s, DSKY &display, IMU &im);
 	virtual ~CSMcomputer();
 
 	bool ValidateVerbNoun(int verb, int noun);

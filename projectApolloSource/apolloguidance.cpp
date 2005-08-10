@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/09 13:05:07  spacex15
+  *	fixed some initialization bugs in dsky and apolloguidance
+  *	
   *	Revision 1.17  2005/08/09 02:28:25  movieman523
   *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
   *	
@@ -85,11 +88,12 @@
 #include "nasspdefs.h"
 #include "apolloguidance.h"
 #include "dsky.h"
+#include "IMU.h"
 
 char TwoSpaceTwoFormat[7] = "XXX XX";
 char RegFormat[7] = "XXXXXX";
 
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display) : soundlib(s), dsky(display)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im) : soundlib(s), dsky(display), imu(im)
 
 {
 	ProgRunning = VerbRunning = NounRunning = 0;
@@ -187,6 +191,14 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display) : soundlib(s), dsky(d
 	// Dsky interface.
 	//
 
+	Prog = 0;
+	Verb = 0;
+	Noun = 0;
+
+	R1 = 0;
+	R2 = 0;
+	R3 = 0;
+
 	EnteringVerb = false;
 	EnteringNoun = false;
 	EnteringData = 0;
@@ -252,7 +264,6 @@ void ApolloGuidance::Startup()
 	NounRunning = 37;	// Change program.
 
 	if (KBCheck()) {
-		SetProg(ProgRunning);
 		BlankData();
 		SetVerb(37);
 		SetVerbNounFlashing();
@@ -470,7 +481,6 @@ void ApolloGuidance::ProcessCommonVerbNoun(int verb, int noun)
 
 	case 37:
 		RunProgram(noun);
-		SetProg(ProgRunning);
 		break;
 
 	//
@@ -1866,6 +1876,25 @@ void ApolloGuidance::DisplayEMEM(unsigned int addr)
 }
 
 //
+// Virtual AGC Erasable memory functions.
+//
+// Currenty do nothing.
+//
+
+
+int ApolloGuidance::GetErasable(int bank, int address)
+
+{
+	return 0;
+}
+
+void ApolloGuidance::SetErasable(int bank, int address, int value)
+
+{
+}
+
+
+//
 // PROG pressed.
 //
 
@@ -2098,15 +2127,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			return;
 		if (!strnicmp (line, "PROGSTATE", 9)) {
 			sscanf (line+9, "%d", &ProgState);
-		}
-		else if (!strnicmp (line, "VERB", 4)) {
-			sscanf (line+4, "%d", &VerbRunning);
-		}
-		else if (!strnicmp (line, "NOUN", 4)) {
-			sscanf (line+4, "%d", &NounRunning);
-		}
-		else if (!strnicmp (line, "PROG", 4)) {
-			sscanf (line+4, "%d", &ProgRunning);
 		}
 		else if (!strnicmp (line, "RCOUNT", 6)) {
 			sscanf (line+6, "%d", &ResetCount);

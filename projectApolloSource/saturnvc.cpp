@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/04/22 13:56:14  tschachim
+  *	new panel ids and defines
+  *	
   *	Revision 1.5  2005/04/11 23:49:32  yogenfrutz
   *	once more:corrected docking view position
   *	
@@ -57,6 +60,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "IMU.h"
 
 #include "saturn.h"
 #include "saturnv.h"

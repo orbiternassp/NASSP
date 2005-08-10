@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/01 19:07:47  movieman523
+  *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
+  *	
   *	Revision 1.10  2005/07/31 01:43:13  movieman523
   *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
   *	
@@ -72,6 +75,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "IMU.h"
 
 #include "saturn.h"
 

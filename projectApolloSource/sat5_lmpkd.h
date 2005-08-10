@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/10 20:00:55  spacex15
+  *	Activated 3 position lem eng arm switch
+  *	
   *	Revision 1.12  2005/08/09 09:17:29  tschachim
   *	Introduced toggleswitch lib
   *	
@@ -401,6 +404,7 @@ protected:
 
 	DSKY dsky;
 	LEMcomputer agc;
+	IMU imu;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
