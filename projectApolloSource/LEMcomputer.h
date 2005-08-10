@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/06 00:03:48  movieman523
+  *	Beginnings of support for AGC I/O channels in LEM.
+  *	
   *	Revision 1.11  2005/08/03 10:44:33  spacex15
   *	improved audio landing synchro
   *	
@@ -196,7 +199,7 @@ protected:
 		double Mu, double Time, VECTOR3 &NewPos, VECTOR3 &NewVel, double &NewVelMag);
 	void Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu, 
 						  VECTOR3 &v1, VECTOR3 &v2);
-	void OrientAxis(VECTOR3 &vec, int axis);
+	void OrientAxis(VECTOR3 &vec, int axis, int ref);
 	void OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, double &apo, double &tta, 
 				 double &per, double &ttp);
 	void Prog13Pressed(int R1, int R2, int R3);
