@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/11 01:27:26  movieman523
+  *	Added initial Virtual AGC support.
+  *	
   *	Revision 1.20  2005/08/10 22:31:57  movieman523
   *	IMU is now enabled when running Prog 01.
   *	
@@ -272,7 +275,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	vagc.InputChannel[033] = val33.Value;
 	InputChannel[033] = (val33.Value ^ 077777);
 
-	isFirstTimestep = false;
+	isFirstTimestep = true;
 }
 
 ApolloGuidance::~ApolloGuidance()
@@ -2516,7 +2519,7 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 			//
 
 			if (channel >= 030 && channel <= 034)
-				val = ~val;
+				val ^= 077777;
 			WriteIO(&vagc, channel, val);
 		}
 	}
@@ -2535,8 +2538,15 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 	unsigned int mask = (1 << (bit - 1));
 	int	data = InputChannel[channel];
 
-	if (Yaagc)
+	if (Yaagc) {
 		data = vagc.InputChannel[channel];
+		//
+		// Channels 030-034 are inverted!
+		//
+
+		if (channel >= 030 && channel <= 034)
+			data ^= 077777;
+	}
 
 	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
 		return;
@@ -2548,17 +2558,18 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 		data &= ~mask;
 	}
 
+	InputChannel[channel] = data;
+
 	if (Yaagc) {
 		//
 		// Channels 030-034 are inverted!
 		//
 
 		if (channel >= 030 && channel <= 034)
-			data = ~data;
+			data ^= 077777;
 		WriteIO(&vagc, channel, data);
 	}
 	else {
-		InputChannel[channel] = data;
 		switch (channel) {
 		case 032:
 			ProcessInputChannel32(bit, val);
