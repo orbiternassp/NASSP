@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.21  2005/08/10 20:29:49  spacex15
   *	added Agc input signal when eng arm switch changes
   *	
@@ -922,7 +925,11 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 	switch (id) {
 	// panel 0 events:
 	case AID_DSKY_KEY:
-		dsky.ProcessKeypress(mx, my);
+		if (event & PANEL_MOUSE_LBDOWN) {
+			dsky.ProcessKeyPress(mx, my);
+		} else if (event & PANEL_MOUSE_LBUP) {
+			dsky.ProcessKeyRelease(mx, my);
+		}
 		return true;
 
 	case AID_MFDLEFT:

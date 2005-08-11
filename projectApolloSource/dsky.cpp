@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.7  2005/08/09 13:05:07  spacex15
   *	fixed some initialization bugs in dsky and apolloguidance
   *	
@@ -141,13 +144,7 @@ void DSKY::KeyClick()
 void DSKY::SendKeyCode(int val)
 
 {
-	//
-	// For now, set the channel and then clear it. When we wire in
-	// the virtual AGC we may need to get smarter here.
-	//
-
 	agc.SetInputChannel(015, val);
-	agc.SetInputChannel(015, 0);
 }
 
 void DSKY::KeyRel()
@@ -232,12 +229,15 @@ void DSKY::ProgPressed()
 
 	KeyClick();
 
-	//
-	// For now we immediately indicate that PRO is released after it's pressed.
-	// We'll need to capture the release properly for the virtual AGC.
-	//
-
 	agc.SetInputChannelBit(032, 14, true);
+}
+
+void DSKY::ProgReleased()
+
+{
+	if (!agc.OutOfReset())
+		return;
+
 	agc.SetInputChannelBit(032, 14, false);
 }
 
@@ -455,7 +455,7 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 // Process a keypress based on the X and Y coords.
 //
 
-void DSKY::ProcessKeypress(int mx, int my)
+void DSKY::ProcessKeyPress(int mx, int my)
 
 {
 	bool KeyDown_Verb;
@@ -642,6 +642,42 @@ void DSKY::ProcessKeypress(int mx, int my)
 			KeyRel();
 		}
 	}*/
+}
+
+void DSKY::ProcessKeyRelease(int mx, int my)
+
+{
+	if (mx > 2+5*41 && mx < 39+5*41) {
+		if (my > 41 && my < 79) {
+			ProgReleased();
+		}
+	}
+	else {
+		SendKeyCode(0);
+	}
+
+#if 0
+	// Reset KeyDown-flags
+	KeyDown_Verb = false;
+	KeyDown_Noun = false;
+	KeyDown_Plus = false;
+	KeyDown_Minus = false;
+	KeyDown_0 = false;
+	KeyDown_1 = false;
+	KeyDown_2 = false;
+	KeyDown_3 = false;
+	KeyDown_4 = false;
+	KeyDown_5 = false;
+	KeyDown_6 = false;
+	KeyDown_7 = false;
+	KeyDown_8 = false;
+	KeyDown_9 = false;
+	KeyDown_Clear = false;
+	KeyDown_Prog = false;
+	KeyDown_KeyRel = false;
+	KeyDown_Enter = false;
+	KeyDown_Reset = false;
+#endif
 }
 
 void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash)

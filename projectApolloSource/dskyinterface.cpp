@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.3  2005/08/09 02:28:26  movieman523
   *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
   *	
@@ -283,7 +286,29 @@ unsigned ApolloGuidance::CharValue(char val)
 	return 0;
 }
 
-void ApolloGuidance::ProcessChannel11(int bit, bool val)
+void ApolloGuidance::ProcessChannel11(int val)
+
+{
+	ChannelValue11 val11;
+
+	val11.Value = val;
+	dsky.SetCompActy(val11.Bits.LightComputerActivity);
+	dsky.SetUplink(val11.Bits.LightUplink);
+	dsky.SetTemp(val11.Bits.LightTempCaution);
+	dsky.SetKbRel(val11.Bits.LightKbRel);
+	dsky.SetOprErr(val11.Bits.LightOprErr);
+
+	if (val11.Bits.FlashVerbNoun) {
+		dsky.SetVerbDisplayFlashing();
+		dsky.SetNounDisplayFlashing();
+	}
+	else {
+		dsky.ClearVerbDisplayFlashing();
+		dsky.ClearNounDisplayFlashing();
+	}
+}
+
+void ApolloGuidance::ProcessChannel11Bit(int bit, bool val)
 
 {
 	//

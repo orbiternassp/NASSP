@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/10 22:31:57  movieman523
+  *	IMU is now enabled when running Prog 01.
+  *	
   *	Revision 1.19  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -88,6 +91,9 @@
 #include "OrbiterSoundSDK3.h"
 #include "soundlib.h"
 
+#include "yaAGC/agc_engine.h"
+#include "ioChannels.h"
+
 #include "nasspdefs.h"
 #include "apolloguidance.h"
 #include "dsky.h"
@@ -96,7 +102,7 @@
 char TwoSpaceTwoFormat[7] = "XXX XX";
 char RegFormat[7] = "XXXXXX";
 
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im) : soundlib(s), dsky(display), imu(im)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfile) : soundlib(s), dsky(display), imu(im)
 
 {
 	ProgRunning = VerbRunning = NounRunning = 0;
@@ -230,6 +236,43 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im) : soundlib(s
 	strncpy (FiveDigitEntry, "      ", 6);
 
 	LastAlt = 0.;
+
+	//
+	// Virtual AGC.
+	//
+
+	memset(&vagc, 0, sizeof(vagc));
+	vagc.agcptr = this;
+
+	agc_engine_init(&vagc, binfile, NULL);
+
+	ChannelValue30 val30;
+	ChannelValue32 val32;
+	ChannelValue33 val33;
+
+	// Set default state. Note that these are oddities, as zero means
+	// true and one means false!
+
+	val30.Value = 077777;
+	// Enable to turn on
+	// val30.Bits.IMUOperate = 0;
+	val30.Bits.TempInLimits = 0;
+	vagc.InputChannel[030] = val30.Value;
+	InputChannel[030] = (val30.Value ^ 077777);
+
+	val32.Value = 077777;
+	vagc.InputChannel[032] = val32.Value;
+	InputChannel[032] = (val32.Value ^ 077777);
+
+	val33.Value = 077777;
+/*	val33.Bits.RangeUnitDataGood = 0;
+	val33.Bits.BlockUplinkInput = 0;
+	val33.Bits.AGCWarning = 0;
+*/	
+	vagc.InputChannel[033] = val33.Value;
+	InputChannel[033] = (val33.Value ^ 077777);
+
+	isFirstTimestep = false;
 }
 
 ApolloGuidance::~ApolloGuidance()
@@ -300,7 +343,7 @@ void ApolloGuidance::GoStandby()
 bool ApolloGuidance::OutOfReset()
 
 {
-	return Reset;
+	return (Yaagc || Reset);
 }
 
 //
@@ -947,6 +990,8 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 bool ApolloGuidance::GenericTimestep(double simt)
 
 {
+	int i;
+
 	LastTimestep = CurrentTimestep;
 	CurrentTimestep = simt;
 
@@ -957,6 +1002,58 @@ bool ApolloGuidance::GenericTimestep(double simt)
 	//
 
 	GetPosVel();
+
+	if (Yaagc) {
+		if (isFirstTimestep) {
+			double latitude, longitude, radius, heading;
+
+			// init pad load
+			OurVessel->GetEquPos(longitude, latitude, radius);
+			oapiGetHeading(OurVessel->GetHandle(), &heading);
+
+			// set launch pad latitude
+			vagc.Erasable[5][2] = (int16_t)((16384.0 * latitude) / TWO_PI);
+
+			// set launch pad azimuth
+			vagc.Erasable[5][0] = (int16_t)((16384.0 * heading) / TWO_PI);
+
+			// z-component of the normalized earth's rotational vector in basic reference coord.
+			// x and y are 0313 and 0315 and are zero
+			vagc.Erasable[3][0317] = 037777;	
+
+			// set launch pad altitude
+			vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
+			//State->Erasable[2][0272] = 01;	// 17.7 nmi
+
+			//
+			// HACK - for now always turn on the IMU for the Virtual AGC since we can't turn it on
+			// from the control panel yet.
+			//
+
+			imu.TurnOn();
+
+			isFirstTimestep = false;
+		}
+		else {
+			// Physical AGC timing was generated from a master 1024 KHz clock, divided by 12.
+			// This resulted in a machine cycle of just over 11.7 microseconds.
+			int cycles = (long) ((simt - LastTimestep) * 1024000 / 12);
+
+			//
+			// Don't want to kill a slow PC.
+			//
+
+			if (cycles > 100000)
+				cycles = 100000;
+			if (cycles < 1)
+				cycles = 1;
+
+			for (i = 0; i < cycles; i++) {
+				agc_engine(&vagc);
+			}
+		}
+		return true;
+	}
 
 	if (Standby)
 		return true;
@@ -1888,12 +1985,23 @@ void ApolloGuidance::DisplayEMEM(unsigned int addr)
 int ApolloGuidance::GetErasable(int bank, int address)
 
 {
-	return 0;
+	if (bank < 0 || bank > 8)
+		return 0;
+	if (address < 0 || address > 0400)
+		return 0;
+
+	return vagc.Erasable[bank][address];
 }
 
 void ApolloGuidance::SetErasable(int bank, int address, int value)
 
 {
+	if (bank < 0 || bank > 8)
+		return;
+	if (address < 0 || address > 0400)
+		return;
+
+	vagc.Erasable[bank][address] = value;
 }
 
 
@@ -1997,6 +2105,14 @@ typedef union
 		unsigned R2Blanked:1;
 		unsigned R3Blanked:1;
 		unsigned KbInUse:1;
+		unsigned isFirstTimestep:1;
+		unsigned ExtraCode:1;
+		unsigned AllowInterrupt:1;
+		unsigned InIsr:1;
+		unsigned SubstituteInstruction:1;
+		unsigned PendFlag:1;
+		unsigned PendDelay:3;
+		unsigned ExtraDelay:3;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -2011,38 +2127,41 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	oapiWriteLine(scn, AGC_START_STRING);
 
 	oapiWriteScenario_int (scn, "YAAGC", Yaagc);
-	oapiWriteScenario_float (scn, "BRNTIME", BurnTime);
-	oapiWriteScenario_float (scn, "BRNSTIME", BurnStartTime);
-	oapiWriteScenario_float (scn, "BRNETIME", BurnEndTime);
-	oapiWriteScenario_float (scn, "EVTTIME", NextEventTime);
-	oapiWriteScenario_float (scn, "CUTFVEL", CutOffVel);
 
-	if (InOrbit) {
-		oapiWriteScenario_float (scn, "LALT", LastAlt);
-		oapiWriteScenario_float (scn, "TGTDV", DesiredDeltaV);
+	if (!Yaagc) {
+		oapiWriteScenario_float (scn, "BRNTIME", BurnTime);
+		oapiWriteScenario_float (scn, "BRNSTIME", BurnStartTime);
+		oapiWriteScenario_float (scn, "BRNETIME", BurnEndTime);
+		oapiWriteScenario_float (scn, "EVTTIME", NextEventTime);
+		oapiWriteScenario_float (scn, "CUTFVEL", CutOffVel);
+
+		if (InOrbit) {
+			oapiWriteScenario_float (scn, "LALT", LastAlt);
+			oapiWriteScenario_float (scn, "TGTDV", DesiredDeltaV);
+		}
+
+		oapiWriteScenario_int (scn, "PROG", Prog);
+		oapiWriteScenario_int (scn, "VERB", Verb);
+		oapiWriteScenario_int (scn, "NOUN", Noun);
+		oapiWriteScenario_int (scn, "R1", R1);
+		oapiWriteScenario_int (scn, "R2", R2);
+		oapiWriteScenario_int (scn, "R3", R3);
+		oapiWriteScenario_int (scn, "EPOS", EnterPos);
+		oapiWriteScenario_int (scn, "EVAL", EnterVal);
+		oapiWriteScenario_int (scn, "EDAT", EnteringData);
+		oapiWriteScenario_int (scn, "ECNT", EnterCount);
+
+		memset(str, 0, 10);
+
+		strncpy(str, TwoDigitEntry, 2);
+		oapiWriteScenario_string (scn, "E2", str);
+		strncpy(str, FiveDigitEntry, 6);
+		oapiWriteScenario_string (scn, "E5", str);
+
+		oapiWriteScenario_string(scn, "R1FMT", R1Format);
+		oapiWriteScenario_string(scn, "R2FMT", R2Format);
+		oapiWriteScenario_string(scn, "R3FMT", R3Format);
 	}
-
-	oapiWriteScenario_int (scn, "PROG", Prog);
-	oapiWriteScenario_int (scn, "VERB", Verb);
-	oapiWriteScenario_int (scn, "NOUN", Noun);
-	oapiWriteScenario_int (scn, "R1", R1);
-	oapiWriteScenario_int (scn, "R2", R2);
-	oapiWriteScenario_int (scn, "R3", R3);
-	oapiWriteScenario_int (scn, "EPOS", EnterPos);
-	oapiWriteScenario_int (scn, "EVAL", EnterVal);
-	oapiWriteScenario_int (scn, "EDAT", EnteringData);
-	oapiWriteScenario_int (scn, "ECNT", EnterCount);
-
-	memset(str, 0, 10);
-
-	strncpy(str, TwoDigitEntry, 2);
-	oapiWriteScenario_string (scn, "E2", str);
-	strncpy(str, FiveDigitEntry, 6);
-	oapiWriteScenario_string (scn, "E5", str);
-
-	oapiWriteScenario_string(scn, "R1FMT", R1Format);
-	oapiWriteScenario_string(scn, "R2FMT", R2Format);
-	oapiWriteScenario_string(scn, "R3FMT", R3Format);
 
 	//
 	// Copy internal state to the structure.
@@ -2069,6 +2188,14 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.R2Blanked = R2Blanked;
 	state.u.R3Blanked = R3Blanked;
 	state.u.KbInUse = KbInUse;
+	state.u.isFirstTimestep = isFirstTimestep;
+	state.u.ExtraCode = vagc.ExtraCode;
+	state.u.AllowInterrupt = vagc.AllowInterrupt;
+	state.u.InIsr = vagc.InIsr;
+	state.u.SubstituteInstruction = vagc.SubstituteInstruction;
+	state.u.PendFlag = vagc.PendFlag;
+	state.u.PendDelay = vagc.PendDelay;
+	state.u.ExtraDelay = vagc.ExtraDelay;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -2087,7 +2214,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	// And non-zero I/O state.
 	//
 
-	for (i = 0; i <= MAX_INPUT_CHANNELS; i++) {
+	for (i = 0; i < MAX_INPUT_CHANNELS; i++) {
 		val = GetInputChannel(i);
 		if (val != 0) {
 			sprintf(fname, "ICHAN%03d", i);
@@ -2095,11 +2222,40 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 		}
 	}
 
-	for (i = 0; i <= MAX_OUTPUT_CHANNELS; i++) {
+	for (i = 0; i < MAX_OUTPUT_CHANNELS; i++) {
 		val = GetOutputChannel(i);
 		if (val != 0) {
 			sprintf(fname, "OCHAN%03d", i);
 			oapiWriteScenario_int (scn, fname, val);
+		}
+	}
+
+	if (Yaagc) {
+		for (i = 0; i < NUM_CHANNELS; i++) {
+			val = vagc.InputChannel[i];
+			if (val != 0) {
+				sprintf(fname, "VICHAN%03d", i);
+				oapiWriteScenario_int (scn, fname, val);
+			}
+		}
+
+		oapiWriteScenario_int (scn, "VOC7", vagc.OutputChannel7);
+		oapiWriteScenario_int (scn, "IDXV", vagc.IndexValue);
+
+		for (i = 0; i < 16; i++) {
+			val = vagc.OutputChannel10[i];
+			if (val != 0) {
+				sprintf(fname, "V10CHAN%03d", i);
+				oapiWriteScenario_int (scn, fname, val);
+			}
+		}
+
+		for (i = 0; i < (1 + NUM_INTERRUPT_TYPES); i++) {
+			val = vagc.InterruptRequests[i];
+			if (val != 0) {
+				sprintf(fname, "VINT%03d", i);
+				oapiWriteScenario_int (scn, fname, val);
+			}
 		}
 	}
 
@@ -2115,7 +2271,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 	//
 	// Set EMEM to defaults.
 	//
-
 
 	for (unsigned int i = 0; i < EMEM_ENTRIES; i++) {
 		WriteMemory(i, 0);
@@ -2193,14 +2348,41 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			unsigned int val;
 			sscanf(line+5, "%d", &num);
 			sscanf(line+9, "%d", &val);
-			SetInputChannel(num, val);
+			InputChannel[num] = val;
+		}
+		else if (!strnicmp (line, "VICHAN", 6)) {
+			int num;
+			unsigned int val;
+			sscanf(line+6, "%d", &num);
+			sscanf(line+10, "%d", &val);
+			vagc.InputChannel[num] = val;
+		}
+		else if (!strnicmp (line, "V10CHAN", 7)) {
+			int num;
+			unsigned int val;
+			sscanf(line+7, "%d", &num);
+			sscanf(line+11, "%d", &val);
+			vagc.OutputChannel10[num] = val;
 		}
 		else if (!strnicmp (line, "OCHAN", 5)) {
 			int num;
 			unsigned int val;
 			sscanf(line+5, "%d", &num);
 			sscanf(line+9, "%d", &val);
-			SetOutputChannel(num, val);
+			OutputChannel[num] = val;
+		}
+		else if (!strnicmp (line, "OC7", 3)) {
+			sscanf (line+3, "%d", &vagc.OutputChannel7);
+		}
+		else if (!strnicmp (line, "IDXV", 4)) {
+			sscanf (line+4, "%d", &vagc.IndexValue);
+		}
+		else if (!strnicmp (line, "VINT", 4)) {
+			int num;
+			unsigned int val;
+			sscanf(line+4, "%d", &num);
+			sscanf(line+8, "%d", &val);
+			vagc.InterruptRequests[num] = val;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			AGCState state;
@@ -2224,6 +2406,14 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			R2Blanked = (state.u.R2Blanked != 0);
 			R3Blanked = (state.u.R3Blanked != 0);
 			KbInUse = (state.u.KbInUse != 0);
+			isFirstTimestep = (state.u.isFirstTimestep != 0);
+			vagc.ExtraCode = state.u.ExtraCode;
+			vagc.AllowInterrupt = state.u.AllowInterrupt;
+			vagc.InIsr = state.u.InIsr;
+			vagc.SubstituteInstruction = state.u.SubstituteInstruction;
+			vagc.PendFlag = state.u.PendFlag;
+			vagc.PendDelay = state.u.PendDelay;
+			vagc.ExtraDelay = state.u.ExtraDelay;
 		}
 		else if (!strnicmp (line, "YAAGC", 5)) {
 			sscanf (line+5, "%d", &Yaagc);
@@ -2289,6 +2479,7 @@ bool ApolloGuidance::GetOutputChannelBit(int channel, int bit)
 	if (channel < 0 || channel > MAX_OUTPUT_CHANNELS)
 		return false;
 
+	int val = OutputChannel[channel];
 	return (OutputChannel[channel] & (1 << (bit - 1))) != 0;
 }
 
@@ -2309,10 +2500,32 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 
 	InputChannel[channel] = val;
 
-	switch (channel) {
-	case 015:
-		ProcessInputChannel15(val);
-		break;
+	if (Yaagc) {
+		if (channel & 0x80) {
+			// In this case we're dealing with a counter increment.
+			// So increment the counter.
+			UnprogrammedIncrement (&vagc, channel, val);
+		}
+		else {
+			// If this is a keystroke from the DSKY, generate an interrupt req.
+			if (channel == 015)
+				vagc.InterruptRequests[5] = 1;
+
+			//
+			// Channels 030-034 are inverted!
+			//
+
+			if (channel >= 030 && channel <= 034)
+				val = ~val;
+			WriteIO(&vagc, channel, val);
+		}
+	}
+	else {
+		switch (channel) {
+		case 015:
+			ProcessInputChannel15(val);
+			break;
+		}
 	}
 }
 
@@ -2320,21 +2533,37 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 {
 	unsigned int mask = (1 << (bit - 1));
+	int	data = InputChannel[channel];
+
+	if (Yaagc)
+		data = vagc.InputChannel[channel];
 
 	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
 		return;
 
 	if (val) {
-		InputChannel[channel] |= mask;
+		data |= mask;
 	}
 	else {
-		InputChannel[channel] &= ~mask;
+		data &= ~mask;
 	}
 
-	switch (channel) {
-	case 032:
-		ProcessInputChannel32(bit, val);
-		break;
+	if (Yaagc) {
+		//
+		// Channels 030-034 are inverted!
+		//
+
+		if (channel >= 030 && channel <= 034)
+			data = ~data;
+		WriteIO(&vagc, channel, data);
+	}
+	else {
+		InputChannel[channel] = data;
+		switch (channel) {
+		case 032:
+			ProcessInputChannel32(bit, val);
+			break;
+		}
 	}
 }
 
@@ -2389,7 +2618,7 @@ void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 		break;
 
 	case 011:
-		ProcessChannel11(bit, val);
+		ProcessChannel11Bit(bit, val);
 		break;
 
 	case 012:
@@ -2504,6 +2733,25 @@ void ApolloGuidance::SetDesiredLanding(double latitude, double longitude, double
 bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 
 {
+	if (Yaagc) {
+		int bank, addr;
+
+		bank = (loc / 0400);
+		addr = loc - (bank * 0400);
+
+		if (bank >= 0 && bank < 8) {
+			val = vagc.Erasable[bank][addr];
+			return true;
+		}
+
+		val = 0;
+		return true;
+	}
+
+	//
+	// C++ EMEM locations.
+	//
+
 	switch (loc)
 	{
 	case 00:
@@ -2610,6 +2858,18 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)
 
 {
+	if (Yaagc) {
+		int bank, addr;
+
+		bank = (loc / 0400);
+		addr = loc - (bank * 0400);
+
+		if (bank >= 0 && bank < 8)
+			vagc.Erasable[bank][addr] = val;
+
+		return;
+	}
+
 	switch (loc)
 	{
 	case 00:
@@ -2724,4 +2984,46 @@ void ApolloGuidance::UpdateBurnTime(int R1, int R2, int R3)
 	}
 
 	BurnTime = LastTimestep + (double) (R1 * 3600 + R2 * 60) + ((double)R3) / 100;
+}
+
+//
+// Virtual AGC functions.
+//
+
+
+//-----------------------------------------------------------------------------
+// Function for broadcasting "output channel" data to all connected clients.
+
+void ChannelOutput (agc_t * State, int Channel, int Value) 
+
+{
+  // Some output channels have purposes within the CPU, so we have to
+  // account for those separately.
+  if (Channel == 7)
+    {
+      State->InputChannel[7] = State->OutputChannel7 = (Value & 0160);
+      return;
+    }
+  // Most output channels are simply transmitted to clients representing
+  // hardware simulations.
+
+  ApolloGuidance *agc;
+
+  agc = (ApolloGuidance *) State->agcptr;
+  agc->SetOutputChannel(Channel, Value);
+}
+
+//
+// Do nothing here. We'll process input seperately.
+//
+
+int ChannelInput (agc_t *State)
+
+{
+	return 0;
+}
+
+void ChannelRoutine (agc_t *State)
+
+{
 }

@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.13  2005/08/09 02:28:25  movieman523
   *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
   *	
@@ -71,6 +74,7 @@ class DSKY;
 class IMU;
 
 #include "control.h"
+#include "yaAGC/agc_engine.h"
 
 //
 // Velocity in feet per second or meters per second?
@@ -82,7 +86,7 @@ class ApolloGuidance
 
 {
 public:
-	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im);
+	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfile);
 	virtual ~ApolloGuidance();
 
 	void RunProgram(int prog);
@@ -120,7 +124,7 @@ public:
 	void ForceRestart();
 	void Startup();
 	void GoStandby();
-	bool OnStandby() { return Standby; };
+	bool OnStandby() { return (!Yaagc && Standby); };
 
 	bool OutOfReset();
 
@@ -158,6 +162,7 @@ public:
 	virtual void SetInputChannel(int channel, unsigned int val);
 	virtual void SetInputChannelBit(int channel, int bit, bool val);
 	virtual void SetOutputChannelBit(int channel, int bit, bool val);
+	virtual void SetOutputChannel(int channel, unsigned int val);
 
 	bool GetInputChannelBit(int channel, int bit);
 	unsigned int GetInputChannel(int channel);
@@ -196,7 +201,8 @@ protected:
 
 	void ProcessInputChannel15(int val);
 	void ProcessInputChannel32(int bit, bool val);
-	void ProcessChannel11(int bit, bool val);
+	void ProcessChannel11Bit(int bit, bool val);
+	void ProcessChannel11(int val);
 	void ProcessChannel10();
 
 	void LightUplink();
@@ -249,7 +255,6 @@ protected:
 	virtual bool OrbitCalculationsValid() = 0;
 	void DisplayOrbitCalculations();
 	void UpdateBurnTime(int R1, int R2, int R3);
-	void SetOutputChannel(int channel, unsigned int val);
 
 	bool Standby;
 	bool Reset;
@@ -385,6 +390,7 @@ protected:
 	bool ProgFlag04;
 	bool RetroFlag;
 	bool BurnFlag;
+	bool isFirstTimestep;
 
 	DSKY &dsky;
 	IMU &imu;
@@ -481,6 +487,12 @@ protected:
 
 	VESSEL	*OurVessel;
 	SoundLib &soundlib;
+
+	//
+	// Virtual AGC.
+	//
+
+	agc_t vagc;
 };
 
 extern char TwoSpaceTwoFormat[];
@@ -492,4 +504,4 @@ extern char TwoSpaceTwoFormat[];
 #define AGC_START_STRING	"AGC_BEGIN"
 #define AGC_END_STRING		"AGC_END"
 
-#define EMEM_ENTRIES	256
+#define EMEM_ENTRIES	(8 * 0400)

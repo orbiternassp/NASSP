@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/08/10 22:31:57  movieman523
+  *	IMU is now enabled when running Prog 01.
+  *	
   *	Revision 1.7  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -64,7 +67,7 @@
 
 static const double ERADIUS2 = (ERADIUS * ERADIUS * 1000000);
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s, display, im)
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s, display, im, "Config/ProjectApollo/Colossus249.bin")
 
 {
 	BurnTime = 0;
@@ -1191,20 +1194,22 @@ void CSMcomputer::SetFlagWord(int num, unsigned int val)
 bool CSMcomputer::ReadMemory(unsigned int loc, int &val)
 
 {
-	//
-	// Note that these values are in OCTAL, so need the
-	// zero prefix.
-	//
+	if (!Yaagc) {
+		//
+		// Note that these values are in OCTAL, so need the
+		// zero prefix.
+		//
 
-	if (loc >= 074 && loc <= 0107) {
-		val = (int) GetFlagWord(loc - 074);
-		return true;
-	}
+		if (loc >= 074 && loc <= 0107) {
+			val = (int) GetFlagWord(loc - 074);
+			return true;
+		}
 
-	switch (loc)
-	{
-	default:
-		break;
+		switch (loc)
+		{
+		default:
+			break;
+		}
 	}
 
 	return GenericReadMemory(loc, val);
@@ -1213,21 +1218,26 @@ bool CSMcomputer::ReadMemory(unsigned int loc, int &val)
 void CSMcomputer::WriteMemory(unsigned int loc, int val)
 
 {
-	//
-	// Note that these values are in OCTAL, so need the
-	// zero prefix.
-	//
+	if (!Yaagc) {
+		//
+		// Note that these values are in OCTAL, so need the
+		// zero prefix.
+		//
 
-	if (loc >= 074 && loc <= 0107) {
-		SetFlagWord(loc - 074, (unsigned int) val);
-		return;
+		if (loc >= 074 && loc <= 0107) {
+			SetFlagWord(loc - 074, (unsigned int) val);
+			return;
+		}
+
+		switch (loc)
+		{
+		default:
+			GenericWriteMemory(loc, val);
+			break;
+		}
 	}
-
-	switch (loc)
-	{
-	default:
+	else {
 		GenericWriteMemory(loc, val);
-		break;
 	}
 }
 
