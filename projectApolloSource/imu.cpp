@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/10 22:31:57  movieman523
+  *	IMU is now enabled when running Prog 01.
+  *	
   *	Revision 1.1  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -72,8 +75,8 @@ void IMU::Init()
 	Gimbal.Z = 0;
 
 	Orbiter.Attitude.X = 0;
-	Orbiter.Attitude.X = 0;
-	Orbiter.Attitude.X = 0;
+	Orbiter.Attitude.Y = 0;
+	Orbiter.Attitude.Z = 0;
 
 	Orbiter.LastAttitude.X = 0;
 	Orbiter.LastAttitude.Y = 0;
