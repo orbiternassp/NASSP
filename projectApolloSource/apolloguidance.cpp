@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/11 23:20:21  movieman523
+  *	Fixed a few more IMU bugs and other odds and ends.
+  *	
   *	Revision 1.23  2005/08/11 22:07:26  movieman523
   *	Wired up DSKY lights correctly to Virtual AGC :).
   *	
@@ -274,10 +277,20 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	InputChannel[032] = (val32.Value ^ 077777);
 
 	val33.Value = 077777;
-/*	val33.Bits.RangeUnitDataGood = 0;
-	val33.Bits.BlockUplinkInput = 0;
+//	val33.Bits.RangeUnitDataGood = 0;
+//	val33.Bits.BlockUplinkInput = 0;
+
+	//
+	// Setting AGCWarning is needed to avoid the 1107 alarm on startup. It basically forces the AGC to do a
+	// hard reset in the RESTART code.
+	//
+	//	CA	BIT14			# IF AGC WARNING ON (BIT = 0), DO A FRESH
+	//	EXTEND				# START ON THE ASSUMPTION THAT WE'RE IN A
+	//	RAND	CHAN33		# RESTART LOOP.
+	//
+
 	val33.Bits.AGCWarning = 0;
-*/	
+	
 	vagc.InputChannel[033] = val33.Value;
 	InputChannel[033] = (val33.Value ^ 077777);
 
