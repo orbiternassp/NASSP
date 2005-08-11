@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/11 22:07:26  movieman523
+  *	Wired up DSKY lights correctly to Virtual AGC :).
+  *	
   *	Revision 1.22  2005/08/11 02:15:17  movieman523
   *	Fixed a couple of bugs in the Virtual AGC interface.
   *	
@@ -2514,7 +2517,7 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 		}
 		else {
 			// If this is a keystroke from the DSKY, generate an interrupt req.
-			if (channel == 015)
+			if ((channel == 015) || (channel == 016))
 				vagc.InterruptRequests[5] = 1;
 
 			//
@@ -2547,7 +2550,7 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 		// Channels 030-034 are inverted!
 		//
 
-		if (channel >= 030 && channel <= 034)
+		if ((channel >= 030) && (channel <= 034))
 			data ^= 077777;
 	}
 
@@ -2568,8 +2571,9 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 		// Channels 030-034 are inverted!
 		//
 
-		if (channel >= 030 && channel <= 034)
+		if ((channel >= 030) && (channel <= 034))
 			data ^= 077777;
+
 		WriteIO(&vagc, channel, data);
 	}
 	else {
@@ -2652,16 +2656,24 @@ bool ApolloGuidance::GetInputChannelBit(int channel, int bit)
 	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
 		return false;
 
-	return (InputChannel[channel] & (1 << (bit - 1))) != 0;
+	return (GetInputChannel(channel) & (1 << (bit - 1))) != 0;
 }
 
 unsigned int ApolloGuidance::GetInputChannel(int channel)
 
 {
-	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
-		return 0;
+	if (Yaagc) {
+		if (channel < 0 || channel >= NUM_CHANNELS)
+			return 0;
 
-	return InputChannel[channel];
+		return vagc.InputChannel[channel];
+	}
+	else {
+		if (channel < 0 || channel > MAX_INPUT_CHANNELS)
+			return 0;
+
+		return InputChannel[channel];
+	}
 }
 
 //

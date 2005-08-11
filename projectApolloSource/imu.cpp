@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/11 22:27:00  movieman523
+  *	Fixed stupid cut-and-paste error in IMU.
+  *	
   *	Revision 1.3  2005/08/11 12:16:23  spacex15
   *	fixed initialization bug
   *	
@@ -148,7 +151,7 @@ void IMU::ChannelOutput(int address, int value)
 
 		if (val12.Bits.ISSTurnOnDelayComplete) 
 		{
-			agc.SetOutputChannelBit(030, 14, false);
+			agc.SetInputChannelBit(030, 14, false);
 			TurnedOn = true;
 		}
     
@@ -449,7 +452,7 @@ void IMU::Timestep(double simt)
 		}
 		else if(val12.Bits.CoarseAlignEnable) {
 			SetOrbiterAttitudeReference();
-		} 
+		}
 		else {
 
 			// Gimbals
