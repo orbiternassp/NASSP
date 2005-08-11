@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/08/11 02:15:17  movieman523
+  *	Fixed a couple of bugs in the Virtual AGC interface.
+  *	
   *	Revision 1.21  2005/08/11 01:27:26  movieman523
   *	Added initial Virtual AGC support.
   *	
@@ -2594,6 +2597,10 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 	{
 	case 010:
 		ProcessChannel10();
+		break;
+
+	case 011:
+		ProcessChannel11(val);
 		break;
 
 	case 012:
