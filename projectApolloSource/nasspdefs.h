@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/08/11 14:00:35  spacex15
+  *	Added Descent Engine Command Override switch
+  *	
   *	Revision 1.21  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -132,7 +135,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 33; // number of bitmap handles
+const int nsurf = 34; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -150,6 +153,7 @@ const int nsurf = 33; // number of bitmap handles
 #define SRF_LMABORTBUTTON			30
 #define SRF_LMMFDFRAME				31
 #define SRF_LMTHREEPOSLEVER         32
+#define SRF_LMTHREEPOSSWITCH        33
 
 //
 // Earth radius and gravity constants.
