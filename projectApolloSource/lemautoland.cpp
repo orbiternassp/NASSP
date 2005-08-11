@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.23  2005/08/10 21:18:59  lazyd
   *	Changed OrientAxis and P63 now allows any yaw attitude until P64 -360 sec
   *	
@@ -1473,6 +1476,7 @@ void LEMcomputer::Prog42(double simt)
 void LEMcomputer::OrientAxis(VECTOR3 &vec, int axis, int ref)
 {
 	//axis=0=x, 1=y, 2=z
+	//ref =0 body coordinates 1=local vertical
 	//orients a vessel axis with a body-relative normalized vector
 	//allows rotation about the axis being oriented
 	static VECTOR3 zero={0.0, 0.0, 0.0};
@@ -1515,31 +1519,54 @@ void LEMcomputer::OrientAxis(VECTOR3 &vec, int axis, int ref)
 		OurVessel->GetRelativeVel(hbody, vel);
 		up=Normalize(pos);
 		left=Normalize(CrossProduct(pos, vel));
-		forward=CrossProduct(left, up);
-		norm=forward*vec.x+up*vec.y+left*vec.z;		
+		forward=Normalize(CrossProduct(left, up));
+		norm=forward*vec.x+up*vec.y+left*vec.z;	
+
+//		fprintf(outstr, "forward=%.3f %.3f %.3f mag=%.3f \n", forward, Mag(forward));
+//		fprintf(outstr, "up=     %.3f %.3f %.3f mag=%.3f \n", up, Mag(up));
+//		fprintf(outstr, "left=   %.3f %.3f %.3f mag=%.3f \n", left, Mag(left));
+//		fprintf(outstr, "norm=   %.3f %.3f %.3f mag=%.3f \n", norm, Mag(norm));
+//		fprintf(outstr, "ygl =   %.3f %.3f %.3f mag=%.3f \n", ygl, Mag(ygl));
 	}
 	if(axis == 0) {
-		xa=acos(norm*xgl);
+		xa=norm*xgl;
+		xa=xa/fabs(xa);
 		ya=asin(norm*ygl);
 		za=asin(norm*zgl);
+		if(xa < 0.0) {
+			ya=(ya/fabs(ya))*PI-ya;
+			za=(za/fabs(za))*PI-za;
+		}
 		delatt.x=0.0;
-		delatt.y=za*xa;
-		delatt.z=-ya*xa;
+		delatt.y=za;
+		delatt.z=-ya;
 	}
 	if(axis == 1) {
 		xa=asin(norm*xgl);
-		ya=acos(norm*ygl);
+		ya=norm*ygl;
+		ya=ya/fabs(ya);
 		za=asin(norm*zgl);
-		delatt.x=-za*ya;
+		if(ya < 0.0) {
+			xa=(xa/fabs(xa))*PI-xa;
+			za=(za/fabs(za))*PI-za;
+		}
+		delatt.x=-za;
 		delatt.y=0.0;
-		delatt.z=xa*ya;
+		delatt.z=xa;
+//		fprintf(outstr, "delatt=%.3f %.3f %.3f xyz=%.3f %.3f %.3f\n", delatt*DEG, 
+//			xa*DEG, ya*DEG, za*DEG);
 	}
 	if(axis == 2) {
 		xa=asin(norm*xgl);
 		ya=asin(norm*ygl);
-		za=acos(norm*zgl);
-		delatt.x=ya*za;
-		delatt.y=-xa*za;
+		za=norm*zgl;
+		za=za/fabs(za);
+		if(za < 0.0) {
+			xa=(xa/fabs(xa))*PI-xa;
+			ya=(ya/fabs(ya))*PI-ya;
+		}
+		delatt.x=ya;
+		delatt.y=-xa;
 		delatt.z=0.0;
 	}
 //	sprintf(oapiDebugString(), "norm=%.3f %.3f %.3f x=%.3f y=%.3f z=%.3f ax=%d", 
@@ -1891,7 +1918,7 @@ void LEMcomputer::AbortAscent(double simt)
 	static VECTOR3 zloc={0.0, 0.0, 1.0};
 	const double GRAVITY=6.67259e-11;
 	VECTOR3 csmpos, csmvel, csmnor, lmpos, lmvel, lmcsm, hvel, csmhvel, actatt, tgtatt,
-		vec1, vec2, acc, lmnor, zerogl, ygl, zgl, lmdown, accvec;
+		vec1, vec2, acc, lmnor, zerogl, ygl, zgl, lmdown;
 	double crossrange, distance, delta, fuelflow, heading, Mass, totvel, altitude,
 		tgo, velexh, veltbg, cbrg, phase, tau, A, B, C, D, D12, D21, E, L, crossvel,
 		centrip, grav, acctot, vthrust, velo;
@@ -1917,6 +1944,7 @@ void LEMcomputer::AbortAscent(double simt)
 			OurVessel->SetAttitudeRotLevel(zero);
 			ProgState++;
 			NextEventTime=simt;
+//			fclose(outstr);
 			oapiSetTimeAcceleration(DesiredDeltaV);
 			if(ApolloNo < 14) {
 				RunProgram(32);
@@ -2007,7 +2035,6 @@ void LEMcomputer::AbortAscent(double simt)
 			acc.z=1.0*(acc.z/fabs(acc.z));
 		}
 		acc.x=sqrt(acctot*acctot-acc.y*acc.y-acc.z*acc.z);
-		accvec=Normalize(acc);
 		TargetPitch=atan(acc.y/acc.x)-PI/2.0;
 //		fprintf(outstr,"acc=%.3f %.3f %.3f cvel=%.3f\n",acc, crossvel);
 
@@ -2062,6 +2089,8 @@ void LEMcomputer::AbortAscent(double simt)
 			}
 
 		}
+//		fprintf(outstr, "tgt=%.3f %.3f %.3f act=%.3f %.3f %.3f \n",
+//			tgtatt*DEG, actatt*DEG);
 
 		if (ProgState < 4) {
 			// for large pitch changes, make sure we pitch keeping thrust 
@@ -2070,12 +2099,12 @@ void LEMcomputer::AbortAscent(double simt)
 //			if(totvel < 100.0) {
 				ComAttitude(actatt, tgtatt, false);
 //			} else {
-//				accvec.z=-accvec.z;
+//				acc.z=sin(tgtatt.z-actatt.z)*acctot;
+//				acc.z=-acc.z;
+//				accvec=Normalize(acc);
 //				OrientAxis(accvec, 1, 1);
-//				sprintf(oapiDebugString(),"acc=%.3f %.3f %.3f", accvec);
+//				fprintf(outstr,"vec=%.3f %.3f %.3f\n", accvec);
 //			}
-//			fprintf(outstr, "tgt=%.3f %.3f %.3f act=%.3f %.3f %.3f \n",
-//				tgtatt*DEG, actatt*DEG);
 		}
 	}
 
