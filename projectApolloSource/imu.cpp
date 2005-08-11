@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/11 12:16:23  spacex15
+  *	fixed initialization bug
+  *	
   *	Revision 1.2  2005/08/10 22:31:57  movieman523
   *	IMU is now enabled when running Prog 01.
   *	
@@ -620,8 +623,8 @@ void IMU::SetOrbiterAttitudeReference()
 	// transformation to navigation base coordinates
 	// CAUTION: gimbal angles are left-handed
 	t = getRotationMatrixY(-Gimbal.Y);
-	t = multiplyMatrix(getRotationMatrixZ(Gimbal.Z), t);
-	t = multiplyMatrix(getRotationMatrixX(Gimbal.X), t);
+	t = multiplyMatrix(getRotationMatrixZ(-Gimbal.Z), t);
+	t = multiplyMatrix(getRotationMatrixX(-Gimbal.X), t);
 	
 	// tranform to orbiter local coordinates
 	t = multiplyMatrix(getNavigationBaseToOrbiterLocalTransformation(), t);
