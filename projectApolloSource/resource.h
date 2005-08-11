@@ -171,6 +171,8 @@
 #define IDB_ROTATIONALSWITCH            280
 #define IDB_SWITCHGUARDS                281
 #define IDB_LMTHREEPOSLEVER             287
+#define IDB_LM3POSSWITCH                288
+#define IDB_LMTHREEPOSSWITCH            288
 #define AID_FUEL_DIGITD                 301
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
@@ -289,12 +291,13 @@
 #define AID_MFDLEFT                     523
 #define AID_MFDRIGHT                    524
 #define IDB_LEM_LPD_WINDOW              525
+#define AID_MODECONTROL                 526
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        288
+#define _APS_NEXT_RESOURCE_VALUE        289
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           10001

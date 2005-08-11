@@ -106,6 +106,7 @@ IDB_LMABORTBUTTON       BITMAP  DISCARDABLE     "LMAbortButton.bmp"
 IDB_LMMFDFRAME          BITMAP  DISCARDABLE     "LMMFDFrame.bmp"
 IDB_LEM_LPD_WINDOW      BITMAP  DISCARDABLE     "lem_lpd_window.bmp"
 IDB_LMTHREEPOSLEVER     BITMAP  DISCARDABLE     "lemswitch3.bmp"
+IDB_LMTHREEPOSSWITCH    BITMAP  DISCARDABLE     "lm3posswitch.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 

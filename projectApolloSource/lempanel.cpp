@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/11 14:00:34  spacex15
+  *	Added Descent Engine Command Override switch
+  *	
   *	Revision 1.23  2005/08/11 01:27:26  movieman523
   *	Added initial Virtual AGC support.
   *	
@@ -169,7 +172,9 @@ void sat5_lmpkd::InitPanel() {
 
 	EngineArmSwitch.Register(PSH, "EngineArmSwitch", THREEPOSSWITCH_CENTER);
 	EngineDescentCommandOverrideSwitch.Register(PSH, "EngineDescentCommandOverrideSwitch", TOGGLESWITCH_DOWN);
-	
+	ModeControlPNGSSwitch.Register(PSH,"ModeControlPNGSSwitch", THREEPOSSWITCH_CENTER);
+	ModeControlAGSSwitch.Register(PSH,"ModeControlAGSSwitch", THREEPOSSWITCH_CENTER);
+
 
 	Cswitch1=false;
 	Cswitch2=false;
@@ -578,6 +583,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_LMABORTBUTTON] = oapiCreateSurface (LOADBMP (IDB_LMABORTBUTTON));
 		srf[SRF_LMMFDFRAME] = oapiCreateSurface (LOADBMP (IDB_LMMFDFRAME));
 		srf[SRF_LMTHREEPOSLEVER]= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
+		srf[SRF_LMTHREEPOSSWITCH]= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
 		
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
@@ -590,6 +596,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_LMABORTBUTTON], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSLEVER],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTWOPOSLEVER],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSSWITCH],		g_Param.col[4]);
 
 		break;
 	
@@ -673,6 +680,8 @@ bool sat5_lmpkd::LoadPanel (int id) {
 	    oapiRegisterPanelArea (AID_ENG_ARM,						_R( 163,  1078,  205,  1118), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		// 2 pos Descent Engine Command Override Lever
 		oapiRegisterPanelArea (AID_DESCENT_ENGINE_SWITCH,		_R( 87,  1321,  129,  1361), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+        // 3 pos Mode control switches
+	    oapiRegisterPanelArea (AID_MODECONTROL,						_R( 524,  1425,  772,  1465), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 
 
 
@@ -814,6 +823,11 @@ void sat5_lmpkd::SetSwitches(int panel) {
 
 	EngineDescentCommandOverrideSwitchesRow.Init(AID_DESCENT_ENGINE_SWITCH,MainPanel);
 	EngineDescentCommandOverrideSwitch.Init (0, 0, 42, 40, srf[SRF_LMTWOPOSLEVER], EngineDescentCommandOverrideSwitchesRow);
+
+	ModeControlSwitchesRow.Init(AID_MODECONTROL,MainPanel);
+	ModeControlPNGSSwitch.Init (0, 0, 42, 40, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
+	ModeControlAGSSwitch.Init (93, 0, 42, 40, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
+
 }
 
 void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {

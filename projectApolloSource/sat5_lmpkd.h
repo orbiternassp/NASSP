@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/11 14:00:35  spacex15
+  *	Added Descent Engine Command Override switch
+  *	
   *	Revision 1.14  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -204,6 +207,11 @@ protected:
 	SwitchRow EngineDescentCommandOverrideSwitchesRow;
 	ToggleSwitch EngineDescentCommandOverrideSwitch;
 
+	SwitchRow ModeControlSwitchesRow;
+	ThreePosSwitch ModeControlPNGSSwitch;
+	ThreePosSwitch ModeControlAGSSwitch;
+
+
 	//bool bAbort;
 	bool RCS_Full;
 	bool Eds;
@@ -344,6 +352,15 @@ protected:
 
 //	bool DESEswitch;
 #define DESEswitch EngineDescentCommandOverrideSwitch.IsUp()
+
+#define ModeControlPNGSAuto ModeControlPNGSSwitch.IsUp()
+#define ModeControlPNGSAttHold ModeControlPNGSSwitch.IsCenter()
+#define ModeControlPNGSOff ModeControlPNGSSwitch.IsDown()
+
+#define ModeControlAGSAuto ModeControlAGSSwitch.IsUp()
+#define ModeControlAGSAttHold ModeControlAGSSwitch.IsCenter()
+#define ModeControlAGSOff ModeControlAGSSwitch.IsDown()
+
 
 	bool SLWRswitch;
 
