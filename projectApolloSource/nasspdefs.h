@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.20  2005/08/10 20:00:55  spacex15
   *	Activated 3 position lem eng arm switch
   *	
@@ -137,6 +140,7 @@ const int nsurf = 33; // number of bitmap handles
 #define SRF_SWITCHGUARDS			 8
 #define SRF_ABORT					 9
 #define SRF_SEQUENCERSWITCHES		17
+#define SRF_LMTWOPOSLEVER           19
 #define SRF_DSKY					21
 #define SRF_DSKYNUM					22
 #define SRF_THREEPOSSWITCH			23

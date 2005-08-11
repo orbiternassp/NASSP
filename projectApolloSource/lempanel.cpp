@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/11 01:27:26  movieman523
+  *	Added initial Virtual AGC support.
+  *	
   *	Revision 1.22  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -165,6 +168,7 @@ void sat5_lmpkd::InitPanel() {
 	AbortStageSwitchLight = false;
 
 	EngineArmSwitch.Register(PSH, "EngineArmSwitch", THREEPOSSWITCH_CENTER);
+	EngineDescentCommandOverrideSwitch.Register(PSH, "EngineDescentCommandOverrideSwitch", TOGGLESWITCH_DOWN);
 	
 
 	Cswitch1=false;
@@ -281,7 +285,7 @@ void sat5_lmpkd::InitPanel() {
 	RATE2switch=true;
 	AT2switch=true;
 
-	DESEswitch=false;
+//	DESEswitch=false;
 
 	SLWRswitch=true;
 
@@ -568,7 +572,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[16] = oapiCreateSurface (LOADBMP (IDB_THRUST));
 		//srf[17] = oapiCreateSurface (LOADBMP (IDB_HEADING));
 		srf[18] = oapiCreateSurface (LOADBMP (IDB_CONTACT));
-		srf[19] = oapiCreateSurface (LOADBMP (IDB_LEMSWITCH2));
+		srf[SRF_LMTWOPOSLEVER] = oapiCreateSurface (LOADBMP (IDB_LEMSWITCH2));
 		srf[20] = oapiCreateSurface (LOADBMP (IDB_LEMSWITCH3));
 		srf[SRF_DSKY] = oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
 		srf[SRF_LMABORTBUTTON] = oapiCreateSurface (LOADBMP (IDB_LMABORTBUTTON));
@@ -585,6 +589,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[18], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMABORTBUTTON], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSLEVER],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_LMTWOPOSLEVER],		g_Param.col[4]);
 
 		break;
 	
@@ -664,7 +669,10 @@ bool sat5_lmpkd::LoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MFDLEFT,						    _R(  27, 1564,  452, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDRIGHT,					    _R(1032, 1564, 1457, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ABORT,							_R( 549,  870,  702,  942), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ENG_ARM,						_R( 163,  1078,  205,  1118), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+        // 3 pos Engine Arm Lever
+	    oapiRegisterPanelArea (AID_ENG_ARM,						_R( 163,  1078,  205,  1118), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		// 2 pos Descent Engine Command Override Lever
+		oapiRegisterPanelArea (AID_DESCENT_ENGINE_SWITCH,		_R( 87,  1321,  129,  1361), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 
 
 
@@ -804,6 +812,8 @@ void sat5_lmpkd::SetSwitches(int panel) {
 	EngineArmSwitchesRow.Init(AID_ENG_ARM,MainPanel);
 	EngineArmSwitch.Init (0, 0, 42, 40, srf[SRF_LMTHREEPOSLEVER], EngineArmSwitchesRow);
 
+	EngineDescentCommandOverrideSwitchesRow.Init(AID_DESCENT_ENGINE_SWITCH,MainPanel);
+	EngineDescentCommandOverrideSwitch.Init (0, 0, 42, 40, srf[SRF_LMTWOPOSLEVER], EngineDescentCommandOverrideSwitchesRow);
 }
 
 void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
@@ -1436,7 +1446,7 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 
 		}
 		return true;
-
+/*
 	case AID_DESCENT_ENGINE_SWITCH:
 		if (my >=0 && my <=17 ){
 			if (mx > 0 && mx < 23 && !DESEswitch){
@@ -1451,7 +1461,7 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 
 		}
 		return true;
-
+*/
 	case AID_SLEW_RATE_SWITCH:
 		if (my >=0 && my <=11 ){
 			if (mx > 0 && mx < 23 && !SLWRswitch){
@@ -2451,7 +2461,7 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf) {
 			oapiBlt(surf,srf[6],0,58,23,0,23,20);
 		}
 		return true;
-
+/*
 	case AID_DESCENT_ENGINE_SWITCH:
 		if(DESEswitch){
 			oapiBlt(surf,srf[19],0,0,0,0,23,30);
@@ -2459,6 +2469,7 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf) {
 			oapiBlt(surf,srf[19],0,0,23,0,23,30);
 		}
 		return true;
+*/
 
 	case AID_SLEW_RATE_SWITCH:
 		if(SLWRswitch){
@@ -2756,7 +2767,7 @@ typedef union {
 		unsigned ACAPswitch:1;
 		unsigned RATE2switch:1;
 		unsigned AT2switch:1;
-		unsigned DESEswitch:1;
+		unsigned dummy ;  // formerly unsigned DESEswitch:1;
 		unsigned SLWRswitch:1;
 		unsigned DBswitch:1;
 		unsigned IMUCswitch:1;
@@ -2795,7 +2806,7 @@ int sat5_lmpkd::GetSSwitchState()
 	state.u.ACAPswitch = ACAPswitch;
 	state.u.RATE2switch = RATE2switch;
 	state.u.AT2switch = AT2switch;
-	state.u.DESEswitch = DESEswitch;
+//	state.u.DESEswitch = DESEswitch;
 	state.u.SLWRswitch = SLWRswitch;
 	state.u.DBswitch = DBswitch;
 	state.u.IMUCswitch = IMUCswitch;
@@ -2834,7 +2845,7 @@ void sat5_lmpkd::SetSSwitchState(int s)
 	ACAPswitch = state.u.ACAPswitch;
 	RATE2switch = state.u.RATE2switch;
 	AT2switch = state.u.AT2switch;
-	DESEswitch = state.u.DESEswitch;
+//	DESEswitch = state.u.DESEswitch;
 	SLWRswitch = state.u.SLWRswitch;
 	DBswitch = state.u.DBswitch;
 	IMUCswitch = state.u.IMUCswitch;
