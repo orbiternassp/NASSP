@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.13  2005/08/10 20:00:55  spacex15
   *	Activated 3 position lem eng arm switch
   *	
@@ -198,6 +201,8 @@ protected:
 	SwitchRow EngineArmSwitchesRow;
 	ThreePosSwitch EngineArmSwitch;
 
+	SwitchRow EngineDescentCommandOverrideSwitchesRow;
+	ToggleSwitch EngineDescentCommandOverrideSwitch;
 
 	//bool bAbort;
 	bool RCS_Full;
@@ -337,7 +342,8 @@ protected:
 	bool RATE2switch;
 	bool AT2switch;
 
-	bool DESEswitch;
+//	bool DESEswitch;
+#define DESEswitch EngineDescentCommandOverrideSwitch.IsUp()
 
 	bool SLWRswitch;
 
