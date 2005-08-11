@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/09 02:28:26  movieman523
+  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
+  *	
   *	Revision 1.2  2005/08/08 22:32:49  movieman523
   *	First steps towards reimplementing the DSKY interface to use the same I/O channels as the real AGC/DSKY interface.
   *	
@@ -110,11 +113,13 @@ public:
 	void ClearPressed();
 	void ResetPressed();
 	void ProgPressed();
+	void ProgReleased();
 	void PlusPressed();
 	void MinusPressed();
 	void NumberPressed(int n);
 
-	void ProcessKeypress(int mx, int my);
+	void ProcessKeyPress(int mx, int my);
+	void ProcessKeyRelease(int mx, int my);
 	void RenderLights(SURFHANDLE surf, SURFHANDLE lights);
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits);
 	void ProcessChannel10(int val);

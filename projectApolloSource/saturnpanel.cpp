@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.32  2005/08/08 20:33:00  movieman523
   *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
   *	
@@ -1491,7 +1494,11 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	case AID_DSKY_KEY:
-		dsky.ProcessKeypress(mx, my);
+		if (event & PANEL_MOUSE_LBDOWN) {
+			dsky.ProcessKeyPress(mx, my);
+		} else if (event & PANEL_MOUSE_LBUP) {
+			dsky.ProcessKeyRelease(mx, my);
+		}
 		return true;
 
 	case AID_GDC_BUTTON:

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.15  2005/08/09 09:24:01  tschachim
   *	Introduced toggleswitch lib
   *	
@@ -85,7 +88,7 @@
 
 #include "sat5_lmpkd.h"
 
-LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s, display, im)
+LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s, display, im, "Config/ProjectApollo/Luminary131.bin")
 
 {
 	//
@@ -1053,37 +1056,39 @@ void LEMcomputer::SetFlagWord(int num, unsigned int val)
 bool LEMcomputer::ReadMemory(unsigned int loc, int &val)
 
 {
-	//
-	// Note that these values are in OCTAL, so need the
-	// zero prefix.
-	//
+	if (!Yaagc) {
+		//
+		// Note that these values are in OCTAL, so need the
+		// zero prefix.
+		//
 
-	if (loc >= 074 && loc <= 0107) {
-		val = (int) GetFlagWord(loc - 074);
-		return true;
-	}
+		if (loc >= 074 && loc <= 0107) {
+			val = (int) GetFlagWord(loc - 074);
+			return true;
+		}
 
-	switch (loc)
-	{
-	case 0110:
-		val = (int) (LandingLatitude * 1000.0);
-		return true;
+		switch (loc)
+		{
+		case 0110:
+			val = (int) (LandingLatitude * 1000.0);
+			return true;
 
-	case 0111:
-		val = (int) (LandingLongitude * 1000.0);
-		return true;
+		case 0111:
+			val = (int) (LandingLongitude * 1000.0);
+			return true;
 
-	case 0112:
-		val = (int) LandingAltitude;
-		return true;
+		case 0112:
+			val = (int) LandingAltitude;
+			return true;
 
-	case 0113:
-		val = (int)(LandingLatitude*100000000-((int) (LandingLatitude * 1000.0))*100000);
-		return true;
+		case 0113:
+			val = (int)(LandingLatitude*100000000-((int) (LandingLatitude * 1000.0))*100000);
+			return true;
 
-	case 0114:
-		val = (int)(LandingLongitude*100000000-((int) (LandingLongitude * 1000.0))*100000);
-		return true;
+		case 0114:
+			val = (int)(LandingLongitude*100000000-((int) (LandingLongitude * 1000.0))*100000);
+			return true;
+		}
 	}
 
 	return GenericReadMemory(loc, val);
@@ -1092,40 +1097,45 @@ bool LEMcomputer::ReadMemory(unsigned int loc, int &val)
 void LEMcomputer::WriteMemory(unsigned int loc, int val)
 
 {
-	//
-	// Note that these values are in OCTAL, so need the
-	// zero prefix.
-	//
+	if (!Yaagc) {
+		//
+		// Note that these values are in OCTAL, so need the
+		// zero prefix.
+		//
 
-	if (loc >= 074 && loc <= 0107) {
-		SetFlagWord(loc - 074, (unsigned int) val);
-		return;
+		if (loc >= 074 && loc <= 0107) {
+			SetFlagWord(loc - 074, (unsigned int) val);
+			return;
+		}
+
+		switch (loc) {
+		case 0110:
+			LandingLatitude = ((double) val) / 1000.0;
+			break;
+
+		case 0111:
+			LandingLongitude = ((double) val) / 1000.0;
+			break;
+
+		case 0112:
+			LandingAltitude = (double) val;
+			break;
+
+		case 0113:
+			LandingLatitude = LandingLatitude+((double) val) / 100000000.0;
+			break;
+
+		case 0114:
+			LandingLongitude = LandingLongitude+((double) val) / 100000000.0;
+			break;
+
+		default:
+			GenericWriteMemory(loc, val);
+			break;
+		}
 	}
-
-	switch (loc) {
-	case 0110:
-		LandingLatitude = ((double) val) / 1000.0;
-		break;
-
-	case 0111:
-		LandingLongitude = ((double) val) / 1000.0;
-		break;
-
-	case 0112:
-		LandingAltitude = (double) val;
-		break;
-
-	case 0113:
-		LandingLatitude = LandingLatitude+((double) val) / 100000000.0;
-		break;
-
-	case 0114:
-		LandingLongitude = LandingLongitude+((double) val) / 100000000.0;
-		break;
-
-	default:
+	else {
 		GenericWriteMemory(loc, val);
-		break;
 	}
 }
 
