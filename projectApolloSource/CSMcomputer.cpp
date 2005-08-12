@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/08/11 01:27:26  movieman523
+  *	Added initial Virtual AGC support.
+  *	
   *	Revision 1.8  2005/08/10 22:31:57  movieman523
   *	IMU is now enabled when running Prog 01.
   *	
@@ -511,8 +514,6 @@ void CSMcomputer::Prog11(double simt)
 	switch (ProgState) {
 
 	case 0:
-		Sat->SetAutopilot(true);
-
 		VerbRunning = 16;
 		NounRunning = 62;
 
@@ -1308,15 +1309,21 @@ void CSMcomputer::DisplayBankSum()
 void CSMcomputer::Liftoff(double simt)
 
 {
-	if (OnStandby())
-		Startup();
 
-	FlagWord1.u.NODOP01 = 1;
+	Saturn *Sat = (Saturn *)OurVessel;
+	Sat->SetAutopilot(true);
 
-	RunProgram(11);
+	if (!Yaagc) {
+		if (OnStandby())
+			Startup();
 
-	if (!KBCheck()) {
-		UnBlankAll();
+		FlagWord1.u.NODOP01 = 1;
+
+		RunProgram(11);
+
+		if (!KBCheck()) {
+			UnBlankAll();
+		}
 	}
 }
 
