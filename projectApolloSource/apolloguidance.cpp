@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/08/12 19:31:38  movieman523
+  *	Fixed 1107 alarm again.
+  *	
   *	Revision 1.27  2005/08/12 19:24:32  movieman523
   *	Updated to latest version of Virtual AGC.
   *	
@@ -2550,8 +2553,10 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 		}
 		else {
 			// If this is a keystroke from the DSKY, generate an interrupt req.
-			if ((channel == 015) || (channel == 016))
+			if (channel == 015)
 				vagc.InterruptRequests[5] = 1;
+			else if (channel == 016) // Secondary DSKY
+				vagc.InterruptRequests[6] = 1;
 
 			//
 			// Channels 030-034 are inverted!

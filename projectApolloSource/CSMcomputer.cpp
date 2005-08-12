@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/12 18:37:01  movieman523
+  *	Made Virtual AGC work all the way to orbit: enabled autopilot appropriately on launch and saved desired apogee/perigee/azimuth in scenario file.
+  *	
   *	Revision 1.9  2005/08/11 01:27:26  movieman523
   *	Added initial Virtual AGC support.
   *	
@@ -67,6 +70,8 @@
 
 #include "toggleswitch.h"
 #include "saturn.h"
+
+#include "ioChannels.h"
 
 static const double ERADIUS2 = (ERADIUS * ERADIUS * 1000000);
 
@@ -304,9 +309,11 @@ void CSMcomputer::ProcessVerbNoun(int verb, int noun)
 
 	case 46:
 		if (ProgRunning == 11) {
-			Saturn *Sat = (Saturn *) OurVessel;
+			ChannelValue12 val12;
+			val12.Value = GetOutputChannel(012);
 
-			Sat->SetAutopilot(!(Sat->GetAutopilot()));
+			val12.Bits.EnableSIVBTakeover = !val12.Bits.EnableSIVBTakeover;
+			SetOutputChannel(012, val12.Value);
 		}
 		break;
 
@@ -1309,9 +1316,17 @@ void CSMcomputer::DisplayBankSum()
 void CSMcomputer::Liftoff(double simt)
 
 {
+	//
+	// Ensure autopilot is enabled.
+	//
 
+	SetOutputChannelBit(012, 9, false);
 	Saturn *Sat = (Saturn *)OurVessel;
 	Sat->SetAutopilot(true);
+
+	//
+	// If we're not running the Virtual AGC, then switch to program 11.
+	//
 
 	if (!Yaagc) {
 		if (OnStandby())
@@ -1336,7 +1351,9 @@ void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 	{
 	case 030:
 		if (bit == 5 && val) {
-			Liftoff(CurrentTimestep);	// Liftoff signal
+			if (Yaagc || ProgRunning == 2) {
+				Liftoff(CurrentTimestep);	// Liftoff signal
+			}
 			break;
 		}
 		break;
