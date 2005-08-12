@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.28  2005/08/09 02:28:27  movieman523
   *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
   *	
@@ -251,7 +254,7 @@ void Saturn::initSaturn()
 	NextMissionEventTime = 0;
 	LastMissionEventTime = 0;
 
-	TimeDisplayOffset = 0.0;
+	MissionTimerDisplay = MissionTime;
 
 	abortTimer = 0;
 	release_time = 0;
@@ -638,7 +641,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
-	oapiWriteScenario_float (scn, "TDO", TimeDisplayOffset);
+	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay); // MUST FOLLOW MISSION TIME: see comments in LoadState();
 	oapiWriteScenario_float (scn, "ETDO", EventTimerOffset);
 
 	if (Realism != REALISM_DEFAULT) {
@@ -1092,10 +1095,16 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
 			MissionTime = ftcp;
+			//
+			// For now we'll duplicate the Mission time in the mission time display. If it's different, it
+			// should get overridden by the MTD entry later. This saves having to enter it twice in the 
+			// scenario file for initial launch.
+			//
+			MissionTimerDisplay = MissionTime;
 		}
-		else if (!strnicmp(line, "TDO", 3)) {
+		else if (!strnicmp(line, "MTD", 3)) {
             sscanf (line + 3, "%f", &ftcp);
-			TimeDisplayOffset = ftcp;
+			MissionTimerDisplay = ftcp;
 		}
 		else if (!strnicmp(line, "ETDO", 4)) {
             sscanf (line + 4, "%f", &ftcp);
@@ -1341,7 +1350,6 @@ void Saturn::SetStage(int s)
 void Saturn::DoLaunch(double simt)
 
 {
-	MissionTime = 0;
 	SetLiftoffLight();
 
 	SetStage(LAUNCH_STAGE_ONE);
@@ -1383,7 +1391,16 @@ void Saturn::GenericTimestep(double simt)
 	// Update mission time.
 	//
 
-	MissionTime = MissionTime + oapiGetSimStep();
+	double deltat = oapiGetSimStep();
+
+	MissionTime += deltat;
+
+	if (MissionTimerSwitch.IsUp()) {
+		MissionTimerDisplay += deltat;
+	}
+	else if (MissionTimerSwitch.IsDown()) {
+		MissionTimerDisplay = 0.0;
+	}
 
 	//
 	// Timestep tracking.
@@ -1539,7 +1556,7 @@ void Saturn::GenericTimestep(double simt)
 
 		getIT = oapiGetAltitude(habort,&altabort);
 
-		if (altabort < 100 && getIT > 0){
+		if (altabort < 100 && getIT > 0) {
 			oapiDeleteVessel(habort,GetHandle());
 			habort = NULL;
 		}
@@ -1557,8 +1574,8 @@ void Saturn::GenericTimestep(double simt)
 	// Destroy seperated SM when it drops too low in the atmosphere.
 	//
 
-	if (hSMJet && !ApolloExploded){
-		if ((simt-(20+ignition_SMtime))>=0 && stgSM){
+	if (hSMJet && !ApolloExploded) {
+		if ((simt-(20+ignition_SMtime))>=0 && stgSM) {
 			UllageSM(hSMJet,0,simt);
 			stgSM = false;
 		}

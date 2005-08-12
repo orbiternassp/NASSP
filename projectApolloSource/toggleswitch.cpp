@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/05 13:13:27  tschachim
+  *	Indicator change speed faster, bugfix
+  *	
   *	Revision 1.9  2005/07/30 16:10:44  tschachim
   *	Added SwitchTo function to simulate switch usage.
   *	
@@ -1224,3 +1227,76 @@ void PanelSwitchScenarioHandler::LoadState(FILEHANDLE scn) {
 		}
 	}
 }
+
+TimerUpdateSwitch::TimerUpdateSwitch()
+
+{
+	timer = 0;
+	adjust_type = TIME_UPDATE_SECONDS;
+
+	springLoaded = SPRINGLOADEDSWITCH_CENTER;
+}
+
+void TimerUpdateSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int adjuster, double *ptimer)
+
+{
+	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	adjust_type = adjuster;
+	timer = ptimer;
+}
+
+void TimerUpdateSwitch::AdjustTime(int val)
+
+{
+	int	t = (int) floor(*timer);
+	double extra = *timer - floor(*timer);
+
+	int hours = (t / 3600);
+	t -= (hours * 3600);
+	int minutes = (t / 60);
+	int secs = t - (minutes * 60);
+
+	switch (adjust_type) {
+	case TIME_UPDATE_HOURS:
+		hours += val;
+		if (hours > 999)
+			hours -= 1000;
+		break;
+
+	case TIME_UPDATE_MINUTES:
+		minutes += val;
+		if (minutes > 59)
+			minutes -= 60;
+		break;
+
+	case TIME_UPDATE_SECONDS:
+		secs += val;
+		if (secs > 59)
+			secs -= 60;
+		break;
+	}
+
+	t = secs + (60 * minutes) + (3600 * hours);
+
+	*timer = extra + (double) t;
+}
+
+bool TimerUpdateSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ThreePosSwitch::CheckMouseClick(event, mx, my))
+	{
+		//
+		// We need to increase by one if the switch is up, and ten if it's down.
+		//
+		if (IsUp()) {
+			AdjustTime(10);
+		}
+		if (IsDown()) {
+			AdjustTime(1);
+		}
+		return true;
+	}
+	else return false;
+}
+

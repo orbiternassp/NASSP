@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.28  2005/08/08 20:33:00  movieman523
   *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
   *	
@@ -206,7 +209,7 @@ protected:
 	// panel, and offset of event timer from mission time.
 	//
 
-	double TimeDisplayOffset;
+	double MissionTimerDisplay;
 	double EventTimerOffset;
 
 	//
@@ -627,6 +630,12 @@ protected:
 	ThreePosSwitch P346switch;
 	ThreePosSwitch P347switch;
 
+	ThreePosSwitch MissionTimerSwitch;
+
+	TimerUpdateSwitch MissionTimerHoursSwitch;
+	TimerUpdateSwitch MissionTimerMinutesSwitch;
+	TimerUpdateSwitch MissionTimerSecondsSwitch;
+
 	ThreePosSwitch RPswitch15;
 
 	SwitchRow RCSIndicatorsSwitchRow;
@@ -773,6 +782,8 @@ protected:
 	//SwitchRow EDSRow;
 	SwitchRow NAVRow1;
 	SwitchRow NAVRow2;
+	SwitchRow CautionWarningRow;
+	SwitchRow MissionTimerSwitchesRow;
 
 	SwitchRow P11Row;
 	SwitchRow SRP1Row;
