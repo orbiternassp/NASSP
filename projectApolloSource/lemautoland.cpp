@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/08/11 20:31:54  lazyd
+  *	fixed an evil bug in OrientAxis
+  *	
   *	Revision 1.24  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -318,8 +321,8 @@ void LEMcomputer::Prog63(double simt)
 				if(ProgState == 15) {
 //					if(tgo > -354.0) OurVessel->SetAttitudeRotLevel(1,0.0); //for old RCS thrust
 					if(tgo > -358.0) OurVessel->SetAttitudeRotLevel(1,0.0);
-					if(tgo > -352.0) {
-						if(fabs(actatt.y) < 0.25) {
+					if(tgo > -356.0) {
+						if((upproj.z > 0.0) && (fabs(actatt.y) < 0.25)) {
 							ProgState++;
 							ProgFlag02=true;
 							ProgFlag03=true;
@@ -331,7 +334,7 @@ void LEMcomputer::Prog63(double simt)
 					if(tgo > -360) {
 						ProgState++;
 						ProgFlag02=false;
-						// roll "the short way" to face-up
+						// yaw "the short way" to face-up
 						sgn=lrproj.z/fabs(lrproj.z);
 						OurVessel->SetAttitudeRotLevel(1,0.5*sgn);
 					}
@@ -2123,9 +2126,8 @@ void LEMcomputer::AbortAscent(double simt)
 void LEMcomputer::Prog32(double simt)
 {
 	const double GRAVITY=6.67259e-11;
-	VECTOR3 lmpos, lmvel, h, n, ve, apos, avel, vec, csmpos;
-	double mu, p, e, i, om, w, v, u, l, a, eanom, manom, period, tsp, rdotv, ttp, tta, 
-		rapo, vapo, velm, dv, t12, vmass;
+	VECTOR3 lmpos, lmvel, apos, avel, vec, csmpos;
+	double mu, e, a, period, ttp, tta, rapo, vapo, velm, dv, t12, vmass, apo, per, vel, r;
 	char line[10];
 
 	if(ProgState == 0) {
@@ -2137,7 +2139,8 @@ void LEMcomputer::Prog32(double simt)
 			OurVessel->GetRelativePos(hbody, lmpos);
 			OurVessel->GetRelativeVel(hbody, lmvel);
 			vmass=OurVessel->GetMass();
-
+			OrbitParams(lmpos, lmvel, period, apo, tta, per, ttp);
+/*
 			rdotv=lmvel*lmpos;
 			h=CrossProduct(lmpos, lmvel);
 			n=(_V(0.0, 0.0, 1.0), h);
@@ -2155,18 +2158,11 @@ void LEMcomputer::Prog32(double simt)
 			if(lmpos.z < 0) u=2.0*PI-u;
 			l=om+u;
 			a=p/(1.0-e*e);
-			eanom=2*atan(sqrt((1.0-e)/(1.0+e))*tan(v/2.0));
-			manom=eanom-e*sin(eanom);
-			period=2*PI*sqrt((a*a*a)/mu);
-			tsp=period*(manom/(2*PI));
-			ttp=period-tsp;
-			if(rdotv < 0.0) ttp=-tsp;
-			if(ttp > (period/2.0)) {
-				tta=fabs((period/2.0) -ttp);
-			} else {
-				tta=fabs(ttp + period/2.0);
-			}
-//
+*/
+			vel=Mag(lmvel);
+			r=Mag(lmpos);
+			e=(vel*vel)/2.0-mu/r;
+			a=-mu/(2.0*e);
 			PredictPosVelVectors(lmpos, lmvel, a, mu, tta, apos, avel, velm);
 			rapo=Mag(apos);
 			vapo=sqrt(mu/rapo);
@@ -2325,10 +2321,10 @@ void LEMcomputer::Prog33(double simt)
 		}
 		if(ProgState == 2) {
 			//for nearly circular orbits this drifts, so recalculate it occasionally
-			if(simt > CutOffVel) {
-				ProgState=1;
-				return;
-			}
+//			if(simt > CutOffVel) {
+//				ProgState=1;
+//				return;
+//			}
 			OBJHANDLE hbody=OurVessel->GetGravityRef();
 			strncpy(line, OurVessel->GetName(), 10);
 			line[6]=0;
