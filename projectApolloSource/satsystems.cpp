@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/10 22:31:57  movieman523
+  *	IMU is now enabled when running Prog 01.
+  *	
   *	Revision 1.11  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -76,6 +79,8 @@
 #include "IMU.h"
 
 #include "saturn.h"
+
+#include "ioChannels.h"
 
 //FILE *PanelsdkLogFile;
 
@@ -430,7 +435,10 @@ void Saturn::SystemsTimestep(double simt) {
 bool Saturn::AutopilotActive()
 
 {
-	return autopilot && CMCswitch;
+	ChannelValue12 val12;
+	val12.Value = agc.GetOutputChannel(012);
+
+	return (autopilot && CMCswitch) && !val12.Bits.EnableSIVBTakeover;
 }
 
 bool Saturn::CabinFansActive()
