@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/11 23:20:21  movieman523
+  *	Fixed a few more IMU bugs and other odds and ends.
+  *	
   *	Revision 1.4  2005/08/11 22:27:00  movieman523
   *	Fixed stupid cut-and-paste error in IMU.
   *	
@@ -578,8 +581,7 @@ void IMU::DriveGimbal(int index, int RegCDU, double angle, int changeCDU)
     		}
 		}
 */
-		int val = agc.GetErasable(0, RegCDU) + pulses;
-		agc.SetErasable(0, RegCDU, (val & 077777));
+		agc.SetErasable(0, RegCDU, (pulses & 077777));
 //	}
 }
 
