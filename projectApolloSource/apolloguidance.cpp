@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/08/12 19:24:32  movieman523
+  *	Updated to latest version of Virtual AGC.
+  *	
   *	Revision 1.26  2005/08/12 18:37:01  movieman523
   *	Made Virtual AGC work all the way to orbit: enabled autopilot appropriately on launch and saved desired apogee/perigee/azimuth in scenario file.
   *	
@@ -293,9 +296,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	//	CA	BIT14			# IF AGC WARNING ON (BIT = 0), DO A FRESH
 	//	EXTEND				# START ON THE ASSUMPTION THAT WE'RE IN A
 	//	RAND	CHAN33		# RESTART LOOP.
-	//
-	// Edit: Weird, the 1107 error is now back after updating to the new Virtual AGC, I guess this needs more
-	// investigation.
 	//
 
 	val33.Bits.AGCWarning = 0;
