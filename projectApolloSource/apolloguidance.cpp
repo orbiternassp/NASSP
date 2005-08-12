@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/08/11 23:51:54  movieman523
+  *	Fixed the 1107 alarm on AGC startup.
+  *	
   *	Revision 1.24  2005/08/11 23:20:21  movieman523
   *	Fixed a few more IMU bugs and other odds and ends.
   *	
@@ -2185,6 +2188,10 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 		oapiWriteScenario_string(scn, "R3FMT", R3Format);
 	}
 
+	oapiWriteScenario_float(scn, "TGTA", DesiredApogee);
+	oapiWriteScenario_float(scn, "TGTP", DesiredPerigee);
+	oapiWriteScenario_float(scn, "TGTZ", DesiredAzimuth);
+
 	//
 	// Copy internal state to the structure.
 	//
@@ -2351,6 +2358,10 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "TGTP", 4)) {
 			sscanf (line+4, "%f", &flt);
 			DesiredPerigee = flt;
+		}
+		else if (!strnicmp (line, "TGTZ", 4)) {
+			sscanf (line+4, "%f", &flt);
+			DesiredAzimuth = flt;
 		}
 		else if (!strnicmp (line, "TGTDV", 5)) {
 			sscanf (line+5, "%f", &flt);
@@ -2833,24 +2844,12 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 		val = BankSumNum;
 		return true;
 
-	case 011:
-		val = (unsigned int) (DesiredApogee * 100.0);
-		return true;
-
-	case 012:
-		val = (unsigned int) (DesiredPerigee * 100.0);
-		return true;
-
 	case 013:
 		val = CurrentEMEMAddr;
 		return true;
 
 	case 014:
 		val = ApolloNo;
-		return true;
-
-	case 015:
-		val = (int) (DesiredAzimuth * 100.0);
 		return true;
 
 	case 016:
@@ -2951,24 +2950,12 @@ void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)
 		BankSumNum = val;
 		break;
 
-	case 011:
-		DesiredApogee = ((double) val) / 100.0;
-		break;
-
-	case 012:
-		DesiredPerigee = ((double) val) / 100.0;
-		break;
-
 	case 013:
 		CurrentEMEMAddr = val;
 		break;
 
 	case 014:
 		ApolloNo = val;
-		break;
-
-	case 015:
-		DesiredAzimuth = ((double) val) / 100.0;
 		break;
 
 	case 016:
