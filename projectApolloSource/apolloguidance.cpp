@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/08/12 18:37:01  movieman523
+  *	Made Virtual AGC work all the way to orbit: enabled autopilot appropriately on launch and saved desired apogee/perigee/azimuth in scenario file.
+  *	
   *	Revision 1.25  2005/08/11 23:51:54  movieman523
   *	Fixed the 1107 alarm on AGC startup.
   *	
@@ -259,7 +262,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	memset(&vagc, 0, sizeof(vagc));
 	vagc.agcptr = this;
 
-	agc_engine_init(&vagc, binfile, NULL);
+	agc_engine_init(&vagc, binfile, NULL, 0);
 
 	ChannelValue30 val30;
 	ChannelValue32 val32;
@@ -290,6 +293,9 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	//	CA	BIT14			# IF AGC WARNING ON (BIT = 0), DO A FRESH
 	//	EXTEND				# START ON THE ASSUMPTION THAT WE'RE IN A
 	//	RAND	CHAN33		# RESTART LOOP.
+	//
+	// Edit: Weird, the 1107 error is now back after updating to the new Virtual AGC, I guess this needs more
+	// investigation.
 	//
 
 	val33.Bits.AGCWarning = 0;
@@ -2138,6 +2144,7 @@ typedef union
 		unsigned PendFlag:1;
 		unsigned PendDelay:3;
 		unsigned ExtraDelay:3;
+		unsigned DownruptTimeValid:1;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -2225,6 +2232,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.PendFlag = vagc.PendFlag;
 	state.u.PendDelay = vagc.PendDelay;
 	state.u.ExtraDelay = vagc.ExtraDelay;
+	state.u.DownruptTimeValid = vagc.DownruptTimeValid;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -2447,6 +2455,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.PendFlag = state.u.PendFlag;
 			vagc.PendDelay = state.u.PendDelay;
 			vagc.ExtraDelay = state.u.ExtraDelay;
+			vagc.DownruptTimeValid = state.u.DownruptTimeValid;
 		}
 		else if (!strnicmp (line, "YAAGC", 5)) {
 			sscanf (line+5, "%d", &Yaagc);
@@ -3043,6 +3052,12 @@ void ChannelOutput (agc_t * State, int Channel, int Value)
   agc->SetOutputChannel(Channel, Value);
 }
 
+void ShiftToDeda (agc_t *State, int Data)
+
+{
+	// Nothing for now.
+}
+
 //
 // Do nothing here. We'll process input seperately.
 //
@@ -3057,3 +3072,4 @@ void ChannelRoutine (agc_t *State)
 
 {
 }
+
