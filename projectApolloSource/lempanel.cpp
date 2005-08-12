@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/08/11 16:29:33  spacex15
+  *	Added PNGS and AGS mode control 3 pos switches
+  *	
   *	Revision 1.24  2005/08/11 14:00:34  spacex15
   *	Added Descent Engine Command Override switch
   *	
@@ -858,8 +861,25 @@ void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
 			agc.SetInputChannelBit(030, 4, true);
 		}
 	} else if (s == &EngineArmSwitch) {
-		    if (!s->IsCenter())
- 			    agc.SetInputChannelBit(030, 3, true);
+		if (!s->IsCenter())
+ 		    agc.SetInputChannelBit(030, 3, true);
+    }
+    else if (s == &ModeControlPNGSSwitch) {
+		if (s->IsCenter())
+		{
+ 		    agc.SetInputChannelBit(031, 13, true);
+ 		    agc.SetInputChannelBit(031, 14, false);
+		}
+		else if (s->IsUp())
+		{
+ 		    agc.SetInputChannelBit(031, 13, false);
+ 		    agc.SetInputChannelBit(031, 14, true);
+		}
+		else if (s->IsDown())
+		{
+ 		    agc.SetInputChannelBit(031, 13, false);
+ 		    agc.SetInputChannelBit(031, 14, false);
+		}
     }
 }
 
