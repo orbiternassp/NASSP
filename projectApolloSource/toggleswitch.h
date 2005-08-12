@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/07/30 16:08:11  tschachim
+  *	Added SwitchTo function to simulate switch usage.
+  *	
   *	Revision 1.8  2005/07/05 17:58:03  tschachim
   *	Introduced spring-loaded switches
   *	
@@ -65,6 +68,9 @@
 #define PANELSWITCH_START_STRING	"PANELSWITCHES_BEGIN"
 #define PANELSWITCH_END_STRING		"PANELSWITCHES_END"
 
+#define TIME_UPDATE_SECONDS	0
+#define TIME_UPDATE_MINUTES 1
+#define TIME_UPDATE_HOURS	2
 
 class SwitchRow;
 class PanelSwitchScenarioHandler;
@@ -206,12 +212,29 @@ class ThreePosSwitch: public ToggleSwitch {
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool IsCenter() { return (state == 1); };
-	bool IsUp() { return (state == 2); };
+	bool IsDown() { return (state == THREEPOSSWITCH_DOWN); };
+	bool IsCenter() { return (state == THREEPOSSWITCH_CENTER); };
+	bool IsUp() { return (state == THREEPOSSWITCH_UP); };
+
+	void SetState(int s) { state = s; };
+	int GetState() { return state; };
 
 	int operator=(const int b) { state = b; return state; };
 };
 
+class TimerUpdateSwitch: public ThreePosSwitch {
+
+public:
+	TimerUpdateSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int adjuster, double *ptimer);
+	bool CheckMouseClick(int event, int mx, int my);
+
+protected:
+	void AdjustTime(int val);
+
+	int adjust_type;
+	double *timer;
+};
 
 class PushSwitch: public ToggleSwitch {
 

@@ -292,6 +292,9 @@
 #define AID_MFDRIGHT                    524
 #define IDB_LEM_LPD_WINDOW              525
 #define AID_MODECONTROL                 526
+#define AID_CAUTIONWARNING_SWITCHES		527
+#define AID_MISSION_TIMER_SWITCHES		528
+
 
 // Next default values for new objects
 // 
