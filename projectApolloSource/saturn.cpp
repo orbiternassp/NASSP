@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/08/13 14:59:24  movieman523
+  *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
+  *	
   *	Revision 1.31  2005/08/13 14:21:36  movieman523
   *	Added beginnings of caution and warning system.
   *	
@@ -256,8 +259,6 @@ void Saturn::initSaturn()
 	MissionTime = (-3600);
 	NextMissionEventTime = 0;
 	LastMissionEventTime = 0;
-
-	MissionTimerDisplay = MissionTime;
 
 	abortTimer = 0;
 	release_time = 0;
@@ -643,7 +644,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
-	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay); // MUST FOLLOW MISSION TIME: see comments in LoadState();
+	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime()); // MUST FOLLOW MISSION TIME: see comments in LoadState();
 	oapiWriteScenario_float (scn, "ETDO", EventTimerOffset);
 
 	if (Realism != REALISM_DEFAULT) {
@@ -782,7 +783,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 typedef union {
 	struct {
-		unsigned Unused1:1;
+		unsigned MissionTimerRunning:1;
 		unsigned SIISepState:1;
 		unsigned autopilot:1;
 		unsigned TLIBurnDone:1;
@@ -810,6 +811,7 @@ int Saturn::GetMainState()
 	MainState state;
 
 	state.word = 0;
+	state.u.MissionTimerRunning = MissionTimerDisplay.IsRunning();
 	state.u.SIISepState = SIISepState;
 	state.u.autopilot = autopilot;
 	state.u.TLIBurnDone = TLIBurnDone;
@@ -852,6 +854,7 @@ void Saturn::SetMainState(int s)
 	PostSplashdownPlayed = (state.u.PostSplashdownPlayed != 0);
 	IGMEnabled = (state.u.IGMEnabled != 0);
 	stgSM = (state.u.stgSM != 0);
+	MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
 }
 
 
@@ -1096,16 +1099,10 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
 			MissionTime = ftcp;
-			//
-			// For now we'll duplicate the Mission time in the mission time display. If it's different, it
-			// should get overridden by the MTD entry later. This saves having to enter it twice in the 
-			// scenario file for initial launch.
-			//
-			MissionTimerDisplay = MissionTime;
 		}
 		else if (!strnicmp(line, "MTD", 3)) {
             sscanf (line + 3, "%f", &ftcp);
-			MissionTimerDisplay = ftcp;
+			MissionTimerDisplay.SetTime(ftcp);
 		}
 		else if (!strnicmp(line, "ETDO", 4)) {
             sscanf (line + 4, "%f", &ftcp);
@@ -1359,6 +1356,12 @@ void Saturn::DoLaunch(double simt)
 	SetStage(LAUNCH_STAGE_ONE);
 
 	//
+	// For now, we'll reset the mission timer to zero.
+	//
+
+	MissionTimerDisplay.Reset();
+
+	//
 	// Tell the AGC that we've lifted off.
 	//
 
@@ -1398,13 +1401,7 @@ void Saturn::GenericTimestep(double simt)
 	double deltat = oapiGetSimStep();
 
 	MissionTime += deltat;
-
-	if (MissionTimerSwitch.IsUp()) {
-		MissionTimerDisplay += deltat;
-	}
-	else if (MissionTimerSwitch.IsDown()) {
-		MissionTimerDisplay = 0.0;
-	}
+	MissionTimerDisplay.Timestep(simt, deltat);
 
 	//
 	// Timestep tracking.

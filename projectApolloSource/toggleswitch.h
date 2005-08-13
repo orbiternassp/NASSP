@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/13 16:41:15  movieman523
+  *	Fully wired up the CSM caution and warning switches.
+  *	
   *	Revision 1.13  2005/08/13 14:21:36  movieman523
   *	Added beginnings of caution and warning system.
   *	
@@ -236,18 +239,40 @@ public:
 	int operator=(const int b) { state = b; return state; };
 };
 
-class TimerUpdateSwitch: public ThreePosSwitch {
+//
+// Mission Timer switches.
+//
+
+class MissionTimer; // Forward reference for files which include this before missiontimer.h
+
+class MissionTimerSwitch: public ThreePosSwitch {
+
+public:
+	MissionTimerSwitch() { timer = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, MissionTimer *ptimer);
+
+protected:
+	MissionTimer *timer;
+};
+
+class TimerControlSwitch: public MissionTimerSwitch {
+
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+
+};
+
+class TimerUpdateSwitch: public MissionTimerSwitch {
 
 public:
 	TimerUpdateSwitch();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int adjuster, double *ptimer);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int adjuster, MissionTimer *ptimer);
 	bool CheckMouseClick(int event, int mx, int my);
 
 protected:
 	void AdjustTime(int val);
 
 	int adjust_type;
-	double *timer;
 };
 
 class CautionWarningSystem; // Forward reference for files which include this before cautionwarning.h

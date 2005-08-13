@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/11 16:29:33  spacex15
+  *	Added PNGS and AGS mode control 3 pos switches
+  *	
   *	Revision 1.15  2005/08/11 14:00:35  spacex15
   *	Added Descent Engine Command Override switch
   *	
@@ -70,9 +73,15 @@
   *	
   **************************************************************************/
 
+
+#if !defined(_PA_SAT5_LMPKD_H)
+#define _PA_SAT5_LMPKD_H
+
 //
 // Lem state settings from scenario file, passed from CSM.
 //
+
+#include "missiontimer.h"
 
 typedef struct {
 
@@ -428,6 +437,7 @@ protected:
 	DSKY dsky;
 	LEMcomputer agc;
 	IMU imu;
+	MissionTimer MissionTimerDisplay;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
@@ -464,3 +474,5 @@ protected:
 extern void LEMLoadMeshes();
 extern void InitGParam(HINSTANCE hModule);
 extern void FreeGParam();
+
+#endif

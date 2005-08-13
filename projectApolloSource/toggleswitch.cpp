@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/13 16:41:15  movieman523
+  *	Fully wired up the CSM caution and warning switches.
+  *	
   *	Revision 1.14  2005/08/13 14:21:36  movieman523
   *	Added beginnings of caution and warning system.
   *	
@@ -82,6 +85,7 @@
 #include "toggleswitch.h"
 
 #include "IMU.h"
+#include "missiontimer.h"
 
 //
 // Generic toggle switch.
@@ -1242,63 +1246,74 @@ void PanelSwitchScenarioHandler::LoadState(FILEHANDLE scn) {
 	}
 }
 
-TimerUpdateSwitch::TimerUpdateSwitch()
-
-{
-	timer = 0;
-	adjust_type = TIME_UPDATE_SECONDS;
-
-	springLoaded = SPRINGLOADEDSWITCH_CENTER;
-}
-
-void TimerUpdateSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int adjuster, double *ptimer)
+void MissionTimerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, MissionTimer *ptimer)
 
 {
 	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
-	adjust_type = adjuster;
 	timer = ptimer;
+}
+
+TimerUpdateSwitch::TimerUpdateSwitch()
+
+{
+	adjust_type = TIME_UPDATE_SECONDS;
+	springLoaded = SPRINGLOADEDSWITCH_CENTER;
+}
+
+void TimerUpdateSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int adjuster, MissionTimer *ptimer)
+
+{
+	MissionTimerSwitch::Init(xp, yp, w, h, surf, row, ptimer);
+	adjust_type = adjuster;
 }
 
 void TimerUpdateSwitch::AdjustTime(int val)
 
 {
-	int	t = (int) floor(*timer);
-	double extra = *timer - floor(*timer);
+	if (timer) {
+		switch (adjust_type) {
+		case TIME_UPDATE_HOURS:
+			timer->UpdateHours(val);
+			break;
 
-	int hours = (t / 3600);
-	t -= (hours * 3600);
-	int minutes = (t / 60);
-	int secs = t - (minutes * 60);
+		case TIME_UPDATE_MINUTES:
+			timer->UpdateMinutes(val);
+			break;
 
-	switch (adjust_type) {
-	case TIME_UPDATE_HOURS:
-		hours += val;
-		if (hours > 999)
-			hours -= 1000;
-		break;
+		case TIME_UPDATE_SECONDS:
+			timer->UpdateSeconds(val);
+			break;
+		}
+	}
+}
 
-	case TIME_UPDATE_MINUTES:
-		minutes += val;
-		if (minutes > 59)
-			minutes -= 60;
-		break;
+bool TimerControlSwitch::CheckMouseClick(int event, int mx, int my)
 
-	case TIME_UPDATE_SECONDS:
-		secs += val;
-		if (secs > 59)
-			secs -= 60;
-		break;
+{
+	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
+	{
+		if (timer) {
+			if (IsUp()) {
+				timer->SetRunning(true);
+			}
+			else if (IsCenter()) {
+				timer->SetRunning(false);
+			}
+			else if (IsDown()) {
+				timer->SetRunning(false);
+				timer->Reset();
+			}
+		}
+		return true;
 	}
 
-	t = secs + (60 * minutes) + (3600 * hours);
-
-	*timer = extra + (double) t;
+	return false;
 }
 
 bool TimerUpdateSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
-	if (ThreePosSwitch::CheckMouseClick(event, mx, my))
+	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
 	{
 		//
 		// We need to increase by one if the switch is up, and ten if it's down.

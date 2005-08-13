@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2005/08/13 16:41:15  movieman523
+  *	Fully wired up the CSM caution and warning switches.
+  *	
   *	Revision 1.40  2005/08/13 14:59:24  movieman523
   *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
   *	
@@ -1191,7 +1194,7 @@ void Saturn::SetSwitches(int panel) {
 	O2Fan2Switch.Init    (541, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
 
 	CautionWarningRow.Init(AID_CAUTIONWARNING_SWITCHES, MainPanel);
-	MissionTimerSwitch.Init(190, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow);
+	MissionTimerSwitch.Init(190, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow, &MissionTimerDisplay);
 	CautionWarningModeSwitch.Init(7, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow, &cws);
 	CautionWarningCMCSMSwitch.Init(55, 0, 34, 29, srf[SRF_SWITCHUP], CautionWarningRow, &cws);
 	CautionWarningPowerSwitch.Init(104, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow, &cws);
@@ -2718,7 +2721,10 @@ void Saturn::StopMasterAlarm()
 	cws.SetMasterAlarm(false);
 }
 
-bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
+bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) 
+
+{
+	int Curdigit, Curdigit2;
 
 	//
 	// Special handling illuminated "sequencer switches"
@@ -2846,54 +2852,8 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		return true;
 
 	case AID_MISSION_CLOCK:
-		int TmpCLKHR, TmpCLKMNT, TmpCLKsec;
-		int Curdigit, Curdigit2;
-		double cTime;
-
-		//
-		// Time display is normally mission time, but can be adjusted by the user with the
-		// mission timer switches.
-		//
-
-		cTime = MissionTimerDisplay;
-
-		if (cTime < 0)
-			cTime = (-cTime);
-
-		TmpCLKHR = (int)(cTime/3600.0);
-		TmpCLKMNT = (((int)cTime-(TmpCLKHR*3600))/60);
-		TmpCLKsec = (((int)cTime-((TmpCLKHR*3600)+TmpCLKMNT*60)));
-
-		// Hour display on three digit
-		Curdigit=TmpCLKHR/100;
-		Curdigit2=TmpCLKHR/1000;
-		oapiBlt(surf,srf[4],0,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		Curdigit=TmpCLKHR/10;
-		Curdigit2=TmpCLKHR/100;
-		oapiBlt(surf,srf[4],0+17,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		Curdigit=TmpCLKHR;
-		Curdigit2=TmpCLKHR/10;
-		oapiBlt(surf,srf[4],0+34,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		oapiBlt(surf,srf[4],0+54,0, 192,0,4,19);
-		// Minute display on five digit
-		Curdigit=TmpCLKMNT/10;
-		Curdigit2=TmpCLKMNT/100;
-		oapiBlt(surf,srf[4],0+61,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		Curdigit=TmpCLKMNT;
-		Curdigit2=TmpCLKMNT/10;
-		oapiBlt(surf,srf[4],0+78,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		oapiBlt(surf,srf[4],0+98,0, 192,0,4,19);
-		// second display on five digit
-		Curdigit=TmpCLKsec/10;
-		Curdigit2=TmpCLKsec/100;
-		oapiBlt(surf,srf[4],0+105,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-		Curdigit=TmpCLKsec;
-		Curdigit2=TmpCLKsec/10;
-		oapiBlt(surf,srf[4],0+122,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
-
+		MissionTimerDisplay.Render(surf, srf[4]);
 		return true;
-		
-
 
 	// old stuff
 	case AID_HORIZON:
@@ -3919,7 +3879,7 @@ void Saturn::InitSwitches() {
 	SivbLmSepSwitch.SetGuardState(false);		// saved in RPSwitchState.RPCswitch
 	SivbLmSepSwitch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
 
-	MissionTimerSwitch.Register(PSH, "MissionTimerSwitch", THREEPOSSWITCH_UP);
+	MissionTimerSwitch.Register(PSH, "MissionTimerSwitch", THREEPOSSWITCH_CENTER);
 	CautionWarningModeSwitch.Register(PSH, "CautionWarningModeSwitch", THREEPOSSWITCH_UP);
 	CautionWarningCMCSMSwitch.Register(PSH, "CautionWarningCMCSMSwitch", 1);
 	CautionWarningPowerSwitch.Register(PSH, "CautionWarningPowerSwitch", THREEPOSSWITCH_UP);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.24  2005/08/10 20:00:55  spacex15
   *	Activated 3 position lem eng arm switch
   *	
@@ -255,6 +258,13 @@ void sat5_lmpkd::Init()
 
 	agc.SetInputChannelBit(030, 2, true);	// Descent stage attached.
 	agc.SetInputChannelBit(030, 15, true);	// Temperature in limits.
+
+	//
+	// For now we'll turn on the mission timer. We don't yet have a switch to control
+	// it.
+	//
+
+	MissionTimerDisplay.SetRunning(true);
 }
 
 void sat5_lmpkd::DoFirstTimestep()
@@ -543,11 +553,14 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 	VECTOR3 RVEL = _V(0.0,0.0,0.0);
 	GetRelativeVel(GetGravityRef(),RVEL);
 
-	MissionTime = MissionTime + oapiGetSimStep();
+	double deltat = oapiGetSimStep();
+
+	MissionTime = MissionTime + deltat;
 
 	agc.Timestep(MissionTime);
 	dsky.Timestep(MissionTime);
 	imu.Timestep(MissionTime);
+	MissionTimerDisplay.Timestep(MissionTime, deltat);
 
 	actualVEL = (sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z)/1000*3600);
 	actualALT = GetAltitude() ;
@@ -844,6 +857,13 @@ void sat5_lmpkd::StartAscent()
 	LunarAscent.done();
 }
 
+typedef union {
+	struct {
+		unsigned MissionTimerRunning:1;
+	} u;
+	unsigned long word;
+} LEMMainState;
+
 //
 // Scenario state functions.
 //
@@ -882,6 +902,9 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 		} else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
 			MissionTime = ftcp;
+		} else if (!strnicmp(line, "MTD", 3)) {
+            sscanf (line+9, "%f", &ftcp);
+			MissionTimerDisplay.SetTime(ftcp);
 		}
 		else if (!strnicmp(line, "UNMANNED", 8)) {
 			int i;
@@ -908,6 +931,12 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
+		}
+		else if (!strnicmp (line, "STATE", 5)) {
+			LEMMainState state;
+			sscanf (line+5, "%d", &state.word);
+
+			MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning);
 		} 
         else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
 			PSH.LoadState(scn);	
@@ -986,6 +1015,7 @@ void sat5_lmpkd::SaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
 	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
+	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
 
@@ -998,6 +1028,12 @@ void sat5_lmpkd::SaveState (FILEHANDLE scn)
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
 	}
+
+	LEMMainState state;
+	state.word = 0;
+
+	state.u.MissionTimerRunning = MissionTimerDisplay.IsRunning();
+	oapiWriteScenario_int (scn, "STATE", state.word);
 
 	dsky.SaveState(scn);
 	agc.SaveState(scn);
@@ -1027,6 +1063,8 @@ void sat5_lmpkd::SetLanderData(LemSettings &ls)
     char buffers[80];
 
 	MissionTime = ls.MissionTime;
+	MissionTimerDisplay.SetTime(MissionTime);
+
 	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
 

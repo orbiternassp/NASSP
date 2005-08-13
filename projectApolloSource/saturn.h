@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/08/13 16:41:15  movieman523
+  *	Fully wired up the CSM caution and warning switches.
+  *	
   *	Revision 1.35  2005/08/13 14:59:24  movieman523
   *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
   *	
@@ -136,10 +139,14 @@
   *	
   **************************************************************************/
 
+#if !defined(_PA_SATURN_H)
+#define _PA_SATURN_H
+
 #include "PanelSDK/PanelSDK.h"
 
 #include "cautionwarning.h"
 #include "csmcautionwarning.h"
+#include "missiontimer.h"
 
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
@@ -230,7 +237,7 @@ protected:
 	// panel, and offset of event timer from mission time.
 	//
 
-	double MissionTimerDisplay;
+	MissionTimer MissionTimerDisplay;
 	double EventTimerOffset;
 
 	//
@@ -640,7 +647,7 @@ protected:
 	ThreePosSwitch P346switch;
 	ThreePosSwitch P347switch;
 
-	ThreePosSwitch MissionTimerSwitch;
+	TimerControlSwitch MissionTimerSwitch;
 	CWSModeSwitch CautionWarningModeSwitch;
 	CWSSourceSwitch CautionWarningCMCSMSwitch;
 	CWSPowerSwitch CautionWarningPowerSwitch;
@@ -1278,3 +1285,5 @@ extern MESHHANDLE hFHO2;
 
 extern void SetupgParam(HINSTANCE hModule);
 extern void DeletegParam();
+
+#endif
