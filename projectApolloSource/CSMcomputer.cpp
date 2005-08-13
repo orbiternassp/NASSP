@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/12 21:42:14  movieman523
+  *	Added support for 'SIVB Takeover' bit on launch.
+  *	
   *	Revision 1.10  2005/08/12 18:37:01  movieman523
   *	Made Virtual AGC work all the way to orbit: enabled autopilot appropriately on launch and saved desired apogee/perigee/azimuth in scenario file.
   *	
@@ -398,7 +401,10 @@ void CSMcomputer::Prog01(double simt)
 
 	case 2:
 		if (simt >= NextProgTime) {
-			if (GetInputChannelBit(030, 9)) {
+			ChannelValue30 val30;
+
+			val30.Value = GetInputChannel(030);
+			if (val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
 				ClearNoAtt();
 				RunProgram(2);
 			}
@@ -1355,6 +1361,12 @@ void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 				Liftoff(CurrentTimestep);	// Liftoff signal
 			}
 			break;
+		}
+		else if (!Yaagc && (bit == 11 || bit == 9)) {
+			ChannelValue30 val30;
+
+			val30.Value = GetInputChannel(030);
+			dsky.SetNoAtt(!val30.Bits.IMUOperate || val30.Bits.IMUCage);
 		}
 		break;
 	}
