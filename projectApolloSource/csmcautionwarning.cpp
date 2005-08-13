@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/13 16:41:15  movieman523
+  *	Fully wired up the CSM caution and warning switches.
+  *	
   *	Revision 1.1  2005/08/13 14:59:24  movieman523
   *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
   *	
@@ -62,6 +65,36 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 
 		//
 		// Check systems.
+		//
+
+		//
+		// LOX/LH2: "The caution and warning system will activate on alarm when oxygen pressure 
+		// in either tank exceeds 950 psia or falls below 800 psia or when the hydrogen system 
+		// pressure exceeds 270 psia or drops below 220 psia."
+		//
+
+		//
+		// Inverter: "A temperature sensor with a range of 32 degrees to 248 degrees F is installed 
+		// in each inverter and will illuminate a light in the caution and warning system at an 
+		// inverter overtemperature of 190 degrees F"
+		//
+
+		//
+		// Power Bus: "If voltage drops below 26.25 volts dc, the applicable dc undervoltage light 
+		// on the caution and warning panel will illuminate."
+		//
+
+		//
+		// Oxygen flow: "Flow rates of 1 pound per hour or more with a duration in excess of 16.5 
+		// seconds will illuminate a light on the caution and warning panel to alert the crew to 
+		// the fact that the oxygen flow rate is greater than is normally required."
+		//
+
+		//
+		// CO2: "A carbon dioxide sensor is connected between the suit inlet and return manifold. It 
+		// is connected to an indicator on the main display console, to telemetry, and to the caution 
+		// and warning system and will activate a warning if the carbon dioxide partial pressure 
+		// reaches 7.6 millimeters of mercury."
 		//
 
 		NextUpdateTime = simt + (0.2 * oapiGetTimeAcceleration());
