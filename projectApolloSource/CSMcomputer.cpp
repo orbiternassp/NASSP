@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/13 01:09:43  movieman523
+  *	Display NO ATT light when IMU is caged.
+  *	
   *	Revision 1.11  2005/08/12 21:42:14  movieman523
   *	Added support for 'SIVB Takeover' bit on launch.
   *	
@@ -1357,9 +1360,7 @@ void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 	{
 	case 030:
 		if (bit == 5 && val) {
-			if (Yaagc || ProgRunning == 2) {
-				Liftoff(CurrentTimestep);	// Liftoff signal
-			}
+			Liftoff(CurrentTimestep);	// Liftoff signal
 			break;
 		}
 		else if (!Yaagc && (bit == 11 || bit == 9)) {

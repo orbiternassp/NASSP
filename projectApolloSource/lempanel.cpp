@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/08/12 10:06:05  spacex15
+  *	added connection of PNGS mode control switch to the agc input channel
+  *	
   *	Revision 1.25  2005/08/11 16:29:33  spacex15
   *	Added PNGS and AGS mode control 3 pos switches
   *	
@@ -695,7 +698,7 @@ bool sat5_lmpkd::LoadPanel (int id) {
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 
-		//oapiRegisterPanelArea (AID_MISSION_CLOCK,						_R( 908,  163, 1007,  178), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MISSION_CLOCK,					_R( 74,  287, 216,  309), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146,  135, 1183,  150), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146,  169, 1183,  184), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_FUEL_DIGIT2,					_R(1232,  163, 1285,  178), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
@@ -1856,7 +1859,11 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 	}
 	return false;
 }
-bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf) {
+bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf) 
+
+{
+	int Curdigit;
+	int Curdigit2;
 
 	//
 	// Special handling illuminated abort stage switch
@@ -1937,49 +1944,7 @@ bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf) {
 		return true;
 
 	case AID_MISSION_CLOCK:
-		int TmpCLKHR;
-		int TmpCLKMNT;
-		int TmpCLKsec;
-		int Curdigit;
-		int Curdigit2;
-
-		double cTime;
-
-		cTime = MissionTime;
-		if (cTime < 0)
-			cTime = (-cTime);
-
-		TmpCLKHR = (int)(cTime/3600.0);
-		TmpCLKMNT = (((int)cTime-(TmpCLKHR*3600))/60);
-		TmpCLKsec = (((int)cTime-((TmpCLKHR*3600)+TmpCLKMNT*60)));
-
-		// Hour display on three digit
-		Curdigit=TmpCLKHR/100;
-		Curdigit2=TmpCLKHR/1000;
-		oapiBlt(surf,srf[4],0,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=TmpCLKHR/10;
-		Curdigit2=TmpCLKHR/100;
-		oapiBlt(surf,srf[4],0+12,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=TmpCLKHR;
-		Curdigit2=TmpCLKHR/10;
-		oapiBlt(surf,srf[4],0+24,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
-		oapiBlt(surf,srf[4],0+34,0, 140,0,10,15);
-		// Minute display on five digit
-		Curdigit=TmpCLKMNT/10;
-		Curdigit2=TmpCLKMNT/100;
-		oapiBlt(surf,srf[4],0+44,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=TmpCLKMNT;
-		Curdigit2=TmpCLKMNT/10;
-		oapiBlt(surf,srf[4],0+56,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
-		oapiBlt(surf,srf[4],0+66,0, 140,0,10,15);
-		// second display on five digit
-		Curdigit=TmpCLKsec/10;
-		Curdigit2=TmpCLKsec/100;
-		oapiBlt(surf,srf[4],0+76,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=TmpCLKsec;
-		Curdigit2=TmpCLKsec/10;
-		oapiBlt(surf,srf[4],0+88,0, 10*(Curdigit-(Curdigit2*10)),0,10,15);
-
+		MissionTimerDisplay.Render(surf, srf[4]);
 		return true;
 
 	case AID_FUEL_DIGIT:
