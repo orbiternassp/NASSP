@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/13 00:09:43  movieman523
+  *	Added IMU Cage switch
+  *	
   *	Revision 1.10  2005/08/12 23:15:49  movieman523
   *	Added switches to update mission time display.
   *	
@@ -237,6 +240,11 @@ protected:
 
 	int adjust_type;
 	double *timer;
+};
+
+class CWSLightTestSwitch: public ThreePosSwitch {
+public:
+	bool CheckMouseClick(int event, int mx, int my);
 };
 
 class PushSwitch: public ToggleSwitch {

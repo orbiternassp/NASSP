@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/13 00:09:43  movieman523
+  *	Added IMU Cage switch
+  *	
   *	Revision 1.11  2005/08/12 23:15:49  movieman523
   *	Added switches to update mission time display.
   *	
@@ -1341,3 +1344,17 @@ bool IMUCageSwitch::CheckMouseClick(int event, int mx, int my)
 	else return false;
 }
 
+bool CWSLightTestSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ThreePosSwitch::CheckMouseClick(event, mx,my)) {
+		//
+		// Up lights left-hand lights, down lights right-hand lights.
+		//
+		// Interface currently not implemented :).
+		//
+		return true;
+	}
+
+	return false;
+}
