@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/11 01:27:26  movieman523
+  *	Added initial Virtual AGC support.
+  *	
   *	Revision 1.16  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -554,8 +557,8 @@ void LEMcomputer::DisplayNounData(int noun)
 
 		SetR1(min * 1000 + sec);
 		SetR1Format("XXX XX");
-		SetR2((int)CurrentVelZ);
-		SetR3((int)CurrentVel);
+		SetR2((int)(CurrentVelZ*10.0));
+		SetR3((int)(CurrentVel*10.0));
 		}
 		break;
 
