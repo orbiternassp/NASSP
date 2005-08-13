@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/08/12 21:42:14  movieman523
+  *	Added support for 'SIVB Takeover' bit on launch.
+  *	
   *	Revision 1.28  2005/08/12 19:31:38  movieman523
   *	Fixed 1107 alarm again.
   *	
@@ -274,13 +277,22 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	ChannelValue32 val32;
 	ChannelValue33 val33;
 
+	//
 	// Set default state. Note that these are oddities, as zero means
-	// true and one means false!
+	// true and one means false for the 'Virtual AGC'!
+	//
 
 	val30.Value = 077777;
 	// Enable to turn on
 	// val30.Bits.IMUOperate = 0;
 	val30.Bits.TempInLimits = 0;
+
+	//
+	// We default to the IMU caged. If you change this, change the IMU code to
+	// match.
+	//
+	val30.Bits.IMUCage = 0;
+
 	vagc.InputChannel[030] = val30.Value;
 	InputChannel[030] = (val30.Value ^ 077777);
 
@@ -1058,13 +1070,6 @@ bool ApolloGuidance::GenericTimestep(double simt)
 			// set launch pad altitude
 			vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
 			//State->Erasable[2][0272] = 01;	// 17.7 nmi
-
-			//
-			// HACK - for now always turn on the IMU for the Virtual AGC since we can't turn it on
-			// from the control panel yet.
-			//
-
-			imu.TurnOn();
 
 			isFirstTimestep = false;
 		}

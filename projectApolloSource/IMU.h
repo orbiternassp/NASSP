@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   **************************************************************************/
 
 // IMU
@@ -51,6 +54,9 @@ public:
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
 	void SetVessel(VESSEL *v) { OurVessel = v; };
+
+	bool IsCaged();
+	void SetCaged(bool val);
 
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
@@ -109,6 +115,7 @@ protected:
 	bool Operate;
 	bool TurnedOn;
 	bool Initialized;
+	bool Caged;
 
 	union {
 		struct {

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/08/12 17:49:42  movieman523
+  *	Fixed stupid cut-and-paste error: IMU is up and running!
+  *	
   *	Revision 1.5  2005/08/11 23:20:21  movieman523
   *	Fixed a few more IMU bugs and other odds and ends.
   *	
@@ -74,6 +77,13 @@ void IMU::Init()
 	Operate = false;
 	TurnedOn = false;
 	Initialized = false;
+
+	//
+	// For now we default to starting with the IMU caged. If this changes, you'll need to change
+	// the startup code in ApolloGuidance() to match.
+	//
+
+	Caged = true;
 	
 	RemainingPIPA.X = 0;
 	RemainingPIPA.Y = 0;
@@ -113,10 +123,39 @@ void IMU::Init()
 	LogInit();
 }
 
+bool IMU::IsCaged()
+
+{
+	return Caged;
+}
+
+//
+// Cage the IMU. I presume this also turns it off?
+//
+
+void IMU::SetCaged(bool val)
+
+{
+	if (Caged != val) {
+		Caged = val;
+		agc.SetInputChannelBit(030, 11, val);
+
+		if (val) {
+			TurnOff();
+			ZeroIMUCDUs();
+		}
+	}
+}
+
+//
+// Turn on the IMU. For now we also uncage it.
+//
+
 void IMU::TurnOn() 
 
 {
 	if (!Operate) {
+		SetCaged(false);
 		agc.SetInputChannelBit(030, 9, true);
 		agc.SetInputChannelBit(030, 14, true);
 		Operate = true;
@@ -658,6 +697,7 @@ typedef union
 		unsigned Operate:1;
 		unsigned TurnedOn:1;
 		unsigned Initialized:1;
+		unsigned Caged:1;
 	} u;
 	unsigned long word;
 } IMUState;
@@ -778,6 +818,7 @@ void IMU::LoadState(FILEHANDLE scn)
 			Operate = (state.u.Operate != 0);
 			Initialized = (state.u.Initialized != 0);
 			TurnedOn = (state.u.TurnedOn != 0);
+			Caged = (state.u.Caged != 0);
 		}
 	}
 }
@@ -823,6 +864,7 @@ void IMU::SaveState(FILEHANDLE scn)
 	state.u.Operate = Operate;
 	state.u.TurnedOn = TurnedOn;
 	state.u.Initialized = Initialized;
+	state.u.Caged = Caged;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
