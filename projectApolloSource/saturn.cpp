@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/08/13 14:21:36  movieman523
+  *	Added beginnings of caution and warning system.
+  *	
   *	Revision 1.30  2005/08/12 23:15:49  movieman523
   *	Added switches to update mission time display.
   *	
@@ -402,7 +405,6 @@ void Saturn::initSaturn()
 	Realism = REALISM_DEFAULT;
 
 	SIISepState = false;
-	masterAlarm = false;
 	autoDISP = false;
 	bRecovery = false;
 	ActivateLEM = false;
@@ -780,7 +782,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 typedef union {
 	struct {
-		unsigned masterAlarm:1;
+		unsigned Unused1:1;
 		unsigned SIISepState:1;
 		unsigned autopilot:1;
 		unsigned TLIBurnDone:1;
@@ -808,7 +810,6 @@ int Saturn::GetMainState()
 	MainState state;
 
 	state.word = 0;
-	state.u.masterAlarm = masterAlarm;
 	state.u.SIISepState = SIISepState;
 	state.u.autopilot = autopilot;
 	state.u.TLIBurnDone = TLIBurnDone;
@@ -835,7 +836,6 @@ void Saturn::SetMainState(int s)
 	MainState state;
 
 	state.word = s;
-	masterAlarm = state.u.masterAlarm;
 	SIISepState = state.u.SIISepState;
 	autopilot = state.u.autopilot;
 	TLIBurnDone = state.u.TLIBurnDone;
