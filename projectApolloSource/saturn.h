@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/08/13 11:48:26  movieman523
+  *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
+  *	
   *	Revision 1.32  2005/08/13 00:43:50  movieman523
   *	Added more caution and warning switches.
   *	
@@ -128,6 +131,8 @@
   **************************************************************************/
 
 #include "PanelSDK/PanelSDK.h"
+
+#include "cautionwarning.h"
 
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
@@ -548,11 +553,6 @@ protected:
 	ThreePosSwitch P216switch;
 	ThreePosSwitch P217switch;
 
-	ThreePosSwitch P218switch;
-	ThreePosSwitch P219switch;
-	ThreePosSwitch P220switch;
-	ToggleSwitch P221switch;
-
 	ThreePosSwitch P222switch;
 	ThreePosSwitch P223switch;
 	ThreePosSwitch P224switch;
@@ -640,7 +640,7 @@ protected:
 	ThreePosSwitch P347switch;
 
 	ThreePosSwitch MissionTimerSwitch;
-	ThreePosSwitch CautionWarningModeSwitch;
+	CWSModeSwitch CautionWarningModeSwitch;
 	ToggleSwitch CautionWarningCMCSMSwitch;
 	ThreePosSwitch CautionWarningPowerSwitch;
 	CWSLightTestSwitch CautionWarningLightTestSwitch;
@@ -821,7 +821,7 @@ protected:
 	SwitchRow P23Row;
 	SwitchRow P24Row;
 	SwitchRow P25Row;
-	SwitchRow P26Row;
+
 	SwitchRow P27Row;
 	SwitchRow P28Row;
 	SwitchRow P29Row;
@@ -842,9 +842,6 @@ protected:
 
 	SwitchRow LPSRow;
 	// old stuff end
-
-	bool masterAlarmLit;
-	double masterAlarmCycleTime;
 
 	//
 	// Do we have a crew, or is this an unmanned flight?
@@ -977,12 +974,13 @@ protected:
 	SURFHANDLE CMTex;
 
 	//
-	// DSKY/AGC support.
+	// Hardware support.
 	//
 
 	DSKY dsky;
 	CSMcomputer agc;
 	IMU imu;
+	CautionWarningSystem cws;
 
 	//
 	// Vessel handles.

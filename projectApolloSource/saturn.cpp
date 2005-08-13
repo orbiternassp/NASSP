@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/08/12 23:15:49  movieman523
+  *	Added switches to update mission time display.
+  *	
   *	Revision 1.29  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -135,7 +138,7 @@
 
 //extern FILE *PanelsdkLogFile;
 
-Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, imu), dsky(soundlib, agc), imu(agc)
+Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, imu), dsky(soundlib, agc), imu(agc), cws(SMasterAlarm)
 
 {
 	InitSaturnCalled = false;
@@ -168,9 +171,6 @@ void Saturn::initSaturn()
 	ApolloNo = 0;
 
 	TCPO = 0.0;
-
-	masterAlarmLit = false;
-	masterAlarmCycleTime = 0;
 
 	FirstTimestep = true;
 	GenericFirstTimestep = true;
@@ -764,6 +764,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	dsky.SaveState(scn);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
+	cws.SaveState(scn);
 
 	// save the internal systems 
 	oapiWriteScenario_int (scn, "SYSTEMSSTATE", systemsState);
@@ -1244,6 +1245,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 			imu.LoadState(scn);
+		}
+		else if (!strnicmp(line, CWS_START_STRING, sizeof(CWS_START_STRING))) {
+			cws.LoadState(scn);
 		}
 		else if (!strnicmp (line, "SYSTEMSSTATE", 12)) {
 			sscanf (line + 12, "%d", &systemsState);

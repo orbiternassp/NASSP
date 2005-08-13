@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2005/08/13 11:48:26  movieman523
+  *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
+  *	
   *	Revision 1.37  2005/08/13 00:43:50  movieman523
   *	Added more caution and warning switches.
   *	
@@ -990,7 +993,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_P24,									_R(1047, 567, 1172,  609), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P25,									_R(1047, 664, 1108,  705), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_SEC_PRPLT_SWITCHES,					_R(1111, 626, 1300,  705), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_CAUTION_PANEL,						_R(1420, 331, 1553,  363), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P27,									_R(1502, 398, 1848,  429), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P28,									_R(1324, 586, 1625,  695), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P29,									_R(1620, 735, 1681,  766), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -1184,7 +1186,7 @@ void Saturn::SetSwitches(int panel) {
 
 	CautionWarningRow.Init(AID_CAUTIONWARNING_SWITCHES, MainPanel);
 	MissionTimerSwitch.Init(190, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow);
-	CautionWarningModeSwitch.Init(7, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow);
+	CautionWarningModeSwitch.Init(7, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow, &cws);
 	CautionWarningCMCSMSwitch.Init(55, 0, 34, 29, srf[SRF_SWITCHUP], CautionWarningRow);
 	CautionWarningPowerSwitch.Init(104, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow);
 	CautionWarningLightTestSwitch.Init(147, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow);
@@ -1286,7 +1288,7 @@ void Saturn::SetSwitches(int panel) {
 	P23Row.Init(AID_P23, MainPanel);
 	P24Row.Init(AID_P24, MainPanel);
 	P25Row.Init(AID_P25, MainPanel);
-	P26Row.Init(AID_CAUTION_PANEL, MainPanel);
+
 	P27Row.Init(AID_P27, MainPanel);
 	P28Row.Init(AID_P28, MainPanel);
 	P29Row.Init(AID_P29, MainPanel);
@@ -1378,11 +1380,6 @@ void Saturn::SetSwitches(int panel) {
 
 	P216switch.Init( 3, 7, 23, 20, srf[23], P25Row);
 	P217switch.Init(35, 7, 23, 20, srf[23], P25Row);
-
-	P218switch.Init(  3, 7, 23, 20, srf[23], P26Row);
-	P219switch.Init( 40, 7, 23, 20, srf[23], P26Row);
-	P220switch.Init( 75, 7, 23, 20, srf[23], P26Row);
-	P221switch.Init(107, 7, 23, 20, srf[6], P26Row);
 
 	P222switch.Init(  3, 7, 23, 20, srf[23], P27Row);
 	P223switch.Init( 35, 7, 23, 20, srf[23], P27Row);
@@ -2700,13 +2697,11 @@ void Saturn::MasterAlarm()
 	if (!masterAlarm) {
 
 		//
-		// Enable master alarm, and set it to unlit with cycle time at zero. The next
-		// timestep call will automatically set it to lit.
+		// Enable master alarm.
 		//
 
 		masterAlarm = true;
-		masterAlarmLit = false;
-		masterAlarmCycleTime = 0;
+		cws.SetMasterAlarm(true);
 	}
 }
 
@@ -2719,8 +2714,8 @@ void Saturn::StopMasterAlarm()
 {
 	if (masterAlarm) {
 		masterAlarm = false;
-		masterAlarmLit = false;
 		SMasterAlarm.stop();
+		cws.SetMasterAlarm(false);
 	}
 }
 
@@ -2857,11 +2852,8 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		double cTime;
 
 		//
-		// Time display is normally mission time, but can be adjusted by the user
-		// and will be reset on an abort.
-		//
-		// Also, historically, the timer didn't start running until liftoff, so we'll
-		// base our operation on the Realism setting.
+		// Time display is normally mission time, but can be adjusted by the user with the
+		// mission timer switches.
 		//
 
 		cTime = MissionTimerDisplay;
@@ -3762,13 +3754,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		}
 		return true;
 */
-	case AID_CW:
-		if(P221switch){
-			oapiBlt(surf,srf[22],0,0,165,0,349,84);
-		}else{
-			oapiBlt(surf,srf[22],0,0,165,85,349,84);
-		}
-		return true;
 
 	case AID_05G_LIGHT:
 		if(P115switch){
@@ -3791,30 +3776,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 			oapiBlt(surf,srf[22],0,0,0,168,141,32);
 		}else{
 			oapiBlt(surf,srf[22],0,0,0,135,141,32);
-		}
-		return true;
-
-	case AID_AUTO_LIGHT:
-		if(P221switch){
-			oapiBlt(surf,srf[22],0,0,142,152,16,16);
-		}else{
-			oapiBlt(surf,srf[22],0,0,142,135,16,16);
-		}
-		return true;
-
-	case AID_BUS_LIGHT:
-		if(P221switch){
-			oapiBlt(surf,srf[22],0,0,142,152,16,16);
-		}else{
-			oapiBlt(surf,srf[22],0,0,142,135,16,16);
-		}
-		return true;
-
-	case AID_CABIN_LIGHT:
-		if(P221switch){
-			oapiBlt(surf,srf[22],0,0,142,152,16,16);
-		}else{
-			oapiBlt(surf,srf[22],0,0,142,135,16,16);
 		}
 		return true;
 
@@ -3849,15 +3810,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		return true;
 
 	case AID_MASTER_ALARM:
-		//
-		// Master alarm light is disabled with Caution and Warning switch in BOOST mode.
-		//
-		if (masterAlarmLit && !CautionWarningModeSwitch.IsCenter()) {
-			oapiBlt (surf, srf[19], 0, 0, 0, 0, 33, 27);
-		}
-		else {
-			oapiBlt (surf, srf[18], 0, 0, 0, 0, 33, 27);
-		}
+		cws.RenderMasterAlarm(surf, srf[19]);
 		return true;
 
 	case AID_DIRECT_ULLAGE_THRUST_ON_LIGHT:
@@ -3968,9 +3921,9 @@ void Saturn::InitSwitches() {
 	SivbLmSepSwitch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
 
 	MissionTimerSwitch.Register(PSH, "MissionTimerSwitch", THREEPOSSWITCH_UP);
-	CautionWarningModeSwitch.Register(PSH, "CautionWarningModeSwitch", THREEPOSSWITCH_CENTER);
+	CautionWarningModeSwitch.Register(PSH, "CautionWarningModeSwitch", THREEPOSSWITCH_UP);
 	CautionWarningCMCSMSwitch.Register(PSH, "CautionWarningCMCSMSwitch", 1);
-	CautionWarningPowerSwitch.Register(PSH, "CautionWarningPowerSwitch", THREEPOSSWITCH_CENTER);
+	CautionWarningPowerSwitch.Register(PSH, "CautionWarningPowerSwitch", THREEPOSSWITCH_UP);
 	CautionWarningLightTestSwitch.Register(PSH, "CautionWarningLightTestSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
 	CabinFan1Switch = false;					// saved in CP2SwitchState.CFswitch1
@@ -4162,11 +4115,6 @@ void Saturn::InitSwitches() {
 
 	P216switch = 1;
 	P217switch = 1;
-
-	P218switch = 1;
-	P219switch = 0;
-	P220switch = 1;
-	P221switch = false;
 
 	P222switch = 1;
 	P223switch = 1;
@@ -4779,7 +4727,7 @@ typedef union {
 		unsigned SP2switch:1;
 		unsigned SP3switch:1;
 		unsigned SP4switch:1;
-		unsigned P221switch:1;
+		unsigned Unused1:1;
 		unsigned CFswitch1:1;
 		unsigned CFswitch2:1;
 	} u;
@@ -4798,7 +4746,6 @@ int Saturn::GetCP2SwitchState()
 	state.u.SP2switch = SP2switch;
 	state.u.SP3switch = SP3switch;
 	state.u.SP4switch = SP4switch;
-	state.u.P221switch = P221switch;
 	state.u.CFswitch1 = CabinFan1Switch;
 	state.u.CFswitch2 = CabinFan2Switch;
 
@@ -4817,7 +4764,6 @@ void Saturn::SetCP2SwitchState(int s)
 	SP2switch = state.u.SP2switch;
 	SP3switch = state.u.SP3switch;
 	SP4switch = state.u.SP4switch;
-	P221switch = state.u.P221switch;
 	CabinFan1Switch = state.u.CFswitch1;
 	CabinFan2Switch = state.u.CFswitch2;
 
