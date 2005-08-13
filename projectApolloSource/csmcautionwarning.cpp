@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/13 14:59:24  movieman523
+  *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
+  *	
   **************************************************************************/
 
 
@@ -37,11 +40,12 @@
 
 #include "cautionwarning.h"
 #include "csmcautionwarning.h"
+#include "nasspdefs.h"
 
 CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &s) : CautionWarningSystem(s)
 
 {
-	NextUpdateTime = 0.0;
+	NextUpdateTime = MINUS_INFINITY;
 }
 
 //

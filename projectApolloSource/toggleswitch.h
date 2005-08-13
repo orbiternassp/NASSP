@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/13 14:21:36  movieman523
+  *	Added beginnings of caution and warning system.
+  *	
   *	Revision 1.12  2005/08/13 11:48:27  movieman523
   *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
   *	
@@ -249,7 +252,17 @@ protected:
 
 class CautionWarningSystem; // Forward reference for files which include this before cautionwarning.h
 
-class CWSLightTestSwitch: public ThreePosSwitch {
+class CWSThreePosSwitch: public ThreePosSwitch {
+
+public:
+	CWSThreePosSwitch() { cws = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c);
+
+protected:
+	CautionWarningSystem *cws;
+};
+
+class CWSLightTestSwitch: public CWSThreePosSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
 };
@@ -265,9 +278,31 @@ protected:
 	virtual void InitSound(SoundLib *s);
 };
 
-class CWSModeSwitch: public ThreePosSwitch {
+//
+// Caution and warning system mode switch.
+//
+
+class CWSModeSwitch: public CWSThreePosSwitch {
 public:
-	CWSModeSwitch();
+	bool CheckMouseClick(int event, int mx, int my);
+};
+
+//
+// Caution and warning system power switch.
+//
+
+class CWSPowerSwitch: public CWSThreePosSwitch {
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+};
+
+//
+// Caution and warning system source switch.
+//
+
+class CWSSourceSwitch: public ToggleSwitch {
+public:
+	CWSSourceSwitch() { cws = 0; };
 	bool CheckMouseClick(int event, int mx, int my);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c);
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/11 16:29:33  spacex15
+  *	Added PNGS and AGS mode control 3 pos switches
+  *	
   *	Revision 1.22  2005/08/11 14:00:35  spacex15
   *	Added Descent Engine Command Override switch
   *	
@@ -168,6 +171,14 @@ const double INH2O = 0.00401474;			// Pa to in H2O
 const double LBH   = 7.93665;				// g/s to lb/h
 
 const double TWO_PI= (PI * 2);
+
+//
+// This is a safe 'minus infinity' time to use as the default value for timers. So if you compare your
+// timer against MissionTime to decide whether to process events at a certain time interval, use this as
+// the default and any mission time should be guaranteed to be greater.
+//
+
+const double MINUS_INFINITY = (-1000000000.0);
 
 inline double KelvinToFahrenheit(double kelvin) {
 	return kelvin * 1.8 - 459.67;

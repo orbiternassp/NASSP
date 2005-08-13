@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2005/08/13 14:59:24  movieman523
+  *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
+  *	
   *	Revision 1.34  2005/08/13 14:21:36  movieman523
   *	Added beginnings of caution and warning system.
   *	
@@ -639,8 +642,8 @@ protected:
 
 	ThreePosSwitch MissionTimerSwitch;
 	CWSModeSwitch CautionWarningModeSwitch;
-	ToggleSwitch CautionWarningCMCSMSwitch;
-	ThreePosSwitch CautionWarningPowerSwitch;
+	CWSSourceSwitch CautionWarningCMCSMSwitch;
+	CWSPowerSwitch CautionWarningPowerSwitch;
 	CWSLightTestSwitch CautionWarningLightTestSwitch;
 
 	TimerUpdateSwitch MissionTimerHoursSwitch;
