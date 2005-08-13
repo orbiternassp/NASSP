@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/08/12 23:15:49  movieman523
+  *	Added switches to update mission time display.
+  *	
   *	Revision 1.29  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -636,6 +639,8 @@ protected:
 	TimerUpdateSwitch MissionTimerMinutesSwitch;
 	TimerUpdateSwitch MissionTimerSecondsSwitch;
 
+	IMUCageSwitch IMUGuardedCageSwitch;
+
 	ThreePosSwitch RPswitch15;
 
 	SwitchRow RCSIndicatorsSwitchRow;
@@ -784,6 +789,7 @@ protected:
 	SwitchRow NAVRow2;
 	SwitchRow CautionWarningRow;
 	SwitchRow MissionTimerSwitchesRow;
+	SwitchRow IMUCageSwitchRow;
 
 	SwitchRow P11Row;
 	SwitchRow SRP1Row;

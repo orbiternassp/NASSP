@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/12 23:15:49  movieman523
+  *	Added switches to update mission time display.
+  *	
   *	Revision 1.10  2005/08/05 13:13:27  tschachim
   *	Indicator change speed faster, bugfix
   *	
@@ -68,6 +71,8 @@
 #include "nasspsound.h"
 
 #include "toggleswitch.h"
+
+#include "IMU.h"
 
 //
 // Generic toggle switch.
@@ -1292,8 +1297,44 @@ bool TimerUpdateSwitch::CheckMouseClick(int event, int mx, int my)
 		if (IsUp()) {
 			AdjustTime(10);
 		}
-		if (IsDown()) {
+		else if (IsDown()) {
 			AdjustTime(1);
+		}
+		return true;
+	}
+	else return false;
+}
+
+IMUCageSwitch::IMUCageSwitch()
+
+{
+	imu = 0;
+}
+
+void IMUCageSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im)
+
+{
+	GuardedToggleSwitch::Init(xp, yp, w, h, surf, row);
+	imu = im;
+}
+
+bool IMUCageSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my))
+	{
+		//
+		// Cage the IMU if it's up, release if it's down. For now we'll also turn it
+		// on if the switch is down.
+		//
+		if (imu) {
+			if (IsUp()) {
+				imu->SetCaged(true);
+			}
+			else if (IsDown()) {
+				imu->SetCaged(false);
+				imu->TurnOn();
+			}
 		}
 		return true;
 	}

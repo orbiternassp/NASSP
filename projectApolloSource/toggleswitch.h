@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/12 23:15:49  movieman523
+  *	Added switches to update mission time display.
+  *	
   *	Revision 1.9  2005/07/30 16:08:11  tschachim
   *	Added SwitchTo function to simulate switch usage.
   *	
@@ -278,6 +281,19 @@ protected:
 	Sound guardClick;
 };
 
+class IMU; // Forward reference for files which include this before IMU.h
+
+class IMUCageSwitch: public GuardedToggleSwitch {
+
+public:
+	IMUCageSwitch();
+
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im);
+	bool CheckMouseClick(int event, int mx, int my);
+
+protected:
+	IMU *imu;
+};
 
 class GuardedPushSwitch: public PushSwitch {
 
