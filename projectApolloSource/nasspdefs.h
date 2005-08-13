@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/13 16:41:15  movieman523
+  *	Fully wired up the CSM caution and warning switches.
+  *	
   *	Revision 1.23  2005/08/11 16:29:33  spacex15
   *	Added PNGS and AGS mode control 3 pos switches
   *	
@@ -94,6 +97,9 @@
   *	
   **************************************************************************/
 
+#if !defined(_PA_NASSPDEFS_H)
+#define _PA_NASSPDEFS_H
+
 #define NASSP_VERSION 60050
 #define REALISM_DEFAULT 5
 
@@ -147,6 +153,7 @@ const int nsurf = 34; // number of bitmap handles
 #define SRF_ABORT					 9
 #define SRF_SEQUENCERSWITCHES		17
 #define SRF_LMTWOPOSLEVER           19
+#define SRF_MASTERALARM_BRIGHT		20
 #define SRF_DSKY					21
 #define SRF_DSKYNUM					22
 #define SRF_THREEPOSSWITCH			23
@@ -236,3 +243,4 @@ inline double KelvinToFahrenheit(double kelvin) {
 #define CSM_H2TANK_CAPACITY  12700.0		// in g, 28 lb
 #define CSM_O2TANK_CAPACITY 145149.0		// in g, 320 lb
 
+#endif

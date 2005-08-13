@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2005/08/13 20:20:17  movieman523
+  *	Created MissionTimer class and wired it into the LEM and CSM.
+  *	
   *	Revision 1.41  2005/08/13 16:41:15  movieman523
   *	Fully wired up the CSM caution and warning switches.
   *	
@@ -810,8 +813,7 @@ void Saturn::InitPanel (int panel)
 		srf[16]							= oapiCreateSurface (LOADBMP (IDB_THRUST));
 		srf[SRF_SEQUENCERSWITCHES]		= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
 		srf[18]							= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
-		srf[19]							= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
-		//srf[20]					    = oapiCreateSurface (LOADBMP (IDB_BUTTON));
+		srf[SRF_MASTERALARM_BRIGHT]		= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
 		srf[SRF_DSKY]					= oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
 		srf[22]							= oapiCreateSurface (LOADBMP (IDB_ALLROUND));
 		srf[SRF_THREEPOSSWITCH]			= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH));
@@ -943,8 +945,6 @@ bool Saturn::clbkLoadPanel (int id) {
 
         //oapiRegisterPanelArea (AID_ALTITUDE1,							_R( 547, 425,  643,  440), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_ALTIMETER,							_R( 626, 109,  717,  199), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_MASTER_ALARM,						_R( 345, 409,  378,  436), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		//oapiRegisterPanelArea (AID_MASTER_ALARM,						_R(2199, 524, 2232,  551), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 		//oapiRegisterPanelArea (AID_GMETER,                              _R( 301, 491,  357,  548), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_HORIZON,								_R( 853, 294,  949,  390), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 		//oapiRegisterPanelArea (AID_HORIZON2,							_R( 440, 537,  536,  633), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -1077,7 +1077,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SBAND_NORMAL_SWITCHES,						_R(2593, 1050, 2858, 1079), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CAUTIONWARNING_SWITCHES,						_R(1908,  400, 2140,  434), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MISSION_TIMER_SWITCHES,						_R(2018,  299, 2140,  330), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_IMU_CAGE_SWITCH,								_R(289,  1242,  330, 1314), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_IMU_CAGE_SWITCH,								_R( 289,  1242,  330, 1314), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MASTER_ALARM,								_R( 462,   495,  511,  535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -3769,7 +3770,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_MASTER_ALARM:
-		cws.RenderMasterAlarm(surf, srf[19]);
+		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT]);
 		return true;
 
 	case AID_DIRECT_ULLAGE_THRUST_ON_LIGHT:
