@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/13 14:22:37  movieman523
+  *	Initial implementation of caution and warning system.
+  *	
   **************************************************************************/
 
 
@@ -36,14 +39,18 @@
 #include "ioChannels.h"
 
 #include "cautionwarning.h"
+#include "nasspdefs.h"
 
 CautionWarningSystem::CautionWarningSystem(Sound &mastersound) : MasterAlarmSound(mastersound)
 
 {
 	TestState = CWS_TEST_LIGHTS_NONE;
 	Mode = CWS_MODE_NORMAL;
+	Source = CWS_SOURCE_CSM;
+	PowerBus = CWS_POWER_BUS_A;
+
 	MasterAlarmLightEnabled = true;
-	MasterAlarmCycleTime = 0.0;
+	MasterAlarmCycleTime = MINUS_INFINITY;
 	MasterAlarm = false;
 	MasterAlarmLit = false;
 }
@@ -77,6 +84,30 @@ void CautionWarningSystem::LightTest(int state)
 }
 
 //
+// Check we have power.
+//
+
+bool CautionWarningSystem::IsPowered()
+
+{
+	switch (PowerBus) {
+
+	//
+	// Later we can check for bus voltage, etc. Now just check the source.
+	//
+
+	case CWS_POWER_BUS_A:
+		return true;
+
+	case CWS_POWER_BUS_B:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+//
 // The timestep code will validate all the spacecraft systems and ligt the lights as required. Obviously
 // much of this code will be CSM-specific or LEM-specific, so we'll probably want to derive CSM and LEM
 // caution and warning systems which do their processing and then call this code for generic processing.
@@ -92,7 +123,7 @@ void CautionWarningSystem::TimeStep(double simt)
 	if ((simt > MasterAlarmCycleTime) && MasterAlarm) {
 		MasterAlarmLit = !MasterAlarmLit;
 		MasterAlarmCycleTime = simt + 0.25;
-		if (MasterAlarmLit) {
+		if (MasterAlarmLit && IsPowered()) {
 			MasterAlarmSound.play(NOLOOP,255);
 		}
 	}
@@ -109,7 +140,7 @@ void CautionWarningSystem::SetMasterAlarm(bool alarm)
 	//
 
 	MasterAlarmLit = false;
-	MasterAlarmCycleTime = 0.0;
+	MasterAlarmCycleTime = MINUS_INFINITY;
 }
 
 //
@@ -119,7 +150,7 @@ void CautionWarningSystem::SetMasterAlarm(bool alarm)
 void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit)
 
 {
-	if (MasterAlarmLit && MasterAlarmLightEnabled) {
+	if (MasterAlarmLit && MasterAlarmLightEnabled && IsPowered()) {
 		//
 		// Draw the master alarm lit bitmap. Nothing for now.
 		//
@@ -156,6 +187,8 @@ typedef union
 	struct {
 		unsigned MasterAlarmLightEnabled:1;
 		unsigned MasterAlarm:1;
+		unsigned Source:2;
+		unsigned PowerBus:2;
 	} u;
 	unsigned long word;
 } CWSState;
@@ -176,6 +209,8 @@ void CautionWarningSystem::SaveState(FILEHANDLE scn)
 	state.word = 0;
 	state.u.MasterAlarmLightEnabled = MasterAlarmLightEnabled;
 	state.u.MasterAlarm = MasterAlarm;
+	state.u.Source = Source;
+	state.u.PowerBus = PowerBus;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -203,6 +238,8 @@ void CautionWarningSystem::LoadState(FILEHANDLE scn)
 
 			MasterAlarm = (state.u.MasterAlarm != 0);
 			MasterAlarmLightEnabled = (state.u.MasterAlarmLightEnabled != 0);
+			Source = state.u.Source;
+			PowerBus = state.u.PowerBus;
 		}
 	}
 }

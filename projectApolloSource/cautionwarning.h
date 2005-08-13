@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/13 14:22:37  movieman523
+  *	Initial implementation of caution and warning system.
+  *	
   **************************************************************************/
 
 #if !defined(_PA_CAUTIONWARNING_H)
@@ -35,6 +38,14 @@
 #define CWS_MODE_BOOST		1
 #define CWS_MODE_ACK		2
 
+#define CWS_SOURCE_LEM		0
+#define CWS_SOURCE_CSM		0
+#define CWS_SOURCE_CM		1
+
+#define CWS_POWER_BUS_A		0
+#define CWS_POWER_BUS_B		1
+#define CWS_POWER_NONE		2
+
 class CautionWarningSystem {
 
 public:
@@ -44,6 +55,8 @@ public:
 	virtual void LightTest(int state);
 	virtual void TimeStep(double simt);
 	void SetMode(int mode);
+	void SetSource(int source) { Source = source; };
+	void SetPowerBus(int bus) { PowerBus = bus; };
 	void SetMasterAlarm(bool alarm);
 
 	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit);
@@ -51,9 +64,13 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
+	bool IsPowered();
+
 protected:
 	int TestState;
 	int Mode;
+	int Source;
+	int PowerBus;
 
 	bool MasterAlarmLightEnabled;
 	bool MasterAlarm;

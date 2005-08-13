@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/13 14:21:36  movieman523
+  *	Added beginnings of caution and warning system.
+  *	
   *	Revision 1.13  2005/08/13 11:48:27  movieman523
   *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
   *	
@@ -1347,31 +1350,43 @@ bool IMUCageSwitch::CheckMouseClick(int event, int mx, int my)
 	else return false;
 }
 
+//
+// Enable light test on caution and warning system.
+//
+
 bool CWSLightTestSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
-	if (ThreePosSwitch::CheckMouseClick(event, mx,my)) {
+	if (CWSThreePosSwitch::CheckMouseClick(event, mx,my)) {
 		//
 		// Up lights left-hand lights, down lights right-hand lights.
 		//
-		// Interface currently not implemented :).
-		//
+
+		if (cws) {
+			if (IsUp()) {
+				cws->LightTest(CWS_TEST_LIGHTS_LEFT);
+			}
+			else if (IsDown()) {
+				cws->LightTest(CWS_TEST_LIGHTS_RIGHT);
+			}
+			else if (IsCenter()) {
+				cws->LightTest(CWS_TEST_LIGHTS_NONE);
+			}
+		}
 		return true;
 	}
 
 	return false;
 }
 
-CWSModeSwitch::CWSModeSwitch()
-
-{
-	cws = 0;
-}
+//
+// Set caution and warning mode state.
+//
 
 bool CWSModeSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
-	if (ThreePosSwitch::CheckMouseClick(event, mx,my)) {
+	if (CWSThreePosSwitch::CheckMouseClick(event, mx,my)) {
 		if (cws) {
 			if (IsUp()) {
 				cws->SetMode(CWS_MODE_NORMAL);
@@ -1390,9 +1405,68 @@ bool CWSModeSwitch::CheckMouseClick(int event, int mx, int my)
 }
 
 
-void CWSModeSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c)
+//
+// Set caution and warning power source.
+//
+
+bool CWSPowerSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (CWSThreePosSwitch::CheckMouseClick(event, mx,my)) {
+		if (cws) {
+			if (IsUp()) {
+				cws->SetPowerBus(CWS_POWER_BUS_A);
+			}
+			else if (IsCenter()) {
+				cws->SetPowerBus(CWS_POWER_NONE);
+			}
+			else if (IsDown()) {
+				cws->SetPowerBus(CWS_POWER_BUS_B);
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
+void CWSThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c)
 
 {
 	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	cws = c;
+}
+
+//
+// Set caution and warning source (e.g. CSM/LEM or CM)
+//
+
+bool CWSSourceSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ToggleSwitch::CheckMouseClick(event, mx, my)) {
+		if (cws) {
+			if (IsUp()) {
+				cws->SetSource(CWS_SOURCE_CSM);
+			}
+			else if (IsDown()) {
+				cws->SetSource(CWS_SOURCE_CM);
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//
+// If we add more caution and warning system switches which use toggle-switch, they could be derived from a new
+// class which has the generic init function to set the cws.
+//
+
+void CWSSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, row);
 	cws = c;
 }
