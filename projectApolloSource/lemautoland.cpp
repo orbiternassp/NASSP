@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/08/12 16:55:53  lazyd
+  *	Fixed a problem with the yaw maneuver going to a face down attitude
+  *	Fixed a problem with P33 continually postponing the CDH burn
+  *	
   *	Revision 1.25  2005/08/11 20:31:54  lazyd
   *	fixed an evil bug in OrientAxis
   *	
@@ -1354,6 +1358,7 @@ void LEMcomputer::Prog41(double simt)
 		return;
 	}
 
+
 	if(BurnStartTime-simt < 30.0) {	
 		SetVerbNoun(16, 31);
 		return;
@@ -1921,7 +1926,7 @@ void LEMcomputer::AbortAscent(double simt)
 	static VECTOR3 zloc={0.0, 0.0, 1.0};
 	const double GRAVITY=6.67259e-11;
 	VECTOR3 csmpos, csmvel, csmnor, lmpos, lmvel, lmcsm, hvel, csmhvel, actatt, tgtatt,
-		vec1, vec2, acc, lmnor, zerogl, ygl, zgl, lmdown;
+		vec1, vec2, acc, lmnor, zerogl, ygl, zgl, lmdown, lmup, lmfor, vec, accvec;
 	double crossrange, distance, delta, fuelflow, heading, Mass, totvel, altitude,
 		tgo, velexh, veltbg, cbrg, phase, tau, A, B, C, D, D12, D21, E, L, crossvel,
 		centrip, grav, acctot, vthrust, velo;
@@ -1981,6 +1986,8 @@ void LEMcomputer::AbortAscent(double simt)
 		OurVessel->GetRelativePos(hbody, lmpos);
 		OurVessel->GetRelativeVel(hbody, lmvel);
 		lmdown=Normalize(-lmpos);
+		lmup=Normalize(lmpos);
+		lmfor=CrossProduct(lmup, csmnor);
 		lmnor=CrossProduct(lmvel, lmpos);
 		lmnor=Normalize(lmnor);
 		OurVessel->GetHorizonAirspeedVector(hvel);
@@ -2099,15 +2106,17 @@ void LEMcomputer::AbortAscent(double simt)
 			// for large pitch changes, make sure we pitch keeping thrust 
 			// in the UP direction...
 			if((actatt.x-tgtatt.x) > 20.0*RAD ) tgtatt.x=actatt.x-20.0*RAD;
-//			if(totvel < 100.0) {
+			if(totvel < 100.0) {
 				ComAttitude(actatt, tgtatt, false);
-//			} else {
+			} else {
 //				acc.z=sin(tgtatt.z-actatt.z)*acctot;
 //				acc.z=-acc.z;
 //				accvec=Normalize(acc);
-//				OrientAxis(accvec, 1, 1);
+				vec=lmfor*acc.x+lmup*acc.y+csmnor*acc.z;
+				accvec=Normalize(vec);
+				OrientAxis(accvec, 1, 0);
 //				fprintf(outstr,"vec=%.3f %.3f %.3f\n", accvec);
-//			}
+			}
 		}
 	}
 
