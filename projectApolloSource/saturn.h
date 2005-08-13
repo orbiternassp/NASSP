@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/08/13 00:43:50  movieman523
+  *	Added more caution and warning switches.
+  *	
   *	Revision 1.31  2005/08/13 00:09:43  movieman523
   *	Added IMU Cage switch
   *	
@@ -639,6 +642,8 @@ protected:
 	ThreePosSwitch MissionTimerSwitch;
 	ThreePosSwitch CautionWarningModeSwitch;
 	ToggleSwitch CautionWarningCMCSMSwitch;
+	ThreePosSwitch CautionWarningPowerSwitch;
+	CWSLightTestSwitch CautionWarningLightTestSwitch;
 
 	TimerUpdateSwitch MissionTimerHoursSwitch;
 	TimerUpdateSwitch MissionTimerMinutesSwitch;
