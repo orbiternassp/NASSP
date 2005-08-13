@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/13 16:41:15  movieman523
+  *	Fully wired up the CSM caution and warning switches.
+  *	
   *	Revision 1.1  2005/08/13 14:22:37  movieman523
   *	Initial implementation of caution and warning system.
   *	
@@ -152,8 +155,9 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 {
 	if (MasterAlarmLit && MasterAlarmLightEnabled && IsPowered()) {
 		//
-		// Draw the master alarm lit bitmap. Nothing for now.
+		// Draw the master alarm lit bitmap.
 		//
+		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 49, 40);
 	}
 }
 
