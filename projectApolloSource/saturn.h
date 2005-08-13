@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/08/13 00:09:43  movieman523
+  *	Added IMU Cage switch
+  *	
   *	Revision 1.30  2005/08/12 23:15:49  movieman523
   *	Added switches to update mission time display.
   *	
@@ -634,6 +637,8 @@ protected:
 	ThreePosSwitch P347switch;
 
 	ThreePosSwitch MissionTimerSwitch;
+	ThreePosSwitch CautionWarningModeSwitch;
+	ToggleSwitch CautionWarningCMCSMSwitch;
 
 	TimerUpdateSwitch MissionTimerHoursSwitch;
 	TimerUpdateSwitch MissionTimerMinutesSwitch;

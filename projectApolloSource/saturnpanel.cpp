@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/08/13 00:09:43  movieman523
+  *	Added IMU Cage switch
+  *	
   *	Revision 1.35  2005/08/12 23:15:49  movieman523
   *	Added switches to update mission time display.
   *	
@@ -1178,6 +1181,8 @@ void Saturn::SetSwitches(int panel) {
 
 	CautionWarningRow.Init(AID_CAUTIONWARNING_SWITCHES, MainPanel);
 	MissionTimerSwitch.Init(190, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow);
+	CautionWarningModeSwitch.Init(7, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow);
+	CautionWarningCMCSMSwitch.Init(55, 0, 34, 29, srf[SRF_SWITCHUP], CautionWarningRow);
 
 	MissionTimerSwitchesRow.Init(AID_MISSION_TIMER_SWITCHES, MainPanel);
 	MissionTimerHoursSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], MissionTimerSwitchesRow, TIME_UPDATE_HOURS, &MissionTimerDisplay);
@@ -3839,7 +3844,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
 		return true;
 
 	case AID_MASTER_ALARM:
-		if (masterAlarmLit) {
+		//
+		// Master alarm light is disabled with Caution and Warning switch in BOOST mode.
+		//
+		if (masterAlarmLit && !CautionWarningModeSwitch.IsCenter()) {
 			oapiBlt (surf, srf[19], 0, 0, 0, 0, 33, 27);
 		}
 		else {
@@ -3955,6 +3963,8 @@ void Saturn::InitSwitches() {
 	SivbLmSepSwitch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
 
 	MissionTimerSwitch.Register(PSH, "MissionTimerSwitch", THREEPOSSWITCH_UP);
+	CautionWarningModeSwitch.Register(PSH, "CautionWarningModeSwitch", THREEPOSSWITCH_CENTER);
+	CautionWarningCMCSMSwitch.Register(PSH, "CautionWarningCMCSMSwitch", 1);
 
 	CabinFan1Switch = false;					// saved in CP2SwitchState.CFswitch1
 	CabinFan2Switch = false;					// saved in CP2SwitchState.CFswitch2
