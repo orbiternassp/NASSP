@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/08/13 14:21:36  movieman523
+  *	Added beginnings of caution and warning system.
+  *	
   *	Revision 1.33  2005/08/13 11:48:26  movieman523
   *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
   *	
@@ -133,6 +136,7 @@
 #include "PanelSDK/PanelSDK.h"
 
 #include "cautionwarning.h"
+#include "csmcautionwarning.h"
 
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
@@ -225,12 +229,6 @@ protected:
 
 	double MissionTimerDisplay;
 	double EventTimerOffset;
-
-	//
-	// Is the master alarm sounding?
-	//
-
-	bool masterAlarm;
 
 	//
 	// Center engine shutdown times for first and
@@ -980,7 +978,7 @@ protected:
 	DSKY dsky;
 	CSMcomputer agc;
 	IMU imu;
-	CautionWarningSystem cws;
+	CSMCautionWarningSystem cws;
 
 	//
 	// Vessel handles.

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2005/08/13 14:21:36  movieman523
+  *	Added beginnings of caution and warning system.
+  *	
   *	Revision 1.38  2005/08/13 11:48:26  movieman523
   *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
   *	
@@ -2694,15 +2697,11 @@ void Saturn::StopCabinFanSound()
 void Saturn::MasterAlarm()
 
 {
-	if (!masterAlarm) {
+	//
+	// Enable master alarm.
+	//
 
-		//
-		// Enable master alarm.
-		//
-
-		masterAlarm = true;
-		cws.SetMasterAlarm(true);
-	}
+	cws.SetMasterAlarm(true);
 }
 
 //
@@ -2712,11 +2711,8 @@ void Saturn::MasterAlarm()
 void Saturn::StopMasterAlarm()
 
 {
-	if (masterAlarm) {
-		masterAlarm = false;
-		SMasterAlarm.stop();
-		cws.SetMasterAlarm(false);
-	}
+	SMasterAlarm.stop();
+	cws.SetMasterAlarm(false);
 }
 
 bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) {
