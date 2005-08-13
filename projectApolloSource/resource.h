@@ -72,7 +72,7 @@
 #define AID_P24                         94
 #define AID_P25                         95
 #define AID_SEC_PRPLT_SWITCHES          96
-#define AID_CAUTION_PANEL               97
+
 #define AID_P27                         98
 #define AID_P28                         99
 #define AID_P29                         100
@@ -192,7 +192,7 @@
 #define AID_P36                         412
 #define AID_CYROTANKSWITCHES            413
 #define AID_CM_RCS_LOGIC                414
-#define AID_CW                          415
+
 #define AID_SMRCS_FUEL                  416
 #define AID_SPS_FUEL                    417
 #define AID_EMS_SWITCH                  418

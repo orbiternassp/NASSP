@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/13 11:48:27  movieman523
+  *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
+  *	
   *	Revision 1.11  2005/08/13 00:09:43  movieman523
   *	Added IMU Cage switch
   *	
@@ -58,6 +61,8 @@
   *	Initial version
   *
   **************************************************************************/
+
+#include "cautionwarning.h"
 
 #define TOGGLESWITCH_DOWN		0
 #define TOGGLESWITCH_UP			1
@@ -242,6 +247,8 @@ protected:
 	double *timer;
 };
 
+class CautionWarningSystem; // Forward reference for files which include this before cautionwarning.h
+
 class CWSLightTestSwitch: public ThreePosSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
@@ -258,6 +265,15 @@ protected:
 	virtual void InitSound(SoundLib *s);
 };
 
+class CWSModeSwitch: public ThreePosSwitch {
+public:
+	CWSModeSwitch();
+	bool CheckMouseClick(int event, int mx, int my);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c);
+
+protected:
+	CautionWarningSystem *cws;
+};
 
 class GuardedToggleSwitch: public ToggleSwitch {
 

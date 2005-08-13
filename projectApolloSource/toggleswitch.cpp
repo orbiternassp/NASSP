@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/13 11:48:27  movieman523
+  *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
+  *	
   *	Revision 1.12  2005/08/13 00:09:43  movieman523
   *	Added IMU Cage switch
   *	
@@ -1357,4 +1360,39 @@ bool CWSLightTestSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
+}
+
+CWSModeSwitch::CWSModeSwitch()
+
+{
+	cws = 0;
+}
+
+bool CWSModeSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ThreePosSwitch::CheckMouseClick(event, mx,my)) {
+		if (cws) {
+			if (IsUp()) {
+				cws->SetMode(CWS_MODE_NORMAL);
+			}
+			else if (IsCenter()) {
+				cws->SetMode(CWS_MODE_BOOST);
+			}
+			else if (IsDown()) {
+				cws->SetMode(CWS_MODE_ACK);
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
+
+void CWSModeSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c)
+
+{
+	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	cws = c;
 }

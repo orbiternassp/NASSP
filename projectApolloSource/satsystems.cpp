@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/12 21:42:14  movieman523
+  *	Added support for 'SIVB Takeover' bit on launch.
+  *	
   *	Revision 1.12  2005/08/10 22:31:57  movieman523
   *	IMU is now enabled when running Prog 01.
   *	
@@ -99,18 +102,6 @@ void Saturn::SystemsInit() {
 void Saturn::SystemsTimestep(double simt) {
 
 	//
-	// MasterAlarm
-	//
-
-	if (masterAlarm && (simt > masterAlarmCycleTime)) {
-		masterAlarmLit = !masterAlarmLit;
-		masterAlarmCycleTime = simt + 0.25;
-		if (masterAlarmLit) {
-			SMasterAlarm.play(NOLOOP,255);
-		}
-	}
-
-	//
 	// Don't clock the computer and the internal systems unless we're actually at the pad.
 	//
 
@@ -119,6 +110,7 @@ void Saturn::SystemsTimestep(double simt) {
 		dsky.Timestep(MissionTime);
 		agc.Timestep(MissionTime);
 		imu.Timestep(MissionTime);
+		cws.TimeStep(MissionTime);
 
 		// Each timestep is passed to the SPSDK
 		// to perform internal computations on the 
