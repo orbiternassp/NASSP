@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/08/13 00:09:43  movieman523
+  *	Added IMU Cage switch
+  *	
   *	Revision 1.29  2005/08/12 21:42:14  movieman523
   *	Added support for 'SIVB Takeover' bit on launch.
   *	
@@ -341,6 +344,17 @@ void ApolloGuidance::Startup()
 
 	Standby = false;
 	dsky.ClearStby();
+
+	//
+	// Light NO ATT if the IMU isn't running.
+	//
+
+	ChannelValue30 val30;
+
+	val30.Value = GetInputChannel(030);
+	if (val30.Bits.IMUCage || !val30.Bits.IMUOperate) {
+		LightNoAtt();
+	}
 
 	//
 	// We always start up in program zero.
