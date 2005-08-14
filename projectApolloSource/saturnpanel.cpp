@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2005/08/13 22:24:20  movieman523
+  *	Added the master alarm rendeing to CSM.
+  *	
   *	Revision 1.42  2005/08/13 20:20:17  movieman523
   *	Created MissionTimer class and wired it into the LEM and CSM.
   *	
@@ -1079,6 +1082,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MISSION_TIMER_SWITCHES,						_R(2018,  299, 2140,  330), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_IMU_CAGE_SWITCH,								_R( 289,  1242,  330, 1314), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MASTER_ALARM,								_R( 462,   495,  511,  535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MASTER_ALARM2,								_R(2958,   650, 3007,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1527,6 +1531,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 	switch (id) {
 	case AID_MASTER_ALARM:
+	case AID_MASTER_ALARM2:
 		StopMasterAlarm();
 		ButtonClick();
 		return true;
@@ -3770,6 +3775,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_MASTER_ALARM:
+	case AID_MASTER_ALARM2:
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT]);
 		return true;
 
