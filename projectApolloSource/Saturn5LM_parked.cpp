@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/08/14 16:08:20  tschachim
+  *	LM is now a VESSEL2
+  *	Changed panel restore mechanism because the CSM mechanism
+  *	caused CTDs, reason is still unknown.
+  *	
   *	Revision 1.27  2005/08/14 15:25:43  movieman523
   *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
   *	
@@ -987,8 +992,7 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 void sat5_lmpkd::clbkSetClassCaps (FILEHANDLE cfg) {
 
-	// Disabled here, it's called in clbkLoadStateEx
-	//SetLmVesselDockStage();
+	SetLmVesselDockStage();
 }
 
 void sat5_lmpkd::PostCreation ()
