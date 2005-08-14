@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/08/14 15:25:43  movieman523
+  *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
+  *	
   *	Revision 1.26  2005/08/13 20:20:17  movieman523
   *	Created MissionTimer class and wired it into the LEM and CSM.
   *	
@@ -156,6 +159,59 @@ const int TO_EVA=1;
 static SoundEvent sevent        ;
 static double NextEventTime = 0.0;
 
+// ==============================================================
+// API interface
+// ==============================================================
+
+BOOL WINAPI DllMain (HINSTANCE hModule,
+					 DWORD ul_reason_for_call,
+					 LPVOID lpReserved)
+{
+	switch (ul_reason_for_call) {
+	case DLL_PROCESS_ATTACH:
+		InitGParam(hModule);
+		break;
+	case DLL_PROCESS_DETACH:
+		FreeGParam();
+		break;
+	}
+	return TRUE;
+}
+
+DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
+
+{
+	sat5_lmpkd *lem;
+
+	if (!refcount++) {
+		LEMLoadMeshes();
+	}
+	
+	// VESSELSOUND 
+
+	lem = new sat5_lmpkd(hvessel, flightmodel);
+	return (VESSEL *) lem;
+}
+
+DLLCLBK void ovcExit (VESSEL *vessel)
+
+{
+	TRACESETUP("ovcExit LMPARKED");
+
+	--refcount;
+
+	if (!refcount) {
+		TRACE("refcount == 0");
+
+		//
+		// This code could tidy up allocations when refcount == 0
+		//
+
+	}
+
+	if (vessel) delete (sat5_lmpkd *)vessel;
+}
+
 
 //Begin code
 
@@ -165,7 +221,7 @@ LanderVessel::LanderVessel(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel)
 	// Nothing special to do.
 }
 
-sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel), dsky(soundlib, agc), agc(soundlib, dsky, imu), imu(agc)
+sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), dsky(soundlib, agc), agc(soundlib, dsky, imu), imu(agc)
 
 {
 	// VESSELSOUND **********************************************************************
@@ -186,7 +242,6 @@ sat5_lmpkd::~sat5_lmpkd()
 void sat5_lmpkd::Init()
 
 {
-	//bAbort =false;
 	RCS_Full=true;
 	Eds=true;	
 	toggleRCS =false;
@@ -204,28 +259,21 @@ void sat5_lmpkd::Init()
 	ToggleEva=false;
 	EVA_IP=false;
 	refcount = 0;
-	lmpview=true;
-	cdrview=true;
+	viewpos = LMVIEW_LMP;
+	//lmpview=true;
+	//cdrview=false;//=true;
 	startimer=false;
 	ContactOK = false;
 	stage = 0;
 	status = 0;
 
 	InVC = false;
-
-	//
-	// TODO WARNING by tschachim
-	// InPanel is temporarily set to true so that LoadPanel does NOT switch to 
-	// the panel id stored in the scenario file during first call of LoadPanel
-	// because this seems to crash Orbiter sometimes. 
-	// We use the same construction in the Saturn without any problems, perhaps because
-	// the Saturn is a VESSEL2? This needs to be investigated and fixed!
-	//
-	InPanel = true;	
-
+	InPanel = false;
 	PanelId = LMPANEL_MAIN;	// default panel
+	CheckPanelIdInTimestep = false;
 	InFOV = true;
 	SaveFOV = 0;
+
 	Crewed = true;
 	AutoSlow = false;
 
@@ -252,8 +300,6 @@ void sat5_lmpkd::Init()
 	soundlib.SetLanguage(AudioLanguage);
 
 	SoundsLoaded = false;
-
-	SetLmVesselDockStage();
 
 	//
 	// Default channel setup.
@@ -399,69 +445,9 @@ void sat5_lmpkd::AttitudeLaunch1()
 
 }
 
-// ==============================================================
-// API interface
-// ==============================================================
-// ==============================================================
-// DLL entry point
-// ==============================================================
+int sat5_lmpkd::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
-BOOL WINAPI DllMain (HINSTANCE hModule,
-					 DWORD ul_reason_for_call,
-					 LPVOID lpReserved)
-{
-	switch (ul_reason_for_call) {
-	case DLL_PROCESS_ATTACH:
-		InitGParam(hModule);
-		break;
-	case DLL_PROCESS_DETACH:
-		FreeGParam();
-		break;
-	}
-	return TRUE;
-}
-
-// ==============================================================
-// API interface
-// ==============================================================
-
-DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
-{
-	sat5_lmpkd *lem;
-
-	if (!refcount++) {
-		LEMLoadMeshes();
-	}
-	
-	// VESSELSOUND 
-
-	lem = new sat5_lmpkd(hvessel, flightmodel);
-	return (VESSEL *) lem;
-}
-
-
-DLLCLBK void ovcExit (VESSEL *vessel)
-
-{
-	TRACESETUP("ovcExit LMPARKED");
-
-	--refcount;
-
-	if (!refcount) {
-		TRACE("refcount == 0");
-
-		//
-		// This code could tidy up allocations when refcount == 0
-		//
-
-	}
-
-	if (vessel) delete (sat5_lmpkd *)vessel;
-}
-
-
-// rewrote to get key events rather than monitor key state - LazyD
-int sat5_lmpkd::ConsumeBufferedKey(DWORD key, bool down, const char *keystate) {
+	// rewrote to get key events rather than monitor key state - LazyD
 
 	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate) || !down) {
 		return 0; 
@@ -474,7 +460,13 @@ int sat5_lmpkd::ConsumeBufferedKey(DWORD key, bool down, const char *keystate) {
 		return 1;
 
 	case OAPI_KEY_6:
-		cdrview = true;
+		viewpos = LMVIEW_CDR;
+		SetView();
+		return 1;
+
+	case OAPI_KEY_7:
+		viewpos = LMVIEW_LMP;
+		SetView();
 		return 1;
 
 	//
@@ -528,10 +520,18 @@ int sat5_lmpkd::ConsumeBufferedKey(DWORD key, bool down, const char *keystate) {
 // Timestep code.
 //
 
-void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
+void sat5_lmpkd::clbkPreStep (double simt, double simdt, double mjd) {
+
+	if (CheckPanelIdInTimestep) {
+		oapiSetPanel(PanelId);
+		CheckPanelIdInTimestep = false;
+	}
+}
+
+
+void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 
 {
-
 	if (FirstTimestep)
 	{
 		DoFirstTimestep();
@@ -551,8 +551,6 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
 			oapiSetFocusObject(hLEVA);
 		}
 	}
-
-	SetView();
 	
 	VECTOR3 RVEL = _V(0.0,0.0,0.0);
 	GetRelativeVel(GetGravityRef(),RVEL);
@@ -806,7 +804,7 @@ void sat5_lmpkd::PostStep(double simt, double simdt, double mjd)
                 sevent.PlaySound( names,newbuffer,offset);
 		   else sevent.PlaySound( names,true,0);
 		}
-	}
+	} 
 }
 
 //
@@ -873,9 +871,9 @@ typedef union {
 // Scenario state functions.
 //
 
-void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
+void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
-{	
+{
 	char *line;
 	int	SwitchState;
 	float ftcp;
@@ -987,9 +985,10 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 	LoadDefaultSounds();
 }
 
-void sat5_lmpkd::SetClassCaps (FILEHANDLE cfg) {
+void sat5_lmpkd::clbkSetClassCaps (FILEHANDLE cfg) {
 
-	SetLmVesselDockStage();
+	// Disabled here, it's called in clbkLoadStateEx
+	//SetLmVesselDockStage();
 }
 
 void sat5_lmpkd::PostCreation ()
@@ -1007,7 +1006,7 @@ void sat5_lmpkd::SetStateEx(const void *status)
 	DefSetStateEx(status);
 }
 
-void sat5_lmpkd::SaveState (FILEHANDLE scn)
+void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 
 {
 	SaveDefaultState (scn);	
@@ -1054,13 +1053,16 @@ void sat5_lmpkd::SaveState (FILEHANDLE scn)
 	PSH.SaveState(scn);	
 }
 
-bool sat5_lmpkd::LoadGenericCockpit ()
+bool sat5_lmpkd::clbkLoadGenericCockpit ()
 
 {
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+
 	InVC = false;
 	InPanel = false;
+	SetView();
+
 	return true;
 }
 
@@ -1090,73 +1092,4 @@ void sat5_lmpkd::SetLanderData(LemSettings &ls)
 	soundlib.SetLanguage(AudioLanguage);
 	sprintf(buffers, "Apollo%d", ApolloNo);
     soundlib.SetSoundLibMissionPath(buffers);
-}
-
-// ==============================================================
-// API interface
-// ==============================================================
-
-DLLCLBK bool ovcLoadPanel (VESSEL *vessel, int id)
-{
-	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-	return lem->LoadPanel(id);
-}
-
-
-DLLCLBK bool ovcPanelMouseEvent (VESSEL *vessel, int id, int event, int mx, int my)
-
-{
-	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-	return lem->PanelMouseEvent(id, event, mx, my);
-}
-
-
-DLLCLBK bool ovcPanelRedrawEvent (VESSEL *vessel, int id, int event, SURFHANDLE surf)
-
-{
-	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-	return lem->PanelRedrawEvent(id, event, surf);
-}
-
-DLLCLBK int ovcConsumeBufferedKey (VESSEL *vessel, DWORD key, bool down, const char *keystate)
-{
-	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-	return lem->ConsumeBufferedKey(key, down, keystate);
-}
-
-DLLCLBK void ovcTimestep (VESSEL *vessel, double simt)
-{
-	sat5_lmpkd *lem = (sat5_lmpkd *) vessel;
-	lem->PostStep(simt, 0, 0);
-}
-
-DLLCLBK void ovcLoadStateEx (VESSEL *vessel, FILEHANDLE scn, VESSELSTATUS *vs)
-{
-	sat5_lmpkd *lem = (sat5_lmpkd *) vessel;
-	lem->LoadStateEx(scn, (void *) vs);
-}
-
-DLLCLBK void ovcSetClassCaps (VESSEL *vessel, FILEHANDLE cfg)
-{
-	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-	lem->SetClassCaps(cfg);
-}
-
-DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
-
-{
-	sat5_lmpkd *lem = (sat5_lmpkd *)vessel;
-	lem->SaveState(scn);
-}
-
-DLLCLBK bool ovcGenericCockpit (VESSEL *vessel) { 
-
-	sat5_lmpkd *lm = (sat5_lmpkd *)vessel; 
-	return lm->LoadGenericCockpit(); 
-}
-
-DLLCLBK void ovcMFDmode (VESSEL *vessel, int mfd, int mode) {
-
-	sat5_lmpkd *lm = (sat5_lmpkd *)vessel; 
-	lm->MFDMode(mfd, mode);
 }
