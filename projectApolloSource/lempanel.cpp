@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/08/13 20:20:17  movieman523
+  *	Created MissionTimer class and wired it into the LEM and CSM.
+  *	
   *	Revision 1.26  2005/08/12 10:06:05  spacex15
   *	added connection of PNGS mode control switch to the agc input channel
   *	
@@ -537,7 +540,7 @@ void sat5_lmpkd::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int x
 	oapiReleaseDC (surf, hDC);
 }
 
-void sat5_lmpkd::MFDMode (int mfd, int mode) {
+void sat5_lmpkd::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
 	case MFD_LEFT:		
@@ -616,27 +619,7 @@ void sat5_lmpkd::InitPanel (int panel)
 	SetSwitches(panel);
 }
 
-bool sat5_lmpkd::LoadPanel (int id) {
-
-	//
-	// The following code switches the panel to PanelId instead of id,
-	// if we are NOT in panel view. This is used for example to switch to 
-	// the panel id saved in the scenario file
-	//
-    static bool recursion; 
- 
-      // avoid recursive calls
-    if (recursion) return true;
-    recursion = true;
- 
-    if (!InPanel && id != PanelId) {
-		// sometimes clbkLoadPanel is called inside oapiSetPanel, 
-		// sometimes not, so ignore the recursive call
-		oapiSetPanel(PanelId);
-		id = PanelId;
-	}
-	recursion = false;
-
+bool sat5_lmpkd::clbkLoadPanel (int id) {
 
 	//
 	// Release all surfaces
@@ -790,28 +773,23 @@ bool sat5_lmpkd::LoadPanel (int id) {
 	InitPanel(id);
 
 	//
-	// Change FOV for the LPD window 
+	// Change to desired panel next timestep.
+	// The implementation from the saturn caused CTDs.
+	// TODO: Why???
 	//
-	if (id == LMPANEL_LPDWINDOW) {
-	   // if this is the first time we've been here, save the current FOV
-		if (InFOV) {
-			SaveFOV = oapiCameraAperture();
-			InFOV = false;
-		}
-		//set FOV to 70 degrees
-		oapiCameraSetAperture(RAD * 35.0);
-
+    if (!InPanel && id != PanelId) {	 
+		CheckPanelIdInTimestep = true;
 	} else {
-		if(InFOV == false) {
-			oapiCameraSetAperture(SaveFOV);
-			InFOV = true;
-		}
+	    PanelId = id;  
 	}
-
-	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
-	InVC = false;
 	InPanel = true; 
-    PanelId = id;  
+	InVC = false;
+
+	//
+	// Set view parameter
+	//
+	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+	SetView();
 
 	return hBmp != NULL;
 }
@@ -961,7 +939,7 @@ void sat5_lmpkd::AbortFire()
 	Afire.play(NOLOOP,255);
 }
 
-bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
+bool sat5_lmpkd::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 {
 	static int ctrl = 0;
@@ -1859,7 +1837,8 @@ bool sat5_lmpkd::PanelMouseEvent (int id, int event, int mx, int my)
 	}
 	return false;
 }
-bool sat5_lmpkd::PanelRedrawEvent (int id, int event, SURFHANDLE surf) 
+
+bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf) 
 
 {
 	int Curdigit;
@@ -2766,7 +2745,7 @@ typedef union {
 		unsigned ACAPswitch:1;
 		unsigned RATE2switch:1;
 		unsigned AT2switch:1;
-		unsigned dummy ;  // formerly unsigned DESEswitch:1;
+		unsigned dummy:1 ;  // formerly unsigned DESEswitch:1;
 		unsigned SLWRswitch:1;
 		unsigned DBswitch:1;
 		unsigned IMUCswitch:1;

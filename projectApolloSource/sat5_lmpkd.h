@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/13 20:20:17  movieman523
+  *	Created MissionTimer class and wired it into the LEM and CSM.
+  *	
   *	Revision 1.16  2005/08/11 16:29:33  spacex15
   *	Added PNGS and AGS mode control 3 pos switches
   *	
@@ -97,25 +100,14 @@ typedef struct {
 
 } LemSettings;
 
-class sat5_lmpkd : public VESSEL, public PanelSwitchListener {
+class sat5_lmpkd : public VESSEL2, public PanelSwitchListener {
 
 public:
 	sat5_lmpkd(OBJHANDLE hObj, int fmodel);
 	virtual ~sat5_lmpkd();
 
 	void Init();
-	void LoadStateEx (FILEHANDLE scn, void *vs);
-	void SaveState (FILEHANDLE scn);
-	int ConsumeBufferedKey (DWORD key, bool down, const char *keystate);
-	void PostStep(double simt, double simdt, double mjd);
-	bool PanelMouseEvent (int id, int event, int mx, int my);
-	bool PanelRedrawEvent (int id, int event, SURFHANDLE surf);
-	bool LoadPanel (int id);
-	bool LoadVC (int id);
-	bool LoadGenericCockpit ();
-	void MFDMode (int mfd, int mode);
 	void PostCreation();
-	void SetClassCaps (FILEHANDLE cfg);
 	void SetStateEx(const void *status);
 	void SetLmVesselDockStage();
 	void SetLmVesselHoverStage();
@@ -125,6 +117,19 @@ public:
 	void AbortStage();
 	void StartAscent();
 	virtual void SetLanderData(LemSettings &ls);
+
+	bool clbkLoadPanel (int id);
+	bool clbkLoadVC(int id);
+	bool clbkPanelMouseEvent (int id, int event, int mx, int my);
+	bool clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf);
+	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+	void clbkPreStep (double simt, double simdt, double mjd);
+	void clbkPostStep(double simt, double simdt, double mjd);
+	void clbkLoadStateEx (FILEHANDLE scn, void *vs);
+	void clbkSetClassCaps (FILEHANDLE cfg);
+	void clbkSaveState (FILEHANDLE scn);
+	bool clbkLoadGenericCockpit ();
+	void clbkMFDMode (int mfd, int mode);
 
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
@@ -221,7 +226,6 @@ protected:
 	ThreePosSwitch ModeControlAGSSwitch;
 
 
-	//bool bAbort;
 	bool RCS_Full;
 	bool Eds;
 
@@ -414,10 +418,12 @@ protected:
 	bool ToggleEva;
 	bool EVA_IP;
 
-	bool lmpview;
-	bool cdrview;
+#define LMVIEW_CDR		0
+#define LMVIEW_LMP		1
+
+	int	viewpos;
+	
 	bool startimer;
-	//bool bABort;
 	bool ContactOK;
 	bool SoundsLoaded;
 
@@ -449,6 +455,7 @@ protected:
 	bool InFOV;  
 	int  PanelId; 
 	double SaveFOV;
+	bool CheckPanelIdInTimestep;
 
 	SoundLib soundlib;
 

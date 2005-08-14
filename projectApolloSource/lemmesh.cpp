@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.14  2005/08/10 20:00:55  spacex15
   *	Activated 3 position lem eng arm switch
   *	
@@ -199,7 +202,8 @@ void sat5_lmpkd::SetLmVesselDockStage()
 	SetTouchdownPoints (_V(0,0,10), _V(-1,0,-10), _V(1,0,-10));
     VECTOR3 mesh_dir=_V(0.0,-0.2,0.03);
 
-	AddMesh (hLMPKD, &mesh_dir);
+	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
     if (!ph_Dsc)  
 		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
@@ -272,7 +276,8 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	ClearAttExhaustRefs();
 	SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);
-	AddMesh (hLMVessel, &mesh_dir);
+	UINT meshidx = AddMesh (hLMVessel, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
     
 	if (!ph_Dsc)  
 		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
@@ -341,10 +346,11 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
-	VECTOR3 mesh_dir=_V(-0.191,-0.02,+0.383);//
 
-	
-	AddMesh (hLMAscent, &mesh_dir);
+	VECTOR3 mesh_dir=_V(-0.191,-0.02,+0.383);	
+	UINT meshidx = AddMesh (hLMAscent, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
     if (!ph_Asc)  
 		ph_Asc  = CreatePropellantResource(2345); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Asc); // display 2nd stage propellant level in generic HUD

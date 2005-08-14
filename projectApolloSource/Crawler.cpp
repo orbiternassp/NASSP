@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/08/05 12:59:35  tschachim
+  *	Saturn detachment handling
+  *	
   *	Revision 1.5  2005/07/05 17:23:11  tschachim
   *	Scenario saving/loading
   *	
@@ -45,6 +48,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "IMU.h"
 #include "saturn.h"
 
 HINSTANCE g_hDLL;
