@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/08/13 20:20:17  movieman523
+  *	Created MissionTimer class and wired it into the LEM and CSM.
+  *	
   *	Revision 1.25  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -265,6 +268,7 @@ void sat5_lmpkd::Init()
 	//
 
 	MissionTimerDisplay.SetRunning(true);
+	MissionTimerDisplay.SetEnabled(true);
 }
 
 void sat5_lmpkd::DoFirstTimestep()
@@ -860,6 +864,7 @@ void sat5_lmpkd::StartAscent()
 typedef union {
 	struct {
 		unsigned MissionTimerRunning:1;
+		unsigned MissionTimerEnabled:1;
 	} u;
 	unsigned long word;
 } LEMMainState;
@@ -936,7 +941,8 @@ void sat5_lmpkd::LoadStateEx (FILEHANDLE scn, void *vs)
 			LEMMainState state;
 			sscanf (line+5, "%d", &state.word);
 
-			MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning);
+			MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
+			MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
 		} 
         else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
 			PSH.LoadState(scn);	
@@ -1029,10 +1035,16 @@ void sat5_lmpkd::SaveState (FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
 	}
 
+	//
+	// Main state flags are packed into a 32-bit value.
+	//
+
 	LEMMainState state;
 	state.word = 0;
 
 	state.u.MissionTimerRunning = MissionTimerDisplay.IsRunning();
+	state.u.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
+
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
 	dsky.SaveState(scn);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/08/13 20:20:17  movieman523
+  *	Created MissionTimer class and wired it into the LEM and CSM.
+  *	
   *	Revision 1.32  2005/08/13 14:59:24  movieman523
   *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
   *	
@@ -800,6 +803,7 @@ typedef union {
 		unsigned PostSplashdownPlayed:1;
 		unsigned IGMEnabled:1;
 		unsigned stgSM:1;
+		unsigned MissionTimerEnabled:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -812,6 +816,7 @@ int Saturn::GetMainState()
 
 	state.word = 0;
 	state.u.MissionTimerRunning = MissionTimerDisplay.IsRunning();
+	state.u.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
 	state.u.SIISepState = SIISepState;
 	state.u.autopilot = autopilot;
 	state.u.TLIBurnDone = TLIBurnDone;
@@ -855,6 +860,7 @@ void Saturn::SetMainState(int s)
 	IGMEnabled = (state.u.IGMEnabled != 0);
 	stgSM = (state.u.stgSM != 0);
 	MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
+	MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
 }
 
 
@@ -1356,10 +1362,11 @@ void Saturn::DoLaunch(double simt)
 	SetStage(LAUNCH_STAGE_ONE);
 
 	//
-	// For now, we'll reset the mission timer to zero.
+	// For now, we'll reset the mission timer to zero and enable it.
 	//
 
 	MissionTimerDisplay.Reset();
+	MissionTimerDisplay.SetEnabled(true);
 
 	//
 	// Tell the AGC that we've lifted off.

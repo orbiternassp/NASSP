@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/13 22:05:17  movieman523
+  *	Mission timer class.
+  *	
   **************************************************************************/
 
 
@@ -45,6 +48,8 @@ public:
 	void Reset();
 	void SetRunning(bool run) { Running = run; };
 	bool IsRunning() { return Running; };
+	void SetEnabled(bool run) { Enabled = run; };
+	bool IsEnabled() { return Enabled; };
 
 	void Render(SURFHANDLE surf, SURFHANDLE digits);
 
@@ -60,6 +65,7 @@ protected:
 	double extra;
 
 	bool Running;
+	bool Enabled;
 
 	//
 	// Don't need to be saved.
