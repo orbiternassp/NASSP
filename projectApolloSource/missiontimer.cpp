@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/13 22:05:17  movieman523
+  *	Mission timer class.
+  *	
   **************************************************************************/
 
 
@@ -41,6 +44,7 @@ MissionTimer::MissionTimer()
 	Reset();
 
 	Running = false;
+	Enabled = false;
 }
 
 MissionTimer::~MissionTimer()
@@ -93,7 +97,7 @@ void MissionTimer::UpdateSeconds(int n)
 void MissionTimer::Timestep(double simt, double deltat)
 
 {
-	if (Running) {
+	if (Running && Enabled) {
 		extra += deltat;
 
 		if (extra >= 1.0) {
