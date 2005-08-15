@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.10  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -1032,23 +1035,25 @@ void Saturn1b::SeparateStage (int stage)
 		vs5.vrot.y = 0.1;
 		vs5.vrot.z = 0.0;
 		strcpy (VName, GetName()); strcat (VName, "-S4BSTG");
+
 		if(ASTPMission)
 			hs4bM = oapiCreateVessel(VName, "nsat1astp", vs1);
-		else
+		else {
 			hs4bM = oapiCreateVessel(VName, "nsat1stg2", vs1);
 
-		targetvessel=oapiGetVesselInterface(hs4bM);
-		if(SIVBPayload == PAYLOAD_TARGET){
-			mesh_dir=_V(-1.0,-1.1,13.3);
-			targetvessel->AddMesh (hCOAStarget, &mesh_dir);
-		}
-		else if(SIVBPayload == PAYLOAD_ASTP){
-			mesh_dir=_V(0,0,13.3);
-			targetvessel->AddMesh (hastp, &mesh_dir);
-		}
-		else if(SIVBPayload == PAYLOAD_LM1){
-			mesh_dir=_V(0,0,13.3);
-			targetvessel->AddMesh (hCOAStarget, &mesh_dir);
+			targetvessel=oapiGetVesselInterface(hs4bM);
+			if (SIVBPayload == PAYLOAD_TARGET){
+				mesh_dir=_V(-1.0,-1.1,13.3);
+				targetvessel->AddMesh (hCOAStarget, &mesh_dir);
+			}
+			else if (SIVBPayload == PAYLOAD_ASTP){
+				mesh_dir=_V(0,0,13.3);
+				targetvessel->AddMesh (hastp, &mesh_dir);
+			}
+			else if (SIVBPayload == PAYLOAD_LM1){
+				mesh_dir=_V(0,0,13.3);
+				targetvessel->AddMesh (hCOAStarget, &mesh_dir);
+			}
 		}
 
 		SetupStage(hs4bM);
@@ -1065,6 +1070,7 @@ void Saturn1b::SeparateStage (int stage)
 		//oapiDeleteVessel(hesc1,vessel->GetHandle());
 		ShiftCentreOfMass (_V(0,0,21.5));
 		SetCSMStage ();
+
 		if(ASTPMission)
 			dockstate = 1;
 		else
