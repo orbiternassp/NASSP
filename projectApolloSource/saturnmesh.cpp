@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.11  2005/08/01 19:07:47  movieman523
   *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
   *	
@@ -1400,9 +1403,6 @@ void Saturn::SetAbortStage ()
 
 	ABORT_IND = true;
 
-	LPswitch1.SetState(false);
-	LPswitch2.SetState(false);
-	LPswitch3.SetState(false);
 	LPswitch4.SetState(false);
 	LPswitch5.SetState(false);
 	LPswitch6.SetState(false);

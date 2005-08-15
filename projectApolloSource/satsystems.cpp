@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/15 02:37:57  movieman523
+  *	SM RCS is now wired up.
+  *	
   *	Revision 1.14  2005/08/13 14:21:36  movieman523
   *	Added beginnings of caution and warning system.
   *	
@@ -469,10 +472,6 @@ void Saturn::DeactivateS4RCS()
 void Saturn::ActivateCSMRCS()
 
 {
-	LPswitch1 = true;
-	LPswitch2 = true;
-	LPswitch3 = true;
-
 	SMRCSHelium1ASwitch.SetState(false);
 	SMRCSHelium1BSwitch.SetState(false);
 	SMRCSHelium1CSwitch.SetState(false);
@@ -497,10 +496,6 @@ void Saturn::ActivateCSMRCS()
 void Saturn::DeactivateCSMRCS()
 
 {
-	LPswitch1 = false;
-	LPswitch2 = false;
-	LPswitch3 = false;
-
 	SMRCSHelium1ASwitch.SetState(true);
 	SMRCSHelium1BSwitch.SetState(true);
 	SMRCSHelium1CSwitch.SetState(true);
