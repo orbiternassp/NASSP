@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.15  2005/08/08 20:32:56  movieman523
   *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
   *	
@@ -929,7 +932,7 @@ void Saturn1b::Timestep (double simt)
 			bManualUnDock=false;
 		}
 
-		if(LPswitch1){
+		if (SMRCSActive()) {
 			SetThrusterResource(th_att_lin[0],ph_rcs0);
 			SetThrusterResource(th_att_lin[1],ph_rcs0);
 			SetThrusterResource(th_att_lin[2],ph_rcs0);
@@ -939,7 +942,7 @@ void Saturn1b::Timestep (double simt)
 			SetThrusterResource(th_att_rot[2],ph_rcs0);
 			SetThrusterResource(th_att_rot[3],ph_rcs0);
 		}
-		else{
+		else {
 			SetThrusterResource(th_att_lin[0],NULL);
 			SetThrusterResource(th_att_lin[1],NULL);
 			SetThrusterResource(th_att_lin[2],NULL);
@@ -949,7 +952,7 @@ void Saturn1b::Timestep (double simt)
 			SetThrusterResource(th_att_rot[2],NULL);
 			SetThrusterResource(th_att_rot[3],NULL);
 		}
-		if(LPswitch2){
+		if (SMRCSActive()) {
 			SetThrusterResource(th_att_rot[4],ph_rcs0);
 			SetThrusterResource(th_att_rot[5],ph_rcs0);
 			SetThrusterResource(th_att_rot[7],ph_rcs0);
@@ -959,7 +962,7 @@ void Saturn1b::Timestep (double simt)
 			SetThrusterResource(th_att_lin[7],ph_rcs0);
 			SetThrusterResource(th_att_lin[6],ph_rcs0);
 		}
-		else{
+		else {
 			SetThrusterResource(th_att_rot[4],NULL);
 			SetThrusterResource(th_att_rot[5],NULL);
 			SetThrusterResource(th_att_rot[6],NULL);
@@ -969,7 +972,7 @@ void Saturn1b::Timestep (double simt)
 			SetThrusterResource(th_att_lin[6],NULL);
 			SetThrusterResource(th_att_lin[7],NULL);
 		}
-		if(LPswitch3) {
+		if(SMRCSActive()) {
 			for(int i=8;i<24;i++){
 				SetThrusterResource(th_att_rot[i],ph_rcs0);
 				SetThrusterResource(th_att_lin[i],ph_rcs0);

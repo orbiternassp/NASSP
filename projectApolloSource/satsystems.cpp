@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/13 14:21:36  movieman523
+  *	Added beginnings of caution and warning system.
+  *	
   *	Revision 1.13  2005/08/12 21:42:14  movieman523
   *	Added support for 'SIVB Takeover' bit on launch.
   *	
@@ -470,23 +473,25 @@ void Saturn::ActivateCSMRCS()
 	LPswitch2 = true;
 	LPswitch3 = true;
 
-	RH11switch = false;
-	RH12switch = false;
-	RH13switch = false;
-	RH14switch = false;
-	RH21switch = false;
-	RH22switch = false;
-	RH23switch = false;
-	RH24switch = false;
+	SMRCSHelium1ASwitch.SetState(false);
+	SMRCSHelium1BSwitch.SetState(false);
+	SMRCSHelium1CSwitch.SetState(false);
+	SMRCSHelium1DSwitch.SetState(false);
 
-	PP1switch = true;
-	PP2switch = true;
-	PP3switch = true;
-	PP4switch = true;
-	SP1switch = true;
-	SP2switch = true;
-	SP3switch = true;
-	SP4switch = true;
+	SMRCSHelium2ASwitch.SetState(false);
+	SMRCSHelium2BSwitch.SetState(false);
+	SMRCSHelium2CSwitch.SetState(false);
+	SMRCSHelium2DSwitch.SetState(false);
+
+	SMRCSProp1ASwitch.SetState(true);
+	SMRCSProp1BSwitch.SetState(true);
+	SMRCSProp1CSwitch.SetState(true);
+	SMRCSProp1DSwitch.SetState(true);
+
+	SMRCSProp2ASwitch.SetState(false);
+	SMRCSProp2BSwitch.SetState(false);
+	SMRCSProp2CSwitch.SetState(false);
+	SMRCSProp2DSwitch.SetState(false);
 }
 
 void Saturn::DeactivateCSMRCS()
@@ -496,23 +501,34 @@ void Saturn::DeactivateCSMRCS()
 	LPswitch2 = false;
 	LPswitch3 = false;
 
-	RH11switch = true;
-	RH12switch = true;
-	RH13switch = true;
-	RH14switch = true;
-	RH21switch = true;
-	RH22switch = true;
-	RH23switch = true;
-	RH24switch = true;
+	SMRCSHelium1ASwitch.SetState(true);
+	SMRCSHelium1BSwitch.SetState(true);
+	SMRCSHelium1CSwitch.SetState(true);
+	SMRCSHelium1DSwitch.SetState(true);
 
-	PP1switch = false;
-	PP2switch = false;
-	PP3switch = false;
-	PP4switch = false;
-	SP1switch = false;
-	SP2switch = false;
-	SP3switch = false;
-	SP4switch = false;
+	SMRCSHelium2ASwitch.SetState(true);
+	SMRCSHelium2BSwitch.SetState(true);
+	SMRCSHelium2CSwitch.SetState(true);
+	SMRCSHelium2DSwitch.SetState(true);
+
+	SMRCSProp1ASwitch.SetState(false);
+	SMRCSProp1BSwitch.SetState(false);
+	SMRCSProp1CSwitch.SetState(false);
+	SMRCSProp1DSwitch.SetState(false);
+
+	SMRCSProp2ASwitch.SetState(false);
+	SMRCSProp2BSwitch.SetState(false);
+	SMRCSProp2CSwitch.SetState(false);
+	SMRCSProp2DSwitch.SetState(false);
+}
+
+bool Saturn::SMRCSActive()
+
+{
+	return !SMRCSHelium1ASwitch && !SMRCSHelium1BSwitch && !SMRCSHelium1CSwitch && !SMRCSHelium1DSwitch && 
+		!SMRCSHelium2ASwitch && !SMRCSHelium2BSwitch && !SMRCSHelium2CSwitch && !SMRCSHelium2DSwitch && 
+		SMRCSProp1ASwitch.GetState() && SMRCSProp1BSwitch.GetState() && SMRCSProp1CSwitch.GetState() && SMRCSProp1DSwitch.GetState() && 
+		SMRCSProp2ASwitch.GetState() && SMRCSProp2BSwitch.GetState() && SMRCSProp2CSwitch.GetState() && SMRCSProp2DSwitch.GetState();
 }
 
 void Saturn::CheckSPSState()
