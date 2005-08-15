@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2005/08/15 19:25:03  movieman523
+  *	Added CSM attitude control switches and removed old ones.
+  *	
   *	Revision 1.45  2005/08/15 02:37:57  movieman523
   *	SM RCS is now wired up.
   *	
@@ -1090,7 +1093,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PRIM_PRPLNT_SWITCHES,						_R(1411,  718, 1748,  747), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SEC_PRPLT_SWITCHES,							_R(1411,  848, 1748,  877), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ATTITUDE_CONTROL_SWITCHES,					_R( 190,  838,  482,  867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-
+		oapiRegisterPanelArea (AID_BMAG_SWITCHES,								_R( 125, 1036,  258, 1065), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1276,6 +1279,15 @@ void Saturn::SetSwitches(int panel) {
 	AttDeadbandSwitch.Init(172, 0, 34, 29, srf[SRF_SWITCHUP], AttitudeControlRow);
 	AttRateSwitch.Init(215, 0, 34, 29, srf[SRF_SWITCHUP], AttitudeControlRow);
 	TransContrSwitch.Init(258, 0, 34, 29, srf[SRF_SWITCHUP], AttitudeControlRow);
+
+	//
+	// BMAG
+	//
+
+	BMAGRow.Init(AID_BMAG_SWITCHES, MainPanel);
+	BMAGRollSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], BMAGRow);
+	BMAGPitchSwitch.Init(49, 0, 34, 29, srf[SRF_THREEPOSSWITCH], BMAGRow);
+	BMAGYawSwitch.Init(99, 0, 34, 29, srf[SRF_THREEPOSSWITCH], BMAGRow);
 
 	//
 	// Caution and Warning switches.
@@ -3807,6 +3819,10 @@ void Saturn::InitSwitches() {
 	AttDeadbandSwitch.Register(PSH, "AttDeadbandSwitch", 0);
 	AttRateSwitch.Register(PSH, "AttRateSwitch", 0);
 	TransContrSwitch.Register(PSH, "TransContrSwitch", 0);
+
+	BMAGRollSwitch.Register(PSH, "BMAGRollSwitch", THREEPOSSWITCH_CENTER);
+	BMAGPitchSwitch.Register(PSH, "BMAGPitchSwitch", THREEPOSSWITCH_CENTER);
+	BMAGYawSwitch.Register(PSH, "BMAGYawSwitch", THREEPOSSWITCH_CENTER);
 
 	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 1, 1);
 	

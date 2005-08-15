@@ -21,6 +21,7 @@
 #define AID_MISSION_CLOCK               34
 #define AID_DSKY_KEY                    35
 #define AID_ABORT                       36
+#define AID_BMAG_SWITCHES				37
 #define AID_MASTER_ALARM2				38
 #define AID_SWITCH_SEP                  40
 #define AID_CONTACT                     41
