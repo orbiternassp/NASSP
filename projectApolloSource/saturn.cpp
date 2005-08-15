@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2005/08/15 02:37:57  movieman523
+  *	SM RCS is now wired up.
+  *	
   *	Revision 1.34  2005/08/14 15:25:43  movieman523
   *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
   *	
@@ -257,6 +260,7 @@ void Saturn::initSaturn()
 	hs4b4 = 0;
 	habort = 0;
 	hSMJet = 0;
+	hLMV = 0;
 
 	//
 	// Default mission time to an hour prior to launch.
@@ -265,6 +269,12 @@ void Saturn::initSaturn()
 	MissionTime = (-3600);
 	NextMissionEventTime = 0;
 	LastMissionEventTime = 0;
+
+	//
+	// No point trying to destroy things if we haven't launched.
+	//
+
+	NextDestroyCheckTime = 0;
 
 	abortTimer = 0;
 	release_time = 0;
@@ -1343,6 +1353,62 @@ void Saturn::UpdatePayloadMass()
 	}
 }
 
+//
+// Destroy any old stages that we don't want to keep around.
+//
+
+void Saturn::DestroyStages(double simt)
+
+{
+	if (hstg1) {
+		KillAlt(hstg1, 60);
+	}
+
+	if (hstg2) {
+		KillAlt(hstg2, 1000);
+	}
+
+	if (hintstg) {
+		KillAlt(hintstg, 1000);
+	}
+
+	if (hesc1) {
+		KillAlt(hesc1,90);
+	}
+
+	if (hPROBE) {
+		KillDist(hPROBE);
+	}
+
+	if (hs4b1) {
+		KillDist(hs4b1);
+	}
+	if (hs4b2) {
+		KillDist(hs4b2);
+	}
+	if (hs4b3) {
+		KillDist(hs4b3);
+	}
+
+	if (hs4b4) {
+		KillDist(hs4b4);
+	}
+
+	//
+	// Destroy seperated SM when it drops too low in the atmosphere.
+	//
+
+	if (hSMJet && !ApolloExploded) {
+		if ((simt-(20+ignition_SMtime))>=0 && stgSM) {
+			UllageSM(hSMJet,0,simt);
+			stgSM = false;
+		}
+		else if (!SMSep){
+			UllageSM(hSMJet,5,simt);
+		}
+		KillAlt(hSMJet,350000);
+	}
+}
 
 void Saturn::SetStage(int s)
 
@@ -1529,7 +1595,8 @@ void Saturn::GenericTimestep(double simt)
 
 	if (stage < CSM_LEM_STAGE && AutopilotActive())	{
 		SetAutopilotLight();
-	} else {
+	} 
+	else {
 		ClearAutopilotLight();
 	}
 
@@ -1596,19 +1663,9 @@ void Saturn::GenericTimestep(double simt)
 		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 	}
 
-	//
-	// Destroy seperated SM when it drops too low in the atmosphere.
-	//
-
-	if (hSMJet && !ApolloExploded) {
-		if ((simt-(20+ignition_SMtime))>=0 && stgSM) {
-			UllageSM(hSMJet,0,simt);
-			stgSM = false;
-		}
-		else if (!SMSep){
-			UllageSM(hSMJet,5,simt);
-		}
-		KillAlt(hSMJet,350000);
+	if (MissionTime >= NextDestroyCheckTime) {
+		DestroyStages(simt);
+		NextDestroyCheckTime = MissionTime + 1.0;
 	}
 }
 

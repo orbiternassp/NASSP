@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/15 02:37:57  movieman523
+  *	SM RCS is now wired up.
+  *	
   *	Revision 1.16  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -750,29 +753,6 @@ void Saturn1b::Timestep (double simt)
 		DoFirstTimestep(simt);
 		FirstTimestep = false;
 		return;
-	}
-
-	if (hstg1) {
-		KillAlt(hstg1,60);
-	}
-
-	if (hesc1) {
-		KillAlt(hesc1,90);
-	}
-	if (hPROBE) {
-		KillDist(hPROBE);
-	}
-	if (hs4b1) {
-		KillDist(hs4b1);
-	}
-	if (hs4b2) {
-		KillDist(hs4b2);
-	}
-	if (hs4b3) {
-		KillDist(hs4b3);
-	}
-	if (hs4b4){
-		KillDist(hs4b4);
 	}
 
 	GenericTimestep(simt);

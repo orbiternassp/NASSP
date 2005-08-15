@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2005/08/15 02:37:57  movieman523
+  *	SM RCS is now wired up.
+  *	
   *	Revision 1.37  2005/08/13 20:20:17  movieman523
   *	Created MissionTimer class and wired it into the LEM and CSM.
   *	
@@ -234,6 +237,7 @@ protected:
 	double MissionTime;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
+	double NextDestroyCheckTime;
 
 	//
 	// Offset from mission time for clock display on control
@@ -1020,6 +1024,7 @@ protected:
 	// Vessel handles.
 	//
 
+	OBJHANDLE hLMV;
 	OBJHANDLE hstg1;
 	OBJHANDLE hstg2;
 	OBJHANDLE hintstg;
@@ -1191,6 +1196,7 @@ protected:
 	void GenericTimestepStage(double simt);
 	bool CheckForLaunchShutdown();
 	void SetGenericStageState();
+	void DestroyStages(double simt);
 
 	void LoadDefaultSounds();
 

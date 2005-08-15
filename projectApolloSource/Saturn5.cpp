@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/15 02:37:57  movieman523
+  *	SM RCS is now wired up.
+  *	
   *	Revision 1.19  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -193,11 +196,6 @@ void SaturnV::initSaturnV()
 	THRUST_FIRST_VAC	= 8062309;
 	THRUST_SECOND_VAC  = 1023000;
 	THRUST_THIRD_VAC = 1023000;
-
-	hstage1 = 0;
-	hstage2 = 0;
-
-	hLMV = 0;
 
 	TLICapableBooster = true;
 
@@ -1559,13 +1557,6 @@ void SaturnV::Timestep(double simt)
 	//
 	// Do stage-specific processing.
 	//
-	if (hstg1) {
-		KillAlt(hstg1,60);
-	}
-
-	if (hstg2) {
-		KillAlt(hstg2,60);
-	}
 
 	if (hintstg) {
 		//
@@ -1604,31 +1595,8 @@ void SaturnV::Timestep(double simt)
 			vsistg.vrot.y += f.y;
 			vistg->DefSetState(&vsistg);
 		}
-
-		KillAlt(hintstg,60);
 	}
 
-	if (hesc1) {
-		KillAlt(hesc1,90);
-	}
-
-	if (hPROBE){
-		KillDist(hPROBE);
-	}
-
-	if (hs4b1) {
-		KillDist(hs4b1);
-	}
-	if (hs4b2) {
-		KillDist(hs4b2);
-	}
-	if (hs4b3) {
-		KillDist(hs4b3);
-	}
-
-	if (hs4b4) {
-		KillDist(hs4b4);
-	}
 	switch (stage) {
 
 	case LAUNCH_STAGE_ONE:
