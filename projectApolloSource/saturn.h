@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2005/08/15 19:25:03  movieman523
+  *	Added CSM attitude control switches and removed old ones.
+  *	
   *	Revision 1.39  2005/08/15 18:48:50  movieman523
   *	Moved the stage destroy code into a generic function for Saturn V and 1b.
   *	
@@ -702,6 +705,10 @@ protected:
 	ToggleSwitch AttRateSwitch;
 	ToggleSwitch TransContrSwitch;
 
+	SwitchRow BMAGRow;
+	ThreePosSwitch BMAGRollSwitch;
+	ThreePosSwitch BMAGPitchSwitch;
+	ThreePosSwitch BMAGYawSwitch;
 
 	// old stuff end
 
