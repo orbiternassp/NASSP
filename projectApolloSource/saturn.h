@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2005/08/15 19:47:08  movieman523
+  *	Added BMAG switches.
+  *	
   *	Revision 1.40  2005/08/15 19:25:03  movieman523
   *	Added CSM attitude control switches and removed old ones.
   *	
@@ -507,7 +510,6 @@ protected:
 	ToggleSwitch SPSswitch;
 	//ToggleSwitch EDSswitch;
 
-	ToggleSwitch P11switch;
 	ToggleSwitch P12switch;
 	ToggleSwitch P13switch;
 	ToggleSwitch P14switch;
@@ -710,6 +712,22 @@ protected:
 	ThreePosSwitch BMAGPitchSwitch;
 	ThreePosSwitch BMAGYawSwitch;
 
+	SwitchRow EntryModeRow;
+	ThreePosSwitch EntryModeSwitch;
+
+	SwitchRow FDAISwitchesRow;
+	ThreePosSwitch FDAIScaleSwitch;
+	ThreePosSwitch FDAISourceSwitch;
+	ThreePosSwitch FDAISelectSwitch;
+	ToggleSwitch FDAIAttSetSwitch;
+
+	//
+	// CMC Att: IMU is normal state, GDC does nothing.
+	//
+
+	SwitchRow CMCAttRow;
+	ToggleSwitch CMCAttSwitch;
+
 	// old stuff end
 
 	//
@@ -856,7 +874,6 @@ protected:
 	SwitchRow MissionTimerSwitchesRow;
 	SwitchRow IMUCageSwitchRow;
 
-	SwitchRow P11Row;
 	SwitchRow SRP1Row;
 	SwitchRow P12Row;
 	SwitchRow P13Row;

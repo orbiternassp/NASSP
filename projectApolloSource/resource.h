@@ -5,6 +5,8 @@
 #define AID_HORIZON                     11
 #define AID_HORIZON2                    12
 #define AID_ALTITUDE1                   13
+#define AID_ENTRY_MODE_SWITCH			14
+#define AID_FDAI_SWITCHES				15
 #define AID_SWITCH_AUTO                 20
 #define AID_FUEL_DIGIT                  21
 #define AID_SWITCH_JET                  22
@@ -28,7 +30,6 @@
 #define AID_MASTER_ALARM                42
 #define AID_DSKY_LIGHTS                 43
 #define AID_ABORT_BUTTON                44
-#define AID_P11_SWITCH                  50
 #define AID_SM_RCS_PANEL1               51
 #define AID_P12_SWITCH                  52
 #define AID_P13                         53
