@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2005/08/13 20:20:17  movieman523
+  *	Created MissionTimer class and wired it into the LEM and CSM.
+  *	
   *	Revision 1.36  2005/08/13 16:41:15  movieman523
   *	Fully wired up the CSM caution and warning switches.
   *	
@@ -461,28 +464,6 @@ protected:
 	bool DPswitch;
 	bool DPCswitch;
 
-	bool RH11switch;
-	bool RH12switch;
-	bool RH13switch;
-	bool RH14switch;
-
-	bool RH21switch;
-	bool RH22switch;
-	bool RH23switch;
-	bool RH24switch;
-
-	bool PP1switch;
-	bool PP2switch;
-	bool PP3switch;
-	bool PP4switch;
-
-	bool CR1switch;
-	bool CR2switch;
-	bool SP1switch;
-	bool SP2switch;
-	bool SP3switch;
-	bool SP4switch;
-
 	bool FCRswitch1;
 	bool FCRswitch2;
 	bool FCRswitch3;
@@ -661,8 +642,53 @@ protected:
 
 	ThreePosSwitch RPswitch15;
 
+	SwitchRow SMRCSHelium1Row;
+
+	ToggleSwitch SMRCSHelium1ASwitch;
+	ToggleSwitch SMRCSHelium1BSwitch;
+	ToggleSwitch SMRCSHelium1CSwitch;
+	ToggleSwitch SMRCSHelium1DSwitch;
+
+	SwitchRow SMRCSHelium2Row;
+
+	ToggleSwitch SMRCSHelium2ASwitch;
+	ToggleSwitch SMRCSHelium2BSwitch;
+	ToggleSwitch SMRCSHelium2CSwitch;
+	ToggleSwitch SMRCSHelium2DSwitch;
+
+	ToggleSwitch CMUplinkSwitch;
+	ToggleSwitch IUUplinkSwitch;
+
+	GuardedToggleSwitch CMRCSPressSwitch;
+	ToggleSwitch SMRCSIndSwitch;
+
+	SwitchRow SMRCSProp1Row;
+
+	ToggleSwitch SMRCSProp1ASwitch;
+	ToggleSwitch SMRCSProp1BSwitch;
+	ToggleSwitch SMRCSProp1CSwitch;
+	ToggleSwitch SMRCSProp1DSwitch;
+
+	ThreePosSwitch SMRCSHeaterASwitch;
+	ThreePosSwitch SMRCSHeaterBSwitch;
+	ThreePosSwitch SMRCSHeaterCSwitch;
+	ThreePosSwitch SMRCSHeaterDSwitch;
+
+	SwitchRow SMRCSProp2Row;
+
+	ToggleSwitch SMRCSProp2ASwitch;
+	ToggleSwitch SMRCSProp2BSwitch;
+	ToggleSwitch SMRCSProp2CSwitch;
+	ToggleSwitch SMRCSProp2DSwitch;
+
+	ThreePosSwitch RCSCMDSwitch;
+	ThreePosSwitch RCSTrnfrSwitch;
+	ThreePosSwitch CMRCSIsolate1;
+	ThreePosSwitch CMRCSIsolate2;
+
 	SwitchRow RCSIndicatorsSwitchRow;
 	RotationalSwitch RCSIndicatorsSwitch;
+
 	// old stuff end
 
 	//
@@ -1098,6 +1124,7 @@ protected:
 	void DeactivateS4RCS();
 	void ActivateCSMRCS();
 	void DeactivateCSMRCS();
+	bool SMRCSActive();
 	void ActivateSPS();
 	void DeactivateSPS();
 	void CheckSPSState();

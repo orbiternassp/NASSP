@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.18  2005/08/08 20:32:57  movieman523
   *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
   *	
@@ -1335,7 +1338,7 @@ void SaturnV::StageSix(double simt)
 		AccelS4B(hs4bM,simt);
 	}
 
-	if (LPswitch1 && !RH11switch && !RH12switch && !RH13switch && !RH14switch && !RH21switch && !RH22switch && !RH23switch && !RH24switch && PP1switch && PP2switch && PP3switch && PP4switch && SP1switch && SP2switch && SP3switch && SP4switch){
+	if (SMRCSActive()) {
 		SetThrusterResource(th_att_lin[0],ph_rcs0);
 		SetThrusterResource(th_att_lin[1],ph_rcs0);
 		SetThrusterResource(th_att_lin[2],ph_rcs0);
@@ -1356,7 +1359,7 @@ void SaturnV::StageSix(double simt)
 		SetThrusterResource(th_att_rot[3],NULL);
 	}
 
-	if(LPswitch2 && !RH11switch && !RH12switch && !RH13switch && !RH14switch && !RH21switch && !RH22switch && !RH23switch && !RH24switch && PP1switch && PP2switch && PP3switch && PP4switch && SP1switch && SP2switch && SP3switch && SP4switch){
+	if(SMRCSActive()) {
 		SetThrusterResource(th_att_rot[4],ph_rcs0);
 		SetThrusterResource(th_att_rot[5],ph_rcs0);
 		SetThrusterResource(th_att_rot[7],ph_rcs0);
@@ -1377,7 +1380,7 @@ void SaturnV::StageSix(double simt)
 		SetThrusterResource(th_att_lin[7],NULL);
 	}
 
-	if(LPswitch3 && !RH11switch && !RH12switch && !RH13switch && !RH14switch && !RH21switch && !RH22switch && !RH23switch && !RH24switch && PP1switch && PP2switch && PP3switch && PP4switch && SP1switch && SP2switch && SP3switch && SP4switch){
+	if(SMRCSActive()){
 		for(int i=8;i<24;i++){
 			SetThrusterResource(th_att_rot[i],ph_rcs0);
 			SetThrusterResource(th_att_lin[i],ph_rcs0);

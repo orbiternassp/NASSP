@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2005/08/14 00:45:55  movieman523
+  *	Added second master alarm light.
+  *	
   *	Revision 1.43  2005/08/13 22:24:20  movieman523
   *	Added the master alarm rendeing to CSM.
   *	
@@ -997,14 +1000,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_CSM_SIVB_SEP_SWITCH,                 _R( 595, 825,  664,  856), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_LEM_POWER_SWITCH,					_R(1258, 248, 1281,  268), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_SIVB_LEM_SEP_SWITCH,					_R( 968, 739,  994,  785), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_SMRCS_HELIUM1_SWITCHES,				_R(1175, 311, 1297,  385), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P22,									_R(1045, 470, 1106,  501), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P23,									_R(1146, 476, 1169,  507), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_SMRCS_HELIUM2_SWITCHES,				_R(1175, 428, 1300,  501), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_PRIM_PRPLNT_SWITCHES,				_R(1175, 527, 1300,  609), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P24,									_R(1047, 567, 1172,  609), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P25,									_R(1047, 664, 1108,  705), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_SEC_PRPLT_SWITCHES,					_R(1111, 626, 1300,  705), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P27,									_R(1502, 398, 1848,  429), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P28,									_R(1324, 586, 1625,  695), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P29,									_R(1620, 735, 1681,  766), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -1080,9 +1079,14 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SBAND_NORMAL_SWITCHES,						_R(2593, 1050, 2858, 1079), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CAUTIONWARNING_SWITCHES,						_R(1908,  400, 2140,  434), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MISSION_TIMER_SWITCHES,						_R(2018,  299, 2140,  330), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_IMU_CAGE_SWITCH,								_R( 289,  1242,  330, 1314), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MASTER_ALARM,								_R( 462,   495,  511,  535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MASTER_ALARM2,								_R(2958,   650, 3007,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_IMU_CAGE_SWITCH,								_R( 289, 1242,  330, 1314), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MASTER_ALARM,								_R( 462,  495,  511,  535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MASTER_ALARM2,								_R(2958,  650, 3007,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SMRCS_HELIUM1_SWITCHES,						_R(1584,  430, 1748,  459), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SMRCS_HELIUM2_SWITCHES,						_R(1411,  567, 1748,  648), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PRIM_PRPLNT_SWITCHES,						_R(1411,  718, 1748,  747), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SEC_PRPLT_SWITCHES,							_R(1411,  848, 1748,  877), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+
 
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1198,6 +1202,67 @@ void Saturn::SetSwitches(int panel) {
 	O2Fan1Switch.Init    (478, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
 	O2Fan2Switch.Init    (541, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
 
+	//
+	// SM RCS Helium 1
+	//
+
+	SMRCSHelium1Row.Init(AID_SMRCS_HELIUM1_SWITCHES, MainPanel);
+	SMRCSHelium1ASwitch.Init (0, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium1Row);
+	SMRCSHelium1BSwitch.Init (43, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium1Row);
+	SMRCSHelium1CSwitch.Init (86, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium1Row);
+	SMRCSHelium1DSwitch.Init (129, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium1Row);
+
+	//
+	// SM RCS Helium 2
+	//
+
+	SMRCSHelium2Row.Init(AID_SMRCS_HELIUM2_SWITCHES, MainPanel);
+	SMRCSHelium2ASwitch.Init (174, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+	SMRCSHelium2BSwitch.Init (217, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+	SMRCSHelium2CSwitch.Init (260, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+	SMRCSHelium2DSwitch.Init (303, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+
+	CMUplinkSwitch.Init(0, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+	IUUplinkSwitch.Init(43, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+	CMRCSPressSwitch.Init(86, 23, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+	CMRCSPressSwitch.InitGuard(86, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	SMRCSIndSwitch.Init(129, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+
+	//
+	// SM RCS Primary Propellant.
+	//
+
+	SMRCSProp1Row.Init(AID_PRIM_PRPLNT_SWITCHES, MainPanel);
+
+	SMRCSHeaterASwitch.Init (2, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row);
+	SMRCSHeaterBSwitch.Init (45, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row);
+	SMRCSHeaterCSwitch.Init (88, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row);
+	SMRCSHeaterDSwitch.Init (131, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row);
+
+	SMRCSProp1ASwitch.Init (174, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
+	SMRCSProp1BSwitch.Init (217, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
+	SMRCSProp1CSwitch.Init (260, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
+	SMRCSProp1DSwitch.Init (303, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
+
+	SMRCSProp2Row.Init(AID_SEC_PRPLT_SWITCHES, MainPanel);
+
+	RCSCMDSwitch.Init (2, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
+	RCSTrnfrSwitch.Init (45, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
+	CMRCSIsolate1.Init (88, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
+	CMRCSIsolate2.Init (131, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
+
+	SMRCSProp2ASwitch.Init (174, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row);
+	SMRCSProp2BSwitch.Init (217, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row);
+	SMRCSProp2CSwitch.Init (260, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row);
+	SMRCSProp2DSwitch.Init (303, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row);
+
+	//
+	// SM RCS Secondary Propellant.
+
+	//
+	// Caution and Warning switches.
+	//
+
 	CautionWarningRow.Init(AID_CAUTIONWARNING_SWITCHES, MainPanel);
 	MissionTimerSwitch.Init(190, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow, &MissionTimerDisplay);
 	CautionWarningModeSwitch.Init(7, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow, &cws);
@@ -1205,10 +1270,18 @@ void Saturn::SetSwitches(int panel) {
 	CautionWarningPowerSwitch.Init(104, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow, &cws);
 	CautionWarningLightTestSwitch.Init(147, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CautionWarningRow, &cws);
 
+	//
+	// Mission Timer switches.
+	//
+
 	MissionTimerSwitchesRow.Init(AID_MISSION_TIMER_SWITCHES, MainPanel);
 	MissionTimerHoursSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], MissionTimerSwitchesRow, TIME_UPDATE_HOURS, &MissionTimerDisplay);
 	MissionTimerMinutesSwitch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], MissionTimerSwitchesRow, TIME_UPDATE_MINUTES, &MissionTimerDisplay);
 	MissionTimerSecondsSwitch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], MissionTimerSwitchesRow, TIME_UPDATE_SECONDS, &MissionTimerDisplay);
+
+	//
+	// IMU Cage switch.
+	//
 
 	IMUCageSwitchRow.Init(AID_IMU_CAGE_SWITCH, MainPanel);
 	IMUGuardedCageSwitch.Init(0, 20, 34, 29, srf[SRF_SWITCHUP], IMUCageSwitchRow, &imu);
@@ -1766,146 +1839,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 					LVSswitch = false;
 					SwitchClick();
 				}
-			}
-		}
-		return true;
-
-	case AID_SMRCS_HELIUM1_SWITCHES:
-		if (my >=49 && my <=60 ){
-			if (mx > 9 && mx < 21 && !RH11switch){
-				SwitchClick();
-				RH11switch=true;
-			}else if (mx > 41 && mx < 53 && !RH12switch){
-				SwitchClick();
-				RH12switch=true;
-			}else if (mx > 73 && mx < 85 && !RH13switch){
-				SwitchClick();
-				RH13switch=true;
-			}else if (mx > 105 && mx < 117 && !RH14switch){
-				SwitchClick();
-				RH14switch=true;
-			}
-		}else if (my >=59 && my <=70 ){
-			if (mx > 9 && mx < 21 && RH11switch){
-				SwitchClick();
-				RH11switch=false;
-			}else if (mx > 41 && mx < 53 && RH12switch){
-				SwitchClick();
-				RH12switch=false;
-			}else if (mx > 73 && mx < 85 && RH13switch){
-				SwitchClick();
-				RH13switch=false;
-			}else if (mx > 105 && mx < 117 && RH14switch){
-				SwitchClick();
-				RH14switch=false;
-			}
-		}
-		return true;
-
-	case AID_SMRCS_HELIUM2_SWITCHES:
-		if (my >=48 && my <=59 ){
-			if (mx > 9 && mx < 21 && !RH21switch){
-				SwitchClick();
-				RH21switch=true;
-			}else if (mx > 41 && mx < 53 && !RH22switch){
-				SwitchClick();
-				RH22switch=true;
-			}else if (mx > 73 && mx < 85 && !RH23switch){
-				SwitchClick();
-				RH23switch=true;
-			}else if (mx > 105 && mx < 117 && !RH24switch){
-				SwitchClick();
-				RH24switch=true;
-			}
-		}else if (my >=58 && my <=69 ){
-			if (mx > 9 && mx < 21 && RH21switch){
-				SwitchClick();
-				RH21switch=false;
-			}else if (mx > 41 && mx < 53 && RH22switch){
-				SwitchClick();
-				RH22switch=false;
-			}else if (mx > 73 && mx < 85 && RH23switch){
-				SwitchClick();
-				RH23switch=false;
-			}else if (mx > 105 && mx < 117 && RH24switch){
-				SwitchClick();
-				RH24switch=false;
-			}
-		}
-		return true;
-
-	case AID_SEC_PRPLT_SWITCHES:
-		if (my >=44 && my <=55 ){
-			if (mx > 9 && mx < 21 && !CR1switch){
-				SwitchClick();
-				CR1switch=true;
-			}else if (mx > 41 && mx < 53 && !CR2switch){
-				SwitchClick();
-				CR2switch=true;
-			}else if (mx > 73 && mx < 85 && !SP1switch){
-				SwitchClick();
-				SP1switch=true;
-			}else if (mx > 105 && mx < 117 && !SP2switch){
-				SwitchClick();
-				SP2switch=true;
-			}else if (mx > 137 && mx < 149 && !SP3switch){
-				SwitchClick();
-				SP3switch=true;
-			}else if (mx > 169 && mx < 181 && !SP4switch){
-				SwitchClick();
-				SP4switch=true;
-			}
-		}else if (my >=54 && my <=65 ){
-			if (mx > 9 && mx < 21 && CR1switch){
-				SwitchClick();
-				CR1switch=false;
-			}else if (mx > 41 && mx < 53 && CR2switch){
-				SwitchClick();
-				CR2switch=false;
-			}else if (mx > 73 && mx < 85 && SP1switch){
-				SwitchClick();
-				SP1switch=false;
-			}else if (mx > 105 && mx < 117 && SP2switch){
-				SwitchClick();
-				SP2switch=false;
-			}else if (mx > 137 && mx < 149 && SP3switch){
-				SwitchClick();
-				SP3switch=false;
-			}else if (mx > 169 && mx < 181 && SP4switch){
-				SwitchClick();
-				SP4switch=false;
-			}
-		}
-		return true;
-
-	case AID_PRIM_PRPLNT_SWITCHES:
-		if (my >=47 && my <=58 ){
-			if (mx > 9 && mx < 21 && !PP1switch){
-				SwitchClick();
-				PP1switch=true;
-			}else if (mx > 41 && mx < 53 && !PP2switch){
-				SwitchClick();
-				PP2switch=true;
-			}else if (mx > 73 && mx < 85 && !PP3switch){
-				SwitchClick();
-				PP3switch=true;
-			}else if (mx > 105 && mx < 117 && !PP4switch){
-				SwitchClick();
-				PP4switch=true;
-			}
-		}else if (my >=57 && my <=68 ){
-			if (mx > 9 && mx < 21 && PP1switch){
-				SwitchClick();
-				PP1switch=false;
-			}else if (mx > 41 && mx < 53 && PP2switch){
-				SwitchClick();
-				PP2switch=false;
-			}else if (mx > 73 && mx < 85 && PP3switch){
-				SwitchClick();
-				PP3switch=false;
-			}else if (mx > 105 && mx < 117 && PP4switch){
-				SwitchClick();
-				PP4switch=false;
 			}
 		}
 		return true;
@@ -3447,144 +3380,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_SMRCS_HELIUM1_SWITCHES:
-		if(RH11switch){
-			oapiBlt(surf,srf[6],3,49,0,0,23,20);
-			oapiBlt(surf,srf[13],5,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],3,49,23,0,23,20);
-			oapiBlt(surf,srf[13],5,1,38,0,19,20);
-		}
-		if(RH12switch){
-			oapiBlt(surf,srf[6],35,49,0,0,23,20);
-			oapiBlt(surf,srf[13],36,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],35,49,23,0,23,20);
-			oapiBlt(surf,srf[13],36,1,38,0,19,20);
-		}
-		if(RH13switch){
-			oapiBlt(surf,srf[6],67,49,0,0,23,20);
-			oapiBlt(surf,srf[13],68,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],67,49,23,0,23,20);
-			oapiBlt(surf,srf[13],68,1,38,0,19,20);
-		}
-		if(RH14switch){
-			oapiBlt(surf,srf[6],99,49,0,0,23,20);
-			oapiBlt(surf,srf[13],99,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],99,49,23,0,23,20);
-			oapiBlt(surf,srf[13],99,1,38,0,19,20);
-		}
-		return true;
-
-	case AID_SMRCS_HELIUM2_SWITCHES:
-		if(RH21switch){
-			oapiBlt(surf,srf[6],3,49,0,0,23,20);
-			oapiBlt(surf,srf[13],5,2,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],3,49,23,0,23,20);
-			oapiBlt(surf,srf[13],5,2,38,0,19,20);
-		}
-		if(RH22switch){
-			oapiBlt(surf,srf[6],35,49,0,0,23,20);
-			oapiBlt(surf,srf[13],36,2,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],35,49,23,0,23,20);
-			oapiBlt(surf,srf[13],36,2,38,0,19,20);
-		}
-		if(RH23switch){
-			oapiBlt(surf,srf[6],67,49,0,0,23,20);
-			oapiBlt(surf,srf[13],68,2,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],67,49,23,0,23,20);
-			oapiBlt(surf,srf[13],68,2,38,0,19,20);
-		}
-		if(RH24switch){
-			oapiBlt(surf,srf[6],99,49,0,0,23,20);
-			oapiBlt(surf,srf[13],99,2,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],99,49,23,0,23,20);
-			oapiBlt(surf,srf[13],99,2,38,0,19,20);
-		}
-		return true;
-
-	case AID_SEC_PRPLT_SWITCHES:
-		if(CR1switch){
-			oapiBlt(surf,srf[6],3,44,0,0,23,20);
-			oapiBlt(surf,srf[13],4,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],3,44,23,0,23,20);
-			oapiBlt(surf,srf[13],4,1,38,0,19,20);
-		}
-		if(CR2switch){
-			oapiBlt(surf,srf[6],35,44,0,0,23,20);
-			oapiBlt(surf,srf[13],35,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],35,44,23,0,23,20);
-			oapiBlt(surf,srf[13],35,1,38,0,19,20);
-		}
-		if(SP1switch){
-			oapiBlt(surf,srf[6],67,44,0,0,23,20);
-			oapiBlt(surf,srf[13],67,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],67,44,23,0,23,20);
-			oapiBlt(surf,srf[13],67,1,38,0,19,20);
-		}
-		if(SP2switch){
-			oapiBlt(surf,srf[6],99,44,0,0,23,20);
-			oapiBlt(surf,srf[13],99,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],99,44,23,0,23,20);
-			oapiBlt(surf,srf[13],99,1,38,0,19,20);
-		}
-		if(SP3switch){
-			oapiBlt(surf,srf[6],131,44,0,0,23,20);
-			oapiBlt(surf,srf[13],130,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],131,44,23,0,23,20);
-			oapiBlt(surf,srf[13],130,1,38,0,19,20);
-		}
-		if(SP4switch){
-			oapiBlt(surf,srf[6],163,44,0,0,23,20);
-			oapiBlt(surf,srf[13],162,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],163,44,23,0,23,20);
-			oapiBlt(surf,srf[13],162,1,38,0,19,20);
-		}
-		return true;
-
-	case AID_PRIM_PRPLNT_SWITCHES:
-		if(PP1switch){
-			oapiBlt(surf,srf[6],3,47,0,0,23,20);
-			oapiBlt(surf,srf[13],5,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],3,47,23,0,23,20);
-			oapiBlt(surf,srf[13],5,1,38,0,19,20);
-		}
-		if(PP2switch){
-			oapiBlt(surf,srf[6],35,47,0,0,23,20);
-			oapiBlt(surf,srf[13],36,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],35,47,23,0,23,20);
-			oapiBlt(surf,srf[13],36,1,38,0,19,20);
-		}
-		if(PP3switch){
-			oapiBlt(surf,srf[6],67,47,0,0,23,20);
-			oapiBlt(surf,srf[13],68,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],67,47,23,0,23,20);
-			oapiBlt(surf,srf[13],68,1,38,0,19,20);
-		}
-		if(PP4switch){
-			oapiBlt(surf,srf[6],99,47,0,0,23,20);
-			oapiBlt(surf,srf[13],99,1,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],99,47,23,0,23,20);
-			oapiBlt(surf,srf[13],99,1,38,0,19,20);
-		}
-		return true;
-
 	case AID_CABIN_PRESS:
 		if(RPswitch12){
 			oapiBlt(surf,srf[6],75,6,0,0,23,20);
@@ -3955,24 +3750,50 @@ void Saturn::InitSwitches() {
 	MissionTimerMinutesSwitch.Register(PSH, "MissionTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	MissionTimerSecondsSwitch.Register(PSH, "MissionTimerSecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
+	SMRCSHelium1ASwitch.Register(PSH, "SMRCSHelium1ASwitch", 1);
+	SMRCSHelium1BSwitch.Register(PSH, "SMRCSHelium1BSwitch", 1);
+	SMRCSHelium1CSwitch.Register(PSH, "SMRCSHelium1CSwitch", 1);
+	SMRCSHelium1DSwitch.Register(PSH, "SMRCSHelium1DSwitch", 1);
+
+	SMRCSHelium2ASwitch.Register(PSH, "SMRCSHelium2ASwitch", 1);
+	SMRCSHelium2BSwitch.Register(PSH, "SMRCSHelium2BSwitch", 1);
+	SMRCSHelium2CSwitch.Register(PSH, "SMRCSHelium2CSwitch", 1);
+	SMRCSHelium2DSwitch.Register(PSH, "SMRCSHelium2DSwitch", 1);
+
+	CMUplinkSwitch.Register(PSH, "CMUplinkSwitch", 0);
+	IUUplinkSwitch.Register(PSH, "CMUplinkSwitch", 0);
+	CMRCSPressSwitch.Register(PSH, "CMRCSPressSwitch", 0, 0);
+	SMRCSIndSwitch.Register(PSH, "SMRCSIndSwitch", 0);
+
+	SMRCSProp1ASwitch.Register(PSH, "SMRCSProp1ASwitch", 0);
+	SMRCSProp1BSwitch.Register(PSH, "SMRCSProp1BSwitch", 0);
+	SMRCSProp1CSwitch.Register(PSH, "SMRCSProp1CSwitch", 0);
+	SMRCSProp1DSwitch.Register(PSH, "SMRCSProp1DSwitch", 0);
+
+	SMRCSHeaterASwitch.Register(PSH, "SMRCSHeaterASwitch", THREEPOSSWITCH_CENTER);
+	SMRCSHeaterBSwitch.Register(PSH, "SMRCSHeaterBSwitch", THREEPOSSWITCH_CENTER);
+	SMRCSHeaterCSwitch.Register(PSH, "SMRCSHeaterCSwitch", THREEPOSSWITCH_CENTER);
+	SMRCSHeaterDSwitch.Register(PSH, "SMRCSHeaterDSwitch", THREEPOSSWITCH_CENTER);
+
+	SMRCSProp2ASwitch.Register(PSH, "SMRCSProp2ASwitch", 0);
+	SMRCSProp2BSwitch.Register(PSH, "SMRCSProp2BSwitch", 0);
+	SMRCSProp2CSwitch.Register(PSH, "SMRCSProp2CSwitch", 0);
+	SMRCSProp2DSwitch.Register(PSH, "SMRCSProp2DSwitch", 0);
+
+	RCSCMDSwitch.Register(PSH, "RCSCMDSwitch", THREEPOSSWITCH_CENTER);
+	RCSTrnfrSwitch.Register(PSH, "RCSTrnfrSwitch", THREEPOSSWITCH_CENTER);
+	CMRCSIsolate1.Register(PSH, "CMRCSIsolate1", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	CMRCSIsolate2.Register(PSH, "CMRCSIsolate2", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+
 	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 1, 1);
 	
 	// old stuff
 
-	//Cswitch1=false;
-	//Cswitch2=false;
-	//Cswitch3=false;
-	//Cswitch4=false;
-	//Cswitch5=false;
 	Cswitch6=false;
 	Cswitch7=false;
 	Cswitch8=false;
 	Cswitch9=false;
-	//Sswitch1=false;
-	//Sswitch2=false;
-	//Sswitch3=false;
-	//Sswitch4=false;
-	//Sswitch5=false;
+
 	Sswitch6=false;
 	Sswitch7=false;
 	Sswitch8=false;
@@ -3995,9 +3816,8 @@ void Saturn::InitSwitches() {
 	RPswitch13=false;
 	RPswitch14=false;
 	RPswitch15=1;
-	//RPswitch16=false;
+
 	RPswitch17 = false;
-	//RPCswitch=false;
 
 	DPSwitch1 = false;
 	DPSwitch2 = false;
@@ -4020,7 +3840,6 @@ void Saturn::InitSwitches() {
 	LPswitch5.SetActive(false);
 
 	SPSswitch = false;
-	//EDSswitch = true;
 
 	P11switch = false;
 	P12switch = false;
@@ -4184,28 +4003,6 @@ void Saturn::InitSwitches() {
 
 	DPswitch = false;
 	DPCswitch = false;
-
-	RH11switch = true;
-	RH12switch = true;
-	RH13switch = true;
-	RH14switch = true;
-
-	RH21switch = true;
-	RH22switch = true;
-	RH23switch = true;
-	RH24switch = true;
-
-	PP1switch = false;
-	PP2switch = false;
-	PP3switch = false;
-	PP4switch = false;
-
-	CR1switch = false;
-	CR2switch = false;
-	SP1switch = false;
-	SP2switch = false;
-	SP3switch = false;
-	SP4switch = false;
 
 	FCRswitch1 = true;
 	FCRswitch2 = true;
@@ -4636,18 +4433,6 @@ int Saturn::GetCPSwitchState()
 	CPSwitchState state;
 
 	state.word = 0;
-	state.u.RH11switch = RH11switch;
-	state.u.RH12switch = RH12switch;
-	state.u.RH13switch = RH13switch;
-	state.u.RH14switch = RH14switch;
-	state.u.RH21switch = RH21switch;
-	state.u.RH22switch = RH22switch;
-	state.u.RH23switch = RH23switch;
-	state.u.RH24switch = RH24switch;
-	state.u.PP1switch = PP1switch;
-	state.u.PP2switch = PP2switch;
-	state.u.PP3switch = PP3switch;
-	state.u.PP4switch = PP4switch;
 	state.u.P21switch = P21switch;
 	state.u.P22switch = P22switch;
 	state.u.P23switch = P23switch;
@@ -4664,18 +4449,6 @@ void Saturn::SetCPSwitchState(int s)
 	CPSwitchState state;
 
 	state.word = s;
-	RH11switch = state.u.RH11switch;
-	RH12switch = state.u.RH12switch;
-	RH13switch = state.u.RH13switch;
-	RH14switch = state.u.RH14switch;
-	RH21switch = state.u.RH21switch;
-	RH22switch = state.u.RH22switch;
-	RH23switch = state.u.RH23switch;
-	RH24switch = state.u.RH24switch;
-	PP1switch = state.u.PP1switch;
-	PP2switch = state.u.PP2switch;
-	PP3switch = state.u.PP3switch;
-	PP4switch = state.u.PP4switch;
 	P21switch = state.u.P21switch;
 	P22switch = state.u.P22switch;
 	P23switch = state.u.P23switch;
@@ -4706,12 +4479,6 @@ int Saturn::GetCP2SwitchState()
 	CP2SwitchState state;
 
 	state.word = 0;
-	state.u.CR1switch = CR1switch;
-	state.u.CR2switch = CR2switch;
-	state.u.SP1switch = SP1switch;
-	state.u.SP2switch = SP2switch;
-	state.u.SP3switch = SP3switch;
-	state.u.SP4switch = SP4switch;
 	state.u.CFswitch1 = CabinFan1Switch;
 	state.u.CFswitch2 = CabinFan2Switch;
 
@@ -4724,12 +4491,6 @@ void Saturn::SetCP2SwitchState(int s)
 	CP2SwitchState state;
 
 	state.word = s;
-	CR1switch = state.u.CR1switch;
-	CR2switch = state.u.CR2switch;
-	SP1switch = state.u.SP1switch;
-	SP2switch = state.u.SP2switch;
-	SP3switch = state.u.SP3switch;
-	SP4switch = state.u.SP4switch;
 	CabinFan1Switch = state.u.CFswitch1;
 	CabinFan2Switch = state.u.CFswitch2;
 

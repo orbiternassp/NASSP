@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/08/14 15:25:43  movieman523
+  *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
+  *	
   *	Revision 1.33  2005/08/13 20:20:17  movieman523
   *	Created MissionTimer class and wired it into the LEM and CSM.
   *	
@@ -1357,12 +1360,23 @@ void Saturn::SetStage(int s)
 void Saturn::DoLaunch(double simt)
 
 {
+	//
+	// Light the liftoff indicator for the crew.
+	//
+
 	SetLiftoffLight();
+
+	//
+	// Switch to the first launch stage.
+	//
 
 	SetStage(LAUNCH_STAGE_ONE);
 
 	//
 	// For now, we'll reset the mission timer to zero and enable it.
+	//
+	// The people on the ProjectApollo mailing list believe that this is the correct
+	// behaviour for the Mission Timer, and it shouldn't run at all until liftoff.
 	//
 
 	MissionTimerDisplay.Reset();
@@ -1375,10 +1389,14 @@ void Saturn::DoLaunch(double simt)
 	agc.SetInputChannelBit(030, 5, true);
 
 	//
-	// Set full thrust.
+	// Set full thrust, just in case.
 	//
 
 	SetThrusterGroupLevel(thg_main, 1.0);
+
+	//
+	// And play the launch sound.
+	//
 
 	if (LaunchS.isValid() && !LaunchS.isPlaying()){
 		LaunchS.play(NOLOOP,255);
@@ -1402,7 +1420,7 @@ void Saturn::GenericTimestep(double simt)
 	}
 
 	//
-	// Update mission time.
+	// Update mission time and mission timer.
 	//
 
 	double deltat = oapiGetSimStep();
@@ -1463,13 +1481,13 @@ void Saturn::GenericTimestep(double simt)
 
 	if(dTime > 0.2) {
 
-		DV= aSpeed - SPEEDN1;
-		aHAcc= (DV / dTime);
+		DV = aSpeed - SPEEDN1;
+		aHAcc = (DV / dTime);
 		DVV = aALT - ALTN1;
 		aVSpeed = DVV / dTime;
 		DVA = aVSpeed- VSPEEDN1;
 
-		aVAcc = (DVA/dTime);
+		aVAcc = (DVA / dTime);
 		aTime = simt;
 		VSPEEDN1 = aVSpeed;
 		ALTN1 = aALT;
