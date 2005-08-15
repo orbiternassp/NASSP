@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/08/05 13:07:06  tschachim
+  *	Added crawler callback function LaunchVesselRolloutEnd,
+  *	added keyboard handling
+  *	
   *	Revision 1.7  2005/08/01 19:07:47  movieman523
   *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
   *	
@@ -135,10 +139,6 @@ protected:
 	bool velDISP;
 
 	bool S4Bset;
-
-	OBJHANDLE hstage1;
-	OBJHANDLE hstage2;
-	OBJHANDLE hLMV;
 
 	//
 	// End state.
