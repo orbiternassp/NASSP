@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2005/08/15 19:47:08  movieman523
+  *	Added BMAG switches.
+  *	
   *	Revision 1.46  2005/08/15 19:25:03  movieman523
   *	Added CSM attitude control switches and removed old ones.
   *	
@@ -245,6 +248,13 @@ void Saturn::RedrawPanel_Thrust (SURFHANDLE surf)
 	double alpha;
 	double range;
 
+	//
+	// MUSTFIX
+	//
+	// Note: on a real Saturn, this _ISN'T_ a thrust meter! It shows pressure at the top of the LET, or
+	// SPS combustion chamber pressure.
+	//
+
 	alpha = GetEngineLevel(ENGINE_MAIN) * 100 * ThrustAdjust;
 
 	if (alpha > 100)
@@ -254,10 +264,10 @@ void Saturn::RedrawPanel_Thrust (SURFHANDLE surf)
 	range = range / 100;
 	alpha = 100 - alpha;
 	HDC hDC = oapiGetDC (surf);
-	DrawNeedle (hDC, 31, 30, 19.0, (alpha*range)-45*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
+	DrawNeedle (hDC, 48, 45, 20.0, (alpha*range)-45*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
 	oapiReleaseDC (surf, hDC);
 
-	oapiBlt (surf, srf[16], 0, 0, 0, 0, 62, 60, SURF_PREDEF_CK);
+	oapiBlt (surf, srf[SRF_THRUSTMETER], 0, 0, 0, 0, 95, 91, SURF_PREDEF_CK);
 }
 
 // Altimeter Needle function by Rob Conley from Mercury code, Heavily modified to have non linear gauge range... :):)
@@ -822,7 +832,7 @@ void Saturn::InitPanel (int panel)
 		srf[13]							= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
 		srf[14]							= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
 		srf[15]							= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
-		srf[16]							= oapiCreateSurface (LOADBMP (IDB_THRUST));
+		srf[SRF_THRUSTMETER]			= oapiCreateSurface (LOADBMP (IDB_THRUST));
 		srf[SRF_SEQUENCERSWITCHES]		= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
 		srf[18]							= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
 		srf[SRF_MASTERALARM_BRIGHT]		= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
@@ -843,7 +853,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHGUARDS],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[14],						g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[15],						g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[16],						g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_THRUSTMETER],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SEQUENCERSWITCHES],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[22],						g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH],		g_Param.col[4]);
@@ -991,7 +1001,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_LIGHTS_LAUNCHER,						_R( 612, 727,  718,  817), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_LV_TANK_GAUGES,                      _R( 466, 728,  589,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_GDC_BUTTON,                          _R( 217, 909,  243,  935), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_THRUSTMETER,                         _R( 374, 727,  436,  787), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_DSKY_KEY,                            _R( 799, 622, 1010,  711), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_SWITCH_JET,                          _R( 841, 739,  964,  784), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_EDS,                                 _R( 808, 752,  831,  772), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -1094,6 +1103,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SEC_PRPLT_SWITCHES,							_R(1411,  848, 1748,  877), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ATTITUDE_CONTROL_SWITCHES,					_R( 190,  838,  482,  867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_BMAG_SWITCHES,								_R( 125, 1036,  258, 1065), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_THRUSTMETER,									_R( 497,  919,  593, 1011), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
