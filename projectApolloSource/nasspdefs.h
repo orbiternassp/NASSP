@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/08/13 22:24:20  movieman523
+  *	Added the master alarm rendeing to CSM.
+  *	
   *	Revision 1.24  2005/08/13 16:41:15  movieman523
   *	Fully wired up the CSM caution and warning switches.
   *	
@@ -151,6 +154,7 @@ const int nsurf = 34; // number of bitmap handles
 #define SRF_SWITCHUP				 6
 #define SRF_SWITCHGUARDS			 8
 #define SRF_ABORT					 9
+#define SRF_THRUSTMETER				16
 #define SRF_SEQUENCERSWITCHES		17
 #define SRF_LMTWOPOSLEVER           19
 #define SRF_MASTERALARM_BRIGHT		20
