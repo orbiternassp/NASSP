@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2005/08/15 02:37:57  movieman523
+  *	SM RCS is now wired up.
+  *	
   *	Revision 1.44  2005/08/14 00:45:55  movieman523
   *	Added second master alarm light.
   *	
@@ -1086,6 +1089,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SMRCS_HELIUM2_SWITCHES,						_R(1411,  567, 1748,  648), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PRIM_PRPLNT_SWITCHES,						_R(1411,  718, 1748,  747), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SEC_PRPLT_SWITCHES,							_R(1411,  848, 1748,  877), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ATTITUDE_CONTROL_SWITCHES,					_R( 190,  838,  482,  867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 
 
 		// display & keyboard (DSKY):		
@@ -1244,6 +1248,10 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSProp1CSwitch.Init (260, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
 	SMRCSProp1DSwitch.Init (303, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
 
+	//
+	// SM RCS Secondary Propellant.
+	//
+
 	SMRCSProp2Row.Init(AID_SEC_PRPLT_SWITCHES, MainPanel);
 
 	RCSCMDSwitch.Init (2, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
@@ -1257,7 +1265,17 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSProp2DSwitch.Init (303, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row);
 
 	//
-	// SM RCS Secondary Propellant.
+	// Attitude control, etc.
+	//
+
+	AttitudeControlRow.Init(AID_ATTITUDE_CONTROL_SWITCHES, MainPanel);
+	ManualAttRollSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AttitudeControlRow);
+	ManualAttPitchSwitch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AttitudeControlRow);
+	ManualAttYawSwitch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AttitudeControlRow);
+	LimitCycleSwitch.Init(129, 0, 34, 29, srf[SRF_SWITCHUP], AttitudeControlRow);
+	AttDeadbandSwitch.Init(172, 0, 34, 29, srf[SRF_SWITCHUP], AttitudeControlRow);
+	AttRateSwitch.Init(215, 0, 34, 29, srf[SRF_SWITCHUP], AttitudeControlRow);
+	TransContrSwitch.Init(258, 0, 34, 29, srf[SRF_SWITCHUP], AttitudeControlRow);
 
 	//
 	// Caution and Warning switches.
@@ -1394,10 +1412,6 @@ void Saturn::SetSwitches(int panel) {
 
 	SPSswitch.Init(0, 0, 30, 39, srf[7], SPSRow);
 	//EDSswitch.Init(0, 0, 23, 20, srf[6], EDSRow);
-
-	LPswitch1.Init(36, 7, 23, 20, srf[6], SRP1Row);
-	LPswitch2.Init(68, 7, 23, 20, srf[6], SRP1Row);
-	LPswitch3.Init(04, 7, 23, 20, srf[6], SRP1Row);
 
 	if (panel == SATPANEL_LEFT_RNDZ_WINDOW) {
 		LPswitch4.Init(55, 33, 23, 20, srf[6], P14Row);
@@ -3785,6 +3799,15 @@ void Saturn::InitSwitches() {
 	CMRCSIsolate1.Register(PSH, "CMRCSIsolate1", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	CMRCSIsolate2.Register(PSH, "CMRCSIsolate2", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
+	ManualAttRollSwitch.Register(PSH, "ManualAttRollSwitch", THREEPOSSWITCH_CENTER);
+	ManualAttPitchSwitch.Register(PSH, "ManualAttPitchSwitch", THREEPOSSWITCH_CENTER);
+	ManualAttYawSwitch.Register(PSH, "ManualAttYawSwitch", THREEPOSSWITCH_CENTER);
+
+	LimitCycleSwitch.Register(PSH, "LimitCycleSwitch", 0);
+	AttDeadbandSwitch.Register(PSH, "AttDeadbandSwitch", 0);
+	AttRateSwitch.Register(PSH, "AttRateSwitch", 0);
+	TransContrSwitch.Register(PSH, "TransContrSwitch", 0);
+
 	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 1, 1);
 	
 	// old stuff
@@ -3832,11 +3855,7 @@ void Saturn::InitSwitches() {
 
 	GDCswitch = false;
 
-	LPswitch1 = false;
-	LPswitch2 = false;
-	LPswitch3 = false;
 	LPswitch4 = true;
-
 	LPswitch5.SetActive(false);
 
 	SPSswitch = false;
@@ -4234,9 +4253,6 @@ void Saturn::SetSSwitchState(int s)
 
 typedef union {
 	struct {
-		unsigned LPswitch1:1;
-		unsigned LPswitch2:1;
-		unsigned LPswitch3:1;
 		unsigned LPswitch4:1;
 		unsigned LPswitch5:1;
 		unsigned LPswitch6:1;
@@ -4266,9 +4282,6 @@ int Saturn::GetLPSwitchState()
 	LPSwitchState state;
 
 	state.word = 0;
-	state.u.LPswitch1 = LPswitch1;
-	state.u.LPswitch2 = LPswitch2;
-	state.u.LPswitch3 = LPswitch3;
 	state.u.LPswitch4 = LPswitch4;
 	state.u.LPswitch5 = LPswitch5;
 	state.u.LPswitch6 = LPswitch6;
@@ -4298,9 +4311,6 @@ void Saturn::SetLPSwitchState(int s)
 	LPSwitchState state;
 
 	state.word = s;
-	LPswitch1 = state.u.LPswitch1;
-	LPswitch2 = state.u.LPswitch2;
-	LPswitch3 = state.u.LPswitch3;
 	LPswitch4 = state.u.LPswitch4;
 	LPswitch5 = state.u.LPswitch5;
 	LPswitch6 = state.u.LPswitch6;

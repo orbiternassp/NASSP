@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/15 18:48:50  movieman523
+  *	Moved the stage destroy code into a generic function for Saturn V and 1b.
+  *	
   *	Revision 1.20  2005/08/15 02:37:57  movieman523
   *	SM RCS is now wired up.
   *	
@@ -908,12 +911,6 @@ void SaturnV::StageFour(double simt)
 void SaturnV::StageSix(double simt)
 
 {
-	if (GetNavmodeState(NAVMODE_KILLROT)&& !LPswitch1 && !LPswitch2){
-		if (GetThrusterLevel(th_att_rot[10]) <0.00001 && GetThrusterLevel(th_att_rot[18]) <0.00001 ){
-			DeactivateNavmode(NAVMODE_KILLROT);
-		}
-	}
-
 	if(simt>0.5)
 		AttitudeLaunch4();
 

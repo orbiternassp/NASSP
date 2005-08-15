@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2005/08/15 18:48:50  movieman523
+  *	Moved the stage destroy code into a generic function for Saturn V and 1b.
+  *	
   *	Revision 1.38  2005/08/15 02:37:57  movieman523
   *	SM RCS is now wired up.
   *	
@@ -493,9 +496,6 @@ protected:
 
 	bool EMSKswitch;
 
-	ToggleSwitch LPswitch1;
-	ToggleSwitch LPswitch2;
-	ToggleSwitch LPswitch3;
 	ToggleSwitch LPswitch4;
 	AttitudeToggle LPswitch5;
 	ToggleSwitch LPswitch6;
@@ -692,6 +692,16 @@ protected:
 
 	SwitchRow RCSIndicatorsSwitchRow;
 	RotationalSwitch RCSIndicatorsSwitch;
+
+	SwitchRow AttitudeControlRow;
+	ThreePosSwitch ManualAttRollSwitch;
+	ThreePosSwitch ManualAttPitchSwitch;
+	ThreePosSwitch ManualAttYawSwitch;
+	ToggleSwitch LimitCycleSwitch;
+	ToggleSwitch AttDeadbandSwitch;
+	ToggleSwitch AttRateSwitch;
+	ToggleSwitch TransContrSwitch;
+
 
 	// old stuff end
 
