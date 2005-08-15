@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/07/04 23:56:46  movieman523
+  *	New C++ version. Totally untested!
+  *	
   *	Revision 1.1  2005/02/11 12:15:50  tschachim
   *	Initial version
   *	
@@ -80,16 +83,23 @@ void ASTP::Setup()
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
+
+	//
+	// Something very odd is going on here. After docking, the ASTP mesh vanishes!
+	//
+
     VECTOR3 mesh_dir=_V(0,0,0);
     AddMesh (hSat1stg2, &mesh_dir);
-	mesh_dir=_V(0,4,-4.2);
-    //vessel->AddMesh (hapsl, &mesh_dir);
-	mesh_dir=_V(0,-4,-4.2);
-    //vessel->AddMesh (hapsh, &mesh_dir);
 	mesh_dir=_V(0,0,13.3);
 	AddMesh (hastp, &mesh_dir);
 
-	VECTOR3 dockpos = {0.0, 0.0, -2.2};
+	//
+	// DockRef = 0.0 -0.1 13.1
+	// DockDir = 0 0 1
+	// DockRot = 0 -1 0
+	//
+
+	VECTOR3 dockpos = {0.0, -0.1, 15.0};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {0,1,0};
 
@@ -106,8 +116,6 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	if (!refcount++) {
 		hSat1stg2 = oapiLoadMeshGlobal ("nsat1stg2");
 		hastp = oapiLoadMeshGlobal ("nASTP2");
-		hapsh = oapiLoadMeshGlobal ("napshigh");
-		hapsl = oapiLoadMeshGlobal ("napslow");
 	}
 	return new ASTP (hvessel, flightmodel);
 }
