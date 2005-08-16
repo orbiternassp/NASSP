@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/13 20:20:17  movieman523
+  *	Created MissionTimer class and wired it into the LEM and CSM.
+  *	
   *	Revision 1.15  2005/08/13 16:41:15  movieman523
   *	Fully wired up the CSM caution and warning switches.
   *	
@@ -939,29 +942,45 @@ RotationalSwitch::RotationalSwitch() {
 	bitmaps[13].xOffset = 1;
 	bitmaps[13].yOffset = 1;
 
-	bitmaps[14].angle = 135;
-	bitmaps[14].xOffset = 3;
+	bitmaps[14].angle = 70;
+	bitmaps[14].xOffset = 2;
 	bitmaps[14].yOffset = 1;
 
-	bitmaps[15].angle = 160;
-	bitmaps[15].xOffset = 4;
+	bitmaps[15].angle = 110;
+	bitmaps[15].xOffset = 3;
 	bitmaps[15].yOffset = 1;
 
-	bitmaps[16].angle = 200;
-	bitmaps[16].xOffset = 5;
+	bitmaps[16].angle = 135;
+	bitmaps[16].xOffset = 4;
 	bitmaps[16].yOffset = 1;
 
-	bitmaps[17].angle = 225;
-	bitmaps[17].xOffset = 6;
+	bitmaps[17].angle = 160;
+	bitmaps[17].xOffset = 5;
 	bitmaps[17].yOffset = 1;
 
-	bitmaps[18].angle = 315;
-	bitmaps[18].xOffset = 8;
+	bitmaps[18].angle = 200;
+	bitmaps[18].xOffset = 6;
 	bitmaps[18].yOffset = 1;
 
-	bitmaps[19].angle = 340;
-	bitmaps[19].xOffset = 9;
+	bitmaps[19].angle = 225;
+	bitmaps[19].xOffset = 7;
 	bitmaps[19].yOffset = 1;
+
+	bitmaps[20].angle = 250;
+	bitmaps[20].xOffset = 8;
+	bitmaps[20].yOffset = 1;
+
+	bitmaps[21].angle = 290;
+	bitmaps[21].xOffset = 9;
+	bitmaps[21].yOffset = 1;
+
+	bitmaps[22].angle = 315;
+	bitmaps[22].xOffset = 10;
+	bitmaps[22].yOffset = 1;
+
+	bitmaps[23].angle = 340;
+	bitmaps[23].xOffset = 11;
+	bitmaps[23].yOffset = 1;
 }
 
 RotationalSwitch::~RotationalSwitch() {
