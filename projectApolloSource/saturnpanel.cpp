@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2005/08/15 21:37:02  movieman523
+  *	Added FDAI switches.
+  *	
   *	Revision 1.48  2005/08/15 20:18:16  movieman523
   *	Made thrust meter work. Unfortunately on a real CSM it's not a thrust meter :).
   *	
@@ -1051,7 +1054,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_CABIN_GAUGES,						_R(1693, 483, 1857,  571), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_EMS_KNOB,							_R( 442, 248,  510,  316), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_EMS_DISPLAY,							_R( 545, 264,  647,  369), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_RCS_INDICATORS,					_R(1327, 371, 1392,  436), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);		
         //oapiRegisterMFD (MFD_RIGHT, mfds_dock);	// MFD_USER1
 		//oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 851,  613, 1152      ,  864     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 635,  845,  655      ,  860     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
@@ -1108,6 +1110,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ENTRY_MODE_SWITCH,							_R( 593,  402,  628,  432), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CMC_SWITCH,									_R( 343,  635,  377,  664), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FDAI_SWITCHES,								_R( 265,  742,  484,  771), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_INDICATORS,								_R(1788,  448, 1875,  535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
+
 
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1355,6 +1359,13 @@ void Saturn::SetSwitches(int panel) {
 	IMUGuardedCageSwitch.Init(0, 20, 34, 29, srf[SRF_SWITCHUP], IMUCageSwitchRow, &imu);
 	IMUGuardedCageSwitch.InitGuard(0, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
 
+	//
+	// RCS Indicators rotary switch.
+	//
+
+	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
+	RCSIndicatorsSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], RCSIndicatorsSwitchRow);
+
 	FuelCellPhRadTempIndicatorsRow.Init(AID_FUELCELLPHRADTEMPINDICATORS, MainPanel);
 	FuelCellPhIndicator.Init     (  0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
 	FuelCellRadTempIndicator.Init(174, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
@@ -1415,8 +1426,6 @@ void Saturn::SetSwitches(int panel) {
 	SuitCompressorSwitchesRow.Init(AID_SUITCOMPRESSORSWITCHES, MainPanel);
 	SuitCompressor1Switch.Init(  0, 58, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 	SuitCompressor2Switch.Init( 42,  0, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
-
-
 
 	// old stuff
 	SPSRow.Init(AID_SPS, MainPanel);
@@ -1622,9 +1631,6 @@ void Saturn::SetSwitches(int panel) {
 	IMUswitch.Init( 1, 16, 23, 20, srf[6], IMUswitchRow);	// ToggleSwitch
 	//IMUswitch.Init( 1, 16, 23, 20, srf[23], IMUswitchRow);	// ThreePosSwitch
 	IMUswitch.InitGuard(0, 0, 25, 45, srf[8]);
-
-	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
-	RCSIndicatorsSwitch.Init(0, 0, 64, 64, srf[27], RCSIndicatorsSwitchRow);
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -3849,7 +3855,15 @@ void Saturn::InitSwitches() {
 	FDAIAttSetSwitch.Register(PSH, "FDAIAttSetSwitch", 1);
 
 	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 1, 1);
-	
+
+	RCSIndicatorsSwitch.AddPosition(1, 280);
+	RCSIndicatorsSwitch.AddPosition(2, 320);
+	RCSIndicatorsSwitch.AddPosition(3, 340);	
+	RCSIndicatorsSwitch.AddPosition(4, 20);	
+	RCSIndicatorsSwitch.AddPosition(5, 40);	
+	RCSIndicatorsSwitch.AddPosition(6, 70);
+	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 1);
+
 	// old stuff
 
 	Cswitch6=false;
@@ -4088,15 +4102,6 @@ void Saturn::InitSwitches() {
 	EMSswitch = 1;
 
 	EMSKswitch = false;
-
-	RCSIndicatorsSwitch.AddPosition(1, 20);
-	RCSIndicatorsSwitch.AddPosition(2, 45);
-	RCSIndicatorsSwitch.AddPosition(3, 90);	
-	RCSIndicatorsSwitch.AddPosition(4, 270);	
-	RCSIndicatorsSwitch.AddPosition(5, 315);	
-	RCSIndicatorsSwitch.AddPosition(6, 340);
-	RCSIndicatorsSwitch = 1;
-
 }
 
 //
