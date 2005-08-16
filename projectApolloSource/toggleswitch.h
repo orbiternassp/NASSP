@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/13 20:20:17  movieman523
+  *	Created MissionTimer class and wired it into the LEM and CSM.
+  *	
   *	Revision 1.14  2005/08/13 16:41:15  movieman523
   *	Fully wired up the CSM caution and warning switches.
   *	
@@ -447,7 +450,7 @@ typedef struct {
 	int yOffset;
 } RotationalSwitchBitmap;
 
-const int RotationalSwitchBitmapCount = 20;
+const int RotationalSwitchBitmapCount = 24;
 
 
 class RotationalSwitchPosition {
