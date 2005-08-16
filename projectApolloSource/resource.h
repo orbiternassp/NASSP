@@ -49,7 +49,6 @@
 #define AID_P18                         67
 #define AID_CMD_SWITCH                  68
 #define AID_CMP_SWITCH                  69
-#define AID_IMU_SWITCH                  70
 #define AID_FCSM_SWITCH                 71
 #define AID_P19                         72
 #define AID_DIRECT_ULLAGE_THRUST_ON_LIGHT 73
@@ -62,7 +61,7 @@
 #define AID_TOWER_JET_SWITCH1           80
 #define AID_TOWER_JET_SWITCH2           81
 #define AID_IU_GUIDANCE_SWITCH          82
-#define AID_LV_STAGE_SWITCH             83
+#define AID_LV_SWITCHES					83
 #define AID_DOCKING_PROBE_SWITCH        84
 #define AID_P21                         85
 #define AID_SEQUENCERSWITCHES           86
