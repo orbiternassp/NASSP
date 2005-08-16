@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/08/15 20:18:16  movieman523
+  *	Made thrust meter work. Unfortunately on a real CSM it's not a thrust meter :).
+  *	
   *	Revision 1.25  2005/08/13 22:24:20  movieman523
   *	Added the master alarm rendeing to CSM.
   *	
@@ -154,6 +157,7 @@ const int nsurf = 34; // number of bitmap handles
 #define SRF_SWITCHUP				 6
 #define SRF_SWITCHGUARDS			 8
 #define SRF_ABORT					 9
+#define SRF_ALTIMETER				14
 #define SRF_THRUSTMETER				16
 #define SRF_SEQUENCERSWITCHES		17
 #define SRF_LMTWOPOSLEVER           19

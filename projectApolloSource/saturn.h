@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2005/08/15 21:37:02  movieman523
+  *	Added FDAI switches.
+  *	
   *	Revision 1.41  2005/08/15 19:47:08  movieman523
   *	Added BMAG switches.
   *	
@@ -381,7 +384,116 @@ protected:
 	ThreePosSwitch SBandNormalMode2Switch;
 	ToggleSwitch SBandNormalMode3Switch;
 
+	TimerControlSwitch MissionTimerSwitch;
+	CWSModeSwitch CautionWarningModeSwitch;
+	CWSSourceSwitch CautionWarningCMCSMSwitch;
+	CWSPowerSwitch CautionWarningPowerSwitch;
+	CWSLightTestSwitch CautionWarningLightTestSwitch;
+
+	TimerUpdateSwitch MissionTimerHoursSwitch;
+	TimerUpdateSwitch MissionTimerMinutesSwitch;
+	TimerUpdateSwitch MissionTimerSecondsSwitch;
+
+	IMUCageSwitch IMUGuardedCageSwitch;
+
+	ThreePosSwitch RPswitch15;
+
+	SwitchRow SMRCSHelium1Row;
+
+	ToggleSwitch SMRCSHelium1ASwitch;
+	ToggleSwitch SMRCSHelium1BSwitch;
+	ToggleSwitch SMRCSHelium1CSwitch;
+	ToggleSwitch SMRCSHelium1DSwitch;
+
+	SwitchRow SMRCSHelium2Row;
+
+	ToggleSwitch SMRCSHelium2ASwitch;
+	ToggleSwitch SMRCSHelium2BSwitch;
+	ToggleSwitch SMRCSHelium2CSwitch;
+	ToggleSwitch SMRCSHelium2DSwitch;
+
+	ToggleSwitch CMUplinkSwitch;
+	ToggleSwitch IUUplinkSwitch;
+
+	GuardedToggleSwitch CMRCSPressSwitch;
+	ToggleSwitch SMRCSIndSwitch;
+
+	SwitchRow SMRCSProp1Row;
+
+	ToggleSwitch SMRCSProp1ASwitch;
+	ToggleSwitch SMRCSProp1BSwitch;
+	ToggleSwitch SMRCSProp1CSwitch;
+	ToggleSwitch SMRCSProp1DSwitch;
+
+	ThreePosSwitch SMRCSHeaterASwitch;
+	ThreePosSwitch SMRCSHeaterBSwitch;
+	ThreePosSwitch SMRCSHeaterCSwitch;
+	ThreePosSwitch SMRCSHeaterDSwitch;
+
+	SwitchRow SMRCSProp2Row;
+
+	ToggleSwitch SMRCSProp2ASwitch;
+	ToggleSwitch SMRCSProp2BSwitch;
+	ToggleSwitch SMRCSProp2CSwitch;
+	ToggleSwitch SMRCSProp2DSwitch;
+
+	ThreePosSwitch RCSCMDSwitch;
+	ThreePosSwitch RCSTrnfrSwitch;
+	ThreePosSwitch CMRCSIsolate1;
+	ThreePosSwitch CMRCSIsolate2;
+
+	SwitchRow RCSIndicatorsSwitchRow;
+	RotationalSwitch RCSIndicatorsSwitch;
+
+	SwitchRow AttitudeControlRow;
+	ThreePosSwitch ManualAttRollSwitch;
+	ThreePosSwitch ManualAttPitchSwitch;
+	ThreePosSwitch ManualAttYawSwitch;
+	ToggleSwitch LimitCycleSwitch;
+	ToggleSwitch AttDeadbandSwitch;
+	ToggleSwitch AttRateSwitch;
+	ToggleSwitch TransContrSwitch;
+
+	SwitchRow BMAGRow;
+	ThreePosSwitch BMAGRollSwitch;
+	ThreePosSwitch BMAGPitchSwitch;
+	ThreePosSwitch BMAGYawSwitch;
+
+	SwitchRow EntryModeRow;
+	ThreePosSwitch EntryModeSwitch;
+
+	//
+	// FDAI control switches.
+	//
+
+	SwitchRow FDAISwitchesRow;
+	ThreePosSwitch FDAIScaleSwitch;
+	ThreePosSwitch FDAISourceSwitch;
+	ThreePosSwitch FDAISelectSwitch;
+	ToggleSwitch FDAIAttSetSwitch;
+
+	//
+	// CMC Att: IMU is normal state, GDC does nothing.
+	//
+
+	SwitchRow CMCAttRow;
+	ToggleSwitch CMCAttSwitch;
+
+	//
+	// Launch vehicle switches.
+	//
+
+	SwitchRow LVRow;
+	ToggleSwitch LVGuidanceSwitch;
+	GuardedToggleSwitch SIISIVBSepSwitch;
+	ToggleSwitch TLIEnableSwitch;
+
+	//
+	// OLD Switches: delete these as and when we can do so.
+	//
 	// old stuff begin
+	//
+
 	//bool Cswitch1;
 	//bool Cswitch2;
 	//bool Cswitch3;
@@ -462,14 +574,7 @@ protected:
 	bool TJ2switch;
 	bool TJ2Cswitch;
 
-	//bool IMUswitch;
-	//bool IMUCswitch;
-	SwitchRow IMUswitchRow;
-	GuardedToggleSwitch IMUswitch;
-	//GuardedThreePosSwitch IMUswitch;
-
 	bool LVSswitch;
-	bool LVSCswitch;
 
 	bool IUswitch;
 	bool IUCswitch;
@@ -636,97 +741,6 @@ protected:
 	ThreePosSwitch P345switch;
 	ThreePosSwitch P346switch;
 	ThreePosSwitch P347switch;
-
-	TimerControlSwitch MissionTimerSwitch;
-	CWSModeSwitch CautionWarningModeSwitch;
-	CWSSourceSwitch CautionWarningCMCSMSwitch;
-	CWSPowerSwitch CautionWarningPowerSwitch;
-	CWSLightTestSwitch CautionWarningLightTestSwitch;
-
-	TimerUpdateSwitch MissionTimerHoursSwitch;
-	TimerUpdateSwitch MissionTimerMinutesSwitch;
-	TimerUpdateSwitch MissionTimerSecondsSwitch;
-
-	IMUCageSwitch IMUGuardedCageSwitch;
-
-	ThreePosSwitch RPswitch15;
-
-	SwitchRow SMRCSHelium1Row;
-
-	ToggleSwitch SMRCSHelium1ASwitch;
-	ToggleSwitch SMRCSHelium1BSwitch;
-	ToggleSwitch SMRCSHelium1CSwitch;
-	ToggleSwitch SMRCSHelium1DSwitch;
-
-	SwitchRow SMRCSHelium2Row;
-
-	ToggleSwitch SMRCSHelium2ASwitch;
-	ToggleSwitch SMRCSHelium2BSwitch;
-	ToggleSwitch SMRCSHelium2CSwitch;
-	ToggleSwitch SMRCSHelium2DSwitch;
-
-	ToggleSwitch CMUplinkSwitch;
-	ToggleSwitch IUUplinkSwitch;
-
-	GuardedToggleSwitch CMRCSPressSwitch;
-	ToggleSwitch SMRCSIndSwitch;
-
-	SwitchRow SMRCSProp1Row;
-
-	ToggleSwitch SMRCSProp1ASwitch;
-	ToggleSwitch SMRCSProp1BSwitch;
-	ToggleSwitch SMRCSProp1CSwitch;
-	ToggleSwitch SMRCSProp1DSwitch;
-
-	ThreePosSwitch SMRCSHeaterASwitch;
-	ThreePosSwitch SMRCSHeaterBSwitch;
-	ThreePosSwitch SMRCSHeaterCSwitch;
-	ThreePosSwitch SMRCSHeaterDSwitch;
-
-	SwitchRow SMRCSProp2Row;
-
-	ToggleSwitch SMRCSProp2ASwitch;
-	ToggleSwitch SMRCSProp2BSwitch;
-	ToggleSwitch SMRCSProp2CSwitch;
-	ToggleSwitch SMRCSProp2DSwitch;
-
-	ThreePosSwitch RCSCMDSwitch;
-	ThreePosSwitch RCSTrnfrSwitch;
-	ThreePosSwitch CMRCSIsolate1;
-	ThreePosSwitch CMRCSIsolate2;
-
-	SwitchRow RCSIndicatorsSwitchRow;
-	RotationalSwitch RCSIndicatorsSwitch;
-
-	SwitchRow AttitudeControlRow;
-	ThreePosSwitch ManualAttRollSwitch;
-	ThreePosSwitch ManualAttPitchSwitch;
-	ThreePosSwitch ManualAttYawSwitch;
-	ToggleSwitch LimitCycleSwitch;
-	ToggleSwitch AttDeadbandSwitch;
-	ToggleSwitch AttRateSwitch;
-	ToggleSwitch TransContrSwitch;
-
-	SwitchRow BMAGRow;
-	ThreePosSwitch BMAGRollSwitch;
-	ThreePosSwitch BMAGPitchSwitch;
-	ThreePosSwitch BMAGYawSwitch;
-
-	SwitchRow EntryModeRow;
-	ThreePosSwitch EntryModeSwitch;
-
-	SwitchRow FDAISwitchesRow;
-	ThreePosSwitch FDAIScaleSwitch;
-	ThreePosSwitch FDAISourceSwitch;
-	ThreePosSwitch FDAISelectSwitch;
-	ToggleSwitch FDAIAttSetSwitch;
-
-	//
-	// CMC Att: IMU is normal state, GDC does nothing.
-	//
-
-	SwitchRow CMCAttRow;
-	ToggleSwitch CMCAttSwitch;
 
 	// old stuff end
 

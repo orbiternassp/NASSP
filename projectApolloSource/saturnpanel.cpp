@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2005/08/16 01:37:23  movieman523
+  *	Wired in RCS Indicators rotary switch, but the switch code seems to be broken at certain angles.
+  *	
   *	Revision 1.49  2005/08/15 21:37:02  movieman523
   *	Added FDAI switches.
   *	
@@ -286,6 +289,10 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 	alpha = GetAltitude();
 	alpha = alpha / 0.305;
 
+#define ALTIMETER_X_CENTER	68
+#define ALTIMETER_Y_CENTER	69
+#define ALTIMETER_RADIUS		52.0
+
 	//sprintf(oapiDebugString(), "altitude %f", alpha);
 	if (alpha > 50000) alpha = 50000;
 
@@ -294,7 +301,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 4000;
 		alpha = 4000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, 44, 44, 40.0, (alpha*range)+150*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 4001 && alpha < 6001){
@@ -302,7 +309,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 2000;
 		alpha = 2000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, 44, 44, 40.0, (alpha*range)+185*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+185*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 6001 && alpha < 8001){
@@ -310,7 +317,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 2000;
 		alpha = 2000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, 44, 44, 40.0, (alpha*range)+165*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+165*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 8001 && alpha < 10001){
@@ -318,7 +325,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 2000;
 		alpha = 2000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, 44, 44, 40.0, (alpha*range)+150*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 10001 && alpha < 20001){
@@ -326,7 +333,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 10000;
 		alpha = 10000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, 44, 44, 40.0, (alpha*range)+70*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+70*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 20001 && alpha < 40001){
@@ -334,7 +341,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 20000;
 		alpha = 20000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, 44, 44, 40.0, (alpha*range)+15*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+15*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else {
@@ -342,10 +349,10 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 10000;
 		alpha = 10000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, 45, 45, 45.0, (alpha*range)+10*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+10*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
-	oapiBlt (surf, srf[14], 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
+	oapiBlt (surf, srf[SRF_ALTIMETER], 0, 0, 0, 0, 137, 139, SURF_PREDEF_CK);
 }
 
 void Saturn::RedrawPanel_Horizon (SURFHANDLE surf)
@@ -836,7 +843,7 @@ void Saturn::InitPanel (int panel)
 		srf[11]							= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
 		srf[12]							= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
 		srf[13]							= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
-		srf[14]							= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
+		srf[SRF_ALTIMETER]				= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
 		srf[15]							= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
 		srf[SRF_THRUSTMETER]			= oapiCreateSurface (LOADBMP (IDB_THRUST));
 		srf[SRF_SEQUENCERSWITCHES]		= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
@@ -972,7 +979,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterMFD (MFD_RIGHT, mfds_right_l);
 
         //oapiRegisterPanelArea (AID_ALTITUDE1,							_R( 547, 425,  643,  440), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_ALTIMETER,							_R( 626, 109,  717,  199), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_GMETER,                              _R( 301, 491,  357,  548), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_HORIZON,								_R( 853, 294,  949,  390), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 		//oapiRegisterPanelArea (AID_HORIZON2,							_R( 440, 537,  536,  633), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -998,7 +1004,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_CM_RCS_LOGIC,                        _R( 616, 905,  645,  937), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_CMD_SWITCH,                          _R( 651, 899,  676,  944), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_CMP_SWITCH,                          _R( 684, 899,  709,  944), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_IMU_SWITCH,                          _R( 215, 964,  240,  1009), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_FCSM_SWITCH,                         _R( 515, 970,  584,  1004), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P19,                                 _R( 247, 970,  436,  1002), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_DIRECT_ULLAGE_THRUST_ON_LIGHT,		_R( 273, 808,  303,  878), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -1013,7 +1018,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_TOWER_JET_SWITCH1,                   _R( 900, 808,  925,  853), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_TOWER_JET_SWITCH2,                   _R( 934, 808,  959,  853), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_IU_GUIDANCE_SWITCH,                  _R( 776, 890,  801,  935), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_LV_STAGE_SWITCH,						_R( 810, 890,  835,  935), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_DOCKING_PROBE_SWITCH,				_R(1029, 171, 1055,  280), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P21,                                 _R(1061, 241, 1236,  273), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_CSM_SIVB_SEP_SWITCH,                 _R( 595, 825,  664,  856), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -1111,6 +1115,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CMC_SWITCH,									_R( 343,  635,  377,  664), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FDAI_SWITCHES,								_R( 265,  742,  484,  771), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RCS_INDICATORS,								_R(1788,  448, 1875,  535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_LV_SWITCHES,									_R(1044, 1141, 1175, 1205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ALTIMETER,									_R( 836,   83,  974,  222), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 
 		// display & keyboard (DSKY):		
@@ -1365,6 +1371,16 @@ void Saturn::SetSwitches(int panel) {
 
 	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
 	RCSIndicatorsSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], RCSIndicatorsSwitchRow);
+
+	//
+	// LV switches.
+	//
+
+	LVRow.Init(AID_LV_SWITCHES, MainPanel);
+	LVGuidanceSwitch.Init(0, 23, 34, 29, srf[SRF_SWITCHUP], LVRow);
+	SIISIVBSepSwitch.Init(47, 23, 34, 29, srf[SRF_SWITCHUP], LVRow);
+	SIISIVBSepSwitch.InitGuard(47, 3, 34, 61, srf[SRF_SWITCHGUARDS]);
+	TLIEnableSwitch.Init(95, 20, 34, 29, srf[SRF_SWITCHUP], LVRow);
 
 	FuelCellPhRadTempIndicatorsRow.Init(AID_FUELCELLPHRADTEMPINDICATORS, MainPanel);
 	FuelCellPhIndicator.Init     (  0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
@@ -1626,11 +1642,6 @@ void Saturn::SetSwitches(int panel) {
 	EMSswitch.Init(4, 6, 23, 20, srf[23], EMS1Row);
 
 	RPswitch15.Init(0, 0, 23, 20, srf[23], LPSRow);
-
-	IMUswitchRow.Init(AID_IMU_SWITCH, MainPanel);
-	IMUswitch.Init( 1, 16, 23, 20, srf[6], IMUswitchRow);	// ToggleSwitch
-	//IMUswitch.Init( 1, 16, 23, 20, srf[23], IMUswitchRow);	// ThreePosSwitch
-	IMUswitch.InitGuard(0, 0, 25, 45, srf[8]);
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -1795,25 +1806,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-/*	case AID_IMU_SWITCH:
-		if(event & PANEL_MOUSE_RBDOWN){
-			if(mx <25 ){
-				IMUCswitch = !IMUCswitch;
-				GuardClick();
-			}
-		}else if(event & PANEL_MOUSE_LBDOWN){
-			if(mx <25 && IMUCswitch){
-				if(my >16 && my <27 && !IMUswitch){
-					IMUswitch = true;
-					SwitchClick();
-				}else if(my >27 && my <37 && IMUswitch && IMUCswitch){
-					IMUswitch = false;
-					SwitchClick();
-				}
-			}
-		}
-		return true;
-*/
 	case AID_MAIN_RELEASE_SWITCH:
 		if(event & PANEL_MOUSE_RBDOWN){
 			if(mx <25 ){
@@ -1885,25 +1877,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 					SwitchClick();
 				}else if(my >27 && my <37 && IUswitch && IUCswitch){
 					IUswitch = false;
-					SwitchClick();
-				}
-			}
-		}
-		return true;
-
-	case AID_LV_STAGE_SWITCH:
-		if(event & PANEL_MOUSE_RBDOWN){
-			if(mx <25 ){
-				LVSCswitch = !LVSCswitch;
-				GuardClick();
-			}
-		}else if(event & PANEL_MOUSE_LBDOWN){
-			if(mx <25 && LVSCswitch){
-				if(my >16 && my <27 && !LVSswitch){
-					LVSswitch = true;
-					SwitchClick();
-				}else if(my >27 && my <37 && LVSswitch && LVSCswitch){
-					LVSswitch = false;
 					SwitchClick();
 				}
 			}
@@ -2938,20 +2911,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-/*	case AID_IMU_SWITCH:
-			if(IMUCswitch){
-			oapiBlt(surf,srf[8],0,0,25,0,25,45);
-			if(IMUswitch){
-				oapiBlt(surf,srf[6],1,16,0,0,23,20);
-			}else{
-				oapiBlt(surf,srf[6],1,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],0,0,0,0,25,45);
-			IMUswitch=false;
-		}
-		return true;
-*/
 	case AID_MAIN_RELEASE_SWITCH:
 			if(MRCswitch){
 			oapiBlt(surf,srf[8],0,0,25,0,25,45);
@@ -3008,20 +2967,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		else{
 			oapiBlt(surf,srf[8],0,0,0,0,25,45);
 			IUswitch=false;
-		}
-		return true;
-
-	case AID_LV_STAGE_SWITCH:
-			if(LVSCswitch){
-			oapiBlt(surf,srf[8],0,0,25,0,25,45);
-			if(LVSswitch){
-				oapiBlt(surf,srf[6],1,16,0,0,23,20);
-			}else{
-				oapiBlt(surf,srf[6],1,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],0,0,0,0,25,45);
-			LVSswitch=false;
 		}
 		return true;
 
@@ -3864,6 +3809,10 @@ void Saturn::InitSwitches() {
 	RCSIndicatorsSwitch.AddPosition(6, 70);
 	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 1);
 
+	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", 1);
+	SIISIVBSepSwitch.Register(PSH, "SIISIVBSepSwitch", 0, 0);
+	TLIEnableSwitch.Register(PSH, "TLIEnableSwitch", 0);
+
 	// old stuff
 
 	Cswitch6=false;
@@ -3932,10 +3881,6 @@ void Saturn::InitSwitches() {
 
 	CMPswitch = false;
 	CMPCswitch = false;
-
-	IMUswitch = false;
-	IMUswitch.SetGuardState(false);
-	//IMUCswitch = false;
 
 	P111switch = false;
 	P112switch = false;
@@ -4068,7 +4013,6 @@ void Saturn::InitSwitches() {
 	TJ2Cswitch = false;
 
 	LVSswitch = false;
-	LVSCswitch = false;
 
 	IUswitch = false;
 	IUCswitch = false;
@@ -4169,7 +4113,6 @@ int Saturn::GetCSwitchState()
 	state.u.ELSCswitch = ELSCswitch;
 	state.u.CMDCswitch = CMDCswitch;
 	state.u.CMPCswitch = CMPCswitch;
-	state.u.IMUCswitch = IMUswitch.GetGuardState(); 
 	state.u.MRswitch = MRswitch;
 	state.u.MRCswitch = MRCswitch;
 	state.u.TJ1switch = TJ1switch;
@@ -4179,7 +4122,6 @@ int Saturn::GetCSwitchState()
 	state.u.IUswitch = IUswitch;
 	state.u.IUCswitch = IUCswitch;
 	state.u.LVSswitch = LVSswitch;
-	state.u.LVSCswitch = LVSCswitch;
 	state.u.DPswitch = DPswitch;
 	state.u.DPCswitch = DPCswitch;
 	state.u.CMRHGswitch = CmRcsHeDumpSwitch.GetGuardState();
@@ -4207,7 +4149,6 @@ void Saturn::SetCSwitchState(int s)
 	ELSCswitch = state.u.ELSCswitch;
 	CMDCswitch = state.u.CMDCswitch;
 	CMPCswitch = state.u.CMPCswitch;
-	IMUswitch.SetGuardState(state.u.IMUCswitch);
 	MRswitch = state.u.MRswitch;
 	MRCswitch = state.u.MRCswitch;
 	TJ1switch = state.u.TJ1switch;
@@ -4217,7 +4158,6 @@ void Saturn::SetCSwitchState(int s)
 	IUswitch = state.u.IUswitch;
 	IUCswitch = state.u.IUCswitch;
 	LVSswitch = state.u.LVSswitch;
-	LVSCswitch = state.u.LVSCswitch;
 	DPswitch = state.u.DPswitch;
 	DPCswitch = state.u.DPCswitch;
 	CmRcsHeDumpSwitch.SetGuardState(state.u.CMRHGswitch);
@@ -4265,7 +4205,6 @@ int Saturn::GetSSwitchState()
 	state.u.ELSswitch = ELSswitch;
 	state.u.CMDswitch = CMDswitch;
 	state.u.CMPswitch = CMPswitch;
-	state.u.IMUswitch = IMUswitch;
 	state.u.CMRHDswitch = CmRcsHeDumpSwitch;
 
 	return state.word;
@@ -4291,7 +4230,6 @@ void Saturn::SetSSwitchState(int s)
 	ELSswitch = state.u.ELSswitch;
 	CMDswitch = state.u.CMDswitch;
 	CMPswitch = state.u.CMPswitch;
-	IMUswitch = state.u.IMUswitch;
 	CmRcsHeDumpSwitch = state.u.CMRHDswitch;
 }
 
