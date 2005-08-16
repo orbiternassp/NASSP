@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/08/15 19:25:03  movieman523
+  *	Added CSM attitude control switches and removed old ones.
+  *	
   *	Revision 1.21  2005/08/15 18:48:50  movieman523
   *	Moved the stage destroy code into a generic function for Saturn V and 1b.
   *	
@@ -1843,7 +1846,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 bool SaturnV::SIVBStart()
 
 {
-	if (bStartS4B || TLIBurnDone)
+	if (bStartS4B || TLIBurnDone || !TLIEnabled)
 		return false;
 
 	if (stage != STAGE_ORBIT_SIVB)
