@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2005/08/16 18:54:30  movieman523
+  *	Added Altimeter and launch vehicle switches.
+  *	
   *	Revision 1.42  2005/08/15 21:37:02  movieman523
   *	Added FDAI switches.
   *	
@@ -165,6 +168,7 @@
 #include "cautionwarning.h"
 #include "csmcautionwarning.h"
 #include "missiontimer.h"
+#include "satswitches.h"
 
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
@@ -220,6 +224,9 @@ public:
 	virtual void LaunchVesselRolloutEnd() {};
 
 	int GetStage() { return stage; };
+
+	void EnableTLI();
+	void DisableTLI() { TLIEnabled = false; };
 
 protected:
 
@@ -486,7 +493,7 @@ protected:
 	SwitchRow LVRow;
 	ToggleSwitch LVGuidanceSwitch;
 	GuardedToggleSwitch SIISIVBSepSwitch;
-	ToggleSwitch TLIEnableSwitch;
+	XLunarSwitch TLIEnableSwitch;
 
 	//
 	// OLD Switches: delete these as and when we can do so.
@@ -543,8 +550,6 @@ protected:
 	bool DPSwitch8;
 	bool DPSwitch9;
 	bool DPSwitch10;
-
-	bool TLIswitch;
 
 	bool CMCswitch;
 	bool SCswitch;
@@ -979,6 +984,7 @@ protected:
 	double CSMAccelPitch;
 
 	bool TLICapableBooster;
+	bool TLIEnabled;
 	bool bAbort;
 	bool bAbtlocked;
 	bool bRecovery;

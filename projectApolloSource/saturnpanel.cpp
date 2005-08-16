@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2005/08/16 18:54:30  movieman523
+  *	Added Altimeter and launch vehicle switches.
+  *	
   *	Revision 1.50  2005/08/16 01:37:23  movieman523
   *	Wired in RCS Indicators rotary switch, but the switch code seems to be broken at certain angles.
   *	
@@ -1380,7 +1383,7 @@ void Saturn::SetSwitches(int panel) {
 	LVGuidanceSwitch.Init(0, 23, 34, 29, srf[SRF_SWITCHUP], LVRow);
 	SIISIVBSepSwitch.Init(47, 23, 34, 29, srf[SRF_SWITCHUP], LVRow);
 	SIISIVBSepSwitch.InitGuard(47, 3, 34, 61, srf[SRF_SWITCHGUARDS]);
-	TLIEnableSwitch.Init(95, 20, 34, 29, srf[SRF_SWITCHUP], LVRow);
+	TLIEnableSwitch.Init(95, 20, 34, 29, srf[SRF_SWITCHUP], LVRow, this);
 
 	FuelCellPhRadTempIndicatorsRow.Init(AID_FUELCELLPHRADTEMPINDICATORS, MainPanel);
 	FuelCellPhIndicator.Init     (  0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
@@ -2048,21 +2051,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 */
-	case AID_TLI_SWITCH:
-	if (my >=0 && my <=10 ){
-			    if (mx > 7 && mx < 18 && !TLIswitch){
-				SwitchClick();
-				TLIswitch=true;
-				if (stage != STAGE_ORBIT_SIVB)
-					MasterAlarm();
-			}
-	}else if (my >=10 && my <=20 ){
-				if (mx >7 && mx < 18 && TLIswitch){
-				SwitchClick();
-				TLIswitch=false;
-				}
-		}
-		return true;
 
 	case AID_FCSM_SWITCH:
 	if (my >=7 && my <=18 ){
@@ -3291,14 +3279,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiBlt(surf,srf[4],70,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		return true;
 
-	case AID_TLI_SWITCH:
-		if(TLIswitch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
-		}
-		return true;
-
 	case AID_CM_RCS_SWITCH:
 		if(CMRCswitch){
 			oapiBlt(surf,srf[8],0,0,25,0,25,45);
@@ -3866,8 +3846,6 @@ void Saturn::InitSwitches() {
 	P12switch = false;
 	P13switch = false;
 
-	TLIswitch = false;
-
 	DVAswitch = false;
 	DVCswitch = false;
 	DVBswitch = false;
@@ -4276,7 +4254,6 @@ int Saturn::GetLPSwitchState()
 	state.u.P15switch = P15switch;
 	state.u.P16switch = P16switch;
 	state.u.SCswitch = SCswitch;
-	state.u.TLIswitch = TLIswitch;
 	state.u.P111switch = P111switch;
 	state.u.P112switch = P112switch;
 	state.u.P113switch = P113switch;
@@ -4304,7 +4281,6 @@ void Saturn::SetLPSwitchState(int s)
 	P15switch = state.u.P15switch;
 	P16switch = state.u.P16switch;
 	SCswitch = state.u.SCswitch;
-	TLIswitch = state.u.TLIswitch;
 	P111switch = state.u.P111switch;
 	P112switch = state.u.P112switch;
 	P113switch = state.u.P113switch;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/08/15 18:48:50  movieman523
+  *	Moved the stage destroy code into a generic function for Saturn V and 1b.
+  *	
   *	Revision 1.35  2005/08/15 02:37:57  movieman523
   *	SM RCS is now wired up.
   *	
@@ -189,7 +192,9 @@ void Saturn::initSaturn()
 
 	FirstTimestep = true;
 	GenericFirstTimestep = true;
+
 	TLICapableBooster = false;
+	TLIEnabled = false;
 
 	bAbort = false;
 	ABORT_IND = false;
@@ -817,6 +822,7 @@ typedef union {
 		unsigned IGMEnabled:1;
 		unsigned stgSM:1;
 		unsigned MissionTimerEnabled:1;
+		unsigned TLIEnabled:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -846,6 +852,7 @@ int Saturn::GetMainState()
 	state.u.PostSplashdownPlayed = PostSplashdownPlayed;
 	state.u.IGMEnabled = IGMEnabled;
 	state.u.stgSM = stgSM;
+	state.u.TLIEnabled = TLIEnabled;
 
 	return state.word;
 }
@@ -874,6 +881,7 @@ void Saturn::SetMainState(int s)
 	stgSM = (state.u.stgSM != 0);
 	MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
 	MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
+	TLIEnabled = (state.u.TLIEnabled != 0);
 }
 
 
@@ -2526,9 +2534,6 @@ void Saturn::StageOrbitSIVB(double simt)
 	AttitudeLaunchSIVB();
 
 	if (TLICapableBooster && !(bStartS4B || TLIBurnDone)) {
-		if (TLIswitch) {
-			(void) SIVBStart();
-		}
 		if (agc.GetOutputChannelBit(012, 13)) {
 			if (SIVBStart())
 				agc.SetOutputChannelBit(012, 13, false);
@@ -2688,7 +2693,6 @@ void Saturn::StageOrbitSIVB(double simt)
 			//
 
 			if (MissionTime >= NextMissionEventTime) {
-				TLIswitch = false;
 				SetThrusterLevel(th_main[0], 1.0);
 				SetThrusterGroupLevel(thg_ver, 0.0);
 				bStartS4B = false;
@@ -2835,6 +2839,14 @@ void Saturn::SlowIfDesired()
 {
 	if (!Crewed && AutoSlow && (oapiGetTimeAcceleration() > 1.0)) {
 		oapiSetTimeAcceleration(1.0);
+	}
+}
+
+void Saturn::EnableTLI()
+
+{
+	if (isTLICapable()) {
+		TLIEnabled = true;
 	}
 }
 
