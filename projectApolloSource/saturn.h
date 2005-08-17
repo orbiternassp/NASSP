@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2005/08/17 00:01:59  movieman523
+  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
+  *	
   *	Revision 1.44  2005/08/16 20:55:23  movieman523
   *	Added first saturn-specific switch for Xlunar Inject.
   *	
@@ -502,6 +505,18 @@ protected:
 	XLunarSwitch TLIEnableSwitch;
 
 	//
+	// ELS and CSM propellant switches.
+	//
+
+	SwitchRow ELSRow;
+	AGCIOSwitch CGSwitch;
+	GuardedToggleSwitch ELSLogicSwitch;
+	ToggleSwitch ELSAutoSwitch;
+	ToggleSwitch CMRCSLogicSwitch;
+	GuardedToggleSwitch CMPropDumpSwitch;
+	GuardedToggleSwitch CPPropPurgeSwitch;
+
+	//
 	// OLD Switches: delete these as and when we can do so.
 	//
 	// old stuff begin
@@ -564,9 +579,6 @@ protected:
 	bool DVCswitch;
 	bool DVBswitch;
     bool DVBCswitch;
-
-	bool ELSswitch;
-	bool ELSCswitch;
 
 	bool CMDswitch;
 	bool CMDCswitch;

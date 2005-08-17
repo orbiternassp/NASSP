@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/16 11:46:58  tschachim
+  *	Fixed rotational switch because of new bitmap.
+  *	
   *	Revision 1.16  2005/08/13 20:20:17  movieman523
   *	Created MissionTimer class and wired it into the LEM and CSM.
   *	
@@ -89,6 +92,7 @@
 
 #include "IMU.h"
 #include "missiontimer.h"
+#include "apolloguidance.h"
 
 //
 // Generic toggle switch.
@@ -1494,6 +1498,28 @@ bool CWSSourceSwitch::CheckMouseClick(int event, int mx, int my)
 }
 
 //
+// Switch that controls AGC input channels.
+//
+
+bool AGCIOSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ToggleSwitch::CheckMouseClick(event, mx, my)) {
+		if (agc) {
+			if (IsUp()) {
+				agc->SetInputChannelBit(Channel, Bit, UpValue);
+			}
+			else if (IsDown()) {
+				agc->SetInputChannelBit(Channel, Bit, !UpValue);
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//
 // If we add more caution and warning system switches which use toggle-switch, they could be derived from a new
 // class which has the generic init function to set the cws.
 //
@@ -1503,4 +1529,12 @@ void CWSSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switch
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, row);
 	cws = c;
+}
+
+
+void AGCSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, ApolloGuidance *c)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	agc = c;
 }

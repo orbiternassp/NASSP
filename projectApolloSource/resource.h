@@ -46,7 +46,7 @@
 #define AID_SIVB_RCS                    63
 #define AID_SIVB_GIMBAL                 64
 #define AID_P17                         65
-#define AID_ELS_SWITCH                  66
+#define AID_ELS_SWITCHES                66
 #define AID_P18                         67
 #define AID_CMD_SWITCH                  68
 #define AID_CMP_SWITCH                  69
