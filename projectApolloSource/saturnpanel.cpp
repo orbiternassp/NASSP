@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2005/08/17 00:01:59  movieman523
+  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
+  *	
   *	Revision 1.52  2005/08/16 20:55:23  movieman523
   *	Added first saturn-specific switch for Xlunar Inject.
   *	
@@ -1005,7 +1008,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_ROT_PWR,								_R( 216, 745,  239,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_SIVB_GIMBAL,                         _R( 284, 912,  338,  932), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P17,                                 _R( 523, 912,  546,  932), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_ELS_SWITCH,                          _R( 554, 899,  579,  944), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P18,                                 _R( 588, 912,  611,  932), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_CM_RCS_LOGIC,                        _R( 616, 905,  645,  937), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_CMD_SWITCH,                          _R( 651, 899,  676,  944), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -1124,6 +1126,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LV_SWITCHES,									_R(1044, 1141, 1175, 1205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ALTIMETER,									_R( 836,   83,  974,  222), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECS_INDICATOR_SWITCH,						_R(1788,  585, 1875,  673), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_ELS_SWITCHES,								_R( 702, 1153,  956,  1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
 
 		// display & keyboard (DSKY):		
@@ -1395,6 +1398,26 @@ void Saturn::SetSwitches(int panel) {
 	SIISIVBSepSwitch.Init(47, 23, 34, 29, srf[SRF_SWITCHUP], LVRow);
 	SIISIVBSepSwitch.InitGuard(47, 3, 34, 61, srf[SRF_SWITCHGUARDS]);
 	TLIEnableSwitch.Init(95, 20, 34, 29, srf[SRF_SWITCHUP], LVRow, this);
+
+	//
+	// ELS Switches.
+	//
+
+	ELSRow.Init(AID_ELS_SWITCHES, MainPanel);
+	CGSwitch.Init(0, 20, 34, 29, srf[SRF_SWITCHUP], ELSRow, &agc);
+	CGSwitch.SetChannelData(32, 11, true);	// LM Attached flag.
+	ELSLogicSwitch.Init(43, 23, 34, 29, srf[SRF_SWITCHUP], ELSRow);
+	ELSLogicSwitch.InitGuard(43, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	ELSAutoSwitch.Init(86, 20, 34, 29, srf[SRF_SWITCHUP], ELSRow);
+	CMRCSLogicSwitch.Init(129, 20, 34, 29, srf[SRF_SWITCHUP], ELSRow);
+	CMPropDumpSwitch.Init(174, 23, 34, 29, srf[SRF_SWITCHUP], ELSRow);
+	CMPropDumpSwitch.InitGuard(174, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	CPPropPurgeSwitch.Init(217, 23, 34, 29, srf[SRF_SWITCHUP], ELSRow);
+	CPPropPurgeSwitch.InitGuard(217, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+
+	//
+	// Fuel Cell Switches.
+	//
 
 	FuelCellPhRadTempIndicatorsRow.Init(AID_FUELCELLPHRADTEMPINDICATORS, MainPanel);
 	FuelCellPhIndicator.Init     (  0, 0, 23, 23, srf[SRF_INDICATOR], FuelCellPhRadTempIndicatorsRow);
@@ -1757,25 +1780,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 					SwitchClick();
 				}else if(my >27 && my <37 && DVBswitch && DVBCswitch){
 					DVBswitch = false;
-					SwitchClick();
-				}
-			}
-		}
-		return true;
-
-	case AID_ELS_SWITCH:
-		if(event & PANEL_MOUSE_RBDOWN){
-			if(mx <25 ){
-				ELSCswitch = !ELSCswitch;
-				GuardClick();
-			}
-		}else if(event & PANEL_MOUSE_LBDOWN){
-			if(mx <25 && ELSCswitch){
-				if(my >16 && my <27 && !ELSswitch){
-				ELSswitch = true;
-					SwitchClick();
-				}else if(my >27 && my <37 && ELSswitch && ELSCswitch){
-				ELSswitch = false;
 					SwitchClick();
 				}
 			}
@@ -2868,20 +2872,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_ELS_SWITCH:
-			if(ELSCswitch){
-			oapiBlt(surf,srf[8],0,0,25,0,25,45);
-			if(ELSswitch){
-				oapiBlt(surf,srf[6],1,16,0,0,23,20);
-			}else{
-				oapiBlt(surf,srf[6],1,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],0,0,0,0,25,45);
-			ELSswitch=false;
-		}
-		return true;
-
 	case AID_CMD_SWITCH:
 			if(CMDCswitch){
 			oapiBlt(surf,srf[8],0,0,25,0,25,45);
@@ -3808,6 +3798,14 @@ void Saturn::InitSwitches() {
 	ECSIndicatorsSwitch.AddPosition(2, 20);
 	ECSIndicatorsSwitch.Register(PSH, "ECSIndicatorsSwitch", 1);
 
+	CGSwitch.Register(PSH, "CGSwitch", 0);
+	ELSLogicSwitch.Register(PSH, "ELSLogicSwitch", 0, 0);
+	ELSAutoSwitch.Register(PSH, "ELSAutoSwitch", 1);
+	CMRCSLogicSwitch.Register(PSH, "CMRCSLogicSwitch", 0);
+	CMPropDumpSwitch.Register(PSH, "CMPropDumpSwitch", 0, 0);
+	CPPropPurgeSwitch.Register(PSH, "CPPropPurgeSwitch", 0, 0);
+
+
 	// old stuff
 
 	Cswitch6=false;
@@ -3865,9 +3863,6 @@ void Saturn::InitSwitches() {
 	DVCswitch = false;
 	DVBswitch = false;
 	DVBCswitch = false;
-
-	ELSswitch = false;
-	ELSCswitch = false;
 
 	CMDswitch = false;
 	CMDCswitch = false;
@@ -4103,7 +4098,6 @@ int Saturn::GetCSwitchState()
 	state.u.Cswitch9 = Cswitch9;
 	state.u.DVCswitch = DVCswitch;
 	state.u.DVBCswitch = DVBCswitch;
-	state.u.ELSCswitch = ELSCswitch;
 	state.u.CMDCswitch = CMDCswitch;
 	state.u.CMPCswitch = CMPCswitch;
 	state.u.MRswitch = MRswitch;
@@ -4139,7 +4133,6 @@ void Saturn::SetCSwitchState(int s)
 	Cswitch9 = state.u.Cswitch9;
 	DVCswitch = state.u.DVCswitch;
 	DVBCswitch = state.u.DVBCswitch;
-	ELSCswitch = state.u.ELSCswitch;
 	CMDCswitch = state.u.CMDCswitch;
 	CMPCswitch = state.u.CMPCswitch;
 	MRswitch = state.u.MRswitch;
@@ -4195,7 +4188,6 @@ int Saturn::GetSSwitchState()
 	state.u.Sswitch9 = Sswitch9;
 	state.u.DVAswitch = DVAswitch;
 	state.u.DVBswitch = DVBswitch;
-	state.u.ELSswitch = ELSswitch;
 	state.u.CMDswitch = CMDswitch;
 	state.u.CMPswitch = CMPswitch;
 	state.u.CMRHDswitch = CmRcsHeDumpSwitch;
@@ -4220,7 +4212,6 @@ void Saturn::SetSSwitchState(int s)
 	Sswitch9 = state.u.Sswitch9;
 	DVAswitch = state.u.DVAswitch;
 	DVBswitch = state.u.DVBswitch;
-	ELSswitch = state.u.ELSswitch;
 	CMDswitch = state.u.CMDswitch;
 	CMPswitch = state.u.CMPswitch;
 	CmRcsHeDumpSwitch = state.u.CMRHDswitch;

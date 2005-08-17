@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/16 11:46:58  tschachim
+  *	Fixed rotational switch because of new bitmap.
+  *	
   *	Revision 1.15  2005/08/13 20:20:17  movieman523
   *	Created MissionTimer class and wired it into the LEM and CSM.
   *	
@@ -336,6 +339,38 @@ public:
 
 protected:
 	CautionWarningSystem *cws;
+};
+
+//
+// Switches that talk directly to the AGC.
+//
+
+class ApolloGuidance; // Forward reference for files which include this before apolloguidance.h
+
+class AGCSwitch: public ToggleSwitch {
+
+public:
+	AGCSwitch() { agc = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, ApolloGuidance *c);
+
+protected:
+	ApolloGuidance *agc;
+};
+
+//
+// This class directly toggles AGC input channel states.
+//
+
+class AGCIOSwitch: public AGCSwitch {
+public:
+	AGCIOSwitch() { Channel = 0; Bit = 0; UpValue = false; };
+	bool CheckMouseClick(int event, int mx, int my);
+	void SetChannelData(int chan, int bit, bool value) { Channel = chan; Bit = bit; UpValue = value; };
+
+protected:
+	bool UpValue;
+	int Channel;
+	int Bit;
 };
 
 class GuardedToggleSwitch: public ToggleSwitch {
