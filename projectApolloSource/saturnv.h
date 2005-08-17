@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/08/15 18:48:50  movieman523
+  *	Moved the stage destroy code into a generic function for Saturn V and 1b.
+  *	
   *	Revision 1.8  2005/08/05 13:07:06  tschachim
   *	Added crawler callback function LaunchVesselRolloutEnd,
   *	added keyboard handling
@@ -59,7 +62,7 @@ public:
 	// General functions that handle calls from Orbiter.
 	//
 
-	void Timestep(double simt);
+	void Timestep(double simt, double simdt);
 	void clbkLoadStateEx (FILEHANDLE scn, void *status);
 	void clbkSetClassCaps (FILEHANDLE cfg);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/16 20:55:23  movieman523
+  *	Added first saturn-specific switch for Xlunar Inject.
+  *	
   *	Revision 1.22  2005/08/15 19:25:03  movieman523
   *	Added CSM attitude control switches and removed old ones.
   *	
@@ -1510,7 +1513,7 @@ void SaturnV::DoFirstTimestep(double simt)
 	habort = oapiGetVesselByName("Saturn_Abort");
 }
 
-void SaturnV::Timestep(double simt)
+void SaturnV::Timestep(double simt, double simdt)
 
 {
 	//
@@ -1529,7 +1532,7 @@ void SaturnV::Timestep(double simt)
 		return;
 	}
 
-	GenericTimestep(simt);
+	GenericTimestep(simt, simdt);
 
 	if (hs4bM){
 		if (!S4Bset){
@@ -1577,7 +1580,7 @@ void SaturnV::Timestep(double simt)
 			// Scale distance appropriately for timestep time.
 			//
 
-			dist2 *= (2.5 / dTime);
+			dist2 *= (2.5 / simdt);
 
 			f.x = (double)(rand() & 1023 - 512) / dist2;
 			f.y = (double)(rand() & 1023 - 512) / dist2;
@@ -1673,7 +1676,7 @@ void SaturnV::Timestep(double simt)
 		break;
 
 	default:
-		GenericTimestepStage(simt);
+		GenericTimestepStage(simt, simdt);
 		break;
 	}
 

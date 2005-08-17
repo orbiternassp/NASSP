@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2005/08/16 20:55:23  movieman523
+  *	Added first saturn-specific switch for Xlunar Inject.
+  *	
   *	Revision 1.43  2005/08/16 18:54:30  movieman523
   *	Added Altimeter and launch vehicle switches.
   *	
@@ -212,7 +215,7 @@ public:
 	bool clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf);
 	void clbkMFDMode (int mfd, int mode);
 
-	virtual void Timestep(double simt) = 0;
+	virtual void Timestep(double simt, double simdt) = 0;
 	int clbkConsumeDirectKey(char *keystate);
 
 	bool clbkLoadVC (int id);
@@ -451,6 +454,9 @@ protected:
 
 	SwitchRow RCSIndicatorsSwitchRow;
 	RotationalSwitch RCSIndicatorsSwitch;
+
+	SwitchRow ECSIndicatorsSwitchRow;
+	RotationalSwitch ECSIndicatorsSwitch;
 
 	SwitchRow AttitudeControlRow;
 	ThreePosSwitch ManualAttRollSwitch;
@@ -820,7 +826,6 @@ protected:
 	double YSPEEDN1;
 	double ZSPEEDN1;
 	double aTime;
-	double dTime;
 
 	double actualVEL;
 	double actualALT;
@@ -1155,7 +1160,7 @@ protected:
 	void SetView(double offset);
 	void MasterAlarm();
 	void StopMasterAlarm();
-	void GenericTimestep(double simt);
+	void GenericTimestep(double simt, double simdt);
 	void SystemsInit();
 	void SystemsTimestep(double simt);
 	void SIVBBoiloff();
@@ -1217,6 +1222,10 @@ protected:
 	void SetCP6SwitchState(int s);
 	int GetMainState();
 	void SetMainState(int s);
+	int GetLaunchState();
+	void SetLaunchState(int s);
+	int GetA13State();
+	void SetA13State(int s);
 	int GetLightState();
 	void SetLightState(int s);
 	void GenericLoadStateSetup();
@@ -1247,7 +1256,7 @@ protected:
 	void SetReentryStage ();
 	void AddRCS_CM(double MaxThrust);
 	void SetRCS_CM();
-	void GenericTimestepStage(double simt);
+	void GenericTimestepStage(double simt, double simdt);
 	bool CheckForLaunchShutdown();
 	void SetGenericStageState();
 	void DestroyStages(double simt);
