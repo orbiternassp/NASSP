@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/07/30 02:05:55  movieman523
+  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
+  *	
   *	Revision 1.2  2005/07/29 22:44:05  movieman523
   *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
   *	
@@ -74,7 +77,7 @@ protected:
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
-	void Timestep (double simt);
+	void Timestep (double simt, double simdt);
 	void DockStage (UINT dockstatus);
 	void StageOne(double simt);
 	void SetS4B();

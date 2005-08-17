@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2005/08/16 20:55:23  movieman523
+  *	Added first saturn-specific switch for Xlunar Inject.
+  *	
   *	Revision 1.51  2005/08/16 18:54:30  movieman523
   *	Added Altimeter and launch vehicle switches.
   *	
@@ -1120,6 +1123,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RCS_INDICATORS,								_R(1788,  448, 1875,  535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_LV_SWITCHES,									_R(1044, 1141, 1175, 1205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ALTIMETER,									_R( 836,   83,  974,  222), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECS_INDICATOR_SWITCH,						_R(1788,  585, 1875,  673), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 
 
 		// display & keyboard (DSKY):		
@@ -1374,6 +1378,13 @@ void Saturn::SetSwitches(int panel) {
 
 	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
 	RCSIndicatorsSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], RCSIndicatorsSwitchRow);
+
+	//
+	// ECS Indicators rotary switch.
+	//
+
+	ECSIndicatorsSwitchRow.Init(AID_ECS_INDICATOR_SWITCH, MainPanel);
+	ECSIndicatorsSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], ECSIndicatorsSwitchRow);
 
 	//
 	// LV switches.
@@ -3792,6 +3803,10 @@ void Saturn::InitSwitches() {
 	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", 1);
 	SIISIVBSepSwitch.Register(PSH, "SIISIVBSepSwitch", 0, 0);
 	TLIEnableSwitch.Register(PSH, "TLIEnableSwitch", 0);
+
+	ECSIndicatorsSwitch.AddPosition(1, 340);
+	ECSIndicatorsSwitch.AddPosition(2, 20);
+	ECSIndicatorsSwitch.Register(PSH, "ECSIndicatorsSwitch", 1);
 
 	// old stuff
 

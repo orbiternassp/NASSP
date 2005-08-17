@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/15 18:48:50  movieman523
+  *	Moved the stage destroy code into a generic function for Saturn V and 1b.
+  *	
   *	Revision 1.17  2005/08/15 02:37:57  movieman523
   *	SM RCS is now wired up.
   *	
@@ -737,7 +740,7 @@ void Saturn1b::SetSIVBMixtureRatio (double ratio)
 	SetThrusterMax0 (th_main[0], THRUST_SECOND_VAC * ThrustAdjust);
 }
 
-void Saturn1b::Timestep (double simt)
+void Saturn1b::Timestep (double simt, double simdt)
 
 {
 	//
@@ -755,7 +758,7 @@ void Saturn1b::Timestep (double simt)
 		return;
 	}
 
-	GenericTimestep(simt);
+	GenericTimestep(simt, simdt);
 
 	if (hAstpDM){
 		if (DestroyAstp) {
@@ -1078,7 +1081,7 @@ void Saturn1b::Timestep (double simt)
 		break;
 
 	default:
-		GenericTimestepStage(simt);
+		GenericTimestepStage(simt, simdt);
 		break;
 	}
 

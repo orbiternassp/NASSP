@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2005/08/16 20:55:23  movieman523
+  *	Added first saturn-specific switch for Xlunar Inject.
+  *	
   *	Revision 1.36  2005/08/15 18:48:50  movieman523
   *	Moved the stage destroy code into a generic function for Saturn V and 1b.
   *	
@@ -593,6 +596,10 @@ double Saturn::SetPitchApo()
 	return cpitch;
 }
 
+//
+// Kill a vessel (typically a stage) based on its distance from us.
+//
+
 void Saturn::KillDist(OBJHANDLE &hvessel)
 
 {
@@ -608,12 +615,17 @@ void Saturn::KillDist(OBJHANDLE &hvessel)
 	}
 }
 
+//
+// Kill a vessel (typically a stage) based on its current altitude.
+//
+
 void Saturn::KillAlt(OBJHANDLE &hvessel, double altVS)
 
 {
-	int getit = oapiGetAltitude(hvessel, &altVS);
+	double CurrentAlt;
+	int getit = oapiGetAltitude(hvessel, &CurrentAlt);
 
-	if ((altVS < 90) && altVS >= 0 ){
+	if ((CurrentAlt < altVS) && CurrentAlt >= 0 ){
 		oapiDeleteVessel(hvessel, GetHandle());
 		hvessel = 0;
 	}
@@ -642,7 +654,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 {
-	Timestep(simt);
+	Timestep(simt, simdt);
 }
 
 void Saturn::clbkSaveState(FILEHANDLE scn)
@@ -729,6 +741,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_float (scn, "IGMST", IGMStartTime);
 	}
 
+	if (stage < CSM_LEM_STAGE) {
+		oapiWriteScenario_int (scn, "LAUNCHSTATE", GetLaunchState());
+	}
+
 	if (stage < CM_STAGE) {
 		oapiWriteScenario_float (scn, "SMFUELLOAD", SM_FuelMass);
 		oapiWriteScenario_float (scn, "SMMASS", SM_EmptyMass);
@@ -779,6 +795,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		}
 	}
 
+	if (ApolloNo == 13) {
+		oapiWriteScenario_int (scn, "A13STATE", GetA13State());
+	}
+
 	if (SIVBPayload != PAYLOAD_LEM) {
 		oapiWriteScenario_int (scn, "S4PL", SIVBPayload);
 	}
@@ -806,23 +826,18 @@ typedef union {
 	struct {
 		unsigned MissionTimerRunning:1;
 		unsigned SIISepState:1;
-		unsigned autopilot:1;
 		unsigned TLIBurnDone:1;
 		unsigned Scorrec:1;
-		unsigned ApolloExploded:1;
 		unsigned Burned:1;
 		unsigned EVA_IP:1;
 		unsigned ABORT_IND:1;
 		unsigned HatchOpen:1;
-		unsigned CryoStir:1;
 		unsigned viewpos:2;
 		unsigned LEMdatatransfer:1;
-		unsigned KranzPlayed:1;
 		unsigned PostSplashdownPlayed:1;
 		unsigned IGMEnabled:1;
 		unsigned stgSM:1;
 		unsigned MissionTimerEnabled:1;
-		unsigned TLIEnabled:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -837,22 +852,17 @@ int Saturn::GetMainState()
 	state.u.MissionTimerRunning = MissionTimerDisplay.IsRunning();
 	state.u.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
 	state.u.SIISepState = SIISepState;
-	state.u.autopilot = autopilot;
 	state.u.TLIBurnDone = TLIBurnDone;
 	state.u.Scorrec = Scorrec;
-	state.u.ApolloExploded = ApolloExploded;
 	state.u.Burned = Burned;
 	state.u.EVA_IP = EVA_IP;
 	state.u.ABORT_IND = ABORT_IND;
 	state.u.HatchOpen = HatchOpen;
-	state.u.CryoStir = CryoStir;
 	state.u.viewpos = viewpos;
 	state.u.LEMdatatransfer = LEMdatatransfer;
-	state.u.KranzPlayed = KranzPlayed;
 	state.u.PostSplashdownPlayed = PostSplashdownPlayed;
 	state.u.IGMEnabled = IGMEnabled;
 	state.u.stgSM = stgSM;
-	state.u.TLIEnabled = TLIEnabled;
 
 	return state.word;
 }
@@ -864,26 +874,93 @@ void Saturn::SetMainState(int s)
 
 	state.word = s;
 	SIISepState = state.u.SIISepState;
-	autopilot = state.u.autopilot;
 	TLIBurnDone = state.u.TLIBurnDone;
 	Scorrec = state.u.Scorrec;
-	ApolloExploded = state.u.ApolloExploded;
 	Burned = state.u.Burned;
 	EVA_IP = state.u.EVA_IP;
 	ABORT_IND = state.u.ABORT_IND;
 	HatchOpen = state.u.HatchOpen;
-	CryoStir = state.u.CryoStir;
 	viewpos = state.u.viewpos;
 	LEMdatatransfer = state.u.LEMdatatransfer;
-	KranzPlayed = (state.u.KranzPlayed != 0);
 	PostSplashdownPlayed = (state.u.PostSplashdownPlayed != 0);
 	IGMEnabled = (state.u.IGMEnabled != 0);
 	stgSM = (state.u.stgSM != 0);
 	MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
 	MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
-	TLIEnabled = (state.u.TLIEnabled != 0);
 }
 
+//
+// State which is only required for Apollo 13
+//
+
+typedef union {
+	struct {
+		unsigned ApolloExploded:1;
+		unsigned CryoStir:1;
+		unsigned KranzPlayed:1;
+	} u;
+	unsigned long word;
+} A13State;
+
+
+int Saturn::GetA13State()
+
+{
+	A13State state;
+
+	state.word = 0;
+	state.u.ApolloExploded = ApolloExploded;
+	state.u.CryoStir = CryoStir;
+	state.u.KranzPlayed = KranzPlayed;
+
+	return state.word;
+}
+
+void Saturn::SetA13State(int s)
+
+{
+	A13State state;
+
+	state.word = s;
+	ApolloExploded = (state.u.ApolloExploded != 0);
+	CryoStir = (state.u.CryoStir != 0);
+	KranzPlayed = (state.u.KranzPlayed != 0);
+}
+
+//
+// State which is only required through the launch process.
+//
+
+typedef union {
+	struct {
+		unsigned autopilot:1;
+		unsigned TLIEnabled:1;
+	} u;
+	unsigned long word;
+} LaunchState;
+
+
+int Saturn::GetLaunchState()
+
+{
+	LaunchState state;
+
+	state.word = 0;
+	state.u.autopilot = autopilot;
+	state.u.TLIEnabled = TLIEnabled;
+
+	return state.word;
+}
+
+void Saturn::SetLaunchState(int s)
+
+{
+	LaunchState state;
+
+	state.word = s;
+	autopilot = (state.u.autopilot != 0);
+	TLIEnabled = (state.u.TLIEnabled != 0);
+}
 
 typedef union {
 	struct {
@@ -1059,6 +1136,16 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
             SwitchState = 0;
 			sscanf (line+9, "%d", &SwitchState);
 			SetMainState(SwitchState);
+		}
+		else if (!strnicmp (line, "A13STATE", 8)) {
+            SwitchState = 0;
+			sscanf (line+8, "%d", &SwitchState);
+			SetMainState(SwitchState);
+		}
+		else if (!strnicmp (line, "LAUNCHSTATE", 11)) {
+            SwitchState = 0;
+			sscanf (line+11, "%d", &SwitchState);
+			SetLaunchState(SwitchState);
 		}
 		else if (!strnicmp (line, "LIGHTSTATE", 10)) {
             SwitchState = 0;
@@ -1478,7 +1565,7 @@ void Saturn::DoLaunch(double simt)
 	}
 }
 
-void Saturn::GenericTimestep(double simt)
+void Saturn::GenericTimestep(double simt, double simdt)
 
 {
 	if (GenericFirstTimestep) {
@@ -1497,10 +1584,8 @@ void Saturn::GenericTimestep(double simt)
 	// Update mission time and mission timer.
 	//
 
-	double deltat = oapiGetSimStep();
-
-	MissionTime += deltat;
-	MissionTimerDisplay.Timestep(simt, deltat);
+	MissionTime += simdt;
+	MissionTimerDisplay.Timestep(simt, simdt);
 
 	//
 	// Timestep tracking.
@@ -1551,7 +1636,7 @@ void Saturn::GenericTimestep(double simt)
 	aSpeed = actualVEL/3600*1000;
 	aALT = actualALT;
 
-	dTime = simt - aTime;
+	double dTime = simt - aTime;
 
 	if(dTime > 0.2) {
 
@@ -2035,7 +2120,7 @@ void Saturn::LaunchCountdown(double simt)
 	}
 }
 
-void Saturn::GenericTimestepStage(double simt)
+void Saturn::GenericTimestepStage(double simt, double simdt)
 
 {
 	//
