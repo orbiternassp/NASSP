@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2005/08/17 00:01:59  movieman523
+  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
+  *	
   *	Revision 1.37  2005/08/16 20:55:23  movieman523
   *	Added first saturn-specific switch for Xlunar Inject.
   *	
@@ -159,7 +162,7 @@
 
 //extern FILE *PanelsdkLogFile;
 
-Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, imu), dsky(soundlib, agc), imu(agc), cws(SMasterAlarm)
+Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, imu), dsky(soundlib, agc, 015), dsky2(soundlib, agc, 016), imu(agc), cws(SMasterAlarm)
 
 {
 	InitSaturnCalled = false;

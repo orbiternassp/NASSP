@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/11 01:27:26  movieman523
+  *	Added initial Virtual AGC support.
+  *	
   *	Revision 1.3  2005/08/09 02:28:26  movieman523
   *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
   *	
@@ -38,7 +41,7 @@ class DSKY
 {
 public:
 
-	DSKY(SoundLib &s, ApolloGuidance &computer);
+	DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel);
 	virtual ~DSKY();
 
 	void Init();
@@ -201,6 +204,12 @@ protected:
 	//
 
 	ApolloGuidance &agc;
+
+	//
+	// I/O channel to use for key-codes.
+	//
+
+	int KeyCodeIOChannel;
 
 	//
 	// Sound library.
