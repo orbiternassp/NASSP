@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2005/08/17 22:54:26  movieman523
+  *	Added ELS and CM RCS switches.
+  *	
   *	Revision 1.53  2005/08/17 00:01:59  movieman523
   *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
   *	
@@ -873,7 +876,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[5],						g_Param.col[5]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHGUARDS],			g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[14],						g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_ALTIMETER],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[15],						g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THRUSTMETER],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SEQUENCERSWITCHES],	g_Param.col[4]);
@@ -1263,7 +1266,8 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSHelium2CSwitch.Init (260, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
 	SMRCSHelium2DSwitch.Init (303, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
 
-	CMUplinkSwitch.Init(0, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+	CMUplinkSwitch.Init(0, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row, &agc);
+	CMUplinkSwitch.SetChannelData(33, 10, false);	// Down is 'Block Uplink Input'
 	IUUplinkSwitch.Init(43, 20, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
 	CMRCSPressSwitch.Init(86, 23, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
 	CMRCSPressSwitch.InitGuard(86, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
@@ -1948,125 +1952,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-/*	case AID_CSM_SIVB_SEP_SWITCH:
-		if(event & PANEL_MOUSE_RBDOWN){
-			if(mx <69 ){
-				Cswitch5 = !Cswitch5;
-				GuardClick();
-			}
-		}else if(event & PANEL_MOUSE_LBDOWN){
-			if(mx <69 && Cswitch5){
-				if(my >3 && my <16 && !Sswitch5){
-					Sswitch5 = true;
-					ButtonClick();
-				}else if(my >16 && my <28 && Sswitch5 && Cswitch5){
-					Sswitch5 = false;
-					ButtonClick();
-				}
-			}
-		}
-		return true;
-
-	case AID_CMRCS_HE_DUMP_SWITCH:
-		if(event & PANEL_MOUSE_RBDOWN){
-			if(mx <69 ){
-				CMRHGswitch = !CMRHGswitch;
-				GuardClick();
-			}
-		}else if(event & PANEL_MOUSE_LBDOWN){
-			if(mx <69 && CMRHGswitch){
-				if(my >3 && my <16 && !CMRHDswitch){
-					CMRHDswitch = true;
-					ButtonClick();
-				}else if(my >16 && my <28 && CMRHDswitch && CMRHGswitch){
-					CMRHDswitch = false;
-					ButtonClick();
-				}
-			}
-		}
-		return true;
-
-	case AID_SIVB_LEM_SEP_SWITCH:
-		if(event & PANEL_MOUSE_RBDOWN){
-			if(mx <25 ){
-				RPCswitch = !RPCswitch;
-				GuardClick();
-			}
-		}else if(event & PANEL_MOUSE_LBDOWN){
-			if(mx <25 && RPCswitch){
-				if(my >16 && my <27 && !RPswitch16){
-					RPswitch16 = true;
-					SwitchClick();
-				}else if(my >27 && my <37 && RPswitch16 && RPCswitch){
-					RPCswitch = false;
-					SwitchClick();
-				}
-			}
-		}
-		return true;
-
-	case AID_SWITCH_JET:
-		if(event & PANEL_MOUSE_RBDOWN){
-			if(mx <25 ){
-				Cswitch1 = !Cswitch1;
-				GuardClick();
-			}
-			if(mx <57 && mx>33 ){
-				Cswitch2 = !Cswitch2;
-				GuardClick();
-			}
-			if(mx <89 && mx>65 ){
-				Cswitch3 = !Cswitch3;
-				GuardClick();
-			}
-			if(mx <121 && mx>97 ){
-				Cswitch4 = !Cswitch4;
-				GuardClick();
-			}
-
-		}else if(event & PANEL_MOUSE_LBDOWN){
-			if(mx <25 && Cswitch1){
-				if(my >16 && my <26 && !Sswitch1){
-					Sswitch1 = true;
-					DPswitch = false;
-					SwitchClick();
-				}else if(my >26 && my <36 && Sswitch1 && Cswitch1){
-					Sswitch1 = false;
-					SwitchClick();
-				}
-			}
-			if(mx <57 && mx>33 && Cswitch2){
-				if(my >16 && my <26 && !Sswitch2){
-					Sswitch2 = true;
-					DPswitch = false;
-					SwitchClick();
-				}else if(my >26 && my <36 && Sswitch2 && Cswitch2){
-				Sswitch2 = false;
-					SwitchClick();
-				}
-			}
-			if(mx <89 && mx>65 && Cswitch3){
-				if(my >16 && my <26 && !Sswitch3){
-				Sswitch3 = true;
-					SwitchClick();
-				}else if(my >26 && my <36 && Sswitch3 && Cswitch3){
-				Sswitch3 = false;
-					SwitchClick();
-				}
-			}
-			if(mx <121 && mx>97 && Cswitch4){
-				if(my >16 && my <26 && !Sswitch4){
-				Sswitch4 = true;
-					SwitchClick();
-				}else if(my >26 && my <36 && Sswitch4 && Cswitch4){
-				Sswitch4 = false;
-					SwitchClick();
-				}
-			}
-		}
-		return true;
-*/
-
 	case AID_FCSM_SWITCH:
 	if (my >=7 && my <=18 ){
 			    if (mx > 14 && mx < 55 && !FCSMswitch){
@@ -2193,32 +2078,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-/*	case AID_FUEL_CELL_RADIATORS:
-		if (my >=53 && my <=64 ){
-			if (mx > 9 && mx < 21 && !FCRswitch1){
-				SwitchClick();
-				FCRswitch1=true;
-			}else if (mx > 41 && mx < 53 && !FCRswitch2){
-				SwitchClick();
-				FCRswitch2=true;
-			}else if (mx > 74 && mx < 86 && !FCRswitch3){
-				SwitchClick();
-				FCRswitch3=true;
-			}
-		}else if (my >=63 && my <=74 ){
-			if (mx > 9 && mx < 21 && FCRswitch1){
-				SwitchClick();
-				FCRswitch1=false;
-			}else if (mx > 41 && mx < 53 && FCRswitch2){
-				SwitchClick();
-				FCRswitch2=false;
-			}else if (mx > 74 && mx < 86 && FCRswitch3){
-				SwitchClick();
-				FCRswitch3=false;
-			}
-		}
-		return true;
-*/
 	case AID_FUEL_CELL_BUS_SWITCHES:
 		if (my >=47 && my <=58 ){
 			if (mx > 9 && mx < 21 && !FCBswitch1){
@@ -2265,50 +2124,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-/*	case AID_FUEL_CELL_SWITCHES:
-		if (my >=49 && my <=60 ){
-			if (mx > 9 && mx < 21 && !FCswitch1){
-				SwitchClick();
-				FCswitch1=true;
-			}else if (mx > 41 && mx < 53 && !FCswitch2){
-				SwitchClick();
-				FCswitch2=true;
-			}else if (mx > 74 && mx < 86 && !FCswitch3){
-				SwitchClick();
-				FCswitch3=true;
-			}else if (mx > 105 && mx < 117 && !FCswitch4){
-				SwitchClick();
-				FCswitch4=true;
-			}else if (mx > 146 && mx < 158 && !FCswitch5){
-				SwitchClick();
-				FCswitch5=true;
-			}else if (mx > 189 && mx < 201 && !FCswitch6){
-				SwitchClick();
-				FCswitch6=true;
-			}
-		}else if (my >=59 && my <=70 ){
-			if (mx > 9 && mx < 21 && FCswitch1){
-				SwitchClick();
-				FCswitch1=false;
-			}else if (mx > 41 && mx < 53 && FCswitch2){
-				SwitchClick();
-				FCswitch2=false;
-			}else if (mx > 74 && mx < 86 && FCswitch3){
-				SwitchClick();
-				FCswitch3=false;
-			}else if (mx > 105 && mx < 117 && FCswitch4){
-				SwitchClick();
-				FCswitch4=false;
-			}else if (mx > 146 && mx < 158 && FCswitch5){
-				SwitchClick();
-				FCswitch5=false;
-			}else if (mx > 189 && mx < 201 && FCswitch6){
-				SwitchClick();
-				FCswitch6=false;
-			}
-		}
-		return true;
-*/
 	case AID_CM_RCS_LOGIC:
 		if (my >=7 && my <=18 ){
 			if (mx > 9 && mx < 21 && !P113switch){
@@ -2981,169 +2796,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-/*	case AID_CSM_SIVB_SEP_SWITCH:
-			if(Cswitch5){
-			oapiBlt(surf,srf[17],0,0,0,32,69,30);
-			if(Sswitch5){
-				oapiBlt(surf,srf[17],17,3,70,25,26,24);
-			}else{
-				oapiBlt(surf,srf[17],17,3,70,0,26,24);
-			}
-		}else{
-			oapiBlt(surf,srf[17],0,0,0,0,69,31);
-			Sswitch5=false;
-		}
-		return true;
-
-	case AID_CMRCS_HE_DUMP_SWITCH:
-			if(CMRHGswitch){
-			oapiBlt(surf,srf[17],0,0,124,32,68,30);
-			if(CMRHDswitch){
-				oapiBlt(surf,srf[17],26,3,97,25,26,24);
-			}else{
-				oapiBlt(surf,srf[17],26,3,97,0,26,24);
-			}
-		}else{
-			oapiBlt(surf,srf[17],0,0,124,0,68,31);
-			CMRHDswitch=false;
-		}
-		return true;
-
-	case AID_SIVB_LEM_SEP_SWITCH:
-		if(RPCswitch){
-			oapiBlt(surf,srf[8],0,0,25,0,25,45);
-			if(RPswitch16){
-				oapiBlt(surf,srf[6],1,16,0,0,23,20);
-			}else{
-				oapiBlt(surf,srf[6],1,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],0,0,0,0,25,45);
-			RPswitch16=false;
-		}
-		return true;
-
-	case AID_SWITCH_JET:
-		if(Cswitch1){
-			oapiBlt(surf,srf[8],0,0,25,0,25,45);
-			if(Sswitch1){
-				oapiBlt(surf,srf[6],1,16,0,0,23,20);
-			}else{
-				oapiBlt(surf,srf[6],1,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],0,0,0,0,25,45);
-			Sswitch1=false;
-		}
-		if(Cswitch2){
-			oapiBlt(surf,srf[8],32,0,25,0,25,45);
-			if(Sswitch2){
-			oapiBlt(surf,srf[6],33,16,0,0,23,20);
-			}else{
-			oapiBlt(surf,srf[6],33,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],32,0,0,0,25,45);
-			Sswitch2=false;
-		}
-		if(Cswitch3){
-			oapiBlt(surf,srf[8],64,0,75,0,25,45);
-			if(Sswitch3){
-			oapiBlt(surf,srf[6],65,16,0,0,23,20);
-			}else{
-			oapiBlt(surf,srf[6],65,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],64,0,50,0,25,45);
-			Sswitch3=false;
-		}
-		if(Cswitch4){
-			oapiBlt(surf,srf[8],96,0,75,0,25,45);
-			if(Sswitch4){
-			oapiBlt(surf,srf[6],97,16,0,0,23,20);
-			}else{
-			oapiBlt(surf,srf[6],97,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],96,0,50,0,25,45);
-			Sswitch4=false;
-		}
-		return true;
-
-	case AID_INDICATOR1:
-		if(stage < CSM_LEM_STAGE){
-			if (autopilot){
-				oapiBlt(surf,srf[1],0,0,105,0,105,18);
-			}else{
-				oapiBlt(surf,srf[1],0,0,210,0,105,18);
-			}
-		}else{
-			oapiBlt(surf,srf[1],0,0,0,0,105,18);
-		}
-		if(GetNavmodeState(NAVMODE_KILLROT)){
-			oapiBlt(surf,srf[1],0,91,105,95,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,91,0,95,105,18);
-		}
-		if(GetNavmodeState(NAVMODE_PROGRADE)){
-			oapiBlt(surf,srf[1],0,19,105,21,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,19,0,21,105,18);
-		}if(GetNavmodeState(NAVMODE_RETROGRADE)){
-			oapiBlt(surf,srf[1],0,37,105,39,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,37,0,39,105,18);
-		}if(GetNavmodeState(NAVMODE_NORMAL)){
-			oapiBlt(surf,srf[1],0,54,105,56,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,54,0,56,105,18);
-		}if(GetNavmodeState(NAVMODE_ANTINORMAL)){
-			oapiBlt(surf,srf[1],0,72,105,74,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,72,0,74,105,18);
-		}
-		if(GetNavmodeState(NAVMODE_HLEVEL)){
-			oapiBlt(surf,srf[1],0,108,105,112,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,108,0,112,105,18);
-		}
-		if(GetNavmodeState(NAVMODE_HOLDALT)){
-			oapiBlt(surf,srf[1],0,126,105,129,105,14);
-		}else{
-			oapiBlt(surf,srf[1],0,126,0,129,105,14);
-		}
-		return true;
-
-	case AID_INDICATOR2:
-
-		if(GetNavmodeState(NAVMODE_KILLROT)){
-			oapiBlt(surf,srf[1],0,69,105,95,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,69,0,95,105,18);
-		}
-		if(GetNavmodeState(NAVMODE_PROGRADE)){
-			oapiBlt(surf,srf[1],0,1,105,21,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,1,0,21,105,18);
-		}
-		if(GetNavmodeState(NAVMODE_RETROGRADE)){
-			oapiBlt(surf,srf[1],0,19,105,39,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,19,0,39,105,18);
-		}
-		if(GetNavmodeState(NAVMODE_NORMAL)){
-			oapiBlt(surf,srf[1],0,35,105,56,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,35,0,56,105,18);
-		}
-		if(GetNavmodeState(NAVMODE_ANTINORMAL)){
-			oapiBlt(surf,srf[1],0,52,105,74,105,18);
-		}else{
-			oapiBlt(surf,srf[1],0,52,0,74,105,18);
-		}
-
-		return true;
-*/
 	case AID_GAUGES1:
 		double DispValue;
 		if (!ph_sps){
@@ -3372,36 +3024,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-/*	case AID_CABIN_GAUGES:
-		if(RPswitch12){
-			oapiBlt(surf,srf[22],0,0,0,0,164,88);
-		}
-		return true;
-
-	case AID_FUEL_CELL_RADIATORS:
-		if(FCRswitch1){
-			oapiBlt(surf,srf[6],3,53,0,0,23,20);
-			oapiBlt(surf,srf[13],6,0,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],3,53,23,0,23,20);
-			oapiBlt(surf,srf[13],6,0,38,0,19,20);
-		}
-		if(FCRswitch2){
-			oapiBlt(surf,srf[6],35,53,0,0,23,20);
-			oapiBlt(surf,srf[13],37,0,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],35,53,23,0,23,20);
-			oapiBlt(surf,srf[13],37,0,38,0,19,20);
-		}
-		if(FCRswitch3){
-			oapiBlt(surf,srf[6],68,53,0,0,23,20);
-			oapiBlt(surf,srf[13],69,0,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],68,53,23,0,23,20);
-			oapiBlt(surf,srf[13],69,0,38,0,19,20);
-		}
-		return true;
-*/
 	case AID_FUEL_CELL_BUS_SWITCHES:
 		if(FCBswitch1){
 			oapiBlt(surf,srf[6],3,47,0,0,23,20);
@@ -3442,52 +3064,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[13],36,0,38,0,19,20);
 		}
 		return true;
-
-/*	case AID_FUEL_CELL_SWITCHES:
-		if(FCswitch1){
-			oapiBlt(surf,srf[6],3,49,0,0,23,20);
-			oapiBlt(surf,srf[13],19,0,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],3,49,23,0,23,20);
-			oapiBlt(surf,srf[13],19,0,38,0,19,20);
-		}
-		if(FCswitch2){
-			oapiBlt(surf,srf[6],35,49,0,0,23,20);
-			oapiBlt(surf,srf[13],50,0,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],35,49,23,0,23,20);
-			oapiBlt(surf,srf[13],50,0,38,0,19,20);
-		}
-		if(FCswitch3){
-			oapiBlt(surf,srf[6],68,49,0,0,23,20);
-			oapiBlt(surf,srf[13],81,0,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],68,49,23,0,23,20);
-			oapiBlt(surf,srf[13],81,0,38,0,19,20);
-		}
-		if(FCswitch4){
-			oapiBlt(surf,srf[6],99,49,0,0,23,20);
-			oapiBlt(surf,srf[13],113,0,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],99,49,23,0,23,20);
-			oapiBlt(surf,srf[13],113,0,38,0,19,20);
-		}
-		if(FCswitch5){
-			oapiBlt(surf,srf[6],140,49,0,0,23,20);
-			oapiBlt(surf,srf[13],145,0,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],140,49,23,0,23,20);
-			oapiBlt(surf,srf[13],145,0,38,0,19,20);
-		}
-		if(FCswitch6){
-			oapiBlt(surf,srf[6],183,49,0,0,23,20);
-			oapiBlt(surf,srf[13],177,0,0,0,19,20);
-		}else{
-			oapiBlt(surf,srf[6],183,49,23,0,23,20);
-			oapiBlt(surf,srf[13],177,0,38,0,19,20);
-		}
-		return true;
-*/
 
 	case AID_05G_LIGHT:
 		if(P115switch){
@@ -3561,39 +3137,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-/*	case AID_LIGHTS_LAUNCHER:
-		if (LAUNCHIND[0]){
-			oapiBlt(surf,srf[11],0,0,56,0,27,22);
-		}else{
-			oapiBlt(surf,srf[11],0,0,0,0,27,22);
-		}
-		if (LAUNCHIND[1]){
-			oapiBlt(surf,srf[11],79,0,84,0,27,22);
-		}else{
-			oapiBlt(surf,srf[11],79,0,28,0,27,22);
-		}
-		if (LAUNCHIND[2]){
-			oapiBlt(surf,srf[11],0,34,56,23,27,22);
-		}else{
-			oapiBlt(surf,srf[11],0,34,0,23,27,22);
-		}
-		if (LAUNCHIND[3]){
-		oapiBlt(surf,srf[11],79,34,84,23,27,22);
-		}else{
-		oapiBlt(surf,srf[11],79,34,28,23,27,22);
-		}
-		if (LAUNCHIND[4]){
-		oapiBlt(surf,srf[11],0,68,56,46,27,22);
-		}else{
-		oapiBlt(surf,srf[11],0,68,0,46,27,22);
-		}
-		if (LAUNCHIND[5]){
-		oapiBlt(surf,srf[11],79,68,84,46,27,22);
-		}else{
-		oapiBlt(surf,srf[11],79,68,28,46,27,22);
-		}
-		return true;
-*/
 	case AID_MFDDOCK:
 		if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
 			oapiBlt(surf,srf[24], 0, 0, 0, 0, 301, 251);
@@ -3734,8 +3277,8 @@ void Saturn::InitSwitches() {
 	SMRCSHelium2CSwitch.Register(PSH, "SMRCSHelium2CSwitch", 1);
 	SMRCSHelium2DSwitch.Register(PSH, "SMRCSHelium2DSwitch", 1);
 
-	CMUplinkSwitch.Register(PSH, "CMUplinkSwitch", 0);
-	IUUplinkSwitch.Register(PSH, "CMUplinkSwitch", 0);
+	CMUplinkSwitch.Register(PSH, "CMUplinkSwitch", 1);
+	IUUplinkSwitch.Register(PSH, "CMUplinkSwitch", 1);
 	CMRCSPressSwitch.Register(PSH, "CMRCSPressSwitch", 0, 0);
 	SMRCSIndSwitch.Register(PSH, "SMRCSIndSwitch", 0);
 
@@ -4025,9 +3568,6 @@ void Saturn::InitSwitches() {
 
 	SRHswitch1 = true;
 	SRHswitch2 = true;
-
-	//CMRHDswitch = false;
-	//CMRHGswitch = false;
 
 	CMCswitch = true;
 

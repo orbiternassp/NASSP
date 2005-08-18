@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2005/08/17 22:54:26  movieman523
+  *	Added ELS and CM RCS switches.
+  *	
   *	Revision 1.45  2005/08/17 00:01:59  movieman523
   *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
   *	
@@ -425,7 +428,7 @@ protected:
 	ToggleSwitch SMRCSHelium2CSwitch;
 	ToggleSwitch SMRCSHelium2DSwitch;
 
-	ToggleSwitch CMUplinkSwitch;
+	AGCIOSwitch CMUplinkSwitch;
 	ToggleSwitch IUUplinkSwitch;
 
 	GuardedToggleSwitch CMRCSPressSwitch;
@@ -1086,7 +1089,13 @@ protected:
 	// Hardware support.
 	//
 
+	//
+	// CSM has two DSKYs: one is in the main panel, the other is below. For true realism we should support
+	// both.
+	//
+
 	DSKY dsky;
+	DSKY dsky2;
 	CSMcomputer agc;
 	IMU imu;
 	CSMCautionWarningSystem cws;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/08/11 01:27:26  movieman523
+  *	Added initial Virtual AGC support.
+  *	
   *	Revision 1.8  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -60,13 +63,16 @@
 #include "dsky.h"
 #include "ioChannels.h"
 
+#include "nasspdefs.h"
+
 static char TwoSpace[] = "  ";
 static char SixSpace[] = "      ";
 
-DSKY::DSKY(SoundLib &s, ApolloGuidance &computer) : soundlib(s), agc(computer)
+DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), agc(computer)
 
 {
 	Reset();
+	KeyCodeIOChannel = IOChannel;
 }
 
 void DSKY::Reset()
@@ -103,7 +109,7 @@ void DSKY::Reset()
 	// that it will flash the digits prior to launch.
 	//
 
-	LastFlashTime = (-100000);
+	LastFlashTime = MINUS_INFINITY;
 }
 
 DSKY::~DSKY()
@@ -144,7 +150,7 @@ void DSKY::KeyClick()
 void DSKY::SendKeyCode(int val)
 
 {
-	agc.SetInputChannel(015, val);
+	agc.SetInputChannel(KeyCodeIOChannel, val);
 }
 
 void DSKY::KeyRel()
