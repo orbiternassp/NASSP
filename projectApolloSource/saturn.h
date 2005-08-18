@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2005/08/18 19:12:21  movieman523
+  *	Added Event Timer switches and null Event Timer class.
+  *	
   *	Revision 1.47  2005/08/18 00:22:53  movieman523
   *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
   *	
@@ -535,6 +538,13 @@ protected:
 	TimerUpdateSwitch EventTimerSecondsSwitch;
 
 	//
+	// Main chute release switch.
+	//
+
+	SwitchRow MainReleaseRow;
+	GuardedToggleSwitch MainReleaseSwitch;
+
+	//
 	// OLD Switches: delete these as and when we can do so.
 	//
 	// old stuff begin
@@ -606,9 +616,6 @@ protected:
 	bool FCSMswitch;
 
 	bool GDCswitch;
-
-	bool MRswitch;
-	bool MRCswitch;
 
 	bool TJ1switch;
 	bool TJ1Cswitch;

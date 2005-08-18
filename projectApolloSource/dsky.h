@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/08/18 20:07:19  spacex15
+  *	fixed click sound missing in lm dsky
+  *	
   *	Revision 1.5  2005/08/18 00:22:53  movieman523
   *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
   *	
@@ -44,7 +47,7 @@ class DSKY
 {
 public:
 
-	DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel);
+	DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel = 015);
 	virtual ~DSKY();
 
 	void Init();
