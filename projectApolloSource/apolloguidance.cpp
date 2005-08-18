@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/08/13 01:09:43  movieman523
+  *	Display NO ATT light when IMU is caged.
+  *	
   *	Revision 1.30  2005/08/13 00:09:43  movieman523
   *	Added IMU Cage switch
   *	
@@ -2591,6 +2594,13 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 		case 015:
 			ProcessInputChannel15(val);
 			break;
+		//
+		// Channel 016 is slightly different to 015, but for now we'll
+		// just call the same function.
+		//
+		case 016:
+			ProcessInputChannel15(val);
+			break;
 		}
 	}
 }
@@ -2657,7 +2667,7 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 	switch (channel)
 	{
 	case 010:
-		ProcessChannel10();
+		ProcessChannel10(val);
 		break;
 
 	case 011:
@@ -2693,7 +2703,7 @@ void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 	switch (channel)
 	{
 	case 010:
-		ProcessChannel10();
+		ProcessChannel10(OutputChannel[010]);
 		break;
 
 	case 011:

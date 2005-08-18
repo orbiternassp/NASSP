@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/08/18 15:07:17  lazyd
+  *	Added third parameter to dsky
+  *	
   *	Revision 1.29  2005/08/14 17:04:41  tschachim
   *	Bugfix SIVB separation, sorry
   *	
@@ -932,7 +935,7 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			sscanf (line+8, "%d", &ApolloNo);
 		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
-			dsky.LoadState(scn);
+			dsky.LoadState(scn, DSKY_END_STRING);
 		}
 		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
 			agc.LoadState(scn);
@@ -1053,7 +1056,7 @@ void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
-	dsky.SaveState(scn);
+	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
 	// save the state of the switches

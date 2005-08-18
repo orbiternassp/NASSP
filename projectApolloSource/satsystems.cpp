@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/15 19:25:03  movieman523
+  *	Added CSM attitude control switches and removed old ones.
+  *	
   *	Revision 1.15  2005/08/15 02:37:57  movieman523
   *	SM RCS is now wired up.
   *	
@@ -114,6 +117,7 @@ void Saturn::SystemsTimestep(double simt) {
 	if (stage >= PRELAUNCH_STAGE) {
 
 		dsky.Timestep(MissionTime);
+		dsky2.Timestep(MissionTime);
 		agc.Timestep(MissionTime);
 		imu.Timestep(MissionTime);
 		cws.TimeStep(MissionTime);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/18 20:07:19  spacex15
+  *	fixed click sound missing in lm dsky
+  *	
   *	Revision 1.10  2005/08/18 00:22:52  movieman523
   *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
   *	
@@ -315,119 +318,6 @@ char DSKY::ValueChar(unsigned val)
 		return '9';
 	}
 	return ' ';
-}
-
-void DSKY::ProcessChannel10(int val)
-
-{
-	ChannelValue10 out_val;
-	char	C1, C2;
-
-	out_val.Value = val;
-
-	C1 = ValueChar(out_val.Bits.c);
-	C2 = ValueChar(out_val.Bits.d);
-
-	switch (out_val.Bits.a) {
-
-	case 11:
-		Prog[0] = C1;
-		Prog[1] = C2;
-		break;
-
-	case 10:
-		Verb[0] = C1;
-		Verb[1] = C2;
-		break;
-
-	case 9:
-		Noun[0] = C1;
-		Noun[1] = C2;
-		break;
-	
-	case 8:
-		R1[1] = C2;
-		break;
-
-	case 7:
-		R1[2] = C1;
-		R1[3] = C2;
-		if (out_val.Bits.b) {
-			R1[0] = '+';
-		}
-		else if (R1[0] == '+') {
-			R1[0] = ' ';
-		}
-		break;
-
-	case 6:
-		R1[4] = C1;
-		R1[5] = C2;
-		if (out_val.Bits.b) {
-			R1[0] = '-';
-		}
-		else if (R1[0] == '-') {
-			R1[0] = ' ';
-		}
-		break;
-
-	case 5:
-		R2[1] = C1;
-		R2[2] = C2;
-		if (out_val.Bits.b) {
-			R2[0] = '+';
-		}
-		else if (R2[0] == '+') {
-			R2[0] = ' ';
-		}
-		break;
-
-	case 4:
-		R2[3] = C1;
-		R2[4] = C2;
-		if (out_val.Bits.b) {
-			R2[0] = '-';
-		}
-		else if (R2[0] == '-') {
-			R2[0] = ' ';
-		}
-		break;
-
-	case 3:
-		R2[5] = C1;
-		R3[1] = C2;
-		break;
-
-	case 2:
-		R3[2] = C1;
-		R3[3] = C2;
-		if (out_val.Bits.b) {
-			R3[0] = '+';
-		}
-		else if (R3[0] == '+') {
-			R3[0] = ' ';
-		}
-		break;
-
-	case 1:
-		R3[4] = C1;
-		R3[5] = C2;
-		if (out_val.Bits.b) {
-			R3[0] = '-';
-		}
-		else if (R3[0] == '-') {
-			R3[0] = ' ';
-		}
-		break;
-
-	// 12 - set light states.
-	case 12:
-		SetNoAtt((out_val.Value & (1 << 3)) != 0);
-		SetGimbalLock((out_val.Value & (1 << 5)) != 0);
-		SetTracker((out_val.Value & (1 << 7)) != 0);
-		SetProg((out_val.Value & (1 << 8)) != 0);
-		break;
-	}
 }
 
 void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit)
@@ -798,10 +688,10 @@ typedef union
 	unsigned long word;
 } DSKYState;
 
-void DSKY::SaveState(FILEHANDLE scn)
+void DSKY::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 
 {
-	oapiWriteLine(scn, DSKY_START_STRING);
+	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_string (scn, "PROG", Prog);
 	oapiWriteScenario_string (scn, "VERB", Verb);
 	oapiWriteScenario_string (scn, "NOUN", Noun);
@@ -835,17 +725,18 @@ void DSKY::SaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
-	oapiWriteLine(scn, DSKY_END_STRING);
+	oapiWriteLine(scn, end_str);
 }
 
 
-void DSKY::LoadState(FILEHANDLE scn)
+void DSKY::LoadState(FILEHANDLE scn, char *end_str)
 
 {
 	char *line;
+	int end_len = strlen (end_str);
 
 	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp(line, DSKY_END_STRING, sizeof(DSKY_END_STRING)))
+		if (!strnicmp(line, end_str, end_len))
 			return;
 		if (!strnicmp (line, "PROG", 4)) {
 			strncpy (Prog, line+5, 2);
@@ -886,5 +777,193 @@ void DSKY::LoadState(FILEHANDLE scn)
 			AltLight = (state.u.AltLight != 0);
 			VelLight = (state.u.VelLight != 0);
 		}
+	}
+}
+
+//
+// I/O channel processing.
+//
+
+
+void DSKY::ProcessChannel11(int val)
+
+{
+	ChannelValue11 val11;
+
+	val11.Value = val;
+	SetCompActy(val11.Bits.LightComputerActivity);
+	SetUplink(val11.Bits.LightUplink);
+	SetTemp(val11.Bits.LightTempCaution);
+	SetKbRel(val11.Bits.LightKbRel);
+	SetOprErr(val11.Bits.LightOprErr);
+
+	if (val11.Bits.FlashVerbNoun) {
+		SetVerbDisplayFlashing();
+		SetNounDisplayFlashing();
+	}
+	else {
+		ClearVerbDisplayFlashing();
+		ClearNounDisplayFlashing();
+	}
+}
+
+void DSKY::ProcessChannel11Bit(int bit, bool val)
+
+{
+	//
+	// Channel 011 has bits to control the lights on the DSKY.
+	//
+
+	switch (bit) {
+
+	// 2 - Comp Acty
+	case 2:
+		SetCompActy(val);
+		break;
+
+	// 3 - Uplink
+	case 3:
+		SetUplink(val);
+		break;
+
+	// 4 - Temp caution
+	case 4:
+		SetTemp(val);
+		break;
+
+	// 5 - Kbd Rel
+	case 5:
+		SetKbRel(val);
+		break;
+
+	// 6 - flash verb and noun
+	case 6:
+		if (val) {
+			SetVerbDisplayFlashing();
+			SetNounDisplayFlashing();
+		}
+		else {
+			ClearVerbDisplayFlashing();
+			ClearNounDisplayFlashing();
+		}
+		break;
+
+	// 7 - Opr Err
+	case 7:
+		SetOprErr(val);
+		break;
+	}
+}
+
+void DSKY::ProcessChannel10(int val)
+
+{
+	ChannelValue10 out_val;
+	char	C1, C2;
+
+	out_val.Value = val;
+
+	C1 = ValueChar(out_val.Bits.c);
+	C2 = ValueChar(out_val.Bits.d);
+
+	switch (out_val.Bits.a) {
+
+	case 11:
+		Prog[0] = C1;
+		Prog[1] = C2;
+		break;
+
+	case 10:
+		Verb[0] = C1;
+		Verb[1] = C2;
+		break;
+
+	case 9:
+		Noun[0] = C1;
+		Noun[1] = C2;
+		break;
+	
+	case 8:
+		R1[1] = C2;
+		break;
+
+	case 7:
+		R1[2] = C1;
+		R1[3] = C2;
+		if (out_val.Bits.b) {
+			R1[0] = '+';
+		}
+		else if (R1[0] == '+') {
+			R1[0] = ' ';
+		}
+		break;
+
+	case 6:
+		R1[4] = C1;
+		R1[5] = C2;
+		if (out_val.Bits.b) {
+			R1[0] = '-';
+		}
+		else if (R1[0] == '-') {
+			R1[0] = ' ';
+		}
+		break;
+
+	case 5:
+		R2[1] = C1;
+		R2[2] = C2;
+		if (out_val.Bits.b) {
+			R2[0] = '+';
+		}
+		else if (R2[0] == '+') {
+			R2[0] = ' ';
+		}
+		break;
+
+	case 4:
+		R2[3] = C1;
+		R2[4] = C2;
+		if (out_val.Bits.b) {
+			R2[0] = '-';
+		}
+		else if (R2[0] == '-') {
+			R2[0] = ' ';
+		}
+		break;
+
+	case 3:
+		R2[5] = C1;
+		R3[1] = C2;
+		break;
+
+	case 2:
+		R3[2] = C1;
+		R3[3] = C2;
+		if (out_val.Bits.b) {
+			R3[0] = '+';
+		}
+		else if (R3[0] == '+') {
+			R3[0] = ' ';
+		}
+		break;
+
+	case 1:
+		R3[4] = C1;
+		R3[5] = C2;
+		if (out_val.Bits.b) {
+			R3[0] = '-';
+		}
+		else if (R3[0] == '-') {
+			R3[0] = ' ';
+		}
+		break;
+
+	// 12 - set light states.
+	case 12:
+		SetNoAtt((out_val.Value & (1 << 3)) != 0);
+		SetGimbalLock((out_val.Value & (1 << 5)) != 0);
+		SetTracker((out_val.Value & (1 << 7)) != 0);
+		SetProg((out_val.Value & (1 << 8)) != 0);
+		break;
 	}
 }

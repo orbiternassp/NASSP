@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/13 20:20:17  movieman523
+  *	Created MissionTimer class and wired it into the LEM and CSM.
+  *	
   *	Revision 1.12  2005/08/13 01:09:43  movieman523
   *	Display NO ATT light when IMU is caged.
   *	
@@ -81,7 +84,7 @@
 
 static const double ERADIUS2 = (ERADIUS * ERADIUS * 1000000);
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s, display, im, "Config/ProjectApollo/Colossus249.bin")
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im) : ApolloGuidance(s, display, im, "Config/ProjectApollo/Colossus249.bin"), dsky2(display2)
 
 {
 	BurnTime = 0;
@@ -1372,3 +1375,29 @@ void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 		break;
 	}
 }
+
+//
+// We need to pass these I/O channels to both DSKYs.
+//
+
+void CSMcomputer::ProcessChannel10(int val)
+
+{
+	dsky.ProcessChannel10(val);
+	dsky2.ProcessChannel10(val);
+}
+
+void CSMcomputer::ProcessChannel11Bit(int bit, bool val)
+
+{
+	dsky.ProcessChannel11Bit(bit, val);
+	dsky2.ProcessChannel11Bit(bit, val);
+}
+
+void CSMcomputer::ProcessChannel11(int val)
+
+{
+	dsky.ProcessChannel11(val);
+	dsky2.ProcessChannel11(val);
+}
+
