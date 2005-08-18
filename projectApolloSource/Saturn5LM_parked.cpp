@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/08/14 17:04:41  tschachim
+  *	Bugfix SIVB separation, sorry
+  *	
   *	Revision 1.28  2005/08/14 16:08:20  tschachim
   *	LM is now a VESSEL2
   *	Changed panel restore mechanism because the CSM mechanism
@@ -226,7 +229,7 @@ LanderVessel::LanderVessel(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel)
 	// Nothing special to do.
 }
 
-sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), dsky(soundlib, agc), agc(soundlib, dsky, imu), imu(agc)
+sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), dsky(soundlib, agc, 015), agc(soundlib, dsky, imu), imu(agc)
 
 {
 	// VESSELSOUND **********************************************************************
