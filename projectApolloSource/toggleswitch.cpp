@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/17 22:54:26  movieman523
+  *	Added ELS and CM RCS switches.
+  *	
   *	Revision 1.17  2005/08/16 11:46:58  tschachim
   *	Fixed rotational switch because of new bitmap.
   *	
@@ -1332,6 +1335,62 @@ bool TimerControlSwitch::CheckMouseClick(int event, int mx, int my)
 
 	return false;
 }
+
+//
+// Event timer start/stop switch. Although it's a three-position switch, the center position does
+// nothing.
+//
+
+bool EventTimerControlSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
+	{
+		if (timer) {
+			if (IsUp()) {
+				timer->SetRunning(true);
+			}
+			else if (IsDown()) {
+				timer->SetRunning(false);
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//
+// Event timer up/down/reset switch.
+//
+
+bool EventTimerResetSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
+	{
+		if (timer) {
+			if (IsUp()) {
+				timer->SetRunning(false);
+				timer->SetCountUp(true);
+				timer->Reset();
+			}
+			else if (IsCenter()) {
+				timer->SetCountUp(true);
+			}
+			else if (IsDown()) {
+				timer->SetCountUp(false);
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//
+// Generic switch to update the timer time. AdjustTime() knows whether to update the hours, minutes or seconds.
+//
 
 bool TimerUpdateSwitch::CheckMouseClick(int event, int mx, int my)
 

@@ -8,6 +8,7 @@
 #define AID_ENTRY_MODE_SWITCH			14
 #define AID_FDAI_SWITCHES				15
 #define AID_ECS_INDICATOR_SWITCH		16
+#define AID_EVENT_TIMER_SWITCHES		17
 #define AID_SWITCH_AUTO                 20
 #define AID_FUEL_DIGIT                  21
 #define AID_SWITCH_JET                  22
