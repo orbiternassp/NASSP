@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.4  2005/08/08 21:10:30  movieman523
   *	Fixed broken TLI program. LastAlt wasn't being set and that screwed up the burn end calculations.
   *	
@@ -180,7 +183,7 @@ class CSMcomputer: public ApolloGuidance
 {
 public:
 
-	CSMcomputer(SoundLib &s, DSKY &display, IMU &im);
+	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im);
 	virtual ~CSMcomputer();
 
 	bool ValidateVerbNoun(int verb, int noun);
@@ -225,6 +228,10 @@ protected:
 	bool OrbitCalculationsValid();
 	void DisplayBankSum();
 
+	void ProcessChannel10(int val);
+	void ProcessChannel11Bit(int bit, bool val);
+	void ProcessChannel11(int val);
+
 	//
 	// Programs we can run.
 	//
@@ -267,4 +274,6 @@ protected:
 	CSMFlagWord3 FlagWord3;
 	CSMFlagWord4 FlagWord4;
 	CSMFlagWord5 FlagWord5;
+
+	DSKY &dsky2;
 };

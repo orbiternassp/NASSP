@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2005/08/18 20:54:16  movieman523
+  *	Added Main Release switch and wired it up to the parachutes.
+  *	
   *	Revision 1.40  2005/08/18 19:12:21  movieman523
   *	Added Event Timer switches and null Event Timer class.
   *	
@@ -168,7 +171,7 @@
 
 //extern FILE *PanelsdkLogFile;
 
-Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, imu), dsky(soundlib, agc, 015), dsky2(soundlib, agc, 016), imu(agc), cws(SMasterAlarm)
+Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, dsky2, imu), dsky(soundlib, agc, 015), dsky2(soundlib, agc, 016), imu(agc), cws(SMasterAlarm)
 
 {
 	InitSaturnCalled = false;
@@ -328,6 +331,7 @@ void Saturn::initSaturn()
 	agc.ControlVessel(this);
 	imu.SetVessel(this);
 	dsky.Init();
+	dsky2.Init();
 
 	//
 	// Default masses.
@@ -814,7 +818,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 
-	dsky.SaveState(scn);
+	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
+	dsky2.SaveState(scn, DSKY2_START_STRING, DSKY2_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
 	cws.SaveState(scn);
@@ -1367,7 +1372,10 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			strncpy (AudioLanguage, line + 5, 64);
 		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
-			dsky.LoadState(scn);
+			dsky.LoadState(scn, DSKY_END_STRING);
+		}
+		else if (!strnicmp(line, DSKY2_START_STRING, sizeof(DSKY2_START_STRING))) {
+			dsky2.LoadState(scn, DSKY2_END_STRING);
 		}
 		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
 			agc.LoadState(scn);

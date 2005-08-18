@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/18 20:54:16  movieman523
+  *	Added Main Release switch and wired it up to the parachutes.
+  *	
   *	Revision 1.6  2005/08/18 20:07:19  spacex15
   *	fixed click sound missing in lm dsky
   *	
@@ -132,6 +135,8 @@ public:
 	void RenderLights(SURFHANDLE surf, SURFHANDLE lights);
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits);
 	void ProcessChannel10(int val);
+	void ProcessChannel11Bit(int bit, bool val);
+	void ProcessChannel11(int val);
 
 	//
 	// Helper functions.
@@ -139,8 +144,8 @@ public:
 
 	void LightsOff();
 
-	void SaveState(FILEHANDLE scn);
-	void LoadState(FILEHANDLE scn);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
 
 protected:
 
@@ -245,4 +250,6 @@ protected:
 #define DSKY_START_STRING	"DSKY_BEGIN"
 #define DSKY_END_STRING		"DSKY_END"
 
+#define DSKY2_START_STRING	"DSKY2_BEGIN"
+#define DSKY2_END_STRING	"DSKY2_END"
 

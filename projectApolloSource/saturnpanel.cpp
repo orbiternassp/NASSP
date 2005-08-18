@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2005/08/18 20:54:16  movieman523
+  *	Added Main Release switch and wired it up to the parachutes.
+  *	
   *	Revision 1.56  2005/08/18 19:12:21  movieman523
   *	Added Event Timer switches and null Event Timer class.
   *	
@@ -1027,7 +1030,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_LIGHTS_LAUNCHER,						_R( 612, 727,  718,  817), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_LV_TANK_GAUGES,                      _R( 466, 728,  589,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_GDC_BUTTON,                          _R( 217, 909,  243,  935), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_DSKY_KEY,                            _R( 799, 622, 1010,  711), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_SWITCH_JET,                          _R( 841, 739,  964,  784), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_EDS,                                 _R( 808, 752,  831,  772), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_ABORT_ROW,                           _R( 771, 815,  882,  844), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -1084,9 +1086,13 @@ bool Saturn::clbkLoadPanel (int id) {
 	case SATPANEL_LOWER: // guidance & navigation lower equipment bay
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1582,  341, 1687,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1438,  346, 1540,  466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1418,  536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		//
+		// Lower panel uses the second DSKY.
+		//
+
+		oapiRegisterPanelArea (AID_DSKY2_DISPLAY,								_R(1582,  341, 1687,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY2_LIGHTS,								_R(1438,  346, 1540,  466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY2_KEY,			                        _R(1418,  536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;    
@@ -1138,7 +1144,12 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_EVENT_TIMER_SWITCHES,						_R( 702, 1260,  956, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_RELEASE_SWITCH,							_R(1043, 1234, 1077, 1295), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
-		// display & keyboard (DSKY):		
+		//
+		// display & keyboard (DSKY):
+		//
+		// Main panel uses the main DSKY.
+		//
+
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1759,6 +1770,14 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			dsky.ProcessKeyPress(mx, my);
 		} else if (event & PANEL_MOUSE_LBUP) {
 			dsky.ProcessKeyRelease(mx, my);
+		}
+		return true;
+
+	case AID_DSKY2_KEY:
+		if (event & PANEL_MOUSE_LBDOWN) {
+			dsky2.ProcessKeyPress(mx, my);
+		} else if (event & PANEL_MOUSE_LBUP) {
+			dsky2.ProcessKeyRelease(mx, my);
 		}
 		return true;
 
@@ -2575,10 +2594,19 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		dsky.RenderData(surf, srf[4]);
 		return true;
 
+	case AID_DSKY2_LIGHTS:
+		dsky2.RenderLights(surf, srf[SRF_DSKY]);
+		return true;
+
+	case AID_DSKY2_DISPLAY:
+		dsky2.RenderData(surf, srf[4]);
+		return true;
+
 	case AID_ABORT_BUTTON:
 		if (ABORT_IND) {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
-		} else {
+		} 
+		else {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
 		}
 		return true;

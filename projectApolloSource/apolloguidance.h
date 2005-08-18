@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/11 01:27:26  movieman523
+  *	Added initial Virtual AGC support.
+  *	
   *	Revision 1.14  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -201,9 +204,10 @@ protected:
 
 	void ProcessInputChannel15(int val);
 	void ProcessInputChannel32(int bit, bool val);
-	void ProcessChannel11Bit(int bit, bool val);
-	void ProcessChannel11(int val);
-	void ProcessChannel10();
+
+	virtual void ProcessChannel10(int val);
+	virtual void ProcessChannel11Bit(int bit, bool val);
+	virtual void ProcessChannel11(int val);
 
 	void LightUplink();
 	void ClearUplink();

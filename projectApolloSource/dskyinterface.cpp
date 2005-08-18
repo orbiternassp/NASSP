@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/11 01:27:26  movieman523
+  *	Added initial Virtual AGC support.
+  *	
   *	Revision 1.4  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -220,12 +223,6 @@ void ApolloGuidance::ClearProg()
 	SetChannel10Lights(8, false);
 }
 
-void ApolloGuidance::ProcessChannel10()
-
-{
-	dsky.ProcessChannel10(OutputChannel[010]);
-}
-
 void ApolloGuidance::LightsOff()
 
 {
@@ -284,76 +281,6 @@ unsigned ApolloGuidance::CharValue(char val)
 	}
 
 	return 0;
-}
-
-void ApolloGuidance::ProcessChannel11(int val)
-
-{
-	ChannelValue11 val11;
-
-	val11.Value = val;
-	dsky.SetCompActy(val11.Bits.LightComputerActivity);
-	dsky.SetUplink(val11.Bits.LightUplink);
-	dsky.SetTemp(val11.Bits.LightTempCaution);
-	dsky.SetKbRel(val11.Bits.LightKbRel);
-	dsky.SetOprErr(val11.Bits.LightOprErr);
-
-	if (val11.Bits.FlashVerbNoun) {
-		dsky.SetVerbDisplayFlashing();
-		dsky.SetNounDisplayFlashing();
-	}
-	else {
-		dsky.ClearVerbDisplayFlashing();
-		dsky.ClearNounDisplayFlashing();
-	}
-}
-
-void ApolloGuidance::ProcessChannel11Bit(int bit, bool val)
-
-{
-	//
-	// Channel 011 has bits to control the lights on the DSKY.
-	//
-
-	switch (bit) {
-
-	// 2 - Comp Acty
-	case 2:
-		dsky.SetCompActy(val);
-		break;
-
-	// 3 - Uplink
-	case 3:
-		dsky.SetUplink(val);
-		break;
-
-	// 4 - Temp caution
-	case 4:
-		dsky.SetTemp(val);
-		break;
-
-	// 5 - Kbd Rel
-	case 5:
-		dsky.SetKbRel(val);
-		break;
-
-	// 6 - flash verb and noun
-	case 6:
-		if (val) {
-			dsky.SetVerbDisplayFlashing();
-			dsky.SetNounDisplayFlashing();
-		}
-		else {
-			dsky.ClearVerbDisplayFlashing();
-			dsky.ClearNounDisplayFlashing();
-		}
-		break;
-
-	// 7 - Opr Err
-	case 7:
-		dsky.SetOprErr(val);
-		break;
-	}
 }
 
 void ApolloGuidance::TwoDigitDisplay(char *Str, int val, bool Blanked)
@@ -1338,3 +1265,26 @@ bool ApolloGuidance::KBCheck()
 
 	return true;
 }
+
+//
+// By default, just pass these calls through to the dsky.
+//
+
+void ApolloGuidance::ProcessChannel10(int val)
+
+{
+	dsky.ProcessChannel10(val);
+}
+
+void ApolloGuidance::ProcessChannel11Bit(int bit, bool val)
+
+{
+	dsky.ProcessChannel11Bit(bit, val);
+}
+
+void ApolloGuidance::ProcessChannel11(int val)
+
+{
+	dsky.ProcessChannel11(val);
+}
+
