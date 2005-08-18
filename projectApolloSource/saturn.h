@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2005/08/18 00:22:53  movieman523
+  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
+  *	
   *	Revision 1.46  2005/08/17 22:54:26  movieman523
   *	Added ELS and CM RCS switches.
   *	
@@ -273,7 +276,7 @@ protected:
 	//
 
 	MissionTimer MissionTimerDisplay;
-	double EventTimerOffset;
+	EventTimer EventTimerDisplay;
 
 	//
 	// Center engine shutdown times for first and
@@ -518,6 +521,18 @@ protected:
 	ToggleSwitch CMRCSLogicSwitch;
 	GuardedToggleSwitch CMPropDumpSwitch;
 	GuardedToggleSwitch CPPropPurgeSwitch;
+
+	//
+	// Event Timer switches.
+	//
+
+	SwitchRow EventTimerRow;
+	ToggleSwitch FCSMSPSASwitch;
+	ToggleSwitch FCSMSPSBSwitch;
+	EventTimerResetSwitch EventTimerUpDownSwitch;
+	EventTimerControlSwitch EventTimerControlSwitch;
+	TimerUpdateSwitch EventTimerMinutesSwitch;
+	TimerUpdateSwitch EventTimerSecondsSwitch;
 
 	//
 	// OLD Switches: delete these as and when we can do so.

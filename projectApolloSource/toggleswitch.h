@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/17 22:54:26  movieman523
+  *	Added ELS and CM RCS switches.
+  *	
   *	Revision 1.16  2005/08/16 11:46:58  tschachim
   *	Fixed rotational switch because of new bitmap.
   *	
@@ -279,6 +282,28 @@ protected:
 	void AdjustTime(int val);
 
 	int adjust_type;
+};
+
+//
+// Switch that starts and stops the event timer.
+//
+
+class EventTimerControlSwitch: public MissionTimerSwitch {
+
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+
+};
+
+//
+// Switch that controls up/down/reset for event timer.
+//
+
+class EventTimerResetSwitch: public MissionTimerSwitch {
+
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+
 };
 
 class CautionWarningSystem; // Forward reference for files which include this before cautionwarning.h

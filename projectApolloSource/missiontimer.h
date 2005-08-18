@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/14 15:25:43  movieman523
+  *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
+  *	
   *	Revision 1.1  2005/08/13 22:05:17  movieman523
   *	Mission timer class.
   *	
@@ -35,7 +38,7 @@ class MissionTimer {
 
 public:
 	MissionTimer();
-	~MissionTimer();
+	virtual ~MissionTimer();
 
 	void Timestep(double simt, double deltat);
 
@@ -50,8 +53,10 @@ public:
 	bool IsRunning() { return Running; };
 	void SetEnabled(bool run) { Enabled = run; };
 	bool IsEnabled() { return Enabled; };
+	void SetCountUp(bool val) { CountUp = val; };
+	bool GetCountUp() { return CountUp; };
 
-	void Render(SURFHANDLE surf, SURFHANDLE digits);
+	virtual void Render(SURFHANDLE surf, SURFHANDLE digits);
 
 protected:
 
@@ -66,10 +71,22 @@ protected:
 
 	bool Running;
 	bool Enabled;
+	bool CountUp;
 
 	//
 	// Don't need to be saved.
 	//
+};
+
+//
+// Event Timer needs a different render function.
+//
+
+class EventTimer: public MissionTimer {
+public:
+	void Render(SURFHANDLE surf, SURFHANDLE digits);
+
+protected:
 };
 
 #endif

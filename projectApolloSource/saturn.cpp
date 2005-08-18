@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2005/08/18 00:22:53  movieman523
+  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
+  *	
   *	Revision 1.38  2005/08/17 00:01:59  movieman523
   *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
   *	
@@ -680,8 +683,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
-	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime()); // MUST FOLLOW MISSION TIME: see comments in LoadState();
-	oapiWriteScenario_float (scn, "ETDO", EventTimerOffset);
+	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
+	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
 
 	if (Realism != REALISM_DEFAULT) {
 		oapiWriteScenario_int (scn, "REALISM", Realism);
@@ -841,6 +844,9 @@ typedef union {
 		unsigned IGMEnabled:1;
 		unsigned stgSM:1;
 		unsigned MissionTimerEnabled:1;
+		unsigned EventTimerEnabled:1;
+		unsigned EventTimerRunning:1;
+		unsigned EventTimerCountUp:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -854,6 +860,9 @@ int Saturn::GetMainState()
 	state.word = 0;
 	state.u.MissionTimerRunning = MissionTimerDisplay.IsRunning();
 	state.u.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
+	state.u.EventTimerRunning = EventTimerDisplay.IsRunning();
+	state.u.EventTimerEnabled = EventTimerDisplay.IsEnabled();
+	state.u.EventTimerCountUp = EventTimerDisplay.GetCountUp();
 	state.u.SIISepState = SIISepState;
 	state.u.TLIBurnDone = TLIBurnDone;
 	state.u.Scorrec = Scorrec;
@@ -890,6 +899,9 @@ void Saturn::SetMainState(int s)
 	stgSM = (state.u.stgSM != 0);
 	MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
 	MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
+	EventTimerDisplay.SetRunning(state.u.EventTimerRunning != 0);
+	EventTimerDisplay.SetEnabled(state.u.EventTimerEnabled != 0);
+	EventTimerDisplay.SetCountUp(state.u.EventTimerCountUp != 0);
 }
 
 //
@@ -1221,9 +1233,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
             sscanf (line + 3, "%f", &ftcp);
 			MissionTimerDisplay.SetTime(ftcp);
 		}
-		else if (!strnicmp(line, "ETDO", 4)) {
-            sscanf (line + 4, "%f", &ftcp);
-			EventTimerOffset = ftcp;
+		else if (!strnicmp(line, "ETD", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			EventTimerDisplay.SetTime(ftcp);
 		}
 		else if (!strnicmp(line, "NMISSNTIME", 10)) {
             sscanf (line+10, "%f", &ftcp);
@@ -1545,6 +1557,8 @@ void Saturn::DoLaunch(double simt)
 
 	MissionTimerDisplay.Reset();
 	MissionTimerDisplay.SetEnabled(true);
+	EventTimerDisplay.Reset();
+	EventTimerDisplay.SetEnabled(true);
 
 	//
 	// Tell the AGC that we've lifted off.
@@ -2919,7 +2933,7 @@ void Saturn::StartAbort()
 	// Event timer resets to zero on abort.
 	//
 
-	EventTimerOffset = (-MissionTime);
+	EventTimerDisplay.Reset();
 }
 
 void Saturn::SlowIfDesired()

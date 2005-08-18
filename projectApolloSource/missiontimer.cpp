@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/14 15:25:43  movieman523
+  *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
+  *	
   *	Revision 1.1  2005/08/13 22:05:17  movieman523
   *	Mission timer class.
   *	
@@ -45,6 +48,7 @@ MissionTimer::MissionTimer()
 
 	Running = false;
 	Enabled = false;
+	CountUp = true;
 }
 
 MissionTimer::~MissionTimer()
@@ -65,60 +69,79 @@ void MissionTimer::Reset()
 void MissionTimer::UpdateHours(int n)
 
 {
-	hours += n;
-	while (hours > 999)
+	if (CountUp) {
+		hours += n;
+	}
+	else {
+		hours -= n;
+	}
+
+	while (hours > 999) {
 		hours -= 1000;
-	if (hours < 0)
-		hours = 0;
+	}
+	while (hours < 0) {
+		hours += 1000;
+	}
 }
 
 void MissionTimer::UpdateMinutes(int n)
 
 {
-	minutes += n;
+	if (CountUp) {
+		minutes += n;
+	}
+	else {
+		minutes -= n;
+	}
+
 	while (minutes > 59) {
 		minutes -= 60;
 	}
-	if (minutes < 0)
-		minutes = 0;
+	while (minutes < 0) {
+		minutes += 60;
+	}
 }
 
 void MissionTimer::UpdateSeconds(int n)
 
 {
-	seconds += n;
+	if (CountUp) {
+		seconds += n;
+	}
+	else {
+		seconds -= n;
+	}
+
 	while (seconds > 59) {
 		seconds -= 60;
 	}
-	if (seconds < 0)
-		seconds = 0;
+	while (seconds < 0) {
+		seconds += 60;
+	}
 }
+
+//
+// This isn't really the most efficient way to update the clock, but the original
+// design didn't allow counting down. We might want to rewrite this at some point.
+//
 
 void MissionTimer::Timestep(double simt, double deltat)
 
 {
 	if (Running && Enabled) {
-		extra += deltat;
+		double t = GetTime();
 
-		if (extra >= 1.0) {
-			int n = (int) extra;
-			seconds += n;
-			if (seconds > 59) {
-				int m = (seconds / 60);
-				minutes += m;
-				seconds -= (m * 60);
-				if (minutes > 59) {
-					m = (minutes / 60);
-					hours += m;
-					minutes -= (m * 60);
-					if (hours > 999) {
-						m = (hours / 1000);
-						hours -= (m * 1000);
-					}
-				}
-			}
-			extra -= (double) n;
+		if (CountUp) {
+			t += deltat;
 		}
+		else {
+			t -= deltat;
+		}
+
+		if (t < 0.0)
+			t = 0.0;
+
+		SetTime(t);
 	}
 }
 
@@ -194,3 +217,10 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 
 }
 
+void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
+
+{
+	//
+	// Nothing for now.
+	//
+}

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2005/08/18 00:22:53  movieman523
+  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
+  *	
   *	Revision 1.54  2005/08/17 22:54:26  movieman523
   *	Added ELS and CM RCS switches.
   *	
@@ -1130,7 +1133,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ALTIMETER,									_R( 836,   83,  974,  222), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECS_INDICATOR_SWITCH,						_R(1788,  585, 1875,  673), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_ELS_SWITCHES,								_R( 702, 1153,  956,  1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-
+		oapiRegisterPanelArea (AID_EVENT_TIMER_SWITCHES,						_R( 702, 1260,  956,  1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1418,6 +1421,18 @@ void Saturn::SetSwitches(int panel) {
 	CMPropDumpSwitch.InitGuard(174, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
 	CPPropPurgeSwitch.Init(217, 23, 34, 29, srf[SRF_SWITCHUP], ELSRow);
 	CPPropPurgeSwitch.InitGuard(217, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+
+	//
+	// Event Timer Switches
+	//
+
+	EventTimerRow.Init(AID_EVENT_TIMER_SWITCHES, MainPanel);
+	FCSMSPSASwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], EventTimerRow);
+	FCSMSPSBSwitch.Init(43, 0, 34, 29, srf[SRF_SWITCHUP], EventTimerRow);
+	EventTimerUpDownSwitch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EventTimerRow, &EventTimerDisplay);
+	EventTimerControlSwitch.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EventTimerRow, &EventTimerDisplay);
+	EventTimerMinutesSwitch.Init(174, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EventTimerRow, TIME_UPDATE_MINUTES, &EventTimerDisplay);
+	EventTimerSecondsSwitch.Init(217, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EventTimerRow, TIME_UPDATE_SECONDS, &EventTimerDisplay);
 
 	//
 	// Fuel Cell Switches.
@@ -3348,6 +3363,12 @@ void Saturn::InitSwitches() {
 	CMPropDumpSwitch.Register(PSH, "CMPropDumpSwitch", 0, 0);
 	CPPropPurgeSwitch.Register(PSH, "CPPropPurgeSwitch", 0, 0);
 
+	FCSMSPSASwitch.Register(PSH, "FCSMSPSASwitch", 0);
+	FCSMSPSBSwitch.Register(PSH, "FCSMSPSBSwitch", 0);
+	EventTimerUpDownSwitch.Register(PSH, "EventTimerUpDownSwitch", THREEPOSSWITCH_DOWN);
+	EventTimerControlSwitch.Register(PSH, "EventTimerControlSwitch", THREEPOSSWITCH_DOWN);
+	EventTimerMinutesSwitch.Register(PSH, "EventTimerMinutesSwitch", THREEPOSSWITCH_CENTER);
+	EventTimerSecondsSwitch.Register(PSH, "EventTimerSecondsSwitch", THREEPOSSWITCH_CENTER);
 
 	// old stuff
 
