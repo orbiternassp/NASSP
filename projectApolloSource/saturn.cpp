@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2005/08/18 19:12:21  movieman523
+  *	Added Event Timer switches and null Event Timer class.
+  *	
   *	Revision 1.39  2005/08/18 00:22:53  movieman523
   *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
   *	
@@ -2170,22 +2173,29 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		}
 		break;
 
+	//
+	// We should really make the time taken to open the main chutes based on
+	// the dynamic air pressure.
+	//
+
 	case CM_ENTRY_STAGE_THREE:
-		if (GetAtmPressure() > 66000) {
+		if (GetAtmPressure() > 66000 || MainReleaseSwitch.GetState()) {
 			SetChuteStage2();
 			SetStage(CM_ENTRY_STAGE_FOUR);
+			NextMissionEventTime = MissionTime + 2.5;
 		}
 		break;
 
 	case CM_ENTRY_STAGE_FOUR:
-		if (GetAtmPressure() > 68000) {
+		if (MissionTime >= NextMissionEventTime) {
 			SetChuteStage3();
 			SetStage(CM_ENTRY_STAGE_FIVE);
+			NextMissionEventTime = MissionTime + 2.5;
 		}
 		break;
 
 	case CM_ENTRY_STAGE_FIVE:
-		if (GetAtmPressure() > 69000) {
+		if (MissionTime >= NextMissionEventTime) {
 			SetChuteStage4();
 			SetStage(CM_ENTRY_STAGE_SIX);
 			LAUNCHIND[5] = true;

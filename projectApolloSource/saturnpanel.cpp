@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2005/08/18 19:12:21  movieman523
+  *	Added Event Timer switches and null Event Timer class.
+  *	
   *	Revision 1.55  2005/08/18 00:22:53  movieman523
   *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
   *	
@@ -1028,7 +1031,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_SWITCH_JET,                          _R( 841, 739,  964,  784), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_EDS,                                 _R( 808, 752,  831,  772), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_ABORT_ROW,                           _R( 771, 815,  882,  844), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_MAIN_RELEASE_SWITCH,                 _R( 774, 957,  799,  1003), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_TOWER_JET_SWITCH1,                   _R( 900, 808,  925,  853), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_TOWER_JET_SWITCH2,                   _R( 934, 808,  959,  853), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_IU_GUIDANCE_SWITCH,                  _R( 776, 890,  801,  935), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -1132,8 +1134,9 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LV_SWITCHES,									_R(1044, 1141, 1175, 1205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ALTIMETER,									_R( 836,   83,  974,  222), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECS_INDICATOR_SWITCH,						_R(1788,  585, 1875,  673), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
-		oapiRegisterPanelArea (AID_ELS_SWITCHES,								_R( 702, 1153,  956,  1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_EVENT_TIMER_SWITCHES,						_R( 702, 1260,  956,  1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ELS_SWITCHES,								_R( 702, 1153,  956, 1217), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_EVENT_TIMER_SWITCHES,						_R( 702, 1260,  956, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MAIN_RELEASE_SWITCH,							_R(1043, 1234, 1077, 1295), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
 		// display & keyboard (DSKY):		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1433,6 +1436,14 @@ void Saturn::SetSwitches(int panel) {
 	EventTimerControlSwitch.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EventTimerRow, &EventTimerDisplay);
 	EventTimerMinutesSwitch.Init(174, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EventTimerRow, TIME_UPDATE_MINUTES, &EventTimerDisplay);
 	EventTimerSecondsSwitch.Init(217, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EventTimerRow, TIME_UPDATE_SECONDS, &EventTimerDisplay);
+
+	//
+	// Main chute release.
+	//
+
+	MainReleaseRow.Init(AID_MAIN_RELEASE_SWITCH, MainPanel);
+	MainReleaseSwitch.Init(0, 20, 34, 29, srf[SRF_SWITCHUP], MainReleaseRow);
+	MainReleaseSwitch.InitGuard(0, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
 
 	//
 	// Fuel Cell Switches.
@@ -1837,26 +1848,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 					SwitchClick();
 				}else if(my >27 && my <37 && CMPswitch && CMPCswitch){
 					CMPswitch = false;
-					SwitchClick();
-				}
-			}
-		}
-		return true;
-
-	case AID_MAIN_RELEASE_SWITCH:
-		if(event & PANEL_MOUSE_RBDOWN){
-			if(mx <25 ){
-				MRCswitch = !MRCswitch;
-				GuardClick();
-			}
-		}else if(event & PANEL_MOUSE_LBDOWN){
-			if(mx <25 && MRCswitch){
-				if(my >16 && my <27 && !MRswitch){
-					MRswitch = true;
-					SwitchClick();
-					SetChuteStage4 ();
-				}else if(my >27 && my <37 && MRswitch && MRCswitch){
-					MRswitch = false;
 					SwitchClick();
 				}
 			}
@@ -2525,6 +2516,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	int Curdigit, Curdigit2;
 
 	//
+	// Note: if you crash in this function with a NULL surf handle, odds are you screwed up
+	// the region definition so maxX < minX or maxY < minY.
+	//
+
+	//
 	// Special handling illuminated "sequencer switches"
 	//
 
@@ -2727,20 +2723,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}else{
 			oapiBlt(surf,srf[8],0,0,0,0,25,45);
 			CMPswitch=false;
-		}
-		return true;
-
-	case AID_MAIN_RELEASE_SWITCH:
-			if(MRCswitch){
-			oapiBlt(surf,srf[8],0,0,25,0,25,45);
-			if(MRswitch){
-				oapiBlt(surf,srf[6],1,16,0,0,23,20);
-			}else{
-				oapiBlt(surf,srf[6],1,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],0,0,0,0,25,45);
-			MRswitch=false;
 		}
 		return true;
 
@@ -3370,6 +3352,8 @@ void Saturn::InitSwitches() {
 	EventTimerMinutesSwitch.Register(PSH, "EventTimerMinutesSwitch", THREEPOSSWITCH_CENTER);
 	EventTimerSecondsSwitch.Register(PSH, "EventTimerSecondsSwitch", THREEPOSSWITCH_CENTER);
 
+	MainReleaseSwitch.Register(PSH, "MainReleaseSwitch", 0, 0);
+
 	// old stuff
 
 	Cswitch6=false;
@@ -3556,9 +3540,6 @@ void Saturn::InitSwitches() {
 
 	FCSMswitch = false;
 
-	MRswitch = false;
-	MRCswitch = false;
-
 	TJ1switch = false;
 	TJ1Cswitch = false;
 	TJ2switch = false;
@@ -3661,8 +3642,6 @@ int Saturn::GetCSwitchState()
 	state.u.DVBCswitch = DVBCswitch;
 	state.u.CMDCswitch = CMDCswitch;
 	state.u.CMPCswitch = CMPCswitch;
-	state.u.MRswitch = MRswitch;
-	state.u.MRCswitch = MRCswitch;
 	state.u.TJ1switch = TJ1switch;
 	state.u.TJ1Cswitch = TJ1Cswitch;
 	state.u.TJ2switch = TJ2switch;
@@ -3696,8 +3675,6 @@ void Saturn::SetCSwitchState(int s)
 	DVBCswitch = state.u.DVBCswitch;
 	CMDCswitch = state.u.CMDCswitch;
 	CMPCswitch = state.u.CMPCswitch;
-	MRswitch = state.u.MRswitch;
-	MRCswitch = state.u.MRCswitch;
 	TJ1switch = state.u.TJ1switch;
 	TJ1Cswitch = state.u.TJ1Cswitch;
 	TJ2switch = state.u.TJ2switch;
