@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.31  2005/08/13 01:09:43  movieman523
   *	Display NO ATT light when IMU is caged.
   *	
@@ -275,7 +278,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	//
 
 	memset(&vagc, 0, sizeof(vagc));
-	vagc.agcptr = this;
+	vagc.agc_clientdata = this;
 
 	agc_engine_init(&vagc, binfile, NULL, 0);
 
@@ -3082,7 +3085,7 @@ void ChannelOutput (agc_t * State, int Channel, int Value)
 
   ApolloGuidance *agc;
 
-  agc = (ApolloGuidance *) State->agcptr;
+  agc = (ApolloGuidance *) State->agc_clientdata;
   agc->SetOutputChannel(Channel, Value);
 }
 
