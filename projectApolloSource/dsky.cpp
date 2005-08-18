@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/18 00:22:52  movieman523
+  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
+  *	
   *	Revision 1.9  2005/08/11 01:27:26  movieman523
   *	Added initial Virtual AGC support.
   *	
@@ -124,12 +127,18 @@ void DSKY::Init()
 
 {
 	Reset();
-	soundlib.LoadSound(Sclick, CLICK_SOUND);
+	FirstTimeStep = true;
 }
 
 void DSKY::Timestep(double simt)
 
 {
+	if(FirstTimeStep)
+	{
+		FirstTimeStep = false;
+	    soundlib.LoadSound(Sclick, CLICK_SOUND);
+	}
+
 	//
 	// Flash counter. For simplicity we'll always update
 	// this even though nothing may be flashing.

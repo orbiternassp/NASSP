@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/18 00:22:53  movieman523
+  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
+  *	
   *	Revision 1.4  2005/08/11 01:27:26  movieman523
   *	Added initial Virtual AGC support.
   *	
@@ -218,6 +221,8 @@ protected:
 	SoundLib &soundlib;
 	Sound Sclick;
 
+
+	bool FirstTimeStep;
 	//
 	// Local helper functions.
 	//
