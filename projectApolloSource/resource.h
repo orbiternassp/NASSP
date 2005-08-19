@@ -79,7 +79,6 @@
 #define AID_P24                         94
 #define AID_P25                         95
 #define AID_SEC_PRPLT_SWITCHES          96
-
 #define AID_P27                         98
 #define AID_P28                         99
 #define AID_P29                         100
@@ -199,7 +198,6 @@
 #define AID_P36                         412
 #define AID_CYROTANKSWITCHES            413
 #define AID_CM_RCS_LOGIC                414
-
 #define AID_SMRCS_FUEL                  416
 #define AID_SPS_FUEL                    417
 #define AID_EMS_SWITCH                  418
@@ -301,10 +299,13 @@
 #define AID_MODECONTROL                 526
 #define AID_CAUTIONWARNING_SWITCHES		527
 #define AID_MISSION_TIMER_SWITCHES		528
-
+#define IDB_DSKY_DISP                   529
+#define AID_FDAI_RIGHT				    530
+#define IDB_FDAI_ROLLINDICATOR			531
+#define IDB_FDAI_ROLL					532
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        289
