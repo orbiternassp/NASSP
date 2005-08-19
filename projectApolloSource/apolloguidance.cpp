@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2005/08/19 18:38:13  movieman523
+  *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
+  *	
   *	Revision 1.34  2005/08/19 14:05:43  tschachim
   *	Fixes because of new Virtual AGC version.
   *	Disabled cycle limitation.
@@ -470,12 +473,12 @@ bool ApolloGuidance::ValidateCommonProgram(int prog)
 		return true;
 
 	//
-	// 33: orbit altitude adjustment.
+	// 37: orbit altitude adjustment.
 	//
 
-	case 33:
-//		if (!InOrbit)
-//			return false;
+	case 37:
+		if (!InOrbit)
+			return false;
 
 		return true;
 
@@ -669,10 +672,10 @@ void ApolloGuidance::TerminateCommonProgram()
 	{
 
 	//
-	// 33: if the engine is on, stop it.
+	// 37: if the engine is on, stop it.
 	//
 
-	case 33:
+	case 37:
 		if (BurnFlag)
 			BurnMainEngine(0);
 		break;
@@ -959,7 +962,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 			DisplayOrbitCalculations();
 			SetR3((int)DisplayAlt(OurVessel->GetAltitude()) / 1000);
 		}
-		else if (ProgRunning == 33) {
+		else if (ProgRunning == 37) {
 			SetR1((int)(DesiredApogee * 10.0));
 			SetR2((int)(DesiredPerigee * 10.0));
 		}
