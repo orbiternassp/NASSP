@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.7  2005/08/18 20:54:16  movieman523
   *	Added Main Release switch and wired it up to the parachutes.
   *	
@@ -133,8 +136,9 @@ public:
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
 	void RenderLights(SURFHANDLE surf, SURFHANDLE lights);
-	void RenderData(SURFHANDLE surf, SURFHANDLE digits);
+	void RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp);
 	void ProcessChannel10(int val);
+	void ProcessChannel13(int val);
 	void ProcessChannel11Bit(int bit, bool val);
 	void ProcessChannel11(int val);
 
