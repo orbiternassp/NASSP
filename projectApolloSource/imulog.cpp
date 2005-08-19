@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   **************************************************************************/
 
 #include <string.h>
@@ -50,16 +53,16 @@ char *intToBinaryString(char *buffer, int i);
 void IMU::LogInit() 
 
 {
-#if DEBUG
+#ifdef _DEBUG
 	if (!logFile)
-		logFile = fopen("VirtualApollo yaIMU.log", "w");
+		logFile = fopen("ProjectApollo IMU.log", "w");
 #endif
 }
 
 void IMU::LogState(int channel, char *device, int value) 
 
 {
-#if DEBUG
+#ifdef _DEBUG
 	struct _timeb tstruct;
 	char *timeline;
 	char buffer[100];	
@@ -85,8 +88,6 @@ void IMU::LogState(int channel, char *device, int value)
 			radToDeg(Gimbal.X),
 			radToDeg(Gimbal.Y),
 			radToDeg(Gimbal.Z));
-
-//	fprintf(logFile, "%.8s.%03hu Ch %03o %s %s\n", buffer, tstruct.millitm, channel, device, buffer1);
 			
 	fflush(logFile);
 #endif
@@ -95,7 +96,7 @@ void IMU::LogState(int channel, char *device, int value)
 void IMU::LogTimeStep(long simt) 
 
 {
-#if DEBUG
+#ifdef _DEBUG
 	struct _timeb tstruct;
 	char *timeline;
 	char buffer[100];	
@@ -119,7 +120,7 @@ void IMU::LogTimeStep(long simt)
 void IMU::LogVector(char* message, IMU_Vector3 v) 
 
 {
-#if DEBUG
+#ifdef _DEBUG
 	struct _timeb tstruct;
 	char *timeline;
 	char buffer[100];
@@ -136,7 +137,7 @@ void IMU::LogVector(char* message, IMU_Vector3 v)
 void IMU::LogMessage(char* s) 
 
 {
-#if DEBUG
+#ifdef _DEBUG
 	struct _timeb tstruct;
 	char *timeline;
 	char buffer[100];	
@@ -162,57 +163,3 @@ char *intToBinaryString(char *buffer, int i) {
 	}
 	return(buffer);
 }
-
-
-/*
-void tsch_log1(FILE *file, int channel, char *device, char *value, int value1, int value2, int value3, int value4, int value5, int value6, int value7) {
-	struct _timeb tstruct;
-	char *timeline;
-	char buffer[100];
-	
-	_ftime(&tstruct);
-	timeline = ctime(&(tstruct.time));
-	strcpy(buffer, timeline + 11);
-	fprintf(file, "%.8s.%03hu Ch %03o %s %s %o %o %o %o %o %o %o\n", buffer, tstruct.millitm, 
-		channel, device, value, value1, value2, value3, value4, value5, value6, value7);
-	fflush(file);
-}
-
-void tsch_log(FILE *file, int channel, char *device, int value, int value1, int value2, int value3, int value4, int value5, int value6, int value7) {
-	char buffer[100];
-
-	tsch_log1(file, channel, device, tsch_intToBinaryString(buffer, value), value1, value2, value3, value4, value5, value6, value7);
-}
-
-void tsch_log(FILE *file, int channel, char *device, char *charValue, int value) {
-	char buffer[500], buffer1[100];
-
-	strcpy(buffer, tsch_intToBinaryString(buffer1, value));
-	strcpy(buffer + strlen(buffer), " ");
-	strcpy(buffer + strlen(buffer), charValue);
-
-	tsch_log(file, channel, device, buffer); 
-}
-
-void tsch_addFlagToLogString(char *dest, int flag, char *toAdd) {
-	
-	char buffer[100];
-
-	strcpy(buffer, toAdd);
-	strcpy(buffer + strlen(buffer), " ");
-	if (flag != 0) {
-		_strupr(buffer);
-	} else {
-		_strlwr(buffer);
-	}
-	strcpy(dest + strlen(dest), buffer);
-}
-
-void tsch_addToLogString(char *dest, char *toAdd) {
-	
-	strcpy(dest + strlen(dest), toAdd);
-}
-
-*/
-
-	
