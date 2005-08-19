@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/17 00:01:59  movieman523
+  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
+  *	
   *	Revision 1.23  2005/08/16 20:55:23  movieman523
   *	Added first saturn-specific switch for Xlunar Inject.
   *	
@@ -777,7 +780,7 @@ void SaturnV::StageThree(double simt)
 	// Tower jettison at 36.2 seconds after SIC shutdown.
 	//
 
-	if (MissionTime >= NextMissionEventTime || bManualSeparate || GetFuelMass() == 0 || TJ1switch && TJ2switch)
+	if (MissionTime >= NextMissionEventTime || bManualSeparate || GetFuelMass() == 0 || TowerJett1Switch.GetState() || TowerJett2Switch.GetState())
 	{
 		SeparateStage (stage);
 		SetStage(LAUNCH_STAGE_TWO_TWR_JET);
@@ -897,7 +900,7 @@ void SaturnV::StageFour(double simt)
 		SetStage(LAUNCH_STAGE_SIVB);
 	}
 
-	if (LVSswitch) {
+	if (SIISIVBSepSwitch.GetState()) {
 		bManualSeparate = false;
 		SeparateStage (stage);
 		NextMissionEventTime = MissionTime;

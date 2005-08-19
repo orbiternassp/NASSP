@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2005/08/19 18:38:13  movieman523
+  *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
+  *	
   *	Revision 1.42  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -716,7 +719,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
 	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
 	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
-	oapiWriteScenario_int (scn, "CPSWITCH", GetCPSwitchState());
 	oapiWriteScenario_int (scn, "CP2SWITCH", GetCP2SwitchState());
 	oapiWriteScenario_int (scn, "CP3SWITCH", GetCP3SwitchState());
 	oapiWriteScenario_int (scn, "CP4SWITCH", GetCP4SwitchState());
@@ -1203,11 +1205,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp (line, "APOLLONO", 8)) {
 			sscanf (line+8, "%d", &ApolloNo);
-		}
-		else if (!strnicmp (line, "CPSWITCH", 8)) {
-            SwitchState = 0;
-			sscanf (line+8, "%d", &SwitchState);
-			SetCPSwitchState(SwitchState);
 		}
 		else if (!strnicmp (line, "CP2SWITCH", 9)) {
             SwitchState = 0;
