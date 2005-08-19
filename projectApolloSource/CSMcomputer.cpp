@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/19 13:57:22  tschachim
+  *	Added earth orbit insertation monitoring.
+  *	Added check for nonspherical gravity sources.
+  *	
   *	Revision 1.14  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -393,6 +397,7 @@ void CSMcomputer::Prog01(double simt)
 			break;
 		}
 
+		LightCompActy();
 		LightNoAtt();
 		imu.TurnOn();
 		NextProgTime = simt + 2.0;
@@ -401,6 +406,7 @@ void CSMcomputer::Prog01(double simt)
 
 	case 1:
 		if (simt >= NextProgTime) {
+			LightCompActy();
 			SetOutputChannelBit(012, 5, true);
 			SetOutputChannelBit(012, 5, false);
 			SetOutputChannelBit(012, 15, true);
@@ -413,6 +419,7 @@ void CSMcomputer::Prog01(double simt)
 		if (simt >= NextProgTime) {
 			ChannelValue30 val30;
 
+			LightCompActy();
 			val30.Value = GetInputChannel(030);
 			if (val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
 				ClearNoAtt();
@@ -435,16 +442,19 @@ void CSMcomputer::Prog02(double simt)
 	switch (ProgState) {
 
 	case 0:
+		LightCompActy();
 		SetVerbNounAndFlash(6, 29);
 		ProgState++;
 		break;
 
 	case 2:
+		LightCompActy();
 		SetVerbNounAndFlash(6, 44);
 		ProgState++;
 		break;
 
 	case 4:
+		LightCompActy();
 		SetVerbNounAndFlash(6, 33);
 		ProgState++;
 		break;
@@ -537,11 +547,9 @@ void CSMcomputer::Prog11(double simt)
 	switch (ProgState) {
 
 	case 0:
-		VerbRunning = 16;
-		NounRunning = 62;
+		SetVerbNoun(16, 62);
 
-		SetVerb(VerbRunning);
-		SetNoun(NounRunning);
+		LightCompActy();
 
 		//
 		// Clear flash in case this program was auto-started by
@@ -597,6 +605,8 @@ void CSMcomputer::DoTLICalcs(double simt)
 
 	double massrequired = mass * (1 - exp(-(DesiredDeltaV / isp)));
 
+	LightCompActy();
+
 	if (massrequired > fuelmass) {
 		ProgState = 2;
 		return;
@@ -646,6 +656,7 @@ void CSMcomputer::UpdateTLICalcs(double simt)
 	double MaxE = CutOffVel * CutOffVel;
 	double deltaE = 2.0 * (CurrentG() * (CurrentAlt - LastAlt));
 
+	LightCompActy();
 	LastAlt = CurrentAlt;
 	CutOffVel = sqrt(MaxE - deltaE);
 }
@@ -660,6 +671,7 @@ void CSMcomputer::Prog15(double simt)
 	//
 
 	case 0:
+		LightCompActy();
 		FlagWord2.u.STEERSW = 0;
 		SetOutputChannelBit(012, 9, true);
 		BurnTime = 0;
@@ -668,6 +680,7 @@ void CSMcomputer::Prog15(double simt)
 		break;
 
 	case 2:
+		LightCompActy();
 		SetVerbNounAndFlash(6, 14);
 		ProgState++;
 		break;
@@ -687,6 +700,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 5:
 		if (simt > NextEventTime) {
+			LightCompActy();
 			Saturn *sat = (Saturn *)OurVessel;
 			LightUplink();
 			sat->SetSIISep();
@@ -697,6 +711,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 6:
 		if (simt > NextEventTime) {
+			LightCompActy();
 			Saturn *sat = (Saturn *)OurVessel;
 			DoTLICalcs(simt);
 			ClearUplink();
@@ -710,6 +725,7 @@ void CSMcomputer::Prog15(double simt)
 		if (simt > NextEventTime) {
 			BlankAll();
 
+			LightCompActy();
 			soundlib.LoadMissionSound(STLI, GO_FOR_TLI_SOUND, NULL);
 
 			VerbRunning = 0;
@@ -761,6 +777,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 10:
 		if (simt >= NextEventTime) {
+			LightCompActy();
 			Saturn *sat = (Saturn *)OurVessel;
 			sat->SetSIISep();
 			NextEventTime = BurnStartTime - 18;
@@ -771,6 +788,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 11:
 		if (simt >= NextEventTime) {
+			LightCompActy();
 			Saturn *sat = (Saturn *)OurVessel;
 			sat->ClearSIISep();
 			NextEventTime = BurnStartTime - 10.9;
@@ -812,6 +830,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 13:
 		if (simt >= NextEventTime) {
+			LightCompActy();
 			Saturn *sat = (Saturn *)OurVessel;
 			NextEventTime = BurnStartTime;
 			sat->SetEngineIndicator(1);
@@ -825,6 +844,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 14:
 		if (simt > BurnStartTime) {
+			LightCompActy();
 			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
 			SetOutputChannelBit(012, 13, true);
 			ProgState++;
@@ -851,6 +871,7 @@ void CSMcomputer::Prog15(double simt)
 				STLIStart.done();
 			}
 
+			LightCompActy();
 			Saturn *sat = (Saturn *) OurVessel;
 			sat->ClearEngineIndicator(1);
 			ProgState++;
@@ -895,6 +916,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 17:
 		if (simt >= NextEventTime) {
+			LightCompActy();
 			Saturn *sat = (Saturn *)OurVessel;
 			sat->ClearEngineIndicator(1);
 			FlagWord5.u.ENGONBIT = 0;

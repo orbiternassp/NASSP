@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2005/08/19 14:04:34  tschachim
+  *	Added missing DSKY display elements and a FDAI.
+  *	
   *	Revision 1.58  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -1990,20 +1993,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_FCSM_SWITCH:
-	if (my >=7 && my <=18 ){
-			    if (mx > 14 && mx < 55 && !FCSMswitch){
-				SwitchClick();
-				FCSMswitch=true;
-			}
-	}else if (my >=18 && my <=28 ){
-				if (mx >14 && mx < 55 && FCSMswitch){
-				SwitchClick();
-				FCSMswitch=false;
-				}
-		}
-		return true;
-
 	case AID_CM_RCS_SWITCH:
 		if(event & PANEL_MOUSE_RBDOWN){
 			if(mx <25 ){
@@ -3153,14 +3142,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_FCSM_SWITCH:
-		if(FCSMswitch){
-			oapiBlt(surf,srf[0],0,0,0,0,68,33);
-		}else{
-			oapiBlt(surf,srf[0],0,0,68,0,68,33);
-		}
-		return true;
-
 	case AID_MASTER_ALARM:
 	case AID_MASTER_ALARM2:
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT]);
@@ -3583,8 +3564,6 @@ void Saturn::InitSwitches() {
 	P346switch = 1;
 	P347switch = 1;
 
-	FCSMswitch = false;
-
 	TJ1switch = false;
 	TJ1Cswitch = false;
 	TJ2switch = false;
@@ -3846,7 +3825,6 @@ int Saturn::GetLPSwitchState()
 	state.u.P111switch = P111switch;
 	state.u.P112switch = P112switch;
 	state.u.P113switch = P113switch;
-	state.u.FCSMswitch = FCSMswitch;
 	state.u.EMSKswitch = EMSKswitch;
 
 	return state.word;
@@ -3873,7 +3851,6 @@ void Saturn::SetLPSwitchState(int s)
 	P111switch = state.u.P111switch;
 	P112switch = state.u.P112switch;
 	P113switch = state.u.P113switch;
-	FCSMswitch = state.u.FCSMswitch;
 	EMSKswitch = state.u.EMSKswitch;
 }
 

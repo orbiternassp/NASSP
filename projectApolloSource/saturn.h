@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2005/08/19 13:41:47  tschachim
+  *	Added FDAI.
+  *	
   *	Revision 1.49  2005/08/18 20:54:16  movieman523
   *	Added Main Release switch and wired it up to the parachutes.
   *	
@@ -548,6 +551,9 @@ protected:
 	//
 	// Main chute release switch.
 	//
+	// Currently this does nothing, as the parachutes automatically release from the CM
+	// after landing.
+	//
 
 	SwitchRow MainReleaseRow;
 	GuardedToggleSwitch MainReleaseSwitch;
@@ -620,8 +626,6 @@ protected:
 	bool CMDCswitch;
 	bool CMPswitch;
 	bool CMPCswitch;
-
-	bool FCSMswitch;
 
 	bool GDCswitch;
 
