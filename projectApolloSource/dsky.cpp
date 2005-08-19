@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.11  2005/08/18 20:07:19  spacex15
   *	fixed click sound missing in lm dsky
   *	
@@ -320,6 +323,28 @@ char DSKY::ValueChar(unsigned val)
 	return ' ';
 }
 
+void DSKY::ProcessChannel13(int val)
+
+{
+	ChannelValue13 out_val;
+
+	out_val.Value = val;
+
+	// StandbyLight (TODO: PRO key?
+	if (out_val.Bits.EnableStandby || out_val.Bits.TestAlarms) {
+		SetStby(true);
+	} else {
+		SetStby(false);
+	}
+
+	// RestartLight (TODO other conditions)
+	if (out_val.Bits.TestAlarms) {
+		SetRestart(true);
+	} else {
+		SetRestart(false);
+	}
+}
+
 void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit)
 
 {
@@ -341,8 +366,8 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit());
 	DSKYLightBlt(surf, lights, 0, 25, NoAttLit());
 	DSKYLightBlt(surf, lights, 0, 49, StbyLit());
-	DSKYLightBlt(surf, lights, 0, 73, KbRelLit());
-	DSKYLightBlt(surf, lights, 0, 97, OprErrLit());
+	DSKYLightBlt(surf, lights, 0, 73, KbRelLit() && FlashOn);
+	DSKYLightBlt(surf, lights, 0, 97, OprErrLit() && FlashOn);
 
 	DSKYLightBlt(surf, lights, 52, 0,  TempLit());
 	DSKYLightBlt(surf, lights, 52, 25, GimbalLockLit());
@@ -558,7 +583,8 @@ void DSKY::ProcessKeyRelease(int mx, int my)
 		}
 	}
 	else {
-		SendKeyCode(0);
+		// this seems to cause operation errors
+		// SendKeyCode(0);
 	}
 
 #if 0
@@ -628,26 +654,35 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	}
 }
 
-void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits)
+void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
 
 {
+	oapiBlt(surf, disp, 66,   3, 35,  0, 35, 10, SURF_PREDEF_CK);
+	oapiBlt(surf, disp, 66,  38, 35, 10, 35, 10, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  7,  38, 35, 20, 35, 10, SURF_PREDEF_CK);
+
+	oapiBlt(surf, disp,  8,  73,  0, 32, 89,  4, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8, 107,  0, 32, 89,  4, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8, 141,  0, 32, 89,  4, SURF_PREDEF_CK);
+
 	if (CompActy) {
 		//
 		// Do stuff to update Comp Acty light.
 		//
+		oapiBlt(surf, disp,  7,   3,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 
-	RenderTwoDigitDisplay(surf, digits, 67, 18, Prog, false);
-	RenderTwoDigitDisplay(surf, digits, 8, 52, Verb, VerbFlashing);
-	RenderTwoDigitDisplay(surf, digits, 67, 52, Noun, NounFlashing);
+	RenderTwoDigitDisplay(surf, digits, 67, 16, Prog, false);
+	RenderTwoDigitDisplay(surf, digits,  8, 51, Verb, VerbFlashing);
+	RenderTwoDigitDisplay(surf, digits, 67, 51, Noun, NounFlashing);
 
 	//
 	// Register contents.
 	//
 
-	RenderSixDigitDisplay(surf, digits, 3, 85, R1);
-	RenderSixDigitDisplay(surf, digits, 3, 119, R2);
-	RenderSixDigitDisplay(surf, digits, 3, 153, R3);
+	RenderSixDigitDisplay(surf, digits, 3, 83, R1);
+	RenderSixDigitDisplay(surf, digits, 3, 117, R2);
+	RenderSixDigitDisplay(surf, digits, 3, 151, R3);
 }
 
 typedef union
