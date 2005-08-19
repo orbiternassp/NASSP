@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/19 18:38:13  movieman523
+  *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
+  *	
   *	Revision 1.15  2005/08/19 13:57:22  tschachim
   *	Added earth orbit insertation monitoring.
   *	Added check for nonspherical gravity sources.
@@ -306,7 +309,7 @@ bool CSMcomputer::OrbitCalculationsValid()
 	case 15:
 		return true;
 
-	case 33:
+	case 37:
 		if (ProgState >= 2)
 			return true;
 		break;
@@ -572,6 +575,8 @@ void CSMcomputer::Prog11(double simt)
 
 			VerbRunning = 0;
 			NounRunning = 0;
+
+			InOrbit = 1;
 
 			Sat->SetAutopilot(false);
 
