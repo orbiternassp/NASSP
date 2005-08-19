@@ -117,6 +117,10 @@ IDB_INDICATOR				BITMAP  DISCARDABLE		"Indicator.bmp"
 IDB_SWITCHGUARDS			BITMAP  DISCARDABLE		"SwitchGuards.bmp"
 IDB_SUITCABINDELTAPMETER	BITMAP  DISCARDABLE		"SuitCabinDeltaPMeter.bmp"
 IDB_THREEPOSSWITCH305   	BITMAP  DISCARDABLE		"threeposswitch305.bmp"
+IDB_DSKY_DISP			   	BITMAP  DISCARDABLE		"dsky_disp.bmp"
+IDB_FDAI_ROLLINDICATOR	   	BITMAP  DISCARDABLE		"FDAIRollindicator.bmp"
+IDB_FDAI				   	BITMAP  DISCARDABLE		"FDAI.bmp"
+IDB_FDAI_ROLL			   	BITMAP  DISCARDABLE		"FDAIRoll.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 

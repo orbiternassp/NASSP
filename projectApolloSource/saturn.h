@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2005/08/18 20:54:16  movieman523
+  *	Added Main Release switch and wired it up to the parachutes.
+  *	
   *	Revision 1.48  2005/08/18 19:12:21  movieman523
   *	Added Event Timer switches and null Event Timer class.
   *	
@@ -183,6 +186,7 @@
 #include "cautionwarning.h"
 #include "csmcautionwarning.h"
 #include "missiontimer.h"
+#include "FDAI.h"
 #include "satswitches.h"
 
 class Saturn: public VESSEL2, public PanelSwitchListener {
@@ -334,6 +338,10 @@ protected:
 	//
 	// Switches
 	//
+
+	FDAI fdaiRight;
+	HBITMAP hBmpFDAIRollIndicator;
+
 	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
 	GuardedPushSwitch LesMotorFireSwitch;
 	GuardedPushSwitch CanardDeploySwitch;
