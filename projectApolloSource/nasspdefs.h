@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/08/16 18:54:30  movieman523
+  *	Added Altimeter and launch vehicle switches.
+  *	
   *	Revision 1.26  2005/08/15 20:18:16  movieman523
   *	Made thrust meter work. Unfortunately on a real CSM it's not a thrust meter :).
   *	
@@ -150,10 +153,11 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 34; // number of bitmap handles
+const int nsurf = 37; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
+#define SRF_DIGITAL					 4
 #define SRF_SWITCHUP				 6
 #define SRF_SWITCHGUARDS			 8
 #define SRF_ABORT					 9
@@ -172,6 +176,9 @@ const int nsurf = 34; // number of bitmap handles
 #define SRF_LMMFDFRAME				31
 #define SRF_LMTHREEPOSLEVER         32
 #define SRF_LMTHREEPOSSWITCH        33
+#define SRF_DSKYDISP				34
+#define SRF_FDAI				    35
+#define SRF_FDAIROLL			    36
 
 //
 // Earth radius and gravity constants.
