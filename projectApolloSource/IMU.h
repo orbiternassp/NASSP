@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/13 00:09:43  movieman523
+  *	Added IMU Cage switch
+  *	
   *	Revision 1.1  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -54,6 +57,7 @@ public:
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
 	void SetVessel(VESSEL *v) { OurVessel = v; };
+	VECTOR3 GetTotalAttitude();
 
 	bool IsCaged();
 	void SetCaged(bool val);
@@ -63,11 +67,11 @@ public:
 
 protected:
 
-	VECTOR3 IMU::CalculateAccelerations(double deltaT);
-	void DriveCDUX();
-	void DriveCDUY();
-	void DriveCDUZ();
-	void DriveCDU(int index, int RegCDU, int RegCDUCMD);
+	VECTOR3 CalculateAccelerations(double deltaT);
+	void DriveCDUX(int cducmd);
+	void DriveCDUY(int cducmd);
+	void DriveCDUZ(int cducmd);
+	void DriveCDU(int index, int RegCDU, int cducmd);
 	void DriveGimbalX(double angle);
 	void DriveGimbalY(double angle);
 	void DriveGimbalZ(double angle);

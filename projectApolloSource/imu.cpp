@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/13 00:09:43  movieman523
+  *	Added IMU Cage switch
+  *	
   *	Revision 1.6  2005/08/12 17:49:42  movieman523
   *	Fixed stupid cut-and-paste error: IMU is up and running!
   *	
@@ -130,7 +133,7 @@ bool IMU::IsCaged()
 }
 
 //
-// Cage the IMU. I presume this also turns it off?
+// Cage the IMU. I presume this also turns it off? -> NO!
 //
 
 void IMU::SetCaged(bool val)
@@ -141,7 +144,7 @@ void IMU::SetCaged(bool val)
 		agc.SetInputChannelBit(030, 11, val);
 
 		if (val) {
-			TurnOff();
+			//TurnOff();
 			ZeroIMUCDUs();
 		}
 	}
@@ -210,59 +213,56 @@ void IMU::ChannelOutput(int address, int value)
 		return;
 	}
 
-	if (address == 014) {
-    	ChannelValue14 val14;
-    	val14.Value = value;
-  	  	
-  		if (val14.Bits.DriveCDUX) { 
-  	  		DriveCDUX();
-  		}
-  		if (val14.Bits.DriveCDUY) { 
-  	  		DriveCDUY();
-  		}
-  		if (val14.Bits.DriveCDUZ) { 
-  	  		DriveCDUZ();
-  		}
-  	
-		if (val14.Bits.GyroActivity) {		  			  
-		  	if (val14.Bits.GyroSign) {
-				pulses = -agc.GetErasable(0, RegGYROCTR);
-		  	} 
-			else {
-				pulses = agc.GetErasable(0, RegGYROCTR);
-		  	}	  		  
-		  	delta = gyroPulsesToRad(pulses);
-		  	
-		  	// gyro torquing is done in stable member coordinates
-		  	if (val14.Bits.GyroSelectA && val14.Bits.GyroSelectB) {
-		  		t = getRotationMatrixZ(delta);
-		  	} 
-			else if (val14.Bits.GyroSelectA) {
-		  		t = getRotationMatrixY(delta);
-		  	} 
-			else if (val14.Bits.GyroSelectB) {
-		  		t = getRotationMatrixX(delta);
-		  	}
-		    
-		    // transformation to navigation base coordinates
-			// CAUTION: gimbal angles are left-handed
-		  	t = multiplyMatrix(getRotationMatrixY(-Gimbal.Y), t);
-		  	t = multiplyMatrix(getRotationMatrixZ(-Gimbal.Z), t);
-		  	t = multiplyMatrix(getRotationMatrixX(-Gimbal.X), t);
-		  	
-		  	// calculate the new gimbal angles
-		  	newAngles = getRotationAnglesXZY(t);
+	// coarse align 
+	if (address == 0174) {
+		DriveCDUX(value);
+	}
+	if (address == 0175) {
+		DriveCDUY(value);
+	}
+	if (address == 0176) {
+		DriveCDUZ(value);
+	}
 
-			// drive gimabals to new angles
-			// CAUTION: gimbal angles are left-handed			
-		  	DriveGimbalX(-newAngles.x - Gimbal.X);
-		  	DriveGimbalY(-newAngles.y - Gimbal.Y);
-		  	DriveGimbalZ(-newAngles.z - Gimbal.Z);
-			SetOrbiterAttitudeReference();
+	// gyro torquing
+	if (address == 0177) {
+		ChannelValue177 val177;
+		val177.Value = value;
 
-			// set to zero, otherwise the AGC adds the new pulses to the old ones 
-			agc.SetErasable(0, RegGYROCTR, 0);
-		}  	
+		if (val177.Bits.GyroSign) {
+			pulses = -1 * val177.Bits.GyroPulses; 
+		} 
+		else {
+			pulses = val177.Bits.GyroPulses;
+		}	  		  
+		delta = gyroPulsesToRad(pulses);
+		
+		// gyro torquing is done in stable member coordinates
+		if (val177.Bits.GyroSelectA && val177.Bits.GyroSelectB) {
+		  	t = getRotationMatrixZ(delta);
+		} 
+		else if (val177.Bits.GyroSelectA) {
+		  	t = getRotationMatrixY(delta);
+		} 
+		else if (val177.Bits.GyroSelectB) {
+		  	t = getRotationMatrixX(delta);
+		}
+		
+		// transformation to navigation base coordinates
+		// CAUTION: gimbal angles are left-handed
+		t = multiplyMatrix(getRotationMatrixY(-Gimbal.Y), t);
+		t = multiplyMatrix(getRotationMatrixZ(-Gimbal.Z), t);
+		t = multiplyMatrix(getRotationMatrixX(-Gimbal.X), t);
+		
+		// calculate the new gimbal angles
+		newAngles = getRotationAnglesXZY(t);
+
+		// drive gimabals to new angles
+		// CAUTION: gimbal angles are left-handed			
+		DriveGimbalX(-newAngles.x - Gimbal.X);
+		DriveGimbalY(-newAngles.y - Gimbal.Y);
+		DriveGimbalZ(-newAngles.z - Gimbal.Z);
+		SetOrbiterAttitudeReference();
 	}
 }
 
@@ -328,112 +328,6 @@ VECTOR3 IMU::CalculateAccelerations(double deltaT)
 	// total gravity
 	GravityAcceleration = GravityAcceleration + gb;
 
-	// ***********************************************************
-	// Earth orbit "calibration" WITHOUT non-spherical gravity
-	// TODO: better solution
-
-/*	double orbitalt = (desired_apogee + desired_perigee) / 2.0;
-	double accrad = dotp(pos, Acceleration);
-	VECTOR3 accRad = pos * accrad;
-	VECTOR3 accTan = Acceleration - accRad;
-
-	int stage = ((Saturn *) OurVessel)->GetStage();
-	if (stage < LAUNCH_STAGE_ONE || stage > LAUNCH_STAGE_SIVB) {
-		double orbitdist = 6373338.0 + orbitalt;
-		accRad = accRad * (1.0 + length(gb) / (0.3986032e15 / (orbitdist * orbitdist)));
-	} else {
-		
-		double a = (-0.3 - -0.3) / (184.55 - 166.96);
-		double b = -0.3 - (a * 184.55);
-		double y = (a * orbitalt) + b;
-
-		accRad = accRad * (1.0 + length(gb) * (accrad / fabs(accrad)) * y);
-	
-		double c = (0.85 - 0.52) / (72.06 - 91.5);
-		double d = 0.85 - (c * 72.06);
-		double z = (c * desired_azimuth) + d;
-
-		accTan = accTan * (1.0 + length(gb) * z);
-
-	}
-	Acceleration = accRad + accTan;
-*/
-
-	// ***********************************************************
-	// Earth orbit calibration WITH nonspherical gravity
-	// TODO: better solution
-
-	double accrad = dotp(pos, Acceleration);
-	VECTOR3 accRad = pos * accrad;
-	VECTOR3 accTan = Acceleration - accRad;
-
-#if MUSTFIX // Commented out for the minute as this will go horribly wrong in the LEM.
-	int stage = ((Saturn *) OurVessel)->GetStage();
-	if (stage >= LAUNCH_STAGE_ONE && stage <= LAUNCH_STAGE_SIVB) {		
- 		accRad = accRad * (1.0 + (accrad / fabs(accrad)) * -0.001);
-		accTan = accTan * 1.0028;
-
-		Acceleration = accRad + accTan;
-	}
-#endif
-
-	// ***********************************************************
-	// various debug-prints
-
-/*	VECTOR3 hvel;
-	double vvel = 0;
-	if (OurVessel->GetHorizonAirspeedVector(hvel)) {
-		vvel = hvel.y * 3.2808399;
-	}	
-	sprintf(oapiDebugString(), "Stage %d.%d Vert. Vel %.1f Alt %.1f Acc %f GAcc %f TAcc %f accR %f",  
-		((Saturn *) OurVessel)->GetStage(), ((Saturn *) OurVessel)->GetStageState(), 
-		vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 
-		length(Acceleration), length(GravityAcceleration), length(Acceleration + GravityAcceleration), 
-		length(accR) * dotp(pos, Acceleration) / fabs(dotp(pos, Acceleration)));
-*/
-
-/*	sprintf(oapiDebugString(), "A X%f Y%f Z%f (%f) Ar X%f Y%f Z%f (%f) Ap X%f Y%f Z%f (%f)",  
-		Acceleration.x, Acceleration.y, Acceleration.z, length(Acceleration), 
-		accR.x, accR.y, accR.z, length(accR), 
-		accP.x, accP.y, accP.z, length(accP));
-*/
-		
-/*		sprintf(oapiDebugString(), "Uz X %f Y %f Z %f - Pos X %f Y %f Z %f (%f)",  
-			uz.x, uz.y, uz.z, pos.x, pos.y, pos.z, distance); 
-*/
-
-//	VECTOR3 tacc = Acceleration + GravityAcceleration; 
-/*	sprintf(oapiDebugString(), "A X%f Y%f Z%f (%f) GA X%f Y%f Z%f (%f) GAb X%f Y%f Z%f (%f) TA X%f Y%f Z%f (%f)",  
-		Acceleration.x, Acceleration.y, Acceleration.z, length(Acceleration), 
-		GravityAcceleration.x - gb.x, GravityAcceleration.y - gb.y, GravityAcceleration.z - gb.z, length(GravityAcceleration - gb), 
-		gb.x, gb.y, gb.z, length(gb),
-		tacc.x, tacc.y, tacc.z, length(tacc));
-*/
-/*	sprintf(oapiDebugString(), "A X%f Y%f Z%f (%f) GA X%f Y%f Z%f (%f) TA X%f Y%f Z%f (%f)",  
-		Acceleration.x, Acceleration.y, Acceleration.z, length(Acceleration), 
-		GravityAcceleration.x, GravityAcceleration.y, GravityAcceleration.z, length(GravityAcceleration), 
-		tacc.x, tacc.y, tacc.z, length(tacc));
-*/
-
-	// TODO Test
-/*	VECTOR3 ug = GravityAcceleration / length(GravityAcceleration);
-	double accG = dotp(Acceleration, ug);
-
-	VECTOR3 east = crossp(pos, uz);
-	east = east / length(east);
-	Acceleration += east * (dotp(Acceleration, east) * 0.1);
-
-	Acceleration += ug * (accG * -0.2); 
-	
-	sprintf(oapiDebugString(), "East X %f Y %f Z %f (%f)", 
-		east.x, east.y, east.z, length(east));
-*/
-
-/*	fprintf(logFile, "%f Dist %f Acc %f\n", 
-		 oapiGetSimTime(), distance, length(Acceleration)); 
-	fflush(logFile);
-*/
-
 
 	// ***********************************************************
 	// store for next timestep
@@ -495,6 +389,9 @@ void IMU::Timestep(double simt)
 		else if(val12.Bits.CoarseAlignEnable) {
 			SetOrbiterAttitudeReference();
 		}
+		else if(Caged) {
+			SetOrbiterAttitudeReference();
+		}
 		else {
 
 			// Gimbals
@@ -551,8 +448,7 @@ void IMU::Timestep(double simt)
 void IMU::PulsePIPA(int RegPIPA, int pulses) 
 
 {
-	int val = (agc.GetErasable(0, RegPIPA) + pulses);
-	agc.SetErasable(0, RegPIPA, (val & 077777));
+	agc.PulsePIPA(RegPIPA, pulses);
 }
 
 void IMU::DriveGimbals(double x, double y, double z) 
@@ -624,35 +520,34 @@ void IMU::DriveGimbal(int index, int RegCDU, double angle, int changeCDU)
 //	}
 }
 
-void IMU::DriveCDUX() 
+void IMU::DriveCDUX(int cducmd) 
 
 {
-	DriveCDU(0, RegCDUX, RegCDUXCMD);
+	DriveCDU(0, RegCDUX, cducmd);
 }
 
-void IMU::DriveCDUY() 
+void IMU::DriveCDUY(int cducmd) 
 
 {
-	DriveCDU(1, RegCDUY, RegCDUYCMD);
+	DriveCDU(1, RegCDUY, cducmd);
 }
 
-void IMU::DriveCDUZ() 
+void IMU::DriveCDUZ(int cducmd) 
 
 {
-	DriveCDU(2, RegCDUZ, RegCDUZCMD);
+	DriveCDU(2, RegCDUZ, cducmd);
 }
 
-void IMU::DriveCDU(int index, int RegCDU, int RegCDUCMD) 
+void IMU::DriveCDU(int index, int RegCDU, int cducmd) 
 
 {
 	int pulses;
 
-	int cmd = agc.GetErasable(0, RegCDUCMD);
-
-	if (040000 & cmd) {  // Negative?
-		pulses = (cmd - 077777) * 256;	// Coarse align
+	if (040000 & cducmd) {  // Negative?
+		//pulses = (cducmd - 077777) * 256;	// Coarse align
+		pulses = (040000 - cducmd) * 256;	// Coarse align
 	} else {
-		pulses = cmd * 256;				// Coarse align
+		pulses = cducmd * 256;				// Coarse align
 	}	
 	DriveGimbal(index, RegCDU, gyroPulsesToRad(pulses), 1);
 	SetOrbiterAttitudeReference();
@@ -688,6 +583,17 @@ void IMU::ZeroIMUCDUs()
 	Gimbal.Y = 0;
 	Gimbal.Z = 0;
 	SetOrbiterAttitudeReference();
+}
+
+VECTOR3 IMU::GetTotalAttitude() 
+
+{
+	VECTOR3 v;
+	v.x = Gimbal.X;
+	v.y = Gimbal.Y;
+	v.z = Gimbal.Z;
+
+	return v;
 }
 
 typedef union
