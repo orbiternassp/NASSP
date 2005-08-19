@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.57  2005/08/18 20:54:16  movieman523
   *	Added Main Release switch and wired it up to the parachutes.
   *	
@@ -854,7 +857,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_INDICATOR]				= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
 		srf[SRF_NEEDLE]					= oapiCreateSurface (LOADBMP (IDB_NEEDLE));
 		srf[3]							= oapiCreateSurface (LOADBMP (IDB_HORIZON));
-		srf[4]							= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
+		srf[SRF_DIGITAL]				= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
 		srf[5]							= oapiCreateSurface (LOADBMP (IDB_HORIZON2));
 		srf[SRF_SWITCHUP]				= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		srf[7]							= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
@@ -879,6 +882,9 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_ROTATIONALSWITCH]		= oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
 		srf[SRF_SUITCABINDELTAPMETER]	= oapiCreateSurface (LOADBMP (IDB_SUITCABINDELTAPMETER));
 		srf[SRF_THREEPOSSWITCH305]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH305));
+		srf[SRF_DSKYDISP]       		= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));
+		srf[SRF_FDAI]	        		= oapiCreateSurface (LOADBMP (IDB_FDAI));
+		srf[SRF_FDAIROLL]       		= oapiCreateSurface (LOADBMP (IDB_FDAI_ROLL));
 				
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -894,6 +900,9 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_ROTATIONALSWITCH],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SUITCABINDELTAPMETER],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH305],	g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],				g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_FDAI],					g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_FDAIROLL],				g_Param.col[4]);
 /*		break;
 	}
 */
@@ -1152,7 +1161,11 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+
+		// FDAI
+		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1120, 314);
+		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;    
@@ -2591,7 +2604,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_DSKY_DISPLAY:
-		dsky.RenderData(surf, srf[4]);
+		dsky.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
+		return true;
+
+	case AID_FDAI_RIGHT:
+		fdaiRight.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
 		return true;
 
 	case AID_DSKY2_LIGHTS:
@@ -2599,7 +2616,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_DSKY2_DISPLAY:
-		dsky2.RenderData(surf, srf[4]);
+		dsky2.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
 		return true;
 
 	case AID_ABORT_BUTTON:
@@ -2674,7 +2691,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_MISSION_CLOCK:
-		MissionTimerDisplay.Render(surf, srf[4]);
+		MissionTimerDisplay.Render(surf, srf[SRF_DIGITAL]);
 		return true;
 
 	// old stuff
@@ -2923,10 +2940,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		int tmpalt2;
 		if (actualALT > 999999){
 		actualALT = actualALT /1000000;
-		oapiBlt(surf,srf[4],85,0,130,0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],85,0,130,0,10,15);
 		}else if (actualALT > 9999){
 		actualALT =actualALT /1000;
-		oapiBlt(surf,srf[4],85,0,120,0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],85,0,120,0,10,15);
 		}
 
 		TmpALT = (int)actualALT;
@@ -2934,27 +2951,27 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		tmpalt2 = (int)(tmpALTdec *100.0);
 
 		Curdigit=(int)actualALT/10000;
-		oapiBlt(surf,srf[4],0,0,10*Curdigit,0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],0,0,10*Curdigit,0,10,15);
 		Curdigit=(int)actualALT/1000;
 		Curdigit2=(int)actualALT/10000;
-		oapiBlt(surf,srf[4],10,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],10,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		Curdigit=(int)actualALT/100;
 		Curdigit2=(int)actualALT/1000;
-		oapiBlt(surf,srf[4],20,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],20,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		Curdigit=(int)actualALT/10;
 		Curdigit2=(int)actualALT/100;
-		oapiBlt(surf,srf[4],30,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],30,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		Curdigit=(int)actualALT;
 		Curdigit2=(int)actualALT/10;
-		oapiBlt(surf,srf[4],40,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		oapiBlt(surf,srf[4],50,11,140,8,10,4);//dot display
+		oapiBlt(surf,srf[SRF_DIGITAL],40,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],50,11,140,8,10,4);//dot display
 
 		Curdigit=tmpalt2/10 ;
 		Curdigit2=tmpalt2 /100;
-		oapiBlt(surf,srf[4],60,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],60,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		Curdigit=tmpalt2 ;
 		Curdigit2=tmpalt2 /10;
-		oapiBlt(surf,srf[4],70,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],70,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		return true;
 
 	case AID_CM_RCS_SWITCH:
