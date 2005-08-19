@@ -21,8 +21,9 @@
 #define AID_GMETER                      28
 #define AID_THRUSTMETER                 29
 #define AID_SPS                         30
-#define AID_EDS                         31
-#define AID_SWITCH_JET                  32
+#define AID_ABORT_ROW                   31
+#define AID_EDS                         32
+
 #define AID_VSI                         33
 #define AID_MISSION_CLOCK               34
 #define AID_SWITCH_PANEL_RIGHT          35
@@ -61,19 +62,19 @@
 #define AID_LV_TANK_GAUGES              75
 #define AID_GDC_BUTTON                  76
 #define AID_EMS                         77
-#define AID_ABORT_ROW                   78
+#define AID_SWITCH_JET                  78
 #define AID_MAIN_RELEASE_SWITCH         79
-#define AID_TOWER_JET_SWITCH1           80
-#define AID_TOWER_JET_SWITCH2           81
-#define AID_IU_GUIDANCE_SWITCH          82
+
+
+
 #define AID_LV_SWITCHES					83
 #define AID_DOCKING_PROBE_SWITCH        84
 #define AID_P21                         85
 #define AID_SEQUENCERSWITCHES           86
 #define AID_LEM_POWER_SWITCH            87
 #define AID_SMRCS_HELIUM1_SWITCHES      89
-#define AID_P22                         90
-#define AID_P23                         91
+
+
 #define AID_SMRCS_HELIUM2_SWITCHES      92
 #define AID_PRIM_PRPLNT_SWITCHES        93
 #define AID_P24                         94

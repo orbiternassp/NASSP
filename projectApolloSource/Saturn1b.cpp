@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/17 00:01:59  movieman523
+  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
+  *	
   *	Revision 1.18  2005/08/15 18:48:50  movieman523
   *	Moved the stage destroy code into a generic function for Saturn V and 1b.
   *	
@@ -594,7 +597,7 @@ void Saturn1b::StageStartSIVB(double simt)
 	//
 
 	case 5:
-		if (MissionTime > NextMissionEventTime) {
+		if (MissionTime > NextMissionEventTime || TowerJett1Switch.GetState() || TowerJett2Switch.GetState()) {
 			SeparateStage(stage);
 			TowerJS.play();
 			TowerJS.done();

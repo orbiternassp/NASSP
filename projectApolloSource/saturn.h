@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2005/08/19 18:38:13  movieman523
+  *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
+  *	
   *	Revision 1.50  2005/08/19 13:41:47  tschachim
   *	Added FDAI.
   *	
@@ -559,6 +562,17 @@ protected:
 	GuardedToggleSwitch MainReleaseSwitch;
 
 	//
+	// Abort switches.
+	//
+
+	SwitchRow AbortRow;
+	ToggleSwitch PropDumpAutoSwitch;
+	ToggleSwitch TwoEngineOutAutoSwitch;
+	ToggleSwitch LVRateAutoSwitch;
+	GuardedToggleSwitch TowerJett1Switch;
+	GuardedToggleSwitch TowerJett2Switch;
+
+	//
 	// OLD Switches: delete these as and when we can do so.
 	//
 	// old stuff begin
@@ -629,16 +643,6 @@ protected:
 
 	bool GDCswitch;
 
-	bool TJ1switch;
-	bool TJ1Cswitch;
-	bool TJ2switch;
-	bool TJ2Cswitch;
-
-	bool LVSswitch;
-
-	bool IUswitch;
-	bool IUCswitch;
-
 	bool DPswitch;
 	bool DPCswitch;
 
@@ -693,20 +697,11 @@ protected:
 	ThreePosSwitch P118switch;
 	ThreePosSwitch P119switch;
 
-	ToggleSwitch P21switch;
-	ToggleSwitch P22switch;
-	ToggleSwitch P23switch;
-
 	ThreePosSwitch P24switch;
 	ThreePosSwitch P25switch;
 	ThreePosSwitch P26switch;
 	ThreePosSwitch P27switch;
 	ThreePosSwitch P28switch;
-
-	ToggleSwitch P29switch;
-	ToggleSwitch P210switch;
-
-	ToggleSwitch P211switch;
 
 	ThreePosSwitch P212switch;
 	ThreePosSwitch P213switch;
@@ -959,11 +954,7 @@ protected:
 
 	SwitchRow MRRow;
 
-	SwitchRow ABTRow;
-
 	SwitchRow P21Row;
-	SwitchRow P22Row;
-	SwitchRow P23Row;
 	SwitchRow P24Row;
 	SwitchRow P25Row;
 
@@ -1263,8 +1254,6 @@ protected:
 	void SetLPSwitchState(int s);
 	int GetRPSwitchState();
 	void SetRPSwitchState(int s);
-	int GetCPSwitchState();
-	void SetCPSwitchState(int s);
 	int GetCP2SwitchState();
 	void SetCP2SwitchState(int s);
 	int GetCP3SwitchState();
