@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/09 00:21:37  movieman523
+  *	Copied I/O channel definitions from virtual apollo.
+  *	
   **************************************************************************/
 
 typedef union {
@@ -193,3 +196,13 @@ typedef union {
 	unsigned int Value;
 } ChannelValue33;
 
+typedef union {
+	struct {
+		unsigned GyroPulses:11;
+		unsigned GyroEnable:1;
+		unsigned GyroSelectB:1;
+		unsigned GyroSelectA:1;
+		unsigned GyroSign:1;
+	} Bits;
+	unsigned int Value;
+} ChannelValue177;
