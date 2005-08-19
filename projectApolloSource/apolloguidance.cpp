@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/08/19 14:05:43  tschachim
+  *	Fixes because of new Virtual AGC version.
+  *	Disabled cycle limitation.
+  *	
   *	Revision 1.33  2005/08/18 23:06:31  movieman523
   *	Changed agcptr to agc_clientdata to match next version of Virtual AGC.
   *	
@@ -1121,6 +1125,17 @@ bool ApolloGuidance::GenericTimestep(double simt)
 		return true;
 	}
 
+	//
+	// Now we know this isn't a Virtual AGC, run the C++ AGC code.
+	//
+
+	//
+	// Clear the COMP ACTY light. That way any code can set it while processing, and
+	// it will automatically be reset on the next timestep.
+	//
+
+	ClearCompActy();
+
 	if (Standby)
 		return true;
 
@@ -1145,6 +1160,7 @@ bool ApolloGuidance::GenericTimestep(double simt)
 
 	case 16:
 		if (simt > (LastVerb16Time + 0.5)) {
+			LightCompActy();
 			DisplayNounData(NounRunning);
 			LastVerb16Time = simt;
 		}
@@ -1325,6 +1341,8 @@ void ApolloGuidance::DoOrbitBurnCalcs(double simt)
 	double VnewBurn1, VesselMass;
 	VECTOR3 RelPosition, RelVelocity;
 	ELEMENTS Elements;
+
+	LightCompActy();
 
 	// Planet parameters
 	hSetGbody = OurVessel->GetApDist(OrbitApo);

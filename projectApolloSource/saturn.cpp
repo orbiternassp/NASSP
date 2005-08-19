@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.41  2005/08/18 20:54:16  movieman523
   *	Added Main Release switch and wired it up to the parachutes.
   *	
@@ -2162,19 +2165,19 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_STAGE:
-		if (GetAtmPressure() > 38000)
+		if (GetAtmPressure() > 38000 || ApexCoverJettSwitch.GetState())
 			StageEight(simt);
 		else
 			StageSeven(simt);
 		break;
 
 	case CM_ENTRY_STAGE:
-		if (GetAtmPressure() > 37680)
+		if (GetAtmPressure() > 37680|| ApexCoverJettSwitch.GetState())
 			StageEight(simt);
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		if (GetAtmPressure() > 39000) {
+		if (GetAtmPressure() > 39000 || DrogueDeploySwitch.GetState()) {
 			SetChuteStage1();
 			LAUNCHIND[3] = true;
 			SetStage(CM_ENTRY_STAGE_THREE);
@@ -2187,7 +2190,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	//
 
 	case CM_ENTRY_STAGE_THREE:
-		if (GetAtmPressure() > 66000 || MainReleaseSwitch.GetState()) {
+		if (GetAtmPressure() > 66000 || MainDeploySwitch.GetState()) {
 			SetChuteStage2();
 			SetStage(CM_ENTRY_STAGE_FOUR);
 			NextMissionEventTime = MissionTime + 2.5;
