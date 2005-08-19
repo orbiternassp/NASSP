@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/08/18 23:06:31  movieman523
+  *	Changed agcptr to agc_clientdata to match next version of Virtual AGC.
+  *	
   *	Revision 1.32  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -1102,11 +1105,15 @@ bool ApolloGuidance::GenericTimestep(double simt)
 			// Don't want to kill a slow PC.
 			//
 
+/*			TODO: Disabled for the moment because if I have a long timestep during test flights
+			      and the cycles get limited, the AGC loses time synchronisation and everything 
+				  is messed up.
+
 			if (cycles > 100000)
 				cycles = 100000;
 			if (cycles < 1)
 				cycles = 1;
-
+*/
 			for (i = 0; i < cycles; i++) {
 				agc_engine(&vagc);
 			}
@@ -2063,6 +2070,26 @@ void ApolloGuidance::SetErasable(int bank, int address, int value)
 	vagc.Erasable[bank][address] = value;
 }
 
+void ApolloGuidance::PulsePIPA(int RegPIPA, int pulses) 
+
+{
+	int i;
+
+	if (pulses >= 0) {
+    	for (i = 0; i < pulses; i++) {
+			UnprogrammedIncrement(&vagc, RegPIPA, 0);	// PINC
+
+    	}
+	} else {
+    	for (i = 0; i < -pulses; i++) {
+			UnprogrammedIncrement(&vagc, RegPIPA, 2);	// MINC
+    	}
+	}
+
+
+//	int val = (agc.GetErasable(0, RegPIPA) + pulses);
+//	agc.SetErasable(0, RegPIPA, (val & 077777));
+}
 
 //
 // PROG pressed.
@@ -2677,8 +2704,16 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 		ProcessChannel11(val);
 		break;
 
+	case 013:
+		ProcessChannel13();
+		break;
+
 	case 012:
 	case 014:
+	case 0174:
+	case 0175:
+	case 0176:
+	case 0177:
 		imu.ChannelOutput(channel, val);
 		break;
 	}
