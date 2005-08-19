@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2005/08/19 20:05:45  movieman523
+  *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
+  *	
   *	Revision 1.51  2005/08/19 18:38:13  movieman523
   *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
   *	
@@ -195,6 +198,40 @@
 #include "FDAI.h"
 #include "satswitches.h"
 
+//
+// Random failure flags.
+//
+
+typedef union {
+	struct {
+		unsigned Init:1;
+		unsigned CoverFail:1;
+		unsigned DrogueFail:1;
+		unsigned MainFail:1;
+	} u;
+	int word;
+} LandingFailures;
+
+typedef union {
+	struct {
+		unsigned Init:1;
+		unsigned EarlySICenterCutoff:1;
+		unsigned EarlySIICenterCutoff:1;
+		unsigned LETAutoJetFail:1;
+		unsigned SIIAutoSepFail:1;
+	} u;
+	int word;
+} LaunchFailures;
+
+typedef union {
+	struct {
+		unsigned Init:1;
+		unsigned TowerJett1Fail:1;
+		unsigned TowerJett2Fail:1;
+	} u;
+	int word;
+} SwitchFailures;
+
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
 public:
@@ -282,6 +319,7 @@ protected:
 	double NextMissionEventTime;
 	double LastMissionEventTime;
 	double NextDestroyCheckTime;
+	double NextFailureTime;
 
 	//
 	// Offset from mission time for clock display on control
@@ -331,6 +369,14 @@ protected:
 	bool CryoStir;
 
 	double TCPO;
+
+	//
+	// Failures.
+	//
+
+	LandingFailures LandFail;
+	LaunchFailures LaunchFail;
+	SwitchFailures SwitchFail;
 
 	//
 	// Pitch table.
@@ -1241,6 +1287,7 @@ protected:
 	void ActivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
+	void SetRandomFailures();
 
 	//
 	// Save/Load support functions.

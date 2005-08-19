@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/08/19 20:05:44  movieman523
+  *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
+  *	
   *	Revision 1.24  2005/08/17 00:01:59  movieman523
   *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
   *	
@@ -879,8 +882,12 @@ void SaturnV::StageFour(double simt)
 			SPUShiftS.done();
 			ClearEngineIndicators();
 			NextMissionEventTime = MissionTime;
-			SeparateStage (stage);
-			SetStage(LAUNCH_STAGE_SIVB);
+			StageState++;
+
+			if (!LaunchFail.u.SIIAutoSepFail) {
+				SeparateStage (stage);
+				SetStage(LAUNCH_STAGE_SIVB);
+			}
 		}
 		break;
 	}
@@ -892,17 +899,10 @@ void SaturnV::StageFour(double simt)
 		AttitudeLaunch2();
 	}
 
-	if (bManualSeparate) {
+	if (bManualSeparate || SIISIVBSepSwitch.GetState()) {
 		bManualSeparate = false;
 		SeparateStage (stage);
-		SetEngineIndicators();
-		NextMissionEventTime = MissionTime;
-		SetStage(LAUNCH_STAGE_SIVB);
-	}
-
-	if (SIISIVBSepSwitch.GetState()) {
-		bManualSeparate = false;
-		SeparateStage (stage);
+		ClearEngineIndicators();
 		NextMissionEventTime = MissionTime;
 		SetStage(LAUNCH_STAGE_SIVB);
 	}
