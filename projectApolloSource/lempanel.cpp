@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/08/14 16:08:20  tschachim
+  *	LM is now a VESSEL2
+  *	Changed panel restore mechanism because the CSM mechanism
+  *	caused CTDs, reason is still unknown.
+  *	
   *	Revision 1.27  2005/08/13 20:20:17  movieman523
   *	Created MissionTimer class and wired it into the LEM and CSM.
   *	
@@ -571,7 +576,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		//srf[1] = oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
 		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
 		srf[3] = oapiCreateSurface (LOADBMP (IDB_HORIZON));
-		srf[4] = oapiCreateSurface (LOADBMP (IDB_DIGITAL));
+		srf[SRF_DIGITAL] = oapiCreateSurface (LOADBMP (IDB_DIGITAL));
 		srf[5] = oapiCreateSurface (LOADBMP (IDB_FDAI));
 		srf[6] = oapiCreateSurface (LOADBMP (IDB_LEMSWITCH1));
 		srf[7] = oapiCreateSurface (LOADBMP (IDB_SWLEVER));
@@ -593,7 +598,8 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_LMMFDFRAME] = oapiCreateSurface (LOADBMP (IDB_LMMFDFRAME));
 		srf[SRF_LMTHREEPOSLEVER]= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
 		srf[SRF_LMTHREEPOSSWITCH]= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
-		
+		srf[SRF_DSKYDISP]       		= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
+
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3], 0);
@@ -606,7 +612,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSLEVER],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTWOPOSLEVER],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSSWITCH],		g_Param.col[4]);
-
+		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],		g_Param.col[4]);
 		break;
 	
 	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
@@ -1871,7 +1877,7 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_DSKY_DISPLAY:
-		dsky.RenderData(surf, srf[4]);
+		dsky.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
 		return true;
 
 	case AID_MFDLEFT:
@@ -1923,7 +1929,7 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_MISSION_CLOCK:
-		MissionTimerDisplay.Render(surf, srf[4]);
+		MissionTimerDisplay.Render(surf, srf[SRF_DIGITAL]);
 		return true;
 
 	case AID_FUEL_DIGIT:
@@ -1934,13 +1940,13 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		tmpFUELdec = actualFUEL-TmpFUEL;
 
 		Curdigit= (int) actualFUEL/100;
-		oapiBlt(surf,srf[4],0,0,10*Curdigit,0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],0,0,10*Curdigit,0,10,15);
 		Curdigit= (int) actualFUEL/10;
 		Curdigit2=(int) actualFUEL/100;
-		oapiBlt(surf,srf[4],13,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],13,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		Curdigit=(int) actualFUEL;
 		Curdigit2=(int) actualFUEL/10;
-		oapiBlt(surf,srf[4],26,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],26,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 
 		return true;
 
@@ -1952,19 +1958,19 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		tmpfuel2 = (int) tmpFUELdec *100;
 
 		Curdigit=(int) actualFUEL/100;
-		oapiBlt(surf,srf[4],0,0,10*Curdigit,0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],0,0,10*Curdigit,0,10,15);
 		Curdigit=(int) actualFUEL/10;
 		Curdigit2=(int) actualFUEL/100;
-		oapiBlt(surf,srf[4],13,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],13,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
    	    Curdigit=(int) actualFUEL;
 		Curdigit2=(int) actualFUEL/10;
-		oapiBlt(surf,srf[4],26,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],26,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 
-		oapiBlt(surf,srf[4],36,0,140,0,5,5);//dot display
+		oapiBlt(surf,srf[SRF_DIGITAL],36,0,140,0,5,5);//dot display
 
 		Curdigit=tmpfuel2/10 ;
 		Curdigit2=tmpfuel2 /100;
-		oapiBlt(surf,srf[4],42,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		oapiBlt(surf,srf[SRF_DIGITAL],42,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		return true;
 
 	case AID_DESCENT_HE:
