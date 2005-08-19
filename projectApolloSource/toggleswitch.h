@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/18 19:12:21  movieman523
+  *	Added Event Timer switches and null Event Timer class.
+  *	
   *	Revision 1.17  2005/08/17 22:54:26  movieman523
   *	Added ELS and CM RCS switches.
   *	
@@ -104,10 +107,13 @@ class PanelSwitchScenarioHandler;
 class PanelSwitchItem {
 
 public:
+	PanelSwitchItem();
 	void SetNext(PanelSwitchItem *s) { next = s; };
 	PanelSwitchItem *GetNext() { return next; };
 	void SetNextForScenario(PanelSwitchItem *s) { nextForScenario = s; };
 	PanelSwitchItem *GetNextForScenario() { return nextForScenario; };
+	void SetFailed(bool fail) { failed = fail; };
+	bool IsFailed() { return failed; };
 	//char *GetName() { return name; }
 
 	virtual bool CheckMouseClick(int event, int mx, int my) = 0;
@@ -116,6 +122,7 @@ public:
 	virtual void LoadState(char *line) = 0;
 
 protected:
+	bool failed;
 	char *name;
 	PanelSwitchItem *next;
 	PanelSwitchItem *nextForScenario;
@@ -138,14 +145,14 @@ public:
 	void SetState(bool s) { state = s; };
 	void SetOffset(int xo, int yo) {xOffset = xo; yOffset = yo; };
 	void SetSpringLoaded(int springloaded) { springLoaded = springloaded; }; 
-	int GetState() { return state; };
+	int GetState();
 	void SetActive(bool s);
 	void SetVisible(bool v) {visible = v; };
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
 	
-	virtual bool IsUp() { return (state == 1); };
-	virtual bool IsDown() { return (state == 0); };
+	virtual bool IsUp() { return (state == 1) && !failed; };
+	virtual bool IsDown() { return (state == 0) && !failed; };
 	virtual bool IsCenter() { return false; };
 
 	virtual void SwitchTo(int newState);

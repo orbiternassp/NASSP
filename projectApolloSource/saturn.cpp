@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2005/08/19 20:05:44  movieman523
+  *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
+  *	
   *	Revision 1.43  2005/08/19 18:38:13  movieman523
   *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
   *	
@@ -159,6 +162,8 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
+
 #include "OrbiterSoundSDK3.h"
 #include "soundlib.h"
 
@@ -174,6 +179,15 @@
 #include "IMU.h"
 
 #include "saturn.h"
+
+//
+// Random functions from Yaagc.
+//
+
+extern "C" {
+	void srandom (unsigned int x);
+	long int random ();
+}
 
 //extern FILE *PanelsdkLogFile;
 
@@ -301,6 +315,7 @@ void Saturn::initSaturn()
 	//
 
 	NextDestroyCheckTime = 0;
+	NextFailureTime = MINUS_INFINITY;
 
 	abortTimer = 0;
 	release_time = 0;
@@ -329,6 +344,14 @@ void Saturn::initSaturn()
 	//
 
 	SecondStagePUShiftTime = 495.0;
+
+	//
+	// Failure modes.
+	//
+
+	LandFail.word = 0;
+	LaunchFail.word = 0;
+	SwitchFail.word = 0;
 
 	//
 	// Configure AGC and DSKY.
@@ -696,6 +719,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
+	oapiWriteScenario_float (scn, "NFAILTIME", NextFailureTime);
 	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
 	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
 
@@ -811,6 +835,18 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		if (AutoSlow) {
 			oapiWriteScenario_int (scn, "AUTOSLOW", 1);
 		}
+	}
+
+	if (LandFail.word) {
+		oapiWriteScenario_int (scn, "LANDFAIL", LandFail.word);
+	}
+
+	if (LaunchFail.word) {
+		oapiWriteScenario_int (scn, "LAUNCHFAIL", LaunchFail.word);
+	}
+
+	if (SwitchFail.word) {
+		oapiWriteScenario_int (scn, "SWITCHFAIL", SwitchFail.word);
 	}
 
 	if (ApolloNo == 13) {
@@ -1090,7 +1126,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// find.
 	//
 
-	srand(VehicleNo + (int) vstatus);
+	srandom(VehicleNo + (int) vstatus + time(0));
 
 	while (oapiReadScenario_nextline (scn, line)) {
         if (!strnicmp (line, "CONFIGURATION", 13)) {
@@ -1246,28 +1282,32 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			EventTimerDisplay.SetTime(ftcp);
 		}
 		else if (!strnicmp(line, "NMISSNTIME", 10)) {
-            sscanf (line+10, "%f", &ftcp);
+            sscanf (line + 10, "%f", &ftcp);
 			NextMissionEventTime = ftcp;
 		}
 		else if (!strnicmp(line, "LMISSNTIME", 10)) {
-            sscanf (line+10, "%f", &ftcp);
+            sscanf (line + 10, "%f", &ftcp);
 			LastMissionEventTime = ftcp;
 		}
+		else if (!strnicmp(line, "NFAILTIME", 9)) {
+            sscanf (line + 9, "%f", &ftcp);
+			NextFailureTime = ftcp;
+		}
 		else if (!strnicmp(line, "SIFUELMASS", 10)) {
-            sscanf (line+10, "%f", &ftcp);
+            sscanf (line + 10, "%f", &ftcp);
 			SI_FuelMass = ftcp;
 		}
 		else if (!strnicmp(line, "SIIFUELMASS", 11)) {
-            sscanf (line+11, "%f", &ftcp);
+            sscanf (line + 11, "%f", &ftcp);
 			SII_FuelMass = ftcp;
 		}
 		else if (!strnicmp(line, "S4FUELMASS", 10)) {
-            sscanf (line+10, "%f", &ftcp);
+            sscanf (line + 10, "%f", &ftcp);
 			S4B_FuelMass = ftcp;
 		}
 		else if (!strnicmp(line, "PRELAUNCHATC", 12)) {
 			int i;
-			sscanf (line +12, "%d", &i);
+			sscanf (line + 12, "%d", &i);
 			UseATC = (i != 0);
 		}
 		else if (!strnicmp (line, "PMET", 4)) {
@@ -1368,6 +1408,15 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			sscanf(line + 6, "%f", &ftcp);
 			CM_EmptyMass = ftcp;
 		}
+		else if (!strnicmp(line, "LANDFAIL", 8)) {
+			sscanf(line + 8, "%d", &LandFail.word);
+		}
+		else if (!strnicmp(line, "LAUNCHFAIL", 10)) {
+			sscanf(line + 10, "%d", &LaunchFail.word);
+		}
+		else if (!strnicmp(line, "SWITCHCHFAIL", 10)) {
+			sscanf(line + 10, "%d", &SwitchFail.word);
+		}
 		else if (!strnicmp(line, "LANG", 4)) {
 			strncpy (AudioLanguage, line + 5, 64);
 		}
@@ -1429,6 +1478,14 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	//
 
 	agc.SetMissionInfo(ApolloNo, Realism);
+
+	//
+	// Set random failures if appropriate.
+	//
+
+	if (!ApolloNo && (Realism > 4)) {
+		SetRandomFailures();
+	}
 }
 
 //
@@ -2162,19 +2219,19 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_STAGE:
-		if (GetAtmPressure() > 38000 || ApexCoverJettSwitch.GetState())
+		if ((GetAtmPressure() > 38000 && !LandFail.u.CoverFail) || ApexCoverJettSwitch.GetState())
 			StageEight(simt);
 		else
 			StageSeven(simt);
 		break;
 
 	case CM_ENTRY_STAGE:
-		if (GetAtmPressure() > 37680|| ApexCoverJettSwitch.GetState())
+		if ((GetAtmPressure() > 37680 && !LandFail.u.DrogueFail) || ApexCoverJettSwitch.GetState())
 			StageEight(simt);
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		if (GetAtmPressure() > 39000 || DrogueDeploySwitch.GetState()) {
+		if ((GetAtmPressure() > 39000 && !LandFail.u.DrogueFail) || DrogueDeploySwitch.GetState()) {
 			SetChuteStage1();
 			LAUNCHIND[3] = true;
 			SetStage(CM_ENTRY_STAGE_THREE);
@@ -2187,7 +2244,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	//
 
 	case CM_ENTRY_STAGE_THREE:
-		if (GetAtmPressure() > 66000 || MainDeploySwitch.GetState()) {
+		if ((GetAtmPressure() > 66000 && !LandFail.u.MainFail) || MainDeploySwitch.GetState()) {
 			SetChuteStage2();
 			SetStage(CM_ENTRY_STAGE_FOUR);
 			NextMissionEventTime = MissionTime + 2.5;
@@ -2998,6 +3055,73 @@ double Saturn::GetJ2ISP(double ratio)
 	}
 
 	return isp;
+}
+
+//
+// Set up random failures if required.
+//
+
+void Saturn::SetRandomFailures()
+
+{
+	//
+	// I'm not sure how reliable the random number generator is. We may want to get a
+	// number from 0-1000 and then see if that's less than some threshold, rather than
+	// checking for the bottom bits being zero.
+	//
+
+	//
+	// Set up launch failures.
+	//
+
+	if (!LaunchFail.u.Init) {
+		LaunchFail.u.Init = 1;
+		if (!(random() & 15)) {
+			LaunchFail.u.EarlySICenterCutoff = 1;
+			FirstStageCentreShutdownTime = 20.0 + ((double) (random() & 1023) / 10.0);
+		}
+		if (!(random() & 15)) {
+			LaunchFail.u.EarlySIICenterCutoff = 1;
+			SecondStageCentreShutdownTime = 200.0 + ((double) (random() & 2047) / 10.0);
+		}
+		if (!(random() & 127)) {
+			LaunchFail.u.LETAutoJetFail = 1;
+		}
+		if (!(random() & 63)) {
+			LaunchFail.u.SIIAutoSepFail = 1;
+		}
+	}
+
+	//
+	// Set up landing failures.
+	//
+
+	if (!LandFail.u.Init) {
+		LandFail.u.Init = 1;
+		if (!(random() & 127)) {
+			LandFail.u.CoverFail = 1;
+		}
+		if (!(random() & 127)) {
+			LandFail.u.DrogueFail = 1;
+		}
+		if (!(random() & 127)) {
+			LandFail.u.MainFail = 1;
+		}
+	}
+
+	//
+	// Set up switch failures.
+	//
+
+	if (!SwitchFail.u.Init) {
+		SwitchFail.u.Init = 1;
+		if (!(random() & 127)) {
+			SwitchFail.u.TowerJett1Fail = 1;
+		}
+		else if (!(random() & 127)) {
+			SwitchFail.u.TowerJett2Fail = 1;
+		}
+	}
 }
 
 //

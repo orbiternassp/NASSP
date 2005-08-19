@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2005/08/19 20:05:45  movieman523
+  *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
+  *	
   *	Revision 1.60  2005/08/19 18:38:13  movieman523
   *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
   *	
@@ -1482,8 +1485,10 @@ void Saturn::SetSwitches(int panel) {
 	LVRateAutoSwitch.Init(110, 20, 34, 29, srf[SRF_SWITCHUP], AbortRow);
 	TowerJett1Switch.Init(169, 23, 34, 29, srf[SRF_SWITCHUP], AbortRow);
 	TowerJett1Switch.InitGuard(169, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	TowerJett1Switch.SetFailed(SwitchFail.u.TowerJett1Fail != 0);
 	TowerJett2Switch.Init(217, 23, 34, 29, srf[SRF_SWITCHUP], AbortRow);
 	TowerJett2Switch.InitGuard(217, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	TowerJett2Switch.SetFailed(SwitchFail.u.TowerJett2Fail != 0);
 
 	//
 	// Fuel Cell Switches.

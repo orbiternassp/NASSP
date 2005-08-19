@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/18 19:12:21  movieman523
+  *	Added Event Timer switches and null Event Timer class.
+  *	
   *	Revision 1.18  2005/08/17 22:54:26  movieman523
   *	Added ELS and CM RCS switches.
   *	
@@ -96,6 +99,19 @@
 #include "IMU.h"
 #include "missiontimer.h"
 #include "apolloguidance.h"
+
+//
+// Generic panel switch item.
+//
+
+PanelSwitchItem::PanelSwitchItem()
+
+{
+	failed = false;
+	name = 0;
+	next = 0;
+	nextForScenario = 0;
+}
 
 //
 // Generic toggle switch.
@@ -179,6 +195,19 @@ void ToggleSwitch::SwitchTo(int newState) {
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 		}
 	}
+}
+
+//
+// Get the state. For now, if it's failed, we just return zero.
+//
+
+int ToggleSwitch::GetState()
+
+{
+	if (!failed)
+		return state;
+
+	return 0;
 }
 
 bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
