@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.13  2005/08/13 20:20:17  movieman523
   *	Created MissionTimer class and wired it into the LEM and CSM.
   *	
@@ -90,6 +93,7 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im) : 
 	BurnTime = 0;
 	BurnStartTime = 0;
 	CutOffVel = 0;
+	lastOrbitalElementsTime = 0;
 
 	MainThrusterIsHover = false;
 
@@ -962,58 +966,98 @@ void CSMcomputer::Prog15Pressed(int R1, int R2, int R3)
 void CSMcomputer::Timestep(double simt)
 
 {
-	if (GenericTimestep(simt))
-		return;
+	if (!GenericTimestep(simt)) {
 
-	switch (ProgRunning) {
+		switch (ProgRunning) {
 
-	//
-	// 00: idle program.
-	//
+		//
+		// 00: idle program.
+		//
 
-	case 0:
-		break;
+		case 0:
+			break;
 
-	//
-	// 01: pre-launch IMU align.
-	//
+		//
+		// 01: pre-launch IMU align.
+		//
 
-	case 1:
-		Prog01(simt);
-		break;
+		case 1:
+			Prog01(simt);
+			break;
 
-	//
-	// 02: pre-launch setup.
-	//
+		//
+		// 02: pre-launch setup.
+		//
 
-	case 2:
-		Prog02(simt);
-		break;
+		case 2:
+			Prog02(simt);
+			break;
 
-	//
-	// 06: power-down.
-	//
+		//
+		// 06: power-down.
+		//
 
-	case 6:
-		Prog06(simt);
-		break;
+		case 6:
+			Prog06(simt);
+			break;
 
-	//
-	// 11: initial launch program.
-	//
+		//
+		// 11: initial launch program.
+		//
 
-	case 11:
-		Prog11(simt);
-		break;
+		case 11:
+			Prog11(simt);
+			break;
 
-	//
-	// 15: TLI program.
-	//
+		//
+		// 15: TLI program.
+		//
 
-	case 15:
-		Prog15(simt);
-		break;
+		case 15:
+			Prog15(simt);
+			break;
 
+		}
+	}
+
+	if (Yaagc) {
+
+		//
+		// Debug output to check P11
+		//
+		VECTOR3 vel, hvel;
+		double vvel = 0, apDist, peDist;
+		OBJHANDLE earth = oapiGetGbodyByName("Earth");
+		OurVessel->GetRelativeVel(earth, vel); 
+		if (OurVessel->GetHorizonAirspeedVector(hvel)) {
+			vvel = hvel.y * 3.2808399;
+		}
+
+		if (lastOrbitalElementsTime == 0) {
+			apDist = 0;
+			peDist = 0;
+			lastOrbitalElementsTime = simt;
+
+		} else if (simt - lastOrbitalElementsTime >= 2.0) {
+			OurVessel->GetApDist(apDist);
+			OurVessel->GetPeDist(peDist);
+
+			apDist -= 6.373338e6;
+			peDist -= 6.373338e6;
+
+			sprintf(oapiDebugString(), "P11 - Vel %.0f Vert. Vel %.0f Alt %.0f ApD %.0f PeD %.0f",  
+				length(vel) * 3.2808399, vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 
+				apDist * 0.000539957 * 10, peDist * 0.000539957 * 10);
+
+			lastOrbitalElementsTime = simt;
+		}
+
+		//
+		// Check nonspherical gravity sources
+		//
+		if (!OurVessel->NonsphericalGravityEnabled()) {
+			sprintf(oapiDebugString(), "*** PLEASE ENABLE NONSPHERICAL GRAVITY SOURCES ***");
+		}
 	}
 }
 
@@ -1328,6 +1372,13 @@ void CSMcomputer::DisplayBankSum()
 void CSMcomputer::Liftoff(double simt)
 
 {
+
+	if (Yaagc) {
+		// TODO If this "prelaunch attitude hack" is enabled, you get more precise 
+		//      orbit parameters, but since it's a dirty hack, it's disabled at the moment
+		//imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
+	}
+
 	//
 	// Ensure autopilot is enabled.
 	//
@@ -1351,7 +1402,7 @@ void CSMcomputer::Liftoff(double simt)
 		if (!KBCheck()) {
 			UnBlankAll();
 		}
-	}
+	} 
 }
 
 void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
