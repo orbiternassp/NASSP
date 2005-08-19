@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.15  2005/08/11 01:27:26  movieman523
   *	Added initial Virtual AGC support.
   *	
@@ -176,6 +179,7 @@ public:
 
 	int GetErasable(int bank, int address);
 	void SetErasable(int bank, int address, int value);
+	void PulsePIPA(int RegPIPA, int pulses);
 
 	//
 	// Generally useful setup.
@@ -208,6 +212,7 @@ protected:
 	virtual void ProcessChannel10(int val);
 	virtual void ProcessChannel11Bit(int bit, bool val);
 	virtual void ProcessChannel11(int val);
+	void ProcessChannel13();
 
 	void LightUplink();
 	void ClearUplink();

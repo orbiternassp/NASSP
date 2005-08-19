@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.5  2005/08/11 01:27:26  movieman523
   *	Added initial Virtual AGC support.
   *	
@@ -221,6 +224,12 @@ void ApolloGuidance::ClearProg()
 
 {
 	SetChannel10Lights(8, false);
+}
+
+void ApolloGuidance::ProcessChannel13()
+
+{
+	dsky.ProcessChannel13(OutputChannel[013]);
 }
 
 void ApolloGuidance::LightsOff()
