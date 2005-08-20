@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2005/08/20 11:14:52  movieman523
+  *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
+  *	
   *	Revision 1.45  2005/08/19 21:33:20  movieman523
   *	Added initial random failure support.
   *	
@@ -867,6 +870,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	agc.SaveState(scn);
 	imu.SaveState(scn);
 	cws.SaveState(scn);
+	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
+	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
 	// save the internal systems 
 	oapiWriteScenario_int (scn, "SYSTEMSSTATE", systemsState);
@@ -1428,6 +1433,12 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp(line, DSKY2_START_STRING, sizeof(DSKY2_START_STRING))) {
 			dsky2.LoadState(scn, DSKY2_END_STRING);
+		}
+		else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
+			fdaiLeft.LoadState(scn, FDAI_END_STRING);
+		}
+		else if (!strnicmp(line, FDAI2_START_STRING, sizeof(FDAI2_START_STRING))) {
+			fdaiRight.LoadState(scn, FDAI2_END_STRING);
 		}
 		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
 			agc.LoadState(scn);

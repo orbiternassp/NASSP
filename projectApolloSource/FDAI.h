@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/19 13:34:18  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include < GL\gl.h >                                
@@ -35,7 +38,10 @@ public:
 	void RegisterMe(int index, int x, int y);
 	void PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHANDLE hFDAIRoll, HBITMAP hBmpRoll);
 
-private:
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+protected:
 	int ScrX;
 	int ScrY;			//coords on screen
 	int idx;			//index on the panel list 
@@ -57,3 +63,13 @@ private:
 	void SetAttitude(VECTOR3 attitude);
 	int LoadOGLBitmap(char *filename);
 };
+
+//
+// Strings for state saving.
+//
+
+#define FDAI_START_STRING	"FDAI_BEGIN"
+#define FDAI_END_STRING		"FDAI_END"
+
+#define FDAI2_START_STRING	"FDAI2_BEGIN"
+#define FDAI2_END_STRING	"FDAI2_END"
