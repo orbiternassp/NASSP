@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2005/08/20 17:21:25  movieman523
+  *	Added dv Thrust switches.
+  *	
   *	Revision 1.54  2005/08/20 11:14:52  movieman523
   *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
   *	
@@ -400,6 +403,8 @@ protected:
 	//
 
 	FDAI fdaiRight;
+	FDAI fdaiLeft;
+
 	HBITMAP hBmpFDAIRollIndicator;
 
 	GuardedPushSwitch LiftoffNoAutoAbortSwitch;

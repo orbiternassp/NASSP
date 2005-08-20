@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/19 13:34:18  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include <stdio.h>
@@ -619,4 +622,61 @@ HBITMAP RotateMemoryDC(HBITMAP hBmpSrc, HDC hdcSrc, int SrcX, int SrcY, float an
 	free(dst);
 
 	return hBmpDst;
+}
+
+//
+// Scenario state functions.
+//
+
+
+void FDAI::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+
+{
+	oapiWriteLine(scn, start_str);
+
+	oapiWriteScenario_float(scn, "TGX", target.x);
+	oapiWriteScenario_float(scn, "TGY", target.y);
+	oapiWriteScenario_float(scn, "TGZ", target.z);
+	oapiWriteScenario_float(scn, "NWX", now.x);
+	oapiWriteScenario_float(scn, "NWY", now.y);
+	oapiWriteScenario_float(scn, "NWZ", now.z);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void FDAI::LoadState(FILEHANDLE scn, char *end_str)
+
+{
+	char *line;
+	float flt = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp (line, "TGX", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			target.x = flt;
+		}
+		else if (!strnicmp (line, "TGY", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			target.y = flt;
+		}
+		else if (!strnicmp (line, "TGZ", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			target.z = flt;
+		}
+		else if (!strnicmp (line, "NWX", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			now.x = flt;
+		}
+		else if (!strnicmp (line, "NWY", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			now.y = flt;
+		}
+		else if (!strnicmp (line, "NWZ", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			now.z = flt;
+		}
+	}
 }
