@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2005/08/19 21:33:20  movieman523
+  *	Added initial random failure support.
+  *	
   *	Revision 1.52  2005/08/19 20:05:45  movieman523
   *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
   *	
@@ -228,6 +231,8 @@ typedef union {
 		unsigned Init:1;
 		unsigned TowerJett1Fail:1;
 		unsigned TowerJett2Fail:1;
+		unsigned SMJett1Fail:1;
+		unsigned SMJett2Fail:1;
 	} u;
 	int word;
 } SwitchFailures;
@@ -619,26 +624,21 @@ protected:
 	GuardedToggleSwitch TowerJett2Switch;
 
 	//
+	// Rotational Controller power switches.
+	//
+
+	SwitchRow RotContrPowerRow;
+	ThreePosSwitch RotPowerNormal1Switch;
+	ThreePosSwitch RotPowerNormal2Switch;
+	ThreePosSwitch RotPowerDirect1Switch;
+	ThreePosSwitch RotPowerDirect2Switch;
+
+	//
 	// OLD Switches: delete these as and when we can do so.
 	//
 	// old stuff begin
 	//
 
-	//bool Cswitch1;
-	//bool Cswitch2;
-	//bool Cswitch3;
-	//bool Cswitch4;
-	//bool Cswitch5;
-	bool Cswitch6;
-	bool Cswitch7;
-	bool Cswitch8;
-	bool Cswitch9;
-
-	//bool Sswitch1;
-	//bool Sswitch2;
-	//bool Sswitch3;
-	//bool Sswitch4;
-	//bool Sswitch5;
 	bool Sswitch6;
 	bool Sswitch7;
 	bool Sswitch8;
@@ -660,8 +660,7 @@ protected:
 	bool RPswitch12;
 	bool RPswitch13;
 	bool RPswitch14;
-	//bool RPswitch16;
-	//bool RPCswitch;
+
 	bool RPswitch17;
 	bool DPSwitch1;
 	bool DPSwitch2;
@@ -677,31 +676,13 @@ protected:
 	bool CMCswitch;
 	bool SCswitch;
 
-	bool DVAswitch;
-	bool DVCswitch;
-	bool DVBswitch;
-    bool DVBCswitch;
-
 	bool CMDswitch;
 	bool CMDCswitch;
 	bool CMPswitch;
 	bool CMPCswitch;
 
-	bool GDCswitch;
-
 	bool DPswitch;
 	bool DPCswitch;
-
-	bool FCRswitch1;
-	bool FCRswitch2;
-	bool FCRswitch3;
-
-	bool FCBswitch1;
-	bool FCBswitch2;
-	bool FCBswitch3;
-
-	bool SRHswitch1;
-	bool SRHswitch2;
 
 	bool FCswitch1;
 	bool FCswitch2;
@@ -712,26 +693,13 @@ protected:
 
 	bool P113switch;
 
-	//bool CMRHDswitch;
-	//bool CMRHGswitch;
-
 	bool EMSKswitch;
 
-	ToggleSwitch LPswitch4;
 	AttitudeToggle LPswitch5;
 	ToggleSwitch LPswitch6;
 	ToggleSwitch LPswitch7;
 
 	ToggleSwitch SPSswitch;
-	//ToggleSwitch EDSswitch;
-
-	ToggleSwitch P12switch;
-	ToggleSwitch P13switch;
-	ToggleSwitch P14switch;
-	ToggleSwitch P15switch;
-	ToggleSwitch P16switch;
-
-	ThreePosSwitch ROTPswitch;
 
 	ToggleSwitch P111switch;
 	ToggleSwitch P112switch;
@@ -989,11 +957,9 @@ protected:
 	SwitchRow IMUCageSwitchRow;
 
 	SwitchRow SRP1Row;
-	SwitchRow P12Row;
-	SwitchRow P13Row;
 	SwitchRow P14Row;
 	SwitchRow P15Row;
-	SwitchRow P16Row;
+
 	SwitchRow P17Row;
 	SwitchRow P18Row;
 	SwitchRow P19Row;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2005/08/19 21:33:20  movieman523
+  *	Added initial random failure support.
+  *	
   *	Revision 1.44  2005/08/19 20:05:44  movieman523
   *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
   *	
@@ -3120,6 +3123,12 @@ void Saturn::SetRandomFailures()
 		}
 		else if (!(random() & 127)) {
 			SwitchFail.u.TowerJett2Fail = 1;
+		}
+		if (!(random() & 127)) {
+			SwitchFail.u.SMJett1Fail = 1;
+		}
+		else if (!(random() & 127)) {
+			SwitchFail.u.SMJett2Fail = 1;
 		}
 	}
 }

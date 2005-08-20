@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/08/19 21:33:20  movieman523
+  *	Added initial random failure support.
+  *	
   *	Revision 1.25  2005/08/19 20:05:44  movieman523
   *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
   *	
@@ -1397,7 +1400,7 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (LPswitch4 && RCS_Full){
+	if (RCS_Full){
 		for(int i=0;i<24;i++){
 			DelThruster(th_att_rot[i]);
 			DelThruster(th_att_lin[i]);
@@ -1412,7 +1415,7 @@ void SaturnV::StageSix(double simt)
 		AddRCSJets(-1.80,995);
 		RCS_Full=false;
 	}
-	else if (!LPswitch4 && !RCS_Full){
+	else if (!RCS_Full){
 		for(int i=0;i<24;i++){
 			DelThruster(th_att_rot[i]);
 			DelThruster(th_att_lin[i]);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/19 20:05:44  movieman523
+  *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
+  *	
   *	Revision 1.19  2005/08/17 00:01:59  movieman523
   *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
   *	
@@ -971,7 +974,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 			}
 		}
 
-		if(LPswitch4.GetState() && RCS_Full){
+		if(RCS_Full){
 			for(int i=0;i<24;i++){
 				DelThruster(th_att_rot[i]);
 				DelThruster(th_att_lin[i]);
@@ -987,7 +990,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 			//sprintf(oapiDebugString(), "RCS HALF");
 			RCS_Full=false;
 		}
-		else if (!LPswitch4 && !RCS_Full) {
+		else if (!RCS_Full) {
 			for(int i=0;i<24;i++){
 				DelThruster(th_att_rot[i]);
 				DelThruster(th_att_lin[i]);
