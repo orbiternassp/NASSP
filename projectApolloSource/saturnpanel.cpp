@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2005/08/20 11:14:52  movieman523
+  *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
+  *	
   *	Revision 1.62  2005/08/19 21:33:20  movieman523
   *	Added initial random failure support.
   *	
@@ -1012,6 +1015,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MAIN_RELEASE_SWITCH,							_R(1043, 1234, 1077, 1295), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ABORT_ROW,									_R(1042, 1030, 1295, 1110), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ROT_PWR,										_R( 104,  948,  324,  977), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_dVTHRUST_SWITCHES,							_R( 443, 1052,  571, 1113), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
 		//
 		// display & keyboard (DSKY):
@@ -1355,6 +1359,16 @@ void Saturn::SetSwitches(int panel) {
 	RotPowerNormal2Switch.Init(59, 0, 34, 29, srf[SRF_THREEPOSSWITCH], RotContrPowerRow);
 	RotPowerDirect1Switch.Init(118, 0, 34, 29, srf[SRF_THREEPOSSWITCH], RotContrPowerRow);
 	RotPowerDirect2Switch.Init(186, 0, 34, 29, srf[SRF_THREEPOSSWITCH], RotContrPowerRow);
+
+	//
+	// dV Thrust switches.
+	//
+
+	dvThrustRow.Init(AID_dVTHRUST_SWITCHES, MainPanel);
+	dVThrust1Switch.Init(0, 20, 34, 29, srf[SRF_SWITCHUP], dvThrustRow);
+	dVThrust1Switch.InitGuard(0, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	dVThrust2Switch.Init(94, 20, 34, 29, srf[SRF_SWITCHUP], dvThrustRow);
+	dVThrust2Switch.InitGuard(94, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
 
 	//
 	// Fuel Cell Switches.
@@ -2976,6 +2990,9 @@ void Saturn::InitSwitches() {
 	RotPowerNormal2Switch.Register(PSH, "RotPowerNormal2Switch", THREEPOSSWITCH_CENTER);
 	RotPowerDirect1Switch.Register(PSH, "RotPowerDirect1Switch", THREEPOSSWITCH_CENTER);
 	RotPowerDirect2Switch.Register(PSH, "RotPowerDirect2Switch", THREEPOSSWITCH_CENTER);
+
+	dVThrust1Switch.Register(PSH, "dVThrust1Switch", 0, 0);
+	dVThrust2Switch.Register(PSH, "dVThrust2Switch", 0, 0);
 
 	//
 	// Old stuff. Delete when no longer required.

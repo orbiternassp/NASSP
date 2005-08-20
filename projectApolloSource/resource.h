@@ -29,7 +29,7 @@
 #define AID_ABORT                       36
 #define AID_BMAG_SWITCHES				37
 #define AID_MASTER_ALARM2				38
-
+#define AID_dVTHRUST_SWITCHES			39
 #define AID_SWITCH_SEP                  40
 #define AID_CONTACT                     41
 #define AID_MASTER_ALARM                42
