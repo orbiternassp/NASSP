@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2005/08/20 11:14:52  movieman523
+  *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
+  *	
   *	Revision 1.53  2005/08/19 21:33:20  movieman523
   *	Added initial random failure support.
   *	
@@ -632,6 +635,14 @@ protected:
 	ThreePosSwitch RotPowerNormal2Switch;
 	ThreePosSwitch RotPowerDirect1Switch;
 	ThreePosSwitch RotPowerDirect2Switch;
+
+	//
+	// dV Thrust switches.
+	//
+
+	SwitchRow dvThrustRow;
+	GuardedToggleSwitch dVThrust1Switch;
+	GuardedToggleSwitch dVThrust2Switch;
 
 	//
 	// OLD Switches: delete these as and when we can do so.
