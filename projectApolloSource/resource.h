@@ -23,30 +23,31 @@
 #define AID_SPS                         30
 #define AID_ABORT_ROW                   31
 #define AID_EDS                         32
-
-#define AID_VSI                         33
+#define AID_ROT_PWR                     33
 #define AID_MISSION_CLOCK               34
 #define AID_SWITCH_PANEL_RIGHT          35
 #define AID_ABORT                       36
 #define AID_BMAG_SWITCHES				37
 #define AID_MASTER_ALARM2				38
+
 #define AID_SWITCH_SEP                  40
 #define AID_CONTACT                     41
 #define AID_MASTER_ALARM                42
+
 #define AID_SWITCH_AUTO                 43
 #define AID_ABORT_BUTTON                44
 #define AID_FUEL_DIGIT                  45
 #define AID_SM_RCS_PANEL1               51
-#define AID_P12_SWITCH                  52
-#define AID_P13                         53
+
+
 #define AID_SM_RCS_MODE                 54
 #define AID_SPS_GIMBAL_SWITCHES         55
 #define AID_TLI_SWITCH                  56
 #define AID_CM_RCS_SWITCH               57
 #define AID_CMC_SWITCH                  58
 #define AID_SC_SWITCH                   59
-#define AID_DVA_SWITCH                  60
-#define AID_DVB_SWITCH                  61
+
+
 #define AID_P16                         62
 #define AID_SIVB_RCS                    63
 #define AID_SIVB_GIMBAL                 64
@@ -60,7 +61,7 @@
 #define AID_DIRECT_ULLAGE_THRUST_ON_LIGHT 73
 #define AID_LV_ENGINE_LIGHTS            74
 #define AID_LV_TANK_GAUGES              75
-#define AID_GDC_BUTTON                  76
+
 #define AID_EMS                         77
 #define AID_SWITCH_JET                  78
 #define AID_MAIN_RELEASE_SWITCH         79
@@ -186,12 +187,12 @@
 #define AID_VSI2                        304
 #define AID_P30                         400
 #define AID_CABIN_PRESS                 401
-#define AID_ROT_PWR                     402
+
 #define AID_FUELCELLRADIATORSINDICATORS 403
 #define AID_P31                         404
-#define AID_FUEL_CELL_BUS_SWITCHES      405
+
 #define AID_P32                         406
-#define AID_SPS_HELIUM_SWITCHES         407
+
 #define AID_P33                         408
 #define AID_P34                         409
 #define AID_FUELCELLREACTANTSSWITCHES   410
