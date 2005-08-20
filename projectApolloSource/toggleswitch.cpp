@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/19 21:33:20  movieman523
+  *	Added initial random failure support.
+  *	
   *	Revision 1.19  2005/08/18 19:12:21  movieman523
   *	Added Event Timer switches and null Event Timer class.
   *	
@@ -107,7 +110,9 @@
 PanelSwitchItem::PanelSwitchItem()
 
 {
-	failed = false;
+	Failed = false;
+	FailedState = 0;
+
 	name = 0;
 	next = 0;
 	nextForScenario = 0;
@@ -198,16 +203,19 @@ void ToggleSwitch::SwitchTo(int newState) {
 }
 
 //
-// Get the state. For now, if it's failed, we just return zero.
+// Get the state. If it's failed, return the failed state.
+//
+// Note that you should always call this to get the state unless you're actually concerned with
+// the appearance of the switch rather than the functionality.
 //
 
 int ToggleSwitch::GetState()
 
 {
-	if (!failed)
+	if (!Failed)
 		return state;
 
-	return 0;
+	return FailedState;
 }
 
 bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
@@ -412,7 +420,7 @@ bool AttitudeToggle::CheckMouseClick(int event, int mx, int my)
 	if (!Active || state == OldState)
 		return true;
 
-	if (state) {
+	if (GetState()) {
 		OurVessel->SetAttitudeMode(ATTMODE_ROT);
 	}
 	else {
@@ -478,7 +486,7 @@ bool HUDToggle::CheckMouseClick(int event, int mx, int my)
 	if (!Active || state == OldState)
 		return true;
 
-	if (state) {
+	if (GetState()) {
 		oapiSetHUDMode(HUDMode);
 	}
 	else {
@@ -525,7 +533,7 @@ bool NavModeToggle::CheckMouseClick(int event, int mx, int my)
 	if (!Active || state == OldState)
 		return true;
 
-	if (state) {
+	if (GetState()) {
 		OurVessel->ActivateNavmode(NAVMode);
 	}
 	else {

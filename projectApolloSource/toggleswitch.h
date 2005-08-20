@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/19 21:33:20  movieman523
+  *	Added initial random failure support.
+  *	
   *	Revision 1.18  2005/08/18 19:12:21  movieman523
   *	Added Event Timer switches and null Event Timer class.
   *	
@@ -112,8 +115,8 @@ public:
 	PanelSwitchItem *GetNext() { return next; };
 	void SetNextForScenario(PanelSwitchItem *s) { nextForScenario = s; };
 	PanelSwitchItem *GetNextForScenario() { return nextForScenario; };
-	void SetFailed(bool fail) { failed = fail; };
-	bool IsFailed() { return failed; };
+	void SetFailed(bool fail, int fail_state = 0) { Failed = fail; FailedState = fail_state; };
+	bool IsFailed() { return Failed; };
 	//char *GetName() { return name; }
 
 	virtual bool CheckMouseClick(int event, int mx, int my) = 0;
@@ -122,7 +125,8 @@ public:
 	virtual void LoadState(char *line) = 0;
 
 protected:
-	bool failed;
+	bool Failed;
+	int FailedState;
 	char *name;
 	PanelSwitchItem *next;
 	PanelSwitchItem *nextForScenario;
@@ -151,8 +155,8 @@ public:
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
 	
-	virtual bool IsUp() { return (state == 1) && !failed; };
-	virtual bool IsDown() { return (state == 0) && !failed; };
+	virtual bool IsUp() { return (GetState() == 1); };
+	virtual bool IsDown() { return (GetState() == 0); };
 	virtual bool IsCenter() { return false; };
 
 	virtual void SwitchTo(int newState);
@@ -166,16 +170,22 @@ public:
 	// the time.
 	//
 
+	//
+	// Note: now that we have integer states rather than bool states, we should stop
+	// using these operators and go back to calling GetState(). At some point I'm
+	// going to delete all of these and remove the code which uses them.
+	//
+
     bool operator=(const bool b) { state = (int) b; return b; };
 	int operator=(const int b) { state = b; return state; };
 	unsigned operator=(const unsigned b) { state = b; return (unsigned)state; };
-	bool operator!() { return !state; };
-	bool operator&&(const bool b) { return (state && b); };
-	bool operator||(const bool b) { return (state || b); };
+	bool operator!() { return !GetState(); };
+	bool operator&&(const bool b) { return (GetState() && b); };
+	bool operator||(const bool b) { return (GetState() || b); };
 
-	operator bool() { return (state != 0); };
-	operator int() { return (int) state; };
-	operator unsigned() { return (unsigned) state; };
+	operator bool() { return (GetState() != 0); };
+	operator int() { return (int) GetState(); };
+	operator unsigned() { return (unsigned) GetState(); };
 
 protected:
 	virtual void InitSound(SoundLib *s);
@@ -245,12 +255,12 @@ class ThreePosSwitch: public ToggleSwitch {
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool IsDown() { return (state == THREEPOSSWITCH_DOWN); };
-	bool IsCenter() { return (state == THREEPOSSWITCH_CENTER); };
-	bool IsUp() { return (state == THREEPOSSWITCH_UP); };
+	bool IsDown() { return (GetState() == THREEPOSSWITCH_DOWN); };
+	bool IsCenter() { return (GetState() == THREEPOSSWITCH_CENTER); };
+	bool IsUp() { return (GetState() == THREEPOSSWITCH_UP); };
 
 	void SetState(int s) { state = s; };
-	int GetState() { return state; };
+//	int GetState() { return state; };
 
 	int operator=(const int b) { state = b; return state; };
 };
