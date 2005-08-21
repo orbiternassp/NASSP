@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/21 11:51:59  movieman523
+  *	Initial version of CSM caution and warning lights: light test switch now works.
+  *	
   *	Revision 1.2  2005/08/13 16:41:15  movieman523
   *	Fully wired up the CSM caution and warning switches.
   *	
@@ -61,6 +64,9 @@ public:
 	void SetSource(int source) { Source = source; };
 	void SetPowerBus(int bus) { PowerBus = bus; };
 	void SetMasterAlarm(bool alarm);
+	void MonitorVessel(VESSEL *v) { OurVessel = v; };
+
+	void SetLight(int lightnum, bool state);
 
 	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit);
 	virtual void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
@@ -94,6 +100,7 @@ protected:
 	bool MasterAlarmLit;
 	double MasterAlarmCycleTime;
 	Sound &MasterAlarmSound;
+	VESSEL *OurVessel;
 
 	//
 	// Helper functions.

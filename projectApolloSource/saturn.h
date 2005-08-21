@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2005/08/21 11:51:59  movieman523
+  *	Initial version of CSM caution and warning lights: light test switch now works.
+  *	
   *	Revision 1.56  2005/08/20 17:50:41  movieman523
   *	Added FDAI state save and load.
   *	
@@ -246,6 +249,24 @@ typedef union {
 	int word;
 } SwitchFailures;
 
+typedef struct {
+	double O2Tank1Pressure;
+	double O2Tank2Pressure;
+	double H2Tank1Pressure;
+	double H2Tank2Pressure;
+} TankPressures;
+
+typedef struct {
+	double BusAVolts;
+	double BusBVolts;
+} BusStatus;
+
+typedef struct {
+	double FC1Temp;
+	double FC2Temp;
+	double FC3Temp;
+} FuelCellStatus;
+
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
 public:
@@ -303,6 +324,15 @@ public:
 
 	void EnableTLI();
 	void DisableTLI() { TLIEnabled = false; };
+
+	//
+	// CWS functions.
+	//
+
+	double GetCO2Level();
+	void GetTankPressures(TankPressures &press);
+//	void GetBusStatus(BusStatus &bus);
+	void GetFuelCellStatus(FuelCellStatus &fc);
 
 protected:
 
@@ -1418,6 +1448,19 @@ protected:
 	//
     PanelSDK Panelsdk;
 	// FILE *PanelsdkLogFile;
+
+	//
+	// PanelSDK pointers.
+	//
+
+	double *pCO2Level;
+	double *pO2Tank1Press;
+	double *pO2Tank2Press;
+	double *pH2Tank1Press;
+	double *pH2Tank2Press;
+	double *pFC1Temp;
+	double *pFC2Temp;
+	double *pFC3Temp;
 
 	// InitSaturn is called twice, but some things must run only once
 	bool InitSaturnCalled;
