@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2005/08/21 11:51:59  movieman523
+  *	Initial version of CSM caution and warning lights: light test switch now works.
+  *	
   *	Revision 1.64  2005/08/20 17:21:25  movieman523
   *	Added dv Thrust switches.
   *	
@@ -489,27 +492,31 @@ void Saturn::RedrawPanel_O2CryoTankPressureIndicator(SURFHANDLE surf, SURFHANDLE
 
 void Saturn::RedrawPanel_CryoTankIndicators(SURFHANDLE surf) {
 
+	TankPressures press;
+
+	GetTankPressures(press);
+
 	// H2Tank1 pressure
-	double value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:PRESS") * PSI;
+	double value = press.H2Tank1Pressure;
 	if (value < 0.0) value = 0.0;
 	if (value > 400.0) value = 400.0;
 	oapiBlt(surf, srf[SRF_NEEDLE],  0, (110 - (int)(value / 400.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 
 	// H2Tank2 pressure
-	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:PRESS") * PSI;
+	value = press.H2Tank2Pressure;
 	if (value < 0.0) value = 0.0;
 	if (value > 400.0) value = 400.0;
 	oapiBlt(surf, srf[SRF_NEEDLE], 53, (110 - (int)(value / 400.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 
 	// O2Tank1 / O2SurgeTank pressure
 	if (O2PressIndSwitch)  
-		value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:PRESS") * PSI;
+		value = press.O2Tank1Pressure;
 	else
 		value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS") * PSI;
 	RedrawPanel_O2CryoTankPressureIndicator(surf, srf[SRF_NEEDLE], value, 86, 0);
 
 	// O2Tank2 pressure
-	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:PRESS") * PSI;
+	value = press.O2Tank2Pressure;
 	RedrawPanel_O2CryoTankPressureIndicator(surf, srf[SRF_NEEDLE], value, 139, 10);
 
 	// H2Tank1 quantity
@@ -585,7 +592,7 @@ void Saturn::RedrawPanel_CabinIndicators (SURFHANDLE surf) {
 		oapiBlt(surf, srf[SRF_NEEDLE],  153, (53 - (int)((value - 6.0) / 10.0 * 45.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 
 	// Cabin CO2 partial pressure
-	value = *(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS") * MMHG;
+	value = GetCO2Level();
 	if (value < 0.0) value = 0.0;
 	if (value > 30.0) value = 30.0;	
 	if (value < 10.0)
