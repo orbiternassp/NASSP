@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/13 14:59:24  movieman523
+  *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
+  *	
   **************************************************************************/
 
 
@@ -33,6 +36,7 @@ class CSMCautionWarningSystem : public CautionWarningSystem {
 public:
 	CSMCautionWarningSystem(Sound &s);
 	void TimeStep(double simt);
+	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
 
 protected:
 
@@ -41,6 +45,12 @@ protected:
 	//
 
 	double NextUpdateTime;
+
+	//
+	// Helper functions.
+	//
+
+	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy);
 };
 
 #endif

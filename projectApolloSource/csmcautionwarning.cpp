@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/13 23:48:57  movieman523
+  *	Added some documentation on caution and warning checks that I found on the web.
+  *	
   *	Revision 1.2  2005/08/13 16:41:15  movieman523
   *	Fully wired up the CSM caution and warning switches.
   *	
@@ -98,5 +101,35 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		//
 
 		NextUpdateTime = simt + (0.2 * oapiGetTimeAcceleration());
+	}
+}
+
+void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel)
+
+{
+	if (leftpanel) {
+		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6, 122);
+	}
+	else {
+		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261, 122);
+	}
+}
+
+void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy)
+
+{
+	int i = 0;
+	int row, column;
+
+	if (!IsPowered())
+		return;
+
+	for (row = 0; row < 6; row++) {
+		for (column = 0; column < 4; column++) {
+			if (LightTest || LightState[i]) {
+				oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
+			}
+			i++;
+		}
 	}
 }

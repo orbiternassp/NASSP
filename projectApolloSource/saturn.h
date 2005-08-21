@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2005/08/20 17:50:41  movieman523
+  *	Added FDAI state save and load.
+  *	
   *	Revision 1.55  2005/08/20 17:21:25  movieman523
   *	Added dv Thrust switches.
   *	
@@ -422,7 +425,7 @@ protected:
 	GuardedToggleSwitch CmSmSep1Switch;
 	GuardedToggleSwitch CmSmSep2Switch;
 	GuardedToggleSwitch SivbLmSepSwitch;
-	
+
 	ToggleSwitch   CabinFan1Switch;
 	ToggleSwitch   CabinFan2Switch;
 	ThreePosSwitch H2Heater1Switch;
@@ -949,25 +952,11 @@ protected:
 	SwitchRow SBandNormalSwitchesRow;
 
 	// old stuff begin
-	HUDToggle HUDswitch1;
-	HUDToggle HUDswitch2;
-	HUDToggle HUDswitch3;
-
-	NavModeToggle NavToggleKillrot;
-	NavModeToggle NavTogglePrograde;
-	NavModeToggle NavToggleRetrograde;
-	NavModeToggle NavToggleNormal;
-	NavModeToggle NavToggleAntiNormal;
-
-	NavModeToggle NavToggleHAlt;
-	NavModeToggle NavToggleHLevel;
 
 	SwitchRow LPRow;
 	SwitchRow HUDRow;
 	SwitchRow SPSRow;
-	//SwitchRow EDSRow;
-	SwitchRow NAVRow1;
-	SwitchRow NAVRow2;
+
 	SwitchRow CautionWarningRow;
 	SwitchRow MissionTimerSwitchesRow;
 	SwitchRow IMUCageSwitchRow;

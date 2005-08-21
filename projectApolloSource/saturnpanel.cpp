@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2005/08/20 17:21:25  movieman523
+  *	Added dv Thrust switches.
+  *	
   *	Revision 1.63  2005/08/20 11:14:52  movieman523
   *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
   *	
@@ -706,7 +709,7 @@ void Saturn::InitPanel (int panel)
 		srf[19] = oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
 		//srf[20] = oapiCreateSurface (LOADBMP (IDB_BUTTON));
 		srf[SRF_DSKY] = oapiCreateSurface (LOADBMP (IDB_ILMDSKY_LIGHTS));
-		srf[22] = oapiCreateSurface (LOADBMP (IDB_ILMALLROUND));
+		srf[SRF_ALLROUND] = oapiCreateSurface (LOADBMP (IDB_ILMALLROUND));
 		srf[23] = oapiCreateSurface (LOADBMP (IDB_ILMTHREEPOSSWITCH));
 		srf[24] = oapiCreateSurface (LOADBMP (IDB_MFDFRAME_ILM));
 		srf[25] = oapiCreateSurface (LOADBMP (IDB_MFDPOWER_ILM));
@@ -717,13 +720,22 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[14], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[15], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[16], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[22], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_ALLROUND], g_Param.col[4]);
 		break;
 
 	case 1: // panel
 	case 3:
     case 5://added for splitted panel
-*/		srf[0]							= oapiCreateSurface (LOADBMP (IDB_FCSM));
+*/
+	
+		//
+		// I'm pretty sure that some of these bitmaps aren't used anymore.
+		// We need to go through these and delete the unused ones at some
+		// point, and remove them from the resource.rc file so as not to
+		// bloat the DLL.
+		//
+
+		srf[0]							= oapiCreateSurface (LOADBMP (IDB_FCSM));
 		srf[SRF_INDICATOR]				= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
 		srf[SRF_NEEDLE]					= oapiCreateSurface (LOADBMP (IDB_NEEDLE));
 		srf[3]							= oapiCreateSurface (LOADBMP (IDB_HORIZON));
@@ -744,7 +756,7 @@ void Saturn::InitPanel (int panel)
 		srf[18]							= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
 		srf[SRF_MASTERALARM_BRIGHT]		= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
 		srf[SRF_DSKY]					= oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
-		srf[22]							= oapiCreateSurface (LOADBMP (IDB_ALLROUND));
+		srf[SRF_ALLROUND]				= oapiCreateSurface (LOADBMP (IDB_ALLROUND));
 		srf[SRF_THREEPOSSWITCH]			= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH));
 		srf[24]							= oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
 		srf[25]							= oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
@@ -755,6 +767,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_DSKYDISP]       		= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));
 		srf[SRF_FDAI]	        		= oapiCreateSurface (LOADBMP (IDB_FDAI));
 		srf[SRF_FDAIROLL]       		= oapiCreateSurface (LOADBMP (IDB_FDAI_ROLL));
+		srf[SRF_CWSLIGHTS]       		= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));
 				
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -765,7 +778,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[15],						g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THRUSTMETER],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SEQUENCERSWITCHES],	g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[22],						g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_ALLROUND],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_ROTATIONALSWITCH],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SUITCABINDELTAPMETER],	g_Param.col[4]);
@@ -1016,6 +1029,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ABORT_ROW,									_R(1042, 1030, 1295, 1110), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ROT_PWR,										_R( 104,  948,  324,  977), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_dVTHRUST_SWITCHES,							_R( 443, 1052,  571, 1113), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CWS_LIGHTS_LEFT,								_R(1540,   97, 1752,  205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CWS_LIGHTS_RIGHT,							_R(1795,   97, 2008,  205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		//
 		// display & keyboard (DSKY):
@@ -1439,9 +1454,6 @@ void Saturn::SetSwitches(int panel) {
 	SPSRow.Init(AID_SPS, MainPanel);
 	//EDSRow.Init(AID_EDS, MainPanel);
 	LPRow.Init(AID_SWITCH_PANEL_LEFT, MainPanel);
-	HUDRow.Init(AID_SWITCH_HUD, MainPanel);
-	NAVRow1.Init(AID_SWITCH_AUTO, MainPanel);
-	NAVRow2.Init(AID_SWITCH_AUTO2, MainPanel);
 
 	SRP1Row.Init(AID_SM_RCS_PANEL1, MainPanel);
 	P14Row.Init(AID_SM_RCS_MODE, MainPanel);
@@ -1481,19 +1493,6 @@ void Saturn::SetSwitches(int panel) {
 
 	LPswitch6.Init( 45, 7, 23, 20, srf[6], P15Row);
 	LPswitch7.Init(119, 7, 23, 20, srf[6], P15Row);
-
-	HUDswitch1.Init(  4, 7, 23, 20, srf[6], HUDRow, HUD_DOCKING, soundlib);
-	HUDswitch2.Init( 36, 7, 23, 20, srf[6], HUDRow, HUD_SURFACE, soundlib);
-	HUDswitch3.Init(110, 7, 23, 20, srf[6], HUDRow, HUD_ORBIT, soundlib);
-
-	NavToggleKillrot.Init(2, 8, 23, 20, srf[6], NAVRow1, this, NAVMODE_KILLROT, soundlib);
-	NavTogglePrograde.Init(31, 8, 23, 20, srf[6], NAVRow1, this, NAVMODE_PROGRADE, soundlib);
-	NavToggleRetrograde.Init(61, 8, 23, 20, srf[6], NAVRow1, this, NAVMODE_RETROGRADE, soundlib);
-	NavToggleNormal.Init(102, 8, 23, 20, srf[6], NAVRow1, this, NAVMODE_NORMAL, soundlib);
-	NavToggleAntiNormal.Init(138, 8, 23, 20, srf[6], NAVRow1, this, NAVMODE_ANTINORMAL, soundlib);
-
-	NavToggleHLevel.Init(2, 4, 23, 20, srf[6], NAVRow2, this, NAVMODE_HLEVEL, soundlib);
-	NavToggleHAlt.Init(31, 4, 23, 20, srf[6], NAVRow2, this, NAVMODE_HOLDALT, soundlib);
 
 	P111switch.Init(0, 0, 23, 20, srf[6], P17Row);
 
@@ -2698,25 +2697,25 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_05G_LIGHT:
 		if(P115switch){
-			oapiBlt(surf,srf[22],0,0,600,68,24,13);
+			oapiBlt(surf,srf[SRF_ALLROUND],0,0,600,68,24,13);
 		}else{
-			oapiBlt(surf,srf[22],0,0,600,82,24,13);
+			oapiBlt(surf,srf[SRF_ALLROUND],0,0,600,82,24,13);
 		}
 		return true;
 
 	case AID_SPS_LIGHT:
 		if(SPSswitch){
-			oapiBlt(surf,srf[22],0,0,625,68,24,13);
+			oapiBlt(surf,srf[SRF_ALLROUND],0,0,625,68,24,13);
 		}else{
-			oapiBlt(surf,srf[22],0,0,625,82,24,13);
+			oapiBlt(surf,srf[SRF_ALLROUND],0,0,625,82,24,13);
 		}
 		return true;
 
 	case AID_SPS_INJ_VLV:
 		if(SPSswitch){
-			oapiBlt(surf,srf[22],0,0,0,168,141,32);
+			oapiBlt(surf,srf[SRF_ALLROUND],0,0,0,168,141,32);
 		}else{
-			oapiBlt(surf,srf[22],0,0,0,135,141,32);
+			oapiBlt(surf,srf[SRF_ALLROUND],0,0,0,135,141,32);
 		}
 		return true;
 
@@ -2730,21 +2729,29 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_EMS_KNOB:
 		if(EMSKswitch){
-			oapiBlt(surf,srf[22],0,0,516,0,67,67);
+			oapiBlt(surf,srf[SRF_ALLROUND],0,0,516,0,67,67);
 		}else{
-			oapiBlt(surf,srf[22],0,0,583,0,67,67);
+			oapiBlt(surf,srf[SRF_ALLROUND],0,0,583,0,67,67);
 		}
 		return true;
 
 	case AID_EMS_DISPLAY:
 		if(EMSKswitch){
-			oapiBlt(surf,srf[22],0,0,651,0,100,104);
+			oapiBlt(surf,srf[SRF_ALLROUND],0,0,651,0,100,104);
 		}
 		return true;
 
 	case AID_MASTER_ALARM:
 	case AID_MASTER_ALARM2:
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT]);
+		return true;
+
+	case AID_CWS_LIGHTS_LEFT:
+		cws.RenderLights(surf, srf[SRF_CWSLIGHTS], true);
+		return true;
+
+	case AID_CWS_LIGHTS_RIGHT:
+		cws.RenderLights(surf, srf[SRF_CWSLIGHTS], false);
 		return true;
 
 	case AID_DIRECT_ULLAGE_THRUST_ON_LIGHT:

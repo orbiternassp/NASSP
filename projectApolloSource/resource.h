@@ -33,10 +33,12 @@
 #define AID_SWITCH_SEP                  40
 #define AID_CONTACT                     41
 #define AID_MASTER_ALARM                42
+#define AID_CWS_LIGHTS_LEFT				43
+#define AID_CWS_LIGHTS_RIGHT			44
 
-#define AID_SWITCH_AUTO                 43
-#define AID_ABORT_BUTTON                44
-#define AID_FUEL_DIGIT                  45
+
+#define AID_ABORT_BUTTON                49
+#define AID_FUEL_DIGIT                  50
 #define AID_SM_RCS_PANEL1               51
 
 
@@ -123,8 +125,8 @@
 #define IDB_ABORTSWITCH                 185
 #define IDB_LIGHTSWITCH                 186
 #define IDB_ABORTILMSW                  200
-#define AID_SWITCH_AUTO2                201
-#define AID_SWITCH_HUD                  202
+
+
 #define IDB_MASTER_ALARM                203
 #define IDB_MASTER_ALARM_BRIGHT         204
 #define IDB_DSKY_LIGHTS                 205
@@ -305,6 +307,7 @@
 #define AID_FDAI_RIGHT				    530
 #define IDB_FDAI_ROLLINDICATOR			531
 #define IDB_FDAI_ROLL					532
+#define IDB_CWS_LIGHTS					533
 
 // Next default values for new objects
 //

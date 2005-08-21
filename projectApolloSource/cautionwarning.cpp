@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/13 22:24:20  movieman523
+  *	Added the master alarm rendeing to CSM.
+  *	
   *	Revision 1.2  2005/08/13 16:41:15  movieman523
   *	Fully wired up the CSM caution and warning switches.
   *	
@@ -56,6 +59,11 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound) : MasterAlarmSoun
 	MasterAlarmCycleTime = MINUS_INFINITY;
 	MasterAlarm = false;
 	MasterAlarmLit = false;
+
+	for (int i = 0; i < 30; i++) {
+		LeftLights[i] = false;
+		RightLights[i] = false;
+	}
 }
 
 CautionWarningSystem::~CautionWarningSystem()
@@ -185,6 +193,14 @@ void CautionWarningSystem::SetMode(int mode)
 	}
 }
 
+void CautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel)
+
+{
+	//
+	// Do nothing, by default.
+	//
+}
+
 typedef union
 
 {
@@ -197,9 +213,48 @@ typedef union
 	unsigned long word;
 } CWSState;
 
+//
+// Functions to pack and unpack light states.
+//
+
+int CautionWarningSystem::GetLightStates(bool *LightState)
+
+{
+	int	lights = 0;
+	int mask = 1;
+
+	for (int i = 0; i < 30; i++) {
+		if (LightState[i])
+			lights |= mask;
+
+		mask <<= 1;
+	}
+
+	return lights;
+}
+
+void CautionWarningSystem::SetLightStates(bool *LightState, int state)
+
+{
+	int mask = 1;
+
+	for (int i = 0; i < 30; i++) {
+		if (state & mask) {
+			LightState[i] = true;
+		}
+		else {
+			LightState[i] = false;
+		}
+
+		mask <<= 1;
+	}
+}
+
 void CautionWarningSystem::SaveState(FILEHANDLE scn)
 
 {
+
+
 	oapiWriteLine(scn, CWS_START_STRING);
 	oapiWriteScenario_int (scn, "MODE", Mode);
 	oapiWriteScenario_int (scn, "TEST", TestState);
@@ -218,6 +273,9 @@ void CautionWarningSystem::SaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
+	oapiWriteScenario_int (scn, "LLIGHTS", GetLightStates(LeftLights));
+	oapiWriteScenario_int (scn, "RLIGHTS", GetLightStates(RightLights));
+
 	oapiWriteLine(scn, CWS_END_STRING);
 }
 
@@ -226,15 +284,24 @@ void CautionWarningSystem::LoadState(FILEHANDLE scn)
 
 {
 	char *line;
+	int lights;
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, CWS_END_STRING, sizeof(CWS_END_STRING)))
 			return;
 		if (!strnicmp (line, "MODE", 4)) {
-			sscanf (line+5, "%d", &Mode);
+			sscanf (line+4, "%d", &Mode);
 		}
 		else if (!strnicmp (line, "TEST", 4)) {
-			sscanf (line+5, "%d", &TestState);
+			sscanf (line+4, "%d", &TestState);
+		}
+		else if (!strnicmp (line, "LLIGHTS", 7)) {
+			sscanf (line+7, "%d", &lights);
+			SetLightStates(LeftLights, lights);
+		}
+		else if (!strnicmp (line, "RLIGHTS", 7)) {
+			sscanf (line+7, "%d", &lights);
+			SetLightStates(RightLights, lights);
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			CWSState state;
