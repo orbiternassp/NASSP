@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/20 11:14:52  movieman523
+  *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
+  *	
   *	Revision 1.13  2005/08/15 19:25:03  movieman523
   *	Added CSM attitude control switches and removed old ones.
   *	
@@ -624,7 +627,7 @@ void Saturn::SetCSMStage ()
 	VECTOR3 dockrot = {0,1,0};
 	SetDockParams(dockpos, dockdir, dockrot);
 
-	AddRCSJets(-13.30,1990);
+	AddRCSJets(-1.80,1990);
 
 	SetView(0.4);
 	// **************************** NAV radios *************************************
@@ -706,7 +709,7 @@ void Saturn::SetCSM2Stage ()
 
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 
-	AddRCSJets(-13.30,1990);
+	AddRCSJets(-1.80,1990);
 
 	SetView(0.4);
 

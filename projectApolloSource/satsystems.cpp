@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/21 16:23:32  movieman523
+  *	Added more alarms.
+  *	
   *	Revision 1.17  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -460,17 +463,11 @@ bool Saturn::CabinFansActive()
 void Saturn::ActivateS4RCS()
 
 {
-	RPswitch1 = true;
-	RPswitch2 = true;
-	RPswitch3 = true;
 }
 
 void Saturn::DeactivateS4RCS()
 
 {
-	RPswitch1 = false;
-	RPswitch2 = false;
-	RPswitch3 = false;
 }
 
 //

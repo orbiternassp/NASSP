@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/20 11:14:52  movieman523
+  *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
+  *	
   *	Revision 1.20  2005/08/19 20:05:44  movieman523
   *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
   *	
@@ -589,6 +592,7 @@ void Saturn1b::StageStartSIVB(double simt)
 
 	case 4:
 		if (MissionTime >= NextMissionEventTime) {
+			SetSIVBThrusters(true);
 			SetSIVBMixtureRatio(5.5);
 			NextMissionEventTime = MissionTime + 17.95;
 			StageState++;
@@ -612,9 +616,6 @@ void Saturn1b::StageStartSIVB(double simt)
 	if(CsmLvSepSwitch.GetState()) {
 		bManualSeparate = true;
 	}
-
-	if (StageState > 3)
-		SetSIVBThrusters();
 
 	if (bManualSeparate || bAbort)
 	{
@@ -698,7 +699,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 
 			ThrustAdjust = 1.0;
 			SetStage(STAGE_ORBIT_SIVB);
-			SetSIVBThrusters();
+			SetSIVBThrusters(true);
 		}
 		break;
 	}
@@ -972,39 +973,6 @@ void Saturn1b::Timestep (double simt, double simdt)
 				SetThrusterResource(th_att_rot[i],NULL);
 				SetThrusterResource(th_att_lin[i],NULL);
 			}
-		}
-
-		if(RCS_Full){
-			for(int i=0;i<24;i++){
-				DelThruster(th_att_rot[i]);
-				DelThruster(th_att_lin[i]);
-				DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-				DelThrusterGroup(THGROUP_ATT_FORWARD,true);
-				DelThrusterGroup(THGROUP_ATT_BACK,true);
-				DelThrusterGroup(THGROUP_ATT_PITCHDOWN,true);
-				DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-				DelThrusterGroup(THGROUP_ATT_YAWRIGHT,true);
-				DelThrusterGroup(THGROUP_ATT_YAWLEFT,true);
-			}
-			AddRCSJets(-1.80,995);
-			//sprintf(oapiDebugString(), "RCS HALF");
-			RCS_Full=false;
-		}
-		else if (!RCS_Full) {
-			for(int i=0;i<24;i++){
-				DelThruster(th_att_rot[i]);
-				DelThruster(th_att_lin[i]);
-				DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-				DelThrusterGroup(THGROUP_ATT_FORWARD,true);
-				DelThrusterGroup(THGROUP_ATT_BACK,true);
-				DelThrusterGroup(THGROUP_ATT_PITCHDOWN,true);
-				DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-				DelThrusterGroup(THGROUP_ATT_YAWRIGHT,true);
-				DelThrusterGroup(THGROUP_ATT_YAWLEFT,true);
-			}
-			AddRCSJets(-1.80,1990);
-			RCS_Full=true;
-			//sprintf(oapiDebugString(), "RCS FULL");
 		}
 
 		CheckSPSState();

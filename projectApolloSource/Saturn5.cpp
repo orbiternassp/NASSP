@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/08/20 11:14:52  movieman523
+  *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
+  *	
   *	Revision 1.26  2005/08/19 21:33:20  movieman523
   *	Added initial random failure support.
   *	
@@ -1400,37 +1403,6 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (RCS_Full){
-		for(int i=0;i<24;i++){
-			DelThruster(th_att_rot[i]);
-			DelThruster(th_att_lin[i]);
-		}
-		DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-		DelThrusterGroup(THGROUP_ATT_FORWARD,true);
-		DelThrusterGroup(THGROUP_ATT_BACK,true);
-		DelThrusterGroup(THGROUP_ATT_PITCHDOWN,true);
-		DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-		DelThrusterGroup(THGROUP_ATT_YAWRIGHT,true);
-		DelThrusterGroup(THGROUP_ATT_YAWLEFT,true);
-		AddRCSJets(-1.80,995);
-		RCS_Full=false;
-	}
-	else if (!RCS_Full){
-		for(int i=0;i<24;i++){
-			DelThruster(th_att_rot[i]);
-			DelThruster(th_att_lin[i]);
-		}
-		DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-		DelThrusterGroup(THGROUP_ATT_FORWARD,true);
-		DelThrusterGroup(THGROUP_ATT_BACK,true);
-		DelThrusterGroup(THGROUP_ATT_PITCHDOWN,true);
-		DelThrusterGroup(THGROUP_ATT_PITCHUP,true);
-		DelThrusterGroup(THGROUP_ATT_YAWRIGHT,true);
-		DelThrusterGroup(THGROUP_ATT_YAWLEFT,true);
-		AddRCSJets(-1.80,1990);
-		RCS_Full=true;
-	}
-
 	//
 	// Enable or disable SPS.
 	//
@@ -1478,8 +1450,7 @@ void SaturnV::DoFirstTimestep(double simt)
 		// Always enable SIVB RCS for now, once we hit orbit.
 		//
 
-		RPswitch1 = true;
-		RPswitch2 = true;
+		SetSIVBThrusters(true);
 		break;
 	}
 
@@ -1802,8 +1773,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		// Always enable SIVB RCS for now, once we hit orbit.
 		//
 
-		RPswitch1 = true;
-		RPswitch2 = true;
+		SetSIVBThrusters(true);
 		break;
 
 	case CSM_LEM_STAGE:
@@ -1973,6 +1943,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 			SepS.stop();
 			AddRCS_S4B();
 			SetThrusterGroupLevel(thg_ver, 0.0);
+			SetSIVBThrusters(true);
 			ClearEngineIndicator(1);
 			LAUNCHIND[6] = false;
 			LastMissionEventTime = NextMissionEventTime;
@@ -2049,9 +2020,6 @@ void SaturnV::StageLaunchSIVB(double simt)
 	if(CsmLvSepSwitch.GetState()){
 		bManualSeparate =true;
 	}
-
-	if (StageState > 3)
-		SetSIVBThrusters();
 
 	if (bManualSeparate || bAbort)
 	{

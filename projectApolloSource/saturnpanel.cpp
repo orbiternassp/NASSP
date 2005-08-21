@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2005/08/21 17:21:10  movieman523
+  *	Added event timer display.
+  *	
   *	Revision 1.67  2005/08/21 16:23:32  movieman523
   *	Added more alarms.
   *	
@@ -1827,32 +1830,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 		return true;
 
-	case AID_SIVB_RCS:
-		if (my >=0 && my <=10 ){
-			if (mx > 44 && mx < 54 && !RPswitch1){
-				SwitchClick();
-				RPswitch1=true;
-			}else if (mx > 80 && mx < 90 && !RPswitch2){
-				SwitchClick();
-				RPswitch2=true;
-			}else if (mx > 7 && mx < 18 && !RPswitch3){
-				SwitchClick();
-				RPswitch3=true;
-			}
-		}else if (my >=10 && my <=20 ){
-			if (mx >44 && mx < 54 && RPswitch1){
-				SwitchClick();
-				RPswitch1=false;
-			}else if (mx >80 && mx < 90 && RPswitch2){
-				SwitchClick();
-				RPswitch2=false;
-			}else if (mx >7 && mx < 18 && RPswitch3){
-				SwitchClick();
-				RPswitch3=false;
-			}
-		}
-		return true;
-
 	case AID_SIVB_GIMBAL:
 		if (my >=0 && my <=10 ){
 			if (mx > 7 && mx < 17 && !RPswitch4){
@@ -2664,26 +2641,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_SIVB_RCS:
-		if(RPswitch1){
-			oapiBlt(surf,srf[6],37,0,0,0,23,20);
-		}
-		else{
-			oapiBlt(surf,srf[6],37,0,23,0,23,20);
-		}
-		if(RPswitch2){
-			oapiBlt(surf,srf[6],73,0,0,0,23,20);
-		}
-		else{
-			oapiBlt(surf,srf[6],73,0,23,0,23,20);
-		}
-		if(RPswitch3){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
-		}
-		return true;
-
 	case AID_SIVB_GIMBAL:
 		if(RPswitch4){
 			oapiBlt(surf,srf[6],0,0,0,0,23,20);
@@ -3047,9 +3004,7 @@ void Saturn::InitSwitches() {
 	Sswitch7=false;
 	Sswitch8=false;
 	Sswitch9=false;
-	RPswitch1=false;
-	RPswitch2=false;
-	RPswitch3=true;
+
 	RPswitch4=true;
 	RPswitch5=true;
 	RPswitch6=false;
@@ -3456,9 +3411,6 @@ int Saturn::GetRPSwitchState()
 	RPSwitchState state;
 
 	state.word = 0;
-	state.u.RPswitch1 = RPswitch1;
-	state.u.RPswitch2 = RPswitch2;
-	state.u.RPswitch3 = RPswitch3;
 	state.u.RPswitch4 = RPswitch4;
 	state.u.RPswitch5 = RPswitch5;
 	state.u.RPswitch6 = RPswitch6;
@@ -3485,9 +3437,6 @@ void Saturn::SetRPSwitchState(int s)
 	RPSwitchState state;
 
 	state.word = s;
-	RPswitch1 = state.u.RPswitch1;
-	RPswitch2 = state.u.RPswitch2;
-	RPswitch3 = state.u.RPswitch3;
 	RPswitch4 = state.u.RPswitch4;
 	RPswitch5 = state.u.RPswitch5;
 	RPswitch6 = state.u.RPswitch6;
