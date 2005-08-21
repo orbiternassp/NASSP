@@ -35,7 +35,7 @@
 #define AID_MASTER_ALARM                42
 #define AID_CWS_LIGHTS_LEFT				43
 #define AID_CWS_LIGHTS_RIGHT			44
-
+#define AID_EVENT_TIMER					45
 
 #define AID_ABORT_BUTTON                49
 #define AID_FUEL_DIGIT                  50
@@ -308,6 +308,7 @@
 #define IDB_FDAI_ROLLINDICATOR			531
 #define IDB_FDAI_ROLL					532
 #define IDB_CWS_LIGHTS					533
+#define IDB_EVENT_TIMER					534
 
 // Next default values for new objects
 //

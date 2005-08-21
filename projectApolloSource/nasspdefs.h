@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/08/21 11:51:59  movieman523
+  *	Initial version of CSM caution and warning lights: light test switch now works.
+  *	
   *	Revision 1.28  2005/08/19 13:45:59  tschachim
   *	Added FDAI.
   *	
@@ -156,7 +159,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 38; // number of bitmap handles
+const int nsurf = 39; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -183,6 +186,7 @@ const int nsurf = 38; // number of bitmap handles
 #define SRF_FDAI				    35
 #define SRF_FDAIROLL			    36
 #define SRF_CWSLIGHTS				37
+#define SRF_EVENT_TIMER_DIGITS		38
 
 //
 // Earth radius and gravity constants.
