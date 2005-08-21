@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2005/08/21 16:23:32  movieman523
+  *	Added more alarms.
+  *	
   *	Revision 1.48  2005/08/21 13:13:43  movieman523
   *	Wired in a few caution and warning lights.
   *	
@@ -1698,6 +1701,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 
 	MissionTime += simdt;
 	MissionTimerDisplay.Timestep(simt, simdt);
+	EventTimerDisplay.Timestep(simt, simdt);
 
 	//
 	// Timestep tracking.

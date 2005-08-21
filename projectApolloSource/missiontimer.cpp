@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/18 19:12:21  movieman523
+  *	Added Event Timer switches and null Event Timer class.
+  *	
   *	Revision 1.2  2005/08/14 15:25:43  movieman523
   *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
   *	
@@ -221,6 +224,26 @@ void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 
 {
 	//
-	// Nothing for now.
+	// Digits are 13x18.
 	//
+
+	int Curdigit, Curdigit2;
+
+	// Minute display on two digit
+	Curdigit = minutes / 10;
+	Curdigit2 = minutes / 100;
+	oapiBlt(surf, digits, 0, 0, 13 * (Curdigit-(Curdigit2*10)), 0, 13, 18);
+
+	Curdigit = minutes;
+	Curdigit2 = minutes / 10;
+	oapiBlt(surf, digits, 13, 0, 13 * (Curdigit-(Curdigit2*10)), 0, 13, 18);
+
+	// second display on two digit
+	Curdigit = seconds / 10;
+	Curdigit2 = seconds / 100;
+	oapiBlt(surf, digits, 45, 0, 13 * (Curdigit-(Curdigit2*10)), 0, 13, 18);
+
+	Curdigit = seconds;
+	Curdigit2 = seconds/10;
+	oapiBlt(surf, digits, 58, 0, 13 * (Curdigit-(Curdigit2*10)), 0, 13, 18);
 }

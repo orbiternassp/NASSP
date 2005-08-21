@@ -122,6 +122,7 @@ IDB_FDAI_ROLLINDICATOR	   	BITMAP  DISCARDABLE	"FDAIRollindicator.bmp"
 IDB_FDAI			BITMAP  DISCARDABLE	"FDAI.bmp"
 IDB_FDAI_ROLL			BITMAP  DISCARDABLE	"FDAIRoll.bmp"
 IDB_CWS_LIGHTS			BITMAP	DISCARDABLE	"cw_lights.bmp"
+IDB_EVENT_TIMER			BITMAP	DISCARDABLE	"event_timer.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
