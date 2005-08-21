@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2005/08/21 17:21:10  movieman523
+  *	Added event timer display.
+  *	
   *	Revision 1.49  2005/08/21 16:23:32  movieman523
   *	Added more alarms.
   *	
@@ -2622,53 +2625,39 @@ void Saturn::SIVBBoiloff()
 }
 
 //
-// Set thruster state based on panel switches.
+// Set thruster state on or off. This should really turn off all but roll
+// thrusters until we're in orbit.
+//
+// Also, they should have their own fuel tank rather than use the main SIVB
+// fuel!
 //
 
-void Saturn::SetSIVBThrusters()
+void Saturn::SetSIVBThrusters(bool active)
 
 {
-	if (GetNavmodeState(NAVMODE_KILLROT)){
-		if (GetThrusterLevel(th_att_rot[2]) == 0 &&
-			GetThrusterLevel(th_att_rot[4]) == 0 &&
-			!RPswitch1 && !RPswitch2){
-			DeactivateNavmode(NAVMODE_KILLROT);
-		}
-	}
-
-	if(RPswitch1) {
-		SetThrusterResource(th_att_rot[0],ph_3rd);
-		SetThrusterResource(th_att_rot[1],ph_3rd);
-	}
-	else{
-		SetThrusterResource(th_att_rot[0],NULL);
-		SetThrusterResource(th_att_rot[1],NULL);
-	}
-
-	if(RPswitch3){
-		SetThrusterResource(th_att_rot[2],ph_3rd);
-		SetThrusterResource(th_att_rot[3],ph_3rd);
-		SetThrusterResource(th_att_rot[4],ph_3rd);
-		SetThrusterResource(th_att_rot[5],ph_3rd);
+	if (active) {
+		SetThrusterResource(th_att_rot[0], ph_3rd);
+		SetThrusterResource(th_att_rot[1], ph_3rd);
+		SetThrusterResource(th_att_rot[2], ph_3rd);
+		SetThrusterResource(th_att_rot[3], ph_3rd);
+		SetThrusterResource(th_att_rot[4], ph_3rd);
+		SetThrusterResource(th_att_rot[5], ph_3rd);
+		SetThrusterResource(th_att_rot[7], ph_3rd);
+		SetThrusterResource(th_att_rot[6], ph_3rd);
+		SetThrusterResource(th_att_rot[8], ph_3rd);
+		SetThrusterResource(th_att_rot[9], ph_3rd);
 	}
 	else{
-		SetThrusterResource(th_att_rot[2],NULL);
-		SetThrusterResource(th_att_rot[3],NULL);
-		SetThrusterResource(th_att_rot[4],NULL);
-		SetThrusterResource(th_att_rot[5],NULL);
-	}
-
-	if(RPswitch2){
-		SetThrusterResource(th_att_rot[7],ph_3rd);
-		SetThrusterResource(th_att_rot[6],ph_3rd);
-		SetThrusterResource(th_att_rot[8],ph_3rd);
-		SetThrusterResource(th_att_rot[9],ph_3rd);
-	}
-	else{
-		SetThrusterResource(th_att_rot[6],NULL);
-		SetThrusterResource(th_att_rot[7],NULL);
-		SetThrusterResource(th_att_rot[8],NULL);
-		SetThrusterResource(th_att_rot[9],NULL);
+		SetThrusterResource(th_att_rot[0], NULL);
+		SetThrusterResource(th_att_rot[1], NULL);
+		SetThrusterResource(th_att_rot[2], NULL);
+		SetThrusterResource(th_att_rot[3], NULL);
+		SetThrusterResource(th_att_rot[4], NULL);
+		SetThrusterResource(th_att_rot[5], NULL);
+		SetThrusterResource(th_att_rot[6], NULL);
+		SetThrusterResource(th_att_rot[7], NULL);
+		SetThrusterResource(th_att_rot[8], NULL);
+		SetThrusterResource(th_att_rot[9], NULL);
 	}
 }
 
@@ -3028,8 +3017,6 @@ void Saturn::StageOrbitSIVB(double simt)
 		}
 		return;
 	}
-
-	SetSIVBThrusters();
 }
 
 void Saturn::StartAbort()

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2005/08/21 16:23:32  movieman523
+  *	Added more alarms.
+  *	
   *	Revision 1.58  2005/08/21 13:13:43  movieman523
   *	Wired in a few caution and warning lights.
   *	
@@ -712,9 +715,6 @@ protected:
 	bool Sswitch8;
 	bool Sswitch9;
 
-	bool RPswitch1;
-	bool RPswitch2;
-	bool RPswitch3;
 	bool RPswitch4;
 	bool RPswitch5;
 	bool RPswitch6;
@@ -1276,7 +1276,7 @@ protected:
 	void SystemsInit();
 	void SystemsTimestep(double simt);
 	void SIVBBoiloff();
-	void SetSIVBThrusters();
+	void SetSIVBThrusters(bool active);
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);
 	void AttitudeLaunchSIVB();
 	virtual void AutoPilot(double autoT) = 0;

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.13  2005/08/06 01:12:52  movieman523
   *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
   *	
@@ -781,7 +784,6 @@ void SaturnV::SetThirdStage ()
 
 	SetThrusterGroupLevel(thg_ver,1.0);
 
-	RPswitch3=true;
 	RPswitch4=true;
 	RPswitch5=true;
 
