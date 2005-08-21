@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.16  2005/08/15 19:25:03  movieman523
   *	Added CSM attitude control switches and removed old ones.
   *	
@@ -132,7 +135,10 @@ void Saturn::SystemsTimestep(double simt) {
 		// Systems state handling
 		//
 
-		double *pMax, *fancap, pCabin, pSuit;
+		AtmosStatus atm;
+		GetAtmosStatus(atm);
+
+		double *pMax, *fancap;
 		float *size;
 		int *open, *number;
 
@@ -237,17 +243,15 @@ void Saturn::SystemsTimestep(double simt) {
 			break;
 
 		case SATSYSTEMS_CABINVENTING:
-			pCabin = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS") * PSI;
-			pSuit = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS") * PSI;
 
 			size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
 			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
 
-			if (pCabin <= 5.0) {
+			if (atm.CabinPressurePSI <= 5.0) {
 				// cabin leak
 				*size = (float)0.001;	
 			}
-			if (pSuit <= 5.0) {
+			if (atm.SuitPressurePSI <= 5.0) {
 				// Close suit pressure relieve
 				*open = SP_VALVE_CLOSE;
 
@@ -635,4 +639,255 @@ bool Saturn::FuelCellCoolingBypassed(int fuelcell) {
 	sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:2:BYPASSED", fuelcell);
 	bool *bypassed = (bool *) Panelsdk.GetPointerByString(buffer);
 	return *bypassed;
+}
+
+//
+// Set all the saved Panel SDK pointers to 0.
+//
+
+void Saturn::ClearPanelSDKPointers()
+
+{
+	pCO2Level = 0;
+	pCabinCO2Level = 0;
+	pCabinPressure = 0;
+	pSuitPressure = 0;
+	pSuitReturnPressure = 0;
+	pCabinTemp = 0;
+	pSuitTemp = 0;
+	pCabinRegulatorFlow = 0;
+	pO2DemandFlow = 0;
+	pDirectO2Flow = 0;
+	pO2Tank1Press = 0;
+	pO2Tank2Press = 0;
+	pH2Tank1Press = 0;
+	pH2Tank2Press = 0;
+	pFC1Temp = 0;
+	pFC2Temp = 0;
+	pFC3Temp = 0;
+}
+
+//
+// Functions that provide structured access to Saturn systems state.
+//
+
+//
+// Get atmosphere status for CM.
+//
+
+void Saturn::GetAtmosStatus(AtmosStatus &atm)
+
+{
+	atm.CabinCO2MMHG = 0.0;
+	atm.SuitCO2MMHG = 0.0;
+	atm.CabinPressureMMHG = 0.0;
+	atm.CabinPressurePSI = 0.0;
+	atm.CabinTempK = 0.0;
+	atm.SuitPressureMMHG = 0.0;
+	atm.SuitPressurePSI = 0;
+	atm.CabinRegulatorFlowLBH = 0.0;
+	atm.DirectO2FlowLBH = 0.0;
+	atm.O2DemandFlowLBH = 0.0;
+	atm.SuitReturnPressureMMHG = 0.0;
+	atm.SuitReturnPressurePSI = 0.0;
+
+	if (!pCO2Level) {
+		pCO2Level = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
+	}
+
+	if (pCO2Level) {
+		atm.SuitCO2MMHG = (*pCO2Level) * MMHG;
+	}
+
+	if (!pCabinCO2Level) {
+		pCabinCO2Level = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS");
+	}
+
+	if (pCabinCO2Level) {
+		atm.CabinCO2MMHG = (*pCO2Level) * MMHG;
+	}
+
+	if (!pCabinPressure) {
+		pCabinPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
+	}
+
+	if (pCabinPressure) {
+		atm.CabinPressureMMHG = (*pCabinPressure) * MMHG;
+		atm.CabinPressurePSI = (*pCabinPressure) * PSI;
+	}
+
+	if (!pSuitPressure) {
+		pSuitPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
+	}
+
+	if (pSuitPressure) {
+		atm.SuitPressureMMHG = (*pSuitPressure) * MMHG;
+		atm.SuitPressurePSI = (*pSuitPressure) * PSI;
+	}
+
+	if (!pSuitReturnPressure) {
+		pSuitReturnPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS");
+	}
+
+	if (pSuitReturnPressure) {
+		atm.SuitReturnPressureMMHG = (*pSuitReturnPressure) * MMHG;
+		atm.SuitReturnPressurePSI = (*pSuitReturnPressure) * PSI;
+	}
+
+	if (!pSuitTemp) {
+		pSuitTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
+	}
+
+	if (pSuitTemp) {
+		atm.SuitTempK = (*pSuitTemp);
+	}
+
+	if (!pCabinTemp) {
+		pCabinTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
+	}
+
+	if (pCabinTemp) {
+		atm.CabinTempK = (*pCabinTemp);
+	}
+
+	if (!pCabinRegulatorFlow) {
+		pCabinRegulatorFlow = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW");
+	}
+
+	if (pCabinRegulatorFlow) {
+		atm.CabinRegulatorFlowLBH = (*pCabinRegulatorFlow) * LBH;
+	}
+
+	if (!pO2DemandFlow) {
+		pO2DemandFlow = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOW");
+	}
+
+	if (pO2DemandFlow) {
+		atm.O2DemandFlowLBH = (*pO2DemandFlow) * LBH;
+	}
+
+	if (!pDirectO2Flow) {
+		pDirectO2Flow = (double*) Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE:FLOW");
+	}
+
+	if (pDirectO2Flow) {
+		atm.DirectO2FlowLBH = (*pDirectO2Flow) * LBH;
+	}
+}
+
+//
+// Get H2/O2 tank pressures.
+//
+
+void Saturn::GetTankPressures(TankPressures &press)
+
+{
+	//
+	// Clear to defaults.
+	//
+
+	press.H2Tank1PressurePSI = 0.0;
+	press.H2Tank2PressurePSI = 0.0;
+	press.O2Tank1PressurePSI = 0.0;
+	press.O2Tank2PressurePSI = 0.0;
+
+	//
+	// No tanks if we've seperated from the SM
+	//
+
+	if (stage >= CM_STAGE) {
+		return;
+	}
+
+	//
+	// Hydrogen tanks.
+	//
+
+	if (!pH2Tank1Press) {
+		pH2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:PRESS");
+	}
+
+	if (pH2Tank1Press) {
+		press.H2Tank1PressurePSI = (*pH2Tank1Press) * PSI;
+	}
+
+	if (!pH2Tank2Press) {
+		pH2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:PRESS");
+	}
+
+	if (pH2Tank2Press) {
+		press.H2Tank2PressurePSI = (*pH2Tank2Press) * PSI;
+	}
+
+	//
+	// Oxygen tanks.
+	//
+
+	if (!pO2Tank1Press) {
+		pO2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:PRESS");
+	}
+
+	if (pO2Tank1Press) {
+		press.O2Tank1PressurePSI = (*pO2Tank1Press) * PSI;
+	}
+
+	if (!pO2Tank2Press) {
+		pO2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:PRESS");
+	}
+
+	if (pO2Tank2Press) {
+		press.O2Tank2PressurePSI = (*pO2Tank2Press) * PSI;
+	}
+}
+
+//
+// Get fuel cell status. We should expand this to also return pressure, etc.
+//
+
+void Saturn::GetFuelCellStatus(FuelCellStatus &fc)
+
+{
+	//
+	// Set defaults.
+	//
+
+	fc.FC1TempK = 0.0;
+	fc.FC2TempK = 0.0;
+	fc.FC3TempK = 0.0;
+
+	//
+	// No fuel cells if we've seperated from the SM.
+	//
+
+	if (stage >= CM_STAGE) {
+		return;
+	}
+
+	//
+	// Get temperatures.
+	//
+
+	if (!pFC1Temp) {
+		pFC1Temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:TEMP");
+	}
+
+	if (pFC1Temp) {
+		fc.FC1TempK = (*pFC1Temp);
+	}
+
+	if (!pFC2Temp) {
+		pFC2Temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:TEMP");
+	}
+
+	if (pFC2Temp) {
+		fc.FC2TempK = (*pFC2Temp);
+	}
+
+	if (!pFC3Temp) {
+		pFC3Temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP");
+	}
+
+	if (pFC3Temp) {
+		fc.FC3TempK = (*pFC3Temp);
+	}
 }

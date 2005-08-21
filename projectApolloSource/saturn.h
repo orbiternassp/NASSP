@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2005/08/21 13:13:43  movieman523
+  *	Wired in a few caution and warning lights.
+  *	
   *	Revision 1.57  2005/08/21 11:51:59  movieman523
   *	Initial version of CSM caution and warning lights: light test switch now works.
   *	
@@ -250,10 +253,10 @@ typedef union {
 } SwitchFailures;
 
 typedef struct {
-	double O2Tank1Pressure;
-	double O2Tank2Pressure;
-	double H2Tank1Pressure;
-	double H2Tank2Pressure;
+	double O2Tank1PressurePSI;
+	double O2Tank2PressurePSI;
+	double H2Tank1PressurePSI;
+	double H2Tank2PressurePSI;
 } TankPressures;
 
 typedef struct {
@@ -262,10 +265,26 @@ typedef struct {
 } BusStatus;
 
 typedef struct {
-	double FC1Temp;
-	double FC2Temp;
-	double FC3Temp;
+	double FC1TempK;
+	double FC2TempK;
+	double FC3TempK;
 } FuelCellStatus;
+
+typedef struct {
+	double SuitTempK;
+	double CabinTempK;
+	double CabinPressureMMHG;
+	double SuitPressureMMHG;
+	double SuitReturnPressureMMHG;
+	double CabinPressurePSI;
+	double SuitPressurePSI;
+	double SuitReturnPressurePSI;
+	double SuitCO2MMHG;
+	double CabinCO2MMHG;
+	double CabinRegulatorFlowLBH;
+	double O2DemandFlowLBH;
+	double DirectO2FlowLBH;
+} AtmosStatus;
 
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
@@ -329,7 +348,7 @@ public:
 	// CWS functions.
 	//
 
-	double GetCO2Level();
+	void GetAtmosStatus(AtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
 //	void GetBusStatus(BusStatus &bus);
 	void GetFuelCellStatus(FuelCellStatus &fc);
@@ -1328,6 +1347,8 @@ protected:
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 
+	void ClearPanelSDKPointers();
+
 	//
 	// Mission stage functions.
 	//
@@ -1454,6 +1475,15 @@ protected:
 	//
 
 	double *pCO2Level;
+	double *pCabinCO2Level;
+	double *pCabinPressure;
+	double *pCabinTemp;
+	double *pSuitTemp;
+	double *pSuitPressure;
+	double *pSuitReturnPressure;
+	double *pCabinRegulatorFlow;
+	double *pO2DemandFlow;
+	double *pDirectO2Flow;
 	double *pO2Tank1Press;
 	double *pO2Tank2Press;
 	double *pH2Tank1Press;

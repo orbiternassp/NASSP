@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/21 13:13:43  movieman523
+  *	Wired in a few caution and warning lights.
+  *	
   *	Revision 1.4  2005/08/21 11:51:59  movieman523
   *	Initial version of CSM caution and warning lights: light test switch now works.
   *	
@@ -148,15 +151,17 @@ void CautionWarningSystem::TimeStep(double simt)
 void CautionWarningSystem::SetMasterAlarm(bool alarm)
 
 {
-	MasterAlarm = alarm;
+	if (MasterAlarm != alarm) {
+		MasterAlarm = alarm;
 
-	//
-	// Always set light state to false. If the alarm is enabled, the next timestep will
-	// take care of lighting it.
-	//
+		//
+		// Always set light state to false. If the alarm is enabled, the next timestep will
+		// take care of lighting it.
+		//
 
-	MasterAlarmLit = false;
-	MasterAlarmCycleTime = MINUS_INFINITY;
+		MasterAlarmLit = false;
+		MasterAlarmCycleTime = MINUS_INFINITY;
+	}
 }
 
 //

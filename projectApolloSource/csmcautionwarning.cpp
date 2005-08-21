@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/21 13:13:43  movieman523
+  *	Wired in a few caution and warning lights.
+  *	
   *	Revision 1.4  2005/08/21 11:51:59  movieman523
   *	Initial version of CSM caution and warning lights: light test switch now works.
   *	
@@ -61,6 +64,11 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &s) : CautionWarningSyste
 
 {
 	NextUpdateTime = MINUS_INFINITY;
+
+	NextO2FlowCheckTime = MINUS_INFINITY;
+	LastO2FlowCheckHigh = false;
+	O2FlowCheckCount = 0;
+
 	TimeStepCount = 0;
 }
 
@@ -75,7 +83,7 @@ bool CSMCautionWarningSystem::FuelCellBad(double temp)
 	// I don't know what the real temperature limits are.
 	//
 
-	if (temp < 150.0 || temp > 500.0)
+	if (temp < 430.0 || temp > 500.0)
 		return true;
 
 	return false;
@@ -110,44 +118,56 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// Check systems.
 		//
 
-		FuelCellStatus fc;
-
-		sat->GetFuelCellStatus(fc);
-
 		//
-		// We should check more than temperature, once we find out what the
-		// caution limits were for pressure, etc.
+		// Some systems only apply when we're in CSM mode.
 		//
 
-		SetLight(CSM_CWS_FC1_LIGHT, FuelCellBad(fc.FC1Temp));
-		SetLight(CSM_CWS_FC2_LIGHT, FuelCellBad(fc.FC2Temp));
-		SetLight(CSM_CWS_FC3_LIGHT, FuelCellBad(fc.FC3Temp));
+		if (Source == CWS_SOURCE_CSM) {
+			FuelCellStatus fc;
 
-		//
-		// LOX/LH2: "The caution and warning system will activate on alarm when oxygen pressure 
-		// in either tank exceeds 950 psia or falls below 800 psia or when the hydrogen system 
-		// pressure exceeds 270 psia or drops below 220 psia."
-		//
+			sat->GetFuelCellStatus(fc);
 
-		bool LightCryo = false;
-		TankPressures press;
+			//
+			// We should check more than temperature, once we find out what the
+			// caution limits were for pressure, etc.
+			//
 
-		sat->GetTankPressures(press);
+			SetLight(CSM_CWS_FC1_LIGHT, FuelCellBad(fc.FC1TempK));
+			SetLight(CSM_CWS_FC2_LIGHT, FuelCellBad(fc.FC2TempK));
+			SetLight(CSM_CWS_FC3_LIGHT, FuelCellBad(fc.FC3TempK));
 
-		if (press.H2Tank1Pressure < 220.0 || press.H2Tank2Pressure < 220.0) {
-			LightCryo = true;
+			//
+			// LOX/LH2: "The caution and warning system will activate on alarm when oxygen pressure 
+			// in either tank exceeds 950 psia or falls below 800 psia or when the hydrogen system 
+			// pressure exceeds 270 psia or drops below 220 psia."
+			//
+
+			bool LightCryo = false;
+			TankPressures press;
+
+			sat->GetTankPressures(press);
+
+			if (press.H2Tank1PressurePSI < 220.0 || press.H2Tank2PressurePSI < 220.0) {
+				LightCryo = true;
+			}
+			else if (press.H2Tank1PressurePSI > 270.0 || press.H2Tank2PressurePSI > 270.0) {
+				LightCryo = true;
+			}
+			else if (press.O2Tank1PressurePSI < 800.0 || press.O2Tank2PressurePSI < 800.0) {
+				LightCryo = true;
+			}
+			else if (press.O2Tank1PressurePSI > 950.0 || press.O2Tank2PressurePSI > 950.0) {
+				LightCryo = true;
+			}
+
+			SetLight(CSM_CWS_CRYO_PRESS_LIGHT, LightCryo);
 		}
-		else if (press.H2Tank1Pressure > 270.0 || press.H2Tank2Pressure > 270.0) {
-			LightCryo = true;
+		else {
+			SetLight(CSM_CWS_FC1_LIGHT, false);
+			SetLight(CSM_CWS_FC2_LIGHT, false);
+			SetLight(CSM_CWS_FC3_LIGHT, false);
+			SetLight(CSM_CWS_CRYO_PRESS_LIGHT, false);
 		}
-		else if (press.O2Tank1Pressure < 800.0 || press.O2Tank2Pressure < 800.0) {
-			LightCryo = true;
-		}
-		else if (press.O2Tank1Pressure > 950.0 || press.O2Tank2Pressure > 950.0) {
-			LightCryo = true;
-		}
-
-		SetLight(CSM_CWS_CRYO_PRESS_LIGHT, LightCryo);
 
 		//
 		// Inverter: "A temperature sensor with a range of 32 degrees to 248 degrees F is installed 
@@ -166,6 +186,38 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// the fact that the oxygen flow rate is greater than is normally required."
 		//
 
+		AtmosStatus atm;
+		sat->GetAtmosStatus(atm);
+
+		if (simt > NextO2FlowCheckTime) {
+			double cf = atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH;
+			bool LightO2Warning = false;
+
+			//
+			// Skip the first few flow checks to give the panel SDK time to stabilise when
+			// starting a scenario.
+			//
+
+			if (O2FlowCheckCount > 10) {
+				if (cf > 1.0) {
+					if (LastO2FlowCheckHigh) {
+						LightO2Warning = true;
+					}
+					LastO2FlowCheckHigh = true;
+				}
+				else {
+					LastO2FlowCheckHigh = false;
+				}
+			}
+			else {
+				O2FlowCheckCount++;
+			}
+
+			SetLight(CSM_CWS_O2_FLOW_HIGH_LIGHT, LightO2Warning);
+
+			NextO2FlowCheckTime = simt + 16.5;
+		}
+
 		//
 		// CO2: "A carbon dioxide sensor is connected between the suit inlet and return manifold. It 
 		// is connected to an indicator on the main display console, to telemetry, and to the caution 
@@ -173,7 +225,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// reaches 7.6 millimeters of mercury."
 		//
 
-		SetLight(CSM_CWS_CO2_LIGHT, (sat->GetCO2Level() >= 7.6));
+		SetLight(CSM_CWS_CO2_LIGHT, (atm.SuitCO2MMHG >= 7.6));
 
 		NextUpdateTime = simt + (0.2 * oapiGetTimeAcceleration());
 	}
@@ -201,7 +253,7 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 
 	for (row = 0; row < 6; row++) {
 		for (column = 0; column < 4; column++) {
-			if (LightTest || LightState[i]) {
+			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK))) {
 				oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
 			}
 			i++;

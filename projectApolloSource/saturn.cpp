@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2005/08/21 13:13:43  movieman523
+  *	Wired in a few caution and warning lights.
+  *	
   *	Revision 1.47  2005/08/20 17:50:41  movieman523
   *	Added FDAI state save and load.
   *	
@@ -578,14 +581,7 @@ void Saturn::initSaturn()
 	// PanelSDK pointers.
 	//
 
-	pCO2Level = 0;
-	pO2Tank1Press = 0;
-	pO2Tank2Press = 0;
-	pH2Tank1Press = 0;
-	pH2Tank2Press = 0;
-	pFC1Temp = 0;
-	pFC2Temp = 0;
-	pFC3Temp = 0;
+	ClearPanelSDKPointers();
 
 	InitSaturnCalled = true;
 }
@@ -3086,127 +3082,6 @@ double Saturn::GetJ2ISP(double ratio)
 	}
 
 	return isp;
-}
-
-//
-// Get CO2 level in mm Hg.
-//
-
-double Saturn::GetCO2Level()
-
-{
-	double CO2Level = 0.0;
-
-	if (!pCO2Level) {
-		pCO2Level = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
-	}
-
-	if (pCO2Level) {
-		CO2Level = *pCO2Level * MMHG;
-	}
-
-	return CO2Level;
-}
-
-//
-// Get H2/O2 tank pressures.
-//
-
-void Saturn::GetTankPressures(TankPressures &press)
-
-{
-	//
-	// Clear to defaults.
-	//
-
-	press.H2Tank1Pressure = 0.0;
-	press.H2Tank2Pressure = 0.0;
-	press.O2Tank1Pressure = 0.0;
-	press.O2Tank2Pressure = 0.0;
-
-	//
-	// Hydrogen tanks.
-	//
-
-	if (!pH2Tank1Press) {
-		pH2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:PRESS");
-	}
-
-	if (pH2Tank1Press) {
-		press.H2Tank1Pressure = (*pH2Tank1Press) * PSI;
-	}
-
-	if (!pH2Tank2Press) {
-		pH2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:PRESS");
-	}
-
-	if (pH2Tank2Press) {
-		press.H2Tank2Pressure = (*pH2Tank2Press) * PSI;
-	}
-
-	//
-	// Oxygen tanks.
-	//
-
-	if (!pO2Tank1Press) {
-		pO2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:PRESS");
-	}
-
-	if (pO2Tank1Press) {
-		press.O2Tank1Pressure = (*pO2Tank1Press) * PSI;
-	}
-
-	if (!pO2Tank2Press) {
-		pO2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:PRESS");
-	}
-
-	if (pO2Tank2Press) {
-		press.O2Tank2Pressure = (*pO2Tank2Press) * PSI;
-	}
-}
-
-//
-// Get fuel cell status. We should expand this to also return pressure, etc.
-//
-
-void Saturn::GetFuelCellStatus(FuelCellStatus &fc)
-
-{
-	//
-	// Set defaults.
-	//
-
-	fc.FC1Temp = 0.0;
-	fc.FC2Temp = 0.0;
-	fc.FC3Temp = 0.0;
-
-	//
-	// Get temperatures.
-	//
-
-	if (!pFC1Temp) {
-		pFC1Temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:TEMP");
-	}
-
-	if (pFC1Temp) {
-		fc.FC1Temp = (*pFC1Temp);
-	}
-
-	if (!pFC2Temp) {
-		pFC2Temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:TEMP");
-	}
-
-	if (pFC2Temp) {
-		fc.FC2Temp = (*pFC2Temp);
-	}
-
-	if (!pFC3Temp) {
-		pFC3Temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP");
-	}
-
-	if (pFC3Temp) {
-		fc.FC3Temp = (*pFC3Temp);
-	}
 }
 
 //

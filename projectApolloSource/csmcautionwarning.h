@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/21 13:13:43  movieman523
+  *	Wired in a few caution and warning lights.
+  *	
   *	Revision 1.2  2005/08/21 11:51:59  movieman523
   *	Initial version of CSM caution and warning lights: light test switch now works.
   *	
@@ -50,6 +53,10 @@ protected:
 	double NextUpdateTime;
 	int TimeStepCount;
 
+	double NextO2FlowCheckTime;
+	bool LastO2FlowCheckHigh;
+	int O2FlowCheckCount;
+
 	//
 	// Helper functions.
 	//
@@ -70,5 +77,6 @@ protected:
 #define CSM_CWS_CMC_LIGHT			46
 #define CSM_CWS_BUS_B_UNDERVOLT		48
 #define CSM_CWS_BUS_A_UNDERVOLT		49
+#define CSM_CWS_O2_FLOW_HIGH_LIGHT	52
 
 #endif
