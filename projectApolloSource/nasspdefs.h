@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/08/19 13:45:59  tschachim
+  *	Added FDAI.
+  *	
   *	Revision 1.27  2005/08/16 18:54:30  movieman523
   *	Added Altimeter and launch vehicle switches.
   *	
@@ -153,7 +156,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 37; // number of bitmap handles
+const int nsurf = 38; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -167,7 +170,7 @@ const int nsurf = 37; // number of bitmap handles
 #define SRF_LMTWOPOSLEVER           19
 #define SRF_MASTERALARM_BRIGHT		20
 #define SRF_DSKY					21
-#define SRF_DSKYNUM					22
+#define SRF_ALLROUND				22
 #define SRF_THREEPOSSWITCH			23
 #define SRF_ROTATIONALSWITCH		27
 #define SRF_SUITCABINDELTAPMETER	28
@@ -179,6 +182,7 @@ const int nsurf = 37; // number of bitmap handles
 #define SRF_DSKYDISP				34
 #define SRF_FDAI				    35
 #define SRF_FDAIROLL			    36
+#define SRF_CWSLIGHTS				37
 
 //
 // Earth radius and gravity constants.

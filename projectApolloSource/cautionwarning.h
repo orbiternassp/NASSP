@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/13 16:41:15  movieman523
+  *	Fully wired up the CSM caution and warning switches.
+  *	
   *	Revision 1.1  2005/08/13 14:22:37  movieman523
   *	Initial implementation of caution and warning system.
   *	
@@ -60,6 +63,7 @@ public:
 	void SetMasterAlarm(bool alarm);
 
 	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit);
+	virtual void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -67,6 +71,7 @@ public:
 	bool IsPowered();
 
 protected:
+
 	int TestState;
 	int Mode;
 	int Source;
@@ -76,12 +81,26 @@ protected:
 	bool MasterAlarm;
 
 	//
+	// Light states.
+	//
+
+	bool LeftLights[30];
+	bool RightLights[30];
+
+	//
 	// These don't have to be saved.
 	//
 
 	bool MasterAlarmLit;
 	double MasterAlarmCycleTime;
 	Sound &MasterAlarmSound;
+
+	//
+	// Helper functions.
+	//
+
+	int GetLightStates(bool *LightState);
+	void SetLightStates(bool *LightState, int state);
 };
 
 //
