@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2005/08/21 13:13:43  movieman523
+  *	Wired in a few caution and warning lights.
+  *	
   *	Revision 1.65  2005/08/21 11:51:59  movieman523
   *	Initial version of CSM caution and warning lights: light test switch now works.
   *	
@@ -418,20 +421,36 @@ void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffs
 
 void Saturn::RedrawPanel_SuitCabinDeltaPMeter (SURFHANDLE surf) {
 
+	AtmosStatus atm;
+	GetAtmosStatus(atm);
+
 	// Suit cabin pressure difference
-	double scdp = (*(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS") -
-			       *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS")) * INH2O;
-	scdp = scdp / 5.0 * 60.0;
-	if (scdp > 90) scdp = 90;
-	if (scdp < -90) scdp = -90;
+	double scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
+
+	//
+	// Limit needle to the meter.
+	//
+
+	if (scdp > 5.5)
+		scdp = 5.5;
+	if (scdp < -5.5)
+		scdp = -5.5;
+
+	scdp = (scdp / 5.0) * 60.0;
 
 	// O2 main regulator output flow 
-	double cf =  *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW") * LBH;
-		   cf += *(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOW") * LBH;
-		   cf += *(double*)Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE:FLOW") * LBH;
+	double cf = atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH;
+
+	//
+	// Limit needle to the meter.
+	//
+
+	if (cf < 0.5)
+		cf = 0.5;
+	if (cf > 1.1)
+		cf = 1.1;
+
 	cf = (cf - .6) / .4 * 60.0;
-	if (cf > 90) cf = 90;
-	if (cf < -90) cf = -90;
 
 	HDC hDC = oapiGetDC (surf);
 	DrawNeedle (hDC,  0, 22, 20.0, scdp * RAD, g_Param.pen[4], g_Param.pen[4]);
@@ -445,16 +464,16 @@ void Saturn::RedrawPanel_SuitComprDeltaPMeter (SURFHANDLE surf) {
 
 	// O2 main regulator output flow 
 	// TODO: Is this the correct flow for that meter? No documentation found yet...
-	double cf =  *(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW") * LBH;
-		   cf += *(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOW") * LBH;
-		   cf += *(double*)Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE:FLOW") * LBH;
+	AtmosStatus atm;
+	GetAtmosStatus(atm);
+
+	double cf = atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH;
 	cf = (cf - .6) / .4 * 60.0;
 	if (cf > 90) cf = 90;
 	if (cf < -90) cf = -90;
 	
 	// Suit compressor pressure difference
-	double scdp = (*(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS") -
-			       *(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS")) * PSI;
+	double scdp = (atm.SuitPressurePSI - atm.SuitReturnPressurePSI);
 	scdp = (scdp - .5) / .5 * 60.0;
 	if (scdp > 90) scdp = 90;
 	if (scdp < -90) scdp = -90;
@@ -497,26 +516,26 @@ void Saturn::RedrawPanel_CryoTankIndicators(SURFHANDLE surf) {
 	GetTankPressures(press);
 
 	// H2Tank1 pressure
-	double value = press.H2Tank1Pressure;
+	double value = press.H2Tank1PressurePSI;
 	if (value < 0.0) value = 0.0;
 	if (value > 400.0) value = 400.0;
 	oapiBlt(surf, srf[SRF_NEEDLE],  0, (110 - (int)(value / 400.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 
 	// H2Tank2 pressure
-	value = press.H2Tank2Pressure;
+	value = press.H2Tank2PressurePSI;
 	if (value < 0.0) value = 0.0;
 	if (value > 400.0) value = 400.0;
 	oapiBlt(surf, srf[SRF_NEEDLE], 53, (110 - (int)(value / 400.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 
 	// O2Tank1 / O2SurgeTank pressure
 	if (O2PressIndSwitch)  
-		value = press.O2Tank1Pressure;
+		value = press.O2Tank1PressurePSI;
 	else
 		value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS") * PSI;
 	RedrawPanel_O2CryoTankPressureIndicator(surf, srf[SRF_NEEDLE], value, 86, 0);
 
 	// O2Tank2 pressure
-	value = press.O2Tank2Pressure;
+	value = press.O2Tank2PressurePSI;
 	RedrawPanel_O2CryoTankPressureIndicator(surf, srf[SRF_NEEDLE], value, 139, 10);
 
 	// H2Tank1 quantity
@@ -561,20 +580,23 @@ void Saturn::RedrawPanel_CryoTankIndicators(SURFHANDLE surf) {
 
 void Saturn::RedrawPanel_CabinIndicators (SURFHANDLE surf) {
 
+	AtmosStatus atm;
+	GetAtmosStatus(atm);
+
 	// Suit temperature
-	double value = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP"));
+	double value = KelvinToFahrenheit(atm.SuitTempK);
 	if (value < 20.0) value = 20.0;
 	if (value > 95.0) value = 95.0;
 	oapiBlt(surf, srf[SRF_NEEDLE],  1, (110 - (int)((value - 20.0) / 75.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 
 	// Cabin temperature
-	value = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP"));
+	value = KelvinToFahrenheit(atm.CabinTempK);
 	if (value < 40.0) value = 40.0;
 	if (value > 120.0) value = 120.0;
 	oapiBlt(surf, srf[SRF_NEEDLE],  53, (110 - (int)((value - 40.0) / 80.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 
 	// Suit pressure
-	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS") * PSI;
+	value = atm.SuitReturnPressurePSI;
 	if (value < 0.0) value = 0.0;
 	if (value > 16.0) value = 16.0;
 	if (value < 6.0)
@@ -583,7 +605,7 @@ void Saturn::RedrawPanel_CabinIndicators (SURFHANDLE surf) {
 		oapiBlt(surf, srf[SRF_NEEDLE],  101, (53 - (int)((value - 6.0) / 10.0 * 45.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 
 	// Cabin pressure
-	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS") * PSI;
+	value = atm.CabinPressurePSI;
 	if (value < 0.0) value = 0.0;
 	if (value > 16.0) value = 16.0;
 	if (value < 6.0)
@@ -591,8 +613,8 @@ void Saturn::RedrawPanel_CabinIndicators (SURFHANDLE surf) {
 	else
 		oapiBlt(surf, srf[SRF_NEEDLE],  153, (53 - (int)((value - 6.0) / 10.0 * 45.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 
-	// Cabin CO2 partial pressure
-	value = GetCO2Level();
+	// Suit CO2 partial pressure
+	value = atm.SuitCO2MMHG;
 	if (value < 0.0) value = 0.0;
 	if (value > 30.0) value = 30.0;	
 	if (value < 10.0)

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/21 13:13:43  movieman523
+  *	Wired in a few caution and warning lights.
+  *	
   *	Revision 1.3  2005/08/21 11:51:59  movieman523
   *	Initial version of CSM caution and warning lights: light test switch now works.
   *	
@@ -66,6 +69,14 @@ public:
 	void SetMasterAlarm(bool alarm);
 	void MonitorVessel(VESSEL *v) { OurVessel = v; };
 
+	//
+	// Turn a light on or off. Lights 0-29 are on the left panel, lights
+	// 30-59 are on the right panel.
+	//
+	// If the light wasn't on and is now being turned on, the Master Alarm
+	// will sound.
+	//
+
 	void SetLight(int lightnum, bool state);
 
 	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit);
@@ -88,6 +99,9 @@ protected:
 
 	//
 	// Light states.
+	//
+	// You get 30 lights per panel, as that fits nicely into a 32-bit integer. In
+	// reality, neither CSM or LEM needs that many.
 	//
 
 	bool LeftLights[30];
