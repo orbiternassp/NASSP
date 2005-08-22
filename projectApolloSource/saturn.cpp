@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2005/08/21 22:21:00  movieman523
+  *	Fixed SM RCS and activated SIVB RCS at all times for now.
+  *	
   *	Revision 1.50  2005/08/21 17:21:10  movieman523
   *	Added event timer display.
   *	
@@ -1803,7 +1806,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	agc.SetFuel(actualFUEL);
 	agc.SetRVel(velMS);
 
-	SystemsTimestep(simt);
+	SystemsTimestep(simt, simdt);
 
 	if (stage < CSM_LEM_STAGE && AutopilotActive())	{
 		SetAutopilotLight();

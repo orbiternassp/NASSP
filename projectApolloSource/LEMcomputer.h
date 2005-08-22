@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.13  2005/08/10 21:19:44  lazyd
   *	Changed arguments for OrientAxis
   *	
@@ -155,7 +158,7 @@ public:
 	void GetHorizVelocity(double &forward, double &lateral);
 	int GetProgRunning();
 
-	void Timestep(double simt);
+	void Timestep(double simt, double simdt);
 
     int  GetStatus(double *simtime,
 		                 int    *mode,

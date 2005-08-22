@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/19 13:51:39  tschachim
+  *	Added lastOrbitalElementsTime for earth orbit insertation monitoring.
+  *	
   *	Revision 1.6  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -199,7 +202,7 @@ public:
 	bool ReadMemory(unsigned int loc, int &val);
 	void WriteMemory(unsigned int loc, int val);
 
-	void Timestep(double simt);
+	void Timestep(double simt, double simdt);
 
 	//
 	// External event handling.

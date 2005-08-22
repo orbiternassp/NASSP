@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2005/08/21 22:21:00  movieman523
+  *	Fixed SM RCS and activated SIVB RCS at all times for now.
+  *	
   *	Revision 1.59  2005/08/21 16:23:32  movieman523
   *	Added more alarms.
   *	
@@ -1274,7 +1277,7 @@ protected:
 	void StopMasterAlarm();
 	void GenericTimestep(double simt, double simdt);
 	void SystemsInit();
-	void SystemsTimestep(double simt);
+	void SystemsTimestep(double simt, double simdt);
 	void SIVBBoiloff();
 	void SetSIVBThrusters(bool active);
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/19 23:54:13  movieman523
+  *	Should have fixed Prog 37, at least for CSM.
+  *	
   *	Revision 1.16  2005/08/19 18:38:13  movieman523
   *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
   *	
@@ -990,10 +993,34 @@ void CSMcomputer::Prog15Pressed(int R1, int R2, int R3)
 	}
 }
 
-void CSMcomputer::Timestep(double simt)
+void CSMcomputer::Timestep(double simt, double simdt)
 
 {
-	if (!GenericTimestep(simt)) {
+	if (Yaagc && !PadLoaded) {
+		double latitude, longitude, radius, heading;
+
+		// init pad load
+		OurVessel->GetEquPos(longitude, latitude, radius);
+		oapiGetHeading(OurVessel->GetHandle(), &heading);
+
+		// set launch pad latitude
+		vagc.Erasable[5][2] = (int16_t)((16384.0 * latitude) / TWO_PI);
+
+		// set launch pad azimuth
+		vagc.Erasable[5][0] = (int16_t)((16384.0 * heading) / TWO_PI);
+
+		// z-component of the normalized earth's rotational vector in basic reference coord.
+		// x and y are 0313 and 0315 and are zero
+		vagc.Erasable[3][0317] = 037777;	
+
+		// set launch pad altitude
+		vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
+		//State->Erasable[2][0272] = 01;	// 17.7 nmi
+
+		PadLoaded = true;
+	}
+
+	if (!GenericTimestep(simt, simdt)) {
 
 		switch (ProgRunning) {
 
