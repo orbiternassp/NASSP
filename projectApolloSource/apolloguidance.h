@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/19 13:55:35  tschachim
+  *	Added Channel 13 handling
+  *	
   *	Revision 1.16  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -119,7 +122,7 @@ public:
 	void ProcessCommonVerbNoun(int verb, int noun);
 	bool CommonProceedNoData();
 
-	virtual void Timestep(double simt) = 0;
+	virtual void Timestep(double simt, double simdt) = 0;
 
 	void SetVesselStats(double ISP, double Thrust, bool MainIsHover);
 	void ControlVessel(VESSEL *v) { OurVessel = v; };
@@ -246,7 +249,7 @@ protected:
 
 	void RaiseAlarm(int AlarmNo);
 	void DoOrbitBurnCalcs(double simt);
-	bool GenericTimestep(double simt);
+	bool GenericTimestep(double simt, double simdt);
 	bool GenericReadMemory(unsigned int loc, int &val);
 	void GenericWriteMemory(unsigned int loc, int val);
 	void DisplayTime(double t);
@@ -399,7 +402,6 @@ protected:
 	bool ProgFlag04;
 	bool RetroFlag;
 	bool BurnFlag;
-	bool isFirstTimestep;
 
 	DSKY &dsky;
 	IMU &imu;
@@ -437,6 +439,9 @@ protected:
 	double NextProgTime;
 	double LastTimestep;
 	double CurrentTimestep;
+
+	bool isFirstTimestep;
+	bool PadLoaded;
 
 	void GetPosVel();
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/08/19 23:54:13  movieman523
+  *	Should have fixed Prog 37, at least for CSM.
+  *	
   *	Revision 1.35  2005/08/19 18:38:13  movieman523
   *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
   *	
@@ -338,6 +341,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	InputChannel[033] = (val33.Value ^ 077777);
 
 	isFirstTimestep = true;
+	PadLoaded = false;
 }
 
 ApolloGuidance::~ApolloGuidance()
@@ -1063,7 +1067,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 	return false;
 }
 
-bool ApolloGuidance::GenericTimestep(double simt)
+bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 
 {
 	int i;
@@ -1080,50 +1084,25 @@ bool ApolloGuidance::GenericTimestep(double simt)
 	GetPosVel();
 
 	if (Yaagc) {
-		if (isFirstTimestep) {
-			double latitude, longitude, radius, heading;
+		// Physical AGC timing was generated from a master 1024 KHz clock, divided by 12.
+		// This resulted in a machine cycle of just over 11.7 microseconds.
+		int cycles = (long) ((simdt) * (1024000.0 / 12.0));
 
-			// init pad load
-			OurVessel->GetEquPos(longitude, latitude, radius);
-			oapiGetHeading(OurVessel->GetHandle(), &heading);
-
-			// set launch pad latitude
-			vagc.Erasable[5][2] = (int16_t)((16384.0 * latitude) / TWO_PI);
-
-			// set launch pad azimuth
-			vagc.Erasable[5][0] = (int16_t)((16384.0 * heading) / TWO_PI);
-
-			// z-component of the normalized earth's rotational vector in basic reference coord.
-			// x and y are 0313 and 0315 and are zero
-			vagc.Erasable[3][0317] = 037777;	
-
-			// set launch pad altitude
-			vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
-			//State->Erasable[2][0272] = 01;	// 17.7 nmi
-
-			isFirstTimestep = false;
-		}
-		else {
-			// Physical AGC timing was generated from a master 1024 KHz clock, divided by 12.
-			// This resulted in a machine cycle of just over 11.7 microseconds.
-			int cycles = (long) ((simt - LastTimestep) * 1024000 / 12);
-
-			//
-			// Don't want to kill a slow PC.
-			//
+		//
+		// Don't want to kill a slow PC.
+		//
 
 /*			TODO: Disabled for the moment because if I have a long timestep during test flights
-			      and the cycles get limited, the AGC loses time synchronisation and everything 
-				  is messed up.
+		      and the cycles get limited, the AGC loses time synchronisation and everything 
+			  is messed up.
 
-			if (cycles > 100000)
-				cycles = 100000;
-			if (cycles < 1)
-				cycles = 1;
+		if (cycles > 100000)
+			cycles = 100000;
+		if (cycles < 1)
+			cycles = 1;
 */
-			for (i = 0; i < cycles; i++) {
-				agc_engine(&vagc);
-			}
+		for (i = 0; i < cycles; i++) {
+			agc_engine(&vagc);
 		}
 		return true;
 	}
@@ -2221,6 +2200,7 @@ typedef union
 		unsigned PendDelay:3;
 		unsigned ExtraDelay:3;
 		unsigned DownruptTimeValid:1;
+		unsigned PadLoaded:1;
 	} u;
 	unsigned long word;
 } AGCState;
@@ -2309,6 +2289,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	state.u.PendDelay = vagc.PendDelay;
 	state.u.ExtraDelay = vagc.ExtraDelay;
 	state.u.DownruptTimeValid = vagc.DownruptTimeValid;
+	state.u.PadLoaded = PadLoaded;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -2532,6 +2513,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			vagc.PendDelay = state.u.PendDelay;
 			vagc.ExtraDelay = state.u.ExtraDelay;
 			vagc.DownruptTimeValid = state.u.DownruptTimeValid;
+			PadLoaded = state.u.PadLoaded;
 		}
 		else if (!strnicmp (line, "YAAGC", 5)) {
 			sscanf (line+5, "%d", &Yaagc);

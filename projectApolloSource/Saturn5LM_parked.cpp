@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/08/18 22:15:22  movieman523
+  *	Wired up second DSKY, to accurately match the real hardware.
+  *	
   *	Revision 1.30  2005/08/18 15:07:17  lazyd
   *	Added third parameter to dsky
   *	
@@ -570,7 +573,7 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 
 	MissionTime = MissionTime + deltat;
 
-	agc.Timestep(MissionTime);
+	agc.Timestep(MissionTime, simdt);
 	dsky.Timestep(MissionTime);
 	imu.Timestep(MissionTime);
 	MissionTimerDisplay.Timestep(MissionTime, deltat);

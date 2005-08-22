@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/21 22:21:00  movieman523
+  *	Fixed SM RCS and activated SIVB RCS at all times for now.
+  *	
   *	Revision 1.18  2005/08/21 16:23:32  movieman523
   *	Added more alarms.
   *	
@@ -114,7 +117,7 @@ void Saturn::SystemsInit() {
 	//PanelsdkLogFile = fopen("NASSP-Systems.log", "w");  
 }
 
-void Saturn::SystemsTimestep(double simt) {
+void Saturn::SystemsTimestep(double simt, double simdt) {
 
 	//
 	// Don't clock the computer and the internal systems unless we're actually at the pad.
@@ -124,7 +127,7 @@ void Saturn::SystemsTimestep(double simt) {
 
 		dsky.Timestep(MissionTime);
 		dsky2.Timestep(MissionTime);
-		agc.Timestep(MissionTime);
+		agc.Timestep(MissionTime, simdt);
 		imu.Timestep(MissionTime);
 		cws.TimeStep(MissionTime);
 

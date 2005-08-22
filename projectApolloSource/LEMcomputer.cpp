@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/13 20:00:28  lazyd
+  *	Fixed noun 77
+  *	
   *	Revision 1.17  2005/08/11 01:27:26  movieman523
   *	Added initial Virtual AGC support.
   *	
@@ -774,10 +777,10 @@ bool LEMcomputer::ValidateProgram(int prog)
 	return false;
 }
 
-void LEMcomputer::Timestep(double simt)
+void LEMcomputer::Timestep(double simt, double simdt)
 
 {
-	if (GenericTimestep(simt))
+	if (GenericTimestep(simt, simdt))
 		return;
 
 	switch (ProgRunning) {
