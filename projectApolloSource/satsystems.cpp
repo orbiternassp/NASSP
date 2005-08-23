@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/08/23 21:29:03  movieman523
+  *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
+  *	
   *	Revision 1.21  2005/08/23 20:13:12  movieman523
   *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
   *	
@@ -593,13 +596,17 @@ bool Saturn::SMRCSActive()
 void Saturn::CheckSPSState()
 
 {
-	if (SPSswitch){
-		SetThrusterResource(th_main[0],ph_sps);
-		agc.SetInputChannelBit(030, 3, true);
-	}
-	else{
-		SetThrusterResource(th_main[0],NULL);
-		agc.SetInputChannelBit(030, 3, false);
+	switch (stage) {
+	case CSM_LEM_STAGE:
+		if (SPSswitch.IsUp()){
+			SetThrusterResource(th_main[0],ph_sps);
+			agc.SetInputChannelBit(030, 3, true);
+		}
+		else{
+			SetThrusterResource(th_main[0],NULL);
+			agc.SetInputChannelBit(030, 3, false);
+		}
+		break;
 	}
 }
 
@@ -638,13 +645,13 @@ void Saturn::CheckRCSState()
 void Saturn::ActivateSPS()
 
 {
-	SPSswitch = true;
+	SPSswitch.SetState(THREEPOSSWITCH_UP);
 }
 
 void Saturn::DeactivateSPS()
 
 {
-	SPSswitch = false;
+	SPSswitch.SetState(THREEPOSSWITCH_DOWN);
 }
 
 void Saturn::SetEngineIndicators()

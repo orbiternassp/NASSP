@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2005/08/23 20:13:12  movieman523
+  *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
+  *	
   *	Revision 1.71  2005/08/23 03:20:00  flydba
   *	modified master alarm bitmap and correction of some switch positions
   *	
@@ -786,7 +789,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_DIGITAL]				= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
 		srf[5]							= oapiCreateSurface (LOADBMP (IDB_HORIZON2));
 		srf[SRF_SWITCHUP]				= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
-		srf[7]							= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
+		srf[SRF_SWITCHLEVER]			= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
 		srf[SRF_SWITCHGUARDS]			= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDS));
 		srf[SRF_ABORT]					= oapiCreateSurface (LOADBMP (IDB_ABORT));
 		srf[10]							= oapiCreateSurface (LOADBMP (IDB_ANNUN));
@@ -817,6 +820,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
 		oapiSetSurfaceColourKey (srf[5],						g_Param.col[5]);
+		oapiSetSurfaceColourKey (srf[SRF_SWITCHLEVER],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHGUARDS],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_ALTIMETER],			g_Param.col[4]);
@@ -1083,6 +1087,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RCS_HELIUM2_TALKBACK,						_R(1590,  525, 1742,  550), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RCS_PROP1_TALKBACK,							_R(1590,  658, 1742,  683), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RCS_PROP2_TALKBACK,							_R(1502,  791, 1742,  816), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SPS,											_R( 300, 1053,  338, 1115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
 		//
 		// display & keyboard (DSKY):
@@ -1529,8 +1534,11 @@ void Saturn::SetSwitches(int panel) {
 	SuitCompressor1Switch.Init(  0, 58, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 	SuitCompressor2Switch.Init( 42,  0, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 
-	// old stuff
 	SPSRow.Init(AID_SPS, MainPanel);
+	SPSswitch.Init(0, 0, 38, 48, srf[SRF_SWITCHLEVER], SPSRow, this);
+
+	// old stuff
+
 	//EDSRow.Init(AID_EDS, MainPanel);
 	LPRow.Init(AID_SWITCH_PANEL_LEFT, MainPanel);
 
@@ -1561,7 +1569,6 @@ void Saturn::SetSwitches(int panel) {
 
 	LPSRow.Init(AID_LEM_POWER_SWITCH, MainPanel);
 
-	SPSswitch.Init(0, 0, 30, 39, srf[7], SPSRow);
 	//EDSswitch.Init(0, 0, 23, 20, srf[6], EDSRow);
 
 	if (panel == SATPANEL_LEFT_RNDZ_WINDOW) {
@@ -2936,11 +2943,6 @@ void Saturn::InitSwitches() {
 	MissionTimerMinutesSwitch.Register(PSH, "MissionTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	MissionTimerSecondsSwitch.Register(PSH, "MissionTimerSecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
-	//
-	// These Helium and Propellant switches are actually spring-loaded,
-	// but we can't easily simulate that until we have working valves.
-	//
-
 	SMRCSHelium1ASwitch.Register(PSH, "SMRCSHelium1ASwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	SMRCSHelium1BSwitch.Register(PSH, "SMRCSHelium1BSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	SMRCSHelium1CSwitch.Register(PSH, "SMRCSHelium1CSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
@@ -3068,6 +3070,8 @@ void Saturn::InitSwitches() {
 	dVThrust1Switch.Register(PSH, "dVThrust1Switch", 0, 0);
 	dVThrust2Switch.Register(PSH, "dVThrust2Switch", 0, 0);
 
+	SPSswitch.Register(PSH, "SPSswitch", THREEPOSSWITCH_CENTER);
+
 	//
 	// Old stuff. Delete when no longer required.
 	//
@@ -3107,8 +3111,6 @@ void Saturn::InitSwitches() {
 	DPSwitch10 = false;
 
 	LPswitch5.SetActive(false);
-
-	SPSswitch = false;
 
 	CMDswitch = false;
 	CMDCswitch = false;
@@ -3423,7 +3425,6 @@ int Saturn::GetLPSwitchState()
 	state.u.LPswitch5 = LPswitch5;
 	state.u.LPswitch6 = LPswitch6;
 	state.u.LPswitch7 = LPswitch7;
-	state.u.SPSswitch = SPSswitch;
 	state.u.EDSswitch = EDSSwitch;
 	state.u.SCswitch = SCswitch;
 	state.u.P111switch = P111switch;
@@ -3443,7 +3444,6 @@ void Saturn::SetLPSwitchState(int s)
 	LPswitch5 = state.u.LPswitch5;
 	LPswitch6 = state.u.LPswitch6;
 	LPswitch7 = state.u.LPswitch7;
-	SPSswitch = state.u.SPSswitch;
 	EDSSwitch = state.u.EDSswitch;
 	SCswitch = state.u.SCswitch;
 	P111switch = state.u.P111switch;

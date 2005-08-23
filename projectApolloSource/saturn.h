@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2005/08/23 21:29:03  movieman523
+  *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
+  *	
   *	Revision 1.62  2005/08/23 20:13:12  movieman523
   *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
   *	
@@ -397,6 +400,8 @@ public:
 	
 	void SetValveState(int valve, bool open);
 	bool GetValveState(int valve);
+	void CheckSPSState();
+	void CheckRCSState();
 
 protected:
 
@@ -771,6 +776,12 @@ protected:
 	GuardedToggleSwitch dVThrust2Switch;
 
 	//
+	// SPS Switch.
+	//
+
+	SaturnSPSSwitch SPSswitch;
+
+	//
 	// OLD Switches: delete these as and when we can do so.
 	//
 	// old stuff begin
@@ -832,8 +843,6 @@ protected:
 	AttitudeToggle LPswitch5;
 	ToggleSwitch LPswitch6;
 	ToggleSwitch LPswitch7;
-
-	ToggleSwitch SPSswitch;
 
 	ToggleSwitch P111switch;
 	ToggleSwitch P112switch;
@@ -1373,8 +1382,6 @@ protected:
 	bool SMRCSDActive();
 	void ActivateSPS();
 	void DeactivateSPS();
-	void CheckSPSState();
-	void CheckRCSState();
 	void ActivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);

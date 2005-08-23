@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/23 21:29:03  movieman523
+  *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
+  *	
   *	Revision 1.22  2005/08/21 22:20:59  movieman523
   *	Fixed SM RCS and activated SIVB RCS at all times for now.
   *	
@@ -925,8 +928,6 @@ void Saturn1b::Timestep (double simt, double simdt)
 			bManualUnDock=false;
 		}
 
-		CheckSPSState();
-
 		if (bManualSeparate)
 		{
 
@@ -1088,6 +1089,11 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 	}
 
+	//
+	// Enable or disable SPS and RCS.
+	//
+
+	CheckSPSState();
 	CheckRCSState();
 }
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/08/21 17:21:10  movieman523
+  *	Added event timer display.
+  *	
   *	Revision 1.29  2005/08/21 11:51:59  movieman523
   *	Initial version of CSM caution and warning lights: light test switch now works.
   *	
@@ -165,6 +168,7 @@ const int nsurf = 39; // number of bitmap handles
 #define SRF_NEEDLE					 2
 #define SRF_DIGITAL					 4
 #define SRF_SWITCHUP				 6
+#define SRF_SWITCHLEVER				 7
 #define SRF_SWITCHGUARDS			 8
 #define SRF_ABORT					 9
 #define SRF_ALTIMETER				14
