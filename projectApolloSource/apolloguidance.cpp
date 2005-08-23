@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2005/08/23 20:13:12  movieman523
+  *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
+  *	
   *	Revision 1.37  2005/08/22 19:47:33  movieman523
   *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
   *	
@@ -2303,7 +2306,8 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	for (i = 0; i < EMEM_ENTRIES; i++) {
 		if (ReadMemory(i, val) && val != 0) {
 			sprintf(fname, "EMEM%04o", i);
-			oapiWriteScenario_int (scn, fname, val);
+			sprintf(str, "%o", val);
+			oapiWriteScenario_string (scn, fname, str);
 		}
 	}
 
@@ -2441,7 +2445,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "EMEM", 4)) {
 			int num, val;
 			sscanf(line+4, "%o", &num);
-			sscanf(line+9, "%d", &val);
+			sscanf(line+9, "%o", &val);
 			WriteMemory(num, val);
 		}
 		else if (!strnicmp (line, "ICHAN", 5)) {
