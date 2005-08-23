@@ -36,6 +36,7 @@
 #define AID_CWS_LIGHTS_LEFT				43
 #define AID_CWS_LIGHTS_RIGHT			44
 #define AID_EVENT_TIMER					45
+#define AID_MASTER_ALARM3               46
 
 #define AID_ABORT_BUTTON                49
 #define AID_FUEL_DIGIT                  50

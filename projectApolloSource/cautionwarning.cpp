@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/08/21 16:23:31  movieman523
+  *	Added more alarms.
+  *	
   *	Revision 1.5  2005/08/21 13:13:43  movieman523
   *	Wired in a few caution and warning lights.
   *	
@@ -175,7 +178,7 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 		//
 		// Draw the master alarm lit bitmap.
 		//
-		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 49, 40);
+		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 45, 36);
 	}
 }
 
