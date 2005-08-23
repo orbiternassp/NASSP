@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2005/08/21 22:21:00  movieman523
+  *	Fixed SM RCS and activated SIVB RCS at all times for now.
+  *	
   *	Revision 1.68  2005/08/21 17:21:10  movieman523
   *	Added event timer display.
   *	
@@ -2892,6 +2895,11 @@ void Saturn::InitSwitches() {
 	MissionTimerMinutesSwitch.Register(PSH, "MissionTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	MissionTimerSecondsSwitch.Register(PSH, "MissionTimerSecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
+	//
+	// These Helium and Propellant switches are actually spring-loaded,
+	// but we can't easily simulate that until we have working valves.
+	//
+
 	SMRCSHelium1ASwitch.Register(PSH, "SMRCSHelium1ASwitch", 1);
 	SMRCSHelium1BSwitch.Register(PSH, "SMRCSHelium1BSwitch", 1);
 	SMRCSHelium1CSwitch.Register(PSH, "SMRCSHelium1CSwitch", 1);
@@ -2902,25 +2910,25 @@ void Saturn::InitSwitches() {
 	SMRCSHelium2CSwitch.Register(PSH, "SMRCSHelium2CSwitch", 1);
 	SMRCSHelium2DSwitch.Register(PSH, "SMRCSHelium2DSwitch", 1);
 
-	CMUplinkSwitch.Register(PSH, "CMUplinkSwitch", 1);
-	IUUplinkSwitch.Register(PSH, "CMUplinkSwitch", 1);
-	CMRCSPressSwitch.Register(PSH, "CMRCSPressSwitch", 0, 0);
-	SMRCSIndSwitch.Register(PSH, "SMRCSIndSwitch", 0);
-
 	SMRCSProp1ASwitch.Register(PSH, "SMRCSProp1ASwitch", 0);
 	SMRCSProp1BSwitch.Register(PSH, "SMRCSProp1BSwitch", 0);
 	SMRCSProp1CSwitch.Register(PSH, "SMRCSProp1CSwitch", 0);
 	SMRCSProp1DSwitch.Register(PSH, "SMRCSProp1DSwitch", 0);
 
-	SMRCSHeaterASwitch.Register(PSH, "SMRCSHeaterASwitch", THREEPOSSWITCH_CENTER);
-	SMRCSHeaterBSwitch.Register(PSH, "SMRCSHeaterBSwitch", THREEPOSSWITCH_CENTER);
-	SMRCSHeaterCSwitch.Register(PSH, "SMRCSHeaterCSwitch", THREEPOSSWITCH_CENTER);
-	SMRCSHeaterDSwitch.Register(PSH, "SMRCSHeaterDSwitch", THREEPOSSWITCH_CENTER);
-
 	SMRCSProp2ASwitch.Register(PSH, "SMRCSProp2ASwitch", 0);
 	SMRCSProp2BSwitch.Register(PSH, "SMRCSProp2BSwitch", 0);
 	SMRCSProp2CSwitch.Register(PSH, "SMRCSProp2CSwitch", 0);
 	SMRCSProp2DSwitch.Register(PSH, "SMRCSProp2DSwitch", 0);
+
+	CMUplinkSwitch.Register(PSH, "CMUplinkSwitch", 1);
+	IUUplinkSwitch.Register(PSH, "CMUplinkSwitch", 1);
+	CMRCSPressSwitch.Register(PSH, "CMRCSPressSwitch", 0, 0);
+	SMRCSIndSwitch.Register(PSH, "SMRCSIndSwitch", 0);
+
+	SMRCSHeaterASwitch.Register(PSH, "SMRCSHeaterASwitch", THREEPOSSWITCH_CENTER);
+	SMRCSHeaterBSwitch.Register(PSH, "SMRCSHeaterBSwitch", THREEPOSSWITCH_CENTER);
+	SMRCSHeaterCSwitch.Register(PSH, "SMRCSHeaterCSwitch", THREEPOSSWITCH_CENTER);
+	SMRCSHeaterDSwitch.Register(PSH, "SMRCSHeaterDSwitch", THREEPOSSWITCH_CENTER);
 
 	RCSCMDSwitch.Register(PSH, "RCSCMDSwitch", THREEPOSSWITCH_CENTER);
 	RCSTrnfrSwitch.Register(PSH, "RCSTrnfrSwitch", THREEPOSSWITCH_CENTER);
