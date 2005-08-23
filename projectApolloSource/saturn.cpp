@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.51  2005/08/21 22:21:00  movieman523
   *	Fixed SM RCS and activated SIVB RCS at all times for now.
   *	
@@ -865,6 +868,17 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		}
 	}
 
+	int valvestate = 0;
+	int mask = 1;
+
+	for (i = 0; i < N_CSM_VALVES; i++) {
+		if (ValveState[i])
+			valvestate |= mask;
+		mask <<= 1;
+	}
+
+	oapiWriteScenario_int (scn, "VALVESTATE", valvestate);
+
 	if (LandFail.word) {
 		oapiWriteScenario_int (scn, "LANDFAIL", LandFail.word);
 	}
@@ -1245,6 +1259,15 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
             SwitchState = 0;
 			sscanf (line+10, "%d", &SwitchState);
 			SetLightState(SwitchState);
+		}
+		else if (!strnicmp (line, "VALVESTATE", 10)) {
+			int valvestate = 0;
+			int mask = 1;
+			sscanf (line+10, "%d", &valvestate);
+			for (n = 0; n < N_CSM_VALVES; n++) {
+				ValveState[n] = ((valvestate & mask) != 0);
+				mask <<= 1;
+			}
 		}
 		else if (!strnicmp (line, "REALISM", 7)) {
 			sscanf (line+7, "%d", &Realism);

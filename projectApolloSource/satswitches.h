@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/16 20:55:23  movieman523
+  *	Added first saturn-specific switch for Xlunar Inject.
+  *	
   **************************************************************************/
 
 class Saturn;
@@ -35,7 +38,28 @@ protected:
 	Saturn *sat;
 };
 
+class SaturnThreePosSwitch : public ThreePosSwitch {
+public:
+	SaturnThreePosSwitch() { sat = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s);
+
+protected:
+	Saturn *sat;
+};
+
+class SaturnValveSwitch: public SaturnThreePosSwitch {
+public:
+	SaturnValveSwitch() { Valve = 0; Indicator = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind);
+	bool CheckMouseClick(int event, int mx, int my);
+
+protected:
+	int Valve;
+	IndicatorSwitch *Indicator;
+};
+
 class XLunarSwitch : public SaturnToggleSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
 };
+

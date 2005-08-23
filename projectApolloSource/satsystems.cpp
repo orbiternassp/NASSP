@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.19  2005/08/21 22:21:00  movieman523
   *	Fixed SM RCS and activated SIVB RCS at all times for now.
   *	
@@ -107,6 +110,8 @@
 
 void Saturn::SystemsInit() {
 
+	int	i;
+
 	// default state
 	systemsState = SATSYSTEMS_NONE;
 
@@ -114,7 +119,40 @@ void Saturn::SystemsInit() {
 	Panelsdk.RegisterVessel(this);
 	Panelsdk.InitFromFile("ProjectApollo\\SaturnSystems");
 
-	//PanelsdkLogFile = fopen("NASSP-Systems.log", "w");  
+	//PanelsdkLogFile = fopen("NASSP-Systems.log", "w");
+
+	for (i = 0; i < N_CSM_VALVES; i++) {
+		pCSMValves[i] = 0;
+	}
+
+	//
+	// Default valve states.
+	//
+	// Make sure switches and talkback state match.
+	//
+
+	SetValveState(CSM_He1_TANKA_VALVE, true);
+	SetValveState(CSM_He1_TANKB_VALVE, true);
+	SetValveState(CSM_He1_TANKC_VALVE, true);
+	SetValveState(CSM_He1_TANKD_VALVE, true);
+
+	SetValveState(CSM_He2_TANKA_VALVE, true);
+	SetValveState(CSM_He2_TANKB_VALVE, true);
+	SetValveState(CSM_He2_TANKC_VALVE, true);
+	SetValveState(CSM_He2_TANKD_VALVE, true);
+
+	SetValveState(CSM_PRIPROP_TANKA_VALVE, false);
+	SetValveState(CSM_PRIPROP_TANKB_VALVE, false);
+	SetValveState(CSM_PRIPROP_TANKC_VALVE, false);
+	SetValveState(CSM_PRIPROP_TANKD_VALVE, false);
+
+	SetValveState(CSM_SECPROP_TANKA_VALVE, false);
+	SetValveState(CSM_SECPROP_TANKB_VALVE, false);
+	SetValveState(CSM_SECPROP_TANKC_VALVE, false);
+	SetValveState(CSM_SECPROP_TANKD_VALVE, false);
+
+	SetValveState(CM_RCSPROP_TANKA_VALVE, false);
+	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
 }
 
 void Saturn::SystemsTimestep(double simt, double simdt) {
@@ -480,58 +518,79 @@ void Saturn::DeactivateS4RCS()
 void Saturn::ActivateCSMRCS()
 
 {
-	SMRCSHelium1ASwitch.SetState(false);
-	SMRCSHelium1BSwitch.SetState(false);
-	SMRCSHelium1CSwitch.SetState(false);
-	SMRCSHelium1DSwitch.SetState(false);
+	SetValveState(CSM_He1_TANKA_VALVE, false);
+	SetValveState(CSM_He1_TANKB_VALVE, false);
+	SetValveState(CSM_He1_TANKC_VALVE, false);
+	SetValveState(CSM_He1_TANKD_VALVE, false);
 
-	SMRCSHelium2ASwitch.SetState(false);
-	SMRCSHelium2BSwitch.SetState(false);
-	SMRCSHelium2CSwitch.SetState(false);
-	SMRCSHelium2DSwitch.SetState(false);
+	SetValveState(CSM_He2_TANKA_VALVE, false);
+	SetValveState(CSM_He2_TANKB_VALVE, false);
+	SetValveState(CSM_He2_TANKC_VALVE, false);
+	SetValveState(CSM_He2_TANKD_VALVE, false);
 
-	SMRCSProp1ASwitch.SetState(true);
-	SMRCSProp1BSwitch.SetState(true);
-	SMRCSProp1CSwitch.SetState(true);
-	SMRCSProp1DSwitch.SetState(true);
+	SetValveState(CSM_PRIPROP_TANKA_VALVE, true);
+	SetValveState(CSM_PRIPROP_TANKB_VALVE, true);
+	SetValveState(CSM_PRIPROP_TANKC_VALVE, true);
+	SetValveState(CSM_PRIPROP_TANKD_VALVE, true);
 
-	SMRCSProp2ASwitch.SetState(false);
-	SMRCSProp2BSwitch.SetState(false);
-	SMRCSProp2CSwitch.SetState(false);
-	SMRCSProp2DSwitch.SetState(false);
+	SetValveState(CSM_SECPROP_TANKA_VALVE, true);
+	SetValveState(CSM_SECPROP_TANKB_VALVE, true);
+	SetValveState(CSM_SECPROP_TANKC_VALVE, true);
+	SetValveState(CSM_SECPROP_TANKD_VALVE, true);
 }
 
 void Saturn::DeactivateCSMRCS()
 
 {
-	SMRCSHelium1ASwitch.SetState(true);
-	SMRCSHelium1BSwitch.SetState(true);
-	SMRCSHelium1CSwitch.SetState(true);
-	SMRCSHelium1DSwitch.SetState(true);
+	SetValveState(CSM_He1_TANKA_VALVE, true);
+	SetValveState(CSM_He1_TANKB_VALVE, true);
+	SetValveState(CSM_He1_TANKC_VALVE, true);
+	SetValveState(CSM_He1_TANKD_VALVE, true);
 
-	SMRCSHelium2ASwitch.SetState(true);
-	SMRCSHelium2BSwitch.SetState(true);
-	SMRCSHelium2CSwitch.SetState(true);
-	SMRCSHelium2DSwitch.SetState(true);
+	SetValveState(CSM_He2_TANKA_VALVE, true);
+	SetValveState(CSM_He2_TANKB_VALVE, true);
+	SetValveState(CSM_He2_TANKC_VALVE, true);
+	SetValveState(CSM_He2_TANKD_VALVE, true);
 
-	SMRCSProp1ASwitch.SetState(false);
-	SMRCSProp1BSwitch.SetState(false);
-	SMRCSProp1CSwitch.SetState(false);
-	SMRCSProp1DSwitch.SetState(false);
+	SetValveState(CSM_PRIPROP_TANKA_VALVE, false);
+	SetValveState(CSM_PRIPROP_TANKB_VALVE, false);
+	SetValveState(CSM_PRIPROP_TANKC_VALVE, false);
+	SetValveState(CSM_PRIPROP_TANKD_VALVE, false);
 
-	SMRCSProp2ASwitch.SetState(false);
-	SMRCSProp2BSwitch.SetState(false);
-	SMRCSProp2CSwitch.SetState(false);
-	SMRCSProp2DSwitch.SetState(false);
+	SetValveState(CSM_SECPROP_TANKA_VALVE, false);
+	SetValveState(CSM_SECPROP_TANKB_VALVE, false);
+	SetValveState(CSM_SECPROP_TANKC_VALVE, false);
+	SetValveState(CSM_SECPROP_TANKD_VALVE, false);
+}
+
+bool Saturn::SMRCSAActive()
+
+{
+	return (!GetValveState(CSM_He1_TANKA_VALVE) && !GetValveState(CSM_He2_TANKA_VALVE) && GetValveState(CSM_PRIPROP_TANKA_VALVE) && GetValveState(CSM_SECPROP_TANKA_VALVE));
+}
+
+bool Saturn::SMRCSBActive()
+
+{
+	return (!GetValveState(CSM_He1_TANKB_VALVE) && !GetValveState(CSM_He2_TANKB_VALVE) && GetValveState(CSM_PRIPROP_TANKB_VALVE) && GetValveState(CSM_SECPROP_TANKB_VALVE));
+}
+
+bool Saturn::SMRCSCActive()
+
+{
+	return (!GetValveState(CSM_He1_TANKC_VALVE) && !GetValveState(CSM_He2_TANKC_VALVE) && GetValveState(CSM_PRIPROP_TANKC_VALVE) && GetValveState(CSM_SECPROP_TANKC_VALVE));
+}
+
+bool Saturn::SMRCSDActive()
+
+{
+	return (!GetValveState(CSM_He1_TANKD_VALVE) && !GetValveState(CSM_He2_TANKD_VALVE) && GetValveState(CSM_PRIPROP_TANKD_VALVE) && GetValveState(CSM_SECPROP_TANKD_VALVE));
 }
 
 bool Saturn::SMRCSActive()
 
 {
-	return !SMRCSHelium1ASwitch && !SMRCSHelium1BSwitch && !SMRCSHelium1CSwitch && !SMRCSHelium1DSwitch && 
-		!SMRCSHelium2ASwitch && !SMRCSHelium2BSwitch && !SMRCSHelium2CSwitch && !SMRCSHelium2DSwitch && 
-		SMRCSProp1ASwitch.GetState() && SMRCSProp1BSwitch.GetState() && SMRCSProp1CSwitch.GetState() && SMRCSProp1DSwitch.GetState() && 
-		SMRCSProp2ASwitch.GetState() && SMRCSProp2BSwitch.GetState() && SMRCSProp2CSwitch.GetState() && SMRCSProp2DSwitch.GetState();
+	return SMRCSAActive() && SMRCSBActive() && SMRCSCActive() && SMRCSDActive();
 }
 
 void Saturn::CheckSPSState()
@@ -891,3 +950,28 @@ void Saturn::GetFuelCellStatus(FuelCellStatus &fc)
 		fc.FC3TempK = (*pFC3Temp);
 	}
 }
+
+//
+// Open and close valves.
+//
+
+void Saturn::SetValveState(int valve, bool open)
+
+{
+	ValveState[valve] = open;
+
+	int valve_state = open ? SP_VALVE_OPEN : SP_VALVE_CLOSE;
+
+	if (pCSMValves[valve])
+		*pCSMValves[valve] = valve_state;
+}
+
+bool Saturn::GetValveState(int valve)
+
+{
+	if (pCSMValves[valve])
+		return (*pCSMValves[valve] == SP_VALVE_OPEN);
+
+	return ValveState[valve];
+}
+
