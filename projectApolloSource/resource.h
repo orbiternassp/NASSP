@@ -37,12 +37,14 @@
 #define AID_CWS_LIGHTS_RIGHT			44
 #define AID_EVENT_TIMER					45
 #define AID_MASTER_ALARM3               46
+#define AID_RCS_HELIUM1_TALKBACK		47
+#define AID_RCS_HELIUM2_TALKBACK		48
+#define AID_RCS_PROP1_TALKBACK			49
+#define AID_RCS_PROP2_TALKBACK			50
 
-#define AID_ABORT_BUTTON                49
-#define AID_FUEL_DIGIT                  50
-#define AID_SM_RCS_PANEL1               51
-
-
+#define AID_ABORT_BUTTON                51
+#define AID_FUEL_DIGIT                  52
+#define AID_SM_RCS_PANEL1               53
 #define AID_SM_RCS_MODE                 54
 #define AID_SPS_GIMBAL_SWITCHES         55
 #define AID_TLI_SWITCH                  56

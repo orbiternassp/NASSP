@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.60  2005/08/21 22:21:00  movieman523
   *	Fixed SM RCS and activated SIVB RCS at all times for now.
   *	
@@ -222,6 +225,32 @@
 #include "FDAI.h"
 #include "satswitches.h"
 
+
+//
+// Valves.
+//
+
+#define CSM_He1_TANKA_VALVE				0
+#define CSM_He1_TANKB_VALVE				1
+#define CSM_He1_TANKC_VALVE				2
+#define CSM_He1_TANKD_VALVE				3
+#define CSM_He2_TANKA_VALVE				4
+#define CSM_He2_TANKB_VALVE				5
+#define CSM_He2_TANKC_VALVE				6
+#define CSM_He2_TANKD_VALVE				7
+#define CSM_PRIPROP_TANKA_VALVE			8
+#define CSM_PRIPROP_TANKB_VALVE			9
+#define CSM_PRIPROP_TANKC_VALVE			10
+#define CSM_PRIPROP_TANKD_VALVE			11
+#define CSM_SECPROP_TANKA_VALVE			12
+#define CSM_SECPROP_TANKB_VALVE			13
+#define CSM_SECPROP_TANKC_VALVE			14
+#define CSM_SECPROP_TANKD_VALVE			15
+#define CM_RCSPROP_TANKA_VALVE			16
+#define CM_RCSPROP_TANKB_VALVE			17
+
+#define N_CSM_VALVES	18
+
 //
 // Random failure flags.
 //
@@ -358,6 +387,13 @@ public:
 	void GetTankPressures(TankPressures &press);
 //	void GetBusStatus(BusStatus &bus);
 	void GetFuelCellStatus(FuelCellStatus &fc);
+
+	//
+	// Panel SDK support.
+	//
+	
+	void SetValveState(int valve, bool open);
+	bool GetValveState(int valve);
 
 protected:
 
@@ -552,18 +588,28 @@ protected:
 	ThreePosSwitch RPswitch15;
 
 	SwitchRow SMRCSHelium1Row;
+	SaturnValveSwitch SMRCSHelium1ASwitch;
+	SaturnValveSwitch SMRCSHelium1BSwitch;
+	SaturnValveSwitch SMRCSHelium1CSwitch;
+	SaturnValveSwitch SMRCSHelium1DSwitch;
 
-	ToggleSwitch SMRCSHelium1ASwitch;
-	ToggleSwitch SMRCSHelium1BSwitch;
-	ToggleSwitch SMRCSHelium1CSwitch;
-	ToggleSwitch SMRCSHelium1DSwitch;
+	SwitchRow SMRCSHelium1TalkbackRow;
+	IndicatorSwitch SMRCSHelium1ATalkback;
+	IndicatorSwitch SMRCSHelium1BTalkback;
+	IndicatorSwitch SMRCSHelium1CTalkback;
+	IndicatorSwitch SMRCSHelium1DTalkback;
 
 	SwitchRow SMRCSHelium2Row;
+	SaturnValveSwitch SMRCSHelium2ASwitch;
+	SaturnValveSwitch SMRCSHelium2BSwitch;
+	SaturnValveSwitch SMRCSHelium2CSwitch;
+	SaturnValveSwitch SMRCSHelium2DSwitch;
 
-	ToggleSwitch SMRCSHelium2ASwitch;
-	ToggleSwitch SMRCSHelium2BSwitch;
-	ToggleSwitch SMRCSHelium2CSwitch;
-	ToggleSwitch SMRCSHelium2DSwitch;
+	SwitchRow SMRCSHelium2TalkbackRow;
+	IndicatorSwitch SMRCSHelium2ATalkback;
+	IndicatorSwitch SMRCSHelium2BTalkback;
+	IndicatorSwitch SMRCSHelium2CTalkback;
+	IndicatorSwitch SMRCSHelium2DTalkback;
 
 	AGCIOSwitch CMUplinkSwitch;
 	ToggleSwitch IUUplinkSwitch;
@@ -573,27 +619,41 @@ protected:
 
 	SwitchRow SMRCSProp1Row;
 
-	ToggleSwitch SMRCSProp1ASwitch;
-	ToggleSwitch SMRCSProp1BSwitch;
-	ToggleSwitch SMRCSProp1CSwitch;
-	ToggleSwitch SMRCSProp1DSwitch;
+	SaturnValveSwitch SMRCSProp1ASwitch;
+	SaturnValveSwitch SMRCSProp1BSwitch;
+	SaturnValveSwitch SMRCSProp1CSwitch;
+	SaturnValveSwitch SMRCSProp1DSwitch;
 
 	ThreePosSwitch SMRCSHeaterASwitch;
 	ThreePosSwitch SMRCSHeaterBSwitch;
 	ThreePosSwitch SMRCSHeaterCSwitch;
 	ThreePosSwitch SMRCSHeaterDSwitch;
 
+	SwitchRow SMRCSProp1TalkbackRow;
+	IndicatorSwitch SMRCSProp1ATalkback;
+	IndicatorSwitch SMRCSProp1BTalkback;
+	IndicatorSwitch SMRCSProp1CTalkback;
+	IndicatorSwitch SMRCSProp1DTalkback;
+
 	SwitchRow SMRCSProp2Row;
 
-	ToggleSwitch SMRCSProp2ASwitch;
-	ToggleSwitch SMRCSProp2BSwitch;
-	ToggleSwitch SMRCSProp2CSwitch;
-	ToggleSwitch SMRCSProp2DSwitch;
+	SaturnValveSwitch SMRCSProp2ASwitch;
+	SaturnValveSwitch SMRCSProp2BSwitch;
+	SaturnValveSwitch SMRCSProp2CSwitch;
+	SaturnValveSwitch SMRCSProp2DSwitch;
 
 	ThreePosSwitch RCSCMDSwitch;
 	ThreePosSwitch RCSTrnfrSwitch;
-	ThreePosSwitch CMRCSIsolate1;
-	ThreePosSwitch CMRCSIsolate2;
+	SaturnValveSwitch CMRCSIsolate1;
+	SaturnValveSwitch CMRCSIsolate2;
+
+	SwitchRow SMRCSProp2TalkbackRow;
+	IndicatorSwitch CMRCSIsolate1Talkback;
+	IndicatorSwitch CMRCSIsolate2Talkback;
+	IndicatorSwitch SMRCSProp2ATalkback;
+	IndicatorSwitch SMRCSProp2BTalkback;
+	IndicatorSwitch SMRCSProp2CTalkback;
+	IndicatorSwitch SMRCSProp2DTalkback;
 
 	SwitchRow RCSIndicatorsSwitchRow;
 	RotationalSwitch RCSIndicatorsSwitch;
@@ -1304,6 +1364,10 @@ protected:
 	void ActivateCSMRCS();
 	void DeactivateCSMRCS();
 	bool SMRCSActive();
+	bool SMRCSAActive();
+	bool SMRCSBActive();
+	bool SMRCSCActive();
+	bool SMRCSDActive();
 	void ActivateSPS();
 	void DeactivateSPS();
 	void CheckSPSState();
@@ -1494,6 +1558,9 @@ protected:
 	double *pFC1Temp;
 	double *pFC2Temp;
 	double *pFC3Temp;
+
+	int *pCSMValves[N_CSM_VALVES];
+	bool ValveState[N_CSM_VALVES];
 
 	// InitSaturn is called twice, but some things must run only once
 	bool InitSaturnCalled;

@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/20 12:24:02  movieman523
+  *	Added a FailedState as well as a Failed flag to each switch. You now must call GetState(), IsUp(), IsDown() etc to get the functional state of the switch. The state variable now only tells you the visual state (e.g. switch up, down, center) and not the functional state.
+  *	
   *	Revision 1.20  2005/08/19 21:33:20  movieman523
   *	Added initial random failure support.
   *	
@@ -1243,10 +1246,10 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 	}
 
 	if (state && displayState < 3.0)
-		displayState += oapiGetSimStep() * 8.0;
+		displayState += oapiGetSimStep() * 4.0;
 
 	if (!state && displayState > 0.0) 
-		displayState -= oapiGetSimStep() * 8.0;
+		displayState -= oapiGetSimStep() * 4.0;
 
 	if (displayState > 3.0) displayState = 3.0;
 	if (displayState < 0.0) displayState = 0.0;

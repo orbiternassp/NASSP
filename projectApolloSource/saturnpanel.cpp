@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2005/08/23 03:20:00  flydba
+  *	modified master alarm bitmap and correction of some switch positions
+  *	
   *	Revision 1.70  2005/08/23 00:03:16  movieman523
   *	Removed agc_utilities.c, as we're not actually using any functions and it has socket code that has to be commented out with every update.
   *	
@@ -1053,10 +1056,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_IMU_CAGE_SWITCH,								_R( 290, 1244,  324, 1305), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MASTER_ALARM,								_R( 464,  497,  509,  533), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MASTER_ALARM2,								_R(2960,  652, 3005,  688), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SMRCS_HELIUM1_SWITCHES,						_R(1585,  430, 1748,  459), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SMRCS_HELIUM2_SWITCHES,						_R(1411,  571, 1748,  632), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PRIM_PRPLNT_SWITCHES,						_R(1411,  718, 1748,  747), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SEC_PRPLT_SWITCHES,							_R(1411,  848, 1748,  877), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SMRCS_HELIUM1_SWITCHES,						_R(1585,  430, 1748,  459), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SMRCS_HELIUM2_SWITCHES,						_R(1411,  571, 1748,  632), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PRIM_PRPLNT_SWITCHES,						_R(1411,  718, 1748,  747), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SEC_PRPLT_SWITCHES,							_R(1411,  848, 1748,  877), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ATTITUDE_CONTROL_SWITCHES,					_R( 190,  838,  482,  867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_BMAG_SWITCHES,								_R( 125, 1036,  258, 1065), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_THRUSTMETER,									_R( 498,  920,  593, 1011), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -1076,6 +1079,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CWS_LIGHTS_LEFT,								_R(1540,   97, 1752,  205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CWS_LIGHTS_RIGHT,							_R(1795,   97, 2008,  205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EVENT_TIMER,									_R( 866,  670,  937,  688), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_HELIUM1_TALKBACK,						_R(1590,  367, 1742,  392), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_HELIUM2_TALKBACK,						_R(1590,  525, 1742,  550), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_PROP1_TALKBACK,							_R(1590,  658, 1742,  683), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_PROP2_TALKBACK,							_R(1502,  791, 1742,  816), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		//
 		// display & keyboard (DSKY):
@@ -1207,20 +1214,26 @@ void Saturn::SetSwitches(int panel) {
 	//
 
 	SMRCSHelium1Row.Init(AID_SMRCS_HELIUM1_SWITCHES, MainPanel);
-	SMRCSHelium1ASwitch.Init (0, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium1Row);
-	SMRCSHelium1BSwitch.Init (43, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium1Row);
-	SMRCSHelium1CSwitch.Init (86, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium1Row);
-	SMRCSHelium1DSwitch.Init (129, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium1Row);
+	SMRCSHelium1ASwitch.Init (0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSHelium1Row, this, CSM_He1_TANKA_VALVE, &SMRCSHelium1ATalkback);
+	SMRCSHelium1BSwitch.Init (43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSHelium1Row, this, CSM_He1_TANKB_VALVE, &SMRCSHelium1BTalkback);
+	SMRCSHelium1CSwitch.Init (86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSHelium1Row, this, CSM_He1_TANKC_VALVE, &SMRCSHelium1CTalkback);
+	SMRCSHelium1DSwitch.Init (129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSHelium1Row, this, CSM_He1_TANKD_VALVE, &SMRCSHelium1DTalkback);
+
+	SMRCSHelium1TalkbackRow.Init(AID_RCS_HELIUM1_TALKBACK, MainPanel);
+	SMRCSHelium1ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
+	SMRCSHelium1BTalkback.Init(43, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
+	SMRCSHelium1CTalkback.Init(86, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
+	SMRCSHelium1DTalkback.Init(129, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
 
 	//
 	// SM RCS Helium 2
 	//
 
 	SMRCSHelium2Row.Init(AID_SMRCS_HELIUM2_SWITCHES, MainPanel);
-	SMRCSHelium2ASwitch.Init (174, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
-	SMRCSHelium2BSwitch.Init (217, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
-	SMRCSHelium2CSwitch.Init (260, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
-	SMRCSHelium2DSwitch.Init (303, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+	SMRCSHelium2ASwitch.Init (174, 16, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSHelium2Row, this, CSM_He2_TANKA_VALVE, &SMRCSHelium2ATalkback);
+	SMRCSHelium2BSwitch.Init (217, 16, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSHelium2Row, this, CSM_He2_TANKB_VALVE, &SMRCSHelium2BTalkback);
+	SMRCSHelium2CSwitch.Init (260, 16, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSHelium2Row, this, CSM_He2_TANKC_VALVE, &SMRCSHelium2CTalkback);
+	SMRCSHelium2DSwitch.Init (303, 16, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSHelium2Row, this, CSM_He2_TANKD_VALVE, &SMRCSHelium2DTalkback);
 
 	CMUplinkSwitch.Init(0, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row, &agc);
 	CMUplinkSwitch.SetChannelData(33, 10, false);	// Down is 'Block Uplink Input'
@@ -1228,6 +1241,12 @@ void Saturn::SetSwitches(int panel) {
 	CMRCSPressSwitch.Init(87, 19, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
 	CMRCSPressSwitch.InitGuard(87, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
 	SMRCSIndSwitch.Init(131, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+
+	SMRCSHelium2TalkbackRow.Init(AID_RCS_HELIUM2_TALKBACK, MainPanel);
+	SMRCSHelium2ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
+	SMRCSHelium2BTalkback.Init(43, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
+	SMRCSHelium2CTalkback.Init(86, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
+	SMRCSHelium2DTalkback.Init(129, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
 
 	//
 	// SM RCS Primary Propellant.
@@ -1240,10 +1259,16 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSHeaterCSwitch.Init (88, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row);
 	SMRCSHeaterDSwitch.Init (131, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row);
 
-	SMRCSProp1ASwitch.Init (174, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
-	SMRCSProp1BSwitch.Init (217, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
-	SMRCSProp1CSwitch.Init (260, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
-	SMRCSProp1DSwitch.Init (303, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp1Row);
+	SMRCSProp1ASwitch.Init (174, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIPROP_TANKA_VALVE, &SMRCSProp1ATalkback);
+	SMRCSProp1BSwitch.Init (217, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIPROP_TANKB_VALVE, &SMRCSProp1BTalkback);
+	SMRCSProp1CSwitch.Init (260, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIPROP_TANKC_VALVE, &SMRCSProp1CTalkback);
+	SMRCSProp1DSwitch.Init (303, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIPROP_TANKD_VALVE, &SMRCSProp1DTalkback);
+
+	SMRCSProp1TalkbackRow.Init(AID_RCS_PROP1_TALKBACK, MainPanel);
+	SMRCSProp1ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
+	SMRCSProp1BTalkback.Init(43, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
+	SMRCSProp1CTalkback.Init(86, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
+	SMRCSProp1DTalkback.Init(129, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
 
 	//
 	// SM RCS Secondary Propellant.
@@ -1253,13 +1278,22 @@ void Saturn::SetSwitches(int panel) {
 
 	RCSCMDSwitch.Init (2, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
 	RCSTrnfrSwitch.Init (45, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
-	CMRCSIsolate1.Init (88, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
-	CMRCSIsolate2.Init (131, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
+	CMRCSIsolate1.Init (88, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CM_RCSPROP_TANKA_VALVE, &CMRCSIsolate1Talkback);
+	CMRCSIsolate2.Init (131, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CM_RCSPROP_TANKB_VALVE, &CMRCSIsolate2Talkback);
 
-	SMRCSProp2ASwitch.Init (174, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row);
-	SMRCSProp2BSwitch.Init (217, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row);
-	SMRCSProp2CSwitch.Init (260, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row);
-	SMRCSProp2DSwitch.Init (303, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row);
+	SMRCSProp2ASwitch.Init (174, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECPROP_TANKA_VALVE, &SMRCSProp2ATalkback);
+	SMRCSProp2BSwitch.Init (217, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECPROP_TANKB_VALVE, &SMRCSProp2BTalkback);
+	SMRCSProp2CSwitch.Init (260, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECPROP_TANKC_VALVE, &SMRCSProp2CTalkback);
+	SMRCSProp2DSwitch.Init (303, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECPROP_TANKD_VALVE, &SMRCSProp2DTalkback);
+
+	SMRCSProp2TalkbackRow.Init(AID_RCS_PROP2_TALKBACK, MainPanel);
+	SMRCSProp2ATalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
+	SMRCSProp2BTalkback.Init(128, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
+	SMRCSProp2CTalkback.Init(171, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
+	SMRCSProp2DTalkback.Init(214, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
+
+	CMRCSIsolate1Talkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
+	CMRCSIsolate2Talkback.Init(43, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
 
 	//
 	// Attitude control, etc.
@@ -2907,25 +2941,45 @@ void Saturn::InitSwitches() {
 	// but we can't easily simulate that until we have working valves.
 	//
 
-	SMRCSHelium1ASwitch.Register(PSH, "SMRCSHelium1ASwitch", 1);
-	SMRCSHelium1BSwitch.Register(PSH, "SMRCSHelium1BSwitch", 1);
-	SMRCSHelium1CSwitch.Register(PSH, "SMRCSHelium1CSwitch", 1);
-	SMRCSHelium1DSwitch.Register(PSH, "SMRCSHelium1DSwitch", 1);
+	SMRCSHelium1ASwitch.Register(PSH, "SMRCSHelium1ASwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSHelium1BSwitch.Register(PSH, "SMRCSHelium1BSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSHelium1CSwitch.Register(PSH, "SMRCSHelium1CSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSHelium1DSwitch.Register(PSH, "SMRCSHelium1DSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
-	SMRCSHelium2ASwitch.Register(PSH, "SMRCSHelium2ASwitch", 1);
-	SMRCSHelium2BSwitch.Register(PSH, "SMRCSHelium2BSwitch", 1);
-	SMRCSHelium2CSwitch.Register(PSH, "SMRCSHelium2CSwitch", 1);
-	SMRCSHelium2DSwitch.Register(PSH, "SMRCSHelium2DSwitch", 1);
+	SMRCSHelium1ATalkback.Register(PSH, "SMRCSHelium1ATalkback", true);
+	SMRCSHelium1BTalkback.Register(PSH, "SMRCSHelium1BTalkback", true);
+	SMRCSHelium1CTalkback.Register(PSH, "SMRCSHelium1CTalkback", true);
+	SMRCSHelium1DTalkback.Register(PSH, "SMRCSHelium1DTalkback", true);
 
-	SMRCSProp1ASwitch.Register(PSH, "SMRCSProp1ASwitch", 0);
-	SMRCSProp1BSwitch.Register(PSH, "SMRCSProp1BSwitch", 0);
-	SMRCSProp1CSwitch.Register(PSH, "SMRCSProp1CSwitch", 0);
-	SMRCSProp1DSwitch.Register(PSH, "SMRCSProp1DSwitch", 0);
+	SMRCSHelium2ASwitch.Register(PSH, "SMRCSHelium2ASwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSHelium2BSwitch.Register(PSH, "SMRCSHelium2BSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSHelium2CSwitch.Register(PSH, "SMRCSHelium2CSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSHelium2DSwitch.Register(PSH, "SMRCSHelium2DSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
-	SMRCSProp2ASwitch.Register(PSH, "SMRCSProp2ASwitch", 0);
-	SMRCSProp2BSwitch.Register(PSH, "SMRCSProp2BSwitch", 0);
-	SMRCSProp2CSwitch.Register(PSH, "SMRCSProp2CSwitch", 0);
-	SMRCSProp2DSwitch.Register(PSH, "SMRCSProp2DSwitch", 0);
+	SMRCSHelium2ATalkback.Register(PSH, "SMRCSHelium2ATalkback", true);
+	SMRCSHelium2BTalkback.Register(PSH, "SMRCSHelium2BTalkback", true);
+	SMRCSHelium2CTalkback.Register(PSH, "SMRCSHelium2CTalkback", true);
+	SMRCSHelium2DTalkback.Register(PSH, "SMRCSHelium2DTalkback", true);
+
+	SMRCSProp1ASwitch.Register(PSH, "SMRCSProp1ASwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSProp1BSwitch.Register(PSH, "SMRCSProp1BSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSProp1CSwitch.Register(PSH, "SMRCSProp1CSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSProp1DSwitch.Register(PSH, "SMRCSProp1DSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+
+	SMRCSProp1ATalkback.Register(PSH, "SMRCSProp1ATalkback", false);
+	SMRCSProp1BTalkback.Register(PSH, "SMRCSProp1BTalkback", false);
+	SMRCSProp1CTalkback.Register(PSH, "SMRCSProp1CTalkback", false);
+	SMRCSProp1DTalkback.Register(PSH, "SMRCSProp1DTalkback", false);
+
+	SMRCSProp2ASwitch.Register(PSH, "SMRCSProp2ASwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSProp2BSwitch.Register(PSH, "SMRCSProp2BSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSProp2CSwitch.Register(PSH, "SMRCSProp2CSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SMRCSProp2DSwitch.Register(PSH, "SMRCSProp2DSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+
+	SMRCSProp2ATalkback.Register(PSH, "SMRCSProp2ATalkback", false);
+	SMRCSProp2BTalkback.Register(PSH, "SMRCSProp2BTalkback", false);
+	SMRCSProp2CTalkback.Register(PSH, "SMRCSProp2CTalkback", false);
+	SMRCSProp2DTalkback.Register(PSH, "SMRCSProp2DTalkback", false);
 
 	CMUplinkSwitch.Register(PSH, "CMUplinkSwitch", 1);
 	IUUplinkSwitch.Register(PSH, "CMUplinkSwitch", 1);
@@ -2941,6 +2995,9 @@ void Saturn::InitSwitches() {
 	RCSTrnfrSwitch.Register(PSH, "RCSTrnfrSwitch", THREEPOSSWITCH_CENTER);
 	CMRCSIsolate1.Register(PSH, "CMRCSIsolate1", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	CMRCSIsolate2.Register(PSH, "CMRCSIsolate2", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+
+	CMRCSIsolate1Talkback.Register(PSH, "CMRCSIsolate1Talkback", false);
+	CMRCSIsolate2Talkback.Register(PSH, "CMRCSIsolate2Talkback", false);
 
 	ManualAttRollSwitch.Register(PSH, "ManualAttRollSwitch", THREEPOSSWITCH_CENTER);
 	ManualAttPitchSwitch.Register(PSH, "ManualAttPitchSwitch", THREEPOSSWITCH_CENTER);

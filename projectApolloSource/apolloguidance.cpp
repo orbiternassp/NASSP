@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.36  2005/08/19 23:54:13  movieman523
   *	Should have fixed Prog 37, at least for CSM.
   *	
@@ -2299,7 +2302,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 	for (i = 0; i < EMEM_ENTRIES; i++) {
 		if (ReadMemory(i, val) && val != 0) {
-			sprintf(fname, "EMEM%03d", i);
+			sprintf(fname, "EMEM%04o", i);
 			oapiWriteScenario_int (scn, fname, val);
 		}
 	}
@@ -2437,8 +2440,8 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp (line, "EMEM", 4)) {
 			int num, val;
-			sscanf(line+4, "%d", &num);
-			sscanf(line+8, "%d", &val);
+			sscanf(line+4, "%o", &num);
+			sscanf(line+9, "%d", &val);
 			WriteMemory(num, val);
 		}
 		else if (!strnicmp (line, "ICHAN", 5)) {

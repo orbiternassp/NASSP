@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/16 20:55:23  movieman523
+  *	Added first saturn-specific switch for Xlunar Inject.
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -69,3 +72,40 @@ bool XLunarSwitch::CheckMouseClick(int event, int mx, int my)
 	return false;
 }
 
+void SaturnThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s)
+
+{
+	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	sat = s;
+}
+
+void SaturnValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind)
+
+{
+	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, row, s);
+
+	Valve = valve;
+	Indicator = ind;
+}
+
+bool SaturnValveSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
+		if (sat) {
+			if (IsUp()) {
+				sat->SetValveState(Valve, true);
+				if (Indicator)
+					*Indicator = true;
+			}
+			else if (IsDown()) {
+				sat->SetValveState(Valve, false);
+				if (Indicator)
+					*Indicator = false;
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
