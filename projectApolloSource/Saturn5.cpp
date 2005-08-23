@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/08/21 22:21:00  movieman523
+  *	Fixed SM RCS and activated SIVB RCS at all times for now.
+  *	
   *	Revision 1.27  2005/08/20 11:14:52  movieman523
   *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
   *	
@@ -1348,61 +1351,6 @@ void SaturnV::StageSix(double simt)
 		AccelS4B(hs4bM,simt);
 	}
 
-	if (SMRCSActive()) {
-		SetThrusterResource(th_att_lin[0],ph_rcs0);
-		SetThrusterResource(th_att_lin[1],ph_rcs0);
-		SetThrusterResource(th_att_lin[2],ph_rcs0);
-		SetThrusterResource(th_att_lin[3],ph_rcs0);
-		SetThrusterResource(th_att_rot[0],ph_rcs0);
-		SetThrusterResource(th_att_rot[1],ph_rcs0);
-		SetThrusterResource(th_att_rot[2],ph_rcs0);
-		SetThrusterResource(th_att_rot[3],ph_rcs0);
-	}
-	else{
-		SetThrusterResource(th_att_lin[0],NULL);
-		SetThrusterResource(th_att_lin[1],NULL);
-		SetThrusterResource(th_att_lin[2],NULL);
-		SetThrusterResource(th_att_lin[3],NULL);
-		SetThrusterResource(th_att_rot[0],NULL);
-		SetThrusterResource(th_att_rot[1],NULL);
-		SetThrusterResource(th_att_rot[2],NULL);
-		SetThrusterResource(th_att_rot[3],NULL);
-	}
-
-	if(SMRCSActive()) {
-		SetThrusterResource(th_att_rot[4],ph_rcs0);
-		SetThrusterResource(th_att_rot[5],ph_rcs0);
-		SetThrusterResource(th_att_rot[7],ph_rcs0);
-		SetThrusterResource(th_att_rot[6],ph_rcs0);
-		SetThrusterResource(th_att_lin[4],ph_rcs0);
-		SetThrusterResource(th_att_lin[5],ph_rcs0);
-		SetThrusterResource(th_att_lin[7],ph_rcs0);
-		SetThrusterResource(th_att_lin[6],ph_rcs0);
-	}
-	else{
-		SetThrusterResource(th_att_rot[4],NULL);
-		SetThrusterResource(th_att_rot[5],NULL);
-		SetThrusterResource(th_att_rot[6],NULL);
-		SetThrusterResource(th_att_rot[7],NULL);
-		SetThrusterResource(th_att_lin[4],NULL);
-		SetThrusterResource(th_att_lin[5],NULL);
-		SetThrusterResource(th_att_lin[6],NULL);
-		SetThrusterResource(th_att_lin[7],NULL);
-	}
-
-	if(SMRCSActive()){
-		for(int i=8;i<24;i++){
-			SetThrusterResource(th_att_rot[i],ph_rcs0);
-			SetThrusterResource(th_att_lin[i],ph_rcs0);
-		}
-	}
-	else{
-		for(int i=8;i<24;i++){
-			SetThrusterResource(th_att_rot[i],NULL);
-			SetThrusterResource(th_att_lin[i],NULL);
-		}
-	}
-
 	//
 	// Enable or disable SPS.
 	//
@@ -1820,6 +1768,8 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	if (bStartS4B && !TLIBurnDone) {
 		soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
 	}
+
+	CheckRCSState();
 }
 
 bool SaturnV::SIVBStart()

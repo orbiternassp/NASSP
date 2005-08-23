@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/23 20:13:12  movieman523
+  *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
+  *	
   *	Revision 1.20  2005/08/22 19:47:33  movieman523
   *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
   *	
@@ -110,8 +113,6 @@
 
 void Saturn::SystemsInit() {
 
-	int	i;
-
 	// default state
 	systemsState = SATSYSTEMS_NONE;
 
@@ -120,10 +121,6 @@ void Saturn::SystemsInit() {
 	Panelsdk.InitFromFile("ProjectApollo\\SaturnSystems");
 
 	//PanelsdkLogFile = fopen("NASSP-Systems.log", "w");
-
-	for (i = 0; i < N_CSM_VALVES; i++) {
-		pCSMValves[i] = 0;
-	}
 
 	//
 	// Default valve states.
@@ -606,6 +603,38 @@ void Saturn::CheckSPSState()
 	}
 }
 
+//
+// Check the state of the RCS, and enable/disable thrusters as required.
+//
+
+void Saturn::CheckRCSState()
+
+{
+	int	i;
+
+	//
+	// For now we'll just turn all of the thrusters on or off. At some point
+	// we should enable or disable them by thruster quad.
+	//
+
+	switch (stage) {
+	case CSM_LEM_STAGE:
+		if (SMRCSActive()) {
+			for (i=0; i<24; i++) {
+				SetThrusterResource(th_att_rot[i], ph_rcs0);
+				SetThrusterResource(th_att_lin[i], ph_rcs0);
+			}
+		}
+		else {
+			for (i=0; i<24; i++) {
+				SetThrusterResource(th_att_rot[i], NULL);
+				SetThrusterResource(th_att_lin[i], NULL);
+			}
+		}
+		break;
+	}
+}
+
 void Saturn::ActivateSPS()
 
 {
@@ -707,6 +736,8 @@ bool Saturn::FuelCellCoolingBypassed(int fuelcell) {
 void Saturn::ClearPanelSDKPointers()
 
 {
+	int	i;
+
 	pCO2Level = 0;
 	pCabinCO2Level = 0;
 	pCabinPressure = 0;
@@ -724,6 +755,10 @@ void Saturn::ClearPanelSDKPointers()
 	pFC1Temp = 0;
 	pFC2Temp = 0;
 	pFC3Temp = 0;
+
+	for (i = 0; i < N_CSM_VALVES; i++) {
+		pCSMValves[i] = 0;
+	}
 }
 
 //
@@ -964,6 +999,8 @@ void Saturn::SetValveState(int valve, bool open)
 
 	if (pCSMValves[valve])
 		*pCSMValves[valve] = valve_state;
+
+	CheckRCSState();
 }
 
 bool Saturn::GetValveState(int valve)
