@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2005/08/23 21:29:03  movieman523
+  *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
+  *	
   *	Revision 1.53  2005/08/23 20:13:12  movieman523
   *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
   *	
@@ -1663,6 +1666,7 @@ void Saturn::SetStage(int s)
 	ThrustAdjust = 1.0;
 
 	CheckRCSState();
+	CheckSPSState();
 }
 
 void Saturn::DoLaunch(double simt)

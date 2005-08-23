@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/23 20:13:12  movieman523
+  *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
+  *	
   *	Revision 1.1  2005/08/16 20:55:23  movieman523
   *	Added first saturn-specific switch for Xlunar Inject.
   *	
@@ -63,3 +66,7 @@ public:
 	bool CheckMouseClick(int event, int mx, int my);
 };
 
+class SaturnSPSSwitch : public SaturnThreePosSwitch {
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+};
