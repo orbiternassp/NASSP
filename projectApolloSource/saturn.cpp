@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2005/08/23 20:13:12  movieman523
+  *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
+  *	
   *	Revision 1.52  2005/08/22 19:47:33  movieman523
   *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
   *	
@@ -585,15 +588,15 @@ void Saturn::initSaturn()
 		// "dummy" SetSwitches to enable the panel event handling
 		SetSwitches(PanelId);
 
+		//
+		// PanelSDK pointers.
+		//
+
+		ClearPanelSDKPointers();
+
 		// Initialize the internal systems
 		SystemsInit();
 	}
-
-	//
-	// PanelSDK pointers.
-	//
-
-	ClearPanelSDKPointers();
 
 	InitSaturnCalled = true;
 }
@@ -1658,6 +1661,8 @@ void Saturn::SetStage(int s)
 	//
 
 	ThrustAdjust = 1.0;
+
+	CheckRCSState();
 }
 
 void Saturn::DoLaunch(double simt)
