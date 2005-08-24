@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/21 17:21:10  movieman523
+  *	Added event timer display.
+  *	
   *	Revision 1.3  2005/08/18 19:12:21  movieman523
   *	Added Event Timer switches and null Event Timer class.
   *	
@@ -51,7 +54,7 @@ MissionTimer::MissionTimer()
 
 	Running = false;
 	Enabled = false;
-	CountUp = true;
+	CountUp = TIMER_COUNT_UP;
 }
 
 MissionTimer::~MissionTimer()
@@ -131,7 +134,7 @@ void MissionTimer::UpdateSeconds(int n)
 void MissionTimer::Timestep(double simt, double deltat)
 
 {
-	if (Running && Enabled) {
+	if (Running && Enabled && (CountUp != TIMER_COUNT_NONE)) {
 		double t = GetTime();
 
 		if (CountUp) {

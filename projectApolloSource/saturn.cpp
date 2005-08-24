@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2005/08/24 00:30:00  movieman523
+  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
+  *	
   *	Revision 1.55  2005/08/23 22:18:47  movieman523
   *	SPS switch now works.
   *	
@@ -948,7 +951,7 @@ typedef union {
 		unsigned MissionTimerEnabled:1;
 		unsigned EventTimerEnabled:1;
 		unsigned EventTimerRunning:1;
-		unsigned EventTimerCountUp:1;
+		unsigned EventTimerCountUp:2;
 	} u;
 	unsigned long word;
 } MainState;
@@ -1003,7 +1006,7 @@ void Saturn::SetMainState(int s)
 	MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
 	EventTimerDisplay.SetRunning(state.u.EventTimerRunning != 0);
 	EventTimerDisplay.SetEnabled(state.u.EventTimerEnabled != 0);
-	EventTimerDisplay.SetCountUp(state.u.EventTimerCountUp != 0);
+	EventTimerDisplay.SetCountUp(state.u.EventTimerCountUp);
 }
 
 //

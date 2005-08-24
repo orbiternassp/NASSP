@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/08/23 20:13:12  movieman523
+  *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
+  *	
   *	Revision 1.21  2005/08/20 12:24:02  movieman523
   *	Added a FailedState as well as a Failed flag to each switch. You now must call GetState(), IsUp(), IsDown() etc to get the functional state of the switch. The state variable now only tells you the visual state (e.g. switch up, down, center) and not the functional state.
   *	
@@ -1411,15 +1414,14 @@ bool EventTimerResetSwitch::CheckMouseClick(int event, int mx, int my)
 	{
 		if (timer) {
 			if (IsUp()) {
-				timer->SetRunning(false);
-				timer->SetCountUp(true);
+				timer->SetCountUp(TIMER_COUNT_NONE);
 				timer->Reset();
 			}
 			else if (IsCenter()) {
-				timer->SetCountUp(true);
+				timer->SetCountUp(TIMER_COUNT_UP);
 			}
 			else if (IsDown()) {
-				timer->SetCountUp(false);
+				timer->SetCountUp(TIMER_COUNT_DOWN);
 			}
 		}
 		return true;
