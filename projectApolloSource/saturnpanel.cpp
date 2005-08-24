@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2005/08/23 22:18:47  movieman523
+  *	SPS switch now works.
+  *	
   *	Revision 1.72  2005/08/23 20:13:12  movieman523
   *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
   *	
@@ -952,12 +955,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_SPS_GIMBAL_SWITCHES,                 _R( 343, 905,  487,  937), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_TLI_SWITCH,							_R( 847, 903,  870,  923), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_SPS,									_R( 221, 821,  251,  860), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_CM_RCS_SWITCH,                       _R(1112, 464, 1137,  509), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_SC_SWITCH,                           _R( 285, 745,  308,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_P16,									_R(  75, 739,  191,  770), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_SIVB_RCS,                            _R(  94, 810,  190,  830), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_ROT_PWR,								_R( 216, 745,  239,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_SIVB_GIMBAL,                         _R( 284, 912,  338,  932), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P17,                                 _R( 523, 912,  546,  932), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_P18,                                 _R( 588, 912,  611,  932), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_CM_RCS_LOGIC,                        _R( 616, 905,  645,  937), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -1546,21 +1545,8 @@ void Saturn::SetSwitches(int panel) {
 	P14Row.Init(AID_SM_RCS_MODE, MainPanel);
 	P15Row.Init(AID_SPS_GIMBAL_SWITCHES, MainPanel);
 
-	P17Row.Init(AID_P17, MainPanel);
-	P18Row.Init(AID_P18, MainPanel);
-	P19Row.Init(AID_P19, MainPanel);
-	P21Row.Init(AID_P21, MainPanel);
-	P24Row.Init(AID_P24, MainPanel);
-	P25Row.Init(AID_P25, MainPanel);
-
-	P27Row.Init(AID_P27, MainPanel);
 	P28Row.Init(AID_P28, MainPanel);
-	P29Row.Init(AID_P29, MainPanel);
-	P30Row.Init(AID_P30, MainPanel);
 	P31Row.Init(AID_P31, MainPanel);
-	P32Row.Init(AID_P32, MainPanel);
-	P33Row.Init(AID_P33, MainPanel);
-	P34Row.Init(AID_P34, MainPanel);
 	P35Row.Init(AID_P35, MainPanel);
 	P36Row.Init(AID_P36, MainPanel);
 	P37Row.Init(AID_BUS_PANEL, MainPanel);
@@ -1580,41 +1566,6 @@ void Saturn::SetSwitches(int panel) {
 	LPswitch6.Init( 45, 7, 23, 20, srf[6], P15Row);
 	LPswitch7.Init(119, 7, 23, 20, srf[6], P15Row);
 
-	P111switch.Init(0, 0, 23, 20, srf[6], P17Row);
-
-	P112switch.Init(0, 0, 23, 20, srf[6], P18Row);
-
-	P114switch.Init(  4, 6, 23, 20, srf[6], P19Row);
-	P115switch.Init( 36, 6, 23, 20, srf[6], P19Row);
-	P116switch.Init( 67, 6, 23, 20, srf[6], P19Row);
-	P117switch.Init( 99, 6, 23, 20, srf[6], P19Row);
-	P118switch.Init(131, 6, 23, 20, srf[23], P19Row);
-	P119switch.Init(163, 6, 23, 20, srf[23], P19Row);
-
-	P24switch.Init(  3, 7, 23, 20, srf[23], P21Row);
-	P25switch.Init( 35, 7, 23, 20, srf[23], P21Row);
-	P26switch.Init( 67, 7, 23, 20, srf[23], P21Row);
-	P27switch.Init(110, 7, 23, 20, srf[23], P21Row);
-	P28switch.Init(150, 7, 23, 20, srf[23], P21Row);
-
-	P212switch.Init( 3, 7, 23, 20, srf[23], P24Row);
-	P213switch.Init(35, 7, 23, 20, srf[23], P24Row);
-	P214switch.Init(67, 7, 23, 20, srf[23], P24Row);
-	P215switch.Init(99, 7, 23, 20, srf[23], P24Row);
-
-	P216switch.Init( 3, 7, 23, 20, srf[23], P25Row);
-	P217switch.Init(35, 7, 23, 20, srf[23], P25Row);
-
-	P222switch.Init(  3, 7, 23, 20, srf[23], P27Row);
-	P223switch.Init( 35, 7, 23, 20, srf[23], P27Row);
-	P224switch.Init( 67, 7, 23, 20, srf[23], P27Row);
-	P225switch.Init(104, 7, 23, 20, srf[23], P27Row);
-	P226switch.Init(136, 7, 23, 20, srf[23], P27Row);
-	P227switch.Init(178, 7, 23, 20, srf[23], P27Row);
-	P228switch.Init(226, 7, 23, 20, srf[23], P27Row);
-	P229switch.Init(274, 7, 23, 20, srf[23], P27Row);
-	P230switch.Init(320, 7, 23, 20, srf[23], P27Row);
-
 	P231switch.Init( 10, 6, 23, 20, srf[23], P28Row);
 	P232switch.Init( 48, 6, 23, 20, srf[23], P28Row);
 	P233switch.Init( 85, 6, 23, 20, srf[23], P28Row);
@@ -1630,25 +1581,12 @@ void Saturn::SetSwitches(int panel) {
 	P243switch.Init(236, 84, 23, 20, srf[23], P28Row);
 	P244switch.Init(275, 84, 23, 20, srf[23], P28Row);
 
-	P246switch.Init( 3, 6, 23, 20, srf[23], P29Row);
-	P247switch.Init(36, 6, 23, 20, srf[23], P29Row);
-
-	P248switch.Init( 3, 6, 23, 20, srf[23], P30Row);
-	P249switch.Init(35, 6, 23, 20, srf[23], P30Row);
-
 	P31switch.Init( 3,  8, 23, 20, srf[6], P31Row);
 	P32switch.Init(35,  8, 23, 20, srf[6], P31Row);
 	P33switch.Init(67,  8, 23, 20, srf[6], P31Row);
 	P34switch.Init( 2, 98, 23, 20, srf[23], P31Row);
 	P35switch.Init(33, 98, 23, 20, srf[23], P31Row);
 	P36switch.Init(66, 98, 23, 20, srf[23], P31Row);
-
-	P37switch.Init(0, 0, 23, 20, srf[23], P32Row);
-
-	P38switch.Init( 3, 7, 23, 20, srf[23], P33Row);
-	P39switch.Init(61, 7, 23, 20, srf[23], P33Row);
-
-	P310switch.Init(0, 0, 23, 20, srf[23], P34Row);
 
 	P311switch.Init(  3, 6, 23, 20, srf[23], P35Row);
 	P312switch.Init( 36, 6, 23, 20, srf[23], P35Row);
@@ -1802,28 +1740,22 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 	case AID_CABIN_PRESS:
 		if (my >=6 && my <=16 ){
-			if (mx >75 && mx < 99 && !RPswitch12){
-				SwitchClick();
-				RPswitch12=true;
-			}else if (mx >38 && mx < 62 && !RPswitch13 && RPswitch12){
+			if (mx >38 && mx < 62 && !RPswitch13){
 				SwitchClick();
 				RPswitch13=true;
 			}else if (mx >5 && mx < 29 && !RPswitch14){
 				SwitchClick();
 				RPswitch14=true;
 			}
-	}else if (my >=16 && my <=27 ){
-			if (mx >75 && mx < 99 && RPswitch12 && !RPswitch13){
-				SwitchClick();
-				RPswitch12=false;
-			}else if (mx >38 && mx < 62 && RPswitch13 ){
+		}else if (my >=16 && my <=27 ){
+			if (mx >38 && mx < 62 && RPswitch13 ){
 				SwitchClick();
 				RPswitch13=false;
 			}else if (mx >5 && mx < 29 && RPswitch14){
 				SwitchClick();
 				RPswitch14=false;
-				}
 			}
+		}
 
 			return true;
 
@@ -1847,25 +1779,6 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	case AID_CM_RCS_SWITCH:
-		if(event & PANEL_MOUSE_RBDOWN){
-			if(mx <25 ){
-				CMRCswitch = !CMRCswitch;
-				GuardClick();
-			}
-		}else if(event & PANEL_MOUSE_LBDOWN){
-			if(mx <25 && CMRCswitch){
-				if(my >16 && my <27 && !CMRswitch){
-					CMRswitch = true;
-					SwitchClick();
-				}else if(my >27 && my <37 && CMRswitch && CMRCswitch){
-					CMRCswitch = false;
-					SwitchClick();
-				}
-			}
-		}
-		return true;
-
 	case AID_SC_SWITCH:
 		if (my >=0 && my <=10 ){
 			if (mx > 7 && mx < 18 && !SCswitch){
@@ -1880,70 +1793,10 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 		return true;
 
-	case AID_SIVB_GIMBAL:
-		if (my >=0 && my <=10 ){
-			if (mx > 7 && mx < 17 && !RPswitch4){
-				SwitchClick();
-				RPswitch4=true;
-			}else if (mx > 38  && mx < 48 && !RPswitch5){
-				SwitchClick();
-				RPswitch5=true;
-			}
-		}else if (my >=10 && my <=20 ){
-			if (mx >7 && mx < 17 && RPswitch4){
-				SwitchClick();
-				RPswitch4=false;
-			}else if (mx >38 && mx < 48 && RPswitch5){
-				SwitchClick();
-				RPswitch5=false;
-			}
-		}
-		return true;
-
 	case AID_ABORT_BUTTON:
 		if (mx > 1 && mx < 62 && my > 1 && my < 31){
 			bAbort =true;
 			ButtonClick();
-		}
-		return true;
-
-	case AID_P16:
-		if (my >=6 && my <=17 ){
-			if (mx >9 && mx < 21 && !RPswitch9){
-				SwitchClick();
-				RPswitch9=true;
-			}else if (mx >53 && mx < 65 && !RPswitch7){
-				SwitchClick();
-				RPswitch7=true;
-			}else if (mx >97 && mx < 109 && !RPswitch8){
-				SwitchClick();
-				RPswitch8=true;
-			}
-		}else if (my >=16 && my <=27 ){
-			if (mx >9 && mx < 21 && RPswitch9){
-				SwitchClick();
-				RPswitch9=false;
-			}else if (mx >53 && mx < 65 && RPswitch7){
-				SwitchClick();
-				RPswitch7=false;
-			}else if (mx >97 && mx < 109 && RPswitch8){
-				SwitchClick();
-				RPswitch8=false;
-			}
-		}
-		return true;
-
-	case AID_CM_RCS_LOGIC:
-		if (my >=7 && my <=18 ){
-			if (mx > 9 && mx < 21 && !P113switch){
-				SwitchClick();
-				P113switch=true;
-			}
-		}else if (my >=17 && my <=28 ){
-			if (mx > 9 && mx < 21 && P113switch){
-				SwitchClick();
-				P113switch=false;
-			}
 		}
 		return true;
 
@@ -2668,20 +2521,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiBlt(surf,srf[SRF_DIGITAL],70,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
 		return true;
 
-	case AID_CM_RCS_SWITCH:
-		if(CMRCswitch){
-			oapiBlt(surf,srf[8],0,0,25,0,25,45);
-			if(CMRswitch){
-				oapiBlt(surf,srf[6],1,16,0,0,23,20);
-			}else{
-				oapiBlt(surf,srf[6],1,16,23,0,23,20);
-			}
-		}else{
-			oapiBlt(surf,srf[8],0,0,0,0,25,45);
-			CMRswitch=false;
-		}
-		return true;
-
 	case AID_SC_SWITCH:
 		if(SCswitch){
 			oapiBlt(surf,srf[6],0,0,0,0,23,20);
@@ -2691,43 +2530,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_SIVB_GIMBAL:
-		if(RPswitch4){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
-		}
-		if(RPswitch5){
-			oapiBlt(surf,srf[6],31,0,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],31,0,23,0,23,20);
-		}
-		return true;
-
-	case AID_P16:
-		if(RPswitch9){
-			oapiBlt(surf,srf[6],3,6,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],3,6,23,0,23,20);
-		}
-		if(RPswitch7){
-			oapiBlt(surf,srf[6],47,6,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],47,6,23,0,23,20);
-		}
-		if(RPswitch8){
-			oapiBlt(surf,srf[6],91,6,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],91,6,23,0,23,20);
-		}
-		return true;
-
 	case AID_CABIN_PRESS:
-		if(RPswitch12){
-			oapiBlt(surf,srf[6],75,6,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],75,6,23,0,23,20);
-		}
 		if(RPswitch13){
 			oapiBlt(surf,srf[6],38,6,0,0,23,20);
 		}else{
@@ -2740,6 +2543,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
+#if 0
 	case AID_05G_LIGHT:
 		if(P115switch){
 			oapiBlt(surf,srf[SRF_ALLROUND],0,0,600,68,24,13);
@@ -2747,9 +2551,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[SRF_ALLROUND],0,0,600,82,24,13);
 		}
 		return true;
+#endif
 
 	case AID_SPS_LIGHT:
-		if(SPSswitch){
+		if(SPSswitch.IsUp()){
 			oapiBlt(surf,srf[SRF_ALLROUND],0,0,625,68,24,13);
 		}else{
 			oapiBlt(surf,srf[SRF_ALLROUND],0,0,625,82,24,13);
@@ -2757,18 +2562,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_SPS_INJ_VLV:
-		if(SPSswitch){
+		if(SPSswitch.IsUp()){
 			oapiBlt(surf,srf[SRF_ALLROUND],0,0,0,168,141,32);
 		}else{
 			oapiBlt(surf,srf[SRF_ALLROUND],0,0,0,135,141,32);
-		}
-		return true;
-
-	case AID_CM_RCS_LOGIC:
-		if(P113switch){
-			oapiBlt(surf,srf[6],3,7,0,0,23,20);
-		}else{
-			oapiBlt(surf,srf[6],3,7,23,0,23,20);
 		}
 		return true;
 
@@ -3076,39 +2873,11 @@ void Saturn::InitSwitches() {
 	// Old stuff. Delete when no longer required.
 	//
 
-	Sswitch6=false;
-	Sswitch7=false;
-	Sswitch8=false;
-	Sswitch9=false;
-
-	RPswitch4=true;
-	RPswitch5=true;
-	RPswitch6=false;
-	CMRswitch=false;
-	CMRCswitch=false;
-
-	RPswitch7 = false;
-	RPswitch8 = false;
-	RPswitch9 = false;
-	RPswitch10=false;
-	RPswitch11=false;
-	RPswitch12=false;
 	RPswitch13=false;
 	RPswitch14=false;
 	RPswitch15=1;
 
 	RPswitch17 = false;
-
-	DPSwitch1 = false;
-	DPSwitch2 = false;
-	DPSwitch3 = false;
-	DPSwitch4 = false;
-	DPSwitch5 = false;
-	DPSwitch6 = false;
-	DPSwitch7 = false;
-	DPSwitch8 = false;
-	DPSwitch9 = false;
-	DPSwitch10 = false;
 
 	LPswitch5.SetActive(false);
 
@@ -3117,41 +2886,6 @@ void Saturn::InitSwitches() {
 
 	CMPswitch = false;
 	CMPCswitch = false;
-
-	P111switch = false;
-	P112switch = false;
-	P113switch = false;
-
-	P114switch = false;
-	P115switch = false;
-	P116switch = false;
-	P117switch = false;
-	P118switch = 1;
-	P119switch = 1;
-
-	P24switch = 1;
-	P25switch = 1;
-	P26switch = 0;
-	P27switch = 1;
-	P28switch = 0;
-
-	P212switch = 1;
-	P213switch = 1;
-	P214switch = 1;
-	P215switch = 1;
-
-	P216switch = 1;
-	P217switch = 1;
-
-	P222switch = 1;
-	P223switch = 1;
-	P224switch = 1;
-	P225switch = 1;
-	P226switch = 0;
-	P227switch = 1;
-	P228switch = 1;
-	P229switch = 1;
-	P230switch = 1;
 
 	P231switch = 1;
 	P232switch = 1;
@@ -3168,25 +2902,12 @@ void Saturn::InitSwitches() {
 	P243switch = 0;
 	P244switch = 0;
 
-	P246switch = 1;
-	P247switch = 1;
-
-	P248switch = 1;
-	P249switch = 0;
-
 	P31switch = false;
 	P32switch = false;
 	P33switch = false;
 	P34switch = 1;
 	P35switch = 1;
 	P36switch = 1;
-
-	P37switch = 1;
-
-	P38switch = 1;
-	P39switch = 1;
-
-	P310switch = 1;
 
 	P311switch = 1;
 	P312switch = 0;
@@ -3360,10 +3081,6 @@ int Saturn::GetSSwitchState()
 	state.u.Sswitch3 = CmSmSep1Switch;
 	state.u.Sswitch4 = CmSmSep2Switch;
 	state.u.Sswitch5 = CsmLvSepSwitch;
-	state.u.Sswitch6 = Sswitch6;
-	state.u.Sswitch7 = Sswitch7;
-	state.u.Sswitch8 = Sswitch8;
-	state.u.Sswitch9 = Sswitch9;
 	state.u.CMDswitch = CMDswitch;
 	state.u.CMPswitch = CMPswitch;
 	state.u.CMRHDswitch = CmRcsHeDumpSwitch;
@@ -3382,10 +3099,6 @@ void Saturn::SetSSwitchState(int s)
 	CmSmSep1Switch = state.u.Sswitch3;
 	CmSmSep2Switch = state.u.Sswitch4;
 	CsmLvSepSwitch = state.u.Sswitch5;
-	Sswitch6 = state.u.Sswitch6;
-	Sswitch7 = state.u.Sswitch7;
-	Sswitch8 = state.u.Sswitch8;
-	Sswitch9 = state.u.Sswitch9;
 	CMDswitch = state.u.CMDswitch;
 	CMPswitch = state.u.CMPswitch;
 	CmRcsHeDumpSwitch = state.u.CMRHDswitch;
@@ -3427,9 +3140,6 @@ int Saturn::GetLPSwitchState()
 	state.u.LPswitch7 = LPswitch7;
 	state.u.EDSswitch = EDSSwitch;
 	state.u.SCswitch = SCswitch;
-	state.u.P111switch = P111switch;
-	state.u.P112switch = P112switch;
-	state.u.P113switch = P113switch;
 	state.u.EMSKswitch = EMSKswitch;
 
 	return state.word;
@@ -3446,9 +3156,6 @@ void Saturn::SetLPSwitchState(int s)
 	LPswitch7 = state.u.LPswitch7;
 	EDSSwitch = state.u.EDSswitch;
 	SCswitch = state.u.SCswitch;
-	P111switch = state.u.P111switch;
-	P112switch = state.u.P112switch;
-	P113switch = state.u.P113switch;
 	EMSKswitch = state.u.EMSKswitch;
 }
 
@@ -3483,21 +3190,10 @@ int Saturn::GetRPSwitchState()
 	RPSwitchState state;
 
 	state.word = 0;
-	state.u.RPswitch4 = RPswitch4;
-	state.u.RPswitch5 = RPswitch5;
-	state.u.RPswitch6 = RPswitch6;
-	state.u.RPswitch7 = RPswitch7;
-	state.u.RPswitch8 = RPswitch8;
-	state.u.RPswitch9 = RPswitch9;
-	state.u.RPswitch10 = RPswitch10;
-	state.u.RPswitch11 = RPswitch11;
-	state.u.RPswitch12 = RPswitch12;
 	state.u.RPswitch13 = RPswitch13;
 	state.u.RPswitch14 = RPswitch14;
 	state.u.RPswitch16 = SivbLmSepSwitch;
 	state.u.RPCswitch = SivbLmSepSwitch.GetGuardState();
-	state.u.CMRswitch = CMRswitch;
-	state.u.CMRCswitch = CMRCswitch;
 	state.u.CMCswitch = CMCswitch;
 
 	return state.word;
@@ -3509,21 +3205,10 @@ void Saturn::SetRPSwitchState(int s)
 	RPSwitchState state;
 
 	state.word = s;
-	RPswitch4 = state.u.RPswitch4;
-	RPswitch5 = state.u.RPswitch5;
-	RPswitch6 = state.u.RPswitch6;
-	RPswitch7 = state.u.RPswitch7;
-	RPswitch8 = state.u.RPswitch8;
-	RPswitch9 = state.u.RPswitch9;
-	RPswitch10 = state.u.RPswitch10;
-	RPswitch11 = state.u.RPswitch11;
-	RPswitch12 = state.u.RPswitch12;
 	RPswitch13 = state.u.RPswitch13;
 	RPswitch14 = state.u.RPswitch14;
 	SivbLmSepSwitch = state.u.RPswitch16;
 	SivbLmSepSwitch.SetGuardState(state.u.RPCswitch);
-	CMRswitch = state.u.CMRswitch;
-	CMRCswitch = state.u.CMRCswitch;
 	CMCswitch = state.u.CMCswitch;
 }
 
@@ -3633,10 +3318,6 @@ int Saturn::GetCP4SwitchState()
 	state.u.FCswitch4 = FCswitch4;
 	state.u.FCswitch5 = FCswitch5;
 	state.u.FCswitch6 = FCswitch6;
-	state.u.P114switch = P114switch;
-	state.u.P115switch = P115switch;
-	state.u.P116switch = P116switch;
-	state.u.P117switch = P117switch;
 
 	return state.word;
 }
@@ -3653,11 +3334,6 @@ void Saturn::SetCP4SwitchState(int s)
 	FCswitch4 = state.u.FCswitch4;
 	FCswitch5 = state.u.FCswitch5;
 	FCswitch6 = state.u.FCswitch6;
-	P114switch = state.u.P114switch;
-	P115switch = state.u.P115switch;
-	P116switch = state.u.P116switch;
-	P117switch = state.u.P117switch;
-
 }
 
 typedef union {

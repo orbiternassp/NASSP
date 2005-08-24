@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/21 22:21:00  movieman523
+  *	Fixed SM RCS and activated SIVB RCS at all times for now.
+  *	
   *	Revision 1.14  2005/08/20 11:14:52  movieman523
   *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
   *	
@@ -251,46 +254,6 @@ void Saturn::AddRCS_CM(double MaxThrust)
 	AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
 }
 
-void Saturn::SetRCS_CM()
-
-{
-	if(P113switch){
-		SetThrusterResource(th_att_cm[0],ph_rcs1);
-		SetThrusterResource(th_att_cm[1],ph_rcs1);
-		SetThrusterResource(th_att_cm[2],ph_rcs1);
-		SetThrusterResource(th_att_cm[3],ph_rcs1);
-	}
-	else{
-		SetThrusterResource(th_att_cm[0],NULL);
-		SetThrusterResource(th_att_cm[1],NULL);
-		SetThrusterResource(th_att_cm[2],NULL);
-		SetThrusterResource(th_att_cm[3],NULL);
-	}
-	if(P113switch){
-		SetThrusterResource(th_att_cm[4],ph_rcs1);
-		SetThrusterResource(th_att_cm[5],ph_rcs1);
-		SetThrusterResource(th_att_cm[7],ph_rcs1);
-		SetThrusterResource(th_att_cm[6],ph_rcs1);
-	}
-	else{
-		SetThrusterResource(th_att_cm[4],NULL);
-		SetThrusterResource(th_att_cm[5],NULL);
-		SetThrusterResource(th_att_cm[6],NULL);
-		SetThrusterResource(th_att_cm[7],NULL);
-	}
-	if(P113switch){
-		SetThrusterResource(th_att_cm[8],ph_rcs1);
-		SetThrusterResource(th_att_cm[9],ph_rcs1);
-		SetThrusterResource(th_att_cm[10],ph_rcs1);
-		SetThrusterResource(th_att_cm[11],ph_rcs1);
-	}
-	else{
-		SetThrusterResource(th_att_cm[8],NULL);
-		SetThrusterResource(th_att_cm[9],NULL);
-		SetThrusterResource(th_att_cm[10],NULL);
-		SetThrusterResource(th_att_cm[11],NULL);
-	}
-}
 void Saturn::ToggelHatch()
 
 {
@@ -744,10 +707,6 @@ void Saturn::SetReentryStage ()
 	SetRotDrag (_V(0.07,0.07,0.003));
 	if (GetFlightModel() >= 1)
 	{
-//		SetPitchMomentScale (-1e-5);
-//		SetBankMomentScale (-1e-5);
-//		SetLiftCoeffFunc (LiftCoeff); 
-//		CreateAirfoil(LIFT_VERTICAL, _V(-0.014,0.107,0.75), CoeffFunc, 3.5 ,11.95, 1.0);
 		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.16,1.12), CoeffFunc, 3.5 ,11.95, 1.0);
     }
   	ShiftCentreOfMass (_V(0,0,0.5));
@@ -810,6 +769,7 @@ void Saturn::StageSeven(double simt)
 		case 0:
 			if (GetAltitude() < 145000) {
 				SlowIfDesired();
+				ActivateCMRCS();
 				ActivateNavmode(NAVMODE_RETROGRADE);
 				StageState++;
 			}
@@ -877,7 +837,7 @@ void Saturn::StageEight(double simt)
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 	}
-	else{
+	else {
 		ClearMeshes();
 		VECTOR3 mesh_dir=_V(0,0,34.40-12.25-21.5);
 		meshidx = AddMesh (hCM2, &mesh_dir);
@@ -907,13 +867,14 @@ void Saturn::StageEight(double simt)
 			if (GetAltitude() < 50000) {
 				SlowIfDesired();
 				DeactivateNavmode(NAVMODE_RETROGRADE);
+				DeactivateCMRCS();
 				StageState++;
 			}
 			break;
 		}
 	}
 
-	LAUNCHIND[1]=true;
+	LAUNCHIND[1] = true;
 	SetStage(CM_ENTRY_STAGE_TWO);
 }
 
@@ -997,8 +958,8 @@ void Saturn::SetChuteStage1()
 	SetView(-7.25);
 	DeactivateNavmode(NAVMODE_KILLROT);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
-	LAUNCHIND[3]=true;
-	LAUNCHIND[1]=true;
+	LAUNCHIND[3] = true;
+	LAUNCHIND[1] = true;
 }
 
 void Saturn::SetChuteStage2()
@@ -1053,7 +1014,7 @@ void Saturn::SetChuteStage2()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 	}
-	else{
+	else {
 		ClearMeshes();
 		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
 		meshidx = AddMesh (hCM2, &mesh_dir);
@@ -1081,8 +1042,8 @@ void Saturn::SetChuteStage2()
 
 	SetView(-7.25);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
-	LAUNCHIND[3]=true;
-	LAUNCHIND[1]=true;
+	LAUNCHIND[3] = true;
+	LAUNCHIND[1] = true;
 }
 
 void Saturn::SetChuteStage3()
@@ -1135,7 +1096,7 @@ void Saturn::SetChuteStage3()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 	}
-	else{
+	else {
 		ClearMeshes();
 		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
 		meshidx = AddMesh (hCM2, &mesh_dir);
@@ -1163,8 +1124,8 @@ void Saturn::SetChuteStage3()
 
 	SetView(-7.25);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
-	LAUNCHIND[3]=true;
-	LAUNCHIND[1]=true;
+	LAUNCHIND[3] = true;
+	LAUNCHIND[1] = true;
 }
 
 void Saturn::SetChuteStage4()

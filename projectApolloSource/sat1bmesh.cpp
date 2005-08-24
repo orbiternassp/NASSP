@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/08/15 23:42:50  movieman523
+  *	Improved ASTP a bit. Still buggy, but vaguely working.
+  *	
   *	Revision 1.11  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -264,9 +267,6 @@ void Saturn1b::SetFirstStage ()
 	// **************************** NAV radios *************************************
 
 	InitNavRadios (4);
-
-	RPswitch10 = true;
-	RPswitch11 = true;
 }
 
 void Saturn1b::SetSecondStage ()

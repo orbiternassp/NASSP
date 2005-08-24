@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/23 22:18:47  movieman523
+  *	SPS switch now works.
+  *	
   *	Revision 1.22  2005/08/23 21:29:03  movieman523
   *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
   *	
@@ -563,6 +566,24 @@ void Saturn::DeactivateCSMRCS()
 	SetValveState(CSM_SECPROP_TANKD_VALVE, false);
 }
 
+//
+// And CM
+//
+
+void Saturn::ActivateCMRCS()
+
+{
+	SetValveState(CM_RCSPROP_TANKA_VALVE, true);
+	SetValveState(CM_RCSPROP_TANKB_VALVE, true);
+}
+
+void Saturn::DeactivateCMRCS()
+
+{
+	SetValveState(CM_RCSPROP_TANKA_VALVE, false);
+	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
+}
+
 bool Saturn::SMRCSAActive()
 
 {
@@ -611,6 +632,36 @@ void Saturn::CheckSPSState()
 }
 
 //
+// Check whether the CM RCS is active.
+//
+
+bool Saturn::CMRCSActive()
+
+{
+	//
+	// I don't think this is correct, but I'm not sure yet what the CM RCS switches do.
+	//
+
+	return GetValveState(CM_RCSPROP_TANKA_VALVE) && GetValveState(CM_RCSPROP_TANKB_VALVE);
+}
+
+void Saturn::SetRCS_CM()
+
+{
+	int i;
+
+	if (CMRCSActive()) {
+		for (i = 0; i < 24; i++) 
+			SetThrusterResource(th_att_cm[i], ph_rcs1);
+	}
+	else {
+		for (i = 0; i < 24; i++)
+			SetThrusterResource(th_att_cm[i], NULL);
+	}
+
+}
+
+//
 // Check the state of the RCS, and enable/disable thrusters as required.
 //
 
@@ -626,18 +677,30 @@ void Saturn::CheckRCSState()
 
 	switch (stage) {
 	case CSM_LEM_STAGE:
+	case CSM_ABORT_STAGE:
 		if (SMRCSActive()) {
-			for (i=0; i<24; i++) {
+			for (i = 0; i < 24; i++) {
 				SetThrusterResource(th_att_rot[i], ph_rcs0);
 				SetThrusterResource(th_att_lin[i], ph_rcs0);
 			}
 		}
 		else {
-			for (i=0; i<24; i++) {
+			for (i = 0; i < 24; i++) {
 				SetThrusterResource(th_att_rot[i], NULL);
 				SetThrusterResource(th_att_lin[i], NULL);
 			}
 		}
+		break;
+
+	case CM_STAGE:
+	case CM_ENTRY_STAGE:
+	case CM_ENTRY_STAGE_TWO:
+	case CM_ENTRY_STAGE_THREE:
+	case CM_ENTRY_STAGE_FOUR:
+	case CM_ENTRY_STAGE_FIVE:
+	case CM_ENTRY_STAGE_SIX:
+	case CM_ENTRY_STAGE_SEVEN:
+		SetRCS_CM();
 		break;
 	}
 }
