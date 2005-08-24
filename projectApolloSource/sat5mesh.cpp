@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/21 22:21:00  movieman523
+  *	Fixed SM RCS and activated SIVB RCS at all times for now.
+  *	
   *	Revision 1.14  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -783,9 +786,6 @@ void SaturnV::SetThirdStage ()
 	thg_ver = CreateThrusterGroup (th_ver, 2, THGROUP_USER);
 
 	SetThrusterGroupLevel(thg_ver,1.0);
-
-	RPswitch4=true;
-	RPswitch5=true;
 
 	ThrustAdjust = 1.0;
 	bAbtlocked = false;

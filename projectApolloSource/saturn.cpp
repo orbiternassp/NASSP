@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2005/08/23 22:18:47  movieman523
+  *	SPS switch now works.
+  *	
   *	Revision 1.54  2005/08/23 21:29:03  movieman523
   *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
   *	
@@ -480,7 +483,7 @@ void Saturn::initSaturn()
 		th_ver[i] = 0;
 	}
 
-	for (i = 0; i < 12; i++) {
+	for (i = 0; i < 24; i++) {
 		th_att_cm[i] = 0;
 	}
 
@@ -2592,37 +2595,30 @@ void Saturn::SetGenericStageState()
 	switch(stage) {
 
 	case CM_STAGE:
-		SetCSMStage();
 		SetReentryStage();
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		SetCSMStage();
 		SetReentryStage();
 		break;
 
 	case CM_ENTRY_STAGE_THREE:
-		SetCSMStage();
 		SetChuteStage1();
 		break;
 
 	case CM_ENTRY_STAGE_FOUR:
-		SetCSMStage();
 		SetChuteStage2();
 		break;
 
 	case CM_ENTRY_STAGE_FIVE:
-		SetCSMStage();
 		SetChuteStage3();
 		break;
 
 	case CM_ENTRY_STAGE_SIX:
-		SetCSMStage();
 		SetChuteStage4();
 		break;
 
 	case CM_ENTRY_STAGE_SEVEN:
-		SetCSMStage();
 		SetSplashStage();
 		break;
 
@@ -2631,7 +2627,6 @@ void Saturn::SetGenericStageState()
 		break;
 
 	case CM_ENTRY_STAGE:
-		SetCSMStage();
 		SetReentryStage();
 		break;
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
@@ -76,12 +79,8 @@ void Saturn::AttitudeLaunchSIVB()
 		tempR =AtempR;
 		tempY =AtempY;
 	}else{
-		if(RPswitch4){
-			tempP = GetManualControlLevel(THGROUP_ATT_PITCHDOWN, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_PITCHUP, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
-		}
-		if(RPswitch5){
-			tempY = GetManualControlLevel(THGROUP_ATT_YAWLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_YAWRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
-		}
+		tempP = GetManualControlLevel(THGROUP_ATT_PITCHDOWN, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_PITCHUP, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
+		tempY = GetManualControlLevel(THGROUP_ATT_YAWLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_YAWRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
 		tempR = GetManualControlLevel(THGROUP_ATT_BANKLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_BANKRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
 	}
 
@@ -116,10 +115,10 @@ void Saturn::AttitudeLaunchSIVB()
 //*************************************************************
 // create opposite vectors for "gyro stabilization" if command levels are 0
 
-	if(tempP==0.0 && RPswitch4) {
+	if(tempP==0.0) {
 		pitchvectorm=_V(0.0,0.95*ang_vel.x*2,0.0);
 	}
-	if(tempY==0.0 && RPswitch5) {
+	if(tempY==0.0) {
 		yawvectorm=_V(-0.95*ang_vel.y*2,0.0,0.0);
 	}
 	if(tempR==0.0) {

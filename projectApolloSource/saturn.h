@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2005/08/23 22:18:47  movieman523
+  *	SPS switch now works.
+  *	
   *	Revision 1.63  2005/08/23 21:29:03  movieman523
   *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
   *	
@@ -787,36 +790,10 @@ protected:
 	// old stuff begin
 	//
 
-	bool Sswitch6;
-	bool Sswitch7;
-	bool Sswitch8;
-	bool Sswitch9;
-
-	bool RPswitch4;
-	bool RPswitch5;
-	bool RPswitch6;
-	bool RPswitch7;
-	bool RPswitch8;
-	bool RPswitch9;
-	bool CMRswitch;
-	bool CMRCswitch;
-	bool RPswitch10;
-	bool RPswitch11;
-	bool RPswitch12;
 	bool RPswitch13;
 	bool RPswitch14;
 
 	bool RPswitch17;
-	bool DPSwitch1;
-	bool DPSwitch2;
-	bool DPSwitch3;
-	bool DPSwitch4;
-	bool DPSwitch5;
-	bool DPSwitch6;
-	bool DPSwitch7;
-	bool DPSwitch8;
-	bool DPSwitch9;
-	bool DPSwitch10;
 
 	bool CMCswitch;
 	bool SCswitch;
@@ -836,47 +813,11 @@ protected:
 	bool FCswitch5;
 	bool FCswitch6;
 
-	bool P113switch;
-
 	bool EMSKswitch;
 
 	AttitudeToggle LPswitch5;
 	ToggleSwitch LPswitch6;
 	ToggleSwitch LPswitch7;
-
-	ToggleSwitch P111switch;
-	ToggleSwitch P112switch;
-
-	ToggleSwitch P114switch;
-	ToggleSwitch P115switch;
-	ToggleSwitch P116switch;
-	ToggleSwitch P117switch;
-	ThreePosSwitch P118switch;
-	ThreePosSwitch P119switch;
-
-	ThreePosSwitch P24switch;
-	ThreePosSwitch P25switch;
-	ThreePosSwitch P26switch;
-	ThreePosSwitch P27switch;
-	ThreePosSwitch P28switch;
-
-	ThreePosSwitch P212switch;
-	ThreePosSwitch P213switch;
-	ThreePosSwitch P214switch;
-	ThreePosSwitch P215switch;
-
-	ThreePosSwitch P216switch;
-	ThreePosSwitch P217switch;
-
-	ThreePosSwitch P222switch;
-	ThreePosSwitch P223switch;
-	ThreePosSwitch P224switch;
-	ThreePosSwitch P225switch;
-	ThreePosSwitch P226switch;
-	ThreePosSwitch P227switch;
-	ThreePosSwitch P228switch;
-	ThreePosSwitch P229switch;
-	ThreePosSwitch P230switch;
 
 	ThreePosSwitch P231switch;
 	ThreePosSwitch P232switch;
@@ -893,25 +834,12 @@ protected:
 	ThreePosSwitch P243switch;
 	ThreePosSwitch P244switch;
 
-	ThreePosSwitch P246switch;
-	ThreePosSwitch P247switch;
-
-	ThreePosSwitch P248switch;
-	ThreePosSwitch P249switch;
-
 	ToggleSwitch P31switch;
 	ToggleSwitch P32switch;
 	ToggleSwitch P33switch;
 	ThreePosSwitch P34switch;
 	ThreePosSwitch P35switch;
 	ThreePosSwitch P36switch;
-
-	ThreePosSwitch P37switch;
-
-	ThreePosSwitch P38switch;
-	ThreePosSwitch P39switch;
-
-	ThreePosSwitch P310switch;
 
 	ThreePosSwitch P311switch;
 	ThreePosSwitch P312switch;
@@ -1089,24 +1017,10 @@ protected:
 	SwitchRow P14Row;
 	SwitchRow P15Row;
 
-	SwitchRow P17Row;
-	SwitchRow P18Row;
-	SwitchRow P19Row;
-
 	SwitchRow MRRow;
 
-	SwitchRow P21Row;
-	SwitchRow P24Row;
-	SwitchRow P25Row;
-
-	SwitchRow P27Row;
 	SwitchRow P28Row;
-	SwitchRow P29Row;
-	SwitchRow P30Row;
 	SwitchRow P31Row;
-	SwitchRow P32Row;
-	SwitchRow P33Row;
-	SwitchRow P34Row;
 	SwitchRow P35Row;
 	SwitchRow P36Row;
 
@@ -1375,6 +1289,9 @@ protected:
 	void DeactivateS4RCS();
 	void ActivateCSMRCS();
 	void DeactivateCSMRCS();
+	void ActivateCMRCS();
+	void DeactivateCMRCS();
+	bool CMRCSActive();
 	bool SMRCSActive();
 	bool SMRCSAActive();
 	bool SMRCSBActive();
@@ -1382,7 +1299,6 @@ protected:
 	bool SMRCSDActive();
 	void ActivateSPS();
 	void DeactivateSPS();
-	void ActivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
 	void SetRandomFailures();
@@ -1496,7 +1412,7 @@ protected:
 	THGROUP_HANDLE thg_main,thg_ull,thg_ver;		          // handles for thruster groups
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
-	THRUSTER_HANDLE th_main[5],th_ull[8],th_ver[3] ,th_att_cm[12];               // handles for orbiter main engines
+	THRUSTER_HANDLE th_main[5],th_ull[8],th_ver[3] ,th_att_cm[24];               // handles for orbiter main engines
 	THRUSTER_HANDLE th_sps[1],th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THRUSTER_HANDLE	th_retro1[4],th_retro2[4], th_aps[3];
 

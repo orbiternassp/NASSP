@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/08/23 22:18:47  movieman523
+  *	SPS switch now works.
+  *	
   *	Revision 1.29  2005/08/23 21:29:03  movieman523
   *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
   *	
@@ -1554,7 +1557,6 @@ void SaturnV::Timestep(double simt, double simdt)
 
 	case CSM_ABORT_STAGE:
 		SetEngineLevel(ENGINE_MAIN,1);
-		SetRCS_CM();
 
 		ClearAutopilotLight();
 
