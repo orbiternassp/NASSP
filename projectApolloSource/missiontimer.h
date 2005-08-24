@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/18 19:12:21  movieman523
+  *	Added Event Timer switches and null Event Timer class.
+  *	
   *	Revision 1.2  2005/08/14 15:25:43  movieman523
   *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
   *	
@@ -53,8 +56,8 @@ public:
 	bool IsRunning() { return Running; };
 	void SetEnabled(bool run) { Enabled = run; };
 	bool IsEnabled() { return Enabled; };
-	void SetCountUp(bool val) { CountUp = val; };
-	bool GetCountUp() { return CountUp; };
+	void SetCountUp(int val) { CountUp = val; };
+	int GetCountUp() { return CountUp; };
 
 	virtual void Render(SURFHANDLE surf, SURFHANDLE digits);
 
@@ -71,7 +74,7 @@ protected:
 
 	bool Running;
 	bool Enabled;
-	bool CountUp;
+	int CountUp;
 
 	//
 	// Don't need to be saved.
@@ -88,5 +91,9 @@ public:
 
 protected:
 };
+
+#define TIMER_COUNT_DOWN	0
+#define TIMER_COUNT_NONE	1
+#define TIMER_COUNT_UP		2
 
 #endif
