@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/08/24 23:29:31  movieman523
+  *	Fixed event timer reset.
+  *	
   *	Revision 1.22  2005/08/23 20:13:12  movieman523
   *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
   *	
@@ -1272,6 +1275,12 @@ void IndicatorSwitch::LoadState(char *line) {
 	sscanf(line, "%s %i", buffer, &st); 
 	if (!strnicmp(buffer, name, strlen(name))) {
 		state = st;
+		if (state) {
+			displayState = 3.0;
+		}
+		else {
+			displayState = 0.0;
+		}
 	}
 }
 
