@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.18  2005/08/13 20:00:28  lazyd
   *	Fixed noun 77
   *	
@@ -560,7 +563,7 @@ void LEMcomputer::DisplayNounData(int noun)
 
 		SetR1(min * 1000 + sec);
 		SetR1Format("XXX XX");
-		SetR2((int)(CurrentVelZ*10.0));
+		SetR2((int)(LandingAltitude*10.0));
 		SetR3((int)(CurrentVel*10.0));
 		}
 		break;
@@ -684,6 +687,13 @@ bool LEMcomputer::ValidateProgram(int prog)
 		return true;
 
 	//
+	// 30: External Delta V
+	//
+
+	case 30:
+		return true;
+
+	//
 	// 32: CSI
 	//
 
@@ -719,11 +729,19 @@ bool LEMcomputer::ValidateProgram(int prog)
 		return true;
 
 	//
+	//	40: DPS program
+	//
+
+	case 40:
+		return true;
+
+	//
 	//	41: RCS program
 	//
 
 	case 41:
 		return true;
+
 	//
 	//	42: APS program
 	//
@@ -809,6 +827,14 @@ void LEMcomputer::Timestep(double simt, double simdt)
 		break;
 
 	//
+	//  30: External Delta V
+	//
+
+	case 30:
+		Prog30(simt);
+		break;
+
+	//
 	//  32: Coelliptic Sequence Initiation
 	//
 
@@ -846,6 +872,14 @@ void LEMcomputer::Timestep(double simt, double simdt)
 
 	case 36:
 		Prog36(simt);
+		break;
+
+	//
+	// 40: DPS program
+	//
+
+	case 40:
+		Prog40(simt);
 		break;
 
 	//
