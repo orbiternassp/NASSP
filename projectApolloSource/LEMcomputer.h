@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.14  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -185,6 +188,7 @@ protected:
 	void TerminateProgram();
 	// Descent, Abort, Ascent and Rendezvous routines
 	void Prog13(double simt);
+	void Prog30(double simt);
 	void Prog32(double simt);
 	void Prog33(double simt);
 	void Prog34(double simt);
@@ -208,6 +212,7 @@ protected:
 	void OrientAxis(VECTOR3 &vec, int axis, int ref);
 	void OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, double &apo, double &tta, 
 				 double &per, double &ttp);
+	void EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos);
 	void Prog13Pressed(int R1, int R2, int R3);
 	void Prog34Pressed(int R1, int R2, int R3);
 	void Prog41Pressed(int R1, int R2, int R3);
