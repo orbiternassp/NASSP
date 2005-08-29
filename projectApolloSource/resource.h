@@ -41,52 +41,33 @@
 #define AID_RCS_HELIUM2_TALKBACK		48
 #define AID_RCS_PROP1_TALKBACK			49
 #define AID_RCS_PROP2_TALKBACK			50
-
 #define AID_ABORT_BUTTON                51
 #define AID_FUEL_DIGIT                  52
 #define AID_SM_RCS_PANEL1               53
 #define AID_SM_RCS_MODE                 54
 #define AID_SPS_GIMBAL_SWITCHES         55
 #define AID_TLI_SWITCH                  56
-
 #define AID_CMC_SWITCH                  58
 #define AID_SC_SWITCH                   59
-
-
-
-
 #define AID_ELS_SWITCHES                66
-
 #define AID_CMD_SWITCH                  68
 #define AID_CMP_SWITCH                  69
 #define AID_FCSM_SWITCH                 71
-
 #define AID_DIRECT_ULLAGE_THRUST_ON_LIGHT 73
 #define AID_LV_ENGINE_LIGHTS            74
 #define AID_LV_TANK_GAUGES              75
-
 #define AID_EMS                         77
 #define AID_SWITCH_JET                  78
 #define AID_MAIN_RELEASE_SWITCH         79
-
-
-
 #define AID_LV_SWITCHES					83
 #define AID_DOCKING_PROBE_SWITCH        84
-
 #define AID_SEQUENCERSWITCHES           86
 #define AID_LEM_POWER_SWITCH            87
 #define AID_SMRCS_HELIUM1_SWITCHES      89
-
-
 #define AID_SMRCS_HELIUM2_SWITCHES      92
 #define AID_PRIM_PRPLNT_SWITCHES        93
-
-
 #define AID_SEC_PRPLT_SWITCHES          96
-
 #define AID_P28                         99
-
 #define IDB_MAINPANEL                   101
 #define IDB_PANEL2                      102
 #define IDB_PANEL3                      103
@@ -126,8 +107,6 @@
 #define IDB_ABORTSWITCH                 185
 #define IDB_LIGHTSWITCH                 186
 #define IDB_ABORTILMSW                  200
-
-
 #define IDB_MASTER_ALARM                203
 #define IDB_MASTER_ALARM_BRIGHT         204
 #define IDB_DSKY_LIGHTS                 205
@@ -188,19 +167,13 @@
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
 #define AID_VSI2                        304
-
 #define AID_CABIN_PRESS                 401
-
 #define AID_FUELCELLRADIATORSINDICATORS 403
 #define AID_P31                         404
-
-
-
 #define AID_FUELCELLREACTANTSSWITCHES   410
 #define AID_P35                         411
 #define AID_P36                         412
 #define AID_CYROTANKSWITCHES            413
-
 #define AID_SMRCS_FUEL                  416
 #define AID_SPS_FUEL                    417
 #define AID_EMS_SWITCH                  418
@@ -308,6 +281,8 @@
 #define IDB_FDAI_ROLL					532
 #define IDB_CWS_LIGHTS					533
 #define IDB_EVENT_TIMER					534
+#define IDB_DSKY_KEY                    535
+
 
 // Next default values for new objects
 //

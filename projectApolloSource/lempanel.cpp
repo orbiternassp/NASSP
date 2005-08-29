@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/08/19 13:42:54  tschachim
+  *	Added missing DSKY display elements.
+  *	
   *	Revision 1.28  2005/08/14 16:08:20  tschachim
   *	LM is now a VESSEL2
   *	Changed panel restore mechanism because the CSM mechanism
@@ -572,33 +575,34 @@ void sat5_lmpkd::InitPanel (int panel)
 {
 	switch (panel) {
 	case LMPANEL_MAIN: // LEM Main Panel
-		srf[0] = oapiCreateSurface (LOADBMP (IDB_ECSG));
-		//srf[1] = oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
-		srf[2] = oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
-		srf[3] = oapiCreateSurface (LOADBMP (IDB_HORIZON));
-		srf[SRF_DIGITAL] = oapiCreateSurface (LOADBMP (IDB_DIGITAL));
-		srf[5] = oapiCreateSurface (LOADBMP (IDB_FDAI));
-		srf[6] = oapiCreateSurface (LOADBMP (IDB_LEMSWITCH1));
-		srf[7] = oapiCreateSurface (LOADBMP (IDB_SWLEVER));
-		srf[8] = oapiCreateSurface (LOADBMP (IDB_SECSWITCH));
-		srf[9] = oapiCreateSurface (LOADBMP (IDB_ABORT));
-		srf[10] = oapiCreateSurface (LOADBMP (IDB_ANNUN));
-		srf[11] = oapiCreateSurface (LOADBMP (IDB_LAUNCH));
-		srf[12] = oapiCreateSurface (LOADBMP (IDB_LV_ENG));
-		srf[13] = oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
-		srf[14] = oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
-		srf[15] = oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
-		srf[16] = oapiCreateSurface (LOADBMP (IDB_THRUST));
-		//srf[17] = oapiCreateSurface (LOADBMP (IDB_HEADING));
-		srf[18] = oapiCreateSurface (LOADBMP (IDB_CONTACT));
-		srf[SRF_LMTWOPOSLEVER] = oapiCreateSurface (LOADBMP (IDB_LEMSWITCH2));
-		srf[20] = oapiCreateSurface (LOADBMP (IDB_LEMSWITCH3));
-		srf[SRF_DSKY] = oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
-		srf[SRF_LMABORTBUTTON] = oapiCreateSurface (LOADBMP (IDB_LMABORTBUTTON));
-		srf[SRF_LMMFDFRAME] = oapiCreateSurface (LOADBMP (IDB_LMMFDFRAME));
-		srf[SRF_LMTHREEPOSLEVER]= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
-		srf[SRF_LMTHREEPOSSWITCH]= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
-		srf[SRF_DSKYDISP]       		= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
+		srf[0]						= oapiCreateSurface (LOADBMP (IDB_ECSG));
+		//srf[1]					= oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
+		srf[2]						= oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
+		srf[3]						= oapiCreateSurface (LOADBMP (IDB_HORIZON));
+		srf[SRF_DIGITAL]			= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
+		srf[5]						= oapiCreateSurface (LOADBMP (IDB_FDAI));
+		srf[6]						= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH1));
+		srf[7]						= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
+		srf[8]						= oapiCreateSurface (LOADBMP (IDB_SECSWITCH));
+		srf[9]						= oapiCreateSurface (LOADBMP (IDB_ABORT));
+		srf[10]						= oapiCreateSurface (LOADBMP (IDB_ANNUN));
+		srf[11]						= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
+		srf[12]						= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
+		srf[13]						= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
+		srf[14]						= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
+		srf[15]						= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
+		srf[16]						= oapiCreateSurface (LOADBMP (IDB_THRUST));
+		//srf[17]					= oapiCreateSurface (LOADBMP (IDB_HEADING));
+		srf[18]						= oapiCreateSurface (LOADBMP (IDB_CONTACT));
+		srf[SRF_LMTWOPOSLEVER]		= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH2));
+		srf[20]						= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH3));
+		srf[SRF_DSKY]				= oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
+		srf[SRF_LMABORTBUTTON]		= oapiCreateSurface (LOADBMP (IDB_LMABORTBUTTON));
+		srf[SRF_LMMFDFRAME]			= oapiCreateSurface (LOADBMP (IDB_LMMFDFRAME));
+		srf[SRF_LMTHREEPOSLEVER]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
+		srf[SRF_LMTHREEPOSSWITCH]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
+		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
+		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
 
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
@@ -672,22 +676,19 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MFDRIGHT,					    _R(1032, 1564, 1457, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ABORT,							_R( 549,  870,  702,  942), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
         // 3 pos Engine Arm Lever
-	    oapiRegisterPanelArea (AID_ENG_ARM,						_R( 163,  1078,  205,  1118), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+	    oapiRegisterPanelArea (AID_ENG_ARM,							_R( 163,  1078, 205, 1118), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		// 2 pos Descent Engine Command Override Lever
-		oapiRegisterPanelArea (AID_DESCENT_ENGINE_SWITCH,		_R( 87,  1321,  129,  1361), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DESCENT_ENGINE_SWITCH,			_R( 87,  1321,  129, 1361), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
         // 3 pos Mode control switches
-	    oapiRegisterPanelArea (AID_MODECONTROL,						_R( 524,  1425,  772,  1465), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
-
-
-
+	    oapiRegisterPanelArea (AID_MODECONTROL,						_R( 524,  1425, 772, 1465), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		// DSKY		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,					_R( 762, 1560,  867, 1736), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,						_R( 618, 1565,  720, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 598, 1755,  886, 1867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 598, 1755,  886, 1876), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_MISSION_CLOCK,					_R(  74,  287,  216,  309), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
-
-		oapiRegisterPanelArea (AID_MISSION_CLOCK,					_R( 74,  287, 216,  309), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		
 		//oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146,  135, 1183,  150), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146,  169, 1183,  184), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_FUEL_DIGIT2,					_R(1232,  163, 1285,  178), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
@@ -1878,6 +1879,10 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_DSKY_DISPLAY:
 		dsky.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
+		return true;
+
+	case AID_DSKY_KEY:
+		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
 		return true;
 
 	case AID_MFDLEFT:

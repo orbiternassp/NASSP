@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/08/19 13:43:42  tschachim
+  *	Channel 13 handling
+  *	
   *	Revision 1.8  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -137,6 +140,7 @@ public:
 	void ProcessKeyRelease(int mx, int my);
 	void RenderLights(SURFHANDLE surf, SURFHANDLE lights);
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp);
+	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys);
 	void ProcessChannel10(int val);
 	void ProcessChannel13(int val);
 	void ProcessChannel11Bit(int bit, bool val);
@@ -181,6 +185,26 @@ protected:
 	//
 
 	bool KbInUse;
+
+	bool KeyDown_Verb;
+	bool KeyDown_Noun;
+	bool KeyDown_Plus;
+	bool KeyDown_Minus;
+	bool KeyDown_0;
+	bool KeyDown_1;
+	bool KeyDown_2;
+	bool KeyDown_3;
+	bool KeyDown_4;
+	bool KeyDown_5;
+	bool KeyDown_6;
+	bool KeyDown_7;
+	bool KeyDown_8;
+	bool KeyDown_9;
+	bool KeyDown_Clear;
+	bool KeyDown_Prog;
+	bool KeyDown_KeyRel;
+	bool KeyDown_Enter;
+	bool KeyDown_Reset;
 
 	//
 	// Current program state.
@@ -241,8 +265,10 @@ protected:
 
 	char ValueChar(unsigned val);
 	void KeyClick();
+	void ResetKeyDown();
 
 	void DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit);
+	void DSKYKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit); 
 	void RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash);
 	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str);
 };
