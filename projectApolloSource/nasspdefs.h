@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/08/23 22:18:47  movieman523
+  *	SPS switch now works.
+  *	
   *	Revision 1.30  2005/08/21 17:21:10  movieman523
   *	Added event timer display.
   *	
@@ -162,7 +165,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 39; // number of bitmap handles
+const int nsurf = 40; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -191,6 +194,7 @@ const int nsurf = 39; // number of bitmap handles
 #define SRF_FDAIROLL			    36
 #define SRF_CWSLIGHTS				37
 #define SRF_EVENT_TIMER_DIGITS		38
+#define SRF_DSKYKEY					39
 
 //
 // Earth radius and gravity constants.
