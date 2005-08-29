@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2005/08/24 00:30:00  movieman523
+  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
+  *	
   *	Revision 1.73  2005/08/23 22:18:47  movieman523
   *	SPS switch now works.
   *	
@@ -452,10 +455,8 @@ void Saturn::RedrawPanel_SuitCabinDeltaPMeter (SURFHANDLE surf) {
 	// Limit needle to the meter.
 	//
 
-	if (scdp > 5.5)
-		scdp = 5.5;
-	if (scdp < -5.5)
-		scdp = -5.5;
+	if (scdp > 5.5)	scdp = 5.5;
+	if (scdp < -5.5) scdp = -5.5;
 
 	scdp = (scdp / 5.0) * 60.0;
 
@@ -466,10 +467,8 @@ void Saturn::RedrawPanel_SuitCabinDeltaPMeter (SURFHANDLE surf) {
 	// Limit needle to the meter.
 	//
 
-	if (cf < 0.5)
-		cf = 0.5;
-	if (cf > 1.1)
-		cf = 1.1;
+	if (cf < 0.1) cf = 0.1;
+	if (cf > 1.1) cf = 1.1;
 
 	cf = (cf - .6) / .4 * 60.0;
 
@@ -819,6 +818,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_FDAIROLL]       		= oapiCreateSurface (LOADBMP (IDB_FDAI_ROLL));
 		srf[SRF_CWSLIGHTS]       		= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));
 		srf[SRF_EVENT_TIMER_DIGITS]    	= oapiCreateSurface (LOADBMP (IDB_EVENT_TIMER));
+		srf[SRF_DSKYKEY]		    	= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -1023,7 +1023,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_DSKY2_DISPLAY,								_R(1582,  341, 1687,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY2_LIGHTS,								_R(1438,  346, 1540,  466), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSKY2_KEY,			                        _R(1418,  536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSKY2_KEY,			                        _R(1418,  536, 1705,  657), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		
 		oapiRegisterPanelArea (AID_MASTER_ALARM3,								_R(1084,  607, 1129,  643), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
@@ -1869,6 +1869,22 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
 		// TEST
 		/*if (s == &CabinFan1Switch) {
+			int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:TESTHEATER:PUMP");
+			if (CabinFan1Switch.IsUp())
+				*pump = SP_PUMP_ON;
+			else
+				*pump = SP_PUMP_OFF;
+		}
+
+		if (s == &CabinFan2Switch) {
+			int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:TESTEXCHANGER:PUMP");
+			if (CabinFan2Switch.IsUp())
+				*pump = SP_PUMP_ON;
+			else
+				*pump = SP_PUMP_OFF;
+		}
+		*/
+		/*
 			FCell *fc = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1");
 			if (CabinFan1Switch) {
 				fc->PLOAD(20.0);
@@ -2228,6 +2244,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		dsky.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
 		return true;
 
+	case AID_DSKY_KEY:
+		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
+		return true;
+
 	case AID_FDAI_RIGHT:
 		fdaiRight.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
 		return true;
@@ -2238,6 +2258,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_DSKY2_DISPLAY:
 		dsky2.RenderData(surf, srf[SRF_DIGITAL], srf[SRF_DSKYDISP]);
+		return true;
+
+	case AID_DSKY2_KEY:
+		dsky2.RenderKeys(surf, srf[SRF_DSKYKEY]);
 		return true;
 
 	case AID_ABORT_BUTTON:
