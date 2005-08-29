@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/08/29 19:14:13  tschachim
+  *	Rendering of the DSKY keys.
+  *	
   *	Revision 1.29  2005/08/19 13:42:54  tschachim
   *	Added missing DSKY display elements.
   *	
@@ -676,11 +679,11 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MFDRIGHT,					    _R(1032, 1564, 1457, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ABORT,							_R( 549,  870,  702,  942), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
         // 3 pos Engine Arm Lever
-	    oapiRegisterPanelArea (AID_ENG_ARM,							_R( 163,  1078, 205, 1118), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+	    oapiRegisterPanelArea (AID_ENG_ARM,							_R( 166,  1078, 208, 1118), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		// 2 pos Descent Engine Command Override Lever
-		oapiRegisterPanelArea (AID_DESCENT_ENGINE_SWITCH,			_R( 87,  1321,  129, 1361), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DESCENT_ENGINE_SWITCH,			_R( 90,  1321,  132, 1361), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
         // 3 pos Mode control switches
-	    oapiRegisterPanelArea (AID_MODECONTROL,						_R( 524,  1425, 772, 1465), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+	    oapiRegisterPanelArea (AID_MODECONTROL,						_R( 529,  1430, 777, 1470), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		// DSKY		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,					_R( 762, 1560,  867, 1736), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,						_R( 618, 1565,  720, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
@@ -810,14 +813,14 @@ void sat5_lmpkd::SetSwitches(int panel) {
 	AbortStageSwitch.Init(78, 4, 75, 64, srf[SRF_LMABORTBUTTON], AbortSwitchesRow);
 
 	EngineArmSwitchesRow.Init(AID_ENG_ARM,MainPanel);
-	EngineArmSwitch.Init (0, 0, 42, 40, srf[SRF_LMTHREEPOSLEVER], EngineArmSwitchesRow);
+	EngineArmSwitch.Init (0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], EngineArmSwitchesRow);
 
 	EngineDescentCommandOverrideSwitchesRow.Init(AID_DESCENT_ENGINE_SWITCH,MainPanel);
-	EngineDescentCommandOverrideSwitch.Init (0, 0, 42, 40, srf[SRF_LMTWOPOSLEVER], EngineDescentCommandOverrideSwitchesRow);
+	EngineDescentCommandOverrideSwitch.Init (0, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], EngineDescentCommandOverrideSwitchesRow);
 
 	ModeControlSwitchesRow.Init(AID_MODECONTROL,MainPanel);
-	ModeControlPNGSSwitch.Init (0, 0, 42, 40, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
-	ModeControlAGSSwitch.Init (93, 0, 42, 40, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
+	ModeControlPNGSSwitch.Init (0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
+	ModeControlAGSSwitch.Init (93, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
 
 }
 
@@ -951,8 +954,10 @@ bool sat5_lmpkd::clbkPanelMouseEvent (int id, int event, int mx, int my)
 {
 	static int ctrl = 0;
 
+
 	if (MainPanel.CheckMouseClick(id, event, mx, my))
 		return true;
+
 
 	switch (id) {
 	// panel 0 events:
