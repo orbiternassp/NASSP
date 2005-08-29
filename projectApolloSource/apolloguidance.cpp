@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2005/08/23 20:25:42  movieman523
+  *	AGC now saves octal data as well as address.
+  *	
   *	Revision 1.38  2005/08/23 20:13:12  movieman523
   *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
   *	
@@ -168,6 +171,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	VesselISP = 1000000;
 
 	Reset = false;
+	CurrentTimestep = 0;
 	LastTimestep = 0;
 	LastEventTime = 0.0;
 	InOrbit = false;
@@ -1099,8 +1103,8 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 		//
 
 /*			TODO: Disabled for the moment because if I have a long timestep during test flights
-		      and the cycles get limited, the AGC loses time synchronisation and everything 
-			  is messed up.
+		          and the cycles get limited, the AGC loses time synchronisation and everything 
+			      is messed up.
 
 		if (cycles > 100000)
 			cycles = 100000;
