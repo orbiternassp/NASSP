@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/19 13:45:26  tschachim
+  *	Added missing DSKY display elements.
+  *	Added channel 013 handling.
+  *	
   *	Revision 1.12  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -81,6 +85,7 @@ DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), 
 
 {
 	Reset();
+	ResetKeyDown();
 	KeyCodeIOChannel = IOChannel;
 }
 
@@ -388,26 +393,6 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 void DSKY::ProcessKeyPress(int mx, int my)
 
 {
-	bool KeyDown_Verb;
-	bool KeyDown_Noun;
-	bool KeyDown_Plus;
-	bool KeyDown_Minus;
-	bool KeyDown_0;
-	bool KeyDown_1;
-	bool KeyDown_2;
-	bool KeyDown_3;
-	bool KeyDown_4;
-	bool KeyDown_5;
-	bool KeyDown_6;
-	bool KeyDown_7;
-	bool KeyDown_8;
-	bool KeyDown_9;
-	bool KeyDown_Clear;
-	bool KeyDown_Prog;
-	bool KeyDown_KeyRel;
-	bool KeyDown_Enter;
-	bool KeyDown_Reset;
-
 	if (mx > 2 && mx < 39) {
 		if (my > 21 && my < 59) {
 			KeyDown_Verb = true;
@@ -507,71 +492,6 @@ void DSKY::ProcessKeyPress(int mx, int my)
 		}
 	}
 
-/*	if (mx > 0 && mx < 26){
-		if (my > 13 && my < 39){
-			VerbPressed();
-		}
-		if (my > 45 && my < 69){
-			NounPressed();
-		}
-	}else if (mx > 172 && mx < 200){
-		if (my > 13 && my < 39){
-			EnterPressed();
-		}
-		if (my > 45 && my < 69){
-			ResetPressed();
-		}
-	}else if (mx > 27 && mx < 54){
-		if (my > 2 && my < 25){
-			PlusPressed();
-		}
-		if (my > 30 && my < 55){
-			MinusPressed();
-		}
-		if (my > 60 && my < 85){
-			NumberPressed(0);
-		}
-	}else if (mx > 57 && mx < 83){
-		if (my > 2 && my < 25){
-			NumberPressed(7);
-		}
-		if (my > 30 && my < 55){
-			NumberPressed(4);
-		}
-		if (my > 60 && my < 85){
-			NumberPressed(1);
-		}
-	}else if (mx > 87 && mx < 112){
-		if (my > 2 && my < 25){
-			NumberPressed(8);
-		}
-		if (my > 30 && my < 55){
-			NumberPressed(5);
-		}
-		if (my > 60 && my < 85){
-			NumberPressed(2);
-		}
-	}else if (mx > 117 && mx < 141){
-		if (my > 2 && my < 25){
-			NumberPressed(9);
-		}
-		if (my > 30 && my < 55){
-			NumberPressed(6);
-		}
-		if (my > 60 && my < 85){
-			NumberPressed(3);
-		}
-	}else if (mx > 146 && mx < 169){
-		if (my > 2 && my < 25){
-			ClearPressed();
-		}
-		if (my > 30 && my < 55){
-			ProgPressed();
-		}
-		if (my > 60 && my < 85){
-			KeyRel();
-		}
-	}*/
 }
 
 void DSKY::ProcessKeyRelease(int mx, int my)
@@ -587,7 +507,12 @@ void DSKY::ProcessKeyRelease(int mx, int my)
 		// SendKeyCode(0);
 	}
 
-#if 0
+	ResetKeyDown();
+}
+
+void DSKY::ResetKeyDown() 
+
+{
 	// Reset KeyDown-flags
 	KeyDown_Verb = false;
 	KeyDown_Noun = false;
@@ -608,7 +533,6 @@ void DSKY::ProcessKeyRelease(int mx, int my)
 	KeyDown_KeyRel = false;
 	KeyDown_Enter = false;
 	KeyDown_Reset = false;
-#endif
 }
 
 void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, bool Flash)
@@ -659,7 +583,7 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
 {
 	oapiBlt(surf, disp, 66,   3, 35,  0, 35, 10, SURF_PREDEF_CK);
 	oapiBlt(surf, disp, 66,  38, 35, 10, 35, 10, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  7,  38, 35, 20, 35, 10, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  6,  38, 35, 20, 35, 10, SURF_PREDEF_CK);
 
 	oapiBlt(surf, disp,  8,  73,  0, 32, 89,  4, SURF_PREDEF_CK);
 	oapiBlt(surf, disp,  8, 107,  0, 32, 89,  4, SURF_PREDEF_CK);
@@ -669,7 +593,7 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
 		//
 		// Do stuff to update Comp Acty light.
 		//
-		oapiBlt(surf, disp,  7,   3,  0,  0, 35, 31, SURF_PREDEF_CK);
+		oapiBlt(surf, disp,  6,   4,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 
 	RenderTwoDigitDisplay(surf, digits, 67, 16, Prog, false);
@@ -683,6 +607,47 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
 	RenderSixDigitDisplay(surf, digits, 3, 83, R1);
 	RenderSixDigitDisplay(surf, digits, 3, 117, R2);
 	RenderSixDigitDisplay(surf, digits, 3, 151, R3);
+}
+
+void DSKY::RenderKeys(SURFHANDLE surf, SURFHANDLE keys)
+
+{
+	DSKYKeyBlt(surf, keys, 2, 21, 0, 20, KeyDown_Verb);
+	DSKYKeyBlt(surf, keys, 2, 61, 0, 60, KeyDown_Noun);
+
+	DSKYKeyBlt(surf, keys, 2 + 41 * 1, 1,  41 * 1, 0,  KeyDown_Plus);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 1, 41, 41 * 1, 40, KeyDown_Minus);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 1, 81, 41 * 1, 80, KeyDown_0);
+
+	DSKYKeyBlt(surf, keys, 2 + 41 * 2, 1,  41 * 2, 0,  KeyDown_7);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 2, 41, 41 * 2, 40, KeyDown_4);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 2, 81, 41 * 2, 80, KeyDown_1);
+
+	DSKYKeyBlt(surf, keys, 2 + 41 * 3, 1,  41 * 3, 0,  KeyDown_8);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 3, 41, 41 * 3, 40, KeyDown_5);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 3, 81, 41 * 3, 80, KeyDown_2);
+
+	DSKYKeyBlt(surf, keys, 2 + 41 * 4, 1,  41 * 4, 0,  KeyDown_9);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 4, 41, 41 * 4, 40, KeyDown_6);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 4, 81, 41 * 4, 80, KeyDown_3);
+
+	DSKYKeyBlt(surf, keys, 2 + 41 * 5, 1,  41 * 5, 0,  KeyDown_Clear);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 5, 41, 41 * 5, 40, KeyDown_Prog);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 5, 81, 41 * 5, 80, KeyDown_KeyRel);
+
+	DSKYKeyBlt(surf, keys, 2 + 41 * 6, 21, 41 * 6, 20, KeyDown_Enter);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 6, 61, 41 * 6, 60, KeyDown_Reset);
+}
+
+void DSKY::DSKYKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit) 
+
+{
+	if (lit) {
+		oapiBlt(surf, keys, dstx, dsty, srcx, srcy, 38, 37);
+	}
+	else {
+		oapiBlt(surf, keys, dstx, dsty, srcx, srcy + 120, 38, 37);
+	}
 }
 
 typedef union
