@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/19 13:35:24  tschachim
+  *	Logging enabled in debug configuration
+  *	
   *	Revision 1.1  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -50,6 +53,7 @@ static long lastTime = -1;
 
 char *intToBinaryString(char *buffer, int i);
 
+
 void IMU::LogInit() 
 
 {
@@ -73,8 +77,24 @@ void IMU::LogState(int channel, char *device, int value)
 	strcpy(buffer, timeline + 11);
 	
 	intToBinaryString(buffer1, value);
-		
-	fprintf(logFile, "%.8s.%03hu Ch %03o %s %s PIPA %o %o %o CDUCMD %o %o %o GYRO %o IMU %.2f %.2f %.2f\n", buffer, tstruct.millitm, channel, device, buffer1,
+
+#ifdef AGC_SOCKET_ENABLED
+	fprintf(logFile, "%.8s.%03hu Ch %03o %s %s PIPA N/A N/A N/A CDUCMD N/A N/A N/A GYRO N/A IMU %.2f %.2f %.2f\n", buffer, tstruct.millitm, channel, device, buffer1,
+//		    agc.GetErasable(0, RegPIPAX), 
+//		    agc.GetErasable(0, RegPIPAY), 
+//			agc.GetErasable(0, RegPIPAZ), 
+//			agc.GetErasable(0, RegCDUXCMD),
+//			agc.GetErasable(0, RegCDUYCMD),
+//			agc.GetErasable(0, RegCDUZCMD),
+			//state->Erasable[0][RegCDUX],
+			//state->Erasable[0][RegCDUY],
+			//state->Erasable[0][RegCDUZ],			
+//			agc.GetErasable(0, RegGYROCTR),
+			radToDeg(Gimbal.X),
+			radToDeg(Gimbal.Y),
+			radToDeg(Gimbal.Z));
+#else
+		fprintf(logFile, "%.8s.%03hu Ch %03o %s %s PIPA %o %o %o CDUCMD %o %o %o GYRO %o IMU %.2f %.2f %.2f\n", buffer, tstruct.millitm, channel, device, buffer1,
 		    agc.GetErasable(0, RegPIPAX), 
 		    agc.GetErasable(0, RegPIPAY), 
 			agc.GetErasable(0, RegPIPAZ), 
@@ -88,6 +108,7 @@ void IMU::LogState(int channel, char *device, int value)
 			radToDeg(Gimbal.X),
 			radToDeg(Gimbal.Y),
 			radToDeg(Gimbal.Z));
+#endif
 			
 	fflush(logFile);
 #endif
@@ -116,6 +137,7 @@ void IMU::LogTimeStep(long simt)
 	fflush(logFile);
 #endif
 }
+
 
 void IMU::LogVector(char* message, IMU_Vector3 v) 
 

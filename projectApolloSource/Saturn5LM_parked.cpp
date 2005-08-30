@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.31  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -638,10 +641,12 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 		if ((EngineArmSwitch.IsDown())  && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
+//TODOX15 is it useful to do it on every step ? surely no
 			agc.SetInputChannelBit(030, 3, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
+//TODOX15
 			agc.SetInputChannelBit(030, 3, false);
 		}
 		
@@ -660,10 +665,12 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 		if ((EngineArmSwitch.IsDown() )&& !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
+// TODOX15
 			agc.SetInputChannelBit(030, 3, true);
 		} else {
 			SetThrusterResource(th_hover[0], NULL);
 			SetThrusterResource(th_hover[1], NULL);
+//TODOX15	
 			agc.SetInputChannelBit(030, 3, false);
 		}
 		if (EVA_IP){

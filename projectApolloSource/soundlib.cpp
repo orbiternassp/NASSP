@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/03 10:44:33  spacex15
+  *	improved audio landing synchro
+  *	
   *	Revision 1.3  2005/07/15 07:58:54  spacex15
   *	fixed CTD short while after landing
   *	
@@ -581,7 +584,7 @@ int SoundEvent::play(SoundLib soundlib,
 	// is Sound still playing ?
 	// if yes let it play
 
-    TRACESETUP("SOUNDEVENT PLAY");
+//   TRACESETUP("SOUNDEVENT PLAY");
 
 	if(lastplayed >= 0)
 	{
@@ -650,21 +653,21 @@ int SoundEvent::play(SoundLib soundlib,
 
     kk = lastplayed+1;
 	sprintf(buffers,"%f",soundevents[kk].altitude);
-	TRACE (buffers);
-	sprintf(buffers,"%f",altitude);
-	TRACE (buffers);
+//	TRACE (buffers);
+//	sprintf(buffers,"%f",altitude);
+//	TRACE (buffers);
 
     // if mode = 1 BRAKING it's altitude 
 	// if mode = 0 MONITOR it's time to ignition
 
 	if (mode == 0)
     {
-		TRACE("TEST PDI IGNIT");
+//		TRACE("TEST PDI IGNIT");
 		sprintf(buffers,"TEST PDI IGNIT NEXTEVENT %d %f %s VERSUS %f",kk,
 			        soundevents[kk].timetoignition,soundevents[kk].filenames,
 					   timetopdi);
 //		sprintf(oapiDebugString(),"%s",buffers);
-		TRACE(buffers);
+//		TRACE(buffers);
         /* skip too old sounds */
 		while (    (soundevents[kk].timetoignition > timetopdi)
 			    && (soundevents[kk+1].timetoignition > timetopdi)
@@ -676,15 +679,15 @@ int SoundEvent::play(SoundLib soundlib,
 	}
 	else if (mode == 1)
 	{
-sprintf(buffers,"TIME AFTER PDI %f", timesincepdi);
-TRACE(buffers);
+//sprintf(buffers,"TIME AFTER PDI %f", timesincepdi);
+//TRACE(buffers);
         
 		if ((timeafterpdi < 160))
 		{
-        TRACE("TIME AFTER");
+//        TRACE("TIME AFTER");
 		sprintf(buffers,"TIME AFTER %f %f",soundevents[kk].timeafterignition,
 			                                                     timesincepdi);
-		TRACE(buffers);
+//		TRACE(buffers);
 
 		sprintf(buffers,"TEST AFTER PDI NEXTEVENT %d %f %s VERSUS %f",kk,
 			        soundevents[kk].timeafterignition,soundevents[kk].filenames,
@@ -703,10 +706,10 @@ TRACE(buffers);
 		}
         else
 		{
-        TRACE("TIME TO APPROACH");
+//        TRACE("TIME TO APPROACH");
 		sprintf(buffers,"TIME TO APP %f %f",soundevents[kk].timetoapproach,
 			                                                     timetoapproach);
-		TRACE(buffers);
+//		TRACE(buffers);
 
 		sprintf(buffers,"TEST TO APPROACH NEXTEVENT %d %f %s VERSUS %f",kk,
 			        soundevents[kk].timetoapproach,soundevents[kk].filenames,
@@ -726,9 +729,9 @@ TRACE(buffers);
 	}
 	else if (mode == 2)
 	{
-        TRACE("TEST ALTITUDE");
+//        TRACE("TEST ALTITUDE");
 		sprintf(buffers,"ALT %d %f %f",mode,soundevents[kk].altitude,altitude);
-		TRACE(buffers);
+//		TRACE(buffers);
 
 //		sprintf(buffers,"TEST ALTI NEXTEVENT %d %f %s VERSUS %f MODE %d",kk,
 //			        soundevents[kk].altitude,soundevents[kk].filenames,
@@ -753,8 +756,8 @@ TRACE(buffers);
 	else return 0;
  
 
-	TRACE("ON VA JOUER ");
-	TRACE(soundevents[kk].filenames);
+//	TRACE("ON VA JOUER ");
+//	TRACE(soundevents[kk].filenames);
 	
 
 	strcpy(names,soundevents[kk].filenames);
@@ -773,8 +776,8 @@ TRACE(buffers);
 	lastplayed = kk;
 
 
-	sprintf(buffers,"SON %d NEW %d OFFSET %f", kk, *newbuffer,*offset);
-	TRACE(buffers);
+//	sprintf(buffers,"SON %d NEW %d OFFSET %f", kk, *newbuffer,*offset);
+//	TRACE(buffers);
 
 	return 1;
 }

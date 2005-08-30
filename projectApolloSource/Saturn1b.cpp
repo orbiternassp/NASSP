@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/23 22:18:47  movieman523
+  *	SPS switch now works.
+  *	
   *	Revision 1.23  2005/08/23 21:29:03  movieman523
   *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
   *	
@@ -113,6 +116,11 @@
 #include "saturn.h"
 
 #include "saturn1b.h"
+
+#include "tracer.h"
+
+char trace_file[] = "NASP-trace.txt";
+
 
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
