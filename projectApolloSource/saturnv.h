@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/17 00:01:59  movieman523
+  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
+  *	
   *	Revision 1.9  2005/08/15 18:48:50  movieman523
   *	Moved the stage destroy code into a generic function for Saturn V and 1b.
   *	
@@ -83,6 +86,7 @@ private:
 	void SetSecondStage1 ();
 	void SetSecondStage2 ();
 	void SetThirdStage ();
+	MESHHANDLE GetInterstageMesh();
 	void Retro1(OBJHANDLE hvessel,double gaz);
 	void Retro2(OBJHANDLE hvessel,double gaz);
 	void setupS4B(OBJHANDLE hvessel);
