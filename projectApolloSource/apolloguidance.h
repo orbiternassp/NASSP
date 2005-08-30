@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.17  2005/08/19 13:55:35  tschachim
   *	Added Channel 13 handling
   *	
@@ -83,7 +86,9 @@ class DSKY;
 class IMU;
 
 #include "control.h"
+#ifndef AGC_SOCKET_ENABLED
 #include "yaAGC/agc_engine.h"
+#endif
 
 //
 // Velocity in feet per second or meters per second?
@@ -324,6 +329,10 @@ protected:
 
 	bool KbInUse;
 
+#ifdef AGC_SOCKET_ENABLED
+	int ConnectionSocket;
+#endif
+
 	//
 	// DSKY interface functions.
 	//
@@ -502,11 +511,18 @@ protected:
 	VESSEL	*OurVessel;
 	SoundLib &soundlib;
 
+
+#ifdef AGC_SOCKET_ENABLED
+bool ApolloGuidance::ReceiveFromSocket(unsigned char packet[4]);
+#else
+
+	
 	//
 	// Virtual AGC.
 	//
 
 	agc_t vagc;
+#endif
 };
 
 extern char TwoSpaceTwoFormat[];

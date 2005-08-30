@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/14 16:08:20  tschachim
+  *	LM is now a VESSEL2
+  *	Changed panel restore mechanism because the CSM mechanism
+  *	caused CTDs, reason is still unknown.
+  *	
   *	Revision 1.17  2005/08/13 20:20:17  movieman523
   *	Created MissionTimer class and wired it into the LEM and CSM.
   *	
@@ -224,6 +229,8 @@ protected:
 	SwitchRow ModeControlSwitchesRow;
 	ThreePosSwitch ModeControlPNGSSwitch;
 	ThreePosSwitch ModeControlAGSSwitch;
+    ToggleSwitch IMUCageSwitch;
+
 
 
 	bool RCS_Full;

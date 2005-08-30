@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.17  2005/08/19 23:54:13  movieman523
   *	Should have fixed Prog 37, at least for CSM.
   *	
@@ -997,6 +1000,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 
 {
 	if (Yaagc && !PadLoaded) {
+
+#ifndef AGC_SOCKET_ENABLED		
 		double latitude, longitude, radius, heading;
 
 		// init pad load
@@ -1016,6 +1021,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		// set launch pad altitude
 		vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
 		//State->Erasable[2][0272] = 01;	// 17.7 nmi
+#endif
 
 		PadLoaded = true;
 	}
@@ -1098,6 +1104,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 
 			apDist -= 6.373338e6;
 			peDist -= 6.373338e6;
+
 
 			sprintf(oapiDebugString(), "P11 - Vel %.0f Vert. Vel %.0f Alt %.0f ApD %.0f PeD %.0f",  
 				length(vel) * 3.2808399, vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 

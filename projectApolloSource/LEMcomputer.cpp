@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/27 23:35:54  lazyd
+  *	Added P30 but don't use it yet
+  *	
   *	Revision 1.19  2005/08/22 19:47:33  movieman523
   *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
   *	
@@ -114,6 +117,12 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s
 	simcomputert = -1.;
     timeremaining = 99999.;
 	timeafterpdi = -1.;
+
+
+// TODOX15  at present  switch is not done so tell agc that PNGS is in control
+
+	SetInputChannelBit(030,10,1);
+
 
 }
 

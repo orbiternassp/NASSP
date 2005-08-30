@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/08/29 21:53:38  spacex15
+  *	fixed broken LM switch display
+  *	
   *	Revision 1.30  2005/08/29 19:14:13  tschachim
   *	Rendering of the DSKY keys.
   *	
@@ -194,6 +197,7 @@ void sat5_lmpkd::InitPanel() {
 	EngineDescentCommandOverrideSwitch.Register(PSH, "EngineDescentCommandOverrideSwitch", TOGGLESWITCH_DOWN);
 	ModeControlPNGSSwitch.Register(PSH,"ModeControlPNGSSwitch", THREEPOSSWITCH_CENTER);
 	ModeControlAGSSwitch.Register(PSH,"ModeControlAGSSwitch", THREEPOSSWITCH_CENTER);
+	IMUCageSwitch.Register(PSH,"IMUCageSwitch", TOGGLESWITCH_DOWN);
 
 
 	Cswitch1=false;
@@ -819,8 +823,11 @@ void sat5_lmpkd::SetSwitches(int panel) {
 	EngineDescentCommandOverrideSwitch.Init (0, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], EngineDescentCommandOverrideSwitchesRow);
 
 	ModeControlSwitchesRow.Init(AID_MODECONTROL,MainPanel);
+
 	ModeControlPNGSSwitch.Init (0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
 	ModeControlAGSSwitch.Init (93, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
+
+	IMUCageSwitch.Init(192,0,42,40,srf[SRF_LMTWOPOSLEVER],ModeControlSwitchesRow);
 
 }
 
@@ -872,6 +879,16 @@ void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
  		    agc.SetInputChannelBit(031, 14, false);
 		}
     }
+	else if (s == &IMUCageSwitch) {
+	 		if (s->IsUp()) {
+				imu.SetCaged(true);
+			}
+			else if (s->IsDown()) {
+				imu.SetCaged(false);
+				imu.TurnOn();
+			}
+	
+	}
 }
 
 

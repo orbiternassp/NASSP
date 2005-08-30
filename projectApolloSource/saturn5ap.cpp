@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.6  2005/07/29 23:05:38  movieman523
   *	Added Inertial Guidance Mode start time to scenario file.
   *	
@@ -66,7 +69,7 @@
 
 void SaturnV::AttitudeLaunch2()
 {
-	TRACESETUP("AttitudeLaunch2");
+//	TRACESETUP("AttitudeLaunch2");
 
 	VECTOR3 ang_vel;
 	GetAngularVel(ang_vel);// gets current angular velocity for stabilizer and rate control
@@ -153,7 +156,7 @@ void SaturnV::AttitudeLaunch2()
 
 void SaturnV::AttitudeLaunch4()
 {
-	TRACESETUP("AttitudeLaunch4");
+//	TRACESETUP("AttitudeLaunch4");
 
 	VECTOR3 ang_vel;
 	GetAngularVel(ang_vel);// gets current angular velocity for stabilizer and rate control
