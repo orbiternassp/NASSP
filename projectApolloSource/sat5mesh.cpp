@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/24 00:30:00  movieman523
+  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
+  *	
   *	Revision 1.15  2005/08/21 22:21:00  movieman523
   *	Fixed SM RCS and activated SIVB RCS at all times for now.
   *	
@@ -107,6 +110,8 @@ PARTICLESTREAMSPEC srb_exhaust = {
 static MESHHANDLE hCRAWL;
 static MESHHANDLE hsat5stg1;
 static MESHHANDLE hsat5intstg;
+static MESHHANDLE hsat5intstg4;
+static MESHHANDLE hsat5intstg8;
 static MESHHANDLE hsat5stg2;
 static MESHHANDLE hsat5stg3;
 static MESHHANDLE hsat5stg31;
@@ -128,7 +133,9 @@ void LoadSat5Meshes()
 
 {
 	LOAD_MESH(hsat5stg1, "sat5stg1");
-	LOAD_MESH(hsat5intstg, "sat5intstg");
+	LOAD_MESH(hsat5intstg, "ProjectApollo/sat5intstg");
+	LOAD_MESH(hsat5intstg4, "ProjectApollo/sat5intstg4");
+	LOAD_MESH(hsat5intstg8, "ProjectApollo/sat5intstg8");
 	LOAD_MESH(hsat5stg2, "sat5stg2");
 	LOAD_MESH(hsat5stg3, "sat5stg3");
 	LOAD_MESH(hsat5stg31, "sat5stg31");
@@ -139,6 +146,21 @@ void LoadSat5Meshes()
 	LOAD_MESH(hapollo8lta, "apollo8_lta");
 	LOAD_MESH(hlta_2r, "LTA_2R");
 	LOAD_MESH(hCRAWL, "CRAWLER");
+}
+
+MESHHANDLE SaturnV::GetInterstageMesh()
+
+{
+	switch (SII_UllageNum) {
+	case 4:
+		return hsat5intstg4;
+
+	case 8:
+		return hsat5intstg8;
+
+	default:
+		return hsat5intstg;
+	}
 }
 
 void SaturnV::BuildFirstStage (int bstate)
@@ -166,7 +188,7 @@ void SaturnV::BuildFirstStage (int bstate)
 	AddMesh (hsat5stg1, &mesh_dir);
 	if (bstate >=1){
 		mesh_dir=_V(0,0,-30.5+STG0O);
-		AddMesh (hsat5intstg, &mesh_dir);
+		AddMesh (GetInterstageMesh(), &mesh_dir);
 	}
 	if (bstate >=1){
 		mesh_dir=_V(0,0,-17.2+STG0O);
@@ -296,7 +318,7 @@ void SaturnV::SetFirstStage ()
 	VECTOR3 mesh_dir=_V(0,0,-54.0+STG0O);
 	AddMesh (hsat5stg1, &mesh_dir);
 	mesh_dir=_V(0,0,-30.5+STG0O);
-	AddMesh (hsat5intstg, &mesh_dir);
+	AddMesh (GetInterstageMesh(), &mesh_dir);
 	mesh_dir=_V(0,0,-17.2+STG0O);
 	AddMesh (hsat5stg2, &mesh_dir);
 	mesh_dir=_V(0,0,2.+STG0O);
@@ -380,7 +402,7 @@ void SaturnV::SetSecondStage ()
 	SetLiftCoeffFunc (0);
     ShiftCentreOfMass (_V(0,0,STG1O));
 	VECTOR3 mesh_dir=_V(0,0,-30.5-STG1O);
-	AddMesh (hsat5intstg, &mesh_dir);
+	AddMesh (GetInterstageMesh(), &mesh_dir);
 	mesh_dir=_V(0,0,-17.2-STG1O);
 	AddMesh (hsat5stg2, &mesh_dir);
 	mesh_dir=_V(0,0,2.-STG1O);
@@ -465,14 +487,14 @@ void SaturnV::SetSecondStage ()
 		VECTOR3	m_exhaust_pos12= _V(-3.55,3.7,-33.15-STG1O);
 		VECTOR3 m_exhaust_pos13= _V(-3.55,-3.7,-33.15-STG1O);
 
-		th_ull[0] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), 100000 , ph_2nd, 3000);
-		th_ull[1] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), 100000 , ph_2nd, 3000);
-		th_ull[2] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), 100000 , ph_2nd, 3000);
-		th_ull[3] = CreateThruster (m_exhaust_pos9, _V( 0,0,1), 100000 , ph_2nd, 3000);
-		th_ull[4] = CreateThruster (m_exhaust_pos10, _V( 0,0,1),100000 , ph_2nd, 3000);
-		th_ull[5] = CreateThruster (m_exhaust_pos11, _V( 0,0,1),100000, ph_2nd, 3000);
-		th_ull[6] = CreateThruster (m_exhaust_pos12, _V( 0,0,1),100000, ph_2nd, 3000);
-		th_ull[7] = CreateThruster (m_exhaust_pos13, _V( 0,0,1),100000, ph_2nd, 3000);
+		th_ull[0] = CreateThruster (m_exhaust_pos10, _V( 0,0,1),100000 , ph_2nd, 3000);
+		th_ull[1] = CreateThruster (m_exhaust_pos11, _V( 0,0,1),100000, ph_2nd, 3000);
+		th_ull[2] = CreateThruster (m_exhaust_pos12, _V( 0,0,1),100000, ph_2nd, 3000);
+		th_ull[3] = CreateThruster (m_exhaust_pos13, _V( 0,0,1),100000, ph_2nd, 3000);
+		th_ull[4] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), 100000 , ph_2nd, 3000);
+		th_ull[5] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), 100000 , ph_2nd, 3000);
+		th_ull[6] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), 100000 , ph_2nd, 3000);
+		th_ull[7] = CreateThruster (m_exhaust_pos9, _V( 0,0,1), 100000 , ph_2nd, 3000);
 
 		for (i = 0; i < SII_UllageNum; i ++)
 			AddExhaust (th_ull[i], 5.0, 0.15);
@@ -1010,9 +1032,26 @@ void SaturnV::SeparateStage (int stage)
 
 		CrashBumpS.play(NOLOOP, 150);
 
-		char VName[256];
-		strcpy (VName, GetName()); strcat (VName, "-INTSTG");
-		hintstg = oapiCreateVessel(VName,"sat5intstg",vs1);
+		char VName[256], *CName;
+
+		strcpy (VName, GetName()); 
+		strcat (VName, "-INTSTG");
+
+		switch (SII_UllageNum) {
+		case 4:
+			CName = "sat5intstg4";
+			break;
+
+		case 8:
+			CName = "sat5intstg8";
+			break;
+
+		default:
+			CName = "sat5intstg";
+			break;
+		}
+
+		hintstg = oapiCreateVessel(VName, CName, vs1);
 		SetSecondStage1 ();
 	}
 
