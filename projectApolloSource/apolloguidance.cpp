@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.40  2005/08/29 19:12:57  tschachim
   *	Bugfix initialization of CurrentTimestep.
   *	
@@ -1275,7 +1278,7 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 #else
 			// Physical AGC timing was generated from a master 1024 KHz clock, divided by 12.
 			// This resulted in a machine cycle of just over 11.7 microseconds.
-			int cycles = (long) ((simt - LastTimestep) * 1024000 / 12);
+			int cycles = (long) ((simdt) * 1024000 / 12);
 
 		//
 		// Don't want to kill a slow PC.
@@ -1291,6 +1294,7 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 		if (cycles < 1)
 			cycles = 1;
 */
+
 		for (i = 0; i < cycles; i++) {
 			agc_engine(&vagc);
 		}
