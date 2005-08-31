@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.31  2005/08/29 21:53:38  spacex15
   *	fixed broken LM switch display
   *	
@@ -687,7 +690,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		// 2 pos Descent Engine Command Override Lever
 		oapiRegisterPanelArea (AID_DESCENT_ENGINE_SWITCH,			_R( 90,  1321,  132, 1361), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
         // 3 pos Mode control switches
-	    oapiRegisterPanelArea (AID_MODECONTROL,						_R( 529,  1430, 777, 1470), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+	    oapiRegisterPanelArea (AID_MODECONTROL,						_R( 529,  1425, 777, 1470), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		// DSKY		
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,					_R( 762, 1560,  867, 1736), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,						_R( 618, 1565,  720, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
@@ -824,10 +827,10 @@ void sat5_lmpkd::SetSwitches(int panel) {
 
 	ModeControlSwitchesRow.Init(AID_MODECONTROL,MainPanel);
 
-	ModeControlPNGSSwitch.Init (0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
-	ModeControlAGSSwitch.Init (93, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
+	ModeControlPNGSSwitch.Init (0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
+	ModeControlAGSSwitch.Init (93, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
 
-	IMUCageSwitch.Init(192,0,42,40,srf[SRF_LMTWOPOSLEVER],ModeControlSwitchesRow);
+	IMUCageSwitch.Init(191,0,34,39,srf[SRF_LMTWOPOSLEVER],ModeControlSwitchesRow);
 
 }
 
