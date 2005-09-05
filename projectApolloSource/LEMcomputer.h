@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/27 23:36:52  lazyd
+  *	P30 added
+  *	
   *	Revision 1.15  2005/08/22 19:47:33  movieman523
   *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
   *	
@@ -187,7 +190,7 @@ protected:
 	void ProceedNoData();
 	void TerminateProgram();
 	// Descent, Abort, Ascent and Rendezvous routines
-	void Prog13(double simt);
+	void Prog12(double simt);
 	void Prog30(double simt);
 	void Prog32(double simt);
 	void Prog33(double simt);
@@ -205,7 +208,7 @@ protected:
 	void Prog70(double simt);
 	void Prog71(double simt);
 	void AbortAscent(double simt);
-	void PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel, double a, 
+	void PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel,
 		double Mu, double Time, VECTOR3 &NewPos, VECTOR3 &NewVel, double &NewVelMag);
 	void Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu, 
 						  VECTOR3 &v1, VECTOR3 &v2);
@@ -213,7 +216,10 @@ protected:
 	void OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, double &apo, double &tta, 
 				 double &per, double &ttp);
 	void EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos);
-	void Prog13Pressed(int R1, int R2, int R3);
+	void Phase(double &phase, double &delta);
+	void Radar(double &range, double &rate);
+	void UplinkStateVector(int type, VECTOR3 &pos, VECTOR3 &vel);
+	void Prog12Pressed(int R1, int R2, int R3);
 	void Prog34Pressed(int R1, int R2, int R3);
 	void Prog41Pressed(int R1, int R2, int R3);
 	void Prog63Pressed(int R1, int R2, int R3);
@@ -235,8 +241,8 @@ protected:
 	//	Ascent Auto-Pilot Data
 	//
 
-	void Prog12(double simt);
-	void Prog12Pressed(int R1, int R2, int R3);
+	void Prog13(double simt);
+	void Prog13Pressed(int R1, int R2, int R3);
 	double iba;							//		Misc stuff, disregard
 
 	Sound LunarAscent;
