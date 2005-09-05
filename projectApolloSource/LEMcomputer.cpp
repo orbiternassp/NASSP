@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.20  2005/08/27 23:35:54  lazyd
   *	Added P30 but don't use it yet
   *	
@@ -367,6 +370,20 @@ void LEMcomputer::DisplayNounData(int noun)
 			SetR3((int)((OurVessel->GetFuelMass() / OurVessel->GetMaxFuelMass()) * 10000.0));
 		}
 		break;
+
+	//
+	// 54: range, range rate, theta
+	//
+
+	case 54:
+		double range, rate, phase, delta;
+		Phase(phase, delta);
+		Radar(range, rate);
+		SetR1 ((int) (range/10.0));
+		SetR2 ((int) (rate*10.0));
+		SetR3 ((int) (phase*DEG*100.0));
+		break;
+
 	//
 	// 60: fwd velocity, Altitude rate, Altitude
 	//
@@ -684,7 +701,7 @@ bool LEMcomputer::ValidateProgram(int prog)
 		return true;
 
 	//
-	//	12: Ascent second phase
+	//	12: Ascent 
 	//
 	case 12:
 		return true;
