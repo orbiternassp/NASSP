@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.5  2005/08/09 09:24:34  tschachim
   *	Introduced toggleswitch lib
   *	
@@ -56,7 +59,7 @@
 
 #include "sat5_lmpkd.h"
 
-void LEMcomputer::Prog12Pressed(int R1, int R2, int R3)
+void LEMcomputer::Prog13Pressed(int R1, int R2, int R3)
 {
 	switch(ProgState)
 	{
@@ -109,7 +112,7 @@ void LEMcomputer::Prog12Pressed(int R1, int R2, int R3)
 	LightOprErr();
 }
 
-void LEMcomputer::Prog12 (double simt)
+void LEMcomputer::Prog13 (double simt)
 {
 	//
 	//	This program inserts us into a preliminary orbit, called the insertion orbit. Periapsis
