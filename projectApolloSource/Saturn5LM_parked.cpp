@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.32  2005/08/22 19:47:33  movieman523
   *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
   *	
@@ -927,7 +930,7 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
             sscanf (line+9, "%f", &ftcp);
 			MissionTime = ftcp;
 		} else if (!strnicmp(line, "MTD", 3)) {
-            sscanf (line+9, "%f", &ftcp);
+            sscanf (line+3, "%f", &ftcp);
 			MissionTimerDisplay.SetTime(ftcp);
 		}
 		else if (!strnicmp(line, "UNMANNED", 8)) {
