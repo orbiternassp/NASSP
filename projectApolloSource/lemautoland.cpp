@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/09/05 21:10:31  lazyd
+  *	Changed the ascent program to P12
+  *	
   *	Revision 1.28  2005/08/27 23:35:07  lazyd
   *	COMP ATY light now works - ALT & VEL will when that works
   *	
@@ -160,10 +163,6 @@
 void LEMcomputer::Prog63(double simt)
 
 {
-	static VECTOR3 zero={0.0, 0.0, 0.0};
-	static VECTOR3 xloc={1.0, 0.0, 0.0};
-	static VECTOR3 yloc={0.0, 1.0, 0.0};
-	static VECTOR3 zloc={0.0, 0.0, 1.0};
 	//A11-A14 aim points
 	static VECTOR3 rhii= {-3401.75, -959.49, 0.0};
 	static VECTOR3 vhii= {    2.87, -60.45, 0.0};
@@ -297,10 +296,10 @@ void LEMcomputer::Prog63(double simt)
 			}
 			// set up frame of reference for body we are orbiting
 			vnorm=Normalize(vnorm);
-			OurVessel->Local2Global(zero, zerogl);
-			OurVessel->Local2Global(xloc, xgl);
-			OurVessel->Local2Global(yloc, ygl);
-			OurVessel->Local2Global(zloc, zgl);
+			OurVessel->Local2Global(_V(0.0, 0.0, 0.0), zerogl);
+			OurVessel->Local2Global(_V(1.0, 0.0, 0.0), xgl);
+			OurVessel->Local2Global(_V(0.0, 1.0, 0.0), ygl);
+			OurVessel->Local2Global(_V(0.0, 0.0, 1.0), zgl);
 			xgl=xgl-zerogl;
 			ygl=ygl-zerogl;
 			zgl=zgl-zerogl;
@@ -408,7 +407,7 @@ void LEMcomputer::Prog63(double simt)
 				acctot=Mag(acc);
 				vmass=OurVessel->GetMass();
 				vthrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
-//				sprintf(oapiDebugString(),"mass=%.1f %.1f %.1f %.1f", vmass, rhi);
+//				sprintf(oapiDebugString(),"mass=%.1f ", vmass);
 				maxacc=MAXTHROT*vthrust/vmass;
 
 				// limit z acceleration to yield < 15 degree roll
@@ -512,26 +511,30 @@ void LEMcomputer::Prog63(double simt)
 		SetVerbNounAndFlash(6, 89);
 		NextEventTime=simt;
 		ProgState++;
+		if (Realism == 0) ProgState++;
 		break;
 
 // display time from ignition and crossrange..
 	case 2:
 		SetVerbNounAndFlash(6, 61);
 		if(fabs(DesiredDeltaV) > MAXOFFPLANE) LightOprErr();
+		if (Realism == 0) ProgState++;
 		break;
 
 //display time of ignition hhmmssss
 	case 3:
 		BurnTime=BurnStartTime;
 		SetVerbNounAndFlash(6, 33);
+		if (Realism == 0) ProgState++;
 		break;
 
 //display Roll, Pitch, and Yaw angles for automaneuver...
 	case 4:
 		SetVerbNounAndFlash(50, 18);
+		if(Realism == 0) ProgState++;
 		break;
 
-// Orient spacecraft retrograde and face-down for PDI
+// Orient spacecraft retrograde 
 	case 5:
 		SetVerbNoun(6,18);
 		//Turn on Attitude control
@@ -572,6 +575,7 @@ void LEMcomputer::Prog63(double simt)
 
 	case 9:
 		SetVerbNounAndFlash(99, 62);
+		if(Realism == 0) ProgState++;
 		break;
 
 	case 10:
@@ -1491,10 +1495,6 @@ void LEMcomputer::OrientAxis(VECTOR3 &vec, int axis, int ref)
 	//ref =0 body coordinates 1=local vertical
 	//orients a vessel axis with a body-relative normalized vector
 	//allows rotation about the axis being oriented
-	static VECTOR3 zero={0.0, 0.0, 0.0};
-	static VECTOR3 xloc={1.0, 0.0, 0.0};
-	static VECTOR3 yloc={0.0, 1.0, 0.0};
-	static VECTOR3 zloc={0.0, 0.0, 1.0};
 	const double RATE_MAX = RAD*(5.0);
 	const double DEADBAND_LOW = RAD*(0.01);
 	const double RATE_FINE = RAD*(0.005);
@@ -1513,10 +1513,10 @@ void LEMcomputer::OrientAxis(VECTOR3 &vec, int axis, int ref)
 
 	factor=1.0;
 
-	OurVessel->Local2Global(zero, zerogl);
-	OurVessel->Local2Global(xloc, xgl);
-	OurVessel->Local2Global(yloc, ygl);
-	OurVessel->Local2Global(zloc, zgl);
+	OurVessel->Local2Global(_V(0.0, 0.0, 0.0), zerogl);
+	OurVessel->Local2Global(_V(1.0, 0.0, 0.0), xgl);
+	OurVessel->Local2Global(_V(0.0, 1.0, 0.0), ygl);
+	OurVessel->Local2Global(_V(0.0, 0.0, 1.0), zgl);
 	xgl=xgl-zerogl;
 	ygl=ygl-zerogl;
 	zgl=zgl-zerogl;
@@ -1751,10 +1751,11 @@ void LEMcomputer::Prog12(double simt)
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			CSMVessel->GetRelativeVel(hbody, csmvel);
 
-			// aim for an orbit apo 25806 m lower than CSM apo
+			// aim for an orbit apo 25806 m (15 nm) lower than CSM apo (or semimajor)
 			OrbitParams(csmpos, csmvel, csmperiod, csmapo, csmtta, csmper, csmttp);
 //			a=(csmper+csmapo+2.0*bradius)/2.0;
-			dapo=(csmapo+bradius)-26806.0;
+//			dapo=(csmapo+bradius)-26806.0;
+			dapo=(((csmapo+csmper)/2.0)+bradius)-26806.0;
 			dper=bradius+18000.0;
 			a=(dapo+dper)/2.0;
 			dh=dapo-(bradius+87000.0);
@@ -1789,7 +1790,8 @@ void LEMcomputer::Prog12(double simt)
 //					BurnTime=simt+time-40.0;  // TPI 13 min
 //					BurnTime=simt+time-35.0;  // TPI 53 min---
 //					BurnTime=simt+time-30.0;  // TPI 57 min
-					BurnTime=simt+time-50.0;  // historical
+					BurnTime=simt+time-50.0;  // historical TPI 46 min after insertion
+//					BurnTime=simt+time-85.0;  //16 min, <2 min for higher orbits
 				}
 				BurnStartTime=BurnTime;
 				ProgFlag01=true;
@@ -1801,6 +1803,7 @@ void LEMcomputer::Prog12(double simt)
 
 	if(ProgState == 1 && ProgFlag01) {
 		SetVerbNounAndFlash(6,33);
+		if(Realism == 0) ProgState++;
 		return;
 	}
 
@@ -1808,6 +1811,7 @@ void LEMcomputer::Prog12(double simt)
 		DesiredDeltaVx=1687.0;
 		DesiredDeltaVy=5.5714;
 		SetVerbNounAndFlash(6,76);
+		if(Realism == 0) ProgState++;
 		return;
 	}
 
@@ -1830,6 +1834,11 @@ void LEMcomputer::Prog12(double simt)
 	if(ProgState == 5) {
 		if(simt > BurnTime-6.0) {
 			SetVerbNounAndFlash(99,74);
+			if(Realism == 0) {
+				ProgState++;
+				sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+				lem->AbortStage();
+			}
 		} else {
 			SetVerbNounAndFlash(6,74);
 		}
@@ -1957,8 +1966,6 @@ void LEMcomputer::Prog71(double simt)
 void LEMcomputer::AbortAscent(double simt)
 {
 	static VECTOR3 zero={0.0, 0.0, 0.0};
-	static VECTOR3 yloc={0.0, 1.0, 0.0};
-	static VECTOR3 zloc={0.0, 0.0, 1.0};
 	const double GRAVITY=6.67259e-11;
 	VECTOR3 csmpos, csmvel, csmnor, lmpos, lmvel, lmcsm, hvel, csmhvel, actatt, tgtatt,
 		vec1, vec2, acc, lmnor, zerogl, ygl, zgl, lmdown, lmup, lmfor, vec, accvec;
@@ -2044,12 +2051,9 @@ void LEMcomputer::AbortAscent(double simt)
 //		velexh=OurVessel->GetISP();
 		velexh=2921.0;
 		totvel=Mag(lmvel);
-//		veltbg=1687-totvel;
 		veltbg=velo-totvel;
 		CurrentVel=totvel;
-//		CurrentVelX=1687.0-sqrt(totvel*totvel-crossvel*crossvel-hvel.y*hvel.y);
 		CurrentVelX=velo-sqrt(totvel*totvel-crossvel*crossvel-hvel.y*hvel.y);
-//		CurrentVelZ=crossvel;
 		LandingAltitude=crossvel;
 		tau=Mass/fuelflow;
 		//estimate time-to-go
@@ -2072,7 +2076,6 @@ void LEMcomputer::AbortAscent(double simt)
 // velocity to be gained in body up, right and forward direction
 		DesiredDeltaVx=5.5714-hvel.y;
 		DesiredDeltaVy=-crossvel;
-//		DesiredDeltaVz=1687.0-sqrt(totvel*totvel-crossvel*crossvel-hvel.y*hvel.y);
 		DesiredDeltaVz=velo-sqrt(totvel*totvel-crossvel*crossvel-hvel.y*hvel.y);
 
 //		fprintf(outstr,"D12=%.3f D21=%.3f A=%.3f B=%.3f C=%.3f D=%.3f E=%.3f L=%.3f tau=%.3f\n",
@@ -2093,9 +2096,12 @@ void LEMcomputer::AbortAscent(double simt)
 			actatt.y=cbrg-heading;
 		} else {
 			// once we have enough velocity, construct orbital reference orientation
-			OurVessel->Local2Global(zero, zerogl);
-			OurVessel->Local2Global(yloc, vec1);
-			OurVessel->Local2Global(zloc, vec2);
+//			OurVessel->Local2Global(zero, zerogl);
+//			OurVessel->Local2Global(yloc, vec1);
+//			OurVessel->Local2Global(zloc, vec2);
+			OurVessel->Local2Global(_V(0.0, 0.0, 0.0), zerogl);
+			OurVessel->Local2Global(_V(0.0, 1.0, 0.0), vec1);
+			OurVessel->Local2Global(_V(0.0, 0.0, 1.0), vec2);
 			ygl=vec1-zerogl;
 			zgl=vec2-zerogl;
 			actatt.x=OurVessel->GetPitch();
@@ -2358,11 +2364,12 @@ void LEMcomputer::Radar(double &range, double &rate)
 	}
 }
 
-void LEMcomputer::UplinkStateVector(int type, VECTOR3 &pos, VECTOR3 &vel)
+void LEMcomputer::GetIMUOrientation(int type, double arg, VECTOR3 &x, VECTOR3 &y, VECTOR3 &z)
 {
-/*	OBJHANDLE earth, moon;
-	VECTOR3 x, y, z, rpos, rvel, east, north, csmpos, csmvel, norm;
-	double az, vrad, vlat, vlon, pday, time;
+	// this code is actually calculating the IMU orientation...
+	OBJHANDLE earth, moon;
+	VECTOR3 rpos, rvel, east, north, csmpos, csmvel, norm;
+	double vrad, vlat, vlon, pday;
     char line[10];
 	switch (type) {
 	// Launch pad alignment
@@ -2373,8 +2380,8 @@ void LEMcomputer::UplinkStateVector(int type, VECTOR3 &pos, VECTOR3 &vel)
 		y=Normalize(-rpos);
 		east=Normalize(CrossProduct(y, _V(0.0, 1.0, 0.0)));
 		north=CrossProduct(y, east);
-		//az needs to be set to the launch azimuth
-		x=Normalize(east*sin(az)+north*cos(az));
+		//arg needs to be set to the launch azimuth
+		x=Normalize(east*sin(arg)+north*cos(arg));
 		z=CrossProduct(x, y);
 		break;
 	//PTC reference alignment
@@ -2384,11 +2391,12 @@ void LEMcomputer::UplinkStateVector(int type, VECTOR3 &pos, VECTOR3 &vel)
         break;
 	//Circularization through lunar landing alignment
 	case 3:
+		// for this case, arg is seconds to landing time...
 		moon=oapiGetGbodyByName("moon");
 		pday=oapiGetPlanetPeriod(moon);
 		vrad=oapiGetSize(moon);
 		vlat=LandingLatitude*RAD;
-		vlon=LandingLongitude*RAD+pday*time;
+		vlon=LandingLongitude*RAD+pday*arg;
 		EquToRel(vlat, vlon, vrad, rpos);
 		x=Normalize(rpos);
 		strncpy(line, OurVessel->GetName(), 10);
@@ -2401,18 +2409,9 @@ void LEMcomputer::UplinkStateVector(int type, VECTOR3 &pos, VECTOR3 &vel)
 		norm=Normalize(CrossProduct(csmpos, csmvel));
 		z=Normalize(CrossProduct(norm, x));
 		y=Normalize(CrossProduct(z, x));
-		OurVessel->GetRelativePos(moon, rpos);
-		OurVessel->GetRelativeVel(moon, rvel);
 		break;
 		
 	}
-	pos.x=x*rpos;
-	pos.y=y*rpos;
-	pos.z=z*rpos;
-	vel.x=x*rvel;
-	vel.y=y*rvel;
-	vel.z=z*rvel;
-	*/
 }
 
 
@@ -2721,8 +2720,11 @@ void LEMcomputer::Prog34(double simt)
 				}
 				BurnTime=time+simt;
 			} else {
+				// what we're doing here is to iteratively solve for the lowest dV
+				// transfer time to get to the CSM.  First we bracket the endpoints 
+				// of the search, then use golden section to converge on the tpitime
 				tpitime=(-phase)/delta;
-				ax=120.0;
+				ax=60.0;
 				cx=-phase/delta+1000.0;
 //				fprintf(outstr, "phase=%.3f del=%.5f tpi=%.1f mx=%.1f\n",
 //					phase*DEG, delta*DEG, tpitime, cx);
@@ -2757,6 +2759,8 @@ void LEMcomputer::Prog34(double simt)
 //				fprintf(outstr, "bx=%.3f fbx=%.3f \n", bx, fbx);
 			// test for bracketing...
 				if(fbx > fax || fbx > fcx) {
+//					sprintf(oapiDebugString(), "ax=%.1f bx=%.1f cx=%.1f %.3f %.3f %.3f",
+//						ax, bx, cx, fax, fbx, fcx);
 					RunProgram(00);
 					return;
 				}
@@ -3133,9 +3137,6 @@ void LEMcomputer::Prog35(double simt)
 void LEMcomputer::Prog36(double simt)
 {
 	static VECTOR3 zero={0.0, 0.0, 0.0};
-	static VECTOR3 xloc={1.0, 0.0, 0.0};
-	static VECTOR3 yloc={0.0, 1.0, 0.0};
-	static VECTOR3 zloc={0.0, 0.0, 1.0};
 	VECTOR3 csmpos, lmpos, csmvel, lmvel, vec, rvel, rpos, zerogl, xgl, ygl, zgl, level, 
 		rlcl, vlcl;
 	double dis, vel, dv, vmass, zo, yo, acc;
@@ -3190,10 +3191,10 @@ void LEMcomputer::Prog36(double simt)
 			}
 			axis=2;
 			if(ProgFlag01) {
-				OurVessel->Local2Global(zero, zerogl);
-				OurVessel->Local2Global(xloc, xgl);
-				OurVessel->Local2Global(yloc, ygl);
-				OurVessel->Local2Global(zloc, zgl);
+				OurVessel->Local2Global(_V(0.0, 0.0, 0.0), zerogl);
+				OurVessel->Local2Global(_V(1.0, 0.0, 0.0), xgl);
+				OurVessel->Local2Global(_V(0.0, 1.0, 0.0), ygl);
+				OurVessel->Local2Global(_V(0.0, 0.0, 1.0), zgl);
 				xgl=xgl-zerogl;
 				ygl=ygl-zerogl;
 				zgl=zgl-zerogl;
@@ -3347,29 +3348,28 @@ void LEMcomputer::Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu,
 		angle=PI/2.0-asin(sa);
 		// we know this is a "short way" problem so this works
 		ca=sqrt(r1*r2*(1.0+cos(angle)));
-//		fprintf(outstr, "r1=%.1f r2=%.1f A=%.3f \n", r1-bradius, r2-bradius, ca);
-//		fprintf(outstr, "ang=%.3f dt=%.1f st=%.1f %.1f %.1f r=%.1f %.1f %.1f \n",
-//			angle*DEG, dt, stpos, renpos);
-//		fprintf(outstr, "stvel=%.3f %.3f %.3f rendezvous=%.3f %.3f %.3f \n", stvel, renvel);
 		zmin=-40.0;
 		zmax=(PI*2.0)*(PI*2.0);
 		z=(zmin+zmax)/2.0;
 		zold=z;
 		for (k=0; k<30; k++) {
-			if (z > 0) {   //BMW 4.4.10
+			if (z > 0) {   //BMW 4.4.10 and .11
 				c=((1 - cos(sqrt(z))) / z);
-			} else if (z < 0) {
-				c=((1 - cosh(sqrt(-z))) / z);
-			} else {
-				c=0.5;
-			}
-			if (z > 0) {  //BMW 4.4.11
 				s=((sqrt(z) - sin(sqrt(z))) / sqrt(pow(z, 3)));
 			} else if (z < 0) {
+				c=((1 - cosh(sqrt(-z))) / z);
 				s=((sinh(sqrt(-z)) - sqrt(-z)) / sqrt(pow(-z, 3)));
 			} else {
+				c=0.5;
 				s=1.0/6.0;
 			}
+//			if (z > 0) {  //BMW 4.4.11
+//				s=((sqrt(z) - sin(sqrt(z))) / sqrt(pow(z, 3)));
+//			} else if (z < 0) {
+//				s=((sinh(sqrt(-z)) - sqrt(-z)) / sqrt(pow(-z, 3)));
+//			} else {
+//				s=1.0/6.0;
+//			}
 
 			y=r1+r2-ca*((1.0-z*s)/sqrt(c)); //BMW 5.3.9
 			x=sqrt(y/c);  //BMW 5.3.10
@@ -3399,29 +3399,20 @@ void LEMcomputer::Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu,
   described in Chapter 4 of "Fundementals of Astrodynamics" by Bate, Mueller,
   and White.
 */
-
-static inline double CalcC(double Z)
+// combined two functions into one
+static inline void CalcCAndS(double &Z, double &C, double &S)
 {
 	if (Z > 0) {
-		return ((1 - cos(sqrt(Z))) / Z);
+		C = ((1 - cos(sqrt(Z))) / Z);
+		S = ((sqrt(Z) - sin(sqrt(Z))) / sqrt(pow(Z, 3)));
 	} else if (Z < 0) {
-		return ((1 - cosh(sqrt(-Z))) / Z);
+		C = ((1 - cosh(sqrt(-Z))) / Z);
+		S = ((sinh(sqrt(-Z)) - sqrt(-Z)) / sqrt(pow(-Z, 3)));
 	} else {
-		return 0.5; // probably doesn't matter, but this is correct - LazyD
+		C = 0.5; // probably doesn't matter, but this is correct - LazyD
+		S = 1.0/6.0; // probably doesn't matter, but this is correct - LazyD
 	}
 }
-
-static inline double CalcS(double Z)
-{
-	if (Z > 0) {
-		return ((sqrt(Z) - sin(sqrt(Z))) / sqrt(pow(Z, 3)));
-	} else if (Z < 0) {
-		return ((sinh(sqrt(-Z)) - sqrt(-Z)) / sqrt(pow(-Z, 3)));
-	} else {
-		return 1.0/6.0; // probably doesn't matter, but this is correct - LazyD
-	}
-}
-
 
 // Required accuracy for the iterative computations
 const double EPSILON = 0.000000001;
@@ -3438,8 +3429,7 @@ static inline void CalcXandZ(double &X, double &Z, const VECTOR3 Pos, const VECT
 											// by the squareroot of Mu
 	double OneRA = (1 - (r / a));			// One minus Pos over the semi-major axis
 
-	C = CalcC(Z);
-	S = CalcS(Z);
+	CalcCAndS(Z, C, S);
 	T = ((RVMu * pow(X, 2) * C) +  (OneRA * pow(X, 3) * S) + (r * X)) / SqrtMu;
 
 	DeltaTime = Time - T;
@@ -3451,8 +3441,7 @@ static inline void CalcXandZ(double &X, double &Z, const VECTOR3 Pos, const VECT
 		X = X + (DeltaTime / dTdX);
 		Z=(X*X)/a;
 
-		C = CalcC(Z);
-		S = CalcS(Z);
+		CalcCAndS(Z, C, S);
 		T = ((RVMu * pow(X, 2) * C) +  (OneRA * pow(X, 3) * S) + (r * X)) / SqrtMu;
 
 		DeltaTime = Time - T;
@@ -3483,8 +3472,7 @@ void LEMcomputer::PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel, d
 	CalcXandZ(X, Z, Pos, Vel, a, Time, SqrtMu);
 
 	// Calculate C(Z) and S(Z)
-	C = CalcC(Z);
-	S = CalcS(Z);
+	CalcCAndS(Z, C, S);
 
 	// Calculate the new position and velocity vectors
 	F = 1.0 - (((X*X )/ r) * C);
