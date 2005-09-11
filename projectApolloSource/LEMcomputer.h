@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/09/05 21:12:02  lazyd
+  *	Added Radar function
+  *	
   *	Revision 1.16  2005/08/27 23:36:52  lazyd
   *	P30 added
   *	
@@ -218,7 +221,7 @@ protected:
 	void EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos);
 	void Phase(double &phase, double &delta);
 	void Radar(double &range, double &rate);
-	void UplinkStateVector(int type, VECTOR3 &pos, VECTOR3 &vel);
+	void GetIMUOrientation(int type, double arg, VECTOR3 &x, VECTOR3 &y, VECTOR3 &z);
 	void Prog12Pressed(int R1, int R2, int R3);
 	void Prog34Pressed(int R1, int R2, int R3);
 	void Prog41Pressed(int R1, int R2, int R3);
