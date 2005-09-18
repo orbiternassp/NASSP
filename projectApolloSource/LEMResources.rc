@@ -13,7 +13,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// Englisch (USA) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE
+1 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE
+2 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE
+3 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "\r\n"
     "\0"
@@ -46,12 +46,12 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-#endif    // English (U.S.) resources
+#endif    // Englisch (USA) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// French (France) resources
+// Französisch (Frankreich) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_FRA)
 #ifdef _WIN32
@@ -64,6 +64,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 // Bitmap
 //
 
+IDB_LEM_RENDEZVOUS_WINDOW BITMAP  DISCARDABLE     "lem_rendezvous_window.bmp"
 IDB_HORIZON             BITMAP  DISCARDABLE     "Horizon.bmp"
 IDB_NEEDLE1             BITMAP  DISCARDABLE     "Needle1.bmp"
 IDB_DIGITAL             BITMAP  DISCARDABLE     "digitaldisp.bmp"
@@ -107,9 +108,9 @@ IDB_LMMFDFRAME          BITMAP  DISCARDABLE     "LMMFDFrame.bmp"
 IDB_LEM_LPD_WINDOW      BITMAP  DISCARDABLE     "lem_lpd_window.bmp"
 IDB_LMTHREEPOSLEVER     BITMAP  DISCARDABLE     "lemswitch3.bmp"
 IDB_LMTHREEPOSSWITCH    BITMAP  DISCARDABLE     "lm3posswitch.bmp"
-IDB_DSKY_DISP		   	BITMAP  DISCARDABLE		"dsky_disp.bmp"
-IDB_DSKY_KEY			BITMAP	DISCARDABLE	    "dsky_keys.bmp"
-#endif    // French (France) resources
+IDB_DSKY_DISP           BITMAP  DISCARDABLE     "dsky_disp.bmp"
+IDB_DSKY_KEY            BITMAP  DISCARDABLE     "dsky_keys.bmp"
+#endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
