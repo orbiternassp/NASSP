@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/08/31 10:24:51  spacex15
+  *	fixed display problems on lem switches imu cage and Descent Engine command override
+  *	
   *	Revision 1.32  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -653,7 +656,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	switch(id) {
     case LMPANEL_MAIN:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_MAIN_PANEL));
-		oapiSetPanelNeighbours(LMPANEL_LEFTWINDOW, LMPANEL_RIGHTWINDOW, -1, -1);
+		oapiSetPanelNeighbours(LMPANEL_LEFTWINDOW, LMPANEL_RIGHTWINDOW, LMPANEL_RNDZWINDOW, -1);
 		break;
 
 	case LMPANEL_RIGHTWINDOW:
@@ -669,6 +672,11 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
     case LMPANEL_LPDWINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_LPD_WINDOW));
 		oapiSetPanelNeighbours(-1, LMPANEL_MAIN, LMPANEL_LEFTWINDOW, -1);
+		break;
+
+	case LMPANEL_RNDZWINDOW:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_RENDEZVOUS_WINDOW));
+		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_MAIN);
 		break;
 	}
 
@@ -781,6 +789,12 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_XPOINTER,		_R(838,  35, 973, 166), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE * RAD), cos(VIEWANGLE * RAD)));			
+		break;
+
+	case LMPANEL_RNDZWINDOW: // LEM Rendezvous Window
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 	}
 

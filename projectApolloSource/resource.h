@@ -5,16 +5,16 @@
 #define AID_HORIZON                     11
 #define AID_HORIZON2                    12
 #define AID_ALTITUDE1                   13
-#define AID_ENTRY_MODE_SWITCH			14
-#define AID_FDAI_SWITCHES				15
-#define AID_ECS_INDICATOR_SWITCH		16
-#define AID_EVENT_TIMER_SWITCHES		17
-#define AID_DSKY_LIGHTS					18
+#define AID_ENTRY_MODE_SWITCH           14
+#define AID_FDAI_SWITCHES               15
+#define AID_ECS_INDICATOR_SWITCH        16
+#define AID_EVENT_TIMER_SWITCHES        17
+#define AID_DSKY_LIGHTS                 18
 #define AID_DSKY_DISPLAY                19
 #define AID_DSKY_KEY                    20
-#define AID_DSKY2_LIGHTS				21
+#define AID_DSKY2_LIGHTS                21
 #define AID_DSKY2_DISPLAY               22
-#define AID_DSKY2_KEY					23
+#define AID_DSKY2_KEY                   23
 #define AID_SWITCH_PANEL_LEFT           24
 #define AID_GAUGES_CENTER               25
 #define AID_ALTIMETER                   27
@@ -27,20 +27,20 @@
 #define AID_MISSION_CLOCK               34
 #define AID_SWITCH_PANEL_RIGHT          35
 #define AID_ABORT                       36
-#define AID_BMAG_SWITCHES				37
-#define AID_MASTER_ALARM2				38
-#define AID_dVTHRUST_SWITCHES			39
+#define AID_BMAG_SWITCHES               37
+#define AID_MASTER_ALARM2               38
+#define AID_dVTHRUST_SWITCHES           39
 #define AID_SWITCH_SEP                  40
 #define AID_CONTACT                     41
 #define AID_MASTER_ALARM                42
-#define AID_CWS_LIGHTS_LEFT				43
-#define AID_CWS_LIGHTS_RIGHT			44
-#define AID_EVENT_TIMER					45
+#define AID_CWS_LIGHTS_LEFT             43
+#define AID_CWS_LIGHTS_RIGHT            44
+#define AID_EVENT_TIMER                 45
 #define AID_MASTER_ALARM3               46
-#define AID_RCS_HELIUM1_TALKBACK		47
-#define AID_RCS_HELIUM2_TALKBACK		48
-#define AID_RCS_PROP1_TALKBACK			49
-#define AID_RCS_PROP2_TALKBACK			50
+#define AID_RCS_HELIUM1_TALKBACK        47
+#define AID_RCS_HELIUM2_TALKBACK        48
+#define AID_RCS_PROP1_TALKBACK          49
+#define AID_RCS_PROP2_TALKBACK          50
 #define AID_ABORT_BUTTON                51
 #define AID_FUEL_DIGIT                  52
 #define AID_SM_RCS_PANEL1               53
@@ -59,7 +59,7 @@
 #define AID_EMS                         77
 #define AID_SWITCH_JET                  78
 #define AID_MAIN_RELEASE_SWITCH         79
-#define AID_LV_SWITCHES					83
+#define AID_LV_SWITCHES                 83
 #define AID_DOCKING_PROBE_SWITCH        84
 #define AID_SEQUENCERSWITCHES           86
 #define AID_LEM_POWER_SWITCH            87
@@ -273,22 +273,22 @@
 #define AID_MFDRIGHT                    524
 #define IDB_LEM_LPD_WINDOW              525
 #define AID_MODECONTROL                 526
-#define AID_CAUTIONWARNING_SWITCHES		527
-#define AID_MISSION_TIMER_SWITCHES		528
+#define AID_CAUTIONWARNING_SWITCHES     527
+#define AID_MISSION_TIMER_SWITCHES      528
 #define IDB_DSKY_DISP                   529
-#define AID_FDAI_RIGHT				    530
-#define IDB_FDAI_ROLLINDICATOR			531
-#define IDB_FDAI_ROLL					532
-#define IDB_CWS_LIGHTS					533
-#define IDB_EVENT_TIMER					534
+#define AID_FDAI_RIGHT                  530
+#define IDB_FDAI_ROLLINDICATOR          531
+#define IDB_FDAI_ROLL                   532
+#define IDB_CWS_LIGHTS                  533
+#define IDB_EVENT_TIMER                 534
 #define IDB_DSKY_KEY                    535
-
+#define IDB_LEM_RENDEZVOUS_WINDOW       536
 
 // Next default values for new objects
-//
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        289
+#define _APS_NEXT_RESOURCE_VALUE        290
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           10001

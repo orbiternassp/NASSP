@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.18  2005/08/14 16:08:20  tschachim
   *	LM is now a VESSEL2
   *	Changed panel restore mechanism because the CSM mechanism
@@ -456,6 +459,7 @@ protected:
 #define LMPANEL_RIGHTWINDOW		1
 #define LMPANEL_LEFTWINDOW		2
 #define LMPANEL_LPDWINDOW		3
+#define LMPANEL_RNDZWINDOW		4
 
 	bool InVC;
 	bool InPanel;
