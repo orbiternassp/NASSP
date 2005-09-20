@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/09/05 21:11:18  lazyd
+  *	Added noun 54 for rendezvous
+  *	
   *	Revision 1.21  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -247,6 +250,30 @@ void LEMcomputer::DisplayNounData(int noun)
 		SetR1((int) pitch);
 		SetR2((int) roll);
 		SetR3((int) yaw);
+		}
+		break;
+
+	//
+	// 23: number of passes, mm ss to burn, offplane distance (fictitious)
+	//
+
+	case 23:
+		{
+			int min, sec;
+			double dt;
+
+			SetR1((int) (DeltaPitchRate));
+
+			// time from ignition
+			dt=CurrentTimestep-BurnStartTime;
+			min = (int) (dt / 60.0);
+			sec = ((int) dt) - (min * 60);
+			if (min > 99)
+				min = 99;
+			SetR2(min * 1000 + sec);
+			SetR2Format("XXX XX");
+
+			SetR3((int) (DesiredDeltaV/100.0 ));
 		}
 		break;
 
@@ -713,6 +740,12 @@ bool LEMcomputer::ValidateProgram(int prog)
 		return true;
 
 	//
+	// 29: Plane Change
+	//
+//	case 29:
+//		return true;
+
+	//
 	// 30: External Delta V
 	//
 
@@ -851,6 +884,15 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	case 13:
 		Prog13(simt);
 		break;
+
+	//
+	//  29: Plane Change
+	//
+
+//	case 29:
+//		Prog29(simt);
+//		break;
+
 
 	//
 	//  30: External Delta V
@@ -1004,6 +1046,10 @@ void LEMcomputer::ProgPressed(int R1, int R2, int R3)
 	case 13:
 		Prog13Pressed(R1, R2, R3);
 		return;	
+
+//	case 29:
+//		Prog29Pressed(R1, R2, R3);
+//		return;	
 
 	case 34:
 		Prog34Pressed(R1, R2, R3);
