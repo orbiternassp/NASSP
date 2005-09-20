@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.18  2005/08/22 19:47:33  movieman523
   *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
   *	
@@ -202,6 +205,13 @@ protected:
 	//
 
 	void ResetProg(double simt);
+
+	void Prog28(double simt);
+	void Prog28Pressed(int R1, int R2, int R3);
+
+	void Prog29(double simt);
+	void Prog29Pressed(int R1, int R2, int R3);
+
 	void Prog37(double simt);
 	void Prog37Pressed(int R1, int R2, int R3);
 
@@ -266,6 +276,14 @@ protected:
 	void OrientForOrbitBurn(double simt);
 	void GetHoverAttitude( VECTOR3 &actatt);
 	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast);
+	void OrientAxis(VECTOR3 &vec, int axis, int ref);
+	void OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, double &apo, double &tta, 
+				 double &per, double &ttp);
+	void EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos);
+	void Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu, 
+						  VECTOR3 &v1, VECTOR3 &v2);
+	void PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel,
+		double Mu, double Time, VECTOR3 &NewPos, VECTOR3 &NewVel, double &NewVelMag);
 	void BurnMainEngine(double thrust);
 	virtual void DisplayBankSum();
 	void DisplayEMEM(unsigned int addr);
@@ -510,6 +528,8 @@ protected:
 
 	VESSEL	*OurVessel;
 	SoundLib &soundlib;
+
+//	FILE *outstr;
 
 
 #ifdef AGC_SOCKET_ENABLED
