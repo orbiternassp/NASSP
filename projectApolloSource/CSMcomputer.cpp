@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.18  2005/08/22 19:47:33  movieman523
   *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
   *	
@@ -1332,6 +1335,25 @@ bool CSMcomputer::ReadMemory(unsigned int loc, int &val)
 
 		switch (loc)
 		{
+		case 0110:
+			val = (int) (LandingLatitude * 1000.0);
+			return true;
+
+		case 0111:
+			val = (int) (LandingLongitude * 1000.0);
+			return true;
+
+		case 0112:
+			val = (int) LandingAltitude;
+			return true;
+
+		case 0113:
+			val = (int)(LandingLatitude*100000000-((int) (LandingLatitude * 1000.0))*100000);
+			return true;
+
+		case 0114:
+			val = (int)(LandingLongitude*100000000-((int) (LandingLongitude * 1000.0))*100000);
+			return true;
 		default:
 			break;
 		}
@@ -1356,6 +1378,26 @@ void CSMcomputer::WriteMemory(unsigned int loc, int val)
 
 		switch (loc)
 		{
+		case 0110:
+			LandingLatitude = ((double) val) / 1000.0;
+			break;
+
+		case 0111:
+			LandingLongitude = ((double) val) / 1000.0;
+			break;
+
+		case 0112:
+			LandingAltitude = (double) val;
+			break;
+
+		case 0113:
+			LandingLatitude = LandingLatitude+((double) val) / 100000000.0;
+			break;
+
+		case 0114:
+			LandingLongitude = LandingLongitude+((double) val) / 100000000.0;
+			break;
+
 		default:
 			GenericWriteMemory(loc, val);
 			break;
