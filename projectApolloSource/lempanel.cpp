@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/09/18 23:15:20  flydba
+  *	Lem overhead rendezvous window added...
+  *	
   *	Revision 1.33  2005/08/31 10:24:51  spacex15
   *	fixed display problems on lem switches imu cage and Descent Engine command override
   *	
@@ -666,7 +669,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 
     case LMPANEL_LEFTWINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_LEFT_WINDOW));
-		oapiSetPanelNeighbours(-1, LMPANEL_MAIN, -1, LMPANEL_LPDWINDOW);
+		oapiSetPanelNeighbours(LMPANEL_LEFTPANEL, LMPANEL_MAIN, -1, LMPANEL_LPDWINDOW);
 		break;
 
     case LMPANEL_LPDWINDOW:
@@ -676,7 +679,17 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 
 	case LMPANEL_RNDZWINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_RENDEZVOUS_WINDOW));
-		oapiSetPanelNeighbours(-1, -1, -1, LMPANEL_MAIN);
+		oapiSetPanelNeighbours(-1, LMPANEL_AOTVIEW, -1, LMPANEL_MAIN);
+		break;
+
+	case LMPANEL_LEFTPANEL:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_LEFT_PANEL));
+		oapiSetPanelNeighbours(-1, LMPANEL_LEFTWINDOW, -1, -1);
+		break;
+
+	case LMPANEL_AOTVIEW:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_AOT_VIEW));
+		oapiSetPanelNeighbours(LMPANEL_RNDZWINDOW, -1, -1, LMPANEL_MAIN);
 		break;
 	}
 
@@ -783,7 +796,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 
-	case LMPANEL_LPDWINDOW: // LDP window
+	case LMPANEL_LPDWINDOW: // LDP Window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		oapiRegisterPanelArea (AID_XPOINTER,		_R(838,  35, 973, 166), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
@@ -792,6 +805,18 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		break;
 
 	case LMPANEL_RNDZWINDOW: // LEM Rendezvous Window
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		break;
+
+	case LMPANEL_LEFTPANEL: // LEM Left Panel
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		break;
+
+	case LMPANEL_AOTVIEW: // LEM Alignment Optical Telescope View
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));

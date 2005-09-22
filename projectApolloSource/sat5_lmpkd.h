@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/09/18 23:18:43  flydba
+  *	Lem overhead rendezvous window added...
+  *	
   *	Revision 1.19  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -460,6 +463,8 @@ protected:
 #define LMPANEL_LEFTWINDOW		2
 #define LMPANEL_LPDWINDOW		3
 #define LMPANEL_RNDZWINDOW		4
+#define LMPANEL_LEFTPANEL		5
+#define LMPANEL_AOTVIEW			6
 
 	bool InVC;
 	bool InPanel;
