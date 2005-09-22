@@ -283,6 +283,8 @@
 #define IDB_EVENT_TIMER                 534
 #define IDB_DSKY_KEY                    535
 #define IDB_LEM_RENDEZVOUS_WINDOW       536
+#define IDB_LEM_LEFT_PANEL				537
+#define IDB_LEM_AOT_VIEW				538
 
 // Next default values for new objects
 // 
