@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/19 13:58:29  tschachim
+  *	Added Channel 13 handling
+  *	
   *	Revision 1.6  2005/08/18 22:15:22  movieman523
   *	Wired up second DSKY, to accurately match the real hardware.
   *	
@@ -597,10 +600,10 @@ void ApolloGuidance::ProgKeyPressed()
 	}
 
 	//
-	// Now we have a value in R3, we can process verb 1 or 11.
+	// Now we have a value in R2, we can process verb 1 or 11.
 	//
 
-	if (Verb == 1 || Verb == 11) {
+	if (Verb == 1 || Verb == 11 || Verb == 21) {
 		VerbNounEntered(Verb, Noun);
 	}
 
@@ -611,17 +614,23 @@ void ApolloGuidance::ProgKeyPressed()
 	ProgPressed(R1, R2, R3);
 
 	//
-	// For verb 1, let us enter another address.
+	// For EMEM access, let us enter another address.
 	//
 
+	if (Noun == 2) {
 	switch (Verb) {
-	case 1:
-		DataEntryR2();
-		break;
+		case 1:
+			DataEntryR1();
+			break;
 
-	case 11:
-		ClearVerbNounFlashing();
-		break;
+		case 11:
+			ClearVerbNounFlashing();
+			break;
+
+		case 21:
+			DataEntryR1R2();
+			break;
+		}
 	}
 }
 
@@ -703,10 +712,6 @@ void ApolloGuidance::EnterPressed()
 
 	switch (Verb) {
 
-	case 21:
-		DataEntryR1();
-		break;
-
 	case 1:
 	case 11:
 		if (Noun != 2) {
@@ -718,11 +723,21 @@ void ApolloGuidance::EnterPressed()
 
 		R2Decimal = false;
 		R1Decimal = false;
-		R1Blanked = false;
+		DataEntryR1();
+		break;
 
-		//
-		// And fall through to get R2.
-		//
+	case 21:
+		if (Noun == 2) {
+			SetVerbNounFlashing();
+
+			R2Decimal = false;
+			R1Decimal = false;
+			DataEntryR1R2();
+		}
+		else {
+			DataEntryR1();
+		}
+		break;
 
 	case 22:
 		DataEntryR2();
@@ -733,11 +748,7 @@ void ApolloGuidance::EnterPressed()
 		break;
 
 	case 24:
-		EnteringData = 1;
-		EnterCount = 2;
-		EnterPos = 0;
-		R1Blanked = true;
-		R2Blanked = true;
+		DataEntryR1R2();
 		break;
 
 	case 25:
@@ -861,6 +872,17 @@ void ApolloGuidance::DataEntryR1()
 	EnterPos = 0;
 	R1Blanked = true;
 	UpdateR1();
+}
+
+void ApolloGuidance::DataEntryR1R2()
+
+{
+	ClearFiveDigitEntry();
+	EnteringData = 1;
+	EnterCount = 2;
+	EnterPos = 0;
+	R1Blanked = true;
+	R2Blanked = true;
 }
 
 void ApolloGuidance::DataEntryR2()
