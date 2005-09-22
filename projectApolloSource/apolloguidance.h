@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/09/20 22:32:05  lazyd
+  *	Moved routines from autoland to here
+  *	
   *	Revision 1.19  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -403,6 +406,7 @@ protected:
 	void ResetPressed();
 	void ClearPressed();
 	void DataEntryR1();
+	void DataEntryR1R2();
 	void DataEntryR2();
 	void DataEntryR3();
 

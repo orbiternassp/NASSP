@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2005/09/20 22:31:17  lazyd
+  *	Moved some common programs here so LM and CSM could run them
+  *	
   *	Revision 1.42  2005/08/31 09:15:53  spacex15
   *	fixed merge bug
   *	
@@ -584,6 +587,7 @@ bool ApolloGuidance::ValidateCommonVerbNoun(int verb, int noun)
 
 	case 1:
 	case 11:
+	case 21:
 		if (noun == 2)
 			return true;
 		return false;
@@ -3128,9 +3132,9 @@ void ApolloGuidance::DisplayEMEM(unsigned int addr)
 	int val;
 
 	if (ReadMemory(addr, val))
-		SetR1Octal(val);
+		SetR2Octal(val);
 	else
-		SetR1Octal(077777);
+		SetR2Octal(077777);
 }
 
 //
@@ -3213,9 +3217,19 @@ bool ApolloGuidance::GenericProgPressed(int R1, int R2, int R3)
 {
 	switch (VerbRunning) {
 	case 1:
-		DisplayEMEM(R2);
+		DisplayEMEM(R1);
 	case 11:
-		CurrentEMEMAddr = R2;
+		CurrentEMEMAddr = R1;
+		return true;
+
+	//
+	// 21: update erasable memory.
+	//
+
+	case 21:
+		if (NounRunning == 2) {
+			WriteMemory(R1, R2);
+		}
 		return true;
 
 	case 91:
