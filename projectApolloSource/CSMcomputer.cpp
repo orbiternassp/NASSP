@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/09/20 22:35:20  lazyd
+  *	Made changes to save/restore landing latitude in EMEM
+  *	
   *	Revision 1.19  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -1079,6 +1082,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		case 15:
 			Prog15(simt);
 			break;
+
 
 		}
 	}
