@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/09/20 22:37:48  lazyd
+  *	Moved programs from here to apolloguidance
+  *	
   *	Revision 1.22  2005/09/05 21:11:18  lazyd
   *	Added noun 54 for rendezvous
   *	
@@ -739,11 +742,6 @@ bool LEMcomputer::ValidateProgram(int prog)
 	case 13:
 		return true;
 
-	//
-	// 29: Plane Change
-	//
-//	case 29:
-//		return true;
 
 	//
 	// 30: External Delta V
@@ -1047,9 +1045,6 @@ void LEMcomputer::ProgPressed(int R1, int R2, int R3)
 		Prog13Pressed(R1, R2, R3);
 		return;	
 
-//	case 29:
-//		Prog29Pressed(R1, R2, R3);
-//		return;	
 
 	case 34:
 		Prog34Pressed(R1, R2, R3);
