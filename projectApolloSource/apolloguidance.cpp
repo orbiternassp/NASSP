@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2005/09/22 22:27:40  movieman523
+  *	Updated erasable memory display/edit functions in AGC.
+  *	
   *	Revision 1.43  2005/09/20 22:31:17  lazyd
   *	Moved some common programs here so LM and CSM could run them
   *	
@@ -537,17 +540,24 @@ bool ApolloGuidance::ValidateCommonProgram(int prog)
 		return true;
 
 	//
-	// 28: DOI for Per / landing site alignment after n passes
+	// 16: LOI
 	//
 
-	case 28:
+	case 16:
 		return true;
 
 	//
-	// 29: Plane Change for landing site alignment after n passes
+	// 17: DOI for Per / landing site alignment after n passes
 	//
 
-	case 29:
+	case 17:
+		return true;
+
+	//
+	// 18: Plane Change for landing site alignment after n passes
+	//
+
+	case 18:
 		return true;
 
 	//
@@ -555,8 +565,8 @@ bool ApolloGuidance::ValidateCommonProgram(int prog)
 	//
 
 	case 37:
-		if (!InOrbit)
-			return false;
+//		if (!InOrbit)
+//			return false;
 
 		return true;
 
@@ -845,6 +855,32 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		SetR2((int)(pitch * 100));
 		SetR3((int)(hdg * 100));
 		return true;
+
+	//
+	// 19: time to burn, altitude, crossrange
+	//
+
+	case 19:
+		{
+			int min, sec;
+			double dt, alt;
+
+			// time from ignition
+			dt=CurrentTimestep-BurnStartTime;
+			min = (int) (dt / 60.0);
+			sec = ((int) dt) - (min * 60);
+			if (min > 99 || min < -99) {
+				SetR1( (int) dt);
+			} else {
+				SetR1(min * 1000 + sec);
+				SetR1Format("XXX XX");
+			}
+			alt = OurVessel->GetAltitude();
+			SetR2((int) (alt/100.0));
+			SetR3((int) (DeltaPitchRate/100.0));
+		}
+		return true;
+
 
 	//
 	// 23: number of passes, mm ss to burn, offplane distance (fictitious)
@@ -1396,20 +1432,29 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 
 	switch (ProgRunning)
 	{
+
 	//
-	// 28: DOI
+	// 16: LOI
 	//
 
-	case 28:
-		Prog28(simt);
+	case 16:
+		Prog16(simt);
 		break;
 
 	//
-	// 29: Plane Change
+	// 17: DOI
 	//
 
-	case 29:
-		Prog29(simt);
+	case 17:
+		Prog17(simt);
+		break;
+
+	//
+	// 18: Plane Change
+	//
+
+	case 18:
+		Prog18(simt);
 		break;
 
 	//
@@ -1942,7 +1987,123 @@ void ApolloGuidance::BurnMainEngine(double thrust)
 		BurnFlag = false;
 }
 
-void ApolloGuidance::Prog28(double simt)
+void ApolloGuidance::Prog16(double simt)
+{
+	static VECTOR3 zero={0.0, 0.0, 0.0};
+	VECTOR3 pos, vel, spos, svel, align, b, norm, veln, hvel, up;
+	double blat, blon, period, apo, tta, per, ttp, vc, vthrust, mu, velm, fmass, 
+		burn, dv, vmass, v, theta, offplane, dvn, vt;  
+	const double GRAVITY=6.67259e-11;
+	int i, n, k;
+	if(ProgState == 0) {
+		ProgState++;
+		ProgFlag01=false;
+		BurnEndTime=simt;
+		NextEventTime=simt;
+		SetVerbNoun(16, 19);
+	}
+	if(ProgFlag01) {
+		if(simt > BurnEndTime) {
+			OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
+			OurVessel->SetAttitudeRotLevel(zero);
+			RunProgram(0);
+			return;
+		}
+	}
+	if(ProgState == 1) {
+		if(simt > NextEventTime) {
+			NextEventTime=simt+DELTAT;
+			blat=LandingLatitude*RAD;
+			blon=LandingLongitude*RAD;
+			OBJHANDLE hbody=OurVessel->GetGravityRef();
+			double bradius=oapiGetSize(hbody);
+			double bmass=oapiGetMass(hbody);
+			mu=GRAVITY*bmass;
+			OurVessel->GetRelativePos(hbody, pos);
+			OurVessel->GetRelativeVel(hbody, vel);
+			norm=Normalize(CrossProduct(vel, pos));
+			up=Normalize(pos);
+			EquToRel(blat, blon, bradius, b);
+			offplane=b*norm;
+			DeltaPitchRate=offplane;
+			theta=asin(offplane/bradius);
+			dvn=(Mag(vel)*offplane)/bradius;
+			veln=-Normalize(vel);
+			OrbitParams(pos, vel, period, apo, tta, per, ttp);
+			vc=sqrt(mu/(per+bradius));
+			if(period <= 0.0) {
+				// hyperbolic
+				PredictPosVelVectors(pos, vel, mu, ttp, spos, svel, velm);
+				dv=Mag(svel)-vc;
+			} else {
+				// elliptical orbit
+				OurVessel->GetHorizonAirspeedVector(hvel);
+				vt=sqrt(hvel.x*hvel.x+hvel.z*hvel.z);
+				vc=sqrt(mu/(Mag(pos)));
+				dv=vt-vc;
+				if(ttp > 800.0) {
+					if(per < 110000.0) {
+						dv=0.0;
+						dvn=0.0;
+					}
+				}
+			}
+			dv=sqrt(dv*dv+dvn*dvn);
+
+//			sprintf(oapiDebugString(), "ttp=%.1f per=%.1f pred=%.1f",
+//				ttp, per, Mag(spos)-bradius);
+			if (MainThrusterIsHover) {
+				vthrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
+			} else {
+				vthrust=OurVessel->GetMaxThrust(ENGINE_MAIN);
+			}
+			vmass=OurVessel->GetMass();
+			n=OurVessel->DockCount();
+			for (k=0; k<n; k++) {
+				DOCKHANDLE Dock=OurVessel->GetDockHandle(k);
+				i=OurVessel->DockingStatus(k);
+				if(i == 0) break;
+				OBJHANDLE hOther=OurVessel->GetDockStatus(Dock);
+				VESSEL *Other=oapiGetVesselInterface(hOther);
+				v=Other->GetMass();
+				vmass=vmass+v;
+			}
+			fmass=vmass*(1.0-exp(-dv/VesselISP));
+			burn=fmass/(vthrust/VesselISP);
+			align=Normalize((veln*dv)+(norm*dvn));
+			if (MainThrusterIsHover) {
+				OrientAxis(align, 1, 0);
+			} else {
+				OrientAxis(align, 2, 0);
+			}
+			if(ProgFlag01) {
+				if(burn > 30.0) {
+					BurnEndTime=simt+burn;
+				} else {
+					if(simt+burn <= BurnEndTime) BurnEndTime=simt+burn;
+				}
+				BurnStartTime=BurnEndTime;
+			} else {
+				BurnStartTime=simt+(ttp-burn/2.0);
+				BurnEndTime=simt+burn;
+			}
+//			sprintf(oapiDebugString(), "v=%.3f %.3f %.3f a=%.3f %.3f %.3f op=%.1f", 
+//				veln, align, offplane);
+//			sprintf(oapiDebugString(), "ttp=%.1f dv=%.3f dvn=%.3f burn=%.3f op=%.1f end=%.1f", 
+//				ttp, dv, dvn, burn, offplane, BurnEndTime-simt);
+
+			if(burn/2.0 > ttp) {
+				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
+				BurnStartTime=simt+burn;
+				ProgFlag01=true;
+			}
+
+
+		}
+	}
+}
+
+void ApolloGuidance::Prog17(double simt)
 {
 	static VECTOR3 zero={0.0, 0.0, 0.0};
 	VECTOR3 pos, vel, spos, svel, norm, fwd, b, align;
@@ -1982,7 +2143,7 @@ void ApolloGuidance::Prog28(double simt)
 		}
 		if(simt >= BurnStartTime) {
 			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
+				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.1);
 			} else {
 				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
 			}
@@ -2123,6 +2284,7 @@ void ApolloGuidance::Prog28(double simt)
 			}
 			fmass=vmass*(1.0-exp(-dv/VesselISP));
 			burn=fmass/(vthrust/VesselISP);
+			if(MainThrusterIsHover) burn=burn*10.0;
 //			sprintf(oapiDebugString(), "dv=%.3f mass=%.1f fmass=%.3f burn=%.1f time=%.1f",
 //				dv, vmass, fmass, burn, tburn);
 			DesiredDeltaV=dv*1000.0;
@@ -2135,7 +2297,7 @@ void ApolloGuidance::Prog28(double simt)
 
 }
 
-void ApolloGuidance::Prog28Pressed(int R1, int R2, int R3)
+void ApolloGuidance::Prog17Pressed(int R1, int R2, int R3)
 
 {
 	switch (ProgState)
@@ -2147,7 +2309,7 @@ void ApolloGuidance::Prog28Pressed(int R1, int R2, int R3)
 
 	}
 }
-void ApolloGuidance::Prog29(double simt)
+void ApolloGuidance::Prog18(double simt)
 {
 	static VECTOR3 zero={0.0, 0.0, 0.0};
 	VECTOR3 pos, vel, norm, b, pn, nodes, npn, align;
@@ -2316,7 +2478,7 @@ void ApolloGuidance::Prog29(double simt)
 	}
 }
 
-void ApolloGuidance::Prog29Pressed(int R1, int R2, int R3)
+void ApolloGuidance::Prog18Pressed(int R1, int R2, int R3)
 
 {
 	switch (ProgState)
@@ -2363,14 +2525,14 @@ void ApolloGuidance::OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period,
 {
 	const double GRAVITY=6.67259e-11;
 	VECTOR3 h, n, ve;
-	double rdotv, p, e, i, om, w, v, u, l, a, eanom, manom, tsp, mu;
+	double rdotv, p, e, i, om, w, v, u, l, a, eanom, manom, tsp, mu, y;
 	OBJHANDLE hbody=OurVessel->GetGravityRef();
 	double bradius=oapiGetSize(hbody);
 	double bmass=oapiGetMass(hbody);
 	mu=GRAVITY*bmass;
 	rdotv=rvel*rpos;
 	h=CrossProduct(rpos, rvel);
-	n=(_V(0.0, 0.0, 1.0), h);
+	n=CrossProduct(_V(0.0, 0.0, 1.0), h);
 	ve=(rpos*(Mag(rvel)*Mag(rvel)-(mu/Mag(rpos)))-rvel*(rpos*rvel))/mu;
 	//calculate orbit elements...
 	p=(h*h)/mu;
@@ -2386,18 +2548,38 @@ void ApolloGuidance::OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period,
 	if(rpos.z < 0) u=2.0*PI-u;
 	l=om+u;
 	a=p/(1.0-e*e);
-	eanom=2*atan(sqrt((1.0-e)/(1.0+e))*tan(v/2.0));
-	manom=eanom-e*sin(eanom);
-	period=2*PI*sqrt((a*a*a)/mu);
-	tsp=period*(manom/(2*PI));
-	ttp=period-tsp;
-	if(rdotv < 0.0) ttp=-tsp;
-	if(ttp > (period/2.0)) {
-		tta=fabs((period/2.0) -ttp);
+	if(a > 0.0) {
+		// circular or elliptical orbit...
+		period=2.0*PI*sqrt((a*a*a)/mu);
+		apo=a*(1.0+e)-bradius;
+		eanom=2.0*atan(sqrt((1.0-e)/(1.0+e))*tan(v/2.0));
+		manom=eanom-e*sin(eanom);
+		tsp=period*(manom/(2*PI));
+		ttp=period-tsp;
+		if(rdotv < 0.0) ttp=-tsp;
+		if(ttp > (period/2.0)) {
+			tta=fabs((period/2.0)-ttp);
+		} else {
+			tta=fabs(ttp + period/2.0);
+		}
 	} else {
-		tta=fabs(ttp + period/2.0);
+		// not in orbit...
+		period=0.0;
+		apo=0.0;
+		tta=0.0;
+		y=(e+cos(v))/(1.0+e*cos(v));
+		eanom=log(y+sqrt(y*y-1.0));
+//		eanom=acosh((e+cos(v))/(1.0+e*cos(v)));
+		if(v < PI) {
+			eanom=fabs(eanom);
+		} else {
+			eanom=-fabs(eanom);
+		}
+		manom=e*sinh(eanom)-eanom;
+		ttp=-sqrt(pow(-a, 3)/mu)*(e*sinh(eanom)-eanom);
 	}
-	apo=a*(1.0+e)-bradius;
+//	sprintf(oapiDebugString(), "p=%.1f e=%.3f v=%.3f a=%.1f ttp=%.1f ",
+//		p, e, v*DEG, a, ttp);
 	per=a*(1.0-e)-bradius;
 }
 //	This is a simple Lambert solver based on BMW Chapter 5 - LazyD
@@ -3240,12 +3422,12 @@ bool ApolloGuidance::GenericProgPressed(int R1, int R2, int R3)
 
 	switch(ProgRunning) {
 
-	case 28:
-		Prog28Pressed(R1, R2, R3);
+	case 17:
+		Prog17Pressed(R1, R2, R3);
 		return true;
 
-	case 29:
-		Prog29Pressed(R1, R2, R3);
+	case 18:
+		Prog17Pressed(R1, R2, R3);
 		return true;
 
 	case 37:
