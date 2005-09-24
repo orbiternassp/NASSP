@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/09/22 22:27:40  movieman523
+  *	Updated erasable memory display/edit functions in AGC.
+  *	
   *	Revision 1.20  2005/09/20 22:32:05  lazyd
   *	Moved routines from autoland to here
   *	
@@ -209,11 +212,14 @@ protected:
 
 	void ResetProg(double simt);
 
-	void Prog28(double simt);
-	void Prog28Pressed(int R1, int R2, int R3);
+	void Prog16(double simt);
+	void Prog16Pressed(int R1, int R2, int R3);
 
-	void Prog29(double simt);
-	void Prog29Pressed(int R1, int R2, int R3);
+	void Prog17(double simt);
+	void Prog17Pressed(int R1, int R2, int R3);
+
+	void Prog18(double simt);
+	void Prog18Pressed(int R1, int R2, int R3);
 
 	void Prog37(double simt);
 	void Prog37Pressed(int R1, int R2, int R3);
