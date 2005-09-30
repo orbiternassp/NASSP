@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2005/09/22 00:39:09  flydba
+  *	AOT - Alignment Optical Telescope view and left instrument panel added to the lem
+  *	
   *	Revision 1.34  2005/09/18 23:15:20  flydba
   *	Lem overhead rendezvous window added...
   *	
@@ -933,8 +936,11 @@ void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
 	}
 }
 
-
 void sat5_lmpkd::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
+
+}
+
+void sat5_lmpkd::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 
 }
 

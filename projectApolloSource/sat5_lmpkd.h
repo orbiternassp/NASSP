@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/09/22 00:40:20  flydba
+  *	AOT - Alignment Optical Telescope view and left instrument panel added to the lem
+  *	
   *	Revision 1.20  2005/09/18 23:18:43  flydba
   *	Lem overhead rendezvous window added...
   *	
@@ -144,6 +147,7 @@ public:
 
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
+	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc, ph_rcslm0,ph_rcslm1; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
