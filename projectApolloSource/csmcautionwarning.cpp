@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/08/21 16:23:32  movieman523
+  *	Added more alarms.
+  *	
   *	Revision 1.5  2005/08/21 13:13:43  movieman523
   *	Wired in a few caution and warning lights.
   *	
@@ -83,7 +86,7 @@ bool CSMCautionWarningSystem::FuelCellBad(double temp)
 	// I don't know what the real temperature limits are.
 	//
 
-	if (temp < 430.0 || temp > 500.0)
+	if (temp < KelvinToFahrenheit(430.0) || temp > KelvinToFahrenheit(500.0))
 		return true;
 
 	return false;
@@ -123,18 +126,20 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		//
 
 		if (Source == CWS_SOURCE_CSM) {
-			FuelCellStatus fc;
+			FuelCellStatus fc1, fc2, fc3;
 
-			sat->GetFuelCellStatus(fc);
+			sat->GetFuelCellStatus(1, fc1);
+			sat->GetFuelCellStatus(2, fc2);
+			sat->GetFuelCellStatus(3, fc3);
 
 			//
 			// We should check more than temperature, once we find out what the
 			// caution limits were for pressure, etc.
 			//
 
-			SetLight(CSM_CWS_FC1_LIGHT, FuelCellBad(fc.FC1TempK));
-			SetLight(CSM_CWS_FC2_LIGHT, FuelCellBad(fc.FC2TempK));
-			SetLight(CSM_CWS_FC3_LIGHT, FuelCellBad(fc.FC3TempK));
+			SetLight(CSM_CWS_FC1_LIGHT, FuelCellBad(fc1.TempF));
+			SetLight(CSM_CWS_FC2_LIGHT, FuelCellBad(fc2.TempF));
+			SetLight(CSM_CWS_FC3_LIGHT, FuelCellBad(fc3.TempF));
 
 			//
 			// LOX/LH2: "The caution and warning system will activate on alarm when oxygen pressure 
@@ -190,7 +195,14 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		sat->GetAtmosStatus(atm);
 
 		if (simt > NextO2FlowCheckTime) {
-			double cf = atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH;
+			//
+			// Use displyed value instead of the PanelSDK to make use of the "damping" 
+			// of the O2 flow meter to pervent alarms because of the fluctuations during 
+			// high time acceleration.
+			//
+			double cf = atm.DisplayedO2FlowLBH;
+			//double cf = atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH;
+
 			bool LightO2Warning = false;
 
 			//
