@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2005/08/29 19:23:26  tschachim
+  *	Rendering of the DSKY keys. Bugfixes
+  *	
   *	Revision 1.74  2005/08/24 00:30:00  movieman523
   *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
   *	
@@ -443,271 +446,6 @@ void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffs
 	oapiReleaseDC (surf, hDC);
 }
 
-void Saturn::RedrawPanel_SuitCabinDeltaPMeter (SURFHANDLE surf) {
-
-	AtmosStatus atm;
-	GetAtmosStatus(atm);
-
-	// Suit cabin pressure difference
-	double scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-
-	//
-	// Limit needle to the meter.
-	//
-
-	if (scdp > 5.5)	scdp = 5.5;
-	if (scdp < -5.5) scdp = -5.5;
-
-	scdp = (scdp / 5.0) * 60.0;
-
-	// O2 main regulator output flow 
-	double cf = atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH;
-
-	//
-	// Limit needle to the meter.
-	//
-
-	if (cf < 0.1) cf = 0.1;
-	if (cf > 1.1) cf = 1.1;
-
-	cf = (cf - .6) / .4 * 60.0;
-
-	HDC hDC = oapiGetDC (surf);
-	DrawNeedle (hDC,  0, 22, 20.0, scdp * RAD, g_Param.pen[4], g_Param.pen[4]);
-	DrawNeedle (hDC, 45, 22, 20.0, (180.0 - cf) * RAD, g_Param.pen[4], g_Param.pen[4]);
-	oapiReleaseDC (surf, hDC);
-
-	oapiBlt (surf, srf[SRF_SUITCABINDELTAPMETER], 0, 13, 0, 0, 46, 18, SURF_PREDEF_CK);
-}
-
-void Saturn::RedrawPanel_SuitComprDeltaPMeter (SURFHANDLE surf) {
-
-	// O2 main regulator output flow 
-	// TODO: Is this the correct flow for that meter? No documentation found yet...
-	AtmosStatus atm;
-	GetAtmosStatus(atm);
-
-	double cf = atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH;
-	cf = (cf - .6) / .4 * 60.0;
-	if (cf > 90) cf = 90;
-	if (cf < -90) cf = -90;
-	
-	// Suit compressor pressure difference
-	double scdp = (atm.SuitPressurePSI - atm.SuitReturnPressurePSI);
-	scdp = (scdp - .5) / .5 * 60.0;
-	if (scdp > 90) scdp = 90;
-	if (scdp < -90) scdp = -90;
-
-	HDC hDC = oapiGetDC (surf);
-	DrawNeedle (hDC,  0, 22, 20.0, cf * RAD, g_Param.pen[4], g_Param.pen[4]);
-	DrawNeedle (hDC, 45, 22, 20.0, (180.0 - scdp) * RAD, g_Param.pen[4], g_Param.pen[4]);
-	oapiReleaseDC (surf, hDC);
-}
-
-void Saturn::RedrawPanel_O2CryoTankPressureIndicator(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle) {
-
-	if (value < 100.0)
-		oapiBlt(surf, needle, xOffset, 110, xNeedle, 0, 10, 10, SURF_PREDEF_CK);
-
-	else if (value <= 500.0) 
-		oapiBlt(surf, needle, xOffset, 110 - (int)((value - 100.0) * 0.065), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
-
-	else if (value <= 850.0)
-		oapiBlt(surf, needle, xOffset, 84 - (int)((value - 500.0) * 0.07714), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
-
-	else if (value <= 900.0)
-		oapiBlt(surf, needle, xOffset, 57 - (int)((value - 850.0) * 0.38), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
-
-	else if (value <= 950.0)
-		oapiBlt(surf, needle, xOffset, 38 - (int)((value - 900.0) * 0.42), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
-
-	else if (value <= 1050.0)
-		oapiBlt(surf, needle, xOffset, 17 - (int)((value - 950.0) * 0.13), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
-
-	else
-		oapiBlt(surf, needle, xOffset, 4, xNeedle, 0, 10, 10, SURF_PREDEF_CK);
-
-}
-
-void Saturn::RedrawPanel_CryoTankIndicators(SURFHANDLE surf) {
-
-	TankPressures press;
-
-	GetTankPressures(press);
-
-	// H2Tank1 pressure
-	double value = press.H2Tank1PressurePSI;
-	if (value < 0.0) value = 0.0;
-	if (value > 400.0) value = 400.0;
-	oapiBlt(surf, srf[SRF_NEEDLE],  0, (110 - (int)(value / 400.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-
-	// H2Tank2 pressure
-	value = press.H2Tank2PressurePSI;
-	if (value < 0.0) value = 0.0;
-	if (value > 400.0) value = 400.0;
-	oapiBlt(surf, srf[SRF_NEEDLE], 53, (110 - (int)(value / 400.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-
-	// O2Tank1 / O2SurgeTank pressure
-	if (O2PressIndSwitch)  
-		value = press.O2Tank1PressurePSI;
-	else
-		value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS") * PSI;
-	RedrawPanel_O2CryoTankPressureIndicator(surf, srf[SRF_NEEDLE], value, 86, 0);
-
-	// O2Tank2 pressure
-	value = press.O2Tank2PressurePSI;
-	RedrawPanel_O2CryoTankPressureIndicator(surf, srf[SRF_NEEDLE], value, 139, 10);
-
-	// H2Tank1 quantity
-	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:MASS") / CSM_H2TANK_CAPACITY ;
-	if (value < 0.0) value = 0.0;
-	if (value > 1.0) value = 1.0;
-	oapiBlt(surf, srf[SRF_NEEDLE],  172, (110 - (int)(value * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-
-	// H2Tank2 quantity
-	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:MASS") / CSM_H2TANK_CAPACITY ;
-	if (value < 0.0) value = 0.0;
-	if (value > 1.0) value = 1.0;
-	oapiBlt(surf, srf[SRF_NEEDLE],  225, (110 - (int)(value * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-
-	// O2Tank1 quantity
-	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:MASS") / CSM_O2TANK_CAPACITY ;
-	if (value < 0.0) value = 0.0;
-	if (value > 1.0) value = 1.0;
-	oapiBlt(surf, srf[SRF_NEEDLE],  258, (110 - (int)(value * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-
-	// O2Tank2 quantity
-	value = *(double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:MASS") / CSM_O2TANK_CAPACITY ;
-	if (value < 0.0) value = 0.0;
-	if (value > 1.0) value = 1.0;
-
-	//
-	// Apollo 13 O2 tank 2 quantity display failed offscale high around 46:45.
-	//
-
-#define O2FAILURETIME	(46.0 * 3600.0 + 45.0 * 60.0)
-
-	if (ApolloNo == 13) {
-		if (MissionTime >= (O2FAILURETIME + 5.0)) {
-			value = 1.05;
-		}
-		else if (MissionTime >= O2FAILURETIME) {
-			value += (1.05 - value) * ((MissionTime - O2FAILURETIME) / 5.0);
-		}
-	}
-	oapiBlt(surf, srf[SRF_NEEDLE],  311, (110 - (int)(value * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-}
-
-void Saturn::RedrawPanel_CabinIndicators (SURFHANDLE surf) {
-
-	AtmosStatus atm;
-	GetAtmosStatus(atm);
-
-	// Suit temperature
-	double value = KelvinToFahrenheit(atm.SuitTempK);
-	if (value < 20.0) value = 20.0;
-	if (value > 95.0) value = 95.0;
-	oapiBlt(surf, srf[SRF_NEEDLE],  1, (110 - (int)((value - 20.0) / 75.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-
-	// Cabin temperature
-	value = KelvinToFahrenheit(atm.CabinTempK);
-	if (value < 40.0) value = 40.0;
-	if (value > 120.0) value = 120.0;
-	oapiBlt(surf, srf[SRF_NEEDLE],  53, (110 - (int)((value - 40.0) / 80.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-
-	// Suit pressure
-	value = atm.SuitReturnPressurePSI;
-	if (value < 0.0) value = 0.0;
-	if (value > 16.0) value = 16.0;
-	if (value < 6.0)
-		oapiBlt(surf, srf[SRF_NEEDLE],  101, (108 - (int)(value / 6.0 * 55.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(surf, srf[SRF_NEEDLE],  101, (53 - (int)((value - 6.0) / 10.0 * 45.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-
-	// Cabin pressure
-	value = atm.CabinPressurePSI;
-	if (value < 0.0) value = 0.0;
-	if (value > 16.0) value = 16.0;
-	if (value < 6.0)
-		oapiBlt(surf, srf[SRF_NEEDLE],  153, (108 - (int)(value / 6.0 * 55.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(surf, srf[SRF_NEEDLE],  153, (53 - (int)((value - 6.0) / 10.0 * 45.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-
-	// Suit CO2 partial pressure
-	value = atm.SuitCO2MMHG;
-	if (value < 0.0) value = 0.0;
-	if (value > 30.0) value = 30.0;	
-	if (value < 10.0)
-		oapiBlt(surf, srf[SRF_NEEDLE],  215, (109 - (int)(value / 10.0 * 55.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else if (value < 15.0)
-		oapiBlt(surf, srf[SRF_NEEDLE],  215, (54 - (int)((value - 10.0) / 5.0 * 19.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else if (value < 20.0)
-		oapiBlt(surf, srf[SRF_NEEDLE],  215, (35 - (int)((value - 15.0) / 5.0 * 15.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(surf, srf[SRF_NEEDLE],  215, (20 - (int)((value - 20.0) / 10.0 * 14.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-
-}
-
-void Saturn::RedrawPanel_FuelCellIndicators (SURFHANDLE surf) {
-
-	double h2flow, o2flow, temp, condenserTemp;
-
-	// read values of the selected fuel cell
-	if (FuelCellIndicatorsSwitch == 1) {
-		h2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:H2FLOW") * LBH;
-		o2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:O2FLOW") * LBH;
-		temp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:TEMP"));
-		condenserTemp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:CONDENSERTEMP"));
-
-	} else if (FuelCellIndicatorsSwitch == 2) {
-		h2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:H2FLOW") * LBH;
-		o2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:O2FLOW") * LBH;
-		temp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:TEMP"));
-		condenserTemp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:CONDENSERTEMP"));
-
-	} else {
-		h2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:H2FLOW") * LBH;
-		o2flow = *(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:O2FLOW") * LBH;
-		temp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP"));
-		condenserTemp = KelvinToFahrenheit(*(double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:CONDENSERTEMP"));
-	}
-
-	// Fuel Cell H2 flow
-	if (h2flow < 0.0) h2flow = 0.0;
-	if (h2flow > 0.2) h2flow = 0.2;
-	if (h2flow < 0.05)
-		oapiBlt(surf, srf[SRF_NEEDLE],  0, (111 - (int)(h2flow / 0.05 * 21.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-	else if (h2flow < 0.15)
-		oapiBlt(surf, srf[SRF_NEEDLE],  0, (90 - (int)((h2flow - 0.05) / 0.1 * 65.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(surf, srf[SRF_NEEDLE],  0, (25 - (int)((h2flow - 0.15) / 0.05 * 21.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-
-	// Fuel Cell O2 flow
-	if (o2flow < 0.0) o2flow = 0.0;
-	if (o2flow > 1.6) o2flow = 1.6;
-	if (o2flow < 0.4)
-		oapiBlt(surf, srf[SRF_NEEDLE],  53, (111 - (int)(o2flow / 0.4 * 21.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else if (o2flow < 1.2)
-		oapiBlt(surf, srf[SRF_NEEDLE],  53, (90 - (int)((o2flow - 0.4) / 0.8 * 65.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(surf, srf[SRF_NEEDLE],  53, (25 - (int)((o2flow - 1.2) / 0.4 * 21.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-
-	// Fuel Cell skin temperature
-	if (temp < 100.0) temp = 100.0;
-	if (temp > 550.0) temp = 550.0;
-	if (temp < 400.0)
-		oapiBlt(surf, srf[SRF_NEEDLE],  86, (109 - (int)((temp - 100.0) / 300.0 * 53.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-	else if (temp < 500.0)
-		oapiBlt(surf, srf[SRF_NEEDLE],  86, (56 - (int)((temp - 400.0) / 100.0 * 40.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(surf, srf[SRF_NEEDLE],  86, (16 - (int)((temp - 500.0) / 50.0 * 12.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-
-	// Fuel Cell condenser exhaust temperature
-	if (condenserTemp < 150.0) condenserTemp = 150.0;
-	if (condenserTemp > 250.0) condenserTemp = 250.0;
-	oapiBlt(surf, srf[SRF_NEEDLE],  139, (109 - (int)((condenserTemp - 150.0) / 100.0 * 103.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-}
-
 
 //
 // Free all allocated surfaces.
@@ -819,6 +557,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_CWSLIGHTS]       		= oapiCreateSurface (LOADBMP (IDB_CWS_LIGHTS));
 		srf[SRF_EVENT_TIMER_DIGITS]    	= oapiCreateSurface (LOADBMP (IDB_EVENT_TIMER));
 		srf[SRF_DSKYKEY]		    	= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
+		srf[SRF_ECSINDICATOR]			= oapiCreateSurface (LOADBMP (IDB_ECSINDICATOR));
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -1087,13 +826,19 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RCS_PROP1_TALKBACK,							_R(1590,  658, 1742,  683), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RCS_PROP2_TALKBACK,							_R(1502,  791, 1742,  816), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SPS,											_R( 300, 1053,  338, 1115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSRADTEMPMETERS,							_R(1951,  604, 1997,  649), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSEVAPTEMPMETERS,							_R(2069,  604, 2115,  649), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSPRESSMETERS,								_R(2186,  604, 2232,  649), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSQUANTITYMETERS,							_R(2186,  726, 2232,  770), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSRADIATORINDICATOR,		 				_R(1799,  683, 1822,  706), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSRADIATORSWITCHES,         				_R(1796,  743, 2023,  772), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSSWITCHES,					 				_R(1787,  848, 2327,  877), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_HIGHGAINANTENNAPITCHPOSITIONSWITCH,			_R(2271, 1019, 2358, 1106), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 
 		//
-		// display & keyboard (DSKY):
-		//
+		// Display & keyboard (DSKY):
 		// Main panel uses the main DSKY.
 		//
-
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
@@ -1118,6 +863,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		
 		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 451,  881,  680,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 965, 1428, 1041, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSSWITCH,						_R( 876, 1527,  963, 1614), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;    
@@ -1166,7 +912,10 @@ void Saturn::SetSwitches(int panel) {
 
 	MainPanel.Init(0, this, &soundlib, this);
 
+	//
 	// SATPANEL_MAIN
+	//
+
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
 	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 81);
 	LiftoffNoAutoAbortSwitch.InitGuard(  0,   1, 92, 40, srf[SRF_SEQUENCERSWITCHES]);
@@ -1513,6 +1262,8 @@ void Saturn::SetSwitches(int panel) {
 	FCReacsValvesSwitch.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellLatchSwitchesRow); 
 	H2PurgeLineSwitch.Init  (43, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellLatchSwitchesRow); 
 
+	SPSRow.Init(AID_SPS, MainPanel);
+	SPSswitch.Init(0, 0, 38, 48, srf[SRF_SWITCHLEVER], SPSRow, this);
 
 	SBandNormalSwitchesRow.Init(AID_SBAND_NORMAL_SWITCHES, MainPanel);
 	SBandNormalXPDRSwitch.Init(		  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SBandNormalSwitchesRow);
@@ -1522,8 +1273,91 @@ void Saturn::SetSwitches(int panel) {
 	SBandNormalMode2Switch.Init(	188, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SBandNormalSwitchesRow);
 	SBandNormalMode3Switch.Init(	231, 0, 34, 29, srf[SRF_SWITCHUP],		 SBandNormalSwitchesRow);
 
+	CryoTankMetersRow.Init(AID_CYROTANKINDICATORS, MainPanel);
+	H2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
+	H2Pressure2Meter.Init(2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
+	O2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this, &O2PressIndSwitch);
+	O2Pressure2Meter.Init(2, srf[SRF_NEEDLE], CryoTankMetersRow, this, &O2PressIndSwitch);
+	H2Quantity1Meter.Init("H2", 1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
+	H2Quantity2Meter.Init("H2", 2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
+	O2Quantity1Meter.Init("O2", 1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
+	O2Quantity2Meter.Init("O2", 2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
+
+	FuelCellMetersRow.Init(AID_FUELCELLINDICATORS, MainPanel);
+	FuelCellH2FlowMeter.Init(srf[SRF_NEEDLE], FuelCellMetersRow, this, &FuelCellIndicatorsSwitch);
+	FuelCellO2FlowMeter.Init(srf[SRF_NEEDLE], FuelCellMetersRow, this, &FuelCellIndicatorsSwitch);
+	FuelCellTempMeter.Init(srf[SRF_NEEDLE], FuelCellMetersRow, this, &FuelCellIndicatorsSwitch);
+	FuelCellCondenserTempMeter.Init(srf[SRF_NEEDLE], FuelCellMetersRow, this, &FuelCellIndicatorsSwitch);
+
+	CabinMetersRow.Init(AID_CABININDICATORS, MainPanel);
+	SuitTempMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
+	CabinTempMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
+	SuitPressMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
+	CabinPressMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
+	PartPressCO2Meter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
+
+	SuitComprDeltaPMeterRow.Init(AID_SUITCOMPRDELTAPMETER, MainPanel);
+	SuitComprDeltaPMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitComprDeltaPMeterRow, this);
+	LeftO2FlowMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitComprDeltaPMeterRow, this);
 	
+	SuitCabinDeltaPMeterRow.Init(AID_SUITCABINDELTAPMETER, MainPanel);
+	SuitCabinDeltaPMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitCabinDeltaPMeterRow, this);
+	SuitCabinDeltaPMeter.FrameSurface = srf[SRF_SUITCABINDELTAPMETER];
+	RightO2FlowMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitCabinDeltaPMeterRow, this);
+	RightO2FlowMeter.FrameSurface = srf[SRF_SUITCABINDELTAPMETER];
+
+	EcsRadTempMetersRow.Init(AID_ECSRADTEMPMETERS, MainPanel);
+	EcsRadTempInletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsRadTempMetersRow, this);
+	EcsRadTempPrimOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsRadTempMetersRow, this);
+
+	EcsEvapTempMetersRow.Init(AID_ECSEVAPTEMPMETERS, MainPanel);
+	EcsRadTempSecOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsEvapTempMetersRow, this);
+	GlyEvapTempOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsEvapTempMetersRow, this);
+
+	EcsPressMetersRow.Init(AID_ECSPRESSMETERS, MainPanel);
+	GlyEvapSteamPressMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsPressMetersRow, this);
+	GlycolDischPressMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsPressMetersRow, this);
+
+	EcsQuantityMetersRow.Init(AID_ECSQUANTITYMETERS, MainPanel);
+	AccumQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this);
+	H2oQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this);
+
+	EcsRadiatorIndicatorRow.Init(AID_ECSRADIATORINDICATOR, MainPanel);
+	EcsRadiatorIndicator.Init( 0, 0, 23, 23, srf[SRF_ECSINDICATOR], EcsRadiatorIndicatorRow);
+	
+	EcsRadiatorSwitchesRow.Init(AID_ECSRADIATORSWITCHES, MainPanel);
+	EcsRadiatorsFlowContAutoSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsRadiatorSwitchesRow); 
+	EcsRadiatorsFlowContPwrSwitch.Init( 50, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsRadiatorSwitchesRow); 
+	EcsRadiatorsManSelSwitch.Init(     100, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsRadiatorSwitchesRow); 
+	EcsRadiatorsHeaterPrimSwitch.Init( 150, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsRadiatorSwitchesRow); 
+	EcsRadiatorsHeaterSecSwitch.Init(  193, 0, 34, 29, srf[SRF_SWITCHUP],       EcsRadiatorSwitchesRow); 
+
+	EcsSwitchesRow.Init(AID_ECSSWITCHES, MainPanel);
+	PotH2oHtrSwitch.Init                   (  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsSwitchesRow); 
+	SuitCircuitH2oAccumAutoSwitch.Init     ( 43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsSwitchesRow); 
+	SuitCircuitH2oAccumOnSwitch.Init       ( 86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsSwitchesRow); 
+	SuitCircuitHeatExchSwitch.Init         (129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsSwitchesRow); 
+	SecCoolantLoopEvapSwitch.Init          (172, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsSwitchesRow); 
+	SecCoolantLoopPumpSwitch.Init          (221, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsSwitchesRow); 
+	H2oQtyIndSwitch.Init                   (270, 0, 34, 29, srf[SRF_SWITCHUP],       EcsSwitchesRow); 
+	GlycolEvapTempInSwitch.Init            (313, 0, 34, 29, srf[SRF_SWITCHUP],       EcsSwitchesRow); 
+	GlycolEvapSteamPressAutoManSwitch.Init (364, 0, 34, 29, srf[SRF_SWITCHUP],       EcsSwitchesRow); 
+	GlycolEvapSteamPressIncrDecrSwitch.Init(411, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsSwitchesRow); 
+	GlycolEvapH2oFlowSwitch.Init           (456, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsSwitchesRow); 
+	CabinTempAutoManSwitch.Init            (506, 0, 34, 29, srf[SRF_SWITCHUP],       EcsSwitchesRow); 
+
+	EcsGlycolPumpsSwitchRow.Init(AID_ECSGLYCOLPUMPSSWITCH, MainPanel);
+	EcsGlycolPumpsSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], EcsGlycolPumpsSwitchRow);
+
+	HighGainAntennaPitchPositionSwitchRow.Init(AID_HIGHGAINANTENNAPITCHPOSITIONSWITCH, MainPanel);
+	HighGainAntennaPitchPositionSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], HighGainAntennaPitchPositionSwitchRow);
+	
+
+
+	//
 	// SATPANEL_RIGHT
+	//
+
 	FuelCellPumpsSwitchesRow.Init(AID_FUELCELLPUMPSSWITCHES, MainPanel);
 	FuelCellPumps1Switch.Init(  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPumpsSwitchesRow); 
 	FuelCellPumps2Switch.Init( 65, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPumpsSwitchesRow); 
@@ -1533,8 +1367,8 @@ void Saturn::SetSwitches(int panel) {
 	SuitCompressor1Switch.Init(  0, 58, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 	SuitCompressor2Switch.Init( 42,  0, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 
-	SPSRow.Init(AID_SPS, MainPanel);
-	SPSswitch.Init(0, 0, 38, 48, srf[SRF_SWITCHLEVER], SPSRow, this);
+
+
 
 	// old stuff
 
@@ -1861,46 +1695,19 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
 	if (s == &CabinFan1Switch || s == &CabinFan2Switch) {
+		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER:PUMP");
+		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER:PUMP");
+
 		if (CabinFansActive()) {
+			*pump1 = SP_PUMP_AUTO;
+			*pump2 = SP_PUMP_AUTO;
 			CabinFanSound();
+
 		} else {
+			*pump1 = SP_PUMP_OFF;
+			*pump2 = SP_PUMP_OFF;
 			StopCabinFanSound();
 		}
-
-		// TEST
-		/*if (s == &CabinFan1Switch) {
-			int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:TESTHEATER:PUMP");
-			if (CabinFan1Switch.IsUp())
-				*pump = SP_PUMP_ON;
-			else
-				*pump = SP_PUMP_OFF;
-		}
-
-		if (s == &CabinFan2Switch) {
-			int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:TESTEXCHANGER:PUMP");
-			if (CabinFan2Switch.IsUp())
-				*pump = SP_PUMP_ON;
-			else
-				*pump = SP_PUMP_OFF;
-		}
-		*/
-		/*
-			FCell *fc = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1");
-			if (CabinFan1Switch) {
-				fc->PLOAD(20.0);
-			} else {
-				fc->PUNLOAD(20.0);
-			}
-		}
-
-		if (s == &CabinFan2Switch) {
-			FCell *fc = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2");
-			if (CabinFan2Switch) {
-				fc->PLOAD(40.0);
-			} else {
-				fc->PUNLOAD(40.0);
-			}
-		}*/
 
 	} else if (s == &O2Heater1Switch) {
 		CryoTankHeaterSwitchToggled(s, 
@@ -2015,6 +1822,123 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 			*pump = SP_PUMP_OFF;
 		else
 			*pump = SP_PUMP_AUTO;
+
+	} else if (s == &EcsRadiatorsFlowContPwrSwitch || s == &EcsRadiatorsManSelSwitch) {
+		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER1:PUMP");
+		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER2:PUMP");
+
+		if (EcsRadiatorsFlowContPwrSwitch.IsUp()) {
+			*pump1 = SP_PUMP_ON;
+			*pump2 = SP_PUMP_ON;
+
+		} else if (EcsRadiatorsFlowContPwrSwitch.IsDown()) {
+			if (EcsRadiatorsManSelSwitch.IsUp()) {
+				*pump1 = SP_PUMP_ON;
+				*pump2 = SP_PUMP_OFF;
+
+			} else if (EcsRadiatorsManSelSwitch.IsCenter()) {
+				*pump1 = SP_PUMP_OFF;
+				*pump2 = SP_PUMP_OFF;
+
+			} else if (EcsRadiatorsManSelSwitch.IsDown()) {
+				*pump1 = SP_PUMP_OFF;
+				*pump2 = SP_PUMP_ON;
+			}
+		}
+
+	} else if (s == &EcsRadiatorsHeaterPrimSwitch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:PRIMECSRADIATORSHEATER:PUMP");
+		if (EcsRadiatorsHeaterPrimSwitch.IsCenter())
+			*pump = SP_PUMP_OFF;
+		else
+			*pump = SP_PUMP_AUTO;
+
+	} else if (s == &EcsRadiatorsHeaterSecSwitch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:SECECSRADIATORSHEATER:PUMP");
+		if (EcsRadiatorsHeaterSecSwitch.IsDown())
+			*pump = SP_PUMP_OFF;
+		else
+			*pump = SP_PUMP_AUTO;
+		
+	} else if (s == &SuitCircuitH2oAccumAutoSwitch || s == &SuitCircuitH2oAccumOnSwitch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:PUMPH2O");
+		if (SuitCircuitH2oAccumAutoSwitch.IsCenter() && SuitCircuitH2oAccumOnSwitch.IsCenter())
+			*pump = SP_PUMP_OFF;
+		else
+			*pump = SP_PUMP_ON;
+
+	} else if (s == &SuitCircuitHeatExchSwitch) {
+		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITHEATEXCHANGER:PUMP");
+		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITCIRCUITHEATEXCHANGER:PUMP");
+		int *pump3 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECSUITHEATEXCHANGER:PUMP");
+		int *pump4 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECSUITCIRCUITHEATEXCHANGER:PUMP");
+
+		if (SuitCircuitHeatExchSwitch.IsDown()) {
+			*pump1 = SP_PUMP_OFF;
+			*pump2 = SP_PUMP_OFF;
+			*pump3 = SP_PUMP_OFF;
+			*pump4 = SP_PUMP_OFF;
+
+		} else if (SuitCircuitHeatExchSwitch.IsUp()) {
+			*pump1 = SP_PUMP_AUTO;
+			*pump2 = SP_PUMP_AUTO;
+			*pump3 = SP_PUMP_AUTO;
+			*pump4 = SP_PUMP_AUTO;
+		}
+
+	} else if (s == &SecCoolantLoopEvapSwitch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPORATOR:PUMP");
+		
+		if (SecCoolantLoopEvapSwitch.IsUp()) {
+			*pump = SP_PUMP_AUTO;
+		} else if (SecCoolantLoopEvapSwitch.IsCenter()) {
+			*pump = SP_PUMP_OFF;
+		} else {
+			*pump = SP_PUMP_ON;
+			*((double*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPORATOR:THROTTLE")) = 0;
+		}
+
+	} else if (s == &SecCoolantLoopPumpSwitch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:SECGLYCOLPUMP:PUMP");
+		
+		if (SecCoolantLoopPumpSwitch.IsCenter()) 
+			*pump = SP_PUMP_OFF;
+		else
+			*pump = SP_PUMP_AUTO;
+
+	} else if (s == &GlycolEvapTempInSwitch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLEVAPINLETTEMPVALVE:PUMP");
+		
+		if (GlycolEvapTempInSwitch.IsUp())
+			*pump = SP_PUMP_AUTO;
+		else
+			*pump = SP_PUMP_ON;
+
+	} else if (s == &GlycolEvapSteamPressAutoManSwitch || s == &GlycolEvapH2oFlowSwitch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:PUMP");
+
+		if (GlycolEvapH2oFlowSwitch.IsCenter()) {
+			*pump = SP_PUMP_OFF;
+
+		} else if (GlycolEvapH2oFlowSwitch.IsDown()) {
+			*pump = SP_PUMP_ON;
+			*((double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:THROTTLE")) = 1;
+		
+		} else {
+			if (GlycolEvapSteamPressAutoManSwitch.IsUp())
+				*pump = SP_PUMP_AUTO;
+			else
+				*pump = SP_PUMP_ON;
+		}
+
+	} else if (s == &GlycolEvapSteamPressIncrDecrSwitch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:VALVE");
+		if (GlycolEvapSteamPressIncrDecrSwitch.IsUp())
+			*pump = SP_VALVE_CLOSE;
+		else if (GlycolEvapSteamPressIncrDecrSwitch.IsDown())
+			*pump = SP_VALVE_OPEN;
+		else
+			*pump = SP_VALVE_NONE;	
 	}
 }
 
@@ -2064,8 +1988,94 @@ void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 		running = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:RUNNING");
 		if (*running) FuelCellReactants3Indicator = false; 
 		         else FuelCellReactants3Indicator = true;
-	
-	} 
+
+	} else if (s == &EcsRadiatorIndicator) {
+		if (EcsRadiatorsFlowContPwrSwitch.IsUp()) {
+			if (EcsRadiatorsFlowContAutoSwitch.IsDown()) 
+				EcsRadiatorIndicator = false;
+			else
+				EcsRadiatorIndicator = true;
+		}
+	}
+}
+
+void Saturn::PanelRotationalSwitchChanged(RotationalSwitch *s) {
+
+
+	if (s == &EcsGlycolPumpsSwitch) {
+		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP:PUMP");
+
+		if (EcsGlycolPumpsSwitch.GetState() == 3) 
+			*pump = SP_PUMP_OFF;
+		else
+			*pump = SP_PUMP_AUTO;
+		
+	} else if (s == &HighGainAntennaPitchPositionSwitch) {
+		// TODO Only for testing the ECS water-glycol cooling 
+		int *pump1 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER1:PUMP");
+		int *pump2 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER2:PUMP");
+		int *pump3 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER3:PUMP");
+		int *pump4 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER4:PUMP");
+		int *pump5 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER5:PUMP");
+		int *pump6 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER6:PUMP");
+
+		if (HighGainAntennaPitchPositionSwitch.GetState() == 0) {
+			*pump1 = SP_PUMP_OFF;
+			*pump2 = SP_PUMP_OFF;
+			*pump3 = SP_PUMP_OFF;
+			*pump4 = SP_PUMP_OFF;
+			*pump5 = SP_PUMP_OFF;
+			*pump6 = SP_PUMP_OFF;
+
+		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 1) {
+			*pump1 = SP_PUMP_ON;
+			*pump2 = SP_PUMP_OFF;
+			*pump3 = SP_PUMP_OFF;
+			*pump4 = SP_PUMP_OFF;
+			*pump5 = SP_PUMP_OFF;
+			*pump6 = SP_PUMP_OFF;
+
+		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 2) {
+			*pump1 = SP_PUMP_ON;
+			*pump2 = SP_PUMP_ON;
+			*pump3 = SP_PUMP_OFF;
+			*pump4 = SP_PUMP_OFF;
+			*pump5 = SP_PUMP_OFF;
+			*pump6 = SP_PUMP_OFF;
+
+		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 3) {
+			*pump1 = SP_PUMP_ON;
+			*pump2 = SP_PUMP_ON;
+			*pump3 = SP_PUMP_ON;
+			*pump4 = SP_PUMP_OFF;
+			*pump5 = SP_PUMP_OFF;
+			*pump6 = SP_PUMP_OFF;
+
+		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 4) {
+			*pump1 = SP_PUMP_ON;
+			*pump2 = SP_PUMP_ON;
+			*pump3 = SP_PUMP_ON;
+			*pump4 = SP_PUMP_ON;
+			*pump5 = SP_PUMP_OFF;
+			*pump6 = SP_PUMP_OFF;
+
+		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 5) {
+			*pump1 = SP_PUMP_ON;
+			*pump2 = SP_PUMP_ON;
+			*pump3 = SP_PUMP_ON;
+			*pump4 = SP_PUMP_ON;
+			*pump5 = SP_PUMP_ON;
+			*pump6 = SP_PUMP_OFF;
+
+		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 6) {
+			*pump1 = SP_PUMP_ON;
+			*pump2 = SP_PUMP_ON;
+			*pump3 = SP_PUMP_ON;
+			*pump4 = SP_PUMP_ON;
+			*pump5 = SP_PUMP_ON;
+			*pump6 = SP_PUMP_ON;
+		}
+	}
 }
 
 void Saturn::CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
@@ -2271,25 +2281,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		else {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
 		}
-		return true;
-
-	case AID_SUITCABINDELTAPMETER:
-		RedrawPanel_SuitCabinDeltaPMeter(surf);
-
-	case AID_CYROTANKINDICATORS:
-		RedrawPanel_CryoTankIndicators(surf);
-		return true;
-
-	case AID_SUITCOMPRDELTAPMETER:
-		RedrawPanel_SuitComprDeltaPMeter(surf);
-		return true;
-
-	case AID_CABININDICATORS:
-		RedrawPanel_CabinIndicators(surf);
-		return true;
-
-	case AID_FUELCELLINDICATORS:
-		RedrawPanel_FuelCellIndicators(surf);
 		return true;
 
 	case AID_LV_ENGINE_LIGHTS:
@@ -2701,7 +2692,7 @@ void Saturn::InitSwitches() {
 	CautionWarningPowerSwitch.Register(PSH, "CautionWarningPowerSwitch", THREEPOSSWITCH_UP);
 	CautionWarningLightTestSwitch.Register(PSH, "CautionWarningLightTestSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
-	CabinFan1Switch = false;					// saved in CP2SwitchState.CFswitch1
+	CabinFan1Switch = true;						// saved in CP2SwitchState.CFswitch1
 	CabinFan2Switch = false;					// saved in CP2SwitchState.CFswitch2
 	H2Heater1Switch.Register(PSH, "H2Heater1Switch", THREEPOSSWITCH_UP);
 	H2Heater2Switch.Register(PSH, "H2Heater2Switch", THREEPOSSWITCH_UP);
@@ -2892,6 +2883,84 @@ void Saturn::InitSwitches() {
 	dVThrust2Switch.Register(PSH, "dVThrust2Switch", 0, 0);
 
 	SPSswitch.Register(PSH, "SPSswitch", THREEPOSSWITCH_CENTER);
+
+	H2Pressure1Meter.Register(PSH, "H2Pressure1Meter", 0, 400, 10);
+	H2Pressure2Meter.Register(PSH, "H2Pressure2Meter", 0, 400, 10);
+	O2Pressure1Meter.Register(PSH, "O2Pressure1Meter", 100, 1050, 10);
+	O2Pressure2Meter.Register(PSH, "O2Pressure2Meter", 100, 1050, 10);
+	H2Quantity1Meter.Register(PSH, "H2Quantity1Meter", 0, 1, 10);
+	H2Quantity2Meter.Register(PSH, "H2Quantity2Meter", 0, 1, 10);
+	O2Quantity1Meter.Register(PSH, "O2Quantity1Meter", 0, 1, 10);
+	O2Quantity2Meter.Register(PSH, "O2Quantity2Meter", 0, 1, 10);
+
+	FuelCellH2FlowMeter.Register(PSH, "FuelCellH2FlowMeter", 0, 0.2, 2);
+	FuelCellO2FlowMeter.Register(PSH, "FuelCellO2FlowMeter", 0, 1.6, 2);
+	FuelCellTempMeter.Register(PSH, "FuelCellTempMeter", 100, 550, 2);
+	FuelCellCondenserTempMeter.Register(PSH, "FuelCellCondenserTempMeter", 150, 250, 2);
+
+	SuitTempMeter.Register(PSH, "SuitTempMeter", 20, 95, 2);
+	CabinTempMeter.Register(PSH, "CabinTempMeter", 40, 120, 2);
+	SuitPressMeter.Register(PSH, "SuitPressMeter", 0, 16, 2);
+	CabinPressMeter.Register(PSH, "CabinPressMeter", 0, 16, 2);
+	PartPressCO2Meter.Register(PSH, "PartPressCO2Meter", 0, 30, 2);
+
+	SuitComprDeltaPMeter.Register(PSH, "SuitComprDeltaPMeter", -0.1, 1.1, 5);
+	LeftO2FlowMeter.Register(PSH, "LeftO2FlowMeter", 0.1, 1.1, 5);
+
+	SuitCabinDeltaPMeter.Register(PSH, "SuitCabinDeltaPMeter", -6, 6, 5);
+	RightO2FlowMeter.Register(PSH, "RightO2FlowMeter", 0.1, 1.1, 5);
+
+	EcsRadTempInletMeter.Register(PSH, "EcsRadTempInletMeter", 50, 130, 5);
+	EcsRadTempPrimOutletMeter.Register(PSH, "EcsRadTempPrimOutletMeter", -60, 110, 5);
+
+	EcsRadTempSecOutletMeter.Register(PSH, "EcsRadTempSecOutletMeter", 26, 74, 5);
+	GlyEvapTempOutletMeter.Register(PSH, "GlyEvapTempOutletMeter", 26, 74, 5);
+
+	GlyEvapSteamPressMeter.Register(PSH, "GlyEvapSteamPressMeter", 0.03, 0.27, 5);
+	GlycolDischPressMeter.Register(PSH, "GlycolDischPressMeter", -6, 66, 5);
+
+	AccumQuantityMeter.Register(PSH, "AccumQuantityMeter", 0, 1, 5);
+	H2oQuantityMeter.Register(PSH, "H2oQuantityMeter", 0, 1, 3);
+
+	EcsRadiatorIndicator.Register(PSH, "EcsRadiatorIndicator", true);
+
+	EcsRadiatorsFlowContAutoSwitch.Register(PSH, "ECSRadiatorsFlowContAutoSwitch", THREEPOSSWITCH_UP);
+	EcsRadiatorsFlowContPwrSwitch.Register(PSH, "ECSRadiatorsFlowContPwrSwitch", THREEPOSSWITCH_UP);
+	EcsRadiatorsManSelSwitch.Register(PSH, "ECSRadiatorsManSelSwitch", THREEPOSSWITCH_CENTER);
+	EcsRadiatorsHeaterPrimSwitch.Register(PSH, "ECSRadiatorsHeaterPrimSwitch", THREEPOSSWITCH_UP);
+	EcsRadiatorsHeaterSecSwitch.Register(PSH, "ECSRadiatorsHeaterSecSwitch", true);
+
+	PotH2oHtrSwitch.Register(PSH, "PotH2oHtrSwitch", THREEPOSSWITCH_UP);
+	SuitCircuitH2oAccumAutoSwitch.Register(PSH, "SuitCircuitH2oAccumAutoSwitch", THREEPOSSWITCH_UP);
+	SuitCircuitH2oAccumOnSwitch.Register(PSH, "SuitCircuitH2oAccumOnSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SuitCircuitHeatExchSwitch.Register(PSH, "SuitCircuitHeatExchSwitch", THREEPOSSWITCH_CENTER);
+	SecCoolantLoopEvapSwitch.Register(PSH, "SecCoolantLoopEvapSwitch", THREEPOSSWITCH_UP);
+	SecCoolantLoopPumpSwitch.Register(PSH, "SecCoolantLoopPumpSwitch", THREEPOSSWITCH_UP);
+	H2oQtyIndSwitch.Register(PSH, "H2oQtyIndSwitch", false);
+	GlycolEvapTempInSwitch.Register(PSH, "GlycolEvapTempInSwitch", true);
+	GlycolEvapSteamPressAutoManSwitch.Register(PSH, "GlycolEvapSteamPressAutoManSwitch", true);
+	GlycolEvapSteamPressIncrDecrSwitch.Register(PSH, "GlycolEvapSteamPressIncrDecrSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	GlycolEvapH2oFlowSwitch.Register(PSH, "GlycolEvapH2oFlowSwitch", THREEPOSSWITCH_UP, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
+	CabinTempAutoManSwitch.Register(PSH, "CabinTempAutoManSwitch", true);
+
+	EcsGlycolPumpsSwitch.AddPosition(1, 240);
+	EcsGlycolPumpsSwitch.AddPosition(2, 270);
+	EcsGlycolPumpsSwitch.AddPosition(3, 300);
+	EcsGlycolPumpsSwitch.AddPosition(4, 330);
+	EcsGlycolPumpsSwitch.AddPosition(5, 0);
+	EcsGlycolPumpsSwitch.Register(PSH, "EcsGlycolPumpsSwitch", 2);
+
+	HighGainAntennaPitchPositionSwitch.AddPosition(0,   0);
+	HighGainAntennaPitchPositionSwitch.AddPosition(1,  30);
+	HighGainAntennaPitchPositionSwitch.AddPosition(2,  60);
+	HighGainAntennaPitchPositionSwitch.AddPosition(3,  90);
+	HighGainAntennaPitchPositionSwitch.AddPosition(4, 120);
+	HighGainAntennaPitchPositionSwitch.AddPosition(5, 150);
+	HighGainAntennaPitchPositionSwitch.AddPosition(6, 180);
+	HighGainAntennaPitchPositionSwitch.Register(PSH, "HighGainAntennaPitchPositionSwitch", 0);
+
+
+
 
 	//
 	// Old stuff. Delete when no longer required.
