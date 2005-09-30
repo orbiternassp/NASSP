@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/08/20 12:24:03  movieman523
+  *	Added a FailedState as well as a Failed flag to each switch. You now must call GetState(), IsUp(), IsDown() etc to get the functional state of the switch. The state variable now only tells you the visual state (e.g. switch up, down, center) and not the functional state.
+  *	
   *	Revision 1.19  2005/08/19 21:33:20  movieman523
   *	Added initial random failure support.
   *	
@@ -92,10 +95,12 @@
 #define THREEPOSSWITCH_CENTER	1
 #define THREEPOSSWITCH_UP		2
 
-#define SPRINGLOADEDSWITCH_NONE		0
-#define SPRINGLOADEDSWITCH_DOWN		1
-#define SPRINGLOADEDSWITCH_CENTER	2
-#define SPRINGLOADEDSWITCH_UP		3
+#define SPRINGLOADEDSWITCH_NONE					0
+#define SPRINGLOADEDSWITCH_DOWN					1
+#define SPRINGLOADEDSWITCH_CENTER				2
+#define SPRINGLOADEDSWITCH_UP					3
+#define SPRINGLOADEDSWITCH_CENTER_SPRINGUP		4
+#define SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN	5
 
 #define PANELSWITCH_START_STRING	"PANELSWITCHES_BEGIN"
 #define PANELSWITCH_END_STRING		"PANELSWITCHES_END"
@@ -117,7 +122,7 @@ public:
 	PanelSwitchItem *GetNextForScenario() { return nextForScenario; };
 	void SetFailed(bool fail, int fail_state = 0) { Failed = fail; FailedState = fail_state; };
 	bool IsFailed() { return Failed; };
-	//char *GetName() { return name; }
+	char *GetName() { return name; }
 
 	virtual bool CheckMouseClick(int event, int mx, int my) = 0;
 	virtual void DrawSwitch(SURFHANDLE DrawSurface) = 0;
@@ -560,6 +565,7 @@ public:
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
+	int GetState();
 	int operator=(const int b);
 	operator int();
 
@@ -573,11 +579,13 @@ protected:
 	SURFHANDLE switchSurface;
 	Sound sclick;
 	RotationalSwitchBitmap bitmaps[RotationalSwitchBitmapCount];
+	SwitchRow *switchRow;
 
 	void SetValue(int newValue);
 	double AngleDiff(double a1, double a2);
 	void DeletePositions();
 };
+
 
 class IndicatorSwitch: public PanelSwitchItem {
 
@@ -604,6 +612,35 @@ protected:
 	SURFHANDLE switchSurface;
 	SwitchRow *switchRow;
 };
+
+
+class MeterSwitch: public PanelSwitchItem {
+
+public:
+	MeterSwitch();
+	virtual ~MeterSwitch();
+
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, double min, double max, double time);
+	void Init(SwitchRow &row);
+	void DrawSwitch(SURFHANDLE drawSurface);
+	bool CheckMouseClick(int event, int mx, int my);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+	double GetDisplayValue() { return displayValue; };
+
+	virtual double QueryValue() = 0;
+	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface) = 0;
+
+protected:
+	double value;
+	double displayValue;
+	double minValue;
+	double maxValue;
+	double minMaxTime;
+	SwitchRow *switchRow;
+	double lastDrawTime;
+};
+
 
 class PanelSwitches;
 
@@ -640,6 +677,7 @@ class PanelSwitchListener {
 public:
 	virtual void PanelSwitchToggled(ToggleSwitch *s) = 0;
 	virtual void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) = 0;
+	virtual void PanelRotationalSwitchChanged(RotationalSwitch *s) = 0;
 };
 
 class PanelSwitches {
@@ -673,6 +711,7 @@ class PanelSwitchScenarioHandler {
 public:
 	PanelSwitchScenarioHandler() { switchList = 0; };
 	void RegisterSwitch(PanelSwitchItem *s);
+	PanelSwitchItem* GetSwitch(char *name);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 

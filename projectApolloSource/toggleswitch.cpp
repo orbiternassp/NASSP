@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/25 18:40:24  movieman523
+  *	Fixed talkback initialisation from scenario file.
+  *	
   *	Revision 1.23  2005/08/24 23:29:31  movieman523
   *	Fixed event timer reset.
   *	
@@ -358,6 +361,12 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
+			state = THREEPOSSWITCH_CENTER;
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
+			state = THREEPOSSWITCH_CENTER;
 	}
 
 	if (Active && (state != OldState)) {
@@ -938,6 +947,7 @@ RotationalSwitch::RotationalSwitch() {
 	positionList = 0;
 	next = 0;
 	switchSurface = 0;
+	switchRow = 0;
 
 	bitmaps[0].angle = 0;
 	bitmaps[0].xOffset = 0;
@@ -1058,6 +1068,7 @@ void RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switc
 	switchSurface = surf;
 	
 	row.AddSwitch(this);
+	switchRow = &row;
 
 	if (!sclick.isValid()) {
 		row.panelSwitches->soundlib->LoadSound(sclick, CLICK_SOUND);
@@ -1132,6 +1143,10 @@ bool RotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 	if (position != bestPosition) {
 		position = bestPosition;
 		sclick.play();
+		if (switchRow) {
+			if (switchRow->panelSwitches->listener) 
+				switchRow->panelSwitches->listener->PanelRotationalSwitchChanged(this);
+		}
 	}
 	return true;
 }
@@ -1164,6 +1179,15 @@ int RotationalSwitch::operator=(const int b) {
 }
 
 RotationalSwitch::operator int() {
+
+	if (position) {
+		return position->GetValue();
+	} else {	
+		return 0;
+	}
+}
+
+int RotationalSwitch::GetState() {
 
 	if (position) {
 		return position->GetValue();
@@ -1224,6 +1248,11 @@ void IndicatorSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, bool d
 
 	name = n;
 	state = defaultState;
+	if (state) 
+		displayState = 3.0;
+	else
+		displayState = 0.0;
+
 	scnh.RegisterSwitch(this);
 }
 
@@ -1275,12 +1304,91 @@ void IndicatorSwitch::LoadState(char *line) {
 	sscanf(line, "%s %i", buffer, &st); 
 	if (!strnicmp(buffer, name, strlen(name))) {
 		state = st;
-		if (state) {
+		if (state) 
 			displayState = 3.0;
-		}
-		else {
+		else
 			displayState = 0.0;
+	}
+}
+
+
+//
+// Meter Switch
+//
+
+MeterSwitch::MeterSwitch() {
+
+	value = 0;
+	displayValue = 0;
+	minValue = 0;
+	maxValue = 0;
+	switchRow = 0;
+	lastDrawTime = -1;
+}
+
+MeterSwitch::~MeterSwitch() {
+}
+
+void MeterSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, double min, double max, double time) {
+
+	name = n;
+	value = min;
+	displayValue = min;
+	minValue = min;
+	maxValue = max;
+	minMaxTime = time;
+	scnh.RegisterSwitch(this);
+}
+
+void MeterSwitch::Init(SwitchRow &row) {
+
+	row.AddSwitch(this);
+	switchRow = &row;
+}
+
+bool MeterSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	return false;
+}
+
+void MeterSwitch::DrawSwitch(SURFHANDLE drawSurface) {
+
+	value = QueryValue();
+	if (value > maxValue) value = maxValue;
+	if (value < minValue) value = minValue;
+
+	if (lastDrawTime == -1) {
+		displayValue = value;
+	} else {
+		double dt = oapiGetSysTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
+		if (dt > 0 && (fabs(value - displayValue) / dt > (maxValue - minValue) / minMaxTime)) {
+			displayValue += ((value - displayValue) / fabs(value - displayValue)) * (maxValue - minValue) / minMaxTime * dt;
+		} else {
+			displayValue = value;
 		}
+	}
+	lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
+	
+	DoDrawSwitch(displayValue, drawSurface);
+}
+
+void MeterSwitch::SaveState(FILEHANDLE scn) {
+
+	char buffer[100];
+
+	sprintf(buffer, "%lf %lf", value, displayValue); 
+	oapiWriteScenario_string(scn, name, buffer);
+}
+
+void MeterSwitch::LoadState(char *line) {
+
+	char buffer[100];
+	double v, dv;
+
+	sscanf(line, "%s %lf %lf", buffer, &v, &dv); 
+	if (!strnicmp(buffer, name, strlen(name))) {
+		value = v;
+		displayValue = dv;
 	}
 }
 
@@ -1323,6 +1431,18 @@ void PanelSwitchScenarioHandler::LoadState(FILEHANDLE scn) {
 		}
 	}
 }
+
+PanelSwitchItem* PanelSwitchScenarioHandler::GetSwitch(char *name) {
+
+	PanelSwitchItem *s = switchList;
+	while (s) {
+		if (!stricmp(s->GetName(), name)) 
+			return s;
+		s = s->GetNextForScenario();
+	}
+	return 0;
+}
+
 
 void MissionTimerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, MissionTimer *ptimer)
 
