@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/08/29 19:25:25  tschachim
+  *	Rendering of the DSKY keys.
+  *	
   *	Revision 1.31  2005/08/23 22:18:47  movieman523
   *	SPS switch now works.
   *	
@@ -165,7 +168,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 40; // number of bitmap handles
+const int nsurf = 41; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -195,6 +198,7 @@ const int nsurf = 40; // number of bitmap handles
 #define SRF_CWSLIGHTS				37
 #define SRF_EVENT_TIMER_DIGITS		38
 #define SRF_DSKYKEY					39
+#define SRF_ECSINDICATOR			40
 
 //
 // Earth radius and gravity constants.
