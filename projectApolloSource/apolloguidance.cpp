@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2005/09/24 20:54:04  lazyd
+  *	Added P16 for LOI
+  *	
   *	Revision 1.44  2005/09/22 22:27:40  movieman523
   *	Updated erasable memory display/edit functions in AGC.
   *	
@@ -4047,9 +4050,26 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 	}
 	else {
 		switch (channel) {
+		case 030:
+			ProcessInputChannel30(bit, val);
+			break;
+
 		case 032:
 			ProcessInputChannel32(bit, val);
 			break;
+		}
+	}
+}
+
+void ApolloGuidance::ProcessInputChannel30(int bit, bool val)
+
+{	
+	if (bit == 14) {	// Answer to ISSTurnOnRequest
+		if (val) {
+			ChannelValue12 val12;
+	    	val12.Value = 0;
+			val12.Bits.ISSTurnOnDelayComplete = 1;
+			imu.ChannelOutput(012, val12.Value);
 		}
 	}
 }

@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/09/24 20:54:43  lazyd
+  *	Added P16
+  *	
   *	Revision 1.21  2005/09/22 22:27:40  movieman523
   *	Updated erasable memory display/edit functions in AGC.
   *	
@@ -234,6 +237,7 @@ protected:
 	void SetChannel10Lights(int bit, bool val);
 
 	void ProcessInputChannel15(int val);
+	void ProcessInputChannel30(int bit, bool val);
 	void ProcessInputChannel32(int bit, bool val);
 
 	virtual void ProcessChannel10(int val);
