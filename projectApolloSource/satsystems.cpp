@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/08/24 00:30:00  movieman523
+  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
+  *	
   *	Revision 1.23  2005/08/23 22:18:47  movieman523
   *	SPS switch now works.
   *	
@@ -121,16 +124,17 @@ void Saturn::SystemsInit() {
 
 	// default state
 	systemsState = SATSYSTEMS_NONE;
+	lastSystemsMissionTime = MINUS_INFINITY;
+	firstSystemsTimeStepDone = false;
 
 	// initialize SPSDK
 	Panelsdk.RegisterVessel(this);
 	Panelsdk.InitFromFile("ProjectApollo\\SaturnSystems");
 
-	//PanelsdkLogFile = fopen("NASSP-Systems.log", "w");
+	//PanelsdkLogFile = fopen("ProjectApollo Systems.log", "w");
 
 	//
 	// Default valve states.
-	//
 	// Make sure switches and talkback state match.
 	//
 
@@ -181,136 +185,206 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		//
 		// Systems state handling
 		//
+		if (!firstSystemsTimeStepDone) {
+			firstSystemsTimeStepDone = true;
 
-		AtmosStatus atm;
-		GetAtmosStatus(atm);
+		} else {
+			AtmosStatus atm;
+			GetAtmosStatus(atm);
 
-		double *pMax, *fancap;
-		float *size;
-		int *open, *number;
+			double *pMax, *fMax, *fancap, scdp;
+			float *size, *pz;
+			int *open, *number, *isopen;
 
-		switch (systemsState) {
+			switch (systemsState) {
 
-		case SATSYSTEMS_NONE:
-			
-			// No crew 
-			number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
-			*number = 0; 
-
-			// No leak
-			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
-			*open = SP_VALVE_CLOSE;
-
-			// Cabin pressure regulator to 14.7 psi
-			pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:PRESSMAX");
-			*pMax = 14.7 / PSI;	
-			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
-			*open = SP_VALVE_OPEN;
-
-			// O2 demand regulator to 5.5 inH2O higher than cabin pressure
-			pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:PRESSMAX");
-			*pMax = 14.7 / PSI + 5.5 / INH2O;	
-			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
-			*open = SP_VALVE_OPEN;
-
-			// Close cabin to suit circuit return value
-			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
-			*open = SP_VALVE_CLOSE;
-
-			// Turn off suit compressor
-			SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-			SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-
-			// Next state
-			systemsState = SATSYSTEMS_PRELAUNCH;
-			break;
-
-		case SATSYSTEMS_PRELAUNCH:
-			if (MissionTime >= -6000) {	// 1h 40min before launch
-				// Crew ingress
-				number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
-				*number = 3; 
-
-				// Cabin leak
-				size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-				*size = (float)0.0005;
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
-				*open = SP_VALVE_OPEN;
-
-				// O2 demand regulator to 2.5 inH2O higher than cabin pressure
-				pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:PRESSMAX");
-				*pMax = 14.7 / PSI + 2.5 / INH2O;
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
-				*open = SP_VALVE_OPEN;
-
-				// Turn on suit compressor 1, prelaunch configuration
-				SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
-				SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-				fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
-				*fancap = 110000.0;
-
-				// Next state
-				systemsState = SATSYSTEMS_CABINCLOSEOUT;
-			}	
-			break;
-
-		case SATSYSTEMS_CABINCLOSEOUT:
-			if (GetAtmPressure() <= 6.0 / PSI) {
-				// Cabin pressure relieve
-				size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-				*size = (float)0.25;
+			case SATSYSTEMS_NONE:
 				
-				// Cabin pressure regulator to 5 psi
+				// No crew 
+				number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
+				*number = 0; 
+
+				// No leak
+				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
+				*open = SP_VALVE_CLOSE;
+
+				// Cabin pressure regulator to 14.7 psi
 				pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:PRESSMAX");
-				*pMax = 5.0 / PSI;
+				*pMax = 14.7 / PSI;	
+				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
+				*open = SP_VALVE_OPEN;
 
-				// Close O2 demand regulator 
+				// O2 demand regulator to 5.5 inH2O higher than cabin pressure
+				pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:PRESSMAX");
+				*pMax = 14.7 / PSI + 5.5 / INH2O;	
 				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
-				*open = SP_VALVE_CLOSE;
+				*open = SP_VALVE_OPEN;
 
-				// Open cabin to suit circuit return value
+				// Close cabin to suit circuit return value
 				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
-				*open = SP_VALVE_OPEN;
-
-				// Open suit pressure relieve
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
-				*open = SP_VALVE_OPEN;
-
-				// Open direct O2 valve
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:LEAK:OPEN");
-				*open = SP_VALVE_OPEN;
-
-				// Suit compressor to flight configuration
-				fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
-				*fancap = 60000.0;	
-
-				// Next state
-				systemsState = SATSYSTEMS_CABINVENTING;
-			}		
-			break;
-
-		case SATSYSTEMS_CABINVENTING:
-
-			size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-			open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
-
-			if (atm.CabinPressurePSI <= 5.0) {
-				// cabin leak
-				*size = (float)0.001;	
-			}
-			if (atm.SuitPressurePSI <= 5.0) {
-				// Close suit pressure relieve
 				*open = SP_VALVE_CLOSE;
 
-				// Close direct O2 valve
-				*(int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:LEAK:OPEN") = SP_VALVE_CLOSE;
-			}
+				// Turn off suit compressor
+				SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+				SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
 
-			if (*size == (float)0.001 && *open == SP_VALVE_CLOSE) {
 				// Next state
-				systemsState = SATSYSTEMS_FLIGHT;
+				systemsState = SATSYSTEMS_PRELAUNCH;
+				lastSystemsMissionTime = MissionTime; 
+				break;
+
+			case SATSYSTEMS_PRELAUNCH:
+				if (MissionTime >= -6000) {	// 1h 40min before launch
+
+					// Close cabin pressure regulator 
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
+					*open = SP_VALVE_CLOSE;
+
+					// O2 demand regulator to 2.5 inH2O higher than cabin pressure
+					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:PRESSMAX");
+					*pMax = 14.7 / PSI + 2.5 / INH2O;
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
+					*open = SP_VALVE_OPEN;
+
+					// O2 demand regulator max flow to 0.8 lb/h 
+					// TODO: This should be done with the direct O2 valve manually, at the moment it doesn't matter
+					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOWMAX");
+					*fMax = 0.8 / LBH;
+
+					// Turn on suit compressor 1, prelaunch configuration
+					SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
+					SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+					fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
+					*fancap = 110000.0;
+
+					// Open cabin to suit circuit return value
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
+					*open = SP_VALVE_OPEN;
+					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:PRESSMAX");
+					*pMax = 100.0 / PSI;	// that's like disabling PREG
+
+					// Next state
+					systemsState = SATSYSTEMS_CREWINGRESS_1;
+					lastSystemsMissionTime = MissionTime; 
+				}	
+				break;
+
+			case SATSYSTEMS_CREWINGRESS_1:
+				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
+				if (scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) {	// Suit Cabin delta p is established
+
+					// Open cabin pressure regulator, max flow to 0.4 lb/h  
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
+					*open = SP_VALVE_OPEN;
+					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOWMAX");
+					*fMax = 0.4 / LBH;
+
+					// O2 demand regulator max flow to 0.5 lb/h 
+					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOWMAX");
+					*fMax = 0.5 / LBH;
+
+					// Close cabin to suit circuit return value
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
+					*open = SP_VALVE_CLOSE;
+					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:PRESSMAX");
+					*pMax = 4.95 / PSI;
+
+					// Next state
+					systemsState = SATSYSTEMS_CREWINGRESS_2;
+					lastSystemsMissionTime = MissionTime; 
+				}	
+				break;
+
+			case SATSYSTEMS_CREWINGRESS_2:
+				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
+				if (scdp > 2.0 && MissionTime - lastSystemsMissionTime >= 10) {	// Suit Cabin delta p is established
+					// Crew ingress
+					number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
+					*number = 3; 
+
+					// Cabin leak
+					size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
+					*size = (float)0.0005;
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
+					*open = SP_VALVE_OPEN;
+
+					// Disable cabin pressure regulator and O2 demand regulator max flow
+					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOWMAX");
+					*fMax = 0;
+					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOWMAX");
+					*fMax = 0;
+
+					// Next state
+					systemsState = SATSYSTEMS_CABINCLOSEOUT;
+					lastSystemsMissionTime = MissionTime; 
+				}	
+				break;
+
+			case SATSYSTEMS_CABINCLOSEOUT:
+				if (GetAtmPressure() <= 6.0 / PSI) {
+					// Cabin pressure relieve
+					size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
+					*size = (float)0.25;
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
+					*open = SP_VALVE_OPEN;
+					
+					// Cabin pressure regulator to 5 psi
+					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:PRESSMAX");
+					*pMax = 5.0 / PSI;
+
+					// Close O2 demand regulator 
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
+					*open = SP_VALVE_CLOSE;
+
+					// Open cabin to suit circuit return value
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
+					*open = SP_VALVE_OPEN;
+
+					// Open suit pressure relieve
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
+					*open = SP_VALVE_OPEN;
+
+					// Open direct O2 valve
+					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:LEAK:OPEN");
+					*open = SP_VALVE_OPEN;
+
+					// Suit compressor to flight configuration
+					fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
+					*fancap = 60000.0;	
+
+					// Next state
+					systemsState = SATSYSTEMS_CABINVENTING;
+					lastSystemsMissionTime = MissionTime; 
+				}		
+				break;
+
+			case SATSYSTEMS_CABINVENTING:
+
+				size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
+				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
+				isopen = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:ISOPEN");
+				pz = (float*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:PZ");
+
+				if (atm.CabinPressurePSI <= 5.0) {
+					// cabin leak
+					*size = (float)0.001;	
+				}
+				if (atm.SuitReturnPressurePSI <= 4.85) {	
+					// Close suit pressure relieve
+					if (*isopen && !*pz)
+						*open = SP_VALVE_CLOSE;
+
+					// Close direct O2 valve
+					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:LEAK:OPEN") = SP_VALVE_CLOSE;
+				}
+
+				if (*size == (float)0.001 && !*isopen) {
+					// Next state
+					systemsState = SATSYSTEMS_FLIGHT;
+					lastSystemsMissionTime = MissionTime; 
+				}
+				break;
 			}
-			break;
 		}
 	}
 
@@ -319,24 +393,27 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 // Various debug prints
 //------------------------------------------------------------------------------------
 
+#ifdef _DEBUG
+
 	double *massCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *tempCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
 	double *pressCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
 	double *pressCabinCO2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS");
 	double *co2removalrate=(double*)Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:CO2REMOVALRATE");
 
-	double *flowCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW");
-	double O2flow = *flowCabin + *(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOW");
-	double *O2flowdirect=(double*)Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE:FLOW");
+	double *O2flowCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW");
+	double *O2flowDemand = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOW");
+	double *O2flowDirect=(double*)Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE:FLOW");
 
 	double *pressSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
 	double *tempSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
 	double *pressSuitCO2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
+	double *massSuitH2O=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:H2O_MASS");
 	double *pressSuitCRV=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS");
 	double *tempSuitCRV=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:TEMP");
 
-	double *tempCabinRad1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINRADIATOR1:TEMP");
-	double *tempCabinRad2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINRADIATOR2:TEMP");
+	//double *tempCabinRad1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINRADIATOR1:TEMP");
+	//double *tempCabinRad2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINRADIATOR2:TEMP");
 
 	double *voltageA=(double*)Panelsdk.GetPointerByString("ELECTRIC:DC_A:VOLTS");
 	double *amperageA=(double*)Panelsdk.GetPointerByString("ELECTRIC:DC_A:AMPS");
@@ -399,9 +476,13 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 	double *tempO2FCM=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELLMANIFOLD:TEMP");
 	double *pressO2FCM=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2FUELCELLMANIFOLD:PRESS");
 
-	double *massWaste=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2O_WASTE:MASS");
-	double *tempWaste=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2O_WASTE:TEMP");
-	double *pressWaste=(double*)Panelsdk.GetPointerByString("HYDRAULIC:H2O_WASTE:PRESS");
+	double *massWaste=(double*)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:MASS");
+	double *tempWaste=(double*)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:TEMP");
+	double *pressWaste=(double*)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:PRESS");
+
+	double *massPotable=(double*)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:MASS");
+	double *tempPotable=(double*)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:TEMP");
+	double *pressPotable=(double*)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:PRESS");
 
 	double *voltFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:VOLTS");
 	double *ampFC=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:AMPS");
@@ -414,11 +495,70 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 	double *tempFC3=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP");
 	//double *ison=(double*)Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING:ISON");
 
+
+	double *massAccu=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:MASS");
+	double *tempAccu=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
+	double *pressAccu=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:PRESS");
+
+	double *massInlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET:MASS");
+	double *tempInlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET:TEMP");
+	double *pressInlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET:PRESS");
+
+	double *massOutlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATOROUTLET:MASS");
+	double *tempOutlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATOROUTLET:TEMP");
+	double *pressOutlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATOROUTLET:PRESS");
+
+	double *tempEvapInlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATORINLET:TEMP");
+	double *pressEvapInlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATORINLET:PRESS");
+
+	double *tempEvapOutlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOROUTLET:TEMP");
+	double *pressEvapOutlet=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOROUTLET:PRESS");
+
+	double *tempECSRad1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:ECSRADIATOR1:TEMP");
+	double *tempECSRad2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:ECSRADIATOR2:TEMP");
+	double *mixerRatio=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLEVAPINLETTEMPVALVE:RATIO");
+	double *evapThrottle=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:THROTTLE");
+	double *exchanger1Power=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER1:POWER");
+	double *exchanger2Power=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER2:POWER");
+	//double *suitExchangerPower=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITHEATEXCHANGER:POWER");
+	double *suitCRVExchangerPower=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITCIRCUITHEATEXCHANGER:POWER");
+
+/*	sprintf(oapiDebugString(), "Pot-m %.1f T %.1f p %.1f Waste-m %.1f T %.1f p %.1f deltaP %.1f Evap %.2f", 
+		*massPotable, *tempPotable, *pressPotable * 0.000145038,
+		*massWaste, *tempWaste, *pressWaste * 0.000145038,
+		(*pressPotable - *pressWaste) * 0.000145038, *evapThrottle);
+*/
+/*	sprintf(oapiDebugString(), "Acc-m %.0f T %.1f In-T %.1f p %5.1f Out-T %.1f Mix %.2f EIn-T %.1f EOut-T %.1f Th %.2f H2o %.1f Rd-T1 %.1f T2 %.1f C %.1f S %.1f H2o %.1f P %.1f", 
+		*massAccu, *tempAccu,
+		*tempInlet, *pressInlet * 0.000145038,
+		*tempOutlet, *mixerRatio, 
+		*tempEvapInlet, *tempEvapOutlet, *evapThrottle, *massWaste,
+		*tempECSRad1, *tempECSRad2,
+		*tempCabin, *tempSuit, *massSuitH2O, *suitCRVExchangerPower);
+*/
+/*	sprintf(oapiDebugString(), "Acc-m %8.2f T %.1f p %3.1f In-T %.1f p %5.1f Out-T %.1f p %5.1f EvIn-T %.1f p %5.1f HSrc-m %4.2f T %.1f p %5.1f Mixer-r %.4f Rad-T1 %.1f T2 %.1f", 
+		*massAccu, *tempAccu, *pressAccu * 0.000145038,
+		*tempInlet, *pressInlet * 0.000145038,
+		*tempOutlet, *pressOutlet * 0.000145038,
+		*tempEvapInlet, *pressEvapInlet * 0.000145038,
+		*massHeatsource, *tempHeatsource, *pressHeatsource * 0.000145038,
+		*mixerRatio, *tempECSRad1, *tempECSRad2);
+*/
+/*	sprintf(oapiDebugString(), "Acc-m %8.2f T %.1f p %3.1f In-T %.1f p %5.1f Out-T %.1f p %5.1f EvOut-T %.1f p %5.1f HSrc-m %4.2f T %.1f p %5.1f H2O-m %.2f T %.1f p %.1f Rad-T1 %.1f T2 %.1f", 
+		*massAccu, *tempAccu, *pressAccu * 0.000145038,
+		*tempInlet, *pressInlet * 0.000145038,
+		*tempOutlet, *pressOutlet * 0.000145038,
+		*tempEvapOutlet, *pressEvapOutlet * 0.000145038,
+		*massHeatsource, *tempHeatsource, *pressHeatsource * 0.000145038,
+		*massWaste, *tempWaste, *pressWaste * 0.000145038,
+		*tempECSRad1, *tempECSRad2);
+*/
+
 	// ECS Pressures
-/*	sprintf(oapiDebugString(), "State %d SuitCompDp %.2f SuitCabinDp %.2f, O2Flow %.2f, DirectO2Flow %.2f Cabin-p %.2f T %.1f Suit-p %.2f T %.1f co2pp %.2f SuitCRV-p %.2f T %.1f", 
+/*	sprintf(oapiDebugString(), "%d SuitCompDp %.2f SuitCabDp %.2f, CabO2 %.2f, DemO2 %.2f DirO2 %.2f Cab-p %.2f T %.1f Suit-p %.2f T %.1f co2pp %.2f SuitCRV-p %.2f T %.1f", 
 		systemsState, 
 		(*pressSuit - *pressSuitCRV) * 0.000145038, (*pressSuitCRV - *pressCabin) * INH2O,
-		O2flow * LBH, *O2flowdirect * LBH,
+		*O2flowCabin * LBH, *O2flowDemand * LBH, *O2flowDirect * LBH,
 		*pressCabin * 0.000145038, *tempCabin,
 		*pressSuit * 0.000145038, *tempSuit, *pressSuitCO2 * 0.00750064,
 		*pressSuitCRV * 0.000145038, *tempSuitCRV);
@@ -483,6 +623,8 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		*tempRad);
 	fflush(PanelsdkLogFile);
 */
+
+#endif
 }
 
 bool Saturn::AutopilotActive()
@@ -822,9 +964,37 @@ void Saturn::ClearPanelSDKPointers()
 	pO2Tank2Press = 0;
 	pH2Tank1Press = 0;
 	pH2Tank2Press = 0;
-	pFC1Temp = 0;
-	pFC2Temp = 0;
-	pFC3Temp = 0;
+	pO2Tank1Quantity = 0;
+	pO2Tank2Quantity = 0;
+	pH2Tank1Quantity = 0;
+	pH2Tank2Quantity = 0;
+	pO2SurgeTankPress = 0;
+	pFCH2Flow[1] = 0;
+	pFCH2Flow[2] = 0;
+	pFCH2Flow[3] = 0;
+	pFCO2Flow[1] = 0;
+	pFCO2Flow[2] = 0;
+	pFCO2Flow[3] = 0;
+	pFCTemp[1] = 0;
+	pFCTemp[2] = 0;
+	pFCTemp[3] = 0;
+	pFCCondenserTemp[1] = 0;
+	pFCCondenserTemp[2] = 0;
+	pFCCondenserTemp[3] = 0;
+	pPrimECSRadiatorInletPressure = 0;
+	pPrimECSRadiatorInletTemp = 0;
+	pPrimECSRadiatorOutletTemp = 0;
+	pPrimECSEvaporatorOutletTemp = 0;
+	pPrimECSEvaporatorSteamPressure = 0;
+	pPrimECSAccumulatorQuantity = 0;
+	pSecECSRadiatorInletPressure = 0;
+	pSecECSRadiatorInletTemp = 0;
+	pSecECSRadiatorOutletTemp = 0;
+	pSecECSEvaporatorOutletTemp = 0;
+	pSecECSEvaporatorSteamPressure = 0;
+	pSecECSAccumulatorQuantity = 0;
+	pPotableH2oTankQuantity = 0;
+	pWasteH2oTankQuantity = 0;
 
 	for (i = 0; i < N_CSM_VALVES; i++) {
 		pCSMValves[i] = 0;
@@ -854,11 +1024,11 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	atm.O2DemandFlowLBH = 0.0;
 	atm.SuitReturnPressureMMHG = 0.0;
 	atm.SuitReturnPressurePSI = 0.0;
+	atm.DisplayedO2FlowLBH = 0.0;
 
 	if (!pCO2Level) {
 		pCO2Level = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
 	}
-
 	if (pCO2Level) {
 		atm.SuitCO2MMHG = (*pCO2Level) * MMHG;
 	}
@@ -866,7 +1036,6 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (!pCabinCO2Level) {
 		pCabinCO2Level = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS");
 	}
-
 	if (pCabinCO2Level) {
 		atm.CabinCO2MMHG = (*pCO2Level) * MMHG;
 	}
@@ -874,7 +1043,6 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (!pCabinPressure) {
 		pCabinPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
 	}
-
 	if (pCabinPressure) {
 		atm.CabinPressureMMHG = (*pCabinPressure) * MMHG;
 		atm.CabinPressurePSI = (*pCabinPressure) * PSI;
@@ -883,7 +1051,6 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (!pSuitPressure) {
 		pSuitPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
 	}
-
 	if (pSuitPressure) {
 		atm.SuitPressureMMHG = (*pSuitPressure) * MMHG;
 		atm.SuitPressurePSI = (*pSuitPressure) * PSI;
@@ -892,7 +1059,6 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (!pSuitReturnPressure) {
 		pSuitReturnPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:PRESS");
 	}
-
 	if (pSuitReturnPressure) {
 		atm.SuitReturnPressureMMHG = (*pSuitReturnPressure) * MMHG;
 		atm.SuitReturnPressurePSI = (*pSuitReturnPressure) * PSI;
@@ -901,7 +1067,6 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (!pSuitTemp) {
 		pSuitTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
 	}
-
 	if (pSuitTemp) {
 		atm.SuitTempK = (*pSuitTemp);
 	}
@@ -909,7 +1074,6 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (!pCabinTemp) {
 		pCabinTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
 	}
-
 	if (pCabinTemp) {
 		atm.CabinTempK = (*pCabinTemp);
 	}
@@ -917,7 +1081,6 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (!pCabinRegulatorFlow) {
 		pCabinRegulatorFlow = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW");
 	}
-
 	if (pCabinRegulatorFlow) {
 		atm.CabinRegulatorFlowLBH = (*pCabinRegulatorFlow) * LBH;
 	}
@@ -925,7 +1088,6 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (!pO2DemandFlow) {
 		pO2DemandFlow = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOW");
 	}
-
 	if (pO2DemandFlow) {
 		atm.O2DemandFlowLBH = (*pO2DemandFlow) * LBH;
 	}
@@ -933,10 +1095,12 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (!pDirectO2Flow) {
 		pDirectO2Flow = (double*) Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE:FLOW");
 	}
-
 	if (pDirectO2Flow) {
 		atm.DirectO2FlowLBH = (*pDirectO2Flow) * LBH;
 	}
+
+	// For caution & warning system
+	atm.DisplayedO2FlowLBH = RightO2FlowMeter.GetDisplayValue();
 }
 
 //
@@ -954,6 +1118,19 @@ void Saturn::GetTankPressures(TankPressures &press)
 	press.H2Tank2PressurePSI = 0.0;
 	press.O2Tank1PressurePSI = 0.0;
 	press.O2Tank2PressurePSI = 0.0;
+	press.O2SurgeTankPressurePSI = 0.0;
+
+	//
+	// Oxygen surge tank.
+	//
+
+	if (!pO2SurgeTankPress) {
+		pO2SurgeTankPress = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
+	}
+	if (pO2SurgeTankPress) {
+		press.O2SurgeTankPressurePSI = (*pO2SurgeTankPress) * PSI;
+	}
+
 
 	//
 	// No tanks if we've seperated from the SM
@@ -970,7 +1147,6 @@ void Saturn::GetTankPressures(TankPressures &press)
 	if (!pH2Tank1Press) {
 		pH2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:PRESS");
 	}
-
 	if (pH2Tank1Press) {
 		press.H2Tank1PressurePSI = (*pH2Tank1Press) * PSI;
 	}
@@ -978,7 +1154,6 @@ void Saturn::GetTankPressures(TankPressures &press)
 	if (!pH2Tank2Press) {
 		pH2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:PRESS");
 	}
-
 	if (pH2Tank2Press) {
 		press.H2Tank2PressurePSI = (*pH2Tank2Press) * PSI;
 	}
@@ -990,7 +1165,6 @@ void Saturn::GetTankPressures(TankPressures &press)
 	if (!pO2Tank1Press) {
 		pO2Tank1Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:PRESS");
 	}
-
 	if (pO2Tank1Press) {
 		press.O2Tank1PressurePSI = (*pO2Tank1Press) * PSI;
 	}
@@ -998,26 +1172,89 @@ void Saturn::GetTankPressures(TankPressures &press)
 	if (!pO2Tank2Press) {
 		pO2Tank2Press = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:PRESS");
 	}
-
 	if (pO2Tank2Press) {
 		press.O2Tank2PressurePSI = (*pO2Tank2Press) * PSI;
 	}
 }
 
+
 //
-// Get fuel cell status. We should expand this to also return pressure, etc.
+// Get H2/O2 tank quantities.
 //
 
-void Saturn::GetFuelCellStatus(FuelCellStatus &fc)
+void Saturn::GetTankQuantities(TankQuantities &q)
+
+{
+	//
+	// Clear to defaults.
+	//
+
+	q.H2Tank1Quantity = 0.0;
+	q.H2Tank2Quantity = 0.0;
+	q.O2Tank1Quantity = 0.0;
+	q.O2Tank2Quantity = 0.0;
+
+	//
+	// No tanks if we've seperated from the SM
+	//
+
+	if (stage >= CM_STAGE) {
+		return;
+	}
+
+	//
+	// Hydrogen tanks.
+	//
+
+	if (!pH2Tank1Quantity) {
+		pH2Tank1Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:MASS");
+	}
+	if (pH2Tank1Quantity) {
+		q.H2Tank1Quantity = (*pH2Tank1Quantity) / CSM_H2TANK_CAPACITY;
+	}
+
+	if (!pH2Tank2Quantity) {
+		pH2Tank2Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:MASS");
+	}
+	if (pH2Tank2Quantity) {
+		q.H2Tank2Quantity = (*pH2Tank2Quantity) / CSM_H2TANK_CAPACITY;
+	}
+
+	//
+	// Oxygen tanks.
+	//
+
+	if (!pO2Tank1Quantity) {
+		pO2Tank1Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:MASS");
+	}
+	if (pO2Tank1Quantity) {
+		q.O2Tank1Quantity = (*pO2Tank1Quantity) / CSM_O2TANK_CAPACITY;
+	}
+
+	if (!pO2Tank2Quantity) {
+		pO2Tank2Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:MASS");
+	}
+	if (pO2Tank2Quantity) {
+		q.O2Tank2Quantity = (*pO2Tank2Quantity) / CSM_O2TANK_CAPACITY;
+	}
+}
+
+
+//
+// Get fuel cell status. 
+//
+
+void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 
 {
 	//
 	// Set defaults.
 	//
 
-	fc.FC1TempK = 0.0;
-	fc.FC2TempK = 0.0;
-	fc.FC3TempK = 0.0;
+	fc.H2FlowLBH  = 0.0;
+	fc.O2FlowLBH = 0.0;
+	fc.TempF = 0.0;
+	fc.CondenserTempF = 0.0;
 
 	//
 	// No fuel cells if we've seperated from the SM.
@@ -1028,33 +1265,207 @@ void Saturn::GetFuelCellStatus(FuelCellStatus &fc)
 	}
 
 	//
-	// Get temperatures.
+	// Fuel cell.
 	//
 
-	if (!pFC1Temp) {
-		pFC1Temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1:TEMP");
+	char buffer[1000];
+	if (!pFCH2Flow[index]) {
+		sprintf(buffer, "ELECTRIC:FUELCELL%i:H2FLOW", index);
+		pFCH2Flow[index] = (double*) Panelsdk.GetPointerByString(buffer);
+	}
+	if (pFCH2Flow[index]) {
+		fc.H2FlowLBH = (*pFCH2Flow[index]) * LBH;
 	}
 
-	if (pFC1Temp) {
-		fc.FC1TempK = (*pFC1Temp);
+	if (!pFCO2Flow[index]) {
+		sprintf(buffer, "ELECTRIC:FUELCELL%i:O2FLOW", index);
+		pFCO2Flow[index] = (double*) Panelsdk.GetPointerByString(buffer);
+	}
+	if (pFCO2Flow[index]) {
+		fc.O2FlowLBH = (*pFCO2Flow[index]) * LBH;
 	}
 
-	if (!pFC2Temp) {
-		pFC2Temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2:TEMP");
+	if (!pFCTemp[index]) {
+		sprintf(buffer, "ELECTRIC:FUELCELL%i:TEMP", index);
+		pFCTemp[index] = (double*) Panelsdk.GetPointerByString(buffer);
+	}
+	if (pFCTemp[index]) {
+		fc.TempF = KelvinToFahrenheit(*pFCTemp[index]);
 	}
 
-	if (pFC2Temp) {
-		fc.FC2TempK = (*pFC2Temp);
+	if (!pFCCondenserTemp[index]) {
+		sprintf(buffer, "ELECTRIC:FUELCELL%i:CONDENSERTEMP", index);
+		pFCCondenserTemp[index] = (double*) Panelsdk.GetPointerByString(buffer);
 	}
-
-	if (!pFC3Temp) {
-		pFC3Temp = (double*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3:TEMP");
-	}
-
-	if (pFC3Temp) {
-		fc.FC3TempK = (*pFC3Temp);
+	if (pFCCondenserTemp[index]) {
+		fc.CondenserTempF = KelvinToFahrenheit(*pFCCondenserTemp[index]);
 	}
 }
+
+
+//
+// Get primary ECS water-glycol cooling status. 
+//
+
+void Saturn::GetPrimECSCoolingStatus(PrimECSCoolingStatus &pcs)
+
+{
+	//
+	// Set defaults.
+	//
+
+	pcs.RadiatorInletPressurePSI = 0.0;
+	pcs.RadiatorInletTempF = 0.0;
+	pcs.RadiatorOutletTempF = 0.0;
+	pcs.EvaporatorOutletTempF = 0.0;
+	pcs.EvaporatorSteamPressurePSI = 0.0;
+
+	//
+	// Get values
+	//
+
+	if (!pPrimECSRadiatorInletPressure) {
+		pPrimECSRadiatorInletPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET:PRESS");
+	}
+	if (pPrimECSRadiatorInletPressure) {
+		pcs.RadiatorInletPressurePSI = (*pPrimECSRadiatorInletPressure) * PSI;
+	}
+
+	if (!pPrimECSRadiatorInletTemp) {
+		pPrimECSRadiatorInletTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET:TEMP");
+	}
+	if (pPrimECSRadiatorInletTemp) {
+		pcs.RadiatorInletTempF = KelvinToFahrenheit(*pPrimECSRadiatorInletTemp);
+	}
+
+	if (!pPrimECSRadiatorOutletTemp) {
+		pPrimECSRadiatorOutletTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATOROUTLET:TEMP");
+	}
+	if (pPrimECSRadiatorOutletTemp) {
+		pcs.RadiatorOutletTempF = KelvinToFahrenheit(*pPrimECSRadiatorOutletTemp);
+	}
+
+	if (!pPrimECSEvaporatorOutletTemp) {
+		pPrimECSEvaporatorOutletTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOROUTLET:TEMP");
+	}
+	if (pPrimECSEvaporatorOutletTemp) {
+		pcs.EvaporatorOutletTempF = KelvinToFahrenheit(*pPrimECSEvaporatorOutletTemp);
+	}
+
+	if (!pPrimECSEvaporatorSteamPressure) {
+		pPrimECSEvaporatorSteamPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:STEAMPRESSURE");
+	}
+	if (pPrimECSEvaporatorSteamPressure) {
+		pcs.EvaporatorSteamPressurePSI = (*pPrimECSEvaporatorSteamPressure) * PSI;
+	}
+
+	if (!pPrimECSAccumulatorQuantity) {
+		pPrimECSAccumulatorQuantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:MASS");
+	}
+	if (pPrimECSAccumulatorQuantity) {
+		pcs.AccumulatorQuantityPercent = (*pPrimECSAccumulatorQuantity) / 10000.0;
+	}
+}
+
+
+//
+// Get secondary ECS water-glycol cooling status. 
+//
+
+void Saturn::GetSecECSCoolingStatus(SecECSCoolingStatus &scs)
+
+{
+	//
+	// Set defaults.
+	//
+
+	scs.RadiatorInletPressurePSI = 0.0;
+	scs.RadiatorInletTempF = 0.0;
+	scs.RadiatorOutletTempF = 0.0;
+	scs.EvaporatorOutletTempF = 0.0;
+	scs.EvaporatorSteamPressurePSI = 0.0;
+
+	//
+	// Get values
+	//
+
+	if (!pSecECSRadiatorInletPressure) {
+		pSecECSRadiatorInletPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATORINLET:PRESS");
+	}
+	if (pSecECSRadiatorInletPressure) {
+		scs.RadiatorInletPressurePSI = (*pSecECSRadiatorInletPressure) * PSI;
+	}
+
+	if (!pSecECSRadiatorInletTemp) {
+		pSecECSRadiatorInletTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATORINLET:TEMP");
+	}
+	if (pSecECSRadiatorInletTemp) {
+		scs.RadiatorInletTempF = KelvinToFahrenheit(*pSecECSRadiatorInletTemp);
+	}
+
+	if (!pSecECSRadiatorOutletTemp) {
+		pSecECSRadiatorOutletTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATOROUTLET:TEMP");
+	}
+	if (pSecECSRadiatorOutletTemp) {
+		scs.RadiatorOutletTempF = KelvinToFahrenheit(*pSecECSRadiatorOutletTemp);
+	}
+
+	if (!pSecECSEvaporatorOutletTemp) {
+		pSecECSEvaporatorOutletTemp = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPORATOROUTLET:TEMP");
+	}
+	if (pSecECSEvaporatorOutletTemp) {
+		scs.EvaporatorOutletTempF = KelvinToFahrenheit(*pSecECSEvaporatorOutletTemp);
+	}
+
+	if (!pSecECSEvaporatorSteamPressure) {
+		pSecECSEvaporatorSteamPressure = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPORATOR:STEAMPRESSURE");
+	}
+	if (pSecECSEvaporatorSteamPressure) {
+		scs.EvaporatorSteamPressurePSI = (*pSecECSEvaporatorSteamPressure) * PSI;
+	}
+
+	if (!pSecECSAccumulatorQuantity) {
+		pSecECSAccumulatorQuantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR:MASS");
+	}
+	if (pSecECSAccumulatorQuantity) {
+		scs.AccumulatorQuantityPercent = (*pSecECSAccumulatorQuantity) / 10000.0;
+	}
+}
+
+
+//
+// Get ECS water status. 
+//
+
+void Saturn::GetECSWaterStatus(ECSWaterStatus &ws)
+
+{
+	//
+	// Set defaults.
+	//
+
+	ws.PotableH2oTankQuantityPercent = 0;
+	ws.WasteH2oTankQuantityPercent = 0;
+
+	//
+	// Get values
+	//
+
+	if (!pPotableH2oTankQuantity) {
+		pPotableH2oTankQuantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK:MASS");
+	}
+	if (pPotableH2oTankQuantity) {
+		ws.PotableH2oTankQuantityPercent = (*pPotableH2oTankQuantity) / 16000.0;
+	}
+
+	if (!pWasteH2oTankQuantity) {
+		pWasteH2oTankQuantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:MASS");
+	}
+	if (pWasteH2oTankQuantity) {
+		ws.WasteH2oTankQuantityPercent = (*pWasteH2oTankQuantity) / 26500.0;
+	}
+}
+
 
 //
 // Open and close valves.
@@ -1081,4 +1492,25 @@ bool Saturn::GetValveState(int valve)
 
 	return ValveState[valve];
 }
+
+
+//
+// Switch status
+//
+
+int Saturn::GetSwitchState(char *switchName) {
+
+	ToggleSwitch *s = (ToggleSwitch *) PSH.GetSwitch(switchName);
+	return s->GetState();
+}
+
+	
+int Saturn::GetRotationalSwitchState(char *switchName) {
+
+	RotationalSwitch *s = (RotationalSwitch *) PSH.GetSwitch(switchName);
+	return s->GetState();
+}
+
+
+
 
