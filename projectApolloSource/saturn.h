@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2005/08/24 00:30:00  movieman523
+  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
+  *	
   *	Revision 1.64  2005/08/23 22:18:47  movieman523
   *	SPS switch now works.
   *	
@@ -301,7 +304,15 @@ typedef struct {
 	double O2Tank2PressurePSI;
 	double H2Tank1PressurePSI;
 	double H2Tank2PressurePSI;
+	double O2SurgeTankPressurePSI;
 } TankPressures;
+
+typedef struct {
+	double O2Tank1Quantity;
+	double O2Tank2Quantity;
+	double H2Tank1Quantity;
+	double H2Tank2Quantity;
+} TankQuantities;
 
 typedef struct {
 	double BusAVolts;
@@ -309,9 +320,10 @@ typedef struct {
 } BusStatus;
 
 typedef struct {
-	double FC1TempK;
-	double FC2TempK;
-	double FC3TempK;
+	double H2FlowLBH;
+	double O2FlowLBH;
+	double TempF;
+	double CondenserTempF;
 } FuelCellStatus;
 
 typedef struct {
@@ -328,7 +340,32 @@ typedef struct {
 	double CabinRegulatorFlowLBH;
 	double O2DemandFlowLBH;
 	double DirectO2FlowLBH;
+	double DisplayedO2FlowLBH;
 } AtmosStatus;
+
+typedef struct {
+	double RadiatorInletPressurePSI;
+	double RadiatorInletTempF;
+	double RadiatorOutletTempF;
+	double EvaporatorOutletTempF;
+	double EvaporatorSteamPressurePSI;
+	double AccumulatorQuantityPercent;
+} PrimECSCoolingStatus;
+
+typedef struct {
+	double RadiatorInletPressurePSI;
+	double RadiatorInletTempF;
+	double RadiatorOutletTempF;
+	double EvaporatorOutletTempF;
+	double EvaporatorSteamPressurePSI;
+	double AccumulatorQuantityPercent;
+} SecECSCoolingStatus;
+
+typedef struct {
+	double PotableH2oTankQuantityPercent;
+	double WasteH2oTankQuantityPercent;
+} ECSWaterStatus;
+
 
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
@@ -379,11 +416,14 @@ public:
 
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
+	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 
 	// called by crawler after arrival on launch pad
 	virtual void LaunchVesselRolloutEnd() {};
 
 	int GetStage() { return stage; };
+	int GetApolloNo() { return ApolloNo; };
+	double GetMissionTime() { return MissionTime; };
 
 	void EnableTLI();
 	void DisableTLI() { TLIEnabled = false; };
@@ -394,8 +434,13 @@ public:
 
 	void GetAtmosStatus(AtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
+	void GetTankQuantities(TankQuantities &q);
 //	void GetBusStatus(BusStatus &bus);
-	void GetFuelCellStatus(FuelCellStatus &fc);
+	void GetFuelCellStatus(int index, FuelCellStatus &fc);
+	void GetPrimECSCoolingStatus(PrimECSCoolingStatus &pcs);
+	void GetSecECSCoolingStatus(SecECSCoolingStatus &scs);
+	void GetECSWaterStatus(ECSWaterStatus &ws);
+
 
 	//
 	// Panel SDK support.
@@ -405,6 +450,8 @@ public:
 	bool GetValveState(int valve);
 	void CheckSPSState();
 	void CheckRCSState();
+	int GetSwitchState(char *switchName);
+	int GetRotationalSwitchState(char *switchName);
 
 protected:
 
@@ -785,6 +832,113 @@ protected:
 	SaturnSPSSwitch SPSswitch;
 
 	//
+	// Cryo tank meters
+	//
+	SwitchRow CryoTankMetersRow;
+	SaturnH2PressureMeter H2Pressure1Meter;
+	SaturnH2PressureMeter H2Pressure2Meter;
+	SaturnO2PressureMeter O2Pressure1Meter;
+	SaturnO2PressureMeter O2Pressure2Meter;
+	SaturnCryoQuantityMeter H2Quantity1Meter;
+	SaturnCryoQuantityMeter H2Quantity2Meter;
+	SaturnCryoQuantityMeter O2Quantity1Meter;
+	SaturnCryoQuantityMeter O2Quantity2Meter;
+
+	//
+	// Fuel cell meters
+	//
+	SwitchRow FuelCellMetersRow;
+	SaturnFuelCellH2FlowMeter FuelCellH2FlowMeter;
+	SaturnFuelCellO2FlowMeter FuelCellO2FlowMeter;
+	SaturnFuelCellTempMeter FuelCellTempMeter;
+	SaturnFuelCellCondenserTempMeter FuelCellCondenserTempMeter;
+
+	//
+	// Cabin meters
+	//
+	SwitchRow CabinMetersRow;
+	SaturnSuitTempMeter SuitTempMeter;
+	SaturnCabinTempMeter CabinTempMeter;
+	SaturnSuitPressMeter SuitPressMeter; 
+	SaturnCabinPressMeter CabinPressMeter;
+	SaturnPartPressCO2Meter PartPressCO2Meter; 
+
+	//
+	// Suit compressor delta pressure meter
+	//
+	SwitchRow SuitComprDeltaPMeterRow;
+	SaturnSuitComprDeltaPMeter SuitComprDeltaPMeter;
+	SaturnLeftO2FlowMeter LeftO2FlowMeter;
+
+	//
+	// Suit cabin delta pressure meter
+	//
+	SwitchRow SuitCabinDeltaPMeterRow;
+	SaturnSuitCabinDeltaPMeter SuitCabinDeltaPMeter;
+	SaturnRightO2FlowMeter RightO2FlowMeter;
+
+	//
+	// ECS radiator/evaporator temperature/pressure meters
+	//
+	SwitchRow EcsRadTempMetersRow;
+	SaturnEcsRadTempInletMeter EcsRadTempInletMeter;
+	SaturnEcsRadTempPrimOutletMeter EcsRadTempPrimOutletMeter;
+
+	SwitchRow EcsEvapTempMetersRow;
+	SaturnEcsRadTempSecOutletMeter EcsRadTempSecOutletMeter;
+	SaturnGlyEvapTempOutletMeter GlyEvapTempOutletMeter;
+
+	SwitchRow EcsPressMetersRow;
+	SaturnGlyEvapSteamPressMeter GlyEvapSteamPressMeter;
+	SaturnGlycolDischPressMeter GlycolDischPressMeter;
+
+	SwitchRow EcsQuantityMetersRow;
+	SaturnAccumQuantityMeter AccumQuantityMeter;
+	SaturnH2oQuantityMeter H2oQuantityMeter;
+
+	//
+	// ECS radiator switches
+	//
+	SwitchRow EcsRadiatorIndicatorRow;
+	IndicatorSwitch EcsRadiatorIndicator;
+
+	SwitchRow EcsRadiatorSwitchesRow;
+	ThreePosSwitch EcsRadiatorsFlowContAutoSwitch;
+	ThreePosSwitch EcsRadiatorsFlowContPwrSwitch;
+	ThreePosSwitch EcsRadiatorsManSelSwitch;
+	ThreePosSwitch EcsRadiatorsHeaterPrimSwitch;
+	ToggleSwitch EcsRadiatorsHeaterSecSwitch;
+
+	//
+	// ECS switches
+	//
+	SwitchRow EcsSwitchesRow;
+	ThreePosSwitch PotH2oHtrSwitch;
+	ThreePosSwitch SuitCircuitH2oAccumAutoSwitch;
+	ThreePosSwitch SuitCircuitH2oAccumOnSwitch;
+	ThreePosSwitch SuitCircuitHeatExchSwitch;
+	ThreePosSwitch SecCoolantLoopEvapSwitch;
+	ThreePosSwitch SecCoolantLoopPumpSwitch;
+	ToggleSwitch H2oQtyIndSwitch;
+	ToggleSwitch GlycolEvapTempInSwitch;
+	ToggleSwitch GlycolEvapSteamPressAutoManSwitch;
+	ThreePosSwitch GlycolEvapSteamPressIncrDecrSwitch;
+	ThreePosSwitch GlycolEvapH2oFlowSwitch;
+	ToggleSwitch CabinTempAutoManSwitch;
+
+	SwitchRow EcsGlycolPumpsSwitchRow;
+	RotationalSwitch EcsGlycolPumpsSwitch;
+
+	//
+	// High gain antenna
+	//
+	SwitchRow HighGainAntennaPitchPositionSwitchRow;
+	RotationalSwitch HighGainAntennaPitchPositionSwitch;
+
+
+
+
+	//
 	// OLD Switches: delete these as and when we can do so.
 	//
 	// old stuff begin
@@ -892,13 +1046,17 @@ protected:
 	int stage;
 	int StageState;
 
-#define SATSYSTEMS_NONE				 0
-#define SATSYSTEMS_PRELAUNCH		10
-#define SATSYSTEMS_CABINCLOSEOUT	20
-#define SATSYSTEMS_CABINVENTING		30
-#define SATSYSTEMS_FLIGHT			40
+#define SATSYSTEMS_NONE				  0
+#define SATSYSTEMS_PRELAUNCH		100
+#define SATSYSTEMS_CREWINGRESS_1	200
+#define SATSYSTEMS_CREWINGRESS_2	210
+#define SATSYSTEMS_CABINCLOSEOUT	300
+#define SATSYSTEMS_CABINVENTING		400
+#define SATSYSTEMS_FLIGHT			500
 
 	int systemsState;
+	bool firstSystemsTimeStepDone;
+	double lastSystemsMissionTime;
 
 	//
 	// End saved state.
@@ -1235,12 +1393,6 @@ protected:
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
-	void RedrawPanel_SuitCabinDeltaPMeter (SURFHANDLE surf);
-	void RedrawPanel_CryoTankIndicators (SURFHANDLE surf);
-	void RedrawPanel_SuitComprDeltaPMeter (SURFHANDLE surf);
-	void RedrawPanel_CabinIndicators (SURFHANDLE surf);
-	void RedrawPanel_O2CryoTankPressureIndicator(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle);
-	void RedrawPanel_FuelCellIndicators (SURFHANDLE surf);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
@@ -1482,9 +1634,29 @@ protected:
 	double *pO2Tank2Press;
 	double *pH2Tank1Press;
 	double *pH2Tank2Press;
-	double *pFC1Temp;
-	double *pFC2Temp;
-	double *pFC3Temp;
+	double *pO2SurgeTankPress;
+	double *pO2Tank1Quantity;
+	double *pO2Tank2Quantity;
+	double *pH2Tank1Quantity;
+	double *pH2Tank2Quantity;
+	double *pFCH2Flow[4];
+	double *pFCO2Flow[4];
+	double *pFCTemp[4];
+	double *pFCCondenserTemp[4];
+	double *pPrimECSRadiatorInletPressure;
+	double *pPrimECSRadiatorInletTemp;
+	double *pPrimECSRadiatorOutletTemp;
+	double *pPrimECSEvaporatorOutletTemp;
+	double *pPrimECSEvaporatorSteamPressure;
+	double *pPrimECSAccumulatorQuantity;
+	double *pSecECSRadiatorInletPressure;
+	double *pSecECSRadiatorInletTemp;
+	double *pSecECSRadiatorOutletTemp;
+	double *pSecECSEvaporatorOutletTemp;
+	double *pSecECSEvaporatorSteamPressure;
+	double *pSecECSAccumulatorQuantity;
+	double *pPotableH2oTankQuantity;
+	double *pWasteH2oTankQuantity;
 
 	int *pCSMValves[N_CSM_VALVES];
 	bool ValveState[N_CSM_VALVES];
