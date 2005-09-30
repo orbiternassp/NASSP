@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2005/08/24 23:29:31  movieman523
+  *	Fixed event timer reset.
+  *	
   *	Revision 1.56  2005/08/24 00:30:00  movieman523
   *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
   *	
@@ -247,6 +250,7 @@ Saturn::~Saturn()
 	//
 	// Nothing for now.
 	//
+
 	//fclose(PanelsdkLogFile);
 }
 
@@ -922,7 +926,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
 	// save the internal systems 
-	oapiWriteScenario_int (scn, "SYSTEMSSTATE", systemsState);
+	oapiWriteScenario_int(scn, "SYSTEMSSTATE", systemsState);
+	oapiWriteScenario_float(scn, "LSYSTEMSMISSNTIME", lastSystemsMissionTime);
 	Panelsdk.Save(scn);	
 
 	// save the state of the switches
@@ -1508,6 +1513,10 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp (line, "SYSTEMSSTATE", 12)) {
 			sscanf (line + 12, "%d", &systemsState);
+		}
+		else if (!strnicmp (line, "LSYSTEMSMISSNTIME", 17)) {
+			sscanf (line + 17, "%f", &ftcp);
+			lastSystemsMissionTime = ftcp;
 		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
