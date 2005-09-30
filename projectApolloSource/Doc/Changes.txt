@@ -1,6 +1,7 @@
 6.5:
 ----
 
+Fixed Saturn 5 interstage fairings.
 Mission timer is now controllable from panel switches.
 Added caution and warning system.
 Integrated Virtual AGC.
