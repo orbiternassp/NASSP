@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2005/09/30 11:20:42  tschachim
+  *	Turn on IMU also in non-Virtual AGC mode.
+  *	
   *	Revision 1.45  2005/09/24 20:54:04  lazyd
   *	Added P16 for LOI
   *	
@@ -564,6 +567,13 @@ bool ApolloGuidance::ValidateCommonProgram(int prog)
 		return true;
 
 	//
+	// 19: Plane Change for landing site alignment after n passes
+	//
+
+	case 19:
+		return true;
+
+	//
 	// 37: orbit altitude adjustment.
 	//
 
@@ -935,6 +945,16 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		return true;
 
 	//
+	// 30: Apoapsis, periapsis, phase angle
+	//
+
+	case 30:
+		SetR1((int)(DesiredApogee / 100.0));
+		SetR2((int)(DesiredPerigee / 100.0));
+		SetR3((int)(DesiredAzimuth * 100.0));
+		return true;
+
+	//
 	// 32: Time from periapsis
 	//
 
@@ -1120,7 +1140,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		return true;
 
 	//
-	// 46: Target DeltaV, DeltaV so far, Time to burn (used by P30)
+	// 46: Target DeltaV, DeltaV so far, Time to burn (used by P37)
 	//
 
 	case 46:
@@ -1142,6 +1162,27 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 			SetR3(min * 1000 + sec);
 			SetR3Format("XXX XX");
 		}			
+		return true;
+
+
+	case 50:
+		{
+			int min, sec;
+			double dt;
+
+			// time from ignition
+			dt=CurrentTimestep-BurnStartTime;
+			min = (int) (dt / 60.0);
+			sec = ((int) dt) - (min * 60);
+			if (min > 99 || min < -99) {
+				SetR1( (int) dt);
+			} else {
+				SetR1(min * 1000 + sec);
+				SetR1Format("XXX XX");
+			}
+			SetR2((int) (CutOffVel*10.0));
+			SetR3((int) ((BurnEndTime-BurnStartTime)*10.0));
+		}
 		return true;
 
 
@@ -1458,6 +1499,13 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 
 	case 18:
 		Prog18(simt);
+		break;
+	//
+	// 19: Orbit altitude and phase adjust
+	//
+
+	case 19:
+		Prog19(simt);
 		break;
 
 	//
@@ -2007,9 +2055,14 @@ void ApolloGuidance::Prog16(double simt)
 	}
 	if(ProgFlag01) {
 		if(simt > BurnEndTime) {
-			OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
+			if (MainThrusterIsHover) {
+				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.0);
+			} else {
+				OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
+			}
 			OurVessel->SetAttitudeRotLevel(zero);
-			RunProgram(0);
+			oapiSetTimeAcceleration(DesiredDeltaV);
+			AwaitProgram();
 			return;
 		}
 	}
@@ -2096,7 +2149,13 @@ void ApolloGuidance::Prog16(double simt)
 //				ttp, dv, dvn, burn, offplane, BurnEndTime-simt);
 
 			if(burn/2.0 > ttp) {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
+				DesiredDeltaV=oapiGetTimeAcceleration();
+				oapiSetTimeAcceleration(1.0);
+				if (MainThrusterIsHover) {
+					OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
+				} else {
+					OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
+				}
 				BurnStartTime=simt+burn;
 				ProgFlag01=true;
 			}
@@ -2140,11 +2199,14 @@ void ApolloGuidance::Prog17(double simt)
 				OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
 			}
 			OurVessel->SetAttitudeRotLevel(zero);
+			oapiSetTimeAcceleration(DesiredDeltaV);
 //			fclose(outstr);
-			RunProgram(0);
+			AwaitProgram();
 			return;
 		}
 		if(simt >= BurnStartTime) {
+			DesiredDeltaV=oapiGetTimeAcceleration();
+			oapiSetTimeAcceleration(1.0);
 			if (MainThrusterIsHover) {
 				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.1);
 			} else {
@@ -2457,10 +2519,13 @@ void ApolloGuidance::Prog18(double simt)
 				OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
 			}
 			OurVessel->SetAttitudeRotLevel(zero);
-			RunProgram(0);
+			oapiSetTimeAcceleration(DesiredDeltaV);
+			AwaitProgram();
 			return;
 		}
 		if(simt >= BurnStartTime) {
+			DesiredDeltaV=oapiGetTimeAcceleration();
+			oapiSetTimeAcceleration(1.0);
 			if (MainThrusterIsHover) {
 				OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
 			} else {
@@ -2496,6 +2561,437 @@ void ApolloGuidance::Prog18Pressed(int R1, int R2, int R3)
 	}
 }
 
+void ApolloGuidance::Prog19(double simt)
+{
+	static VECTOR3 zero={0.0, 0.0, 0.0};
+	VECTOR3 pos, vel, spos, svel, up, no, fwd, delta, veln, 
+		vh, vf, vup, epos, v1, v2;
+	double mu, e, a, p, v, ea, ma, vr, tsp, tr, period, apo, per, tta, ttp,
+		velm, vdot, sign, dv, vc, vthrust, vmass, fmass, burn, bmass, tb,
+		bradius, theta, ap, pe, en, an, pn, r, h, vn, rc, rn, dph,
+		vch, vcl, vnh, vnl, vp, vv, vhv, cth, sth, vfwd, can, dt;
+	const double GRAVITY=6.67259e-11;
+	int i, n, k;
+	bool high, intersect;
+
+	if(simt > NextEventTime) {
+		NextEventTime=simt+DELTAT;
+		OBJHANDLE hbody=OurVessel->GetGravityRef();
+		switch(ProgState)
+		{
+		case 0:
+			ProgState++;
+			ProgFlag01=false;
+			DesiredAzimuth=0.0;
+			NextEventTime=simt;
+			break;
+
+		case 1:
+			ProgState++;
+			OurVessel->GetRelativePos(hbody, pos);
+			OurVessel->GetRelativeVel(hbody, vel);
+			OrbitParams(pos, vel, period, apo, tta, per, ttp);
+//			char fname[8];
+//			sprintf(fname,"P19log.txt");
+//			outstr=fopen(fname,"w");
+			if(period > 0.0) {
+				DesiredApogee=apo;
+				DesiredPerigee=per;
+				SetVerbNounAndFlash(6,30);
+			} else {
+				//we're not in orbit
+				AbortWithError(606);
+				return;
+			}
+			break;
+
+		case 3:
+			OurVessel->GetRelativePos(hbody, pos);
+			OurVessel->GetRelativeVel(hbody, vel);
+			rc=Mag(pos);
+			OrbitParams(pos, vel, period, apo, tta, per, ttp);
+			bradius=oapiGetSize(hbody);
+			bmass=oapiGetMass(hbody);
+			mu=GRAVITY*bmass;
+			if (MainThrusterIsHover) {
+				vthrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
+			} else {
+				vthrust=OurVessel->GetMaxThrust(ENGINE_MAIN);
+			}
+			vmass=OurVessel->GetMass();
+			n=OurVessel->DockCount();
+			for (k=0; k<n; k++) {
+				DOCKHANDLE Dock=OurVessel->GetDockHandle(k);
+				i=OurVessel->DockingStatus(k);
+				if(i == 0) break;
+				OBJHANDLE hOther=OurVessel->GetDockStatus(Dock);
+				VESSEL *Other=oapiGetVesselInterface(hOther);
+				v=Other->GetMass();
+				vmass=vmass+v;
+			}
+			// the orbit we're in
+//			fprintf(outstr, "apo=%.1f tta=%.1f per=%.1f ttp=%.1f \n", apo, tta, per, ttp);
+			e=(2.0*(apo+bradius))/(apo+per+2.0*bradius)-1.0;
+			a=bradius+((apo+per)/2.0);
+			p=a*(1.0-e*e);
+			vdot=vel*pos;
+			sign=vdot/fabs(vdot);
+			v=sign*acos(((p/Mag(pos))-1.0)/e); //current angle from periapsis
+			ea=acos((cos(v)+e)/(1.0+e*cos(v)));
+			ma=ea-e*sin(ea);
+			tsp=ma*sqrt(fabs(a*a*a)/mu);
+
+			if(DesiredPerigee > apo) {
+				tb=300.0;
+				PredictPosVelVectors(pos, vel, mu, tb, spos, svel, velm);
+				vh=Normalize(CrossProduct(spos, svel));
+				vf=Normalize(CrossProduct(vh, spos));
+				vup=Normalize(spos);
+				theta=DesiredAzimuth*RAD;
+				ap=DesiredApogee+bradius;
+				pe=DesiredPerigee+bradius;
+				// now calculate elements for the desired orbit
+				en=(2.0*ap)/(ap+pe)-1.0;
+				an=(ap+pe)/2.0;
+				pn=an*(1.0-en*en);
+				// calc new orbit altitude at intercept
+				dph=acos(Normalize(pos)*Normalize(spos));
+				can=130.0*RAD;
+				vn=v+theta-dph-can;
+				rn=pn/(1.0+en*cos(vn));
+//				fprintf(outstr, "vn=%.3f dph=%.3f alt=%.1f\n", vn*DEG,dph*DEG, rn-bradius);
+				epos=vup*(rn*cos(can))+vf*(rn*sin(can));
+				dt=45.0*60.0;
+				Lambert(spos, epos, dt, mu, v1, v2);
+//				fprintf(outstr, "Lambert spos=%.1f %.1f %.1f epos=%.1f %.1f %.1f \n",
+//					spos, epos);
+//				fprintf(outstr, "Lambert v1=%.1f %.1f %.1f v2=%.1f %.1f %.1f \n",
+//					v1, v2);
+
+				delta=v1-svel;
+				dv=Mag(delta);
+				CutOffVel=dv;
+//				fprintf(outstr, "delta=%.3f %.3f %.3f dv=%.3f \n", delta, dv);
+				fmass=vmass*(1.0-exp(-dv/VesselISP));
+				burn=fmass/(vthrust/VesselISP);
+				BurnStartTime=simt+tb-burn/2.0;
+				BurnEndTime=BurnStartTime+burn;	
+				delta=Normalize(delta);
+				DesiredDeltaVx=delta.x;
+				DesiredDeltaVy=delta.y;
+				DesiredDeltaVz=delta.z;
+				BurnTime=BurnStartTime;
+				SetVerbNoun(16, 50);
+				ProgFlag01=true;
+				ProgState++;
+				return;
+			}
+			if(DesiredApogee < per) {
+				tb=300.0;
+				PredictPosVelVectors(pos, vel, mu, tb, spos, svel, velm);
+				vh=Normalize(CrossProduct(spos, svel));
+				vf=Normalize(CrossProduct(vh, spos));
+				vup=Normalize(spos);
+
+				theta=DesiredAzimuth*RAD;
+				ap=DesiredApogee+bradius;
+				pe=DesiredPerigee+bradius;
+				// now calculate elements for the desired orbit
+				en=(2.0*ap)/(ap+pe)-1.0;
+				an=(ap+pe)/2.0;
+				pn=an*(1.0-en*en);
+				// calc new orbit altitude at intercept
+				dph=acos(Normalize(pos)*Normalize(spos));
+				can=130.0*RAD;
+				vn=v+theta-dph-can;
+				rn=pn/(1.0+en*cos(vn));
+//				fprintf(outstr, "vn=%.3f dph=%.3f alt=%.1f\n", vn*DEG,dph*DEG, rn-bradius);
+				epos=vup*(rn*cos(can))+vf*(rn*sin(can));
+
+				dt=45.0*60.0;
+				Lambert(spos, epos, dt, mu, v1, v2);
+//				fprintf(outstr, "Lambert spos=%.1f %.1f %.1f epos=%.1f %.1f %.1f \n",
+//					spos, epos);
+//				fprintf(outstr, "Lambert v1=%.1f %.1f %.1f v2=%.1f %.1f %.1f \n",
+//					v1, v2);
+
+				delta=v1-svel;
+				dv=Mag(delta);
+				CutOffVel=dv;
+//				fprintf(outstr, "delta=%.3f %.3f %.3f dv=%.3f \n", delta, dv);
+				fmass=vmass*(1.0-exp(-dv/VesselISP));
+				burn=fmass/(vthrust/VesselISP);
+				BurnStartTime=simt+tb-burn/2.0;
+				BurnEndTime=BurnStartTime+burn;	
+				delta=Normalize(delta);
+				DesiredDeltaVx=delta.x;
+				DesiredDeltaVy=delta.y;
+				DesiredDeltaVz=delta.z;
+				BurnTime=BurnStartTime;
+				SetVerbNoun(16, 50);
+				ProgFlag01=true;
+				ProgState++;
+				return;
+			}
+			if(fabs(DesiredApogee-DesiredPerigee) < 1000.0) {
+			// circularize at a specific altitude...
+				vr=acos(((p/(DesiredApogee+bradius))-1.0)/e); //angle from periapsis where r=a
+				ea=acos((cos(vr)+e)/(1.0+e*cos(vr)));
+				ma=ea-e*sin(ea);
+				tr=ma*sqrt(fabs(a*a*a)/mu);
+				if(ttp < tr) {
+					tb=ttp+tr;
+				} else {
+					tb=ttp-tr;
+				}
+				if(tb < 300.0) tb=ttp+tr;
+				PredictPosVelVectors(pos, vel, mu, tb, spos, svel, velm);
+				up=Normalize(spos);
+				no=Normalize(CrossProduct(spos, svel));
+				fwd=Normalize(CrossProduct(no, up));
+				vc=sqrt(mu/Mag(spos));  // vel for circular orbit at spos radius
+				delta=fwd*vc-svel;
+				dv=Mag(delta);
+				CutOffVel=dv;
+				fmass=vmass*(1.0-exp(-dv/VesselISP));
+				burn=fmass/(vthrust/VesselISP);
+				BurnStartTime=simt+tb-burn/2.0;
+				BurnEndTime=BurnStartTime+burn;	
+				delta=Normalize(delta);
+				DesiredDeltaVx=delta.x;
+				DesiredDeltaVy=delta.y;
+				DesiredDeltaVz=delta.z;
+				BurnTime=BurnStartTime;
+				SetVerbNoun(16, 50);
+				ProgFlag01=false;
+				ProgState++;
+				return;
+			}
+			// if we made it to here our orbit goes between DesiredPerigee and DesiredApogee
+			// let's see if they intersect...
+			theta=DesiredAzimuth*RAD;
+//			fprintf(outstr, "Theta=%.3f\n", theta);
+//			fprintf(outstr, "old ap=%.1f ta=%.1f pe=%.1f tp=%.1f\n", apo, tta, per, ttp);
+			// real anomoly from our desired periapsis
+			vn=v+theta;
+			ap=DesiredApogee+bradius;
+			pe=DesiredPerigee+bradius;
+			// now calculate elements for the desired orbit
+			en=(2.0*ap)/(ap+pe)-1.0;
+			an=(ap+pe)/2.0;
+			pn=an*(1.0-en*en);
+			rn=pn/(1.0+en*cos(vn));
+			// rc and rn the radii at this v of the current and desired orbits
+//			sprintf(oapiDebugString(), "rc=%.1f rn=%.1f v=%.5f vn=%.5f",
+//				rc, rn, v*DEG, vn*DEG);
+			high=false;
+			if(rc > rn) high=true;
+
+
+			// look for intersection starting here...
+			intersect=false;
+			vc=v;
+			for (k=0; k<36; k++) {
+				vc=vc+10.0*RAD;
+				vn=vn+10.0*RAD;
+				rc=p/(1.0+e*cos(vc));
+				rn=pn/(1.0+en*cos(vn));
+//				fprintf(outstr, "k=%d vc=%.3f vn=%.3f rc=%.1f rn=%.1f\n",
+//					k, vc*DEG, vn*DEG, rc-bradius, rn-bradius);
+				if(high) {
+					if(rc < rn) {
+						high=false;
+						intersect=true;
+						break;
+					}
+				} else {
+					if(rc > rn) {
+						high=true;
+						intersect=true;
+						break;
+					}
+				}
+			}
+//			fprintf(outstr, "intersect=%d\n", intersect);
+//			fprintf(outstr, "k=%d vc=%.3f vn=%.3f rc=%.1f rn=%.1f\n",
+//					k, vc*DEG, vn*DEG, rc-bradius, rn-bradius);
+			if(intersect) {
+// intersection is between vc and vc-10 degrees 
+				vcl=vc-10.0*RAD;
+				vch=vc;
+				vnl=vn-10.0*RAD;
+				vnh=vn;
+				for (k=0; k<32;k++) {
+//					fprintf(outstr, "k=%d vcl=%.3f vch=%.3f vnl=%.3f vnh=%.3f \n",
+//						k, vcl*DEG, vch*DEG, vnl*DEG, vnh*DEG);
+					vc=(vcl+vch)/2.0;
+					vn=(vnl+vnh)/2.0;
+					rc=p/(1.0+e*cos(vc));
+					rn=pn/(1.0+en*cos(vn));
+					if(fabs(rc-rn) < 0.001) break;
+					high=false;
+//					fprintf(outstr, "vc=%.3f vn=%.3f rc=%.1f rn=%.1f high=%d\n",
+//						vc*DEG, vn*DEG, rc-bradius, rn-bradius, high);
+					if(high) {
+						if(rc>rn) {
+							vch=vc;
+							vnh=vn;
+						} else {
+							vcl=vc;
+							vnl=vn;
+						}
+					} else {
+						if(rc>rn) {
+							vcl=vc;
+							vnl=vn;
+						} else {
+							vch=vc;
+							vnh=vn;
+						}
+					}
+				}
+
+				ea=acos((cos(vc)+e)/(1.0+e*cos(vc)));
+				ma=ea-e*sin(ea);
+				tsp=ma*sqrt(fabs(a*a*a)/mu);
+				// choose the next intersection >= 300 seconds from now
+				tb=ttp-tsp;
+				if(tb < 300.0) tb=ttp+tsp;
+//				fprintf(outstr, "tsp=%.1f ttp=%.1f\n", tsp, ttp);
+				PredictPosVelVectors(pos, vel, mu, tb, spos, svel, velm);
+//				fprintf(outstr, "pos=%.1f %.1f %.1f vel=%.1f %.1f %.1f tb=%.1f\n", pos, vel, tb);
+//				fprintf(outstr, "spos=%.1f %.1f %.1f svel=%.1f %.1f %.1f\n", spos, svel);
+				r=Mag(spos);
+				// now we know the position and time of the intersection, and starting v
+				// let's calculate the v for new orbit...
+				h=sqrt(mu*an*(1-en*en));
+				vp=h/pe;  // velocity at periapsis for new orbit...
+				vhv=h/r;
+				sth=(en*sin(vn))/sqrt(1.0+2.0*en*cos(vn)+en*en);
+				cth=sqrt(1.0-sth*sth);
+				vv=sth*vhv;
+				vfwd=cth*vhv;
+//				fprintf(outstr, "h/r=%.1f fwd=%.1f vert=%.1f\n", vhv, vfwd, vv);
+				vh=Normalize(CrossProduct(spos, svel));
+				vf=Normalize(CrossProduct(vh, spos));
+				vup=Normalize(spos);
+				veln=vf*vfwd+vup*vv;
+				OrbitParams(spos, veln, period, apo, tta, per, ttp);
+//				fprintf(outstr, "new ap=%.1f ta=%.1f pe=%.1f tp=%.1f\n", apo, tta, per, ttp);
+				delta=veln-svel;
+//				fprintf(outstr, "veln=%.3f %.3f %.3f delta=%.3f %.3f %.3f\n", veln, delta);
+				dv=Mag(delta);
+				CutOffVel=dv;
+				fmass=vmass*(1.0-exp(-dv/VesselISP));
+				burn=fmass/(vthrust/VesselISP);
+				BurnStartTime=simt+tb-burn/2.0;
+				BurnEndTime=BurnStartTime+burn;	
+				delta=Normalize(delta);
+				DesiredDeltaVx=delta.x;
+				DesiredDeltaVy=delta.y;
+				DesiredDeltaVz=delta.z;
+				BurnTime=BurnStartTime;
+//				fprintf(outstr, "burn=%.1f \n", burn);
+				SetVerbNoun(16, 50);
+				ProgFlag01=false;
+				ProgState++;
+				return;
+			} else { 
+// no intersection
+				tb=300.0;
+				PredictPosVelVectors(pos, vel, mu, tb, spos, svel, velm);
+				vh=Normalize(CrossProduct(spos, svel));
+				vf=Normalize(CrossProduct(vh, spos));
+				vup=Normalize(spos);
+				// calc new orbit altitude at intercept
+				dph=acos(Normalize(pos)*Normalize(spos));
+				can=130.0*RAD;
+				vn=v+theta-dph-can;
+				rn=pn/(1.0+en*cos(vn));
+//				fprintf(outstr, "vn=%.3f dph=%.3f rn=%.1f\n", vn*DEG,dph*DEG, rn);
+				epos=vup*(rn*cos(can))+vf*(rn*sin(can));
+				dt=45.0*60.0;
+				Lambert(spos, epos, dt, mu, v1, v2);
+//				fprintf(outstr, "Lambert spos=%.1f %.1f %.1f epos=%.1f %.1f %.1f ealt=%.1f\n",
+//					spos, epos, Mag(epos)-bradius);
+//				fprintf(outstr, "Lambert v1=%.1f %.1f %.1f v2=%.1f %.1f %.1f \n",
+//					v1, v2);
+
+				delta=v1-svel;
+				dv=Mag(delta);
+				CutOffVel=dv;
+//				fprintf(outstr, "delta=%.3f %.3f %.3f dv=%.3f \n", delta, dv);
+				fmass=vmass*(1.0-exp(-dv/VesselISP));
+				burn=fmass/(vthrust/VesselISP);
+				BurnStartTime=simt+tb-burn/2.0;
+				BurnEndTime=BurnStartTime+burn;	
+				delta=Normalize(delta);
+				DesiredDeltaVx=delta.x;
+				DesiredDeltaVy=delta.y;
+				DesiredDeltaVz=delta.z;
+				BurnTime=BurnStartTime;
+				SetVerbNoun(16, 50);
+				ProgFlag01=true;
+				ProgState++;
+				return;
+			}
+
+
+		case 4:
+			delta.x=DesiredDeltaVx;
+			delta.y=DesiredDeltaVy;
+			delta.z=DesiredDeltaVz;
+			if (MainThrusterIsHover) {
+				OrientAxis(delta, 1, 0);
+			} else {
+				OrientAxis(delta, 2, 0);
+			}
+			break;
+		}	
+	}
+	if(ProgState == 4) {
+		if ((simt+0.05) > BurnEndTime) {
+			if (MainThrusterIsHover) {
+				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.0);
+			} else {
+				OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
+			}
+			OurVessel->SetAttitudeRotLevel(zero);
+			if(ProgFlag01 == false) {
+//				fclose(outstr);
+				oapiSetTimeAcceleration(DesiredDeltaV);
+				AwaitProgram();
+				return;
+			}
+			ProgState=3;
+			return;
+		}
+		if (simt > BurnStartTime) {
+			DesiredDeltaV=oapiGetTimeAcceleration();
+			oapiSetTimeAcceleration(1.0);
+			if (MainThrusterIsHover) {
+				OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
+			} else {
+				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
+			}
+		}
+	}
+}
+
+void ApolloGuidance::Prog19Pressed(int R1, int R2, int R3)
+
+{
+	switch (ProgState)
+	{
+	case 2:
+		DesiredApogee=R1*100.0;
+		DesiredPerigee=R2*100.0;
+		DesiredAzimuth=R3/100.0;
+		ProgState++;
+		break;
+	}
+}
+
 void ApolloGuidance::EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos)
 {
 		VECTOR3 a;
@@ -2504,13 +3000,9 @@ void ApolloGuidance::EquToRel(double vlat, double vlon, double vrad, VECTOR3 &po
 		a.x=cos(vlat)*cos(vlon)*vrad;
 		a.z=cos(vlat)*sin(vlon)*vrad;
 		a.y=sin(vlat)*vrad;
-//		pday=oapiGetPlanetPeriod(hbody);
 		obliq=oapiGetPlanetObliquity(hbody);
 		theta=oapiGetPlanetTheta(hbody);
 		rot=oapiGetPlanetCurrentRotation(hbody);
-//		date=oapiGetSimMJD();
-//		sprintf(oapiDebugString(), "per=%.5f ob=%.15f rot=%.12f date=%.8f theta=%.15f",
-//			pday, obliq, rot, date, theta);
 		pos.x=a.x*(cos(theta)*cos(rot)-sin(theta)*cos(obliq)*sin(rot))-
 			a.y*sin(theta)*sin(obliq)-
 			a.z*(cos(theta)*sin(rot)+sin(theta)*cos(obliq)*cos(rot));
@@ -2522,7 +3014,13 @@ void ApolloGuidance::EquToRel(double vlat, double vlon, double vrad, VECTOR3 &po
 			a.z*(-sin(theta)*sin(rot)+cos(theta)*cos(obliq)*cos(rot));
 
 }
-
+//
+// This will calculate orbit params for elliptical or hyperbolic trajectories
+// if period=0.0, the orbit is hyperbolic and there is no apoapsis or time-to-apoapsis
+// These variables are set to zero.  Periapsis will be valid, ttp is positive before
+// periapsis and negative after periapsis.  In the elliptical case, tta and ttp are
+// always positive and correspond to the time till next apo or per.
+//
 void ApolloGuidance::OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, 
 				double &apo, double &tta, double &per, double &ttp)
 {
@@ -2566,7 +3064,7 @@ void ApolloGuidance::OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period,
 			tta=fabs(ttp + period/2.0);
 		}
 	} else {
-		// not in orbit...
+		// hyperbolic orbit no period, apo or tta...
 		period=0.0;
 		apo=0.0;
 		tta=0.0;
@@ -2595,17 +3093,18 @@ void ApolloGuidance::OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period,
 //	only need to consider the "short way" solution.
 //
 
-void ApolloGuidance::Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu, 
+void ApolloGuidance::Lambert(VECTOR3 &stpos, VECTOR3 &enpos, double dt, double mu, 
 						  VECTOR3 &v1, VECTOR3 &v2)
 {
 	int k;
 	double r1, r2, sa, angle, ca, zmin, zmax, z, c, s, y, x, t, sdz, cdz, tdz, f, g,
 			gdot, zold;
 		r1=Mag(stpos);
-		r2=Mag(renpos);
-		sa=(stpos/r1)*(renpos/r2);
+		r2=Mag(enpos);
+		sa=(stpos/r1)*(enpos/r2);
 		angle=PI/2.0-asin(sa);
 		// we know this is a "short way" problem so this works
+		// this would need to be changed for central angle of 180 or greater...
 		ca=sqrt(r1*r2*(1.0+cos(angle)));
 		zmin=-40.0;
 		zmax=(PI*2.0)*(PI*2.0);
@@ -2638,8 +3137,8 @@ void ApolloGuidance::Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double 
 		f=1.0-y/r1; //BMW 5.3.13
 		g=ca*sqrt(y/mu); //BMW 5.3.14
 		gdot=1.0-y/r2;  //BMW 5.3.15
-		v1=(renpos - stpos*f)/g;  //BMW 5.3.16
-		v2=(renpos*gdot-stpos)/g; //BMW 5.3.17
+		v1=(enpos - stpos*f)/g;  //BMW 5.3.16
+		v2=(enpos*gdot-stpos)/g; //BMW 5.3.17
 }
 /*
   Copyright 2003-2005 Chris Knestrick
@@ -2757,17 +3256,18 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 	OurVessel->GetPMI(PMI);
 	Mass=OurVessel->GetMass();
 	n=OurVessel->DockCount();
+	Size=OurVessel->GetSize();
 	for (k=0; k<n; k++) {
 		DOCKHANDLE Dock=OurVessel->GetDockHandle(k);
 		i=OurVessel->DockingStatus(k);
 		if(i == 0) break;
+		Size=Size*2.0;
 		OBJHANDLE hOther=OurVessel->GetDockStatus(Dock);
 		VESSEL *Other=oapiGetVesselInterface(hOther);
 		v=Other->GetMass();
 		Mass=Mass+v;
 //				sprintf(oapiDebugString(), "mass=%.3f v=%.1f count=%d %d %d", vmass, v, n, k, i);
 	}
-	Size=OurVessel->GetSize();
 	MaxThrust=OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
 
 	factor=1.0;
@@ -3430,7 +3930,11 @@ bool ApolloGuidance::GenericProgPressed(int R1, int R2, int R3)
 		return true;
 
 	case 18:
-		Prog17Pressed(R1, R2, R3);
+		Prog18Pressed(R1, R2, R3);
+		return true;
+
+	case 19:
+		Prog19Pressed(R1, R2, R3);
 		return true;
 
 	case 37:
