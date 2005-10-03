@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/09/30 11:20:42  tschachim
+  *	Turn on IMU also in non-Virtual AGC mode.
+  *	
   *	Revision 1.22  2005/09/24 20:54:43  lazyd
   *	Added P16
   *	
@@ -223,6 +226,9 @@ protected:
 
 	void Prog18(double simt);
 	void Prog18Pressed(int R1, int R2, int R3);
+
+	void Prog19(double simt);
+	void Prog19Pressed(int R1, int R2, int R3);
 
 	void Prog37(double simt);
 	void Prog37Pressed(int R1, int R2, int R3);
