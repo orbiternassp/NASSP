@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/10/03 15:54:44  lazyd
+  *	Deleted code moved to apolloguidance
+  *	
   *	Revision 1.31  2005/09/20 22:37:02  lazyd
   *	Moved some programs out of here to apolloguidance
   *	
@@ -723,11 +726,6 @@ void LEMcomputer::Prog64(double simt)
 			fprintf(outstr, "Approach mode beginning: \n");
 		}
 
-//        sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel; 
-//		OurVessel->SetThrusterDir(lem->th_hover[0], pdvec);
-//		OurVessel->SetThrusterDir(lem->th_hover[1], pdvec);
-//		OurVessel->GetThrusterDir(lem->th_hover[0],vel);
-//		sprintf(oapiDebugString(),"hover  %.3f %.3f %.3f", vel);
 		BurnStartTime=simt;
 		BurnEndTime=BurnStartTime+100.0;
 		ProgFlag01=false;
@@ -894,10 +892,6 @@ void LEMcomputer::Prog64(double simt)
 		CutOffVel=1000.0*secs+lpd;
 		sprintf(oapiDebugString(),"LPD time=%d  LPD angle=%d",secs, lpd);
 		OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
-//		sprintf (oapiDebugString(), "LPD angle %.1f", (atan(position.y/fabs(position.x))+actatt.x)*DEG);
-//		sprintf(oapiDebugString(),
-//			"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f tgo=%.1f cut=%.1f",
-//			acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60., CutOffVel);
 		ComAttitude(actatt, tgtatt, true);
 		if(P64LOG) {
 			fprintf(outstr,"Time-to-go= %.1f\n",ttg);
@@ -1270,8 +1264,6 @@ void LEMcomputer::RedesignateTarget(int axis, double direction)
 	}
 	LandingLatitude=(blat+dlat)*DEG;
 	LandingLongitude=(blon+dlon)*DEG;
-//	sprintf(oapiDebugString(),"New Lat=%.8f Lon=%.8f xoff=%.1f zoff=%.1f", 
-//		LandingLatitude, LandingLongitude, xoffset, zoffset);
 }
 void LEMcomputer::GetHorizVelocity(double &forward, double &lateral)
 {
@@ -1434,8 +1426,6 @@ void LEMcomputer::Prog42(double simt)
 			dvdir.z=DesiredDeltaVz;
 			OrientAxis(dvdir, 1, 0);
 		}
-//		if(ProgFlag01 == false) sprintf(oapiDebugString(),"P41 burn=%.1f end=%.1f lvl=%.1f",
-//			BurnStartTime-simt, BurnEndTime-simt, DesiredPlaneChange);
 	}
 	if(ProgFlag01) {
 		OBJHANDLE hbody=OurVessel->GetGravityRef();
@@ -1963,6 +1953,18 @@ void LEMcomputer::AbortAscent(double simt)
 
 void LEMcomputer::Prog30(double simt)
 {
+//	VECTOR3 posm, velm, posv, velv;
+//	double emass, mmass;
+//	OBJHANDLE hmoon=oapiGetGbodyByName("moon");
+//	OBJHANDLE hearth=oapiGetGbodyByName("earth");
+//	mmass=oapiGetMass(hmoon);
+//	emass=oapiGetMass(hearth);
+//	oapiGetRelativePos(hmoon, hearth, posm);
+//	oapiGetRelativeVel(hmoon, hearth, velm);
+//	OurVessel->GetRelativePos(hearth, posv);
+//	OurVessel->GetRelativeVel(hearth, velv);
+}
+	/*
 	const double GRAVITY=6.67259e-11;
 	VECTOR3 pos, vel, b, norm, spos, svel, apos, avel, v1, v2, dv1, forward;
 	double period, apo, tta, per, ttp, vmass, mu, vlat, vlon, vrad, pday, offplane,
@@ -2081,7 +2083,8 @@ void LEMcomputer::Prog30(double simt)
 			// burn at pericenter to raise apo to >= 110 km
 		}
 	}  // end of 2-sec guidance 
-}
+
+
 /*
 void LEMcomputer::EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos)
 {
@@ -2691,7 +2694,6 @@ void LEMcomputer::Prog34(double simt)
 			PredictPosVelVectors(csmpos, csmvel, mu, time, cstpos, cstvel, velm);
 			ul=Normalize(cstpos-stpos);
 			uu=Normalize(CrossProduct(stpos, stvel));
-//			up=Normalize((ul-stpos*(ul*stpos))/(Mag(stpos)*Mag(stpos)));
 			up=Normalize(CrossProduct(uu, stpos));
 			q=Normalize(stpos)*ul;
 			q=q/fabs(q);
