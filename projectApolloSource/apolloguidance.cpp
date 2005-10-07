@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2005/10/03 15:53:01  lazyd
+  *	Added P19
+  *	
   *	Revision 1.46  2005/09/30 11:20:42  tschachim
   *	Turn on IMU also in non-Virtual AGC mode.
   *	
@@ -1168,7 +1171,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 	case 50:
 		{
 			int min, sec;
-			double dt;
+			double dt, dv, bt;
 
 			// time from ignition
 			dt=CurrentTimestep-BurnStartTime;
@@ -1180,8 +1183,14 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 				SetR1(min * 1000 + sec);
 				SetR1Format("XXX XX");
 			}
-			SetR2((int) (CutOffVel*10.0));
-			SetR3((int) ((BurnEndTime-BurnStartTime)*10.0));
+			dv=CutOffVel;
+            bt=BurnEndTime-BurnStartTime;
+			if(dt > 0.0) {
+				dv=(CutOffVel*(BurnEndTime-CurrentTimestep))/bt;
+				bt=BurnEndTime-CurrentTimestep;
+			}
+			SetR2((int) (dv*10.0));
+			SetR3((int) (bt*10.0));
 		}
 		return true;
 
@@ -2038,6 +2047,10 @@ void ApolloGuidance::BurnMainEngine(double thrust)
 		BurnFlag = false;
 }
 
+//
+// LOI Program
+//
+
 void ApolloGuidance::Prog16(double simt)
 {
 	static VECTOR3 zero={0.0, 0.0, 0.0};
@@ -2165,6 +2178,10 @@ void ApolloGuidance::Prog16(double simt)
 	}
 }
 
+//
+// DOI Program
+//
+
 void ApolloGuidance::Prog17(double simt)
 {
 	static VECTOR3 zero={0.0, 0.0, 0.0};
@@ -2187,6 +2204,8 @@ void ApolloGuidance::Prog17(double simt)
 		DeltaPitchRate=0.0;
 		DesiredLAN=9900.0;
 		ProgFlag01=false;
+		ProgFlag02=false;
+		ProgFlag03=false;
 	}
 
 	if(ProgFlag01) {
@@ -2204,15 +2223,6 @@ void ApolloGuidance::Prog17(double simt)
 			AwaitProgram();
 			return;
 		}
-		if(simt >= BurnStartTime) {
-			DesiredDeltaV=oapiGetTimeAcceleration();
-			oapiSetTimeAcceleration(1.0);
-			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.1);
-			} else {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
-			}
-		}
 		if(simt > NextEventTime) {
 			NextEventTime=simt+DELTAT;
 			align.x=DesiredDeltaVx;
@@ -2222,6 +2232,19 @@ void ApolloGuidance::Prog17(double simt)
 				OrientAxis(align, 1, 0);
 			} else {
 				OrientAxis(align, 2, 0);
+			}
+		}
+		if(simt >= BurnStartTime) {
+			if(ProgFlag03) return;
+			DesiredDeltaV=oapiGetTimeAcceleration();
+			oapiSetTimeAcceleration(1.0);
+			ProgFlag03=true;
+			dt=BurnEndTime-BurnStartTime;
+			BurnEndTime=simt+dt;
+			if (MainThrusterIsHover) {
+				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.1);
+			} else {
+				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
 			}
 		}
 		return;
@@ -2362,6 +2385,7 @@ void ApolloGuidance::Prog17(double simt)
 
 }
 
+
 void ApolloGuidance::Prog17Pressed(int R1, int R2, int R3)
 
 {
@@ -2374,19 +2398,25 @@ void ApolloGuidance::Prog17Pressed(int R1, int R2, int R3)
 
 	}
 }
+
+//
+// Plane Change program
+//
+
 void ApolloGuidance::Prog18(double simt)
 {
 	static VECTOR3 zero={0.0, 0.0, 0.0};
 	VECTOR3 pos, vel, norm, b, pn, nodes, npn, align;
 	double mu, vmass, vlat, vlon, vrad, blat, blon, dlat, dlon, aa, cc,  
 		tpass, period, pday, offplane, apo, per, tta, ttp, sign, an, ann, 
-		dv, vthrust, burn, anext, ttn, v, fmass;
+		dv, vthrust, burn, anext, ttn, v, fmass, dt;
 	const double GRAVITY=6.67259e-11;
 	int i, n, k;
 	LightCompActy();
 	if(ProgState == 0) {
 		NextEventTime=simt;
 		ProgState++;
+		ProgFlag01=false;
 		DeltaPitchRate=0.0;
 		BurnStartTime=0.0;
 		DesiredDeltaV=0.0;
@@ -2523,15 +2553,6 @@ void ApolloGuidance::Prog18(double simt)
 			AwaitProgram();
 			return;
 		}
-		if(simt >= BurnStartTime) {
-			DesiredDeltaV=oapiGetTimeAcceleration();
-			oapiSetTimeAcceleration(1.0);
-			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
-			} else {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
-			}
-		}
 		if(simt > NextEventTime) {
 			NextEventTime=simt+DELTAT;
 			align.x=DesiredDeltaVx;
@@ -2541,6 +2562,19 @@ void ApolloGuidance::Prog18(double simt)
 				OrientAxis(align, 1, 0);
 			} else {
 				OrientAxis(align, 2, 0);
+			}
+		}
+		if(simt >= BurnStartTime) {
+			if(ProgFlag01) return;
+			DesiredDeltaV=oapiGetTimeAcceleration();
+			oapiSetTimeAcceleration(1.0);
+			ProgFlag01=true;
+			dt=BurnEndTime-BurnStartTime;
+			BurnEndTime=simt+dt;
+			if (MainThrusterIsHover) {
+				OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
+			} else {
+				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
 			}
 		}
 	}
@@ -2560,6 +2594,10 @@ void ApolloGuidance::Prog18Pressed(int R1, int R2, int R3)
 		ProgState=1;
 	}
 }
+
+//
+// Orbit change program
+//
 
 void ApolloGuidance::Prog19(double simt)
 {
@@ -2956,19 +2994,24 @@ void ApolloGuidance::Prog19(double simt)
 			} else {
 				OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
 			}
+			ProgFlag02=false;
 			OurVessel->SetAttitudeRotLevel(zero);
+			oapiSetTimeAcceleration(DesiredDeltaV);
 			if(ProgFlag01 == false) {
 //				fclose(outstr);
-				oapiSetTimeAcceleration(DesiredDeltaV);
 				AwaitProgram();
 				return;
 			}
 			ProgState=3;
 			return;
 		}
+		if(ProgFlag02) return;  //engine is already on...
 		if (simt > BurnStartTime) {
 			DesiredDeltaV=oapiGetTimeAcceleration();
 			oapiSetTimeAcceleration(1.0);
+			ProgFlag02=true;
+			dt=BurnEndTime-BurnStartTime;
+			BurnEndTime=simt+dt;
 			if (MainThrusterIsHover) {
 				OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
 			} else {
