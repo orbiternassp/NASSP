@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2005/09/30 11:25:48  tschachim
+  *	Added ECS meters and switches.
+  *	
   *	Revision 1.75  2005/08/29 19:23:26  tschachim
   *	Rendering of the DSKY keys. Bugfixes
   *	
@@ -845,6 +848,9 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		// FDAI
 		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1120, 314);
+		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
+		
+		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 563, 642);
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
@@ -2260,6 +2266,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_FDAI_RIGHT:
 		fdaiRight.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
+		return true;
+
+	case AID_FDAI_LEFT:
+		fdaiLeft.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
 		return true;
 
 	case AID_DSKY2_LIGHTS:
