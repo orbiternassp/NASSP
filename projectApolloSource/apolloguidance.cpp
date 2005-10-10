@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2005/10/10 14:30:18  lazyd
+  *	Fixed time-acceleration problems in P16-P19
+  *	
   *	Revision 1.48  2005/10/07 20:26:00  lazyd
   *	Fixed a time acceleration problem
   *	
@@ -2070,6 +2073,10 @@ void ApolloGuidance::Prog16(double simt)
 		ProgFlag01=false;
 		BurnEndTime=simt;
 		NextEventTime=simt;
+//			char fname[8];
+//			sprintf(fname,"attlog.txt");
+//			outstr=fopen(fname,"w");
+//			fprintf(outstr, "Open file \n");
 		SetVerbNoun(16, 19);
 	}
 	if(ProgFlag01) {
@@ -2081,6 +2088,7 @@ void ApolloGuidance::Prog16(double simt)
 			}
 			OurVessel->SetAttitudeRotLevel(zero);
 			oapiSetTimeAcceleration(DesiredDeltaV);
+//			fclose(outstr);
 			AwaitProgram();
 			ProgState++;
 			return;
@@ -3285,7 +3293,6 @@ void ApolloGuidance::PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel
 	NewVel = (Pos * FDot) + (Vel * GDot);
 	NewVelMag = Mag(NewVel);
 }
-
 void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 {
 	//axis=0=x, 1=y, 2=z
@@ -3299,7 +3306,7 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 
 	VECTOR3 PMI, Level, Drate, delatt, Rate, zerogl, xgl, ygl, zgl, norm, pos, vel, up,
 		left, forward;
-	double Mass, Size, MaxThrust, Thrust, Rdead, factor, xa, ya, za, v;
+	double Mass, Size, MaxThrust, Thrust, Rdead, factor, xa, ya, za, v, rmax, denom;
 	int i, n, k;
 
 	VESSELSTATUS status2;
@@ -3308,6 +3315,8 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 	Mass=OurVessel->GetMass();
 	n=OurVessel->DockCount();
 	Size=OurVessel->GetSize();
+	rmax=RATE_MAX;
+	denom=3.0;
 	for (k=0; k<n; k++) {
 		DOCKHANDLE Dock=OurVessel->GetDockHandle(k);
 		i=OurVessel->DockingStatus(k);
@@ -3317,7 +3326,19 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 		VESSEL *Other=oapiGetVesselInterface(hOther);
 		v=Other->GetMass();
 		Mass=Mass+v;
-//				sprintf(oapiDebugString(), "mass=%.3f v=%.1f count=%d %d %d", vmass, v, n, k, i);
+		if (MainThrusterIsHover) {
+		// for the LM docked to the CSM
+			rmax=RATE_MAX/3.0;
+			PMI.x=165.0;
+			PMI.y=PMI.y+7.0;
+			PMI.z=165.0;
+		} else {
+		// for the CSM docked to the LM
+			PMI.x=PMI.x*15.0;
+			PMI.y=PMI.y*15.0;
+			PMI.z=PMI.z+2.37;
+		}
+		denom=10.0;
 	}
 	MaxThrust=OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
 
@@ -3400,9 +3421,9 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 			Level.x = min((Thrust/MaxThrust), 1);
 		}
 	} else {
-		Rate.x=fabs(delatt.x)/3.0;
+		Rate.x=fabs(delatt.x)/denom;
 		if(Rate.x < RATE_FINE) Rate.x=RATE_FINE;
-		if (Rate.x > RATE_MAX ) Rate.x=RATE_MAX;
+		if (Rate.x > rmax ) Rate.x=rmax;
 		Rdead=min(Rate.x/2,RATE_FINE);
 		if(delatt.x < 0) {
 			Rate.x=-Rate.x;
@@ -3428,6 +3449,11 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 			}
 		}
 	}
+//	fprintf(outstr, "del=%.5f rate=%.5f drate=%.5f lvl=%.5f vrot=%.5f\n",
+//		delatt.x*DEG, Rate.x*DEG, Drate.x*DEG, Level.x, status2.vrot.x*DEG);
+
+//	sprintf(oapiDebugString(), "del=%.5f rate=%.5f drate=%.5f lvl=%.5f pmi=%.5f th=%.3f vr=%.3f",
+//		delatt.x*DEG, Rate.x*DEG, Drate.x*DEG, Level.x, PMI.x, Thrust, status2.vrot.x*DEG);
 
 //Y-axis
 	if (fabs(delatt.y) < DEADBAND_LOW) {
@@ -3441,9 +3467,9 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 		}
 //		sprintf(oapiDebugString(),"yrate=%.5f level%.5f", status2.vrot.y, Level.y);
 	} else {
-		Rate.y=fabs(delatt.y)/3.0;
+		Rate.y=fabs(delatt.y)/denom;
 		if(Rate.y < RATE_FINE) Rate.y=RATE_FINE;
-		if (Rate.y > RATE_MAX ) Rate.y=RATE_MAX;
+		if (Rate.y > rmax ) Rate.y=rmax;
 		Rdead=min(Rate.y/2,RATE_FINE);
 		if(delatt.y < 0) {
 			Rate.y=-Rate.y;
@@ -3481,9 +3507,9 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 			Level.z = min((Thrust/MaxThrust), 1);
 		}
 	} else {
-		Rate.z=fabs(delatt.z)/3.0;
+		Rate.z=fabs(delatt.z)/denom;
 		if(Rate.z < RATE_FINE) Rate.z=RATE_FINE;
-		if (Rate.z > RATE_MAX ) Rate.z=RATE_MAX;
+		if (Rate.z > rmax ) Rate.z=rmax;
 		Rdead=min(Rate.z/2,RATE_FINE);
 		if(delatt.z< 0) {
 			Rate.z=-Rate.z;
@@ -3512,6 +3538,239 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 	OurVessel->SetAttitudeRotLevel(Level);
 
 }
+/*
+void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
+{
+	//axis=0=x, 1=y, 2=z
+	//ref =0 body coordinates 1=local vertical
+	//orients a vessel axis with a body-relative normalized vector
+	//allows rotation about the axis being oriented
+	const double RATE_MAX = RAD*(5.0);
+	const double DEADBAND_LOW = RAD*(0.01);
+	const double RATE_FINE = RAD*(0.005);
+	const double RATE_NULL = RAD*(0.0001);
+
+	VECTOR3 PMI, Level, Drate, delatt, Rate, zerogl, xgl, ygl, zgl, norm, pos, vel, up,
+		left, forward;
+	double Mass, Size, MaxThrust, Thrust, Rdead, factor, xa, ya, za, v, rmax, denom;
+	int i, n, k;
+
+	VESSELSTATUS status2;
+	OurVessel->GetStatus(status2);
+	OurVessel->GetPMI(PMI);
+	Mass=OurVessel->GetMass();
+	n=OurVessel->DockCount();
+	Size=OurVessel->GetSize();
+	rmax=RATE_MAX;
+	denom=3.0;
+	for (k=0; k<n; k++) {
+		DOCKHANDLE Dock=OurVessel->GetDockHandle(k);
+		i=OurVessel->DockingStatus(k);
+		if(i == 0) break;
+		Size=Size*2.0;
+		OBJHANDLE hOther=OurVessel->GetDockStatus(Dock);
+		VESSEL *Other=oapiGetVesselInterface(hOther);
+		v=Other->GetMass();
+		Mass=Mass+v;
+		rmax=RATE_MAX/2.0;
+		denom=9.0;
+	}
+	MaxThrust=OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
+
+	factor=1.0;
+
+	OurVessel->Local2Global(_V(0.0, 0.0, 0.0), zerogl);
+	OurVessel->Local2Global(_V(1.0, 0.0, 0.0), xgl);
+	OurVessel->Local2Global(_V(0.0, 1.0, 0.0), ygl);
+	OurVessel->Local2Global(_V(0.0, 0.0, 1.0), zgl);
+	xgl=xgl-zerogl;
+	ygl=ygl-zerogl;
+	zgl=zgl-zerogl;
+	norm=Normalize(vec);
+	if(ref == 1) {
+		// vec is in local vertical reference, change to body rel coords
+		// vec.x=forward component
+		// vec.y=up component
+		// vec.z=left component
+		OBJHANDLE hbody=OurVessel->GetGravityRef();
+		OurVessel->GetRelativePos(hbody, pos);
+		OurVessel->GetRelativeVel(hbody, vel);
+		up=Normalize(pos);
+		left=Normalize(CrossProduct(pos, vel));
+		forward=Normalize(CrossProduct(left, up));
+		norm=forward*vec.x+up*vec.y+left*vec.z;	
+	}
+	if(axis == 0) {
+		xa=norm*xgl;
+		xa=xa/fabs(xa);
+		ya=asin(norm*ygl);
+		za=asin(norm*zgl);
+		if(xa < 0.0) {
+			ya=(ya/fabs(ya))*PI-ya;
+			za=(za/fabs(za))*PI-za;
+		}
+		delatt.x=0.0;
+		delatt.y=za;
+		delatt.z=-ya;
+	}
+	if(axis == 1) {
+		xa=asin(norm*xgl);
+		ya=norm*ygl;
+		ya=ya/fabs(ya);
+		za=asin(norm*zgl);
+		if(ya < 0.0) {
+			xa=(xa/fabs(xa))*PI-xa;
+			za=(za/fabs(za))*PI-za;
+		}
+		delatt.x=-za;
+		delatt.y=0.0;
+		delatt.z=xa;
+//		fprintf(outstr, "delatt=%.3f %.3f %.3f xyz=%.3f %.3f %.3f\n", delatt*DEG, 
+//			xa*DEG, ya*DEG, za*DEG);
+	}
+	if(axis == 2) {
+		xa=asin(norm*xgl);
+		ya=asin(norm*ygl);
+		za=norm*zgl;
+		za=za/fabs(za);
+		if(za < 0.0) {
+			xa=(xa/fabs(xa))*PI-xa;
+			ya=(ya/fabs(ya))*PI-ya;
+		}
+		delatt.x=ya;
+		delatt.y=-xa;
+		delatt.z=0.0;
+	}
+//	sprintf(oapiDebugString(), "norm=%.3f %.3f %.3f x=%.3f y=%.3f z=%.3f ax=%d", 
+//	norm, xa*DEG, ya*DEG, za*DEG, axis);
+
+
+//X axis
+	if (fabs(delatt.x) < DEADBAND_LOW) {
+		if(fabs(status2.vrot.x) < RATE_NULL) {
+		// set level to zero
+			Level.x=0;
+		} else {
+		// null the rate
+			Thrust=-(Mass*PMI.x*status2.vrot.x)/Size;
+			Level.x = min((Thrust/MaxThrust), 1);
+		}
+	} else {
+		Rate.x=fabs(delatt.x)/denom;
+		if(Rate.x < RATE_FINE) Rate.x=RATE_FINE;
+		if (Rate.x > rmax ) Rate.x=rmax;
+		Rdead=min(Rate.x/2,RATE_FINE);
+		if(delatt.x < 0) {
+			Rate.x=-Rate.x;
+			Rdead=-Rdead;
+		}
+		Drate.x=Rate.x-status2.vrot.x;
+		Thrust=factor*(Mass*PMI.x*Drate.x)/Size;
+		if(delatt.x > 0) {
+			if(Drate.x > Rdead) {
+				Level.x=min((Thrust/MaxThrust),1);
+			} else if (Drate.x < -Rdead) {
+				Level.x=max((Thrust/MaxThrust),-1);
+			} else {
+				Level.x=0;
+			}
+		} else {
+			if(Drate.x < Rdead) {
+				Level.x=max((Thrust/MaxThrust),-1);
+			} else if (Drate.x > -Rdead) {
+				Level.x=min((Thrust/MaxThrust),1);
+			} else {
+				Level.x=0;
+			}
+		}
+	}
+	sprintf(oapiDebugString(), "del=%.5f rate=%.5f drate=%.5f lvl=%.5f",
+		delatt.x*DEG, Rate.x*DEG, Drate.x*DEG, Level.x);
+
+//Y-axis
+	if (fabs(delatt.y) < DEADBAND_LOW) {
+		if(fabs(status2.vrot.y) < RATE_NULL) {
+		// set level to zero
+			Level.y=0;
+		} else {
+		// null the rate
+			Thrust=-(Mass*PMI.y*status2.vrot.y)/Size;
+			Level.y = min((Thrust/MaxThrust), 1);
+		}
+//		sprintf(oapiDebugString(),"yrate=%.5f level%.5f", status2.vrot.y, Level.y);
+	} else {
+		Rate.y=fabs(delatt.y)/denom;
+		if(Rate.y < RATE_FINE) Rate.y=RATE_FINE;
+		if (Rate.y > rmax ) Rate.y=rmax;
+		Rdead=min(Rate.y/2,RATE_FINE);
+		if(delatt.y < 0) {
+			Rate.y=-Rate.y;
+			Rdead=-Rdead;
+		}
+		Drate.y=Rate.y-status2.vrot.y;
+		Thrust=factor*(Mass*PMI.y*Drate.y)/Size;
+		if(delatt.y > 0) {
+			if(Drate.y > Rdead) {
+				Level.y=min((Thrust/MaxThrust),1);
+			} else if (Drate.y < -Rdead) {
+				Level.y=max((Thrust/MaxThrust),-1);
+			} else {
+				Level.y=0;
+			}
+		} else {
+			if(Drate.y < Rdead) {
+				Level.y=max((Thrust/MaxThrust),-1);
+			} else if (Drate.y > -Rdead) {
+				Level.y=min((Thrust/MaxThrust),1);
+			} else {
+				Level.y=0;
+			}
+		}
+	}
+
+//Z axis
+	if (fabs(delatt.z) < DEADBAND_LOW) {
+		if(fabs(status2.vrot.z) < RATE_NULL) {
+		// set level to zero
+			Level.z=0;
+		} else {
+		// null the rate
+			Thrust=-(Mass*PMI.z*status2.vrot.z)/Size;
+			Level.z = min((Thrust/MaxThrust), 1);
+		}
+	} else {
+		Rate.z=fabs(delatt.z)/denom;
+		if(Rate.z < RATE_FINE) Rate.z=RATE_FINE;
+		if (Rate.z > rmax ) Rate.z=rmax;
+		Rdead=min(Rate.z/2,RATE_FINE);
+		if(delatt.z< 0) {
+			Rate.z=-Rate.z;
+			Rdead=-Rdead;
+		}
+		Drate.z=Rate.z-status2.vrot.z;
+		Thrust=factor*(Mass*PMI.z*Drate.z)/Size;
+		if(delatt.z > 0) {
+			if(Drate.z > Rdead) {
+				Level.z=min((Thrust/MaxThrust),1);
+			} else if (Drate.z < -Rdead) {
+				Level.z=max((Thrust/MaxThrust),-1);
+			} else {
+				Level.z=0;
+			}
+		} else {
+			if(Drate.z < Rdead) {
+				Level.z=max((Thrust/MaxThrust),-1);
+			} else if (Drate.z > -Rdead) {
+				Level.z=min((Thrust/MaxThrust),1);
+			} else {
+				Level.z=0;
+			}
+		}
+	}
+	OurVessel->SetAttitudeRotLevel(Level);
+
+}
+*/
 
 
 void ApolloGuidance::Prog37(double simt)
