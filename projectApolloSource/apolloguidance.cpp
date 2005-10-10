@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2005/10/07 20:26:00  lazyd
+  *	Fixed a time acceleration problem
+  *	
   *	Revision 1.47  2005/10/03 15:53:01  lazyd
   *	Added P19
   *	
@@ -2059,6 +2062,9 @@ void ApolloGuidance::Prog16(double simt)
 		burn, dv, vmass, v, theta, offplane, dvn, vt;  
 	const double GRAVITY=6.67259e-11;
 	int i, n, k;
+
+	if(ProgState > 1) return;
+	LightCompActy();
 	if(ProgState == 0) {
 		ProgState++;
 		ProgFlag01=false;
@@ -2076,6 +2082,7 @@ void ApolloGuidance::Prog16(double simt)
 			OurVessel->SetAttitudeRotLevel(zero);
 			oapiSetTimeAcceleration(DesiredDeltaV);
 			AwaitProgram();
+			ProgState++;
 			return;
 		}
 	}
@@ -2111,7 +2118,7 @@ void ApolloGuidance::Prog16(double simt)
 				vc=sqrt(mu/(Mag(pos)));
 				dv=vt-vc;
 				if(ttp > 800.0) {
-					if(per < 110000.0) {
+					if(per < 100000.0) {
 						dv=0.0;
 						dvn=0.0;
 					}
@@ -2119,8 +2126,6 @@ void ApolloGuidance::Prog16(double simt)
 			}
 			dv=sqrt(dv*dv+dvn*dvn);
 
-//			sprintf(oapiDebugString(), "ttp=%.1f per=%.1f pred=%.1f",
-//				ttp, per, Mag(spos)-bradius);
 			if (MainThrusterIsHover) {
 				vthrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
 			} else {
@@ -2152,14 +2157,11 @@ void ApolloGuidance::Prog16(double simt)
 					if(simt+burn <= BurnEndTime) BurnEndTime=simt+burn;
 				}
 				BurnStartTime=BurnEndTime;
+				return;
 			} else {
 				BurnStartTime=simt+(ttp-burn/2.0);
 				BurnEndTime=simt+burn;
 			}
-//			sprintf(oapiDebugString(), "v=%.3f %.3f %.3f a=%.3f %.3f %.3f op=%.1f", 
-//				veln, align, offplane);
-//			sprintf(oapiDebugString(), "ttp=%.1f dv=%.3f dvn=%.3f burn=%.3f op=%.1f end=%.1f", 
-//				ttp, dv, dvn, burn, offplane, BurnEndTime-simt);
 
 			if(burn/2.0 > ttp) {
 				DesiredDeltaV=oapiGetTimeAcceleration();
@@ -2191,6 +2193,7 @@ void ApolloGuidance::Prog17(double simt)
 		passes, a, e, h, v, dv, vthrust, vmass, burn, psave, fmass;
 	const double GRAVITY=6.67259e-11;
 	int k, n, i;
+	if(ProgState > 1) return;
 	LightCompActy();
 	if(ProgState == 0) {
 //			char fname[8];
@@ -2221,6 +2224,7 @@ void ApolloGuidance::Prog17(double simt)
 			oapiSetTimeAcceleration(DesiredDeltaV);
 //			fclose(outstr);
 			AwaitProgram();
+			ProgState++;
 			return;
 		}
 		if(simt > NextEventTime) {
@@ -2412,6 +2416,7 @@ void ApolloGuidance::Prog18(double simt)
 		dv, vthrust, burn, anext, ttn, v, fmass, dt;
 	const double GRAVITY=6.67259e-11;
 	int i, n, k;
+	if(ProgState > 3) return;
 	LightCompActy();
 	if(ProgState == 0) {
 		NextEventTime=simt;
@@ -2551,6 +2556,7 @@ void ApolloGuidance::Prog18(double simt)
 			OurVessel->SetAttitudeRotLevel(zero);
 			oapiSetTimeAcceleration(DesiredDeltaV);
 			AwaitProgram();
+			ProgState++;
 			return;
 		}
 		if(simt > NextEventTime) {
@@ -2611,7 +2617,8 @@ void ApolloGuidance::Prog19(double simt)
 	const double GRAVITY=6.67259e-11;
 	int i, n, k;
 	bool high, intersect;
-
+    if(ProgState > 4) return;
+	LightCompActy();
 	if(simt > NextEventTime) {
 		NextEventTime=simt+DELTAT;
 		OBJHANDLE hbody=OurVessel->GetGravityRef();
@@ -3000,6 +3007,7 @@ void ApolloGuidance::Prog19(double simt)
 			if(ProgFlag01 == false) {
 //				fclose(outstr);
 				AwaitProgram();
+				ProgState++;
 				return;
 			}
 			ProgState=3;
