@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/09/24 20:55:18  lazyd
+  *	No change
+  *	
   *	Revision 1.20  2005/09/20 22:35:20  lazyd
   *	Made changes to save/restore landing latitude in EMEM
   *	
@@ -414,7 +417,16 @@ void CSMcomputer::Prog01(double simt)
 
 		LightCompActy();
 		LightNoAtt();
-		imu.TurnOn();
+
+		// Check if the IMU is running and uncaged.
+		ChannelValue30 val30;
+		val30.Value = GetInputChannel(030);
+		if (val30.Bits.IMUCage || !val30.Bits.IMUOperate) {
+			AbortWithError(0210);
+			break;
+		}
+		//imu.TurnOn();
+
 		NextProgTime = simt + 2.0;
 		ProgState++;
 		break;
@@ -1479,13 +1491,6 @@ void CSMcomputer::DisplayBankSum()
 void CSMcomputer::Liftoff(double simt)
 
 {
-
-	if (Yaagc) {
-		// TODO If this "prelaunch attitude hack" is enabled, you get more precise 
-		//      orbit parameters, but since it's a dirty hack, it's disabled at the moment
-		//imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
-	}
-
 	//
 	// Ensure autopilot is enabled.
 	//
@@ -1499,6 +1504,11 @@ void CSMcomputer::Liftoff(double simt)
 	//
 
 	if (!Yaagc) {
+
+		// As a quick hack we drive the IMU to prelaunch orientation 
+		// until the NASSP AGC has a working P01
+		imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
+
 		if (OnStandby())
 			Startup();
 
