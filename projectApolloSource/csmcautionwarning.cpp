@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/09/30 11:21:28  tschachim
+  *	Changed fuel cell and O2 flow handling.
+  *	
   *	Revision 1.6  2005/08/21 16:23:32  movieman523
   *	Added more alarms.
   *	
@@ -63,7 +66,7 @@
 
 #include "saturn.h"
 
-CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &s) : CautionWarningSystem(s)
+CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &buttonsound) : CautionWarningSystem(mastersound, buttonsound)
 
 {
 	NextUpdateTime = MINUS_INFINITY;
@@ -71,6 +74,8 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &s) : CautionWarningSyste
 	NextO2FlowCheckTime = MINUS_INFINITY;
 	LastO2FlowCheckHigh = false;
 	O2FlowCheckCount = 0;
+	for (int i = 0; i < 4; i++)
+		FuelCellCheckCount[i] = 0;
 
 	TimeStepCount = 0;
 }
@@ -79,16 +84,41 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &s) : CautionWarningSyste
 // Check status of a fuel cell.
 //
 
-bool CSMCautionWarningSystem::FuelCellBad(double temp)
+bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus fc, int index)
 
 {
+	bool bad = false;
+	
 	//
-	// I don't know what the real temperature limits are.
+	// Various conditions, see Apollo Operations Handbook 2.10.4.2
 	//
 
-	if (temp < KelvinToFahrenheit(430.0) || temp > KelvinToFahrenheit(500.0))
-		return true;
+	if (fc.H2FlowLBH > 0.161) bad = true;
+	if (fc.O2FlowLBH > 1.276) bad = true;
 
+	// pH > 9 not simulated at the moment
+
+	if (fc.TempF < 360.0) bad = true;
+	if (fc.TempF > 475.0) bad = true;
+
+	if (fc.CondenserTempF < 150.0) bad = true;
+	if (fc.CondenserTempF > 175.0) bad = true;
+
+	if (fc.CoolingTempF < -30.0) bad = true;
+
+	//
+	// To avoid spurious alarms because of fluctuation at high time accelerations
+	// the "bad" condition has to last for a few check counts.
+	// This is similar to the shutdown handling in FCell.refresh
+	//
+	if (bad) {
+		if (FuelCellCheckCount[index] < 5)
+			FuelCellCheckCount[index]++;
+		else
+			return true;
+	} else {
+		FuelCellCheckCount[index] = 0;
+	}
 	return false;
 }
 
@@ -103,12 +133,13 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	CautionWarningSystem::TimeStep(simt);
 
 	//
-	// Skip the first few timesteps to give the internal systems time to
+	// Skip the first few timesteps and simulation time seconds to give the internal systems time to
 	// settle down after a scenario load. This should avoid spurious
 	// warnings.
 	//
 
-	if (TimeStepCount < 10) {
+	if (TimeStepCount < 100) {
+		if (TimeStepCount == 0) NextUpdateTime = simt + 20.0;
 		TimeStepCount++;
 		return;
 	}
@@ -126,20 +157,19 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		//
 
 		if (Source == CWS_SOURCE_CSM) {
+
+			//
+			// Check fuel cells
+			//
 			FuelCellStatus fc1, fc2, fc3;
 
 			sat->GetFuelCellStatus(1, fc1);
 			sat->GetFuelCellStatus(2, fc2);
 			sat->GetFuelCellStatus(3, fc3);
 
-			//
-			// We should check more than temperature, once we find out what the
-			// caution limits were for pressure, etc.
-			//
-
-			SetLight(CSM_CWS_FC1_LIGHT, FuelCellBad(fc1.TempF));
-			SetLight(CSM_CWS_FC2_LIGHT, FuelCellBad(fc2.TempF));
-			SetLight(CSM_CWS_FC3_LIGHT, FuelCellBad(fc3.TempF));
+			SetLight(CSM_CWS_FC1_LIGHT, FuelCellBad(fc1, 1));
+			SetLight(CSM_CWS_FC2_LIGHT, FuelCellBad(fc2, 2));
+			SetLight(CSM_CWS_FC3_LIGHT, FuelCellBad(fc3, 3));
 
 			//
 			// LOX/LH2: "The caution and warning system will activate on alarm when oxygen pressure 
@@ -174,6 +204,18 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			SetLight(CSM_CWS_CRYO_PRESS_LIGHT, false);
 		}
 
+		AtmosStatus atm;
+		sat->GetAtmosStatus(atm);
+
+		//
+		// Glycol temperature of the EcsRadTempPrimOutletMeter lower than -30°F
+		// Use displayed value instead of the PanelSDK to make use of the "damping" 
+		// of the SuitComprDeltaPMeter to pervent alarms because of the fluctuations during 
+		// high time acceleration.
+		//
+		
+		SetLight(CSM_CWS_GLYCOL_TEMP_LOW, (atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF < -30.0));
+
 		//
 		// Inverter: "A temperature sensor with a range of 32 degrees to 248 degrees F is installed 
 		// in each inverter and will illuminate a light in the caution and warning system at an 
@@ -191,9 +233,6 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// the fact that the oxygen flow rate is greater than is normally required."
 		//
 
-		AtmosStatus atm;
-		sat->GetAtmosStatus(atm);
-
 		if (simt > NextO2FlowCheckTime) {
 			//
 			// Use displyed value instead of the PanelSDK to make use of the "damping" 
@@ -201,8 +240,6 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			// high time acceleration.
 			//
 			double cf = atm.DisplayedO2FlowLBH;
-			//double cf = atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH;
-
 			bool LightO2Warning = false;
 
 			//
@@ -239,6 +276,15 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 
 		SetLight(CSM_CWS_CO2_LIGHT, (atm.SuitCO2MMHG >= 7.6));
 
+		//
+		// Suit compressor delta pressure below 0.22 psi
+		// Use displayed value instead of the PanelSDK to make use of the "damping" 
+		// of the SuitComprDeltaPMeter to pervent alarms because of the fluctuations during 
+		// high time acceleration.
+		//
+		
+		SetLight(CSM_CWS_SUIT_COMPRESSOR, (atm.DisplayedSuitComprDeltaPressurePSI < 0.22));
+
 		NextUpdateTime = simt + (0.2 * oapiGetTimeAcceleration());
 	}
 }
@@ -265,7 +311,7 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 
 	for (row = 0; row < 6; row++) {
 		for (column = 0; column < 4; column++) {
-			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK))) {
+			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK || MasterAlarmPressed))) {
 				oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
 			}
 			i++;
