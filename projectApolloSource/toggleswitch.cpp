@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/09/30 11:26:47  tschachim
+  *	Added new spring-loaded modes, new event handler, added MeterSwitch.
+  *	
   *	Revision 1.24  2005/08/25 18:40:24  movieman523
   *	Fixed talkback initialisation from scenario file.
   *	
@@ -201,7 +204,7 @@ void ToggleSwitch::InitSound(SoundLib *s) {
 		s->LoadSound(Sclick, CLICK_SOUND);
 }
 
-void ToggleSwitch::SwitchTo(int newState) {
+bool ToggleSwitch::SwitchTo(int newState) {
 
 	if (Active && (state != newState)) {
 		state = newState;
@@ -211,7 +214,9 @@ void ToggleSwitch::SwitchTo(int newState) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 		}
+		return true;
 	}
+	return false;
 }
 
 //
@@ -655,6 +660,7 @@ GuardedToggleSwitch::GuardedToggleSwitch() {
 	guardHeight = 0;
 	guardSurface = 0;
 	guardState = 0;
+	guardResetsState = true;
 }
 
 GuardedToggleSwitch::~GuardedToggleSwitch() {
@@ -685,12 +691,25 @@ void GuardedToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 
 	if (!visible) return;
 
-	if(guardState) {
-		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
-		DoDrawSwitch(DrawSurface);
+	if (guardResetsState) { 
+		if (guardState) {
+			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+			DoDrawSwitch(DrawSurface);
+		} else {
+			DoDrawSwitch(DrawSurface);
+			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+		}
 	} else {
-		DoDrawSwitch(DrawSurface);
-		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+		if (guardState) {
+			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+			DoDrawSwitch(DrawSurface);
+		} else {
+			if (state) {
+				oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + 3 * guardWidth, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+			} else {
+				oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+			}
+		}
 	}
 }
 
@@ -703,8 +722,27 @@ bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 			my >= guardY && my <= guardY + guardHeight) {			
 			if (guardState) {
 				guardState = 0;
-				if (Active && state) SwitchToggled = true;
-				state = 0;
+
+				int OldState = state;
+				// reset by guard
+				if (guardResetsState) { 
+					if (Active && state) {
+						state = TOGGLESWITCH_DOWN;
+					}
+				}
+				// reset by spring
+				if (springLoaded != SPRINGLOADEDSWITCH_NONE ) {
+					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
+					if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
+				}
+
+				if (state != OldState) {
+					SwitchToggled = true;
+					if (switchRow) {
+						if (switchRow->panelSwitches->listener) 
+							switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+					}
+				}
 			} else {
 				guardState = 1;
 			}
@@ -855,14 +893,15 @@ GuardedThreePosSwitch::~GuardedThreePosSwitch() {
 	guardClick.done();
 }
 
-void GuardedThreePosSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState) {
+void GuardedThreePosSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, 
+									 int springloaded) {
 
-	ThreePosSwitch::Register(scnh, n, defaultState);
+	ThreePosSwitch::Register(scnh, n, defaultState, springloaded);
 	guardState = defaultGuardState;
 }
 
 void GuardedThreePosSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, 
-									SoundLib &s, int xOffset, int yOffset) {
+									  int xOffset, int yOffset) {
 	guardX = xp;
 	guardY = yp;
 	guardWidth = w;
@@ -872,18 +911,33 @@ void GuardedThreePosSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE s
 	guardYOffset = yOffset;
 
 	if (!guardClick.isValid())
-		s.LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
+		switchRow->panelSwitches->soundlib->LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
 }
 
 void GuardedThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 
 	if (!visible) return;
 
-	if(guardState) {
-		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight);
-		ThreePosSwitch::DrawSwitch(DrawSurface);
+	if (guardResetsState) { 
+		if(guardState) {
+			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight);
+			ThreePosSwitch::DrawSwitch(DrawSurface);
+		} else {
+			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight);
+		}
 	} else {
-		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight);
+		if (guardState) {
+			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+			ThreePosSwitch::DrawSwitch(DrawSurface);
+		} else {
+			if (state == THREEPOSSWITCH_DOWN) {
+				oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+			} else if (state == THREEPOSSWITCH_CENTER) {
+				oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + 2 * guardWidth, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+			} else {
+				oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + 3 * guardWidth, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+			}
+		}
 	}
 }
 
@@ -896,8 +950,34 @@ bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 			my >= guardY && my <= guardY + guardHeight) {			
 			if (guardState) {
 				guardState = 0;
-				if (Active && state) SwitchToggled = true;
-				state = 0;
+
+				int OldState = state;
+				// reset by guard
+				if (guardResetsState) { 
+					if (Active && state) {
+						state = THREEPOSSWITCH_DOWN;
+					}
+				}
+				// reset by spring
+				if (springLoaded != SPRINGLOADEDSWITCH_NONE ) {
+					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
+					if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
+					if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;
+
+					if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
+						state = THREEPOSSWITCH_CENTER;
+
+					if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
+						state = THREEPOSSWITCH_CENTER;
+				}
+
+				if (state != OldState) {
+					SwitchToggled = true;
+					if (switchRow) {
+						if (switchRow->panelSwitches->listener) 
+							switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+					}
+				}
 			} else {
 				guardState = 1;
 			}
@@ -1490,23 +1570,40 @@ bool TimerControlSwitch::CheckMouseClick(int event, int mx, int my)
 {
 	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
 	{
-		if (timer) {
-			if (IsUp()) {
-				timer->SetRunning(true);
-			}
-			else if (IsCenter()) {
-				timer->SetRunning(false);
-			}
-			else if (IsDown()) {
-				timer->SetRunning(false);
-				timer->Reset();
-			}
-		}
+		SetTimer();
 		return true;
 	}
 
 	return false;
 }
+
+bool TimerControlSwitch::SwitchTo(int newState) 
+
+{
+	if (MissionTimerSwitch::SwitchTo(newState)) {
+		SetTimer();
+		return true;
+	}
+	return false;
+}
+
+void TimerControlSwitch::SetTimer() 
+
+{
+	if (timer) {
+		if (IsUp()) {
+			timer->SetRunning(true);
+		}
+		else if (IsCenter()) {
+			timer->SetRunning(false);
+		}
+		else if (IsDown()) {
+			timer->SetRunning(false);
+			timer->Reset();
+		}
+	}
+}
+
 
 //
 // Event timer start/stop switch. Although it's a three-position switch, the center position does
@@ -1600,23 +1697,41 @@ bool IMUCageSwitch::CheckMouseClick(int event, int mx, int my)
 {
 	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my))
 	{
-		//
-		// Cage the IMU if it's up, release if it's down. For now we'll also turn it
-		// on if the switch is down.
-		//
-		if (imu) {
-			if (IsUp()) {
-				imu->SetCaged(true);
-			}
-			else if (IsDown()) {
-				imu->SetCaged(false);
-				imu->TurnOn();
-			}
-		}
+		SetIMU();
 		return true;
 	}
 	else return false;
 }
+
+bool IMUCageSwitch::SwitchTo(int newState)
+
+{
+	if (GuardedToggleSwitch::SwitchTo(newState))
+	{
+		SetIMU();
+		return true;
+	}
+	else return false;
+}
+
+void IMUCageSwitch::SetIMU() 
+
+{
+	//
+	// Cage the IMU if it's up, release if it's down. For now we'll also turn it
+	// on if the switch is down.
+	//
+	if (imu) {
+		if (IsUp()) {
+			imu->SetCaged(true);
+		}
+		else if (IsDown()) {
+			imu->SetCaged(false);
+			imu->TurnOn();
+		}
+	}
+}
+
 
 //
 // Enable light test on caution and warning system.
@@ -1680,22 +1795,38 @@ bool CWSModeSwitch::CheckMouseClick(int event, int mx, int my)
 bool CWSPowerSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
-	if (CWSThreePosSwitch::CheckMouseClick(event, mx,my)) {
-		if (cws) {
-			if (IsUp()) {
-				cws->SetPowerBus(CWS_POWER_BUS_A);
-			}
-			else if (IsCenter()) {
-				cws->SetPowerBus(CWS_POWER_NONE);
-			}
-			else if (IsDown()) {
-				cws->SetPowerBus(CWS_POWER_BUS_B);
-			}
-		}
+	if (CWSThreePosSwitch::CheckMouseClick(event, mx, my)) {
+		SetPowerBus();
 		return true;
 	}
 
 	return false;
+}
+
+bool CWSPowerSwitch::SwitchTo(int newState) 
+
+{
+	if (CWSThreePosSwitch::SwitchTo(newState)) {
+		SetPowerBus();
+		return true;
+	}
+	return false;
+}
+
+void CWSPowerSwitch::SetPowerBus() 
+
+{
+	if (cws) {
+		if (IsUp()) {
+			cws->SetPowerBus(CWS_POWER_BUS_A);
+		}
+		else if (IsCenter()) {
+			cws->SetPowerBus(CWS_POWER_NONE);
+		}
+		else if (IsDown()) {
+			cws->SetPowerBus(CWS_POWER_BUS_B);
+		}
+	}
 }
 
 void CWSThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c)
