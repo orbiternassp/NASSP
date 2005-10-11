@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2005/09/30 11:25:48  tschachim
+  *	Added ECS meters and switches.
+  *	
   *	Revision 1.65  2005/08/24 00:30:00  movieman523
   *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
   *	
@@ -320,13 +323,6 @@ typedef struct {
 } BusStatus;
 
 typedef struct {
-	double H2FlowLBH;
-	double O2FlowLBH;
-	double TempF;
-	double CondenserTempF;
-} FuelCellStatus;
-
-typedef struct {
 	double SuitTempK;
 	double CabinTempK;
 	double CabinPressureMMHG;
@@ -341,6 +337,8 @@ typedef struct {
 	double O2DemandFlowLBH;
 	double DirectO2FlowLBH;
 	double DisplayedO2FlowLBH;
+	double DisplayedSuitComprDeltaPressurePSI;
+	double DisplayedEcsRadTempPrimOutletMeterTemperatureF;
 } AtmosStatus;
 
 typedef struct {
@@ -553,6 +551,7 @@ protected:
 	//
 	// Switches
 	//
+	int coasEnabled;
 
 	FDAI fdaiRight;
 	FDAI fdaiLeft;
@@ -758,7 +757,7 @@ protected:
 	//
 
 	SwitchRow LVRow;
-	ToggleSwitch LVGuidanceSwitch;
+	GuardedToggleSwitch LVGuidanceSwitch;
 	GuardedToggleSwitch SIISIVBSepSwitch;
 	XLunarSwitch TLIEnableSwitch;
 
@@ -804,8 +803,8 @@ protected:
 	ToggleSwitch PropDumpAutoSwitch;
 	ToggleSwitch TwoEngineOutAutoSwitch;
 	ToggleSwitch LVRateAutoSwitch;
-	GuardedToggleSwitch TowerJett1Switch;
-	GuardedToggleSwitch TowerJett2Switch;
+	GuardedThreePosSwitch TowerJett1Switch;
+	GuardedThreePosSwitch TowerJett2Switch;
 
 	//
 	// Rotational Controller power switches.
@@ -936,6 +935,11 @@ protected:
 	RotationalSwitch HighGainAntennaPitchPositionSwitch;
 
 
+	//
+	// Orbiter switches
+	//
+	SwitchRow OrbiterAttitudeToggleRow;
+	AttitudeToggle OrbiterAttitudeToggle;
 
 
 	//
@@ -969,7 +973,6 @@ protected:
 
 	bool EMSKswitch;
 
-	AttitudeToggle LPswitch5;
 	ToggleSwitch LPswitch6;
 	ToggleSwitch LPswitch7;
 
@@ -1161,6 +1164,9 @@ protected:
 
 	SwitchRow SBandNormalSwitchesRow;
 
+
+
+
 	// old stuff begin
 
 	SwitchRow LPRow;
@@ -1172,7 +1178,6 @@ protected:
 	SwitchRow IMUCageSwitchRow;
 
 	SwitchRow SRP1Row;
-	SwitchRow P14Row;
 	SwitchRow P15Row;
 
 	SwitchRow MRRow;
@@ -1392,12 +1397,13 @@ protected:
 	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
-	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
+	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start);
 	void FuelCellPumpsSwitchToggled(ToggleSwitch *s, int *pump);
+	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	double SetPitchApo();
 	void SetStage(int s);
 	void setupSM(OBJHANDLE hvessel);
@@ -1643,6 +1649,7 @@ protected:
 	double *pFCO2Flow[4];
 	double *pFCTemp[4];
 	double *pFCCondenserTemp[4];
+	double *pFCCoolingTemp[4];
 	double *pPrimECSRadiatorInletPressure;
 	double *pPrimECSRadiatorInletTemp;
 	double *pPrimECSRadiatorOutletTemp;
