@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/23 03:19:59  flydba
+  *	modified master alarm bitmap and correction of some switch positions
+  *	
   *	Revision 1.6  2005/08/21 16:23:31  movieman523
   *	Added more alarms.
   *	
@@ -56,13 +59,13 @@
 #include "cautionwarning.h"
 #include "nasspdefs.h"
 
-CautionWarningSystem::CautionWarningSystem(Sound &mastersound) : MasterAlarmSound(mastersound)
+CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsound) : MasterAlarmSound(mastersound), ButtonSound(buttonsound)
 
 {
 	TestState = CWS_TEST_LIGHTS_NONE;
 	Mode = CWS_MODE_NORMAL;
 	Source = CWS_SOURCE_CSM;
-	PowerBus = CWS_POWER_BUS_A;
+	PowerBus = CWS_POWER_NONE;
 
 	OurVessel = 0;
 
@@ -70,6 +73,7 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound) : MasterAlarmSoun
 	MasterAlarmCycleTime = MINUS_INFINITY;
 	MasterAlarm = false;
 	MasterAlarmLit = false;
+	MasterAlarmPressed = false;
 
 	for (int i = 0; i < 30; i++) {
 		LeftLights[i] = false;
@@ -129,6 +133,19 @@ bool CautionWarningSystem::IsPowered()
 	}
 }
 
+
+void CautionWarningSystem::SetPowerBus(int bus) 
+
+{ 
+	PowerBus = bus; 
+
+	// Enable MasterAlarm when power is switched on (Apollo Operations Handbook 2.10.4.1) 
+	if (PowerBus != CWS_POWER_NONE) {
+		SetMasterAlarm(true);
+	}
+}
+
+
 //
 // The timestep code will validate all the spacecraft systems and ligt the lights as required. Obviously
 // much of this code will be CSM-specific or LEM-specific, so we'll probably want to derive CSM and LEM
@@ -171,10 +188,17 @@ void CautionWarningSystem::SetMasterAlarm(bool alarm)
 // Render the lit master alarm light if required.
 //
 
-void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit)
+void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, int position)
 
 {
-	if (MasterAlarmLit && MasterAlarmLightEnabled && IsPowered()) {
+	// In Boost-Mode only the left master alarm button is not illuminated (Apollo Operations Handbook 2.10.3)
+	// The left/right lamp test illuminates the left/right master alarm button on the main panel (Apollo Operations Handbook 2.10.3)
+
+	if (IsPowered() && (
+	       (MasterAlarmLit && (MasterAlarmLightEnabled || position != CWS_MASTERALARMPOSITION_LEFT)) || 
+	       (TestState == CWS_TEST_LIGHTS_LEFT && position == CWS_MASTERALARMPOSITION_LEFT) ||
+	       (TestState == CWS_TEST_LIGHTS_RIGHT && position == CWS_MASTERALARMPOSITION_RIGHT)
+	   )) {
 		//
 		// Draw the master alarm lit bitmap.
 		//
@@ -182,8 +206,23 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 	}
 }
 
+bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)
+
+{
+	if (event & PANEL_MOUSE_LBDOWN) {
+		MasterAlarmSound.stop();
+		SetMasterAlarm(false); 
+		MasterAlarmPressed = true;
+		ButtonSound.play(NOLOOP, 255);
+
+	} else if (event & PANEL_MOUSE_LBUP) {
+		MasterAlarmPressed = false;
+	}
+	return true;
+}
+
 //
-// Set operation mode. In BOOST mode the master alarm light is disabled.
+// Set operation mode. In BOOST mode the left master alarm light on the main panel is disabled.
 //
 
 void CautionWarningSystem::SetMode(int mode)
@@ -287,8 +326,6 @@ void CautionWarningSystem::SetLightStates(bool *LightState, int state)
 void CautionWarningSystem::SaveState(FILEHANDLE scn)
 
 {
-
-
 	oapiWriteLine(scn, CWS_START_STRING);
 	oapiWriteScenario_int (scn, "MODE", Mode);
 	oapiWriteScenario_int (scn, "TEST", TestState);
