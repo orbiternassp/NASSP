@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/24 23:29:31  movieman523
+  *	Fixed event timer reset.
+  *	
   *	Revision 1.4  2005/08/21 17:21:10  movieman523
   *	Added event timer display.
   *	
@@ -75,10 +78,10 @@ void MissionTimer::Reset()
 void MissionTimer::UpdateHours(int n)
 
 {
-	if (CountUp) {
+	if (CountUp == TIMER_COUNT_UP) {
 		hours += n;
 	}
-	else {
+	else if (CountUp == TIMER_COUNT_DOWN) {
 		hours -= n;
 	}
 
@@ -93,10 +96,10 @@ void MissionTimer::UpdateHours(int n)
 void MissionTimer::UpdateMinutes(int n)
 
 {
-	if (CountUp) {
+	if (CountUp == TIMER_COUNT_UP) {
 		minutes += n;
 	}
-	else {
+	else if (CountUp == TIMER_COUNT_DOWN) {
 		minutes -= n;
 	}
 
@@ -111,10 +114,10 @@ void MissionTimer::UpdateMinutes(int n)
 void MissionTimer::UpdateSeconds(int n)
 
 {
-	if (CountUp) {
+	if (CountUp == TIMER_COUNT_UP) {
 		seconds += n;
 	}
-	else {
+	else if (CountUp == TIMER_COUNT_DOWN) {
 		seconds -= n;
 	}
 
