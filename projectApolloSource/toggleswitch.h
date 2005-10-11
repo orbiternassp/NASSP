@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/09/30 11:26:47  tschachim
+  *	Added new spring-loaded modes, new event handler, added MeterSwitch.
+  *	
   *	Revision 1.20  2005/08/20 12:24:03  movieman523
   *	Added a FailedState as well as a Failed flag to each switch. You now must call GetState(), IsUp(), IsDown() etc to get the functional state of the switch. The state variable now only tells you the visual state (e.g. switch up, down, center) and not the functional state.
   *	
@@ -164,7 +167,7 @@ public:
 	virtual bool IsDown() { return (GetState() == 0); };
 	virtual bool IsCenter() { return false; };
 
-	virtual void SwitchTo(int newState);
+	virtual bool SwitchTo(int newState);
 	virtual void DrawSwitch(SURFHANDLE DrawSurface);
 	virtual bool CheckMouseClick(int event, int mx, int my);
 	virtual void SaveState(FILEHANDLE scn);
@@ -290,7 +293,10 @@ class TimerControlSwitch: public MissionTimerSwitch {
 
 public:
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
 
+protected:
+	void SetTimer();
 };
 
 class TimerUpdateSwitch: public MissionTimerSwitch {
@@ -372,6 +378,10 @@ public:
 class CWSPowerSwitch: public CWSThreePosSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
+
+protected:
+	void SetPowerBus();
 };
 
 //
@@ -435,6 +445,7 @@ public:
 	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
+	void SetGuardResetsState(bool s) { guardResetsState = s; };
 
 	int operator=(const int b) { state = b; return state; };
 
@@ -444,6 +455,7 @@ protected:
 	int guardWidth;
 	int guardHeight;
 	int guardState;
+	bool guardResetsState;
 	SURFHANDLE guardSurface;
 	int guardXOffset;
 	int guardYOffset;
@@ -459,9 +471,12 @@ public:
 
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
 
 protected:
 	IMU *imu;
+
+	void SetIMU();
 };
 
 class GuardedPushSwitch: public PushSwitch {
@@ -501,15 +516,17 @@ public:
 	GuardedThreePosSwitch();
 	virtual ~GuardedThreePosSwitch();
 
-	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState);
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, 
+				  int springloaded = SPRINGLOADEDSWITCH_NONE);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
-				   SoundLib &s, int xOffset = 0, int yOffset = 0);
+				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
+	void SetGuardResetsState(bool s) { guardResetsState = s; };
 
 	int operator=(const int b) { state = b; return state; };
 
@@ -519,6 +536,7 @@ protected:
 	int guardWidth;
 	int guardHeight;
 	int guardState;
+	bool guardResetsState;
 	SURFHANDLE guardSurface;
 	int guardXOffset;
 	int guardYOffset;
@@ -667,6 +685,7 @@ protected:
 	friend class ThreePosSwitch;
 	friend class PushSwitch;
 	friend class GuardedToggleSwitch;
+	friend class GuardedThreePosSwitch;
 	friend class GuardedPushSwitch;
 	friend class RotationalSwitch;
 	friend class IndicatorSwitch;
@@ -700,6 +719,7 @@ protected:
 	friend class ThreePosSwitch;
 	friend class PushSwitch;
 	friend class GuardedToggleSwitch;
+	friend class GuardedThreePosSwitch;
 	friend class GuardedPushSwitch;
 	friend class RotationalSwitch;
 	friend class IndicatorSwitch;
