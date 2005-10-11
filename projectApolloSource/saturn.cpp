@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2005/09/30 11:24:37  tschachim
+  *	Saving/Loading of lastSystemsMissionTime.
+  *	
   *	Revision 1.57  2005/08/24 23:29:31  movieman523
   *	Fixed event timer reset.
   *	
@@ -230,7 +233,7 @@ extern "C" {
 
 //extern FILE *PanelsdkLogFile;
 
-Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, dsky2, imu), dsky(soundlib, agc, 015), dsky2(soundlib, agc, 016), imu(agc), cws(SMasterAlarm)
+Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, dsky2, imu), dsky(soundlib, agc, 015), dsky2(soundlib, agc, 016), imu(agc), cws(SMasterAlarm, Bclick)
 
 {
 	InitSaturnCalled = false;
@@ -932,6 +935,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	// save the state of the switches
 	PSH.SaveState(scn);	
+	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
 }
 
 //
@@ -1524,6 +1528,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
         else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
 			PSH.LoadState(scn);	
 		}
+		else if (!strnicmp (line, "COASENABLED", 11)) {
+			sscanf (line + 11, "%i", &coasEnabled);
+		}
 		else {
 			ParseScenarioLineEx (line, vstatus);
         }
@@ -1688,6 +1695,11 @@ void Saturn::DoLaunch(double simt)
 
 {
 	//
+	// Uncage IMU
+	//
+	IMUGuardedCageSwitch.SwitchTo(TOGGLESWITCH_DOWN); 
+
+	//
 	// Light the liftoff indicator for the crew.
 	//
 
@@ -1710,6 +1722,7 @@ void Saturn::DoLaunch(double simt)
 	MissionTimerDisplay.SetEnabled(true);
 	EventTimerDisplay.Reset();
 	EventTimerDisplay.SetEnabled(true);
+	EventTimerDisplay.SetRunning(true);
 
 	//
 	// Tell the AGC that we've lifted off.
@@ -2408,10 +2421,10 @@ void Saturn::GenericLoadStateSetup()
 	//
 
 	if (stage != CSM_LEM_STAGE) {
-		LPswitch5.SetActive(false);
+		OrbiterAttitudeToggle.SetActive(false);
 	}
 	else {
-		LPswitch5.SetActive(true);
+		OrbiterAttitudeToggle.SetActive(true);
 	}
 
 	//
@@ -2734,10 +2747,13 @@ void Saturn::LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir)
 		alarm = true;
 	}
 
-	if (alarm && autopilot) {
+//
+//	I don't think this is historically correct, so I disabled it
+//    
+/*	if (alarm && autopilot) {
 		MasterAlarm();
 	}
-
+*/
 	SetThrusterDir(th, realdir);
 }
 
