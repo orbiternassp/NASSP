@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   *	Revision 1.6  2005/04/22 13:56:14  tschachim
   *	new panel ids and defines
   *	
@@ -125,33 +128,41 @@ void Saturn::SetView(double offset)
 
 	CurrentViewOffset = offset;
 
-	if (InPanel && (PanelId == SATPANEL_LEFT_RNDZ_WINDOW)) {
-		v = _V(-1.022, 1.046, offset - 3.0);
+	if (InPanel) {
+		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
+			v = _V(-1.022, 1.046, offset - 3.0);
+
+		} else if (PanelId == SATPANEL_RIGHT_RNDZ_WINDOW) {
+			v = _V(1.022, 1.046, offset - 3.0);
+
+		} else {
+			v = _V(0, 0, offset - 3.0);
+		}
+	} else if (!InVC) {		// generic panel
+		v = _V(0, 0, offset - 3.0);
+
 	} else {
 		switch (viewpos) {
 			case SATVIEW_CDR:
-			v = _V(-0.6,0.7,offset);
+			v = _V(-0.6, 0.7, offset);
 			break;
 
 			case SATVIEW_CMP:
-			v = _V(0,0.7,offset);
+			v = _V(0, 0.7, offset);
 			break;
 
 			case SATVIEW_DMP:
-			v = _V(0.6,0.7,offset);
+			v = _V(0.6, 0.7, offset);
 			break;
 
 			case SATVIEW_DOCK:
-			if (dockstate==13) {
-				v = _V(0,0,2.5 + offset);
-			}else{
-				v = _V(-0.65,1.05,0.25 + offset);
+			if (dockstate == 13) {
+				v = _V(0, 0, 2.5 + offset);
+			} else {
+				v = _V(-0.65, 1.05, 0.25 + offset);
 			}
 			break;
 		}
-	}
-
-	if (InVC) {
 		v.x += ViewOffsetx;
 		v.y += ViewOffsety;
 		v.z += ViewOffsetz;
