@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/09/30 11:27:21  tschachim
+  *	New SRF.
+  *	
   *	Revision 1.32  2005/08/29 19:25:25  tschachim
   *	Rendering of the DSKY keys.
   *	
@@ -168,7 +171,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 41; // number of bitmap handles
+const int nsurf = 44; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -185,6 +188,8 @@ const int nsurf = 41; // number of bitmap handles
 #define SRF_DSKY					21
 #define SRF_ALLROUND				22
 #define SRF_THREEPOSSWITCH			23
+#define SRF_MFDFRAME				24
+#define SRF_MFDPOWER				25
 #define SRF_ROTATIONALSWITCH		27
 #define SRF_SUITCABINDELTAPMETER	28
 #define SRF_THREEPOSSWITCH305   	29
@@ -199,6 +204,9 @@ const int nsurf = 41; // number of bitmap handles
 #define SRF_EVENT_TIMER_DIGITS		38
 #define SRF_DSKYKEY					39
 #define SRF_ECSINDICATOR			40
+#define SRF_SWITCHUPSMALL			41
+#define SRF_CMMFDFRAME				42
+#define SRF_COAS					43
 
 //
 // Earth radius and gravity constants.
