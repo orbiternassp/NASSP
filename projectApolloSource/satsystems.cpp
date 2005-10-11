@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/09/30 11:23:28  tschachim
+  *	Added ECS water-glycol coolant loop.
+  *	
   *	Revision 1.24  2005/08/24 00:30:00  movieman523
   *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
   *	
@@ -224,10 +227,6 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
 				*open = SP_VALVE_CLOSE;
 
-				// Turn off suit compressor
-				SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-				SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-
 				// Next state
 				systemsState = SATSYSTEMS_PRELAUNCH;
 				lastSystemsMissionTime = MissionTime; 
@@ -235,6 +234,10 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 			case SATSYSTEMS_PRELAUNCH:
 				if (MissionTime >= -6000) {	// 1h 40min before launch
+
+					// Slow down time acceleration
+					if (oapiGetTimeAcceleration() > 1.0)
+						oapiSetTimeAcceleration(1.0);
 
 					// Close cabin pressure regulator 
 					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
@@ -253,7 +256,6 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 					// Turn on suit compressor 1, prelaunch configuration
 					SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
-					SuitCompressor2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
 					fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
 					*fancap = 110000.0;
 
@@ -263,6 +265,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:PRESSMAX");
 					*pMax = 100.0 / PSI;	// that's like disabling PREG
 
+					// Start mission timer
+					MissionTimerSwitch.SwitchTo(THREEPOSSWITCH_UP);
+					
 					// Next state
 					systemsState = SATSYSTEMS_CREWINGRESS_1;
 					lastSystemsMissionTime = MissionTime; 
@@ -313,6 +318,14 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					*fMax = 0;
 					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOWMAX");
 					*fMax = 0;
+
+					// Turn on C/W system.
+					// In reality this was done before turing on the suit compressor, but since the internal 
+					// systems are in "REALISM 0 mode" at the moment and we want to avoid alarms confusing the user
+					// this is done now
+					CautionWarningPowerSwitch.SwitchTo(THREEPOSSWITCH_UP);
+					// Avoid master alarm because of power on
+					cws.SetMasterAlarm(false); 
 
 					// Next state
 					systemsState = SATSYSTEMS_CABINCLOSEOUT;
@@ -369,7 +382,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					// cabin leak
 					*size = (float)0.001;	
 				}
-				if (atm.SuitReturnPressurePSI <= 4.85) {	
+				if (atm.SuitReturnPressurePSI <= 4.87) {	
 					// Close suit pressure relieve
 					if (*isopen && !*pz)
 						*open = SP_VALVE_CLOSE;
@@ -819,7 +832,7 @@ void Saturn::CheckRCSState()
 
 	switch (stage) {
 	case CSM_LEM_STAGE:
-	case CSM_ABORT_STAGE:
+	//case CSM_ABORT_STAGE:
 		if (SMRCSActive()) {
 			for (i = 0; i < 24; i++) {
 				SetThrusterResource(th_att_rot[i], ph_rcs0);
@@ -842,6 +855,7 @@ void Saturn::CheckRCSState()
 	case CM_ENTRY_STAGE_FIVE:
 	case CM_ENTRY_STAGE_SIX:
 	case CM_ENTRY_STAGE_SEVEN:
+	case CSM_ABORT_STAGE:
 		SetRCS_CM();
 		break;
 	}
@@ -969,18 +983,13 @@ void Saturn::ClearPanelSDKPointers()
 	pH2Tank1Quantity = 0;
 	pH2Tank2Quantity = 0;
 	pO2SurgeTankPress = 0;
-	pFCH2Flow[1] = 0;
-	pFCH2Flow[2] = 0;
-	pFCH2Flow[3] = 0;
-	pFCO2Flow[1] = 0;
-	pFCO2Flow[2] = 0;
-	pFCO2Flow[3] = 0;
-	pFCTemp[1] = 0;
-	pFCTemp[2] = 0;
-	pFCTemp[3] = 0;
-	pFCCondenserTemp[1] = 0;
-	pFCCondenserTemp[2] = 0;
-	pFCCondenserTemp[3] = 0;
+	for (i = 0; i <= 3; i++) {
+		pFCH2Flow[i] = 0;
+		pFCO2Flow[i] = 0;
+		pFCTemp[i] = 0;
+		pFCCondenserTemp[i] = 0;
+		pFCCoolingTemp[i] = 0;
+	}
 	pPrimECSRadiatorInletPressure = 0;
 	pPrimECSRadiatorInletTemp = 0;
 	pPrimECSRadiatorOutletTemp = 0;
@@ -1025,6 +1034,8 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	atm.SuitReturnPressureMMHG = 0.0;
 	atm.SuitReturnPressurePSI = 0.0;
 	atm.DisplayedO2FlowLBH = 0.0;
+	atm.DisplayedSuitComprDeltaPressurePSI = 0.0;
+	atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF = 0.0;
 
 	if (!pCO2Level) {
 		pCO2Level = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
@@ -1101,6 +1112,8 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 
 	// For caution & warning system
 	atm.DisplayedO2FlowLBH = RightO2FlowMeter.GetDisplayValue();
+	atm.DisplayedSuitComprDeltaPressurePSI = SuitComprDeltaPMeter.GetDisplayValue();
+	atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF = EcsRadTempPrimOutletMeter.GetDisplayValue();
 }
 
 //
@@ -1255,6 +1268,7 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	fc.O2FlowLBH = 0.0;
 	fc.TempF = 0.0;
 	fc.CondenserTempF = 0.0;
+	fc.CoolingTempF = 0.0;
 
 	//
 	// No fuel cells if we've seperated from the SM.
@@ -1299,6 +1313,14 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	}
 	if (pFCCondenserTemp[index]) {
 		fc.CondenserTempF = KelvinToFahrenheit(*pFCCondenserTemp[index]);
+	}
+
+	if (!pFCCoolingTemp[index]) {
+		sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:TEMP", index);
+		pFCCoolingTemp[index] = (double*) Panelsdk.GetPointerByString(buffer);
+	}
+	if (pFCCoolingTemp[index]) {
+		fc.CoolingTempF = KelvinToFahrenheit(*pFCCoolingTemp[index]);
 	}
 }
 
