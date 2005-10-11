@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.24  2005/08/23 22:18:47  movieman523
   *	SPS switch now works.
   *	
@@ -618,7 +621,12 @@ void Saturn1b::StageStartSIVB(double simt)
 	//
 
 	case 5:
-		if (MissionTime > NextMissionEventTime || TowerJett1Switch.GetState() || TowerJett2Switch.GetState()) {
+		if ((MissionTime >= NextMissionEventTime && (TowerJett1Switch.GetState() == THREEPOSSWITCH_DOWN || TowerJett2Switch.GetState() == THREEPOSSWITCH_DOWN)) || 
+			bManualSeparate || 
+			GetFuelMass() == 0 || 
+			TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
+			TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
+		{
 			SeparateStage(stage);
 			TowerJS.play();
 			TowerJS.done();
@@ -828,12 +836,17 @@ void Saturn1b::Timestep (double simt, double simdt)
 		hs4bM = oapiGetVesselByName(VName);
 	}
 
-	if (bAbort && stage <= LAUNCH_STAGE_TWO ){
-		SetEngineLevel(ENGINE_MAIN, 0);
-		SeparateStage (stage);
-		StartAbort();
-		stage = CSM_ABORT_STAGE;
-		bAbort=false;
+	if (bAbort && stage <= LAUNCH_STAGE_TWO) {
+		if (stage < LAUNCH_STAGE_ONE) {
+			// No abort before launch
+			bAbort = false;
+		} else {
+			SetEngineLevel(ENGINE_MAIN, 0);
+			SeparateStage(stage);
+			StartAbort();
+			stage = CSM_ABORT_STAGE;
+			bAbort = false;
+		}
 		return;
 	}
 

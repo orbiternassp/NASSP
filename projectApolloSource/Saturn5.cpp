@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/08/24 00:30:00  movieman523
+  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
+  *	
   *	Revision 1.30  2005/08/23 22:18:47  movieman523
   *	SPS switch now works.
   *	
@@ -798,11 +801,15 @@ void SaturnV::StageThree(double simt)
 	// Tower jettison at 36.2 seconds after SIC shutdown.
 	//
 
-	if (MissionTime >= NextMissionEventTime || bManualSeparate || GetFuelMass() == 0 || TowerJett1Switch.GetState() || TowerJett2Switch.GetState())
+	if ((MissionTime >= NextMissionEventTime && (TowerJett1Switch.GetState() == THREEPOSSWITCH_DOWN || TowerJett2Switch.GetState() == THREEPOSSWITCH_DOWN)) || 
+		bManualSeparate || 
+		GetFuelMass() == 0 || 
+		TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
+		TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
 	{
 		SeparateStage (stage);
 		SetStage(LAUNCH_STAGE_TWO_TWR_JET);
-		bManualSeparate=false;
+		bManualSeparate = false;
 	}
 }
 
@@ -1473,12 +1480,17 @@ void SaturnV::Timestep(double simt, double simdt)
 		}
 	}
 
-	if (bAbort && stage < LAUNCH_STAGE_TWO_TWR_JET){
-		SetEngineLevel(ENGINE_MAIN,0);
-		SeparateStage (stage);
-		StartAbort();
-		SetStage(CSM_ABORT_STAGE);
-		bAbort=false;
+	if (bAbort && stage < LAUNCH_STAGE_TWO_TWR_JET) {
+		if (stage < LAUNCH_STAGE_ONE) {
+			// No abort before launch
+			bAbort = false;
+		} else {
+			SetEngineLevel(ENGINE_MAIN, 0);
+			SeparateStage(stage);
+			StartAbort();
+			SetStage(CSM_ABORT_STAGE);
+			bAbort = false;
+		}
 		return;
 	}
 
