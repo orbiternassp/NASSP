@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/21 16:23:32  movieman523
+  *	Added more alarms.
+  *	
   *	Revision 1.4  2005/08/21 13:13:43  movieman523
   *	Wired in a few caution and warning lights.
   *	
@@ -55,17 +58,22 @@
 #define CWS_POWER_BUS_B		1
 #define CWS_POWER_NONE		2
 
+#define CWS_MASTERALARMPOSITION_NONE	0
+#define CWS_MASTERALARMPOSITION_LEFT    1
+#define CWS_MASTERALARMPOSITION_RIGHT	2
+
+
 class CautionWarningSystem {
 
 public:
-	CautionWarningSystem(Sound &mastersound);
+	CautionWarningSystem(Sound &mastersound, Sound &buttonsound);
 	virtual ~CautionWarningSystem();
 
 	virtual void LightTest(int state);
 	virtual void TimeStep(double simt);
 	void SetMode(int mode);
 	void SetSource(int source) { Source = source; };
-	void SetPowerBus(int bus) { PowerBus = bus; };
+	void SetPowerBus(int bus);
 	void SetMasterAlarm(bool alarm);
 	void MonitorVessel(VESSEL *v) { OurVessel = v; };
 
@@ -79,8 +87,9 @@ public:
 
 	void SetLight(int lightnum, bool state);
 
-	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit);
+	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, int position);
 	virtual void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
+	bool CheckMasterAlarmMouseClick(int event);
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -96,6 +105,7 @@ protected:
 
 	bool MasterAlarmLightEnabled;
 	bool MasterAlarm;
+	bool MasterAlarmPressed;
 
 	//
 	// Light states.
@@ -114,6 +124,7 @@ protected:
 	bool MasterAlarmLit;
 	double MasterAlarmCycleTime;
 	Sound &MasterAlarmSound;
+	Sound &ButtonSound;
 	VESSEL *OurVessel;
 
 	//
