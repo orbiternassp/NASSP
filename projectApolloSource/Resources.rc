@@ -125,6 +125,9 @@ IDB_CWS_LIGHTS				BITMAP	DISCARDABLE     "cw_lights.bmp"
 IDB_EVENT_TIMER				BITMAP	DISCARDABLE     "event_timer.bmp"
 IDB_DSKY_KEY				BITMAP	DISCARDABLE     "dsky_keys.bmp"
 IDB_ECSINDICATOR			BITMAP	DISCARDABLE     "ECSIndicator.bmp"
+IDB_SWITCHUPSMALL          	BITMAP  DISCARDABLE     "Switchupsmall.bmp"
+IDB_CMMFDFRAME          	BITMAP  DISCARDABLE     "CMMFDFrame.bmp"
+IDB_COAS		          	BITMAP  DISCARDABLE     "coas.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
