@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/20 17:50:41  movieman523
+  *	Added FDAI state save and load.
+  *	
   *	Revision 1.1  2005/08/19 13:34:18  tschachim
   *	Initial version
   *	
@@ -234,6 +237,7 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHAND
 
 	if (!init) InitGL();
   
+	int ret = wglMakeCurrent(hDC2,hRC);
 	SetAttitude(attitude);
 	MoveBall();
 	glCallList(list_name);	//render
