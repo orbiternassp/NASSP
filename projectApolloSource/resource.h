@@ -293,9 +293,16 @@
 #define IDB_LEM_AOT_VIEW				544
 #define IDB_ECSINDICATOR				545
 #define AID_ECSRADIATORINDICATOR		546
-#define AID_HIGHGAINANTENNAPITCHPOSITIONSWITCH	547 
+#define AID_HIGHGAINANTENNAPITCHPOSITIONSWITCH	547
 #define AID_ECSGLYCOLPUMPSSWITCH		548
-#define AID_FDAI_LEFT                   549 
+#define IDB_SWITCHUPSMALL				549
+#define AID_FDAI_LEFT                   550
+#define AID_MFDGNLEFT					551
+#define AID_MFDGNMIDDLE					552
+#define AID_MFDGNRIGHT					553
+#define IDB_CMMFDFRAME					554
+#define IDB_COAS						555
+
 
 // Next default values for new objects
 //
