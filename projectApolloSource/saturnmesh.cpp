@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/24 00:30:00  movieman523
+  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
+  *	
   *	Revision 1.15  2005/08/21 22:21:00  movieman523
   *	Fixed SM RCS and activated SIVB RCS at all times for now.
   *	
@@ -599,7 +602,7 @@ void Saturn::SetCSMStage ()
 	SetEnableFocus(true);
 	EnableTransponder (true);
 
-	LPswitch5.SetActive(true);
+	OrbiterAttitudeToggle.SetActive(true);
 
 	ThrustAdjust = 1.0;
 	ActivateASTP = false;
@@ -686,7 +689,7 @@ void Saturn::SetCSM2Stage ()
 
 	SetEnableFocus(true);
 
-	LPswitch5.SetActive(true);
+	OrbiterAttitudeToggle.SetActive(true);
 
 	ThrustAdjust = 1.0;
 	ActivateASTP = false;
@@ -1370,7 +1373,7 @@ void Saturn::SetAbortStage ()
 
 	ABORT_IND = true;
 
-	LPswitch5.SetState(false);
+	OrbiterAttitudeToggle.SetState(false);
 	LPswitch6.SetState(false);
 
 }
