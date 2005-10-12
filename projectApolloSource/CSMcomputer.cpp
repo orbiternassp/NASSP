@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/10/11 16:34:04  tschachim
+  *	Only for NASSP AGC mode:
+  *	P01 requires the IMU turned on and P11 drives the IMU to prelaunch alignment.
+  *	
   *	Revision 1.21  2005/09/24 20:55:18  lazyd
   *	No change
   *	
@@ -159,6 +163,11 @@ bool CSMcomputer::ValidateVerbNoun(int verb, int noun)
 
 {
 	switch (verb) {
+
+	case 21:
+		if (ProgRunning == 15 && (noun == 14 || noun == 33))
+			return true;
+		return false;
 
 	case 75:
 	case 82:
