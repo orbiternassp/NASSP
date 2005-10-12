@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2005/10/10 22:37:13  lazyd
+  *	Fixed time acceleration problems and docked attitude control
+  *	
   *	Revision 1.49  2005/10/10 14:30:18  lazyd
   *	Fixed time-acceleration problems in P16-P19
   *	
@@ -4224,8 +4227,9 @@ bool ApolloGuidance::GenericProgPressed(int R1, int R2, int R3)
 	case 21:
 		if (NounRunning == 2) {
 			WriteMemory(R1, R2);
+			return true;
 		}
-		return true;
+		return false;
 
 	case 91:
 		BankSumNum++;
