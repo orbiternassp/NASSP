@@ -297,11 +297,12 @@
 #define AID_ECSGLYCOLPUMPSSWITCH		548
 #define IDB_SWITCHUPSMALL				549
 #define AID_FDAI_LEFT                   550
-#define AID_MFDGNLEFT					551
-#define AID_MFDGNMIDDLE					552
-#define AID_MFDGNRIGHT					553
-#define IDB_CMMFDFRAME					554
-#define IDB_COAS						555
+#define AID_MFDGNLEFTTOP				551
+#define AID_MFDGNLEFTMIDDLE				552
+#define AID_MFDGNLEFTBOTTOM				553
+#define AID_MFDGNRIGHTBOTTOM			554
+#define IDB_CMMFDFRAME					555
+#define IDB_COAS						556
 
 
 // Next default values for new objects
