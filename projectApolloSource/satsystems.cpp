@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/10/11 16:37:56  tschachim
+  *	More REALISM 0 automatisms, bugfix stage 1 aborts, more C/W alarms
+  *	
   *	Revision 1.25  2005/09/30 11:23:28  tschachim
   *	Added ECS water-glycol coolant loop.
   *	
@@ -363,7 +366,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 					// Suit compressor to flight configuration
 					fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
-					*fancap = 60000.0;	
+					*fancap = 65000.0;	
 
 					// Next state
 					systemsState = SATSYSTEMS_CABINVENTING;
