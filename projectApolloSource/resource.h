@@ -303,7 +303,8 @@
 #define AID_MFDGNRIGHTBOTTOM			554
 #define IDB_CMMFDFRAME					555
 #define IDB_COAS						556
-
+#define AID_MFDMAINLEFT					557
+#define AID_MFDMAINRIGHT				558
 
 // Next default values for new objects
 //

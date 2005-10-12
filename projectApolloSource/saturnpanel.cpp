@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2005/10/12 11:24:17  tschachim
+  *	Added fourth MFD on G&N panel.
+  *	
   *	Revision 1.78  2005/10/11 16:45:44  tschachim
   *	Added switches, COAS and MFDs, bugfixes.
   *	
@@ -765,11 +768,13 @@ bool Saturn::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 635,  845,  655      ,  860     ), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_SM_RCS_MODE,     _R( 719,  791,  719 + 133,  791 + 73), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN, PANEL_MAP_BACKGROUND);		
 	
-	MFDSPEC mfds_dock		=     {{ 893, 627, 1112, 842}, 6, 6, 31, 31};
-	MFDSPEC mfds_gnlefttop  =     {{  57, 124,  316, 379}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnleftmiddle   = {{  57, 427,  316, 682}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnleftbottom   = {{  57, 731,  316, 986}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnrightbottom  = {{1500, 685, 1759, 940}, 6, 6, 37, 37};
+	MFDSPEC mfds_mainleft   =     {{1462, 1075, 1721, 1330}, 6, 6, 37, 37};
+	MFDSPEC mfds_mainright  =     {{1834, 1075, 2093, 1330}, 6, 6, 37, 37};
+	MFDSPEC mfds_dock		=     {{ 893,  627, 1112,  842}, 6, 6, 31, 31};
+	MFDSPEC mfds_gnlefttop  =     {{  57,  124,  316,  379}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnleftmiddle   = {{  57,  427,  316,  682}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnleftbottom   = {{  57,  731,  316,  986}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnrightbottom  = {{1500,  685, 1759,  940}, 6, 6, 37, 37};
 
 	switch (id) {
 	
@@ -864,10 +869,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ECSSWITCHES,					 				_R(1787,  848, 2327,  877), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_HIGHGAINANTENNAPITCHPOSITIONSWITCH,			_R(2271, 1019, 2358, 1106), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 
-		//
-		// Display & keyboard (DSKY):
-		// Main panel uses the main DSKY.
-		//
+		// Display & keyboard (DSKY), main panel uses the main DSKY.
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
@@ -876,6 +878,14 @@ bool Saturn::clbkLoadPanel (int id) {
 		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1120, 314);		
 		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 563, 642);
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
+
+		// MFDs
+        oapiRegisterMFD(MFD_LEFT , mfds_mainleft);	
+        oapiRegisterMFD(MFD_RIGHT, mfds_mainright);	
+
+		oapiRegisterPanelArea (AID_MFDMAINLEFT,	    							_R(1413, 1060, 1772, 1360), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDMAINRIGHT,								_R(1785, 1060, 2144, 1360), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;    
@@ -1564,6 +1574,14 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		} else if (event & PANEL_MOUSE_LBUP) {
 			dsky2.ProcessKeyRelease(mx, my);
 		}
+		return true;
+
+	case AID_MFDMAINLEFT:
+		MousePanel_MFDButton(MFD_LEFT, event, mx, my);
+		return true;
+
+	case AID_MFDMAINRIGHT:
+		MousePanel_MFDButton(MFD_RIGHT, event, mx, my);
 		return true;
 
 	case AID_MFDGNLEFTTOP:
@@ -2461,6 +2479,24 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		cws.RenderLights(surf, srf[SRF_CWSLIGHTS], false);
 		return true;
 
+	case AID_MFDMAINLEFT:
+		if (oapiGetMFDMode(MFD_LEFT) != MFD_NONE) {	
+			oapiBlt(surf, srf[SRF_CMMFDFRAME], 0, 0, 0, 0, 358, 299);
+
+			RedrawPanel_MFDButton(surf, MFD_LEFT, 0, 10, 47, 37);	
+			RedrawPanel_MFDButton(surf, MFD_LEFT, 1, 328, 47, 37);	
+		}
+		return true;
+
+	case AID_MFDMAINRIGHT:
+		if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	
+			oapiBlt(surf, srf[SRF_CMMFDFRAME], 0, 0, 0, 0, 358, 299);
+
+			RedrawPanel_MFDButton(surf, MFD_RIGHT, 0, 10, 47, 37);	
+			RedrawPanel_MFDButton(surf, MFD_RIGHT, 1, 328, 47, 37);	
+		}
+		return true;
+
 	case AID_MFDGNLEFTTOP:
 		if (oapiGetMFDMode(MFD_USER1) != MFD_NONE) {	
 			oapiBlt(surf, srf[SRF_CMMFDFRAME], 0, 0, 0, 0, 358, 299);
@@ -2795,10 +2831,12 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
 	case MFD_LEFT:		
+		oapiTriggerPanelRedrawArea (SATPANEL_MAIN, AID_MFDMAINLEFT);
 		oapiTriggerPanelRedrawArea (SATPANEL_LOWER, AID_MFDGNLEFTBOTTOM);
 		break;
 
 	case MFD_RIGHT:		
+		oapiTriggerPanelRedrawArea (SATPANEL_MAIN, AID_MFDMAINRIGHT);
 		oapiTriggerPanelRedrawArea (SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
 		oapiTriggerPanelRedrawArea (SATPANEL_LOWER, AID_MFDGNRIGHTBOTTOM);
 		break;
