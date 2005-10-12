@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/10/11 16:31:50  tschachim
+  *	Added more alarms.
+  *	
   *	Revision 1.7  2005/09/30 11:21:28  tschachim
   *	Changed fuel cell and O2 flow handling.
   *	
@@ -280,10 +283,12 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// Suit compressor delta pressure below 0.22 psi
 		// Use displayed value instead of the PanelSDK to make use of the "damping" 
 		// of the SuitComprDeltaPMeter to pervent alarms because of the fluctuations during 
-		// high time acceleration.
+		// high time acceleration. The alarm pressure gets reduced with a time acceleration
+		// factor, this "dirty hack" should be removed if we find a better solution
 		//
 		
-		SetLight(CSM_CWS_SUIT_COMPRESSOR, (atm.DisplayedSuitComprDeltaPressurePSI < 0.22));
+		double minPressure = 0.22 - 0.0002 * oapiGetTimeAcceleration();
+		SetLight(CSM_CWS_SUIT_COMPRESSOR, (atm.DisplayedSuitComprDeltaPressurePSI < minPressure));
 
 		NextUpdateTime = simt + (0.2 * oapiGetTimeAcceleration());
 	}
