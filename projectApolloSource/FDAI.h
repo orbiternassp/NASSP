@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/20 17:50:41  movieman523
+  *	Added FDAI state save and load.
+  *	
   *	Revision 1.1  2005/08/19 13:34:18  tschachim
   *	Initial version
   *	
@@ -47,9 +50,8 @@ protected:
 	int idx;			//index on the panel list 
 	int init;
 	int list_name; //we store the rendering into a display list
-
 	VECTOR3 now, target;
-	double over_rate;
+	double lastPaintTime, over_rate;
 
 	//some stuff for OpenGL
 	HDC hDC2;
