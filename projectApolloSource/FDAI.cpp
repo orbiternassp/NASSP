@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/10/11 16:34:49  tschachim
+  *	Bugfix for multiple FDAIs on a panel.
+  *	
   *	Revision 1.2  2005/08/20 17:50:41  movieman523
   *	Added FDAI state save and load.
   *	
@@ -45,6 +48,7 @@ FDAI::FDAI() {
 	ScrX = 0;
 	ScrY = 0;
 	now = _V(0, 0, 0);
+	lastPaintTime = -1;
 }
 
 void FDAI::InitGL() {
@@ -113,25 +117,6 @@ void FDAI::InitGL() {
 	glMatrixMode(GL_MODELVIEW);                     // Select The Modelview Matrix          
 	glLoadIdentity();                               // Reset The Projection Matrix
 
-/*	//some ambiental setup
-	GLfloat light_position[]={10.0, 20.0, 10.0, 0.0};
-	//GLfloat light_diffuse[]= {1.0f, 0.2f, 0.2f, 1.0f};
-	GLfloat light_diffuse[]= {0.5f, 0.5f, 0.5f, 1.0f};
-	//GLfloat light_ambient[]= {0.8f, 0.6f, 0.6f, 1.0f};
-	GLfloat light_ambient[]= {1.0f, 1.0f, 1.0f, 1.0f};
-	GLfloat mat_specular[]=  {0.3f, 0.3f, 0.3f, 1.0f};
-	GLfloat mat_shin[]=      {5.0};
-	glMaterialfv(GL_FRONT,GL_SPECULAR,mat_specular);
-
-	// light
-	glEnable(GL_LIGHTING);
-	glLightfv(GL_LIGHT0,GL_DIFFUSE,light_diffuse);
-	glLightfv(GL_LIGHT0,GL_POSITION,light_position);
-	glLightfv(GL_LIGHT0,GL_AMBIENT,light_ambient);
-	glLightfv(GL_LIGHT0,GL_SPECULAR,mat_specular);
-	glEnable(GL_LIGHT0);
-*/
-
 	//some ambiental setup
 	GLfloat light_position[]={-10.0,10.0,10.0,0.0};
 	GLfloat light_diffuse[]={1.0f, 1.0f, 1.0f, 1.0f};
@@ -192,7 +177,7 @@ void FDAI::SetAttitude(VECTOR3 attitude) {
 
 void FDAI::MoveBall() {
 
-	double delta;
+/*	double delta;
 	
     over_rate=0.0;
     delta=target.z-now.z;
@@ -222,31 +207,39 @@ void FDAI::MoveBall() {
 								return;}
 						now.x-=0.05;over_rate=1.;}
 	else now.x+=delta;
-
+*/
+	now.x = target.x;
+	now.y = target.y;
+	now.z = target.z;
+	
 	glLoadIdentity(); 
 	gluLookAt(0.0,-35.0,0.0, 0.0,0.0,0.0,0.0,0.0,1.0);
 
 	glRotatef(90.0, 0.0, 1.0, 0.0);	
 
-	glRotated(now.y / PI*180.0, 0.0, 1.0, 0.0);	//attitude.x
-	glRotated(now.x / PI*180.0, 1.0, 0.0, 0.0);	//attitude.z
-	glRotated(now.z / PI*180.0, 0.0, 0.0, 1.0);	//attitude.y
+	glRotated(now.y / PI * 180.0, 0.0, 1.0, 0.0);	//attitude.x
+	glRotated(now.x / PI * 180.0, 1.0, 0.0, 0.0);	//attitude.z
+	glRotated(now.z / PI * 180.0, 0.0, 0.0, 1.0);	//attitude.y
 }
 
 void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHANDLE hFDAIRoll, HBITMAP hBmpRoll) {
 
 	if (!init) InitGL();
-  
-	int ret = wglMakeCurrent(hDC2,hRC);
+
 	SetAttitude(attitude);
-	MoveBall();
-	glCallList(list_name);	//render
-	glFlush();
-	glFinish();
+	// Don't do the OpenGL calculations every timestep
+	if (length(now - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) {
+		int ret = wglMakeCurrent(hDC2, hRC);
+		MoveBall();
+		glCallList(list_name);	//render
+		glFlush();
+		glFinish();
+
+		lastPaintTime = oapiGetSysTime();
+	}
 
 	HDC hDC = oapiGetDC(surf);
-
-	BitBlt(hDC, 13, 13, 150, 150, hDC2, 10, 10, SRCCOPY);//then we bitblt onto the panel. wish there
+	BitBlt(hDC, 13, 13, 150, 150, hDC2, 10, 10, SRCCOPY);//then we bitblt onto the panel.
 
 	// roll indicator
 	HDC hDCRotate;
