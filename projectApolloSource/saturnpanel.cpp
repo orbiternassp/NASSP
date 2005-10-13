@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2005/10/12 17:55:46  tschachim
+  *	Added 2 MFDs to the main panel.
+  *	
   *	Revision 1.79  2005/10/12 11:24:17  tschachim
   *	Added fourth MFD on G&N panel.
   *	
@@ -602,29 +605,10 @@ void Saturn::InitPanel (int panel)
 
 bool Saturn::clbkLoadPanel (int id) {
 
-	static HBITMAP hBmpMain = 0;
-	static HBITMAP hBmpLeft = 0;
-	static HBITMAP hBmpRight = 0;
-	static HBITMAP hBmpLower = 0;
-	static HBITMAP hBmpHatch = 0;
-	static HBITMAP hBmpRNDZ_Left = 0;
-	static HBITMAP hBmpRNDZ_Right = 0;
-	static bool recursion;
-
-	// avoid recursive calls
-	if (recursion) return true;
-	recursion = true;
-
-	if (!InPanel && id != PanelId) {
-		// sometimes clbkLoadPanel is called inside oapiSetPanel, 
-		// sometimes not, so ignore the recursive call
-		oapiSetPanel(PanelId);
-		id = PanelId;
-	}
-	recursion = false;
-
+	//
+	// Release all surfaces
+	//
 	ReleaseSurfaces();
-	HBITMAP hBmp;
 
 	//
 	// Should we display a panel for unmanned flights?
@@ -633,55 +617,44 @@ bool Saturn::clbkLoadPanel (int id) {
 	if (!Crewed)
 		return false;
 
+	//
+	// Load panel background image
+	//
+	HBITMAP hBmp;
+
 	switch(id) {
 	case SATPANEL_LOWER:
-//		if (!hBmpLower)
-			hBmpLower = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL));
-		hBmp = hBmpLower;
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL));
 		oapiSetPanelNeighbours(-1, -1, SATPANEL_MAIN, -1);
 		break;
 
 	case SATPANEL_MAIN:
-//		if (!hBmpMain)
-			hBmpMain = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_PANEL));
-		hBmp = hBmpMain;
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_PANEL));
 		oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER);
-
 		break;
 
 	case SATPANEL_LEFT:
-//		if (!hBmpLeft)
-			hBmpLeft = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_PANEL));
-		hBmp = hBmpLeft;
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_PANEL));
 		oapiSetPanelNeighbours(-1, SATPANEL_MAIN, -1, -1);
-
 		break;
 
 	case SATPANEL_RIGHT:
-//		if (!hBmpRight)
-			hBmpRight = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_PANEL));
-		hBmp = hBmpRight;
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_PANEL));
 		oapiSetPanelNeighbours(SATPANEL_MAIN, -1, -1, -1);
 		break;
 
 	case SATPANEL_LEFT_RNDZ_WINDOW:
-//		if (!hBmpRNDZ_Left)
-			hBmpRNDZ_Left = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW));
-		hBmp = hBmpRNDZ_Left;
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW));
 		oapiSetPanelNeighbours(-1, SATPANEL_HATCH_WINDOW, -1, SATPANEL_MAIN);
 		break;
 
 	case SATPANEL_RIGHT_RNDZ_WINDOW:
-//		if (!hBmpRNDZ_Right)
-			hBmpRNDZ_Right = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_RNDZ_WINDOW));
-		hBmp = hBmpRNDZ_Right;
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_RNDZ_WINDOW));
 		oapiSetPanelNeighbours(SATPANEL_HATCH_WINDOW, -1, -1, SATPANEL_MAIN);
 		break;
 
 	case SATPANEL_HATCH_WINDOW:
-//		if (!hBmpHatch)
-			hBmpHatch = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW));
-		hBmp = hBmpHatch;
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW));
 		oapiSetPanelNeighbours(SATPANEL_LEFT_RNDZ_WINDOW, SATPANEL_RIGHT_RNDZ_WINDOW, -1, SATPANEL_MAIN);
 		break;
 
@@ -935,11 +908,21 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	InitPanel (id);
 
-	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
-
+	//
+	// Change to desired panel next timestep.
+	//
+    if (!InPanel && id != PanelId) {	 
+		CheckPanelIdInTimestep = true;
+	} else {
+	    PanelId = id;  
+	}
 	InVC = false;
 	InPanel = true;
-	PanelId = id;
+	
+	//
+	// Set view parameter
+	//
+	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetView();
 
 	return hBmp != NULL;
