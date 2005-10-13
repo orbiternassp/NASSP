@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2005/10/11 16:41:10  tschachim
+  *	More REALISM 0 automatisms, added COAS, bugfixes.
+  *	
   *	Revision 1.58  2005/09/30 11:24:37  tschachim
   *	Saving/Loading of lastSystemsMissionTime.
   *	
@@ -242,8 +245,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundli
 
 	// VESSELSOUND **********************************************************************
 	// initialisation
-
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
+
 	cws.MonitorVessel(this);
 }
 
@@ -454,6 +457,7 @@ void Saturn::initSaturn()
 
 	InVC = false;
 	InPanel = false;
+	CheckPanelIdInTimestep = false;
 
 	//
 	// Save the last view offset set.
@@ -736,10 +740,17 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	// You'll also die horribly if you set time acceleration at all in the
 	// early parts of the launch.
 	//
-
 	if (stage == LAUNCH_STAGE_ONE && MissionTime < 50 &&
 		oapiGetTimeAcceleration() > 1.0) {
 		oapiSetTimeAcceleration(1.0);
+	}
+
+	//
+	// Change to desired panel if necessary
+	//
+	if (CheckPanelIdInTimestep) {
+		oapiSetPanel(PanelId);
+		CheckPanelIdInTimestep = false;
 	}
 }
 
