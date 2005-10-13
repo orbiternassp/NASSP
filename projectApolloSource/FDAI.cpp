@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/10/12 17:55:05  tschachim
+  *	Smarter redraw handing because of performance.
+  *	
   *	Revision 1.3  2005/10/11 16:34:49  tschachim
   *	Bugfix for multiple FDAIs on a panel.
   *	
@@ -102,8 +105,7 @@ void FDAI::InitGL() {
 
 	//We load the texture
 	int texture_index = LoadOGLBitmap("Textures\\ProjectApollo\\FDAI_Ball.dds");
-
-	if (texture_index>0) glEnable(GL_TEXTURE_2D);
+	if (texture_index > 0) glEnable(GL_TEXTURE_2D);
 
 	glShadeModel(GL_SMOOTH);                        // Enable Smooth Shading
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);           // Panel Background color
@@ -131,19 +133,18 @@ void FDAI::InitGL() {
 	glLightfv(GL_LIGHT0,GL_SPECULAR,mat_specular);
 	glEnable(GL_LIGHT0);
 
-
 	//defining our geometry and composing a display list;
 	list_name=glGenLists(1);
-	glNewList(list_name,GL_COMPILE);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear The Screen And The Depth Buffer        
-		glColor3f(1.0,1.0,1.0);   
-        quadObj = gluNewQuadric(); 
-		gluQuadricTexture(quadObj, GL_TRUE);
-        gluSphere (quadObj, 12, 32, 32); 
+	glNewList(list_name,GL_COMPILE);	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);             // Clear The Screen And The Depth Buffer        
+	glColor3f(1.0,1.0,1.0);   
+    quadObj = gluNewQuadric(); 
+	gluQuadricTexture(quadObj, GL_TRUE);
+    gluSphere (quadObj, 12, 24, 24); 
 	glEndList();
 
-	init=1;		//that's it. If we made it so far, we can use OpenGL
-};
+	init = 1;		//that's it. If we made it so far, we can use OpenGL
+}
 
 FDAI::~FDAI() {
 
@@ -177,37 +178,6 @@ void FDAI::SetAttitude(VECTOR3 attitude) {
 
 void FDAI::MoveBall() {
 
-/*	double delta;
-	
-    over_rate=0.0;
-    delta=target.z-now.z;
-
-	if (delta>0.05) {if (delta>PI) {now.z+=2*PI;MoveBall();
-									return;}
-						now.z+=0.05;over_rate=1.;}
-	else if (delta<-0.05){ if (delta<-PI) {now.z-=2*PI;MoveBall();
-								return;}
-						now.z-=0.05;over_rate=1.;}
-	else now.z+=delta;
-
-	delta=target.y-now.y;
-	if (delta>0.05) {if (delta>PI) {now.y+=2*PI;MoveBall();
-										return;}
-					now.y+=0.05;over_rate=1.;}
-	else if (delta<-0.05) {if (delta<-PI) {now.y-=2*PI;MoveBall();
-								return;}
-						now.y-=0.05;over_rate=1.;}
-	else now.y+=delta;
-
-	delta=target.x-now.x;
-	if (delta>0.05) {if (delta>PI) {now.x+=2*PI;MoveBall();
-									return;}
-						now.x+=0.05;over_rate=1.;}
-	else if (delta<-0.05) {if (delta<-PI) {now.x-=2*PI;MoveBall();
-								return;}
-						now.x-=0.05;over_rate=1.;}
-	else now.x+=delta;
-*/
 	now.x = target.x;
 	now.y = target.y;
 	now.z = target.z;
@@ -228,7 +198,7 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHAND
 
 	SetAttitude(attitude);
 	// Don't do the OpenGL calculations every timestep
-	if (length(now - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) {
+	if ((length(now - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) && oapiGetSysTime() > lastPaintTime + 0.1) {
 		int ret = wglMakeCurrent(hDC2, hRC);
 		MoveBall();
 		glCallList(list_name);	//render
