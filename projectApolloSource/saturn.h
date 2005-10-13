@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2005/10/11 16:52:29  tschachim
+  *	Added switches, COAS and MFDs, bugfixes.
+  *	
   *	Revision 1.66  2005/09/30 11:25:48  tschachim
   *	Added ECS meters and switches.
   *	
@@ -1300,11 +1303,9 @@ protected:
 	bool ProbeJetison;
 	bool RCS_Full;
 	bool LEMdatatransfer;
-	bool InVC;
-	bool InPanel;
 
-#define SATPANEL_LOWER				0
-#define SATPANEL_MAIN				1
+#define SATPANEL_MAIN				0
+#define SATPANEL_LOWER				1
 #define SATPANEL_LEFT				2
 #define SATPANEL_RIGHT				3
 #define SATPANEL_LEFT_RNDZ_WINDOW	4
@@ -1312,6 +1313,10 @@ protected:
 #define SATPANEL_HATCH_WINDOW		6
 
 	int  PanelId;
+	bool InVC;
+	bool InPanel;
+	bool CheckPanelIdInTimestep;
+
 	bool KranzPlayed;
 	bool PostSplashdownPlayed;
 
