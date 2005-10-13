@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/09/30 11:22:00  tschachim
+  *	New panel event handler.
+  *	
   *	Revision 1.35  2005/09/22 00:39:09  flydba
   *	AOT - Alignment Optical Telescope view and left instrument panel added to the lem
   *	
@@ -659,6 +662,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	// Load panel background image
 	//
 	HBITMAP hBmp;
+
 	switch(id) {
     case LMPANEL_MAIN:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_MAIN_PANEL));
@@ -833,8 +837,6 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 
 	//
 	// Change to desired panel next timestep.
-	// The implementation from the saturn caused CTDs.
-	// TODO: Why???
 	//
     if (!InPanel && id != PanelId) {	 
 		CheckPanelIdInTimestep = true;
