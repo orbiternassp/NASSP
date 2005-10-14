@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2005/10/12 11:22:16  tschachim
+  *	Bugfix OPR ERR during P15.
+  *	
   *	Revision 1.50  2005/10/10 22:37:13  lazyd
   *	Fixed time acceleration problems and docked attitude control
   *	
@@ -579,7 +582,7 @@ bool ApolloGuidance::ValidateCommonProgram(int prog)
 		return true;
 
 	//
-	// 19: Plane Change for landing site alignment after n passes
+	// 19: Orbit adjustment
 	//
 
 	case 19:
@@ -2717,7 +2720,8 @@ void ApolloGuidance::Prog19(double simt)
 				rn=pn/(1.0+en*cos(vn));
 //				fprintf(outstr, "vn=%.3f dph=%.3f alt=%.1f\n", vn*DEG,dph*DEG, rn-bradius);
 				epos=vup*(rn*cos(can))+vf*(rn*sin(can));
-				dt=45.0*60.0;
+//				dt=45.0*60.0;
+				dt=period*(can/(2.0*PI));
 				Lambert(spos, epos, dt, mu, v1, v2);
 //				fprintf(outstr, "Lambert spos=%.1f %.1f %.1f epos=%.1f %.1f %.1f \n",
 //					spos, epos);
@@ -2764,7 +2768,8 @@ void ApolloGuidance::Prog19(double simt)
 //				fprintf(outstr, "vn=%.3f dph=%.3f alt=%.1f\n", vn*DEG,dph*DEG, rn-bradius);
 				epos=vup*(rn*cos(can))+vf*(rn*sin(can));
 
-				dt=45.0*60.0;
+//				dt=45.0*60.0;
+				dt=period*(can/(2.0*PI));
 				Lambert(spos, epos, dt, mu, v1, v2);
 //				fprintf(outstr, "Lambert spos=%.1f %.1f %.1f epos=%.1f %.1f %.1f \n",
 //					spos, epos);
@@ -2966,7 +2971,8 @@ void ApolloGuidance::Prog19(double simt)
 				rn=pn/(1.0+en*cos(vn));
 //				fprintf(outstr, "vn=%.3f dph=%.3f rn=%.1f\n", vn*DEG,dph*DEG, rn);
 				epos=vup*(rn*cos(can))+vf*(rn*sin(can));
-				dt=45.0*60.0;
+				dt=period*(can/(2.0*PI));
+//				dt=45.0*60.0;
 				Lambert(spos, epos, dt, mu, v1, v2);
 //				fprintf(outstr, "Lambert spos=%.1f %.1f %.1f epos=%.1f %.1f %.1f ealt=%.1f\n",
 //					spos, epos, Mag(epos)-bradius);
@@ -3337,8 +3343,10 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 			PMI.z=165.0;
 		} else {
 		// for the CSM docked to the LM
-			PMI.x=PMI.x*15.0;
-			PMI.y=PMI.y*15.0;
+//			PMI.x=PMI.x*15.0;
+//			PMI.y=PMI.y*15.0;
+			PMI.x=180.0;
+			PMI.y=180.0;
 			PMI.z=PMI.z+2.37;
 		}
 		denom=10.0;
