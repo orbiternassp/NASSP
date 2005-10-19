@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/08/14 16:08:20  tschachim
+  *	LM is now a VESSEL2
+  *	Changed panel restore mechanism because the CSM mechanism
+  *	caused CTDs, reason is still unknown.
+  *	
   *	Revision 1.6  2005/08/05 12:59:35  tschachim
   *	Saturn detachment handling
   *	
@@ -52,7 +57,7 @@
 #include "saturn.h"
 
 HINSTANCE g_hDLL;
-char trace_file[] = "ProjectApollo-Crawler-trace.txt";
+char trace_file[] = "ProjectApollo Crawler.log";
 
 
 DLLCLBK void InitModule(HINSTANCE hModule) {
