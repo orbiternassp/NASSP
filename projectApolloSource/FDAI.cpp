@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/10/13 15:50:46  tschachim
+  *	Limited refresh rate because of performance.
+  *	
   *	Revision 1.4  2005/10/12 17:55:05  tschachim
   *	Smarter redraw handing because of performance.
   *	
@@ -198,7 +201,7 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHAND
 
 	SetAttitude(attitude);
 	// Don't do the OpenGL calculations every timestep
-	if ((length(now - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) && oapiGetSysTime() > lastPaintTime + 0.1) {
+	if (lastPaintTime == -1 || ((length(now - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) && oapiGetSysTime() > lastPaintTime + 0.1)) {
 		int ret = wglMakeCurrent(hDC2, hRC);
 		MoveBall();
 		glCallList(list_name);	//render
