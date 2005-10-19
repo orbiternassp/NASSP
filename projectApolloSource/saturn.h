@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2005/10/13 15:55:31  tschachim
+  *	Fixed the panel change bug.
+  *	Changed panel ids to have the main panel as default panel.
+  *	
   *	Revision 1.67  2005/10/11 16:52:29  tschachim
   *	Added switches, COAS and MFDs, bugfixes.
   *	
@@ -339,10 +343,13 @@ typedef struct {
 	double CabinRegulatorFlowLBH;
 	double O2DemandFlowLBH;
 	double DirectO2FlowLBH;
+} AtmosStatus;
+
+typedef struct {
 	double DisplayedO2FlowLBH;
 	double DisplayedSuitComprDeltaPressurePSI;
 	double DisplayedEcsRadTempPrimOutletMeterTemperatureF;
-} AtmosStatus;
+} DisplayedAtmosStatus;
 
 typedef struct {
 	double RadiatorInletPressurePSI;
@@ -434,6 +441,7 @@ public:
 	//
 
 	void GetAtmosStatus(AtmosStatus &atm);
+	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
 	void GetTankQuantities(TankQuantities &q);
 //	void GetBusStatus(BusStatus &bus);
@@ -558,6 +566,7 @@ protected:
 
 	FDAI fdaiRight;
 	FDAI fdaiLeft;
+	int fdaiDisabled;
 
 	HBITMAP hBmpFDAIRollIndicator;
 
