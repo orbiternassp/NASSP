@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2005/10/13 15:52:24  tschachim
+  *	Fixed the panel change bug.
+  *	
   *	Revision 1.59  2005/10/11 16:41:10  tschachim
   *	More REALISM 0 automatisms, added COAS, bugfixes.
   *	
@@ -224,6 +227,7 @@
 #include "IMU.h"
 
 #include "saturn.h"
+#include "tracer.h"
 
 //
 // Random functions from Yaagc.
@@ -602,6 +606,7 @@ void Saturn::initSaturn()
 	if (!InitSaturnCalled) {
 
 		// Initialize the panel
+		fdaiDisabled = false;
 		PanelId = SATPANEL_MAIN; 		// default panel
 		InitSwitches();
 
@@ -736,6 +741,7 @@ void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
 void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 
 {
+	TRACESETUP("Saturn::clbkPreStep");
 	//
 	// You'll also die horribly if you set time acceleration at all in the
 	// early parts of the launch.
@@ -757,6 +763,8 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 {
+	TRACESETUP("Saturn::clbkPostStep");
+
 	Timestep(simt, simdt);
 }
 
@@ -947,6 +955,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	// save the state of the switches
 	PSH.SaveState(scn);	
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
+	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 }
 
 //
@@ -1541,6 +1550,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp (line, "COASENABLED", 11)) {
 			sscanf (line + 11, "%i", &coasEnabled);
+		}
+		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
+			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
 		else {
 			ParseScenarioLineEx (line, vstatus);
