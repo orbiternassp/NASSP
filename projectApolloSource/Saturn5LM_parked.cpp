@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/09/07 22:01:53  movieman523
+  *	Fixed the mission timer loading.
+  *	
   *	Revision 1.33  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -150,7 +153,7 @@
 #include "tracer.h"
 
 
-char trace_file[] = "NASP-trace.txt";
+char trace_file[] = "ProjectApollo LM.log";
 
 
 // ==============================================================
