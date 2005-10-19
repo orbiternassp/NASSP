@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/10/11 16:42:01  tschachim
+  *	Renamed LPswitch5.
+  *	
   *	Revision 1.16  2005/08/24 00:30:00  movieman523
   *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
   *	
@@ -93,6 +96,7 @@
 #include "IMU.h"
 
 #include "saturn.h"
+#include "tracer.h"
 
 MESHHANDLE hSM;
 MESHHANDLE hSMhga;
@@ -1404,6 +1408,8 @@ void Saturn::setupSM(OBJHANDLE hvessel)
 bool Saturn::clbkLoadGenericCockpit ()
 
 {
+	TRACESETUP("Saturn::clbkLoadGenericCockpit");
+
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 	InVC = false;

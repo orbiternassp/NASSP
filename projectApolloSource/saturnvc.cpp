@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/10/11 16:46:34  tschachim
+  *	Fixed camera offsets.
+  *	
   *	Revision 1.7  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -72,6 +75,8 @@
 
 bool Saturn::clbkLoadVC (int id)
 {
+	TRACESETUP("Saturn::clbkLoadVC");
+
 	switch (id) {
 	case 0:
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
