@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/24 00:30:36  movieman523
+  *	Major revision for Orbitersound 3.0 and new Orbiter. Added new 'flag planting' sound support.
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -42,7 +45,7 @@
 // Set the file name for the tracer code.
 //
 
-char trace_file[] = "NASP_LEVA-trace.txt";
+char trace_file[] = "ProjectApollo LEVA.log";
 
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -8.935};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, 9.25-12.25};

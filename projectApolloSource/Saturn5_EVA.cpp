@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/11 12:48:51  tschachim
+  *	header inserted
+  *	
   **************************************************************************/
 
 #include "orbitersdk.h"
@@ -34,7 +37,7 @@
 // Set the file name for the tracer code.
 //
 
-char trace_file[] = "NASP_EVA-trace.txt";
+char trace_file[] = "ProjectApollo EVA.log";
 
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -8.935};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, 9.25-12.25};
