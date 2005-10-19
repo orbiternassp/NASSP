@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2005/10/13 15:54:03  tschachim
+  *	Fixed the panel change bug.
+  *	
   *	Revision 1.80  2005/10/12 17:55:46  tschachim
   *	Added 2 MFDs to the main panel.
   *	
@@ -293,6 +296,7 @@
 #include "IMU.h"
 
 #include "saturn.h"
+#include "tracer.h"
 
 extern GDIParams g_Param;
 
@@ -604,6 +608,8 @@ void Saturn::InitPanel (int panel)
 }
 
 bool Saturn::clbkLoadPanel (int id) {
+
+	TRACESETUP("Saturn::clbkLoadPanel");
 
 	//
 	// Release all surfaces
@@ -1601,16 +1607,21 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			} else if (mx > 5 && mx < 26 && my > 38 && my < 208) {
 				if ((my - 38) % 31 < 14) {
 					int bt = (my - 38) / 31 + 0;
-					ButtonClick();
+					if (event & PANEL_MOUSE_LBDOWN)
+						ButtonClick();
 					oapiProcessMFDButton(MFD_RIGHT, bt, event);	// MFD_USER1
 				}
 			} else if (mx > 273 && mx < 294 && my > 38 && my < 208) {
 				if ((my - 38) % 31 < 14) {
 					int bt = (my - 38) / 31 + 6;
-					ButtonClick();
+					if (event & PANEL_MOUSE_LBDOWN)
+						ButtonClick();
 					oapiProcessMFDButton(MFD_RIGHT, bt, event);	// MFD_USER1
 				}
 			}
+		} else if (event & PANEL_MOUSE_LBDOWN) {
+			ButtonClick();
+			oapiToggleMFD_on(MFD_RIGHT); // MFD_USER1
 		}
 		return true;
 
@@ -2207,13 +2218,15 @@ void Saturn::MousePanel_MFDButton(int mfd, int event, int mx, int my) {
 		} else if (mx > 8 && mx < 31 && my > 46 && my < 247) {
 			if ((my - 46) % 37 < 16) {
 				int bt = (my - 46) / 37 + 0;
-				ButtonClick();
+				if (event & PANEL_MOUSE_LBDOWN)
+					ButtonClick();
 				oapiProcessMFDButton (mfd, bt, event);
 			}
 		} else if (mx > 326 && mx < 349 && my > 46 && my < 247) {
 			if ((my - 46) % 37 < 16) {
 				int bt = (my - 46) / 37 + 6;
-				ButtonClick();
+				if (event & PANEL_MOUSE_LBDOWN)
+					ButtonClick();
 				oapiProcessMFDButton (mfd, bt, event);
 			}
 		}
@@ -2287,6 +2300,11 @@ void Saturn::StopMasterAlarm()
 bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf) 
 
 {
+	// Enable this to trace the redraws, but then it's running horrible slow!
+	// char tracebuffer[100];
+	// sprintf(tracebuffer, "Saturn::clbkPanelRedrawEvent id %i", id);
+	// TRACESETUP(tracebuffer);
+
 	int Curdigit, Curdigit2;
 
 	//
@@ -2351,11 +2369,13 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_FDAI_RIGHT:
-		fdaiRight.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
+		if (!fdaiDisabled)
+			fdaiRight.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
 		return true;
 
 	case AID_FDAI_LEFT:
-		fdaiLeft.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
+		if (!fdaiDisabled)
+			fdaiLeft.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
 		return true;
 
 	case AID_DSKY2_LIGHTS:
@@ -2814,22 +2834,22 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
 	case MFD_LEFT:		
-		oapiTriggerPanelRedrawArea (SATPANEL_MAIN, AID_MFDMAINLEFT);
-		oapiTriggerPanelRedrawArea (SATPANEL_LOWER, AID_MFDGNLEFTBOTTOM);
+		oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINLEFT);
+		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNLEFTBOTTOM);
 		break;
 
 	case MFD_RIGHT:		
-		oapiTriggerPanelRedrawArea (SATPANEL_MAIN, AID_MFDMAINRIGHT);
-		oapiTriggerPanelRedrawArea (SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
-		oapiTriggerPanelRedrawArea (SATPANEL_LOWER, AID_MFDGNRIGHTBOTTOM);
+		oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINRIGHT);
+		oapiTriggerPanelRedrawArea(SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
+		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNRIGHTBOTTOM);
 		break;
 
 	case MFD_USER1:		
-		oapiTriggerPanelRedrawArea (SATPANEL_LOWER, AID_MFDGNLEFTTOP);
+		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNLEFTTOP);
 		break;
 
 	case MFD_USER2:	
-		oapiTriggerPanelRedrawArea (SATPANEL_LOWER, AID_MFDGNLEFTMIDDLE);
+		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNLEFTMIDDLE);
 		break;
 
 	}
