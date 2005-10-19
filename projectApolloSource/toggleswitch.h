@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/10/11 16:53:12  tschachim
+  *	Enhanced guard handling, SwitchTo functions added, bugfixes.
+  *	
   *	Revision 1.21  2005/09/30 11:26:47  tschachim
   *	Added new spring-loaded modes, new event handler, added MeterSwitch.
   *	
@@ -644,7 +647,7 @@ public:
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
-	double GetDisplayValue() { return displayValue; };
+	double GetDisplayValue();
 
 	virtual double QueryValue() = 0;
 	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface) = 0;

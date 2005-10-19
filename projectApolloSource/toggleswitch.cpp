@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/10/11 16:48:31  tschachim
+  *	Enhanced guard handling, SwitchTo functions added, bugfixes.
+  *	
   *	Revision 1.25  2005/09/30 11:26:47  tschachim
   *	Added new spring-loaded modes, new event handler, added MeterSwitch.
   *	
@@ -1433,7 +1436,7 @@ bool MeterSwitch::CheckMouseClick(int event, int mx, int my) {
 
 void MeterSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 
-	value = QueryValue();
+/*	value = QueryValue();
 	if (value > maxValue) value = maxValue;
 	if (value < minValue) value = minValue;
 
@@ -1448,8 +1451,30 @@ void MeterSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 		}
 	}
 	lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
-	
-	DoDrawSwitch(displayValue, drawSurface);
+*/
+	DoDrawSwitch(GetDisplayValue(), drawSurface);
+}
+
+double MeterSwitch::GetDisplayValue() {
+
+	value = QueryValue();
+	if (value > maxValue) value = maxValue;
+	if (value < minValue) value = minValue;
+
+	if (lastDrawTime == -1) {
+		displayValue = value;
+	} else {
+		double dt = oapiGetSysTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
+		if (dt > 0) {
+			if (fabs(value - displayValue) / dt > (maxValue - minValue) / minMaxTime) {
+				displayValue += ((value - displayValue) / fabs(value - displayValue)) * (maxValue - minValue) / minMaxTime * dt;
+			} else {
+				displayValue = value;
+			}
+		}
+	}
+	lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
+	return displayValue;
 }
 
 void MeterSwitch::SaveState(FILEHANDLE scn) {
