@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.8  2005/08/19 13:41:03  tschachim
   *	Fixes because of new Virtual AGC version.
   *	
@@ -373,7 +376,7 @@ VECTOR3 IMU::CalculateAccelerations(double deltaT)
 void IMU::Timestep(double simt) 
 
 {
-	TRACESETUP("IMU TIMESTEP");
+	TRACESETUP("IMU::Timestep");
 
 	double deltaTime, pulses;
 	IMU_Matrix3 t;

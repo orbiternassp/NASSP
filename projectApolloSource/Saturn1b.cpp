@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/10/11 16:38:50  tschachim
+  *	Bugfix tower jettison and aborts.
+  *	
   *	Revision 1.25  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -122,7 +125,7 @@
 
 #include "tracer.h"
 
-char trace_file[] = "NASP-trace.txt";
+char trace_file[] = "ProjectApollo Saturn1b.log";
 
 
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/10/11 16:39:27  tschachim
+  *	Bugfix tower jettison and aborts.
+  *	
   *	Revision 1.31  2005/08/24 00:30:00  movieman523
   *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
   *	
@@ -145,7 +148,7 @@
 // Set the file name for the tracer code.
 //
 
-char trace_file[] = "NASP-trace.txt";
+char trace_file[] = "ProjectApollo Saturn5.log";
 
 //
 // Various bits of real global data for the DLL. Most things should be vessel
@@ -540,6 +543,7 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 void SaturnV::clbkSetClassCaps (FILEHANDLE cfg)
 
 {
+	TRACESETUP("SaturnV::clbkSetClassCaps");
 	//
 	// For some reason things get screwy if we do all the initialisation in the constructor. I think
 	// that Orbiter may be keeping a pool of objects and reusing them, so we have to reinitialise here
@@ -1681,6 +1685,8 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 {
+	TRACESETUP("SaturnV::clbkLoadStateEx");
+
 	GetScenarioState(scn, status);
 
 	//

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.2  2005/08/19 13:35:24  tschachim
   *	Logging enabled in debug configuration
   *	
@@ -59,7 +62,11 @@ void IMU::LogInit()
 {
 #ifdef _DEBUG
 	if (!logFile)
+#ifdef SAT5_LMPKD_EXPORTS
+		logFile = fopen("ProjectApollo LM IMU.log", "w");
+#else
 		logFile = fopen("ProjectApollo IMU.log", "w");
+#endif
 #endif
 }
 
