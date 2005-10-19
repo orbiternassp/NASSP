@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/10/12 19:38:34  tschachim
+  *	Added a little bit more power to the suit compressor to have
+  *	more stability with high time accelerations.
+  *	
   *	Revision 1.26  2005/10/11 16:37:56  tschachim
   *	More REALISM 0 automatisms, bugfix stage 1 aborts, more C/W alarms
   *	
@@ -137,7 +141,7 @@ void Saturn::SystemsInit() {
 	Panelsdk.RegisterVessel(this);
 	Panelsdk.InitFromFile("ProjectApollo\\SaturnSystems");
 
-	//PanelsdkLogFile = fopen("ProjectApollo Systems.log", "w");
+	//PanelsdkLogFile = fopen("ProjectApollo Saturn Systems.log", "w");
 
 	//
 	// Default valve states.
@@ -580,13 +584,12 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		*pressSuitCRV * 0.000145038, *tempSuitCRV);
 */
 	// Cabin O2 supply
-/*	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f p %.1f O2T2-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f CAB-m %.1f T %.1f p %.1f CO2PP %.2f RAD-T %.1f", 
+/*	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f p %.1f O2T2-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f CAB-m %.1f T %.1f p %.1f CO2PP %.2f", 
 		*massO2Tank1 / 1000.0, *tempO2Tank1, *pressO2Tank1 * 0.000145038,
 		*massO2Tank2 / 1000.0, *tempO2Tank2, *pressO2Tank2 * 0.000145038,
 		*massO2SMSupply / 1000.0, *tempO2SMSupply, *pressO2SMSupply * 0.000145038,
 		*massO2MainReg / 1000.0, *tempO2MainReg, *pressO2MainReg * 0.000145038,
-		*massCabin, *tempCabin, *pressCabin * 0.000145038, *pressCabinCO2 * 0.00750064,
-		*tempRad); 
+		*massCabin, *tempCabin, *pressCabin * 0.000145038, *pressCabinCO2 * 0.00750064); 
 */
 
 	// Fuel Cell, flow in lb/h
@@ -1036,9 +1039,6 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	atm.O2DemandFlowLBH = 0.0;
 	atm.SuitReturnPressureMMHG = 0.0;
 	atm.SuitReturnPressurePSI = 0.0;
-	atm.DisplayedO2FlowLBH = 0.0;
-	atm.DisplayedSuitComprDeltaPressurePSI = 0.0;
-	atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF = 0.0;
 
 	if (!pCO2Level) {
 		pCO2Level = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
@@ -1112,12 +1112,21 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	if (pDirectO2Flow) {
 		atm.DirectO2FlowLBH = (*pDirectO2Flow) * LBH;
 	}
+}
 
-	// For caution & warning system
+
+//
+// Get displayed atmosphere status for caution & warning system
+//
+
+void Saturn::GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm) 
+
+{
 	atm.DisplayedO2FlowLBH = RightO2FlowMeter.GetDisplayValue();
 	atm.DisplayedSuitComprDeltaPressurePSI = SuitComprDeltaPMeter.GetDisplayValue();
 	atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF = EcsRadTempPrimOutletMeter.GetDisplayValue();
 }
+
 
 //
 // Get H2/O2 tank pressures.

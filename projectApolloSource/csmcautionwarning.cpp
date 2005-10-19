@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/10/12 19:41:08  tschachim
+  *	Reduced suit compressor alarm pressure with higher time accelerations,
+  *	TODO better solution.
+  *	
   *	Revision 1.8  2005/10/11 16:31:50  tschachim
   *	Added more alarms.
   *	
@@ -101,13 +105,15 @@ bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus fc, int index)
 
 	// pH > 9 not simulated at the moment
 
-	if (fc.TempF < 360.0) bad = true;
-	if (fc.TempF > 475.0) bad = true;
+	// The alarm conditions gets reduced with a time acceleration
+	// factor, this "dirty hack" should be removed if we find a better solution	
+	if (fc.TempF < 360.0 - 0.02 * oapiGetTimeAcceleration()) bad = true;
+	if (fc.TempF > 475.0 + 0.02 * oapiGetTimeAcceleration()) bad = true;
 
-	if (fc.CondenserTempF < 150.0) bad = true;
-	if (fc.CondenserTempF > 175.0) bad = true;
+	if (fc.CondenserTempF < 150.0 - 0.02 * oapiGetTimeAcceleration()) bad = true;
+	if (fc.CondenserTempF > 175.0 + 0.02 * oapiGetTimeAcceleration()) bad = true;
 
-	if (fc.CoolingTempF < -30.0) bad = true;
+	if (fc.CoolingTempF < -30.0 - 0.02 * oapiGetTimeAcceleration()) bad = true;
 
 	//
 	// To avoid spurious alarms because of fluctuation at high time accelerations
@@ -115,7 +121,7 @@ bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus fc, int index)
 	// This is similar to the shutdown handling in FCell.refresh
 	//
 	if (bad) {
-		if (FuelCellCheckCount[index] < 5)
+		if (FuelCellCheckCount[index] < 10)
 			FuelCellCheckCount[index]++;
 		else
 			return true;
@@ -208,7 +214,9 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		}
 
 		AtmosStatus atm;
+		DisplayedAtmosStatus datm;
 		sat->GetAtmosStatus(atm);
+		sat->GetDisplayedAtmosStatus(datm);
 
 		//
 		// Glycol temperature of the EcsRadTempPrimOutletMeter lower than -30°F
@@ -217,7 +225,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// high time acceleration.
 		//
 		
-		SetLight(CSM_CWS_GLYCOL_TEMP_LOW, (atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF < -30.0));
+		SetLight(CSM_CWS_GLYCOL_TEMP_LOW, (datm.DisplayedEcsRadTempPrimOutletMeterTemperatureF < -30.0));
 
 		//
 		// Inverter: "A temperature sensor with a range of 32 degrees to 248 degrees F is installed 
@@ -242,7 +250,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			// of the O2 flow meter to pervent alarms because of the fluctuations during 
 			// high time acceleration.
 			//
-			double cf = atm.DisplayedO2FlowLBH;
+			double cf = datm.DisplayedO2FlowLBH;
 			bool LightO2Warning = false;
 
 			//
@@ -287,8 +295,8 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// factor, this "dirty hack" should be removed if we find a better solution
 		//
 		
-		double minPressure = 0.22 - 0.0002 * oapiGetTimeAcceleration();
-		SetLight(CSM_CWS_SUIT_COMPRESSOR, (atm.DisplayedSuitComprDeltaPressurePSI < minPressure));
+		double minPressure = 0.22 - 0.001 * oapiGetTimeAcceleration();
+		SetLight(CSM_CWS_SUIT_COMPRESSOR, (datm.DisplayedSuitComprDeltaPressurePSI < minPressure));
 
 		NextUpdateTime = simt + (0.2 * oapiGetTimeAcceleration());
 	}
