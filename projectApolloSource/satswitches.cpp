@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/09/30 11:22:40  tschachim
+  *	Added ECS meters.
+  *	
   *	Revision 1.3  2005/08/23 22:18:47  movieman523
   *	SPS switch now works.
   *	
@@ -53,10 +56,10 @@
 #include "saturn.h"
 
 
-void SaturnToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s)
+void SaturnToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int xoffset, int yoffset)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, row, xoffset, yoffset);
 	sat = s;
 }
 
@@ -119,7 +122,7 @@ bool SaturnValveSwitch::CheckMouseClick(int event, int mx, int my)
 bool SaturnSPSSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
-	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
+	if (SaturnToggleSwitch::CheckMouseClick(event, mx, my)) {
 		if (sat) {
 			sat->CheckSPSState();
 		}
