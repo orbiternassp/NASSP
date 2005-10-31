@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE DISCARDABLE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE DISCARDABLE
 BEGIN
     "\r\n"
     "\0"
@@ -85,7 +85,7 @@ IDB_ANNUN               BITMAP  DISCARDABLE     "Annonciators.bmp"
 IDB_ILMANNUN            BITMAP  DISCARDABLE     "ilmAnnonciators.bmp"
 IDB_LIGHTS2             BITMAP  DISCARDABLE     "lights2.bmp"
 IDB_ILMLIGHTS2          BITMAP  DISCARDABLE     "ilmlights2.bmp"
-IDB_ANLG_ALT            BITMAP  DISCARDABLE     "Altimeter.bmp"
+IDB_ALTIMETER           BITMAP  DISCARDABLE     "Altimeter.bmp"
 IDB_ANLG_GMETER         BITMAP  DISCARDABLE     "Gmeter.bmp"
 IDB_THRUST              BITMAP  DISCARDABLE     "Thrustmeter.bmp"
 IDB_CONTACT             BITMAP  DISCARDABLE     "contact.bmp"
