@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/14 16:08:20  tschachim
+  *	LM is now a VESSEL2
+  *	Changed panel restore mechanism because the CSM mechanism
+  *	caused CTDs, reason is still unknown.
+  *	
   *	Revision 1.3  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -70,7 +75,11 @@ void sat5_lmpkd::SetView() {
 		}
 
 	} else {
-		SetCameraOffset (_V(0, 0, 0));
+		if (InPanel && PanelId == LMPANEL_RNDZWINDOW) {
+			SetCameraOffset (_V(0, -1.8, 0.55));
+		} else {
+			SetCameraOffset (_V(0, 0, 0));
+		}
 	}
 
 	//
