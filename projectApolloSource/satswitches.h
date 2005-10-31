@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/09/30 11:22:40  tschachim
+  *	Added ECS meters.
+  *	
   *	Revision 1.3  2005/08/23 22:18:47  movieman523
   *	SPS switch now works.
   *	
@@ -38,7 +41,7 @@ class Saturn;
 class SaturnToggleSwitch : public ToggleSwitch {
 public:
 	SaturnToggleSwitch() { sat = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int xoffset = 0, int yoffset = 0);
 
 protected:
 	Saturn *sat;
@@ -69,7 +72,7 @@ public:
 	bool CheckMouseClick(int event, int mx, int my);
 };
 
-class SaturnSPSSwitch : public SaturnThreePosSwitch {
+class SaturnSPSSwitch : public SaturnToggleSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
 };
