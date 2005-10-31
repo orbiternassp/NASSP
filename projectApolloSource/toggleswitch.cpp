@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/10/19 11:45:15  tschachim
+  *	Update MeterSwitch.DisplayValue when requested (and not only when displayed).
+  *	
   *	Revision 1.26  2005/10/11 16:48:31  tschachim
   *	Enhanced guard handling, SwitchTo functions added, bugfixes.
   *	
@@ -427,6 +430,46 @@ void PushSwitch::InitSound(SoundLib *s) {
 	if (!Sclick.isValid())
 		s->LoadSound(Sclick, BUTTON_SOUND);
 }
+
+
+//
+// Circuit braker switch.
+//
+
+bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+	if (mx < x || my < y) return false;
+	if (mx > (x + width) || my > (y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (state) {
+			state = 0;
+			Sclick.play();
+		} else {
+			state = 1;
+			Sclick.play();
+		}
+	}
+
+	if (Active && (state != OldState)) {
+		SwitchToggled = true;
+		if (switchRow) {
+			if (switchRow->panelSwitches->listener) 
+				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+		}
+	}
+	return true;
+}
+
+void CircuitBrakerSwitch::InitSound(SoundLib *s) {
+
+	if (!Sclick.isValid())
+		s->LoadSound(Sclick, BUTTON_SOUND);
+}
+
 
 //
 // Attitude mode toggle switch.
@@ -1309,6 +1352,120 @@ RotationalSwitchPosition::~RotationalSwitchPosition() {
 
 
 //
+// Thumbwheel Switch
+//
+
+ThumbwheelSwitch::ThumbwheelSwitch() {
+
+	x = 0;
+	y = 0;
+	width = 0;
+	height = 0;
+	state = 0;
+	maxState = 0;
+	switchSurface = 0;
+	switchRow = 0;
+}
+
+ThumbwheelSwitch::~ThumbwheelSwitch() {
+	sclick.done();
+}
+
+void ThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState) {
+
+	name = n;
+	state = defaultState;
+	maxState = maximumState;
+	scnh.RegisterSwitch(this);
+}
+
+void ThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row) {
+
+	x = xp;
+	y = yp;
+	width = w;
+	height = h;
+	switchSurface = surf;
+	
+	row.AddSwitch(this);
+	switchRow = &row;
+
+	if (!sclick.isValid()) {
+		row.panelSwitches->soundlib->LoadSound(sclick, CLICK_SOUND);
+	}
+}
+
+int ThumbwheelSwitch::GetState() {
+
+	return state;
+}
+
+bool ThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	//
+	// Check whether it's actually in our switch region.
+	//
+
+	if (mx < x || my < y)
+		return false;
+
+	if (mx > (x + width) || my > (y + height))
+		return false;
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (my < (y + (height / 2.0))) {
+			if (state < maxState) {
+				state++;
+				sclick.play();
+			}
+		}
+		else {
+			if (state > 0) {
+				state--;
+				sclick.play();
+			}
+		}
+	}
+
+	if (state != OldState) {
+		if (switchRow) {
+			if (switchRow->panelSwitches->listener) 
+				switchRow->panelSwitches->listener->PanelThumbwheelSwitchChanged(this);
+		}
+	}
+	return true;
+}
+
+void ThumbwheelSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
+
+	oapiBlt(DrawSurface, switchSurface, x, y, state * width, 0, width, height, SURF_PREDEF_CK);
+}
+
+void ThumbwheelSwitch::SaveState(FILEHANDLE scn) {
+
+	oapiWriteScenario_int (scn, name, state);
+}
+
+void ThumbwheelSwitch::LoadState(char *line) {
+
+	char buffer[100];
+	int st;
+
+	sscanf(line, "%s %i", buffer, &st); 
+	if (!strnicmp(buffer, name, strlen(name))) {
+		state = st;
+	}
+}
+
+
+//
 // Indicator Switch
 //
 
@@ -1436,22 +1593,6 @@ bool MeterSwitch::CheckMouseClick(int event, int mx, int my) {
 
 void MeterSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 
-/*	value = QueryValue();
-	if (value > maxValue) value = maxValue;
-	if (value < minValue) value = minValue;
-
-	if (lastDrawTime == -1) {
-		displayValue = value;
-	} else {
-		double dt = oapiGetSysTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
-		if (dt > 0 && (fabs(value - displayValue) / dt > (maxValue - minValue) / minMaxTime)) {
-			displayValue += ((value - displayValue) / fabs(value - displayValue)) * (maxValue - minValue) / minMaxTime * dt;
-		} else {
-			displayValue = value;
-		}
-	}
-	lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
-*/
 	DoDrawSwitch(GetDisplayValue(), drawSurface);
 }
 
