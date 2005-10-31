@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/10/19 11:48:09  tschachim
+  *	Update MeterSwitch.DisplayValue when requested (and not only when displayed).
+  *	
   *	Revision 1.22  2005/10/11 16:53:12  tschachim
   *	Enhanced guard handling, SwitchTo functions added, bugfixes.
   *	
@@ -354,6 +357,7 @@ public:
 	bool CheckMouseClick(int event, int mx, int my);
 };
 
+
 class PushSwitch: public ToggleSwitch {
 
 public:
@@ -364,6 +368,19 @@ public:
 protected:
 	virtual void InitSound(SoundLib *s);
 };
+
+
+class CircuitBrakerSwitch: public ToggleSwitch {
+
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+
+	int operator=(const int b) { state = b; return state; };
+
+protected:
+	virtual void InitSound(SoundLib *s);
+};
+
 
 //
 // Caution and warning system mode switch.
@@ -663,6 +680,35 @@ protected:
 };
 
 
+class ThumbwheelSwitch: public PanelSwitchItem {
+
+public:
+	ThumbwheelSwitch();
+	virtual ~ThumbwheelSwitch();
+
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
+	void DrawSwitch(SURFHANDLE drawSurface);
+	bool CheckMouseClick(int event, int mx, int my);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+	int GetState();
+	int operator=(const int b);
+	operator int();
+
+protected:
+	int	x;
+	int y;
+	int width;
+	int height;
+	int state;
+	int maxState;
+	SURFHANDLE switchSurface;
+	Sound sclick;
+	SwitchRow *switchRow;
+};
+
+
 class PanelSwitches;
 
 class SwitchRow {
@@ -692,6 +738,8 @@ protected:
 	friend class GuardedPushSwitch;
 	friend class RotationalSwitch;
 	friend class IndicatorSwitch;
+	friend class ThumbwheelSwitch;
+	friend class CircuitBrakerSwitch;
 };
 
 class PanelSwitchListener {
@@ -700,6 +748,7 @@ public:
 	virtual void PanelSwitchToggled(ToggleSwitch *s) = 0;
 	virtual void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) = 0;
 	virtual void PanelRotationalSwitchChanged(RotationalSwitch *s) = 0;
+	virtual void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s) = 0;
 };
 
 class PanelSwitches {
@@ -726,6 +775,8 @@ protected:
 	friend class GuardedPushSwitch;
 	friend class RotationalSwitch;
 	friend class IndicatorSwitch;
+	friend class ThumbwheelSwitch;
+	friend class CircuitBrakerSwitch;
 };
 
 
