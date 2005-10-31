@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2005/10/19 11:47:34  tschachim
+  *	Bugfixes for high time accelerations.
+  *	FDAIs optionally disabled.
+  *	
   *	Revision 1.68  2005/10/13 15:55:31  tschachim
   *	Fixed the panel change bug.
   *	Changed panel ids to have the main panel as default panel.
@@ -425,10 +429,14 @@ public:
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
+	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
-	// called by crawler after arrival on launch pad
-	virtual void LaunchVesselRolloutEnd() {};
-
+	// called by crawler 
+	virtual void LaunchVesselRolloutEnd() {};	// after arrival on launch pad
+	virtual void LaunchVesselBuild() {};		// build/unbuild during assembly
+	virtual void LaunchVesselUnbuild() {};
+	
+	int GetBuildStatus() { return buildstatus; }
 	int GetStage() { return stage; };
 	int GetApolloNo() { return ApolloNo; };
 	double GetMissionTime() { return MissionTime; };
@@ -937,6 +945,9 @@ protected:
 	ThreePosSwitch GlycolEvapH2oFlowSwitch;
 	ToggleSwitch CabinTempAutoManSwitch;
 
+	SwitchRow CabinTempAutoControlSwitchRow;
+	ThumbwheelSwitch CabinTempAutoControlSwitch;
+
 	SwitchRow EcsGlycolPumpsSwitchRow;
 	RotationalSwitch EcsGlycolPumpsSwitch;
 
@@ -952,6 +963,15 @@ protected:
 	//
 	SwitchRow OrbiterAttitudeToggleRow;
 	AttitudeToggle OrbiterAttitudeToggle;
+
+	//
+	// EPS sensor signal circuit brakers
+	//
+	SwitchRow EpsSensorSignalDcCircuitBrakersRow;
+	CircuitBrakerSwitch EpsSensorSignalDcMnaCircuitBraker;
+	CircuitBrakerSwitch EpsSensorSignalDcMnbCircuitBraker;
+
+
 
 
 	//
@@ -1417,6 +1437,7 @@ protected:
 	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start);
 	void FuelCellPumpsSwitchToggled(ToggleSwitch *s, int *pump);
+	void CabinTempAutoSwitchToggled();
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	double SetPitchApo();
 	void SetStage(int s);
