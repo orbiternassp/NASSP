@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2005/10/13 15:48:38  tschachim
+  *	Removed comment regarding the panel change bug.
+  *	
   *	Revision 1.36  2005/09/30 11:22:00  tschachim
   *	New panel event handler.
   *	
@@ -611,7 +614,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[11]						= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
 		srf[12]						= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
 		srf[13]						= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
-		srf[14]						= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
+		srf[14]						= oapiCreateSurface (LOADBMP (IDB_ALTIMETER));
 		srf[15]						= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
 		srf[16]						= oapiCreateSurface (LOADBMP (IDB_THRUST));
 		//srf[17]					= oapiCreateSurface (LOADBMP (IDB_HEADING));
@@ -814,7 +817,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	case LMPANEL_RNDZWINDOW: // LEM Rendezvous Window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
-		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
 		break;
 
 	case LMPANEL_LEFTPANEL: // LEM Left Panel
@@ -943,6 +946,10 @@ void sat5_lmpkd::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 }
 
 void sat5_lmpkd::PanelRotationalSwitchChanged(RotationalSwitch *s) {
+
+}
+
+void sat5_lmpkd::PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s) {
 
 }
 
