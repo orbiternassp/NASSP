@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2005/10/19 11:43:01  tschachim
+  *	FDAIs optionally disabled.
+  *	Improved logging.
+  *	
   *	Revision 1.81  2005/10/13 15:54:03  tschachim
   *	Fixed the panel change bug.
   *	
@@ -325,25 +329,17 @@ void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPE
 
 void Saturn::RedrawPanel_G (SURFHANDLE surf)
 {
-	double alpha;
-	double range;
+	double alpha = aZAcc / G;
+	if (alpha > 15)	alpha = 15;
+	if (alpha < -1)	alpha = -1;
 
-	alpha = aZAcc/G;
+	double angle = (-alpha * 180.0 / 12.0) + 180.0;
 
-	//sprintf(oapiDebugString(), "Accel %f", alpha);
-	if (alpha > 15)
-		alpha = 15;
-	if (alpha < -1)
-		alpha = -1;
-
-	range = 235 * RAD;
-	range = range / 15;
-	alpha = 15 - alpha;
 	HDC hDC = oapiGetDC (surf);
-	DrawNeedle (hDC, 27, 27, 26.0, (alpha*range)-50*RAD, g_Param.pen[2], g_Param.pen[3] );//(alpha * range)
+	DrawNeedle (hDC, 40, 40, 35.0, angle * RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
 	oapiReleaseDC (surf, hDC);
 
-	oapiBlt (surf, srf[15], 0, 0, 0, 0, 56, 57, SURF_PREDEF_CK);
+	//oapiBlt (surf, srf[15], 0, 0, 0, 0, 56, 57, SURF_PREDEF_CK);
 }
 
 void Saturn::RedrawPanel_Thrust (SURFHANDLE surf)
@@ -385,7 +381,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 
 #define ALTIMETER_X_CENTER	68
 #define ALTIMETER_Y_CENTER	69
-#define ALTIMETER_RADIUS		52.0
+#define ALTIMETER_RADIUS	55.0
 
 	//sprintf(oapiDebugString(), "altitude %f", alpha);
 	if (alpha > 50000) alpha = 50000;
@@ -395,7 +391,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 4000;
 		alpha = 4000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 4001 && alpha < 6001){
@@ -403,7 +399,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 2000;
 		alpha = 2000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+185*RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+185*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 6001 && alpha < 8001){
@@ -411,7 +407,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 2000;
 		alpha = 2000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+165*RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+165*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 8001 && alpha < 10001){
@@ -419,7 +415,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 2000;
 		alpha = 2000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 10001 && alpha < 20001){
@@ -427,7 +423,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 10000;
 		alpha = 10000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+70*RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+70*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else if (alpha > 20001 && alpha < 40001){
@@ -435,7 +431,7 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 20000;
 		alpha = 20000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+15*RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+15*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
 	else {
@@ -443,10 +439,10 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 		range = range / 10000;
 		alpha = 10000 - alpha;
 		HDC hDC = oapiGetDC (surf);
-		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+10*RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
+		DrawNeedle (hDC, ALTIMETER_X_CENTER, ALTIMETER_Y_CENTER, ALTIMETER_RADIUS, (alpha*range)+10*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
 		oapiReleaseDC (surf, hDC);
 	}
-	oapiBlt (surf, srf[SRF_ALTIMETER], 0, 0, 0, 0, 137, 139, SURF_PREDEF_CK);
+	oapiBlt(surf, srf[SRF_ALTIMETER], 0, 0, 0, 0, 137, 137, SURF_PREDEF_CK);
 }
 
 void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist) {
@@ -555,8 +551,8 @@ void Saturn::InitPanel (int panel)
 		srf[11]							= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
 		srf[12]							= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
 		srf[13]							= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
-		srf[SRF_ALTIMETER]				= oapiCreateSurface (LOADBMP (IDB_ANLG_ALT));
-		srf[15]							= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
+		srf[SRF_ALTIMETER]				= oapiCreateSurface (LOADBMP (IDB_ALTIMETER));
+		//srf[15]							= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
 		srf[SRF_THRUSTMETER]			= oapiCreateSurface (LOADBMP (IDB_THRUST));
 		srf[SRF_SEQUENCERSWITCHES]		= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
 		srf[18]							= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
@@ -580,6 +576,8 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_SWITCHUPSMALL]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUPSMALL));
 		srf[SRF_CMMFDFRAME]				= oapiCreateSurface (LOADBMP (IDB_CMMFDFRAME));
 		srf[SRF_COAS]				    = oapiCreateSurface (LOADBMP (IDB_COAS));
+		srf[SRF_THUMBWHEEL_SMALLFONTS]  = oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_SMALLFONTS));
+		srf[SRF_CIRCUITBRAKER]          = oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -588,7 +586,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHGUARDS],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_ALTIMETER],			g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[15],						g_Param.col[4]);
+		//oapiSetSurfaceColourKey (srf[15],						g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THRUSTMETER],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SEQUENCERSWITCHES],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_ALLROUND],				g_Param.col[4]);
@@ -601,6 +599,8 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_FDAIROLL],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUPSMALL],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_COAS],					g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS],g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKER],		g_Param.col[4]);
 /*		break;
 	}
 */
@@ -847,6 +847,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ECSRADIATORSWITCHES,         				_R(1796,  743, 2023,  772), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSSWITCHES,					 				_R(1787,  848, 2327,  877), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_HIGHGAINANTENNAPITCHPOSITIONSWITCH,			_R(2271, 1019, 2358, 1106), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_GMETER,										_R( 403,  605,  482,  684), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABINTEMPAUTOCONTROLSWITCH,					_R(2441,  843, 2458,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 
 		// Display & keyboard (DSKY), main panel uses the main DSKY.
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -883,6 +885,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 311,  881,  540,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 825, 1428,  901, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSSWITCH,						_R( 736, 1527,  823, 1614), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_EPSSENSORSIGNALDCCIRCUITBRAKERS,				_R( 857,  872,  922,  899), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;    
@@ -1297,7 +1300,7 @@ void Saturn::SetSwitches(int panel) {
 	H2PurgeLineSwitch.Init  (43, 0, 34, 29, srf[SRF_SWITCHUP], FuelCellLatchSwitchesRow); 
 
 	SPSRow.Init(AID_SPS, MainPanel);
-	SPSswitch.Init(0, 0, 38, 48, srf[SRF_SWITCHLEVER], SPSRow, this);
+	SPSswitch.Init(0, 0, 38, 48, srf[SRF_SWITCHLEVER], SPSRow, this, 76);
 
 	SBandNormalSwitchesRow.Init(AID_SBAND_NORMAL_SWITCHES, MainPanel);
 	SBandNormalXPDRSwitch.Init(		  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SBandNormalSwitchesRow);
@@ -1380,6 +1383,9 @@ void Saturn::SetSwitches(int panel) {
 	GlycolEvapH2oFlowSwitch.Init           (456, 0, 34, 29, srf[SRF_THREEPOSSWITCH], EcsSwitchesRow); 
 	CabinTempAutoManSwitch.Init            (506, 0, 34, 29, srf[SRF_SWITCHUP],       EcsSwitchesRow); 
 
+	CabinTempAutoControlSwitchRow.Init(AID_CABINTEMPAUTOCONTROLSWITCH, MainPanel); 
+	CabinTempAutoControlSwitch.Init(0, 0, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], CabinTempAutoControlSwitchRow); 
+
 	EcsGlycolPumpsSwitchRow.Init(AID_ECSGLYCOLPUMPSSWITCH, MainPanel);
 	EcsGlycolPumpsSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], EcsGlycolPumpsSwitchRow);
 
@@ -1400,6 +1406,11 @@ void Saturn::SetSwitches(int panel) {
 	SuitCompressorSwitchesRow.Init(AID_SUITCOMPRESSORSWITCHES, MainPanel);
 	SuitCompressor1Switch.Init(  0, 58, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 	SuitCompressor2Switch.Init( 42,  0, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
+
+	EpsSensorSignalDcCircuitBrakersRow.Init(AID_EPSSENSORSIGNALDCCIRCUITBRAKERS, MainPanel);
+	EpsSensorSignalDcMnaCircuitBraker.Init( 0, 0, 27, 27, srf[SRF_CIRCUITBRAKER], EpsSensorSignalDcCircuitBrakersRow);
+	EpsSensorSignalDcMnbCircuitBraker.Init(38, 0, 27, 27, srf[SRF_CIRCUITBRAKER], EpsSensorSignalDcCircuitBrakersRow);
+
 
 
 	//
@@ -1516,7 +1527,7 @@ void SetupgParam(HINSTANCE hModule) {
 	g_Param.brush[2] = CreateSolidBrush (RGB(154,154,154));  // Grey
 	g_Param.brush[3] = CreateSolidBrush (RGB(3,3,3));  // Black
 	g_Param.pen[0] = CreatePen (PS_SOLID, 1, RGB(224, 224, 224));
-	g_Param.pen[1] = CreatePen (PS_SOLID, 3, RGB(164, 164, 164));
+	g_Param.pen[1] = CreatePen (PS_SOLID, 4, RGB(  0,   0,   0));
 	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB( 77,  77,  77));
 	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB( 77,  77,  77));
 	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(  0,   0,   0));
@@ -2014,7 +2025,11 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 			*pump = SP_VALVE_OPEN;
 		else
 			*pump = SP_VALVE_NONE;	
+
+	} else 	if (s == &CabinTempAutoManSwitch) {
+		CabinTempAutoSwitchToggled();
 	}
+
 }
 
 void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
@@ -2146,6 +2161,13 @@ void Saturn::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 	}
 }
 
+void Saturn::PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s) {
+
+	if (s == &CabinTempAutoControlSwitch) {
+		CabinTempAutoSwitchToggled();
+	}
+}
+
 void Saturn::CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
 
 	if (s->IsUp())
@@ -2197,6 +2219,22 @@ void Saturn::FuelCellPumpsSwitchToggled(ToggleSwitch *s, int *pump) {
 		*pump = SP_PUMP_AUTO;
 	else if (s->IsCenter())
 		*pump = SP_PUMP_OFF;
+}
+
+void Saturn::CabinTempAutoSwitchToggled() {
+
+	if (CabinTempAutoManSwitch.IsUp()) {
+		double targetTemp = 294.0 + CabinTempAutoControlSwitch.GetState() * 6.0 / 9.0; 
+
+		*((double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER:TEMPMIN")) = targetTemp;
+		*((double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER:TEMPMAX")) = targetTemp + 0.5;
+
+		*((double*) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER:TEMPMIN")) = targetTemp;
+		*((double*) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER:TEMPMAX")) = targetTemp + 0.5;
+		
+		*((double*) Panelsdk.GetPointerByString("ELECTRIC:CABINHEATER:MINV")) = targetTemp - 1.0;
+		*((double*) Panelsdk.GetPointerByString("ELECTRIC:CABINHEATER:MAXV")) = targetTemp;
+	}
 }
 
 void Saturn::MousePanel_MFDButton(int mfd, int event, int mx, int my) {
@@ -3090,7 +3128,7 @@ void Saturn::InitSwitches() {
 	dVThrust1Switch.Register(PSH, "dVThrust1Switch", 0, 0);
 	dVThrust2Switch.Register(PSH, "dVThrust2Switch", 0, 0);
 
-	SPSswitch.Register(PSH, "SPSswitch", THREEPOSSWITCH_CENTER);
+	SPSswitch.Register(PSH, "SPSswitch", TOGGLESWITCH_DOWN);
 
 	H2Pressure1Meter.Register(PSH, "H2Pressure1Meter", 0, 400, 10);
 	H2Pressure2Meter.Register(PSH, "H2Pressure2Meter", 0, 400, 10);
@@ -3151,6 +3189,8 @@ void Saturn::InitSwitches() {
 	GlycolEvapH2oFlowSwitch.Register(PSH, "GlycolEvapH2oFlowSwitch", THREEPOSSWITCH_UP, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
 	CabinTempAutoManSwitch.Register(PSH, "CabinTempAutoManSwitch", true);
 
+	CabinTempAutoControlSwitch.Register(PSH, "CabinTempAutoControlSwitch", 5, 9);
+
 	EcsGlycolPumpsSwitch.AddPosition(1, 240);
 	EcsGlycolPumpsSwitch.AddPosition(2, 270);
 	EcsGlycolPumpsSwitch.AddPosition(3, 300);
@@ -3168,6 +3208,9 @@ void Saturn::InitSwitches() {
 	HighGainAntennaPitchPositionSwitch.Register(PSH, "HighGainAntennaPitchPositionSwitch", 3);
 
 	OrbiterAttitudeToggle.SetActive(false);		// saved in LPSwitchState.LPswitch5
+
+	EpsSensorSignalDcMnaCircuitBraker.Register(PSH, "EpsSensorSignalDcMnaCircuitBraker", 0); 
+	EpsSensorSignalDcMnbCircuitBraker.Register(PSH, "EpsSensorSignalDcMnbCircuitBraker", 0); 
 
 
 
