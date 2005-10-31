@@ -83,7 +83,7 @@ IDB_ANNUN               	BITMAP  DISCARDABLE     "Annonciators.bmp"
 IDB_ILMANNUN            	BITMAP  DISCARDABLE     "ilmAnnonciators.bmp"
 IDB_LIGHTS2             	BITMAP  DISCARDABLE     "lights2.bmp"
 IDB_ILMLIGHTS2          	BITMAP  DISCARDABLE     "ilmlights2.bmp"
-IDB_ANLG_ALT            	BITMAP  DISCARDABLE     "Altimeter.bmp"
+IDB_ALTIMETER            	BITMAP  DISCARDABLE     "Altimeter.bmp"
 IDB_ANLG_GMETER         	BITMAP  DISCARDABLE     "Gmeter.bmp"
 IDB_THRUST              	BITMAP  DISCARDABLE     "Thrustmeter.bmp"
 IDB_MASTER_ALARM        	BITMAP  DISCARDABLE     "masteralarm.bmp"
@@ -128,6 +128,8 @@ IDB_ECSINDICATOR			BITMAP	DISCARDABLE     "ECSIndicator.bmp"
 IDB_SWITCHUPSMALL          	BITMAP  DISCARDABLE     "Switchupsmall.bmp"
 IDB_CMMFDFRAME          	BITMAP  DISCARDABLE     "CMMFDFrame.bmp"
 IDB_COAS		          	BITMAP  DISCARDABLE     "coas.bmp"
+IDB_THUMBWHEEL_SMALLFONTS	BITMAP  DISCARDABLE     "thumbwheel_small_fonts.bmp"
+IDB_CIRCUITBRAKER			BITMAP  DISCARDABLE     "circuit_breaker.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
