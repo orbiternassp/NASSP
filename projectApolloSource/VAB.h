@@ -1,0 +1,84 @@
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2005
+
+  VAB vessel
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************** Revision History ****************************
+  *	$Log$
+  **************************************************************************/
+
+class VAB: public VESSEL2 {
+
+public:
+	VAB(OBJHANDLE hObj, int fmodel);
+	virtual ~VAB();
+
+	void clbkSetClassCaps(FILEHANDLE cfg);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
+	void clbkSaveState(FILEHANDLE scn);
+	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+	void clbkPreStep(double simt, double simdt, double mjd);
+	void clbkPostStep(double simt, double simdt, double mjd);
+	void clbkPostCreation();
+
+	void ToggleHighBay1Door();
+	void ToggleHighBay3Door();
+	void BuildSaturnStage();
+	void UnbuildSaturnStage();
+	void SetSaturnName(char *name) { strcpy(saturnName, name); };
+
+protected:
+	bool firstTimestepDone;
+
+	int meshindexVAB;
+	int meshindexSaturn[10];
+	int meshcountSaturn;
+
+	enum DoorStatus { 
+		DOOR_CLOSED, 
+		DOOR_OPEN, 
+		DOOR_CLOSING, 
+		DOOR_OPENING 
+	} highBay1Door_Status, highBay3Door_Status;
+
+	enum CraneStatus { 
+		CRANE_BEGIN, 
+		CRANE_END, 
+		CRANE_BUILDING, 
+		CRANE_UNBUILDING 
+	} crane_Status;
+
+	UINT anim_HighBay1Door;         
+	UINT anim_HighBay3Door;         
+	UINT anim_Crane;
+
+	double highBay1Door_Proc;
+	double highBay3Door_Proc;
+	double crane_Proc;
+
+	char saturnName[256];
+	int saturnVisible;
+
+	SoundLib soundlib;
+	Sound soundEngine;
+
+	void DoFirstTimestep();
+	void DefineAnimations();
+};
