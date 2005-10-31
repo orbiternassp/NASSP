@@ -99,7 +99,7 @@
 #define IDB_ANNUN                       177
 #define IDB_LIGHTS2                     178
 #define IDB_HEADING                     179
-#define IDB_ANLG_ALT                    180
+#define IDB_ALTIMETER                   180
 #define IDB_ANLG_GMETER                 181
 #define IDB_THRUST                      182
 #define IDB_LEM_MAIN_PANEL              183
@@ -305,6 +305,11 @@
 #define IDB_COAS						556
 #define AID_MFDMAINLEFT					557
 #define AID_MFDMAINRIGHT				558
+#define IDB_THUMBWHEEL_SMALLFONTS		559
+#define AID_CABINTEMPAUTOCONTROLSWITCH	560
+#define IDB_CIRCUITBRAKER				561
+#define AID_EPSSENSORSIGNALDCCIRCUITBRAKERS 562
+
 
 // Next default values for new objects
 //
