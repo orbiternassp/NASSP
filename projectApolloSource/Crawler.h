@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/08/05 13:01:49  tschachim
+  *	Saturn detachment handling
+  *	
   *	Revision 1.5  2005/07/05 17:23:11  tschachim
   *	Scenario saving/loading
   *	
@@ -35,14 +38,6 @@
   *	File header inserted.
   *	
   **************************************************************************/
-
-#include "orbitersdk.h"
-#include "stdio.h"
-#include "math.h"
-#include "nasspsound.h"
-#include "OrbiterSoundSDK3.h"
-#include "soundlib.h"
-#include "tracer.h"
 
 class Crawler: public VESSEL2 {
 
@@ -65,6 +60,7 @@ protected:
 	int useForce;
 	int standalone;
 	int padIndex;
+	int showMLPedestals;
 
 	bool firstTimestepDone;
 	bool doAfterLVDetached;
