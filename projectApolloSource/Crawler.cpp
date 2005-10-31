@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/10/31 10:15:06  tschachim
+  *	New VAB.
+  *	
   *	Revision 1.8  2005/10/19 11:06:24  tschachim
   *	Changed log file name.
   *	
@@ -267,13 +270,16 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	else
 		soundEngine.stop();
 
-	if (doAfterLVDetached) AfterLVDetached();
-
 	//sprintf(oapiDebugString(), "Force %i simdt %f vv.z %f", uf, simdt, vv.z);
 
 	/*VECTOR3 pos;
 	GetRelativePos(hML, pos);
 	sprintf(oapiDebugString(), "Dist %f", length(pos));*/
+}
+
+void Crawler::clbkPostStep(double simt, double simdt, double mjd) {
+
+	if (doAfterLVDetached) AfterLVDetached();
 }
 
 void Crawler::SetTouchdownPoint() {
@@ -546,13 +552,13 @@ void Crawler::DetachML() {
 			DetachChild(ah);
 
 			// Move ML to pad, KSC Pad 39A is hardcoded!
-			VESSELSTATUS vs;
+/*			VESSELSTATUS vs;
 			ml->GetStatus(vs);
 			vs.vdata[0].x = -80.6082240;
 			vs.vdata[0].y = 28.6009432;
 			vs.vdata[0].z = 90.0; 
 			ml->DefSetState(&vs);
-
+*/
 			// Notify Saturn that we're on pad
 			Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
 			lav->LaunchVesselRolloutEnd();
@@ -586,14 +592,22 @@ void Crawler::DetachML() {
 
 void Crawler::AfterLVDetached() {
 
+	// Move ML to pad, KSC Pad 39A is hardcoded!
+	VESSEL *ml = oapiGetVesselInterface(hML);
+	VESSELSTATUS vs;
+	ml->GetStatus(vs);
+	vs.vdata[0].x = -80.6082240 * RAD;
+	vs.vdata[0].y = 28.6009432 * RAD;
+	vs.vdata[0].z = 90.0 * RAD; 
+	ml->DefSetState(&vs);
+
+
 	// Move LV to pad, KSC Pad 39A is hardcoded!
 	VESSEL *lv = oapiGetVesselInterface(hLV);
-
-	VESSELSTATUS vs;
 	lv->GetStatus(vs);
-	vs.vdata[0].x = -80.6082242; 
-	vs.vdata[0].y =  28.6008442;
-	vs.vdata[0].z = 270.0; 
+	vs.vdata[0].x = -80.6082242 * RAD; 
+	vs.vdata[0].y =  28.6008442 * RAD;
+	vs.vdata[0].z = 270.0 * RAD; 
 	lv->DefSetState(&vs);
 
 	doAfterLVDetached = false;

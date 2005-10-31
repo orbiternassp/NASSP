@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/10/31 10:30:35  tschachim
+  *	New VAB.
+  *	
   *	Revision 1.6  2005/08/05 13:01:49  tschachim
   *	Saturn detachment handling
   *	
@@ -51,6 +54,7 @@ public:
 	int clbkConsumeDirectKey(char *kstate);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep (double simt, double simdt, double mjd);
+	void clbkPostStep(double simt, double simdt, double mjd);
 
 protected:
 	double velocity;
