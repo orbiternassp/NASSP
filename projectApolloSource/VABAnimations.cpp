@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/10/31 11:59:22  tschachim
+  *	New VAB.
+  *	
   **************************************************************************/
 
 #include "orbitersdk.h"
@@ -67,6 +70,7 @@ void VAB::BuildSaturnStage() {
 	OBJHANDLE hLV = oapiGetVesselByName(saturnName);
 	if (!hLV) return;
 	Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
+	if (lav->GetStage() != ROLLOUT_STAGE) return;
 
 	if (lav->GetBuildStatus() > 0) { 
 		lav->LaunchVesselBuild();
@@ -88,6 +92,7 @@ void VAB::UnbuildSaturnStage() {
 	OBJHANDLE hLV = oapiGetVesselByName(saturnName);
 	if (!hLV) return;
 	Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
+	if (lav->GetStage() != ROLLOUT_STAGE) return;
 
 	if (lav->GetBuildStatus() <= 0) return;
 	if (lav->GetBuildStatus() > 1) {	
