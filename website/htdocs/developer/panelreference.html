@@ -49,12 +49,61 @@
         <th width="5%" scope="col"><div align="center" class="style1">Grid</div></th>
       </tr>	  
       <tr valign="top">
+        <td>ALTIMETER</td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">A</div></td>
+        <td><div align="center">C-22</div></td>
+        <td>Indicates the altitude of the spacecraft in feet. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>MASTER ALARM switch-light </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">C</div></td>
+        <td><div align="center">H-17</div></td>
+        <td>Illuminates red to alert the crew of a C/W alarm condition, which is indicated by the system status lights. Pressing the switch resets the master alarm. This switch-light is not illuminated when the C/W system is in boost mode to avoid confusion with the ABORT button. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>ACCEL G meter </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">I-17</div></td>
+        <td>Displays the acceleration along the spacecraft X-axis in g. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>SPS THRUST switch</td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">E</div></td>
+        <td><div align="center">N-16</div></td>
+        <td>When switched to DIRECT ON, the SPS engine can be controlled with the Orbiter main thruster control, otherwise it's disabled. </td>
+        <td>This is probably not the correct functionality.</td>
+      </tr>
+      <tr valign="top">
+        <td>IMU CAGE switch </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">G</div></td>
+        <td><div align="center">P-15</div></td>
+        <td>When switched to CAGE, the IMU is caged with all three gimbal angles to 0&deg;, otherwise the caging is released.</td>
+        <td><p>At the start of the simulation the IMU is turned off and the IMU CAGE switch is set to CAGE. When you set it to OFF, the IMU is turned on. After that's the IMU CAGE switch works normally, so you can't turn it off again. </p>
+          <p>The IMU should be turned on and off by using the G/N IMU PWR switch on panel 100, which doesn't exists at the moment. </p></td>
+      </tr>
+      <tr valign="top">
         <td>ABORT light </td>
         <td><div align="center">1</div></td>
         <td><div align="center">I</div></td>
         <td><div align="center">I-22</div></td>
         <td>When pressed, an abort is requested and the light illuminates yellow. </td>
         <td>Should illuminate red to indicate an abort requested by ground control, not pressable. </td>
+      </tr>
+      <tr valign="top">
+        <td>EVENT TIMER </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">I-22</div></td>
+        <td>Digital event timer provides crew with means of monitoring and timing events. Event timer will start automatically when lift-off occurs and is not working before that. </td>
+        <td>Is it really not working before lift-off? </td>
       </tr>
       <tr valign="top">
         <td>LV RATE light </td>
@@ -103,8 +152,8 @@
         <td><div align="center">1</div></td>
         <td><div align="center">I</div></td>
         <td><div align="center">L-23</div></td>
-        <td>-</td>
-        <td>No function yet. </td>
+        <td>Backup switch to jettison CM apex cover. </td>
+        <td>&nbsp;</td>
       </tr>
       <tr valign="top">
         <td>LES MOTOR FIRE switch </td>
@@ -119,8 +168,8 @@
         <td><div align="center">1</div></td>
         <td><div align="center">I</div></td>
         <td><div align="center">M-23</div></td>
-        <td>-</td>
-        <td>No function yet. </td>
+        <td>Backup switch to deploy drogue parachutes. </td>
+        <td>&nbsp;</td>
       </tr>
       <tr valign="top">
         <td>CANARD DEPLOY switch </td>
@@ -135,7 +184,7 @@
         <td><div align="center">1</div></td>
         <td><div align="center">I</div></td>
         <td><div align="center">N-21</div></td>
-        <td>Switch for normal CSM/LV separation after ascent phase of mission. </td>
+        <td>Press for normal CSM/LV separation after ascent phase of mission. </td>
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
@@ -143,8 +192,8 @@
         <td><div align="center">1</div></td>
         <td><div align="center">I</div></td>
         <td><div align="center">N-23</div></td>
-        <td>-</td>
-        <td>No function yet. </td>
+        <td>Backup switch to deploy drogue parachutes. </td>
+        <td>&nbsp;</td>
       </tr>
       <tr valign="top">
         <td>CM RCS He DUMP switch </td>
@@ -155,12 +204,101 @@
         <td>No function yet. </td>
       </tr>
       <tr valign="top">
+        <td>EVENT TIMER RESET DOWN switch </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">L</div></td>
+        <td><div align="center">P-21</div></td>
+        <td>RESET sets the event timer to 0 and stops counting. When switched to center position the event timer counts up when running otherwise it counts down.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>EVENT TIMER START STOP switch </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">L</div></td>
+        <td><div align="center">P-22</div></td>
+        <td>START starts the event timer, STOP stops it. The event timer is not working before lift-off and is set to 0 and started at lift-off. </td>
+        <td><p>Is it really not working before lift-off? </p>
+        <p>Up position is spring-loaded to center position. </p></td>
+      </tr>
+      <tr valign="top">
+        <td>EVENT TIMER MIN switch </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">L</div></td>
+        <td><div align="center">P-22</div></td>
+        <td>Increases or decreases the event timer minutes in tens or units depending on the EVENT TIMER RESET DOWN switch. </td>
+        <td>Spring-loaded to center position.</td>
+      </tr>
+      <tr valign="top">
+        <td>EVENT TIMER SEC switch </td>
+        <td><div align="center">1</div></td>
+        <td><div align="center">L</div></td>
+        <td><div align="center">P-23</div></td>
+        <td>Increases or decreases the event timer seconds in tens or units depending on the EVENT TIMER RESET DOWN switch. </td>
+        <td>Spring-loaded to center position.</td>
+      </tr>
+      <tr valign="top">
+        <td>CRYO PRESS status light</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">A</div></td>
+        <td><div align="center">C-31</div></td>
+        <td>Indicates when the pressure of a hydrogen cryogenic tank is below 220 psi or above 270 psi or the pressure of a oxygen cryogenic tank is below 800 psi or above 950 psi. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>CO<sub>2</sub> PP HI status light </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">A</div></td>
+        <td><div align="center">C-32</div></td>
+        <td>Indicates when CO<sub>2</sub> partial pressure in the suit circuit reaches 7.6 mmHg. </td>
+        <td>The light is wrongly labeled with &quot;CO<sub>2</sub> PRESS&quot; . </td>
+      </tr>
+      <tr valign="top">
+        <td>GLYCOL TEMP LOW status light </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">A</div></td>
+        <td><div align="center">C-32</div></td>
+        <td>Indicates when the temperature of the radiator outlet of the  primary water-glycol coolant loop drops below -30 &deg;F. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>FC 1/2/3 status light </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">A</div></td>
+        <td><div align="center">C-33</div></td>
+        <td><p>Indicates one of the following conditions in the respective fuel cell:</p>
+          <ul>
+            <li>H<sub>2</sub> flow rate above 0.171 lb/hr</li>
+            <li>O<sub>2</sub> flow rate above 1.276 lb/hr</li>
+            <li>   Skin temperature below 360 &deg;F or above 475 &deg;F</li>
+            <li>Condenser exhaust temperature below 150 &deg;F or above 175 &deg;F</li>
+            <li> Radiator outlet temperature below - 30 &deg;F</li>
+          </ul>
+        <p></td>
+        <td>To avoid spurious alarms the temperature limits are weakened during higher time accelerations in the current implementation.</td>
+      </tr>
+      <tr valign="top">
+        <td>O<sub>2</sub> FLOW HIGH status light </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">A</div></td>
+        <td><div align="center">D-34</div></td>
+        <td>Indicates when total ECS oxygen flow reaches 1.0 lb/hr for a period of time exceeding 16.5 s. </td>
+        <td>To avoid spurious alarms the limit is weakened during higher time accelerations in the current implementation.</td>
+      </tr>
+      <tr valign="top">
+        <td>SUIT COMPRESSOR status light </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">A</div></td>
+        <td><div align="center">D-35</div></td>
+        <td>Indicates suit compressor differential pressure below 0.22 psi. </td>
+        <td>To avoid spurious alarms the limit is weakened during higher time accelerations in the current implementation.</td>
+      </tr>
+      <tr valign="top">
         <td>DSKY (all switches and diplays) </td>
         <td><div align="center">2</div></td>
         <td><div align="center">C</div></td>
         <td>
           <div align="center">-</div></td>
-        <td>(See user documentation for more informations)</td>
+        <td>(See extra documentation for more informations)</td>
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
@@ -203,6 +341,166 @@
         <td>Spring-loaded to down position. </td>
       </tr>
       <tr valign="top">
+        <td>2 ENG OUT switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">N-25</div></td>
+        <td>-</td>
+        <td>No function yet. </td>
+      </tr>
+      <tr valign="top">
+        <td>LV RATES switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">N-26</div></td>
+        <td>-</td>
+        <td>No function yet. </td>
+      </tr>
+      <tr valign="top">
+        <td>TWR JETT 1/2 switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">N-26</div></td>
+        <td>When either switch is set to AUTO, automatic tower jettison is enabled. When both switches are set to OFF (center), automatic tower jettison is disabled. Switching either switch to up position, manual tower jettison is initiated. </td>
+        <td>Works only between SIC/SII staging and SII/SIVB staging. Up position is spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
+        <td>S-II/S-IVB LV STAGE switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">O-24</div></td>
+        <td>Switching to LV STAGE (up)  initiates manual SII/SIVB staging. </td>
+        <td>Works only between SIC/SII staging and automatic SII/SIVB staging.</td>
+      </tr>
+      <tr valign="top">
+        <td>MAIN RELEASE switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">D</div></td>
+        <td><div align="center">P-24</div></td>
+        <td>-</td>
+        <td>No function yet. </td>
+      </tr>
+      <tr valign="top">
+        <td>PRPLNT DUMP AUTO switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">E</div></td>
+        <td><div align="center">N-24</div></td>
+        <td>-</td>
+        <td>No function yet. </td>
+      </tr>
+      <tr valign="top">
+        <td>LAUNCH VEHICLE-GUIDANCE switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">F</div></td>
+        <td><div align="center">O-24</div></td>
+        <td>-</td>
+        <td>No function yet. </td>
+      </tr>
+      <tr valign="top">
+        <td>XLUNAR INJECT switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">G</div></td>
+        <td><div align="center">O-26</div></td>
+        <td>Enables (up) or disables (down) the SIVB for the TLI burn. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>SM RCS HELIUM 1 A/B/C/D indicators </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">F-30</div></td>
+        <td>Indicates if the  SM RCS helium 1 valves are closed (striped-line) or open (gray). </td>
+        <td>The valves have to be closed to enable the SM RCS. </td>
+      </tr>
+      <tr valign="top">
+        <td>SM RCS HELIUM 1 A/B/C/D switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">G-30</div></td>
+        <td>Momentary switch position OPEN/CLOSE opens or closes SM RCS helium 1 valves.</td>
+        <td>Spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
+        <td>SM RCS HELIUM 2 A/B/C/D indicators</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">H-30</div></td>
+        <td>Indicates if the SM RCS helium 2 valves are closed (striped-line) or open (gray). </td>
+        <td>The valves have to be closed to enable the SM RCS. </td>
+      </tr>
+      <tr valign="top">
+        <td>SM RCS HELIUM 2 A/B/C/D switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">I-30</div></td>
+        <td>Momentary switch position OPEN/CLOSE opens or closes SM RCS helium 2 valves.</td>
+        <td>Spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
+        <td>SM RCS PRIM PRPLNT A/B/C/D indicators </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">I-30</div></td>
+        <td>Indicates if the SM RCS primary propellant isolation valves are closed (striped-line) or open (gray). </td>
+        <td>The valves have to be open to enable the SM RCS. </td>
+      </tr>
+      <tr valign="top">
+        <td>SM RCS PROPELLANT A/B/C/D switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">J-30</div></td>
+        <td>Momentary switch position OPEN/CLOSE opens or closes SM RCS primary propellant isolation valves.</td>
+        <td>Should  open or close both SM RCS primary and secondary propellant isolation valves. Spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
+        <td>CM RCS PRPLNT1/2 indicators</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">K-29</div></td>
+        <td>Indicates if the CM RCS propellant isolation valves are closed (striped-line) or open (gray). </td>
+        <td>The valves have to be open to enable the CM RCS. </td>
+      </tr>
+      <tr valign="top">
+        <td>SM RCS SEC PRPLNT A/B/C/D indicators</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">K-30</div></td>
+        <td>Indicates if the SM RCS primary propellant isolation valves are closed (striped-line) or open (gray). </td>
+        <td>The valves have to be open to enable the SM RCS. </td>
+      </tr>
+      <tr valign="top">
+        <td>CM RCS PRPLNT1/2 switches</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">L-29</div></td>
+        <td>Momentary switch position OPEN/CLOSE opens or closes CM RCS propellant isolation valves.</td>
+        <td>Spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
+        <td>SM RCS SEC PRPLNT FUEL PRESS A/B/C/D switches</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">I</div></td>
+        <td><div align="center">L-30</div></td>
+        <td>Momentary switch position OPEN/CLOSE opens or closes SM RCS secondary propellant isolation valves.</td>
+        <td>Should open or close SM RCS secondary propellant fuel pressure valves. Spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
+        <td>UP TLM CM switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">J</div></td>
+        <td><div align="center">I-28</div></td>
+        <td>If switched to ACCEPT (up) the AGC accepts ground telemetry data, otherwise it does'nt. </td>
+        <td>Connected to AGC channel 033, bit 10.</td>
+      </tr>
+      <tr valign="top">
+        <td>UP TLM IU switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">J</div></td>
+        <td><div align="center">I-29</div></td>
+        <td>-</td>
+        <td>No function yet. </td>
+      </tr>
+      <tr valign="top">
         <td>MISSION TIMER indicator</td>
         <td><div align="center">2</div></td>
         <td><div align="center">N</div></td>
@@ -211,12 +509,141 @@
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
+        <td>MISSION TIMER HOURS switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">N</div></td>
+        <td><div align="center">E-35</div></td>
+        <td>Increases the mission timer hours in tens or units. </td>
+        <td>Spring-loaded to center position.</td>
+      </tr>
+      <tr valign="top">
+        <td>MISSION TIMER MIN switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">N</div></td>
+        <td><div align="center">E-36</div></td>
+        <td>Increases the mission timer minutes in tens or units. </td>
+        <td>Spring-loaded to center position.</td>
+      </tr>
+      <tr valign="top">
+        <td>MISSION TIMER SEC switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">N</div></td>
+        <td><div align="center">E-36</div></td>
+        <td>Increases the mission timer seconds in tens or units. </td>
+        <td>Spring-loaded to center position.</td>
+      </tr>
+      <tr valign="top">
+        <td>MISSION TIMER switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">N</div></td>
+        <td><div align="center">F-36</div></td>
+        <td>START starts the mission timer, STOP stops it and RESET resets it. The mission timer is not working before lift-off and is set to 0 and started at lift-off. </td>
+        <td><p>Is it really not working before lift-off? </p>
+        <p>Down position is spring-loaded to center position. </p></td>
+      </tr>
+      <tr valign="top">
+        <td>CAUTION/WARNING NORMAL/BOOST/ACK switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">O</div></td>
+        <td><div align="center">F-34</div></td>
+        <td>When switched to BOOST, the left master alarm switch-light on the main panel will not illuminate. When switched to ACK the C/W status lights will illuminate only when a master alarm switch-light is pressed. NORMAL means normal operations. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>CAUTION/WARNING CM/CSM switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">O</div></td>
+        <td><div align="center">F-35</div></td>
+        <td>When switched to CSM both CM and SM systems are monitored. Switch to CM before CM/SM separation to monitor only the CM systems. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>CAUTION/WARNING POWER switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">O</div></td>
+        <td><div align="center">F-35</div></td>
+        <td>When switched to OFF, the C/W system is turned off, otherwise it's turned on. </td>
+        <td>Turning on the C/W system triggers the master alarm switch-light.</td>
+      </tr>
+      <tr valign="top">
+        <td>CAUTION/WARNING LAMP TEST switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">O</div></td>
+        <td><div align="center">F-36</div></td>
+        <td>Switching to 1 (up) illuminates the left C/W status lights and the left master alarm switch-light, switching to 2 (down) the right side. </td>
+        <td>Spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
         <td>CABIN FAN 1/2 switches</td>
         <td><div align="center">2</div></td>
         <td><div align="center">P</div></td>
         <td><div align="center">G-34</div></td>
-        <td>Cabin fan sound goes on if one switch is ON </td>
-        <td>Not connected to the internal systems</td>
+        <td>If at least one switch is ON the primary and secondary cabin heat exchangers are turned on and the cabin fan sound goes on. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>ECS INDICATORS switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-33</div></td>
+        <td><p>If switched to PRIM, the following indicators are showing the values of the primary water-glycol coolant loop:</p>
+          <ul>
+            <li> ECS RAD TEMP INLET meter</li>
+            <li>GLY EVAP TEMP OUTLET meter</li>
+            <li>GLY EVAP STEAM PRESS meter</li>
+            <li>GLYCOL DISCH PRESS meter</li>
+            <li>ACCUM QUANTITY meter</li>
+          </ul>
+        <p>When switched to SEC, the vales of the secondary loop are displayed. </p></td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>ECS RAD TEMP INLET meter</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-34</div></td>
+        <td>Displays temperature of the primary or secondary radiator inlet in &deg;F, dependent on position of the ECS INDICATORS switch.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>ECS RAD TEMP PRIM OUTLET meter </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-35</div></td>
+        <td>Displays temperature of the primary radiator outlet in &deg;F.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>ECS RAD TEMP SEC OUTLET meter </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-36</div></td>
+        <td>Displays temperature of the secondary radiator outlet in &deg;F.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>GLY EVAP TEMP OUTLET meter</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-36</div></td>
+        <td>Displays temperature of the primary or secondary evaporator outlet in &deg;F, dependent on position of the ECS INDICATORS switch.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>GLY EVAP STEAM PRESS meter</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-37</div></td>
+        <td>Displays the steam pressure of the primary or secondary evaporator in psi, dependent on position of the ECS INDICATORS switch.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>GLYCOL DISCH PRESS meter</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">I-38</div></td>
+        <td>Displays primary or secondary water-glycol pumps output pressure in psi, dependent on position of the ECS INDICATORS switch.</td>
+        <td>&nbsp;</td>
       </tr>
       <tr valign="top">
         <td>SUIT TEMP meter </td>
@@ -259,12 +686,181 @@
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
+        <td>ECS RADIATOR indicator </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">J-33</div></td>
+        <td>Shows grey indication if flow control No. 1 is in operation, otherwise &quot;2&quot; indication. </td>
+        <td>Not connected to the internal systems. </td>
+      </tr>
+      <tr valign="top">
+        <td>ECS RADIATORS FLOW CONT AUTO switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">J-33</div></td>
+        <td>Places radiator flow control in AUTO mode or selects No. 1 or 2 flow control. </td>
+        <td>The ECS RADIATOR indicator shows the selected flow control, but it's not connected to the internal systems. </td>
+      </tr>
+      <tr valign="top">
+        <td>ECS RADIATORS FLOW CONT PWR switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">J-33</div></td>
+        <td>Applies power to the ECS RADIATORS FLOW CONT AUTO switch when switched to PWR or to the ECS RADIATORS MAN SEL switch when switched to MAN SEL MODE. OFF (center) removes power from both switches. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>ECS RADIATORS MAN SEL switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">J-34</div></td>
+        <td>RAD1 selects  ECS radiator 1 as primary coolant loop radiator, RAD2 selects  ECS radiator 2 as primary coolant loop radiator and OFF (center) bypasses both radiators </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>ECS RADIATORS HEATER PRIM switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">J-34</div></td>
+        <td>PRIM 1/2 enables the prim. ECS radiators heater, OFF (center) disables it. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>ECS RADIATORS HEATER SEC switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">J-35</div></td>
+        <td>SEC enables the sec. ECS radiators heater, OFF (down) disables it. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
         <td>SUIT COMPR &#916;P meter </td>
         <td><div align="center">2</div></td>
         <td><div align="center">P</div></td>
         <td><div align="center">J-36</div></td>
         <td>Displays differential pressure between the compressor inlet and outlet manifolds in psi. </td>
         <td>The purpose of the left meter is unkown, it shows also the O<sub>2</sub> flow in lb/hr at the moment. </td>
+      </tr>
+      <tr valign="top">
+        <td>ACCUM QUANTITY meter</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">J-37</div></td>
+        <td>Displays quantity (in %) of water-glycol in the primary or secondary glycol accumulator, dependent on position of the ECS INDICATORS switch.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>H2O QUANTITY meter </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">J-37</div></td>
+        <td>Displays quantity (in %) of water in the potable or waste water tank, dependent on position of the H2O QTY IND switch.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>POT H2O HTR switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-32</div></td>
+        <td>-</td>
+        <td>No function yet. </td>
+      </tr>
+      <tr valign="top">
+        <td>SUIT CIRCUIT ACCUM AUTO switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-33</div></td>
+        <td>AUTO 1/2 turns on the suit circuit water accumulator (part of the suit compressor CO<sub>2</sub>  absorber), OFF (center) turns it off and provides power to the SUIT CIRCUIT ACCUM ON switch.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>SUIT CIRCUIT ACCUM ON switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-33</div></td>
+        <td>ON 1/2 turn on the suit circuit water accumulator, OFF (center) turns it off.</td>
+        <td>Spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
+        <td>SUIT CIRCUIT HEAT EXCH switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-34</div></td>
+        <td>ON turns on the primary and secondary suit heat exchanger, BYPASS turns them off, center position does nothing. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>SEC COOLANT LOOP EVAP switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-35</div></td>
+        <td>EVAP turns on the secondary glycol evaporator in automatic mode, RESET closes the steam pressure valve and OFF (center) turns it off. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>SEC COOLANT LOOP PUMP switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-35</div></td>
+        <td>AC 1/2 turn on the secondary water-glycol pump, OFF (center) turns off the pump. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>H2O QTY IND switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-36</div></td>
+        <td>POT selects the potable water tank quantity signal for display on the H2O QUANTITY meter, WASTE selects the waste water tank. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>GLYCOL EVAP TEMP IN switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-36</div></td>
+        <td>When switched to AUTO the prim. glycol evaporator inlet temp. valve automatically regulates the temperature of coolant entering the evaporator inlet by mixing hot and cold water-glycol. MAN turns off the automatic control.</td>
+        <td>Manual control of the prim. glycol evaporator inlet temp. valve is not possible at the moment, because the panel for that is missing. </td>
+      </tr>
+      <tr valign="top">
+        <td>GLYCOL EVAP STEAM PRESS AUTO MAN switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-37</div></td>
+        <td><p>When switched to AUTO the primary evaporator steam pressure is controlled automatically and the GLYCOL EVAP STEAM PRESS INCR DECR switch is disabled. Switching to MAN turns off the automatic control and enables the GLYCOL EVAP STEAM PRESS INCR DECR switch.</p>
+        </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>GLYCOL EVAP STEAM PRESS INCR DECR switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-37</div></td>
+        <td>INCR increases the primary evaporator steam pressure, DECR decreases it. OFF (center) does nothing. Valve full travel requires 58s.</td>
+        <td>Spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
+        <td>GLYCOL EVAP H2O FLOW switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-38</div></td>
+        <td>AUTO turns on the  primary evaporator, OFF (center) turns it off and ON turns it on manually running at maximum evaporation.</td>
+        <td>Down position is spring-loaded to center position. </td>
+      </tr>
+      <tr valign="top">
+        <td>CABIN TEMP AUTO MAN switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-38</div></td>
+        <td>When switched to AUTO, cabin temperature is controlled by the CABIN TEMP AUTO control thumbwheel. MAN turns off the automatic control.</td>
+        <td>Manual control of the cabin temperature is not possible at the moment, because the panel for that is missing. </td>
+      </tr>
+      <tr valign="top">
+        <td>CABIN TEMP AUTO control </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">P</div></td>
+        <td><div align="center">K-40</div></td>
+        <td>Thumbwheel permits control of the cabin temperature, which can be selected between 70 &deg;F and 80 &deg;F. The numbers on the thumbwheel don't correspond to any temperature. </td>
+        <td>&nbsp;</td>
       </tr>
       <tr valign="top">
         <td>H<sub>2</sub> PRESSURE 1/2 meters</td>
@@ -345,6 +941,16 @@
         <td><div align="center">G-40</div></td>
         <td>Controls power to O<sub>2</sub> tanks No. 1 and No. 2 fans motors. When switched to AUTO, fans are turned on at 865 psi and turned off at 935 psi. </td>
         <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>HIGH GAIN ANTENNA PITCH POSITION switch</td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">R</div></td>
+        <td><div align="center">N-39</div></td>
+        <td><p>TEMPORARY TEST SWITCH FOR ECS! </p>
+        <p>If the  switch is set to +90&deg; (up) there's no additional ECS heating, each position adds 800 W of heating power, so in the -90&deg; position (down) the coolant loop is heated with a heating power of 4800 W.</p></td>
+        <td><p>To test and play with the primary water-glycol coolant loop this switch can be used to heat the coolant loop with a boiler. </p>
+        <p>This function will be removed and replaced with the correct one in later versions. </p></td>
       </tr>
       <tr valign="top">
         <td>SUIT CAB &#916;P meter </td>
@@ -486,6 +1092,14 @@
         <td><div align="center">C</div></td>
         <td><div align="center">N-60</div></td>
         <td>Switch position AC1/2 applies power to suit compressor 2 from AC bus 1/2, switch position OFF turns off the suit compressor. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>ECS GLYCOL PUMPS switch </td>
+        <td><div align="center">4</div></td>
+        <td><div align="center">C</div></td>
+        <td><div align="center">O-59</div></td>
+        <td>OFF turns off the primary water-glycol pump, the other positions turn it on. </td>
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">

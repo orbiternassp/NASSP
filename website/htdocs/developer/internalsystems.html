@@ -12,17 +12,17 @@
     <p>In order to make Project Apollo more realistic, some of it's mechanical, hydraulical and electrical devices, the &quot;internal systems&quot;, are simulated. The internal systems affects the displays and controls of the panels and the behavior of the spacecrafts 
 
 themselves. In terms of the real Apollo project these systems are mainly the EPS (Electrical Power System) and ECS (Environmental Control System). </p>
-    <p>At the moment only a few system components are integrated. This is an ongoing development, so check out this site occasionally for new features and improvements.</p>
+    <p>At the moment only a few system components are implemented. This is an ongoing development, so please check out this site occasionally for new features and improvements.</p>
     <p>The internal systems in Project Apollo are simulated with a slightly modified version of Radu Poenaru's System &amp; Panel SDK, which can be found here: <a href="http://217.10.196.198/Orbiter/main.html">http://217.10.196.198/Orbiter/main.html</a>. But only the &quot;system&quot; part of the PanelSDK is used, not the panel part. The panels are still managed by the Project Apollo toggleswitch library. </p>
     <p>The following documentation describes the systems and components as they are modelled in Project Apollo with the PanelSDK. It's no documentation of the real Apollo systems. Of course both systems are similar and should behave identical as much as possible, but of course there are some differences and simplifications. </p>
     <p>For additional informations please also take a look at the forum topic about the internal systems here: <a href="http://www.ibiblio.org/mscorbit/phpBB2/viewtopic.php?t=132">http://www.ibiblio.org/mscorbit/phpBB2/viewtopic.php?t=132</a>.</p>
     <h3>Command and Service Module (CSM) Systems </h3>
-    <p>The following diagram shows the components of the internal systems of the Command and Service Module (CSM) as they are modelled with the PanelSDK. These components are defined in the &quot;SaturnSystems.cfg&quot; file in the Config\ProjectApollo folder.</p>
-    <p><img src="../images/csmhydraulicsystems.gif" width="640" height="436"></p>
+    <p>The following diagram shows the components of the internal systems of the Command and Service Module (CSM) as they are modelled with the PanelSDK. These components are defined in the &quot;SaturnSystems.cfg&quot; file in the Config\ProjectApollo folder. Please note hat the values in the diagram refer to the systems in &quot;flight configuration&quot;, on the launch pad the suit and cabin pressure is higher, for example.</p>
+    <p><img src="../images/csmhydraulicsystems.gif" width="1000" height="476"></p>
     <h3>Flight Plan</h3>
-    <p>In the  flight plan the sequence of events related to the internal systems during an Apollo mission is shown. At the moment these events are controlled automatically, in later versions perhaps there will be a checklist or different 
+    <p>In the  flight plan the sequence of events related to the internal systems during an Apollo mission is shown. At the moment these events are controlled automatically so you don't have to care about it, in later versions perhaps there will be a checklist or different 
     <span class="postbody">&quot;levels of realism&quot; will be available. </span></p>
-    <p><span class="postbody">But of course you can control the internal systems by yourself and so change the </span>system state and the sequence of events. For example if you turn off the suit compressors after crew ingress, your suit compressor delta pressure reading will drop below 0 psi you'll get more than 7.6 mmHg CO<sub>2</sub> partial pressure in about 10 minutes, which is obviously not the normal system state. </p>
+    <p><span class="postbody">But of course you can control the internal systems by yourself and so change the </span>system state and the sequence of events. For example if you turn off the suit compressors after crew ingress, your suit compressor delta pressure reading will drop below 0 psi and you'll get more than 7.6 mmHg CO<sub>2</sub> partial pressure in about 10 minutes, which is obviously not the normal system state. </p>
     <table width="100%"  border="1" cellspacing="0">
       <tr bgcolor="#023C8C">
         <th width="18%" scope="col"><span class="style1">Misson Elapsed Time </span></th>
@@ -45,7 +45,7 @@ themselves. In terms of the real Apollo project these systems are mainly the EPS
         O<sub>2</sub> flow 0 lb/hr</p>
         </td>
         <td valign="top"> <p>After the start of a prelaunch scenario it takes about 5 minutes until the measured values settled down. </p>
-        <p>No crew at this moment. </p></td>
+        <p>No crew at this time. </p></td>
       </tr>
       <tr>
         <td valign="top">-1 h 40 min </td>
@@ -91,10 +91,11 @@ Suit cabin &#916;P -1.0 to -3.5 inH<sub>2</sub>O</p>
       </tr>
     </table>
     <h3>Operational Procedures</h3>
-    <p>This section provides step-by-step examples and instructions how to use the internal systems. Hopefully you get a better feeling how to work with the EPS and ECS. It is assumed that the spacecraft is in a &quot;stable condition&quot; without flying manoeuvers with ECS in &quot;flight configuration&quot;, for example during Trans Lunar Coast and you can use time acceleration up to 1000 so that all of the internal systems have reasonable reaction times.</p>
+    <p>This section provides step-by-step examples and instructions how to use the internal systems. Hopefully this will help users to get a better understanding and feeling how to work with the EPS and ECS. In these procedures it is assumed that the spacecraft is in a &quot;stable condition&quot; without flying manoeuvers with ECS in &quot;flight configuration&quot;, for example during Trans Lunar Coast and you can use time acceleration up to 1000 so that all of the internal systems have reasonable reaction times.</p>
     <h4>CSM ECS monitoring check</h4>
-    <p>This is the part of the original Apollo documentation used for regular checking the most important ECS components. At the moment not all displays and controls are simulated. These  procedures are from the <em>Apollo-Soyuz test project Operations handbook reference issue </em>(see <a href="#references">below</a>)<em>. </em></p>
+    <p>This is the part of the original Apollo documentation used for regular checking the most important ECS components.  These  procedures are from the <em>Apollo-Soyuz test project Operations handbook reference issue </em>(see <a href="#references">below</a>)<em>. </em></p>
     <p><img src="../images/aoh-ecscheck.gif" width="640" height="863"></p>
+    <p>
     <h4>CSM suit compressor shutdown and restart</h4>
     <p>During normal operations suit compressor 1 is turned on in order to drive  the suit atmosphere regeneration systems, which  remove CO<sub>2</sub>, water and other unwanted substances. Suit compressor 2 is redundant and turned off. The following procedure demonstrates the necessity of the suit compressor.</p>
     <ul>
@@ -105,12 +106,42 @@ Suit cabin &#916;P -1.0 to -3.5 inH<sub>2</sub>O</p>
       <li>Switch the SUIT COMPRESSOR 1 switch back to AC1. The SUIT COMPR &#916;P meter goes back to 0.3 - 0.4 psi, the PART PRESS CO<sub>2</sub> meter slowly begins to decrease.<p></li>
       <li>After about 1 hour the PART PRESS CO<sub>2</sub> meter should show approx. 2 mmHg and is normal again. </li>
     </ul>
+    <p>
+    <h4>CSM cooling with the primary water-glycol coolant loop</h4>
+    <p>At the moment the primary and secondary water-glycol cooling systems are only used to control the suit and cabin temperature. The suit is heated by the crew at about 10 W per crew member. In reality the cooling system also has to cool all the electrical devices like the IMU or the BMAGs and so has to remove much more heat from the CSM. But the heating of these devices is not simulated at the moment, so the cooling systems are running quite idle in the initial state, all temperatures are very low. </p>
+    <p>To test and play with the primary water-glycol coolant loop you can use the HIGH GAIN ANTENNA PITCH POSITION switch to heat the coolant loop with a boiler. Of course this is not the realistic functionality of this of switch, but that way you can watch the behavior of the cooling system during different heat loads. If the HIGH GAIN ANTENNA PITCH POSITION switch is set to +90&deg; (up)  there's no additional heating, each position adds 800 W of heating power, so in the -90&deg; position (down) the coolant loop is heated with a heating power of 4800 W, which is about the maximum heat the primary loop can deal with.</p>
+    <p>With the following procedure you can discover the behavior of the primary water-glycol coolant loop during various heat loads:</p>
+    <ul>
+      <li>Set the HIGH GAIN ANTENNA PITCH POSITION switch to +90&deg; to disable the heating, set the ECS INDICATORS switch to PRIM to make sure you're monitoring the primary loop and switch to time acceleration 10 and wait until the ECS meters are in a stable condition.<p></li>
+      <li>The ECS RAD TEMP INLET meter indicates a temperature lower than 60 &deg;F, the ECS RAD TEMP PRIM OUTLET meter shows about -10 &deg;F maintained by the primary ECS radiators heater. The GLY EVAP TEMP OUTLET meter shows ca. 45 &deg;F, the GLY EVAP STEAM PRESS meter is a little bit over 0.15 psi indicating that the evaporator steam pressure control valve is closed. Because the primary coolant loop has only to remove the small heat load caused by the crew the evaporator is not evaporating and the radiators have only a small amount of thermal energy to radiate, the outlet has to be heated to maintain the minimum temperature. If you switch the ECS RADIATORS HEATER PRIM switch to OFF (center) you can see the outlet temperature drop down.
+      <p></li>
+      <li> Set the HIGH GAIN ANTENNA PITCH POSITION switch to 0&deg; to enable medium heating and wait a few minutes until the ECS meters are in a stable condition again.<p></li>
+      <li> The ECS RAD TEMP INLET meter indicates now a temperature of about 80 &deg;F, the ECS RAD TEMP PRIM OUTLET meter shows about 30&deg;F to 40 &deg;F. The GLY EVAP TEMP OUTLET meter shows still about 45 &deg;F, the GLY EVAP STEAM PRESS meter is still a little bit over 0.15 psi indicating that the evaporator is still not necessary. All the thermal energy is now removed and radiated to the space by the ECS radiators, as indicated by the higher radiator outlet temperature.
+        <p></li>
+      <li>Set the HIGH GAIN ANTENNA PITCH POSITION switch to -60&deg; to enable a huge amount of heat and wait a few minutes until the ECS meters are in a stable condition again.<p></li>
+      <li>The ECS RAD TEMP INLET meter indicates now a temperature of about 90 &deg;F, the ECS RAD TEMP PRIM OUTLET meter shows about 50 &deg;F. Now the radiators are no longer capable removing all the thermal energy from the water-glycol coolant and the evaporator mode of cooling is initiated. The GLY EVAP TEMP OUTLET meter shows about 40 &deg;F, the GLY EVAP STEAM PRESS meter is about 0.12 psi. That means that the steam pressure control valve is now partially open and the evaporator removes the remaining thermal energy by evaporating waste water to the space.
+        <p></li>
+      <li> Set the HIGH GAIN ANTENNA PITCH POSITION switch to -90&deg; to enable maximum heating. Wait a few minutes and you will notice that the GLY EVAP STEAM PRESS meter is further decreasing. Wait and see if the evaporator (together with the still operating radiators) can remove all this heat from the coolant...<p></li>
+      <li>  Set the HIGH GAIN ANTENNA PITCH POSITION switch back to 0&deg; to enable medium heating again. The temperatures will go back to normal readings. </li>
+    </ul><p>
+    <h4>CSM primary water-glycol coolant loop manual control </h4>
+    <p>In the previous procedure we changed the amount of heat the primary water-glycol coolant loop had to remove, the radiators and the evaporator were controlled automatically by the ECS with respect to the amount of thermal energy they had to remove from the coolant. But you also can control both systems manually in case the automatic control fails (but this is not possible at the moment) or you want a different behavior of these systems:</p>
+    <ul>
+      <li>Set the HIGH GAIN ANTENNA PITCH POSITION switch to 0&deg; to enable medium heating and wait a few minutes until the ECS is in a stable condition again.<p></li>
+      <li>The radiators are sufficient to remove all the heat, the ECS RAD TEMP INLET meter indicates  a temperature of about 80 &deg;F, the ECS RAD TEMP PRIM OUTLET meter shows about 40 &deg;F. The evaporator is not necessary, the GLY EVAP TEMP OUTLET meter shows  about 45 &deg;F, the GLY EVAP STEAM PRESS meter is again a little bit over 0.15 psi indicating that the steam pressure control valve is closed.<p></li>
+      <li>Now we disable the radiators: Switch the ECS RADIATORS FLOW CONT PWR switch to MAN SEL MODE (down) and the ECS RADIATORS MAN SEL switch to OFF (center). The radiators are bypassed, the ECS RAD TEMP PRIM OUTLET meter increases to about 80 &deg;F within a few minutes. Now the evaporator has to remove all the heat, the GLY EVAP STEAM PRESS meter indicates about 0.09 psi,  GLY EVAP TEMP OUTLET meter shows  about 50 &deg;F. That means the evaporator is running at full evaporation and is hardly capable of cooling the water-glycol.<p></li>
+      <li>Switch the ECS RADIATORS FLOW CONT PWR switch back to PWR and wait a few minutes until the ECS is back in the previous state.<p></li>
+      <li>Now we try manual operation of the evaporator: Switch the GLYCOL EVAP STEAM PRESS AUTO MAN switch to MAN. Now you can control the steam pressure control valve manually with the GLYCOL EVAP STEAM PRESS INCR DECR switch. Switch and hold it to DECR to open the valve. The GLY EVAP TEMP OUTLET meter quickly drops below 40 &deg;F indicating that there's more cooling than necessary. You can play with different steam pressures and monitor the GLY EVAP TEMP OUTLET meter to see the effect.<p></li>
+      <li> Switch the GLYCOL EVAP STEAM PRESS AUTO MAN switch to AUTO, all ECS systems are back to automatic control.</li>
+    </ul><p>
     <h4>CSM cryogenic tank and fuel cell check </h4>
     <p>During normal operations the cryo tanks and fuel cells should operate as descriped in the original Apollo documentation. The following procedures are from the <em>Apollo-Soyuz test project Operations handbook reference issue </em>(see <a href="#references">below</a>)<em>. </em></p>
     <p><img src="../images/aoh-cyroandfccheck.gif" width="630" height="425"></p>
+    <p>
     <h4>CSM fuel cell purging</h4>
     <p>To keep the fuel cells working properly, it's necessary to do fuel cell purging from time to time. Unlike shown in the original Apollo documentation below in Project Apollo it's not necessary to wait after switching the H<sub>2</sub> PURGE LINE switch to HTR, but to do on  H<sub>2</sub> purging it's necessary to turn on the H<sub>2</sub> purge line heater. The  procedures are from the <em>Apollo-Soyuz test project Operations handbook reference issue </em>(see <a href="#references">below</a>)<em>. </em></p>
     <p><img src="../images/aoh-fcpurging.gif" width="640" height="332"></p>
+    <p>
     <h4>CSM H<sub>2</sub> cryogenic tank pressurization</h4>
     <p>During normal operations cryogenic hydrogen from the cryo tanks is consumed by the fuel cells, so for this procedure it is necessary that the fuel cells are turned on and all cryo tank heaters and fans are switched to AUTO. The cyro tank fans and heaters then maintain the pressure in the tanks.</p>
     <ul>
@@ -119,10 +150,12 @@ Suit cabin &#916;P -1.0 to -3.5 inH<sub>2</sub>O</p>
       <li>Switch the H<sub>2</sub> FANS 2 switch to ON (down position). The pressure in H<sub>2</sub> tank 2 increases continuously without stopping, so you can overpressure the tank (but it doesn't explode at the moment...). Switch the H<sub>2</sub> FANS 2 switch back to OFF if you have enough pressure.<p></li>
       <li>Switch the H<sub>2</sub> HEATERS 2 switch and the H<sub>2</sub> FANS 2 switch back to AUTO (up position). Now the tanks are operated automatically again. Please notice that they now doesn't operate &quot;synchronously&quot; as before. </li>
     </ul>
+    <p>
     <h4>CSM fuel cell shutdown and restart </h4>
     <p>During normal operations all fuel cells are running and  have  a load of about 20 A at the moment. Unlike in reality we can shutdown and restart the fuel cells at any time. </p>
     <ul>
-      <li>Switch to time acceleration 100. Switch the FUEL CELL INDICATOR to position 1. You can monitor a hydrogen and oxygen flow above 0 lb/hr on the FUEL CELL FLOW H<sub>2</sub>/O<sub>2</sub>meters and a FUEL CELL MODULE SKIN TEMP of above 400 &deg;F.<p></li>
+      <li>Switch to time acceleration 100. Switch the FUEL CELL INDICATOR to position 1. You can monitor a hydrogen and oxygen flow above 0 lb/hr on the FUEL CELL FLOW H<sub>2</sub>/O<sub>2</sub> meters and a FUEL CELL MODULE SKIN TEMP of above 400 &deg;F.
+        <p></li>
       <li>Make sure that the FC REACS VALVES switch is in NORM position, otherwise you cannot operate the fuel cell reactants valves. Switch the FUEL CELL REACTANTS 1 switch to OFF (down position). The switch is spring-loaded and flips back to  to center position. Now fuel cell 1 is down, the FUEL CELL REACTANTS 1 indicator changes to striped-line indication, both flows are 0 lb/hr, but the fuel cell skin temperature remains almost unchanged because the fuel cell temperature is still maintained by the fuel cell heaters.
         <p></li>
       <li>Switch the FUEL CELL HEATERS 1 switch to OFF (down position). The fuel cell skin (and condenser exhaust) temperature decreases slowly. Wait until it drops below 300 &deg;F (use time acceleration 1000, if you are impatient...). 
@@ -130,6 +163,7 @@ Suit cabin &#916;P -1.0 to -3.5 inH<sub>2</sub>O</p>
       <li>Switch the FUEL CELL REACTANTS 1 switch to ON (up position). Unfortunatly the fuel cell does not start, because the skin temperature is below 300 &deg;F.<p></li>
       <li>Switch the FUEL CELL HEATERS 1 switch to up position. The fuel cell skin  temperature increases slowly. After 300 &deg;F is reached, again switch the FUEL CELL REACTANTS 1 switch to ON (up position). The fuel cell turns on, the flows are normal again and the skin temperature increases quickly to the old value. The fuel cell is running normally again. </li>
     </ul>
+    <p>
     <h4>CSM fuel cell radiator emergency bypass </h4>
     <p>During normal operations no fuel cell emergency bypass is necessary. But if only one fuel cell is running at a load of about 20 A, you have to bypass some of the radiators so that the coolant temperature is not too low.</p>
     <ul>
@@ -141,7 +175,7 @@ Suit cabin &#916;P -1.0 to -3.5 inH<sub>2</sub>O</p>
         <p></li>
       <li>Monitor fuel cell 2 and 3 by switching the FUEL CELL INDICATOR to position 2 and 3. The flows are 0 lb/hr of course and the FC RAD TEMP LOW indicator shows  striped-line  indication because the radiators of the other fuel cells are not bypassed. Switch the FUEL CELL INDICATOR back to position 1.<p></li>
       <li>Switch the FUEL CELL RADIATORS 1 switch to NORMAL (up position). Switch the FUEL CELL REACTANTS 2 and 3 switches to ON (up position). You are now back in &quot;normal mode&quot;. The FC RAD TEMP LOW indicator should show gray indication again. </li>
-    </ul>
+    </ul><p>
     <h3><a name="references"></a>References</h3>
 	<p>The following documents are used to gather most of the informations needed for the internal systems:</p>
 	<ul>
