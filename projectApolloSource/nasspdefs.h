@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/10/11 16:50:44  tschachim
+  *	SRFs added.
+  *	
   *	Revision 1.33  2005/09/30 11:27:21  tschachim
   *	New SRF.
   *	
@@ -143,6 +146,7 @@ typedef struct {
 //
 
 #define ROLLOUT_STAGE				1
+#define ONPAD_STAGE					3
 #define PRELAUNCH_STAGE				5
 
 #define LAUNCH_STAGE_ONE			11
@@ -171,7 +175,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 44; // number of bitmap handles
+const int nsurf = 46; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -207,6 +211,8 @@ const int nsurf = 44; // number of bitmap handles
 #define SRF_SWITCHUPSMALL			41
 #define SRF_CMMFDFRAME				42
 #define SRF_COAS					43
+#define SRF_THUMBWHEEL_SMALLFONTS	44
+#define SRF_CIRCUITBRAKER			45
 
 //
 // Earth radius and gravity constants.
