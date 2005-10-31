@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/08/30 18:37:39  movieman523
+  *	Added support for new interstage meshes.
+  *	
   *	Revision 1.10  2005/08/17 00:01:59  movieman523
   *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
   *	
@@ -72,8 +75,10 @@ public:
 
 	void initSaturnV();
 
-	// called by crawler after arrival on launch pad
-	void LaunchVesselRolloutEnd();
+	// called by crawler 
+	void LaunchVesselRolloutEnd();		// after arrival on launch pad
+	void LaunchVesselBuild();			// build/unbuild during assembly
+	void LaunchVesselUnbuild();
 
 	//
 	// Functions that external code shouldn't need to access.
