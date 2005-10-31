@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/10/19 11:29:22  tschachim
+  *	Bugfixes for high time accelerations.
+  *	
   *	Revision 1.27  2005/10/12 19:38:34  tschachim
   *	Added a little bit more power to the suit compressor to have
   *	more stability with high time accelerations.
@@ -175,10 +178,13 @@ void Saturn::SystemsInit() {
 void Saturn::SystemsTimestep(double simt, double simdt) {
 
 	//
-	// Don't clock the computer and the internal systems unless we're actually at the pad.
+	// Don't clock the computer and the internal systems unless we're actually at pre-launch.
 	//
 
-	if (stage >= PRELAUNCH_STAGE) {
+	if (stage == ONPAD_STAGE && MissionTime >= -7200) {	// 2h 00min before launch
+		stage = PRELAUNCH_STAGE;
+
+	} else if (stage >= PRELAUNCH_STAGE) {
 
 		dsky.Timestep(MissionTime);
 		dsky2.Timestep(MissionTime);
@@ -870,13 +876,13 @@ void Saturn::CheckRCSState()
 void Saturn::ActivateSPS()
 
 {
-	SPSswitch.SetState(THREEPOSSWITCH_UP);
+	SPSswitch.SetState(TOGGLESWITCH_UP);
 }
 
 void Saturn::DeactivateSPS()
 
 {
-	SPSswitch.SetState(THREEPOSSWITCH_DOWN);
+	SPSswitch.SetState(TOGGLESWITCH_UP);
 }
 
 void Saturn::SetEngineIndicators()

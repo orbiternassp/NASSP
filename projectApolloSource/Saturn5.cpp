@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/10/19 11:31:10  tschachim
+  *	Changed log file name.
+  *	
   *	Revision 1.32  2005/10/11 16:39:27  tschachim
   *	Bugfix tower jettison and aborts.
   *	
@@ -1696,6 +1699,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	switch (stage) {
 
 	case ROLLOUT_STAGE:
+	case ONPAD_STAGE:
 	case LAUNCH_STAGE_ONE:
 	case PRELAUNCH_STAGE:
 		if (buildstatus < 8){
@@ -2000,7 +2004,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 		SeparateStage (stage);
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort){
-			SPSswitch.SetState(true);
+			SPSswitch.SetState(TOGGLESWITCH_UP);
 			StartAbort();
 			ABORT_IND = true;
 			SetThrusterGroupLevel(thg_main, 1.0);
@@ -2019,17 +2023,14 @@ int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	}
 
 	if (stage == ROLLOUT_STAGE) {
-		if (key == OAPI_KEY_B && down == true && buildstatus < 7) {
-			buildstatus++;
-			BuildFirstStage(buildstatus);
+		if (key == OAPI_KEY_B && down == true) {
+			LaunchVesselBuild();
 			return 1;
 		}
-		if (key == OAPI_KEY_U && down == true && buildstatus > 0) {
-			buildstatus--;
-			BuildFirstStage(buildstatus);
+		if (key == OAPI_KEY_U && down == true) {
+			LaunchVesselUnbuild();
 			return 1;
 		}
-
 	}
 	return 0;
 }
@@ -2039,6 +2040,23 @@ void SaturnV::LaunchVesselRolloutEnd() {
 
 	SetFirstStage();
 	ShiftCentreOfMass (_V(0,0,STG0O));
-	SetStage(PRELAUNCH_STAGE);
+	SetStage(ONPAD_STAGE);
 }
 
+void SaturnV::LaunchVesselBuild() {
+	// called by crawler
+	
+	if (stage == ROLLOUT_STAGE && buildstatus < 7) {
+		buildstatus++;
+		BuildFirstStage(buildstatus);
+	}
+}
+
+void SaturnV::LaunchVesselUnbuild() {
+	// called by crawler
+
+	if (stage == ROLLOUT_STAGE && buildstatus > 0) {
+		buildstatus--;
+		BuildFirstStage(buildstatus);
+	}
+}
