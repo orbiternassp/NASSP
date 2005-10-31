@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/10/19 11:29:55  tschachim
+  *	Changed log file name.
+  *	
   *	Revision 1.26  2005/10/11 16:38:50  tschachim
   *	Bugfix tower jettison and aborts.
   *	
@@ -649,7 +652,7 @@ void Saturn1b::StageStartSIVB(double simt)
 		SeparateStage (stage);
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort){
-			SPSswitch.SetState(true);
+			SPSswitch.SetState(TOGGLESWITCH_UP);
 			ABORT_IND = true;
 			StartAbort();
 			SetThrusterGroupLevel(thg_main, 1.0);
@@ -740,7 +743,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		SetStage(CSM_LEM_STAGE);
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 		if (bAbort){
-			SPSswitch.SetState(true);
+			SPSswitch.SetState(TOGGLESWITCH_UP);
 			ABORT_IND = true;
 			StartAbort();
 			SetThrusterGroupLevel(thg_main, 1.0);
@@ -1057,6 +1060,7 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	switch (stage) {
 
 	case ROLLOUT_STAGE:
+	case ONPAD_STAGE:
 	case LAUNCH_STAGE_ONE:
 	case PRELAUNCH_STAGE:
 		SetFirstStage();
