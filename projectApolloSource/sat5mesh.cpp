@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/08/30 18:37:39  movieman523
+  *	Added support for new interstage meshes.
+  *	
   *	Revision 1.16  2005/08/24 00:30:00  movieman523
   *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
   *	
@@ -184,21 +187,24 @@ void SaturnV::BuildFirstStage (int bstate)
 	VECTOR3 m_exhaust_pos1= {3,3,Offset1st};
 	VECTOR3 mesh_dir=_V(0,0,-80.0+STG0O);
 	//AddMesh (hCRAWL, &mesh_dir);		// Crawler and Mobile Launcher are separate vessels now
-	mesh_dir=_V(0,0,-54.0+STG0O);
-	AddMesh (hsat5stg1, &mesh_dir);
+
 	if (bstate >=1){
+		mesh_dir=_V(0,0,-54.0+STG0O);
+		AddMesh (hsat5stg1, &mesh_dir);
+	}
+	if (bstate >=2){
 		mesh_dir=_V(0,0,-30.5+STG0O);
 		AddMesh (GetInterstageMesh(), &mesh_dir);
 	}
-	if (bstate >=1){
+	if (bstate >=2){
 		mesh_dir=_V(0,0,-17.2+STG0O);
 		AddMesh (hsat5stg2, &mesh_dir);
 	}
-	if (bstate >=2){
+	if (bstate >=3){
 		mesh_dir=_V(0,0,2.+STG0O);
 		AddMesh (hsat5stg3, &mesh_dir);
 	}
-	if (bstate >=3){
+	if (bstate >=4){
 		mesh_dir=_V(0,0,12+STG0O);
 		AddMesh (hLMPKD, &mesh_dir);
 	}
@@ -218,15 +224,23 @@ void SaturnV::BuildFirstStage (int bstate)
 		mesh_dir=_V(-1.48,1.48,14.55+STG0O);
 		AddMesh (hsat5stg34, &mesh_dir);
 	}
-	if (bstate >=5){
+	if (bstate >=4){
 		mesh_dir=_V(0,SMVO,19.1+STG0O);
 		AddMesh (hSM, &mesh_dir);
 	}
-	if (bstate >=6){
+	if (bstate >=4){
 		mesh_dir=_V(0,0,23.25+STG0O);
 		AddMesh (hCM, &mesh_dir);
 	}
-	if (bstate >=7){
+	if (bstate >=4){
+		mesh_dir=_V(0.02,1.35,23.39+STG0O);
+		AddMesh (hFHC, &mesh_dir);
+	}
+	if (bstate >=4){
+		mesh_dir=_V(0,0,24.8+STG0O);
+		AddMesh (hprobe, &mesh_dir);
+	}
+	if (bstate >=5){
 		mesh_dir=_V(0,0,28.2+STG0O);
 		AddMesh (hsat5tower, &mesh_dir);
 	}
@@ -362,7 +376,7 @@ void SaturnV::SetFirstStage ()
 
 	SetView(23.1+STG0O);
 
-	buildstatus=8;
+	buildstatus = 6;
 
 	EnableTransponder (true);
 

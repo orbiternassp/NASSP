@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/10/31 10:23:26  tschachim
+  *	SPSSwitch is now 2-pos, new ONPAD_STAGE.
+  *	
   *	Revision 1.33  2005/10/19 11:31:10  tschachim
   *	Changed log file name.
   *	
@@ -629,7 +632,7 @@ void SaturnV::StageOne(double simt)
 		break;
 
 	case 3:
-		if (GetFuelMass() == 0 && buildstatus > 7)
+		if (GetFuelMass() == 0 && buildstatus > 5)
 		{
 			NextMissionEventTime = MissionTime + 0.7;
 			StageState++;
@@ -1702,7 +1705,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	case ONPAD_STAGE:
 	case LAUNCH_STAGE_ONE:
 	case PRELAUNCH_STAGE:
-		if (buildstatus < 8){
+		if (buildstatus < 6){
 			BuildFirstStage(buildstatus);
 		}
 		else{
@@ -2046,7 +2049,7 @@ void SaturnV::LaunchVesselRolloutEnd() {
 void SaturnV::LaunchVesselBuild() {
 	// called by crawler
 	
-	if (stage == ROLLOUT_STAGE && buildstatus < 7) {
+	if (stage == ROLLOUT_STAGE && buildstatus < 5) {
 		buildstatus++;
 		BuildFirstStage(buildstatus);
 	}
