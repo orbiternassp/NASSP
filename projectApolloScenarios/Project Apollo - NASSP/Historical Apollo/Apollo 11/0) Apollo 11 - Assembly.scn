@@ -1,10 +1,10 @@
 BEGIN_DESC
-Assembly of the Saturn V for the first manned lunar landing a day before launch. July 15, 1969
+Assembly of the Saturn V for the first manned lunar landing 3 days before launch. July 13, 1969
 END_DESC
 
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol
-  Date MJD 40417.52222222
+  Date MJD 40415.52222222
 END_ENVIRONMENT
 
 BEGIN_FOCUS
@@ -34,7 +34,7 @@ AS-506:ProjectApollo\Saturn5
   BUILDSTATUS 0  
   STAGESTATUS 0
   DOCKSTATE 0
-  MISSNTIME -90000
+  MISSNTIME -262800
   TOAPO 185.94
   TOPER 183.16
   TOHDG 72.058

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/10/31 11:59:22  tschachim
+  *	New VAB.
+  *	
   **************************************************************************/
 
 class VAB: public VESSEL2 {
@@ -48,15 +51,8 @@ protected:
 	bool firstTimestepDone;
 
 	int meshindexVAB;
-	int meshindexSaturn[10];
+	int meshindexSaturn[14];
 	int meshcountSaturn;
-
-	enum DoorStatus { 
-		DOOR_CLOSED, 
-		DOOR_OPEN, 
-		DOOR_CLOSING, 
-		DOOR_OPENING 
-	} highBay1Door_Status, highBay3Door_Status;
 
 	enum CraneStatus { 
 		CRANE_BEGIN, 
@@ -65,13 +61,27 @@ protected:
 		CRANE_UNBUILDING 
 	} crane_Status;
 
+	UINT animCrane[5];
+	UINT currentAnimCrane;
+	int animCraneCount;
+	double crane_Proc;
+	MGROUP_TRANSFORM *mgroupCrane[5][16];
+	MGROUP_TRANSFORM *mgroupSaturn[14][8];
+	MGROUP_TRANSFORM *mgroupCrane2[5][6];
+	UINT animPlatform;
+	double platform_Proc;
+
+	enum DoorStatus { 
+		DOOR_CLOSED, 
+		DOOR_OPEN, 
+		DOOR_CLOSING, 
+		DOOR_OPENING 
+	} highBay1Door_Status, highBay3Door_Status;
+
 	UINT anim_HighBay1Door;         
 	UINT anim_HighBay3Door;         
-	UINT anim_Crane;
-
 	double highBay1Door_Proc;
 	double highBay3Door_Proc;
-	double crane_Proc;
 
 	char saturnName[256];
 	int saturnVisible;
@@ -81,4 +91,8 @@ protected:
 
 	void DoFirstTimestep();
 	void DefineAnimations();
+	void DefineCraneAnimation(MGROUP_TRANSFORM *mgroup[], double pickupHeight, double releaseHeight);
+	void DefineSaturnAnimation(MGROUP_TRANSFORM *mgroup[], int meshindex, double pickupHeight, double releaseHeight);
+	void DefineCrane2Animation(MGROUP_TRANSFORM *mgroup[], double pickupHeight, double length);
+	void SetSaturnMeshVisibilityMode(int buildStatus, WORD mode);
 };
