@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/10/31 19:18:39  tschachim
+  *	Bugfixes.
+  *	
   *	Revision 1.1  2005/10/31 11:59:22  tschachim
   *	New VAB.
   *	
@@ -72,15 +75,23 @@ void VAB::BuildSaturnStage() {
 	Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
 	if (lav->GetStage() != ROLLOUT_STAGE) return;
 
-	if (lav->GetBuildStatus() > 0) { 
+	// Platforms
+	if (lav->GetBuildStatus() == animCraneCount && platform_Proc > 0) { 
+		currentAnimCrane = -1;
+		crane_Status = CRANE_BUILDING;
+		return;
+	}
+	if (lav->GetBuildStatus() >= animCraneCount) { 
 		lav->LaunchVesselBuild();
 		return;
 	}
-	if (crane_Status == CRANE_END) {
-		crane_Proc = 0.00001;
-		SetAnimation(anim_Crane, crane_Proc);
-		crane_Status = CRANE_BEGIN;
-	}
+
+	for (int i = 0; i < animCraneCount; i++) 
+		SetAnimation(animCrane[i], 0);
+
+	currentAnimCrane = animCrane[lav->GetBuildStatus()];	
+	crane_Proc = 0.00001;
+	SetAnimation(currentAnimCrane, crane_Proc);
 	crane_Status = CRANE_BUILDING;
 }
 
@@ -95,14 +106,21 @@ void VAB::UnbuildSaturnStage() {
 	if (lav->GetStage() != ROLLOUT_STAGE) return;
 
 	if (lav->GetBuildStatus() <= 0) return;
-	if (lav->GetBuildStatus() > 1) {	
+	if (lav->GetBuildStatus() > animCraneCount) {	
 		lav->LaunchVesselUnbuild();
 		return;
 	}
-	if (crane_Status == CRANE_BEGIN) {
-		crane_Proc = 1;
-		SetAnimation(anim_Crane, crane_Proc);
-		crane_Status = CRANE_END;
+	// Platforms
+	if (lav->GetBuildStatus() == animCraneCount && platform_Proc < 1.0) { 
+		currentAnimCrane = -1;
+		crane_Status = CRANE_UNBUILDING;
+		return;
 	}
+	for (int i = 0; i < animCraneCount; i++) 
+		SetAnimation(animCrane[i], 0);
+
+	currentAnimCrane = animCrane[lav->GetBuildStatus() - 1];
+	crane_Proc = 1;
+	SetAnimation(currentAnimCrane, crane_Proc);
 	crane_Status = CRANE_UNBUILDING;
 }
