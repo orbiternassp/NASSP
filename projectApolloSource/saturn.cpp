@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2005/10/19 11:40:40  tschachim
+  *	FDAIs optionally disabled.
+  *	
   *	Revision 1.60  2005/10/13 15:52:24  tschachim
   *	Fixed the panel change bug.
   *	
@@ -322,7 +325,7 @@ void Saturn::initSaturn()
 
 	stgSM = false;
 
-	buildstatus = 8;
+	buildstatus = 6;
 	ThrustAdjust = 1.0;
 	DockAngle = 0;
 
@@ -796,7 +799,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "REALISM", Realism);
 	}
 
-	if (buildstatus < 8) {
+	if (buildstatus < 6) {
 		oapiWriteScenario_int (scn, "BUILDSTATUS", buildstatus);
 	}
 
