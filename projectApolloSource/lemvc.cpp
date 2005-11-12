@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/10/31 10:16:54  tschachim
+  *	LEM rendezvous window camera offset.
+  *	
   *	Revision 1.4  2005/08/14 16:08:20  tschachim
   *	LM is now a VESSEL2
   *	Changed panel restore mechanism because the CSM mechanism
@@ -59,27 +62,54 @@
 
 void sat5_lmpkd::SetView() {
 
-
 	//
 	// Set camera offset
 	//
 	if (InVC) {
 		switch (viewpos) {
 		case LMVIEW_CDR:
-			SetCameraOffset (_V(-0.68, 1.65, 1.35));
+			//SetCameraOffset (_V(-0.68, 1.65, 1.35));
+			SetCameraOffset (_V(-0.576, 1.90, 1.26));
 			break;
 
 		case LMVIEW_LMP:
-			SetCameraOffset (_V(0.92, 1.65, 1.23));
+			//SetCameraOffset (_V(0.92, 1.65, 1.23));
+			SetCameraOffset (_V(0.576, 1.90, 1.26));
 			break;
 		}
 
 	} else {
-		if (InPanel && PanelId == LMPANEL_RNDZWINDOW) {
-			SetCameraOffset (_V(0, -1.8, 0.55));
-		} else {
-			SetCameraOffset (_V(0, 0, 0));
+
+		if(InPanel)
+		{
+			switch(PanelId)
+			{
+				case LMPANEL_MAIN:
+					SetCameraOffset (_V(0, 1.90, 1.26));
+					break;
+				case LMPANEL_RIGHTWINDOW:
+					SetCameraOffset (_V(0.576, 1.90, 1.26));
+					break;
+				case LMPANEL_LEFTWINDOW:
+					SetCameraOffset (_V(-0.576, 1.90, 1.26));
+					break;
+				case LMPANEL_LPDWINDOW:
+					SetCameraOffset (_V(-0.576, 1.90, 1.26));
+					break;
+				case LMPANEL_RNDZWINDOW:
+					SetCameraOffset (_V(-0.28, -0.80, 1.65));
+					//SetCameraOffset (_V(-0.576, -0.80, 1.26));
+					break;
+				case LMPANEL_LEFTPANEL:
+					SetCameraOffset (_V(-0.576, 1.90, 1.26));
+					break;
+				case LMPANEL_AOTVIEW:
+					SetCameraOffset (_V(0, 2.88, 1.26));
+					break;
+			}
 		}
+		else
+			SetCameraOffset (_V(0, 0, 0));
 	}
 
 	//
