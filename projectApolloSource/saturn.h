@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2005/10/31 10:41:49  tschachim
+  *	Added CircuitBrakerSwitch and ThumbwheelSwitch. new VAB.
+  *	
   *	Revision 1.69  2005/10/19 11:47:34  tschachim
   *	Bugfixes for high time accelerations.
   *	FDAIs optionally disabled.
@@ -970,8 +973,75 @@ protected:
 	SwitchRow EpsSensorSignalDcCircuitBrakersRow;
 	CircuitBrakerSwitch EpsSensorSignalDcMnaCircuitBraker;
 	CircuitBrakerSwitch EpsSensorSignalDcMnbCircuitBraker;
+	
+	SwitchRow EpsSensorSignalAcCircuitBrakersRow;
+	CircuitBrakerSwitch EpsSensorSignalAc1CircuitBraker;
+	CircuitBrakerSwitch EpsSensorSignalAc2CircuitBraker;
 
+	//
+	// C/W circuit brakers
+	//
+	SwitchRow CWCircuitBrakersRow;
+	CircuitBrakerSwitch CWMnaCircuitBraker;
+	CircuitBrakerSwitch CWMnbCircuitBraker;
 
+	//
+	// LEM PWR circuit brakers
+	//
+	
+	SwitchRow LMPWRCircuitBrakersRow;
+	CircuitBrakerSwitch MnbLMPWR1CircuitBraker;
+	CircuitBrakerSwitch MnbLMPWR2CircuitBraker;
+
+	//
+	// Inverter control circuit brakers
+	//
+	
+	SwitchRow InverterControlCircuitBrakersRow;
+	CircuitBrakerSwitch InverterControl1CircuitBraker;
+	CircuitBrakerSwitch InverterControl2CircuitBraker;
+	CircuitBrakerSwitch InverterControl3CircuitBraker;
+
+	//
+	// EPS sensor unit circuit brakers
+	//
+	
+	SwitchRow EPSSensorUnitCircuitBrakersRow;
+	CircuitBrakerSwitch EPSSensorUnitDcBusACircuitBraker;
+	CircuitBrakerSwitch EPSSensorUnitDcBusBCircuitBraker;
+	CircuitBrakerSwitch EPSSensorUnitAcBus1CircuitBraker;
+	CircuitBrakerSwitch EPSSensorUnitAcBus2CircuitBraker;
+
+	//
+	// Battery relay bus circuit brakers
+	//
+
+	SwitchRow BATRLYBusCircuitBrakersRow;
+	CircuitBrakerSwitch BATRLYBusBatACircuitBraker;
+	CircuitBrakerSwitch BATRLYBusBatBCircuitBraker;
+
+	//
+	// ECS radiators circuit brakers
+	// 
+
+	SwitchRow ECSRadiatorsCircuitBrakersRow;
+	CircuitBrakerSwitch ControllerAc1CircuitBraker;
+	CircuitBrakerSwitch ControllerAc2CircuitBraker;
+	CircuitBrakerSwitch CONTHTRSMnACircuitBraker;
+	CircuitBrakerSwitch CONTHTRSMnBCircuitBraker;
+	CircuitBrakerSwitch HTRSOVLDBatACircuitBraker;
+	CircuitBrakerSwitch HTRSOVLDBatBCircuitBraker;
+
+	//
+	// Battery charger circuit brakers
+	//
+
+	SwitchRow BatteryChargerCircuitBrakersRow;
+	CircuitBrakerSwitch BatteryChargerBatACircuitBraker;
+	CircuitBrakerSwitch BatteryChargerBatBCircuitBraker;
+	CircuitBrakerSwitch BatteryChargerMnACircuitBraker;
+	CircuitBrakerSwitch BatteryChargerMNBCircuitBraker;
+	CircuitBrakerSwitch BatteryChargerAcPWRCircuitBraker;
 
 
 	//

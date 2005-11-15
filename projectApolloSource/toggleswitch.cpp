@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/10/31 10:29:38  tschachim
+  *	Added CircuitBrakerSwitch and ThumbwheelSwitch.
+  *	
   *	Revision 1.27  2005/10/19 11:45:15  tschachim
   *	Update MeterSwitch.DisplayValue when requested (and not only when displayed).
   *	
@@ -467,7 +470,7 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
-		s->LoadSound(Sclick, BUTTON_SOUND);
+		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND);
 }
 
 
@@ -1197,7 +1200,7 @@ void RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switc
 	switchRow = &row;
 
 	if (!sclick.isValid()) {
-		row.panelSwitches->soundlib->LoadSound(sclick, CLICK_SOUND);
+		row.panelSwitches->soundlib->LoadSound(sclick, ROTARY_SOUND);
 	}
 }
 
@@ -1391,7 +1394,7 @@ void ThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switc
 	switchRow = &row;
 
 	if (!sclick.isValid()) {
-		row.panelSwitches->soundlib->LoadSound(sclick, CLICK_SOUND);
+		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND);
 	}
 }
 

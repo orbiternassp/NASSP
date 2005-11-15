@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/04/20 17:56:29  movieman523
+  *	Added SECO sound.
+  *	
   *	Revision 1.4  2005/04/14 23:07:21  movieman523
   *	Added post-splashdown sound.
   *	
@@ -75,5 +78,8 @@
 #define LUNARCONTACT_SOUND			"contact.wav"
 #define POSTSPLASHDOWN_SOUND		"post-splash.wav"
 #define SECO_SOUND					"seco.wav"
+#define ROTARY_SOUND				"rotary.wav"
+#define CIRCUITBREAKER_SOUND		"circuit_breaker.wav"
+#define THUMBWHEEL_SOUND			"thumbwheel.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"

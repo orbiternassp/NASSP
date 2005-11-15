@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/08/29 19:16:43  tschachim
+  *	Rendering of the DSKY keys.
+  *	
   *	Revision 1.13  2005/08/19 13:45:26  tschachim
   *	Added missing DSKY display elements.
   *	Added channel 013 handling.
@@ -147,7 +150,7 @@ void DSKY::Timestep(double simt)
 	if(FirstTimeStep)
 	{
 		FirstTimeStep = false;
-	    soundlib.LoadSound(Sclick, CLICK_SOUND);
+	    soundlib.LoadSound(Sclick, BUTTON_SOUND);
 	}
 
 	//
