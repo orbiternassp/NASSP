@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2005/11/15 05:43:55  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.70  2005/10/31 10:41:49  tschachim
   *	Added CircuitBrakerSwitch and ThumbwheelSwitch. new VAB.
   *	
@@ -1043,6 +1046,35 @@ protected:
 	CircuitBrakerSwitch BatteryChargerMNBCircuitBraker;
 	CircuitBrakerSwitch BatteryChargerAcPWRCircuitBraker;
 
+	//
+	// Instrument lighting circuit brakers
+	//
+
+	SwitchRow InstrumentLightingCircuitBrakersRow;
+	CircuitBrakerSwitch InstrumentLightingESSMnACircuitBraker;
+	CircuitBrakerSwitch InstrumentLightingESSMnBCircuitBraker;
+	CircuitBrakerSwitch InstrumentLightingNonESSCircuitBraker;
+	CircuitBrakerSwitch InstrumentLightingSCIEquipSEP1CircuitBraker;
+	CircuitBrakerSwitch InstrumentLightingSCIEquipSEP2CircuitBraker;
+	CircuitBrakerSwitch InstrumentLightingSCIEquipHatchCircuitBraker;
+	
+	//
+	// ECS circuit brakers
+	//
+
+	SwitchRow ECSCircuitBrakersRow;
+	CircuitBrakerSwitch ECSPOTH2OHTRMnACircuitBraker;
+	CircuitBrakerSwitch ECSPOTH2OHTRMnBCircuitBraker;
+	CircuitBrakerSwitch ECSH2OAccumMnACircuitBraker;
+	CircuitBrakerSwitch ECSH2OAccumMnBCircuitBraker;
+	CircuitBrakerSwitch ECSTransducerWastePOTH2OMnACircuitBraker;
+	CircuitBrakerSwitch ECSTransducerWastePOTH2OMnBCircuitBraker;
+	CircuitBrakerSwitch ECSTransducerPressGroup1MnACircuitBraker;
+	CircuitBrakerSwitch ECSTransducerPressGroup1MnBCircuitBraker;
+	CircuitBrakerSwitch ECSTransducerPressGroup2MnACircuitBraker;
+	CircuitBrakerSwitch ECSTransducerPressGroup2MnBCircuitBraker;
+	CircuitBrakerSwitch ECSTransducerTempMnACircuitBraker;
+	CircuitBrakerSwitch ECSTransducerTempMnBCircuitBraker;
 
 	//
 	// OLD Switches: delete these as and when we can do so.
