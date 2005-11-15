@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2005/11/14 23:53:56  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.83  2005/10/31 10:28:22  tschachim
   *	altimeter, gmeter, cabin temp thumbwheel etc.
   *	
@@ -889,6 +892,14 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 825, 1428,  901, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSSWITCH,						_R( 736, 1527,  823, 1614), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_EPSSENSORSIGNALDCCIRCUITBRAKERS,				_R( 856,  871,  923,  900), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_EPSSENSORSIGNALACCIRCUITBRAKERS,				_R( 962,  871, 1092,  900), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CWCIRCUITBRAKERS,				            _R(1130,  871, 1197,  900), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LMPWRCIRCUITBRAKERS,				            _R(1206,  871, 1238,  978), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_INVERTERCONTROLCIRCUITBRAKERS,				_R( 856,  949,  961,  978), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_EPSSENSORUNITCIRCUITBRAKERS,					_R( 987,  949, 1127,  978), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_BATRLYBUSCIRCUITBRAKERS,					    _R(1135,  949, 1201,  978), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSRADIATORSCIRCUITBRAKERS,					_R( 680, 1032,  955, 1061), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_BATTERYCHARGERCIRCUITBRAKERS,				_R( 963, 1032, 1184, 1061), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;    
@@ -1414,8 +1425,48 @@ void Saturn::SetSwitches(int panel) {
 	EpsSensorSignalDcMnaCircuitBraker.Init( 0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], EpsSensorSignalDcCircuitBrakersRow);
 	EpsSensorSignalDcMnbCircuitBraker.Init(38, 0, 29, 29, srf[SRF_CIRCUITBRAKER], EpsSensorSignalDcCircuitBrakersRow);
 
+	EpsSensorSignalAcCircuitBrakersRow.Init(AID_EPSSENSORSIGNALACCIRCUITBRAKERS, MainPanel);
+	EpsSensorSignalAc1CircuitBraker.Init(  0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], EpsSensorSignalAcCircuitBrakersRow);
+	EpsSensorSignalAc2CircuitBraker.Init(101, 0, 29, 29, srf[SRF_CIRCUITBRAKER], EpsSensorSignalAcCircuitBrakersRow);
 
+	CWCircuitBrakersRow.Init(AID_CWCIRCUITBRAKERS, MainPanel);
+	CWMnaCircuitBraker.Init( 0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow);
+	CWMnbCircuitBraker.Init(38, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow);
+	
+	LMPWRCircuitBrakersRow.Init(AID_LMPWRCIRCUITBRAKERS, MainPanel);
+	MnbLMPWR1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], LMPWRCircuitBrakersRow);
+	MnbLMPWR2CircuitBraker.Init( 3, 78, 29, 29, srf[SRF_CIRCUITBRAKER], LMPWRCircuitBrakersRow);
+	
+	InverterControlCircuitBrakersRow.Init(AID_INVERTERCONTROLCIRCUITBRAKERS, MainPanel);
+	InverterControl1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InverterControlCircuitBrakersRow);
+	InverterControl2CircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InverterControlCircuitBrakersRow);
+	InverterControl3CircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InverterControlCircuitBrakersRow);
 
+	EPSSensorUnitCircuitBrakersRow.Init(AID_EPSSENSORUNITCIRCUITBRAKERS, MainPanel);
+	EPSSensorUnitDcBusACircuitBraker.Init(  0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow);
+	EPSSensorUnitDcBusBCircuitBraker.Init( 37,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow);
+	EPSSensorUnitAcBus1CircuitBraker.Init( 74,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow);
+	EPSSensorUnitAcBus2CircuitBraker.Init(111,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow);
+	
+	BATRLYBusCircuitBrakersRow.Init(AID_BATRLYBUSCIRCUITBRAKERS, MainPanel);
+	BATRLYBusBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BATRLYBusCircuitBrakersRow);
+	BATRLYBusBatBCircuitBraker.Init(37,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BATRLYBusCircuitBrakersRow);
+	
+	ECSRadiatorsCircuitBrakersRow.Init(AID_ECSRADIATORSCIRCUITBRAKERS, MainPanel);
+	ControllerAc1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSRadiatorsCircuitBrakersRow);
+	ControllerAc2CircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSRadiatorsCircuitBrakersRow);
+	CONTHTRSMnACircuitBraker.Init(  76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSRadiatorsCircuitBrakersRow);
+	CONTHTRSMnBCircuitBraker.Init( 172,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSRadiatorsCircuitBrakersRow);
+	HTRSOVLDBatACircuitBraker.Init(209,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSRadiatorsCircuitBrakersRow);
+	HTRSOVLDBatBCircuitBraker.Init(246,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSRadiatorsCircuitBrakersRow);
+	
+	BatteryChargerCircuitBrakersRow.Init(AID_BATTERYCHARGERCIRCUITBRAKERS, MainPanel);
+	BatteryChargerBatACircuitBraker.Init(   0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BatteryChargerCircuitBrakersRow);
+	BatteryChargerBatBCircuitBraker.Init(  37,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BatteryChargerCircuitBrakersRow);
+	BatteryChargerMnACircuitBraker.Init(   74,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BatteryChargerCircuitBrakersRow);
+	BatteryChargerMNBCircuitBraker.Init(  111,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BatteryChargerCircuitBrakersRow);
+	BatteryChargerAcPWRCircuitBraker.Init(192,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BatteryChargerCircuitBrakersRow);
+	
 	//
 	// SATPANEL_LEFT_RNDZ_WINDOW
 	//
@@ -3212,12 +3263,43 @@ void Saturn::InitSwitches() {
 
 	OrbiterAttitudeToggle.SetActive(false);		// saved in LPSwitchState.LPswitch5
 
-	EpsSensorSignalDcMnaCircuitBraker.Register(PSH, "EpsSensorSignalDcMnaCircuitBraker", 0); 
-	EpsSensorSignalDcMnbCircuitBraker.Register(PSH, "EpsSensorSignalDcMnbCircuitBraker", 0); 
+	EpsSensorSignalDcMnaCircuitBraker.Register(PSH, "EpsSensorSignalDcMnaCircuitBraker", 1); 
+	EpsSensorSignalDcMnbCircuitBraker.Register(PSH, "EpsSensorSignalDcMnbCircuitBraker", 1); 
 
+	EpsSensorSignalAc1CircuitBraker.Register(PSH, "EpsSensorSignalAc1CircuitBraker", 1); 
+	EpsSensorSignalAc2CircuitBraker.Register(PSH, "EpsSensorSignalAc2CircuitBraker", 1);
 
+	CWMnaCircuitBraker.Register(PSH, "CWMnaCircuitBraker", 1); 
+	CWMnbCircuitBraker.Register(PSH, "CWMnbCircuitBraker", 1);
+	
+	MnbLMPWR1CircuitBraker.Register(PSH, "MnbLMPWR1CircuitBraker", 1);
+	MnbLMPWR2CircuitBraker.Register(PSH, "MnbLMPWR2CircuitBraker", 1);
 
+	InverterControl1CircuitBraker.Register(PSH, "InverterControl1CircuitBraker", 1);
+	InverterControl2CircuitBraker.Register(PSH, "InverterControl2CircuitBraker", 1);
+	InverterControl3CircuitBraker.Register(PSH, "InverterControl3CircuitBraker", 1);
 
+	EPSSensorUnitDcBusACircuitBraker.Register(PSH, "EPSSensorUnitDcBusACircuitBraker", 1);
+	EPSSensorUnitDcBusBCircuitBraker.Register(PSH, "EPSSensorUnitDcBusBCircuitBraker", 1);
+	EPSSensorUnitAcBus1CircuitBraker.Register(PSH, "EPSSensorUnitAcBus1CircuitBraker", 1);
+	EPSSensorUnitAcBus2CircuitBraker.Register(PSH, "EPSSensorUnitAcBus2CircuitBraker", 1);
+
+	BATRLYBusBatACircuitBraker.Register(PSH, "BATRLYBusBatACircuitBraker", 1);
+	BATRLYBusBatBCircuitBraker.Register(PSH, "BATRLYBusBatBCircuitBraker", 1);
+
+	ControllerAc1CircuitBraker.Register(PSH, "ControllerAc1CircuitBraker", 1);
+	ControllerAc2CircuitBraker.Register(PSH, "ControllerAc2CircuitBraker", 1);
+	CONTHTRSMnACircuitBraker.Register(PSH, "CONTHTRSMnACircuitBraker", 1);
+	CONTHTRSMnBCircuitBraker.Register(PSH, "CONTHTRSMnBCircuitBraker", 1);
+	HTRSOVLDBatACircuitBraker.Register(PSH, "HTRSOVLDBatACircuitBraker", 1);
+	HTRSOVLDBatBCircuitBraker.Register(PSH, "HTRSOVLDBatBCircuitBraker", 1);
+	
+	BatteryChargerBatACircuitBraker.Register(PSH, "BatteryChargerBatACircuitBraker", 1);
+	BatteryChargerBatBCircuitBraker.Register(PSH, "BatteryChargerBatBCircuitBraker", 1);
+	BatteryChargerMnACircuitBraker.Register(PSH, "BatteryChargerMnACircuitBraker", 1);
+	BatteryChargerMNBCircuitBraker.Register(PSH, "BatteryChargerMnBCircuitBraker", 1);
+	BatteryChargerAcPWRCircuitBraker.Register(PSH, "BatteryChargerAcPWRCircuitBraker", 1);
+	
 	//
 	// Old stuff. Delete when no longer required.
 	//
