@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/11/16 00:18:49  movieman523
+  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
+  *	
   *	Revision 1.13  2005/08/24 00:30:00  movieman523
   *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
   *	
@@ -114,7 +117,7 @@ void Saturn1b::SetS4B()
 {
 	char VName2[256];
 
-	strcpy (VName2, GetName());
+	GetApolloName(VName2);
 	strcat (VName2, "-S4BSTG");
 
 	Saturn::hs4bM=oapiGetVesselByName(VName2);
@@ -819,7 +822,7 @@ void Saturn1b::DockStage (UINT dockstatus)
 	vs4b.vrot.y = 0.0;
 	vs4b.vrot.z = 0.0;
 	if(ASTPMission){
-		strcpy (VName2, GetName()); strcat (VName2, "-ASTPDM");
+		GetApolloName(VName2); strcat (VName2, "-ASTPDM");
 		VESSEL::Create (VName2, "nSat1astp2", vs4b);
 		hAstpDM=oapiGetVesselByName(VName2);
 	}
@@ -1006,7 +1009,7 @@ void Saturn1b::SeparateStage (int stage)
 		TowerJS.play();
 		TowerJS.done();
 		char VName[256];
-		strcpy (VName, GetName()); strcat (VName, "-TWR");
+		GetApolloName(VName); strcat (VName, "-TWR");
 
 		hesc1 = oapiCreateVessel(VName,"nsat1btower",vs1);
 		SetSecondStage2 ();
@@ -1021,10 +1024,6 @@ void Saturn1b::SeparateStage (int stage)
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 	{
 		char VName[256]="";
-		char VName1[256]="";
-		char VName2[256]="";
-		char VName3[256]="";
-		char VName4[256]="";
 		VECTOR3 mesh_dir;
 		VESSEL *targetvessel;
 
@@ -1043,7 +1042,8 @@ void Saturn1b::SeparateStage (int stage)
 		vs5.vrot.x = -0.1;
 		vs5.vrot.y = 0.1;
 		vs5.vrot.z = 0.0;
-		strcpy (VName, GetName()); strcat (VName, "-S4BSTG");
+
+		GetApolloName(VName); strcat (VName, "-S4BSTG");
 
 		if(ASTPMission)
 			hs4bM = oapiCreateVessel(VName, "nsat1astp", vs1);
@@ -1067,15 +1067,17 @@ void Saturn1b::SeparateStage (int stage)
 
 		SetupStage(hs4bM);
 
-		strcpy (VName1, GetName()); strcat (VName1, "-S4B1");
-		hs4b1 = oapiCreateVessel(VName1, "nsat1stg21", vs2);
-		strcpy (VName2, GetName()); strcat (VName2, "-S4B2");
-		hs4b2 = oapiCreateVessel(VName2, "nsat1stg22", vs3);
-		strcpy (VName3, GetName()); strcat (VName3, "-S4B3");
-		hs4b3 = oapiCreateVessel(VName3, "nsat1stg23", vs4);
-		strcpy (VName4, GetName()); strcat (VName4, "-S4B4");
-		hs4b4 = oapiCreateVessel(VName4, "nsat1stg24", vs5);
+		GetApolloName(VName); strcat (VName, "-S4B1");
+		hs4b1 = oapiCreateVessel(VName, "nsat1stg21", vs2);
+		GetApolloName(VName); strcat (VName, "-S4B2");
+		hs4b2 = oapiCreateVessel(VName, "nsat1stg22", vs3);
+		GetApolloName(VName); strcat (VName, "-S4B3");
+		hs4b3 = oapiCreateVessel(VName, "nsat1stg23", vs4);
+		GetApolloName(VName); strcat (VName, "-S4B4");
+		hs4b4 = oapiCreateVessel(VName, "nsat1stg24", vs5);
+
 		SeparationS.play();
+
 		//oapiDeleteVessel(hesc1,vessel->GetHandle());
 		ShiftCentreOfMass (_V(0,0,21.5));
 		SetCSMStage ();
@@ -1103,10 +1105,10 @@ void Saturn1b::SeparateStage (int stage)
 			vs4b.vrot.x = 0.0;
 			vs4b.vrot.y = 0.0;
 			vs4b.vrot.z = 0.0;
-			strcpy (VName, GetName()); strcat (VName, "-DCKPRB");
+			GetApolloName(VName); strcat (VName, "-DCKPRB");
 			hPROBE = oapiCreateVessel(VName, "nsat1probe", vs4b);
 		}
-		strcpy (VName, GetName()); strcat (VName, "-SM");
+		GetApolloName(VName); strcat (VName, "-SM");
 		hSMJet = oapiCreateVessel(VName, "nSAT1_SM", vs1);
 
 		//
@@ -1163,7 +1165,7 @@ void Saturn1b::SeparateStage (int stage)
 		vs1.vrot.z = 0.0;
 		TowerJS.play();
 		TowerJS.done();
-		strcpy (VName, GetName()); strcat (VName, "-TWR");
+		GetApolloName(VName); strcat (VName, "-TWR");
 		hesc1 = oapiCreateVessel (VName, "sat5btower", vs1);
 		SetReentryStage ();
 		ActivateNavmode(NAVMODE_KILLROT);

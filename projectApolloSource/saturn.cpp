@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2005/11/16 00:18:49  movieman523
+  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
+  *	
   *	Revision 1.62  2005/11/09 18:16:38  tschachim
   *	New Saturn assembly process.
   *	
@@ -668,6 +671,12 @@ void Saturn::GetLEMName(char *s)
 	}
 
 	strcpy (s, GetName()); strcat (s, "-LM");
+}
+
+void Saturn::GetApolloName(char *s)
+
+{
+	sprintf(s, "AS-%d", VehicleNo);
 }
 
 void Saturn::UpdateLaunchTime(double t)
@@ -1648,7 +1657,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// And pass it the mission number and realism settings.
 	//
 
-	agc.SetMissionInfo(ApolloNo, Realism);
+	agc.SetMissionInfo(ApolloNo, Realism, LEMName);
 
 	//
 	// Set random failures if appropriate.

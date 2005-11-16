@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2005/10/14 17:23:06  lazyd
+  *	Changed P12 to work orbiting any body
+  *	
   *	Revision 1.51  2005/10/12 11:22:16  tschachim
   *	Bugfix OPR ERR during P15.
   *	
@@ -276,6 +279,8 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	ApolloNo = 0;
 
 	Realism = REALISM_DEFAULT;
+
+	OtherVesselName[0] = 0;
 
 	//
 	// Default to meters per second for
@@ -1587,7 +1592,7 @@ void ApolloGuidance::VerbNounEntered(int verb, int noun)
 	LightOprErr();
 }
 
-void ApolloGuidance::SetMissionInfo(int MissionNo, int RealismValue) 
+void ApolloGuidance::SetMissionInfo(int MissionNo, int RealismValue, char *OtherName) 
 
 {
 	Realism = RealismValue;
@@ -1600,7 +1605,11 @@ void ApolloGuidance::SetMissionInfo(int MissionNo, int RealismValue)
 
 	if (!ApolloNo)
 		ApolloNo = MissionNo; 
+
+	if (OtherName != 0)
+		strncpy(OtherVesselName, OtherName, 64);
 }
+
 
 //
 // Run the reset program on startup.
@@ -4401,6 +4410,9 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "TGTP", DesiredPerigee);
 	oapiWriteScenario_float(scn, "TGTZ", DesiredAzimuth);
 
+	if (OtherVesselName[0])
+		oapiWriteScenario_string(scn, "ONAME", OtherVesselName);
+
 	//
 	// Copy internal state to the structure.
 	//
@@ -4679,6 +4691,9 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 #endif
 			PadLoaded = state.u.PadLoaded;
 		}
+		else if (!strnicmp (line, "ONAME", 5)) {
+			strncpy (OtherVesselName, line + 6, 6);
+		}
 		else if (!strnicmp (line, "YAAGC", 5)) {
 			sscanf (line+5, "%d", &Yaagc);
 		}
@@ -4727,6 +4742,16 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "E5", 2)) {
 			strncpy (FiveDigitEntry, line + 3, 6);
 		}
+	}
+
+	//
+	// Quick hack to make the code work with old scenario files. Can be removed after NASSP 7
+	// release.
+	//
+
+	if (!OtherVesselName[0] && OurVessel) {
+		strncpy (OtherVesselName, OurVessel->GetName(), 63);
+		OtherVesselName[6] = 0;
 	}
 }
 

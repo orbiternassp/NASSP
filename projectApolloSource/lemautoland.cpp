@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/10/07 20:26:57  lazyd
+  *	*** empty log message ***
+  *	
   *	Revision 1.32  2005/10/03 15:54:44  lazyd
   *	Deleted code moved to apolloguidance
   *	
@@ -1491,15 +1494,13 @@ void LEMcomputer::Prog12(double simt)
 	double distance, radius, rlm, vel, time, cbrg, vh, csmapo, csmtta, csmper, csmttp, 
 		csmperiod, a, mu, dapo, dper, dv, dh;
 	VECTOR3 csmpos, csmvel, lmpos, csmnor, csmhvel;
-	char line[10];
+
 	OBJHANDLE hbody=OurVessel->GetGravityRef();
 	vh=1687.0;
 
 	LightCompActy();
 	if(ProgState == 0) {
-		strncpy(line, OurVessel->GetName(), 10);
-		line[6]=0;
-		OBJHANDLE hcsm=oapiGetVesselByName(line);
+		OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 		VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 		CSMVessel->GetRelativePos(hbody, csmpos);
 		OurVessel->GetRelativePos(hbody, lmpos);
@@ -1526,9 +1527,8 @@ void LEMcomputer::Prog12(double simt)
 			double bradius=oapiGetSize(hbody);
 			double bmass=oapiGetMass(hbody);
 			mu=GRAVITY*bmass;
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			CSMVessel->GetRelativeVel(hbody, csmvel);
@@ -1754,7 +1754,6 @@ void LEMcomputer::AbortAscent(double simt)
 	double crossrange, distance, delta, fuelflow, heading, Mass, totvel, altitude,
 		tgo, velexh, veltbg, cbrg, phase, tau, A, B, C, D, D12, D21, E, L, crossvel,
 		centrip, grav, acctot, vthrust, velo, ta;
-	char line[10];
 	LightCompActy();
 
 //	velo=1687.0;
@@ -1794,9 +1793,8 @@ void LEMcomputer::AbortAscent(double simt)
 		double bradius=oapiGetSize(hbody);
 		double bmass=oapiGetMass(hbody);
 		NextEventTime=simt+DELTAT;
-		strncpy(line, OurVessel->GetName(), 10);
-		line[6]=0;
-		OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+		OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 		VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 		CSMVessel->GetRelativePos(hbody, csmpos);
 		CSMVessel->GetRelativeVel(hbody, csmvel);
@@ -2119,11 +2117,10 @@ void LEMcomputer::Phase(double &phase, double &delta)
 	VECTOR3 csmpos, csmvel, lmpos, lmvel;
 	double vdotr, lmperiod, lmapo, lmtta, lmper, lmttp, csmperiod, csmapo,
 		csmtta, csmper, csmttp;
-	char line[10];
+
 	OBJHANDLE hbody=OurVessel->GetGravityRef();
-	strncpy(line, OurVessel->GetName(), 10);
-	line[6]=0;
-	OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+	OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 	VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 	CSMVessel->GetRelativePos(hbody, csmpos);
 	CSMVessel->GetRelativeVel(hbody, csmvel);
@@ -2141,11 +2138,9 @@ void LEMcomputer::Phase(double &phase, double &delta)
 void LEMcomputer::Radar(double &range, double &rate)
 {
 	VECTOR3 csmpos, csmvel, lmpos, lmvel;
-	char line[10];
 	OBJHANDLE hbody=OurVessel->GetGravityRef();
-	strncpy(line, OurVessel->GetName(), 10);
-	line[6]=0;
-	OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+	OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 	VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 	CSMVessel->GetRelativePos(hbody, csmpos);
 	CSMVessel->GetRelativeVel(hbody, csmvel);
@@ -2221,7 +2216,6 @@ void LEMcomputer::Prog32(double simt)
 	VECTOR3 lmpos, lmvel, apos, avel, vec, csmpos;
 	double mu, period, ttp, tta, rapo, vapo, velm, dv, t12, vmass, apo, per,  
 		 ythrust;
-	char line[10];
 	int i, nt;
 
 	LightCompActy();
@@ -2267,9 +2261,8 @@ void LEMcomputer::Prog32(double simt)
 		}
 		if(ProgState == 1) {
 			OBJHANDLE hbody=OurVessel->GetGravityRef();
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			OurVessel->GetRelativePos(hbody, lmpos);
@@ -2297,7 +2290,6 @@ void LEMcomputer::Prog33(double simt)
 	double csmperiod, csmapo, csmtta, csmper, csmttp, lmperiod, lmapo, lmtta, lmper, 
 		phase, lmttp, vdotr, delta, adh, theta, cdhtim, tpitime, a, e, h, vnew, 
 		mu, drad, velm, t12, vmass, newapo, newper, samer, ddv, ythrust;
-	char line[10];
 	int i, nt;
 	LightCompActy();
 	if(ProgState == 0) {
@@ -2315,9 +2307,8 @@ void LEMcomputer::Prog33(double simt)
 			double bradius=oapiGetSize(hbody);
 			double bmass=oapiGetMass(hbody);
 			mu=GRAVITY*bmass;
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			CSMVessel->GetRelativeVel(hbody, csmvel);
@@ -2410,9 +2401,8 @@ void LEMcomputer::Prog33(double simt)
 		}
 		if(ProgState == 2) {
 			OBJHANDLE hbody=OurVessel->GetGravityRef();
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			OurVessel->GetRelativePos(hbody, lmpos);
@@ -2447,7 +2437,6 @@ void LEMcomputer::Prog34(double simt)
 		visp, thrust, fmass, csmperiod, csmapo, csmtta, csmper, csmttp, lmperiod, lmapo, 
 		lmtta, lmper, lmttp, phase, vdotr, adh, theta, x0, x1, x2, x3,
 		f0, f1, f2, f3, c, r, ax, bx, cx, fax, fbx, fcx, dr;
-	char line[10];
 	int k, nt;
 
 
@@ -2456,9 +2445,8 @@ void LEMcomputer::Prog34(double simt)
 			OBJHANDLE hbody=OurVessel->GetGravityRef();
 			double bradius=oapiGetSize(hbody);
 			double bmass=oapiGetMass(hbody);
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			CSMVessel->GetRelativeVel(hbody, csmvel);
@@ -2662,9 +2650,8 @@ void LEMcomputer::Prog34(double simt)
 				thrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
 			}
 			visp=OurVessel->GetISP();
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			CSMVessel->GetRelativeVel(hbody, csmvel);
@@ -2785,9 +2772,8 @@ void LEMcomputer::Prog34(double simt)
 		if(simt > NextEventTime) {
 			NextEventTime=simt+DELTAT;
 			OBJHANDLE hbody=OurVessel->GetGravityRef();
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			OurVessel->GetRelativePos(hbody, lmpos);
@@ -2835,7 +2821,6 @@ void LEMcomputer::Prog35(double simt)
 	VECTOR3 lmpos, lmvel, stpos, stvel, v1, v2, csmpos, csmvel, crpos, crvel,
 		lrpos, lrvel, dv, vec;
 	double dt, mu, rtime, time, ctime, velm, vmass, ythrust;
-	char line[10];
 	int i, nt;
 
 //			char fname[8];
@@ -2851,9 +2836,8 @@ void LEMcomputer::Prog35(double simt)
 			double bradius=oapiGetSize(hbody);
 			double bmass=oapiGetMass(hbody);
 			mu=GRAVITY*bmass;
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			CSMVessel->GetRelativeVel(hbody, csmvel);
@@ -2910,9 +2894,8 @@ void LEMcomputer::Prog35(double simt)
 		}
 		if(ProgState == 1) {
 			OBJHANDLE hbody=OurVessel->GetGravityRef();
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			OurVessel->GetRelativePos(hbody, lmpos);
@@ -2936,7 +2919,7 @@ void LEMcomputer::Prog36(double simt)
 		rlcl, vlcl;
 	double dis, vel, dv, vmass, zo, yo, acc;
 	int axis;
-	char line[10];
+
 	LightCompActy();
 	if(simt > NextEventTime) {
 		NextEventTime=simt+DELTAT;
@@ -2950,9 +2933,8 @@ void LEMcomputer::Prog36(double simt)
 		}
 		if(ProgState >= 1) {
 			OBJHANDLE hbody=OurVessel->GetGravityRef();
-			strncpy(line, OurVessel->GetName(), 10);
-			line[6]=0;
-			OBJHANDLE hcsm=oapiGetVesselByName(line);
+
+			OBJHANDLE hcsm=oapiGetVesselByName(OtherVesselName);
 			VESSEL *CSMVessel=oapiGetVesselInterface(hcsm);
 			CSMVessel->GetRelativePos(hbody, csmpos);
 			OurVessel->GetRelativePos(hbody, lmpos);

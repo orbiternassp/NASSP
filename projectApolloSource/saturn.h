@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2005/11/16 18:43:42  flydba
+  *	All circuit breakers now set on panel 5.
+  *	
   *	Revision 1.73  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -1664,6 +1667,7 @@ protected:
 	double GetJ2ISP(double ratio);
 	void StartAbort();
 	void GetLEMName(char *s);
+	void GetApolloName(char *s);
 
 	//
 	// Systems functions.

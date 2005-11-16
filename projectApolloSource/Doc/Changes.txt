@@ -1,7 +1,7 @@
 6.5:
 ----
 
-Support for naming LEM in scenario file.
+Support for naming LEM in scenario file, and renamed CMs and LEMs in historical missions.
 Start of IU emulation.
 Random caution and warning light failures on non-historical missions.
 Initial support for Skylab CM and SM.

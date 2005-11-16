@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/10/03 15:53:41  lazyd
+  *	Added P19
+  *	
   *	Revision 1.23  2005/09/30 11:20:42  tschachim
   *	Turn on IMU also in non-Virtual AGC mode.
   *	
@@ -208,7 +211,7 @@ public:
 	// Generally useful setup.
 	//
 
-	void SetMissionInfo(int MissonNo, int RealismValue);
+	void SetMissionInfo(int MissonNo, int RealismValue, char *OtherVessel = 0);
 
 protected:
 
@@ -548,6 +551,8 @@ protected:
 
 	VESSEL	*OurVessel;
 	SoundLib &soundlib;
+
+	char OtherVesselName[64];
 
 //	FILE *outstr;
 
