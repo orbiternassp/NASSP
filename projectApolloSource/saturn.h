@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.74  2005/11/16 18:43:42  flydba
   *	All circuit breakers now set on panel 5.
   *	
@@ -658,6 +661,8 @@ protected:
 
 	ThreePosSwitch SuitCompressor1Switch;
 	ThreePosSwitch SuitCompressor2Switch;
+
+	ThreePosSwitch COASSwitch;
 
 	ThreePosSwitch SBandNormalXPDRSwitch;
 	ThreePosSwitch SBandNormalPwrAmpl1Switch;
@@ -1384,6 +1389,7 @@ protected:
 	SwitchRow FuelCellLatchSwitchesRow;
 	SwitchRow FuelCellPumpsSwitchesRow;
 	SwitchRow SuitCompressorSwitchesRow;
+	SwitchRow COASSwitchRow;
 
 	SwitchRow SBandNormalSwitchesRow;
 
