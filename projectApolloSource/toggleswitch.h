@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/10/31 10:43:13  tschachim
+  *	Added CircuitBrakerSwitch and ThumbwheelSwitch.
+  *	
   *	Revision 1.23  2005/10/19 11:48:09  tschachim
   *	Update MeterSwitch.DisplayValue when requested (and not only when displayed).
   *	
@@ -120,6 +123,7 @@
 
 class SwitchRow;
 class PanelSwitchScenarioHandler;
+class PowerBreaker;
 
 class PanelSwitchItem {
 
@@ -373,12 +377,16 @@ protected:
 class CircuitBrakerSwitch: public ToggleSwitch {
 
 public:
+	CircuitBrakerSwitch() { breaker = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerBreaker *b = 0);
 	bool CheckMouseClick(int event, int mx, int my);
+	void LoadState(char *line);
 
 	int operator=(const int b) { state = b; return state; };
 
 protected:
 	virtual void InitSound(SoundLib *s);
+	PowerBreaker *breaker;
 };
 
 

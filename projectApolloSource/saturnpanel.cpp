@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.89  2005/11/16 20:43:55  flydba
+  *	New switch added on panel 14.
+  *	
   *	Revision 1.88  2005/11/16 18:43:14  flydba
   *	All circuit breakers now set on panel 5.
   *	
@@ -1473,8 +1476,8 @@ void Saturn::SetSwitches(int panel) {
 	EpsSensorSignalAc2CircuitBraker.Init(101, 0, 29, 29, srf[SRF_CIRCUITBRAKER], EpsSensorSignalAcCircuitBrakersRow);
 
 	CWCircuitBrakersRow.Init(AID_CWCIRCUITBRAKERS, MainPanel);
-	CWMnaCircuitBraker.Init( 0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow);
-	CWMnbCircuitBraker.Init(38, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow);
+	CWMnaCircuitBraker.Init( 0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow, &CWSMainABreaker);
+	CWMnbCircuitBraker.Init(38, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow, &CWSMainBBreaker);
 	
 	LMPWRCircuitBrakersRow.Init(AID_LMPWRCIRCUITBRAKERS, MainPanel);
 	MnbLMPWR1CircuitBraker.Init(0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], LMPWRCircuitBrakersRow);
@@ -1540,12 +1543,12 @@ void Saturn::SetSwitches(int panel) {
 	ECSSecCoolLoopXducersMnBCircuitBraker.Init(262,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
 	ECSWasteH2OUrineDumpHTRMnACircuitBraker.Init(355,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
 	ECSWasteH2OUrineDumpHTRMnBCircuitBraker.Init(393,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC1ACircuitBraker.Init(585,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC1BCircuitBraker.Init(622,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC1CCircuitBraker.Init(659,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC2ACircuitBraker.Init(696,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC2BCircuitBraker.Init(733,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC2CCircuitBraker.Init(771,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
+	ECSCabinFanAC1ACircuitBraker.Init(585,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &CabinFan1ABreaker);
+	ECSCabinFanAC1BCircuitBraker.Init(622,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &CabinFan1BBreaker);
+	ECSCabinFanAC1CCircuitBraker.Init(659,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &CabinFan1CBreaker);
+	ECSCabinFanAC2ACircuitBraker.Init(696,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &CabinFan2ABreaker);
+	ECSCabinFanAC2BCircuitBraker.Init(733,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &CabinFan2BBreaker);
+	ECSCabinFanAC2CCircuitBraker.Init(771,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &CabinFan2CBreaker);
 
 	GNCircuitBrakersRow.Init(AID_GUIDANCENAVIGATIONCIRCUITBRAKERS, MainPanel);
 	GNPowerAc1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
@@ -1962,7 +1965,10 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
-	if (s == &CabinFan1Switch || s == &CabinFan2Switch) {
+	if (s == &CabinFan1Switch || s == &CabinFan2Switch ||
+		s == &ECSCabinFanAC1ACircuitBraker || s == &ECSCabinFanAC1BCircuitBraker ||
+		s == &ECSCabinFanAC1CCircuitBraker || s == &ECSCabinFanAC2ACircuitBraker ||
+		s == &ECSCabinFanAC2BCircuitBraker || s == &ECSCabinFanAC2CCircuitBraker) {
 		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER:PUMP");
 		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER:PUMP");
 
@@ -1970,7 +1976,6 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 			*pump1 = SP_PUMP_AUTO;
 			*pump2 = SP_PUMP_AUTO;
 			CabinFanSound();
-
 		} else {
 			*pump1 = SP_PUMP_OFF;
 			*pump2 = SP_PUMP_OFF;
@@ -2483,7 +2488,30 @@ void Saturn::ProbeSound()
 void Saturn::CabinFanSound()
 
 {
-	CabinFans.play(LOOP,255);
+	double volume = 0.0;
+
+	//
+	// We base the volume on the number of fans and the power supply to them.
+	//
+
+	if (CabinFan1Switch) {
+		volume += CabinFan1ABreaker.Voltage();
+		volume += CabinFan1BBreaker.Voltage();
+		volume += CabinFan1CBreaker.Voltage();
+	}
+
+	if (CabinFan2Switch) {
+		volume += CabinFan2ABreaker.Voltage();
+		volume += CabinFan2BBreaker.Voltage();
+		volume += CabinFan2CBreaker.Voltage();
+	}
+
+	//
+	// Scale volume appropriately based on the expected max voltage. Adjust
+	// this when the AC bus is connected to a real inverter.
+	//
+
+	CabinFans.play(LOOP, (int) ((64.0 * volume / 180.0) + 127.0));
 }
 
 void Saturn::StopCabinFanSound()

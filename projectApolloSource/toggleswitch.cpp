@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/11/15 05:44:45  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.28  2005/10/31 10:29:38  tschachim
   *	Added CircuitBrakerSwitch and ThumbwheelSwitch.
   *	
@@ -126,6 +129,7 @@
 #include "IMU.h"
 #include "missiontimer.h"
 #include "apolloguidance.h"
+#include "powersource.h"
 
 //
 // Generic panel switch item.
@@ -459,6 +463,11 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	if (Active && (state != OldState)) {
 		SwitchToggled = true;
+
+		if (breaker) {
+			breaker->SetOpen(state == 0);
+		}
+
 		if (switchRow) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
@@ -471,6 +480,28 @@ void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
 		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND);
+}
+
+
+void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerBreaker *b)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	breaker = b;
+}
+
+//
+// This function just resets the circuit breaker state based on the state loaded
+// from the file.
+//
+
+void CircuitBrakerSwitch::LoadState(char *line)
+
+{
+	ToggleSwitch::LoadState(line);
+	if (breaker) {
+		breaker->SetOpen(state == 0);
+	}
 }
 
 

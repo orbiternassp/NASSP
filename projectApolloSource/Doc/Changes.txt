@@ -1,6 +1,7 @@
 6.5:
 ----
 
+Some circuit breakers are now wired into the electrical systems.
 Support for naming LEM in scenario file, and renamed CMs and LEMs in historical missions.
 Start of IU emulation.
 Random caution and warning light failures on non-historical missions.

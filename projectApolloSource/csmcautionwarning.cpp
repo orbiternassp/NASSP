@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/11/16 00:18:49  movieman523
+  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
+  *	
   *	Revision 1.10  2005/10/19 11:25:14  tschachim
   *	Bugfixes for high time accelerations.
   *	
@@ -163,6 +166,17 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		//
 		// Check systems.
 		//
+
+		//
+		// If we don't have power to the CWS, light the CWS light and return.
+		//
+
+		if (!IsPowered()) {
+			SetLight(CSM_CWS_CWS_POWER, true);
+			return;
+		}
+
+		SetLight(CSM_CWS_CWS_POWER, false);
 
 		//
 		// Some systems only apply when we're in CSM mode.
@@ -322,7 +336,7 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 	int i = 0;
 	int row, column;
 
-	if (!IsPowered())
+	if (!LightsPowered())
 		return;
 
 	for (row = 0; row < 6; row++) {

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2005/11/16 20:45:09  flydba
+  *	New switch added on panel 14.
+  *	
   *	Revision 1.75  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -269,7 +272,7 @@
 #include "FDAI.h"
 #include "iu.h"
 #include "satswitches.h"
-
+#include "powersource.h"
 
 //
 // Valves.
@@ -1394,7 +1397,26 @@ protected:
 	SwitchRow SBandNormalSwitchesRow;
 
 
+	//
+	// Electrical systems.
+	//
 
+	PowerBreaker CWSMainABreaker;
+	PowerBreaker CWSMainBBreaker;
+
+	PowerBreaker CabinFan1ABreaker;
+	PowerBreaker CabinFan1BBreaker;
+	PowerBreaker CabinFan1CBreaker;
+
+	PowerBreaker CabinFan2ABreaker;
+	PowerBreaker CabinFan2BBreaker;
+	PowerBreaker CabinFan2CBreaker;
+
+	PowerSDKObject MainBusA;
+	PowerSDKObject MainBusB;
+
+	PowerSDKObject ACBus1;
+	PowerSDKObject ACBus2;
 
 	// old stuff begin
 

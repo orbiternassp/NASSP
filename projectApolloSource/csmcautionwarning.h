@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/10/11 16:50:01  tschachim
+  *	Added more alarms.
+  *	
   *	Revision 1.4  2005/08/21 16:23:32  movieman523
   *	Added more alarms.
   *	
@@ -91,6 +94,7 @@ protected:
 #define CSM_CWS_CMC_LIGHT			46
 #define CSM_CWS_BUS_B_UNDERVOLT		48
 #define CSM_CWS_BUS_A_UNDERVOLT		49
+#define CSM_CWS_CWS_POWER			51
 #define CSM_CWS_O2_FLOW_HIGH_LIGHT	52
 #define CSM_CWS_SUIT_COMPRESSOR		53
 
