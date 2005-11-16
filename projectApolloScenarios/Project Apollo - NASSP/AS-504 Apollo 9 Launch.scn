@@ -34,13 +34,14 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-504:saturn5nasp
+Gumdrop:saturn5nasp
   STATUS Landed Earth
   BASE Cape Canaveral:11
   HEADING 270.00
   FUEL 1.000
   APOLLONO 9
-  NASSPVER 50001
+  NASSPVER 60050
+  VECHNO 504
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
@@ -50,5 +51,6 @@ AS-504:saturn5nasp
   TOHDG 72
   TCP -8.5
   LANG English
+  LEMN Spider
 END
 END_SHIPS

@@ -45,13 +45,13 @@ SKYLAB:ProjectApollo\Saturn5Skylab
   TOHDG 72
   TCP -8.5
 END
-AS-206:ProjectApollo\Saturn1b
+Skylab-2:ProjectApollo\Saturn1b
   STATUS Landed Earth
   BASE Cape Canaveral:1
   HEADING 90.00
   FUEL 1.000
-  APOLLONO 10
   NASSPVER 60050
+  VECHNO 206
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
