@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/11/16 23:14:02  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   *	Revision 1.29  2005/11/15 05:44:45  flydba
   *	*** empty log message ***
   *	
@@ -488,6 +491,14 @@ void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Sw
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, row);
 	breaker = b;
+
+	//
+	// Set initial state.
+	//
+
+	if (breaker) {
+		breaker->SetOpen(state == 0);
+	}
 }
 
 //
@@ -2018,13 +2029,13 @@ void CWSPowerSwitch::SetPowerBus()
 {
 	if (cws) {
 		if (IsUp()) {
-			cws->SetPowerBus(CWS_POWER_BUS_A);
+			cws->SetPowerBus(CWS_POWER_SUPPLY_1);
 		}
 		else if (IsCenter()) {
 			cws->SetPowerBus(CWS_POWER_NONE);
 		}
 		else if (IsDown()) {
-			cws->SetPowerBus(CWS_POWER_BUS_B);
+			cws->SetPowerBus(CWS_POWER_SUPPLY_2);
 		}
 	}
 }
