@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2005/11/15 17:18:37  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.71  2005/11/15 05:43:55  flydba
   *	*** empty log message ***
   *	
@@ -255,6 +258,7 @@
 #include "csmcautionwarning.h"
 #include "missiontimer.h"
 #include "FDAI.h"
+#include "iu.h"
 #include "satswitches.h"
 
 
@@ -1231,7 +1235,7 @@ protected:
 	double Stage2Mass;
 	double Stage3Mass;
 
-	bool ENGIND[6];
+	bool ENGIND[9];
 	bool LAUNCHIND[8];
 	bool AutopilotLight;
 
@@ -1382,6 +1386,9 @@ protected:
 
 	bool TLICapableBooster;
 	bool TLIEnabled;
+	bool SkylabSM;
+	bool SkylabCM;
+	bool S1bPanel;
 	bool bAbort;
 	bool bAbtlocked;
 	bool bRecovery;
@@ -1477,6 +1484,7 @@ protected:
 	DSKY dsky2;
 	CSMcomputer agc;
 	IMU imu;
+	IU iu;
 	CSMCautionWarningSystem cws;
 
 	//
@@ -1573,6 +1581,7 @@ protected:
 	double GetCPitch(double t);
 	double GetJ2ISP(double ratio);
 	void StartAbort();
+	void GetLEMName(char *s);
 
 	//
 	// Systems functions.
@@ -1751,6 +1760,12 @@ protected:
 	//
 
 	char AudioLanguage[64];
+
+	//
+	// LEM name
+	//
+
+	char LEMName[64];
 
 	//
 	// PanelSDK functions as a interface between the

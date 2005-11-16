@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2005/11/09 18:15:48  tschachim
+  *	New Saturn assembly process.
+  *	
   *	Revision 1.34  2005/10/31 10:23:26  tschachim
   *	SPSSwitch is now 2-pos, new ONPAD_STAGE.
   *	
@@ -1441,8 +1444,10 @@ void SaturnV::DoFirstTimestep(double simt)
 	hs4b4 = oapiGetVesselByName(VName);
 	strcpy (VName, GetName()); strcat (VName, "-SM");
 	hSMJet = oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-LM");
+
+	GetLEMName(VName);
 	hLMV = oapiGetVesselByName(VName);
+
 	strcpy (VName, GetName()); strcat (VName, "-DCKPRB");
 	hPROBE = oapiGetVesselByName(VName);
 	strcpy (VName, GetName()); strcat (VName, "-EVA");

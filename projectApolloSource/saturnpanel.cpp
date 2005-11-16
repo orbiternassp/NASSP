@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2005/11/15 17:19:05  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.85  2005/11/15 05:44:21  flydba
   *	*** empty log message ***
   *	
@@ -1001,8 +1004,11 @@ void Saturn::SetSwitches(int panel) {
 	CmSmSep2Switch.Init			  (175, 19, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
 	CmSmSep2Switch.InitGuard      (175,  0, 34, 61, srf[SRF_SWITCHGUARDS], 68);
 	CmSmSep2Switch.SetFailed(SwitchFail.u.SMJett2Fail != 0);
-	SivbLmSepSwitch.Init		  (219, 19, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
-	SivbLmSepSwitch.InitGuard     (219,  0, 34, 61, srf[SRF_SWITCHGUARDS]);
+
+	if (!SkylabCM) {
+		SivbLmSepSwitch.Init		  (219, 19, 34, 29, srf[SRF_SWITCHUP], SeparationSwitchesRow); 
+		SivbLmSepSwitch.InitGuard     (219,  0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	}
 
 	CryoTankSwitchesRow.Init(AID_CYROTANKSWITCHES, MainPanel);
 	CabinFan1Switch.Init (  0, 0, 34, 29, srf[SRF_SWITCHUP],       CryoTankSwitchesRow); 
@@ -1045,7 +1051,10 @@ void Saturn::SetSwitches(int panel) {
 
 	CMUplinkSwitch.Init(0, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row, &agc);
 	CMUplinkSwitch.SetChannelData(033, 10, false);	// Down is 'Block Uplink Input'
-	IUUplinkSwitch.Init(43, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+
+	if (!SkylabCM)
+		IUUplinkSwitch.Init(43, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
+
 	CMRCSPressSwitch.Init(87, 19, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
 	CMRCSPressSwitch.InitGuard(87, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
 	SMRCSIndSwitch.Init(131, 16, 34, 29, srf[SRF_SWITCHUP], SMRCSHelium2Row);
@@ -1198,9 +1207,12 @@ void Saturn::SetSwitches(int panel) {
 	LVRow.Init(AID_LV_SWITCHES, MainPanel);
 	LVGuidanceSwitch.Init	  ( 0, 19, 34, 29, srf[SRF_SWITCHUP], LVRow);
 	LVGuidanceSwitch.InitGuard( 0,  0, 34, 61, srf[SRF_SWITCHGUARDS], 170);
-	SIISIVBSepSwitch.Init     (47, 19, 34, 29, srf[SRF_SWITCHUP], LVRow);
-	SIISIVBSepSwitch.InitGuard(47,  0, 34, 61, srf[SRF_SWITCHGUARDS]);
-	TLIEnableSwitch.Init      (95, 16, 34, 29, srf[SRF_SWITCHUP], LVRow, this);
+
+	if (!SkylabCM) {
+		SIISIVBSepSwitch.Init     (47, 19, 34, 29, srf[SRF_SWITCHUP], LVRow);
+		SIISIVBSepSwitch.InitGuard(47,  0, 34, 61, srf[SRF_SWITCHGUARDS]);
+		TLIEnableSwitch.Init      (95, 16, 34, 29, srf[SRF_SWITCHUP], LVRow, this);
+	}
 
 	//
 	// ELS Switches.
@@ -3006,9 +3018,12 @@ void Saturn::InitSwitches() {
 	CmSmSep2Switch = false;						// saved in SSwitchState.Sswitch4
 	CmSmSep2Switch.SetGuardState(false);		// saved in CSwitchState.Cswitch4
 	CmSmSep2Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
-	SivbLmSepSwitch = false;					// saved in RPSwitchState.RPswitch16
-	SivbLmSepSwitch.SetGuardState(false);		// saved in RPSwitchState.RPCswitch
-	SivbLmSepSwitch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
+
+	if (!SkylabCM) {
+		SivbLmSepSwitch = false;					// saved in RPSwitchState.RPswitch16
+		SivbLmSepSwitch.SetGuardState(false);		// saved in RPSwitchState.RPCswitch
+		SivbLmSepSwitch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
+	}
 
 	MissionTimerSwitch.Register(PSH, "MissionTimerSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
 	CautionWarningModeSwitch.Register(PSH, "CautionWarningModeSwitch", THREEPOSSWITCH_UP);
@@ -3120,7 +3135,10 @@ void Saturn::InitSwitches() {
 	SMRCSProp2DTalkback.Register(PSH, "SMRCSProp2DTalkback", false);
 
 	CMUplinkSwitch.Register(PSH, "CMUplinkSwitch", 1);
-	IUUplinkSwitch.Register(PSH, "IUUplinkSwitch", 1);
+
+	if (!SkylabCM)
+		IUUplinkSwitch.Register(PSH, "IUUplinkSwitch", 1);
+
 	CMRCSPressSwitch.Register(PSH, "CMRCSPressSwitch", 0, 0);
 	SMRCSIndSwitch.Register(PSH, "SMRCSIndSwitch", 0);
 
@@ -3169,9 +3187,12 @@ void Saturn::InitSwitches() {
 	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 1);
 
 	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", TOGGLESWITCH_UP, false);
-	LVGuidanceSwitch.SetGuardResetsState(false); 
-	SIISIVBSepSwitch.Register(PSH, "SIISIVBSepSwitch", 0, 0);
-	TLIEnableSwitch.Register(PSH, "TLIEnableSwitch", 0);
+	LVGuidanceSwitch.SetGuardResetsState(false);
+
+	if (!SkylabCM) {
+		SIISIVBSepSwitch.Register(PSH, "SIISIVBSepSwitch", 0, 0);
+		TLIEnableSwitch.Register(PSH, "TLIEnableSwitch", 0);
+	}
 
 	ECSIndicatorsSwitch.AddPosition(1, 340);
 	ECSIndicatorsSwitch.AddPosition(2, 20);
@@ -3669,8 +3690,12 @@ int Saturn::GetRPSwitchState()
 	state.word = 0;
 	state.u.RPswitch13 = RPswitch13;
 	state.u.RPswitch14 = RPswitch14;
-	state.u.RPswitch16 = SivbLmSepSwitch;
-	state.u.RPCswitch = SivbLmSepSwitch.GetGuardState();
+
+	if (!SkylabCM) {
+		state.u.RPswitch16 = SivbLmSepSwitch;
+		state.u.RPCswitch = SivbLmSepSwitch.GetGuardState();
+	}
+
 	state.u.CMCswitch = CMCswitch;
 
 	return state.word;
@@ -3684,8 +3709,12 @@ void Saturn::SetRPSwitchState(int s)
 	state.word = s;
 	RPswitch13 = state.u.RPswitch13;
 	RPswitch14 = state.u.RPswitch14;
-	SivbLmSepSwitch = state.u.RPswitch16;
-	SivbLmSepSwitch.SetGuardState(state.u.RPCswitch);
+
+	if (!SkylabCM) {
+		SivbLmSepSwitch = state.u.RPswitch16;
+		SivbLmSepSwitch.SetGuardState(state.u.RPCswitch);
+	}
+
 	CMCswitch = state.u.CMCswitch;
 }
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/10/31 10:22:17  tschachim
+  *	SPSSwitch is now 2-pos, new ONPAD_STAGE.
+  *	
   *	Revision 1.27  2005/10/19 11:29:55  tschachim
   *	Changed log file name.
   *	
@@ -1129,6 +1132,22 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 void Saturn1b::SetVehicleStats()
 
 {
+	switch (VehicleNo)
+	{
+	case 206:
+	case 207:
+	case 208:
+		SkylabSM = true;
+		SkylabCM = true;
+
+	//
+	// Fall through. I think that Apollo 7 would have the
+	// S1b panel with eight lights.
+	//
+	case 205:
+		S1bPanel = true;
+		break;
+	}
 }
 
 void Saturn1b::CalculateStageMass()

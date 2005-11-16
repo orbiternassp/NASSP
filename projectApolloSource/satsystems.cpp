@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/10/31 10:20:51  tschachim
+  *	SPSSwitch is now 2-pos, new ONPAD_STAGE.
+  *	
   *	Revision 1.28  2005/10/19 11:29:22  tschachim
   *	Bugfixes for high time accelerations.
   *	
@@ -189,6 +192,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		dsky.Timestep(MissionTime);
 		dsky2.Timestep(MissionTime);
 		agc.Timestep(MissionTime, simdt);
+		iu.Timestep(MissionTime, simdt);
 		imu.Timestep(MissionTime);
 		cws.TimeStep(MissionTime);
 
@@ -928,7 +932,7 @@ void Saturn::ClearAutopilotLight()
 void Saturn::SetEngineIndicator(int i)
 
 {
-	if (i < 1 || i > 5)
+	if (i < 1 || i > 8)
 		return;
 
 	ENGIND[i - 1] = true;
@@ -937,7 +941,7 @@ void Saturn::SetEngineIndicator(int i)
 void Saturn::ClearEngineIndicator(int i)
 
 {
-	if (i < 1 || i > 5)
+	if (i < 1 || i > 8)
 		return;
 
 	ENGIND[i - 1] = false;

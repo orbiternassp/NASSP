@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/10/19 11:25:14  tschachim
+  *	Bugfixes for high time accelerations.
+  *	
   *	Revision 1.9  2005/10/12 19:41:08  tschachim
   *	Reduced suit compressor alarm pressure with higher time accelerations,
   *	TODO better solution.
@@ -325,7 +328,9 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 	for (row = 0; row < 6; row++) {
 		for (column = 0; column < 4; column++) {
 			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK || MasterAlarmPressed))) {
-				oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
+				if (!IsFailed(i)) {
+					oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
+				}
 			}
 			i++;
 		}

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/11/09 18:14:51  tschachim
+  *	New Saturn assembly process.
+  *	
   *	Revision 1.17  2005/08/30 18:37:39  movieman523
   *	Added support for new interstage meshes.
   *	
@@ -1378,8 +1381,8 @@ void SaturnV::DockStage (UINT dockstatus)
 		//Now Lets create a real LEM and dock it
 		//oapiDeleteVessel(hs4bM,GetHandle());
 
-		strcpy (VNameLM, GetName());
-		strcat (VNameLM, "-LM");
+
+		GetLEMName(VNameLM);
 
 		vslm2.version = 2;
 		vslm2.flag = 0;
