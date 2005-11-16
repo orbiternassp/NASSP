@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2005/11/16 00:18:49  movieman523
+  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
+  *	
   *	Revision 1.72  2005/11/15 17:18:37  flydba
   *	*** empty log message ***
   *	
@@ -1079,6 +1082,85 @@ protected:
 	CircuitBrakerSwitch ECSTransducerPressGroup2MnBCircuitBraker;
 	CircuitBrakerSwitch ECSTransducerTempMnACircuitBraker;
 	CircuitBrakerSwitch ECSTransducerTempMnBCircuitBraker;
+
+	//
+	// ECS circuit brakers lower row 
+	//
+
+	SwitchRow ECSLowerRowCircuitBrakersRow;
+	CircuitBrakerSwitch ECSSecCoolLoopAc1CircuitBraker;
+	CircuitBrakerSwitch ECSSecCoolLoopAc2CircuitBraker;
+	CircuitBrakerSwitch ECSSecCoolLoopRADHTRMnACircuitBraker;
+	CircuitBrakerSwitch ECSSecCoolLoopXducersMnACircuitBraker;
+	CircuitBrakerSwitch ECSSecCoolLoopXducersMnBCircuitBraker;
+	CircuitBrakerSwitch ECSWasteH2OUrineDumpHTRMnACircuitBraker;
+	CircuitBrakerSwitch ECSWasteH2OUrineDumpHTRMnBCircuitBraker;
+	CircuitBrakerSwitch ECSCabinFanAC1ACircuitBraker;
+	CircuitBrakerSwitch ECSCabinFanAC1BCircuitBraker;
+	CircuitBrakerSwitch ECSCabinFanAC1CCircuitBraker;
+	CircuitBrakerSwitch ECSCabinFanAC2ACircuitBraker;
+	CircuitBrakerSwitch ECSCabinFanAC2BCircuitBraker;
+	CircuitBrakerSwitch ECSCabinFanAC2CCircuitBraker;
+
+	//
+	// Guidance/Navigation circuit brakers 
+	//
+
+	SwitchRow GNCircuitBrakersRow;
+	CircuitBrakerSwitch GNPowerAc1CircuitBraker;
+	CircuitBrakerSwitch GNPowerAc2CircuitBraker;
+	CircuitBrakerSwitch GNIMUMnACircuitBraker;
+	CircuitBrakerSwitch GNIMUMnBCircuitBraker;
+	CircuitBrakerSwitch GNIMUHTRMnACircuitBraker;
+	CircuitBrakerSwitch GNIMUHTRMnBCircuitBraker;
+	CircuitBrakerSwitch GNComputerMnACircuitBraker;
+	CircuitBrakerSwitch GNComputerMnBCircuitBraker;
+	CircuitBrakerSwitch GNOpticsMnACircuitBraker;
+	CircuitBrakerSwitch GNOpticsMnBCircuitBraker;
+
+	//
+	// Suit compressors circuit brakers 
+	//
+
+	SwitchRow SuitCompressorsAc1ACircuitBrakerRow;
+	CircuitBrakerSwitch SuitCompressorsAc1ACircuitBraker;
+
+	SwitchRow SuitCompressorsAc1BCircuitBrakerRow;
+	CircuitBrakerSwitch SuitCompressorsAc1BCircuitBraker;
+
+	SwitchRow SuitCompressorsAc1CCircuitBrakerRow;
+	CircuitBrakerSwitch SuitCompressorsAc1CCircuitBraker;
+
+	SwitchRow SuitCompressorsAc2ACircuitBrakerRow;
+	CircuitBrakerSwitch SuitCompressorsAc2ACircuitBraker;
+
+	SwitchRow SuitCompressorsAc2BCircuitBrakerRow;
+	CircuitBrakerSwitch SuitCompressorsAc2BCircuitBraker;
+
+	SwitchRow SuitCompressorsAc2CCircuitBrakerRow;
+	CircuitBrakerSwitch SuitCompressorsAc2CCircuitBraker;
+
+	//
+	// ECS glycol pumps circuit brakers 
+	//
+
+	SwitchRow ECSGlycolPumpsAc1ACircuitBrakerRow;
+	CircuitBrakerSwitch ECSGlycolPumpsAc1ACircuitBraker;
+
+	SwitchRow ECSGlycolPumpsAc1BCircuitBrakerRow;
+	CircuitBrakerSwitch ECSGlycolPumpsAc1BCircuitBraker;
+
+	SwitchRow ECSGlycolPumpsAc1CCircuitBrakerRow;
+	CircuitBrakerSwitch ECSGlycolPumpsAc1CCircuitBraker;
+
+	SwitchRow ECSGlycolPumpsAc2ACircuitBrakerRow;
+	CircuitBrakerSwitch ECSGlycolPumpsAc2ACircuitBraker;
+
+	SwitchRow ECSGlycolPumpsAc2BCircuitBrakerRow;
+	CircuitBrakerSwitch ECSGlycolPumpsAc2BCircuitBraker;
+
+	SwitchRow ECSGlycolPumpsAc2CCircuitBrakerRow;
+	CircuitBrakerSwitch ECSGlycolPumpsAc2CCircuitBraker;
 
 	//
 	// OLD Switches: delete these as and when we can do so.
