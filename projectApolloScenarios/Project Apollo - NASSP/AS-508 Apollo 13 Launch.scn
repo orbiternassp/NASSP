@@ -34,13 +34,14 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-508:saturn5nasp
+Odyssey:saturn5nasp
   STATUS Landed Earth
   BASE Cape Canaveral:11
   HEADING 270.00
   FUEL 1.000
   APOLLONO 13
   NASSPVER 60050
+  VECHNO 508
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
@@ -57,5 +58,6 @@ AS-508:saturn5nasp
   IGMST 204.5
   TCP -8.5
   LANG English
+  LEMN Aquarius
 END
 END_SHIPS
