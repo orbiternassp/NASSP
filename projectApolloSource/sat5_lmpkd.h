@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/10/31 10:36:32  tschachim
+  *	New toggleswitch callback PanelThumbwheelSwitchChanged.
+  *	
   *	Revision 1.22  2005/09/30 11:22:00  tschachim
   *	New panel event handler.
   *	
@@ -111,6 +114,7 @@ typedef struct {
 	int MissionNo;
 	double MissionTime;
 	char language[64];
+	char CSMName[64];
 	bool Crewed;
 	bool AutoSlow;
 	int Realism;

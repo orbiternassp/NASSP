@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/11/16 00:18:49  movieman523
+  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
+  *	
   *	Revision 1.35  2005/11/09 18:15:48  tschachim
   *	New Saturn assembly process.
   *	
@@ -1427,34 +1430,37 @@ void SaturnV::DoFirstTimestep(double simt)
 	//
 
 	char VName[256];
+	char ApolloName[64];
 
-	strcpy (VName, GetName()); strcat (VName, "-TWR");
+	GetApolloName(ApolloName);
+
+	strcpy (VName, ApolloName); strcat (VName, "-TWR");
 	hesc1= oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-STG1");
+	strcpy (VName, ApolloName); strcat (VName, "-STG1");
 	hstg1= oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-S4BSTG");
+	strcpy (VName, ApolloName); strcat (VName, "-S4BSTG");
 	hs4bM= oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-S4B1");
+	strcpy (VName, ApolloName); strcat (VName, "-S4B1");
 	hs4b1 = oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-S4B2");
+	strcpy (VName, ApolloName); strcat (VName, "-S4B2");
 	hs4b2 = oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-S4B3");
+	strcpy (VName, ApolloName); strcat (VName, "-S4B3");
 	hs4b3 = oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-S4B4");
+	strcpy (VName, ApolloName); strcat (VName, "-S4B4");
 	hs4b4 = oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-SM");
+	strcpy (VName, ApolloName); strcat (VName, "-SM");
 	hSMJet = oapiGetVesselByName(VName);
 
 	GetLEMName(VName);
 	hLMV = oapiGetVesselByName(VName);
 
-	strcpy (VName, GetName()); strcat (VName, "-DCKPRB");
+	strcpy (VName, ApolloName); strcat (VName, "-DCKPRB");
 	hPROBE = oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-EVA");
+	strcpy (VName, ApolloName); strcat (VName, "-EVA");
 	hEVA = oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-INTSTG");
+	strcpy (VName, ApolloName); strcat (VName, "-INTSTG");
 	hintstg = oapiGetVesselByName(VName);
-	strcpy (VName, GetName()); strcat (VName, "-STG2");
+	strcpy (VName, ApolloName); strcat (VName, "-STG2");
 	hstg2 = oapiGetVesselByName(VName);
 
 	habort = oapiGetVesselByName("Saturn_Abort");

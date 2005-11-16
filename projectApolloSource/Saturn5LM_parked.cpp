@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2005/10/19 11:39:11  tschachim
+  *	Changed log file name.
+  *	
   *	Revision 1.34  2005/09/07 22:01:53  movieman523
   *	Fixed the mission timer loading.
   *	
@@ -1101,19 +1104,21 @@ void sat5_lmpkd::SetLanderData(LemSettings &ls)
 
 {
     char buffers[80];
+	char CSMName[64];
 
 	MissionTime = ls.MissionTime;
 	MissionTimerDisplay.SetTime(MissionTime);
 
 	agc.SetDesiredLanding(ls.LandingLatitude, ls.LandingLongitude, ls.LandingAltitude);
 	strncpy (AudioLanguage, ls.language, 64);
+	strncpy (CSMName, ls.CSMName, 64);
 
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
 	Realism = ls.Realism;
 	ApolloNo = ls.MissionNo;
 
-	agc.SetMissionInfo(ApolloNo, Realism);
+	agc.SetMissionInfo(ApolloNo, Realism, CSMName);
 
 	soundlib.SetLanguage(AudioLanguage);
 	sprintf(buffers, "Apollo%d", ApolloNo);
