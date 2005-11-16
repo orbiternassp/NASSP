@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2005/10/31 10:31:34  tschachim
+  *	New ONPAD_STAGE, new surfaces.
+  *	
   *	Revision 1.34  2005/10/11 16:50:44  tschachim
   *	SRFs added.
   *	
@@ -213,6 +216,7 @@ const int nsurf = 46; // number of bitmap handles
 #define SRF_COAS					43
 #define SRF_THUMBWHEEL_SMALLFONTS	44
 #define SRF_CIRCUITBRAKER			45
+#define SRF_THREEPOSSWITCH20		46
 
 //
 // Earth radius and gravity constants.
