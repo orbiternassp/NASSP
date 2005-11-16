@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/11/16 23:14:01  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   *	Revision 1.11  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -323,14 +326,49 @@ void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf
 
 {
 	if (leftpanel) {
-		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6, 122);
+		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6, 122, 0);
 	}
 	else {
-		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261, 122);
+		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261, 122, 30);
 	}
 }
 
-void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy)
+bool CSMCautionWarningSystem::LightPowered(int i)
+
+{
+	if (!LightsPowered())
+		return false;
+
+	if (Source == CWS_SOURCE_CSM)
+		return true;
+
+	//
+	// Disable SM lights when source is set to CM.
+	//
+
+	switch (i) {
+	case CSM_CWS_PITCH_GIMBAL1:
+	case CSM_CWS_PITCH_GIMBAL2:
+	case CSM_CWS_YAW_GIMBAL1:
+	case CSM_CWS_YAW_GIMBAL2:
+	case CSM_CWS_HIGAIN_LIMIT:
+	case CSM_CWS_FC1_LIGHT:
+	case CSM_CWS_FC2_LIGHT:
+	case CSM_CWS_FC3_LIGHT:
+	case CSM_CWS_SM_RCS_A:
+	case CSM_CWS_SM_RCS_B:
+	case CSM_CWS_SM_RCS_C:
+	case CSM_CWS_SM_RCS_D:
+	case CSM_CWS_SPS_PRESS:
+	case CSM_CWS_CRYO_PRESS_LIGHT:
+	case CSM_CWS_GLYCOL_TEMP_LOW:
+		return false;
+	}
+
+	return true;
+}
+
+void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base)
 
 {
 	int i = 0;
@@ -342,7 +380,7 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 	for (row = 0; row < 6; row++) {
 		for (column = 0; column < 4; column++) {
 			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK || MasterAlarmPressed))) {
-				if (!IsFailed(i)) {
+				if (!IsFailed(i + base) && LightPowered(i + base)) {
 					oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
 				}
 			}

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/11/16 23:14:01  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   *	Revision 1.9  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -131,15 +134,14 @@ bool CautionWarningSystem::IsPowered()
 	switch (PowerBus) {
 
 	//
-	// Check that the current bus is providing enough voltage.
+	// Check that we have enough voltage. We should eventually simulate both of the internal
+	// power supplies, so one can fail if desired.
 	//
 
-	case CWS_POWER_BUS_A:
+	case CWS_POWER_SUPPLY_1:
+	case CWS_POWER_SUPPLY_2:
 		if (BusA && (BusA->Voltage() > 25.0))
 			return true;
-		return false;
-
-	case CWS_POWER_BUS_B:
 		if (BusB && (BusB->Voltage() > 25.0))
 			return true;
 		return false;

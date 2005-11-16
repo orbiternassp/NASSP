@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/11/16 23:14:01  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   *	Revision 1.7  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -60,9 +63,9 @@
 #define CWS_SOURCE_CSM		0
 #define CWS_SOURCE_CM		1
 
-#define CWS_POWER_BUS_A		0
-#define CWS_POWER_BUS_B		1
-#define CWS_POWER_NONE		2
+#define CWS_POWER_SUPPLY_1		0
+#define CWS_POWER_SUPPLY_2		1
+#define CWS_POWER_NONE			2
 
 #define CWS_MASTERALARMPOSITION_NONE	0
 #define CWS_MASTERALARMPOSITION_LEFT    1

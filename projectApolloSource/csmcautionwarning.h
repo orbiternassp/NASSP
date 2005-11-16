@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/16 23:14:01  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   *	Revision 1.5  2005/10/11 16:50:01  tschachim
   *	Added more alarms.
   *	
@@ -77,8 +80,9 @@ protected:
 	// Helper functions.
 	//
 
-	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy);
+	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base);
 	bool FuelCellBad(FuelCellStatus fc, int index);
+	bool LightPowered(int i);
 };
 
 //
@@ -86,11 +90,21 @@ protected:
 //
 
 #define CSM_CWS_CO2_LIGHT			3
+#define CSM_CWS_PITCH_GIMBAL1		4
+#define CSM_CWS_YAW_GIMBAL1			5
+#define CSM_CWS_HIGAIN_LIMIT		6
+#define CSM_CWS_PITCH_GIMBAL2		8
+#define CSM_CWS_YAW_GIMBAL2			9
+#define CSM_CWS_SM_RCS_A			16
+#define CSM_CWS_SM_RCS_B			17
+#define CSM_CWS_SM_RCS_C			18
+#define CSM_CWS_SM_RCS_D			19
 #define CSM_CWS_CRYO_PRESS_LIGHT	10
 #define CSM_CWS_GLYCOL_TEMP_LOW		11
 #define CSM_CWS_FC1_LIGHT			31
 #define CSM_CWS_FC2_LIGHT			32
 #define CSM_CWS_FC3_LIGHT			33
+#define CSM_CWS_SPS_PRESS			38
 #define CSM_CWS_CMC_LIGHT			46
 #define CSM_CWS_BUS_B_UNDERVOLT		48
 #define CSM_CWS_BUS_A_UNDERVOLT		49
