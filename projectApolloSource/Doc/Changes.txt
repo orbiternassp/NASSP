@@ -1,6 +1,10 @@
 6.5:
 ----
 
+Support for naming LEM in scenario file.
+Start of IU emulation.
+Random caution and warning light failures on non-historical missions.
+Initial support for Skylab CM and SM.
 Fixed Saturn 5 interstage fairings.
 Mission timer is now controllable from panel switches.
 Added caution and warning system.

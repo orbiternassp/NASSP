@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2005/11/09 18:16:38  tschachim
+  *	New Saturn assembly process.
+  *	
   *	Revision 1.61  2005/10/19 11:40:40  tschachim
   *	FDAIs optionally disabled.
   *	
@@ -285,6 +288,17 @@ void Saturn::initSaturn()
 	TLICapableBooster = false;
 	TLIEnabled = false;
 
+	//
+	// Do we have the Skylab-type SM and CM?
+	//
+	SkylabSM = false;
+	SkylabCM = false;
+
+	//
+	// Or the S1b panel with 8 engine lights?
+	//
+	S1bPanel = false;
+
 	bAbort = false;
 	ABORT_IND = false;
 	LEM_DISPLAY=false;
@@ -523,6 +537,11 @@ void Saturn::initSaturn()
 		th_att_lin[i] = 0;
 	}
 
+	for (i = 0; i < 8; i++)
+		ENGIND[i] = false;
+
+	LEMName[0] = 0;
+
 	UseATC = false;
 	Realism = REALISM_DEFAULT;
 
@@ -638,6 +657,17 @@ bool Saturn::SIVBStart()
 void Saturn::SIVBStop()
 
 {
+}
+
+void Saturn::GetLEMName(char *s)
+
+{
+	if (LEMName[0]) {
+		strcpy (s, LEMName);
+		return;
+	}
+
+	strcpy (s, GetName()); strcat (s, "-LM");
 }
 
 void Saturn::UpdateLaunchTime(double t)
@@ -942,11 +972,15 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 
+	if (LEMName[0])
+		oapiWriteScenario_string (scn, "LEMN", LEMName);
+
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	dsky2.SaveState(scn, DSKY2_START_STRING, DSKY2_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
 	cws.SaveState(scn);
+	iu.SaveState(scn);
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
@@ -984,6 +1018,9 @@ typedef union {
 		unsigned EventTimerEnabled:1;
 		unsigned EventTimerRunning:1;
 		unsigned EventTimerCountUp:2;
+		unsigned SkylabSM:1;
+		unsigned SkylabCM:1;
+		unsigned S1bPanel:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -1012,6 +1049,9 @@ int Saturn::GetMainState()
 	state.u.PostSplashdownPlayed = PostSplashdownPlayed;
 	state.u.IGMEnabled = IGMEnabled;
 	state.u.stgSM = stgSM;
+	state.u.SkylabSM = SkylabSM;
+	state.u.SkylabCM = SkylabCM;
+	state.u.S1bPanel = S1bPanel;
 
 	return state.word;
 }
@@ -1039,6 +1079,9 @@ void Saturn::SetMainState(int s)
 	EventTimerDisplay.SetRunning(state.u.EventTimerRunning != 0);
 	EventTimerDisplay.SetEnabled(state.u.EventTimerEnabled != 0);
 	EventTimerDisplay.SetCountUp(state.u.EventTimerCountUp);
+	SkylabSM = (state.u.SkylabSM != 0);
+	SkylabCM = (state.u.SkylabCM != 0);
+	S1bPanel = (state.u.S1bPanel != 0);
 }
 
 //
@@ -1131,6 +1174,9 @@ typedef union {
 		unsigned Launchind5:1;
 		unsigned Launchind6:1;
 		unsigned Launchind7:1;
+		unsigned Engind6:1;
+		unsigned Engind7:1;
+		unsigned Engind8:1;
 	} u;
 	unsigned long word;
 } LightState;
@@ -1147,6 +1193,9 @@ int Saturn::GetLightState()
 	state.u.Engind3 = ENGIND[3];
 	state.u.Engind4 = ENGIND[4];
 	state.u.Engind5 = ENGIND[5];
+	state.u.Engind6 = ENGIND[6];
+	state.u.Engind7 = ENGIND[7];
+	state.u.Engind8 = ENGIND[8];
 	state.u.Autopilot = AutopilotLight;
 	state.u.Launchind0 = LAUNCHIND[0];
 	state.u.Launchind1 = LAUNCHIND[1];
@@ -1172,6 +1221,9 @@ void Saturn::SetLightState(int s)
 	ENGIND[3] = (state.u.Engind3 != 0);
 	ENGIND[4] = (state.u.Engind4 != 0);
 	ENGIND[5] = (state.u.Engind5 != 0);
+	ENGIND[6] = (state.u.Engind6 != 0);
+	ENGIND[7] = (state.u.Engind7 != 0);
+	ENGIND[8] = (state.u.Engind8 != 0);
 	AutopilotLight = (state.u.Autopilot != 0);
 	LAUNCHIND[0] = (state.u.Launchind0 != 0);
 	LAUNCHIND[1] = (state.u.Launchind1 != 0);
@@ -1203,7 +1255,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	strncpy (VNameApollo, GetName(), 255);
 	if (!strnicmp (VNameApollo, "AS-", 3)) {
 		sscanf(VNameApollo+3, "%d", &n);
-		if (n > 500) {
+		if (n > 200) {
 			VehicleNo = n;
 			SetVehicleStats();
 		}
@@ -1517,6 +1569,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "LANG", 4)) {
 			strncpy (AudioLanguage, line + 5, 64);
 		}
+		else if (!strnicmp(line, "LEMN", 4)) {
+			strncpy (LEMName, line + 5, 64);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -1534,6 +1589,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 			imu.LoadState(scn);
+		}
+		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
+			iu.LoadState(scn);
 		}
 		else if (!strnicmp(line, CWS_START_STRING, sizeof(CWS_START_STRING))) {
 			cws.LoadState(scn);
@@ -3229,7 +3287,20 @@ void Saturn::SetRandomFailures()
 		else if (!(random() & 127)) {
 			SwitchFail.u.SMJett2Fail = 1;
 		}
+
+		//
+		// Random CWS light failures.
+		//
+		if (!(random() & 15)) 
+		{
+			int i, n = (random() & 7) + 1;
+
+			for (i = 0; i < n; i++) {
+				cws.FailLight(random() & 63, true);
+			}
+		}
 	}
+
 }
 
 //

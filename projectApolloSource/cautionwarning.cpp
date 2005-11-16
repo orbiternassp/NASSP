@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/10/11 16:28:11  tschachim
+  *	Improved realism of the switch functionality.
+  *	
   *	Revision 1.7  2005/08/23 03:19:59  flydba
   *	modified master alarm bitmap and correction of some switch positions
   *	
@@ -68,6 +71,9 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	PowerBus = CWS_POWER_NONE;
 
 	OurVessel = 0;
+
+	LightsFailedLeft = 0;
+	LightsFailedRight = 0;
 
 	MasterAlarmLightEnabled = true;
 	MasterAlarmCycleTime = MINUS_INFINITY;
@@ -214,7 +220,6 @@ bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)
 		SetMasterAlarm(false); 
 		MasterAlarmPressed = true;
 		ButtonSound.play(NOLOOP, 255);
-
 	} else if (event & PANEL_MOUSE_LBUP) {
 		MasterAlarmPressed = false;
 	}
@@ -323,6 +328,48 @@ void CautionWarningSystem::SetLightStates(bool *LightState, int state)
 	}
 }
 
+//
+// Fail or fix a light.
+//
+
+void CautionWarningSystem::FailLight(int lightnum, bool failed)
+
+{
+	if (lightnum < 0 || lightnum > 59)
+		return;
+
+	if (failed) {
+		if (lightnum < 30) {
+			LightsFailedLeft |= (1 << lightnum);
+		}
+		else {
+			LightsFailedRight |= (1 << (lightnum - 30));
+		}
+	}
+	else {
+		if (lightnum < 30) {
+			LightsFailedLeft &= ~(1 << lightnum);
+		}
+		else {
+			LightsFailedRight &= ~(1 << (lightnum - 30));
+		}
+	}
+}
+
+bool CautionWarningSystem::IsFailed(int lightnum)
+
+{
+	if (lightnum < 0 || lightnum > 59)
+		return false;
+
+	if (lightnum < 30) {
+		return (LightsFailedLeft & (1 << lightnum)) != 0;
+	}
+	else {
+		return (LightsFailedRight & (1 << (lightnum - 30))) != 0;
+	}
+}
+
 void CautionWarningSystem::SaveState(FILEHANDLE scn)
 
 {
@@ -346,6 +393,12 @@ void CautionWarningSystem::SaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "LLIGHTS", GetLightStates(LeftLights));
 	oapiWriteScenario_int (scn, "RLIGHTS", GetLightStates(RightLights));
+
+	if (LightsFailedLeft)
+		oapiWriteScenario_int (scn, "LFAIL", LightsFailedLeft);
+
+	if (LightsFailedRight)
+		oapiWriteScenario_int (scn, "RFAIL", LightsFailedRight);
 
 	oapiWriteLine(scn, CWS_END_STRING);
 }
@@ -373,6 +426,12 @@ void CautionWarningSystem::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "RLIGHTS", 7)) {
 			sscanf (line+7, "%d", &lights);
 			SetLightStates(RightLights, lights);
+		}
+		else if (!strnicmp (line, "LFAIL", 5)) {
+			sscanf (line+5, "%d", &LightsFailedLeft);
+		}
+		else if (!strnicmp (line, "RFAIL", 5)) {
+			sscanf (line+5, "%d", &LightsFailedRight);
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			CWSState state;

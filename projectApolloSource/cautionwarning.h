@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/10/11 16:49:17  tschachim
+  *	Improved realism of the switch functionality.
+  *	
   *	Revision 1.5  2005/08/21 16:23:32  movieman523
   *	Added more alarms.
   *	
@@ -87,6 +90,13 @@ public:
 
 	void SetLight(int lightnum, bool state);
 
+	//
+	// Force a light to fail, or fix it.
+	//
+
+	void FailLight(int lightnum, bool failed);
+	bool IsFailed(int lightnum);
+
 	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, int position);
 	virtual void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
 	bool CheckMasterAlarmMouseClick(int event);
@@ -102,6 +112,9 @@ protected:
 	int Mode;
 	int Source;
 	int PowerBus;
+
+	int LightsFailedLeft;
+	int LightsFailedRight;
 
 	bool MasterAlarmLightEnabled;
 	bool MasterAlarm;

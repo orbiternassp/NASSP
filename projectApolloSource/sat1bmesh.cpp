@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/08/24 00:30:00  movieman523
+  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
+  *	
   *	Revision 1.12  2005/08/15 23:42:50  movieman523
   *	Improved ASTP a bit. Still buggy, but vaguely working.
   *	
@@ -585,8 +588,14 @@ void Saturn1b::SetASTPStage ()
 	VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
 	AddMesh (hSM, &mesh_dir);
 
-	mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
-	AddMesh (hSMhga, &mesh_dir);
+	//
+	// Skylab SM has no HGA.
+	//
+	if (!SkylabSM) {
+		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		AddMesh (hSMhga, &mesh_dir);
+	}
+
 	mesh_dir=_V(0,0,34.4-12.25-21.5);
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
