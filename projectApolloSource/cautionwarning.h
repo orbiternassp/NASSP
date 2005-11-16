@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/11/16 00:18:49  movieman523
+  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
+  *	
   *	Revision 1.6  2005/10/11 16:49:17  tschachim
   *	Improved realism of the switch functionality.
   *	
@@ -65,6 +68,7 @@
 #define CWS_MASTERALARMPOSITION_LEFT    1
 #define CWS_MASTERALARMPOSITION_RIGHT	2
 
+class PowerSource;
 
 class CautionWarningSystem {
 
@@ -105,6 +109,9 @@ public:
 	void LoadState(FILEHANDLE scn);
 
 	bool IsPowered();
+	bool LightsPowered();
+
+	void WireTo(PowerSource *a, PowerSource *b) { BusA = a; BusB = b; };
 
 protected:
 
@@ -139,6 +146,9 @@ protected:
 	Sound &MasterAlarmSound;
 	Sound &ButtonSound;
 	VESSEL *OurVessel;
+
+	PowerSource *BusA;
+	PowerSource *BusB;
 
 	//
 	// Helper functions.

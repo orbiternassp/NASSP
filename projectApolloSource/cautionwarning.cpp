@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/11/16 00:18:49  movieman523
+  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
+  *	
   *	Revision 1.8  2005/10/11 16:28:11  tschachim
   *	Improved realism of the switch functionality.
   *	
@@ -59,6 +62,7 @@
 
 #include "ioChannels.h"
 
+#include "powersource.h"
 #include "cautionwarning.h"
 #include "nasspdefs.h"
 
@@ -85,6 +89,8 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 		LeftLights[i] = false;
 		RightLights[i] = false;
 	}
+
+	BusA = BusB = 0;
 }
 
 CautionWarningSystem::~CautionWarningSystem()
@@ -125,18 +131,38 @@ bool CautionWarningSystem::IsPowered()
 	switch (PowerBus) {
 
 	//
-	// Later we can check for bus voltage, etc. Now just check the source.
+	// Check that the current bus is providing enough voltage.
 	//
 
 	case CWS_POWER_BUS_A:
-		return true;
+		if (BusA && (BusA->Voltage() > 25.0))
+			return true;
+		return false;
 
 	case CWS_POWER_BUS_B:
-		return true;
+		if (BusB && (BusB->Voltage() > 25.0))
+			return true;
+		return false;
 
 	default:
 		return false;
 	}
+}
+
+//
+// Check whether the lights are powered. This merely requires enough voltage from either bus.
+//
+
+bool CautionWarningSystem::LightsPowered()
+
+{
+	if (BusA && (BusA->Voltage() > 25.0))
+		return true;
+
+	if (BusB && (BusB->Voltage() > 25.0))
+		return true;
+
+	return false;
 }
 
 
@@ -200,7 +226,7 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 	// In Boost-Mode only the left master alarm button is not illuminated (Apollo Operations Handbook 2.10.3)
 	// The left/right lamp test illuminates the left/right master alarm button on the main panel (Apollo Operations Handbook 2.10.3)
 
-	if (IsPowered() && (
+	if (LightsPowered() && (
 	       (MasterAlarmLit && (MasterAlarmLightEnabled || position != CWS_MASTERALARMPOSITION_LEFT)) || 
 	       (TestState == CWS_TEST_LIGHTS_LEFT && position == CWS_MASTERALARMPOSITION_LEFT) ||
 	       (TestState == CWS_TEST_LIGHTS_RIGHT && position == CWS_MASTERALARMPOSITION_RIGHT)

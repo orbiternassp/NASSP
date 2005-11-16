@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/11/16 00:18:49  movieman523
+  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
+  *	
   *	Revision 1.29  2005/10/31 10:20:51  tschachim
   *	SPSSwitch is now 2-pos, new ONPAD_STAGE.
   *	
@@ -148,6 +151,44 @@ void Saturn::SystemsInit() {
 	Panelsdk.InitFromFile("ProjectApollo\\SaturnSystems");
 
 	//PanelsdkLogFile = fopen("ProjectApollo Saturn Systems.log", "w");
+
+	//
+	// Electrical systems.
+	//
+
+	//
+	// First wire up buses to the Panel SDK.
+	//
+
+	e_object *eo;
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:DC_A");
+	MainBusA.WireToSDK(eo);
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:DC_B");
+	MainBusB.WireToSDK(eo);
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_A");
+	ACBus1.WireToSDK(eo);
+
+	//
+	// For now both AC buses are wired to bus A.
+	//
+
+	ACBus2.WireToSDK(eo);
+
+	CWSMainABreaker.WireTo(&MainBusA);
+	CWSMainBBreaker.WireTo(&MainBusB);
+
+	cws.WireTo(&CWSMainABreaker, &CWSMainBBreaker);
+
+	CabinFan1ABreaker.WireTo(&ACBus1);
+	CabinFan1BBreaker.WireTo(&ACBus1);
+	CabinFan1CBreaker.WireTo(&ACBus1);
+
+	CabinFan2ABreaker.WireTo(&ACBus2);
+	CabinFan2BBreaker.WireTo(&ACBus2);
+	CabinFan2CBreaker.WireTo(&ACBus2);
 
 	//
 	// Default valve states.
@@ -668,7 +709,14 @@ bool Saturn::AutopilotActive()
 bool Saturn::CabinFansActive()
 
 {
-	return CabinFan1Switch || CabinFan2Switch;
+	//
+	// For now, if either switch and any power breaker is enabled, then run the fans.
+	//
+
+	bool PowerFan1 = (CabinFan1ABreaker.Voltage() > 20.0) || (CabinFan1BBreaker.Voltage() > 20.0) || (CabinFan1CBreaker.Voltage() > 20.0);
+	bool PowerFan2 = (CabinFan2ABreaker.Voltage() > 20.0) || (CabinFan2BBreaker.Voltage() > 20.0) || (CabinFan2CBreaker.Voltage() > 20.0);
+
+	return (CabinFan1Switch && PowerFan1) || (CabinFan2Switch && PowerFan2);
 }
 
 //
