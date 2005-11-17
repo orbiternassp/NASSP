@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2005/11/17 03:43:09  flydba
+  *	COAS switch renamed...
+  *	
   *	Revision 1.81  2005/11/17 03:30:30  flydba
   *	Changed panel number from 14 to 16.
   *	
@@ -1189,11 +1192,33 @@ protected:
 	CircuitBrakerSwitch ECSGlycolPumpsAc2CCircuitBraker;
 
 	//
-	// Audio panel thumbwheels (panel 6 - right hand side)
+	// Audio panel 6 - thumbwheels 
 	//
 
 	SwitchRow ModeIntercomVOXSensThumbwheelSwitchRow;
 	ThumbwheelSwitch ModeIntercomVOXSensThumbwheelSwitch;
+
+	SwitchRow PowerMasterVolumeThumbwheelSwitchRow;
+	ThumbwheelSwitch PowerMasterVolumeThumbwheelSwitch;
+
+	SwitchRow PadCommVolumeThumbwheelSwitchRow;
+	ThumbwheelSwitch PadCommVolumeThumbwheelSwitch;
+
+	SwitchRow IntercomVolumeThumbwheelSwitchRow;
+	ThumbwheelSwitch IntercomVolumeThumbwheelSwitch;
+
+	SwitchRow SBandVolumeThumbwheelSwitchRow;
+	ThumbwheelSwitch SBandVolumeThumbwheelSwitch;
+
+	SwitchRow VHFAMVolumeThumbwheelSwitchRow;
+	ThumbwheelSwitch VHFAMVolumeThumbwheelSwitch;
+
+	//
+	// Audio panel 6 - switches 
+	//
+
+	SwitchRow AudioControlSwitchRow;
+	ThreePosSwitch AudioControlSwitch;
 	
 	//
 	// OLD Switches: delete these as and when we can do so.
