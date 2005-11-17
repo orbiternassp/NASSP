@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/11/17 01:52:29  movieman523
+  *	Simplified setup for circuit breakers, and added battery buses.
+  *	
   *	Revision 1.33  2005/11/17 01:23:11  movieman523
   *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
   *	
@@ -178,22 +181,44 @@ void Saturn::SystemsInit() {
 	MainBusB.WireToSDK(eo);
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_A");
-	ACBus1.WireToSDK(eo);
+	ACBus1PhaseA.WireToSDK(eo);
 
 	//
-	// For now both AC buses are wired to bus A.
+	// For now all AC phases are wired to bus A.
 	//
 
-	ACBus2.WireToSDK(eo);
+	ACBus1PhaseB.WireToSDK(eo);
+	ACBus1PhaseC.WireToSDK(eo);
+
+	ACBus2PhaseA.WireToSDK(eo);
+	ACBus2PhaseB.WireToSDK(eo);
+	ACBus2PhaseC.WireToSDK(eo);
+
+	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
+	ACBus2.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_A");
-	BatteryBusA.WireToSDK(eo);
+	EntryBatteryA.WireToSDK(eo);
 
 	//
-	// For now both battery buses are wired to battery A.
+	// For now all batteries are wired to battery A.
 	//
 
-	BatteryBusB.WireToSDK(eo);
+	EntryBatteryB.WireToSDK(eo);
+	EntryBatteryC.WireToSDK(eo);
+
+	PyroBatteryA.WireToSDK(eo);
+	PyroBatteryB.WireToSDK(eo);
+
+	//
+	// Wire battery buses to batteries.
+	//
+
+	BatteryBusA.WireToBuses(&EntryBatteryA, &EntryBatteryB, &EntryBatteryC);
+	BatteryBusB.WireToBuses(&EntryBatteryA, &EntryBatteryB, &EntryBatteryC);
+
+	PyroBusA.WireToBuses(&EntryBatteryA, &PyroBatteryA);
+	PyroBusB.WireToBuses(&EntryBatteryB, &PyroBatteryB);
 
 	//
 	// Generic power source for switches, tied to both Bus A and

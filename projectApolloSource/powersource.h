@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/11/17 01:52:29  movieman523
+  *	Simplified setup for circuit breakers, and added battery buses.
+  *	
   *	Revision 1.2  2005/11/17 01:23:11  movieman523
   *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
   *	
@@ -82,6 +85,19 @@ public:
 protected:
 	PowerSource *BusA;
 	PowerSource *BusB;
+};
+
+class ThreeWayPowerMerge : public PowerSource {
+public:
+	ThreeWayPowerMerge() { Phase1 = 0; Phase2 = 0; Phase3 = 0; };
+	double Voltage();
+	void DrawPower(double watts);
+	void WireToBuses(PowerSource *a, PowerSource *b, PowerSource *c) { Phase1 = a; Phase2 = b; Phase3 = c; };
+
+protected:
+	PowerSource *Phase1;
+	PowerSource *Phase2;
+	PowerSource *Phase3;
 };
 
 class PowerBreaker : public PowerSource {

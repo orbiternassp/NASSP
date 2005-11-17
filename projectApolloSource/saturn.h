@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2005/11/17 07:07:04  flydba
+  *	Thumbwheels on panel 6 now work, other switches on the right panel  added etc.
+  *	
   *	Revision 1.82  2005/11/17 03:43:09  flydba
   *	COAS switch renamed...
   *	
@@ -1450,11 +1453,32 @@ protected:
 	PowerSDKObject MainBusA;
 	PowerSDKObject MainBusB;
 
-	PowerSDKObject ACBus1;
-	PowerSDKObject ACBus2;
+	PowerSDKObject ACBus1PhaseA;
+	PowerSDKObject ACBus1PhaseB;
+	PowerSDKObject ACBus1PhaseC;
 
-	PowerSDKObject BatteryBusA;
-	PowerSDKObject BatteryBusB;
+	PowerSDKObject ACBus2PhaseA;
+	PowerSDKObject ACBus2PhaseB;
+	PowerSDKObject ACBus2PhaseC;
+
+	PowerSDKObject NonESSBus1;
+	PowerSDKObject NonESSBus2;
+
+	ThreeWayPowerMerge ACBus1;
+	ThreeWayPowerMerge ACBus2;
+
+	PowerSDKObject EntryBatteryA;
+	PowerSDKObject EntryBatteryB;
+	PowerSDKObject EntryBatteryC;
+
+	PowerSDKObject PyroBatteryA;
+	PowerSDKObject PyroBatteryB;
+
+	ThreeWayPowerMerge BatteryBusA;
+	ThreeWayPowerMerge BatteryBusB;
+
+	PowerMerge PyroBusA;
+	PowerMerge PyroBusB;
 
 	PowerMerge SwitchPower;
 
@@ -1619,7 +1643,7 @@ protected:
 	// Surfaces.
 	//
 
-	SURFHANDLE srf[nsurf];  // handles for panel bitmaps
+	SURFHANDLE srf[nsurf + 1];  // handles for panel bitmaps. +1 for safety :).
 	SURFHANDLE SMExhaustTex;
 	SURFHANDLE SMMETex;
 	SURFHANDLE CMTex;
