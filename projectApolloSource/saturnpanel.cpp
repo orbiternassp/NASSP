@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.95  2005/11/17 03:43:35  flydba
+  *	COAS switch renamed...
+  *	
   *	Revision 1.94  2005/11/17 03:32:15  flydba
   *	Changed panel number from 14 to 16, some changes...
   *	
@@ -616,6 +619,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL]  = oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL));
 		srf[SRF_CIRCUITBRAKER]          = oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
 		srf[SRF_THREEPOSSWITCH20]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH20));
+		srf[SRF_THREEPOSSWITCH30]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH30));
 		
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -633,6 +637,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SUITCABINDELTAPMETER],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH305],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH20],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH30],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_FDAI],					g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_FDAIROLL],				g_Param.col[4]);
@@ -951,7 +956,13 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC2BCIRCUITBRAKER,				_R( 980, 1530, 1009, 1559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC2CCIRCUITBRAKER,				_R(1003, 1499, 1032, 1528), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_COASSWITCH,									_R( 330,   63,  364,   94), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MODEINTERCOMVOXSENSTHUMBWHEEL,				_R( 137,  280,  171,  323), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MODEINTERCOMVOXSENSTHUMBWHEEL,				_R( 138,  280,  171,  323), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_POWERMASTERVOLUMETHUMBWHEEL,					_R( 262,  299,  295,  342), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PADCOMMVOLUMETHUMBWHEEL,						_R( 181,  387,  214,  430), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_INTERCOMVOLUMETHUMBWHEEL,					_R( 307,  412,  340,  455), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SBANDVOLUMETHUMBWHEEL,						_R( 224,  496,  257,  539), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_VHFVOLUMETHUMBWHEEL,							_R( 350,  519,  383,  562), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_AUDIOCONTROLSWITCH,							_R( 347,  649,  381,  683), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;    
@@ -1617,7 +1628,25 @@ void Saturn::SetSwitches(int panel) {
 	ECSGlycolPumpsAc2CCircuitBraker.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSGlycolPumpsAc2CCircuitBrakerRow);
 	
 	ModeIntercomVOXSensThumbwheelSwitchRow.Init(AID_MODEINTERCOMVOXSENSTHUMBWHEEL, MainPanel);  
-	ModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 34, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], ModeIntercomVOXSensThumbwheelSwitchRow);
+	ModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], ModeIntercomVOXSensThumbwheelSwitchRow);
+	
+	PowerMasterVolumeThumbwheelSwitchRow.Init(AID_POWERMASTERVOLUMETHUMBWHEEL, MainPanel);
+	PowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], PowerMasterVolumeThumbwheelSwitchRow);
+	
+	PadCommVolumeThumbwheelSwitchRow.Init(AID_PADCOMMVOLUMETHUMBWHEEL, MainPanel);
+	PadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], PadCommVolumeThumbwheelSwitchRow);
+	
+	IntercomVolumeThumbwheelSwitchRow.Init(AID_INTERCOMVOLUMETHUMBWHEEL, MainPanel);
+	IntercomVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], IntercomVolumeThumbwheelSwitchRow);
+	
+	SBandVolumeThumbwheelSwitchRow.Init(AID_SBANDVOLUMETHUMBWHEEL, MainPanel);
+	SBandVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], SBandVolumeThumbwheelSwitchRow);
+	
+	VHFAMVolumeThumbwheelSwitchRow.Init(AID_VHFVOLUMETHUMBWHEEL, MainPanel);
+	VHFAMVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], VHFAMVolumeThumbwheelSwitchRow);
+
+	AudioControlSwitchRow.Init(AID_AUDIOCONTROLSWITCH, MainPanel);
+	AudioControlSwitch.Init(0, 0, 34, 34, srf[SRF_THREEPOSSWITCH30], AudioControlSwitchRow);
 	
 	//
 	// SATPANEL_LEFT_RNDZ_WINDOW
@@ -3221,7 +3250,9 @@ void Saturn::InitSwitches() {
 	SuitCompressor1Switch.Register(PSH, "SuitCompressor1Switch", THREEPOSSWITCH_CENTER);   
 	SuitCompressor2Switch.Register(PSH, "SuitCompressor2Switch", THREEPOSSWITCH_CENTER);   
 	
-	RightCOASPowerSwitch.Register(PSH, "RightCOASPowerSwitch", THREEPOSSWITCH_DOWN); 
+	RightCOASPowerSwitch.Register(PSH, "RightCOASPowerSwitch", THREEPOSSWITCH_DOWN);
+	
+	AudioControlSwitch.Register(PSH, "AudioControlSwitch", THREEPOSSWITCH_DOWN);
 	
 	SBandNormalXPDRSwitch.Register(PSH, "SBandNormalXPDRSwitch", THREEPOSSWITCH_CENTER);
 	SBandNormalPwrAmpl1Switch.Register(PSH, "SBandNormalPwrAmpl1Switch", THREEPOSSWITCH_CENTER);
@@ -3547,7 +3578,17 @@ void Saturn::InitSwitches() {
 	ECSGlycolPumpsAc2BCircuitBraker.Register(PSH, "ECSGlycolPumpsAc2BCircuitBraker", 1);
 	ECSGlycolPumpsAc2CCircuitBraker.Register(PSH, "ECSGlycolPumpsAc2CCircuitBraker", 1);
 	
-	ModeIntercomVOXSensThumbwheelSwitch.Register(PSH, "ModeIntercomVOXSensThumbwheelSwitch", 5, 9);
+	ModeIntercomVOXSensThumbwheelSwitch.Register(PSH, "ModeIntercomVOXSensThumbwheelSwitch", 2, 9);
+	
+	PowerMasterVolumeThumbwheelSwitch.Register(PSH, "PowerMasterVolumeThumbwheelSwitch", 2, 9);
+
+	PadCommVolumeThumbwheelSwitch.Register(PSH, "PadCommVolumeThumbwheelSwitch", 2, 9);
+
+	IntercomVolumeThumbwheelSwitch.Register(PSH, "IntercomVolumeThumbwheelSwitch", 2, 9);
+
+	SBandVolumeThumbwheelSwitch.Register(PSH, "SBandVolumeThumbwheelSwitch", 2, 9);
+
+	VHFAMVolumeThumbwheelSwitch.Register(PSH, "VHFAMVolumeThumbwheelSwitch", 2, 9);
 	
 	//
 	// Old stuff. Delete when no longer required.
