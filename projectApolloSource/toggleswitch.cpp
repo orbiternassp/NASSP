@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/11/16 23:50:31  movieman523
+  *	More updates to CWS operation. Still not completely correct, but closer.
+  *	
   *	Revision 1.30  2005/11/16 23:14:02  movieman523
   *	Initial support for wiring in the circuit breakers.
   *	
@@ -467,10 +470,6 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 	if (Active && (state != OldState)) {
 		SwitchToggled = true;
 
-		if (breaker) {
-			breaker->SetOpen(state == 0);
-		}
-
 		if (switchRow) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
@@ -479,40 +478,19 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+double CircuitBrakerSwitch::Voltage()
+
+{
+	if ((state != 0) && next_source)
+		return next_source->Voltage();
+
+	return 0.0;
+}
+
 void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
 		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND);
-}
-
-
-void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerBreaker *b)
-
-{
-	ToggleSwitch::Init(xp, yp, w, h, surf, row);
-	breaker = b;
-
-	//
-	// Set initial state.
-	//
-
-	if (breaker) {
-		breaker->SetOpen(state == 0);
-	}
-}
-
-//
-// This function just resets the circuit breaker state based on the state loaded
-// from the file.
-//
-
-void CircuitBrakerSwitch::LoadState(char *line)
-
-{
-	ToggleSwitch::LoadState(line);
-	if (breaker) {
-		breaker->SetOpen(state == 0);
-	}
 }
 
 
@@ -666,6 +644,8 @@ SwitchRow::SwitchRow() {
 	SwitchList = 0;
 	RowList = 0;
 	PanelArea = (-1);
+
+	RowPower = 0;
 }
 
 SwitchRow::~SwitchRow() {
@@ -685,12 +665,28 @@ bool SwitchRow::CheckMouseClick(int id, int event, int mx, int my) {
 	return false;
 }
 
-void SwitchRow::Init(int area, PanelSwitches &panel) {
+void SwitchRow::AddSwitch(PanelSwitchItem *s)
+
+{
+	s->SetNext(SwitchList); 
+	SwitchList = s;
+
+	//
+	// If we have power, wire it to the switch. Unless someone's already connected it
+	// to another power source.
+	//
+	if (RowPower && !(s->IsWired()))
+		s->WireTo(RowPower);
+}
+
+void SwitchRow::Init(int area, PanelSwitches &panel, PowerSource *p) {
 
 	SwitchList = 0;
 	RowList = 0;
 	PanelArea = area;
 	panelSwitches = &panel;
+	RowPower = p;
+
 	panel.AddRow(this);
 }
 
