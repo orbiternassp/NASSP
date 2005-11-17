@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2005/11/17 01:23:11  movieman523
+  *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
+  *	
   *	Revision 1.78  2005/11/17 00:28:36  movieman523
   *	Wired in AGC circuit breakers.
   *	
@@ -1402,7 +1405,6 @@ protected:
 
 	SwitchRow SBandNormalSwitchesRow;
 
-
 	//
 	// Electrical systems.
 	//
@@ -1412,6 +1414,11 @@ protected:
 
 	PowerSDKObject ACBus1;
 	PowerSDKObject ACBus2;
+
+	PowerSDKObject BatteryBusA;
+	PowerSDKObject BatteryBusB;
+
+	PowerMerge SwitchPower;
 
 	// old stuff begin
 

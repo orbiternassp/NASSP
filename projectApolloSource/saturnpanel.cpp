@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.92  2005/11/17 01:23:11  movieman523
+  *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
+  *	
   *	Revision 1.91  2005/11/17 00:28:36  movieman523
   *	Wired in AGC circuit breakers.
   *	
@@ -1482,8 +1485,8 @@ void Saturn::SetSwitches(int panel) {
 	EpsSensorSignalAc2CircuitBraker.Init(101, 0, 29, 29, srf[SRF_CIRCUITBRAKER], EpsSensorSignalAcCircuitBrakersRow);
 
 	CWCircuitBrakersRow.Init(AID_CWCIRCUITBRAKERS, MainPanel);
-	CWMnaCircuitBraker.Init( 0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow);
-	CWMnbCircuitBraker.Init(38, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow);
+	CWMnaCircuitBraker.Init( 0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow, &MainBusA);
+	CWMnbCircuitBraker.Init(38, 0, 29, 29, srf[SRF_CIRCUITBRAKER], CWCircuitBrakersRow, &MainBusB);
 	
 	LMPWRCircuitBrakersRow.Init(AID_LMPWRCIRCUITBRAKERS, MainPanel);
 	MnbLMPWR1CircuitBraker.Init(0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], LMPWRCircuitBrakersRow);
@@ -1549,12 +1552,12 @@ void Saturn::SetSwitches(int panel) {
 	ECSSecCoolLoopXducersMnBCircuitBraker.Init(262,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
 	ECSWasteH2OUrineDumpHTRMnACircuitBraker.Init(355,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
 	ECSWasteH2OUrineDumpHTRMnBCircuitBraker.Init(393,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC1ACircuitBraker.Init(585,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC1BCircuitBraker.Init(622,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC1CCircuitBraker.Init(659,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC2ACircuitBraker.Init(696,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC2BCircuitBraker.Init(733,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC2CCircuitBraker.Init(771,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
+	ECSCabinFanAC1ACircuitBraker.Init(585,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1);
+	ECSCabinFanAC1BCircuitBraker.Init(622,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1);
+	ECSCabinFanAC1CCircuitBraker.Init(659,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1);
+	ECSCabinFanAC2ACircuitBraker.Init(696,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2);
+	ECSCabinFanAC2BCircuitBraker.Init(733,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2);
+	ECSCabinFanAC2CCircuitBraker.Init(771,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2);
 
 	GNCircuitBrakersRow.Init(AID_GUIDANCENAVIGATIONCIRCUITBRAKERS, MainPanel);
 	GNPowerAc1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
@@ -1563,8 +1566,8 @@ void Saturn::SetSwitches(int panel) {
 	GNIMUMnBCircuitBraker.Init(140,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
 	GNIMUHTRMnACircuitBraker.Init(177,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
 	GNIMUHTRMnBCircuitBraker.Init(214,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
-	GNComputerMnACircuitBraker.Init(251,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
-	GNComputerMnBCircuitBraker.Init(288,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
+	GNComputerMnACircuitBraker.Init(251,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &MainBusA);
+	GNComputerMnBCircuitBraker.Init(288,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &MainBusB);
 	GNOpticsMnACircuitBraker.Init(325,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
 	GNOpticsMnBCircuitBraker.Init(362,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
 	

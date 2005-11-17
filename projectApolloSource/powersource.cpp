@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/16 23:14:02  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   **************************************************************************/
 
 
@@ -91,3 +94,32 @@ void PowerSDKObject::DrawPower(double watts)
 	//
 }
 
+//
+// Tie power together from two sources. For now we just take the
+// largest voltage from both sources.
+//
+
+double PowerMerge::Voltage()
+
+{
+	double VoltsA = 0.0, VoltsB = 0.0;
+
+	if (BusA)
+		VoltsA = BusA->Voltage();
+	if (BusB)
+		VoltsB = BusB->Voltage();
+
+	if (VoltsA > VoltsB)
+		return VoltsA;
+
+	return VoltsB;
+}
+
+void PowerMerge::DrawPower(double watts)
+
+{
+	//
+	// I guess we should draw power from each source proportionally to the
+	// voltage?
+	//
+}
