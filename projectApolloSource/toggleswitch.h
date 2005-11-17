@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/11/16 23:14:02  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   *	Revision 1.24  2005/10/31 10:43:13  tschachim
   *	Added CircuitBrakerSwitch and ThumbwheelSwitch.
   *	
@@ -123,9 +126,10 @@
 
 class SwitchRow;
 class PanelSwitchScenarioHandler;
-class PowerBreaker;
 
-class PanelSwitchItem {
+#include "powersource.h"
+
+class PanelSwitchItem: public PowerSource {
 
 public:
 	PanelSwitchItem();
@@ -377,16 +381,14 @@ protected:
 class CircuitBrakerSwitch: public ToggleSwitch {
 
 public:
-	CircuitBrakerSwitch() { breaker = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerBreaker *b = 0);
 	bool CheckMouseClick(int event, int mx, int my);
-	void LoadState(char *line);
+
+	double Voltage();
 
 	int operator=(const int b) { state = b; return state; };
 
 protected:
 	virtual void InitSound(SoundLib *s);
-	PowerBreaker *breaker;
 };
 
 
@@ -727,8 +729,8 @@ public:
 
 	bool CheckMouseClick(int id, int event, int mx, int my);
 	bool DrawRow(int id, SURFHANDLE DrawSurface);
-	void AddSwitch(PanelSwitchItem *s) { s->SetNext(SwitchList); SwitchList = s; };
-	void Init(int area, PanelSwitches &panel);
+	void AddSwitch(PanelSwitchItem *s);
+	void Init(int area, PanelSwitches &panel, PowerSource *p = 0);
 	SwitchRow *GetNext() { return RowList; };
 	void SetNext(SwitchRow *s) { RowList = s; };
 
@@ -737,6 +739,8 @@ protected:
 	SwitchRow *RowList;
 	int PanelArea;
 	PanelSwitches *panelSwitches;
+
+	PowerSource *RowPower;
 
 	friend class ToggleSwitch;
 	friend class ThreePosSwitch;

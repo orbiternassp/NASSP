@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2005/11/17 00:28:36  movieman523
+  *	Wired in AGC circuit breakers.
+  *	
   *	Revision 1.77  2005/11/16 23:14:01  movieman523
   *	Initial support for wiring in the circuit breakers.
   *	
@@ -1403,20 +1406,6 @@ protected:
 	//
 	// Electrical systems.
 	//
-
-	PowerBreaker CWSMainABreaker;
-	PowerBreaker CWSMainBBreaker;
-
-	PowerBreaker CabinFan1ABreaker;
-	PowerBreaker CabinFan1BBreaker;
-	PowerBreaker CabinFan1CBreaker;
-
-	PowerBreaker CabinFan2ABreaker;
-	PowerBreaker CabinFan2BBreaker;
-	PowerBreaker CabinFan2CBreaker;
-
-	PowerBreaker AGCMainABreaker;
-	PowerBreaker AGCMainBBreaker;
 
 	PowerSDKObject MainBusA;
 	PowerSDKObject MainBusB;

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/11/17 00:28:36  movieman523
+  *	Wired in AGC circuit breakers.
+  *	
   *	Revision 1.31  2005/11/16 23:14:01  movieman523
   *	Initial support for wiring in the circuit breakers.
   *	
@@ -180,23 +183,23 @@ void Saturn::SystemsInit() {
 
 	ACBus2.WireToSDK(eo);
 
-	CWSMainABreaker.WireTo(&MainBusA);
-	CWSMainBBreaker.WireTo(&MainBusB);
+	CWMnaCircuitBraker.WireTo(&MainBusA);
+	CWMnbCircuitBraker.WireTo(&MainBusB);
 
-	cws.WireTo(&CWSMainABreaker, &CWSMainBBreaker);
+	cws.WireTo(&CWMnaCircuitBraker, &CWMnbCircuitBraker);
 
-	CabinFan1ABreaker.WireTo(&ACBus1);
-	CabinFan1BBreaker.WireTo(&ACBus1);
-	CabinFan1CBreaker.WireTo(&ACBus1);
+	ECSCabinFanAC1ACircuitBraker.WireTo(&ACBus1);
+	ECSCabinFanAC1BCircuitBraker.WireTo(&ACBus1);
+	ECSCabinFanAC1CCircuitBraker.WireTo(&ACBus1);
 
-	CabinFan2ABreaker.WireTo(&ACBus2);
-	CabinFan2BBreaker.WireTo(&ACBus2);
-	CabinFan2CBreaker.WireTo(&ACBus2);
+	ECSCabinFanAC2ACircuitBraker.WireTo(&ACBus2);
+	ECSCabinFanAC2BCircuitBraker.WireTo(&ACBus2);
+	ECSCabinFanAC2CCircuitBraker.WireTo(&ACBus2);
 
-	AGCMainABreaker.WireTo(&MainBusA);
-	AGCMainBBreaker.WireTo(&MainBusB);
+	GNComputerMnACircuitBraker.WireTo(&MainBusA);
+	GNComputerMnBCircuitBraker.WireTo(&MainBusB);
 
-	agc.WirePower(&AGCMainABreaker, &AGCMainBBreaker);
+	agc.WirePower(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
 
 	//
 	// Default valve states.
@@ -721,8 +724,8 @@ bool Saturn::CabinFansActive()
 	// For now, if either switch and any power breaker is enabled, then run the fans.
 	//
 
-	bool PowerFan1 = (CabinFan1ABreaker.Voltage() > 20.0) || (CabinFan1BBreaker.Voltage() > 20.0) || (CabinFan1CBreaker.Voltage() > 20.0);
-	bool PowerFan2 = (CabinFan2ABreaker.Voltage() > 20.0) || (CabinFan2BBreaker.Voltage() > 20.0) || (CabinFan2CBreaker.Voltage() > 20.0);
+	bool PowerFan1 = (ECSCabinFanAC1ACircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC1BCircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC1CCircuitBraker.Voltage() > 20.0);
+	bool PowerFan2 = (ECSCabinFanAC2ACircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC2BCircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC2CCircuitBraker.Voltage() > 20.0);
 
 	return (CabinFan1Switch && PowerFan1) || (CabinFan2Switch && PowerFan2);
 }

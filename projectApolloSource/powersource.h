@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/16 23:14:02  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   **************************************************************************/
 
 #if !defined(_PA_POWERSOURCE_H)
@@ -36,6 +39,8 @@ public:
 	~PowerSource();
 
 	void WireTo(PowerSource *p) { next_source = p; };
+	bool IsWired() { return (next_source != 0); };
+
 	virtual double Voltage();
 	virtual void DrawPower(double watts);
 
