@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/11/16 20:41:07  flydba
+  *	New threeposswitch for panel 14 added.
+  *	
   *	Revision 1.35  2005/10/31 10:31:34  tschachim
   *	New ONPAD_STAGE, new surfaces.
   *	
@@ -178,7 +181,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 46; // number of bitmap handles
+const int nsurf = 47; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -217,6 +220,7 @@ const int nsurf = 46; // number of bitmap handles
 #define SRF_THUMBWHEEL_SMALLFONTS	44
 #define SRF_CIRCUITBRAKER			45
 #define SRF_THREEPOSSWITCH20		46
+#define SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL	47
 
 //
 // Earth radius and gravity constants.
