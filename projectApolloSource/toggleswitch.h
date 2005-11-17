@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/11/17 01:34:25  movieman523
+  *	Extended circuit breaker init function so it can be wired directly to a power source.
+  *	
   *	Revision 1.26  2005/11/17 01:23:11  movieman523
   *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
   *	
@@ -384,15 +387,19 @@ protected:
 class CircuitBrakerSwitch: public ToggleSwitch {
 
 public:
+	CircuitBrakerSwitch() { MaxAmps = 0.0; };
+
 	bool CheckMouseClick(int event, int mx, int my);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerSource *s = 0);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerSource *s = 0, double amps = 30.0);
 
 	double Voltage();
+	void DrawPower(double watts);
 
 	int operator=(const int b) { state = b; return state; };
 
 protected:
 	virtual void InitSound(SoundLib *s);
+	double MaxAmps;
 };
 
 

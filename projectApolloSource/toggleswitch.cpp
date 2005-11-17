@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/11/17 01:34:25  movieman523
+  *	Extended circuit breaker init function so it can be wired directly to a power source.
+  *	
   *	Revision 1.32  2005/11/17 01:23:11  movieman523
   *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
   *	
@@ -496,13 +499,49 @@ void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND);
 }
 
-void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerSource *s)
+void CircuitBrakerSwitch::DrawPower(double watts)
+
+{
+	//
+	// Do nothing if the breaker is open.
+	//
+
+	if (state == 0)
+		return;
+
+	//
+	// Check the current isn't over the max rating, and if it is then
+	// pop the breaker.
+	//
+
+	if (next_source) {
+		double volts = next_source->Voltage();
+		if (volts > 0.0) {
+			double amps = watts / volts;
+			if (amps > MaxAmps) {
+				state = 0;
+				SwitchToggled = true;
+
+				if (switchRow) {
+					if (switchRow->panelSwitches->listener) 
+						switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+				}
+				return;
+			}
+		}
+		PowerSource::DrawPower(watts);
+	}
+}
+
+void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerSource *s, double amps)
 
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, row);
 	if (s) {
 		WireTo(s);
 	}
+
+	MaxAmps = amps;
 }
 
 //
