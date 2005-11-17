@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.52  2005/10/14 17:23:06  lazyd
   *	Changed P12 to work orbiting any body
   *	
@@ -200,6 +203,7 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "powersource.h"
 
 #include "tracer.h"
 
@@ -348,6 +352,9 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	strncpy (FiveDigitEntry, "      ", 6);
 
 	LastAlt = 0.;
+
+	BusA = 0;
+	BusB = 0;
 
 
 #ifdef AGC_SOCKET_ENABLED
@@ -4756,6 +4763,30 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 }
 
 //
+// Power.
+//
+
+bool ApolloGuidance::IsPowered()
+
+{
+	if (BusA && BusA->Voltage() > 20.0)
+		return true;
+
+	if (BusB && BusB->Voltage() > 20.0)
+		return true;
+
+	//
+	// Quick hack for now: if no power bus connected, pretend we
+	// have power.
+	//
+
+	if (!BusA && !BusB)
+		return true;
+
+	return false;
+}
+
+//
 // I/O channel support code.
 //
 // Note that the AGC 'bit 1' is actually 'bit 0' in today's terminology, so we have
@@ -4790,6 +4821,12 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 	
 
 	InputChannel[channel] = val;
+
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
 
 	if (Yaagc) {
 #ifdef AGC_SOCKET_ENABLED
@@ -4881,6 +4918,12 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 	}
 
 	InputChannel[channel] = data;
+
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
 
 	if (Yaagc) {
 		//

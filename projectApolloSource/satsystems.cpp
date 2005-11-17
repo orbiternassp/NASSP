@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/11/16 23:14:01  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   *	Revision 1.30  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -189,6 +192,11 @@ void Saturn::SystemsInit() {
 	CabinFan2ABreaker.WireTo(&ACBus2);
 	CabinFan2BBreaker.WireTo(&ACBus2);
 	CabinFan2CBreaker.WireTo(&ACBus2);
+
+	AGCMainABreaker.WireTo(&MainBusA);
+	AGCMainBBreaker.WireTo(&MainBusB);
+
+	agc.WirePower(&AGCMainABreaker, &AGCMainBBreaker);
 
 	//
 	// Default valve states.

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/10/12 11:23:06  tschachim
+  *	Bugfix OPR ERR during P15.
+  *	
   *	Revision 1.22  2005/10/11 16:34:04  tschachim
   *	Only for NASSP AGC mode:
   *	P01 requires the IMU turned on and P11 drives the IMU to prelaunch alignment.
@@ -1026,6 +1029,15 @@ void CSMcomputer::Prog15Pressed(int R1, int R2, int R3)
 void CSMcomputer::Timestep(double simt, double simdt)
 
 {
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
+
+	//
+	// Initial startup hack for Yaagc.
+	//
 	if (Yaagc && !PadLoaded) {
 
 #ifndef AGC_SOCKET_ENABLED		
@@ -1500,6 +1512,13 @@ void CSMcomputer::DisplayBankSum()
 void CSMcomputer::Liftoff(double simt)
 
 {
+
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
+
 	//
 	// Ensure autopilot is enabled.
 	//
@@ -1535,6 +1554,12 @@ void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 
 {
 	ApolloGuidance::SetInputChannelBit(channel, bit, val);
+
+	//
+	// Do nothing if we have no power.
+	//
+	if (!IsPowered())
+		return;
 
 	switch (channel)
 	{
