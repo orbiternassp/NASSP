@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/11/17 21:04:52  movieman523
+  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
+  *	
   *	Revision 1.35  2005/11/17 19:19:12  movieman523
   *	Added three-phase AC bus and battery buses.
   *	
@@ -185,13 +188,10 @@ void Saturn::SystemsInit() {
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_A");
 	ACBus1PhaseA.WireToSDK(eo);
-
-	//
-	// For now all AC phases are wired to bus A.
-	//
-
 	ACBus1PhaseB.WireToSDK(eo);
 	ACBus1PhaseC.WireToSDK(eo);
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_B");
 
 	ACBus2PhaseA.WireToSDK(eo);
 	ACBus2PhaseB.WireToSDK(eo);
@@ -760,14 +760,32 @@ bool Saturn::AutopilotActive()
 bool Saturn::CabinFansActive()
 
 {
+	return CabinFan1Active() || CabinFan2Active();
+}
+
+
+bool Saturn::CabinFan1Active()
+
+{
 	//
-	// For now, if either switch and any power breaker is enabled, then run the fans.
+	// For now, if any power breaker is enabled, then run the fans.
 	//
 
 	bool PowerFan1 = (ECSCabinFanAC1ACircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC1BCircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC1CCircuitBraker.Voltage() > 20.0);
+
+	return (CabinFan1Switch && PowerFan1);
+}
+
+bool Saturn::CabinFan2Active()
+
+{
+	//
+	// For now, if any power breaker is enabled, then run the fans.
+	//
+
 	bool PowerFan2 = (ECSCabinFanAC2ACircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC2BCircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC2CCircuitBraker.Voltage() > 20.0);
 
-	return (CabinFan1Switch && PowerFan1) || (CabinFan2Switch && PowerFan2);
+	return (CabinFan2Switch && PowerFan2);
 }
 
 //

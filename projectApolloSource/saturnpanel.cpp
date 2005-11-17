@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.98  2005/11/17 21:04:52  movieman523
+  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
+  *	
   *	Revision 1.97  2005/11/17 19:19:12  movieman523
   *	Added three-phase AC bus and battery buses.
   *	
@@ -2028,13 +2031,21 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER:PUMP");
 		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER:PUMP");
 
+		*pump1 = SP_PUMP_OFF;
+		*pump2 = SP_PUMP_OFF;
+
 		if (CabinFansActive()) {
-			*pump1 = SP_PUMP_AUTO;
-			*pump2 = SP_PUMP_AUTO;
+			if (CabinFan1Active()) {
+				*pump1 = SP_PUMP_AUTO;
+			}
+
+			if (CabinFan2Active()) {
+				*pump2 = SP_PUMP_AUTO;
+			}
+
 			CabinFanSound();
-		} else {
-			*pump1 = SP_PUMP_OFF;
-			*pump2 = SP_PUMP_OFF;
+		} 
+		else {
 			StopCabinFanSound();
 		}
 
@@ -2563,11 +2574,10 @@ void Saturn::CabinFanSound()
 	}
 
 	//
-	// Scale volume appropriately based on the expected max voltage. Adjust
-	// this when the AC bus is connected to a real inverter.
+	// Scale volume appropriately based on the expected max voltage (115V per phase)
 	//
 
-	CabinFans.play(LOOP, (int) ((64.0 * volume / 180.0) + 127.0));
+	CabinFans.play(LOOP, (int) ((64.0 * volume / 400.0) + 127.0));
 }
 
 void Saturn::StopCabinFanSound()
