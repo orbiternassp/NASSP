@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/12 18:13:03  darth_vader
+  *	Adjusted the camera position for the various 2D panels to something more realistic (I hope).
+  *	
   *	Revision 1.5  2005/10/31 10:16:54  tschachim
   *	LEM rendezvous window camera offset.
   *	
@@ -68,13 +71,13 @@ void sat5_lmpkd::SetView() {
 	if (InVC) {
 		switch (viewpos) {
 		case LMVIEW_CDR:
-			//SetCameraOffset (_V(-0.68, 1.65, 1.35));
-			SetCameraOffset (_V(-0.576, 1.90, 1.26));
+			SetCameraOffset (_V(-0.68, 1.65, 1.35));
+			//SetCameraOffset (_V(-0.576, 1.90, 1.26));
 			break;
 
 		case LMVIEW_LMP:
-			//SetCameraOffset (_V(0.92, 1.65, 1.23));
-			SetCameraOffset (_V(0.576, 1.90, 1.26));
+			SetCameraOffset (_V(0.92, 1.65, 1.23));
+			//SetCameraOffset (_V(0.576, 1.90, 1.26));
 			break;
 		}
 
@@ -97,7 +100,7 @@ void sat5_lmpkd::SetView() {
 					SetCameraOffset (_V(-0.576, 1.90, 1.26));
 					break;
 				case LMPANEL_RNDZWINDOW:
-					SetCameraOffset (_V(-0.28, -0.80, 1.65));
+					SetCameraOffset (_V(-0.28, -1.00, 1.65));
 					//SetCameraOffset (_V(-0.576, -0.80, 1.26));
 					break;
 				case LMPANEL_LEFTPANEL:
