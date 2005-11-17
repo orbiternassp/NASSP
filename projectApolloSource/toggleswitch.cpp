@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/11/17 01:23:11  movieman523
+  *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
+  *	
   *	Revision 1.31  2005/11/16 23:50:31  movieman523
   *	More updates to CWS operation. Still not completely correct, but closer.
   *	
@@ -493,6 +496,14 @@ void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND);
 }
 
+void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerSource *s)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	if (s) {
+		WireTo(s);
+	}
+}
 
 //
 // Attitude mode toggle switch.
