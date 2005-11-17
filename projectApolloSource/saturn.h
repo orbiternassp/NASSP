@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2005/11/17 01:52:29  movieman523
+  *	Simplified setup for circuit breakers, and added battery buses.
+  *	
   *	Revision 1.79  2005/11/17 01:23:11  movieman523
   *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
   *	
@@ -674,7 +677,7 @@ protected:
 	ThreePosSwitch SuitCompressor1Switch;
 	ThreePosSwitch SuitCompressor2Switch;
 
-	ThreePosSwitch COASSwitch;
+	ThreePosSwitch COAS2Switch;
 
 	ThreePosSwitch SBandNormalXPDRSwitch;
 	ThreePosSwitch SBandNormalPwrAmpl1Switch;
@@ -1183,6 +1186,13 @@ protected:
 	CircuitBrakerSwitch ECSGlycolPumpsAc2CCircuitBraker;
 
 	//
+	// Audio panel thumbwheels (panel 6 - right hand side)
+	//
+
+	SwitchRow ModeIntercomVOXSensThumbwheelSwitchRow;
+	ThumbwheelSwitch ModeIntercomVOXSensThumbwheelSwitch;
+	
+	//
 	// OLD Switches: delete these as and when we can do so.
 	//
 	// old stuff begin
@@ -1401,7 +1411,7 @@ protected:
 	SwitchRow FuelCellLatchSwitchesRow;
 	SwitchRow FuelCellPumpsSwitchesRow;
 	SwitchRow SuitCompressorSwitchesRow;
-	SwitchRow COASSwitchRow;
+	SwitchRow COAS2SwitchRow;
 
 	SwitchRow SBandNormalSwitchesRow;
 
