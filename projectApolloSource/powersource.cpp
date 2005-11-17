@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/11/17 19:19:12  movieman523
+  *	Added three-phase AC bus and battery buses.
+  *	
   *	Revision 1.2  2005/11/17 01:52:29  movieman523
   *	Simplified setup for circuit breakers, and added battery buses.
   *	
@@ -121,10 +124,23 @@ double PowerMerge::Voltage()
 void PowerMerge::DrawPower(double watts)
 
 {
-	//
-	// I guess we should draw power from each source proportionally to the
-	// voltage?
-	//
+	double Volts = 0.0;
+	double VoltsA = 0.0;
+	double VoltsB = 0.0;
+
+	if (BusA)
+		VoltsA = BusA->Voltage();
+	if (BusB)
+		VoltsB = BusB->Voltage();
+
+	Volts = VoltsA + VoltsB;
+
+	if (Volts > 0.0) {
+		if (BusA)
+			BusA->DrawPower(watts * VoltsA / Volts);
+		if (BusB)
+			BusB->DrawPower(watts * VoltsB / Volts);
+	}
 }
 
 //
@@ -158,8 +174,26 @@ double ThreeWayPowerMerge::Voltage()
 void ThreeWayPowerMerge::DrawPower(double watts)
 
 {
-	//
-	// I guess we should draw power from each source proportionally to the
-	// voltage?
-	//
+	double Volts = 0.0;
+	double VoltsA = 0.0;
+	double VoltsB = 0.0;
+	double VoltsC = 0.0;
+
+	if (Phase1)
+		VoltsA = Phase1->Voltage();
+	if (Phase2)
+		VoltsB = Phase2->Voltage();
+	if (Phase3)
+		VoltsC = Phase3->Voltage();
+
+	Volts = VoltsA + VoltsB + VoltsC;
+
+	if (Volts > 0.0) {
+		if (Phase1)
+			Phase1->DrawPower(watts * VoltsA / Volts);
+		if (Phase2)
+			Phase2->DrawPower(watts * VoltsB / Volts);
+		if (Phase3)
+			Phase3->DrawPower(watts * VoltsC / Volts);
+	}
 }

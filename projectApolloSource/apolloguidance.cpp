@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2005/11/17 00:28:36  movieman523
+  *	Wired in AGC circuit breakers.
+  *	
   *	Revision 1.53  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -351,11 +354,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	strncpy (TwoDigitEntry, "  ", 2);
 	strncpy (FiveDigitEntry, "      ", 6);
 
-	LastAlt = 0.;
-
-	BusA = 0;
-	BusB = 0;
-
+	LastAlt = 0.0;
 
 #ifdef AGC_SOCKET_ENABLED
     ConnectionSocket = -1;
@@ -392,10 +391,10 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	val30.Bits.TempInLimits = 0;
 
 	//
-	// We default to the IMU caged. If you change this, change the IMU code to
+	// We default to the IMU turned off. If you change this, change the IMU code to
 	// match.
 	//
-	val30.Bits.IMUCage = 0;
+	val30.Bits.IMUOperate = 1;
 
 #ifndef AGC_SOCKET_ENABLED
 	vagc.InputChannel[030] = val30.Value;
@@ -438,6 +437,8 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 
 	isFirstTimestep = true;
 	PadLoaded = false;
+
+	PowerConnected = false;
 }
 
 ApolloGuidance::~ApolloGuidance()
@@ -4769,18 +4770,15 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 bool ApolloGuidance::IsPowered()
 
 {
-	if (BusA && BusA->Voltage() > 20.0)
-		return true;
-
-	if (BusB && BusB->Voltage() > 20.0)
+	if (DCPower.Voltage() > 20.0)
 		return true;
 
 	//
-	// Quick hack for now: if no power bus connected, pretend we
+	// Quick hack for now: if no power connected, pretend we
 	// have power.
 	//
 
-	if (!BusA && !BusB)
+	if (!PowerConnected)
 		return true;
 
 	return false;

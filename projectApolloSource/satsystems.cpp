@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2005/11/17 19:19:12  movieman523
+  *	Added three-phase AC bus and battery buses.
+  *	
   *	Revision 1.34  2005/11/17 01:52:29  movieman523
   *	Simplified setup for circuit breakers, and added battery buses.
   *	
@@ -200,14 +203,17 @@ void Saturn::SystemsInit() {
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_A");
 	EntryBatteryA.WireToSDK(eo);
 
-	//
-	// For now all batteries are wired to battery A.
-	//
-
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_B");
 	EntryBatteryB.WireToSDK(eo);
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_C");
 	EntryBatteryC.WireToSDK(eo);
 
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_A");
 	PyroBatteryA.WireToSDK(eo);
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_B");
 	PyroBatteryB.WireToSDK(eo);
 
 	//
@@ -233,6 +239,7 @@ void Saturn::SystemsInit() {
 
 	cws.WireTo(&CWMnaCircuitBraker, &CWMnbCircuitBraker);
 	agc.WirePower(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
+	imu.WireToBuses(&GNIMUMnACircuitBraker, &GNIMUMnBCircuitBraker);
 
 	//
 	// Default valve states.
