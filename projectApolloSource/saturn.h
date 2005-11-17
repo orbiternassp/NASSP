@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2005/11/16 23:14:01  movieman523
+  *	Initial support for wiring in the circuit breakers.
+  *	
   *	Revision 1.76  2005/11/16 20:45:09  flydba
   *	New switch added on panel 14.
   *	
@@ -1411,6 +1414,9 @@ protected:
 	PowerBreaker CabinFan2ABreaker;
 	PowerBreaker CabinFan2BBreaker;
 	PowerBreaker CabinFan2CBreaker;
+
+	PowerBreaker AGCMainABreaker;
+	PowerBreaker AGCMainBBreaker;
 
 	PowerSDKObject MainBusA;
 	PowerSDKObject MainBusB;

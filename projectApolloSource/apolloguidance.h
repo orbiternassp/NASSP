@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.24  2005/10/03 15:53:41  lazyd
   *	Added P19
   *	
@@ -102,6 +105,8 @@
 
 class DSKY;
 class IMU;
+
+class PowerSource;
 
 #include "control.h"
 #ifndef AGC_SOCKET_ENABLED
@@ -212,6 +217,13 @@ public:
 	//
 
 	void SetMissionInfo(int MissonNo, int RealismValue, char *OtherVessel = 0);
+
+	//
+	// Power supply.
+	//
+
+	void WirePower(PowerSource *a, PowerSource *b) { BusA = a; BusB = b; };
+	bool IsPowered();
 
 protected:
 
@@ -544,6 +556,13 @@ protected:
 
 	unsigned int InputChannel[MAX_INPUT_CHANNELS + 1];
 	unsigned int OutputChannel[MAX_OUTPUT_CHANNELS + 1];
+
+	//
+	// Power supply.
+	//
+
+	PowerSource *BusA;
+	PowerSource *BusB;
 
 	//
 	// The Vessel we're controlling.
