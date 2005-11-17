@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/11/17 01:23:11  movieman523
+  *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
+  *	
   *	Revision 1.32  2005/11/17 00:28:36  movieman523
   *	Wired in AGC circuit breakers.
   *	
@@ -183,22 +186,27 @@ void Saturn::SystemsInit() {
 
 	ACBus2.WireToSDK(eo);
 
-	CWMnaCircuitBraker.WireTo(&MainBusA);
-	CWMnbCircuitBraker.WireTo(&MainBusB);
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_A");
+	BatteryBusA.WireToSDK(eo);
+
+	//
+	// For now both battery buses are wired to battery A.
+	//
+
+	BatteryBusB.WireToSDK(eo);
+
+	//
+	// Generic power source for switches, tied to both Bus A and
+	// Bus B.
+	//
+
+	SwitchPower.WireToBuses(&MainBusA, &MainBusB);
+
+	//
+	// Wire up internal systems.
+	//
 
 	cws.WireTo(&CWMnaCircuitBraker, &CWMnbCircuitBraker);
-
-	ECSCabinFanAC1ACircuitBraker.WireTo(&ACBus1);
-	ECSCabinFanAC1BCircuitBraker.WireTo(&ACBus1);
-	ECSCabinFanAC1CCircuitBraker.WireTo(&ACBus1);
-
-	ECSCabinFanAC2ACircuitBraker.WireTo(&ACBus2);
-	ECSCabinFanAC2BCircuitBraker.WireTo(&ACBus2);
-	ECSCabinFanAC2CCircuitBraker.WireTo(&ACBus2);
-
-	GNComputerMnACircuitBraker.WireTo(&MainBusA);
-	GNComputerMnBCircuitBraker.WireTo(&MainBusB);
-
 	agc.WirePower(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
 
 	//

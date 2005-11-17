@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/17 01:23:11  movieman523
+  *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
+  *	
   *	Revision 1.1  2005/11/16 23:14:02  movieman523
   *	Initial support for wiring in the circuit breakers.
   *	
@@ -67,6 +70,18 @@ public:
 protected:
 	double Volts;
 	double PowerDraw;
+};
+
+class PowerMerge : public PowerSource {
+public:
+	PowerMerge() { BusA = 0; BusB = 0; };
+	double Voltage();
+	void DrawPower(double watts);
+	void WireToBuses(PowerSource *a, PowerSource *b) { BusA = a; BusB = b; };
+
+protected:
+	PowerSource *BusA;
+	PowerSource *BusB;
 };
 
 class PowerBreaker : public PowerSource {
