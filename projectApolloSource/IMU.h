@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/19 13:44:24  tschachim
+  *	Fixes because of new Virtual AGC version.
+  *	
   *	Revision 1.2  2005/08/13 00:09:43  movieman523
   *	Added IMU Cage switch
   *	
@@ -32,7 +35,12 @@
 
 // IMU
 
+#if !defined(_PA_IMU_H)
+#define _PA_IMU_H
+
 class ApolloGuidance;
+
+#include "powersource.h"
 
 typedef union {      // 3 vector
 	double data[3];
@@ -59,7 +67,10 @@ public:
 	void SetVessel(VESSEL *v) { OurVessel = v; };
 	VECTOR3 GetTotalAttitude();
 
+	void WireToBuses(PowerSource *a, PowerSource *b) { DCPower.WireToBuses(a, b); };
+
 	bool IsCaged();
+	bool IsPowered();
 	void SetCaged(bool val);
 
 	void LoadState(FILEHANDLE scn);
@@ -153,6 +164,8 @@ protected:
 
 	VECTOR3 Velocity;
 
+	PowerMerge DCPower;
+
 	double LastTime;	// in seconds
 };
 
@@ -162,3 +175,5 @@ protected:
 
 #define IMU_START_STRING	"IMU_BEGIN"
 #define IMU_END_STRING		"IMU_END"
+
+#endif

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/10/19 11:28:18  tschachim
+  *	Changed log file name.
+  *	
   *	Revision 1.9  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -102,13 +105,7 @@ void IMU::Init()
 	Operate = false;
 	TurnedOn = false;
 	Initialized = false;
-
-	//
-	// For now we default to starting with the IMU caged. If this changes, you'll need to change
-	// the startup code in ApolloGuidance() to match.
-	//
-
-	Caged = true;
+	Caged = false;
 	
 	RemainingPIPA.X = 0;
 	RemainingPIPA.Y = 0;
@@ -373,6 +370,12 @@ VECTOR3 IMU::CalculateAccelerations(double deltaT)
 	return Acceleration + GravityAcceleration;
 }
 
+bool IMU::IsPowered()
+
+{
+	return DCPower.Voltage() > 20.0;
+}
+
 void IMU::Timestep(double simt) 
 
 {
@@ -384,7 +387,14 @@ void IMU::Timestep(double simt)
 	ChannelValue12 val12;
 
 	if (!TurnedOn) {
-		return; 
+		if (IsPowered())
+			TurnOn();
+		else
+			return; 
+	}
+	else if (!IsPowered()) {
+		TurnOff();
+		return;
 	}
 
 	VESSELSTATUS vs;

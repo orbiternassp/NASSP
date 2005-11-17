@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.97  2005/11/17 19:19:12  movieman523
+  *	Added three-phase AC bus and battery buses.
+  *	
   *	Revision 1.96  2005/11/17 07:06:38  flydba
   *	Thumbwheels on panel 6 now work, other switches on the right panel  added etc.
   *	
@@ -1583,12 +1586,12 @@ void Saturn::SetSwitches(int panel) {
 	ECSCabinFanAC2CCircuitBraker.Init(771,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2PhaseC);
 
 	GNCircuitBrakersRow.Init(AID_GUIDANCENAVIGATIONCIRCUITBRAKERS, MainPanel);
-	GNPowerAc1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
-	GNPowerAc2CircuitBraker.Init(57,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
-	GNIMUMnACircuitBraker.Init(103,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
-	GNIMUMnBCircuitBraker.Init(140,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
-	GNIMUHTRMnACircuitBraker.Init(177,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
-	GNIMUHTRMnBCircuitBraker.Init(214,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
+	GNPowerAc1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &ACBus1);
+	GNPowerAc2CircuitBraker.Init(57,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &ACBus2);
+	GNIMUMnACircuitBraker.Init(103,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &MainBusA);
+	GNIMUMnBCircuitBraker.Init(140,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &MainBusB);
+	GNIMUHTRMnACircuitBraker.Init(177,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &MainBusA);
+	GNIMUHTRMnBCircuitBraker.Init(214,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &MainBusB);
 	GNComputerMnACircuitBraker.Init(251,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &MainBusA);
 	GNComputerMnBCircuitBraker.Init(288,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &MainBusB);
 	GNOpticsMnACircuitBraker.Init(325,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
@@ -3350,7 +3353,7 @@ void Saturn::InitSwitches() {
 	FDAISelectSwitch.Register(PSH, "FDAISelectSwitch", THREEPOSSWITCH_CENTER);
 	FDAIAttSetSwitch.Register(PSH, "FDAIAttSetSwitch", 1);
 
-	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 1, 1);
+	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 0, 0);
 
 	RCSIndicatorsSwitch.AddPosition(1, 280);
 	RCSIndicatorsSwitch.AddPosition(2, 320);
@@ -3558,12 +3561,12 @@ void Saturn::InitSwitches() {
 	
 	GNPowerAc1CircuitBraker.Register(PSH, "GNPowerAc1CircuitBraker", 1);
 	GNPowerAc2CircuitBraker.Register(PSH, "GNPowerAc2CircuitBraker", 1);
-	GNIMUMnACircuitBraker.Register(PSH, "GNIMUMnACircuitBraker", 1);
-	GNIMUMnBCircuitBraker.Register(PSH, "GNIMUMnBCircuitBraker", 1);
-	GNIMUHTRMnACircuitBraker.Register(PSH, "GNIMUHTRMnACircuitBraker", 1);
-	GNIMUHTRMnBCircuitBraker.Register(PSH, "GNIMUHTRMnBCircuitBraker", 1);
-	GNComputerMnACircuitBraker.Register(PSH, "GNComputerMnACircuitBraker", 1);
-	GNComputerMnBCircuitBraker.Register(PSH, "GNComputerMnBCircuitBraker", 1);
+	GNIMUMnACircuitBraker.Register(PSH, "GNIMUMnACircuitBraker", 0);
+	GNIMUMnBCircuitBraker.Register(PSH, "GNIMUMnBCircuitBraker", 0);
+	GNIMUHTRMnACircuitBraker.Register(PSH, "GNIMUHTRMnACircuitBraker", 0);
+	GNIMUHTRMnBCircuitBraker.Register(PSH, "GNIMUHTRMnBCircuitBraker", 0);
+	GNComputerMnACircuitBraker.Register(PSH, "GNComputerMnACircuitBraker", 0);
+	GNComputerMnBCircuitBraker.Register(PSH, "GNComputerMnBCircuitBraker", 0);
 	GNOpticsMnACircuitBraker.Register(PSH, "GNOpticsMnACircuitBraker", 1);
 	GNOpticsMnBCircuitBraker.Register(PSH, "GNOpticsMnBCircuitBraker", 1);
 

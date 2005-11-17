@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/11/17 00:28:36  movieman523
+  *	Wired in AGC circuit breakers.
+  *	
   *	Revision 1.25  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -106,7 +109,7 @@
 class DSKY;
 class IMU;
 
-class PowerSource;
+#include "powersource.h"
 
 #include "control.h"
 #ifndef AGC_SOCKET_ENABLED
@@ -222,7 +225,7 @@ public:
 	// Power supply.
 	//
 
-	void WirePower(PowerSource *a, PowerSource *b) { BusA = a; BusB = b; };
+	void WirePower(PowerSource *a, PowerSource *b) { DCPower.WireToBuses(a, b); PowerConnected = true; };
 	bool IsPowered();
 
 protected:
@@ -561,8 +564,8 @@ protected:
 	// Power supply.
 	//
 
-	PowerSource *BusA;
-	PowerSource *BusB;
+	PowerMerge DCPower;
+	bool PowerConnected;
 
 	//
 	// The Vessel we're controlling.
