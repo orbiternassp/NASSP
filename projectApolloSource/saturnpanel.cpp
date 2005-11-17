@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.94  2005/11/17 03:32:15  flydba
+  *	Changed panel number from 14 to 16, some changes...
+  *	
   *	Revision 1.93  2005/11/17 01:52:29  movieman523
   *	Simplified setup for circuit breakers, and added battery buses.
   *	
@@ -1479,8 +1482,8 @@ void Saturn::SetSwitches(int panel) {
 	SuitCompressor1Switch.Init( 0, 58, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 	SuitCompressor2Switch.Init(42,  0, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 
-	COAS2SwitchRow.Init(AID_COASSWITCH, MainPanel);
-	COAS2Switch.Init( 0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], COAS2SwitchRow);
+	RightCOASPowerSwitchRow.Init(AID_COASSWITCH, MainPanel);
+	RightCOASPowerSwitch.Init( 0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], RightCOASPowerSwitchRow);
 	
 	EpsSensorSignalDcCircuitBrakersRow.Init(AID_EPSSENSORSIGNALDCCIRCUITBRAKERS, MainPanel);
 	EpsSensorSignalDcMnaCircuitBraker.Init( 0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], EpsSensorSignalDcCircuitBrakersRow);
@@ -3218,7 +3221,7 @@ void Saturn::InitSwitches() {
 	SuitCompressor1Switch.Register(PSH, "SuitCompressor1Switch", THREEPOSSWITCH_CENTER);   
 	SuitCompressor2Switch.Register(PSH, "SuitCompressor2Switch", THREEPOSSWITCH_CENTER);   
 	
-	COAS2Switch.Register(PSH, "COAS2Switch", THREEPOSSWITCH_DOWN); 
+	RightCOASPowerSwitch.Register(PSH, "RightCOASPowerSwitch", THREEPOSSWITCH_DOWN); 
 	
 	SBandNormalXPDRSwitch.Register(PSH, "SBandNormalXPDRSwitch", THREEPOSSWITCH_CENTER);
 	SBandNormalPwrAmpl1Switch.Register(PSH, "SBandNormalPwrAmpl1Switch", THREEPOSSWITCH_CENTER);

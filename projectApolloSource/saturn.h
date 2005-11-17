@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2005/11/17 03:30:30  flydba
+  *	Changed panel number from 14 to 16.
+  *	
   *	Revision 1.80  2005/11/17 01:52:29  movieman523
   *	Simplified setup for circuit breakers, and added battery buses.
   *	
@@ -677,7 +680,7 @@ protected:
 	ThreePosSwitch SuitCompressor1Switch;
 	ThreePosSwitch SuitCompressor2Switch;
 
-	ThreePosSwitch COAS2Switch;
+	ThreePosSwitch RightCOASPowerSwitch;
 
 	ThreePosSwitch SBandNormalXPDRSwitch;
 	ThreePosSwitch SBandNormalPwrAmpl1Switch;
@@ -1411,7 +1414,7 @@ protected:
 	SwitchRow FuelCellLatchSwitchesRow;
 	SwitchRow FuelCellPumpsSwitchesRow;
 	SwitchRow SuitCompressorSwitchesRow;
-	SwitchRow COAS2SwitchRow;
+	SwitchRow RightCOASPowerSwitchRow;
 
 	SwitchRow SBandNormalSwitchesRow;
 
