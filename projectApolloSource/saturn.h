@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2005/11/17 19:19:12  movieman523
+  *	Added three-phase AC bus and battery buses.
+  *	
   *	Revision 1.83  2005/11/17 07:07:04  flydba
   *	Thumbwheels on panel 6 now work, other switches on the right panel  added etc.
   *	
@@ -1767,6 +1770,8 @@ protected:
 
 	bool AutopilotActive();
 	bool CabinFansActive();
+	bool CabinFan1Active();
+	bool CabinFan2Active();
 	void ActivateS4RCS();
 	void DeactivateS4RCS();
 	void ActivateCSMRCS();
