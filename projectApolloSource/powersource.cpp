@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/17 01:52:29  movieman523
+  *	Simplified setup for circuit breakers, and added battery buses.
+  *	
   *	Revision 1.1  2005/11/16 23:14:02  movieman523
   *	Initial support for wiring in the circuit breakers.
   *	
@@ -116,6 +119,43 @@ double PowerMerge::Voltage()
 }
 
 void PowerMerge::DrawPower(double watts)
+
+{
+	//
+	// I guess we should draw power from each source proportionally to the
+	// voltage?
+	//
+}
+
+//
+// Tie power together from three sources. For now we just take the
+// largest voltage from all sources.
+//
+
+double ThreeWayPowerMerge::Voltage()
+
+{
+	double Volts1 = 0.0, Volts2 = 0.0, Volts3 = 0.0;
+	double MaxVolts;
+
+	if (Phase1)
+		Volts1 = Phase1->Voltage();
+	if (Phase2)
+		Volts2 = Phase2->Voltage();
+	if (Phase3)
+		Volts3 = Phase2->Voltage();
+
+	MaxVolts = Volts1;
+
+	if (Volts2 > Volts1)
+		MaxVolts = Volts2;
+	if (Volts3 > MaxVolts)
+		MaxVolts = Volts3;
+
+	return MaxVolts;
+}
+
+void ThreeWayPowerMerge::DrawPower(double watts)
 
 {
 	//

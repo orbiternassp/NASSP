@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.96  2005/11/17 07:06:38  flydba
+  *	Thumbwheels on panel 6 now work, other switches on the right panel  added etc.
+  *	
   *	Revision 1.95  2005/11/17 03:43:35  flydba
   *	COAS switch renamed...
   *	
@@ -1572,12 +1575,12 @@ void Saturn::SetSwitches(int panel) {
 	ECSSecCoolLoopXducersMnBCircuitBraker.Init(262,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
 	ECSWasteH2OUrineDumpHTRMnACircuitBraker.Init(355,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
 	ECSWasteH2OUrineDumpHTRMnBCircuitBraker.Init(393,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC1ACircuitBraker.Init(585,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1);
-	ECSCabinFanAC1BCircuitBraker.Init(622,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1);
-	ECSCabinFanAC1CCircuitBraker.Init(659,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1);
-	ECSCabinFanAC2ACircuitBraker.Init(696,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2);
-	ECSCabinFanAC2BCircuitBraker.Init(733,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2);
-	ECSCabinFanAC2CCircuitBraker.Init(771,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2);
+	ECSCabinFanAC1ACircuitBraker.Init(585,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1PhaseA);
+	ECSCabinFanAC1BCircuitBraker.Init(622,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1PhaseB);
+	ECSCabinFanAC1CCircuitBraker.Init(659,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1PhaseC);
+	ECSCabinFanAC2ACircuitBraker.Init(696,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2PhaseA);
+	ECSCabinFanAC2BCircuitBraker.Init(733,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2PhaseB);
+	ECSCabinFanAC2CCircuitBraker.Init(771,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2PhaseC);
 
 	GNCircuitBrakersRow.Init(AID_GUIDANCENAVIGATIONCIRCUITBRAKERS, MainPanel);
 	GNPowerAc1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow);
