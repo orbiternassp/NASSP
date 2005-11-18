@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/11/17 21:04:52  movieman523
+  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
+  *	
   *	Revision 1.10  2005/10/19 11:28:18  tschachim
   *	Changed log file name.
   *	
@@ -396,6 +399,15 @@ void IMU::Timestep(double simt)
 		TurnOff();
 		return;
 	}
+
+	//
+	// If we get here, we're powered up.
+	//
+
+	if (Caged)
+		DCPower.DrawPower(61.7);
+	else
+		DCPower.DrawPower(325.0);
 
 	VESSELSTATUS vs;
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/11/16 23:50:31  movieman523
+  *	More updates to CWS operation. Still not completely correct, but closer.
+  *	
   *	Revision 1.12  2005/11/16 23:14:01  movieman523
   *	Initial support for wiring in the circuit breakers.
   *	
@@ -382,6 +385,7 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK || MasterAlarmPressed))) {
 				if (!IsFailed(i + base) && LightPowered(i + base)) {
 					oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
+					DCPower.DrawPower(1.0);
 				}
 			}
 			i++;

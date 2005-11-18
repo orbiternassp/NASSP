@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/11/16 23:50:31  movieman523
+  *	More updates to CWS operation. Still not completely correct, but closer.
+  *	
   *	Revision 1.8  2005/11/16 23:14:01  movieman523
   *	Initial support for wiring in the circuit breakers.
   *	
@@ -71,7 +74,7 @@
 #define CWS_MASTERALARMPOSITION_LEFT    1
 #define CWS_MASTERALARMPOSITION_RIGHT	2
 
-class PowerSource;
+#include "powersource.h"
 
 class CautionWarningSystem {
 
@@ -114,7 +117,7 @@ public:
 	bool IsPowered();
 	bool LightsPowered();
 
-	void WireTo(PowerSource *a, PowerSource *b) { BusA = a; BusB = b; };
+	void WireTo(PowerSource *a, PowerSource *b) { DCPower.WireToBuses(a, b); };
 
 protected:
 
@@ -150,8 +153,7 @@ protected:
 	Sound &ButtonSound;
 	VESSEL *OurVessel;
 
-	PowerSource *BusA;
-	PowerSource *BusB;
+	PowerMerge DCPower;
 
 	//
 	// Helper functions.

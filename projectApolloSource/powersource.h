@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/17 19:19:12  movieman523
+  *	Added three-phase AC bus and battery buses.
+  *	
   *	Revision 1.3  2005/11/17 01:52:29  movieman523
   *	Simplified setup for circuit breakers, and added battery buses.
   *	
@@ -48,6 +51,7 @@ public:
 	bool IsWired() { return (next_source != 0); };
 
 	virtual double Voltage();
+	virtual double Current();
 	virtual void DrawPower(double watts);
 
 protected:
@@ -81,6 +85,7 @@ public:
 	double Voltage();
 	void DrawPower(double watts);
 	void WireToBuses(PowerSource *a, PowerSource *b) { BusA = a; BusB = b; };
+	double Current();
 
 protected:
 	PowerSource *BusA;
@@ -93,6 +98,7 @@ public:
 	double Voltage();
 	void DrawPower(double watts);
 	void WireToBuses(PowerSource *a, PowerSource *b, PowerSource *c) { Phase1 = a; Phase2 = b; Phase3 = c; };
+	double Current();
 
 protected:
 	PowerSource *Phase1;
@@ -118,6 +124,7 @@ public:
 	PowerSDKObject() { SDKObj = 0; };
 
 	double Voltage();
+	double Current();
 	void DrawPower(double watts);
 	void WireToSDK(e_object *s) { SDKObj = s; };
 

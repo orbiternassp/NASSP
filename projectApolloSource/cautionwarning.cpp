@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/11/16 23:50:31  movieman523
+  *	More updates to CWS operation. Still not completely correct, but closer.
+  *	
   *	Revision 1.10  2005/11/16 23:14:01  movieman523
   *	Initial support for wiring in the circuit breakers.
   *	
@@ -92,8 +95,6 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 		LeftLights[i] = false;
 		RightLights[i] = false;
 	}
-
-	BusA = BusB = 0;
 }
 
 CautionWarningSystem::~CautionWarningSystem()
@@ -140,9 +141,7 @@ bool CautionWarningSystem::IsPowered()
 
 	case CWS_POWER_SUPPLY_1:
 	case CWS_POWER_SUPPLY_2:
-		if (BusA && (BusA->Voltage() > 25.0))
-			return true;
-		if (BusB && (BusB->Voltage() > 25.0))
+		if (DCPower.Voltage() > 25.0)
 			return true;
 		return false;
 
@@ -158,10 +157,7 @@ bool CautionWarningSystem::IsPowered()
 bool CautionWarningSystem::LightsPowered()
 
 {
-	if (BusA && (BusA->Voltage() > 25.0))
-		return true;
-
-	if (BusB && (BusB->Voltage() > 25.0))
+	if (DCPower.Voltage() > 25.0)
 		return true;
 
 	return false;
@@ -200,6 +196,22 @@ void CautionWarningSystem::TimeStep(double simt)
 			MasterAlarmSound.play(NOLOOP,255);
 		}
 	}
+
+	//
+	// These numbers are just made up for now.
+	//
+
+	double consumption = 0.0;
+
+	if (IsPowered()) {
+		consumption += 5.0;
+		if (MasterAlarmLit)
+			consumption += 2.0;
+	}
+	if (MasterAlarmLit && LightsPowered())
+		consumption += 1.0;
+
+	DCPower.DrawPower(consumption);
 }
 
 void CautionWarningSystem::SetMasterAlarm(bool alarm)

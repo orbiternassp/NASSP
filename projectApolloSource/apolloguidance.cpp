@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2005/11/17 21:04:52  movieman523
+  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
+  *	
   *	Revision 1.54  2005/11/17 00:28:36  movieman523
   *	Wired in AGC circuit breakers.
   *	
@@ -1396,6 +1399,13 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 	CurrentTimestep = simt;
 
 	TIME1 += (int)((simt - LastTimestep) * 1600.0);
+
+	if (OnStandby()) {
+		DCPower.DrawPower(15.0);
+	}
+	else {
+		DCPower.DrawPower(115.0);
+	}
 
 	//
 	// Get position and velocity data since it's generally useful.
