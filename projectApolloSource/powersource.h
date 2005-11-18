@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/11/18 02:40:55  movieman523
+  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
+  *	
   *	Revision 1.4  2005/11/17 19:19:12  movieman523
   *	Added three-phase AC bus and battery buses.
   *	
@@ -125,6 +128,8 @@ public:
 
 	double Voltage();
 	double Current();
+	double PowerLoad();
+
 	void DrawPower(double watts);
 	void WireToSDK(e_object *s) { SDKObj = s; };
 
