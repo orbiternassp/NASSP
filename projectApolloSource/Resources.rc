@@ -135,6 +135,7 @@ IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL    BITMAP  DISCARDABLE     "thumbwheel_small_
 IDB_THREEPOSSWITCH30 BITMAP  DISCARDABLE     "threeposswitch30.bmp"
 IDB_SWITCH20 BITMAP  DISCARDABLE     "switch20.bmp"
 IDB_SWITCH30 BITMAP  DISCARDABLE     "switch30.bmp"
+IDB_CSMRIGHTWINDOWCOVER  BITMAP DISCARDABLE     	"csm_right_les_window_cover.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2005/11/18 03:16:27  flydba
+  *	Right hand side panel almost finished.
+  *	
   *	Revision 1.85  2005/11/17 22:06:47  movieman523
   *	Added other electrical buses and revised cabin fan code.
   *	
@@ -1274,7 +1277,14 @@ protected:
 	SwitchRow TelcomSwitchesRow;
 	ThreePosSwitch TelcomGroup1Switch;
 	ThreePosSwitch TelcomGroup2Switch;
-	
+
+	////////////////////////
+	// Right window cover //
+	////////////////////////
+
+	//SwitchRow RightWindowCoverRow;
+	//ToggleSwitch RightWindowCoverSwitch;
+
 	//
 	// OLD Switches: delete these as and when we can do so.
 	//
