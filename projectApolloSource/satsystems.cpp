@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2005/11/17 22:06:47  movieman523
+  *	Added other electrical buses and revised cabin fan code.
+  *	
   *	Revision 1.36  2005/11/17 21:04:52  movieman523
   *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
   *	
@@ -192,13 +195,12 @@ void Saturn::SystemsInit() {
 	ACBus1PhaseC.WireToSDK(eo);
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_B");
-
 	ACBus2PhaseA.WireToSDK(eo);
 	ACBus2PhaseB.WireToSDK(eo);
 	ACBus2PhaseC.WireToSDK(eo);
 
 	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
-	ACBus2.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
+	ACBus2.WireToBuses(&ACBus2PhaseA, &ACBus2PhaseB, &ACBus2PhaseC);
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_A");
 	EntryBatteryA.WireToSDK(eo);
@@ -278,15 +280,14 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 	if (stage == ONPAD_STAGE && MissionTime >= -7200) {	// 2h 00min before launch
 		stage = PRELAUNCH_STAGE;
+	}
+	else if (stage >= PRELAUNCH_STAGE) {
 
-	} else if (stage >= PRELAUNCH_STAGE) {
-
-		dsky.Timestep(MissionTime);
-		dsky2.Timestep(MissionTime);
-		agc.Timestep(MissionTime, simdt);
-		iu.Timestep(MissionTime, simdt);
-		imu.Timestep(MissionTime);
-		cws.TimeStep(MissionTime);
+#ifdef _DEBUG
+//		sprintf(oapiDebugString(), "Bus A = %fA, Bus B = %fA, AC Bus 1 = %fA, AC Bus 2 = %fA, Batt A = %fV, Batt B = %fV", 
+//			MainBusA.Current(), MainBusB.Current(),
+//			ACBus1.Current(), ACBus2.Current(), EntryBatteryA.Voltage(), EntryBatteryB.Voltage());
+#endif // _DEBUG
 
 		// Each timestep is passed to the SPSDK
 		// to perform internal computations on the 
@@ -295,12 +296,24 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		Panelsdk.Timestep(simt);
 
 		//
+		// Do all updates after the SDK has updated, so that power use
+		// will feed back to it.
+		//
+
+		dsky.Timestep(MissionTime);
+		dsky2.Timestep(MissionTime);
+		agc.Timestep(MissionTime, simdt);
+		iu.Timestep(MissionTime, simdt);
+		imu.Timestep(MissionTime);
+		cws.TimeStep(MissionTime);
+
+		//
 		// Systems state handling
 		//
 		if (!firstSystemsTimeStepDone) {
 			firstSystemsTimeStepDone = true;
-
-		} else {
+		}
+		else {
 			AtmosStatus atm;
 			GetAtmosStatus(atm);
 

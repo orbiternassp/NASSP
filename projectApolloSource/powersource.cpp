@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/17 21:04:52  movieman523
+  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
+  *	
   *	Revision 1.3  2005/11/17 19:19:12  movieman523
   *	Added three-phase AC bus and battery buses.
   *	
@@ -52,6 +55,15 @@ PowerSource::~PowerSource()
 
 {
 	// Nothing for now.
+}
+
+double PowerSource::Current()
+
+{
+	if (next_source)
+		return next_source->Current();
+
+	return 0.0;
 }
 
 //
@@ -87,7 +99,16 @@ double PowerSDKObject::Voltage()
 
 {
 	if (SDKObj)
-		return SDKObj->Volts;
+		return SDKObj->Voltage();
+
+	return 0.0;
+}
+
+double PowerSDKObject::Current()
+
+{
+	if (SDKObj)
+		return SDKObj->Current();
 
 	return 0.0;
 }
@@ -95,9 +116,8 @@ double PowerSDKObject::Voltage()
 void PowerSDKObject::DrawPower(double watts)
 
 {
-	//
-	// Nothing for now.
-	//
+	if (SDKObj)
+		SDKObj->PLOAD(watts);
 }
 
 //
@@ -119,6 +139,19 @@ double PowerMerge::Voltage()
 		return VoltsA;
 
 	return VoltsB;
+}
+
+double PowerMerge::Current()
+
+{
+	double current = 0.0;
+
+	if (BusA)
+		current += BusA->Current();
+	if (BusB)
+		current += BusB->Current();
+
+	return current;
 }
 
 void PowerMerge::DrawPower(double watts)
@@ -169,6 +202,21 @@ double ThreeWayPowerMerge::Voltage()
 		MaxVolts = Volts3;
 
 	return MaxVolts;
+}
+
+double ThreeWayPowerMerge::Current()
+
+{
+	double current = 0.0;
+
+	if (Phase1)
+		current += Phase1->Current();
+	if (Phase2)
+		current += Phase2->Current();
+	if (Phase3)
+		current += Phase3->Current();
+
+	return current;
 }
 
 void ThreeWayPowerMerge::DrawPower(double watts)
