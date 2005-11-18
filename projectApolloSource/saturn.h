@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2005/11/17 22:06:47  movieman523
+  *	Added other electrical buses and revised cabin fan code.
+  *	
   *	Revision 1.84  2005/11/17 19:19:12  movieman523
   *	Added three-phase AC bus and battery buses.
   *	
@@ -689,8 +692,6 @@ protected:
 	ThreePosSwitch SuitCompressor1Switch;
 	ThreePosSwitch SuitCompressor2Switch;
 
-	ThreePosSwitch RightCOASPowerSwitch;
-
 	ThreePosSwitch SBandNormalXPDRSwitch;
 	ThreePosSwitch SBandNormalPwrAmpl1Switch;
 	ThreePosSwitch SBandNormalPwrAmpl2Switch;
@@ -1005,16 +1006,19 @@ protected:
 	SwitchRow HighGainAntennaPitchPositionSwitchRow;
 	RotationalSwitch HighGainAntennaPitchPositionSwitch;
 
-
 	//
 	// Orbiter switches
 	//
+
 	SwitchRow OrbiterAttitudeToggleRow;
 	AttitudeToggle OrbiterAttitudeToggle;
 
-	//
+	/////////////////////////////
+	// Panel 5 circuit brakers //
+	/////////////////////////////
+	
 	// EPS sensor signal circuit brakers
-	//
+
 	SwitchRow EpsSensorSignalDcCircuitBrakersRow;
 	CircuitBrakerSwitch EpsSensorSignalDcMnaCircuitBraker;
 	CircuitBrakerSwitch EpsSensorSignalDcMnbCircuitBraker;
@@ -1023,33 +1027,26 @@ protected:
 	CircuitBrakerSwitch EpsSensorSignalAc1CircuitBraker;
 	CircuitBrakerSwitch EpsSensorSignalAc2CircuitBraker;
 
-	//
 	// C/W circuit brakers
-	//
+
 	SwitchRow CWCircuitBrakersRow;
 	CircuitBrakerSwitch CWMnaCircuitBraker;
 	CircuitBrakerSwitch CWMnbCircuitBraker;
 
-	//
 	// LEM PWR circuit brakers
-	//
 	
 	SwitchRow LMPWRCircuitBrakersRow;
 	CircuitBrakerSwitch MnbLMPWR1CircuitBraker;
 	CircuitBrakerSwitch MnbLMPWR2CircuitBraker;
 
-	//
 	// Inverter control circuit brakers
-	//
 	
 	SwitchRow InverterControlCircuitBrakersRow;
 	CircuitBrakerSwitch InverterControl1CircuitBraker;
 	CircuitBrakerSwitch InverterControl2CircuitBraker;
 	CircuitBrakerSwitch InverterControl3CircuitBraker;
 
-	//
 	// EPS sensor unit circuit brakers
-	//
 	
 	SwitchRow EPSSensorUnitCircuitBrakersRow;
 	CircuitBrakerSwitch EPSSensorUnitDcBusACircuitBraker;
@@ -1057,17 +1054,13 @@ protected:
 	CircuitBrakerSwitch EPSSensorUnitAcBus1CircuitBraker;
 	CircuitBrakerSwitch EPSSensorUnitAcBus2CircuitBraker;
 
-	//
 	// Battery relay bus circuit brakers
-	//
 
 	SwitchRow BATRLYBusCircuitBrakersRow;
 	CircuitBrakerSwitch BATRLYBusBatACircuitBraker;
 	CircuitBrakerSwitch BATRLYBusBatBCircuitBraker;
 
-	//
 	// ECS radiators circuit brakers
-	// 
 
 	SwitchRow ECSRadiatorsCircuitBrakersRow;
 	CircuitBrakerSwitch ControllerAc1CircuitBraker;
@@ -1077,9 +1070,7 @@ protected:
 	CircuitBrakerSwitch HTRSOVLDBatACircuitBraker;
 	CircuitBrakerSwitch HTRSOVLDBatBCircuitBraker;
 
-	//
 	// Battery charger circuit brakers
-	//
 
 	SwitchRow BatteryChargerCircuitBrakersRow;
 	CircuitBrakerSwitch BatteryChargerBatACircuitBraker;
@@ -1088,9 +1079,7 @@ protected:
 	CircuitBrakerSwitch BatteryChargerMNBCircuitBraker;
 	CircuitBrakerSwitch BatteryChargerAcPWRCircuitBraker;
 
-	//
 	// Instrument lighting circuit brakers
-	//
 
 	SwitchRow InstrumentLightingCircuitBrakersRow;
 	CircuitBrakerSwitch InstrumentLightingESSMnACircuitBraker;
@@ -1100,9 +1089,7 @@ protected:
 	CircuitBrakerSwitch InstrumentLightingSCIEquipSEP2CircuitBraker;
 	CircuitBrakerSwitch InstrumentLightingSCIEquipHatchCircuitBraker;
 	
-	//
 	// ECS circuit brakers
-	//
 
 	SwitchRow ECSCircuitBrakersRow;
 	CircuitBrakerSwitch ECSPOTH2OHTRMnACircuitBraker;
@@ -1118,9 +1105,7 @@ protected:
 	CircuitBrakerSwitch ECSTransducerTempMnACircuitBraker;
 	CircuitBrakerSwitch ECSTransducerTempMnBCircuitBraker;
 
-	//
 	// ECS circuit brakers lower row 
-	//
 
 	SwitchRow ECSLowerRowCircuitBrakersRow;
 	CircuitBrakerSwitch ECSSecCoolLoopAc1CircuitBraker;
@@ -1137,9 +1122,7 @@ protected:
 	CircuitBrakerSwitch ECSCabinFanAC2BCircuitBraker;
 	CircuitBrakerSwitch ECSCabinFanAC2CCircuitBraker;
 
-	//
-	// Guidance/Navigation circuit brakers 
-	//
+	// Guidance/navigation circuit brakers 
 
 	SwitchRow GNCircuitBrakersRow;
 	CircuitBrakerSwitch GNPowerAc1CircuitBraker;
@@ -1153,9 +1136,11 @@ protected:
 	CircuitBrakerSwitch GNOpticsMnACircuitBraker;
 	CircuitBrakerSwitch GNOpticsMnBCircuitBraker;
 
-	//
+	/////////////////////////////
+	// Panel 4 circuit brakers //
+	/////////////////////////////
+	
 	// Suit compressors circuit brakers 
-	//
 
 	SwitchRow SuitCompressorsAc1ACircuitBrakerRow;
 	CircuitBrakerSwitch SuitCompressorsAc1ACircuitBraker;
@@ -1175,9 +1160,7 @@ protected:
 	SwitchRow SuitCompressorsAc2CCircuitBrakerRow;
 	CircuitBrakerSwitch SuitCompressorsAc2CCircuitBraker;
 
-	//
 	// ECS glycol pumps circuit brakers 
-	//
 
 	SwitchRow ECSGlycolPumpsAc1ACircuitBrakerRow;
 	CircuitBrakerSwitch ECSGlycolPumpsAc1ACircuitBraker;
@@ -1197,9 +1180,9 @@ protected:
 	SwitchRow ECSGlycolPumpsAc2CCircuitBrakerRow;
 	CircuitBrakerSwitch ECSGlycolPumpsAc2CCircuitBraker;
 
-	//
-	// Audio panel 6 - thumbwheels 
-	//
+	/////////////////////////
+	// Panel 6 thumbwheels //
+	/////////////////////////
 
 	SwitchRow ModeIntercomVOXSensThumbwheelSwitchRow;
 	ThumbwheelSwitch ModeIntercomVOXSensThumbwheelSwitch;
@@ -1219,12 +1202,78 @@ protected:
 	SwitchRow VHFAMVolumeThumbwheelSwitchRow;
 	ThumbwheelSwitch VHFAMVolumeThumbwheelSwitch;
 
-	//
-	// Audio panel 6 - switches 
-	//
+	//////////////////////
+	// Panel 6 switches //
+	//////////////////////
 
+	SwitchRow RightModeIntercomSwitchRow;
+	ThreePosSwitch RightModeIntercomSwitch;
+
+	SwitchRow RightAudioPowerSwitchRow;
+	ThreePosSwitch RightAudioPowerSwitch;
+
+	SwitchRow RightPadCommSwitchRow;
+	ThreePosSwitch RightPadCommSwitch;
+
+	SwitchRow RightIntercomSwitchRow;
+	ThreePosSwitch RightIntercomSwitch;
+
+	SwitchRow RightSBandSwitchRow;
+	ThreePosSwitch RightSBandSwitch;
+
+	SwitchRow RightVHFAMSwitchRow;
+	ThreePosSwitch RightVHFAMSwitch;
+	
 	SwitchRow AudioControlSwitchRow;
-	ThreePosSwitch AudioControlSwitch;
+	ToggleSwitch AudioControlSwitch;
+
+	SwitchRow SuidPowerSwitchRow;
+	ToggleSwitch SuidPowerSwitch;
+
+	///////////////////////
+	// Panel 16 switches //
+	///////////////////////
+
+	SwitchRow RightCOASPowerSwitchRow;
+	ToggleSwitch RightCOASPowerSwitch;
+
+	SwitchRow RightUtilityPowerSwitchRow;
+	ToggleSwitch RightUtilityPowerSwitch;
+
+	SwitchRow RightDockingTargetSwitchRow;
+	ThreePosSwitch RightDockingTargetSwitch;
+
+	//////////////////////
+	// Panel 5 switches //
+	//////////////////////
+
+	SwitchRow GNPowerSwitchRow;
+	ThreePosSwitch GNPowerSwitch;
+	
+	SwitchRow MainBusTieSwitchesRow;
+	ThreePosSwitch MainBusTieBatAcSwitch;
+	ThreePosSwitch MainBusTieBatBcSwitch;
+
+	SwitchRow BatCHGRSwitchRow;
+	ToggleSwitch BatCHGRSwitch;
+
+	SwitchRow NonessBusSwitchRow;
+	ThreePosSwitch NonessBusSwitch;
+
+	SwitchRow InteriorLightsFloodSwitchesRow;
+	ToggleSwitch InteriorLightsFloodDimSwitch;
+	ToggleSwitch InteriorLightsFloodFixedSwitch;
+
+	//////////////////////
+	// Panel 4 switches //
+	//////////////////////
+
+	SwitchRow SPSGaugingSwitchRow;
+	ThreePosSwitch SPSGaugingSwitch;
+
+	SwitchRow TelcomSwitchesRow;
+	ThreePosSwitch TelcomGroup1Switch;
+	ThreePosSwitch TelcomGroup2Switch;
 	
 	//
 	// OLD Switches: delete these as and when we can do so.
@@ -1445,7 +1494,6 @@ protected:
 	SwitchRow FuelCellLatchSwitchesRow;
 	SwitchRow FuelCellPumpsSwitchesRow;
 	SwitchRow SuitCompressorSwitchesRow;
-	SwitchRow RightCOASPowerSwitchRow;
 
 	SwitchRow SBandNormalSwitchesRow;
 
