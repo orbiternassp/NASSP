@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.100  2005/11/17 23:32:46  movieman523
+  *	Added support for specifying the maximum current for a circuit breaker. Exceed that current and the breaker pops.
+  *	
   *	Revision 1.99  2005/11/17 22:06:47  movieman523
   *	Added other electrical buses and revised cabin fan code.
   *	
@@ -632,6 +635,8 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_CIRCUITBRAKER]          = oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
 		srf[SRF_THREEPOSSWITCH20]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH20));
 		srf[SRF_THREEPOSSWITCH30]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH30));
+		srf[SRF_SWITCH20]				= oapiCreateSurface (LOADBMP (IDB_SWITCH20));
+		srf[SRF_SWITCH30]				= oapiCreateSurface (LOADBMP (IDB_SWITCH30));
 		
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -649,6 +654,8 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SUITCABINDELTAPMETER],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH305],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH20],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SWITCH20],				g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SWITCH30],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH30],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_FDAI],					g_Param.col[4]);
@@ -939,7 +946,7 @@ bool Saturn::clbkLoadPanel (int id) {
 	case SATPANEL_RIGHT: // right instrument panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 311,  881,  540,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 311,  881,  475,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 825, 1428,  901, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSSWITCH,						_R( 736, 1527,  820, 1611), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_EPSSENSORSIGNALDCCIRCUITBRAKERS,				_R( 856,  871,  923,  900), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);		
@@ -967,7 +974,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC2ACIRCUITBRAKER,				_R( 957, 1562,  986, 1591), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC2BCIRCUITBRAKER,				_R( 980, 1530, 1009, 1559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC2CCIRCUITBRAKER,				_R(1003, 1499, 1032, 1528), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_COASSWITCH,									_R( 330,   63,  364,   94), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTCOASSWITCH,								_R( 330,   63,  364,   94), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MODEINTERCOMVOXSENSTHUMBWHEEL,				_R( 138,  280,  171,  323), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_POWERMASTERVOLUMETHUMBWHEEL,					_R( 262,  299,  295,  342), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PADCOMMVOLUMETHUMBWHEEL,						_R( 181,  387,  214,  430), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -975,6 +982,22 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SBANDVOLUMETHUMBWHEEL,						_R( 224,  496,  257,  539), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_VHFVOLUMETHUMBWHEEL,							_R( 350,  519,  383,  562), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_AUDIOCONTROLSWITCH,							_R( 347,  649,  381,  683), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUITPOWERSWITCH,								_R( 403,  627,  437,  661), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTUTILITYPOWERSWITCH,						_R( 221,   81,  255,  112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTDOCKINGTARGETSWITCH,					_R(  54,  109,   88,  140), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTMODEINTERCOMSWITCH,						_R(  92,  305,  126,  339), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTAUDIOPOWERSWITCH,						_R( 308,  287,  342,  321), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTPADCOMMSWITCH,							_R( 135,  411,  169,  445), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTINTERCOMSWITCH,							_R( 353,  400,  387,  434), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTSBANDSWITCH,							_R( 178,  520,  212,  554), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTVHFAMSWITCH,							_R( 396,  507,  430,  541), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GNPOWERSWITCH,								_R( 506,  881,  540,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MAINBUSTIESWITCHES,							_R( 608,  881,  687,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_BATTERYCHARGERSWITCH,						_R( 698,  881,  732,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_NONESSBUSSWITCH,								_R( 763,  881,  797,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_INTERIORLIGHTSFLOODSSWITCHES,				_R( 570, 1003,  649, 1032), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SPSGAUGINGSWITCH,							_R( 626, 1401,  660, 1434), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_TELCOMSWITCHES,								_R( 672, 1416,  762, 1527), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;    
@@ -1490,8 +1513,6 @@ void Saturn::SetSwitches(int panel) {
 	HighGainAntennaPitchPositionSwitchRow.Init(AID_HIGHGAINANTENNAPITCHPOSITIONSWITCH, MainPanel);
 	HighGainAntennaPitchPositionSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], HighGainAntennaPitchPositionSwitchRow);
 	
-
-
 	//
 	// SATPANEL_RIGHT
 	//
@@ -1505,8 +1526,8 @@ void Saturn::SetSwitches(int panel) {
 	SuitCompressor1Switch.Init( 0, 58, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 	SuitCompressor2Switch.Init(42,  0, 34, 33, srf[SRF_THREEPOSSWITCH305], SuitCompressorSwitchesRow); 
 
-	RightCOASPowerSwitchRow.Init(AID_COASSWITCH, MainPanel);
-	RightCOASPowerSwitch.Init( 0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], RightCOASPowerSwitchRow);
+	RightCOASPowerSwitchRow.Init(AID_RIGHTCOASSWITCH, MainPanel);
+	RightCOASPowerSwitch.Init( 0, 0, 34, 31, srf[SRF_SWITCH20], RightCOASPowerSwitchRow);
 	
 	EpsSensorSignalDcCircuitBrakersRow.Init(AID_EPSSENSORSIGNALDCCIRCUITBRAKERS, MainPanel);
 	EpsSensorSignalDcMnaCircuitBraker.Init( 0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], EpsSensorSignalDcCircuitBrakersRow);
@@ -1658,7 +1679,58 @@ void Saturn::SetSwitches(int panel) {
 	VHFAMVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], VHFAMVolumeThumbwheelSwitchRow);
 
 	AudioControlSwitchRow.Init(AID_AUDIOCONTROLSWITCH, MainPanel);
-	AudioControlSwitch.Init(0, 0, 34, 34, srf[SRF_THREEPOSSWITCH30], AudioControlSwitchRow);
+	AudioControlSwitch.Init(0, 0, 34, 34, srf[SRF_SWITCH30], AudioControlSwitchRow);
+
+	SuidPowerSwitchRow.Init(AID_SUITPOWERSWITCH, MainPanel);
+	SuidPowerSwitch.Init(0, 0, 34, 34, srf[SRF_SWITCH30], SuidPowerSwitchRow);
+
+	RightUtilityPowerSwitchRow.Init(AID_RIGHTUTILITYPOWERSWITCH, MainPanel);
+	RightUtilityPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20], RightUtilityPowerSwitchRow);
+
+	RightDockingTargetSwitchRow.Init(AID_RIGHTDOCKINGTARGETSWITCH, MainPanel);
+	RightDockingTargetSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20], RightDockingTargetSwitchRow);
+
+	RightModeIntercomSwitchRow.Init(AID_RIGHTMODEINTERCOMSWITCH, MainPanel);
+	RightModeIntercomSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], RightModeIntercomSwitchRow);
+
+	RightAudioPowerSwitchRow.Init(AID_RIGHTAUDIOPOWERSWITCH, MainPanel);
+	RightAudioPowerSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], RightAudioPowerSwitchRow);
+
+	RightPadCommSwitchRow.Init(AID_RIGHTPADCOMMSWITCH, MainPanel);
+	RightPadCommSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], RightPadCommSwitchRow);
+
+	RightIntercomSwitchRow.Init(AID_RIGHTINTERCOMSWITCH, MainPanel);
+	RightIntercomSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], RightIntercomSwitchRow);
+
+	RightSBandSwitchRow.Init(AID_RIGHTSBANDSWITCH, MainPanel);
+	RightSBandSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], RightSBandSwitchRow);
+
+	RightVHFAMSwitchRow.Init(AID_RIGHTVHFAMSWITCH, MainPanel);
+	RightVHFAMSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30], RightVHFAMSwitchRow);
+
+	GNPowerSwitchRow.Init(AID_GNPOWERSWITCH, MainPanel);
+	GNPowerSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], GNPowerSwitchRow);
+
+	MainBusTieSwitchesRow.Init(AID_MAINBUSTIESWITCHES, MainPanel);
+	MainBusTieBatAcSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], MainBusTieSwitchesRow);
+	MainBusTieBatBcSwitch.Init(45, 0, 34, 29, srf[SRF_THREEPOSSWITCH], MainBusTieSwitchesRow);
+
+	BatCHGRSwitchRow.Init(AID_BATTERYCHARGERSWITCH, MainPanel);
+	BatCHGRSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], BatCHGRSwitchRow);
+
+	NonessBusSwitchRow.Init(AID_NONESSBUSSWITCH, MainPanel);
+	NonessBusSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], NonessBusSwitchRow);
+
+	InteriorLightsFloodSwitchesRow.Init(AID_INTERIORLIGHTSFLOODSSWITCHES, MainPanel);
+	InteriorLightsFloodDimSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], InteriorLightsFloodSwitchesRow);
+	InteriorLightsFloodFixedSwitch.Init(45, 0, 34, 29, srf[SRF_SWITCHUP], InteriorLightsFloodSwitchesRow);
+
+	SPSGaugingSwitchRow.Init(AID_SPSGAUGINGSWITCH, MainPanel);
+	SPSGaugingSwitch.Init(0, 0, 34, 33, srf[SRF_THREEPOSSWITCH305], SPSGaugingSwitchRow);
+	
+	TelcomSwitchesRow.Init(AID_TELCOMSWITCHES, MainPanel);
+	TelcomGroup1Switch.Init(0, 78, 34, 33, srf[SRF_THREEPOSSWITCH305], TelcomSwitchesRow);
+	TelcomGroup2Switch.Init(56, 0, 34, 33, srf[SRF_THREEPOSSWITCH305], TelcomSwitchesRow);
 	
 	//
 	// SATPANEL_LEFT_RNDZ_WINDOW
@@ -3269,9 +3341,44 @@ void Saturn::InitSwitches() {
 	SuitCompressor1Switch.Register(PSH, "SuitCompressor1Switch", THREEPOSSWITCH_CENTER);   
 	SuitCompressor2Switch.Register(PSH, "SuitCompressor2Switch", THREEPOSSWITCH_CENTER);   
 	
-	RightCOASPowerSwitch.Register(PSH, "RightCOASPowerSwitch", THREEPOSSWITCH_DOWN);
+	RightCOASPowerSwitch.Register(PSH, "RightCOASPowerSwitch", false);
 	
-	AudioControlSwitch.Register(PSH, "AudioControlSwitch", THREEPOSSWITCH_DOWN);
+	AudioControlSwitch.Register(PSH, "AudioControlSwitch", false);
+
+	SuidPowerSwitch.Register(PSH, "SuidPowerSwitch", false);
+
+	RightUtilityPowerSwitch.Register(PSH, "RightUtilityPowerSwitch", false);
+
+	RightDockingTargetSwitch.Register(PSH, "RightDockingTargetSwitch", THREEPOSSWITCH_CENTER);
+
+	RightModeIntercomSwitch.Register(PSH, "RightModeIntercomSwitch", THREEPOSSWITCH_CENTER);
+
+	RightAudioPowerSwitch.Register(PSH, "RightAudioPowerSwitch", THREEPOSSWITCH_CENTER);
+
+	RightPadCommSwitch.Register(PSH, "RightPadCommSwitch", THREEPOSSWITCH_CENTER);
+
+	RightIntercomSwitch.Register(PSH, "RightIntercomSwitch", THREEPOSSWITCH_CENTER);
+
+	RightSBandSwitch.Register(PSH, "RightSBandSwitch", THREEPOSSWITCH_CENTER);
+
+	RightVHFAMSwitch.Register(PSH, "RightVHFAMSwitch", THREEPOSSWITCH_CENTER);
+
+	GNPowerSwitch.Register(PSH, "GNPowerSwitch", THREEPOSSWITCH_CENTER);
+
+	MainBusTieBatAcSwitch.Register(PSH, "MainBusTieBatAcSwitch", THREEPOSSWITCH_CENTER);
+	MainBusTieBatBcSwitch.Register(PSH, "MainBusTieBatBcSwitch", THREEPOSSWITCH_CENTER);
+
+	BatCHGRSwitch.Register(PSH, "BatCHGRSwitch", false);
+
+	NonessBusSwitch.Register(PSH, "NonessBusSwitch", THREEPOSSWITCH_CENTER);
+
+	InteriorLightsFloodDimSwitch.Register(PSH, "InteriorLightsFloodDimSwitch", false);
+	InteriorLightsFloodFixedSwitch.Register(PSH, "InteriorLightsFloodFixedSwitch", false);
+
+	SPSGaugingSwitch.Register(PSH, "SPSGaugingSwitch", THREEPOSSWITCH_CENTER);
+
+	TelcomGroup1Switch.Register(PSH, "TelcomGroup1Switch", THREEPOSSWITCH_CENTER);
+	TelcomGroup2Switch.Register(PSH, "TelcomGroup2Switch", THREEPOSSWITCH_CENTER);
 	
 	SBandNormalXPDRSwitch.Register(PSH, "SBandNormalXPDRSwitch", THREEPOSSWITCH_CENTER);
 	SBandNormalPwrAmpl1Switch.Register(PSH, "SBandNormalPwrAmpl1Switch", THREEPOSSWITCH_CENTER);
