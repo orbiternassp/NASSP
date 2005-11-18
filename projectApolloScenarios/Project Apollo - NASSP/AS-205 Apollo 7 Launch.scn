@@ -1,11 +1,12 @@
 BEGIN_DESC
-Wally Schirra Walt Cunningham and Donn Eislie take the most complex machine yet created,
-the Apollo CSM, on its first test flight. Oct 11 1968
+Wally Schirra, Walt Cunningham and Donn Eisele take the most complex machine yet created,
+the Apollo CSM, on its first test flight, Oct 11th 1968. Scenario starts on the pad,
+60 minutes before launch.
 END_DESC
 
 BEGIN_ENVIRONMENT
   System Sol_NASSP5
-  Date MJD 40140.6268518519
+  Date MJD 40140.5851851851
 END_ENVIRONMENT
 
 BEGIN_FOCUS
@@ -51,7 +52,7 @@ AS-205:nSaturn1B
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
-  MISSNTIME -120
+  MISSNTIME -3600
   TOAPO 282.13
   TOPER 227.85
   TOHDG 72
