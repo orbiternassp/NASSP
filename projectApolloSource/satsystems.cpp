@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2005/11/18 02:40:55  movieman523
+  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
+  *	
   *	Revision 1.37  2005/11/17 22:06:47  movieman523
   *	Added other electrical buses and revised cabin fan code.
   *	
@@ -1421,6 +1424,9 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	fc.TempF = 0.0;
 	fc.CondenserTempF = 0.0;
 	fc.CoolingTempF = 0.0;
+	fc.Voltage = 0.0;
+	fc.Current = 0.0;
+	fc.PowerOutput = 0.0;
 
 	//
 	// No fuel cells if we've seperated from the SM.
@@ -1474,6 +1480,10 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	if (pFCCoolingTemp[index]) {
 		fc.CoolingTempF = KelvinToFahrenheit(*pFCCoolingTemp[index]);
 	}
+
+	fc.Voltage = FuelCells[index].Voltage();
+	fc.Current = FuelCells[index].Current();
+	fc.PowerOutput = FuelCells[index].PowerLoad();
 }
 
 

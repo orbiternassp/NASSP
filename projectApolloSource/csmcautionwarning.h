@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/11/16 23:50:31  movieman523
+  *	More updates to CWS operation. Still not completely correct, but closer.
+  *	
   *	Revision 1.6  2005/11/16 23:14:01  movieman523
   *	Initial support for wiring in the circuit breakers.
   *	
@@ -53,6 +56,9 @@ typedef struct {
 	double TempF;
 	double CondenserTempF;
 	double CoolingTempF;
+	double Voltage;
+	double Current;
+	double PowerOutput;
 } FuelCellStatus;
 
 class CSMCautionWarningSystem : public CautionWarningSystem {

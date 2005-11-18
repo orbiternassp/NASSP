@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/11/18 02:40:55  movieman523
+  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
+  *	
   *	Revision 1.4  2005/11/17 21:04:52  movieman523
   *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
   *	
@@ -109,6 +112,15 @@ double PowerSDKObject::Current()
 {
 	if (SDKObj)
 		return SDKObj->Current();
+
+	return 0.0;
+}
+
+double PowerSDKObject::PowerLoad()
+
+{
+	if (SDKObj)
+		return SDKObj->PowerLoad();
 
 	return 0.0;
 }

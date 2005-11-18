@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.87  2005/11/18 04:46:26  flydba
+  *	Window cover bitmap added.
+  *	
   *	Revision 1.86  2005/11/18 03:16:27  flydba
   *	Right hand side panel almost finished.
   *	
@@ -429,7 +432,6 @@ typedef struct {
 	double PotableH2oTankQuantityPercent;
 	double WasteH2oTankQuantityPercent;
 } ECSWaterStatus;
-
 
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
@@ -1510,6 +1512,8 @@ protected:
 	//
 	// Electrical systems.
 	//
+
+	PowerSDKObject FuelCells[3];
 
 	PowerSDKObject MainBusA;
 	PowerSDKObject MainBusB;
