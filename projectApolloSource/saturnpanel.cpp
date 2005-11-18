@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.101  2005/11/18 03:22:09  flydba
+  *	Right hand side panel almost finished.
+  *	
   *	Revision 1.100  2005/11/17 23:32:46  movieman523
   *	Added support for specifying the maximum current for a circuit breaker. Exceed that current and the breaker pops.
   *	
@@ -637,6 +640,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_THREEPOSSWITCH30]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH30));
 		srf[SRF_SWITCH20]				= oapiCreateSurface (LOADBMP (IDB_SWITCH20));
 		srf[SRF_SWITCH30]				= oapiCreateSurface (LOADBMP (IDB_SWITCH30));
+		srf[SRF_CSMRIGHTWINDOWCOVER]	= oapiCreateSurface (LOADBMP (IDB_CSMRIGHTWINDOWCOVER));
 		
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -665,6 +669,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS],g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL],g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKER],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_CSMRIGHTWINDOWCOVER],	g_Param.col[4]);
 /*		break;
 	}
 */
@@ -998,6 +1003,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_INTERIORLIGHTSFLOODSSWITCHES,				_R( 570, 1003,  649, 1032), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SPSGAUGINGSWITCH,							_R( 626, 1401,  660, 1434), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TELCOMSWITCHES,								_R( 672, 1416,  762, 1527), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		
+		//oapiRegisterPanelArea (AID_RIGHTWINDOWCOVER,							_R( 609,  237, 1134,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;    
@@ -1731,6 +1738,9 @@ void Saturn::SetSwitches(int panel) {
 	TelcomSwitchesRow.Init(AID_TELCOMSWITCHES, MainPanel);
 	TelcomGroup1Switch.Init(0, 78, 34, 33, srf[SRF_THREEPOSSWITCH305], TelcomSwitchesRow);
 	TelcomGroup2Switch.Init(56, 0, 34, 33, srf[SRF_THREEPOSSWITCH305], TelcomSwitchesRow);
+
+	//RightWindowCoverRow.Init(AID_RIGHTWINDOWCOVER, MainPanel);
+	//RightWindowCoverSwitch.Init(0, 0, 525, 496, srf[SRF_CSMRIGHTWINDOWCOVER], RightWindowCoverRow);
 	
 	//
 	// SATPANEL_LEFT_RNDZ_WINDOW
@@ -3379,6 +3389,8 @@ void Saturn::InitSwitches() {
 
 	TelcomGroup1Switch.Register(PSH, "TelcomGroup1Switch", THREEPOSSWITCH_CENTER);
 	TelcomGroup2Switch.Register(PSH, "TelcomGroup2Switch", THREEPOSSWITCH_CENTER);
+
+	//RightWindowCoverSwitch.Register(PSH, "RightWindowCoverSwitch", false);
 	
 	SBandNormalXPDRSwitch.Register(PSH, "SBandNormalXPDRSwitch", THREEPOSSWITCH_CENTER);
 	SBandNormalPwrAmpl1Switch.Register(PSH, "SBandNormalPwrAmpl1Switch", THREEPOSSWITCH_CENTER);
