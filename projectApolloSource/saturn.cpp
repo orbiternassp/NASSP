@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.63  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -1846,10 +1849,6 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		//
 		// Do any generic setup.
 		//
-
-		if (CabinFansActive()) {
-			CabinFanSound();
-		}
 
 		GenericFirstTimestep = false;
 	}

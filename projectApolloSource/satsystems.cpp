@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2005/11/18 20:38:59  movieman523
+  *	Revised condensor output from fuel cell to eliminate master alarms.
+  *	
   *	Revision 1.38  2005/11/18 02:40:55  movieman523
   *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
   *	
@@ -309,6 +312,12 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		iu.Timestep(MissionTime, simdt);
 		imu.Timestep(MissionTime);
 		cws.TimeStep(MissionTime);
+
+		//
+		// General checks.
+		//
+
+		CheckCabinFans();
 
 		//
 		// Systems state handling
@@ -764,6 +773,35 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 #endif
 }
 
+void Saturn::CheckCabinFans()
+
+{
+	if (!pCabinFan1)
+		pCabinFan1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER:PUMP");
+	if (!pCabinFan2)
+		pCabinFan2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER:PUMP");
+
+	*pCabinFan1 = SP_PUMP_OFF;
+	*pCabinFan2 = SP_PUMP_OFF;
+
+	if (CabinFansActive()) {
+		if (CabinFan1Active()) {
+			ACBus1.DrawPower(30.0);
+			*pCabinFan1 = SP_PUMP_AUTO;
+		}
+
+		if (CabinFan2Active()) {
+			ACBus2.DrawPower(30.0);
+			*pCabinFan2 = SP_PUMP_AUTO;
+		}
+
+		CabinFanSound();
+	} 
+	else {
+		StopCabinFanSound();
+	}
+}
+
 bool Saturn::AutopilotActive()
 
 {
@@ -1157,6 +1195,9 @@ void Saturn::ClearPanelSDKPointers()
 	for (i = 0; i < N_CSM_VALVES; i++) {
 		pCSMValves[i] = 0;
 	}
+
+	pCabinFan1 = 0;
+	pCabinFan2 = 0;
 }
 
 //

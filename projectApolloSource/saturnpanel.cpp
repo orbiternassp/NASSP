@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.102  2005/11/18 04:45:28  flydba
+  *	Window cover bitmap added.
+  *	
   *	Revision 1.101  2005/11/18 03:22:09  flydba
   *	Right hand side panel almost finished.
   *	
@@ -2109,32 +2112,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
-	if (s == &CabinFan1Switch || s == &CabinFan2Switch ||
-		s == &ECSCabinFanAC1ACircuitBraker || s == &ECSCabinFanAC1BCircuitBraker ||
-		s == &ECSCabinFanAC1CCircuitBraker || s == &ECSCabinFanAC2ACircuitBraker ||
-		s == &ECSCabinFanAC2BCircuitBraker || s == &ECSCabinFanAC2CCircuitBraker) {
-		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER:PUMP");
-		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER:PUMP");
-
-		*pump1 = SP_PUMP_OFF;
-		*pump2 = SP_PUMP_OFF;
-
-		if (CabinFansActive()) {
-			if (CabinFan1Active()) {
-				*pump1 = SP_PUMP_AUTO;
-			}
-
-			if (CabinFan2Active()) {
-				*pump2 = SP_PUMP_AUTO;
-			}
-
-			CabinFanSound();
-		} 
-		else {
-			StopCabinFanSound();
-		}
-
-	} else if (s == &O2Heater1Switch) {
+	if (s == &O2Heater1Switch) {
 		CryoTankHeaterSwitchToggled(s, 
 			(int*) Panelsdk.GetPointerByString("ELECTRIC:O2TANK1HEATER:PUMP"));
 

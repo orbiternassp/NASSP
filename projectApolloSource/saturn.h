@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.88  2005/11/18 20:38:59  movieman523
+  *	Revised condensor output from fuel cell to eliminate master alarms.
+  *	
   *	Revision 1.87  2005/11/18 04:46:26  flydba
   *	Window cover bitmap added.
   *	
@@ -1799,6 +1802,7 @@ protected:
 	void ProbeSound();
 	void CabinFanSound();
 	void StopCabinFanSound();
+	void CheckCabinFans();
 	void ButtonClick();
 	void GuardClick();
 	void FuelCell();
@@ -2061,6 +2065,9 @@ protected:
 	double *pSecECSAccumulatorQuantity;
 	double *pPotableH2oTankQuantity;
 	double *pWasteH2oTankQuantity;
+
+	int *pCabinFan1;
+	int *pCabinFan2;
 
 	int *pCSMValves[N_CSM_VALVES];
 	bool ValveState[N_CSM_VALVES];
