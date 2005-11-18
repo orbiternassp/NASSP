@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2005/11/17 07:08:20  flydba
+  *	New srf added.
+  *	
   *	Revision 1.37  2005/11/17 03:27:48  flydba
   *	Added new surfaces.
   *	
@@ -184,7 +187,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 48; // number of bitmap handles
+const int nsurf = 51; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -225,6 +228,8 @@ const int nsurf = 48; // number of bitmap handles
 #define SRF_THREEPOSSWITCH20		46
 #define SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL	47
 #define SRF_THREEPOSSWITCH30		48
+#define SRF_SWITCH20				49
+#define SRF_SWITCH30				50
 
 //
 // Earth radius and gravity constants.
