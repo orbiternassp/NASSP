@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/11/19 22:19:07  movieman523
+  *	Revised interface to update SIVB, and added payload mass and stage empty mass.
+  *	
   *	Revision 1.17  2005/11/19 22:05:16  movieman523
   *	Added RCS to SIVb stage after seperation.
   *	
@@ -1012,11 +1015,12 @@ void Saturn1b::SeparateStage (int stage)
 		// For now we'll only seperate the panels on ASTP.
 		//
 
-		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD | SIVB_SETTINGS_MASS | SIVB_SETTINGS_GENERAL;
+		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD | SIVB_SETTINGS_MASS | SIVB_SETTINGS_GENERAL | SIVB_SETTINGS_FUEL;
 		S4Config.Payload = SIVBPayload;
 		S4Config.PanelsHinged = !ASTPMission;
 		S4Config.VehicleNo = VehicleNo;
 		S4Config.EmptyMass = SII_EmptyMass;
+		S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
 		S4Config.PayloadMass = S4PL_Mass;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
