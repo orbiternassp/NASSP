@@ -22,12 +22,16 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/19 22:05:16  movieman523
+  *	Added RCS to SIVb stage after seperation.
+  *	
   *	Revision 1.1  2005/11/19 21:27:31  movieman523
   *	Initial SIVb implementation.
   *	
   **************************************************************************/
 
 typedef struct {
+	int SettingsType;
 	int Payload;
 	int VehicleNo;
 	double EmptyMass;
@@ -36,6 +40,11 @@ typedef struct {
 	double MainFuelKg;
 	bool PanelsHinged;
 } SIVBSettings;
+
+#define SIVB_SETTINGS_MASS		0x1
+#define SIVB_SETTINGS_PAYLOAD	0x2
+#define SIVB_SETTINGS_FUEL		0x4
+#define SIVB_SETTINGS_GENERAL	0x8
 
 class SIVB : public VESSEL2 {
 
@@ -69,6 +78,7 @@ protected:
 	int VehicleNo;
 
 	double EmptyMass;
+	double PayloadMass;
 	double MainFuel;
 
 	bool PanelsHinged;

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/11/19 22:05:16  movieman523
+  *	Added RCS to SIVb stage after seperation.
+  *	
   *	Revision 1.16  2005/11/19 20:54:47  movieman523
   *	Added SIVb DLL and wired it up to Saturn 1b.
   *	
@@ -754,28 +757,38 @@ void Saturn1b::DockStage (UINT dockstatus)
    switch (dockstatus)	{
 
    case 2:
-	   	//Interface initialization for mesh modification to SIVB
+		//
+		//Interface initialization for mesh modification to SIVB
+		//
 		Undock(0);
+
+		//
+		// Tell the S4b that we've removed the payload.
+		//
 
 		SIVBSettings S4Config;
 		SIVB *SIVBVessel;
 
-		S4Config.PanelsHinged = false;
+		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD;
 		S4Config.Payload = PAYLOAD_EMPTY;
-		S4Config.VehicleNo = VehicleNo;
-		S4Config.EmptyMass = SII_EmptyMass;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);
 
-//		targetvessel->SetDockParams(_V(0.0,0.0,0.0),_V(0.0,0.0,0.0),_V(0.0,0.0,18.0));
+		//
 		//Time to hear the Stage separation
+		//
+
 		SMJetS.play();
+
+		//
 		//Now Lets reconfigure Apollo for the DM.
+		//
+
 		if (ASTPMission)
 			SetASTPStage ();
-		dockstate=3;
-		bManualUnDock= false;
+		dockstate = 3;
+		bManualUnDock = false;
 		SetAttitudeLinLevel(2,-1);
 	   	break;
 
@@ -999,17 +1012,18 @@ void Saturn1b::SeparateStage (int stage)
 		// For now we'll only seperate the panels on ASTP.
 		//
 
+		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD | SIVB_SETTINGS_MASS | SIVB_SETTINGS_GENERAL;
 		S4Config.Payload = SIVBPayload;
 		S4Config.PanelsHinged = !ASTPMission;
 		S4Config.VehicleNo = VehicleNo;
 		S4Config.EmptyMass = SII_EmptyMass;
+		S4Config.PayloadMass = S4PL_Mass;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);
 
 		SeparationS.play();
 
-		//oapiDeleteVessel(hesc1,vessel->GetHandle());
 		ShiftCentreOfMass (_V(0,0,21.5));
 		SetCSMStage ();
 

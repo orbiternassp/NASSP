@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/19 22:05:16  movieman523
+  *	Added RCS to SIVb stage after seperation.
+  *	
   *	Revision 1.1  2005/11/19 21:27:31  movieman523
   *	Initial SIVb implementation.
   *	
@@ -88,6 +91,7 @@ void SIVB::InitS4b()
 	thg_aps = 0;
 
 	EmptyMass = 15000.0;
+	PayloadMass = 0.0;
 
 	for (i = 0; i < 10; i++)
 		th_att_rot[i] = 0;
@@ -101,9 +105,10 @@ void SIVB::SetS4b()
 	ClearMeshes();
 	VECTOR3 mesh_dir=_V(0,0,0);
 
+	double mass = EmptyMass;
+
 	ClearThrusterDefinitions();
 	SetSize (15);
-	SetEmptyMass (EmptyMass);
 	SetPMI (_V(94,94,20));
 	SetCOG_elev (10);
 	SetCrossSections (_V(267, 267, 97));
@@ -122,18 +127,24 @@ void SIVB::SetS4b()
 		mesh_dir=_V(-1.0,-1.1,13.3);
 		AddMesh (hCOAStarget, &mesh_dir);
 		ClearDockDefinitions();
+		mass += PayloadMass;
 	}
 	else if(Payload == PAYLOAD_ASTP){
 		mesh_dir=_V(0,0,13.3);
 		AddMesh (hastp, &mesh_dir);
+		mass += PayloadMass;
 	}
 	else if(Payload == PAYLOAD_LM1){
 		mesh_dir=_V(0,0,13.3);
 		AddMesh (hCOAStarget, &mesh_dir);
+		mass += PayloadMass;
 	}
 	else if (Payload == PAYLOAD_EMPTY) {
 		ClearDockDefinitions();
+		mass += PayloadMass;
 	}
+
+	SetEmptyMass (mass);
 
 	AddRCS_S4B();
 }
@@ -257,6 +268,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
+	oapiWriteScenario_float (scn, "PMASS", PayloadMass);
 }
 
 typedef union {
@@ -393,6 +405,10 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line+5, "%g", &flt);
 			EmptyMass = flt;
 		}
+		else if (!strnicmp (line, "PMASS", 5)) {
+			sscanf (line+5, "%g", &flt);
+			PayloadMass = flt;
+		}
 		else {
 			ParseScenarioLineEx (line, vstatus);
         }
@@ -416,10 +432,19 @@ void SIVB::clbkDockEvent(int dock, OBJHANDLE connected)
 void SIVB::SetState(SIVBSettings &state)
 
 {
-	Payload = state.Payload;
-	PanelsHinged = state.PanelsHinged;
-	VehicleNo = state.VehicleNo;
-	EmptyMass = state.EmptyMass;
+	if (state.SettingsType & SIVB_SETTINGS_PAYLOAD) {
+		Payload = state.Payload;
+	}
+
+	if (state.SettingsType & SIVB_SETTINGS_GENERAL) {
+		PanelsHinged = state.PanelsHinged;
+		VehicleNo = state.VehicleNo;
+	}
+
+	if (state.SettingsType & SIVB_SETTINGS_MASS) {
+		EmptyMass = state.EmptyMass;
+		PayloadMass = state.PayloadMass;
+	}
 
 	SetS4b();
 }
