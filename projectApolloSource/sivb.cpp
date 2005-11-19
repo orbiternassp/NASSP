@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/11/19 22:19:07  movieman523
+  *	Revised interface to update SIVB, and added payload mass and stage empty mass.
+  *	
   *	Revision 1.2  2005/11/19 22:05:16  movieman523
   *	Added RCS to SIVb stage after seperation.
   *	
@@ -92,11 +95,13 @@ void SIVB::InitS4b()
 
 	EmptyMass = 15000.0;
 	PayloadMass = 0.0;
+	MainFuel = 5000.0;
 
 	for (i = 0; i < 10; i++)
 		th_att_rot[i] = 0;
 	for (i = 0; i < 2; i++)
 		th_att_lin[i] = 0;
+	th_main[0] = 0;
 }
 
 void SIVB::SetS4b()
@@ -269,6 +274,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "PMASS", PayloadMass);
+	oapiWriteScenario_float (scn, "FMASS", MainFuel);
 }
 
 typedef union {
@@ -320,6 +326,21 @@ void SIVB::AddRCS_S4B()
 
 	if (!ph_aps)
 		ph_aps  = CreatePropellantResource(275.0);
+
+	if (!ph_main)
+		ph_main = CreatePropellantResource(MainFuel);
+
+	SetDefaultPropellantResource (ph_main);
+
+	VECTOR3 m_exhaust_pos1= {0, 0, -7};
+
+	//
+	// The main engine is just venting fuel through the exhaust: low thrust and low ISP.
+	//
+
+	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), 1000.0, ph_main, 300.0, 300.0);
+	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+	AddExhaust (th_main[0], .6, .5);
 
 //	if((ApolloNo<8)&&(ApolloNo!=6)&&(ApolloNo!=4))offset=7.7;
 
@@ -409,6 +430,10 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line+5, "%g", &flt);
 			PayloadMass = flt;
 		}
+		else if (!strnicmp (line, "FMASS", 5)) {
+			sscanf (line+5, "%g", &flt);
+			MainFuel = flt;
+		}
 		else {
 			ParseScenarioLineEx (line, vstatus);
         }
@@ -444,6 +469,10 @@ void SIVB::SetState(SIVBSettings &state)
 	if (state.SettingsType & SIVB_SETTINGS_MASS) {
 		EmptyMass = state.EmptyMass;
 		PayloadMass = state.PayloadMass;
+	}
+
+	if (state.SettingsType & SIVB_SETTINGS_FUEL) {
+		MainFuel = state.MainFuelKg;
 	}
 
 	SetS4b();
