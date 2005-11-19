@@ -22,12 +22,18 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/19 21:27:31  movieman523
+  *	Initial SIVb implementation.
   *	
   **************************************************************************/
 
 typedef struct {
 	int Payload;
 	int VehicleNo;
+	double EmptyMass;
+	double PayloadMass;
+	double ApsFuelKg;
+	double MainFuelKg;
 	bool PanelsHinged;
 } SIVBSettings;
 
@@ -56,10 +62,14 @@ protected:
 	int GetMainState();
 	void SetMainState(int s);
 	void GetApolloName(char *s);
+	void AddRCS_S4B();
 
 	int Payload;
 	int MissionNo;
 	int VehicleNo;
+
+	double EmptyMass;
+	double MainFuel;
 
 	bool PanelsHinged;
 	bool PanelsOpened;
@@ -70,4 +80,8 @@ protected:
 	OBJHANDLE hs4b4;
 
 	DOCKHANDLE hDock;
+
+	THRUSTER_HANDLE th_att_rot[10], th_att_lin[2];                 // handles for APS engines
+	THGROUP_HANDLE thg_aps;
+	PROPELLANT_HANDLE ph_aps, ph_main;
 };

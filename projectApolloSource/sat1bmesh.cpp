@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/11/19 20:54:47  movieman523
+  *	Added SIVb DLL and wired it up to Saturn 1b.
+  *	
   *	Revision 1.15  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -760,6 +763,7 @@ void Saturn1b::DockStage (UINT dockstatus)
 		S4Config.PanelsHinged = false;
 		S4Config.Payload = PAYLOAD_EMPTY;
 		S4Config.VehicleNo = VehicleNo;
+		S4Config.EmptyMass = SII_EmptyMass;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);
@@ -998,6 +1002,7 @@ void Saturn1b::SeparateStage (int stage)
 		S4Config.Payload = SIVBPayload;
 		S4Config.PanelsHinged = !ASTPMission;
 		S4Config.VehicleNo = VehicleNo;
+		S4Config.EmptyMass = SII_EmptyMass;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);
