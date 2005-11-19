@@ -1,5 +1,5 @@
 Microsoft Developer Studio Workspace File, Format Version 6.00
-# WARNUNG: DIESE ARBEITSBEREICHSDATEI DARF NICHT BEARBEITET ODER GELÖSCHT WERDEN!
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
 
 ###############################################################################
 
@@ -40,6 +40,18 @@ Package=<4>
 ###############################################################################
 
 Project: "SAT5_LMPKD"=".\Sat5_LMPKD\Sat5_LMPKD.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "SIVb"=".\SIVb\SIVb.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
