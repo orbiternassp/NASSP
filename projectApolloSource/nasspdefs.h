@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2005/11/18 04:44:01  flydba
+  *	Window cover bitmap added.
+  *	
   *	Revision 1.39  2005/11/18 03:12:51  flydba
   *	Some new switch bitmaps added.
   *	
@@ -305,6 +308,7 @@ inline double KelvinToFahrenheit(double kelvin) {
 #define PAYLOAD_LTA8	4
 #define PAYLOAD_TARGET	5
 #define PAYLOAD_LTA6	6
+#define PAYLOAD_EMPTY	7
 
 //
 // Internal systems.

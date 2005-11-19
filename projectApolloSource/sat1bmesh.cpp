@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.14  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -89,6 +92,8 @@
 
 #include "saturn1b.h"
 
+#include "sivb.h"
+
 static MESHHANDLE hSat1stg1;
 static MESHHANDLE hSat1intstg;
 static MESHHANDLE hSat1stg2;
@@ -110,36 +115,6 @@ PARTICLESTREAMSPEC srb_exhaust = {
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
 };
-
-
-void Saturn1b::SetS4B()
-
-{
-	char VName2[256];
-
-	GetApolloName(VName2);
-	strcat (VName2, "-S4BSTG");
-
-	Saturn::hs4bM=oapiGetVesselByName(VName2);
-	VESSEL *targetvessel;
-
-	targetvessel=oapiGetVesselInterface(hs4bM);
-	targetvessel->ClearMeshes();
-	VECTOR3 mesh_dir=_V(0,0,0);
-	targetvessel->AddMesh (hSat1stg2, &mesh_dir);
-	if(SIVBPayload == PAYLOAD_TARGET){
-		mesh_dir=_V(-1.0,-1.1,13.3);
-		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
-	}
-	else if(SIVBPayload == PAYLOAD_ASTP){
-		mesh_dir=_V(0,0,13.3);
-		targetvessel->AddMesh (hastp, &mesh_dir);
-	}
-	else if(SIVBPayload == PAYLOAD_LM1){
-		mesh_dir=_V(0,0,13.3);
-		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
-	}
-}
 
 void Saturn1b::SetFirstStage ()
 {
@@ -773,30 +748,23 @@ void Saturn1b::DockStage (UINT dockstatus)
 	VECTOR3 ofs = _V(0,0,0);
 	VECTOR3 vel = _V(0,0,0.6);
 
-	VECTOR3 mesh_dir=_V(0,0,0);
-
    switch (dockstatus)	{
 
    case 2:
 	   	//Interface initialization for mesh modification to SIVB
-		VESSEL *targetvessel;
 		Undock(0);
-		targetvessel=oapiGetVesselInterface(hs4bM);
-		targetvessel->ClearMeshes();
-		targetvessel->AddMesh (hSat1stg2, &mesh_dir);
-	if(SIVBPayload == PAYLOAD_TARGET){
-		mesh_dir=_V(-1.0,-1.1,13.3);
-		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
-	}
-	else if(SIVBPayload == PAYLOAD_ASTP){
-		mesh_dir=_V(0,0,13.3);
-		targetvessel->AddMesh (hastp, &mesh_dir);
-	}
-	else if(SIVBPayload == PAYLOAD_LM1){
-		mesh_dir=_V(0,0,13.3);
-		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
-	}
-		targetvessel->SetDockParams(_V(0.0,0.0,0.0),_V(0.0,0.0,0.0),_V(0.0,0.0,18.0));
+
+		SIVBSettings S4Config;
+		SIVB *SIVBVessel;
+
+		S4Config.PanelsHinged = false;
+		S4Config.Payload = PAYLOAD_EMPTY;
+		S4Config.VehicleNo = VehicleNo;
+
+		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
+		SIVBVessel->SetState(S4Config);
+
+//		targetvessel->SetDockParams(_V(0.0,0.0,0.0),_V(0.0,0.0,0.0),_V(0.0,0.0,18.0));
 		//Time to hear the Stage separation
 		SMJetS.play();
 		//Now Lets reconfigure Apollo for the DM.
@@ -915,14 +883,6 @@ void Saturn1b::SeparateStage (int stage)
 	{
 	 	ofs1 = OFS_STAGE2;
 		vel1 = _V(0,0,-0.235);
-		ofs2 = OFS_STAGE21;
-		vel2 = _V(0.5,0.5,-0.55);
-		ofs3 = OFS_STAGE22;
-		vel3 = _V(-0.5,0.5,-0.55);
-		ofs4 = OFS_STAGE23;
-		vel4 = _V(0.5,-0.5,-0.55);
-		ofs5 = OFS_STAGE24;
-		vel5 = _V(-0.5,-0.5,-0.55);
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1024,57 +984,23 @@ void Saturn1b::SeparateStage (int stage)
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 	{
 		char VName[256]="";
-		VECTOR3 mesh_dir;
-		VESSEL *targetvessel;
-
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
-		vs2.vrot.x = 0.1;
-		vs2.vrot.y = -0.1;
-		vs2.vrot.z = 0.0;
-		vs3.vrot.x = 0.1;
-		vs3.vrot.y = 0.1;
-		vs3.vrot.z = 0.0;
-		vs4.vrot.x = -0.1;
-		vs4.vrot.y = -0.1;
-		vs4.vrot.z = 0.0;
-		vs5.vrot.x = -0.1;
-		vs5.vrot.y = 0.1;
-		vs5.vrot.z = 0.0;
+		SIVB *SIVBVessel;
 
 		GetApolloName(VName); strcat (VName, "-S4BSTG");
+		hs4bM = oapiCreateVessel(VName, "ProjectApollo/nsat1stg2", vs1);
 
-		if(ASTPMission)
-			hs4bM = oapiCreateVessel(VName, "nsat1astp", vs1);
-		else {
-			hs4bM = oapiCreateVessel(VName, "nsat1stg2", vs1);
+		SIVBSettings S4Config;
 
-			targetvessel=oapiGetVesselInterface(hs4bM);
-			if (SIVBPayload == PAYLOAD_TARGET){
-				mesh_dir=_V(-1.0,-1.1,13.3);
-				targetvessel->AddMesh (hCOAStarget, &mesh_dir);
-			}
-			else if (SIVBPayload == PAYLOAD_ASTP){
-				mesh_dir=_V(0,0,13.3);
-				targetvessel->AddMesh (hastp, &mesh_dir);
-			}
-			else if (SIVBPayload == PAYLOAD_LM1){
-				mesh_dir=_V(0,0,13.3);
-				targetvessel->AddMesh (hCOAStarget, &mesh_dir);
-			}
-		}
+		//
+		// For now we'll only seperate the panels on ASTP.
+		//
 
-		SetupStage(hs4bM);
+		S4Config.Payload = SIVBPayload;
+		S4Config.PanelsHinged = !ASTPMission;
+		S4Config.VehicleNo = VehicleNo;
 
-		GetApolloName(VName); strcat (VName, "-S4B1");
-		hs4b1 = oapiCreateVessel(VName, "nsat1stg21", vs2);
-		GetApolloName(VName); strcat (VName, "-S4B2");
-		hs4b2 = oapiCreateVessel(VName, "nsat1stg22", vs3);
-		GetApolloName(VName); strcat (VName, "-S4B3");
-		hs4b3 = oapiCreateVessel(VName, "nsat1stg23", vs4);
-		GetApolloName(VName); strcat (VName, "-S4B4");
-		hs4b4 = oapiCreateVessel(VName, "nsat1stg24", vs5);
+		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
+		SIVBVessel->SetState(S4Config);
 
 		SeparationS.play();
 

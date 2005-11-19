@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.29  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -837,7 +840,6 @@ void Saturn1b::Timestep (double simt, double simdt)
 				//	sprintf(oapiDebugString() ,"NOT S4B %f");
 		}
 		if (dockstate>=2 && !S4BASTP){
-			SetS4B();
 			if(ASTPMission)
 				S4BASTP=true;
 		}

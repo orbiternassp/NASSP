@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/17 00:01:59  movieman523
+  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
+  *	
   *	Revision 1.3  2005/07/30 02:05:55  movieman523
   *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
   *	
@@ -80,7 +83,6 @@ protected:
 	void Timestep (double simt, double simdt);
 	void DockStage (UINT dockstatus);
 	void StageOne(double simt);
-	void SetS4B();
 	void SetupStage(OBJHANDLE hTarget);
 	void StageStartSIVB(double simt);
 	void StageLaunchSIVB(double simt);
