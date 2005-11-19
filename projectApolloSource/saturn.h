@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.89  2005/11/18 22:11:22  movieman523
+  *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
+  *	
   *	Revision 1.88  2005/11/18 20:38:59  movieman523
   *	Revised condensor output from fuel cell to eliminate master alarms.
   *	
@@ -1289,6 +1292,30 @@ protected:
 
 	//SwitchRow RightWindowCoverRow;
 	//ToggleSwitch RightWindowCoverSwitch;
+
+	/////////////////////////////
+	// G&N lower equipment bay //
+	/////////////////////////////
+
+	SwitchRow ModeSwitchRow;
+	ThreePosSwitch ModeSwitch;
+
+	SwitchRow ControllerSpeedSwitchRow;
+	ThreePosSwitch ControllerSpeedSwitch;
+
+	SwitchRow ControllerCouplingSwitchRow;
+	ToggleSwitch ControllerCouplingSwitch;
+
+	SwitchRow ControllerSwitchesRow;
+	ThreePosSwitch ControllerTrackerSwitch;
+	ThreePosSwitch ControllerTelescopeTrunnionSwitch;
+
+	SwitchRow ConditionLampsSwitchRow;
+	ThreePosSwitch ConditionLampsSwitch;
+
+	SwitchRow UPTLMSwitchRow;
+	ToggleSwitch UPTLMSwitch;
+
 
 	//
 	// OLD Switches: delete these as and when we can do so.
