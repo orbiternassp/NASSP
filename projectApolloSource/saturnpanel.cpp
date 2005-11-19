@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.103  2005/11/18 22:11:22  movieman523
+  *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
+  *	
   *	Revision 1.102  2005/11/18 04:45:28  flydba
   *	Window cover bitmap added.
   *	
@@ -850,6 +853,15 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MFDGNLEFTMIDDLE,								_R(   8,  412,  367,  712), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDGNLEFTBOTTOM,								_R(   8,  716,  367, 1016), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDGNRIGHTBOTTOM,							_R(1451,  670, 1810,  970), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+		
+		oapiRegisterPanelArea (AID_GNMODESWITCH,								_R( 425,  522,  459,  551), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,						_R( 556,  522,  590,  551), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,					_R( 665,  522,  699,  551), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTORLLERSWITCHES,							_R( 556,  661,  699,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONDITIONLAMPSSWITCH,						_R(1290,  537, 1324,  566), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_UPLINKTELEMETRYSWITCH,						_R(1290,  677, 1324,  706), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYCWLIGHTS,					_R(1160,  494, 1214,  570), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYOPTICSLIGHTS,				_R( 423,  625,  496,  723), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);	
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;    
@@ -1752,6 +1764,28 @@ void Saturn::SetSwitches(int panel) {
 	OrbiterAttitudeToggleRow.Init(AID_SM_RCS_MODE, MainPanel);
 	OrbiterAttitudeToggle.Init(86, 33, 23, 20, srf[SRF_SWITCHUPSMALL], OrbiterAttitudeToggleRow);
 
+	/////////////////////////////
+	// G&N lower equipment bay //
+	/////////////////////////////
+
+	ModeSwitchRow.Init(AID_GNMODESWITCH, MainPanel);
+	ModeSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], ModeSwitchRow);
+
+	ControllerSpeedSwitchRow.Init(AID_CONTROLLERSPEEDSWITCH, MainPanel);
+	ControllerSpeedSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], ControllerSpeedSwitchRow);
+
+	ControllerCouplingSwitchRow.Init(AID_CONTROLLERCOUPLINGSWITCH, MainPanel);
+	ControllerCouplingSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], ControllerCouplingSwitchRow);
+
+	ControllerSwitchesRow.Init(AID_CONTORLLERSWITCHES, MainPanel);
+	ControllerTrackerSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], ControllerSwitchesRow);
+	ControllerTelescopeTrunnionSwitch.Init(109, 0, 34, 29, srf[SRF_THREEPOSSWITCH], ControllerSwitchesRow);
+
+	ConditionLampsSwitchRow.Init(AID_CONDITIONLAMPSSWITCH, MainPanel);
+	ConditionLampsSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], ConditionLampsSwitchRow);
+
+	UPTLMSwitchRow.Init(AID_UPLINKTELEMETRYSWITCH, MainPanel);
+	UPTLMSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], UPTLMSwitchRow);
 
 	// old stuff
 
@@ -3705,6 +3739,19 @@ void Saturn::InitSwitches() {
 	SBandVolumeThumbwheelSwitch.Register(PSH, "SBandVolumeThumbwheelSwitch", 2, 9);
 
 	VHFAMVolumeThumbwheelSwitch.Register(PSH, "VHFAMVolumeThumbwheelSwitch", 2, 9);
+
+	ModeSwitch.Register(PSH, "ModeSwitch", THREEPOSSWITCH_DOWN);
+
+	ControllerSpeedSwitch.Register(PSH, "ControllerSpeedSwitch", THREEPOSSWITCH_UP);
+
+	ControllerCouplingSwitch.Register(PSH, "ControllerCouplingSwitch", false);
+
+	ControllerTrackerSwitch.Register(PSH, "ControllerTrackerSwitch", THREEPOSSWITCH_DOWN);
+	ControllerTelescopeTrunnionSwitch.Register(PSH, "ControllerTelescopeTrunnionSwitch", THREEPOSSWITCH_UP);
+
+	ConditionLampsSwitch.Register(PSH, "ConditionLampsSwitch", THREEPOSSWITCH_UP);
+
+	UPTLMSwitch.Register(PSH, "UPTLMSwitch", false);
 	
 	//
 	// Old stuff. Delete when no longer required.
