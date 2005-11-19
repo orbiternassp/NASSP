@@ -22,6 +22,8 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/19 21:27:31  movieman523
+  *	Initial SIVb implementation.
   *	
   **************************************************************************/
 
@@ -74,11 +76,23 @@ SIVB::~SIVB()
 void SIVB::InitS4b()
 
 {
+	int i;
+
 	Payload = PAYLOAD_EMPTY;
 	PanelsHinged = false;
 	PanelsOpened = false;
 
 	hDock = 0;
+	ph_aps = 0;
+	ph_main = 0;
+	thg_aps = 0;
+
+	EmptyMass = 15000.0;
+
+	for (i = 0; i < 10; i++)
+		th_att_rot[i] = 0;
+	for (i = 0; i < 2; i++)
+		th_att_lin[i] = 0;
 }
 
 void SIVB::SetS4b()
@@ -89,7 +103,7 @@ void SIVB::SetS4b()
 
 	ClearThrusterDefinitions();
 	SetSize (15);
-	SetEmptyMass (15000);
+	SetEmptyMass (EmptyMass);
 	SetPMI (_V(94,94,20));
 	SetCOG_elev (10);
 	SetCrossSections (_V(267, 267, 97));
@@ -120,6 +134,8 @@ void SIVB::SetS4b()
 	else if (Payload == PAYLOAD_EMPTY) {
 		ClearDockDefinitions();
 	}
+
+	AddRCS_S4B();
 }
 
 const VECTOR3 OFS_STAGE21 =  { 1.85,1.85, 15.3};
@@ -240,6 +256,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "S4PL", Payload);
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
+	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 }
 
 typedef union {
@@ -262,6 +279,87 @@ int SIVB::GetMainState()
 	return state.word;
 }
 
+void SIVB::AddRCS_S4B()
+
+{
+	const double ATTCOOR = -10;
+	const double ATTCOOR2 = 3.61;
+	const double TRANCOOR = 0;
+	const double TRANCOOR2 = 0.1;
+	const double TRANZ=-3.2;
+	const double ATTWIDTH=.2;
+	const double ATTHEIGHT=.5;
+	const double TRANWIDTH=.2;
+	const double TRANHEIGHT=1;
+	const double RCSOFFSET=0.75;
+	const double RCSOFFSETM=0.30;
+	const double RCSOFFSETM2=0.47;
+	const double RCSX=0.35;
+	VECTOR3 m_exhaust_pos2= {0,ATTCOOR2,TRANZ};
+	VECTOR3 m_exhaust_pos3= {0,-ATTCOOR2,TRANZ};
+	VECTOR3 m_exhaust_pos4= {-ATTCOOR2,0,TRANZ};
+	VECTOR3 m_exhaust_pos5= {ATTCOOR2,0,TRANZ};
+	VECTOR3 m_exhaust_ref2 = {0,0.1,-1};
+	VECTOR3 m_exhaust_ref3 = {0,-0.1,-1};
+	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
+	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
+	double offset;
+	offset = 2.65;
+
+	if (!ph_aps)
+		ph_aps  = CreatePropellantResource(275.0);
+
+//	if((ApolloNo<8)&&(ApolloNo!=6)&&(ApolloNo!=4))offset=7.7;
+
+	//
+	// Rotational thrusters are 150lb (666N) thrust. ISP is estimated.
+	//
+
+	th_att_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.25+offset), _V(0, -1,0), 666.0, ph_aps, 3000.0, 3000.0);
+	th_att_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.25+offset), _V(0,1,0), 666.0, ph_aps, 3000.0, 3000.0);
+	
+	AddExhaust (th_att_rot[0], 0.6, 0.078);
+	AddExhaust (th_att_rot[1], 0.6, 0.078);
+	CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
+	CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
+
+	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+	th_att_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+
+	AddExhaust (th_att_rot[2], 0.6, 0.078);
+	AddExhaust (th_att_rot[3], 0.6, 0.078);
+	AddExhaust (th_att_rot[4], 0.6, 0.078);
+	AddExhaust (th_att_rot[5], 0.6, 0.078);
+	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_BANKLEFT);
+	CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
+
+	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(-1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+
+	AddExhaust (th_att_rot[6], 0.6, 0.078);
+	AddExhaust (th_att_rot[7], 0.6, 0.078);
+	AddExhaust (th_att_rot[8], 0.6, 0.078);
+	AddExhaust (th_att_rot[9], 0.6, 0.078);
+
+	CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
+	CreateThrusterGroup (th_att_rot+8, 2, THGROUP_ATT_YAWRIGHT);
+
+	//
+	// APS thrusters are 320N (72 pounds) thrust
+	//
+
+	th_att_lin[0] = CreateThruster (_V(0,ATTCOOR2-0.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_aps, 3000.0, 3000.0);
+	th_att_lin[1] = CreateThruster (_V(0,-ATTCOOR2+.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_aps, 3000.0, 3000.0);
+	AddExhaust (th_att_lin[0], 7, 0.15);
+	AddExhaust (th_att_lin[1], 7, 0.15);
+
+	thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_ATT_FORWARD);
+}
+
 void SIVB::SetMainState(int s)
 
 {
@@ -277,6 +375,7 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 
 {
 	char *line;
+	float flt;
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, "S4PL", 4)) {
@@ -289,6 +388,10 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp (line, "VECHNO", 6)) {
 			sscanf (line+6, "%d", &VehicleNo);
+		}
+		else if (!strnicmp (line, "EMASS", 5)) {
+			sscanf (line+5, "%g", &flt);
+			EmptyMass = flt;
 		}
 		else {
 			ParseScenarioLineEx (line, vstatus);
@@ -316,6 +419,8 @@ void SIVB::SetState(SIVBSettings &state)
 	Payload = state.Payload;
 	PanelsHinged = state.PanelsHinged;
 	VehicleNo = state.VehicleNo;
+	EmptyMass = state.EmptyMass;
+
 	SetS4b();
 }
 
