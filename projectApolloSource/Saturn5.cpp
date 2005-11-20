@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.36  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -249,8 +252,6 @@ void SaturnV::initSaturnV()
 
 	GoHover=false;
 
-	S4Shoot=false;
-
 	Scorrec=false;
 	Resetjet=false;
 
@@ -272,8 +273,6 @@ void SaturnV::initSaturnV()
 	// Some of these need to be zeroed, but I'm not sure which ones. So for
 	// safety, do all of them.
 	//
-
-	ignition_S4time = 0;
 
 	//
 	// State variables.
@@ -401,41 +400,6 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 	for (int i = 0; i < 5; i++) {
 		SetThrusterIsp (th_main[i], isp, ISP_SECOND_SL);
 		SetThrusterMax0 (th_main[i], THRUST_SECOND_VAC * ThrustAdjust);
-	}
-}
-
-void SaturnV::AccelS4B(OBJHANDLE hvessel, double time)
-
-{
-	VESSEL *stg1vessel = oapiGetVesselInterface(hvessel);
-
-	if (ignition_S4time == 0 && !S4Sep){
-		ignition_S4time=time;
-		S4Sep = true;
-		VECTOR3 m_exhaust_pos1= {0,0,-STG2O-4};
-		VECTOR3 m_exhaust_ref = {0,0,-1};
-		stg1vessel->AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos1, 15.0, 1.5, &m_exhaust_ref);
-		stg1vessel->SetAttitudeLinLevel(2,-1);
-	}
-
-	if (time > ignition_S4time+5){
-		stg1vessel->SetAttitudeLinLevel(2,0);
-		stg1vessel->SetAttitudeLinLevel(0,-1);
-	}
-
-	if (time > ignition_S4time+10){
-		stg1vessel->SetAttitudeLinLevel(0,0);
-	}
-
-	if (time > ignition_S4time+180){
-		stg1vessel->ActivateNavmode(NAVMODE_KILLROT);
-		stg1vessel->DeactivateNavmode(NAVMODE_RETROGRADE);
-		stg1vessel->SetEngineLevel(ENGINE_MAIN,1);
-		S4Shoot = true;
-	}
-
-	if (time > ignition_S4time + 90){
-		stg1vessel->ActivateNavmode(NAVMODE_RETROGRADE);
 	}
 }
 
@@ -1376,10 +1340,6 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (dockstate == 3 && !S4Shoot) {
-		AccelS4B(hs4bM,simt);
-	}
-
 	if (bManualSeparate)
 	{
 		if (dockstate <= 1 || dockstate >= 3) {
@@ -1488,10 +1448,6 @@ void SaturnV::Timestep(double simt, double simdt)
 	GenericTimestep(simt, simdt);
 
 	if (hs4bM){
-		if (!S4Bset){
-			setupS4B(hs4bM);
-			S4Bset = true;
-		}
 		if (dockstate > 2){
 			double TimeW1;
 			TimeW1 = oapiGetTimeAcceleration ();
