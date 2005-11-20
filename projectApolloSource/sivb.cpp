@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/20 20:35:14  movieman523
+  *	Moved mesh files into ProjectApollo directory, and fixed RCS on Saturn V SIVb after seperation.
+  *	
   *	Revision 1.5  2005/11/20 01:06:27  movieman523
   *	Saturn V now uses SIVB DLL too.
   *	
@@ -522,7 +525,14 @@ void SIVB::AddRCS_S4B()
 
 	SetDefaultPropellantResource (ph_main);
 
-	VECTOR3 m_exhaust_pos1= {0, 0, -7};
+	VECTOR3 m_exhaust_pos1;
+	
+	if (SaturnVStage) {
+		m_exhaust_pos1 = _V(0, 0, -11.7);
+	}
+	else {
+		m_exhaust_pos1 = _V(0, 0, -7);
+	}
 
 	//
 	// The main engine is just venting fuel through the exhaust: low thrust and low ISP.
@@ -530,7 +540,7 @@ void SIVB::AddRCS_S4B()
 
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), 1000.0, ph_main, 300.0, 300.0);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-	AddExhaust (th_main[0], .6, .5);
+	AddExhaust (th_main[0], 1.5, .25);
 
 //	if((ApolloNo<8)&&(ApolloNo!=6)&&(ApolloNo!=4))offset=7.7;
 
