@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.104  2005/11/19 01:06:01  flydba
+  *	Switches set on the lower equipment bay.
+  *	
   *	Revision 1.103  2005/11/18 22:11:22  movieman523
   *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
   *	
@@ -1686,7 +1689,7 @@ void Saturn::SetSwitches(int panel) {
 	ModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], ModeIntercomVOXSensThumbwheelSwitchRow);
 	
 	PowerMasterVolumeThumbwheelSwitchRow.Init(AID_POWERMASTERVOLUMETHUMBWHEEL, MainPanel);
-	PowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], PowerMasterVolumeThumbwheelSwitchRow);
+	PowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], PowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS, &soundlib);
 	
 	PadCommVolumeThumbwheelSwitchRow.Init(AID_PADCOMMVOLUMETHUMBWHEEL, MainPanel);
 	PadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], PadCommVolumeThumbwheelSwitchRow);

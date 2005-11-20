@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/11/17 23:32:46  movieman523
+  *	Added support for specifying the maximum current for a circuit breaker. Exceed that current and the breaker pops.
+  *	
   *	Revision 1.33  2005/11/17 01:34:25  movieman523
   *	Extended circuit breaker init function so it can be wired directly to a power source.
   *	
@@ -1555,6 +1558,54 @@ void ThumbwheelSwitch::LoadState(char *line) {
 	}
 }
 
+//
+// Thumbwheel which adjusts volume levels.
+//
+
+VolumeThumbwheelSwitch::VolumeThumbwheelSwitch()
+
+{
+	sl = 0;
+	volume_class = -1;
+}
+
+void VolumeThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vclass, SoundLib *s)
+
+{
+	ThumbwheelSwitch::Init(xp, yp, w, h, surf, row);
+	sl = s;
+	volume_class = vclass;
+}
+
+//
+// We override CheckMouseClick so we can update the volume on change.
+//
+
+bool VolumeThumbwheelSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	bool ret = ThumbwheelSwitch::CheckMouseClick(event, mx, my);
+
+	if (ret && sl) {
+		sl->SetVolume(volume_class, state * 10);
+	}
+
+	return ret;
+}
+
+//
+// We override LoadState() so we can update the volume on loading.
+//
+
+void VolumeThumbwheelSwitch::LoadState(char *line)
+
+{
+	ThumbwheelSwitch::LoadState(line);
+
+	if (sl) {
+		sl->SetVolume(volume_class, state * 10);
+	}
+}
 
 //
 // Indicator Switch

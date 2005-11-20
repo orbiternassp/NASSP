@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/03 10:44:34  spacex15
+  *	improved audio landing synchro
+  *	
   *	Revision 1.2  2005/07/14 10:06:14  spacex15
   *	Added full apollo11 landing sound
   *	initial release
@@ -46,7 +49,7 @@ public:
 	virtual ~SoundData();
 	bool isValid();
 	bool isPlaying();
-	void play(int flags = NOLOOP, int volume = 255);
+	void play(int flags, int libflags, int volume, int playvolume);
 	void stop();
 	void done();
 	void setID(int num) { id = num; };
@@ -56,14 +59,25 @@ public:
 	void MakeValid() { valid = true; refcount = 0; };
 	void MakeInvalid() { valid = false; };
 	bool matches(char *s);
+	int GetPlayFlags() { return PlayFlags; };
+	int GetLibFlags() { return LibFlags; };
+	int GetBaseVolume() { return BaseVolume; };
 
 protected:
+
 	char filename[256];
 	int refcount;
 	bool valid;
+
 	int	id;
+	int PlayVolume;
+	int PlayFlags;
+	int LibFlags;
+	int BaseVolume;
 	int SoundlibId;
 };
+
+class SoundLib;
 
 class Sound {
 
@@ -79,15 +93,21 @@ public:
 	void stop();
 	void done();
 	void SetSoundData(SoundData *s);
+	void SetSoundLib(SoundLib *s) { sl = s; };
 
 protected:
 	int soundflags;
 	bool valid;
 	SoundData *sd;
+	SoundLib *sl;
 };
 
 #define SOUNDFLAG_1XORLESS		0x0001
 #define SOUNDFLAG_1XONLY		0x0002
+
+#define SOUNDFLAG_COMMS			0x0010
+
+#define VOLUME_COMMS	0
 
 class SoundLib {
 
@@ -102,16 +122,18 @@ public:
 	void SetSoundLibMissionPath(char *mission);
 	void SoundOptionOnOff(int option, int onoff);
 	void SetLanguage(char *language);
-
-	char basepath[256];
-	char missionpath[256];
-
+	void SetVolume(int type, int percent);
+	int GetSoundVolume(int flags, int volume);
 
 protected:
 
 	SoundData *DoLoadSound(char *SoundPath, EXTENDEDPLAY extended);
 	SoundData *CheckForMatch(char *s);
 	int FindSlot();
+
+#define N_VOLUMES	10
+
+	int MasterVolume[N_VOLUMES];
 
 //
 // OrbiterSound currently supports 60 sounds. Note that zero is
@@ -123,7 +145,11 @@ protected:
 
 	SoundData sounds[MAX_SOUNDS+1];
 
+	
+	char basepath[256];
+	char missionpath[256];
 	char languagepath[256];
+
 	bool OrbiterSoundActive;
 	int SoundlibId;
 };
