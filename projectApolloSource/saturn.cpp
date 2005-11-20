@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2005/11/18 22:11:22  movieman523
+  *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
+  *	
   *	Revision 1.64  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -2556,8 +2559,8 @@ void Saturn::GenericLoadStateSetup()
 		if (!UseATC) {
 			soundlib.LoadMissionSound(Scount, LAUNCH_COUNT_10_SOUND, DEFAULT_LAUNCH_COUNT_SOUND);
 			soundlib.LoadMissionSound(LaunchS, LAUNCH_SOUND, LAUNCH_SOUND);
-			Scount.setFlags(SOUNDFLAG_1XORLESS);
-			LaunchS.setFlags(SOUNDFLAG_1XORLESS);
+			Scount.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
+			LaunchS.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
 		}
 	}
 
@@ -2597,6 +2600,10 @@ void Saturn::GenericLoadStateSetup()
 		soundlib.LoadMissionSound(SwindowS, WINDOW_SOUND, POST_TOWER_JET_SOUND);
 		soundlib.LoadMissionSound(S2ShutS, SII_CUTOFF_SOUND, SIISHUTDOWN_SOUND);
 		soundlib.LoadMissionSound(S4CutS, GO_FOR_ORBIT_SOUND, SIVBSHUTDOWN_SOUND);
+
+		SwindowS.setFlags(SOUNDFLAG_COMMS);
+		S4CutS.setFlags(SOUNDFLAG_COMMS);
+		S2ShutS.setFlags(SOUNDFLAG_COMMS);
 	}
 
 	if (stage < CSM_LEM_STAGE) {
@@ -2629,12 +2636,13 @@ void Saturn::GenericLoadStateSetup()
 			soundlib.LoadMissionSound(SSMSepExploded, A13_SM_SEP_SOUND, NULL);
 		}
 
-		SApollo13.setFlags(SOUNDFLAG_1XORLESS);
-		SExploded.setFlags(SOUNDFLAG_1XORLESS);
+		SKranz.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
+		SApollo13.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
+		SExploded.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
 	}
 
 	//
-	// Turn of the timer display on launch.
+	// Turn off the timer display on launch.
 	//
 
 	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
@@ -2869,7 +2877,7 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(StageS, "Stagesep.wav");
 	soundlib.LoadSound(CrashBumpS, "Crash.wav");
 
-	Sctdw.setFlags(SOUNDFLAG_1XONLY);
+	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
 
 void Saturn::StageOrbitSIVB(double simt)

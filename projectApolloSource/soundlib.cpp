@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.4  2005/08/03 10:44:33  spacex15
   *	improved audio landing synchro
   *	
@@ -98,11 +101,15 @@ bool SoundData::isValid()
 	return valid;
 }
 
-void SoundData::play(int flags, int volume)
+void SoundData::play(int flags, int libflags, int volume, int playvolume)
 
 {
 	if (valid) {
-		PlayVesselWave3(SoundlibId, id, flags, volume);
+		PlayVesselWave3(SoundlibId, id, flags, playvolume);
+		PlayVolume = playvolume;
+		PlayFlags = flags;
+		LibFlags = libflags;
+		BaseVolume = volume;
 	}
 }
 
@@ -155,7 +162,9 @@ void SoundData::setFileName(char *s)
 SoundLib::SoundLib()
 
 {
-	for (int i = 0; i <= MAX_SOUNDS; i++) {
+	int	i;
+
+	for (i = 0; i <= MAX_SOUNDS; i++) {
 		sounds[i].MakeInvalid();
 	}
 
@@ -164,6 +173,10 @@ SoundLib::SoundLib()
 	missionpath[0] = 0;
 	basepath[0] = 0;
 	strcpy(languagepath, "English");
+
+	for (i = 0; i < N_VOLUMES; i++) {
+		MasterVolume[i] = 100;
+	}
 }
 
 SoundLib::~SoundLib()
@@ -286,6 +299,8 @@ void SoundLib::LoadSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
 		return;
 	}
 
+	s.SetSoundLib(this);
+
 	char SoundPath[256];
 
 	//
@@ -337,6 +352,8 @@ void SoundLib::LoadMissionSound(Sound &s, char *soundname, char *genericname, EX
 		return;
 	}
 
+	s.SetSoundLib(this);
+
 	//
 	// First check for a language-specific sound.
 	//
@@ -387,6 +404,8 @@ void SoundLib::LoadVesselSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
 		return;
 	}
 
+	s.SetSoundLib(this);
+
 	_snprintf(SoundPath, 255, "Vessel\\%s", soundname);
 	s.SetSoundData(DoLoadSound(SoundPath, extended));
 }
@@ -403,10 +422,93 @@ void SoundLib::SetLanguage(char *language)
 	strncpy(languagepath, language, 255);
 }
 
+//
+// Adjust the volume passed in based on the master volume controls.
+//
+
+int SoundLib::GetSoundVolume(int flags, int volume)
+
+{
+	if (flags & SOUNDFLAG_COMMS) {
+		volume = (volume * MasterVolume[VOLUME_COMMS]) / 100;
+	}
+
+	return volume;
+}
+
+//
+// Update volume.
+//
+
+void SoundLib::SetVolume(int type, int percent)
+
+{
+	//
+	// We'll be nice if the volume is invalid.
+	//
+
+	if (percent > 100)
+		percent = 100;
+	if (percent < 0)
+		percent = 0;
+
+	//
+	// Return if the type is invalid.
+	//
+
+	if (type < 0)
+		return;
+	if (type >= N_VOLUMES)
+		return;
+
+	//
+	// Store volume as a percentage of max.
+	//
+
+	MasterVolume[type] = percent;
+
+#if 0
+
+	//
+	// Try to update any sounds that are currently playing.
+	//
+
+	//
+	// Unfortunately this doesn't work here, even though it does work for
+	// the cabin fans... maybe only looped sounds let you change the volume?
+	//
+
+	int match_flags = 0;
+
+	switch (type) {
+	case VOLUME_COMMS:
+		match_flags = SOUNDFLAG_COMMS;
+		break;
+
+	default:
+		return;
+	}
+
+	for (int i = 1; i <= MAX_SOUNDS; i++) {
+		if (sounds[i].isValid() && sounds[i].isPlaying()) {
+			int libflags = sounds[i].GetLibFlags();
+			if (libflags & match_flags) {
+				int base_vol = sounds[i].GetBaseVolume();
+				int playflags = sounds[i].GetPlayFlags();
+				int vol = GetSoundVolume(libflags, base_vol);
+
+				sounds[i].play(playflags, libflags, base_vol, vol);
+			}
+		}
+	}
+#endif
+}
+
 Sound::Sound()
 
 {
 	sd = 0;
+	sl = 0;
 	valid = false;
 	soundflags = 0;
 }
@@ -415,6 +517,8 @@ Sound::Sound(Sound &s)
 
 {
 	sd = s.sd;
+	sl = s.sl;
+
 	valid = s.valid;
 
 	if (sd)
@@ -478,7 +582,14 @@ void Sound::play(int flags, int volume)
 			if (acc > 1.01 || acc < 0.99)
 				return;
 		}
-		sd->play(flags, volume);
+
+		int vol = volume;
+
+		if (sl) {
+			vol = sl->GetSoundVolume(soundflags, volume);
+		}
+
+		sd->play(flags, soundflags, volume, vol);
 	}
 }
 

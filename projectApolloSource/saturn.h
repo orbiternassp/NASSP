@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.90  2005/11/19 01:07:04  flydba
+  *	Switches set on the lower equipment bay.
+  *	
   *	Revision 1.89  2005/11/18 22:11:22  movieman523
   *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
   *	
@@ -1199,7 +1202,7 @@ protected:
 	ThumbwheelSwitch ModeIntercomVOXSensThumbwheelSwitch;
 
 	SwitchRow PowerMasterVolumeThumbwheelSwitchRow;
-	ThumbwheelSwitch PowerMasterVolumeThumbwheelSwitch;
+	VolumeThumbwheelSwitch PowerMasterVolumeThumbwheelSwitch;
 
 	SwitchRow PadCommVolumeThumbwheelSwitchRow;
 	ThumbwheelSwitch PadCommVolumeThumbwheelSwitch;

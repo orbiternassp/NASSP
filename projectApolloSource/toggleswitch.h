@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/11/17 23:32:46  movieman523
+  *	Added support for specifying the maximum current for a circuit breaker. Exceed that current and the breaker pops.
+  *	
   *	Revision 1.27  2005/11/17 01:34:25  movieman523
   *	Extended circuit breaker init function so it can be wired directly to a power source.
   *	
@@ -729,6 +732,20 @@ protected:
 	SwitchRow *switchRow;
 };
 
+class SoundLib;
+
+class VolumeThumbwheelSwitch: public ThumbwheelSwitch {
+
+public:
+	VolumeThumbwheelSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vclass, SoundLib *s);
+	bool CheckMouseClick(int event, int mx, int my);
+	void LoadState(char *line);
+
+protected:
+	SoundLib *sl;
+	int volume_class;
+};
 
 class PanelSwitches;
 
