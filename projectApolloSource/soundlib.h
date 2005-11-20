@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/20 21:46:31  movieman523
+  *	Added initial volume control support.
+  *	
   *	Revision 1.3  2005/08/03 10:44:34  spacex15
   *	improved audio landing synchro
   *	
@@ -125,6 +128,9 @@ public:
 	void SetVolume(int type, int percent);
 	int GetSoundVolume(int flags, int volume);
 
+	char basepath[256];
+	char missionpath[256];
+
 protected:
 
 	SoundData *DoLoadSound(char *SoundPath, EXTENDEDPLAY extended);
@@ -145,9 +151,6 @@ protected:
 
 	SoundData sounds[MAX_SOUNDS+1];
 
-	
-	char basepath[256];
-	char missionpath[256];
 	char languagepath[256];
 
 	bool OrbiterSoundActive;
