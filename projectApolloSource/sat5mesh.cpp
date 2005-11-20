@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/11/20 01:06:27  movieman523
+  *	Saturn V now uses SIVB DLL too.
+  *	
   *	Revision 1.20  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -145,19 +148,19 @@ static MESHHANDLE hlta_2r;
 void LoadSat5Meshes()
 
 {
-	LOAD_MESH(hsat5stg1, "sat5stg1");
+	LOAD_MESH(hsat5stg1, "ProjectApollo/sat5stg1");
 	LOAD_MESH(hsat5intstg, "ProjectApollo/sat5intstg");
 	LOAD_MESH(hsat5intstg4, "ProjectApollo/sat5intstg4");
 	LOAD_MESH(hsat5intstg8, "ProjectApollo/sat5intstg8");
-	LOAD_MESH(hsat5stg2, "sat5stg2");
-	LOAD_MESH(hsat5stg3, "sat5stg3");
-	LOAD_MESH(hsat5stg31, "sat5stg31");
-	LOAD_MESH(hsat5stg32, "sat5stg32");
-	LOAD_MESH(hsat5stg33, "sat5stg33");
-	LOAD_MESH(hsat5stg34, "sat5stg34");
-	LOAD_MESH(hLMPKD, "LM_Parked");
-	LOAD_MESH(hapollo8lta, "apollo8_lta");
-	LOAD_MESH(hlta_2r, "LTA_2R");
+	LOAD_MESH(hsat5stg2, "ProjectApollo/sat5stg2");
+	LOAD_MESH(hsat5stg3, "ProjectApollo/sat5stg3");
+	LOAD_MESH(hsat5stg31, "ProjectApollo/sat5stg31");
+	LOAD_MESH(hsat5stg32, "ProjectApollo/sat5stg32");
+	LOAD_MESH(hsat5stg33, "ProjectApollo/sat5stg33");
+	LOAD_MESH(hsat5stg34, "ProjectApollo/sat5stg34");
+	LOAD_MESH(hLMPKD, "ProjectApollo/LM_Parked");
+	LOAD_MESH(hapollo8lta, "ProjectApollo/apollo8_lta");
+	LOAD_MESH(hlta_2r, "ProjectApollo/LTA_2R");
 }
 
 MESHHANDLE SaturnV::GetInterstageMesh()
