@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/19 22:58:32  movieman523
+  *	Pass main fuel mass from Saturn 1b to SIVb and added main thrust from venting fuel.
+  *	
   *	Revision 1.3  2005/11/19 22:19:07  movieman523
   *	Revised interface to update SIVB, and added payload mass and stage empty mass.
   *	
@@ -33,21 +36,42 @@
   *	
   **************************************************************************/
 
+//
+// Data structure passed from main vessel to SIVB to configure stage.
+//
+
 typedef struct {
 	int SettingsType;
 	int Payload;
 	int VehicleNo;
+	int Realism;
+	double MissionTime;
 	double EmptyMass;
 	double PayloadMass;
 	double ApsFuelKg;
 	double MainFuelKg;
 	bool PanelsHinged;
+	bool SaturnVStage;
 } SIVBSettings;
+
+//
+// Which parts of the structure are active.
+//
 
 #define SIVB_SETTINGS_MASS		0x1
 #define SIVB_SETTINGS_PAYLOAD	0x2
 #define SIVB_SETTINGS_FUEL		0x4
 #define SIVB_SETTINGS_GENERAL	0x8
+
+//
+// Stage states.
+//
+
+#define SIVB_STATE_WAITING		0
+
+//
+// Stage class.
+//
 
 class SIVB : public VESSEL2 {
 
@@ -75,17 +99,25 @@ protected:
 	void SetMainState(int s);
 	void GetApolloName(char *s);
 	void AddRCS_S4B();
+	void Boiloff();
 
 	int Payload;
 	int MissionNo;
 	int VehicleNo;
+	int State;
+	int Realism;
 
 	double EmptyMass;
 	double PayloadMass;
 	double MainFuel;
 
+	double MissionTime;
+	double NextMissionEventTime;
+	double LastMissionEventTime;
+
 	bool PanelsHinged;
 	bool PanelsOpened;
+	bool SaturnVStage;
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;

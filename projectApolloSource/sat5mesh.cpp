@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.19  2005/11/16 00:18:49  movieman523
   *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
   *	
@@ -105,6 +108,8 @@
 #include "tracer.h"
 #include "sat5_lmpkd.h"
 
+#include "sivb.h"
+
 PARTICLESTREAMSPEC srb_contrail = {
 	0, 12.0, 5, 150.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
@@ -116,7 +121,6 @@ PARTICLESTREAMSPEC srb_exhaust = {
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
 };
 
-static MESHHANDLE hCRAWL;
 static MESHHANDLE hsat5stg1;
 static MESHHANDLE hsat5intstg;
 static MESHHANDLE hsat5intstg4;
@@ -154,7 +158,6 @@ void LoadSat5Meshes()
 	LOAD_MESH(hLMPKD, "LM_Parked");
 	LOAD_MESH(hapollo8lta, "apollo8_lta");
 	LOAD_MESH(hlta_2r, "LTA_2R");
-	LOAD_MESH(hCRAWL, "CRAWLER");
 }
 
 MESHHANDLE SaturnV::GetInterstageMesh()
@@ -192,7 +195,6 @@ void SaturnV::BuildFirstStage (int bstate)
 	ClearMeshes();
 	VECTOR3 m_exhaust_pos1= {3,3,Offset1st};
 	VECTOR3 mesh_dir=_V(0,0,-80.0+STG0O);
-	//AddMesh (hCRAWL, &mesh_dir);		// Crawler and Mobile Launcher are separate vessels now
 
 	if (bstate >=1){
 		mesh_dir=_V(0,0,-54.0+STG0O);
@@ -833,57 +835,6 @@ void SaturnV::SetThirdStage ()
 	bAbtlocked = false;
 }
 
-void SaturnV::SetPayloadMesh(VESSEL *s4b)
-
-{
-	VECTOR3 mesh_dir;
-//	VECTOR3 dockpos = {0,0,-2.2};
-	VECTOR3 dockpos = {0,0.03,-2.1};
-	VECTOR3 dockdir = {0,0,1};
-	VECTOR3 dockrot = {-0.705,-0.705,0};
-
-	switch (SIVBPayload) {
-	case PAYLOAD_LEM:
-		mesh_dir=_V(-0.0,0,-4.7);
-		s4b->AddMesh (hLMPKD, &mesh_dir);
-		s4b->SetDockParams(dockpos, dockdir, dockrot);
-		break;
-	case PAYLOAD_LTA:
-	case PAYLOAD_LTA6:
-		mesh_dir=_V(0.0,0,-4.9);
-		s4b->AddMesh (hlta_2r, &mesh_dir);
-		break;
-	case PAYLOAD_LTA8:
-		mesh_dir=_V(0.0,0,-5.7);
-		s4b->AddMesh (hapollo8lta, &mesh_dir);
-		break;
-	}
-}
-
-void SaturnV::setupS4B(OBJHANDLE hvessel)
-
-{
-	VESSEL *stgSMvessel = oapiGetVesselInterface(hvessel);
-
-	stgSMvessel->SetSize (15.5);
-	stgSMvessel->SetEmptyMass (65600);
-	stgSMvessel->SetMaxFuelMass (114000);
-	stgSMvessel->SetFuelMass(100);
-	stgSMvessel->SetISP (5159.5);
-	stgSMvessel->SetEnableFocus(false);
-	stgSMvessel->SetMaxThrust (ENGINE_MAIN, 1201725);
-	stgSMvessel->SetMaxThrust (ENGINE_ATTITUDE, 4700);
-	stgSMvessel->SetEngineLevel(ENGINE_MAIN, 0.0);
-	stgSMvessel->ClearMeshes();
-	VECTOR3 mesh_dir=_V(0,0,-14.5);
-	stgSMvessel->AddMesh (hsat5stg3, &mesh_dir);
-
-	if( dockstate <= 2) {
-		SetPayloadMesh(stgSMvessel);
-	}
-	//stgSMvessel->CreateDock(_V(0.0,0.0,-2.2),_V(0.0,0.0,1.0),_V(-0.705, -0.705, 0));
-}
-
 void SaturnV::SeparateStage (int stage)
 
 {
@@ -1119,7 +1070,6 @@ void SaturnV::SeparateStage (int stage)
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 	{
 		char VName[256]="";
-		char *s4bconfig;
 
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -1137,52 +1087,31 @@ void SaturnV::SeparateStage (int stage)
 		vs5.vrot.y = 0.1;
 		vs5.vrot.z = 0.0;
 
-		//
-		// Pick appropriate config file for payload. We need different config
-		// files so we can specify the docking ports there: otherwise Orbiter
-		// blows up when loading a saved scenario.
-		//
 
-		switch (SIVBPayload) {
-		case PAYLOAD_LEM:
-			s4bconfig = "sat5stg3lem";
-			break;
-		case PAYLOAD_LTA:
-		case PAYLOAD_LTA6:
-			s4bconfig = "sat5stg3lta";
-			break;
-		case PAYLOAD_LTA8:
-			s4bconfig = "sat5stg3lta";
-			break;
-
-		//
-		// Shouldn't have ASTP on Saturn V, but what the heck?
-		//
-
-		case PAYLOAD_ASTP:
-			s4bconfig = "sat5stg3astp";
-			break;
-
-		case PAYLOAD_LM1:
-			s4bconfig = "sat5stg3lm1";
-			break;
-
-		default:
-			s4bconfig = "sat5stg3";
-			break;
-		}
+		SIVB *SIVBVessel;
 
 		GetApolloName(VName); strcat (VName, "-S4BSTG");
-		hs4bM = oapiCreateVessel(VName, s4bconfig, vs1);
-		setupS4B(hs4bM);
-		GetApolloName(VName); strcat (VName, "-S4B1");
-		hs4b1 = oapiCreateVessel(VName, "sat5stg31", vs2);
-		GetApolloName(VName); strcat (VName, "-S4B2");
-		hs4b2 = oapiCreateVessel(VName, "sat5stg32", vs3);
-		GetApolloName(VName); strcat (VName, "-S4B3");
-		hs4b3 = oapiCreateVessel(VName, "sat5stg33", vs4);
-		GetApolloName(VName); strcat (VName, "-S4B4");
-		hs4b4 = oapiCreateVessel(VName, "sat5stg34", vs5);
+		hs4bM = oapiCreateVessel(VName, "ProjectApollo/sat5stg3", vs1);
+
+		SIVBSettings S4Config;
+
+		//
+		// For now we'll only seperate the panels on ASTP.
+		//
+
+		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD | SIVB_SETTINGS_MASS | SIVB_SETTINGS_GENERAL | SIVB_SETTINGS_FUEL;
+		S4Config.Payload = SIVBPayload;
+		S4Config.PanelsHinged = false;
+		S4Config.VehicleNo = VehicleNo;
+		S4Config.EmptyMass = S4B_EmptyMass;
+		S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
+		S4Config.PayloadMass = S4PL_Mass;
+		S4Config.SaturnVStage = true;
+		S4Config.MissionTime = MissionTime;
+		S4Config.Realism = Realism;
+
+		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
+		SIVBVessel->SetState(S4Config);
 
 		SeparationS.play(NOLOOP,255);
 
@@ -1360,36 +1289,42 @@ void SaturnV::DockStage (UINT dockstatus)
 	vs5.rvel.y = rvel5.y+rofs5.y;
 	vs5.rvel.z = rvel5.z+rofs5.z;
 
-    VECTOR3 mesh_dir = _V(0,0,-14.1);
-
    switch (dockstatus)	{
 
    case 1:
 		break;
 
    case 2:
-		//Interface initialization for mesh modification to SIVB
-		VESSEL *targetvessel;
+
 		sat5_lmpkd *lmvessel;
 		VESSELSTATUS2 vslm2, *pv;
 		VESSELSTATUS2::DOCKINFOSPEC dckinfo;
 		char VNameLM[256];
 
 		Undock(0);
-		targetvessel = oapiGetVesselInterface(hs4bM);
-		//time to free LM from SIVB
-		targetvessel->ClearMeshes();
 
-		targetvessel->AddMesh (hsat5stg3, &mesh_dir);
-//		targetvessel->ShiftCentreOfMass(_V(0,0,-14.1));
+		//
+		// Tell the S4b that we've removed the payload.
+		//
 
-		//Release of Slaved Stage
+		SIVBSettings S4Config;
+		SIVB *SIVBVessel;
+
+		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD;
+		S4Config.Payload = PAYLOAD_EMPTY;
+
+		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
+		SIVBVessel->SetState(S4Config);
+
+		//
 		//Time to hear the Stage separation
+		//
+
 		SMJetS.play(NOLOOP,230);
 
+		//
 		//Now Lets create a real LEM and dock it
-		//oapiDeleteVessel(hs4bM,GetHandle());
-
+		//
 
 		GetLEMName(VNameLM);
 

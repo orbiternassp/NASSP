@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/11/19 22:58:32  movieman523
+  *	Pass main fuel mass from Saturn 1b to SIVb and added main thrust from venting fuel.
+  *	
   *	Revision 1.18  2005/11/19 22:19:07  movieman523
   *	Revised interface to update SIVB, and added payload mass and stage empty mass.
   *	
@@ -1022,6 +1025,9 @@ void Saturn1b::SeparateStage (int stage)
 		S4Config.EmptyMass = SII_EmptyMass;
 		S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
 		S4Config.PayloadMass = S4PL_Mass;
+		S4Config.SaturnVStage = false;
+		S4Config.MissionTime = MissionTime;
+		S4Config.Realism = Realism;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);

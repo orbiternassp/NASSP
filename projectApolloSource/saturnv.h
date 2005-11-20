@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/10/31 10:42:25  tschachim
+  *	New VAB.
+  *	
   *	Revision 1.11  2005/08/30 18:37:39  movieman523
   *	Added support for new interstage meshes.
   *	
@@ -94,13 +97,11 @@ private:
 	MESHHANDLE GetInterstageMesh();
 	void Retro1(OBJHANDLE hvessel,double gaz);
 	void Retro2(OBJHANDLE hvessel,double gaz);
-	void setupS4B(OBJHANDLE hvessel);
 	void AttitudeLaunch1();
 	void AttitudeLaunch2();
 	void AttitudeLaunch4();
 	void AutoPilot(double autoT);
 	void SetSIICMixtureRatio (double ratio);
-	void AccelS4B(OBJHANDLE hvessel, double time);
 	void MoveEVA();
 
 	void SeparateStage (int stage);
@@ -111,8 +112,6 @@ private:
 
 	bool SIVBStart();
 	void SIVBStop();
-
-	void SetPayloadMesh(VESSEL *s4b);
 
 protected:
 
@@ -182,7 +181,6 @@ protected:
 	//
 
 	double ignition_S4time;
-	bool S4Shoot;
 
 };
 
