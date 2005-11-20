@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/11/20 01:06:27  movieman523
+  *	Saturn V now uses SIVB DLL too.
+  *	
   *	Revision 1.19  2005/11/19 22:58:32  movieman523
   *	Pass main fuel mass from Saturn 1b to SIVb and added main thrust from venting fuel.
   *	
@@ -1130,14 +1133,14 @@ void Saturn1b::SeparateStage (int stage)
 void Saturn1bLoadMeshes()
 
 {
-	hSat1stg1 = oapiLoadMeshGlobal ("nsat1stg1");
-	hSat1intstg = oapiLoadMeshGlobal ("nsat1intstg");
-	hSat1stg2 = oapiLoadMeshGlobal ("nsat1stg2");
-	hSat1stg21 = oapiLoadMeshGlobal ("nsat1stg21");
-	hSat1stg22 = oapiLoadMeshGlobal ("nsat1stg22");
-	hSat1stg23 = oapiLoadMeshGlobal ("nsat1stg23");
-	hSat1stg24 = oapiLoadMeshGlobal ("nsat1stg24");
-	hastp = oapiLoadMeshGlobal ("nASTP3");
-	hastp2 = oapiLoadMeshGlobal ("nASTP2");
-	hCOAStarget = oapiLoadMeshGlobal ("sat_target");
+	hSat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg1");
+	hSat1intstg = oapiLoadMeshGlobal ("ProjectApollo/nsat1intstg");
+	hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
+	hSat1stg21 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg21");
+	hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
+	hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
+	hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
+	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
+	hastp2 = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
+	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
 }

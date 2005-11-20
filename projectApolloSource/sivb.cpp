@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/11/20 01:06:27  movieman523
+  *	Saturn V now uses SIVB DLL too.
+  *	
   *	Revision 1.4  2005/11/19 22:58:32  movieman523
   *	Pass main fuel mass from Saturn 1b to SIVb and added main thrust from venting fuel.
   *	
@@ -72,28 +75,28 @@ void SIVbLoadMeshes()
 	// Saturn 1b.
 	//
 
-	hSat1stg2 = oapiLoadMeshGlobal ("nsat1stg2");
-	hSat1stg21 = oapiLoadMeshGlobal ("nsat1stg21");
-	hSat1stg22 = oapiLoadMeshGlobal ("nsat1stg22");
-	hSat1stg23 = oapiLoadMeshGlobal ("nsat1stg23");
-	hSat1stg24 = oapiLoadMeshGlobal ("nsat1stg24");
-	hastp = oapiLoadMeshGlobal ("nASTP3");
-	hastp2 = oapiLoadMeshGlobal ("nASTP2");
-	hCOAStarget = oapiLoadMeshGlobal ("sat_target");
+	hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
+	hSat1stg21 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg21");
+	hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
+	hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
+	hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
+	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
+	hastp2 = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
+	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
 
 	//
 	// Saturn V
 	//
 
-	hsat5stg3 = oapiLoadMeshGlobal ("sat5stg3");
-	hsat5stg31 = oapiLoadMeshGlobal ("sat5stg31");
-	hsat5stg32 = oapiLoadMeshGlobal ("sat5stg32");
-	hsat5stg33 = oapiLoadMeshGlobal ("sat5stg33");
-	hsat5stg34 = oapiLoadMeshGlobal ("sat5stg34");
+	hsat5stg3 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg3");
+	hsat5stg31 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg31");
+	hsat5stg32 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg32");
+	hsat5stg33 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg33");
+	hsat5stg34 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg34");
 
-	hLMPKD = oapiLoadMeshGlobal ("LM_Parked");
-	hapollo8lta = oapiLoadMeshGlobal ("apollo8_lta");
-	hlta_2r = oapiLoadMeshGlobal ("LTA_2R");
+	hLMPKD = oapiLoadMeshGlobal ("ProjectApollo/LM_Parked");
+	hapollo8lta = oapiLoadMeshGlobal ("ProjectApollo/apollo8_lta");
+	hlta_2r = oapiLoadMeshGlobal ("ProjectApollo/LTA_2R");
 }
 
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
@@ -503,7 +506,13 @@ void SIVB::AddRCS_S4B()
 	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
 	double offset;
-	offset = 2.65;
+
+	if (SaturnVStage) {
+		offset = -2.05;
+	}
+	else {
+		offset = 2.65;
+	}
 
 	if (!ph_aps)
 		ph_aps  = CreatePropellantResource(275.0);
