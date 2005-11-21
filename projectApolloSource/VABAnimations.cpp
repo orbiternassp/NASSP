@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/11/09 18:35:42  tschachim
+  *	New Saturn assembly process.
+  *	
   *	Revision 1.2  2005/10/31 19:18:39  tschachim
   *	Bugfixes.
   *	
@@ -89,9 +92,16 @@ void VAB::BuildSaturnStage() {
 	for (int i = 0; i < animCraneCount; i++) 
 		SetAnimation(animCrane[i], 0);
 
+	// Saturn Stage 1
+	if (lav->GetBuildStatus() == 0) {
+		saturnStage1_Proc = 0.00001;
+		SetAnimation(animSaturnStage1, saturnStage1_Proc);
+	}
+
 	currentAnimCrane = animCrane[lav->GetBuildStatus()];	
 	crane_Proc = 0.00001;
 	SetAnimation(currentAnimCrane, crane_Proc);
+
 	crane_Status = CRANE_BUILDING;
 }
 
@@ -110,17 +120,30 @@ void VAB::UnbuildSaturnStage() {
 		lav->LaunchVesselUnbuild();
 		return;
 	}
+
 	// Platforms
 	if (lav->GetBuildStatus() == animCraneCount && platform_Proc < 1.0) { 
 		currentAnimCrane = -1;
 		crane_Status = CRANE_UNBUILDING;
 		return;
 	}
+
 	for (int i = 0; i < animCraneCount; i++) 
 		SetAnimation(animCrane[i], 0);
 
+	// Saturn Stage 1
+	if (lav->GetBuildStatus() == 1) {
+		if (saturnStage1_Proc < 1.0) {
+			adjustSaturnStage1 = true;
+			if (saturnStage1_Proc < 0.3) {
+				saturnStage1_Proc = 0.3;
+				SetAnimation(animSaturnStage1, saturnStage1_Proc);
+			}
+		}
+	}
 	currentAnimCrane = animCrane[lav->GetBuildStatus() - 1];
-	crane_Proc = 1;
+	crane_Proc = 1.0;
 	SetAnimation(currentAnimCrane, crane_Proc);
+
 	crane_Status = CRANE_UNBUILDING;
 }
