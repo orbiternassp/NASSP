@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/11/20 20:35:14  movieman523
+  *	Moved mesh files into ProjectApollo directory, and fixed RCS on Saturn V SIVb after seperation.
+  *	
   *	Revision 1.21  2005/11/20 01:06:27  movieman523
   *	Saturn V now uses SIVB DLL too.
   *	
@@ -129,7 +132,9 @@ static MESHHANDLE hsat5intstg;
 static MESHHANDLE hsat5intstg4;
 static MESHHANDLE hsat5intstg8;
 static MESHHANDLE hsat5stg2;
+static MESHHANDLE hsat5stg2base;
 static MESHHANDLE hsat5stg3;
+static MESHHANDLE hsat5stg3base;
 static MESHHANDLE hsat5stg31;
 static MESHHANDLE hsat5stg32;
 static MESHHANDLE hsat5stg33;
@@ -153,7 +158,9 @@ void LoadSat5Meshes()
 	LOAD_MESH(hsat5intstg4, "ProjectApollo/sat5intstg4");
 	LOAD_MESH(hsat5intstg8, "ProjectApollo/sat5intstg8");
 	LOAD_MESH(hsat5stg2, "ProjectApollo/sat5stg2");
+	LOAD_MESH(hsat5stg2base, "ProjectApollo/sat5stg2base");
 	LOAD_MESH(hsat5stg3, "ProjectApollo/sat5stg3");
+	LOAD_MESH(hsat5stg3base, "ProjectApollo/sat5stg3base");
 	LOAD_MESH(hsat5stg31, "ProjectApollo/sat5stg31");
 	LOAD_MESH(hsat5stg32, "ProjectApollo/sat5stg32");
 	LOAD_MESH(hsat5stg33, "ProjectApollo/sat5stg33");
@@ -207,17 +214,27 @@ void SaturnV::BuildFirstStage (int bstate)
 		mesh_dir=_V(0,0,-30.5+STG0O);
 		AddMesh (GetInterstageMesh(), &mesh_dir);
 	}
-	if (bstate >=2){
+	if (bstate == 2){
+		mesh_dir=_V(0,0,-17.2+STG0O);
+		AddMesh (hsat5stg2base, &mesh_dir);
+	}
+	if (bstate > 2){
 		mesh_dir=_V(0,0,-17.2+STG0O);
 		AddMesh (hsat5stg2, &mesh_dir);
 	}
-	if (bstate >=3){
+	if (bstate ==3 ){
+		mesh_dir=_V(0,0,2.+STG0O);
+		AddMesh (hsat5stg3base, &mesh_dir);
+	}
+	if (bstate > 3){
 		mesh_dir=_V(0,0,2.+STG0O);
 		AddMesh (hsat5stg3, &mesh_dir);
 	}
 	if (bstate >=4){
-		mesh_dir=_V(0,0,12+STG0O);
-		AddMesh (hLMPKD, &mesh_dir);
+		if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
+			mesh_dir=_V(0,0,12+STG0O);
+			AddMesh (hLMPKD, &mesh_dir);
+		}
 	}
 	if (bstate >=4){
 		mesh_dir=_V(-1.48,-1.48,14.55+STG0O);
