@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "orbitersdk.h"
@@ -114,14 +117,14 @@ void SetFirstStage (VESSEL *vessel)
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 if (!refcount++) {
-		hSat1stg1 = oapiLoadMeshGlobal ("nsat1stg1");
-		hSat1stg2 = oapiLoadMeshGlobal ("nsat1stg2");
-		hSat1stg20 = oapiLoadMeshGlobal ("nsat1stg20");
-		hSat1stg21 = oapiLoadMeshGlobal ("nsat1stg21");
-		hSat1stg22 = oapiLoadMeshGlobal ("nsat1stg22");
-		hSat1stg23 = oapiLoadMeshGlobal ("nsat1stg23");
-		hSat1stg24 = oapiLoadMeshGlobal ("nsat1stg24");
-		hSM = oapiLoadMeshGlobal ("nSaturn1_SM");
+		hSat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg1");
+		hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
+		hSat1stg20 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg20");
+		hSat1stg21 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg21");
+		hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
+		hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
+		hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
+		hSM = oapiLoadMeshGlobal ("ProjectApollo/nSaturn1_SM");
 	}
 	return new VESSEL (hvessel, flightmodel);
 

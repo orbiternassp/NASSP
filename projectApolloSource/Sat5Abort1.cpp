@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "orbitersdk.h"
@@ -154,15 +157,15 @@ DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hsat5stg1 = oapiLoadMeshGlobal ("sat5stg1");
-		hsat5intstg = oapiLoadMeshGlobal ("sat5intstg");
-		hsat5stg2 = oapiLoadMeshGlobal ("sat5stg2");
-		hsat5stg3 = oapiLoadMeshGlobal ("sat5stg3");
-		hsat5stg31 = oapiLoadMeshGlobal ("sat5stg31");
-		hsat5stg32 = oapiLoadMeshGlobal ("sat5stg32");
-		hsat5stg33 = oapiLoadMeshGlobal ("sat5stg33");
-		hsat5stg34 = oapiLoadMeshGlobal ("sat5stg34");
-		hSM = oapiLoadMeshGlobal ("nSaturn1_SM");
+		hsat5stg1 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg1");
+		hsat5intstg = oapiLoadMeshGlobal ("ProjectApollo/sat5intstg");
+		hsat5stg2 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg2");
+		hsat5stg3 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg3");
+		hsat5stg31 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg31");
+		hsat5stg32 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg32");
+		hsat5stg33 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg33");
+		hsat5stg34 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg34");
+		hSM = oapiLoadMeshGlobal ("ProjectApollo/nSaturn1_SM");
 	}
 	return new Sat5Abort1 (hvessel, flightmodel);
 }

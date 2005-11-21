@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/10/19 11:31:10  tschachim
+  *	Changed log file name.
+  *	
   *	Revision 1.2  2005/02/11 12:48:51  tschachim
   *	header inserted
   *	
@@ -196,7 +199,7 @@ void Saturn5_EVA::Timestep (double simt)
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hCMPEVA = oapiLoadMeshGlobal ("saturn1_CMP_EVA");
+		hCMPEVA = oapiLoadMeshGlobal ("ProjectApollo/saturn1_CMP_EVA");
 	}
 	return new Saturn5_EVA (hvessel, flightmodel);
 }
