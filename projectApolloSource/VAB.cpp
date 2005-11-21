@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/09 18:34:21  tschachim
+  *	New Saturn assembly process.
+  *	
   *	Revision 1.1  2005/10/31 11:59:22  tschachim
   *	New VAB.
   *	
@@ -80,6 +83,8 @@ VAB::VAB(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	crane_Status = CRANE_BEGIN;
 	crane_Proc = 0.00001;
 	platform_Proc = 0;
+	saturnStage1_Proc = 0;
+	adjustSaturnStage1 = false;
 	saturnName[0] = '\0';
 	saturnVisible = false;
 
@@ -87,7 +92,7 @@ VAB::VAB(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 		for (int j = 0; j < 16; j++) 
 			mgroupCrane[i][j] = 0;
 	}
-	for (i = 0; i < 14; i++) {
+	for (i = 0; i < 16; i++) {
 		for (int j = 0; j < 8; j++) 
 			mgroupSaturn[i][j] = 0;
 	}
@@ -105,7 +110,7 @@ VAB::~VAB() {
 		for (int j = 0; j < 16; j++) 
 			if (mgroupCrane[i][j]) delete mgroupCrane[i][j];
 	}
-	for (i = 0; i < 14; i++) {
+	for (i = 0; i < 16; i++) {
 		for (int j = 0; j < 8; j++) 
 			if (mgroupSaturn[i][j]) delete mgroupSaturn[i][j];
 	}
@@ -128,39 +133,43 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
     meshindexVAB = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\ApolloVAB"), &meshoffset);
 	SetMeshVisibilityMode(meshindexVAB, MESHVIS_ALWAYS);
 
-	meshcountSaturn = 14;
+	meshcountSaturn = 16;
 	meshoffset = _V(75, -55, -66.4);
 	meshindexSaturn[0] = AddMesh(oapiLoadMeshGlobal("sat5stg1"), &meshoffset);
 
 	meshoffset = _V(75, -60, -66.4);
-	meshindexSaturn[1] = AddMesh(oapiLoadMeshGlobal("sat5stg2"), &meshoffset);
+	meshindexSaturn[1] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg2base"), &meshoffset);
 	meshoffset = _V(75, -73.3, -66.4);
 	meshindexSaturn[2] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5intstg4"), &meshoffset);
 
 	meshoffset = _V(75, -65, -66.4);
-	meshindexSaturn[3] = AddMesh(oapiLoadMeshGlobal("sat5stg3"), &meshoffset);
+	meshindexSaturn[3] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg3base"), &meshoffset);
+	meshoffset = _V(75, -84.2, -66.4);
+	meshindexSaturn[4] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg2intstg"), &meshoffset);
 
 	meshoffset = _V(75, -60, -66.4);
-	meshindexSaturn[4] = AddMesh(oapiLoadMeshGlobal("sat5CM"), &meshoffset);
+	meshindexSaturn[5] = AddMesh(oapiLoadMeshGlobal("sat5CM"), &meshoffset);
 	meshoffset = _V(75 - 0.14, -60 - 4.15, -66.4);
-	meshindexSaturn[5] = AddMesh(oapiLoadMeshGlobal("nSaturn1_SM"), &meshoffset);
+	meshindexSaturn[6] = AddMesh(oapiLoadMeshGlobal("nSaturn1_SM"), &meshoffset);
 	meshoffset = _V(75 - 1.48, -60 - 8.7, -66.4 - 1.48);
-	meshindexSaturn[6] = AddMesh(oapiLoadMeshGlobal("sat5stg31"), &meshoffset);
+	meshindexSaturn[7] = AddMesh(oapiLoadMeshGlobal("sat5stg31"), &meshoffset);
 	meshoffset = _V(75 - 1.48, -60 - 8.7, -66.4 + 1.48);
-	meshindexSaturn[7] = AddMesh(oapiLoadMeshGlobal("sat5stg32"), &meshoffset);
+	meshindexSaturn[8] = AddMesh(oapiLoadMeshGlobal("sat5stg32"), &meshoffset);
 	meshoffset = _V(75 + 1.48, -60 - 8.7, -66.4 + 1.48);
-	meshindexSaturn[8] = AddMesh(oapiLoadMeshGlobal("sat5stg33"), &meshoffset);
+	meshindexSaturn[9] = AddMesh(oapiLoadMeshGlobal("sat5stg33"), &meshoffset);
 	meshoffset = _V(75 + 1.48, -60 - 8.7, -66.4 - 1.48);
-	meshindexSaturn[9] = AddMesh(oapiLoadMeshGlobal("sat5stg34"), &meshoffset);
-	meshoffset = _V(75, -60 - 11.25, -66.4);
-	meshindexSaturn[10] = AddMesh(oapiLoadMeshGlobal("LM_Parked"), &meshoffset);
+	meshindexSaturn[10] = AddMesh(oapiLoadMeshGlobal("sat5stg34"), &meshoffset);
+	meshoffset = _V(75.1, -60 - 11.25, -66.4 + 0.05);
+	meshindexSaturn[11] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/LM_SLA"), &meshoffset);
 	meshoffset = _V(75 + 1.35, -60 + 0.14, -66.4 + 0.02);
-	meshindexSaturn[11] = AddMesh(oapiLoadMeshGlobal("SAT5HC"), &meshoffset);
+	meshindexSaturn[12] = AddMesh(oapiLoadMeshGlobal("SAT5HC"), &meshoffset);
 	meshoffset = _V(75, -60 + 1.5, -66.4);
-	meshindexSaturn[12] = AddMesh(oapiLoadMeshGlobal("sat5probe"), &meshoffset);
+	meshindexSaturn[13] = AddMesh(oapiLoadMeshGlobal("sat5probe"), &meshoffset);
+	meshoffset = _V(75, -60 - 21.25, -66.4);
+	meshindexSaturn[14] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg3intstg"), &meshoffset);
 
 	meshoffset = _V(75, -65, -66.4);
-	meshindexSaturn[13] = AddMesh(oapiLoadMeshGlobal("sat5BPC"), &meshoffset);
+	meshindexSaturn[15] = AddMesh(oapiLoadMeshGlobal("sat5BPC"), &meshoffset);
 	
 	for (int i = 0; i < meshcountSaturn; i++) 
 		SetMeshVisibilityMode(meshindexSaturn[i], MESHVIS_NEVER);
@@ -280,26 +289,27 @@ void VAB::DefineAnimations() {
 	mgroupSaturn[0][7] = new MGROUP_TRANSLATE (meshindexSaturn[0], NULL, 0, _V(0, -3, 0));
 
 	// Saturn Stage 2
-	DefineCraneAnimation(mgroupCrane[1], 102, 51.5);
-	DefineCrane2Animation(mgroupCrane2[1], 26, 99.7);
-	for (int i = 1; i < 3; i++) 
-		DefineSaturnAnimation(mgroupSaturn[i], meshindexSaturn[i], 102, 51.5);
+	DefineCraneAnimation(mgroupCrane[1], 107.4, 56.9);
+	DefineCrane2Animation(mgroupCrane2[1], 31.4, 99.7);
+	DefineSaturnAnimation(mgroupSaturn[1], meshindexSaturn[1], 107.4, 56.9);
+	DefineSaturnAnimation(mgroupSaturn[2], meshindexSaturn[2], 107.4, 56.9);
 
 	// Saturn Stage 3
-	DefineCraneAnimation(mgroupCrane[2], 111, 36.25);
-	DefineCrane2Animation(mgroupCrane2[2], 35, 99.7);
-	DefineSaturnAnimation(mgroupSaturn[3], meshindexSaturn[3], 111, 36.25);
+	DefineCraneAnimation(mgroupCrane[2], 111 + 2.8, 36.25 + 2.8);
+	DefineCrane2Animation(mgroupCrane2[2], 35 + 2.8, 99.7 + 2.8);
+	DefineSaturnAnimation(mgroupSaturn[3], meshindexSaturn[3], 111 + 2.8, 36.25 + 2.8);
+	DefineSaturnAnimation(mgroupSaturn[4], meshindexSaturn[4], 111 + 2.8, 36.25 + 2.8);
 
 	// Saturn Stage CSM/LTA
 	DefineCraneAnimation(mgroupCrane[3], 113, 22);
 	DefineCrane2Animation(mgroupCrane2[3], 37, 99.7);
-	for (i = 4; i < 13; i++) 
+	for (int i = 5; i < 15; i++) 
 		DefineSaturnAnimation(mgroupSaturn[i], meshindexSaturn[i], 113, 22);
 
 	// Saturn Stage Tower
 	DefineCraneAnimation(mgroupCrane[4], 114.5, 13.5);
 	DefineCrane2Animation(mgroupCrane2[4], 38, 99.7);
-	DefineSaturnAnimation(mgroupSaturn[13], meshindexSaturn[13], 114.5, 13.5);
+	DefineSaturnAnimation(mgroupSaturn[15], meshindexSaturn[15], 114.5, 13.5);
 
 	// Create animations
 	animCraneCount = 5;
@@ -333,9 +343,9 @@ void VAB::DefineAnimations() {
 	int j = 0;
 	for (i = 1; i < meshcountSaturn; i++) {
 		if (i <= 2) j = 1;
-		else if (i <= 3) j = 2;
-		else if (i <= 12) j = 3;
-		else if (i <= 13) j = 4;
+		else if (i <= 4) j = 2;
+		else if (i <= 14) j = 3;
+		else if (i <= 15) j = 4;
 
 		AddAnimationComponent(animCrane[j], 0,        0.000005, mgroupSaturn[i][0]);
 		AddAnimationComponent(animCrane[j], 0.000005, 0.00001,  mgroupSaturn[i][1]);
@@ -348,15 +358,16 @@ void VAB::DefineAnimations() {
 	currentAnimCrane = animCrane[0];
 
 	// Special handling Saturn Stage 1
-	AddAnimationComponent(animCrane[0], 0,        0.00001, mgroupSaturn[0][0]);
-	AddAnimationComponent(animCrane[0], 0.00001,  0.2,     mgroupSaturn[0][1]);
+	animSaturnStage1 = CreateAnimation(0.0);
+	AddAnimationComponent(animSaturnStage1, 0,        0.00001, mgroupSaturn[0][0]);
+	AddAnimationComponent(animSaturnStage1, 0.00001,  0.2,     mgroupSaturn[0][1]);
 	ANIMATIONCOMPONENT_HANDLE ach = 
-    AddAnimationComponent(animCrane[0], 0.3,      0.35,    mgroupSaturn[0][2]);
-	AddAnimationComponent(animCrane[0], 0.3,      0.35,    mgroupSaturn[0][3], ach);
-	AddAnimationComponent(animCrane[0], 0.35,     0.4,     mgroupSaturn[0][4]);
-	AddAnimationComponent(animCrane[0], 0.4,      0.6,     mgroupSaturn[0][5]);
-	AddAnimationComponent(animCrane[0], 0.6,      0.7,     mgroupSaturn[0][6]);
-	AddAnimationComponent(animCrane[0], 0.7,      0.8,     mgroupSaturn[0][7]);
+    AddAnimationComponent(animSaturnStage1, 0.3,      0.35,    mgroupSaturn[0][2]);
+	AddAnimationComponent(animSaturnStage1, 0.3,      0.35,    mgroupSaturn[0][3], ach);
+	AddAnimationComponent(animSaturnStage1, 0.35,     0.4,     mgroupSaturn[0][4]);
+	AddAnimationComponent(animSaturnStage1, 0.4,      0.6,     mgroupSaturn[0][5]);
+	AddAnimationComponent(animSaturnStage1, 0.6,      0.7,     mgroupSaturn[0][6]);
+	AddAnimationComponent(animSaturnStage1, 0.7,      0.8,     mgroupSaturn[0][7]);
 
 	// Platforms
 	static UINT platform1_groups[1] = {1969};
@@ -440,6 +451,7 @@ void VAB::clbkPostCreation() {
 	
 	SetAnimation(currentAnimCrane, crane_Proc);
 	SetAnimation(animPlatform, platform_Proc);
+	SetAnimation(animSaturnStage1, saturnStage1_Proc);
 }
 
 void VAB::clbkPreStep(double simt, double simdt, double mjd) {
@@ -554,6 +566,10 @@ void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 				if (lav && lav->GetBuildStatus() == 1 && crane_Proc > 0.8 && platform_Proc < 1.0)
 					platform_Proc = min(1.0, platform_Proc + simdt / 1000.0);
 
+				// Saturn Stage 1
+				if (currentAnimCrane == animCrane[0])
+					saturnStage1_Proc = crane_Proc;
+
 			} else { // unbuilding
 				if (crane_Proc > 0.00001)
 					crane_Proc = max(0.00001, crane_Proc - da);
@@ -572,12 +588,26 @@ void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 				}
 
 				// Platforms
-				if (lav && lav->GetBuildStatus() == 1 && crane_Proc < 1.0 && platform_Proc > 0)
+				if (lav && lav->GetBuildStatus() == 1 && crane_Proc < 0.9 && crane_Proc > 0.8 && platform_Proc > 0)
 					platform_Proc = max(0, platform_Proc - simdt / 1000.0);
 
+				// Saturn Stage 1
+				if (currentAnimCrane == animCrane[0]) {
+					if (adjustSaturnStage1) {
+						if (saturnStage1_Proc <= 0.35) {
+							saturnStage1_Proc += da / 3.9;
+						} else {
+							saturnStage1_Proc = 1.0;
+							adjustSaturnStage1 = false;
+						}
+					} else {
+						saturnStage1_Proc = crane_Proc;
+					}
+				}
 			}
 			SetAnimation(currentAnimCrane, crane_Proc);
 			SetAnimation(animPlatform, platform_Proc);
+			SetAnimation(animSaturnStage1, saturnStage1_Proc);
 		}
 	}
 }
@@ -593,13 +623,14 @@ void VAB::SetSaturnMeshVisibilityMode(int buildStatus, WORD mode) {
 	}
 	else if (buildStatus == 2) {
 		SetMeshVisibilityMode(meshindexSaturn[3], mode);
+		SetMeshVisibilityMode(meshindexSaturn[4], mode);
 	}
 	else if (buildStatus == 3) {
-		for (int i = 4; i < 13; i++) 
+		for (int i = 5; i < 15; i++) 
 			SetMeshVisibilityMode(meshindexSaturn[i], mode);
 	}
 	else if (buildStatus == 4) {
-		SetMeshVisibilityMode(meshindexSaturn[13], mode);
+		SetMeshVisibilityMode(meshindexSaturn[15], mode);
 	}
 }
 

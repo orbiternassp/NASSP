@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/09 18:41:03  tschachim
+  *	New Saturn assembly process.
+  *	
   *	Revision 1.1  2005/10/31 11:59:22  tschachim
   *	New VAB.
   *	
@@ -51,7 +54,7 @@ protected:
 	bool firstTimestepDone;
 
 	int meshindexVAB;
-	int meshindexSaturn[14];
+	int meshindexSaturn[16];
 	int meshcountSaturn;
 
 	enum CraneStatus { 
@@ -66,10 +69,13 @@ protected:
 	int animCraneCount;
 	double crane_Proc;
 	MGROUP_TRANSFORM *mgroupCrane[5][16];
-	MGROUP_TRANSFORM *mgroupSaturn[14][8];
+	MGROUP_TRANSFORM *mgroupSaturn[16][8];
 	MGROUP_TRANSFORM *mgroupCrane2[5][6];
 	UINT animPlatform;
 	double platform_Proc;
+	UINT animSaturnStage1;
+	double saturnStage1_Proc;
+	bool adjustSaturnStage1;
 
 	enum DoorStatus { 
 		DOOR_CLOSED, 
