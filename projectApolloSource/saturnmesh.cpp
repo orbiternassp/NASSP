@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/10/19 11:41:43  tschachim
+  *	Improved logging.
+  *	
   *	Revision 1.17  2005/10/11 16:42:01  tschachim
   *	Renamed LPswitch5.
   *	
@@ -128,27 +131,27 @@ extern void CoeffFunc(double aoa, double M, double Re ,double *cl ,double *cm  ,
 void SaturnInitMeshes()
 
 {
-	LOAD_MESH(hSM, "nSaturn1_SM");
-	LOAD_MESH(hSMhga, "nsat1SMHGA");
-	LOAD_MESH(hCM, "sat5CM");
-	LOAD_MESH(hCM2, "sat5CM2");
-	LOAD_MESH(hCMP, "SAT5CMP");
-	LOAD_MESH(hCREW, "SAT5CREW");
-	LOAD_MESH(hFHC, "SAT5HC");
-	LOAD_MESH(hFHO, "SAT5HO");
-	LOAD_MESH(hCM2B, "SAT5CM2B");
-	LOAD_MESH(hprobe, "sat5probe");
-	LOAD_MESH(hCMBALLOON, "nsat1CMBN");
-	LOAD_MESH(hCRB, "nSATURN1_CRB");
-	LOAD_MESH(hCMB, "SAT5CMB");
-	LOAD_MESH(hChute30, "Apollo_2chute");
-	LOAD_MESH(hChute31, "Apollo_3chuteEX");
-	LOAD_MESH(hChute32, "Apollo_3chuteHD");
-	LOAD_MESH(hApollochute, "Apollo_3chute");
-	LOAD_MESH(hFHC2, "SAT5HC2");
-	LOAD_MESH(hsat5tower, "sat5BPC");
-	LOAD_MESH(hFHO2, "SAT5HO2");
-	LOAD_MESH(hCMPEVA, "nSATURN1_CMP_EVA");
+	LOAD_MESH(hSM, "ProjectApollo/nSaturn1_SM");
+	LOAD_MESH(hSMhga, "ProjectApollo/nsat1SMHGA");
+	LOAD_MESH(hCM, "ProjectApollo/sat5CM");
+	LOAD_MESH(hCM2, "ProjectApollo/sat5CM2");
+	LOAD_MESH(hCMP, "ProjectApollo/SAT5CMP");
+	LOAD_MESH(hCREW, "ProjectApollo/SAT5CREW");
+	LOAD_MESH(hFHC, "ProjectApollo/SAT5HC");
+	LOAD_MESH(hFHO, "ProjectApollo/SAT5HO");
+	LOAD_MESH(hCM2B, "ProjectApollo/SAT5CM2B");
+	LOAD_MESH(hprobe, "ProjectApollo/sat5probe");
+	LOAD_MESH(hCMBALLOON, "ProjectApollo/nsat1CMBN");
+	LOAD_MESH(hCRB, "ProjectApollo/nSATURN1_CRB");
+	LOAD_MESH(hCMB, "ProjectApollo/SAT5CMB");
+	LOAD_MESH(hChute30, "ProjectApollo/Apollo_2chute");
+	LOAD_MESH(hChute31, "ProjectApollo/Apollo_3chuteEX");
+	LOAD_MESH(hChute32, "ProjectApollo/Apollo_3chuteHD");
+	LOAD_MESH(hApollochute, "ProjectApollo/Apollo_3chute");
+	LOAD_MESH(hFHC2, "ProjectApollo/SAT5HC2");
+	LOAD_MESH(hsat5tower, "ProjectApollo/sat5BPC");
+	LOAD_MESH(hFHO2, "ProjectApollo/SAT5HO2");
+	LOAD_MESH(hCMPEVA, "ProjectApollo/nSATURN1_CMP_EVA");
 }
 
 void Saturn::AddRCS_CM(double MaxThrust)

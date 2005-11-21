@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/15 23:42:50  movieman523
+  *	Improved ASTP a bit. Still buggy, but vaguely working.
+  *	
   *	Revision 1.2  2005/07/04 23:56:46  movieman523
   *	New C++ version. Totally untested!
   *	
@@ -114,8 +117,8 @@ void ASTP::Setup()
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hSat1stg2 = oapiLoadMeshGlobal ("nsat1stg2");
-		hastp = oapiLoadMeshGlobal ("nASTP2");
+		hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
+		hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
 	}
 	return new ASTP (hvessel, flightmodel);
 }

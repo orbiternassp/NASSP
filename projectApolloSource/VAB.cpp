@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/11/21 13:31:34  tschachim
+  *	New Saturn assembly meshes.
+  *	
   *	Revision 1.2  2005/11/09 18:34:21  tschachim
   *	New Saturn assembly process.
   *	
@@ -135,7 +138,7 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 
 	meshcountSaturn = 16;
 	meshoffset = _V(75, -55, -66.4);
-	meshindexSaturn[0] = AddMesh(oapiLoadMeshGlobal("sat5stg1"), &meshoffset);
+	meshindexSaturn[0] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg1"), &meshoffset);
 
 	meshoffset = _V(75, -60, -66.4);
 	meshindexSaturn[1] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg2base"), &meshoffset);
@@ -148,28 +151,28 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 	meshindexSaturn[4] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg2intstg"), &meshoffset);
 
 	meshoffset = _V(75, -60, -66.4);
-	meshindexSaturn[5] = AddMesh(oapiLoadMeshGlobal("sat5CM"), &meshoffset);
+	meshindexSaturn[5] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5CM"), &meshoffset);
 	meshoffset = _V(75 - 0.14, -60 - 4.15, -66.4);
-	meshindexSaturn[6] = AddMesh(oapiLoadMeshGlobal("nSaturn1_SM"), &meshoffset);
+	meshindexSaturn[6] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/nSaturn1_SM"), &meshoffset);
 	meshoffset = _V(75 - 1.48, -60 - 8.7, -66.4 - 1.48);
-	meshindexSaturn[7] = AddMesh(oapiLoadMeshGlobal("sat5stg31"), &meshoffset);
+	meshindexSaturn[7] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg31"), &meshoffset);
 	meshoffset = _V(75 - 1.48, -60 - 8.7, -66.4 + 1.48);
-	meshindexSaturn[8] = AddMesh(oapiLoadMeshGlobal("sat5stg32"), &meshoffset);
+	meshindexSaturn[8] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg32"), &meshoffset);
 	meshoffset = _V(75 + 1.48, -60 - 8.7, -66.4 + 1.48);
-	meshindexSaturn[9] = AddMesh(oapiLoadMeshGlobal("sat5stg33"), &meshoffset);
+	meshindexSaturn[9] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg33"), &meshoffset);
 	meshoffset = _V(75 + 1.48, -60 - 8.7, -66.4 - 1.48);
-	meshindexSaturn[10] = AddMesh(oapiLoadMeshGlobal("sat5stg34"), &meshoffset);
+	meshindexSaturn[10] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg34"), &meshoffset);
 	meshoffset = _V(75.1, -60 - 11.25, -66.4 + 0.05);
 	meshindexSaturn[11] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/LM_SLA"), &meshoffset);
 	meshoffset = _V(75 + 1.35, -60 + 0.14, -66.4 + 0.02);
-	meshindexSaturn[12] = AddMesh(oapiLoadMeshGlobal("SAT5HC"), &meshoffset);
+	meshindexSaturn[12] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/SAT5HC"), &meshoffset);
 	meshoffset = _V(75, -60 + 1.5, -66.4);
-	meshindexSaturn[13] = AddMesh(oapiLoadMeshGlobal("sat5probe"), &meshoffset);
+	meshindexSaturn[13] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5probe"), &meshoffset);
 	meshoffset = _V(75, -60 - 21.25, -66.4);
 	meshindexSaturn[14] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg3intstg"), &meshoffset);
 
 	meshoffset = _V(75, -65, -66.4);
-	meshindexSaturn[15] = AddMesh(oapiLoadMeshGlobal("sat5BPC"), &meshoffset);
+	meshindexSaturn[15] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5BPC"), &meshoffset);
 	
 	for (int i = 0; i < meshcountSaturn; i++) 
 		SetMeshVisibilityMode(meshindexSaturn[i], MESHVIS_NEVER);

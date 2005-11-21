@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "orbitersdk.h"
@@ -168,7 +171,7 @@ DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hCMPEVA = oapiLoadMeshGlobal ("nsaturn1_CMP_EVA");
+		hCMPEVA = oapiLoadMeshGlobal ("ProjectApollo/nsaturn1_CMP_EVA");
 
 	}
 	return new VESSEL (hvessel, flightmodel);
