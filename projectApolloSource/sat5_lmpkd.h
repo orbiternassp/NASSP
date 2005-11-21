@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.23  2005/10/31 10:36:32  tschachim
   *	New toggleswitch callback PanelThumbwheelSwitchChanged.
   *	
@@ -133,6 +136,7 @@ public:
 	void SetLmVesselDockStage();
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
+	void SetLmLandedMesh();
 	void SetGimbal(bool setting);
 	void GetMissionTime(double &Met);
 	void AbortStage();
@@ -462,6 +466,7 @@ protected:
 
 	int Realism;
 	int ApolloNo;
+	int Landed;
 
 	int SwitchFocusToLeva;
 
