@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/08/14 16:08:20  tschachim
+  *	LM is now a VESSEL2
+  *	Changed panel restore mechanism because the CSM mechanism
+  *	caused CTDs, reason is still unknown.
+  *	
   *	Revision 1.15  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -91,6 +96,7 @@
 
 static MESHHANDLE hLMPKD ;
 static MESHHANDLE hLMVessel ;
+static MESHHANDLE hLMLanded ;
 static MESHHANDLE hLMDescent;
 static MESHHANDLE hLMAscent ;
 static MESHHANDLE hLMAscent2 ;
@@ -274,9 +280,14 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
-	SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
-	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);
-	UINT meshidx = AddMesh (hLMVessel, &mesh_dir);
+	SetTouchdownPoints (_V(0, -3.8, 10), _V(-1, -3.8, -10), _V(1, -3.8, -10));
+
+	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
+	UINT meshidx;
+	if (Landed)
+		meshidx = AddMesh (hLMLanded, &mesh_dir);		
+	else
+		meshidx = AddMesh (hLMVessel, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
     
 	if (!ph_Dsc)  
@@ -432,7 +443,7 @@ void sat5_lmpkd::SeparateStage (UINT stage)
 
 		char VName[256];
 		strcpy (VName, GetName()); strcat (VName, "-DESCENTSTG");
-		hdsc = oapiCreateVessel(VName,"sat5LMDSC",vs1);
+		hdsc = oapiCreateVessel(VName, "ProjectApollo/sat5LMDSC", vs1);
 
 		SetLmAscentHoverStage();
 //		ENGARMswitch=ENGINE_ARMED_ASCENT;
@@ -440,11 +451,22 @@ void sat5_lmpkd::SeparateStage (UINT stage)
 	}
 }
 
+void sat5_lmpkd::SetLmLandedMesh() {
+
+	ClearMeshes();
+	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
+	UINT meshidx = AddMesh (hLMLanded, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	Landed = true;
+}
+
 void LEMLoadMeshes()
 
 {
 	hLMPKD = oapiLoadMeshGlobal ("LM_NoWheel");
 	hLMVessel = oapiLoadMeshGlobal ("LM_vessel_on");
+	hLMLanded = oapiLoadMeshGlobal ("ProjectApollo/LM_Landed");
 	hLMDescent = oapiLoadMeshGlobal ("LM_descent");
 	hLMAscent = oapiLoadMeshGlobal ("LM_ascent");
 	hLMAscent2= oapiLoadMeshGlobal ("LM_ascent2");

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.35  2005/10/19 11:39:11  tschachim
   *	Changed log file name.
   *	
@@ -321,6 +324,7 @@ void sat5_lmpkd::Init()
 
 	Realism = REALISM_DEFAULT;
 	ApolloNo = 0;
+	Landed = false;
 
 	strncpy(AudioLanguage, "English", 64);
 	soundlib.SetLanguage(AudioLanguage);
@@ -536,10 +540,9 @@ int sat5_lmpkd::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	case OAPI_KEY_EQUALS:
 		//decrease descent rate
 		agc.ChangeDescentRate(0.3077);
-		return 1;
+		return 1;	
 	}
 	return 0;
-
 }
 
 //
@@ -723,7 +726,9 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 			SetEngineLevel(ENGINE_HOVER,0);
 			ContactOK = true;
 
+			SetLmLandedMesh();
 		}
+
 		if (CPswitch && HATCHswitch && EVAswitch && GroundContact()){
 			ToggleEva = true;
 			EVAswitch = false;
@@ -953,6 +958,9 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "APOLLONO", 8)) {
 			sscanf (line+8, "%d", &ApolloNo);
 		}
+		else if (!strnicmp (line, "LANDED", 6)) {
+			sscanf (line+6, "%d", &Landed);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -1058,6 +1066,7 @@ void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 	}
 
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
+	oapiWriteScenario_int (scn, "LANDED", Landed);
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
