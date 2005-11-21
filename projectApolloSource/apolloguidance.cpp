@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2005/11/18 02:40:54  movieman523
+  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
+  *	
   *	Revision 1.55  2005/11/17 21:04:52  movieman523
   *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
   *	
@@ -4558,7 +4561,8 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, AGC_END_STRING, sizeof(AGC_END_STRING)))
-			return;
+			break;
+			
 		if (!strnicmp (line, "PROGSTATE", 9)) {
 			sscanf (line+9, "%d", &ProgState);
 		}
