@@ -37700,8 +37700,8 @@ MATERIAL tankyellow
 1.000 0.973 0.867 1.000
 0 0 0 1
 TEXTURES 5
-S1C.dds
-SICFINA.dds
-SICFINB.dds
-SICFINC.dds
-SICFIND.dds
+ProjectApollo/S1C.dds
+ProjectApollo/SICFINA.dds
+ProjectApollo/SICFINB.dds
+ProjectApollo/SICFINC.dds
+ProjectApollo/SICFIND.dds

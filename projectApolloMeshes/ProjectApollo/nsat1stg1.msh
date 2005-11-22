@@ -37113,9 +37113,9 @@ MATERIAL Material11
 1 0.973 0.867 1
 0 0 0 1
 TEXTURES 6
-S1BTANK.dds
-S1B2.dds
-S1B1.dds
-S1B4.dds
-S1B3.dds
-S1CENG.dds
+ProjectApollo/S1BTANK.dds
+ProjectApollo/S1B2.dds
+ProjectApollo/S1B1.dds
+ProjectApollo/S1B4.dds
+ProjectApollo/S1B3.dds
+ProjectApollo/S1CENG.dds
