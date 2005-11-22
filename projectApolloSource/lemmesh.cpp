@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/11/21 12:42:17  tschachim
+  *	New LM landed and descent stage mesh.
+  *	
   *	Revision 1.16  2005/08/14 16:08:20  tschachim
   *	LM is now a VESSEL2
   *	Changed panel restore mechanism because the CSM mechanism
@@ -95,12 +98,12 @@
 #include "saturn5_leva.h"
 
 static MESHHANDLE hLMPKD ;
-static MESHHANDLE hLMVessel ;
 static MESHHANDLE hLMLanded ;
 static MESHHANDLE hLMDescent;
 static MESHHANDLE hLMAscent ;
 static MESHHANDLE hLMAscent2 ;
 static MESHHANDLE hAstro1 ;
+static MESHHANDLE hLemProbes;
 
 
 void sat5_lmpkd::ToggleEVA()
@@ -114,7 +117,7 @@ void sat5_lmpkd::ToggleEVA()
 		ClearExhaustRefs();
 		ClearAttExhaustRefs();
 		VECTOR3 mesh_dir=_V(-0.08,0,0);
-		AddMesh (hLMVessel, &mesh_dir);
+		AddMesh (hLMLanded, &mesh_dir);
 	}
 	else{
 		EVA_IP =true;
@@ -141,7 +144,7 @@ void sat5_lmpkd::ToggleEVA()
 		ClearExhaustRefs();
 		ClearAttExhaustRefs();
 		VECTOR3 mesh_dir=_V(-0.08,-0.15,-4.3);
-		AddMesh (hLMVessel, &mesh_dir);
+		AddMesh (hLMLanded, &mesh_dir);
 
 		SwitchFocusToLeva = 10;
 
@@ -164,7 +167,7 @@ void sat5_lmpkd::SetupEVA()
 		EVA_IP =true;
 		ClearMeshes();
 		VECTOR3 mesh_dir=_V(-0.08,-0.15,-4.3);
-		AddMesh (hLMVessel, &mesh_dir);
+		AddMesh (hLMLanded, &mesh_dir);
 		if(high){
 		}
 		else{
@@ -284,15 +287,24 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
 	UINT meshidx;
-	if (Landed)
-		meshidx = AddMesh (hLMLanded, &mesh_dir);		
-	else
-		meshidx = AddMesh (hLMVessel, &mesh_dir);
+
+	if (Landed) {
+		meshidx = AddMesh (hLMLanded, &mesh_dir);
+	}
+	else {
+		UINT probeidx;
+		meshidx = AddMesh (hLMLanded, &mesh_dir);
+		probeidx = AddMesh (hLemProbes, &mesh_dir);
+		SetMeshVisibilityMode (probeidx, MESHVIS_VCEXTERNAL);
+	}
+
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
     
 	if (!ph_Dsc)  
 		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
+
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
+
 	if (!ph_rcslm0){
 		ph_rcslm0 = CreatePropellantResource(100);
 	}
@@ -465,12 +477,12 @@ void LEMLoadMeshes()
 
 {
 	hLMPKD = oapiLoadMeshGlobal ("LM_NoWheel");
-	hLMVessel = oapiLoadMeshGlobal ("LM_vessel_on");
 	hLMLanded = oapiLoadMeshGlobal ("ProjectApollo/LM_Landed");
 	hLMDescent = oapiLoadMeshGlobal ("LM_descent");
 	hLMAscent = oapiLoadMeshGlobal ("LM_ascent");
 	hLMAscent2= oapiLoadMeshGlobal ("LM_ascent2");
 	hAstro1= oapiLoadMeshGlobal ("Sat5AstroS");
+	hLemProbes = oapiLoadMeshGlobal ("ProjectApollo/LM_ContactProbes");
 }
 
 //
