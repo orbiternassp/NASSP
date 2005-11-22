@@ -45972,10 +45972,10 @@ Material #7 with Tex: QUAD3
 Material #9 with Tex: BLACKGRA
 Material #24
 MATERIAL Material #1
-0.78 0.678 0.631 1.0
-0.588 0.553 0.51 1.0
-1.0 1.0 1.0 1.0 0.0
-0.0 0.0 0.0 1.0
+0.725 0.698 0.655 1.000
+0.596 0.588 0.576 1.000
+1.000 1.000 1.000 1.000
+0 0 0 1
 MATERIAL Material #10 with Tex: REDFOIL
 1.0 1.0 1.0 1.0
 0.388 0.529 0.192 1.0
