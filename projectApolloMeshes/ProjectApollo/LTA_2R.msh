@@ -5899,7 +5899,7 @@ MATERIAL material06
 1.000 1.000 1.000 1.000
 0 0 0 1
 TEXTURES 4
-ltaminusy.dds
-ltaminusz.dds
-ltaplusy.dds
-ltaplusz.dds
+ProjectApollo/ltaminusy.dds
+ProjectApollo/ltaminusz.dds
+ProjectApollo/ltaplusy.dds
+ProjectApollo/ltaplusz.dds
