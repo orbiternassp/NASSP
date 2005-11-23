@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/11/23 01:43:13  movieman523
+  *	Added SII stage DLL.
+  *	
   *	Revision 1.24  2005/11/23 00:29:38  movieman523
   *	Added S1C DLL and revised LEVA code to look for NEP-specific flag if it exists.
   *	
@@ -1412,7 +1415,7 @@ void SaturnV::DockStage (UINT dockstatus)
 		vslm2.flag = VS_DOCKINFOLIST;
 		vslm2.version = 2;
 		pv = &vslm2;
-		hLMV = oapiCreateVesselEx(VNameLM, "sat5_LMPKD", pv);
+		hLMV = oapiCreateVesselEx(VNameLM, "ProjectApollo/sat5_LMPKD", pv);
 
 		//
 		// Initialise the state of the LEM AGC information.
