@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/11/23 00:29:38  movieman523
+  *	Added S1C DLL and revised LEVA code to look for NEP-specific flag if it exists.
+  *	
   *	Revision 1.23  2005/11/21 13:26:41  tschachim
   *	New assembly meshes.
   *	
@@ -118,6 +121,7 @@
 #include "sat5_lmpkd.h"
 
 #include "sivb.h"
+#include "sii.h"
 #include "s1c.h"
 
 PARTICLESTREAMSPEC srb_contrail = {
@@ -626,7 +630,6 @@ void SaturnV::SetSecondStage1 ()
 	SetDefaultPropellantResource (ph_2nd); // display 2nd stage propellant level in generic HUD
 	// attitude - this is temporary
 	// attitude adjustment during launch phase should really be done via ENGINE gimbaling
-//	SetMaxThrust (ENGINE_ATTITUDE, 2e5);
 
 	// *********************** thruster definitions ********************************
 	int i;
@@ -837,11 +840,6 @@ void SaturnV::SetThirdStage ()
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 
 	SetCameraOffset (_V(-1,1.0,32.4-STG2O));
-
-#if 0
-	VECTOR3	m_exhaust_pos6= _V(0,3.3,-4-STG2O);
-	VECTOR3 m_exhaust_pos7= _V(0,-3.3,-4-STG2O);
-#endif
 
 	VECTOR3	m_exhaust_pos6= _V(3.6, -0.425, -3.6-STG2O);
 	VECTOR3 m_exhaust_pos7= _V(-3.6, 0.925, -3.6-STG2O);
@@ -1078,7 +1076,6 @@ void SaturnV::SeparateStage (int stage)
 
 	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && !bAbort )
 	{
-
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
@@ -1091,7 +1088,7 @@ void SaturnV::SeparateStage (int stage)
 		GetApolloName(VName);
 		strcat (VName, "-TWR");
 
-		hesc1 = oapiCreateVessel(VName,"sat5btower",vs1);
+		hesc1 = oapiCreateVessel(VName,"ProjectApollo/sat5btower",vs1);
 		SetSecondStage2 ();
 	}
 
@@ -1106,12 +1103,35 @@ void SaturnV::SeparateStage (int stage)
 
 		StageS.play();
 
+		//
+		// Seperate off the SII stage and initialise it.
+		//
+
 		char VName[256];
 
 		GetApolloName(VName);
 		strcat (VName, "-STG2");
-		hstg2 = oapiCreateVessel(VName,"sat5stg2",vs1);
-		Retro2(hstg2,5);
+		hstg2 = oapiCreateVessel(VName,"ProjectApollo/sat5stg2",vs1);
+
+		SIISettings S2Config;
+
+		S2Config.SettingsType = (SII_SETTINGS_MASS|SII_SETTINGS_FUEL|SII_SETTINGS_GENERAL|SII_SETTINGS_ENGINES);
+
+		S2Config.RetroNum = SII_RetroNum;
+		S2Config.EmptyMass = SII_EmptyMass;
+		S2Config.MainFuelKg = GetPropellantMass(ph_2nd);
+		S2Config.MissionTime = MissionTime;
+		S2Config.Realism = Realism;
+		S2Config.VehicleNo = VehicleNo;
+		S2Config.ISP_SECOND_SL = ISP_SECOND_SL;
+		S2Config.ISP_SECOND_VAC = ISP_SECOND_VAC;
+		S2Config.THRUST_SECOND_VAC = THRUST_SECOND_VAC;
+		S2Config.CurrentThrust = GetThrusterGroupLevel(thg_main);
+
+		SII *stage2 = (SII *) oapiGetVesselInterface(hstg2);
+
+		stage2->SetState(S2Config);
+
 		SetThirdStage ();
 	}
 
@@ -1469,43 +1489,3 @@ void SaturnV::DockStage (UINT dockstatus)
 	}
 
 }
-
-//
-// This is now the SII retro thrusters.
-//
-
-void SaturnV::Retro2(OBJHANDLE hvessel,double gaz)
-
-{
-	TRACESETUP("Retro2");
-	VESSEL *stg2vessel = oapiGetVesselInterface(hvessel);
-
-	VECTOR3 m_exhaust_pos2= {-2.83,-2.83,11.2};
-	VECTOR3 m_exhaust_pos3= {-2.83,2.83,11.2};
-	VECTOR3 m_exhaust_ref2 = {0.1,0.1,-1};
-	VECTOR3 m_exhaust_ref3 = {0.1,-0.1,-1};
-	VECTOR3 m_exhaust_pos4= {2.83,-2.83,11.2};
-	VECTOR3 m_exhaust_pos5= {2.83,2.83,11.2};
-	VECTOR3 m_exhaust_ref4 = {-0.1,0.1,-1};
-	VECTOR3 m_exhaust_ref5 = {-0.1,-0.1,-1};
-
-	ph_retro2 = stg2vessel->CreatePropellantResource(264);
-
-	double thrust = 175500 ;
-
-	if (!th_retro2[0]) {
-		th_retro2[0] = stg2vessel->CreateThruster (m_exhaust_pos2, m_exhaust_ref2, thrust, ph_retro2, 4000);
-		th_retro2[1] = stg2vessel->CreateThruster (m_exhaust_pos3, m_exhaust_ref3, thrust, ph_retro2, 4000);
-		th_retro2[2] = stg2vessel->CreateThruster (m_exhaust_pos4, m_exhaust_ref4, thrust, ph_retro2, 4000);
-		th_retro2[3] = stg2vessel->CreateThruster (m_exhaust_pos5, m_exhaust_ref5, thrust, ph_retro2, 4000);
-	}
-
-	thg_retro2 = stg2vessel->CreateThrusterGroup(th_retro2, 4, THGROUP_RETRO);
-
-	for (int i = 0; i < 4; i++)
-		stg2vessel->AddExhaust (th_retro2[i], 8.0, 0.2);
-
-	stg2vessel->SetThrusterGroupLevel(thg_retro2, 1.0);
-
-}
-

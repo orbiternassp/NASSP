@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2005/11/23 00:29:38  movieman523
+  *	Added S1C DLL and revised LEVA code to look for NEP-specific flag if it exists.
+  *	
   *	Revision 1.38  2005/11/20 01:06:27  movieman523
   *	Saturn V now uses SIVB DLL too.
   *	
@@ -298,7 +301,9 @@ void SaturnV::initSaturnV()
 
 	SI_EmptyMass = 148000;			// Stage + wasted fuel, approx
 	SI_FuelMass = 2117000;
+
 	SI_RetroNum = 8;
+	SII_RetroNum = 4;
 
 	SM_EmptyMass = 6100;
 	SM_FuelMass = 20500;
@@ -1583,6 +1588,7 @@ void SaturnV::SetVehicleStats()
 	//
 
 	SI_RetroNum = 8;
+	SII_RetroNum = 8;
 	SII_EmptyMass = BASE_SII_MASS;
 
 	if (VehicleNo > 500 && VehicleNo < 503) {
@@ -1824,8 +1830,6 @@ void SaturnV::StageLaunchSIVB(double simt)
 
 	case 0:
 		SetThrusterResource(th_main[0], ph_3rd);
-		if (hstg2)
-			Retro2(hstg2,5);
 		SepS.play(LOOP, 130);
 		SetThrusterGroupLevel(thg_ver,1.0);
 		NextMissionEventTime = MissionTime + 2.0;

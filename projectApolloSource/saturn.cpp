@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2005/11/20 21:46:31  movieman523
+  *	Added initial volume control support.
+  *	
   *	Revision 1.65  2005/11/18 22:11:22  movieman523
   *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
   *	
@@ -533,10 +536,6 @@ void Saturn::initSaturn()
 
 	for (i = 0; i < 4; i++) {
 		th_retro1[i] = 0;
-	}
-
-	for (i = 0; i < 4; i++) {
-		th_retro2[i] = 0;
 	}
 
 	th_sps[0] = 0;
