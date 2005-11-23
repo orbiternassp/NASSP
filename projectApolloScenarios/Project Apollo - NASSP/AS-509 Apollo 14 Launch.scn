@@ -63,6 +63,7 @@ AS-509-CT:ProjectApollo\Crawler
   HEADING 75.80
   NAVFREQ 0 0
   USEFORCE 1
+  LVNAME Kitty-Hawk
 END
 AS-509-ML:ProjectApollo\Saturn5ML
   STATUS Landed Earth

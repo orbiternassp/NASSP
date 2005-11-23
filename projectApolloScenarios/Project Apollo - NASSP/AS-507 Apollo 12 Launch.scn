@@ -68,5 +68,6 @@ AS-507-ML:ProjectApollo\Saturn5ML
   STATUS Landed Earth
   POS -80.6082240 28.6009432
   HEADING 90.0
+  LVNAME Yankee-Clipper
 END
 END_SHIPS
