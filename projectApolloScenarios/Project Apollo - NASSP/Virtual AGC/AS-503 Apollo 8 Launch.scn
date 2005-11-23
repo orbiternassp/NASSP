@@ -56,7 +56,7 @@ AGC_BEGIN
   YAAGC 1
 AGC_END
 END
-AS-506-CT:ProjectApollo\Crawler
+AS-503-CT:ProjectApollo\Crawler
   STATUS Landed Earth
   POS -80.6527277 28.5791263
   HEADING 75.80
@@ -64,7 +64,7 @@ AS-506-CT:ProjectApollo\Crawler
   USEFORCE 1
   STANDALONE 0
 END
-AS-506-ML:ProjectApollo\Saturn5ML
+AS-503-ML:ProjectApollo\Saturn5ML
   STATUS Landed Earth
   POS -80.6081960 28.6009220  
   HEADING 90.0

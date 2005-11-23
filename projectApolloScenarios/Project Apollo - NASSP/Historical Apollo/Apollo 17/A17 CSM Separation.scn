@@ -4,7 +4,7 @@ The positions and velocities were generated from the mission report trajectory n
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 41662.7228720949
 END_ENVIRONMENT
 
@@ -44,7 +44,7 @@ END_PANEL
 
 
 BEGIN_SHIPS
-AS-512:saturn5nasp
+AS-512:ProjectApollo/saturn5
   STATUS Orbiting Moon
   RPOS    712750.21  -114642.65 -1676598.32
   RVEL     -1408.11      558.41     -597.81
@@ -481,7 +481,7 @@ PANELSWITCHES_BEGIN
   LiftoffNoAutoAbortSwitch 0 0
 PANELSWITCHES_END
 END
-AS-512-LM:sat5_LMPKD
+AS-512-LM:ProjectApollo/sat5_LMPKD
   STATUS Orbiting Moon
   RPOS    750676.92  -139434.74 -1655069.64
   RVEL     -1392.65      554.38     -643.07

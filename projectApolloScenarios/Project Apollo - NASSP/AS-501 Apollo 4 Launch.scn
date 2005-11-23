@@ -5,7 +5,7 @@ While not a perfect simulation, this does give a basic idea of what happened on 
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 39803.5000115741
 END_ENVIRONMENT
 
@@ -33,13 +33,14 @@ END_MFD
 
 
 BEGIN_SHIPS
-AS-501:saturn5nasp
+AS-501:ProjectApollo/Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
   HEADING 270.00
   FUEL 1.000
   APOLLONO 4
-  NASSPVER 60002
+  NASSPVER 60050
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
@@ -48,7 +49,7 @@ AS-501:saturn5nasp
   TOPER 184
   TOHDG 72
   SICSHUT 135.5
-  TCP -8.5
+  TCP 0.5
   LANG English
   UNMANNED 1
   S4PL 2
@@ -63,5 +64,17 @@ AS-501:saturn5nasp
   CSMACCPITCH -49.13
   CMSEP 29882.6
   AUTOSLOW 1
+END
+AS-501-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+END
+AS-501-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
 END
 END_SHIPS

@@ -5,7 +5,7 @@ for A11. May 18, 1969.
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 40359.65902777
 END_ENVIRONMENT
 
@@ -35,9 +35,10 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-Charlie-Brown:saturn5nasp
+Charlie-Brown:ProjectApollo/Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
   HEADING 270.00
   FUEL 1.000
   APOLLONO 10
@@ -50,8 +51,20 @@ Charlie-Brown:saturn5nasp
   TOAPO 185.7926
   TOPER 184.6629
   TOHDG 72.028
-  TCP -8.5
+  TCP 0.5
   LANG English
   LEMN Snoopy
+END
+AS-505-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+END
+AS-505-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
 END
 END_SHIPS

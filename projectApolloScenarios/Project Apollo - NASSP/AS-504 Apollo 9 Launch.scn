@@ -4,7 +4,7 @@ and the first docking of two manned spacecraft. March 3, 1969
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 40283.625
 END_ENVIRONMENT
 
@@ -34,9 +34,10 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-Gumdrop:saturn5nasp
+Gumdrop:ProjectApollo/Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
   HEADING 270.00
   FUEL 1.000
   APOLLONO 9
@@ -49,8 +50,20 @@ Gumdrop:saturn5nasp
   TOAPO 186.570
   TOPER 184.607
   TOHDG 72
-  TCP -8.5
+  TCP 0.5
   LANG English
   LEMN Spider
+END
+AS-504-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+END
+AS-504-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
 END
 END_SHIPS
