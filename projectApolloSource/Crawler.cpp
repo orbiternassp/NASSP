@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/10/31 19:18:39  tschachim
+  *	Bugfixes.
+  *	
   *	Revision 1.9  2005/10/31 10:15:06  tschachim
   *	New VAB.
   *	
@@ -111,6 +114,8 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	keyRight= false;
 	keyUp = false;
 	keyDown = false;
+
+	LVName[0] = 0;
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 	soundlib.LoadSound(soundEngine, "CrawlerEngine.wav", BOTHVIEW_FADED_MEDIUM);
@@ -315,13 +320,17 @@ void Crawler::DoFirstTimestep() {
 		strcpy(nameLV, nameML);
 		strcat(nameML, "-ML");
 
+		if (LVName[0])
+			strcpy(nameLV, LVName);
+
 		double vcount = oapiGetVesselCount();
 		for (int i = 0; i < vcount; i++)	{
 			OBJHANDLE h = oapiGetVesselByIndex(i);
 			oapiGetObjectName(h, buffer, 256);
 			if (!strcmp(nameML, buffer)){
 				hML = h;
-			} else if (!strcmp(nameLV, buffer)){
+			}
+			else if (!strcmp(nameLV, buffer)){
 				hLV = h;
 			}
 		}
@@ -359,6 +368,8 @@ void Crawler::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 			sscanf (line + 10, "%i", &standalone);
 		} else if (!strnicmp (line, "PADINDEX", 8)) {
 			sscanf (line + 8, "%i", &padIndex);
+		} else if (!strnicmp (line, "LVNAME", 6)) {
+			strncpy (LVName, line + 7, 64);
 		} else if (!strnicmp (line, "SHOWMLPEDESTRALS", 16)) {
 			sscanf (line + 16, "%i", &showMLPedestals);
 		} else {
@@ -387,6 +398,8 @@ void Crawler::clbkSaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int (scn, "STANDALONE", standalone);
 	oapiWriteScenario_int (scn, "PADINDEX", padIndex);
 	oapiWriteScenario_int (scn, "SHOWMLPEDESTRALS", showMLPedestals);
+	if (LVName[0])
+		oapiWriteScenario_string (scn, "LVNAME", LVName);
 }
 
 int Crawler::clbkConsumeDirectKey(char *kstate) {
