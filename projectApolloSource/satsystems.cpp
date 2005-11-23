@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2005/11/18 22:11:22  movieman523
+  *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
+  *	
   *	Revision 1.39  2005/11/18 20:38:59  movieman523
   *	Revised condensor output from fuel cell to eliminate master alarms.
   *	
@@ -290,9 +293,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 	else if (stage >= PRELAUNCH_STAGE) {
 
 #ifdef _DEBUG
-//		sprintf(oapiDebugString(), "Bus A = %fA, Bus B = %fA, AC Bus 1 = %fA, AC Bus 2 = %fA, Batt A = %fV, Batt B = %fV", 
-//			MainBusA.Current(), MainBusB.Current(),
-//			ACBus1.Current(), ACBus2.Current(), EntryBatteryA.Voltage(), EntryBatteryB.Voltage());
+//		sprintf(oapiDebugString(), "Bus A = %fA/%fV, Bus B = %fA/%fV, AC Bus 1 = %fA/%fV, AC Bus 2 = %fA/%fV, Batt A = %fV, Batt B = %fV", 
+//			MainBusA.Current(), MainBusA.Voltage(), MainBusB.Current(), MainBusB.Voltage(),
+//			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA.Voltage(), EntryBatteryB.Voltage());
 #endif // _DEBUG
 
 		// Each timestep is passed to the SPSDK
