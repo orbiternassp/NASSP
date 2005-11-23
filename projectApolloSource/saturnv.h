@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/11/20 01:06:27  movieman523
+  *	Saturn V now uses SIVB DLL too.
+  *	
   *	Revision 1.12  2005/10/31 10:42:25  tschachim
   *	New VAB.
   *	
@@ -95,8 +98,6 @@ private:
 	void SetSecondStage2 ();
 	void SetThirdStage ();
 	MESHHANDLE GetInterstageMesh();
-	void Retro1(OBJHANDLE hvessel,double gaz);
-	void Retro2(OBJHANDLE hvessel,double gaz);
 	void AttitudeLaunch1();
 	void AttitudeLaunch2();
 	void AttitudeLaunch4();
@@ -158,6 +159,7 @@ protected:
 	double gaz;
 
 	int SI_RetroNum;
+	int SII_RetroNum;
 	int SII_UllageNum;
 
 	//

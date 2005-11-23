@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.91  2005/11/20 21:46:31  movieman523
+  *	Added initial volume control support.
+  *	
   *	Revision 1.90  2005/11/19 01:07:04  flydba
   *	Switches set on the lower equipment bay.
   *	
@@ -1997,7 +2000,7 @@ protected:
 
 	THRUSTER_HANDLE th_main[5],th_ull[8],th_ver[3] ,th_att_cm[24];               // handles for orbiter main engines
 	THRUSTER_HANDLE th_sps[1],th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
-	THRUSTER_HANDLE	th_retro1[4],th_retro2[4], th_aps[3];
+	THRUSTER_HANDLE	th_retro1[4], th_aps[3];
 
 	//
 	// LEM data.
