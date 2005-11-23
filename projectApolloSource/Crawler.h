@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/10/31 19:18:39  tschachim
+  *	Bugfixes.
+  *	
   *	Revision 1.7  2005/10/31 10:30:35  tschachim
   *	New VAB.
   *	
@@ -80,6 +83,8 @@ protected:
 	
 	SoundLib soundlib;
 	Sound soundEngine;
+
+	char LVName[256];
 
 	void DoFirstTimestep();
 	void SetTouchdownPoint();
