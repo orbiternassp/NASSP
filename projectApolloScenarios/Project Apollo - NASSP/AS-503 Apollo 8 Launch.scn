@@ -4,7 +4,7 @@ of a million miles to the moon. Dec 21 1968
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 40211.49375
 END_ENVIRONMENT
 
@@ -34,14 +34,15 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-503:saturn5nasp
+AS-503:ProjectApollo/Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
   HEADING 270.00
   FUEL 1.000
   APOLLONO 8
   S4PL 4
-  NASSPVER 50001
+  NASSPVER 60050
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
@@ -51,6 +52,18 @@ AS-503:saturn5nasp
   TOHDG 72.124
   SICSHUT 126.0
   SIIPUT 443.45
-  TCP -8.5
+  TCP 0.5
+END
+AS-503-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+END
+AS-503-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
 END
 END_SHIPS

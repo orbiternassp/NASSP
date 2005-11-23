@@ -3,7 +3,7 @@ Test out the random failures with this mission. Odds are about one in ten of som
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 40418.52222222
 END_ENVIRONMENT
 
@@ -33,9 +33,9 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-520:saturn5nasp
+AS-520:ProjectApollo/Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+  BASE Cape Canaveral:2
   HEADING 270.00
   FUEL 1.000
   NASSPVER 60050

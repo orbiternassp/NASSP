@@ -3,7 +3,7 @@ This time you can fly the full Apollo 13 mission as it would have happened had t
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 40687.75902777
 END_ENVIRONMENT
 
@@ -33,9 +33,10 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-Odyssey:saturn5nasp
+Odyssey:ProjectApollo/Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
   HEADING 270.00
   FUEL 1.000
   APOLLONO 1301
@@ -51,8 +52,20 @@ Odyssey:saturn5nasp
   MOONLAT -17.47
   MOONLONG -3.64
   MOONALT 0.0
-  TCP -8.5
+  TCP 0.5
   LANG English
   LEMN Aquarius
+END
+AS-508-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+END
+AS-508-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
 END
 END_SHIPS

@@ -34,7 +34,7 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-506:ProjectApollo\Saturn5
+Columbia:ProjectApollo\Saturn5
   STATUS Landed Earth
   BASE Cape Canaveral:2
   HEADING 270.00
@@ -55,6 +55,8 @@ AS-506:ProjectApollo\Saturn5
   MOONALT 0.0
   TCP 2.5
   LANG English
+  LEMN Eagle
+  VECHNO 506
 AGC_BEGIN
   YAAGC 1
 AGC_END

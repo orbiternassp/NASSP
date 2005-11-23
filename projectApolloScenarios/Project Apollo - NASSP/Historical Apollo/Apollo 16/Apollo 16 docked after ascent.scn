@@ -3,7 +3,7 @@ Orbiter saved state at T = 20
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 41431.1495138886
 END_ENVIRONMENT
 
@@ -41,7 +41,7 @@ END_PANEL
 
 
 BEGIN_SHIPS
-AS-511:saturn5nasp
+AS-511:ProjectApollo/saturn5
   STATUS Orbiting Moon
   RPOS    631948.88  -293523.97 -1724004.59
   RVEL     -1520.72        6.04     -557.24
@@ -493,7 +493,7 @@ AS-511-S4BSTG:sat5stg3
   AROT 178.46 62.20 178.63
   PRPLEVEL 0:0.001
 END
-AS-511-LM:sat5_LMPKD
+AS-511-LM:ProjectApollo/sat5_LMPKD
   STATUS Orbiting Moon
   RPOS    631948.88  -293523.97 -1724004.59
   RVEL     -1520.72        6.04     -557.24

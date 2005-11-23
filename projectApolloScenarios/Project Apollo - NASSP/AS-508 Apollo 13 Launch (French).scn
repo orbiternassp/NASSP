@@ -4,7 +4,7 @@ life from death in the translunar gulf. Using NASSPs apollo 13 vehicle. April 11
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 40687.75902777
 END_ENVIRONMENT
 
@@ -34,9 +34,10 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-508:saturn5nasp
+AS-508:ProjectApollo/Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
   HEADING 270.00
   FUEL 1.000
   APOLLONO 13
@@ -51,7 +52,19 @@ AS-508:saturn5nasp
   MOONLAT -17.47
   MOONLONG -3.64
   MOONALT 0.0
-  TCP -8.5
+  TCP 0.5
   LANG French
+END
+AS-508-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+END
+AS-508-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
 END
 END_SHIPS

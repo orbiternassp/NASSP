@@ -3,7 +3,7 @@ Eagle is ready for Lunar liftoff
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 40423.7389004631
 END_ENVIRONMENT
 
@@ -39,7 +39,7 @@ END_PANEL
 
 
 BEGIN_SHIPS
-AS-506:saturn5nasp
+AS-506:ProjectApollo/Saturn5
   STATUS Orbiting Moon
   RPOS 241706.70 -5276.90 1842607.33
   RVEL 1608.847 -4.182 -208.620
@@ -476,7 +476,7 @@ PANELSWITCHES_BEGIN
   LiftoffNoAutoAbortSwitch 0 0
 PANELSWITCHES_END
 END
-AS-506-LM:sat5_LMPKD
+AS-506-LM:ProjectApollo/sat5_LMPKD
   STATUS Landed Moon
   POS 23.4333033 0.6874957
   HEADING 268.10

@@ -5,7 +5,7 @@ the Apollo CSM, on its first test flight, Oct 11th 1968. Scenario starts on the 
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 40140.5851851851
 END_ENVIRONMENT
 
@@ -20,10 +20,6 @@ BEGIN_CAMERA
   TRACKMODE TargetRelative
   FOV 60.00
 END_CAMERA
-
-BEGIN_HUD
-  TYPE Surface
-END_HUD
 
 BEGIN_MFD Left
   TYPE Map
@@ -41,9 +37,9 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-205:nSaturn1B
+AS-205:ProjectApollo/Saturn1B
   STATUS Landed Earth
-  BASE Cape Canaveral:13
+  BASE Cape Canaveral:3
   HEADING 270.00
   FUEL 1.000
   APOLLONO 7

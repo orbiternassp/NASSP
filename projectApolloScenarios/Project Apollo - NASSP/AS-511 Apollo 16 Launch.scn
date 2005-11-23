@@ -4,7 +4,7 @@ and discover their landing site, Descartes, is not what it seems. April 16 1972
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo/Sol
   Date MJD 41423.7041666666
 END_ENVIRONMENT
 
@@ -34,9 +34,10 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-Casper:saturn5nasp
+Casper:ProjectApollo/Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
   HEADING 270.00
   FUEL 1.000
   APOLLONO 16
@@ -55,8 +56,20 @@ Casper:saturn5nasp
   SIIPUT 494.8
   SMMASS 6113.0
   SMFUELLOAD 18452.0
-  TCP -8.5
+  TCP 0.5
   LANG English
   LEMN Orion
+END
+AS-511-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+END
+AS-511-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
 END
 END_SHIPS

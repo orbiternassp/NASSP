@@ -4,7 +4,7 @@ landing near Surveyor III makes future accurate exploration possible. November 1
 END_DESC
 
 BEGIN_ENVIRONMENT
-  system Sol_NASSP5
+  system ProjectApollo/Sol
   Date MJD 40539.64027777
 END_ENVIRONMENT
 
@@ -34,9 +34,10 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-Yankee-Clipper:saturn5nasp
+Yankee-Clipper:ProjectApollo/Saturn5
   STATUS Landed Earth
-  BASE Cape Canaveral:11
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
   HEADING 270.00
   FUEL 1.000
   APOLLONO 12
@@ -52,8 +53,20 @@ Yankee-Clipper:saturn5nasp
   MOONLAT -23.42
   MOONLONG -3.01
   MOONALT 0.0
-  TCP -8.5
+  TCP 0.5
   LANG English
   LEMN Intrepid
+END
+AS-507-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+END
+AS-507-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
 END
 END_SHIPS
