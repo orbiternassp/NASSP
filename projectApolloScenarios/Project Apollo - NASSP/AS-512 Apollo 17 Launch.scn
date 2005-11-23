@@ -65,6 +65,7 @@ AS-512-CT:ProjectApollo\Crawler
   HEADING 75.80
   NAVFREQ 0 0
   USEFORCE 1
+  LVNAME America
 END
 AS-512-ML:ProjectApollo\Saturn5ML
   STATUS Landed Earth

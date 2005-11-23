@@ -65,6 +65,7 @@ AS-510-CT:ProjectApollo\Crawler
   HEADING 75.80
   NAVFREQ 0 0
   USEFORCE 1
+  LVNAME Endeavour
 END
 AS-510-ML:ProjectApollo\Saturn5ML
   STATUS Landed Earth

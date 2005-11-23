@@ -60,6 +60,7 @@ AS-504-CT:ProjectApollo\Crawler
   HEADING 75.80
   NAVFREQ 0 0
   USEFORCE 1
+  LVNAME Gumdrop
 END
 AS-504-ML:ProjectApollo\Saturn5ML
   STATUS Landed Earth

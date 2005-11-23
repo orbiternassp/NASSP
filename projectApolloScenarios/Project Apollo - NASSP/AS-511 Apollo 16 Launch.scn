@@ -66,6 +66,7 @@ AS-511-CT:ProjectApollo\Crawler
   HEADING 75.80
   NAVFREQ 0 0
   USEFORCE 1
+  LVNAME Casper
 END
 AS-511-ML:ProjectApollo\Saturn5ML
   STATUS Landed Earth
