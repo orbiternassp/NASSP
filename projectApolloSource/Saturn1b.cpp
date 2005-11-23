@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/11/19 20:54:47  movieman523
+  *	Added SIVb DLL and wired it up to Saturn 1b.
+  *	
   *	Revision 1.30  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -315,68 +318,6 @@ double LiftCoeff (double aoa)
 	return -(CL[i] + (aoa-AOA[i])*SCL[i]);
 }
 
-//
-// Are any of the functions from here to MemoVessel actually used?
-//
-
-void Saturn1b::SetupSlaveUnDockedmode(OBJHANDLE hTarget)
-
-{
-	VECTOR3 PMIO = _V(0,0,0);
-	VECTOR3 PMIM = _V(0,0,0);
-	VESSEL *targetvessel;
-	targetvessel=oapiGetVesselInterface(hTarget);
-	targetvessel->SetEmptyMass((targetvessel->GetMass()-targetvessel->GetFuelMass()) - GetMass());
-	GetPMI(PMIO);
-	targetvessel->GetPMI(PMIM);
-	targetvessel->SetPMI((PMIM-PMIO));
-}
-
-void Saturn1b::SetupUnDockedmode(OBJHANDLE hTarget)
-
-{
-	VECTOR3 PMIO = _V(0,0,0);
-	VECTOR3 PMIM = _V(0,0,0);
-	VESSEL *targetvessel;
-	targetvessel=oapiGetVesselInterface(hTarget);
-	SetEmptyMass((GetMass() - GetFuelMass()) -targetvessel->GetMass());
-	GetPMI(PMIO);
-	targetvessel->GetPMI(PMIM);
-	SetPMI((PMIO-PMIM));
-}
-
-void Saturn1b::SetupStage(OBJHANDLE hTarget)
-{
-	VESSEL *targetvessel;
-	targetvessel=oapiGetVesselInterface(hTarget);
-
-	targetvessel->SetEmptyMass (17000);
-	targetvessel->SetMaxFuelMass (114000);
-	targetvessel->SetFuelMass(GetFuelMass());
-	targetvessel->SetISP (4160);
-	targetvessel->SetMaxThrust (ENGINE_MAIN, 981000);
-	targetvessel->SetMaxThrust (ENGINE_ATTITUDE, 3e3);
-	targetvessel->SetPMI (_V(94,94,20));
-	targetvessel->SetCrossSections (_V(267,267,97));
-	targetvessel->SetCW (0.1, 0.3, 1.4, 1.4);
-	targetvessel->SetRotDrag (_V(0.7,0.7,1.2));
-	targetvessel->SetPitchMomentScale (0);
-	targetvessel->SetBankMomentScale (0);
-	targetvessel->SetLiftCoeffFunc (0);
-/*	if(SIVBPayload == PAYLOAD_TARGET){
-		mesh_dir=_V(-1.0,-1.1,13.3);
-		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
-	}
-	else if(SIVBPayload == PAYLOAD_ASTP){
-		mesh_dir=_V(0,0,13.3);
-		targetvessel->AddMesh (hastp, &mesh_dir);
-	}
-	else if(SIVBPayload == PAYLOAD_LM1){
-		mesh_dir=_V(0,0,13.3);
-		targetvessel->AddMesh (hCOAStarget, &mesh_dir);
-	}*/
-}
-
 // ==============================================================
 // API interface
 // ==============================================================
@@ -442,14 +383,6 @@ void Saturn1b::DoFirstTimestep(double simt)
 	hSoyuz = oapiGetVesselByName("SOYUZ19");
 	GetApolloName(VName); strcat (VName, "-INTSTG");
 	hintstg = oapiGetVesselByName(VName);
-
-	//
-	// Stage One mesh doesn't include the interstage, so add it if
-	// the stage exists.
-	//
-
-	if (hstg1)
-		AddStageOneInterstage();
 }
 
 void Saturn1b::StageOne(double simt)
