@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/11/20 20:35:14  movieman523
+  *	Moved mesh files into ProjectApollo directory, and fixed RCS on Saturn V SIVb after seperation.
+  *	
   *	Revision 1.20  2005/11/20 01:06:27  movieman523
   *	Saturn V now uses SIVB DLL too.
   *	
@@ -108,6 +111,7 @@
 #include "saturn1b.h"
 
 #include "sivb.h"
+#include "s1b.h"
 
 static MESHHANDLE hSat1stg1;
 static MESHHANDLE hSat1intstg;
@@ -135,6 +139,7 @@ void Saturn1b::SetFirstStage ()
 {
 	int i;
 	UINT meshidx;
+
 	ClearThrusterDefinitions();
 	SetSize (45);
 	SetEmptyMass (Stage1Mass);
@@ -149,9 +154,12 @@ void Saturn1b::SetFirstStage ()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	ShiftCentreOfMass (_V(0,0,8.935));
+
 	double TCP=-54.485-TCPO;//STG0O;
 	SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
+
 	VECTOR3 mesh_dir=_V(0,0,-14);
+
 	AddMesh (hSat1stg1, &mesh_dir);
 	mesh_dir=_V(0,0,2.2);
 	AddMesh (hSat1intstg, &mesh_dir);
@@ -640,39 +648,6 @@ void Saturn1b::SetASTPStage ()
 	ActivateASTP = true;
 }
 
-void Saturn1b::AddStageOneInterstage()
-
-{
-	if (hstg1) {
-		VESSEL *stg1vessel = oapiGetVesselInterface(hstg1);
-		VECTOR3 mesh_dir = _V(0, 0, 16.2);
-		stg1vessel->AddMesh (hSat1intstg, &mesh_dir);
-
-		VECTOR3 m_exhaust_pos2= {-2.5,-2.5, 20.2};
-		VECTOR3 m_exhaust_pos3= {-2.5,2.5, 20.2};
-		VECTOR3 m_exhaust_pos4= {2.5,-2.5, 20.2};
-		VECTOR3 m_exhaust_pos5= {2.5,2.5, 20.2};
-
-		ph_retro1 = stg1vessel->CreatePropellantResource(200);
-
-		double thrust = 100000;
-
-		if (!th_retro1[0]) {
-			th_retro1[0] = stg1vessel->CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro1, 4000);
-			th_retro1[1] = stg1vessel->CreateThruster (m_exhaust_pos3, _V(0.1, -0.1, -0.9), thrust, ph_retro1, 4000);
-			th_retro1[2] = stg1vessel->CreateThruster (m_exhaust_pos4, _V(-0.1, 0.1, -0.9), thrust, ph_retro1, 4000);
-			th_retro1[3] = stg1vessel->CreateThruster (m_exhaust_pos5, _V(-0.1, -0.1, -0.9), thrust, ph_retro1, 4000);
-		}
-
-		thg_retro1 = stg1vessel->CreateThrusterGroup(th_retro1, 4, THGROUP_RETRO);
-
-		for (int i = 0; i < 4; i++)
-			stg1vessel->AddExhaust (th_retro1[i], 8.0, 0.2);
-
-		stg1vessel->SetThrusterGroupLevel(thg_retro1, 1.0);
-	}
-}
-
 void Saturn1b::DockStage (UINT dockstatus)
 {
 	VESSELSTATUS vs1;
@@ -930,6 +905,7 @@ void Saturn1b::SeparateStage (int stage)
 		ofs1 = OFS_ABORT_TOWER;
 		vel1 = _V(15.0,15.0,50.0);
 	}
+
 	VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
 	VECTOR3 rofs2, rvel2 = {vs2.rvel.x, vs2.rvel.y, vs2.rvel.z};
 	VECTOR3 rofs3, rvel3 = {vs3.rvel.x, vs3.rvel.y, vs3.rvel.z};
@@ -960,7 +936,6 @@ void Saturn1b::SeparateStage (int stage)
 	vs5.rvel.x = rvel5.x+rofs5.x;
 	vs5.rvel.y = rvel5.y+rofs5.y;
 	vs5.rvel.z = rvel5.z+rofs5.z;
-//
 
 	if (stage == CM_STAGE)
 	{
@@ -979,10 +954,32 @@ void Saturn1b::SeparateStage (int stage)
 		vs2.vrot.z = 0.0;
 		StageS.play();
 
+		//
+		// Create S1b stage and set it up.
+		//
+
 		char VName[256];
 		strcpy (VName, GetName()); strcat (VName, "-STG1");
-		hstg1 = oapiCreateVessel(VName,"nsat1stg1", vs1);
-		AddStageOneInterstage();
+		hstg1 = oapiCreateVessel(VName,"ProjectApollo/nsat1stg1", vs1);
+
+		S1BSettings S1Config;
+
+		S1Config.SettingsType = (S1B_SETTINGS_MASS|S1B_SETTINGS_FUEL|S1B_SETTINGS_GENERAL|S1B_SETTINGS_ENGINES);
+
+		S1Config.RetroNum = 4;
+		S1Config.EmptyMass = SI_EmptyMass;
+		S1Config.MainFuelKg = GetPropellantMass(ph_1st);
+		S1Config.MissionTime = MissionTime;
+		S1Config.Realism = Realism;
+		S1Config.VehicleNo = VehicleNo;
+		S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
+		S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
+		S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
+		S1Config.CurrentThrust = GetThrusterGroupLevel(thg_main);
+
+		S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
+
+		stage1->SetState(S1Config);
 		SetSecondStage1 ();
 	}
 
@@ -997,7 +994,7 @@ void Saturn1b::SeparateStage (int stage)
 		char VName[256];
 		GetApolloName(VName); strcat (VName, "-TWR");
 
-		hesc1 = oapiCreateVessel(VName,"nsat1btower",vs1);
+		hesc1 = oapiCreateVessel(VName,"ProjectApollo/nsat1btower",vs1);
 		SetSecondStage2 ();
 		AddRCS_S4B();
 	}

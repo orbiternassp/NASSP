@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/11/19 20:54:47  movieman523
+  *	Added SIVb DLL and wired it up to Saturn 1b.
+  *	
   *	Revision 1.4  2005/08/17 00:01:59  movieman523
   *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
   *	
@@ -60,14 +63,7 @@ protected:
 	OBJHANDLE hAstpDM;
 
 	double LiftCoeff (double aoa);
-	void SetDockedVessel(OBJHANDLE hTarget,double RelAngle);
-	void SetDockedSlaveVessel(OBJHANDLE hTarget,double RelAngle);
-	void SetupDockedmode(OBJHANDLE hTarget);
-	void SetupSlaveUnDockedmode(OBJHANDLE hTarget);
-	void SetupSlaveDockedmode(OBJHANDLE hTarget);
-	void SetupUnDockedmode(OBJHANDLE hTarget);
-	void ToggleRCS();
-	void MemoVessel(OBJHANDLE hTarget);
+
 	void AttitudeLaunch1();
 	void AttitudeLaunch4();
 	void AutoPilot(double autoT);
@@ -83,17 +79,13 @@ protected:
 	void Timestep (double simt, double simdt);
 	void DockStage (UINT dockstatus);
 	void StageOne(double simt);
-	void SetupStage(OBJHANDLE hTarget);
 	void StageStartSIVB(double simt);
 	void StageLaunchSIVB(double simt);
 	void SetVehicleStats();
 	void CalculateStageMass ();
-	void AddStageOneInterstage();
 	void SetSIVBMixtureRatio(double ratio);
 };
 
-
-//const VECTOR3 OFS_STAGE1 =  { 0, 0, -14.935};
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -26};
 const VECTOR3 OFS_STAGE12 =  { 0, 0, -9.935};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, 14};
