@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/10/19 11:31:10  tschachim
+  *	Changed log file name.
+  *	
   *	Revision 1.2  2005/02/24 00:30:36  movieman523
   *	Major revision for Orbitersound 3.0 and new Orbiter. Added new 'flag planting' sound support.
   *	
@@ -412,10 +415,27 @@ void Saturn5_LEVA::SetFlag()
 	lon = lon + cos(cap) * cm;
 	vs1.vdata[0].x=lon;
 	vs1.vdata[0].y=lat;
+
+	//
+	// Create the flag. For NEP support we load per-mission config if it exists.
+	//
 	
 	char VName[256]="";
+	char FName[256];
+
+	sprintf(FName, "ProjectApollo/Apollo%d/sat5flag.cfg", ApolloNo);
 	strcpy (VName, GetName()); strcat (VName, "-FLAG");
-	oapiCreateVessel(VName,"Sat5flag",vs1);
+
+	FILE *fp = fopen(FName, "rt");
+	if (fp) {
+		fclose(fp);
+		sprintf(FName, "ProjectApollo/Apollo%d/sat5flag", ApolloNo);
+		oapiCreateVessel(VName,"Sat5flag",vs1);
+	}
+	else {
+		oapiCreateVessel(VName,"Sat5flag",vs1);
+	}
+
 	FlagPlanted = true;
 	GoFlag = false;
 

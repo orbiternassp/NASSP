@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2005/11/20 01:06:27  movieman523
+  *	Saturn V now uses SIVB DLL too.
+  *	
   *	Revision 1.37  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -368,18 +371,6 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 	*cd = (CD[i] + (aoa-AOA[i])*SCD[i]);
 }
 
-void SetS4B(OBJHANDLE hS4B)
-{
-	VESSEL *targetvessel;
-	VESSELSTATUS S4;
-	TRACESETUP("SetS4B");
-
-	targetvessel = oapiGetVesselInterface(hS4B);
-	targetvessel->GetStatus(S4);
-	S4.vrot = _V(0.0,0.0,0.0);
-	targetvessel->DefSetState(&S4);
-}
-
 //
 // Adjust the mixture ratio of the engines on the SII stage. This occured late in
 // the flight to ensure that the fuel was fully burnt before the stage was dropped.
@@ -665,10 +656,6 @@ void SaturnV::StageTwo(double simt)
 			SepS.play(LOOP, 130);
 		}
 
-		if (hstg1) {
-			Retro1(hstg1, 5);
-		}
-
 		NextMissionEventTime = MissionTime + 1.4;
 		SIISepState = true;
 		StageState++;
@@ -699,7 +686,7 @@ void SaturnV::StageTwo(double simt)
 			}
 
 			for (int i = 0; i<5; i++){
-				if (GetThrusterLevel(th_main[i]) > 0.65){
+				if (GetThrusterLevel(th_main[i]) > 0.65) {
 					ENGIND[i] = false;
 				}
 				else{
@@ -978,7 +965,7 @@ void SaturnV::StageSix(double simt)
 			dockstate=4;
 		}
 	}
-	//sprintf(oapiDebugString(), "dockstate= %d",dockstate);
+
 	if (hs4bM && hLMV){
 		if (GetDockStatus(GetDockHandle(0))==hLMV){
 			ActivateLEM=true;
@@ -1446,16 +1433,6 @@ void SaturnV::Timestep(double simt, double simdt)
 	}
 
 	GenericTimestep(simt, simdt);
-
-	if (hs4bM){
-		if (dockstate > 2){
-			double TimeW1;
-			TimeW1 = oapiGetTimeAcceleration ();
-			if (TimeW1 > 10){
-				SetS4B(hs4bM);
-			}
-		}
-	}
 
 	if (bAbort && stage < LAUNCH_STAGE_TWO_TWR_JET) {
 		if (stage < LAUNCH_STAGE_ONE) {

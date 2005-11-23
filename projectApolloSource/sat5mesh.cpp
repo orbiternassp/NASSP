@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/11/21 13:26:41  tschachim
+  *	New assembly meshes.
+  *	
   *	Revision 1.22  2005/11/20 20:35:14  movieman523
   *	Moved mesh files into ProjectApollo directory, and fixed RCS on Saturn V SIVb after seperation.
   *	
@@ -115,6 +118,7 @@
 #include "sat5_lmpkd.h"
 
 #include "sivb.h"
+#include "s1c.h"
 
 PARTICLESTREAMSPEC srb_contrail = {
 	0, 12.0, 5, 150.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
@@ -280,6 +284,7 @@ void SaturnV::BuildFirstStage (int bstate)
 }
 
 void SaturnV::SetFirstStage ()
+
 {
 	int i;
 	TRACESETUP("SetFirstStage");
@@ -1005,11 +1010,34 @@ void SaturnV::SeparateStage (int stage)
 
 		StageS.play(NOLOOP, 255);
 
+		//
+		// Seperate off the S1C stage and initialise it.
+		//
+
 		char VName[256];
 
 		GetApolloName(VName);
 		strcat (VName, "-STG1");
-		hstg1 = oapiCreateVessel(VName,"sat5stg1",vs1);
+		hstg1 = oapiCreateVessel(VName,"ProjectApollo/sat5stg1",vs1);
+
+		S1CSettings S1Config;
+
+		S1Config.SettingsType = (S1C_SETTINGS_MASS|S1C_SETTINGS_FUEL|S1C_SETTINGS_GENERAL|S1C_SETTINGS_ENGINES);
+
+		S1Config.RetroNum = SI_RetroNum;
+		S1Config.EmptyMass = SI_EmptyMass;
+		S1Config.MainFuelKg = GetPropellantMass(ph_1st);
+		S1Config.MissionTime = MissionTime;
+		S1Config.Realism = Realism;
+		S1Config.VehicleNo = VehicleNo;
+		S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
+		S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
+		S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
+		S1Config.CurrentThrust = GetThrusterGroupLevel(thg_main);
+
+		S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
+
+		stage1->SetState(S1Config);
 
 		SetSecondStage ();
 	}
@@ -1440,44 +1468,6 @@ void SaturnV::DockStage (UINT dockstatus)
 
 	}
 
-}
-
-void SaturnV::Retro1(OBJHANDLE hvessel, double gaz)
-
-{
-	TRACESETUP("Retro1");
-
-	//
-	// Just in case someone removes all the retros, do nothing.
-	//
-
-	if (!SI_RetroNum)
-		return;
-
-	VESSEL *stg1vessel = oapiGetVesselInterface(hvessel);
-
-	VECTOR3 m_exhaust_pos2= {-4,-4, -14};
-	VECTOR3 m_exhaust_pos3= {-4,4, -14};
-	VECTOR3 m_exhaust_pos4= {4,-4, -14};
-	VECTOR3 m_exhaust_pos5= {4,4, -14};
-
-	ph_retro1 = stg1vessel->CreatePropellantResource(51.6 * SI_RetroNum);
-
-	double thrust = 382000;
-
-	if (!th_retro1[0]) {
-		th_retro1[0] = stg1vessel->CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro1, 4000);
-		th_retro1[1] = stg1vessel->CreateThruster (m_exhaust_pos3, _V(0.1, -0.1, -0.9), thrust, ph_retro1, 4000);
-		th_retro1[2] = stg1vessel->CreateThruster (m_exhaust_pos4, _V(-0.1, 0.1, -0.9), thrust, ph_retro1, 4000);
-		th_retro1[3] = stg1vessel->CreateThruster (m_exhaust_pos5, _V(-0.1, -0.1, -0.9), thrust, ph_retro1, 4000);
-	}
-
-	thg_retro1 = stg1vessel->CreateThrusterGroup(th_retro1, 4, THGROUP_RETRO);
-
-	for (int i = 0; i < 4; i++)
-		stg1vessel->AddExhaust (th_retro1[i], 8.0, 0.2);
-
-	stg1vessel->SetThrusterGroupLevel(thg_retro1, 1.0);
 }
 
 //
