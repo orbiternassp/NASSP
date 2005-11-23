@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2005/11/23 19:20:51  movieman523
+  *	Made boilers work again!
+  *	
   *	Revision 1.40  2005/11/18 22:11:22  movieman523
   *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
   *	
@@ -211,6 +214,23 @@ void Saturn::SystemsInit() {
 	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
 	ACBus2.WireToBuses(&ACBus2PhaseA, &ACBus2PhaseB, &ACBus2PhaseC);
 
+	//
+	// Fuel cells.
+	//
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1");
+	FuelCells[0].WireToSDK(eo);
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2");
+	FuelCells[1].WireToSDK(eo);
+
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3");
+	FuelCells[2].WireToSDK(eo);
+
+	//
+	// Entry and landing batteries.
+	//
+
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_A");
 	EntryBatteryA.WireToSDK(eo);
 
@@ -220,6 +240,9 @@ void Saturn::SystemsInit() {
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_C");
 	EntryBatteryC.WireToSDK(eo);
 
+	//
+	// Pyro batteries.
+	//
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_A");
 	PyroBatteryA.WireToSDK(eo);
@@ -296,6 +319,10 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 //		sprintf(oapiDebugString(), "Bus A = %fA/%fV, Bus B = %fA/%fV, AC Bus 1 = %fA/%fV, AC Bus 2 = %fA/%fV, Batt A = %fV, Batt B = %fV", 
 //			MainBusA.Current(), MainBusA.Voltage(), MainBusB.Current(), MainBusB.Voltage(),
 //			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA.Voltage(), EntryBatteryB.Voltage());
+//		sprintf(oapiDebugString(), "FC1 %3.3fV/%3.3fA/%3.3fW FC2 %3.3fV/%3.3fA/%3.3fW FC3 %3.3fV/%3.3fA/%3.3fW",
+//			FuelCells[0].Voltage(), FuelCells[0].Current(), FuelCells[0].PowerLoad(),
+//			FuelCells[1].Voltage(), FuelCells[1].Current(), FuelCells[1].PowerLoad(),
+//			FuelCells[2].Voltage(), FuelCells[2].Current(), FuelCells[2].PowerLoad());
 #endif // _DEBUG
 
 		// Each timestep is passed to the SPSDK
