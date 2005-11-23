@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/11/20 20:41:47  movieman523
+  *	Fixed Saturn V SIVb engine exhaust after seperation.
+  *	
   *	Revision 1.6  2005/11/20 20:35:14  movieman523
   *	Moved mesh files into ProjectApollo directory, and fixed RCS on Saturn V SIVb after seperation.
   *	
@@ -487,18 +490,8 @@ int SIVB::GetMainState()
 void SIVB::AddRCS_S4B()
 
 {
-	const double ATTCOOR = -10;
 	const double ATTCOOR2 = 3.61;
-	const double TRANCOOR = 0;
-	const double TRANCOOR2 = 0.1;
 	const double TRANZ=-3.2;
-	const double ATTWIDTH=.2;
-	const double ATTHEIGHT=.5;
-	const double TRANWIDTH=.2;
-	const double TRANHEIGHT=1;
-	const double RCSOFFSET=0.75;
-	const double RCSOFFSETM=0.30;
-	const double RCSOFFSETM2=0.47;
 	const double RCSX=0.35;
 	VECTOR3 m_exhaust_pos2= {0,ATTCOOR2,TRANZ};
 	VECTOR3 m_exhaust_pos3= {0,-ATTCOOR2,TRANZ};
