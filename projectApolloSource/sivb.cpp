@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/11/23 23:52:12  movieman523
+  *	Removed some unused variables.
+  *	
   *	Revision 1.7  2005/11/20 20:41:47  movieman523
   *	Fixed Saturn V SIVb engine exhaust after seperation.
   *	
@@ -136,6 +139,8 @@ void SIVB::InitS4b()
 	PayloadMass = 0.0;
 	MainFuel = 5000.0;
 	Realism = REALISM_DEFAULT;
+
+	CurrentThrust = 0;
 
 	MissionTime = MINUS_INFINITY;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -463,6 +468,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
+	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 }
 
 typedef union {
@@ -639,6 +645,10 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "LMISSNTIME", 10)) {
             sscanf (line + 10, "%f", &flt);
 			LastMissionEventTime = flt;
+		}
+		else if (!strnicmp(line, "CTR", 3)) {
+            sscanf (line + 3, "%f", &flt);
+			CurrentThrust = flt;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line+5, "%d", &State);

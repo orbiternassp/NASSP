@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/23 01:43:13  movieman523
+  *	Added SII stage DLL.
+  *	
   *	
   *	
   **************************************************************************/
@@ -85,6 +88,8 @@ void SII::InitSII()
 	NextMissionEventTime = MINUS_INFINITY;
 	LastMissionEventTime = MINUS_INFINITY;
 
+	CurrentThrust = 0.0;
+
 	THRUST_SECOND_VAC  = 1023000;
 	ISP_SECOND_SL   = 300*G;
 	ISP_SECOND_VAC  = 418*G;
@@ -134,9 +139,9 @@ void SII::clbkPreStep(double simt, double simdt, double mjd)
 	MissionTime += simdt;
 
 	//
-	// Currently this just starts the retros. At some point it should
-	// run down the engines if they haven't completely shut down, and
-	// then do any other simulation like ejecting camera pods.
+	// Currently this just starts the retros and shuts down the main engines.
+	// At some point it should then do any other simulation like ejecting 
+	// camera pods.
 	//
 
 	switch (State) {
@@ -145,7 +150,16 @@ void SII::clbkPreStep(double simt, double simdt, double mjd)
 		if (!RetrosFired && thg_retro) {
 			SetThrusterGroupLevel(thg_retro, 1.0);
 			RetrosFired = true;
-
+		}
+		
+		if (CurrentThrust > 0.0) {
+			CurrentThrust -= simdt;
+			for (int i = 0; i < 4; i++) {
+				SetThrusterLevel(th_main[i], CurrentThrust);
+			}
+		}
+		else {
+			SetEngineLevel(ENGINE_MAIN, 0.0);
 			State = SII_STATE_WAITING;
 		}
 		break;
@@ -178,6 +192,7 @@ void SII::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "T2V", THRUST_SECOND_VAC);
 	oapiWriteScenario_float (scn, "I2S", ISP_SECOND_SL);
 	oapiWriteScenario_float (scn, "I2V", ISP_SECOND_VAC);
+	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 }
 
 typedef union {
@@ -221,7 +236,7 @@ void SII::AddEngines()
 	if (!ph_retro)
 		ph_retro = CreatePropellantResource(264);;
 
-	if (!ph_main && MainFuel > 0.0)
+	if (!ph_main && (MainFuel > 0.0))
 		ph_main = CreatePropellantResource(MainFuel);
 
 	double thrust = 175500;
@@ -238,18 +253,18 @@ void SII::AddEngines()
 	for (int i = 0; i < 4; i++)
 		AddExhaust (th_retro[i], 8.0, 0.2);
 
-	m_exhaust_pos1= _V(-1.8,-1.8,-33.5);
-	m_exhaust_pos2= _V(1.8,1.8,-33.5);
-	m_exhaust_pos3= _V(-1.8,1.8,-33.5);
-	m_exhaust_pos4 = _V(1.8,-1.8,-33.5);
-	m_exhaust_pos5 = _V(0,0,-33.5);
+	m_exhaust_pos1= _V(-1.8,-1.8,-15);
+	m_exhaust_pos2= _V(1.8,1.8,-15);
+	m_exhaust_pos3= _V(-1.8,1.8,-15);
+	m_exhaust_pos4 = _V(1.8,-1.8,-15);
+	m_exhaust_pos5 = _V(0,0,-15);
 
 	// orbiter main thrusters
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_main[1] = CreateThruster (m_exhaust_pos2,_V( 0,0,1),  THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_main[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_main[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
-	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
+	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_SECOND_VAC , 0, ISP_SECOND_VAC, ISP_SECOND_SL);
 	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
 
 	for (i = 0; i < 5; i++)
@@ -312,6 +327,10 @@ void SII::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "I2V", 3)) {
             sscanf (line + 3, "%f", &flt);
 			ISP_SECOND_VAC = flt;
+		}
+		else if (!strnicmp(line, "CTR", 3)) {
+            sscanf (line + 3, "%f", &flt);
+			CurrentThrust = flt;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line+5, "%d", &State);

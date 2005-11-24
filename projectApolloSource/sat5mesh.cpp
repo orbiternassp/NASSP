@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/11/23 21:05:57  movieman523
+  *	Use ProjectApollo directory for LEM config file.
+  *	
   *	Revision 1.25  2005/11/23 01:43:13  movieman523
   *	Added SII stage DLL.
   *	
@@ -1034,7 +1037,7 @@ void SaturnV::SeparateStage (int stage)
 		S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
 		S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
 		S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
-		S1Config.CurrentThrust = GetThrusterGroupLevel(thg_main);
+		S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
 
 		S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
 
@@ -1129,7 +1132,7 @@ void SaturnV::SeparateStage (int stage)
 		S2Config.ISP_SECOND_SL = ISP_SECOND_SL;
 		S2Config.ISP_SECOND_VAC = ISP_SECOND_VAC;
 		S2Config.THRUST_SECOND_VAC = THRUST_SECOND_VAC;
-		S2Config.CurrentThrust = GetThrusterGroupLevel(thg_main);
+		S2Config.CurrentThrust = GetThrusterLevel(th_main[0]);
 
 		SII *stage2 = (SII *) oapiGetVesselInterface(hstg2);
 

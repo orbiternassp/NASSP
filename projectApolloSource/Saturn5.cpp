@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2005/11/24 01:07:54  movieman523
+  *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
+  *	
   *	Revision 1.40  2005/11/23 01:43:13  movieman523
   *	Added SII stage DLL.
   *	
@@ -528,7 +531,7 @@ void SaturnV::clbkSetClassCaps (FILEHANDLE cfg)
 	initSaturnV();
 }
 
-void SaturnV::StageOne(double simt)
+void SaturnV::StageOne(double simt, double simdt)
 
 {
 	VESSELSTATUS vs;
@@ -585,14 +588,14 @@ void SaturnV::StageOne(double simt)
 		// Begin shutdown countdown at 5% fuel.
 		//
 
-		if ((actualFUEL <= 5)) {
+		if ((actualFUEL <= 5) || (MissionTime >= (FirstStageShutdownTime - 10.0))) {
 			Sctdw.play(NOLOOP, 245);
 			StageState++;
 		}
 		break;
 
 	case 3:
-		if (GetFuelMass() == 0 && buildstatus > 5)
+		if ((GetFuelMass() <= 0.001) || (MissionTime >= FirstStageShutdownTime))
 		{
 			NextMissionEventTime = MissionTime + 0.7;
 			StageState++;
@@ -601,12 +604,23 @@ void SaturnV::StageOne(double simt)
 
 	case 4:
 		if (MissionTime >= NextMissionEventTime) {
-			SetEngineLevel(ENGINE_MAIN, 0.0);
 			SetEngineIndicators();
 			SeparateStage (stage);
 			bManualSeparate = false;
 			SeparationS.play(NOLOOP, 245);
 			SetStage(LAUNCH_STAGE_TWO);
+		}
+		else {
+
+			//
+			// Engine thrust decay.
+			//
+
+			for (int i = 0; i < 4; i++) {
+				double Level = GetThrusterLevel(th_main[i]);
+				Level -= (simdt * 1.2);
+				SetThrusterLevel(th_main[i], Level);
+			}
 		}
 		break;
 	}
@@ -705,6 +719,15 @@ void SaturnV::StageTwo(double simt)
 				SepS.stop();
 
 				NextMissionEventTime += 25.9;
+
+				//
+				// Override if required.
+				//
+
+				if (InterstageSepTime < NextMissionEventTime) {
+					NextMissionEventTime = InterstageSepTime;
+				}
+
 				StageState++;
 			}
 		}
@@ -717,11 +740,21 @@ void SaturnV::StageTwo(double simt)
 		//
 
 		if (MissionTime >= NextMissionEventTime || bManualSeparate) {
+
 			SeparateStage (stage);
 			SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 			bManualSeparate = false;
 			SIISepState = false;
+
 			NextMissionEventTime += 5.7;
+
+			//
+			// Override if required.
+			//
+
+			if (LESJettisonTime < NextMissionEventTime) {
+				NextMissionEventTime = LESJettisonTime;
+			}
 		}
 		break;
 	}
@@ -758,10 +791,13 @@ void SaturnV::StageThree(double simt)
 	}
 }
 
-void SaturnV::StageFour(double simt)
+void SaturnV::StageFour(double simt, double simdt)
 
 {
 	LAUNCHIND[2] = true;
+
+	int i;
+	double Level;
 
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
 
@@ -820,14 +856,14 @@ void SaturnV::StageFour(double simt)
 		// Begin shutdown countdown at 1.7% fuel.
 		//
 
-		if (actualFUEL < 1.7) {
+		if ((actualFUEL < 1.7) || (MissionTime >= (SecondStageShutdownTime - 10.0))) {
 			Sctdw.play(NOLOOP,245);
 			StageState++;
 		}
 		break;
 
 	case 4:
-		if (GetFuelMass() <= 0) {
+		if ((GetFuelMass() <= 0) || (MissionTime >= SecondStageShutdownTime)) {
 			SetEngineIndicators();
 			NextMissionEventTime = MissionTime + 2.0;
 			StageState++;
@@ -846,6 +882,35 @@ void SaturnV::StageFour(double simt)
 				SeparateStage (stage);
 				SetStage(LAUNCH_STAGE_SIVB);
 			}
+		}
+		else {
+
+			//
+			// Engine thrust decay.
+			//
+
+			for (i = 0; i < 4; i++) {
+				Level = GetThrusterLevel(th_main[i]);
+				Level -= (simdt * 1.2);
+				SetThrusterLevel(th_main[i], Level);
+			}
+		}
+		break;
+
+	case 6:
+
+		//
+		// Engine thrust decay.			
+		//
+
+		for (i = 0; i < 4; i++) {
+			Level = GetThrusterLevel(th_main[i]);
+			Level -= (simdt * 1.2);
+			SetThrusterLevel(th_main[i], Level);
+		}
+
+		if (Level < 0) {
+			StageState++;
 		}
 		break;
 	}
@@ -1463,7 +1528,7 @@ void SaturnV::Timestep(double simt, double simdt)
 	switch (stage) {
 
 	case LAUNCH_STAGE_ONE:
-		StageOne(simt);
+		StageOne(simt, simdt);
 		break;
 
 	case LAUNCH_STAGE_TWO:
@@ -1475,7 +1540,7 @@ void SaturnV::Timestep(double simt, double simdt)
 		break;
 
 	case LAUNCH_STAGE_TWO_TWR_JET:
-		StageFour(simt);
+		StageFour(simt, simdt);
 		break;
 
 	case LAUNCH_STAGE_SIVB:

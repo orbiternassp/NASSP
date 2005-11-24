@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/11/23 01:43:13  movieman523
+  *	Added SII stage DLL.
+  *	
   *	Revision 1.13  2005/11/20 01:06:27  movieman523
   *	Saturn V now uses SIVB DLL too.
   *	
@@ -120,10 +123,10 @@ protected:
 	// Mission stage functions.
 	//
 
-	void StageOne(double simt);
+	void StageOne(double simt, double simdt);
 	void StageTwo(double simt);
 	void StageThree(double simt);
-	void StageFour(double simt);
+	void StageFour(double simt, double simdt);
 	void StageSix(double simt);
 	void StageLaunchSIVB(double simt);
 

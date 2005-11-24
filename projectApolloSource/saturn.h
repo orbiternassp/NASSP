@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.93  2005/11/24 01:07:54  movieman523
+  *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
+  *	
   *	Revision 1.92  2005/11/23 01:43:13  movieman523
   *	Added SII stage DLL.
   *	
@@ -589,10 +592,24 @@ protected:
 	double SecondStageCentreShutdownTime;
 
 	//
+	// Interstage and LES jettison time.
+	//
+
+	double InterstageSepTime;
+	double LESJettisonTime;
+
+	//
 	// Mixture-ratio shift time for second stage.
 	//
 
 	double SecondStagePUShiftTime;
+
+	//
+	// Stage shutdown times.
+	//
+
+	double FirstStageShutdownTime;
+	double SecondStageShutdownTime;
 
 	//
 	// Iterative Guidance Mode start time, when we stop following the pitch program and start aiming for

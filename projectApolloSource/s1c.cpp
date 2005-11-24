@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/23 00:34:16  movieman523
+  *	S1C dll code.
+  *	
   *	
   **************************************************************************/
 
@@ -88,6 +91,8 @@ void S1C::InitS1c()
 	ISP_FIRST_SL    = 265*G;
 	ISP_FIRST_VAC   = 304*G;
 
+	CurrentThrust = 0.0;
+
 	for (i = 0; i < 4; i++)
 		th_retro[i] = 0;
 
@@ -142,7 +147,16 @@ void S1C::clbkPreStep(double simt, double simdt, double mjd)
 		if (!RetrosFired && thg_retro) {
 			SetThrusterGroupLevel(thg_retro, 1.0);
 			RetrosFired = true;
-
+		}
+		
+		if (CurrentThrust > 0.0) {
+			CurrentThrust -= simdt;
+			for (int i = 0; i < 4; i++) {
+				SetThrusterLevel(th_main[i], CurrentThrust);
+			}
+		}
+		else {
+			SetEngineLevel(ENGINE_MAIN, 0.0);
 			State = S1C_STATE_WAITING;
 		}
 		break;
@@ -175,6 +189,7 @@ void S1C::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "T1V", THRUST_FIRST_VAC);
 	oapiWriteScenario_float (scn, "I1S", ISP_FIRST_SL);
 	oapiWriteScenario_float (scn, "I1V", ISP_FIRST_VAC);
+	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 }
 
 typedef union {
@@ -230,7 +245,7 @@ void S1C::AddEngines()
 	for (int i = 0; i < 4; i++)
 		AddExhaust (th_retro[i], 8.0, 0.2);
 
-	double Offset1st = -75.1;
+	double Offset1st = -23.1;
 
 	VECTOR3 m_exhaust_ref = {0,0,-1};
     VECTOR3 MAIN4a_Vector= {3,3,Offset1st+0.5};
@@ -245,7 +260,7 @@ void S1C::AddEngines()
 	th_main[1] = CreateThruster (MAIN2a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[2] = CreateThruster (MAIN1a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
 
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
 
@@ -310,6 +325,10 @@ void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "I1V", 3)) {
             sscanf (line + 3, "%f", &flt);
 			ISP_FIRST_VAC = flt;
+		}
+		else if (!strnicmp(line, "CTR", 3)) {
+            sscanf (line + 3, "%f", &flt);
+			CurrentThrust = flt;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line+5, "%d", &State);
