@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/11/20 01:06:27  movieman523
+  *	Saturn V now uses SIVB DLL too.
+  *	
   *	Revision 1.4  2005/11/19 22:58:32  movieman523
   *	Pass main fuel mass from Saturn 1b to SIVb and added main thrust from venting fuel.
   *	
@@ -118,6 +121,8 @@ protected:
 	bool PanelsHinged;
 	bool PanelsOpened;
 	bool SaturnVStage;
+
+	double CurrentThrust;
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;

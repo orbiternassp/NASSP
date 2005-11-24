@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/23 02:21:30  movieman523
+  *	Added S1b stage.
+  *	
   *	Revision 1.5  2005/11/19 20:54:47  movieman523
   *	Added SIVb DLL and wired it up to Saturn 1b.
   *	
@@ -78,7 +81,7 @@ protected:
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt);
 	void DockStage (UINT dockstatus);
-	void StageOne(double simt);
+	void StageOne(double simt, double simdt);
 	void StageStartSIVB(double simt);
 	void StageLaunchSIVB(double simt);
 	void SetVehicleStats();

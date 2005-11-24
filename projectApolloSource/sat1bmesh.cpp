@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2005/11/23 02:21:30  movieman523
+  *	Added S1b stage.
+  *	
   *	Revision 1.21  2005/11/20 20:35:14  movieman523
   *	Moved mesh files into ProjectApollo directory, and fixed RCS on Saturn V SIVb after seperation.
   *	
@@ -975,7 +978,7 @@ void Saturn1b::SeparateStage (int stage)
 		S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
 		S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
 		S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
-		S1Config.CurrentThrust = GetThrusterGroupLevel(thg_main);
+		S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
 
 		S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
 

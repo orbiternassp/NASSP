@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2005/11/24 01:07:54  movieman523
+  *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
+  *	
   *	Revision 1.67  2005/11/23 01:43:13  movieman523
   *	Added SII stage DLL.
   *	
@@ -421,6 +424,20 @@ void Saturn::initSaturn()
 
 	FirstStageCentreShutdownTime = 135.0;
 	SecondStageCentreShutdownTime = 460.0;
+
+	//
+	// Stage shutdown times greater than stage burn times, to guarantee we burn all fuel.
+	//
+
+	FirstStageShutdownTime = 250.0;
+	SecondStageShutdownTime = 1000.0;
+
+	//
+	// Same for interstage and LES jettison.
+	//
+
+	InterstageSepTime = 1000.0;
+	LESJettisonTime = 1000.0;
 
 	//
 	// PU shift time. Default to 8:15
@@ -864,12 +881,17 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (stage < LAUNCH_STAGE_ONE)
 		oapiWriteScenario_int (scn, "PRELAUNCHATC",  int(UseATC));
 
-	if (stage < LAUNCH_STAGE_TWO)
+	if (stage < LAUNCH_STAGE_TWO) {
 		oapiWriteScenario_float (scn, "SICSHUT", FirstStageCentreShutdownTime);
+		oapiWriteScenario_float (scn, "SISHUT", FirstStageShutdownTime);
+	}
 
 	if (stage < LAUNCH_STAGE_SIVB) {
 		oapiWriteScenario_float (scn, "SIICSHUT", SecondStageCentreShutdownTime);
 		oapiWriteScenario_float (scn, "SIIPUT", SecondStagePUShiftTime);
+		oapiWriteScenario_float (scn, "SIISHUT", SecondStageShutdownTime);
+		oapiWriteScenario_float (scn, "ISTGJT", InterstageSepTime);
+		oapiWriteScenario_float (scn, "LESJT", LESJettisonTime);
 	}
 
 	if (stage < STAGE_ORBIT_SIVB) {
@@ -1338,6 +1360,22 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp (line, "SIICSHUT", 8)) {
 			sscanf (line + 8, "%f", &ftcp);
 			SecondStageCentreShutdownTime = ftcp;
+		}
+		else if (!strnicmp (line, "SISHUT", 6)) {
+			sscanf (line + 6, "%f", &ftcp);
+			FirstStageShutdownTime = ftcp;
+		}
+		else if (!strnicmp (line, "SIISHUT", 7)) {
+			sscanf (line + 7, "%f", &ftcp);
+			SecondStageShutdownTime = ftcp;
+		}
+		else if (!strnicmp (line, "ISTGJT", 6)) {
+			sscanf (line + 6, "%f", &ftcp);
+			InterstageSepTime = ftcp;
+		}
+		else if (!strnicmp (line, "LESJT", 5)) {
+			sscanf (line + 5, "%f", &ftcp);
+			LESJettisonTime = ftcp;
 		}
 		else if (!strnicmp (line, "SIIPUT", 6)) {
 			sscanf (line + 6, "%f", &ftcp);

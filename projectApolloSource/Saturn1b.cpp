@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2005/11/24 01:07:54  movieman523
+  *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
+  *	
   *	Revision 1.32  2005/11/23 02:21:30  movieman523
   *	Added S1b stage.
   *	
@@ -388,13 +391,15 @@ void Saturn1b::DoFirstTimestep(double simt)
 	hintstg = oapiGetVesselByName(VName);
 }
 
-void Saturn1b::StageOne(double simt)
+void Saturn1b::StageOne(double simt, double simdt)
 
 {
 	VESSELSTATUS vs;
 	GetStatus(vs);
 
-	if (GetEngineLevel(ENGINE_MAIN) < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10){
+	double MainLevel = GetEngineLevel(ENGINE_MAIN);
+
+	if (MainLevel < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10) {
 		bAbort = true;
 	}
 
@@ -426,7 +431,7 @@ void Saturn1b::StageOne(double simt)
 	//
 
 	case 1:
-		if (GetFuelMass() == 0 || bManualSeparate)
+		if ((GetFuelMass() <= 0.001) || (MissionTime >= FirstStageShutdownTime) || bManualSeparate)
 		{
 			NextMissionEventTime = MissionTime + 0.7;
 			SetEngineIndicators();
@@ -435,13 +440,25 @@ void Saturn1b::StageOne(double simt)
 		break;
 
 	case 2:
-		if (MissionTime >= NextMissionEventTime){
+		if (MissionTime >= NextMissionEventTime) {
 			SShutS.done();
 			ClearEngineIndicators();
 			SeparateStage (stage);
 			bManualSeparate = false;
 			SeparationS.play(NOLOOP, 245);
 			SetStage(LAUNCH_STAGE_TWO);
+		}
+		else {
+
+			//
+			// Engine thrust decay.
+			//
+
+			for (int i = 0; i < 4; i++) {
+				double Level = GetThrusterLevel(th_main[i]);
+				Level -= (simdt * 1.2);
+				SetThrusterLevel(th_main[i], Level);
+			}
 		}
 		return;
 	}
@@ -535,6 +552,15 @@ void Saturn1b::StageStartSIVB(double simt)
 			SetSIVBThrusters(true);
 			SetSIVBMixtureRatio(5.5);
 			NextMissionEventTime = MissionTime + 17.95;
+
+			//
+			// Override if required.
+			//
+
+			if (LESJettisonTime < NextMissionEventTime) {
+				NextMissionEventTime = LESJettisonTime;
+			}
+
 			StageState++;
 		}
 		break;
@@ -752,7 +778,8 @@ void Saturn1b::Timestep (double simt, double simdt)
 		if (stage < LAUNCH_STAGE_ONE) {
 			// No abort before launch
 			bAbort = false;
-		} else {
+		} 
+		else {
 			SetEngineLevel(ENGINE_MAIN, 0);
 			SeparateStage(stage);
 			StartAbort();
@@ -923,7 +950,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 	switch (stage) {
 
 	case LAUNCH_STAGE_ONE:
-		StageOne(simt);
+		StageOne(simt, simdt);
 		break;
 
 	case LAUNCH_STAGE_TWO:

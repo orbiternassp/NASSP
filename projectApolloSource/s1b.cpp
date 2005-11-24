@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/23 02:21:30  movieman523
+  *	Added S1b stage.
+  *	
   **************************************************************************/
 
 #include "orbiterSDK.h"
@@ -78,6 +81,8 @@ void S1B::InitS1b()
 	EmptyMass = 37500.0;
 	MainFuel = 5000.0;
 	Realism = REALISM_DEFAULT;
+
+	CurrentThrust = 0.0;
 
 	RetrosFired = false;
 
@@ -147,7 +152,16 @@ void S1B::clbkPreStep(double simt, double simdt, double mjd)
 		if (!RetrosFired && thg_retro) {
 			SetThrusterGroupLevel(thg_retro, 1.0);
 			RetrosFired = true;
+		}
 
+		if (CurrentThrust > 0.0) {
+			CurrentThrust -= simdt;
+			for (int i = 0; i < 4; i++) {
+				SetThrusterLevel(th_main[i], CurrentThrust);
+			}
+		}
+		else {
+			SetEngineLevel(ENGINE_MAIN, 0.0);
 			State = S1B_STATE_WAITING;
 		}
 		break;
@@ -180,6 +194,7 @@ void S1B::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "T1V", THRUST_FIRST_VAC);
 	oapiWriteScenario_float (scn, "I1S", ISP_FIRST_SL);
 	oapiWriteScenario_float (scn, "I1V", ISP_FIRST_VAC);
+	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 }
 
 typedef union {
@@ -235,7 +250,7 @@ void S1B::AddEngines()
 	for (int i = 0; i < 4; i++)
 		AddExhaust (th_retro[i], 8.0, 0.2);
 
-	double Offset1st = -80.1;
+	double Offset1st = -65.5;
 
 	m_exhaust_pos5= _V(0,1.414,Offset1st+55);
     VECTOR3 m_exhaust_pos6= {1.414,0,Offset1st+55};
@@ -251,10 +266,10 @@ void S1B::AddEngines()
 	th_main[1] = CreateThruster (m_exhaust_pos2, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[5] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[6] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[7] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[5] = CreateThruster (m_exhaust_pos6, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[6] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
+	th_main[7] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
 
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
 	thg_main = CreateThrusterGroup (th_main, 8, THGROUP_MAIN);
@@ -319,6 +334,10 @@ void S1B::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "I1V", 3)) {
             sscanf (line + 3, "%f", &flt);
 			ISP_FIRST_VAC = flt;
+		}
+		else if (!strnicmp(line, "CTR", 3)) {
+            sscanf (line + 3, "%f", &flt);
+			CurrentThrust = flt;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line+5, "%d", &State);
