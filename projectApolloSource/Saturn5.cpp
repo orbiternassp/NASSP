@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2005/11/23 01:43:13  movieman523
+  *	Added SII stage DLL.
+  *	
   *	Revision 1.39  2005/11/23 00:29:38  movieman523
   *	Added S1C DLL and revised LEVA code to look for NEP-specific flag if it exists.
   *	
@@ -533,15 +536,6 @@ void SaturnV::StageOne(double simt)
 
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
 
-	if (MainLevel > 0.65 ) {
-		LAUNCHIND[7] = true;
-		ENGIND[5] = true;
-	}
-	else {
-		LAUNCHIND[7] = false;
-		ENGIND[5] = false;
-	}
-
 	double amt = (MainLevel) * 0.4;
 	JostleViewpoint(amt);
 
@@ -634,15 +628,6 @@ void SaturnV::StageTwo(double simt)
 {
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
 
-	if (MainLevel > 0.65 ) {
-		LAUNCHIND[7] = true;
-		ENGIND[5] = true;
-	}
-	else{
-		LAUNCHIND[7] = false;
-		ENGIND[5] = false;
-	}
-
 	double amt = (MainLevel) * 0.25;
 	JostleViewpoint(amt);
 
@@ -718,7 +703,6 @@ void SaturnV::StageTwo(double simt)
 				SetThrusterGroupLevel(thg_main, 1.0);
 
 				SepS.stop();
-				LAUNCHIND[6] = false;
 
 				NextMissionEventTime += 25.9;
 				StageState++;
@@ -746,18 +730,7 @@ void SaturnV::StageTwo(double simt)
 void SaturnV::StageThree(double simt)
 
 {
-	LAUNCHIND[6]=false;
-
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
-
-	if (MainLevel > 0.65 ){
-		LAUNCHIND[7] = true;
-		ENGIND[5] = true;
-	}
-	else{
-		LAUNCHIND[7] = false;
-		ENGIND[5] = false;
-	}
 
 	double amt = (MainLevel) * 0.2;
 	JostleViewpoint(amt);
@@ -791,15 +764,6 @@ void SaturnV::StageFour(double simt)
 	LAUNCHIND[2] = true;
 
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
-
-	if (MainLevel > 0.65 ) {
-		LAUNCHIND[7] = true;
-		ENGIND[5] = true;
-	}
-	else{
-		LAUNCHIND[7] = false;
-		ENGIND[5] = false;
-	}
 
 	double amt = (MainLevel) * 0.2;
 	JostleViewpoint(amt);
@@ -1529,8 +1493,6 @@ void SaturnV::Timestep(double simt, double simdt)
 	case CSM_ABORT_STAGE:
 		SetEngineLevel(ENGINE_MAIN,1);
 
-		ClearAutopilotLight();
-
 		//sprintf(oapiDebugString(), "Mode Abort 1B%f", abortTimer);
 
         if (GetFuelMass() == 0 && abortTimer == 0){
@@ -1792,14 +1754,6 @@ void SaturnV::StageLaunchSIVB(double simt)
 {
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
 
-	if (MainLevel > 0.65 ){
-		LAUNCHIND[7] = true;
-		ENGIND[5] = true;
-	}else{
-		ENGIND[5] = false;
-		LAUNCHIND[7] = false;
-	}
-
 	double amt = (MainLevel) * 0.1;
 	JostleViewpoint(amt);
 
@@ -1808,22 +1762,6 @@ void SaturnV::StageLaunchSIVB(double simt)
 	}
 	else {
 		AttitudeLaunchSIVB();
-	}
-
-	//
-	// Update the ullage indicator as appropriate.
-	//
-
-	LAUNCHIND[6] = false;
-	if (StageState < 5) {
-		if (GetThrusterGroupLevel(thg_ver) > 0) {
-			LAUNCHIND[6] = true;
-		}
-	}
-	else {
-		if (GetThrusterGroupLevel(thg_aps) > 0) {
-			LAUNCHIND[6] = true;
-		}
 	}
 
 	switch (StageState) {
@@ -1872,7 +1810,6 @@ void SaturnV::StageLaunchSIVB(double simt)
 			SetThrusterGroupLevel(thg_ver, 0.0);
 			SetSIVBThrusters(true);
 			ClearEngineIndicator(1);
-			LAUNCHIND[6] = false;
 			LastMissionEventTime = NextMissionEventTime;
 			NextMissionEventTime += 2.1;
 			StageState++;

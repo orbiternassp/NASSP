@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2005/11/23 01:43:13  movieman523
+  *	Added SII stage DLL.
+  *	
   *	Revision 1.66  2005/11/20 21:46:31  movieman523
   *	Added initial volume control support.
   *	
@@ -466,9 +469,6 @@ void Saturn::initSaturn()
 	ph_rcs0 = 0;
 	ph_rcs1 = 0;
 	ph_sps = 0;
-	ph_retro1 = 0;
-	ph_retro2 = 0;
-
 	//
 	// Thruster groups.
 	//
@@ -508,7 +508,8 @@ void Saturn::initSaturn()
 		ClearEngineIndicator(i);
 	}
 
-	ClearAutopilotLight();
+	ClearLVGuidLight();
+	ClearLVRateLight();
 
 	for (i = 0; i < 8; i++) {
 		LAUNCHIND[i] = false;
@@ -532,10 +533,6 @@ void Saturn::initSaturn()
 
 	for (i = 0; i < 24; i++) {
 		th_att_cm[i] = 0;
-	}
-
-	for (i = 0; i < 4; i++) {
-		th_retro1[i] = 0;
 	}
 
 	th_sps[0] = 0;
@@ -1179,7 +1176,7 @@ typedef union {
 		unsigned Engind3:1;
 		unsigned Engind4:1;
 		unsigned Engind5:1;
-		unsigned Autopilot:1;
+		unsigned LVGuidLight:1;
 		unsigned Launchind0:1;
 		unsigned Launchind1:1;
 		unsigned Launchind2:1;
@@ -1191,6 +1188,7 @@ typedef union {
 		unsigned Engind6:1;
 		unsigned Engind7:1;
 		unsigned Engind8:1;
+		unsigned LVRateLight:1;
 	} u;
 	unsigned long word;
 } LightState;
@@ -1210,7 +1208,7 @@ int Saturn::GetLightState()
 	state.u.Engind6 = ENGIND[6];
 	state.u.Engind7 = ENGIND[7];
 	state.u.Engind8 = ENGIND[8];
-	state.u.Autopilot = AutopilotLight;
+	state.u.LVGuidLight = LVGuidLight;
 	state.u.Launchind0 = LAUNCHIND[0];
 	state.u.Launchind1 = LAUNCHIND[1];
 	state.u.Launchind2 = LAUNCHIND[2];
@@ -1219,6 +1217,7 @@ int Saturn::GetLightState()
 	state.u.Launchind5 = LAUNCHIND[5];
 	state.u.Launchind6 = LAUNCHIND[6];
 	state.u.Launchind7 = LAUNCHIND[7];
+	state.u.LVRateLight = LVRateLight;
 
 	return state.word;
 }
@@ -1238,7 +1237,7 @@ void Saturn::SetLightState(int s)
 	ENGIND[6] = (state.u.Engind6 != 0);
 	ENGIND[7] = (state.u.Engind7 != 0);
 	ENGIND[8] = (state.u.Engind8 != 0);
-	AutopilotLight = (state.u.Autopilot != 0);
+	LVGuidLight = (state.u.LVGuidLight != 0);
 	LAUNCHIND[0] = (state.u.Launchind0 != 0);
 	LAUNCHIND[1] = (state.u.Launchind1 != 0);
 	LAUNCHIND[2] = (state.u.Launchind2 != 0);
@@ -1247,6 +1246,7 @@ void Saturn::SetLightState(int s)
 	LAUNCHIND[5] = (state.u.Launchind5 != 0);
 	LAUNCHIND[6] = (state.u.Launchind6 != 0);
 	LAUNCHIND[7] = (state.u.Launchind7 != 0);
+	LVRateLight = (state.u.LVRateLight != 0);
 }
 
 void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
@@ -1961,13 +1961,6 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	agc.SetRVel(velMS);
 
 	SystemsTimestep(simt, simdt);
-
-	if (stage < CSM_LEM_STAGE && AutopilotActive())	{
-		SetAutopilotLight();
-	} 
-	else {
-		ClearAutopilotLight();
-	}
 
 	if(stage < LAUNCH_STAGE_SIVB) {
 		if (GetNavmodeState(NAVMODE_KILLROT)) {
@@ -2894,15 +2887,6 @@ void Saturn::StageOrbitSIVB(double simt)
 		}
 	}
 
-	if (GetEngineLevel(ENGINE_MAIN) > 0.65 ){
-		LAUNCHIND[7] = true;
-		ENGIND[5] = true;
-	}
-	else{
-		ENGIND[5] = false;
-		LAUNCHIND[7] = false;
-	}
-
 	if(TLICapableBooster){
 		switch (StageState) {
 
@@ -3135,13 +3119,6 @@ void Saturn::StageOrbitSIVB(double simt)
 			if (Realism)
 				SetThrusterResource(th_main[0], NULL);
 		}
-	}
-
-	if (thg_ver && GetThrusterGroupLevel(thg_ver) > 0) {
-		LAUNCHIND[6] = true;
-	}
-	else {
-		LAUNCHIND[6] = false;
 	}
 
 	//

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/11/21 23:08:15  movieman523
+  *	Moved more mesh files into the ProjectApollo directory.
+  *	
   *	Revision 1.18  2005/10/19 11:41:43  tschachim
   *	Improved logging.
   *	
@@ -768,8 +771,6 @@ void Saturn::SetReentryStage ()
 void Saturn::StageSeven(double simt)
 
 {
-	ClearAutopilotLight();
-
 	if (CsmLmFinalSep1Switch.GetState()){
 		Undock(0);
 	}

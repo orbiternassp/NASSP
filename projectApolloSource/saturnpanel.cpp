@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.105  2005/11/20 21:46:31  movieman523
+  *	Added initial volume control support.
+  *	
   *	Revision 1.104  2005/11/19 01:06:01  flydba
   *	Switches set on the lower equipment bay.
   *	
@@ -2816,42 +2819,50 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_LV_ENGINE_LIGHTS:
 		if (ENGIND[0]) {
 			oapiBlt(surf,srf[12],55,44,55,44,27,27);
-		} else {
+		} 
+		else {
 			oapiBlt(surf,srf[12],55,44,157,44,27,27);
 		}
 		if (ENGIND[1]) {
 			oapiBlt(surf,srf[12],55,98,55,98,27,27);
-		} else {
+		} 
+		else {
 			oapiBlt(surf,srf[12],55,98,157,98,27,27);
 		}
 		if (ENGIND[2]) {
 			oapiBlt(surf,srf[12],20,98,20,98,27,27);
-		} else {
+		} 
+		else {
 			oapiBlt(surf,srf[12],20,98,122,98,27,27);
 		}
 		if (ENGIND[3]) {
 			oapiBlt(surf,srf[12],20,44,20,44,27,27);
-		} else {
+		} 
+		else {
 			oapiBlt(surf,srf[12],20,44,122,44,27,27);
 		}
 		if (ENGIND[4]) {
 			oapiBlt(surf,srf[12],37,71,37,71,27,27);
-		} else {
+		} 
+		else {
 			oapiBlt(surf,srf[12],37,71,140,71,27,27);
 		}
-		if (ENGIND[5]) {
+		if (LVRateLight) {
 			oapiBlt(surf,srf[12],6,4,6,4,27,27);
-		} else {
+		} 
+		else {
 			oapiBlt(surf,srf[12],6,4,108,4,27,27);
 		}
 		if (SIISepState) {
 			oapiBlt(surf,srf[12],37,4,37,4,27,27);
-		} else {
+		} 
+		else {
 			oapiBlt(surf,srf[12],37,4,139,4,27,27);
 		}
-		if (AutopilotLight) {
+		if (LVGuidLight) {
 			oapiBlt(surf,srf[12],69,4,69,4,27,27);
-		} else {
+		} 
+		else {
 			oapiBlt(surf,srf[12],69,4,171,4,27,27);
 		}
 		return true;
@@ -3228,15 +3239,21 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
+	//
+	// These aren't lights, they're buttons!
+	//
+
 	case AID_DIRECT_ULLAGE_THRUST_ON_LIGHT:
 		if (LAUNCHIND[6]){
 			oapiBlt(surf,srf[10],3,3,27,0,26,26);
-		}else{
+		}
+		else{
 			oapiBlt(surf,srf[10],3,3,0,0,26,26);
 		}
 		if (LAUNCHIND[7]){
 			oapiBlt(surf,srf[10],3,42,27,27,26,26);
-		}else{
+		}
+		else{
 			oapiBlt(surf,srf[10],3,42,0,27,26,26);
 		}
 		return true;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/11/23 02:21:30  movieman523
+  *	Added S1b stage.
+  *	
   *	Revision 1.31  2005/11/19 20:54:47  movieman523
   *	Added SIVb DLL and wired it up to Saturn 1b.
   *	
@@ -391,15 +394,6 @@ void Saturn1b::StageOne(double simt)
 	VESSELSTATUS vs;
 	GetStatus(vs);
 
-	if (GetEngineLevel(ENGINE_MAIN) > 0.65 ) {
-		LAUNCHIND[7] = true;
-		ENGIND[5] = true;
-	}
-	else {
-		LAUNCHIND[7] = false;
-		ENGIND[5] = false;
-	}
-
 	if (GetEngineLevel(ENGINE_MAIN) < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10){
 		bAbort = true;
 	}
@@ -467,15 +461,6 @@ void Saturn1b::StageOne(double simt)
 void Saturn1b::StageStartSIVB(double simt)
 
 {
-	if (GetEngineLevel(ENGINE_MAIN) > 0.65 ){
-		LAUNCHIND[7] = true;
-		ENGIND[5] = true;
-	}
-	else{
-		ENGIND[5] = false;
-		LAUNCHIND[7] = false;
-	}
-
 	if (autopilot && CMCswitch) {
 		AutoPilot(MissionTime);
 	}
@@ -483,18 +468,9 @@ void Saturn1b::StageStartSIVB(double simt)
 		AttitudeLaunchSIVB();
 	}
 
-	if(GetThrusterGroupLevel(thg_ver) > 0){
-		LAUNCHIND[6] = true;
-	}
-	else{
-		LAUNCHIND[6] = false;
-	}
-
 	switch (StageState) {
 
 	case 0:
-//		if (hstg2)
-//			Ullage2(hstg2,5);
 		SepS.play(LOOP, 130);
 		SetThrusterGroupLevel(thg_ver,1.0);
 		NextMissionEventTime = MissionTime + 2.0;
@@ -545,7 +521,6 @@ void Saturn1b::StageStartSIVB(double simt)
 			SepS.stop();
 			AddRCS_S4B();
 			SetThrusterGroupLevel(thg_ver, 0.0);
-			LAUNCHIND[6] = false;
 			NextMissionEventTime = MissionTime + 2.05;
 			StageState++;
 		}
@@ -607,16 +582,6 @@ void Saturn1b::StageStartSIVB(double simt)
 void Saturn1b::StageLaunchSIVB(double simt)
 
 {
-	if (GetEngineLevel(ENGINE_MAIN) > 0.65 )
-	{
-		LAUNCHIND[7] = true;
-		ENGIND[5] = true;
-	}
-	else {
-		ENGIND[5] = false;
-		LAUNCHIND[7] = false;
-	}
-
     if (autopilot && CMCswitch) {
 		AutoPilot(MissionTime);
 	}

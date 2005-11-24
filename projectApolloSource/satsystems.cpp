@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2005/11/23 23:59:24  movieman523
+  *	Added fuel cells.
+  *	
   *	Revision 1.41  2005/11/23 19:20:51  movieman523
   *	Made boilers work again!
   *	
@@ -1118,16 +1121,28 @@ void Saturn::ClearLiftoffLight()
 	LAUNCHIND[0] = false;
 }
 
-void Saturn::SetAutopilotLight()
+void Saturn::SetLVGuidLight()
 
 {
-	AutopilotLight = true;
+	LVGuidLight = true;
 }
 
-void Saturn::ClearAutopilotLight()
+void Saturn::ClearLVGuidLight()
 
 {
-	AutopilotLight = false;
+	LVGuidLight = false;
+}
+
+void Saturn::SetLVRateLight()
+
+{
+	LVRateLight = true;
+}
+
+void Saturn::ClearLVRateLight()
+
+{
+	LVRateLight = false;
 }
 
 void Saturn::SetEngineIndicator(int i)
