@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.92  2005/11/23 01:43:13  movieman523
+  *	Added SII stage DLL.
+  *	
   *	Revision 1.91  2005/11/20 21:46:31  movieman523
   *	Added initial volume control support.
   *	
@@ -543,8 +546,10 @@ protected:
 	void ClearEngineIndicators();
 	void SetLiftoffLight();
 	void ClearLiftoffLight();
-	void SetAutopilotLight();
-	void ClearAutopilotLight();
+	void SetLVGuidLight();
+	void ClearLVGuidLight();
+	void SetLVRateLight();
+	void ClearLVRateLight();
 
 	//
 	// State that needs to be saved.
@@ -1480,7 +1485,8 @@ protected:
 
 	bool ENGIND[9];
 	bool LAUNCHIND[8];
-	bool AutopilotLight;
+	bool LVGuidLight;
+	bool LVRateLight;
 
 	//
 	// And state that doesn't need to be saved.
@@ -1993,14 +1999,13 @@ protected:
 	//
 
 	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd,ph_rcs0,ph_rcs1,ph_sps; // handles for propellant resources
-	PROPELLANT_HANDLE ph_retro1,ph_retro2;
 
 	THGROUP_HANDLE thg_main,thg_ull,thg_ver;		          // handles for thruster groups
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
 	THRUSTER_HANDLE th_main[5],th_ull[8],th_ver[3] ,th_att_cm[24];               // handles for orbiter main engines
 	THRUSTER_HANDLE th_sps[1],th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
-	THRUSTER_HANDLE	th_retro1[4], th_aps[3];
+	THRUSTER_HANDLE	th_aps[3];
 
 	//
 	// LEM data.
