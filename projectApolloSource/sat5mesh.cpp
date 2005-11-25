@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.26  2005/11/23 21:05:57  movieman523
   *	Use ProjectApollo directory for LEM config file.
   *	
@@ -559,9 +562,9 @@ void SaturnV::SetSecondStage ()
 		thg_ull = CreateThrusterGroup (th_ull, SII_UllageNum, THGROUP_USER);
 	}
 
-	LAUNCHIND[6]=true;
+	SetSIICMixtureRatio(MixtureRatio);
 
-	ThrustAdjust = 1.0;
+	LAUNCHIND[6]=true;
 	bAbtlocked =false;
 }
 
@@ -660,7 +663,8 @@ void SaturnV::SetSecondStage1 ()
 
 	SetISP(ISP_SECOND_VAC);
 
-	ThrustAdjust = 1.0;
+	SetSIICMixtureRatio(MixtureRatio);
+
 	bAbtlocked =false;
 }
 
@@ -757,7 +761,8 @@ void SaturnV::SetSecondStage2 ()
 
 	SetISP(ISP_SECOND_VAC);
 
-	ThrustAdjust = 1.0;
+	SetSIICMixtureRatio(MixtureRatio);
+
 	bAbtlocked =false;
 }
 
@@ -858,9 +863,8 @@ void SaturnV::SetThirdStage ()
 
 	thg_ver = CreateThrusterGroup (th_ver, 2, THGROUP_USER);
 
-	SetThrusterGroupLevel(thg_ver,1.0);
+	SetSIVbCMixtureRatio(MixtureRatio);
 
-	ThrustAdjust = 1.0;
 	bAbtlocked = false;
 }
 

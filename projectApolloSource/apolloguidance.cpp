@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2005/11/21 11:54:00  tschachim
+  *	Bugfix LM state load.
+  *	
   *	Revision 1.56  2005/11/18 02:40:54  movieman523
   *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
   *	
@@ -5283,6 +5286,14 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 	case 027:
 		val = Chan10Flags;
 		return true;
+
+	case 030:
+		val = (int) (VesselISP * 100.0);
+		return true;
+
+	case 031:
+		val = (int) MaxThrust;
+		return true;
 	}
 
 	val = 0;
@@ -5391,6 +5402,14 @@ void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)
 
 	case 027:
 		Chan10Flags = val;
+		break;
+
+	case 030:
+		VesselISP = ((double) val) / 100.0;
+		break;
+
+	case 031:
+		MaxThrust = (double) val;
 		break;
 	}
 }

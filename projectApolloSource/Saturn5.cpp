@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2005/11/25 00:02:16  movieman523
+  *	Trying to make Apollo 11 work 'by the numbers'.
+  *	
   *	Revision 1.42  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -406,6 +409,42 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 		SetThrusterIsp (th_main[i], isp, ISP_SECOND_SL);
 		SetThrusterMax0 (th_main[i], THRUST_SECOND_VAC * ThrustAdjust);
 	}
+
+	//
+	// Give the AGC our new stats.
+	//
+
+	agc.SetVesselStats(isp, THRUST_SECOND_VAC * ThrustAdjust, false);
+
+	MixtureRatio = ratio;
+}
+
+//
+// And SIVb.
+//
+
+void SaturnV::SetSIVbCMixtureRatio (double ratio)
+
+{
+	double isp;
+
+	isp = GetJ2ISP(ratio);
+
+	//
+	// For simplicity assume no ISP change at sea-level: SIVb stage should always
+	// be in near-vacuum anyway.
+	//
+
+	SetThrusterIsp (th_main[0], isp, isp);
+	SetThrusterMax0 (th_main[0], THRUST_THIRD_VAC * ThrustAdjust);
+
+	//
+	// Give the AGC our new stats.
+	//
+
+	agc.SetVesselStats(isp, THRUST_THIRD_VAC * ThrustAdjust, false);
+
+	MixtureRatio = ratio;
 }
 
 void SaturnV::MoveEVA()
@@ -670,6 +709,7 @@ void SaturnV::StageTwo(double simt)
 
 	case 1:
 		if (MissionTime >= NextMissionEventTime) {
+			SetSIICMixtureRatio(5.5);
 			LastMissionEventTime = MissionTime;
 			NextMissionEventTime += 3.0;
 			StageState++;
@@ -845,7 +885,7 @@ void SaturnV::StageFour(double simt, double simdt)
 		//
 
 		if ((actualFUEL < 5) || (MissionTime >= SecondStagePUShiftTime)) {
-			SetSIICMixtureRatio (4.5);
+			SetSIICMixtureRatio (4.3);
 			if (Crewed) {
 				SPUShiftS.play();
 			}
@@ -1853,6 +1893,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 	switch (StageState) {
 
 	case 0:
+		SetSIVbCMixtureRatio(4.9);
 		SetThrusterResource(th_main[0], ph_3rd);
 		SepS.play(LOOP, 130);
 		SetThrusterGroupLevel(thg_ver,1.0);
