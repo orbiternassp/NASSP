@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.94  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.93  2005/11/24 01:07:54  movieman523
   *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
   *	
@@ -1491,6 +1494,15 @@ protected:
 	double SI_Mass;
 	double SI_EmptyMass;
 	double SI_FuelMass;
+
+
+	bool SI_MassLoaded;
+	bool SII_MassLoaded;
+	bool S4B_MassLoaded;
+
+	bool S1_ThrustLoaded;
+	bool S2_ThrustLoaded;
+	bool S3_ThrustLoaded;
 
 	//
 	// Calculated total stage mass.

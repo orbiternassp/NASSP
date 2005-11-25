@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.33  2005/11/24 01:07:54  movieman523
   *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
   *	
@@ -983,6 +986,20 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn)
 	if (dockstate==6) {
 		oapiWriteScenario_float (scn, "DOCKANGLE", DockAngle);
 	}
+
+	//
+	// Fuel mass on launch. This could be made generic in saturn.cpp
+	//
+
+	oapiWriteScenario_float (scn, "SIFUELMASS", SI_FuelMass);
+	oapiWriteScenario_float (scn, "SIIFUELMASS", SII_FuelMass);
+
+	//
+	// Stage masses.
+	//
+
+	oapiWriteScenario_float (scn, "SIEMPTYMASS", SI_EmptyMass);
+	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
 }
 
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
