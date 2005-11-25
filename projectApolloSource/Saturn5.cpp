@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.41  2005/11/24 01:07:54  movieman523
   *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
   *	
@@ -210,8 +213,8 @@ GDIParams g_Param;
 // Default pitch program.
 //
 
-const double default_met[PITCH_TABLE_SIZE]    = { 0,  58, 70, 80,  90, 110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90,  75, 60, 50,  45,  40,  35,  30,  30,  30,  25,  20, 10 ,   5,  -2,   0};	// Commanded pitch in °
+const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58, 70, 80,  110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
+const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88, 75, 60, 50,  40,  35,  30,  30,  30,  25,  20, 10 ,   5,  -2,   0};	// Commanded pitch in °
 
 //
 // SaturnV constructor, derived from basic Saturn class.
@@ -305,7 +308,7 @@ void SaturnV::initSaturnV()
 	SII_FuelMass = 441600;
 	SII_UllageNum = 8;
 
-	SI_EmptyMass = 148000;			// Stage + wasted fuel, approx
+	SI_EmptyMass = 148000;			// Stage mass, approx
 	SI_FuelMass = 2117000;
 
 	SI_RetroNum = 8;
@@ -1616,16 +1619,21 @@ void SaturnV::SetVehicleStats()
 
 	SI_RetroNum = 8;
 	SII_RetroNum = 8;
-	SII_EmptyMass = BASE_SII_MASS;
 
 	if (VehicleNo > 500 && VehicleNo < 503) {
-		THRUST_FIRST_VAC = 7653000;
-		THRUST_SECOND_VAC = 1001000;
-		THRUST_THIRD_VAC = 1001000;
+		if (!S1_ThrustLoaded)
+			THRUST_FIRST_VAC = 7653000;
+		if (!S2_ThrustLoaded)
+			THRUST_SECOND_VAC = 1001000;
+		if (!S3_ThrustLoaded)
+			THRUST_THIRD_VAC = 1001000;
+
 		SII_UllageNum = 8;
 	}
 	else if (VehicleNo >= 503 && VehicleNo < 510) {
-		THRUST_FIRST_VAC = 7807000;
+		if (!S1_ThrustLoaded)
+			THRUST_FIRST_VAC = 7800000;
+
 		SII_UllageNum = 4;
 	}
 	else {
@@ -1638,8 +1646,13 @@ void SaturnV::SetVehicleStats()
 	// than earlier missions.
 	//
 
-	if (VehicleNo >= 508) {
-		SII_EmptyMass = BASE_SII_MASS - 1500;
+	if (!SII_MassLoaded) {
+		if (VehicleNo >= 508) {
+			SII_EmptyMass = BASE_SII_MASS - 1500;
+		}
+		else {
+			SII_EmptyMass = BASE_SII_MASS;
+		}
 	}
 
 	CalculateStageMass ();
@@ -1663,6 +1676,14 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "SIFUELMASS", SI_FuelMass);
 	oapiWriteScenario_float (scn, "SIIFUELMASS", SII_FuelMass);
 	oapiWriteScenario_float (scn, "S4FUELMASS", S4B_FuelMass);
+
+	//
+	// Stage masses.
+	//
+
+	oapiWriteScenario_float (scn, "SIEMPTYMASS", SI_EmptyMass);
+	oapiWriteScenario_float (scn, "SIIEMPTYMASS", SII_EmptyMass);
+	oapiWriteScenario_float (scn, "S4EMPTYMASS", S4B_EmptyMass);
 }
 
 void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)

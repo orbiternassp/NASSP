@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.68  2005/11/24 01:07:54  movieman523
   *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
   *	
@@ -476,6 +479,14 @@ void Saturn::initSaturn()
 
 	Abort_Mass = 4050;
 
+	SI_MassLoaded = false;
+	SII_MassLoaded = false;
+	S4B_MassLoaded = false;
+
+	S1_ThrustLoaded = false;
+	S2_ThrustLoaded = false;
+	S3_ThrustLoaded = false;
+
 	//
 	// Propellant handles.
 	//
@@ -878,24 +889,36 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "CP4SWITCH", GetCP4SwitchState());
 	oapiWriteScenario_int (scn, "CP5SWITCH", GetCP5SwitchState());
 
+	//
+	// Save vessel-specific stats.
+	//
+
+	SaveVehicleStats(scn);
+
 	if (stage < LAUNCH_STAGE_ONE)
 		oapiWriteScenario_int (scn, "PRELAUNCHATC",  int(UseATC));
 
 	if (stage < LAUNCH_STAGE_TWO) {
 		oapiWriteScenario_float (scn, "SICSHUT", FirstStageCentreShutdownTime);
 		oapiWriteScenario_float (scn, "SISHUT", FirstStageShutdownTime);
-	}
-
-	if (stage < LAUNCH_STAGE_SIVB) {
-		oapiWriteScenario_float (scn, "SIICSHUT", SecondStageCentreShutdownTime);
-		oapiWriteScenario_float (scn, "SIIPUT", SecondStagePUShiftTime);
-		oapiWriteScenario_float (scn, "SIISHUT", SecondStageShutdownTime);
-		oapiWriteScenario_float (scn, "ISTGJT", InterstageSepTime);
-		oapiWriteScenario_float (scn, "LESJT", LESJettisonTime);
+		oapiWriteScenario_float (scn, "T1V", THRUST_FIRST_VAC);
+		oapiWriteScenario_float (scn, "I1S", ISP_FIRST_SL);
+		oapiWriteScenario_float (scn, "I1V", ISP_FIRST_VAC);
 	}
 
 	if (stage < STAGE_ORBIT_SIVB) {
 		char fname[64];
+
+		oapiWriteScenario_float (scn, "SIICSHUT", SecondStageCentreShutdownTime);
+		oapiWriteScenario_float (scn, "SIIPUT", SecondStagePUShiftTime);
+		oapiWriteScenario_float (scn, "SIISHUT", SecondStageShutdownTime);
+		oapiWriteScenario_float (scn, "T2V", THRUST_SECOND_VAC);
+		oapiWriteScenario_float (scn, "I2S", ISP_SECOND_SL);
+		oapiWriteScenario_float (scn, "I2V", ISP_SECOND_VAC);
+		oapiWriteScenario_float (scn, "T3V", THRUST_THIRD_VAC);
+		oapiWriteScenario_float (scn, "I3V", ISP_THIRD_VAC);
+		oapiWriteScenario_float (scn, "ISTGJT", InterstageSepTime);
+		oapiWriteScenario_float (scn, "LESJT", LESJettisonTime);
 
 		//
 		// Save pitch program.
@@ -1505,6 +1528,56 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "S4FUELMASS", 10)) {
             sscanf (line + 10, "%f", &ftcp);
 			S4B_FuelMass = ftcp;
+		}
+		else if (!strnicmp(line, "S4EMPTYMASS", 11)) {
+            sscanf (line + 11, "%f", &ftcp);
+			S4B_EmptyMass = ftcp;
+			S4B_MassLoaded = true;
+		}
+			else if (!strnicmp(line, "SIEMPTYMASS", 11)) {
+            sscanf (line + 11, "%f", &ftcp);
+			SI_EmptyMass = ftcp;
+			SI_MassLoaded = true;
+		}
+		else if (!strnicmp(line, "SIIEMPTYMASS", 12)) {
+            sscanf (line + 12, "%f", &ftcp);
+			SII_EmptyMass = ftcp;
+			SII_MassLoaded = true;
+		}
+		else if (!strnicmp(line, "T1V", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			THRUST_FIRST_VAC = ftcp;
+			S1_ThrustLoaded = true;
+		}
+		else if (!strnicmp(line, "I1S", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			ISP_FIRST_SL = ftcp;
+		}
+		else if (!strnicmp(line, "I1V", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			ISP_FIRST_VAC = ftcp;
+		}
+		else if (!strnicmp(line, "T2V", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			THRUST_SECOND_VAC = ftcp;
+			S2_ThrustLoaded = true;
+		}
+		else if (!strnicmp(line, "I2S", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			ISP_SECOND_SL = ftcp;
+		}
+		else if (!strnicmp(line, "I2V", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			ISP_SECOND_VAC = ftcp;
+		}
+		else if (!strnicmp(line, "T3V", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			THRUST_THIRD_VAC = ftcp;
+			S3_ThrustLoaded = true;
+		}
+		else if (!strnicmp(line, "I3V", 3)) {
+            sscanf (line + 3, "%f", &ftcp);
+			ISP_THIRD_VAC = ftcp;
 		}
 		else if (!strnicmp(line, "PRELAUNCHATC", 12)) {
 			int i;
@@ -2350,7 +2423,7 @@ void Saturn::LaunchCountdown(double simt)
 			// Engine lights on.
 			//
 
-			for (int i = 0; i < 5; i++) {
+			for (int i = 0; i < 8; i++) {
 				ENGIND[i] = true;
 			}
 			StageState++;
@@ -2403,8 +2476,8 @@ void Saturn::LaunchCountdown(double simt)
 
 		double thrst;
 
-		if (MissionTime > (-1.0)) {
-			thrst = 0.7 + (0.3 * (MissionTime + 1.0));
+		if (MissionTime > (-2.0)) {
+			thrst = 0.9 + (0.05 * (MissionTime + 2.0));
 
 			//
 			// Engine lights off.
@@ -2415,7 +2488,7 @@ void Saturn::LaunchCountdown(double simt)
 			}
 		}
 		else {
-			thrst = (0.7 / 8.9) * (MissionTime + 8.9);
+			thrst = (0.9 / 6.9) * (MissionTime + 6.9);
 		}
 		SetThrusterGroupLevel(thg_main, thrst);
 
@@ -3240,7 +3313,7 @@ double Saturn::GetJ2ISP(double ratio)
 		ThrustAdjust = 0.898;
 	}
 	else {
-		isp = 425*G;
+		isp = 428*G;
 		ThrustAdjust = 0.772;
 	}
 
