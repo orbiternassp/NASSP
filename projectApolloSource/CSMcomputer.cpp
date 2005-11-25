@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/11/25 20:59:48  movieman523
+  *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
+  *	
   *	Revision 1.25  2005/11/25 02:03:47  movieman523
   *	Fixed mixture-ratio change code and made it more realistic.
   *	
@@ -157,7 +160,7 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im) : 
 	// Generic thrust decay value. This still needs tweaking.
 	//
 
-	ThrustDecayDV = 7.2;
+	ThrustDecayDV = 6.1;
 }
 
 CSMcomputer::~CSMcomputer()
