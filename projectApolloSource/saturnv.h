@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.14  2005/11/23 01:43:13  movieman523
   *	Added SII stage DLL.
   *	
@@ -106,6 +109,7 @@ private:
 	void AttitudeLaunch4();
 	void AutoPilot(double autoT);
 	void SetSIICMixtureRatio (double ratio);
+	void SetSIVbCMixtureRatio(double ratio);
 	void MoveEVA();
 
 	void SeparateStage (int stage);

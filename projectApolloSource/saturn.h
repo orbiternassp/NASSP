@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.95  2005/11/25 00:02:16  movieman523
+  *	Trying to make Apollo 11 work 'by the numbers'.
+  *	
   *	Revision 1.94  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -1538,6 +1541,7 @@ protected:
 	double actualFUEL;
 
 	double ThrustAdjust;
+	double MixtureRatio;
 
 	bool KEY1;
 	bool KEY2;

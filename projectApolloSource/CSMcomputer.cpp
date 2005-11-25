@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/11/17 00:28:36  movieman523
+  *	Wired in AGC circuit breakers.
+  *	
   *	Revision 1.23  2005/10/12 11:23:06  tschachim
   *	Bugfix OPR ERR during P15.
   *	
@@ -640,9 +643,9 @@ void CSMcomputer::DoTLICalcs(double simt)
 	//
 
 	double mass = OurVessel->GetMass();
-	double isp = OurVessel->GetISP();
+	double isp = VesselISP;
 	double fuelmass = OurVessel->GetFuelMass();
-	double thrust = OurVessel->GetMaxThrust(ENGINE_MAIN);
+	double thrust = MaxThrust;
 
 	double massrequired = mass * (1 - exp(-(DesiredDeltaV / isp)));
 

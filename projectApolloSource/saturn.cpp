@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2005/11/25 00:02:16  movieman523
+  *	Trying to make Apollo 11 work 'by the numbers'.
+  *	
   *	Revision 1.69  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -361,7 +364,10 @@ void Saturn::initSaturn()
 	stgSM = false;
 
 	buildstatus = 6;
+
 	ThrustAdjust = 1.0;
+	MixtureRatio = 5.5;
+
 	DockAngle = 0;
 
 	AtempP  = 0;
@@ -863,6 +869,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "NFAILTIME", NextFailureTime);
 	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
 	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
+	oapiWriteScenario_float (scn, "THRUSTA", ThrustAdjust);
+	oapiWriteScenario_float (scn, "MR", MixtureRatio);
 
 	if (Realism != REALISM_DEFAULT) {
 		oapiWriteScenario_int (scn, "REALISM", Realism);
@@ -1327,6 +1335,11 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 	srandom(VehicleNo + (int) vstatus + time(0));
 
+	//
+	// At some point we should reorder these checks by length, to minimise the chances
+	// of accidentally matching a longer string.
+	//
+
 	while (oapiReadScenario_nextline (scn, line)) {
         if (!strnicmp (line, "CONFIGURATION", 13)) {
             sscanf (line+13, "%d", &status);
@@ -1407,6 +1420,10 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp (line, "IGMST", 5)) {
 			sscanf (line + 5, "%f", &ftcp);
 			IGMStartTime = ftcp;
+		}
+		else if (!strnicmp (line, "THRUSTA", 7)) {
+			sscanf (line + 7, "%f", &ftcp);
+			ThrustAdjust = ftcp;
 		}
 		else if (!strnicmp (line, "LEM_DISPLAY", 11)) {
 			LEM_DISPLAY = true;
@@ -1740,6 +1757,10 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
+		else if (!strnicmp (line, "MR", 2)) {
+			sscanf (line + 2, "%f", &ftcp);
+			MixtureRatio = ftcp;
+		}
 		else {
 			ParseScenarioLineEx (line, vstatus);
         }
@@ -1889,12 +1910,6 @@ void Saturn::SetStage(int s)
 {
 	stage = s;
 	StageState = 0;
-
-	//
-	// Reset thrust.
-	//
-
-	ThrustAdjust = 1.0;
 
 	CheckRCSState();
 	CheckSPSState();
@@ -3294,27 +3309,31 @@ void Saturn::EnableTLI()
 // Get the J2 ISP from the mixture ratio and calculate the thrust adjustment.
 //
 
+#define MR_STATS 5
+
+static double MixtureRatios[MR_STATS] = {6.0, 5.5, 5.0, 4.3, 4.0 };
+static double MRISP[MR_STATS] = { 416*G, 418*G, 421*G, 427*G, 432*G };
+static double MRThrust[MR_STATS] = { 1.1, 1.0, .898, .7391, .7 };
+
 double Saturn::GetJ2ISP(double ratio)
 
 {
-	double isp;
+	double isp = 421*G;
 
 	// From Usenet:
 	// It had roughly three stops. 178,000 lbs at 425s Isp and an O/F of 4.5,
 	// 207,000 lbs at 421s Isp and an O/F of 5.0, and 230,500 lbs at 418s Isp
 	// and an O/F of 5.5.
 
-	if (ratio >= 5.5) {
-		isp = 418*G;
-		ThrustAdjust = 1.0;
-	}
-	else if (ratio >= 5.0) {
-		isp = 421*G;
-		ThrustAdjust = 0.898;
-	}
-	else {
-		isp = 428*G;
-		ThrustAdjust = 0.772;
+	for (int i = 0; i < MR_STATS; i++) {
+		if (ratio >= MixtureRatios[i]) {
+			double delta = (ratio - MixtureRatios[i]) / (MixtureRatios[i - 1] - MixtureRatios[i]);
+
+			isp = MRISP[i] + ((MRISP[i - 1] - MRISP[i]) * delta);
+			ThrustAdjust = MRThrust[i] + ((MRThrust[i - 1] - MRThrust[i]) * delta);
+
+			return isp;
+		}
 	}
 
 	return isp;
