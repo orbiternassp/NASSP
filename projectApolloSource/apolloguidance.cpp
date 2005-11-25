@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2005/11/25 02:03:47  movieman523
+  *	Fixed mixture-ratio change code and made it more realistic.
+  *	
   *	Revision 1.57  2005/11/21 11:54:00  tschachim
   *	Bugfix LM state load.
   *	
@@ -279,6 +282,12 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	DesiredLAN = 0.0;
 
 	DeltaPitchRate = 0.0;
+
+	//
+	// Expected dV from thrust decay of engine.
+	//
+
+	ThrustDecayDV = 0.0;
 
 	//
 	// Alarm codes.
@@ -4551,14 +4560,6 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 	float	flt;
 
 	//
-	// Set EMEM to defaults.
-	//
-
-	for (unsigned int i = 0; i < EMEM_ENTRIES; i++) {
-		WriteMemory(i, 0);
-	}
-
-	//
 	// Now load the data.
 	//
 
@@ -5294,6 +5295,10 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 	case 031:
 		val = (int) MaxThrust;
 		return true;
+
+	case 032:
+		val = (int) (ThrustDecayDV * 100.0);
+		return true;
 	}
 
 	val = 0;
@@ -5410,6 +5415,10 @@ void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)
 
 	case 031:
 		MaxThrust = (double) val;
+		break;
+
+	case 032:
+		ThrustDecayDV = ((double) val) / 100.0;
 		break;
 	}
 }

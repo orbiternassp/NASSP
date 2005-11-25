@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2005/11/25 02:03:47  movieman523
+  *	Fixed mixture-ratio change code and made it more realistic.
+  *	
   *	Revision 1.70  2005/11/25 00:02:16  movieman523
   *	Trying to make Apollo 11 work 'by the numbers'.
   *	
@@ -2998,7 +3001,7 @@ void Saturn::LoadDefaultSounds()
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
 
-void Saturn::StageOrbitSIVB(double simt)
+void Saturn::StageOrbitSIVB(double simt, double simdt)
 
 {
 	//
@@ -3012,6 +3015,8 @@ void Saturn::StageOrbitSIVB(double simt)
 				agc.SetOutputChannelBit(012, 13, false);
 		}
 	}
+
+	double MainLevel;
 
 	if(TLICapableBooster){
 		switch (StageState) {
@@ -3188,9 +3193,8 @@ void Saturn::StageOrbitSIVB(double simt)
 				//
 
 				if ((ap >= (prad + (SIVBApogee * 1000.0))) || (actualFUEL <= 0.1)) {
-					StageState = 200;
+					StageState = 201;
 					SIVBBurn = false;
-					SIVBStop();
 					DeactivateNavmode(NAVMODE_PROGRADE);
 					DeactivateS4RCS();
 				}
@@ -3202,23 +3206,33 @@ void Saturn::StageOrbitSIVB(double simt)
 		case 200:
 
 			//
-			// Wait for shutdown and disable thrust.
+			// Wait for shutdown.
 			//
 
 			if (agc.GetOutputChannelBit(012, 14)) {
 				agc.SetOutputChannelBit(012, 14, false);
-				SIVBStop();
+				StageState++;
 			}
+			break;
 
-			if (GetEngineLevel(ENGINE_MAIN) <= 0) {
-				if (Realism)
-					SetThrusterResource(th_main[0], NULL);
+			//
+			// Thrust decay.
+			//
+
+		case 201:
+			MainLevel = GetThrusterLevel(th_main[0]);
+
+			MainLevel -= (simdt * 1.2);
+			SetThrusterLevel(th_main[0], MainLevel);
+
+			if (MainLevel <= 0.0) {
+				SIVBStop();
 				NextMissionEventTime = MissionTime + 10.0;
 				StageState++;
 			}
 			break;
 
-		case 201:
+		case 202:
 
 			if (Realism < 2)
 				StageState = 100;
@@ -3226,7 +3240,7 @@ void Saturn::StageOrbitSIVB(double simt)
 				StageState++;
 			break;
 
-		case 202:
+		case 203:
 
 			//
 			// Engine is now dead. Just boil off the remaining
