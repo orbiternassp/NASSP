@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/11/17 21:04:52  movieman523
+  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
+  *	
   *	Revision 1.26  2005/11/17 00:28:36  movieman523
   *	Wired in AGC circuit breakers.
   *	
@@ -543,6 +546,8 @@ protected:
 
 	double MaxThrust;
 	double VesselISP;
+
+	double ThrustDecayDV;
 
 	double DesiredDeltaVx;
 	double DesiredDeltaVy;

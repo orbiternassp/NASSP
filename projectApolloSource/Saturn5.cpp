@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2005/11/25 02:03:47  movieman523
+  *	Fixed mixture-ratio change code and made it more realistic.
+  *	
   *	Revision 1.43  2005/11/25 00:02:16  movieman523
   *	Trying to make Apollo 11 work 'by the numbers'.
   *	
@@ -1591,7 +1594,7 @@ void SaturnV::Timestep(double simt, double simdt)
 		break;
 
 	case STAGE_ORBIT_SIVB:
-		StageOrbitSIVB(simt);
+		StageOrbitSIVB(simt, simdt);
 		break;
 
 	case CSM_LEM_STAGE:

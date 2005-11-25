@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.96  2005/11/25 02:03:47  movieman523
+  *	Fixed mixture-ratio change code and made it more realistic.
+  *	
   *	Revision 1.95  2005/11/25 00:02:16  movieman523
   *	Trying to make Apollo 11 work 'by the numbers'.
   *	
@@ -1891,7 +1894,7 @@ protected:
 	void AttitudeLaunchSIVB();
 	virtual void AutoPilot(double autoT) = 0;
 	virtual void SeparateStage (int stage) = 0;
-	void StageOrbitSIVB(double simt);
+	void StageOrbitSIVB(double simt, double simdt);
 	void JostleViewpoint(double amount);
 	double CalculateApogeeTime();
 	void SlowIfDesired();

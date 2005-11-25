@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/11/25 02:03:47  movieman523
+  *	Fixed mixture-ratio change code and made it more realistic.
+  *	
   *	Revision 1.24  2005/11/17 00:28:36  movieman523
   *	Wired in AGC circuit breakers.
   *	
@@ -149,6 +152,12 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im) : 
 	FlagWord3.u.VINTFLAG = 1;
 	FlagWord3.u.V50N18FL = 1;
 	FlagWord5.u.DSKYFLAG = 1;
+
+	//
+	// Generic thrust decay value. This still needs tweaking.
+	//
+
+	ThrustDecayDV = 7.2;
 }
 
 CSMcomputer::~CSMcomputer()
@@ -647,7 +656,7 @@ void CSMcomputer::DoTLICalcs(double simt)
 	double fuelmass = OurVessel->GetFuelMass();
 	double thrust = MaxThrust;
 
-	double massrequired = mass * (1 - exp(-(DesiredDeltaV / isp)));
+	double massrequired = mass * (1 - exp(-((DesiredDeltaV - ThrustDecayDV) / isp)));
 
 	LightCompActy();
 
@@ -684,7 +693,7 @@ void CSMcomputer::DoTLICalcs(double simt)
 	PredictPosVelVectors(Pos, Vel, el.a, 3.986e14,
 						  BurnTime - LastTimestep, NewPos, NewVel, NewVelMag);
 
-	CutOffVel = NewVelMag + DesiredDeltaV;
+	CutOffVel = NewVelMag + DesiredDeltaV - ThrustDecayDV;
 }
 
 double CSMcomputer::CurrentG()
@@ -960,6 +969,7 @@ void CSMcomputer::Prog15(double simt)
 
 	case 17:
 		if (simt >= NextEventTime) {
+			UpdateTLICalcs(simt);
 			LightCompActy();
 			Saturn *sat = (Saturn *)OurVessel;
 			sat->ClearEngineIndicator(1);
