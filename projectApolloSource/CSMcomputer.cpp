@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2005/11/25 21:30:47  movieman523
+  *	Fine-tuned thrust decay default.
+  *	
   *	Revision 1.26  2005/11/25 20:59:48  movieman523
   *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
   *	
@@ -802,12 +805,18 @@ void CSMcomputer::Prog15(double simt)
 			DoTLICalcs(simt);
 
 			//
+			// Reset time acceleration to normal.
+			//
+
+			oapiSetTimeAcceleration (1);
+
+
+			//
 			// Only play this the first time.
 			//
 
 			if (STLI.isValid() && !(sat->TLIDone())) {
-				if (oapiGetTimeAcceleration () < 10)
-					STLI.play();
+				STLI.play();
 				STLI.done();
 			}
 
