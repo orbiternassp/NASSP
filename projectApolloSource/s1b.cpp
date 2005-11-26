@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.1  2005/11/23 02:21:30  movieman523
   *	Added S1b stage.
   *	
@@ -161,7 +164,7 @@ void S1B::clbkPreStep(double simt, double simdt, double mjd)
 			}
 		}
 		else {
-			SetEngineLevel(ENGINE_MAIN, 0.0);
+			SetThrusterGroupLevel(THGROUP_MAIN, 0.0);
 			State = S1B_STATE_WAITING;
 		}
 		break;

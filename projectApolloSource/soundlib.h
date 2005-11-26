@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/11/20 21:50:40  movieman523
+  *	Fixed LEM build break.
+  *	
   *	Revision 1.4  2005/11/20 21:46:31  movieman523
   *	Added initial volume control support.
   *	
@@ -155,6 +158,7 @@ protected:
 
 	bool OrbiterSoundActive;
 	int SoundlibId;
+	int NextSlot;
 };
 
 // MODIF x15  managing landing sound

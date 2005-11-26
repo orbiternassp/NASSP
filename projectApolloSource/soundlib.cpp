@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/20 21:46:31  movieman523
+  *	Added initial volume control support.
+  *	
   *	Revision 1.5  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -173,6 +176,7 @@ SoundLib::SoundLib()
 	missionpath[0] = 0;
 	basepath[0] = 0;
 	strcpy(languagepath, "English");
+	NextSlot = 1;
 
 	for (i = 0; i < N_VOLUMES; i++) {
 		MasterVolume[i] = 100;
@@ -238,10 +242,28 @@ int SoundLib::FindSlot()
 {
 	int	i;
 
+	//
+	// Orbitersound doesn't seem to like reusing slots much, so we won't do that until we run out
+	// of slots. That won't happen too often unless you try to fly an entire mission without
+	// quitting Orbiter and reloading.
+	//
+
+	if (NextSlot <= MAX_SOUNDS) {
+		return NextSlot++;
+	}
+
+	//
+	// If we've used all slots, look for an empty one.
+	//
+
 	for (i = 1; i <= MAX_SOUNDS; i++) {
 		if (!(sounds[i].isValid()))
 			return i;
 	}
+
+	//
+	// Uh-oh, we're doomed.
+	//
 
 	return -1;
 }
