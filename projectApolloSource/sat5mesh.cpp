@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/11/25 02:03:47  movieman523
+  *	Fixed mixture-ratio change code and made it more realistic.
+  *	
   *	Revision 1.27  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -209,8 +212,7 @@ void SaturnV::BuildFirstStage (int bstate)
 
 	SetSize (59.5);
 	SetEmptyMass (Stage1Mass);
-	//SetMaxFuelMass (SI_FuelMass);
-	//SetFuelMass(0);
+
 	SetPMI (_V(1147,1147,216.68));
 	SetCrossSections (_V(1129,1133,52.4));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -227,68 +229,84 @@ void SaturnV::BuildFirstStage (int bstate)
 		mesh_dir=_V(0,0,-54.0+STG0O);
 		AddMesh (hsat5stg1, &mesh_dir);
 	}
+
 	if (bstate >=2){
 		mesh_dir=_V(0,0,-30.5+STG0O);
 		AddMesh (GetInterstageMesh(), &mesh_dir);
 	}
+
 	if (bstate == 2){
 		mesh_dir=_V(0,0,-17.2+STG0O);
 		AddMesh (hsat5stg2base, &mesh_dir);
 	}
+
 	if (bstate > 2){
 		mesh_dir=_V(0,0,-17.2+STG0O);
 		AddMesh (hsat5stg2, &mesh_dir);
 	}
+
 	if (bstate ==3 ){
 		mesh_dir=_V(0,0,2.+STG0O);
 		AddMesh (hsat5stg3base, &mesh_dir);
 	}
+
 	if (bstate > 3){
 		mesh_dir=_V(0,0,2.+STG0O);
 		AddMesh (hsat5stg3, &mesh_dir);
 	}
+
 	if (bstate >=4){
 		if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
 			mesh_dir=_V(0,0,12+STG0O);
 			AddMesh (hLMPKD, &mesh_dir);
 		}
 	}
+
 	if (bstate >=4){
 		mesh_dir=_V(-1.48,-1.48,14.55+STG0O);
 		AddMesh (hsat5stg31, &mesh_dir);
 	}
+
 	if (bstate >=4){
 		mesh_dir=_V(1.48,-1.48,14.55+STG0O);
 		AddMesh (hsat5stg32, &mesh_dir);
 	}
+
 	if (bstate >=4){
 		mesh_dir=_V(1.48,1.48,14.55+STG0O);
 		AddMesh (hsat5stg33, &mesh_dir);
 	}
+
 	if (bstate >=4){
 		mesh_dir=_V(-1.48,1.48,14.55+STG0O);
 		AddMesh (hsat5stg34, &mesh_dir);
 	}
+
 	if (bstate >=4){
 		mesh_dir=_V(0,SMVO,19.1+STG0O);
 		AddMesh (hSM, &mesh_dir);
 	}
+
 	if (bstate >=4){
 		mesh_dir=_V(0,0,23.25+STG0O);
 		AddMesh (hCM, &mesh_dir);
 	}
+
 	if (bstate >=4){
 		mesh_dir=_V(0.02,1.35,23.39+STG0O);
 		AddMesh (hFHC, &mesh_dir);
 	}
+
 	if (bstate >=4){
 		mesh_dir=_V(0,0,24.8+STG0O);
 		AddMesh (hprobe, &mesh_dir);
 	}
+
 	if (bstate >=5){
 		mesh_dir=_V(0,0,28.2+STG0O);
 		AddMesh (hsat5tower, &mesh_dir);
 	}
+
 	Offset1st = -60.1+STG0O;
 	SetCameraOffset (_V(-1,1.0,23.1+STG0O));
 
@@ -362,14 +380,7 @@ void SaturnV::SetFirstStage ()
 	AddExhaustStream (th_main[4], MAIN5a_Vector+_V(0,0,-30), &srb_contrail);
 	AddExhaustStream (th_main[4], MAIN5a_Vector+_V(0,0,-25), &srb_exhaust);
 
-	SetISP(ISP_FIRST_VAC);
-
-	// attitude - this is temporary
-	// attitude adjustment during launch phase should really be done via ENGINE gimbaling
-	//CreateAttControls_Launch();
-	//SetMaxThrust (ENGINE_ATTITUDE, 8e5);
 	// ************************ visual parameters **********************************
-
 
 	ClearMeshes();
 	UINT meshidx;
@@ -510,9 +521,6 @@ void SaturnV::SetSecondStage ()
 	if (!ph_2nd)
 		ph_2nd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_2nd); // display 2nd stage propellant level in generic HUD
-	// attitude - this is temporary
-	// attitude adjustment during launch phase should really be done via ENGINE gimbaling
-	//SetMaxThrust (ENGINE_ATTITUDE, 2e5);
 
 	// *********************** thruster definitions ********************************
 	int i;
@@ -534,8 +542,6 @@ void SaturnV::SetSecondStage ()
 	for (i = 0; i < 5; i++)
 		AddExhaust (th_main[i], 25.0, 1.5, SMMETex);
 	SetThrusterGroupLevel(thg_main, 0.0);
-
-	SetISP(ISP_SECOND_VAC);
 
 	if (SII_UllageNum) {
 		VECTOR3	m_exhaust_pos6= _V(0,5.07,-33.15-STG1O);
@@ -637,8 +643,6 @@ void SaturnV::SetSecondStage1 ()
 	if (!ph_2nd)
 		ph_2nd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_2nd); // display 2nd stage propellant level in generic HUD
-	// attitude - this is temporary
-	// attitude adjustment during launch phase should really be done via ENGINE gimbaling
 
 	// *********************** thruster definitions ********************************
 	int i;
@@ -660,8 +664,6 @@ void SaturnV::SetSecondStage1 ()
 	for (i = 0; i < 5; i++) AddExhaust (th_main[i], 25.0, 1.5,tex);
 
 	SetThrusterGroupLevel(thg_main, 1.0);
-
-	SetISP(ISP_SECOND_VAC);
 
 	SetSIICMixtureRatio(MixtureRatio);
 
@@ -759,8 +761,6 @@ void SaturnV::SetSecondStage2 ()
 		AddExhaust (th_main[i], 25.0, 1.5,SMMETex);
 	SetThrusterGroupLevel(thg_main, 1.0);
 
-	SetISP(ISP_SECOND_VAC);
-
 	SetSIICMixtureRatio(MixtureRatio);
 
 	bAbtlocked =false;
@@ -841,14 +841,7 @@ void SaturnV::SetThirdStage ()
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_THIRD_VAC, ph_3rd, ISP_THIRD_VAC);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
-	SetISP(ISP_THIRD_VAC);
-
 	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
-
-	// attitude - this is temporary
-	// attitude adjustment during launch phase should really be done via ENGINE gimbaling
-
-	SetEngineLevel(ENGINE_MAIN, 0.0);
 
 	SetCameraOffset (_V(-1,1.0,32.4-STG2O));
 
@@ -871,7 +864,6 @@ void SaturnV::SetThirdStage ()
 void SaturnV::SeparateStage (int stage)
 
 {
-	//ResetThrusters(vessel);
 	VESSELSTATUS vs1;
 	VESSELSTATUS vs2;
 	VESSELSTATUS vs3;
@@ -904,16 +896,19 @@ void SaturnV::SeparateStage (int stage)
 		ofs1 = OFS_STAGE1;
 		vel1 = _V(0,0,-4.0);
 	}
+
 	if (stage == LAUNCH_STAGE_ONE && bAbort)
 	{
 		ofs1= OFS_ABORT;
 		vel1 = _V(0,0,-4.0);
 	}
+
 	if (stage == LAUNCH_STAGE_TWO && !bAbort)
 	{
 		ofs1 = OFS_STAGE12;
 		vel1 = _V(0,0,-4.0);
 	}
+
 	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && !bAbort|| stage == CSM_ABORT_STAGE && !bAbort)
 	{
 		ofs1 = OFS_TOWER;
@@ -931,7 +926,6 @@ void SaturnV::SeparateStage (int stage)
 	{
 	 	ofs1 = OFS_STAGE2;
 		vel1 = _V(0,0,-6.0);
-
 	}
 
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
@@ -956,11 +950,13 @@ void SaturnV::SeparateStage (int stage)
 		vel2 = _V(0.0,0.0,0.6);
 
 	}
+
 	if (stage == CM_STAGE)
 	{
 		ofs1 = OFS_CM_CONE;
 		vel1 = _V(1.0,1.0,1.0);
 	}
+
 	if (stage == CSM_ABORT_STAGE)
 	{
 		ofs1 = OFS_ABORT_TOWER;
@@ -997,7 +993,6 @@ void SaturnV::SeparateStage (int stage)
 	vs5.rvel.x = rvel5.x+rofs5.x;
 	vs5.rvel.y = rvel5.y+rofs5.y;
 	vs5.rvel.z = rvel5.z+rofs5.z;
-//
 
 	if (stage == CM_ENTRY_STAGE_TWO)
 	{
@@ -1044,7 +1039,6 @@ void SaturnV::SeparateStage (int stage)
 		S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
 
 		S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
-
 		stage1->SetState(S1Config);
 
 		SetSecondStage ();
@@ -1139,7 +1133,6 @@ void SaturnV::SeparateStage (int stage)
 		S2Config.CurrentThrust = GetThrusterLevel(th_main[0]);
 
 		SII *stage2 = (SII *) oapiGetVesselInterface(hstg2);
-
 		stage2->SetState(S2Config);
 
 		SetThirdStage ();
@@ -1209,7 +1202,7 @@ void SaturnV::SeparateStage (int stage)
 		// Play appropriate sound for SM seperation.
 		//
 
-		if (ApolloExploded && SSMSepExploded.isValid()) {
+		if (ApolloExploded) {
 			SSMSepExploded.play(NOLOOP, 200);
 		}
 		else {
@@ -1219,7 +1212,7 @@ void SaturnV::SeparateStage (int stage)
 		SMJetS.done();
 		SSMSepExploded.done();
 
-		if(dockstate != 5){
+		if(dockstate != 5) {
 			VECTOR3 ofs = OFS_DOCKING2;
 			VECTOR3 vel = {0.0,0.0,2.5};
 			VESSELSTATUS vs4b;
@@ -1247,14 +1240,17 @@ void SaturnV::SeparateStage (int stage)
 	{
 		SetChuteStage2 ();
 	}
+
 	if (stage == CM_ENTRY_STAGE_TWO)
 	{
 		SetChuteStage3 ();
 	}
+
 	if (stage == CM_ENTRY_STAGE_FOUR)
 	{
 		SetChuteStage4 ();
 	}
+
 	if (stage == CM_ENTRY_STAGE_FIVE)
 	{
 		SetSplashStage ();
@@ -1268,9 +1264,13 @@ void SaturnV::SeparateStage (int stage)
 
 		StageS.play();
 
-		habort = oapiCreateVessel ("Saturn_Abort", "Saturn5Abort1", vs1);
+		char VName[256];
+
+		GetApolloName(VName); strcat (VName, "-ABORT");
+		habort = oapiCreateVessel (VName, "Saturn5Abort1", vs1);
 		SetAbortStage ();
 	}
+
 	if (stage == LAUNCH_STAGE_TWO && bAbort || stage == LAUNCH_STAGE_TWO_ISTG_JET && bAbort )
 	{
 		vs1.vrot.x = 0.0;
@@ -1279,7 +1279,10 @@ void SaturnV::SeparateStage (int stage)
 
 		StageS.play();
 
-		habort = oapiCreateVessel ("Saturn_Abort", "Saturn5Abort2", vs1);
+		char VName[256];
+
+		GetApolloName(VName); strcat (VName, "-ABORT");
+		habort = oapiCreateVessel (VName, "Saturn5Abort2", vs1);
 		SetAbortStage ();
 	}
 
@@ -1299,6 +1302,11 @@ void SaturnV::SeparateStage (int stage)
 		ActivateNavmode(NAVMODE_KILLROT);
 	}
 }
+
+//
+// Does anyone know what this function is meant to do? Obviously it gets called to seperate the LEM from the SIVb, but
+// I'm not sure what the 'dockstatus' is meant to signify, and ASTP was a Saturn 1b payload, not Saturn V.
+//
 
 void SaturnV::DockStage (UINT dockstatus)
 {
