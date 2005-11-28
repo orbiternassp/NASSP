@@ -66,6 +66,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 
 IDB_LEM_AOT_VIEW  BITMAP   "alignment_optical_telescope_view.bmp"
 IDB_LEM_LEFT_PANEL BITMAP  DISCARDABLE     "lem_left_panel.bmp"
+IDB_LEM_RIGHT_PANEL BITMAP DISCARDABLE	"lem_right_panel.bmp"
 IDB_LEM_RENDEZVOUS_WINDOW BITMAP  DISCARDABLE     "lem_rendezvous_window.bmp"
 IDB_HORIZON             BITMAP  DISCARDABLE     "Horizon.bmp"
 IDB_NEEDLE1             BITMAP  DISCARDABLE     "Needle1.bmp"

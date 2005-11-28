@@ -372,6 +372,7 @@
 #define AID_UPLINKTELEMETRYSWITCH			622
 #define AID_LOWEREQUIPMENTBAYCWLIGHTS		623
 #define AID_LOWEREQUIPMENTBAYOPTICSLIGHTS	624
+#define IDB_LEM_RIGHT_PANEL              624
 
 // Next default values for new objects
 // 
