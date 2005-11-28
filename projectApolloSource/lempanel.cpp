@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2005/10/31 10:16:10  tschachim
+  *	LEM rendezvous window camera direction.
+  *	
   *	Revision 1.37  2005/10/13 15:48:38  tschachim
   *	Removed comment regarding the panel change bug.
   *	
@@ -674,7 +677,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 
 	case LMPANEL_RIGHTWINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_RIGHT_WINDOW));
-		oapiSetPanelNeighbours(LMPANEL_MAIN, -1, -1, -1);
+		oapiSetPanelNeighbours(LMPANEL_MAIN, LMPANEL_RIGHTPANEL, -1, -1);
 		break;
 
     case LMPANEL_LEFTWINDOW:
@@ -700,6 +703,11 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	case LMPANEL_AOTVIEW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_AOT_VIEW));
 		oapiSetPanelNeighbours(LMPANEL_RNDZWINDOW, -1, -1, LMPANEL_MAIN);
+		break;
+
+	case LMPANEL_RIGHTPANEL:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_LEM_RIGHT_PANEL));
+		oapiSetPanelNeighbours(LMPANEL_RIGHTWINDOW, -1, -1, -1);
 		break;
 	}
 
@@ -821,6 +829,12 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		break;
 
 	case LMPANEL_LEFTPANEL: // LEM Left Panel
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		break;
+
+	case LMPANEL_RIGHTPANEL: // LEM Right Panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));

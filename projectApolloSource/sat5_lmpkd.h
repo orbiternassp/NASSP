@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2005/11/21 12:42:17  tschachim
+  *	New LM landed and descent stage mesh.
+  *	
   *	Revision 1.24  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -482,6 +485,7 @@ protected:
 #define LMPANEL_RNDZWINDOW		4
 #define LMPANEL_LEFTPANEL		5
 #define LMPANEL_AOTVIEW			6
+#define LMPANEL_RIGHTPANEL		7
 
 	bool InVC;
 	bool InPanel;
