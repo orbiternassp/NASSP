@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/18 20:38:59  movieman523
+  *	Revised condensor output from fuel cell to eliminate master alarms.
+  *	
   *	Revision 1.5  2005/11/18 02:40:55  movieman523
   *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
   *	
@@ -42,44 +45,21 @@
 #if !defined(_PA_POWERSOURCE_H)
 #define _PA_POWERSOURCE_H
 
-class e_object;
+#include "PanelSDK/PanelSDK.h"
+#include "PanelSDK/Internals/ESystems.h"
 
-class PowerSource {
+class PowerSource : public e_object {
 
 public:
 	PowerSource();
 	~PowerSource();
 
-	void WireTo(PowerSource *p) { next_source = p; };
-	bool IsWired() { return (next_source != 0); };
-
-	virtual double Voltage();
-	virtual double Current();
-	virtual void DrawPower(double watts);
+	void WireTo(e_object *p) { SRC = p; };
+	bool IsWired() { return (SRC != 0); };
+	double Voltage();
+	double Current();
 
 protected:
-
-	PowerSource *next_source;
-};
-
-//
-// This is just a dummy class at the moment. In future it will be replaced by
-// wrapper classes around Panel SDK voltage sources (e.g. fuel cell, battery,
-// etc).
-//
-
-class VoltageSource : public PowerSource {
-
-public:
-	VoltageSource() { Volts = 0.0; PowerDraw = 0.0; };
-
-	double Voltage() { return Volts; };
-	void DrawPower(double watts) { PowerDraw += watts; };
-	void SetVolts(double v) { Volts = v; };
-
-protected:
-	double Volts;
-	double PowerDraw;
 };
 
 class PowerMerge : public PowerSource {

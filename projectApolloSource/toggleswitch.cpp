@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2005/11/20 21:46:31  movieman523
+  *	Added initial volume control support.
+  *	
   *	Revision 1.34  2005/11/17 23:32:46  movieman523
   *	Added support for specifying the maximum current for a circuit breaker. Exceed that current and the breaker pops.
   *	
@@ -490,8 +493,8 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 double CircuitBrakerSwitch::Voltage()
 
 {
-	if ((state != 0) && next_source)
-		return next_source->Voltage();
+	if ((state != 0) && SRC)
+		return SRC->Voltage();
 
 	return 0.0;
 }
@@ -517,8 +520,8 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 	// pop the breaker.
 	//
 
-	if (next_source) {
-		double volts = next_source->Voltage();
+	if (SRC) {
+		double volts = SRC->Voltage();
 		if (volts > 0.0) {
 			double amps = watts / volts;
 			if (amps > MaxAmps) {
