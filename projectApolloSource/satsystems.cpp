@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2005/12/02 19:29:24  movieman523
+  *	Started integrating PowerSource code into PanelSDK.
+  *	
   *	Revision 1.43  2005/11/24 01:07:54  movieman523
   *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
   *	
@@ -201,24 +204,21 @@ void Saturn::SystemsInit() {
 
 	e_object *eo;
 
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:DC_A");
-	MainBusA.WireToSDK(eo);
-
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:DC_B");
-	MainBusB.WireToSDK(eo);
+	MainBusA = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_A");
+	MainBusB = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_B");
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_A");
-	ACBus1PhaseA.WireToSDK(eo);
-	ACBus1PhaseB.WireToSDK(eo);
-	ACBus1PhaseC.WireToSDK(eo);
+	ACBus1PhaseA = (ACbus *) eo;
+	ACBus1PhaseB = (ACbus *) eo;
+	ACBus1PhaseC = (ACbus *) eo;
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_B");
-	ACBus2PhaseA.WireToSDK(eo);
-	ACBus2PhaseB.WireToSDK(eo);
-	ACBus2PhaseC.WireToSDK(eo);
+	ACBus2PhaseA = (ACbus *) eo;
+	ACBus2PhaseB = (ACbus *) eo;
+	ACBus2PhaseC = (ACbus *) eo;
 
-	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
-	ACBus2.WireToBuses(&ACBus2PhaseA, &ACBus2PhaseB, &ACBus2PhaseC);
+	ACBus1.WireToBuses(ACBus1PhaseA, ACBus1PhaseB, ACBus1PhaseC);
+	ACBus2.WireToBuses(ACBus2PhaseA, ACBus2PhaseB, ACBus2PhaseC);
 
 	//
 	// Fuel cells.
@@ -232,41 +232,33 @@ void Saturn::SystemsInit() {
 	// Entry and landing batteries.
 	//
 
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_A");
-	EntryBatteryA.WireToSDK(eo);
-
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_B");
-	EntryBatteryB.WireToSDK(eo);
-
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_C");
-	EntryBatteryC.WireToSDK(eo);
+	EntryBatteryA = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_A");
+	EntryBatteryB = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_B");
+	EntryBatteryC = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_C");
 
 	//
 	// Pyro batteries.
 	//
 
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_A");
-	PyroBatteryA.WireToSDK(eo);
-
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_B");
-	PyroBatteryB.WireToSDK(eo);
+	PyroBatteryA = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_A");
+	PyroBatteryB = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_B");
 
 	//
 	// Wire battery buses to batteries.
 	//
 
-	BatteryBusA.WireToBuses(&EntryBatteryA, &EntryBatteryB, &EntryBatteryC);
-	BatteryBusB.WireToBuses(&EntryBatteryA, &EntryBatteryB, &EntryBatteryC);
+	BatteryBusA.WireToBuses(EntryBatteryA, EntryBatteryB, EntryBatteryC);
+	BatteryBusB.WireToBuses(EntryBatteryA, EntryBatteryB, EntryBatteryC);
 
-	PyroBusA.WireToBuses(&EntryBatteryA, &PyroBatteryA);
-	PyroBusB.WireToBuses(&EntryBatteryB, &PyroBatteryB);
+	PyroBusA.WireToBuses(EntryBatteryA, PyroBatteryA);
+	PyroBusB.WireToBuses(EntryBatteryB, PyroBatteryB);
 
 	//
 	// Generic power source for switches, tied to both Bus A and
 	// Bus B.
 	//
 
-	SwitchPower.WireToBuses(&MainBusA, &MainBusB);
+	SwitchPower.WireToBuses(MainBusA, MainBusB);
 
 	//
 	// Wire up internal systems.
