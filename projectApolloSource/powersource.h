@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/12/02 19:29:24  movieman523
+  *	Started integrating PowerSource code into PanelSDK.
+  *	
   *	Revision 1.6  2005/11/18 20:38:59  movieman523
   *	Revised condensor output from fuel cell to eliminate master alarms.
   *	
@@ -54,8 +57,6 @@ public:
 	PowerSource();
 	~PowerSource();
 
-	void WireTo(e_object *p) { SRC = p; };
-	bool IsWired() { return (SRC != 0); };
 	double Voltage();
 	double Current();
 
@@ -67,12 +68,12 @@ public:
 	PowerMerge() { BusA = 0; BusB = 0; };
 	double Voltage();
 	void DrawPower(double watts);
-	void WireToBuses(PowerSource *a, PowerSource *b) { BusA = a; BusB = b; };
+	void WireToBuses(e_object *a, e_object *b) { BusA = a; BusB = b; };
 	double Current();
 
 protected:
-	PowerSource *BusA;
-	PowerSource *BusB;
+	e_object *BusA;
+	e_object *BusB;
 };
 
 class ThreeWayPowerMerge : public PowerSource {
@@ -80,13 +81,13 @@ public:
 	ThreeWayPowerMerge() { Phase1 = 0; Phase2 = 0; Phase3 = 0; };
 	double Voltage();
 	void DrawPower(double watts);
-	void WireToBuses(PowerSource *a, PowerSource *b, PowerSource *c) { Phase1 = a; Phase2 = b; Phase3 = c; };
+	void WireToBuses(e_object *a, e_object *b, e_object *c) { Phase1 = a; Phase2 = b; Phase3 = c; };
 	double Current();
 
 protected:
-	PowerSource *Phase1;
-	PowerSource *Phase2;
-	PowerSource *Phase3;
+	e_object *Phase1;
+	e_object *Phase2;
+	e_object *Phase3;
 };
 
 class PowerBreaker : public PowerSource {

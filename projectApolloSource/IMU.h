@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/17 21:04:52  movieman523
+  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
+  *	
   *	Revision 1.3  2005/08/19 13:44:24  tschachim
   *	Fixes because of new Virtual AGC version.
   *	
@@ -67,7 +70,7 @@ public:
 	void SetVessel(VESSEL *v) { OurVessel = v; };
 	VECTOR3 GetTotalAttitude();
 
-	void WireToBuses(PowerSource *a, PowerSource *b) { DCPower.WireToBuses(a, b); };
+	void WireToBuses(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
 
 	bool IsCaged();
 	bool IsPowered();
