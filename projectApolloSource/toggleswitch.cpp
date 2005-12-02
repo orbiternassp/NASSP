@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/12/02 19:29:24  movieman523
+  *	Started integrating PowerSource code into PanelSDK.
+  *	
   *	Revision 1.35  2005/11/20 21:46:31  movieman523
   *	Added initial volume control support.
   *	
@@ -535,11 +538,11 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 				return;
 			}
 		}
-		PowerSource::DrawPower(watts);
+		e_object::DrawPower(watts);
 	}
 }
 
-void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerSource *s, double amps)
+void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s, double amps)
 
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, row);
@@ -735,7 +738,7 @@ void SwitchRow::AddSwitch(PanelSwitchItem *s)
 		s->WireTo(RowPower);
 }
 
-void SwitchRow::Init(int area, PanelSwitches &panel, PowerSource *p) {
+void SwitchRow::Init(int area, PanelSwitches &panel, e_object *p) {
 
 	SwitchList = 0;
 	RowList = 0;

@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/11/25 20:59:49  movieman523
+  *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
+  *	
   *	Revision 1.27  2005/11/17 21:04:52  movieman523
   *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
   *	
@@ -228,7 +231,7 @@ public:
 	// Power supply.
 	//
 
-	void WirePower(PowerSource *a, PowerSource *b) { DCPower.WireToBuses(a, b); PowerConnected = true; };
+	void WirePower(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); PowerConnected = true; };
 	bool IsPowered();
 
 protected:

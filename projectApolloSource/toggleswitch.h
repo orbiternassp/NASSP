@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/11/20 21:46:32  movieman523
+  *	Added initial volume control support.
+  *	
   *	Revision 1.28  2005/11/17 23:32:46  movieman523
   *	Added support for specifying the maximum current for a circuit breaker. Exceed that current and the breaker pops.
   *	
@@ -138,7 +141,7 @@ class PanelSwitchScenarioHandler;
 
 #include "powersource.h"
 
-class PanelSwitchItem: public PowerSource {
+class PanelSwitchItem: public e_object {
 
 public:
 	PanelSwitchItem();
@@ -393,7 +396,7 @@ public:
 	CircuitBrakerSwitch() { MaxAmps = 0.0; };
 
 	bool CheckMouseClick(int event, int mx, int my);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, PowerSource *s = 0, double amps = 30.0);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s = 0, double amps = 30.0);
 
 	double Voltage();
 	void DrawPower(double watts);
@@ -758,7 +761,7 @@ public:
 	bool CheckMouseClick(int id, int event, int mx, int my);
 	bool DrawRow(int id, SURFHANDLE DrawSurface);
 	void AddSwitch(PanelSwitchItem *s);
-	void Init(int area, PanelSwitches &panel, PowerSource *p = 0);
+	void Init(int area, PanelSwitches &panel, e_object *p = 0);
 	SwitchRow *GetNext() { return RowList; };
 	void SetNext(SwitchRow *s) { RowList = s; };
 
@@ -768,7 +771,7 @@ protected:
 	int PanelArea;
 	PanelSwitches *panelSwitches;
 
-	PowerSource *RowPower;
+	e_object *RowPower;
 
 	friend class ToggleSwitch;
 	friend class ThreePosSwitch;

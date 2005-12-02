@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/11/18 02:40:55  movieman523
+  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
+  *	
   *	Revision 1.9  2005/11/16 23:50:31  movieman523
   *	More updates to CWS operation. Still not completely correct, but closer.
   *	
@@ -117,7 +120,7 @@ public:
 	bool IsPowered();
 	bool LightsPowered();
 
-	void WireTo(PowerSource *a, PowerSource *b) { DCPower.WireToBuses(a, b); };
+	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
 
 protected:
 
