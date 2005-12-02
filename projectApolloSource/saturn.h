@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.98  2005/12/02 19:29:24  movieman523
+  *	Started integrating PowerSource code into PanelSDK.
+  *	
   *	Revision 1.97  2005/11/25 20:59:49  movieman523
   *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
   *	
@@ -1596,16 +1599,16 @@ protected:
 
 	FCell *FuelCells[3];
 
-	PowerSDKObject MainBusA;
-	PowerSDKObject MainBusB;
+	DCbus *MainBusA;
+	DCbus *MainBusB;
 
-	PowerSDKObject ACBus1PhaseA;
-	PowerSDKObject ACBus1PhaseB;
-	PowerSDKObject ACBus1PhaseC;
+	ACbus *ACBus1PhaseA;
+	ACbus *ACBus1PhaseB;
+	ACbus *ACBus1PhaseC;
 
-	PowerSDKObject ACBus2PhaseA;
-	PowerSDKObject ACBus2PhaseB;
-	PowerSDKObject ACBus2PhaseC;
+	ACbus *ACBus2PhaseA;
+	ACbus *ACBus2PhaseB;
+	ACbus *ACBus2PhaseC;
 
 	PowerSDKObject NonESSBus1;
 	PowerSDKObject NonESSBus2;
@@ -1613,12 +1616,12 @@ protected:
 	ThreeWayPowerMerge ACBus1;
 	ThreeWayPowerMerge ACBus2;
 
-	PowerSDKObject EntryBatteryA;
-	PowerSDKObject EntryBatteryB;
-	PowerSDKObject EntryBatteryC;
+	Battery *EntryBatteryA;
+	Battery *EntryBatteryB;
+	Battery *EntryBatteryC;
 
-	PowerSDKObject PyroBatteryA;
-	PowerSDKObject PyroBatteryB;
+	Battery *PyroBatteryA;
+	Battery *PyroBatteryB;
 
 	ThreeWayPowerMerge BatteryBusA;
 	ThreeWayPowerMerge BatteryBusB;
