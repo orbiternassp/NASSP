@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/18 20:38:59  movieman523
+  *	Revised condensor output from fuel cell to eliminate master alarms.
+  *	
   *	Revision 1.5  2005/11/18 02:40:55  movieman523
   *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
   *	
@@ -51,7 +54,7 @@
 PowerSource::PowerSource()
 
 {
-	next_source = 0;
+	SRC = 0;
 }
 
 PowerSource::~PowerSource()
@@ -63,8 +66,8 @@ PowerSource::~PowerSource()
 double PowerSource::Current()
 
 {
-	if (next_source)
-		return next_source->Current();
+	if (SRC)
+		return SRC->Current();
 
 	return 0.0;
 }
@@ -76,24 +79,17 @@ double PowerSource::Current()
 double PowerSource::Voltage()
 
 {
-	if (next_source)
-		return next_source->Voltage();
+	if (SRC)
+		return SRC->Voltage();
 
 	return 0.0;
-}
-
-void PowerSource::DrawPower(double watts)
-
-{
-	if (next_source)
-		next_source->DrawPower(watts);
 }
 
 double PowerBreaker::Voltage()
 
 {
-	if (!IsOpen() && next_source)
-		return next_source->Voltage();
+	if (!IsOpen() && SRC)
+		return SRC->Voltage();
 
 	return 0.0;
 }
@@ -129,7 +125,7 @@ void PowerSDKObject::DrawPower(double watts)
 
 {
 	if (SDKObj)
-		SDKObj->PLOAD(watts);
+		SDKObj->DrawPower(watts);
 }
 
 //

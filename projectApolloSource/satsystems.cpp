@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2005/11/24 01:07:54  movieman523
+  *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
+  *	
   *	Revision 1.42  2005/11/23 23:59:24  movieman523
   *	Added fuel cells.
   *	
@@ -221,14 +224,9 @@ void Saturn::SystemsInit() {
 	// Fuel cells.
 	//
 
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1");
-	FuelCells[0].WireToSDK(eo);
-
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2");
-	FuelCells[1].WireToSDK(eo);
-
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3");
-	FuelCells[2].WireToSDK(eo);
+	FuelCells[0] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1");
+	FuelCells[1] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2");
+	FuelCells[2] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3");
 
 	//
 	// Entry and landing batteries.
@@ -323,9 +321,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 //			MainBusA.Current(), MainBusA.Voltage(), MainBusB.Current(), MainBusB.Voltage(),
 //			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA.Voltage(), EntryBatteryB.Voltage());
 //		sprintf(oapiDebugString(), "FC1 %3.3fV/%3.3fA/%3.3fW FC2 %3.3fV/%3.3fA/%3.3fW FC3 %3.3fV/%3.3fA/%3.3fW",
-//			FuelCells[0].Voltage(), FuelCells[0].Current(), FuelCells[0].PowerLoad(),
-//			FuelCells[1].Voltage(), FuelCells[1].Current(), FuelCells[1].PowerLoad(),
-//			FuelCells[2].Voltage(), FuelCells[2].Current(), FuelCells[2].PowerLoad());
+//			FuelCells[0]->Voltage(), FuelCells[0]->Current(), FuelCells[0]->PowerLoad(),
+//			FuelCells[1]->Voltage(), FuelCells[1]->Current(), FuelCells[1]->PowerLoad(),
+//			FuelCells[2]->Voltage(), FuelCells[2]->Current(), FuelCells[2]->PowerLoad());
 #endif // _DEBUG
 
 		// Each timestep is passed to the SPSDK
@@ -1522,42 +1520,18 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 		return;
 	}
 
+	FCell *f = FuelCells[index - 1];
+
 	//
 	// Fuel cell.
 	//
 
 	char buffer[1000];
-	if (!pFCH2Flow[index]) {
-		sprintf(buffer, "ELECTRIC:FUELCELL%i:H2FLOW", index);
-		pFCH2Flow[index] = (double*) Panelsdk.GetPointerByString(buffer);
-	}
-	if (pFCH2Flow[index]) {
-		fc.H2FlowLBH = (*pFCH2Flow[index]) * LBH;
-	}
 
-	if (!pFCO2Flow[index]) {
-		sprintf(buffer, "ELECTRIC:FUELCELL%i:O2FLOW", index);
-		pFCO2Flow[index] = (double*) Panelsdk.GetPointerByString(buffer);
-	}
-	if (pFCO2Flow[index]) {
-		fc.O2FlowLBH = (*pFCO2Flow[index]) * LBH;
-	}
-
-	if (!pFCTemp[index]) {
-		sprintf(buffer, "ELECTRIC:FUELCELL%i:TEMP", index);
-		pFCTemp[index] = (double*) Panelsdk.GetPointerByString(buffer);
-	}
-	if (pFCTemp[index]) {
-		fc.TempF = KelvinToFahrenheit(*pFCTemp[index]);
-	}
-
-	if (!pFCCondenserTemp[index]) {
-		sprintf(buffer, "ELECTRIC:FUELCELL%i:CONDENSERTEMP", index);
-		pFCCondenserTemp[index] = (double*) Panelsdk.GetPointerByString(buffer);
-	}
-	if (pFCCondenserTemp[index]) {
-		fc.CondenserTempF = KelvinToFahrenheit(*pFCCondenserTemp[index]);
-	}
+	fc.H2FlowLBH = f->H2_flowPerSecond * LBH;
+	fc.O2FlowLBH = f->O2_flowPerSecond * LBH;
+	fc.TempF = KelvinToFahrenheit(f->Temp);
+	fc.CondenserTempF = KelvinToFahrenheit(f->condenserTemp);
 
 	if (!pFCCoolingTemp[index]) {
 		sprintf(buffer, "ELECTRIC:FUELCELL%iCOOLING:TEMP", index);
@@ -1567,9 +1541,9 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 		fc.CoolingTempF = KelvinToFahrenheit(*pFCCoolingTemp[index]);
 	}
 
-	fc.Voltage = FuelCells[index].Voltage();
-	fc.Current = FuelCells[index].Current();
-	fc.PowerOutput = FuelCells[index].PowerLoad();
+	fc.Voltage = FuelCells[index - 1]->Voltage();
+	fc.Current = FuelCells[index - 1]->Current();
+	fc.PowerOutput = FuelCells[index - 1]->PowerLoad();
 }
 
 
