@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2005/11/25 02:03:47  movieman523
+  *	Fixed mixture-ratio change code and made it more realistic.
+  *	
   *	Revision 1.15  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -201,7 +204,7 @@ const double STG1O= -5.25;
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -54.935};
 const VECTOR3 OFS_STAGE12 =  { 0, 0, -30.5};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, -20.25};
-const VECTOR3 OFS_STAGE3 =  { 0, 0, 7.5+STG2O+21.5};
+const VECTOR3 OFS_STAGE3 =  { 0, 0, STG2O - 29.0};
 const VECTOR3 OFS_STAGE31 =  { -1.48,-1.48,5.6+STG2O+21.5};
 const VECTOR3 OFS_STAGE32 =  { 1.48,-1.48,5.6+STG2O+21.5};
 const VECTOR3 OFS_STAGE33 =  { 1.48,1.48,5.6+STG2O+21.5};
