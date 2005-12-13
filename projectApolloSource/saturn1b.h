@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.6  2005/11/23 02:21:30  movieman523
   *	Added S1b stage.
   *	
@@ -76,6 +79,7 @@ protected:
 	void SetSecondStage2 ();
 	void SetASTPStage ();
 	void clbkLoadStateEx (FILEHANDLE scn, void *vs);
+	//int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
@@ -91,7 +95,7 @@ protected:
 
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -26};
 const VECTOR3 OFS_STAGE12 =  { 0, 0, -9.935};
-const VECTOR3 OFS_STAGE2 =  { 0, 0, 14};
+const VECTOR3 OFS_STAGE2 =  { 0, 0, -24};
 const VECTOR3 OFS_STAGE21 =  { 1.85,1.85,32};
 const VECTOR3 OFS_STAGE22 =  { -1.85,1.85,32};
 const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85,32};
