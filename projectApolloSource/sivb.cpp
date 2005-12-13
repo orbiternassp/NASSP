@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.8  2005/11/23 23:52:12  movieman523
   *	Removed some unused variables.
   *	
@@ -199,7 +202,7 @@ void SIVB::SetS4b()
 		VECTOR3 dockdir = {0,0,1};
 		VECTOR3 dockrot = {-0.705,-0.705,0};
 
-		ShiftCentreOfMass (_V(0, 0, -15.0));
+		//ShiftCentreOfMass (_V(0, 0, -15.0));
 
 		AddMesh (hsat5stg3, &mesh_dir);
 
@@ -232,7 +235,7 @@ void SIVB::SetS4b()
 		}
 	}
 	else {
-		ShiftCentreOfMass (_V(0, 0, 2.9));
+		//ShiftCentreOfMass (_V(0, 0, 2.9));
 		AddMesh (hSat1stg2, &mesh_dir);
 
 		switch (Payload) {
