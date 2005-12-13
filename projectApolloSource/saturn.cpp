@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2005/11/25 20:59:49  movieman523
+  *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
+  *	
   *	Revision 1.71  2005/11/25 02:03:47  movieman523
   *	Fixed mixture-ratio change code and made it more realistic.
   *	
@@ -669,6 +672,12 @@ void Saturn::initSaturn()
 	// call only once 
 	if (!InitSaturnCalled) {
 
+		// PanelSDK pointers.
+		ClearPanelSDKPointers();
+
+		// Initialize the internal systems
+		SystemsInit();
+
 		// Initialize the panel
 		fdaiDisabled = false;
 		PanelId = SATPANEL_MAIN; 		// default panel
@@ -676,17 +685,7 @@ void Saturn::initSaturn()
 
 		// "dummy" SetSwitches to enable the panel event handling
 		SetSwitches(PanelId);
-
-		//
-		// PanelSDK pointers.
-		//
-
-		ClearPanelSDKPointers();
-
-		// Initialize the internal systems
-		SystemsInit();
 	}
-
 	InitSaturnCalled = true;
 }
 
