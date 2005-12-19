@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.107  2005/12/02 20:44:35  movieman523
+  *	Wired up buses and batteries directly rather than through PowerSource objects.
+  *	
   *	Revision 1.106  2005/11/24 01:07:54  movieman523
   *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
   *	
@@ -2301,11 +2304,24 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
 	} else if (s == &EcsRadiatorsHeaterSecSwitch) {
 		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:SECECSRADIATORSHEATER:PUMP");
-		if (EcsRadiatorsHeaterSecSwitch.IsDown())
-			*pump = SP_PUMP_OFF;
-		else
-			*pump = SP_PUMP_AUTO;
+
+		// The heat exchangers should be controlled by the GLY TO RAD SEC valve on panel 377,
+		// until we have that panel we switch them together with the pump
+		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECECSRADIATOREXCHANGER1:PUMP");
+		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECECSRADIATOREXCHANGER2:PUMP");
 		
+		if (EcsRadiatorsHeaterSecSwitch.IsDown()) {
+			*pump = SP_PUMP_OFF;
+
+			*pump1 = SP_PUMP_OFF;
+			*pump2 = SP_PUMP_OFF;
+		} else {
+			*pump = SP_PUMP_AUTO;
+			
+			*pump1 = SP_PUMP_ON;
+			*pump2 = SP_PUMP_ON;
+		}
+
 	} else if (s == &SuitCircuitH2oAccumAutoSwitch || s == &SuitCircuitH2oAccumOnSwitch) {
 		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:PUMPH2O");
 		if (SuitCircuitH2oAccumAutoSwitch.IsCenter() && SuitCircuitH2oAccumOnSwitch.IsCenter())
@@ -2319,17 +2335,26 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 		int *pump3 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECSUITHEATEXCHANGER:PUMP");
 		int *pump4 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECSUITCIRCUITHEATEXCHANGER:PUMP");
 
+		int *pump5 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SUITHEATER:PUMP");
+		int *pump6 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SUITCIRCUITHEATER:PUMP");
+
 		if (SuitCircuitHeatExchSwitch.IsDown()) {
 			*pump1 = SP_PUMP_OFF;
 			*pump2 = SP_PUMP_OFF;
 			*pump3 = SP_PUMP_OFF;
 			*pump4 = SP_PUMP_OFF;
 
+			*pump5 = SP_PUMP_OFF;
+			*pump6 = SP_PUMP_OFF;
+
 		} else if (SuitCircuitHeatExchSwitch.IsUp()) {
 			*pump1 = SP_PUMP_AUTO;
 			*pump2 = SP_PUMP_AUTO;
 			*pump3 = SP_PUMP_AUTO;
 			*pump4 = SP_PUMP_AUTO;
+
+			*pump5 = SP_PUMP_AUTO;
+			*pump6 = SP_PUMP_AUTO;
 		}
 
 	} else if (s == &SecCoolantLoopEvapSwitch) {
@@ -2347,11 +2372,11 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 	} else if (s == &SecCoolantLoopPumpSwitch) {
 		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:SECGLYCOLPUMP:PUMP");
 		
-		if (SecCoolantLoopPumpSwitch.IsCenter()) 
+		if (SecCoolantLoopPumpSwitch.IsCenter()) {
 			*pump = SP_PUMP_OFF;
-		else
+		} else {
 			*pump = SP_PUMP_AUTO;
-
+		}
 	} else if (s == &GlycolEvapTempInSwitch) {
 		int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLEVAPINLETTEMPVALVE:PUMP");
 		
@@ -3308,7 +3333,7 @@ void Saturn::InitSwitches() {
 	CmRcsHeDumpSwitch = false;					// saved in SSwitchState.CMRHDswitch
 	CmRcsHeDumpSwitch.SetGuardState(false);		// saved in CSwitchState.CMRHGswitch
 
-	EDSSwitch = true;							// saved in LPSwitchState.EDSswitch
+	EDSSwitch = false;							// saved in LPSwitchState.EDSswitch
 	CsmLmFinalSep1Switch = false;				// saved in SSwitchState.Sswitch1
 	CsmLmFinalSep1Switch.SetGuardState(false);	// saved in CSwitchState.Cswitch1
 	CsmLmFinalSep1Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
@@ -3334,7 +3359,7 @@ void Saturn::InitSwitches() {
 	CautionWarningPowerSwitch.Register(PSH, "CautionWarningPowerSwitch", THREEPOSSWITCH_CENTER);
 	CautionWarningLightTestSwitch.Register(PSH, "CautionWarningLightTestSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
-	CabinFan1Switch = true;						// saved in CP2SwitchState.CFswitch1
+	CabinFan1Switch = false;					// saved in CP2SwitchState.CFswitch1
 	CabinFan2Switch = false;					// saved in CP2SwitchState.CFswitch2
 	H2Heater1Switch.Register(PSH, "H2Heater1Switch", THREEPOSSWITCH_UP);
 	H2Heater2Switch.Register(PSH, "H2Heater2Switch", THREEPOSSWITCH_UP);
@@ -3380,8 +3405,8 @@ void Saturn::InitSwitches() {
 	H2PurgeLineSwitch.Register  (PSH, "H2PurgeLineSwitch",   false);
 
 	FuelCellPumps1Switch.Register(PSH, "FuelCellPumps1Switch", THREEPOSSWITCH_UP); 
-	FuelCellPumps2Switch.Register(PSH, "FuelCellPumps2Switch", THREEPOSSWITCH_UP); 
-	FuelCellPumps3Switch.Register(PSH, "FuelCellPumps3Switch", THREEPOSSWITCH_UP); 
+	FuelCellPumps2Switch.Register(PSH, "FuelCellPumps2Switch", THREEPOSSWITCH_DOWN); 
+	FuelCellPumps3Switch.Register(PSH, "FuelCellPumps3Switch", THREEPOSSWITCH_DOWN); 
 
 	SuitCompressor1Switch.Register(PSH, "SuitCompressor1Switch", THREEPOSSWITCH_CENTER);   
 	SuitCompressor2Switch.Register(PSH, "SuitCompressor2Switch", THREEPOSSWITCH_CENTER);   
@@ -3534,8 +3559,8 @@ void Saturn::InitSwitches() {
 	LVGuidanceSwitch.SetGuardResetsState(false);
 
 	if (!SkylabCM) {
-		SIISIVBSepSwitch.Register(PSH, "SIISIVBSepSwitch", 0, 0);
-		TLIEnableSwitch.Register(PSH, "TLIEnableSwitch", 0);
+		SIISIVBSepSwitch.Register(PSH, "SIISIVBSepSwitch", false, false);
+		TLIEnableSwitch.Register(PSH, "TLIEnableSwitch", true);
 	}
 
 	ECSIndicatorsSwitch.AddPosition(1, 340);
@@ -3617,23 +3642,23 @@ void Saturn::InitSwitches() {
 	EcsRadiatorIndicator.Register(PSH, "EcsRadiatorIndicator", true);
 
 	EcsRadiatorsFlowContAutoSwitch.Register(PSH, "ECSRadiatorsFlowContAutoSwitch", THREEPOSSWITCH_UP);
-	EcsRadiatorsFlowContPwrSwitch.Register(PSH, "ECSRadiatorsFlowContPwrSwitch", THREEPOSSWITCH_UP);
-	EcsRadiatorsManSelSwitch.Register(PSH, "ECSRadiatorsManSelSwitch", THREEPOSSWITCH_CENTER);
-	EcsRadiatorsHeaterPrimSwitch.Register(PSH, "ECSRadiatorsHeaterPrimSwitch", THREEPOSSWITCH_UP);
+	EcsRadiatorsFlowContPwrSwitch.Register(PSH, "ECSRadiatorsFlowContPwrSwitch", THREEPOSSWITCH_CENTER);
+	EcsRadiatorsManSelSwitch.Register(PSH, "ECSRadiatorsManSelSwitch", THREEPOSSWITCH_UP);
+	EcsRadiatorsHeaterPrimSwitch.Register(PSH, "ECSRadiatorsHeaterPrimSwitch", THREEPOSSWITCH_CENTER);
 	EcsRadiatorsHeaterSecSwitch.Register(PSH, "ECSRadiatorsHeaterSecSwitch", false);
 
-	PotH2oHtrSwitch.Register(PSH, "PotH2oHtrSwitch", THREEPOSSWITCH_UP);
-	SuitCircuitH2oAccumAutoSwitch.Register(PSH, "SuitCircuitH2oAccumAutoSwitch", THREEPOSSWITCH_UP);
+	PotH2oHtrSwitch.Register(PSH, "PotH2oHtrSwitch", THREEPOSSWITCH_CENTER);
+	SuitCircuitH2oAccumAutoSwitch.Register(PSH, "SuitCircuitH2oAccumAutoSwitch", THREEPOSSWITCH_CENTER);
 	SuitCircuitH2oAccumOnSwitch.Register(PSH, "SuitCircuitH2oAccumOnSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	SuitCircuitHeatExchSwitch.Register(PSH, "SuitCircuitHeatExchSwitch", THREEPOSSWITCH_CENTER);
 	SecCoolantLoopEvapSwitch.Register(PSH, "SecCoolantLoopEvapSwitch", THREEPOSSWITCH_CENTER);
 	SecCoolantLoopPumpSwitch.Register(PSH, "SecCoolantLoopPumpSwitch", THREEPOSSWITCH_CENTER);
 	H2oQtyIndSwitch.Register(PSH, "H2oQtyIndSwitch", false);
-	GlycolEvapTempInSwitch.Register(PSH, "GlycolEvapTempInSwitch", true);
-	GlycolEvapSteamPressAutoManSwitch.Register(PSH, "GlycolEvapSteamPressAutoManSwitch", true);
+	GlycolEvapTempInSwitch.Register(PSH, "GlycolEvapTempInSwitch", false);
+	GlycolEvapSteamPressAutoManSwitch.Register(PSH, "GlycolEvapSteamPressAutoManSwitch", false);
 	GlycolEvapSteamPressIncrDecrSwitch.Register(PSH, "GlycolEvapSteamPressIncrDecrSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
-	GlycolEvapH2oFlowSwitch.Register(PSH, "GlycolEvapH2oFlowSwitch", THREEPOSSWITCH_UP, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
-	CabinTempAutoManSwitch.Register(PSH, "CabinTempAutoManSwitch", true);
+	GlycolEvapH2oFlowSwitch.Register(PSH, "GlycolEvapH2oFlowSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
+	CabinTempAutoManSwitch.Register(PSH, "CabinTempAutoManSwitch", false);
 
 	CabinTempAutoControlSwitch.Register(PSH, "CabinTempAutoControlSwitch", 5, 9);
 
@@ -3642,7 +3667,7 @@ void Saturn::InitSwitches() {
 	EcsGlycolPumpsSwitch.AddPosition(3, 300);
 	EcsGlycolPumpsSwitch.AddPosition(4, 330);
 	EcsGlycolPumpsSwitch.AddPosition(5, 0);
-	EcsGlycolPumpsSwitch.Register(PSH, "EcsGlycolPumpsSwitch", 2);
+	EcsGlycolPumpsSwitch.Register(PSH, "EcsGlycolPumpsSwitch", 3);
 
 	HighGainAntennaPitchPositionSwitch.AddPosition(0,   0);
 	HighGainAntennaPitchPositionSwitch.AddPosition(1,  30);
@@ -3651,7 +3676,7 @@ void Saturn::InitSwitches() {
 	HighGainAntennaPitchPositionSwitch.AddPosition(4, 120);
 	HighGainAntennaPitchPositionSwitch.AddPosition(5, 150);
 	HighGainAntennaPitchPositionSwitch.AddPosition(6, 180);
-	HighGainAntennaPitchPositionSwitch.Register(PSH, "HighGainAntennaPitchPositionSwitch", 3);
+	HighGainAntennaPitchPositionSwitch.Register(PSH, "HighGainAntennaPitchPositionSwitch", 0);
 
 	OrbiterAttitudeToggle.SetActive(false);		// saved in LPSwitchState.LPswitch5
 
