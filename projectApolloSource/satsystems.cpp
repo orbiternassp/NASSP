@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2005/12/02 20:44:35  movieman523
+  *	Wired up buses and batteries directly rather than through PowerSource objects.
+  *	
   *	Revision 1.44  2005/12/02 19:29:24  movieman523
   *	Started integrating PowerSource code into PanelSDK.
   *	
@@ -196,9 +199,6 @@ void Saturn::SystemsInit() {
 
 	//
 	// Electrical systems.
-	//
-
-	//
 	// First wire up buses to the Panel SDK.
 	//
 
@@ -261,6 +261,17 @@ void Saturn::SystemsInit() {
 	SwitchPower.WireToBuses(MainBusA, MainBusB);
 
 	//
+	// ECS devices
+	//
+
+	PrimCabinHeatExchanger = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER");
+	SecCabinHeatExchanger = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER");
+	CabinHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:CABINHEATER");
+
+	PrimEcsRadiatorExchanger1 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER1");
+	PrimEcsRadiatorExchanger2 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER2");
+
+	//
 	// Wire up internal systems.
 	//
 
@@ -303,20 +314,14 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 	// Don't clock the computer and the internal systems unless we're actually at pre-launch.
 	//
 
-	if (stage == ONPAD_STAGE && MissionTime >= -7200) {	// 2h 00min before launch
+	if (stage == ONPAD_STAGE && MissionTime >= -10800) {	// 3h 00min before launch
+		// Slow down time acceleration
+		if (Realism && oapiGetTimeAcceleration() > 1.0)
+			oapiSetTimeAcceleration(1.0);
+
 		stage = PRELAUNCH_STAGE;
 	}
 	else if (stage >= PRELAUNCH_STAGE) {
-
-#ifdef _DEBUG
-//		sprintf(oapiDebugString(), "Bus A = %fA/%fV, Bus B = %fA/%fV, AC Bus 1 = %fA/%fV, AC Bus 2 = %fA/%fV, Batt A = %fV, Batt B = %fV", 
-//			MainBusA.Current(), MainBusA.Voltage(), MainBusB.Current(), MainBusB.Voltage(),
-//			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA.Voltage(), EntryBatteryB.Voltage());
-//		sprintf(oapiDebugString(), "FC1 %3.3fV/%3.3fA/%3.3fW FC2 %3.3fV/%3.3fA/%3.3fW FC3 %3.3fV/%3.3fA/%3.3fW",
-//			FuelCells[0]->Voltage(), FuelCells[0]->Current(), FuelCells[0]->PowerLoad(),
-//			FuelCells[1]->Voltage(), FuelCells[1]->Current(), FuelCells[1]->PowerLoad(),
-//			FuelCells[2]->Voltage(), FuelCells[2]->Current(), FuelCells[2]->PowerLoad());
-#endif // _DEBUG
 
 		// Each timestep is passed to the SPSDK
 		// to perform internal computations on the 
@@ -352,7 +357,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 			AtmosStatus atm;
 			GetAtmosStatus(atm);
 
-			double *pMax, *fMax, *fancap, scdp;
+			double *pMax, *fMax, *fancap, scdp, *ison;
 			float *size, *pz;
 			int *open, *number, *isopen;
 
@@ -384,6 +389,47 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
 				*open = SP_VALVE_CLOSE;
 
+
+				//
+				// Checklist actions
+				//
+				
+				// Temporary fix because of too low power load
+				FuelCellRadiators1Switch.SwitchTo(THREEPOSSWITCH_DOWN);  
+				FuelCellRadiators2Switch.SwitchTo(THREEPOSSWITCH_DOWN);  
+				FuelCellRadiators3Switch.SwitchTo(THREEPOSSWITCH_DOWN);  
+
+				// Activate CMC
+				GNComputerMnACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+				GNComputerMnBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+
+				// Activate IMU
+				GNIMUHTRMnACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+				GNIMUHTRMnBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+				GNIMUMnACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+				GNIMUMnBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+
+				CautionWarningPowerSwitch.SwitchTo(THREEPOSSWITCH_UP);
+				// Avoid master alarm because of power on
+				cws.SetMasterAlarm(false);
+				// Avoid suit compressor alarm 
+				if (!Realism)
+					cws.SetInhibitNextMasterAlarm(true);
+				// Switch directly to launch configuration
+				// To do the complete checklist next would be the lamp tests... 
+				CautionWarningModeSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
+
+				// Activate primary water-glycol coolant loop
+				EcsGlycolPumpsSwitch.SwitchTo(2);
+				EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_UP);
+				EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
+				SuitCircuitHeatExchSwitch.SwitchTo(THREEPOSSWITCH_UP);
+				SuitCircuitHeatExchSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
+
+				// Start mission timer
+				MissionTimerSwitch.SwitchTo(THREEPOSSWITCH_UP);
+				
+
 				// Next state
 				systemsState = SATSYSTEMS_PRELAUNCH;
 				lastSystemsMissionTime = MissionTime; 
@@ -393,7 +439,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				if (MissionTime >= -6000) {	// 1h 40min before launch
 
 					// Slow down time acceleration
-					if (oapiGetTimeAcceleration() > 1.0)
+					if (Realism && oapiGetTimeAcceleration() > 1.0)
 						oapiSetTimeAcceleration(1.0);
 
 					// Close cabin pressure regulator 
@@ -411,8 +457,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOWMAX");
 					*fMax = 0.8 / LBH;
 
-					// Turn on suit compressor 1, prelaunch configuration
-					SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
+					// Suit compressor 1 to prelaunch configuration
 					fancap = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:FANCAP");
 					*fancap = 110000.0;
 
@@ -421,10 +466,21 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					*open = SP_VALVE_OPEN;
 					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:PRESSMAX");
 					*pMax = 100.0 / PSI;	// that's like disabling PREG
+				
 
-					// Start mission timer
-					MissionTimerSwitch.SwitchTo(THREEPOSSWITCH_UP);
-					
+					//
+					// Checklist actions
+					//
+		
+					// Turn on suit compressor 1
+					SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
+
+					// Turn on cabin fans
+					CabinFan1Switch.SwitchTo(TOGGLESWITCH_UP);
+					CabinFan2Switch.SwitchTo(TOGGLESWITCH_UP);
+					SuitCircuitH2oAccumAutoSwitch.SwitchTo(THREEPOSSWITCH_UP);
+
+
 					// Next state
 					systemsState = SATSYSTEMS_CREWINGRESS_1;
 					lastSystemsMissionTime = MissionTime; 
@@ -432,34 +488,40 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				break;
 
 			case SATSYSTEMS_CREWINGRESS_1:
-				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-				if (scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) {	// Suit Cabin delta p is established
-
-					// Open cabin pressure regulator, max flow to 0.4 lb/h  
-					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
-					*open = SP_VALVE_OPEN;
-					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOWMAX");
-					*fMax = 0.4 / LBH;
-
-					// O2 demand regulator max flow to 0.5 lb/h 
-					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOWMAX");
-					*fMax = 0.5 / LBH;
-
-					// Close cabin to suit circuit return value
-					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
-					*open = SP_VALVE_CLOSE;
-					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:PRESSMAX");
-					*pMax = 4.95 / PSI;
-
-					// Next state
-					systemsState = SATSYSTEMS_CREWINGRESS_2;
+				// Suit compressor running?
+				ison = (double*) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER:ISON");
+				if (!*ison) {
 					lastSystemsMissionTime = MissionTime; 
-				}	
+				} else {
+					scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
+					if (scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) {	// Suit Cabin delta p is established
+
+						// Open cabin pressure regulator, max flow to 0.4 lb/h  
+						open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
+						*open = SP_VALVE_OPEN;
+						fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOWMAX");
+						*fMax = 0.4 / LBH;
+
+						// O2 demand regulator max flow to 0.5 lb/h 
+						fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOWMAX");
+						*fMax = 0.5 / LBH;
+
+						// Close cabin to suit circuit return value
+						open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
+						*open = SP_VALVE_CLOSE;
+						pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:PRESSMAX");
+						*pMax = 4.95 / PSI;
+
+						// Next state
+						systemsState = SATSYSTEMS_CREWINGRESS_2;
+						lastSystemsMissionTime = MissionTime; 
+					}
+				}
 				break;
 
 			case SATSYSTEMS_CREWINGRESS_2:
 				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-				if (scdp > 2.0 && MissionTime - lastSystemsMissionTime >= 10) {	// Suit Cabin delta p is established
+				if (scdp > 1.5 && MissionTime - lastSystemsMissionTime >= 10) {	// Suit Cabin delta p is established
 					// Crew ingress
 					number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
 					*number = 3; 
@@ -476,14 +538,6 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOWMAX");
 					*fMax = 0;
 
-					// Turn on C/W system.
-					// In reality this was done before turing on the suit compressor, but since the internal 
-					// systems are in "REALISM 0 mode" at the moment and we want to avoid alarms confusing the user
-					// this is done now
-					CautionWarningPowerSwitch.SwitchTo(THREEPOSSWITCH_UP);
-					// Avoid master alarm because of power on
-					cws.SetMasterAlarm(false); 
-
 					// Next state
 					systemsState = SATSYSTEMS_CABINCLOSEOUT;
 					lastSystemsMissionTime = MissionTime; 
@@ -491,6 +545,40 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				break;
 
 			case SATSYSTEMS_CABINCLOSEOUT:
+				if (MissionTime >= -1200) {	// 20min before launch
+
+					// Slow down time acceleration
+					if (Realism && oapiGetTimeAcceleration() > 1.0)
+						oapiSetTimeAcceleration(1.0);
+
+					//
+					// Checklist actions
+					//
+		
+					// Turn off cabin fans
+					CabinFan1Switch.SwitchTo(TOGGLESWITCH_DOWN);
+					CabinFan2Switch.SwitchTo(TOGGLESWITCH_DOWN);
+
+					// Turn off cyro fans
+					H2Fan1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+					H2Fan2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+					O2Fan1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+					O2Fan2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+
+					// EDS auto on
+					EDSSwitch.SwitchTo(TOGGLESWITCH_UP);
+					
+					// Latch FC valves
+					FCReacsValvesSwitch.SwitchTo(TOGGLESWITCH_DOWN);
+
+
+					// Next state
+					systemsState = SATSYSTEMS_READYTOLAUNCH;
+					lastSystemsMissionTime = MissionTime; 
+				}
+				break;	
+
+			case SATSYSTEMS_READYTOLAUNCH:
 				if (GetAtmPressure() <= 6.0 / PSI) {
 					// Cabin pressure relieve
 					size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
@@ -549,6 +637,10 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				}
 
 				if (*size == (float)0.001 && !*isopen) {
+					// Primary ECS radiators now working normally, TODO secondary
+					PrimEcsRadiatorExchanger1->SetLength(10.0);
+					PrimEcsRadiatorExchanger2->SetLength(10.0);
+					
 					// Next state
 					systemsState = SATSYSTEMS_FLIGHT;
 					lastSystemsMissionTime = MissionTime; 
@@ -564,6 +656,15 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 //------------------------------------------------------------------------------------
 
 #ifdef _DEBUG
+
+//		sprintf(oapiDebugString(), "Bus A = %fA/%fV, Bus B = %fA/%fV, AC Bus 1 = %fA/%fV, AC Bus 2 = %fA/%fV, Batt A = %fV, Batt B = %fV", 
+//			MainBusA.Current(), MainBusA.Voltage(), MainBusB.Current(), MainBusB.Voltage(),
+//			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA.Voltage(), EntryBatteryB.Voltage());
+//		sprintf(oapiDebugString(), "FC1 %3.3fV/%3.3fA/%3.3fW FC2 %3.3fV/%3.3fA/%3.3fW FC3 %3.3fV/%3.3fA/%3.3fW",
+//			FuelCells[0]->Voltage(), FuelCells[0]->Current(), FuelCells[0]->PowerLoad(),
+//			FuelCells[1]->Voltage(), FuelCells[1]->Current(), FuelCells[1]->PowerLoad(),
+//			FuelCells[2]->Voltage(), FuelCells[2]->Current(), FuelCells[2]->PowerLoad());
+
 
 	double *massCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *tempCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
@@ -799,28 +900,29 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 void Saturn::CheckCabinFans()
 
 {
-	if (!pCabinFan1)
-		pCabinFan1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER:PUMP");
-	if (!pCabinFan2)
-		pCabinFan2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER:PUMP");
-
-	*pCabinFan1 = SP_PUMP_OFF;
-	*pCabinFan2 = SP_PUMP_OFF;
+	// Both cabin fans blow through both heat exchangers,
+	// so one fan is enough to turn them on both
 
 	if (CabinFansActive()) {
 		if (CabinFan1Active()) {
 			ACBus1.DrawPower(30.0);
-			*pCabinFan1 = SP_PUMP_AUTO;
 		}
 
 		if (CabinFan2Active()) {
 			ACBus2.DrawPower(30.0);
-			*pCabinFan2 = SP_PUMP_AUTO;
 		}
+
+		PrimCabinHeatExchanger->SetPumpAuto();
+		SecCabinHeatExchanger->SetPumpAuto();
+		CabinHeater->SetPumpAuto(); 
 
 		CabinFanSound();
 	} 
 	else {
+		PrimCabinHeatExchanger->SetPumpOff();
+		SecCabinHeatExchanger->SetPumpOff();
+		CabinHeater->SetPumpOff(); 
+
 		StopCabinFanSound();
 	}
 }
@@ -1042,7 +1144,6 @@ void Saturn::CheckRCSState()
 
 	switch (stage) {
 	case CSM_LEM_STAGE:
-	//case CSM_ABORT_STAGE:
 		if (SMRCSActive()) {
 			for (i = 0; i < 24; i++) {
 				SetThrusterResource(th_att_rot[i], ph_rcs0);
@@ -1230,9 +1331,6 @@ void Saturn::ClearPanelSDKPointers()
 	for (i = 0; i < N_CSM_VALVES; i++) {
 		pCSMValves[i] = 0;
 	}
-
-	pCabinFan1 = 0;
-	pCabinFan2 = 0;
 }
 
 //
