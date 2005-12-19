@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2005/12/13 10:12:20  tschachim
+  *	Bugfix pointer initialization.
+  *	
   *	Revision 1.72  2005/11/25 20:59:49  movieman523
   *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
   *	
@@ -1799,6 +1802,12 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	agc.SetMissionInfo(ApolloNo, Realism, LEMName);
 
 	//
+	// Tell the panel the realism setting
+	//
+
+	MainPanel.SetRealism(Realism);
+
+	//
 	// Set random failures if appropriate.
 	//
 
@@ -2824,6 +2833,37 @@ bool Saturn::CheckForLaunchShutdown()
 			ActivateNavmode(NAVMODE_KILLROT);
 
 			agc.LaunchShutdown();
+
+			//
+			// Checklist actions
+			//
+
+			// Unlatch FC valves
+			FCReacsValvesSwitch.SwitchTo(TOGGLESWITCH_UP);
+			CautionWarningModeSwitch.SwitchTo(THREEPOSSWITCH_UP);
+			
+			// Turn on cyro fans
+			H2Fan1Switch.SwitchTo(THREEPOSSWITCH_UP);
+			H2Fan2Switch.SwitchTo(THREEPOSSWITCH_UP);
+			O2Fan1Switch.SwitchTo(THREEPOSSWITCH_UP);
+			O2Fan2Switch.SwitchTo(THREEPOSSWITCH_UP);
+
+			// ECS flight configuration
+			EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_UP);
+			EcsRadiatorsHeaterPrimSwitch.SwitchTo(THREEPOSSWITCH_UP);
+			PotH2oHtrSwitch.SwitchTo(THREEPOSSWITCH_UP);
+			GlycolEvapTempInSwitch.SwitchTo(TOGGLESWITCH_UP);
+
+			// Temporary solution to enable medium heating of the primary coolant loop. 
+			HighGainAntennaPitchPositionSwitch.SwitchTo(3);
+
+			// Turn on cabin fans
+			CabinFan1Switch.SwitchTo(TOGGLESWITCH_UP);
+			CabinFan2Switch.SwitchTo(TOGGLESWITCH_UP);
+
+			// Avoid O2 flow high alarm 
+			if (!Realism)
+				cws.SetInhibitNextMasterAlarm(true);		
 		}
 		return true;
 	}
