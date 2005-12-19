@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2005/11/25 20:59:49  movieman523
+  *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
+  *	
   *	Revision 1.44  2005/11/25 02:03:47  movieman523
   *	Fixed mixture-ratio change code and made it more realistic.
   *	
@@ -270,6 +273,7 @@ void SaturnV::initSaturnV()
 	THRUST_THIRD_VAC = 1023000;
 
 	TLICapableBooster = true;
+	TLIEnabled = true;	// default position of XLUNAR switch is INJECT
 
 	GoHover=false;
 
@@ -615,6 +619,18 @@ void SaturnV::StageOne(double simt, double simdt)
 			//
 			ClearLiftoffLight();
 			SetThrusterResource(th_main[4], NULL);
+
+
+			//
+			// Checklist actions
+			//
+
+			// EDS auto off
+			EDSSwitch.SwitchTo(TOGGLESWITCH_DOWN);
+			TwoEngineOutAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
+			LVRateAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
+
+
 			NextMissionEventTime = MissionTime + 1.0;
 			StageState++;
 		}
@@ -642,6 +658,7 @@ void SaturnV::StageOne(double simt, double simdt)
 	case 3:
 		if ((GetFuelMass() <= 0.001) || (MissionTime >= FirstStageShutdownTime))
 		{
+			SetEngineIndicators();
 			NextMissionEventTime = MissionTime + 0.7;
 			StageState++;
 		}
@@ -649,7 +666,7 @@ void SaturnV::StageOne(double simt, double simdt)
 
 	case 4:
 		if (MissionTime >= NextMissionEventTime) {
-			SetEngineIndicators();
+			ClearEngineIndicators();
 			SeparateStage (stage);
 			bManualSeparate = false;
 			SeparationS.play(NOLOOP, 245);
@@ -706,6 +723,7 @@ void SaturnV::StageTwo(double simt)
 		}
 
 		NextMissionEventTime = MissionTime + 1.4;
+		SetEngineIndicators();
 		SIISepState = true;
 		StageState++;
 		break;
@@ -763,6 +781,15 @@ void SaturnV::StageTwo(double simt)
 				SetThrusterGroupLevel(thg_main, 1.0);
 
 				SepS.stop();
+
+				//
+				// Checklist actions
+				//
+
+				// Activate primary evaporator
+				GlycolEvapSteamPressAutoManSwitch.SwitchTo(TOGGLESWITCH_UP);
+				GlycolEvapH2oFlowSwitch.SwitchTo(THREEPOSSWITCH_UP);
+
 
 				NextMissionEventTime += 25.9;
 
@@ -2050,6 +2077,12 @@ int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			return 1;
 		}
 	}
+
+	// Separate stages with keypress if REALISM 0
+	if (!Realism && key == OAPI_KEY_S && down == true) {
+		bManualSeparate = true;
+	}
+
 	return 0;
 }
 
