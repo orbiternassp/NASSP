@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2005/12/02 19:47:19  movieman523
+  *	Replaced most PowerSource code with e_object.
+  *	
   *	Revision 1.36  2005/12/02 19:29:24  movieman523
   *	Started integrating PowerSource code into PanelSDK.
   *	
@@ -240,6 +243,12 @@ void ToggleSwitch::InitSound(SoundLib *s) {
 
 bool ToggleSwitch::SwitchTo(int newState) {
 
+	// Switch only with REALISM 0
+	if (switchRow) {
+		if (switchRow->panelSwitches->Realism) 
+			return false;
+	}
+
 	if (Active && (state != newState)) {
 		state = newState;
 		Sclick.play();
@@ -247,6 +256,11 @@ bool ToggleSwitch::SwitchTo(int newState) {
 		if (switchRow) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+		}
+
+		if (springLoaded != SPRINGLOADEDSWITCH_NONE) {
+			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
+			if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
 		}
 		return true;
 	}
@@ -421,6 +435,39 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 
 	oapiBlt(DrawSurface, SwitchSurface, x, y, (state * width), 0, width, height, SURF_PREDEF_CK);
+}
+
+bool ThreePosSwitch::SwitchTo(int newState) {
+
+	// Switch only with REALISM 0
+	if (switchRow) {
+		if (switchRow->panelSwitches->Realism) 
+			return false;
+	}
+
+	if (Active && (state != newState)) {
+		state = newState;
+		Sclick.play();
+		SwitchToggled = true;
+		if (switchRow) {
+			if (switchRow->panelSwitches->listener) 
+				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+		}
+
+		if (springLoaded != SPRINGLOADEDSWITCH_NONE) {
+			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
+			if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;
+
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
+				state = THREEPOSSWITCH_CENTER;
+
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
+				state = THREEPOSSWITCH_CENTER;
+		}
+		return true;
+	}
+	return false;
 }
 
 
@@ -1377,6 +1424,26 @@ bool RotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+bool RotationalSwitch::SwitchTo(int newValue) {
+
+	// Switch only with REALISM 0
+	if (switchRow) {
+		if (switchRow->panelSwitches->Realism) 
+			return false;
+	}
+
+	if (!position || (position->GetValue() != newValue)) {
+		SetValue(newValue);
+		sclick.play();
+		if (switchRow) {
+			if (switchRow->panelSwitches->listener) 
+				switchRow->panelSwitches->listener->PanelRotationalSwitchChanged(this);
+		}
+		return true;
+	}
+	return false;
+}
+
 void RotationalSwitch::SetValue(int newValue) { 
 	
 	RotationalSwitchPosition *p = positionList; 
@@ -2101,6 +2168,26 @@ bool CWSModeSwitch::CheckMouseClick(int event, int mx, int my)
 	return false;
 }
 
+bool CWSModeSwitch::SwitchTo(int newState) 
+
+{
+	if (CWSThreePosSwitch::SwitchTo(newState)) {
+		if (cws) {
+			if (IsUp()) {
+				cws->SetMode(CWS_MODE_NORMAL);
+			}
+			else if (IsCenter()) {
+				cws->SetMode(CWS_MODE_BOOST);
+			}
+			else if (IsDown()) {
+				cws->SetMode(CWS_MODE_ACK);
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
 
 //
 // Set caution and warning power source.
@@ -2109,11 +2196,14 @@ bool CWSModeSwitch::CheckMouseClick(int event, int mx, int my)
 bool CWSPowerSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
+	int OldState = state;
+
 	if (CWSThreePosSwitch::CheckMouseClick(event, mx, my)) {
-		SetPowerBus();
+		if (Active && (state != OldState)) {
+			SetPowerBus();
+		}
 		return true;
 	}
-
 	return false;
 }
 
