@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/12/13 15:21:46  tschachim
+  *	Fixed SIVB separation offset (hopefully).
+  *	
   *	Revision 1.7  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -79,7 +82,7 @@ protected:
 	void SetSecondStage2 ();
 	void SetASTPStage ();
 	void clbkLoadStateEx (FILEHANDLE scn, void *vs);
-	//int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
