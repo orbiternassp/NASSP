@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/11/18 02:40:55  movieman523
+  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
+  *	
   *	Revision 1.11  2005/11/16 23:50:31  movieman523
   *	More updates to CWS operation. Still not completely correct, but closer.
   *	
@@ -78,7 +81,7 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	TestState = CWS_TEST_LIGHTS_NONE;
 	Mode = CWS_MODE_NORMAL;
 	Source = CWS_SOURCE_CSM;
-	PowerBus = CWS_POWER_NONE;
+	PowerBus = CWS_POWER_NONE;	
 
 	OurVessel = 0;
 
@@ -90,6 +93,7 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	MasterAlarm = false;
 	MasterAlarmLit = false;
 	MasterAlarmPressed = false;
+	InhibitNextMasterAlarm = false;
 
 	for (int i = 0; i < 30; i++) {
 		LeftLights[i] = false;
@@ -242,7 +246,7 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 
 	if (LightsPowered() && (
 	       (MasterAlarmLit && (MasterAlarmLightEnabled || position != CWS_MASTERALARMPOSITION_LEFT)) || 
-	       (TestState == CWS_TEST_LIGHTS_LEFT && position == CWS_MASTERALARMPOSITION_LEFT) ||
+	       (TestState == CWS_TEST_LIGHTS_LEFT && position == CWS_MASTERALARMPOSITION_LEFT && MasterAlarmLightEnabled) ||
 	       (TestState == CWS_TEST_LIGHTS_RIGHT && position == CWS_MASTERALARMPOSITION_RIGHT)
 	   )) {
 		//
@@ -295,7 +299,7 @@ void CautionWarningSystem::SetLight(int lightnum, bool state)
 {
 	bool *LightStates = LeftLights;
 
-	if (lightnum > 30) {
+	if (lightnum >= 30) {
 		LightStates = RightLights;
 		lightnum -= 30;
 	}
@@ -305,9 +309,12 @@ void CautionWarningSystem::SetLight(int lightnum, bool state)
 	//
 
 	if (state && !LightStates[lightnum]) {
-		SetMasterAlarm(true);
+		if (InhibitNextMasterAlarm) {
+			InhibitNextMasterAlarm = false;
+		} else {
+			SetMasterAlarm(true);
+		}
 	}
-
 	LightStates[lightnum] = state;
 }
 
