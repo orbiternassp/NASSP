@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/12/02 19:47:19  movieman523
+  *	Replaced most PowerSource code with e_object.
+  *	
   *	Revision 1.29  2005/11/20 21:46:32  movieman523
   *	Added initial volume control support.
   *	
@@ -289,12 +292,12 @@ class ThreePosSwitch: public ToggleSwitch {
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
+
 	bool IsDown() { return (GetState() == THREEPOSSWITCH_DOWN); };
 	bool IsCenter() { return (GetState() == THREEPOSSWITCH_CENTER); };
 	bool IsUp() { return (GetState() == THREEPOSSWITCH_UP); };
-
 	void SetState(int s) { state = s; };
-//	int GetState() { return state; };
 
 	int operator=(const int b) { state = b; return state; };
 };
@@ -416,6 +419,7 @@ protected:
 class CWSModeSwitch: public CWSThreePosSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
 };
 
 //
@@ -628,6 +632,7 @@ public:
 	void AddPosition(int value, double angle);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newValue);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetState();
@@ -797,11 +802,12 @@ public:
 class PanelSwitches {
 
 public:
-	PanelSwitches() { PanelID = 0; RowList = 0; };
+	PanelSwitches() { PanelID = 0; RowList = 0; Realism = 0; };
 	bool CheckMouseClick(int id, int event, int mx, int my);
 	bool DrawRow(int id, SURFHANDLE DrawSurface);
 	void AddRow(SwitchRow *s) { s->SetNext(RowList); RowList = s; };
 	void Init(int id, VESSEL *v, SoundLib *s, PanelSwitchListener *l) { PanelID = id; RowList = 0; vessel = v; soundlib = s; listener = l; };
+	void SetRealism(int r) { Realism = r; };
 
 protected:
 	VESSEL *vessel;
@@ -809,6 +815,7 @@ protected:
 	PanelSwitchListener *listener;
 	int	PanelID;
 	SwitchRow *RowList;
+	int Realism;
 
 	friend class ToggleSwitch;
 	friend class ThreePosSwitch;
