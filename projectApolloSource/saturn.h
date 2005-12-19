@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.99  2005/12/02 20:44:35  movieman523
+  *	Wired up buses and batteries directly rather than through PowerSource objects.
+  *	
   *	Revision 1.98  2005/12/02 19:29:24  movieman523
   *	Started integrating PowerSource code into PanelSDK.
   *	
@@ -1472,8 +1475,9 @@ protected:
 #define SATSYSTEMS_CREWINGRESS_1	200
 #define SATSYSTEMS_CREWINGRESS_2	210
 #define SATSYSTEMS_CABINCLOSEOUT	300
-#define SATSYSTEMS_CABINVENTING		400
-#define SATSYSTEMS_FLIGHT			500
+#define SATSYSTEMS_READYTOLAUNCH    400
+#define SATSYSTEMS_CABINVENTING		500
+#define SATSYSTEMS_FLIGHT			600
 
 	int systemsState;
 	bool firstSystemsTimeStepDone;
@@ -1594,7 +1598,7 @@ protected:
 	SwitchRow SBandNormalSwitchesRow;
 
 	//
-	// Electrical systems.
+	// Internal systems devices.
 	//
 
 	FCell *FuelCells[3];
@@ -1630,6 +1634,16 @@ protected:
 	PowerMerge PyroBusB;
 
 	PowerMerge SwitchPower;
+
+	h_HeatExchanger *PrimCabinHeatExchanger;
+	h_HeatExchanger *SecCabinHeatExchanger;
+	Boiler *CabinHeater;
+
+	h_HeatExchanger *PrimEcsRadiatorExchanger1;
+	h_HeatExchanger *PrimEcsRadiatorExchanger2;
+
+
+
 
 	// old stuff begin
 
@@ -2145,9 +2159,6 @@ protected:
 	double *pSecECSAccumulatorQuantity;
 	double *pPotableH2oTankQuantity;
 	double *pWasteH2oTankQuantity;
-
-	int *pCabinFan1;
-	int *pCabinFan2;
 
 	int *pCSMValves[N_CSM_VALVES];
 	bool ValveState[N_CSM_VALVES];
