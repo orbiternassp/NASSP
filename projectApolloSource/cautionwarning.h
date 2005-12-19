@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/12/02 19:47:19  movieman523
+  *	Replaced most PowerSource code with e_object.
+  *	
   *	Revision 1.10  2005/11/18 02:40:55  movieman523
   *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
   *	
@@ -91,6 +94,7 @@ public:
 	void SetSource(int source) { Source = source; };
 	void SetPowerBus(int bus);
 	void SetMasterAlarm(bool alarm);
+	void SetInhibitNextMasterAlarm(bool i) { InhibitNextMasterAlarm = i; };
 	void MonitorVessel(VESSEL *v) { OurVessel = v; };
 
 	//
@@ -135,6 +139,7 @@ protected:
 	bool MasterAlarmLightEnabled;
 	bool MasterAlarm;
 	bool MasterAlarmPressed;
+	bool InhibitNextMasterAlarm;
 
 	//
 	// Light states.
