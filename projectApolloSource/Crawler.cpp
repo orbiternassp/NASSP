@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/11/23 21:36:55  movieman523
+  *	Allow specification of LV name in scenario file.
+  *	
   *	Revision 1.10  2005/10/31 19:18:39  tschachim
   *	Bugfixes.
   *	
@@ -580,9 +583,6 @@ void Crawler::DetachML() {
 			
 		} else {
 			DetachChild(ah);
-			ml->SetTouchdownPoints(_V(  0, touchdownPointHeight - 66.7,  10), 
-				  			       _V(-10, touchdownPointHeight - 66.7, -10), 
-							       _V( 10, touchdownPointHeight - 66.7, -10));
 		}
 	}
 
@@ -595,11 +595,22 @@ void Crawler::DetachML() {
 		ml->AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Saturn5MLPedestals"), &meshoffset);
 	}
 
-	// set touchdown points if LV is detached
+	// set touchdown points 
 	if (GetAttachmentStatus(ahml) == NULL) {
 		ml->SetTouchdownPoints(_V(  0, -83.7,  10), 
 				  			   _V(-10, -83.7, -10), 
 							   _V( 10, -83.7, -10));
+	} else {
+		if (showMLPedestals) {
+			ml->SetTouchdownPoints(_V(  0, touchdownPointHeight - 66.7,  10), 
+				  			       _V(-10, touchdownPointHeight - 66.7, -10), 
+							       _V( 10, touchdownPointHeight - 66.7, -10));
+		} else {
+			// in VAB on the VAB pedestrals
+			ml->SetTouchdownPoints(_V(  0, -67.35,  10), 
+				  			       _V(-10, -67.35, -10), 
+							       _V( 10, -67.35, -10));
+		}
 	}
 }
 
