@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2005/11/25 20:59:49  movieman523
+  *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
+  *	
   *	Revision 1.35  2005/11/25 00:02:16  movieman523
   *	Trying to make Apollo 11 work 'by the numbers'.
   *	
@@ -1111,4 +1114,20 @@ void Saturn1b::CalculateStageMass()
 	Stage3Mass = SM_Mass + CM_Mass;
 	Stage2Mass = Stage3Mass + SII_EmptyMass;
 	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass + Abort_Mass;
+}
+
+int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
+
+	if (FirstTimestep) return 0;
+
+	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
+		return 0; 
+	}
+	
+	// Separate stages with keypress if REALISM 0
+	if (!Realism && key == OAPI_KEY_S && down == true) {
+		bManualSeparate = true;
+	}
+
+	return 0;
 }
