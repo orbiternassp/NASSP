@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2005/11/18 02:40:55  movieman523
+  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
+  *	
   *	Revision 1.13  2005/11/16 23:50:31  movieman523
   *	More updates to CWS operation. Still not completely correct, but closer.
   *	
@@ -117,15 +120,13 @@ bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus fc, int index)
 
 	// pH > 9 not simulated at the moment
 
-	// The alarm conditions gets reduced with a time acceleration
-	// factor, this "dirty hack" should be removed if we find a better solution	
-	if (fc.TempF < 360.0 - 0.02 * oapiGetTimeAcceleration()) bad = true;
-	if (fc.TempF > 475.0 + 0.02 * oapiGetTimeAcceleration()) bad = true;
+	if (fc.TempF < 360.0) bad = true;
+	if (fc.TempF > 475.0) bad = true;
 
-	if (fc.CondenserTempF < 150.0 - 0.02 * oapiGetTimeAcceleration()) bad = true;
-	if (fc.CondenserTempF > 175.0 + 0.02 * oapiGetTimeAcceleration()) bad = true;
+	if (fc.CondenserTempF < 150.0) bad = true;
+	if (fc.CondenserTempF > 175.0) bad = true;
 
-	if (fc.CoolingTempF < -30.0 - 0.02 * oapiGetTimeAcceleration()) bad = true;
+	if (fc.CoolingTempF < -30.0) bad = true;
 
 	//
 	// To avoid spurious alarms because of fluctuation at high time accelerations
@@ -178,6 +179,12 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		//
 
 		if (!IsPowered()) {
+
+			// Turn off all lights
+			SetLightStates(LeftLights, 0);
+			SetLightStates(RightLights, 0);
+
+			// Turn on CWS light
 			SetLight(CSM_CWS_CWS_POWER, true);
 			return;
 		}
@@ -314,12 +321,10 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// Suit compressor delta pressure below 0.22 psi
 		// Use displayed value instead of the PanelSDK to make use of the "damping" 
 		// of the SuitComprDeltaPMeter to pervent alarms because of the fluctuations during 
-		// high time acceleration. The alarm pressure gets reduced with a time acceleration
-		// factor, this "dirty hack" should be removed if we find a better solution
+		// high time acceleration. 
 		//
 		
-		double minPressure = 0.22 - 0.001 * oapiGetTimeAcceleration();
-		SetLight(CSM_CWS_SUIT_COMPRESSOR, (datm.DisplayedSuitComprDeltaPressurePSI < minPressure));
+		SetLight(CSM_CWS_SUIT_COMPRESSOR, (datm.DisplayedSuitComprDeltaPressurePSI < 0.22));
 
 		NextUpdateTime = simt + (0.2 * oapiGetTimeAcceleration());
 	}
