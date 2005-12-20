@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2005/12/19 17:04:59  tschachim
+  *	checklist actions, engine indicators.
+  *	
   *	Revision 1.45  2005/11/25 20:59:49  movieman523
   *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
   *	
@@ -723,13 +726,13 @@ void SaturnV::StageTwo(double simt)
 		}
 
 		NextMissionEventTime = MissionTime + 1.4;
-		SetEngineIndicators();
-		SIISepState = true;
 		StageState++;
 		break;
 
 	case 1:
 		if (MissionTime >= NextMissionEventTime) {
+			SetEngineIndicators();
+			SIISepState = true;
 			SetSIICMixtureRatio(5.5);
 			LastMissionEventTime = MissionTime;
 			NextMissionEventTime += 3.0;
