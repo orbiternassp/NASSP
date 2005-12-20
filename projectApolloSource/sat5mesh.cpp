@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/11/28 00:36:48  movieman523
+  *	Code tidyup - no intentional functional changes.
+  *	
   *	Revision 1.28  2005/11/25 02:03:47  movieman523
   *	Fixed mixture-ratio change code and made it more realistic.
   *	
@@ -825,6 +828,13 @@ void SaturnV::SetThirdStage ()
 
 	mesh_dir=_V(0,0,24.8-STG2O);
 	probeidx=AddMesh (hprobe, &mesh_dir);
+
+	// Dummy docking port so the auto burn feature of IMFD 4.2 is working
+	// Remove it when a newer release of IMFD don't need that anymore
+	VECTOR3 dockpos = {0,0,24.8-STG2O};
+	VECTOR3 dockdir = {0,0,1};
+	VECTOR3 dockrot = {0,1,0};
+	SetDockParams(dockpos, dockdir, dockrot);
 
 	SetView(23.1-STG2O);
 
