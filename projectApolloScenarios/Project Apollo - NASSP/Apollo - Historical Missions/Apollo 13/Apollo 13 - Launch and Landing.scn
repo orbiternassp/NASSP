@@ -1,0 +1,72 @@
+BEGIN_DESC
+This time you can fly the full Apollo 13 mission as it would have happened had the in-flight accident not occured. April 11, 1970. (AS-508)
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 40687.75902777
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AS-508
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AS-508
+  MODE Extern
+  POS 2.44 0.0 -90.0
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Launch
+END_MFD
+
+BEGIN_PANEL
+END_PANEL
+
+BEGIN_SHIPS
+Odyssey:ProjectApollo/Saturn5
+  STATUS Landed Earth
+;  BASE Cape Canaveral:2
+  POS -80.6082242 28.6008442
+  HEADING 270.00
+  FUEL 1.000
+  APOLLONO 1301
+  NASSPVER 60050
+  VECHNO 508
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -3600
+  TOAPO 185.7556
+  TOPER 183.9036
+  TOHDG 72.043
+  MOONLAT -17.47
+  MOONLONG -3.64
+  MOONALT 0.0
+  TCP 0.5
+  LANG English
+  LEMN Aquarius
+END
+AS-508-CT:ProjectApollo\Crawler
+  STATUS Landed Earth
+  POS -80.6527277 28.5791263
+  HEADING 75.80
+  NAVFREQ 0 0
+  USEFORCE 1
+  LVNAME Odyssey
+END
+AS-508-ML:ProjectApollo\Saturn5ML
+  STATUS Landed Earth
+  POS -80.6082240 28.6009432
+  HEADING 90.0
+END
+END_SHIPS
