@@ -1,10 +1,10 @@
 BEGIN_DESC
-Neil Armstrong, Mike Collins and Buzz Aldrin change history forever. The first manned Lunar Landing. July 16, 1969. The scenario starts at T-3h00min and uses the quickstart realism mode.
+Neil Armstrong, Mike Collins and Buzz Aldrin change history forever. The first manned Lunar Landing. July 16, 1969. The scenario starts at T-2h00min and uses the quickstart realism mode.
 END_DESC
 
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol
-  Date MJD 40418.4388888889
+  Date MJD 40418.4805555556
 END_ENVIRONMENT
 
 BEGIN_FOCUS
@@ -42,12 +42,12 @@ Columbia:ProjectApollo\Saturn5
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
-  SIFUELMASS 2120306.0
+  SIFUELMASS 2095574.0
   SIEMPTYMASS 138681.8
   SIIFUELMASS 443340.0
   SIIEMPTYMASS 40181.8
   S4FUELMASS 106831.0
-  MISSNTIME -10800
+  MISSNTIME -7200
   TOAPO 185.94
   TOPER 183.16
   TOHDG 72.058
