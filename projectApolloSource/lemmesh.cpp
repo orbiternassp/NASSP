@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/12/28 16:19:10  movieman523
+  *	Should now be getting all config files from ProjectApollo directory.
+  *	
   *	Revision 1.18  2005/11/22 20:16:40  movieman523
   *	Revised to only use one LEM mesh and add the landing probes as required.
   *	
@@ -479,12 +482,12 @@ void sat5_lmpkd::SetLmLandedMesh() {
 void LEMLoadMeshes()
 
 {
-	hLMPKD = oapiLoadMeshGlobal ("LM_NoWheel");
+	hLMPKD = oapiLoadMeshGlobal ("ProjectApollo/LM_NoWheel");
 	hLMLanded = oapiLoadMeshGlobal ("ProjectApollo/LM_Landed");
-	hLMDescent = oapiLoadMeshGlobal ("LM_descent");
-	hLMAscent = oapiLoadMeshGlobal ("LM_ascent");
-	hLMAscent2= oapiLoadMeshGlobal ("LM_ascent2");
-	hAstro1= oapiLoadMeshGlobal ("Sat5AstroS");
+	hLMDescent = oapiLoadMeshGlobal ("ProjectApollo/LM_descent");
+	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_ascent");
+	hLMAscent2= oapiLoadMeshGlobal ("ProjectApollo/LM_ascent2");
+	hAstro1= oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
 	hLemProbes = oapiLoadMeshGlobal ("ProjectApollo/LM_ContactProbes");
 }
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/12/28 16:19:10  movieman523
+  *	Should now be getting all config files from ProjectApollo directory.
+  *	
   *	Revision 1.4  2005/11/23 00:29:38  movieman523
   *	Added S1C DLL and revised LEVA code to look for NEP-specific flag if it exists.
   *	
@@ -667,8 +670,8 @@ void Saturn5_LEVA::SaveState(FILEHANDLE scn)
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hCMPEVA = oapiLoadMeshGlobal ("Sat5AstroS");
-		hLRV = oapiLoadMeshGlobal ("LRV");
+		hCMPEVA = oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
+		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
 	}
 
 	return new Saturn5_LEVA (hvessel, flightmodel);
