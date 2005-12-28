@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2005/11/22 20:16:40  movieman523
+  *	Revised to only use one LEM mesh and add the landing probes as required.
+  *	
   *	Revision 1.17  2005/11/21 12:42:17  tschachim
   *	New LM landed and descent stage mesh.
   *	
@@ -138,7 +141,7 @@ void sat5_lmpkd::ToggleEVA()
 
 		char VName[256]="";
 		strcpy (VName, GetName()); strcat (VName, "-LEVA");
-		hLEVA = oapiCreateVessel(VName,"Saturn5_LEVA",vs1);
+		hLEVA = oapiCreateVessel(VName,"ProjectApollo/Saturn5_LEVA",vs1);
 
 		ClearMeshes();
 		ClearExhaustRefs();

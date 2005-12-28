@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.22  2005/11/23 02:21:30  movieman523
   *	Added S1b stage.
   *	
@@ -795,7 +798,7 @@ void Saturn1b::DockStage (UINT dockstatus)
 	vs4b.vrot.z = 0.0;
 	if(ASTPMission){
 		GetApolloName(VName2); strcat (VName2, "-ASTPDM");
-		VESSEL::Create (VName2, "nSat1astp2", vs4b);
+		VESSEL::Create (VName2, "ProjectApollo/nSat1astp2", vs4b);
 		hAstpDM=oapiGetVesselByName(VName2);
 	}
 		if (ProbeJetison){
@@ -1064,10 +1067,10 @@ void Saturn1b::SeparateStage (int stage)
 			vs4b.vrot.y = 0.0;
 			vs4b.vrot.z = 0.0;
 			GetApolloName(VName); strcat (VName, "-DCKPRB");
-			hPROBE = oapiCreateVessel(VName, "nsat1probe", vs4b);
+			hPROBE = oapiCreateVessel(VName, "ProjectApollo/nsat1probe", vs4b);
 		}
 		GetApolloName(VName); strcat (VName, "-SM");
-		hSMJet = oapiCreateVessel(VName, "nSAT1_SM", vs1);
+		hSMJet = oapiCreateVessel(VName, "ProjectApollo/nSAT1_SM", vs1);
 
 		//
 		// Tell AGC the CM has seperated from the SM.
@@ -1101,7 +1104,7 @@ void Saturn1b::SeparateStage (int stage)
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		StageS.play();
-		habort = oapiCreateVessel ("Saturn_Abort", "nSaturn1Abort1", vs1);
+		habort = oapiCreateVessel ("Saturn_Abort", "ProjectApollo/nSaturn1Abort1", vs1);
 		SetAbortStage ();
 	}
 
@@ -1111,7 +1114,7 @@ void Saturn1b::SeparateStage (int stage)
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		StageS.play();
-		habort = oapiCreateVessel ("Saturn_Abort", "nSaturn1Abort2", vs1);
+		habort = oapiCreateVessel ("Saturn_Abort", "ProjectApollo/nSaturn1Abort2", vs1);
 		SetAbortStage ();
 	}
 
@@ -1124,7 +1127,7 @@ void Saturn1b::SeparateStage (int stage)
 		TowerJS.play();
 		TowerJS.done();
 		GetApolloName(VName); strcat (VName, "-TWR");
-		hesc1 = oapiCreateVessel (VName, "sat5btower", vs1);
+		hesc1 = oapiCreateVessel (VName, "ProjectApollo/sat5btower", vs1);
 		SetReentryStage ();
 		ActivateNavmode(NAVMODE_KILLROT);
 	}

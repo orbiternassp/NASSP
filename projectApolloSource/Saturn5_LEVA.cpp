@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/23 00:29:38  movieman523
+  *	Added S1C DLL and revised LEVA code to look for NEP-specific flag if it exists.
+  *	
   *	Revision 1.3  2005/10/19 11:31:10  tschachim
   *	Changed log file name.
   *	
@@ -430,10 +433,10 @@ void Saturn5_LEVA::SetFlag()
 	if (fp) {
 		fclose(fp);
 		sprintf(FName, "ProjectApollo/Apollo%d/sat5flag", ApolloNo);
-		oapiCreateVessel(VName,"Sat5flag",vs1);
+		oapiCreateVessel(VName, FName, vs1);
 	}
 	else {
-		oapiCreateVessel(VName,"Sat5flag",vs1);
+		oapiCreateVessel(VName,"ProjectApollo/sat5flag",vs1);
 	}
 
 	FlagPlanted = true;
