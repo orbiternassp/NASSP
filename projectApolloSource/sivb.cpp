@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/12/13 10:10:26  tschachim
+  *	Removed ShiftCentreOfMass because it' not working.
+  *	
   *	Revision 1.9  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -387,13 +390,13 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 			vs5.vrot.z = 0.0;
 
 			GetApolloName(VName); strcat (VName, "-S4B1");
-			hs4b1 = oapiCreateVessel(VName, "sat5stg31", vs2);
+			hs4b1 = oapiCreateVessel(VName, "ProjectApollo/sat5stg31", vs2);
 			GetApolloName(VName); strcat (VName, "-S4B2");
-			hs4b2 = oapiCreateVessel(VName, "sat5stg32", vs3);
+			hs4b2 = oapiCreateVessel(VName, "ProjectApollo/sat5stg32", vs3);
 			GetApolloName(VName); strcat (VName, "-S4B3");
-			hs4b3 = oapiCreateVessel(VName, "sat5stg33", vs4);
+			hs4b3 = oapiCreateVessel(VName, "ProjectApollo/sat5stg33", vs4);
 			GetApolloName(VName); strcat (VName, "-S4B4");
-			hs4b4 = oapiCreateVessel(VName, "sat5stg34", vs5);
+			hs4b4 = oapiCreateVessel(VName, "ProjectApollo/sat5stg34", vs5);
 		}
 		else {
 
@@ -411,13 +414,13 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 			vs5.vrot.z = 0.0;
 
 			GetApolloName(VName); strcat (VName, "-S4B1");
-			hs4b1 = oapiCreateVessel(VName, "nsat1stg21", vs2);
+			hs4b1 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg21", vs2);
 			GetApolloName(VName); strcat (VName, "-S4B2");
-			hs4b2 = oapiCreateVessel(VName, "nsat1stg22", vs3);
+			hs4b2 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg22", vs3);
 			GetApolloName(VName); strcat (VName, "-S4B3");
-			hs4b3 = oapiCreateVessel(VName, "nsat1stg23", vs4);
+			hs4b3 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg23", vs4);
 			GetApolloName(VName); strcat (VName, "-S4B4");
-			hs4b4 = oapiCreateVessel(VName, "nsat1stg24", vs5);
+			hs4b4 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg24", vs5);
 		}
 
 		PanelsOpened = true;
