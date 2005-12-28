@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2005/12/20 19:45:27  tschachim
+  *	Added a dummy docking port to the SIVB just because
+  *	now you can use the IMFD 4.2 autoburn feature.
+  *	
   *	Revision 1.29  2005/11/28 00:36:48  movieman523
   *	Code tidyup - no intentional functional changes.
   *	
@@ -1072,15 +1076,15 @@ void SaturnV::SeparateStage (int stage)
 
 		switch (SII_UllageNum) {
 		case 4:
-			CName = "sat5intstg4";
+			CName = "ProjectApollo/sat5intstg4";
 			break;
 
 		case 8:
-			CName = "sat5intstg8";
+			CName = "ProjectApollo/sat5intstg8";
 			break;
 
 		default:
-			CName = "sat5intstg";
+			CName = "ProjectApollo/sat5intstg";
 			break;
 		}
 
