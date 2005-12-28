@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/11/24 01:07:54  movieman523
+  *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
+  *	
   *	Revision 1.19  2005/11/21 23:08:15  movieman523
   *	Moved more mesh files into the ProjectApollo directory.
   *	
@@ -445,7 +448,7 @@ void Saturn::ToggleEVA()
 		vs1.rvel.z = rvel1.z+rofs1.z;
 		char VName[256]="";
 		strcpy (VName, GetName()); strcat (VName, "-EVA");
-		hEVA = oapiCreateVessel(VName,"Saturn5_EVA",vs1);
+		hEVA = oapiCreateVessel(VName,"ProjectApollo/Saturn5_EVA",vs1);
 		oapiSetFocusObject(hEVA);
 	}
 }

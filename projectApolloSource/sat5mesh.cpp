@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/12/28 15:52:56  movieman523
+  *	Get interstage config from subdirectory.
+  *	
   *	Revision 1.30  2005/12/20 19:45:27  tschachim
   *	Added a dummy docking port to the SIVB just because
   *	now you can use the IMFD 4.2 autoburn feature.
@@ -1236,11 +1239,11 @@ void SaturnV::SeparateStage (int stage)
 			vs4b.vrot.y = 0.0;
 			vs4b.vrot.z = 0.0;
 			GetApolloName(VName); strcat (VName, "-DCKPRB");
-			hPROBE = oapiCreateVessel(VName, "sat1probe", vs4b);
+			hPROBE = oapiCreateVessel(VName, "ProjectApollo/sat1probe", vs4b);
 		}
 
 		GetApolloName(VName); strcat (VName, "-SM");
-		hSMJet = oapiCreateVessel(VName, "sat1_SM", vs1);
+		hSMJet = oapiCreateVessel(VName, "ProjectApollo/sat1_SM", vs1);
 		SetReentryStage ();
 
 		//
@@ -1281,7 +1284,7 @@ void SaturnV::SeparateStage (int stage)
 		char VName[256];
 
 		GetApolloName(VName); strcat (VName, "-ABORT");
-		habort = oapiCreateVessel (VName, "Saturn5Abort1", vs1);
+		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort1", vs1);
 		SetAbortStage ();
 	}
 
@@ -1296,7 +1299,7 @@ void SaturnV::SeparateStage (int stage)
 		char VName[256];
 
 		GetApolloName(VName); strcat (VName, "-ABORT");
-		habort = oapiCreateVessel (VName, "Saturn5Abort2", vs1);
+		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort2", vs1);
 		SetAbortStage ();
 	}
 
@@ -1311,7 +1314,7 @@ void SaturnV::SeparateStage (int stage)
 		TowerJS.done();
 
 		GetApolloName(VName); strcat (VName, "-TWR");
-		hesc1 = oapiCreateVessel (VName, "sat5btower", vs1);
+		hesc1 = oapiCreateVessel (VName, "ProjectApollo/sat5btower", vs1);
 		SetReentryStage ();
 		ActivateNavmode(NAVMODE_KILLROT);
 	}

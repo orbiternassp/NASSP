@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:06  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include "orbitersdk.h"
@@ -965,7 +968,7 @@ void ToggleEVA(VESSEL *vessel){
 		//vs1.vdata[0].z = vs1.vdata[0].z +PI;
 		char VName[256]="";
 		strcpy (VName, vessel->GetName()); strcat (VName, "-LEVA");
-		hLEVA = oapiCreateVessel(VName,"Saturn5_LEVA",vs1);
+		hLEVA = oapiCreateVessel(VName,"ProjectApollo/Saturn5_LEVA",vs1);
 		vessel->ClearMeshes();
 		vessel->ClearExhaustRefs();
 		vessel->ClearAttExhaustRefs();
