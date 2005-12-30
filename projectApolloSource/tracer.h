@@ -26,13 +26,16 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 class Tracer {
 public:
 	Tracer(char *s);
 	~Tracer();
-	print(char *s);
+	void print(char *s);
 
 private:
 	char *ThisFunc;
