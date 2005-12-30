@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:54  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #ifndef CONTROL_H
@@ -53,7 +56,7 @@ bool SetAttitude(double TargetAttitude, double CurrentAttitude, double RotRate,
 bool SetAttitude(double TargetAttitude, double CurrentAttitude, AXIS Axis, DEADBAND DeadbandLow);
 bool NullRate(AXIS Axis);
 
-static inline NormalizeThrustLevel(double& Level)
+static inline void NormalizeThrustLevel(double& Level)
 {
 	if (Level > 1.0) {
 		Level = 1.0;

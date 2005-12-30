@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include <stdio.h>
@@ -94,7 +97,7 @@ Tracer::~Tracer()
 	prefix_count--;
 }
 
-Tracer::print(char *s)
+void Tracer::print(char *s)
 
 {
 	DoTrace(ThisFunc, s);
