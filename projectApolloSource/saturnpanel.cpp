@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.110  2006/01/03 13:02:31  flydba
+  *	Some changes done on panel 15.
+  *	
   *	Revision 1.109  2006/01/03 03:59:48  flydba
   *	Some changes done on panel 15.
   *	
@@ -660,11 +663,14 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_COAS]				    = oapiCreateSurface (LOADBMP (IDB_COAS));
 		srf[SRF_THUMBWHEEL_SMALLFONTS]  = oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_SMALLFONTS));
 		srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL]  = oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL));
+		srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT]  = oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT));
 		srf[SRF_CIRCUITBRAKER]          = oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
 		srf[SRF_THREEPOSSWITCH20]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH20));
 		srf[SRF_THREEPOSSWITCH30]		= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH30));
+		srf[SRF_THREEPOSSWITCH30LEFT]	= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH30LEFT));
 		srf[SRF_SWITCH20]				= oapiCreateSurface (LOADBMP (IDB_SWITCH20));
 		srf[SRF_SWITCH30]				= oapiCreateSurface (LOADBMP (IDB_SWITCH30));
+		srf[SRF_SWITCH30LEFT]			= oapiCreateSurface (LOADBMP (IDB_SWITCH30LEFT));
 		srf[SRF_CSMRIGHTWINDOWCOVER]	= oapiCreateSurface (LOADBMP (IDB_CSMRIGHTWINDOWCOVER));
 		srf[SRF_SWITCH20LEFT]			= oapiCreateSurface (LOADBMP (IDB_SWITCH20LEFT));
 		srf[SRF_THREEPOSSWITCH20LEFT]	= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH20LEFT));
@@ -692,7 +698,9 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SWITCH20LEFT],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_GUARDEDSWITCH20],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCH30],				g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SWITCH30LEFT],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH30],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH30LEFT],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_FDAI],					g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_FDAIROLL],				g_Param.col[4]);
@@ -700,6 +708,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_COAS],					g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS],g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL],g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT],g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKER],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_CSMRIGHTWINDOWCOVER],	g_Param.col[4]);
 /*		break;
@@ -989,6 +998,21 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_POSTLANDINGBCNLTSWITCH,						_R(1388,   88, 1422,  119), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_POSTLANDINGDYEMARKERSWITCH,		    		_R(1429,   79, 1473,  146), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_POSTLANDINGVENTSWITCH,						_R(1512,  109, 1546,  140), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTMODEINTERCOMVOXSENSTHUMBWHEEL,			_R(1303,  304, 1336,  347), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTPOWERMASTERVOLUMETHUMBWHEEL,				_R(1426,  279, 1459,  322), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTPADCOMMVOLUMETHUMBWHEEL,					_R(1260,  411, 1293,  454), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTINTERCOMVOLUMETHUMBWHEEL,				_R(1381,  392, 1414,  435), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTSBANDVOLUMETHUMBWHEEL,					_R(1217,  519, 1250,  562), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTVHFVOLUMETHUMBWHEEL,						_R(1338,  499, 1371,  542), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTMODEINTERCOMSWITCH,						_R(1256,  292, 1290,  326), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTAUDIOPOWERSWITCH,						_R(1471,  304, 1505,  338), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTPADCOMMSWITCH,							_R(1213,  398, 1247,  432), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTINTERCOMSWITCH,							_R(1426,  417, 1460,  451), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTSBANDSWITCH,								_R(1170,  507, 1204,  541), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTVHFAMSWITCH,								_R(1383,  523, 1417,  557), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTAUDIOCONTROLSWITCH,						_R(1175,  632, 1209,  666), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTSUITPOWERSWITCH,							_R(1240,  658, 1274,  692), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_VHFRNGSWITCH,								_R(1305,  684, 1339,  718), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0)); 
 		break;    
@@ -1800,6 +1824,51 @@ void Saturn::SetSwitches(int panel) {
 	PostLandingVentSwitchRow.Init(AID_POSTLANDINGVENTSWITCH, MainPanel);
 	PostLandingVentSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20LEFT], PostLandingVentSwitchRow);
 
+	LeftModeIntercomVOXSensThumbwheelSwitchRow.Init(AID_LEFTMODEINTERCOMVOXSENSTHUMBWHEEL, MainPanel);  
+	LeftModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftModeIntercomVOXSensThumbwheelSwitchRow);
+	
+	LeftPowerMasterVolumeThumbwheelSwitchRow.Init(AID_LEFTPOWERMASTERVOLUMETHUMBWHEEL, MainPanel);
+	LeftPowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftPowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS, &soundlib);
+	
+	LeftPadCommVolumeThumbwheelSwitchRow.Init(AID_LEFTPADCOMMVOLUMETHUMBWHEEL, MainPanel);
+	LeftPadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftPadCommVolumeThumbwheelSwitchRow);
+	
+	LeftIntercomVolumeThumbwheelSwitchRow.Init(AID_LEFTINTERCOMVOLUMETHUMBWHEEL, MainPanel);
+	LeftIntercomVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftIntercomVolumeThumbwheelSwitchRow);
+	
+	LeftSBandVolumeThumbwheelSwitchRow.Init(AID_LEFTSBANDVOLUMETHUMBWHEEL, MainPanel);
+	LeftSBandVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftSBandVolumeThumbwheelSwitchRow);
+	
+	LeftVHFAMVolumeThumbwheelSwitchRow.Init(AID_LEFTVHFVOLUMETHUMBWHEEL, MainPanel);
+	LeftVHFAMVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftVHFAMVolumeThumbwheelSwitchRow);
+	
+	LeftModeIntercomSwitchRow.Init(AID_LEFTMODEINTERCOMSWITCH, MainPanel);
+	LeftModeIntercomSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30LEFT], LeftModeIntercomSwitchRow);
+
+	LeftAudioPowerSwitchRow.Init(AID_LEFTAUDIOPOWERSWITCH, MainPanel);
+	LeftAudioPowerSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30LEFT], LeftAudioPowerSwitchRow);
+
+	LeftPadCommSwitchRow.Init(AID_LEFTPADCOMMSWITCH, MainPanel);
+	LeftPadCommSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30LEFT], LeftPadCommSwitchRow);
+
+	LeftIntercomSwitchRow.Init(AID_LEFTINTERCOMSWITCH, MainPanel);
+	LeftIntercomSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30LEFT], LeftIntercomSwitchRow);
+
+	LeftSBandSwitchRow.Init(AID_LEFTSBANDSWITCH, MainPanel);
+	LeftSBandSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30LEFT], LeftSBandSwitchRow);
+
+	LeftVHFAMSwitchRow.Init(AID_LEFTVHFAMSWITCH, MainPanel);
+	LeftVHFAMSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30LEFT], LeftVHFAMSwitchRow);
+	
+	LeftAudioControlSwitchRow.Init(AID_LEFTAUDIOCONTROLSWITCH, MainPanel);
+	LeftAudioControlSwitch.Init(0, 0, 34, 34, srf[SRF_THREEPOSSWITCH30LEFT], LeftAudioControlSwitchRow);
+	
+	LeftSuitPowerSwitchRow.Init(AID_LEFTSUITPOWERSWITCH, MainPanel);
+	LeftSuitPowerSwitch.Init(0, 0, 34, 34, srf[SRF_SWITCH30LEFT], LeftSuitPowerSwitchRow);
+	
+	VHFRNGSwitchRow.Init(AID_VHFRNGSWITCH, MainPanel);
+	VHFRNGSwitch.Init(0, 0, 34, 34, srf[SRF_SWITCH30LEFT], VHFRNGSwitchRow);
+	
 	//RightWindowCoverRow.Init(AID_RIGHTWINDOWCOVER, MainPanel);
 	//RightWindowCoverSwitch.Init(0, 0, 525, 496, srf[SRF_CSMRIGHTWINDOWCOVER], RightWindowCoverRow);
 	
@@ -3493,6 +3562,36 @@ void Saturn::InitSwitches() {
 	PostLandingDYEMarkerSwitch.Register(PSH, "PostLandingDYEMarkerSwitch", false, false);
 	
 	PostLandingVentSwitch.Register(PSH, "PostLandingVentSwitch", THREEPOSSWITCH_CENTER);
+	
+	LeftModeIntercomVOXSensThumbwheelSwitch.Register(PSH, "LeftModeIntercomVOXSensThumbwheelSwitch", 2, 9);
+	
+	LeftPowerMasterVolumeThumbwheelSwitch.Register(PSH, "LeftPowerMasterVolumeThumbwheelSwitch", 2, 9);
+
+	LeftPadCommVolumeThumbwheelSwitch.Register(PSH, "LeftPadCommVolumeThumbwheelSwitch", 2, 9);
+
+	LeftIntercomVolumeThumbwheelSwitch.Register(PSH, "LeftIntercomVolumeThumbwheelSwitch", 2, 9);
+
+	LeftSBandVolumeThumbwheelSwitch.Register(PSH, "LeftSBandVolumeThumbwheelSwitch", 2, 9);
+
+	LeftVHFAMVolumeThumbwheelSwitch.Register(PSH, "LeftVHFAMVolumeThumbwheelSwitch", 2, 9);
+	
+	LeftModeIntercomSwitch.Register(PSH, "LeftModeIntercomSwitch", THREEPOSSWITCH_CENTER);
+
+	LeftAudioPowerSwitch.Register(PSH, "LeftAudioPowerSwitch", THREEPOSSWITCH_CENTER);
+
+	LeftPadCommSwitch.Register(PSH, "LeftPadCommSwitch", THREEPOSSWITCH_CENTER);
+
+	LeftIntercomSwitch.Register(PSH, "LeftIntercomSwitch", THREEPOSSWITCH_CENTER);
+
+	LeftSBandSwitch.Register(PSH, "LeftSBandSwitch", THREEPOSSWITCH_CENTER);
+
+	LeftVHFAMSwitch.Register(PSH, "LeftVHFAMSwitch", THREEPOSSWITCH_CENTER);
+	
+	LeftAudioControlSwitch.Register(PSH, "LeftAudioControlSwitch", THREEPOSSWITCH_DOWN);
+
+	LeftSuitPowerSwitch.Register(PSH, "LeftSuitPowerSwitch", false);
+	
+	VHFRNGSwitch.Register(PSH, "VHFRNGSwitch", false);
 	
 	//RightWindowCoverSwitch.Register(PSH, "RightWindowCoverSwitch", false);
 	
