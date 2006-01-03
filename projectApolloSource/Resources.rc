@@ -140,6 +140,9 @@ IDB_SWITCH20LEFT BITMAP  DISCARDABLE     "switch20_left.bmp"
 IDB_THREEPOSSWITCH20LEFT BITMAP  DISCARDABLE     "threeposswitch20_left.bmp"
 IDB_GUARDEDSWITCH20 BITMAP	DISCARDABLE     "guarded_switch20.bmp"
 IDB_SWITCHGUARDPANEL15 BITMAP	DISCARDABLE     "SwitchGuardPanel15.bmp"
+IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT BITMAP	DISCARDABLE	"Thumbwheel_small_fonts_diagonal_left.bmp"
+IDB_THREEPOSSWITCH30LEFT BITMAP  DISCARDABLE     "threeposswitch30_left.bmp"
+IDB_SWITCH30LEFT BITMAP  DISCARDABLE     "switch30_left.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
