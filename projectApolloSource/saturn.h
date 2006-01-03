@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.101  2006/01/03 03:59:16  flydba
+  *	Some changes done on panel 15.
+  *	
   *	Revision 1.100  2005/12/19 16:39:12  tschachim
   *	New devices.
   *	
@@ -1383,6 +1386,59 @@ protected:
 
 	SwitchRow PostLandingVentSwitchRow;
 	ThreePosSwitch PostLandingVentSwitch;
+
+	/////////////////////////
+	// Panel 9 thumbwheels //
+	/////////////////////////
+
+	SwitchRow LeftModeIntercomVOXSensThumbwheelSwitchRow;
+	ThumbwheelSwitch LeftModeIntercomVOXSensThumbwheelSwitch;
+
+	SwitchRow LeftPowerMasterVolumeThumbwheelSwitchRow;
+	VolumeThumbwheelSwitch LeftPowerMasterVolumeThumbwheelSwitch;
+
+	SwitchRow LeftPadCommVolumeThumbwheelSwitchRow;
+	ThumbwheelSwitch LeftPadCommVolumeThumbwheelSwitch;
+
+	SwitchRow LeftIntercomVolumeThumbwheelSwitchRow;
+	ThumbwheelSwitch LeftIntercomVolumeThumbwheelSwitch;
+
+	SwitchRow LeftSBandVolumeThumbwheelSwitchRow;
+	ThumbwheelSwitch LeftSBandVolumeThumbwheelSwitch;
+
+	SwitchRow LeftVHFAMVolumeThumbwheelSwitchRow;
+	ThumbwheelSwitch LeftVHFAMVolumeThumbwheelSwitch;
+
+	//////////////////////
+	// Panel 9 switches //
+	//////////////////////
+
+	SwitchRow LeftModeIntercomSwitchRow;
+	ThreePosSwitch LeftModeIntercomSwitch;
+
+	SwitchRow LeftAudioPowerSwitchRow;
+	ThreePosSwitch LeftAudioPowerSwitch;
+
+	SwitchRow LeftPadCommSwitchRow;
+	ThreePosSwitch LeftPadCommSwitch;
+
+	SwitchRow LeftIntercomSwitchRow;
+	ThreePosSwitch LeftIntercomSwitch;
+
+	SwitchRow LeftSBandSwitchRow;
+	ThreePosSwitch LeftSBandSwitch;
+
+	SwitchRow LeftVHFAMSwitchRow;
+	ThreePosSwitch LeftVHFAMSwitch;
+
+	SwitchRow LeftAudioControlSwitchRow;
+	ThreePosSwitch LeftAudioControlSwitch;
+
+	SwitchRow LeftSuitPowerSwitchRow;
+	ToggleSwitch LeftSuitPowerSwitch;
+
+	SwitchRow VHFRNGSwitchRow;
+	ToggleSwitch VHFRNGSwitch;
 
 	//
 	// OLD Switches: delete these as and when we can do so.
