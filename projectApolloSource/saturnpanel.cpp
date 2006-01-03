@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.109  2006/01/03 03:59:48  flydba
+  *	Some changes done on panel 15.
+  *	
   *	Revision 1.108  2005/12/19 17:14:20  tschachim
   *	Bugfixes, changes for the prelaunch checklist
   *	
@@ -3487,8 +3490,7 @@ void Saturn::InitSwitches() {
 
 	PostLandingBCNLTSwitch.Register(PSH, "PostLandingBCNLTSwitch", THREEPOSSWITCH_CENTER);
 	
-	PostLandingDYEMarkerSwitch = false;				
-	PostLandingDYEMarkerSwitch.SetGuardState(false);
+	PostLandingDYEMarkerSwitch.Register(PSH, "PostLandingDYEMarkerSwitch", false, false);
 	
 	PostLandingVentSwitch.Register(PSH, "PostLandingVentSwitch", THREEPOSSWITCH_CENTER);
 	
