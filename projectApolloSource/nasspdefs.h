@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/01/03 13:00:18  flydba
+  *	Some changes done on panel 15.
+  *	
   *	Revision 1.42  2006/01/03 03:58:07  flydba
   *	Some changes done on panel 15.
   *	
@@ -199,7 +202,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 57; // number of bitmap handles
+const int nsurf = 59; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -247,6 +250,9 @@ const int nsurf = 57; // number of bitmap handles
 #define SRF_THREEPOSSWITCH20LEFT	53
 #define SRF_GUARDEDSWITCH20			54
 #define SRF_SWITCHGUARDPANEL15		55
+#define SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT	56
+#define SRF_THREEPOSSWITCH30LEFT	57
+#define SRF_SWITCH30LEFT			58
 
 //
 // Earth radius and gravity constants.
