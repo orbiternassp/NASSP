@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.108  2005/12/19 17:14:20  tschachim
+  *	Bugfixes, changes for the prelaunch checklist
+  *	
   *	Revision 1.107  2005/12/02 20:44:35  movieman523
   *	Wired up buses and batteries directly rather than through PowerSource objects.
   *	
@@ -621,6 +624,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_SWITCHUP]				= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		srf[SRF_SWITCHLEVER]			= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
 		srf[SRF_SWITCHGUARDS]			= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDS));
+		srf[SRF_SWITCHGUARDPANEL15]		= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDPANEL15));
 		srf[SRF_ABORT]					= oapiCreateSurface (LOADBMP (IDB_ABORT));
 		srf[10]							= oapiCreateSurface (LOADBMP (IDB_ANNUN));
 		srf[11]							= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
@@ -659,6 +663,9 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_SWITCH20]				= oapiCreateSurface (LOADBMP (IDB_SWITCH20));
 		srf[SRF_SWITCH30]				= oapiCreateSurface (LOADBMP (IDB_SWITCH30));
 		srf[SRF_CSMRIGHTWINDOWCOVER]	= oapiCreateSurface (LOADBMP (IDB_CSMRIGHTWINDOWCOVER));
+		srf[SRF_SWITCH20LEFT]			= oapiCreateSurface (LOADBMP (IDB_SWITCH20LEFT));
+		srf[SRF_THREEPOSSWITCH20LEFT]	= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH20LEFT));
+		srf[SRF_GUARDEDSWITCH20]		= oapiCreateSurface (LOADBMP (IDB_GUARDEDSWITCH20));
 		
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -666,6 +673,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHLEVER],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHGUARDS],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SWITCHGUARDPANEL15],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_ALTIMETER],			g_Param.col[4]);
 		//oapiSetSurfaceColourKey (srf[15],						g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THRUSTMETER],			g_Param.col[4]);
@@ -676,7 +684,10 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SUITCABINDELTAPMETER],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH305],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH20],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH20LEFT],	g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCH20],				g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SWITCH20LEFT],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_GUARDEDSWITCH20],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCH30],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH30],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],				g_Param.col[4]);
@@ -970,7 +981,11 @@ bool Saturn::clbkLoadPanel (int id) {
 	case SATPANEL_LEFT: // left instrument panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		//new areas to be added soon...
+		oapiRegisterPanelArea (AID_LEFTCOASSWITCH,								_R(1236,   63, 1270,   94), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTTUTILITYPOWERSWITCH,						_R(1345,   81, 1379,  112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_POSTLANDINGBCNLTSWITCH,						_R(1388,   88, 1422,  119), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_POSTLANDINGDYEMARKERSWITCH,		    		_R(1429,   79, 1473,  146), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_POSTLANDINGVENTSWITCH,						_R(1512,  109, 1546,  140), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0)); 
 		break;    
@@ -1765,6 +1780,22 @@ void Saturn::SetSwitches(int panel) {
 	TelcomSwitchesRow.Init(AID_TELCOMSWITCHES, MainPanel);
 	TelcomGroup1Switch.Init(0, 78, 34, 33, srf[SRF_THREEPOSSWITCH305], TelcomSwitchesRow);
 	TelcomGroup2Switch.Init(56, 0, 34, 33, srf[SRF_THREEPOSSWITCH305], TelcomSwitchesRow);
+
+	LeftCOASPowerSwitchRow.Init(AID_LEFTCOASSWITCH, MainPanel);
+	LeftCOASPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20LEFT], LeftCOASPowerSwitchRow);
+	
+	LeftUtilityPowerSwitchRow.Init(AID_LEFTTUTILITYPOWERSWITCH, MainPanel);
+	LeftUtilityPowerSwitch.Init(0, 0, 34, 31, srf[SRF_SWITCH20LEFT], LeftUtilityPowerSwitchRow);
+
+	PostLandingBCNLTSwitchRow.Init(AID_POSTLANDINGBCNLTSWITCH, MainPanel);
+	PostLandingBCNLTSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20LEFT], PostLandingBCNLTSwitchRow);
+	
+	PostLandingDYEMarkerSwitchRow.Init(AID_POSTLANDINGDYEMARKERSWITCH, MainPanel);
+	PostLandingDYEMarkerSwitch.Init		(4, 21, 34, 31, srf[SRF_GUARDEDSWITCH20], PostLandingDYEMarkerSwitchRow);
+	PostLandingDYEMarkerSwitch.InitGuard(0,  0, 44, 67, srf[SRF_SWITCHGUARDPANEL15]);
+
+	PostLandingVentSwitchRow.Init(AID_POSTLANDINGVENTSWITCH, MainPanel);
+	PostLandingVentSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20LEFT], PostLandingVentSwitchRow);
 
 	//RightWindowCoverRow.Init(AID_RIGHTWINDOWCOVER, MainPanel);
 	//RightWindowCoverSwitch.Init(0, 0, 525, 496, srf[SRF_CSMRIGHTWINDOWCOVER], RightWindowCoverRow);
@@ -3450,6 +3481,17 @@ void Saturn::InitSwitches() {
 	TelcomGroup1Switch.Register(PSH, "TelcomGroup1Switch", THREEPOSSWITCH_CENTER);
 	TelcomGroup2Switch.Register(PSH, "TelcomGroup2Switch", THREEPOSSWITCH_CENTER);
 
+	LeftCOASPowerSwitch.Register(PSH, "LeftCOASPowerSwitch", false);
+
+	LeftUtilityPowerSwitch.Register(PSH, "LeftUtilityPowerSwitch", false);
+
+	PostLandingBCNLTSwitch.Register(PSH, "PostLandingBCNLTSwitch", THREEPOSSWITCH_CENTER);
+	
+	PostLandingDYEMarkerSwitch = false;				
+	PostLandingDYEMarkerSwitch.SetGuardState(false);
+	
+	PostLandingVentSwitch.Register(PSH, "PostLandingVentSwitch", THREEPOSSWITCH_CENTER);
+	
 	//RightWindowCoverSwitch.Register(PSH, "RightWindowCoverSwitch", false);
 	
 	SBandNormalXPDRSwitch.Register(PSH, "SBandNormalXPDRSwitch", THREEPOSSWITCH_CENTER);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2005/11/19 20:54:47  movieman523
+  *	Added SIVb DLL and wired it up to Saturn 1b.
+  *	
   *	Revision 1.40  2005/11/18 04:44:01  flydba
   *	Window cover bitmap added.
   *	
@@ -193,7 +196,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 52; // number of bitmap handles
+const int nsurf = 56; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -237,6 +240,10 @@ const int nsurf = 52; // number of bitmap handles
 #define SRF_SWITCH20				49
 #define SRF_SWITCH30				50
 #define SRF_CSMRIGHTWINDOWCOVER		51
+#define SRF_SWITCH20LEFT			52
+#define SRF_THREEPOSSWITCH20LEFT	53
+#define SRF_GUARDEDSWITCH20			54
+#define SRF_SWITCHGUARDPANEL15		55
 
 //
 // Earth radius and gravity constants.

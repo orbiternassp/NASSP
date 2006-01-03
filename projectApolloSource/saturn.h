@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.100  2005/12/19 16:39:12  tschachim
+  *	New devices.
+  *	
   *	Revision 1.99  2005/12/02 20:44:35  movieman523
   *	Wired up buses and batteries directly rather than through PowerSource objects.
   *	
@@ -1362,6 +1365,24 @@ protected:
 	SwitchRow UPTLMSwitchRow;
 	ToggleSwitch UPTLMSwitch;
 
+	///////////////////////
+	// Panel 15 switches //
+	///////////////////////
+
+	SwitchRow LeftCOASPowerSwitchRow;
+	ToggleSwitch LeftCOASPowerSwitch;
+
+	SwitchRow LeftUtilityPowerSwitchRow;
+	ToggleSwitch LeftUtilityPowerSwitch;
+
+	SwitchRow PostLandingBCNLTSwitchRow;
+	ThreePosSwitch PostLandingBCNLTSwitch;
+
+	SwitchRow PostLandingDYEMarkerSwitchRow;
+	GuardedToggleSwitch PostLandingDYEMarkerSwitch;
+
+	SwitchRow PostLandingVentSwitchRow;
+	ThreePosSwitch PostLandingVentSwitch;
 
 	//
 	// OLD Switches: delete these as and when we can do so.
