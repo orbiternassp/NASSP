@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/01/03 03:58:07  flydba
+  *	Some changes done on panel 15.
+  *	
   *	Revision 1.41  2005/11/19 20:54:47  movieman523
   *	Added SIVb DLL and wired it up to Saturn 1b.
   *	
@@ -196,7 +199,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 56; // number of bitmap handles
+const int nsurf = 57; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
