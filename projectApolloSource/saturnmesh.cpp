@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2006/01/04 19:51:54  movieman523
+  *	Updated config file names.
+  *	
   *	Revision 1.21  2005/12/28 16:19:10  movieman523
   *	Should now be getting all config files from ProjectApollo directory.
   *	
@@ -140,8 +143,8 @@ extern void CoeffFunc(double aoa, double M, double Re ,double *cl ,double *cm  ,
 void SaturnInitMeshes()
 
 {
-	LOAD_MESH(hSM, "ProjectApollo/nSaturn1_SM");
-	LOAD_MESH(hSMhga, "ProjectApollo/nsat1SMHGA");
+	LOAD_MESH(hSM, "ProjectApollo/SM");
+	LOAD_MESH(hSMhga, "ProjectApollo/SM_HGA");
 	LOAD_MESH(hCM, "ProjectApollo/sat5CM");
 	LOAD_MESH(hCM2, "ProjectApollo/sat5CM2");
 	LOAD_MESH(hCMP, "ProjectApollo/SAT5CMP");
@@ -150,7 +153,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hFHO, "ProjectApollo/SAT5HO");
 	LOAD_MESH(hCM2B, "ProjectApollo/SAT5CM2B");
 	LOAD_MESH(hprobe, "ProjectApollo/sat5probe");
-	LOAD_MESH(hCMBALLOON, "ProjectApollo/nsat1CMBN");
+	LOAD_MESH(hCMBALLOON, "ProjectApollo/CM_Balloons");
 	LOAD_MESH(hCRB, "ProjectApollo/nSATURN1_CRB");
 	LOAD_MESH(hCMB, "ProjectApollo/SAT5CMB");
 	LOAD_MESH(hChute30, "ProjectApollo/Apollo_2chute");
@@ -158,7 +161,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hChute32, "ProjectApollo/Apollo_3chuteHD");
 	LOAD_MESH(hApollochute, "ProjectApollo/Apollo_3chute");
 	LOAD_MESH(hFHC2, "ProjectApollo/SAT5HC2");
-	LOAD_MESH(hsat5tower, "ProjectApollo/sat5BPC");
+	LOAD_MESH(hsat5tower, "ProjectApollo/BoostCover");
 	LOAD_MESH(hFHO2, "ProjectApollo/SAT5HO2");
 	LOAD_MESH(hCMPEVA, "ProjectApollo/nSATURN1_CMP_EVA");
 }
@@ -283,8 +286,13 @@ void Saturn::ToggelHatch()
 	meshidx = AddMesh (hSM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
-	AddMesh (hSMhga, &mesh_dir);
+	//
+	// Skylab SM and Apollo 7 have no HGA.
+	//
+	if (!NoHGA) {
+		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		AddMesh (hSMhga, &mesh_dir);
+	}
 
 	mesh_dir=_V(0,0,34.4-12.25-21.5);
 	meshidx = AddMesh (hCM, &mesh_dir);
@@ -380,8 +388,14 @@ void Saturn::ToggleEVA()
 		ClearMeshes();
 		VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
 		AddMesh (hSM, &mesh_dir);
-		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
-		AddMesh (hSMhga, &mesh_dir);
+
+		//
+		// Skylab SM and Apollo 7 have no HGA.
+		//
+		if (!NoHGA) {
+			mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+			AddMesh (hSMhga, &mesh_dir);
+		}
 
 		mesh_dir=_V(0,0,34.4-12.25-21.5);
 		meshidx = AddMesh (hCM, &mesh_dir);
@@ -467,8 +481,14 @@ void Saturn::SetupEVA()
 		ClearMeshes();
 		VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
 		AddMesh (hSM, &mesh_dir);
-		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
-		AddMesh (hSMhga, &mesh_dir);
+
+		//
+		// Skylab SM and Apollo 7 have no HGA.
+		//
+		if (!NoHGA) {
+			mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+			AddMesh (hSMhga, &mesh_dir);
+		}
 
 		mesh_dir=_V(0,0,34.4-12.25-21.5);
 		meshidx = AddMesh (hCM, &mesh_dir);
@@ -577,8 +597,14 @@ void Saturn::SetCSMStage ()
 	VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
 	AddMesh (hSM, &mesh_dir);
 
-	mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
-	AddMesh (hSMhga, &mesh_dir);
+	//
+	// Skylab SM and Apollo 7 have no HGA.
+	//
+	if (!NoHGA) {
+		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		AddMesh (hSMhga, &mesh_dir);
+	}
+
 	mesh_dir=_V(0,0,34.4-12.25-21.5);
 
 	UINT meshidx;
@@ -666,8 +692,13 @@ void Saturn::SetCSM2Stage ()
 	VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
 	AddMesh (hSM, &mesh_dir);
 
-	mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
-	AddMesh (hSMhga, &mesh_dir);
+	//
+	// Skylab SM and Apollo 7 have no HGA.
+	//
+	if (!NoHGA) {
+		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		AddMesh (hSMhga, &mesh_dir);
+	}
 
 	mesh_dir=_V(0,0,34.4-12.25-21.5);
 	meshidx = AddMesh (hCM, &mesh_dir);
@@ -1392,6 +1423,10 @@ void Saturn::SetAbortStage ()
 
 }
 
+//
+// We really want an SM class to handle the retros and roll after seperation.
+//
+
 void Saturn::setupSM(OBJHANDLE hvessel)
 
 {
@@ -1410,8 +1445,14 @@ void Saturn::setupSM(OBJHANDLE hvessel)
 	VECTOR3 mesh_dir=_V(0,SMVO,0);
 	stg1vessel->AddMesh (hSM, &mesh_dir);
 
-	mesh_dir=_V(-2.2,-1.7,-1.6);
-	stg1vessel->AddMesh (hSMhga, &mesh_dir);
+	//
+	// Skylab SM and Apollo 7 have no HGA.
+	//
+	if (!NoHGA) {
+		mesh_dir=_V(-2.2,-1.7,-1.6);
+		stg1vessel->AddMesh (hSMhga, &mesh_dir);
+	}
+
 	//Roll left
 }
 

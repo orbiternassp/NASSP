@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/21 23:08:15  movieman523
+  *	Moved more mesh files into the ProjectApollo directory.
+  *	
   *	Revision 1.3  2005/11/21 13:31:34  tschachim
   *	New Saturn assembly meshes.
   *	
@@ -153,7 +156,7 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 	meshoffset = _V(75, -60, -66.4);
 	meshindexSaturn[5] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5CM"), &meshoffset);
 	meshoffset = _V(75 - 0.14, -60 - 4.15, -66.4);
-	meshindexSaturn[6] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/nSaturn1_SM"), &meshoffset);
+	meshindexSaturn[6] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/SM"), &meshoffset);
 	meshoffset = _V(75 - 1.48, -60 - 8.7, -66.4 - 1.48);
 	meshindexSaturn[7] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg31"), &meshoffset);
 	meshoffset = _V(75 - 1.48, -60 - 8.7, -66.4 + 1.48);
@@ -172,7 +175,7 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 	meshindexSaturn[14] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg3intstg"), &meshoffset);
 
 	meshoffset = _V(75, -65, -66.4);
-	meshindexSaturn[15] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5BPC"), &meshoffset);
+	meshindexSaturn[15] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/BoostCover"), &meshoffset);
 	
 	for (int i = 0; i < meshcountSaturn; i++) 
 		SetMeshVisibilityMode(meshindexSaturn[i], MESHVIS_NEVER);
