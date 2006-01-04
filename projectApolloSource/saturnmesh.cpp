@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2005/12/28 16:19:10  movieman523
+  *	Should now be getting all config files from ProjectApollo directory.
+  *	
   *	Revision 1.20  2005/11/24 01:07:54  movieman523
   *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
   *	
@@ -448,7 +451,7 @@ void Saturn::ToggleEVA()
 		vs1.rvel.z = rvel1.z+rofs1.z;
 		char VName[256]="";
 		strcpy (VName, GetName()); strcat (VName, "-EVA");
-		hEVA = oapiCreateVessel(VName,"ProjectApollo/Saturn5_EVA",vs1);
+		hEVA = oapiCreateVessel(VName,"ProjectApollo/EVA",vs1);
 		oapiSetFocusObject(hEVA);
 	}
 }

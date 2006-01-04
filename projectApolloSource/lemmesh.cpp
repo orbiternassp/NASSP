@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2005/12/28 19:11:32  movieman523
+  *	Changed some mesh paths.
+  *	
   *	Revision 1.19  2005/12/28 16:19:10  movieman523
   *	Should now be getting all config files from ProjectApollo directory.
   *	
@@ -144,7 +147,7 @@ void sat5_lmpkd::ToggleEVA()
 
 		char VName[256]="";
 		strcpy (VName, GetName()); strcat (VName, "-LEVA");
-		hLEVA = oapiCreateVessel(VName,"ProjectApollo/Saturn5_LEVA",vs1);
+		hLEVA = oapiCreateVessel(VName,"ProjectApollo/LEVA",vs1);
 
 		ClearMeshes();
 		ClearExhaustRefs();
