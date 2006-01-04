@@ -481,7 +481,7 @@ PANELSWITCHES_BEGIN
   LiftoffNoAutoAbortSwitch 0 0
 PANELSWITCHES_END
 END
-AS-512-LM:ProjectApollo/sat5_LMPKD
+AS-512-LM:ProjectApollo/LEM
   STATUS Orbiting Moon
   RPOS   1726166.64  -598075.94  -281353.10
   RVEL      -186.99      202.59    -1581.53

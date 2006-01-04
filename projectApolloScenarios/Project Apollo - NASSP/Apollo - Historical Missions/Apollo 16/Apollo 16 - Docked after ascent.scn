@@ -493,7 +493,7 @@ AS-511-S4BSTG:sat5stg3
   AROT 178.46 62.20 178.63
   PRPLEVEL 0:0.001
 END
-AS-511-LM:ProjectApollo/sat5_LMPKD
+AS-511-LM:ProjectApollo/LEM
   STATUS Orbiting Moon
   RPOS    631948.88  -293523.97 -1724004.59
   RVEL     -1520.72        6.04     -557.24
