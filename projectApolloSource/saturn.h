@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.102  2006/01/03 17:52:32  flydba
+  *	Switches on panel 9 are set up now.
+  *	
   *	Revision 1.101  2006/01/03 03:59:16  flydba
   *	Some changes done on panel 15.
   *	
@@ -1439,6 +1442,136 @@ protected:
 
 	SwitchRow VHFRNGSwitchRow;
 	ToggleSwitch VHFRNGSwitch;
+
+	SwitchRow FloatBagSwitchRow;
+	ToggleSwitch FloatBagSwitch1;
+	ToggleSwitch FloatBagSwitch2;
+	ToggleSwitch FloatBagSwitch3;
+
+	SwitchRow SeqEventsContSystemSwitchesRow;
+	ToggleSwitch Logic1Switch;
+	ToggleSwitch Logic2Switch;
+	ToggleSwitch PyroArmASwitch;
+	ToggleSwitch PyroArmBSwitch;
+
+	//////////////////////////////
+	// Panel 8 circuit breakers //
+	//////////////////////////////
+
+	SwitchRow StabContSystemCircuitBrakerRow;
+	CircuitBrakerSwitch StabContSystemTVCAc1CircuitBraker;
+	CircuitBrakerSwitch StabContSystemAc1CircuitBraker;
+	CircuitBrakerSwitch StabContSystemAc2CircuitBraker;
+
+	SwitchRow StabilizationControlSystemCircuitBrakerRow;
+	CircuitBrakerSwitch ECATVCAc2CircuitBraker;
+	CircuitBrakerSwitch DirectUllMnACircuitBraker;
+	CircuitBrakerSwitch DirectUllMnBCircuitBraker;
+	CircuitBrakerSwitch ContrDirectMnA1CircuitBraker;
+	CircuitBrakerSwitch ContrDirectMnB1CircuitBraker;
+	CircuitBrakerSwitch ContrDirectMnA2CircuitBraker;
+	CircuitBrakerSwitch ContrDirectMnB2CircuitBraker;
+	CircuitBrakerSwitch ACRollMnACircuitBraker;
+	CircuitBrakerSwitch ACRollMnBCircuitBraker;
+	CircuitBrakerSwitch BDRollMnACircuitBraker;
+	CircuitBrakerSwitch BDRollMnBCircuitBraker;
+	CircuitBrakerSwitch PitchMnACircuitBraker;
+	CircuitBrakerSwitch PitchMnBCircuitBraker;
+	CircuitBrakerSwitch YawMnACircuitBraker;
+	CircuitBrakerSwitch YawMnBCircuitBraker;
+
+	SwitchRow StabilizationControlSystem2CircuitBrakerRow;
+	CircuitBrakerSwitch OrdealAc2CircuitBraker;
+	CircuitBrakerSwitch OrdealMnBCircuitBraker;
+	CircuitBrakerSwitch ContrAutoMnACircuitBraker;
+	CircuitBrakerSwitch ContrAutoMnBCircuitBraker;
+	CircuitBrakerSwitch LogicBus12MnACircuitBraker;
+	CircuitBrakerSwitch LogicBus34MnACircuitBraker;
+	CircuitBrakerSwitch LogicBus14MnBCircuitBraker;
+	CircuitBrakerSwitch LogicBus23MnBCircuitBraker;
+	CircuitBrakerSwitch SystemMnACircuitBraker;
+	CircuitBrakerSwitch SystemMnBCircuitBraker;
+
+	SwitchRow ReactionControlSystemCircuitBrakerRow;
+	CircuitBrakerSwitch CMHeater1MnACircuitBraker;
+	CircuitBrakerSwitch CMHeater2MnBCircuitBraker;
+	CircuitBrakerSwitch SMHeatersAMnBCircuitBraker;
+	CircuitBrakerSwitch SMHeatersCMnBCircuitBraker;
+	CircuitBrakerSwitch SMHeatersBMnACircuitBraker;
+	CircuitBrakerSwitch SMHeatersDMnACircuitBraker;
+	CircuitBrakerSwitch PrplntIsolMnACircuitBraker;
+	CircuitBrakerSwitch PrplntIsolMnBCircuitBraker;
+	CircuitBrakerSwitch RCSLogicMnACircuitBraker;
+	CircuitBrakerSwitch RCSLogicMnBCircuitBraker;
+	CircuitBrakerSwitch EMSMnACircuitBraker;
+	CircuitBrakerSwitch EMSMnBCircuitBraker;
+	CircuitBrakerSwitch DockProbeMnACircuitBraker;
+	CircuitBrakerSwitch DockProbeMnBCircuitBraker;
+
+	SwitchRow ServicePropulsionSysCircuitBrakerRow;
+	CircuitBrakerSwitch GaugingMnACircuitBraker;
+	CircuitBrakerSwitch GaugingMnBCircuitBraker;
+	CircuitBrakerSwitch GaugingAc1CircuitBraker;
+	CircuitBrakerSwitch GaugingAc2CircuitBraker;
+	CircuitBrakerSwitch HeValveMnACircuitBraker;
+	CircuitBrakerSwitch HeValveMnBCircuitBraker;
+	CircuitBrakerSwitch PitchBatACircuitBraker;
+	CircuitBrakerSwitch PitchBatBCircuitBraker;
+	CircuitBrakerSwitch YawBatACircuitBraker;
+	CircuitBrakerSwitch YawBatBCircuitBraker;
+	CircuitBrakerSwitch PilotValveMnACircuitBraker;
+	CircuitBrakerSwitch PilotValveMnBCircuitBraker;
+
+	SwitchRow FloatBagCircuitBrakerRow;
+	CircuitBrakerSwitch FloatBag1BatACircuitBraker;
+	CircuitBrakerSwitch FloatBag2BatBCircuitBraker;
+	CircuitBrakerSwitch FloatBag3FLTPLCircuitBraker;
+
+	SwitchRow SeqEventsContSysCircuitBrakerRow;
+	CircuitBrakerSwitch LogicBatACircuitBraker;
+	CircuitBrakerSwitch LogicBatBCircuitBraker;
+	CircuitBrakerSwitch ArmBatACircuitBraker;
+	CircuitBrakerSwitch ArmBatBCircuitBraker;
+
+	SwitchRow EDSCircuitBrakerRow;
+	CircuitBrakerSwitch EDS1BatACircuitBraker;
+	CircuitBrakerSwitch EDS2BatBCircuitBraker;
+	CircuitBrakerSwitch EDS3BatCCircuitBraker;
+
+	SwitchRow ELSCircuitBrakerRow;
+	CircuitBrakerSwitch ELSBatACircuitBraker;
+	CircuitBrakerSwitch ELSBatBCircuitBraker;
+
+	SwitchRow PLVentCircuitBrakerRow;
+	CircuitBrakerSwitch FLTPLCircuitBraker;
+
+	//////////////////////
+	// Panel 8 switches //
+	//////////////////////
+	
+	SwitchRow AutoRCSSelectSwitchesRow;
+	ThreePosSwitch AcRollA1Switch;
+	ThreePosSwitch AcRollC1Switch;
+	ThreePosSwitch AcRollA2Switch;
+	ThreePosSwitch AcRollC2Switch;
+	ThreePosSwitch BdRollB1Switch;
+	ThreePosSwitch BdRollD1Switch;
+	ThreePosSwitch BdRollB2Switch;
+	ThreePosSwitch BdRollD2Switch;
+	ThreePosSwitch PitchA3Switch;
+	ThreePosSwitch PitchC3Switch;
+	ThreePosSwitch PitchA4Switch;
+	ThreePosSwitch PitchC4Switch;
+	ThreePosSwitch YawB3Switch;
+	ThreePosSwitch YawD3Switch;
+	ThreePosSwitch YawB4Switch;
+	ThreePosSwitch YawD4Switch;
+
+	SwitchRow FloodDimSwitchRow;
+	ToggleSwitch FloodDimSwitch;
+
+	SwitchRow FloodFixedSwitchRow;
+	ThreePosSwitch FloodFixedSwitch;
 
 	//
 	// OLD Switches: delete these as and when we can do so.
