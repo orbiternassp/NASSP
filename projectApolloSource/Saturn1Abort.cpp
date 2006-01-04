@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/21 23:08:15  movieman523
+  *	Moved more mesh files into the ProjectApollo directory.
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -124,7 +127,7 @@ if (!refcount++) {
 		hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
 		hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
 		hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
-		hSM = oapiLoadMeshGlobal ("ProjectApollo/nSaturn1_SM");
+		hSM = oapiLoadMeshGlobal ("ProjectApollo/SM");
 	}
 	return new VESSEL (hvessel, flightmodel);
 

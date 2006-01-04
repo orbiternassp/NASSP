@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/21 23:08:15  movieman523
+  *	Moved more mesh files into the ProjectApollo directory.
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
@@ -147,7 +150,7 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hsat5stg32 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg32");
 		hsat5stg33 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg33");
 		hsat5stg34 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg34");
-		hSM = oapiLoadMeshGlobal ("ProjectApollo/nSaturn1_SM");
+		hSM = oapiLoadMeshGlobal ("ProjectApollo/SM");
 
 	}
 	return new Sat5Abort2 (hvessel, flightmodel);

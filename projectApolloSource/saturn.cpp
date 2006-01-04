@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2005/12/19 16:37:32  tschachim
+  *	Realism modes, checklist actions.
+  *	
   *	Revision 1.73  2005/12/13 10:12:20  tschachim
   *	Bugfix pointer initialization.
   *	
@@ -326,6 +329,13 @@ void Saturn::initSaturn()
 	//
 	SkylabSM = false;
 	SkylabCM = false;
+
+	//
+	// Do we have an HGA? This is a 'negative' variable for backward
+	// compatibility with old scenarios... otherwise it would default
+	// to having no HGA when the state was read from those files.
+	//
+	NoHGA = false;
 
 	//
 	// Or the S1b panel with 8 engine lights?
@@ -1090,6 +1100,7 @@ typedef union {
 		unsigned SkylabSM:1;
 		unsigned SkylabCM:1;
 		unsigned S1bPanel:1;
+		unsigned NoHGA:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -1121,6 +1132,7 @@ int Saturn::GetMainState()
 	state.u.SkylabSM = SkylabSM;
 	state.u.SkylabCM = SkylabCM;
 	state.u.S1bPanel = S1bPanel;
+	state.u.NoHGA = NoHGA;
 
 	return state.word;
 }
@@ -1151,6 +1163,7 @@ void Saturn::SetMainState(int s)
 	SkylabSM = (state.u.SkylabSM != 0);
 	SkylabCM = (state.u.SkylabCM != 0);
 	S1bPanel = (state.u.S1bPanel != 0);
+	NoHGA = (state.u.NoHGA != 0);
 }
 
 //

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/12/28 16:19:10  movieman523
+  *	Should now be getting all config files from ProjectApollo directory.
+  *	
   *	Revision 1.23  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -596,9 +599,9 @@ void Saturn1b::SetASTPStage ()
 	AddMesh (hSM, &mesh_dir);
 
 	//
-	// Skylab SM has no HGA.
+	// Skylab SM and Apollo 7 have no HGA.
 	//
-	if (!SkylabSM) {
+	if (!NoHGA) {
 		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
 		AddMesh (hSMhga, &mesh_dir);
 	}

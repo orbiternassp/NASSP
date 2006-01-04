@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.103  2006/01/04 01:57:08  flydba
+  *	Switches on panel 8 now set.
+  *	
   *	Revision 1.102  2006/01/03 17:52:32  flydba
   *	Switches on panel 9 are set up now.
   *	
@@ -1937,6 +1940,7 @@ protected:
 	bool TLICapableBooster;
 	bool TLIEnabled;
 	bool SkylabSM;
+	bool NoHGA;
 	bool SkylabCM;
 	bool S1bPanel;
 	bool bAbort;
