@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2005/12/28 16:19:10  movieman523
+  *	Should now be getting all config files from ProjectApollo directory.
+  *	
   *	Revision 1.31  2005/12/28 15:52:56  movieman523
   *	Get interstage config from subdirectory.
   *	
@@ -1447,7 +1450,7 @@ void SaturnV::DockStage (UINT dockstatus)
 		vslm2.flag = VS_DOCKINFOLIST;
 		vslm2.version = 2;
 		pv = &vslm2;
-		hLMV = oapiCreateVesselEx(VNameLM, "ProjectApollo/sat5_LMPKD", pv);
+		hLMV = oapiCreateVesselEx(VNameLM, "ProjectApollo/LEM", pv);
 
 		//
 		// Initialise the state of the LEM AGC information.
