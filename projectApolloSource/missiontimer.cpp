@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/10/11 16:35:35  tschachim
+  *	Improved realism of the switch functionality.
+  *	
   *	Revision 1.5  2005/08/24 23:29:31  movieman523
   *	Fixed event timer reset.
   *	
@@ -56,7 +59,7 @@ MissionTimer::MissionTimer()
 	Reset();
 
 	Running = false;
-	Enabled = false;
+	Enabled = true;
 	CountUp = TIMER_COUNT_UP;
 }
 
