@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2005/12/19 17:09:25  tschachim
+  *	Bugfixes, checklist actions.
+  *	
   *	Revision 1.45  2005/12/02 20:44:35  movieman523
   *	Wired up buses and batteries directly rather than through PowerSource objects.
   *	
@@ -340,6 +343,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		iu.Timestep(MissionTime, simdt);
 		imu.Timestep(MissionTime);
 		cws.TimeStep(MissionTime);
+		dockingprobe.TimeStep(MissionTime, simdt);
 
 		//
 		// General checks.

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2006/01/04 02:55:49  movieman523
+  *	Use LEM.cfg, not sat5_LMPKD.cfg.
+  *	
   *	Revision 1.32  2005/12/28 16:19:10  movieman523
   *	Should now be getting all config files from ProjectApollo directory.
   *	
@@ -839,8 +842,6 @@ void SaturnV::SetThirdStage ()
 	mesh_dir=_V(0,0,24.8-STG2O);
 	probeidx=AddMesh (hprobe, &mesh_dir);
 
-	// Dummy docking port so the auto burn feature of IMFD 4.2 is working
-	// Remove it when a newer release of IMFD don't need that anymore
 	VECTOR3 dockpos = {0,0,24.8-STG2O};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {0,1,0};
@@ -1432,6 +1433,9 @@ void SaturnV::DockStage (UINT dockstatus)
 		//Now Lets create a real LEM and dock it
 		//
 
+		dockingprobe.SetIgnoreNextDockEvent();
+
+		
 		GetLEMName(VNameLM);
 
 		vslm2.version = 2;
