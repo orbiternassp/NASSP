@@ -143,6 +143,13 @@ IDB_SWITCHGUARDPANEL15 BITMAP	DISCARDABLE     "SwitchGuardPanel15.bmp"
 IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT BITMAP	DISCARDABLE	"Thumbwheel_small_fonts_diagonal_left.bmp"
 IDB_THREEPOSSWITCH30LEFT BITMAP  DISCARDABLE     "threeposswitch30_left.bmp"
 IDB_SWITCH30LEFT BITMAP  DISCARDABLE     "switch30_left.bmp"
+IDB_THREEPOSSWITCH305LEFT BITMAP  DISCARDABLE     "threeposswitch305_left.bmp"
+IDB_SWITCH305LEFT BITMAP  DISCARDABLE     "switch305_left.bmp"
+IDB_LIGHTROTARY BITMAP  DISCARDABLE     "light_rotary.bmp"
+IDB_FDAIPOWERROTARY BITMAP  DISCARDABLE     "FDAIPower_rotary.bmp"
+IDB_SCSBMAGROTARY BITMAP  DISCARDABLE     "SCSBMAGPower_rotary.bmp"
+IDB_DIRECTO2ROTARY BITMAP  DISCARDABLE     "direct_o2_rotary.bmp"
+IDB_ECSGLYCOLPUMPROTARY BITMAP  DISCARDABLE     "ECSGlycolpump_rotary.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
