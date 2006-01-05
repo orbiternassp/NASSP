@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2005/12/20 16:10:22  tschachim
+  *	Improved timing of the engine indicators during SIC/SII staging.
+  *	
   *	Revision 1.46  2005/12/19 17:04:59  tschachim
   *	checklist actions, engine indicators.
   *	
@@ -864,6 +867,8 @@ void SaturnV::StageThree(double simt)
 		SeparateStage (stage);
 		SetStage(LAUNCH_STAGE_TWO_TWR_JET);
 		bManualSeparate = false;
+		// Enable docking probe because the tower is gone
+		dockingprobe.SetEnabled(true);
 	}
 }
 
@@ -1044,13 +1049,6 @@ void SaturnV::StageSix(double simt)
 		RPswitch14 = false;
 	}
 
-	if(!probeOn){
-		if(GetDockStatus(GetDockHandle(0))!=NULL){
-			Undock(0);
-			CrashBumpS.play(NOLOOP,150);
-		}
-	}
-
 	//
 	// Should we be turning off these lights here?
 	//
@@ -1060,7 +1058,7 @@ void SaturnV::StageSix(double simt)
 	}
 
 	if (hLMV && dockstate <5){
-		if (GetDockStatus(GetDockHandle(0))==hLMV){
+		if (GetDockStatus(GetDockHandle(0)) == hLMV){
 			ActivateLEM=true;
 			VESSEL *lmvessel;
 			dockstate=3;
@@ -1088,11 +1086,7 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (CsmLmFinalSep2Switch.GetState()) {
-		Undock(0);
-	}
-
-	if (CsmLmFinalSep1Switch.GetState()) {
+	if (CsmLmFinalSep1Switch.GetState() || CsmLmFinalSep2Switch.GetState()) {
 		if (ActivateLEM) {
 			ProbeJetison = true;
 			bManualUnDock = true;
@@ -1419,21 +1413,25 @@ void SaturnV::StageSix(double simt)
 
 	if (bManualUnDock)
 	{
-		if (GetDockStatus(GetDockHandle(0))== hs4bM)//this check is for docking status if doked we cannot jetison ASTP
-		{
+		if (GetDockStatus(GetDockHandle(0)) == NULL) {
+			bManualUnDock = false;
+		}
+		else if (GetDockStatus(GetDockHandle(0)) == hs4bM) { //this check is for docking status if docked we cannot jetison ASTP
 			dockstate = 2;
 			release_time = simt;
-			Resetjet =true;
+			Resetjet = true;
 			DockStage (dockstate);
-			bManualUnDock=false;
+			bManualUnDock = false;
 		}
-		else if(GetDockStatus(GetDockHandle(0))==hLMV && dockstate ==3 && ProbeJetison){
+		else if(GetDockStatus(GetDockHandle(0)) == hLMV && dockstate == 3 && ProbeJetison) {
 			DockStage (dockstate);
 			Undock(0);
-			bManualUnDock=false;
+			// Disable docking probe because it's jettisoned 
+			dockingprobe.SetEnabled(false);
+			bManualUnDock = false;
 		}
-		else{
-			bManualUnDock=false;
+		else {
+			bManualUnDock = false;
 		}
 	}
 
@@ -1470,7 +1468,7 @@ void SaturnV::DoFirstTimestep(double simt)
 		// In TLI mode, disable the engines if we're waiting for
 		// the user to start the TLI burn or if it's been done.
 		//
-		if (Realism && (StageState == 0 || StageState == 8)) {
+		if (Realism && (StageState == 0 || StageState == 8 || StageState == 202 || StageState == 203)) {
 			SetThrusterResource(th_main[0], 0);
 		}
 
