@@ -1357,5 +1357,5 @@ MATERIAL Mtl #0
 0.9 0.9 0.9 1.0 53.0
 0.0 0.0 0.0 1.0
 TEXTURES 2
-dor.dds
-hopen.dds
+ProjectApollo/dor.dds
+ProjectApollo/hopen.dds

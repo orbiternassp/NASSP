@@ -7271,5 +7271,5 @@ MATERIAL material14
 1.000 1.000 1.000 1
 0 0 0 1
 TEXTURES 2
-OWS1.dds
-OWS2.dds
+ProjectApollo/OWS1.dds
+ProjectApollo/OWS2.dds
