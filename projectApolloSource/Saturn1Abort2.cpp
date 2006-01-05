@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/01/04 23:06:03  movieman523
+  *	Moved meshes into ProjectApollo directory and renamed a few.
+  *	
   *	Revision 1.2  2005/11/21 23:08:15  movieman523
   *	Moved more mesh files into the ProjectApollo directory.
   *	
@@ -40,7 +43,6 @@ const VECTOR3 OFS_STAGE22 =  { -1.85,1.85,24.5-12.25};
 const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85,24.5-12.25};
 const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 
-
 static int refcount = 0;
 static MESHHANDLE hSat1stg1;
 static MESHHANDLE hSat1stg2;
@@ -51,8 +53,7 @@ static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
 static MESHHANDLE hSat1tower;
 static MESHHANDLE hSM;
-UINT stage = 0;
-int status = 0;
+
 void SetSecondStage (VESSEL *vessel)
 {
 
@@ -95,7 +96,6 @@ void SetSecondStage (VESSEL *vessel)
 	mesh_dir=_V(0,0,30.15-12.25);
 	vessel->AddMesh (hSM, &mesh_dir);
 	mesh_dir=_V(0,0,34.40-12.25);
-	status = 1;
 }
 
 
@@ -107,7 +107,7 @@ void SetSecondStage (VESSEL *vessel)
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
-if (!refcount++) {
+	if (!refcount++) {
 		hSat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg1");
 		hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
 		hSat1stg20 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg20");
