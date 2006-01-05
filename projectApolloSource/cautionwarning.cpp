@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2005/12/19 16:49:52  tschachim
+  *	InhibitNextMasterAlarm for realism 0.
+  *	
   *	Revision 1.12  2005/11/18 02:40:55  movieman523
   *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
   *	
@@ -334,6 +337,7 @@ typedef union
 		unsigned MasterAlarm:1;
 		unsigned Source:2;
 		unsigned PowerBus:2;
+		unsigned InhibitNextMasterAlarm:1;
 	} u;
 	unsigned long word;
 } CWSState;
@@ -435,6 +439,7 @@ void CautionWarningSystem::SaveState(FILEHANDLE scn)
 	state.u.MasterAlarm = MasterAlarm;
 	state.u.Source = Source;
 	state.u.PowerBus = PowerBus;
+	state.u.InhibitNextMasterAlarm = InhibitNextMasterAlarm;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 
@@ -488,6 +493,7 @@ void CautionWarningSystem::LoadState(FILEHANDLE scn)
 			MasterAlarmLightEnabled = (state.u.MasterAlarmLightEnabled != 0);
 			Source = state.u.Source;
 			PowerBus = state.u.PowerBus;
+			InhibitNextMasterAlarm = (state.u.InhibitNextMasterAlarm != 0);
 		}
 	}
 }
