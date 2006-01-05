@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.105  2006/01/05 04:55:52  flydba
+  *	All clickable areas of the right & left hand side panels added now!
+  *	
   *	Revision 1.104  2006/01/04 23:06:03  movieman523
   *	Moved meshes into ProjectApollo directory and renamed a few.
   *	
@@ -357,6 +360,7 @@
 #include "iu.h"
 #include "satswitches.h"
 #include "powersource.h"
+#include "dockingprobe.h"
 
 //
 // Valves.
@@ -615,7 +619,7 @@ protected:
 
 	MissionTimer MissionTimerDisplay;
 	EventTimer EventTimerDisplay;
-
+	
 	//
 	// Center engine shutdown times for first and
 	// second stage.
@@ -1077,6 +1081,18 @@ protected:
 	//
 	SwitchRow HighGainAntennaPitchPositionSwitchRow;
 	RotationalSwitch HighGainAntennaPitchPositionSwitch;
+
+	//
+	// Docking probe switches
+	//
+	SwitchRow DockingProbeSwitchesRow;
+	GuardedThreePosSwitch DockingProbeExtdRelSwitch;
+	ThreePosSwitch DockingProbeRetractPrimSwitch;
+	ThreePosSwitch DockingProbeRetractSecSwitch;
+
+	SwitchRow DockingProbeIndicatorsRow;
+	IndicatorSwitch DockingProbeAIndicator;
+	IndicatorSwitch DockingProbeBIndicator;
 
 	//
 	// Orbiter switches
@@ -2013,7 +2029,6 @@ protected:
 	unsigned int	viewpos;
 
 	UINT probeidx;
-	bool probeOn;
 	bool ActivateASTP;
 	bool FIRSTCSM;
 	bool bManualSeparate;
@@ -2093,6 +2108,7 @@ protected:
 	IMU imu;
 	IU iu;
 	CSMCautionWarningSystem cws;
+	DockingProbe dockingprobe;
 
 	//
 	// Vessel handles.
@@ -2316,6 +2332,10 @@ protected:
 	Sound SApollo13;
 	Sound SSMSepExploded;
 	Sound SPUShiftS;
+	Sound SDockingCapture;
+	Sound SDockingLatch;
+	Sound SDockingExtend;
+	Sound SUndock;
 
 	//
 	// General engine resources.
