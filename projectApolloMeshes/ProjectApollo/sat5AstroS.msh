@@ -66156,11 +66156,11 @@ MATERIAL Material #6
 1.000 1.000 1.000 0.200
 0 0 0 1
 TEXTURES 8
-AST_TEXT.dds
-SUIT_TEX.dds
-USFLAG.dds
-PLSS_NA.dds
-RCU_NA.dds
-USFLAG2.dds
-BOOT2.dds
-VISOR11.dds
+ProjectApollo/AST_TEXT.dds
+ProjectApollo/SUIT_TEX.dds
+ProjectApollo/USFLAG.dds
+ProjectApollo/PLSS_NA.dds
+ProjectApollo/RCU_NA.dds
+ProjectApollo/USFLAG2.dds
+ProjectApollo/BOOT2.dds
+ProjectApollo/VISOR11.dds

@@ -30816,6 +30816,6 @@ MATERIAL Material #24
 0.898 0.898 0.898 0.000
 0 0 0 1
 TEXTURES 3
-LIGHTBLA.dds
-HATCH2.dds
-BLACKGRA.dds
+ProjectApollo/LIGHTBLA.dds
+ProjectApollo/HATCH2.dds
+ProjectApollo/BLACKGRA.dds

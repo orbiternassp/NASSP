@@ -30141,9 +30141,9 @@ MATERIAL Mtl #2
 0.9 0.9 0.9 1.0 0.0
 0.0 0.0 0.0 1.0
 TEXTURES 6
-slaster_1b.dds
-panel.dds
-cm_dt2_b.dds
-shutte1.dds
-cmb.dds
-cm_b_bottom.dds
+ProjectApollo/slaster_1b.dds
+ProjectApollo/panel.dds
+ProjectApollo/cm_dt2_b.dds
+ProjectApollo/shutte1.dds
+ProjectApollo/cmb.dds
+ProjectApollo/cm_b_bottom.dds

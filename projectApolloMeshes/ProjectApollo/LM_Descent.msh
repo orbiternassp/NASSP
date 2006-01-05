@@ -46037,14 +46037,14 @@ MATERIAL Material #24
 0.898 0.898 0.898 0.0 0.0
 0.0 0.0 0.0 0.0
 TEXTURES 11
-REDFOIL.dds
-SILVERFO.dds
-PORCH.dds
-LIGHTBLA.dds
-GOLDFOIL.dds
-LEGWRAP.dds
-QUAD1.dds
-QUAD4.dds
-QUAD2.dds
-QUAD3.dds
-BLACKGRA.dds
+ProjectApollo/REDFOIL.dds
+ProjectApollo/SILVERFO.dds
+ProjectApollo/PORCH.dds
+ProjectApollo/LIGHTBLA.dds
+ProjectApollo/GOLDFOIL.dds
+ProjectApollo/LEGWRAP.dds
+ProjectApollo/QUAD1.dds
+ProjectApollo/QUAD4.dds
+ProjectApollo/QUAD2.dds
+ProjectApollo/QUAD3.dds
+ProjectApollo/BLACKGRA.dds

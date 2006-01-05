@@ -73869,17 +73869,17 @@ MATERIAL Material #24
 0.898 0.898 0.898 0.000
 0 0 0 1
 TEXTURES 14
-BLACKGRA.dds
-GOLDFOIL.dds
-LIGHTBLA.dds
-REDFOIL.dds
-SILVERFO.dds
-QUAD1.dds
-QUAD2.dds
-QUAD3.dds
-QUAD4.dds
-LEGWRAP.dds
-RCS.dds
-HATCH2.dds
-HATCH2A.dds
-PORCH.dds
+ProjectApollo/BLACKGRA.dds
+ProjectApollo/GOLDFOIL.dds
+ProjectApollo/LIGHTBLA.dds
+ProjectApollo/REDFOIL.dds
+ProjectApollo/SILVERFO.dds
+ProjectApollo/QUAD1.dds
+ProjectApollo/QUAD2.dds
+ProjectApollo/QUAD3.dds
+ProjectApollo/QUAD4.dds
+ProjectApollo/LEGWRAP.dds
+ProjectApollo/RCS.dds
+ProjectApollo/HATCH2.dds
+ProjectApollo/HATCH2A.dds
+ProjectApollo/PORCH.dds
