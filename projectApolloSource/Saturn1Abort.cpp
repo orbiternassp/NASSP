@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/01/04 23:06:03  movieman523
+  *	Moved meshes into ProjectApollo directory and renamed a few.
+  *	
   *	Revision 1.2  2005/11/21 23:08:15  movieman523
   *	Moved more mesh files into the ProjectApollo directory.
   *	
@@ -51,8 +54,6 @@ static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
 static MESHHANDLE hSat1tower;
 static MESHHANDLE hSM;
-UINT stage = 0;
-int status = 0;
 
 void SetFirstStage (VESSEL *vessel)
 {
@@ -106,7 +107,6 @@ void SetFirstStage (VESSEL *vessel)
 	vessel->AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos3, 30.0, 1.25, &m_exhaust_ref);
 	vessel->AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos4, 30.0, 1.25, &m_exhaust_ref);
 	vessel->SetCameraOffset (_V(-1,1.0,34.15));
-	status = 0;
 	vessel->SetEngineLevel(ENGINE_MAIN,0);
 }
 

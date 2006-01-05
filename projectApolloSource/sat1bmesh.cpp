@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2006/01/04 23:06:03  movieman523
+  *	Moved meshes into ProjectApollo directory and renamed a few.
+  *	
   *	Revision 1.24  2005/12/28 16:19:10  movieman523
   *	Should now be getting all config files from ProjectApollo directory.
   *	
@@ -1107,7 +1110,7 @@ void Saturn1b::SeparateStage (int stage)
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		StageS.play();
-		habort = oapiCreateVessel ("Saturn_Abort", "ProjectApollo/nSaturn1Abort1", vs1);
+		habort = oapiCreateVessel ("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
 		SetAbortStage ();
 	}
 
@@ -1117,7 +1120,7 @@ void Saturn1b::SeparateStage (int stage)
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		StageS.play();
-		habort = oapiCreateVessel ("Saturn_Abort", "ProjectApollo/nSaturn1Abort2", vs1);
+		habort = oapiCreateVessel ("Saturn_Abort", "ProjectApollo/Saturn1bAbort2", vs1);
 		SetAbortStage ();
 	}
 
