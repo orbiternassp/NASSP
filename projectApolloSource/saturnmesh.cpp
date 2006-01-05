@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2006/01/04 23:06:03  movieman523
+  *	Moved meshes into ProjectApollo directory and renamed a few.
+  *	
   *	Revision 1.22  2006/01/04 19:51:54  movieman523
   *	Updated config file names.
   *	
@@ -585,10 +588,10 @@ void Saturn::SetCSMStage ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-	ShiftCentreOfMass (_V(0,0,21.5));
+	//ShiftCentreOfMass (_V(0,0,21.5));
 	if (FIRSTCSM){
 		//sprintf(oapiDebugString(), "shift %f", gaz);
-		ShiftCentreOfMass (_V(0,0,21.5));
+		//ShiftCentreOfMass (_V(0,0,21.5));
 		FIRSTCSM=false;
 	}
 	else if (bManualUnDock){
@@ -731,7 +734,6 @@ void Saturn::SetCSM2Stage ()
 	// **************************** NAV radios *************************************
 
 	InitNavRadios (4);
-	probeOn = false;
 	probeidx=0;
 
 	SetEnableFocus(true);
@@ -808,8 +810,9 @@ void Saturn::SetReentryStage ()
 void Saturn::StageSeven(double simt)
 
 {
-	if (CsmLmFinalSep1Switch.GetState()){
+	if (CsmLmFinalSep1Switch.GetState() || CsmLmFinalSep2Switch.GetState()) {
 		Undock(0);
+		dockingprobe.SetEnabled(false);
 	}
 
 	if (!Crewed) {
