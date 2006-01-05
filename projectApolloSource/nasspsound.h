@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/15 05:43:14  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.5  2005/04/20 17:56:29  movieman523
   *	Added SECO sound.
   *	
@@ -81,5 +84,9 @@
 #define ROTARY_SOUND				"rotary.wav"
 #define CIRCUITBREAKER_SOUND		"circuit_breaker.wav"
 #define THUMBWHEEL_SOUND			"thumbwheel.wav"
+#define DOCKINGCAPTURE_SOUND		"DockingCapture.wav"
+#define DOCKINGLATCH_SOUND			"DockingLatch.wav"
+#define DOCKINGEXTEND_SOUND			"DockingExtend.wav"
+#define UNDOCK_SOUND				"undocking.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"
