@@ -60,7 +60,7 @@
 #define AID_SWITCH_JET                  78
 #define AID_MAIN_RELEASE_SWITCH         79
 #define AID_LV_SWITCHES                 83
-#define AID_DOCKING_PROBE_SWITCH        84
+#define AID_DOCKINGPROBESWITCHES        84
 #define AID_SEQUENCERSWITCHES           86
 #define AID_LEM_POWER_SWITCH            87
 #define AID_SMRCS_HELIUM1_SWITCHES      89
@@ -433,9 +433,10 @@
 #define AID_DIRECTO2ROTARY					729
 #define IDB_ECSGLYCOLPUMPROTARY				730
 #define AID_RIGHTINTERIORLIGHTROTARIES		731
+#define AID_DOCKINGPROBEINDICATORS          732
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        296
