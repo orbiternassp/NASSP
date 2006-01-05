@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2005/12/19 17:05:33  tschachim
+  *	Introduced clbkConsumeBufferedKey
+  *	
   *	Revision 1.36  2005/11/25 20:59:49  movieman523
   *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
   *	
@@ -589,6 +592,8 @@ void Saturn1b::StageStartSIVB(double simt)
 			TowerJS.play();
 			TowerJS.done();
 			SetStage(LAUNCH_STAGE_SIVB);
+			// Enable docking probe because the tower is gone
+			dockingprobe.SetEnabled(true);
 		}
 		return;
 	}
@@ -818,10 +823,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 				}
 			}
 		}
-		if (CsmLmFinalSep2Switch.GetState()) {
-			Undock(0);
-		}
-		if (CsmLmFinalSep1Switch.GetState()) {
+		if (CsmLmFinalSep1Switch.GetState() || CsmLmFinalSep2Switch.GetState()) {
 			if (dockstate == 3) {
 				ProbeJetison = true;
 				bManualUnDock = true;
@@ -833,22 +835,6 @@ void Saturn1b::Timestep (double simt, double simdt)
 		if (RPswitch14 && HatchOpen){
 			ToggleEva = true;
 			RPswitch14=false;
-		}
-
-		if(!probeOn){
-			if (GetDockStatus(GetDockHandle(0))!=NULL){
-				Undock(0);
-				CrashBumpS.play(NOLOOP,150);
-			}
-		}
-		else{
-			if(GetDockStatus(GetDockHandle(0))==Saturn::hs4bM){
-
-			//sprintf(oapiDebugString() ,"loade %f");
-			}
-			else{
-				//sprintf(oapiDebugString() ,NULL);
-			}
 		}
 
 		for (int i=0 ;i<6;i++){
