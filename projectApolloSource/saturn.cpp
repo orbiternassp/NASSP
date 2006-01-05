@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2006/01/04 23:06:03  movieman523
+  *	Moved meshes into ProjectApollo directory and renamed a few.
+  *	
   *	Revision 1.74  2005/12/19 16:37:32  tschachim
   *	Realism modes, checklist actions.
   *	
@@ -282,7 +285,13 @@ extern "C" {
 
 //extern FILE *PanelsdkLogFile;
 
-Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundlib, dsky, dsky2, imu), dsky(soundlib, agc, 015), dsky2(soundlib, agc, 016), imu(agc), cws(SMasterAlarm, Bclick)
+Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
+							   agc(soundlib, dsky, dsky2, imu), 
+							   dsky(soundlib, agc, 015), 
+							   dsky2(soundlib, agc, 016), 
+							   imu(agc), 
+							   cws(SMasterAlarm, Bclick),
+							   dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS)  
 
 {
 	InitSaturnCalled = false;
@@ -294,6 +303,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), agc(soundli
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	cws.MonitorVessel(this);
+	dockingprobe.RegisterVessel(this);
 }
 
 Saturn::~Saturn()
@@ -348,7 +358,6 @@ void Saturn::initSaturn()
 	bManualUnDock = false;
 	bManualSeparate = false;
 	ASTPMission = false;
-	probeOn = true;
 	bToggleHatch = false;
 
 	AutoSlow = false;
@@ -827,8 +836,9 @@ void Saturn::KillAlt(OBJHANDLE &hvessel, double altVS)
 
 
 void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
-{
 
+{
+	dockingprobe.DockEvent(dock, connected); 
 }
 
 void Saturn::clbkPreStep(double simt, double simdt, double mjd)
@@ -1054,12 +1064,16 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (LEMName[0])
 		oapiWriteScenario_string (scn, "LEMN", LEMName);
 
+	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
+	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
+
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	dsky2.SaveState(scn, DSKY2_START_STRING, DSKY2_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
 	cws.SaveState(scn);
 	iu.SaveState(scn);
+	dockingprobe.SaveState(scn);
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
@@ -1070,8 +1084,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	// save the state of the switches
 	PSH.SaveState(scn);	
-	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
-	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 }
 
 //
@@ -1756,6 +1768,9 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, CWS_START_STRING, sizeof(CWS_START_STRING))) {
 			cws.LoadState(scn);
 		}
+		else if (!strnicmp(line, DOCKINGPROBE_START_STRING, sizeof(DOCKINGPROBE_START_STRING))) {
+			dockingprobe.LoadState(scn);
+		}
 		else if (!strnicmp (line, "SYSTEMSSTATE", 12)) {
 			sscanf (line + 12, "%d", &systemsState);
 		}
@@ -2167,9 +2182,12 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		}
 	}
 
-	// Docking radar sound only for CSM_LEM_STAGE
+	// Docking radar sound only for CSM_LEM_STAGE when nothing docked
 	if (stage == CSM_LEM_STAGE) {
-		soundlib.SoundOptionOnOff(PLAYRADARBIP, TRUE);
+		if (!dockingprobe.GetDocked())
+			soundlib.SoundOptionOnOff(PLAYRADARBIP, TRUE);
+		else
+			soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 	}
 	else {
 		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
@@ -2786,8 +2804,14 @@ void Saturn::GenericLoadStateSetup()
 	//
 	// Turn off the timer display on launch.
 	//
-
+	
 	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
+
+	//
+	// Turn off docking sound
+	//
+	
+	soundlib.SoundOptionOnOff(PLAYDOCKINGSOUND, FALSE);
 }
 
 void Saturn::UllageSM(OBJHANDLE hvessel,double gaz1, double time)
@@ -3049,6 +3073,10 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(SplashS, SPLASH_SOUND);
 	soundlib.LoadSound(StageS, "Stagesep.wav");
 	soundlib.LoadSound(CrashBumpS, "Crash.wav");
+	soundlib.LoadSound(SDockingCapture, DOCKINGCAPTURE_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(SDockingLatch, DOCKINGLATCH_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(SDockingExtend, DOCKINGEXTEND_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(SUndock, UNDOCK_SOUND, INTERNAL_ONLY);
 
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
