@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2005/12/19 17:22:50  tschachim
+  *	Realism mode, SwitchTo functions.
+  *	
   *	Revision 1.37  2005/12/02 19:47:19  movieman523
   *	Replaced most PowerSource code with e_object.
   *	
@@ -1113,10 +1116,10 @@ void GuardedThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 
 	if (guardResetsState) { 
 		if(guardState) {
-			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight);
+			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
 			ThreePosSwitch::DrawSwitch(DrawSurface);
 		} else {
-			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight);
+			oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
 		}
 	} else {
 		if (guardState) {
