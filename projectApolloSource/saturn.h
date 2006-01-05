@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.104  2006/01/04 23:06:03  movieman523
+  *	Moved meshes into ProjectApollo directory and renamed a few.
+  *	
   *	Revision 1.103  2006/01/04 01:57:08  flydba
   *	Switches on panel 8 now set.
   *	
@@ -1334,6 +1337,14 @@ protected:
 	ToggleSwitch InteriorLightsFloodFixedSwitch;
 
 	//////////////////////
+	// Panel 5 rotaries //
+	//////////////////////
+	
+	SwitchRow RightInteriorLightRotariesRow;
+	RotationalSwitch RightIntegralRotarySwitch;
+	RotationalSwitch RightFloodRotarySwitch;
+
+	//////////////////////
 	// Panel 4 switches //
 	//////////////////////
 
@@ -1575,6 +1586,48 @@ protected:
 
 	SwitchRow FloodFixedSwitchRow;
 	ThreePosSwitch FloodFixedSwitch;
+
+	//////////////////////
+	// Panel 7 switches //
+	//////////////////////
+
+	SwitchRow EDSPowerSwitchRow;
+	ToggleSwitch EDSPowerSwitch;
+
+	SwitchRow TVCServorPowerSwitchesRow;
+	ThreePosSwitch TVCServorPower1Switch;
+	ThreePosSwitch TVCServorPower2Switch;
+
+	SwitchRow LogicPowerSwitchRow;
+	ToggleSwitch LogicPowerSwitch;
+
+	SwitchRow SIGCondDriverBiasPowerSwitchesRow;
+	ThreePosSwitch SIGCondDriverBiasPower1Switch;
+	ThreePosSwitch SIGCondDriverBiasPower2Switch;
+
+	//////////////////////
+	// Panel 7 rotaries //
+	//////////////////////
+
+	SwitchRow LeftInteriorLightRotariesRow;
+	RotationalSwitch NumericRotarySwitch;
+	RotationalSwitch FloodRotarySwitch;
+	RotationalSwitch IntegralRotarySwitch;
+
+	SwitchRow FDAIPowerRotaryRow;
+	RotationalSwitch FDAIPowerRotarySwitch;
+
+	SwitchRow SCSElectronicsPowerRotaryRow;
+	RotationalSwitch SCSElectronicsPowerRotarySwitch;
+
+	SwitchRow BMAGPowerRotary1Row;
+	RotationalSwitch BMAGPowerRotary1Switch;
+
+	SwitchRow BMAGPowerRotary2Row;
+	RotationalSwitch BMAGPowerRotary2Switch;
+
+	SwitchRow DirectO2RotaryRow;
+	RotationalSwitch DirectO2RotarySwitch;
 
 	//
 	// OLD Switches: delete these as and when we can do so.
