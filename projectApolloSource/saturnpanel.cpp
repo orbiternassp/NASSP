@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.117  2006/01/06 20:37:18  movieman523
+  *	Made the voltage and current meters work. Currently hard-coded to main bus A and AC bus 1.
+  *	
   *	Revision 1.116  2006/01/06 19:46:16  flydba
   *	Switches added on main panel 1.
   *	
@@ -486,7 +489,7 @@ void Saturn::RedrawPanel_Thrust (SURFHANDLE surf)
 	oapiBlt (surf, srf[SRF_THRUSTMETER], 0, 0, 0, 0, 95, 91, SURF_PREDEF_CK);
 }
 
-void Saturn::RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int srf_id)
+void Saturn::RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int srf_id, double &last_val)
 {
 	double range;
 
@@ -494,6 +497,27 @@ void Saturn::RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int sr
 		fraction = 1.0;
 	if (fraction < 0.0)
 		fraction = 0.0;
+
+	//
+	// Damp motion.
+	//
+
+	double delta = 0.005 * oapiGetTimeAcceleration();
+
+	if (fraction > last_val) {
+		if (fraction - last_val > delta)
+			fraction = last_val + delta;
+		else
+			fraction = last_val;
+	}
+	else {
+		if (last_val - fraction > delta)
+			fraction = last_val - delta;
+		else
+			fraction = last_val;
+	}
+
+	last_val = fraction;
 
 	range = 270.0 * RAD;
 	fraction = 1.0 - fraction;
@@ -3352,7 +3376,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		// For now we'll always display main bus A voltage.
 		//
 
-		RedrawPanel_ElectricMeter(surf, (MainBusA->Voltage() - 17.0) / 30.0, SRF_DCVOLTS);
+		RedrawPanel_ElectricMeter(surf, (MainBusA->Voltage() - 17.0) / 30.0, SRF_DCVOLTS, LastDCVoltDisplay);
 		return true;
 
 
@@ -3361,7 +3385,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		// For now we'll always display main bus A current.
 		//
 
-		RedrawPanel_ElectricMeter(surf, (MainBusA->Current() + 10.0) / 120.0, SRF_DCAMPS);
+		RedrawPanel_ElectricMeter(surf, (MainBusA->Current() + 10.0) / 120.0, SRF_DCAMPS, LastDCAmpDisplay);
 		return true;
 
 	case AID_ACVOLTS:
@@ -3369,7 +3393,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		// For now we'll always display AC bus 1 voltage.
 		//
 
-		RedrawPanel_ElectricMeter(surf, (ACBus1.Voltage() - 85.0) / 60.0, SRF_ACVOLTS);
+		RedrawPanel_ElectricMeter(surf, (ACBus1.Voltage() - 85.0) / 60.0, SRF_ACVOLTS, LastACVoltDisplay);
 		return true;
 
 	case AID_MASTER_ALARM:

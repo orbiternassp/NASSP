@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2006/01/05 11:59:59  tschachim
+  *	New dockingprobe handling, bugfixes.
+  *	
   *	Revision 1.75  2006/01/04 23:06:03  movieman523
   *	Moved meshes into ProjectApollo directory and renamed a few.
   *	
@@ -424,6 +427,14 @@ void Saturn::initSaturn()
 	habort = 0;
 	hSMJet = 0;
 	hLMV = 0;
+
+	//
+	// State for damping electrical meter display.
+	//
+
+	LastACVoltDisplay = 0.0;
+	LastDCVoltDisplay = 0.0;
+	LastDCAmpDisplay = 0.0;
 
 	//
 	// Default mission time to an hour prior to launch.
