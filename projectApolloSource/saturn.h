@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.108  2006/01/06 19:45:45  flydba
+  *	Switches added on main panel 1.
+  *	
   *	Revision 1.107  2006/01/06 02:06:07  flydba
   *	Some changes done on the main panel.
   *	
@@ -2203,6 +2206,7 @@ protected:
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
+	void RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int srf_id);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
