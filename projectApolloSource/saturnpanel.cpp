@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.116  2006/01/06 19:46:16  flydba
+  *	Switches added on main panel 1.
+  *	
   *	Revision 1.115  2006/01/06 02:06:52  flydba
   *	Some changes done on the main panel.
   *	
@@ -403,16 +406,23 @@
 
 extern GDIParams g_Param;
 
-void BaseInit() {
+void BaseInit() 
 
+{
+	//
 	// need to init device-dependent resources here in case the screen mode has changed
+	//
+
 	g_Param.col[2] = oapiGetColour(154, 154, 154);
 	g_Param.col[3] = oapiGetColour(3, 3, 3);
 	g_Param.col[4] = oapiGetColour(255, 0, 255);
 	g_Param.col[5] = oapiGetColour(255, 0, 255);
 }
 
+//
 //Needle function by Rob Conley from Mercury code
+//
+
 void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPEN pen1)
 {
 	double dx = rad * cos(angle), dy = rad * sin(angle);
@@ -426,6 +436,10 @@ void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPE
 	SelectObject (hDC, oldObj);
 }
 
+//
+// Draw G meter.
+//
+
 void Saturn::RedrawPanel_G (SURFHANDLE surf)
 {
 	double alpha = aZAcc / G;
@@ -435,11 +449,15 @@ void Saturn::RedrawPanel_G (SURFHANDLE surf)
 	double angle = (-alpha * 180.0 / 12.0) + 180.0;
 
 	HDC hDC = oapiGetDC (surf);
-	DrawNeedle (hDC, 40, 40, 35.0, angle * RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
+	DrawNeedle (hDC, 40, 40, 35.0, angle * RAD, g_Param.pen[4], g_Param.pen[4]);
 	oapiReleaseDC (surf, hDC);
 
 	//oapiBlt (surf, srf[15], 0, 0, 0, 0, 56, 57, SURF_PREDEF_CK);
 }
+
+//
+// Draw 'thrust meter'.
+//
 
 void Saturn::RedrawPanel_Thrust (SURFHANDLE surf)
 {
@@ -462,13 +480,33 @@ void Saturn::RedrawPanel_Thrust (SURFHANDLE surf)
 	range = range / 100;
 	alpha = 100 - alpha;
 	HDC hDC = oapiGetDC (surf);
-	DrawNeedle (hDC, 48, 45, 20.0, (alpha*range)-45*RAD, g_Param.pen[4], g_Param.pen[4]);//(alpha * range)
+	DrawNeedle (hDC, 48, 45, 20.0, (alpha*range)-45*RAD, g_Param.pen[4], g_Param.pen[4]);
 	oapiReleaseDC (surf, hDC);
 
 	oapiBlt (surf, srf[SRF_THRUSTMETER], 0, 0, 0, 0, 95, 91, SURF_PREDEF_CK);
 }
 
+void Saturn::RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int srf_id)
+{
+	double range;
+
+	if (fraction > 1.0)
+		fraction = 1.0;
+	if (fraction < 0.0)
+		fraction = 0.0;
+
+	range = 270.0 * RAD;
+	fraction = 1.0 - fraction;
+	HDC hDC = oapiGetDC (surf);
+	DrawNeedle (hDC, 49, 49, 20.0, (fraction*range)-45*RAD, g_Param.pen[4], g_Param.pen[4]);
+	oapiReleaseDC (surf, hDC);
+
+	oapiBlt (surf, srf[srf_id], 0, 0, 0, 0, 98, 97, SURF_PREDEF_CK);
+}
+
+//
 // Altimeter Needle function by Rob Conley from Mercury code, Heavily modified to have non linear gauge range... :):)
+//
 
 void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 {
@@ -654,6 +692,9 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_ALTIMETER]				= oapiCreateSurface (LOADBMP (IDB_ALTIMETER));
 		//srf[15]							= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
 		srf[SRF_THRUSTMETER]			= oapiCreateSurface (LOADBMP (IDB_THRUST));
+		srf[SRF_DCVOLTS]				= oapiCreateSurface (LOADBMP (IDB_DCVOLTS));
+		srf[SRF_DCAMPS]					= oapiCreateSurface (LOADBMP (IDB_DCAMPS));
+		srf[SRF_ACVOLTS]				= oapiCreateSurface (LOADBMP (IDB_ACVOLTS));
 		srf[SRF_SEQUENCERSWITCHES]		= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
 		srf[18]							= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
 		srf[SRF_MASTERALARM_BRIGHT]		= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
@@ -968,6 +1009,9 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ATTITUDE_CONTROL_SWITCHES,					_R( 190,  838,  482,  867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_BMAG_SWITCHES,								_R( 125, 1036,  258, 1065), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_THRUSTMETER,									_R( 498,  920,  593, 1011), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DCVOLTS,										_R(3154,  761, 3253,  859), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DCAMPS,										_R(3135,  656, 3234,  754), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ACVOLTS,										_R(3365, 1069, 3464, 1167), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ENTRY_MODE_SWITCH,							_R( 593,  402,  628,  432), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CMC_SWITCH,									_R( 343,  635,  377,  664), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FDAI_SWITCHES,								_R( 265,  742,  484,  771), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
@@ -3301,6 +3345,31 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_THRUSTMETER  :
 		RedrawPanel_Thrust(surf);
+		return true;
+
+	case AID_DCVOLTS:
+		//
+		// For now we'll always display main bus A voltage.
+		//
+
+		RedrawPanel_ElectricMeter(surf, (MainBusA->Voltage() - 17.0) / 30.0, SRF_DCVOLTS);
+		return true;
+
+
+	case AID_DCAMPS:
+		//
+		// For now we'll always display main bus A current.
+		//
+
+		RedrawPanel_ElectricMeter(surf, (MainBusA->Current() + 10.0) / 120.0, SRF_DCAMPS);
+		return true;
+
+	case AID_ACVOLTS:
+		//
+		// For now we'll always display AC bus 1 voltage.
+		//
+
+		RedrawPanel_ElectricMeter(surf, (ACBus1.Voltage() - 85.0) / 60.0, SRF_ACVOLTS);
 		return true;
 
 	case AID_MASTER_ALARM:

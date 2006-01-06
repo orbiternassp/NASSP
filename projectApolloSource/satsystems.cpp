@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/01/05 11:28:28  tschachim
+  *	New dockingprobe handling.
+  *	
   *	Revision 1.46  2005/12/19 17:09:25  tschachim
   *	Bugfixes, checklist actions.
   *	
@@ -662,8 +665,8 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 #ifdef _DEBUG
 
 //		sprintf(oapiDebugString(), "Bus A = %fA/%fV, Bus B = %fA/%fV, AC Bus 1 = %fA/%fV, AC Bus 2 = %fA/%fV, Batt A = %fV, Batt B = %fV", 
-//			MainBusA.Current(), MainBusA.Voltage(), MainBusB.Current(), MainBusB.Voltage(),
-//			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA.Voltage(), EntryBatteryB.Voltage());
+//			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
+//			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA->Voltage(), EntryBatteryB->Voltage());
 //		sprintf(oapiDebugString(), "FC1 %3.3fV/%3.3fA/%3.3fW FC2 %3.3fV/%3.3fA/%3.3fW FC3 %3.3fV/%3.3fA/%3.3fW",
 //			FuelCells[0]->Voltage(), FuelCells[0]->Current(), FuelCells[0]->PowerLoad(),
 //			FuelCells[1]->Voltage(), FuelCells[1]->Current(), FuelCells[1]->PowerLoad(),

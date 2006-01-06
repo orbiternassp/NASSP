@@ -17,6 +17,7 @@
 #define AID_DSKY2_KEY                   23
 #define AID_SWITCH_PANEL_LEFT           24
 #define AID_GAUGES_CENTER               25
+#define AID_DCAMPS						26
 #define AID_ALTIMETER                   27
 #define AID_GMETER                      28
 #define AID_THRUSTMETER                 29
@@ -47,11 +48,13 @@
 #define AID_SM_RCS_MODE                 54
 #define AID_SPS_GIMBAL_SWITCHES         55
 #define AID_TLI_SWITCH                  56
+#define AID_ACVOLTS						57
 #define AID_CMC_SWITCH                  58
 #define AID_SC_SWITCH                   59
 #define AID_ELS_SWITCHES                66
 #define AID_CMD_SWITCH                  68
 #define AID_CMP_SWITCH                  69
+#define AID_DCVOLTS						70
 #define AID_FCSM_SWITCH                 71
 #define AID_DIRECT_ULLAGE_THRUST_ON_LIGHT 73
 #define AID_LV_ENGINE_LIGHTS            74
@@ -68,6 +71,7 @@
 #define AID_PRIM_PRPLNT_SWITCHES        93
 #define AID_SEC_PRPLT_SWITCHES          96
 #define AID_P28                         99
+#define IDB_DCVOLTS						100
 #define IDB_MAINPANEL                   101
 #define IDB_PANEL2                      102
 #define IDB_PANEL3                      103
@@ -77,6 +81,8 @@
 #define IDB_INDICATOR                   107
 #define IDB_HORIZON                     108
 #define IDB_SLIDER1                     109
+#define IDB_DCAMPS						110
+#define IDB_ACVOLTS						111
 #define IDB_SWITCH2                     152
 #define IDB_SWITCH3                     153
 #define IDB_VPITCH                      154
