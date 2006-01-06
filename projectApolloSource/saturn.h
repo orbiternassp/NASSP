@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.109  2006/01/06 20:37:18  movieman523
+  *	Made the voltage and current meters work. Currently hard-coded to main bus A and AC bus 1.
+  *	
   *	Revision 1.108  2006/01/06 19:45:45  flydba
   *	Switches added on main panel 1.
   *	
@@ -1966,7 +1969,9 @@ protected:
 	h_HeatExchanger *PrimEcsRadiatorExchanger2;
 
 
-
+	double LastACVoltDisplay;
+	double LastDCVoltDisplay;
+	double LastDCAmpDisplay;
 
 	// old stuff begin
 
@@ -2206,7 +2211,7 @@ protected:
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
-	void RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int srf_id);
+	void RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int srf_id, double &last_val);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
