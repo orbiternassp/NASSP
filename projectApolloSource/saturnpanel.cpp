@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.118  2006/01/06 21:40:15  movieman523
+  *	Quick hack for damping electrical meters.
+  *	
   *	Revision 1.117  2006/01/06 20:37:18  movieman523
   *	Made the voltage and current meters work. Currently hard-coded to main bus A and AC bus 1.
   *	
@@ -507,14 +510,10 @@ void Saturn::RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int sr
 	if (fraction > last_val) {
 		if (fraction - last_val > delta)
 			fraction = last_val + delta;
-		else
-			fraction = last_val;
 	}
 	else {
 		if (last_val - fraction > delta)
 			fraction = last_val - delta;
-		else
-			fraction = last_val;
 	}
 
 	last_val = fraction;

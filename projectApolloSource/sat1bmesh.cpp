@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2006/01/05 19:40:53  movieman523
+  *	Added Saturn1b abort stages to build.
+  *	
   *	Revision 1.25  2006/01/04 23:06:03  movieman523
   *	Moved meshes into ProjectApollo directory and renamed a few.
   *	
@@ -1076,7 +1079,7 @@ void Saturn1b::SeparateStage (int stage)
 			hPROBE = oapiCreateVessel(VName, "ProjectApollo/nsat1probe", vs4b);
 		}
 		GetApolloName(VName); strcat (VName, "-SM");
-		hSMJet = oapiCreateVessel(VName, "ProjectApollo/nSAT1_SM", vs1);
+		hSMJet = oapiCreateVessel(VName, "ProjectApollo/SM", vs1);
 
 		//
 		// Tell AGC the CM has seperated from the SM.

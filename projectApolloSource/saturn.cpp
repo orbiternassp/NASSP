@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2006/01/06 21:40:15  movieman523
+  *	Quick hack for damping electrical meters.
+  *	
   *	Revision 1.76  2006/01/05 11:59:59  tschachim
   *	New dockingprobe handling, bugfixes.
   *	
@@ -1951,7 +1954,24 @@ void Saturn::DestroyStages(double simt)
 		else if (!SMSep){
 			UllageSM(hSMJet,5,simt);
 		}
-		KillAlt(hSMJet,350000);
+		KillAlt(hSMJet,35000);
+	}
+}
+
+void Saturn::CheckSMSystemsState()
+
+{
+	//
+	// If we've seperated from the SM, disable the fuel cells so they appear to have
+	// been disconnected.
+	//
+
+	if (stage >= CM_STAGE) {
+		int i;
+		for (i = 0; i < 3; i++) {
+			if (FuelCells[i])
+				FuelCells[i]->Disable();
+		}
 	}
 }
 
@@ -1961,6 +1981,7 @@ void Saturn::SetStage(int s)
 	stage = s;
 	StageState = 0;
 
+	CheckSMSystemsState();
 	CheckRCSState();
 	CheckSPSState();
 }
@@ -2966,8 +2987,9 @@ void Saturn::SetGenericStageState()
 	case CSM_ABORT_STAGE:
 		SetAbortStage();
 		break;
-
 	}
+
+	CheckSMSystemsState();
 }
 
 void Saturn::SIVBBoiloff()

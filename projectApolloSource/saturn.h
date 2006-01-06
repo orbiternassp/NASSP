@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.110  2006/01/06 21:40:15  movieman523
+  *	Quick hack for damping electrical meters.
+  *	
   *	Revision 1.109  2006/01/06 20:37:18  movieman523
   *	Made the voltage and current meters work. Currently hard-coded to main bus A and AC bus 1.
   *	
@@ -588,6 +591,7 @@ public:
 	bool GetValveState(int valve);
 	void CheckSPSState();
 	void CheckRCSState();
+	void CheckSMSystemsState();
 	int GetSwitchState(char *switchName);
 	int GetRotationalSwitchState(char *switchName);
 
