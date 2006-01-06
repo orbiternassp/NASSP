@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2006/01/05 11:27:48  tschachim
+  *	New dockingprobe handling.
+  *	
   *	Revision 1.33  2006/01/04 02:55:49  movieman523
   *	Use LEM.cfg, not sat5_LMPKD.cfg.
   *	
@@ -1247,7 +1250,7 @@ void SaturnV::SeparateStage (int stage)
 		}
 
 		GetApolloName(VName); strcat (VName, "-SM");
-		hSMJet = oapiCreateVessel(VName, "ProjectApollo/sat1_SM", vs1);
+		hSMJet = oapiCreateVessel(VName, "ProjectApollo/SM", vs1);
 		SetReentryStage ();
 
 		//
