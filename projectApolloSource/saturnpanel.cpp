@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.115  2006/01/06 02:06:52  flydba
+  *	Some changes done on the main panel.
+  *	
   *	Revision 1.114  2006/01/05 12:06:52  tschachim
   *	New dockingprobe handling.
   *	
@@ -1000,6 +1003,12 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_DOCKINGPROBEINDICATORS,      				_R(1396,  179, 1419,  229), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EMSFUNCTIONSWITCH,      						_R( 598,  283,  682,  367), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_GTASWITCH,		    						_R( 904,  288,  959,  399), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SCCONTCMCMODESWITCHES,      					_R( 383,  948,  460,  977), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SCSTVCSWITCHES,      						_R( 380, 1173,  457, 1202), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SPSGIMBALMOTORSSWITCHES,      				_R( 472, 1173,  654, 1202), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ENTRYSWITCHES,      							_R( 336, 1260,  413, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LVSPSINDICATORSWITCHES,      				_R( 422, 1260,  499, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_TVCGIMBALDRIVESWITCHES,      				_R( 508, 1260,  585, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		// Display & keyboard (DSKY), main panel uses the main DSKY.
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1247,6 +1256,32 @@ void Saturn::SetSwitches(int panel) {
 	O2Fan1Switch.Init    (478, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
 	O2Fan2Switch.Init    (541, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
 
+	SCContCMCModeSwitchesRow.Init(AID_SCCONTCMCMODESWITCHES, MainPanel);
+	SCContSwitch.Init(  0, 0, 34, 29, srf[SRF_SWITCHUP], SCContCMCModeSwitchesRow);
+	CMCModeSwitch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SCContCMCModeSwitchesRow);
+	
+	SCSTvcSwitchesRow.Init(AID_SCSTVCSWITCHES, MainPanel);
+	SCSTvcPitchSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SCSTvcSwitchesRow);
+	SCSTvcYawSwitch.Init  (43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SCSTvcSwitchesRow);
+	
+	SPSGimbalMotorsRow.Init(AID_SPSGIMBALMOTORSSWITCHES, MainPanel);
+	Pitch1Switch.Init(  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SPSGimbalMotorsRow);
+	Pitch2Switch.Init( 49, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SPSGimbalMotorsRow);
+	Yaw1Switch.Init  ( 98, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SPSGimbalMotorsRow);
+	Yaw2Switch.Init  (148, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SPSGimbalMotorsRow);
+
+	EntrySwitchesRow.Init(AID_ENTRYSWITCHES, MainPanel);
+	EMSRollSwitch.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], EntrySwitchesRow); 
+	GSwitch.Init    (43, 0, 34, 29, srf[SRF_SWITCHUP], EntrySwitchesRow); 
+	
+	LVSPSIndSwitchesRow.Init(AID_LVSPSINDICATORSWITCHES, MainPanel);
+	LVSPSPcIndicatorSwitch.Init        ( 0, 0, 34, 29, srf[SRF_SWITCHUP], LVSPSIndSwitchesRow); 
+	LVFuelTankPressIndicatorSwitch.Init(43, 0, 34, 29, srf[SRF_SWITCHUP], LVSPSIndSwitchesRow);
+	
+	TVCGimbalDriveSwitchesRow.Init(AID_TVCGIMBALDRIVESWITCHES, MainPanel);
+	TVCGimbalDrivePitchSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], TVCGimbalDriveSwitchesRow);
+	TVCGimbalDriveYawSwitch.Init  (43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], TVCGimbalDriveSwitchesRow);
+	
 	//
 	// SM RCS Helium 1
 	//
@@ -3702,6 +3737,26 @@ void Saturn::InitSwitches() {
 	O2Fan1Switch.Register(PSH, "O2Fan1Switch", THREEPOSSWITCH_UP);
 	O2Fan2Switch.Register(PSH, "O2Fan2Switch", THREEPOSSWITCH_UP);
 
+	SCContSwitch.Register(PSH, "SCContSwitch", false);
+	CMCModeSwitch.Register(PSH, "CMCModeSwitch", THREEPOSSWITCH_CENTER);
+
+	SCSTvcPitchSwitch.Register(PSH, "SCSTvcPitchSwitch", THREEPOSSWITCH_CENTER);
+	SCSTvcYawSwitch.Register(PSH, "SCSTvcYawSwitch", THREEPOSSWITCH_CENTER);
+
+	Pitch1Switch.Register(PSH, "Pitch1Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Pitch2Switch.Register(PSH, "Pitch2Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Yaw1Switch.Register(PSH, "Yaw1Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	Yaw2Switch.Register(PSH, "Yaw2Switch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+
+	EMSRollSwitch.Register(PSH, "EMSRollSwitch", false);
+	GSwitch.Register(PSH, "GSwitch", false);
+
+	LVSPSPcIndicatorSwitch.Register(PSH, "LVSPSPcIndicatorSwitch", false);
+	LVFuelTankPressIndicatorSwitch.Register(PSH, "LVFuelTankPressIndicatorSwitch", false);
+
+	TVCGimbalDrivePitchSwitch.Register(PSH, "TVCGimbalDrivePitchSwitch", THREEPOSSWITCH_CENTER);
+	TVCGimbalDriveYawSwitch.Register(PSH, "TVCGimbalDriveYawSwitch", THREEPOSSWITCH_CENTER);
+	
 	FuelCellPhIndicator.Register(PSH, "FuelCellPhIndicator", false);
 	FuelCellRadTempIndicator.Register(PSH, "FuelCellRadTempIndicator", false);
 
