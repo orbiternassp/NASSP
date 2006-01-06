@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.107  2006/01/06 02:06:07  flydba
+  *	Some changes done on the main panel.
+  *	
   *	Revision 1.106  2006/01/05 12:11:02  tschachim
   *	New dockingprobe handling.
   *	
@@ -888,6 +891,32 @@ protected:
 
 	SwitchRow GTASwitchRow;
 	GuardedToggleSwitch GTASwitch;
+
+	SwitchRow SCContCMCModeSwitchesRow;
+	ToggleSwitch SCContSwitch;
+	ThreePosSwitch CMCModeSwitch;
+
+	SwitchRow SCSTvcSwitchesRow;
+	ThreePosSwitch SCSTvcPitchSwitch;
+	ThreePosSwitch SCSTvcYawSwitch;
+
+	SwitchRow SPSGimbalMotorsRow;
+	ThreePosSwitch Pitch1Switch;
+	ThreePosSwitch Pitch2Switch;
+	ThreePosSwitch Yaw1Switch;
+	ThreePosSwitch Yaw2Switch;
+
+	SwitchRow EntrySwitchesRow;
+	ToggleSwitch EMSRollSwitch;
+	ToggleSwitch GSwitch;
+
+	SwitchRow LVSPSIndSwitchesRow;
+	ToggleSwitch LVSPSPcIndicatorSwitch;
+	ToggleSwitch LVFuelTankPressIndicatorSwitch;
+
+	SwitchRow TVCGimbalDriveSwitchesRow;
+	ThreePosSwitch TVCGimbalDrivePitchSwitch;
+	ThreePosSwitch TVCGimbalDriveYawSwitch;
 	
 	//
 	// FDAI control switches.
