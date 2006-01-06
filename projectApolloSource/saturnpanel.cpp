@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.114  2006/01/05 12:06:52  tschachim
+  *	New dockingprobe handling.
+  *	
   *	Revision 1.113  2006/01/05 04:54:30  flydba
   *	All clickable areas of the right & left hand side panels added now!
   *
@@ -691,6 +694,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_SCSBMAGROTARY]			= oapiCreateSurface (LOADBMP (IDB_SCSBMAGROTARY));
 		srf[SRF_DIRECTO2ROTARY]			= oapiCreateSurface (LOADBMP (IDB_DIRECTO2ROTARY));
 		srf[SRF_ECSGLYCOLPUMPROTARY]	= oapiCreateSurface (LOADBMP (IDB_ECSGLYCOLPUMPROTARY));
+		srf[SRF_GTACOVER]				= oapiCreateSurface (LOADBMP (IDB_GTACOVER));
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -734,6 +738,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_SCSBMAGROTARY],		g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_DIRECTO2ROTARY],		g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_ECSGLYCOLPUMPROTARY],	g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_GTACOVER],				g_Param.col[4]);
 /*		break;
 	}
 */
@@ -993,7 +998,9 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CABINTEMPAUTOCONTROLSWITCH,					_R(2441,  843, 2458,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DOCKINGPROBESWITCHES,    					_R(1389,  263, 1725,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DOCKINGPROBEINDICATORS,      				_R(1396,  179, 1419,  229), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-
+		oapiRegisterPanelArea (AID_EMSFUNCTIONSWITCH,      						_R( 598,  283,  682,  367), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GTASWITCH,		    						_R( 904,  288,  959,  399), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		
 		// Display & keyboard (DSKY), main panel uses the main DSKY.
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -1653,6 +1660,17 @@ void Saturn::SetSwitches(int panel) {
 	DockingProbeAIndicator.Init(  0,  0, 23, 23, srf[SRF_INDICATOR], DockingProbeIndicatorsRow);
 	DockingProbeBIndicator.Init(  0, 27, 23, 23, srf[SRF_INDICATOR], DockingProbeIndicatorsRow);
 
+	//
+	// EMS switches
+	//
+
+	EMSFunctionSwitchRow.Init(AID_EMSFUNCTIONSWITCH, MainPanel);
+	EMSFunctionSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], EMSFunctionSwitchRow);
+	
+	GTASwitchRow.Init(AID_GTASWITCH, MainPanel);
+	GTASwitch.Init(10, 52, 34,  29, srf[SRF_SWITCHUP], GTASwitchRow);
+	GTASwitch.InitGuard(0,  0, 55, 111, srf[SRF_GTACOVER]);
+	
 	//
 	// SATPANEL_RIGHT
 	//
@@ -3790,6 +3808,8 @@ void Saturn::InitSwitches() {
 
 	PostLandingDYEMarkerSwitch.Register(PSH, "PostLandingDYEMarkerSwitch", false, false);
 
+	GTASwitch.Register(PSH, "GTASwitch", false, false);
+	
 	PostLandingVentSwitch.Register(PSH, "PostLandingVentSwitch", THREEPOSSWITCH_CENTER);
 
 	LeftModeIntercomVOXSensThumbwheelSwitch.Register(PSH, "LeftModeIntercomVOXSensThumbwheelSwitch", 2, 9);
@@ -4097,6 +4117,20 @@ void Saturn::InitSwitches() {
 	HighGainAntennaPitchPositionSwitch.AddPosition(6, 180);
 	HighGainAntennaPitchPositionSwitch.Register(PSH, "HighGainAntennaPitchPositionSwitch", 0);
 
+	EMSFunctionSwitch.AddPosition(0,  180);
+	EMSFunctionSwitch.AddPosition(1,  210);
+	EMSFunctionSwitch.AddPosition(2,  240);
+	EMSFunctionSwitch.AddPosition(3,  270);
+	EMSFunctionSwitch.AddPosition(4,  300);
+	EMSFunctionSwitch.AddPosition(5,  330);
+	EMSFunctionSwitch.AddPosition(6,    0);
+	EMSFunctionSwitch.AddPosition(7,   30);
+	EMSFunctionSwitch.AddPosition(8,   60);
+	EMSFunctionSwitch.AddPosition(9,   90);
+	EMSFunctionSwitch.AddPosition(10, 120);
+	EMSFunctionSwitch.AddPosition(11, 150);
+	EMSFunctionSwitch.Register(PSH, "EMSFunctionSwitch", 0);
+	
 	DockingProbeExtdRelSwitch.Register(PSH, "DockingProbeExtdRelSwitch", THREEPOSSWITCH_CENTER, false);
 	DockingProbeExtdRelSwitch.SetGuardResetsState(false);
 	DockingProbeRetractPrimSwitch.Register(PSH, "DockingProbeRetractPrimSwitch", THREEPOSSWITCH_CENTER);

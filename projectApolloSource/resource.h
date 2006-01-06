@@ -434,6 +434,9 @@
 #define IDB_ECSGLYCOLPUMPROTARY				730
 #define AID_RIGHTINTERIORLIGHTROTARIES		731
 #define AID_DOCKINGPROBEINDICATORS          732
+#define AID_EMSFUNCTIONSWITCH				733
+#define IDB_GTACOVER						734
+#define AID_GTASWITCH						735
 
 // Next default values for new objects
 //

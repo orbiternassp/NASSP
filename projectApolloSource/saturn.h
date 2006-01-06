@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.106  2006/01/05 12:11:02  tschachim
+  *	New dockingprobe handling.
+  *	
   *	Revision 1.105  2006/01/05 04:55:52  flydba
   *	All clickable areas of the right & left hand side panels added now!
   *	
@@ -702,7 +705,7 @@ protected:
 	int fdaiDisabled;
 
 	HBITMAP hBmpFDAIRollIndicator;
-
+	
 	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
 	GuardedPushSwitch LesMotorFireSwitch;
 	GuardedPushSwitch CanardDeploySwitch;
@@ -880,6 +883,12 @@ protected:
 	SwitchRow EntryModeRow;
 	ThreePosSwitch EntryModeSwitch;
 
+	SwitchRow EMSFunctionSwitchRow;
+	RotationalSwitch EMSFunctionSwitch;
+
+	SwitchRow GTASwitchRow;
+	GuardedToggleSwitch GTASwitch;
+	
 	//
 	// FDAI control switches.
 	//
