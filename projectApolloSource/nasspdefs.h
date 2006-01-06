@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/01/05 04:53:22  flydba
+  *	Some new gfx added.!
+  *	
   *	Revision 1.44  2006/01/03 17:51:02  flydba
   *	Some new bitmaps added.
   *	
@@ -205,7 +208,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 66; // number of bitmap handles
+const int nsurf = 67; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -263,6 +266,7 @@ const int nsurf = 66; // number of bitmap handles
 #define SRF_SCSBMAGROTARY			63
 #define SRF_DIRECTO2ROTARY			64
 #define SRF_ECSGLYCOLPUMPROTARY		65
+#define SRF_GTACOVER				66
 
 //
 // Earth radius and gravity constants.
