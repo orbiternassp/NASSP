@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/01/07 03:28:28  movieman523
+  *	Removed a lot of unused switches and wired up the FDAI power switch.
+  *	
   *	Revision 1.6  2005/10/19 11:25:50  tschachim
   *	Bugfix
   *	
@@ -226,7 +229,7 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHAND
 	// roll indicator
 	HDC hDCRotate;
 	int rotateX, rotateY;
-	double angle = attitude.x;
+	double angle = -target.y;
 
 	HDC hDCTemp = CreateCompatibleDC(hDC);
 	HBITMAP hBmpTemp = (HBITMAP) SelectObject(hDCTemp, hBmpRoll);

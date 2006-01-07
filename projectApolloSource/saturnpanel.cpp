@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.122  2006/01/07 03:28:28  movieman523
+  *	Removed a lot of unused switches and wired up the FDAI power switch.
+  *	
   *	Revision 1.121  2006/01/07 03:16:38  flydba
   *	Switches added on main panel 2.
   *	
@@ -4065,7 +4068,7 @@ void Saturn::InitSwitches() {
 	EcsGlycolPumpsSwitch.AddPosition(2, 300);
 	EcsGlycolPumpsSwitch.AddPosition(3, 330);
 	EcsGlycolPumpsSwitch.AddPosition(4,   0);
-	EcsGlycolPumpsSwitch.Register(PSH, "EcsGlycolPumpsSwitch", 3);
+	EcsGlycolPumpsSwitch.Register(PSH, "EcsGlycolPumpsSwitch", 2);
 
 	RightIntegralRotarySwitch.AddPosition(0,  210);
 	RightIntegralRotarySwitch.AddPosition(1,  240);
