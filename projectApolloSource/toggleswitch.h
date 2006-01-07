@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2005/12/19 16:47:36  tschachim
+  *	Realism mode, SwitchTo functions.
+  *	
   *	Revision 1.30  2005/12/02 19:47:19  movieman523
   *	Replaced most PowerSource code with e_object.
   *	
@@ -300,6 +303,21 @@ public:
 	void SetState(int s) { state = s; };
 
 	int operator=(const int b) { state = b; return state; };
+};
+
+class ThreeSourceSwitch : public ThreePosSwitch {
+public:
+	ThreeSourceSwitch() { source1 = source2 = source3 = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3);
+	bool CheckMouseClick(int event, int mx, int my);
+	void LoadState(char *line);
+
+protected:
+	void UpdateSourceState();
+
+	e_object *source1;
+	e_object *source2;
+	e_object *source3;
 };
 
 //

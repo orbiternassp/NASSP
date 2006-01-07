@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.111  2006/01/06 22:55:53  movieman523
+  *	Fixed SM seperation and cut off fuel cell power when it happens.
+  *	
   *	Revision 1.110  2006/01/06 21:40:15  movieman523
   *	Quick hack for damping electrical meters.
   *	
@@ -1220,7 +1223,7 @@ protected:
 	SwitchRow InstrumentLightingCircuitBrakersRow;
 	CircuitBrakerSwitch InstrumentLightingESSMnACircuitBraker;
 	CircuitBrakerSwitch InstrumentLightingESSMnBCircuitBraker;
-	CircuitBrakerSwitch InstrumentLightingNonESSCircuitBraker;
+	ThreeSourceSwitch InstrumentLightingNonESSCircuitBraker;
 	CircuitBrakerSwitch InstrumentLightingSCIEquipSEP1CircuitBraker;
 	CircuitBrakerSwitch InstrumentLightingSCIEquipSEP2CircuitBraker;
 	CircuitBrakerSwitch InstrumentLightingSCIEquipHatchCircuitBraker;
@@ -1933,8 +1936,23 @@ protected:
 
 	FCell *FuelCells[3];
 
+	//
+	// Main bus A and B.
+	//
+
 	DCbus *MainBusA;
 	DCbus *MainBusB;
+
+	//
+	// Non-essential buses... oddly, these are for non-essential systems.
+	//
+
+	DCbus NonEssBus1;
+	DCbus NonEssBus2;
+
+	//
+	// AC bus 1 and 2, which are three-phase.
+	//
 
 	ACbus *ACBus1PhaseA;
 	ACbus *ACBus1PhaseB;
@@ -1943,9 +1961,6 @@ protected:
 	ACbus *ACBus2PhaseA;
 	ACbus *ACBus2PhaseB;
 	ACbus *ACBus2PhaseC;
-
-	PowerSDKObject NonESSBus1;
-	PowerSDKObject NonESSBus2;
 
 	ThreeWayPowerMerge ACBus1;
 	ThreeWayPowerMerge ACBus2;
