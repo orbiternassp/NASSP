@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.119  2006/01/06 22:55:53  movieman523
+  *	Fixed SM seperation and cut off fuel cell power when it happens.
+  *	
   *	Revision 1.118  2006/01/06 21:40:15  movieman523
   *	Quick hack for damping electrical meters.
   *	
@@ -1838,7 +1841,7 @@ void Saturn::SetSwitches(int panel) {
 	InstrumentLightingCircuitBrakersRow.Init(AID_INSTRUMENTLIGHTINGCIRCUITBRAKERS, MainPanel);
 	InstrumentLightingESSMnACircuitBraker.Init(  0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InstrumentLightingCircuitBrakersRow);
 	InstrumentLightingESSMnBCircuitBraker.Init( 38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InstrumentLightingCircuitBrakersRow);
-	InstrumentLightingNonESSCircuitBraker.Init(133,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InstrumentLightingCircuitBrakersRow);
+	InstrumentLightingNonESSCircuitBraker.Init(133,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InstrumentLightingCircuitBrakersRow, MainBusA, 0, MainBusB);
 	InstrumentLightingSCIEquipSEP1CircuitBraker.Init(171,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InstrumentLightingCircuitBrakersRow);
 	InstrumentLightingSCIEquipSEP2CircuitBraker.Init(209,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InstrumentLightingCircuitBrakersRow);
 	InstrumentLightingSCIEquipHatchCircuitBraker.Init(247,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InstrumentLightingCircuitBrakersRow);

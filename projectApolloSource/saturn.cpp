@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2006/01/06 22:55:53  movieman523
+  *	Fixed SM seperation and cut off fuel cell power when it happens.
+  *	
   *	Revision 1.77  2006/01/06 21:40:15  movieman523
   *	Quick hack for damping electrical meters.
   *	
@@ -297,7 +300,9 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 							   dsky2(soundlib, agc, 016), 
 							   imu(agc), 
 							   cws(SMasterAlarm, Bclick),
-							   dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS)  
+							   dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS),
+							   NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
+							   NonEssBus2("Non-Essential-Bus2", &InstrumentLightingNonESSCircuitBraker)
 
 {
 	InitSaturnCalled = false;

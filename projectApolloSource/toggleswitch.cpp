@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2006/01/05 12:07:40  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.38  2005/12/19 17:22:50  tschachim
   *	Realism mode, SwitchTo functions.
   *	
@@ -1913,6 +1916,53 @@ void MissionTimerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Swi
 {
 	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
 	timer = ptimer;
+}
+
+//
+// ThreeSourceSwitch allows you to connect the output to one of three inputs based on the position
+// of the switch.
+//
+
+void ThreeSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3)
+
+{
+	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	source1 = s1;
+	source2 = s2;
+	source3 = s3;
+}
+
+bool ThreeSourceSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ThreePosSwitch::CheckMouseClick(event, mx, my))
+	{
+		UpdateSourceState();
+		return true;
+	}
+
+	return false;
+}
+
+void ThreeSourceSwitch::UpdateSourceState()
+
+{
+	if (IsUp()) {
+		WireTo(source1);
+	}
+	else if (IsCenter()) {
+		WireTo(source2);
+	}
+	else if (IsDown()) {
+		WireTo(source3);
+	}
+}
+
+void ThreeSourceSwitch::LoadState(char *line)
+
+{
+	ThreePosSwitch::LoadState(line);
+	UpdateSourceState();
 }
 
 TimerUpdateSwitch::TimerUpdateSwitch()
