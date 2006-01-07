@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/11/18 20:38:59  movieman523
+  *	Revised condensor output from fuel cell to eliminate master alarms.
+  *	
   *	Revision 1.7  2005/11/16 23:50:31  movieman523
   *	More updates to CWS operation. Still not completely correct, but closer.
   *	
@@ -50,6 +53,7 @@
 #define _PA_CSMCAUTIONWARNING_H
 
 // moved from Saturn.h as "foreward reference" because of FuelCellBad
+
 typedef struct {
 	double H2FlowLBH;
 	double O2FlowLBH;
@@ -60,6 +64,14 @@ typedef struct {
 	double Current;
 	double PowerOutput;
 } FuelCellStatus;
+
+typedef struct {
+	double ACBusVoltage;
+	double ACBusCurrent;
+	double Phase1Current;
+	double Phase2Current;
+	double Phase3Current;
+} ACBusStatus;
 
 class CSMCautionWarningSystem : public CautionWarningSystem {
 
@@ -87,7 +99,8 @@ protected:
 	//
 
 	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base);
-	bool FuelCellBad(FuelCellStatus fc, int index);
+	bool FuelCellBad(FuelCellStatus &fc, int index);
+	bool ACOverloaded(ACBusStatus &as);
 	bool LightPowered(int i);
 };
 
@@ -111,6 +124,10 @@ protected:
 #define CSM_CWS_FC2_LIGHT			32
 #define CSM_CWS_FC3_LIGHT			33
 #define CSM_CWS_SPS_PRESS			38
+#define CSM_CWS_AC_BUS1_LIGHT		40
+#define CSM_CWS_AC_BUS2_LIGHT		41
+#define CSM_CWS_AC_BUS1_OVERLOAD	44
+#define CSM_CWS_AC_BUS2_OVERLOAD	45
 #define CSM_CWS_CMC_LIGHT			46
 #define CSM_CWS_BUS_B_UNDERVOLT		48
 #define CSM_CWS_BUS_A_UNDERVOLT		49

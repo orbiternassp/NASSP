@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/01/06 20:37:18  movieman523
+  *	Made the voltage and current meters work. Currently hard-coded to main bus A and AC bus 1.
+  *	
   *	Revision 1.47  2006/01/05 11:28:28  tschachim
   *	New dockingprobe handling.
   *	
@@ -1807,6 +1810,56 @@ void Saturn::GetECSWaterStatus(ECSWaterStatus &ws)
 	}
 }
 
+//
+// Main bus state.
+//
+
+void Saturn::GetMainBusStatus(MainBusStatus &ms)
+
+{
+	ms.MainBusAVoltage = 0.0;
+	ms.MainBusBVoltage = 0.0;
+
+	if (MainBusA) {
+		ms.MainBusAVoltage = MainBusA->Voltage();
+	}
+
+	if (MainBusB) {
+		ms.MainBusBVoltage = MainBusB->Voltage();
+	}
+}
+
+//
+// AC bus state.
+//
+
+void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
+
+{
+	as.ACBusCurrent = 0.0;
+	as.ACBusVoltage = 0.0;
+	as.Phase1Current = 0.0;
+	as.Phase2Current = 0.0;
+	as.Phase3Current = 0.0;
+
+	switch (busno) {
+	case 1:
+		as.ACBusCurrent = ACBus1.Current();
+		as.ACBusVoltage = ACBus1.Voltage();
+		as.Phase1Current = ACBus1PhaseA->Current();
+		as.Phase2Current = ACBus1PhaseA->Current();
+		as.Phase3Current = ACBus1PhaseA->Current();
+		break;
+
+	case 2:
+		as.ACBusCurrent = ACBus2.Current();
+		as.ACBusVoltage = ACBus2.Voltage();
+		as.Phase1Current = ACBus2PhaseA->Current();
+		as.Phase2Current = ACBus2PhaseA->Current();
+		as.Phase3Current = ACBus2PhaseA->Current();
+		break;
+	}
+}
 
 //
 // Open and close valves.

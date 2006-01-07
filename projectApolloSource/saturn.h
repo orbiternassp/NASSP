@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.112  2006/01/07 00:43:58  movieman523
+  *	Added non-essential buses, though there's nothing connected to them at the moment.
+  *	
   *	Revision 1.111  2006/01/06 22:55:53  movieman523
   *	Fixed SM seperation and cut off fuel cell power when it happens.
   *	
@@ -457,11 +460,6 @@ typedef struct {
 } TankQuantities;
 
 typedef struct {
-	double BusAVolts;
-	double BusBVolts;
-} BusStatus;
-
-typedef struct {
 	double SuitTempK;
 	double CabinTempK;
 	double CabinPressureMMHG;
@@ -505,6 +503,11 @@ typedef struct {
 	double PotableH2oTankQuantityPercent;
 	double WasteH2oTankQuantityPercent;
 } ECSWaterStatus;
+
+typedef struct {
+	double MainBusAVoltage;
+	double MainBusBVoltage;
+} MainBusStatus;
 
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
@@ -579,12 +582,12 @@ public:
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
 	void GetTankQuantities(TankQuantities &q);
-//	void GetBusStatus(BusStatus &bus);
 	void GetFuelCellStatus(int index, FuelCellStatus &fc);
 	void GetPrimECSCoolingStatus(PrimECSCoolingStatus &pcs);
 	void GetSecECSCoolingStatus(SecECSCoolingStatus &scs);
 	void GetECSWaterStatus(ECSWaterStatus &ws);
-
+	void GetMainBusStatus(MainBusStatus &ms);
+	void GetACBusStatus(ACBusStatus &as, int busno);
 
 	//
 	// Panel SDK support.

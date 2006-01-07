@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/12/19 16:48:50  tschachim
+  *	Bugfix, Removed "dirty hacks".
+  *	
   *	Revision 1.14  2005/11/18 02:40:55  movieman523
   *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
   *	
@@ -106,7 +109,7 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 // Check status of a fuel cell.
 //
 
-bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus fc, int index)
+bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus &fc, int index)
 
 {
 	bool bad = false;
@@ -141,6 +144,28 @@ bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus fc, int index)
 	} else {
 		FuelCellCheckCount[index] = 0;
 	}
+	return false;
+}
+
+//
+// Check status of the AC bus.
+//
+// Currently these numbers are purely arbitrary since I don't know what the the real numbers are. They're
+// also set high since the three-phase power system doesn't work correctly yet.
+//
+
+bool CSMCautionWarningSystem::ACOverloaded(ACBusStatus &as)
+
+{
+	if (as.ACBusCurrent > 32.0)
+		return true;
+	if (as.Phase1Current > 12.0)
+		return true;
+	if (as.Phase2Current > 12.0)
+		return true;
+	if (as.Phase3Current > 12.0)
+		return true;
+
 	return false;
 }
 
@@ -267,6 +292,28 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// Power Bus: "If voltage drops below 26.25 volts dc, the applicable dc undervoltage light 
 		// on the caution and warning panel will illuminate."
 		//
+
+		MainBusStatus ms;
+		sat->GetMainBusStatus(ms);
+
+		SetLight(CSM_CWS_BUS_A_UNDERVOLT, (ms.MainBusAVoltage < 26.25));
+		SetLight(CSM_CWS_BUS_B_UNDERVOLT, (ms.MainBusAVoltage < 26.25));
+
+		//
+		// AC bus: lights come on to indicate under or overvoltage in the AC bus.
+		//
+		// AC bus overload: overload light will come on if total output exceeds 250% of rated current, or a
+		// single phase output exceeds 300% of rated current. However, I'm not sure what the rated
+		// current actually is!
+		//
+
+		ACBusStatus as;
+
+		sat->GetACBusStatus(as, 1);
+		SetLight(CSM_CWS_AC_BUS1_OVERLOAD, ACOverloaded(as));
+
+		sat->GetACBusStatus(as, 2);
+		SetLight(CSM_CWS_AC_BUS2_OVERLOAD, ACOverloaded(as));
 
 		//
 		// Oxygen flow: "Flow rates of 1 pound per hour or more with a duration in excess of 16.5 
