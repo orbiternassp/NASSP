@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.120  2006/01/07 00:43:58  movieman523
+  *	Added non-essential buses, though there's nothing connected to them at the moment.
+  *	
   *	Revision 1.119  2006/01/06 22:55:53  movieman523
   *	Fixed SM seperation and cut off fuel cell power when it happens.
   *	
@@ -765,6 +768,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_DIRECTO2ROTARY]			= oapiCreateSurface (LOADBMP (IDB_DIRECTO2ROTARY));
 		srf[SRF_ECSGLYCOLPUMPROTARY]	= oapiCreateSurface (LOADBMP (IDB_ECSGLYCOLPUMPROTARY));
 		srf[SRF_GTACOVER]				= oapiCreateSurface (LOADBMP (IDB_GTACOVER));
+		srf[SRF_POSTLDGVENTVLVLEVER]	= oapiCreateSurface (LOADBMP (IDB_POSTLDGVENTVLVLEVER));
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -809,6 +813,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_DIRECTO2ROTARY],		g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_ECSGLYCOLPUMPROTARY],	g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_GTACOVER],				g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_POSTLDGVENTVLVLEVER],	g_Param.col[4]);
 /*		break;
 	}
 */
@@ -1054,10 +1059,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CWS_LIGHTS_LEFT,								_R(1540,   97, 1752,  205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CWS_LIGHTS_RIGHT,							_R(1795,   97, 2008,  205), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EVENT_TIMER,									_R( 866,  670,  937,  688), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_RCS_HELIUM1_TALKBACK,						_R(1590,  367, 1742,  392), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_RCS_HELIUM2_TALKBACK,						_R(1590,  525, 1742,  550), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_RCS_PROP1_TALKBACK,							_R(1590,  658, 1742,  683), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_RCS_PROP2_TALKBACK,							_R(1502,  791, 1742,  816), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_HELIUM1_TALKBACK,						_R(1591,  368, 1741,  391), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_HELIUM2_TALKBACK,						_R(1591,  526, 1741,  549), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_PROP1_TALKBACK,							_R(1591,  659, 1741,  682), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_PROP2_TALKBACK,							_R(1503,  792, 1739,  815), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SPS,											_R( 299, 1053,  337, 1102), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSRADTEMPMETERS,							_R(1951,  604, 1997,  649), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSEVAPTEMPMETERS,							_R(2069,  604, 2115,  649), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -1069,7 +1074,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_HIGHGAINANTENNAPITCHPOSITIONSWITCH,			_R(2271, 1019, 2358, 1106), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_GMETER,										_R( 403,  605,  482,  684), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CABINTEMPAUTOCONTROLSWITCH,					_R(2441,  843, 2458,  879), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DOCKINGPROBESWITCHES,    					_R(1389,  263, 1725,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DOCKINGPROBESWITCHES,    					_R(1389,  263, 1509,  324), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DOCKINGPROBEINDICATORS,      				_R(1396,  179, 1419,  229), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EMSFUNCTIONSWITCH,      						_R( 598,  283,  682,  367), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_GTASWITCH,		    						_R( 904,  288,  959,  399), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
@@ -1079,6 +1084,12 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ENTRYSWITCHES,      							_R( 336, 1260,  413, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LVSPSINDICATORSWITCHES,      				_R( 422, 1260,  499, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TVCGIMBALDRIVESWITCHES,      				_R( 508, 1260,  585, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSMLIGHTSWITCHES,      						_R(1518,  279, 1663,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LMPOWERSWITCH,      							_R(1692,  279, 1726,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_POSTLANDINGVENTVALVELEVER,      				_R(2062,   76, 2112,  234), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_HIGHGAINANTENNAUPPERSWITCHES,      			_R(2185,  943, 2262,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_HIGHGAINANTENNALOWERSWITCHES,      			_R(2381, 1157, 2458, 1186), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_HIGHGAINANTENNAYAWPOSITIONSWITCH,      		_R(2401, 1019, 2485, 1103), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		// Display & keyboard (DSKY), main panel uses the main DSKY.
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1351,6 +1362,25 @@ void Saturn::SetSwitches(int panel) {
 	TVCGimbalDriveSwitchesRow.Init(AID_TVCGIMBALDRIVESWITCHES, MainPanel);
 	TVCGimbalDrivePitchSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], TVCGimbalDriveSwitchesRow);
 	TVCGimbalDriveYawSwitch.Init  (43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], TVCGimbalDriveSwitchesRow);
+
+	CSMLightSwitchesRow.Init(AID_CSMLIGHTSWITCHES, MainPanel);
+	RunEVALightSwitch.Init(  0, 0, 34, 29, srf[SRF_SWITCHUP], CSMLightSwitchesRow);
+	RndzLightSwitch.Init  ( 57, 0, 34, 29, srf[SRF_SWITCHUP], CSMLightSwitchesRow);
+	TunnelLightSwitch.Init(111, 0, 34, 29, srf[SRF_SWITCHUP], CSMLightSwitchesRow);
+
+	LMPowerSwitchRow.Init(AID_LMPOWERSWITCH, MainPanel);
+	LMPowerSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], LMPowerSwitchRow);
+
+	PostLDGVentValveLeverRow.Init(AID_POSTLANDINGVENTVALVELEVER, MainPanel);
+	PostLDGVentValveLever.Init( 0, 0, 50, 158, srf[SRF_POSTLDGVENTVLVLEVER], PostLDGVentValveLeverRow);
+
+	HighGainAntennaUpperSwitchesRow.Init(AID_HIGHGAINANTENNAUPPERSWITCHES, MainPanel);
+	GHATrackSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], HighGainAntennaUpperSwitchesRow); 
+	GHABeamSwitch.Init (43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], HighGainAntennaUpperSwitchesRow);
+	
+	HighGainAntennaLowerSwitchesRow.Init(AID_HIGHGAINANTENNALOWERSWITCHES, MainPanel);
+	GHAPowerSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], HighGainAntennaLowerSwitchesRow); 
+	GHAServoElecSwitch.Init (43, 0, 34, 29, srf[SRF_SWITCHUP], HighGainAntennaLowerSwitchesRow);
 	
 	//
 	// SM RCS Helium 1
@@ -1364,9 +1394,9 @@ void Saturn::SetSwitches(int panel) {
 
 	SMRCSHelium1TalkbackRow.Init(AID_RCS_HELIUM1_TALKBACK, MainPanel);
 	SMRCSHelium1ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
-	SMRCSHelium1BTalkback.Init(43, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
-	SMRCSHelium1CTalkback.Init(86, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
-	SMRCSHelium1DTalkback.Init(129, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
+	SMRCSHelium1BTalkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
+	SMRCSHelium1CTalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
+	SMRCSHelium1DTalkback.Init(127, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow);
 
 	//
 	// SM RCS Helium 2
@@ -1390,9 +1420,9 @@ void Saturn::SetSwitches(int panel) {
 
 	SMRCSHelium2TalkbackRow.Init(AID_RCS_HELIUM2_TALKBACK, MainPanel);
 	SMRCSHelium2ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
-	SMRCSHelium2BTalkback.Init(43, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
-	SMRCSHelium2CTalkback.Init(86, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
-	SMRCSHelium2DTalkback.Init(129, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
+	SMRCSHelium2BTalkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
+	SMRCSHelium2CTalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
+	SMRCSHelium2DTalkback.Init(127, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
 
 	//
 	// SM RCS Primary Propellant.
@@ -1412,9 +1442,9 @@ void Saturn::SetSwitches(int panel) {
 
 	SMRCSProp1TalkbackRow.Init(AID_RCS_PROP1_TALKBACK, MainPanel);
 	SMRCSProp1ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
-	SMRCSProp1BTalkback.Init(43, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
-	SMRCSProp1CTalkback.Init(86, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
-	SMRCSProp1DTalkback.Init(129, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
+	SMRCSProp1BTalkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
+	SMRCSProp1CTalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
+	SMRCSProp1DTalkback.Init(127, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow);
 
 	//
 	// SM RCS Secondary Propellant.
@@ -1436,10 +1466,10 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSProp2ATalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
 	SMRCSProp2BTalkback.Init(128, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
 	SMRCSProp2CTalkback.Init(171, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
-	SMRCSProp2DTalkback.Init(214, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
+	SMRCSProp2DTalkback.Init(213, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
 
 	CMRCSIsolate1Talkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
-	CMRCSIsolate2Talkback.Init(43, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
+	CMRCSIsolate2Talkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow);
 
 	//
 	// Attitude control, etc.
@@ -1752,6 +1782,9 @@ void Saturn::SetSwitches(int panel) {
 	HighGainAntennaPitchPositionSwitchRow.Init(AID_HIGHGAINANTENNAPITCHPOSITIONSWITCH, MainPanel);
 	HighGainAntennaPitchPositionSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], HighGainAntennaPitchPositionSwitchRow);
 
+	HighGainAntennaYawPositionSwitchRow.Init(AID_HIGHGAINANTENNAYAWPOSITIONSWITCH, MainPanel);
+	HighGainAntennaYawPositionSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], HighGainAntennaYawPositionSwitchRow);
+	
 	//
 	// Docking probe switches
 	//
@@ -3851,6 +3884,20 @@ void Saturn::InitSwitches() {
 
 	TVCGimbalDrivePitchSwitch.Register(PSH, "TVCGimbalDrivePitchSwitch", THREEPOSSWITCH_CENTER);
 	TVCGimbalDriveYawSwitch.Register(PSH, "TVCGimbalDriveYawSwitch", THREEPOSSWITCH_CENTER);
+
+	RunEVALightSwitch.Register(PSH, "RunEVALightSwitch", false);
+	RndzLightSwitch.Register(PSH, "RndzLightSwitch", false);
+	TunnelLightSwitch.Register(PSH, "TunnelLightSwitch", false);
+
+	LMPowerSwitch.Register(PSH, "LMPowerSwitch", THREEPOSSWITCH_CENTER);
+
+	PostLDGVentValveLever.Register(PSH, "PostLDGVentValveLever", 1);
+
+	GHATrackSwitch.Register(PSH, "GHATrackSwitch", THREEPOSSWITCH_CENTER);
+	GHABeamSwitch.Register(PSH, "GHABeamSwitch", THREEPOSSWITCH_CENTER);
+
+	GHAPowerSwitch.Register(PSH, "GHAPowerSwitch", THREEPOSSWITCH_CENTER);
+	GHAServoElecSwitch.Register(PSH, "GHAServoElecSwitch", false);
 	
 	FuelCellPhIndicator.Register(PSH, "FuelCellPhIndicator", false);
 	FuelCellRadTempIndicator.Register(PSH, "FuelCellRadTempIndicator", false);
@@ -4266,6 +4313,20 @@ void Saturn::InitSwitches() {
 	HighGainAntennaPitchPositionSwitch.AddPosition(5, 150);
 	HighGainAntennaPitchPositionSwitch.AddPosition(6, 180);
 	HighGainAntennaPitchPositionSwitch.Register(PSH, "HighGainAntennaPitchPositionSwitch", 0);
+
+	HighGainAntennaYawPositionSwitch.AddPosition(0,    0);
+	HighGainAntennaYawPositionSwitch.AddPosition(1,   30);
+	HighGainAntennaYawPositionSwitch.AddPosition(2,   60);
+	HighGainAntennaYawPositionSwitch.AddPosition(3,   90);
+	HighGainAntennaYawPositionSwitch.AddPosition(4,  120);
+	HighGainAntennaYawPositionSwitch.AddPosition(5,  150);
+	HighGainAntennaYawPositionSwitch.AddPosition(6,  180);
+	HighGainAntennaYawPositionSwitch.AddPosition(7,  210);
+	HighGainAntennaYawPositionSwitch.AddPosition(8,  240);
+	HighGainAntennaYawPositionSwitch.AddPosition(9,  270);
+	HighGainAntennaYawPositionSwitch.AddPosition(10, 300);
+	HighGainAntennaYawPositionSwitch.AddPosition(11, 330);
+	HighGainAntennaYawPositionSwitch.Register(PSH, "HighGainAntennaYawPositionSwitch", 0);
 
 	EMSFunctionSwitch.AddPosition(0,  180);
 	EMSFunctionSwitch.AddPosition(1,  210);
