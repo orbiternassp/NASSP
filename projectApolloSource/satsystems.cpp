@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/01/07 03:28:28  movieman523
+  *	Removed a lot of unused switches and wired up the FDAI power switch.
+  *	
   *	Revision 1.49  2006/01/07 01:34:08  movieman523
   *	Added AC bus overvoltage and main bus undervolt lights.
   *	
@@ -440,7 +443,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				CautionWarningModeSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
 
 				// Activate primary water-glycol coolant loop
-				EcsGlycolPumpsSwitch.SwitchTo(2);
+				EcsGlycolPumpsSwitch.SwitchTo(1);
 				EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_UP);
 				EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
 				SuitCircuitHeatExchSwitch.SwitchTo(THREEPOSSWITCH_UP);
