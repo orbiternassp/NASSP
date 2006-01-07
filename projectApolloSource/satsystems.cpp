@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/01/07 01:34:08  movieman523
+  *	Added AC bus overvoltage and main bus undervolt lights.
+  *	
   *	Revision 1.48  2006/01/06 20:37:18  movieman523
   *	Made the voltage and current meters work. Currently hard-coded to main bus A and AC bus 1.
   *	
@@ -287,6 +290,13 @@ void Saturn::SystemsInit() {
 	cws.WireTo(&CWMnaCircuitBraker, &CWMnbCircuitBraker);
 	agc.WirePower(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
 	imu.WireToBuses(&GNIMUMnACircuitBraker, &GNIMUMnBCircuitBraker);
+
+	//
+	// FDAI power. This is almost certainly wired to the wrong bus, but it will do for
+	// now.
+	//
+
+	FDAIPowerRotarySwitch.WireTo(&SwitchPower);
 
 	//
 	// Default valve states.

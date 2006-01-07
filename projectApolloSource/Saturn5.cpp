@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/01/05 11:42:44  tschachim
+  *	New dockingprobe handling, bugfix.
+  *	
   *	Revision 1.47  2005/12/20 16:10:22  tschachim
   *	Improved timing of the engine indicators during SIC/SII staging.
   *	
@@ -1027,13 +1030,6 @@ void SaturnV::StageSix(double simt)
 	if(simt>0.5)
 		AttitudeLaunch4();
 
-	if(RPswitch13 && !HatchOpen){
-		bToggleHatch = true;
-	}
-	else if(!RPswitch13 && HatchOpen){
-		bToggleHatch = true;
-	}
-
 	if(RPswitch17){
 		if (ActivateLEM && hLMV){
 			ActivateLEM=false;
@@ -1042,11 +1038,6 @@ void SaturnV::StageSix(double simt)
 			lmvessel=oapiGetVesselInterface(hLMV);
 			lmvessel->SetEnableFocus(true);
 		}
-	}
-
-	if (RPswitch14 && HatchOpen){
-		ToggleEva = true;
-		RPswitch14 = false;
 	}
 
 	//

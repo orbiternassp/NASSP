@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.114  2006/01/07 03:16:04  flydba
+  *	Switches added on main panel 2.
+  *	
   *	Revision 1.113  2006/01/07 01:34:08  movieman523
   *	Added AC bus overvoltage and main bus undervolt lights.
   *	
@@ -727,7 +730,12 @@ protected:
 	int fdaiDisabled;
 
 	HBITMAP hBmpFDAIRollIndicator;
-	
+
+	SwitchRow IMUCageSwitchRow;
+	SwitchRow CautionWarningRow;
+	SwitchRow MissionTimerSwitchesRow;
+	SwitchRow SPSRow;
+
 	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
 	GuardedPushSwitch LesMotorFireSwitch;
 	GuardedPushSwitch CanardDeploySwitch;
@@ -1711,7 +1719,7 @@ protected:
 	RotationalSwitch IntegralRotarySwitch;
 
 	SwitchRow FDAIPowerRotaryRow;
-	RotationalSwitch FDAIPowerRotarySwitch;
+	FDAIPowerRotationalSwitch FDAIPowerRotarySwitch;
 
 	SwitchRow SCSElectronicsPowerRotaryRow;
 	RotationalSwitch SCSElectronicsPowerRotarySwitch;
@@ -1731,96 +1739,13 @@ protected:
 	// old stuff begin
 	//
 
-	bool RPswitch13;
-	bool RPswitch14;
-
 	bool RPswitch17;
 
 	bool CMCswitch;
 	bool SCswitch;
 
-	bool CMDswitch;
-	bool CMDCswitch;
-	bool CMPswitch;
-	bool CMPCswitch;
-
-	bool DPswitch;
-	bool DPCswitch;
-
-	bool FCswitch1;
-	bool FCswitch2;
-	bool FCswitch3;
-	bool FCswitch4;
-	bool FCswitch5;
-	bool FCswitch6;
-
-	bool EMSKswitch;
-
 	ToggleSwitch LPswitch6;
 	ToggleSwitch LPswitch7;
-
-	ThreePosSwitch P231switch;
-	ThreePosSwitch P232switch;
-	ThreePosSwitch P233switch;
-	ThreePosSwitch P234switch;
-	ThreePosSwitch P235switch;
-	ThreePosSwitch P236switch;
-	ThreePosSwitch P237switch;
-	ThreePosSwitch P238switch;
-	ThreePosSwitch P239switch;
-	ThreePosSwitch P240switch;
-	ThreePosSwitch P241switch;
-	ThreePosSwitch P242switch;
-	ThreePosSwitch P243switch;
-	ThreePosSwitch P244switch;
-
-	ToggleSwitch P31switch;
-	ToggleSwitch P32switch;
-	ToggleSwitch P33switch;
-	ThreePosSwitch P34switch;
-	ThreePosSwitch P35switch;
-	ThreePosSwitch P36switch;
-
-	ThreePosSwitch P311switch;
-	ThreePosSwitch P312switch;
-	ThreePosSwitch P313switch;
-	ThreePosSwitch P314switch;
-	ThreePosSwitch P315switch;
-	ThreePosSwitch P316switch;
-	ThreePosSwitch P317switch;
-	ThreePosSwitch P318switch;
-	ThreePosSwitch P319switch;
-	ThreePosSwitch P320switch;
-	ThreePosSwitch P321switch;
-	ThreePosSwitch P322switch;
-	ThreePosSwitch P323switch;
-	ThreePosSwitch P324switch;
-	ThreePosSwitch P325switch;
-	ThreePosSwitch P326switch;
-	ThreePosSwitch P327switch;
-	ToggleSwitch P328switch;
-	ToggleSwitch P329switch;
-	ThreePosSwitch P330switch;
-	ThreePosSwitch P331switch;
-	ThreePosSwitch P332switch;
-	ThreePosSwitch P333switch;
-	ThreePosSwitch P334switch;
-	ThreePosSwitch P335switch;
-	ThreePosSwitch P336switch;
-
-	ThreePosSwitch EMSswitch;
-
-	ThreePosSwitch P337switch;
-	ThreePosSwitch P338switch;
-	ThreePosSwitch P339switch;
-	ThreePosSwitch P340switch;
-	ThreePosSwitch P341switch;
-	ThreePosSwitch P342switch;
-	ThreePosSwitch P343switch;
-	ThreePosSwitch P344switch;
-	ThreePosSwitch P345switch;
-	ThreePosSwitch P346switch;
-	ThreePosSwitch P347switch;
 
 	// old stuff end
 
@@ -2016,39 +1941,16 @@ protected:
 	h_HeatExchanger *PrimEcsRadiatorExchanger1;
 	h_HeatExchanger *PrimEcsRadiatorExchanger2;
 
-
 	double LastACVoltDisplay;
 	double LastDCVoltDisplay;
 	double LastDCAmpDisplay;
 
 	// old stuff begin
 
-	SwitchRow LPRow;
-	SwitchRow HUDRow;
-	SwitchRow SPSRow;
-
-	SwitchRow CautionWarningRow;
-	SwitchRow MissionTimerSwitchesRow;
-	SwitchRow IMUCageSwitchRow;
-
-	SwitchRow SRP1Row;
 	SwitchRow P15Row;
 
-	SwitchRow MRRow;
-
-	SwitchRow P28Row;
-	SwitchRow P31Row;
-	SwitchRow P35Row;
-	SwitchRow P36Row;
-
-	SwitchRow P37Row;
-
-	SwitchRow XRow;
-	SwitchRow RHRRow;
-
-	SwitchRow EMS1Row;
-
 	SwitchRow LPSRow;
+
 	// old stuff end
 
 	//
@@ -2341,14 +2243,6 @@ protected:
 	void SetLPSwitchState(int s);
 	int GetRPSwitchState();
 	void SetRPSwitchState(int s);
-	int GetCP2SwitchState();
-	void SetCP2SwitchState(int s);
-	int GetCP3SwitchState();
-	void SetCP3SwitchState(int s);
-	int GetCP4SwitchState();
-	void SetCP4SwitchState(int s);
-	int GetCP5SwitchState();
-	void SetCP5SwitchState(int s);
 	int GetCP6SwitchState();
 	void SetCP6SwitchState(int s);
 	int GetMainState();

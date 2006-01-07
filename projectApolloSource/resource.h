@@ -15,7 +15,6 @@
 #define AID_DSKY2_LIGHTS                21
 #define AID_DSKY2_DISPLAY               22
 #define AID_DSKY2_KEY                   23
-#define AID_SWITCH_PANEL_LEFT           24
 #define AID_GAUGES_CENTER               25
 #define AID_DCAMPS						26
 #define AID_ALTIMETER                   27
@@ -44,7 +43,6 @@
 #define AID_RCS_PROP2_TALKBACK          50
 #define AID_ABORT_BUTTON                51
 #define AID_FUEL_DIGIT                  52
-#define AID_SM_RCS_PANEL1               53
 #define AID_SM_RCS_MODE                 54
 #define AID_SPS_GIMBAL_SWITCHES         55
 #define AID_TLI_SWITCH                  56
@@ -52,8 +50,6 @@
 #define AID_CMC_SWITCH                  58
 #define AID_SC_SWITCH                   59
 #define AID_ELS_SWITCHES                66
-#define AID_CMD_SWITCH                  68
-#define AID_CMP_SWITCH                  69
 #define AID_DCVOLTS						70
 #define AID_FCSM_SWITCH                 71
 #define AID_DIRECT_ULLAGE_THRUST_ON_LIGHT 73
@@ -174,17 +170,11 @@
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
 #define AID_VSI2                        304
-#define AID_CABIN_PRESS                 401
 #define AID_FUELCELLRADIATORSINDICATORS 403
-#define AID_P31                         404
 #define AID_FUELCELLREACTANTSSWITCHES   410
-#define AID_P35                         411
-#define AID_P36                         412
 #define AID_CYROTANKSWITCHES            413
 #define AID_SMRCS_FUEL                  416
 #define AID_SPS_FUEL                    417
-#define AID_EMS_SWITCH                  418
-#define AID_BUS_PANEL                   419
 #define AID_05G_LIGHT                   420
 #define AID_SPS_LIGHT                   421
 #define AID_SPS_INJ_VLV                 422
@@ -241,8 +231,6 @@
 #define AID_PANEL4_SWITCH2              479
 #define AID_PANEL4_SWITCH3              480
 #define AID_PANEL4_SWITCH4              481
-#define AID_EMS_KNOB                    482
-#define AID_EMS_DISPLAY                 483
 #define AID_MFDDOCK                     484
 #define AID_MFDDOCK_POWER               485
 #define AID_RCS_INDICATORS              486
