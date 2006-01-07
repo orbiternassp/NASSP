@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/01/07 03:28:28  movieman523
+  *	Removed a lot of unused switches and wired up the FDAI power switch.
+  *	
   *	Revision 1.40  2006/01/07 00:43:58  movieman523
   *	Added non-essential buses, though there's nothing connected to them at the moment.
   *	
@@ -1571,6 +1574,17 @@ bool FDAIPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
+		CheckFDAIPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+bool FDAIPowerRotationalSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
 		CheckFDAIPowerState();
 		return true;
 	}

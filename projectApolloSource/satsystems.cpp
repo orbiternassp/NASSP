@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/01/07 18:12:43  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.50  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -448,6 +451,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
 				SuitCircuitHeatExchSwitch.SwitchTo(THREEPOSSWITCH_UP);
 				SuitCircuitHeatExchSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
+
+				// Activate FDAIs
+				FDAIPowerRotarySwitch.SwitchTo(3);
 
 				// Start mission timer
 				MissionTimerSwitch.SwitchTo(THREEPOSSWITCH_UP);

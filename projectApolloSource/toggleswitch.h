@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2006/01/07 03:28:28  movieman523
+  *	Removed a lot of unused switches and wired up the FDAI power switch.
+  *	
   *	Revision 1.32  2006/01/07 00:43:58  movieman523
   *	Added non-essential buses, though there's nothing connected to them at the moment.
   *	
@@ -685,6 +688,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, FDAI *F1, FDAI *F2);
 
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newValue);
 	void LoadState(char *line);
 
 protected:
