@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/10/19 11:25:50  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.5  2005/10/13 15:50:46  tschachim
   *	Limited refresh rate because of performance.
   *	
@@ -41,6 +44,9 @@
 
 #include <stdio.h>
 #include "orbitersdk.h"
+
+#include "PanelSDK/PanelSDK.h"
+#include "PanelSDK/Internals/Esystems.h"
 
 #include "FDAI.h"
 
@@ -174,6 +180,9 @@ void FDAI::RegisterMe(int index, int x, int y) {
 
 void FDAI::SetAttitude(VECTOR3 attitude) {
 
+	if (!IsPowered())
+		return;
+
 	target.y = -attitude.x;	// roll
 	target.z = attitude.y;	// pitch
 	target.x = attitude.z;	// yaw
@@ -243,6 +252,13 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHAND
 	// frame-bitmaps
 	oapiBlt (surf, hFDAIRoll, 13, 13, 0, 0, 160, 160, SURF_PREDEF_CK);
 	oapiBlt (surf, hFDAI, 0, 0, 0, 0, 185, 183, SURF_PREDEF_CK);
+
+	//
+	// Dummy value for power usage for now.
+	//
+
+	if (IsPowered())
+		DrawPower(100);
 }
 
 int FDAI::LoadOGLBitmap(char *filename) {
@@ -592,6 +608,20 @@ HBITMAP RotateMemoryDC(HBITMAP hBmpSrc, HDC hdcSrc, int SrcX, int SrcY, float an
 	free(dst);
 
 	return hBmpDst;
+}
+
+bool FDAI::IsPowered()
+
+{
+	//
+	// I suspect the FDAI really runs off AC, not DC, but for now we'll just use the main DC
+	// bus to power it.
+	//
+
+	if (SRC && SRC->Voltage() > 25.0)
+		return true;
+
+	return false;
 }
 
 //

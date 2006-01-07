@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/01/07 00:43:58  movieman523
+  *	Added non-essential buses, though there's nothing connected to them at the moment.
+  *	
   *	Revision 1.39  2006/01/05 12:07:40  tschachim
   *	Bugfix
   *	
@@ -160,6 +163,7 @@
 #include "missiontimer.h"
 #include "apolloguidance.h"
 #include "powersource.h"
+#include "fdai.h"
 
 //
 // Generic panel switch item.
@@ -1523,6 +1527,63 @@ RotationalSwitchPosition::RotationalSwitchPosition(int v, double a) {
 RotationalSwitchPosition::~RotationalSwitchPosition() {
 }
 
+
+void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, FDAI *F1, FDAI *F2)
+
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, row);
+	FDAI1 = F1;
+	FDAI2 = F2;
+}
+
+//
+// Wire up the FDAIs to the appropriate power source based on switch position. We wire them to this
+// switch, and higher level code can wire the switch to a suitable power source.
+//
+
+void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
+
+{
+	switch (GetState()) {
+	case 0:
+		FDAI1->WireTo(0);
+		FDAI2->WireTo(0);
+		break;
+
+	case 1:
+		FDAI1->WireTo(this);
+		FDAI2->WireTo(0);
+		break;
+
+	case 2:
+		FDAI1->WireTo(0);
+		FDAI2->WireTo(this);
+		break;
+
+	case 3:
+		FDAI1->WireTo(this);
+		FDAI2->WireTo(this);
+		break;
+	}
+}
+
+bool FDAIPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
+		CheckFDAIPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+void FDAIPowerRotationalSwitch::LoadState(char *line)
+
+{
+	RotationalSwitch::LoadState(line);
+	CheckFDAIPowerState();
+}
 
 //
 // Thumbwheel Switch

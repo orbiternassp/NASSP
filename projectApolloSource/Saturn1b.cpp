@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/01/05 11:40:12  tschachim
+  *	New dockingprobe handling.
+  *	
   *	Revision 1.37  2005/12/19 17:05:33  tschachim
   *	Introduced clbkConsumeBufferedKey
   *	
@@ -805,13 +808,8 @@ void Saturn1b::Timestep (double simt, double simdt)
 
 	if (stage == CSM_LEM_STAGE)
 	{
-		if(simt>0.5) AttitudeLaunch4();
-		if(RPswitch13 && !HatchOpen){
-			bToggleHatch = true;
-		}
-		else if(!RPswitch13 && HatchOpen){
-			bToggleHatch = true;
-		}
+		if(simt>0.5)
+			AttitudeLaunch4();
 
 		if (RPswitch15.GetState() && SivbLmSepSwitch.GetState()){
 			if (ASTPMission) {
@@ -831,10 +829,6 @@ void Saturn1b::Timestep (double simt, double simdt)
 		}
 		if (CmSmSep1Switch.GetState() || CmSmSep2Switch.GetState()) {
 			bManualSeparate=true;
-		}
-		if (RPswitch14 && HatchOpen){
-			ToggleEva = true;
-			RPswitch14=false;
 		}
 
 		for (int i=0 ;i<6;i++){

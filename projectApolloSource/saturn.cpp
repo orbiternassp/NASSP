@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2006/01/07 00:43:58  movieman523
+  *	Added non-essential buses, though there's nothing connected to them at the moment.
+  *	
   *	Revision 1.78  2006/01/06 22:55:53  movieman523
   *	Fixed SM seperation and cut off fuel cell power when it happens.
   *	
@@ -936,10 +939,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
 	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
 	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
-	oapiWriteScenario_int (scn, "CP2SWITCH", GetCP2SwitchState());
-	oapiWriteScenario_int (scn, "CP3SWITCH", GetCP3SwitchState());
-	oapiWriteScenario_int (scn, "CP4SWITCH", GetCP4SwitchState());
-	oapiWriteScenario_int (scn, "CP5SWITCH", GetCP5SwitchState());
 
 	//
 	// Save vessel-specific stats.
@@ -1531,26 +1530,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp (line, "APOLLONO", 8)) {
 			sscanf (line+8, "%d", &ApolloNo);
-		}
-		else if (!strnicmp (line, "CP2SWITCH", 9)) {
-            SwitchState = 0;
-			sscanf (line+9, "%d", &SwitchState);
-			SetCP2SwitchState(SwitchState);
-		}
-		else if (!strnicmp (line, "CP3SWITCH", 9)) {
-            SwitchState = 0;
-			sscanf (line+9, "%d", &SwitchState);
-			SetCP3SwitchState(SwitchState);
-		}
-		else if (!strnicmp (line, "CP4SWITCH", 9)) {
-            SwitchState = 0;
-			sscanf (line+9, "%d", &SwitchState);
-			SetCP4SwitchState(SwitchState);
-		}
-		else if (!strnicmp (line, "CP5SWITCH", 9)) {
-            SwitchState = 0;
-			sscanf (line+9, "%d", &SwitchState);
-			SetCP5SwitchState(SwitchState);
 		}
 		else if (!strnicmp (line, "DOCKSTATE", 9)) {
             sscanf (line+9, "%d", &dockstate);
@@ -2666,15 +2645,6 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE_SEVEN:
-		if(RPswitch13 && !HatchOpen){
-			bToggleHatch = true;
-		}
-		else if(!RPswitch13 && HatchOpen){
-			bToggleHatch = true;
-		}
-		if (RPswitch14 && HatchOpen){
-			bRecovery = true;
-		}
 
 		if (!Swater.isPlaying())
 			Swater.play(LOOP,190);

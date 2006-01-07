@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2006/01/07 00:43:58  movieman523
+  *	Added non-essential buses, though there's nothing connected to them at the moment.
+  *	
   *	Revision 1.31  2005/12/19 16:47:36  tschachim
   *	Realism mode, SwitchTo functions.
   *	
@@ -674,6 +677,22 @@ protected:
 	void DeletePositions();
 };
 
+class FDAI;
+
+class FDAIPowerRotationalSwitch: public RotationalSwitch {
+public:
+	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, FDAI *F1, FDAI *F2);
+
+	bool CheckMouseClick(int event, int mx, int my);
+	void LoadState(char *line);
+
+protected:
+	void CheckFDAIPowerState();
+
+	FDAI *FDAI1;
+	FDAI *FDAI2;
+};
 
 class IndicatorSwitch: public PanelSwitchItem {
 

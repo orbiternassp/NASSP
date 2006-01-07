@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/10/12 17:55:05  tschachim
+  *	Smarter redraw handing because of performance.
+  *	
   *	Revision 1.2  2005/08/20 17:50:41  movieman523
   *	Added FDAI state save and load.
   *	
@@ -33,7 +36,7 @@
 #include < GL\gl.h >                                
 #include < GL\glu.h >
 
-class FDAI {
+class FDAI : public e_object {
 
 public:
 	FDAI();
@@ -43,6 +46,8 @@ public:
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
+
+	bool IsPowered();
 
 protected:
 	int ScrX;
@@ -58,7 +63,7 @@ protected:
 	HGLRC hRC;
 	HBITMAP hBMP;
 	HBITMAP hBMP_old;
-	GLUquadricObj *quadObj; 
+	GLUquadricObj *quadObj;
 
 	void InitGL();
 	void MoveBall();
