@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.113  2006/01/07 01:34:08  movieman523
+  *	Added AC bus overvoltage and main bus undervolt lights.
+  *	
   *	Revision 1.112  2006/01/07 00:43:58  movieman523
   *	Added non-essential buses, though there's nothing connected to them at the moment.
   *	
@@ -933,6 +936,17 @@ protected:
 	SwitchRow TVCGimbalDriveSwitchesRow;
 	ThreePosSwitch TVCGimbalDrivePitchSwitch;
 	ThreePosSwitch TVCGimbalDriveYawSwitch;
+
+	SwitchRow CSMLightSwitchesRow;
+	ToggleSwitch RunEVALightSwitch;
+	ToggleSwitch RndzLightSwitch;
+	ToggleSwitch TunnelLightSwitch;
+
+	SwitchRow LMPowerSwitchRow;
+	ThreePosSwitch LMPowerSwitch;
+
+	SwitchRow PostLDGVentValveLeverRow;
+	CircuitBrakerSwitch PostLDGVentValveLever;
 	
 	//
 	// FDAI control switches.
@@ -1133,8 +1147,20 @@ protected:
 	//
 	// High gain antenna
 	//
+	
+	SwitchRow HighGainAntennaUpperSwitchesRow;
+	ThreePosSwitch GHATrackSwitch;
+	ThreePosSwitch GHABeamSwitch;
+
+	SwitchRow HighGainAntennaLowerSwitchesRow;
+	ThreePosSwitch GHAPowerSwitch;
+	ToggleSwitch GHAServoElecSwitch;
+	
 	SwitchRow HighGainAntennaPitchPositionSwitchRow;
 	RotationalSwitch HighGainAntennaPitchPositionSwitch;
+
+	SwitchRow HighGainAntennaYawPositionSwitchRow;
+	RotationalSwitch HighGainAntennaYawPositionSwitch;
 
 	//
 	// Docking probe switches
