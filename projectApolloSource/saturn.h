@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.116  2006/01/08 04:00:24  movieman523
+  *	Added first two engineering cameras.
+  *	
   *	Revision 1.115  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -2025,6 +2028,7 @@ protected:
 #define SATVIEW_DOCK	3
 #define SATVIEW_ENG1	4
 #define SATVIEW_ENG2	5
+#define SATVIEW_ENG3	6
 
 	unsigned int	viewpos;
 

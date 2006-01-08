@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2006/01/08 04:00:24  movieman523
+  *	Added first two engineering cameras.
+  *	
   *	Revision 1.80  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -2320,6 +2323,15 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 		if (InVC && KEYDOWN (keystate, OAPI_KEY_2) && isTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_2, 1.0)) {
 				viewpos = SATVIEW_ENG2;
+				oapiCameraAttach(GetHandle(), CAM_COCKPIT);
+				SetView();
+			}
+			return 1;
+		}
+
+		if (InVC && KEYDOWN (keystate, OAPI_KEY_3) && isTLICapable() && stage < STAGE_ORBIT_SIVB && stage >= PRELAUNCH_STAGE) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_3, 1.0)) {
+				viewpos = SATVIEW_ENG3;
 				oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 				SetView();
 			}
