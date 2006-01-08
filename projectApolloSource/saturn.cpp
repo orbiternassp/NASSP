@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2006/01/08 04:37:50  movieman523
+  *	Added camera 3.
+  *	
   *	Revision 1.81  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -559,6 +562,8 @@ void Saturn::initSaturn()
 	ph_rcs0 = 0;
 	ph_rcs1 = 0;
 	ph_sps = 0;
+	ph_sep = 0;
+
 	//
 	// Thruster groups.
 	//
@@ -615,10 +620,12 @@ void Saturn::initSaturn()
 
 	for (i = 0; i < 8; i++) {
 		th_ull[i] = 0;
+		th_sep[i] = 0;
 	}
 
 	for (i = 0; i < 3; i++) {
 		th_ver[i] = 0;
+		th_aps[i] = 0;
 	}
 
 	for (i = 0; i < 24; i++) {
@@ -626,6 +633,7 @@ void Saturn::initSaturn()
 	}
 
 	th_sps[0] = 0;
+
 
 	for (i = 0; i < 24; i++) {
 		th_att_rot[i] = 0;
