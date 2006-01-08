@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2006/01/08 16:15:20  movieman523
+  *	For now, hard-wire batteries to buses when CM is seperated from SM.
+  *	
   *	Revision 1.83  2006/01/08 14:51:24  movieman523
   *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
   *	
@@ -317,7 +320,13 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 							   cws(SMasterAlarm, Bclick),
 							   dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS),
 							   NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
-							   NonEssBus2("Non-Essential-Bus2", &InstrumentLightingNonESSCircuitBraker)
+							   NonEssBus2("Non-Essential-Bus2", &InstrumentLightingNonESSCircuitBraker),
+							   ACBus1PhaseA("AC-Bus1-PhaseA", 115, &ACBus1Source),
+							   ACBus1PhaseB("AC-Bus1-PhaseB", 115, &ACBus1Source),
+							   ACBus1PhaseC("AC-Bus1-PhaseC", 115, &ACBus1Source),
+							   ACBus2PhaseA("AC-Bus2-PhaseA", 115, &ACBus2Source),
+							   ACBus2PhaseB("AC-Bus2-PhaseB", 115, &ACBus2Source),
+							   ACBus2PhaseC("AC-Bus2-PhaseC", 115, &ACBus2Source)
 
 {
 	InitSaturnCalled = false;
@@ -1982,15 +1991,6 @@ void Saturn::CheckSMSystemsState()
 		if (MainBusA) {
 			MainBusA->WireTo(EntryBatteryA);
 			MainBusB->WireTo(EntryBatteryB);
-		}
-
-		if (ACBus1PhaseA) {
-			ACBus1PhaseA->WireTo(MainBusA);
-			ACBus1PhaseB->WireTo(MainBusA);
-			ACBus1PhaseC->WireTo(MainBusA);
-			ACBus2PhaseA->WireTo(MainBusB);
-			ACBus2PhaseB->WireTo(MainBusB);
-			ACBus2PhaseC->WireTo(MainBusB);
 		}
 	}
 }

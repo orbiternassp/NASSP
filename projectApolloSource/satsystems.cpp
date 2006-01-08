@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/01/08 16:59:59  flydba
+  *	Tried to set up talkbacks for switches on panel 3 but it was unsuccessful.
+  *	
   *	Revision 1.53  2006/01/08 16:15:19  movieman523
   *	For now, hard-wire batteries to buses when CM is seperated from SM.
   *	
@@ -231,18 +234,44 @@ void Saturn::SystemsInit() {
 	MainBusA = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_A");
 	MainBusB = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_B");
 
+	ACBus1Source.WireToBuses(&AcBus1Switch1, &AcBus1Switch2, &AcBus1Switch3);
+	ACBus2Source.WireToBuses(&AcBus2Switch1, &AcBus2Switch2, &AcBus2Switch3);
+
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_A");
-	ACBus1PhaseA = (ACbus *) eo;
-	ACBus1PhaseB = (ACbus *) eo;
-	ACBus1PhaseC = (ACbus *) eo;
+	eo->WireTo(&ACBus1);
+
+	ACBus1PhaseA.WireTo(&ACBus1Source);
+	ACBus1PhaseB.WireTo(&ACBus1Source);
+	ACBus1PhaseC.WireTo(&ACBus1Source);
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_B");
-	ACBus2PhaseA = (ACbus *) eo;
-	ACBus2PhaseB = (ACbus *) eo;
-	ACBus2PhaseC = (ACbus *) eo;
+	eo->WireTo(&ACBus2);
 
-	ACBus1.WireToBuses(ACBus1PhaseA, ACBus1PhaseB, ACBus1PhaseC);
-	ACBus2.WireToBuses(ACBus2PhaseA, ACBus2PhaseB, ACBus2PhaseC);
+	ACBus2PhaseA.WireTo(&ACBus2Source);
+	ACBus2PhaseB.WireTo(&ACBus2Source);
+	ACBus2PhaseC.WireTo(&ACBus2Source);
+
+	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
+	ACBus2.WireToBuses(&ACBus2PhaseA, &ACBus2PhaseB, &ACBus2PhaseC);
+
+	//
+	// For now we register these systems so that the panel SDK will update
+	// them each timestep. Otherwise we get infinitely increasing current
+	// if we're not careful.
+	//
+
+	Panelsdk.AddElectrical(&ACBus1);
+	Panelsdk.AddElectrical(&ACBus2);
+	Panelsdk.AddElectrical(&ACBus1Source);
+	Panelsdk.AddElectrical(&ACBus2Source);
+
+	Panelsdk.AddElectrical(&ACBus1PhaseA);
+	Panelsdk.AddElectrical(&ACBus1PhaseB);
+	Panelsdk.AddElectrical(&ACBus1PhaseC);
+
+	Panelsdk.AddElectrical(&ACBus2PhaseA);
+	Panelsdk.AddElectrical(&ACBus2PhaseB);
+	Panelsdk.AddElectrical(&ACBus2PhaseC);
 
 	//
 	// Fuel cells.
@@ -692,9 +721,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 #ifdef _DEBUG
 
-//		sprintf(oapiDebugString(), "Bus A = %fA/%fV, Bus B = %fA/%fV, AC Bus 1 = %fA/%fV, AC Bus 2 = %fA/%fV, Batt A = %fV, Batt B = %fV", 
-//			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
-//			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA->Voltage(), EntryBatteryB->Voltage());
+		sprintf(oapiDebugString(), "Bus A = %3.3fA/%3.3fV, Bus B = %3.3fA/%3.3fV, AC Bus 1 = %3.3fA/%3.3fV, AC Bus 2 = %3.3fA/%3.3fV, Batt A = %3.3fV, Batt B = %3.3fV", 
+			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
+			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA->Voltage(), EntryBatteryB->Voltage());
 //		sprintf(oapiDebugString(), "FC1 %3.3fV/%3.3fA/%3.3fW FC2 %3.3fV/%3.3fA/%3.3fW FC3 %3.3fV/%3.3fA/%3.3fW",
 //			FuelCells[0]->Voltage(), FuelCells[0]->Current(), FuelCells[0]->PowerLoad(),
 //			FuelCells[1]->Voltage(), FuelCells[1]->Current(), FuelCells[1]->PowerLoad(),
@@ -1872,17 +1901,17 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 	case 1:
 		as.ACBusCurrent = ACBus1.Current();
 		as.ACBusVoltage = ACBus1.Voltage();
-		as.Phase1Current = ACBus1PhaseA->Current();
-		as.Phase2Current = ACBus1PhaseA->Current();
-		as.Phase3Current = ACBus1PhaseA->Current();
+		as.Phase1Current = ACBus1PhaseA.Current();
+		as.Phase2Current = ACBus1PhaseB.Current();
+		as.Phase3Current = ACBus1PhaseC.Current();
 		break;
 
 	case 2:
 		as.ACBusCurrent = ACBus2.Current();
 		as.ACBusVoltage = ACBus2.Voltage();
-		as.Phase1Current = ACBus2PhaseA->Current();
-		as.Phase2Current = ACBus2PhaseA->Current();
-		as.Phase3Current = ACBus2PhaseA->Current();
+		as.Phase1Current = ACBus2PhaseA.Current();
+		as.Phase2Current = ACBus2PhaseB.Current();
+		as.Phase3Current = ACBus2PhaseC.Current();
 		break;
 	}
 }

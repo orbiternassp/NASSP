@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.120  2006/01/08 17:50:38  movieman523
+  *	Wired up electrical meter switches other than battery charger.
+  *	
   *	Revision 1.119  2006/01/08 17:01:09  flydba
   *	Switches added on main panel 3.
   *	
@@ -1044,22 +1047,22 @@ protected:
 	PowerStateRotationalSwitch DCIndicatorsRotary;
 
 	SwitchRow BatteryChargeRotaryRow;
-	RotationalSwitch BatteryChargeRotary;
+	PowerStateRotationalSwitch BatteryChargeRotary;
 
 	SwitchRow ACIndicatorRotaryRow;
 	PowerStateRotationalSwitch ACIndicatorRotary;
 
 	SwitchRow ACInverterSwitchesRow;
-	ToggleSwitch MnA1Switch;
-	ToggleSwitch MnB2Switch;
-	ThreePosSwitch MnA3Switch;
-	ToggleSwitch AcBus1Switch1;
-	ToggleSwitch AcBus1Switch2;
-	ToggleSwitch AcBus1Switch3;
+	CircuitBrakerSwitch MnA1Switch;
+	CircuitBrakerSwitch MnB2Switch;
+	ThreeSourceSwitch MnA3Switch;
+	CircuitBrakerSwitch AcBus1Switch1;
+	CircuitBrakerSwitch AcBus1Switch2;
+	CircuitBrakerSwitch AcBus1Switch3;
 	ThreePosSwitch AcBus1ResetSwitch;
-	ToggleSwitch AcBus2Switch1;
-	ToggleSwitch AcBus2Switch2;
-	ToggleSwitch AcBus2Switch3;
+	CircuitBrakerSwitch AcBus2Switch1;
+	CircuitBrakerSwitch AcBus2Switch2;
+	CircuitBrakerSwitch AcBus2Switch3;
 	ThreePosSwitch AcBus2ResetSwitch;
 	
 	//
@@ -2014,13 +2017,16 @@ protected:
 	// AC bus 1 and 2, which are three-phase.
 	//
 
-	ACbus *ACBus1PhaseA;
-	ACbus *ACBus1PhaseB;
-	ACbus *ACBus1PhaseC;
+	ThreeWayPowerMerge ACBus1Source;
+	ThreeWayPowerMerge ACBus2Source;
 
-	ACbus *ACBus2PhaseA;
-	ACbus *ACBus2PhaseB;
-	ACbus *ACBus2PhaseC;
+	ACbus ACBus1PhaseA;
+	ACbus ACBus1PhaseB;
+	ACbus ACBus1PhaseC;
+
+	ACbus ACBus2PhaseA;
+	ACbus ACBus2PhaseB;
+	ACbus ACBus2PhaseC;
 
 	ThreeWayPowerMerge ACBus1;
 	ThreeWayPowerMerge ACBus2;
