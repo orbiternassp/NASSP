@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.121  2006/01/08 19:04:30  movieman523
+  *	Wired up AC bus switches in a quick and hacky manner.
+  *	
   *	Revision 1.120  2006/01/08 17:50:38  movieman523
   *	Wired up electrical meter switches other than battery charger.
   *	
@@ -2012,6 +2015,14 @@ protected:
 
 	DCbus NonEssBus1;
 	DCbus NonEssBus2;
+
+	//
+	// Inverters.
+	//
+
+	ACInverter *Inverter1;
+	ACInverter *Inverter2;
+	ACInverter *Inverter3;
 
 	//
 	// AC bus 1 and 2, which are three-phase.
