@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2006/01/08 04:00:24  movieman523
+  *	Added first two engineering cameras.
+  *	
   *	Revision 1.34  2006/01/07 19:11:44  tschachim
   *	Checklist actions for FDAIPowerRotarySwitch.
   *	
@@ -711,6 +714,21 @@ protected:
 
 	FDAI *FDAI1;
 	FDAI *FDAI2;
+};
+
+class PowerStateRotationalSwitch: public RotationalSwitch {
+public:
+	PowerStateRotationalSwitch();
+
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newValue);
+	void LoadState(char *line);
+	void SetSource(int num, e_object *s);
+
+protected:
+	void CheckPowerState();
+
+	e_object *sources[16];
 };
 
 class IndicatorSwitch: public PanelSwitchItem {

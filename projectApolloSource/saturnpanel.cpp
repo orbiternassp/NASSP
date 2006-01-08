@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.125  2006/01/08 17:01:42  flydba
+  *	Switches added on main panel 3.
+  *	
   *	Revision 1.124  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -523,7 +526,7 @@ void Saturn::RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int sr
 	// Damp motion.
 	//
 
-	double delta = 0.005 * oapiGetTimeAcceleration();
+	double delta = 0.01 * oapiGetTimeAcceleration();
 
 	if (fraction > last_val) {
 		if (fraction - last_val > delta)
@@ -3367,28 +3370,16 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_DCVOLTS:
-		//
-		// For now we'll always display main bus A voltage.
-		//
-
-		RedrawPanel_ElectricMeter(surf, (MainBusA->Voltage() - 17.0) / 30.0, SRF_DCVOLTS, LastDCVoltDisplay);
+		RedrawPanel_ElectricMeter(surf, (DCIndicatorsRotary.Voltage() - 17.0) / 30.0, SRF_DCVOLTS, LastDCVoltDisplay);
 		return true;
 
 
 	case AID_DCAMPS:
-		//
-		// For now we'll always display main bus A current.
-		//
-
-		RedrawPanel_ElectricMeter(surf, (MainBusA->Current() + 10.0) / 120.0, SRF_DCAMPS, LastDCAmpDisplay);
+		RedrawPanel_ElectricMeter(surf, (DCIndicatorsRotary.Current() + 10.0) / 120.0, SRF_DCAMPS, LastDCAmpDisplay);
 		return true;
 
 	case AID_ACVOLTS:
-		//
-		// For now we'll always display AC bus 1 voltage.
-		//
-
-		RedrawPanel_ElectricMeter(surf, (ACBus1.Voltage() - 85.0) / 60.0, SRF_ACVOLTS, LastACVoltDisplay);
+		RedrawPanel_ElectricMeter(surf, (ACIndicatorRotary.Voltage() - 85.0) / 60.0, SRF_ACVOLTS, LastACVoltDisplay);
 		return true;
 
 	case AID_MASTER_ALARM:
@@ -4303,6 +4294,17 @@ void Saturn::InitSwitches() {
 	VHFAntennaRotarySwitch.AddPosition(2,  60);
 	VHFAntennaRotarySwitch.Register(PSH, "VHFAntennaRotarySwitch", 0);
 
+	DCIndicatorsRotary.SetSource(0, FuelCells[0]);
+	DCIndicatorsRotary.SetSource(1, FuelCells[1]);
+	DCIndicatorsRotary.SetSource(2, FuelCells[2]);
+	DCIndicatorsRotary.SetSource(3, MainBusA);
+	DCIndicatorsRotary.SetSource(4, MainBusB);
+	DCIndicatorsRotary.SetSource(5, EntryBatteryA);
+	DCIndicatorsRotary.SetSource(6, EntryBatteryB);
+	DCIndicatorsRotary.SetSource(8, EntryBatteryC);
+	DCIndicatorsRotary.SetSource(9, PyroBatteryA);
+	DCIndicatorsRotary.SetSource(10, PyroBatteryB);
+
 	DCIndicatorsRotary.AddPosition(0, 210);
 	DCIndicatorsRotary.AddPosition(1, 240);
 	DCIndicatorsRotary.AddPosition(2, 270);
@@ -4315,6 +4317,13 @@ void Saturn::InitSwitches() {
 	DCIndicatorsRotary.AddPosition(9, 120);
 	DCIndicatorsRotary.AddPosition(10,150);
 	DCIndicatorsRotary.Register(PSH, "DCIndicatorsRotary", 6);
+
+	ACIndicatorRotary.SetSource(0, ACBus1PhaseA);
+	ACIndicatorRotary.SetSource(1, ACBus1PhaseB);
+	ACIndicatorRotary.SetSource(2, ACBus1PhaseC);
+	ACIndicatorRotary.SetSource(3, ACBus2PhaseA);
+	ACIndicatorRotary.SetSource(4, ACBus2PhaseB);
+	ACIndicatorRotary.SetSource(5, ACBus2PhaseC);
 
 	ACIndicatorRotary.AddPosition(0, 290);
 	ACIndicatorRotary.AddPosition(1, 315);
