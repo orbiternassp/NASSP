@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.118  2006/01/08 14:51:24  movieman523
+  *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
+  *	
   *	Revision 1.117  2006/01/08 04:37:50  movieman523
   *	Added camera 3.
   *	
@@ -810,13 +813,6 @@ protected:
 	ThreePosSwitch SuitCompressor1Switch;
 	ThreePosSwitch SuitCompressor2Switch;
 
-	ThreePosSwitch SBandNormalXPDRSwitch;
-	ThreePosSwitch SBandNormalPwrAmpl1Switch;
-	ThreePosSwitch SBandNormalPwrAmpl2Switch;
-	ThreePosSwitch SBandNormalMode1Switch;
-	ThreePosSwitch SBandNormalMode2Switch;
-	ToggleSwitch SBandNormalMode3Switch;
-
 	TimerControlSwitch MissionTimerSwitch;
 	CWSModeSwitch CautionWarningModeSwitch;
 	CWSSourceSwitch CautionWarningCMCSMSwitch;
@@ -964,6 +960,104 @@ protected:
 
 	SwitchRow PostLDGVentValveLeverRow;
 	CircuitBrakerSwitch PostLDGVentValveLever;
+	
+	//
+	// Communication switches (s-band, vhf etc.)
+	//
+
+	ThreePosSwitch SBandNormalXPDRSwitch;
+	ThreePosSwitch SBandNormalPwrAmpl1Switch;
+	ThreePosSwitch SBandNormalPwrAmpl2Switch;
+	ThreePosSwitch SBandNormalMode1Switch;
+	ThreePosSwitch SBandNormalMode2Switch;
+	ToggleSwitch SBandNormalMode3Switch;
+
+	SwitchRow SBandAuxSwitchesRow;
+	ThreePosSwitch SBandAuxSwitch1;
+	ThreePosSwitch SBandAuxSwitch2;
+
+	SwitchRow UPTLMSwitchesRow;
+	ThreePosSwitch UPTLMSwitch1;
+	ThreePosSwitch UPTLMSwitch2;
+
+	SwitchRow SBandAntennaSwitchesRow;
+	ThreePosSwitch SBandAntennaSwitch1;
+	ThreePosSwitch SBandAntennaSwitch2;
+
+	SwitchRow VHFAmThumbwheelsRow;
+	ThumbwheelSwitch SquelchAThumbwheel;
+	ThumbwheelSwitch SquelchBThumbwheel;
+
+	SwitchRow VHFSwitchesRow;
+	ThreePosSwitch VHFAMASwitch;
+	ThreePosSwitch VHFAMBSwitch;
+	ThreePosSwitch RCVOnlySwitch;
+	ToggleSwitch VHFBeaconSwitch;
+	ToggleSwitch VHFRangingSwitch;
+
+	SwitchRow TapeRecorderSwitchesRow;
+	ToggleSwitch TapeRecorder1Switch;
+	ThreePosSwitch TapeRecorder2Switch;
+	ThreePosSwitch TapeRecorder3Switch;
+
+	SwitchRow PowerSwitchesRow;
+	ThreePosSwitch SCESwitch;
+	ThreePosSwitch PMPSwitch;
+
+	SwitchRow PCMBitRateSwitchRow;
+	ToggleSwitch PCMBitRateSwitch;
+	ThreePosSwitch DummySwitch;
+	
+	//
+	// VHF antenna rotary
+	//
+	
+	SwitchRow VHFAntennaRotaryRow;
+	RotationalSwitch VHFAntennaRotarySwitch;
+
+	//
+	// SPS switches (panel 3)
+	//
+
+	SwitchRow SPSTestSwitchRow;
+	ThreePosSwitch SPSTestSwitch;
+
+	SwitchRow SPSOxidFlowValveSwitchesRow;
+	ThreePosSwitch SPSOxidFlowValveSwitch;
+	ToggleSwitch SPSOxidFlowValveSelectorSwitch;
+
+	SwitchRow PugModeSwitchRow;
+	ThreePosSwitch PugModeSwitch;
+
+	SwitchRow SPSSwitchesRow;
+	ThreePosSwitch LineHTRSSwitch;
+	ThreePosSwitch PressIndSwitch;
+
+	//
+	// Electricals switches & indicators
+	//
+
+	SwitchRow DCIndicatorsRotaryRow;
+	RotationalSwitch DCIndicatorsRotary;
+
+	SwitchRow BatteryChargeRotaryRow;
+	RotationalSwitch BatteryChargeRotary;
+
+	SwitchRow ACIndicatorRotaryRow;
+	RotationalSwitch ACIndicatorRotary;
+
+	SwitchRow ACInverterSwitchesRow;
+	ToggleSwitch MnA1Switch;
+	ToggleSwitch MnB2Switch;
+	ThreePosSwitch MnA3Switch;
+	ToggleSwitch AcBus1Switch1;
+	ToggleSwitch AcBus1Switch2;
+	ToggleSwitch AcBus1Switch3;
+	ThreePosSwitch AcBus1ResetSwitch;
+	ToggleSwitch AcBus2Switch1;
+	ToggleSwitch AcBus2Switch2;
+	ToggleSwitch AcBus2Switch3;
+	ThreePosSwitch AcBus2ResetSwitch;
 	
 	//
 	// FDAI control switches.
