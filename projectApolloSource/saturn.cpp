@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2006/01/08 14:51:24  movieman523
+  *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
+  *	
   *	Revision 1.82  2006/01/08 04:37:50  movieman523
   *	Added camera 3.
   *	
@@ -1953,7 +1956,7 @@ void Saturn::DestroyStages(double simt)
 		else if (!SMSep){
 			UllageSM(hSMJet,5,simt);
 		}
-		KillAlt(hSMJet,35000);
+		KillAlt(hSMJet, 45000);
 	}
 }
 
@@ -1970,6 +1973,24 @@ void Saturn::CheckSMSystemsState()
 		for (i = 0; i < 3; i++) {
 			if (FuelCells[i])
 				FuelCells[i]->Disable();
+		}
+
+		//
+		// HACK: For now, hard-wire the buses to the batteries.
+		//
+
+		if (MainBusA) {
+			MainBusA->WireTo(EntryBatteryA);
+			MainBusB->WireTo(EntryBatteryB);
+		}
+
+		if (ACBus1PhaseA) {
+			ACBus1PhaseA->WireTo(MainBusA);
+			ACBus1PhaseB->WireTo(MainBusA);
+			ACBus1PhaseC->WireTo(MainBusA);
+			ACBus2PhaseA->WireTo(MainBusB);
+			ACBus2PhaseB->WireTo(MainBusB);
+			ACBus2PhaseC->WireTo(MainBusB);
 		}
 	}
 }
