@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/01/08 19:08:20  movieman523
+  *	Disabled debug output.
+  *	
   *	Revision 1.55  2006/01/08 19:04:30  movieman523
   *	Wired up AC bus switches in a quick and hacky manner.
   *	
@@ -234,6 +237,14 @@ void Saturn::SystemsInit() {
 
 	e_object *eo;
 
+	Inverter1 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_1");
+	Inverter2 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_2");
+	Inverter3 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_3");
+
+	Inverter1->WireTo(&MnA1Switch);
+	Inverter2->WireTo(&MnB2Switch);
+	Inverter3->WireTo(&MnA3Switch);
+
 	MainBusA = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_A");
 	MainBusB = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_B");
 
@@ -263,18 +274,18 @@ void Saturn::SystemsInit() {
 	// if we're not careful.
 	//
 
-	Panelsdk.AddElectrical(&ACBus1);
-	Panelsdk.AddElectrical(&ACBus2);
-	Panelsdk.AddElectrical(&ACBus1Source);
-	Panelsdk.AddElectrical(&ACBus2Source);
+	Panelsdk.AddElectrical(&ACBus1, false);
+	Panelsdk.AddElectrical(&ACBus2, false);
+	Panelsdk.AddElectrical(&ACBus1Source, false);
+	Panelsdk.AddElectrical(&ACBus2Source, false);
 
-	Panelsdk.AddElectrical(&ACBus1PhaseA);
-	Panelsdk.AddElectrical(&ACBus1PhaseB);
-	Panelsdk.AddElectrical(&ACBus1PhaseC);
+	Panelsdk.AddElectrical(&ACBus1PhaseA, false);
+	Panelsdk.AddElectrical(&ACBus1PhaseB, false);
+	Panelsdk.AddElectrical(&ACBus1PhaseC, false);
 
-	Panelsdk.AddElectrical(&ACBus2PhaseA);
-	Panelsdk.AddElectrical(&ACBus2PhaseB);
-	Panelsdk.AddElectrical(&ACBus2PhaseC);
+	Panelsdk.AddElectrical(&ACBus2PhaseA, false);
+	Panelsdk.AddElectrical(&ACBus2PhaseB, false);
+	Panelsdk.AddElectrical(&ACBus2PhaseC, false);
 
 	//
 	// Fuel cells.

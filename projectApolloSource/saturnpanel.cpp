@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.127  2006/01/08 19:04:30  movieman523
+  *	Wired up AC bus switches in a quick and hacky manner.
+  *	
   *	Revision 1.126  2006/01/08 17:50:38  movieman523
   *	Wired up electrical meter switches other than battery charger.
   *	
@@ -1768,13 +1771,13 @@ void Saturn::SetSwitches(int panel) {
 	MnA1Switch.Init       (  0,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, MainBusA);
 	MnB2Switch.Init       ( 63,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, MainBusB);
 	MnA3Switch.Init       (126,   0, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow, MainBusA, 0, MainBusB);
-	AcBus1Switch1.Init    (  0, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnA1Switch);
-	AcBus1Switch2.Init    ( 43, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnB2Switch);
-	AcBus1Switch3.Init    ( 86, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnA3Switch);
+	AcBus1Switch1.Init    (  0, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter1);
+	AcBus1Switch2.Init    ( 43, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter2);
+	AcBus1Switch3.Init    ( 86, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter3);
 	AcBus1ResetSwitch.Init(129, 101, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
-	AcBus2Switch1.Init    (  0, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnA1Switch);
-	AcBus2Switch2.Init    ( 43, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnB2Switch);
-	AcBus2Switch3.Init    ( 86, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnA3Switch);
+	AcBus2Switch1.Init    (  0, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter1);
+	AcBus2Switch2.Init    ( 43, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter2);
+	AcBus2Switch3.Init    ( 86, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter3);
 	AcBus2ResetSwitch.Init(129, 200, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
 	 
 	SBandNormalSwitchesRow.Init(AID_SBAND_NORMAL_SWITCHES, MainPanel);
