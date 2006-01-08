@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2006/01/08 14:51:22  movieman523
+  *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
+  *	
   *	Revision 1.36  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -885,6 +888,11 @@ void SaturnV::SetSecondStage2 ()
 		ph_2nd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_2nd); // display 2nd stage propellant level in generic HUD
 
+	if (ph_sep) {
+		DelPropellantResource(ph_sep);
+		ph_sep = 0;
+	}
+
 	// *********************** thruster definitions ********************************
 	int i;
 
@@ -985,6 +993,39 @@ void SaturnV::SetThirdStage ()
 
 	// *********************** thruster definitions ********************************
 
+	VECTOR3	s_exhaust_pos1= _V(2.55,2.55,-3.6-STG2O);
+	VECTOR3 s_exhaust_pos2= _V(2.55,-2.55,-3.6-STG2O);
+	VECTOR3	s_exhaust_pos3= _V(-2.55,2.55,-3.6-STG2O);
+	VECTOR3 s_exhaust_pos4= _V(-2.55,-2.55,-3.6-STG2O);
+	VECTOR3	s_exhaust_pos6= _V(0,3.6,-3.6-STG2O);
+	VECTOR3 s_exhaust_pos7= _V(0,-3.6,-3.6-STG2O);
+	VECTOR3	s_exhaust_pos8= _V(3.6,0,-3.6-STG2O);
+	VECTOR3 s_exhaust_pos9= _V(-3.6,0,-3.6-STG2O);
+
+	//
+	// Seperation 'thrusters'.
+	//
+
+	if (viewpos != SATVIEW_ENG1 && viewpos != SATVIEW_ENG2) {
+
+		int i;
+
+		ph_sep = CreatePropellantResource(0.25);
+
+		th_sep[0] = CreateThruster (s_exhaust_pos1, _V( 1,1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[1] = CreateThruster (s_exhaust_pos2, _V( 1,-1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[2] = CreateThruster (s_exhaust_pos3, _V( -1,1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[3] = CreateThruster (s_exhaust_pos4, _V( -1,-1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[4] = CreateThruster (s_exhaust_pos6, _V( 0,1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[5] = CreateThruster (s_exhaust_pos7, _V( 0,-1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[6] = CreateThruster (s_exhaust_pos8, _V( 1,0,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[7] = CreateThruster (s_exhaust_pos9, _V( -1,0,0), 1.0, ph_sep, 10.0, 10.0);
+
+		for (i = 0; i < 8; i++) {
+			AddExhaustStream (th_sep[i], &seperation_junk);
+			SetThrusterLevel(th_sep[i], 1.0);
+		}
+	}
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
 	// orbiter main thrusters
@@ -995,11 +1036,11 @@ void SaturnV::SetThirdStage ()
 
 	SetCameraOffset (_V(-1,1.0,32.4-STG2O));
 
-	VECTOR3	m_exhaust_pos6= _V(3.6, -0.425, -3.6-STG2O);
-	VECTOR3 m_exhaust_pos7= _V(-3.6, 0.925, -3.6-STG2O);
+	VECTOR3	u_exhaust_pos6= _V(3.6, -0.425, -3.6-STG2O);
+	VECTOR3 u_exhaust_pos7= _V(-3.6, 0.925, -3.6-STG2O);
 
-	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( -0.4,0.0,1), 311 , ph_3rd, 45790.85);
-	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( 0.4,0.0,1), 311 , ph_3rd, 45790.85);
+	th_ver[0] = CreateThruster (u_exhaust_pos6, _V( -0.4,0.0,1), 311 , ph_3rd, 45790.85);
+	th_ver[1] = CreateThruster (u_exhaust_pos7, _V( 0.4,0.0,1), 311 , ph_3rd, 45790.85);
 
 	for (int i = 0; i < 2; i++)
 		AddExhaust (th_ver[i], 5.0, 0.25);
