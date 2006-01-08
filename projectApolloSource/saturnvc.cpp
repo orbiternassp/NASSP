@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/01/08 04:37:50  movieman523
+  *	Added camera 3.
+  *	
   *	Revision 1.10  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -162,8 +165,8 @@ void Saturn::SetView(double offset, bool update_direction)
 
 		switch (stage) {
 		case PRELAUNCH_STAGE:
-			e3 = _V(0.0, 5.4, -10.0+STG0O);
-			v3 = _V(0.0, 0.01, -1.0);
+			e3 = _V(0.0, 7.5, -10.0+STG0O);
+			v3 = _V(0.0, -0.1, -1.0);
 			break;
 
 		case LAUNCH_STAGE_ONE:
@@ -171,16 +174,16 @@ void Saturn::SetView(double offset, bool update_direction)
 			v1 = _V(-0.15, 0, 1.0);
 			e2 = _V(3.5, 0.0, -31.0+STG0O);
 			v2 = _V(-0.15, 0, -1.0);
-			e3 = _V(0.0, 5.4, -10.0+STG0O);
-			v3 = _V(0.0, 0.01, -1.0);
+			e3 = _V(0.0, 7.5, -10.0+STG0O);
+			v3 = _V(0.0, -0.1, -1.0);
 			break;
 
 		case LAUNCH_STAGE_TWO:
 		case LAUNCH_STAGE_TWO_ISTG_JET:
 			e2 = _V(3.5, 0.0, -31.0-STG1O);
 			v2 = _V(-0.15, 0, -1.0);
-			e3 = _V(0.0, 5.4, -10.0-STG1O);
-			v3 = _V(0.0, 0.01, -1.0);
+			e3 = _V(0.0, 7.5, -10.0-STG1O);
+			v3 = _V(0.0, -0.1, -1.0);
 			break;
 
 		//

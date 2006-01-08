@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.117  2006/01/08 04:37:50  movieman523
+  *	Added camera 3.
+  *	
   *	Revision 1.116  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -2340,7 +2343,7 @@ protected:
 	// General engine resources.
 	//
 
-	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd,ph_rcs0,ph_rcs1,ph_sps; // handles for propellant resources
+	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_sps, ph_sep; // handles for propellant resources
 
 	THGROUP_HANDLE thg_main,thg_ull,thg_ver;		          // handles for thruster groups
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
@@ -2348,6 +2351,7 @@ protected:
 	THRUSTER_HANDLE th_main[5],th_ull[8],th_ver[3] ,th_att_cm[24];               // handles for orbiter main engines
 	THRUSTER_HANDLE th_sps[1],th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THRUSTER_HANDLE	th_aps[3];
+	THRUSTER_HANDLE	th_sep[8];
 
 	//
 	// LEM data.

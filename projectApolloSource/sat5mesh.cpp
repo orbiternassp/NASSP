@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2006/01/08 04:00:24  movieman523
+  *	Added first two engineering cameras.
+  *	
   *	Revision 1.35  2006/01/06 22:55:53  movieman523
   *	Fixed SM seperation and cut off fuel cell power when it happens.
   *	
@@ -163,10 +166,30 @@ PARTICLESTREAMSPEC srb_contrail = {
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
 };
+
 PARTICLESTREAMSPEC srb_exhaust = {
 	0, 8.0, 20, 150.0, 0.1, 0.3, 12, 2.0, PARTICLESTREAMSPEC::EMISSIVE,//	0, 4.0, 20, 150.0, 0.1, 0.3, 12, 2.0, PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
+};
+
+PARTICLESTREAMSPEC solid_exhaust = {
+	0, 0.5, 250, 35.0, 0.1, 0.15, 0.5, 1.0, 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
+	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
+};
+
+//
+// Spew out particles to simulate the junk thrown out by stage
+// seperation explosives.
+//
+
+PARTICLESTREAMSPEC seperation_junk = {
+	0, 0.08, 150, 15.0, 5.0, 0.5, 0.0, 1.0, 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
 static MESHHANDLE hsat5stg1;
@@ -190,6 +213,9 @@ static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
 static MESHHANDLE hlta_2r;
 
+static SURFHANDLE contrail_tex;
+static SURFHANDLE exhaust_tex;
+
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
 void LoadSat5Meshes()
@@ -210,6 +236,13 @@ void LoadSat5Meshes()
 	LOAD_MESH(hLMPKD, "ProjectApollo/LM_Parked");
 	LOAD_MESH(hapollo8lta, "ProjectApollo/apollo8_lta");
 	LOAD_MESH(hlta_2r, "ProjectApollo/LTA_2R");
+
+	contrail_tex = oapiRegisterParticleTexture ("Contrail2");
+	exhaust_tex = oapiRegisterExhaustTexture ("Exhaust2");
+
+	srb_exhaust.tex = contrail_tex;
+	seperation_junk.tex = contrail_tex;
+	solid_exhaust.tex = contrail_tex;
 }
 
 MESHHANDLE SaturnV::GetInterstageMesh()
@@ -385,11 +418,8 @@ void SaturnV::SetFirstStage ()
 	th_main[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
 
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");//"Exhaust2"
 	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
-	for (i = 0; i < 5; i++) AddExhaust (th_main[i], 120.0, 3.5, tex);
-
-	srb_exhaust.tex = oapiRegisterParticleTexture ("Contrail2");
+	for (i = 0; i < 5; i++) AddExhaust (th_main[i], 120.0, 3.5, exhaust_tex);
 
 	AddExhaustStream (th_main[0], MAIN4a_Vector+_V(0,0,-30), &srb_contrail);
 	AddExhaustStream (th_main[0], MAIN4a_Vector+_V(0,0,-25), &srb_exhaust);
@@ -566,6 +596,38 @@ void SaturnV::SetSecondStage ()
 	VECTOR3 m_exhaust_pos3= {-1.8,1.8,-33.5-STG1O};
 	VECTOR3 m_exhaust_pos4 = {1.8,-1.8,-33.5-STG1O};
 	VECTOR3 m_exhaust_pos5 = {0,0,-33.5-STG1O};
+	VECTOR3 s_exhaust_pos = {0, 0, -35.0-STG1O};
+
+	VECTOR3	m_exhaust_pos6= _V(0,5.07,-33.15-STG1O);
+	VECTOR3 m_exhaust_pos7= _V(0,-5.07,-33.15-STG1O);
+	VECTOR3	m_exhaust_pos8= _V(5.07,0,-33.15-STG1O);
+	VECTOR3 m_exhaust_pos9= _V(-5.07,0,-33.15-STG1O);
+	VECTOR3	m_exhaust_pos10= _V(3.55,3.7,-33.15-STG1O);
+	VECTOR3 m_exhaust_pos11= _V(3.55,-3.7,-33.15-STG1O);
+	VECTOR3	m_exhaust_pos12= _V(-3.55,3.7,-33.15-STG1O);
+	VECTOR3 m_exhaust_pos13= _V(-3.55,-3.7,-33.15-STG1O);
+
+	//
+	// Seperation 'thruster'.
+	//
+
+	if (viewpos != SATVIEW_ENG1 && viewpos != SATVIEW_ENG2) {
+		ph_sep = CreatePropellantResource(0.25);
+
+		th_sep[0] = CreateThruster (m_exhaust_pos10, _V( 1,1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[1] = CreateThruster (m_exhaust_pos11, _V( 1,-1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[2] = CreateThruster (m_exhaust_pos12, _V( -1,1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[3] = CreateThruster (m_exhaust_pos13, _V( -1,-1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[4] = CreateThruster (m_exhaust_pos6, _V( 0,1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[5] = CreateThruster (m_exhaust_pos7, _V( 0,-1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[6] = CreateThruster (m_exhaust_pos8, _V( 1,0,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[7] = CreateThruster (m_exhaust_pos9, _V( -1,0,0), 1.0, ph_sep, 10.0, 10.0);
+
+		for (i = 0; i < 8; i++) {
+			AddExhaustStream (th_sep[i], &seperation_junk);
+			SetThrusterLevel(th_sep[i], 1.0);
+		}
+	}
 
 	// orbiter main thrusters
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
@@ -580,14 +642,6 @@ void SaturnV::SetSecondStage ()
 	SetThrusterGroupLevel(thg_main, 0.0);
 
 	if (SII_UllageNum) {
-		VECTOR3	m_exhaust_pos6= _V(0,5.07,-33.15-STG1O);
-		VECTOR3 m_exhaust_pos7= _V(0,-5.07,-33.15-STG1O);
-		VECTOR3	m_exhaust_pos8= _V(5.07,0,-33.15-STG1O);
-		VECTOR3 m_exhaust_pos9= _V(-5.07,0,-33.15-STG1O);
-		VECTOR3	m_exhaust_pos10= _V(3.55,3.7,-33.15-STG1O);
-		VECTOR3 m_exhaust_pos11= _V(3.55,-3.7,-33.15-STG1O);
-		VECTOR3	m_exhaust_pos12= _V(-3.55,3.7,-33.15-STG1O);
-		VECTOR3 m_exhaust_pos13= _V(-3.55,-3.7,-33.15-STG1O);
 
 		th_ull[0] = CreateThruster (m_exhaust_pos10, _V( 0,0,1),100000 , ph_2nd, 3000);
 		th_ull[1] = CreateThruster (m_exhaust_pos11, _V( 0,0,1),100000, ph_2nd, 3000);
@@ -598,8 +652,10 @@ void SaturnV::SetSecondStage ()
 		th_ull[6] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), 100000 , ph_2nd, 3000);
 		th_ull[7] = CreateThruster (m_exhaust_pos9, _V( 0,0,1), 100000 , ph_2nd, 3000);
 
-		for (i = 0; i < SII_UllageNum; i ++)
+		for (i = 0; i < SII_UllageNum; i ++) {
 			AddExhaust (th_ull[i], 5.0, 0.15);
+			AddExhaustStream (th_ull[i], &solid_exhaust);
+		}
 
 		thg_ull = CreateThrusterGroup (th_ull, SII_UllageNum, THGROUP_USER);
 	}
@@ -686,15 +742,63 @@ void SaturnV::SetSecondStage1 ()
 		ph_2nd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_2nd); // display 2nd stage propellant level in generic HUD
 
+	if (ph_sep) {
+		DelPropellantResource(ph_sep);
+		ph_sep = 0;
+	}
+
+	//
 	// *********************** thruster definitions ********************************
+	//
+
 	int i;
+
+	//
+	// Seperation 'thrusters' to spew out junk simulating the explosive seperation of the interstage.
+	//
 
 	VECTOR3 m_exhaust_pos1= {-1.8,-1.8,-33.5-STG1O};
 	VECTOR3 m_exhaust_pos2= {1.8,1.8,-33.5-STG1O};
 	VECTOR3 m_exhaust_pos3= {-1.8,1.8,-33.5-STG1O};
 	VECTOR3 m_exhaust_pos4 = {1.8,-1.8,-33.5-STG1O};
 	VECTOR3 m_exhaust_pos5 = {0,0,-33.5-STG1O};
+
+	VECTOR3	m_exhaust_pos6= _V(0,5.07,-30.0-STG1O);
+	VECTOR3 m_exhaust_pos7= _V(0,-5.07,-30.0-STG1O);
+	VECTOR3	m_exhaust_pos8= _V(5.07,0,-30.0-STG1O);
+	VECTOR3 m_exhaust_pos9= _V(-5.07,0,-30.0-STG1O);
+	VECTOR3	m_exhaust_pos10= _V(3.55,3.7,-30.0-STG1O);
+	VECTOR3 m_exhaust_pos11= _V(3.55,-3.7,-30.0-STG1O);
+	VECTOR3	m_exhaust_pos12= _V(-3.55,3.7,-30.0-STG1O);
+	VECTOR3 m_exhaust_pos13= _V(-3.55,-3.7,-30.0-STG1O);
+
+	//
+	// Seperation 'thrusters'.
+	//
+
+	if (viewpos != SATVIEW_ENG1 && viewpos != SATVIEW_ENG2) {
+
+		ph_sep = CreatePropellantResource(0.25);
+
+		th_sep[0] = CreateThruster (m_exhaust_pos10, _V( 1,1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[1] = CreateThruster (m_exhaust_pos11, _V( 1,-1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[2] = CreateThruster (m_exhaust_pos12, _V( -1,1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[3] = CreateThruster (m_exhaust_pos13, _V( -1,-1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[4] = CreateThruster (m_exhaust_pos6, _V( 0,1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[5] = CreateThruster (m_exhaust_pos7, _V( 0,-1,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[6] = CreateThruster (m_exhaust_pos8, _V( 1,0,0), 1.0, ph_sep, 10.0, 10.0);
+		th_sep[7] = CreateThruster (m_exhaust_pos9, _V( -1,0,0), 1.0, ph_sep, 10.0, 10.0);
+
+		for (i = 0; i < 8; i++) {
+			AddExhaustStream (th_sep[i], &seperation_junk);
+			SetThrusterLevel(th_sep[i], 1.0);
+		}
+	}
+
+	//
 	// orbiter main thrusters
+	//
+
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_main[1] = CreateThruster (m_exhaust_pos2, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_main[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
@@ -702,8 +806,7 @@ void SaturnV::SetSecondStage1 ()
 	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
 
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atsme");//"Exhaust2"
-	for (i = 0; i < 5; i++) AddExhaust (th_main[i], 25.0, 1.5,tex);
+	for (i = 0; i < 5; i++) AddExhaust (th_main[i], 25.0, 1.5, SMMETex);
 
 	SetThrusterGroupLevel(thg_main, 1.0);
 
@@ -800,7 +903,7 @@ void SaturnV::SetSecondStage2 ()
 	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
 
 	for (i = 0; i < 5; i++)
-		AddExhaust (th_main[i], 25.0, 1.5,SMMETex);
+		AddExhaust (th_main[i], 25.0, 1.5, SMMETex);
 	SetThrusterGroupLevel(thg_main, 1.0);
 
 	SetSIICMixtureRatio(MixtureRatio);
