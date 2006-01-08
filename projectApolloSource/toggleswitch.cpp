@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/01/08 04:00:24  movieman523
+  *	Added first two engineering cameras.
+  *	
   *	Revision 1.42  2006/01/07 19:11:44  tschachim
   *	Checklist actions for FDAIPowerRotarySwitch.
   *	
@@ -1523,7 +1526,6 @@ void RotationalSwitch::LoadState(char *line) {
 	}
 }
 
-
 RotationalSwitchPosition::RotationalSwitchPosition(int v, double a) {
 
 	value = v;
@@ -1600,6 +1602,57 @@ void FDAIPowerRotationalSwitch::LoadState(char *line)
 {
 	RotationalSwitch::LoadState(line);
 	CheckFDAIPowerState();
+}
+
+PowerStateRotationalSwitch::PowerStateRotationalSwitch()
+
+{
+	int i;
+
+	for (i = 0; i < 10; i++)
+		sources[i] = 0;
+}
+
+void PowerStateRotationalSwitch::CheckPowerState()
+
+{
+	WireTo(sources[GetState()]);
+}
+
+bool PowerStateRotationalSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
+		CheckPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+void PowerStateRotationalSwitch::SetSource(int num, e_object *s)
+
+{
+	if (num >= 0 && num < 16)
+		sources[num] = s; 
+}
+
+bool PowerStateRotationalSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
+		CheckPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+void PowerStateRotationalSwitch::LoadState(char *line)
+
+{
+	RotationalSwitch::LoadState(line);
+	CheckPowerState();
 }
 
 //

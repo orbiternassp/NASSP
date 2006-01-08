@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.119  2006/01/08 17:01:09  flydba
+  *	Switches added on main panel 3.
+  *	
   *	Revision 1.118  2006/01/08 14:51:24  movieman523
   *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
   *	
@@ -1038,13 +1041,13 @@ protected:
 	//
 
 	SwitchRow DCIndicatorsRotaryRow;
-	RotationalSwitch DCIndicatorsRotary;
+	PowerStateRotationalSwitch DCIndicatorsRotary;
 
 	SwitchRow BatteryChargeRotaryRow;
 	RotationalSwitch BatteryChargeRotary;
 
 	SwitchRow ACIndicatorRotaryRow;
-	RotationalSwitch ACIndicatorRotary;
+	PowerStateRotationalSwitch ACIndicatorRotary;
 
 	SwitchRow ACInverterSwitchesRow;
 	ToggleSwitch MnA1Switch;
