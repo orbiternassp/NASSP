@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2006/01/08 04:00:24  movieman523
+  *	Added first two engineering cameras.
+  *	
   *	Revision 1.24  2006/01/05 12:02:26  tschachim
   *	Fixed SIVB separation offset (hopefully)
   *	
@@ -558,8 +561,16 @@ void Saturn::SetCSMStage ()
 {
 	ClearMeshes();
     ClearThrusterDefinitions();
-	if(ph_3rd)
+
+	if(ph_3rd) {
 		DelPropellantResource(ph_3rd);
+		ph_3rd = 0;
+	}
+
+	if (ph_sep) {
+		DelPropellantResource(ph_sep);
+		ph_sep = 0;
+	}
 
 	SetSize (20);
 	SetCOG_elev (3.5);
@@ -660,8 +671,16 @@ void Saturn::SetCSM2Stage ()
 {	ClearMeshes();
 	DelThrusterGroup(THGROUP_MAIN,true);
     ClearThrusterDefinitions();
-	if(ph_3rd)
+
+	if(ph_3rd) {
 		DelPropellantResource(ph_3rd);
+		ph_3rd = 0;
+	}
+
+	if (ph_sep) {
+		DelPropellantResource(ph_sep);
+		ph_sep = 0;
+	}
 
 	SetSize (7);
 	SetCOG_elev (3.5);
