@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/11/26 16:30:50  movieman523
+  *	Fixed retros and trying to fix TLI audio.
+  *	
   *	Revision 1.2  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -32,8 +35,12 @@
   **************************************************************************/
 
 #include "orbiterSDK.h"
+#include "orbiterSoundSDK3.h"
 
 #include "nasspdefs.h"
+#include "nasspsound.h"
+
+#include "soundlib.h"
 #include "s1c.h"
 
 #include <stdio.h>
@@ -59,6 +66,17 @@ S1C::S1C (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
 	InitS1c();
+
+	//
+	// We need to turn off most of the Orbitersound options.
+	//
+
+	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
+	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
+	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
+	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
+	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
+	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 }
 
 S1C::~S1C()
@@ -112,7 +130,7 @@ void S1C::SetS1c()
 
 	ClearThrusterDefinitions();
 	
-	SetSize (10);
+	SetSize (40.0);
 	SetPMI (_V(119.65, 119.45, 15.45));
 	SetCOG_elev (2.0);
 	SetCrossSections (_V(508.35, 530.75, 115.19));
@@ -125,9 +143,19 @@ void S1C::SetS1c()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	AddMesh (hsat5stg1, &mesh_dir);
+	UINT meshidx;
+	meshidx = AddMesh (hsat5stg1, &mesh_dir);
+
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	SetEmptyMass (mass);
+
+	VECTOR3 v = {4.0, 0, 15.0};
+	VECTOR3 v2 = {-0.15, 0, 1.0};
+
+	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+	SetCameraDefaultDirection(v2);
+	SetCameraOffset(v);
 
 	AddEngines ();
 }
@@ -357,6 +385,21 @@ void S1C::clbkSetClassCaps (FILEHANDLE cfg)
 void S1C::clbkDockEvent(int dock, OBJHANDLE connected)
 
 {
+}
+
+bool S1C::clbkLoadGenericCockpit ()
+
+{
+	return false;
+}
+
+bool S1C::clbkLoadVC (int id)
+
+{
+	if (!id)
+		return true;
+
+	return false;
 }
 
 void S1C::SetState(S1CSettings &state)

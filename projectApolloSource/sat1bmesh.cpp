@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2006/01/06 22:55:53  movieman523
+  *	Fixed SM seperation and cut off fuel cell power when it happens.
+  *	
   *	Revision 1.26  2006/01/05 19:40:53  movieman523
   *	Added Saturn1b abort stages to build.
   *	
@@ -214,7 +217,7 @@ void Saturn1b::SetFirstStage ()
 	meshidx = AddMesh (hsat5tower, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	SetView(35.2);
+	SetView(35.2, false);
 
 	Offset1st = -28.5;
 	SetCameraOffset (_V(-1,1.0,35.15));
@@ -344,10 +347,8 @@ void Saturn1b::SetSecondStage ()
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
-
 	
-    SetView(22.95);
-
+    SetView(22.95, false);
 
 	//Don't Forget the Hatch
 	mesh_dir=_V(0.02,1.35,35.415-12.25);
@@ -450,7 +451,7 @@ void Saturn1b::SetSecondStage1 ()
 	}
 
 	
-    SetView(22.95);
+    SetView(22.95, false);
 
 	//Don't Forget the Hatch
 	mesh_dir=_V(0.02,1.35,35.415-12.25);
@@ -548,7 +549,7 @@ void Saturn1b::SetSecondStage2 ()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-    SetView(22.95);
+    SetView(22.95, false);
 
 	//Don't Forget the Hatch
 	mesh_dir=_V(0.02,1.35,35.530-12.25);

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2006/01/05 12:02:26  tschachim
+  *	Fixed SIVB separation offset (hopefully)
+  *	
   *	Revision 1.23  2006/01/04 23:06:03  movieman523
   *	Moved meshes into ProjectApollo directory and renamed a few.
   *	
@@ -1463,6 +1466,13 @@ bool Saturn::clbkLoadGenericCockpit ()
 
 {
 	TRACESETUP("Saturn::clbkLoadGenericCockpit");
+
+	//
+	// VC-only in engineering camera view.
+	//
+
+	if (viewpos == SATVIEW_ENG1 || viewpos == SATVIEW_ENG2)
+		return false;
 
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));

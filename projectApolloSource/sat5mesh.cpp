@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2006/01/06 22:55:53  movieman523
+  *	Fixed SM seperation and cut off fuel cell power when it happens.
+  *	
   *	Revision 1.34  2006/01/05 11:27:48  tschachim
   *	New dockingprobe handling.
   *	
@@ -405,12 +408,19 @@ void SaturnV::SetFirstStage ()
 	UINT meshidx;
 	double TCP=-101.5+STG0O-TCPO;
 	SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
+
 	VECTOR3 mesh_dir=_V(0,0,-54.0+STG0O);
-	AddMesh (hsat5stg1, &mesh_dir);
+	meshidx = AddMesh (hsat5stg1, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
 	mesh_dir=_V(0,0,-30.5+STG0O);
-	AddMesh (GetInterstageMesh(), &mesh_dir);
+	meshidx = AddMesh (GetInterstageMesh(), &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
 	mesh_dir=_V(0,0,-17.2+STG0O);
-	AddMesh (hsat5stg2, &mesh_dir);
+	meshidx = AddMesh (hsat5stg2, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
 	mesh_dir=_V(0,0,2.+STG0O);
 	AddMesh (hsat5stg3, &mesh_dir);
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
@@ -450,7 +460,7 @@ void SaturnV::SetFirstStage ()
 	meshidx = AddMesh (hsat5tower, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	SetView(23.1+STG0O);
+	SetView(23.1+STG0O, false);
 
 	buildstatus = 6;
 
@@ -491,12 +501,19 @@ void SaturnV::SetSecondStage ()
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
     ShiftCentreOfMass (_V(0,0,STG1O));
+
 	VECTOR3 mesh_dir=_V(0,0,-30.5-STG1O);
-	AddMesh (GetInterstageMesh(), &mesh_dir);
+	meshidx = AddMesh (GetInterstageMesh(), &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
 	mesh_dir=_V(0,0,-17.2-STG1O);
-	AddMesh (hsat5stg2, &mesh_dir);
+	meshidx = AddMesh (hsat5stg2, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
 	mesh_dir=_V(0,0,2.-STG1O);
-	AddMesh (hsat5stg3, &mesh_dir);
+	meshidx = AddMesh (hsat5stg3, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
 		mesh_dir=_V(0,0,12-STG1O);
 		AddMesh (hLMPKD, &mesh_dir);
@@ -534,7 +551,7 @@ void SaturnV::SetSecondStage ()
 	meshidx = AddMesh (hsat5tower, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	SetView(23.1-STG1O);
+	SetView(23.1-STG1O, false);
 
 	// ************************* propellant specs **********************************
 	if (!ph_2nd)
@@ -615,14 +632,20 @@ void SaturnV::SetSecondStage1 ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
+
     VECTOR3 mesh_dir=_V(0,0,-17.2-STG1O);
-	AddMesh (hsat5stg2, &mesh_dir);
+	meshidx = AddMesh (hsat5stg2, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
 	mesh_dir=_V(0,0,2.-STG1O);
-	AddMesh (hsat5stg3, &mesh_dir);
+	meshidx = AddMesh (hsat5stg3, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
 		mesh_dir=_V(0,0,12-STG1O);
 		AddMesh (hLMPKD, &mesh_dir);
 	}
+
 	mesh_dir=_V(-1.48,-1.48,14.55-STG1O);
 	AddMesh (hsat5stg31, &mesh_dir);
 	mesh_dir=_V(1.48,-1.48,14.55-STG1O);
@@ -656,7 +679,7 @@ void SaturnV::SetSecondStage1 ()
 	meshidx = AddMesh (hsat5tower, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	SetView(23.1-STG1O);
+	SetView(23.1-STG1O, false);
 
 	// ************************* propellant specs **********************************
 	if (!ph_2nd)
@@ -750,7 +773,7 @@ void SaturnV::SetSecondStage2 ()
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	SetView(23.1-STG1O);
+	SetView(23.1-STG1O, false);
 
 	mesh_dir=_V(0,0,24.8-STG1O);
 	probeidx=AddMesh (hprobe, &mesh_dir);
@@ -850,7 +873,7 @@ void SaturnV::SetThirdStage ()
 	VECTOR3 dockrot = {0,1,0};
 	SetDockParams(dockpos, dockdir, dockrot);
 
-	SetView(23.1-STG2O);
+	SetView(23.1-STG2O, false);
 
 	// ************************* propellant specs **********************************
 	if (!ph_3rd)
@@ -1028,8 +1051,8 @@ void SaturnV::SeparateStage (int stage)
 
     if (stage == LAUNCH_STAGE_ONE && !bAbort )
 	{
-	    vs1.vrot.x = 0.025;
-		vs1.vrot.y = 0.025;
+	    vs1.vrot.x = 0.0025;
+		vs1.vrot.y = 0.0025;
 		vs1.vrot.z = 0.0;
 		vs2.vrot.x = 0.0;
 		vs2.vrot.y = 0.0;
@@ -1066,6 +1089,11 @@ void SaturnV::SeparateStage (int stage)
 		stage1->SetState(S1Config);
 
 		SetSecondStage ();
+
+		if (viewpos == SATVIEW_ENG1) {
+			oapiSetFocusObject(hstg1);
+			oapiCameraAttach(hstg1, CAM_COCKPIT);
+		}
 	}
 
 	if (stage == LAUNCH_STAGE_TWO && !bAbort )

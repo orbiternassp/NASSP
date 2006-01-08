@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2006/01/07 03:28:28  movieman523
+  *	Removed a lot of unused switches and wired up the FDAI power switch.
+  *	
   *	Revision 1.79  2006/01/07 00:43:58  movieman523
   *	Added non-essential buses, though there's nothing connected to them at the moment.
   *	
@@ -635,7 +638,6 @@ void Saturn::initSaturn()
 	Realism = REALISM_DEFAULT;
 
 	SIISepState = false;
-	autoDISP = false;
 	bRecovery = false;
 	ActivateLEM = false;
 	ActivateS4B = false;
@@ -1118,7 +1120,8 @@ typedef union {
 		unsigned EVA_IP:1;
 		unsigned ABORT_IND:1;
 		unsigned HatchOpen:1;
-		unsigned viewpos:2;
+		unsigned unused_1:1;
+		unsigned unused_2:1;
 		unsigned LEMdatatransfer:1;
 		unsigned PostSplashdownPlayed:1;
 		unsigned IGMEnabled:1;
@@ -1131,6 +1134,7 @@ typedef union {
 		unsigned SkylabCM:1;
 		unsigned S1bPanel:1;
 		unsigned NoHGA:1;
+		unsigned viewpos:3;
 	} u;
 	unsigned long word;
 } MainState;
@@ -2265,21 +2269,10 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 			}
 		}
 
-		if (KEYDOWN (keystate, OAPI_KEY_S)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_S, 1.0)){
-				if (!autoDISP){
-					autoDISP = true;
-				}else{
-					autoDISP = false;
-				}
-			return 1;
-			}
-		}
-
 		if (KEYDOWN (keystate, OAPI_KEY_9) && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_9, 1.0)) {
 				viewpos = SATVIEW_DOCK;
-				SetView();
+				SetView(true);
 			}
 			return 1;
 		}
@@ -2287,7 +2280,7 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 		if (KEYDOWN (keystate, OAPI_KEY_8)) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_8, 1.0)) {
 				viewpos = SATVIEW_DMP;
-				SetView();
+				SetView(true);
 			}
 			return 1;
 		}
@@ -2295,7 +2288,7 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 		if (KEYDOWN (keystate, OAPI_KEY_7)) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_7, 1.0)) {
 				viewpos = SATVIEW_CMP;
-				SetView();
+				SetView(true);
 			}
 			return 1;
 		}
@@ -2303,6 +2296,31 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 		if (KEYDOWN (keystate, OAPI_KEY_6)) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_6, 1.0)) {
 				viewpos = SATVIEW_CDR;
+				SetView(true);
+			}
+			return 1;
+		}
+
+		//
+		// We only allow this switch in VC mode, as we need to disable the panel when selecting these
+		// cameras.
+		//
+		// For now this is limited to the Saturn V.
+		//
+
+		if (InVC && KEYDOWN (keystate, OAPI_KEY_1) && isTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_1, 1.0)) {
+				viewpos = SATVIEW_ENG1;
+				SetView();
+				oapiCameraAttach(GetHandle(), CAM_COCKPIT);
+			}
+			return 1;
+		}
+
+		if (InVC && KEYDOWN (keystate, OAPI_KEY_2) && isTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+			if (oapiAcceptDelayedKey (OAPI_KEY_2, 1.0)) {
+				viewpos = SATVIEW_ENG2;
+				oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 				SetView();
 			}
 			return 1;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2006/01/07 19:11:44  tschachim
+  *	Checklist actions for FDAIPowerRotarySwitch.
+  *	
   *	Revision 1.33  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -319,11 +322,23 @@ public:
 	void LoadState(char *line);
 
 protected:
-	void UpdateSourceState();
+	virtual void UpdateSourceState();
 
 	e_object *source1;
 	e_object *source2;
 	e_object *source3;
+};
+
+class ThreeSourceTwoDestSwitch : public ThreeSourceSwitch {
+public:
+	ThreeSourceTwoDestSwitch() { dest1 = dest2 = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3, e_object *d1, e_object *d2);
+
+protected:
+	void UpdateSourceState();
+
+	e_object *dest1;
+	e_object *dest2;
 };
 
 //
