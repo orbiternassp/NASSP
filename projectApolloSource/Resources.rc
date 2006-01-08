@@ -155,6 +155,8 @@ IDB_DIRECTO2ROTARY BITMAP  DISCARDABLE     "direct_o2_rotary.bmp"
 IDB_ECSGLYCOLPUMPROTARY BITMAP  DISCARDABLE     "ECSGlycolpump_rotary.bmp"
 IDB_GTACOVER BITMAP  DISCARDABLE     "gta_cover.bmp"
 IDB_POSTLDGVENTVLVLEVER BITMAP  DISCARDABLE     "post_lndg_vlv_lever.bmp"
+IDB_VHFANTENNAROTARY BITMAP  DISCARDABLE     "VHFAntenna_rotary.bmp"
+IDB_SPSMAXINDICATOR BITMAP  DISCARDABLE     "SPSmax_indicator.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 
