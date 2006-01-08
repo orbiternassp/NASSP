@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2006/01/08 19:04:30  movieman523
+  *	Wired up AC bus switches in a quick and hacky manner.
+  *	
   *	Revision 1.54  2006/01/08 16:59:59  flydba
   *	Tried to set up talkbacks for switches on panel 3 but it was unsuccessful.
   *	
@@ -721,9 +724,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 #ifdef _DEBUG
 
-		sprintf(oapiDebugString(), "Bus A = %3.3fA/%3.3fV, Bus B = %3.3fA/%3.3fV, AC Bus 1 = %3.3fA/%3.3fV, AC Bus 2 = %3.3fA/%3.3fV, Batt A = %3.3fV, Batt B = %3.3fV", 
-			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
-			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA->Voltage(), EntryBatteryB->Voltage());
+//		sprintf(oapiDebugString(), "Bus A = %3.3fA/%3.3fV, Bus B = %3.3fA/%3.3fV, AC Bus 1 = %3.3fA/%3.3fV, AC Bus 2 = %3.3fA/%3.3fV, Batt A = %3.3fV, Batt B = %3.3fV", 
+//			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
+//			ACBus1.Current(), ACBus1.Voltage(), ACBus2.Current(), ACBus2.Voltage(), EntryBatteryA->Voltage(), EntryBatteryB->Voltage());
 //		sprintf(oapiDebugString(), "FC1 %3.3fV/%3.3fA/%3.3fW FC2 %3.3fV/%3.3fA/%3.3fW FC3 %3.3fV/%3.3fA/%3.3fW",
 //			FuelCells[0]->Voltage(), FuelCells[0]->Current(), FuelCells[0]->PowerLoad(),
 //			FuelCells[1]->Voltage(), FuelCells[1]->Current(), FuelCells[1]->PowerLoad(),
