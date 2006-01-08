@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.126  2006/01/08 17:50:38  movieman523
+  *	Wired up electrical meter switches other than battery charger.
+  *	
   *	Revision 1.125  2006/01/08 17:01:42  flydba
   *	Switches added on main panel 3.
   *	
@@ -1762,16 +1765,16 @@ void Saturn::SetSwitches(int panel) {
 	DummySwitch.Init     (43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], PCMBitRateSwitchRow);
 
 	ACInverterSwitchesRow.Init(AID_ACINVERTERSWITCHES, MainPanel);
-	MnA1Switch.Init       (  0,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow);
-	MnB2Switch.Init       ( 63,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow);
-	MnA3Switch.Init       (126,   0, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
-	AcBus1Switch1.Init    (  0, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow);
-	AcBus1Switch2.Init    ( 43, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow);
-	AcBus1Switch3.Init    ( 86, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow);
+	MnA1Switch.Init       (  0,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, MainBusA);
+	MnB2Switch.Init       ( 63,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, MainBusB);
+	MnA3Switch.Init       (126,   0, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow, MainBusA, 0, MainBusB);
+	AcBus1Switch1.Init    (  0, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnA1Switch);
+	AcBus1Switch2.Init    ( 43, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnB2Switch);
+	AcBus1Switch3.Init    ( 86, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnA3Switch);
 	AcBus1ResetSwitch.Init(129, 101, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
-	AcBus2Switch1.Init    (  0, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow);
-	AcBus2Switch2.Init    ( 43, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow);
-	AcBus2Switch3.Init    ( 86, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow);
+	AcBus2Switch1.Init    (  0, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnA1Switch);
+	AcBus2Switch2.Init    ( 43, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnB2Switch);
+	AcBus2Switch3.Init    ( 86, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, &MnA3Switch);
 	AcBus2ResetSwitch.Init(129, 200, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
 	 
 	SBandNormalSwitchesRow.Init(AID_SBAND_NORMAL_SWITCHES, MainPanel);
@@ -2017,12 +2020,12 @@ void Saturn::SetSwitches(int panel) {
 	ECSSecCoolLoopXducersMnBCircuitBraker.Init(262,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
 	ECSWasteH2OUrineDumpHTRMnACircuitBraker.Init(355,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
 	ECSWasteH2OUrineDumpHTRMnBCircuitBraker.Init(393,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow);
-	ECSCabinFanAC1ACircuitBraker.Init(585,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, ACBus1PhaseA, 2.0);
-	ECSCabinFanAC1BCircuitBraker.Init(622,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, ACBus1PhaseB, 2.0);
-	ECSCabinFanAC1CCircuitBraker.Init(659,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, ACBus1PhaseC, 2.0);
-	ECSCabinFanAC2ACircuitBraker.Init(696,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, ACBus2PhaseA, 2.0);
-	ECSCabinFanAC2BCircuitBraker.Init(733,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, ACBus2PhaseB, 2.0);
-	ECSCabinFanAC2CCircuitBraker.Init(771,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, ACBus2PhaseC, 2.0);
+	ECSCabinFanAC1ACircuitBraker.Init(585,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1PhaseA, 2.0);
+	ECSCabinFanAC1BCircuitBraker.Init(622,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1PhaseB, 2.0);
+	ECSCabinFanAC1CCircuitBraker.Init(659,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus1PhaseC, 2.0);
+	ECSCabinFanAC2ACircuitBraker.Init(696,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2PhaseA, 2.0);
+	ECSCabinFanAC2BCircuitBraker.Init(733,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2PhaseB, 2.0);
+	ECSCabinFanAC2CCircuitBraker.Init(771,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSLowerRowCircuitBrakersRow, &ACBus2PhaseC, 2.0);
 
 	GNCircuitBrakersRow.Init(AID_GUIDANCENAVIGATIONCIRCUITBRAKERS, MainPanel);
 	GNPowerAc1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], GNCircuitBrakersRow, &ACBus1, 2.0);
@@ -4301,6 +4304,7 @@ void Saturn::InitSwitches() {
 	DCIndicatorsRotary.SetSource(4, MainBusB);
 	DCIndicatorsRotary.SetSource(5, EntryBatteryA);
 	DCIndicatorsRotary.SetSource(6, EntryBatteryB);
+	DCIndicatorsRotary.SetSource(7, &BatteryChargeRotary);	
 	DCIndicatorsRotary.SetSource(8, EntryBatteryC);
 	DCIndicatorsRotary.SetSource(9, PyroBatteryA);
 	DCIndicatorsRotary.SetSource(10, PyroBatteryB);
@@ -4318,12 +4322,12 @@ void Saturn::InitSwitches() {
 	DCIndicatorsRotary.AddPosition(10,150);
 	DCIndicatorsRotary.Register(PSH, "DCIndicatorsRotary", 6);
 
-	ACIndicatorRotary.SetSource(0, ACBus1PhaseA);
-	ACIndicatorRotary.SetSource(1, ACBus1PhaseB);
-	ACIndicatorRotary.SetSource(2, ACBus1PhaseC);
-	ACIndicatorRotary.SetSource(3, ACBus2PhaseA);
-	ACIndicatorRotary.SetSource(4, ACBus2PhaseB);
-	ACIndicatorRotary.SetSource(5, ACBus2PhaseC);
+	ACIndicatorRotary.SetSource(0, &ACBus1PhaseA);
+	ACIndicatorRotary.SetSource(1, &ACBus1PhaseB);
+	ACIndicatorRotary.SetSource(2, &ACBus1PhaseC);
+	ACIndicatorRotary.SetSource(3, &ACBus2PhaseA);
+	ACIndicatorRotary.SetSource(4, &ACBus2PhaseB);
+	ACIndicatorRotary.SetSource(5, &ACBus2PhaseC);
 
 	ACIndicatorRotary.AddPosition(0, 290);
 	ACIndicatorRotary.AddPosition(1, 315);

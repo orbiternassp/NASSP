@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/12/02 19:29:24  movieman523
+  *	Started integrating PowerSource code into PanelSDK.
+  *	
   *	Revision 1.6  2005/11/18 20:38:59  movieman523
   *	Revised condensor output from fuel cell to eliminate master alarms.
   *	
@@ -200,7 +203,7 @@ double ThreeWayPowerMerge::Voltage()
 	if (Phase2)
 		Volts2 = Phase2->Voltage();
 	if (Phase3)
-		Volts3 = Phase2->Voltage();
+		Volts3 = Phase3->Voltage();
 
 	MaxVolts = Volts1;
 
@@ -215,16 +218,24 @@ double ThreeWayPowerMerge::Voltage()
 double ThreeWayPowerMerge::Current()
 
 {
-	double current = 0.0;
+	double Volts = 0.0;
+	double VoltsA = 0.0;
+	double VoltsB = 0.0;
+	double VoltsC = 0.0;
 
 	if (Phase1)
-		current += Phase1->Current();
+		VoltsA = Phase1->Voltage();
 	if (Phase2)
-		current += Phase2->Current();
+		VoltsB = Phase2->Voltage();
 	if (Phase3)
-		current += Phase3->Current();
+		VoltsC = Phase3->Voltage();
 
-	return current;
+	Volts = VoltsA + VoltsB + VoltsC;
+
+	if (Volts > 0.0) {
+		return power_load / Volts;
+	}
+	return 0.0;
 }
 
 void ThreeWayPowerMerge::DrawPower(double watts)
@@ -234,6 +245,8 @@ void ThreeWayPowerMerge::DrawPower(double watts)
 	double VoltsA = 0.0;
 	double VoltsB = 0.0;
 	double VoltsC = 0.0;
+
+	power_load += watts;
 
 	if (Phase1)
 		VoltsA = Phase1->Voltage();
