@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/01/08 16:15:19  movieman523
+  *	For now, hard-wire batteries to buses when CM is seperated from SM.
+  *	
   *	Revision 1.52  2006/01/07 19:11:44  tschachim
   *	Checklist actions for FDAIPowerRotarySwitch.
   *	
@@ -311,7 +314,7 @@ void Saturn::SystemsInit() {
 	// Default valve states.
 	// Make sure switches and talkback state match.
 	//
-
+	
 	SetValveState(CSM_He1_TANKA_VALVE, true);
 	SetValveState(CSM_He1_TANKB_VALVE, true);
 	SetValveState(CSM_He1_TANKC_VALVE, true);
