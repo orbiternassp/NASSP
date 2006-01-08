@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/01/07 19:11:44  tschachim
+  *	Checklist actions for FDAIPowerRotarySwitch.
+  *	
   *	Revision 1.41  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -2045,6 +2048,37 @@ TimerUpdateSwitch::TimerUpdateSwitch()
 {
 	adjust_type = TIME_UPDATE_SECONDS;
 	springLoaded = SPRINGLOADEDSWITCH_CENTER;
+}
+
+void ThreeSourceTwoDestSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3, e_object *d1, e_object *d2)
+
+{
+	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	source1 = s1;
+	source2 = s2;
+	source3 = s3;
+	dest1 = d1;
+	dest2 = d2;
+}
+
+void ThreeSourceTwoDestSwitch::UpdateSourceState()
+
+{
+	if (IsUp()) {
+		//
+		// Source 1 to dest 1, source 3 to dest 2
+		//
+	}
+	else if (IsCenter()) {
+		//
+		// Disconnect.
+		//
+	}
+	else if (IsDown()) {
+		//
+		// Source 2 to dest 2, source 3 to dest 1.
+		//
+	}
 }
 
 void TimerUpdateSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int adjuster, MissionTimer *ptimer)

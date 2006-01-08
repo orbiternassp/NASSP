@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.123  2006/01/07 18:14:37  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.122  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -843,6 +846,13 @@ bool Saturn::clbkLoadPanel (int id) {
 		return false;
 
 	//
+	// No panel in engineering camera view.
+	//
+
+	if (viewpos == SATVIEW_ENG1 || viewpos == SATVIEW_ENG2)
+		return false;
+
+	//
 	// Load panel background image
 	//
 	HBITMAP hBmp;
@@ -890,13 +900,6 @@ bool Saturn::clbkLoadPanel (int id) {
 //
 // Delete when no longer required.
 //
-
-		//MFDSPEC mfds_left_l  = {{1012, 770, 1290, 1048}, 6, 6, 41, 27};
-		//MFDSPEC mfds_right_l = {{1305, 770, 1583, 1048}, 6, 6, 41, 27};
-		//MFDSPEC mfds_left_r  = {{253, 770, 531, 1048}, 6, 6, 41, 27};
-		//MFDSPEC mfds_right_r = {{546, 770, 824, 1048}, 6, 6, 41, 27};
-
-		//MFDSPEC mfds_dock = {{893, 627, 1112, 842}, 6, 6, 31, 31};;
 
 		//oapiRegisterMFD (MFD_LEFT,  mfds_left_l);
 		//oapiRegisterMFD (MFD_RIGHT, mfds_right_l);

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/10/19 11:43:44  tschachim
+  *	Improved logging.
+  *	
   *	Revision 1.8  2005/10/11 16:46:34  tschachim
   *	Fixed camera offsets.
   *	
@@ -123,17 +126,76 @@ void Saturn::JostleViewpoint(double amount)
 void Saturn::SetView()
 
 {
-	SetView(CurrentViewOffset);
+	SetView(CurrentViewOffset, false);
 }
 
 void Saturn::SetView(double offset)
+
+{
+	SetView(offset, false);
+}
+
+void Saturn::SetView(bool update_direction)
+
+{
+	SetView(CurrentViewOffset, update_direction);
+}
+
+void Saturn::SetView(double offset, bool update_direction)
 
 {
 	VECTOR3 v;
 
 	CurrentViewOffset = offset;
 
-	if (InPanel) {
+	if (viewpos >= SATVIEW_ENG1) {
+		VECTOR3 e1 = _V(0, 0, 0), e2 = _V(0, 0, 0);	
+		VECTOR3 v1 = _V(0, 0, 0), v2 = _V(0, 0, 0);
+		VECTOR3 cd;
+
+		//
+		// We really need different cameras for Saturn V and 1b.
+		//
+
+		switch (stage) {
+		case LAUNCH_STAGE_ONE:
+			e1 = _V(4.0, 0.0, -39.0+STG0O);
+			v1 = _V(-0.15, 0, 1.0);
+			e2 = _V(3.5, 0.0, -31.0+STG0O);
+			v2 = _V(-0.15, 0, -1.0);
+			break;
+
+		case LAUNCH_STAGE_TWO:
+		case LAUNCH_STAGE_TWO_ISTG_JET:
+			e2 = _V(3.5, 0.0, -31.0-STG1O);
+			v2 = _V(-0.15, 0, -1.0);
+			break;
+
+		//
+		// Switch back to commander view if we're past the point where we can
+		// display anything useful.
+		//
+
+		case LAUNCH_STAGE_TWO_TWR_JET:
+		case LAUNCH_STAGE_SIVB:
+			viewpos = SATVIEW_CDR;
+			SetView(offset, true);
+			return;
+		}
+
+		if (viewpos == SATVIEW_ENG1) {
+			v = e1;
+			cd = v1;
+		}
+		else {
+			v = e2;
+			cd = v2;
+		}
+
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+		SetCameraDefaultDirection(cd);
+	}
+	else if (InPanel) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
 			v = _V(-1.022, 1.046, offset - 3.0);
 
@@ -143,10 +205,14 @@ void Saturn::SetView(double offset)
 		} else {
 			v = _V(0, 0, offset - 3.0);
 		}
-	} else if (!InVC) {		// generic panel
+	} 
+	else if (!InVC) {		// generic panel
 		v = _V(0, 0, offset - 3.0);
-
-	} else {
+	} 
+	else {
+		//
+		// VC, in cockpit
+		//
 		switch (viewpos) {
 			case SATVIEW_CDR:
 			v = _V(-0.6, 0.7, offset);
@@ -168,6 +234,12 @@ void Saturn::SetView(double offset)
 			}
 			break;
 		}
+
+		if (update_direction) {
+			SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		}
+
 		v.x += ViewOffsetx;
 		v.y += ViewOffsety;
 		v.z += ViewOffsetz;

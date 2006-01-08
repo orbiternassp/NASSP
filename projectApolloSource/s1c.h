@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/23 00:34:16  movieman523
+  *	S1C dll code.
+  *	
   *	
   **************************************************************************/
 
@@ -77,6 +80,8 @@ public:
 	void clbkLoadStateEx (FILEHANDLE scn, void *status);
 	void clbkSetClassCaps (FILEHANDLE cfg);
 	void clbkDockEvent(int dock, OBJHANDLE connected);
+	bool clbkLoadGenericCockpit ();
+	bool clbkLoadVC (int id);
 
 	//
 	// Must be virtual so it can be called from other DLLs.
@@ -84,6 +89,8 @@ public:
 	virtual void SetState(S1CSettings &state);
 
 protected:
+
+	SoundLib soundlib;
 
 	void SetS1c();
 	void InitS1c();

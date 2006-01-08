@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.115  2006/01/07 03:28:28  movieman523
+  *	Removed a lot of unused switches and wired up the FDAI power switch.
+  *	
   *	Revision 1.114  2006/01/07 03:16:04  flydba
   *	Switches added on main panel 2.
   *	
@@ -2011,7 +2014,6 @@ protected:
 	bool bAbort;
 	bool bAbtlocked;
 	bool bRecovery;
-	bool autoDISP;
 
 	bool ActivateLEM;
 	bool ActivateS4B;
@@ -2021,6 +2023,8 @@ protected:
 #define SATVIEW_DMP		1
 #define SATVIEW_CMP		2
 #define SATVIEW_DOCK	3
+#define SATVIEW_ENG1	4
+#define SATVIEW_ENG2	5
 
 	unsigned int	viewpos;
 
@@ -2183,6 +2187,8 @@ protected:
 	void FuelCell();
 	void SetView();
 	void SetView(double offset);
+	void SetView(bool update_direction);
+	void SetView(double offset, bool update_direction);
 	void MasterAlarm();
 	void StopMasterAlarm();
 	void GenericTimestep(double simt, double simdt);
