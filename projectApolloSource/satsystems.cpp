@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/01/07 19:11:44  tschachim
+  *	Checklist actions for FDAIPowerRotarySwitch.
+  *	
   *	Revision 1.51  2006/01/07 18:12:43  tschachim
   *	Bugfix
   *	
@@ -1146,15 +1149,16 @@ void Saturn::SetRCS_CM()
 {
 	int i;
 
-	if (CMRCSActive()) {
-		for (i = 0; i < 24; i++) 
-			SetThrusterResource(th_att_cm[i], ph_rcs1);
+	if (th_att_cm[0]) {
+		if (CMRCSActive()) {
+			for (i = 0; i < 24; i++) 
+				SetThrusterResource(th_att_cm[i], ph_rcs1);
+		}
+		else {
+			for (i = 0; i < 24; i++)
+				SetThrusterResource(th_att_cm[i], NULL);
+		}
 	}
-	else {
-		for (i = 0; i < 24; i++)
-			SetThrusterResource(th_att_cm[i], NULL);
-	}
-
 }
 
 //
