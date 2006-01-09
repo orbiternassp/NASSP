@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/01/08 17:11:41  movieman523
+  *	Added seperation particles to SII/SIVb sep.
+  *	
   *	Revision 1.37  2006/01/08 14:51:22  movieman523
   *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
   *	
@@ -1534,6 +1537,8 @@ void SaturnV::DockStage (UINT dockstatus)
 	vs4.eng_main = vs4.eng_hovr = 0.0;
 	vs5.eng_main = vs5.eng_hovr = 0.0;
 
+	int i;
+
 	if (dockstatus == 2 || dockstatus == 6)
 	{
 	 	ofs1 = RelPos;
@@ -1647,6 +1652,7 @@ void SaturnV::DockStage (UINT dockstatus)
 		ls.MissionNo = ApolloNo;
 		ls.MissionTime = MissionTime;
 		ls.Realism = Realism;
+		ls.Yaagc = agc.IsVirtualAGC();
 
 		lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hLMV);
 		lmvessel->SetLanderData(ls);
@@ -1663,6 +1669,16 @@ void SaturnV::DockStage (UINT dockstatus)
 		vslm2.version = 2;
 
 		DefSetStateEx(&vslm2);
+
+		//
+		// PAD load.
+		//
+
+		if (LMPad && LMPadCount > 0) {
+			for (i = 0; i < LMPadCount; i++) {
+				lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
+			}
+		}
 
 		bManualUnDock = false;
 		dockstate = 3;

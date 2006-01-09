@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2006/01/08 19:04:30  movieman523
+  *	Wired up AC bus switches in a quick and hacky manner.
+  *	
   *	Revision 1.84  2006/01/08 16:15:20  movieman523
   *	For now, hard-wire batteries to buses when CM is seperated from SM.
   *	
@@ -344,9 +347,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 Saturn::~Saturn()
 
 {
-	//
-	// Nothing for now.
-	//
+	if (LMPad) {
+		delete[] LMPad;
+		LMPad = 0;
+	}
 
 	//fclose(PanelsdkLogFile);
 }
@@ -459,6 +463,13 @@ void Saturn::initSaturn()
 	habort = 0;
 	hSMJet = 0;
 	hLMV = 0;
+
+	//
+	// LM PAD data.
+	//
+
+	LMPadCount = 0;
+	LMPad = 0;
 
 	//
 	// State for damping electrical meter display.
@@ -924,6 +935,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	VESSEL2::clbkSaveState (scn);
 
 	int i = 1;
+	char str[256];
 
 	oapiWriteScenario_int (scn, "NASSPVER", NASSP_VERSION);
 	oapiWriteScenario_int (scn, "STAGE", stage);
@@ -1033,6 +1045,14 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_float (scn, "MOONLAT", LMLandingLatitude);
 		oapiWriteScenario_float (scn, "MOONLONG", LMLandingLongitude);
 		oapiWriteScenario_float (scn, "MOONALT", LMLandingAltitude);
+
+		if (LMPadCount > 0) {
+			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
+			for (i = 0; i < LMPadCount; i++) {
+				sprintf(str, "%04o %05o", LMPad[i * 2], LMPad[i * 2 + 1]);
+				oapiWriteScenario_string (scn, "LMPAD", str);
+			}
+		}
 	}
 
 	if (!Crewed) {
@@ -1387,6 +1407,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	int SwitchState = 0;
 	int nasspver = 0, status = 0;
 	int n;
+	int LMPadLoadCount = 0, LMPadValueCount = 0;
 	double tohdg = 45;
 
 	//
@@ -1531,6 +1552,37 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 				ValveState[n] = ((valvestate & mask) != 0);
 				mask <<= 1;
 			}
+		}
+		else if (!strnicmp (line, "LMPADCNT", 8)) {
+			if (!LMPad) {
+				sscanf (line+8, "%d", &LMPadCount);
+				if (LMPadCount > 0) {
+					LMPad = new unsigned int[LMPadCount * 2];
+				}
+			}
+		}
+		else if (!strnicmp (line, "LMPAD", 5)) {
+			unsigned int addr, val;
+			sscanf (line+5, "%o %o", &addr, &val);
+			LMPadValueCount++;
+			if (LMPad && LMPadLoadCount < (LMPadCount * 2)) {
+				LMPad[LMPadLoadCount++] = addr;
+				LMPad[LMPadLoadCount++] = val;
+			}
+		}
+		else if (!strnicmp (line, "CMPAD", 5)) {
+			unsigned int addr, val;
+
+			//
+			// CM PAD value aren't saved, as the AGC will save them itself. They're only used to load values in
+			// a starting scenario.
+			//
+			// Be sure that you put CMPAD lines _after_ the AGC entries, so that the AGC will know whether it's
+			// running Virtual AGC or not. PAD loads are ignored if it's not a Virtual AGC.
+			//
+
+			sscanf (line+5, "%o %o", &addr, &val);
+			agc.PadLoad(addr, val);
 		}
 		else if (!strnicmp (line, "REALISM", 7)) {
 			sscanf (line+7, "%d", &Realism);

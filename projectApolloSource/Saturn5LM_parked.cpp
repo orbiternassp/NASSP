@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2005/11/21 12:42:17  tschachim
+  *	New LM landed and descent stage mesh.
+  *	
   *	Revision 1.36  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -1128,8 +1131,17 @@ void sat5_lmpkd::SetLanderData(LemSettings &ls)
 	ApolloNo = ls.MissionNo;
 
 	agc.SetMissionInfo(ApolloNo, Realism, CSMName);
+	agc.SetVirtualAGC(ls.Yaagc);
 
 	soundlib.SetLanguage(AudioLanguage);
 	sprintf(buffers, "Apollo%d", ApolloNo);
     soundlib.SetSoundLibMissionPath(buffers);
 }
+
+void sat5_lmpkd::PadLoad(unsigned int address, unsigned int value)
+
+{ 
+	agc.PadLoad(address, value);
+ }
+
+

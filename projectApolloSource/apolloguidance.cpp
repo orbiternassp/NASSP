@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2005/11/25 20:59:49  movieman523
+  *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
+  *	
   *	Revision 1.58  2005/11/25 02:03:47  movieman523
   *	Fixed mixture-ratio change code and made it more realistic.
   *	
@@ -259,7 +262,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	// Default to C++ AGC.
 	//
 
-	Yaagc = 0;
+	Yaagc = false;
 
 	//
 	// Target attitude.
@@ -4357,6 +4360,11 @@ void ApolloGuidance::LaunchShutdown()
 // State save/load routines.
 //
 
+//
+// Note that this state structure is now full! If you want to add a bit you'll have to add it to
+// a new structure.
+//
+
 typedef union
 
 {
@@ -4402,7 +4410,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 	oapiWriteLine(scn, AGC_START_STRING);
 
-	oapiWriteScenario_int (scn, "YAAGC", Yaagc);
+	oapiWriteScenario_int (scn, "YAAGC", Yaagc ? 1 : 0);
 
 	if (!Yaagc) {
 		oapiWriteScenario_float (scn, "BRNTIME", BurnTime);
@@ -4721,7 +4729,9 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			strncpy (OtherVesselName, line + 6, 6);
 		}
 		else if (!strnicmp (line, "YAAGC", 5)) {
-			sscanf (line+5, "%d", &Yaagc);
+			int is_virtual = 0;
+			sscanf (line+5, "%d", &is_virtual);
+			Yaagc = (is_virtual != 0);
 		}
 		else if (!strnicmp (line, "PROG", 4)) {
 			sscanf (line+4, "%d", &Prog);
@@ -5303,6 +5313,19 @@ bool ApolloGuidance::GenericReadMemory(unsigned int loc, int &val)
 
 	val = 0;
 	return false;
+}
+
+//
+// Load a PAD value into the AGC. Used for initialising the LEM when created.
+//
+
+void ApolloGuidance::PadLoad(unsigned int address, unsigned int value)
+
+{
+	if (Yaagc) {
+		WriteMemory(address, value);
+		PadLoaded = true;
+	}
 }
 
 void ApolloGuidance::GenericWriteMemory(unsigned int loc, int val)

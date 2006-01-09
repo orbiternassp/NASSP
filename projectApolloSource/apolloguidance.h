@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2005/12/02 19:47:19  movieman523
+  *	Replaced most PowerSource code with e_object.
+  *	
   *	Revision 1.28  2005/11/25 20:59:49  movieman523
   *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
   *	
@@ -219,7 +222,12 @@ public:
 
 	int GetErasable(int bank, int address);
 	void SetErasable(int bank, int address, int value);
+	void PadLoad(unsigned int address, unsigned int value);
+
 	void PulsePIPA(int RegPIPA, int pulses);
+
+	bool IsVirtualAGC() { return Yaagc; };
+	void SetVirtualAGC(bool is_virtual) { Yaagc = is_virtual; };
 
 	//
 	// Generally useful setup.
@@ -503,7 +511,7 @@ protected:
 	int ResetCount;
 	int ApolloNo;
 	int Realism;
-	int Yaagc;
+	bool Yaagc;
 
 	double ResetTime;
 	double LastProgTime;

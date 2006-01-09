@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.122  2006/01/08 21:43:34  movieman523
+  *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
+  *	
   *	Revision 1.121  2006/01/08 19:04:30  movieman523
   *	Wired up AC bus switches in a quick and hacky manner.
   *	
@@ -2075,6 +2078,13 @@ protected:
 	SwitchRow LPSRow;
 
 	// old stuff end
+
+	//
+	// LM PAD
+	//
+
+	int LMPadCount;
+	unsigned int *LMPad;
 
 	//
 	// Do we have a crew, or is this an unmanned flight?
