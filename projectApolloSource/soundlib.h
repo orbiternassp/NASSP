@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/26 16:30:50  movieman523
+  *	Fixed retros and trying to fix TLI audio.
+  *	
   *	Revision 1.5  2005/11/20 21:50:40  movieman523
   *	Fixed LEM build break.
   *	
@@ -42,7 +45,7 @@
 
 // X15 direct sound include to add landing sound
 #ifdef DIRECTSOUNDENABLED
-typedef DWORD *DWORD_PTR;
+typedef DWORD * DWORD_PTR;
 #include "dsound.h"
 #endif
 

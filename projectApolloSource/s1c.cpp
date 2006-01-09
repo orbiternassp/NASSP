@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/01/08 04:00:24  movieman523
+  *	Added first two engineering cameras.
+  *	
   *	Revision 1.3  2005/11/26 16:30:50  movieman523
   *	Fixed retros and trying to fix TLI audio.
   *	
@@ -273,7 +276,8 @@ void S1C::AddEngines()
 
 	thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);
 
-	for (int i = 0; i < 4; i++)
+	int i;
+	for (i = 0; i < 4; i++)
 		AddExhaust (th_retro[i], 8.0, 0.2);
 
 	double Offset1st = -23.1;
