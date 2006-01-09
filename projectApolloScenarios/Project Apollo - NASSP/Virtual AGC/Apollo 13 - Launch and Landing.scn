@@ -1,5 +1,7 @@
 BEGIN_DESC
-Take part in the bravery of the Apollo 13 crew as you use your LEM aquarius to save your life from death in the translunar gulf. Using NASSPs apollo 13 vehicle. April 11, 1970. (AS-508)
+This time you can fly the full Apollo 13 mission as it would have happened had the in-flight accident not occured. April 11, 1970. (AS-508)
+
+This scenario has a full PAD load for the LEM AGC.
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -39,7 +41,7 @@ Odyssey:ProjectApollo/Saturn5
   POS -80.6082242 28.6008442
   HEADING 270.00
   FUEL 1.000
-  APOLLONO 13
+  APOLLONO 1301
   NASSPVER 60050
   VECHNO 508
   STAGE 5
@@ -52,10 +54,6 @@ Odyssey:ProjectApollo/Saturn5
   MOONLAT -17.47
   MOONLONG -3.64
   MOONALT 0.0
-  SICSHUT 135.18
-  SIICSHUT 330.65
-  SIIPUT 537.5
-  IGMST 204.5
   TCP 0.5
   LANG English
   LEMN Aquarius
@@ -334,6 +332,12 @@ Odyssey:ProjectApollo/Saturn5
   LMPAD 3430 57777
   LMPAD 3431 20000
   LMPAD 3432 00000
+AGC_BEGIN
+  YAAGC 1
+; Launch Azimuth?
+  EMEM2633 6316
+  EMEM2634 20000
+AGC_END
 END
 AS-508-CT:ProjectApollo\Crawler
   STATUS Landed Earth
