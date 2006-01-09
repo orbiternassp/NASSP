@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/01/05 12:08:15  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #if !defined(_PA_DOCKINGPROBE_H)
@@ -47,6 +50,8 @@ public:
 	void RegisterVessel(VESSEL *v) { OurVessel = v; };
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
+	bool IsPowered() { return DCPower.Voltage() > 20.0; };
 
 protected:
 
@@ -63,6 +68,7 @@ protected:
 	bool FirstTimeStepDone;
 	bool UndockNextTimestep;
 	bool IgnoreNextDockEvent;
+	PowerMerge DCPower;
 
 	void DoFirstTimeStep();
 };

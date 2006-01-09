@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2006/01/08 21:43:34  movieman523
+  *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
+  *	
   *	Revision 1.56  2006/01/08 19:08:20  movieman523
   *	Disabled debug output.
   *	
@@ -345,6 +348,7 @@ void Saturn::SystemsInit() {
 	cws.WireTo(&CWMnaCircuitBraker, &CWMnbCircuitBraker);
 	agc.WirePower(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
 	imu.WireToBuses(&GNIMUMnACircuitBraker, &GNIMUMnBCircuitBraker);
+	dockingprobe.WireTo(&DockProbeMnACircuitBraker, &DockProbeMnBCircuitBraker);   
 
 	//
 	// FDAI power. This is almost certainly wired to the wrong bus, but it will do for

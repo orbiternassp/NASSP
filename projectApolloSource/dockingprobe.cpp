@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/01/05 11:24:56  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 
@@ -32,7 +35,7 @@
 
 #include "soundlib.h"
 #include "nasspsound.h"
-
+#include "powersource.h"
 #include "dockingprobe.h"
 #include "nasspdefs.h"
 
@@ -60,6 +63,7 @@ void DockingProbe::Extend()
 
 {
 	if (!Enabled) return;
+	if (!IsPowered()) return;
 
 	ExtendingRetracting = 1;
 	if (Status != DOCKINGPROBE_STATUS_EXTENDED) {
@@ -77,6 +81,7 @@ void DockingProbe::Retract()
 
 {
 	if (!Enabled) return;
+	if (!IsPowered()) return;
 
 	ExtendingRetracting = -1;
 	if (Status != DOCKINGPROBE_STATUS_RETRACTED) {
@@ -103,7 +108,7 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 	if (connected == NULL) {
 		Docked = false;
 	} else {
-		if (!Enabled || Status != DOCKINGPROBE_STATUS_EXTENDED) {
+		if (!Enabled || !IsPowered() || Status != DOCKINGPROBE_STATUS_EXTENDED) {
 			DockFailedSound .play(NOLOOP, 200);
 			UndockNextTimestep = true;
 
@@ -137,6 +142,8 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		} else {
 			Status += 0.33 * simdt;
 		}
+		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet
+
 	} else if (ExtendingRetracting < 0) {
 		if (Status <= DOCKINGPROBE_STATUS_RETRACTED) {
 			Status = DOCKINGPROBE_STATUS_RETRACTED;
@@ -145,6 +152,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		} else {
 			Status -= 0.33 * simdt;
 		}	
+		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet
 	}
 }
 
