@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/11/26 16:30:50  movieman523
+  *	Fixed retros and trying to fix TLI audio.
+  *	
   *	Revision 1.2  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -253,7 +256,8 @@ void SII::AddEngines()
 
 	thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);
 
-	for (int i = 0; i < 4; i++)
+	int i;
+	for (i = 0; i < 4; i++)
 		AddExhaust (th_retro[i], 8.0, 0.2);
 
 	m_exhaust_pos1= _V(-1.8,-1.8,-15);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/01/04 23:06:03  movieman523
+  *	Moved meshes into ProjectApollo directory and renamed a few.
+  *	
   *	Revision 1.4  2005/11/21 23:08:15  movieman523
   *	Moved more mesh files into the ProjectApollo directory.
   *	
@@ -94,7 +97,8 @@ VAB::VAB(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	saturnName[0] = '\0';
 	saturnVisible = false;
 
-	for (int i = 0; i < 5; i++) {
+	int i;
+	for (i = 0; i < 5; i++) {
 		for (int j = 0; j < 16; j++) 
 			mgroupCrane[i][j] = 0;
 	}
@@ -112,7 +116,8 @@ VAB::VAB(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 VAB::~VAB() {
 
-	for (int i = 0; i < 5; i++) {
+	int i;
+	for (i = 0; i < 5; i++) {
 		for (int j = 0; j < 16; j++) 
 			if (mgroupCrane[i][j]) delete mgroupCrane[i][j];
 	}

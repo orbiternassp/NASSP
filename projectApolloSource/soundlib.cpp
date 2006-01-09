@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/11/26 16:30:50  movieman523
+  *	Fixed retros and trying to fix TLI audio.
+  *	
   *	Revision 1.6  2005/11/20 21:46:31  movieman523
   *	Added initial volume control support.
   *	
@@ -58,12 +61,12 @@
 
 #ifdef DIRECTSOUNDENABLED
 // MODIF PG
-static int   lastplayed=-1;
-static reallyplayed;
-static int   tobeplayed = -1;
+static int lastplayed = -1;
+static int reallyplayed;
+static int tobeplayed = -1;
 #define MAX_SOUND_EVENT 90
 static SoundEvent soundevents[MAX_SOUND_EVENT];
-static SoundEventLoaded = false;
+static int SoundEventLoaded = false;
 #endif
 
 

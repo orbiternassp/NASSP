@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/01/07 03:28:28  movieman523
+  *	Removed a lot of unused switches and wired up the FDAI power switch.
+  *	
   *	Revision 1.48  2006/01/05 11:42:44  tschachim
   *	New dockingprobe handling, bugfix.
   *	
@@ -398,7 +401,8 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 		SCM[j]= (CM[j+1]-CM[j])/(AOA[j+1]-AOA[j]);
 		SCD[j]= (CD[j+1]-CD[j])/(AOA[j+1]-AOA[j]);
 	}
-	for (int i = 0; i < nlift-1 && AOA[i+1] < aoa; i++);
+	int i;
+	for (i = 0; i < nlift-1 && AOA[i+1] < aoa; i++);
 	*cl = (CL[i] + (aoa-AOA[i])*SCL[i]);
 	*cm = factor*(CM[i] + (aoa-AOA[i])*SCM[i]);
 	*cd = (CD[i] + (aoa-AOA[i])*SCD[i]);
