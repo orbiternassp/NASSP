@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2005/11/26 16:30:50  movieman523
+  *	Fixed retros and trying to fix TLI audio.
+  *	
   *	Revision 1.27  2005/11/25 21:30:47  movieman523
   *	Fine-tuned thrust decay default.
   *	
@@ -1558,9 +1561,18 @@ void CSMcomputer::Liftoff(double simt)
 
 	if (!Yaagc) {
 
+		//
 		// As a quick hack we drive the IMU to prelaunch orientation 
 		// until the NASSP AGC has a working P01
+		//
+
 		imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
+
+		//
+		// Also, we need to reset the AGC time to zero at this point, as the real AGC did.
+		//
+
+		TIME1 = 0;
 
 		if (OnStandby())
 			Startup();

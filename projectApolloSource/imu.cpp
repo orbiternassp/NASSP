@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/11/18 02:40:55  movieman523
+  *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
+  *	
   *	Revision 1.11  2005/11/17 21:04:52  movieman523
   *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
   *	
@@ -185,6 +188,12 @@ void IMU::TurnOn()
 		agc.SetInputChannelBit(030, 14, true);
 		Operate = true;
 	}
+
+	//
+	// This should really be turned on after the delay, but for now we'll turn it on immediately.
+	//
+
+	TurnedOn = true;
 }
 
 void IMU::TurnOff() 

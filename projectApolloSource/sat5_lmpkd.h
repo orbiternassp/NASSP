@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2005/11/28 01:13:54  movieman523
+  *	Added LEM right-hand panel.
+  *	
   *	Revision 1.25  2005/11/21 12:42:17  tschachim
   *	New LM landed and descent stage mesh.
   *	
@@ -124,6 +127,7 @@ typedef struct {
 	bool Crewed;
 	bool AutoSlow;
 	int Realism;
+	bool Yaagc;
 
 } LemSettings;
 
@@ -144,7 +148,6 @@ public:
 	void GetMissionTime(double &Met);
 	void AbortStage();
 	void StartAscent();
-	virtual void SetLanderData(LemSettings &ls);
 
 	bool clbkLoadPanel (int id);
 	bool clbkLoadVC(int id);
@@ -163,6 +166,13 @@ public:
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
+
+	//
+	// These functions must be virtual so they can be called from the Saturn V.
+	//
+
+	virtual void SetLanderData(LemSettings &ls);
+	virtual void PadLoad(unsigned int address, unsigned int value);
 
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc, ph_rcslm0,ph_rcslm1; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
@@ -255,8 +265,6 @@ protected:
 	ThreePosSwitch ModeControlPNGSSwitch;
 	ThreePosSwitch ModeControlAGSSwitch;
     ToggleSwitch IMUCageSwitch;
-
-
 
 	bool RCS_Full;
 	bool Eds;
@@ -405,7 +413,6 @@ protected:
 #define ModeControlAGSAuto ModeControlAGSSwitch.IsUp()
 #define ModeControlAGSAttHold ModeControlAGSSwitch.IsCenter()
 #define ModeControlAGSOff ModeControlAGSSwitch.IsDown()
-
 
 	bool SLWRswitch;
 
