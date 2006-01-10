@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.125  2006/01/10 20:49:50  movieman523
+  *	Added CM RCS propellant dump and revised thrust display.
+  *	
   *	Revision 1.124  2006/01/10 19:34:45  movieman523
   *	Fixed AC bus switches and added ELS Logic/Auto support.
   *	
@@ -654,6 +657,7 @@ protected:
 	bool RCSLogicActive();
 	bool RCSDumpActive();
 	bool RCSPurgeActive();
+	bool LETAttached();
 
 	//
 	// State that needs to be saved.

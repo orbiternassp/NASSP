@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2006/01/10 20:49:50  movieman523
+  *	Added CM RCS propellant dump and revised thrust display.
+  *	
   *	Revision 1.59  2006/01/10 19:34:44  movieman523
   *	Fixed AC bus switches and added ELS Logic/Auto support.
   *	
@@ -2020,3 +2023,8 @@ bool Saturn::RCSPurgeActive()
 	return ((CPPropPurgeSwitch.Voltage() > 20.0) && CPPropPurgeSwitch.IsUp());
 }
 
+bool Saturn::LETAttached()
+
+{
+	return (stage < LAUNCH_STAGE_TWO_TWR_JET);
+}

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.130  2006/01/10 20:49:50  movieman523
+  *	Added CM RCS propellant dump and revised thrust display.
+  *	
   *	Revision 1.129  2006/01/10 19:34:45  movieman523
   *	Fixed AC bus switches and added ELS Logic/Auto support.
   *	
@@ -509,12 +512,18 @@ void Saturn::RedrawPanel_Thrust (SURFHANDLE surf)
 	// Note: on a real Saturn, this _ISN'T_ a thrust meter! It shows angle of attack while the LET is attached, or
 	// SPS combustion chamber pressure percentage from 0-150%.
 	//
+	// For now it shows AoA x 10, and main engine thrust (should really only be SPS thrust).
+	//
 
 	if (LVSPSPcIndicatorSwitch.IsDown()) {
 		alpha = GetEngineLevel(ENGINE_MAIN) * 100 * ThrustAdjust;
 	}
 	else {
-		alpha = 0.0;
+		if (LETAttached() && GetDynPressure() > 100.0) {
+			alpha = fabs((10.0 / RAD) * GetAOA());
+		}
+		else
+			alpha = 0.0;
 	}
 
 	//
@@ -540,8 +549,8 @@ void Saturn::RedrawPanel_Thrust (SURFHANDLE surf)
 		alpha = 0.0;
 
 	range = 270.0 * RAD;
-	range = range / 150.0;
-	alpha = 150.0 - alpha;
+	range = range / 160.0;
+	alpha = 155.0 - alpha;
 	HDC hDC = oapiGetDC (surf);
 	DrawNeedle (hDC, 48, 45, 20.0, (alpha*range)-45*RAD, g_Param.pen[4], g_Param.pen[4]);
 	oapiReleaseDC (surf, hDC);
