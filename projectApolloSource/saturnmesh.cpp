@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2006/01/10 23:20:51  movieman523
+  *	SM RCS is now enabled per quad.
+  *	
   *	Revision 1.26  2006/01/08 17:11:41  movieman523
   *	Added seperation particles to SII/SIVb sep.
   *	
@@ -176,116 +179,6 @@ void SaturnInitMeshes()
 	LOAD_MESH(hsat5tower, "ProjectApollo/BoostCover");
 	LOAD_MESH(hFHO2, "ProjectApollo/SAT5HO2");
 	LOAD_MESH(hCMPEVA, "ProjectApollo/nSATURN1_CMP_EVA");
-}
-
-void Saturn::AddRCS_CM(double MaxThrust)
-
-{
-	UINT atthand;
-	const double ATTCOOR = 0.95;
-	const double ATTCOOR2 = 1.92;
-	const double TRANCOOR = 0;
-	const double TRANCOOR2 = 0.1;
-	const double TRANZ=-0.65;
-	const double ATTWIDTH=.15;
-	const double ATTHEIGHT=.2;
-	const double TRANWIDTH=.2;
-	const double TRANHEIGHT=.6;
-	const double RCSOFFSET=0.75;
-	const double RCSOFFSETM=0.30;
-	const double RCSOFFSETM2=0.47;
-	VECTOR3 m_exhaust_pos2= {0,ATTCOOR2,TRANZ};
-	VECTOR3 m_exhaust_pos3= {0,-ATTCOOR2,TRANZ};
-	VECTOR3 m_exhaust_pos4= {-ATTCOOR2,0,TRANZ};
-	VECTOR3 m_exhaust_pos5= {ATTCOOR2,0,TRANZ};
-	VECTOR3 m_exhaust_ref2 = {0,0.1,-1};
-	VECTOR3 m_exhaust_ref3 = {0,-0.1,-1};
-	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
-	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
-
-	//MaxThrust=120;
-
-	th_att_cm[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),120, ph_rcs1,15000, 15000);
-	th_att_cm[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),120, ph_rcs1,15000, 15000);
-	th_att_cm[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs1,15000, 15000);
-
-	CreateThrusterGroup (th_att_cm,   4, THGROUP_ATT_YAWLEFT);
-	CreateThrusterGroup (th_att_cm+4,   4, THGROUP_ATT_YAWRIGHT);
-
-	th_att_cm[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcs1,15000, 15000);
-	th_att_cm[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcs1,15000, 15000);
-	th_att_cm[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1,15000, 15000);
-
-	th_att_cm[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
-
-	CreateThrusterGroup (th_att_cm+12,   4, THGROUP_ATT_PITCHDOWN);
-	CreateThrusterGroup (th_att_cm+8,   4, THGROUP_ATT_PITCHUP);
-
-	th_att_cm[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0),120, ph_rcs1,15000, 15000);
-	th_att_cm[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),120, ph_rcs1,15000, 15000);
-	th_att_cm[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_cm[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1,15000, 15000);
-
-	CreateThrusterGroup (th_att_cm+20,   4, THGROUP_ATT_BANKLEFT);
-	CreateThrusterGroup (th_att_cm+16,   4, THGROUP_ATT_BANKRIGHT);
-
-	//Rot up
-
-	m_exhaust_pos2= _V(0.1,ATTCOOR2,TRANZ +0.05);
-	m_exhaust_ref2 = _V(0,1,1);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-
-	//Rot down
-	m_exhaust_pos3= _V(0.1,ATTCOOR-0.2,TRANZ+1.4);
-	m_exhaust_ref3 = _V(0,1,1);
-	atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-
-	//Rot left
-
-	m_exhaust_pos2= _V(ATTCOOR2,0.1,TRANZ);
-	m_exhaust_ref2 = _V(0.5,0.1,0);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-
-	//Rot right
-	m_exhaust_pos2= _V(-ATTCOOR2,0.1,TRANZ);
-	m_exhaust_ref2 = _V(-0.5,0.1,0);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-
-
-	//Roll left
-
-	m_exhaust_pos2= _V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ);
-	m_exhaust_ref2 = _V(1,-0.5,0);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
-
-	//Roll right
-	m_exhaust_pos2= _V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ);
-	m_exhaust_ref2 = _V(-1,-0.5,0);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
 }
 
 void Saturn::ToggelHatch()
@@ -653,7 +546,7 @@ void Saturn::SetCSMStage ()
 	VECTOR3 dockrot = {0,1,0};
 	SetDockParams(dockpos, dockdir, dockrot);
 
-	AddRCSJets(-1.80,1990);
+	AddRCSJets(-1.80, SM_RCS_THRUST);
 
 	SetView(0.4);
 	// **************************** NAV radios *************************************
@@ -695,7 +588,6 @@ void Saturn::SetCSM2Stage ()
 	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
 
 	// *********************** thruster definitions ********************************
-
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
 	// orbiter main thrusters
@@ -746,7 +638,7 @@ void Saturn::SetCSM2Stage ()
 
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 
-	AddRCSJets(-1.80,1990);
+	AddRCSJets(-1.80, SM_RCS_THRUST);
 
 	SetView(0.4);
 
@@ -819,7 +711,8 @@ void Saturn::SetReentryStage ()
 	//DelThruster(th_main[0]);
 	//CMTex =oapiRegisterReentryTexture("reentry");
 	if (CMTex) SetReentryTexture(CMTex,1e6,5,0.7);
-	AddRCS_CM(240);
+
+	AddRCS_CM(CM_RCS_THRUST);
 
 	VECTOR3 dockpos = {0,0,1.5};
 	VECTOR3 dockdir = {0,0,1};
@@ -1412,7 +1305,9 @@ void Saturn::SetAbortStage ()
 	if (!ph_sps)
 		ph_sps  = CreatePropellantResource(2500); //SPS stage Propellant
 	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
-	AddRCS_CM(540);
+
+	AddRCS_CM(CM_RCS_THRUST);
+
 	// *********************** thruster definitions ********************************
 
 	// orbiter main thrusters

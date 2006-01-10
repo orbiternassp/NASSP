@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.89  2006/01/10 23:20:51  movieman523
+  *	SM RCS is now enabled per quad.
+  *	
   *	Revision 1.88  2006/01/10 20:49:50  movieman523
   *	Added CM RCS propellant dump and revised thrust display.
   *	
@@ -2440,7 +2443,7 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 	return 0;
 }
 
-void Saturn::AddRCSJets(double TRANZ,double MaxThrust)
+void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 
 {
 	int i;
@@ -2471,8 +2474,6 @@ void Saturn::AddRCSJets(double TRANZ,double MaxThrust)
 	// CM RCS Propellant tanks
 	//
 
-#define RCS_FUEL_PER_QUAD 125
-
 	//
 	// RCS0 = quad A
 	// RCS1 = quad B
@@ -2489,26 +2490,26 @@ void Saturn::AddRCSJets(double TRANZ,double MaxThrust)
 	if (!ph_rcs3)
 		ph_rcs3  = CreatePropellantResource(RCS_FUEL_PER_QUAD);
 
-	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,-0.1,1),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1),MaxThrust, ph_rcs2,15000, 15000);
-	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(0.1,0,1),MaxThrust, ph_rcs3,15000, 15000);
-	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(-0.1,0,1),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET), _V(0,-0.1,-1),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1),MaxThrust, ph_rcs2,15000, 15000);
-	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET), _V(0.1,0,-1),MaxThrust, ph_rcs3,15000, 15000);
-	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET), _V(-0.1,0,-1),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,-0.1,1),MaxThrust, ph_rcs0, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1),MaxThrust, ph_rcs2, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(0.1,0,1),MaxThrust, ph_rcs3, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(-0.1,0,1),MaxThrust, ph_rcs1, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET), _V(0,-0.1,-1),MaxThrust, ph_rcs0, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1),MaxThrust, ph_rcs2, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET), _V(0.1,0,-1),MaxThrust, ph_rcs3, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET), _V(-0.1,0,-1),MaxThrust, ph_rcs1, SM_RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(-0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0),MaxThrust, ph_rcs2,15000, 15000);
+	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0),MaxThrust, ph_rcs0, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(-0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0),MaxThrust, ph_rcs2, SM_RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0),MaxThrust, ph_rcs2,15000, 15000);
+	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0),MaxThrust, ph_rcs0, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0),MaxThrust, ph_rcs2, SM_RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,-0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0),MaxThrust, ph_rcs3,15000, 15000);
+	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,-0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0),MaxThrust, ph_rcs1, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0),MaxThrust, ph_rcs3, SM_RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0),MaxThrust, ph_rcs1,15000, 15000);
-	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0),MaxThrust, ph_rcs3,15000, 15000);
+	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0),MaxThrust, ph_rcs1, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0),MaxThrust, ph_rcs3, SM_RCS_ISP, SM_RCS_ISP_SL);
 
 	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
@@ -2528,6 +2529,113 @@ void Saturn::AddRCSJets(double TRANZ,double MaxThrust)
 		if (th_att_lin[i])
 			AddExhaust (th_att_lin[i], 1.2, 0.18, SMExhaustTex);
 	}
+}
+
+void Saturn::AddRCS_CM(double MaxThrust)
+
+{
+	UINT atthand;
+	const double ATTCOOR = 0.95;
+	const double ATTCOOR2 = 1.92;
+	const double TRANCOOR = 0;
+	const double TRANCOOR2 = 0.1;
+	const double TRANZ=-0.65;
+	const double ATTWIDTH=.15;
+	const double ATTHEIGHT=.2;
+	const double TRANWIDTH=.2;
+	const double TRANHEIGHT=.6;
+	const double RCSOFFSET=0.75;
+	const double RCSOFFSETM=0.30;
+	const double RCSOFFSETM2=0.47;
+	VECTOR3 m_exhaust_pos2= {0,ATTCOOR2,TRANZ};
+	VECTOR3 m_exhaust_pos3= {0,-ATTCOOR2,TRANZ};
+	VECTOR3 m_exhaust_pos4= {-ATTCOOR2,0,TRANZ};
+	VECTOR3 m_exhaust_pos5= {ATTCOOR2,0,TRANZ};
+	VECTOR3 m_exhaust_ref2 = {0,0.1,-1};
+	VECTOR3 m_exhaust_ref3 = {0,-0.1,-1};
+	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
+	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
+
+	th_att_cm[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+
+	CreateThrusterGroup (th_att_cm,   4, THGROUP_ATT_YAWLEFT);
+	CreateThrusterGroup (th_att_cm+4,   4, THGROUP_ATT_YAWRIGHT);
+
+	th_att_cm[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+
+	th_att_cm[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+
+	CreateThrusterGroup (th_att_cm+12,   4, THGROUP_ATT_PITCHDOWN);
+	CreateThrusterGroup (th_att_cm+8,   4, THGROUP_ATT_PITCHUP);
+
+	th_att_cm[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+
+	CreateThrusterGroup (th_att_cm+20,   4, THGROUP_ATT_BANKLEFT);
+	CreateThrusterGroup (th_att_cm+16,   4, THGROUP_ATT_BANKRIGHT);
+
+	//Rot up
+
+	m_exhaust_pos2= _V(0.1,ATTCOOR2,TRANZ +0.05);
+	m_exhaust_ref2 = _V(0,1,1);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
+
+	//Rot down
+	m_exhaust_pos3= _V(0.1,ATTCOOR-0.2,TRANZ+1.4);
+	m_exhaust_ref3 = _V(0,1,1);
+	atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
+
+	//Rot left
+
+	m_exhaust_pos2= _V(ATTCOOR2,0.1,TRANZ);
+	m_exhaust_ref2 = _V(0.5,0.1,0);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
+
+	//Rot right
+	m_exhaust_pos2= _V(-ATTCOOR2,0.1,TRANZ);
+	m_exhaust_ref2 = _V(-0.5,0.1,0);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
+
+	//Roll left
+
+	m_exhaust_pos2= _V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ);
+	m_exhaust_ref2 = _V(1,-0.5,0);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
+
+	//Roll right
+	m_exhaust_pos2= _V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ);
+	m_exhaust_ref2 = _V(-1,-0.5,0);
+
+	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
+	AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
 }
 
 void Saturn::AddRCS_S4B()
