@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2006/01/10 21:09:30  movieman523
+  *	Improved AoA/thrust meter.
+  *	
   *	Revision 1.60  2006/01/10 20:49:50  movieman523
   *	Added CM RCS propellant dump and revised thrust display.
   *	
@@ -1147,25 +1150,25 @@ void Saturn::DeactivateCMRCS()
 bool Saturn::SMRCSAActive()
 
 {
-	return (!GetValveState(CSM_He1_TANKA_VALVE) && !GetValveState(CSM_He2_TANKA_VALVE) && GetValveState(CSM_PRIPROP_TANKA_VALVE) && GetValveState(CSM_SECPROP_TANKA_VALVE));
+	return (GetValveState(CSM_He1_TANKA_VALVE) && GetValveState(CSM_He2_TANKA_VALVE) && GetValveState(CSM_PRIPROP_TANKA_VALVE) && GetValveState(CSM_SECPROP_TANKA_VALVE));
 }
 
 bool Saturn::SMRCSBActive()
 
 {
-	return (!GetValveState(CSM_He1_TANKB_VALVE) && !GetValveState(CSM_He2_TANKB_VALVE) && GetValveState(CSM_PRIPROP_TANKB_VALVE) && GetValveState(CSM_SECPROP_TANKB_VALVE));
+	return (GetValveState(CSM_He1_TANKB_VALVE) && GetValveState(CSM_He2_TANKB_VALVE) && GetValveState(CSM_PRIPROP_TANKB_VALVE) && GetValveState(CSM_SECPROP_TANKB_VALVE));
 }
 
 bool Saturn::SMRCSCActive()
 
 {
-	return (!GetValveState(CSM_He1_TANKC_VALVE) && !GetValveState(CSM_He2_TANKC_VALVE) && GetValveState(CSM_PRIPROP_TANKC_VALVE) && GetValveState(CSM_SECPROP_TANKC_VALVE));
+	return (GetValveState(CSM_He1_TANKC_VALVE) && GetValveState(CSM_He2_TANKC_VALVE) && GetValveState(CSM_PRIPROP_TANKC_VALVE) && GetValveState(CSM_SECPROP_TANKC_VALVE));
 }
 
 bool Saturn::SMRCSDActive()
 
 {
-	return (!GetValveState(CSM_He1_TANKD_VALVE) && !GetValveState(CSM_He2_TANKD_VALVE) && GetValveState(CSM_PRIPROP_TANKD_VALVE) && GetValveState(CSM_SECPROP_TANKD_VALVE));
+	return (GetValveState(CSM_He1_TANKD_VALVE) && GetValveState(CSM_He2_TANKD_VALVE) && GetValveState(CSM_PRIPROP_TANKD_VALVE) && GetValveState(CSM_SECPROP_TANKD_VALVE));
 }
 
 bool Saturn::SMRCSActive()
@@ -1226,30 +1229,29 @@ void Saturn::SetRCS_CM()
 // Check the state of the RCS, and enable/disable thrusters as required.
 //
 
+void Saturn::SetRCSThrusters(int n1, int n2, int n3, int n4, PROPELLANT_HANDLE ph)
+
+{
+	SetThrusterResource(th_att_rot[n1], ph);
+	SetThrusterResource(th_att_rot[n2], ph);
+	SetThrusterResource(th_att_rot[n3], ph);
+	SetThrusterResource(th_att_rot[n4], ph);
+}
+
 void Saturn::CheckRCSState()
 
 {
-	int	i;
-
 	//
-	// For now we'll just turn all of the thrusters on or off. At some point
-	// we should enable or disable them by thruster quad.
+	// Enable and disable thrusters by quad.
+	//
 	//
 
 	switch (stage) {
 	case CSM_LEM_STAGE:
-		if (SMRCSActive()) {
-			for (i = 0; i < 24; i++) {
-				SetThrusterResource(th_att_rot[i], ph_rcs0);
-				SetThrusterResource(th_att_lin[i], ph_rcs0);
-			}
-		}
-		else {
-			for (i = 0; i < 24; i++) {
-				SetThrusterResource(th_att_rot[i], NULL);
-				SetThrusterResource(th_att_lin[i], NULL);
-			}
-		}
+		SetRCSThrusters(0, 2, 10, 16, SMRCSAActive() ? ph_rcs0 : 0);
+		SetRCSThrusters(5, 7, 14, 20, SMRCSBActive() ? ph_rcs1 : 0);
+		SetRCSThrusters(1, 3, 8, 18, SMRCSCActive() ? ph_rcs2 : 0);
+		SetRCSThrusters(4, 6, 12, 22, SMRCSDActive() ? ph_rcs1 : 0);
 		break;
 
 	case CM_STAGE:

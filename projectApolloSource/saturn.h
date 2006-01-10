@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.126  2006/01/10 21:09:30  movieman523
+  *	Improved AoA/thrust meter.
+  *	
   *	Revision 1.125  2006/01/10 20:49:50  movieman523
   *	Added CM RCS propellant dump and revised thrust display.
   *	
@@ -636,6 +639,7 @@ public:
 	bool GetValveState(int valve);
 	void CheckSPSState();
 	void CheckRCSState();
+	void SetRCSThrusters(int n1, int n2, int n3, int n4, PROPELLANT_HANDLE ph);
 	void CheckSMSystemsState();
 	int GetSwitchState(char *switchName);
 	int GetRotationalSwitchState(char *switchName);
@@ -2484,7 +2488,7 @@ protected:
 	// General engine resources.
 	//
 
-	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_sps, ph_sep; // handles for propellant resources
+	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3, ph_sps, ph_sep; // handles for propellant resources
 
 	THGROUP_HANDLE thg_main,thg_ull,thg_ver;		          // handles for thruster groups
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;

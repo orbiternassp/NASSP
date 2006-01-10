@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.88  2006/01/10 20:49:50  movieman523
+  *	Added CM RCS propellant dump and revised thrust display.
+  *	
   *	Revision 1.87  2006/01/10 19:34:44  movieman523
   *	Fixed AC bus switches and added ELS Logic/Auto support.
   *	
@@ -596,6 +599,8 @@ void Saturn::initSaturn()
 	ph_3rd = 0;
 	ph_rcs0 = 0;
 	ph_rcs1 = 0;
+	ph_rcs2 = 0;
+	ph_rcs3 = 0;
 	ph_sps = 0;
 	ph_sep = 0;
 
@@ -2436,6 +2441,7 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 }
 
 void Saturn::AddRCSJets(double TRANZ,double MaxThrust)
+
 {
 	int i;
 	const double ATTCOOR = 0;
@@ -2452,54 +2458,76 @@ void Saturn::AddRCSJets(double TRANZ,double MaxThrust)
 	const double RCSOFFSETM=0.30;
 	const double RCSOFFSETM2=0.40;
 
+	//
+	// Clear any old thrusters.
+	//
+
+	for (i = 0; i < 24; i++) {
+		th_att_lin[i] = 0;
+		th_att_rot[i] = 0;
+	}
+
+	//
+	// CM RCS Propellant tanks
+	//
+
+#define RCS_FUEL_PER_QUAD 125
+
+	//
+	// RCS0 = quad A
+	// RCS1 = quad B
+	// RCS2 = quad C
+	// RCS3 = quad D
+	//
+
+	if (!ph_rcs0)
+		ph_rcs0  = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	if (!ph_rcs1)
+		ph_rcs1  = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	if (!ph_rcs2)
+		ph_rcs2  = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	if (!ph_rcs3)
+		ph_rcs3  = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+
 	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,-0.1,1),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(0.1,0,1),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(-0.1,0,1),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1),MaxThrust, ph_rcs2,15000, 15000);
+	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(0.1,0,1),MaxThrust, ph_rcs3,15000, 15000);
+	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(-0.1,0,1),MaxThrust, ph_rcs1,15000, 15000);
 	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET), _V(0,-0.1,-1),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET), _V(0.1,0,-1),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET), _V(-0.1,0,-1),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1),MaxThrust, ph_rcs2,15000, 15000);
+	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET), _V(0.1,0,-1),MaxThrust, ph_rcs3,15000, 15000);
+	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET), _V(-0.1,0,-1),MaxThrust, ph_rcs1,15000, 15000);
+
+	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(-0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0),MaxThrust, ph_rcs2,15000, 15000);
+
+	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
+	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0),MaxThrust, ph_rcs2,15000, 15000);
+
+	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,-0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0),MaxThrust, ph_rcs3,15000, 15000);
+
+	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0),MaxThrust, ph_rcs1,15000, 15000);
+	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0),MaxThrust, ph_rcs3,15000, 15000);
 
 	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
+	CreateThrusterGroup (th_att_lin+8,   2, THGROUP_ATT_RIGHT);
+	CreateThrusterGroup (th_att_lin+12, 2, THGROUP_ATT_LEFT);
+	CreateThrusterGroup (th_att_lin+16,   2, THGROUP_ATT_UP);
+	CreateThrusterGroup (th_att_lin+20,   2, THGROUP_ATT_DOWN);
+
 	CreateThrusterGroup (th_att_rot,   2, THGROUP_ATT_PITCHDOWN);
 	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_PITCHUP);
 	CreateThrusterGroup (th_att_rot+4,   2, THGROUP_ATT_YAWRIGHT);
 	CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
-
-	for (i = 0; i < 8; i++)
-		AddExhaust (th_att_lin[i], 1.2, 0.18, SMExhaustTex);
-
-	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(-0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[10]=CreateThruster (_V(-0.2,ATTCOOR2,-TRANZ-RCSOFFSETM), _V(1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[11]=CreateThruster (_V(-0.2,-ATTCOOR2,-TRANZ-RCSOFFSETM2), _V(1,0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-
-	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[14]=CreateThruster (_V(0.2,ATTCOOR2,-TRANZ-RCSOFFSETM2), _V(-1,-0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[15]=CreateThruster (_V(0.2,-ATTCOOR2,-TRANZ-RCSOFFSETM), _V(-1,0.1,0),MaxThrust, ph_rcs0,15000, 15000);
-
-	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,-0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[18]=CreateThruster (_V(ATTCOOR2,-0.2,-TRANZ-RCSOFFSETM2), _V(-0.1,1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[19]=CreateThruster (_V(-ATTCOOR2,-0.2,-TRANZ-RCSOFFSETM), _V(-0.1,1,0),MaxThrust, ph_rcs0,15000, 15000);
-
-	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[22]=CreateThruster (_V(ATTCOOR2,0.2,-TRANZ-RCSOFFSETM), _V(-0.1,-1,0),MaxThrust, ph_rcs0,15000, 15000);
-	th_att_lin[23]=CreateThruster (_V(-ATTCOOR2,0.2,-TRANZ-RCSOFFSETM2), _V(0.1,-1,0),MaxThrust, ph_rcs0,15000, 15000);
-
-	CreateThrusterGroup (th_att_lin+8,   4, THGROUP_ATT_RIGHT);
-	CreateThrusterGroup (th_att_lin+12, 4, THGROUP_ATT_LEFT);
-	CreateThrusterGroup (th_att_lin+16,   4, THGROUP_ATT_UP);
-	CreateThrusterGroup (th_att_lin+20,   4, THGROUP_ATT_DOWN);
 	CreateThrusterGroup (th_att_rot+8,   8, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_rot+16,   8, THGROUP_ATT_BANKRIGHT);
 
-	for (i = 8; i < 24; i++)
-		AddExhaust (th_att_rot[i], 1.2, 0.18, SMExhaustTex);
+	for (i = 0; i < 24; i++) {
+		if (th_att_lin[i])
+			AddExhaust (th_att_lin[i], 1.2, 0.18, SMExhaustTex);
+	}
 }
 
 void Saturn::AddRCS_S4B()
