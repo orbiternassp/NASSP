@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2006/01/08 17:11:41  movieman523
+  *	Added seperation particles to SII/SIVb sep.
+  *	
   *	Revision 1.25  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -576,8 +579,6 @@ void Saturn::SetCSMStage ()
 	SetCOG_elev (3.5);
 	SetEmptyMass (CM_Mass + SM_EmptyMass);
 	// ************************* propellant specs **********************************
-	if (!ph_rcs0)
-		ph_rcs0  = CreatePropellantResource(500); //RCS stage Propellant
 
 	if (!ph_sps) {
 		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage Propellant
@@ -686,8 +687,6 @@ void Saturn::SetCSM2Stage ()
 	SetCOG_elev (3.5);
 	SetEmptyMass (CM_Mass + SM_EmptyMass);
 	// ************************* propellant specs **********************************
-	if (!ph_rcs0)
-		ph_rcs0  = CreatePropellantResource(500); //RCS stage Propellant
 
 	if (!ph_sps) {
 		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage Propellant
@@ -810,6 +809,8 @@ void Saturn::SetReentryStage ()
 	if (ph_sps) DelPropellantResource(ph_sps);
 	if (ph_rcs0) DelPropellantResource(ph_rcs0);
 	if (ph_rcs1) DelPropellantResource(ph_rcs1);
+	if (ph_rcs2) DelPropellantResource(ph_rcs2);
+	if (ph_rcs3) DelPropellantResource(ph_rcs3);
 
 	if (!ph_rcs1) ph_rcs1  = CreatePropellantResource(500); //rcs stage Propellant
 	SetDefaultPropellantResource (ph_rcs1); // display rcs stage propellant level in generic HUD
