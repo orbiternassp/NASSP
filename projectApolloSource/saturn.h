@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.124  2006/01/10 19:34:45  movieman523
+  *	Fixed AC bus switches and added ELS Logic/Auto support.
+  *	
   *	Revision 1.123  2006/01/09 21:56:44  movieman523
   *	Added support for LEM and CSM AGC PAD loads in scenario file.
   *	
@@ -648,6 +651,9 @@ protected:
 
 	bool ELSActive();
 	bool ELSAuto();
+	bool RCSLogicActive();
+	bool RCSDumpActive();
+	bool RCSPurgeActive();
 
 	//
 	// State that needs to be saved.
@@ -1111,7 +1117,7 @@ protected:
 	AGCIOSwitch CGSwitch;
 	GuardedTwoOutputSwitch ELSLogicSwitch;
 	ToggleSwitch ELSAutoSwitch;
-	ToggleSwitch CMRCSLogicSwitch;
+	TwoOutputSwitch CMRCSLogicSwitch;
 	GuardedToggleSwitch CMPropDumpSwitch;
 	GuardedToggleSwitch CPPropPurgeSwitch;
 
@@ -2076,6 +2082,7 @@ protected:
 	double LastACVoltDisplay;
 	double LastDCVoltDisplay;
 	double LastDCAmpDisplay;
+	double LastThrustDisplay;
 
 	// old stuff begin
 
