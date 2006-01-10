@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.87  2006/01/10 19:34:44  movieman523
+  *	Fixed AC bus switches and added ELS Logic/Auto support.
+  *	
   *	Revision 1.86  2006/01/09 21:56:44  movieman523
   *	Added support for LEM and CSM AGC PAD loads in scenario file.
   *	
@@ -481,6 +484,12 @@ void Saturn::initSaturn()
 	LastACVoltDisplay = 0.0;
 	LastDCVoltDisplay = 0.0;
 	LastDCAmpDisplay = 0.0;
+
+	//
+	// And thrust/AoA meter.
+	//
+
+	LastThrustDisplay = 0.0;
 
 	//
 	// Default mission time to an hour prior to launch.
@@ -2805,6 +2814,52 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			PostSplashdownPlayed = true;
 		}
 		break;
+	}
+
+	//
+	// Generic state for CM.
+	//
+
+	if (stage >= CM_STAGE) {
+		if (RCSDumpActive()) {
+			//
+			// Clear toggle state.
+			//
+			CMPropDumpSwitch.ClearToggled();
+
+			//
+			// Start burning RCS propellant. This apparently uses all RCS thrusters other
+			// than pitch up - Apollo Training: Sequential Events Control
+			//
+			// Note that before 61 seconds after launch, we should just dump the oxidiser
+			// out of the RCS, and not burn them. There's not enough time to burn up all the
+			// fuel before landing.
+			//
+
+			if (MissionTime < 61.0) {
+			}
+			else {
+				SetThrusterGroupLevel(THGROUP_ATT_PITCHDOWN, 1.0);
+				SetThrusterGroupLevel(THGROUP_ATT_YAWLEFT, 1.0);
+				SetThrusterGroupLevel(THGROUP_ATT_YAWRIGHT, 1.0);
+				SetThrusterGroupLevel(THGROUP_ATT_BANKLEFT, 1.0);
+				SetThrusterGroupLevel(THGROUP_ATT_BANKRIGHT, 1.0);
+			}
+		}
+		else if (CMPropDumpSwitch.Toggled()) {
+			//
+			// Clear toggled state so we don't end up here again.
+			//
+			CMPropDumpSwitch.ClearToggled();
+			//
+			// Stop burning RCS propellant.
+			//
+			SetThrusterGroupLevel(THGROUP_ATT_PITCHDOWN, 0.0);
+			SetThrusterGroupLevel(THGROUP_ATT_YAWLEFT, 0.0);
+			SetThrusterGroupLevel(THGROUP_ATT_YAWRIGHT, 0.0);
+			SetThrusterGroupLevel(THGROUP_ATT_BANKLEFT, 0.0);
+			SetThrusterGroupLevel(THGROUP_ATT_BANKRIGHT, 0.0);
+		}
 	}
 }
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2006/01/10 19:34:44  movieman523
+  *	Fixed AC bus switches and added ELS Logic/Auto support.
+  *	
   *	Revision 1.58  2006/01/09 17:55:26  tschachim
   *	Connected the dockingprobe to the EPS.
   *	
@@ -1998,3 +2001,22 @@ bool Saturn::ELSAuto()
 {
 	return (ELSActive() && ELSAutoSwitch.IsUp());
 }
+
+bool Saturn::RCSLogicActive()
+
+{
+	return (CMPropDumpSwitch.Voltage() > 20.0);
+}
+
+bool Saturn::RCSDumpActive()
+
+{
+	return (RCSLogicActive() && CMPropDumpSwitch.IsUp());
+}
+
+bool Saturn::RCSPurgeActive()
+
+{
+	return ((CPPropPurgeSwitch.Voltage() > 20.0) && CPPropPurgeSwitch.IsUp());
+}
+

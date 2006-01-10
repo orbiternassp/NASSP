@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.129  2006/01/10 19:34:45  movieman523
+  *	Fixed AC bus switches and added ELS Logic/Auto support.
+  *	
   *	Revision 1.128  2006/01/08 21:43:34  movieman523
   *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
   *	
@@ -503,18 +506,42 @@ void Saturn::RedrawPanel_Thrust (SURFHANDLE surf)
 	//
 	// MUSTFIX
 	//
-	// Note: on a real Saturn, this _ISN'T_ a thrust meter! It shows pressure at the top of the LET, or
-	// SPS combustion chamber pressure.
+	// Note: on a real Saturn, this _ISN'T_ a thrust meter! It shows angle of attack while the LET is attached, or
+	// SPS combustion chamber pressure percentage from 0-150%.
 	//
 
-	alpha = GetEngineLevel(ENGINE_MAIN) * 100 * ThrustAdjust;
+	if (LVSPSPcIndicatorSwitch.IsDown()) {
+		alpha = GetEngineLevel(ENGINE_MAIN) * 100 * ThrustAdjust;
+	}
+	else {
+		alpha = 0.0;
+	}
 
-	if (alpha > 100)
-		alpha = 100;
+	//
+	// Damp motion.
+	//
 
-	range = 270 * RAD;
-	range = range / 100;
-	alpha = 100 - alpha;
+	double delta = 8.0 * oapiGetTimeAcceleration();
+
+	if (alpha > LastThrustDisplay) {
+		if (alpha - LastThrustDisplay > delta)
+			alpha = LastThrustDisplay + delta;
+	}
+	else {
+		if (LastThrustDisplay - alpha > delta)
+			alpha = LastThrustDisplay - delta;
+	}
+
+	LastThrustDisplay = alpha;
+
+	if (alpha > 150.0)
+		alpha = 150.0;
+	if (alpha < 0.0)
+		alpha = 0.0;
+
+	range = 270.0 * RAD;
+	range = range / 150.0;
+	alpha = 150.0 - alpha;
 	HDC hDC = oapiGetDC (surf);
 	DrawNeedle (hDC, 48, 45, 20.0, (alpha*range)-45*RAD, g_Param.pen[4], g_Param.pen[4]);
 	oapiReleaseDC (surf, hDC);
@@ -1622,11 +1649,13 @@ void Saturn::SetSwitches(int panel) {
 	ELSLogicSwitch.InitGuard(44, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
 	ELSLogicSwitch.WireTo(&SwitchPower);
 	ELSAutoSwitch.Init(88, 16, 34, 29, srf[SRF_SWITCHUP], ELSRow);
-	CMRCSLogicSwitch.Init(131, 16, 34, 29, srf[SRF_SWITCHUP], ELSRow);
+	CMRCSLogicSwitch.Init(131, 16, 34, 29, srf[SRF_SWITCHUP], ELSRow, &CMPropDumpSwitch, 0);
+	CMRCSLogicSwitch.WireTo(&SwitchPower);
 	CMPropDumpSwitch.Init(175, 19, 34, 29, srf[SRF_SWITCHUP], ELSRow);
 	CMPropDumpSwitch.InitGuard(175, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
 	CPPropPurgeSwitch.Init(220, 19, 34, 29, srf[SRF_SWITCHUP], ELSRow);
 	CPPropPurgeSwitch.InitGuard(220, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	CPPropPurgeSwitch.WireTo(&CMPropDumpSwitch);
 
 	//
 	// Event Timer Switches
