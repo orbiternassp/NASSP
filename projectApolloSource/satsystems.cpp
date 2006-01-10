@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2006/01/09 17:55:26  tschachim
+  *	Connected the dockingprobe to the EPS.
+  *	
   *	Revision 1.57  2006/01/08 21:43:34  movieman523
   *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
   *	
@@ -289,6 +292,8 @@ void Saturn::SystemsInit() {
 	Panelsdk.AddElectrical(&ACBus2PhaseA, false);
 	Panelsdk.AddElectrical(&ACBus2PhaseB, false);
 	Panelsdk.AddElectrical(&ACBus2PhaseC, false);
+
+	Panelsdk.AddElectrical(&SwitchPower, false);
 
 	//
 	// Fuel cells.
@@ -1978,6 +1983,18 @@ int Saturn::GetRotationalSwitchState(char *switchName) {
 	return s->GetState();
 }
 
+//
+// Check whether the ELS is active and whether it's in auto mode.
+//
 
+bool Saturn::ELSActive()
 
+{
+	return (ELSAutoSwitch.Voltage() > 20.0);
+}
 
+bool Saturn::ELSAuto()
+
+{
+	return (ELSActive() && ELSAutoSwitch.IsUp());
+}

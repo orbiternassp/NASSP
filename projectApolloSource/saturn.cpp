@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2006/01/09 21:56:44  movieman523
+  *	Added support for LEM and CSM AGC PAD loads in scenario file.
+  *	
   *	Revision 1.85  2006/01/08 19:04:30  movieman523
   *	Wired up AC bus switches in a quick and hacky manner.
   *	
@@ -2691,6 +2694,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	// Do stage-specific processing.
 	//
 
+	bool deploy = false;
+
 	switch (stage) {
 
 	case PRELAUNCH_STAGE:
@@ -2698,19 +2703,37 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_STAGE:
-		if ((GetAtmPressure() > 38000 && !LandFail.u.CoverFail) || ApexCoverJettSwitch.GetState())
+		if (ELSAuto() && GetAtmPressure() > 38000 && !LandFail.u.CoverFail)
+			deploy = true;
+
+		if (ELSActive() && ApexCoverJettSwitch.GetState())
+			deploy = true;
+
+		if (deploy)
 			StageEight(simt);
 		else
 			StageSeven(simt);
 		break;
 
 	case CM_ENTRY_STAGE:
-		if ((GetAtmPressure() > 37680 && !LandFail.u.DrogueFail) || ApexCoverJettSwitch.GetState())
+		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.u.DrogueFail)
+			deploy = true;
+
+		if (ELSActive() && ApexCoverJettSwitch.GetState())
+			deploy = true;
+
+		if (deploy)
 			StageEight(simt);
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		if ((GetAtmPressure() > 39000 && !LandFail.u.DrogueFail) || DrogueDeploySwitch.GetState()) {
+		if (ELSAuto() && GetAtmPressure() > 39000 && !LandFail.u.DrogueFail)
+			deploy = true;
+
+		if (ELSActive() && DrogueDeploySwitch.GetState()) 
+			deploy = true;
+
+		if (deploy) {
 			SetChuteStage1();
 			LAUNCHIND[3] = true;
 			SetStage(CM_ENTRY_STAGE_THREE);
@@ -2723,7 +2746,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	//
 
 	case CM_ENTRY_STAGE_THREE:
-		if ((GetAtmPressure() > 66000 && !LandFail.u.MainFail) || MainDeploySwitch.GetState()) {
+		if ((GetAtmPressure() > 66000 && !LandFail.u.MainFail) || (ELSActive() && MainDeploySwitch.GetState())) {
 			SetChuteStage2();
 			SetStage(CM_ENTRY_STAGE_FOUR);
 			NextMissionEventTime = MissionTime + 2.5;

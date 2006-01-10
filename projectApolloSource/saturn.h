@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.123  2006/01/09 21:56:44  movieman523
+  *	Added support for LEM and CSM AGC PAD loads in scenario file.
+  *	
   *	Revision 1.122  2006/01/08 21:43:34  movieman523
   *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
   *	
@@ -643,6 +646,9 @@ protected:
 	void SetLVRateLight();
 	void ClearLVRateLight();
 
+	bool ELSActive();
+	bool ELSAuto();
+
 	//
 	// State that needs to be saved.
 	//
@@ -1059,16 +1065,16 @@ protected:
 	PowerStateRotationalSwitch ACIndicatorRotary;
 
 	SwitchRow ACInverterSwitchesRow;
-	CircuitBrakerSwitch MnA1Switch;
-	CircuitBrakerSwitch MnB2Switch;
+	TwoSourceSwitch MnA1Switch;
+	TwoSourceSwitch MnB2Switch;
 	ThreeSourceSwitch MnA3Switch;
-	CircuitBrakerSwitch AcBus1Switch1;
-	CircuitBrakerSwitch AcBus1Switch2;
-	CircuitBrakerSwitch AcBus1Switch3;
+	TwoSourceSwitch AcBus1Switch1;
+	TwoSourceSwitch AcBus1Switch2;
+	TwoSourceSwitch AcBus1Switch3;
 	ThreePosSwitch AcBus1ResetSwitch;
-	CircuitBrakerSwitch AcBus2Switch1;
-	CircuitBrakerSwitch AcBus2Switch2;
-	CircuitBrakerSwitch AcBus2Switch3;
+	TwoSourceSwitch AcBus2Switch1;
+	TwoSourceSwitch AcBus2Switch2;
+	TwoSourceSwitch AcBus2Switch3;
 	ThreePosSwitch AcBus2ResetSwitch;
 	
 	//
@@ -1103,7 +1109,7 @@ protected:
 
 	SwitchRow ELSRow;
 	AGCIOSwitch CGSwitch;
-	GuardedToggleSwitch ELSLogicSwitch;
+	GuardedTwoOutputSwitch ELSLogicSwitch;
 	ToggleSwitch ELSAutoSwitch;
 	ToggleSwitch CMRCSLogicSwitch;
 	GuardedToggleSwitch CMPropDumpSwitch;

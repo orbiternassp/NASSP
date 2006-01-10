@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/01/08 17:50:38  movieman523
+  *	Wired up electrical meter switches other than battery charger.
+  *	
   *	Revision 1.43  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -2093,6 +2096,147 @@ void ThreeSourceSwitch::LoadState(char *line)
 
 {
 	ThreePosSwitch::LoadState(line);
+	UpdateSourceState();
+}
+
+//
+// TwoSourceSwitch allows you to connect the output to one of two inputs based on the position
+// of the switch.
+//
+
+void TwoSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	source1 = s1;
+	source2 = s2;
+}
+
+bool TwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ToggleSwitch::CheckMouseClick(event, mx, my))
+	{
+		UpdateSourceState();
+		return true;
+	}
+
+	return false;
+}
+
+void TwoSourceSwitch::UpdateSourceState()
+
+{
+	if (IsUp()) {
+		WireTo(source1);
+	}
+	else if (IsDown()) {
+		WireTo(source2);
+	}
+}
+
+void TwoSourceSwitch::LoadState(char *line)
+
+{
+	ToggleSwitch::LoadState(line);
+	UpdateSourceState();
+}
+
+//
+// TwoOutputSwitch allows you to connect one of the two outputs to the input based on the position
+// of the switch.
+//
+
+void TwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *o1, e_object *o2)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	output1 = o1;
+	output2 = o2;
+}
+
+bool TwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ToggleSwitch::CheckMouseClick(event, mx, my))
+	{
+		UpdateSourceState();
+		return true;
+	}
+
+	return false;
+}
+
+void TwoOutputSwitch::UpdateSourceState()
+
+{
+	if (IsUp()) {
+		if (output1)
+			output1->WireTo(this);
+		if (output2)
+			output2->WireTo(0);
+	}
+	else if (IsDown()) {
+		if (output1)
+			output1->WireTo(0);
+		if (output2)
+			output2->WireTo(this);
+	}
+}
+
+void TwoOutputSwitch::LoadState(char *line)
+
+{
+	ToggleSwitch::LoadState(line);
+	UpdateSourceState();
+}
+
+//
+// GuardedTwoOutputSwitch allows you to connect one of the two outputs to the input based on the position
+// of the switch.
+//
+
+void GuardedTwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *o1, e_object *o2)
+
+{
+	GuardedToggleSwitch::Init(xp, yp, w, h, surf, row);
+	output1 = o1;
+	output2 = o2;
+}
+
+bool GuardedTwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my))
+	{
+		UpdateSourceState();
+		return true;
+	}
+
+	return false;
+}
+
+void GuardedTwoOutputSwitch::UpdateSourceState()
+
+{
+	if (IsUp()) {
+		if (output1)
+			output1->WireTo(this);
+		if (output2)
+			output2->WireTo(0);
+	}
+	else if (IsDown()) {
+		if (output1)
+			output1->WireTo(0);
+		if (output2)
+			output2->WireTo(this);
+	}
+}
+
+void GuardedTwoOutputSwitch::LoadState(char *line)
+
+{
+	ToggleSwitch::LoadState(line);
 	UpdateSourceState();
 }
 

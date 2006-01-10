@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.128  2006/01/08 21:43:34  movieman523
+  *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
+  *	
   *	Revision 1.127  2006/01/08 19:04:30  movieman523
   *	Wired up AC bus switches in a quick and hacky manner.
   *	
@@ -1615,8 +1618,9 @@ void Saturn::SetSwitches(int panel) {
 	ELSRow.Init(AID_ELS_SWITCHES, MainPanel);
 	CGSwitch.Init(0, 16, 34, 29, srf[SRF_SWITCHUP], ELSRow, &agc);
 	CGSwitch.SetChannelData(32, 11, true);	// LM Attached flag.
-	ELSLogicSwitch.Init(44, 19, 34, 29, srf[SRF_SWITCHUP], ELSRow);
+	ELSLogicSwitch.Init(44, 19, 34, 29, srf[SRF_SWITCHUP], ELSRow, &ELSAutoSwitch, 0);
 	ELSLogicSwitch.InitGuard(44, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
+	ELSLogicSwitch.WireTo(&SwitchPower);
 	ELSAutoSwitch.Init(88, 16, 34, 29, srf[SRF_SWITCHUP], ELSRow);
 	CMRCSLogicSwitch.Init(131, 16, 34, 29, srf[SRF_SWITCHUP], ELSRow);
 	CMPropDumpSwitch.Init(175, 19, 34, 29, srf[SRF_SWITCHUP], ELSRow);
@@ -1768,16 +1772,16 @@ void Saturn::SetSwitches(int panel) {
 	DummySwitch.Init     (43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], PCMBitRateSwitchRow);
 
 	ACInverterSwitchesRow.Init(AID_ACINVERTERSWITCHES, MainPanel);
-	MnA1Switch.Init       (  0,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, MainBusA);
-	MnB2Switch.Init       ( 63,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, MainBusB);
+	MnA1Switch.Init       (  0,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, MainBusA, 0);
+	MnB2Switch.Init       ( 63,   0, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, MainBusB, 0);
 	MnA3Switch.Init       (126,   0, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow, MainBusA, 0, MainBusB);
-	AcBus1Switch1.Init    (  0, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter1);
-	AcBus1Switch2.Init    ( 43, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter2);
-	AcBus1Switch3.Init    ( 86, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter3);
+	AcBus1Switch1.Init    (  0, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter1, 0);
+	AcBus1Switch2.Init    ( 43, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter2, 0);
+	AcBus1Switch3.Init    ( 86, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter3, 0);
 	AcBus1ResetSwitch.Init(129, 101, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
-	AcBus2Switch1.Init    (  0, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter1);
-	AcBus2Switch2.Init    ( 43, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter2);
-	AcBus2Switch3.Init    ( 86, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter3);
+	AcBus2Switch1.Init    (  0, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter1, 0);
+	AcBus2Switch2.Init    ( 43, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter2, 0);
+	AcBus2Switch3.Init    ( 86, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter3, 0);
 	AcBus2ResetSwitch.Init(129, 200, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
 	 
 	SBandNormalSwitchesRow.Init(AID_SBAND_NORMAL_SWITCHES, MainPanel);
