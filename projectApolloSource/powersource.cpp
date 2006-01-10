@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/01/08 19:04:29  movieman523
+  *	Wired up AC bus switches in a quick and hacky manner.
+  *	
   *	Revision 1.7  2005/12/02 19:29:24  movieman523
   *	Started integrating PowerSource code into PanelSDK.
   *	
@@ -155,14 +158,21 @@ double PowerMerge::Voltage()
 double PowerMerge::Current()
 
 {
-	double current = 0.0;
+	double Volts = 0.0;
+	double VoltsA = 0.0, VoltsB = 0.0;
 
 	if (BusA)
-		current += BusA->Current();
+		VoltsA = BusA->Voltage();
 	if (BusB)
-		current += BusB->Current();
+		VoltsB = BusB->Voltage();
 
-	return current;
+	Volts = VoltsA + VoltsB;
+
+	if (Volts > 0.0) {
+		return power_load / Volts;
+	}
+
+	return 0.0;
 }
 
 void PowerMerge::DrawPower(double watts)
@@ -171,6 +181,8 @@ void PowerMerge::DrawPower(double watts)
 	double Volts = 0.0;
 	double VoltsA = 0.0;
 	double VoltsB = 0.0;
+
+	power_load += watts;
 
 	if (BusA)
 		VoltsA = BusA->Voltage();

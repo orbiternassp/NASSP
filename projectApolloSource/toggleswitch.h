@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2006/01/08 17:50:39  movieman523
+  *	Wired up electrical meter switches other than battery charger.
+  *	
   *	Revision 1.35  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -332,6 +335,34 @@ protected:
 	e_object *source3;
 };
 
+class TwoSourceSwitch : public ToggleSwitch {
+public:
+	TwoSourceSwitch() { source1 = source2 = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2);
+	bool CheckMouseClick(int event, int mx, int my);
+	void LoadState(char *line);
+
+protected:
+	virtual void UpdateSourceState();
+
+	e_object *source1;
+	e_object *source2;
+};
+
+class TwoOutputSwitch : public ToggleSwitch {
+public:
+	TwoOutputSwitch() { output1 = output2 = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *o1, e_object *o2);
+	bool CheckMouseClick(int event, int mx, int my);
+	void LoadState(char *line);
+
+protected:
+	virtual void UpdateSourceState();
+
+	e_object *output1;
+	e_object *output2;
+};
+
 class ThreeSourceTwoDestSwitch : public ThreeSourceSwitch {
 public:
 	ThreeSourceTwoDestSwitch() { dest1 = dest2 = 0; };
@@ -553,6 +584,20 @@ protected:
 	int guardXOffset;
 	int guardYOffset;
 	Sound guardClick;
+};
+
+class GuardedTwoOutputSwitch : public GuardedToggleSwitch {
+public:
+	GuardedTwoOutputSwitch() { output1 = output2 = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *o1, e_object *o2);
+	bool CheckMouseClick(int event, int mx, int my);
+	void LoadState(char *line);
+
+protected:
+	virtual void UpdateSourceState();
+
+	e_object *output1;
+	e_object *output2;
 };
 
 class IMU; // Forward reference for files which include this before IMU.h
