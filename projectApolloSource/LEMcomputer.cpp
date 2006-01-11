@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2005/09/24 20:56:08  lazyd
+  *	Moved some code
+  *	
   *	Revision 1.23  2005/09/20 22:37:48  lazyd
   *	Moved programs from here to apolloguidance
   *	
@@ -109,7 +112,7 @@
 
 #include "sat5_lmpkd.h"
 
-LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s, display, im, "Config/ProjectApollo/Luminary131.bin")
+LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s, display, im)
 
 {
 	//
@@ -123,16 +126,16 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s
 	InOrbit = 1;
 
     mode = -1;
-	simcomputert = -1.;
-    timeremaining = 99999.;
-	timeafterpdi = -1.;
+	simcomputert = -1.0;
+    timeremaining = 99999.0;
+	timeafterpdi = -1.0;
+
+	InitVirtualAGC("Config/ProjectApollo/Luminary131.bin");
 
 
 // TODOX15  at present  switch is not done so tell agc that PNGS is in control
 
 	SetInputChannelBit(030,10,1);
-
-
 }
 
 LEMcomputer::~LEMcomputer()
