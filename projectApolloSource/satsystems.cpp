@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2006/01/10 23:20:51  movieman523
+  *	SM RCS is now enabled per quad.
+  *	
   *	Revision 1.61  2006/01/10 21:09:30  movieman523
   *	Improved AoA/thrust meter.
   *	
@@ -1216,7 +1219,7 @@ void Saturn::SetRCS_CM()
 	if (th_att_cm[0]) {
 		if (CMRCSActive()) {
 			for (i = 0; i < 24; i++) 
-				SetThrusterResource(th_att_cm[i], ph_rcs1);
+				SetThrusterResource(th_att_cm[i], ph_rcs_cm);
 		}
 		else {
 			for (i = 0; i < 24; i++)
@@ -2029,4 +2032,10 @@ bool Saturn::LETAttached()
 
 {
 	return (stage < LAUNCH_STAGE_TWO_TWR_JET);
+}
+
+bool Saturn::DisplayingPropellantQuantity()
+
+{
+	return SMRCSIndSwitch.IsDown();
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.90  2006/01/10 23:45:35  movieman523
+  *	Revised RCS ISP and thrust to historical values.
+  *	
   *	Revision 1.89  2006/01/10 23:20:51  movieman523
   *	SM RCS is now enabled per quad.
   *	
@@ -341,8 +344,12 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 							   ACBus1PhaseC("AC-Bus1-PhaseC", 115, &ACBus1Source),
 							   ACBus2PhaseA("AC-Bus2-PhaseA", 115, &ACBus2Source),
 							   ACBus2PhaseB("AC-Bus2-PhaseB", 115, &ACBus2Source),
-							   ACBus2PhaseC("AC-Bus2-PhaseC", 115, &ACBus2Source)
-
+							   ACBus2PhaseC("AC-Bus2-PhaseC", 115, &ACBus2Source),
+							   SMQuadARCS(ph_rcs0),
+							   SMQuadBRCS(ph_rcs1),
+							   SMQuadCRCS(ph_rcs2),
+							   SMQuadDRCS(ph_rcs3),
+							   CMRCS(ph_rcs_cm)
 {
 	InitSaturnCalled = false;
 	autopilot = false;
@@ -572,6 +579,16 @@ void Saturn::initSaturn()
 	dsky2.Init();
 
 	//
+	// Propellant sources.
+	//
+
+	SMQuadARCS.SetVessel(this);
+	SMQuadBRCS.SetVessel(this);
+	SMQuadCRCS.SetVessel(this);
+	SMQuadDRCS.SetVessel(this);
+	CMRCS.SetVessel(this);
+
+	//
 	// Default masses.
 	//
 
@@ -604,6 +621,7 @@ void Saturn::initSaturn()
 	ph_rcs1 = 0;
 	ph_rcs2 = 0;
 	ph_rcs3 = 0;
+	ph_rcs_cm = 0;
 	ph_sps = 0;
 	ph_sep = 0;
 
@@ -2556,39 +2574,49 @@ void Saturn::AddRCS_CM(double MaxThrust)
 	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
 
-	th_att_cm[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	if (!ph_rcs_cm)
+		ph_rcs_cm = CreatePropellantResource(RCS_FUEL_CM);
+
+	//
+	// display rcs stage propellant level in generic HUD
+	//
+
+	SetDefaultPropellantResource (ph_rcs_cm);
+	ClearThrusterDefinitions();
+
+	th_att_cm[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
 
 	CreateThrusterGroup (th_att_cm,   4, THGROUP_ATT_YAWLEFT);
 	CreateThrusterGroup (th_att_cm+4,   4, THGROUP_ATT_YAWRIGHT);
 
-	th_att_cm[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
 
-	th_att_cm[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
 
 	CreateThrusterGroup (th_att_cm+12,   4, THGROUP_ATT_PITCHDOWN);
 	CreateThrusterGroup (th_att_cm+8,   4, THGROUP_ATT_PITCHUP);
 
-	th_att_cm[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs1, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
 
 	CreateThrusterGroup (th_att_cm+20,   4, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_cm+16,   4, THGROUP_ATT_BANKRIGHT);

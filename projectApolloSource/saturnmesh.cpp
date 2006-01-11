@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2006/01/10 23:45:35  movieman523
+  *	Revised RCS ISP and thrust to historical values.
+  *	
   *	Revision 1.27  2006/01/10 23:20:51  movieman523
   *	SM RCS is now enabled per quad.
   *	
@@ -704,12 +707,8 @@ void Saturn::SetReentryStage ()
 	if (ph_rcs2) DelPropellantResource(ph_rcs2);
 	if (ph_rcs3) DelPropellantResource(ph_rcs3);
 
-	if (!ph_rcs1) ph_rcs1  = CreatePropellantResource(500); //rcs stage Propellant
-	SetDefaultPropellantResource (ph_rcs1); // display rcs stage propellant level in generic HUD
-
 	DelThrusterGroup(THGROUP_MAIN,true);
-	//DelThruster(th_main[0]);
-	//CMTex =oapiRegisterReentryTexture("reentry");
+
 	if (CMTex) SetReentryTexture(CMTex,1e6,5,0.7);
 
 	AddRCS_CM(CM_RCS_THRUST);
@@ -767,6 +766,8 @@ void Saturn::StageSeven(double simt)
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 
+		AddRCS_CM(CM_RCS_THRUST);
+
 		SetStage(CM_ENTRY_STAGE);
 		Burned = true;
 
@@ -777,9 +778,6 @@ void Saturn::StageSeven(double simt)
 void Saturn::StageEight(double simt)
 
 {
-	DelPropellantResource(ph_rcs1);
-	ClearMeshes();
-
 	UINT meshidx;
 	VECTOR3 mesh_dir=_V(0,0,-1);
 
@@ -825,6 +823,8 @@ void Saturn::StageEight(double simt)
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 	}
+
+	AddRCS_CM(CM_RCS_THRUST);
 
 	SetView(0.5);
 
@@ -873,7 +873,6 @@ void Saturn::SetChuteStage1()
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	//ShiftCentreOfMass (_V(0,0,6.25));
 
 	VECTOR3 mesh_dir=_V(0,0,34.40-12.25-16.5-6.5-6.25);
 	if (Burned){
@@ -918,6 +917,9 @@ void Saturn::SetChuteStage1()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 	}
+
+	AddRCS_CM(CM_RCS_THRUST);
+
 	mesh_dir=_V(0,0,44.00-12.25-21.5-7.75);
 	meshidx = AddMesh (hChute30, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
@@ -1002,6 +1004,8 @@ void Saturn::SetChuteStage2()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 	}
+
+	AddRCS_CM(CM_RCS_THRUST);
 
 	mesh_dir=_V(0,-0.25,39.7-12.25-21.5-7.75);
 	meshidx=AddMesh (hChute31, &mesh_dir);
@@ -1089,6 +1093,8 @@ void Saturn::SetChuteStage3()
 	meshidx = AddMesh (hChute32, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
+	AddRCS_CM(CM_RCS_THRUST);
+
 	SetView(-7.25);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
 	LAUNCHIND[3] = true;
@@ -1165,6 +1171,8 @@ void Saturn::SetChuteStage4()
 	meshidx=AddMesh (hApollochute, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
+	AddRCS_CM(CM_RCS_THRUST);
+
 	SetView(-7.25);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
 	LAUNCHIND[5]=true;
@@ -1232,6 +1240,8 @@ void Saturn::SetSplashStage()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
+	AddRCS_CM(CM_RCS_THRUST);
+
 	SetView(-1.35);
 }
 
@@ -1297,8 +1307,6 @@ void Saturn::SetAbortStage ()
 		ph_1st = 0;
 	}
 
-	if (!ph_rcs1)
-		ph_rcs1  = CreatePropellantResource(500); //RCS stage Propellant
 	if (ph_sps)
 		DelPropellantResource(ph_sps); //SPS stage Propellant
 		ph_sps = 0;
@@ -1341,7 +1349,6 @@ void Saturn::SetAbortStage ()
 
 	OrbiterAttitudeToggle.SetState(false);
 	LPswitch6.SetState(false);
-
 }
 
 //
