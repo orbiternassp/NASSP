@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/10/31 10:18:13  tschachim
+  *	Offset for SaturnToggleSwitch, SPSSwitch is now 2-pos.
+  *	
   *	Revision 1.4  2005/09/30 11:22:40  tschachim
   *	Added ECS meters.
   *	
@@ -284,6 +287,127 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	}
 }
 
+RCSQuantityMeter::RCSQuantityMeter()
+
+{
+	source = 0;
+	NeedleSurface = 0;
+}
+
+void RCSQuantityMeter::Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s, Saturn *v)
+
+{
+	MeterSwitch::Init(row);
+	source = s;
+	NeedleSurface = surf;
+	our_vessel = v;
+}
+
+double RCSQuantityMeter::QueryValue()
+
+{
+	if (!source)
+		return 0.0;
+
+	PropellantSource *ps = source->GetSource();
+
+	//
+	// Offscale high error return if we're not connected.
+	//
+
+	if (!ps)
+		return 1.1;
+
+	if (our_vessel->DisplayingPropellantQuantity()) {		
+		return ps->Quantity();
+	}
+
+	return ps->Temperature();
+}
+
+void RCSQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  150, (110 - (int)(v * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+}
+
+CMRCSPropellant::CMRCSPropellant(PROPELLANT_HANDLE &h) : PropellantSource(h)
+
+{
+}
+
+double CMRCSPropellant::Quantity()
+
+{
+	if (our_vessel && our_vessel->GetStage() < CM_STAGE)
+		return 1.0;
+
+	return PropellantSource::Quantity();
+}
+
+SMRCSPropellant::SMRCSPropellant(PROPELLANT_HANDLE &h) : PropellantSource(h)
+
+{
+}
+
+double SMRCSPropellant::Quantity()
+
+{
+	if (our_vessel) {
+		int stage = our_vessel->GetStage();
+		if (stage < CSM_LEM_STAGE)
+			return 1.0;
+		if (stage > CSM_LEM_STAGE)
+			return 0.0;
+	}
+
+	return PropellantSource::Quantity();
+}
+
+PropellantSource::PropellantSource(PROPELLANT_HANDLE &h) : source_prop(h)
+
+{
+	our_vessel = 0;
+}
+
+PROPELLANT_HANDLE PropellantSource::Handle()
+
+{
+	return source_prop;
+}
+
+double PropellantSource::Quantity()
+
+{
+	if (source_prop && our_vessel) {
+		return our_vessel->GetPropellantMass(source_prop) / our_vessel->GetPropellantMaxMass(source_prop);
+	}
+
+	return 0.0;
+}
+
+PropellantRotationalSwitch::PropellantRotationalSwitch()
+
+{
+	int i;
+
+	for (i = 0; i < 10; i++)
+		sources[i] = 0;
+}
+
+void PropellantRotationalSwitch::SetSource(int num, PropellantSource *s)
+
+{
+	if (num >= 0 && num < 16)
+		sources[num] = s; 
+}
+
+PropellantSource *PropellantRotationalSwitch::GetSource()
+
+{
+	PropellantSource *ps = sources[GetState()];
+	return ps;
+}
 
 void SaturnFuelCellMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, RotationalSwitch *fuelCellIndicatorsSwitch)
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/10/31 10:38:24  tschachim
+  *	Offset for SaturnToggleSwitch, SPSSwitch is now 2-pos.
+  *	
   *	Revision 1.4  2005/09/30 11:22:40  tschachim
   *	Added ECS meters.
   *	
@@ -115,6 +118,55 @@ protected:
 	int Index;
 	SURFHANDLE NeedleSurface;
 	Saturn *Sat;
+};
+
+class PropellantSource {
+public:
+	PropellantSource(PROPELLANT_HANDLE &h);
+	void SetVessel(Saturn *v) { our_vessel = v; };
+	PROPELLANT_HANDLE Handle();
+	virtual double Quantity();
+	virtual double Temperature() { return 0.0; };
+	virtual double Pressure() { return 0.0; };
+
+protected:
+	PROPELLANT_HANDLE &source_prop;
+	Saturn *our_vessel;
+};
+
+class CMRCSPropellant : public PropellantSource {
+public:
+	CMRCSPropellant(PROPELLANT_HANDLE &h);
+	double Quantity();
+};
+
+class SMRCSPropellant : public PropellantSource {
+public:
+	SMRCSPropellant(PROPELLANT_HANDLE &h);
+	double Quantity();
+};
+
+class PropellantRotationalSwitch: public RotationalSwitch {
+public:
+	PropellantRotationalSwitch();
+	void SetSource(int num, PropellantSource *s);
+	PropellantSource *GetSource();
+
+protected:
+	PropellantSource *sources[16];
+};
+
+class RCSQuantityMeter : public MeterSwitch {
+public:
+	RCSQuantityMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s, Saturn *v);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	PropellantRotationalSwitch *source;
+	SURFHANDLE NeedleSurface;
+	Saturn *our_vessel;
 };
 
 class SaturnFuelCellMeter : public MeterSwitch {

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/01/10 23:45:35  movieman523
+  *	Revised RCS ISP and thrust to historical values.
+  *	
   *	Revision 1.49  2006/01/08 16:57:11  flydba
   *	New bitmap added.
   *	
@@ -325,10 +328,12 @@ inline double KelvinToFahrenheit(double kelvin) {
 #define DPS_THRUST		44910
 #define DPS_ISP			3107
 
-#define RCS_FUEL_PER_QUAD	125
+#define RCS_FUEL_PER_QUAD	310
 #define SM_RCS_ISP			(290.0 * G)
 #define SM_RCS_ISP_SL		50.0
 #define SM_RCS_THRUST		441.5
+
+#define RCS_FUEL_CM			90.0
 #define CM_RCS_ISP			(290.0 * G)
 #define CM_RCS_ISP_SL		50.0
 #define CM_RCS_THRUST		412.0

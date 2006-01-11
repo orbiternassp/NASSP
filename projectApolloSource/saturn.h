@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.127  2006/01/10 23:20:51  movieman523
+  *	SM RCS is now enabled per quad.
+  *	
   *	Revision 1.126  2006/01/10 21:09:30  movieman523
   *	Improved AoA/thrust meter.
   *	
@@ -603,6 +606,8 @@ public:
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
+	bool DisplayingPropellantQuantity();
+
 	// called by crawler 
 	virtual void LaunchVesselRolloutEnd() {};	// after arrival on launch pad
 	virtual void LaunchVesselBuild() {};		// build/unbuild during assembly
@@ -889,8 +894,10 @@ protected:
 	GuardedToggleSwitch CMRCSPressSwitch;
 	ToggleSwitch SMRCSIndSwitch;
 
-	SwitchRow SMRCSProp1Row;
+	SwitchRow RCSGaugeRow;
+	RCSQuantityMeter RCSQuantityGauge;
 
+	SwitchRow SMRCSProp1Row;
 	SaturnValveSwitch SMRCSProp1ASwitch;
 	SaturnValveSwitch SMRCSProp1BSwitch;
 	SaturnValveSwitch SMRCSProp1CSwitch;
@@ -908,7 +915,6 @@ protected:
 	IndicatorSwitch SMRCSProp1DTalkback;
 
 	SwitchRow SMRCSProp2Row;
-
 	SaturnValveSwitch SMRCSProp2ASwitch;
 	SaturnValveSwitch SMRCSProp2BSwitch;
 	SaturnValveSwitch SMRCSProp2CSwitch;
@@ -928,7 +934,7 @@ protected:
 	IndicatorSwitch SMRCSProp2DTalkback;
 
 	SwitchRow RCSIndicatorsSwitchRow;
-	RotationalSwitch RCSIndicatorsSwitch;
+	PropellantRotationalSwitch RCSIndicatorsSwitch;
 
 	SwitchRow ECSIndicatorsSwitchRow;
 	RotationalSwitch ECSIndicatorsSwitch;
@@ -2488,7 +2494,7 @@ protected:
 	// General engine resources.
 	//
 
-	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3, ph_sps, ph_sep; // handles for propellant resources
+	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3, ph_rcs_cm, ph_sps, ph_sep; // handles for propellant resources
 
 	THGROUP_HANDLE thg_main,thg_ull,thg_ver;		          // handles for thruster groups
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
@@ -2497,6 +2503,12 @@ protected:
 	THRUSTER_HANDLE th_sps[1],th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THRUSTER_HANDLE	th_aps[3];
 	THRUSTER_HANDLE	th_sep[8];
+
+	CMRCSPropellant CMRCS;
+	SMRCSPropellant SMQuadARCS;
+	SMRCSPropellant SMQuadBRCS;
+	SMRCSPropellant SMQuadCRCS;
+	SMRCSPropellant SMQuadDRCS;
 
 	//
 	// LEM data.

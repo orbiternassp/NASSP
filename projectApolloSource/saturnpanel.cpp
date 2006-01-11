@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.131  2006/01/10 21:09:30  movieman523
+  *	Improved AoA/thrust meter.
+  *	
   *	Revision 1.130  2006/01/10 20:49:50  movieman523
   *	Added CM RCS propellant dump and revised thrust display.
   *	
@@ -1104,6 +1107,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CMC_SWITCH,									_R( 343,  635,  377,  664), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FDAI_SWITCHES,								_R( 265,  742,  484,  771), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RCS_INDICATORS,								_R(1788,  448, 1875,  535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RCS_GAUGES,									_R(1385,  385, 1548,  511), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LV_SWITCHES,									_R(1044, 1145, 1173, 1206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ALTIMETER,									_R( 836,   85,  973,  222), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECS_INDICATOR_SWITCH,						_R(1788,  585, 1875,  673), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1499,6 +1503,13 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSHelium2DTalkback.Init(127, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium2TalkbackRow);
 
 	//
+	// RCS Gauges.
+	//
+
+	RCSGaugeRow.Init(AID_RCS_GAUGES, MainPanel);
+	RCSQuantityGauge.Init(srf[SRF_NEEDLE], RCSGaugeRow, &RCSIndicatorsSwitch, this);
+
+	//
 	// SM RCS Primary Propellant.
 	//
 
@@ -1625,6 +1636,12 @@ void Saturn::SetSwitches(int panel) {
 
 	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
 	RCSIndicatorsSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], RCSIndicatorsSwitchRow);
+	RCSIndicatorsSwitch.SetSource(1, &CMRCS);
+	RCSIndicatorsSwitch.SetSource(2, &CMRCS);
+	RCSIndicatorsSwitch.SetSource(3, &SMQuadARCS);
+	RCSIndicatorsSwitch.SetSource(4, &SMQuadBRCS);
+	RCSIndicatorsSwitch.SetSource(5, &SMQuadCRCS);
+	RCSIndicatorsSwitch.SetSource(6, &SMQuadDRCS);
 
 	//
 	// ECS Indicators rotary switch.
@@ -4110,6 +4127,8 @@ void Saturn::InitSwitches() {
 
 	CMRCSPressSwitch.Register(PSH, "CMRCSPressSwitch", 0, 0);
 	SMRCSIndSwitch.Register(PSH, "SMRCSIndSwitch", 0);
+
+	RCSQuantityGauge.Register(PSH, "RCSQuantityGauge", 0.0, 1.0, 0.5);
 
 	SMRCSHeaterASwitch.Register(PSH, "SMRCSHeaterASwitch", THREEPOSSWITCH_CENTER);
 	SMRCSHeaterBSwitch.Register(PSH, "SMRCSHeaterBSwitch", THREEPOSSWITCH_CENTER);

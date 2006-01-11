@@ -15,6 +15,7 @@
 #define AID_DSKY2_LIGHTS                21
 #define AID_DSKY2_DISPLAY               22
 #define AID_DSKY2_KEY                   23
+#define AID_RCS_GAUGES					24
 #define AID_GAUGES_CENTER               25
 #define AID_DCAMPS						26
 #define AID_ALTIMETER                   27
