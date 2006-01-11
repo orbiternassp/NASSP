@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2006/01/11 02:59:43  movieman523
+  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
+  *	
   *	Revision 1.63  2006/01/11 02:16:25  movieman523
   *	Added RCS propellant quantity gauge.
   *	
@@ -378,19 +381,18 @@ void Saturn::SystemsInit() {
 	FDAIPowerRotarySwitch.WireTo(&SwitchPower);
 
 	//
-	// Default valve states.
-	// Make sure switches and talkback state match.
+	// Default valve states. For now, everything starts closed.
 	//
 	
-	SetValveState(CSM_He1_TANKA_VALVE, true);
-	SetValveState(CSM_He1_TANKB_VALVE, true);
-	SetValveState(CSM_He1_TANKC_VALVE, true);
-	SetValveState(CSM_He1_TANKD_VALVE, true);
+	SetValveState(CSM_He1_TANKA_VALVE, false);
+	SetValveState(CSM_He1_TANKB_VALVE, false);
+	SetValveState(CSM_He1_TANKC_VALVE, false);
+	SetValveState(CSM_He1_TANKD_VALVE, false);
 
-	SetValveState(CSM_He2_TANKA_VALVE, true);
-	SetValveState(CSM_He2_TANKB_VALVE, true);
-	SetValveState(CSM_He2_TANKC_VALVE, true);
-	SetValveState(CSM_He2_TANKD_VALVE, true);
+	SetValveState(CSM_He2_TANKA_VALVE, false);
+	SetValveState(CSM_He2_TANKB_VALVE, false);
+	SetValveState(CSM_He2_TANKC_VALVE, false);
+	SetValveState(CSM_He2_TANKD_VALVE, false);
 
 	SetValveState(CSM_PRIPROP_TANKA_VALVE, false);
 	SetValveState(CSM_PRIPROP_TANKB_VALVE, false);
