@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.128  2006/01/11 02:16:25  movieman523
+  *	Added RCS propellant quantity gauge.
+  *	
   *	Revision 1.127  2006/01/10 23:20:51  movieman523
   *	SM RCS is now enabled per quad.
   *	
@@ -432,26 +435,28 @@
 // Valves.
 //
 
-#define CSM_He1_TANKA_VALVE				0
-#define CSM_He1_TANKB_VALVE				1
-#define CSM_He1_TANKC_VALVE				2
-#define CSM_He1_TANKD_VALVE				3
-#define CSM_He2_TANKA_VALVE				4
-#define CSM_He2_TANKB_VALVE				5
-#define CSM_He2_TANKC_VALVE				6
-#define CSM_He2_TANKD_VALVE				7
-#define CSM_PRIPROP_TANKA_VALVE			8
-#define CSM_PRIPROP_TANKB_VALVE			9
-#define CSM_PRIPROP_TANKC_VALVE			10
-#define CSM_PRIPROP_TANKD_VALVE			11
-#define CSM_SECPROP_TANKA_VALVE			12
-#define CSM_SECPROP_TANKB_VALVE			13
-#define CSM_SECPROP_TANKC_VALVE			14
-#define CSM_SECPROP_TANKD_VALVE			15
-#define CM_RCSPROP_TANKA_VALVE			16
-#define CM_RCSPROP_TANKB_VALVE			17
+#define CSM_He1_TANKA_VALVE				1
+#define CSM_He1_TANKB_VALVE				2
+#define CSM_He1_TANKC_VALVE				3
+#define CSM_He1_TANKD_VALVE				4
+#define CSM_He2_TANKA_VALVE				5
+#define CSM_He2_TANKB_VALVE				6
+#define CSM_He2_TANKC_VALVE				7
+#define CSM_He2_TANKD_VALVE				8
+#define CSM_PRIPROP_TANKA_VALVE			9
+#define CSM_PRIPROP_TANKB_VALVE			10
+#define CSM_PRIPROP_TANKC_VALVE			11
+#define CSM_PRIPROP_TANKD_VALVE			12
+#define CSM_SECPROP_TANKA_VALVE			13
+#define CSM_SECPROP_TANKB_VALVE			14
+#define CSM_SECPROP_TANKC_VALVE			15
+#define CSM_SECPROP_TANKD_VALVE			16
 
-#define N_CSM_VALVES	18
+#define CM_VALVES_START					28
+#define CM_RCSPROP_TANKA_VALVE			29
+#define CM_RCSPROP_TANKB_VALVE			30
+
+#define N_CSM_VALVES	31
 
 //
 // Random failure flags.
@@ -871,10 +876,10 @@ protected:
 	SaturnValveSwitch SMRCSHelium1DSwitch;
 
 	SwitchRow SMRCSHelium1TalkbackRow;
-	IndicatorSwitch SMRCSHelium1ATalkback;
-	IndicatorSwitch SMRCSHelium1BTalkback;
-	IndicatorSwitch SMRCSHelium1CTalkback;
-	IndicatorSwitch SMRCSHelium1DTalkback;
+	SaturnValveTalkback SMRCSHelium1ATalkback;
+	SaturnValveTalkback SMRCSHelium1BTalkback;
+	SaturnValveTalkback SMRCSHelium1CTalkback;
+	SaturnValveTalkback SMRCSHelium1DTalkback;
 
 	SwitchRow SMRCSHelium2Row;
 	SaturnValveSwitch SMRCSHelium2ASwitch;
@@ -883,10 +888,10 @@ protected:
 	SaturnValveSwitch SMRCSHelium2DSwitch;
 
 	SwitchRow SMRCSHelium2TalkbackRow;
-	IndicatorSwitch SMRCSHelium2ATalkback;
-	IndicatorSwitch SMRCSHelium2BTalkback;
-	IndicatorSwitch SMRCSHelium2CTalkback;
-	IndicatorSwitch SMRCSHelium2DTalkback;
+	SaturnValveTalkback SMRCSHelium2ATalkback;
+	SaturnValveTalkback SMRCSHelium2BTalkback;
+	SaturnValveTalkback SMRCSHelium2CTalkback;
+	SaturnValveTalkback SMRCSHelium2DTalkback;
 
 	AGCIOSwitch CMUplinkSwitch;
 	ToggleSwitch IUUplinkSwitch;
@@ -909,10 +914,10 @@ protected:
 	ThreePosSwitch SMRCSHeaterDSwitch;
 
 	SwitchRow SMRCSProp1TalkbackRow;
-	IndicatorSwitch SMRCSProp1ATalkback;
-	IndicatorSwitch SMRCSProp1BTalkback;
-	IndicatorSwitch SMRCSProp1CTalkback;
-	IndicatorSwitch SMRCSProp1DTalkback;
+	SaturnValveTalkback SMRCSProp1ATalkback;
+	SaturnValveTalkback SMRCSProp1BTalkback;
+	SaturnValveTalkback SMRCSProp1CTalkback;
+	SaturnValveTalkback SMRCSProp1DTalkback;
 
 	SwitchRow SMRCSProp2Row;
 	SaturnValveSwitch SMRCSProp2ASwitch;
@@ -926,12 +931,12 @@ protected:
 	SaturnValveSwitch CMRCSIsolate2;
 
 	SwitchRow SMRCSProp2TalkbackRow;
-	IndicatorSwitch CMRCSIsolate1Talkback;
-	IndicatorSwitch CMRCSIsolate2Talkback;
-	IndicatorSwitch SMRCSProp2ATalkback;
-	IndicatorSwitch SMRCSProp2BTalkback;
-	IndicatorSwitch SMRCSProp2CTalkback;
-	IndicatorSwitch SMRCSProp2DTalkback;
+	SaturnValveTalkback CMRCSIsolate1Talkback;
+	SaturnValveTalkback CMRCSIsolate2Talkback;
+	SaturnValveTalkback SMRCSProp2ATalkback;
+	SaturnValveTalkback SMRCSProp2BTalkback;
+	SaturnValveTalkback SMRCSProp2CTalkback;
+	SaturnValveTalkback SMRCSProp2DTalkback;
 
 	SwitchRow RCSIndicatorsSwitchRow;
 	PropellantRotationalSwitch RCSIndicatorsSwitch;

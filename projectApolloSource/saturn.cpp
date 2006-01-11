@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.91  2006/01/11 02:16:25  movieman523
+  *	Added RCS propellant quantity gauge.
+  *	
   *	Revision 1.90  2006/01/10 23:45:35  movieman523
   *	Revised RCS ISP and thrust to historical values.
   *	
@@ -1132,7 +1135,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	int valvestate = 0;
 	int mask = 1;
 
-	for (i = 0; i < N_CSM_VALVES; i++) {
+	for (i = 1; i < N_CSM_VALVES; i++) {
 		if (ValveState[i])
 			valvestate |= mask;
 		mask <<= 1;
@@ -1586,7 +1589,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			int valvestate = 0;
 			int mask = 1;
 			sscanf (line+10, "%d", &valvestate);
-			for (n = 0; n < N_CSM_VALVES; n++) {
+			for (n = 1; n < N_CSM_VALVES; n++) {
 				ValveState[n] = ((valvestate & mask) != 0);
 				mask <<= 1;
 			}

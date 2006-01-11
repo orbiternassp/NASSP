@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2006/01/11 02:16:25  movieman523
+  *	Added RCS propellant quantity gauge.
+  *	
   *	Revision 1.62  2006/01/10 23:20:51  movieman523
   *	SM RCS is now enabled per quad.
   *	
@@ -1970,6 +1973,15 @@ void Saturn::SetValveState(int valve, bool open)
 bool Saturn::GetValveState(int valve)
 
 {
+	//
+	// First check whether the valve still exists!
+	//
+
+	if (valve < CM_VALVES_START) {
+		if (stage > CSM_LEM_STAGE)
+			return false;
+	}
+
 	if (pCSMValves[valve])
 		return (*pCSMValves[valve] == SP_VALVE_OPEN);
 

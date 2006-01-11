@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/01/10 19:34:45  movieman523
+  *	Fixed AC bus switches and added ELS Logic/Auto support.
+  *	
   *	Revision 1.44  2006/01/08 17:50:38  movieman523
   *	Wired up electrical meter switches other than battery charger.
   *	
@@ -1875,10 +1878,10 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 			switchRow->panelSwitches->listener->PanelIndicatorSwitchStateRequested(this);
 	}
 
-	if (state && displayState < 3.0)
+	if (GetState() && displayState < 3.0)
 		displayState += oapiGetSimStep() * 4.0;
 
-	if (!state && displayState > 0.0) 
+	if (!GetState() && displayState > 0.0) 
 		displayState -= oapiGetSimStep() * 4.0;
 
 	if (displayState > 3.0) displayState = 3.0;
