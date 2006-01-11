@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/08/22 19:47:33  movieman523
+  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
+  *	
   *	Revision 1.7  2005/08/19 13:51:39  tschachim
   *	Added lastOrbitalElementsTime for earth orbit insertation monitoring.
   *	
@@ -224,6 +227,8 @@ public:
 	void SetBurnTime(double val) { BurnTime = val; };
 
 	void SetInputChannelBit(int channel, int bit, bool val);
+
+	void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
 
 protected:
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2006/01/09 21:56:44  movieman523
+  *	Added support for LEM and CSM AGC PAD loads in scenario file.
+  *	
   *	Revision 1.28  2005/11/26 16:30:50  movieman523
   *	Fixed retros and trying to fix TLI audio.
   *	
@@ -131,7 +134,7 @@
 
 static const double ERADIUS2 = (ERADIUS * ERADIUS * 1000000);
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im) : ApolloGuidance(s, display, im, "Config/ProjectApollo/Colossus249.bin"), dsky2(display2)
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im) : ApolloGuidance(s, display, im), dsky2(display2)
 
 {
 	BurnTime = 0;
@@ -175,6 +178,22 @@ CSMcomputer::~CSMcomputer()
 	//
 	// Nothing for now.
 	//
+}
+
+void CSMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel)
+
+{
+	ApolloGuidance::SetMissionInfo(MissionNo, RealismValue, OtherVessel);
+
+	//
+	// Pick the appropriate AGC binary file based on the mission number.
+	//
+
+	char *binfile = "Config/ProjectApollo/Artemis072.bin";
+	if (MissionNo < 15 || MissionNo == 1301)
+		binfile = "Config/ProjectApollo/Colossus249.bin";
+
+	InitVirtualAGC(binfile);
 }
 
 //

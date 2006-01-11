@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2006/01/09 21:56:44  movieman523
+  *	Added support for LEM and CSM AGC PAD loads in scenario file.
+  *	
   *	Revision 1.59  2005/11/25 20:59:49  movieman523
   *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
   *	
@@ -233,7 +236,7 @@ char RegFormat[7] = "XXXXXX";
 
 
 
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfile) : soundlib(s), dsky(display), imu(im)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im) : soundlib(s), dsky(display), imu(im)
 
 {
 	ProgRunning = VerbRunning = NounRunning = 0;
@@ -377,24 +380,37 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 
 	LastAlt = 0.0;
 
-#ifdef AGC_SOCKET_ENABLED
-    ConnectionSocket = -1;
-#else
-
+	isFirstTimestep = true;
+	PadLoaded = false;
 
 	//
 	// Virtual AGC.
 	//
 
 	memset(&vagc, 0, sizeof(vagc));
-		
-
 	vagc.agc_clientdata = this;
+	agc_engine_init(&vagc, NULL, NULL, 0);
 
+	PowerConnected = false;
+}
 
-	agc_engine_init(&vagc, binfile, NULL, 0);
+ApolloGuidance::~ApolloGuidance()
+
+{
+	//
+	// Nothing for now.
+	//
+}
+
+void ApolloGuidance::InitVirtualAGC(char *binfile)
+
+{
+
+#ifdef AGC_SOCKET_ENABLED
+    ConnectionSocket = -1;
+#else
+	(void) agc_load_binfile(&vagc, binfile);
 #endif
-
 
 	ChannelValue30 val30;
 	ChannelValue31 val31;
@@ -454,20 +470,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfil
 	vagc.InputChannel[033] = val33.Value;
 #endif
 	InputChannel[033] = (val33.Value ^ 077777);
-
-
-	isFirstTimestep = true;
-	PadLoaded = false;
-
-	PowerConnected = false;
-}
-
-ApolloGuidance::~ApolloGuidance()
-
-{
-	//
-	// Nothing for now.
-	//
 }
 
 //

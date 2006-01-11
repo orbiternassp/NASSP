@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2006/01/09 21:56:44  movieman523
+  *	Added support for LEM and CSM AGC PAD loads in scenario file.
+  *	
   *	Revision 1.29  2005/12/02 19:47:19  movieman523
   *	Replaced most PowerSource code with e_object.
   *	
@@ -135,7 +138,7 @@ class ApolloGuidance
 
 {
 public:
-	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, char *binfile);
+	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im);
 	virtual ~ApolloGuidance();
 
 	void RunProgram(int prog);
@@ -233,7 +236,8 @@ public:
 	// Generally useful setup.
 	//
 
-	void SetMissionInfo(int MissonNo, int RealismValue, char *OtherVessel = 0);
+	virtual void SetMissionInfo(int MissonNo, int RealismValue, char *OtherVessel = 0);
+	virtual void InitVirtualAGC(char *binfile);
 
 	//
 	// Power supply.
