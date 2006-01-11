@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/01/11 02:16:25  movieman523
+  *	Added RCS propellant quantity gauge.
+  *	
   *	Revision 1.5  2005/10/31 10:18:13  tschachim
   *	Offset for SaturnToggleSwitch, SPSSwitch is now 2-pos.
   *	
@@ -89,6 +92,31 @@ void SaturnThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, S
 {
 	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
 	sat = s;
+}
+
+SaturnValveTalkback::SaturnValveTalkback()
+
+{
+	Valve = 0;
+	our_vessel = 0;
+}
+
+void SaturnValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, Saturn *s)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row);
+
+	Valve = vlv;
+	our_vessel = s;
+}
+
+int SaturnValveTalkback::GetState()
+
+{
+	if (our_vessel)
+		return our_vessel->GetValveState(Valve) ? 1 : 0;
+
+	return 0;
 }
 
 void SaturnValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind)

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/01/11 02:16:25  movieman523
+  *	Added RCS propellant quantity gauge.
+  *	
   *	Revision 1.5  2005/10/31 10:38:24  tschachim
   *	Offset for SaturnToggleSwitch, SPSSwitch is now 2-pos.
   *	
@@ -68,6 +71,17 @@ public:
 protected:
 	int Valve;
 	IndicatorSwitch *Indicator;
+};
+
+class SaturnValveTalkback : public IndicatorSwitch {
+public:
+	SaturnValveTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, Saturn *v);
+	int GetState();
+
+protected:
+	int Valve;
+	Saturn *our_vessel;
 };
 
 class XLunarSwitch : public SaturnToggleSwitch {

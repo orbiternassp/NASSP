@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2006/01/10 19:34:45  movieman523
+  *	Fixed AC bus switches and added ELS Logic/Auto support.
+  *	
   *	Revision 1.36  2006/01/08 17:50:39  movieman523
   *	Wired up electrical meter switches other than battery charger.
   *	
@@ -204,7 +207,7 @@ public:
 	void SetState(bool s) { state = s; };
 	void SetOffset(int xo, int yo) {xOffset = xo; yOffset = yo; };
 	void SetSpringLoaded(int springloaded) { springLoaded = springloaded; }; 
-	int GetState();
+	virtual int GetState();
 	void SetActive(bool s);
 	void SetVisible(bool v) {visible = v; };
 	bool Toggled() { return SwitchToggled; };
@@ -788,6 +791,7 @@ public:
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
+	virtual int GetState() { return state; };
 	int operator=(const bool b) { state = b; return state; };
 	operator bool() {return state; };
 
