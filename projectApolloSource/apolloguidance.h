@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2006/01/11 19:57:55  movieman523
+  *	Load appropriate AGC binary file based on mission number.
+  *	
   *	Revision 1.30  2006/01/09 21:56:44  movieman523
   *	Added support for LEM and CSM AGC PAD loads in scenario file.
   *	
@@ -282,6 +285,8 @@ protected:
 	void ProcessInputChannel30(int bit, bool val);
 	void ProcessInputChannel32(int bit, bool val);
 
+	virtual void ProcessChannel5(int val);
+	virtual void ProcessChannel6(int val);
 	virtual void ProcessChannel10(int val);
 	virtual void ProcessChannel11Bit(int bit, bool val);
 	virtual void ProcessChannel11(int val);

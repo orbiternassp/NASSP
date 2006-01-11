@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2006/01/11 19:57:55  movieman523
+  *	Load appropriate AGC binary file based on mission number.
+  *	
   *	Revision 1.29  2006/01/09 21:56:44  movieman523
   *	Added support for LEM and CSM AGC PAD loads in scenario file.
   *	
@@ -170,6 +173,14 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im) : 
 	//
 
 	ThrustDecayDV = 6.1;
+
+	//
+	// Last RCS settings.
+	//
+
+	LastOut5 = 0;
+	LastOut6 = 0;
+	LastOut11 = 0;
 }
 
 CSMcomputer::~CSMcomputer()
@@ -1107,6 +1118,13 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		// set launch pad altitude
 		vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
 		//State->Erasable[2][0272] = 01;	// 17.7 nmi
+
+		//
+		// Enable DAP. These should work, but no guarantees.
+		//
+
+		vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 010002;
+		vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 #endif
 
 		PadLoaded = true;
@@ -1192,10 +1210,11 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			apDist -= 6.373338e6;
 			peDist -= 6.373338e6;
 
-
+#ifdef _DEBUG
 			sprintf(oapiDebugString(), "P11 - Vel %.0f Vert. Vel %.0f Alt %.0f ApD %.0f PeD %.0f",  
 				length(vel) * 3.2808399, vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 
 				apDist * 0.000539957 * 10, peDist * 0.000539957 * 10);
+#endif
 
 			lastOrbitalElementsTime = simt;
 		}
@@ -1650,6 +1669,16 @@ void CSMcomputer::ProcessChannel11Bit(int bit, bool val)
 {
 	dsky.ProcessChannel11Bit(bit, val);
 	dsky2.ProcessChannel11Bit(bit, val);
+
+	//
+	// Channel 11 also controls the SPS engine.
+	//
+
+	if (bit == 13) {
+		CheckEngineOnOff(GetOutputChannel(011));
+	}
+
+	LastOut11 = GetOutputChannel(011);
 }
 
 void CSMcomputer::ProcessChannel11(int val)
@@ -1657,5 +1686,152 @@ void CSMcomputer::ProcessChannel11(int val)
 {
 	dsky.ProcessChannel11(val);
 	dsky2.ProcessChannel11(val);
+
+	CheckEngineOnOff(val);
+
+	LastOut11 = val;
+}
+
+void CSMcomputer::CheckEngineOnOff(int val)
+
+{
+	ChannelValue30 val30;
+	val30.Value = GetInputChannel(030);
+
+	Saturn *sat = (Saturn *) OurVessel;
+
+	if (!val30.Bits.CMSMSeperate) {
+		ChannelValue11 Current;
+		ChannelValue11 Changed;
+
+		Current.Value = val;
+		Changed.Value = (val ^ LastOut11);
+
+		if (Changed.Bits.EngineOnOff) {
+			sat->SetSPSState(Current.Value != 0);
+		}
+	}
+}
+
+//
+// Process RCS channels
+//
+
+void CSMcomputer::ProcessChannel5(int val)
+
+{
+	ChannelValue30 val30;
+	val30.Value = GetInputChannel(030);
+
+	Saturn *sat = (Saturn *) OurVessel;
+
+	//
+	// SM channels.
+	//
+
+	if (!val30.Bits.CMSMSeperate) {
+		CSMOut5 Current;
+		CSMOut5 Changed;
+
+		//
+		// Get the current state and a mask of any changed state.
+		//
+
+		Current.word = val;
+		Changed.word = (val ^ LastOut5);
+
+		//
+		// Update any thrusters that have changed.
+		//
+
+		if (Changed.u.SMA3) {
+			sat->SetRCSState(RCS_SM_QUAD_A, 3, Current.u.SMA3 != 0);
+		}
+		if (Changed.u.SMA4) {
+			sat->SetRCSState(RCS_SM_QUAD_A, 4, Current.u.SMA4 != 0);
+		}
+
+		if (Changed.u.SMB3) {
+			sat->SetRCSState(RCS_SM_QUAD_B, 3, Current.u.SMB3 != 0);
+		}
+		if (Changed.u.SMB4) {
+			sat->SetRCSState(RCS_SM_QUAD_B, 4, Current.u.SMB4 != 0);
+		}
+
+		if (Changed.u.SMC3) {
+			sat->SetRCSState(RCS_SM_QUAD_C, 3, Current.u.SMC3 != 0);
+		}
+		if (Changed.u.SMC4) {
+			sat->SetRCSState(RCS_SM_QUAD_C, 4, Current.u.SMC4 != 0);
+		}
+
+		if (Changed.u.SMD3) {
+			sat->SetRCSState(RCS_SM_QUAD_D, 3, Current.u.SMD3 != 0);
+		}
+		if (Changed.u.SMD4) {
+			sat->SetRCSState(RCS_SM_QUAD_D, 4, Current.u.SMD4 != 0);
+		}
+	}
+
+	LastOut5 = val;
+}
+
+void CSMcomputer::ProcessChannel6(int val)
+
+{
+	ChannelValue30 val30;
+	val30.Value = GetInputChannel(030);
+
+	Saturn *sat = (Saturn *) OurVessel;
+
+	//
+	// SM channels.
+	//
+
+	if (!val30.Bits.CMSMSeperate) {
+		CSMOut6 Current;
+		CSMOut6 Changed;
+
+		//
+		// Get the current state and a mask of any changed state.
+		//
+
+		Current.word = val;
+		Changed.word = (val ^ LastOut6);
+
+		//
+		// Update any thrusters that have changed.
+		//
+
+		if (Changed.u.SMA1) {
+			sat->SetRCSState(RCS_SM_QUAD_A, 1, Current.u.SMA1 != 0);
+		}
+		if (Changed.u.SMA2) {
+			sat->SetRCSState(RCS_SM_QUAD_A, 2, Current.u.SMA2 != 0);
+		}
+
+		if (Changed.u.SMB1) {
+			sat->SetRCSState(RCS_SM_QUAD_B, 1, Current.u.SMB1 != 0);
+		}
+		if (Changed.u.SMB2) {
+			sat->SetRCSState(RCS_SM_QUAD_B, 2, Current.u.SMB2 != 0);
+		}
+
+		if (Changed.u.SMC1) {
+			sat->SetRCSState(RCS_SM_QUAD_C, 1, Current.u.SMC1 != 0);
+		}
+		if (Changed.u.SMC2) {
+			sat->SetRCSState(RCS_SM_QUAD_C, 2, Current.u.SMC2 != 0);
+		}
+
+		if (Changed.u.SMD1) {
+			sat->SetRCSState(RCS_SM_QUAD_D, 1, Current.u.SMD1 != 0);
+		}
+		if (Changed.u.SMD2) {
+			sat->SetRCSState(RCS_SM_QUAD_D, 2, Current.u.SMD2 != 0);
+		}
+	}
+
+	LastOut6 = val;
 }
 

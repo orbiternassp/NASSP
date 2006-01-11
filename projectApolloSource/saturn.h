@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.129  2006/01/11 02:59:43  movieman523
+  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
+  *	
   *	Revision 1.128  2006/01/11 02:16:25  movieman523
   *	Added RCS propellant quantity gauge.
   *	
@@ -458,6 +461,14 @@
 
 #define N_CSM_VALVES	31
 
+#define RCS_SM_QUAD_A		0
+#define RCS_SM_QUAD_B		1
+#define RCS_SM_QUAD_C		2
+#define RCS_SM_QUAD_D		3
+
+#define RCS_CM_RING_1		4
+#define RCS_CM_RING_2		5
+
 //
 // Random failure flags.
 //
@@ -586,6 +597,8 @@ public:
 
 	virtual bool SIVBStart();
 	virtual void SIVBStop();
+	virtual void SetRCSState(int Quad, int Thruster, bool Active);
+	virtual void SetSPSState(bool Active);
 
 	void clbkSaveState (FILEHANDLE scn);
 	void clbkPostStep (double simt, double simdt, double mjd);
@@ -968,8 +981,8 @@ protected:
 	GuardedToggleSwitch GTASwitch;
 
 	SwitchRow SCContCMCModeSwitchesRow;
-	ToggleSwitch SCContSwitch;
-	ThreePosSwitch CMCModeSwitch;
+	AGCIOSwitch SCContSwitch;
+	CMCModeHoldFreeSwitch CMCModeSwitch;
 
 	SwitchRow SCSTvcSwitchesRow;
 	ThreePosSwitch SCSTvcPitchSwitch;
@@ -2508,6 +2521,7 @@ protected:
 	THRUSTER_HANDLE th_sps[1],th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THRUSTER_HANDLE	th_aps[3];
 	THRUSTER_HANDLE	th_sep[8];
+	THRUSTER_HANDLE th_rcs_a[5], th_rcs_b[5], th_rcs_c[5], th_rcs_d[5];		// RCS quads. Entry zero is not used, to match Apollo numbering
 
 	CMRCSPropellant CMRCS;
 	SMRCSPropellant SMQuadARCS;

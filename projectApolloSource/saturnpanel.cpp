@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.133  2006/01/11 02:59:43  movieman523
+  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
+  *	
   *	Revision 1.132  2006/01/11 02:16:25  movieman523
   *	Added RCS propellant quantity gauge.
   *	
@@ -1419,8 +1422,8 @@ void Saturn::SetSwitches(int panel) {
 	O2Fan2Switch.Init    (541, 0, 34, 29, srf[SRF_THREEPOSSWITCH], CryoTankSwitchesRow);
 
 	SCContCMCModeSwitchesRow.Init(AID_SCCONTCMCMODESWITCHES, MainPanel);
-	SCContSwitch.Init(  0, 0, 34, 29, srf[SRF_SWITCHUP], SCContCMCModeSwitchesRow);
-	CMCModeSwitch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SCContCMCModeSwitchesRow);
+	SCContSwitch.Init(  0, 0, 34, 29, srf[SRF_SWITCHUP], SCContCMCModeSwitchesRow, &agc);
+	CMCModeSwitch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SCContCMCModeSwitchesRow, &agc);
 	
 	SCSTvcSwitchesRow.Init(AID_SCSTVCSWITCHES, MainPanel);
 	SCSTvcPitchSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SCSTvcSwitchesRow);
@@ -3830,6 +3833,7 @@ void Saturn::InitSwitches() {
 	O2Fan2Switch.Register(PSH, "O2Fan2Switch", THREEPOSSWITCH_UP);
 
 	SCContSwitch.Register(PSH, "SCContSwitch", false);
+	SCContSwitch.SetChannelData(031, 15, true);
 	CMCModeSwitch.Register(PSH, "CMCModeSwitch", THREEPOSSWITCH_CENTER);
 
 	SCSTvcPitchSwitch.Register(PSH, "SCSTvcPitchSwitch", THREEPOSSWITCH_CENTER);

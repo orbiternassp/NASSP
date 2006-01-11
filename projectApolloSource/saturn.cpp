@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.92  2006/01/11 02:59:43  movieman523
+  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
+  *	
   *	Revision 1.91  2006/01/11 02:16:25  movieman523
   *	Added RCS propellant quantity gauge.
   *	
@@ -698,6 +701,16 @@ void Saturn::initSaturn()
 
 	th_sps[0] = 0;
 
+	//
+	// SM RCS thrusters.
+	//
+
+	for (i = 0; i < 5; i++) {
+		th_rcs_a[i] = 0;
+		th_rcs_b[i] = 0;
+		th_rcs_c[i] = 0;
+		th_rcs_d[i] = 0;
+	}
 
 	for (i = 0; i < 24; i++) {
 		th_att_rot[i] = 0;
@@ -2550,6 +2563,31 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 		if (th_att_lin[i])
 			AddExhaust (th_att_lin[i], 1.2, 0.18, SMExhaustTex);
 	}
+
+	//
+	// Map thrusters to RCS quads. Note that we don't use entry zero, we're matching the array to
+	// Apollo numbering for simplicity.
+	//
+
+	th_rcs_a[1] = th_att_rot[16];
+	th_rcs_a[2] = th_att_rot[10];
+	th_rcs_a[3] = th_att_rot[2];
+	th_rcs_a[4] = th_att_rot[0];
+
+	th_rcs_b[1] = th_att_rot[20];
+	th_rcs_b[2] = th_att_rot[14];
+	th_rcs_b[3] = th_att_rot[5];
+	th_rcs_b[4] = th_att_rot[7];
+
+	th_rcs_c[1] = th_att_rot[18];
+	th_rcs_c[2] = th_att_rot[8];
+	th_rcs_c[3] = th_att_rot[3];
+	th_rcs_c[4] = th_att_rot[1];
+
+	th_rcs_d[1] = th_att_rot[22];
+	th_rcs_d[2] = th_att_rot[12];
+	th_rcs_d[3] = th_att_rot[4];
+	th_rcs_d[4] = th_att_rot[6];
 }
 
 void Saturn::AddRCS_CM(double MaxThrust)

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/01/11 02:59:43  movieman523
+  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
+  *	
   *	Revision 1.37  2006/01/10 19:34:45  movieman523
   *	Fixed AC bus switches and added ELS Logic/Auto support.
   *	
@@ -541,6 +544,16 @@ protected:
 	ApolloGuidance *agc;
 };
 
+class AGCThreePoswitch: public ThreePosSwitch {
+
+public:
+	AGCThreePoswitch() { agc = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, ApolloGuidance *c);
+
+protected:
+	ApolloGuidance *agc;
+};
+
 //
 // This class directly toggles AGC input channel states.
 //
@@ -555,6 +568,15 @@ protected:
 	bool UpValue;
 	int Channel;
 	int Bit;
+};
+
+//
+// CMC mode switch.
+//
+
+class CMCModeHoldFreeSwitch : public AGCThreePoswitch {
+public:
+	bool CheckMouseClick(int event, int mx, int my);
 };
 
 class GuardedToggleSwitch: public ToggleSwitch {
