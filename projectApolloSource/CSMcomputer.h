@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/01/11 19:57:55  movieman523
+  *	Load appropriate AGC binary file based on mission number.
+  *	
   *	Revision 1.8  2005/08/22 19:47:33  movieman523
   *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
   *	
@@ -183,6 +186,34 @@ typedef union {
 	unsigned int word;
 } CSMFlagWord5;
 
+typedef union {
+	struct {
+		unsigned SMC3:1;
+		unsigned SMC4:1;
+		unsigned SMA3:1;
+		unsigned SMA4:1;
+		unsigned SMD3:1;
+		unsigned SMD4:1;
+		unsigned SMB3:1;
+		unsigned SMB4:1;
+	} u;
+	unsigned int word;
+} CSMOut5;
+
+typedef union {
+	struct {
+		unsigned SMB1:1;
+		unsigned SMB2:1;
+		unsigned SMD1:1;
+		unsigned SMD2:1;
+		unsigned SMA1:1;
+		unsigned SMA2:1;
+		unsigned SMC1:1;
+		unsigned SMC2:1;
+	} u;
+	unsigned int word;
+} CSMOut6;
+
 //
 // Class definition.
 //
@@ -239,9 +270,12 @@ protected:
 	bool OrbitCalculationsValid();
 	void DisplayBankSum();
 
+	void ProcessChannel5(int val);
+	void ProcessChannel6(int val);
 	void ProcessChannel10(int val);
 	void ProcessChannel11Bit(int bit, bool val);
 	void ProcessChannel11(int val);
+	void CheckEngineOnOff(int val);
 
 	//
 	// Programs we can run.
@@ -286,6 +320,10 @@ protected:
 	CSMFlagWord3 FlagWord3;
 	CSMFlagWord4 FlagWord4;
 	CSMFlagWord5 FlagWord5;
+
+	unsigned int LastOut5;
+	unsigned int LastOut6;
+	unsigned int LastOut11;
 
 	DSKY &dsky2;
 };

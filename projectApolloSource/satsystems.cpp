@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2006/01/11 03:09:40  movieman523
+  *	Changed default RCS valve states to closed.
+  *	
   *	Revision 1.64  2006/01/11 02:59:43  movieman523
   *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
   *	
@@ -2052,4 +2055,55 @@ bool Saturn::DisplayingPropellantQuantity()
 
 {
 	return SMRCSIndSwitch.IsDown();
+}
+
+//
+// Engine control functions for AGC.
+//
+
+void Saturn::SetRCSState(int Quad, int Thruster, bool Active)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (stage < CSM_LEM_STAGE)
+		return;
+
+	if (stage > CSM_LEM_STAGE && Quad < RCS_CM_RING_1)
+		return;
+
+	THRUSTER_HANDLE th = 0;
+
+	switch (Quad) {
+	case RCS_SM_QUAD_A:
+		th = th_rcs_a[Thruster];
+		break;
+
+	case RCS_SM_QUAD_B:
+		th = th_rcs_b[Thruster];
+		break;
+
+	case RCS_SM_QUAD_C:
+		th = th_rcs_c[Thruster];
+		break;
+
+	case RCS_SM_QUAD_D:
+		th = th_rcs_d[Thruster];
+		break;
+	}
+
+	double Level = Active ? 1.0 : 0.0;
+
+	if (th)
+		SetThrusterLevel(th, Level);
+}
+
+void Saturn::SetSPSState(bool Active)
+
+{
+	if (stage == CSM_LEM_STAGE) {
+		SetThrusterGroupLevel(THGROUP_MAIN, Active ? 1.0 : 0.0);
+	}
 }

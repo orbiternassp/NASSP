@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/08/19 13:46:56  tschachim
+  *	Added ChannelValue177.
+  *	
   *	Revision 1.1  2005/08/09 00:21:37  movieman523
   *	Copied I/O channel definitions from virtual apollo.
   *	
@@ -206,3 +209,14 @@ typedef union {
 	} Bits;
 	unsigned int Value;
 } ChannelValue177;
+
+
+//
+// For now we'll also put AGC addresses in here.
+//
+
+#define AGC_DAPDTR1			03066
+#define AGC_DAPDTR2			03067
+
+#define AGC_BANK(n) ((n) / 256)
+#define AGC_ADDR(n) ((n) & 0xff)

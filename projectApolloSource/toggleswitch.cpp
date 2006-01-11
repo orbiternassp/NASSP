@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2006/01/11 02:59:43  movieman523
+  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
+  *	
   *	Revision 1.45  2006/01/10 19:34:45  movieman523
   *	Fixed AC bus switches and added ELS Logic/Auto support.
   *	
@@ -2647,6 +2650,34 @@ bool AGCIOSwitch::CheckMouseClick(int event, int mx, int my)
 }
 
 //
+// CMC Hold/Free/Auto mode.
+//
+
+bool CMCModeHoldFreeSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (AGCThreePoswitch::CheckMouseClick(event, mx, my)) {
+		if (agc) {
+			bool Hold = false;
+			bool Free = false;
+
+			if (IsCenter()) {
+				Hold = true;
+			}
+			else if (IsDown()) {
+				Free = true;
+			}
+
+			agc->SetInputChannelBit(031, 13, Hold);
+			agc->SetInputChannelBit(031, 14, Free);
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//
 // If we add more caution and warning system switches which use toggle-switch, they could be derived from a new
 // class which has the generic init function to set the cws.
 //
@@ -2665,3 +2696,11 @@ void AGCSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &r
 	ToggleSwitch::Init(xp, yp, w, h, surf, row);
 	agc = c;
 }
+
+void AGCThreePoswitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, ApolloGuidance *c)
+
+{
+	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	agc = c;
+}
+

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2006/01/11 19:57:55  movieman523
+  *	Load appropriate AGC binary file based on mission number.
+  *	
   *	Revision 1.60  2006/01/09 21:56:44  movieman523
   *	Added support for LEM and CSM AGC PAD loads in scenario file.
   *	
@@ -5010,6 +5013,14 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 
 	switch (channel)
 	{
+	case 05:
+		ProcessChannel5(val);
+		break;
+
+	case 06:
+		ProcessChannel6(val);
+		break;
+
 	case 010:
 		ProcessChannel10(val);
 		break;
@@ -5033,6 +5044,20 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 	}
 }
 
+//
+// By default, do nothing for the RCS channels.
+//
+
+void ApolloGuidance::ProcessChannel5(int val)
+
+{
+}
+
+void ApolloGuidance::ProcessChannel6(int val)
+
+{
+}
+
 void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 
 {
@@ -5054,6 +5079,14 @@ void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 
 	switch (channel)
 	{
+	case 05:
+		ProcessChannel5(OutputChannel[05]);
+		break;
+
+	case 06:
+		ProcessChannel6(OutputChannel[06]);
+		break;
+
 	case 010:
 		ProcessChannel10(OutputChannel[010]);
 		break;
