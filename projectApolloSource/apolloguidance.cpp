@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2006/01/12 00:09:07  movieman523
+  *	Few fixes: Program 40 now starts and stops the SPS engine, but doesn't orient the CSM first.
+  *	
   *	Revision 1.62  2006/01/11 22:34:20  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -397,15 +400,20 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im) : soundlib(s
 	vagc.agc_clientdata = this;
 	agc_engine_init(&vagc, NULL, NULL, 0);
 
+#ifdef _DEBUG
+	out_file = fopen("ProjectApollo AGC.log", "wt");
+	vagc.out_file = out_file;
+#endif
+
 	PowerConnected = false;
 }
 
 ApolloGuidance::~ApolloGuidance()
 
 {
-	//
-	// Nothing for now.
-	//
+#ifdef _DEBUG
+	fclose(out_file);
+#endif
 }
 
 void ApolloGuidance::InitVirtualAGC(char *binfile)
@@ -4881,7 +4889,11 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 	}
 
 #else
-		
+
+#ifdef _DEBUG
+	fprintf(out_file, "Wrote %05o to input channel %04o\n", channel, val);
+#endif
+
 		if (channel & 0x80) {
 			// In this case we're dealing with a counter increment.
 			// So increment the counter.
@@ -4938,6 +4950,10 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 		if ((channel >= 030) && (channel <= 034))
 			data ^= 077777;
+
+#ifdef _DEBUG
+		fprintf(out_file, "Set bit %d of input channel %04o to %d\n", bit, channel, val ? 1 : 0); 
+#endif
 #endif
 	}
 
@@ -5010,6 +5026,23 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 
 	OutputChannel[channel] = val;
 
+#ifdef _DEBUG
+	if (Yaagc) {
+		switch (channel) {
+		case 010:
+		case 034:
+		case 035:
+		case 01:
+		case 02:
+			break;
+
+		default:
+			fprintf(out_file, "AGC write %05o to %04o\n", val, channel);
+			break;
+		}
+	}
+#endif
+
 	//
 	// Special-case processing.
 	//
@@ -5036,8 +5069,23 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 		ProcessChannel13();
 		break;
 
-	case 012:
 	case 014:
+		{
+			ChannelValue12 val12;
+			val12.Value = GetOutputChannel(012);
+
+			if (!val12.Bits.TVCEnable) {
+				imu.ChannelOutput(channel, val);
+			}
+			else {
+				//
+				// TVC enable appears to control SPS gimballing.
+				//
+			}
+		}
+		break;
+
+	case 012:
 	case 0174:
 	case 0175:
 	case 0176:
@@ -5537,7 +5585,6 @@ void ChannelOutput (agc_t * State, int Channel, int Value)
 
   agc = (ApolloGuidance *) State->agc_clientdata;
   agc->SetOutputChannel(Channel, Value);
-
 }
 
 void ShiftToDeda (agc_t *State, int Data)
