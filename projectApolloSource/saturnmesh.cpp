@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2006/01/11 02:16:25  movieman523
+  *	Added RCS propellant quantity gauge.
+  *	
   *	Revision 1.28  2006/01/10 23:45:35  movieman523
   *	Revised RCS ISP and thrust to historical values.
   *	
@@ -1304,7 +1307,7 @@ void Saturn::SetAbortStage ()
 	}
 	if(ph_2nd) {
 		DelPropellantResource(ph_2nd);
-		ph_1st = 0;
+		ph_2nd = 0;
 	}
 
 	if (ph_sps)
