@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.130  2006/01/11 22:34:20  movieman523
+  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
+  *	
   *	Revision 1.129  2006/01/11 02:59:43  movieman523
   *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
   *	
@@ -2412,6 +2415,9 @@ protected:
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
 	void SetRandomFailures();
+	virtual void ActivatePrelaunchVenting() = 0;
+	virtual void DeactivatePrelaunchVenting() = 0;
+
 
 	//
 	// Save/Load support functions.
@@ -2522,6 +2528,10 @@ protected:
 	THRUSTER_HANDLE	th_aps[3];
 	THRUSTER_HANDLE	th_sep[8];
 	THRUSTER_HANDLE th_rcs_a[5], th_rcs_b[5], th_rcs_c[5], th_rcs_d[5];		// RCS quads. Entry zero is not used, to match Apollo numbering
+
+	PSTREAM_HANDLE prelaunchvent1;
+	PSTREAM_HANDLE prelaunchvent2;
+	PSTREAM_HANDLE prelaunchvent3;
 
 	CMRCSPropellant CMRCS;
 	SMRCSPropellant SMQuadARCS;

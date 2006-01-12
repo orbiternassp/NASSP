@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.93  2006/01/11 22:34:20  movieman523
+  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
+  *	
   *	Revision 1.92  2006/01/11 02:59:43  movieman523
   *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
   *	
@@ -641,6 +644,10 @@ void Saturn::initSaturn()
 	thg_retro1 = 0;
 	thg_retro2 = 0;
 	thg_aps = 0;
+
+	prelaunchvent1 = NULL;
+	prelaunchvent2 = NULL;
+	prelaunchvent3 = NULL;
 
 	//
 	// Random virtual cockpit motion.
@@ -2814,6 +2821,14 @@ void Saturn::LaunchCountdown(double simt)
 	if (MissionTime >= 0) {
 		DoLaunch(simt);
 		return;
+	}
+
+	// Prelaunch tank venting between -3:00h and engine ignition
+	// No clue if the venting start time is correct
+	if (MissionTime < -10800 || MissionTime > -9) {
+		DeactivatePrelaunchVenting();
+	} else {
+		ActivatePrelaunchVenting();
 	}
 
 	switch (StageState) {
