@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2006/01/09 21:56:44  movieman523
+  *	Added support for LEM and CSM AGC PAD loads in scenario file.
+  *	
   *	Revision 1.38  2006/01/08 17:11:41  movieman523
   *	Added seperation particles to SII/SIVb sep.
   *	
@@ -197,6 +200,50 @@ PARTICLESTREAMSPEC seperation_junk = {
 	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
+
+// "prelaunch tank venting" particle streams
+PARTICLESTREAMSPEC prelaunchvent1_spec = {
+	0,		// flag
+	0.6,	// size
+	40,		// rate
+	1.1,	// velocity
+	0.8,	// velocity distribution
+	8,		// lifetime
+	0.2,	// growthrate
+	4.0,    // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.25, 0.25,
+	PARTICLESTREAMSPEC::ATM_FLAT, 0.25, 0.25
+};
+
+PARTICLESTREAMSPEC prelaunchvent2_spec = {
+	0,		// flag
+	0.5,	// size
+	50,		// rate
+	1.5,	// velocity
+	1.0,	// velocity distribution
+	6,		// lifetime
+	0.1,	// growthrate
+	4.5,    // atmslowdown
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.2, 0.2,
+	PARTICLESTREAMSPEC::ATM_FLAT, 0.2, 0.2
+};
+
+PARTICLESTREAMSPEC prelaunchvent3_spec = {
+	0,		// flag
+	0.4,	// size
+	80,		// rate
+	1.8,	// velocity
+	1.2,	// velocity distribution
+	5,		// lifetime
+	0.2,	// growthrate
+	5.0,    // atmslowdown
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.1, 0.1,
+	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
+};
+
 
 static MESHHANDLE hsat5stg1;
 static MESHHANDLE hsat5intstg;
@@ -397,7 +444,7 @@ void SaturnV::SetFirstStage ()
 	if (!ph_1st)
 		ph_1st  = CreatePropellantResource(SI_FuelMass); //1st stage Propellant
 	SetDefaultPropellantResource (ph_1st); // display 1st stage propellant level in generic HUD
-
+	
 	// *********************** thruster definitions ********************************
 
 	ClearThrusterDefinitions();
@@ -1722,3 +1769,40 @@ void SaturnV::DockStage (UINT dockstatus)
 	}
 
 }
+
+void SaturnV::ActivatePrelaunchVenting()
+
+{
+	// "tank venting" particle streams
+	static double lvl = 1.0;
+
+	if (!prelaunchvent1)
+		prelaunchvent1 = AddParticleStream(&prelaunchvent1_spec, _V(-5.5, -1, -24.0 + STG0O), _V(-1, 0, 0.3), &lvl);
+	
+	if (!prelaunchvent2)
+		prelaunchvent2 = AddParticleStream(&prelaunchvent2_spec, _V(-3.7, -3.7, -38.0 + STG0O), _V(-1, -1, 0.5), &lvl);
+
+	if (!prelaunchvent3)
+		prelaunchvent3 = AddParticleStream(&prelaunchvent3_spec, _V(-3.5, 1, -3.5 + STG0O), _V(-1, 0, 0.5), &lvl);
+}
+
+void SaturnV::DeactivatePrelaunchVenting()
+
+{
+	// "tank venting" particle streams
+	if (prelaunchvent1) {
+		DelExhaustStream(prelaunchvent1);
+		prelaunchvent1 = NULL;
+	}
+
+	if (prelaunchvent2) {
+		DelExhaustStream(prelaunchvent2);
+		prelaunchvent2 = NULL;
+	}
+
+	if (prelaunchvent3) {
+		DelExhaustStream(prelaunchvent3);
+		prelaunchvent3 = NULL;
+	}
+}
+

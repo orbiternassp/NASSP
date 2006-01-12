@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2005/12/13 10:13:56  tschachim
+  *	Fixed SIVB separation offset (hopefully).
+  *	
   *	Revision 1.16  2005/11/25 02:03:47  movieman523
   *	Fixed mixture-ratio change code and made it more realistic.
   *	
@@ -148,6 +151,8 @@ protected:
 	//
 
 	void DoFirstTimestep(double simt);
+	void ActivatePrelaunchVenting();
+	void DeactivatePrelaunchVenting();
 
 	//
 	// Class variables.

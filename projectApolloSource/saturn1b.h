@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/12/19 17:02:25  tschachim
+  *	Introduced clbkConsumeBufferedKey
+  *	
   *	Revision 1.8  2005/12/13 15:21:46  tschachim
   *	Fixed SIVB separation offset (hopefully).
   *	
@@ -94,6 +97,9 @@ protected:
 	void SetVehicleStats();
 	void CalculateStageMass ();
 	void SetSIVBMixtureRatio(double ratio);
+	// Prelaunch tank venting not implemented for the Saturn 1b at the moment
+	void ActivatePrelaunchVenting() {};
+	void DeactivatePrelaunchVenting() {};
 };
 
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -26};
