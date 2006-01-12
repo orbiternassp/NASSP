@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/01/12 14:52:31  tschachim
+  *	Added prelaunch tank venting.
+  *	
   *	Revision 1.39  2006/01/09 21:56:44  movieman523
   *	Added support for LEM and CSM AGC PAD loads in scenario file.
   *	
@@ -205,12 +208,12 @@ PARTICLESTREAMSPEC seperation_junk = {
 PARTICLESTREAMSPEC prelaunchvent1_spec = {
 	0,		// flag
 	0.6,	// size
-	40,		// rate
-	1.1,	// velocity
-	0.8,	// velocity distribution
-	8,		// lifetime
+	60,		// rate
+	2,	    // velocity
+	0.5,    // velocity distribution
+	2,		// lifetime
 	0.2,	// growthrate
-	4.0,    // atmslowdown 
+	0.5,    // atmslowdown 
 	PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.25, 0.25,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.25, 0.25
@@ -219,12 +222,12 @@ PARTICLESTREAMSPEC prelaunchvent1_spec = {
 PARTICLESTREAMSPEC prelaunchvent2_spec = {
 	0,		// flag
 	0.5,	// size
-	50,		// rate
-	1.5,	// velocity
-	1.0,	// velocity distribution
-	6,		// lifetime
+	80,		// rate
+	3,		// velocity
+	0.6,	// velocity distribution
+	1,		// lifetime
 	0.1,	// growthrate
-	4.5,    // atmslowdown
+	0.7,    // atmslowdown
 	PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.2, 0.2,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.2, 0.2
@@ -233,12 +236,12 @@ PARTICLESTREAMSPEC prelaunchvent2_spec = {
 PARTICLESTREAMSPEC prelaunchvent3_spec = {
 	0,		// flag
 	0.4,	// size
-	80,		// rate
-	1.8,	// velocity
-	1.2,	// velocity distribution
-	5,		// lifetime
+	100,	// rate
+	4,	    // velocity
+	0.6,    // velocity distribution
+	1,		// lifetime
 	0.2,	// growthrate
-	5.0,    // atmslowdown
+	0.9,    // atmslowdown
 	PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.1, 0.1,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
@@ -1777,13 +1780,13 @@ void SaturnV::ActivatePrelaunchVenting()
 	static double lvl = 1.0;
 
 	if (!prelaunchvent1)
-		prelaunchvent1 = AddParticleStream(&prelaunchvent1_spec, _V(-5.5, -1, -24.0 + STG0O), _V(-1, 0, 0.3), &lvl);
+		prelaunchvent1 = AddParticleStream(&prelaunchvent1_spec, _V(-5.5, -1, -24.0 + STG0O), _V(-1, 0, 0), &lvl);
 	
 	if (!prelaunchvent2)
-		prelaunchvent2 = AddParticleStream(&prelaunchvent2_spec, _V(-3.7, -3.7, -38.0 + STG0O), _V(-1, -1, 0.5), &lvl);
+		prelaunchvent2 = AddParticleStream(&prelaunchvent2_spec, _V(-3.7, -3.7, -38.0 + STG0O), _V(-1, -1, 0), &lvl);
 
 	if (!prelaunchvent3)
-		prelaunchvent3 = AddParticleStream(&prelaunchvent3_spec, _V(-3.5, 1, -3.5 + STG0O), _V(-1, 0, 0.5), &lvl);
+		prelaunchvent3 = AddParticleStream(&prelaunchvent3_spec, _V(-3.5, 1, -3.5 + STG0O), _V(-1, 0, 0), &lvl);
 }
 
 void SaturnV::DeactivatePrelaunchVenting()
