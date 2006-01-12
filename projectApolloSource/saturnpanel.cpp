@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.134  2006/01/11 22:34:20  movieman523
+  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
+  *	
   *	Revision 1.133  2006/01/11 02:59:43  movieman523
   *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
   *	
@@ -3834,7 +3837,7 @@ void Saturn::InitSwitches() {
 
 	SCContSwitch.Register(PSH, "SCContSwitch", false);
 	SCContSwitch.SetChannelData(031, 15, true);
-	CMCModeSwitch.Register(PSH, "CMCModeSwitch", THREEPOSSWITCH_CENTER);
+	CMCModeSwitch.Register(PSH, "CMCModeSwitch", THREEPOSSWITCH_UP);
 
 	SCSTvcPitchSwitch.Register(PSH, "SCSTvcPitchSwitch", THREEPOSSWITCH_CENTER);
 	SCSTvcYawSwitch.Register(PSH, "SCSTvcYawSwitch", THREEPOSSWITCH_CENTER);
