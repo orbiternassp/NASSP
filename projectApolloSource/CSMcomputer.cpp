@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2006/01/11 22:34:20  movieman523
+  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
+  *	
   *	Revision 1.30  2006/01/11 19:57:55  movieman523
   *	Load appropriate AGC binary file based on mission number.
   *	
@@ -1708,7 +1711,7 @@ void CSMcomputer::CheckEngineOnOff(int val)
 		Changed.Value = (val ^ LastOut11);
 
 		if (Changed.Bits.EngineOnOff) {
-			sat->SetSPSState(Current.Value != 0);
+			sat->SetSPSState(Current.Bits.EngineOnOff != 0);
 		}
 	}
 }

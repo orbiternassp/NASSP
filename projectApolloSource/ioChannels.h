@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/01/11 22:34:20  movieman523
+  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
+  *	
   *	Revision 1.2  2005/08/19 13:46:56  tschachim
   *	Added ChannelValue177.
   *	
@@ -213,6 +216,10 @@ typedef union {
 
 //
 // For now we'll also put AGC addresses in here.
+//
+
+//
+// For Artemis 072, these are 03065 and 03066.
 //
 
 #define AGC_DAPDTR1			03066

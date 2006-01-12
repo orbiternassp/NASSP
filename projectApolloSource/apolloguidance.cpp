@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2006/01/11 22:34:20  movieman523
+  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
+  *	
   *	Revision 1.61  2006/01/11 19:57:55  movieman523
   *	Load appropriate AGC binary file based on mission number.
   *	
@@ -5125,7 +5128,17 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 		if (channel < 0 || channel >= NUM_CHANNELS)
 			return 0;
 
-		return vagc.InputChannel[channel];
+		//
+		// Virtual AGC code stores values in native form. C++ AGC expects to read them out in
+		// 0 = false, 1 = true form.
+		//
+
+		unsigned int val = vagc.InputChannel[channel];
+
+		if ((channel >= 030) && (channel <= 034))
+			val ^= 077777;
+
+		return val;
 #endif
 	}
 	else {
