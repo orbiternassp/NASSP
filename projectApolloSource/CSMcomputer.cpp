@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2006/01/12 00:09:07  movieman523
+  *	Few fixes: Program 40 now starts and stops the SPS engine, but doesn't orient the CSM first.
+  *	
   *	Revision 1.31  2006/01/11 22:34:20  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -1711,6 +1714,9 @@ void CSMcomputer::CheckEngineOnOff(int val)
 		Changed.Value = (val ^ LastOut11);
 
 		if (Changed.Bits.EngineOnOff) {
+#ifdef _DEBUG
+	fprintf(out_file, "Setting SPS state = %d\n", Current.Bits.EngineOnOff);
+#endif
 			sat->SetSPSState(Current.Bits.EngineOnOff != 0);
 		}
 	}
