@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/01/11 22:34:20  movieman523
+  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
+  *	
   *	Revision 1.9  2006/01/11 19:57:55  movieman523
   *	Load appropriate AGC binary file based on mission number.
   *	
@@ -223,7 +226,7 @@ class CSMcomputer: public ApolloGuidance
 {
 public:
 
-	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im);
+	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p);
 	virtual ~CSMcomputer();
 
 	bool ValidateVerbNoun(int verb, int noun);

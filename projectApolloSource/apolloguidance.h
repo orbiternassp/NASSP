@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2006/01/12 20:02:42  movieman523
+  *	Updated to new Virtual AGC.
+  *	
   *	Revision 1.32  2006/01/11 22:34:20  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -126,6 +129,7 @@
 
 class DSKY;
 class IMU;
+class PanelSDK;
 
 #include "powersource.h"
 
@@ -144,7 +148,7 @@ class ApolloGuidance
 
 {
 public:
-	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im);
+	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p);
 	virtual ~ApolloGuidance();
 
 	void RunProgram(int prog);

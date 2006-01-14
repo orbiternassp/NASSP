@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/01/09 17:55:26  tschachim
+  *	Connected the dockingprobe to the EPS.
+  *	
   *	Revision 1.1  2006/01/05 12:08:15  tschachim
   *	Initial version
   *	
@@ -36,7 +39,7 @@
 class DockingProbe {
 
 public:
-	DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extendsound, Sound &undocksound, Sound &dockfailedsound);
+	DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extendsound, Sound &undocksound, Sound &dockfailedsound, PanelSDK &p);
 	virtual ~DockingProbe();
 
 	double GetStatus() { return Status; }

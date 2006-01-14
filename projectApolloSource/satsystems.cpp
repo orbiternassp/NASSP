@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   *	Revision 1.67  2006/01/14 00:54:35  movieman523
   *	Hacky wiring of sequential systems and pyro arm switches.
   *	
@@ -310,10 +313,6 @@ void Saturn::SystemsInit() {
 	// if we're not careful.
 	//
 
-	Panelsdk.AddElectrical(&ACBus1, false);
-	Panelsdk.AddElectrical(&ACBus2, false);
-	Panelsdk.AddElectrical(&ACBus1Source, false);
-	Panelsdk.AddElectrical(&ACBus2Source, false);
 
 	Panelsdk.AddElectrical(&ACBus1PhaseA, false);
 	Panelsdk.AddElectrical(&ACBus1PhaseB, false);
@@ -322,14 +321,6 @@ void Saturn::SystemsInit() {
 	Panelsdk.AddElectrical(&ACBus2PhaseA, false);
 	Panelsdk.AddElectrical(&ACBus2PhaseB, false);
 	Panelsdk.AddElectrical(&ACBus2PhaseC, false);
-
-	Panelsdk.AddElectrical(&SwitchPower, false);
-
-	Panelsdk.AddElectrical(&PyroBusA, false);
-	Panelsdk.AddElectrical(&PyroBusB, false);
-
-	Panelsdk.AddElectrical(&PyroPower, false);
-	Panelsdk.AddElectrical(&SECSLogicPower, false);
 
 	//
 	// Fuel cells.

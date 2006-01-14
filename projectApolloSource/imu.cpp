@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/01/09 21:56:44  movieman523
+  *	Added support for LEM and CSM AGC PAD loads in scenario file.
+  *	
   *	Revision 1.12  2005/11/18 02:40:55  movieman523
   *	Major revamp of PanelSDK electrical code, and various modifications to run off fuel cells.
   *	
@@ -94,7 +97,7 @@
 
 
 
-IMU::IMU(ApolloGuidance & comp) : agc(comp)
+IMU::IMU(ApolloGuidance & comp, PanelSDK &p) : agc(comp), DCPower(0, p)
 
 {
 	Init();
@@ -169,7 +172,6 @@ void IMU::SetCaged(bool val)
 		agc.SetInputChannelBit(030, 11, val);
 
 		if (val) {
-			//TurnOff();
 			ZeroIMUCDUs();
 		}
 	}

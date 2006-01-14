@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.96  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   *	Revision 1.95  2006/01/14 00:54:35  movieman523
   *	Hacky wiring of sequential systems and pyro arm switches.
   *	
@@ -346,12 +349,12 @@ extern "C" {
 //extern FILE *PanelsdkLogFile;
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
-								agc(soundlib, dsky, dsky2, imu), 
+								agc(soundlib, dsky, dsky2, imu, Panelsdk), 
 								dsky(soundlib, agc, 015),
 								dsky2(soundlib, agc, 016), 
-								imu(agc), 
-								cws(SMasterAlarm, Bclick),
-								dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS),
+								imu(agc, Panelsdk), 
+								cws(SMasterAlarm, Bclick, Panelsdk),
+								dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 								NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
 								NonEssBus2("Non-Essential-Bus2", &InstrumentLightingNonESSCircuitBraker),
 								ACBus1PhaseA("AC-Bus1-PhaseA", 115, &ACBus1Source),
@@ -360,6 +363,17 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 								ACBus2PhaseA("AC-Bus2-PhaseA", 115, &ACBus2Source),
 								ACBus2PhaseB("AC-Bus2-PhaseB", 115, &ACBus2Source),
 								ACBus2PhaseC("AC-Bus2-PhaseC", 115, &ACBus2Source),
+								ACBus1Source(0, Panelsdk),
+								ACBus2Source(0, Panelsdk),
+								ACBus1("ACBus1", Panelsdk),
+								ACBus2("ACBus2", Panelsdk),
+								BatteryBusA("Battery-Bus-A", Panelsdk),
+								BatteryBusB("Battery-Bus-B", Panelsdk),
+								PyroBusA("Pyro-Bus-A", Panelsdk),
+								PyroBusB("Pyro-Bus-B", Panelsdk),
+								SECSLogicPower("SECS-Logic-Power", Panelsdk),
+								PyroPower("Pyro-Power", Panelsdk),
+								SwitchPower("Switch-Power", Panelsdk),
 								SMQuadARCS(ph_rcs0),
 								SMQuadBRCS(ph_rcs1),
 								SMQuadCRCS(ph_rcs2),

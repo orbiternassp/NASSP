@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2005/09/20 22:38:27  lazyd
+  *	Moved programs from here to apolloguidance
+  *	
   *	Revision 1.18  2005/09/11 15:16:59  lazyd
   *	Added definition for GetIMUOrientation
   *	
@@ -155,7 +158,7 @@ class LEMcomputer: public ApolloGuidance
 {
 public:
 
-	LEMcomputer(SoundLib &s, DSKY &display, IMU &im);
+	LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p);
 	virtual ~LEMcomputer();
 
 	bool ValidateVerbNoun(int verb, int noun);
