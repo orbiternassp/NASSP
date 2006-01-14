@@ -138,7 +138,8 @@ IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL    BITMAP  DISCARDABLE     "thumbwheel_small_
 IDB_THREEPOSSWITCH30 BITMAP  DISCARDABLE     "threeposswitch30.bmp"
 IDB_SWITCH20 BITMAP  DISCARDABLE     "switch20.bmp"
 IDB_SWITCH30 BITMAP  DISCARDABLE     "switch30.bmp"
-IDB_CSMRIGHTWINDOWCOVER  BITMAP DISCARDABLE     	"csm_right_les_window_cover.bmp"
+IDB_CSMRIGHTWINDOWCOVER  BITMAP DISCARDABLE     "csm_right_les_window_cover.bmp"
+IDB_CSMLEFTWINDOWCOVER  BITMAP DISCARDABLE     	"csm_left_les_window_cover.bmp"
 IDB_SWITCH20LEFT BITMAP  DISCARDABLE     "switch20_left.bmp"
 IDB_THREEPOSSWITCH20LEFT BITMAP  DISCARDABLE     "threeposswitch20_left.bmp"
 IDB_GUARDEDSWITCH20 BITMAP	DISCARDABLE     "guarded_switch20.bmp"
@@ -157,6 +158,12 @@ IDB_GTACOVER BITMAP  DISCARDABLE     "gta_cover.bmp"
 IDB_POSTLDGVENTVLVLEVER BITMAP  DISCARDABLE     "post_lndg_vlv_lever.bmp"
 IDB_VHFANTENNAROTARY BITMAP  DISCARDABLE     "VHFAntenna_rotary.bmp"
 IDB_SPSMAXINDICATOR BITMAP  DISCARDABLE     "SPSmax_indicator.bmp"
+IDB_CSM_CABIN_PRESS_PANEL BITMAP  DISCARDABLE     "csm_cabin_press_panel.bmp"
+IDB_ECSROTARY BITMAP  DISCARDABLE     "ECSRotary.bmp"
+IDB_CSMMAINPANELWINDOWCOVER BITMAP  DISCARDABLE     "csm_main_panel_les_window_cover.bmp"
+IDB_CSMRIGHTRNDZWINDOWLESCOVER BITMAP  DISCARDABLE     "csm_right_rndz_les_window_cover.bmp"
+IDB_GLYCOLLEVER BITMAP  DISCARDABLE     "glycol_lever.bmp"
+
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.136  2006/01/14 00:54:35  movieman523
+  *	Hacky wiring of sequential systems and pyro arm switches.
+  *	
   *	Revision 1.135  2006/01/12 00:09:07  movieman523
   *	Few fixes: Program 40 now starts and stops the SPS engine, but doesn't orient the CSM first.
   *	
@@ -846,6 +849,11 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_POSTLDGVENTVLVLEVER]	= oapiCreateSurface (LOADBMP (IDB_POSTLDGVENTVLVLEVER));
 		srf[SRF_VHFANTENNAROTARY]		= oapiCreateSurface (LOADBMP (IDB_VHFANTENNAROTARY));
 		srf[SRF_SPSMAXINDICATOR]		= oapiCreateSurface (LOADBMP (IDB_SPSMAXINDICATOR));
+		srf[SRF_ECSROTARY]				= oapiCreateSurface (LOADBMP (IDB_ECSROTARY));
+		srf[SRF_CSMMAINPANELWINDOWCOVER]	= oapiCreateSurface (LOADBMP (IDB_CSMMAINPANELWINDOWCOVER));
+		srf[SRF_CSMRIGHTRNDZWINDOWLESCOVER]	= oapiCreateSurface (LOADBMP (IDB_CSMRIGHTRNDZWINDOWLESCOVER));
+		srf[SRF_CSMLEFTWINDOWCOVER]		= oapiCreateSurface (LOADBMP (IDB_CSMLEFTWINDOWCOVER));
+		srf[SRF_GLYCOLLEVER]	= oapiCreateSurface (LOADBMP (IDB_GLYCOLLEVER));
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -893,6 +901,11 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_POSTLDGVENTVLVLEVER],	g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_VHFANTENNAROTARY],		g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_SPSMAXINDICATOR],		g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_ECSROTARY],			g_Param.col[4]);	
+		oapiSetSurfaceColourKey	(srf[SRF_CSMMAINPANELWINDOWCOVER],	g_Param.col[4]);	
+		oapiSetSurfaceColourKey	(srf[SRF_CSMRIGHTRNDZWINDOWLESCOVER], g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_CSMLEFTWINDOWCOVER],	g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_GLYCOLLEVER],	g_Param.col[4]);
 /*		break;
 	}
 */
@@ -940,7 +953,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	case SATPANEL_LEFT:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_PANEL));
-		oapiSetPanelNeighbours(-1, SATPANEL_MAIN, -1, -1);
+		oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_MAIN, -1, -1);
 		break;
 
 	case SATPANEL_RIGHT:
@@ -961,6 +974,11 @@ bool Saturn::clbkLoadPanel (int id) {
 	case SATPANEL_HATCH_WINDOW:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW));
 		oapiSetPanelNeighbours(SATPANEL_LEFT_RNDZ_WINDOW, SATPANEL_RIGHT_RNDZ_WINDOW, -1, SATPANEL_MAIN);
+		break;
+
+	case SATPANEL_CABIN_PRESS_PANEL:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_CABIN_PRESS_PANEL));
+		oapiSetPanelNeighbours(-1, SATPANEL_LEFT, -1, -1);
 		break;
 
 	}
@@ -1249,7 +1267,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SCSELECTRONICSPOWERROTARY,					_R( 661, 1411,  745, 1495), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_BMAGPOWERROTARY1,							_R( 523, 1422,  607, 1506), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_BMAGPOWERROTARY2,							_R( 584, 1508,  668, 1592), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DIRECTO2ROTARY,								_R( 686, 1575,  756, 1645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DIRECTO2ROTARY,								_R( 685, 1575,  755, 1645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
 		break;
@@ -1339,6 +1357,17 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		SetCameraDefaultDirection(_V(0.0, 0.83867, 0.544639));
 		break;
+
+	case SATPANEL_CABIN_PRESS_PANEL: // cabin pressurization controls panel
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+
+		oapiRegisterPanelArea (AID_GLYCOLTORADIATORSLEVER,			_R(1218,   46, 1250,  206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOLRESERVOIRROTARIES,			_R(1226,  705, 1304,  995), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OXYGENROTARIES,					_R(1228, 1146, 1518, 1224), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		
+		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+		break;
+	
 	}
 
 	InitPanel (id);
@@ -2145,7 +2174,7 @@ void Saturn::SetSwitches(int panel) {
 
 	ECSGlycolPumpsAc2BCircuitBrakerRow.Init(AID_ECSGLYCOLPUMPSAC2BCIRCUITBRAKER, MainPanel);
 	ECSGlycolPumpsAc2BCircuitBraker.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSGlycolPumpsAc2BCircuitBrakerRow);
-
+	
 	ECSGlycolPumpsAc2CCircuitBrakerRow.Init(AID_ECSGLYCOLPUMPSAC2CCIRCUITBRAKER, MainPanel);
 	ECSGlycolPumpsAc2CCircuitBraker.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSGlycolPumpsAc2CCircuitBrakerRow);
 
@@ -2479,6 +2508,23 @@ void Saturn::SetSwitches(int panel) {
 	UPTLMSwitchRow.Init(AID_UPLINKTELEMETRYSWITCH, MainPanel);
 	UPTLMSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], UPTLMSwitchRow);
 
+	//////////////////////
+	// Panel 325/326    //
+	//////////////////////
+	
+	GlycolToRadiatorsLeverRow.Init(AID_GLYCOLTORADIATORSLEVER, MainPanel);
+	GlycolToRadiatorsLever.Init(0, 0, 32, 160, srf[SRF_GLYCOLLEVER],  GlycolToRadiatorsLeverRow);
+
+	GlycolReservoirRotariesRow.Init(AID_GLYCOLRESERVOIRROTARIES, MainPanel);
+	GlycolReservoirInletRotary.Init (0, 0, 78, 78, srf[SRF_ECSROTARY],  GlycolReservoirRotariesRow);
+	GlycolReservoirBypassRotary.Init(0, 106, 78, 78, srf[SRF_ECSROTARY],  GlycolReservoirRotariesRow);
+	GlycolReservoirOutletRotary.Init(0, 212, 78, 78, srf[SRF_ECSROTARY],  GlycolReservoirRotariesRow);
+	
+	OxygenRotariesRow.Init(AID_OXYGENROTARIES, MainPanel);
+	OxygenSurgeTankRotary.Init      (  0, 0, 78, 78, srf[SRF_ECSROTARY], OxygenRotariesRow);
+	OxygenSMSupplyRotary.Init       (106, 0, 78, 78, srf[SRF_ECSROTARY], OxygenRotariesRow);
+	OxygenRepressPackageRotary.Init (212, 0, 78, 78, srf[SRF_ECSROTARY], OxygenRotariesRow);
+	
 	// old stuff
 
 	P15Row.Init(AID_SPS_GIMBAL_SWITCHES, MainPanel);
@@ -4487,9 +4533,36 @@ void Saturn::InitSwitches() {
 	BMAGPowerRotary2Switch.AddPosition(2, 90);
 	BMAGPowerRotary2Switch.Register(PSH, "BMAGPowerRotary2Switch", 0);
 
-	DirectO2RotarySwitch.AddPosition(0, 30);
-	DirectO2RotarySwitch.AddPosition(1, 90);
-	DirectO2RotarySwitch.Register(PSH, "DirectO2RotarySwitch", 1);
+	DirectO2RotarySwitch.AddPosition(0,  20);
+	DirectO2RotarySwitch.AddPosition(1,  45);
+	DirectO2RotarySwitch.AddPosition(2,  70);
+	DirectO2RotarySwitch.AddPosition(3, 110);
+	DirectO2RotarySwitch.Register(PSH, "DirectO2RotarySwitch", 3);
+
+	GlycolReservoirInletRotary.AddPosition(0,  90);
+	GlycolReservoirInletRotary.AddPosition(1, 180);
+	GlycolReservoirInletRotary.Register(PSH, "GlycolReservoirInletRotary", 0);
+
+	GlycolReservoirBypassRotary.AddPosition(0,  90);
+	GlycolReservoirBypassRotary.AddPosition(1, 180);
+	GlycolReservoirBypassRotary.Register(PSH, "GlycolReservoirBypassRotary", 0);
+	
+	GlycolReservoirOutletRotary.AddPosition(0,  90);
+	GlycolReservoirOutletRotary.AddPosition(1, 180);
+	GlycolReservoirOutletRotary.Register(PSH, "GlycolReservoirOutletRotary", 0);
+
+	OxygenSurgeTankRotary.AddPosition(0,  0);
+	OxygenSurgeTankRotary.AddPosition(1, 90);
+	OxygenSurgeTankRotary.Register(PSH, "OxygenSurgeTankRotary", 1);
+
+	OxygenSMSupplyRotary.AddPosition(0,  0);
+	OxygenSMSupplyRotary.AddPosition(1, 90);
+	OxygenSMSupplyRotary.Register(PSH, "OxygenSMSupplyRotary", 1);
+	
+	OxygenRepressPackageRotary.AddPosition(0, 330);
+	OxygenRepressPackageRotary.AddPosition(1,  60);
+	OxygenRepressPackageRotary.AddPosition(2, 120);
+	OxygenRepressPackageRotary.Register(PSH, "OxygenRepressPackageRotary", 2);
 
 	OrbiterAttitudeToggle.SetActive(false);		// saved in LPSwitchState.LPswitch5
 
@@ -4690,6 +4763,8 @@ void Saturn::InitSwitches() {
 	ConditionLampsSwitch.Register(PSH, "ConditionLampsSwitch", THREEPOSSWITCH_UP);
 
 	UPTLMSwitch.Register(PSH, "UPTLMSwitch", false);
+
+	GlycolToRadiatorsLever.Register(PSH, "GlycolToRadiatorsLever", 1);
 
 	//
 	// Old stuff. Delete when no longer required.
