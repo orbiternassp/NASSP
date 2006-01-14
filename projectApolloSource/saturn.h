@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.131  2006/01/12 14:47:25  tschachim
+  *	Added prelaunch tank venting.
+  *	
   *	Revision 1.130  2006/01/11 22:34:20  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -688,6 +691,7 @@ protected:
 	bool RCSDumpActive();
 	bool RCSPurgeActive();
 	bool LETAttached();
+	bool PyrosArmed();
 
 	//
 	// State that needs to be saved.
@@ -1729,10 +1733,10 @@ protected:
 	ToggleSwitch FloatBagSwitch3;
 
 	SwitchRow SeqEventsContSystemSwitchesRow;
-	ToggleSwitch Logic1Switch;
-	ToggleSwitch Logic2Switch;
-	ToggleSwitch PyroArmASwitch;
-	ToggleSwitch PyroArmBSwitch;
+	TwoSourceSwitch Logic1Switch;
+	TwoSourceSwitch Logic2Switch;
+	TwoSourceSwitch PyroArmASwitch;
+	TwoSourceSwitch PyroArmBSwitch;
 
 	//////////////////////////////
 	// Panel 8 circuit breakers //
@@ -2104,6 +2108,9 @@ protected:
 
 	PowerMerge PyroBusA;
 	PowerMerge PyroBusB;
+
+	PowerMerge SECSLogicPower;
+	PowerMerge PyroPower;
 
 	PowerMerge SwitchPower;
 

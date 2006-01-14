@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.94  2006/01/12 14:51:41  tschachim
+  *	Added prelaunch tank venting.
+  *	
   *	Revision 1.93  2006/01/11 22:34:20  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -2827,7 +2830,8 @@ void Saturn::LaunchCountdown(double simt)
 	// No clue if the venting start time is correct
 	if (MissionTime < -10800 || MissionTime > -9) {
 		DeactivatePrelaunchVenting();
-	} else {
+	}
+	else {
 		ActivatePrelaunchVenting();
 	}
 
@@ -2938,7 +2942,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		if (ELSActive() && ApexCoverJettSwitch.GetState())
 			deploy = true;
 
-		if (deploy)
+		if (deploy && PyrosArmed())
 			StageEight(simt);
 		else
 			StageSeven(simt);
@@ -2951,7 +2955,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		if (ELSActive() && ApexCoverJettSwitch.GetState())
 			deploy = true;
 
-		if (deploy)
+		if (deploy && PyrosArmed())
 			StageEight(simt);
 		break;
 
@@ -2962,7 +2966,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		if (ELSActive() && DrogueDeploySwitch.GetState()) 
 			deploy = true;
 
-		if (deploy) {
+		if (deploy && PyrosArmed()) {
 			SetChuteStage1();
 			LAUNCHIND[3] = true;
 			SetStage(CM_ENTRY_STAGE_THREE);
@@ -3772,7 +3776,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 		bManualSeparate = true;
 	}
 
-	if (bManualSeparate || bAbort)
+	if ((bManualSeparate || bAbort) && PyrosArmed())
 	{
 		bManualSeparate = false;
 		SeparateStage(stage);

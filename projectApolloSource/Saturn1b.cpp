@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/01/09 19:26:03  tschachim
+  *	More attempts to make code build on MS C++ 2005
+  *	
   *	Revision 1.39  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -881,7 +884,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 			bManualUnDock=false;
 		}
 
-		if (bManualSeparate)
+		if (bManualSeparate && PyrosArmed())
 		{
 
 			SeparateStage (stage);
@@ -929,7 +932,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 			if (altitude < 500 ){
 				altlow = true;
 			}
-		if (bManualSeparate ||  altlow)
+		if ((bManualSeparate ||  altlow) && PyrosArmed())
 			{
 				SeparateStage (stage);
 				SetStage(CM_STAGE);

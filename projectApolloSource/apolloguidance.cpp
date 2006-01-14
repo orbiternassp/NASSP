@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2006/01/12 20:02:42  movieman523
+  *	Updated to new Virtual AGC.
+  *	
   *	Revision 1.63  2006/01/12 00:09:07  movieman523
   *	Few fixes: Program 40 now starts and stops the SPS engine, but doesn't orient the CSM first.
   *	
@@ -1428,6 +1431,8 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 {
 //	TRACESETUP("COMPUTER TIMESTEP");
 	int i;
+
+	DCPower.UpdateFlow(simdt);
 
 	LastTimestep = CurrentTimestep;
 	CurrentTimestep = simt;
@@ -4268,11 +4273,6 @@ void ApolloGuidance::PulsePIPA(int RegPIPA, int pulses)
 #endif
     	}
 	}
-
-
-
-//	int val = (agc.GetErasable(0, RegPIPA) + pulses);
-//	agc.SetErasable(0, RegPIPA, (val & 077777));
 }
 
 //
@@ -4857,12 +4857,8 @@ unsigned int ApolloGuidance::GetOutputChannel(int channel)
 void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 
 {
-// TODO X15
-//	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
-//		return;
-	
-
-	InputChannel[channel] = val;
+	if (channel >= 0 && channel <= MAX_INPUT_CHANNELS)
+		InputChannel[channel] = val;
 
 	//
 	// Do nothing if we have no power.
@@ -4891,7 +4887,11 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 #else
 
 #ifdef _DEBUG
-	fprintf(out_file, "Wrote %05o to input channel %04o\n", channel, val);
+	//
+	// Don't print debug for IMU channels or we get a multi-gigabyte log file!
+	//
+	if (!(channel & 0x80))
+		fprintf(out_file, "Wrote %05o to input channel %04o\n", channel, val);
 #endif
 
 		if (channel & 0x80) {
