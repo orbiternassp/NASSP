@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/01/11 02:16:25  movieman523
+  *	Added RCS propellant quantity gauge.
+  *	
   *	Revision 1.50  2006/01/10 23:45:35  movieman523
   *	Revised RCS ISP and thrust to historical values.
   *	
@@ -223,7 +226,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 73; // number of bitmap handles
+const int nsurf = 78; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -288,6 +291,11 @@ const int nsurf = 73; // number of bitmap handles
 #define SRF_POSTLDGVENTVLVLEVER		70
 #define SRF_VHFANTENNAROTARY		71
 #define SRF_SPSMAXINDICATOR			72
+#define SRF_ECSROTARY 				73
+#define SRF_CSMMAINPANELWINDOWCOVER	74
+#define SRF_CSMRIGHTRNDZWINDOWLESCOVER 75
+#define SRF_CSMLEFTWINDOWCOVER		76  
+#define SRF_GLYCOLLEVER				77
 
 //
 // Earth radius and gravity constants.

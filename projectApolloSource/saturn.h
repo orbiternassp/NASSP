@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.132  2006/01/14 00:54:35  movieman523
+  *	Hacky wiring of sequential systems and pyro arm switches.
+  *	
   *	Revision 1.131  2006/01/12 14:47:25  tschachim
   *	Added prelaunch tank venting.
   *	
@@ -1899,6 +1902,23 @@ protected:
 	SwitchRow DirectO2RotaryRow;
 	RotationalSwitch DirectO2RotarySwitch;
 
+	//////////////////////
+	// Panel 325/326    //
+	//////////////////////
+
+	SwitchRow GlycolToRadiatorsLeverRow; 	
+	CircuitBrakerSwitch GlycolToRadiatorsLever;
+
+	SwitchRow GlycolReservoirRotariesRow;
+	RotationalSwitch GlycolReservoirInletRotary;
+	RotationalSwitch GlycolReservoirBypassRotary;
+	RotationalSwitch GlycolReservoirOutletRotary;
+
+	SwitchRow OxygenRotariesRow;
+	RotationalSwitch OxygenSurgeTankRotary;
+	RotationalSwitch OxygenSMSupplyRotary;
+	RotationalSwitch OxygenRepressPackageRotary;
+
 	//
 	// OLD Switches: delete these as and when we can do so.
 	//
@@ -2257,6 +2277,7 @@ protected:
 #define SATPANEL_LEFT_RNDZ_WINDOW	4
 #define SATPANEL_RIGHT_RNDZ_WINDOW	5
 #define SATPANEL_HATCH_WINDOW		6
+#define SATPANEL_CABIN_PRESS_PANEL	7
 
 	int  PanelId;
 	bool InVC;
