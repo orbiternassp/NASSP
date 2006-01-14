@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/01/09 19:26:03  tschachim
+  *	More attempts to make code build on MS C++ 2005
+  *	
   *	Revision 1.49  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -1088,11 +1091,11 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (CmSmSep1Switch.GetState() || CmSmSep2Switch.GetState()) {
+	if ((CmSmSep1Switch.GetState() || CmSmSep2Switch.GetState()) && PyrosArmed()) {
 		bManualSeparate=true;
 	}
 
-	if (SivbLmSepSwitch.GetState()){
+	if (SivbLmSepSwitch.GetState() && PyrosArmed()){
 		bManualUnDock = true;
 	}
 
@@ -1430,7 +1433,7 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (bManualSeparate)
+	if (bManualSeparate && PyrosArmed())
 	{
 		if (dockstate <= 1 || dockstate >= 3) {
 			SeparateStage (stage);
@@ -1656,7 +1659,7 @@ void SaturnV::Timestep(double simt, double simdt)
 				abortTimer = 0;
 			}
 
-			if (bManualSeparate || GetAltitude() < 500)
+			if ((bManualSeparate || GetAltitude() < 500) && PyrosArmed())
 			{
 				SeparateStage (stage);
 				SetStage(CM_STAGE);

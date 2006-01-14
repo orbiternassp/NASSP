@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.135  2006/01/12 00:09:07  movieman523
+  *	Few fixes: Program 40 now starts and stops the SPS engine, but doesn't orient the CSM first.
+  *	
   *	Revision 1.134  2006/01/11 22:34:20  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -1682,7 +1685,7 @@ void Saturn::SetSwitches(int panel) {
 	CGSwitch.SetChannelData(32, 11, true);	// LM Attached flag.
 	ELSLogicSwitch.Init(44, 19, 34, 29, srf[SRF_SWITCHUP], ELSRow, &ELSAutoSwitch, 0);
 	ELSLogicSwitch.InitGuard(44, 0, 34, 61, srf[SRF_SWITCHGUARDS]);
-	ELSLogicSwitch.WireTo(&SwitchPower);
+	ELSLogicSwitch.WireTo(&SECSLogicPower);
 	ELSAutoSwitch.Init(88, 16, 34, 29, srf[SRF_SWITCHUP], ELSRow);
 	CMRCSLogicSwitch.Init(131, 16, 34, 29, srf[SRF_SWITCHUP], ELSRow, &CMPropDumpSwitch, 0);
 	CMRCSLogicSwitch.WireTo(&SwitchPower);
@@ -2367,10 +2370,10 @@ void Saturn::SetSwitches(int panel) {
 	FloatBagSwitch3.Init(116, 0, 38, 49, srf[SRF_SWITCHLEVER], FloatBagSwitchRow);
 
 	SeqEventsContSystemSwitchesRow.Init(AID_SEQEVENTSCONTSYSTEM, MainPanel);
-	Logic1Switch.Init( 0, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow);
-	Logic2Switch.Init(40, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow);
-	PyroArmASwitch.Init( 80, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow);
-	PyroArmBSwitch.Init(133, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow);
+	Logic1Switch.Init( 0, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, MainBusA, 0);
+	Logic2Switch.Init(40, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, MainBusB, 0);
+	PyroArmASwitch.Init( 80, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, &PyroBusA, 0);
+	PyroArmBSwitch.Init(133, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, &PyroBusB, 0);
 
 	EDSPowerSwitchRow.Init(AID_EDSPOWERSWITCH, MainPanel);
 	EDSPowerSwitch.Init(0, 0, 34, 33, srf[SRF_SWITCH305LEFT], EDSPowerSwitchRow);

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2006/01/11 22:34:20  movieman523
+  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
+  *	
   *	Revision 1.65  2006/01/11 03:09:40  movieman523
   *	Changed default RCS valve states to closed.
   *	
@@ -295,6 +298,9 @@ void Saturn::SystemsInit() {
 	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
 	ACBus2.WireToBuses(&ACBus2PhaseA, &ACBus2PhaseB, &ACBus2PhaseC);
 
+	PyroPower.WireToBuses(&PyroArmASwitch, &PyroArmBSwitch);
+	SECSLogicPower.WireToBuses(&Logic1Switch, &Logic2Switch);
+
 	//
 	// For now we register these systems so that the panel SDK will update
 	// them each timestep. Otherwise we get infinitely increasing current
@@ -315,6 +321,12 @@ void Saturn::SystemsInit() {
 	Panelsdk.AddElectrical(&ACBus2PhaseC, false);
 
 	Panelsdk.AddElectrical(&SwitchPower, false);
+
+	Panelsdk.AddElectrical(&PyroBusA, false);
+	Panelsdk.AddElectrical(&PyroBusB, false);
+
+	Panelsdk.AddElectrical(&PyroPower, false);
+	Panelsdk.AddElectrical(&SECSLogicPower, false);
 
 	//
 	// Fuel cells.
@@ -2043,6 +2055,12 @@ bool Saturn::RCSPurgeActive()
 
 {
 	return ((CPPropPurgeSwitch.Voltage() > 20.0) && CPPropPurgeSwitch.IsUp());
+}
+
+bool Saturn::PyrosArmed()
+
+{
+	return (PyroPower.Voltage() > 20.0);
 }
 
 bool Saturn::LETAttached()
