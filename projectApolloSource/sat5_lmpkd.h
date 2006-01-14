@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2006/01/14 20:58:16  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.27  2006/01/09 21:56:44  movieman523
   *	Added support for LEM and CSM AGC PAD loads in scenario file.
   *	
@@ -229,6 +232,8 @@ protected:
 	bool AscentEngineArmed();
 	bool AscentRCSArmed();
 
+	void SystemsTimestep(double simt, double simdt);
+	void SystemsInit();
 
 	//
 	// Save/Load support functions.

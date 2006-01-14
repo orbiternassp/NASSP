@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/01/09 19:26:03  tschachim
+  *	More attempts to make code build on MS C++ 2005
+  *	
   *	Revision 1.5  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -1262,4 +1265,21 @@ bool sat5_lmpkd::AscentRCSArmed()
 
 {
 	return AFEED1switch || AFEED2switch || AFEED3switch || AFEED4switch;
+}
+
+void sat5_lmpkd::SystemsInit()
+
+{
+	Panelsdk.RegisterVessel(this);
+	Panelsdk.InitFromFile("ProjectApollo/LEMSystems");
+}
+
+void sat5_lmpkd::SystemsTimestep(double simt, double simdt) 
+
+{
+	// Each timestep is passed to the SPSDK
+	// to perform internal computations on the 
+	// systems.
+
+	Panelsdk.Timestep(simt);
 }

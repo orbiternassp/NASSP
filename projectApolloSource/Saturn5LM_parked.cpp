@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.38  2006/01/09 21:56:44  movieman523
   *	Added support for LEM and CSM AGC PAD loads in scenario file.
   *	
@@ -266,6 +269,7 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	Init();
+	SystemsInit();
 }
 
 sat5_lmpkd::~sat5_lmpkd()
@@ -599,6 +603,7 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 	dsky.Timestep(MissionTime);
 	imu.Timestep(MissionTime);
 	MissionTimerDisplay.Timestep(MissionTime, deltat);
+	SystemsTimestep(MissionTime, deltat);
 
 	actualVEL = (sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z)/1000*3600);
 	actualALT = GetAltitude() ;
@@ -990,6 +995,9 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
         else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
 			PSH.LoadState(scn);	
 		}
+        else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
+			Panelsdk.Load(scn);			//send the loading to the Panelsdk
+		}
 		else 
 		{
             ParseScenarioLineEx (line, vs);
@@ -1094,7 +1102,17 @@ void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
-	// save the state of the switches
+
+	//
+	// Save the Panel SDK state.
+	//
+
+	Panelsdk.Save(scn);
+	
+	//
+	// Save the state of the switches
+	//
+
 	PSH.SaveState(scn);	
 }
 
