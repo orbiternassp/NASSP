@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   *	Revision 1.47  2006/01/11 22:34:21  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -346,7 +349,8 @@ bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 				Sclick.play();
 			}
 		}
-	} else if (springLoaded != SPRINGLOADEDSWITCH_NONE && event == PANEL_MOUSE_LBUP) {
+	}
+	else if (springLoaded != SPRINGLOADEDSWITCH_NONE && (event & PANEL_MOUSE_LBUP)) {
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
 	}
@@ -891,9 +895,9 @@ GuardedToggleSwitch::~GuardedToggleSwitch() {
 	guardClick.done();
 }
 
-void GuardedToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState) {
+void GuardedToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded) {
 
-	ToggleSwitch::Register(scnh, n, defaultState);
+	ToggleSwitch::Register(scnh, n, defaultState, springloaded);
 	guardState = defaultGuardState;
 }
 
@@ -967,13 +971,15 @@ bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 							switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 					}
 				}
-			} else {
+			} 
+			else {
 				guardState = 1;
 			}
 			guardClick.play();
 			return true;
 		}
-	} else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
+	}
+	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
 		if (guardState) {
 			return ToggleSwitch::CheckMouseClick(event, mx, my);
 		}

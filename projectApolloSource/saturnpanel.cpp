@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.138  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   *	Revision 1.137  2006/01/14 12:34:49  flydba
   *	New panel added (325/326) for cabin press control.
   *	
@@ -3852,14 +3855,6 @@ void Saturn::InitSwitches() {
 	CmRcsHeDumpSwitch.SetGuardState(false);		// saved in CSwitchState.CMRHGswitch
 
 	EDSSwitch = false;							// saved in LPSwitchState.EDSswitch
-	CsmLmFinalSep1Switch = false;				// saved in SSwitchState.Sswitch1
-	CsmLmFinalSep1Switch.SetGuardState(false);	// saved in CSwitchState.Cswitch1
-	CsmLmFinalSep1Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
-	CsmLmFinalSep2Switch = false;				// saved in SSwitchState.Sswitch2
-	CsmLmFinalSep2Switch.SetGuardState(false);	// saved in CSwitchState.Cswitch2
-	CsmLmFinalSep2Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
-	CmSmSep1Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
-	CmSmSep2Switch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
 
 	if (!SkylabCM) {
 		SivbLmSepSwitch = false;					// saved in RPSwitchState.RPswitch16
@@ -4270,8 +4265,10 @@ void Saturn::InitSwitches() {
 	TowerJett2Switch.Register(PSH, "TowerJett2Switch", THREEPOSSWITCH_DOWN, false, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	TowerJett2Switch.SetGuardResetsState(false);
 
-	CmSmSep1Switch.Register(PSH, "CmSmSep1Switch", 0, 0);
-	CmSmSep2Switch.Register(PSH, "CmSmSep2Switch", 0, 0);
+	CmSmSep1Switch.Register(PSH, "CmSmSep1Switch", 0, 0, SPRINGLOADEDSWITCH_DOWN);
+	CmSmSep2Switch.Register(PSH, "CmSmSep2Switch", 0, 0, SPRINGLOADEDSWITCH_DOWN);
+	CsmLmFinalSep1Switch.Register(PSH, "CsmLmFinalSep1Switch",  THREEPOSSWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
+	CsmLmFinalSep2Switch.Register(PSH, "CsmLmFinalSep2Switch",  THREEPOSSWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
 
 	RotPowerNormal1Switch.Register(PSH, "RotPowerNormal1Switch", THREEPOSSWITCH_CENTER);
 	RotPowerNormal2Switch.Register(PSH, "RotPowerNormal2Switch", THREEPOSSWITCH_CENTER);
@@ -4827,8 +4824,6 @@ int Saturn::GetCSwitchState()
 	CSwitchState state;
 
 	state.word = 0;
-	state.u.Cswitch1 = CsmLmFinalSep1Switch.GetGuardState();
-	state.u.Cswitch2 = CsmLmFinalSep2Switch.GetGuardState();
 	state.u.Cswitch5 = CsmLvSepSwitch.GetGuardState();
 	state.u.CMRHGswitch = CmRcsHeDumpSwitch.GetGuardState();
 
@@ -4841,8 +4836,6 @@ void Saturn::SetCSwitchState(int s)
 	CSwitchState state;
 
 	state.word = s;
-	CsmLmFinalSep1Switch.SetGuardState(state.u.Cswitch1);
-	CsmLmFinalSep2Switch.SetGuardState(state.u.Cswitch2);
 	CsmLvSepSwitch.SetGuardState(state.u.Cswitch5);
 	CmRcsHeDumpSwitch.SetGuardState(state.u.CMRHGswitch);
 }
@@ -4873,8 +4866,6 @@ int Saturn::GetSSwitchState()
 	SSwitchState state;
 
 	state.word = 0;
-	state.u.Sswitch1 = CsmLmFinalSep1Switch;
-	state.u.Sswitch2 = CsmLmFinalSep2Switch;
 	state.u.Sswitch5 = CsmLvSepSwitch;
 	state.u.CMRHDswitch = CmRcsHeDumpSwitch;
 
@@ -4887,8 +4878,6 @@ void Saturn::SetSSwitchState(int s)
 	SSwitchState state;
 
 	state.word = s;
-	CsmLmFinalSep1Switch = state.u.Sswitch1;
-	CsmLmFinalSep2Switch = state.u.Sswitch2;
 	CsmLvSepSwitch = state.u.Sswitch5;
 	CmRcsHeDumpSwitch = state.u.CMRHDswitch;
 }
