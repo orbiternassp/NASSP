@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.133  2006/01/14 12:34:16  flydba
+  *	New panel added (325/326) for cabin press control.
+  *	
   *	Revision 1.132  2006/01/14 00:54:35  movieman523
   *	Hacky wiring of sequential systems and pyro arm switches.
   *	
@@ -432,6 +435,11 @@
 #if !defined(_PA_SATURN_H)
 #define _PA_SATURN_H
 
+//
+// I hate nested includes, but this is much easier than adding them to all the files
+// which need them.
+//
+
 #include "PanelSDK/PanelSDK.h"
 
 #include "cautionwarning.h"
@@ -442,6 +450,8 @@
 #include "satswitches.h"
 #include "powersource.h"
 #include "dockingprobe.h"
+#include "pyro.h"
+#include "secs.h"
 
 //
 // Valves.
@@ -678,6 +688,18 @@ public:
 
 protected:
 
+	//
+	// PanelSDK functions as a interface between the
+	// actual System & Panel SDK and VESSEL class
+	//
+	// Note that this must be defined early in the file, so it will be initialised
+	// before any other classes which rely on it at creation. Don't move it further
+	// down without good reason, or you're likely to crash!
+	//
+
+    PanelSDK Panelsdk;
+	// FILE *PanelsdkLogFile;
+
 	void InitSwitches();
 	void SetEngineIndicators();
 	void ClearEngineIndicators();
@@ -825,8 +847,8 @@ protected:
 	ToggleSwitch	    EDSSwitch;				
 	GuardedToggleSwitch CsmLmFinalSep1Switch;
 	GuardedToggleSwitch CsmLmFinalSep2Switch;
-	GuardedToggleSwitch CmSmSep1Switch;
-	GuardedToggleSwitch CmSmSep2Switch;
+	GuardedTwoOutputSwitch CmSmSep1Switch;
+	GuardedTwoOutputSwitch CmSmSep2Switch;
 	GuardedToggleSwitch SivbLmSepSwitch;
 
 	ToggleSwitch   CabinFan1Switch;
@@ -2316,6 +2338,9 @@ protected:
 	IU iu;
 	CSMCautionWarningSystem cws;
 	DockingProbe dockingprobe;
+	SECS secs;
+
+	Pyro CMSMPyros;
 
 	//
 	// Vessel handles.
@@ -2613,13 +2638,6 @@ protected:
 	//
 
 	char LEMName[64];
-
-	//
-	// PanelSDK functions as a interface between the
-	// actual System & Panel SDK and VESSEL class
-	//
-    PanelSDK Panelsdk;
-	// FILE *PanelsdkLogFile;
 
 	//
 	// PanelSDK pointers.

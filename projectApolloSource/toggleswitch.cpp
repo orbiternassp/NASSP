@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/01/11 22:34:21  movieman523
+  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
+  *	
   *	Revision 1.46  2006/01/11 02:59:43  movieman523
   *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
   *	
@@ -1551,6 +1554,8 @@ void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE su
 	RotationalSwitch::Init(xp, yp, w, h, surf, row);
 	FDAI1 = F1;
 	FDAI2 = F2;
+
+	CheckFDAIPowerState();
 }
 
 //
@@ -1618,7 +1623,7 @@ PowerStateRotationalSwitch::PowerStateRotationalSwitch()
 {
 	int i;
 
-	for (i = 0; i < 10; i++)
+	for (i = 0; i < 16; i++)
 		sources[i] = 0;
 }
 
@@ -1644,6 +1649,8 @@ void PowerStateRotationalSwitch::SetSource(int num, e_object *s)
 {
 	if (num >= 0 && num < 16)
 		sources[num] = s; 
+
+	CheckPowerState();
 }
 
 bool PowerStateRotationalSwitch::SwitchTo(int newValue)
@@ -2070,6 +2077,8 @@ void ThreeSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Swit
 	source1 = s1;
 	source2 = s2;
 	source3 = s3;
+
+	UpdateSourceState();
 }
 
 bool ThreeSourceSwitch::CheckMouseClick(int event, int mx, int my)
@@ -2116,6 +2125,8 @@ void TwoSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switch
 	ToggleSwitch::Init(xp, yp, w, h, surf, row);
 	source1 = s1;
 	source2 = s2;
+
+	UpdateSourceState();
 }
 
 bool TwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
@@ -2159,6 +2170,8 @@ void TwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switch
 	ToggleSwitch::Init(xp, yp, w, h, surf, row);
 	output1 = o1;
 	output2 = o2;
+
+	UpdateSourceState();
 }
 
 bool TwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
@@ -2208,6 +2221,8 @@ void GuardedTwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf,
 	GuardedToggleSwitch::Init(xp, yp, w, h, surf, row);
 	output1 = o1;
 	output2 = o2;
+
+	UpdateSourceState();
 }
 
 bool GuardedTwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
@@ -2242,7 +2257,7 @@ void GuardedTwoOutputSwitch::UpdateSourceState()
 void GuardedTwoOutputSwitch::LoadState(char *line)
 
 {
-	ToggleSwitch::LoadState(line);
+	GuardedToggleSwitch::LoadState(line);
 	UpdateSourceState();
 }
 
@@ -2262,6 +2277,8 @@ void ThreeSourceTwoDestSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE sur
 	source3 = s3;
 	dest1 = d1;
 	dest2 = d2;
+
+	UpdateSourceState();
 }
 
 void ThreeSourceTwoDestSwitch::UpdateSourceState()

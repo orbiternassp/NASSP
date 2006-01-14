@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.95  2006/01/14 00:54:35  movieman523
+  *	Hacky wiring of sequential systems and pyro arm switches.
+  *	
   *	Revision 1.94  2006/01/12 14:51:41  tschachim
   *	Added prelaunch tank venting.
   *	
@@ -343,25 +346,26 @@ extern "C" {
 //extern FILE *PanelsdkLogFile;
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
-							   agc(soundlib, dsky, dsky2, imu), 
-							   dsky(soundlib, agc, 015), 
-							   dsky2(soundlib, agc, 016), 
-							   imu(agc), 
-							   cws(SMasterAlarm, Bclick),
-							   dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS),
-							   NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
-							   NonEssBus2("Non-Essential-Bus2", &InstrumentLightingNonESSCircuitBraker),
-							   ACBus1PhaseA("AC-Bus1-PhaseA", 115, &ACBus1Source),
-							   ACBus1PhaseB("AC-Bus1-PhaseB", 115, &ACBus1Source),
-							   ACBus1PhaseC("AC-Bus1-PhaseC", 115, &ACBus1Source),
-							   ACBus2PhaseA("AC-Bus2-PhaseA", 115, &ACBus2Source),
-							   ACBus2PhaseB("AC-Bus2-PhaseB", 115, &ACBus2Source),
-							   ACBus2PhaseC("AC-Bus2-PhaseC", 115, &ACBus2Source),
-							   SMQuadARCS(ph_rcs0),
-							   SMQuadBRCS(ph_rcs1),
-							   SMQuadCRCS(ph_rcs2),
-							   SMQuadDRCS(ph_rcs3),
-							   CMRCS(ph_rcs_cm)
+								agc(soundlib, dsky, dsky2, imu), 
+								dsky(soundlib, agc, 015),
+								dsky2(soundlib, agc, 016), 
+								imu(agc), 
+								cws(SMasterAlarm, Bclick),
+								dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS),
+								NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
+								NonEssBus2("Non-Essential-Bus2", &InstrumentLightingNonESSCircuitBraker),
+								ACBus1PhaseA("AC-Bus1-PhaseA", 115, &ACBus1Source),
+								ACBus1PhaseB("AC-Bus1-PhaseB", 115, &ACBus1Source),
+								ACBus1PhaseC("AC-Bus1-PhaseC", 115, &ACBus1Source),
+								ACBus2PhaseA("AC-Bus2-PhaseA", 115, &ACBus2Source),
+								ACBus2PhaseB("AC-Bus2-PhaseB", 115, &ACBus2Source),
+								ACBus2PhaseC("AC-Bus2-PhaseC", 115, &ACBus2Source),
+								SMQuadARCS(ph_rcs0),
+								SMQuadBRCS(ph_rcs1),
+								SMQuadCRCS(ph_rcs2),
+								SMQuadDRCS(ph_rcs3),
+								CMRCS(ph_rcs_cm),
+								CMSMPyros("CM-SM-Pyros", Panelsdk)
 {
 	InitSaturnCalled = false;
 	autopilot = false;

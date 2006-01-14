@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/01/14 00:54:35  movieman523
+  *	Hacky wiring of sequential systems and pyro arm switches.
+  *	
   *	Revision 1.50  2006/01/09 19:26:03  tschachim
   *	More attempts to make code build on MS C++ 2005
   *	
@@ -1091,10 +1094,6 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if ((CmSmSep1Switch.GetState() || CmSmSep2Switch.GetState()) && PyrosArmed()) {
-		bManualSeparate=true;
-	}
-
 	if (SivbLmSepSwitch.GetState() && PyrosArmed()){
 		bManualUnDock = true;
 	}
@@ -1433,7 +1432,7 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (bManualSeparate && PyrosArmed())
+	if (CMSMPyros.Blown())
 	{
 		if (dockstate <= 1 || dockstate >= 3) {
 			SeparateStage (stage);
