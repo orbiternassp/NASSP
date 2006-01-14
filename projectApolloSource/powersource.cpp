@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/01/10 19:34:44  movieman523
+  *	Fixed AC bus switches and added ELS Logic/Auto support.
+  *	
   *	Revision 1.8  2006/01/08 19:04:29  movieman523
   *	Wired up AC bus switches in a quick and hacky manner.
   *	
@@ -139,6 +142,18 @@ void PowerSDKObject::DrawPower(double watts)
 // largest voltage from both sources.
 //
 
+PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
+
+{
+	if (i_name)
+		strcpy(name, i_name);
+
+	BusA = 0; 
+	BusB = 0;
+
+	sdk.AddElectrical(this, false);
+}
+
 double PowerMerge::Voltage()
 
 {
@@ -248,6 +263,23 @@ double ThreeWayPowerMerge::Current()
 		return power_load / Volts;
 	}
 	return 0.0;
+}
+
+ThreeWayPowerMerge::ThreeWayPowerMerge(char *i_name, PanelSDK &p) : sdk(p)
+
+{
+	if (i_name)
+		strcpy (name, i_name);
+
+	Phase1 = 0;
+	Phase2 = 0;
+	Phase3 = 0;
+
+	//
+	// Register with the Panel SDK so it will call our update function.
+	//
+
+	sdk.AddElectrical(this, false);
 }
 
 void ThreeWayPowerMerge::DrawPower(double watts)

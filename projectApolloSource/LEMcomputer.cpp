@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2006/01/11 19:57:55  movieman523
+  *	Load appropriate AGC binary file based on mission number.
+  *	
   *	Revision 1.24  2005/09/24 20:56:08  lazyd
   *	Moved some code
   *	
@@ -112,7 +115,7 @@
 
 #include "sat5_lmpkd.h"
 
-LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im) : ApolloGuidance(s, display, im)
+LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : ApolloGuidance(s, display, im, p)
 
 {
 	//

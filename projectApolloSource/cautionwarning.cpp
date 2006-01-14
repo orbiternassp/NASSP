@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/01/05 11:24:10  tschachim
+  *	Introduced InhibitNextMasterAlarm.
+  *	
   *	Revision 1.13  2005/12/19 16:49:52  tschachim
   *	InhibitNextMasterAlarm for realism 0.
   *	
@@ -78,7 +81,8 @@
 #include "cautionwarning.h"
 #include "nasspdefs.h"
 
-CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsound) : MasterAlarmSound(mastersound), ButtonSound(buttonsound)
+CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsound, PanelSDK &p) : 
+	MasterAlarmSound(mastersound), ButtonSound(buttonsound), DCPower(0, p)
 
 {
 	TestState = CWS_TEST_LIGHTS_NONE;

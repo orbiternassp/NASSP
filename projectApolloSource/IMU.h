@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2005/12/02 19:47:19  movieman523
+  *	Replaced most PowerSource code with e_object.
+  *	
   *	Revision 1.4  2005/11/17 21:04:52  movieman523
   *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
   *	
@@ -58,7 +61,7 @@ typedef union {      // 3x3 matrix
 class IMU {
 
 public:
-	IMU(ApolloGuidance &comp);
+	IMU(ApolloGuidance &comp, PanelSDK &p);
 	~IMU();
 
 	void Init();

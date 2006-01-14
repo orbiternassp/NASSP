@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/12/19 16:41:01  tschachim
+  *	InhibitNextMasterAlarm for realism 0.
+  *	
   *	Revision 1.11  2005/12/02 19:47:19  movieman523
   *	Replaced most PowerSource code with e_object.
   *	
@@ -85,7 +88,7 @@
 class CautionWarningSystem {
 
 public:
-	CautionWarningSystem(Sound &mastersound, Sound &buttonsound);
+	CautionWarningSystem(Sound &mastersound, Sound &buttonsound, PanelSDK &p);
 	virtual ~CautionWarningSystem();
 
 	virtual void LightTest(int state);

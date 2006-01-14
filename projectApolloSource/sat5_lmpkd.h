@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2006/01/09 21:56:44  movieman523
+  *	Added support for LEM and CSM AGC PAD loads in scenario file.
+  *	
   *	Revision 1.26  2005/11/28 01:13:54  movieman523
   *	Added LEM right-hand panel.
   *	
@@ -180,6 +183,18 @@ public:
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 
 protected:
+
+	//
+	// PanelSDK functions as a interface between the
+	// actual System & Panel SDK and VESSEL class
+	//
+	// Note that this must be defined early in the file, so it will be initialised
+	// before any other classes which rely on it at creation. Don't move it further
+	// down without good reason, or you're likely to crash!
+	//
+
+    PanelSDK Panelsdk;
+
 	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_XPointer (SURFHANDLE surf);
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);

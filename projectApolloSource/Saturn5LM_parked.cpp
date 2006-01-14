@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/01/09 21:56:44  movieman523
+  *	Added support for LEM and CSM AGC PAD loads in scenario file.
+  *	
   *	Revision 1.37  2005/11/21 12:42:17  tschachim
   *	New LM landed and descent stage mesh.
   *	
@@ -253,7 +256,8 @@ LanderVessel::LanderVessel(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel)
 	// Nothing special to do.
 }
 
-sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), dsky(soundlib, agc, 015), agc(soundlib, dsky, imu), imu(agc)
+sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
+	dsky(soundlib, agc, 015), agc(soundlib, dsky, imu, Panelsdk), imu(agc, Panelsdk)
 
 {
 	// VESSELSOUND **********************************************************************

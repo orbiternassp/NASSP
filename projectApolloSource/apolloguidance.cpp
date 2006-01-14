@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2006/01/14 00:54:35  movieman523
+  *	Hacky wiring of sequential systems and pyro arm switches.
+  *	
   *	Revision 1.64  2006/01/12 20:02:42  movieman523
   *	Updated to new Virtual AGC.
   *	
@@ -248,7 +251,7 @@ char RegFormat[7] = "XXXXXX";
 
 
 
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im) : soundlib(s), dsky(display), imu(im)
+ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p)
 
 {
 	ProgRunning = VerbRunning = NounRunning = 0;
@@ -1431,8 +1434,6 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 {
 //	TRACESETUP("COMPUTER TIMESTEP");
 	int i;
-
-	DCPower.UpdateFlow(simdt);
 
 	LastTimestep = CurrentTimestep;
 	CurrentTimestep = simt;

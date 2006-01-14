@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2006/01/12 20:02:42  movieman523
+  *	Updated to new Virtual AGC.
+  *	
   *	Revision 1.32  2006/01/12 00:09:07  movieman523
   *	Few fixes: Program 40 now starts and stops the SPS engine, but doesn't orient the CSM first.
   *	
@@ -143,7 +146,8 @@
 
 static const double ERADIUS2 = (ERADIUS * ERADIUS * 1000000);
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im) : ApolloGuidance(s, display, im), dsky2(display2)
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p) : 
+	ApolloGuidance(s, display, im, p), dsky2(display2)
 
 {
 	BurnTime = 0;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/01/09 17:55:26  tschachim
+  *	Connected the dockingprobe to the EPS.
+  *	
   *	Revision 1.1  2006/01/05 11:24:56  tschachim
   *	Initial version
   *	
@@ -40,9 +43,9 @@
 #include "nasspdefs.h"
 
 DockingProbe::DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extendsound, 
-						   Sound &undocksound, Sound &dockfailedsound) : 
+						   Sound &undocksound, Sound &dockfailedsound, PanelSDK &p) : 
 	                       CaptureSound(capturesound), LatchSound(latchsound), ExtendSound(extendsound), 
-						   UndockSound(undocksound), DockFailedSound(dockfailedsound)
+						   UndockSound(undocksound), DockFailedSound(dockfailedsound), DCPower(0, p)
 {
 	Enabled = false;
 	Status = DOCKINGPROBE_STATUS_RETRACTED;

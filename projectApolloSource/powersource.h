@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/12/02 19:47:19  movieman523
+  *	Replaced most PowerSource code with e_object.
+  *	
   *	Revision 1.7  2005/12/02 19:29:24  movieman523
   *	Started integrating PowerSource code into PanelSDK.
   *	
@@ -65,26 +68,30 @@ protected:
 
 class PowerMerge : public PowerSource {
 public:
-	PowerMerge() { BusA = 0; BusB = 0; };
+	PowerMerge(char *i_name, PanelSDK &p);
 	double Voltage();
 	void DrawPower(double watts);
 	void WireToBuses(e_object *a, e_object *b) { BusA = a; BusB = b; };
 	double Current();
 
 protected:
+	PanelSDK &sdk;
+
 	e_object *BusA;
 	e_object *BusB;
 };
 
 class ThreeWayPowerMerge : public PowerSource {
 public:
-	ThreeWayPowerMerge() { Phase1 = 0; Phase2 = 0; Phase3 = 0; };
+	ThreeWayPowerMerge(char *i_name, PanelSDK &p);
 	double Voltage();
 	void DrawPower(double watts);
 	void WireToBuses(e_object *a, e_object *b, e_object *c) { Phase1 = a; Phase2 = b; Phase3 = c; };
 	double Current();
 
 protected:
+	PanelSDK &sdk;
+
 	e_object *Phase1;
 	e_object *Phase2;
 	e_object *Phase3;

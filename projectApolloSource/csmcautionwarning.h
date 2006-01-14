@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/01/07 01:34:08  movieman523
+  *	Added AC bus overvoltage and main bus undervolt lights.
+  *	
   *	Revision 1.8  2005/11/18 20:38:59  movieman523
   *	Revised condensor output from fuel cell to eliminate master alarms.
   *	
@@ -76,7 +79,7 @@ typedef struct {
 class CSMCautionWarningSystem : public CautionWarningSystem {
 
 public:
-	CSMCautionWarningSystem(Sound &mastersound, Sound &buttonsound);
+	CSMCautionWarningSystem(Sound &mastersound, Sound &buttonsound, PanelSDK &p);
 	void TimeStep(double simt);
 	void RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf, bool leftpanel);
 
