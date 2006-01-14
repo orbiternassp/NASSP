@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2006/01/14 00:54:35  movieman523
+  *	Hacky wiring of sequential systems and pyro arm switches.
+  *	
   *	Revision 1.66  2006/01/11 22:34:20  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -456,6 +459,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		imu.Timestep(MissionTime);
 		cws.TimeStep(MissionTime);
 		dockingprobe.TimeStep(MissionTime, simdt);
+		secs.Timestep(MissionTime, simdt);
 
 		//
 		// General checks.

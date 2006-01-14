@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/01/14 00:54:34  movieman523
+  *	Hacky wiring of sequential systems and pyro arm switches.
+  *	
   *	Revision 1.40  2006/01/09 19:26:03  tschachim
   *	More attempts to make code build on MS C++ 2005
   *	
@@ -834,9 +837,6 @@ void Saturn1b::Timestep (double simt, double simdt)
 				bManualUnDock = true;
 			}
 		}
-		if (CmSmSep1Switch.GetState() || CmSmSep2Switch.GetState()) {
-			bManualSeparate=true;
-		}
 
 		for (int i=0 ;i<6;i++){
 			LAUNCHIND[i]=false;
@@ -884,7 +884,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 			bManualUnDock=false;
 		}
 
-		if (bManualSeparate && PyrosArmed())
+		if (CMSMPyros.Blown())
 		{
 
 			SeparateStage (stage);
