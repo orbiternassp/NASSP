@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.99  2006/01/15 02:38:59  movieman523
+  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
+  *	
   *	Revision 1.98  2006/01/15 01:23:19  movieman523
   *	Put 'phantom' RCS thrusters back in and adjusted RCS thrust and ISP based on REALISM value.
   *	
@@ -2108,7 +2111,7 @@ void Saturn::DestroyStages(double simt)
 	// see them.
 	//
 
-	if (DeleteLaunchSite) {
+	if (DeleteLaunchSite && stage >= STAGE_ORBIT_SIVB) {
 		if (hVAB) {
 			KillDist(hVAB, 100000.0);
 		}
