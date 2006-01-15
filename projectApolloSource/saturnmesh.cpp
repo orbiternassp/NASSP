@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2006/01/12 14:49:35  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.29  2006/01/11 02:16:25  movieman523
   *	Added RCS propellant quantity gauge.
   *	
@@ -460,6 +463,7 @@ void Saturn::SetRecovery()
 }
 
 void Saturn::SetCSMStage ()
+
 {
 	ClearMeshes();
     ClearThrusterDefinitions();
@@ -511,50 +515,53 @@ void Saturn::SetCSMStage ()
 	else if (bManualUnDock){
 		dockstate = 4;
 	}
-	VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
+
+	const double CGOffset = 12.25+21.5-1.8+0.35;
+
+	VECTOR3 mesh_dir=_V(0,SMVO,30.25-CGOffset);
 	AddMesh (hSM, &mesh_dir);
 
 	//
 	// Skylab SM and Apollo 7 have no HGA.
 	//
 	if (!NoHGA) {
-		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		mesh_dir=_V(-2.2,-1.7,28.82-CGOffset);
 		AddMesh (hSMhga, &mesh_dir);
 	}
 
-	mesh_dir=_V(0,0,34.4-12.25-21.5);
+	mesh_dir=_V(0,0,34.4-CGOffset);
 
 	UINT meshidx;
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	//Don't Forget the Hatch
-	mesh_dir=_V(0.02,1.35,34.54-12.25-21.5);
+	mesh_dir=_V(0.02,1.35,34.54-CGOffset);
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	// And the Crew
 	if (Crewed) {
-		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		mesh_dir=_V(0,0.15,34.25-CGOffset);
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		mesh_dir=_V(0,0.15,34.25-CGOffset);
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	mesh_dir=_V(0,0,35.90-12.25-21.5);
+	mesh_dir=_V(0,0,35.90-CGOffset);
 	probeidx=AddMesh (hprobe, &mesh_dir);
 
-	VECTOR3 dockpos = {0,0,35.90-12.25-21.5};
+	VECTOR3 dockpos = {0,0,35.90-CGOffset};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {0,1,0};
 	SetDockParams(dockpos, dockdir, dockrot);
 
-	AddRCSJets(-1.80, SM_RCS_THRUST);
+	AddRCSJets(0.0, SM_RCS_THRUST);
 
-	SetView(0.4);
+	SetView(0.4 + 1.8 - 0.35);
 	// **************************** NAV radios *************************************
 
 	InitNavRadios (4);
@@ -568,7 +575,8 @@ void Saturn::SetCSMStage ()
 }
 
 void Saturn::SetCSM2Stage ()
-{	ClearMeshes();
+{
+	ClearMeshes();
 	DelThrusterGroup(THGROUP_MAIN,true);
     ClearThrusterDefinitions();
 
@@ -610,43 +618,45 @@ void Saturn::SetCSM2Stage ()
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
 
+	const double CGOffset = 12.25+21.5-1.8+0.35;
+
 	UINT meshidx;
-	VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
+	VECTOR3 mesh_dir=_V(0,SMVO,30.25-CGOffset);
 	AddMesh (hSM, &mesh_dir);
 
 	//
 	// Skylab SM and Apollo 7 have no HGA.
 	//
 	if (!NoHGA) {
-		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		mesh_dir=_V(-2.2,-1.7,28.82-CGOffset);
 		AddMesh (hSMhga, &mesh_dir);
 	}
 
-	mesh_dir=_V(0,0,34.4-12.25-21.5);
+	mesh_dir=_V(0,0,34.4-CGOffset);
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	//Don't Forget the Hatch
-	mesh_dir=_V(0.02,1.35,34.54-12.25-21.5);
+	mesh_dir=_V(0.02,1.35,34.54-CGOffset);
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	// And the Crew
 	if (Crewed) {
-		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		mesh_dir=_V(0,0.15,34.25-CGOffset);
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
+		mesh_dir=_V(0,0.15,34.25-CGOffset);
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 
-	AddRCSJets(-1.80, SM_RCS_THRUST);
+	AddRCSJets(0.0, SM_RCS_THRUST);
 
-	SetView(0.4);
+	SetView(0.4 + 1.8 - 0.35);
 
 	EnableTransponder (true);
 

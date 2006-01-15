@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/01/12 14:48:44  tschachim
+  *	Added prelaunch tank venting.
+  *	
   *	Revision 1.9  2005/12/19 17:02:25  tschachim
   *	Introduced clbkConsumeBufferedKey
   *	
@@ -104,7 +107,7 @@ protected:
 
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -26};
 const VECTOR3 OFS_STAGE12 =  { 0, 0, -9.935};
-const VECTOR3 OFS_STAGE2 =  { 0, 0, -24};
+const VECTOR3 OFS_STAGE2 =  { 0, 0, -24 + 1.45};
 const VECTOR3 OFS_STAGE21 =  { 1.85,1.85,32};
 const VECTOR3 OFS_STAGE22 =  { -1.85,1.85,32};
 const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85,32};

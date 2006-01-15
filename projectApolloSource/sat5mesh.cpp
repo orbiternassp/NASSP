@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/01/12 19:57:24  tschachim
+  *	Better prelaunch tank venting particles now?
+  *	
   *	Revision 1.40  2006/01/12 14:52:31  tschachim
   *	Added prelaunch tank venting.
   *	
@@ -1110,30 +1113,17 @@ void SaturnV::SeparateStage (int stage)
 {
 	VESSELSTATUS vs1;
 	VESSELSTATUS vs2;
-	VESSELSTATUS vs3;
-	VESSELSTATUS vs4;
-	VESSELSTATUS vs5;
+
 	VECTOR3 ofs1 = _V(0,0,0);
 	VECTOR3 ofs2 = _V(0,0,0);
-	VECTOR3 ofs3 = _V(0,0,0);
-	VECTOR3 ofs4 = _V(0,0,0);
-	VECTOR3 ofs5 = _V(0,0,0);
 	VECTOR3 vel1 = _V(0,0,0);
 	VECTOR3 vel2 = _V(0,0,0);
-	VECTOR3 vel3 = _V(0,0,0);
-	VECTOR3 vel4 = _V(0,0,0);
-	VECTOR3 vel5 = _V(0,0,0);
 
 	GetStatus (vs1);
 	GetStatus (vs2);
-	GetStatus (vs3);
-	GetStatus (vs4);
-	GetStatus (vs5);
+
 	vs1.eng_main = vs1.eng_hovr = 0.0;
 	vs2.eng_main = vs2.eng_hovr = 0.0;
-	vs3.eng_main = vs3.eng_hovr = 0.0;
-	vs4.eng_main = vs4.eng_hovr = 0.0;
-	vs5.eng_main = vs5.eng_hovr = 0.0;
 
 	if (stage == LAUNCH_STAGE_ONE && !bAbort)
 	{
@@ -1176,14 +1166,6 @@ void SaturnV::SeparateStage (int stage)
 	{
 	 	ofs1 = OFS_STAGE3;
 		vel1 = _V(0,0,-0.135);
-		ofs2 = OFS_STAGE31;
-		vel2 = _V(-0.5,-0.5,-0.55);
-		ofs3 = OFS_STAGE32;
-		vel3 = _V(0.5,-0.5,-0.55);
-		ofs4 = OFS_STAGE33;
-		vel4 = _V(0.5,0.5,-0.55);
-		ofs5 = OFS_STAGE34;
-		vel5 = _V(-0.5,0.5,-0.55);
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1192,7 +1174,6 @@ void SaturnV::SeparateStage (int stage)
 		vel1 = _V(0,0,-0.5);
 		ofs2 = OFS_DOCKING;
 		vel2 = _V(0.0,0.0,0.6);
-
 	}
 
 	if (stage == CM_STAGE)
@@ -1209,34 +1190,19 @@ void SaturnV::SeparateStage (int stage)
 
 	VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
 	VECTOR3 rofs2, rvel2 = {vs2.rvel.x, vs2.rvel.y, vs2.rvel.z};
-	VECTOR3 rofs3, rvel3 = {vs3.rvel.x, vs3.rvel.y, vs3.rvel.z};
-	VECTOR3 rofs4, rvel4 = {vs4.rvel.x, vs4.rvel.y, vs4.rvel.z};
-	VECTOR3 rofs5, rvel5 = {vs5.rvel.x, vs5.rvel.y, vs5.rvel.z};
+
 	Local2Rel (ofs1, vs1.rpos);
 	Local2Rel (ofs2, vs2.rpos);
-	Local2Rel (ofs3, vs3.rpos);
-	Local2Rel (ofs4, vs4.rpos);
-	Local2Rel (ofs5, vs5.rpos);
+
 	GlobalRot (vel1, rofs1);
 	GlobalRot (vel2, rofs2);
-	GlobalRot (vel3, rofs3);
-	GlobalRot (vel4, rofs4);
-	GlobalRot (vel5, rofs5);
+
 	vs1.rvel.x = rvel1.x+rofs1.x;
 	vs1.rvel.y = rvel1.y+rofs1.y;
 	vs1.rvel.z = rvel1.z+rofs1.z;
 	vs2.rvel.x = rvel2.x+rofs2.x;
 	vs2.rvel.y = rvel2.y+rofs2.y;
 	vs2.rvel.z = rvel2.z+rofs2.z;
-	vs3.rvel.x = rvel3.x+rofs3.x;
-	vs3.rvel.y = rvel3.y+rofs3.y;
-	vs3.rvel.z = rvel3.z+rofs3.z;
-	vs4.rvel.x = rvel4.x+rofs4.x;
-	vs4.rvel.y = rvel4.y+rofs4.y;
-	vs4.rvel.z = rvel4.z+rofs4.z;
-	vs5.rvel.x = rvel5.x+rofs5.x;
-	vs5.rvel.y = rvel5.y+rofs5.y;
-	vs5.rvel.z = rvel5.z+rofs5.z;
 
 	if (stage == CM_ENTRY_STAGE_TWO)
 	{
@@ -1394,19 +1360,6 @@ void SaturnV::SeparateStage (int stage)
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
-		vs2.vrot.x = -0.1;
-		vs2.vrot.y = 0.1;
-		vs2.vrot.z = 0.0;
-		vs3.vrot.x = -0.1;
-		vs3.vrot.y = -0.1;
-		vs3.vrot.z = 0.0;
-		vs4.vrot.x = 0.1;
-		vs4.vrot.y = -0.1;
-		vs4.vrot.z = 0.0;
-		vs5.vrot.x = 0.1;
-		vs5.vrot.y = 0.1;
-		vs5.vrot.z = 0.0;
-
 
 		SIVB *SIVBVessel;
 
