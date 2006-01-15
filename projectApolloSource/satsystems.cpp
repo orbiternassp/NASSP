@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2006/01/14 20:58:16  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.68  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
@@ -1247,13 +1250,15 @@ void Saturn::SetRCS_CM()
 // Check the state of the RCS, and enable/disable thrusters as required.
 //
 
-void Saturn::SetRCSThrusters(int n1, int n2, int n3, int n4, PROPELLANT_HANDLE ph)
+void Saturn::SetRCSThrusters(THRUSTER_HANDLE *th, PROPELLANT_HANDLE ph)
 
 {
-	SetThrusterResource(th_att_rot[n1], ph);
-	SetThrusterResource(th_att_rot[n2], ph);
-	SetThrusterResource(th_att_rot[n3], ph);
-	SetThrusterResource(th_att_rot[n4], ph);
+	int i;
+
+	for (i = 0; i < 8; i++) {
+		if (th[i])
+			SetThrusterResource(th[i], ph);
+	}
 }
 
 void Saturn::CheckRCSState()
@@ -1266,10 +1271,10 @@ void Saturn::CheckRCSState()
 
 	switch (stage) {
 	case CSM_LEM_STAGE:
-		SetRCSThrusters(0, 2, 10, 16, SMRCSAActive() ? ph_rcs0 : 0);
-		SetRCSThrusters(5, 7, 14, 20, SMRCSBActive() ? ph_rcs1 : 0);
-		SetRCSThrusters(1, 3, 8, 18, SMRCSCActive() ? ph_rcs2 : 0);
-		SetRCSThrusters(4, 6, 12, 22, SMRCSDActive() ? ph_rcs1 : 0);
+		SetRCSThrusters(th_rcs_a, SMRCSAActive() ? ph_rcs0 : 0);
+		SetRCSThrusters(th_rcs_b, SMRCSBActive() ? ph_rcs1 : 0);
+		SetRCSThrusters(th_rcs_c, SMRCSCActive() ? ph_rcs2 : 0);
+		SetRCSThrusters(th_rcs_d, SMRCSDActive() ? ph_rcs3 : 0);
 		break;
 
 	case CM_STAGE:

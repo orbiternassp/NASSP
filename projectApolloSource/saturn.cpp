@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.97  2006/01/14 20:58:16  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.96  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
@@ -733,7 +736,7 @@ void Saturn::initSaturn()
 	// SM RCS thrusters.
 	//
 
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < 8; i++) {
 		th_rcs_a[i] = 0;
 		th_rcs_b[i] = 0;
 		th_rcs_c[i] = 0;
@@ -2533,6 +2536,13 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	}
 
 	//
+	// Adjust ISP and thrust based on realism level.
+	//
+
+	double RCS_ISP = (SM_RCS_ISP * (15.0 - Realism)) / 5.0;
+	double RCS_Thrust = (MaxThrust * (15.0 - Realism)) / 5.0;
+
+	//
 	// CM RCS Propellant tanks
 	//
 
@@ -2552,33 +2562,47 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	if (!ph_rcs3)
 		ph_rcs3  = CreatePropellantResource(RCS_FUEL_PER_QUAD);
 
-	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,-0.1,1),MaxThrust, ph_rcs0, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1),MaxThrust, ph_rcs2, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(0.1,0,1),MaxThrust, ph_rcs3, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(-0.1,0,1),MaxThrust, ph_rcs1, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET), _V(0,-0.1,-1),MaxThrust, ph_rcs0, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1),MaxThrust, ph_rcs2, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET), _V(0.1,0,-1),MaxThrust, ph_rcs3, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET), _V(-0.1,0,-1),MaxThrust, ph_rcs1, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,-0.1,1), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(0.1,0,1), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET2), _V(-0.1,0,1), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(0,ATTCOOR2,TRANZ+RCSOFFSET), _V(0,-0.1,-1), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(0,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,0,TRANZ+RCSOFFSET), _V(0.1,0,-1), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,0,TRANZ+RCSOFFSET), _V(-0.1,0,-1), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0),MaxThrust, ph_rcs0, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(-0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0),MaxThrust, ph_rcs2, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(-0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[10]=CreateThruster (_V(-0.2,ATTCOOR2,-TRANZ-RCSOFFSETM), _V(1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[11]=CreateThruster (_V(-0.2,-ATTCOOR2,-TRANZ-RCSOFFSETM2), _V(1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0),MaxThrust, ph_rcs0, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0),MaxThrust, ph_rcs2, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[14]=CreateThruster (_V(0.2,ATTCOOR2,-TRANZ-RCSOFFSETM2), _V(-1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[15]=CreateThruster (_V(0.2,-ATTCOOR2,-TRANZ-RCSOFFSETM), _V(-1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,-0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0),MaxThrust, ph_rcs1, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0),MaxThrust, ph_rcs3, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,-0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[18]=CreateThruster (_V(ATTCOOR2,-0.2,-TRANZ-RCSOFFSETM2), _V(-0.1,1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[19]=CreateThruster (_V(-ATTCOOR2,-0.2,-TRANZ-RCSOFFSETM), _V(-0.1,1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0),MaxThrust, ph_rcs1, SM_RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0),MaxThrust, ph_rcs3, SM_RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[22]=CreateThruster (_V(ATTCOOR2,0.2,-TRANZ-RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[23]=CreateThruster (_V(-ATTCOOR2,0.2,-TRANZ-RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
+
+	//
+	// The code here uses fake RCS thrusters in some of these groups. I'm not sure quite why it does this, but
+	// without them the CSM rotates when we use translational thrusters. I'm guessing they're compensating for
+	// the RCS quads not being on the center of mass.
+	//
 
 	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
-	CreateThrusterGroup (th_att_lin+8,   2, THGROUP_ATT_RIGHT);
-	CreateThrusterGroup (th_att_lin+12, 2, THGROUP_ATT_LEFT);
-	CreateThrusterGroup (th_att_lin+16,   2, THGROUP_ATT_UP);
-	CreateThrusterGroup (th_att_lin+20,   2, THGROUP_ATT_DOWN);
+	CreateThrusterGroup (th_att_lin+8,   4, THGROUP_ATT_RIGHT);
+	CreateThrusterGroup (th_att_lin+12, 4, THGROUP_ATT_LEFT);
+	CreateThrusterGroup (th_att_lin+16,   4, THGROUP_ATT_UP);
+	CreateThrusterGroup (th_att_lin+20,   4, THGROUP_ATT_DOWN);
 
 	CreateThrusterGroup (th_att_rot,   2, THGROUP_ATT_PITCHDOWN);
 	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_PITCHUP);
@@ -2594,28 +2618,36 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 
 	//
 	// Map thrusters to RCS quads. Note that we don't use entry zero, we're matching the array to
-	// Apollo numbering for simplicity.
+	// Apollo numbering for simplicity... we also have to include the fake thrusters here so we
+	// can enable and disable them.
 	//
 
 	th_rcs_a[1] = th_att_rot[16];
 	th_rcs_a[2] = th_att_rot[10];
 	th_rcs_a[3] = th_att_rot[2];
 	th_rcs_a[4] = th_att_rot[0];
+	th_rcs_a[5] = th_att_lin[14];
+	th_rcs_a[6] = th_att_lin[10];
 
 	th_rcs_b[1] = th_att_rot[20];
 	th_rcs_b[2] = th_att_rot[14];
 	th_rcs_b[3] = th_att_rot[5];
 	th_rcs_b[4] = th_att_rot[7];
+	th_rcs_b[5] = th_att_lin[18];
+	th_rcs_b[6] = th_att_lin[22];
 
 	th_rcs_c[1] = th_att_rot[18];
 	th_rcs_c[2] = th_att_rot[8];
 	th_rcs_c[3] = th_att_rot[3];
 	th_rcs_c[4] = th_att_rot[1];
+	th_rcs_c[5] = th_att_lin[15];
+	th_rcs_c[6] = th_att_lin[11];
 
 	th_rcs_d[1] = th_att_rot[22];
 	th_rcs_d[2] = th_att_rot[12];
 	th_rcs_d[3] = th_att_rot[4];
-	th_rcs_d[4] = th_att_rot[6];
+	th_rcs_d[5] = th_att_lin[17];
+	th_rcs_d[6] = th_att_lin[23];
 }
 
 void Saturn::AddRCS_CM(double MaxThrust)
@@ -2653,39 +2685,46 @@ void Saturn::AddRCS_CM(double MaxThrust)
 	SetDefaultPropellantResource (ph_rcs_cm);
 	ClearThrusterDefinitions();
 
-	th_att_cm[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	//
+	// Adjust ISP and thrust based on realism level.
+	//
+
+	double RCS_ISP = (CM_RCS_ISP * (15.0 - Realism)) / 5.0;
+	double RCS_Thrust = (MaxThrust * (15.0 - Realism)) / 5.0;
+
+	th_att_cm[2]=CreateThruster (_V(2,2,-2), _V(0,0,1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[7]=CreateThruster (_V(2,2,2), _V(0,0,-1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
 
 	CreateThrusterGroup (th_att_cm,   4, THGROUP_ATT_YAWLEFT);
 	CreateThrusterGroup (th_att_cm+4,   4, THGROUP_ATT_YAWRIGHT);
 
-	th_att_cm[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[12]=CreateThruster (_V(2,2,2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
 
-	th_att_cm[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[10]=CreateThruster (_V(2,-2,2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
 
 	CreateThrusterGroup (th_att_cm+12,   4, THGROUP_ATT_PITCHDOWN);
 	CreateThrusterGroup (th_att_cm+8,   4, THGROUP_ATT_PITCHUP);
 
-	th_att_cm[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),MaxThrust, ph_rcs_cm, CM_RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[17]=CreateThruster (_V(2,2,2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[21]=CreateThruster (_V(2,-2,2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
 
 	CreateThrusterGroup (th_att_cm+20,   4, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_cm+16,   4, THGROUP_ATT_BANKRIGHT);
