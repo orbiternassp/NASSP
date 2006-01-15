@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.135  2006/01/15 01:23:19  movieman523
+  *	Put 'phantom' RCS thrusters back in and adjusted RCS thrust and ISP based on REALISM value.
+  *	
   *	Revision 1.134  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
@@ -729,6 +732,8 @@ protected:
 	bool SIISepState;
 	bool TLIBurnDone;
 	bool ABORT_IND;
+
+	bool DeleteLaunchSite;
 
 	int buildstatus;
 
@@ -2363,6 +2368,9 @@ protected:
 	OBJHANDLE habort;
 	OBJHANDLE hMaster;
 	OBJHANDLE hSMJet;
+	OBJHANDLE hVAB;
+	OBJHANDLE hCrawler;
+	OBJHANDLE hML;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
@@ -2393,7 +2401,7 @@ protected:
 	void InitPanel(int panel);
 	void SetSwitches(int panel);
 	void ReleaseSurfaces();
-	void KillDist(OBJHANDLE &hvessel);
+	void KillDist(OBJHANDLE &hvessel, double kill_dist = 5000.0);
 	void KillAlt(OBJHANDLE &hvessel,double altVS);
 	void RedrawPanel_G (SURFHANDLE surf);
 	void RedrawPanel_Thrust (SURFHANDLE surf);

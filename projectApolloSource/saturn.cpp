@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.98  2006/01/15 01:23:19  movieman523
+  *	Put 'phantom' RCS thrusters back in and adjusted RCS thrust and ISP based on REALISM value.
+  *	
   *	Revision 1.97  2006/01/14 20:58:16  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -480,6 +483,8 @@ void Saturn::initSaturn()
 	LEMdatatransfer = false;
 	PostSplashdownPlayed = false;
 
+	DeleteLaunchSite = true;
+
 	stgSM = false;
 
 	buildstatus = 6;
@@ -515,6 +520,9 @@ void Saturn::initSaturn()
 	habort = 0;
 	hSMJet = 0;
 	hLMV = 0;
+	hVAB = 0;
+	hML = 0;
+	hCrawler = 0;
 
 	//
 	// LM PAD data.
@@ -946,7 +954,7 @@ double Saturn::SetPitchApo()
 // Kill a vessel (typically a stage) based on its distance from us.
 //
 
-void Saturn::KillDist(OBJHANDLE &hvessel)
+void Saturn::KillDist(OBJHANDLE &hvessel, double kill_dist)
 
 {
 	VECTOR3 posr  = {0,0,0};
@@ -955,7 +963,7 @@ void Saturn::KillDist(OBJHANDLE &hvessel)
 	oapiGetRelativePos (GetHandle() ,hvessel, &posr);
 	dist = (posr.x * posr.x + posr.y * posr.y + posr.z * posr.z);
 
-	if (dist > (5000 * 5000)){
+	if (dist > (kill_dist * kill_dist)){
 		oapiDeleteVessel(hvessel, GetHandle());
 		hvessel = 0;
 	}
@@ -1040,6 +1048,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
 	oapiWriteScenario_float (scn, "THRUSTA", ThrustAdjust);
 	oapiWriteScenario_float (scn, "MR", MixtureRatio);
+	oapiWriteScenario_int (scn, "DLS", DeleteLaunchSite ? 1 : 0);
 
 	if (Realism != REALISM_DEFAULT) {
 		oapiWriteScenario_int (scn, "REALISM", Realism);
@@ -1491,7 +1500,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	double autopTime;
 	int SwitchState = 0;
 	int nasspver = 0, status = 0;
-	int n;
+	int n, DummyLoad;
 	int LMPadLoadCount = 0, LMPadValueCount = 0;
 	double tohdg = 45;
 
@@ -1569,6 +1578,10 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp (line, "TCP", 3)) {
             sscanf (line+3, "%f", &ftcp);
 			TCPO=ftcp;
+		}
+		else if (!strnicmp (line, "DLS", 3)) {
+            sscanf (line+3, "%d", &DummyLoad);
+			DeleteLaunchSite = (DummyLoad != 0);
 		}
 		else if (!strnicmp (line, "SICSHUT", 7)) {
 			sscanf (line + 7, "%f", &ftcp);
@@ -2091,6 +2104,25 @@ void Saturn::DestroyStages(double simt)
 	}
 
 	//
+	// In most missions we can delete the VAB, Crawler and mobile launcher when we can no longer
+	// see them.
+	//
+
+	if (DeleteLaunchSite) {
+		if (hVAB) {
+			KillDist(hVAB, 100000.0);
+		}
+
+		if (hCrawler) {
+			KillDist(hCrawler, 10000.0);
+		}
+
+		if (hML) {
+			KillDist(hML, 50000.0);
+		}
+	}
+
+	//
 	// Destroy seperated SM when it drops too low in the atmosphere.
 	//
 
@@ -2205,6 +2237,20 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		//
 		// Do any generic setup.
 		//
+
+		//
+		// Get the handles for any odds and ends that are out there.
+		//
+
+		char VName[256];
+		char ApolloName[64];
+
+		GetApolloName(ApolloName);
+		strcpy (VName, ApolloName); strcat (VName, "-ML");
+		hML = oapiGetVesselByName(VName);
+		strcpy (VName, ApolloName); strcat (VName, "-CT");
+		hCrawler = oapiGetVesselByName(VName);
+		hVAB = oapiGetVesselByName("VAB");
 
 		GenericFirstTimestep = false;
 	}
@@ -2521,10 +2567,10 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	const double ATTHEIGHT=.5;
 	const double TRANWIDTH=.2;
 	const double TRANHEIGHT=1;
-	const double RCSOFFSET=0.6;
-	const double RCSOFFSET2=0.10;
-	const double RCSOFFSETM=0.30;
-	const double RCSOFFSETM2=0.40;
+	const double RCSOFFSET=0.25;
+	const double RCSOFFSET2=-0.25;
+	const double RCSOFFSETM=-0.05;
+	const double RCSOFFSETM2=0.05;
 
 	//
 	// Clear any old thrusters.
@@ -2573,36 +2619,22 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 
 	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
 	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(-0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[10]=CreateThruster (_V(-0.2,ATTCOOR2,-TRANZ-RCSOFFSETM), _V(1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[11]=CreateThruster (_V(-0.2,-ATTCOOR2,-TRANZ-RCSOFFSETM2), _V(1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
 
 	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
 	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[14]=CreateThruster (_V(0.2,ATTCOOR2,-TRANZ-RCSOFFSETM2), _V(-1,-0.1,0), RCS_Thrust, ph_rcs0, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[15]=CreateThruster (_V(0.2,-ATTCOOR2,-TRANZ-RCSOFFSETM), _V(-1,0.1,0), RCS_Thrust, ph_rcs2, RCS_ISP, SM_RCS_ISP_SL);
 
 	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,-0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
 	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[18]=CreateThruster (_V(ATTCOOR2,-0.2,-TRANZ-RCSOFFSETM2), _V(-0.1,1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[19]=CreateThruster (_V(-ATTCOOR2,-0.2,-TRANZ-RCSOFFSETM), _V(-0.1,1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
 
 	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
 	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[22]=CreateThruster (_V(ATTCOOR2,0.2,-TRANZ-RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[23]=CreateThruster (_V(-ATTCOOR2,0.2,-TRANZ-RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
-
-	//
-	// The code here uses fake RCS thrusters in some of these groups. I'm not sure quite why it does this, but
-	// without them the CSM rotates when we use translational thrusters. I'm guessing they're compensating for
-	// the RCS quads not being on the center of mass.
-	//
 
 	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
-	CreateThrusterGroup (th_att_lin+8,   4, THGROUP_ATT_RIGHT);
-	CreateThrusterGroup (th_att_lin+12, 4, THGROUP_ATT_LEFT);
-	CreateThrusterGroup (th_att_lin+16,   4, THGROUP_ATT_UP);
-	CreateThrusterGroup (th_att_lin+20,   4, THGROUP_ATT_DOWN);
+	CreateThrusterGroup (th_att_lin+8,   2, THGROUP_ATT_RIGHT);
+	CreateThrusterGroup (th_att_lin+12, 2, THGROUP_ATT_LEFT);
+	CreateThrusterGroup (th_att_lin+16,   2, THGROUP_ATT_UP);
+	CreateThrusterGroup (th_att_lin+20,   2, THGROUP_ATT_DOWN);
 
 	CreateThrusterGroup (th_att_rot,   2, THGROUP_ATT_PITCHDOWN);
 	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_PITCHUP);
@@ -2626,28 +2658,21 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	th_rcs_a[2] = th_att_rot[10];
 	th_rcs_a[3] = th_att_rot[2];
 	th_rcs_a[4] = th_att_rot[0];
-	th_rcs_a[5] = th_att_lin[14];
-	th_rcs_a[6] = th_att_lin[10];
 
 	th_rcs_b[1] = th_att_rot[20];
 	th_rcs_b[2] = th_att_rot[14];
 	th_rcs_b[3] = th_att_rot[5];
 	th_rcs_b[4] = th_att_rot[7];
-	th_rcs_b[5] = th_att_lin[18];
-	th_rcs_b[6] = th_att_lin[22];
 
 	th_rcs_c[1] = th_att_rot[18];
 	th_rcs_c[2] = th_att_rot[8];
 	th_rcs_c[3] = th_att_rot[3];
 	th_rcs_c[4] = th_att_rot[1];
-	th_rcs_c[5] = th_att_lin[15];
-	th_rcs_c[6] = th_att_lin[11];
 
 	th_rcs_d[1] = th_att_rot[22];
 	th_rcs_d[2] = th_att_rot[12];
 	th_rcs_d[3] = th_att_rot[4];
-	th_rcs_d[5] = th_att_lin[17];
-	th_rcs_d[6] = th_att_lin[23];
+	th_rcs_d[4] = th_att_rot[2];
 }
 
 void Saturn::AddRCS_CM(double MaxThrust)

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/01/12 14:48:12  tschachim
+  *	Added prelaunch tank venting.
+  *	
   *	Revision 1.17  2005/12/13 10:13:56  tschachim
   *	Fixed SIVB separation offset (hopefully).
   *	
@@ -209,7 +212,7 @@ const double STG1O= -5.25;
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -54.935};
 const VECTOR3 OFS_STAGE12 =  { 0, 0, -30.5};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, -20.25};
-const VECTOR3 OFS_STAGE3 =  { 0, 0, STG2O - 29.0};
+const VECTOR3 OFS_STAGE3 =  { 0, 0, STG2O - 29.0 + 1.45};
 const VECTOR3 OFS_STAGE31 =  { -1.48,-1.48,5.6+STG2O+21.5};
 const VECTOR3 OFS_STAGE32 =  { 1.48,-1.48,5.6+STG2O+21.5};
 const VECTOR3 OFS_STAGE33 =  { 1.48,1.48,5.6+STG2O+21.5};
