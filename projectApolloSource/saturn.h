@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.134  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   *	Revision 1.133  2006/01/14 12:34:16  flydba
   *	New panel added (325/326) for cabin press control.
   *	
@@ -681,7 +684,7 @@ public:
 	bool GetValveState(int valve);
 	void CheckSPSState();
 	void CheckRCSState();
-	void SetRCSThrusters(int n1, int n2, int n3, int n4, PROPELLANT_HANDLE ph);
+	void SetRCSThrusters(THRUSTER_HANDLE *th, PROPELLANT_HANDLE ph);
 	void CheckSMSystemsState();
 	int GetSwitchState(char *switchName);
 	int GetRotationalSwitchState(char *switchName);
@@ -2580,7 +2583,7 @@ protected:
 	THRUSTER_HANDLE th_sps[1],th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THRUSTER_HANDLE	th_aps[3];
 	THRUSTER_HANDLE	th_sep[8];
-	THRUSTER_HANDLE th_rcs_a[5], th_rcs_b[5], th_rcs_c[5], th_rcs_d[5];		// RCS quads. Entry zero is not used, to match Apollo numbering
+	THRUSTER_HANDLE th_rcs_a[8], th_rcs_b[8], th_rcs_c[8], th_rcs_d[8];		// RCS quads. Entry zero is not used, to match Apollo numbering
 
 	PSTREAM_HANDLE prelaunchvent1;
 	PSTREAM_HANDLE prelaunchvent2;
