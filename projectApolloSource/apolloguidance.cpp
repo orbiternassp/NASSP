@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.65  2006/01/14 00:54:35  movieman523
   *	Hacky wiring of sequential systems and pyro arm switches.
   *	
@@ -2391,7 +2394,7 @@ void ApolloGuidance::Prog17(double simt)
 			// do the burn before next pass...
 			mu=GRAVITY*bmass;
 			//iterate to get the timing just right...
-			for (k=0; k<10; k++) {
+			for (k=0; k<20; k++) {
 				PredictPosVelVectors(pos, vel, mu, tburn, spos, svel, velm);
 				altb=Mag(spos);
 				a=(altb+bradius+15000.0)/2.0;
@@ -2414,7 +2417,7 @@ void ApolloGuidance::Prog17(double simt)
 //					tburn, dt, an*DEG, k);
 				tburn=tburn+dt;
 //			sprintf(oapiDebugString(), "dt=%.3f tburn=%.1f an=%.3f k=%d", dt, tburn, an*DEG, k);
-				if(fabs(dt) < 0.01) {
+				if(fabs(dt) < 1.0) {
 					// we have a solution...
 					ProgFlag01=true;
 					break;
@@ -2708,6 +2711,7 @@ void ApolloGuidance::Prog19(double simt)
 		case 0:
 			ProgState++;
 			ProgFlag01=false;
+			ProgFlag02=false;
 			DesiredAzimuth=0.0;
 			NextEventTime=simt;
 			break;
@@ -2871,6 +2875,11 @@ void ApolloGuidance::Prog19(double simt)
 					tb=ttp+tr;
 				} else {
 					tb=ttp-tr;
+					// added 01/16/05
+					if(tsp < tr) {
+						tb=tr-tsp;
+						if(tb < 300.0) tb=ttp-tr;
+					}
 				}
 				if(tb < 300.0) tb=ttp+tr;
 				PredictPosVelVectors(pos, vel, mu, tb, spos, svel, velm);
@@ -2984,6 +2993,12 @@ void ApolloGuidance::Prog19(double simt)
 				tsp=ma*sqrt(fabs(a*a*a)/mu);
 				// choose the next intersection >= 300 seconds from now
 				tb=ttp-tsp;
+
+				//added 01/15/05
+				if(period-ttp < tsp) {
+					tb=tsp-(period-ttp);
+					if(tb < 300.0) tb=ttp-tsp;
+				}
 				if(tb < 300.0) tb=ttp+tsp;
 //				fprintf(outstr, "tsp=%.1f ttp=%.1f\n", tsp, ttp);
 				PredictPosVelVectors(pos, vel, mu, tb, spos, svel, velm);
@@ -3070,6 +3085,7 @@ void ApolloGuidance::Prog19(double simt)
 			delta.x=DesiredDeltaVx;
 			delta.y=DesiredDeltaVy;
 			delta.z=DesiredDeltaVz;
+//			sprintf(oapiDebugString(), "Orienting...");
 			if (MainThrusterIsHover) {
 				OrientAxis(delta, 1, 0);
 			} else {
@@ -3079,6 +3095,7 @@ void ApolloGuidance::Prog19(double simt)
 		}	
 	}
 	if(ProgState == 4) {
+//		sprintf(oapiDebugString(), "burn in %.1f secs f2=%d", simt-BurnStartTime, ProgFlag02);
 		if ((simt+0.05) > BurnEndTime) {
 			if (MainThrusterIsHover) {
 				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.0);
@@ -3104,6 +3121,7 @@ void ApolloGuidance::Prog19(double simt)
 			ProgFlag02=true;
 			dt=BurnEndTime-BurnStartTime;
 			BurnEndTime=simt+dt;
+//			sprintf(oapiDebugString(), "dt=%.1f Engine on", dt);
 			if (MainThrusterIsHover) {
 				OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
 			} else {
