@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2006/01/14 21:59:52  movieman523
+  *	Added PanelSDK, init, timestep, save and load.
+  *	
   *	Revision 1.28  2006/01/14 20:58:16  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -275,6 +278,13 @@ protected:
 	PushSwitch AbortStageSwitch;
 	bool AbortStageSwitchLight;
 
+	//////////////////////
+	// LEM panel 1		//
+	//////////////////////
+
+	SwitchRow LeftXPointerSwitchRow;
+	ToggleSwitch LeftXPointerSwitch;
+	
 	SwitchRow EngineArmSwitchesRow;
 	ThreePosSwitch EngineArmSwitch;
 
