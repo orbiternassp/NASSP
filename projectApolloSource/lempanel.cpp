@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2005/11/28 01:13:53  movieman523
+  *	Added LEM right-hand panel.
+  *	
   *	Revision 1.38  2005/10/31 10:16:10  tschachim
   *	LEM rendezvous window camera direction.
   *	
@@ -219,6 +222,7 @@ void sat5_lmpkd::InitPanel() {
 	ModeControlPNGSSwitch.Register(PSH,"ModeControlPNGSSwitch", THREEPOSSWITCH_CENTER);
 	ModeControlAGSSwitch.Register(PSH,"ModeControlAGSSwitch", THREEPOSSWITCH_CENTER);
 	IMUCageSwitch.Register(PSH,"IMUCageSwitch", TOGGLESWITCH_DOWN);
+	LeftXPointerSwitch.Register(PSH, "LeftXPointerSwitch", true);
 
 
 	Cswitch1=false;
@@ -631,6 +635,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_LMTHREEPOSSWITCH]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
 		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
 		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
+		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
@@ -640,11 +645,12 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[15], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[16], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[18], g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[SRF_LMABORTBUTTON], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_LMABORTBUTTON],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSLEVER],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTWOPOSLEVER],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSSWITCH],		g_Param.col[4]);
-		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],				g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
 		break;
 	
 	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
@@ -736,6 +742,10 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 598, 1755,  886, 1876), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_MISSION_CLOCK,					_R(  74,  287,  216,  309), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		
+		oapiRegisterPanelArea (AID_CONTACTLIGHT1,					_R( 324,  428,  369,  473), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1362, 1222, 1407, 1267), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTXPOINTERSWITCH,				_R( 330,  515,  364,  544), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		
 		//oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146,  135, 1183,  150), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
@@ -760,8 +770,6 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		//oapiRegisterPanelArea (AID_RCS_PRESS,					_R(1420,  139, 1456,  213), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_RCS_QTY,						_R(1478,  139, 1514,  213), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_ENG_THRUST,					_R(1141,  256, 1177,  331), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_CONTACT,						_R(1069,  249, 1099,  279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_CONTACT,						_R(1715,  749, 1745,  779), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_FDAI,						_R( 979,  401, 1075,  497), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 		//oapiRegisterPanelArea (AID_FDAI,						_R(1581,  401, 1677,  497), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 		//oapiRegisterPanelArea (AID_DSKY_KEY,					_R(1222, 1106, 1433, 1195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,PANEL_MAP_BACKGROUND);
@@ -880,8 +888,11 @@ void sat5_lmpkd::SetSwitches(int panel) {
 	AbortSwitch.Init     ( 0, 0, 72, 72, srf[SRF_LMABORTBUTTON], AbortSwitchesRow, 0, 64);
 	AbortStageSwitch.Init(78, 4, 75, 64, srf[SRF_LMABORTBUTTON], AbortSwitchesRow);
 
-	EngineArmSwitchesRow.Init(AID_ENG_ARM,MainPanel);
+	EngineArmSwitchesRow.Init(AID_ENG_ARM, MainPanel);
 	EngineArmSwitch.Init (0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], EngineArmSwitchesRow);
+
+	LeftXPointerSwitchRow.Init(AID_LEFTXPOINTERSWITCH, MainPanel);
+	LeftXPointerSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], LeftXPointerSwitchRow);
 
 	EngineDescentCommandOverrideSwitchesRow.Init(AID_DESCENT_ENGINE_SWITCH,MainPanel);
 	EngineDescentCommandOverrideSwitch.Init (0, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], EngineDescentCommandOverrideSwitchesRow);
@@ -2003,9 +2014,10 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 
 
-	case AID_CONTACT:
+	case AID_CONTACTLIGHT1:
+	case AID_CONTACTLIGHT2:
 		if (GroundContact()&& stage ==1){
-			oapiBlt(surf,srf[18],0,0,0,0,30,30, SURF_PREDEF_CK);//
+			oapiBlt(surf,srf[18],0,0,0,0,45,45, SURF_PREDEF_CK);//
 		}return true;
 
 	case AID_SWITCH_SEP:

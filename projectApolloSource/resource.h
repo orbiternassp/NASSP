@@ -32,7 +32,7 @@
 #define AID_MASTER_ALARM2               38
 #define AID_dVTHRUST_SWITCHES           39
 #define AID_SWITCH_SEP                  40
-#define AID_CONTACT                     41
+#define AID_CONTACTLIGHT1               41
 #define AID_MASTER_ALARM                42
 #define AID_CWS_LIGHTS_LEFT             43
 #define AID_CWS_LIGHTS_RIGHT            44
@@ -475,6 +475,8 @@
 #define AID_GLYCOLTORADIATORSLEVER			776
 #define AID_GLYCOLRESERVOIRROTARIES			777
 #define AID_OXYGENROTARIES					778
+#define AID_CONTACTLIGHT2					779
+#define AID_LEFTXPOINTERSWITCH				780
 
 // Next default values for new objects
 //
