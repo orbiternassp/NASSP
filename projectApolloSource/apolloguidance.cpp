@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2006/01/17 01:13:50  lazyd
+  *	Fixed an evil bug in P19
+  *	
   *	Revision 1.66  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -4761,7 +4764,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			PadLoaded = state.u.PadLoaded;
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
-			strncpy (OtherVesselName, line + 6, 6);
+			strncpy (OtherVesselName, line + 6, 64);
 		}
 		else if (!strnicmp (line, "YAAGC", 5)) {
 			int is_virtual = 0;
