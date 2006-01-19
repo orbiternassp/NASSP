@@ -8,11 +8,11 @@ BEGIN_ENVIRONMENT
 END_ENVIRONMENT
 
 BEGIN_FOCUS
-  Ship AS-510
+  Ship Endeavour
 END_FOCUS
 
 BEGIN_CAMERA
-  TARGET AS-510
+  TARGET Endeavour
   MODE Extern
   POS 2.44 0.0 -90.0
   TRACKMODE TargetRelative
@@ -23,10 +23,6 @@ BEGIN_MFD Left
   TYPE Map
   REF Earth
   BTARGET Cape Canaveral
-END_MFD
-
-BEGIN_MFD Right
-  TYPE Launch
 END_MFD
 
 BEGIN_PANEL
