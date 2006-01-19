@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2006/01/18 20:12:54  flydba
+  *	Contact lights added.
+  *	
   *	Revision 1.29  2006/01/14 21:59:52  movieman523
   *	Added PanelSDK, init, timestep, save and load.
   *	
@@ -177,11 +180,12 @@ public:
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
 	//
-	// These functions must be virtual so they can be called from the Saturn V.
+	// These functions must be virtual so they can be called from the Saturn V or the LEVA
 	//
 
 	virtual void SetLanderData(LemSettings &ls);
 	virtual void PadLoad(unsigned int address, unsigned int value);
+	virtual void StopEVA();
 
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc, ph_rcslm0,ph_rcslm1; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
@@ -478,7 +482,6 @@ protected:
 
 	double countdown;
 
-	bool high;
 	bool bToggleHatch;
 	bool bModeDocked;
 	bool bModeHover;

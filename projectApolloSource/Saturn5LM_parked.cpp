@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/01/14 21:59:52  movieman523
+  *	Added PanelSDK, init, timestep, save and load.
+  *	
   *	Revision 1.39  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -164,9 +167,8 @@
 
 #include "landervessel.h"
 #include "sat5_lmpkd.h"
-
 #include "tracer.h"
-
+#include "CollisionSDK/CollisionSDK.h"
 
 char trace_file[] = "ProjectApollo LM.log";
 
@@ -194,8 +196,10 @@ const int TO_EVA=1;
 
 
 // Modif x15 to manage landing sound
+#ifdef DIRECTSOUNDENABLED
 static SoundEvent sevent        ;
 static double NextEventTime = 0.0;
+#endif
 
 // ==============================================================
 // API interface
@@ -208,7 +212,9 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	switch (ul_reason_for_call) {
 	case DLL_PROCESS_ATTACH:
 		InitGParam(hModule);
+		InitCollisionSDK();
 		break;
+
 	case DLL_PROCESS_DETACH:
 		FreeGParam();
 		break;
@@ -275,8 +281,10 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 sat5_lmpkd::~sat5_lmpkd()
 
 {
+#ifdef DIRECTSOUNDENABLED
     sevent.Stop();
 	sevent.Done();
+#endif
 }
 
 void sat5_lmpkd::Init()
@@ -290,7 +298,6 @@ void sat5_lmpkd::Init()
 
 	ABORT_IND=false;
 
-	high=false;
 	bToggleHatch=false;
 	bModeDocked=false;
 	bModeHover=false;
@@ -300,8 +307,6 @@ void sat5_lmpkd::Init()
 	EVA_IP=false;
 	refcount = 0;
 	viewpos = LMVIEW_LMP;
-	//lmpview=true;
-	//cdrview=false;//=true;
 	startimer=false;
 	ContactOK = false;
 	stage = 0;
@@ -327,6 +332,10 @@ void sat5_lmpkd::Init()
 
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
+	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
+	// Disabled for now because of the LEVA and the descent stage vessel
+	// TODO Enable before CSM docking
+	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 
 	ph_Dsc = 0;
 	ph_Asc = 0;
@@ -364,7 +373,10 @@ void sat5_lmpkd::DoFirstTimestep()
 	if (!SoundsLoaded) {
 		LoadDefaultSounds();
 	}
+
+#ifdef DIRECTSOUNDENABLED
 	NextEventTime = 0.0;
+#endif
 
 	if (CabinFansActive()) {
 		CabinFans.play(LOOP,255);
@@ -399,9 +411,10 @@ void sat5_lmpkd::LoadDefaultSounds()
 	soundlib.LoadSound(Afire, "des_abort.wav");
 
 // MODIF X15 manage landing sound
+#ifdef DIRECTSOUNDENABLED
     sevent.LoadMissionLandingSoundArray(soundlib,"sound.csv");
     sevent.InitDirectSound(soundlib);
-
+#endif
 	SoundsLoaded = true;
 }
 
@@ -499,6 +512,15 @@ int sat5_lmpkd::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	case OAPI_KEY_K:
 		bToggleHatch = true;
 		return 1;
+
+	case OAPI_KEY_E:
+		if (!Realism) {
+			ToggleEva = true;
+			return 1;
+		}
+		else {
+			return 0;
+		}
 
 	case OAPI_KEY_6:
 		viewpos = LMVIEW_CDR;
@@ -697,19 +719,13 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 //TODOX15	
 			agc.SetInputChannelBit(030, 3, false);
 		}
-		if (EVA_IP){
-			if(!hLEVA){
+
+		if (EVA_IP) {
+			if(!hLEVA) {
 				ToggleEVA();
 			}
-			else{
-				if(high){
-				}
-				else{
-					high=true;
-					SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
-				}
-			}
 		}
+
 		if (ToggleEva && GroundContact()){
 			ToggleEVA();
 		}
@@ -720,21 +736,20 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 			if (vs.status == 1){
 				//PlayVesselWave(Scontact,NOLOOP,255);
 				//SetLmVesselHoverStage2(vessel);
-				if(high){
-					high=false;
-					SetTouchdownPoints (_V(0,-0,10), _V(-1,-0,-10), _V(1,-0,-10));
-				}
-				else{
-					high=true;
-					SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
-				}
 			}
 			bToggleHatch=false;
 		}
 
-		if (actualALT < 5.3 && !ContactOK && actualALT > 5.0){
+		double vsAlt = VSGetATL(GetHandle());
+		if (!ContactOK && 
+		   ((vsAlt != VS_NO_ALT && vsAlt < 1.0) ||
+		    (vsAlt == VS_NO_ALT && actualALT < 5.3 && actualALT > 5.0))) {
+
+#ifdef DIRECTSOUNDENABLED
 			if (!sevent.isValid())
+#endif
 				Scontact.play();
+
 			SetEngineLevel(ENGINE_HOVER,0);
 			ContactOK = true;
 
@@ -816,6 +831,7 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 	}
 
     // x15 landing sound management
+#ifdef DIRECTSOUNDENABLED
 
     double     simtime       ;
 	int        mode          ;
@@ -852,6 +868,7 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 		   else sevent.PlaySound( names,true,0);
 		}
 	} 
+#endif
 }
 
 //
@@ -1013,10 +1030,12 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	case 1:
 		stage=1;
 		SetLmVesselHoverStage();
+
 		if (EVA_IP){
 			SetupEVA();
 		}
 		break;
+
 	case 2:
 		stage=2;
 		SetLmAscentHoverStage();
@@ -1040,6 +1059,7 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 void sat5_lmpkd::clbkSetClassCaps (FILEHANDLE cfg) {
 
+	VSRegVessel(GetHandle());
 	SetLmVesselDockStage();
 }
 
