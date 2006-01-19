@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/01/04 19:51:54  movieman523
+  *	Updated config file names.
+  *	
   *	Revision 1.20  2005/12/28 19:11:32  movieman523
   *	Changed some mesh paths.
   *	
@@ -106,6 +109,8 @@
 #include "sat5_lmpkd.h"
 #include "saturn5_leva.h"
 
+#include "CollisionSDK/CollisionSDK.h"
+
 static MESHHANDLE hLMPKD ;
 static MESHHANDLE hLMLanded ;
 static MESHHANDLE hLMDescent;
@@ -118,51 +123,38 @@ static MESHHANDLE hLemProbes;
 void sat5_lmpkd::ToggleEVA()
 
 {
-	ToggleEva=false;	
+	ToggleEva = false;	
 	
-	if (EVA_IP){
-		EVA_IP =false;
-		ClearMeshes();
-		ClearExhaustRefs();
-		ClearAttExhaustRefs();
-		VECTOR3 mesh_dir=_V(-0.08,0,0);
-		AddMesh (hLMLanded, &mesh_dir);
+	if (EVA_IP) {
+		// Nothing for now, the EVA is ended, when the LEVA vessel calls StopEVA
+		// TODO: Support for 2 LEVA vessels
 	}
-	else{
-		EVA_IP =true;
-
+	else {
 		VESSELSTATUS vs1;
 		GetStatus(vs1);
 
-		VECTOR3 ofs1 = _V(0,0,0);
-		VECTOR3 vel1 = _V(0,0,0);
-		VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
+		// The LM must be in landed state
+		if (vs1.status != 1) return;
 
-		Local2Rel (ofs1, vs1.rpos);
-		GlobalRot (vel1, rofs1);
-		vs1.rvel.x = rvel1.x+rofs1.x;
-		vs1.rvel.y = rvel1.y+rofs1.y;
-		vs1.rvel.z = rvel1.z+rofs1.z;
-		//vs1.vdata[0].z = vs1.vdata[0].z +PI;
+		EVA_IP = true;
+
+		OBJHANDLE hbody = GetGravityRef();
+		double radius = oapiGetSize(hbody);
+		vs1.vdata[0].x += 4.5 * sin(vs1.vdata[0].z) / radius;
+		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
 
 		char VName[256]="";
 		strcpy (VName, GetName()); strcat (VName, "-LEVA");
 		hLEVA = oapiCreateVessel(VName,"ProjectApollo/LEVA",vs1);
-
-		ClearMeshes();
-		ClearExhaustRefs();
-		ClearAttExhaustRefs();
-		VECTOR3 mesh_dir=_V(-0.08,-0.15,-4.3);
-		AddMesh (hLMLanded, &mesh_dir);
-
+		
 		SwitchFocusToLeva = 10;
 
 		Saturn5_LEVA *leva = (Saturn5_LEVA *) oapiGetVesselInterface(hLEVA);
-
 		if (leva) {
 			EVASettings evas;
 
 			evas.MissionNo = agc.GetApolloNo();
+			evas.Realism = Realism;
 			leva->SetEVAStats(evas);
 		}
 	}
@@ -172,18 +164,17 @@ void sat5_lmpkd::ToggleEVA()
 void sat5_lmpkd::SetupEVA()
 
 {
-	if (EVA_IP){
-		EVA_IP =true;
-		ClearMeshes();
-		VECTOR3 mesh_dir=_V(-0.08,-0.15,-4.3);
-		AddMesh (hLMLanded, &mesh_dir);
-		if(high){
-		}
-		else{
-			high=true;
-			SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
-		}
+	if (EVA_IP) {
+		EVA_IP = true;
+		// nothing for now...
 	}
+}
+
+void sat5_lmpkd::StopEVA()
+
+{
+	// Called by LEVA vessel during destruction
+	EVA_IP = false;
 }
 
 void sat5_lmpkd::SetLmVesselDockStage()
@@ -292,11 +283,12 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
-	SetTouchdownPoints (_V(0, -3.8, 10), _V(-1, -3.8, -10), _V(1, -3.8, -10));
+
+	SetTouchdownPoints (_V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
+	VSSetTouchdownPoints(GetHandle(), _V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5), 3.86);
 
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
 	UINT meshidx;
-
 	if (Landed) {
 		meshidx = AddMesh (hLMLanded, &mesh_dir);
 	}
@@ -306,7 +298,6 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 		probeidx = AddMesh (hLemProbes, &mesh_dir);
 		SetMeshVisibilityMode (probeidx, MESHVIS_VCEXTERNAL);
 	}
-
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
     
 	if (!ph_Dsc)  
@@ -322,12 +313,10 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 	th_hover[0] = CreateThruster (_V( 0.0,-3.3,0.0), _V( 0,1,0), 44910, ph_Dsc, 3107);
 	th_hover[1] = CreateThruster (_V( 0.013,-3.3,-0.034), _V( 0,1,0), 0, ph_Dsc, 0);//this is a "virtual engine",no thrust and no fuel
 	                                                                                //needed for visual gimbaling for corrected engine flames
-
     DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
 	AddExhaust (th_hover[1], 8.0, 0.65);//
-
 	
 	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
 	
@@ -377,7 +366,10 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
-	SetTouchdownPoints (_V(0,-5,10), _V(-1,-5,-10), _V(1,-5,-10));
+
+	double tdph = -5.8;
+	SetTouchdownPoints (_V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
+	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5), -tdph);
 
 	VECTOR3 mesh_dir=_V(-0.191,-0.02,+0.383);	
 	UINT meshidx = AddMesh (hLMAscent, &mesh_dir);

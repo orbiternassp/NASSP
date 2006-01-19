@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/02/24 00:28:24  movieman523
+  *	Revised for Orbitersound 3 and new Orbiter.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -30,15 +33,20 @@
 typedef struct {
 
 	int MissionNo;
+	int Realism;
 
 } EVASettings;
 
-class Saturn5_LEVA: public VESSEL {
+class Saturn5_LEVA: public VESSEL2 {
 
 public:
 	Saturn5_LEVA(OBJHANDLE hObj, int fmodel);
 	virtual ~Saturn5_LEVA();
-	int ConsumeKey(const char *keystate);
+
+	int clbkConsumeDirectKey(char *kstate);
+	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+	void clbkSetClassCaps (FILEHANDLE cfg);
+
 	void SetAstroStage ();
 	void SetRoverStage ();
 	void init();
@@ -67,6 +75,7 @@ protected:
 
 	int ApolloNo;
 	int StepCount;
+	int Realism;
 
 	OBJHANDLE hMaster;
 	bool GoDock1;
@@ -94,7 +103,14 @@ protected:
 	bool SLEVAPlayed;
 	bool StateSet;
 
+	bool lastLatLongSet;
+	double lastLat;
+	double lastLong;
+
 	SoundLib soundlib;
 	Sound FlagSound;
 	Sound SLEVA;
+
+	// touchdown point test
+	// double touchdownPointHeight;
 };

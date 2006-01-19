@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/12/28 19:11:32  movieman523
+  *	Changed some mesh paths.
+  *	
   *	Revision 1.5  2005/12/28 16:19:10  movieman523
   *	Should now be getting all config files from ProjectApollo directory.
   *	
@@ -39,16 +42,28 @@
   *	
   **************************************************************************/
 
+#define ORBITER_MODULE
+
 #include "orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
 
 #include "nasspsound.h"
+#include "nasspdefs.h"
 #include "OrbiterSoundSDK3.h"
 #include "soundlib.h"
 
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "LEMcomputer.h"
+#include "dsky.h"
+#include "IMU.h"
+#include "sat5_lmpkd.h"
+
 #include "saturn5_leva.h"
 #include "tracer.h"
+
+#include "CollisionSDK/CollisionSDK.h"
 
 //
 // Set the file name for the tracer code.
@@ -71,8 +86,7 @@ static 	int refcount = 0;
 static MESHHANDLE hCMPEVA;
 static MESHHANDLE hLRV;
 
-Saturn5_LEVA::Saturn5_LEVA(OBJHANDLE hObj, int fmodel)
-: VESSEL (hObj, fmodel)
+Saturn5_LEVA::Saturn5_LEVA(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
 	hMaster = hObj;
@@ -114,50 +128,74 @@ void Saturn5_LEVA::init()
 	SLEVAPlayed = false;
 	StateSet = false;
 
+	lastLatLongSet = false;
+	lastLat = 0;
+	lastLong = 0;
+
 	ApolloNo = 0;
+	Realism = 0;
+
+	// touchdown point test
+	// touchdownPointHeight = -0.8;
+}
+
+void Saturn5_LEVA::clbkSetClassCaps (FILEHANDLE cfg)
+{
+	init();
+	VSRegVessel(GetHandle());
+	SetAstroStage();
 }
 		 
 void Saturn5_LEVA::SetAstroStage ()
 {
-	SetEmptyMass (115);
-	SetISP (23e6);
-	SetCOG_elev(3);
-	SetSize (2);
-	SetPMI (_V(5,5,5));
-	SetRotDrag (_V(0.7,0.7,1.2));
-	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0); 
-    ClearMeshes();
+	SetEmptyMass(115);
+	SetSize(2);
+	SetPMI(_V(5,5,5));
+
+	SetSurfaceFrictionCoeff(0.005, 0.5);
+	SetRotDrag (_V(0, 0, 0));
+	SetCW(0, 0, 0, 0);
+	SetPitchMomentScale(0);
+	SetBankMomentScale(0);
+	SetLiftCoeffFunc(0); 
+		
+	ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-    ShiftCentreOfMass (_V(0,0,0));
 	VECTOR3 mesh_dir=_V(0,0,0);
     AddMesh (hCMPEVA, &mesh_dir);
 	SetCameraOffset(_V(0,1.6,0));
-	SetTouchdownPoints (_V(0,-1,1), _V(-1,-1,-1), _V(1,-1,-1));
+	
+	double tdph = -0.8;
+	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
+	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1), -tdph); // GetCOG_elev());
 	Astro = true;
 }
 
-
 void Saturn5_LEVA::SetRoverStage ()
 {
-	SetEmptyMass (250);
-	SetSize (2);
-	SetCOG_elev(3);
-	SetPMI (_V(15,15,15));
-	SetRotDrag (_V(0.7,0.7,1.2));
-	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0); 
+	SetEmptyMass(250);
+	SetSize(10);
+	SetPMI(_V(15,15,15));
+
+	SetSurfaceFrictionCoeff(0.005, 0.5);
+	SetRotDrag(_V(0, 0, 0));
+	SetCW(0, 0, 0, 0);
+	SetPitchMomentScale(0);
+	SetBankMomentScale(0);
+	SetLiftCoeffFunc(0); 
+
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-    ShiftCentreOfMass (_V(0,0.0,0));
 	VECTOR3 mesh_dir=_V(0,0.0,0);
-    AddMesh (hLRV, &mesh_dir);
+    AddMesh(hLRV, &mesh_dir);
 	SetCameraOffset(_V(0,0,0));
-	SetTouchdownPoints (_V(0,-2,1), _V(-1,-2,-1), _V(1,-2,-1));
+
+	double tdph = -0.9;
+	SetTouchdownPoints(_V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3));
+	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3), -tdph); // GetCOG_elev());
+
 	Astro=false;
 }
 
@@ -193,22 +231,31 @@ void Saturn5_LEVA::MoveEVA()
 	double lat;
 	double lon;
 	double cap;
-	double timeW=1;
+	double timeW = 1;
 	VESSELSTATUS eva;
 
 	GetStatus(eva);
 	oapiGetHeading(GetHandle(),&cap);
 	timeW=oapiGetTimeAcceleration();
-	if (timeW >100)
+	if (timeW > 100)
 		oapiSetTimeAcceleration(100);
-	lon=eva.vdata[0].x;
-	lat=eva.vdata[0].y;
+	
+	if (eva.status == 1) {
+		lon = eva.vdata[0].x;
+		lat = eva.vdata[0].y;
+	
+	} else if (lastLatLongSet) {
+		lon = lastLong;
+		lat = lastLat;
+		eva.vdata[0].z = cap;
+	
+	} else return;
 
 	if (Astro){
-		cm = 0.3e-7*timeW;
+		cm = 0.3e-7 * timeW;
 	}
 	else{
-		cm = 0.9e-7*timeW;
+		cm = 0.9e-7 * timeW;
 	}
 	if (KEY1){
 		eva.vdata[0].z = eva.vdata[0].z - PI*0.5/180;
@@ -224,7 +271,8 @@ void Saturn5_LEVA::MoveEVA()
 		}
 		KEY3=false;
 	}
-	else if (KEY2){
+
+	if (KEY2){
 		lat = lat - cos(cap) * cm;
 		lon = lon - sin(cap) * cm;
 		KEY2=false;
@@ -252,144 +300,143 @@ void Saturn5_LEVA::MoveEVA()
 	}
 	else if (KEY9){
 		KEY9=false;
-	}else{
+	} else {
 		//StopVesselWave(HAstro);
 		//StopVesselWave(HRover);
 	}
 
-	eva.vdata[0].x=lon;
-	eva.vdata[0].y=lat;
+	eva.vdata[0].x = lon;
+	eva.vdata[0].y = lat;
+	eva.status = 1;
 	DefSetState(&eva);
+
+	lastLat = lat;
+	lastLong = lon;
+	lastLatLongSet = true;
 }
 
 // ==============================================================
 // API interface
 // ==============================================================
 
+int Saturn5_LEVA::clbkConsumeDirectKey(char *kstate) {
 
-DLLCLBK int ovcConsumeKey (VESSEL *vessel, const char *keystate)
-{
-	Saturn5_LEVA *sv = (Saturn5_LEVA *)vessel;
-	return sv->ConsumeKey(keystate);
-}
+	TRACESETUP("clbkConsumeDirectKey");
 
-int Saturn5_LEVA::ConsumeKey(const char *keystate)
+	if (FirstTimestep) return 0;
 
-{
-	TRACESETUP("ConsumeKey");
-
-	if (KEYMOD_SHIFT (keystate)) 
-	{
+	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
 		return 0; 
 	}
-	else if (KEYMOD_CONTROL (keystate)) 
-	{
-	
+
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD1)) {
+		KEY1 = true;
+		RESETKEY(kstate, OAPI_KEY_NUMPAD1);
 	}
-	else 
-	{ 
-		if (KEYDOWN (keystate, OAPI_KEY_E)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_E, 1)){
-				
-				if (Astro){
-				GoDock1 = !GoDock1;
-				}
-				
-			return 1;
-			}
-		}
 
-		//
-		// V switches to rover if applicable.
-		//
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD2)) {
+		KEY2 = true;
+		RESETKEY(kstate, OAPI_KEY_NUMPAD2);
+	}
 
-		if (KEYDOWN (keystate, OAPI_KEY_V)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_V, 1.0)) {
-				if ((ApolloNo > 14) || (ApolloNo == 0)) {
-					GoRover = !GoRover;
-					return 1;
-				}
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_G)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_G, 1.0)){
-				if (!Astro)
-					GoHover = !GoHover;	
-				return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_F)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_F, 1.0)){
-				if (Astro && !FlagPlanted )
-				GoFlag = true;	
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD3)) {
+		KEY3 = true;
+		RESETKEY(kstate, OAPI_KEY_NUMPAD3);
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD4)) {			
+		KEY4 = true;
+		RESETKEY(kstate, OAPI_KEY_NUMPAD4);			
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD5)) {			
+		KEY5 = true;
+		RESETKEY(kstate, OAPI_KEY_NUMPAD5);			
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD6)) {			
+		KEY6 = true;
+		RESETKEY(kstate, OAPI_KEY_NUMPAD6);
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD7)) {			
+		KEY7 = true;
+		RESETKEY(kstate, OAPI_KEY_NUMPAD7);			
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD8)) {
+		KEY8 = true;
+		RESETKEY(kstate, OAPI_KEY_NUMPAD8);						
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD9)) {
+		KEY9 = true;
+		RESETKEY(kstate, OAPI_KEY_NUMPAD9);
+	}
+
+
+	// touchdown point test
+	/* 
+	if (KEYDOWN (kstate, OAPI_KEY_A)) {
+		touchdownPointHeight += 0.01;
+		RESETKEY(kstate, OAPI_KEY_A);
+
+		SetTouchdownPoints (_V(0, touchdownPointHeight, 1), _V(-1, touchdownPointHeight, -1), _V(1, touchdownPointHeight, -1));
+		VSSetTouchdownPoints(GetHandle(), _V(0, touchdownPointHeight, 1), _V(-1, touchdownPointHeight, -1), _V(1, touchdownPointHeight, -1), -touchdownPointHeight); // GetCOG_elev());
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_S)) {
+		touchdownPointHeight -= 0.01;
+		RESETKEY(kstate, OAPI_KEY_S);
+
+		SetTouchdownPoints (_V(0, touchdownPointHeight, 1), _V(-1, touchdownPointHeight, -1), _V(1, touchdownPointHeight, -1));
+		VSSetTouchdownPoints(GetHandle(), _V(0, touchdownPointHeight, 1), _V(-1, touchdownPointHeight, -1), _V(1, touchdownPointHeight, -1), -touchdownPointHeight); // GetCOG_elev());
+	}
+	*/
+
+	return 0;
+}
+
+int Saturn5_LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
+
+	TRACESETUP("clbkConsumeBufferedKey");
+
+	if (FirstTimestep) return 0;
+
+	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
+		return 0; 
+	}
+
+	if (key == OAPI_KEY_E && down == true) {				
+		if (Astro) {
+			GoDock1 = !GoDock1;
+		}				
+		return 1;
+	}
+
+	//
+	// V switches to rover if applicable.
+	//
+
+	if (key == OAPI_KEY_V && down == true) {				
+		if ((ApolloNo > 14) || (ApolloNo == 0) || (!Realism)) {
+			GoRover = !GoRover;
 			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_NUMPAD1)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_NUMPAD1, .001)){
-				KEY1 = true;
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_NUMPAD3)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_NUMPAD3, 0.001)){
-				KEY3 = true;
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_NUMPAD2)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_NUMPAD2, .001)){
-				KEY2 = true;
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_NUMPAD4)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_NUMPAD4, 0.001)){
-				
-				KEY4 = true;
-				
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_NUMPAD5)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_NUMPAD5, .001)){
-				
-				KEY5 = true;
-				
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_NUMPAD6)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_NUMPAD6, .001)){
-				
-				KEY6 = true;
-				
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_NUMPAD7)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_NUMPAD7, .001)){
-				
-				KEY7 = true;
-				
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_NUMPAD8)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_NUMPAD8, .001)){
-				
-				KEY8 = true;
-				
-			return 1;
-			}
-		}
-		if (KEYDOWN (keystate, OAPI_KEY_NUMPAD9)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_NUMPAD9, .001)){	
-				KEY9 = true;
-				return 1;
-			}
 		}
 	}
+		
+	if (key == OAPI_KEY_G && down == true) {				
+		if (!Astro)
+			GoHover = !GoHover;	
+		return 1;
+	}
+
+	if (key == OAPI_KEY_F && down == true) {				
+		if (Astro && !FlagPlanted )
+			GoFlag = true;	
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -470,6 +517,7 @@ void Saturn5_LEVA::SetEVAStats(EVASettings &evas)
 
 {
 	ApolloNo = evas.MissionNo;
+	Realism = evas.Realism;
 	StateSet = true;
 }
 
@@ -501,6 +549,8 @@ void Saturn5_LEVA::DoFirstTimestep()
 		soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
 		soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
 		soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
+		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
+		soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 		FirstTimestep = false;
 	}
@@ -511,7 +561,6 @@ void Saturn5_LEVA::Timestep(double simt)
 {
 	VESSELSTATUS csmV;
 	VESSELSTATUS evaV;
-	VESSEL *csmvessel;
 	VECTOR3 rdist = {0,0,0};
 	VECTOR3 posr  = {0,0,0};
 	VECTOR3 rvel  = {0,0,0};
@@ -542,17 +591,18 @@ void Saturn5_LEVA::Timestep(double simt)
 	}
 	
 	if (hMaster){
-		csmvessel = oapiGetVesselInterface(hMaster);					
+		sat5_lmpkd *lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hMaster);					
 		oapiGetRelativePos (GetHandle() ,hMaster, &posr);
 		oapiGetRelativeVel (GetHandle() ,hMaster , &rvel);
 		GetStatus(evaV);
-		csmvessel->GetStatus(csmV);
+		lmvessel->GetStatus(csmV);
 		GlobalRot (posr, RelRot);
 		dist = sqrt(posr.x * posr.x + posr.y * posr.y + posr.z * posr.z);
 		Vel = sqrt(rvel.x * rvel.x + rvel.y * rvel.y + rvel.z * rvel.z);
-		if (GoDock1){						
-			if (dist <= 6.00550){
-				GoDock1 =false;
+		if (GoDock1) {						
+			if (dist <= 6.00550) {
+				GoDock1 = false;
+				lmvessel->StopEVA();
 				oapiSetFocusObject(hMaster);
 				oapiDeleteVessel(GetHandle());
 				return;
@@ -573,6 +623,9 @@ void Saturn5_LEVA::Timestep(double simt)
 	if (GoFlag && !FlagPlanted) {
 		SetFlag();
 	}
+
+	// touchdown point test
+	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
 }
 
 DLLCLBK void ovcLoadState (VESSEL *vessel, FILEHANDLE scn, VESSELSTATUS *vs)
@@ -599,8 +652,11 @@ void Saturn5_LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
 				SetEngineLevel(ENGINE_HOVER,1);
 			}
 		}
-		else if (!strnicmp (line, "MISSIONNO", 8)) {
-			sscanf(line + 8, "%d", &ApolloNo);
+		else if (!strnicmp (line, "MISSIONNO", 9)) {
+			sscanf(line + 9, "%d", &ApolloNo);
+		}
+		else if (!strnicmp (line, "REALISM", 7)) {
+			sscanf(line + 7, "%d", &Realism);
 		}
 		else {
             ParseScenarioLine (line, vs);
@@ -664,7 +720,7 @@ void Saturn5_LEVA::SaveState(FILEHANDLE scn)
 	if (ApolloNo != 0) {
 		oapiWriteScenario_int (scn, "MISSIONNO", ApolloNo);
 	}
-	
+	oapiWriteScenario_int (scn, "REALISM", Realism);
 }
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
@@ -677,19 +733,15 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	return new Saturn5_LEVA (hvessel, flightmodel);
 }
 
-
-DLLCLBK void ovcSetClassCaps (VESSEL *vessel, FILEHANDLE cfg)
-{
-	Saturn5_LEVA *sv = (Saturn5_LEVA *)vessel;
-
-	sv->init();
-	sv->SetAstroStage ();
-}
-
 DLLCLBK void ovcExit (VESSEL *vessel)
 {
 	Saturn5_LEVA *sv = (Saturn5_LEVA *) vessel;
 
 	if (sv)
 		delete sv;
+}
+
+DLLCLBK void InitModule (HINSTANCE hModule)
+{
+	InitCollisionSDK();
 }
