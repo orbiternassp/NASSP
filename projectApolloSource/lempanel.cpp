@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/01/18 20:11:28  flydba
+  *	Contact lights added.
+  *	
   *	Revision 1.39  2005/11/28 01:13:53  movieman523
   *	Added LEM right-hand panel.
   *	
@@ -910,29 +913,34 @@ void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
 
 
 	if (s == &AbortSwitch) {
-		// This is the "ABORT" button
-		AbortFire();
-		SetEngineLevel(ENGINE_HOVER, 1);
-		//SetThrusterResource(th_hover[0], ph_Asc);
-		//SetThrusterResource(th_hover[1], ph_Asc);
-		//stage = 2;
-		startimer = false;
-		agc.SetInputChannelBit(030, 1, true);
+		if (s->IsDown()) {
+			// This is the "ABORT" button
+			AbortFire();
+			SetEngineLevel(ENGINE_HOVER, 1);
+			//SetThrusterResource(th_hover[0], ph_Asc);
+			//SetThrusterResource(th_hover[1], ph_Asc);
+			//stage = 2;
+			startimer = false;
+			agc.SetInputChannelBit(030, 1, true);
+		}
 	
 	} else if (s == &AbortStageSwitch) {
 		// This is the "ABORT STAGE" button
-		AbortFire();
-		AbortStageSwitchLight = true;
-		SeparateStage(stage);
-		SetThrusterResource(th_hover[0], ph_Asc);
-		SetThrusterResource(th_hover[1], ph_Asc);
-		stage = 2;
-		startimer = false;
-		AbortStageSwitchLight = true;
-		if(agc.GetProgRunning() > 14 ) {
-			SetEngineLevel(ENGINE_HOVER, 1);
-			agc.SetInputChannelBit(030, 4, true);
+		if (s->IsDown()) {
+			AbortFire();
+			AbortStageSwitchLight = true;
+			SeparateStage(stage);
+			SetThrusterResource(th_hover[0], ph_Asc);
+			SetThrusterResource(th_hover[1], ph_Asc);
+			stage = 2;
+			startimer = false;
+			AbortStageSwitchLight = true;
+			if(agc.GetProgRunning() > 14 ) {
+				SetEngineLevel(ENGINE_HOVER, 1);
+				agc.SetInputChannelBit(030, 4, true);
+			}
 		}
+
 	} else if (s == &EngineArmSwitch) {
 		if (!s->IsCenter())
  		    agc.SetInputChannelBit(030, 3, true);
