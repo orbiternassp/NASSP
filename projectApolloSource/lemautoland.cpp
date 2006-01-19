@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2005/11/16 20:21:39  movieman523
+  *	CSM/LEM renaming changes.
+  *	
   *	Revision 1.33  2005/10/07 20:26:57  lazyd
   *	*** empty log message ***
   *	
@@ -142,6 +145,8 @@
 #include "IMU.h"
 
 #include "sat5_lmpkd.h"
+
+#include "CollisionSDK/CollisionSDK.h"
 
 #define MAXOFFPLANE	44000
 #define BRAKDIST	425000
@@ -385,7 +390,7 @@ void LEMcomputer::Prog63(double simt)
 					if(fabs(dtg) < 0.01) break;
 					ttg=ttg+dtg;
 				}
-//				sprintf(oapiDebugString(),"ttg=%.1f",ttg);
+				//sprintf(oapiDebugString(),"ttg=%.1f fabs(dtg)=%f",ttg,fabs(dtg));
 				BurnEndTime=simt-ttg-60.0;
 				ttg2=ttg*ttg;
 				if(A15DELCO) {
@@ -481,9 +486,9 @@ void LEMcomputer::Prog63(double simt)
 				accvec=Normalize(acc);
 				tgtatt.y=0.0;
 				OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
-//				sprintf(oapiDebugString(),
-//					"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f tgo=%.1f",
-//					acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60.);
+				//sprintf(oapiDebugString(),
+				//	"acc=%.2f %.2f %.2f att=%.1f %.1f %.1f act=%.1f %.1f %.1f ath=%.3f tgo=%.1f",
+				//	acc, tgtatt*DEG, actatt*DEG, cthrust, ttg+60.);
 			}
 			if(ProgState < 15) {
 				OrientAxis(accvec, 1, 1);
@@ -515,8 +520,8 @@ void LEMcomputer::Prog63(double simt)
         }
 		//end of 2-second interval guidance calcs
 	}
-//	sprintf(oapiDebugString(),"ProgState, Time, Next= %d %.1f %.1f", ProgState, 
-//			simt, NextEventTime);
+	//sprintf(oapiDebugString(),"ProgState, Time, Next= %d %.1f %.1f", ProgState, 
+	//		simt, NextEventTime);
 	double dt=BurnStartTime-simt;
 	switch (ProgState) {
 	case 0:
@@ -552,7 +557,7 @@ void LEMcomputer::Prog63(double simt)
 		//Turn on Attitude control
 		ProgFlag02=true;
 		ProgFlag03=false;
-//		sprintf(oapiDebugString(),"t=%.1f ", dt);
+		//sprintf(oapiDebugString(),"t=%.1f ", dt);
 // 35 seconds from ignition, blank the DSKY for 5 seconds
 		if(dt <= 35) {
 			BlankAll();
@@ -936,7 +941,9 @@ void LEMcomputer::Prog65(double simt)
 		RunProgram(68);
 		return;
 	}
-	if(OurVessel->GroundContact()) {
+
+	double vsAlt = VSGetATL(OurVessel->GetHandle());
+	if (OurVessel->GroundContact() || (vsAlt != VS_NO_ALT && vsAlt < 1.0)) {
 		ProgState++;
 		OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
 		OurVessel->SetAttitudeRotLevel(zero);
@@ -983,9 +990,12 @@ void LEMcomputer::Prog65(double simt)
 		CutOffVel=-vel.x*10.0;
 		actatt.y=BurnTime-heading;
 		DesiredApogee=vel.y*10.0;
-		cgelev=OurVessel->GetCOG_elev();
+		cgelev=OurVessel->GetCOG_elev();		
 		CurrentAlt=vrad-bradius-cgelev;
-		if (CurrentAlt <= 0.0 ) {
+
+		if ((vsAlt != VS_NO_ALT && vsAlt < 1.0) ||
+			(vsAlt == VS_NO_ALT && CurrentAlt <= 0.0)) { 
+
 			OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
 			OurVessel->SetAttitudeRotLevel(zero);
 			ProgState++;
@@ -1150,7 +1160,6 @@ void LEMcomputer::Prog65(double simt)
 	
 }
 
-
 void LEMcomputer::Prog66(double simt)
 {
 	static VECTOR3 zero={0.0, 0.0, 0.0};
@@ -1174,7 +1183,11 @@ void LEMcomputer::Prog66(double simt)
 		OurVessel->GetHorizonAirspeedVector(velocity);
 		cgelev=OurVessel->GetCOG_elev();
 		CurrentAlt=vrad-bradius-cgelev;
-		if (CurrentAlt <= 0.0 ) {
+
+		double vsAlt = VSGetATL(OurVessel->GetHandle());
+		if ((vsAlt != VS_NO_ALT && vsAlt < 1.0) ||
+			(vsAlt == VS_NO_ALT && CurrentAlt <= 0.0)) { 
+
 			OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
 			OurVessel->SetAttitudeRotLevel(zero);
 			ProgState++;
