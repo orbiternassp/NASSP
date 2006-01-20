@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.16  2006/01/07 01:34:08  movieman523
   *	Added AC bus overvoltage and main bus undervolt lights.
   *	
@@ -376,6 +379,15 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		//
 		
 		SetLight(CSM_CWS_SUIT_COMPRESSOR, (datm.DisplayedSuitComprDeltaPressurePSI < 0.22));
+
+		//
+		// RCS:
+		//
+		// SM RCS warning lights when temperature is below 75F or above 205F. In auto mode,
+		// RCS heaters (two per quad at 36W) turn on at 115F and off at 134F (AOH RCS 2.5-24).
+		//
+		// CM RCS warning lights if pressure is below 260psi or above 330psi (AOH RCS 2.5-46).
+		//
 
 		NextUpdateTime = simt + (0.2 * oapiGetTimeAcceleration());
 	}
