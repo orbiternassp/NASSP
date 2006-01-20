@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.100  2006/01/15 19:50:48  movieman523
+  *	Don't delete launch site until we reach orbit.
+  *	
   *	Revision 1.99  2006/01/15 02:38:59  movieman523
   *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
   *	
@@ -2675,7 +2678,7 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	th_rcs_d[1] = th_att_rot[22];
 	th_rcs_d[2] = th_att_rot[12];
 	th_rcs_d[3] = th_att_rot[4];
-	th_rcs_d[4] = th_att_rot[2];
+	th_rcs_d[4] = th_att_rot[6];
 }
 
 void Saturn::AddRCS_CM(double MaxThrust)
