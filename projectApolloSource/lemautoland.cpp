@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2006/01/20 19:43:19  lazyd
+  *	P63, P64, P65 and P66 are now MeshLand-aware
+  *	
   *	Revision 1.35  2006/01/19 14:46:35  tschachim
   *	Initial Meshland support
   *	
@@ -900,7 +903,7 @@ void LEMcomputer::Prog64(double simt)
 			cthrust=0.6772;
 		}
 		tgtatt.z=-asin(acc.z/acctot);
-		tgtatt.y=0.0;
+//		tgtatt.y=0.0;
 		tgtatt.x=(PI/2.0-atan(acc.y/acc.x)*(fabs(acc.x)/acc.x));
 		// the LPD time and LPD angle are calculated and put into CutOffVel for N64 display
 //		int secs=(int)(-ttg-45);
@@ -908,6 +911,8 @@ void LEMcomputer::Prog64(double simt)
 		if(secs < 0) secs=0;
 		if(secs > 99) secs=99;
 		lpd=(int)((atan(position.y/fabs(position.x))+actatt.x)*DEG+0.5);
+		tgtatt.y=-sin(actatt.z)*lpd*RAD;
+		if(secs <=0.0) tgtatt.y=0.0;
 		CutOffVel=1000.0*secs+lpd;
 		sprintf(oapiDebugString(),"LPD time=%d  LPD angle=%d",secs, lpd);
 //		sprintf(oapiDebugString(),"LPD time=%d  LPD angle=%d lat=%.6f, lon=%.6f alt=%.1f ",secs, lpd,
