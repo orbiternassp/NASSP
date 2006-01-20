@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2006/01/19 14:46:35  tschachim
+  *	Initial Meshland support
+  *	
   *	Revision 1.34  2005/11/16 20:21:39  movieman523
   *	CSM/LEM renaming changes.
   *	
@@ -197,11 +200,14 @@ void LEMcomputer::Prog63(double simt)
 		maxacc, down, ttg, ttg2, ttg3, ttg4, ttgl, ttgl2, dtg, jfz, heading, maxthr, 
 		locr, hicr, braktim, sgn;
 	// go through guidance calcs every 2 seconds
-//	tgo=-540.0-(BurnStartTime-simt);
 	LightCompActy();
 	if(simt > NextEventTime) {
 //		sprintf(oapiDebugString(),"ProgState= %d  simt=%.1f ", ProgState, simt);
 		if(ProgState == 0) {
+// MeshLand change..
+			char pname[5];
+			oapiGetObjectName(OurVessel->GetSurfaceRef(),pname,5); 		
+			LandingAltitude=VSGetAbsMaxElvLoc(pname, LandingLatitude*RAD, LandingLongitude*RAD);
 			LightAlt();
 			LightVel();
 //			sprintf(oapiDebugString(),"Alt Vel lights on");
@@ -234,6 +240,7 @@ void LEMcomputer::Prog63(double simt)
 			aa = pow(sin(dlat/2), 2) + cos(blat) * cos (vlat) * pow(sin(dlon/2), 2);
 			cc = 2 * atan2(sqrt(aa), sqrt(1 - aa));
 			sbdis=bradius*cc;
+//			sprintf(oapiDebugString(), "distance=%.1f", sbdis);
 			//Downrange distance for noun 68
 			DeltaPitchRate=sbdis;
 			if(ProgState == 0) return;
@@ -340,7 +347,7 @@ void LEMcomputer::Prog63(double simt)
 			tgtatt.y=0.0;
 			tgtatt.z=0.0;
 			position.x=-sbdis*cos(rbrg);
-			position.y=CurrentAlt;
+			position.y=CurrentAlt-LandingAltitude;
 			position.z=-sin(rbrg)*sbdis;
 			velocity.x=hvel*cos(rbrg);
 			velocity.y=vel.y;
@@ -421,6 +428,7 @@ void LEMcomputer::Prog63(double simt)
 					acc.z=ahi.z+(6.0*(velocity.z+vhi.z))/ttg - (12.0*(position.z-rhi.z))/ttg2;
 				}
 
+//				sprintf(oapiDebugString(), "p=%.1f %.1f %.1f v=%.1f %.1f %.1f a=%.3f %.3f %.3f", position, velocity, acc);
 				acctot=Mag(acc);
 				vmass=OurVessel->GetMass();
 				vthrust=OurVessel->GetMaxThrust(ENGINE_HOVER);
@@ -708,7 +716,6 @@ void LEMcomputer::Prog63Pressed(int R1, int R2, int R3)
 
 	LightOprErr();
 }
-
 void LEMcomputer::Prog64(double simt)
 {
 	//Position targets for low gate
@@ -726,7 +733,11 @@ void LEMcomputer::Prog64(double simt)
 		ttgl2, dtg, grav, acctot, vmass, vthrust, maxacc, cthrust, accx, cgelev;
 	LightCompActy();
 	if(ProgState==0) {
-
+// MeshLand change..
+		char pname[5];
+		oapiGetObjectName(OurVessel->GetSurfaceRef(),pname,5); 		
+		LandingAltitude=VSGetAbsMaxElvLoc(pname, LandingLatitude*RAD, LandingLongitude*RAD);
+		sprintf(oapiDebugString(), "lat=%.5f lon=%.5f alt=%.1f", LandingLatitude, LandingLongitude, LandingAltitude);
 		if(P64LOG) {
 			char fname[8];
 			sprintf(fname,"P64log.txt");
@@ -810,7 +821,7 @@ void LEMcomputer::Prog64(double simt)
 		BurnTime=heading;
 
 		position.x=-sbdis*cos(tbrg-heading);
-		position.y=CurrentAlt;
+		position.y=CurrentAlt-LandingAltitude;
 		position.z=sbdis*sin(tbrg-heading);
 		velocity.x=hvel*cos(cbrg-heading);
 		velocity.y=vel.y;
@@ -899,6 +910,8 @@ void LEMcomputer::Prog64(double simt)
 		lpd=(int)((atan(position.y/fabs(position.x))+actatt.x)*DEG+0.5);
 		CutOffVel=1000.0*secs+lpd;
 		sprintf(oapiDebugString(),"LPD time=%d  LPD angle=%d",secs, lpd);
+//		sprintf(oapiDebugString(),"LPD time=%d  LPD angle=%d lat=%.6f, lon=%.6f alt=%.1f ",secs, lpd,
+//			LandingLatitude, LandingLongitude, position.y);
 		OurVessel->SetEngineLevel(ENGINE_HOVER, cthrust);
 		ComAttitude(actatt, tgtatt, true);
 		if(P64LOG) {
@@ -991,7 +1004,8 @@ void LEMcomputer::Prog65(double simt)
 		actatt.y=BurnTime-heading;
 		DesiredApogee=vel.y*10.0;
 		cgelev=OurVessel->GetCOG_elev();		
-		CurrentAlt=vrad-bradius-cgelev;
+//		CurrentAlt=vrad-bradius-cgelev;
+		CurrentAlt=vsAlt;
 
 		if ((vsAlt != VS_NO_ALT && vsAlt < 1.0) ||
 			(vsAlt == VS_NO_ALT && CurrentAlt <= 0.0)) { 
@@ -1049,7 +1063,8 @@ void LEMcomputer::Prog65(double simt)
 			rbrg-=2*PI;
 		}
 		position.x=-sbdis*cos(tbrg-heading);
-		position.y=CurrentAlt;
+//		position.y=CurrentAlt-LandingAltitude;
+		position.y=vsAlt;
 		position.z=sbdis*sin(tbrg-heading);
 		velocity.x=hvel*cos(cbrg-heading);
 		velocity.y=vel.y;
@@ -1182,9 +1197,10 @@ void LEMcomputer::Prog66(double simt)
 		OurVessel->GetEquPos(vlon, vlat, vrad);
 		OurVessel->GetHorizonAirspeedVector(velocity);
 		cgelev=OurVessel->GetCOG_elev();
-		CurrentAlt=vrad-bradius-cgelev;
+
 
 		double vsAlt = VSGetATL(OurVessel->GetHandle());
+		CurrentAlt=vsAlt;
 		if ((vsAlt != VS_NO_ALT && vsAlt < 1.0) ||
 			(vsAlt == VS_NO_ALT && CurrentAlt <= 0.0)) { 
 
@@ -1280,6 +1296,11 @@ void LEMcomputer::RedesignateTarget(int axis, double direction)
 	}
 	LandingLatitude=(blat+dlat)*DEG;
 	LandingLongitude=(blon+dlon)*DEG;
+// MeshLand change..
+	char pname[5];
+	oapiGetObjectName(OurVessel->GetSurfaceRef(),pname,5); 		
+	LandingAltitude=VSGetAbsMaxElvLoc(pname, LandingLatitude*RAD, LandingLongitude*RAD);
+//	sprintf(oapiDebugString(), "lat=%.5f lon=%.5f alt=%.1f", LandingLatitude, LandingLongitude, LandingAltitude);
 }
 void LEMcomputer::GetHorizVelocity(double &forward, double &lateral)
 {
@@ -1383,7 +1404,7 @@ void LEMcomputer::Prog41(double simt)
 
 	if(ProgState == 0) {
 //		SetVerbNounAndFlash(50, 18);
-		SetVerbNoun(16, 18);
+		SetVerbNoun(16, 31);
 		ProgState++;
 		return;
 	}
@@ -1464,6 +1485,8 @@ void LEMcomputer::Prog42(double simt)
 	if(BurnStartTime-simt < 0.0) {
 		DesiredDeltaV=oapiGetTimeAcceleration();
 		oapiSetTimeAcceleration(1.0);
+		BurnEndTime=simt+(BurnEndTime-BurnStartTime);
+		BurnStartTime=simt;
 		// Turn on ascent engine
 		OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
 		OBJHANDLE hbody=OurVessel->GetGravityRef();
@@ -1477,7 +1500,7 @@ void LEMcomputer::Prog42(double simt)
 
 	if(ProgState == 0) {
 		SetVerbNounAndFlash(50, 18);
-		SetVerbNoun(16, 18);
+		SetVerbNoun(16, 31);
 		ProgState++;
 		return;
 	}
