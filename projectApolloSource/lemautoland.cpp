@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2006/01/20 22:34:06  lazyd
+  *	Fixed window-pointing logic for redesignation
+  *	
   *	Revision 1.36  2006/01/20 19:43:19  lazyd
   *	P63, P64, P65 and P66 are now MeshLand-aware
   *	
@@ -211,6 +214,7 @@ void LEMcomputer::Prog63(double simt)
 			char pname[5];
 			oapiGetObjectName(OurVessel->GetSurfaceRef(),pname,5); 		
 			LandingAltitude=VSGetAbsMaxElvLoc(pname, LandingLatitude*RAD, LandingLongitude*RAD);
+			if(LandingAltitude == VS_NO_ALT) LandingAltitude=0.0;
 			LightAlt();
 			LightVel();
 //			sprintf(oapiDebugString(),"Alt Vel lights on");
@@ -740,7 +744,8 @@ void LEMcomputer::Prog64(double simt)
 		char pname[5];
 		oapiGetObjectName(OurVessel->GetSurfaceRef(),pname,5); 		
 		LandingAltitude=VSGetAbsMaxElvLoc(pname, LandingLatitude*RAD, LandingLongitude*RAD);
-		sprintf(oapiDebugString(), "lat=%.5f lon=%.5f alt=%.1f", LandingLatitude, LandingLongitude, LandingAltitude);
+		if(LandingAltitude == VS_NO_ALT) LandingAltitude=0.0;
+//		sprintf(oapiDebugString(), "lat=%.5f lon=%.5f alt=%.1f", LandingLatitude, LandingLongitude, LandingAltitude);
 		if(P64LOG) {
 			char fname[8];
 			sprintf(fname,"P64log.txt");
@@ -961,6 +966,7 @@ void LEMcomputer::Prog65(double simt)
 	}
 
 	double vsAlt = VSGetATL(OurVessel->GetHandle());
+	if(vsAlt == VS_NO_ALT) vsAlt=0.0;
 	if (OurVessel->GroundContact() || (vsAlt != VS_NO_ALT && vsAlt < 1.0)) {
 		ProgState++;
 		OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
@@ -1205,6 +1211,7 @@ void LEMcomputer::Prog66(double simt)
 
 
 		double vsAlt = VSGetATL(OurVessel->GetHandle());
+		if(vsAlt == VS_NO_ALT) vsAlt=0.0;
 		CurrentAlt=vsAlt;
 		if ((vsAlt != VS_NO_ALT && vsAlt < 1.0) ||
 			(vsAlt == VS_NO_ALT && CurrentAlt <= 0.0)) { 
@@ -1305,6 +1312,7 @@ void LEMcomputer::RedesignateTarget(int axis, double direction)
 	char pname[5];
 	oapiGetObjectName(OurVessel->GetSurfaceRef(),pname,5); 		
 	LandingAltitude=VSGetAbsMaxElvLoc(pname, LandingLatitude*RAD, LandingLongitude*RAD);
+	if(LandingAltitude == VS_NO_ALT) LandingAltitude=0.0;
 //	sprintf(oapiDebugString(), "lat=%.5f lon=%.5f alt=%.1f", LandingLatitude, LandingLongitude, LandingAltitude);
 }
 void LEMcomputer::GetHorizVelocity(double &forward, double &lateral)
