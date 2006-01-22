@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/01/19 14:47:43  tschachim
+  *	Bugfix abort buttons.
+  *	
   *	Revision 1.40  2006/01/18 20:11:28  flydba
   *	Contact lights added.
   *	
@@ -226,6 +229,29 @@ void sat5_lmpkd::InitPanel() {
 	ModeControlAGSSwitch.Register(PSH,"ModeControlAGSSwitch", THREEPOSSWITCH_CENTER);
 	IMUCageSwitch.Register(PSH,"IMUCageSwitch", TOGGLESWITCH_DOWN);
 	LeftXPointerSwitch.Register(PSH, "LeftXPointerSwitch", true);
+	GuidContSwitch.Register(PSH, "GuidContSwitch", true);
+	ModeSelSwitch.Register(PSH, "ModeSelSwitch", true);
+	AltRngMonSwitch.Register(PSH, "AltRngMonSwitch", true);
+	RateErrorMonSwitch.Register(PSH, "RateErrorMonSwitch", true);
+	AttitudeMonSwitch.Register(PSH, "AttitudeMonSwitch", true);
+	ShiftTruSwitch.Register(PSH, "ShiftTruSwitch", true);
+	RateScaleSwitch.Register(PSH, "RateScaleSwitch", false);
+	ACAPropSwitch.Register(PSH, "ACAPropSwitch", true);
+	THRContSwitch.Register(PSH, "THRContSwitch", true);
+	MANThrotSwitch.Register(PSH, "MANThrotSwitch", true);
+	ATTTranslSwitch.Register(PSH, "ATTTranslSwitch", true);
+	BALCPLSwitch.Register(PSH, "BALCPLSwitch", true);
+	QTYMonSwitch.Register(PSH, "QTYMonSwitch", THREEPOSSWITCH_DOWN);
+	TempPressMonSwitch.Register(PSH, "TempPressMonSwitch", THREEPOSSWITCH_UP);
+
+	HeliumMonRotary.AddPosition(0, 290);
+	HeliumMonRotary.AddPosition(1, 315);
+	HeliumMonRotary.AddPosition(2, 340);
+	HeliumMonRotary.AddPosition(3,  20);
+	HeliumMonRotary.AddPosition(4,  45);
+	HeliumMonRotary.AddPosition(5,  70);
+	HeliumMonRotary.AddPosition(6, 110);
+	HeliumMonRotary.Register(PSH, "HeliumMonRotary", 0);
 
 
 	Cswitch1=false;
@@ -639,6 +665,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
 		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
 		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
+		srf[SRF_LEMROTARY]			= oapiCreateSurface (LOADBMP (IDB_LEMROTARY));
 
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
@@ -654,6 +681,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_LMTHREEPOSSWITCH],		g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_LEMROTARY],			g_Param.col[4]);
 		break;
 	
 	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
@@ -748,6 +776,12 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CONTACTLIGHT1,					_R( 324,  428,  369,  473), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1362, 1222, 1407, 1267), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTXPOINTERSWITCH,				_R( 330,  515,  364,  544), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GUIDCONTSWITCHROW,				_R( 661,  627,  696,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEFTMONITORSWITCHES,				_R(  51,  712,   85,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FDAILOWERSWITCHROW,				_R( 138,  920,  314,  959), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ENGINETHRUSTCONTSWITCHES,		_R( 211, 1006,  320, 1117), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PROPELLANTSWITCHES,				_R( 484,  991,  546, 1112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_HELIUMMONROTARY,					_R( 587,  995,  665, 1073), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		
@@ -897,6 +931,34 @@ void sat5_lmpkd::SetSwitches(int panel) {
 	LeftXPointerSwitchRow.Init(AID_LEFTXPOINTERSWITCH, MainPanel);
 	LeftXPointerSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], LeftXPointerSwitchRow);
 
+	GuidContSwitchRow.Init(AID_GUIDCONTSWITCHROW, MainPanel);
+	GuidContSwitch.Init (0,   0, 34, 39, srf[SRF_LMTWOPOSLEVER], GuidContSwitchRow);
+	ModeSelSwitch.Init  (0,  83, 34, 29, srf[SRF_SWITCHUP], GuidContSwitchRow);
+	AltRngMonSwitch.Init(0, 167, 34, 29, srf[SRF_SWITCHUP], GuidContSwitchRow);
+
+	LeftMonitorSwitchRow.Init(AID_LEFTMONITORSWITCHES, MainPanel);
+	RateErrorMonSwitch.Init(0,  0, 34, 29, srf[SRF_SWITCHUP], LeftMonitorSwitchRow);
+	AttitudeMonSwitch.Init (0, 83, 34, 29, srf[SRF_SWITCHUP], LeftMonitorSwitchRow);
+
+	FDAILowerSwitchRow.Init(AID_FDAILOWERSWITCHROW, MainPanel);
+	ShiftTruSwitch.Init (  0,  5, 34, 29, srf[SRF_SWITCHUP], FDAILowerSwitchRow);
+	RateScaleSwitch.Init( 73,  5, 34, 29, srf[SRF_SWITCHUP], FDAILowerSwitchRow);
+	ACAPropSwitch.Init  (142,  0, 34, 39, srf[SRF_LMTWOPOSLEVER], FDAILowerSwitchRow);
+
+	EngineThrustContSwitchRow.Init(AID_ENGINETHRUSTCONTSWITCHES, MainPanel);
+	THRContSwitch.Init  (  0,  0, 34, 39, srf[SRF_LMTWOPOSLEVER], EngineThrustContSwitchRow);
+	MANThrotSwitch.Init ( 69,  0, 34, 39, srf[SRF_LMTWOPOSLEVER], EngineThrustContSwitchRow);
+	ATTTranslSwitch.Init( 20, 77, 34, 29, srf[SRF_SWITCHUP], EngineThrustContSwitchRow);
+	BALCPLSwitch.Init   ( 75, 72, 34, 39, srf[SRF_LMTWOPOSLEVER], EngineThrustContSwitchRow);
+
+	PropellantSwitchRow.Init(AID_PROPELLANTSWITCHES, MainPanel);
+	QTYMonSwitch.Init      ( 0,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], PropellantSwitchRow);
+	TempPressMonSwitch.Init(28, 92, 34, 29, srf[SRF_LMTHREEPOSSWITCH], PropellantSwitchRow);
+
+	HeliumMonRotaryRow.Init(AID_HELIUMMONROTARY, MainPanel);
+	HeliumMonRotary.Init(0, 0, 78, 78, srf[SRF_LEMROTARY], HeliumMonRotaryRow);
+
+	
 	EngineDescentCommandOverrideSwitchesRow.Init(AID_DESCENT_ENGINE_SWITCH,MainPanel);
 	EngineDescentCommandOverrideSwitch.Init (0, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], EngineDescentCommandOverrideSwitchesRow);
 
