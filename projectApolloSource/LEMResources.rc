@@ -72,7 +72,7 @@ IDB_HORIZON             BITMAP  DISCARDABLE     "Horizon.bmp"
 IDB_NEEDLE1             BITMAP  DISCARDABLE     "Needle1.bmp"
 IDB_DIGITAL             BITMAP  DISCARDABLE     "digitaldisp.bmp"
 IDB_HORIZON2            BITMAP  DISCARDABLE     "Horizon2.bmp"
-IDB_SWITCHUP            BITMAP  DISCARDABLE     "SwitchUP.bmp"
+IDB_SWITCHUP            BITMAP  DISCARDABLE     "lemswitchup.bmp"
 IDB_ILMSWITCHUP         BITMAP  DISCARDABLE     "ilmswitchup.bmp"
 IDB_SWLEVER             BITMAP  DISCARDABLE     "switch_lever.bmp"
 IDB_ILMSWLEVER          BITMAP  DISCARDABLE     "ilmswitch_lever.bmp"
@@ -113,6 +113,7 @@ IDB_LMTHREEPOSLEVER     BITMAP  DISCARDABLE     "lemswitch3.bmp"
 IDB_LMTHREEPOSSWITCH    BITMAP  DISCARDABLE     "lm3posswitch.bmp"
 IDB_DSKY_DISP           BITMAP  DISCARDABLE     "dsky_disp.bmp"
 IDB_DSKY_KEY            BITMAP  DISCARDABLE     "dsky_keys.bmp"
+IDB_LEMROTARY           BITMAP  DISCARDABLE	"LemRotationalSwitch.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 

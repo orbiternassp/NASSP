@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/01/14 12:33:04  flydba
+  *	New panel added (325/326) for cabin press control.
+  *	
   *	Revision 1.51  2006/01/11 02:16:25  movieman523
   *	Added RCS propellant quantity gauge.
   *	
@@ -226,7 +229,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 78; // number of bitmap handles
+const int nsurf = 79; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -296,6 +299,7 @@ const int nsurf = 78; // number of bitmap handles
 #define SRF_CSMRIGHTRNDZWINDOWLESCOVER 75
 #define SRF_CSMLEFTWINDOWCOVER		76  
 #define SRF_GLYCOLLEVER				77
+#define SRF_LEMROTARY				78
 
 //
 // Earth radius and gravity constants.
