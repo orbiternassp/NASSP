@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2006/01/19 14:55:13  tschachim
+  *	Initial Meshland support.
+  *	
   *	Revision 1.30  2006/01/18 20:12:54  flydba
   *	Contact lights added.
   *	
@@ -288,6 +291,37 @@ protected:
 
 	SwitchRow LeftXPointerSwitchRow;
 	ToggleSwitch LeftXPointerSwitch;
+
+	SwitchRow GuidContSwitchRow;
+	ToggleSwitch GuidContSwitch;
+	ToggleSwitch ModeSelSwitch;
+	ToggleSwitch AltRngMonSwitch;
+
+	SwitchRow LeftMonitorSwitchRow;
+	ToggleSwitch RateErrorMonSwitch;
+	ToggleSwitch AttitudeMonSwitch;
+
+	SwitchRow FDAILowerSwitchRow;
+	ToggleSwitch ShiftTruSwitch;
+	ToggleSwitch RateScaleSwitch;
+	ToggleSwitch ACAPropSwitch;
+	
+	SwitchRow EngineThrustContSwitchRow;
+	ToggleSwitch THRContSwitch;
+	ToggleSwitch MANThrotSwitch;
+	ToggleSwitch ATTTranslSwitch;
+	ToggleSwitch BALCPLSwitch;
+
+	SwitchRow PropellantSwitchRow;
+	ThreePosSwitch QTYMonSwitch;
+	ThreePosSwitch TempPressMonSwitch;
+
+	SwitchRow HeliumMonRotaryRow;
+	RotationalSwitch HeliumMonRotary;
+
+	//////////////////////
+	// LEM panel 3		//
+	//////////////////////
 	
 	SwitchRow EngineArmSwitchesRow;
 	ThreePosSwitch EngineArmSwitch;
