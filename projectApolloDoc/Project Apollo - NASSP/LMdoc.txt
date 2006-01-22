@@ -1,0 +1,256 @@
+
+
+
+The REALISM variable:
+
+The REALISM variable is used to specify the extent of DSKY interaction the user wishes.  If REALISM is set to zero, it is only necessary to start a program (i.e. V37N63E) and everything is automatic.  If REALISM is > zero, the DSKY interactions are as described below.
+
+Programs available for Orbit, Landing, Ascent and Rendezvous:
+P12 - LM Ascent 
+P16 - LOI: Lunar Orbit Insertion
+P17 - DOI: Descent Orbit Insertion
+P18 - Orbit Plane/Surface Alignment 
+P19 - Orbit Adjustment- In Plane
+P32 - CSI: Coelliptic Sequence Initiation 
+P33 - CDH: Constant Delta Height 
+P34 - TPI: Transfer Phase Initiation 
+P35 - TPM: Transfer Phase Midcourse 
+P36 - Rendezvous Braking and station keeping 
+P40 - DPS: Descent Propulsion System Burn 
+P41 - RCS: RCS Burn 
+P42 - APS: Ascent Propulsion System Burn 
+P63 - LM PDI Braking 
+P64 - LM Approach 
+P65 - LM Auto Landing 
+P66 - LM Manual landing 
+P70 - LM DPS Abort 
+P71 - LM APS Abort 
+
+
+Landing the LM on the moon  and returning to the CSM with Project Apollo: 
+
+Prior to initiating a descent to the moon, the orbit plane needs to come fairly close (<24 km) to the landing site (see P18), and have a periapsis altitude of between 10 and 20 km which is roughly above the landing site (see P17). This translates to radius from moon center of 1748 to 1758 km. When your orbit is correct and the LM is approaching the base about 1000 km away, you can start P63: 
+
+On the DSKY: 
+
+PRO 
+
+Verb 37 Noun 63 Enter 
+
+Noun 89:
+	R1=landing latitude 	XX.XXX 
+	R2=longitude/2 		XX.XXX  
+
+PRO 
+
+Noun 61: 
+	R1=time-to-go 
+	R2=Time from Ignition 
+	R3=crossrange 		XXXX.X km 
+(you can adjust crossrange with this display if you need to) 
+
+PRO 
+
+Noun 33: Ignition MET 
+	R1=HH 
+	R2=MM 
+	R3=SS.SS 
+
+PRO 
+
+Verb 50 Noun 18: PDI Orientation angle 
+	R1=pitch 
+	R2=roll 
+	R3=yaw 
+(verb 50=Please perform - ask the AGC to orient the LM) 
+
+PRO 
+
+Noun 18 monitors attitude for PDI 
+
+At Ignition-35 seconds, DSKY blanks 
+At Ignition-30 seconds, DSKY displays: 
+
+Noun 62: 
+	R1=Velocity 
+	R2=Time from ignition (seconds) 
+	R3=DeltaV 
+
+At Ignition-5 seconds, Verb 99 Noun 62 flashes, 
+
+PRO (make sure you hit PRO before the count gets to zero!!) 
+
+At ignition, the display is: 
+
+Noun 63: 
+	R1=Delta Altitude 
+	R2=Alt. rate 
+	R3=Altitude. Just watch. 
+
+
+At about 3 minutes into powered descent, the yaw maneuver rolls the LM into heads-up oriention. Now the display will be: 
+
+Verb 16 Noun 68: 
+	R1=Downrange distance 
+	R2=Time-to-go in braking phase (mm ss) 
+	R3=velocity 
+
+At this point our landing radar would measure altitude and this information would be incorporated into guidance. 
+
+At around 2 minutes to go in P63, throttledown will occur. You will notice a slight pitchover. 
+
+At Zero time-to-go, P64 will begin, displaying: 
+
+Noun 64: 
+	R1=LPD time (seconds) LPD angle(degrees) SS DD
+	R2=Altitude rate 
+	R3=Altitude 
+
+The LPD is the "down-angle" to the landing site, which matches the scribe marks on the window. The CDR could move the landing point closer, further, left or right with the attitude controller. Currently the keys for target redesignation are: 
+
+<comma> = left 2 degrees 
+<period> = right 2 degrees 
+<home> = 1/2 degree further 
+<end> = 1/2 degree closer 
+
+At the beginning of Approach phase, each key hit moves the target about 160 meters. As the LM gets closer to the target, the redesignations move the target smaller distances. 
+
+Left/right redesignations will cause the LM to roll, which is necessary to change the direction of flight, and also to yaw in the direction of redesignation to keep the reticle on the target site at the LPD angle. It will take a few seconds for the yaw and roll to occur, so wait until the attitude settles down to make further adjustments. It works best if one estimates needed corrections ifor both left/right and near/far, enters them all at once, then wait until attitude settles to make finer adjustments. If you have a site targeted correctly, points on the surface closer than the site will appear to move toward bigger LPD numbers, while points beyond the site will appear to move toward smaller LPD numbers. The targeted site will stay at the displayed LPD number and centered on the vertical reticle. 
+
+At any time during Approach Phase, one can assume manual control and enter P66 using either the <minus> or <equals> key. 
+
+When the Approach phase is complete, P65 will take over and the display will change to: 
+
+Noun 60: 
+	R1=Forward velocity 
+	R2=Altitude rate 
+	R3=Altitude 
+
+At any time during Landing Phase, one can assume manual control and enter P66 using either the <minus> or <equals> key. 
+
+P66 allows one to control the attitude of the LM using the keypad 2, 4, 6, and 8 keys in the same manner as for RCS attitude control. Attitude will change only while a key is held down, and after key release attitude will remain constant until further control input. Rate of descent is controller using the <minus> or <equals> keys. The first <minus> or <equals> hit used to enter P66 does not increment or decrement the descent rate, but sets the current descent rate as default. Each <minus> or <equals> key hit will increase/decrease the descent rate by 0.3077 m/s. WARNING! P66 displays: 
+
+Noun 60: 
+	R1=forward velocity*10 (m/s)
+	R2=rate of descent*10 (m/s)	
+	R3=altitude (m)
+
+At contact, the engine will shut down automatically and P68 will be run. 
+
+After you land, P68 will start and tell you your landing lat and lon. 
+
+
+
+
+Ascent and Rendezvous with ProjectApollo - Apollo 11 Example 
+
+
+Start the Apollo 11 - Lunar Liftoff scenario. The LM is almost prepared for liftoff, and the CSM is about 4 minutes away from passing overhead. 
+
+Start P12: 
+
+V37N12E 
+
+Noun 33 will display the MET of liftoff. Write it on your flight plan, then: 
+
+PRO 
+
+Noun 76 will display: 
+	R1=Desired downrange velocity 
+	R2=Desired radial velocity 
+	R3=Crossrange distance 
+
+PRO 
+
+Noun 74: 
+	R1=Time from ignition 
+	R2=Yaw after vertical rise DEG.hh 
+	R3=Pitch after vertical rise DEG.hh 
+
+The countdown will proceed in R1. At t-35 seconds, the DSKY will blank. Press 
+
+ABORT STAGE 
+
+At T-5 seconds, Verb 99 Noun 74 will flash. Press: 
+
+PRO 
+
+For the next 7 1/2 minutes, enjoy the ride - guidance will put you into an elliptical orbit about 18 X 82 kms, and close to coplanar with the CSM. From now on you don't have to do anything but watch. You can use 10X time acceleration except for the burns themselves. 
+
+Apollo 11 and 12 used the coelliptic rendezvous procedure.  Later missions userd direct rendezvous, which lift off a littler sooner and skip P32 and P33, and go directly to TPI using P34.  
+
+For coelliptic rendezvous, after cutoff, P32 will start and the LM will orient with windows (and rendezvous radar) facing the CSM. Noun 39 will display the time to CSI burn, which occurs at apoapsis and will circularize the LM orbit. The burn is done using RCS, so 120 seconds before the burn P41 will start, orient the LM, and do the burn. 
+
+After the CSI burn is complete, P33 will start and calculate the CDH burn, which tries to maintain a constant altitude difference between the LM and CSM. Since the CSM orbit is nearly circular, this will be a small burn about 40 minutes after the CSI burn. 
+
+Next, P34 will start and calculate the TPI burn, which takes us to the rendezvous point in about 45 minutes (130 degrees of a 360 degree orbit). Again, P34 will start P41 to do the burn. 
+
+Next P35 will do the two TPM burns, which will be very small. The first will be 30 minutes to rendezvous, and the next will be 15 minutes to rendezvous. Time to rendezvous will be displayed with Noun 39 (fictitious). 
+
+Next P36 (a fictitious program) starts and takes care of final braking and station keeping. If you would rather do this manually, simply V37N00E and take over.  As you approach the CSM, watch the -V and position indicator on the docking HUD. They should be fairly close. At 1.8 km distance, TPF begins, and the closing speed is reduced in stages as was done manually on the LM. The LM will come to a stop with windows facing the CSM at a distance of 10 m. When velocities are damped, the LM will pitch forward to present the docking port to the CSM. Let the attitude stabilize, then V37N00E, kit KILLROT and transfer to the CSM to dock. If you don't terminate P36, you'll have quite a time trying to dock - try it and see! 
+
+
+P17 - DOI: Descent Orbit Insertion
+
+P17 will run either on the LM or CSM computer, for the LM, CSM, or docked pair. Start the program with V37N17E. The display will show noun 23, which is: 
+
+Noun 23:
+	R1=Number of passes BEFORE landing
+	R2=MM SS minutes and seconds to plane change burn, or seconds if more than -99 minutes 
+	R3=Burn dv m/s MM.M 
+
+The program will calculate a time-to-burn for the next possible periapsis 15 degrees before the landing site. If you want to Wait until a later time, use V21E to enter in R1 the number of passes over the landing site BEFORE the landing. P17 will will figure out the timings, orientation and dV and do the burn. You can enter V16E to get a countdown to the burn. 
+
+P17 doesn't attempt to get the apoapsis to be 110 km. It simply does a burn 195 degrees away from where the landing site will be after the number of passes entered, so as to make the flight path angle zero and have the proper periapsis 15 degrees before the landing site. Since we're going to land, the apoapsis doesn't matter too much. 
+
+After running P17, you can run P18 to correct offplane errors. 
+
+
+
+P18 - Alignment of Orbit with Landing site 
+
+P18 will run either on the LM or CSM computer. Start the program with V37N18E. The display will show noun 23, which is: 
+
+Noun 23:
+	R1=Number of passes 
+	R2=MM SS minutes and seconds to plane change burn, or seconds if more than -99 minutes 
+	R3=Burn dv m/s MM.M 
+
+The program first calculates an orbit alignment for the next possible alignment. If R1=0, that means the alignment is for the next pass over the PDI point (about 500 km uprange of the landing site) BRFORE a landing or liftoff. You can increase the number of passes using V21E, then enter some number larger than the current value of R1. P17 will now calculate alignment for the site after the designated number of passes, but will execute the burn at the next opportunity. 
+
+You can monitor noun 23 with V16E - now you can see the countdown to the burn. When the burn is complete, P18 starts P00. 
+
+
+P16 - LOI
+
+
+All you need to do is P37N16E. It will display a new noun, (19) which is: 
+
+Noun 19:
+	R1=time to ignition(before ignition)/time to cutoff(after ignition) 
+	R2=altitude xxx.x km 
+	R3=offplane distance xxx.x km 
+
+
+
+P19 - Orbit Change Program 
+
+P19 is a fictious AGC program to change orbits in a general way. It uses non-Hohman transfers to change orbits rapidly at the expense of fuel efficiency, and can usually change your orbit to the desired one in 1/2 orbit. If the current and desired orbits intersect, a single burn is used, otherwise a transfer burn is done to make the orbits intersect, then a correction burn is done at the intersection. 
+
+Run P19 using V37N19E. Noun 30 will be displayed: 
+Noun 30:
+	R1=Current Apoapsis XXXX.x km above surface 
+	R2=Current Periapsis XXXX.x km above surface 
+	R3=Phase angle XXX.XX degrees 
+
+You can change these values using V21E, V22E and V23E, then enter PRO to make the change The phase angle determines the location of the new pariapsis relative to the current one. It can have a value of +180 degrees to -180 degrees. A positive angle will move the periapsis earlier in the orbit than the current periapsis. 
+
+When Noun 30 is PROceeded, Noun 50 will be monitored (display only): 
+
+Noun 50:
+	R1=Time until next burn MM SS 
+	R2=Burn Delta v in m/s xxxx.x 
+	R3=Burn Duration, seconds xxxx.x 
+
+The single-burn orbit changes use some interesting attitudes. One example to try is for an orbit with very different apo and per, simply V23E and enter +18000. The burn will reverse the location of the apo and per. The downside of these transfers is they use more fuel than Hohman transfer burns done at apo and per, but they get you where you want to be much faster. I think this might be useful in a LM rescue situation where the LM has only 11 hours of oxygen aboard, and the CSM has to get to the LM before it runs out. 
+
