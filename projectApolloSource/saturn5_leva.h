@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/01/19 14:56:05  tschachim
+  *	Initial Meshland support.
+  *	
   *	Revision 1.2  2005/02/24 00:28:24  movieman523
   *	Revised for Orbitersound 3 and new Orbiter.
   *	
@@ -43,6 +46,7 @@ public:
 	Saturn5_LEVA(OBJHANDLE hObj, int fmodel);
 	virtual ~Saturn5_LEVA();
 
+	void clbkPreStep (double SimT, double SimDT, double mjd);
 	int clbkConsumeDirectKey(char *kstate);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkSetClassCaps (FILEHANDLE cfg);
@@ -50,7 +54,6 @@ public:
 	void SetAstroStage ();
 	void SetRoverStage ();
 	void init();
-	void Timestep(double simt);
 	void LoadState(FILEHANDLE scn, VESSELSTATUS *vs);
 	void SaveState(FILEHANDLE scn);
 
@@ -64,7 +67,7 @@ public:
 private:
 
 	void ScanMotherShip();
-	void MoveEVA();
+	void MoveEVA(double SimDT);
 	void SetFlag();
 	void SetMissionPath();
 	void DoFirstTimestep();

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/01/19 14:58:33  tschachim
+  *	Initial Meshland support.
+  *	
   *	Revision 1.6  2005/12/28 19:11:32  movieman523
   *	Changed some mesh paths.
   *	
@@ -77,6 +80,15 @@ const VECTOR3 OFS_STAGE21 =  { 1.85,1.85,24.5-12.25};
 const VECTOR3 OFS_STAGE22 =  { -1.85,1.85,24.5-12.25};
 const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85,24.5-12.25};
 const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
+
+//
+// Astronaut and rover movement capabilities
+//
+
+#define ROVER_SPEED_M_S 3.6  // rover speed in m/s (http://en.wikipedia.org/wiki/Lunar_rover; values on the web range from 7 mph to 10.56 mph)
+#define ASTRO_SPEED_M_S 1.8  // astronaut speed in m/s (arbitrarily set to 1/2 the rover speed)
+#define ASTRO_TURN_DEG_PER_SEC 40.0  // astronaut can turn x degrees / sec (just a convenient number)
+#define ROVER_TURN_DEG_PER_SEC 20.0  // rover can turn x degrees / sec (just a convenient number)
 
 //
 // Variables that really should be global variables.
@@ -189,8 +201,8 @@ void Saturn5_LEVA::SetRoverStage ()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 	VECTOR3 mesh_dir=_V(0,0.0,0);
-    AddMesh(hLRV, &mesh_dir);
-	SetCameraOffset(_V(0,0,0));
+	SetMeshVisibilityMode(AddMesh(hLRV, &mesh_dir), MESHVIS_ALWAYS);
+	SetCameraOffset(_V(0.36, 0.54, -0.55));
 
 	double tdph = -0.9;
 	SetTouchdownPoints(_V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3));
@@ -223,22 +235,25 @@ void Saturn5_LEVA::ScanMotherShip()
 	}
 }
 
-void Saturn5_LEVA::MoveEVA()
-
+void Saturn5_LEVA::MoveEVA(double SimDT)
 {
 	TRACESETUP("MoveEVA");
-	double cm ;
+	VESSELSTATUS eva;
+	GetStatus(eva);
 	double lat;
 	double lon;
 	double cap;
-	double timeW = 1;
-	VESSELSTATUS eva;
+	double turn_spd = Radians(SimDT * (Astro ? ASTRO_TURN_DEG_PER_SEC : ROVER_TURN_DEG_PER_SEC));
+	double move_spd = SimDT * atan2(Astro ? ASTRO_SPEED_M_S : ROVER_SPEED_M_S, oapiGetSize(eva.rbody));
 
-	GetStatus(eva);
 	oapiGetHeading(GetHandle(),&cap);
-	timeW=oapiGetTimeAcceleration();
+
+	double timeW = oapiGetTimeAcceleration();
 	if (timeW > 100)
 		oapiSetTimeAcceleration(100);
+
+	// turn speed is only tripled when time acc is multiplied by ten:
+	turn_spd = (pow(3.0, log10(timeW))) * turn_spd / timeW;
 	
 	if (eva.status == 1) {
 		lon = eva.vdata[0].x;
@@ -251,21 +266,15 @@ void Saturn5_LEVA::MoveEVA()
 	
 	} else return;
 
-	if (Astro){
-		cm = 0.3e-7 * timeW;
-	}
-	else{
-		cm = 0.9e-7 * timeW;
-	}
 	if (KEY1){
-		eva.vdata[0].z = eva.vdata[0].z - PI*0.5/180;
+		eva.vdata[0].z = eva.vdata[0].z - turn_spd;
 		if(eva.vdata[0].z <=-2*PI){
 			eva.vdata[0].z = eva.vdata[0].z + 2*PI;
 		}
 		KEY1=false;
 	}
 	else if (KEY3){
-		eva.vdata[0].z = eva.vdata[0].z +( PI*0.5/180);
+		eva.vdata[0].z = eva.vdata[0].z + turn_spd;
 		if(eva.vdata[0].z >=2*PI){
 			eva.vdata[0].z = eva.vdata[0].z - 2*PI;
 		}
@@ -273,29 +282,29 @@ void Saturn5_LEVA::MoveEVA()
 	}
 
 	if (KEY2){
-		lat = lat - cos(cap) * cm;
-		lon = lon - sin(cap) * cm;
+		lat = lat - cos(cap) * move_spd;
+		lon = lon - sin(cap) * move_spd;
 		KEY2=false;
 	}
 	else if (KEY4 && Astro){
-		lat = lat + sin(cap) * cm;
-		lon = lon - cos(cap) * cm;
+		lat = lat + sin(cap) * move_spd;
+		lon = lon - cos(cap) * move_spd;
 		KEY4=false;
 	}
 	else if (KEY5){
 		KEY5=false;
 	}
 	else if (KEY6 && Astro){
-		lat = lat - sin(cap) * cm;
-		lon = lon + cos(cap) * cm;
+		lat = lat - sin(cap) * move_spd;
+		lon = lon + cos(cap) * move_spd;
 		KEY6=false;
 	}
 	else if (KEY7){
 		KEY7=false;
 	}
-	else if (KEY8||GoHover && !Astro){// we go ahead whatever our headign
-		lat = lat + cos(cap) * cm;
-		lon = lon + sin(cap) * cm;
+	else if (KEY8||GoHover && !Astro){// we go ahead whatever our heading
+		lat = lat + cos(cap) * move_spd;
+		lon = lon + sin(cap) * move_spd;
 		KEY8=false;
 	}
 	else if (KEY9){
@@ -496,14 +505,6 @@ void Saturn5_LEVA::SetFlag()
 	FlagSound.done();
 }
 
-DLLCLBK void ovcTimestep (VESSEL *vessel, double simt)
-
-{
-	Saturn5_LEVA *sv = (Saturn5_LEVA *)vessel;
-
-	sv->Timestep(simt);
-}
-
 void Saturn5_LEVA::SetMissionPath()
 
 {
@@ -556,7 +557,7 @@ void Saturn5_LEVA::DoFirstTimestep()
 	}
 }
 
-void Saturn5_LEVA::Timestep(double simt)
+void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 
 {
 	VESSELSTATUS csmV;
@@ -611,7 +612,7 @@ void Saturn5_LEVA::Timestep(double simt)
 		
 	}
 
-	MoveEVA();
+	MoveEVA(SimDT);
 
 	if (GoRover && Astro){
 		SetRoverStage();
