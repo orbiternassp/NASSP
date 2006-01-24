@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.101  2006/01/20 19:36:24  movieman523
+  *	Fixed RCS disable bug with Quad D.
+  *	
   *	Revision 1.100  2006/01/15 19:50:48  movieman523
   *	Don't delete launch site until we reach orbit.
   *	
@@ -683,9 +686,18 @@ void Saturn::initSaturn()
 	thg_retro2 = 0;
 	thg_aps = 0;
 
-	prelaunchvent1 = NULL;
-	prelaunchvent2 = NULL;
-	prelaunchvent3 = NULL;
+	//
+	// Particle streams
+	//
+	int i;
+
+	for (i = 0; i < 3; i++) {
+		prelaunchvent[i] = NULL;
+	}
+
+	for (i = 0; i < 8; i++) {
+		stagingvent[i] = NULL;
+	}
 
 	//
 	// Random virtual cockpit motion.
@@ -709,8 +721,6 @@ void Saturn::initSaturn()
 	// Zeroing arrays for safety.
 	//
 
-	int i;
-
 	for (i = 1; i < 6; i++){
 		ClearEngineIndicator(i);
 	}
@@ -733,6 +743,7 @@ void Saturn::initSaturn()
 	for (i = 0; i < 8; i++) {
 		th_ull[i] = 0;
 		th_sep[i] = 0;
+		stagingvent[i] = NULL;
 	}
 
 	for (i = 0; i < 3; i++) {
@@ -1018,6 +1029,8 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 		oapiSetPanel(PanelId);
 		CheckPanelIdInTimestep = false;
 	}
+
+	Timestep(simt, simdt);
 }
 
 void Saturn::clbkPostStep (double simt, double simdt, double mjd)
@@ -1025,7 +1038,6 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 {
 	TRACESETUP("Saturn::clbkPostStep");
 
-	Timestep(simt, simdt);
 }
 
 void Saturn::clbkSaveState(FILEHANDLE scn)
