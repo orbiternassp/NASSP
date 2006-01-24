@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/01/09 19:26:03  tschachim
+  *	More attempts to make code build on MS C++ 2005
+  *	
   *	Revision 1.4  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -259,13 +262,14 @@ void S1C::AddEngines()
 	VECTOR3 m_exhaust_pos4= { 4,-4, -14};
 	VECTOR3 m_exhaust_pos5= { 4, 4, -14};
 
+	// Double propellant, half thrust just because of "eye-candy"
 	if (!ph_retro)
-		ph_retro = CreatePropellantResource(51.6 * RetroNum);
+		ph_retro = CreatePropellantResource(51.6 * 2. * RetroNum);
 
 	if (!ph_main && MainFuel > 0.0)
 		ph_main = CreatePropellantResource(MainFuel);
 
-	double thrust = 382000;
+	double thrust = 382000. / 2.;
 
 	if (!th_retro[0]) {
 		th_retro[0] = CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro, 4000);
@@ -275,10 +279,10 @@ void S1C::AddEngines()
 	}
 
 	thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);
-
+	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
 	int i;
 	for (i = 0; i < 4; i++)
-		AddExhaust (th_retro[i], 8.0, 0.2);
+		AddExhaust (th_retro[i], 15.0, 1.0, tex);
 
 	double Offset1st = -23.1;
 
@@ -296,8 +300,6 @@ void S1C::AddEngines()
 	th_main[2] = CreateThruster (MAIN1a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
-
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
 
 	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
 	for (i = 0; i < 5; i++) 
