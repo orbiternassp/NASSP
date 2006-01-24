@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   *	Revision 1.51  2006/01/14 00:54:35  movieman523
   *	Hacky wiring of sequential systems and pyro arm switches.
   *	
@@ -740,6 +743,7 @@ void SaturnV::StageTwo(double simt)
 			SetThrusterGroupLevel(thg_ull, 1.0);
 			SepS.play(LOOP, 130);
 		}
+		ActivateStagingVent();
 
 		NextMissionEventTime = MissionTime + 1.4;
 		StageState++;
@@ -750,6 +754,8 @@ void SaturnV::StageTwo(double simt)
 			SetEngineIndicators();
 			SIISepState = true;
 			SetSIICMixtureRatio(5.5);
+			DeactivateStagingVent();
+
 			LastMissionEventTime = MissionTime;
 			NextMissionEventTime += 3.0;
 			StageState++;
@@ -800,6 +806,7 @@ void SaturnV::StageTwo(double simt)
 				SetThrusterGroupLevel(thg_main, 1.0);
 
 				SepS.stop();
+
 
 				//
 				// Checklist actions
@@ -1776,7 +1783,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		}
 		else{
 			SetFirstStage();
-			ShiftCentreOfMass (_V(0,0,STG0O));
+			//ShiftCentreOfMass (_V(0,0,STG0O));	// Seems to be useless...
 		}
 
 		if (GetEngineLevel(ENGINE_MAIN)>=0.5){
@@ -2088,7 +2095,7 @@ void SaturnV::LaunchVesselRolloutEnd() {
 	// called by crawler after arrival on launch pad
 
 	SetFirstStage();
-	ShiftCentreOfMass (_V(0,0,STG0O));
+	//ShiftCentreOfMass (_V(0,0,STG0O));	// Seems to be useless...
 	SetStage(ONPAD_STAGE);
 }
 

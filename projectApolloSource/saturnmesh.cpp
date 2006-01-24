@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2006/01/15 02:38:59  movieman523
+  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
+  *	
   *	Revision 1.30  2006/01/12 14:49:35  tschachim
   *	Bugfix
   *	
@@ -506,18 +509,15 @@ void Saturn::SetCSMStage ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-	//ShiftCentreOfMass (_V(0,0,21.5));
-	if (FIRSTCSM){
-		//sprintf(oapiDebugString(), "shift %f", gaz);
-		//ShiftCentreOfMass (_V(0,0,21.5));
-		FIRSTCSM=false;
+
+	if (FIRSTCSM) {
+		FIRSTCSM = false;
 	}
 	else if (bManualUnDock){
 		dockstate = 4;
 	}
 
 	const double CGOffset = 12.25+21.5-1.8+0.35;
-
 	VECTOR3 mesh_dir=_V(0,SMVO,30.25-CGOffset);
 	AddMesh (hSM, &mesh_dir);
 
