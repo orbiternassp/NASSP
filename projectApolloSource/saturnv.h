@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/01/15 02:38:59  movieman523
+  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
+  *	
   *	Revision 1.18  2006/01/12 14:48:12  tschachim
   *	Added prelaunch tank venting.
   *	
@@ -156,6 +159,8 @@ protected:
 	void DoFirstTimestep(double simt);
 	void ActivatePrelaunchVenting();
 	void DeactivatePrelaunchVenting();
+	void ActivateStagingVent();
+	void DeactivateStagingVent();
 
 	//
 	// Class variables.
@@ -207,12 +212,12 @@ protected:
 extern void LoadSat5Meshes();
 
 
-const double STG0O= 20.4;
-const double STG1O= -5.25;
-const VECTOR3 OFS_STAGE1 =  { 0, 0, -54.935};
+const double STG0O = 20.4;
+const double STG1O = -5.25;
+const VECTOR3 OFS_STAGE1 =  { 0, 0, -54.0 + STG0O};
 const VECTOR3 OFS_STAGE12 =  { 0, 0, -30.5};
-const VECTOR3 OFS_STAGE2 =  { 0, 0, -20.25};
-const VECTOR3 OFS_STAGE3 =  { 0, 0, STG2O - 29.0 + 1.45};
+const VECTOR3 OFS_STAGE2 =  { 0, 0, -17.2 - STG1O};
+const VECTOR3 OFS_STAGE3 =  { 0, 0, 2. - STG2O};
 const VECTOR3 OFS_STAGE31 =  { -1.48,-1.48,5.6+STG2O+21.5};
 const VECTOR3 OFS_STAGE32 =  { 1.48,-1.48,5.6+STG2O+21.5};
 const VECTOR3 OFS_STAGE33 =  { 1.48,1.48,5.6+STG2O+21.5};
