@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/01/15 02:38:59  movieman523
+  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
+  *	
   *	Revision 1.41  2006/01/12 19:57:24  tschachim
   *	Better prelaunch tank venting particles now?
   *	
@@ -201,7 +204,7 @@ PARTICLESTREAMSPEC solid_exhaust = {
 //
 
 PARTICLESTREAMSPEC seperation_junk = {
-	0, 0.08, 150, 15.0, 5.0, 0.5, 0.0, 1.0, 
+	0, 0.15,  300, 15.0, 5.0, 2.0, 0.0, 1.0, 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
@@ -249,6 +252,22 @@ PARTICLESTREAMSPEC prelaunchvent3_spec = {
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.1, 0.1,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
 };
+
+// "staging vent" particle streams
+PARTICLESTREAMSPEC stagingvent_spec = {
+	0,		// flag
+	2.5,	// size
+	100,	// rate
+	10,	    // velocity
+	2,		// velocity distribution
+	2,		// lifetime
+	2.0,	// growthrate
+	0.5,    // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.1, 0.1,
+	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
+};
+
 
 
 static MESHHANDLE hsat5stg1;
@@ -589,7 +608,6 @@ void SaturnV::SetSecondStage ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-    ShiftCentreOfMass (_V(0,0,STG1O));
 
 	VECTOR3 mesh_dir=_V(0,0,-30.5-STG1O);
 	meshidx = AddMesh (GetInterstageMesh(), &mesh_dir);
@@ -712,7 +730,7 @@ void SaturnV::SetSecondStage ()
 		th_ull[7] = CreateThruster (m_exhaust_pos9, _V( 0,0,1), 100000 , ph_2nd, 3000);
 
 		for (i = 0; i < SII_UllageNum; i ++) {
-			AddExhaust (th_ull[i], 5.0, 0.15);
+			AddExhaust (th_ull[i], 5.0, 0.3, exhaust_tex);
 			AddExhaustStream (th_ull[i], &solid_exhaust);
 		}
 
@@ -994,7 +1012,6 @@ void SaturnV::SetThirdStage ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-    ShiftCentreOfMass (_V(0,0,STG2O));
 	VECTOR3 mesh_dir=_V(0,0,2.-STG2O);
 
 	AddMesh (hsat5stg3, &mesh_dir);
@@ -1257,6 +1274,7 @@ void SaturnV::SeparateStage (int stage)
 			oapiSetFocusObject(hstg1);
 			oapiCameraAttach(hstg1, CAM_COCKPIT);
 		}
+		ShiftCentreOfMass(_V(0, 0, STG0O + STG1O));
 	}
 
 	if (stage == LAUNCH_STAGE_TWO && !bAbort )
@@ -1350,7 +1368,9 @@ void SaturnV::SeparateStage (int stage)
 		SII *stage2 = (SII *) oapiGetVesselInterface(hstg2);
 		stage2->SetState(S2Config);
 
-		SetThirdStage ();
+		SetThirdStage();
+
+		ShiftCentreOfMass(_V(0, 0, STG2O - STG1O));
 	}
 
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
@@ -1391,6 +1411,10 @@ void SaturnV::SeparateStage (int stage)
 		dockstate = 1;
 		FIRSTCSM = true;
 		SetCSMStage ();
+
+		// See Saturn::SetCSMStage()
+		const double CGOffset = 12.25+21.5-1.8+0.35;
+		ShiftCentreOfMass(_V(0, 0, 19.1 - STG2O - 30.25 + CGOffset));
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1732,33 +1756,60 @@ void SaturnV::ActivatePrelaunchVenting()
 	// "tank venting" particle streams
 	static double lvl = 1.0;
 
-	if (!prelaunchvent1)
-		prelaunchvent1 = AddParticleStream(&prelaunchvent1_spec, _V(-5.5, -1, -24.0 + STG0O), _V(-1, 0, 0), &lvl);
-	
-	if (!prelaunchvent2)
-		prelaunchvent2 = AddParticleStream(&prelaunchvent2_spec, _V(-3.7, -3.7, -38.0 + STG0O), _V(-1, -1, 0), &lvl);
-
-	if (!prelaunchvent3)
-		prelaunchvent3 = AddParticleStream(&prelaunchvent3_spec, _V(-3.5, 1, -3.5 + STG0O), _V(-1, 0, 0), &lvl);
+	if (!prelaunchvent[0]) prelaunchvent[0] = AddParticleStream(&prelaunchvent1_spec, _V(-5.5, -1,   -24.0 + STG0O), _V(-1,  0, 0), &lvl);
+	if (!prelaunchvent[1]) prelaunchvent[1] = AddParticleStream(&prelaunchvent2_spec, _V(-3.7, -3.7, -38.0 + STG0O), _V(-1, -1, 0), &lvl);
+	if (!prelaunchvent[2]) prelaunchvent[2] = AddParticleStream(&prelaunchvent3_spec, _V(-3.5,  1,    -3.5 + STG0O), _V(-1,  0, 0), &lvl);
 }
 
 void SaturnV::DeactivatePrelaunchVenting()
 
 {
 	// "tank venting" particle streams
-	if (prelaunchvent1) {
-		DelExhaustStream(prelaunchvent1);
-		prelaunchvent1 = NULL;
-	}
+	int i;
 
-	if (prelaunchvent2) {
-		DelExhaustStream(prelaunchvent2);
-		prelaunchvent2 = NULL;
-	}
-
-	if (prelaunchvent3) {
-		DelExhaustStream(prelaunchvent3);
-		prelaunchvent3 = NULL;
+	for (i = 0; i < 3; i++) {
+		if (prelaunchvent[i]) {
+			DelExhaustStream(prelaunchvent[i]);
+			prelaunchvent[i] = NULL;
+		}
 	}
 }
 
+void SaturnV::ActivateStagingVent()
+
+{
+	// "staging vent" particle streams
+	static double lvl = 1.0;
+
+	VECTOR3	m_exhaust_pos6= _V(0,5.07,-33.15-STG1O - 5.);
+	VECTOR3 m_exhaust_pos7= _V(0,-5.07,-33.15-STG1O - 5.);
+	VECTOR3	m_exhaust_pos8= _V(5.07,0,-33.15-STG1O - 5.);
+	VECTOR3 m_exhaust_pos9= _V(-5.07,0,-33.15-STG1O - 5.);
+	VECTOR3	m_exhaust_pos10= _V(3.55,3.7,-33.15-STG1O - 5.);
+	VECTOR3 m_exhaust_pos11= _V(3.55,-3.7,-33.15-STG1O - 5.);
+	VECTOR3	m_exhaust_pos12= _V(-3.55,3.7,-33.15-STG1O - 5.);
+	VECTOR3 m_exhaust_pos13= _V(-3.55,-3.7,-33.15-STG1O - 5.);
+
+	if (!stagingvent[0]) stagingvent[0] = AddParticleStream (&stagingvent_spec, m_exhaust_pos10, _V( 1, 1,-1), &lvl);
+	if (!stagingvent[1]) stagingvent[1] = AddParticleStream (&stagingvent_spec, m_exhaust_pos11, _V( 1,-1,-1), &lvl);
+	if (!stagingvent[2]) stagingvent[2] = AddParticleStream (&stagingvent_spec, m_exhaust_pos12, _V(-1, 1,-1), &lvl);
+	if (!stagingvent[3]) stagingvent[3] = AddParticleStream (&stagingvent_spec, m_exhaust_pos13, _V(-1,-1,-1), &lvl);
+	if (!stagingvent[4]) stagingvent[4] = AddParticleStream (&stagingvent_spec, m_exhaust_pos6,  _V( 0, 1,-1), &lvl);
+	if (!stagingvent[5]) stagingvent[5] = AddParticleStream (&stagingvent_spec, m_exhaust_pos7,  _V( 0,-1,-1), &lvl);
+	if (!stagingvent[6]) stagingvent[6] = AddParticleStream (&stagingvent_spec, m_exhaust_pos8,  _V( 1, 0,-1), &lvl);
+	if (!stagingvent[7]) stagingvent[7] = AddParticleStream (&stagingvent_spec, m_exhaust_pos9,  _V(-1, 0,-1), &lvl);
+}
+
+void SaturnV::DeactivateStagingVent()
+
+{
+	// "staging vent" particle streams
+	int i;
+
+	for (i = 0; i < 8; i++) {
+		if (stagingvent[i]) {
+			DelExhaustStream(stagingvent[i]);
+			stagingvent[i] = NULL;
+		}
+	}
+}

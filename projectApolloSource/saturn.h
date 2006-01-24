@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.136  2006/01/15 02:38:59  movieman523
+  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
+  *	
   *	Revision 1.135  2006/01/15 01:23:19  movieman523
   *	Put 'phantom' RCS thrusters back in and adjusted RCS thrust and ISP based on REALISM value.
   *	
@@ -2593,9 +2596,8 @@ protected:
 	THRUSTER_HANDLE	th_sep[8];
 	THRUSTER_HANDLE th_rcs_a[8], th_rcs_b[8], th_rcs_c[8], th_rcs_d[8];		// RCS quads. Entry zero is not used, to match Apollo numbering
 
-	PSTREAM_HANDLE prelaunchvent1;
-	PSTREAM_HANDLE prelaunchvent2;
-	PSTREAM_HANDLE prelaunchvent3;
+	PSTREAM_HANDLE prelaunchvent[3];
+	PSTREAM_HANDLE stagingvent[8];
 
 	CMRCSPropellant CMRCS;
 	SMRCSPropellant SMQuadARCS;
