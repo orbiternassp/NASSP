@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/01/26 03:31:57  movieman523
+  *	Less hacky low-res mesh support for Saturn V.
+  *	
   *	Revision 1.53  2006/01/24 13:56:46  tschachim
   *	Smoother staging with more eye-candy.
   *	
@@ -603,6 +606,20 @@ void SaturnV::clbkSetClassCaps (FILEHANDLE cfg)
 	//
 
 	initSaturnV();
+
+	//
+	// Scan the config file for specific information about this class.
+	//
+
+	char *line;
+	int DummyLoad = 0;
+
+	while (oapiReadScenario_nextline (cfg, line)) {
+		if (!strnicmp (line, "LOWRES", 6)) {
+            sscanf (line+6, "%d", &DummyLoad);
+			LowRes = (DummyLoad != 0);
+		}
+	}
 }
 
 void SaturnV::StageOne(double simt, double simdt)
