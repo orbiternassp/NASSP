@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/01/26 03:07:49  movieman523
+  *	Quick hack to support low-res mesh.
+  *	
   *	Revision 1.43  2006/01/24 13:48:28  tschachim
   *	Smoother staging with more eye-candy.
   *	
@@ -271,8 +274,6 @@ PARTICLESTREAMSPEC stagingvent_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
 };
 
-
-
 static MESHHANDLE hsat5stg1;
 static MESHHANDLE hsat5intstg;
 static MESHHANDLE hsat5intstg4;
@@ -286,6 +287,15 @@ static MESHHANDLE hsat5stg32;
 static MESHHANDLE hsat5stg33;
 static MESHHANDLE hsat5stg34;
 
+static MESHHANDLE hsat5stg1low;
+static MESHHANDLE hsat5intstglow;
+static MESHHANDLE hsat5stg2low;
+static MESHHANDLE hsat5stg3low;
+static MESHHANDLE hsat5stg31low;
+static MESHHANDLE hsat5stg32low;
+static MESHHANDLE hsat5stg33low;
+static MESHHANDLE hsat5stg34low;
+
 static MESHHANDLE hCONE;
 
 static MESHHANDLE hApollocsm;
@@ -298,41 +308,35 @@ static SURFHANDLE contrail_tex;
 static SURFHANDLE exhaust_tex;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
-#define LOAD_LMESH(var, name) { sprintf(fname, "%s/%s", dir, name); var = oapiLoadMeshGlobal(fname); }
-
-static bool LowRes = false;
 
 void LoadSat5Meshes()
 
 {
-	char dir[256] = "ProjectApollo";
+	LOAD_MESH(hsat5stg1low, "ProjectApollo/LowRes/sat5stg1");
+	LOAD_MESH(hsat5stg1, "ProjectApollo/sat5stg1");
 
-	if (LowRes) {
-		strcat (dir, "/LowRes");
-	}
+	LOAD_MESH(hsat5intstglow, "ProjectApollo/LowRes/sat5intstg");
+	LOAD_MESH(hsat5intstg, "ProjectApollo/sat5intstg");
+	LOAD_MESH(hsat5intstg4, "ProjectApollo/sat5intstg4");
+	LOAD_MESH(hsat5intstg8, "ProjectApollo/sat5intstg8");
 
-	char fname[256];
-
-	LOAD_LMESH(hsat5stg1, "sat5stg1");
-	LOAD_LMESH(hsat5intstg, "sat5intstg");
-
-	if (LowRes) {
-		LOAD_LMESH(hsat5intstg4, "sat5intstg");
-		LOAD_LMESH(hsat5intstg8, "sat5intstg");
-	}
-	else {
-		LOAD_MESH(hsat5intstg4, "ProjectApollo/sat5intstg4");
-		LOAD_MESH(hsat5intstg8, "ProjectApollo/sat5intstg8");
-	}
-
-	LOAD_LMESH(hsat5stg2, "sat5stg2");
+	LOAD_MESH(hsat5stg2low, "ProjectApollo/LowRes/sat5stg2");
+	LOAD_MESH(hsat5stg2, "ProjectApollo/sat5stg2");
 	LOAD_MESH(hsat5stg2base, "ProjectApollo/sat5stg2base");
-	LOAD_LMESH(hsat5stg3, "sat5stg3");
+
+	LOAD_MESH(hsat5stg3low, "ProjectApollo/LowRes/sat5stg3");
+	LOAD_MESH(hsat5stg31low, "ProjectApollo/LowRes/sat5stg31");
+	LOAD_MESH(hsat5stg32low, "ProjectApollo/LowRes/sat5stg32");
+	LOAD_MESH(hsat5stg33low, "ProjectApollo/LowRes/sat5stg33");
+	LOAD_MESH(hsat5stg34low, "ProjectApollo/LowRes/sat5stg34");
+
+	LOAD_MESH(hsat5stg3, "ProjectApollo/sat5stg3");
 	LOAD_MESH(hsat5stg3base, "ProjectApollo/sat5stg3base");
-	LOAD_LMESH(hsat5stg31, "sat5stg31");
-	LOAD_LMESH(hsat5stg32, "sat5stg32");
-	LOAD_LMESH(hsat5stg33, "sat5stg33");
-	LOAD_LMESH(hsat5stg34, "sat5stg34");
+	LOAD_MESH(hsat5stg31, "ProjectApollo/sat5stg31");
+	LOAD_MESH(hsat5stg32, "ProjectApollo/sat5stg32");
+	LOAD_MESH(hsat5stg33, "ProjectApollo/sat5stg33");
+	LOAD_MESH(hsat5stg34, "ProjectApollo/sat5stg34");
+
 	LOAD_MESH(hLMPKD, "ProjectApollo/LM_Parked");
 	LOAD_MESH(hapollo8lta, "ProjectApollo/apollo8_lta");
 	LOAD_MESH(hlta_2r, "ProjectApollo/LTA_2R");
@@ -345,9 +349,35 @@ void LoadSat5Meshes()
 	solid_exhaust.tex = contrail_tex;
 }
 
+void SaturnV::SetupMeshes()
+
+{
+	if (LowRes) {
+		hStage1Mesh = hsat5stg1low;
+		hStage2Mesh = hsat5stg2low;
+		hStage3Mesh = hsat5stg3low;
+		hStageSLA1Mesh = hsat5stg31low;
+		hStageSLA2Mesh = hsat5stg32low;
+		hStageSLA3Mesh = hsat5stg33low;
+		hStageSLA4Mesh = hsat5stg34low;
+	}
+	else {
+		hStage1Mesh = hsat5stg1;
+		hStage2Mesh = hsat5stg2;
+		hStage3Mesh = hsat5stg3;
+		hStageSLA1Mesh = hsat5stg31;
+		hStageSLA2Mesh = hsat5stg32;
+		hStageSLA3Mesh = hsat5stg33;
+		hStageSLA4Mesh = hsat5stg34;
+	}
+}
+
 MESHHANDLE SaturnV::GetInterstageMesh()
 
 {
+	if (LowRes)
+		return hsat5intstglow;
+
 	switch (SII_UllageNum) {
 	case 4:
 		return hsat5intstg4;
@@ -382,7 +412,7 @@ void SaturnV::BuildFirstStage (int bstate)
 
 	if (bstate >=1){
 		mesh_dir=_V(0,0,-54.0+STG0O);
-		AddMesh (hsat5stg1, &mesh_dir);
+		AddMesh (hStage1Mesh, &mesh_dir);
 	}
 
 	if (bstate >=2){
@@ -397,7 +427,7 @@ void SaturnV::BuildFirstStage (int bstate)
 
 	if (bstate > 2){
 		mesh_dir=_V(0,0,-17.2+STG0O);
-		AddMesh (hsat5stg2, &mesh_dir);
+		AddMesh (hStage2Mesh, &mesh_dir);
 	}
 
 	if (bstate ==3 ){
@@ -407,7 +437,7 @@ void SaturnV::BuildFirstStage (int bstate)
 
 	if (bstate > 3){
 		mesh_dir=_V(0,0,2.+STG0O);
-		AddMesh (hsat5stg3, &mesh_dir);
+		AddMesh (hStage3Mesh, &mesh_dir);
 	}
 
 	if (bstate >=4){
@@ -419,22 +449,22 @@ void SaturnV::BuildFirstStage (int bstate)
 
 	if (bstate >=4){
 		mesh_dir=_V(-1.48,-1.48,14.55+STG0O);
-		AddMesh (hsat5stg31, &mesh_dir);
+		AddMesh (hStageSLA1Mesh, &mesh_dir);
 	}
 
 	if (bstate >=4){
 		mesh_dir=_V(1.48,-1.48,14.55+STG0O);
-		AddMesh (hsat5stg32, &mesh_dir);
+		AddMesh (hStageSLA2Mesh, &mesh_dir);
 	}
 
 	if (bstate >=4){
 		mesh_dir=_V(1.48,1.48,14.55+STG0O);
-		AddMesh (hsat5stg33, &mesh_dir);
+		AddMesh (hStageSLA3Mesh, &mesh_dir);
 	}
 
 	if (bstate >=4){
 		mesh_dir=_V(-1.48,1.48,14.55+STG0O);
-		AddMesh (hsat5stg34, &mesh_dir);
+		AddMesh (hStageSLA4Mesh, &mesh_dir);
 	}
 
 	if (bstate >=4){
@@ -540,7 +570,7 @@ void SaturnV::SetFirstStage ()
 	SetTouchdownPoints (_V(0,-100.0,TCP), _V(-7,7,TCP), _V(7,7,TCP));
 
 	VECTOR3 mesh_dir=_V(0,0,-54.0+STG0O);
-	meshidx = AddMesh (hsat5stg1, &mesh_dir);
+	meshidx = AddMesh (hStage1Mesh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	mesh_dir=_V(0,0,-30.5+STG0O);
@@ -548,23 +578,23 @@ void SaturnV::SetFirstStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	mesh_dir=_V(0,0,-17.2+STG0O);
-	meshidx = AddMesh (hsat5stg2, &mesh_dir);
+	meshidx = AddMesh (hStage2Mesh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	mesh_dir=_V(0,0,2.+STG0O);
-	AddMesh (hsat5stg3, &mesh_dir);
+	AddMesh (hStage3Mesh, &mesh_dir);
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
 		mesh_dir=_V(0,0,12+STG0O);
 		AddMesh (hLMPKD, &mesh_dir);
 	}
 	mesh_dir=_V(-1.48,-1.48,14.55+STG0O);
-	AddMesh (hsat5stg31, &mesh_dir);
+	AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,-1.48,14.55+STG0O);
-	AddMesh (hsat5stg32, &mesh_dir);
+	AddMesh (hStageSLA2Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,1.48,14.55+STG0O);
-    AddMesh (hsat5stg33, &mesh_dir);
+    AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55+STG0O);
-    AddMesh (hsat5stg34, &mesh_dir);
+    AddMesh (hStageSLA4Mesh, &mesh_dir);
 	mesh_dir=_V(0,SMVO,19.1+STG0O);
 	AddMesh (hSM, &mesh_dir);
 
@@ -636,11 +666,11 @@ void SaturnV::SetSecondStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	mesh_dir=_V(0,0,-17.2-STG1O);
-	meshidx = AddMesh (hsat5stg2, &mesh_dir);
+	meshidx = AddMesh (hStage2Mesh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	mesh_dir=_V(0,0,2.-STG1O);
-	meshidx = AddMesh (hsat5stg3, &mesh_dir);
+	meshidx = AddMesh (hStage3Mesh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
@@ -648,13 +678,13 @@ void SaturnV::SetSecondStage ()
 		AddMesh (hLMPKD, &mesh_dir);
 	}
 	mesh_dir=_V(-1.48,-1.48,14.55-STG1O);
-	AddMesh (hsat5stg31, &mesh_dir);
+	AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,-1.48,14.55-STG1O);
-	AddMesh (hsat5stg32, &mesh_dir);
+	AddMesh (hStageSLA2Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,1.48,14.55-STG1O);
-    AddMesh (hsat5stg33, &mesh_dir);
+    AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
-    AddMesh (hsat5stg34, &mesh_dir);
+    AddMesh (hStageSLA4Mesh, &mesh_dir);
 	mesh_dir=_V(0,SMVO,19.1-STG1O);
 	AddMesh (hSM, &mesh_dir);
 
@@ -789,11 +819,11 @@ void SaturnV::SetSecondStage1 ()
 	SetLiftCoeffFunc (0);
 
     VECTOR3 mesh_dir=_V(0,0,-17.2-STG1O);
-	meshidx = AddMesh (hsat5stg2, &mesh_dir);
+	meshidx = AddMesh (hStage2Mesh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	mesh_dir=_V(0,0,2.-STG1O);
-	meshidx = AddMesh (hsat5stg3, &mesh_dir);
+	meshidx = AddMesh (hStage3Mesh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
@@ -802,13 +832,13 @@ void SaturnV::SetSecondStage1 ()
 	}
 
 	mesh_dir=_V(-1.48,-1.48,14.55-STG1O);
-	AddMesh (hsat5stg31, &mesh_dir);
+	AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,-1.48,14.55-STG1O);
-	AddMesh (hsat5stg32, &mesh_dir);
+	AddMesh (hStageSLA2Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,1.48,14.55-STG1O);
-    AddMesh (hsat5stg33, &mesh_dir);
+    AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
-    AddMesh (hsat5stg34, &mesh_dir);
+    AddMesh (hStageSLA4Mesh, &mesh_dir);
 	mesh_dir=_V(0,SMVO,19.1-STG1O);
 	AddMesh (hSM, &mesh_dir);
 
@@ -937,21 +967,21 @@ void SaturnV::SetSecondStage2 ()
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
     VECTOR3 mesh_dir=_V(0,0,-17.2-STG1O);
-	AddMesh (hsat5stg2, &mesh_dir);
+	AddMesh (hStage2Mesh, &mesh_dir);
 	mesh_dir=_V(0,0,2.-STG1O);
-	AddMesh (hsat5stg3, &mesh_dir);
+	AddMesh (hStage3Mesh, &mesh_dir);
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
 		mesh_dir=_V(0,0,12-STG1O);
 		AddMesh (hLMPKD, &mesh_dir);
 	}
 	mesh_dir=_V(-1.48,-1.48,14.55-STG1O);
-	AddMesh (hsat5stg31, &mesh_dir);
+	AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,-1.48,14.55-STG1O);
-	AddMesh (hsat5stg32, &mesh_dir);
+	AddMesh (hStageSLA2Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,1.48,14.55-STG1O);
-    AddMesh (hsat5stg33, &mesh_dir);
+    AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
-    AddMesh (hsat5stg34, &mesh_dir);
+    AddMesh (hStageSLA4Mesh, &mesh_dir);
 	mesh_dir=_V(0,SMVO,19.1-STG1O);
 	AddMesh (hSM, &mesh_dir);
 
@@ -1036,19 +1066,19 @@ void SaturnV::SetThirdStage ()
 	SetLiftCoeffFunc (0);
 	VECTOR3 mesh_dir=_V(0,0,2.-STG2O);
 
-	AddMesh (hsat5stg3, &mesh_dir);
+	AddMesh (hStage3Mesh, &mesh_dir);
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
 		mesh_dir=_V(0,0,12-STG2O);
 		AddMesh (hLMPKD, &mesh_dir);
 	}
 	mesh_dir=_V(-1.48,-1.48,14.55-STG2O);
-	AddMesh (hsat5stg31, &mesh_dir);
+	AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,-1.48,14.55-STG2O);
-	AddMesh (hsat5stg32, &mesh_dir);
+	AddMesh (hStageSLA2Mesh, &mesh_dir);
 	mesh_dir=_V(1.48,1.48,14.55-STG2O);
-    AddMesh (hsat5stg33, &mesh_dir);
+    AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG2O);
-    AddMesh (hsat5stg34, &mesh_dir);
+    AddMesh (hStageSLA4Mesh, &mesh_dir);
 	mesh_dir=_V(0,SMVO,19.1-STG2O);
 	AddMesh (hSM, &mesh_dir);
 	mesh_dir=_V(0,0,23.25-STG2O);
