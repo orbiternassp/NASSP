@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.102  2006/01/24 13:56:03  tschachim
+  *	Smoother staging with more eye-candy.
+  *	Moved Timestep from clbkPostStep to clbkPreStep.
+  *	
   *	Revision 1.101  2006/01/20 19:36:24  movieman523
   *	Fixed RCS disable bug with Quad D.
   *	
@@ -511,6 +515,16 @@ void Saturn::initSaturn()
 	SMSep = false;
 	bStartS4B = false;
 	IGMEnabled = false;
+
+	LowRes = false;
+
+	hStage1Mesh = 0;
+	hStage2Mesh = 0;
+	hStage3Mesh = 0;
+	hStageSLA1Mesh = 0;
+	hStageSLA2Mesh = 0;
+	hStageSLA3Mesh = 0;
+	hStageSLA4Mesh = 0;
 
 	refSaturn1B = 0;
 	refPREV = 0;
@@ -1066,7 +1080,9 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
 	oapiWriteScenario_float (scn, "THRUSTA", ThrustAdjust);
 	oapiWriteScenario_float (scn, "MR", MixtureRatio);
+
 	oapiWriteScenario_int (scn, "DLS", DeleteLaunchSite ? 1 : 0);
+	oapiWriteScenario_int (scn, "LOWRES", LowRes ? 1 : 0);
 
 	if (Realism != REALISM_DEFAULT) {
 		oapiWriteScenario_int (scn, "REALISM", Realism);
@@ -1601,6 +1617,10 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
             sscanf (line+3, "%d", &DummyLoad);
 			DeleteLaunchSite = (DummyLoad != 0);
 		}
+		else if (!strnicmp (line, "LOWRES", 6)) {
+            sscanf (line+6, "%d", &DummyLoad);
+			LowRes = (DummyLoad != 0);
+		}
 		else if (!strnicmp (line, "SICSHUT", 7)) {
 			sscanf (line + 7, "%f", &ftcp);
 			FirstStageCentreShutdownTime = ftcp;
@@ -1774,7 +1794,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 			S4B_EmptyMass = ftcp;
 			S4B_MassLoaded = true;
 		}
-			else if (!strnicmp(line, "SIEMPTYMASS", 11)) {
+		else if (!strnicmp(line, "SIEMPTYMASS", 11)) {
             sscanf (line + 11, "%f", &ftcp);
 			SI_EmptyMass = ftcp;
 			SI_MassLoaded = true;

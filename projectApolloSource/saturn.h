@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.137  2006/01/24 13:47:07  tschachim
+  *	Smoother staging with more eye-candy.
+  *	
   *	Revision 1.136  2006/01/15 02:38:59  movieman523
   *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
   *	
@@ -793,6 +796,24 @@ protected:
 
 	double IGMStartTime;
 	bool IGMEnabled;
+
+	//
+	// Low-res mesh?
+	//
+
+	bool LowRes;
+
+	//
+	// Mesh handles.
+	//
+
+	MESHHANDLE hStage1Mesh;
+	MESHHANDLE hStage2Mesh;
+	MESHHANDLE hStage3Mesh;
+	MESHHANDLE hStageSLA1Mesh;
+	MESHHANDLE hStageSLA2Mesh;
+	MESHHANDLE hStageSLA3Mesh;
+	MESHHANDLE hStageSLA4Mesh;
 
 	bool LEM_DISPLAY;
 

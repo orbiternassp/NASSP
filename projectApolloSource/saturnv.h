@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/01/24 13:46:30  tschachim
+  *	Smoother staging with more eye-candy.
+  *	
   *	Revision 1.19  2006/01/15 02:38:59  movieman523
   *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
   *	
@@ -109,6 +112,7 @@ public:
 	//
 
 private:
+
 	void BuildFirstStage (int bstate);
 	void SetFirstStage ();
 	void SetSecondStage ();
@@ -132,6 +136,8 @@ private:
 
 	bool SIVBStart();
 	void SIVBStop();
+
+	void SetupMeshes();
 
 protected:
 

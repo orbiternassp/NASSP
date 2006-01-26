@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/01/24 13:56:46  tschachim
+  *	Smoother staging with more eye-candy.
+  *	
   *	Revision 1.52  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
@@ -1767,6 +1770,8 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	TRACESETUP("SaturnV::clbkLoadStateEx");
 
 	GetScenarioState(scn, status);
+
+	SetupMeshes();
 
 	//
 	// This code all needs to be fixed up.
