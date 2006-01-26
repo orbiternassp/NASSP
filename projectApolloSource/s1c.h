@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/01/08 04:00:24  movieman523
+  *	Added first two engineering cameras.
+  *	
   *	Revision 1.1  2005/11/23 00:34:16  movieman523
   *	S1C dll code.
   *	
@@ -46,6 +49,8 @@ typedef struct {
 	double EmptyMass;
 	double MainFuelKg;
 	double CurrentThrust;
+
+	bool LowRes;
 
 } S1CSettings;
 
@@ -106,6 +111,7 @@ protected:
 	int RetroNum;
 
 	bool RetrosFired;
+	bool LowRes;
 
 	double EmptyMass;
 	double PayloadMass;

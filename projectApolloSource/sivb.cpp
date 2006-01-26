@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2005/12/28 15:43:34  movieman523
+  *	Revised to find config files in ProjectApollo subdirectory.
+  *	
   *	Revision 1.10  2005/12/13 10:10:26  tschachim
   *	Removed ShiftCentreOfMass because it' not working.
   *	
@@ -76,6 +79,11 @@ static MESHHANDLE hsat5stg31;
 static MESHHANDLE hsat5stg32;
 static MESHHANDLE hsat5stg33;
 static MESHHANDLE hsat5stg34;
+static MESHHANDLE hsat5stg3low;
+static MESHHANDLE hsat5stg31low;
+static MESHHANDLE hsat5stg32low;
+static MESHHANDLE hsat5stg33low;
+static MESHHANDLE hsat5stg34low;
 static MESHHANDLE hastp;
 static MESHHANDLE hastp2;
 static MESHHANDLE hCOAStarget;
@@ -109,6 +117,12 @@ void SIVbLoadMeshes()
 	hsat5stg33 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg33");
 	hsat5stg34 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg34");
 
+	hsat5stg3low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg3");
+	hsat5stg31low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg31");
+	hsat5stg32low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg32");
+	hsat5stg33low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg33");
+	hsat5stg34low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg34");
+
 	hLMPKD = oapiLoadMeshGlobal ("ProjectApollo/LM_Parked");
 	hapollo8lta = oapiLoadMeshGlobal ("ProjectApollo/apollo8_lta");
 	hlta_2r = oapiLoadMeshGlobal ("ProjectApollo/LTA_2R");
@@ -135,6 +149,7 @@ void SIVB::InitS4b()
 	PanelsHinged = false;
 	PanelsOpened = false;
 	State = SIVB_STATE_WAITING;
+	LowRes = false;
 
 	hDock = 0;
 	ph_aps = 0;
@@ -207,8 +222,13 @@ void SIVB::SetS4b()
 
 		//ShiftCentreOfMass (_V(0, 0, -15.0));
 
-		AddMesh (hsat5stg3, &mesh_dir);
-
+		if (LowRes) {
+			AddMesh (hsat5stg3low, &mesh_dir);
+		}
+		else {
+			AddMesh (hsat5stg3, &mesh_dir);
+		}
+		
 		switch (Payload) {
 		case PAYLOAD_LEM:
 			mesh_dir=_V(-0.0,0, 9.8);
@@ -482,6 +502,7 @@ typedef union {
 		unsigned PanelsHinged:1;
 		unsigned PanelsOpened:1;
 		unsigned SaturnVStage:1;
+		unsigned LowRes:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -495,6 +516,7 @@ int SIVB::GetMainState()
 	state.u.PanelsHinged = PanelsHinged;
 	state.u.PanelsOpened = PanelsOpened;
 	state.u.SaturnVStage = SaturnVStage;
+	state.u.LowRes = LowRes;
 
 	return state.word;
 }
@@ -608,6 +630,7 @@ void SIVB::SetMainState(int s)
 	SaturnVStage = (state.u.SaturnVStage != 0);
 	PanelsHinged = (state.u.PanelsHinged != 0);
 	PanelsOpened = (state.u.PanelsOpened != 0);
+	LowRes = (state.u.LowRes != 0);
 }
 
 void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)

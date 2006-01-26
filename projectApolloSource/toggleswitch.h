@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/01/14 20:03:35  movieman523
+  *	Fixed some switch bugs.
+  *	
   *	Revision 1.39  2006/01/11 22:34:21  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -582,6 +585,11 @@ public:
 	bool CheckMouseClick(int event, int mx, int my);
 };
 
+class PGNSSwitch : public AGCThreePoswitch {
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+};
+
 class GuardedToggleSwitch: public ToggleSwitch {
 
 public:
@@ -634,6 +642,21 @@ class IMUCageSwitch: public GuardedToggleSwitch {
 
 public:
 	IMUCageSwitch();
+
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
+
+protected:
+	IMU *imu;
+
+	void SetIMU();
+};
+
+class UnguardedIMUCageSwitch: public ToggleSwitch {
+
+public:
+	UnguardedIMUCageSwitch();
 
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im);
 	bool CheckMouseClick(int event, int mx, int my);
