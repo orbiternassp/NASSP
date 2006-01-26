@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/01/09 19:26:03  tschachim
+  *	More attempts to make code build on MS C++ 2005
+  *	
   *	Revision 1.3  2005/11/26 16:30:50  movieman523
   *	Fixed retros and trying to fix TLI audio.
   *	
@@ -47,7 +50,7 @@
 // Meshes are globally loaded.
 //
 
-static MESHHANDLE hsat5stg2;
+static MESHHANDLE hsat5stg2, hsat5stg2low;
 
 void SIILoadMeshes()
 
@@ -57,6 +60,7 @@ void SIILoadMeshes()
 	//
 
 	hsat5stg2 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg2");
+	hsat5stg2low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg2");
 }
 
 SII::SII (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
@@ -89,6 +93,7 @@ void SII::InitSII()
 	Realism = REALISM_DEFAULT;
 
 	RetrosFired = false;
+	LowRes = false;
 
 	MissionTime = MINUS_INFINITY;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -131,7 +136,12 @@ void SII::SetSII()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	AddMesh (hsat5stg2, &mesh_dir);
+	if (LowRes) {
+		AddMesh (hsat5stg2low, &mesh_dir);
+	}
+	else {
+		AddMesh (hsat5stg2, &mesh_dir);
+	}
 
 	SetEmptyMass (mass);
 
@@ -204,6 +214,7 @@ void SII::clbkSaveState (FILEHANDLE scn)
 typedef union {
 	struct {
 		unsigned int RetrosFired:1;
+		unsigned int LowRes:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -215,6 +226,7 @@ int SII::GetMainState()
 
 	state.word = 0;
 	state.u.RetrosFired = RetrosFired;
+	state.u.LowRes = LowRes;
 
 	return state.word;
 }
@@ -286,6 +298,7 @@ void SII::SetMainState(int s)
 	state.word = s;
 
 	RetrosFired = (state.u.RetrosFired != 0);
+	LowRes = (state.u.LowRes != 0);
 }
 
 void SII::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -373,6 +386,7 @@ void SII::SetState(SIISettings &state)
 		VehicleNo = state.VehicleNo;
 		Realism = state.Realism;
 		RetroNum = state.RetroNum;
+		LowRes = state.LowRes;
 	}
 
 	if (state.SettingsType & SII_SETTINGS_MASS) {

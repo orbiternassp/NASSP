@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/23 01:43:13  movieman523
+  *	Added SII stage DLL.
+  *	
   *	
   *	
   **************************************************************************/
@@ -44,6 +47,8 @@ typedef struct {
 	double EmptyMass;
 	double MainFuelKg;
 	double CurrentThrust;
+
+	bool LowRes;
 
 } SIISettings;
 
@@ -100,6 +105,7 @@ protected:
 	int RetroNum;
 
 	bool RetrosFired;
+	bool LowRes;
 
 	double EmptyMass;
 	double PayloadMass;

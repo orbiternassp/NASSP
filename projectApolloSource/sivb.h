@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2005/11/24 20:31:23  movieman523
+  *	Added support for engine thrust decay during launch.
+  *	
   *	Revision 1.5  2005/11/20 01:06:27  movieman523
   *	Saturn V now uses SIVB DLL too.
   *	
@@ -121,6 +124,7 @@ protected:
 	bool PanelsHinged;
 	bool PanelsOpened;
 	bool SaturnVStage;
+	bool LowRes;
 
 	double CurrentThrust;
 

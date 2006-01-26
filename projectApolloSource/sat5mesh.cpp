@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/01/24 13:48:28  tschachim
+  *	Smoother staging with more eye-candy.
+  *	
   *	Revision 1.42  2006/01/15 02:38:59  movieman523
   *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
   *	
@@ -295,22 +298,41 @@ static SURFHANDLE contrail_tex;
 static SURFHANDLE exhaust_tex;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
+#define LOAD_LMESH(var, name) { sprintf(fname, "%s/%s", dir, name); var = oapiLoadMeshGlobal(fname); }
+
+static bool LowRes = false;
 
 void LoadSat5Meshes()
 
 {
-	LOAD_MESH(hsat5stg1, "ProjectApollo/sat5stg1");
-	LOAD_MESH(hsat5intstg, "ProjectApollo/sat5intstg");
-	LOAD_MESH(hsat5intstg4, "ProjectApollo/sat5intstg4");
-	LOAD_MESH(hsat5intstg8, "ProjectApollo/sat5intstg8");
-	LOAD_MESH(hsat5stg2, "ProjectApollo/sat5stg2");
+	char dir[256] = "ProjectApollo";
+
+	if (LowRes) {
+		strcat (dir, "/LowRes");
+	}
+
+	char fname[256];
+
+	LOAD_LMESH(hsat5stg1, "sat5stg1");
+	LOAD_LMESH(hsat5intstg, "sat5intstg");
+
+	if (LowRes) {
+		LOAD_LMESH(hsat5intstg4, "sat5intstg");
+		LOAD_LMESH(hsat5intstg8, "sat5intstg");
+	}
+	else {
+		LOAD_MESH(hsat5intstg4, "ProjectApollo/sat5intstg4");
+		LOAD_MESH(hsat5intstg8, "ProjectApollo/sat5intstg8");
+	}
+
+	LOAD_LMESH(hsat5stg2, "sat5stg2");
 	LOAD_MESH(hsat5stg2base, "ProjectApollo/sat5stg2base");
-	LOAD_MESH(hsat5stg3, "ProjectApollo/sat5stg3");
+	LOAD_LMESH(hsat5stg3, "sat5stg3");
 	LOAD_MESH(hsat5stg3base, "ProjectApollo/sat5stg3base");
-	LOAD_MESH(hsat5stg31, "ProjectApollo/sat5stg31");
-	LOAD_MESH(hsat5stg32, "ProjectApollo/sat5stg32");
-	LOAD_MESH(hsat5stg33, "ProjectApollo/sat5stg33");
-	LOAD_MESH(hsat5stg34, "ProjectApollo/sat5stg34");
+	LOAD_LMESH(hsat5stg31, "sat5stg31");
+	LOAD_LMESH(hsat5stg32, "sat5stg32");
+	LOAD_LMESH(hsat5stg33, "sat5stg33");
+	LOAD_LMESH(hsat5stg34, "sat5stg34");
 	LOAD_MESH(hLMPKD, "ProjectApollo/LM_Parked");
 	LOAD_MESH(hapollo8lta, "ProjectApollo/apollo8_lta");
 	LOAD_MESH(hlta_2r, "ProjectApollo/LTA_2R");
@@ -1264,6 +1286,7 @@ void SaturnV::SeparateStage (int stage)
 		S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
 		S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
 		S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
+		S1Config.LowRes = LowRes;
 
 		S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
 		stage1->SetState(S1Config);
@@ -1364,6 +1387,7 @@ void SaturnV::SeparateStage (int stage)
 		S2Config.ISP_SECOND_VAC = ISP_SECOND_VAC;
 		S2Config.THRUST_SECOND_VAC = THRUST_SECOND_VAC;
 		S2Config.CurrentThrust = GetThrusterLevel(th_main[0]);
+		S2Config.LowRes = LowRes;
 
 		SII *stage2 = (SII *) oapiGetVesselInterface(hstg2);
 		stage2->SetState(S2Config);

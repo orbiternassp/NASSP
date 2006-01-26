@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/01/14 20:03:35  movieman523
+  *	Fixed some switch bugs.
+  *	
   *	Revision 1.48  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
@@ -2501,6 +2504,62 @@ void IMUCageSwitch::SetIMU()
 	}
 }
 
+//
+// Unfortunately we need to duplicate this code for the LEM switch which doesn't have a guard.
+//
+
+UnguardedIMUCageSwitch::UnguardedIMUCageSwitch()
+
+{
+	imu = 0;
+}
+
+void UnguardedIMUCageSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	imu = im;
+}
+
+bool UnguardedIMUCageSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ToggleSwitch::CheckMouseClick(event, mx, my))
+	{
+		SetIMU();
+		return true;
+	}
+	else return false;
+}
+
+bool UnguardedIMUCageSwitch::SwitchTo(int newState)
+
+{
+	if (ToggleSwitch::SwitchTo(newState))
+	{
+		SetIMU();
+		return true;
+	}
+	else return false;
+}
+
+void UnguardedIMUCageSwitch::SetIMU() 
+
+{
+	//
+	// Cage the IMU if it's up, release if it's down. For now we'll also turn it
+	// on if the switch is down.
+	//
+	if (imu) {
+		if (IsUp()) {
+			imu->SetCaged(true);
+		}
+		else if (IsDown()) {
+			imu->SetCaged(false);
+			imu->TurnOn();
+		}
+	}
+}
 
 //
 // Enable light test on caution and warning system.
@@ -2688,6 +2747,34 @@ bool CMCModeHoldFreeSwitch::CheckMouseClick(int event, int mx, int my)
 				Hold = true;
 			}
 			else if (IsDown()) {
+				Free = true;
+			}
+
+			agc->SetInputChannelBit(031, 13, Hold);
+			agc->SetInputChannelBit(031, 14, Free);
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//
+// LEM PGNS switch.
+//
+
+bool PGNSSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (AGCThreePoswitch::CheckMouseClick(event, mx, my)) {
+		if (agc) {
+			bool Hold = false;
+			bool Free = false;
+
+			if (IsCenter()) {
+				Hold = true;
+			}
+			else if (IsUp()) {
 				Free = true;
 			}
 

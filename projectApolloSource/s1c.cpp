@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/01/24 13:45:29  tschachim
+  *	More and longer thrust and exhaust texture for the retros.
+  *	
   *	Revision 1.5  2006/01/09 19:26:03  tschachim
   *	More attempts to make code build on MS C++ 2005
   *	
@@ -56,7 +59,7 @@
 // Meshes are globally loaded.
 //
 
-static MESHHANDLE hsat5stg1;
+static MESHHANDLE hsat5stg1, hsat5stg1low;
 
 void S1cLoadMeshes()
 
@@ -66,6 +69,7 @@ void S1cLoadMeshes()
 	//
 
 	hsat5stg1 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg1");
+	hsat5stg1low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg1");
 }
 
 S1C::S1C (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
@@ -109,6 +113,7 @@ void S1C::InitS1c()
 	Realism = REALISM_DEFAULT;
 
 	RetrosFired = false;
+	LowRes = false;
 
 	MissionTime = MINUS_INFINITY;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -150,7 +155,13 @@ void S1C::SetS1c()
     ClearAttExhaustRefs();
 
 	UINT meshidx;
-	meshidx = AddMesh (hsat5stg1, &mesh_dir);
+
+	if (LowRes) {
+		meshidx = AddMesh (hsat5stg1low, &mesh_dir);
+	}
+	else {
+		meshidx = AddMesh (hsat5stg1, &mesh_dir);
+	}
 
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
@@ -232,6 +243,7 @@ void S1C::clbkSaveState (FILEHANDLE scn)
 typedef union {
 	struct {
 		unsigned int RetrosFired:1;
+		unsigned int LowRes:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -243,6 +255,7 @@ int S1C::GetMainState()
 
 	state.word = 0;
 	state.u.RetrosFired = RetrosFired;
+	state.u.LowRes = LowRes;
 
 	return state.word;
 }
@@ -314,6 +327,7 @@ void S1C::SetMainState(int s)
 	state.word = s;
 
 	RetrosFired = (state.u.RetrosFired != 0);
+	LowRes = (state.u.LowRes != 0);
 }
 
 void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -416,6 +430,7 @@ void S1C::SetState(S1CSettings &state)
 		VehicleNo = state.VehicleNo;
 		Realism = state.Realism;
 		RetroNum = state.RetroNum;
+		LowRes = state.LowRes;
 	}
 
 	if (state.SettingsType & S1C_SETTINGS_MASS) {
