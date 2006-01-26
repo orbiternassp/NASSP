@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/01/22 16:34:01  flydba
+  *	Switches added on LEM panel 1.
+  *	
   *	Revision 1.41  2006/01/19 14:47:43  tschachim
   *	Bugfix abort buttons.
   *	
@@ -253,6 +256,9 @@ void sat5_lmpkd::InitPanel() {
 	HeliumMonRotary.AddPosition(6, 110);
 	HeliumMonRotary.Register(PSH, "HeliumMonRotary", 0);
 
+	//
+	// Old stuff.
+	//
 
 	Cswitch1=false;
 	Cswitch2=false;
@@ -964,10 +970,10 @@ void sat5_lmpkd::SetSwitches(int panel) {
 
 	ModeControlSwitchesRow.Init(AID_MODECONTROL,MainPanel);
 
-	ModeControlPNGSSwitch.Init (0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
+	ModeControlPNGSSwitch.Init (0, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow, &agc);
 	ModeControlAGSSwitch.Init (93, 5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], ModeControlSwitchesRow);
 
-	IMUCageSwitch.Init(191,0,34,39,srf[SRF_LMTWOPOSLEVER],ModeControlSwitchesRow);
+	IMUCageSwitch.Init(191, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], ModeControlSwitchesRow, &imu);
 
 }
 
@@ -1003,37 +1009,11 @@ void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
 			}
 		}
 
-	} else if (s == &EngineArmSwitch) {
+	} 
+	else if (s == &EngineArmSwitch) {
 		if (!s->IsCenter())
  		    agc.SetInputChannelBit(030, 3, true);
     }
-    else if (s == &ModeControlPNGSSwitch) {
-		if (s->IsCenter())
-		{
- 		    agc.SetInputChannelBit(031, 13, true);
- 		    agc.SetInputChannelBit(031, 14, false);
-		}
-		else if (s->IsUp())
-		{
- 		    agc.SetInputChannelBit(031, 13, false);
- 		    agc.SetInputChannelBit(031, 14, true);
-		}
-		else if (s->IsDown())
-		{
- 		    agc.SetInputChannelBit(031, 13, false);
- 		    agc.SetInputChannelBit(031, 14, false);
-		}
-    }
-	else if (s == &IMUCageSwitch) {
-	 		if (s->IsUp()) {
-				imu.SetCaged(true);
-			}
-			else if (s->IsDown()) {
-				imu.SetCaged(false);
-				imu.TurnOn();
-			}
-	
-	}
 }
 
 void sat5_lmpkd::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
