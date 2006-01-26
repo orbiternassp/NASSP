@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/01/15 02:38:59  movieman523
+  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
+  *	
   *	Revision 1.10  2006/01/12 14:48:44  tschachim
   *	Added prelaunch tank venting.
   *	
@@ -88,6 +91,7 @@ protected:
 	void SetSecondStage2 ();
 	void SetASTPStage ();
 	void clbkLoadStateEx (FILEHANDLE scn, void *vs);
+	void clbkSetClassCaps (FILEHANDLE cfg);
 	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);

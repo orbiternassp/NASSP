@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/01/26 03:07:50  movieman523
+  *	Quick hack to support low-res mesh.
+  *	
   *	Revision 1.11  2005/12/28 15:43:34  movieman523
   *	Revised to find config files in ProjectApollo subdirectory.
   *	
@@ -718,6 +721,7 @@ void SIVB::SetState(SIVBSettings &state)
 		PanelsHinged = state.PanelsHinged;
 		VehicleNo = state.VehicleNo;
 		Realism = state.Realism;
+		LowRes = state.LowRes;
 	}
 
 	if (state.SettingsType & SIVB_SETTINGS_MASS) {

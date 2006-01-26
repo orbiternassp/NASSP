@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/01/26 03:31:57  movieman523
+  *	Less hacky low-res mesh support for Saturn V.
+  *	
   *	Revision 1.44  2006/01/26 03:07:49  movieman523
   *	Quick hack to support low-res mesh.
   *	
@@ -1456,6 +1459,7 @@ void SaturnV::SeparateStage (int stage)
 		S4Config.SaturnVStage = true;
 		S4Config.MissionTime = MissionTime;
 		S4Config.Realism = Realism;
+		S4Config.LowRes = LowRes;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);

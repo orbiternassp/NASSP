@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   *	Revision 1.41  2006/01/14 00:54:34  movieman523
   *	Hacky wiring of sequential systems and pyro arm switches.
   *	
@@ -1068,6 +1071,19 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	CheckRCSState();
 }
 
+void Saturn1b::clbkSetClassCaps (FILEHANDLE cfg)
+
+{
+	//
+	// Scan the config file for specific information about this class.
+	//
+
+	char *line;
+
+	while (oapiReadScenario_nextline (cfg, line)) {
+		ProcessConfigFileLine(cfg, line);
+	}
+}
 
 void Saturn1b::SetVehicleStats()
 

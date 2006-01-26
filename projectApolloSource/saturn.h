@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.138  2006/01/26 03:31:57  movieman523
+  *	Less hacky low-res mesh support for Saturn V.
+  *	
   *	Revision 1.137  2006/01/24 13:47:07  tschachim
   *	Smoother staging with more eye-candy.
   *	
@@ -2536,6 +2539,7 @@ protected:
 	virtual void SaveVehicleStats(FILEHANDLE scn) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
+	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
 
 	void ClearPanelSDKPointers();
 

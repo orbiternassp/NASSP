@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.103  2006/01/26 03:31:57  movieman523
+  *	Less hacky low-res mesh support for Saturn V.
+  *	
   *	Revision 1.102  2006/01/24 13:56:03  tschachim
   *	Smoother staging with more eye-candy.
   *	Moved Timestep from clbkPostStep to clbkPreStep.
@@ -1525,18 +1528,477 @@ void Saturn::SetLightState(int s)
 	LVRateLight = (state.u.LVRateLight != 0);
 }
 
-void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
+bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 
 {
-    char VNameApollo[256];
-	char *line;
 	float ftcp;
 	double autopTime;
 	int SwitchState = 0;
 	int nasspver = 0, status = 0;
 	int n, DummyLoad;
 	int LMPadLoadCount = 0, LMPadValueCount = 0;
-	double tohdg = 45;
+
+   if (!strnicmp (line, "CONFIGURATION", 13)) {
+        sscanf (line+13, "%d", &status);
+	}
+	else if (!strnicmp (line, "NASSPVER", 8)) {
+		sscanf (line + 8, "%d", &nasspver);
+	}
+	else if (!strnicmp (line, "TOALT", 5)) {
+        int toalt;
+		sscanf (line+5, "%d", &toalt);
+		agc.SetDesiredApogee(toalt);
+		agc.SetDesiredPerigee(toalt * 0.98);
+	}
+	else if (!strnicmp (line, "TOAPO", 5)) {
+        sscanf (line+5, "%f", &ftcp);
+		agc.SetDesiredApogee(ftcp);
+	}
+	else if (!strnicmp (line, "TOPER", 5)) {
+        sscanf (line+5, "%f", &ftcp);
+		agc.SetDesiredPerigee(ftcp);
+	}
+	else if (!strnicmp (line, "BUILDSTATUS", 11)) {
+		sscanf (line+11, "%d", &buildstatus);
+	}
+	else if (!strnicmp (line, "PANEL_ID", 8)) {
+		sscanf (line+8, "%d", &PanelId);
+	}
+	else if (!strnicmp (line, "STAGESTATUS", 11)) {
+		sscanf (line+11, "%d", &StageState);
+	}
+	else if (!strnicmp (line, "DOCKANGLE", 9)) {
+		sscanf (line+5, "%g", &ftcp);
+		DockAngle = ftcp;
+	}
+	else if (!strnicmp (line, "STAGE", 5)) {
+		sscanf (line+5, "%d", &stage);
+	}
+	else if (!strnicmp (line, "TOHDG", 5)) {
+		sscanf (line+5, "%g", &ftcp);
+
+		//
+		// Tell the AGC the heading we want.
+		//
+
+		agc.SetDesiredAzimuth(ftcp);
+	}
+	else if (!strnicmp (line, "VECHNO", 6)) {
+        int numb;
+		sscanf (line+6, "%d", &numb);
+		VehicleNo = numb;
+		SetVehicleStats();
+	}
+	else if (!strnicmp (line, "TCP", 3)) {
+        sscanf (line+3, "%f", &ftcp);
+		TCPO=ftcp;
+	}
+	else if (!strnicmp (line, "DLS", 3)) {
+        sscanf (line+3, "%d", &DummyLoad);
+		DeleteLaunchSite = (DummyLoad != 0);
+	}
+	else if (!strnicmp (line, "LOWRES", 6)) {
+        sscanf (line+6, "%d", &DummyLoad);
+		LowRes = (DummyLoad != 0);
+	}
+	else if (!strnicmp (line, "SICSHUT", 7)) {
+		sscanf (line + 7, "%f", &ftcp);
+		FirstStageCentreShutdownTime = ftcp;
+	}
+	else if (!strnicmp (line, "SIICSHUT", 8)) {
+		sscanf (line + 8, "%f", &ftcp);
+		SecondStageCentreShutdownTime = ftcp;
+	}
+	else if (!strnicmp (line, "SISHUT", 6)) {
+		sscanf (line + 6, "%f", &ftcp);
+		FirstStageShutdownTime = ftcp;
+	}
+	else if (!strnicmp (line, "SIISHUT", 7)) {
+		sscanf (line + 7, "%f", &ftcp);
+		SecondStageShutdownTime = ftcp;
+	}
+	else if (!strnicmp (line, "ISTGJT", 6)) {
+		sscanf (line + 6, "%f", &ftcp);
+		InterstageSepTime = ftcp;
+	}
+	else if (!strnicmp (line, "LESJT", 5)) {
+		sscanf (line + 5, "%f", &ftcp);
+		LESJettisonTime = ftcp;
+	}
+	else if (!strnicmp (line, "SIIPUT", 6)) {
+		sscanf (line + 6, "%f", &ftcp);
+		SecondStagePUShiftTime = ftcp;
+	}
+	else if (!strnicmp (line, "IGMST", 5)) {
+		sscanf (line + 5, "%f", &ftcp);
+		IGMStartTime = ftcp;
+	}
+	else if (!strnicmp (line, "THRUSTA", 7)) {
+		sscanf (line + 7, "%f", &ftcp);
+		ThrustAdjust = ftcp;
+	}
+	else if (!strnicmp (line, "LEM_DISPLAY", 11)) {
+		LEM_DISPLAY = true;
+	}
+	else if (!strnicmp (line, "MAINSTATE", 9)) {
+        SwitchState = 0;
+		sscanf (line+9, "%d", &SwitchState);
+		SetMainState(SwitchState);
+	}
+	else if (!strnicmp (line, "A13STATE", 8)) {
+        SwitchState = 0;
+		sscanf (line+8, "%d", &SwitchState);
+		SetMainState(SwitchState);
+	}
+	else if (!strnicmp (line, "LAUNCHSTATE", 11)) {
+        SwitchState = 0;
+		sscanf (line+11, "%d", &SwitchState);
+		SetLaunchState(SwitchState);
+	}
+	else if (!strnicmp (line, "LIGHTSTATE", 10)) {
+        SwitchState = 0;
+		sscanf (line+10, "%d", &SwitchState);
+		SetLightState(SwitchState);
+	}
+	else if (!strnicmp (line, "VALVESTATE", 10)) {
+		int valvestate = 0;
+		int mask = 1;
+		sscanf (line+10, "%d", &valvestate);
+		for (n = 1; n < N_CSM_VALVES; n++) {
+			ValveState[n] = ((valvestate & mask) != 0);
+			mask <<= 1;
+		}
+	}
+	else if (!strnicmp (line, "LMPADCNT", 8)) {
+		if (!LMPad) {
+			sscanf (line+8, "%d", &LMPadCount);
+			if (LMPadCount > 0) {
+				LMPad = new unsigned int[LMPadCount * 2];
+			}
+		}
+	}
+	else if (!strnicmp (line, "LMPAD", 5)) {
+		unsigned int addr, val;
+		sscanf (line+5, "%o %o", &addr, &val);
+		LMPadValueCount++;
+		if (LMPad && LMPadLoadCount < (LMPadCount * 2)) {
+			LMPad[LMPadLoadCount++] = addr;
+			LMPad[LMPadLoadCount++] = val;
+		}
+	}
+	else if (!strnicmp (line, "CMPAD", 5)) {
+		unsigned int addr, val;
+
+		//
+		// CM PAD value aren't saved, as the AGC will save them itself. They're only used to load values in
+		// a starting scenario.
+		//
+		// Be sure that you put CMPAD lines _after_ the AGC entries, so that the AGC will know whether it's
+		// running Virtual AGC or not. PAD loads are ignored if it's not a Virtual AGC.
+		//
+
+		sscanf (line+5, "%o %o", &addr, &val);
+		agc.PadLoad(addr, val);
+	}
+	else if (!strnicmp (line, "REALISM", 7)) {
+		sscanf (line+7, "%d", &Realism);
+	}
+	else if (!strnicmp (line, "CSWITCH", 7)) {
+        SwitchState = 0;
+		sscanf (line+7, "%d", &SwitchState);
+		SetCSwitchState(SwitchState);
+	}
+	else if (!strnicmp (line, "SSWITCH", 7)) {
+        SwitchState = 0;
+		sscanf (line+7, "%d", &SwitchState);
+		SetSSwitchState(SwitchState);
+	}
+	else if (!strnicmp (line, "LPSWITCH", 8)) {
+        SwitchState = 0;
+		sscanf (line+8, "%d", &SwitchState);
+		SetLPSwitchState(SwitchState);
+	}
+	else if (!strnicmp (line, "RPSWITCH", 8)) {
+        SwitchState = 0;
+		sscanf (line+8, "%d", &SwitchState);
+		SetRPSwitchState(SwitchState);
+	}
+	else if (!strnicmp (line, "APOLLONO", 8)) {
+		sscanf (line+8, "%d", &ApolloNo);
+	}
+	else if (!strnicmp (line, "DOCKSTATE", 9)) {
+        sscanf (line+9, "%d", &dockstate);
+	}
+	else if (!strnicmp (line, "AUTOTIMER", 9)) {
+        sscanf (line+9, "%f", &ftcp);
+		autopTime = ftcp;
+	}
+	else if (!strnicmp(line, "MISSNTIME", 9)) {
+        sscanf (line+9, "%f", &ftcp);
+		MissionTime = ftcp;
+	}
+	else if (!strnicmp(line, "MTD", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		MissionTimerDisplay.SetTime(ftcp);
+	}
+	else if (!strnicmp(line, "ETD", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		EventTimerDisplay.SetTime(ftcp);
+	}
+	else if (!strnicmp(line, "NMISSNTIME", 10)) {
+        sscanf (line + 10, "%f", &ftcp);
+		NextMissionEventTime = ftcp;
+	}
+	else if (!strnicmp(line, "LMISSNTIME", 10)) {
+        sscanf (line + 10, "%f", &ftcp);
+		LastMissionEventTime = ftcp;
+	}
+	else if (!strnicmp(line, "NFAILTIME", 9)) {
+        sscanf (line + 9, "%f", &ftcp);
+		NextFailureTime = ftcp;
+	}
+	else if (!strnicmp(line, "SIFUELMASS", 10)) {
+        sscanf (line + 10, "%f", &ftcp);
+		SI_FuelMass = ftcp;
+	}
+	else if (!strnicmp(line, "SIIFUELMASS", 11)) {
+        sscanf (line + 11, "%f", &ftcp);
+		SII_FuelMass = ftcp;
+	}
+	else if (!strnicmp(line, "S4FUELMASS", 10)) {
+        sscanf (line + 10, "%f", &ftcp);
+		S4B_FuelMass = ftcp;
+	}
+	else if (!strnicmp(line, "S4EMPTYMASS", 11)) {
+        sscanf (line + 11, "%f", &ftcp);
+		S4B_EmptyMass = ftcp;
+		S4B_MassLoaded = true;
+	}
+	else if (!strnicmp(line, "SIEMPTYMASS", 11)) {
+        sscanf (line + 11, "%f", &ftcp);
+		SI_EmptyMass = ftcp;
+		SI_MassLoaded = true;
+	}
+	else if (!strnicmp(line, "SIIEMPTYMASS", 12)) {
+        sscanf (line + 12, "%f", &ftcp);
+		SII_EmptyMass = ftcp;
+		SII_MassLoaded = true;
+	}
+	else if (!strnicmp(line, "T1V", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		THRUST_FIRST_VAC = ftcp;
+		S1_ThrustLoaded = true;
+	}
+	else if (!strnicmp(line, "I1S", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		ISP_FIRST_SL = ftcp;
+	}
+	else if (!strnicmp(line, "I1V", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		ISP_FIRST_VAC = ftcp;
+	}
+	else if (!strnicmp(line, "T2V", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		THRUST_SECOND_VAC = ftcp;
+		S2_ThrustLoaded = true;
+	}
+	else if (!strnicmp(line, "I2S", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		ISP_SECOND_SL = ftcp;
+	}
+	else if (!strnicmp(line, "I2V", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		ISP_SECOND_VAC = ftcp;
+	}
+	else if (!strnicmp(line, "T3V", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		THRUST_THIRD_VAC = ftcp;
+		S3_ThrustLoaded = true;
+	}
+	else if (!strnicmp(line, "I3V", 3)) {
+        sscanf (line + 3, "%f", &ftcp);
+		ISP_THIRD_VAC = ftcp;
+	}
+	else if (!strnicmp(line, "PRELAUNCHATC", 12)) {
+		int i;
+		sscanf (line + 12, "%d", &i);
+		UseATC = (i != 0);
+	}
+	else if (!strnicmp (line, "PMET", 4)) {
+		sscanf(line+4, "%d", &n);
+		sscanf(line+8, "%f", &ftcp);
+		if (n >= 0 && n < PITCH_TABLE_SIZE) {
+			met[n] = ftcp;
+		}
+	}
+	else if (!strnicmp (line, "CPITCH", 6)) {
+		sscanf(line+6, "%d", &n);
+		sscanf(line+10, "%f", &ftcp);
+		if (n >= 0 && n < PITCH_TABLE_SIZE) {
+			cpitch[n] = ftcp;
+		}
+	}
+	else if (!strnicmp(line, "MOONLAT", 7)) {
+		sscanf(line + 7, "%f", &ftcp);
+		LMLandingLatitude = ftcp;
+	}
+	else if (!strnicmp(line, "MOONLONG", 8)) {
+		sscanf(line + 8, "%f", &ftcp);
+		LMLandingLongitude = ftcp;
+	}
+	else if (!strnicmp(line, "MOONALT", 7)) {
+		sscanf(line + 7, "%f", &ftcp);
+		LMLandingAltitude = ftcp;
+	}
+	else if (!strnicmp(line, "UNMANNED", 8)) {
+		int i;
+		sscanf(line + 8, "%d", &i);
+		Crewed = (i == 0);
+	}
+	else if (!strnicmp(line, "AUTOSLOW", 8)) {
+		int i;
+		sscanf(line + 8, "%d", &i);
+		AutoSlow = (i != 0);
+	}
+	else if (!strnicmp(line, "S4PL", 4)) {
+		sscanf(line + 4, "%d", &SIVBPayload);
+	}
+	else if (!strnicmp(line, "CSMSEP", 6)) {
+		sscanf(line + 6, "%f", &ftcp);
+		CSMSepTime = ftcp;
+		CSMSepSet = true;
+	}
+	else if (!strnicmp(line, "CMSEP", 5)) {
+		sscanf(line + 5, "%f", &ftcp);
+		CMSepTime = ftcp;
+		CMSepSet = true;
+	}
+	else if (!strnicmp(line, "S4APO", 5)) {
+		sscanf(line + 5, "%f", &ftcp);
+		SIVBApogee = ftcp;
+	}
+	else if (!strnicmp(line, "S4BURN", 6)) {
+		sscanf(line + 6, "%f", &ftcp);
+		SIVBBurnStart = ftcp;
+	}
+	else if (!strnicmp(line, "CSMAPO", 6)) {
+		sscanf(line + 6, "%f", &ftcp);
+		CSMApogee = ftcp;
+	}
+	else if (!strnicmp(line, "CSMPER", 6)) {
+		sscanf(line + 6, "%f", &ftcp);
+		CSMPerigee = ftcp;
+	}
+	else if (!strnicmp(line, "CSMBURN", 7)) {
+		sscanf(line + 7, "%f", &ftcp);
+		CSMBurnStart = ftcp;
+	}
+	else if (!strnicmp(line, "CSMACCEL", 8)) {
+		sscanf(line + 8, "%f", &ftcp);
+		CSMAccelSet = true;
+		CSMAccelTime = ftcp;
+	}
+	else if (!strnicmp(line, "CSMACCEND", 9)) {
+		sscanf(line + 9, "%f", &ftcp);
+		CSMAccelEnd = ftcp;
+	}
+	else if (!strnicmp(line, "CSMACCPITCH", 11)) {
+		sscanf(line + 11, "%f", &ftcp);
+		CSMAccelPitch = ftcp;
+	}
+	else if (!strnicmp(line, "SMFUELLOAD", 10)) {
+		sscanf(line + 10, "%f", &ftcp);
+		SM_FuelMass = ftcp;
+	}
+	else if (!strnicmp(line, "CMFUELLOAD", 10)) {
+		sscanf(line + 10, "%f", &ftcp);
+		CM_FuelMass = ftcp;
+	}
+	else if (!strnicmp(line, "SMMASS", 6)) {
+		sscanf(line + 6, "%f", &ftcp);
+		SM_EmptyMass = ftcp;
+	}
+	else if (!strnicmp(line, "CMMASS", 6)) {
+		sscanf(line + 6, "%f", &ftcp);
+		CM_EmptyMass = ftcp;
+	}
+	else if (!strnicmp(line, "LANDFAIL", 8)) {
+		sscanf(line + 8, "%d", &LandFail.word);
+	}
+	else if (!strnicmp(line, "LAUNCHFAIL", 10)) {
+		sscanf(line + 10, "%d", &LaunchFail.word);
+	}
+	else if (!strnicmp(line, "SWITCHCHFAIL", 10)) {
+		sscanf(line + 10, "%d", &SwitchFail.word);
+	}
+	else if (!strnicmp(line, "LANG", 4)) {
+		strncpy (AudioLanguage, line + 5, 64);
+	}
+	else if (!strnicmp(line, "LEMN", 4)) {
+		strncpy (LEMName, line + 5, 64);
+	}
+	else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
+		dsky.LoadState(scn, DSKY_END_STRING);
+	}
+	else if (!strnicmp(line, DSKY2_START_STRING, sizeof(DSKY2_START_STRING))) {
+		dsky2.LoadState(scn, DSKY2_END_STRING);
+	}
+	else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
+		fdaiLeft.LoadState(scn, FDAI_END_STRING);
+	}
+	else if (!strnicmp(line, FDAI2_START_STRING, sizeof(FDAI2_START_STRING))) {
+		fdaiRight.LoadState(scn, FDAI2_END_STRING);
+	}
+	else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
+		agc.LoadState(scn);
+	}
+	else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
+		imu.LoadState(scn);
+	}
+	else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
+		iu.LoadState(scn);
+	}
+	else if (!strnicmp(line, CWS_START_STRING, sizeof(CWS_START_STRING))) {
+		cws.LoadState(scn);
+	}
+	else if (!strnicmp(line, DOCKINGPROBE_START_STRING, sizeof(DOCKINGPROBE_START_STRING))) {
+		dockingprobe.LoadState(scn);
+	}
+	else if (!strnicmp (line, "SYSTEMSSTATE", 12)) {
+		sscanf (line + 12, "%d", &systemsState);
+	}
+	else if (!strnicmp (line, "LSYSTEMSMISSNTIME", 17)) {
+		sscanf (line + 17, "%f", &ftcp);
+		lastSystemsMissionTime = ftcp;
+	}
+    else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
+		Panelsdk.Load(scn);			//send the loading to the Panelsdk
+	}
+    else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
+		PSH.LoadState(scn);	
+	}
+	else if (!strnicmp (line, "COASENABLED", 11)) {
+		sscanf (line + 11, "%i", &coasEnabled);
+	}
+	else if (!strnicmp (line, "FDAIDISABLED", 12)) {
+		sscanf (line + 12, "%i", &fdaiDisabled);
+	}
+	else if (!strnicmp (line, "MR", 2)) {
+		sscanf (line + 2, "%f", &ftcp);
+		MixtureRatio = ftcp;
+	}
+	else
+		return false;
+
+	return true;
+}
+
+void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
+
+{
+    char VNameApollo[256];
+	char *line;
+	int n;
 
 	//
 	// If the name of the spacecraft is "AS-xxx" then get the vehicle
@@ -1565,449 +2027,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	//
 
 	while (oapiReadScenario_nextline (scn, line)) {
-        if (!strnicmp (line, "CONFIGURATION", 13)) {
-            sscanf (line+13, "%d", &status);
-		}
-		else if (!strnicmp (line, "NASSPVER", 8)) {
-			sscanf (line + 8, "%d", &nasspver);
-		}
-		else if (!strnicmp (line, "TOALT", 5)) {
-            int toalt;
-			sscanf (line+5, "%d", &toalt);
-			agc.SetDesiredApogee(toalt);
-			agc.SetDesiredPerigee(toalt * 0.98);
-		}
-		else if (!strnicmp (line, "TOAPO", 5)) {
-            sscanf (line+5, "%f", &ftcp);
-			agc.SetDesiredApogee(ftcp);
-		}
-		else if (!strnicmp (line, "TOPER", 5)) {
-            sscanf (line+5, "%f", &ftcp);
-			agc.SetDesiredPerigee(ftcp);
-		}
-		else if (!strnicmp (line, "BUILDSTATUS", 11)) {
-			sscanf (line+11, "%d", &buildstatus);
-		}else if (!strnicmp (line, "PANEL_ID", 8)) {
-			sscanf (line+8, "%d", &PanelId);
-		}else if (!strnicmp (line, "STAGESTATUS", 11)) {
-			sscanf (line+11, "%d", &StageState);
-		}
-		else if (!strnicmp (line, "DOCKANGLE", 9)) {
-			sscanf (line+5, "%g", &ftcp);
-			DockAngle = ftcp;
-		}
-		else if (!strnicmp (line, "STAGE", 5)) {
-			sscanf (line+5, "%d", &stage);
-		}
-		else if (!strnicmp (line, "TOHDG", 5)) {
-			sscanf (line+5, "%g", &ftcp);
-			tohdg = ftcp;
-		}
-		else if (!strnicmp (line, "VECHNO", 6)) {
-            int numb;
-			sscanf (line+6, "%d", &numb);
-			VehicleNo = numb;
-			SetVehicleStats();
-		}
-		else if (!strnicmp (line, "TCP", 3)) {
-            sscanf (line+3, "%f", &ftcp);
-			TCPO=ftcp;
-		}
-		else if (!strnicmp (line, "DLS", 3)) {
-            sscanf (line+3, "%d", &DummyLoad);
-			DeleteLaunchSite = (DummyLoad != 0);
-		}
-		else if (!strnicmp (line, "LOWRES", 6)) {
-            sscanf (line+6, "%d", &DummyLoad);
-			LowRes = (DummyLoad != 0);
-		}
-		else if (!strnicmp (line, "SICSHUT", 7)) {
-			sscanf (line + 7, "%f", &ftcp);
-			FirstStageCentreShutdownTime = ftcp;
-		}
-		else if (!strnicmp (line, "SIICSHUT", 8)) {
-			sscanf (line + 8, "%f", &ftcp);
-			SecondStageCentreShutdownTime = ftcp;
-		}
-		else if (!strnicmp (line, "SISHUT", 6)) {
-			sscanf (line + 6, "%f", &ftcp);
-			FirstStageShutdownTime = ftcp;
-		}
-		else if (!strnicmp (line, "SIISHUT", 7)) {
-			sscanf (line + 7, "%f", &ftcp);
-			SecondStageShutdownTime = ftcp;
-		}
-		else if (!strnicmp (line, "ISTGJT", 6)) {
-			sscanf (line + 6, "%f", &ftcp);
-			InterstageSepTime = ftcp;
-		}
-		else if (!strnicmp (line, "LESJT", 5)) {
-			sscanf (line + 5, "%f", &ftcp);
-			LESJettisonTime = ftcp;
-		}
-		else if (!strnicmp (line, "SIIPUT", 6)) {
-			sscanf (line + 6, "%f", &ftcp);
-			SecondStagePUShiftTime = ftcp;
-		}
-		else if (!strnicmp (line, "IGMST", 5)) {
-			sscanf (line + 5, "%f", &ftcp);
-			IGMStartTime = ftcp;
-		}
-		else if (!strnicmp (line, "THRUSTA", 7)) {
-			sscanf (line + 7, "%f", &ftcp);
-			ThrustAdjust = ftcp;
-		}
-		else if (!strnicmp (line, "LEM_DISPLAY", 11)) {
-			LEM_DISPLAY = true;
-		}
-		else if (!strnicmp (line, "MAINSTATE", 9)) {
-            SwitchState = 0;
-			sscanf (line+9, "%d", &SwitchState);
-			SetMainState(SwitchState);
-		}
-		else if (!strnicmp (line, "A13STATE", 8)) {
-            SwitchState = 0;
-			sscanf (line+8, "%d", &SwitchState);
-			SetMainState(SwitchState);
-		}
-		else if (!strnicmp (line, "LAUNCHSTATE", 11)) {
-            SwitchState = 0;
-			sscanf (line+11, "%d", &SwitchState);
-			SetLaunchState(SwitchState);
-		}
-		else if (!strnicmp (line, "LIGHTSTATE", 10)) {
-            SwitchState = 0;
-			sscanf (line+10, "%d", &SwitchState);
-			SetLightState(SwitchState);
-		}
-		else if (!strnicmp (line, "VALVESTATE", 10)) {
-			int valvestate = 0;
-			int mask = 1;
-			sscanf (line+10, "%d", &valvestate);
-			for (n = 1; n < N_CSM_VALVES; n++) {
-				ValveState[n] = ((valvestate & mask) != 0);
-				mask <<= 1;
-			}
-		}
-		else if (!strnicmp (line, "LMPADCNT", 8)) {
-			if (!LMPad) {
-				sscanf (line+8, "%d", &LMPadCount);
-				if (LMPadCount > 0) {
-					LMPad = new unsigned int[LMPadCount * 2];
-				}
-			}
-		}
-		else if (!strnicmp (line, "LMPAD", 5)) {
-			unsigned int addr, val;
-			sscanf (line+5, "%o %o", &addr, &val);
-			LMPadValueCount++;
-			if (LMPad && LMPadLoadCount < (LMPadCount * 2)) {
-				LMPad[LMPadLoadCount++] = addr;
-				LMPad[LMPadLoadCount++] = val;
-			}
-		}
-		else if (!strnicmp (line, "CMPAD", 5)) {
-			unsigned int addr, val;
-
-			//
-			// CM PAD value aren't saved, as the AGC will save them itself. They're only used to load values in
-			// a starting scenario.
-			//
-			// Be sure that you put CMPAD lines _after_ the AGC entries, so that the AGC will know whether it's
-			// running Virtual AGC or not. PAD loads are ignored if it's not a Virtual AGC.
-			//
-
-			sscanf (line+5, "%o %o", &addr, &val);
-			agc.PadLoad(addr, val);
-		}
-		else if (!strnicmp (line, "REALISM", 7)) {
-			sscanf (line+7, "%d", &Realism);
-		}
-		else if (!strnicmp (line, "CSWITCH", 7)) {
-            SwitchState = 0;
-			sscanf (line+7, "%d", &SwitchState);
-			SetCSwitchState(SwitchState);
-		}
-		else if (!strnicmp (line, "SSWITCH", 7)) {
-            SwitchState = 0;
-			sscanf (line+7, "%d", &SwitchState);
-			SetSSwitchState(SwitchState);
-		}
-		else if (!strnicmp (line, "LPSWITCH", 8)) {
-            SwitchState = 0;
-			sscanf (line+8, "%d", &SwitchState);
-			SetLPSwitchState(SwitchState);
-		}
-		else if (!strnicmp (line, "RPSWITCH", 8)) {
-            SwitchState = 0;
-			sscanf (line+8, "%d", &SwitchState);
-			SetRPSwitchState(SwitchState);
-		}
-		else if (!strnicmp (line, "APOLLONO", 8)) {
-			sscanf (line+8, "%d", &ApolloNo);
-		}
-		else if (!strnicmp (line, "DOCKSTATE", 9)) {
-            sscanf (line+9, "%d", &dockstate);
-		}
-		else if (!strnicmp (line, "AUTOTIMER", 9)) {
-            sscanf (line+9, "%f", &ftcp);
-			autopTime = ftcp;
-		}
-		else if (!strnicmp(line, "MISSNTIME", 9)) {
-            sscanf (line+9, "%f", &ftcp);
-			MissionTime = ftcp;
-		}
-		else if (!strnicmp(line, "MTD", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			MissionTimerDisplay.SetTime(ftcp);
-		}
-		else if (!strnicmp(line, "ETD", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			EventTimerDisplay.SetTime(ftcp);
-		}
-		else if (!strnicmp(line, "NMISSNTIME", 10)) {
-            sscanf (line + 10, "%f", &ftcp);
-			NextMissionEventTime = ftcp;
-		}
-		else if (!strnicmp(line, "LMISSNTIME", 10)) {
-            sscanf (line + 10, "%f", &ftcp);
-			LastMissionEventTime = ftcp;
-		}
-		else if (!strnicmp(line, "NFAILTIME", 9)) {
-            sscanf (line + 9, "%f", &ftcp);
-			NextFailureTime = ftcp;
-		}
-		else if (!strnicmp(line, "SIFUELMASS", 10)) {
-            sscanf (line + 10, "%f", &ftcp);
-			SI_FuelMass = ftcp;
-		}
-		else if (!strnicmp(line, "SIIFUELMASS", 11)) {
-            sscanf (line + 11, "%f", &ftcp);
-			SII_FuelMass = ftcp;
-		}
-		else if (!strnicmp(line, "S4FUELMASS", 10)) {
-            sscanf (line + 10, "%f", &ftcp);
-			S4B_FuelMass = ftcp;
-		}
-		else if (!strnicmp(line, "S4EMPTYMASS", 11)) {
-            sscanf (line + 11, "%f", &ftcp);
-			S4B_EmptyMass = ftcp;
-			S4B_MassLoaded = true;
-		}
-		else if (!strnicmp(line, "SIEMPTYMASS", 11)) {
-            sscanf (line + 11, "%f", &ftcp);
-			SI_EmptyMass = ftcp;
-			SI_MassLoaded = true;
-		}
-		else if (!strnicmp(line, "SIIEMPTYMASS", 12)) {
-            sscanf (line + 12, "%f", &ftcp);
-			SII_EmptyMass = ftcp;
-			SII_MassLoaded = true;
-		}
-		else if (!strnicmp(line, "T1V", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			THRUST_FIRST_VAC = ftcp;
-			S1_ThrustLoaded = true;
-		}
-		else if (!strnicmp(line, "I1S", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			ISP_FIRST_SL = ftcp;
-		}
-		else if (!strnicmp(line, "I1V", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			ISP_FIRST_VAC = ftcp;
-		}
-		else if (!strnicmp(line, "T2V", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			THRUST_SECOND_VAC = ftcp;
-			S2_ThrustLoaded = true;
-		}
-		else if (!strnicmp(line, "I2S", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			ISP_SECOND_SL = ftcp;
-		}
-		else if (!strnicmp(line, "I2V", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			ISP_SECOND_VAC = ftcp;
-		}
-		else if (!strnicmp(line, "T3V", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			THRUST_THIRD_VAC = ftcp;
-			S3_ThrustLoaded = true;
-		}
-		else if (!strnicmp(line, "I3V", 3)) {
-            sscanf (line + 3, "%f", &ftcp);
-			ISP_THIRD_VAC = ftcp;
-		}
-		else if (!strnicmp(line, "PRELAUNCHATC", 12)) {
-			int i;
-			sscanf (line + 12, "%d", &i);
-			UseATC = (i != 0);
-		}
-		else if (!strnicmp (line, "PMET", 4)) {
-			sscanf(line+4, "%d", &n);
-			sscanf(line+8, "%f", &ftcp);
-			if (n >= 0 && n < PITCH_TABLE_SIZE) {
-				met[n] = ftcp;
-			}
-		}
-		else if (!strnicmp (line, "CPITCH", 6)) {
-			sscanf(line+6, "%d", &n);
-			sscanf(line+10, "%f", &ftcp);
-			if (n >= 0 && n < PITCH_TABLE_SIZE) {
-				cpitch[n] = ftcp;
-			}
-		}
-		else if (!strnicmp(line, "MOONLAT", 7)) {
-			sscanf(line + 7, "%f", &ftcp);
-			LMLandingLatitude = ftcp;
-		}
-		else if (!strnicmp(line, "MOONLONG", 8)) {
-			sscanf(line + 8, "%f", &ftcp);
-			LMLandingLongitude = ftcp;
-		}
-		else if (!strnicmp(line, "MOONALT", 7)) {
-			sscanf(line + 7, "%f", &ftcp);
-			LMLandingAltitude = ftcp;
-		}
-		else if (!strnicmp(line, "UNMANNED", 8)) {
-			int i;
-			sscanf(line + 8, "%d", &i);
-			Crewed = (i == 0);
-		}
-		else if (!strnicmp(line, "AUTOSLOW", 8)) {
-			int i;
-			sscanf(line + 8, "%d", &i);
-			AutoSlow = (i != 0);
-		}
-		else if (!strnicmp(line, "S4PL", 4)) {
-			sscanf(line + 4, "%d", &SIVBPayload);
-		}
-		else if (!strnicmp(line, "CSMSEP", 6)) {
-			sscanf(line + 6, "%f", &ftcp);
-			CSMSepTime = ftcp;
-			CSMSepSet = true;
-		}
-		else if (!strnicmp(line, "CMSEP", 5)) {
-			sscanf(line + 5, "%f", &ftcp);
-			CMSepTime = ftcp;
-			CMSepSet = true;
-		}
-		else if (!strnicmp(line, "S4APO", 5)) {
-			sscanf(line + 5, "%f", &ftcp);
-			SIVBApogee = ftcp;
-		}
-		else if (!strnicmp(line, "S4BURN", 6)) {
-			sscanf(line + 6, "%f", &ftcp);
-			SIVBBurnStart = ftcp;
-		}
-		else if (!strnicmp(line, "CSMAPO", 6)) {
-			sscanf(line + 6, "%f", &ftcp);
-			CSMApogee = ftcp;
-		}
-		else if (!strnicmp(line, "CSMPER", 6)) {
-			sscanf(line + 6, "%f", &ftcp);
-			CSMPerigee = ftcp;
-		}
-		else if (!strnicmp(line, "CSMBURN", 7)) {
-			sscanf(line + 7, "%f", &ftcp);
-			CSMBurnStart = ftcp;
-		}
-		else if (!strnicmp(line, "CSMACCEL", 8)) {
-			sscanf(line + 8, "%f", &ftcp);
-			CSMAccelSet = true;
-			CSMAccelTime = ftcp;
-		}
-		else if (!strnicmp(line, "CSMACCEND", 9)) {
-			sscanf(line + 9, "%f", &ftcp);
-			CSMAccelEnd = ftcp;
-		}
-		else if (!strnicmp(line, "CSMACCPITCH", 11)) {
-			sscanf(line + 11, "%f", &ftcp);
-			CSMAccelPitch = ftcp;
-		}
-		else if (!strnicmp(line, "SMFUELLOAD", 10)) {
-			sscanf(line + 10, "%f", &ftcp);
-			SM_FuelMass = ftcp;
-		}
-		else if (!strnicmp(line, "CMFUELLOAD", 10)) {
-			sscanf(line + 10, "%f", &ftcp);
-			CM_FuelMass = ftcp;
-		}
-		else if (!strnicmp(line, "SMMASS", 6)) {
-			sscanf(line + 6, "%f", &ftcp);
-			SM_EmptyMass = ftcp;
-		}
-		else if (!strnicmp(line, "CMMASS", 6)) {
-			sscanf(line + 6, "%f", &ftcp);
-			CM_EmptyMass = ftcp;
-		}
-		else if (!strnicmp(line, "LANDFAIL", 8)) {
-			sscanf(line + 8, "%d", &LandFail.word);
-		}
-		else if (!strnicmp(line, "LAUNCHFAIL", 10)) {
-			sscanf(line + 10, "%d", &LaunchFail.word);
-		}
-		else if (!strnicmp(line, "SWITCHCHFAIL", 10)) {
-			sscanf(line + 10, "%d", &SwitchFail.word);
-		}
-		else if (!strnicmp(line, "LANG", 4)) {
-			strncpy (AudioLanguage, line + 5, 64);
-		}
-		else if (!strnicmp(line, "LEMN", 4)) {
-			strncpy (LEMName, line + 5, 64);
-		}
-		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
-			dsky.LoadState(scn, DSKY_END_STRING);
-		}
-		else if (!strnicmp(line, DSKY2_START_STRING, sizeof(DSKY2_START_STRING))) {
-			dsky2.LoadState(scn, DSKY2_END_STRING);
-		}
-		else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
-			fdaiLeft.LoadState(scn, FDAI_END_STRING);
-		}
-		else if (!strnicmp(line, FDAI2_START_STRING, sizeof(FDAI2_START_STRING))) {
-			fdaiRight.LoadState(scn, FDAI2_END_STRING);
-		}
-		else if (!strnicmp(line, AGC_START_STRING, sizeof(AGC_START_STRING))) {
-			agc.LoadState(scn);
-		}
-		else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
-			imu.LoadState(scn);
-		}
-		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
-			iu.LoadState(scn);
-		}
-		else if (!strnicmp(line, CWS_START_STRING, sizeof(CWS_START_STRING))) {
-			cws.LoadState(scn);
-		}
-		else if (!strnicmp(line, DOCKINGPROBE_START_STRING, sizeof(DOCKINGPROBE_START_STRING))) {
-			dockingprobe.LoadState(scn);
-		}
-		else if (!strnicmp (line, "SYSTEMSSTATE", 12)) {
-			sscanf (line + 12, "%d", &systemsState);
-		}
-		else if (!strnicmp (line, "LSYSTEMSMISSNTIME", 17)) {
-			sscanf (line + 17, "%f", &ftcp);
-			lastSystemsMissionTime = ftcp;
-		}
-        else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
-			Panelsdk.Load(scn);			//send the loading to the Panelsdk
-		}
-        else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
-			PSH.LoadState(scn);	
-		}
-		else if (!strnicmp (line, "COASENABLED", 11)) {
-			sscanf (line + 11, "%i", &coasEnabled);
-		}
-		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
-			sscanf (line + 12, "%i", &fdaiDisabled);
-		}
-		else if (!strnicmp (line, "MR", 2)) {
-			sscanf (line + 2, "%f", &ftcp);
-			MixtureRatio = ftcp;
-		}
-		else {
+		if (!ProcessConfigFileLine(scn, line)) {
 			ParseScenarioLineEx (line, vstatus);
         }
     }
@@ -2029,12 +2049,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 	UpdatePayloadMass();
 	CalculateStageMass ();
-
-	//
-	// Tell the AGC the heading we want.
-	//
-
-	agc.SetDesiredAzimuth(tohdg);
 
 	//
 	// And pass it the mission number and realism settings.

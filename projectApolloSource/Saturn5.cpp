@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2006/01/26 03:59:03  movieman523
+  *	Resolution can now be read from config file.
+  *	
   *	Revision 1.54  2006/01/26 03:31:57  movieman523
   *	Less hacky low-res mesh support for Saturn V.
   *	
@@ -612,13 +615,9 @@ void SaturnV::clbkSetClassCaps (FILEHANDLE cfg)
 	//
 
 	char *line;
-	int DummyLoad = 0;
 
 	while (oapiReadScenario_nextline (cfg, line)) {
-		if (!strnicmp (line, "LOWRES", 6)) {
-            sscanf (line+6, "%d", &DummyLoad);
-			LowRes = (DummyLoad != 0);
-		}
+		ProcessConfigFileLine(cfg, line);
 	}
 }
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2006/01/15 02:38:59  movieman523
+  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
+  *	
   *	Revision 1.28  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -1020,6 +1023,7 @@ void Saturn1b::SeparateStage (int stage)
 		S4Config.SaturnVStage = false;
 		S4Config.MissionTime = MissionTime;
 		S4Config.Realism = Realism;
+		S4Config.LowRes = LowRes;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);

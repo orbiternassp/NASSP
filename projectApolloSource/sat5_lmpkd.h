@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2006/01/22 16:38:11  flydba
+  *	Switches added on LEM panel 1.
+  *	
   *	Revision 1.31  2006/01/19 14:55:13  tschachim
   *	Initial Meshland support.
   *	
@@ -330,9 +333,9 @@ protected:
 	ToggleSwitch EngineDescentCommandOverrideSwitch;
 
 	SwitchRow ModeControlSwitchesRow;
-	ThreePosSwitch ModeControlPNGSSwitch;
+	PGNSSwitch ModeControlPNGSSwitch;
 	ThreePosSwitch ModeControlAGSSwitch;
-    ToggleSwitch IMUCageSwitch;
+    UnguardedIMUCageSwitch IMUCageSwitch;
 
 	bool RCS_Full;
 	bool Eds;

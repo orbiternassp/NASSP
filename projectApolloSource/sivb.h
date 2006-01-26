@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/01/26 03:07:50  movieman523
+  *	Quick hack to support low-res mesh.
+  *	
   *	Revision 1.6  2005/11/24 20:31:23  movieman523
   *	Added support for engine thrust decay during launch.
   *	
@@ -58,6 +61,7 @@ typedef struct {
 	double MainFuelKg;
 	bool PanelsHinged;
 	bool SaturnVStage;
+	bool LowRes;
 } SIVBSettings;
 
 //
