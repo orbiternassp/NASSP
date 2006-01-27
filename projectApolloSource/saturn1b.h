@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/01/26 19:26:31  movieman523
+  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
+  *	
   *	Revision 1.11  2006/01/15 02:38:59  movieman523
   *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
   *	
@@ -82,6 +85,7 @@ protected:
 
 	double LiftCoeff (double aoa);
 
+	void SetupMeshes();
 	void AttitudeLaunch1();
 	void AttitudeLaunch4();
 	void AutoPilot(double autoT);

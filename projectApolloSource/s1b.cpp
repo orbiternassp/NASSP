@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/01/09 19:26:03  tschachim
+  *	More attempts to make code build on MS C++ 2005
+  *	
   *	Revision 1.3  2005/11/26 16:30:50  movieman523
   *	Fixed retros and trying to fix TLI audio.
   *	
@@ -47,16 +50,20 @@
 
 static MESHHANDLE hsat1stg1;
 static MESHHANDLE hSat1intstg;
+static MESHHANDLE hsat1stg1low;
+static MESHHANDLE hSat1intstglow;
 
 void S1bLoadMeshes()
 
 {
 	//
-	// Saturn 1b
+	// S1b meshes
 	//
 
 	hsat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg1");
 	hSat1intstg = oapiLoadMeshGlobal ("ProjectApollo/nsat1intstg");
+	hsat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/LowRes/nsat1stg1");
+	hSat1intstg = oapiLoadMeshGlobal ("ProjectApollo/LowRes/nsat1intstg");
 }
 
 S1B::S1B (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
@@ -91,6 +98,7 @@ void S1B::InitS1b()
 	CurrentThrust = 0.0;
 
 	RetrosFired = false;
+	LowRes = false;
 
 	MissionTime = MINUS_INFINITY;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -130,10 +138,21 @@ void S1B::SetS1b()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	AddMesh (hsat1stg1, &mesh_dir);
+	if (LowRes) {
+		AddMesh (hsat1stg1low, &mesh_dir);
+	}
+	else {
+		AddMesh (hsat1stg1, &mesh_dir);
+	}
 
 	mesh_dir = _V(0, 0, 16.2);
-	AddMesh (hSat1intstg, &mesh_dir);
+
+	if (LowRes) {
+		AddMesh (hSat1intstglow, &mesh_dir);
+	}
+	else {
+		AddMesh (hSat1intstg, &mesh_dir);
+	}
 
 	SetEmptyMass (mass);
 
@@ -143,7 +162,6 @@ void S1B::SetS1b()
 void S1B::clbkPreStep(double simt, double simdt, double mjd)
 
 {
-
 	MissionTime += simdt;
 
 	//
@@ -206,6 +224,7 @@ void S1B::clbkSaveState (FILEHANDLE scn)
 typedef union {
 	struct {
 		unsigned int RetrosFired:1;
+		unsigned int LowRes:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -217,6 +236,7 @@ int S1B::GetMainState()
 
 	state.word = 0;
 	state.u.RetrosFired = RetrosFired;
+	state.u.LowRes = LowRes;
 
 	return state.word;
 }
@@ -293,6 +313,7 @@ void S1B::SetMainState(int s)
 	state.word = s;
 
 	RetrosFired = (state.u.RetrosFired != 0);
+	LowRes = (state.u.LowRes != 0);
 }
 
 void S1B::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)

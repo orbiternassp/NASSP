@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/01/26 19:26:31  movieman523
+  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
+  *	
   *	Revision 1.12  2006/01/26 03:07:50  movieman523
   *	Quick hack to support low-res mesh.
   *	
@@ -73,6 +76,7 @@
 //
 
 static MESHHANDLE hSat1stg2;
+static MESHHANDLE hSat1stg2low;
 static MESHHANDLE hSat1stg21;
 static MESHHANDLE hSat1stg22;
 static MESHHANDLE hSat1stg23;
@@ -102,6 +106,7 @@ void SIVbLoadMeshes()
 	//
 
 	hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
+	hSat1stg2low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/nsat1stg2");
 	hSat1stg21 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg21");
 	hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
 	hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
@@ -261,8 +266,13 @@ void SIVB::SetS4b()
 		}
 	}
 	else {
-		//ShiftCentreOfMass (_V(0, 0, 2.9));
-		AddMesh (hSat1stg2, &mesh_dir);
+
+		if (LowRes) {
+			AddMesh (hSat1stg2low, &mesh_dir);
+		}
+		else {
+			AddMesh (hSat1stg2, &mesh_dir);
+		}
 
 		switch (Payload) {
 
@@ -398,7 +408,6 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 		//
 
 		if (SaturnVStage) {
-
 			vs2.vrot.x = -0.1;
 			vs2.vrot.y = 0.1;
 			vs2.vrot.z = 0.0;
@@ -422,7 +431,6 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 			hs4b4 = oapiCreateVessel(VName, "ProjectApollo/sat5stg34", vs5);
 		}
 		else {
-
 			vs2.vrot.x = 0.1;
 			vs2.vrot.y = -0.1;
 			vs2.vrot.z = 0.0;

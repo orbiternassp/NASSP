@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.104  2006/01/26 19:26:31  movieman523
+  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
+  *	
   *	Revision 1.103  2006/01/26 03:31:57  movieman523
   *	Less hacky low-res mesh support for Saturn V.
   *	
@@ -524,6 +527,7 @@ void Saturn::initSaturn()
 	hStage1Mesh = 0;
 	hStage2Mesh = 0;
 	hStage3Mesh = 0;
+	hInterstageMesh = 0;
 	hStageSLA1Mesh = 0;
 	hStageSLA2Mesh = 0;
 	hStageSLA3Mesh = 0;

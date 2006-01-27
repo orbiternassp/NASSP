@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2006/01/26 19:26:31  movieman523
+  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
+  *	
   *	Revision 1.29  2006/01/15 02:38:59  movieman523
   *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
   *	
@@ -138,8 +141,11 @@
 #include "s1b.h"
 
 static MESHHANDLE hSat1stg1;
+static MESHHANDLE hSat1stg1low;
 static MESHHANDLE hSat1intstg;
+static MESHHANDLE hSat1intstglow;
 static MESHHANDLE hSat1stg2;
+static MESHHANDLE hSat1stg2low;
 static MESHHANDLE hSat1stg21;
 static MESHHANDLE hSat1stg22;
 static MESHHANDLE hSat1stg23;
@@ -184,23 +190,23 @@ void Saturn1b::SetFirstStage ()
 
 	VECTOR3 mesh_dir=_V(0,0,-14);
 
-	AddMesh (hSat1stg1, &mesh_dir);
+	AddMesh (hStage1Mesh, &mesh_dir);
 	mesh_dir=_V(0,0,2.2);
-	AddMesh (hSat1intstg, &mesh_dir);
+	AddMesh (hInterstageMesh, &mesh_dir);
 	mesh_dir=_V(0,0,9.25);
-	AddMesh (hSat1stg2, &mesh_dir);
+	AddMesh (hStage2Mesh, &mesh_dir);
 	mesh_dir=_V(0,4,4.7);
     //vessel->AddMesh (hapsl, &mesh_dir);
 	mesh_dir=_V(0,-4,4.7);
     //vessel->AddMesh (hapsh, &mesh_dir);
 	mesh_dir=_V(1.85,1.85,24.5);
-    AddMesh (hSat1stg21, &mesh_dir);
+    AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,1.85,24.5);
-    AddMesh (hSat1stg22, &mesh_dir);
+    AddMesh (hStageSLA2Mesh, &mesh_dir);
 	mesh_dir=_V(1.85,-1.85,24.5);
-    AddMesh (hSat1stg23, &mesh_dir);
+    AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,-1.85,24.5);
-    AddMesh (hSat1stg24, &mesh_dir);
+    AddMesh (hStageSLA4Mesh, &mesh_dir);
 	mesh_dir=_V(0,SMVO,31.25);
 	AddMesh (hSM, &mesh_dir);
 
@@ -320,21 +326,21 @@ void Saturn1b::SetSecondStage ()
     ClearAttExhaustRefs();
 	ShiftCentreOfMass (_V(0,0,12.25));
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
-    AddMesh (hSat1stg2, &mesh_dir);
+    AddMesh (hStage2Mesh, &mesh_dir);
 	mesh_dir=_V(0,0,2.2-12.25);
-	AddMesh (hSat1intstg, &mesh_dir);
+	AddMesh (hInterstageMesh, &mesh_dir);
 	mesh_dir=_V(0,4,5.2-12.25);
     //vessel->AddMesh (hapsl, &mesh_dir);
 	mesh_dir=_V(0,-4,5.2-12.25);
     //vessel->AddMesh (hapsh, &mesh_dir);
 	mesh_dir=_V(1.85,1.85,24.5-12.25);
-    AddMesh (hSat1stg21, &mesh_dir);
+    AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,1.85,24.5-12.25);
-    AddMesh (hSat1stg22, &mesh_dir);
+    AddMesh (hStageSLA2Mesh, &mesh_dir);
 	mesh_dir=_V(1.85,-1.85,24.5-12.25);
-    AddMesh (hSat1stg23, &mesh_dir);
+    AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
-    AddMesh (hSat1stg24, &mesh_dir);
+    AddMesh (hStageSLA4Mesh, &mesh_dir);
 	mesh_dir=_V(0,SMVO,31.25-12.25);
 	AddMesh (hSM, &mesh_dir);
 
@@ -425,19 +431,19 @@ void Saturn1b::SetSecondStage1 ()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
-    AddMesh (hSat1stg2, &mesh_dir);
+    AddMesh (hStage2Mesh, &mesh_dir);
 	mesh_dir=_V(0,4,5.2-12.25);
     //vessel->AddMesh (hapsl, &mesh_dir);
 	mesh_dir=_V(0,-4,5.2-12.25);
     //vessel->AddMesh (hapsh, &mesh_dir);
 	mesh_dir=_V(1.85,1.85,24.5-12.25);
-    AddMesh (hSat1stg21, &mesh_dir);
+    AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,1.85,24.5-12.25);
-    AddMesh (hSat1stg22, &mesh_dir);
+    AddMesh (hStageSLA2Mesh, &mesh_dir);
 	mesh_dir=_V(1.85,-1.85,24.5-12.25);
-    AddMesh (hSat1stg23, &mesh_dir);
+    AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
-    AddMesh (hSat1stg24, &mesh_dir);
+    AddMesh (hStageSLA4Mesh, &mesh_dir);
 	mesh_dir=_V(0,SMVO,31.25-12.25);
 	AddMesh (hSM, &mesh_dir);
 
@@ -524,19 +530,19 @@ void Saturn1b::SetSecondStage2 ()
     ClearAttExhaustRefs();
 	//vessel->ShiftCentreOfMass (_V(0,0,12.25));
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
-    AddMesh (hSat1stg2, &mesh_dir);
+    AddMesh (hStage2Mesh, &mesh_dir);
 	mesh_dir=_V(0,4,5.2-12.25);
     //vessel->AddMesh (hapsl, &mesh_dir);
 	mesh_dir=_V(0,-4,5.2-12.25);
     //vessel->AddMesh (hapsh, &mesh_dir);
 	mesh_dir=_V(1.85,1.85,24.5-12.25);
-    AddMesh (hSat1stg21, &mesh_dir);
+    AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,1.85,24.5-12.25);
-    AddMesh (hSat1stg22, &mesh_dir);
+    AddMesh (hStageSLA2Mesh, &mesh_dir);
 	mesh_dir=_V(1.85,-1.85,24.5-12.25);
-    AddMesh (hSat1stg23, &mesh_dir);
+    AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
-    AddMesh (hSat1stg24, &mesh_dir);
+    AddMesh (hStageSLA4Mesh, &mesh_dir);
 	mesh_dir=_V(0,SMVO,31.25-12.25);
 	AddMesh (hSM, &mesh_dir);
 
@@ -971,6 +977,7 @@ void Saturn1b::SeparateStage (int stage)
 		S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
 		S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
 		S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
+		S1Config.LowRes = LowRes;
 
 		S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
 
@@ -1127,8 +1134,12 @@ void Saturn1bLoadMeshes()
 
 {
 	hSat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg1");
+	hSat1stg1low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/nsat1stg1");
 	hSat1intstg = oapiLoadMeshGlobal ("ProjectApollo/nsat1intstg");
+	hSat1intstglow = oapiLoadMeshGlobal ("ProjectApollo/LowRes/nsat1intstg");
 	hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
+	hSat1stg2low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/nsat1stg2");
+
 	hSat1stg21 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg21");
 	hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
 	hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
@@ -1136,4 +1147,28 @@ void Saturn1bLoadMeshes()
 	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
 	hastp2 = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
+}
+
+
+void Saturn1b::SetupMeshes()
+
+{
+	if (LowRes) {
+		hStage1Mesh = hSat1stg1low;
+		hStage2Mesh = hSat1stg2low;
+		hInterstageMesh = hSat1intstglow;
+		hStageSLA1Mesh = hSat1stg21;
+		hStageSLA2Mesh = hSat1stg22;
+		hStageSLA3Mesh = hSat1stg23;
+		hStageSLA4Mesh = hSat1stg24;
+	}
+	else {
+		hStage1Mesh = hSat1stg1;
+		hStage2Mesh = hSat1stg2;
+		hInterstageMesh = hSat1intstg;
+		hStageSLA1Mesh = hSat1stg21;
+		hStageSLA2Mesh = hSat1stg22;
+		hStageSLA3Mesh = hSat1stg23;
+		hStageSLA4Mesh = hSat1stg24;
+	}
 }

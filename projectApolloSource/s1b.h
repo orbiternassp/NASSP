@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/11/23 02:21:30  movieman523
+  *	Added S1b stage.
+  *	
   **************************************************************************/
 
 //
@@ -42,6 +45,8 @@ typedef struct {
 	double EmptyMass;
 	double MainFuelKg;
 	double CurrentThrust;
+
+	bool LowRes;
 
 } S1BSettings;
 
@@ -98,6 +103,7 @@ protected:
 	int RetroNum;
 
 	bool RetrosFired;
+	bool LowRes;
 
 	double EmptyMass;
 	double PayloadMass;
