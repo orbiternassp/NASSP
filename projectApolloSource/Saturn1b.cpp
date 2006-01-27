@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/01/26 19:26:31  movieman523
+  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
+  *	
   *	Revision 1.42  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
@@ -1002,6 +1005,8 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 {
 	GetScenarioState(scn, vs);
+
+	SetupMeshes();
 
 	switch (stage) {
 
