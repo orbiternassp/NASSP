@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/01/26 19:26:31  movieman523
+  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
+  *	
   *	Revision 1.42  2006/01/22 16:34:01  flydba
   *	Switches added on LEM panel 1.
   *	
@@ -246,6 +249,9 @@ void sat5_lmpkd::InitPanel() {
 	BALCPLSwitch.Register(PSH, "BALCPLSwitch", true);
 	QTYMonSwitch.Register(PSH, "QTYMonSwitch", THREEPOSSWITCH_DOWN);
 	TempPressMonSwitch.Register(PSH, "TempPressMonSwitch", THREEPOSSWITCH_UP);
+	RightRateErrorMonSwitch.Register(PSH, "RightRateErrorMonSwitch", true);
+	RightAttitudeMonSwitch.Register(PSH, "RightAttitudeMonSwitch", true);
+	RightACAPropSwitch.Register(PSH, "RightACAPropSwitch", false);
 
 	HeliumMonRotary.AddPosition(0, 290);
 	HeliumMonRotary.AddPosition(1, 315);
@@ -255,6 +261,28 @@ void sat5_lmpkd::InitPanel() {
 	HeliumMonRotary.AddPosition(5,  70);
 	HeliumMonRotary.AddPosition(6, 110);
 	HeliumMonRotary.Register(PSH, "HeliumMonRotary", 0);
+
+	TempPressMonRotary.AddPosition(0, 340);
+	TempPressMonRotary.AddPosition(1,  20);
+	TempPressMonRotary.AddPosition(2,  45);
+	TempPressMonRotary.AddPosition(3,  70);
+	TempPressMonRotary.Register(PSH, "TempPressMonRotary", 0);
+
+	ClycolRotary.AddPosition(0,  45);
+	ClycolRotary.AddPosition(1,  70);
+	ClycolRotary.AddPosition(2, 110);
+	ClycolRotary.Register(PSH, "ClycolRotary", 1);
+	
+	SuitFanRotary.AddPosition(0,  45);
+	SuitFanRotary.AddPosition(1,  70);
+	SuitFanRotary.AddPosition(2, 110);
+	SuitFanRotary.Register(PSH, "SuitFanRotary", 0);
+
+	QtyMonRotary.AddPosition(0, 340);
+	QtyMonRotary.AddPosition(1,  20);
+	QtyMonRotary.AddPosition(2,  45);
+	QtyMonRotary.AddPosition(3,  70);
+	QtyMonRotary.Register(PSH, "QtyMonRotary", 1);
 
 	//
 	// Old stuff.
@@ -788,6 +816,11 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ENGINETHRUSTCONTSWITCHES,		_R( 211, 1006,  320, 1117), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PROPELLANTSWITCHES,				_R( 484,  991,  546, 1112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_HELIUMMONROTARY,					_R( 587,  995,  665, 1073), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RIGHTMONITORSWITCHES,			_R(1400,  712, 1434,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_TEMPPRESSMONROTARY,				_R( 791, 1005,  869, 1083), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ACAPROPSWITCH,					_R(1012, 1012, 1046, 1051), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CLYCOLSUITFANROTARIES,			_R(1101,  929, 1179, 1127), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_QTYMONROTARY,					_R(1287,  989, 1365, 1067), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		
@@ -964,7 +997,23 @@ void sat5_lmpkd::SetSwitches(int panel) {
 	HeliumMonRotaryRow.Init(AID_HELIUMMONROTARY, MainPanel);
 	HeliumMonRotary.Init(0, 0, 78, 78, srf[SRF_LEMROTARY], HeliumMonRotaryRow);
 
-	
+	RightMonitorSwitchRow.Init(AID_RIGHTMONITORSWITCHES, MainPanel);
+	RightRateErrorMonSwitch.Init(0,  0, 34, 29, srf[SRF_SWITCHUP], RightMonitorSwitchRow);
+	RightAttitudeMonSwitch.Init (0, 83, 34, 29, srf[SRF_SWITCHUP], RightMonitorSwitchRow);
+
+	TempPressMonRotaryRow.Init(AID_TEMPPRESSMONROTARY, MainPanel);
+	TempPressMonRotary.Init(0, 0, 78, 78, srf[SRF_LEMROTARY], TempPressMonRotaryRow);
+
+	RightACAPropSwitchRow.Init(AID_ACAPROPSWITCH, MainPanel);
+	RightACAPropSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTWOPOSLEVER], RightACAPropSwitchRow);
+
+	ClycolSuitFanRotaryRow.Init(AID_CLYCOLSUITFANROTARIES, MainPanel);
+	ClycolRotary.Init (0,   0, 78, 78, srf[SRF_LEMROTARY], ClycolSuitFanRotaryRow);
+	SuitFanRotary.Init(0, 120, 78, 78, srf[SRF_LEMROTARY], ClycolSuitFanRotaryRow);
+
+	QtyMonRotaryRow.Init(AID_QTYMONROTARY, MainPanel);
+	QtyMonRotary.Init(0,   0, 78, 78, srf[SRF_LEMROTARY], QtyMonRotaryRow);
+
 	EngineDescentCommandOverrideSwitchesRow.Init(AID_DESCENT_ENGINE_SWITCH,MainPanel);
 	EngineDescentCommandOverrideSwitch.Init (0, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], EngineDescentCommandOverrideSwitchesRow);
 
