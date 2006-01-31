@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/01/26 19:26:31  movieman523
+  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
+  *	
   *	Revision 1.55  2006/01/26 03:59:03  movieman523
   *	Resolution can now be read from config file.
   *	
@@ -251,9 +254,12 @@ GDIParams g_Param;
 //
 // Default pitch program.
 //
-
+/*
 const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58, 70, 80,  110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88, 75, 60, 50,  40,  35,  30,  30,  30,  25,  20, 10 ,   5,  -2,   0};	// Commanded pitch in °
+const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   75, 60, 50,   40,  35,  30,  30,  30,  25,  20,  10 ,  5,  -2,   0};	// Commanded pitch in °
+*/
+const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58, 70, 80,  110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
+const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   73, 58, 50,   40,  33,  30,  20,  20,  10,   18,  8 ,  3,  -2,   0};	// Commanded pitch in °
 
 //
 // SaturnV constructor, derived from basic Saturn class.
