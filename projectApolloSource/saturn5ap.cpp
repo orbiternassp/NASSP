@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/01/31 00:52:43  lazyd
+  *	Added linear guidance for SII and SIVB
+  *	
   *	Revision 1.8  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -541,6 +544,14 @@ void SaturnV::AutoPilot(double autoT)
 	}
 	else if (altitude >= 4500)	{
 
+		bank = GetBank();
+		bank = bank*180./PI;
+		if(bank > 90) bank = bank - 180;
+		else if(bank < -90) bank = bank + 180;
+		AtempR=-bank/20.0;
+//		sprintf(oapiDebugString(), "bank=%.3f", bank);
+
+
 	// navigation
 		pitch = GetPitch();
 		pitch=pitch*180./PI;
@@ -573,13 +584,13 @@ void SaturnV::AutoPilot(double autoT)
 
 		if (fabs(level)<10 && StopRot) {	// above atmosphere, soft correction
 			AtempP = 0.0;
-			AtempR = 0.0;
+//			AtempR = 0.0;
 			AtempY = 0.0;
 			StopRot = false;
 		}
 		if (fabs(level)<0.05) {	// above atmosphere, soft correction
 			AtempP = 0.0;
-			AtempR = 0.0;
+//			AtempR = 0.0;
 			AtempY = 0.0;
 		}
 		else if (level>0 && fabs(vsp.vrot.z) < 0.09) {
@@ -594,9 +605,10 @@ void SaturnV::AutoPilot(double autoT)
 		}
 		else {
 			AtempP = 0.0;
-			AtempR = 0.0;
+//			AtempR = 0.0;
 			AtempY = 0.0;
 		}
+
 
 		if(IGMEnabled) {
 			VECTOR3 target;
@@ -617,7 +629,8 @@ void SaturnV::AutoPilot(double autoT)
 			} else if(stage == LAUNCH_STAGE_TWO_TWR_JET) {
 				target.x=velo-700.0;
 				target.y=73.0;
-				target.z=altco-3000.0;
+//				target.z=altco-3000.0;
+				target.z=altco-1000.0;
 				LinearGuidance(target, pit, yaw);
 				if(pit > 22.0*DEG) pit=22.0*DEG;
 				AtempP=(pit*DEG-pitch)/20.0;
@@ -642,6 +655,19 @@ void SaturnV::AutoPilot(double autoT)
 			if (AtempP < (-1.0))
 				AtempP = -1.0;
 
+			if(altitude > 1500.0 && altitude < 5000.0) AtempY=(TO_HDG-heading)/30.0;
+//			sprintf(oapiDebugString(), "heading=%.3f TO_HDG=%.3f", heading, TO_HDG);
+
+			// zero angle-of-attack...
+			if(autoT > 45.0 && autoT < 100.0) {
+				double aoa=GetAOA()*DEG;
+				double slip=GetSlipAngle()*DEG;
+				pitch_c=pitch+aoa-0.3;
+				AtempP=(pitch_c-pitch)/5.0;
+				AtempY=slip/10.0;
+//				sprintf(oapiDebugString(), "t=%.1f aoa=%.3f pitch=%.3f cmd=%.3f atp=%.3f", autoT, aoa, pitch, pitch_c, AtempP);
+			}
+			
 			AttitudeLaunch1();
 		break;
 			case LAUNCH_STAGE_TWO:
