@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/01/26 03:31:57  movieman523
+  *	Less hacky low-res mesh support for Saturn V.
+  *	
   *	Revision 1.20  2006/01/24 13:46:30  tschachim
   *	Smoother staging with more eye-candy.
   *	
@@ -124,6 +127,7 @@ private:
 	void AttitudeLaunch2();
 	void AttitudeLaunch4();
 	void AutoPilot(double autoT);
+	void LinearGuidance(VECTOR3 &target, double &pitch, double &yaw);
 	void SetSIICMixtureRatio (double ratio);
 	void SetSIVbCMixtureRatio(double ratio);
 	void MoveEVA();
