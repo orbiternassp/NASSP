@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/08/30 14:53:00  spacex15
+  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
+  *	
   *	Revision 1.7  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -322,6 +325,7 @@ void SaturnV::AttitudeLaunch1()
 
 void SaturnV::AutoPilot(double autoT)
 {
+	const double GRAVITY=6.67259e-11;
 	static int t = 0;
 	double level=0.;
 	double altitude;
@@ -385,13 +389,12 @@ void SaturnV::AutoPilot(double autoT)
 		}
 	}
 	else if (altitude < 750  && altitude > 250)	{
+
 		bank = GetBank();
-//		oapiGetFocusBank(&bank);
 		bank = bank*180./PI;
 		if(bank > 90) bank = bank - 180;
 		else if(bank < -90) bank = bank + 180;
 
-//		sprintf (oapiDebugString(), "bank = %d", (int)bank);
 
 		if (fabs(bank+(90-TO_HDG)) <15  && StopRot){
 			AtempP = 0.0;
@@ -404,7 +407,7 @@ void SaturnV::AutoPilot(double autoT)
 			AtempY = 0.0;
 		}
 
-		//sprintf(oapiDebugString(), "Autopilot Bank Mode TotalROT %f", totalRot);
+//		sprintf(oapiDebugString(), "Over 250m Autopilot Bank Mode TotalROT %f", totalRot);
 
 		if (bank > -(90-TO_HDG)+0.5){
 			AtempR = -fabs((90-TO_HDG)-bank);
@@ -424,15 +427,18 @@ void SaturnV::AutoPilot(double autoT)
 			AtempR = 0.0;
 		}
 
+
 	}
+/*
 	else if (altitude < 2800  && altitude > 750){
+
+
 		bank = GetBank();
-//		oapiGetFocusBank(&bank);
 		bank = bank*180./PI;
 		if(bank > 90) bank = bank - 180;
 		else if(bank < -90) bank = bank + 180;
 
-//		sprintf (oapiDebugString(), "bank = %d", (int)bank);
+		sprintf (oapiDebugString(), "over 750 bank = %d", (int)bank);
 
 		int etat;
 		if (fabs(heading-TO_HDG) <10 && StopRot) {
@@ -494,14 +500,17 @@ void SaturnV::AutoPilot(double autoT)
 		}
 		//sprintf(oapiDebugString(), "Autopilot Heading Mode DEG %f %f %d", heading, AtempP,etat);
 	}
-	else if (altitude < 4500  && altitude > 2800) {
-//		oapiGetFocusBank(&bank);
+*/
+	else if (altitude < 4500  && altitude > 750){
+//	else if (altitude < 4500  && altitude > 2800) {
 		bank = GetBank();
 		bank = bank*180./PI;
 		if(bank > 90) bank = bank - 180;
 		else if(bank < -90) bank = bank + 180;
 
-//		sprintf (oapiDebugString(), "bank = %d", (int)bank);
+//		sprintf (oapiDebugString(), " over 2800 bank = %d hdg=%.3f az=%.3f", (int)bank, heading, TO_HDG);
+
+		AtempY=(TO_HDG-heading)*0.03;
 
 		if (fabs(bank) < 0.5) {
 			AtempP = 0.0;
@@ -510,12 +519,12 @@ void SaturnV::AutoPilot(double autoT)
 
 		}
 		else if (bank < 0 && fabs(vsp.vrot.z) < 0.11) {
-			AtempR = 1.0;
-			//SetAttitudeRotLevel(2,-1 );//bank/30
+//			AtempR = 1.0;
+			AtempR = 0.2;
 		}
 		else if (bank > 0 && fabs(vsp.vrot.z) < 0.11) {
-			AtempR = -1.0;
-			//SetAttitudeRotLevel(2, 1);
+//			AtempR = -1.0;
+			AtempR = -0.2;
 		}
 		else {
 			AtempP = 0.0;
@@ -548,9 +557,17 @@ void SaturnV::AutoPilot(double autoT)
 			GetApDist(SatApo);
 
 			pitch_c = GetCPitch(autoT);
-			if (SatApo >= ((agc.GetDesiredApogee() *.80) + ERADIUS)*1000 || (MissionTime >= IGMStartTime))
+//			if (SatApo >= ((agc.GetDesiredApogee() *.80) + ERADIUS)*1000 || (MissionTime >= IGMStartTime))
+			if (MissionTime >= IGMStartTime) {
 				IGMEnabled = true;
+//				char fname[8];
+//				sprintf(fname,"asclog.txt");
+//				if(pit > 22.0*DEG) pit=22.0*DEG;
+//				outstr=fopen(fname,"w");
+			}
 		}
+//		sprintf(oapiDebugString(), "t=%.1f IGM=%d pitch=%.3f cpitch=%.3f tpitch=%.3f", 
+//			autoT, IGMEnabled, pitch, pitch_c, GetCPitch(autoT));
 
 		level = pitch_c - pitch;
 
@@ -580,6 +597,33 @@ void SaturnV::AutoPilot(double autoT)
 			AtempR = 0.0;
 			AtempY = 0.0;
 		}
+
+		if(IGMEnabled) {
+			VECTOR3 target;
+			double pit, yaw;
+			OBJHANDLE hbody=GetGravityRef();
+			double bradius=oapiGetSize(hbody);
+			double bmass=oapiGetMass(hbody);
+			double mu=GRAVITY*bmass;
+			double altco=agc.GetDesiredApogee()*1000.0;
+			double velo=sqrt(mu/(bradius+altco));
+			if(stage == LAUNCH_STAGE_SIVB) {
+				target.x=velo;
+				target.y=0.0;
+				target.z=altco;
+				LinearGuidance(target, pit, yaw);
+				if(pit > 16.0*DEG) pit=16.0*DEG;
+				AtempP=(pit*DEG-pitch)/20.0;
+			} else if(stage == LAUNCH_STAGE_TWO_TWR_JET) {
+				target.x=velo-700.0;
+				target.y=73.0;
+				target.z=altco-3000.0;
+				LinearGuidance(target, pit, yaw);
+				if(pit > 22.0*DEG) pit=22.0*DEG;
+				AtempP=(pit*DEG-pitch)/20.0;
+			}
+		}
+
 	}
 
 	if (CMCswitch){
@@ -615,4 +659,125 @@ void SaturnV::AutoPilot(double autoT)
 		}
 	}
 
+}
+
+void SaturnV::LinearGuidance(VECTOR3 &target, double &pitch, double &yaw)
+// target.x = total velocity
+// target.y = vertical velocity
+// target.z = cutoff altitude
+{
+	const double GRAVITY=6.67259e-11;
+	VECTOR3 pos, vel, hvel, acc, h, ve;
+	double altitude, crossrange, crossvel, Mass, vthrust, velexh, fuelflow, totvel, veltbg, tau, tgo, 
+		velo, velv, altco, L, D12, D21, E, B, D, A, C, centrip, grav, acctot, simt, mu, p, e, a, apo, 
+		thmax, thlvl;
+	VESSELSTATUS2 status;
+	status.version=2;
+	status.flag=0;
+	GetStatusEx(&status);
+	simt=oapiGetSimTime();
+	OBJHANDLE hbody=GetGravityRef();
+	double bradius=oapiGetSize(hbody);
+	double bmass=oapiGetMass(hbody);
+	velo=target.x;
+	velv=target.y;
+	altco=target.z;
+	mu=GRAVITY*bmass;
+/*
+	tgtnor=CrossProduct(tgtvel, tgtpos);
+	tgtnor=Normalize(tgtnor);
+*/
+	pos=status.rpos;
+	vel=status.rvel;
+
+	h=CrossProduct(pos, vel);
+	ve=(pos*(Mag(vel)*Mag(vel)-(mu/Mag(pos)))-vel*(pos*vel))/mu;
+	p=(h*h)/mu;
+	e=Mag(ve);
+	a=p/(1.0-e*e);
+	apo=a*(1.0+e)-bradius;
+
+	GetHorizonAirspeedVector(hvel);
+	altitude=GetAltitude();
+//	crossrange=pos*tgtnor;
+//	crossvel=vel*tgtnor;
+	crossrange=0.0;
+	crossvel=0.0;
+	Mass=GetMass();
+	thmax=0.0;
+
+	int i;
+	double tmax;
+	THGROUP_HANDLE thm=GetThrusterGroupHandle(THGROUP_MAIN);
+	int num=GetGroupThrusterCount(THGROUP_MAIN);
+	for(i=0; i<num;i++){
+		THRUSTER_HANDLE th=GetGroupThruster(THGROUP_MAIN, i);
+		tmax=GetThrusterMax(th);
+		thmax=thmax+tmax;
+		velexh=GetThrusterIsp(th);
+	}
+	thlvl=GetThrusterGroupLevel(THGROUP_MAIN);
+
+	vthrust=thmax*thlvl;
+	if(thlvl < 0.7) {
+		pitch = GetPitch();	
+//		fprintf(outstr, "lvl=%.1f pitch=%.3f\n", thlvl, pitch*DEG);
+		return;
+	}
+	fuelflow=vthrust/velexh;
+	totvel=Mag(vel);
+	if(totvel > velo) {
+		SetThrusterGroupLevel(THGROUP_MAIN, 0.0);
+		pitch = GetPitch();	
+		return;
+	}
+	veltbg=velo-totvel;
+	tau=Mass/fuelflow;
+	//estimate time-to-go
+	tgo=tau*(1.0-exp(-(veltbg/velexh)));
+//	sprintf(oapiDebugString(), "IGM tgo=%.1f tgt=%.1f %.1f %.1f", tgo, target);
+//	fprintf(outstr, "th=%.1f lvl=%.3f max=%.1f isp=%.1f fl=%.3f vel=%.1f tgo=%.1f acc=%.3f\n", 
+//		vthrust, thlvl, thmax, velexh, fuelflow, totvel, tgo, vthrust/Mass);
+//	BurnEndTime=simt+tgo;
+	//now compute the linear guidance coefficients
+	L=log(1.0-tgo/tau);
+	D12=tau+tgo/L;
+	D21=tgo-D12;
+	E=tgo/2.0-D21;
+	B=(D21*(velv-hvel.y)-(altco-altitude-hvel.y*tgo))/(tgo*E);
+	D=(D21*(-crossvel)-(-crossrange-crossvel*tgo))/(tgo*E);
+	A=-D12*B-(velv-hvel.y)/L;
+//	fprintf(outstr, "L=%.3f altco=%.1f alt=%.1f velv=%.1f vy=%.1f D12=%.3f velo=%.1f vel=%.1f\n",
+//		L, altco, altitude, velv, hvel.y, D12, velo, totvel);
+	C=-D12*D-(-crossvel)/L;
+	centrip=(totvel*totvel-hvel.y*hvel.y)/(bradius+altitude);
+	grav=(GRAVITY*bmass)/((bradius+altitude)*(bradius+altitude));
+//	fprintf(outstr, "tau=%.3f L=%.3f D12=%.3f D21=%.3f E=%.3f B=%.3f D=%.3f A=%.3f C=%.3f\n",
+//		tau, L, D12, D21, E, B, D, A, C);
+	acctot=vthrust/Mass;
+	acc.y=(1.0/tau)*(A+B)-centrip+grav;
+	acc.z=(1.0/tau)*(C+D);
+	
+	double zmax=acctot*0.2;
+	if(fabs(acc.z) > zmax) {
+		acc.z=zmax*(acc.z/fabs(acc.z));
+	}
+	double xacc2=acctot*acctot-acc.y*acc.y-acc.z*acc.z;
+	if(xacc2 > 0.0) {
+		acc.x=sqrt(xacc2);
+		pitch=atan(acc.y/acc.x);
+	} else {
+		acc.x=0.0;
+		acc.y=acctot;
+		acc.z=0.0;
+		pitch=PI*0.5;
+	}
+
+	
+	if(tgo < 5.0) pitch = GetPitch();
+	yaw=asin(acc.z/acctot);
+//	fprintf(outstr, "tau=%.3f a=%.5f b=%.5f c=%.3f g=%.3f g-c=%.3f\n", tau, A, B, centrip, grav, grav-centrip);
+//	fprintf(outstr, "tgo=%.1f acc=%.3f %.3f %.3f cpitch=%.3f pitch=%.3f velo=%.1f vel=%.1f\n", 
+//		tgo, acc, pitch*DEG, GetPitch()*DEG, velo, totvel);
+//	fprintf(outstr, "acc=%.3f %.3f %.3f atot=%.3f cvel=%.3f\n",acc, acctot, crossvel);
 }
