@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.105  2006/01/27 22:11:38  movieman523
+  *	Added support for low-res Saturn 1b.
+  *	
   *	Revision 1.104  2006/01/26 19:26:31  movieman523
   *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
   *	
@@ -976,6 +979,7 @@ double Saturn::SetPitchApo()
 	GetApDist(SatApo1);
 	DiffApo = SatApo1 - ((agc.GetDesiredApogee()+ERADIUS)*1000);
 	cpitch=(GetPitch()*DEG)-aVAcc-(aVSpeed/50)+((agc.GetDesiredApogee()*1000-GetAltitude())/8000) ;
+
 
 	if (cpitch>35){
 		cpitch=35;
@@ -2376,9 +2380,17 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		aHAcc = (DV / dTime);
 		DVV = aALT - ALTN1;
 		aVSpeed = DVV / dTime;
+
+// LazyD fix for jumpy aVSpeed
+		VECTOR3 hvel;
+		GetHorizonAirspeedVector(hvel);
+		aVSpeed=hvel.y;
+// end LazyD fix
+
 		DVA = aVSpeed- VSPEEDN1;
 
 		aVAcc = (DVA / dTime);
+//		sprintf(oapiDebugString(), "vs=%.1f vv=%.1f va=%.3f dt=%.3f", aVSpeed, hvel.y, aVAcc, dTime);
 		aTime = simt;
 		VSPEEDN1 = aVSpeed;
 		ALTN1 = aALT;
