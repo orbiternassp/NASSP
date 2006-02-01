@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2006/01/26 19:26:31  movieman523
+  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
+  *	
   *	Revision 1.45  2006/01/26 03:31:57  movieman523
   *	Less hacky low-res mesh support for Saturn V.
   *	
@@ -194,11 +197,35 @@ PARTICLESTREAMSPEC srb_contrail = {
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
 };
 
+
 PARTICLESTREAMSPEC srb_exhaust = {
-	0, 8.0, 20, 150.0, 0.1, 0.3, 12, 2.0, PARTICLESTREAMSPEC::EMISSIVE,//	0, 4.0, 20, 150.0, 0.1, 0.3, 12, 2.0, PARTICLESTREAMSPEC::EMISSIVE,
+	0,		// flag
+	8.0,	// size
+	20,		// rate
+	150.0,	// velocity
+	0.1,	// velocity distribution
+	0.3,	// lifetime
+	12,		// growthrate
+	2.0,	// atmslowdown 
+	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
 };
+/*
+PARTICLESTREAMSPEC srb_exhaust = {
+	0,		// flag
+	2.85,	// size
+	150000,	// rate
+	60.0,	// velocity
+	0.0,	// velocity distribution
+	0.2,	// lifetime
+	-1.0,	// growthrate
+	0.0,	// atmslowdown 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 1.0,
+	PARTICLESTREAMSPEC::ATM_PLOG, 1e-1140, 1.0
+};
+*/
 
 PARTICLESTREAMSPEC solid_exhaust = {
 	0, 0.5, 250, 35.0, 0.1, 0.15, 0.5, 1.0, 
@@ -213,7 +240,7 @@ PARTICLESTREAMSPEC solid_exhaust = {
 //
 
 PARTICLESTREAMSPEC seperation_junk = {
-	0, 0.15,  300, 15.0, 5.0, 2.0, 0.0, 1.0, 
+	0, 0.08,  300, 15.0, 5.0, 2.0, 0.0, 1.0, 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
@@ -272,7 +299,7 @@ PARTICLESTREAMSPEC stagingvent_spec = {
 	2,		// lifetime
 	2.0,	// growthrate
 	0.5,    // atmslowdown 
-	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.1, 0.1,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
 };
@@ -1200,7 +1227,7 @@ void SaturnV::SeparateStage (int stage)
 	if (stage == LAUNCH_STAGE_ONE && !bAbort)
 	{
 		ofs1 = OFS_STAGE1;
-		vel1 = _V(0,0,-4.0);
+		vel1 = _V(0, 0, 0.0);
 	}
 
 	if (stage == LAUNCH_STAGE_ONE && bAbort)
