@@ -13,7 +13,7 @@
       </tr>
     </table>
     <h3>Installation</h3>
-    <p>This section tries to provide step-by-step instructions to install the Meshland integration  for Project Apollo. </p>
+    <p>This section provides step-by-step instructions to install the Meshland integration  for Project Apollo. </p>
     <ul>
       <li>Install (or update to) the latest beta release of Project Apollo - NASSP. You'll find detailed instructions here: <a href="http://nassp.sf.net/user/betatesting.html">http://nassp.sf.net/user/betatesting.html</a>.
           <p>       
@@ -43,7 +43,9 @@ R3 = Altitude
         &lt;PERIOD&gt; = right 2 degrees<br>
         &lt;HOME&gt; = 1/2 degree further<br>
         &lt;END&gt; = 1/2 degree closer</p>
-        <p>At the beginning of approach phase, each key hit moves the target about 160 meters. As the LM gets closer to the target, the redesignations move the target smaller distances. Left/right redesignations will cause the LM yaw 2 degree to the direction of redesignation so the LPD reticle always points directly to the target. Left/right redesignations will also cause the LM to roll slightly - this is normal and necessary.<br>
+        <p>At the beginning of Approach phase, each key hit moves the target about 160 meters. As the LM gets closer to the target, the redesignations move the target smaller distances. <br>
+          <br>
+          Left/right redesignations will cause the LM to roll, which is necessary to change the direction of flight, and also to yaw in the direction of redesignation to keep the reticle on the target site at the LPD angle. It will take a few seconds for the yaw and roll to occur, so wait until the attitude settles down to make further adjustments. It works best if one estimates needed corrections for both left/right and near/far, enters them all at once, then wait until attitude settles to make finer adjustments. If you have a site targeted correctly, points on the surface closer than the site will appear to move toward bigger LPD numbers, while points beyond the site will appear to move toward smaller LPD numbers. The targeted site will stay at the displayed LPD number and centered on the vertical reticle.<br>
           <br>
           At any time during approach phase, one can assume manual control and enter P66 using either the &lt;MINUS&gt; or &lt;EQUALS&gt; key.</p>
       </li>
@@ -63,7 +65,8 @@ R3 = Altitude
       </li>
       <li>At contact, the engine will shut down automatically and P68 will be run and tell you your landing latitude and longitude. The LM should sit properly on the landing site mesh, although tilting of the LM is not supported by the current Meshland version.
       </li>
-    </ul><p>&nbsp;</p>
+    </ul>
+    <p>&nbsp;</p>
     <h3>Walking on the moon</h3>
     <p>After we landed the LM on the Fra Mauro landing site we want to go a little bit mountain climbing on the moon.</p>
     <ul>
