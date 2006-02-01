@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/01/26 03:07:52  movieman523
+  *	Quick hack to support low-res mesh.
+  *	
   *	Revision 1.40  2006/01/14 20:03:35  movieman523
   *	Fixed some switch bugs.
   *	
@@ -352,6 +355,7 @@ public:
 	TwoSourceSwitch() { source1 = source2 = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
 	void LoadState(char *line);
 
 protected:
