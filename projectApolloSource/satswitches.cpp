@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/01/11 02:59:43  movieman523
+  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
+  *	
   *	Revision 1.6  2006/01/11 02:16:25  movieman523
   *	Added RCS propellant quantity gauge.
   *	
@@ -132,22 +135,41 @@ bool SaturnValveSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
-		if (sat) {
-			if (IsUp()) {
-				sat->SetValveState(Valve, true);
-				if (Indicator)
-					*Indicator = true;
-			}
-			else if (IsDown()) {
-				sat->SetValveState(Valve, false);
-				if (Indicator)
-					*Indicator = false;
-			}
-		}
+		CheckValve(GetState());
 		return true;
 	}
 
 	return false;
+}
+
+bool SaturnValveSwitch::SwitchTo(int newState)
+
+{
+	if (SaturnThreePosSwitch::SwitchTo(newState)) {
+		// some of these switches are spring-loaded, 
+		// so we have to use newState here
+		CheckValve(newState);
+		return true;
+	}
+
+	return false;
+}
+
+void SaturnValveSwitch::CheckValve(int s) 
+
+{
+	if (sat) {
+		if (s == THREEPOSSWITCH_UP) {
+			sat->SetValveState(Valve, true);
+			if (Indicator)
+				*Indicator = true;
+		}
+		else if (s == THREEPOSSWITCH_DOWN) {
+			sat->SetValveState(Valve, false);
+			if (Indicator)
+				*Indicator = false;
+		}
+	}
 }
 
 bool SaturnSPSSwitch::CheckMouseClick(int event, int mx, int my)
