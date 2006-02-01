@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2006/01/15 01:23:19  movieman523
+  *	Put 'phantom' RCS thrusters back in and adjusted RCS thrust and ISP based on REALISM value.
+  *	
   *	Revision 1.69  2006/01/14 20:58:16  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -671,7 +674,39 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					//
 					// Checklist actions
 					//
-		
+
+					// Turn on SM RCS
+					SMRCSHelium1ASwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSHelium1BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSHelium1CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSHelium1DSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+
+					SMRCSHelium2ASwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSHelium2BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSHelium2CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSHelium2DSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+
+					SMRCSProp1ASwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSProp1BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSProp1CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSProp1DSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+
+					SMRCSProp2ASwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSProp2BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSProp2CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					SMRCSProp2DSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+
+					// Turn on sequencial logic and arm pryros
+					ArmBatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+					ArmBatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);					
+					LogicBatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+					LogicBatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+
+					Logic1Switch.SwitchTo(TOGGLESWITCH_UP);
+					Logic2Switch.SwitchTo(TOGGLESWITCH_UP);
+					PyroArmASwitch.SwitchTo(TOGGLESWITCH_UP);
+					PyroArmBSwitch.SwitchTo(TOGGLESWITCH_UP);
+						
 					// Turn off cabin fans
 					CabinFan1Switch.SwitchTo(TOGGLESWITCH_DOWN);
 					CabinFan2Switch.SwitchTo(TOGGLESWITCH_DOWN);
@@ -688,6 +723,11 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					// Latch FC valves
 					FCReacsValvesSwitch.SwitchTo(TOGGLESWITCH_DOWN);
 
+					// Bypass primary radiators
+					GlycolToRadiatorsLever.SwitchTo(TOGGLESWITCH_DOWN);
+
+					// Temporary solution to enable medium heating of the primary coolant loop. 
+					HighGainAntennaPitchPositionSwitch.SwitchTo(3);
 
 					// Next state
 					systemsState = SATSYSTEMS_READYTOLAUNCH;
@@ -2061,6 +2101,12 @@ bool Saturn::PyrosArmed()
 
 {
 	return (PyroPower.Voltage() > 20.0);
+}
+
+bool Saturn::SECSLogicActive() 
+
+{
+	return (SECSLogicPower.Voltage() > 20.0);
 }
 
 bool Saturn::LETAttached()

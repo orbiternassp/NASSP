@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.106  2006/01/31 00:51:39  lazyd
+  *	Fixed vertical speed
+  *	
   *	Revision 1.105  2006/01/27 22:11:38  movieman523
   *	Added support for low-res Saturn 1b.
   *	
@@ -894,6 +897,7 @@ void Saturn::initSaturn()
 
 		// Initialize the panel
 		fdaiDisabled = false;
+		fdaiSmooth = false;
 		PanelId = SATPANEL_MAIN; 		// default panel
 		InitSwitches();
 
@@ -1268,6 +1272,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
+	oapiWriteScenario_int (scn, "FDAISMOOTH", fdaiSmooth);
 
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	dsky2.SaveState(scn, DSKY2_START_STRING, DSKY2_END_STRING);
@@ -1991,6 +1996,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 		sscanf (line + 12, "%i", &fdaiDisabled);
 	}
+	else if (!strnicmp (line, "FDAISMOOTH", 10)) {
+		sscanf (line + 10, "%i", &fdaiSmooth);
+	}
 	else if (!strnicmp (line, "MR", 2)) {
 		sscanf (line + 2, "%f", &ftcp);
 		MixtureRatio = ftcp;
@@ -2065,10 +2073,11 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	agc.SetMissionInfo(ApolloNo, Realism, LEMName);
 
 	//
-	// Tell the panel the realism setting
+	// Tell various systems the realism setting
 	//
 
 	MainPanel.SetRealism(Realism);
+	dockingprobe.SetRealism(Realism);
 
 	//
 	// Set random failures if appropriate.
@@ -2618,6 +2627,27 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 			return 1;
 		}
 
+	}
+	return 0;
+}
+
+int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
+
+	if (FirstTimestep) return 0;
+
+	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
+		return 0; 
+	}
+
+	// Separate stages and undock with keypress if REALISM 0
+	if (!Realism && key == OAPI_KEY_S && down == true) {
+
+		if (stage == CSM_LEM_STAGE) {			
+			bManualUnDock = true;
+		
+		} else {
+			bManualSeparate = true;
+		}
 	}
 	return 0;
 }
@@ -3420,8 +3450,8 @@ bool Saturn::CheckForLaunchShutdown()
 
 	GetElements(elemSaturn1B, refSaturn1B);
 
-	double apogee = ((elemSaturn1B.a * (1.0 + elemSaturn1B.e)) / 1000) - ERADIUS;
-	double perigee = ((elemSaturn1B.a * (1.0 - elemSaturn1B.e)) / 1000) - ERADIUS;
+	double apogee = ((elemSaturn1B.a * (1.0 + elemSaturn1B.e)) / 1000.0) - ERADIUS;
+	double perigee = ((elemSaturn1B.a * (1.0 - elemSaturn1B.e)) / 1000.0) - ERADIUS;
 
 	if ((refSaturn1B - refPREV) >= 0 &&
 		(stage == LAUNCH_STAGE_SIVB) &&
@@ -3457,12 +3487,10 @@ bool Saturn::CheckForLaunchShutdown()
 
 			// ECS flight configuration
 			EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_UP);
+			GlycolToRadiatorsLever.SwitchTo(TOGGLESWITCH_UP);
 			EcsRadiatorsHeaterPrimSwitch.SwitchTo(THREEPOSSWITCH_UP);
 			PotH2oHtrSwitch.SwitchTo(THREEPOSSWITCH_UP);
 			GlycolEvapTempInSwitch.SwitchTo(TOGGLESWITCH_UP);
-
-			// Temporary solution to enable medium heating of the primary coolant loop. 
-			HighGainAntennaPitchPositionSwitch.SwitchTo(3);
 
 			// Turn on cabin fans
 			CabinFan1Switch.SwitchTo(TOGGLESWITCH_UP);
@@ -3470,7 +3498,11 @@ bool Saturn::CheckForLaunchShutdown()
 
 			// Avoid O2 flow high alarm 
 			if (!Realism)
-				cws.SetInhibitNextMasterAlarm(true);		
+				cws.SetInhibitNextMasterAlarm(true);
+			
+			// Extend docking probe
+			DockingProbeExtdRelSwitch.SwitchTo(THREEPOSSWITCH_UP);
+			DockingProbeExtdRelSwitch.SwitchTo(THREEPOSSWITCH_DOWN);			
 		}
 		return true;
 	}
@@ -3926,21 +3958,27 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 		bManualSeparate = true;
 	}
 
-	if ((bManualSeparate || bAbort) && PyrosArmed())
+	if ((bManualSeparate || bAbort))
 	{
-		bManualSeparate = false;
-		SeparateStage(stage);
-		SetStage(CSM_LEM_STAGE);
-		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
-		if (bAbort) {
-			SPSswitch.SetState(true);
-			ABORT_IND = true;
-			SetThrusterGroupLevel(thg_main, 1.0);
-			bAbort = false;
-			autopilot= false;
-			StartAbort();
+		if (SECSLogicActive() && PyrosArmed()) {
+			bManualSeparate = false;
+			SeparateStage(stage);
+			SetStage(CSM_LEM_STAGE);
+			soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
+			if (bAbort) {
+				SPSswitch.SetState(true);
+				ABORT_IND = true;
+				SetThrusterGroupLevel(thg_main, 1.0);
+				bAbort = false;
+				autopilot= false;
+				StartAbort();
+			}
+			return;
 		}
-		return;
+		else {
+			bManualSeparate = false;
+			bAbort = false;
+		}
 	}
 }
 
