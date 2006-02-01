@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2006/01/31 21:29:20  lazyd
+  *	New pitch table
+  *	
   *	Revision 1.57  2006/01/31 00:50:32  lazyd
   *	added stuff for new autopilot
   *	
@@ -1129,7 +1132,7 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (SivbLmSepSwitch.GetState() && PyrosArmed()){
+	if (SivbLmSepSwitch.GetState()) {
 		bManualUnDock = true;
 	}
 
@@ -1449,17 +1452,26 @@ void SaturnV::StageSix(double simt)
 			bManualUnDock = false;
 		}
 		else if (GetDockStatus(GetDockHandle(0)) == hs4bM) { //this check is for docking status if docked we cannot jetison ASTP
-			dockstate = 2;
-			release_time = simt;
-			Resetjet = true;
-			DockStage (dockstate);
+			if (PyrosArmed() && SECSLogicActive()) {
+				dockstate = 2;
+				release_time = simt;
+				Resetjet = true;
+				DockStage (dockstate);
+			}
 			bManualUnDock = false;
 		}
-		else if(GetDockStatus(GetDockHandle(0)) == hLMV && dockstate == 3 && ProbeJetison) {
-			DockStage (dockstate);
-			Undock(0);
-			// Disable docking probe because it's jettisoned 
-			dockingprobe.SetEnabled(false);
+		else if (GetDockStatus(GetDockHandle(0)) == hLMV) {
+			if (dockstate == 3 && ProbeJetison) {
+				// Final separation
+				DockStage (dockstate);
+				Undock(0);
+				// Disable docking probe because it's jettisoned 
+				dockingprobe.SetEnabled(false);
+
+			} else {
+				// Normal undocking
+				dockingprobe.Extend(); 
+			}
 			bManualUnDock = false;
 		}
 		else {
@@ -2098,27 +2110,21 @@ int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (FirstTimestep) return 0;
 
-	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
-		return 0; 
-	}
+	if (!KEYMOD_SHIFT(kstate) && !KEYMOD_CONTROL(kstate)) {
 
-	if (stage == ROLLOUT_STAGE) {
-		if (key == OAPI_KEY_B && down == true) {
-			LaunchVesselBuild();
-			return 1;
+		if (stage == ROLLOUT_STAGE) {
+			if (key == OAPI_KEY_B && down == true) {
+				LaunchVesselBuild();
+				return 1;
+			}
+			if (key == OAPI_KEY_U && down == true) {
+				LaunchVesselUnbuild();
+				return 1;
+			}
 		}
-		if (key == OAPI_KEY_U && down == true) {
-			LaunchVesselUnbuild();
-			return 1;
-		}
 	}
 
-	// Separate stages with keypress if REALISM 0
-	if (!Realism && key == OAPI_KEY_S && down == true) {
-		bManualSeparate = true;
-	}
-
-	return 0;
+	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
 
 void SaturnV::LaunchVesselRolloutEnd() {
