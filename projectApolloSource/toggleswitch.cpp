@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/01/26 03:07:50  movieman523
+  *	Quick hack to support low-res mesh.
+  *	
   *	Revision 1.49  2006/01/14 20:03:35  movieman523
   *	Fixed some switch bugs.
   *	
@@ -2147,6 +2150,16 @@ bool TwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 
+	return false;
+}
+
+bool TwoSourceSwitch::SwitchTo(int newState)
+
+{
+	if (ToggleSwitch::SwitchTo(newState)) {
+		UpdateSourceState();
+		return true;
+	}
 	return false;
 }
 
