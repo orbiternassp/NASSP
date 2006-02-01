@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/01/14 20:58:16  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.2  2006/01/09 17:55:26  tschachim
   *	Connected the dockingprobe to the EPS.
   *	
@@ -42,6 +45,15 @@
 #include "dockingprobe.h"
 #include "nasspdefs.h"
 
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "dsky.h"
+#include "csmcomputer.h"
+#include "IMU.h"
+
+#include "saturn.h"
+
+
 DockingProbe::DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extendsound, 
 						   Sound &undocksound, Sound &dockfailedsound, PanelSDK &p) : 
 	                       CaptureSound(capturesound), LatchSound(latchsound), ExtendSound(extendsound), 
@@ -54,6 +66,7 @@ DockingProbe::DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extend
 	FirstTimeStepDone = false;
 	UndockNextTimestep = false;
 	IgnoreNextDockEvent = false;
+	Realism = REALISM_DEFAULT;
 }
 
 DockingProbe::~DockingProbe()
@@ -86,6 +99,11 @@ void DockingProbe::Retract()
 	if (!Enabled) return;
 	if (!IsPowered()) return;
 
+	// sequencial logic and pyros have to powered for retraction
+	if (!OurVessel) return;
+	if (!OurVessel->SECSLogicActive()) return;
+	if (!OurVessel->PyrosArmed()) return;
+
 	ExtendingRetracting = -1;
 	if (Status != DOCKINGPROBE_STATUS_RETRACTED) {
 		if (Docked) {
@@ -111,6 +129,7 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 	if (connected == NULL) {
 		Docked = false;
 	} else {
+		Docked = true;
 		if (!Enabled || !IsPowered() || Status != DOCKINGPROBE_STATUS_EXTENDED) {
 			DockFailedSound .play(NOLOOP, 200);
 			UndockNextTimestep = true;
@@ -118,8 +137,12 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 		} else {
 			Status = 0.8;
 			CaptureSound.play();
+
+			// Retract automatically if REALISM 0
+			if (!Realism) {
+				Retract();
+			}
 		}
-		Docked = true;
 	}
 }
 
