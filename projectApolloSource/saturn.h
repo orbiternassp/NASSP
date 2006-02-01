@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.140  2006/01/27 22:11:38  movieman523
+  *	Added support for low-res Saturn 1b.
+  *	
   *	Revision 1.139  2006/01/26 19:26:31  movieman523
   *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
   *	
@@ -637,11 +640,6 @@ public:
 	virtual void SetRCSState(int Quad, int Thruster, bool Active);
 	virtual void SetSPSState(bool Active);
 
-	void clbkSaveState (FILEHANDLE scn);
-	void clbkPostStep (double simt, double simdt, double mjd);
-	void clbkPreStep(double simt, double simdt, double mjd);
-	bool clbkLoadPanel (int id);
-
 	//
 	// General functions that handle calls from Orbiter.
 	//
@@ -650,11 +648,14 @@ public:
 	bool clbkPanelMouseEvent(int id, int event, int mx, int my);
 	bool clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf);
 	void clbkMFDMode (int mfd, int mode);
-
-	virtual void Timestep(double simt, double simdt) = 0;
+	void clbkSaveState (FILEHANDLE scn);
+	void clbkPostStep (double simt, double simdt, double mjd);
+	void clbkPreStep(double simt, double simdt, double mjd);
+	bool clbkLoadPanel (int id);
 	int clbkConsumeDirectKey(char *keystate);
-
+	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	bool clbkLoadVC (int id);
+	virtual void Timestep(double simt, double simdt) = 0;
 
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
@@ -703,6 +704,8 @@ public:
 	void CheckSMSystemsState();
 	int GetSwitchState(char *switchName);
 	int GetRotationalSwitchState(char *switchName);
+	bool PyrosArmed();
+	bool SECSLogicActive();
 
 protected:
 
@@ -734,7 +737,6 @@ protected:
 	bool RCSDumpActive();
 	bool RCSPurgeActive();
 	bool LETAttached();
-	bool PyrosArmed();
 
 	//
 	// State that needs to be saved.
@@ -866,6 +868,7 @@ protected:
 	FDAI fdaiRight;
 	FDAI fdaiLeft;
 	int fdaiDisabled;
+	int fdaiSmooth;
 
 	HBITMAP hBmpFDAIRollIndicator;
 
