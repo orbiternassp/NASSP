@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/01/07 18:12:06  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.7  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -207,13 +210,15 @@ void FDAI::MoveBall() {
 	glRotated(now.z / PI * 180.0, 0.0, 0.0, 1.0);	//attitude.y
 }
 
-void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHANDLE hFDAIRoll, HBITMAP hBmpRoll) {
+void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, 
+				   SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, HBITMAP hBmpRoll, int smooth) {
 
 	if (!init) InitGL();
 
 	SetAttitude(attitude);
+
 	// Don't do the OpenGL calculations every timestep
-	if (lastPaintTime == -1 || ((length(now - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) && oapiGetSysTime() > lastPaintTime + 0.1)) {
+	if (smooth || lastPaintTime == -1 || ((length(now - target) > 0.005 || oapiGetSysTime() > lastPaintTime + 2.0) && oapiGetSysTime() > lastPaintTime + 0.1)) {
 		int ret = wglMakeCurrent(hDC2, hRC);
 		MoveBall();
 		glCallList(list_name);	//render
@@ -262,6 +267,8 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHAND
 
 	if (IsPowered())
 		DrawPower(100);
+	else
+		oapiBlt (surf, hFDAIOff, 1, 70, 0, 0, 13, 30, SURF_PREDEF_CK);
 }
 
 int FDAI::LoadOGLBitmap(char *filename) {

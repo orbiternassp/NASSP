@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/01/07 03:28:28  movieman523
+  *	Removed a lot of unused switches and wired up the FDAI power switch.
+  *	
   *	Revision 1.3  2005/10/12 17:55:05  tschachim
   *	Smarter redraw handing because of performance.
   *	
@@ -42,7 +45,8 @@ public:
 	FDAI();
 	virtual ~FDAI();
 	void RegisterMe(int index, int x, int y);
-	void PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, SURFHANDLE hFDAIRoll, HBITMAP hBmpRoll);
+	void PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, 
+		         SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, HBITMAP hBmpRoll, int smooth);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
