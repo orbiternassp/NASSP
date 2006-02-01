@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.139  2006/01/14 20:03:35  movieman523
+  *	Fixed some switch bugs.
+  *	
   *	Revision 1.138  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
@@ -859,7 +862,8 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_CSMMAINPANELWINDOWCOVER]	= oapiCreateSurface (LOADBMP (IDB_CSMMAINPANELWINDOWCOVER));
 		srf[SRF_CSMRIGHTRNDZWINDOWLESCOVER]	= oapiCreateSurface (LOADBMP (IDB_CSMRIGHTRNDZWINDOWLESCOVER));
 		srf[SRF_CSMLEFTWINDOWCOVER]		= oapiCreateSurface (LOADBMP (IDB_CSMLEFTWINDOWCOVER));
-		srf[SRF_GLYCOLLEVER]	= oapiCreateSurface (LOADBMP (IDB_GLYCOLLEVER));
+		srf[SRF_GLYCOLLEVER]			= oapiCreateSurface (LOADBMP (IDB_GLYCOLLEVER));
+		srf[SRF_FDAIOFFFLAG]       		= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -911,7 +915,8 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_CSMMAINPANELWINDOWCOVER],	g_Param.col[4]);	
 		oapiSetSurfaceColourKey	(srf[SRF_CSMRIGHTRNDZWINDOWLESCOVER], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_CSMLEFTWINDOWCOVER],	g_Param.col[4]);
-		oapiSetSurfaceColourKey	(srf[SRF_GLYCOLLEVER],	g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_GLYCOLLEVER],			g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_FDAIOFFFLAG],			g_Param.col[4]);
 /*		break;
 	}
 */
@@ -2407,10 +2412,10 @@ void Saturn::SetSwitches(int panel) {
 	FloatBagSwitch3.Init(116, 0, 38, 49, srf[SRF_SWITCHLEVER], FloatBagSwitchRow);
 
 	SeqEventsContSystemSwitchesRow.Init(AID_SEQEVENTSCONTSYSTEM, MainPanel);
-	Logic1Switch.Init( 0, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, MainBusA, 0);
-	Logic2Switch.Init(40, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, MainBusB, 0);
-	PyroArmASwitch.Init( 80, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, &PyroBusA, 0);
-	PyroArmBSwitch.Init(133, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, &PyroBusB, 0);
+	Logic1Switch.Init( 0, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, &LogicBatACircuitBraker, 0);
+	Logic2Switch.Init(40, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, &LogicBatBCircuitBraker, 0);
+	PyroArmASwitch.Init( 80, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, &ArmBatACircuitBraker, 0);
+	PyroArmBSwitch.Init(133, 0, 38, 49, srf[SRF_SWITCHLEVER], SeqEventsContSystemSwitchesRow, &ArmBatBCircuitBraker, 0);
 
 	EDSPowerSwitchRow.Init(AID_EDSPOWERSWITCH, MainPanel);
 	EDSPowerSwitch.Init(0, 0, 34, 33, srf[SRF_SWITCH305LEFT], EDSPowerSwitchRow);
@@ -2466,10 +2471,10 @@ void Saturn::SetSwitches(int panel) {
 	FloatBag3FLTPLCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], FloatBagCircuitBrakerRow);
 
 	SeqEventsContSysCircuitBrakerRow.Init(AID_SEQEVENTSCONTSYSCIRCUITBREAKERS, MainPanel);
-	LogicBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], SeqEventsContSysCircuitBrakerRow);
-	LogicBatBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], SeqEventsContSysCircuitBrakerRow);
-	ArmBatACircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], SeqEventsContSysCircuitBrakerRow);
-	ArmBatBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], SeqEventsContSysCircuitBrakerRow);
+	LogicBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], SeqEventsContSysCircuitBrakerRow, MainBusA);
+	LogicBatBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], SeqEventsContSysCircuitBrakerRow, MainBusB);
+	ArmBatACircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], SeqEventsContSysCircuitBrakerRow, &PyroBusA);
+	ArmBatBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], SeqEventsContSysCircuitBrakerRow, &PyroBusB);
 
 	EDSCircuitBrakerRow.Init(AID_EDSCIRCUITBREAKERS, MainPanel);
 	EDS1BatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EDSCircuitBrakerRow);
@@ -2833,26 +2838,33 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 		else
 			*pump = SP_PUMP_AUTO;
 
-	} else if (s == &EcsRadiatorsFlowContPwrSwitch || s == &EcsRadiatorsManSelSwitch) {
-		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER1:PUMP");
-		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER2:PUMP");
+	} else if (s == &GlycolToRadiatorsLever) {
+		if (GlycolToRadiatorsLever.IsDown()) {
+			// Radiators are bypassed
+			PrimEcsRadiatorExchanger1->SetBypassed(true);
+			PrimEcsRadiatorExchanger2->SetBypassed(true);
+		} else {
+			PrimEcsRadiatorExchanger1->SetBypassed(false);
+			PrimEcsRadiatorExchanger2->SetBypassed(false);
+		}
 
+	} else if (s == &EcsRadiatorsFlowContPwrSwitch || s == &EcsRadiatorsManSelSwitch) {
 		if (EcsRadiatorsFlowContPwrSwitch.IsUp()) {
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_ON;
+			PrimEcsRadiatorExchanger1->SetPumpOn(); 
+			PrimEcsRadiatorExchanger2->SetPumpOn(); 
 
 		} else if (EcsRadiatorsFlowContPwrSwitch.IsDown()) {
 			if (EcsRadiatorsManSelSwitch.IsUp()) {
-				*pump1 = SP_PUMP_ON;
-				*pump2 = SP_PUMP_OFF;
+				PrimEcsRadiatorExchanger1->SetPumpOn(); 
+				PrimEcsRadiatorExchanger2->SetPumpOff(); 
 
 			} else if (EcsRadiatorsManSelSwitch.IsCenter()) {
-				*pump1 = SP_PUMP_OFF;
-				*pump2 = SP_PUMP_OFF;
+				PrimEcsRadiatorExchanger1->SetPumpOff(); 
+				PrimEcsRadiatorExchanger2->SetPumpOff(); 
 
 			} else if (EcsRadiatorsManSelSwitch.IsDown()) {
-				*pump1 = SP_PUMP_OFF;
-				*pump2 = SP_PUMP_ON;
+				PrimEcsRadiatorExchanger1->SetPumpOff(); 
+				PrimEcsRadiatorExchanger2->SetPumpOn(); 
 			}
 		}
 
@@ -3400,12 +3412,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_FDAI_RIGHT:
 		if (!fdaiDisabled)
-			fdaiRight.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
+			fdaiRight.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], hBmpFDAIRollIndicator, fdaiSmooth);
 		return true;
 
 	case AID_FDAI_LEFT:
 		if (!fdaiDisabled)
-			fdaiLeft.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], hBmpFDAIRollIndicator);
+			fdaiLeft.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], hBmpFDAIRollIndicator, fdaiSmooth);
 		return true;
 
 	case AID_DSKY2_LIGHTS:
@@ -4110,15 +4122,15 @@ void Saturn::InitSwitches() {
 	PCMBitRateSwitch.Register(PSH, "PCMBitRateSwitch", false);
 	DummySwitch.Register(PSH, "PMPSwitch", THREEPOSSWITCH_CENTER);
 
-	MnA1Switch.Register(PSH, "MnA1Switch", false);
-	MnB2Switch.Register(PSH, "MnB2Switch", false);
+	MnA1Switch.Register(PSH, "MnA1Switch", true);
+	MnB2Switch.Register(PSH, "MnB2Switch", true);
 	MnA3Switch.Register(PSH, "MnA3Switch", THREEPOSSWITCH_CENTER);
-	AcBus1Switch1.Register(PSH, "AcBus1Switch1", false);
+	AcBus1Switch1.Register(PSH, "AcBus1Switch1", true);
 	AcBus1Switch2.Register(PSH, "AcBus1Switch2", false);
 	AcBus1Switch3.Register(PSH, "AcBus1Switch3", false);
 	AcBus1ResetSwitch.Register(PSH, "AcBus1ResetSwitch", THREEPOSSWITCH_CENTER);
 	AcBus2Switch1.Register(PSH, "AcBus2Switch1", false);
-	AcBus2Switch2.Register(PSH, "AcBus2Switch2", false);
+	AcBus2Switch2.Register(PSH, "AcBus2Switch2", true);
 	AcBus2Switch3.Register(PSH, "AcBus2Switch3", false);
 	AcBus2ResetSwitch.Register(PSH, "AcBus2ResetSwitch", THREEPOSSWITCH_CENTER);
 
@@ -4726,10 +4738,10 @@ void Saturn::InitSwitches() {
 	FloatBag2BatBCircuitBraker.Register(PSH, "FloatBag2BatBCircuitBraker", 1);
 	FloatBag3FLTPLCircuitBraker.Register(PSH, "FloatBag3FLTPLCircuitBraker", 1);
 
-	LogicBatACircuitBraker.Register(PSH, "LogicBatACircuitBraker", 1);
-	LogicBatBCircuitBraker.Register(PSH, "LogicBatBCircuitBraker", 1);
-	ArmBatACircuitBraker.Register(PSH, "ArmBatACircuitBraker", 1);
-	ArmBatBCircuitBraker.Register(PSH, "ArmBatBCircuitBraker", 1);
+	LogicBatACircuitBraker.Register(PSH, "LogicBatACircuitBraker", 0);
+	LogicBatBCircuitBraker.Register(PSH, "LogicBatBCircuitBraker", 0);
+	ArmBatACircuitBraker.Register(PSH, "ArmBatACircuitBraker", 0);
+	ArmBatBCircuitBraker.Register(PSH, "ArmBatBCircuitBraker", 0);
 
 	EDS1BatACircuitBraker.Register(PSH, "EDS1BatACircuitBraker", 1);
 	EDS2BatBCircuitBraker.Register(PSH, "EDS2BatBCircuitBraker", 1);
