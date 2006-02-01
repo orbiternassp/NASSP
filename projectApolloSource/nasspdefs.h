@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/01/22 16:37:20  flydba
+  *	New bitmap added.
+  *	
   *	Revision 1.52  2006/01/14 12:33:04  flydba
   *	New panel added (325/326) for cabin press control.
   *	
@@ -229,7 +232,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 79; // number of bitmap handles
+const int nsurf = 80; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -300,6 +303,7 @@ const int nsurf = 79; // number of bitmap handles
 #define SRF_CSMLEFTWINDOWCOVER		76  
 #define SRF_GLYCOLLEVER				77
 #define SRF_LEMROTARY				78
+#define SRF_FDAIOFFFLAG				79
 
 //
 // Earth radius and gravity constants.
