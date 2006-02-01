@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/01/14 20:58:16  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.2  2006/01/09 17:55:26  tschachim
   *	Connected the dockingprobe to the EPS.
   *	
@@ -36,10 +39,13 @@
 #define DOCKINGPROBE_STATUS_RETRACTED 0
 #define DOCKINGPROBE_STATUS_EXTENDED  1
 
+class Saturn;
+
 class DockingProbe {
 
 public:
-	DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extendsound, Sound &undocksound, Sound &dockfailedsound, PanelSDK &p);
+	DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extendsound, 
+		         Sound &undocksound, Sound &dockfailedsound, PanelSDK &p);
 	virtual ~DockingProbe();
 
 	double GetStatus() { return Status; }
@@ -50,13 +56,15 @@ public:
 	void SetIgnoreNextDockEvent() { IgnoreNextDockEvent = true; };
 	void DockEvent(int dock, OBJHANDLE connected);
 	void TimeStep(double simt, double simdt);
-	void RegisterVessel(VESSEL *v) { OurVessel = v; };
+	void RegisterVessel(Saturn *v) { OurVessel = v; };
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
 	bool IsPowered() { return DCPower.Voltage() > 20.0; };
+	void SetRealism(int r) { Realism = r; };
 
 protected:
+	void DoFirstTimeStep();
 
 	bool Enabled;
 	double Status;
@@ -67,13 +75,12 @@ protected:
 	Sound &ExtendSound;
 	Sound &UndockSound;;
 	Sound &DockFailedSound;
-	VESSEL *OurVessel;
+	Saturn *OurVessel;
 	bool FirstTimeStepDone;
 	bool UndockNextTimestep;
 	bool IgnoreNextDockEvent;
 	PowerMerge DCPower;
-
-	void DoFirstTimeStep();
+	int Realism;
 };
 
 //
