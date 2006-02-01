@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/01/11 02:59:43  movieman523
+  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
+  *	
   *	Revision 1.6  2006/01/11 02:16:25  movieman523
   *	Added RCS propellant quantity gauge.
   *	
@@ -67,8 +70,11 @@ public:
 	SaturnValveSwitch() { Valve = 0; Indicator = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
 
 protected:
+	void CheckValve(int s);
+
 	int Valve;
 	IndicatorSwitch *Indicator;
 };
