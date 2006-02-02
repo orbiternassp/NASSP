@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/02/01 18:19:55  tschachim
+  *	Added SaturnValveSwitch::SwitchTo function.
+  *	
   *	Revision 1.7  2006/01/11 02:59:43  movieman523
   *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
   *	
@@ -914,4 +917,17 @@ void SaturnH2oQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	v = (v - 0.5) / 0.5 * 60.0;	
 	DrawNeedle(drawSurface, 45, 22, 20.0, (180.0 - v) * RAD);
+}
+
+double SaturnAccelGMeter::QueryValue()
+
+{
+	return Sat->GetAccelG();
+}
+
+void SaturnAccelGMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	v = (-v * 180.0 / 12.0) + 180.0;
+	DrawNeedle (drawSurface, 40, 40, 35.0, v * RAD);
 }
