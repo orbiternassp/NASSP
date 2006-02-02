@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.140  2006/02/01 18:29:41  tschachim
+  *	Pyros and secs logic cb's, FDAI off flag.
+  *	
   *	Revision 1.139  2006/01/14 20:03:35  movieman523
   *	Fixed some switch bugs.
   *	
@@ -503,25 +506,6 @@ void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPE
 	oldObj = SelectObject (hDC, pen0);
 	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
 	SelectObject (hDC, oldObj);
-}
-
-//
-// Draw G meter.
-//
-
-void Saturn::RedrawPanel_G (SURFHANDLE surf)
-{
-	double alpha = aZAcc / G;
-	if (alpha > 15)	alpha = 15;
-	if (alpha < -1)	alpha = -1;
-
-	double angle = (-alpha * 180.0 / 12.0) + 180.0;
-
-	HDC hDC = oapiGetDC (surf);
-	DrawNeedle (hDC, 40, 40, 35.0, angle * RAD, g_Param.pen[4], g_Param.pen[4]);
-	oapiReleaseDC (surf, hDC);
-
-	//oapiBlt (surf, srf[15], 0, 0, 0, 0, 56, 57, SURF_PREDEF_CK);
 }
 
 //
@@ -1417,6 +1401,9 @@ void Saturn::SetSwitches(int panel) {
 	//
 	// SATPANEL_MAIN
 	//
+
+	AccelGMeterRow.Init(AID_GMETER, MainPanel);
+	AccelGMeter.Init(g_Param.pen[4], g_Param.pen[4], AccelGMeterRow, this);
 
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
 	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], SequencerSwitchesRow, 0, 81);
@@ -3504,10 +3491,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		RedrawPanel_Alt(surf);
 		return true;
 
-	case AID_GMETER  :
-		RedrawPanel_G(surf);
-		return true;
-
 	case AID_THRUSTMETER  :
 		RedrawPanel_Thrust(surf);
 		return true;
@@ -3515,7 +3498,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_DCVOLTS:
 		RedrawPanel_ElectricMeter(surf, (DCIndicatorsRotary.Voltage() - 17.0) / 30.0, SRF_DCVOLTS, LastDCVoltDisplay);
 		return true;
-
 
 	case AID_DCAMPS:
 		RedrawPanel_ElectricMeter(surf, (DCIndicatorsRotary.Current() + 10.0) / 120.0, SRF_DCAMPS, LastDCAmpDisplay);
@@ -3854,6 +3836,8 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 void Saturn::InitSwitches() {
 
 	coasEnabled = false;
+
+	AccelGMeter.Register(PSH, "AccelGMeter", -1, 15, 1);
 
 	LiftoffNoAutoAbortSwitch.Register(PSH, "LiftoffNoAutoAbortSwitch", false, false);
 	LesMotorFireSwitch.Register(PSH, "LesMotorFireSwitch", false, false);
