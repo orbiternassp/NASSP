@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.142  2006/02/02 18:54:16  tschachim
+  *	Smoother acceleration calculations.
+  *	
   *	Revision 1.141  2006/02/01 18:30:48  tschachim
   *	Pyros and secs logic cb's.
   *	
@@ -2119,6 +2122,7 @@ protected:
 	int CurrentTimestep;
 	int LongestTimestep;
 	double LongestTimestepLength;
+	VECTOR3 normal;
 
 	PanelSwitches MainPanel;
 	PanelSwitchScenarioHandler PSH;
@@ -2688,6 +2692,9 @@ protected:
 	//
 
 	char LEMName[64];
+
+//	FILE *outstr;
+
 
 	//
 	// PanelSDK pointers.
