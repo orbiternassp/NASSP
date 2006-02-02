@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/02/01 18:17:30  tschachim
+  *	Added TwoSourceSwitch::SwitchTo function.
+  *	
   *	Revision 1.50  2006/01/26 03:07:50  movieman523
   *	Quick hack to support low-res mesh.
   *	
@@ -1982,7 +1985,7 @@ double MeterSwitch::GetDisplayValue() {
 	if (value > maxValue) value = maxValue;
 	if (value < minValue) value = minValue;
 
-	if (lastDrawTime == -1) {
+	if (lastDrawTime == -1 || minMaxTime == 0) {
 		displayValue = value;
 	} else {
 		double dt = oapiGetSysTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
