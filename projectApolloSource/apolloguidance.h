@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.33  2006/01/12 20:02:42  movieman523
   *	Updated to new Virtual AGC.
   *	
@@ -182,6 +185,16 @@ public:
 	void SetApolloNo(int flight) { ApolloNo = flight; };
 	int GetApolloNo() { return ApolloNo; };
 	void SetDesiredLanding(double latitude, double longitude, double altitude);
+
+	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast);
+	void OrientAxis(VECTOR3 &vec, int axis, int ref);
+	void OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, double &apo, double &tta, 
+				 double &per, double &ttp);
+	void EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos);
+	void Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu, 
+						  VECTOR3 &v1, VECTOR3 &v2);
+	void PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel,
+		double Mu, double Time, VECTOR3 &NewPos, VECTOR3 &NewVel, double &NewVelMag);
 
 	void ForceRestart();
 	void Startup();
@@ -342,15 +355,6 @@ protected:
 	void KillAllThrusters();
 	void OrientForOrbitBurn(double simt);
 	void GetHoverAttitude( VECTOR3 &actatt);
-	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast);
-	void OrientAxis(VECTOR3 &vec, int axis, int ref);
-	void OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, double &apo, double &tta, 
-				 double &per, double &ttp);
-	void EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos);
-	void Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu, 
-						  VECTOR3 &v1, VECTOR3 &v2);
-	void PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel,
-		double Mu, double Time, VECTOR3 &NewPos, VECTOR3 &NewVel, double &NewVelMag);
 	void BurnMainEngine(double thrust);
 	virtual void DisplayBankSum();
 	void DisplayEMEM(unsigned int addr);
