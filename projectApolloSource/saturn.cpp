@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.107  2006/02/01 18:34:36  tschachim
+  *	More REALISM 0 checklist actions.
+  *	
   *	Revision 1.106  2006/01/31 00:51:39  lazyd
   *	Fixed vertical speed
   *	
@@ -836,13 +839,13 @@ void Saturn::initSaturn()
 	aVSpeed = 0;
 	aHAcc = 0;
 	aZAcc = 0;
-	ALTN1 = 0;
-	SPEEDN1 = 0;
-	VSPEEDN1 = 0;
-	XSPEEDN1 = 0;
-	YSPEEDN1 = 0;
-	ZSPEEDN1 = 0;
-	aTime = 0;
+
+	for (i = 0; i < LASTVELOCITYCOUNT; i++) {
+		LastVelocity[i] = _V(0, 0, 0);
+		LastVerticalVelocity[i] = 0;
+		LastSimt[i] = 0;
+	}
+	LastVelocityFilled = -1;
 
 	viewpos = SATVIEW_CDR;
 
@@ -2363,71 +2366,63 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	if (amt > 0)
 		JostleViewpoint(amt);
 
-	VECTOR3 RVEL = _V(0.0,0.0,0.0);
-	GetRelativeVel(GetGravityRef(),RVEL);
+	//
+	// Velocity calculations
+	//
 
-	double velMS = sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z);
-
-	actualVEL = (velMS / 1000 * 3600);
-	actualALT = GetAltitude();
-
-	actualFUEL = ((GetFuelMass()*100)/GetMaxFuelMass());
-
-	double aSpeed, DV, aALT, DVV, DVA, DVX, DVY, DVZ;
-	double agrav,radius,mass,calpha,salpha,cbeta,sbeta,radius2;
-	OBJHANDLE hPlanet;
 	VESSELSTATUS status;
+	GetStatus(status);
+	
+	double aSpeed = length(status.rvel);
+	actualVEL = (aSpeed / 1000.0 * 3600.0);
+	actualALT = GetAltitude();
+	actualFUEL = ((GetFuelMass() * 100.0) / GetMaxFuelMass());
+		
+	VECTOR3 hvel;
+	GetHorizonAirspeedVector(hvel);
+	aVSpeed = hvel.y;
 
-	aSpeed = actualVEL/3600*1000;
-	aALT = actualALT;
+	// Manage velocity cache
+	for (int i = LASTVELOCITYCOUNT - 1; i > 0; i--) {
+		LastVelocity[i] = LastVelocity[i - 1];
+		LastVerticalVelocity[i] = LastVerticalVelocity[i -1];
+		LastSimt[i] = LastSimt[i - 1];
+	}
+	if (LastVelocityFilled < LASTVELOCITYCOUNT - 1)	LastVelocityFilled++;
 
-	double dTime = simt - aTime;
+	// Store current velocities
+	LastVelocity[0] = status.rvel;
+	LastVerticalVelocity[0] = aVSpeed;
+	LastSimt[0] = simt;
 
-	if(dTime > 0.2) {
+	// Calculate accelerations
+	if (LastVelocityFilled > 0) {
+		aHAcc = (aSpeed - length(LastVelocity[LastVelocityFilled])) / (simt - LastSimt[LastVelocityFilled]);
+		aVAcc = (aVSpeed - LastVerticalVelocity[LastVelocityFilled]) / (simt - LastSimt[LastVelocityFilled]);
 
-		DV = aSpeed - SPEEDN1;
-		aHAcc = (DV / dTime);
-		DVV = aALT - ALTN1;
-		aVSpeed = DVV / dTime;
+		//  This stuff is to compute the component of the total acceleration
+		//	along the z axis. This supports the "ACCEL G meter" on the panel.
+		double agrav, radius, mass, calpha, salpha, cbeta, sbeta, radius2, DVX, DVY, DVZ;
+		OBJHANDLE hPlanet;
 
-// LazyD fix for jumpy aVSpeed
-		VECTOR3 hvel;
-		GetHorizonAirspeedVector(hvel);
-		aVSpeed=hvel.y;
-// end LazyD fix
-
-		DVA = aVSpeed- VSPEEDN1;
-
-		aVAcc = (DVA / dTime);
-//		sprintf(oapiDebugString(), "vs=%.1f vv=%.1f va=%.3f dt=%.3f", aVSpeed, hvel.y, aVAcc, dTime);
-		aTime = simt;
-		VSPEEDN1 = aVSpeed;
-		ALTN1 = aALT;
-		SPEEDN1= aSpeed;
-
-//  This stuff is to compute the component of the total acceleration
-//		 along the z axis. This supports the "G-gauge" on the panel.
-
-		GetStatus(status);
 		calpha = cos(status.arot.x);
 		cbeta = cos(status.arot.y);
 		salpha = sin(status.arot.x);
 		sbeta = sin(status.arot.y);
-		DVX = status.rvel.x - XSPEEDN1;
-		DVY = status.rvel.y - YSPEEDN1;
-		DVZ = status.rvel.z - ZSPEEDN1;
-		DVZ = cbeta*(DVY*salpha+DVZ*calpha)-DVX*sbeta;
-		aZAcc = (DVZ / dTime);
+
+		DVX = status.rvel.x - LastVelocity[LastVelocityFilled].x;
+		DVY = status.rvel.y - LastVelocity[LastVelocityFilled].y;
+		DVZ = status.rvel.z - LastVelocity[LastVelocityFilled].z;
+		DVZ = cbeta * (DVY * salpha + DVZ * calpha) - DVX * sbeta;
+		aZAcc = DVZ / (simt - LastSimt[LastVelocityFilled]);
+
 		hPlanet = GetSurfaceRef();
 		mass = oapiGetMass(hPlanet);
-		radius2 = status.rpos.x*status.rpos.x+status.rpos.y*status.rpos.y+status.rpos.z*status.rpos.z;
+		radius2 = status.rpos.x * status.rpos.x + status.rpos.y * status.rpos.y + status.rpos.z * status.rpos.z;
 		radius = sqrt(radius2);
-		agrav = cbeta*(status.rpos.y*salpha+status.rpos.z*calpha)-status.rpos.x*sbeta;
-		agrav *= 6.672e-11 * mass/(radius * radius2);
+		agrav = cbeta * (status.rpos.y * salpha + status.rpos.z * calpha) - status.rpos.x * sbeta;
+		agrav *= GKSI * mass / (radius * radius2);
 		aZAcc += agrav;
-		XSPEEDN1 = status.rvel.x;
-		YSPEEDN1 = status.rvel.y;
-		ZSPEEDN1 = status.rvel.z;
 	}
 
 	//
@@ -2435,7 +2430,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	//
 
 	agc.SetFuel(actualFUEL);
-	agc.SetRVel(velMS);
+	agc.SetRVel(aSpeed);
 
 	SystemsTimestep(simt, simdt);
 

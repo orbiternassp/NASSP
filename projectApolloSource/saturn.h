@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.141  2006/02/01 18:30:48  tschachim
+  *	Pyros and secs logic cb's.
+  *	
   *	Revision 1.140  2006/01/27 22:11:38  movieman523
   *	Added support for low-res Saturn 1b.
   *	
@@ -691,6 +694,7 @@ public:
 	void GetECSWaterStatus(ECSWaterStatus &ws);
 	void GetMainBusStatus(MainBusStatus &ms);
 	void GetACBusStatus(ACBusStatus &as, int busno);
+	double GetAccelG() { return aZAcc / G; };
 
 	//
 	// Panel SDK support.
@@ -876,6 +880,9 @@ protected:
 	SwitchRow CautionWarningRow;
 	SwitchRow MissionTimerSwitchesRow;
 	SwitchRow SPSRow;
+
+	SwitchRow AccelGMeterRow;
+	SaturnAccelGMeter AccelGMeter;
 
 	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
 	GuardedPushSwitch LesMotorFireSwitch;
@@ -2078,17 +2085,16 @@ protected:
 	double aVSpeed;
 	double aHAcc;
 	double aZAcc;
-	double ALTN1;
-	double SPEEDN1;
-	double VSPEEDN1;
-	double XSPEEDN1;
-	double YSPEEDN1;
-	double ZSPEEDN1;
-	double aTime;
 
 	double actualVEL;
 	double actualALT;
 	double actualFUEL;
+
+	#define LASTVELOCITYCOUNT 50
+	VECTOR3 LastVelocity[LASTVELOCITYCOUNT];
+	double LastVerticalVelocity[LASTVELOCITYCOUNT];
+	double LastSimt[LASTVELOCITYCOUNT];
+	int LastVelocityFilled;
 
 	double ThrustAdjust;
 	double MixtureRatio;
@@ -2437,7 +2443,6 @@ protected:
 	void ReleaseSurfaces();
 	void KillDist(OBJHANDLE &hvessel, double kill_dist = 5000.0);
 	void KillAlt(OBJHANDLE &hvessel,double altVS);
-	void RedrawPanel_G (SURFHANDLE surf);
 	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
