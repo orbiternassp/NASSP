@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/02/01 18:32:17  tschachim
+  *	Adjusted particle streams.
+  *	
   *	Revision 1.46  2006/01/26 19:26:31  movieman523
   *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
   *	
@@ -1227,7 +1230,7 @@ void SaturnV::SeparateStage (int stage)
 	if (stage == LAUNCH_STAGE_ONE && !bAbort)
 	{
 		ofs1 = OFS_STAGE1;
-		vel1 = _V(0, 0, 0.0);
+		vel1 = _V(0, 0, -4.0);
 	}
 
 	if (stage == LAUNCH_STAGE_ONE && bAbort)
