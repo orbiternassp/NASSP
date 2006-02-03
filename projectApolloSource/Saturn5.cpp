@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2006/02/01 18:35:47  tschachim
+  *	More REALISM 0 checklist actions.
+  *	
   *	Revision 1.58  2006/01/31 21:29:20  lazyd
   *	New pitch table
   *	
@@ -734,6 +737,7 @@ void SaturnV::StageOne(double simt, double simdt)
 			for (int i = 0; i < 4; i++) {
 				double Level = GetThrusterLevel(th_main[i]);
 				Level -= (simdt * 1.2);
+				Level = max(0, Level);
 				SetThrusterLevel(th_main[i], Level);
 			}
 		}
@@ -1024,6 +1028,7 @@ void SaturnV::StageFour(double simt, double simdt)
 			for (i = 0; i < 4; i++) {
 				Level = GetThrusterLevel(th_main[i]);
 				Level -= (simdt * 1.2);
+				Level = max(0, Level);
 				SetThrusterLevel(th_main[i], Level);
 			}
 		}
@@ -1038,10 +1043,11 @@ void SaturnV::StageFour(double simt, double simdt)
 		for (i = 0; i < 4; i++) {
 			Level = GetThrusterLevel(th_main[i]);
 			Level -= (simdt * 1.2);
+			Level = max(0, Level);
 			SetThrusterLevel(th_main[i], Level);
 		}
 
-		if (Level < 0) {
+		if (Level <= 0) {
 			StageState++;
 		}
 		break;
