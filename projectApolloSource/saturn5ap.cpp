@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/02/02 21:40:08  lazyd
+  *	Changed to a new frame of reference for launch, and fixed the roll program.
+  *	
   *	Revision 1.10  2006/01/31 21:31:11  lazyd
   *	Added zero AOA guidance for 45-100 sec MET
   *	
@@ -353,137 +356,142 @@ void SaturnV::AutoPilot(double autoT)
 	AltitudePREV = altitude = GetAltitude();
 	VESSELSTATUS vsp;
 	GetStatus(vsp);
-	double totalRot=0;
-	totalRot=vsp.vrot.x+vsp.vrot.y+vsp.vrot.z;
 
-	if (fabs(totalRot) >= 0.025){
-//		StopRot=true;
-	}
+	if(stage > 1) {
+		double totalRot=0;
+		totalRot=vsp.vrot.x+vsp.vrot.y+vsp.vrot.z;
 
-	//
-	// Shut down the engines when we reach the desired
-	// orbit.
-	//
-
-	if (altitude >= 120000 && CheckForLaunchShutdown())
-		return;
-
- // navigation
-	pitch = GetPitch();
-	pitch = pitch*180./PI;
-	altitude = GetAltitude();
-	oapiGetHeading(GetHandle(),&heading);
-	heading = heading*180./PI;
-
-	// This vector rotation will be used to tell if heads up (rhoriz.z<0) or heads down.
-
-	HorizonRot(_V(1,0,0),rhoriz);
-
-
-	//sprintf(oapiDebugString(), "Autopilot %f", altitude);
- // guidance
-	pitch_c = GetCPitch(altitude);
- // control
-	if (altitude >= 4500)	{
-		bank = GetBank();
-		bank = bank*180./PI;
-		if(bank > 90) bank = bank - 180;
-		else if(bank < -90) bank = bank + 180;
-
-		AtempR=-bank/20.0;
-//		if(fabs(bank) < 0.3) AtempR=0.0;
-		if(autoT <=45.0) {
-			AtempY=(TO_HDG-heading)*0.03;
+		if (fabs(totalRot) >= 0.025){
+	//		StopRot=true;
 		}
 
+		//
+		// Shut down the engines when we reach the desired
+		// orbit.
+		//
 
-	// navigation
+		if (altitude >= 120000 && CheckForLaunchShutdown())
+			return;
+
+	 // navigation
 		pitch = GetPitch();
-		pitch=pitch*180./PI;
+		pitch = pitch*180./PI;
 		altitude = GetAltitude();
+		oapiGetHeading(GetHandle(),&heading);
+		heading = heading*180./PI;
 
+		// This vector rotation will be used to tell if heads up (rhoriz.z<0) or heads down.
+
+		HorizonRot(_V(1,0,0),rhoriz);
+
+
+		//sprintf(oapiDebugString(), "Autopilot %f", altitude);
+	 // guidance
+		pitch_c = GetCPitch(altitude);
 	 // control
-		if (IGMEnabled)
-		{
-			pitch_c = SetPitchApo();
-		}
-		else
-		{
-			double SatApo;
-			GetApDist(SatApo);
+		if (altitude >= 4500)	{
+			bank = GetBank();
+			bank = bank*180./PI;
+			if(bank > 90) bank = bank - 180;
+			else if(bank < -90) bank = bank + 180;
 
-			pitch_c = GetCPitch(autoT);
-//			if (SatApo >= ((agc.GetDesiredApogee() *.80) + ERADIUS)*1000 || (MissionTime >= IGMStartTime))
-			if (MissionTime >= IGMStartTime) {
-				IGMEnabled = true;
-//				char fname[8];
-//				sprintf(fname,"asclog.txt");
-//				if(pit > 22.0*DEG) pit=22.0*DEG;
-//				outstr=fopen(fname,"w");
+			AtempR=-bank/20.0;
+	//		if(fabs(bank) < 0.3) AtempR=0.0;
+			if(autoT <=45.0) {
+				AtempY=(TO_HDG-heading)*0.03;
 			}
-		}
-//		sprintf(oapiDebugString(), "t=%.1f IGM=%d pitch=%.3f cpitch=%.3f tpitch=%.3f", 
-//			autoT, IGMEnabled, pitch, pitch_c, GetCPitch(autoT));
-
-		level = pitch_c - pitch;
-
-		if (fabs(level)<10 && StopRot) {	// above atmosphere, soft correction
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-			StopRot = false;
-		}
-		if (fabs(level)<0.05) {	// above atmosphere, soft correction
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-		else if (level>0 && fabs(vsp.vrot.z) < 0.09) {
-			AtempP = -(fabs(level)/10);
-			if (AtempP < -1.0) AtempP = -1.0;
-			if(rhoriz.z>0)AtempP= -AtempP;
-		}
-		else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
-			AtempP = (fabs(level)/10);
-			if (AtempP > 1.0) AtempP = 1.0;
-			if(rhoriz.z>0)AtempP = -AtempP;
-		}
-		else {
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
 
 
-		if(IGMEnabled) {
-			VECTOR3 target;
-			double pit, yaw;
-			OBJHANDLE hbody=GetGravityRef();
-			double bradius=oapiGetSize(hbody);
-			double bmass=oapiGetMass(hbody);
-			double mu=GRAVITY*bmass;
-			double altco=agc.GetDesiredApogee()*1000.0;
-			double velo=sqrt(mu/(bradius+altco));
-			if(stage == LAUNCH_STAGE_SIVB) {
-				target.x=velo-0.234;
-				target.y=0.0;
-				target.z=altco;
-				LinearGuidance(target, pit, yaw);
-				if(pit > 16.0*DEG) pit=16.0*DEG;
-				AtempP=(pit*DEG-pitch)/30.0;
-			} else if(stage == LAUNCH_STAGE_TWO_TWR_JET) {
-//				target.x=velo-700.0;
-				target.x=velo-500.0;
-				target.y=73.0;
-//				target.z=altco-3000.0;
-				target.z=altco-1000.0;
-				LinearGuidance(target, pit, yaw);
-				if(pit > 22.0*DEG) pit=22.0*DEG;
-				AtempP=(pit*DEG-pitch)/30.0;
-//				AtempY=(yaw-asin(zgl*normal))*DEG/30.0;
+		// navigation
+			pitch = GetPitch();
+			pitch=pitch*180./PI;
+			altitude = GetAltitude();
+
+		 // control
+			if (IGMEnabled)
+			{
+				pitch_c = SetPitchApo();
 			}
-		}
+			else
+			{
+				double SatApo;
+				GetApDist(SatApo);
 
+				pitch_c = GetCPitch(autoT);
+	//			if (SatApo >= ((agc.GetDesiredApogee() *.80) + ERADIUS)*1000 || (MissionTime >= IGMStartTime))
+				if (MissionTime >= IGMStartTime) {
+					IGMEnabled = true;
+	//				char fname[8];
+	//				sprintf(fname,"asclog.txt");
+	//				if(pit > 22.0*DEG) pit=22.0*DEG;
+	//				outstr=fopen(fname,"w");
+				}
+			}
+	//		sprintf(oapiDebugString(), "t=%.1f IGM=%d pitch=%.3f cpitch=%.3f tpitch=%.3f", 
+	//			autoT, IGMEnabled, pitch, pitch_c, GetCPitch(autoT));
+
+			level = pitch_c - pitch;
+
+			if (fabs(level)<10 && StopRot) {	// above atmosphere, soft correction
+				AtempP = 0.0;
+				AtempR = 0.0;
+				AtempY = 0.0;
+				StopRot = false;
+			}
+			if (fabs(level)<0.05) {	// above atmosphere, soft correction
+				AtempP = 0.0;
+				AtempR = 0.0;
+				AtempY = 0.0;
+			}
+			else if (level>0 && fabs(vsp.vrot.z) < 0.09) {
+				AtempP = -(fabs(level)/10);
+				if (AtempP < -1.0) AtempP = -1.0;
+				if(rhoriz.z>0)AtempP= -AtempP;
+			}
+			else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
+				AtempP = (fabs(level)/10);
+				if (AtempP > 1.0) AtempP = 1.0;
+				if(rhoriz.z>0)AtempP = -AtempP;
+			}
+			else {
+				AtempP = 0.0;
+				AtempR = 0.0;
+				AtempY = 0.0;
+			}
+			AtempY=(-asin(zgl*normal)*DEG)/50.0;
+
+			if(IGMEnabled) {
+				VECTOR3 target;
+				double pit, yaw;
+				OBJHANDLE hbody=GetGravityRef();
+				double bradius=oapiGetSize(hbody);
+				double bmass=oapiGetMass(hbody);
+				double mu=GRAVITY*bmass;
+				double altco=agc.GetDesiredApogee()*1000.0;
+				double velo=sqrt(mu/(bradius+altco));
+				if(stage == LAUNCH_STAGE_SIVB) {
+					target.x=velo-0.234;
+					target.y=0.0;
+					target.z=altco;
+					LinearGuidance(target, pit, yaw);
+					AtempP=(pit*DEG-pitch)/30.0;
+				} else {
+	//				sprintf(oapiDebugString(), "time=%.1f State=%d", autoT, StageState);
+	//				target.x=velo-700.0;
+					target.x=velo-500.0;
+	//				target.y=73.0;
+					target.y=123.0;
+	//				target.z=altco-3000.0;
+	//				target.z=altco-1000.0;
+					target.z=altco;
+					LinearGuidance(target, pit, yaw);
+					if(pit > 26.0*RAD) pit=26.0*RAD;
+					AtempP=(pit*DEG-pitch)/30.0;
+	//				AtempY=(yaw-asin(zgl*normal))*DEG/30.0;
+				}
+			}
+
+		}
 	}
 
 	if (CMCswitch){
@@ -519,7 +527,8 @@ void SaturnV::AutoPilot(double autoT)
 			if(autoT > 30.0 && autoT < 45.0) {
 				//pitch and adjust for relative wind
 				AtempR=asin(ygl*normal)*DEG/20.0;
-				AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
+//				AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
+				AtempY=(TO_HDG-(heading+slip))/20.0;
 			}
 			pitch = GetPitch();
 			pitch=pitch*180./PI;
@@ -538,12 +547,25 @@ void SaturnV::AutoPilot(double autoT)
 				double aoa=GetAOA()*DEG;
 				pitch_c=pitch+aoa-0.3;
 				AtempP=(pitch_c-pitch)/5.0;
+				if(AtempP < -0.2) AtempP=-0.2;
+				if(AtempP >  0.2) AtempP= 0.2;
+//				sprintf(oapiDebugString(), " pitch=%.3f pc=%.3f ap=%.3f", pitch, pitch_c, AtempP);
 				if(autoT < 50.0) {
-					AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
+//					AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
+					AtempY=(TO_HDG-(heading+slip))/20.0;
+					// try this...
+					AtempR=asin(ygl*normal)*DEG/20.0;
 				} else {
-					AtempY=slip/10.0;
+//					AtempY=slip/10.0;
+					AtempY=(TO_HDG-(heading+slip))/20.0;
 				}
 			}
+			if(autoT > 115.0) {
+				AtempY=0.0;
+				normal=Normalize(CrossProduct(Normalize(vsp.rpos), Normalize(vsp.rvel)));
+			}
+//			sprintf(oapiDebugString(), "roll=%.3f yaw=%.3f slip=%.3f sum=%.3f hdg+slip=%.3f hdg=%.3f ay=%.3f", 
+//			asin(ygl*normal)*DEG, asin(zgl*normal)*DEG, slip, slip+asin(zgl*normal)*DEG, heading+slip, heading, AtempY);
 
 			AttitudeLaunch1();
 		break;
@@ -676,6 +698,8 @@ void SaturnV::LinearGuidance(VECTOR3 &target, double &pitch, double &yaw)
 	yaw=asin(acc.z/acctot);
 //	fprintf(outstr, "tau=%.3f a=%.5f b=%.5f c=%.3f g=%.3f g-c=%.3f\n", tau, A, B, centrip, grav, grav-centrip);
 //	fprintf(outstr, "tgo=%.1f acc=%.3f %.3f %.3f cpitch=%.3f pitch=%.3f velo=%.1f vel=%.1f\n", 
+//		tgo, acc, pitch*DEG, GetPitch()*DEG, velo, totvel);
+//	sprintf(oapiDebugString(), "tgo=%.1f acc=%.3f %.3f %.3f cpitch=%.3f pitch=%.3f velo=%.1f vel=%.1f", 
 //		tgo, acc, pitch*DEG, GetPitch()*DEG, velo, totvel);
 //	sprintf(oapiDebugString(), "acc=%.3f %.3f %.3f atot=%.3f cvel=%.3f cr=%.1f yaw=%.3f",
 //		acc, acctot, crossvel, crossrange, yaw*DEG);
