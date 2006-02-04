@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.108  2006/02/02 18:54:15  tschachim
+  *	Smoother acceleration calculations.
+  *	
   *	Revision 1.107  2006/02/01 18:34:36  tschachim
   *	More REALISM 0 checklist actions.
   *	
@@ -3451,7 +3454,7 @@ bool Saturn::CheckForLaunchShutdown()
 	if ((refSaturn1B - refPREV) >= 0 &&
 		(stage == LAUNCH_STAGE_SIVB) &&
 		((elemSaturn1B.e > elemPREV.e && elemSaturn1B.e < 0.03) ||
-		(apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee())) &&
+		(apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee()-0.5)) &&
 		(SCswitch||CMCswitch))
 	{
 		if (GetEngineLevel(ENGINE_MAIN) > 0){
