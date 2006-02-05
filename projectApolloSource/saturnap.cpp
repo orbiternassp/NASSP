@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/08/24 00:30:00  movieman523
+  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
+  *	
   *	Revision 1.2  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -124,7 +127,7 @@ void Saturn::AttitudeLaunchSIVB()
 	if(tempR==0.0) {
 		rollvectorl = _V(0.0,0.99*ang_vel.z*2,0.0);
 	}
-
+	SetAttitudeRotLevel(2, -rollvectorl.y);
 //**************************************************************
 // Sets thrust vectors by simply adding up all the axis deflection vectors and the
 // "neutral" default vector
