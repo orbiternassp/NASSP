@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/02/04 20:58:57  lazyd
+  *	Accounted for Ullage rockets for SIVB shutdown
+  *	
   *	Revision 1.11  2006/02/02 21:40:08  lazyd
   *	Changed to a new frame of reference for launch, and fixed the roll program.
   *	
@@ -475,6 +478,7 @@ void SaturnV::AutoPilot(double autoT)
 					target.z=altco;
 					LinearGuidance(target, pit, yaw);
 					AtempP=(pit*DEG-pitch)/30.0;
+					AtempR=-bank/20.0;
 				} else {
 	//				sprintf(oapiDebugString(), "time=%.1f State=%d", autoT, StageState);
 	//				target.x=velo-700.0;
