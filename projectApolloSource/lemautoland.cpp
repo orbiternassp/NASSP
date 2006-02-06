@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/01/21 15:46:10  lazyd
+  *	Checks for VS_NO_ALT if no mesh altitude is available, alt=0
+  *	
   *	Revision 1.37  2006/01/20 22:34:06  lazyd
   *	Fixed window-pointing logic for redesignation
   *	
@@ -219,10 +222,6 @@ void LEMcomputer::Prog63(double simt)
 			LightVel();
 //			sprintf(oapiDebugString(),"Alt Vel lights on");
 		}
-		if(ProgState >= 16) {
-			ClearAlt();
-			ClearVel();
-		}
 		OBJHANDLE hbody=OurVessel->GetGravityRef();
 		double bradius=oapiGetSize(hbody);
 		double bmass=oapiGetMass(hbody);
@@ -234,6 +233,14 @@ void LEMcomputer::Prog63(double simt)
 			// used for altitude rate * 10
 			DesiredApogee=vel.y*10.0;
 			CurrentAlt=vrad-bradius;
+			if(ProgState >= 16) {
+				if(CurrentAlt <= 13000.0) {
+					ClearAlt();
+					ClearVel();
+//					sprintf(oapiDebugString(),"Alt Vel lights out");
+				}
+			}
+
 			if(vel.x < 0) {
 				prograde=-1;
 			} else {
@@ -984,6 +991,7 @@ void LEMcomputer::Prog65(double simt)
 		OurVessel->GetHorizonAirspeedVector(vel);
 		DesiredDeltaVy=vel.y;
 		NextEventTime=simt;
+		ProgState=0;
 		RunProgram(66);
 		return;
 	}
@@ -1211,10 +1219,9 @@ void LEMcomputer::Prog66(double simt)
 
 
 		double vsAlt = VSGetATL(OurVessel->GetHandle());
-		if(vsAlt == VS_NO_ALT) vsAlt=0.0;
-		CurrentAlt=vsAlt;
+		if (vsAlt != VS_NO_ALT) CurrentAlt=vsAlt;
 		if ((vsAlt != VS_NO_ALT && vsAlt < 1.0) ||
-			(vsAlt == VS_NO_ALT && CurrentAlt <= 0.0)) { 
+			(vsAlt == VS_NO_ALT && CurrentAlt <= 1.0)) { 
 
 			OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
 			OurVessel->SetAttitudeRotLevel(zero);
