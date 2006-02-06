@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/02/05 20:55:58  lazyd
+  *	Added RCS roll control to SIVB
+  *	
   *	Revision 1.12  2006/02/04 20:58:57  lazyd
   *	Accounted for Ullage rockets for SIVB shutdown
   *	
@@ -388,7 +391,6 @@ void SaturnV::AutoPilot(double autoT)
 		HorizonRot(_V(1,0,0),rhoriz);
 
 
-		//sprintf(oapiDebugString(), "Autopilot %f", altitude);
 	 // guidance
 		pitch_c = GetCPitch(altitude);
 	 // control
@@ -399,10 +401,8 @@ void SaturnV::AutoPilot(double autoT)
 			else if(bank < -90) bank = bank + 180;
 
 			AtempR=-bank/20.0;
-	//		if(fabs(bank) < 0.3) AtempR=0.0;
-			if(autoT <=45.0) {
-				AtempY=(TO_HDG-heading)*0.03;
-			}
+			if(fabs(bank) < 0.3) AtempR=0.0;
+
 
 
 		// navigation
@@ -421,7 +421,6 @@ void SaturnV::AutoPilot(double autoT)
 				GetApDist(SatApo);
 
 				pitch_c = GetCPitch(autoT);
-	//			if (SatApo >= ((agc.GetDesiredApogee() *.80) + ERADIUS)*1000 || (MissionTime >= IGMStartTime))
 				if (MissionTime >= IGMStartTime) {
 					IGMEnabled = true;
 	//				char fname[8];
@@ -434,33 +433,7 @@ void SaturnV::AutoPilot(double autoT)
 	//			autoT, IGMEnabled, pitch, pitch_c, GetCPitch(autoT));
 
 			level = pitch_c - pitch;
-
-			if (fabs(level)<10 && StopRot) {	// above atmosphere, soft correction
-				AtempP = 0.0;
-				AtempR = 0.0;
-				AtempY = 0.0;
-				StopRot = false;
-			}
-			if (fabs(level)<0.05) {	// above atmosphere, soft correction
-				AtempP = 0.0;
-				AtempR = 0.0;
-				AtempY = 0.0;
-			}
-			else if (level>0 && fabs(vsp.vrot.z) < 0.09) {
-				AtempP = -(fabs(level)/10);
-				if (AtempP < -1.0) AtempP = -1.0;
-				if(rhoriz.z>0)AtempP= -AtempP;
-			}
-			else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
-				AtempP = (fabs(level)/10);
-				if (AtempP > 1.0) AtempP = 1.0;
-				if(rhoriz.z>0)AtempP = -AtempP;
-			}
-			else {
-				AtempP = 0.0;
-				AtempR = 0.0;
-				AtempY = 0.0;
-			}
+			AtempP=level/30.0;
 			AtempY=(-asin(zgl*normal)*DEG)/50.0;
 
 			if(IGMEnabled) {
@@ -478,20 +451,15 @@ void SaturnV::AutoPilot(double autoT)
 					target.z=altco;
 					LinearGuidance(target, pit, yaw);
 					AtempP=(pit*DEG-pitch)/30.0;
-					AtempR=-bank/20.0;
+//					AtempR=-bank/20.0;
 				} else {
-	//				sprintf(oapiDebugString(), "time=%.1f State=%d", autoT, StageState);
-	//				target.x=velo-700.0;
 					target.x=velo-500.0;
 	//				target.y=73.0;
 					target.y=123.0;
-	//				target.z=altco-3000.0;
-	//				target.z=altco-1000.0;
 					target.z=altco;
 					LinearGuidance(target, pit, yaw);
 					if(pit > 26.0*RAD) pit=26.0*RAD;
 					AtempP=(pit*DEG-pitch)/30.0;
-	//				AtempY=(yaw-asin(zgl*normal))*DEG/30.0;
 				}
 			}
 
