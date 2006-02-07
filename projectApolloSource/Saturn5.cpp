@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2006/02/04 20:57:59  lazyd
+  *	Pitch table change
+  *	
   *	Revision 1.60  2006/02/03 19:46:37  tschachim
   *	Bugfix engine thrust decay.
   *	
@@ -357,7 +360,7 @@ void SaturnV::initSaturnV()
 	// Default masses.
 	//
 
-	Interstage_Mass = 1905;
+	Interstage_Mass = 3982;
 
 	S4B_EmptyMass = 13680 + 1200; // Stage + SLA
 	S4B_FuelMass = 106100;
@@ -408,7 +411,7 @@ SaturnV::~SaturnV()
 void SaturnV::CalculateStageMass ()
 
 {
-	SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 250);
+	SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
 	SII_Mass = SII_EmptyMass + SII_FuelMass + (SII_UllageNum * 175);
 	S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
 	SM_Mass = SM_EmptyMass + SM_FuelMass;
@@ -452,9 +455,23 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 void SaturnV::SetSIICMixtureRatio (double ratio)
 
 {
-	double isp;
+	double isp, thrust;
 
-	isp = GetJ2ISP(ratio);
+	// Hardcoded ISP and thrust according to the Apollo 11 Saturn V flight evaluation report.
+	// http://klabs.org/history/history_docs/jsc_t/apollo_11_saturn_v.pdf
+
+	if (ratio == 5.5) {
+		thrust = 1028303.;
+		isp = 4165.;
+	
+	} else if (ratio == 4.3) {
+		thrust = 770692.;
+		isp = 4180.;
+
+	} else {
+		isp = GetJ2ISP(ratio);
+		thrust = THRUST_SECOND_VAC * ThrustAdjust;
+	}
 
 	//
 	// For simplicity assume no ISP change at sea-level: SII stage should always
@@ -462,15 +479,15 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 	//
 
 	for (int i = 0; i < 5; i++) {
-		SetThrusterIsp (th_main[i], isp, ISP_SECOND_SL);
-		SetThrusterMax0 (th_main[i], THRUST_SECOND_VAC * ThrustAdjust);
+		SetThrusterIsp (th_main[i], isp, isp);
+		SetThrusterMax0 (th_main[i], thrust);
 	}
 
 	//
 	// Give the AGC our new stats.
 	//
 
-	agc.SetVesselStats(isp, THRUST_SECOND_VAC * ThrustAdjust, false);
+	agc.SetVesselStats(isp, thrust, false);
 
 	MixtureRatio = ratio;
 }
@@ -482,8 +499,19 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 void SaturnV::SetSIVbCMixtureRatio (double ratio)
 
 {
-	double isp;
+	double isp, thrust;
 
+	// Hardcoded ISP and thrust according to the Apollo 11 Saturn V flight evaluation report.
+	// http://klabs.org/history/history_docs/jsc_t/apollo_11_saturn_v.pdf
+
+	if (ratio == 4.9) {
+		thrust = 901223.;
+		isp = 4202.;
+	
+	} else {
+		isp = GetJ2ISP(ratio);
+		thrust = THRUST_THIRD_VAC * ThrustAdjust;
+	}
 	isp = GetJ2ISP(ratio);
 
 	//
@@ -492,13 +520,13 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 	//
 
 	SetThrusterIsp (th_main[0], isp, isp);
-	SetThrusterMax0 (th_main[0], THRUST_THIRD_VAC * ThrustAdjust);
+	SetThrusterMax0 (th_main[0], thrust);
 
 	//
 	// Give the AGC our new stats.
 	//
 
-	agc.SetVesselStats(isp, THRUST_THIRD_VAC * ThrustAdjust, false);
+	agc.SetVesselStats(isp, thrust, false);
 
 	MixtureRatio = ratio;
 }
@@ -1964,6 +1992,8 @@ void SaturnV::SIVBStop()
 void SaturnV::StageLaunchSIVB(double simt)
 
 {
+	double peDist;
+	OBJHANDLE ref;
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
 
 	double amt = (MainLevel) * 0.1;
@@ -2067,7 +2097,9 @@ void SaturnV::StageLaunchSIVB(double simt)
 		break;
 
 	case 6:
-		if (MissionTime < NextMissionEventTime) {
+		ref = GetGravityRef();
+		GetPeDist(peDist);
+		if (peDist - oapiGetSize(ref) < agc.GetDesiredPerigee() * 1000. && MissionTime < NextMissionEventTime) {
 			if (!SepS.isPlaying()) {
 				SepS.play(LOOP, 130);
 				SetThrusterGroupLevel(thg_aps, 1.0);
@@ -2079,7 +2111,9 @@ void SaturnV::StageLaunchSIVB(double simt)
 		break;
 
 	case 7:
-		if (MissionTime >= NextMissionEventTime) {
+		ref = GetGravityRef();
+		GetPeDist(peDist);
+		if (peDist - oapiGetSize(ref) >= agc.GetDesiredPerigee() * 1000. || MissionTime >= NextMissionEventTime) {
 			//
 			// Switch to TLI mode. Disable the ullage rockets
 			// and switch stages.

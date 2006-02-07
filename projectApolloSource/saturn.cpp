@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.109  2006/02/04 20:59:42  lazyd
+  *	*** empty log message ***
+  *	
   *	Revision 1.108  2006/02/02 18:54:15  tschachim
   *	Smoother acceleration calculations.
   *	
@@ -3454,7 +3457,7 @@ bool Saturn::CheckForLaunchShutdown()
 	if ((refSaturn1B - refPREV) >= 0 &&
 		(stage == LAUNCH_STAGE_SIVB) &&
 		((elemSaturn1B.e > elemPREV.e && elemSaturn1B.e < 0.03) ||
-		(apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee()-0.5)) &&
+		(apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee() - 0.8)) &&
 		(SCswitch||CMCswitch))
 	{
 		if (GetEngineLevel(ENGINE_MAIN) > 0){
