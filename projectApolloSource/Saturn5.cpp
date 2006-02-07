@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2006/02/07 14:05:36  tschachim
+  *	Changed the Saturn parameters according to the Apollo 11 Saturn V flight evaluation report.
+  *	
   *	Revision 1.61  2006/02/04 20:57:59  lazyd
   *	Pitch table change
   *	
@@ -273,9 +276,9 @@ GDIParams g_Param;
 const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58, 70, 80,  110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
 const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   75, 60, 50,   40,  35,  30,  30,  30,  25,  20,  10 ,  5,  -2,   0};	// Commanded pitch in °
 */
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58,   70, 80,  110, 130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   80.5, 56, 50,   35,  30,  28,  27,  25,  10,   10, 10 ,  5,  -2,   0};	// Commanded pitch in °
-// 3 was 82
+const double default_met[PITCH_TABLE_SIZE]    = { 0, 13.2, 58,   70, 80,  110,   130, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
+const double default_cpitch[PITCH_TABLE_SIZE] = {90, 88,   81.4, 56, 50,   35.5,  30,  28,  27,  25,  10,   10, 10 ,  5,  -2,   0};	// Commanded pitch in °
+// 3 was 80.5
 //
 // SaturnV constructor, derived from basic Saturn class.
 //
