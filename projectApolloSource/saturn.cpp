@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.110  2006/02/07 14:06:25  tschachim
+  *	Changed the Saturn parameters according to the Apollo 11 Saturn V flight evaluation report.
+  *	
   *	Revision 1.109  2006/02/04 20:59:42  lazyd
   *	*** empty log message ***
   *	
@@ -3097,6 +3100,7 @@ void Saturn::LaunchCountdown(double simt)
 		double amt = (thrst) * 0.1;
 		JostleViewpoint(amt);
 
+		AddForce(_V(0, 0, -10. * THRUST_FIRST_VAC), _V(0, 0, 0));
 		break;
 	}
 }
