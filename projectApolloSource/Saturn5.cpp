@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2006/02/07 19:33:30  lazyd
+  *	Changed pitch table for different masses
+  *	
   *	Revision 1.62  2006/02/07 14:05:36  tschachim
   *	Changed the Saturn parameters according to the Apollo 11 Saturn V flight evaluation report.
   *	
@@ -1787,7 +1790,7 @@ void SaturnV::SetVehicleStats()
 	}
 	else if (VehicleNo >= 503 && VehicleNo < 510) {
 		if (!S1_ThrustLoaded)
-			THRUST_FIRST_VAC = 7800000;
+			THRUST_FIRST_VAC = 8000000;
 
 		SII_UllageNum = 4;
 	}
