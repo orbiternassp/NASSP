@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2006/02/08 12:07:03  tschachim
+  *	Fixed SIC thrust.
+  *	
   *	Revision 1.63  2006/02/07 19:33:30  lazyd
   *	Changed pitch table for different masses
   *	
@@ -314,8 +317,8 @@ void SaturnV::initSaturnV()
 	// Default ISP and thrust values.
 	//
 
-	ISP_FIRST_SL    = 265*G;
-	ISP_FIRST_VAC   = 304*G;
+	ISP_FIRST_SL    = 2594.4;
+	ISP_FIRST_VAC   = 2979.4;
 	ISP_SECOND_SL   = 300*G;//300*G;
 	ISP_SECOND_VAC  = 418*G;//421*G;
 	ISP_THIRD_VAC  = 424*G;//421*G;
@@ -1790,7 +1793,7 @@ void SaturnV::SetVehicleStats()
 	}
 	else if (VehicleNo >= 503 && VehicleNo < 510) {
 		if (!S1_ThrustLoaded)
-			THRUST_FIRST_VAC = 8000000;
+			THRUST_FIRST_VAC = 7835000;
 
 		SII_UllageNum = 4;
 	}
