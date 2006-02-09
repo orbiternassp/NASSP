@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.111  2006/02/08 12:08:31  tschachim
+  *	Apply hold down force before lift-off.
+  *	
   *	Revision 1.110  2006/02/07 14:06:25  tschachim
   *	Changed the Saturn parameters according to the Apollo 11 Saturn V flight evaluation report.
   *	
@@ -3067,7 +3070,7 @@ void Saturn::LaunchCountdown(double simt)
 		break;
 
 	case 3:
-		if (MissionTime >= -8.9) {
+		if (MissionTime >= -4.9) {
 			StageState++;
 		}
 		break;
@@ -3092,10 +3095,9 @@ void Saturn::LaunchCountdown(double simt)
 			}
 		}
 		else {
-			thrst = (0.9 / 6.9) * (MissionTime + 6.9);
+			thrst = (0.9 / 2.9) * (MissionTime + 4.9);
 		}
 		SetThrusterGroupLevel(thg_main, thrst);
-
 
 		double amt = (thrst) * 0.1;
 		JostleViewpoint(amt);
