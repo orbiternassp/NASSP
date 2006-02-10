@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2006/02/09 18:28:12  lazyd
+  *	Another pitch table change...
+  *	
   *	Revision 1.65  2006/02/09 14:40:02  tschachim
   *	Again fixed SIC thrust.
   *	
@@ -1187,6 +1190,7 @@ void SaturnV::StageSix(double simt)
 
 	if (SivbLmSepSwitch.GetState()) {
 		bManualUnDock = true;
+		SivbLmSepSwitch.SetState(false); // temporary bugfix, TODO get rid of bManualUnDock, use pyros, connect this switch and fix REALSIM 0 "S" key press
 	}
 
 	if (ApolloNo == 13) {
