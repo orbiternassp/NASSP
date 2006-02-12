@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/01/14 20:58:16  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.13  2006/01/09 21:56:44  movieman523
   *	Added support for LEM and CSM AGC PAD loads in scenario file.
   *	
@@ -225,13 +228,13 @@ TRACE(buffers);
 	double delta;
   	IMU_Matrix3 t;
   	IMU_Vector3 newAngles;
+    ChannelValue12 val12;
 	
 	if (address != 07 && address != 033 /*&& address != 010*/) {  	  
     	LogState(address, "out", value);
 	}
 
   	if (address == 012) {
-    	ChannelValue12 val12;
     	val12.Value = value;
 
 		if (val12.Bits.ISSTurnOnDelayComplete) 
@@ -258,18 +261,21 @@ TRACE(buffers);
 		return;
 	}
 
-
 	// coarse align 
-	if (address == 0174) {
-		DriveCDUX(value);
-	}
-	if (address == 0175) {
-		DriveCDUY(value);
-	}
-	if (address == 0176) {
-		DriveCDUZ(value);
-	}
+	val12.Value = agc.GetOutputChannel(012);
 
+	if(val12.Bits.CoarseAlignEnable) {
+		if (address == 0174) {
+			DriveCDUX(value);
+		}
+		if (address == 0175) {
+			DriveCDUY(value);
+		}
+		if (address == 0176) {
+			DriveCDUZ(value);
+		}
+	}
+	
 	// gyro torquing
 	if (address == 0177) {
 		ChannelValue177 val177;
