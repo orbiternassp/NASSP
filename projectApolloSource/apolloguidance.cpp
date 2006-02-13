@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2006/01/18 14:56:50  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.67  2006/01/17 01:13:50  lazyd
   *	Fixed an evil bug in P19
   *	
@@ -438,64 +441,70 @@ void ApolloGuidance::InitVirtualAGC(char *binfile)
 	(void) agc_load_binfile(&vagc, binfile);
 #endif
 
-	ChannelValue30 val30;
-	ChannelValue31 val31;
-	ChannelValue32 val32;
-	ChannelValue33 val33;
+	// Set channels only once, otherwise this code overwrites the channel values in the scenario
+	if (!PadLoaded) { 
+		ChannelValue30 val30;
+		ChannelValue31 val31;
+		ChannelValue32 val32;
+		ChannelValue33 val33;
 
-	//
-	// Set default state. Note that these are oddities, as zero means
-	// true and one means false for the 'Virtual AGC'!
-	//
+		//
+		// Set default state. Note that these are oddities, as zero means
+		// true and one means false for the 'Virtual AGC'!
+		//
 
-	val30.Value = 077777;
-	// Enable to turn on
-	// val30.Bits.IMUOperate = 0;
-	val30.Bits.TempInLimits = 0;
+		val30.Value = 077777;
+		// Enable to turn on
+		// val30.Bits.IMUOperate = 0;
+		val30.Bits.TempInLimits = 0;
 
-	//
-	// We default to the IMU turned off. If you change this, change the IMU code to
-	// match.
-	//
-	val30.Bits.IMUOperate = 1;
+		//
+		// We default to the IMU turned off. If you change this, change the IMU code to
+		// match.
+		//
+		val30.Bits.IMUOperate = 1;
 
 #ifndef AGC_SOCKET_ENABLED
-	vagc.InputChannel[030] = val30.Value;
+		vagc.InputChannel[030] = val30.Value;
 #endif
-	InputChannel[030] = (val30.Value ^ 077777);
+		InputChannel[030] = (val30.Value ^ 077777);
 
-	val31.Value = 077777;
+		val31.Value = 077777;
+		// Default position of the CMC MODE switch is FREE
+		val31.Bits.FreeFunction = 0;
+
 #ifndef AGC_SOCKET_ENABLED
-	vagc.InputChannel[031] = val31.Value;
+		vagc.InputChannel[031] = val31.Value;
 #endif
-	InputChannel[031] = (val31.Value ^ 077777);
+		InputChannel[031] = (val31.Value ^ 077777);
 
 
-	val32.Value = 077777;
+		val32.Value = 077777;
 #ifndef AGC_SOCKET_ENABLED
-	vagc.InputChannel[032] = val32.Value;
+		vagc.InputChannel[032] = val32.Value;
 #endif
-	InputChannel[032] = (val32.Value ^ 077777);
+		InputChannel[032] = (val32.Value ^ 077777);
 
-	val33.Value = 077777;
-//	val33.Bits.RangeUnitDataGood = 0;
-//	val33.Bits.BlockUplinkInput = 0;
+		val33.Value = 077777;
+	//	val33.Bits.RangeUnitDataGood = 0;
+	//	val33.Bits.BlockUplinkInput = 0;
 
-	//
-	// Setting AGCWarning is needed to avoid the 1107 alarm on startup. It basically forces the AGC to do a
-	// hard reset in the RESTART code.
-	//
-	//	CA	BIT14			# IF AGC WARNING ON (BIT = 0), DO A FRESH
-	//	EXTEND				# START ON THE ASSUMPTION THAT WE'RE IN A
-	//	RAND	CHAN33		# RESTART LOOP.
-	//
+		//
+		// Setting AGCWarning is needed to avoid the 1107 alarm on startup. It basically forces the AGC to do a
+		// hard reset in the RESTART code.
+		//
+		//	CA	BIT14			# IF AGC WARNING ON (BIT = 0), DO A FRESH
+		//	EXTEND				# START ON THE ASSUMPTION THAT WE'RE IN A
+		//	RAND	CHAN33		# RESTART LOOP.
+		//
 
-	val33.Bits.AGCWarning = 0;
-	
+		val33.Bits.AGCWarning = 0;
+		
 #ifndef AGC_SOCKET_ENABLED
-	vagc.InputChannel[033] = val33.Value;
+		vagc.InputChannel[033] = val33.Value;
 #endif
-	InputChannel[033] = (val33.Value ^ 077777);
+		InputChannel[033] = (val33.Value ^ 077777);
+	}
 }
 
 //
@@ -5579,6 +5588,50 @@ void ApolloGuidance::UpdateBurnTime(int R1, int R2, int R3)
 
 	BurnTime = LastTimestep + (double) (R1 * 3600 + R2 * 60) + ((double)R3) / 100;
 }
+
+
+int16_t ApolloGuidance::ConvertDecimalToAGCOctal(double x, bool highByte) 
+
+{
+	int sign = 0, value = 0, i = 0;
+
+	if (x < 0) {
+		sign = 1;
+		x = -x;
+    }
+	
+	if (x >= 1.0) {
+		// Illegal value: Must be <1.0 according to AGC rules
+		return -1;
+    }
+
+	for (value = 0, i = 0; i < 28; i++) {
+		value = value << 1;
+		if (x >= 0.5) {
+			value++;
+			x -= 0.5;
+		}
+		x *= 2;
+    }
+  
+	if (x >= 0.5)
+		value++;
+
+	i = value & 0x00003fff;
+	value = (value >> 14) & 0x00003fff;
+	if (sign) {
+		value = ~value;
+		i = ~i;
+		i &= 0x00007fff;
+		value &= 0x00007fff;
+	}
+
+	if (highByte)
+		return value;
+	else
+		return i;
+}
+
 
 //
 // Virtual AGC functions.
