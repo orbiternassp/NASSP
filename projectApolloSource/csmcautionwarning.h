@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/01/14 20:58:16  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.9  2006/01/07 01:34:08  movieman523
   *	Added AC bus overvoltage and main bus undervolt lights.
   *	
@@ -134,6 +137,7 @@ protected:
 #define CSM_CWS_CMC_LIGHT			46
 #define CSM_CWS_BUS_B_UNDERVOLT		48
 #define CSM_CWS_BUS_A_UNDERVOLT		49
+#define CSM_CWS_ISS_LIGHT			50
 #define CSM_CWS_CWS_POWER			51
 #define CSM_CWS_O2_FLOW_HIGH_LIGHT	52
 #define CSM_CWS_SUIT_COMPRESSOR		53
