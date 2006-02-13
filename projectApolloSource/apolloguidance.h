@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2006/02/02 21:36:17  lazyd
+  *	Changed some routines to public.
+  *	
   *	Revision 1.34  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -361,6 +364,7 @@ protected:
 	virtual bool OrbitCalculationsValid() = 0;
 	void DisplayOrbitCalculations();
 	void UpdateBurnTime(int R1, int R2, int R3);
+	int16_t ConvertDecimalToAGCOctal(double x, bool highByte);
 
 	bool Standby;
 	bool Reset;
