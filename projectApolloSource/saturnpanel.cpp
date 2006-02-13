@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.141  2006/02/02 18:52:35  tschachim
+  *	Improved Accel G meter.
+  *	
   *	Revision 1.140  2006/02/01 18:29:41  tschachim
   *	Pyros and secs logic cb's, FDAI off flag.
   *	
@@ -3878,7 +3881,7 @@ void Saturn::InitSwitches() {
 
 	SCContSwitch.Register(PSH, "SCContSwitch", false);
 	SCContSwitch.SetChannelData(031, 15, true);
-	CMCModeSwitch.Register(PSH, "CMCModeSwitch", THREEPOSSWITCH_UP);
+	CMCModeSwitch.Register(PSH, "CMCModeSwitch", THREEPOSSWITCH_DOWN);
 
 	SCSTvcPitchSwitch.Register(PSH, "SCSTvcPitchSwitch", THREEPOSSWITCH_CENTER);
 	SCSTvcYawSwitch.Register(PSH, "SCSTvcYawSwitch", THREEPOSSWITCH_CENTER);
