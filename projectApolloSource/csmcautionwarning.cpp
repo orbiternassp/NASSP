@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/01/20 19:13:02  movieman523
+  *	Added info on RCS warning lights.
+  *	
   *	Revision 1.17  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -198,31 +201,48 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		return;
 	}
 
+	//
+	// Check systems.
+	//
+	Saturn *sat = (Saturn *) OurVessel;
+
+	//
+	// If we don't have power to the CWS, light the CWS light and return.
+	//
+	if (!IsPowered()) {
+
+		// Turn off all lights
+		SetLightStates(LeftLights, 0);
+		SetLightStates(RightLights, 0);
+
+		// Turn on CWS light
+		SetLight(CSM_CWS_CWS_POWER, true);
+		return;
+	}
+
+	SetLight(CSM_CWS_CWS_POWER, false);
+
+	//
+	// Check AGC warnings
+	//
+
+	AGCWarningStatus aws;
+	sat->GetAGCWarningStatus(aws);
+	
+	if (aws.ISSWarning) {
+		SetLight(CSM_CWS_ISS_LIGHT, true);
+		// No Master Alarm during lamp test
+		if (aws.TestAlarms) 
+			SetMasterAlarm(false);
+	} 
+	else {
+		SetLight(CSM_CWS_ISS_LIGHT, false);
+	}
+		
+	//
+	// Do some checks not every timestep
+	//
 	if (simt > NextUpdateTime) {
-
-		Saturn *sat = (Saturn *) OurVessel;
-
-		//
-		// Check systems.
-		//
-
-		//
-		// If we don't have power to the CWS, light the CWS light and return.
-		//
-
-		if (!IsPowered()) {
-
-			// Turn off all lights
-			SetLightStates(LeftLights, 0);
-			SetLightStates(RightLights, 0);
-
-			// Turn on CWS light
-			SetLight(CSM_CWS_CWS_POWER, true);
-			return;
-		}
-
-		SetLight(CSM_CWS_CWS_POWER, false);
-
 		//
 		// Some systems only apply when we're in CSM mode.
 		//
