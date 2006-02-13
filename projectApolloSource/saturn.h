@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.143  2006/02/02 21:38:47  lazyd
+  *	Added a variable to save orbit-normal vector for launch
+  *	
   *	Revision 1.142  2006/02/02 18:54:16  tschachim
   *	Smoother acceleration calculations.
   *	
@@ -616,6 +619,11 @@ typedef struct {
 	double MainBusBVoltage;
 } MainBusStatus;
 
+typedef struct {
+	bool ISSWarning;
+	bool TestAlarms;
+} AGCWarningStatus;
+
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
 public:
@@ -697,6 +705,7 @@ public:
 	void GetECSWaterStatus(ECSWaterStatus &ws);
 	void GetMainBusStatus(MainBusStatus &ms);
 	void GetACBusStatus(ACBusStatus &as, int busno);
+	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	double GetAccelG() { return aZAcc / G; };
 
 	//
