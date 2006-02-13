@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2006/02/01 18:33:21  tschachim
+  *	More REALISM 0 checklist actions.
+  *	
   *	Revision 1.70  2006/01/15 01:23:19  movieman523
   *	Put 'phantom' RCS thrusters back in and adjusted RCS thrust and ISP based on REALISM value.
   *	
@@ -562,6 +565,10 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					if (Realism && oapiGetTimeAcceleration() > 1.0)
 						oapiSetTimeAcceleration(1.0);
 
+					// Crew ingress
+					number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
+					*number = 3; 
+
 					// Close cabin pressure regulator 
 					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
 					*open = SP_VALVE_CLOSE;
@@ -642,10 +649,6 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 			case SATSYSTEMS_CREWINGRESS_2:
 				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
 				if (scdp > 1.5 && MissionTime - lastSystemsMissionTime >= 10) {	// Suit Cabin delta p is established
-					// Crew ingress
-					number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
-					*number = 3; 
-
 					// Cabin leak
 					size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
 					*size = (float)0.0005;
@@ -2008,6 +2011,29 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase3Current = ACBus2PhaseC.Current();
 		break;
 	}
+}
+
+//
+// ISS warning state.
+//
+
+void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
+
+{
+	ChannelValue11 val11;
+	ChannelValue13 val13;
+
+	val11.Value = agc.GetOutputChannel(011);
+	if (val11.Bits.ISSWarning) 
+		aws.ISSWarning = true;
+	else
+		aws.ISSWarning = false;
+
+	val13.Value = agc.GetOutputChannel(013);
+	if (val13.Bits.TestAlarms)  
+		aws.TestAlarms = true;
+	else
+		aws.TestAlarms = false;
 }
 
 //
