@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/02/12 01:07:49  tschachim
+  *	Bugfix coarse align.
+  *	
   *	Revision 1.14  2006/01/14 20:58:16  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -193,12 +196,6 @@ void IMU::TurnOn()
 		agc.SetInputChannelBit(030, 14, true);
 		Operate = true;
 	}
-
-	//
-	// This should really be turned on after the delay, but for now we'll turn it on immediately.
-	//
-
-	TurnedOn = true;
 }
 
 void IMU::TurnOff() 
@@ -406,7 +403,7 @@ void IMU::Timestep(double simt)
 	IMU_Vector3 newAngles, acc, accI; 
 	ChannelValue12 val12;
 
-	if (!TurnedOn) {
+	if (!Operate) {
 		if (IsPowered())
 			TurnOn();
 		else
@@ -426,6 +423,10 @@ void IMU::Timestep(double simt)
 	else
 		DCPower.DrawPower(325.0);
 
+	if (!TurnedOn) {
+		return;
+	}
+	
 	VESSELSTATUS vs;
 
 	// fill OrbiterData
