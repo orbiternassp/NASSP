@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.33  2006/01/12 20:02:42  movieman523
   *	Updated to new Virtual AGC.
   *	
@@ -362,7 +365,7 @@ void CSMcomputer::DisplayNounData(int noun)
 	//
 
 	case 62:
-		SetR1((int)DisplayVel(CurrentVel));
+		SetR1((int)DisplayVel(CurrentRVel));
 		SetR2((int)DisplayVel(CurrentVelY));
 		SetR3((int)(DisplayAlt(CurrentAlt) / 1000));
 		break;
@@ -1116,7 +1119,9 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		oapiGetHeading(OurVessel->GetHandle(), &heading);
 
 		// set launch pad latitude
-		vagc.Erasable[5][2] = (int16_t)((16384.0 * latitude) / TWO_PI);
+		vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
+		vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
+		//vagc.Erasable[5][2] = (int16_t)((16384.0 * latitude) / TWO_PI);
 
 		// set launch pad azimuth
 		vagc.Erasable[5][0] = (int16_t)((16384.0 * heading) / TWO_PI);
@@ -1125,9 +1130,15 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		// x and y are 0313 and 0315 and are zero
 		vagc.Erasable[3][0317] = 037777;	
 
+		// set launch pad longitude
+		if (longitude < 0) longitude += TWO_PI;
+		vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
+		vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
+
 		// set launch pad altitude
-		vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
 		//State->Erasable[2][0272] = 01;	// 17.7 nmi
+		vagc.Erasable[2][0272] = 0;
+		vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
 
 		//
 		// Enable DAP. These should work, but no guarantees.
