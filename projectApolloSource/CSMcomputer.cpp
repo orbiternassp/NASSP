@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2006/02/13 21:33:41  tschachim
+  *	P11 shows inertial velocity instead of surface relative now.
+  *	Fixes PAD load.
+  *	
   *	Revision 1.34  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -214,7 +218,7 @@ void CSMcomputer::SetMissionInfo(int MissionNo, int RealismValue, char *OtherVes
 	//
 
 	char *binfile = "Config/ProjectApollo/Artemis072.bin";
-	if (MissionNo < 15 || MissionNo == 1301)
+	if (MissionNo < 15 || MissionNo == 1301)	// same criterium in CSMcomputer::Timestep because of pad load
 		binfile = "Config/ProjectApollo/Colossus249.bin";
 
 	InitVirtualAGC(binfile);
@@ -1127,8 +1131,12 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		vagc.Erasable[5][0] = (int16_t)((16384.0 * heading) / TWO_PI);
 
 		// z-component of the normalized earth's rotational vector in basic reference coord.
-		// x and y are 0313 and 0315 and are zero
-		vagc.Erasable[3][0317] = 037777;	
+		// x and y are 0313 and 0315 and are zero (Colossus249)
+
+		if (ApolloNo < 15 || ApolloNo == 1301) 		// Colossus249 criterium in SetMissionInfo
+			vagc.Erasable[3][0317] = 037777;			
+		else
+			vagc.Erasable[3][0315] = 037777;	
 
 		// set launch pad longitude
 		if (longitude < 0) longitude += TWO_PI;
