@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2006/02/14 19:35:41  tschachim
+  *	Bugfix Colossus 3 pad load.
+  *	
   *	Revision 1.35  2006/02/13 21:33:41  tschachim
   *	P11 shows inertial velocity instead of surface relative now.
   *	Fixes PAD load.
@@ -807,12 +810,17 @@ void CSMcomputer::Prog15(double simt)
 
 		break;
 
+	//
+	// 9:38 before ignition, signal the SIVb to start.
+	//
+
 	case 5:
 		if (simt > NextEventTime) {
 			LightCompActy();
 			Saturn *sat = (Saturn *)OurVessel;
 			LightUplink();
 			sat->SetSIISep();
+			SetOutputChannelBit(012, 13, true);
 			ProgState++;
 			NextEventTime += 10;
 		}
@@ -961,7 +969,6 @@ void CSMcomputer::Prog15(double simt)
 		if (simt > BurnStartTime) {
 			LightCompActy();
 			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
-			SetOutputChannelBit(012, 13, true);
 			ProgState++;
 			LastAlt = CurrentAlt;
 			NextEventTime = simt + 1;
@@ -1058,7 +1065,12 @@ void CSMcomputer::Prog15Pressed(int R1, int R2, int R3)
 		//
 
 		UpdateBurnTime(R1, R2, R3);
-		ProgState++;
+
+		if ((BurnTime - LastTimestep) < 600.0) {
+			RaiseAlarm(0603); // Not the correct alarm, but close enough.
+		}
+		else
+			ProgState++;
 		break;
 
 	case 3:

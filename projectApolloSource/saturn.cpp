@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.112  2006/02/09 14:37:42  tschachim
+  *	Engine thrust build-up fixed.
+  *	
   *	Revision 1.111  2006/02/08 12:08:31  tschachim
   *	Apply hold down force before lift-off.
   *	
@@ -3752,17 +3755,6 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 			break;
 
 		case 100:
-			if (bStartS4B && TLICapableBooster) {
-				SetAttitudeLinLevel(2,1);
-
-				//
-				// We'll treat the switch at the command to start the ullage engines.
-				//
-
-				NextMissionEventTime = MissionTime + 1.0;
-				StageState++;
-			}
-
 			//
 			// Fuel boiloff every ten seconds.
 			//
@@ -3772,6 +3764,20 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 					SIVBBoiloff();
 				}
 				NextMissionEventTime = MissionTime + 10.0;
+			}
+
+			if (bStartS4B && TLICapableBooster) {
+
+				//
+				// Start signal is sent 9:38 before ullage rockets ignite.
+				//
+				// For now we'll also enable prograde autopilot.
+				//
+
+				NextMissionEventTime = MissionTime + ((9.0 * 60.0) + 38.0);
+				ActivateNavmode(NAVMODE_PROGRADE);
+
+				StageState++;
 			}
 			break;
 
