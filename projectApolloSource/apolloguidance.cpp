@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2006/02/13 21:27:16  tschachim
+  *	Bugfix scenario loading.
+  *	
   *	Revision 1.68  2006/01/18 14:56:50  tschachim
   *	Bugfix
   *	
@@ -5269,6 +5272,8 @@ void ApolloGuidance::RaiseAlarm(int AlarmNo)
 		Alarm02 = AlarmNo;
 
 	Alarm03 = AlarmNo;
+
+	LightProg();
 }
 
 //
@@ -5279,7 +5284,6 @@ void ApolloGuidance::AbortWithError(int ErrNo)
 
 {
 	BlankData();
-	LightProg();
 	RunProgram(0);
 	RaiseAlarm(ErrNo);
 	SetVerbNounAndFlash(5, 9);
