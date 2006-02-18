@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/02/13 21:29:00  tschachim
+  *	ISS light.
+  *	
   *	Revision 1.18  2006/01/20 19:13:02  movieman523
   *	Added info on RCS warning lights.
   *	
@@ -324,7 +327,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		sat->GetMainBusStatus(ms);
 
 		SetLight(CSM_CWS_BUS_A_UNDERVOLT, (ms.MainBusAVoltage < 26.25));
-		SetLight(CSM_CWS_BUS_B_UNDERVOLT, (ms.MainBusAVoltage < 26.25));
+		SetLight(CSM_CWS_BUS_B_UNDERVOLT, (ms.MainBusBVoltage < 26.25));
 
 		//
 		// AC bus: lights come on to indicate under or overvoltage in the AC bus.
