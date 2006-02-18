@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/02/13 21:42:31  tschachim
+  *	C/W ISS light.
+  *	
   *	Revision 1.10  2006/01/14 20:58:16  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -135,8 +138,8 @@ protected:
 #define CSM_CWS_AC_BUS1_OVERLOAD	44
 #define CSM_CWS_AC_BUS2_OVERLOAD	45
 #define CSM_CWS_CMC_LIGHT			46
-#define CSM_CWS_BUS_B_UNDERVOLT		48
-#define CSM_CWS_BUS_A_UNDERVOLT		49
+#define CSM_CWS_BUS_A_UNDERVOLT		48
+#define CSM_CWS_BUS_B_UNDERVOLT		49
 #define CSM_CWS_ISS_LIGHT			50
 #define CSM_CWS_CWS_POWER			51
 #define CSM_CWS_O2_FLOW_HIGH_LIGHT	52
