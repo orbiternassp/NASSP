@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/02/21 12:00:42  tschachim
+  *	Moved TLI sequence to the IU.
+  *	
   *	Revision 1.37  2006/02/15 01:07:37  movieman523
   *	Revised TLI burn so hopefully it will work with the Virtual AGC.
   *	
@@ -325,8 +328,8 @@ void CSMcomputer::DisplayNounData(int noun)
 			double bradius = oapiGetSize(hbody);
 			OurVessel->GetElements(el, mjd_ref);
 
-			double apogee = (el.a * (1.0 + el.e)) - (bradius * 1000);
-			double perigee = (el.a * (1.0 - el.e)) - (bradius * 1000);
+			double apogee = (el.a * (1.0 + el.e)) - (bradius);
+			double perigee = (el.a * (1.0 - el.e)) - (bradius);
 
 			if (apogee < 0)
 				apogee = 0;
@@ -339,7 +342,7 @@ void CSMcomputer::DisplayNounData(int noun)
 			// surface.
 			//
 
-			double g = CurrentG() - ((CurrentVelX * CurrentVelX + CurrentVelZ * CurrentVelZ) / (CurrentAlt + (bradius * 1000)));
+			double g = CurrentG() - ((CurrentVelX * CurrentVelX + CurrentVelZ * CurrentVelZ) / (CurrentAlt + bradius));
 			double tff = CalcTFF(CurrentVelY, CurrentAlt, g);
 
 			int	min = (int)(tff / 60);
@@ -761,8 +764,8 @@ double CSMcomputer::CurrentG()
 	OBJHANDLE hbody = OurVessel->GetGravityRef();
 	double bradius = oapiGetSize(hbody);
 
-	double CurrentDist = (bradius * 1000.) + CurrentAlt;
-	return (G * bradius * bradius * 1000000.) / (CurrentDist * CurrentDist);
+	double CurrentDist = bradius + CurrentAlt;
+	return (G * bradius * bradius) / (CurrentDist * CurrentDist);
 }
 
 void CSMcomputer::UpdateTLICalcs(double simt)
