@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/02/06 20:57:41  lazyd
+  *	Improved roll control for SII and SIVB
+  *	
   *	Revision 1.13  2006/02/05 20:55:58  lazyd
   *	Added RCS roll control to SIVB
   *	
@@ -467,7 +470,8 @@ void SaturnV::AutoPilot(double autoT)
 	}
 
 	if (CMCswitch){
-		double slip;
+		double slip, aoa;
+		VECTOR3 az;
 		OBJHANDLE hbody=GetGravityRef();
 		double bradius=oapiGetSize(hbody);
 		switch (stage){
@@ -478,7 +482,7 @@ void SaturnV::AutoPilot(double autoT)
 			north=Normalize(north);
 			east=Normalize(CrossProduct(north, up));
 			north=Normalize(CrossProduct(up, east));
-			VECTOR3 az=east*sin(TO_HDG*RAD)-north*cos(TO_HDG*RAD);
+			az=east*sin(TO_HDG*RAD)-north*cos(TO_HDG*RAD);
 			if(autoT < 60.0) normal=Normalize(CrossProduct(up, az));
 
 			slip=GetSlipAngle()*DEG;
@@ -516,7 +520,7 @@ void SaturnV::AutoPilot(double autoT)
 
 			// zero angle-of-attack...
 			if(autoT > 45.0 && autoT < 115.0) {
-				double aoa=GetAOA()*DEG;
+				aoa=GetAOA()*DEG;
 				pitch_c=pitch+aoa-0.3;
 				AtempP=(pitch_c-pitch)/5.0;
 				if(AtempP < -0.2) AtempP=-0.2;
