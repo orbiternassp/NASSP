@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/02/01 18:10:55  tschachim
+  *	Introduced off flag and smooth mode.
+  *	
   *	Revision 1.4  2006/01/07 03:28:28  movieman523
   *	Removed a lot of unused switches and wired up the FDAI power switch.
   *	
@@ -45,6 +48,7 @@ public:
 	FDAI();
 	virtual ~FDAI();
 	void RegisterMe(int index, int x, int y);
+	void Timestep(double simt, double simdt);
 	void PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, 
 		         SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, HBITMAP hBmpRoll, int smooth);
 

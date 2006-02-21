@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/02/01 18:11:50  tschachim
+  *	Introduced off flag and smooth mode.
+  *	
   *	Revision 1.8  2006/01/07 18:12:06  tschachim
   *	Bugfix
   *	
@@ -260,6 +263,13 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI,
 	// frame-bitmaps
 	oapiBlt (surf, hFDAIRoll, 13, 13, 0, 0, 160, 160, SURF_PREDEF_CK);
 	oapiBlt (surf, hFDAI, 0, 0, 0, 0, 185, 183, SURF_PREDEF_CK);
+	
+	// Off-flag
+	if (!IsPowered())
+		oapiBlt (surf, hFDAIOff, 1, 70, 0, 0, 13, 30, SURF_PREDEF_CK);
+}
+
+void FDAI::Timestep(double simt, double simdt) {
 
 	//
 	// Dummy value for power usage for now.
@@ -267,8 +277,6 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI,
 
 	if (IsPowered())
 		DrawPower(100);
-	else
-		oapiBlt (surf, hFDAIOff, 1, 70, 0, 0, 13, 30, SURF_PREDEF_CK);
 }
 
 int FDAI::LoadOGLBitmap(char *filename) {
