@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2006/01/31 01:26:18  lazyd
+  *	Autopilot change
+  *	
   *	Revision 1.21  2006/01/26 03:31:57  movieman523
   *	Less hacky low-res mesh support for Saturn V.
   *	
@@ -138,9 +141,6 @@ private:
 	void SetVehicleStats();
 	void CalculateStageMass ();
 
-	bool SIVBStart();
-	void SIVBStop();
-
 	void SetupMeshes();
 
 protected:
@@ -177,19 +177,11 @@ protected:
 	//
 
 	bool GoHover;
-
 	bool Resetjet;
-
-	bool S4Sep;
-	bool velDISP;
-
-	bool S4Bset;
 
 	//
 	// End state.
 	//
-
-	double gaz;
 
 	int SI_RetroNum;
 	int SII_RetroNum;
@@ -200,23 +192,11 @@ protected:
 	//
 
 	Sound DockS;
-
 	Sound SpeedS;
-
 	Sound SCorrection;
 	Sound S5P100;
-
 	Sound SRover;
-
 	Sound SecoSound;
-
-	//
-	// Obsolete variables... currently in for backward compatibility, and
-	// removed as code is deleted.
-	//
-
-	double ignition_S4time;
-
 };
 
 extern void LoadSat5Meshes();

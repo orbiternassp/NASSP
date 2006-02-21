@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.10  2006/01/11 22:34:20  movieman523
   *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
   *	
@@ -217,6 +220,8 @@ typedef union {
 	unsigned int word;
 } CSMOut6;
 
+class IU;
+
 //
 // Class definition.
 //
@@ -226,7 +231,7 @@ class CSMcomputer: public ApolloGuidance
 {
 public:
 
-	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p);
+	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, IU &i);
 	virtual ~CSMcomputer();
 
 	bool ValidateVerbNoun(int verb, int noun);
@@ -261,6 +266,8 @@ public:
 	void SetBurnTime(double val) { BurnTime = val; };
 
 	void SetInputChannelBit(int channel, int bit, bool val);
+	void SetOutputChannelBit(int channel, int bit, bool val);
+	void SetOutputChannel(int channel, unsigned int val);
 
 	void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
 
@@ -309,14 +316,6 @@ protected:
 	//
 	double lastOrbitalElementsTime;
 
-	//
-	// Sounds.
-	//
-
-	Sound STLI;
-	Sound STLIStart;
-	Sound Scount;
-
 	CSMFlagWord0 FlagWord0;
 	CSMFlagWord1 FlagWord1;
 	CSMFlagWord2 FlagWord2;
@@ -329,4 +328,5 @@ protected:
 	unsigned int LastOut11;
 
 	DSKY &dsky2;
+	IU &iu;
 };

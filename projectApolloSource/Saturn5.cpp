@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2006/02/10 21:09:22  tschachim
+  *	Bugfix SivbLmSepSwitch.
+  *	
   *	Revision 1.66  2006/02/09 18:28:12  lazyd
   *	Another pitch table change...
   *	
@@ -342,38 +345,19 @@ void SaturnV::initSaturnV()
 	THRUST_SECOND_VAC  = 1023000;
 	THRUST_THIRD_VAC = 1023000;
 
-	TLICapableBooster = true;
-	TLIEnabled = true;	// default position of XLUNAR switch is INJECT
-
-	GoHover=false;
-
-	Scorrec=false;
-	Resetjet=false;
-
-	S4Sep=false;
-	velDISP=false;
-
-	Burned=false;
-
-	S4Bset = false;
-
-	ApolloExploded =false;
-	CryoStir = false;
-	KranzPlayed = false;
-
-	EVA_IP=false;
-	gaz=0;
-
-	//
-	// Some of these need to be zeroed, but I'm not sure which ones. So for
-	// safety, do all of them.
-	//
-
 	//
 	// State variables.
 	//
 
-	TLIBurnDone = false;
+	TLICapableBooster = true;
+	GoHover = false;
+	Scorrec = false;
+	Resetjet = false;
+	Burned = false;
+	ApolloExploded = false;
+	CryoStir = false;
+	KranzPlayed = false;
+	EVA_IP = false;
 
 	//
 	// Default masses.
@@ -1566,14 +1550,6 @@ void SaturnV::DoFirstTimestep(double simt)
 
 	case STAGE_ORBIT_SIVB:
 		//
-		// In TLI mode, disable the engines if we're waiting for
-		// the user to start the TLI burn or if it's been done.
-		//
-		if (Realism && (StageState == 0 || StageState == 8 || StageState == 202 || StageState == 203)) {
-			SetThrusterResource(th_main[0], 0);
-		}
-
-		//
 		// Always enable SIVB RCS for now, once we hit orbit.
 		//
 
@@ -1961,52 +1937,12 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		}
 	}
 
-	if (bStartS4B && !TLIBurnDone) {
-		soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
-	}
-
 	//
 	// Enable or disable SPS and RCS.
 	//
 
 	CheckSPSState();
 	CheckRCSState();
-}
-
-bool SaturnV::SIVBStart()
-
-{
-	if (bStartS4B || TLIBurnDone || !TLIEnabled)
-		return false;
-
-	if (stage != STAGE_ORBIT_SIVB)
-		return false;
-
-	bStartS4B = true;
-
-	if (Realism)
-		SetThrusterResource(th_main[0], ph_3rd);
-
-	soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
-
-	return true;
-}
-
-void SaturnV::SIVBStop()
-
-{
-	if (stage != STAGE_ORBIT_SIVB)
-		return;
-
-	SetEngineLevel(ENGINE_MAIN,0);
-
-	if (Realism)
-		SetThrusterResource(th_main[0], 0);
-
-	SecoSound.play();
-	SecoSound.done();
-
-	TLIBurnDone = true;
 }
 
 void SaturnV::StageLaunchSIVB(double simt)
@@ -2194,7 +2130,6 @@ void SaturnV::LaunchVesselRolloutEnd() {
 	// called by crawler after arrival on launch pad
 
 	SetFirstStage();
-	//ShiftCentreOfMass (_V(0,0,STG0O));	// Seems to be useless...
 	SetStage(ONPAD_STAGE);
 }
 

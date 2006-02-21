@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/02/02 18:52:35  tschachim
+  *	Improved Accel G meter.
+  *	
   *	Revision 1.8  2006/02/01 18:19:55  tschachim
   *	Added SaturnValveSwitch::SwitchTo function.
   *	
@@ -79,17 +82,9 @@ bool XLunarSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (ToggleSwitch::CheckMouseClick(event, mx, my)) {
-		if (sat) {
-			if (IsUp()) {
-				sat->EnableTLI();
-			}
-			else if (IsDown()) {
-				sat->DisableTLI();
-			}
-		}
+		// Do nothing, handling is done in the IU
 		return true;
 	}
-
 	return false;
 }
 
