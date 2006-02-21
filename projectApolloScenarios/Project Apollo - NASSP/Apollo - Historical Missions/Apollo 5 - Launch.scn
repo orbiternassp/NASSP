@@ -1,0 +1,54 @@
+BEGIN_DESC
+Apollo 5 was an unmanned flight used to test the LEM in Earth orbit.
+END_DESC
+
+BEGIN_ENVIRONMENT
+  System ProjectApollo/Sol
+  Date MJD 39877.9500925927
+END_ENVIRONMENT
+
+BEGIN_FOCUS
+  Ship AS-501
+END_FOCUS
+
+BEGIN_CAMERA
+  TARGET AS-501
+  MODE Extern
+  POS 2.44 0.0 -90.0
+  TRACKMODE TargetRelative
+  FOV 60.00
+END_CAMERA
+
+BEGIN_MFD Left
+  TYPE Map
+  REF Earth
+  BTARGET Cape Canaveral
+END_MFD
+
+BEGIN_MFD Right
+  TYPE Launch
+END_MFD
+
+BEGIN_SHIPS
+AS-204:ProjectApollo/Saturn1B
+  STATUS Landed Earth
+  BASE Cape Canaveral:3
+  HEADING 270.00
+  FUEL 1.000
+  APOLLONO 4
+  NASSPVER 60050
+  STAGE 5
+  STAGESTATUS 0
+  DOCKSTATE 0
+  MISSNTIME -3600
+  TOAPO 192
+  TOPER 184
+  TOHDG 72
+  SICSHUT 135.5
+  TCP -15.0
+  LANG English
+  UNMANNED 1
+  S4PL 3
+  AUTOSLOW 1
+END
+END_SHIPS
