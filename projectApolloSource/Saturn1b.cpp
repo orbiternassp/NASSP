@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/01/27 22:11:37  movieman523
+  *	Added support for low-res Saturn 1b.
+  *	
   *	Revision 1.43  2006/01/26 19:26:31  movieman523
   *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
   *	
@@ -351,7 +354,8 @@ double LiftCoeff (double aoa)
 		(CL[5]-CL[4])/(AOA[5]-AOA[4]), (CL[6]-CL[5])/(AOA[6]-AOA[5]),
 		(CL[7]-CL[6])/(AOA[7]-AOA[6]), (CL[8]-CL[7])/(AOA[8]-AOA[7])};
 
-	for (int i = 0; i < nlift-1 && AOA[i+1] < aoa; i++);
+	int i;
+	for (i = 0; i < nlift-1 && AOA[i+1] < aoa; i++);
 	return -(CL[i] + (aoa-AOA[i])*SCL[i]);
 }
 
