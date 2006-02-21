@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/01/09 19:26:03  tschachim
+  *	More attempts to make code build on MS C++ 2005
+  *	
   *	Revision 1.5  2006/01/04 23:06:03  movieman523
   *	Moved meshes into ProjectApollo directory and renamed a few.
   *	
@@ -182,7 +185,8 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 	meshoffset = _V(75, -65, -66.4);
 	meshindexSaturn[15] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/BoostCover"), &meshoffset);
 	
-	for (int i = 0; i < meshcountSaturn; i++) 
+	int i;
+	for (i = 0; i < meshcountSaturn; i++) 
 		SetMeshVisibilityMode(meshindexSaturn[i], MESHVIS_NEVER);
 
 	DefineAnimations();
@@ -191,6 +195,8 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 }
 
 void VAB::DefineAnimations() {
+
+	int i = 0;
 
 	// High bay 1 door
 	static UINT highBay1Door1_groups[1] = {46};
@@ -314,7 +320,7 @@ void VAB::DefineAnimations() {
 	// Saturn Stage CSM/LTA
 	DefineCraneAnimation(mgroupCrane[3], 113, 22);
 	DefineCrane2Animation(mgroupCrane2[3], 37, 99.7);
-	for (int i = 5; i < 15; i++) 
+	for (i = 5; i < 15; i++) 
 		DefineSaturnAnimation(mgroupSaturn[i], meshindexSaturn[i], 113, 22);
 
 	// Saturn Stage Tower
@@ -625,6 +631,8 @@ void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 
 void VAB::SetSaturnMeshVisibilityMode(int buildStatus, WORD mode) {
 
+	int i;
+
 	if (buildStatus == 0) {
 		SetMeshVisibilityMode(meshindexSaturn[0], mode);
 	}
@@ -637,7 +645,7 @@ void VAB::SetSaturnMeshVisibilityMode(int buildStatus, WORD mode) {
 		SetMeshVisibilityMode(meshindexSaturn[4], mode);
 	}
 	else if (buildStatus == 3) {
-		for (int i = 5; i < 15; i++) 
+		for (i = 5; i < 15; i++) 
 			SetMeshVisibilityMode(meshindexSaturn[i], mode);
 	}
 	else if (buildStatus == 4) {
