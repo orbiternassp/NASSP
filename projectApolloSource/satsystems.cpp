@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2006/02/13 21:36:21  tschachim
+  *	C/W ISS light, Bugfix.
+  *	
   *	Revision 1.71  2006/02/01 18:33:21  tschachim
   *	More REALISM 0 checklist actions.
   *	
@@ -460,6 +463,8 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		cws.TimeStep(MissionTime);
 		dockingprobe.TimeStep(MissionTime, simdt);
 		secs.Timestep(MissionTime, simdt);
+		fdaiLeft.Timestep(MissionTime, simdt);
+		fdaiRight.Timestep(MissionTime, simdt);
 
 		//
 		// General checks.
