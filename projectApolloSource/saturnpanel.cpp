@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.142  2006/02/13 21:40:28  tschachim
+  *	CMCModeSwitch up by default.
+  *	
   *	Revision 1.141  2006/02/02 18:52:35  tschachim
   *	Improved Accel G meter.
   *	
@@ -4249,7 +4252,7 @@ void Saturn::InitSwitches() {
 
 	FCSMSPSASwitch.Register(PSH, "FCSMSPSASwitch", 0);
 	FCSMSPSBSwitch.Register(PSH, "FCSMSPSBSwitch", 0);
-	EventTimerUpDownSwitch.Register(PSH, "EventTimerUpDownSwitch", THREEPOSSWITCH_CENTER);
+	EventTimerUpDownSwitch.Register(PSH, "EventTimerUpDownSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	EventTimerControlSwitch.Register(PSH, "EventTimerControlSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	EventTimerMinutesSwitch.Register(PSH, "EventTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	EventTimerSecondsSwitch.Register(PSH, "EventTimerSecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
