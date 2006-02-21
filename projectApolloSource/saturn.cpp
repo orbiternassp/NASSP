@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.113  2006/02/15 01:07:38  movieman523
+  *	Revised TLI burn so hopefully it will work with the Virtual AGC.
+  *	
   *	Revision 1.112  2006/02/09 14:37:42  tschachim
   *	Engine thrust build-up fixed.
   *	
@@ -398,10 +401,11 @@ extern "C" {
 //extern FILE *PanelsdkLogFile;
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
-								agc(soundlib, dsky, dsky2, imu, Panelsdk), 
+								agc(soundlib, dsky, dsky2, imu, Panelsdk, iu), 
 								dsky(soundlib, agc, 015),
 								dsky2(soundlib, agc, 016), 
 								imu(agc, Panelsdk), 
+								iu(soundlib, agc),
 								cws(SMasterAlarm, Bclick, Panelsdk),
 								dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 								NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
@@ -434,12 +438,14 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	autopilot = false;
 	LastTimestep = 0;
 
-	// VESSELSOUND **********************************************************************
-	// initialisation
+	//
+	// VESSELSOUND initialisation
+	// 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	cws.MonitorVessel(this);
 	dockingprobe.RegisterVessel(this);
+	iu.RegisterVessel(this);
 }
 
 Saturn::~Saturn()
@@ -462,14 +468,12 @@ void Saturn::initSaturn()
 
 	VehicleNo = 600;
 	ApolloNo = 0;
-
 	TCPO = 0.0;
 
 	FirstTimestep = true;
 	GenericFirstTimestep = true;
 
 	TLICapableBooster = false;
-	TLIEnabled = false;
 
 	//
 	// Do we have the Skylab-type SM and CM?
@@ -511,7 +515,6 @@ void Saturn::initSaturn()
 	CSMAccelEnd = 0.0;
 	CSMAccelPitch = 0.0;
 
-	SIVBBurn = false;
 	SIVBBurnStart = 0.0;
 	SIVBApogee = 0.0;
 
@@ -627,7 +630,7 @@ void Saturn::initSaturn()
 	agc.SetDesiredAzimuth(45);
 	agc.SetVesselStats(SPS_ISP, SPS_THRUST, false);
 
-	IGMStartTime = 196.0;
+	IGMStartTime = 204.1 ;
 
 	//
 	// Typical center engine shutdown times.
@@ -925,17 +928,6 @@ void Saturn::initSaturn()
 	InitSaturnCalled = true;
 }
 
-bool Saturn::SIVBStart()
-
-{
-	return false;
-}
-
-void Saturn::SIVBStop()
-
-{
-}
-
 void Saturn::GetLEMName(char *s)
 
 {
@@ -998,16 +990,19 @@ double Saturn::SetPitchApo()
 	double SatApo1;
 	double DiffApo;
 
+	OBJHANDLE hbody = GetGravityRef();
+	double bradius = oapiGetSize(hbody);
+
 	GetApDist(SatApo1);
-	DiffApo = SatApo1 - ((agc.GetDesiredApogee()+ERADIUS)*1000);
-	cpitch=(GetPitch()*DEG)-aVAcc-(aVSpeed/50)+((agc.GetDesiredApogee()*1000-GetAltitude())/8000) ;
+	DiffApo = SatApo1 - (agc.GetDesiredApogee() * 1000. + bradius);
+	cpitch = (GetPitch() * DEG) - aVAcc - (aVSpeed / 50.) + ((agc.GetDesiredApogee() * 1000. - GetAltitude()) / 8000.);
 
 
-	if (cpitch>35){
+	if (cpitch > 35){
 		cpitch=35;
 	}
-	else if(cpitch<-35){
-		cpitch=-35;
+	else if(cpitch < -35){
+		cpitch = -35;
 	}
 
 	//sprintf(oapiDebugString(), "diff %f", cpitch );
@@ -1202,7 +1197,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "CMFUELLOAD", CM_FuelMass);
 	oapiWriteScenario_float (scn, "CMMASS", CM_EmptyMass);
 
-	if (!LEMdatatransfer && isTLICapable()) {
+	if (!LEMdatatransfer && iu.IsTLICapable()) {
 		oapiWriteScenario_float (scn, "MOONLAT", LMLandingLatitude);
 		oapiWriteScenario_float (scn, "MOONLONG", LMLandingLongitude);
 		oapiWriteScenario_float (scn, "MOONALT", LMLandingAltitude);
@@ -1229,7 +1224,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 			oapiWriteScenario_float (scn, "CMSEP", CMSepTime);
 		}
 
-		if (SIVBBurn && (stage <= CSM_LEM_STAGE)) {
+		if (stage <= CSM_LEM_STAGE) {
 			oapiWriteScenario_float (scn, "S4APO", SIVBApogee);
 			oapiWriteScenario_float (scn, "S4BURN", SIVBBurnStart);
 		}
@@ -1357,7 +1352,6 @@ int Saturn::GetMainState()
 	state.u.EventTimerEnabled = EventTimerDisplay.IsEnabled();
 	state.u.EventTimerCountUp = EventTimerDisplay.GetCountUp();
 	state.u.SIISepState = SIISepState;
-	state.u.TLIBurnDone = TLIBurnDone;
 	state.u.Scorrec = Scorrec;
 	state.u.Burned = Burned;
 	state.u.EVA_IP = EVA_IP;
@@ -1383,7 +1377,6 @@ void Saturn::SetMainState(int s)
 
 	state.word = s;
 	SIISepState = state.u.SIISepState;
-	TLIBurnDone = state.u.TLIBurnDone;
 	Scorrec = state.u.Scorrec;
 	Burned = state.u.Burned;
 	EVA_IP = state.u.EVA_IP;
@@ -1463,7 +1456,6 @@ int Saturn::GetLaunchState()
 
 	state.word = 0;
 	state.u.autopilot = autopilot;
-	state.u.TLIEnabled = TLIEnabled;
 
 	return state.word;
 }
@@ -1475,7 +1467,6 @@ void Saturn::SetLaunchState(int s)
 
 	state.word = s;
 	autopilot = (state.u.autopilot != 0);
-	TLIEnabled = (state.u.TLIEnabled != 0);
 }
 
 typedef union {
@@ -2066,10 +2057,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
         }
     }
 
-	if (!Crewed && (SIVBApogee > 0.0) && (SIVBBurnStart > 0) && (stage < CSM_LEM_STAGE)) {
-		SIVBBurn = true;
-	}
-
 	if (!Crewed && (CSMApogee > 0.0) && (CSMBurnStart > 0) && (stage < CM_STAGE)) {
 		CSMBurn = true;
 	}
@@ -2610,7 +2597,7 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 		// For now this is limited to the Saturn V.
 		//
 
-		if (InVC && KEYDOWN (keystate, OAPI_KEY_1) && isTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+		if (InVC && KEYDOWN (keystate, OAPI_KEY_1) && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_1, 1.0)) {
 				viewpos = SATVIEW_ENG1;
 				SetView();
@@ -2619,7 +2606,7 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 			return 1;
 		}
 
-		if (InVC && KEYDOWN (keystate, OAPI_KEY_2) && isTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+		if (InVC && KEYDOWN (keystate, OAPI_KEY_2) && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_2, 1.0)) {
 				viewpos = SATVIEW_ENG2;
 				oapiCameraAttach(GetHandle(), CAM_COCKPIT);
@@ -2628,7 +2615,7 @@ int Saturn::clbkConsumeDirectKey(char *keystate)
 			return 1;
 		}
 
-		if (InVC && KEYDOWN (keystate, OAPI_KEY_3) && isTLICapable() && stage < STAGE_ORBIT_SIVB && stage >= PRELAUNCH_STAGE) {
+		if (InVC && KEYDOWN (keystate, OAPI_KEY_3) && iu.IsTLICapable() && stage < STAGE_ORBIT_SIVB && stage >= PRELAUNCH_STAGE) {
 			if (oapiAcceptDelayedKey (OAPI_KEY_3, 1.0)) {
 				viewpos = SATVIEW_ENG3;
 				oapiCameraAttach(GetHandle(), CAM_COCKPIT);
@@ -3422,6 +3409,12 @@ void Saturn::GenericLoadStateSetup()
 	//
 	
 	soundlib.SoundOptionOnOff(PLAYDOCKINGSOUND, FALSE);
+
+	//
+	// Initialize the IU
+	//
+
+	iu.SetMissionInfo(TLICapableBooster, Crewed, Realism, &th_main[0], &ph_3rd, &thg_aps, SIVBBurnStart, SIVBApogee); 
 }
 
 void Saturn::UllageSM(OBJHANDLE hvessel,double gaz1, double time)
@@ -3458,10 +3451,14 @@ bool Saturn::CheckForLaunchShutdown()
 	// Shut down the engine when we're close to the desired apogee and perigee.
 	//
 
-	GetElements(elemSaturn1B, refSaturn1B);
+	double apogee, perigee;
 
-	double apogee = ((elemSaturn1B.a * (1.0 + elemSaturn1B.e)) / 1000.0) - ERADIUS;
-	double perigee = ((elemSaturn1B.a * (1.0 - elemSaturn1B.e)) / 1000.0) - ERADIUS;
+	OBJHANDLE ref = GetGravityRef();
+	GetElements(elemSaturn1B, refSaturn1B);
+	GetApDist(apogee);
+	GetPeDist(perigee);
+	apogee = (apogee - oapiGetSize(ref)) / 1000.;
+	perigee = (perigee - oapiGetSize(ref)) / 1000.;
 
 	if ((refSaturn1B - refPREV) >= 0 &&
 		(stage == LAUNCH_STAGE_SIVB) &&
@@ -3570,23 +3567,6 @@ void Saturn::SetGenericStageState()
 	}
 
 	CheckSMSystemsState();
-}
-
-void Saturn::SIVBBoiloff()
-
-{
-	if (Realism < 2)
-		return;
-
-	//
-	// The SIVB stage boils off a small amount of fuel while in orbit.
-	//
-	// For the time being we'll ignore any thrust created by the venting
-	// of this fuel.
-	//
-
-	double FuelMass = GetPropellantMass(ph_3rd) * 0.99998193;
-	SetPropellantMass(ph_3rd, FuelMass);
 }
 
 //
@@ -3702,260 +3682,12 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	//
 	AttitudeLaunchSIVB();
 
-	if (TLICapableBooster && !(bStartS4B || TLIBurnDone)) {
-		if (agc.GetOutputChannelBit(012, 13)) {
-			if (SIVBStart())
-				agc.SetOutputChannelBit(012, 13, false);
-		}
-	}
+	//
+	// Enable random ATC chatter.
+	//
 
-	double MainLevel;
-
-	if(TLICapableBooster){
-		switch (StageState) {
-
-		case 0:
-
-			//
-			// Enable random ATC chatter.
-			//
-
-			if (!UseATC)
-				soundlib.SoundOptionOnOff(PLAYRADIOATC, TRUE);
-
-			if (Crewed || !SIVBBurn) {
-				StageState = 100;
-			}
-			else {
-				NextMissionEventTime = SIVBBurnStart - 100.0;
-				StageState++;
-			}
-			break;
-
-		case 1:
-			if (MissionTime >= NextMissionEventTime) {
-				SlowIfDesired();
-				ActivateS4RCS();
-				StageState++;
-			}
-			break;
-
-		case 2:
-			ActivateNavmode(NAVMODE_PROGRADE);
-			NextMissionEventTime = SIVBBurnStart;
-			StageState++;
-			break;
-
-		case 3:
-			if (MissionTime >= NextMissionEventTime) {
-				ActivateNavmode(NAVMODE_PROGRADE);
-				SIVBStart();
-				StageState = 100;
-			}
-			break;
-
-		case 100:
-			//
-			// Fuel boiloff every ten seconds.
-			//
-
-			if (MissionTime >= NextMissionEventTime) {
-				if(TLICapableBooster){
-					SIVBBoiloff();
-				}
-				NextMissionEventTime = MissionTime + 10.0;
-			}
-
-			if (bStartS4B && TLICapableBooster) {
-
-				//
-				// Start signal is sent 9:38 before ullage rockets ignite.
-				//
-				// For now we'll also enable prograde autopilot.
-				//
-
-				NextMissionEventTime = MissionTime + ((9.0 * 60.0) + 38.0);
-				ActivateNavmode(NAVMODE_PROGRADE);
-
-				StageState++;
-			}
-			break;
-
-		case 101:
-			//
-			// Start ullage engines after 1 second.
-			//
-
-			if (MissionTime >= NextMissionEventTime) {
-				SetThrusterGroupLevel(thg_aps, 1.0);
-				SepS.play(LOOP, 130);
-				NextMissionEventTime += 16.7;
-				StageState++;
-			}
-			break;
-
-		case 102:
-
-			//
-			// Ullage cutoff after 17.7 seconds.
-			//
-
-			if (MissionTime >= NextMissionEventTime) {
-				SetThrusterGroupLevel(thg_aps, 0.0);
-				SepS.stop();
-				SepS.done();
-				NextMissionEventTime += 4.8;
-				StageState++;
-			}
-			break;
-
-		case 103:
-			if (MissionTime >= NextMissionEventTime) {
-				if (Realism)
-					SetThrusterResource(th_main[0], ph_3rd);
-				LastMissionEventTime = NextMissionEventTime;
-				NextMissionEventTime += 2.5;
-				StageState++;
-			}
-			break;
-
-		case 104:
-
-			//
-			// Engine ramps up to 90% thrust from 22.5 to 25 seconds.
-			//
-			if (MissionTime < NextMissionEventTime) {
-				double deltat = (MissionTime - LastMissionEventTime);
-				SetThrusterLevel(th_main[0], (0.9 * deltat) * 0.4);
-			}
-			else {
-				LastMissionEventTime = NextMissionEventTime;
-				NextMissionEventTime += 0.5;
-				StageState++;
-			}
-			break;
-
-		case 105:
-
-			//
-			// Then up to 100%.
-			//
-
-			if (MissionTime < NextMissionEventTime) {
-				double deltat = (MissionTime - LastMissionEventTime);
-				SetThrusterLevel(th_main[0], 0.9 + (deltat * 0.2));
-			}
-			else {
-				NextMissionEventTime += 0.5;
-				StageState++;
-			}
-			break;
-
-		case 106:
-
-			//
-			// Engine will be at 100% thrust after around 26 seconds.
-			//
-
-			if (MissionTime >= NextMissionEventTime) {
-				SetThrusterLevel(th_main[0], 1.0);
-				SetThrusterGroupLevel(thg_ver, 0.0);
-				bStartS4B = false;
-				SetAttitudeLinLevel(2,0);
-				if (!SIVBBurn || Crewed) {
-					StageState = 200;
-				}
-				else {
-					StageState = 150;
-				}
-			}
-			break;
-
-		//
-		// Wait for the right apogee.
-		//
-
-		case 150:
-			if (MissionTime >= NextMissionEventTime) {
-				OBJHANDLE hPlanet = GetGravityRef();
-				double prad = oapiGetSize(hPlanet);
-				double ap;
-				GetApDist(ap);
-
-				ActivateNavmode(NAVMODE_PROGRADE);
-
-				//
-				// Burn until the orbit is about right or we're out of fuel.
-				//
-
-				if ((ap >= (prad + (SIVBApogee * 1000.0))) || (actualFUEL <= 0.1)) {
-					StageState = 201;
-					SIVBBurn = false;
-					DeactivateNavmode(NAVMODE_PROGRADE);
-					DeactivateS4RCS();
-				}
-
-				NextMissionEventTime = MissionTime + 0.25;
-			}
-			break;
-
-		case 200:
-
-			//
-			// Wait for shutdown.
-			//
-
-			if (agc.GetOutputChannelBit(012, 14)) {
-				agc.SetOutputChannelBit(012, 14, false);
-				StageState++;
-			}
-			break;
-
-			//
-			// Thrust decay.
-			//
-
-		case 201:
-			MainLevel = GetThrusterLevel(th_main[0]);
-
-			MainLevel -= (simdt * 1.2);
-			SetThrusterLevel(th_main[0], MainLevel);
-
-			if (MainLevel <= 0.0) {
-				SIVBStop();
-				NextMissionEventTime = MissionTime + 10.0;
-				StageState++;
-			}
-			break;
-
-		case 202:
-
-			if (Realism < 2)
-				StageState = 100;
-			else
-				StageState++;
-			break;
-
-		case 203:
-
-			//
-			// Engine is now dead. Just boil off the remaining
-			// fuel.
-			//
-
-			if (MissionTime >= NextMissionEventTime) {
-				SIVBBoiloff();
-				NextMissionEventTime = MissionTime + 10.0;
-			}
-			break;
-		}
-	}
-	else{
-		if (GetEngineLevel(ENGINE_MAIN) <= 0) {
-			if (Realism)
-				SetThrusterResource(th_main[0], NULL);
-		}
-	}
+	if (!UseATC)
+		soundlib.SoundOptionOnOff(PLAYRADIOATC, TRUE);
 
 	//
 	// For unmanned launches, seperate the CSM on timer.
@@ -4010,14 +3742,6 @@ void Saturn::SlowIfDesired()
 {
 	if (!Crewed && AutoSlow && (oapiGetTimeAcceleration() > 1.0)) {
 		oapiSetTimeAcceleration(1.0);
-	}
-}
-
-void Saturn::EnableTLI()
-
-{
-	if (isTLICapable()) {
-		TLIEnabled = true;
 	}
 }
 

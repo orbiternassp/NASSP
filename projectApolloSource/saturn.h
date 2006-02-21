@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.144  2006/02/13 21:43:32  tschachim
+  *	C/W ISS light.
+  *	
   *	Revision 1.143  2006/02/02 21:38:47  lazyd
   *	Added a variable to save orbit-normal vector for launch
   *	
@@ -154,311 +157,6 @@
   *	
   *	Revision 1.100  2005/12/19 16:39:12  tschachim
   *	New devices.
-  *	
-  *	Revision 1.99  2005/12/02 20:44:35  movieman523
-  *	Wired up buses and batteries directly rather than through PowerSource objects.
-  *	
-  *	Revision 1.98  2005/12/02 19:29:24  movieman523
-  *	Started integrating PowerSource code into PanelSDK.
-  *	
-  *	Revision 1.97  2005/11/25 20:59:49  movieman523
-  *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
-  *	
-  *	Revision 1.96  2005/11/25 02:03:47  movieman523
-  *	Fixed mixture-ratio change code and made it more realistic.
-  *	
-  *	Revision 1.95  2005/11/25 00:02:16  movieman523
-  *	Trying to make Apollo 11 work 'by the numbers'.
-  *	
-  *	Revision 1.94  2005/11/24 20:31:23  movieman523
-  *	Added support for engine thrust decay during launch.
-  *	
-  *	Revision 1.93  2005/11/24 01:07:54  movieman523
-  *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
-  *	
-  *	Revision 1.92  2005/11/23 01:43:13  movieman523
-  *	Added SII stage DLL.
-  *	
-  *	Revision 1.91  2005/11/20 21:46:31  movieman523
-  *	Added initial volume control support.
-  *	
-  *	Revision 1.90  2005/11/19 01:07:04  flydba
-  *	Switches set on the lower equipment bay.
-  *	
-  *	Revision 1.89  2005/11/18 22:11:22  movieman523
-  *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
-  *	
-  *	Revision 1.88  2005/11/18 20:38:59  movieman523
-  *	Revised condensor output from fuel cell to eliminate master alarms.
-  *	
-  *	Revision 1.87  2005/11/18 04:46:26  flydba
-  *	Window cover bitmap added.
-  *	
-  *	Revision 1.86  2005/11/18 03:16:27  flydba
-  *	Right hand side panel almost finished.
-  *	
-  *	Revision 1.85  2005/11/17 22:06:47  movieman523
-  *	Added other electrical buses and revised cabin fan code.
-  *	
-  *	Revision 1.84  2005/11/17 19:19:12  movieman523
-  *	Added three-phase AC bus and battery buses.
-  *	
-  *	Revision 1.83  2005/11/17 07:07:04  flydba
-  *	Thumbwheels on panel 6 now work, other switches on the right panel  added etc.
-  *	
-  *	Revision 1.82  2005/11/17 03:43:09  flydba
-  *	COAS switch renamed...
-  *	
-  *	Revision 1.81  2005/11/17 03:30:30  flydba
-  *	Changed panel number from 14 to 16.
-  *	
-  *	Revision 1.80  2005/11/17 01:52:29  movieman523
-  *	Simplified setup for circuit breakers, and added battery buses.
-  *	
-  *	Revision 1.79  2005/11/17 01:23:11  movieman523
-  *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
-  *	
-  *	Revision 1.78  2005/11/17 00:28:36  movieman523
-  *	Wired in AGC circuit breakers.
-  *	
-  *	Revision 1.77  2005/11/16 23:14:01  movieman523
-  *	Initial support for wiring in the circuit breakers.
-  *	
-  *	Revision 1.76  2005/11/16 20:45:09  flydba
-  *	New switch added on panel 14.
-  *	
-  *	Revision 1.75  2005/11/16 20:21:39  movieman523
-  *	CSM/LEM renaming changes.
-  *	
-  *	Revision 1.74  2005/11/16 18:43:42  flydba
-  *	All circuit breakers now set on panel 5.
-  *	
-  *	Revision 1.73  2005/11/16 00:18:49  movieman523
-  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
-  *	
-  *	Revision 1.72  2005/11/15 17:18:37  flydba
-  *	*** empty log message ***
-  *	
-  *	Revision 1.71  2005/11/15 05:43:55  flydba
-  *	*** empty log message ***
-  *	
-  *	Revision 1.70  2005/10/31 10:41:49  tschachim
-  *	Added CircuitBrakerSwitch and ThumbwheelSwitch. new VAB.
-  *	
-  *	Revision 1.69  2005/10/19 11:47:34  tschachim
-  *	Bugfixes for high time accelerations.
-  *	FDAIs optionally disabled.
-  *	
-  *	Revision 1.68  2005/10/13 15:55:31  tschachim
-  *	Fixed the panel change bug.
-  *	Changed panel ids to have the main panel as default panel.
-  *	
-  *	Revision 1.67  2005/10/11 16:52:29  tschachim
-  *	Added switches, COAS and MFDs, bugfixes.
-  *	
-  *	Revision 1.66  2005/09/30 11:25:48  tschachim
-  *	Added ECS meters and switches.
-  *	
-  *	Revision 1.65  2005/08/24 00:30:00  movieman523
-  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
-  *	
-  *	Revision 1.64  2005/08/23 22:18:47  movieman523
-  *	SPS switch now works.
-  *	
-  *	Revision 1.63  2005/08/23 21:29:03  movieman523
-  *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
-  *	
-  *	Revision 1.62  2005/08/23 20:13:12  movieman523
-  *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
-  *	
-  *	Revision 1.61  2005/08/22 19:47:33  movieman523
-  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
-  *	
-  *	Revision 1.60  2005/08/21 22:21:00  movieman523
-  *	Fixed SM RCS and activated SIVB RCS at all times for now.
-  *	
-  *	Revision 1.59  2005/08/21 16:23:32  movieman523
-  *	Added more alarms.
-  *	
-  *	Revision 1.58  2005/08/21 13:13:43  movieman523
-  *	Wired in a few caution and warning lights.
-  *	
-  *	Revision 1.57  2005/08/21 11:51:59  movieman523
-  *	Initial version of CSM caution and warning lights: light test switch now works.
-  *	
-  *	Revision 1.56  2005/08/20 17:50:41  movieman523
-  *	Added FDAI state save and load.
-  *	
-  *	Revision 1.55  2005/08/20 17:21:25  movieman523
-  *	Added dv Thrust switches.
-  *	
-  *	Revision 1.54  2005/08/20 11:14:52  movieman523
-  *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
-  *	
-  *	Revision 1.53  2005/08/19 21:33:20  movieman523
-  *	Added initial random failure support.
-  *	
-  *	Revision 1.52  2005/08/19 20:05:45  movieman523
-  *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
-  *	
-  *	Revision 1.51  2005/08/19 18:38:13  movieman523
-  *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
-  *	
-  *	Revision 1.50  2005/08/19 13:41:47  tschachim
-  *	Added FDAI.
-  *	
-  *	Revision 1.49  2005/08/18 20:54:16  movieman523
-  *	Added Main Release switch and wired it up to the parachutes.
-  *	
-  *	Revision 1.48  2005/08/18 19:12:21  movieman523
-  *	Added Event Timer switches and null Event Timer class.
-  *	
-  *	Revision 1.47  2005/08/18 00:22:53  movieman523
-  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
-  *	
-  *	Revision 1.46  2005/08/17 22:54:26  movieman523
-  *	Added ELS and CM RCS switches.
-  *	
-  *	Revision 1.45  2005/08/17 00:01:59  movieman523
-  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
-  *	
-  *	Revision 1.44  2005/08/16 20:55:23  movieman523
-  *	Added first saturn-specific switch for Xlunar Inject.
-  *	
-  *	Revision 1.43  2005/08/16 18:54:30  movieman523
-  *	Added Altimeter and launch vehicle switches.
-  *	
-  *	Revision 1.42  2005/08/15 21:37:02  movieman523
-  *	Added FDAI switches.
-  *	
-  *	Revision 1.41  2005/08/15 19:47:08  movieman523
-  *	Added BMAG switches.
-  *	
-  *	Revision 1.40  2005/08/15 19:25:03  movieman523
-  *	Added CSM attitude control switches and removed old ones.
-  *	
-  *	Revision 1.39  2005/08/15 18:48:50  movieman523
-  *	Moved the stage destroy code into a generic function for Saturn V and 1b.
-  *	
-  *	Revision 1.38  2005/08/15 02:37:57  movieman523
-  *	SM RCS is now wired up.
-  *	
-  *	Revision 1.37  2005/08/13 20:20:17  movieman523
-  *	Created MissionTimer class and wired it into the LEM and CSM.
-  *	
-  *	Revision 1.36  2005/08/13 16:41:15  movieman523
-  *	Fully wired up the CSM caution and warning switches.
-  *	
-  *	Revision 1.35  2005/08/13 14:59:24  movieman523
-  *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
-  *	
-  *	Revision 1.34  2005/08/13 14:21:36  movieman523
-  *	Added beginnings of caution and warning system.
-  *	
-  *	Revision 1.33  2005/08/13 11:48:26  movieman523
-  *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
-  *	
-  *	Revision 1.32  2005/08/13 00:43:50  movieman523
-  *	Added more caution and warning switches.
-  *	
-  *	Revision 1.31  2005/08/13 00:09:43  movieman523
-  *	Added IMU Cage switch
-  *	
-  *	Revision 1.30  2005/08/12 23:15:49  movieman523
-  *	Added switches to update mission time display.
-  *	
-  *	Revision 1.29  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.28  2005/08/08 20:33:00  movieman523
-  *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
-  *	
-  *	Revision 1.27  2005/08/06 01:12:52  movieman523
-  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
-  *	
-  *	Revision 1.26  2005/08/05 13:02:54  tschachim
-  *	Added crawler callback function LaunchVesselRolloutEnd
-  *	
-  *	Revision 1.25  2005/08/04 01:06:03  flydba
-  *	*** empty log message ***
-  *	
-  *	Revision 1.24  2005/08/01 19:07:47  movieman523
-  *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
-  *	
-  *	Revision 1.23  2005/07/31 01:43:13  movieman523
-  *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
-  *	
-  *	Revision 1.22  2005/07/30 16:04:55  tschachim
-  *	Added systemsState for the internal systems
-  *	
-  *	Revision 1.21  2005/07/30 02:05:55  movieman523
-  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
-  *	
-  *	Revision 1.20  2005/07/29 23:05:38  movieman523
-  *	Added Inertial Guidance Mode start time to scenario file.
-  *	
-  *	Revision 1.19  2005/07/29 22:44:05  movieman523
-  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
-  *	
-  *	Revision 1.18  2005/07/19 15:58:57  tschachim
-  *	new switches
-  *	
-  *	Revision 1.17  2005/07/06 22:11:31  tschachim
-  *	Finished SequencerSwitchesRow, no functionality yet
-  *	
-  *	Revision 1.16  2005/06/06 11:58:52  tschachim
-  *	New switches, PanelSwitchScenarioHandler
-  *	
-  *	Revision 1.15  2005/05/31 02:12:08  movieman523
-  *	Updated pre-entry burn variables and wrote most of the code to handle them.
-  *	
-  *	Revision 1.14  2005/05/31 00:17:33  movieman523
-  *	Added CSMACCEL variables for unmanned flights which made burns just before re-entry to raise velocity to levels similar to a return from the moon.
-  *	
-  *	Revision 1.13  2005/05/26 15:51:11  tschachim
-  *	New fuel cell displays and controls
-  *	
-  *	Revision 1.12  2005/05/18 23:34:23  movieman523
-  *	Added roughly correct masses for the various Saturn payloads.
-  *	
-  *	Revision 1.11  2005/05/05 21:33:46  tschachim
-  *	Introduced cryo fans and fuel cell indicators
-  *	Renamed some toggleswitch interfaces and functions
-  *	
-  *	Revision 1.10  2005/04/22 13:59:46  tschachim
-  *	Introduced PanelSDK
-  *	Panelid defines
-  *	New switches
-  *	
-  *	Revision 1.9  2005/04/14 23:12:44  movieman523
-  *	Added post-splashdown audio support. Unfortunately I can't test this at the moment as the control panel switches for getting out of the CM after splashdown aren't working :).
-  *	
-  *	However, it's pretty simple code, so 90+% likely to work.
-  *	
-  *	Revision 1.8  2005/04/01 14:22:00  tschachim
-  *	Added RCSIndicatorsSwitch
-  *	
-  *	Revision 1.7  2005/03/13 21:20:12  chode99
-  *	Added support for accurate g-gauge calculations.
-  *	
-  *	Revision 1.6  2005/03/11 17:54:00  tschachim
-  *	Introduced GuardedToggleSwitch and GuardedThreePosSwitch
-  *	
-  *	Revision 1.5  2005/03/09 22:09:02  tschachim
-  *	Docking panel camera without changing direction from Yogenfrutz
-  *	Switchable docking panel MFD
-  *	
-  *	Revision 1.4  2005/03/09 00:24:15  chode99
-  *	Added header stuff for SII retrorockets.
-  *	
-  *	Revision 1.3  2005/03/03 17:54:13  tschachim
-  *	new panel and MFD variables
-  *	
-  *	Revision 1.2  2005/02/18 00:44:06  movieman523
-  *	Added new Apollo 13 sounds, removed unused MESHHANDLEs.
-  *	
-  *	Revision 1.1  2005/02/11 12:17:55  tschachim
-  *	Initial version
   *	
   **************************************************************************/
 
@@ -638,9 +336,6 @@ public:
 	void SetEngineIndicator(int i);
 	void ClearEngineIndicator(int i);
 
-	bool TLIDone() { return TLIBurnDone; };
-	bool isTLICapable() { return TLICapableBooster; };
-
 	void UpdateLaunchTime(double t);
 
 	//
@@ -649,8 +344,6 @@ public:
 
 	void DefaultCMMeshSetup();
 
-	virtual bool SIVBStart();
-	virtual void SIVBStop();
 	virtual void SetRCSState(int Quad, int Thruster, bool Active);
 	virtual void SetSPSState(bool Active);
 
@@ -688,9 +381,6 @@ public:
 	int GetApolloNo() { return ApolloNo; };
 	double GetMissionTime() { return MissionTime; };
 
-	void EnableTLI();
-	void DisableTLI() { TLIEnabled = false; };
-
 	//
 	// CWS functions.
 	//
@@ -722,6 +412,9 @@ public:
 	int GetRotationalSwitchState(char *switchName);
 	bool PyrosArmed();
 	bool SECSLogicActive();
+	void SlowIfDesired();
+	void ActivateS4RCS();
+	void DeactivateS4RCS();
 
 protected:
 
@@ -760,7 +453,6 @@ protected:
 
 	bool autopilot;
 	bool SIISepState;
-	bool TLIBurnDone;
 	bool ABORT_IND;
 
 	bool DeleteLaunchSite;
@@ -2232,7 +1924,6 @@ protected:
 	// old stuff begin
 
 	SwitchRow P15Row;
-
 	SwitchRow LPSRow;
 
 	// old stuff end
@@ -2271,7 +1962,6 @@ protected:
 	// SIVB burn info for unmanned flights.
 	//
 
-	bool SIVBBurn;
 	double SIVBBurnStart;
 	double SIVBApogee;
 
@@ -2294,7 +1984,6 @@ protected:
 	double CSMAccelPitch;
 
 	bool TLICapableBooster;
-	bool TLIEnabled;
 	bool SkylabSM;
 	bool NoHGA;
 	bool SkylabCM;
@@ -2489,7 +2178,6 @@ protected:
 	void GenericTimestep(double simt, double simdt);
 	void SystemsInit();
 	void SystemsTimestep(double simt, double simdt);
-	void SIVBBoiloff();
 	void SetSIVBThrusters(bool active);
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);
 	void AttitudeLaunchSIVB();
@@ -2498,7 +2186,6 @@ protected:
 	void StageOrbitSIVB(double simt, double simdt);
 	void JostleViewpoint(double amount);
 	double CalculateApogeeTime();
-	void SlowIfDesired();
 	void UpdatePayloadMass();
 	double GetCPitch(double t);
 	double GetJ2ISP(double ratio);
@@ -2514,8 +2201,6 @@ protected:
 	bool CabinFansActive();
 	bool CabinFan1Active();
 	bool CabinFan2Active();
-	void ActivateS4RCS();
-	void DeactivateS4RCS();
 	void ActivateCSMRCS();
 	void DeactivateCSMRCS();
 	void ActivateCMRCS();
