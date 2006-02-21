@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/02/02 18:51:50  tschachim
+  *	Bugfix.
+  *	
   *	Revision 1.51  2006/02/01 18:17:30  tschachim
   *	Added TwoSourceSwitch::SwitchTo function.
   *	
@@ -2430,6 +2433,7 @@ bool EventTimerResetSwitch::CheckMouseClick(int event, int mx, int my)
 			if (IsUp()) {
 				timer->SetCountUp(TIMER_COUNT_NONE);
 				timer->Reset();
+				timer->SetRunning(false);
 			}
 			else if (IsCenter()) {
 				timer->SetCountUp(TIMER_COUNT_UP);
