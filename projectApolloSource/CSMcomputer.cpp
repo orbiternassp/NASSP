@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2006/02/15 01:07:37  movieman523
+  *	Revised TLI burn so hopefully it will work with the Virtual AGC.
+  *	
   *	Revision 1.36  2006/02/14 19:35:41  tschachim
   *	Bugfix Colossus 3 pad load.
   *	
@@ -154,10 +157,8 @@
 
 #include "ioChannels.h"
 
-static const double ERADIUS2 = (ERADIUS * ERADIUS * 1000000);
-
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p) : 
-	ApolloGuidance(s, display, im, p), dsky2(display2)
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, IU &i) : 
+	ApolloGuidance(s, display, im, p), dsky2(display2), iu(i)
 
 {
 	BurnTime = 0;
@@ -320,10 +321,12 @@ void CSMcomputer::DisplayNounData(int noun)
 			ELEMENTS el;
 			double mjd_ref;
 
+			OBJHANDLE hbody = OurVessel->GetGravityRef();
+			double bradius = oapiGetSize(hbody);
 			OurVessel->GetElements(el, mjd_ref);
 
-			double apogee = (el.a * (1.0 + el.e)) - (ERADIUS * 1000);
-			double perigee = (el.a * (1.0 - el.e)) - (ERADIUS * 1000);
+			double apogee = (el.a * (1.0 + el.e)) - (bradius * 1000);
+			double perigee = (el.a * (1.0 - el.e)) - (bradius * 1000);
 
 			if (apogee < 0)
 				apogee = 0;
@@ -336,7 +339,7 @@ void CSMcomputer::DisplayNounData(int noun)
 			// surface.
 			//
 
-			double g = CurrentG() - ((CurrentVelX * CurrentVelX + CurrentVelZ * CurrentVelZ) / (CurrentAlt + (ERADIUS * 1000)));
+			double g = CurrentG() - ((CurrentVelX * CurrentVelX + CurrentVelZ * CurrentVelZ) / (CurrentAlt + (bradius * 1000)));
 			double tff = CalcTFF(CurrentVelY, CurrentAlt, g);
 
 			int	min = (int)(tff / 60);
@@ -474,9 +477,7 @@ bool CSMcomputer::ValidateProgram(int prog)
 		return true;
 
 	case 15:
-		Saturn *sat = (Saturn *) OurVessel;
-		return sat->isTLICapable();
-
+		return iu.IsTLICapable();
 	}
 
 	return false;
@@ -715,7 +716,7 @@ void CSMcomputer::DoTLICalcs(double simt)
 	double fuelmass = OurVessel->GetFuelMass();
 	double thrust = MaxThrust;
 
-	double massrequired = mass * (1 - exp(-((DesiredDeltaV - ThrustDecayDV) / isp)));
+	double massrequired = mass * (1.0 - exp(-((DesiredDeltaV - ThrustDecayDV) / isp)));
 
 	LightCompActy();
 
@@ -727,12 +728,11 @@ void CSMcomputer::DoTLICalcs(double simt)
 	double deltaT = massrequired / (thrust / isp);
 
 	//
-	// Start the burn early, subtracting half the burn length, and 25
-	// seconds for SIVB startup.
+	// Start the burn early, subtracting half the burn length.
 	//
 
-	BurnStartTime = (BurnTime - (deltaT / 2) - 25.0);
-	BurnEndTime = BurnTime + (deltaT / 2);
+	BurnStartTime = BurnTime - (deltaT / 2.0);
+	BurnEndTime = BurnTime + (deltaT / 2.0);
 
 	//
 	// Now calculate the cutoff velocity.
@@ -758,8 +758,11 @@ void CSMcomputer::DoTLICalcs(double simt)
 double CSMcomputer::CurrentG()
 
 {
-	double CurrentDist = (ERADIUS * 1000) + CurrentAlt;
-	return (G * ERADIUS2) / (CurrentDist * CurrentDist);
+	OBJHANDLE hbody = OurVessel->GetGravityRef();
+	double bradius = oapiGetSize(hbody);
+
+	double CurrentDist = (bradius * 1000.) + CurrentAlt;
+	return (G * bradius * bradius * 1000000.) / (CurrentDist * CurrentDist);
 }
 
 void CSMcomputer::UpdateTLICalcs(double simt)
@@ -803,7 +806,7 @@ void CSMcomputer::Prog15(double simt)
 		SetVerbNounAndFlash(6, 95);
 		ProgState++;
 
-		NextEventTime = (BurnStartTime - (9 * 60 + 38));
+		NextEventTime = (BurnStartTime - (9.0 * 60.0 + 38.0));
 
 		if (NextEventTime < simt)
 			NextEventTime = simt;
@@ -817,10 +820,9 @@ void CSMcomputer::Prog15(double simt)
 	case 5:
 		if (simt > NextEventTime) {
 			LightCompActy();
-			Saturn *sat = (Saturn *)OurVessel;
 			LightUplink();
-			sat->SetSIISep();
 			SetOutputChannelBit(012, 13, true);
+
 			ProgState++;
 			NextEventTime += 10;
 		}
@@ -829,10 +831,9 @@ void CSMcomputer::Prog15(double simt)
 	case 6:
 		if (simt > NextEventTime) {
 			LightCompActy();
-			Saturn *sat = (Saturn *)OurVessel;
 			DoTLICalcs(simt);
 			ClearUplink();
-			sat->ClearSIISep();
+
 			ProgState++;
 			NextEventTime = BurnStartTime - 105;
 		}
@@ -843,7 +844,6 @@ void CSMcomputer::Prog15(double simt)
 			BlankAll();
 
 			LightCompActy();
-			soundlib.LoadMissionSound(STLI, GO_FOR_TLI_SOUND, NULL);
 
 			VerbRunning = 0;
 			NounRunning = 0;
@@ -862,22 +862,6 @@ void CSMcomputer::Prog15(double simt)
 
 			DoTLICalcs(simt);
 
-			//
-			// Reset time acceleration to normal.
-			//
-
-			oapiSetTimeAcceleration (1);
-
-
-			//
-			// Only play this the first time.
-			//
-
-			if (STLI.isValid() && !(sat->TLIDone())) {
-				STLI.play();
-				STLI.done();
-			}
-
 			ProgState++;
 			NextEventTime += 10;
 		}
@@ -885,7 +869,6 @@ void CSMcomputer::Prog15(double simt)
 
 	case 9:
 		if (simt >= NextEventTime) {
-			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
 			DoTLICalcs(simt);
 
 			if (simt > (BurnStartTime - 20)) {
@@ -901,101 +884,54 @@ void CSMcomputer::Prog15(double simt)
 	case 10:
 		if (simt >= NextEventTime) {
 			LightCompActy();
-			Saturn *sat = (Saturn *)OurVessel;
-			sat->SetSIISep();
 			NextEventTime = BurnStartTime - 18;
 			ProgState++;
 		}
 		break;
 
-
 	case 11:
 		if (simt >= NextEventTime) {
 			LightCompActy();
-			Saturn *sat = (Saturn *)OurVessel;
-			sat->ClearSIISep();
 			NextEventTime = BurnStartTime - 10.9;
-			soundlib.LoadSound(Scount, COUNT10_SOUND);
 			ProgState++;
 		}
 		break;
 
 	case 12:
 		if (simt >= NextEventTime) {
-
-			//
-			// Reset time acceleration to normal.
-			//
-
-			oapiSetTimeAcceleration (1);
-
-			//
-			// And play the countdown.
-			//
-
-
 			DoTLICalcs(simt);
-
-			Scount.play(NOLOOP,245);
-			Scount.done();
-
-			soundlib.LoadMissionSound(STLIStart, TLI_START_SOUND, NULL);
 
 			ProgState++;
 			NextEventTime = BurnStartTime - 1;
 		}
 		break;
 
-	//
-	// One second before the burn the engine light comes
-	// on to warn the crew.
-	//
-
 	case 13:
 		if (simt >= NextEventTime) {
 			LightCompActy();
-			Saturn *sat = (Saturn *)OurVessel;
+
 			NextEventTime = BurnStartTime;
-			sat->SetEngineIndicator(1);
 			ProgState++;
 		}
 		break;
-
-	//
-	// Signal the SIVB to start.
-	//
 
 	case 14:
 		if (simt > BurnStartTime) {
 			LightCompActy();
-			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
-			ProgState++;
 			LastAlt = CurrentAlt;
+
 			NextEventTime = simt + 1;
+			ProgState++;
 		}
 		break;
 
 	//
-	// We should really wait for the output channel bit to be cleared here.
-	//
-
-	//
 	// Ignition!
-	//
-	// Oddly, the engine indicator is turned _off_ here.
-	//
 
 	case 15:
 		if (OurVessel->GetEngineLevel(ENGINE_MAIN) >= 1.0) {
-			if (STLIStart.isValid()) {
-				if (oapiGetTimeAcceleration () < 10)
-					STLIStart.play();
-				STLIStart.done();
-			}
 
 			LightCompActy();
-			Saturn *sat = (Saturn *) OurVessel;
-			sat->ClearEngineIndicator(1);
 			ProgState++;
 		}
 
@@ -1004,46 +940,31 @@ void CSMcomputer::Prog15(double simt)
 		//
 
 	case 16:
-		{
-			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
+		if (simt > NextEventTime) {
+			UpdateTLICalcs(simt);
+			NextEventTime = simt + 0.5;
+		}
 
-			if (simt > NextEventTime) {
-				UpdateTLICalcs(simt);
-				NextEventTime = simt + 0.5;
-			}
+		//
+		// Cut off the engine at the appropriate velocity.
+		//
+		if (CurrentRVel >= CutOffVel) {
+			SetOutputChannelBit(012, 13, false);
+			SetOutputChannelBit(012, 14, true);
+			SetVerbNoun(6, 95);
 
-			//
-			// Cut off the engine at the appropriate velocity.
-			//
-			// This is indicated to the crew by the engine light
-			// coming on.
-			//
-
-			if (CurrentRVel >= CutOffVel) {
-				Saturn *sat = (Saturn *)OurVessel;
-				SetOutputChannelBit(012, 13, false);
-				SetOutputChannelBit(012, 14, true);
-				SetVerbNoun(6, 95);
-				sat->SetEngineIndicator(1);
-				OurVessel->DeactivateNavmode(NAVMODE_PROGRADE);
-				NextEventTime = simt + 2.0;
-				ProgState = 17;
-			}
+			NextEventTime = simt + 2.0;
+			ProgState = 17;
 		}
 		break;
-
-		//
-		// Turn engine indicator off.
-		//
 
 	case 17:
 		if (simt >= NextEventTime) {
 			UpdateTLICalcs(simt);
 			LightCompActy();
-			Saturn *sat = (Saturn *)OurVessel;
-			sat->ClearEngineIndicator(1);
 			FlagWord5.u.ENGONBIT = 0;
 			FlagWord2.u.STEERSW = 0;
+
 			ProgState++;
 		}
 		break;
@@ -1137,35 +1058,51 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		// set launch pad latitude
 		vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 		vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
-		//vagc.Erasable[5][2] = (int16_t)((16384.0 * latitude) / TWO_PI);
 
 		// set launch pad azimuth
 		vagc.Erasable[5][0] = (int16_t)((16384.0 * heading) / TWO_PI);
 
-		// z-component of the normalized earth's rotational vector in basic reference coord.
-		// x and y are 0313 and 0315 and are zero (Colossus249)
+		// Colossus 249 criterium in SetMissionInfo
+		if (ApolloNo < 15 || ApolloNo == 1301) {
+			
+			// set launch pad longitude
+			if (longitude < 0) longitude += TWO_PI;
+			vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
+			vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
 
-		if (ApolloNo < 15 || ApolloNo == 1301) 		// Colossus249 criterium in SetMissionInfo
-			vagc.Erasable[3][0317] = 037777;			
-		else
+			// set launch pad altitude
+			//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
+			vagc.Erasable[2][0272] = 0;
+			vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
+			
+			// z-component of the normalized earth's rotational vector in basic reference coord.
+			// x and y are 0313 and 0315 and are zero
+			vagc.Erasable[3][0317] = 037777;
+
+			// set DAP data to CSM mode 
+			vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 010002;
+			vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
+			
+		} else { // Artemis 072
+
+			// set launch pad longitude
+			if (longitude < 0) longitude += TWO_PI;
+			vagc.Erasable[2][0135] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
+			vagc.Erasable[2][0136] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
+
+			// set launch pad altitude
+			//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
+			vagc.Erasable[2][0133] = 0;
+			vagc.Erasable[2][0134] = (int16_t) (0.5 * OurVessel->GetAltitude());
+
+			// z-component of the normalized earth's rotational vector in basic reference coord.
+			// x and y are 0313 and 0315 and are zero
 			vagc.Erasable[3][0315] = 037777;	
 
-		// set launch pad longitude
-		if (longitude < 0) longitude += TWO_PI;
-		vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-		vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
-
-		// set launch pad altitude
-		//State->Erasable[2][0272] = 01;	// 17.7 nmi
-		vagc.Erasable[2][0272] = 0;
-		vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
-
-		//
-		// Enable DAP. These should work, but no guarantees.
-		//
-
-		vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 010002;
-		vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
+			// set DAP data to CSM mode 
+			vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 010002;
+			vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
+		}
 #endif
 
 		PadLoaded = true;
@@ -1290,18 +1227,6 @@ void CSMcomputer::TerminateProgram()
 		{
 			Saturn *sat = (Saturn *) OurVessel;
 			sat->SetAutopilot(false);
-		}
-		break;
-
-	//
-	// 15: if we started the SIVB, then stop it.
-	//
-
-	case 15:
-		if (ProgState > 14) {
-			Saturn *sat = (Saturn *)OurVessel;
-			sat->SIVBStop();
-			sat->ClearEngineIndicator(1);
 		}
 		break;
 
@@ -1690,6 +1615,40 @@ void CSMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 			val30.Value = GetInputChannel(030);
 			dsky.SetNoAtt(!val30.Bits.IMUOperate || val30.Bits.IMUCage);
 		}
+		break;
+	}
+}
+
+void CSMcomputer::SetOutputChannelBit(int channel, int bit, bool val)
+
+{
+	ApolloGuidance::SetOutputChannelBit(channel, bit, val);
+
+	//
+	// Special-case processing.
+	//
+
+	switch (channel)
+	{
+	case 012:
+		iu.ChannelOutput(channel, OutputChannel[channel]);
+		break;
+	}
+}
+
+void CSMcomputer::SetOutputChannel(int channel, unsigned int val)
+
+{
+	ApolloGuidance::SetOutputChannel(channel, val);
+
+	//
+	// Special-case processing.
+	//
+
+	switch (channel)
+	{
+	case 012:
+		iu.ChannelOutput(channel, val);
 		break;
 	}
 }
