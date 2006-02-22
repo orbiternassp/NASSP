@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.145  2006/02/21 12:19:21  tschachim
+  *	Moved TLI sequence to the IU.
+  *	
   *	Revision 1.144  2006/02/13 21:43:32  tschachim
   *	C/W ISS light.
   *	
@@ -446,6 +449,8 @@ protected:
 	bool RCSDumpActive();
 	bool RCSPurgeActive();
 	bool LETAttached();
+
+	bool SaturnHasCSM();
 
 	//
 	// State that needs to be saved.
