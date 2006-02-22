@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2006/02/21 11:53:17  tschachim
+  *	Bugfix FDAI.
+  *	
   *	Revision 1.72  2006/02/13 21:36:21  tschachim
   *	C/W ISS light, Bugfix.
   *	
@@ -1153,15 +1156,15 @@ void Saturn::DeactivateS4RCS()
 void Saturn::ActivateCSMRCS()
 
 {
-	SetValveState(CSM_He1_TANKA_VALVE, false);
-	SetValveState(CSM_He1_TANKB_VALVE, false);
-	SetValveState(CSM_He1_TANKC_VALVE, false);
-	SetValveState(CSM_He1_TANKD_VALVE, false);
+	SetValveState(CSM_He1_TANKA_VALVE, true);
+	SetValveState(CSM_He1_TANKB_VALVE, true);
+	SetValveState(CSM_He1_TANKC_VALVE, true);
+	SetValveState(CSM_He1_TANKD_VALVE, true);
 
-	SetValveState(CSM_He2_TANKA_VALVE, false);
-	SetValveState(CSM_He2_TANKB_VALVE, false);
-	SetValveState(CSM_He2_TANKC_VALVE, false);
-	SetValveState(CSM_He2_TANKD_VALVE, false);
+	SetValveState(CSM_He2_TANKA_VALVE, true);
+	SetValveState(CSM_He2_TANKB_VALVE, true);
+	SetValveState(CSM_He2_TANKC_VALVE, true);
+	SetValveState(CSM_He2_TANKD_VALVE, true);
 
 	SetValveState(CSM_PRIPROP_TANKA_VALVE, true);
 	SetValveState(CSM_PRIPROP_TANKB_VALVE, true);
@@ -1177,15 +1180,15 @@ void Saturn::ActivateCSMRCS()
 void Saturn::DeactivateCSMRCS()
 
 {
-	SetValveState(CSM_He1_TANKA_VALVE, true);
-	SetValveState(CSM_He1_TANKB_VALVE, true);
-	SetValveState(CSM_He1_TANKC_VALVE, true);
-	SetValveState(CSM_He1_TANKD_VALVE, true);
+	SetValveState(CSM_He1_TANKA_VALVE, false);
+	SetValveState(CSM_He1_TANKB_VALVE, false);
+	SetValveState(CSM_He1_TANKC_VALVE, false);
+	SetValveState(CSM_He1_TANKD_VALVE, false);
 
-	SetValveState(CSM_He2_TANKA_VALVE, true);
-	SetValveState(CSM_He2_TANKB_VALVE, true);
-	SetValveState(CSM_He2_TANKC_VALVE, true);
-	SetValveState(CSM_He2_TANKD_VALVE, true);
+	SetValveState(CSM_He2_TANKA_VALVE, false);
+	SetValveState(CSM_He2_TANKB_VALVE, false);
+	SetValveState(CSM_He2_TANKC_VALVE, false);
+	SetValveState(CSM_He2_TANKD_VALVE, false);
 
 	SetValveState(CSM_PRIPROP_TANKA_VALVE, false);
 	SetValveState(CSM_PRIPROP_TANKB_VALVE, false);

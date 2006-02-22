@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/02/01 18:16:50  tschachim
+  *	Added TwoSourceSwitch::SwitchTo function.
+  *	
   *	Revision 1.41  2006/01/26 03:07:52  movieman523
   *	Quick hack to support low-res mesh.
   *	
@@ -216,7 +219,7 @@ public:
 		      int xoffset = 0, int yoffset = 0);
 	void SetSize(int w, int h) { width = w; height = h; };
 	void SetPosition(int xp, int yp) { x = xp; y = yp; };
-	void SetState(bool s) { state = s; };
+	virtual void SetState(bool s) { state = s; };
 	void SetOffset(int xo, int yo) {xOffset = xo; yOffset = yo; };
 	void SetSpringLoaded(int springloaded) { springLoaded = springloaded; }; 
 	virtual int GetState();
@@ -631,10 +634,11 @@ public:
 	GuardedTwoOutputSwitch() { output1 = output2 = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *o1, e_object *o2);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
 	void LoadState(char *line);
 
 protected:
-	virtual void UpdateSourceState();
+	virtual void UpdateSourceState(int newState);
 
 	e_object *output1;
 	e_object *output2;
