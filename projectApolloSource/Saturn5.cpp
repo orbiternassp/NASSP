@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2006/02/21 11:55:49  tschachim
+  *	Moved TLI sequence to the IU.
+  *	
   *	Revision 1.67  2006/02/10 21:09:22  tschachim
   *	Bugfix SivbLmSepSwitch.
   *	
@@ -1293,7 +1296,7 @@ void SaturnV::StageSix(double simt)
 		{
 		case 0:
 			if (CSMBurn) {
-				NextMissionEventTime = CSMBurnStart - 200.0;
+				NextMissionEventTime = CSMBurnStart - 100.0;
 				StageState++;
 			}
 			break;
@@ -1356,7 +1359,7 @@ void SaturnV::StageSix(double simt)
 
 		case 5:
 			if (MissionTime >= NextMissionEventTime) {
-				NextMissionEventTime = MissionTime + CalculateApogeeTime() - 400;
+				NextMissionEventTime = MissionTime + CalculateApogeeTime() - 100;
 				StageState++;
 			}
 			break;
@@ -1374,6 +1377,8 @@ void SaturnV::StageSix(double simt)
 
 		case 7:
 			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+
 				OBJHANDLE hPlanet = GetGravityRef();
 				double prad = oapiGetSize(hPlanet);
 				double pe;
@@ -1443,7 +1448,7 @@ void SaturnV::StageSix(double simt)
 
 		case 12:
 			if (MissionTime >= NextMissionEventTime) {
-				SlowIfDesired();
+//				SlowIfDesired();
 				ActivateNavmode(NAVMODE_PROGRADE);
 				ActivateSPS();
 //				SetThrusterGroupLevel(thg_main, 1.0);
@@ -1483,7 +1488,8 @@ void SaturnV::StageSix(double simt)
 
 		if (CMSepSet && (MissionTime >= CMSepTime)) {
 			SlowIfDesired();
-			bManualSeparate = true;
+			CmSmSep1Switch.SwitchTo(TOGGLESWITCH_UP);
+			CmSmSep2Switch.SwitchTo(TOGGLESWITCH_UP);
 		}
 	}
 
@@ -1770,7 +1776,7 @@ void SaturnV::SetVehicleStats()
 
 	if (VehicleNo > 500 && VehicleNo < 503) {
 		if (!S1_ThrustLoaded)
-			THRUST_FIRST_VAC = 7653000;
+			THRUST_FIRST_VAC = 7835000; // 7653000; // TODO: Temporary fix, otherwise the autopilot is not working properly, we should replace this when we figured out all parameters (masses, fuel masses etc.) of these vehicles
 		if (!S2_ThrustLoaded)
 			THRUST_SECOND_VAC = 1001000;
 		if (!S3_ThrustLoaded)

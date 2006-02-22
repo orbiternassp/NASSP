@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/02/21 12:19:52  tschachim
+  *	Moved TLI sequence to the IU.
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -139,7 +142,7 @@ void IU::Timestep(double simt, double simdt)
 				State = 100;
 			}
 			else {
-				NextMissionEventTime = SIVBBurnStart - 100.0;
+				NextMissionEventTime = SIVBBurnStart - (9.0 * 60.0) - 38.0 - 10.0;
 				State++;
 			}
 			break;
@@ -153,14 +156,12 @@ void IU::Timestep(double simt, double simdt)
 			break;
 
 		case 2:
-			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
-			NextMissionEventTime = SIVBBurnStart;
+			NextMissionEventTime = SIVBBurnStart - (9.0 * 60.0) - 38.0 ;
 			State++;
 			break;
 
 		case 3:
 			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
 				SIVBStart();
 				State = 100;
 			}

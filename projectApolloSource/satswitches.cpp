@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/02/21 11:54:04  tschachim
+  *	Moved TLI sequence to the IU.
+  *	
   *	Revision 1.9  2006/02/02 18:52:35  tschachim
   *	Improved Accel G meter.
   *	
@@ -183,6 +186,14 @@ bool SaturnSPSSwitch::CheckMouseClick(int event, int mx, int my)
 	return false;
 }
 
+void SaturnSPSSwitch::SetState(bool s)
+
+{
+	SaturnToggleSwitch::SetState(s);
+	if (sat) {
+		sat->CheckSPSState();
+	}
+}
 
 void SaturnH2PressureMeter::Init(int i, SURFHANDLE surf, SwitchRow &row, Saturn *s)
 

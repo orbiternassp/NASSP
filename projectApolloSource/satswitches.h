@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/02/02 18:52:35  tschachim
+  *	Improved Accel G meter.
+  *	
   *	Revision 1.8  2006/02/01 18:18:22  tschachim
   *	Added SaturnValveSwitch::SwitchTo function.
   *	
@@ -101,6 +104,7 @@ public:
 class SaturnSPSSwitch : public SaturnToggleSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
+	void SetState(bool s);
 };
 
 class SaturnH2PressureMeter : public MeterSwitch {

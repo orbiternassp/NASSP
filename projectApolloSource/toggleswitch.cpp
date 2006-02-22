@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/02/21 23:22:06  quetalsi
+  *	Bugfix in EVENT TIMER RESET/DOWN switch.
+  *	
   *	Revision 1.52  2006/02/02 18:51:50  tschachim
   *	Bugfix.
   *	
@@ -2250,7 +2253,7 @@ void GuardedTwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf,
 	output1 = o1;
 	output2 = o2;
 
-	UpdateSourceState();
+	UpdateSourceState(GetState());
 }
 
 bool GuardedTwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
@@ -2258,23 +2261,37 @@ bool GuardedTwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
 {
 	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my))
 	{
-		UpdateSourceState();
+		UpdateSourceState(GetState());
 		return true;
 	}
 
 	return false;
 }
 
-void GuardedTwoOutputSwitch::UpdateSourceState()
+bool GuardedTwoOutputSwitch::SwitchTo(int newState)
 
 {
-	if (IsUp()) {
+	if (GuardedToggleSwitch::SwitchTo(newState))
+	{
+		// some of these switches are spring-loaded, 
+		// so we have to use newState here
+		UpdateSourceState(newState);
+		return true;
+	}
+
+	return false;
+}
+
+void GuardedTwoOutputSwitch::UpdateSourceState(int newState)
+
+{
+	if (newState == TOGGLESWITCH_UP) {
 		if (output1)
 			output1->WireTo(this);
 		if (output2)
 			output2->WireTo(0);
 	}
-	else if (IsDown()) {
+	else if (newState == TOGGLESWITCH_DOWN) {
 		if (output1)
 			output1->WireTo(0);
 		if (output2)
@@ -2286,7 +2303,7 @@ void GuardedTwoOutputSwitch::LoadState(char *line)
 
 {
 	GuardedToggleSwitch::LoadState(line);
-	UpdateSourceState();
+	UpdateSourceState(GetState());
 }
 
 TimerUpdateSwitch::TimerUpdateSwitch()
