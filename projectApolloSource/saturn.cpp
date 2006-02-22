@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.114  2006/02/21 12:22:39  tschachim
+  *	Moved TLI sequence to the IU.
+  *	
   *	Revision 1.113  2006/02/15 01:07:38  movieman523
   *	Revised TLI burn so hopefully it will work with the Virtual AGC.
   *	
@@ -2302,6 +2305,12 @@ void Saturn::DoLaunch(double simt)
 		LaunchS.play(NOLOOP,255);
 		LaunchS.done();
 	}
+
+	//
+	// Ensure autopilot is on at launch.
+	//
+
+	autopilot = true;
 }
 
 void Saturn::GenericTimestep(double simt, double simdt)
@@ -3567,6 +3576,24 @@ void Saturn::SetGenericStageState()
 	}
 
 	CheckSMSystemsState();
+}
+
+//
+// Do we have a CSM on this launcher?
+//
+
+bool Saturn::SaturnHasCSM()
+
+{
+
+	//
+	// LM1 has a nosecap rather than a CSM.
+	//
+
+	if (SIVBPayload != PAYLOAD_LM1)
+		return true;
+
+	return false;
 }
 
 //

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2006/01/27 22:11:38  movieman523
+  *	Added support for low-res Saturn 1b.
+  *	
   *	Revision 1.30  2006/01/26 19:26:31  movieman523
   *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
   *	
@@ -140,6 +143,12 @@
 #include "sivb.h"
 #include "s1b.h"
 
+//
+// Meshes are loaded globally, once, so we use these global
+// variables for them. Nothing vessel-specific should use a
+// global variable.
+//
+
 static MESHHANDLE hSat1stg1;
 static MESHHANDLE hSat1stg1low;
 static MESHHANDLE hSat1intstg;
@@ -150,9 +159,14 @@ static MESHHANDLE hSat1stg21;
 static MESHHANDLE hSat1stg22;
 static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
+static MESHHANDLE hNosecap;
 static MESHHANDLE hastp;
 static MESHHANDLE hastp2;
 static MESHHANDLE hCOAStarget;
+
+//
+// Same for particle streams.
+//
 
 PARTICLESTREAMSPEC srb_contrail = {
 	0, 12.0, 1, 50.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
@@ -207,27 +221,46 @@ void Saturn1b::SetFirstStage ()
     AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,-1.85,24.5);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
-	mesh_dir=_V(0,SMVO,31.25);
-	AddMesh (hSM, &mesh_dir);
 
-	mesh_dir=_V(0,0,35.4);
-	meshidx =AddMesh (hCM, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	if (SaturnHasCSM()) {
 
-	// And the Crew
-	if (Crewed) {
-		mesh_dir=_V(0,0.15,35.2);
-		meshidx = AddMesh (hCMP, &mesh_dir);
+		//
+		// Add CSM.
+		//
+		
+		mesh_dir=_V(0,SMVO,31.25);
+		AddMesh (hSM, &mesh_dir);
+		mesh_dir=_V(0,0,35.4);
+		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0.15,35.2);
-		meshidx = AddMesh (hCREW, &mesh_dir);
+		//
+		// And the Crew.
+		//
+
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,35.2);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,35.2);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+
+		mesh_dir=_V(0,0,40.35);
+		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
+	else {
 
-	mesh_dir=_V(0,0,40.35);
-	meshidx = AddMesh (hsat5tower, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		//
+		// Add nosecap.
+		//
+
+		mesh_dir=_V(0,0,29.77);
+		AddMesh (hNosecap, &mesh_dir);
+	}
 
 	SetView(35.2, false);
 
@@ -243,15 +276,7 @@ void Saturn1b::SetFirstStage ()
 
 	Offset1st = -80.1;//+STG0O;
 	VECTOR3 m_exhaust_ref = {0,0,-1};
-/*    VECTOR3 m_exhaust_pos5= {1,1,Offset1st+55};
-    VECTOR3 m_exhaust_pos6= {-1,-1,Offset1st+55};
-	VECTOR3 m_exhaust_pos7= {-1,1,Offset1st+55};
-	VECTOR3 m_exhaust_pos8= {1,-1,Offset1st+55};
-	VECTOR3 m_exhaust_pos1= {3,0,Offset1st+55};
-    VECTOR3 m_exhaust_pos2= {-3,0,Offset1st+55};
-	VECTOR3 m_exhaust_pos3= {0,3,Offset1st+55};
-	VECTOR3 m_exhaust_pos4= {0,-3,Offset1st+55};
-	*/
+
 	VECTOR3 m_exhaust_pos5= {0,1.414,Offset1st+55};
     VECTOR3 m_exhaust_pos6= {1.414,0,Offset1st+55};
 	VECTOR3 m_exhaust_pos7= {0,-1.414,Offset1st+55};
@@ -329,10 +354,7 @@ void Saturn1b::SetSecondStage ()
     AddMesh (hStage2Mesh, &mesh_dir);
 	mesh_dir=_V(0,0,2.2-12.25);
 	AddMesh (hInterstageMesh, &mesh_dir);
-	mesh_dir=_V(0,4,5.2-12.25);
-    //vessel->AddMesh (hapsl, &mesh_dir);
-	mesh_dir=_V(0,-4,5.2-12.25);
-    //vessel->AddMesh (hapsh, &mesh_dir);
+
 	mesh_dir=_V(1.85,1.85,24.5-12.25);
     AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,1.85,24.5-12.25);
@@ -341,36 +363,57 @@ void Saturn1b::SetSecondStage ()
     AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
-	mesh_dir=_V(0,SMVO,31.25-12.25);
-	AddMesh (hSM, &mesh_dir);
 
-	mesh_dir=_V(0,0,35.4-12.25);
-	meshidx = AddMesh (hCM, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	if (SaturnHasCSM()) {
 
-	
-	// And the Crew
-	if (Crewed) {
-		mesh_dir=_V(0,0.15,22.95);
-		meshidx = AddMesh (hCMP, &mesh_dir);
+		//
+		// Add CSM.
+		//
+		
+		mesh_dir=_V(0,SMVO,31.25-12.25);
+		AddMesh (hSM, &mesh_dir);
+
+		mesh_dir=_V(0,0,35.4-12.25);
+		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0.15,22.95);
-		meshidx = AddMesh (hCREW, &mesh_dir);
+		//
+		// And the Crew
+		//
+
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,22.95);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,22.95);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+
+		//
+		// Don't Forget the Hatch
+		//
+
+		mesh_dir=_V(0.02,1.35,35.415-12.25);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0,40.35-12.25);
+		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
-	
+	else {
+
+		//
+		// Add nosecap.
+		//
+
+		mesh_dir=_V(0,0,29.77 - 12.25);
+		AddMesh (hNosecap, &mesh_dir);
+	}
+
     SetView(22.95, false);
-
-	//Don't Forget the Hatch
-	mesh_dir=_V(0.02,1.35,35.415-12.25);
-	meshidx = AddMesh (hFHC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	mesh_dir=_V(0,0,40.35-12.25);
-	meshidx = AddMesh (hsat5tower, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
 
 		// ************************* propellant specs **********************************
 	if (!ph_3rd)
@@ -432,10 +475,7 @@ void Saturn1b::SetSecondStage1 ()
     ClearAttExhaustRefs();
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
     AddMesh (hStage2Mesh, &mesh_dir);
-	mesh_dir=_V(0,4,5.2-12.25);
-    //vessel->AddMesh (hapsl, &mesh_dir);
-	mesh_dir=_V(0,-4,5.2-12.25);
-    //vessel->AddMesh (hapsh, &mesh_dir);
+
 	mesh_dir=_V(1.85,1.85,24.5-12.25);
     AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,1.85,24.5-12.25);
@@ -444,35 +484,57 @@ void Saturn1b::SetSecondStage1 ()
     AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
-	mesh_dir=_V(0,SMVO,31.25-12.25);
-	AddMesh (hSM, &mesh_dir);
 
-	mesh_dir=_V(0,0,35.4-12.25);
-	meshidx = AddMesh (hCM, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	if (SaturnHasCSM()) {
 
-	// And the Crew
-	if (Crewed) {
-		mesh_dir=_V(0,0.15,22.95);
-		meshidx = AddMesh (hCMP, &mesh_dir);
+		//
+		// Add CSM.
+		//
+		
+		mesh_dir=_V(0,SMVO,31.25-12.25);
+		AddMesh (hSM, &mesh_dir);
+
+		mesh_dir=_V(0,0,35.4-12.25);
+		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0.15,22.95);
-		meshidx = AddMesh (hCREW, &mesh_dir);
+		//
+		// And the Crew
+		//
+
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,22.95);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,22.95);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+
+		//
+		// Don't Forget the Hatch
+		//
+
+		mesh_dir=_V(0.02,1.35,35.415-12.25);
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0,40.35-12.25);
+		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
+	else {
 
-	
+		//
+		// Add nosecap.
+		//
+
+		mesh_dir=_V(0,0,29.77 - 12.25);
+		AddMesh (hNosecap, &mesh_dir);
+	}
+
     SetView(22.95, false);
-
-	//Don't Forget the Hatch
-	mesh_dir=_V(0.02,1.35,35.415-12.25);
-	meshidx = AddMesh (hFHC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	mesh_dir=_V(0,0,40.30-12.25);
-	meshidx = AddMesh (hsat5tower, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	SetCameraOffset (_V(-1,1.0,33.15-STG1O));
 		// ************************* propellant specs **********************************
@@ -528,13 +590,10 @@ void Saturn1b::SetSecondStage2 ()
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	//vessel->ShiftCentreOfMass (_V(0,0,12.25));
+
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
     AddMesh (hStage2Mesh, &mesh_dir);
-	mesh_dir=_V(0,4,5.2-12.25);
-    //vessel->AddMesh (hapsl, &mesh_dir);
-	mesh_dir=_V(0,-4,5.2-12.25);
-    //vessel->AddMesh (hapsh, &mesh_dir);
+
 	mesh_dir=_V(1.85,1.85,24.5-12.25);
     AddMesh (hStageSLA1Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,1.85,24.5-12.25);
@@ -543,33 +602,58 @@ void Saturn1b::SetSecondStage2 ()
     AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
-	mesh_dir=_V(0,SMVO,31.25-12.25);
-	AddMesh (hSM, &mesh_dir);
 
-	mesh_dir=_V(0,0,35.4-12.25);
-	UINT meshidx = AddMesh (hCM, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	UINT meshidx;
 
-	// And the Crew
-	if (Crewed) {
-		mesh_dir=_V(0,0.15,22.95);
-		meshidx = AddMesh (hCMP, &mesh_dir);
+	if (SaturnHasCSM()) {
+
+		//
+		// Add CSM.
+		//
+		
+		mesh_dir=_V(0,SMVO,31.25-12.25);
+		AddMesh (hSM, &mesh_dir);
+
+		mesh_dir=_V(0,0,35.4-12.25);
+		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0.15,22.95);
-		meshidx = AddMesh (hCREW, &mesh_dir);
+		//
+		// And the Crew
+		//
+
+		if (Crewed) {
+			mesh_dir=_V(0,0.15,22.95);
+			meshidx = AddMesh (hCMP, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+			mesh_dir=_V(0,0.15,22.95);
+			meshidx = AddMesh (hCREW, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+
+		//
+		// Don't Forget the Hatch
+		//
+
+		mesh_dir=_V(0.02,1.35,35.415-12.25);
+		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+		mesh_dir=_V(0,0,36.95-12.25);
+		AddMesh (hprobe, &mesh_dir);
+	}
+	else {
+
+		//
+		// Add nosecap.
+		//
+
+		mesh_dir=_V(0,0,29.77 - 12.25);
+		AddMesh (hNosecap, &mesh_dir);
 	}
 
     SetView(22.95, false);
-
-	//Don't Forget the Hatch
-	mesh_dir=_V(0.02,1.35,35.530-12.25);
-	meshidx = AddMesh (hFHC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	mesh_dir=_V(0,0,36.95-12.25);
-	AddMesh (hprobe, &mesh_dir);
 		// ************************* propellant specs **********************************
 	if (!ph_3rd)
 		ph_3rd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
@@ -725,7 +809,6 @@ void Saturn1b::DockStage (UINT dockstatus)
 		ofs5 = OFS_STAGE24;
 		vel5 = _V(-0.5,-0.5,-0.55);
 	}
-
 	else if (dockstatus == 2||dockstatus == 6)
 	{
 	 	ofs1 = RelPos;
@@ -805,43 +888,43 @@ void Saturn1b::DockStage (UINT dockstatus)
 	   	break;
 
    case 3:
-	if(bManualUnDock) {
+		if(bManualUnDock) {
 
-	//DM Jetison preparation
-	char VName2[256];
-	ofs = OFS_DOCKING2;
-	GetStatus (vs4b);
-	vs4b.eng_main = vs4b.eng_hovr = 0.0;
-	SetEngineLevel(ENGINE_MAIN, 0);
-	StageTransform(this,&vs4b,ofs,vel);
-	vs4b.status=0;
-	vs4b.vrot.x = 0.0;
-	vs4b.vrot.y = 0.0;
-	vs4b.vrot.z = 0.0;
-	if(ASTPMission){
-		GetApolloName(VName2); strcat (VName2, "-ASTPDM");
-		VESSEL::Create (VName2, "ProjectApollo/nSat1astp2", vs4b);
-		hAstpDM=oapiGetVesselByName(VName2);
-	}
-		if (ProbeJetison){
-			SetCSM2Stage ();
-			StageS.play();
-			bManualUnDock= false;
-			dockstate=4;
-			ProbeJetison=false;
-			break;
+			//DM Jetison preparation
+			char VName2[256];
+			ofs = OFS_DOCKING2;
+			GetStatus (vs4b);
+			vs4b.eng_main = vs4b.eng_hovr = 0.0;
+			SetEngineLevel(ENGINE_MAIN, 0);
+			StageTransform(this,&vs4b,ofs,vel);
+			vs4b.status=0;
+			vs4b.vrot.x = 0.0;
+			vs4b.vrot.y = 0.0;
+			vs4b.vrot.z = 0.0;
+			if(ASTPMission){
+				GetApolloName(VName2); strcat (VName2, "-ASTPDM");
+				VESSEL::Create (VName2, "ProjectApollo/nSat1astp2", vs4b);
+				hAstpDM=oapiGetVesselByName(VName2);
+			}
+			if (ProbeJetison){
+				SetCSM2Stage ();
+				StageS.play();
+				bManualUnDock= false;
+				dockstate=4;
+				ProbeJetison=false;
+				break;
+			}
+			else{
+				FIRSTCSM = false;
+				ShiftCentreOfMass (_V(0,0,-21.5));
+				SetCSMStage ();
+				SMJetS.play();
+				dockstate=4;
+				bManualUnDock= false;
+				break;
+			}
 		}
-		else{
-			FIRSTCSM = false;
-			ShiftCentreOfMass (_V(0,0,-21.5));
-			SetCSMStage ();
-			SMJetS.play();
-			dockstate=4;
-			bManualUnDock= false;
-			break;
-		}
-	}
-	break;
+		break;
    case 4:
 	   //vessel->Undock(0);
 	   if (hAstpDM){
@@ -878,6 +961,7 @@ void Saturn1b::SeparateStage (int stage)
 		ofs1 = OFS_STAGE1;
 		vel1 = _V(0,0,-4.0);
 	}
+
 	if (stage == LAUNCH_STAGE_ONE && bAbort)
 	{
 		ofs1= OFS_ABORT;
@@ -910,6 +994,7 @@ void Saturn1b::SeparateStage (int stage)
 		vel2 = _V(0.0,0.0,0.3);
 
 	}
+
 	if (stage == CM_STAGE)
 	{
 		ofs1 = OFS_CM_CONE;
@@ -987,16 +1072,19 @@ void Saturn1b::SeparateStage (int stage)
 
 	if (stage == LAUNCH_STAGE_TWO && !bAbort )
 	{
+		if (SaturnHasCSM()) {
+			vs1.vrot.x = 0.0;
+			vs1.vrot.y = 0.0;
+			vs1.vrot.z = 0.0;
+			TowerJS.play();
 
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
-		TowerJS.play();
+			char VName[256];
+			GetApolloName(VName); strcat (VName, "-TWR");
+
+			hesc1 = oapiCreateVessel(VName,"ProjectApollo/nsat1btower",vs1);
+		}
+
 		TowerJS.done();
-		char VName[256];
-		GetApolloName(VName); strcat (VName, "-TWR");
-
-		hesc1 = oapiCreateVessel(VName,"ProjectApollo/nsat1btower",vs1);
 		SetSecondStage2 ();
 		AddRCS_S4B();
 	}
@@ -1082,14 +1170,17 @@ void Saturn1b::SeparateStage (int stage)
 	{
 		SetChuteStage2 ();
 	}
+
 	if (stage == CM_ENTRY_STAGE_TWO)
 	{
 		SetChuteStage3 ();
 	}
+
 	if (stage == CM_ENTRY_STAGE_FOUR)
 	{
 		SetChuteStage4 ();
 	}
+
 	if (stage == CM_ENTRY_STAGE_FIVE)
 	{
 		SetSplashStage ();
@@ -1130,6 +1221,10 @@ void Saturn1b::SeparateStage (int stage)
 	}
 }
 
+//
+// Load the meshes once per DLL.
+//
+
 void Saturn1bLoadMeshes()
 
 {
@@ -1147,8 +1242,12 @@ void Saturn1bLoadMeshes()
 	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
 	hastp2 = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
+	hNosecap = oapiLoadMeshGlobal ("ProjectApollo/nsat1aerocap");
 }
 
+//
+// Update per-vessel handles to the appropriate low-res or high-res meshes.
+//
 
 void Saturn1b::SetupMeshes()
 

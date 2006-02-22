@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/02/21 11:57:09  tschachim
+  *	Fixes to make code build with MS C++ 2005
+  *	
   *	Revision 1.44  2006/01/27 22:11:37  movieman523
   *	Added support for low-res Saturn 1b.
   *	
@@ -1123,8 +1126,18 @@ void Saturn1b::CalculateStageMass()
 	SM_Mass = SM_EmptyMass + SM_FuelMass;
 	CM_Mass = CM_EmptyMass + CM_FuelMass;
 
-	Stage3Mass = SM_Mass + CM_Mass;
-	Stage2Mass = Stage3Mass + SII_EmptyMass;
+	//
+	// This needs fixing.
+	//
+
+	if (SaturnHasCSM()) {
+		Stage3Mass = SM_Mass + CM_Mass;
+	}
+	else {
+		Stage3Mass = 0.0;
+	}
+
+	Stage2Mass = Stage3Mass + SII_EmptyMass + S4PL_Mass;
 	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass + Abort_Mass;
 }
 
