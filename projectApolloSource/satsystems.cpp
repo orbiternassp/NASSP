@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2006/02/22 18:53:48  tschachim
+  *	Bugfixes for Apollo 4-6.
+  *	
   *	Revision 1.73  2006/02/21 11:53:17  tschachim
   *	Bugfix FDAI.
   *	
@@ -2001,6 +2004,10 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 	as.Phase1Current = 0.0;
 	as.Phase2Current = 0.0;
 	as.Phase3Current = 0.0;
+	as.Phase1Voltage = 0.0;
+	as.Phase2Voltage = 0.0;
+	as.Phase3Voltage = 0.0;
+	as.Enabled_AC_CWS = true;
 
 	switch (busno) {
 	case 1:
@@ -2009,6 +2016,10 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Current = ACBus1PhaseA.Current();
 		as.Phase2Current = ACBus1PhaseB.Current();
 		as.Phase3Current = ACBus1PhaseC.Current();
+		as.Phase1Voltage = ACBus1PhaseA.Voltage();
+		as.Phase2Voltage = ACBus1PhaseB.Voltage();
+		as.Phase3Voltage = ACBus1PhaseC.Voltage();
+		as.Enabled_AC_CWS = AcBus1ResetSwitch.IsCenter();
 		break;
 
 	case 2:
@@ -2017,6 +2028,10 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Current = ACBus2PhaseA.Current();
 		as.Phase2Current = ACBus2PhaseB.Current();
 		as.Phase3Current = ACBus2PhaseC.Current();
+		as.Phase1Voltage = ACBus2PhaseA.Voltage();
+		as.Phase2Voltage = ACBus2PhaseB.Voltage();
+		as.Phase3Voltage = ACBus2PhaseC.Voltage();
+		as.Enabled_AC_CWS = AcBus2ResetSwitch.IsCenter();
 		break;
 	}
 }

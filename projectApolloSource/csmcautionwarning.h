@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/02/18 21:39:42  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.11  2006/02/13 21:42:31  tschachim
   *	C/W ISS light.
   *	
@@ -80,6 +83,10 @@ typedef struct {
 	double Phase1Current;
 	double Phase2Current;
 	double Phase3Current;
+	double Phase1Voltage;
+	double Phase2Voltage;
+	double Phase3Voltage;
+	bool Enabled_AC_CWS;
 } ACBusStatus;
 
 class CSMCautionWarningSystem : public CautionWarningSystem {
@@ -110,6 +117,7 @@ protected:
 	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base);
 	bool FuelCellBad(FuelCellStatus &fc, int index);
 	bool ACOverloaded(ACBusStatus &as);
+	bool ACUndervoltage(ACBusStatus &as);
 	bool LightPowered(int i);
 };
 

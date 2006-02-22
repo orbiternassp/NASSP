@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/02/18 21:38:55  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.19  2006/02/13 21:29:00  tschachim
   *	ISS light.
   *	
@@ -182,6 +185,17 @@ bool CSMCautionWarningSystem::ACOverloaded(ACBusStatus &as)
 	return false;
 }
 
+
+bool CSMCautionWarningSystem::ACUndervoltage(ACBusStatus &as)
+
+{
+	if (as.Phase1Voltage < 96 || as.Phase2Voltage < 96 || as.Phase3Voltage < 96)
+		return true;
+
+	return false;
+
+}
+
 //
 // We'll only check the internal systems five times a second (x time acceleration). That should cut the overhead to
 // a minimum.
@@ -335,16 +349,32 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// AC bus overload: overload light will come on if total output exceeds 250% of rated current, or a
 		// single phase output exceeds 300% of rated current. However, I'm not sure what the rated
 		// current actually is!
-		//
+		// AC bus undervoltage: AC_BUS1/2 light will come on if voltage on any phase is
+		// < 96 volts and reset switch is center. Lights only come off if reset switch is out of center.
 
 		ACBusStatus as;
 
 		sat->GetACBusStatus(as, 1);
-		SetLight(CSM_CWS_AC_BUS1_OVERLOAD, ACOverloaded(as));
-
+		
+		if (as.Enabled_AC_CWS) {
+			if (ACOverloaded(as)) SetLight(CSM_CWS_AC_BUS1_OVERLOAD, true);
+			if (ACUndervoltage(as)) SetLight(CSM_CWS_AC_BUS1_LIGHT, true);
+		}
+		else {
+			SetLight(CSM_CWS_AC_BUS1_OVERLOAD, false);
+			SetLight(CSM_CWS_AC_BUS1_LIGHT, false);
+		}
+		
 		sat->GetACBusStatus(as, 2);
-		SetLight(CSM_CWS_AC_BUS2_OVERLOAD, ACOverloaded(as));
-
+		
+		if (as.Enabled_AC_CWS) {
+			if (ACOverloaded(as)) SetLight(CSM_CWS_AC_BUS2_OVERLOAD, true);
+			if (ACUndervoltage(as)) SetLight(CSM_CWS_AC_BUS2_LIGHT, true);
+		}
+		else {
+			SetLight(CSM_CWS_AC_BUS2_OVERLOAD, false);
+			SetLight(CSM_CWS_AC_BUS2_LIGHT, false);
+		}
 		//
 		// Oxygen flow: "Flow rates of 1 pound per hour or more with a duration in excess of 16.5 
 		// seconds will illuminate a light on the caution and warning panel to alert the crew to 
