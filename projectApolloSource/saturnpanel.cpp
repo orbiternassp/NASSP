@@ -23,9 +23,6 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.143  2006/02/21 23:20:40  quetalsi
-  *	Bugfix in EVENT TIMER RESET/DOWN switch.
-  *	
   *	Revision 1.142  2006/02/13 21:40:28  tschachim
   *	CMCModeSwitch up by default.
   *	
@@ -1200,7 +1197,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_TAPERECORDERSWITCHES,      					_R(2838, 1250, 2958, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_POWERSWITCHES,      							_R(2967, 1250, 3044, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PCMBITRATESWITCH,							_R(3053, 1250, 3130, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ACINVERTERSWITCHES,							_R(3182, 1050, 3345, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ACINVERTERSWITCHES,							_R(3182, 1050, 3345, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACINDICATORROTARY,							_R(3389, 1208, 3473, 1292), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		// Display & keyboard (DSKY), main panel uses the main DSKY.
@@ -1686,8 +1683,8 @@ void Saturn::SetSwitches(int panel) {
 
 	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
 	RCSIndicatorsSwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], RCSIndicatorsSwitchRow);
-	RCSIndicatorsSwitch.SetSource(1, &CMRCS);
-	RCSIndicatorsSwitch.SetSource(2, &CMRCS);
+	RCSIndicatorsSwitch.SetSource(1, &CMRCS1);
+	RCSIndicatorsSwitch.SetSource(2, &CMRCS2);
 	RCSIndicatorsSwitch.SetSource(3, &SMQuadARCS);
 	RCSIndicatorsSwitch.SetSource(4, &SMQuadBRCS);
 	RCSIndicatorsSwitch.SetSource(5, &SMQuadCRCS);
@@ -4121,11 +4118,11 @@ void Saturn::InitSwitches() {
 	AcBus1Switch1.Register(PSH, "AcBus1Switch1", true);
 	AcBus1Switch2.Register(PSH, "AcBus1Switch2", false);
 	AcBus1Switch3.Register(PSH, "AcBus1Switch3", false);
-	AcBus1ResetSwitch.Register(PSH, "AcBus1ResetSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	AcBus1ResetSwitch.Register(PSH, "AcBus1ResetSwitch", THREEPOSSWITCH_CENTER);
 	AcBus2Switch1.Register(PSH, "AcBus2Switch1", false);
 	AcBus2Switch2.Register(PSH, "AcBus2Switch2", true);
 	AcBus2Switch3.Register(PSH, "AcBus2Switch3", false);
-	AcBus2ResetSwitch.Register(PSH, "AcBus2ResetSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	AcBus2ResetSwitch.Register(PSH, "AcBus2ResetSwitch", THREEPOSSWITCH_CENTER);
 
 	MissionTimerHoursSwitch.Register(PSH, "MissionTimerHoursSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	MissionTimerMinutesSwitch.Register(PSH, "MissionTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
@@ -4255,7 +4252,7 @@ void Saturn::InitSwitches() {
 
 	FCSMSPSASwitch.Register(PSH, "FCSMSPSASwitch", 0);
 	FCSMSPSBSwitch.Register(PSH, "FCSMSPSBSwitch", 0);
-	EventTimerUpDownSwitch.Register(PSH, "EventTimerUpDownSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	EventTimerUpDownSwitch.Register(PSH, "EventTimerUpDownSwitch", THREEPOSSWITCH_CENTER);
 	EventTimerControlSwitch.Register(PSH, "EventTimerControlSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	EventTimerMinutesSwitch.Register(PSH, "EventTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	EventTimerSecondsSwitch.Register(PSH, "EventTimerSecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);

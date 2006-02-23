@@ -23,9 +23,6 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.74  2006/02/22 18:53:48  tschachim
-  *	Bugfixes for Apollo 4-6.
-  *	
   *	Revision 1.73  2006/02/21 11:53:17  tschachim
   *	Bugfix FDAI.
   *	
@@ -1159,15 +1156,15 @@ void Saturn::DeactivateS4RCS()
 void Saturn::ActivateCSMRCS()
 
 {
-	SetValveState(CSM_He1_TANKA_VALVE, true);
-	SetValveState(CSM_He1_TANKB_VALVE, true);
-	SetValveState(CSM_He1_TANKC_VALVE, true);
-	SetValveState(CSM_He1_TANKD_VALVE, true);
+	SetValveState(CSM_He1_TANKA_VALVE, false);
+	SetValveState(CSM_He1_TANKB_VALVE, false);
+	SetValveState(CSM_He1_TANKC_VALVE, false);
+	SetValveState(CSM_He1_TANKD_VALVE, false);
 
-	SetValveState(CSM_He2_TANKA_VALVE, true);
-	SetValveState(CSM_He2_TANKB_VALVE, true);
-	SetValveState(CSM_He2_TANKC_VALVE, true);
-	SetValveState(CSM_He2_TANKD_VALVE, true);
+	SetValveState(CSM_He2_TANKA_VALVE, false);
+	SetValveState(CSM_He2_TANKB_VALVE, false);
+	SetValveState(CSM_He2_TANKC_VALVE, false);
+	SetValveState(CSM_He2_TANKD_VALVE, false);
 
 	SetValveState(CSM_PRIPROP_TANKA_VALVE, true);
 	SetValveState(CSM_PRIPROP_TANKB_VALVE, true);
@@ -1183,15 +1180,15 @@ void Saturn::ActivateCSMRCS()
 void Saturn::DeactivateCSMRCS()
 
 {
-	SetValveState(CSM_He1_TANKA_VALVE, false);
-	SetValveState(CSM_He1_TANKB_VALVE, false);
-	SetValveState(CSM_He1_TANKC_VALVE, false);
-	SetValveState(CSM_He1_TANKD_VALVE, false);
+	SetValveState(CSM_He1_TANKA_VALVE, true);
+	SetValveState(CSM_He1_TANKB_VALVE, true);
+	SetValveState(CSM_He1_TANKC_VALVE, true);
+	SetValveState(CSM_He1_TANKD_VALVE, true);
 
-	SetValveState(CSM_He2_TANKA_VALVE, false);
-	SetValveState(CSM_He2_TANKB_VALVE, false);
-	SetValveState(CSM_He2_TANKC_VALVE, false);
-	SetValveState(CSM_He2_TANKD_VALVE, false);
+	SetValveState(CSM_He2_TANKA_VALVE, true);
+	SetValveState(CSM_He2_TANKB_VALVE, true);
+	SetValveState(CSM_He2_TANKC_VALVE, true);
+	SetValveState(CSM_He2_TANKD_VALVE, true);
 
 	SetValveState(CSM_PRIPROP_TANKA_VALVE, false);
 	SetValveState(CSM_PRIPROP_TANKB_VALVE, false);
@@ -1273,6 +1270,8 @@ void Saturn::CheckSPSState()
 // Check whether the CM RCS is active.
 //
 
+/*
+// DS20060222 Removed
 bool Saturn::CMRCSActive()
 
 {
@@ -1282,21 +1281,40 @@ bool Saturn::CMRCSActive()
 
 	return GetValveState(CM_RCSPROP_TANKA_VALVE) && GetValveState(CM_RCSPROP_TANKB_VALVE);
 }
+*/
 
+// DS20060222 Rewritten
 void Saturn::SetRCS_CM()
 
 {
-	int i;
+	PROPELLANT_HANDLE sysa_ph,sysb_ph; // Temporary
 
 	if (th_att_cm[0]) {
-		if (CMRCSActive()) {
-			for (i = 0; i < 24; i++) 
-				SetThrusterResource(th_att_cm[i], ph_rcs_cm);
+		if (GetValveState(CM_RCSPROP_TANKA_VALVE)) {		
+			// CM RCS System A
+			sysa_ph = ph_rcs_cm_1;
+		}else{
+			sysa_ph = NULL;
 		}
-		else {
-			for (i = 0; i < 24; i++)
-				SetThrusterResource(th_att_cm[i], NULL);
-		}
+		if(GetValveState(CM_RCSPROP_TANKB_VALVE)){
+			// CM RCS System B
+			sysb_ph = ph_rcs_cm_2;	
+		}else{
+			sysb_ph = NULL;
+		}		
+		// Now assign them accordingly
+		SetThrusterResource(th_att_cm[0], sysa_ph);
+		SetThrusterResource(th_att_cm[1], sysb_ph);
+		SetThrusterResource(th_att_cm[2], sysa_ph);
+		SetThrusterResource(th_att_cm[3], sysb_ph);
+		SetThrusterResource(th_att_cm[4], sysa_ph);
+		SetThrusterResource(th_att_cm[5], sysb_ph);
+		SetThrusterResource(th_att_cm[6], sysb_ph);
+		SetThrusterResource(th_att_cm[7], sysa_ph);
+		SetThrusterResource(th_att_cm[8], sysa_ph);
+		SetThrusterResource(th_att_cm[9], sysb_ph);
+		SetThrusterResource(th_att_cm[10], sysb_ph);
+		SetThrusterResource(th_att_cm[11], sysa_ph);
 	}
 }
 
@@ -2004,10 +2022,6 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 	as.Phase1Current = 0.0;
 	as.Phase2Current = 0.0;
 	as.Phase3Current = 0.0;
-	as.Phase1Voltage = 0.0;
-	as.Phase2Voltage = 0.0;
-	as.Phase3Voltage = 0.0;
-	as.Enabled_AC_CWS = true;
 
 	switch (busno) {
 	case 1:
@@ -2016,10 +2030,6 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Current = ACBus1PhaseA.Current();
 		as.Phase2Current = ACBus1PhaseB.Current();
 		as.Phase3Current = ACBus1PhaseC.Current();
-		as.Phase1Voltage = ACBus1PhaseA.Voltage();
-		as.Phase2Voltage = ACBus1PhaseB.Voltage();
-		as.Phase3Voltage = ACBus1PhaseC.Voltage();
-		as.Enabled_AC_CWS = AcBus1ResetSwitch.IsCenter();
 		break;
 
 	case 2:
@@ -2028,10 +2038,6 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Current = ACBus2PhaseA.Current();
 		as.Phase2Current = ACBus2PhaseB.Current();
 		as.Phase3Current = ACBus2PhaseC.Current();
-		as.Phase1Voltage = ACBus2PhaseA.Voltage();
-		as.Phase2Voltage = ACBus2PhaseB.Voltage();
-		as.Phase3Voltage = ACBus2PhaseC.Voltage();
-		as.Enabled_AC_CWS = AcBus2ResetSwitch.IsCenter();
 		break;
 	}
 }
@@ -2211,6 +2217,14 @@ void Saturn::SetRCSState(int Quad, int Thruster, bool Active)
 
 	if (th)
 		SetThrusterLevel(th, Level);
+}
+
+// DS20060221 Added function
+void Saturn::SetCMRCSState(int Thruster, bool Active)
+
+{
+	double Level = Active ? 1.0 : 0.0;
+	SetThrusterLevel(th_att_cm[Thruster], Level);
 }
 
 void Saturn::SetSPSState(bool Active)
