@@ -23,6 +23,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.147  2006/02/23 14:13:49  dseagrav
+  *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
+  *
+  *	Revision 1.146  2006/02/22 01:03:02  movieman523
+  *	Initial Apollo 5 support.	
+  *	
   *	Revision 1.145  2006/02/21 12:19:21  tschachim
   *	Moved TLI sequence to the IU.
   *	
@@ -450,6 +456,8 @@ protected:
 	bool RCSDumpActive();
 	bool RCSPurgeActive();
 	bool LETAttached();
+
+	bool SaturnHasCSM();
 
 	//
 	// State that needs to be saved.
