@@ -1,6 +1,6 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2004-2005 Jean-Luc Rocca-Serra, Mark Grant, Matthias M¸ller
+  Copyright 2004-2005 Jean-Luc Rocca-Serra, Mark Grant, Matthias MÅEler
 
   ORBITER vessel module: generic Saturn base class
 
@@ -22,9 +22,6 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.115  2006/02/22 01:03:02  movieman523
-  *	Initial Apollo 5 support.
-  *	
   *	Revision 1.114  2006/02/21 12:22:39  tschachim
   *	Moved TLI sequence to the IU.
   *	
@@ -437,7 +434,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 								SMQuadBRCS(ph_rcs1),
 								SMQuadCRCS(ph_rcs2),
 								SMQuadDRCS(ph_rcs3),
-								CMRCS(ph_rcs_cm),
+								CMRCS1(ph_rcs_cm_1),CMRCS2(ph_rcs_cm_2),
 								CMSMPyros("CM-SM-Pyros", Panelsdk)
 {
 	InitSaturnCalled = false;
@@ -690,7 +687,8 @@ void Saturn::initSaturn()
 	SMQuadBRCS.SetVessel(this);
 	SMQuadCRCS.SetVessel(this);
 	SMQuadDRCS.SetVessel(this);
-	CMRCS.SetVessel(this);
+	CMRCS1.SetVessel(this);
+	CMRCS2.SetVessel(this);
 
 	//
 	// Default masses.
@@ -725,7 +723,8 @@ void Saturn::initSaturn()
 	ph_rcs1 = 0;
 	ph_rcs2 = 0;
 	ph_rcs3 = 0;
-	ph_rcs_cm = 0;
+	ph_rcs_cm_1 = 0;
+	ph_rcs_cm_2 = 0;
 	ph_sps = 0;
 	ph_sep = 0;
 
@@ -805,7 +804,7 @@ void Saturn::initSaturn()
 		th_aps[i] = 0;
 	}
 
-	for (i = 0; i < 24; i++) {
+	for (i = 0; i < 12; i++) {
 		th_att_cm[i] = 0;
 	}
 
@@ -2308,12 +2307,6 @@ void Saturn::DoLaunch(double simt)
 		LaunchS.play(NOLOOP,255);
 		LaunchS.done();
 	}
-
-	//
-	// Ensure autopilot is on at launch.
-	//
-
-	autopilot = true;
 }
 
 void Saturn::GenericTimestep(double simt, double simdt)
@@ -2784,8 +2777,8 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 
 void Saturn::AddRCS_CM(double MaxThrust)
 
-{
-	UINT atthand;
+{	
+	// DS20060222 Extensively Modified, see comments below
 	const double ATTCOOR = 0.95;
 	const double ATTCOOR2 = 1.92;
 	const double TRANCOOR = 0;
@@ -2807,103 +2800,84 @@ void Saturn::AddRCS_CM(double MaxThrust)
 	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
 
-	if (!ph_rcs_cm)
-		ph_rcs_cm = CreatePropellantResource(RCS_FUEL_CM);
+	// DS20060223 The number 154.4482019 is the combined fuel + oxidizer capacity of one pair of CM RCS tanks.
+	if (!ph_rcs_cm_1)
+		ph_rcs_cm_1 = CreatePropellantResource(154.4482019); // Was RCS_FUEL_CM
+	if (!ph_rcs_cm_2)
+		ph_rcs_cm_2 = CreatePropellantResource(154.4482019);
 
 	//
 	// display rcs stage propellant level in generic HUD
 	//
 
-	SetDefaultPropellantResource (ph_rcs_cm);
+	SetDefaultPropellantResource (ph_rcs_cm_1);
 	ClearThrusterDefinitions();
 
 	//
 	// Adjust ISP and thrust based on realism level.
 	//
 
-	double RCS_ISP = (CM_RCS_ISP * (15.0 - Realism)) / 5.0;
-	double RCS_Thrust = (MaxThrust * (15.0 - Realism)) / 5.0;
+	// These will need to be re-adjusted for realism
+	double RCS_ISP = 290*G;    // (CM_RCS_ISP * (15.0 - Realism)) / 5.0;
+	double RCS_Thrust = 410; // (MaxThrust * (15.0 - Realism)) / 5.0;
 
-	th_att_cm[2]=CreateThruster (_V(2,2,-2), _V(0,0,1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[7]=CreateThruster (_V(2,2,2), _V(0,0,-1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	// DS20060221 Multiple Edits As Follows:
+	// A) Rearrange these so that they make more sense	
+	// B) Delete the extra thrusters that shouldn't be here
+	// C) Reposition the thrusters to their original correct positions
 
-	CreateThrusterGroup (th_att_cm,   4, THGROUP_ATT_YAWLEFT);
-	CreateThrusterGroup (th_att_cm+4,   4, THGROUP_ATT_YAWRIGHT);
+	// For thrusters - X means LEFT/RIGHT, Y means IN/OUT, Z means UP/DOWN)
 
-	th_att_cm[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[12]=CreateThruster (_V(2,2,2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	// Jet #1 -- This used to be at _V(2,2,-2), _V(0,-1,0)
+	th_att_cm[0]=CreateThruster (_V(0.1,ATTCOOR2,TRANZ +0.05), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[0],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	// Jet #3 
+	th_att_cm[1]=CreateThruster (_V(-0.1,ATTCOOR2,TRANZ +0.05), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[1],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	CreateThrusterGroup (th_att_cm,   2, THGROUP_ATT_PITCHUP);
 
-	th_att_cm[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[10]=CreateThruster (_V(2,-2,2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	// Jet #2 -- Used to be at (_V(2,2,2), _V(0,-1,0)
+	th_att_cm[2]=CreateThruster (_V(0.1,ATTCOOR+0.1,TRANZ+1.4), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[2],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	// Jet #4
+	th_att_cm[3]=CreateThruster (_V(-0.1,ATTCOOR+0.1,TRANZ+1.4), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[3],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	CreateThrusterGroup (th_att_cm+2,   2, THGROUP_ATT_PITCHDOWN);
 
-	CreateThrusterGroup (th_att_cm+12,   4, THGROUP_ATT_PITCHDOWN);
-	CreateThrusterGroup (th_att_cm+8,   4, THGROUP_ATT_PITCHUP);
+	// Jet #5 -- Used to be at _V(-2,2,2), _V(0,0,-1)
+	th_att_cm[4]=CreateThruster (_V(ATTCOOR2,0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[4],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	// Jet #7
+	th_att_cm[5]=CreateThruster (_V(ATTCOOR2,-0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[5],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	CreateThrusterGroup (th_att_cm+4,   2, THGROUP_ATT_YAWRIGHT);
 
-	th_att_cm[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[17]=CreateThruster (_V(2,2,2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[21]=CreateThruster (_V(2,-2,2), _V(0,1,0), RCS_Thrust, ph_rcs_cm, RCS_ISP, CM_RCS_ISP_SL);
+	// Jet #6 -- Used to be at _V(-2,2,-2), _V(0,0,1)
+	th_att_cm[6]=CreateThruster (_V(-ATTCOOR2,0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[6],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	// Jet #8
+	th_att_cm[7]=CreateThruster (_V(-ATTCOOR2,-0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[7],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	CreateThrusterGroup (th_att_cm+6,   2, THGROUP_ATT_YAWLEFT);
 
-	CreateThrusterGroup (th_att_cm+20,   4, THGROUP_ATT_BANKLEFT);
-	CreateThrusterGroup (th_att_cm+16,   4, THGROUP_ATT_BANKRIGHT);
+	// The roll jets introduce a slight upward pitch if not corrected for.
+	// Apparently the AGC expects this.
 
-	//Rot up
-
-	m_exhaust_pos2= _V(0.1,ATTCOOR2,TRANZ +0.05);
-	m_exhaust_ref2 = _V(0,1,1);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-
-	//Rot down
-	m_exhaust_pos3= _V(0.1,ATTCOOR-0.2,TRANZ+1.4);
-	m_exhaust_ref3 = _V(0,1,1);
-	atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-
-	//Rot left
-
-	m_exhaust_pos2= _V(ATTCOOR2,0.1,TRANZ);
-	m_exhaust_ref2 = _V(0.5,0.1,0);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-
-	//Rot right
-	m_exhaust_pos2= _V(-ATTCOOR2,0.1,TRANZ);
-	m_exhaust_ref2 = _V(-0.5,0.1,0);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-
-	//Roll left
-
-	m_exhaust_pos2= _V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ);
-	m_exhaust_ref2 = _V(1,-0.5,0);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
-
-	//Roll right
-	m_exhaust_pos2= _V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ);
-	m_exhaust_ref2 = _V(-1,-0.5,0);
-
-	atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-	AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
+	// Jet #9 -- Used to be at _V(2,2,-2)
+	th_att_cm[8]=CreateThruster (_V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[8],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	// Jet #11
+	th_att_cm[9]=CreateThruster (_V(-ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0,1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[9],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	CreateThrusterGroup (th_att_cm+8,   2, THGROUP_ATT_BANKRIGHT);
+		
+	// Jet #10 -- Used to be at _V(-2,2,-2), _V(0,-1,0)
+	th_att_cm[10]=CreateThruster (_V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[10],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	// Jet #12
+	th_att_cm[11]=CreateThruster (_V(ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0,1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	AddExhaust(th_att_cm[11],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
+	CreateThrusterGroup (th_att_cm+10,   2, THGROUP_ATT_BANKLEFT);
 }
 
 void Saturn::AddRCS_S4B()
@@ -3582,24 +3556,6 @@ void Saturn::SetGenericStageState()
 }
 
 //
-// Do we have a CSM on this launcher?
-//
-
-bool Saturn::SaturnHasCSM()
-
-{
-
-	//
-	// LM1 has a nosecap rather than a CSM.
-	//
-
-	if (SIVBPayload != PAYLOAD_LM1)
-		return true;
-
-	return false;
-}
-
-//
 // Set thruster state on or off. This should really turn off all but roll
 // thrusters until we're in orbit.
 //
@@ -3722,10 +3678,6 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	//
 	// For unmanned launches, seperate the CSM on timer.
 	//
-
-	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime - 10.)) {
-		SlowIfDesired();
-	}
 
 	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime)) {
 		SlowIfDesired();
@@ -3919,7 +3871,7 @@ double Saturn::CalculateApogeeTime()
 	// Planet parameters
 	hSetGbody = GetApDist(OrbitApo);
 	GbodyMass = oapiGetMass(hSetGbody);
-	GbodySize = oapiGetSize(hSetGbody) / 1000.;
+	GbodySize = oapiGetSize(hSetGbody) / 1000;
 	Mu_Planet = GK * GbodyMass;
 
 	// Get eccentricity and orbital radius
@@ -3927,40 +3879,40 @@ double Saturn::CalculateApogeeTime()
 	GetRelativePos(hSetGbody, RelPosition);
 	GetRelativeVel(hSetGbody, RelVelocity);
 
-	R = AbsOfVector(RelPosition) / 1000.;
+	R = AbsOfVector(RelPosition) / 1000;
 
 	// Calculate semi-latus rectum and true anomaly
-	p = Elements.a / 1000. * (1. - Elements.e * Elements.e);
-	v = acos((1. / Elements.e) * (p / R - 1.));
+	p = Elements.a/1000 *(1 - Elements.e*Elements.e);
+	v = acos((1/Elements.e)*(p/R - 1));
 
 	RDotV = dotp(RelVelocity, RelPosition);
 	if (RDotV < 0)
 	{
-		v = 2. * PI - v;
+		v = 2*PI - v;
 	}
 
 	// Determine the time since periapsis
 	//   - Eccentric anomaly
-	E = 2. * atan(sqrt((1. - Elements.e) / (1. + Elements.e)) * tan(v / 2.));
+	E = 2 * atan(sqrt((1-Elements.e)/(1+Elements.e))*tan(v/2));
 	//   - Mean anomaly
-	Me = E - Elements.e * sin(E);
+	Me = E - Elements.e*sin(E);
 	//   - Period of orbit
-	T = 2. * PI * sqrt((Elements.a * Elements.a * Elements.a / 1e9) / Mu_Planet);
+	T = 2*PI*sqrt((Elements.a*Elements.a*Elements.a/1e9)/Mu_Planet);
 
 	// Time since periapsis is
-	tsp = Me / (2.* PI) * T;
+	tsp = Me/(2*PI)*T;
 
 	// Time to next periapsis & apoapsis
 	TtPeri = T - tsp;
 	if (RDotV < 0) {
-		TtPeri = -1. * tsp;
+		TtPeri = -1 * tsp;
 	}
 
-	if (TtPeri > (T / 2.)) {
-		TtApo = fabs((T / 2.) - TtPeri);
+	if (TtPeri > (T / 2)) {
+		TtApo = fabs((T/2) - TtPeri);
 	}
 	else {
-		TtApo = fabs(TtPeri + (T / 2.));
+		TtApo = fabs(TtPeri + (T/2));
 	}
 
 	return TtApo;

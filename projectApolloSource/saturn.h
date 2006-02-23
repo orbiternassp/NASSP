@@ -348,6 +348,7 @@ public:
 	void DefaultCMMeshSetup();
 
 	virtual void SetRCSState(int Quad, int Thruster, bool Active);
+	virtual void SetCMRCSState(int Thruster, bool Active);
 	virtual void SetSPSState(bool Active);
 
 	//
@@ -449,8 +450,6 @@ protected:
 	bool RCSDumpActive();
 	bool RCSPurgeActive();
 	bool LETAttached();
-
-	bool SaturnHasCSM();
 
 	//
 	// State that needs to be saved.
@@ -2210,7 +2209,7 @@ protected:
 	void DeactivateCSMRCS();
 	void ActivateCMRCS();
 	void DeactivateCMRCS();
-	bool CMRCSActive();
+	// bool CMRCSActive();
 	bool SMRCSActive();
 	bool SMRCSAActive();
 	bool SMRCSBActive();
@@ -2325,12 +2324,12 @@ protected:
 	// General engine resources.
 	//
 
-	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3, ph_rcs_cm, ph_sps, ph_sep; // handles for propellant resources
+	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3, ph_rcs_cm_1,ph_rcs_cm_2, ph_sps, ph_sep; // handles for propellant resources
 
 	THGROUP_HANDLE thg_main,thg_ull,thg_ver;		          // handles for thruster groups
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
-	THRUSTER_HANDLE th_main[5],th_ull[8],th_ver[3] ,th_att_cm[24];               // handles for orbiter main engines
+	THRUSTER_HANDLE th_main[5],th_ull[8],th_ver[3] ,th_att_cm[12];               // handles for orbiter main engines
 	THRUSTER_HANDLE th_sps[1],th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THRUSTER_HANDLE	th_aps[3];
 	THRUSTER_HANDLE	th_sep[8];
@@ -2339,7 +2338,8 @@ protected:
 	PSTREAM_HANDLE prelaunchvent[3];
 	PSTREAM_HANDLE stagingvent[8];
 
-	CMRCSPropellant CMRCS;
+	CMRCSPropellant CMRCS1;
+	CMRCSPropellant CMRCS2;
 	SMRCSPropellant SMQuadARCS;
 	SMRCSPropellant SMQuadBRCS;
 	SMRCSPropellant SMQuadCRCS;
