@@ -1,6 +1,6 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2004-2005 Jean-Luc Rocca-Serra, Mark Grant, Matthias MEler
+  Copyright 2004-2005 Jean-Luc Rocca-Serra, Mark Grant, Matthias Mueller
 
   ORBITER vessel module: generic Saturn base class
 
@@ -22,6 +22,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.117  2006/02/23 14:13:49  dseagrav
+  *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
+  *	
+  *	Revision 1.116  2006/02/22 18:50:20  tschachim
+  *	Bugfixes for Apollo 4-6.
+  *	
+  *	Revision 1.115  2006/02/22 01:03:02  movieman523
+  *	Initial Apollo 5 support.
+  *
   *	Revision 1.114  2006/02/21 12:22:39  tschachim
   *	Moved TLI sequence to the IU.
   *	
@@ -2307,6 +2316,12 @@ void Saturn::DoLaunch(double simt)
 		LaunchS.play(NOLOOP,255);
 		LaunchS.done();
 	}
+
+	//
+	// Ensure autopilot is on at launch.
+	//
+
+	autopilot = true;
 }
 
 void Saturn::GenericTimestep(double simt, double simdt)
@@ -3556,6 +3571,24 @@ void Saturn::SetGenericStageState()
 }
 
 //
+// Do we have a CSM on this launcher?
+//
+
+bool Saturn::SaturnHasCSM()
+
+{
+
+	//
+	// LM1 has a nosecap rather than a CSM.
+	//
+
+	if (SIVBPayload != PAYLOAD_LM1)
+		return true;
+
+	return false;
+}
+
+//
 // Set thruster state on or off. This should really turn off all but roll
 // thrusters until we're in orbit.
 //
@@ -3678,6 +3711,10 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	//
 	// For unmanned launches, seperate the CSM on timer.
 	//
+
+	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime - 10.)) {
+		SlowIfDesired();
+	}
 
 	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime)) {
 		SlowIfDesired();
@@ -3871,7 +3908,7 @@ double Saturn::CalculateApogeeTime()
 	// Planet parameters
 	hSetGbody = GetApDist(OrbitApo);
 	GbodyMass = oapiGetMass(hSetGbody);
-	GbodySize = oapiGetSize(hSetGbody) / 1000;
+	GbodySize = oapiGetSize(hSetGbody) / 1000.;
 	Mu_Planet = GK * GbodyMass;
 
 	// Get eccentricity and orbital radius
@@ -3879,40 +3916,40 @@ double Saturn::CalculateApogeeTime()
 	GetRelativePos(hSetGbody, RelPosition);
 	GetRelativeVel(hSetGbody, RelVelocity);
 
-	R = AbsOfVector(RelPosition) / 1000;
+	R = AbsOfVector(RelPosition) / 1000.;
 
 	// Calculate semi-latus rectum and true anomaly
-	p = Elements.a/1000 *(1 - Elements.e*Elements.e);
-	v = acos((1/Elements.e)*(p/R - 1));
+	p = Elements.a / 1000. * (1. - Elements.e * Elements.e);
+	v = acos((1. / Elements.e) * (p / R - 1.));
 
 	RDotV = dotp(RelVelocity, RelPosition);
 	if (RDotV < 0)
 	{
-		v = 2*PI - v;
+		v = 2. * PI - v;
 	}
 
 	// Determine the time since periapsis
 	//   - Eccentric anomaly
-	E = 2 * atan(sqrt((1-Elements.e)/(1+Elements.e))*tan(v/2));
+	E = 2. * atan(sqrt((1. - Elements.e) / (1. + Elements.e)) * tan(v / 2.));
 	//   - Mean anomaly
-	Me = E - Elements.e*sin(E);
+	Me = E - Elements.e * sin(E);
 	//   - Period of orbit
-	T = 2*PI*sqrt((Elements.a*Elements.a*Elements.a/1e9)/Mu_Planet);
+	T = 2. * PI * sqrt((Elements.a * Elements.a * Elements.a / 1e9) / Mu_Planet);
 
 	// Time since periapsis is
-	tsp = Me/(2*PI)*T;
+	tsp = Me / (2.* PI) * T;
 
 	// Time to next periapsis & apoapsis
 	TtPeri = T - tsp;
 	if (RDotV < 0) {
-		TtPeri = -1 * tsp;
+		TtPeri = -1. * tsp;
 	}
 
-	if (TtPeri > (T / 2)) {
-		TtApo = fabs((T/2) - TtPeri);
+	if (TtPeri > (T / 2.)) {
+		TtApo = fabs((T / 2.) - TtPeri);
 	}
 	else {
-		TtApo = fabs(TtPeri + (T/2));
+		TtApo = fabs(TtPeri + (T / 2.));
 	}
 
 	return TtApo;

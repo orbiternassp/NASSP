@@ -23,6 +23,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2006/02/23 14:13:49  dseagrav
+  *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
+  *	
+  *	Revision 1.75  2006/02/22 20:14:46  quetalsi
+  *	C&W  AC_BUS1/2 light and AC RESET SWITCH now woks.
+  *	
+  *	Revision 1.74  2006/02/22 18:53:48  tschachim
+  *	Bugfixes for Apollo 4-6.
+  *
   *	Revision 1.73  2006/02/21 11:53:17  tschachim
   *	Bugfix FDAI.
   *	
@@ -1156,15 +1165,15 @@ void Saturn::DeactivateS4RCS()
 void Saturn::ActivateCSMRCS()
 
 {
-	SetValveState(CSM_He1_TANKA_VALVE, false);
-	SetValveState(CSM_He1_TANKB_VALVE, false);
-	SetValveState(CSM_He1_TANKC_VALVE, false);
-	SetValveState(CSM_He1_TANKD_VALVE, false);
+	SetValveState(CSM_He1_TANKA_VALVE, true);
+	SetValveState(CSM_He1_TANKB_VALVE, true);
+	SetValveState(CSM_He1_TANKC_VALVE, true);
+	SetValveState(CSM_He1_TANKD_VALVE, true);
 
-	SetValveState(CSM_He2_TANKA_VALVE, false);
-	SetValveState(CSM_He2_TANKB_VALVE, false);
-	SetValveState(CSM_He2_TANKC_VALVE, false);
-	SetValveState(CSM_He2_TANKD_VALVE, false);
+	SetValveState(CSM_He2_TANKA_VALVE, true);
+	SetValveState(CSM_He2_TANKB_VALVE, true);
+	SetValveState(CSM_He2_TANKC_VALVE, true);
+	SetValveState(CSM_He2_TANKD_VALVE, true);
 
 	SetValveState(CSM_PRIPROP_TANKA_VALVE, true);
 	SetValveState(CSM_PRIPROP_TANKB_VALVE, true);
@@ -1180,15 +1189,15 @@ void Saturn::ActivateCSMRCS()
 void Saturn::DeactivateCSMRCS()
 
 {
-	SetValveState(CSM_He1_TANKA_VALVE, true);
-	SetValveState(CSM_He1_TANKB_VALVE, true);
-	SetValveState(CSM_He1_TANKC_VALVE, true);
-	SetValveState(CSM_He1_TANKD_VALVE, true);
+	SetValveState(CSM_He1_TANKA_VALVE, false);
+	SetValveState(CSM_He1_TANKB_VALVE, false);
+	SetValveState(CSM_He1_TANKC_VALVE, false);
+	SetValveState(CSM_He1_TANKD_VALVE, false);
 
-	SetValveState(CSM_He2_TANKA_VALVE, true);
-	SetValveState(CSM_He2_TANKB_VALVE, true);
-	SetValveState(CSM_He2_TANKC_VALVE, true);
-	SetValveState(CSM_He2_TANKD_VALVE, true);
+	SetValveState(CSM_He2_TANKA_VALVE, false);
+	SetValveState(CSM_He2_TANKB_VALVE, false);
+	SetValveState(CSM_He2_TANKC_VALVE, false);
+	SetValveState(CSM_He2_TANKD_VALVE, false);
 
 	SetValveState(CSM_PRIPROP_TANKA_VALVE, false);
 	SetValveState(CSM_PRIPROP_TANKB_VALVE, false);
@@ -2022,6 +2031,10 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 	as.Phase1Current = 0.0;
 	as.Phase2Current = 0.0;
 	as.Phase3Current = 0.0;
+	as.Phase1Voltage = 0.0;
+	as.Phase2Voltage = 0.0;
+	as.Phase3Voltage = 0.0;
+	as.Enabled_AC_CWS = true;
 
 	switch (busno) {
 	case 1:
@@ -2030,6 +2043,10 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Current = ACBus1PhaseA.Current();
 		as.Phase2Current = ACBus1PhaseB.Current();
 		as.Phase3Current = ACBus1PhaseC.Current();
+		as.Phase1Voltage = ACBus1PhaseA.Voltage();
+		as.Phase2Voltage = ACBus1PhaseB.Voltage();
+		as.Phase3Voltage = ACBus1PhaseC.Voltage();
+		as.Enabled_AC_CWS = AcBus1ResetSwitch.IsCenter();
 		break;
 
 	case 2:
@@ -2038,6 +2055,10 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Current = ACBus2PhaseA.Current();
 		as.Phase2Current = ACBus2PhaseB.Current();
 		as.Phase3Current = ACBus2PhaseC.Current();
+		as.Phase1Voltage = ACBus2PhaseA.Voltage();
+		as.Phase2Voltage = ACBus2PhaseB.Voltage();
+		as.Phase3Voltage = ACBus2PhaseC.Voltage();
+		as.Enabled_AC_CWS = AcBus2ResetSwitch.IsCenter();
 		break;
 	}
 }
