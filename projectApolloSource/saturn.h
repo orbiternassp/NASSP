@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.148  2006/02/23 15:50:11  tschachim
+  *	Restored changes lost in last version.
+  *	
   *	Revision 1.147  2006/02/23 14:13:49  dseagrav
   *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
   *
@@ -405,6 +408,7 @@ public:
 	void GetECSWaterStatus(ECSWaterStatus &ws);
 	void GetMainBusStatus(MainBusStatus &ms);
 	void GetACBusStatus(ACBusStatus &as, int busno);
+	void DisconectInverter(bool disc, int busno);
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	double GetAccelG() { return aZAcc / G; };
 

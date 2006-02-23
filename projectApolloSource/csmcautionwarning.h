@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/02/22 20:14:46  quetalsi
+  *	C&W  AC_BUS1/2 light and AC RESET SWITCH now woks.
+  *	
   *	Revision 1.12  2006/02/18 21:39:42  tschachim
   *	Bugfix
   *	
@@ -118,6 +121,7 @@ protected:
 	bool FuelCellBad(FuelCellStatus &fc, int index);
 	bool ACOverloaded(ACBusStatus &as);
 	bool ACUndervoltage(ACBusStatus &as);
+	bool ACOvervoltage(ACBusStatus &as);
 	bool LightPowered(int i);
 };
 

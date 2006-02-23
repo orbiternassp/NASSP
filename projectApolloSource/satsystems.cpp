@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2006/02/23 15:48:30  tschachim
+  *	Restored changes lost in last version.
+  *	
   *	Revision 1.76  2006/02/23 14:13:49  dseagrav
   *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
   *	
@@ -2060,6 +2063,19 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase3Voltage = ACBus2PhaseC.Voltage();
 		as.Enabled_AC_CWS = AcBus2ResetSwitch.IsCenter();
 		break;
+	}
+}
+
+void Saturn::DisconectInverter(bool disc, int busno)
+
+{
+	if (disc) {
+		if (busno == 1) ACBus1Source.WireToBuses(0,0,0);
+		else ACBus2Source.WireToBuses(0,0,0);
+	}
+	else {
+		if (busno == 1) ACBus1Source.WireToBuses(&AcBus1Switch1, &AcBus1Switch2, &AcBus1Switch3);
+		else ACBus2Source.WireToBuses(&AcBus2Switch1, &AcBus2Switch2, &AcBus2Switch3);
 	}
 }
 
