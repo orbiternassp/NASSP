@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/02/22 20:14:45  quetalsi
+  *	C&W  AC_BUS1/2 light and AC RESET SWITCH now woks.
+  *	
   *	Revision 1.20  2006/02/18 21:38:55  tschachim
   *	Bugfix
   *	
@@ -196,6 +199,17 @@ bool CSMCautionWarningSystem::ACUndervoltage(ACBusStatus &as)
 
 }
 
+
+bool CSMCautionWarningSystem::ACOvervoltage(ACBusStatus &as)
+
+{
+	if (as.Phase1Voltage > 130 || as.Phase2Voltage >130 || as.Phase3Voltage >130)
+		return true;
+
+	return false;
+
+}
+
 //
 // We'll only check the internal systems five times a second (x time acceleration). That should cut the overhead to
 // a minimum.
@@ -349,32 +363,49 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// AC bus overload: overload light will come on if total output exceeds 250% of rated current, or a
 		// single phase output exceeds 300% of rated current. However, I'm not sure what the rated
 		// current actually is!
+		//
 		// AC bus undervoltage: AC_BUS1/2 light will come on if voltage on any phase is
 		// < 96 volts and reset switch is center. Lights only come off if reset switch is out of center.
+		//
+		// AC bus overvoltage: AC_BUS1/2 light will come on and disconnected the inverter from the bus
+		// if voltage on any phase is > 130 volts and reset switch is center.
 
 		ACBusStatus as;
 
 		sat->GetACBusStatus(as, 1);
 		
 		if (as.Enabled_AC_CWS) {
-			if (ACOverloaded(as)) SetLight(CSM_CWS_AC_BUS1_OVERLOAD, true);
+			if (ACOverloaded(as)) {
+				SetLight(CSM_CWS_AC_BUS1_OVERLOAD, true);
+				SetLight(CSM_CWS_AC_BUS1_LIGHT, true); }
 			if (ACUndervoltage(as)) SetLight(CSM_CWS_AC_BUS1_LIGHT, true);
+			if (ACOvervoltage(as)) {
+				SetLight(CSM_CWS_AC_BUS1_LIGHT, true);
+				sat->DisconectInverter(true,1); }
 		}
 		else {
 			SetLight(CSM_CWS_AC_BUS1_OVERLOAD, false);
 			SetLight(CSM_CWS_AC_BUS1_LIGHT, false);
+			sat->DisconectInverter(false,1);
 		}
 		
 		sat->GetACBusStatus(as, 2);
 		
 		if (as.Enabled_AC_CWS) {
-			if (ACOverloaded(as)) SetLight(CSM_CWS_AC_BUS2_OVERLOAD, true);
+			if (ACOverloaded(as)) {
+				SetLight(CSM_CWS_AC_BUS2_OVERLOAD, true);
+				SetLight(CSM_CWS_AC_BUS2_LIGHT, true); }
 			if (ACUndervoltage(as)) SetLight(CSM_CWS_AC_BUS2_LIGHT, true);
+			if (ACOvervoltage(as)) {
+				SetLight(CSM_CWS_AC_BUS2_LIGHT, true);
+				sat->DisconectInverter(true,2); }
 		}
 		else {
 			SetLight(CSM_CWS_AC_BUS2_OVERLOAD, false);
 			SetLight(CSM_CWS_AC_BUS2_LIGHT, false);
+			sat->DisconectInverter(false,2);
 		}
+
 		//
 		// Oxygen flow: "Flow rates of 1 pound per hour or more with a duration in excess of 16.5 
 		// seconds will illuminate a light on the caution and warning panel to alert the crew to 
