@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/02/21 11:56:30  tschachim
+  *	Fixes to make code build with MS C++ 2005
+  *	
   *	Revision 1.14  2006/02/06 20:57:41  lazyd
   *	Improved roll control for SII and SIVB
   *	
@@ -165,92 +168,17 @@ void SaturnV::AttitudeLaunch2()
 	}
 //**************************************************************
 // Sets thrust vectors by simply adding up all the axis deflection vectors and the
-// "neutral" default vector
+// "neutral" default vector	
 	LimitSetThrusterDir(th_main[0],pitchvectorm+yawvectorm-rollvectorl+_V( 0,0,1));//4
 	LimitSetThrusterDir(th_main[1],pitchvectorm+yawvectorm+rollvectorl+_V( 0,0,1));//2
 	LimitSetThrusterDir(th_main[2],pitchvectorm+yawvectorm-rollvectorl+_V( 0,0,1));//1
 	LimitSetThrusterDir(th_main[3],pitchvectorm+yawvectorm+rollvectorl+_V( 0,0,1));//3
-	LimitSetThrusterDir(th_main[4],pitchvectorm+yawvectorm+_V( 0,0,1));//5
+	LimitSetThrusterDir(th_main[4],pitchvectorm+yawvectorm+_V( 0,0,1));//5	
 	// sprintf (oapiDebugString(), "roll input: %f, roll vel: %f", tempR, ang_vel.z);
 
 }
 
-void SaturnV::AttitudeLaunch4()
-{
-//	TRACESETUP("AttitudeLaunch4");
-
-	VECTOR3 ang_vel;
-	GetAngularVel(ang_vel);// gets current angular velocity for stabilizer and rate control
-// variables to store each component deflection vector
-	VECTOR3 rollvectorl={0.0,0.0,0.0};
-	VECTOR3 rollvectorr={0.0,0.0,0.0};
-	VECTOR3 pitchvector={0.0,0.0,0.0};
-	VECTOR3 yawvector={0.0,0.0,0.0};
-	VECTOR3 yawvectorm={0.0,0.0,0.0};
-	VECTOR3 pitchvectorm={0.0,0.0,0.0};
-//************************************************************
-// variables to store Manual control levels for each axis
-	double tempP = 0.0;
-	double tempY = 0.0;
-	double tempR = 0.0;
-//************************************************************
-// Variables to store correction factors for rate control
-	double rollcorrect = 0.0;
-	double yawcorrect= 0.0;
-	double pitchcorrect = 0.0;
-//************************************************************
-// gets manual control levels in each axis, this code copied directly from Rob Conley's Mercury Atlas
-	if(LPswitch6){
-		tempP = GetManualControlLevel(THGROUP_ATT_PITCHDOWN, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_PITCHUP, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);}
-	if(LPswitch7){
-		tempY = GetManualControlLevel(THGROUP_ATT_YAWLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_YAWRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);}
-	tempR = GetManualControlLevel(THGROUP_ATT_BANKLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_BANKRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
-//*************************************************************
-//Creates correction factors for rate control in each axis as a function of input level
-// and current angular velocity. Varies from 1 to 0 as angular velocity approaches command level
-// multiplied by maximum rate desired
-	if(tempR != 0.0)	{
-		rollcorrect = (1/(fabs(tempR)*0.35))*((fabs(tempR)*0.35)-fabs(ang_vel.z));
-			}
-	if(tempP != 0.0)	{
-		pitchcorrect = (1/(fabs(tempP)*0.175))*((fabs(tempP)*0.175)-fabs(ang_vel.x));
-		if((tempP > 0 && ang_vel.x > 0) || (tempP < 0 && ang_vel.x < 0))	{
-						pitchcorrect = 1;
-					}
-	}
-	if(tempY != 0.0)	{
-	yawcorrect = (1/(fabs(tempY)*0.175))*((fabs(tempY)*0.175)-fabs(ang_vel.y));
-	if((tempY > 0 && ang_vel.y < 0) || (tempY < 0 && ang_vel.y > 0))	{
-			yawcorrect = 1;
-		}
-	}
-//*************************************************************
-// Create deflection vectors in each axis
-	pitchvector = _V(0.0,0.05*tempP*pitchcorrect,0.0);
-	pitchvectorm = _V(0.0,0.09*tempP*pitchcorrect,0.0);
-	yawvector = _V(0.05*tempY*yawcorrect,0.0,0.0);
-	yawvectorm = _V(0.09*tempY*yawcorrect,0.0,0.0);
-	rollvectorl = _V(0.0,0.090*tempR*rollcorrect,0.0);
-	rollvectorr = _V(0.0,-0.09*tempR*rollcorrect,0.0);
-
-//*************************************************************
-// create opposite vectors for "gyro stabilization" if command levels are 0
-	if(tempP==0.0) {
-		pitchvectorm=_V(0.0,0.95*ang_vel.x*2,0.0);
-	}
-	if(tempY==0.0) {
-		yawvectorm=_V(-0.95*ang_vel.y*2,0.0,0.0);
-	}
-	if(tempR==0.0) {
-		rollvectorl = _V(0.0,0.99*ang_vel.z*2,0.0);
-	}
-//**************************************************************
-// Sets thrust vectors by simply adding up all the axis deflection vectors and the
-// "neutral" default vector
-	LimitSetThrusterDir(th_main[0],pitchvectorm+yawvectorm+_V( 0,0,1));//4
-	// sprintf (oapiDebugString(), "roll input: %f, roll vel: %f", tempR, ang_vel.z);
-
-}
+// DS20060226 AttitudeLaunch4 deleted.
 
 void SaturnV::AttitudeLaunch1()
 {

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2006/02/15 01:07:38  movieman523
+  *	Revised TLI burn so hopefully it will work with the Virtual AGC.
+  *	
   *	Revision 1.69  2006/02/13 21:27:16  tschachim
   *	Bugfix scenario loading.
   *	
@@ -255,13 +258,11 @@
 
 #include "tracer.h"
 
-#define DELTAT		2.0
-
-
 char TwoSpaceTwoFormat[7] = "XXX XX";
 char RegFormat[7] = "XXXXXX";
 
-
+// Moved DELTAT definition to avoid INTERNAL COMPILER ERROR
+#define DELTAT 2.0
 
 ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p)
 
@@ -5105,26 +5106,58 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 
 	case 014:
 		{
-			ChannelValue12 val12;
-			val12.Value = GetOutputChannel(012);
-
-			if (!val12.Bits.TVCEnable) {
-				imu.ChannelOutput(channel, val);
-			}
-			else {
-				//
-				// TVC enable appears to control SPS gimballing.
-				//
-			}
+			// DS20060225 Enable SPS gimbal control
+			// TVC Enable does not disconnect the IMU from this channel			
+			// (Even though it probably doesn't matter)
+			imu.ChannelOutput(channel, val);
 		}
 		break;
 
+	// Various control bits
 	case 012:
+		/*
+		{
+			// Test for this...
+			ChannelValue12 val12;
+			val12.Value = val;
+			// It's not Zero-Optics-CDUs so...
+			if(val12.Bits.ZeroOptics){
+				if (val12.Bits.TVCEnable) {
+					sprintf(oapiDebugString(),"CH12 TVC-ENABLE ZERO-OPTICS");
+				}else{
+					sprintf(oapiDebugString(),"CH12 ZERO-OPTICS");
+				}
+			}
+		} // and fall into...
+		*/
+	// 174-177 are ficticious channels with the IMU CDU angles.
 	case 0174:
 	case 0175:
 	case 0176:
 	case 0177:
 		imu.ChannelOutput(channel, val);
+		break;
+
+	// DS20060225 Enable SPS gimbal control
+	// Ficticious channels 160 & 161 have the optics shaft & trunion angles.
+	case 0160:
+		ProcessChannel160(val);
+		break;
+
+	case 0161:		
+		ProcessChannel161(val);
+		break;
+
+	case 033: 
+		{
+			ChannelValue33 val33;
+			val33.Value = val;
+			ChannelValue12 val12;
+			val12.Value = GetOutputChannel(012);
+			if(val33.Bits.ZeroOptics){ // val12.Bits.TVCEnable && 
+				sprintf(oapiDebugString(),"TVC CH33 ZERO-OPTICS");
+			}
+		}
 		break;
 	}
 }
@@ -5140,6 +5173,15 @@ void ApolloGuidance::ProcessChannel5(int val)
 
 void ApolloGuidance::ProcessChannel6(int val)
 
+{
+}
+
+// DS20060226 Stubs for optics controls and TVC
+void ApolloGuidance::ProcessChannel160(int val)
+{
+}
+
+void ApolloGuidance::ProcessChannel161(int val)
 {
 }
 
