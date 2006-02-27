@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/02/23 14:13:49  dseagrav
+  *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
+  *	
   *	Revision 1.39  2006/02/21 12:17:52  tschachim
   *	Bugfix.
   *	
@@ -1914,3 +1917,55 @@ void CSMcomputer::ProcessChannel6(int val)
 	LastOut6 = val;
 }
 
+// DS20060226 TVC / Optics control
+void CSMcomputer::ProcessChannel160(int val){
+	ChannelValue12 val12;
+	val12.Value = GetOutputChannel(012);
+	Saturn *sat = (Saturn *) OurVessel;
+	double error = 0;
+	
+	// TVC enable controls SPS gimballing.			
+	if (val12.Bits.TVCEnable) {
+		// TVC PITCH
+		int tvc_pitch_pulses = 0;
+		double tvc_pitch_cmd = 0;
+		// One pulse means .0237 degree of rotation.
+		if(val&077000){ // Negative
+			tvc_pitch_pulses = (~val)&0777;
+			if(tvc_pitch_pulses == 0){ return; } // HACK
+			tvc_pitch_cmd = (double)0.0237 * tvc_pitch_pulses;
+			tvc_pitch_cmd = 0 - tvc_pitch_cmd; // Invert
+		}else{
+			tvc_pitch_pulses = val&0777;
+			tvc_pitch_cmd = (double)0.0237 * tvc_pitch_pulses;
+		}				
+		// sprintf(oapiDebugString(),"TVC PITCH COMMAND: %d pulses, %f degrees",tvc_pitch_pulses,tvc_pitch_cmd);
+		// X/Y/Z = ??/??/??
+		// If we're out of the zero notch
+		error = sat->SetSPSPitch(tvc_pitch_cmd);
+		// Should return error value via optics error counters
+	}
+}
+
+void CSMcomputer::ProcessChannel161(int val){
+	ChannelValue12 val12;
+	val12.Value = GetOutputChannel(012);
+	Saturn *sat = (Saturn *) OurVessel;
+	double error = 0;
+	
+	if (val12.Bits.TVCEnable) {
+		// TVC YAW
+		int tvc_yaw_pulses = 0;
+		double tvc_yaw_cmd = 0;		
+		if(val&077000){ 
+			tvc_yaw_pulses = (~val)&0777;
+			if(tvc_yaw_pulses == 0){ return; } 
+			tvc_yaw_cmd = (double)0.0237 * tvc_yaw_pulses;
+			tvc_yaw_cmd = 0 - tvc_yaw_cmd; 
+		}else{
+			tvc_yaw_pulses = val&0777;
+			tvc_yaw_cmd = (double)0.0237 * tvc_yaw_pulses;
+		}				
+		error = sat->SetSPSYaw(tvc_yaw_cmd);
+	}
+}

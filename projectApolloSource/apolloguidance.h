@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2006/02/13 21:41:41  tschachim
+  *	Fixes pad load.
+  *	
   *	Revision 1.35  2006/02/02 21:36:17  lazyd
   *	Changed some routines to public.
   *	
@@ -314,7 +317,9 @@ protected:
 	virtual void ProcessChannel11Bit(int bit, bool val);
 	virtual void ProcessChannel11(int val);
 	void ProcessChannel13();
-
+	virtual void ProcessChannel160(int val);
+	virtual void ProcessChannel161(int val);
+	
 	void LightUplink();
 	void ClearUplink();
 	void LightCompActy();

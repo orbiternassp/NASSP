@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2006/02/23 22:46:41  quetalsi
+  *	Added AC ovevoltage control and Bugfix
+  *	
   *	Revision 1.77  2006/02/23 15:48:30  tschachim
   *	Restored changes lost in last version.
   *	
@@ -442,6 +445,9 @@ void Saturn::SystemsInit() {
 
 	SetValveState(CM_RCSPROP_TANKA_VALVE, false);
 	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
+	// DS20060226 SPS Gimbal reset to zero
+	sps_pitch_position = 0;
+	sps_yaw_position = 0;	
 }
 
 void Saturn::SystemsTimestep(double simt, double simdt) {
@@ -2270,4 +2276,43 @@ void Saturn::SetSPSState(bool Active)
 	if (stage == CSM_LEM_STAGE) {
 		SetThrusterGroupLevel(THGROUP_MAIN, Active ? 1.0 : 0.0);
 	}
+}
+
+// DS20060226 Added below
+// Should return error between commanded value and current value
+double Saturn::SetSPSPitch(double direction){
+	VECTOR3 spsvector;
+	double error = sps_pitch_position - direction;	
+	sps_pitch_position += direction; // Instant positioning	
+	// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
+	spsvector.x = sps_yaw_position * 0.017453; // Convert deg to rad
+	spsvector.y = sps_pitch_position * 0.017453;
+	spsvector.z = 1;
+	SetThrusterDir(th_main[0],spsvector);
+	// If out of zero posiiton
+	if(sps_pitch_position != 0 || sps_yaw_position != 0){
+		sprintf(oapiDebugString(),"SPS: Vector P:%f Y:%f",sps_pitch_position,sps_yaw_position);
+	}else{
+		// Clear the message
+		sprintf(oapiDebugString(),"");
+	}
+	return(error);
+}
+
+double Saturn::SetSPSYaw(double direction){
+	VECTOR3 spsvector;
+	double error = sps_yaw_position - direction;	
+	sps_yaw_position += direction; // Instant positioning	
+	spsvector.x = sps_yaw_position * 0.017453; // Convert deg to rad
+	spsvector.y = sps_pitch_position * 0.017453;
+	spsvector.z = 1;
+	SetThrusterDir(th_main[0],spsvector);
+	// If out of zero posiiton
+	if(sps_pitch_position != 0 || sps_yaw_position != 0){
+		sprintf(oapiDebugString(),"SPS: Vector P:%f Y:%f",sps_pitch_position,sps_yaw_position);
+	}else{
+		// Clear the message
+		sprintf(oapiDebugString(),"");
+	}
+	return(error);
 }

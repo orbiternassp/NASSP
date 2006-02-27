@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2006/02/22 18:52:10  tschachim
+  *	Bugfixes for Apollo 4-6.
+  *	
   *	Revision 1.68  2006/02/21 11:55:49  tschachim
   *	Moved TLI sequence to the IU.
   *	
@@ -1118,8 +1121,7 @@ void SaturnV::StageFour(double simt, double simdt)
 void SaturnV::StageSix(double simt)
 
 {
-	if(simt>0.5)
-		AttitudeLaunch4();
+	// Call to AttitudeLaunch4 deleted - DS20060226
 
 	if(RPswitch17){
 		if (ActivateLEM && hLMV){
@@ -1707,7 +1709,7 @@ void SaturnV::Timestep(double simt, double simdt)
 	case STAGE_ORBIT_SIVB:
 		StageOrbitSIVB(simt, simdt);
 		break;
-
+	
 	case CSM_LEM_STAGE:
 		StageSix(simt);
 		break;

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.149  2006/02/23 22:46:41  quetalsi
+  *	Added AC ovevoltage control and Bugfix
+  *	
   *	Revision 1.148  2006/02/23 15:50:11  tschachim
   *	Restored changes lost in last version.
   *	
@@ -359,6 +362,11 @@ public:
 	virtual void SetRCSState(int Quad, int Thruster, bool Active);
 	virtual void SetCMRCSState(int Thruster, bool Active);
 	virtual void SetSPSState(bool Active);
+	// DS20060226 Added
+	double sps_pitch_position;
+	double sps_yaw_position;
+	virtual double SetSPSPitch(double direction);
+	virtual double SetSPSYaw(double direction);
 
 	//
 	// General functions that handle calls from Orbiter.

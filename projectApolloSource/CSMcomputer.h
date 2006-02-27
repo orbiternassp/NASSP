@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/02/21 11:54:40  tschachim
+  *	Moved TLI sequence to the IU.
+  *	
   *	Revision 1.11  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -285,6 +288,9 @@ protected:
 	void ProcessChannel10(int val);
 	void ProcessChannel11Bit(int bit, bool val);
 	void ProcessChannel11(int val);
+	// DS20060226 TVC / Optics
+	void ProcessChannel160(int val);
+	void ProcessChannel161(int val);
 	void CheckEngineOnOff(int val);
 
 	//
