@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.147  2006/02/28 00:03:58  quetalsi
+  *	MainBus A & B Switches and Talkbacks woks and wired.
+  *	
   *	Revision 1.146  2006/02/23 15:51:16  tschachim
   *	Restored changes lost in last version.
   *	
@@ -1916,12 +1919,18 @@ void Saturn::SetSwitches(int panel) {
 	MainBusBIndicator2.Init(172, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
 	MainBusBIndicator3.Init(215, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
 
-	MainBusASwitch1.WireTo(FuelCells[0]);
-	MainBusASwitch2.WireTo(FuelCells[1]);
-	MainBusASwitch3.WireTo(FuelCells[2]);
-	MainBusBSwitch1.WireTo(FuelCells[0]);
-	MainBusBSwitch2.WireTo(FuelCells[1]);
-	MainBusBSwitch3.WireTo(FuelCells[2]);
+	if (MainBusAIndicator1) MainBusASwitch1.WireTo(FuelCells[0]);
+	else MainBusASwitch1.WireTo(0);
+	if (MainBusAIndicator2) MainBusASwitch2.WireTo(FuelCells[1]);
+	else MainBusASwitch2.WireTo(0);
+	if (MainBusAIndicator3) MainBusASwitch3.WireTo(FuelCells[2]);
+	else MainBusASwitch3.WireTo(0);
+	if (MainBusBIndicator1) MainBusBSwitch1.WireTo(FuelCells[0]);
+	else MainBusBSwitch1.WireTo(0);
+	if (MainBusBIndicator2) MainBusBSwitch2.WireTo(FuelCells[1]);
+	else MainBusBSwitch2.WireTo(0);
+	if (MainBusBIndicator3) MainBusBSwitch3.WireTo(FuelCells[2]);
+	else MainBusBSwitch3.WireTo(0);
 
 	SBandNormalSwitchesRow.Init(AID_SBAND_NORMAL_SWITCHES, MainPanel);
 	SBandNormalXPDRSwitch.Init    (	  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SBandNormalSwitchesRow);
