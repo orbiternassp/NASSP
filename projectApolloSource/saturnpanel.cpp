@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.146  2006/02/23 15:51:16  tschachim
+  *	Restored changes lost in last version.
+  *	
   *	Revision 1.145  2006/02/23 14:13:49  dseagrav
   *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
   *	
@@ -1123,9 +1126,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_FUELCELLRADIATORSSWITCHES,    				_R(2816,  607, 2937,  637), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLINDICATORSSWITCH,    				_R(3030,  630, 3114,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLHEATERSSWITCHES,	    				_R(2817,  695, 2938,  725), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FUELCELLPURGESWITCHES,	    				_R(2815,  817, 3123,  846), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUELCELLPURGESWITCHES,	    				_R(2815,  817, 3123,  846), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLREACTANTSINDICATORS,    				_R(2823,  893, 3061,  917), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2800,  955, 3131,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (ADI_MAINBUSAINDICATORS,		    				_R(2953,  758, 3062,  781), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FUELCELLLATCHSWITCHES,	    				_R(2593, 1251, 2670, 1280), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SBAND_NORMAL_SWITCHES,						_R(2593, 1050, 2858, 1079), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CAUTIONWARNING_SWITCHES,						_R(1908,  400, 2140,  434), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
@@ -1894,7 +1898,31 @@ void Saturn::SetSwitches(int panel) {
 	AcBus2Switch2.Init    ( 43, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter2, 0);
 	AcBus2Switch3.Init    ( 86, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter3, 0);
 	AcBus2ResetSwitch.Init(129, 200, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
-	 
+	
+	MainBusASwitch1.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow);
+	MainBusASwitch2.Init(179, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow);
+	MainBusASwitch3.Init(230, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow);
+	MainBusAResetSwitch.Init(273, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow);
+	MainBusAIndicatorsRow.Init(ADI_MAINBUSAINDICATORS, MainPanel);
+	MainBusAIndicator1.Init(0, 0, 23, 23, srf[SRF_INDICATOR], MainBusAIndicatorsRow);
+	MainBusAIndicator2.Init(43, 0, 23, 23, srf[SRF_INDICATOR], MainBusAIndicatorsRow);
+	MainBusAIndicator3.Init(86, 0, 23, 23, srf[SRF_INDICATOR], MainBusAIndicatorsRow);
+
+	MainBusBSwitch1.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow);
+	MainBusBSwitch2.Init(185, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow);
+	MainBusBSwitch3.Init(241, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow);
+	MainBusBResetSwitch.Init(297, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow);
+	MainBusBIndicator1.Init(129, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
+	MainBusBIndicator2.Init(172, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
+	MainBusBIndicator3.Init(215, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
+
+	MainBusASwitch1.WireTo(FuelCells[0]);
+	MainBusASwitch2.WireTo(FuelCells[1]);
+	MainBusASwitch3.WireTo(FuelCells[2]);
+	MainBusBSwitch1.WireTo(FuelCells[0]);
+	MainBusBSwitch2.WireTo(FuelCells[1]);
+	MainBusBSwitch3.WireTo(FuelCells[2]);
+
 	SBandNormalSwitchesRow.Init(AID_SBAND_NORMAL_SWITCHES, MainPanel);
 	SBandNormalXPDRSwitch.Init    (	  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SBandNormalSwitchesRow);
 	SBandNormalPwrAmpl1Switch.Init(  43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SBandNormalSwitchesRow);
@@ -2830,6 +2858,54 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 	} else if (s == &FuelCellPumps3Switch) {
 		FuelCellPumpsSwitchToggled(s,
 			(int*) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3COOLING:PUMP"));
+
+	} else if (s == &MainBusBSwitch1) {
+		if (s->IsUp()) {
+			MainBusBIndicator1 = true;
+			MainBusBSwitch1.WireTo(FuelCells[0]);}
+		if (s->IsDown()) {
+			MainBusBIndicator1 = false;
+			MainBusBSwitch1.WireTo(0);}
+
+	} else if (s == &MainBusBSwitch2) {
+		if (s->IsUp()) {
+			MainBusBIndicator2 = true;
+			MainBusBSwitch2.WireTo(FuelCells[1]);}
+		if (s->IsDown()) {
+			MainBusBIndicator2 = false;
+			MainBusBSwitch2.WireTo(0);}
+
+	} else if (s == &MainBusBSwitch3) {
+		if (s->IsUp()) {
+			MainBusBIndicator3 = true;
+			MainBusBSwitch3.WireTo(FuelCells[2]);}
+		if (s->IsDown()) {
+			MainBusBIndicator3 = false;
+			MainBusBSwitch3.WireTo(0);}
+	
+	} else if (s == &MainBusASwitch1) {
+		if (s->IsUp()) {
+			MainBusAIndicator1 = true;
+			MainBusASwitch1.WireTo(FuelCells[0]);}
+		if (s->IsDown()) {
+			MainBusAIndicator1 = false;
+			MainBusASwitch1.WireTo(0);}
+
+	} else if (s == &MainBusASwitch2) {
+		if (s->IsUp()) {
+			MainBusAIndicator2 = true;
+			MainBusASwitch2.WireTo(FuelCells[1]);}
+		if (s->IsDown()) {
+			MainBusAIndicator2 = false;
+			MainBusASwitch2.WireTo(0);}
+
+	} else if (s == &MainBusASwitch3) {
+		if (s->IsUp()) {
+			MainBusAIndicator3 = true;
+			MainBusASwitch3.WireTo(FuelCells[2]);}
+		if (s->IsDown()) {
+			MainBusAIndicator3 = false;
+			MainBusASwitch3.WireTo(0);}
 
 
 	} else if (s == &SuitCompressor1Switch || s == & SuitCompressor2Switch) {
@@ -4132,7 +4208,22 @@ void Saturn::InitSwitches() {
 	AcBus2Switch2.Register(PSH, "AcBus2Switch2", true);
 	AcBus2Switch3.Register(PSH, "AcBus2Switch3", false);
 	AcBus2ResetSwitch.Register(PSH, "AcBus2ResetSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
-
+	
+	MainBusASwitch1.Register(PSH, "MainBusASwitch1", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	MainBusASwitch2.Register(PSH, "MainBusASwitch2", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	MainBusASwitch3.Register(PSH, "MainBusASwitch3", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	MainBusAResetSwitch.Register(PSH, "MainBusAResetSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	MainBusBSwitch1.Register(PSH, "MainBusBSwitch1", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	MainBusBSwitch2.Register(PSH, "MainBusBSwitch2", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	MainBusBSwitch3.Register(PSH, "MainBusBSwitch3", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	MainBusBResetSwitch.Register(PSH, "MainBusBResetSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	MainBusBIndicator1.Register(PSH, "MainBusBIndicator1", true);
+	MainBusBIndicator2.Register(PSH, "MainBusBIndicator2", true);
+	MainBusBIndicator3.Register(PSH, "MainBusBIndicator3", true);
+	MainBusAIndicator1.Register(PSH, "MainBusAIndicator1", true);
+	MainBusAIndicator2.Register(PSH, "MainBusAIndicator2", true);
+	MainBusAIndicator3.Register(PSH, "MainBusAIndicator3", true);
+		
 	MissionTimerHoursSwitch.Register(PSH, "MissionTimerHoursSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	MissionTimerMinutesSwitch.Register(PSH, "MissionTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	MissionTimerSecondsSwitch.Register(PSH, "MissionTimerSecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);

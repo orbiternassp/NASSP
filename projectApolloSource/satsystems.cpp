@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2006/02/27 00:57:48  dseagrav
+  *	Added SPS thrust-vector control. Changes 20060225-20060226.
+  *	
   *	Revision 1.78  2006/02/23 22:46:41  quetalsi
   *	Added AC ovevoltage control and Bugfix
   *	
@@ -314,6 +317,12 @@ void Saturn::SystemsInit() {
 	MainBusA = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_A");
 	MainBusB = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_B");
 
+	DCBusASource.WireToBuses(&MainBusASwitch1, &MainBusASwitch2, &MainBusASwitch3);
+	DCBusBSource.WireToBuses(&MainBusBSwitch1, &MainBusBSwitch2, &MainBusBSwitch3);
+
+	MainBusA->WireTo(&DCBusASource);
+	MainBusB->WireTo(&DCBusBSource);
+	
 	ACBus1Source.WireToBuses(&AcBus1Switch1, &AcBus1Switch2, &AcBus1Switch3);
 	ACBus2Source.WireToBuses(&AcBus2Switch1, &AcBus2Switch2, &AcBus2Switch3);
 
