@@ -173,6 +173,7 @@
 #define AID_VSI2                        304
 #define AID_FUELCELLRADIATORSINDICATORS 403
 #define AID_FUELCELLREACTANTSSWITCHES   410
+#define ADI_MAINBUSAINDICATORS			411
 #define AID_CYROTANKSWITCHES            413
 #define AID_SMRCS_FUEL                  416
 #define AID_SPS_FUEL                    417

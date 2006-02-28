@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.118  2006/02/23 15:49:24  tschachim
+  *	Restored changes lost in last version.
+  *	
   *	Revision 1.117  2006/02/23 14:13:49  dseagrav
   *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
   *	
@@ -432,6 +435,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 								ACBus2Source(0, Panelsdk),
 								ACBus1("ACBus1", Panelsdk),
 								ACBus2("ACBus2", Panelsdk),
+								DCBusASource(0, Panelsdk),
+								DCBusBSource(0, Panelsdk),
 								BatteryBusA("Battery-Bus-A", Panelsdk),
 								BatteryBusB("Battery-Bus-B", Panelsdk),
 								PyroBusA("Pyro-Bus-A", Panelsdk),

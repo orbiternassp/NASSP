@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.150  2006/02/27 00:57:48  dseagrav
+  *	Added SPS thrust-vector control. Changes 20060225-20060226.
+  *	
   *	Revision 1.149  2006/02/23 22:46:41  quetalsi
   *	Added AC ovevoltage control and Bugfix
   *	
@@ -923,6 +926,21 @@ protected:
 	TwoSourceSwitch AcBus2Switch2;
 	TwoSourceSwitch AcBus2Switch3;
 	ThreePosSwitch AcBus2ResetSwitch;
+
+	IndicatorSwitch MainBusBIndicator1;
+	IndicatorSwitch MainBusBIndicator2;
+	IndicatorSwitch MainBusBIndicator3;
+	IndicatorSwitch MainBusAIndicator1;
+	IndicatorSwitch MainBusAIndicator2;
+	IndicatorSwitch MainBusAIndicator3;
+	ThreePosSwitch MainBusBSwitch1;
+	ThreePosSwitch MainBusBSwitch2;
+	ThreePosSwitch MainBusBSwitch3;
+	ThreePosSwitch MainBusBResetSwitch;
+	ThreePosSwitch MainBusASwitch1;
+	ThreePosSwitch MainBusASwitch2;
+	ThreePosSwitch MainBusASwitch3;
+	ThreePosSwitch MainBusAResetSwitch;
 	
 	//
 	// FDAI control switches.
@@ -1866,6 +1884,7 @@ protected:
 	SwitchRow FuelCellLatchSwitchesRow;
 	SwitchRow FuelCellPumpsSwitchesRow;
 	SwitchRow SuitCompressorSwitchesRow;
+	SwitchRow MainBusAIndicatorsRow;
 
 	SwitchRow SBandNormalSwitchesRow;
 
@@ -1888,6 +1907,10 @@ protected:
 
 	DCbus NonEssBus1;
 	DCbus NonEssBus2;
+
+
+	ThreeWayPowerMerge DCBusASource;
+	ThreeWayPowerMerge DCBusBSource;
 
 	//
 	// Inverters.
