@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2006/02/23 22:46:41  quetalsi
+  *	Added AC ovevoltage control and Bugfix
+  *	
   *	Revision 1.21  2006/02/22 20:14:45  quetalsi
   *	C&W  AC_BUS1/2 light and AC RESET SWITCH now woks.
   *	
@@ -354,8 +357,19 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		MainBusStatus ms;
 		sat->GetMainBusStatus(ms);
 
-		SetLight(CSM_CWS_BUS_A_UNDERVOLT, (ms.MainBusAVoltage < 26.25));
-		SetLight(CSM_CWS_BUS_B_UNDERVOLT, (ms.MainBusBVoltage < 26.25));
+		if (ms.Enabled_DC_A_CWS) {
+			if (ms.MainBusAVoltage <26.25) {
+				SetLight(CSM_CWS_BUS_A_UNDERVOLT, true); }
+		}
+		else SetLight(CSM_CWS_BUS_A_UNDERVOLT, false);
+		
+		if (ms.Enabled_DC_B_CWS) {
+			if (ms.MainBusBVoltage <26.25) {
+				SetLight(CSM_CWS_BUS_B_UNDERVOLT, true); }
+		}
+		else SetLight(CSM_CWS_BUS_B_UNDERVOLT, false);
+
+		SetLight(CSM_CWS_FC_BUS_DISCONNECT, ms.Fc_Disconnected);
 
 		//
 		// AC bus: lights come on to indicate under or overvoltage in the AC bus.

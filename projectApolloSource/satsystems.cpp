@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2006/02/28 00:03:58  quetalsi
+  *	MainBus A & B Switches and Talkbacks woks and wired.
+  *	
   *	Revision 1.79  2006/02/27 00:57:48  dseagrav
   *	Added SPS thrust-vector control. Changes 20060225-20060226.
   *	
@@ -2027,14 +2030,24 @@ void Saturn::GetMainBusStatus(MainBusStatus &ms)
 {
 	ms.MainBusAVoltage = 0.0;
 	ms.MainBusBVoltage = 0.0;
+	ms.Enabled_DC_A_CWS = MainBusAResetSwitch.IsCenter();
+	ms.Enabled_DC_B_CWS = MainBusBResetSwitch.IsCenter();
+	if (&MainBusA) {
+		ms.MainBusAVoltage = MainBusA->Voltage();}
 
-	if (MainBusA) {
-		ms.MainBusAVoltage = MainBusA->Voltage();
-	}
+	if (&MainBusB) {
+		ms.MainBusBVoltage = MainBusB->Voltage();}
 
-	if (MainBusB) {
-		ms.MainBusBVoltage = MainBusB->Voltage();
-	}
+	if (( MainBusASwitch1.IsCenter() && !MainBusAIndicator1 ) ||
+		( MainBusASwitch2.IsCenter() && !MainBusAIndicator2 ) ||
+		( MainBusASwitch3.IsCenter() && !MainBusAIndicator3 ) ||
+		( MainBusBSwitch1.IsCenter() && !MainBusBIndicator1 ) ||
+		( MainBusBSwitch2.IsCenter() && !MainBusBIndicator2 ) ||
+		( MainBusBSwitch3.IsCenter() && !MainBusBIndicator3 ))
+		ms.Fc_Disconnected = true;
+	else
+		ms.Fc_Disconnected = false;
+
 }
 
 //

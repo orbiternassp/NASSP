@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/02/23 22:46:41  quetalsi
+  *	Added AC ovevoltage control and Bugfix
+  *	
   *	Revision 1.13  2006/02/22 20:14:46  quetalsi
   *	C&W  AC_BUS1/2 light and AC RESET SWITCH now woks.
   *	
@@ -147,6 +150,7 @@ protected:
 #define CSM_CWS_SPS_PRESS			38
 #define CSM_CWS_AC_BUS1_LIGHT		40
 #define CSM_CWS_AC_BUS2_LIGHT		41
+#define CSM_CWS_FC_BUS_DISCONNECT   43
 #define CSM_CWS_AC_BUS1_OVERLOAD	44
 #define CSM_CWS_AC_BUS2_OVERLOAD	45
 #define CSM_CWS_CMC_LIGHT			46

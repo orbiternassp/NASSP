@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.151  2006/02/28 00:03:58  quetalsi
+  *	MainBus A & B Switches and Talkbacks woks and wired.
+  *	
   *	Revision 1.150  2006/02/27 00:57:48  dseagrav
   *	Added SPS thrust-vector control. Changes 20060225-20060226.
   *	
@@ -333,6 +336,9 @@ typedef struct {
 typedef struct {
 	double MainBusAVoltage;
 	double MainBusBVoltage;
+	bool Enabled_DC_A_CWS;
+	bool Enabled_DC_B_CWS;
+	bool Fc_Disconnected;
 } MainBusStatus;
 
 typedef struct {
