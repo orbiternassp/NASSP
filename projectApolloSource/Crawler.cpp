@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2005/12/19 16:46:33  tschachim
+  *	Bugfix touchdownpoints.
+  *	
   *	Revision 1.11  2005/11/23 21:36:55  movieman523
   *	Allow specification of LV name in scenario file.
   *	
@@ -274,7 +277,9 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	}
 
 	if (velocity != 0) 
-		soundEngine.play(LOOP, (int)(127.5 + 127.5 * velocity / maxVelocity));
+		// velocity dependent sound disabled
+		//  soundEngine.play(LOOP, (int)(127.5 + 127.5 * velocity / maxVelocity));
+		soundEngine.play();
 	else
 		soundEngine.stop();
 
