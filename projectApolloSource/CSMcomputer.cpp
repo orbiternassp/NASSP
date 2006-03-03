@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/02/27 00:57:48  dseagrav
+  *	Added SPS thrust-vector control. Changes 20060225-20060226.
+  *	
   *	Revision 1.40  2006/02/23 14:13:49  dseagrav
   *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
   *	
@@ -1046,6 +1049,9 @@ void CSMcomputer::Prog15Pressed(int R1, int R2, int R3)
 void CSMcomputer::Timestep(double simt, double simdt)
 
 {
+	// DS20060302 For joystick stuff below
+	Saturn *sat = (Saturn *) OurVessel;
+
 	//
 	// Do nothing if we have no power.
 	//

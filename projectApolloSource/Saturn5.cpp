@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2006/02/27 00:57:48  dseagrav
+  *	Added SPS thrust-vector control. Changes 20060225-20060226.
+  *	
   *	Revision 1.69  2006/02/22 18:52:10  tschachim
   *	Bugfixes for Apollo 4-6.
   *	
@@ -325,6 +328,9 @@ SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
 void SaturnV::initSaturnV()
 
 {
+	// DS20060301 Save DLL instance handle for later abuse
+	dllhandle = g_Param.hDLL;
+
 	//
 	// Do the basic initialisation from the
 	// generic Saturn class first.

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.119  2006/02/28 00:03:58  quetalsi
+  *	MainBus A & B Switches and Talkbacks woks and wired.
+  *	
   *	Revision 1.118  2006/02/23 15:49:24  tschachim
   *	Restored changes lost in last version.
   *	
@@ -471,6 +474,18 @@ Saturn::~Saturn()
 	if (LMPad) {
 		delete[] LMPad;
 		LMPad = 0;
+	}
+
+	// DS20060302 release DirectX stuff
+	if(js_enabled > 0){
+		// Release joysticks
+		while(js_enabled > 0){
+			js_enabled--;
+			dx8_joystick[js_enabled]->Unacquire();
+			dx8_joystick[js_enabled]->Release();
+		}
+		dx8ppv->Release();
+		dx8ppv = NULL;
 	}
 
 	//fclose(PanelsdkLogFile);
