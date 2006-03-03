@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2006/02/28 20:40:32  quetalsi
+  *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
+  *	
   *	Revision 1.80  2006/02/28 00:03:58  quetalsi
   *	MainBus A & B Switches and Talkbacks woks and wired.
   *	
@@ -289,6 +292,25 @@
 
 //FILE *PanelsdkLogFile;
 
+// DS20060302 DX8 callback for enumerating joysticks
+BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pSaturn)
+{
+	class Saturn * sat = (Saturn*)pSaturn; // Pointer to us
+	HRESULT hr;
+
+	if(sat->js_enabled > 1){  // Do we already have enough joysticks?
+		return DIENUM_STOP; } // If so, stop enumerating additional devices.
+
+	// Obtain an interface to the enumerated joystick.
+    hr = sat->dx8ppv->CreateDevice(pdidInstance->guidInstance, &sat->dx8_joystick[sat->js_enabled], NULL);
+	
+	if(FAILED(hr)) {              // Did that work?
+		return DIENUM_CONTINUE; } // No, keep enumerating (if there's more)
+
+	sat->js_enabled++;      // Otherwise, Next!
+	return DIENUM_CONTINUE; // and keep enumerating
+}
+
 void Saturn::SystemsInit() {
 
 	// default state
@@ -459,10 +481,301 @@ void Saturn::SystemsInit() {
 	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
 	// DS20060226 SPS Gimbal reset to zero
 	sps_pitch_position = 0;
-	sps_yaw_position = 0;	
+	sps_yaw_position = 0;
+	
+	// DS20060301 Initialize joystick
+	HRESULT         hr;
+	js_enabled = 0;  // Disabled
+	rhc_id = -1;     // Disabled
+	rhc_rot_id = -1; // Disabled
+	rhc_sld_id = -1; // Disabled
+	rhc_rzx_id = -1; // Disabled
+	thc_id = -1;     // Disabled
+	thc_rot_id = -1; // Disabled
+	thc_sld_id = -1; // Disabled
+	thc_rzx_id = -1; // Disabled
+	thc_debug = -1;
+	rhc_debug = -1;
+	FILE *fd;
+	// Open configuration file
+	fd = fopen("Config\\ProjectApollo\\Joystick.INI","r");
+	if(fd != NULL){ // Did that work?
+		char dataline[256];
+		char *token;
+		char *parameter;
+		rhc_id = 0; // Trap!
+		while(!feof(fd)){
+			fgets(dataline,256,fd); // Yes, so read a line
+			// Get a token.
+			token = strtok(dataline," \r\n");
+			if(token != NULL){                                  // If it's not null, parse.
+				if(strncmp(token,"RHC",3)==0){                  // RHC address?
+					// Get next token, which should be JS number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						rhc_id = atoi(parameter);
+						if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"RRT",3)==0){                  // RHC ROTATOR address?
+					// Get next token, which should be ROTATOR number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						rhc_rot_id = atoi(parameter);
+						if(rhc_rot_id > 2){ rhc_rot_id = 2; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"RSL",3)==0){                  // RHC SLIDER address?
+					// Get next token, which should be SLIDER number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						rhc_sld_id = atoi(parameter);
+						if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"RZX",3)==0){                  // RHC ROTATOR address?
+					// Get next token, which should be ROTATOR number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						rhc_rzx_id = atoi(parameter);
+						if(rhc_rzx_id > 1){ rhc_rzx_id = 1; } // Be paranoid
+					}
+				}
+				/* *** THC *** */
+				if(strncmp(token,"THC",3)==0){                  // THC address?
+					// Get next token, which should be JS number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						thc_id = atoi(parameter);
+						if(thc_id > 1){ thc_id = 1; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"TRT",3)==0){                  // THC ROTATOR address?
+					// Get next token, which should be ROTATOR number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						thc_rot_id = atoi(parameter);
+						if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"TSL",3)==0){                  // THC SLIDER address?
+					// Get next token, which should be SLIDER number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						thc_sld_id = atoi(parameter);
+						if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"TZX",3)==0){                  // THC ROTATOR address?
+					// Get next token, which should be ROTATOR number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						thc_rzx_id = atoi(parameter);
+						if(thc_rzx_id > 1){ thc_rzx_id = 1; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"RDB",3)==0){					// RHC debug					
+					rhc_debug = 1;
+				}
+				if(strncmp(token,"TDB",3)==0){					// THC debug					
+					thc_debug = 1;
+				}
+			}			
+		}		
+		fclose(fd);
+		// Having read the configuration file, set up DirectX...	
+		hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
+		if(!FAILED(hr)){
+			int x=0;
+			// Enumerate attached joysticks until we find 2 or run out.
+			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+			if(js_enabled == 0){   // Did we get anything?			
+				dx8ppv->Release(); // No. Close down DirectInput
+				dx8ppv = NULL;     // otherwise it won't get closed later
+				sprintf(oapiDebugString(),"DX8JS: No joysticks found");
+			}else{
+				while(x < js_enabled){                                // For each joystick
+					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
+					/* Can't do this because we don't own a window.
+					dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
+						DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		  // and we don't need exclusive joystick access.
+						*/ 
+					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
+					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+					x++;                                              // Next!
+				}
+			}
+		}else{
+			// We can't print an error message this early in initialization, so save this reason for later investigation.
+			dx8_failure = hr;
+		}
+	}
 }
 
 void Saturn::SystemsTimestep(double simt, double simdt) {
+
+
+	// DS20060302 Read joysticks and feed data to the computer
+	if(js_enabled > 0){
+		HRESULT hr;
+		ChannelValue31 val31;
+		// I thought that minimum-impulse meant the controller wasn't all the way over but that's not the case.
+		// ChannelValue32 val32;
+		val31.Value = agc.GetInputChannel(031); // Get current data
+		//val32.Value = agc.GetInputChannel(032);
+		// Mask off joystick bits
+		val31.Value &= 070000;
+		//val32.Value &= 077700;
+
+		// We'll do this with a RHC first. 
+		if(rhc_id != -1){
+			int rhc_voltage1 = 0,rhc_voltage2 = 0;
+			// Since we are feeding the AGC, the RHC NORMAL power must be on.
+			// The switch is not very clear on what is feeding it, I'll assume MNA/MNB for DC, and AC1/AC2 for AC
+			switch(RotPowerNormal1Switch.GetState()){
+				case THREEPOSSWITCH_UP:       // AC1
+					rhc_voltage1 = (int)ACBus1.Voltage();
+					break;
+				case THREEPOSSWITCH_DOWN:     // MNA
+					rhc_voltage1 = (int)MainBusA->Voltage();
+					break;
+			}
+			switch(RotPowerNormal2Switch.GetState()){
+				case THREEPOSSWITCH_UP:       // AC2
+					rhc_voltage2 = (int)ACBus2.Voltage();
+					break;
+				case THREEPOSSWITCH_DOWN:     // MNB
+					rhc_voltage2 = (int)MainBusB->Voltage();
+					break;
+			}
+			hr=dx8_joystick[rhc_id]->Poll();
+			if(FAILED(hr)){ // Did that work?
+				// Attempt to acquire the device
+				hr = dx8_joystick[rhc_id]->Acquire();
+				if(FAILED(hr)){
+					sprintf(oapiDebugString(),"DX8JS: Cannot aquire RHC");
+				}else{
+					hr=dx8_joystick[rhc_id]->Poll();
+				}
+			}		
+			// Read data
+			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]),&dx8_jstate[rhc_id]);
+			// X and Y are well-duh kinda things. X=0 for full-left, Y = 0 for full-down
+			// Set bits according to joystick state. 32768 is center, so 16384 is the left half.
+			if(rhc_voltage1 > 0 || rhc_voltage2 > 0){
+				if(dx8_jstate[rhc_id].lX < 16384){							
+					val31.Bits.MinusRollManualRotation = 1;
+				}	
+				if(dx8_jstate[rhc_id].lY < 16384){
+					val31.Bits.MinusPitchManualRotation = 1;
+				}
+				if(dx8_jstate[rhc_id].lX > 49152){
+					val31.Bits.PlusRollManualRotation = 1;
+				}
+				if(dx8_jstate[rhc_id].lY > 49152){
+					val31.Bits.PlusPitchManualRotation = 1;
+				}
+				// Z-axis read.
+				int rhc_rot_pos = 32768; // Initialize to centered
+				if(rhc_rot_id != -1){ // If this is a rotator-type axis
+					switch(rhc_rot_id){
+						case 0:
+							rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
+						case 1:
+							rhc_rot_pos = dx8_jstate[rhc_id].lRy; break;
+						case 2:
+							rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
+					}
+				}
+				if(rhc_sld_id != -1){ // If this is a slider
+					rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
+				}
+				if(rhc_rzx_id != -1){ // If we use the native Z-axis
+					rhc_rot_pos = dx8_jstate[rhc_id].lZ;
+				}
+				if(rhc_rot_pos < 16384){
+					val31.Bits.MinusYawManualRotation = 1;
+				}
+				if(rhc_rot_pos > 49152){
+					val31.Bits.PlusYawManualRotation = 1;
+				}
+				if(rhc_debug != -1){ sprintf(oapiDebugString(),"RHC: X/Y/Z = %d / %d / %d",dx8_jstate[rhc_id].lX,dx8_jstate[rhc_id].lY,
+					rhc_rot_pos); }
+			}
+		}
+		// And now the THC...
+		if(thc_id != -1){
+			int thc_voltage = 0; 
+			switch(TransContrSwitch.GetState()){
+				case TOGGLESWITCH_UP: // I can't find what this is supposed to be connected to. I'll assume MNA for now
+					thc_voltage = (int)MainBusA->Voltage();
+					break;
+				case TOGGLESWITCH_DOWN:
+					break;			
+			}
+			hr=dx8_joystick[thc_id]->Poll();
+			if(FAILED(hr)){ // Did that work?
+				// Attempt to acquire the device
+				hr = dx8_joystick[thc_id]->Acquire();
+				if(FAILED(hr)){
+					sprintf(oapiDebugString(),"DX8JS: Cannot aquire THC");
+				}else{
+					hr=dx8_joystick[thc_id]->Poll();
+				}
+			}		
+			// Read data
+			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]),&dx8_jstate[thc_id]);
+			// The THC layout is wierd. I'm going to change it so the axes are represenative of directions that make sense.
+			// This is correct for the Space Shuttle THC anyway...
+			if(thc_voltage > 0){
+				if(dx8_jstate[thc_id].lX < 16384){							
+					val31.Bits.MinusYTranslation = 1;
+				}	
+				if(dx8_jstate[thc_id].lY < 16384){
+					val31.Bits.PlusXTranslation = 1;
+				}
+				if(dx8_jstate[thc_id].lX > 49152){
+					val31.Bits.PlusYTranslation = 1;
+				}
+				if(dx8_jstate[thc_id].lY > 49152){
+					val31.Bits.MinusXTranslation = 1;
+				}
+				// Z-axis read.
+				int thc_rot_pos = 32768; // Initialize to centered
+				if(thc_rot_id != -1){ // If this is a rotator-type axis
+					switch(thc_rot_id){
+						case 0:
+							thc_rot_pos = dx8_jstate[thc_id].lRx; break;
+						case 1:
+							thc_rot_pos = dx8_jstate[thc_id].lRy; break;
+						case 2:
+							thc_rot_pos = dx8_jstate[thc_id].lRz; break;
+					}
+				}
+				if(thc_sld_id != -1){ // If this is a slider
+					thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
+				}
+				if(thc_rzx_id != -1){ // If we use the native Z-axis
+					thc_rot_pos = dx8_jstate[thc_id].lZ;
+				}
+				if(thc_rot_pos < 16384){
+					val31.Bits.MinusZTranslation = 1;
+				}
+				if(thc_rot_pos > 49152){
+					val31.Bits.PlusZTranslation = 1;
+				}
+				if(thc_debug != -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
+					thc_rot_pos); }
+			}
+		}
+
+		// sprintf(oapiDebugString(),"DX8JS: RHC %d : THC %d : CH31 = %o",rhc_id,thc_id,val31.Value);
+		// Submit data to the CPU.
+		agc.SetInputChannel(031,val31.Value);
+		//SetInputChannel(032,val32.Value);
+	}/* else{
+		sprintf(oapiDebugString(),"DX8JS: Couldn't initialize DirectInput: %X",dx8_failure);
+	} */
 
 	//
 	// Don't clock the computer and the internal systems unless we're actually at pre-launch.

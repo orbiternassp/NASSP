@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.152  2006/02/28 20:40:32  quetalsi
+  *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
+  *	
   *	Revision 1.151  2006/02/28 00:03:58  quetalsi
   *	MainBus A & B Switches and Talkbacks woks and wired.
   *	
@@ -201,6 +204,9 @@
 #include "dockingprobe.h"
 #include "pyro.h"
 #include "secs.h"
+// DS20060301 Include DirectInput
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
 
 //
 // Valves.
@@ -360,7 +366,7 @@ public:
 	void SetEngineIndicator(int i);
 	void ClearEngineIndicator(int i);
 
-	void UpdateLaunchTime(double t);
+	void UpdateLaunchTime(double t);	
 
 	//
 	// Set up the default mesh for the virtual cockpit.
@@ -376,6 +382,29 @@ public:
 	double sps_yaw_position;
 	virtual double SetSPSPitch(double direction);
 	virtual double SetSPSYaw(double direction);
+
+	// DS20060301 DirectInput stuff
+	// Handle to DLL instance
+	HINSTANCE dllhandle;
+	// pointer to DirectInput class itself
+	LPDIRECTINPUT8 dx8ppv;
+	// Joysticks-Enabled flag / counter - Zero if we aren't using DirectInput, nonzero is the number of joysticks we have.
+	int js_enabled;
+	// Pointers to DirectInput joystick devices
+	LPDIRECTINPUTDEVICE8 dx8_joystick[2]; // One for THC, one for RHC, ignore extras
+	DIDEVCAPS			 dx8_jscaps[2];   // Joystick capabilities
+	DIJOYSTATE2			 dx8_jstate[2];   // Joystick state
+	HRESULT				 dx8_failure;     // DX failure reason
+	int rhc_id;							  // Joystick # for the RHC
+	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
+	int rhc_sld_id;                       // ID of SLIDER axis to use for RHC Z-axis
+	int rhc_rzx_id;                       // Flag to use native Z-axis as RHC Z-axis
+	int thc_id;                           // Joystick # for the THC
+	int thc_rot_id;						  // ID of ROTATOR axis to use for THC Z-axis
+	int thc_sld_id;                       // ID of SLIDER axis to use for THC Z-axis
+	int thc_rzx_id;                       // Flag to use native Z-axis as THC Z-axis	
+	int rhc_debug;						  // Flags to print debugging messages.
+	int thc_debug;
 
 	//
 	// General functions that handle calls from Orbiter.
