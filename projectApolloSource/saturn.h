@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.153  2006/03/03 05:12:37  dseagrav
+  *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
+  *	
   *	Revision 1.152  2006/02/28 20:40:32  quetalsi
   *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
   *	
@@ -206,7 +209,7 @@
 #include "secs.h"
 // DS20060301 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
+#include "dinput.h"
 
 //
 // Valves.
