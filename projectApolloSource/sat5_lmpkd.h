@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2006/01/29 00:48:36  flydba
+  *	Switches added on LEM panel 2.
+  *	
   *	Revision 1.33  2006/01/26 19:26:31  movieman523
   *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
   *	
@@ -291,9 +294,9 @@ protected:
 	PushSwitch AbortStageSwitch;
 	bool AbortStageSwitchLight;
 
-	//////////////////////
-	// LEM panel 1		//
-	//////////////////////
+	/////////////////
+	// LEM panel 1 //
+	/////////////////
 
 	SwitchRow LeftXPointerSwitchRow;
 	ToggleSwitch LeftXPointerSwitch;
@@ -325,9 +328,9 @@ protected:
 	SwitchRow HeliumMonRotaryRow;
 	RotationalSwitch HeliumMonRotary;
 
-	//////////////////////
-	// LEM panel 2		//
-	//////////////////////
+	/////////////////
+	// LEM panel 2 //
+	/////////////////
 
 	SwitchRow RightMonitorSwitchRow;
 	ToggleSwitch RightRateErrorMonSwitch;
@@ -346,9 +349,9 @@ protected:
 	SwitchRow QtyMonRotaryRow;
 	RotationalSwitch QtyMonRotary;
 
-	//////////////////////
-	// LEM panel 3		//
-	//////////////////////
+	/////////////////
+	// LEM panel 3 //
+	/////////////////
 	
 	SwitchRow EngineArmSwitchesRow;
 	ThreePosSwitch EngineArmSwitch;
@@ -360,6 +363,66 @@ protected:
 	PGNSSwitch ModeControlPNGSSwitch;
 	ThreePosSwitch ModeControlAGSSwitch;
     UnguardedIMUCageSwitch IMUCageSwitch;
+
+	SwitchRow RadarAntTestSwitchesRow;
+	ThreePosSwitch LandingAntSwitch;
+	ThreePosSwitch RadarTestSwitch;
+
+	SwitchRow TestMonitorRotaryRow;
+	RotationalSwitch TestMonitorRotary;
+
+	SwitchRow SlewRateSwitchRow;
+	ToggleSwitch SlewRateSwitch;
+
+	SwitchRow RendezvousRadarRotaryRow;
+	RotationalSwitch RendezvousRadarRotary;
+
+	SwitchRow StabContSwitchesRow;
+	ToggleSwitch DeadBandSwitch;
+	ThreePosSwitch GyroTestLeftSwitch;
+	ThreePosSwitch GyroTestRightSwitch;
+
+	SwitchRow AttitudeControlSwitchesRow;
+	ThreePosSwitch RollSwitch;
+	ThreePosSwitch PitchSwitch;
+	ThreePosSwitch YawSwitch;
+
+	SwitchRow TempMonitorRotaryRow;
+	RotationalSwitch TempMonitorRotary;
+
+	SwitchRow RCSSysQuadSwitchesRow;
+	ThreePosSwitch RCSSysQuad1Switch;
+	ThreePosSwitch RCSSysQuad2Switch;
+	ThreePosSwitch RCSSysQuad3Switch;
+	ThreePosSwitch RCSSysQuad4Switch;
+
+	SwitchRow LightingSwitchesRow;
+	ToggleSwitch SidePanelsSwitch;
+	ThreePosSwitch FloodSwitch;
+
+	SwitchRow FloodRotaryRow;
+	RotationalSwitch FloodRotary;
+
+	SwitchRow LampToneTestRotaryRow;
+	RotationalSwitch LampToneTestRotary;
+
+	SwitchRow RightXPointerSwitchRow;
+	ToggleSwitch RightXPointerSwitch;
+
+	SwitchRow ExteriorLTGSwitchRow;
+	ThreePosSwitch ExteriorLTGSwitch;
+
+	/////////////////
+	// LEM panel 4 //
+	/////////////////
+
+	SwitchRow Panel4LeftSwitchRow;
+	ToggleSwitch LeftACA4JetSwitch;
+	ToggleSwitch LeftTTCATranslSwitch;
+
+	SwitchRow Panel4RightSwitchRow;
+	ToggleSwitch RightACA4JetSwitch;
+	ToggleSwitch RightTTCATranslSwitch;
 
 	bool RCS_Full;
 	bool Eds;
