@@ -114,6 +114,7 @@ IDB_LMTHREEPOSSWITCH    BITMAP  DISCARDABLE     "lm3posswitch.bmp"
 IDB_DSKY_DISP           BITMAP  DISCARDABLE     "dsky_disp.bmp"
 IDB_DSKY_KEY            BITMAP  DISCARDABLE     "dsky_keys.bmp"
 IDB_LEMROTARY           BITMAP  DISCARDABLE	"LemRotationalSwitch.bmp"
+IDB_CIRCUITBRAKERLEM    BITMAP  DISCARDABLE     "circuit_breaker_lem.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 

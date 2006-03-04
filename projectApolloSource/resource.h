@@ -506,6 +506,7 @@
 #define AID_EXTERIORLTGSWITCH				806
 #define AID_PANEL4LEFTSWITCHROW				807
 #define AID_PANEL4RIGHTSWITCHROW			808
+#define IDB_CIRCUITBRAKERLEM				809
 
 // Next default values for new objects
 //
