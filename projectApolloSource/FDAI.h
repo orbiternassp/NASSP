@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/02/21 12:02:52  tschachim
+  *	Bugfix FDAI.
+  *	
   *	Revision 1.5  2006/02/01 18:10:55  tschachim
   *	Introduced off flag and smooth mode.
   *	
@@ -49,8 +52,8 @@ public:
 	virtual ~FDAI();
 	void RegisterMe(int index, int x, int y);
 	void Timestep(double simt, double simdt);
-	void PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, 
-		         SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, HBITMAP hBmpRoll, int smooth);
+	void PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
+		         SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);

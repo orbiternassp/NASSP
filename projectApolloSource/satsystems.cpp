@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2006/03/03 05:12:36  dseagrav
+  *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
+  *	
   *	Revision 1.81  2006/02/28 20:40:32  quetalsi
   *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
   *	
@@ -617,6 +620,13 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 	// DS20060302 Read joysticks and feed data to the computer
 	if(js_enabled > 0){
+		// Issue warnings for bad configuration
+		if(thc_id != -1 && !(thc_id < js_enabled)){
+			sprintf(oapiDebugString(),"DX8JS: Joystick selected as THC does not exist.");
+		}
+		if(rhc_id != -1 && !(rhc_id < js_enabled)){
+			sprintf(oapiDebugString(),"DX8JS: Joystick selected as RHC does not exist.");
+		}
 		HRESULT hr;
 		ChannelValue31 val31;
 		// I thought that minimum-impulse meant the controller wasn't all the way over but that's not the case.
@@ -628,10 +638,11 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		//val32.Value &= 077700;
 
 		// We'll do this with a RHC first. 
-		if(rhc_id != -1){
+		if(rhc_id != -1 && rhc_id < js_enabled){
 			int rhc_voltage1 = 0,rhc_voltage2 = 0;
 			// Since we are feeding the AGC, the RHC NORMAL power must be on.
-			// The switch is not very clear on what is feeding it, I'll assume MNA/MNB for DC, and AC1/AC2 for AC
+			// There's more than one RHC in the real ship, but ours is "both" - having the power on for either one will work.
+			// The manual says this is right, the RHC is powered from MNA for DC, and AC1/AC2 for AC
 			switch(RotPowerNormal1Switch.GetState()){
 				case THREEPOSSWITCH_UP:       // AC1
 					rhc_voltage1 = (int)ACBus1.Voltage();
@@ -704,11 +715,14 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 			}
 		}
 		// And now the THC...
-		if(thc_id != -1){
+		if(thc_id != -1 && thc_id < js_enabled){
 			int thc_voltage = 0; 
 			switch(TransContrSwitch.GetState()){
-				case TOGGLESWITCH_UP: // I can't find what this is supposed to be connected to. I'll assume MNA for now
+				case TOGGLESWITCH_UP: // The THC is powered from MNA or MNB automatically.
 					thc_voltage = (int)MainBusA->Voltage();
+					if(thc_voltage < 5){
+						thc_voltage = (int)MainBusB->Voltage();
+					}
 					break;
 				case TOGGLESWITCH_DOWN:
 					break;			
@@ -2618,6 +2632,9 @@ void Saturn::SetSPSState(bool Active)
 double Saturn::SetSPSPitch(double direction){
 	VECTOR3 spsvector;
 	double error = sps_pitch_position - direction;	
+	// Only 5.5 degrees of travel allowed.
+	if(direction > 5.5){ direction = 5.5; }
+	if(direction < -5.5){ direction = -5.5; }
 	sps_pitch_position += direction; // Instant positioning	
 	// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
 	spsvector.x = sps_yaw_position * 0.017453; // Convert deg to rad
@@ -2637,6 +2654,9 @@ double Saturn::SetSPSPitch(double direction){
 double Saturn::SetSPSYaw(double direction){
 	VECTOR3 spsvector;
 	double error = sps_yaw_position - direction;	
+	// Only 5.5 degrees of travel allowed.
+	if(direction > 5.5){ direction = 5.5; }
+	if(direction < -5.5){ direction = -5.5; }
 	sps_yaw_position += direction; // Instant positioning	
 	spsvector.x = sps_yaw_position * 0.017453; // Convert deg to rad
 	spsvector.y = sps_pitch_position * 0.017453;
