@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/02/01 18:12:41  tschachim
+  *	New surface SRF_FDAIOFFFLAG.
+  *	
   *	Revision 1.53  2006/01/22 16:37:20  flydba
   *	New bitmap added.
   *	
@@ -232,7 +235,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 80; // number of bitmap handles
+const int nsurf = 81; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -304,6 +307,7 @@ const int nsurf = 80; // number of bitmap handles
 #define SRF_GLYCOLLEVER				77
 #define SRF_LEMROTARY				78
 #define SRF_FDAIOFFFLAG				79
+#define SRF_CIRCUITBRAKERLEM		80
 
 //
 // Earth radius and gravity constants.
