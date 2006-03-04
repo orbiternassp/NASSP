@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.148  2006/02/28 20:40:32  quetalsi
+  *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
+  *	
   *	Revision 1.147  2006/02/28 00:03:58  quetalsi
   *	MainBus A & B Switches and Talkbacks woks and wired.
   *	
@@ -869,6 +872,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_CSMLEFTWINDOWCOVER]		= oapiCreateSurface (LOADBMP (IDB_CSMLEFTWINDOWCOVER));
 		srf[SRF_GLYCOLLEVER]			= oapiCreateSurface (LOADBMP (IDB_GLYCOLLEVER));
 		srf[SRF_FDAIOFFFLAG]       		= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
+		srf[SRF_FDAINEEDLES]			= oapiCreateSurface (LOADBMP (IDB_FDAINEEDLES));
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -922,6 +926,7 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_CSMLEFTWINDOWCOVER],	g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_GLYCOLLEVER],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_FDAIOFFFLAG],			g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_FDAINEEDLES],			g_Param.col[4]);
 /*		break;
 	}
 */
@@ -1222,8 +1227,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
 		// FDAI
-		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1120, 314);
-		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 563, 642);
+		// FDAIRight was at 1120, 314
+		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1090, 284);
+		// FDAILeft was at 563, 642
+		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 533, 612);
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 
 		// MFDs
@@ -1658,6 +1665,8 @@ void Saturn::SetSwitches(int panel) {
 	//
 	// FDAI switches.
 	//
+
+	// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
 
 	FDAISwitchesRow.Init(AID_FDAI_SWITCHES, MainPanel);
 	FDAIScaleSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FDAISwitchesRow);
@@ -3498,13 +3507,110 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_FDAI_RIGHT:
-		if (!fdaiDisabled)
-			fdaiRight.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], hBmpFDAIRollIndicator, fdaiSmooth);
+		if (!fdaiDisabled){
+			int bmag_voltage = 0;
+			int no_att = 0;
+			VECTOR3 euler_rates;
+			VECTOR3 attitude;
+			// Is this FDAI enabled?
+			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
+			switch(FDAISourceSwitch.GetState()){
+				case THREEPOSSWITCH_UP:     // 1+2
+				case THREEPOSSWITCH_CENTER: // 2
+					attitude = imu.GetTotalAttitude(); // Yes
+					// Get our rotation rates, in radians/second.
+					GetAngularVel(euler_rates);
+					// X Y Z = PITCH YAW ROLL, + means UP/LEFT/RIGHT
+					// Zero axes in which BMAG is not powered. 
+					// BMAG 1 is powered from MNA and AC1, #2 from MNB and AC2
+					switch(BMAGRollSwitch.GetState()){
+						case THREEPOSSWITCH_UP:     // RATE2
+						case THREEPOSSWITCH_CENTER: // RATE2				
+							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5 || ACBus2.Voltage() < 5){ euler_rates.z = 0; }
+							break;
+						case THREEPOSSWITCH_DOWN:   // RATE1
+							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5 || ACBus1.Voltage() < 5){ euler_rates.z = 0; }
+							break;			
+					}
+					switch(BMAGPitchSwitch.GetState()){
+						case THREEPOSSWITCH_UP:     // RATE2
+						case THREEPOSSWITCH_CENTER: // RATE2
+							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5 || ACBus2.Voltage() < 5){ euler_rates.x = 0; }
+							break;
+						case THREEPOSSWITCH_DOWN:   // RATE1											
+							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5 || ACBus1.Voltage() < 5){ euler_rates.x = 0; }
+							break;			
+					}
+					switch(BMAGYawSwitch.GetState()){
+						case THREEPOSSWITCH_UP:     // RATE2
+						case THREEPOSSWITCH_CENTER: // RATE2
+							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5 || ACBus2.Voltage() < 5){ euler_rates.y = 0; }
+							break;
+						case THREEPOSSWITCH_DOWN:   // RATE1											
+							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5 || ACBus1.Voltage() < 5){ euler_rates.y = 0; }
+							break;			
+					}				
+					break;				
+				case THREEPOSSWITCH_DOWN:   // 1
+					attitude = _V(0,0,0);   // No
+					euler_rates = _V(0,0,0);
+					no_att = 1;
+					break;
+			}			
+			fdaiRight.PaintMe(attitude, no_att, euler_rates, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+		}
 		return true;
 
 	case AID_FDAI_LEFT:
-		if (!fdaiDisabled)
-			fdaiLeft.PaintMe(imu.GetTotalAttitude(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], hBmpFDAIRollIndicator, fdaiSmooth);
+		if (!fdaiDisabled){
+			VECTOR3 euler_rates;
+			VECTOR3 attitude;
+			int no_att = 0;
+			// Is this FDAI enabled?
+			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
+			switch(FDAISourceSwitch.GetState()){
+				case THREEPOSSWITCH_UP:     // 1+2
+				case THREEPOSSWITCH_DOWN:   // 1
+					attitude = imu.GetTotalAttitude(); // Yes
+					GetAngularVel(euler_rates);
+					// Zero axes in which BMAG is not powered. I assume that BMAG 1 is powered from MNA and BMAG 2 from MNB
+					switch(BMAGRollSwitch.GetState()){
+						case THREEPOSSWITCH_UP:     // RATE2
+						case THREEPOSSWITCH_CENTER: // RATE2				
+							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5){ euler_rates.z = 0; }
+							break;
+						case THREEPOSSWITCH_DOWN:   // RATE1
+							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5){ euler_rates.z = 0; }
+							break;			
+					}
+					switch(BMAGPitchSwitch.GetState()){
+						case THREEPOSSWITCH_UP:     // RATE2
+						case THREEPOSSWITCH_CENTER: // RATE2
+							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5){ euler_rates.x = 0; }
+							break;
+						case THREEPOSSWITCH_DOWN:   // RATE1											
+							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5){ euler_rates.x = 0; }
+							break;			
+					}
+					switch(BMAGYawSwitch.GetState()){
+						case THREEPOSSWITCH_UP:     // RATE2
+						case THREEPOSSWITCH_CENTER: // RATE2
+							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5){ euler_rates.y = 0; }
+							break;
+						case THREEPOSSWITCH_DOWN:   // RATE1											
+							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5){ euler_rates.y = 0; }
+							break;			
+					}
+
+					break;				
+				case THREEPOSSWITCH_CENTER: // 2
+					attitude = _V(0,0,0);   // No
+					euler_rates = _V(0,0,0);
+					no_att = 1;
+					break;
+			}
+			fdaiLeft.PaintMe(attitude, no_att, euler_rates, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+		}
 		return true;
 
 	case AID_DSKY2_LIGHTS:

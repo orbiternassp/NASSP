@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/02/21 12:01:16  tschachim
+  *	Bugfix FDAI.
+  *	
   *	Revision 1.9  2006/02/01 18:11:50  tschachim
   *	Introduced off flag and smooth mode.
   *	
@@ -183,7 +186,8 @@ void FDAI::RegisterMe(int index, int x, int y) {
 	idx = index;
 	ScrX = x;
 	ScrY = y;
-	oapiRegisterPanelArea(index, _R(ScrX, ScrY, ScrX + 185, ScrY + 185), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+	// Old size was 185 x 185
+	oapiRegisterPanelArea(index, _R(ScrX, ScrY, ScrX + 245, ScrY + 245), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 }
 
 
@@ -213,8 +217,8 @@ void FDAI::MoveBall() {
 	glRotated(now.z / PI * 180.0, 0.0, 0.0, 1.0);	//attitude.y
 }
 
-void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI, 
-				   SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, HBITMAP hBmpRoll, int smooth) {
+void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
+				   SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth) {
 
 	if (!init) InitGL();
 
@@ -232,7 +236,7 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI,
 	}
 
 	HDC hDC = oapiGetDC(surf);
-	BitBlt(hDC, 13, 13, 150, 150, hDC2, 10, 10, SRCCOPY);//then we bitblt onto the panel.
+	BitBlt(hDC, 43, 43, 150, 150, hDC2, 10, 10, SRCCOPY);//then we bitblt onto the panel.
 
 	// roll indicator
 	HDC hDCRotate;
@@ -247,8 +251,10 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI,
 	SelectObject(hDCRotate, hBmpXXX);
 	
 	double radius = 62;
-	int targetX = ((int)( sin(-angle) * radius)) + 93 - ((int)(rotateX/2));
-	int targetY = ((int)(-cos(-angle) * radius)) + 92 - ((int)(rotateY/2));
+	// Was + 93 and 92
+	int targetX = ((int)( sin(-angle) * radius)) + 123 - ((int)(rotateX/2));
+	int targetY = ((int)(-cos(-angle) * radius)) + 122 - ((int)(rotateY/2));
+	int targetZ = 0;
 
 	DrawTransparentBitmap(hDC, hBmpRotate, targetX, targetY, 0x00FF00FF);
 	
@@ -258,14 +264,54 @@ void FDAI::PaintMe(VECTOR3 attitude, SURFHANDLE surf, SURFHANDLE hFDAI,
 	DeleteDC(hDCTemp);
 	DeleteDC(hDCRotate);
 
-	oapiReleaseDC(surf,hDC);		   
-	
+	oapiReleaseDC(surf,hDC);		   	
+
 	// frame-bitmaps
-	oapiBlt (surf, hFDAIRoll, 13, 13, 0, 0, 160, 160, SURF_PREDEF_CK);
-	oapiBlt (surf, hFDAI, 0, 0, 0, 0, 185, 183, SURF_PREDEF_CK);
+	// Was 13,13
+	oapiBlt (surf, hFDAIRoll, 43, 43, 0, 0, 160, 160, SURF_PREDEF_CK);
+	// Was 0,0
+	oapiBlt (surf, hFDAI, 30, 30, 0, 0, 185, 183, SURF_PREDEF_CK);
+		
+	// Roll/Yaw X range is 54 - 180, 117 is center, 63 px per side. (the window is 245 pixels wide)
+	// Full-Scale is 63. The max rates for roll are 1, 5, and 50 degrees per second.
+	// This becomes 0.017453, 0.087265, and 0.87265 radians respectively.
+	// 10 is 0.17453 radians and conversion factor 360.969460
+	// Conversion rates are 3609.694608, 721.938921, and 72.193892
+	// Offset = Conversion * Rate
 	
+	switch(ratescale){
+		case 2: // THREEPOSSWITCH_UP:
+			targetX = (int)(117+(3609.694608 * rates.z));
+			targetY = (int)(117-(3609.694608 * rates.x));
+			targetZ = (int)(117-(3609.694608 * rates.y));
+			break;
+		case 1: // THREEPOSSWITCH_CENTER:
+			targetX = (int)(117+(721.938921 * rates.z));
+			targetY = (int)(117-(721.938921 * rates.x));
+			targetZ = (int)(117-(721.938921 * rates.y));
+			break;
+		case 0: // THREEPOSSWITCH_DOWN:
+			targetX = (int)(117+( 72.193892 * rates.z));
+			targetY = (int)(117-(360.969460 * rates.x));
+			targetZ = (int)(117-(360.969460 * rates.y));
+			break;
+	}
+	// Enforce Limits
+	if(targetX > 180){ targetX = 180; }else{ if(targetX < 54){ targetX = 54; }}
+	if(targetY > 180){ targetY = 180; }else{ if(targetY < 54){ targetY = 54; }}
+	if(targetZ > 180){ targetZ = 180; }else{ if(targetZ < 54){ targetZ = 54; }}
+	// 60-176
+
+	// Draw Roll-Rate Needle
+	oapiBlt (surf, hFDAINeedles, targetX, 6, 16, 3, 12, 11, SURF_PREDEF_CK);
+	// Draw Pitch-Rate Needle
+	oapiBlt (surf, hFDAINeedles, 223, targetY, 28, 3, 10, 12, SURF_PREDEF_CK);
+	// Draw Yaw-Rate Needle
+	oapiBlt (surf, hFDAINeedles, targetZ, 222, 4, 3, 12, 11, SURF_PREDEF_CK);
+
+	// sprintf(oapiDebugString(),"FDAI: Rates %f %f %f, TGX %d",rates.x,rates.y,rates.z,targetX);
 	// Off-flag
-	if (!IsPowered())
+	if (!IsPowered() || no_att != 0)
 		oapiBlt (surf, hFDAIOff, 1, 70, 0, 0, 13, 30, SURF_PREDEF_CK);
 }
 

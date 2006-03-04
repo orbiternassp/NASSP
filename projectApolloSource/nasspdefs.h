@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2006/03/04 20:55:59  flydba
+  *	Circuit breaker resource for the LEM panels added to the panel code.
+  *	
   *	Revision 1.54  2006/02/01 18:12:41  tschachim
   *	New surface SRF_FDAIOFFFLAG.
   *	
@@ -307,7 +310,8 @@ const int nsurf = 81; // number of bitmap handles
 #define SRF_GLYCOLLEVER				77
 #define SRF_LEMROTARY				78
 #define SRF_FDAIOFFFLAG				79
-#define SRF_CIRCUITBRAKERLEM		80
+#define SRF_FDAINEEDLES				80
+#define SRF_CIRCUITBRAKERLEM			81
 
 //
 // Earth radius and gravity constants.
