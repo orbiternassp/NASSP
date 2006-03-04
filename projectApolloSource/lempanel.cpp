@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/03/04 13:41:48  flydba
+  *	Switches added on LEM panels 3 & 4
+  *	
   *	Revision 1.44  2006/01/29 00:47:23  flydba
   *	Switches added on LEM panel 2.
   *	
@@ -767,6 +770,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
 		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		srf[SRF_LEMROTARY]			= oapiCreateSurface (LOADBMP (IDB_LEMROTARY));
+		srf[SRF_CIRCUITBRAKERLEM]   = oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKERLEM));
 
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
@@ -783,6 +787,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LEMROTARY],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKERLEM],		g_Param.col[4]);
 		break;
 	
 	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
