@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.149  2006/03/04 22:50:52  dseagrav
+  *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
+  *	
   *	Revision 1.148  2006/02/28 20:40:32  quetalsi
   *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
   *	
@@ -2386,22 +2389,22 @@ void Saturn::SetSwitches(int panel) {
 	StabContSystemAc2CircuitBraker.Init(135,  0, 29, 29, srf[SRF_CIRCUITBRAKER], StabContSystemCircuitBrakerRow);
 
 	AutoRCSSelectSwitchesRow.Init(AID_AUTORCSSELECTSWITCHES, MainPanel);
-	AcRollA1Switch.Init(  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	AcRollC1Switch.Init( 45, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	AcRollA2Switch.Init( 90, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	AcRollC2Switch.Init(135, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	BdRollB1Switch.Init(180, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	BdRollD1Switch.Init(225, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	BdRollB2Switch.Init(270, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	BdRollD2Switch.Init(315, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	PitchA3Switch.Init(360, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	PitchC3Switch.Init(405, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	PitchA4Switch.Init(450, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	PitchC4Switch.Init(495, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	YawB3Switch.Init(540, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	YawD3Switch.Init(585, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	YawB4Switch.Init(630, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
-	YawD4Switch.Init(675, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow);
+	AcRollA1Switch.Init(  0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	AcRollC1Switch.Init( 45, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	AcRollA2Switch.Init( 90, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	AcRollC2Switch.Init(135, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	BdRollB1Switch.Init(180, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	BdRollD1Switch.Init(225, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	BdRollB2Switch.Init(270, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	BdRollD2Switch.Init(315, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	PitchA3Switch.Init(360, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	PitchC3Switch.Init(405, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	PitchA4Switch.Init(450, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	PitchC4Switch.Init(495, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	YawB3Switch.Init(540, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	YawD3Switch.Init(585, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	YawB4Switch.Init(630, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
+	YawD4Switch.Init(675, 0, 34, 29, srf[SRF_THREEPOSSWITCH], AutoRCSSelectSwitchesRow, MainBusA, 0, MainBusB);
 
 	StabilizationControlSystemCircuitBrakerRow.Init(AID_STABILIZATIONCONTROLSYSTEMCIRCUITBREAKERS, MainPanel);
 	ECATVCAc2CircuitBraker.Init(0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], StabilizationControlSystemCircuitBrakerRow);

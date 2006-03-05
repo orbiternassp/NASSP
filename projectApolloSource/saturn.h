@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.154  2006/03/03 12:39:41  tschachim
+  *	Fixes for using DInput.
+  *	
   *	Revision 1.153  2006/03/03 05:12:37  dseagrav
   *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
   *	
@@ -1692,22 +1695,22 @@ protected:
 	//////////////////////
 	
 	SwitchRow AutoRCSSelectSwitchesRow;
-	ThreePosSwitch AcRollA1Switch;
-	ThreePosSwitch AcRollC1Switch;
-	ThreePosSwitch AcRollA2Switch;
-	ThreePosSwitch AcRollC2Switch;
-	ThreePosSwitch BdRollB1Switch;
-	ThreePosSwitch BdRollD1Switch;
-	ThreePosSwitch BdRollB2Switch;
-	ThreePosSwitch BdRollD2Switch;
-	ThreePosSwitch PitchA3Switch;
-	ThreePosSwitch PitchC3Switch;
-	ThreePosSwitch PitchA4Switch;
-	ThreePosSwitch PitchC4Switch;
-	ThreePosSwitch YawB3Switch;
-	ThreePosSwitch YawD3Switch;
-	ThreePosSwitch YawB4Switch;
-	ThreePosSwitch YawD4Switch;
+	ThreeSourceSwitch AcRollA1Switch;
+	ThreeSourceSwitch AcRollC1Switch;
+	ThreeSourceSwitch AcRollA2Switch;
+	ThreeSourceSwitch AcRollC2Switch;
+	ThreeSourceSwitch BdRollB1Switch;
+	ThreeSourceSwitch BdRollD1Switch;
+	ThreeSourceSwitch BdRollB2Switch;
+	ThreeSourceSwitch BdRollD2Switch;
+	ThreeSourceSwitch PitchA3Switch;
+	ThreeSourceSwitch PitchC3Switch;
+	ThreeSourceSwitch PitchA4Switch;
+	ThreeSourceSwitch PitchC4Switch;
+	ThreeSourceSwitch YawB3Switch;
+	ThreeSourceSwitch YawD3Switch;
+	ThreeSourceSwitch YawB4Switch;
+	ThreeSourceSwitch YawD4Switch;
 
 	SwitchRow FloodDimSwitchRow;
 	ToggleSwitch FloodDimSwitch;
