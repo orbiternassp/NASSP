@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/03/04 22:50:52  dseagrav
+  *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
+  *	
   *	Revision 1.55  2006/03/04 20:55:59  flydba
   *	Circuit breaker resource for the LEM panels added to the panel code.
   *	
@@ -238,7 +241,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 81; // number of bitmap handles
+const int nsurf = 83; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -311,7 +314,7 @@ const int nsurf = 81; // number of bitmap handles
 #define SRF_LEMROTARY				78
 #define SRF_FDAIOFFFLAG				79
 #define SRF_FDAINEEDLES				80
-#define SRF_CIRCUITBRAKERLEM			81
+#define SRF_CIRCUITBRAKERLEM		81
 
 //
 // Earth radius and gravity constants.
