@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2006/03/04 20:49:08  flydba
+  *	Circuit breaker resource added to the LEM panel code.
+  *	
   *	Revision 1.45  2006/03/04 13:41:48  flydba
   *	Switches added on LEM panels 3 & 4
   *	
@@ -279,6 +282,17 @@ void sat5_lmpkd::InitPanel() {
 	LeftTTCATranslSwitch.Register(PSH, "LeftTTCATranslSwitch", false);
 	RightACA4JetSwitch.Register(PSH, "RightACA4JetSwitch", false);
 	RightTTCATranslSwitch.Register(PSH, "RightTTCATranslSwitch", false);
+
+	SeWindHTRCircuitBraker.Register(PSH, "SeWindHTRCircuitBraker", 1);
+	HePQGSPropDispCircuitBraker.Register(PSH, "HePQGSPropDispCircuitBraker", 1);
+	SBDAntCircuitBraker.Register(PSH, "SBDAntCircuitBraker", 1);
+	OrdealCircuitBraker.Register(PSH, "OrdealCircuitBraker", 1);
+	AQSCircuitBraker.Register(PSH, "AOTLampCircuitBraker", 1);
+	AOTLampCircuitBraker.Register(PSH, "AOTLampCircuitBraker", 1);
+	SeFDAICircuitBraker.Register(PSH, "SeFDAICircuitBraker", 1);
+	NumLTGCircuitBraker.Register(PSH, "NumLTGCircuitBraker", 1);
+	BusTieInv2CircuitBraker.Register(PSH, "BusTieInv2CircuitBraker", 1);
+	BusTieInv1CircuitBraker.Register(PSH, "BusTieInv1CircuitBraker", 1);
 
 	HeliumMonRotary.AddPosition(0, 290);
 	HeliumMonRotary.AddPosition(1, 315);
@@ -770,7 +784,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
 		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		srf[SRF_LEMROTARY]			= oapiCreateSurface (LOADBMP (IDB_LEMROTARY));
-		srf[SRF_CIRCUITBRAKERLEM]   = oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKERLEM));
+		srf[SRF_CIRCUITBRAKERLEM]	= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKERLEM));
 
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
@@ -1002,6 +1016,8 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	case LMPANEL_LEFTPANEL: // LEM Left Panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
+		oapiRegisterPanelArea (AID_ACBUSBCIRCUITBREAKERS,			_R( 187,   85,  851,  114), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 
@@ -1166,6 +1182,18 @@ void sat5_lmpkd::SetSwitches(int panel) {
 	Panel4RightSwitchRow.Init(AID_PANEL4RIGHTSWITCHROW, MainPanel);
 	RightACA4JetSwitch.Init   (0,   0, 34, 39, srf[SRF_LMTWOPOSLEVER], Panel4RightSwitchRow);
 	RightTTCATranslSwitch.Init(0, 136, 34, 39, srf[SRF_LMTWOPOSLEVER], Panel4RightSwitchRow);
+
+	AcBusBCircuitBrakersRow.Init(AID_ACBUSBCIRCUITBREAKERS, MainPanel);
+	SeWindHTRCircuitBraker.Init     (   0,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
+	HePQGSPropDispCircuitBraker.Init(  64,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
+	SBDAntCircuitBraker.Init        ( 128,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
+	OrdealCircuitBraker.Init        ( 192,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
+	AQSCircuitBraker.Init           ( 315,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
+	AOTLampCircuitBraker.Init       ( 379,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
+	SeFDAICircuitBraker.Init        ( 443,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
+	NumLTGCircuitBraker.Init        ( 507,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
+	BusTieInv2CircuitBraker.Init    ( 571,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
+	BusTieInv1CircuitBraker.Init    ( 635,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], AcBusBCircuitBrakersRow);
 
 }
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2006/03/04 13:40:34  flydba
+  *	Switches added on LEM panels 3 & 4
+  *	
   *	Revision 1.34  2006/01/29 00:48:36  flydba
   *	Switches added on LEM panel 2.
   *	
@@ -423,6 +426,22 @@ protected:
 	SwitchRow Panel4RightSwitchRow;
 	ToggleSwitch RightACA4JetSwitch;
 	ToggleSwitch RightTTCATranslSwitch;
+
+	//////////////////
+	// LEM panel 11 //
+	//////////////////
+	
+	SwitchRow AcBusBCircuitBrakersRow;
+	CircuitBrakerSwitch SeWindHTRCircuitBraker;
+	CircuitBrakerSwitch HePQGSPropDispCircuitBraker;
+	CircuitBrakerSwitch SBDAntCircuitBraker;
+	CircuitBrakerSwitch OrdealCircuitBraker;
+	CircuitBrakerSwitch AQSCircuitBraker;
+	CircuitBrakerSwitch AOTLampCircuitBraker;
+	CircuitBrakerSwitch SeFDAICircuitBraker;
+	CircuitBrakerSwitch NumLTGCircuitBraker;
+	CircuitBrakerSwitch BusTieInv2CircuitBraker;
+	CircuitBrakerSwitch BusTieInv1CircuitBraker;
 
 	bool RCS_Full;
 	bool Eds;
