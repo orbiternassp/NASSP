@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/01/19 15:01:52  tschachim
+  *	Initial Meshland support.
+  *	
   *	Revision 1.40  2006/01/14 21:59:52  movieman523
   *	Added PanelSDK, init, timestep, save and load.
   *	
@@ -312,6 +315,8 @@ void sat5_lmpkd::Init()
 	stage = 0;
 	status = 0;
 
+	actualFUEL = 0.0;
+
 	InVC = false;
 	InPanel = false;
 	PanelId = LMPANEL_MAIN;	// default panel
@@ -365,6 +370,13 @@ void sat5_lmpkd::Init()
 
 	MissionTimerDisplay.SetRunning(true);
 	MissionTimerDisplay.SetEnabled(true);
+
+	//
+	// And Event Timer.
+	//
+
+	EventTimerDisplay.SetRunning(true);
+	EventTimerDisplay.SetEnabled(true);
 }
 
 void sat5_lmpkd::DoFirstTimestep()
@@ -624,7 +636,10 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 	agc.Timestep(MissionTime, simdt);
 	dsky.Timestep(MissionTime);
 	imu.Timestep(MissionTime);
+
 	MissionTimerDisplay.Timestep(MissionTime, deltat);
+	EventTimerDisplay.Timestep(MissionTime, deltat);
+
 	SystemsTimestep(MissionTime, deltat);
 
 	actualVEL = (sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z)/1000*3600);
@@ -927,6 +942,8 @@ typedef union {
 	struct {
 		unsigned MissionTimerRunning:1;
 		unsigned MissionTimerEnabled:1;
+		unsigned EventTimerRunning:1;
+		unsigned EventTimerEnabled:1;
 	} u;
 	unsigned long word;
 } LEMMainState;
@@ -958,20 +975,28 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
             SwitchState = 0;
 			sscanf (line+7, "%d", &SwitchState);
 			SetSSwitchState(SwitchState);
-		} else if (!strnicmp (line, "LPSWITCH", 8)) {
+		} 
+		else if (!strnicmp (line, "LPSWITCH", 8)) {
             SwitchState = 0;
 			sscanf (line+8, "%d", &SwitchState);
 			SetLPSwitchState(SwitchState);
-		} else if (!strnicmp (line, "RPSWITCH", 8)) {
+		} 
+		else if (!strnicmp (line, "RPSWITCH", 8)) {
             SwitchState = 0;
 			sscanf (line+8, "%d", &SwitchState);
 			SetRPSwitchState(SwitchState);
-		} else if (!strnicmp(line, "MISSNTIME", 9)) {
+		} 
+		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &ftcp);
 			MissionTime = ftcp;
-		} else if (!strnicmp(line, "MTD", 3)) {
+		} 
+		else if (!strnicmp(line, "MTD", 3)) {
             sscanf (line+3, "%f", &ftcp);
 			MissionTimerDisplay.SetTime(ftcp);
+		} 
+		else if (!strnicmp(line, "ETD", 3)) {
+            sscanf (line+3, "%f", &ftcp);
+			EventTimerDisplay.SetTime(ftcp);
 		}
 		else if (!strnicmp(line, "UNMANNED", 8)) {
 			int i;
@@ -1008,6 +1033,8 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 			MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
 			MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
+			EventTimerDisplay.SetRunning(state.u.EventTimerRunning != 0);
+			EventTimerDisplay.SetEnabled(state.u.EventTimerEnabled != 0);
 		} 
         else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
 			PSH.LoadState(scn);	
@@ -1093,6 +1120,7 @@ void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
+	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
 
@@ -1116,6 +1144,8 @@ void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 
 	state.u.MissionTimerRunning = MissionTimerDisplay.IsRunning();
 	state.u.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
+	state.u.EventTimerEnabled = EventTimerDisplay.IsEnabled();
+	state.u.EventTimerRunning = EventTimerDisplay.IsRunning();
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
 

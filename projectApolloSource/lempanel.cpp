@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/03/07 02:18:17  flydba
+  *	Circuit breakers added to panel 11.
+  *	
   *	Revision 1.46  2006/03/04 20:49:08  flydba
   *	Circuit breaker resource added to the LEM panel code.
   *	
@@ -892,7 +895,9 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,						_R( 618, 1565,  720, 1734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_KEY,						_R( 598, 1755,  886, 1876), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
 		oapiRegisterPanelArea (AID_MISSION_CLOCK,					_R(  74,  287,  216,  309), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea (AID_EVENT_TIMER,						_R( 291,  287,  372,  309), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FUEL_DIGIT,						_R( 460,  245,  496,  319), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+
 		oapiRegisterPanelArea (AID_CONTACTLIGHT1,					_R( 324,  428,  369,  473), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1362, 1222, 1407, 1267), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTXPOINTERSWITCH,				_R( 330,  515,  364,  544), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -2312,59 +2317,51 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		MissionTimerDisplay.Render(surf, srf[SRF_DIGITAL]);
 		return true;
 
-	case AID_FUEL_DIGIT:
-		int TmpFUEL;
-		double tmpFUELdec;
-
-		TmpFUEL = (int) actualFUEL;
-		tmpFUELdec = actualFUEL-TmpFUEL;
-
-		Curdigit= (int) actualFUEL/100;
-		oapiBlt(surf,srf[SRF_DIGITAL],0,0,10*Curdigit,0,10,15);
-		Curdigit= (int) actualFUEL/10;
-		Curdigit2=(int) actualFUEL/100;
-		oapiBlt(surf,srf[SRF_DIGITAL],13,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=(int) actualFUEL;
-		Curdigit2=(int) actualFUEL/10;
-		oapiBlt(surf,srf[SRF_DIGITAL],26,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-
+	case AID_EVENT_TIMER:
+		EventTimerDisplay.Render(surf, srf[SRF_DIGITAL]);
 		return true;
 
-	case AID_FUEL_DIGIT2:
-		int tmpfuel2;
+	case AID_FUEL_DIGIT:
+		double fuel;
 
-		TmpFUEL = (int) actualFUEL;
-		tmpFUELdec = actualFUEL-TmpFUEL;
-		tmpfuel2 = (int) tmpFUELdec *100;
+		//
+		// What should this display with > 99% fuel?
+		//
 
-		Curdigit=(int) actualFUEL/100;
-		oapiBlt(surf,srf[SRF_DIGITAL],0,0,10*Curdigit,0,10,15);
-		Curdigit=(int) actualFUEL/10;
-		Curdigit2=(int) actualFUEL/100;
-		oapiBlt(surf,srf[SRF_DIGITAL],13,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-   	    Curdigit=(int) actualFUEL;
-		Curdigit2=(int) actualFUEL/10;
-		oapiBlt(surf,srf[SRF_DIGITAL],26,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		fuel = actualFUEL;
+		if (fuel > 99.0)
+			fuel = 99.0;
 
-		oapiBlt(surf,srf[SRF_DIGITAL],36,0,140,0,5,5);//dot display
+		//
+		// For now we display the same value for fuel and oxidiser.
+		//
 
-		Curdigit=tmpfuel2/10 ;
-		Curdigit2=tmpfuel2 /100;
-		oapiBlt(surf,srf[SRF_DIGITAL],42,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
+		Curdigit= (int) fuel/10;
+		Curdigit2= (int) fuel/100;
+
+		oapiBlt(surf, srf[SRF_DIGITAL], 0, 0, 16 * Curdigit, 0, 16, 19);
+		oapiBlt(surf, srf[SRF_DIGITAL], 0, 54, 16 * Curdigit, 0, 16, 19);
+
+		Curdigit2= (int) fuel;
+		oapiBlt(surf, srf[SRF_DIGITAL], 18, 0, 16 * (Curdigit2 - (Curdigit*10)), 0, 16, 19);
+		oapiBlt(surf, srf[SRF_DIGITAL], 18, 54, 16 * (Curdigit2 - (Curdigit*10)), 0, 16, 19);
+
 		return true;
 
 	case AID_DESCENT_HE:
 		if(DESHE1switch){
 			oapiBlt(surf,srf[6],1,30,0,0,23,20);
 			oapiBlt(surf,srf[13],3,0,0,0,19,20);
-		}else{
+		}
+		else{
 			oapiBlt(surf,srf[6],1,30,23,0,23,20);
 			oapiBlt(surf,srf[13],3,0,38,0,19,20);
 		}
 		if(DESHE2switch){
 			oapiBlt(surf,srf[6],44,30,0,0,23,20);
 			oapiBlt(surf,srf[13],46,0,0,0,19,20);
-		}else{
+		}
+		else{
 			oapiBlt(surf,srf[6],44,30,23,0,23,20);
 			oapiBlt(surf,srf[13],46,0,38,0,19,20);
 		}
