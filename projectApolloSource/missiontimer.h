@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/08/24 23:29:31  movieman523
+  *	Fixed event timer reset.
+  *	
   *	Revision 1.3  2005/08/18 19:12:21  movieman523
   *	Added Event Timer switches and null Event Timer class.
   *	
@@ -91,6 +94,18 @@ public:
 
 protected:
 };
+
+//
+// And LEM Event Timer needs yet another render function!
+//
+
+class LEMEventTimer: public EventTimer {
+public:
+	void Render(SURFHANDLE surf, SURFHANDLE digits);
+
+protected:
+};
+
 
 #define TIMER_COUNT_DOWN	0
 #define TIMER_COUNT_NONE	1

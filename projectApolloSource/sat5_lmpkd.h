@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2006/03/07 02:20:27  flydba
+  *	Circuit breakers added to panel 11.
+  *	
   *	Revision 1.35  2006/03/04 13:40:34  flydba
   *	Switches added on LEM panels 3 & 4
   *	
@@ -660,6 +663,7 @@ protected:
 	LEMcomputer agc;
 	IMU imu;
 	MissionTimer MissionTimerDisplay;
+	LEMEventTimer EventTimerDisplay;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/01/05 11:26:56  tschachim
+  *	The missiontimer is now enabled by default.
+  *	
   *	Revision 1.6  2005/10/11 16:35:35  tschachim
   *	Improved realism of the switch functionality.
   *	
@@ -227,6 +230,36 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	Curdigit2 = seconds/10;
 	oapiBlt(surf, digits,0+122,0, 16*(Curdigit-(Curdigit2*10)),0,16,19);
 
+}
+
+void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
+
+{
+	//
+	// Digits are 16x19.
+	//
+
+	int Curdigit, Curdigit2;
+
+	// Minute display on two digit
+	Curdigit = minutes / 10;
+	Curdigit2 = minutes / 100;
+	oapiBlt(surf, digits, 0, 0, 16 * (Curdigit-(Curdigit2*10)), 0, 16, 19);
+
+	Curdigit = minutes;
+	Curdigit2 = minutes / 10;
+	oapiBlt(surf, digits, 17, 0, 16 * (Curdigit-(Curdigit2*10)), 0, 16, 19);
+
+	oapiBlt(surf, digits, 37,0, 192,0,4,19);
+
+	// second display on two digit
+	Curdigit = seconds / 10;
+	Curdigit2 = seconds / 100;
+	oapiBlt(surf, digits, 44, 0, 16 * (Curdigit-(Curdigit2*10)), 0, 16, 19);
+
+	Curdigit = seconds;
+	Curdigit2 = seconds/10;
+	oapiBlt(surf, digits, 61, 0, 16 * (Curdigit-(Curdigit2*10)), 0, 16, 19);
 }
 
 void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
