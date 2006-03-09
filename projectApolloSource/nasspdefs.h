@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2006/03/07 02:19:41  flydba
+  *	Circuit breakers not visible, tried to solve the problem.
+  *	
   *	Revision 1.56  2006/03/04 22:50:52  dseagrav
   *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
   *	
@@ -241,7 +244,7 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 83; // number of bitmap handles
+const int nsurf = 85; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -315,6 +318,8 @@ const int nsurf = 83; // number of bitmap handles
 #define SRF_FDAIOFFFLAG				79
 #define SRF_FDAINEEDLES				80
 #define SRF_CIRCUITBRAKERLEM		81
+#define SRF_SPS_FONT_WHITE			82
+#define SRF_SPS_FONT_BLACK			83
 
 //
 // Earth radius and gravity constants.
