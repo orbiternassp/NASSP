@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2006/03/04 22:50:52  dseagrav
+  *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
+  *	
   *	Revision 1.82  2006/03/03 05:12:36  dseagrav
   *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
   *	
@@ -338,9 +341,9 @@ void Saturn::SystemsInit() {
 	Inverter2 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_2");
 	Inverter3 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_3");
 
-	Inverter1->WireTo(&MnA1Switch);
-	Inverter2->WireTo(&MnB2Switch);
-	Inverter3->WireTo(&MnA3Switch);
+	Inverter1->WireTo(&InverterControl1CircuitBraker);
+	Inverter2->WireTo(&InverterControl2CircuitBraker);
+	Inverter3->WireTo(&InverterControl3CircuitBraker);
 
 	MainBusA = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_A");
 	MainBusB = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_B");
@@ -360,6 +363,8 @@ void Saturn::SystemsInit() {
 	ACBus1PhaseA.WireTo(&ACBus1Source);
 	ACBus1PhaseB.WireTo(&ACBus1Source);
 	ACBus1PhaseC.WireTo(&ACBus1Source);
+
+	BatteryRelayBus.WireToBuses( &BATRLYBusBatACircuitBraker, &BATRLYBusBatBCircuitBraker);
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_B");
 	eo->WireTo(&ACBus2);
@@ -2357,8 +2362,10 @@ void Saturn::GetMainBusStatus(MainBusStatus &ms)
 {
 	ms.MainBusAVoltage = 0.0;
 	ms.MainBusBVoltage = 0.0;
-	ms.Enabled_DC_A_CWS = MainBusAResetSwitch.IsCenter();
-	ms.Enabled_DC_B_CWS = MainBusBResetSwitch.IsCenter();
+	
+	ms.Enabled_DC_A_CWS = (MainBusAResetSwitch.Voltage() > 20);
+	ms.Enabled_DC_B_CWS = (MainBusBResetSwitch.Voltage() > 20);
+	
 	if (&MainBusA) {
 		ms.MainBusAVoltage = MainBusA->Voltage();}
 
@@ -2404,7 +2411,7 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Voltage = ACBus1PhaseA.Voltage();
 		as.Phase2Voltage = ACBus1PhaseB.Voltage();
 		as.Phase3Voltage = ACBus1PhaseC.Voltage();
-		as.Enabled_AC_CWS = AcBus1ResetSwitch.IsCenter();
+		as.Enabled_AC_CWS = (AcBus1ResetSwitch.Voltage() > 20);
 		break;
 
 	case 2:
@@ -2416,7 +2423,7 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Voltage = ACBus2PhaseA.Voltage();
 		as.Phase2Voltage = ACBus2PhaseB.Voltage();
 		as.Phase3Voltage = ACBus2PhaseC.Voltage();
-		as.Enabled_AC_CWS = AcBus2ResetSwitch.IsCenter();
+		as.Enabled_AC_CWS = (AcBus2ResetSwitch.Voltage() > 20);
 		break;
 	}
 }

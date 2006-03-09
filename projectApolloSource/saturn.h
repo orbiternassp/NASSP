@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.155  2006/03/05 00:49:48  movieman523
+  *	Wired up Auto RCS Select switches to bus A and B.
+  *	
   *	Revision 1.154  2006/03/03 12:39:41  tschachim
   *	Fixes for using DInput.
   *	
@@ -962,11 +965,11 @@ protected:
 	TwoSourceSwitch AcBus1Switch1;
 	TwoSourceSwitch AcBus1Switch2;
 	TwoSourceSwitch AcBus1Switch3;
-	ThreePosSwitch AcBus1ResetSwitch;
+	ThreeSourceSwitch AcBus1ResetSwitch;
 	TwoSourceSwitch AcBus2Switch1;
 	TwoSourceSwitch AcBus2Switch2;
 	TwoSourceSwitch AcBus2Switch3;
-	ThreePosSwitch AcBus2ResetSwitch;
+	ThreeSourceSwitch AcBus2ResetSwitch;
 
 	IndicatorSwitch MainBusBIndicator1;
 	IndicatorSwitch MainBusBIndicator2;
@@ -977,11 +980,11 @@ protected:
 	ThreePosSwitch MainBusBSwitch1;
 	ThreePosSwitch MainBusBSwitch2;
 	ThreePosSwitch MainBusBSwitch3;
-	ThreePosSwitch MainBusBResetSwitch;
+	ThreeSourceSwitch MainBusBResetSwitch;
 	ThreePosSwitch MainBusASwitch1;
 	ThreePosSwitch MainBusASwitch2;
 	ThreePosSwitch MainBusASwitch3;
-	ThreePosSwitch MainBusAResetSwitch;
+	ThreeSourceSwitch MainBusAResetSwitch;
 	
 	//
 	// FDAI control switches.
@@ -1988,6 +1991,8 @@ protected:
 
 	ThreeWayPowerMerge BatteryBusA;
 	ThreeWayPowerMerge BatteryBusB;
+
+	PowerMerge BatteryRelayBus;
 
 	PowerMerge PyroBusA;
 	PowerMerge PyroBusB;

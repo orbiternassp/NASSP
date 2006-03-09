@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.120  2006/03/03 05:12:37  dseagrav
+  *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
+  *	
   *	Revision 1.119  2006/02/28 00:03:58  quetalsi
   *	MainBus A & B Switches and Talkbacks woks and wired.
   *	
@@ -444,6 +447,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 								BatteryBusB("Battery-Bus-B", Panelsdk),
 								PyroBusA("Pyro-Bus-A", Panelsdk),
 								PyroBusB("Pyro-Bus-B", Panelsdk),
+								BatteryRelayBus("Battery-Relay-Bus", Panelsdk),
 								SECSLogicPower("SECS-Logic-Power", Panelsdk),
 								PyroPower("Pyro-Power", Panelsdk),
 								SwitchPower("Switch-Power", Panelsdk),
