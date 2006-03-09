@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.151  2006/03/09 00:27:25  movieman523
+  *	Added SPS fuel quantity gauges
+  *	
   *	Revision 1.150  2006/03/05 00:49:48  movieman523
   *	Wired up Auto RCS Select switches to bus A and B.
   *	
@@ -1915,16 +1918,16 @@ void Saturn::SetSwitches(int panel) {
 	AcBus1Switch1.Init    (  0, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter1, 0);
 	AcBus1Switch2.Init    ( 43, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter2, 0);
 	AcBus1Switch3.Init    ( 86, 101, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter3, 0);
-	AcBus1ResetSwitch.Init(129, 101, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
+	AcBus1ResetSwitch.Init(129, 101, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow, 0, &EPSSensorUnitAcBus1CircuitBraker, 0);
 	AcBus2Switch1.Init    (  0, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter1, 0);
 	AcBus2Switch2.Init    ( 43, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter2, 0);
 	AcBus2Switch3.Init    ( 86, 200, 34, 29, srf[SRF_SWITCHUP], ACInverterSwitchesRow, Inverter3, 0);
-	AcBus2ResetSwitch.Init(129, 200, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow);
+	AcBus2ResetSwitch.Init(129, 200, 34, 29, srf[SRF_THREEPOSSWITCH], ACInverterSwitchesRow, 0, &EPSSensorUnitAcBus2CircuitBraker, 0);
 	
 	MainBusASwitch1.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow);
 	MainBusASwitch2.Init(179, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow);
 	MainBusASwitch3.Init(230, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow);
-	MainBusAResetSwitch.Init(273, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow);
+	MainBusAResetSwitch.Init(273, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellPurgeSwitchesRow, 0, &EPSSensorUnitDcBusACircuitBraker, 0);
 	MainBusAIndicatorsRow.Init(ADI_MAINBUSAINDICATORS, MainPanel);
 	MainBusAIndicator1.Init(0, 0, 23, 23, srf[SRF_INDICATOR], MainBusAIndicatorsRow);
 	MainBusAIndicator2.Init(43, 0, 23, 23, srf[SRF_INDICATOR], MainBusAIndicatorsRow);
@@ -1933,7 +1936,7 @@ void Saturn::SetSwitches(int panel) {
 	MainBusBSwitch1.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow);
 	MainBusBSwitch2.Init(185, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow);
 	MainBusBSwitch3.Init(241, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow);
-	MainBusBResetSwitch.Init(297, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow);
+	MainBusBResetSwitch.Init(297, 0, 34, 29, srf[SRF_THREEPOSSWITCH], FuelCellReactantsSwitchesRow, 0, &EPSSensorUnitDcBusBCircuitBraker, 0);
 	MainBusBIndicator1.Init(129, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
 	MainBusBIndicator2.Init(172, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
 	MainBusBIndicator3.Init(215, 0, 23, 23, srf[SRF_INDICATOR], FuelCellReactantsIndicatorsRow);
@@ -2135,19 +2138,19 @@ void Saturn::SetSwitches(int panel) {
 	MnbLMPWR2CircuitBraker.Init(3, 78, 29, 29, srf[SRF_CIRCUITBRAKER], LMPWRCircuitBrakersRow);
 
 	InverterControlCircuitBrakersRow.Init(AID_INVERTERCONTROLCIRCUITBRAKERS, MainPanel);
-	InverterControl1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InverterControlCircuitBrakersRow);
-	InverterControl2CircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InverterControlCircuitBrakersRow);
-	InverterControl3CircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InverterControlCircuitBrakersRow);
+	InverterControl1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InverterControlCircuitBrakersRow, &MnA1Switch, 70.0);
+	InverterControl2CircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InverterControlCircuitBrakersRow, &MnB2Switch, 70.0);
+	InverterControl3CircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], InverterControlCircuitBrakersRow, &MnA3Switch, 70.0);
 
 	EPSSensorUnitCircuitBrakersRow.Init(AID_EPSSENSORUNITCIRCUITBRAKERS, MainPanel);
-	EPSSensorUnitDcBusACircuitBraker.Init(  0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow);
-	EPSSensorUnitDcBusBCircuitBraker.Init( 37,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow);
-	EPSSensorUnitAcBus1CircuitBraker.Init( 74,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow);
-	EPSSensorUnitAcBus2CircuitBraker.Init(111,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow);
+	EPSSensorUnitDcBusACircuitBraker.Init(  0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow, &BatteryRelayBus, 5.0);
+	EPSSensorUnitDcBusBCircuitBraker.Init( 37,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow, &BatteryRelayBus, 5.0);
+	EPSSensorUnitAcBus1CircuitBraker.Init( 74,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow, &BatteryRelayBus, 5.0);
+	EPSSensorUnitAcBus2CircuitBraker.Init(111,  0, 29, 29, srf[SRF_CIRCUITBRAKER], EPSSensorUnitCircuitBrakersRow, &BatteryRelayBus, 5.0);
 
 	BATRLYBusCircuitBrakersRow.Init(AID_BATRLYBUSCIRCUITBRAKERS, MainPanel);
-	BATRLYBusBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BATRLYBusCircuitBrakersRow);
-	BATRLYBusBatBCircuitBraker.Init(37,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BATRLYBusCircuitBrakersRow);
+	BATRLYBusBatACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BATRLYBusCircuitBrakersRow, &BatteryBusA, 15.0);
+	BATRLYBusBatBCircuitBraker.Init(37,  0, 29, 29, srf[SRF_CIRCUITBRAKER], BATRLYBusCircuitBrakersRow, &BatteryBusB, 15.0);
 
 	ECSRadiatorsCircuitBrakersRow.Init(AID_ECSRADIATORSCIRCUITBRAKERS, MainPanel);
 	ControllerAc1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ECSRadiatorsCircuitBrakersRow);
