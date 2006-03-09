@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.150  2006/03/05 00:49:48  movieman523
+  *	Wired up Auto RCS Select switches to bus A and B.
+  *	
   *	Revision 1.149  2006/03/04 22:50:52  dseagrav
   *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
   *	
@@ -876,6 +879,8 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_GLYCOLLEVER]			= oapiCreateSurface (LOADBMP (IDB_GLYCOLLEVER));
 		srf[SRF_FDAIOFFFLAG]       		= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
 		srf[SRF_FDAINEEDLES]			= oapiCreateSurface (LOADBMP (IDB_FDAINEEDLES));
+		srf[SRF_SPS_FONT_WHITE]			= oapiCreateSurface (LOADBMP (IDB_SPS_FUEL_FONT_WHITE));
+		srf[SRF_SPS_FONT_BLACK]			= oapiCreateSurface (LOADBMP (IDB_SPS_FUEL_FONT_BLACK));
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -1223,7 +1228,9 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PCMBITRATESWITCH,							_R(3053, 1250, 3130, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACINVERTERSWITCHES,							_R(3182, 1050, 3345, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACINDICATORROTARY,							_R(3389, 1208, 3473, 1292), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea (AID_SPS_OXID_PERCENT_DISPLAY,					_R(2664,  628, 2702,  641), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SPS_FUEL_PERCENT_DISPLAY,					_R(2664,  657, 2702,  670), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+
 		// Display & keyboard (DSKY), main panel uses the main DSKY.
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -3685,6 +3692,43 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		else {
 			oapiBlt(surf,srf[12],69,4,171,4,27,27);
+		}
+		return true;
+
+	//
+	// For now, both SPS fuel and oxidiser display the same.
+	//
+
+	case AID_SPS_OXID_PERCENT_DISPLAY:
+	case AID_SPS_FUEL_PERCENT_DISPLAY:
+		{
+			int fuel = 0;
+
+			if (stage < CSM_LEM_STAGE) {
+				fuel = 1000;
+			}
+			else if (ph_sps) {
+				fuel = (int) (1000.0 * GetPropellantMass(ph_sps) / GetPropellantMaxMass(ph_sps));
+			}
+
+			if (fuel > 999) {
+
+				//
+				// What should the panel display with full tanks? Looks like 99.9 is the maximum.
+				//
+
+				fuel = 999;
+			}
+
+			int digit1 = fuel / 100;
+			fuel -= (digit1 * 100);
+
+			int digit2 = fuel / 10;
+			int digit3 = fuel - (digit2 * 10);
+
+			oapiBlt(surf, srf[SRF_SPS_FONT_BLACK], 0, 0, 10 * digit1, 0, 10, 12);
+			oapiBlt(surf, srf[SRF_SPS_FONT_BLACK], 13, 0, 10 * digit2, 0, 10, 12);
+			oapiBlt(surf, srf[SRF_SPS_FONT_WHITE], 26, 0, 11 * digit3, 0, 11, 12);
 		}
 		return true;
 

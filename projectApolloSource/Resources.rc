@@ -171,6 +171,8 @@ IDB_CSMMAINPANELWINDOWCOVER BITMAP                  "csm_main_panel_les_window_c
 IDB_CSMRIGHTRNDZWINDOWLESCOVER BITMAP                  "csm_right_rndz_les_window_cover.bmp"
 IDB_GLYCOLLEVER         BITMAP                  "glycol_lever.bmp"
 IDB_FDAIOFFFLAG         BITMAP                  "FDAI_off_flag.bmp"
+IDB_SPS_FUEL_FONT_WHITE BITMAP			"fonts_white.bmp"
+IDB_SPS_FUEL_FONT_BLACK BITMAP			"fonts_black.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 

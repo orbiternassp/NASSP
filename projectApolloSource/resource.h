@@ -50,6 +50,10 @@
 #define AID_ACVOLTS                     57
 #define AID_CMC_SWITCH                  58
 #define AID_SC_SWITCH                   59
+#define IDB_SPS_FUEL_FONT_WHITE			60
+#define IDB_SPS_FUEL_FONT_BLACK			61
+#define AID_SPS_FUEL_PERCENT_DISPLAY	62
+#define AID_SPS_OXID_PERCENT_DISPLAY	63
 #define AID_ELS_SWITCHES                66
 #define AID_DCVOLTS                     70
 #define AID_FCSM_SWITCH                 71
