@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2006/03/09 00:27:25  movieman523
+  *	Added SPS fuel quantity gauges
+  *	
   *	Revision 1.57  2006/03/07 02:19:41  flydba
   *	Circuit breakers not visible, tried to solve the problem.
   *	
@@ -318,8 +321,9 @@ const int nsurf = 85; // number of bitmap handles
 #define SRF_FDAIOFFFLAG				79
 #define SRF_FDAINEEDLES				80
 #define SRF_CIRCUITBRAKERLEM		81
-#define SRF_SPS_FONT_WHITE			82
-#define SRF_SPS_FONT_BLACK			83
+#define SRF_THUMBWHEEL_LARGEFONTS	82
+#define SRF_SPS_FONT_WHITE			83
+#define SRF_SPS_FONT_BLACK			84
 
 //
 // Earth radius and gravity constants.

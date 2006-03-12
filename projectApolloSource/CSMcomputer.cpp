@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/03/03 05:12:36  dseagrav
+  *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
+  *	
   *	Revision 1.41  2006/02/27 00:57:48  dseagrav
   *	Added SPS thrust-vector control. Changes 20060225-20060226.
   *	
@@ -1950,6 +1953,73 @@ void CSMcomputer::ProcessChannel160(int val){
 		// If we're out of the zero notch
 		error = sat->SetSPSPitch(tvc_pitch_cmd);
 		// Should return error value via optics error counters
+	}
+}
+
+// DS20060308 FDAI
+void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
+	// These pulses work like the TVC pulses.
+	// FULL NEEDLE DEFLECTION is 16.88 DEGREES
+	// 030 PULSES = MAX IN ONE RELAY EVENT
+	// 22 PULSES IS ONE DEGREE, 384 PULSES = FULL SCALE
+	// 0.10677083 PIXELS PER PULSE
+
+	Saturn *sat = (Saturn *) OurVessel;
+	ChannelValue12 val12;
+	if(channel != 012){ val12.Value = GetOutputChannel(012); }else{ val12.Value = val; }
+	// 174 = X, 175 = Y, 176 = Z
+	if(val12.Bits.CoarseAlignEnable){ return; } // Does not apply to us here.
+	switch(channel){
+	case 012:
+		if(val12.Bits.EnableIMUCDUErrorCounters){
+			if(sat->gdc.fdai_err_ena == 0){
+				sprintf(oapiDebugString(),"FDAI: RESET");						
+				sat->gdc.fdai_err_x = 0;
+				sat->gdc.fdai_err_y = 0;
+				sat->gdc.fdai_err_z = 0;
+				sat->gdc.fdai_err_ena = 1;
+			}
+		}else{
+			sat->gdc.fdai_err_ena = 0;
+		}
+		break;
+		
+	case 0174: // FDAI ROLL ERROR
+		if(val12.Bits.EnableIMUCDUErrorCounters){
+			int delta = val&0777;
+			// Direction for these is inverted.
+			if(val&040000){
+				sat->gdc.fdai_err_x += delta;
+			}else{
+				sat->gdc.fdai_err_x -= delta;
+			}
+		}
+//		sprintf(oapiDebugString(),"FDAI: NEEDLES: %d %d %d",sat->gdc.fdai_err_x,sat->gdc.fdai_err_y,sat->gdc.fdai_err_z);
+		break;
+	
+	case 0175: // FDAI PITCH ERROR
+		if(val12.Bits.EnableIMUCDUErrorCounters){
+			int delta = val&0777;
+			if(val&040000){
+				sat->gdc.fdai_err_y -= delta;
+			}else{
+				sat->gdc.fdai_err_y += delta;
+			}
+		}
+//		sprintf(oapiDebugString(),"FDAI: NEEDLES: %d %d %d",sat->gdc.fdai_err_x,sat->gdc.fdai_err_y,sat->gdc.fdai_err_z);
+		break;
+
+	case 0176: // FDAI YAW ERROR
+		if(val12.Bits.EnableIMUCDUErrorCounters){
+			int delta = val&0777;
+			if(val&040000){
+				sat->gdc.fdai_err_z += delta;
+			}else{
+				sat->gdc.fdai_err_z -= delta;
+			}
+		}
+//		sprintf(oapiDebugString(),"FDAI: NEEDLES: %d %d %d",sat->gdc.fdai_err_x,sat->gdc.fdai_err_y,sat->gdc.fdai_err_z);
+		break;
 	}
 }
 

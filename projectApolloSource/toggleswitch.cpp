@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/02/22 18:53:10  tschachim
+  *	Bugfixes for Apollo 4-6.
+  *	
   *	Revision 1.53  2006/02/21 23:22:06  quetalsi
   *	Bugfix in EVENT TIMER RESET/DOWN switch.
   *	
@@ -203,6 +206,9 @@
 #include "apolloguidance.h"
 #include "powersource.h"
 #include "fdai.h"
+#include "scs.h"
+
+// DS20060304 SCS PANEL OBJECTS
 
 //
 // Generic panel switch item.
@@ -2851,3 +2857,62 @@ void AGCThreePoswitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switc
 	agc = c;
 }
 
+// DS20060304 SCS OBJECTS
+void BMAGPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, BMAG *Unit)
+
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, row);
+	bmag = Unit;
+	
+	CheckBMAGPowerState();
+}
+
+void BMAGPowerRotationalSwitch::CheckBMAGPowerState()
+
+{
+	switch (GetState()) {
+	case 0: // OFF
+		bmag->dc_source = NULL;
+		bmag->ac_source = NULL;
+		bmag->rates = _V(0,0,0);
+		break;
+	case 1: // WARM UP
+		bmag->dc_source = bmag->dc_bus;
+		bmag->ac_source = NULL;
+		bmag->rates = _V(0,0,0);
+		break;
+	case 2: // ON
+		bmag->dc_source = bmag->dc_bus;
+		bmag->ac_source = bmag->ac_bus;
+		break;
+	}
+}
+
+bool BMAGPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {		
+		CheckBMAGPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+bool BMAGPowerRotationalSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
+		CheckBMAGPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+void BMAGPowerRotationalSwitch::LoadState(char *line)
+
+{
+	RotationalSwitch::LoadState(line);
+	CheckBMAGPowerState();
+}

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/02/27 00:57:48  dseagrav
+  *	Added SPS thrust-vector control. Changes 20060225-20060226.
+  *	
   *	Revision 1.12  2006/02/21 11:54:40  tschachim
   *	Moved TLI sequence to the IU.
   *	
@@ -292,6 +295,8 @@ protected:
 	void ProcessChannel160(int val);
 	void ProcessChannel161(int val);
 	void CheckEngineOnOff(int val);
+	// DS20060308 FDAI NEEDLES
+	void ProcessIMUCDUErrorCount(int channel, unsigned int val);
 
 	//
 	// Programs we can run.

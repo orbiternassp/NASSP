@@ -53,6 +53,7 @@ END
 //
 
 IDB_FDAINEEDLES         BITMAP                  "FDAI_needles.bmp"
+IDB_THUMBWHEEL_LARGEFONTS BITMAP                  "thumbwheel_large_fonts.bmp"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

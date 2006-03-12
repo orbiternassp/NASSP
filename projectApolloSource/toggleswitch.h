@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/02/22 18:54:24  tschachim
+  *	Bugfixes for Apollo 4-6.
+  *	
   *	Revision 1.42  2006/02/01 18:16:50  tschachim
   *	Added TwoSourceSwitch::SwitchTo function.
   *	
@@ -801,6 +804,25 @@ protected:
 	double AngleDiff(double a1, double a2);
 	void DeletePositions();
 };
+
+// DS20060304 SCS OBJECTS
+class BMAG;
+
+class BMAGPowerRotationalSwitch: public RotationalSwitch {
+public:
+	BMAGPowerRotationalSwitch() { bmag = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, BMAG *Unit);
+
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newValue);
+	void LoadState(char *line);
+
+protected:
+	void CheckBMAGPowerState();
+
+	BMAG *bmag;	
+};
+
 
 class FDAI;
 

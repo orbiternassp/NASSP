@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.156  2006/03/09 20:40:22  quetalsi
+  *	Added Battery Relay Bus. Wired Inverter 1/2/3, EPS Sensor Unit DC A/B, EPS Sensor Unit AC 1/2 and Bat Rly Bus BAT A/B brakers.
+  *	
   *	Revision 1.155  2006/03/05 00:49:48  movieman523
   *	Wired up Auto RCS Select switches to bus A and B.
   *	
@@ -213,6 +216,8 @@
 #include "dockingprobe.h"
 #include "pyro.h"
 #include "secs.h"
+// DS20060304 Include SCS
+#include "scs.h"
 // DS20060301 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -634,10 +639,16 @@ protected:
 	// Pitch table.
 	//
 
-#define PITCH_TABLE_SIZE	16
+	#define PITCH_TABLE_SIZE	16
 
 	double met[PITCH_TABLE_SIZE];
 	double cpitch[PITCH_TABLE_SIZE];
+
+	// DS20060304 SCS COMPONENTS	
+	BMAG bmag1;
+	BMAG bmag2;
+	GDC  gdc;
+	ASCP ascp;
 
 	//
 	// Switches
@@ -1755,10 +1766,10 @@ protected:
 	RotationalSwitch SCSElectronicsPowerRotarySwitch;
 
 	SwitchRow BMAGPowerRotary1Row;
-	RotationalSwitch BMAGPowerRotary1Switch;
+	BMAGPowerRotationalSwitch BMAGPowerRotary1Switch;
 
 	SwitchRow BMAGPowerRotary2Row;
-	RotationalSwitch BMAGPowerRotary2Switch;
+	BMAGPowerRotationalSwitch BMAGPowerRotary2Switch;
 
 	SwitchRow DirectO2RotaryRow;
 	RotationalSwitch DirectO2RotarySwitch;
@@ -1804,14 +1815,14 @@ protected:
 	int stage;
 	int StageState;
 
-#define SATSYSTEMS_NONE				  0
-#define SATSYSTEMS_PRELAUNCH		100
-#define SATSYSTEMS_CREWINGRESS_1	200
-#define SATSYSTEMS_CREWINGRESS_2	210
-#define SATSYSTEMS_CABINCLOSEOUT	300
-#define SATSYSTEMS_READYTOLAUNCH    400
-#define SATSYSTEMS_CABINVENTING		500
-#define SATSYSTEMS_FLIGHT			600
+	#define SATSYSTEMS_NONE				  0
+	#define SATSYSTEMS_PRELAUNCH		100
+	#define SATSYSTEMS_CREWINGRESS_1	200
+	#define SATSYSTEMS_CREWINGRESS_2	210
+	#define SATSYSTEMS_CABINCLOSEOUT	300
+	#define SATSYSTEMS_READYTOLAUNCH    400
+	#define SATSYSTEMS_CABINVENTING		500
+	#define SATSYSTEMS_FLIGHT			600
 
 	int systemsState;
 	bool firstSystemsTimeStepDone;
@@ -2089,13 +2100,13 @@ protected:
 	bool ActivateS4B;
 	bool ToggleEva;
 
-#define SATVIEW_CDR		0
-#define SATVIEW_DMP		1
-#define SATVIEW_CMP		2
-#define SATVIEW_DOCK	3
-#define SATVIEW_ENG1	4
-#define SATVIEW_ENG2	5
-#define SATVIEW_ENG3	6
+	#define SATVIEW_CDR		0
+	#define SATVIEW_DMP		1
+	#define SATVIEW_CMP		2
+	#define SATVIEW_DOCK	3
+	#define SATVIEW_ENG1	4
+	#define SATVIEW_ENG2	5
+	#define SATVIEW_ENG3	6
 
 	unsigned int	viewpos;
 
@@ -2532,6 +2543,12 @@ protected:
 
 	// InitSaturn is called twice, but some things must run only once
 	bool InitSaturnCalled;
+	
+	// DS20060305 Friend Class List Added for SCS objects
+	friend class GDC;
+	friend class BMAG;
+	friend class ASCP;
+	friend class CSMcomputer; // I want this to be able to see the GDC
 };
 
 extern void BaseInit();
