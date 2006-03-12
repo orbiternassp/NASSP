@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/03/12 01:13:28  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.42  2006/03/03 05:12:36  dseagrav
   *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
   *	
@@ -1973,7 +1976,7 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	case 012:
 		if(val12.Bits.EnableIMUCDUErrorCounters){
 			if(sat->gdc.fdai_err_ena == 0){
-				sprintf(oapiDebugString(),"FDAI: RESET");						
+				// sprintf(oapiDebugString(),"FDAI: RESET");						
 				sat->gdc.fdai_err_x = 0;
 				sat->gdc.fdai_err_y = 0;
 				sat->gdc.fdai_err_z = 0;
