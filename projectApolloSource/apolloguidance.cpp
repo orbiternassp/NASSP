@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2006/02/27 00:57:48  dseagrav
+  *	Added SPS thrust-vector control. Changes 20060225-20060226.
+  *	
   *	Revision 1.70  2006/02/15 01:07:38  movieman523
   *	Revised TLI burn so hopefully it will work with the Virtual AGC.
   *	
@@ -5114,27 +5117,13 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 		break;
 
 	// Various control bits
-	case 012:
-		/*
-		{
-			// Test for this...
-			ChannelValue12 val12;
-			val12.Value = val;
-			// It's not Zero-Optics-CDUs so...
-			if(val12.Bits.ZeroOptics){
-				if (val12.Bits.TVCEnable) {
-					sprintf(oapiDebugString(),"CH12 TVC-ENABLE ZERO-OPTICS");
-				}else{
-					sprintf(oapiDebugString(),"CH12 ZERO-OPTICS");
-				}
-			}
-		} // and fall into...
-		*/
+	case 012:		
 	// 174-177 are ficticious channels with the IMU CDU angles.
-	case 0174:
-	case 0175:
-	case 0176:
+	case 0174:  // FDAI ROLL CHANNEL
+	case 0175:  // FDAI PITCH CHANNEL
+	case 0176:  // FDAI YAW CHANNEL
 	case 0177:
+		ProcessIMUCDUErrorCount(channel, val);
 		imu.ChannelOutput(channel, val);
 		break;
 
@@ -5183,6 +5172,10 @@ void ApolloGuidance::ProcessChannel160(int val)
 
 void ApolloGuidance::ProcessChannel161(int val)
 {
+}
+
+// DS20060308 Stub for FDAI
+void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 }
 
 void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)

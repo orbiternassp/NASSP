@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2006/03/09 20:40:21  quetalsi
+  *	Added Battery Relay Bus. Wired Inverter 1/2/3, EPS Sensor Unit DC A/B, EPS Sensor Unit AC 1/2 and Bat Rly Bus BAT A/B brakers.
+  *	
   *	Revision 1.83  2006/03/04 22:50:52  dseagrav
   *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
   *	
@@ -490,7 +493,13 @@ void Saturn::SystemsInit() {
 	// DS20060226 SPS Gimbal reset to zero
 	sps_pitch_position = 0;
 	sps_yaw_position = 0;
-	
+
+	// DS20030304 SCS initialization
+	bmag1.Init(this,MainBusA,&ACBus1);
+	bmag2.Init(this,MainBusB,&ACBus2);
+	gdc.Init(this);
+	ascp.Init(this);
+
 	// DS20060301 Initialize joystick
 	HRESULT         hr;
 	js_enabled = 0;  // Disabled
@@ -621,7 +630,6 @@ void Saturn::SystemsInit() {
 }
 
 void Saturn::SystemsTimestep(double simt, double simdt) {
-
 
 	// DS20060302 Read joysticks and feed data to the computer
 	if(js_enabled > 0){
@@ -825,6 +833,13 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		agc.Timestep(MissionTime, simdt);
 		iu.Timestep(MissionTime, simdt);
 		imu.Timestep(MissionTime);
+
+		// DS20060304 SCS updation
+		bmag1.TimeStep();
+		bmag2.TimeStep();
+		ascp.TimeStep();
+		gdc.TimeStep(MissionTime);
+
 		cws.TimeStep(MissionTime);
 		dockingprobe.TimeStep(MissionTime, simdt);
 		secs.Timestep(MissionTime, simdt);
@@ -2677,4 +2692,594 @@ double Saturn::SetSPSYaw(double direction){
 		sprintf(oapiDebugString(),"");
 	}
 	return(error);
+}
+
+// DS20060304 SCS OBJECTS
+// BMAG
+BMAG::BMAG(){
+	sat = NULL;
+	powered = FALSE;
+	dc_source = NULL;
+	ac_source = NULL;
+	dc_bus = NULL;
+	ac_bus = NULL;
+	temperature=0;
+	rates = _V(0,0,0);
+}
+
+void BMAG::Init(Saturn *vessel, e_object *dcbus, ThreeWayPowerMerge *acbus){
+	// Initialize
+	sat = vessel;
+	dc_bus = dcbus;
+	ac_bus = acbus;
+}
+
+void BMAG::TimeStep(){
+	// For right now, simply get rates if both the heater and the gyro are powered.
+	// Later, we should consider temperature and spin-up time and such.
+	
+	if(sat != NULL){
+		if(dc_source != NULL && dc_source->Voltage() > 12){
+			dc_source->DrawPower(10);  // Take DC power to heat the gyro
+			if(ac_source != NULL && ac_source->Voltage() > 12){
+				ac_source->DrawPower(10);  // And take AC power to spin the gyro
+				powered = TRUE;
+				sat->GetAngularVel(rates); // From those, generate ROTATION RATE data.
+			}else{
+				powered = FALSE; // No data
+			}
+		}else{
+			powered = FALSE; // No data
+		}
+	}
+}
+
+// GDC
+GDC::GDC(){
+	rates = _V(0,0,0);	
+	attitude = _V(0,0,0);
+	ref = _V(0,0,0);
+	sat = NULL;
+	Initialized = FALSE;
+	fdai_err_ena=0;
+	fdai_err_x=0;
+	fdai_err_y=0;
+	fdai_err_z=0;
+
+}
+
+void GDC::Init(Saturn *vessel){
+	sat = vessel;
+}
+
+void GDC::TimeStep(double simt){
+	VESSELSTATUS vs;
+	GDC_Matrix3 t;
+	VECTOR3 newAngles;
+	// Do we have power?
+	if(sat->SCSElectronicsPowerRotarySwitch.GetState() != 2){ return; } // Switched off
+	// Ensure DC power from MNA and MNB
+	if(sat->MainBusA != NULL){ 
+		if(sat->MainBusA->Voltage() < 12){ return; }else{ sat->MainBusA->DrawPower(10); }
+	}else{ return; }
+	if(sat->MainBusB != NULL){ 
+		if(sat->MainBusB->Voltage() < 12){ return; }else{ sat->MainBusB->DrawPower(10); }
+	}else{ return; }
+	// Ensure AC power from AC1-A and AC2-A
+	if(sat->ACBus1PhaseA.Voltage() < 12){ return; }else{ sat->ACBus1PhaseA.DrawPower(10); }
+	if(sat->ACBus2PhaseA.Voltage() < 12){ return; }else{ sat->ACBus2PhaseA.DrawPower(10); }	
+
+	// Pull status
+	sat->GetStatus(vs);
+	// Get eccliptic-plane attitude
+	double orbiterAttitudeX;
+	double orbiterAttitudeY;
+	double orbiterAttitudeZ;
+
+	// AXIS TRANSLATION - Was X = Z, Y = X, Z = TWO_PI-Y
+
+	// Get rates from the appropriate BMAG
+	switch(sat->BMAGRollSwitch.GetState()){
+		case THREEPOSSWITCH_UP:     // RATE2/ATT2
+			rates.z = sat->bmag2.rates.z;
+			if(sat->bmag2.powered){	orbiterAttitudeX = vs.arot.x; }else{
+				orbiterAttitudeX = 0;
+				Orbiter.AttitudeReference.m11 = 0;
+				Orbiter.AttitudeReference.m12 = 0;
+				Orbiter.AttitudeReference.m13 = 0;}
+			break;
+		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
+			rates.z = sat->bmag2.rates.z;
+			if(sat->bmag1.powered){	orbiterAttitudeX = vs.arot.x; }else{
+				orbiterAttitudeX = 0;
+				Orbiter.AttitudeReference.m11 = 0;
+				Orbiter.AttitudeReference.m12 = 0;
+				Orbiter.AttitudeReference.m13 = 0; }
+			break;
+		case THREEPOSSWITCH_DOWN:   // RATE1/ATT1
+			rates.z = sat->bmag1.rates.z;
+			if(sat->bmag1.powered){	orbiterAttitudeX = vs.arot.x; }else{
+				orbiterAttitudeX = 0;
+				Orbiter.AttitudeReference.m11 = 0;
+				Orbiter.AttitudeReference.m12 = 0;
+				Orbiter.AttitudeReference.m13 = 0;}
+			break;			
+	}
+	switch(sat->BMAGPitchSwitch.GetState()){
+		case THREEPOSSWITCH_UP:     // RATE2/ATT2
+			rates.x = sat->bmag2.rates.x;
+			if(sat->bmag2.powered){orbiterAttitudeY = vs.arot.y;}else{
+				orbiterAttitudeY = 0;
+				Orbiter.AttitudeReference.m21 = 0;
+				Orbiter.AttitudeReference.m22 = 0;
+				Orbiter.AttitudeReference.m23 = 0;}
+			break;
+		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
+			rates.x = sat->bmag2.rates.x;
+			if(sat->bmag1.powered){orbiterAttitudeY = vs.arot.y;}else{
+				orbiterAttitudeY = 0;
+				Orbiter.AttitudeReference.m21 = 0;
+				Orbiter.AttitudeReference.m22 = 0;
+				Orbiter.AttitudeReference.m23 = 0;}
+			break;
+		case THREEPOSSWITCH_DOWN:   // RATE1/ATT1										
+			rates.x = sat->bmag1.rates.x;
+			if(sat->bmag1.powered){orbiterAttitudeY = vs.arot.y;}else{
+				orbiterAttitudeY = 0;
+				Orbiter.AttitudeReference.m21 = 0;
+				Orbiter.AttitudeReference.m22 = 0;
+				Orbiter.AttitudeReference.m23 = 0;}
+			break;			
+	}
+	switch(sat->BMAGYawSwitch.GetState()){
+		case THREEPOSSWITCH_UP:     // RATE2/ATT2
+			rates.y = sat->bmag2.rates.y;
+			if(sat->bmag2.powered){orbiterAttitudeZ = vs.arot.z;}else{ 
+				orbiterAttitudeZ = 0;
+				Orbiter.AttitudeReference.m31 = 0;
+				Orbiter.AttitudeReference.m32 = 0;
+				Orbiter.AttitudeReference.m33 = 0;}
+			break;
+		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
+			rates.y = sat->bmag2.rates.y;
+			if(sat->bmag1.powered){orbiterAttitudeZ = vs.arot.z;}else{ 
+				orbiterAttitudeZ = 0;
+				Orbiter.AttitudeReference.m31 = 0;
+				Orbiter.AttitudeReference.m32 = 0;
+				Orbiter.AttitudeReference.m33 = 0;}
+			break;
+		case THREEPOSSWITCH_DOWN:   // RATE1/ATT1										
+			rates.y = sat->bmag1.rates.y;
+			if(sat->bmag1.powered){orbiterAttitudeZ = vs.arot.z;}else{ 
+				orbiterAttitudeZ = 0; 
+				Orbiter.AttitudeReference.m31 = 0;
+				Orbiter.AttitudeReference.m32 = 0;
+				Orbiter.AttitudeReference.m33 = 0;}
+			break;
+	}					
+
+	if (!Initialized) {
+		// Reset
+//		attitude = _V(0,0,0); Don't reset, provided by alignment key
+		Orbiter.AttitudeReference.m11 = 0;
+		Orbiter.AttitudeReference.m12 = 0;
+		Orbiter.AttitudeReference.m13 = 0;
+		Orbiter.AttitudeReference.m21 = 0;
+		Orbiter.AttitudeReference.m22 = 0;
+		Orbiter.AttitudeReference.m23 = 0;
+		Orbiter.AttitudeReference.m31 = 0;
+		Orbiter.AttitudeReference.m32 = 0;
+		Orbiter.AttitudeReference.m33 = 0;
+		Orbiter.Attitude.X = orbiterAttitudeX;
+		Orbiter.Attitude.Y = orbiterAttitudeY;
+		Orbiter.Attitude.Z = orbiterAttitudeZ;
+		SetOrbiterAttitudeReference();
+		
+		Orbiter.LastAttitude.X = orbiterAttitudeX;
+		Orbiter.LastAttitude.Y = orbiterAttitudeY;
+		Orbiter.LastAttitude.Z = orbiterAttitudeZ;	
+		
+		LastTime = simt;
+		Initialized = true;
+	}else{
+		Orbiter.Attitude.X = orbiterAttitudeX;
+		Orbiter.Attitude.Y = orbiterAttitudeY;
+		Orbiter.Attitude.Z = orbiterAttitudeZ;
+		// Gimbals
+		t = Orbiter.AttitudeReference;
+	  	t = multiplyMatrix(getRotationMatrixX(Orbiter.Attitude.X), t);
+	  	t = multiplyMatrix(getRotationMatrixY(Orbiter.Attitude.Y), t);
+	  	t = multiplyMatrix(getRotationMatrixZ(Orbiter.Attitude.Z), t);
+	  	
+	  	t = multiplyMatrix(getOrbiterLocalToNavigationBaseTransformation(), t);
+	  	
+		// calculate the new gimbal angles
+		newAngles = getRotationAnglesXZY(t);
+
+		// Correct new angles
+		double OldGimbal;
+
+		OldGimbal = attitude.x;
+		attitude.x += (-newAngles.x - attitude.x);
+		if (attitude.x >= TWO_PI) {
+			attitude.x -= TWO_PI;
+		}
+		if (attitude.x < 0) {
+			attitude.x += TWO_PI;
+		}
+		OldGimbal = attitude.y;
+		attitude.y += (-newAngles.y - attitude.y);
+		if (attitude.y >= TWO_PI) {
+			attitude.y -= TWO_PI;
+		}
+		if (attitude.y < 0) {
+			attitude.y += TWO_PI;
+		}
+		OldGimbal = attitude.z;
+		attitude.z += (-newAngles.z - attitude.z);
+		if (attitude.z >= TWO_PI) {
+			attitude.z -= TWO_PI;
+		}
+		if (attitude.z < 0) {
+			attitude.z += TWO_PI;
+		}
+
+
+		Orbiter.LastAttitude.X = Orbiter.Attitude.X;
+		Orbiter.LastAttitude.Y = Orbiter.Attitude.Y;
+		Orbiter.LastAttitude.Z = Orbiter.Attitude.Z;
+		LastTime = simt;
+	}	
+	{
+		// Debug
+		VECTOR3 testmatrix = sat->imu.GetTotalAttitude();
+		/*
+		testmatrix.x -= attitude.x;
+		testmatrix.y -= attitude.y;
+		testmatrix.z -= attitude.z;
+		*/
+		// sprintf(oapiDebugString(),"GDC: %f %f %f IMU: %f %f %f",attitude.x,attitude.y,attitude.z,testmatrix.x,testmatrix.y,testmatrix.z);
+	}
+	
+}
+
+// Confusing mathematics blatantly copipe from IMU
+GDC_Matrix3 GDC::multiplyMatrix(GDC_Matrix3 a, GDC_Matrix3 b) {
+	GDC_Matrix3 r;
+	
+	r.m11 = (a.m11 * b.m11) + (a.m12 * b.m21) + (a.m13 * b.m31);
+	r.m12 = (a.m11 * b.m12) + (a.m12 * b.m22) + (a.m13 * b.m32);
+	r.m13 = (a.m11 * b.m13) + (a.m12 * b.m23) + (a.m13 * b.m33);
+	r.m21 = (a.m21 * b.m11) + (a.m22 * b.m21) + (a.m23 * b.m31);
+	r.m22 = (a.m21 * b.m12) + (a.m22 * b.m22) + (a.m23 * b.m32);
+	r.m23 = (a.m21 * b.m13) + (a.m22 * b.m23) + (a.m23 * b.m33);
+	r.m31 = (a.m31 * b.m11) + (a.m32 * b.m21) + (a.m33 * b.m31);
+	r.m32 = (a.m31 * b.m12) + (a.m32 * b.m22) + (a.m33 * b.m32);
+	r.m33 = (a.m31 * b.m13) + (a.m32 * b.m23) + (a.m33 * b.m33);	
+	return r;
+}
+
+GDC_Matrix3 GDC::getRotationMatrixX(double angle) {
+	// Returns the rotation matrix for a rotation of a given angle around the X axis (Pitch)
+	
+	GDC_Matrix3 RotMatrixX;
+	
+	RotMatrixX.m11 = 1;
+	RotMatrixX.m12 = 0;
+	RotMatrixX.m13 = 0;
+	RotMatrixX.m21 = 0;
+	RotMatrixX.m22 = cos(angle);
+	RotMatrixX.m23 = -sin(angle);
+	RotMatrixX.m31 = 0;
+	RotMatrixX.m32 = sin(angle);
+	RotMatrixX.m33 = cos(angle);
+	
+	return RotMatrixX;
+}
+
+GDC_Matrix3 GDC::getRotationMatrixY(double angle) {
+	// Returns the rotation matrix for a rotation of a given angle around the Y axis (Yaw)
+
+	GDC_Matrix3 RotMatrixY;
+	
+	RotMatrixY.m11 = cos(angle);
+	RotMatrixY.m12 = 0;
+	RotMatrixY.m13 = sin(angle);
+	RotMatrixY.m21 = 0;
+	RotMatrixY.m22 = 1;
+	RotMatrixY.m23 = 0;
+	RotMatrixY.m31 = -sin(angle);
+	RotMatrixY.m32 = 0;
+	RotMatrixY.m33 = cos(angle);
+	
+	return RotMatrixY;
+}
+
+GDC_Matrix3 GDC::getRotationMatrixZ(double angle) {
+	// Returns the rotation matrix for a rotation of a given angle around the Z axis (Roll)
+
+	GDC_Matrix3 RotMatrixZ;
+	
+	RotMatrixZ.m11 = cos(angle);
+	RotMatrixZ.m12 = -sin(angle);
+	RotMatrixZ.m13 = 0;
+	RotMatrixZ.m21 = sin(angle);
+	RotMatrixZ.m22 = cos(angle);
+	RotMatrixZ.m23 = 0;
+	RotMatrixZ.m31 = 0;
+	RotMatrixZ.m32 = 0;
+	RotMatrixZ.m33 = 1;
+	
+	return RotMatrixZ;	
+}
+
+void GDC::SetOrbiterAttitudeReference(){
+	GDC_Matrix3 t;
+
+	// transformation to navigation base coordinates
+	// CAUTION: gimbal angles are left-handed
+	t = getRotationMatrixY(-attitude.y);
+	t = multiplyMatrix(getRotationMatrixZ(-attitude.z), t);
+	t = multiplyMatrix(getRotationMatrixX(-attitude.x), t);
+	
+	// tranform to orbiter local coordinates
+	t = multiplyMatrix(getNavigationBaseToOrbiterLocalTransformation(), t);
+	
+	// tranform to orbiter global coordinates
+	t = multiplyMatrix(getRotationMatrixZ(-Orbiter.Attitude.Z), t);
+	t = multiplyMatrix(getRotationMatrixY(-Orbiter.Attitude.Y), t);
+	t = multiplyMatrix(getRotationMatrixX(-Orbiter.Attitude.X), t);
+
+	Orbiter.AttitudeReference = t;
+}
+
+GDC_Matrix3 GDC::getNavigationBaseToOrbiterLocalTransformation() {
+	// This transformation assumes that spacecraft azimuth - orbiter heading = 180 deg
+	GDC_Matrix3 m;
+	int i;
+	
+	for (i = 0; i < 9; i++) {
+		m.data[i] = 0.0;
+	}
+	m.m12 = 1.0;	
+	m.m23 = -1.0;
+	m.m31 = 1.0;
+
+	return m;
+} 
+
+GDC_Matrix3 GDC::getOrbiterLocalToNavigationBaseTransformation() {
+	// This transformation assumes that spacecraft azimuth - orbiter heading = 180 deg
+	GDC_Matrix3 m;
+	int i;
+	
+	for (i = 0; i < 9; i++) {
+		m.data[i] = 0.0;
+	}
+	m.m13 = 1.0;
+	m.m21 = 1.0;	
+	m.m32 = -1.0;
+
+	return m;
+}
+
+VECTOR3 GDC::getRotationAnglesXZY(GDC_Matrix3 m) {
+	
+	VECTOR3 v;
+	
+	v.z = asin(-m.m12);
+	
+	if (m.m11 * cos(v.z) > 0) {		  	
+		v.y = atan(m.m13 / m.m11);
+	} else {
+		v.y = atan(m.m13 / m.m11) + PI;
+	}
+	
+	if (m.m22 * cos(v.z) > 0) {
+		v.x = atan(m.m32 / m.m22);
+	} else {
+		v.x = atan(m.m32 / m.m22) + PI;
+	}
+	return v;
+}
+
+bool GDC::AlignGDC(){
+	// User pushed the Align GDC button.
+	// Set the GDC attitude to match what's on the ASCP.
+	attitude.x = (sat->ascp.output.x * 0.017453); // Degrees to radians
+	attitude.y = (sat->ascp.output.y * 0.017453); // Degrees to radians
+	attitude.z = (sat->ascp.output.z * 0.017453); // Degrees to radians
+	// Thwack!
+	Initialized = FALSE; // Resets reference
+	return(true);
+}
+
+// ASCP
+ASCP::ASCP(){
+	input.x = 0;
+	input.y = 0;
+	input.z = 0;
+	output.x = 0;
+	output.y = 0;
+	output.z = 0;
+	sat = NULL;
+}
+
+void ASCP::Init(Saturn *vessel){
+	sat = vessel;
+}
+
+void ASCP::TimeStep(){
+	if(msgcounter > 0){
+		msgcounter--;
+		if(msgcounter==0){
+			sprintf(oapiDebugString(),""); // Clear message
+		}
+	}
+}
+
+bool ASCP::RollDisplayClicked(){
+	msgcounter = 50; // Keep for 50 timesteps
+	sprintf(oapiDebugString(),"ASCP: Roll = %05.1f",output.x);
+	return true;
+}
+
+bool ASCP::PitchDisplayClicked(){
+	msgcounter = 50;
+	sprintf(oapiDebugString(),"ASCP: Pitch = %05.1f",output.y);
+	return true;
+}
+
+bool ASCP::YawDisplayClicked(){
+	msgcounter = 50;
+	sprintf(oapiDebugString(),"ASCP: Yaw = %05.1f",output.z);
+	return true;
+}
+
+bool ASCP::RollUpClick(int Event){
+	switch(Event){
+		case PANEL_MOUSE_LBDOWN:
+			output.x++; break;
+		case PANEL_MOUSE_RBDOWN:
+			output.x += 0.1; break;	
+	}
+	// Wrap around
+	if(output.x >= 360){ output.x -= 360; }
+	RollDisplayClicked();
+	return true;
+}
+
+bool ASCP::RollDnClick(int Event){
+	switch(Event){
+		case PANEL_MOUSE_LBDOWN:
+			output.x--; break;
+		case PANEL_MOUSE_RBDOWN:
+			output.x -= 0.1; break;	
+	}
+	// Wrap around
+	if(output.x < 0){ output.x += 360; }
+	RollDisplayClicked();
+	return true;
+}
+
+bool ASCP::PitchUpClick(int Event){
+	switch(Event){
+		case PANEL_MOUSE_LBDOWN:
+			output.y++; break;
+		case PANEL_MOUSE_RBDOWN:
+			output.y += 0.1; break;	
+	}
+	// Wrap around
+	if(output.y >= 360){ output.y -= 360; }
+	PitchDisplayClicked();
+	return true;
+}
+
+bool ASCP::PitchDnClick(int Event){
+	switch(Event){
+		case PANEL_MOUSE_LBDOWN:
+			output.y--; break;
+		case PANEL_MOUSE_RBDOWN:
+			output.y -= 0.1; break;	
+	}
+	// Wrap around
+	if(output.y < 0){ output.y += 360; }
+	PitchDisplayClicked();
+	return true;
+}
+
+bool ASCP::YawUpClick(int Event){
+	// Cannot click beyond 90 degrees.
+	switch(Event){
+		case PANEL_MOUSE_LBDOWN:
+			output.z++; break;
+		case PANEL_MOUSE_RBDOWN:
+			output.z += 0.1; break;	
+	}
+	if(output.z > 90 && output.z < 270){ // Can't get here
+		output.z = 90;
+	}	
+	// Wrap around zero
+	if(output.z >= 360){ output.z -= 360; }
+	YawDisplayClicked();
+	return true;
+}
+
+bool ASCP::YawDnClick(int Event){
+	// Cannot click beyond 270 degrees.
+	switch(Event){
+		case PANEL_MOUSE_LBDOWN:
+			output.z--; break;
+		case PANEL_MOUSE_RBDOWN:
+			output.z -= 0.1; break;	
+	}
+	if(output.z < 270 && output.z > 90){ // Can't get here
+		output.z = 270;
+	}	
+	// Wrap around zero
+	if(output.z < 0){ output.z += 360; }
+	YawDisplayClicked();
+	return true;
+}
+
+
+
+bool ASCP::PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits){
+	char cheat[10];                       // Have plenty of room for this
+	int srx,sry,beta,digit;
+	sprintf(cheat,"%+06.1f",output.x);    // Arithmetic is for suckers!	
+	srx = 8+((cheat[1]-0x30)*25);	      // Hint: 0x30 = ASCII "0"
+	oapiBlt (surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8+((cheat[2]-0x30)*25);
+	oapiBlt (surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	digit = cheat[3]-0x30; srx = 8+(digit*25); beta = cheat[5]-0x30; sry = (int)(beta*1.2);
+	if(beta == 0){		
+		oapiBlt (surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	}else{
+		oapiBlt (surf, digits, 20, sry, srx, 33, 9, 12-sry, SURF_PREDEF_CK);			
+		if(digit == 9){digit=0;}else{digit++;}
+		srx = 8+(digit*25);			
+		oapiBlt (surf, digits, 20, 0, srx, 45-sry, 9, sry, SURF_PREDEF_CK);
+	}
+	return true;
+}
+
+bool ASCP::PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits){
+	char cheat[10];                       // Have plenty of room for this
+	int srx,sry,beta,digit;
+	sprintf(cheat,"%+06.1f",output.y);    // Arithmetic is for suckers!	
+	srx = 8+((cheat[1]-0x30)*25);	      // Hint: 0x30 = ASCII "0"
+	oapiBlt (surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8+((cheat[2]-0x30)*25);
+	oapiBlt (surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	digit = cheat[3]-0x30; srx = 8+(digit*25); beta = cheat[5]-0x30; sry = (int)(beta*1.2);
+	if(beta == 0){		
+		oapiBlt (surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	}else{
+		oapiBlt (surf, digits, 20, sry, srx, 33, 9, 12-sry, SURF_PREDEF_CK);			
+		if(digit == 9){digit=0;}else{digit++;}
+		srx = 8+(digit*25);			
+		oapiBlt (surf, digits, 20, 0, srx, 45-sry, 9, sry, SURF_PREDEF_CK);
+	}
+	return true;
+}
+
+bool ASCP::PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits){
+	char cheat[10];                       // Have plenty of room for this
+	int srx,sry,beta,digit;
+	sprintf(cheat,"%+06.1f",output.z);    // Arithmetic is for suckers!	
+	srx = 8+((cheat[1]-0x30)*25);	      // Hint: 0x30 = ASCII "0"
+	oapiBlt (surf, digits, 0, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	srx = 8+((cheat[2]-0x30)*25);
+	oapiBlt (surf, digits, 10, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	digit = cheat[3]-0x30; srx = 8+(digit*25); beta = cheat[5]-0x30; sry = (int)(beta*1.2);
+	if(beta == 0){		
+		oapiBlt (surf, digits, 20, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
+	}else{
+		oapiBlt (surf, digits, 20, sry, srx, 33, 9, 12-sry, SURF_PREDEF_CK);			
+		if(digit == 9){digit=0;}else{digit++;}
+		srx = 8+(digit*25);			
+		oapiBlt (surf, digits, 20, 0, srx, 45-sry, 9, sry, SURF_PREDEF_CK);
+	}
+	return true;
 }

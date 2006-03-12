@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/03/04 22:50:52  dseagrav
+  *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
+  *	
   *	Revision 1.10  2006/02/21 12:01:16  tschachim
   *	Bugfix FDAI.
   *	
@@ -217,7 +220,7 @@ void FDAI::MoveBall() {
 	glRotated(now.z / PI * 180.0, 0.0, 0.0, 1.0);	//attitude.y
 }
 
-void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
+void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
 				   SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth) {
 
 	if (!init) InitGL();
@@ -308,6 +311,18 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, int ratescale, S
 	oapiBlt (surf, hFDAINeedles, 223, targetY, 28, 3, 10, 12, SURF_PREDEF_CK);
 	// Draw Yaw-Rate Needle
 	oapiBlt (surf, hFDAINeedles, targetZ, 222, 4, 3, 12, 11, SURF_PREDEF_CK);
+
+	// Draw Roll-Error Needle
+	// 122,42 is the center, 41 px left-right variance, 11 px up-down variance.
+	// 0.268292 px down per pixel left.
+	targetY = (int)(abs(errors.x) * 0.268292);
+	oapiBlt (surf, hFDAINeedles, 122+(int)errors.x, 42+targetY, 0, 0, 2, 72-targetY, SURF_PREDEF_CK);
+	// Draw Pitch-Error Needle
+	targetY = (int)(abs(errors.y) * 0.268292);
+	oapiBlt (surf, hFDAINeedles, 135, 122+(int)errors.y, 4, 0, 69-targetY, 2, SURF_PREDEF_CK);
+	// Draw Yaw-Error Needle
+	targetY = (int)(abs(errors.z) * 0.268292);
+	oapiBlt (surf, hFDAINeedles, 122+(int)errors.z, 135, 0, 0, 2, 69-targetY, SURF_PREDEF_CK);
 
 	// sprintf(oapiDebugString(),"FDAI: Rates %f %f %f, TGX %d",rates.x,rates.y,rates.z,targetX);
 	// Off-flag

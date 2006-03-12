@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.152  2006/03/09 20:40:22  quetalsi
+  *	Added Battery Relay Bus. Wired Inverter 1/2/3, EPS Sensor Unit DC A/B, EPS Sensor Unit AC 1/2 and Bat Rly Bus BAT A/B brakers.
+  *	
   *	Revision 1.151  2006/03/09 00:27:25  movieman523
   *	Added SPS fuel quantity gauges
   *	
@@ -882,8 +885,10 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_GLYCOLLEVER]			= oapiCreateSurface (LOADBMP (IDB_GLYCOLLEVER));
 		srf[SRF_FDAIOFFFLAG]       		= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
 		srf[SRF_FDAINEEDLES]			= oapiCreateSurface (LOADBMP (IDB_FDAINEEDLES));
+		srf[SRF_THUMBWHEEL_LARGEFONTS]	= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_LARGEFONTS));
 		srf[SRF_SPS_FONT_WHITE]			= oapiCreateSurface (LOADBMP (IDB_SPS_FUEL_FONT_WHITE));
 		srf[SRF_SPS_FONT_BLACK]			= oapiCreateSurface (LOADBMP (IDB_SPS_FUEL_FONT_BLACK));
+
 
 		oapiSetSurfaceColourKey (srf[SRF_NEEDLE],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[3],						0);
@@ -938,6 +943,8 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_GLYCOLLEVER],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_FDAIOFFFLAG],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_FDAINEEDLES],			g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_LARGEFONTS],g_Param.col[4]);
+
 /*		break;
 	}
 */
@@ -1231,8 +1238,23 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PCMBITRATESWITCH,							_R(3053, 1250, 3130, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACINVERTERSWITCHES,							_R(3182, 1050, 3345, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACINDICATORROTARY,							_R(3389, 1208, 3473, 1292), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		// DS20060305 GDC ALIGNMENT BUTTON
+		oapiRegisterPanelArea (AID_GDCALIGNBUTTON,								_R( 293, 1172,  323, 1202), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		// DS20060306 ASCP
+		oapiRegisterPanelArea (AID_ASCPDISPLAYROLL,								_R( 199, 1144,  229, 1156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPDISPLAYPITCH,							_R( 199, 1206,  229, 1218), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPDISPLAYYAW,								_R( 199, 1268,  229, 1280), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPINCROLL,									_R( 124, 1126,  140, 1142), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPDECROLL,									_R( 124, 1143,  140, 1161), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPINCPITCH,								_R( 124, 1188,  140, 1204), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPDECPITCH,								_R( 124, 1205,  140, 1223), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPINCYAW,									_R( 124, 1250,  140, 1266), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPDECYAW,									_R( 124, 1267,  140, 1285), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+
+// SPS FUEL DISPLAYS
 		oapiRegisterPanelArea (AID_SPS_OXID_PERCENT_DISPLAY,					_R(2664,  628, 2702,  641), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SPS_FUEL_PERCENT_DISPLAY,					_R(2664,  657, 2702,  670), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+
 
 		// Display & keyboard (DSKY), main panel uses the main DSKY.
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -2504,10 +2526,10 @@ void Saturn::SetSwitches(int panel) {
 	SCSElectronicsPowerRotarySwitch.Init(0,  0, 84, 84, srf[SRF_SCSBMAGROTARY], SCSElectronicsPowerRotaryRow);
 
 	BMAGPowerRotary1Row.Init(AID_BMAGPOWERROTARY1, MainPanel);
-	BMAGPowerRotary1Switch.Init(0,  0, 84, 84, srf[SRF_SCSBMAGROTARY], BMAGPowerRotary1Row);
+	BMAGPowerRotary1Switch.Init(0,  0, 84, 84, srf[SRF_SCSBMAGROTARY], BMAGPowerRotary1Row, &bmag1);
 
 	BMAGPowerRotary2Row.Init(AID_BMAGPOWERROTARY2, MainPanel);
-	BMAGPowerRotary2Switch.Init(0,  0, 84, 84, srf[SRF_SCSBMAGROTARY], BMAGPowerRotary2Row);
+	BMAGPowerRotary2Switch.Init(0,  0, 84, 84, srf[SRF_SCSBMAGROTARY], BMAGPowerRotary2Row, &bmag2);
 
 	DirectO2RotaryRow.Init(AID_DIRECTO2ROTARY, MainPanel);
 	DirectO2RotarySwitch.Init(0,  0, 70, 70, srf[SRF_DIRECTO2ROTARY], DirectO2RotaryRow);
@@ -2655,6 +2677,46 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	switch (id) {
+	// DS20060305 GDC ALIGNMENT SWITCH
+	case AID_GDCALIGNBUTTON:
+		Sclick.play();
+		return gdc.AlignGDC();
+
+	// DS20060306 ASCP
+	case AID_ASCPDISPLAYROLL:
+		ascp.RollDisplayClicked();
+		return true;
+	case AID_ASCPDISPLAYPITCH:
+		ascp.PitchDisplayClicked();
+		return true;
+	case AID_ASCPDISPLAYYAW:
+		ascp.YawDisplayClicked();
+		return true;
+	case AID_ASCPINCROLL:
+		Sclick.play();
+		ascp.RollUpClick(event);
+		return true;
+	case AID_ASCPDECROLL:
+		Sclick.play();
+		ascp.RollDnClick(event);
+		return true;
+	case AID_ASCPINCPITCH:
+		Sclick.play();
+		ascp.PitchUpClick(event);
+		return true;
+	case AID_ASCPDECPITCH:
+		Sclick.play();
+		ascp.PitchDnClick(event);
+		return true;
+	case AID_ASCPINCYAW:
+		Sclick.play();
+		ascp.YawUpClick(event);
+		return true;
+	case AID_ASCPDECYAW:
+		Sclick.play();
+		ascp.YawDnClick(event);
+		return true;
+
 	case AID_MASTER_ALARM:
 	case AID_MASTER_ALARM2:
 	case AID_MASTER_ALARM3:
@@ -3519,110 +3581,505 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
 		return true;
 
-	case AID_FDAI_RIGHT:
-		if (!fdaiDisabled){
-			int bmag_voltage = 0;
-			int no_att = 0;
-			VECTOR3 euler_rates;
-			VECTOR3 attitude;
-			// Is this FDAI enabled?
-			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
-			switch(FDAISourceSwitch.GetState()){
-				case THREEPOSSWITCH_UP:     // 1+2
-				case THREEPOSSWITCH_CENTER: // 2
-					attitude = imu.GetTotalAttitude(); // Yes
-					// Get our rotation rates, in radians/second.
-					GetAngularVel(euler_rates);
-					// X Y Z = PITCH YAW ROLL, + means UP/LEFT/RIGHT
-					// Zero axes in which BMAG is not powered. 
-					// BMAG 1 is powered from MNA and AC1, #2 from MNB and AC2
-					switch(BMAGRollSwitch.GetState()){
-						case THREEPOSSWITCH_UP:     // RATE2
-						case THREEPOSSWITCH_CENTER: // RATE2				
-							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5 || ACBus2.Voltage() < 5){ euler_rates.z = 0; }
-							break;
-						case THREEPOSSWITCH_DOWN:   // RATE1
-							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5 || ACBus1.Voltage() < 5){ euler_rates.z = 0; }
-							break;			
-					}
-					switch(BMAGPitchSwitch.GetState()){
-						case THREEPOSSWITCH_UP:     // RATE2
-						case THREEPOSSWITCH_CENTER: // RATE2
-							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5 || ACBus2.Voltage() < 5){ euler_rates.x = 0; }
-							break;
-						case THREEPOSSWITCH_DOWN:   // RATE1											
-							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5 || ACBus1.Voltage() < 5){ euler_rates.x = 0; }
-							break;			
-					}
-					switch(BMAGYawSwitch.GetState()){
-						case THREEPOSSWITCH_UP:     // RATE2
-						case THREEPOSSWITCH_CENTER: // RATE2
-							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5 || ACBus2.Voltage() < 5){ euler_rates.y = 0; }
-							break;
-						case THREEPOSSWITCH_DOWN:   // RATE1											
-							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5 || ACBus1.Voltage() < 5){ euler_rates.y = 0; }
-							break;			
-					}				
-					break;				
-				case THREEPOSSWITCH_DOWN:   // 1
-					attitude = _V(0,0,0);   // No
-					euler_rates = _V(0,0,0);
-					no_att = 1;
-					break;
-			}			
-			fdaiRight.PaintMe(attitude, no_att, euler_rates, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
-		}
+	// DS20060306 ASCP
+	case AID_ASCPDISPLAYROLL:
+		ascp.PaintRollDisplay(surf,srf[SRF_THUMBWHEEL_LARGEFONTS]);
+		return true;
+	case AID_ASCPDISPLAYPITCH:
+		ascp.PaintPitchDisplay(surf,srf[SRF_THUMBWHEEL_LARGEFONTS]);
+		return true;
+	case AID_ASCPDISPLAYYAW:
+		ascp.PaintYawDisplay(surf,srf[SRF_THUMBWHEEL_LARGEFONTS]);
 		return true;
 
 	case AID_FDAI_LEFT:
 		if (!fdaiDisabled){
 			VECTOR3 euler_rates;
 			VECTOR3 attitude;
-			int no_att = 0;
-			// Is this FDAI enabled?
+			VECTOR3 errors;
+			int no_att = 0, digital_error = 0;
 			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
 			switch(FDAISourceSwitch.GetState()){
-				case THREEPOSSWITCH_UP:     // 1+2
-				case THREEPOSSWITCH_DOWN:   // 1
-					attitude = imu.GetTotalAttitude(); // Yes
-					GetAngularVel(euler_rates);
-					// Zero axes in which BMAG is not powered. I assume that BMAG 1 is powered from MNA and BMAG 2 from MNB
-					switch(BMAGRollSwitch.GetState()){
-						case THREEPOSSWITCH_UP:     // RATE2
-						case THREEPOSSWITCH_CENTER: // RATE2				
-							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5){ euler_rates.z = 0; }
+				case THREEPOSSWITCH_UP:     // 1+2 - FDAI1 shows IMU ATT / CMC ERR
+					euler_rates = gdc.rates;					
+					attitude = imu.GetTotalAttitude();
+					digital_error = 1; // DO NOT PERFORM AXIS SWAPPING
+					errors.x = gdc.fdai_err_x * 0.106770; // CMC error value, CMC-scaled
+					errors.y = gdc.fdai_err_y * 0.106770; // CMC error value, CMC-scaled
+					errors.z = gdc.fdai_err_z * 0.106770; // CMC error value, CMC-scaled
+					break;
+				case THREEPOSSWITCH_DOWN:   // 1 -- ALTERNATE DIRECT MODE
+					euler_rates = gdc.rates;					
+					switch(FDAISelectSwitch.GetState()){
+						case THREEPOSSWITCH_UP:   // IMU
+							attitude = imu.GetTotalAttitude();
+							digital_error = 1; // DO NOT PERFORM AXIS SWAPPING
+							errors.x = gdc.fdai_err_x * 0.106770; // CMC error value, CMC-scaled
+							errors.y = gdc.fdai_err_y * 0.106770; // CMC error value, CMC-scaled
+							errors.z = gdc.fdai_err_z * 0.106770; // CMC error value, CMC-scaled
 							break;
-						case THREEPOSSWITCH_DOWN:   // RATE1
-							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5){ euler_rates.z = 0; }
-							break;			
-					}
-					switch(BMAGPitchSwitch.GetState()){
-						case THREEPOSSWITCH_UP:     // RATE2
-						case THREEPOSSWITCH_CENTER: // RATE2
-							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5){ euler_rates.x = 0; }
+						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
+							VECTOR3 setting,target;
+							setting.x = ascp.output.x * 0.017453; // Degrees to radians
+							setting.y = ascp.output.y * 0.017453;
+							setting.z = ascp.output.z * 0.017453;
+							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
+								attitude = imu.GetTotalAttitude();
+							}else{
+								attitude = gdc.attitude;
+							}
+							target.x = setting.x - attitude.x;
+							target.y = setting.y - attitude.y;
+							target.z = setting.z - attitude.z;							
+							switch(FDAIScaleSwitch.GetState()){
+								case THREEPOSSWITCH_UP:
+								case THREEPOSSWITCH_CENTER:
+									// 5 degree rate
+									if(target.x > 0){ // Positive Error
+										if(target.x > PI){ 
+											errors.x = -((TWO_PI-target.x) * 469.827882); }else{
+											errors.x = (target.x * 469.827882);	}
+									}else{
+										if(target.x < -PI){
+											errors.x = ((TWO_PI+target.x) * 469.827882); }else{
+											errors.x = (target.x * 469.827882);	}
+									}
+									if(target.y > 0){ 
+										if(target.y > PI){ 
+											errors.y = ((TWO_PI-target.y) * 469.827882); }else{
+											errors.y = -(target.y * 469.827882);	}
+									}else{
+										if(target.y < -PI){
+											errors.y = -((TWO_PI+target.y) * 469.827882); }else{
+											errors.y = -(target.y * 469.827882);	}
+									}
+									if(target.z > 0){ 
+										if(target.z > PI){ 
+											errors.z = -((TWO_PI-target.z) * 469.827882); }else{
+											errors.z = (target.z * 469.827882);	}
+									}else{
+										if(target.z < -PI){
+											errors.z = ((TWO_PI+target.z) * 469.827882); }else{
+											errors.z = (target.z * 469.827882);	}
+									}											
+									break;
+								case THREEPOSSWITCH_DOWN:
+									// 50/15/15 degree rate
+									if(target.x > 0){ // Positive Error
+										if(target.x > PI){ 
+											errors.x = -((TWO_PI-target.x) * 46.982572); }else{
+											errors.x = (target.x * 46.982572);	}
+									}else{
+										if(target.x < -PI){
+											errors.x = ((TWO_PI+target.x) * 46.982572); }else{
+											errors.x = (target.x * 46.982572);	}
+									}
+									if(target.y > 0){ 
+										if(target.y > PI){ 
+											errors.y = ((TWO_PI-target.y) * 156.608695); }else{
+											errors.y = -(target.y * 156.608695);	}
+									}else{
+										if(target.y < -PI){
+											errors.y = -((TWO_PI+target.y) * 156.608695); }else{
+											errors.y = -(target.y * 156.608695);	}
+									}
+									if(target.z > 0){ 
+										if(target.z > PI){ 
+											errors.z = -((TWO_PI-target.z) * 156.608695); }else{
+											errors.z = (target.z * 156.608695);	}
+									}else{
+										if(target.z < -PI){
+											errors.z = ((TWO_PI+target.z) * 156.608695); }else{
+											errors.z = (target.z * 156.608695);	}
+									}											
+									break;
+							}
 							break;
-						case THREEPOSSWITCH_DOWN:   // RATE1											
-							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5){ euler_rates.x = 0; }
-							break;			
+						case THREEPOSSWITCH_DOWN: // GDC
+							attitude = gdc.attitude;
+							digital_error = 1; // DO NOT PERFORM AXIS SWAPPING (I think...)
+							switch(FDAIScaleSwitch.GetState()){
+								case THREEPOSSWITCH_UP:
+								case THREEPOSSWITCH_CENTER:
+									// 5 degree rate
+									if(BMAGRollSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.x > 3.141592){ // > 180?								
+											errors.x = ((TWO_PI-gdc.attitude.x) * 469.827882); // Convert to left error
+										}else{
+											errors.x = -(gdc.attitude.x * 469.827882);
+										}
+									}
+									if(BMAGPitchSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.y > 3.141592){ // > 180?								
+											errors.y = -((TWO_PI-gdc.attitude.y) * 469.827882); // Convert to left error
+										}else{
+											errors.y = (gdc.attitude.y * 469.827882);
+										}
+									}
+									if(BMAGYawSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.z > 3.141592){ // > 180?								
+											errors.z = ((TWO_PI-gdc.attitude.z) * 469.827882); // Convert to left error
+										}else{
+											errors.z = -(gdc.attitude.z * 469.827882);
+										}
+									}
+									break;
+								case THREEPOSSWITCH_DOWN:
+									// 50/15/15 degree rate
+									if(BMAGRollSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.x > 3.141592){ // > 180?								
+											errors.x = ((TWO_PI-gdc.attitude.x) * 46.982572); // Convert to left error
+											}else{
+												errors.x = -(gdc.attitude.x * 46.982572);
+											}
+										}
+									if(BMAGPitchSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.y > 3.141592){ // > 180?								
+											errors.y = -((TWO_PI-gdc.attitude.y) * 156.608695); // Convert to left error
+										}else{
+											errors.y = (gdc.attitude.y * 156.608695);
+										}
+									}
+									if(BMAGYawSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.z > 3.141592){ // > 180?								
+											errors.z = ((TWO_PI-gdc.attitude.z) * 156.608695); // Convert to left error
+										}else{
+											errors.z = -(gdc.attitude.z * 156.608695);
+										}
+									}
+									break;
+							}
 					}
-					switch(BMAGYawSwitch.GetState()){
-						case THREEPOSSWITCH_UP:     // RATE2
-						case THREEPOSSWITCH_CENTER: // RATE2
-							if(BMAGPowerRotary2Switch.GetState() != 2 || MainBusB->Voltage() < 5){ euler_rates.y = 0; }
-							break;
-						case THREEPOSSWITCH_DOWN:   // RATE1											
-							if(BMAGPowerRotary1Switch.GetState() != 2 || MainBusA->Voltage() < 5){ euler_rates.y = 0; }
-							break;			
-					}
-
+			
 					break;				
 				case THREEPOSSWITCH_CENTER: // 2
 					attitude = _V(0,0,0);   // No
-					euler_rates = _V(0,0,0);
+					errors = _V(0,0,0);
+					// euler_rates = _V(0,0,0); // Does not disconnect rate inputs?
 					no_att = 1;
 					break;
 			}
-			fdaiLeft.PaintMe(attitude, no_att, euler_rates, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			if(digital_error == 0){
+				double input_pitch = errors.y;
+				double input_yaw = errors.z;
+				double roll_percent,output_pitch,output_yaw,pitch_factor = 1;
+				// In reality, PITCH and YAW are swapped around as needed to make the error needles  FLY-TO.
+				// This does that.
+				// ROLL IS LEFT-HANDED
+				if(attitude.x > 4.712388){                    // 0 thru 90 degrees
+					roll_percent = abs((attitude.x-TWO_PI) / 1.570796);				
+					output_pitch = input_pitch * (1-roll_percent); 
+					output_pitch += input_yaw * roll_percent;
+					output_yaw = input_yaw * (1-roll_percent);
+					output_yaw -=input_pitch * roll_percent;       
+				}
+				if(attitude.x > PI && attitude.x < 4.712388){ // 90 thru 180 degrees
+					roll_percent = (attitude.x-PI) / 1.570796;					
+					output_pitch = -(input_pitch * (1-roll_percent)); 
+					output_pitch += input_yaw * roll_percent;
+					output_yaw = -input_yaw * (1-roll_percent);
+					output_yaw -=input_pitch * roll_percent;       
+				}
+				if(attitude.x > 1.570796 && attitude.x < PI){ // 180 thru 270 degrees
+					roll_percent = abs((attitude.x-PI) / 1.570796);
+					output_pitch = -(input_pitch * (1-roll_percent)); 
+					output_pitch -= input_yaw * roll_percent;
+					output_yaw = -input_yaw * (1-roll_percent);
+					output_yaw +=input_pitch * roll_percent;       
+				}
+				if(attitude.x > 0 && attitude.x < 1.570796){ // 270 thru 360 degrees
+					roll_percent = attitude.x / 1.570796;					
+					output_pitch = input_pitch * (1-roll_percent); 
+					output_pitch -= input_yaw * roll_percent;
+					output_yaw = input_yaw * (1-roll_percent);
+					output_yaw +=input_pitch * roll_percent;       
+				}
+
+				//sprintf(oapiDebugString(),"Roll Att %f Percent = %f | P-I %f P-O %f | Y-I %f Y-O %f",
+				//	attitude.x,roll_percent,input_pitch,output_pitch,input_yaw,output_yaw);
+
+				errors.y = output_pitch;
+				errors.z = output_yaw;
+			}
+			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
+			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
+			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
+			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
+			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+		}
+		return true;
+
+	case AID_FDAI_RIGHT:
+		if (!fdaiDisabled){
+			int no_att = 0, digital_error = 0;
+			VECTOR3 euler_rates;
+			VECTOR3 attitude;
+			VECTOR3 errors;
+			// Is this FDAI enabled?
+			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
+			switch(FDAISourceSwitch.GetState()){
+				case THREEPOSSWITCH_UP:     // 1+2 - FDAI2 shows GDC ATT / BMAG1 ERR
+					attitude = gdc.attitude;
+					euler_rates = gdc.rates;
+					digital_error = 1; // DO NOT PERFORM AXIS SWAPPING (I think...)
+					// GDC error scale is set by the FDAIScaleSwitch, and it's 5/5/15 for pitch/yaw and 5/5/50 for roll.
+					// The pixel multiplier for these is:
+					// 5 degrees  = 0.087266 radians, r * 469.827882
+					// 15 degrees = 0.261799 radians, r * 156.608695
+					// 50 degrees = 0.872664 radians, r *  46.982572										
+					switch(FDAIScaleSwitch.GetState()){
+						case THREEPOSSWITCH_UP:
+						case THREEPOSSWITCH_CENTER:
+							// 5 degree rate
+							if(BMAGRollSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+								if(gdc.attitude.x > 3.141592){ // > 180?								
+									errors.x = ((TWO_PI-gdc.attitude.x) * 469.827882); // Convert to left error
+								}else{
+									errors.x = -(gdc.attitude.x * 469.827882);
+								}
+							}
+							if(BMAGPitchSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+								if(gdc.attitude.y > 3.141592){ // > 180?								
+									errors.y = -((TWO_PI-gdc.attitude.y) * 469.827882); // Convert to left error
+								}else{
+									errors.y = (gdc.attitude.y * 469.827882);
+								}
+							}
+							if(BMAGYawSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+								if(gdc.attitude.z > 3.141592){ // > 180?								
+									errors.z = ((TWO_PI-gdc.attitude.z) * 469.827882); // Convert to left error
+								}else{
+									errors.z = -(gdc.attitude.z * 469.827882);
+								}
+							}
+							break;
+						case THREEPOSSWITCH_DOWN:
+							// 50/15/15 degree rate
+							if(BMAGRollSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+								if(gdc.attitude.x > 3.141592){ // > 180?								
+									errors.x = ((TWO_PI-gdc.attitude.x) * 46.982572); // Convert to left error
+								}else{
+									errors.x = -(gdc.attitude.x * 46.982572);
+								}
+							}
+							if(BMAGPitchSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+								if(gdc.attitude.y > 3.141592){ // > 180?								
+									errors.y = -((TWO_PI-gdc.attitude.y) * 156.608695); // Convert to left error
+								}else{
+									errors.y = (gdc.attitude.y * 156.608695);
+								}
+							}
+							if(BMAGYawSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+								if(gdc.attitude.z > 3.141592){ // > 180?								
+									errors.z = ((TWO_PI-gdc.attitude.z) * 156.608695); // Convert to left error
+								}else{
+									errors.z = -(gdc.attitude.z * 156.608695);
+								}
+							}
+							break;
+						}						
+					break;
+				case THREEPOSSWITCH_CENTER: // 2
+					// Normally this data comes from the DEA (Display Electronics Assembly)
+					// but for now it will be fetched straight from the GDC
+					euler_rates = gdc.rates;
+					// Get attitude to display
+					switch(FDAISelectSwitch.GetState()){
+						case THREEPOSSWITCH_UP:   // IMU
+							attitude = imu.GetTotalAttitude();
+							digital_error = 1; // DO NOT PERFORM AXIS SWAPPING
+							errors.x = gdc.fdai_err_x * 0.106770; // CMC error value, CMC-scaled
+							errors.y = gdc.fdai_err_y * 0.106770; // CMC error value, CMC-scaled
+							errors.z = gdc.fdai_err_z * 0.106770; // CMC error value, CMC-scaled
+							break;
+						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
+							VECTOR3 setting,target;
+							setting.x = ascp.output.x * 0.017453; // Degrees to radians
+							setting.y = ascp.output.y * 0.017453;
+							setting.z = ascp.output.z * 0.017453;
+							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
+								attitude = imu.GetTotalAttitude();
+							}else{
+								attitude = gdc.attitude;
+							}
+							target.x = setting.x - attitude.x;
+							target.y = setting.y - attitude.y;
+							target.z = setting.z - attitude.z;							
+							switch(FDAIScaleSwitch.GetState()){
+								case THREEPOSSWITCH_UP:
+								case THREEPOSSWITCH_CENTER:
+									// 5 degree rate
+									if(target.x > 0){ // Positive Error
+										if(target.x > PI){ 
+											errors.x = -((TWO_PI-target.x) * 469.827882); }else{
+											errors.x = (target.x * 469.827882);	}
+									}else{
+										if(target.x < -PI){
+											errors.x = ((TWO_PI+target.x) * 469.827882); }else{
+											errors.x = (target.x * 469.827882);	}
+									}
+									if(target.y > 0){ 
+										if(target.y > PI){ 
+											errors.y = ((TWO_PI-target.y) * 469.827882); }else{
+											errors.y = -(target.y * 469.827882);	}
+									}else{
+										if(target.y < -PI){
+											errors.y = -((TWO_PI+target.y) * 469.827882); }else{
+											errors.y = -(target.y * 469.827882);	}
+									}
+									if(target.z > 0){ 
+										if(target.z > PI){ 
+											errors.z = -((TWO_PI-target.z) * 469.827882); }else{
+											errors.z = (target.z * 469.827882);	}
+									}else{
+										if(target.z < -PI){
+											errors.z = ((TWO_PI+target.z) * 469.827882); }else{
+											errors.z = (target.z * 469.827882);	}
+									}											
+									break;
+								case THREEPOSSWITCH_DOWN:
+									// 50/15/15 degree rate
+									if(target.x > 0){ // Positive Error
+										if(target.x > PI){ 
+											errors.x = -((TWO_PI-target.x) * 46.982572); }else{
+											errors.x = (target.x * 46.982572);	}
+									}else{
+										if(target.x < -PI){
+											errors.x = ((TWO_PI+target.x) * 46.982572); }else{
+											errors.x = (target.x * 46.982572);	}
+									}
+									if(target.y > 0){ 
+										if(target.y > PI){ 
+											errors.y = ((TWO_PI-target.y) * 156.608695); }else{
+											errors.y = -(target.y * 156.608695);	}
+									}else{
+										if(target.y < -PI){
+											errors.y = -((TWO_PI+target.y) * 156.608695); }else{
+											errors.y = -(target.y * 156.608695);	}
+									}
+									if(target.z > 0){ 
+										if(target.z > PI){ 
+											errors.z = -((TWO_PI-target.z) * 156.608695); }else{
+											errors.z = (target.z * 156.608695);	}
+									}else{
+										if(target.z < -PI){
+											errors.z = ((TWO_PI+target.z) * 156.608695); }else{
+											errors.z = (target.z * 156.608695);	}
+									}											
+									break;
+							}
+							break;
+						case THREEPOSSWITCH_DOWN: // GDC
+							attitude = gdc.attitude;
+							euler_rates = gdc.rates;
+							digital_error = 1; // DO NOT PERFORM AXIS SWAPPING (I think...)
+							switch(FDAIScaleSwitch.GetState()){
+								case THREEPOSSWITCH_UP:
+								case THREEPOSSWITCH_CENTER:
+									// 5 degree rate
+									if(BMAGRollSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.x > 3.141592){ // > 180?								
+											errors.x = ((TWO_PI-gdc.attitude.x) * 469.827882); // Convert to left error
+										}else{
+											errors.x = -(gdc.attitude.x * 469.827882);
+										}
+									}
+									if(BMAGPitchSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.y > 3.141592){ // > 180?								
+											errors.y = -((TWO_PI-gdc.attitude.y) * 469.827882); // Convert to left error
+										}else{
+											errors.y = (gdc.attitude.y * 469.827882);
+										}
+									}
+									if(BMAGYawSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.z > 3.141592){ // > 180?								
+											errors.z = ((TWO_PI-gdc.attitude.z) * 469.827882); // Convert to left error
+										}else{
+											errors.z = -(gdc.attitude.z * 469.827882);
+										}
+									}
+									break;
+								case THREEPOSSWITCH_DOWN:
+									// 50/15/15 degree rate
+									if(BMAGRollSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.x > 3.141592){ // > 180?								
+											errors.x = ((TWO_PI-gdc.attitude.x) * 46.982572); // Convert to left error
+										}else{
+											errors.x = -(gdc.attitude.x * 46.982572);
+										}
+									}
+									if(BMAGPitchSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.y > 3.141592){ // > 180?								
+											errors.y = -((TWO_PI-gdc.attitude.y) * 156.608695); // Convert to left error
+										}else{
+											errors.y = (gdc.attitude.y * 156.608695);
+										}
+									}
+									if(BMAGYawSwitch.GetState() != THREEPOSSWITCH_UP || bmag1.powered != FALSE){
+										if(gdc.attitude.z > 3.141592){ // > 180?								
+											errors.z = ((TWO_PI-gdc.attitude.z) * 156.608695); // Convert to left error
+										}else{
+											errors.z = -(gdc.attitude.z * 156.608695);
+										}
+									}
+									break;
+							}		
+					}
+					break;				
+				case THREEPOSSWITCH_DOWN:   // 1
+					attitude = _V(0,0,0);   // No
+					errors = _V(0,0,0);
+					// Does not null rates?
+					no_att = 1;
+					break;
+			}			
+			if(digital_error == 0){
+				double input_pitch = errors.y;
+				double input_yaw = errors.z;
+				double roll_percent,output_pitch,output_yaw,pitch_factor = 1;
+				// In reality, PITCH and YAW are swapped around as needed to make the error needles  FLY-TO.
+				// This does that.
+				// ROLL IS LEFT-HANDED
+				if(attitude.x > 4.712388){                    // 0 thru 90 degrees
+					roll_percent = abs((attitude.x-TWO_PI) / 1.570796);				
+					output_pitch = input_pitch * (1-roll_percent); 
+					output_pitch += input_yaw * roll_percent;
+					output_yaw = input_yaw * (1-roll_percent);
+					output_yaw -=input_pitch * roll_percent;       
+				}
+				if(attitude.x > PI && attitude.x < 4.712388){ // 90 thru 180 degrees
+					roll_percent = (attitude.x-PI) / 1.570796;					
+					output_pitch = -(input_pitch * (1-roll_percent)); 
+					output_pitch += input_yaw * roll_percent;
+					output_yaw = -input_yaw * (1-roll_percent);
+					output_yaw -=input_pitch * roll_percent;       
+				}
+				if(attitude.x > 1.570796 && attitude.x < PI){ // 180 thru 270 degrees
+					roll_percent = abs((attitude.x-PI) / 1.570796);
+					output_pitch = -(input_pitch * (1-roll_percent)); 
+					output_pitch -= input_yaw * roll_percent;
+					output_yaw = -input_yaw * (1-roll_percent);
+					output_yaw +=input_pitch * roll_percent;       
+				}
+				if(attitude.x > 0 && attitude.x < 1.570796){ // 270 thru 360 degrees
+					roll_percent = attitude.x / 1.570796;					
+					output_pitch = input_pitch * (1-roll_percent); 
+					output_pitch -= input_yaw * roll_percent;
+					output_yaw = input_yaw * (1-roll_percent);
+					output_yaw +=input_pitch * roll_percent;       
+				}
+
+				//sprintf(oapiDebugString(),"Roll Att %f Percent = %f | P-I %f P-O %f | Y-I %f Y-O %f",
+				//	attitude.x,roll_percent,input_pitch,output_pitch,input_yaw,output_yaw);
+
+				errors.y = output_pitch;
+				errors.z = output_yaw;
+			}
+			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
+			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
+			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
+			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
+			fdaiRight.PaintMe(attitude, no_att, euler_rates, errors, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 

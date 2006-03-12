@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2006/02/27 00:57:48  dseagrav
+  *	Added SPS thrust-vector control. Changes 20060225-20060226.
+  *	
   *	Revision 1.36  2006/02/13 21:41:41  tschachim
   *	Fixes pad load.
   *	
@@ -319,7 +322,8 @@ protected:
 	void ProcessChannel13();
 	virtual void ProcessChannel160(int val);
 	virtual void ProcessChannel161(int val);
-	
+	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);
+
 	void LightUplink();
 	void ClearUplink();
 	void LightCompActy();

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/03/04 22:50:52  dseagrav
+  *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
+  *	
   *	Revision 1.6  2006/02/21 12:02:52  tschachim
   *	Bugfix FDAI.
   *	
@@ -52,7 +55,7 @@ public:
 	virtual ~FDAI();
 	void RegisterMe(int index, int x, int y);
 	void Timestep(double simt, double simdt);
-	void PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
+	void PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
 		         SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
