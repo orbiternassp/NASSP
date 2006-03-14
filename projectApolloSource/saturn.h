@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.157  2006/03/12 01:13:29  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.156  2006/03/09 20:40:22  quetalsi
   *	Added Battery Relay Bus. Wired Inverter 1/2/3, EPS Sensor Unit DC A/B, EPS Sensor Unit AC 1/2 and Bat Rly Bus BAT A/B brakers.
   *	
@@ -649,6 +652,7 @@ protected:
 	BMAG bmag2;
 	GDC  gdc;
 	ASCP ascp;
+	EDA  eda;
 
 	//
 	// Switches
@@ -2548,7 +2552,8 @@ protected:
 	friend class GDC;
 	friend class BMAG;
 	friend class ASCP;
-	friend class CSMcomputer; // I want this to be able to see the GDC
+	friend class EDA;
+	friend class CSMcomputer; // I want this to be able to see the GDC	
 };
 
 extern void BaseInit();
