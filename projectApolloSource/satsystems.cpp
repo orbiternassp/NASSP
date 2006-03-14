@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2006/03/12 01:13:28  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.84  2006/03/09 20:40:21  quetalsi
   *	Added Battery Relay Bus. Wired Inverter 1/2/3, EPS Sensor Unit DC A/B, EPS Sensor Unit AC 1/2 and Bat Rly Bus BAT A/B brakers.
   *	
@@ -499,6 +502,7 @@ void Saturn::SystemsInit() {
 	bmag2.Init(this,MainBusB,&ACBus2);
 	gdc.Init(this);
 	ascp.Init(this);
+	eda.Init(this);
 
 	// DS20060301 Initialize joystick
 	HRESULT         hr;
@@ -3282,4 +3286,200 @@ bool ASCP::PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits){
 		oapiBlt (surf, digits, 20, 0, srx, 45-sry, 9, sry, SURF_PREDEF_CK);
 	}
 	return true;
+}
+
+// EDA
+EDA::EDA(){
+	sat = NULL; // Initialize
+}
+
+void EDA::Init(Saturn *vessel){
+	sat = vessel;
+}
+
+VECTOR3 EDA::ReturnCMCErrorNeedles(){
+	VECTOR3 errors;
+	errors.x = sat->gdc.fdai_err_x * 0.106770; // CMC error value, CMC-scaled
+	errors.y = sat->gdc.fdai_err_y * 0.106770; // CMC error value, CMC-scaled
+	errors.z = sat->gdc.fdai_err_z * 0.106770; // CMC error value, CMC-scaled
+	return(errors);
+}
+
+VECTOR3 EDA::ReturnASCPError(VECTOR3 attitude){
+	VECTOR3 setting,target,errors;
+	// Get ASCP setting in radians
+	setting.x = sat->ascp.output.x * 0.017453;
+	setting.y = sat->ascp.output.y * 0.017453;
+	setting.z = sat->ascp.output.z * 0.017453;
+	// And difference
+	target.x = setting.x - attitude.x;
+	target.y = setting.y - attitude.y;
+	target.z = setting.z - attitude.z;							
+	// Now process
+	switch(sat->FDAIScaleSwitch.GetState()){
+		case THREEPOSSWITCH_UP:
+		case THREEPOSSWITCH_CENTER:
+			// 5 degree rate
+			if(target.x > 0){ // Positive Error
+				if(target.x > PI){ 
+					errors.x = -((TWO_PI-target.x) * 469.827882); }else{
+						errors.x = (target.x * 469.827882);	}
+			}else{
+				if(target.x < -PI){
+					errors.x = ((TWO_PI+target.x) * 469.827882); }else{
+						errors.x = (target.x * 469.827882);	}
+			}
+			if(target.y > 0){ 
+				if(target.y > PI){ 
+					errors.y = ((TWO_PI-target.y) * 469.827882); }else{
+						errors.y = -(target.y * 469.827882);	}
+			}else{
+				if(target.y < -PI){
+					errors.y = -((TWO_PI+target.y) * 469.827882); }else{
+						errors.y = -(target.y * 469.827882);	}
+			}
+			if(target.z > 0){ 
+				if(target.z > PI){ 
+					errors.z = -((TWO_PI-target.z) * 469.827882); }else{
+						errors.z = (target.z * 469.827882);	}
+			}else{
+				if(target.z < -PI){
+					errors.z = ((TWO_PI+target.z) * 469.827882); }else{
+						errors.z = (target.z * 469.827882);	}
+			}											
+			break;
+		case THREEPOSSWITCH_DOWN:
+			// 50/15/15 degree rate
+			if(target.x > 0){ // Positive Error
+				if(target.x > PI){ 
+					errors.x = -((TWO_PI-target.x) * 46.982572); }else{
+						errors.x = (target.x * 46.982572);	}
+			}else{
+				if(target.x < -PI){
+					errors.x = ((TWO_PI+target.x) * 46.982572); }else{
+						errors.x = (target.x * 46.982572);	}
+			}
+			if(target.y > 0){ 
+				if(target.y > PI){ 
+					errors.y = ((TWO_PI-target.y) * 156.608695); }else{
+						errors.y = -(target.y * 156.608695);	}
+			}else{
+				if(target.y < -PI){
+					errors.y = -((TWO_PI+target.y) * 156.608695); }else{
+						errors.y = -(target.y * 156.608695);	}
+			}
+			if(target.z > 0){ 
+				if(target.z > PI){ 
+					errors.z = -((TWO_PI-target.z) * 156.608695); }else{
+						errors.z = (target.z * 156.608695);	}
+			}else{
+				if(target.z < -PI){
+					errors.z = ((TWO_PI+target.z) * 156.608695); }else{
+						errors.z = (target.z * 156.608695);	}
+			}											
+			break;
+	}
+	return(errors);
+}
+
+VECTOR3 EDA::ReturnBMAG1Error(){
+	VECTOR3 errors;
+	switch(sat->FDAIScaleSwitch.GetState()){
+		case THREEPOSSWITCH_UP:
+		case THREEPOSSWITCH_CENTER:
+			// 5 degree rate
+			if(sat->BMAGRollSwitch.GetState() != THREEPOSSWITCH_UP || sat->bmag1.powered != FALSE){
+				if(sat->gdc.attitude.x > 3.141592){ // > 180?								
+					errors.x = ((TWO_PI-sat->gdc.attitude.x) * 469.827882); // Convert to left error
+				}else{
+					errors.x = -(sat->gdc.attitude.x * 469.827882);
+				}
+			}
+			if(sat->BMAGPitchSwitch.GetState() != THREEPOSSWITCH_UP || sat->bmag1.powered != FALSE){
+				if(sat->gdc.attitude.y > 3.141592){ // > 180?								
+					errors.y = -((TWO_PI-sat->gdc.attitude.y) * 469.827882); // Convert to left error
+				}else{
+					errors.y = (sat->gdc.attitude.y * 469.827882);
+				}
+			}
+			if(sat->BMAGYawSwitch.GetState() != THREEPOSSWITCH_UP || sat->bmag1.powered != FALSE){
+				if(sat->gdc.attitude.z > 3.141592){ // > 180?								
+					errors.z = ((TWO_PI-sat->gdc.attitude.z) * 469.827882); // Convert to left error
+				}else{
+					errors.z = -(sat->gdc.attitude.z * 469.827882);
+				}
+			}
+			break;
+		case THREEPOSSWITCH_DOWN:
+			// 50/15/15 degree rate
+			if(sat->BMAGRollSwitch.GetState() != THREEPOSSWITCH_UP || sat->bmag1.powered != FALSE){
+				if(sat->gdc.attitude.x > 3.141592){ // > 180?								
+					errors.x = ((TWO_PI-sat->gdc.attitude.x) * 46.982572); // Convert to left error
+				}else{
+					errors.x = -(sat->gdc.attitude.x * 46.982572);
+				}
+			}
+			if(sat->BMAGPitchSwitch.GetState() != THREEPOSSWITCH_UP || sat->bmag1.powered != FALSE){
+				if(sat->gdc.attitude.y > 3.141592){ // > 180?								
+					errors.y = -((TWO_PI-sat->gdc.attitude.y) * 156.608695); // Convert to left error
+				}else{
+					errors.y = (sat->gdc.attitude.y * 156.608695);
+				}
+			}
+			if(sat->BMAGYawSwitch.GetState() != THREEPOSSWITCH_UP || sat->bmag1.powered != FALSE){
+				if(sat->gdc.attitude.z > 3.141592){ // > 180?								
+					errors.z = ((TWO_PI-sat->gdc.attitude.z) * 156.608695); // Convert to left error
+				}else{
+					errors.z = -(sat->gdc.attitude.z * 156.608695);
+				}
+			}
+			break;
+	}
+	return(errors);
+}
+
+VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors){
+	VECTOR3 output_errors;
+	double input_pitch = errors.y;
+	double input_yaw = errors.z;
+	double roll_percent,output_pitch,output_yaw,pitch_factor = 1;
+	// In reality, PITCH and YAW are swapped around as needed to make the error needles  FLY-TO.
+	// This does that.
+	// ROLL IS LEFT-HANDED
+	if(attitude.x > 4.712388){                    // 0 thru 90 degrees
+		roll_percent = abs((attitude.x-TWO_PI) / 1.570796);				
+		output_pitch = input_pitch * (1-roll_percent); 
+		output_pitch += input_yaw * roll_percent;
+		output_yaw = input_yaw * (1-roll_percent);
+		output_yaw -=input_pitch * roll_percent;       
+	}
+	if(attitude.x > PI && attitude.x < 4.712388){ // 90 thru 180 degrees
+		roll_percent = (attitude.x-PI) / 1.570796;					
+		output_pitch = -(input_pitch * (1-roll_percent)); 
+		output_pitch += input_yaw * roll_percent;
+		output_yaw = -input_yaw * (1-roll_percent);
+		output_yaw -=input_pitch * roll_percent;       
+	}
+	if(attitude.x > 1.570796 && attitude.x < PI){ // 180 thru 270 degrees
+		roll_percent = abs((attitude.x-PI) / 1.570796);
+		output_pitch = -(input_pitch * (1-roll_percent)); 
+		output_pitch -= input_yaw * roll_percent;
+		output_yaw = -input_yaw * (1-roll_percent);
+		output_yaw +=input_pitch * roll_percent;       
+	}
+	if(attitude.x > 0 && attitude.x < 1.570796){ // 270 thru 360 degrees
+		roll_percent = attitude.x / 1.570796;					
+		output_pitch = input_pitch * (1-roll_percent); 
+		output_pitch -= input_yaw * roll_percent;
+		output_yaw = input_yaw * (1-roll_percent);
+		output_yaw +=input_pitch * roll_percent;       
+	}
+
+	//sprintf(oapiDebugString(),"Roll Att %f Percent = %f | P-I %f P-O %f | Y-I %f Y-O %f",
+	//	attitude.x,roll_percent,input_pitch,output_pitch,input_yaw,output_yaw);
+
+	output_errors.x = errors.x;
+	output_errors.y = output_pitch;
+	output_errors.z = output_yaw;
+	return(output_errors);
 }

@@ -115,3 +115,18 @@ public: // We use these inside a timestep, so everything is public to make data 
 	Saturn *sat;												   // The spacecraft
 	int msgcounter;
 };
+
+class EDA {
+	// Electronic Display Assembly
+	// This really just serves as a placeholder right now, and does some of the FDAI sourcing
+	// so the FDAI redraw is less messy.
+public: // Same stuff about speed and I'm lazy too.
+	EDA();															// Cons
+	void Init(Saturn *vessel);										// Initialization
+	VECTOR3 ReturnCMCErrorNeedles();								// Return said data.
+	VECTOR3 ReturnASCPError(VECTOR3 attitude);						// Return said data.
+	VECTOR3 ReturnBMAG1Error();										// See the general theme here?
+	VECTOR3 AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors);  // Adjust errors for roll so as to be FLY-TO
+
+	Saturn *sat;
+};
