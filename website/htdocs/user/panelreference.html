@@ -86,8 +86,8 @@
         <td><div align="center">G</div></td>
         <td><div align="center">P-15</div></td>
         <td>When switched to CAGE, the IMU is caged with all three gimbal angles to 0&deg;, otherwise the caging is released.</td>
-        <td><p>At the start of the simulation the IMU is turned off and the IMU CAGE switch is set to CAGE. When you set it to OFF, the IMU is turned on. After that's the IMU CAGE switch works normally, so you can't turn it off again. </p>
-          <p>The IMU should be turned on and off by using the G/N IMU PWR switch on panel 100, which doesn't exists at the moment. </p></td>
+        <td><p>&nbsp;</p>
+          </td>
       </tr>
       <tr valign="top">
         <td>ABORT light </td>
@@ -103,14 +103,14 @@
         <td><div align="center">I</div></td>
         <td><div align="center">I-22</div></td>
         <td>Digital event timer provides crew with means of monitoring and timing events. Event timer will start automatically when lift-off occurs and is not working before that. </td>
-        <td>Is it really not working before lift-off? </td>
+        <td>&nbsp;</td>
       </tr>
       <tr valign="top">
         <td>LV RATE light </td>
         <td><div align="center">1</div></td>
         <td><div align="center">I</div></td>
         <td><div align="center">K-22</div></td>
-        <td>Illuminates yellow when LV thrust level is above 65%. </td>
+        <td>-</td>
         <td>Should illuminate red when LV angular rates exceed predeterminated limits. </td>
       </tr>
       <tr valign="top">
@@ -126,7 +126,7 @@
         <td><div align="center">1</div></td>
         <td><div align="center">I</div></td>
         <td><div align="center">K-22</div></td>
-        <td>Illuminates yellow when the Saturn autopilot is active. </td>
+        <td>-</td>
         <td>Should illuminate red when LV guidance attitude reference gets lost. </td>
       </tr>
       <tr valign="top">
@@ -217,8 +217,8 @@
         <td><div align="center">L</div></td>
         <td><div align="center">P-22</div></td>
         <td>START starts the event timer, STOP stops it. The event timer is not working before lift-off and is set to 0 and started at lift-off. </td>
-        <td><p>Is it really not working before lift-off? </p>
-        <p>Up position is spring-loaded to center position. </p></td>
+        <td><p>Up position is spring-loaded to center position. </p>
+        </td>
       </tr>
       <tr valign="top">
         <td>EVENT TIMER MIN switch </td>
@@ -310,19 +310,12 @@
         <td>Should enable/disable the LV auto abort system, details about that are not known at the moment. </td>
       </tr>
       <tr valign="top">
-        <td height="47">CSM/LM FINAL SEP 1 switch </td>
+        <td height="47">CSM/LM FINAL SEP 1/2 switch </td>
         <td><div align="center">2</div></td>
         <td><div align="center">D</div></td>
         <td><div align="center">M-26</div></td>
         <td>Separates the LM from the CSM irreversibly including the docking probe. </td>
-        <td rowspan="2">Either switch initiates abandonment of LM or jettisons the docking probe and ring subsequent to SPS abort. Reversible undocking of the LM should be done with the DOCKING PROBE EXTD/REL switch. Spring-loaded to down position. </td>
-      </tr>
-      <tr valign="top">
-        <td>CSM/LM FINAL SEP 2 switch </td>
-        <td><div align="center">2</div></td>
-        <td><div align="center">D</div></td>
-        <td><div align="center">M-26</div></td>
-        <td>Separates the LM from the CSM reversibly so you can dock again. </td>
+        <td>Reversible undocking of the LM is done with the DOCKING PROBE EXTD/REL switch. Spring-loaded to down position. </td>
       </tr>
       <tr valign="top">
         <td>CM/SM SEP 1/2 switches </td>
@@ -369,8 +362,8 @@
         <td><div align="center">2</div></td>
         <td><div align="center">D</div></td>
         <td><div align="center">O-24</div></td>
-        <td>Switching to LV STAGE (up)  initiates manual SII/SIVB staging. </td>
-        <td>Works only between SIC/SII staging and automatic SII/SIVB staging.</td>
+        <td>Switching to LV STAGE (up)  initiates manual SII/SIVB staging. Switching to up also inhibits TLI burn sequence from 18s before SIVB ignition on. SIVB engine is restartable if inhibit occurs not later than 12s after SIVB ignition.</td>
+        <td>Works only between SIC/SII staging and automatic SII/SIVB staging or during TLI. </td>
       </tr>
       <tr valign="top">
         <td>MAIN RELEASE switch </td>
@@ -401,7 +394,38 @@
         <td><div align="center">2</div></td>
         <td><div align="center">G</div></td>
         <td><div align="center">O-26</div></td>
-        <td>Enables (up) or disables (down) the SIVB for the TLI burn. </td>
+        <td>Inhibits TLI burn sequence until 18s before SIVB ignition, when switched to down position. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>DOCKING PROBE EXTD/RETR A/B indicators </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">H</div></td>
+        <td><div align="center">D-28</div></td>
+        <td>Striped-line display indicates probe in motion. Gray display indicates completed movement.</td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>DOCKING PROBE EXTD/REL/OFF/RETR switch </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">H</div></td>
+        <td><div align="center">E-28</div></td>
+        <td>EXTD/REL extends the docking probe and undocks from a docked vessel. RETR applies power to the DOCKING PROBE RETRACT PRIM and SEC switches. OFF removes power from the probe. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td> DOCKING PROBE RETRACT PRIM 1/2 switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">H</div></td>
+        <td><div align="center">E-28</div></td>
+        <td rowspan="2">Engage docking latches to do hard dock after capture of the vessel to dock. </td>
+        <td>&nbsp;</td>
+      </tr>
+      <tr valign="top">
+        <td>DOCKING PROBE RETRACT SEC 1/2 switches </td>
+        <td><div align="center">2</div></td>
+        <td><div align="center">H</div></td>
+        <td><div align="center">E-29</div></td>
         <td>&nbsp;</td>
       </tr>
       <tr valign="top">
@@ -537,9 +561,9 @@
         <td><div align="center">2</div></td>
         <td><div align="center">N</div></td>
         <td><div align="center">F-36</div></td>
-        <td>START starts the mission timer, STOP stops it and RESET resets it. The mission timer is not working before lift-off and is set to 0 and started at lift-off. </td>
-        <td><p>Is it really not working before lift-off? </p>
-        <p>Down position is spring-loaded to center position. </p></td>
+        <td>START starts the mission timer, STOP stops it and RESET resets it. The mission timer is set to 0 and started at lift-off. </td>
+        <td><p>Down position is spring-loaded to center position. </p>
+        </td>
       </tr>
       <tr valign="top">
         <td>CAUTION/WARNING NORMAL/BOOST/ACK switch </td>
