@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2006/03/14 02:48:57  dseagrav
+  *	Added ECA object, moved FDAI redraw stuff into ECA to clean up FDAI redraw mess.
+  *	
   *	Revision 1.85  2006/03/12 01:13:28  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -2742,14 +2745,15 @@ void BMAG::TimeStep(){
 GDC::GDC(){
 	rates = _V(0,0,0);	
 	attitude = _V(0,0,0);
-	ref = _V(0,0,0);
 	sat = NULL;
 	Initialized = FALSE;
 	fdai_err_ena=0;
 	fdai_err_x=0;
 	fdai_err_y=0;
 	fdai_err_z=0;
-
+	roll_bmag_failed=0;
+	pitch_bmag_failed=0;
+	yaw_bmag_failed=0;
 }
 
 void GDC::Init(Saturn *vessel){
@@ -2776,92 +2780,67 @@ void GDC::TimeStep(double simt){
 	// Pull status
 	sat->GetStatus(vs);
 	// Get eccliptic-plane attitude
-	double orbiterAttitudeX;
-	double orbiterAttitudeY;
-	double orbiterAttitudeZ;
-
-	// AXIS TRANSLATION - Was X = Z, Y = X, Z = TWO_PI-Y
+	double orbiterAttitudeX = vs.arot.x;
+	double orbiterAttitudeY = vs.arot.y;
+	double orbiterAttitudeZ = vs.arot.z;
 
 	// Get rates from the appropriate BMAG
 	switch(sat->BMAGRollSwitch.GetState()){
-		case THREEPOSSWITCH_UP:     // RATE2/ATT2
+		case THREEPOSSWITCH_UP:     // RATE2
 			rates.z = sat->bmag2.rates.z;
-			if(sat->bmag2.powered){	orbiterAttitudeX = vs.arot.x; }else{
-				orbiterAttitudeX = 0;
-				Orbiter.AttitudeReference.m11 = 0;
-				Orbiter.AttitudeReference.m12 = 0;
-				Orbiter.AttitudeReference.m13 = 0;}
+			if(!roll_bmag_failed){ roll_bmag_failed = 1; } // Fail it
 			break;
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
 			rates.z = sat->bmag2.rates.z;
-			if(sat->bmag1.powered){	orbiterAttitudeX = vs.arot.x; }else{
-				orbiterAttitudeX = 0;
-				Orbiter.AttitudeReference.m11 = 0;
-				Orbiter.AttitudeReference.m12 = 0;
-				Orbiter.AttitudeReference.m13 = 0; }
+			if(sat->bmag1.powered){
+				if(roll_bmag_failed){ attitude.x = 0; Initialized=FALSE; roll_bmag_failed = 0; } // Force align to zero
+			}else{
+				if(!roll_bmag_failed){ roll_bmag_failed = 1; } // Fail it
+			}
 			break;
-		case THREEPOSSWITCH_DOWN:   // RATE1/ATT1
+		case THREEPOSSWITCH_DOWN:   // RATE1
 			rates.z = sat->bmag1.rates.z;
-			if(sat->bmag1.powered){	orbiterAttitudeX = vs.arot.x; }else{
-				orbiterAttitudeX = 0;
-				Orbiter.AttitudeReference.m11 = 0;
-				Orbiter.AttitudeReference.m12 = 0;
-				Orbiter.AttitudeReference.m13 = 0;}
+			if(!roll_bmag_failed){ roll_bmag_failed = 1; } // Fail it
 			break;			
 	}
 	switch(sat->BMAGPitchSwitch.GetState()){
-		case THREEPOSSWITCH_UP:     // RATE2/ATT2
+		case THREEPOSSWITCH_UP:     // RATE2
 			rates.x = sat->bmag2.rates.x;
-			if(sat->bmag2.powered){orbiterAttitudeY = vs.arot.y;}else{
-				orbiterAttitudeY = 0;
-				Orbiter.AttitudeReference.m21 = 0;
-				Orbiter.AttitudeReference.m22 = 0;
-				Orbiter.AttitudeReference.m23 = 0;}
+			if(!pitch_bmag_failed){ pitch_bmag_failed = 1; } // Fail it
 			break;
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
 			rates.x = sat->bmag2.rates.x;
-			if(sat->bmag1.powered){orbiterAttitudeY = vs.arot.y;}else{
-				orbiterAttitudeY = 0;
-				Orbiter.AttitudeReference.m21 = 0;
-				Orbiter.AttitudeReference.m22 = 0;
-				Orbiter.AttitudeReference.m23 = 0;}
+			if(sat->bmag1.powered){
+				if(pitch_bmag_failed){ attitude.y = 0; Initialized=FALSE; pitch_bmag_failed = 0; } // Force align to zero
+			}else{
+				if(!pitch_bmag_failed){ pitch_bmag_failed = 1; } // Fail it				
+			}
 			break;
-		case THREEPOSSWITCH_DOWN:   // RATE1/ATT1										
+		case THREEPOSSWITCH_DOWN:   // RATE1
 			rates.x = sat->bmag1.rates.x;
-			if(sat->bmag1.powered){orbiterAttitudeY = vs.arot.y;}else{
-				orbiterAttitudeY = 0;
-				Orbiter.AttitudeReference.m21 = 0;
-				Orbiter.AttitudeReference.m22 = 0;
-				Orbiter.AttitudeReference.m23 = 0;}
+			if(!pitch_bmag_failed){ pitch_bmag_failed = 1; } // Fail it
 			break;			
 	}
+
 	switch(sat->BMAGYawSwitch.GetState()){
-		case THREEPOSSWITCH_UP:     // RATE2/ATT2
+		case THREEPOSSWITCH_UP:     // RATE2
 			rates.y = sat->bmag2.rates.y;
-			if(sat->bmag2.powered){orbiterAttitudeZ = vs.arot.z;}else{ 
-				orbiterAttitudeZ = 0;
-				Orbiter.AttitudeReference.m31 = 0;
-				Orbiter.AttitudeReference.m32 = 0;
-				Orbiter.AttitudeReference.m33 = 0;}
+			if(!yaw_bmag_failed){ yaw_bmag_failed = 1; } // Fail it
 			break;
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
 			rates.y = sat->bmag2.rates.y;
-			if(sat->bmag1.powered){orbiterAttitudeZ = vs.arot.z;}else{ 
-				orbiterAttitudeZ = 0;
-				Orbiter.AttitudeReference.m31 = 0;
-				Orbiter.AttitudeReference.m32 = 0;
-				Orbiter.AttitudeReference.m33 = 0;}
+			if(sat->bmag1.powered){
+				if(yaw_bmag_failed){ attitude.z = 0; Initialized=FALSE; yaw_bmag_failed = 0; } // Force align to zero
+			}else{ 
+				if(!yaw_bmag_failed){ yaw_bmag_failed = 1; } // Fail it
+			}
 			break;
-		case THREEPOSSWITCH_DOWN:   // RATE1/ATT1										
+		case THREEPOSSWITCH_DOWN:   // RATE1
 			rates.y = sat->bmag1.rates.y;
-			if(sat->bmag1.powered){orbiterAttitudeZ = vs.arot.z;}else{ 
-				orbiterAttitudeZ = 0; 
-				Orbiter.AttitudeReference.m31 = 0;
-				Orbiter.AttitudeReference.m32 = 0;
-				Orbiter.AttitudeReference.m33 = 0;}
+			if(!yaw_bmag_failed){ yaw_bmag_failed = 1; } // Fail it
 			break;
 	}					
-
+	
 	if (!Initialized) {
 		// Reset
 //		attitude = _V(0,0,0); Don't reset, provided by alignment key
@@ -2910,7 +2889,7 @@ void GDC::TimeStep(double simt){
 		}
 		if (attitude.x < 0) {
 			attitude.x += TWO_PI;
-		}
+		}		
 		OldGimbal = attitude.y;
 		attitude.y += (-newAngles.y - attitude.y);
 		if (attitude.y >= TWO_PI) {
@@ -2933,18 +2912,11 @@ void GDC::TimeStep(double simt){
 		Orbiter.LastAttitude.Y = Orbiter.Attitude.Y;
 		Orbiter.LastAttitude.Z = Orbiter.Attitude.Z;
 		LastTime = simt;
-	}	
-	{
-		// Debug
-		VECTOR3 testmatrix = sat->imu.GetTotalAttitude();
-		/*
-		testmatrix.x -= attitude.x;
-		testmatrix.y -= attitude.y;
-		testmatrix.z -= attitude.z;
-		*/
-		// sprintf(oapiDebugString(),"GDC: %f %f %f IMU: %f %f %f",attitude.x,attitude.y,attitude.z,testmatrix.x,testmatrix.y,testmatrix.z);
 	}
-	
+	// Force zero in caged/failed axes
+	if(roll_bmag_failed){  attitude.x = 0; } 
+	if(pitch_bmag_failed){ attitude.y = 0; } 
+	if(yaw_bmag_failed){   attitude.z = 0; } 
 }
 
 // Confusing mathematics blatantly copipe from IMU

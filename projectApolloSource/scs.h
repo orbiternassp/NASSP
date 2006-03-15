@@ -64,10 +64,12 @@ public: // We use these inside a timestep, so everything is public to make data 
 	GDC_Matrix3 getNavigationBaseToOrbiterLocalTransformation();	
 	GDC_Matrix3 getOrbiterLocalToNavigationBaseTransformation();
 	VECTOR3 rates;              // Integrated Euler rotation rates
-	VECTOR3	ref;                // Reference attitude at alignment time
 	VECTOR3 attitude;           // Calculated Attitude
 	double LastTime;			// in seconds
 	bool Initialized;			// Was it?
+	int roll_bmag_failed;       // Fault-finding
+	int pitch_bmag_failed;
+	int yaw_bmag_failed;
 	struct {					// Orbiter's state
 		struct {
 			double X;
@@ -84,6 +86,7 @@ public: // We use these inside a timestep, so everything is public to make data 
 	// GDC is supplied from AC1 and AC2 phase A, and from MNA and MNB.
 	// All of these are needed for it to operate!
 	Saturn *sat;
+	// FDAI error needle data from CMC
 	int fdai_err_ena;
 	int fdai_err_x;
 	int fdai_err_y;
