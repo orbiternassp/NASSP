@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.87  2006/03/15 03:43:18  dseagrav
+  *	Corrected GDC BMAG logic, removed absurd attitude error on BMAG failure, changed failure simulation to more accurate method.
+  *	
   *	Revision 1.86  2006/03/14 02:48:57  dseagrav
   *	Added ECA object, moved FDAI redraw stuff into ECA to clean up FDAI redraw mess.
   *	
@@ -693,18 +696,46 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]),&dx8_jstate[rhc_id]);
 			// X and Y are well-duh kinda things. X=0 for full-left, Y = 0 for full-down
 			// Set bits according to joystick state. 32768 is center, so 16384 is the left half.
+			// The real RHC had a 12 degree travel. Our joystick travels 32768 points to full deflection.
+			// This means 2730 points per degree travel. The RHC breakout switches trigger at 1.5 degrees deflection and
+			// stop at 11. So from 36863 to 62798, we trigger plus, and from 28673 to 2738 we trigger minus.
+			// The last degree of travel is reserved for the DIRECT control switches.
 			if(rhc_voltage1 > 0 || rhc_voltage2 > 0){
-				if(dx8_jstate[rhc_id].lX < 16384){							
-					val31.Bits.MinusRollManualRotation = 1;
+				if(dx8_jstate[rhc_id].lX < 28673 && dx8_jstate[rhc_id].lX > 2738){
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.MinusRollManualRotation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}	
-				if(dx8_jstate[rhc_id].lY < 16384){
-					val31.Bits.MinusPitchManualRotation = 1;
+				if(dx8_jstate[rhc_id].lY < 28673 && dx8_jstate[rhc_id].lY > 2738){
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.MinusPitchManualRotation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
-				if(dx8_jstate[rhc_id].lX > 49152){
-					val31.Bits.PlusRollManualRotation = 1;
+				if(dx8_jstate[rhc_id].lX > 36863 && dx8_jstate[rhc_id].lX < 62798){
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.PlusRollManualRotation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
-				if(dx8_jstate[rhc_id].lY > 49152){
-					val31.Bits.PlusPitchManualRotation = 1;
+				if(dx8_jstate[rhc_id].lY > 36863 && dx8_jstate[rhc_id].lY < 62798){
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.PlusPitchManualRotation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
 				// Z-axis read.
 				int rhc_rot_pos = 32768; // Initialize to centered
@@ -724,11 +755,23 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				if(rhc_rzx_id != -1){ // If we use the native Z-axis
 					rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 				}
-				if(rhc_rot_pos < 16384){
-					val31.Bits.MinusYawManualRotation = 1;
+				if(rhc_rot_pos < 28673 && rhc_rot_pos > 2738){
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.MinusYawManualRotation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
-				if(rhc_rot_pos > 49152){
-					val31.Bits.PlusYawManualRotation = 1;
+				if(rhc_rot_pos > 36863 && rhc_rot_pos < 62798){
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.PlusYawManualRotation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
 				if(rhc_debug != -1){ sprintf(oapiDebugString(),"RHC: X/Y/Z = %d / %d / %d",dx8_jstate[rhc_id].lX,dx8_jstate[rhc_id].lY,
 					rhc_rot_pos); }
@@ -763,16 +806,40 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 			// This is correct for the Space Shuttle THC anyway...
 			if(thc_voltage > 0){
 				if(dx8_jstate[thc_id].lX < 16384){							
-					val31.Bits.MinusYTranslation = 1;
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.MinusYTranslation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}	
 				if(dx8_jstate[thc_id].lY < 16384){
-					val31.Bits.PlusXTranslation = 1;
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.PlusXTranslation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
 				if(dx8_jstate[thc_id].lX > 49152){
-					val31.Bits.PlusYTranslation = 1;
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.PlusYTranslation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
 				if(dx8_jstate[thc_id].lY > 49152){
-					val31.Bits.MinusXTranslation = 1;
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.MinusXTranslation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
 				// Z-axis read.
 				int thc_rot_pos = 32768; // Initialize to centered
@@ -793,10 +860,22 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					thc_rot_pos = dx8_jstate[thc_id].lZ;
 				}
 				if(thc_rot_pos < 16384){
-					val31.Bits.MinusZTranslation = 1;
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.MinusZTranslation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
 				if(thc_rot_pos > 49152){
-					val31.Bits.PlusZTranslation = 1;
+					switch(SCContSwitch.GetState()){
+						case TOGGLESWITCH_UP: // CMC
+							val31.Bits.PlusZTranslation = 1;
+							break;
+						case TOGGLESWITCH_DOWN: // SCS
+							break;
+					}
 				}
 				if(thc_debug != -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
 					thc_rot_pos); }
