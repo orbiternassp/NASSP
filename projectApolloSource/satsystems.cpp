@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.88  2006/03/16 01:28:24  dseagrav
+  *	Changed RHC switch positions to match the real RHC, conditionalized RHC/THC CMC inputs on the position of the SC CONT switch.
+  *	
   *	Revision 1.87  2006/03/15 03:43:18  dseagrav
   *	Corrected GDC BMAG logic, removed absurd attitude error on BMAG failure, changed failure simulation to more accurate method.
   *	
@@ -509,6 +512,7 @@ void Saturn::SystemsInit() {
 	gdc.Init(this);
 	ascp.Init(this);
 	eda.Init(this);
+	rjec.Init(this);
 
 	// DS20060301 Initialize joystick
 	HRESULT         hr;
@@ -3533,4 +3537,276 @@ VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors){
 	output_errors.y = output_pitch;
 	output_errors.z = output_yaw;
 	return(output_errors);
+}
+
+// Reaction Jet / Engine Control
+RJEC::RJEC(){
+	sat = NULL;
+}
+
+void RJEC::Init(Saturn *vessel){
+	sat = vessel;
+}
+
+void RJEC::SetThruster(int thruster,bool Active){
+	/* Thruster List:
+	CM#		SM#		INDEX#		SWITCH GROUP
+
+	1		C3		1			PITCH
+	2		A4		2			PITCH
+	3		A3		3			PITCH
+	4		C4		4			PITCH
+	5		D3		5			YAW
+	6		B4		6			YAW
+	7		B3		7			YAW
+	8		D4		8			YAW
+	9		B1		9			ROLL B/D
+	10		D2		10			ROLL B/D
+	11		D1		11			ROLL B/D
+	12		B2		12			ROLL B/D
+	xx		A1		13			ROLL A/C
+	xx		A2		14			ROLL A/C
+	xx		C1		15			ROLL A/C
+	xx		C2		16			ROLL A/C
+
+	*/
+
+	ChannelValue30 val30;
+	int sm_sep=0;
+	val30.Value = sat->agc.GetInputChannel(030); 
+	sm_sep = val30.Bits.CMSMSeperate; // There should probably be a way for the SCS to do this if VAGC is not running
+
+	switch(thruster){
+		case 1:
+			switch(sat->PitchC3Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_C, 3, Active); 
+					}else{
+						sat->SetCMRCSState(0,Active);
+					}
+					break;
+			}
+			break;
+
+		case 2:
+			switch(sat->PitchA4Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_A, 4, Active); 
+					}else{
+						sat->SetCMRCSState(2,Active);
+					}
+					break;
+			}
+			break;
+
+		case 3:
+			switch(sat->PitchA3Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_A, 3, Active); 
+					}else{
+						sat->SetCMRCSState(1,Active);
+					}
+					break;
+			}
+			break;
+
+		case 4:
+			switch(sat->PitchC4Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_C, 4, Active); 
+					}else{
+						sat->SetCMRCSState(3,Active);
+					}
+					break;
+			}
+			break;
+
+		case 5:
+			switch(sat->YawD3Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_D, 3, Active); 
+					}else{
+						sat->SetCMRCSState(4,Active);
+					}
+					break;
+			}
+			break;
+
+		case 6:
+			switch(sat->YawB4Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_B, 4, Active); 
+					}else{
+						sat->SetCMRCSState(6,Active);
+					}
+					break;
+			}
+			break;
+
+		case 7:
+			switch(sat->YawB3Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_B, 3, Active); 
+					}else{
+						sat->SetCMRCSState(5,Active);
+					}
+					break;
+			}
+			break;
+
+		case 8:
+			switch(sat->YawD4Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_D, 4, Active); 
+					}else{
+						sat->SetCMRCSState(7,Active);
+					}
+					break;
+			}
+			break;
+
+		case 9:
+			switch(sat->BdRollB1Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_B, 1, Active); 
+					}else{
+						sat->SetCMRCSState(8,Active);
+					}
+					break;
+			}
+			break;
+
+		case 10:
+			switch(sat->BdRollD2Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_D, 2, Active); 
+					}else{
+						sat->SetCMRCSState(10,Active);
+					}
+					break;
+			}
+			break;
+
+		case 11:
+			switch(sat->BdRollD1Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_D, 1, Active); 
+					}else{
+						sat->SetCMRCSState(9,Active);
+					}
+					break;
+			}
+			break;
+
+		case 12:
+			switch(sat->BdRollB2Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_B, 2, Active); 
+					}else{
+						sat->SetCMRCSState(11,Active);
+					}
+					break;
+			}
+			break;
+
+		case 13:
+			switch(sat->AcRollA1Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_A, 1, Active); 
+					}
+					break;
+			}
+			break;
+
+		case 14:
+			switch(sat->AcRollA2Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_A, 2, Active); 
+					}
+					break;
+			}
+			break;
+
+		case 15:
+			switch(sat->AcRollC1Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_C, 1, Active); 
+					}
+					break;
+			}
+			break;
+
+		case 16:
+			switch(sat->AcRollC2Switch.GetState()){ // Powered?
+				case THREEPOSSWITCH_CENTER:			// No.
+					break;
+				case THREEPOSSWITCH_UP:   // MNA
+				case THREEPOSSWITCH_DOWN: // MNB
+					if(!sm_sep){
+						sat->SetRCSState(RCS_SM_QUAD_C, 2, Active); 
+					}
+					break;
+			}
+			break;
+	}
 }

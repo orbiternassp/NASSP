@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/03/12 01:46:17  dseagrav
+  *	Removed leftover debug message
+  *	
   *	Revision 1.43  2006/03/12 01:13:28  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -1748,97 +1751,46 @@ void CSMcomputer::ProcessChannel5(int val)
 	val30.Value = GetInputChannel(030);
 
 	Saturn *sat = (Saturn *) OurVessel;
+	CSMOut5 Current;
+	CSMOut5 Changed;
 
 	//
-	// SM channels.
+	// Get the current state and a mask of any changed state.
 	//
 
-	if (!val30.Bits.CMSMSeperate) {
-		CSMOut5 Current;
-		CSMOut5 Changed;
+	Current.word = val;
+	Changed.word = (val ^ LastOut5);
 
-		//
-		// Get the current state and a mask of any changed state.
-		//
+	//
+	// Update any thrusters that have changed.
+	//
 
-		Current.word = val;
-		Changed.word = (val ^ LastOut5);
+	if (Changed.u.SMA3) {
+		sat->rjec.SetThruster(3,Current.u.SMA3 != 0);
+	}
+	if (Changed.u.SMA4) {
+		sat->rjec.SetThruster(2,Current.u.SMA4 != 0);
+	}
 
-		//
-		// Update any thrusters that have changed.
-		//
+	if (Changed.u.SMB3) {
+		sat->rjec.SetThruster(7,Current.u.SMB3 != 0);
+	}
+	if (Changed.u.SMB4) {
+		sat->rjec.SetThruster(6,Current.u.SMB4 != 0);
+	}
 
-		if (Changed.u.SMA3) {
-			sat->SetRCSState(RCS_SM_QUAD_A, 3, Current.u.SMA3 != 0);
-		}
-		if (Changed.u.SMA4) {
-			sat->SetRCSState(RCS_SM_QUAD_A, 4, Current.u.SMA4 != 0);
-		}
+	if (Changed.u.SMC3) {
+		sat->rjec.SetThruster(1,Current.u.SMC3 != 0);
+	}
+	if (Changed.u.SMC4) {
+		sat->rjec.SetThruster(4,Current.u.SMC4 != 0);
+	}
 
-		if (Changed.u.SMB3) {
-			sat->SetRCSState(RCS_SM_QUAD_B, 3, Current.u.SMB3 != 0);
-		}
-		if (Changed.u.SMB4) {
-			sat->SetRCSState(RCS_SM_QUAD_B, 4, Current.u.SMB4 != 0);
-		}
-
-		if (Changed.u.SMC3) {
-			sat->SetRCSState(RCS_SM_QUAD_C, 3, Current.u.SMC3 != 0);
-		}
-		if (Changed.u.SMC4) {
-			sat->SetRCSState(RCS_SM_QUAD_C, 4, Current.u.SMC4 != 0);
-		}
-
-		if (Changed.u.SMD3) {
-			sat->SetRCSState(RCS_SM_QUAD_D, 3, Current.u.SMD3 != 0);
-		}
-		if (Changed.u.SMD4) {
-			sat->SetRCSState(RCS_SM_QUAD_D, 4, Current.u.SMD4 != 0);
-		}
-	}else{
-		// DS20060221 - Use CM RCS
-		CSMOut5 Current;
-		CSMOut5 Changed;
-
-		//
-		// Get the current state and a mask of any changed state.
-		//
-
-		Current.word = val;
-		Changed.word = (val ^ LastOut5);
-
-		if(Changed.u.SMC3) {
-			// Fire Jet 1			
-			sat->SetCMRCSState(0,Current.u.SMC3 != 0);
-		}
-		if(Changed.u.SMC4) {
-			// Fire Jet 4
-			sat->SetCMRCSState(3,Current.u.SMC4 != 0);
-		}
-		if(Changed.u.SMA3) {
-			// Fire Jet 3
-			sat->SetCMRCSState(1,Current.u.SMA3 != 0);
-		}
-		if(Changed.u.SMA4) {
-			// Fire Jet 2			
-			sat->SetCMRCSState(2,Current.u.SMA4 != 0); 			
-		}
-		if(Changed.u.SMD3) {
-			// Fire Jet 5
-			sat->SetCMRCSState(4,Current.u.SMD3 != 0);
-		}
-		if(Changed.u.SMD4) {
-			// Fire Jet 8
-			sat->SetCMRCSState(7,Current.u.SMD4 != 0);
-		}
-		if(Changed.u.SMB3) {
-			// Fire Jet 7			
-			sat->SetCMRCSState(5,Current.u.SMB3 != 0); 			
-		}
-		if(Changed.u.SMB4) {
-			// Fire Jet 6			
-			sat->SetCMRCSState(6,Current.u.SMB4 != 0);
-		}
+	if (Changed.u.SMD3) {
+		sat->rjec.SetThruster(5,Current.u.SMD3 != 0);
+	}
+	if (Changed.u.SMD4) {
+		sat->rjec.SetThruster(8,Current.u.SMD4 != 0);
 	}
 
 	LastOut5 = val;
@@ -1849,81 +1801,47 @@ void CSMcomputer::ProcessChannel6(int val)
 {
 	ChannelValue30 val30;
 	val30.Value = GetInputChannel(030);
-
 	Saturn *sat = (Saturn *) OurVessel;
+	CSMOut6 Current;
+	CSMOut6 Changed;
 
 	//
-	// SM channels.
+	// Get the current state and a mask of any changed state.
 	//
 
-	if (!val30.Bits.CMSMSeperate) {
-		CSMOut6 Current;
-		CSMOut6 Changed;
+	Current.word = val;
+	Changed.word = (val ^ LastOut6);
 
-		//
-		// Get the current state and a mask of any changed state.
-		//
+	//
+	// Update any thrusters that have changed.
+	//
 
-		Current.word = val;
-		Changed.word = (val ^ LastOut6);
+	if (Changed.u.SMA1) {
+		sat->rjec.SetThruster(13,Current.u.SMA1 != 0);
+	}
+	if (Changed.u.SMA2) {
+		sat->rjec.SetThruster(14,Current.u.SMA2 != 0);
+	}
 
-		//
-		// Update any thrusters that have changed.
-		//
+	if (Changed.u.SMB1) {
+		sat->rjec.SetThruster(9,Current.u.SMB1 != 0);
+	}
+	if (Changed.u.SMB2) {
+		sat->rjec.SetThruster(12,Current.u.SMB2 != 0);
+	}
 
-		if (Changed.u.SMA1) {
-			sat->SetRCSState(RCS_SM_QUAD_A, 1, Current.u.SMA1 != 0);
-		}
-		if (Changed.u.SMA2) {
-			sat->SetRCSState(RCS_SM_QUAD_A, 2, Current.u.SMA2 != 0);
-		}
+	if (Changed.u.SMC1) {
+		sat->rjec.SetThruster(15,Current.u.SMC1 != 0);
+	}
+	if (Changed.u.SMC2) {
+		sat->rjec.SetThruster(16,Current.u.SMC2 != 0);
+	}
 
-		if (Changed.u.SMB1) {
-			sat->SetRCSState(RCS_SM_QUAD_B, 1, Current.u.SMB1 != 0);
-		}
-		if (Changed.u.SMB2) {
-			sat->SetRCSState(RCS_SM_QUAD_B, 2, Current.u.SMB2 != 0);
-		}
-
-		if (Changed.u.SMC1) {
-			sat->SetRCSState(RCS_SM_QUAD_C, 1, Current.u.SMC1 != 0);
-		}
-		if (Changed.u.SMC2) {
-			sat->SetRCSState(RCS_SM_QUAD_C, 2, Current.u.SMC2 != 0);
-		}
-
-		if (Changed.u.SMD1) {
-			sat->SetRCSState(RCS_SM_QUAD_D, 1, Current.u.SMD1 != 0);
-		}
-		if (Changed.u.SMD2) {
-			sat->SetRCSState(RCS_SM_QUAD_D, 2, Current.u.SMD2 != 0);
-		}
-	}else{
-		// DS20060221 Use CM RCS
-		CSMOut6 Current;
-		CSMOut6 Changed;
-		//
-		// Get the current state and a mask of any changed state.
-		//
-		Current.word = val;
-		Changed.word = (val ^ LastOut6);
-		if(Changed.u.SMB1) {
-			// Fire Jet 9
-			sat->SetCMRCSState(8,Current.u.SMB1 != 0);  
-		}
-		if(Changed.u.SMB2) {
-			// Fire Jet 12
-			sat->SetCMRCSState(11,Current.u.SMB2 != 0);  
-		}
-		if(Changed.u.SMD1){
-			// Fire Jet 11
-			sat->SetCMRCSState(9,Current.u.SMD1 != 0);  
-		}
-		if(Changed.u.SMD2){
-			// Fire Jet 10
-			sat->SetCMRCSState(10,Current.u.SMD2 != 0);  
-		}
-		// Channel 6 Bits 5-8 are not used by the CM RCS
+	if (Changed.u.SMD1) {
+		sat->rjec.SetThruster(11,Current.u.SMD1 != 0);
+	}
+	if (Changed.u.SMD2) {
+		sat->rjec.SetThruster(10,Current.u.SMD2 != 0);
 	}
 
 	LastOut6 = val;

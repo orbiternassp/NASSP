@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.158  2006/03/14 02:48:57  dseagrav
+  *	Added ECA object, moved FDAI redraw stuff into ECA to clean up FDAI redraw mess.
+  *	
   *	Revision 1.157  2006/03/12 01:13:29  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -653,6 +656,7 @@ protected:
 	GDC  gdc;
 	ASCP ascp;
 	EDA  eda;
+	RJEC rjec;
 
 	//
 	// Switches
@@ -2553,6 +2557,7 @@ protected:
 	friend class BMAG;
 	friend class ASCP;
 	friend class EDA;
+	friend class RJEC;
 	friend class CSMcomputer; // I want this to be able to see the GDC	
 };
 

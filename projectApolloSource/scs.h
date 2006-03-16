@@ -133,3 +133,13 @@ public: // Same stuff about speed and I'm lazy too.
 
 	Saturn *sat;
 };
+
+class RJEC {
+	// Reaction Jet Engine Control
+public: // Same stuff about speed and I'm lazy too.
+	RJEC();															// Cons
+	void Init(Saturn *vessel);										// Initialization
+	void SetThruster(int thruster,bool Active);                     // Set Thruster Level
+
+	Saturn *sat;
+};
