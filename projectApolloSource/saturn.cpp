@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.121  2006/03/09 20:40:22  quetalsi
+  *	Added Battery Relay Bus. Wired Inverter 1/2/3, EPS Sensor Unit DC A/B, EPS Sensor Unit AC 1/2 and Bat Rly Bus BAT A/B brakers.
+  *	
   *	Revision 1.120  2006/03/03 05:12:37  dseagrav
   *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
   *	
@@ -2676,7 +2679,76 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (FirstTimestep) return 0;
 
-	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
+	if (KEYMOD_SHIFT(kstate)){
+		// Do DSKY stuff
+		if(down){
+			switch(key){
+				case OAPI_KEY_PRIOR:
+					dsky.ResetPressed();
+					break;
+				case OAPI_KEY_NEXT:
+					dsky.KeyRel();
+					break;
+				case OAPI_KEY_NUMPADENTER:
+					dsky.EnterPressed();
+					break;
+				case OAPI_KEY_DIVIDE:
+					dsky.VerbPressed();
+					break;
+				case OAPI_KEY_MULTIPLY:
+					dsky.NounPressed();
+					break;
+				case OAPI_KEY_ADD:
+					dsky.PlusPressed();
+					break;
+				case OAPI_KEY_SUBTRACT:
+					dsky.MinusPressed();
+					break;
+				case OAPI_KEY_DECIMAL:
+					dsky.ProgPressed();
+					break;
+				case OAPI_KEY_NUMPAD1:
+					dsky.NumberPressed(1);
+					break;
+				case OAPI_KEY_NUMPAD2:
+					dsky.NumberPressed(2);
+					break;
+				case OAPI_KEY_NUMPAD3:
+					dsky.NumberPressed(3);
+					break;
+				case OAPI_KEY_NUMPAD4:
+					dsky.NumberPressed(4);
+					break;
+				case OAPI_KEY_NUMPAD5:
+					dsky.NumberPressed(5);
+					break;
+				case OAPI_KEY_NUMPAD6:
+					dsky.NumberPressed(6);
+					break;
+				case OAPI_KEY_NUMPAD7:
+					dsky.NumberPressed(7);
+					break;
+				case OAPI_KEY_NUMPAD8:
+					dsky.NumberPressed(8);
+					break;
+				case OAPI_KEY_NUMPAD9:
+					dsky.NumberPressed(9);
+					break;
+				case OAPI_KEY_NUMPAD0:
+					dsky.NumberPressed(0);
+					break;
+			}
+		}else{
+			// KEY UP
+			switch(key){
+				case OAPI_KEY_DECIMAL:
+					dsky.ProgReleased();
+					break;
+			}
+		}
+		return 0;
+	}
+	if (KEYMOD_CONTROL(kstate)) {
 		return 0; 
 	}
 
