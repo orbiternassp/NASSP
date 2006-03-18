@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.154  2006/03/14 02:48:57  dseagrav
+  *	Added ECA object, moved FDAI redraw stuff into ECA to clean up FDAI redraw mess.
+  *	
   *	Revision 1.153  2006/03/12 01:13:29  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -1646,7 +1649,7 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSProp2Row.Init(AID_SEC_PRPLT_SWITCHES, MainPanel);
 
 	RCSCMDSwitch.Init (2, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
-	RCSTrnfrSwitch.Init (45, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row);
+	RCSTrnfrSwitch.Init (45, 0, 34, 29, srf[SRF_SWITCHUP], SMRCSProp2Row); // This is a 2-position switch, not 3
 	CMRCSIsolate1.Init (88, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CM_RCSPROP_TANKA_VALVE, &CMRCSIsolate1Talkback);
 	CMRCSIsolate2.Init (131, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CM_RCSPROP_TANKB_VALVE, &CMRCSIsolate2Talkback);
 
