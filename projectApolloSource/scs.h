@@ -140,6 +140,9 @@ public: // Same stuff about speed and I'm lazy too.
 	RJEC();															// Cons
 	void Init(Saturn *vessel);										// Initialization
 	void SetThruster(int thruster,bool Active);                     // Set Thruster Level
-
+	void TimeStep();                                                // Timestep
+	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
+	bool SPSActive;                                                 // SPS Active notification
+	bool DirectPitchActive,DirectYawActive,DirectRollActive;        // Direct axis fire notification
 	Saturn *sat;
 };

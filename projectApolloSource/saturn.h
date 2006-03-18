@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.159  2006/03/16 04:53:21  dseagrav
+  *	Added preliminary RJEC, connected CMC to RJEC.
+  *	
   *	Revision 1.158  2006/03/14 02:48:57  dseagrav
   *	Added ECA object, moved FDAI redraw stuff into ECA to clean up FDAI redraw mess.
   *	
@@ -814,7 +817,7 @@ protected:
 	SaturnValveSwitch SMRCSProp2DSwitch;
 
 	ThreePosSwitch RCSCMDSwitch;
-	ThreePosSwitch RCSTrnfrSwitch;
+	ToggleSwitch RCSTrnfrSwitch;
 	SaturnValveSwitch CMRCSIsolate1;
 	SaturnValveSwitch CMRCSIsolate2;
 
