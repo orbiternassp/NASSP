@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.91  2006/03/19 06:09:45  dseagrav
+  *	GDC and ASCP save and load state.
+  *	
   *	Revision 1.90  2006/03/18 22:55:55  dseagrav
   *	Added more RJEC functionality.
   *	
@@ -816,9 +819,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 			val30.Value = agc.GetInputChannel(030); 
 			sm_sep = val30.Bits.CMSMSeperate; // There should probably be a way for the SCS to do this if VAGC is not running
 			// DIRECT
-			if((rhc_directv1 > 12 || rhc_directv2 > 5) &&
-				((!sm_sep && RCSTrnfrSwitch.GetState() == TOGGLESWITCH_DOWN) || (sm_sep && RCSTrnfrSwitch.GetState() == TOGGLESWITCH_UP))){
-					
+			if((rhc_directv1 > 12 || rhc_directv2 > 5)){
 				if(dx8_jstate[rhc_id].lX < 2738){
 					// MINUS ROLL
 					if(!sm_sep){						
@@ -3969,17 +3970,6 @@ void RJEC::TimeStep(){
 		if(thruster < 5 && DirectPitchActive != 0){ thruster++; continue; } // Skip entirely
 		if(thruster > 4 && thruster < 9 && DirectYawActive != 0){ thruster++; continue; } 
 		if(thruster > 8 && DirectRollActive != 0){ thruster++; continue; } 
-		// If the RCS TRNFR switch doesn't match the vehicle state, (for now) nothing fires.
-		// Later this should allow the user to fire the CM jets with the SM attached.
-		if(!sm_sep && sat->RCSTrnfrSwitch.GetState() == TOGGLESWITCH_UP){
-			// CSM w/ switch set to CM
-			thruster_lockout = 1;
-		}
-		if(sm_sep && sat->RCSTrnfrSwitch.GetState() == TOGGLESWITCH_DOWN){
-			// CM w/ switch set to SM
-			thruster_lockout = 1;
-		}
-
 		// THRUSTER PROCESSING
 		switch(thruster){
 			case 1:

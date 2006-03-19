@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.160  2006/03/18 22:55:55  dseagrav
+  *	Added more RJEC functionality.
+  *	
   *	Revision 1.159  2006/03/16 04:53:21  dseagrav
   *	Added preliminary RJEC, connected CMC to RJEC.
   *	
@@ -817,7 +820,7 @@ protected:
 	SaturnValveSwitch SMRCSProp2DSwitch;
 
 	ThreePosSwitch RCSCMDSwitch;
-	ToggleSwitch RCSTrnfrSwitch;
+	ThreePosSwitch RCSTrnfrSwitch;
 	SaturnValveSwitch CMRCSIsolate1;
 	SaturnValveSwitch CMRCSIsolate2;
 
