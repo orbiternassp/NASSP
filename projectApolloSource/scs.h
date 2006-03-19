@@ -48,13 +48,18 @@ typedef union {      // 3x3 matrix
 	struct { double m11, m12, m13, m21, m22, m23, m31, m32, m33; };
 } GDC_Matrix3;
 
+#define GDC_START_STRING	"GDC_BEGIN"
+#define GDC_END_STRING		"GDC_END"
+
 class GDC {
 	// Gyro Display Coupler
 public: // We use these inside a timestep, so everything is public to make data access as fast as possible.
-	GDC();                      //  Cons
-	void Init(Saturn *vessel);	// Initialization
-	void TimeStep(double simt); // TimeStep
-	bool AlignGDC();            // Alignment Switch Pressed
+	GDC();                          //  Cons
+	void Init(Saturn *vessel);	    // Initialization
+	void TimeStep(double simt);     // TimeStep
+	bool AlignGDC();                // Alignment Switch Pressed
+	void SaveState(FILEHANDLE scn); // SaveState callback
+	void LoadState(FILEHANDLE scn); // LoadState callback
 	GDC_Matrix3 multiplyMatrix(GDC_Matrix3 a, GDC_Matrix3 b);
 	GDC_Matrix3 getRotationMatrixX(double angle);
 	GDC_Matrix3 getRotationMatrixY(double angle);
@@ -94,6 +99,9 @@ public: // We use these inside a timestep, so everything is public to make data 
 	friend class CSMcomputer; // Needs to write FDAI error indications, which are really not on the GDC, but meh.
 };
 
+#define ASCP_START_STRING	"ASCP_BEGIN"
+#define ASCP_END_STRING		"ASCP_END"
+
 class ASCP {
 	// Attitude Set Control Panel
 public: // We use these inside a timestep, so everything is public to make data access as fast as possible.
@@ -112,8 +120,9 @@ public: // We use these inside a timestep, so everything is public to make data 
 	bool PitchDnClick(int Event);
 	bool YawUpClick(int Event);									   // Clicked
 	bool YawDnClick(int Event);
+	void SaveState(FILEHANDLE scn);                                // SaveState callback
+	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
-	VECTOR3 input;												   // Input attitude
 	VECTOR3 output;												   // Output attitude
 	Saturn *sat;												   // The spacecraft
 	int msgcounter;
@@ -146,3 +155,4 @@ public: // Same stuff about speed and I'm lazy too.
 	bool DirectPitchActive,DirectYawActive,DirectRollActive;        // Direct axis fire notification
 	Saturn *sat;
 };
+

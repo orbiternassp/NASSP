@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.122  2006/03/17 02:17:30  dseagrav
+  *	Routed SHIFT-NUMPAD keys to DSKY.
+  *	
   *	Revision 1.121  2006/03/09 20:40:22  quetalsi
   *	Added Battery Relay Bus. Wired Inverter 1/2/3, EPS Sensor Unit DC A/B, EPS Sensor Unit AC 1/2 and Bat Rly Bus BAT A/B brakers.
   *	
@@ -1334,6 +1337,9 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	imu.SaveState(scn);
 	cws.SaveState(scn);
 	iu.SaveState(scn);
+	// DS20060318 SCS OBJECTS
+	gdc.SaveState(scn);
+	ascp.SaveState(scn);
 	dockingprobe.SaveState(scn);
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
@@ -2017,6 +2023,12 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 		imu.LoadState(scn);
+	}
+	else if (!strnicmp(line, GDC_START_STRING, sizeof(GDC_START_STRING))) {
+		gdc.LoadState(scn);
+	}
+	else if (!strnicmp(line, ASCP_START_STRING, sizeof(ASCP_START_STRING))) {
+		ascp.LoadState(scn);
 	}
 	else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 		iu.LoadState(scn);
