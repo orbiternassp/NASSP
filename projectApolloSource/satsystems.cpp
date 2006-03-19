@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.90  2006/03/18 22:55:55  dseagrav
+  *	Added more RJEC functionality.
+  *	
   *	Revision 1.89  2006/03/16 04:53:21  dseagrav
   *	Added preliminary RJEC, connected CMC to RJEC.
   *	
@@ -3370,11 +3373,122 @@ bool GDC::AlignGDC(){
 	return(true);
 }
 
+void GDC::SaveState(FILEHANDLE scn){
+	oapiWriteLine(scn, GDC_START_STRING);
+	oapiWriteScenario_float(scn, "ATX", attitude.x);
+	oapiWriteScenario_float(scn, "ATY", attitude.y);
+	oapiWriteScenario_float(scn, "ATZ", attitude.z);
+	oapiWriteScenario_float(scn, "OAX", Orbiter.Attitude.X);
+	oapiWriteScenario_float(scn, "OAY", Orbiter.Attitude.Y);
+	oapiWriteScenario_float(scn, "OAZ", Orbiter.Attitude.Z);
+	oapiWriteScenario_float(scn, "LAX", Orbiter.LastAttitude.X);
+	oapiWriteScenario_float(scn, "LAY", Orbiter.LastAttitude.Y);
+	oapiWriteScenario_float(scn, "LAZ", Orbiter.LastAttitude.Z);
+	oapiWriteScenario_float(scn, "M11", Orbiter.AttitudeReference.m11);
+	oapiWriteScenario_float(scn, "M12", Orbiter.AttitudeReference.m12);
+	oapiWriteScenario_float(scn, "M13", Orbiter.AttitudeReference.m13);
+	oapiWriteScenario_float(scn, "M21", Orbiter.AttitudeReference.m21);
+	oapiWriteScenario_float(scn, "M22", Orbiter.AttitudeReference.m22);
+	oapiWriteScenario_float(scn, "M23", Orbiter.AttitudeReference.m23);
+	oapiWriteScenario_float(scn, "M31", Orbiter.AttitudeReference.m31);
+	oapiWriteScenario_float(scn, "M32", Orbiter.AttitudeReference.m32);
+	oapiWriteScenario_float(scn, "M33", Orbiter.AttitudeReference.m33);
+	oapiWriteScenario_float(scn, "LTM", LastTime);
+	oapiWriteLine(scn, GDC_END_STRING);
+}
+
+void GDC::LoadState(FILEHANDLE scn){
+	char *line;
+	float flt = 0;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, GDC_END_STRING, sizeof(GDC_END_STRING))){
+			Initialized = TRUE;
+			return;
+		}
+		if (!strnicmp (line, "ATX", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			attitude.x = flt;
+		}
+		else if (!strnicmp (line, "ATY", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			attitude.y = flt;
+		}
+		else if (!strnicmp (line, "ATZ", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			attitude.z = flt;
+		}
+		else if (!strnicmp (line, "OAX", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.Attitude.X = flt;
+		}
+		else if (!strnicmp (line, "OAY", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.Attitude.Y = flt;
+		}
+		else if (!strnicmp (line, "OAZ", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.Attitude.Z = flt;
+		}
+		else if (!strnicmp (line, "LAX", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.LastAttitude.X = flt;
+		}
+		else if (!strnicmp (line, "LAY", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.LastAttitude.Y = flt;
+		}
+		else if (!strnicmp (line, "LAZ", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.LastAttitude.Z = flt;
+		}
+		else if (!strnicmp (line, "M11", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.AttitudeReference.m11 = flt;
+		}
+		else if (!strnicmp (line, "M12", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.AttitudeReference.m12 = flt;
+		}
+		else if (!strnicmp (line, "M13", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.AttitudeReference.m13 = flt;
+		}
+		else if (!strnicmp (line, "M21", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.AttitudeReference.m21 = flt;
+		}
+		else if (!strnicmp (line, "M22", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.AttitudeReference.m22 = flt;
+		}
+		else if (!strnicmp (line, "M23", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.AttitudeReference.m23 = flt;
+		}
+		else if (!strnicmp (line, "M31", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.AttitudeReference.m31 = flt;
+		}
+		else if (!strnicmp (line, "M32", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.AttitudeReference.m32 = flt;
+		}
+		else if (!strnicmp (line, "M33", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			Orbiter.AttitudeReference.m33 = flt;
+		}
+		else if (!strnicmp (line, "LTM", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			LastTime = flt;
+		}		
+	}
+	// We're done, so call this initialized
+	Initialized = TRUE;
+}
+
 // ASCP
 ASCP::ASCP(){
-	input.x = 0;
-	input.y = 0;
-	input.z = 0;
 	output.x = 0;
 	output.y = 0;
 	output.z = 0;
@@ -3559,6 +3673,38 @@ bool ASCP::PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits){
 	}
 	return true;
 }
+
+void ASCP::SaveState(FILEHANDLE scn){
+	oapiWriteLine(scn, ASCP_START_STRING);
+	oapiWriteScenario_float(scn, "OPX", output.x);
+	oapiWriteScenario_float(scn, "OPY", output.y);
+	oapiWriteScenario_float(scn, "OPZ", output.z);
+	oapiWriteLine(scn, ASCP_END_STRING);
+}
+
+void ASCP::LoadState(FILEHANDLE scn){
+	char *line;
+	float flt = 0;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, ASCP_END_STRING, sizeof(ASCP_END_STRING))){
+			return;
+		}
+		if (!strnicmp (line, "OPX", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			output.x = flt;
+		}
+		else if (!strnicmp (line, "OPY", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			output.y = flt;
+		}
+		else if (!strnicmp (line, "OPZ", 3)) {
+			sscanf(line + 3, "%f", &flt);
+			output.z = flt;
+		}
+	}
+}
+
 
 // EDA
 EDA::EDA(){
