@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/03/08 02:24:21  movieman523
+  *	Added event timer and fuel display.
+  *	
   *	Revision 1.47  2006/03/07 02:18:17  flydba
   *	Circuit breakers added to panel 11.
   *	
@@ -755,8 +758,8 @@ void sat5_lmpkd::ReleaseSurfaces ()
 void sat5_lmpkd::InitPanel (int panel)
 
 {
-	switch (panel) {
-	case LMPANEL_MAIN: // LEM Main Panel
+//	switch (panel) {
+//	case LMPANEL_MAIN: // LEM Main Panel
 		srf[0]						= oapiCreateSurface (LOADBMP (IDB_ECSG));
 		//srf[1]					= oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
 		srf[2]						= oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
@@ -805,14 +808,14 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LEMROTARY],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKERLEM],		g_Param.col[4]);
-		break;
+//		break;
 	
-	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
-	case LMPANEL_LEFTWINDOW: // LEM Left Window 
+//	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
+//	case LMPANEL_LEFTWINDOW: // LEM Left Window 
 		
-		break;
+//		break;
 
-	}
+//	}
 
 	SetSwitches(panel);
 }
