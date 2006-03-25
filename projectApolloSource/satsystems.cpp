@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.93  2006/03/25 00:12:42  dseagrav
+  *	SCS ECA added.
+  *	
   *	Revision 1.92  2006/03/19 17:06:13  dseagrav
   *	Fixed mistake with RCS TRNFR, it's a 3-position switch and is ignored for now.
   *	
@@ -4595,8 +4598,8 @@ void ECA::TimeStep(){
 			if(sat->rjec.ThrusterDemand[14] != 0){ pseudorate.x -= .000275; }
 			if(sat->rjec.ThrusterDemand[15]  != 0){ pseudorate.x += .000275; }
 			if(sat->rjec.ThrusterDemand[16] != 0){ pseudorate.x -= .000275; }
-			sprintf(oapiDebugString(),"SCS: PR: %f+%f %f+%f %f+%f",sat->gdc.rates.z,pseudorate.x,sat->gdc.rates.x,pseudorate.y,
-				sat->gdc.rates.y,pseudorate.z);
+			// sprintf(oapiDebugString(),"SCS: PR: %f+%f %f+%f %f+%f",sat->gdc.rates.z,pseudorate.x,sat->gdc.rates.x,pseudorate.y,
+			//	sat->gdc.rates.y,pseudorate.z);
 //			sprintf(oapiDebugString(),"SCS: PSEUDORATE CALBRATION: %f %f %f",sat->gdc.rates.z,sat->gdc.rates.x,sat->gdc.rates.y);
 		}
 
