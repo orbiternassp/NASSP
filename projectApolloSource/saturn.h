@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.161  2006/03/19 17:06:13  dseagrav
+  *	Fixed mistake with RCS TRNFR, it's a 3-position switch and is ignored for now.
+  *	
   *	Revision 1.160  2006/03/18 22:55:55  dseagrav
   *	Added more RJEC functionality.
   *	
@@ -663,6 +666,7 @@ protected:
 	ASCP ascp;
 	EDA  eda;
 	RJEC rjec;
+	ECA  eca;
 
 	//
 	// Switches
@@ -2564,6 +2568,7 @@ protected:
 	friend class ASCP;
 	friend class EDA;
 	friend class RJEC;
+	friend class ECA;
 	friend class CSMcomputer; // I want this to be able to see the GDC	
 };
 

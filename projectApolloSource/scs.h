@@ -148,7 +148,7 @@ class RJEC {
 public: // Same stuff about speed and I'm lazy too.
 	RJEC();															// Cons
 	void Init(Saturn *vessel);										// Initialization
-	void SetThruster(int thruster,bool Active);                     // Set Thruster Level
+	void SetThruster(int thruster,bool Active);                     // Set Thruster Level for CMC
 	void TimeStep();                                                // Timestep
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
 	bool SPSActive;                                                 // SPS Active notification
@@ -156,3 +156,22 @@ public: // Same stuff about speed and I'm lazy too.
 	Saturn *sat;
 };
 
+class ECA {
+	// Electronic Control Assembly
+public:
+	ECA();
+	void Init(Saturn *vessel);										// Initialization
+	void TimeStep();                                                // Timestep
+	long rhc_x,rhc_y,rhc_z;											// RHC position
+	long thc_x,thc_y,thc_z;											// THC position
+	int accel_roll_trigger;                                         // Joystick triggered roll thrust in ACCEL CMD mode
+	int mnimp_roll_trigger;                                         // Joystick triggered roll thrust in MIN IMP mode
+	int accel_pitch_trigger;                                        // Joystick triggered pitch thrust in ACCEL CMD mode
+	int mnimp_pitch_trigger;                                        // Joystick triggered pitch thrust in MIN IMP mode
+	int accel_yaw_trigger;                                          // Joystick triggered yaw thrust in ACCEL CMD mode
+	int mnimp_yaw_trigger;                                          // Joystick triggered yaw thrust in MIN IMP mode
+	int trans_x_trigger;                                            // Translation triggers
+	int trans_y_trigger;
+	int trans_z_trigger;
+	Saturn *sat;
+};
