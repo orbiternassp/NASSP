@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/02/22 18:54:57  tschachim
+  *	Bugfixes for Apollo 4-6.
+  *	
   *	Revision 1.10  2006/02/21 11:54:04  tschachim
   *	Moved TLI sequence to the IU.
   *	
@@ -117,8 +120,35 @@ void SaturnValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Sw
 int SaturnValveTalkback::GetState()
 
 {
-	if (our_vessel)
+	if (our_vessel && (SRC->Voltage() > 20))
 		return our_vessel->GetValveState(Valve) ? 1 : 0;
+
+	return 0;
+}
+
+SaturnPropValveTalkback::SaturnPropValveTalkback()
+
+{
+	Valve1 = 0;
+	Valve2 = 0;
+	our_vessel = 0;
+}
+
+void SaturnPropValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv1, int vlv2, Saturn *s)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row);
+
+	Valve1 = vlv1;
+	Valve2 = vlv2;
+	our_vessel = s;
+}
+
+int SaturnPropValveTalkback::GetState()
+
+{
+	if (our_vessel && (SRC->Voltage() > 20))
+		return (our_vessel->GetValveState(Valve1) ? 1 : 0) && (our_vessel->GetValveState(Valve2) ? 1 : 0);
 
 	return 0;
 }
@@ -159,7 +189,7 @@ bool SaturnValveSwitch::SwitchTo(int newState)
 void SaturnValveSwitch::CheckValve(int s) 
 
 {
-	if (sat) {
+	if (sat && (SRC->Voltage() > 20)) {
 		if (s == THREEPOSSWITCH_UP) {
 			sat->SetValveState(Valve, true);
 			if (Indicator)
@@ -169,6 +199,71 @@ void SaturnValveSwitch::CheckValve(int s)
 			sat->SetValveState(Valve, false);
 			if (Indicator)
 				*Indicator = false;
+		}
+	}
+}
+
+void SaturnPropValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int valve1, int valve2, int valve3,
+		int valve4,	IndicatorSwitch *ind1, IndicatorSwitch *ind2)
+
+{
+	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, row, s);
+
+	Valve1 = valve1;
+	Valve2 = valve2;
+	Valve3 = valve3;
+	Valve4 = valve4;
+	Indicator1 = ind1;
+	Indicator2 = ind2;
+}
+
+bool SaturnPropValveSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
+		CheckValve(GetState());
+		return true;
+	}
+
+	return false;
+}
+
+bool SaturnPropValveSwitch::SwitchTo(int newState)
+
+{
+	if (SaturnThreePosSwitch::SwitchTo(newState)) {
+		// some of these switches are spring-loaded, 
+		// so we have to use newState here
+		CheckValve(newState);
+		return true;
+	}
+
+	return false;
+}
+
+void SaturnPropValveSwitch::CheckValve(int s) 
+
+{
+	if (sat && (SRC->Voltage() > 20)) {
+		if (s == THREEPOSSWITCH_UP) {
+			sat->SetValveState(Valve1, true);
+			sat->SetValveState(Valve2, true);
+			sat->SetValveState(Valve3, true);
+			sat->SetValveState(Valve4, true);
+			if (Indicator1)
+				*Indicator1 = true;
+			if (Indicator2)
+				*Indicator2 = true;
+		}
+		else if (s == THREEPOSSWITCH_DOWN) {
+			sat->SetValveState(Valve1, false);
+			sat->SetValveState(Valve2, false);
+			sat->SetValveState(Valve3, false);
+			sat->SetValveState(Valve4, false);
+			if (Indicator1)
+				*Indicator1 = false;
+			if (Indicator2)
+				*Indicator2 = false;
 		}
 	}
 }

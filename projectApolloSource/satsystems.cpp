@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.94  2006/03/25 00:14:31  dseagrav
+  *	Missed a debug print
+  *	
   *	Revision 1.93  2006/03/25 00:12:42  dseagrav
   *	SCS ECA added.
   *	
@@ -495,6 +498,62 @@ void Saturn::SystemsInit() {
 	// Default valve states. For now, everything starts closed.
 	//
 	
+	SMRCSHelium1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSHelium1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSHelium2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSHelium2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSProp1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSProp1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSProp1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSProp1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSProp2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSProp2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSProp2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSProp2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSHelium1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSHelium1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSHelium2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSHelium2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSProp1ATalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSProp1BTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSProp1CTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSProp1DTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+
+	SMRCSProp2ATalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSProp2BTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSProp2CTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSProp2DTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+
+	SMRCSHelium1ATalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSHelium1BTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSHelium1CTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSHelium1DTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+
+	SMRCSHelium2ATalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSHelium2BTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSHelium2CTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSHelium2DTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+
+	CMRCSIsolate1.WireTo(&PrplntIsolMnACircuitBraker);
+	CMRCSIsolate2.WireTo(&PrplntIsolMnBCircuitBraker);
+
+	CMRCSIsolate1Talkback.WireTo(&SMHeatersBMnACircuitBraker);
+	CMRCSIsolate2Talkback.WireTo(&SMHeatersAMnBCircuitBraker);
+
 	SetValveState(CSM_He1_TANKA_VALVE, false);
 	SetValveState(CSM_He1_TANKB_VALVE, false);
 	SetValveState(CSM_He1_TANKC_VALVE, false);
@@ -505,15 +564,30 @@ void Saturn::SystemsInit() {
 	SetValveState(CSM_He2_TANKC_VALVE, false);
 	SetValveState(CSM_He2_TANKD_VALVE, false);
 
-	SetValveState(CSM_PRIPROP_TANKA_VALVE, false);
-	SetValveState(CSM_PRIPROP_TANKB_VALVE, false);
-	SetValveState(CSM_PRIPROP_TANKC_VALVE, false);
-	SetValveState(CSM_PRIPROP_TANKD_VALVE, false);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_A, false);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_B, false);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_C, false);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_D, false);
 
-	SetValveState(CSM_SECPROP_TANKA_VALVE, false);
-	SetValveState(CSM_SECPROP_TANKB_VALVE, false);
-	SetValveState(CSM_SECPROP_TANKC_VALVE, false);
-	SetValveState(CSM_SECPROP_TANKD_VALVE, false);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_A, false);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_B, false);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_C, false);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_D, false);
+
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_A, false);
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, false);
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_C, false);
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_D, false);
+
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_A, false);
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_B, false);
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_C, false);
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_D, false);
+
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_A, false);
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_B, false);
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_C, false);
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_D, false);
 
 	SetValveState(CM_RCSPROP_TANKA_VALVE, false);
 	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
@@ -1906,15 +1980,30 @@ void Saturn::ActivateCSMRCS()
 	SetValveState(CSM_He2_TANKC_VALVE, true);
 	SetValveState(CSM_He2_TANKD_VALVE, true);
 
-	SetValveState(CSM_PRIPROP_TANKA_VALVE, true);
-	SetValveState(CSM_PRIPROP_TANKB_VALVE, true);
-	SetValveState(CSM_PRIPROP_TANKC_VALVE, true);
-	SetValveState(CSM_PRIPROP_TANKD_VALVE, true);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_A, true);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_B, true);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_C, true);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_D, true);
 
-	SetValveState(CSM_SECPROP_TANKA_VALVE, true);
-	SetValveState(CSM_SECPROP_TANKB_VALVE, true);
-	SetValveState(CSM_SECPROP_TANKC_VALVE, true);
-	SetValveState(CSM_SECPROP_TANKD_VALVE, true);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_A, true);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_B, true);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_C, true);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_D, true);
+
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_A, true);
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, true);
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_C, true);
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_D, true);
+
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_A, true);
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_B, true);
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_C, true);
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_D, true);
+
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_A, true);
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_B, true);
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_C, true);
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_D, true);
 }
 
 void Saturn::DeactivateCSMRCS()
@@ -1930,15 +2019,30 @@ void Saturn::DeactivateCSMRCS()
 	SetValveState(CSM_He2_TANKC_VALVE, false);
 	SetValveState(CSM_He2_TANKD_VALVE, false);
 
-	SetValveState(CSM_PRIPROP_TANKA_VALVE, false);
-	SetValveState(CSM_PRIPROP_TANKB_VALVE, false);
-	SetValveState(CSM_PRIPROP_TANKC_VALVE, false);
-	SetValveState(CSM_PRIPROP_TANKD_VALVE, false);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_A, false);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_B, false);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_C, false);
+	SetValveState(CSM_PRIOXID_INSOL_VALVE_D, false);
 
-	SetValveState(CSM_SECPROP_TANKA_VALVE, false);
-	SetValveState(CSM_SECPROP_TANKB_VALVE, false);
-	SetValveState(CSM_SECPROP_TANKC_VALVE, false);
-	SetValveState(CSM_SECPROP_TANKD_VALVE, false);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_A, false);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_B, false);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_C, false);
+	SetValveState(CSM_SECOXID_INSOL_VALVE_D, false);
+
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_A, false);
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, false);
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_C, false);
+	SetValveState(CSM_PRIFUEL_INSOL_VALVE_D, false);
+
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_A, false);
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_B, false);
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_C, false);
+	SetValveState(CSM_SECFUEL_INSOL_VALVE_D, false);
+
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_A, false);
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_B, false);
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_C, false);
+	SetValveState(CSM_SECFUEL_PRESS_VALVE_D, false);
 }
 
 //
@@ -1962,25 +2066,35 @@ void Saturn::DeactivateCMRCS()
 bool Saturn::SMRCSAActive()
 
 {
-	return (GetValveState(CSM_He1_TANKA_VALVE) && GetValveState(CSM_He2_TANKA_VALVE) && GetValveState(CSM_PRIPROP_TANKA_VALVE) && GetValveState(CSM_SECPROP_TANKA_VALVE));
+	return ((GetValveState(CSM_He1_TANKA_VALVE) || GetValveState(CSM_He2_TANKA_VALVE)) && 
+		(GetValveState(CSM_PRIOXID_INSOL_VALVE_A) || GetValveState(CSM_SECOXID_INSOL_VALVE_A)) &&
+		(GetValveState(CSM_PRIFUEL_INSOL_VALVE_A) || (GetValveState(CSM_SECFUEL_PRESS_VALVE_A) && GetValveState(CSM_SECOXID_INSOL_VALVE_A))));
 }
 
 bool Saturn::SMRCSBActive()
 
 {
-	return (GetValveState(CSM_He1_TANKB_VALVE) && GetValveState(CSM_He2_TANKB_VALVE) && GetValveState(CSM_PRIPROP_TANKB_VALVE) && GetValveState(CSM_SECPROP_TANKB_VALVE));
+	return ((GetValveState(CSM_He1_TANKB_VALVE) || GetValveState(CSM_He2_TANKB_VALVE)) && 
+		(GetValveState(CSM_PRIOXID_INSOL_VALVE_B) || GetValveState(CSM_SECOXID_INSOL_VALVE_B)) &&
+		(GetValveState(CSM_PRIFUEL_INSOL_VALVE_B) || (GetValveState(CSM_SECFUEL_PRESS_VALVE_B) && GetValveState(CSM_SECOXID_INSOL_VALVE_B))));
+
 }
 
 bool Saturn::SMRCSCActive()
 
 {
-	return (GetValveState(CSM_He1_TANKC_VALVE) && GetValveState(CSM_He2_TANKC_VALVE) && GetValveState(CSM_PRIPROP_TANKC_VALVE) && GetValveState(CSM_SECPROP_TANKC_VALVE));
+	return ((GetValveState(CSM_He1_TANKC_VALVE) || GetValveState(CSM_He2_TANKC_VALVE)) && 
+		(GetValveState(CSM_PRIOXID_INSOL_VALVE_C) || GetValveState(CSM_SECOXID_INSOL_VALVE_C)) &&
+		(GetValveState(CSM_PRIFUEL_INSOL_VALVE_C) || (GetValveState(CSM_SECFUEL_PRESS_VALVE_C) && GetValveState(CSM_SECOXID_INSOL_VALVE_C))));
+
 }
 
 bool Saturn::SMRCSDActive()
 
 {
-	return (GetValveState(CSM_He1_TANKD_VALVE) && GetValveState(CSM_He2_TANKD_VALVE) && GetValveState(CSM_PRIPROP_TANKD_VALVE) && GetValveState(CSM_SECPROP_TANKD_VALVE));
+	return ((GetValveState(CSM_He1_TANKD_VALVE) || GetValveState(CSM_He2_TANKD_VALVE)) && 
+		(GetValveState(CSM_PRIOXID_INSOL_VALVE_D) || GetValveState(CSM_SECOXID_INSOL_VALVE_D)) &&
+		(GetValveState(CSM_PRIFUEL_INSOL_VALVE_D) || (GetValveState(CSM_SECFUEL_PRESS_VALVE_D) && GetValveState(CSM_SECOXID_INSOL_VALVE_D))));
 }
 
 bool Saturn::SMRCSActive()

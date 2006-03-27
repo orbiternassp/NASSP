@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.156  2006/03/19 17:06:13  dseagrav
+  *	Fixed mistake with RCS TRNFR, it's a 3-position switch and is ignored for now.
+  *	
   *	Revision 1.155  2006/03/18 22:55:55  dseagrav
   *	Added more RJEC functionality.
   *	
@@ -1634,17 +1637,24 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSHeaterCSwitch.Init (88, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row);
 	SMRCSHeaterDSwitch.Init (131, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row);
 
-	SMRCSProp1ASwitch.Init (174, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIPROP_TANKA_VALVE, &SMRCSProp1ATalkback);
-	SMRCSProp1BSwitch.Init (217, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIPROP_TANKB_VALVE, &SMRCSProp1BTalkback);
-	SMRCSProp1CSwitch.Init (260, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIPROP_TANKC_VALVE, &SMRCSProp1CTalkback);
-	SMRCSProp1DSwitch.Init (303, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIPROP_TANKD_VALVE, &SMRCSProp1DTalkback);
+	SMRCSProp1ASwitch.Init (174, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIFUEL_INSOL_VALVE_A,
+		CSM_SECFUEL_INSOL_VALVE_A, CSM_PRIOXID_INSOL_VALVE_A, CSM_SECOXID_INSOL_VALVE_A, &SMRCSProp1ATalkback, &SMRCSProp2ATalkback);
+	SMRCSProp1BSwitch.Init (217, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIFUEL_INSOL_VALVE_B,
+		CSM_SECFUEL_INSOL_VALVE_B, CSM_PRIOXID_INSOL_VALVE_B, CSM_SECOXID_INSOL_VALVE_B, &SMRCSProp1BTalkback, &SMRCSProp2BTalkback);
+	SMRCSProp1CSwitch.Init (260, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIFUEL_INSOL_VALVE_C,
+		CSM_SECFUEL_INSOL_VALVE_C, CSM_PRIOXID_INSOL_VALVE_C, CSM_SECOXID_INSOL_VALVE_C, &SMRCSProp1CTalkback, &SMRCSProp2CTalkback);
+	SMRCSProp1DSwitch.Init (303, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp1Row, this, CSM_PRIFUEL_INSOL_VALVE_D,
+		CSM_SECFUEL_INSOL_VALVE_D, CSM_PRIOXID_INSOL_VALVE_D, CSM_SECOXID_INSOL_VALVE_D, &SMRCSProp1DTalkback, &SMRCSProp2DTalkback);
 
 	SMRCSProp1TalkbackRow.Init(AID_RCS_PROP1_TALKBACK, MainPanel);
-	SMRCSProp1ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, CSM_PRIPROP_TANKA_VALVE, this);
-	SMRCSProp1BTalkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, CSM_PRIPROP_TANKB_VALVE, this);
-	SMRCSProp1CTalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, CSM_PRIPROP_TANKC_VALVE, this);
-	SMRCSProp1DTalkback.Init(127, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, CSM_PRIPROP_TANKD_VALVE, this);
-
+	SMRCSProp1ATalkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, CSM_PRIFUEL_INSOL_VALVE_A, 
+		CSM_PRIOXID_INSOL_VALVE_A, this);
+	SMRCSProp1BTalkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, CSM_PRIFUEL_INSOL_VALVE_B, 
+		CSM_PRIOXID_INSOL_VALVE_B, this);
+	SMRCSProp1CTalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, CSM_PRIFUEL_INSOL_VALVE_C, 
+		CSM_PRIOXID_INSOL_VALVE_C, this);
+	SMRCSProp1DTalkback.Init(127, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp1TalkbackRow, CSM_PRIFUEL_INSOL_VALVE_D, 
+		CSM_PRIOXID_INSOL_VALVE_D, this);
 	//
 	// SM RCS Secondary Propellant.
 	//
@@ -1656,17 +1666,20 @@ void Saturn::SetSwitches(int panel) {
 	CMRCSIsolate1.Init (88, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CM_RCSPROP_TANKA_VALVE, &CMRCSIsolate1Talkback);
 	CMRCSIsolate2.Init (131, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CM_RCSPROP_TANKB_VALVE, &CMRCSIsolate2Talkback);
 
-	SMRCSProp2ASwitch.Init (174, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECPROP_TANKA_VALVE, &SMRCSProp2ATalkback);
-	SMRCSProp2BSwitch.Init (217, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECPROP_TANKB_VALVE, &SMRCSProp2BTalkback);
-	SMRCSProp2CSwitch.Init (260, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECPROP_TANKC_VALVE, &SMRCSProp2CTalkback);
-	SMRCSProp2DSwitch.Init (303, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECPROP_TANKD_VALVE, &SMRCSProp2DTalkback);
+	SMRCSProp2ASwitch.Init (174, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECFUEL_PRESS_VALVE_A, 0);
+	SMRCSProp2BSwitch.Init (217, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECFUEL_PRESS_VALVE_B, 0);
+	SMRCSProp2CSwitch.Init (260, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECFUEL_PRESS_VALVE_B, 0);
+	SMRCSProp2DSwitch.Init (303, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSProp2Row, this, CSM_SECFUEL_PRESS_VALVE_B, 0);
 
 	SMRCSProp2TalkbackRow.Init(AID_RCS_PROP2_TALKBACK, MainPanel);
-	SMRCSProp2ATalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CSM_SECPROP_TANKA_VALVE, this);
-	SMRCSProp2BTalkback.Init(128, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CSM_SECPROP_TANKB_VALVE, this);
-	SMRCSProp2CTalkback.Init(171, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CSM_SECPROP_TANKC_VALVE, this);
-	SMRCSProp2DTalkback.Init(213, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CSM_SECPROP_TANKD_VALVE, this);
-
+	SMRCSProp2ATalkback.Init(85, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CSM_SECFUEL_INSOL_VALVE_A, 
+		CSM_SECOXID_INSOL_VALVE_A, this);
+	SMRCSProp2BTalkback.Init(128, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CSM_SECFUEL_INSOL_VALVE_B, 
+		CSM_SECOXID_INSOL_VALVE_B, this);
+	SMRCSProp2CTalkback.Init(171, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CSM_SECFUEL_INSOL_VALVE_C, 
+		CSM_SECOXID_INSOL_VALVE_C, this);
+	SMRCSProp2DTalkback.Init(213, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CSM_SECFUEL_INSOL_VALVE_D, 
+		CSM_SECOXID_INSOL_VALVE_D, this);
 	CMRCSIsolate1Talkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CM_RCSPROP_TANKA_VALVE, this);
 	CMRCSIsolate2Talkback.Init(42, 0, 23, 23, srf[SRF_INDICATOR], SMRCSProp2TalkbackRow, CM_RCSPROP_TANKB_VALVE, this);
 
@@ -2485,12 +2498,12 @@ void Saturn::SetSwitches(int panel) {
 	ReactionControlSystemCircuitBrakerRow.Init(AID_REACTIONCONTROLSYSTEMCIRCUITBREAKERS, MainPanel);
 	CMHeater1MnACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusA);
 	CMHeater2MnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusB);
-	SMHeatersAMnBCircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusB);
-	SMHeatersCMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusB);
-	SMHeatersBMnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusA);
-	SMHeatersDMnACircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusA);
-	PrplntIsolMnACircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusA);
-	PrplntIsolMnBCircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusB);
+	SMHeatersAMnBCircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusB, 7.5);
+	SMHeatersCMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusB, 7.5);
+	SMHeatersBMnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusA, 7.5);
+	SMHeatersDMnACircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusA, 7.5);
+	PrplntIsolMnACircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusA, 10.0);
+	PrplntIsolMnBCircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusB, 10.0);
 	RCSLogicMnACircuitBraker.Init(304,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusA);
 	RCSLogicMnBCircuitBraker.Init(342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusB);
 	EMSMnACircuitBraker.Init(380,  0, 29, 29, srf[SRF_CIRCUITBRAKER], ReactionControlSystemCircuitBrakerRow, MainBusA);
