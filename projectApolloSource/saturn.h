@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.162  2006/03/25 00:12:42  dseagrav
+  *	SCS ECA added.
+  *	
   *	Revision 1.161  2006/03/19 17:06:13  dseagrav
   *	Fixed mistake with RCS TRNFR, it's a 3-position switch and is ignored for now.
   *	
@@ -249,20 +252,33 @@
 #define CSM_He2_TANKB_VALVE				6
 #define CSM_He2_TANKC_VALVE				7
 #define CSM_He2_TANKD_VALVE				8
-#define CSM_PRIPROP_TANKA_VALVE			9
-#define CSM_PRIPROP_TANKB_VALVE			10
-#define CSM_PRIPROP_TANKC_VALVE			11
-#define CSM_PRIPROP_TANKD_VALVE			12
-#define CSM_SECPROP_TANKA_VALVE			13
-#define CSM_SECPROP_TANKB_VALVE			14
-#define CSM_SECPROP_TANKC_VALVE			15
-#define CSM_SECPROP_TANKD_VALVE			16
+#define CSM_PRIOXID_INSOL_VALVE_A		9
+#define CSM_PRIOXID_INSOL_VALVE_B		10
+#define CSM_PRIOXID_INSOL_VALVE_C		11
+#define CSM_PRIOXID_INSOL_VALVE_D		12
+#define CSM_SECOXID_INSOL_VALVE_A		13
+#define CSM_SECOXID_INSOL_VALVE_B		14
+#define CSM_SECOXID_INSOL_VALVE_C		15
+#define CSM_SECOXID_INSOL_VALVE_D		16
+#define CSM_PRIFUEL_INSOL_VALVE_A		17
+#define CSM_PRIFUEL_INSOL_VALVE_B		18
+#define CSM_PRIFUEL_INSOL_VALVE_C		19
+#define CSM_PRIFUEL_INSOL_VALVE_D		20
+#define CSM_SECFUEL_INSOL_VALVE_A		21
+#define CSM_SECFUEL_INSOL_VALVE_B		22
+#define CSM_SECFUEL_INSOL_VALVE_C		23
+#define CSM_SECFUEL_INSOL_VALVE_D		24
+#define CSM_SECFUEL_PRESS_VALVE_A		25
+#define CSM_SECFUEL_PRESS_VALVE_B		26
+#define CSM_SECFUEL_PRESS_VALVE_C		27
+#define CSM_SECFUEL_PRESS_VALVE_D		28
 
-#define CM_VALVES_START					28
-#define CM_RCSPROP_TANKA_VALVE			29
-#define CM_RCSPROP_TANKB_VALVE			30
 
-#define N_CSM_VALVES	31
+#define CM_VALVES_START					29
+#define CM_RCSPROP_TANKA_VALVE			30
+#define CM_RCSPROP_TANKB_VALVE			31
+
+#define N_CSM_VALVES	32
 
 #define RCS_SM_QUAD_A		0
 #define RCS_SM_QUAD_B		1
@@ -801,10 +817,10 @@ protected:
 	RCSQuantityMeter RCSQuantityGauge;
 
 	SwitchRow SMRCSProp1Row;
-	SaturnValveSwitch SMRCSProp1ASwitch;
-	SaturnValveSwitch SMRCSProp1BSwitch;
-	SaturnValveSwitch SMRCSProp1CSwitch;
-	SaturnValveSwitch SMRCSProp1DSwitch;
+	SaturnPropValveSwitch SMRCSProp1ASwitch;
+	SaturnPropValveSwitch SMRCSProp1BSwitch;
+	SaturnPropValveSwitch SMRCSProp1CSwitch;
+	SaturnPropValveSwitch SMRCSProp1DSwitch;
 
 	ThreePosSwitch SMRCSHeaterASwitch;
 	ThreePosSwitch SMRCSHeaterBSwitch;
@@ -812,10 +828,10 @@ protected:
 	ThreePosSwitch SMRCSHeaterDSwitch;
 
 	SwitchRow SMRCSProp1TalkbackRow;
-	SaturnValveTalkback SMRCSProp1ATalkback;
-	SaturnValveTalkback SMRCSProp1BTalkback;
-	SaturnValveTalkback SMRCSProp1CTalkback;
-	SaturnValveTalkback SMRCSProp1DTalkback;
+	SaturnPropValveTalkback SMRCSProp1ATalkback;
+	SaturnPropValveTalkback SMRCSProp1BTalkback;
+	SaturnPropValveTalkback SMRCSProp1CTalkback;
+	SaturnPropValveTalkback SMRCSProp1DTalkback;
 
 	SwitchRow SMRCSProp2Row;
 	SaturnValveSwitch SMRCSProp2ASwitch;
@@ -831,10 +847,10 @@ protected:
 	SwitchRow SMRCSProp2TalkbackRow;
 	SaturnValveTalkback CMRCSIsolate1Talkback;
 	SaturnValveTalkback CMRCSIsolate2Talkback;
-	SaturnValveTalkback SMRCSProp2ATalkback;
-	SaturnValveTalkback SMRCSProp2BTalkback;
-	SaturnValveTalkback SMRCSProp2CTalkback;
-	SaturnValveTalkback SMRCSProp2DTalkback;
+	SaturnPropValveTalkback SMRCSProp2ATalkback;
+	SaturnPropValveTalkback SMRCSProp2BTalkback;
+	SaturnPropValveTalkback SMRCSProp2CTalkback;
+	SaturnPropValveTalkback SMRCSProp2DTalkback;
 
 	SwitchRow RCSIndicatorsSwitchRow;
 	PropellantRotationalSwitch RCSIndicatorsSwitch;
