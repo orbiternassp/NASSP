@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.95  2006/03/27 19:22:44  quetalsi
+  *	Bugfix RCS PRPLNT switches and wired to brakers.
+  *	
   *	Revision 1.94  2006/03/25 00:14:31  dseagrav
   *	Missed a debug print
   *	
@@ -4037,7 +4040,7 @@ VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors){
 		return(attitude);
 	}
 	if(attitude.x > 4.712388){                    // 0 thru 90 degrees
-		roll_percent = abs((attitude.x-TWO_PI) / 1.570796);				
+		roll_percent = fabs((attitude.x-TWO_PI) / 1.570796);				
 		output_pitch = input_pitch * (1-roll_percent); 
 		output_pitch += input_yaw * roll_percent;
 		output_yaw = input_yaw * (1-roll_percent);
@@ -4051,7 +4054,7 @@ VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors){
 		output_yaw -=input_pitch * roll_percent;       
 	}
 	if(attitude.x > 1.570796 && attitude.x < PI){ // 180 thru 270 degrees
-		roll_percent = abs((attitude.x-PI) / 1.570796);
+		roll_percent = fabs((attitude.x-PI) / 1.570796);
 		output_pitch = -(input_pitch * (1-roll_percent)); 
 		output_pitch -= input_yaw * roll_percent;
 		output_yaw = -input_yaw * (1-roll_percent);
@@ -4412,6 +4415,24 @@ void RJEC::SetThruster(int thruster,bool Active){
 
 // Electronic Control Assembly
 ECA::ECA(){
+
+	rhc_x = 32768;
+	rhc_y = 32768;
+	rhc_z = 32768;
+	thc_x = 32768;
+	thc_y = 32768;
+	thc_z = 32768;
+
+	accel_roll_trigger = 0;
+	mnimp_roll_trigger = 0;
+	accel_pitch_trigger = 0;
+	mnimp_pitch_trigger = 0;
+	accel_yaw_trigger = 0;
+	mnimp_yaw_trigger = 0;
+	trans_x_trigger = 0;
+	trans_y_trigger = 0;
+	trans_z_trigger = 0;
+
 	sat = NULL;
 }
 
@@ -4971,7 +4992,7 @@ void ECA::TimeStep(){
 		}
 	}
 	// If accel thrust fired and is no longer needed, kill it.
-	if(accel_roll_flag == 0&& accel_roll_trigger){
+	if(accel_roll_flag == 0 && accel_roll_trigger){
 		sat->rjec.SetThruster(9,0);
 		sat->rjec.SetThruster(10,0);
 		sat->rjec.SetThruster(11,0);
