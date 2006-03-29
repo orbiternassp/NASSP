@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.163  2006/03/27 19:22:44  quetalsi
+  *	Bugfix RCS PRPLNT switches and wired to brakers.
+  *	
   *	Revision 1.162  2006/03/25 00:12:42  dseagrav
   *	SCS ECA added.
   *	
@@ -340,6 +343,17 @@ typedef struct {
 } TankQuantities;
 
 typedef struct {
+	double SICQuantity;
+	double SIIQuantity;
+	double SIVBOxQuantity;
+	double SIVBFuelQuantity;
+	double SICFuelMass;
+	double SIIFuelMass;
+	double S4BFuelMass;
+	double S4BOxMass;
+} LVTankQuantities;
+
+typedef struct {
 	double SuitTempK;
 	double CabinTempK;
 	double CabinPressureMMHG;
@@ -502,6 +516,9 @@ public:
 	void DisconectInverter(bool disc, int busno);
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	double GetAccelG() { return aZAcc / G; };
+
+	// LV Status Check
+	void GetLVTankQuantities(LVTankQuantities &LVq);
 
 	//
 	// Panel SDK support.
@@ -2525,6 +2542,18 @@ protected:
 	//
 
 	char LEMName[64];
+
+	//
+	// GPFPI Values
+	//
+	bool initialized;
+	int PitchClusterCurrent;
+	int YawClusterCurrent;
+	int PitchClusterActual;
+	int YawClusterActual;
+	int dPC;
+	int dYC;
+
 
 //	FILE *outstr;
 

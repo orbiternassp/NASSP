@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.157  2006/03/27 19:22:44  quetalsi
+  *	Bugfix RCS PRPLNT switches and wired to brakers.
+  *	
   *	Revision 1.156  2006/03/19 17:06:13  dseagrav
   *	Fixed mistake with RCS TRNFR, it's a 3-position switch and is ignored for now.
   *	
@@ -1263,17 +1266,19 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ASCPINCYAW,									_R( 124, 1250,  140, 1266), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ASCPDECYAW,									_R( 124, 1267,  140, 1285), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
 
+// GPFPI DISPLAYS
+		oapiRegisterPanelArea (AID_GPFPI_METERS,								_R( 629,  927,  791, 1032), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+
 // SPS FUEL DISPLAYS
 		oapiRegisterPanelArea (AID_SPS_OXID_PERCENT_DISPLAY,					_R(2664,  628, 2702,  641), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SPS_FUEL_PERCENT_DISPLAY,					_R(2664,  657, 2702,  670), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
-
-		// Display & keyboard (DSKY), main panel uses the main DSKY.
+// Display & keyboard (DSKY), main panel uses the main DSKY.
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
-		// FDAI
+// FDAI
 		// FDAIRight was at 1120, 314
 		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1090, 284);
 		// FDAILeft was at 563, 642
@@ -3790,6 +3795,103 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	//
+	// GPFPI
+	//
+
+	case AID_GPFPI_METERS:
+		{
+			LVTankQuantities LVq;
+			GetLVTankQuantities(LVq);
+
+			if (!initialized){
+				PitchClusterCurrent = 0;
+				YawClusterCurrent = 0;
+				initialized = true;
+			}
+
+			if (LVFuelTankPressIndicatorSwitch.GetState() == TOGGLESWITCH_UP){
+
+				if (stage > LAUNCH_STAGE_TWO_TWR_JET) {  
+					PitchClusterActual = (int) (89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass);
+					YawClusterActual = (int) (89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass);
+				}
+				else {
+					PitchClusterActual = (int) (89.0 * LVq.SIIQuantity / LVq.SIIFuelMass);
+					YawClusterActual = (int) (89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass);
+				}
+
+			}
+			else {
+				PitchClusterActual = (int) (45 * sps_yaw_position / 5.5) + 45;
+				YawClusterActual = (int) (45 * sps_pitch_position / 5.5) + 45;
+			}
+
+			dPC = (PitchClusterActual - PitchClusterCurrent);
+			dYC = (YawClusterActual - YawClusterCurrent);
+
+			// PitchCluster Damping
+			
+			if (PitchClusterActual > PitchClusterCurrent){
+				if (dPC >= 25){
+					PitchClusterCurrent = PitchClusterCurrent + 3;
+				}else if (dPC < 25 && dPC >= 10){
+					PitchClusterCurrent = PitchClusterCurrent + 2;
+				}else if (dPC < 10 && dPC >= 1){
+					PitchClusterCurrent = PitchClusterCurrent + 1;
+				}else if (dPC == 0){
+					PitchClusterCurrent = PitchClusterCurrent;
+				}
+			}else if (PitchClusterActual < PitchClusterCurrent){
+				if (dPC <= -25){
+					PitchClusterCurrent = PitchClusterCurrent - 3;
+				}else if (dPC > -25 && dPC <= -10){
+					PitchClusterCurrent = PitchClusterCurrent - 2;
+				}else if (dPC > -10 && dPC <= -1){
+					PitchClusterCurrent = PitchClusterCurrent - 1;
+				}else if (dPC == 0){
+					PitchClusterCurrent = PitchClusterCurrent;
+				}
+			}
+
+
+            // YawCluster Damping
+
+			if (YawClusterActual > YawClusterCurrent){
+				if (dYC >= 25){
+					YawClusterCurrent = YawClusterCurrent + 3;
+				}else if (dYC < 25 && dYC >= 10){
+					YawClusterCurrent = YawClusterCurrent + 2;
+				}else if (dYC < 10 && dYC >= 1){
+					YawClusterCurrent = YawClusterCurrent + 1;
+				}else if (dYC == 0){
+					YawClusterCurrent = YawClusterCurrent;
+				}
+			}else if (YawClusterActual < YawClusterCurrent){
+				if (dYC <= -25){
+					YawClusterCurrent = YawClusterCurrent - 3;
+				}else if (dYC > -25 && dYC <= -10){
+					YawClusterCurrent = YawClusterCurrent - 2;
+				}else if (dYC > -10 && dYC <= -1){
+					YawClusterCurrent = YawClusterCurrent - 1;
+				}else if (dYC == 0){
+					YawClusterCurrent = YawClusterCurrent;
+				}
+			}
+
+			oapiBlt(surf, srf[SRF_NEEDLE], 15, 92 - PitchClusterCurrent, 10, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 27, 92 - PitchClusterCurrent, 3, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 53, 92 - PitchClusterCurrent, 10, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 65, 92 - PitchClusterCurrent, 3, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 91, 92 - YawClusterCurrent, 10, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 103, 92 - YawClusterCurrent, 3, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 129, 91 - YawClusterCurrent, 10, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 141, 92 - YawClusterCurrent, 3, 1, 7, 8, SURF_PREDEF_CK);
+
+		}
+		return true;
+
+
+	//
 	// For now, both SPS fuel and oxidiser display the same.
 	//
 
@@ -3993,7 +4095,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiBlt(surf,srf[2],96,(int)(90-(DispValue*90.0)),10,0,6,4);//
 		return true;
 
-	case AID_LV_TANK_GAUGES:
+	/*case AID_LV_TANK_GAUGES:
 		if (!ph_2nd){
 			if(stage < LAUNCH_STAGE_SIVB){
 				DispValue = 1;
@@ -4036,7 +4138,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiBlt(surf,srf[2], 36,(60-(int)(DispValue*60.0))+17,8,0,7,7, SURF_PREDEF_CK);//
 		oapiBlt(surf,srf[2], 67,(75-(int)(DispValue*75.0))+ 2,0,0,7,7, SURF_PREDEF_CK);//
 		oapiBlt(surf,srf[2],104,(75-(int)(DispValue*75.0))+ 2,8,0,7,7, SURF_PREDEF_CK);//
-		return true;
+		return true;*/
 
 	case AID_SPS_FUEL:
 		if (!ph_sps){

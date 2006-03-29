@@ -57,6 +57,7 @@
 #define AID_ELS_SWITCHES                66
 #define AID_DCVOLTS                     70
 #define AID_FCSM_SWITCH                 71
+#define AID_GPFPI_METERS				72
 #define AID_DIRECT_ULLAGE_THRUST_ON_LIGHT 73
 #define AID_LV_ENGINE_LIGHTS            74
 #define AID_LV_TANK_GAUGES              75
