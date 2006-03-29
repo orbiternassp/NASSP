@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/02/03 13:19:55  tschachim
+  *	Fixed SIC velocity during creation.
+  *	
   *	Revision 1.47  2006/02/01 18:32:17  tschachim
   *	Adjusted particle streams.
   *	
@@ -501,8 +504,7 @@ void SaturnV::BuildFirstStage (int bstate)
 	}
 
 	if (bstate >=4){
-		mesh_dir=_V(0,SMVO,19.1+STG0O);
-		AddMesh (hSM, &mesh_dir);
+		AddSM(19.1+STG0O, false);
 	}
 
 	if (bstate >=4){
@@ -628,8 +630,8 @@ void SaturnV::SetFirstStage ()
     AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55+STG0O);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
-	mesh_dir=_V(0,SMVO,19.1+STG0O);
-	AddMesh (hSM, &mesh_dir);
+
+	AddSM(19.1+STG0O, false);
 
 	mesh_dir=_V(0,0,23.25+STG0O);
 	meshidx = AddMesh (hCM, &mesh_dir);
@@ -718,8 +720,8 @@ void SaturnV::SetSecondStage ()
     AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
-	mesh_dir=_V(0,SMVO,19.1-STG1O);
-	AddMesh (hSM, &mesh_dir);
+
+	AddSM(19.1-STG1O, false);
 
 	mesh_dir=_V(0,0,23.25-STG1O);
 	meshidx = AddMesh (hCM, &mesh_dir);
@@ -872,8 +874,8 @@ void SaturnV::SetSecondStage1 ()
     AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
-	mesh_dir=_V(0,SMVO,19.1-STG1O);
-	AddMesh (hSM, &mesh_dir);
+
+	AddSM(19.1-STG1O, false);
 
 	mesh_dir=_V(0,0,23.25-STG1O);
 	meshidx = AddMesh (hCM, &mesh_dir);
@@ -1015,8 +1017,8 @@ void SaturnV::SetSecondStage2 ()
     AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
-	mesh_dir=_V(0,SMVO,19.1-STG1O);
-	AddMesh (hSM, &mesh_dir);
+
+	AddSM(19.1-STG1O, false);
 
 	UINT meshidx;
 
@@ -1112,9 +1114,10 @@ void SaturnV::SetThirdStage ()
     AddMesh (hStageSLA3Mesh, &mesh_dir);
 	mesh_dir=_V(-1.48,1.48,14.55-STG2O);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
-	mesh_dir=_V(0,SMVO,19.1-STG2O);
-	AddMesh (hSM, &mesh_dir);
-	mesh_dir=_V(0,0,23.25-STG2O);
+
+	AddSM(19.1-STG2O, false);
+
+	mesh_dir=_V(0, 0, 23.25-STG2O);
 
 	UINT meshidx;
 	meshidx = AddMesh (hCM, &mesh_dir);
