@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2006/01/24 13:57:21  tschachim
+  *	Smoother staging with more eye-candy.
+  *	
   *	Revision 1.31  2006/01/15 02:38:59  movieman523
   *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
   *	
@@ -141,6 +144,14 @@
 #include "tracer.h"
 
 MESHHANDLE hSM;
+MESHHANDLE hSMRCS;
+MESHHANDLE hSMSPS;
+MESHHANDLE hSMPanel1;
+MESHHANDLE hSMPanel2;
+MESHHANDLE hSMPanel3;
+MESHHANDLE hSMPanel4;
+MESHHANDLE hSMPanel5;
+MESHHANDLE hSMPanel6;
 MESHHANDLE hSMhga;
 MESHHANDLE hCM;
 MESHHANDLE hCM2;
@@ -170,7 +181,15 @@ extern void CoeffFunc(double aoa, double M, double Re ,double *cl ,double *cm  ,
 void SaturnInitMeshes()
 
 {
-	LOAD_MESH(hSM, "ProjectApollo/SM");
+	LOAD_MESH(hSM, "ProjectApollo/SM-core");
+	LOAD_MESH(hSMRCS, "ProjectApollo/SM-RCS");
+	LOAD_MESH(hSMSPS, "ProjectApollo/SM-SPS");
+	LOAD_MESH(hSMPanel1, "ProjectApollo/SM-Panel1");
+	LOAD_MESH(hSMPanel2, "ProjectApollo/SM-Panel2");
+	LOAD_MESH(hSMPanel3, "ProjectApollo/SM-Panel3");
+	LOAD_MESH(hSMPanel4, "ProjectApollo/SM-Panel4");
+	LOAD_MESH(hSMPanel5, "ProjectApollo/SM-Panel5");
+	LOAD_MESH(hSMPanel6, "ProjectApollo/SM-Panel6");
 	LOAD_MESH(hSMhga, "ProjectApollo/SM_HGA");
 	LOAD_MESH(hCM, "ProjectApollo/sat5CM");
 	LOAD_MESH(hCM2, "ProjectApollo/sat5CM2");
@@ -193,6 +212,26 @@ void SaturnInitMeshes()
 	LOAD_MESH(hCMPEVA, "ProjectApollo/nSATURN1_CMP_EVA");
 }
 
+void Saturn::AddSM(double offset, bool showSPS)
+
+{
+	VECTOR3 mesh_dir=_V(0, SMVO, offset);
+
+	AddMesh (hSM, &mesh_dir);
+	AddMesh (hSMRCS, &mesh_dir);
+	AddMesh (hSMPanel1, &mesh_dir);
+	AddMesh (hSMPanel2, &mesh_dir);
+	AddMesh (hSMPanel3, &mesh_dir);
+	AddMesh (hSMPanel4, &mesh_dir);
+	AddMesh (hSMPanel5, &mesh_dir);
+	AddMesh (hSMPanel6, &mesh_dir);
+
+	if (showSPS) {
+		mesh_dir = _V(0, SMVO, offset - 1.5);
+		SPSidx = AddMesh(hSMSPS, &mesh_dir);
+	}
+}
+
 void Saturn::ToggelHatch()
 
 {
@@ -207,7 +246,7 @@ void Saturn::ToggelHatch()
 	// Skylab SM and Apollo 7 have no HGA.
 	//
 	if (!NoHGA) {
-		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		mesh_dir=_V(-2.2,-1.7,29.2-12.25-21.5);
 		AddMesh (hSMhga, &mesh_dir);
 	}
 
@@ -277,7 +316,8 @@ void Saturn::ToggelHatch2()
 		mesh_dir=_V(0.02,1.35,-1.06);
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		HatchOpen= false;
-	}else{
+	}
+	else{
 		mesh_dir=_V(-0.7,1.75,0.45-1.2);
 		meshidx = AddMesh (hFHO, &mesh_dir);
 		HatchOpen= true;
@@ -310,7 +350,7 @@ void Saturn::ToggleEVA()
 		// Skylab SM and Apollo 7 have no HGA.
 		//
 		if (!NoHGA) {
-			mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+			mesh_dir=_V(-2.2,-1.7,29.2-12.25-21.5);
 			AddMesh (hSMhga, &mesh_dir);
 		}
 
@@ -339,13 +379,13 @@ void Saturn::ToggleEVA()
 			probeidx = AddMesh (hprobe, &mesh_dir);
 		}
 	}
-	else{
+	else {
 		EVA_IP = true;
 
 		ClearMeshes();
 		VECTOR3 mesh_dir=_V(0,SMVO,30.25-12.25-21.5);
 		AddMesh (hSM, &mesh_dir);
-		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+		mesh_dir=_V(-2.2,-1.7,29.2-12.25-21.5);
 		AddMesh (hSMhga, &mesh_dir);
 
 		mesh_dir=_V(0,0,34.4-12.25-21.5);
@@ -403,7 +443,7 @@ void Saturn::SetupEVA()
 		// Skylab SM and Apollo 7 have no HGA.
 		//
 		if (!NoHGA) {
-			mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
+			mesh_dir=_V(-2.2,-1.7,29.2-12.25-21.5);
 			AddMesh (hSMhga, &mesh_dir);
 		}
 
@@ -518,14 +558,16 @@ void Saturn::SetCSMStage ()
 	}
 
 	const double CGOffset = 12.25+21.5-1.8+0.35;
-	VECTOR3 mesh_dir=_V(0,SMVO,30.25-CGOffset);
-	AddMesh (hSM, &mesh_dir);
+
+	AddSM(30.25 - CGOffset, true);
+
+	VECTOR3 mesh_dir;
 
 	//
 	// Skylab SM and Apollo 7 have no HGA.
 	//
 	if (!NoHGA) {
-		mesh_dir=_V(-2.2,-1.7,28.82-CGOffset);
+		mesh_dir=_V(-2.2,-1.7,29.2-CGOffset);
 		AddMesh (hSMhga, &mesh_dir);
 	}
 
@@ -559,7 +601,7 @@ void Saturn::SetCSMStage ()
 	VECTOR3 dockrot = {0,1,0};
 	SetDockParams(dockpos, dockdir, dockrot);
 
-	AddRCSJets(0.0, SM_RCS_THRUST);
+	AddRCSJets(-0.18, SM_RCS_THRUST);
 
 	SetView(0.4 + 1.8 - 0.35);
 	// **************************** NAV radios *************************************
@@ -621,14 +663,16 @@ void Saturn::SetCSM2Stage ()
 	const double CGOffset = 12.25+21.5-1.8+0.35;
 
 	UINT meshidx;
-	VECTOR3 mesh_dir=_V(0,SMVO,30.25-CGOffset);
-	AddMesh (hSM, &mesh_dir);
+
+	AddSM(30.25-CGOffset, true);
+
+	VECTOR3 mesh_dir;
 
 	//
 	// Skylab SM and Apollo 7 have no HGA.
 	//
 	if (!NoHGA) {
-		mesh_dir=_V(-2.2,-1.7,28.82-CGOffset);
+		mesh_dir=_V(-2.2,-1.7,29.2-CGOffset);
 		AddMesh (hSMhga, &mesh_dir);
 	}
 
@@ -654,7 +698,7 @@ void Saturn::SetCSM2Stage ()
 
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 
-	AddRCSJets(0.0, SM_RCS_THRUST);
+	AddRCSJets(0.18, SM_RCS_THRUST);
 
 	SetView(0.4 + 1.8 - 0.35);
 
@@ -1383,14 +1427,26 @@ void Saturn::setupSM(OBJHANDLE hvessel)
 	stg1vessel->SetPMI (_V(30,30,15.5));
 	stg1vessel->SetRotDrag (_V(0.7,0.7,0.3));
 	stg1vessel->ClearMeshes();
+
 	VECTOR3 mesh_dir=_V(0,SMVO,0);
 	stg1vessel->AddMesh (hSM, &mesh_dir);
+
+	stg1vessel->AddMesh (hSMRCS, &mesh_dir);
+	stg1vessel->AddMesh (hSMPanel1, &mesh_dir);
+	stg1vessel->AddMesh (hSMPanel2, &mesh_dir);
+	stg1vessel->AddMesh (hSMPanel3, &mesh_dir);
+	stg1vessel->AddMesh (hSMPanel4, &mesh_dir);
+	stg1vessel->AddMesh (hSMPanel5, &mesh_dir);
+	stg1vessel->AddMesh (hSMPanel6, &mesh_dir);
+
+	mesh_dir = _V(0, SMVO, -1.5);
+	stg1vessel->AddMesh(hSMSPS, &mesh_dir);
 
 	//
 	// Skylab SM and Apollo 7 have no HGA.
 	//
 	if (!NoHGA) {
-		mesh_dir=_V(-2.2,-1.7,-1.6);
+		mesh_dir=_V(-2.2,-1.7,-1.4);
 		stg1vessel->AddMesh (hSMhga, &mesh_dir);
 	}
 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.164  2006/03/29 16:34:00  jasonims
+  *	GPFPI Meters added supporting proper LV Fuel Quantities and SPS Gimbel Position display.  LV Tank Quantities now accessable from outside Saturn class.
+  *	
   *	Revision 1.163  2006/03/27 19:22:44  quetalsi
   *	Bugfix RCS PRPLNT switches and wired to brakers.
   *	
@@ -655,6 +658,8 @@ protected:
 	MESHHANDLE hStageSLA2Mesh;
 	MESHHANDLE hStageSLA3Mesh;
 	MESHHANDLE hStageSLA4Mesh;
+
+	UINT SPSidx;
 
 	bool LEM_DISPLAY;
 
@@ -2347,6 +2352,7 @@ protected:
 	void StartAbort();
 	void GetLEMName(char *s);
 	void GetApolloName(char *s);
+	void AddSM(double offet, bool showSPS);
 
 	//
 	// Systems functions.

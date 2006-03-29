@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/03/16 04:53:21  dseagrav
+  *	Added preliminary RJEC, connected CMC to RJEC.
+  *	
   *	Revision 1.44  2006/03/12 01:46:17  dseagrav
   *	Removed leftover debug message
   *	
@@ -800,6 +803,13 @@ void CSMcomputer::UpdateTLICalcs(double simt)
 void CSMcomputer::Prog15(double simt)
 
 {
+#if 0
+	if (ProgState < 17 && ) {
+		AbortWithError(021200);
+		return;
+	}
+#endif
+
 	switch (ProgState) {
 
 	//
