@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2006/03/30 00:14:46  movieman523
+  *	First pass at SM DLL.
+  *	
   *	Revision 1.33  2006/03/29 19:06:49  movieman523
   *	First support for new SM.
   *	
@@ -1166,7 +1169,7 @@ void Saturn1b::SeparateStage (int stage)
 
 		SMConfig.SettingsType = (SM_SETTINGS_MASS|SM_SETTINGS_FUEL|SM_SETTINGS_GENERAL|SM_SETTINGS_ENGINES);
 
-		SMConfig.EmptyMass = SI_EmptyMass;
+		SMConfig.EmptyMass = SM_EmptyMass;
 		SMConfig.MainFuelKg = GetPropellantMass(ph_sps);
 		SMConfig.RCSAFuelKg = GetPropellantMass(ph_rcs0);
 		SMConfig.RCSBFuelKg = GetPropellantMass(ph_rcs1);
@@ -1177,7 +1180,7 @@ void Saturn1b::SeparateStage (int stage)
 		SMConfig.VehicleNo = VehicleNo;
 		SMConfig.LowRes = LowRes;
 		SMConfig.showHGA = !NoHGA;
-		SMConfig.A13Exploded = false;
+		SMConfig.A13Exploded = ApolloExploded;
 
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);
