@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2006/03/30 00:14:47  movieman523
+  *	First pass at SM DLL.
+  *	
   *	Revision 1.33  2006/03/29 19:06:50  movieman523
   *	First support for new SM.
   *	
@@ -778,8 +781,6 @@ void Saturn::SetReentryStage ()
 	VECTOR3 dockrot = {0,1,0};
 
 	SetDockParams(dockpos, dockdir, dockrot);
-
-	stgSM = true;
 }
 
 void Saturn::StageSeven(double simt)

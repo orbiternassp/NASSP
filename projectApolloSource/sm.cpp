@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/03/30 00:31:22  movieman523
+  *	Set up RCS thruster propellant.
+  *	
   *	Revision 1.1  2006/03/30 00:21:37  movieman523
   *	Pass empty mass correctly and remember to check in SM files :).
   *	
@@ -87,7 +90,7 @@ SM::~SM()
 void SM::InitSM()
 
 {
-	State = SM_STATE_SHUTTING_DOWN;
+	State = SM_STATE_RCS_START;
 
 	EmptyMass = 6100.0;
 	MainFuel = 5000.0;
@@ -124,15 +127,13 @@ void SM::SetSM()
 	ClearMeshes();
 
 	double mass = EmptyMass + MainFuel;
-
-	ClearThrusterDefinitions();
 	
 	SetSize (5);
-	SetPMI (_V(20.0, 20.0, 2.00));
-	SetCOG_elev (19.0);
-	SetCrossSections (_V(20.0, 20.0, 10.0));
-	SetCW (0.5, 1.1, 2, 2.4);
-	SetRotDrag (_V(2,2,2));
+
+	SetPMI (_V(12,12,7));
+	SetCrossSections (_V(40,40,14));
+	SetCW (0.1, 0.3, 1.4, 1.4);
+	SetRotDrag (_V(0.7,0.7,0.3));
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
@@ -186,21 +187,45 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	MissionTime += simdt;
 
 	//
-	// Currently this just starts the retros. At some point it should
-	// run down the engines if they haven't completely shut down, and
-	// then do any other simulation like ejecting camera pods.
+	// See section 2.9.4.13.2 of the Apollo Operations Handbook Seq Sys section for
+	// details on RCS operation after SM sep.
+	//
+	// -X engines start at seperation. +R engines fire 2.0 seconds later, and stop
+	// 5.5 seconds after that. -X engines continue to fire until the fuel depletes
+	// or the fuel cells stop providing power.
 	//
 
 	switch (State) {
 
-	case SM_STATE_SHUTTING_DOWN:
-		State = SM_STATE_WAITING;
+	case SM_STATE_RCS_START:
+		SetThrusterLevel(th_rcs_a[3], 1.0);
+		SetThrusterLevel(th_rcs_b[3], 1.0);
+		SetThrusterLevel(th_rcs_c[4], 1.0);
+		SetThrusterLevel(th_rcs_d[4], 1.0);
+		NextMissionEventTime = MissionTime + 2.0;
+		State = SM_STATE_RCS_ROLL_START;
 		break;
 
-	case SM_STATE_WAITING:
-		//
-		// Nothing for now.
-		//
+	case SM_STATE_RCS_ROLL_START:
+		if (MissionTime >= NextMissionEventTime) {
+			SetThrusterLevel(th_rcs_a[1], 1.0);
+			SetThrusterLevel(th_rcs_b[1], 1.0);
+			SetThrusterLevel(th_rcs_c[1], 1.0);
+			SetThrusterLevel(th_rcs_d[1], 1.0);
+			NextMissionEventTime = MissionTime + 5.5;
+			State = SM_STATE_RCS_ROLL_STOP;
+		}
+		break;
+
+
+	case SM_STATE_RCS_ROLL_STOP:
+		if (MissionTime >= NextMissionEventTime) {
+			SetThrusterLevel(th_rcs_a[1], 0.0);
+			SetThrusterLevel(th_rcs_b[1], 0.0);
+			SetThrusterLevel(th_rcs_c[1], 0.0);
+			SetThrusterLevel(th_rcs_d[1], 0.0);
+			State = SM_STATE_WAITING;
+		}
 		break;
 
 	default:
@@ -265,6 +290,8 @@ int SM::GetMainState()
 void SM::AddEngines()
 
 {
+	ClearThrusterDefinitions();
+
 	//
 	// Add the RCS. SPS won't fire with SM seperated.
 	//
@@ -277,6 +304,109 @@ void SM::AddEngines()
 		ph_rcsc = CreatePropellantResource(RCS_FUEL_PER_QUAD);
 	if (!ph_rcsd)
 		ph_rcsd = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+
+	double TRANZ = 1.9;
+
+	int i;
+	const double ATTCOOR = 0;
+	const double ATTCOOR2 = 2.05;
+	const double ATTZ = 2.85;
+	const double TRANCOOR = 0;
+	const double TRANCOOR2 = 0.1;
+	const double ATTWIDTH=.2;
+	const double ATTHEIGHT=.5;
+	const double TRANWIDTH=.2;
+	const double TRANHEIGHT=1;
+	const double RCSOFFSET=0.25;
+	const double RCSOFFSET2=-0.25;
+	const double RCSOFFSETM=-0.05;
+	const double RCSOFFSETM2=0.05;
+
+	//
+	// Clear any old thrusters.
+	//
+
+	for (i = 0; i < 24; i++) {
+		th_att_lin[i] = 0;
+		th_att_rot[i] = 0;
+	}
+
+	//
+	// Adjust ISP and thrust based on realism level.
+	//
+
+	double RCS_ISP = (SM_RCS_ISP * (15.0 - Realism)) / 5.0;
+	double RCS_Thrust = (SM_RCS_THRUST * (15.0 - Realism)) / 5.0;
+
+	const double CENTEROFFS = 0.25;
+
+	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(-CENTEROFFS,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,-0.1,1), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(CENTEROFFS,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS,TRANZ+RCSOFFSET2), _V(0.1,0,1), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,CENTEROFFS,TRANZ+RCSOFFSET2), _V(-0.1,0,1), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(-CENTEROFFS,ATTCOOR2,TRANZ+RCSOFFSET), _V(0,-0.1,-1), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(CENTEROFFS,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS,TRANZ+RCSOFFSET), _V(0.1,0,-1), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,CENTEROFFS,TRANZ+RCSOFFSET), _V(-0.1,0,-1), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
+
+	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-CENTEROFFS - 0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(CENTEROFFS -0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
+
+	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(-CENTEROFFS + 0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(CENTEROFFS + 0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
+
+	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,CENTEROFFS -0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS -0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
+
+	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,CENTEROFFS + 0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS + 0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
+
+	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
+	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
+	CreateThrusterGroup (th_att_lin+8,   2, THGROUP_ATT_RIGHT);
+	CreateThrusterGroup (th_att_lin+12, 2, THGROUP_ATT_LEFT);
+	CreateThrusterGroup (th_att_lin+16,   2, THGROUP_ATT_UP);
+	CreateThrusterGroup (th_att_lin+20,   2, THGROUP_ATT_DOWN);
+
+	CreateThrusterGroup (th_att_rot,   2, THGROUP_ATT_PITCHDOWN);
+	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_PITCHUP);
+	CreateThrusterGroup (th_att_rot+4,   2, THGROUP_ATT_YAWRIGHT);
+	CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
+	CreateThrusterGroup (th_att_rot+8,   8, THGROUP_ATT_BANKLEFT);
+	CreateThrusterGroup (th_att_rot+16,   8, THGROUP_ATT_BANKRIGHT);
+
+	SURFHANDLE SMExhaustTex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
+
+	for (i = 0; i < 24; i++) {
+		if (th_att_lin[i])
+			AddExhaust (th_att_lin[i], 1.2, 0.18, SMExhaustTex);
+	}
+
+	//
+	// Map thrusters to RCS quads. Note that we don't use entry zero, we're matching the array to
+	// Apollo numbering for simplicity... we also have to include the fake thrusters here so we
+	// can enable and disable them.
+	//
+
+	th_rcs_a[1] = th_att_rot[16];
+	th_rcs_a[2] = th_att_rot[10];
+	th_rcs_a[3] = th_att_rot[2];
+	th_rcs_a[4] = th_att_rot[0];
+
+	th_rcs_b[1] = th_att_rot[20];
+	th_rcs_b[2] = th_att_rot[14];
+	th_rcs_b[3] = th_att_rot[5];
+	th_rcs_b[4] = th_att_rot[7];
+
+	th_rcs_c[1] = th_att_rot[18];
+	th_rcs_c[2] = th_att_rot[8];
+	th_rcs_c[3] = th_att_rot[3];
+	th_rcs_c[4] = th_att_rot[1];
+
+	th_rcs_d[1] = th_att_rot[22];
+	th_rcs_d[2] = th_att_rot[12];
+	th_rcs_d[3] = th_att_rot[4];
+	th_rcs_d[4] = th_att_rot[6];
 }
 
 void SM::SetMainState(int s)
@@ -369,6 +499,14 @@ void SM::SetState(SMSettings &state)
 		Realism = state.Realism;
 		showHGA = state.showHGA;
 		A13Exploded = state.A13Exploded;
+
+		//
+		// If the SM exploded, assume no RCS.
+		//
+
+		if (A13Exploded) {
+			State = SM_STATE_WAITING;
+		}
 	}
 
 	if (state.SettingsType & SM_SETTINGS_MASS) {

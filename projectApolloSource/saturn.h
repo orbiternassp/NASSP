@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.166  2006/03/30 00:14:47  movieman523
+  *	First pass at SM DLL.
+  *	
   *	Revision 1.165  2006/03/29 19:06:50  movieman523
   *	First support for new SM.
   *	
@@ -2180,7 +2183,6 @@ protected:
 	bool SMSep;
 	bool bStartS4B;
 	bool Abort_Locked;
-	bool stgSM;
 
 	double DockAngle;
 
@@ -2188,7 +2190,6 @@ protected:
 	double AtempY;
 	double AtempR;
 
-	double ignition_SMtime;
 	double release_time;
 	double abortTimer;
 
@@ -2302,7 +2303,6 @@ protected:
 	void ToggleEVA();
 	void SetupEVA();
 	void SetRecovery();
-	void UllageSM(OBJHANDLE hvessel,double gaz1, double time);
 	void InitPanel(int panel);
 	void SetSwitches(int panel);
 	void ReleaseSurfaces();
