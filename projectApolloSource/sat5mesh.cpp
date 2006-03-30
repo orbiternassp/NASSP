@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/03/30 00:14:46  movieman523
+  *	First pass at SM DLL.
+  *	
   *	Revision 1.49  2006/03/29 19:06:49  movieman523
   *	First support for new SM.
   *	
@@ -1553,7 +1556,7 @@ void SaturnV::SeparateStage (int stage)
 
 		SMConfig.SettingsType = (SM_SETTINGS_MASS|SM_SETTINGS_FUEL|SM_SETTINGS_GENERAL|SM_SETTINGS_ENGINES);
 
-		SMConfig.EmptyMass = SI_EmptyMass;
+		SMConfig.EmptyMass = SM_EmptyMass;
 		SMConfig.MainFuelKg = GetPropellantMass(ph_sps);
 		SMConfig.RCSAFuelKg = GetPropellantMass(ph_rcs0);
 		SMConfig.RCSBFuelKg = GetPropellantMass(ph_rcs1);
