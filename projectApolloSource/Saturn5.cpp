@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2006/03/30 00:14:46  movieman523
+  *	First pass at SM DLL.
+  *	
   *	Revision 1.71  2006/03/03 05:12:36  dseagrav
   *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
   *	
@@ -1541,7 +1544,6 @@ void SaturnV::StageSix(double simt)
 	{
 		if (dockstate <= 1 || dockstate >= 3) {
 			SeparateStage (stage);
-			ignition_SMtime = simt;
 			bManualSeparate = false;
 			SetStage(CM_STAGE);
 		}

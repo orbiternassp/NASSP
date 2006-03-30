@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.126  2006/03/30 00:14:46  movieman523
+  *	First pass at SM DLL.
+  *	
   *	Revision 1.125  2006/03/29 19:06:49  movieman523
   *	First support for new SM.
   *	
@@ -582,8 +585,6 @@ void Saturn::initSaturn()
 
 	DeleteLaunchSite = true;
 
-	stgSM = false;
-
 	buildstatus = 6;
 
 	ThrustAdjust = 1.0;
@@ -671,7 +672,6 @@ void Saturn::initSaturn()
 
 	abortTimer = 0;
 	release_time = 0;
-	ignition_SMtime = 0;
 
 	//
 	// Defaults.
@@ -1382,7 +1382,7 @@ typedef union {
 		unsigned LEMdatatransfer:1;
 		unsigned PostSplashdownPlayed:1;
 		unsigned IGMEnabled:1;
-		unsigned stgSM:1;
+		unsigned UNUSED:1;
 		unsigned MissionTimerEnabled:1;
 		unsigned EventTimerEnabled:1;
 		unsigned EventTimerRunning:1;
@@ -1418,7 +1418,6 @@ int Saturn::GetMainState()
 	state.u.LEMdatatransfer = LEMdatatransfer;
 	state.u.PostSplashdownPlayed = PostSplashdownPlayed;
 	state.u.IGMEnabled = IGMEnabled;
-	state.u.stgSM = stgSM;
 	state.u.SkylabSM = SkylabSM;
 	state.u.SkylabCM = SkylabCM;
 	state.u.S1bPanel = S1bPanel;
@@ -1443,7 +1442,6 @@ void Saturn::SetMainState(int s)
 	LEMdatatransfer = state.u.LEMdatatransfer;
 	PostSplashdownPlayed = (state.u.PostSplashdownPlayed != 0);
 	IGMEnabled = (state.u.IGMEnabled != 0);
-	stgSM = (state.u.stgSM != 0);
 	MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
 	MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
 	EventTimerDisplay.SetRunning(state.u.EventTimerRunning != 0);
@@ -2263,14 +2261,7 @@ void Saturn::DestroyStages(double simt)
 	// Destroy seperated SM when it drops too low in the atmosphere.
 	//
 
-	if (hSMJet && !ApolloExploded) {
-		if ((simt-(20+ignition_SMtime))>=0 && stgSM) {
-			UllageSM(hSMJet,0,simt);
-			stgSM = false;
-		}
-		else if (!SMSep){
-			UllageSM(hSMJet,5,simt);
-		}
+	if (hSMJet) {
 		KillAlt(hSMJet, 45000);
 	}
 }
@@ -3536,32 +3527,6 @@ void Saturn::GenericLoadStateSetup()
 	//
 
 	iu.SetMissionInfo(TLICapableBooster, Crewed, Realism, &th_main[0], &ph_3rd, &thg_aps, SIVBBurnStart, SIVBApogee); 
-}
-
-void Saturn::UllageSM(OBJHANDLE hvessel,double gaz1, double time)
-
-{
-	if (ignition_SMtime == 0 && !SMSep) {
-		ignition_SMtime=time;
-		SMSep = true;
-	}
-
-	VESSEL *stg1vessel = oapiGetVesselInterface(hvessel);
-
-	if (gaz1 >0) {
-		stg1vessel->SetAttitudeLinLevel(2,-1);
-		if (time > ignition_SMtime+5){
-			stg1vessel->SetAttitudeRotLevel(2,-1);
-		}
-		if (time > ignition_SMtime+7){
-			stg1vessel->SetAttitudeRotLevel(2,0);
-		}
-	}
-	else {
-		stg1vessel->SetAttitudeLinLevel(2,0);
-		stg1vessel->SetAttitudeRotLevel(2,0);
-		stg1vessel->SetAttitudeRotLevel(1,0);
-	}
 }
 
 bool Saturn::CheckForLaunchShutdown()

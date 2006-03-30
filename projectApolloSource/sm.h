@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/03/30 00:21:37  movieman523
+  *	Pass empty mass correctly and remember to check in SM files :).
+  *	
   *	
   **************************************************************************/
 
@@ -62,8 +65,10 @@ typedef struct {
 // Stage states.
 //
 
-#define SM_STATE_SHUTTING_DOWN		0
-#define SM_STATE_WAITING			1
+#define SM_STATE_RCS_START			0
+#define SM_STATE_RCS_ROLL_START		1
+#define SM_STATE_RCS_ROLL_STOP		2
+#define SM_STATE_WAITING			3
 
 //
 // Stage class.
@@ -132,4 +137,5 @@ protected:
 	double LastMissionEventTime;
 
 	PROPELLANT_HANDLE ph_rcsa, ph_rcsb, ph_rcsc, ph_rcsd;
+	THRUSTER_HANDLE th_att_lin[24], th_att_rot[24], th_rcs_a[4], th_rcs_b[4], th_rcs_c[4], th_rcs_d[4];
 };

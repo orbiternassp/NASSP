@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/03/30 00:14:46  movieman523
+  *	First pass at SM DLL.
+  *	
   *	Revision 1.46  2006/02/22 01:03:02  movieman523
   *	Initial Apollo 5 support.
   *	
@@ -904,7 +907,6 @@ void Saturn1b::Timestep (double simt, double simdt)
 		{
 			SeparateStage (stage);
 			bManualSeparate=false;
-			ignition_SMtime=simt;
 			SetStage(CM_STAGE);
 		}
 	}
