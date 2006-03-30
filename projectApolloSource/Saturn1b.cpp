@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2006/02/22 01:03:02  movieman523
+  *	Initial Apollo 5 support.
+  *	
   *	Revision 1.45  2006/02/21 11:57:09  tschachim
   *	Fixes to make code build with MS C++ 2005
   *	
@@ -899,11 +902,9 @@ void Saturn1b::Timestep (double simt, double simdt)
 
 		if (CMSMPyros.Blown())
 		{
-
 			SeparateStage (stage);
 			bManualSeparate=false;
 			ignition_SMtime=simt;
-			setupSM(hSMJet);
 			SetStage(CM_STAGE);
 		}
 	}

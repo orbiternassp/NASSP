@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2006/03/29 19:06:50  movieman523
+  *	First support for new SM.
+  *	
   *	Revision 1.32  2006/01/24 13:57:21  tschachim
   *	Smoother staging with more eye-candy.
   *	
@@ -1406,51 +1409,6 @@ void Saturn::SetAbortStage ()
 
 	OrbiterAttitudeToggle.SetState(false);
 	LPswitch6.SetState(false);
-}
-
-//
-// We really want an SM class to handle the retros and roll after seperation.
-//
-
-void Saturn::setupSM(OBJHANDLE hvessel)
-
-{
-	VESSEL *stg1vessel = oapiGetVesselInterface(hvessel);
-
-	stg1vessel->SetSize (4.0);
-	stg1vessel->SetCOG_elev (3.5);
-	stg1vessel->SetEmptyMass (10318);
-	stg1vessel->SetMaxFuelMass (2222);
-	stg1vessel->SetFuelMass(2222);
-	stg1vessel->SetISP (3083);
-	stg1vessel->SetMaxThrust (ENGINE_ATTITUDE, 10980);
-	stg1vessel->SetPMI (_V(30,30,15.5));
-	stg1vessel->SetRotDrag (_V(0.7,0.7,0.3));
-	stg1vessel->ClearMeshes();
-
-	VECTOR3 mesh_dir=_V(0,SMVO,0);
-	stg1vessel->AddMesh (hSM, &mesh_dir);
-
-	stg1vessel->AddMesh (hSMRCS, &mesh_dir);
-	stg1vessel->AddMesh (hSMPanel1, &mesh_dir);
-	stg1vessel->AddMesh (hSMPanel2, &mesh_dir);
-	stg1vessel->AddMesh (hSMPanel3, &mesh_dir);
-	stg1vessel->AddMesh (hSMPanel4, &mesh_dir);
-	stg1vessel->AddMesh (hSMPanel5, &mesh_dir);
-	stg1vessel->AddMesh (hSMPanel6, &mesh_dir);
-
-	mesh_dir = _V(0, SMVO, -1.5);
-	stg1vessel->AddMesh(hSMSPS, &mesh_dir);
-
-	//
-	// Skylab SM and Apollo 7 have no HGA.
-	//
-	if (!NoHGA) {
-		mesh_dir=_V(-2.2,-1.7,-1.4);
-		stg1vessel->AddMesh (hSMhga, &mesh_dir);
-	}
-
-	//Roll left
 }
 
 bool Saturn::clbkLoadGenericCockpit ()

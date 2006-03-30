@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/03/29 19:06:49  movieman523
+  *	First support for new SM.
+  *	
   *	Revision 1.48  2006/02/03 13:19:55  tschachim
   *	Fixed SIC velocity during creation.
   *	
@@ -196,6 +199,7 @@
 #include "sivb.h"
 #include "sii.h"
 #include "s1c.h"
+#include "sm.h"
 
 PARTICLESTREAMSPEC srb_contrail = {
 	0, 12.0, 5, 150.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
@@ -1276,7 +1280,7 @@ void SaturnV::SeparateStage (int stage)
 	if (stage == CSM_LEM_STAGE)
 	{
 	 	ofs1 = OFS_SM;
-		vel1 = _V(0,0,-0.5);
+		vel1 = _V(0,0,-0.1);
 		ofs2 = OFS_DOCKING;
 		vel2 = _V(0.0,0.0,0.6);
 	}
@@ -1544,6 +1548,27 @@ void SaturnV::SeparateStage (int stage)
 
 		GetApolloName(VName); strcat (VName, "-SM");
 		hSMJet = oapiCreateVessel(VName, "ProjectApollo/SM", vs1);
+
+		SMSettings SMConfig;
+
+		SMConfig.SettingsType = (SM_SETTINGS_MASS|SM_SETTINGS_FUEL|SM_SETTINGS_GENERAL|SM_SETTINGS_ENGINES);
+
+		SMConfig.EmptyMass = SI_EmptyMass;
+		SMConfig.MainFuelKg = GetPropellantMass(ph_sps);
+		SMConfig.RCSAFuelKg = GetPropellantMass(ph_rcs0);
+		SMConfig.RCSBFuelKg = GetPropellantMass(ph_rcs1);
+		SMConfig.RCSCFuelKg = GetPropellantMass(ph_rcs2);
+		SMConfig.RCSDFuelKg = GetPropellantMass(ph_rcs3);
+		SMConfig.MissionTime = MissionTime;
+		SMConfig.Realism = Realism;
+		SMConfig.VehicleNo = VehicleNo;
+		SMConfig.LowRes = LowRes;
+		SMConfig.showHGA = !NoHGA;
+		SMConfig.A13Exploded = ApolloExploded;
+
+		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
+		SMVessel->SetState(SMConfig);
+
 		SetReentryStage ();
 
 		//

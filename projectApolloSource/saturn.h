@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.165  2006/03/29 19:06:50  movieman523
+  *	First support for new SM.
+  *	
   *	Revision 1.164  2006/03/29 16:34:00  jasonims
   *	GPFPI Meters added supporting proper LV Fuel Quantities and SPS Gimbel Position display.  LV Tank Quantities now accessable from outside Saturn class.
   *	
@@ -2319,7 +2322,6 @@ protected:
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	double SetPitchApo();
 	void SetStage(int s);
-	void setupSM(OBJHANDLE hvessel);
 	void initSaturn();
 	void SwitchClick();
 	void ProbeSound();

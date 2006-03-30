@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.125  2006/03/29 19:06:49  movieman523
+  *	First support for new SM.
+  *	
   *	Revision 1.124  2006/03/29 16:34:00  jasonims
   *	GPFPI Meters added supporting proper LV Fuel Quantities and SPS Gimbel Position display.  LV Tank Quantities now accessable from outside Saturn class.
   *	
@@ -3539,7 +3542,6 @@ void Saturn::UllageSM(OBJHANDLE hvessel,double gaz1, double time)
 
 {
 	if (ignition_SMtime == 0 && !SMSep) {
-		setupSM(hvessel);
 		ignition_SMtime=time;
 		SMSep = true;
 	}
