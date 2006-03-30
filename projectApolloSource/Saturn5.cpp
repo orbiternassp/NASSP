@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2006/03/03 05:12:36  dseagrav
+  *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
+  *	
   *	Revision 1.70  2006/02/27 00:57:48  dseagrav
   *	Added SPS thrust-vector control. Changes 20060225-20060226.
   *	
@@ -1540,7 +1543,6 @@ void SaturnV::StageSix(double simt)
 			SeparateStage (stage);
 			ignition_SMtime = simt;
 			bManualSeparate = false;
-			setupSM(hSMJet);
 			SetStage(CM_STAGE);
 		}
 		else {
