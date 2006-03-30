@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/03/30 00:21:37  movieman523
+  *	Pass empty mass correctly and remember to check in SM files :).
+  *	
   *	
   **************************************************************************/
 
@@ -120,7 +123,7 @@ void SM::SetSM()
 {
 	ClearMeshes();
 
-	double mass = EmptyMass;
+	double mass = EmptyMass + MainFuel;
 
 	ClearThrusterDefinitions();
 	
@@ -265,6 +268,15 @@ void SM::AddEngines()
 	//
 	// Add the RCS. SPS won't fire with SM seperated.
 	//
+
+	if (!ph_rcsa)
+		ph_rcsa = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	if (!ph_rcsb)
+		ph_rcsb = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	if (!ph_rcsc)
+		ph_rcsc = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	if (!ph_rcsd)
+		ph_rcsd = CreatePropellantResource(RCS_FUEL_PER_QUAD);
 }
 
 void SM::SetMainState(int s)
@@ -375,6 +387,18 @@ void SM::SetState(SMSettings &state)
 	}
 
 	SetSM();
+
+	//
+	// Now the RCS propellant resource has been created, set the
+	// fuel levels.
+	//
+
+	if (state.SettingsType & SM_SETTINGS_FUEL) {
+		SetPropellantMass(ph_rcsa, state.RCSAFuelKg);
+		SetPropellantMass(ph_rcsb, state.RCSBFuelKg);
+		SetPropellantMass(ph_rcsc, state.RCSCFuelKg);
+		SetPropellantMass(ph_rcsd, state.RCSDFuelKg);
+	}
 }
 
 static int refcount = 0;
