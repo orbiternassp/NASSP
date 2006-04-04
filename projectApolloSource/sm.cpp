@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/03/30 01:59:37  movieman523
+  *	Added RCS to SM DLL.
+  *	
   *	Revision 1.2  2006/03/30 00:31:22  movieman523
   *	Set up RCS thruster propellant.
   *	
@@ -40,11 +43,12 @@
 #include <string.h>
 
 //
-// Meshes are globally loaded.
+// Meshes are globally loaded. Only HiRes for time being
 //
 
 MESHHANDLE hSM;
 MESHHANDLE hSMRCS;
+//MESHHANDLE hSMRCSHI;
 MESHHANDLE hSMSPS;
 MESHHANDLE hSMPanel1;
 MESHHANDLE hSMPanel2;
@@ -53,6 +57,8 @@ MESHHANDLE hSMPanel4;
 MESHHANDLE hSMPanel5;
 MESHHANDLE hSMPanel6;
 MESHHANDLE hSMhga;
+MESHHANDLE hSMCRYO;
+
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -64,7 +70,8 @@ void SMLoadMeshes()
 	//
 
 	LOAD_MESH(hSM, "ProjectApollo/SM-core");
-	LOAD_MESH(hSMRCS, "ProjectApollo/SM-RCS");
+    LOAD_MESH(hSMRCS, "ProjectApollo/SM-RCSHI");
+//	LOAD_MESH(hSMRCSHI, "ProjectApollo/SM-RCSHI");
 	LOAD_MESH(hSMSPS, "ProjectApollo/SM-SPS");
 	LOAD_MESH(hSMPanel1, "ProjectApollo/SM-Panel1");
 	LOAD_MESH(hSMPanel2, "ProjectApollo/SM-Panel2");
@@ -72,13 +79,16 @@ void SMLoadMeshes()
 	LOAD_MESH(hSMPanel4, "ProjectApollo/SM-Panel4");
 	LOAD_MESH(hSMPanel5, "ProjectApollo/SM-Panel5");
 	LOAD_MESH(hSMPanel6, "ProjectApollo/SM-Panel6");
-	LOAD_MESH(hSMhga, "ProjectApollo/SM_HGA");
+	LOAD_MESH(hSMhga, "ProjectApollo/SM-HGA");
+	LOAD_MESH(hSMCRYO, "ProjectApollo/SM-CRYO");
+
 }
 
 SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
 	InitSM();
+	DefineAnimations();
 }
 
 SM::~SM()
@@ -110,7 +120,13 @@ void SM::InitSM()
 
 	showSPS = true;
 	showHGA = true;
+	showCRYO = true;
 	showRCS = true;
+/*	if (LowRes == true){
+		showRCSLO = true;
+	}else{
+		showRCSHI = true;
+	}*/
 	showPanel1 = true;
 	showPanel2 = true;
 	showPanel3 = true;
@@ -119,7 +135,7 @@ void SM::InitSM()
 	showPanel6 = true;
 }
 
-const double SMVO = -0.14;
+const double SMVO = 0.0;//-0.14;
 
 void SM::SetSM()
 
@@ -141,13 +157,19 @@ void SM::SetSM()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	VECTOR3 mesh_dir=_V(0, SMVO, 0);
+	VECTOR3 mesh_dir=_V(0, 0, 0);
 
 	AddMesh (hSM, &mesh_dir);
 
 	if (showRCS)
 		AddMesh (hSMRCS, &mesh_dir);
 
+/*	if (showRCSLO)
+		AddMesh (hSMRCSLO, &mesh_dir);
+
+	if (showRCSHI)
+		AddMesh (hSMRCSHI, &mesh_dir);
+*/
 	if (showPanel1)
 		AddMesh (hSMPanel1, &mesh_dir);
 
@@ -166,25 +188,36 @@ void SM::SetSM()
 	if (showPanel6)
 		AddMesh (hSMPanel6, &mesh_dir);
 
+	if (showCRYO)
+		AddMesh (hSMCRYO, &mesh_dir);
+
 	if (showSPS) {
-		mesh_dir = _V(0, SMVO, -1.5);
+		mesh_dir = _V(0, SMVO, -1.654);
 		AddMesh(hSMSPS, &mesh_dir);
 	}
 
 	if (showHGA) {
-		mesh_dir=_V(-2.2,-1.7,-1.1);
+		mesh_dir=_V(-1.308,-1.18,-1.258);
 		AddMesh (hSMhga, &mesh_dir);
 	}
 
 	SetEmptyMass (mass);
 
 	AddEngines ();
+
 }
 
 void SM::clbkPreStep(double simt, double simdt, double mjd)
 
 {
 	MissionTime += simdt;
+
+
+	double da = simdt * UMBILICAL_SPEED;
+	if (umbilical_proc < 1.0){
+			umbilical_proc = min (1.0, umbilical_proc+da);
+	}
+    	SetAnimation (anim_umbilical, umbilical_proc);
 
 	//
 	// See section 2.9.4.13.2 of the Apollo Operations Handbook Seq Sys section for
@@ -194,16 +227,25 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	// 5.5 seconds after that. -X engines continue to fire until the fuel depletes
 	// or the fuel cells stop providing power.
 	//
+	
+
 
 	switch (State) {
 
+	case SM_UMBILICALDETACH_PAUSE:
+		//Someone who knows how, please add a small Particle stream going from detach Point.
+		NextMissionEventTime = MissionTime + 1.0;
+		State = SM_STATE_RCS_START;
+
 	case SM_STATE_RCS_START:
-		SetThrusterLevel(th_rcs_a[3], 1.0);
-		SetThrusterLevel(th_rcs_b[3], 1.0);
-		SetThrusterLevel(th_rcs_c[4], 1.0);
-		SetThrusterLevel(th_rcs_d[4], 1.0);
-		NextMissionEventTime = MissionTime + 2.0;
-		State = SM_STATE_RCS_ROLL_START;
+		if (MissionTime >=NextMissionEventTime) {
+			SetThrusterLevel(th_rcs_a[3], 1.0);
+			SetThrusterLevel(th_rcs_b[3], 1.0);
+			SetThrusterLevel(th_rcs_c[4], 1.0);
+			SetThrusterLevel(th_rcs_d[4], 1.0);
+			NextMissionEventTime = MissionTime + 2.0;
+			State = SM_STATE_RCS_ROLL_START;
+		}
 		break;
 
 	case SM_STATE_RCS_ROLL_START:
@@ -253,7 +295,10 @@ typedef union {
 	struct {
 		unsigned int showSPS:1;
 		unsigned int showHGA:1;
+		unsigned int showCRYO:1;
 		unsigned int showRCS:1;
+//		unsigned int showRCSLO:1;
+//		unsigned int showRCSHI:1;
 		unsigned int showPanel1:1;
 		unsigned int showPanel2:1;
 		unsigned int showPanel3:1;
@@ -274,7 +319,10 @@ int SM::GetMainState()
 	state.word = 0;
 	state.u.showSPS = showSPS;
 	state.u.showHGA = showHGA;
+	state.u.showCRYO = showCRYO;
 	state.u.showRCS = showRCS;
+//	state.u.showRCSLO = showRCSHI;
+//	state.u.showRCSHI = showRCSLO;
 	state.u.showPanel1 = showPanel1;
 	state.u.showPanel2 = showPanel2;
 	state.u.showPanel3 = showPanel3;
@@ -409,6 +457,22 @@ void SM::AddEngines()
 	th_rcs_d[4] = th_att_rot[6];
 }
 
+void SM::DefineAnimations()
+{
+
+	static UINT umbilical_group[1] = {2}; // participating groups
+	static MGROUP_ROTATE umbilical (
+		0,				// mesh index
+		umbilical_group, 1,		// group list and # groups
+		_V(0,-1.9540,3.168), // rotation reference point
+		_V(1,0,0),		// rotation axis
+		(float)(50*PI/180) // angular rotation range
+	);
+	anim_umbilical = CreateAnimation (0.0);
+	AddAnimationComponent (anim_umbilical, 0, 1, &umbilical);
+
+}
+
 void SM::SetMainState(int s)
 
 {
@@ -418,7 +482,10 @@ void SM::SetMainState(int s)
 
 	showSPS = (state.u.showSPS != 0);
 	showHGA = (state.u.showHGA != 0);
+	showCRYO = (state.u.showCRYO != 0);
 	showRCS = (state.u.showRCS != 0);
+//	showRCSLO = (state.u.showRCSLO != 0);
+//	showRCSHI = (state.u.showRCSHI != 0);
 	showPanel1 = (state.u.showPanel1 != 0);
 	showPanel2 = (state.u.showPanel2 != 0);
 	showPanel3 = (state.u.showPanel3 != 0);
