@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/03/30 01:59:37  movieman523
+  *	Added RCS to SM DLL.
+  *	
   *	Revision 1.1  2006/03/30 00:21:37  movieman523
   *	Pass empty mass correctly and remember to check in SM files :).
   *	
@@ -65,14 +68,16 @@ typedef struct {
 // Stage states.
 //
 
-#define SM_STATE_RCS_START			0
-#define SM_STATE_RCS_ROLL_START		1
-#define SM_STATE_RCS_ROLL_STOP		2
-#define SM_STATE_WAITING			3
+#define SM_UMBILICALDETACH_PAUSE	0
+#define SM_STATE_RCS_START			1
+#define SM_STATE_RCS_ROLL_START		2
+#define SM_STATE_RCS_ROLL_STOP		3
+#define SM_STATE_WAITING			4
 
 //
 // Stage class.
 //
+const double UMBILICAL_SPEED = 0.5;
 
 class SM : public VESSEL2 {
 
@@ -91,11 +96,16 @@ public:
 	//
 	virtual void SetState(SMSettings &state);
 
+	double umbilical_proc;
+	UINT anim_umbilical;
+
+
 protected:
 
 	void SetSM();
 	void InitSM();
 	void AddEngines();
+	void DefineAnimations();
 
 	int GetMainState();
 	void SetMainState(int s);
@@ -114,6 +124,8 @@ protected:
 
 	bool showSPS;
 	bool showRCS;
+//	bool showRCSLO;
+//	bool showRCSHI;
 	bool showPanel1;
 	bool showPanel2;
 	bool showPanel3;
@@ -121,6 +133,7 @@ protected:
 	bool showPanel5;
 	bool showPanel6;
 	bool showHGA;
+	bool showCRYO;
 
 	bool A13Exploded;
 

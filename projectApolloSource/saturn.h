@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.167  2006/03/30 01:59:37  movieman523
+  *	Added RCS to SM DLL.
+  *	
   *	Revision 1.166  2006/03/30 00:14:47  movieman523
   *	First pass at SM DLL.
   *	
@@ -2630,7 +2633,8 @@ extern void SaturnInitMeshes();
 extern void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel);
 
 const double STG2O = 8;
-const double SMVO = -0.14;
+const double SMVO = 0.0;//-0.14;
+const double CREWO = 0.0;
 const VECTOR3 OFS_MAINCHUTE =  { 0, -2, 9};
 
 extern MESHHANDLE hSM;
