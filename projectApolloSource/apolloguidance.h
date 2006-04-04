@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/03/12 01:13:28  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.37  2006/02/27 00:57:48  dseagrav
   *	Added SPS thrust-vector control. Changes 20060225-20060226.
   *	
@@ -323,6 +326,7 @@ protected:
 	virtual void ProcessChannel160(int val);
 	virtual void ProcessChannel161(int val);
 	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);
+	public: virtual void GenerateDownrupt();
 
 	void LightUplink();
 	void ClearUplink();

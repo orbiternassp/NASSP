@@ -1,4 +1,4 @@
-/***************************************************************************
+/*	***************************************************************************
   This file is part of Project Apollo - NASSP
   Copyright 2004-2005 Jean-Luc Rocca-Serra, Mark Grant
 
@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.96  2006/03/28 12:45:31  tschachim
+  *	Bugfixes.
+  *	
   *	Revision 1.95  2006/03/27 19:22:44  quetalsi
   *	Bugfix RCS PRPLNT switches and wired to brakers.
   *	
@@ -316,20 +319,15 @@
 #include <math.h>
 #include "OrbiterSoundSDK3.h"
 #include "soundlib.h"
-
 #include "resource.h"
-
 #include "nasspdefs.h"
 #include "nasspsound.h"
-
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
-
 #include "saturn.h"
-
 #include "ioChannels.h"
 
 //FILE *PanelsdkLogFile;
@@ -598,7 +596,7 @@ void Saturn::SystemsInit() {
 	sps_pitch_position = 0;
 	sps_yaw_position = 0;
 
-	// DS20030304 SCS initialization
+	// DS20060304 SCS initialization
 	bmag1.Init(this,MainBusA,&ACBus1);
 	bmag2.Init(this,MainBusB,&ACBus2);
 	gdc.Init(this);
@@ -606,6 +604,8 @@ void Saturn::SystemsInit() {
 	eda.Init(this);
 	rjec.Init(this);
 	eca.Init(this);
+	// DS20060326 Telecom initialization
+	pcm.Init(this);
 
 	// DS20060301 Initialize joystick
 	HRESULT         hr;
@@ -1879,7 +1879,11 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 	fflush(PanelsdkLogFile);
 */
 
+
 #endif
+	// DS20060326 Telecom updation - This is last so telemetry reflects the current state.
+	pcm.TimeStep(MissionTime);
+
 }
 
 void Saturn::CheckCabinFans()
@@ -5092,5 +5096,1737 @@ void ECA::TimeStep(){
 		sat->rjec.SetThruster(11,0);
 		sat->rjec.SetThruster(12,0);
 		trans_z_trigger=0;
+	}
+}
+
+// DS20060326 TELECOM OBJECTS
+// PCM SYSTEM
+PCM::PCM(){
+	sat = NULL;
+	conn_state = 0;
+	wsk_error = 0;
+	last_update = 0;
+}
+
+void PCM::Init(Saturn *vessel){
+	sat = vessel;
+	conn_state = 0;
+	wsk_error = 0;
+	last_update = 0;
+	word_addr = 0;
+	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
+	if ( iResult != NO_ERROR ){
+		sprintf(wsk_emsg,"TELECOM: Error at WSAStartup()");
+		wsk_error = 1;
+		return;
+	}
+	m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
+	if ( m_socket == INVALID_SOCKET ) {
+		sprintf(wsk_emsg,"TELECOM: Error at socket(): %ld", WSAGetLastError());
+		WSACleanup();
+		wsk_error = 1;
+		return;
+	}
+	// Be nonblocking
+	int iMode = 1; // 0 = BLOCKING, 1 = NONBLOCKING
+	if(ioctlsocket(m_socket, FIONBIO, (u_long FAR*) &iMode) != 0){
+		sprintf(wsk_emsg,"TELECOM: ioctlsocket() failed: %ld", WSAGetLastError());
+		wsk_error = 1;
+		closesocket(m_socket);
+		WSACleanup();
+		return;
+	}
+
+	// Set up incoming options
+	service.sin_family = AF_INET;
+	service.sin_addr.s_addr = inet_addr( "127.0.0.1" );
+	service.sin_port = htons( 14242 );
+
+	if ( bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
+		sprintf(wsk_emsg,"TELECOM: bind() failed: %ld", WSAGetLastError());
+		wsk_error = 1;
+		closesocket(m_socket);
+		WSACleanup();
+		return;
+	}
+	if ( listen( m_socket, 1 ) == SOCKET_ERROR ){
+		wsk_error = 1;
+		sprintf(wsk_emsg,"TELECOM: listen() failed: %ld", WSAGetLastError());
+		closesocket(m_socket);
+		WSACleanup();
+		return;
+	}
+	conn_state = 1; // INITIALIZED, LISTENING
+}
+
+void PCM::TimeStep(double simt){
+	// This stuff has to happen every timestep, regardless of system status.
+	if(wsk_error != 0){
+		sprintf(oapiDebugString(),"%s",wsk_emsg);
+		// return;
+	}
+	// For now, don't care about voltages and such.
+
+	// Allow IO to check for connections, etc
+	if(conn_state != 2){
+		last_update = simt; // Don't care about rate
+		perform_io();
+		return;
+	}
+
+	// Generate PCM datastream
+	switch(sat->PCMBitRateSwitch.GetState()){
+		case TOGGLESWITCH_DOWN: // LOW			
+			tx_size = (int)((simt - last_update) / 0.005);
+			// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
+			if(tx_size > 0){
+				last_update = simt;
+				if(tx_size < 1024){
+					tx_offset = 0;
+					while(tx_offset < tx_size){
+						generate_stream_lbr();
+						tx_offset++;
+					}
+					perform_io();
+				}
+			}	
+			break;
+
+		case TOGGLESWITCH_UP:   // HIGH
+			tx_size = (int)((simt - last_update) / 0.00015625);
+			// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
+			if(tx_size > 0){
+				last_update = simt;
+				if(tx_size < 1024){
+					tx_offset = 0;
+					while(tx_offset < tx_size){
+						generate_stream_hbr();
+						tx_offset++;
+					}			
+					perform_io();
+				}
+			}	
+			break;
+	}
+}
+
+void PCM::generate_stream_lbr(){
+	unsigned char data=0;
+	// 40 words per frame, 5 frames, 1 frame per second
+	switch(word_addr){
+		case 0: // SYNC 1
+			// Trigger telemetry END PULSE
+			sat->agc.GenerateDownrupt();
+			// And continue
+			tx_data[tx_offset] = 05;
+			break;
+		case 1: // SYNC 2
+			tx_data[tx_offset] = 0171;
+			break;
+		case 2: // SYNC 3
+			tx_data[tx_offset] = 0267;
+			break;
+		case 3: // SYNC 4 & FRAME COUNT
+			tx_data[tx_offset] = (0300|frame_count);
+			break;
+		case 4: 
+			switch(frame_count){
+				case 0: // 11A1 ECS: SUIT MANF ABS PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A109 EPS: BAT B CURR
+					tx_data[tx_offset] = (unsigned char)(sat->EntryBatteryB->Current() / 0.390625); 
+					break;
+				case 2: // 11A46 RCS: SM HE MANF C PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A154 CMI: SCE NEG SUPPLY VOLTS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A91 EPS: BAT BUS A VOLTS					
+					tx_data[tx_offset] = (unsigned char)(sat->BatteryBusA.Voltage() / 0.17578125);
+					break;
+			}
+			break;
+		case 5:
+			switch(frame_count){
+				case 0: // 11A2 ECS: SUIT COMP DELTA P
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A110 EPS: BAT C CURR
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A47 EPS: LM HEATER CURRENT
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A155 RCS: CM HE TK A TEMP
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A92 RCS: SM FU MANF A PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 6:
+			switch(frame_count){
+				case 0: // 11A3 ECS: GLY PUMP OUT PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A111 ECS: SM FU MANF C PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A48 PCM HI LEVEL 85 PCT REF
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A156 CM HE TK B TEMP
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A93 BAT BUS B VOLTS
+					tx_data[tx_offset] = (unsigned char)(sat->BatteryBusB.Voltage() / 0.17578125);
+					break;
+			}
+			break;
+		case 7:
+			switch(frame_count){
+				case 0: // 11A4 ECS SURGE TANK PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A112 SM FU MANF D PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A49 PC HI LEVEL 15 PCT REF
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A157 SEC GLY PUMP OUT PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A94 SM FU MANF B PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 8: // 51DS1A COMPUTER DIGITAL DATA (40 BITS) 
+		case 28:
+			unsigned char data;
+			ChannelValue13 ch13;
+			ch13.Value = sat->agc.GetOutputChannel(013);			
+			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
+			if(ch13.Bits.DownlinkWordOrderCodeBit){ data |= 0200; } // WORD ORDER BIT
+			/*
+			sprintf(oapiDebugString(),"CMC DATA: %o (%lo %lo)",data,sat->agc.GetOutputChannel(034),
+				sat->agc.GetOutputChannel(035));
+			*/			
+			tx_data[tx_offset] = data; 
+			break;
+		case 9: // 51DS1B COMPUTER DIGITAL DATA (40 BITS)
+		case 29:
+			data = (sat->agc.GetOutputChannel(034)&0277);
+			tx_data[tx_offset] = data; 
+			break;
+		case 10: // 51DS1C COMPUTER DIGITAL DATA (40 BITS) 
+		case 30:
+			// PARITY OF CH 34 GOES IN TOP BIT HERE!
+			data = (sat->agc.GetOutputChannel(035)&077400)>>8;
+			tx_data[tx_offset] = data; 
+			break;
+		case 11: // 51DS1D COMPUTER DIGITAL DATA (40 BITS) 
+		case 31:
+			data = (sat->agc.GetOutputChannel(035)&0277);
+			tx_data[tx_offset] = data; 
+			break;
+		case 12: // 51DS1E COMPUTER DIGITAL DATA (40 BITS) 
+		case 32:
+			// PARITY OF CH 35 GOES IN TOP BIT HERE!
+			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
+			tx_data[tx_offset] = data; 
+			break;
+		case 13: // 51DP2 UP-DATA-LINK VALIDITY BITS (4 BITS)
+		case 33:
+			tx_data[tx_offset] = 0; 
+			break;
+		case 14:
+			switch(frame_count){
+				case 0: // 10A123
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A126
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A129
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A132
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A135
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 15:
+			switch(frame_count){
+				case 0: // 10A138
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A141 H2 TK 1 QTY
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A144 H2 TK 2 QTY
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A147 O2 TK 1 QTY
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A150 O2 TK 1 PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 16:
+			switch(frame_count){
+				case 0: // 10A3
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A6
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A9
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A12
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A15
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 17:
+			switch(frame_count){
+				case 0: // 10A18
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A21
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A24
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A27
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A30
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 18:
+			switch(frame_count){
+				case 0: // 10A33 
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A36 H2 TK 1 PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A39 H2 TK 2 PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A42 O2 TK 2 QTY
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A45
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 19:
+			switch(frame_count){
+				case 0: // 10A48 
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A51
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A54 O2 TK 1 TEMP
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A57 O2 TK 2 TEMP
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A60 H2 TK 1 TEMP
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 20:
+			// Trigger telemetry END PULSE
+			sat->agc.GenerateDownrupt();
+			// and continue
+			switch(frame_count){
+				case 0: // 10DP1 
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP6
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP27
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP15
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP20
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 21:
+			switch(frame_count){
+				case 0: // SRC 0
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP7
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP28
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP16
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP21
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 22:
+			switch(frame_count){
+				case 0: // 11A39
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A147 AC BUS 1 PH A VOLTS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A84
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A21
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A129
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 23:
+			switch(frame_count){
+				case 0: // 11A40
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A48
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A85
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A22
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A130
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 24:
+			switch(frame_count){
+				case 0: // 11A73
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A10
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A118
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A55
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A163
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 25:
+			switch(frame_count){
+				case 0: // 11A74
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A11
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A119
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A56 AC BUS 2 PH A VOLTS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A164
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 26:
+			switch(frame_count){
+				case 0: // 11A75
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A12
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A120
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A57
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A165
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 27:
+			switch(frame_count){
+				case 0: // 11A76
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A13
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A121
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A58
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A166
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 34:
+			switch(frame_count){
+				case 0: // 11DP3
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP8
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP13
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP29
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP22
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 35:
+			switch(frame_count){
+				case 0: // SRC 1
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP9
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP14
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP17
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP23
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 36:
+			switch(frame_count){
+				case 0: // 10A63 H2 TK 2 TEMP
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A66 O2 TK 2 PRESS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A69
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A72
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A75
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 37:
+			switch(frame_count){
+				case 0: // 10A78
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A81
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A84
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A87
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A90
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 38:
+			switch(frame_count){
+				case 0: // 10A93
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A96
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A99
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A102
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A105
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 39:
+			switch(frame_count){
+				case 0: // 10A108
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 10A111
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 10A114
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 10A117
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 10A120
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		// JUST IN CASE
+		default:
+			tx_data[tx_offset] = 0;
+			break;
+	}
+	word_addr++;
+	if(word_addr > 39){
+		word_addr = 0;
+		frame_addr++;
+		if(frame_addr > 4){
+			frame_addr = 0;
+		}
+		frame_count++;
+		if(frame_count > 5){
+			frame_count = 0;
+		}
+	}
+}
+
+void PCM::generate_stream_hbr(){
+	unsigned char data=0;
+	// 128 words per frame, 50 frames pre second
+	switch(word_addr){
+		case 0: // SYNC 1
+			// Trigger telemetry END PULSE
+			sat->agc.GenerateDownrupt();
+			// Continue
+			tx_data[tx_offset] = 05;
+			break;
+		case 1: // SYNC 2
+			tx_data[tx_offset] = 0171;
+			break;
+		case 2: // SYNC 3
+			tx_data[tx_offset] = 0267;
+			break;
+		case 3: // SYNC 4 & FRAME COUNT
+			tx_data[tx_offset] = (0300|frame_count);
+			break;
+		case 4: // 22A1
+		case 36:
+		case 68:
+		case 100:
+			tx_data[tx_offset] = 0;
+			break;
+		case 5: // 22A2
+		case 37:
+		case 69:
+		case 101:
+			tx_data[tx_offset] = 0;
+			break;
+		case 6: // 22A3
+		case 38:
+		case 70:
+		case 102:
+			tx_data[tx_offset] = 0;
+			break;
+		case 7: // 22A4
+		case 39:
+		case 71:
+		case 103:
+			tx_data[tx_offset] = 0;
+			break;
+		case 8:
+			switch(frame_count){
+				case 0: // 11A1
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A37
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A73
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A109
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A145
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 9: 
+			switch(frame_count){
+				case 0: // 11A2
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A38
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A74
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A110
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A146
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 10:
+			switch(frame_count){
+				case 0: // 11A3
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A39
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A75
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A111
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A147 AC BUS 1 PH A VOLTS
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 11:
+			switch(frame_count){
+				case 0: // 11A4
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A40
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A76
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A112
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A148
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 12: // 12A1
+		case 76:
+			tx_data[tx_offset] = 0;
+			break;
+		case 13: // 12A2
+		case 77:
+			tx_data[tx_offset] = 0;
+			break;
+		case 14: // 12A3
+		case 78:
+			tx_data[tx_offset] = 0;
+			break;
+		case 15: // 12A4
+		case 79:
+			tx_data[tx_offset] = 0;
+			break;
+		case 16:
+			switch(frame_count){
+				case 0: // 11A5
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A41
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A77
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A113
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A149
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 17: // 22DP1
+			tx_data[tx_offset] = 0;
+			break;
+		case 18: // 22DP2
+			tx_data[tx_offset] = 0;
+			break;
+		case 19: // MAGICAL WORD SRC-0
+			tx_data[tx_offset] = 0;
+			break;
+		case 20: // 12A5
+		case 84:
+			tx_data[tx_offset] = 0;
+			break;
+		case 21: // 12A6
+		case 85:
+			tx_data[tx_offset] = 0;
+			break;
+		case 22: // 12A7
+		case 86:
+			tx_data[tx_offset] = 0;
+			break;
+		case 23: // 12A8
+		case 87:
+			tx_data[tx_offset] = 0;
+			break;
+		case 24:
+			switch(frame_count){
+				case 0: // 11A6
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A42
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A78
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A114
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A150
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 25:
+			switch(frame_count){
+				case 0: // 11A7
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A43
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A79
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A115
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A151
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 26:
+			switch(frame_count){
+				case 0: // 11A8
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A44
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A80
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A116
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A152
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 27:
+			switch(frame_count){
+				case 0: // 11A9
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A45
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A81
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A117
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A153
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 28: // 51A1
+			tx_data[tx_offset] = 0;
+			break;
+		case 29: // 51A2
+			tx_data[tx_offset] = 0;
+			break;
+		case 30: // 51A3
+			tx_data[tx_offset] = 0;
+			break;
+		case 31: // 51DS1A COMPUTER DIGITAL DATA (40 BITS)
+			ChannelValue13 ch13;
+			ch13.Value = sat->agc.GetOutputChannel(013);			
+			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
+			if(ch13.Bits.DownlinkWordOrderCodeBit){ data |= 0200; } // WORD ORDER BIT
+			/*
+			sprintf(oapiDebugString(),"CMC DATA: %o (%lo %lo)",data,sat->agc.GetOutputChannel(034),
+				sat->agc.GetOutputChannel(035));
+			*/			
+			tx_data[tx_offset] = data; 
+			break;
+		case 32: // 51DS1B COMPUTER DIGITAL DATA (40 BITS)
+			data = (sat->agc.GetOutputChannel(034)&0277);
+			tx_data[tx_offset] = data; 
+			break;
+		case 33: // 51DS1C COMPUTER DIGITAL DATA (40 BITS)
+			// PARITY OF CH 34 GOES IN TOP BIT HERE!
+			data = (sat->agc.GetOutputChannel(035)&077400)>>8;
+			tx_data[tx_offset] = data; 
+			break;
+		case 34: // 51DS1C COMPUTER DIGITAL DATA (40 BITS)
+			data = (sat->agc.GetOutputChannel(035)&0277);
+			tx_data[tx_offset] = data; 
+			break;
+		case 35: // 51DS1E COMPUTER DIGITAL DATA (40 BITS)
+			// PARITY OF CH 35 GOES IN TOP BIT HERE!
+			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
+			tx_data[tx_offset] = data; 
+			break;
+		case 40:
+			switch(frame_count){
+				case 0: // 11A10
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A46
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A82
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A118
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A154
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 41:
+			switch(frame_count){
+				case 0: // 11A11
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A47
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A83
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A119
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A155
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 42:
+			switch(frame_count){
+				case 0: // 11A12
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A48
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A84
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A120
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A156
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 43:
+			switch(frame_count){
+				case 0: // 11A13
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A49
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A85
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A121
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A157
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 44: // 12A9
+		case 108:
+			tx_data[tx_offset] = 0;
+			break;
+		case 45: // 12A10
+		case 109:
+			tx_data[tx_offset] = 0;
+			break;
+		case 46: // 12A11
+		case 110:
+			tx_data[tx_offset] = 0;
+			break;
+		case 47: // 12A12
+		case 111:
+			tx_data[tx_offset] = 0;
+			break;
+		case 48:
+			switch(frame_count){
+				case 0: // 11A14
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A50
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A86
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A122
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A158
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 49: // 22DP1
+			tx_data[tx_offset] = 0;
+			break;
+		case 50: // 22DP2
+			tx_data[tx_offset] = 0;
+			break;
+		case 51: // MAGICAL WORD 2
+			tx_data[tx_offset] = 0;
+			break;
+		case 52: // 12A13
+		case 116:
+			tx_data[tx_offset] = 0;
+			break;
+		case 53: // 12A14
+		case 117:
+			tx_data[tx_offset] = 0;
+			break;
+		case 54: // 12A15
+		case 118:
+			tx_data[tx_offset] = 0;
+			break;
+		case 55: // 12A16
+		case 119:
+			tx_data[tx_offset] = 0;
+			break;
+		case 56:
+			switch(frame_count){
+				case 0: // 11A15
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A51
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A87
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A123
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A159
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 57:
+			switch(frame_count){
+				case 0: // 11A16
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A52
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A88
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A124
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A160
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 58:
+			switch(frame_count){
+				case 0: // 11A17
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A53
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A89
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A125
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A161
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 59:
+			switch(frame_count){
+				case 0: // 11A18
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A54
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A90
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A126
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A162
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 60: // 51A4
+			tx_data[tx_offset] = 0;
+			break;
+		case 61: // 51A5
+			tx_data[tx_offset] = 0;
+			break;
+		case 62: // 51A6
+			tx_data[tx_offset] = 0;
+			break;
+		case 63: // 51A7
+			tx_data[tx_offset] = 0;
+			break;
+		case 64:
+			switch(frame_count){
+				case 0: // 11DP2A
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP6
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP13
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP20
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP27
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 65:
+			switch(frame_count){
+				case 0: // 11DP2B
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP7
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP14
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP21
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP28
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 66:
+			switch(frame_count){
+				case 0: // 11DP2C
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP8
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP15
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP22
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP29
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 67:
+			switch(frame_count){
+				case 0: // 11DP2D
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP9
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP16
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP23
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP30
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 72: 
+			switch(frame_count){
+				case 0: // 11A19
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A55
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A91
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A127
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A163
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 73:
+			switch(frame_count){
+				case 0: // 11A20
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A56 AC BUS 2 PH A VOLTS
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A92
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A128
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A164
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 74:
+			switch(frame_count){
+				case 0: // 11A21
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A57
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A93
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A129
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A165
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 75:
+			switch(frame_count){
+				case 0: // 11A22
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A58
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A94
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A130
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A166
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 80:
+			switch(frame_count){
+				case 0: // 11A23
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A59
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A95
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A131
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A167
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 81: // 22DP1
+			tx_data[tx_offset] = 0;
+			break;
+		case 82: // 22DP2
+			tx_data[tx_offset] = 0;
+			break;
+		case 83: // MAGICAL WORD 3
+			tx_data[tx_offset] = 0;
+			break;
+		case 88:
+			switch(frame_count){
+				case 0: // 11A24
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A60
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A96
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A132
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A168
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 89:
+			switch(frame_count){
+				case 0: // 11A25
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A61
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A97
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A133
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A169
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 90:
+			switch(frame_count){
+				case 0: // 11A26
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A62
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A98
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A134
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A170
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 91:
+			switch(frame_count){
+				case 0: // 11A27
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A63
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A99
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A135
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A171
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 92: // 51A8
+			tx_data[tx_offset] = 0;
+			break;
+		case 93: // 51A9
+			tx_data[tx_offset] = 0;
+			break;
+		case 94: // 51A10
+			tx_data[tx_offset] = 0;
+			break;
+		case 95: // 51A11
+			tx_data[tx_offset] = 0;
+			break;
+		case 96:
+			switch(frame_count){
+				case 0: // 11DP3
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP10
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP17
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP24
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP31
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 97:
+			switch(frame_count){
+				case 0: // 11DP4
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP11
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP18
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP25
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP32
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 98:
+			switch(frame_count){
+				case 0: // 11DP5
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11DP12
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11DP19
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11DP26
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11DP33
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 99: // 51DP2
+			tx_data[tx_offset] = 0;
+			break;
+		case 104:
+			switch(frame_count){
+				case 0: // 11A28
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A64
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A100
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A136
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A172
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 105:
+			switch(frame_count){
+				case 0: // 11A29
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A65
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A101
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A137
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A173
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 106:
+			switch(frame_count){
+				case 0: // 11A30
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A66
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A102
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A138
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A174
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 107:
+			switch(frame_count){
+				case 0: // 11A31
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A67
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A103
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A139
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A175
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 112:
+			switch(frame_count){
+				case 0: // 11A32 
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A68
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A104
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A140
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A176
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 113: // 22DP1
+			tx_data[tx_offset] = 0;
+			break;
+		case 114: // 22DP2
+			tx_data[tx_offset] = 0;
+			break;
+		case 115: // MAGICAL WORD 4
+			tx_data[tx_offset] = 0;
+			break;
+		case 120:
+			switch(frame_count){
+				case 0: // 11A33 
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A69
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A105
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A141
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A177
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 121:
+			switch(frame_count){
+				case 0: // 11A34
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A70
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A106
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A142
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A178
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 122:
+			switch(frame_count){
+				case 0: // 11A35
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A71
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A107
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A143
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A179
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 123:
+			switch(frame_count){
+				case 0: // 11A36
+					tx_data[tx_offset] = 0; 
+					break;
+				case 1: // 11A72
+					tx_data[tx_offset] = 0; 
+					break;
+				case 2: // 11A108
+					tx_data[tx_offset] = 0; 
+					break;
+				case 3: // 11A143
+					tx_data[tx_offset] = 0; 
+					break;
+				case 4: // 11A180
+					tx_data[tx_offset] = 0; 
+					break;
+			}
+			break;
+		case 124: // 51A12
+			tx_data[tx_offset] = 0;
+			break;
+		case 125: // 51A13
+			tx_data[tx_offset] = 0;
+			break;
+		case 126: // 51A14
+			tx_data[tx_offset] = 0;
+			break;
+		case 127: // 51A15
+			tx_data[tx_offset] = 0;
+			break;
+
+		// JUST IN CASE
+		default:
+			tx_data[tx_offset] = 0;
+			break;
+	}
+	word_addr++;
+	if(word_addr > 127){
+		word_addr = 0;
+		frame_addr++;
+		if(frame_addr > 4){
+			frame_addr = 0;
+		}
+		frame_count++;
+		if(frame_count > 50){
+			frame_count = 0;
+		}
+	}
+}
+
+void PCM::perform_io(){
+	// Do TCP IO
+	switch(conn_state){
+		case 0: // UNINITIALIZED
+			break;
+		case 1: // INITALIZED, LISTENING
+			// Try to accept
+			AcceptSocket = accept( m_socket, NULL, NULL );
+			if(AcceptSocket != INVALID_SOCKET){
+				conn_state = 2; // Accept this!
+				wsk_error = 0; // For now
+			}
+			// Otherwise loop and try again.
+			break;
+		case 2: // CONNECTED			
+			int bytesSent;
+
+			bytesSent = send(AcceptSocket, (char *)tx_data, tx_size, 0 );
+			if(bytesSent == SOCKET_ERROR){
+				wsk_error = 1;
+				sprintf(wsk_emsg,"TELECOM: send() failed: %ld",WSAGetLastError());
+				closesocket(AcceptSocket);
+				conn_state = 1; // Accept another
+			}
+			break;			
 	}
 }

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.168  2006/04/04 22:00:54  jasonims
+  *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
+  *	
   *	Revision 1.167  2006/03/30 01:59:37  movieman523
   *	Added RCS to SM DLL.
   *	
@@ -251,6 +254,8 @@
 #include "secs.h"
 // DS20060304 Include SCS
 #include "scs.h"
+// DS20060326 Include Telecom
+#include "csm_telecom.h"
 // DS20060301 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -714,6 +719,8 @@ protected:
 	EDA  eda;
 	RJEC rjec;
 	ECA  eca;
+	// DS20060326 TELECOM EQUIPMENT
+	PCM  pcm;
 
 	//
 	// Switches
@@ -2626,6 +2633,7 @@ protected:
 	friend class RJEC;
 	friend class ECA;
 	friend class CSMcomputer; // I want this to be able to see the GDC	
+	friend class PCM;         // Otherwise reading telemetry is a pain
 };
 
 extern void BaseInit();

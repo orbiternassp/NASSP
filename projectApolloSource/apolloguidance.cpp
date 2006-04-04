@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2006/03/12 01:13:28  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.71  2006/02/27 00:57:48  dseagrav
   *	Added SPS thrust-vector control. Changes 20060225-20060226.
   *	
@@ -5176,6 +5179,11 @@ void ApolloGuidance::ProcessChannel161(int val)
 
 // DS20060308 Stub for FDAI
 void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, unsigned int val){
+}
+
+// DS20060402 DOWNRUPT
+void ApolloGuidance::GenerateDownrupt(){
+	GenerateDOWNRUPT(&vagc);
 }
 
 void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
