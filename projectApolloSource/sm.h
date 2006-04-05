@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/04/04 22:00:54  jasonims
+  *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
+  *	
   *	Revision 1.2  2006/03/30 01:59:37  movieman523
   *	Added RCS to SM DLL.
   *	
@@ -124,8 +127,6 @@ protected:
 
 	bool showSPS;
 	bool showRCS;
-//	bool showRCSLO;
-//	bool showRCSHI;
 	bool showPanel1;
 	bool showPanel2;
 	bool showPanel3;
