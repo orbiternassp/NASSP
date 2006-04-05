@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/04/04 22:00:54  jasonims
+  *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
+  *	
   *	Revision 1.3  2006/03/30 01:59:37  movieman523
   *	Added RCS to SM DLL.
   *	
@@ -48,7 +51,7 @@
 
 MESHHANDLE hSM;
 MESHHANDLE hSMRCS;
-//MESHHANDLE hSMRCSHI;
+MESHHANDLE hSMRCSLow;
 MESHHANDLE hSMSPS;
 MESHHANDLE hSMPanel1;
 MESHHANDLE hSMPanel2;
@@ -71,7 +74,7 @@ void SMLoadMeshes()
 
 	LOAD_MESH(hSM, "ProjectApollo/SM-core");
     LOAD_MESH(hSMRCS, "ProjectApollo/SM-RCSHI");
-//	LOAD_MESH(hSMRCSHI, "ProjectApollo/SM-RCSHI");
+	LOAD_MESH(hSMRCSLow, "ProjectApollo/SM-RCSLO");
 	LOAD_MESH(hSMSPS, "ProjectApollo/SM-SPS");
 	LOAD_MESH(hSMPanel1, "ProjectApollo/SM-Panel1");
 	LOAD_MESH(hSMPanel2, "ProjectApollo/SM-Panel2");
@@ -122,11 +125,7 @@ void SM::InitSM()
 	showHGA = true;
 	showCRYO = true;
 	showRCS = true;
-/*	if (LowRes == true){
-		showRCSLO = true;
-	}else{
-		showRCSHI = true;
-	}*/
+
 	showPanel1 = true;
 	showPanel2 = true;
 	showPanel3 = true;
@@ -161,15 +160,11 @@ void SM::SetSM()
 
 	AddMesh (hSM, &mesh_dir);
 
-	if (showRCS)
+	if (LowRes)
+		AddMesh (hSMRCSLow, &mesh_dir);
+	else
 		AddMesh (hSMRCS, &mesh_dir);
 
-/*	if (showRCSLO)
-		AddMesh (hSMRCSLO, &mesh_dir);
-
-	if (showRCSHI)
-		AddMesh (hSMRCSHI, &mesh_dir);
-*/
 	if (showPanel1)
 		AddMesh (hSMPanel1, &mesh_dir);
 
@@ -212,12 +207,11 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 {
 	MissionTime += simdt;
 
-
 	double da = simdt * UMBILICAL_SPEED;
 	if (umbilical_proc < 1.0){
 			umbilical_proc = min (1.0, umbilical_proc+da);
 	}
-    	SetAnimation (anim_umbilical, umbilical_proc);
+    SetAnimation (anim_umbilical, umbilical_proc);
 
 	//
 	// See section 2.9.4.13.2 of the Apollo Operations Handbook Seq Sys section for
@@ -227,8 +221,6 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	// 5.5 seconds after that. -X engines continue to fire until the fuel depletes
 	// or the fuel cells stop providing power.
 	//
-	
-
 
 	switch (State) {
 
@@ -289,6 +281,7 @@ void SM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
+	oapiWriteScenario_float (scn, "UPRC", umbilical_proc);
 }
 
 typedef union {
@@ -297,8 +290,6 @@ typedef union {
 		unsigned int showHGA:1;
 		unsigned int showCRYO:1;
 		unsigned int showRCS:1;
-//		unsigned int showRCSLO:1;
-//		unsigned int showRCSHI:1;
 		unsigned int showPanel1:1;
 		unsigned int showPanel2:1;
 		unsigned int showPanel3:1;
@@ -321,8 +312,6 @@ int SM::GetMainState()
 	state.u.showHGA = showHGA;
 	state.u.showCRYO = showCRYO;
 	state.u.showRCS = showRCS;
-//	state.u.showRCSLO = showRCSHI;
-//	state.u.showRCSHI = showRCSLO;
 	state.u.showPanel1 = showPanel1;
 	state.u.showPanel2 = showPanel2;
 	state.u.showPanel3 = showPanel3;
@@ -344,14 +333,21 @@ void SM::AddEngines()
 	// Add the RCS. SPS won't fire with SM seperated.
 	//
 
-	if (!ph_rcsa)
-		ph_rcsa = CreatePropellantResource(RCS_FUEL_PER_QUAD);
-	if (!ph_rcsb)
-		ph_rcsb = CreatePropellantResource(RCS_FUEL_PER_QUAD);
-	if (!ph_rcsc)
-		ph_rcsc = CreatePropellantResource(RCS_FUEL_PER_QUAD);
-	if (!ph_rcsd)
-		ph_rcsd = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	//
+	// For now, we just don't create propellant tanks for the Apollo 13 SM. We should do something
+	// more sensible eventually.
+	//
+
+	if (!A13Exploded) {
+		if (!ph_rcsa)
+			ph_rcsa = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+		if (!ph_rcsb)
+			ph_rcsb = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+		if (!ph_rcsc)
+			ph_rcsc = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+		if (!ph_rcsd)
+			ph_rcsd = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	}
 
 	double TRANZ = 1.9;
 
@@ -484,8 +480,6 @@ void SM::SetMainState(int s)
 	showHGA = (state.u.showHGA != 0);
 	showCRYO = (state.u.showCRYO != 0);
 	showRCS = (state.u.showRCS != 0);
-//	showRCSLO = (state.u.showRCSLO != 0);
-//	showRCSHI = (state.u.showRCSHI != 0);
 	showPanel1 = (state.u.showPanel1 != 0);
 	showPanel2 = (state.u.showPanel2 != 0);
 	showPanel3 = (state.u.showPanel3 != 0);
@@ -532,10 +526,14 @@ void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			LastMissionEventTime = flt;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
-			sscanf (line+5, "%d", &State);
+			sscanf (line + 5, "%d", &State);
 		}
 		else if (!strnicmp (line, "REALISM", 7)) {
-			sscanf (line+7, "%d", &Realism);
+			sscanf (line + 7, "%d", &Realism);
+		}
+		else if (!strnicmp (line, "UPRC", 4)) {
+			sscanf (line + 4, "%g", &flt);
+			umbilical_proc = flt;
 		}
 		else {
 			ParseScenarioLineEx (line, vstatus);
@@ -568,11 +566,11 @@ void SM::SetState(SMSettings &state)
 		A13Exploded = state.A13Exploded;
 
 		//
-		// If the SM exploded, assume no RCS.
+		// If the SM exploded, panel 4 was blown off earlier.
 		//
 
 		if (A13Exploded) {
-			State = SM_STATE_WAITING;
+			showPanel4 = false;
 		}
 	}
 
