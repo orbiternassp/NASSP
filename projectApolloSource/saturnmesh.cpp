@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2006/04/04 22:00:54  jasonims
+  *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
+  *	
   *	Revision 1.35  2006/03/30 01:59:37  movieman523
   *	Added RCS to SM DLL.
   *	
@@ -154,6 +157,7 @@
 
 MESHHANDLE hSM;
 MESHHANDLE hSMRCS;
+MESHHANDLE hSMRCSLow;
 MESHHANDLE hSMSPS;
 MESHHANDLE hSMPanel1;
 MESHHANDLE hSMPanel2;
@@ -193,7 +197,8 @@ void SaturnInitMeshes()
 
 {
 	LOAD_MESH(hSM, "ProjectApollo/SM-core");
-	LOAD_MESH(hSMRCS, "ProjectApollo/SM-RCS");
+	LOAD_MESH(hSMRCS, "ProjectApollo/SM-RCSHI");
+	LOAD_MESH(hSMRCSLow, "ProjectApollo/SM-RCSLO");
 	LOAD_MESH(hSMSPS, "ProjectApollo/SM-SPS");
 	LOAD_MESH(hSMPanel1, "ProjectApollo/SM-Panel1");
 	LOAD_MESH(hSMPanel2, "ProjectApollo/SM-Panel2");
@@ -231,14 +236,23 @@ void Saturn::AddSM(double offset, bool showSPS)
 	VECTOR3 mesh_dir=_V(0, SMVO, offset);
 
 	AddMesh (hSM, &mesh_dir);
-	AddMesh (hSMRCS, &mesh_dir);
+
+	if (LowRes)
+		AddMesh(hSMRCSLow, &mesh_dir);
+	else
+		AddMesh (hSMRCS, &mesh_dir);
+
 	AddMesh (hSMPanel1, &mesh_dir);
 	AddMesh (hSMPanel2, &mesh_dir);
 	AddMesh (hSMPanel3, &mesh_dir);
-	AddMesh (hSMPanel4, &mesh_dir);
+
+	if (!ApolloExploded)
+		AddMesh (hSMPanel4, &mesh_dir);
+	else
+		AddMesh (hSMCRYO, &mesh_dir);
+
 	AddMesh (hSMPanel5, &mesh_dir);
 	AddMesh (hSMPanel6, &mesh_dir);
-	AddMesh (hSMCRYO, &mesh_dir);
 	AddMesh (hSMSIMBAY, &mesh_dir);
 
 	if (showSPS) {
