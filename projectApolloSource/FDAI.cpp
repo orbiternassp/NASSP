@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/03/12 16:48:04  movieman523
+  *	Fixed compile warnings.
+  *	
   *	Revision 1.12  2006/03/12 01:13:28  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -330,7 +333,7 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	// sprintf(oapiDebugString(),"FDAI: Rates %f %f %f, TGX %d",rates.x,rates.y,rates.z,targetX);
 	// Off-flag
 	if (!IsPowered() || no_att != 0)
-		oapiBlt (surf, hFDAIOff, 1, 70, 0, 0, 13, 30, SURF_PREDEF_CK);
+		oapiBlt (surf, hFDAIOff, 31, 100, 0, 0, 13, 30, SURF_PREDEF_CK);
 }
 
 void FDAI::Timestep(double simt, double simdt) {
