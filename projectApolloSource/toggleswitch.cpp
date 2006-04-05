@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2006/03/12 01:13:29  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.54  2006/02/22 18:53:10  tschachim
   *	Bugfixes for Apollo 4-6.
   *	
@@ -1993,11 +1996,16 @@ void MeterSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 
 double MeterSwitch::GetDisplayValue() {
 
+	if (lastDrawTime == -1) {
+		lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
+		return displayValue;
+	}
+
 	value = QueryValue();
 	if (value > maxValue) value = maxValue;
 	if (value < minValue) value = minValue;
 
-	if (lastDrawTime == -1 || minMaxTime == 0) {
+	if (minMaxTime == 0) {
 		displayValue = value;
 	} else {
 		double dt = oapiGetSysTime() - lastDrawTime; // oapiGetSimTime() - lastDrawTime;
