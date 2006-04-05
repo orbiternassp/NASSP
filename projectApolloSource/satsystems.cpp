@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.97  2006/04/04 23:36:14  dseagrav
+  *	Added the beginnings of the telecom subsystem.
+  *	
   *	Revision 1.96  2006/03/28 12:45:31  tschachim
   *	Bugfixes.
   *	
@@ -739,7 +742,8 @@ void Saturn::SystemsInit() {
 void Saturn::SystemsTimestep(double simt, double simdt) {
 
 	// DS20060302 Read joysticks and feed data to the computer
-	if(js_enabled > 0){
+	// DS20060404 Do not do this if we aren't the active vessel.
+	if(js_enabled > 0 && oapiGetFocusInterface() == this){
 		e_object *direct_power1, *direct_power2;
 		// Issue warnings for bad configuration
 		if(thc_id != -1 && !(thc_id < js_enabled)){
