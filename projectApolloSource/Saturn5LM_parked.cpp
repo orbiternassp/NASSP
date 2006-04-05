@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/03/08 02:24:21  movieman523
+  *	Added event timer and fuel display.
+  *	
   *	Revision 1.41  2006/01/19 15:01:52  tschachim
   *	Initial Meshland support.
   *	
@@ -514,6 +517,77 @@ void sat5_lmpkd::AttitudeLaunch1()
 int sat5_lmpkd::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	// rewrote to get key events rather than monitor key state - LazyD
+
+	// DS20060404 Allow keys to control DSKY like in the CM
+	if (KEYMOD_SHIFT(keystate)){
+		// Do DSKY stuff
+		if(down){
+			switch(key){
+				case OAPI_KEY_PRIOR:
+					dsky.ResetPressed();
+					break;
+				case OAPI_KEY_NEXT:
+					dsky.KeyRel();
+					break;
+				case OAPI_KEY_NUMPADENTER:
+					dsky.EnterPressed();
+					break;
+				case OAPI_KEY_DIVIDE:
+					dsky.VerbPressed();
+					break;
+				case OAPI_KEY_MULTIPLY:
+					dsky.NounPressed();
+					break;
+				case OAPI_KEY_ADD:
+					dsky.PlusPressed();
+					break;
+				case OAPI_KEY_SUBTRACT:
+					dsky.MinusPressed();
+					break;
+				case OAPI_KEY_DECIMAL:
+					dsky.ProgPressed();
+					break;
+				case OAPI_KEY_NUMPAD1:
+					dsky.NumberPressed(1);
+					break;
+				case OAPI_KEY_NUMPAD2:
+					dsky.NumberPressed(2);
+					break;
+				case OAPI_KEY_NUMPAD3:
+					dsky.NumberPressed(3);
+					break;
+				case OAPI_KEY_NUMPAD4:
+					dsky.NumberPressed(4);
+					break;
+				case OAPI_KEY_NUMPAD5:
+					dsky.NumberPressed(5);
+					break;
+				case OAPI_KEY_NUMPAD6:
+					dsky.NumberPressed(6);
+					break;
+				case OAPI_KEY_NUMPAD7:
+					dsky.NumberPressed(7);
+					break;
+				case OAPI_KEY_NUMPAD8:
+					dsky.NumberPressed(8);
+					break;
+				case OAPI_KEY_NUMPAD9:
+					dsky.NumberPressed(9);
+					break;
+				case OAPI_KEY_NUMPAD0:
+					dsky.NumberPressed(0);
+					break;
+			}
+		}else{
+			// KEY UP
+			switch(key){
+				case OAPI_KEY_DECIMAL:
+					dsky.ProgReleased();
+					break;
+			}
+		}
+		return 0;
+	}
 
 	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate) || !down) {
 		return 0; 
