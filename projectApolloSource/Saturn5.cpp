@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2006/03/30 01:59:37  movieman523
+  *	Added RCS to SM DLL.
+  *	
   *	Revision 1.72  2006/03/30 00:14:46  movieman523
   *	First pass at SM DLL.
   *	
@@ -1238,13 +1241,32 @@ void SaturnV::StageSix(double simt)
 
 			ApolloExploded = true;
 
+			//
+			// Update the mesh.
+			//
+			// We should also blow off Panel 4.
+			//
+
+			SetCSMStage();
+
+			//
+			// This is actually wrong because it will give us an
+			// artificially low mass for the CSM. We should just disable
+			// the engines.
+			//
+
 			SetPropellantMass(ph_rcs0,0);
 			SetPropellantMass(ph_sps,0);
 
 			VESSELSTATUS vs13;
 			GetStatus(vs13);
 
-			vs13.vrot = _V(-1,-1,-1);
+			//
+			// Also, the effect wouldn't be this large and immediate. We should 
+			// create a thruster at the O2 tank which vents the fuel to space.
+			//
+
+			vs13.vrot = _V(-.5,-.5,-.5);
 			DefSetState(&vs13);
 		}
 
