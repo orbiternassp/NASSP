@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.128  2006/04/06 00:54:46  movieman523
+  *	Fixed bug in saving Apollo 13 state and added blowing off of panel 4.
+  *	
   *	Revision 1.127  2006/03/30 01:59:37  movieman523
   *	Added RCS to SM DLL.
   *	
@@ -779,6 +782,7 @@ void Saturn::initSaturn()
 	ph_rcs_cm_2 = 0;
 	ph_sps = 0;
 	ph_sep = 0;
+	ph_o2_vent = 0;
 
 	//
 	// Thruster groups.
@@ -790,6 +794,7 @@ void Saturn::initSaturn()
 	thg_retro1 = 0;
 	thg_retro2 = 0;
 	thg_aps = 0;
+	th_o2_vent = 0;
 
 	//
 	// Particle streams

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2006/04/05 19:48:05  movieman523
+  *	Added low-res SM RCS meshes and updated Apollo 13.
+  *	
   *	Revision 1.36  2006/04/04 22:00:54  jasonims
   *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
   *	
@@ -192,6 +195,21 @@ extern void CoeffFunc(double aoa, double M, double Re ,double *cl ,double *cm  ,
 //extern double LiftCoeff (double aoa);
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
+
+// "o2 venting" particle streams
+PARTICLESTREAMSPEC o2_venting_spec = {
+	0,		// flag
+	0.3,	// size
+	30,		// rate
+	2,	    // velocity
+	0.5,    // velocity distribution
+	2,		// lifetime
+	0.2,	// growthrate
+	0.5,    // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
 
 void SaturnInitMeshes()
 
@@ -561,14 +579,27 @@ void Saturn::SetCSMStage ()
 		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage Propellant
 	}
 
+	if (ApolloExploded && !ph_o2_vent) {
+
+		double tank_mass = CSM_O2TANK_CAPACITY / 500.0;
+
+		ph_o2_vent = CreatePropellantResource(tank_mass, tank_mass); //SPS stage Propellant
+
+		TankQuantities t;
+		GetTankQuantities(t);
+
+		SetPropellantMass(ph_o2_vent, t.O2Tank1QuantityKg + t.O2Tank2QuantityKg);
+	}
+
 	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
 
 	// *********************** thruster definitions ********************************
 
+	const double CGOffset = 12.25+21.5-1.8+0.35;
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (_V( 0,0,-6.5), _V( 0,0,1),100552.5 , ph_sps, 3778.5);
+	th_main[0] = CreateThruster (_V( 0,0,-6.5), _V( 0,0,1), 100552.5 , ph_sps, 3778.5);
 	DelThrusterGroup(THGROUP_MAIN,true);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
@@ -587,8 +618,6 @@ void Saturn::SetCSMStage ()
 	else if (bManualUnDock){
 		dockstate = 4;
 	}
-
-	const double CGOffset = 12.25+21.5-1.8+0.35;
 
 	AddSM(30.25 - CGOffset, true);
 
@@ -633,6 +662,14 @@ void Saturn::SetCSMStage ()
 	SetDockParams(dockpos, dockdir, dockrot);
 
 	AddRCSJets(-0.18, SM_RCS_THRUST);
+
+	if (ApolloExploded) {
+		VECTOR3 vent_pos = {0, 1.5, 30.25 - CGOffset};
+		VECTOR3 vent_dir = {0.5, 1, 0};
+
+		th_o2_vent = CreateThruster (vent_pos, vent_dir, 450.0, ph_o2_vent, 300.0);
+		AddExhaustStream(th_o2_vent, &o2_venting_spec);
+	}
 
 	SetView(0.4 + 1.8 - 0.35);
 	// **************************** NAV radios *************************************

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.169  2006/04/04 23:36:15  dseagrav
+  *	Added the beginnings of the telecom subsystem.
+  *	
   *	Revision 1.168  2006/04/04 22:00:54  jasonims
   *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
   *	
@@ -354,7 +357,9 @@ typedef struct {
 
 typedef struct {
 	double O2Tank1Quantity;
+	double O2Tank1QuantityKg;
 	double O2Tank2Quantity;
+	double O2Tank2QuantityKg;
 	double H2Tank1Quantity;
 	double H2Tank2Quantity;
 } TankQuantities;
@@ -524,6 +529,7 @@ public:
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
 	void GetTankQuantities(TankQuantities &q);
+	void SetO2TankQuantities(double q);
 	void GetFuelCellStatus(int index, FuelCellStatus &fc);
 	void GetPrimECSCoolingStatus(PrimECSCoolingStatus &pcs);
 	void GetSecECSCoolingStatus(SecECSCoolingStatus &scs);
@@ -2022,6 +2028,12 @@ protected:
 	FCell *FuelCells[3];
 
 	//
+	// O2 tanks.
+	//
+
+	h_Tank *O2Tanks[2];
+
+	//
 	// Main bus A and B.
 	//
 
@@ -2494,6 +2506,7 @@ protected:
 	//
 
 	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3, ph_rcs_cm_1,ph_rcs_cm_2, ph_sps, ph_sep; // handles for propellant resources
+	PROPELLANT_HANDLE ph_o2_vent;
 
 	THGROUP_HANDLE thg_main,thg_ull,thg_ver;		          // handles for thruster groups
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
@@ -2503,6 +2516,7 @@ protected:
 	THRUSTER_HANDLE	th_aps[3];
 	THRUSTER_HANDLE	th_sep[8];
 	THRUSTER_HANDLE th_rcs_a[8], th_rcs_b[8], th_rcs_c[8], th_rcs_d[8];		// RCS quads. Entry zero is not used, to match Apollo numbering
+	THRUSTER_HANDLE th_o2_vent;
 
 	PSTREAM_HANDLE prelaunchvent[3];
 	PSTREAM_HANDLE stagingvent[8];
