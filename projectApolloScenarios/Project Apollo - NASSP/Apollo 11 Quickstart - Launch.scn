@@ -76,7 +76,7 @@ END
 AS-506-ML:ProjectApollo\Saturn5ML
   STATUS Landed Earth
   POS -80.6082240 28.6009432
-  HEADING 90.0
+  HEADING 0.0
 END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
