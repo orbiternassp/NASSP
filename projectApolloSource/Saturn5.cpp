@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2006/04/05 19:48:05  movieman523
+  *	Added low-res SM RCS meshes and updated Apollo 13.
+  *	
   *	Revision 1.73  2006/03/30 01:59:37  movieman523
   *	Added RCS to SM DLL.
   *	
@@ -1244,10 +1247,40 @@ void SaturnV::StageSix(double simt)
 			//
 			// Update the mesh.
 			//
-			// We should also blow off Panel 4.
-			//
 
 			SetCSMStage();
+
+			//
+			// Blow off Panel 4.
+			//
+
+			VESSELSTATUS vs1;
+
+			const double CGOffset = 12.25+21.5-1.8+0.35;
+
+			VECTOR3 vel1 = { 0.0, -0.25, 0.15 };
+			VECTOR3 ofs1 = { 0, 0, 30.25 - CGOffset};
+
+			GetStatus (vs1);
+
+			VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
+
+			Local2Rel (ofs1, vs1.rpos);
+			GlobalRot (vel1, rofs1);
+
+			vs1.rvel.x = rvel1.x+rofs1.x;
+			vs1.rvel.y = rvel1.y+rofs1.y;
+			vs1.rvel.z = rvel1.z+rofs1.z;
+			vs1.vrot.x = 0.005;
+			vs1.vrot.y = 0.05;
+			vs1.vrot.z = 0.01;
+
+			char VName[256];
+
+			GetApolloName(VName);
+			strcat (VName, "-PANEL4");
+
+			oapiCreateVessel(VName,"ProjectApollo/SM-Panel4",vs1);
 
 			//
 			// This is actually wrong because it will give us an
@@ -1257,17 +1290,6 @@ void SaturnV::StageSix(double simt)
 
 			SetPropellantMass(ph_rcs0,0);
 			SetPropellantMass(ph_sps,0);
-
-			VESSELSTATUS vs13;
-			GetStatus(vs13);
-
-			//
-			// Also, the effect wouldn't be this large and immediate. We should 
-			// create a thruster at the O2 tank which vents the fuel to space.
-			//
-
-			vs13.vrot = _V(-.5,-.5,-.5);
-			DefSetState(&vs13);
 		}
 
 		//
