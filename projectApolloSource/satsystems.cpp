@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.98  2006/04/05 00:55:06  dseagrav
+  *	Bugfix: Do not read joysticks when we don't have input focus.
+  *	
   *	Revision 1.97  2006/04/04 23:36:14  dseagrav
   *	Added the beginnings of the telecom subsystem.
   *	
@@ -438,6 +441,13 @@ void Saturn::SystemsInit() {
 	FuelCells[0] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1");
 	FuelCells[1] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2");
 	FuelCells[2] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3");
+
+	//
+	// O2 tanks.
+	//
+
+	O2Tanks[0] = (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1");
+	O2Tanks[1] = (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2");
 
 	//
 	// Entry and landing batteries.
@@ -2589,6 +2599,8 @@ void Saturn::GetTankQuantities(TankQuantities &q)
 
 	q.H2Tank1Quantity = 0.0;
 	q.H2Tank2Quantity = 0.0;
+	q.O2Tank1QuantityKg = 0.0;
+	q.O2Tank2QuantityKg = 0.0;
 	q.O2Tank1Quantity = 0.0;
 	q.O2Tank2Quantity = 0.0;
 
@@ -2625,8 +2637,10 @@ void Saturn::GetTankQuantities(TankQuantities &q)
 	if (!pO2Tank1Quantity) {
 		pO2Tank1Quantity = (double*) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:MASS");
 	}
+
 	if (pO2Tank1Quantity) {
 		q.O2Tank1Quantity = (*pO2Tank1Quantity) / CSM_O2TANK_CAPACITY;
+		q.O2Tank1QuantityKg = (*pO2Tank1Quantity) / 1000.0;
 	}
 
 	if (!pO2Tank2Quantity) {
@@ -2634,9 +2648,20 @@ void Saturn::GetTankQuantities(TankQuantities &q)
 	}
 	if (pO2Tank2Quantity) {
 		q.O2Tank2Quantity = (*pO2Tank2Quantity) / CSM_O2TANK_CAPACITY;
+		q.O2Tank2QuantityKg = (*pO2Tank2Quantity) / 1000.0;
 	}
 }
 
+//
+// Set O2 tank quantities. For now, just use one fixed input.
+//
+
+void Saturn::SetO2TankQuantities(double q)
+
+{
+	O2Tanks[0]->space.composition[SUBSTANCE_O2].mass = q * 1000.0;
+	O2Tanks[1]->space.composition[SUBSTANCE_O2].mass = q * 1000.0;
+}
 
 //
 // Get fuel cell status. 

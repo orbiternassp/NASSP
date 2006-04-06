@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2006/04/06 00:54:46  movieman523
+  *	Fixed bug in saving Apollo 13 state and added blowing off of panel 4.
+  *	
   *	Revision 1.74  2006/04/05 19:48:05  movieman523
   *	Added low-res SM RCS meshes and updated Apollo 13.
   *	
@@ -1288,7 +1291,6 @@ void SaturnV::StageSix(double simt)
 			// the engines.
 			//
 
-			SetPropellantMass(ph_rcs0,0);
 			SetPropellantMass(ph_sps,0);
 		}
 
@@ -1307,6 +1309,14 @@ void SaturnV::StageSix(double simt)
 			SKranz.done();
 
 			KranzPlayed = true;
+		}
+
+		if (ApolloExploded && ph_o2_vent) {
+			TankQuantities t;
+			GetTankQuantities(t);
+
+			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity + 0.1);
+			SetO2TankQuantities(GetPropellantMass(ph_o2_vent) / 2.0);
 		}
 	}
 
