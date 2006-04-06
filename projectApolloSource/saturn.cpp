@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.127  2006/03/30 01:59:37  movieman523
+  *	Added RCS to SM DLL.
+  *	
   *	Revision 1.126  2006/03/30 00:14:46  movieman523
   *	First pass at SM DLL.
   *	
@@ -1725,7 +1728,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "A13STATE", 8)) {
         SwitchState = 0;
 		sscanf (line+8, "%d", &SwitchState);
-		SetMainState(SwitchState);
+		SetA13State(SwitchState);
 	}
 	else if (!strnicmp (line, "LAUNCHSTATE", 11)) {
         SwitchState = 0;
