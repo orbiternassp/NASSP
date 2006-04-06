@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.158  2006/03/29 16:34:00  jasonims
+  *	GPFPI Meters added supporting proper LV Fuel Quantities and SPS Gimbel Position display.  LV Tank Quantities now accessable from outside Saturn class.
+  *	
   *	Revision 1.157  2006/03/27 19:22:44  quetalsi
   *	Bugfix RCS PRPLNT switches and wired to brakers.
   *	
@@ -3822,8 +3825,8 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 			}
 			else {
-				PitchClusterActual = (int) (45 * sps_yaw_position / 5.5) + 45;
-				YawClusterActual = (int) (45 * sps_pitch_position / 5.5) + 45;
+				PitchClusterActual = (int) (10.0 * sps_yaw_position) + 44;
+				YawClusterActual = (int) (10.0 * sps_pitch_position) + 44;
 			}
 
 			dPC = (PitchClusterActual - PitchClusterCurrent);
@@ -3879,13 +3882,13 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			}
 
 			oapiBlt(surf, srf[SRF_NEEDLE], 15, 92 - PitchClusterCurrent, 10, 1, 7, 8, SURF_PREDEF_CK);
-			oapiBlt(surf, srf[SRF_NEEDLE], 27, 92 - PitchClusterCurrent, 3, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 27, 92 - PitchClusterCurrent,  3, 1, 7, 8, SURF_PREDEF_CK);
 			oapiBlt(surf, srf[SRF_NEEDLE], 53, 92 - PitchClusterCurrent, 10, 1, 7, 8, SURF_PREDEF_CK);
-			oapiBlt(surf, srf[SRF_NEEDLE], 65, 92 - PitchClusterCurrent, 3, 1, 7, 8, SURF_PREDEF_CK);
-			oapiBlt(surf, srf[SRF_NEEDLE], 91, 92 - YawClusterCurrent, 10, 1, 7, 8, SURF_PREDEF_CK);
-			oapiBlt(surf, srf[SRF_NEEDLE], 103, 92 - YawClusterCurrent, 3, 1, 7, 8, SURF_PREDEF_CK);
-			oapiBlt(surf, srf[SRF_NEEDLE], 129, 91 - YawClusterCurrent, 10, 1, 7, 8, SURF_PREDEF_CK);
-			oapiBlt(surf, srf[SRF_NEEDLE], 141, 92 - YawClusterCurrent, 3, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 65, 92 - PitchClusterCurrent,  3, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 91, 92 - YawClusterCurrent,   10, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 103, 92 - YawClusterCurrent,   3, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 129, 92 - YawClusterCurrent,  10, 1, 7, 8, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_NEEDLE], 141, 92 - YawClusterCurrent,   3, 1, 7, 8, SURF_PREDEF_CK);
 
 		}
 		return true;
