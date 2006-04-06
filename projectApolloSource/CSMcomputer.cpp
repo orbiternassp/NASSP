@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2006/03/29 19:06:49  movieman523
+  *	First support for new SM.
+  *	
   *	Revision 1.45  2006/03/16 04:53:21  dseagrav
   *	Added preliminary RJEC, connected CMC to RJEC.
   *	
@@ -1110,8 +1113,9 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
 			
 			// z-component of the normalized earth's rotational vector in basic reference coord.
-			// x and y are 0313 and 0315 and are zero
+			// x and y are 0313 and 0315 and are defined in the scenario
 			vagc.Erasable[3][0317] = 037777;
+			vagc.Erasable[3][0320] = 037777;
 
 			// set DAP data to CSM mode 
 			vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 010002;
@@ -1132,6 +1136,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// z-component of the normalized earth's rotational vector in basic reference coord.
 			// x and y are 0313 and 0315 and are zero
 			vagc.Erasable[3][0315] = 037777;	
+			vagc.Erasable[3][0316] = 037777;	
 
 			// set DAP data to CSM mode 
 			vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 010002;
@@ -1869,15 +1874,15 @@ void CSMcomputer::ProcessChannel160(int val){
 		// TVC PITCH
 		int tvc_pitch_pulses = 0;
 		double tvc_pitch_cmd = 0;
-		// One pulse means .0237 degree of rotation.
+		// One pulse means .023725 degree of rotation.
 		if(val&077000){ // Negative
 			tvc_pitch_pulses = (~val)&0777;
 			if(tvc_pitch_pulses == 0){ return; } // HACK
-			tvc_pitch_cmd = (double)0.0237 * tvc_pitch_pulses;
+			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
 			tvc_pitch_cmd = 0 - tvc_pitch_cmd; // Invert
 		}else{
 			tvc_pitch_pulses = val&0777;
-			tvc_pitch_cmd = (double)0.0237 * tvc_pitch_pulses;
+			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
 		}				
 		// sprintf(oapiDebugString(),"TVC PITCH COMMAND: %d pulses, %f degrees",tvc_pitch_pulses,tvc_pitch_cmd);
 		// X/Y/Z = ??/??/??
@@ -1967,11 +1972,11 @@ void CSMcomputer::ProcessChannel161(int val){
 		if(val&077000){ 
 			tvc_yaw_pulses = (~val)&0777;
 			if(tvc_yaw_pulses == 0){ return; } 
-			tvc_yaw_cmd = (double)0.0237 * tvc_yaw_pulses;
+			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
 			tvc_yaw_cmd = 0 - tvc_yaw_cmd; 
 		}else{
 			tvc_yaw_pulses = val&0777;
-			tvc_yaw_cmd = (double)0.0237 * tvc_yaw_pulses;
+			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
 		}				
 		error = sat->SetSPSYaw(tvc_yaw_cmd);
 	}
