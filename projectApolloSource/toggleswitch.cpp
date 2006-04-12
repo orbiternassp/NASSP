@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/04/05 16:52:17  tschachim
+  *	Bugfix MeterSwitch.
+  *	
   *	Revision 1.55  2006/03/12 01:13:29  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -469,7 +472,7 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 				Sclick.play();
 			}
 		}
-	} else if (springLoaded != SPRINGLOADEDSWITCH_NONE && event == PANEL_MOUSE_LBUP) {
+	} else if (springLoaded != SPRINGLOADEDSWITCH_NONE && event == PANEL_MOUSE_LBUP) {		
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;

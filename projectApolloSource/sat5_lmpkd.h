@@ -1,4 +1,4 @@
-/***************************************************************************
+/**************************************************************************
   This file is part of Project Apollo - NASSP
   Copyright 2004-2005
 
@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2006/03/08 02:24:21  movieman523
+  *	Added event timer and fuel display.
+  *	
   *	Revision 1.36  2006/03/07 02:20:27  flydba
   *	Circuit breakers added to panel 11.
   *	
@@ -135,14 +138,22 @@
   *	
   **************************************************************************/
 
-
 #if !defined(_PA_SAT5_LMPKD_H)
 #define _PA_SAT5_LMPKD_H
+
+//
+// Valves.
+//
+#define N_LEM_VALVES	32
+
+#define LEM_RCS_MAIN_SOV_A				1
+#define LEM_RCS_MAIN_SOV_B				2
 
 //
 // Lem state settings from scenario file, passed from CSM.
 //
 
+#include "lemswitches.h"
 #include "missiontimer.h"
 
 typedef struct {
@@ -161,6 +172,25 @@ typedef struct {
 
 } LemSettings;
 
+// Systems things
+
+// ELECTRICAL
+// Electrical Control Assembly
+class LEM_ECA : public e_object {
+public:
+	LEM_ECA();							// Cons
+	void Init(sat5_lmpkd *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b); // Init
+	void UpdateFlow(double dt);
+	void DrawPower(double watts);
+
+	sat5_lmpkd *lem;					// Pointer at LEM
+	e_object *dc_source_hi_a;			// An ECA has four inputs - Two HV inputs, and two LV inputs.
+	e_object *dc_source_hi_b;
+	e_object *dc_source_lo_a;
+	e_object *dc_source_lo_b;
+	int input;                          // Input selector
+};
+
 class sat5_lmpkd : public VESSEL2, public PanelSwitchListener {
 
 public:
@@ -178,6 +208,7 @@ public:
 	void GetMissionTime(double &Met);
 	void AbortStage();
 	void StartAscent();
+	void CheckRCS();
 
 	bool clbkLoadPanel (int id);
 	bool clbkLoadVC(int id);
@@ -197,6 +228,10 @@ public:
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
+	// Panel SDK
+	bool GetValveState(int valve);
+	void SetValveState(int valve, bool open);
+
 	//
 	// These functions must be virtual so they can be called from the Saturn V or the LEVA
 	//
@@ -204,9 +239,12 @@ public:
 	virtual void SetLanderData(LemSettings &ls);
 	virtual void PadLoad(unsigned int address, unsigned int value);
 	virtual void StopEVA();
-
-	PROPELLANT_HANDLE ph_Dsc, ph_Asc, ph_rcslm0,ph_rcslm1; // handles for propellant resources
+	
+	PROPELLANT_HANDLE ph_DscRCSA,ph_DscRCSB;   // Descent RCS A and B, replaces ph_rcslm0
+	PROPELLANT_HANDLE ph_Dsc, ph_Asc ,ph_rcslm1; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
+	// I don't know where all these extra RCSes came from.
+	// There should be only 16 of them. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
 
@@ -229,7 +267,7 @@ protected:
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
 	void ResetThrusters();
-	void SetRCS(PROPELLANT_HANDLE ph_prop);
+	// void SetRCS(PROPELLANT_HANDLE ph_prop); OBSOLETED DS20060410	
 	void AttitudeLaunch1();
 	void SeparateStage (UINT stage);
 	void InitPanel (int panel);
@@ -344,6 +382,13 @@ protected:
 
 	SwitchRow TempPressMonRotaryRow;
 	RotationalSwitch TempPressMonRotary;
+
+	// DS20060406 For right now...
+	SwitchRow RCSMainSOVSwitchRow;
+	LEMValveSwitch RCSMainSovASwitch;
+	LEMValveSwitch RCSMainSovBSwitch;
+	LEMValveTalkback RCSMainSovATalkback;
+	LEMValveTalkback RCSMainSovBTalkback;
 
 	SwitchRow RightACAPropSwitchRow;
 	ToggleSwitch RightACAPropSwitch;
@@ -519,9 +564,6 @@ protected:
 	bool AFEED3switch;
 	bool AFEED4switch;
 
-	bool MSOV1switch;
-	bool MSOV2switch;
-
 	bool LDGswitch;
 
 	bool ED1switch;
@@ -620,6 +662,31 @@ protected:
 
 	bool COASswitch;
 
+	//////////////////
+	// LEM panel 14 //
+	//////////////////
+
+	SwitchRow DSCHiVoltageSwitchRow;
+	LEMBatterySwitch DSCSEBat1HVSwitch;
+	LEMBatterySwitch DSCSEBat2HVSwitch;
+	LEMBatterySwitch DSCCDRBat3HVSwitch;
+	LEMBatterySwitch DSCCDRBat4HVSwitch;	
+
+	SwitchRow DSCLoVoltageSwitchRow;
+	LEMBatterySwitch DSCSEBat1LVSwitch;
+	LEMBatterySwitch DSCSEBat2LVSwitch;
+	LEMBatterySwitch DSCCDRBat3LVSwitch;
+	LEMBatterySwitch DSCCDRBat4LVSwitch;	
+
+	//////////////////
+	// LEM panel 16 //
+	//////////////////
+
+	SwitchRow Panel16CB4SwitchRow;
+	// Battery feed tie breakers (ECA output breakers)
+	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
+	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
+
 	bool FirstTimestep;
 
 	bool LAUNCHIND[8];
@@ -700,6 +767,34 @@ protected:
 	Sound Slanding;
 
 	char AudioLanguage[64];
+
+	// New Panel SDK stuff
+	int *pLEMValves[N_LEM_VALVES];
+	bool ValveState[N_LEM_VALVES];
+
+	// POWER AND SUCH
+
+	// Descent batteries
+	Battery *Battery1;
+	Battery *Battery2;
+	Battery *Battery3;
+	Battery *Battery4;
+
+	// Ascent batteries
+	Battery *Battery5;
+	Battery *Battery6;
+
+	// Lunar Stay Battery
+	Battery *LunarBattery;
+
+	// ECA
+	LEM_ECA ECA_1;
+
+	// CDR and LMP 28V DC busses
+	DCbus CDRs28VBus;
+	DCbus LMPs28VBus;
+
+
 };
 
 extern void LEMLoadMeshes();

@@ -526,6 +526,8 @@
 #define AID_ASCPDECROLL					818
 #define AID_ASCPDECPITCH				819
 #define AID_ASCPDECYAW					820
+#define AID_DSC_HIGH_VOLTAGE_SWITCHES	821
+#define AID_LEM_P16_CB_ROW4				822
 
 // Next default values for new objects
 // 
