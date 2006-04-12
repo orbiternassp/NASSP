@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2006/01/19 14:53:50  tschachim
+  *	Initial Meshland support.
+  *	
   *	Revision 1.21  2006/01/04 19:51:54  movieman523
   *	Updated config file names.
   *	
@@ -217,8 +220,12 @@ void sat5_lmpkd::SetLmVesselDockStage()
 		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
-	if (!ph_rcslm0) {
-		ph_rcslm0 = CreatePropellantResource(100);
+	// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
+	if (!ph_DscRCSA) {
+		ph_DscRCSA = CreatePropellantResource(133.084001);
+	}
+	if (!ph_DscRCSB) {
+		ph_DscRCSB = CreatePropellantResource(133.084001);
 	}
 
 	// orbiter main thrusters
@@ -305,8 +312,11 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
-	if (!ph_rcslm0){
-		ph_rcslm0 = CreatePropellantResource(100);
+	if (!ph_DscRCSA){
+		ph_DscRCSA = CreatePropellantResource(133.084001);
+	}
+	if (!ph_DscRCSB){
+		ph_DscRCSB = CreatePropellantResource(133.084001);
 	}
 	
 	// orbiter main thrusters
@@ -407,8 +417,11 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 		DelPropellantResource(ph_Dsc);
 		ph_Dsc = 0;
 	}
-	if(ph_rcslm0){
-		DelPropellantResource(ph_rcslm0);
+	if(ph_DscRCSA){
+		DelPropellantResource(ph_DscRCSA);
+	}
+	if(ph_DscRCSB){
+		DelPropellantResource(ph_DscRCSB);
 	}
 
 	

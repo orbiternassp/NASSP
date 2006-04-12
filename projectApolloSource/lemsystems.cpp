@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/01/14 21:59:52  movieman523
+  *	Added PanelSDK, init, timestep, save and load.
+  *	
   *	Revision 1.6  2006/01/09 19:26:03  tschachim
   *	More attempts to make code build on MS C++ 2005
   *	
@@ -1211,9 +1214,11 @@ void sat5_lmpkd::AddRCS_LMH2(double TRANZ)
 		AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
 }
 
+/* OBSOLETED DS20060410
+
 void sat5_lmpkd::SetRCS(PROPELLANT_HANDLE ph_prop)
 {
-		if(ATT2switch && QUAD1switch && QUAD2switch && QUAD3switch  && QUAD4switch  && QUAD5switch  && QUAD6switch  && QUAD7switch  && QUAD8switch && MSOV1switch && MSOV2switch && ED1switch && ED4switch && RCSS1switch && RCSS2switch && RCSS3switch && RCSS4switch){
+		if(ATT2switch && QUAD1switch && QUAD2switch && QUAD3switch  && QUAD4switch  && QUAD5switch  && QUAD6switch  && QUAD7switch  && QUAD8switch && GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B) && ED1switch && ED4switch && RCSS1switch && RCSS2switch && RCSS3switch && RCSS4switch){
 			for(int i=8;i<16;i++){
 				SetThrusterResource(th_att_rot[i],ph_prop);
 				SetThrusterResource(th_att_lin[i+8],ph_prop);
@@ -1224,7 +1229,7 @@ void sat5_lmpkd::SetRCS(PROPELLANT_HANDLE ph_prop)
 				SetThrusterResource(th_att_lin[i+8],NULL);
 			}
 		}
-		if(ATT3switch && QUAD1switch && QUAD2switch && QUAD3switch  && QUAD4switch  && QUAD5switch  && QUAD6switch  && QUAD7switch  && QUAD8switch && MSOV1switch && MSOV2switch && ED1switch && ED4switch && RCSS1switch && RCSS2switch && RCSS3switch && RCSS4switch){
+		if(ATT3switch && QUAD1switch && QUAD2switch && QUAD3switch  && QUAD4switch  && QUAD5switch  && QUAD6switch  && QUAD7switch  && QUAD8switch && GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B) && ED1switch && ED4switch && RCSS1switch && RCSS2switch && RCSS3switch && RCSS4switch){
 			for(int i=0;i<8;i++){
 				SetThrusterResource(th_att_rot[i],ph_prop);
 				SetThrusterResource(th_att_lin[i+8],ph_prop);
@@ -1235,7 +1240,7 @@ void sat5_lmpkd::SetRCS(PROPELLANT_HANDLE ph_prop)
 				SetThrusterResource(th_att_lin[i+8],NULL);
 			}
 		}
-		if(ATT1switch && QUAD1switch && QUAD2switch && QUAD3switch  && QUAD4switch  && QUAD5switch  && QUAD6switch  && QUAD7switch  && QUAD8switch && MSOV1switch && MSOV2switch && ED1switch && ED4switch && RCSS1switch && RCSS2switch && RCSS3switch && RCSS4switch){
+		if(ATT1switch && QUAD1switch && QUAD2switch && QUAD3switch  && QUAD4switch  && QUAD5switch  && QUAD6switch  && QUAD7switch  && QUAD8switch && GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B) && ED1switch && ED4switch && RCSS1switch && RCSS2switch && RCSS3switch && RCSS4switch){
 			for(int i=0;i<8;i++){
 				SetThrusterResource(th_att_rot[i+16],ph_prop);
 				SetThrusterResource(th_att_lin[i],ph_prop);
@@ -1247,7 +1252,7 @@ void sat5_lmpkd::SetRCS(PROPELLANT_HANDLE ph_prop)
 			}
 		}
 	return;
-}
+} */
 
 bool sat5_lmpkd::CabinFansActive()
 
@@ -1272,6 +1277,38 @@ void sat5_lmpkd::SystemsInit()
 {
 	Panelsdk.RegisterVessel(this);
 	Panelsdk.InitFromFile("ProjectApollo/LEMSystems");
+
+	// DS20060407 Start wiring things together
+
+	// Batteries
+	Battery1 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_A");
+	Battery2 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_B");
+	Battery3 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_C");
+	Battery4 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_D");
+	Battery5 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_A");
+	Battery6 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B");
+	LunarBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:LUNAR_BATTERY");
+
+	// ECA #1
+	ECA_1.dc_source_hi_a = Battery1;
+	ECA_1.dc_source_lo_a = Battery1;
+	ECA_1.dc_source_hi_b = Battery2;
+	ECA_1.dc_source_lo_b = LunarBattery;
+
+	// Temporarily wire direct to two descent batteries.
+	// Apparently unpowered (Wired to NULL) busses get 28V for some reason...
+	CDRs28VBus.WireTo(Battery1);
+	LMPs28VBus.WireTo(&ECA_1);
+
+	// RCS Main Shutoff valves
+	RCSMainSovASwitch.WireTo(&CDRs28VBus);
+	RCSMainSovBSwitch.WireTo(&LMPBatteryFeedTieCB2);
+
+	// Arrange for updates
+	Panelsdk.AddElectrical(&ECA_1, false);
+	
+	Panelsdk.AddElectrical(&CDRs28VBus, false);
+	Panelsdk.AddElectrical(&LMPs28VBus, false);
 }
 
 void sat5_lmpkd::SystemsTimestep(double simt, double simdt) 
@@ -1282,4 +1319,146 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 	// systems.
 
 	Panelsdk.Timestep(simt);
+}
+
+// PANEL SDK SUPPORT
+void sat5_lmpkd::SetValveState(int valve, bool open)
+
+{
+	ValveState[valve] = open;
+
+	int valve_state = open ? SP_VALVE_OPEN : SP_VALVE_CLOSE;
+
+	if (pLEMValves[valve])
+		*pLEMValves[valve] = valve_state;
+
+	/*
+	CheckRCSState();
+	*/
+}
+
+bool sat5_lmpkd::GetValveState(int valve)
+
+{
+	//
+	// First check whether the valve still exists!
+	//
+
+	/*
+	if (valve < CM_VALVES_START) {
+		if (stage > CSM_LEM_STAGE)
+			return false;
+	}
+	*/
+
+	if (pLEMValves[valve])
+		return (*pLEMValves[valve] == SP_VALVE_OPEN);
+
+	return ValveState[valve];
+}
+
+// SYSTEMS COMPONENTS
+
+// ELECTRICAL CONTROL ASSEMBLY
+
+LEM_ECA::LEM_ECA(){
+	lem = NULL;
+}
+
+void LEM_ECA::Init(sat5_lmpkd *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b){
+	lem = s;
+	input = 0;
+	dc_source_hi_a = hi_a;
+	dc_source_hi_b = hi_b;
+	dc_source_lo_a = lo_a;
+	dc_source_lo_b = lo_b;
+}
+
+void LEM_ECA::DrawPower(double watts)
+
+{ 
+	power_load += watts;
+};
+
+void LEM_ECA::UpdateFlow(double dt){
+	
+	//sprintf(oapiDebugString(),"ECA Input = %d Voltage %f Load %f",input,Volts,power_load);
+	// Draw power from the source, and retake voltage, etc.
+	switch(input){
+		case 1: // HV 1
+			if(dc_source_hi_a != NULL){
+				dc_source_hi_a->DrawPower(power_load); // Draw 1:1
+			}
+			break;
+		case 2: // LV 1
+			break;
+		case 3: // HV 2
+			if(dc_source_hi_b != NULL){
+				dc_source_hi_b->DrawPower(power_load); // Draw 1:1
+			}
+			break;
+		case 4: // LV 2
+			break;
+	}
+	// Reset for next pass.
+	e_object::UpdateFlow(dt);
+	// Resupply from source
+	switch(input){
+		case 1: // HV 1
+			if(dc_source_hi_a != NULL){
+				Volts = dc_source_hi_a->Voltage();
+				Amperes = dc_source_hi_a->Current();
+			}
+			break;
+		case 2: // LV 1
+			break;
+		case 3: // HV 2
+			if(dc_source_hi_b != NULL){
+				Volts = dc_source_hi_b->Voltage();
+				Amperes = dc_source_hi_b->Current();
+			}
+			break;
+		case 4: // LV 2
+			break;
+	}
+}
+
+void sat5_lmpkd::CheckRCS()
+{
+	// FIXME - CORRECT THESE
+	sprintf(oapiDebugString(),"CheckRCS: %d %d",GetValveState(LEM_RCS_MAIN_SOV_A),GetValveState(LEM_RCS_MAIN_SOV_B));
+	if(GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B)){
+		for(int i=8;i<16;i++){
+			SetThrusterResource(th_att_rot[i],ph_DscRCSA);
+			SetThrusterResource(th_att_lin[i+8],ph_DscRCSA);
+		}
+	}else{
+		for(int i=8;i<16;i++){
+			SetThrusterResource(th_att_rot[i],NULL);
+			SetThrusterResource(th_att_lin[i+8],NULL);
+		}
+	}
+	if(GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B)){
+		for(int i=0;i<8;i++){
+			SetThrusterResource(th_att_rot[i],ph_DscRCSA);
+			SetThrusterResource(th_att_lin[i+8],ph_DscRCSA);
+		}
+	}else{
+		for(int i=0;i<8;i++){
+			SetThrusterResource(th_att_rot[i],NULL);
+			SetThrusterResource(th_att_lin[i+8],NULL);
+		}
+	}
+	if(GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B)){
+		for(int i=0;i<8;i++){
+			SetThrusterResource(th_att_rot[i+16],ph_DscRCSA);
+			SetThrusterResource(th_att_lin[i],ph_DscRCSA);
+		}
+	}else{
+		for(int i=0;i<8;i++){
+			SetThrusterResource(th_att_rot[i+16],NULL);
+			SetThrusterResource(th_att_lin[i],NULL);
+		}
+	}		
+	return;
 }

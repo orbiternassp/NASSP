@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/04/05 01:09:42  dseagrav
+  *	Allow SHIFT-NUMPAD keys to control the DSKY like the CM does.
+  *	
   *	Revision 1.42  2006/03/08 02:24:21  movieman523
   *	Added event timer and fuel display.
   *	
@@ -272,7 +275,11 @@ LanderVessel::LanderVessel(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel)
 }
 
 sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
-	dsky(soundlib, agc, 015), agc(soundlib, dsky, imu, Panelsdk), imu(agc, Panelsdk)
+	CDRs28VBus("CDR-28V-Bus",NULL),
+	LMPs28VBus("LMP-28V-Bus",NULL),
+	dsky(soundlib, agc, 015),
+	agc(soundlib, dsky, imu, Panelsdk),
+	imu(agc, Panelsdk)
 
 {
 	// VESSELSOUND **********************************************************************
@@ -347,7 +354,8 @@ void sat5_lmpkd::Init()
 
 	ph_Dsc = 0;
 	ph_Asc = 0;
-	ph_rcslm0 = 0;
+	ph_DscRCSA = 0;
+	ph_DscRCSB = 0;
 	ph_rcslm1 = 0;
 
 	Realism = REALISM_DEFAULT;
@@ -785,18 +793,23 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 			agc.SetInputChannelBit(030, 3, false);
 		}
 		
+		/* OBSOLETED DS20060410
+
 		if(!AFEED1switch && !AFEED2switch && !AFEED3switch && !AFEED4switch){
 			SetRCS(ph_rcslm0);
 		} else {
 			SetRCS(ph_rcslm1);
-		}
+		} */
+
 	}else if (stage == 1 || stage == 5)	{
+		/* OBSOLETED DS20060410
 		if(!AFEED1switch && !AFEED2switch && !AFEED3switch && !AFEED4switch){
 			SetRCS(ph_rcslm0);
 		}
 		else{
 			SetRCS(ph_rcslm1);
 		}
+		*/
 		if ((EngineArmSwitch.IsDown() )&& !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
@@ -891,12 +904,13 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 			SetThrusterResource(th_hover[1], NULL);
 			agc.SetInputChannelBit(030, 3, false);
 		}
+		/* OBSOLETED DS20060410
 		if (!AscentRCSArmed()) {
 			SetRCS(NULL);
 		}
 		else{
 			SetRCS(ph_rcslm1);
-		}
+		} */
 	}
 	else if (stage == 3){
 		if (AscentEngineArmed()) {
@@ -908,12 +922,13 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 			SetThrusterResource(th_hover[1], NULL);
 			agc.SetInputChannelBit(030, 3, false);
 		}
+		/* OBSOLETED DS20060410
 		if(!AscentRCSArmed()){
 			SetRCS(NULL);
 		}
 		else{
 			SetRCS(ph_rcslm1);
-		}
+		} */
 	}
 	else if (stage == 4)
 	{	
