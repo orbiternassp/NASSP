@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/04/12 06:27:19  dseagrav
+  *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
+  *	
   *	Revision 1.43  2006/04/05 01:09:42  dseagrav
   *	Allow SHIFT-NUMPAD keys to control the DSKY like the CM does.
   *	
@@ -368,6 +371,13 @@ void sat5_lmpkd::Init()
 	SoundsLoaded = false;
 
 	//
+	// Panel flash.
+	//
+
+	NextFlashUpdate = MINUS_INFINITY;
+	PanelFlashOn = false;
+
+	//
 	// Default channel setup.
 	//
 
@@ -693,6 +703,15 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 		DoFirstTimestep();
 		FirstTimestep = false;
 		return;
+	}
+
+	//
+	// Panel flash counter.
+	//
+
+	if (MissionTime >= NextFlashUpdate) {
+		PanelFlashOn = !PanelFlashOn;
+		NextFlashUpdate = MissionTime + 0.25;
 	}
 
 	//

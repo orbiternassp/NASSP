@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.170  2006/04/06 19:32:49  movieman523
+  *	More Apollo 13 support.
+  *	
   *	Revision 1.169  2006/04/04 23:36:15  dseagrav
   *	Added the beginnings of the telecom subsystem.
   *	
@@ -2562,6 +2565,13 @@ protected:
 	//
 
 	double LastTimestep;
+
+	//
+	// Panel flash.
+	//
+
+	double NextFlashUpdate;
+	bool PanelFlashOn;
 
 	//
 	// Audio language.

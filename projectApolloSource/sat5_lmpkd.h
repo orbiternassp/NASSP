@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/04/12 06:27:19  dseagrav
+  *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
+  *	
   *	Revision 1.37  2006/03/08 02:24:21  movieman523
   *	Added event timer and fuel display.
   *	
@@ -719,6 +722,13 @@ protected:
 	OBJHANDLE hdsc;
 	UINT stage;
 	int status;
+
+	//
+	// Panel flash.
+	//
+
+	double NextFlashUpdate;
+	bool PanelFlashOn;
 
 	int Realism;
 	int ApolloNo;

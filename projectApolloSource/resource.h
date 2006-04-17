@@ -54,6 +54,8 @@
 #define IDB_SPS_FUEL_FONT_BLACK			61
 #define AID_SPS_FUEL_PERCENT_DISPLAY	62
 #define AID_SPS_OXID_PERCENT_DISPLAY	63
+#define IDB_BORDER_34x29				64
+#define IDB_BORDER_34x61				65
 #define AID_ELS_SWITCHES                66
 #define AID_DCVOLTS                     70
 #define AID_FCSM_SWITCH                 71

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/04/12 06:27:19  dseagrav
+  *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
+  *	
   *	Revision 1.49  2006/03/23 11:59:48  tschachim
   *	Bugfix switch surfaces.
   *	
@@ -798,6 +801,8 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		srf[SRF_LEMROTARY]			= oapiCreateSurface (LOADBMP (IDB_LEMROTARY));
 		srf[SRF_CIRCUITBRAKERLEM]	= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKERLEM));
+		srf[SRF_BORDER_34x29]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
+		srf[SRF_BORDER_34x61]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
 
 		oapiSetSurfaceColourKey (srf[0], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[2], g_Param.col[4]);
@@ -815,6 +820,9 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LEMROTARY],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKERLEM],		g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_BORDER_34x29], g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_BORDER_34x61], g_Param.col[4]);
+
 //		break;
 	
 //	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
@@ -2284,7 +2292,7 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	// Process all the generic switches.
 	//
 
-	if (MainPanel.DrawRow(id, surf))
+	if (MainPanel.DrawRow(id, surf, PanelFlashOn))
 		return true;
 
 	//

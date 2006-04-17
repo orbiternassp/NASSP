@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/03/12 01:13:29  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.43  2006/02/22 18:54:24  tschachim
   *	Bugfixes for Apollo 4-6.
   *	
@@ -199,11 +202,22 @@ public:
 	virtual void DrawSwitch(SURFHANDLE DrawSurface) = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(char *line) = 0;
+	virtual void DrawFlash(SURFHANDLE DrawSurface) {};
+
+	void SetDisplayName(char *s) { DisplayName = s; };
+	char *GetDisplayName();
+
+	void SetFlashing(bool flash) { flashing = flash; };
+	bool IsFlashing() { return flashing; };
 
 protected:
 	bool Failed;
 	int FailedState;
 	char *name;
+
+	bool flashing;
+	char *DisplayName;
+
 	PanelSwitchItem *next;
 	PanelSwitchItem *nextForScenario;
 };
@@ -215,10 +229,12 @@ public:
 	ToggleSwitch();
 	virtual ~ToggleSwitch();
 
-	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_NONE);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_NONE, char *dname = 0);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib &s,
 		      int xoffset = 0, int yoffset = 0);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row,
+		      int xoffset = 0, int yoffset = 0);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
 		      int xoffset = 0, int yoffset = 0);
 	void SetSize(int w, int h) { width = w; height = h; };
 	void SetPosition(int xp, int yp) { x = xp; y = yp; };
@@ -231,6 +247,9 @@ public:
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
 	
+	void DrawFlash(SURFHANDLE DrawSurface);
+	void SetBorderSurface(SURFHANDLE border) { BorderSurface = border; };
+
 	virtual bool IsUp() { return (GetState() == 1); };
 	virtual bool IsDown() { return (GetState() == 0); };
 	virtual bool IsCenter() { return false; };
@@ -282,6 +301,7 @@ protected:
 	bool visible;
 
 	SURFHANDLE SwitchSurface;
+	SURFHANDLE BorderSurface;
 	VESSEL *OurVessel;
 	Sound Sclick;
 
@@ -607,9 +627,10 @@ public:
 	virtual ~GuardedToggleSwitch();
 
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded = SPRINGLOADEDSWITCH_NONE);
-	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
+	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf = 0,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawFlash(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
@@ -626,7 +647,10 @@ protected:
 	int guardHeight;
 	int guardState;
 	bool guardResetsState;
+
 	SURFHANDLE guardSurface;
+	SURFHANDLE guardBorder;
+
 	int guardXOffset;
 	int guardYOffset;
 	Sound guardClick;
@@ -965,7 +989,7 @@ public:
 	virtual ~SwitchRow();
 
 	bool CheckMouseClick(int id, int event, int mx, int my);
-	bool DrawRow(int id, SURFHANDLE DrawSurface);
+	bool DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn);
 	void AddSwitch(PanelSwitchItem *s);
 	void Init(int area, PanelSwitches &panel, e_object *p = 0);
 	SwitchRow *GetNext() { return RowList; };
@@ -1005,7 +1029,7 @@ class PanelSwitches {
 public:
 	PanelSwitches() { PanelID = 0; RowList = 0; Realism = 0; };
 	bool CheckMouseClick(int id, int event, int mx, int my);
-	bool DrawRow(int id, SURFHANDLE DrawSurface);
+	bool DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn);
 	void AddRow(SwitchRow *s) { s->SetNext(RowList); RowList = s; };
 	void Init(int id, VESSEL *v, SoundLib *s, PanelSwitchListener *l) { PanelID = id; RowList = 0; vessel = v; soundlib = s; listener = l; };
 	void SetRealism(int r) { Realism = r; };
