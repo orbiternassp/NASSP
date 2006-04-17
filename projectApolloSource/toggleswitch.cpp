@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2006/04/12 06:27:19  dseagrav
+  *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
+  *	
   *	Revision 1.56  2006/04/05 16:52:17  tschachim
   *	Bugfix MeterSwitch.
   *	
@@ -229,6 +232,18 @@ PanelSwitchItem::PanelSwitchItem()
 	name = 0;
 	next = 0;
 	nextForScenario = 0;
+
+	DisplayName = 0;
+	flashing = false;
+}
+
+char *PanelSwitchItem::GetDisplayName()
+
+{
+	if (DisplayName)
+		return DisplayName;
+
+	return name;
 }
 
 //
@@ -247,6 +262,8 @@ ToggleSwitch::ToggleSwitch() {
 	next = 0;
 
 	SwitchSurface = 0;
+	BorderSurface = 0;
+
 	OurVessel = 0;
 	switchRow = 0;
 	Active = true;
@@ -257,12 +274,14 @@ ToggleSwitch::~ToggleSwitch() {
 	Sclick.done();
 }
 
-void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded) {
+void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded, char *dname) {
 
 	name = n;
 	state = defaultState;
 	springLoaded = springloaded;
 	scnh.RegisterSwitch(this);
+
+	DisplayName = dname;
 }
 
 void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int xoffset, int yoffset) {
@@ -274,6 +293,28 @@ void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow
 	xOffset = xoffset;
 	yOffset = yoffset;
 	SwitchSurface = surf;
+	SwitchToggled = false;
+	
+	row.AddSwitch(this);
+	switchRow = &row;
+	OurVessel = switchRow->panelSwitches->vessel;
+
+	InitSound(switchRow->panelSwitches->soundlib);
+}
+
+void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset)
+
+{
+	x = xp;
+	y = yp;
+	width = w;
+	height = h;
+	xOffset = xoffset;
+	yOffset = yoffset;
+
+	SwitchSurface = surf;
+	BorderSurface = bsurf;
+	
 	SwitchToggled = false;
 	
 	row.AddSwitch(this);
@@ -413,6 +454,21 @@ void ToggleSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
 void ToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	if (visible) 
 		DoDrawSwitch(DrawSurface);
+}
+
+//
+// Generic function to draw a flashing box around the switch. This is only called if the
+// flashing is currently active.
+//
+
+void ToggleSwitch::DrawFlash(SURFHANDLE DrawSurface)
+
+{
+	if (!visible)
+		return;
+
+	if (BorderSurface)
+		oapiBlt(DrawSurface, BorderSurface, x, y, 0, 0, width, height, SURF_PREDEF_CK);
 }
 
 void ToggleSwitch::SetActive(bool s) {
@@ -858,7 +914,7 @@ void SwitchRow::Init(int area, PanelSwitches &panel, e_object *p) {
 	panel.AddRow(this);
 }
 
-bool SwitchRow::DrawRow(int id, SURFHANDLE DrawSurface) {
+bool SwitchRow::DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn) {
 
 	if (id != PanelArea)
 		return false;
@@ -866,6 +922,8 @@ bool SwitchRow::DrawRow(int id, SURFHANDLE DrawSurface) {
 	PanelSwitchItem *s = SwitchList;
 	while (s) {
 		s->DrawSwitch(DrawSurface);
+		if (FlashOn && s->IsFlashing())
+			s->DrawFlash(DrawSurface);
 		s = s->GetNext();
 	}
 	return true;
@@ -890,12 +948,12 @@ bool PanelSwitches::CheckMouseClick(int id, int event, int mx, int my) {
 	return false;
 }
 
-bool PanelSwitches::DrawRow(int id, SURFHANDLE DrawSurface) {
+bool PanelSwitches::DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn) {
 
 	SwitchRow *row = RowList;
 
 	while (row) {
-		if (row->DrawRow(id, DrawSurface))
+		if (row->DrawRow(id, DrawSurface, FlashOn))
 			return true;
 		row = row->GetNext();
 	}
@@ -928,13 +986,16 @@ void GuardedToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, in
 	guardState = defaultGuardState;
 }
 
-void GuardedToggleSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, 
+void GuardedToggleSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf,
 									int xOffset, int yOffset) {
 	guardX = xp;
 	guardY = yp;
 	guardWidth = w;
 	guardHeight = h;
+
 	guardSurface = surf;
+	guardBorder = bsurf;
+	
 	guardXOffset = xOffset;
 	guardYOffset = yOffset;
 
@@ -966,6 +1027,19 @@ void GuardedToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 			}
 		}
 	}
+}
+
+
+void GuardedToggleSwitch::DrawFlash(SURFHANDLE DrawSurface)
+
+{
+	if (!visible)
+		return;
+
+	if (!guardState && guardBorder)
+		oapiBlt(DrawSurface, guardBorder, guardX, guardY, 0, 0, guardWidth, guardHeight, SURF_PREDEF_CK);
+	else
+		ToggleSwitch::DrawFlash(DrawSurface);
 }
 
 bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {

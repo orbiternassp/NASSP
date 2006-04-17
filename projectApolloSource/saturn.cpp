@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.129  2006/04/06 19:32:49  movieman523
+  *	More Apollo 13 support.
+  *	
   *	Revision 1.128  2006/04/06 00:54:46  movieman523
   *	Fixed bug in saving Apollo 13 state and added blowing off of panel 4.
   *	
@@ -675,6 +678,13 @@ void Saturn::initSaturn()
 
 	NextDestroyCheckTime = 0;
 	NextFailureTime = MINUS_INFINITY;
+
+	//
+	// Panel flash.
+	//
+
+	NextFlashUpdate = MINUS_INFINITY;
+	PanelFlashOn = false;
 
 	abortTimer = 0;
 	release_time = 0;
@@ -2404,6 +2414,15 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	MissionTime += simdt;
 	MissionTimerDisplay.Timestep(simt, simdt);
 	EventTimerDisplay.Timestep(simt, simdt);
+
+	//
+	// Panel flash counter.
+	//
+
+	if (MissionTime >= NextFlashUpdate) {
+		PanelFlashOn = !PanelFlashOn;
+		NextFlashUpdate = MissionTime + 0.25;
+	}
 
 	//
 	// Timestep tracking.

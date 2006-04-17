@@ -174,6 +174,8 @@ IDB_GLYCOLLEVER         BITMAP                  "glycol_lever.bmp"
 IDB_FDAIOFFFLAG         BITMAP                  "FDAI_off_flag.bmp"
 IDB_SPS_FUEL_FONT_WHITE BITMAP			"fonts_white.bmp"
 IDB_SPS_FUEL_FONT_BLACK BITMAP			"fonts_black.bmp"
+IDB_BORDER_34x29	BITMAP			"border34x29.bmp"
+IDB_BORDER_34x61	BITMAP			"border34x61.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 

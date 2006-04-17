@@ -115,6 +115,8 @@ IDB_DSKY_DISP           BITMAP  DISCARDABLE     "dsky_disp.bmp"
 IDB_DSKY_KEY            BITMAP  DISCARDABLE     "dsky_keys.bmp"
 IDB_LEMROTARY           BITMAP  DISCARDABLE	"LemRotationalSwitch.bmp"
 IDB_CIRCUITBRAKERLEM    BITMAP  DISCARDABLE     "circuit_breaker_lem.bmp"
+IDB_BORDER_34x29	BITMAP			"border34x29.bmp"
+IDB_BORDER_34x61	BITMAP			"border34x61.bmp"
 #endif    // Französisch (Frankreich) resources
 /////////////////////////////////////////////////////////////////////////////
 

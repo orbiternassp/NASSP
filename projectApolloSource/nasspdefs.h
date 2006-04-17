@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2006/03/12 01:13:28  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.58  2006/03/09 00:27:25  movieman523
   *	Added SPS fuel quantity gauges
   *	
@@ -247,7 +250,11 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
-const int nsurf = 85; // number of bitmap handles
+//
+// Remember that we start the surface count at 1, so nsurf must be one
+// more than the highest value here.
+//
+const int nsurf = 87; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -324,6 +331,8 @@ const int nsurf = 85; // number of bitmap handles
 #define SRF_THUMBWHEEL_LARGEFONTS	82
 #define SRF_SPS_FONT_WHITE			83
 #define SRF_SPS_FONT_BLACK			84
+#define SRF_BORDER_34x29			85
+#define SRF_BORDER_34x61			86
 
 //
 // Earth radius and gravity constants.
