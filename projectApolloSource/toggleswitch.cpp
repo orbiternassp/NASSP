@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2006/04/17 18:14:27  movieman523
+  *	Added flashing borders to all switches (I think).
+  *	
   *	Revision 1.58  2006/04/17 15:16:16  movieman523
   *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
   *	
@@ -286,26 +289,6 @@ void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defau
 
 	DisplayName = dname;
 }
-
-#if 0
-void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int xoffset, int yoffset) {
-
-	x = xp;
-	y = yp;
-	width = w;
-	height = h;
-	xOffset = xoffset;
-	yOffset = yoffset;
-	SwitchSurface = surf;
-	SwitchToggled = false;
-	
-	row.AddSwitch(this);
-	switchRow = &row;
-	OurVessel = switchRow->panelSwitches->vessel;
-
-	InitSound(switchRow->panelSwitches->soundlib);
-}
-#endif
 
 void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset)
 
