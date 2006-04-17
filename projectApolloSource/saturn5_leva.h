@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/01/22 18:08:11  redburne
+  *	- timestep processing moved to VESSEL2 method clbkPreStep()
+  *	- semi-realistic movement and turn speed values (as #defines)
+  *	- turn speed now affected by time acceleration (but only tripled when acc is multiplied by 10)
+  *	- LRV mesh visible from cockpit view (camera at driver head)
+  *	
   *	Revision 1.3  2006/01/19 14:56:05  tschachim
   *	Initial Meshland support.
   *	
@@ -50,6 +56,8 @@ public:
 	int clbkConsumeDirectKey(char *kstate);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkSetClassCaps (FILEHANDLE cfg);
+	void clbkVisualCreated (VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
 
 	void SetAstroStage ();
 	void SetRoverStage ();
@@ -67,7 +75,7 @@ public:
 private:
 
 	void ScanMotherShip();
-	void MoveEVA(double SimDT);
+	void MoveEVA(double SimDT, VESSELSTATUS *eva, double heading);
 	void SetFlag();
 	void SetMissionPath();
 	void DoFirstTimestep();
@@ -116,4 +124,24 @@ protected:
 
 	// touchdown point test
 	// double touchdownPointHeight;
+
+	// VC console
+	int vccMeshIdx;
+	VISHANDLE vccVis;
+	double vccCompAngle;
+	double vccBear001Angle;
+	double vccBear010Angle;
+	double vccBear100Angle;
+	double vccDist001Angle;
+	double vccDist010Angle;
+	double vccDist100Angle;
+	double vccRange001Angle;
+	double vccRange010Angle;
+	double vccRange100Angle;
+	bool vccInitialized;	// true, as soon as vccInitLat and vccInitLong contain usable values
+	double vccInitLat;	// latitude of last console navigation initialization (bearing and range reference point)
+	double vccInitLong;	// longitude of last console navigation initialization (bearing and range reference point)
+	double vccDistance;	// distance travelled since last console navigation initialization
+	MESHGROUP_TRANSFORM mgtRotCompass;
+	MESHGROUP_TRANSFORM mgtRotDrums;  // Bearing, distance or range "drum"
 };

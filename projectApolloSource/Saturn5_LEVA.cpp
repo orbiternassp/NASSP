@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/01/22 18:08:38  redburne
+  *	- timestep processing moved to VESSEL2 method clbkPreStep()
+  *	- semi-realistic movement and turn speed values (as #defines)
+  *	- turn speed now affected by time acceleration (but only tripled when acc is multiplied by 10)
+  *	- LRV mesh visible from cockpit view (camera at driver head)
+  *	
   *	Revision 1.7  2006/01/19 14:58:33  tschachim
   *	Initial Meshland support.
   *	
@@ -55,6 +61,7 @@
 #include "nasspdefs.h"
 #include "OrbiterSoundSDK3.h"
 #include "soundlib.h"
+#include "OrbiterMath.h"
 
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -64,6 +71,7 @@
 #include "sat5_lmpkd.h"
 
 #include "saturn5_leva.h"
+#include "lrv_console.h"
 #include "tracer.h"
 
 #include "CollisionSDK/CollisionSDK.h"
@@ -147,6 +155,22 @@ void Saturn5_LEVA::init()
 	ApolloNo = 0;
 	Realism = 0;
 
+	// LRV Console
+	vccCompAngle = 0.0; // North
+	vccBear001Angle = 0.0;
+	vccBear010Angle = 0.0;
+	vccBear100Angle = 0.0;
+	vccDist001Angle = 0.0;
+	vccDist010Angle = 0.0;
+	vccDist100Angle = 0.0;
+	vccRange001Angle = 0.0;
+	vccRange010Angle = 0.0;
+	vccRange100Angle = 0.0;
+	vccInitialized = false;
+	vccInitLat = 0.0;
+	vccInitLong = 0.0;
+	vccDistance = 0.0;
+
 	// touchdown point test
 	// touchdownPointHeight = -0.8;
 }
@@ -201,8 +225,28 @@ void Saturn5_LEVA::SetRoverStage ()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 	VECTOR3 mesh_dir=_V(0,0.0,0);
-	SetMeshVisibilityMode(AddMesh(hLRV, &mesh_dir), MESHVIS_ALWAYS);
+	vccMeshIdx = AddMesh(hLRV, &mesh_dir);
+	SetMeshVisibilityMode(vccMeshIdx, MESHVIS_ALWAYS);
 	SetCameraOffset(_V(0.36, 0.54, -0.55));
+
+	//////////////////////////////////////////////////////////////////////////
+	// With vccMeshIdx, we now have all data to initialize the LRV console
+	// transformation matrices:
+	//////////////////////////////////////////////////////////////////////////
+    // Compass rose rotation
+	mgtRotCompass.P.rotparam.ref = LRV_COMPASS_PIVOT;
+	mgtRotCompass.P.rotparam.axis = LRV_COMPASS_AXIS;
+	mgtRotCompass.P.rotparam.angle = 0.0;  // dummy value
+	mgtRotCompass.nmesh = vccMeshIdx;
+	mgtRotCompass.ngrp = GEOM_COMPASS;
+	mgtRotCompass.transform = MESHGROUP_TRANSFORM::ROTATE;
+    // Bearing, distance or range drum (shared for all drums)
+	mgtRotDrums.P.rotparam.ref = LRV_DRUM_PIVOT_UPPER;  // dummy value
+	mgtRotDrums.P.rotparam.axis = LRV_DRUM_AXIS;
+	mgtRotDrums.P.rotparam.angle = 0.0;  // dummy value
+	mgtRotDrums.nmesh = vccMeshIdx;
+	mgtRotDrums.ngrp = GEOM_DRUM_BEAR_001;  // dummy value
+	mgtRotDrums.transform = MESHGROUP_TRANSFORM::ROTATE;
 
 	double tdph = -0.9;
 	SetTouchdownPoints(_V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3));
@@ -235,18 +279,14 @@ void Saturn5_LEVA::ScanMotherShip()
 	}
 }
 
-void Saturn5_LEVA::MoveEVA(double SimDT)
+void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 {
 	TRACESETUP("MoveEVA");
-	VESSELSTATUS eva;
-	GetStatus(eva);
+
 	double lat;
 	double lon;
-	double cap;
 	double turn_spd = Radians(SimDT * (Astro ? ASTRO_TURN_DEG_PER_SEC : ROVER_TURN_DEG_PER_SEC));
-	double move_spd = SimDT * atan2(Astro ? ASTRO_SPEED_M_S : ROVER_SPEED_M_S, oapiGetSize(eva.rbody));
-
-	oapiGetHeading(GetHandle(),&cap);
+	double move_spd = SimDT * atan2(Astro ? ASTRO_SPEED_M_S : ROVER_SPEED_M_S, oapiGetSize(eva->rbody));
 
 	double timeW = oapiGetTimeAcceleration();
 	if (timeW > 100)
@@ -255,56 +295,58 @@ void Saturn5_LEVA::MoveEVA(double SimDT)
 	// turn speed is only tripled when time acc is multiplied by ten:
 	turn_spd = (pow(3.0, log10(timeW))) * turn_spd / timeW;
 	
-	if (eva.status == 1) {
-		lon = eva.vdata[0].x;
-		lat = eva.vdata[0].y;
+	if (eva->status == 1) {
+		lon = eva->vdata[0].x;
+		lat = eva->vdata[0].y;
 	
 	} else if (lastLatLongSet) {
 		lon = lastLong;
 		lat = lastLat;
-		eva.vdata[0].z = cap;
+		eva->vdata[0].z = heading;
 	
 	} else return;
 
 	if (KEY1){
-		eva.vdata[0].z = eva.vdata[0].z - turn_spd;
-		if(eva.vdata[0].z <=-2*PI){
-			eva.vdata[0].z = eva.vdata[0].z + 2*PI;
+		eva->vdata[0].z = eva->vdata[0].z - turn_spd;
+		if(eva->vdata[0].z <=-2*PI){
+			eva->vdata[0].z = eva->vdata[0].z + 2*PI;
 		}
 		KEY1=false;
 	}
 	else if (KEY3){
-		eva.vdata[0].z = eva.vdata[0].z + turn_spd;
-		if(eva.vdata[0].z >=2*PI){
-			eva.vdata[0].z = eva.vdata[0].z - 2*PI;
+		eva->vdata[0].z = eva->vdata[0].z + turn_spd;
+		if(eva->vdata[0].z >=2*PI){
+			eva->vdata[0].z = eva->vdata[0].z - 2*PI;
 		}
 		KEY3=false;
 	}
 
-	if (KEY2){
-		lat = lat - cos(cap) * move_spd;
-		lon = lon - sin(cap) * move_spd;
+	if (KEY2){  // move backward
+		if (!Astro) vccDistance = vccDistance + SimDT * (Astro ? ASTRO_SPEED_M_S : ROVER_SPEED_M_S);  // the console distance always counts up!
+		lat = lat - cos(heading) * move_spd;
+		lon = lon - sin(heading) * move_spd;
 		KEY2=false;
 	}
 	else if (KEY4 && Astro){
-		lat = lat + sin(cap) * move_spd;
-		lon = lon - cos(cap) * move_spd;
+		lat = lat + sin(heading) * move_spd;
+		lon = lon - cos(heading) * move_spd;
 		KEY4=false;
 	}
 	else if (KEY5){
 		KEY5=false;
 	}
 	else if (KEY6 && Astro){
-		lat = lat - sin(cap) * move_spd;
-		lon = lon + cos(cap) * move_spd;
+		lat = lat - sin(heading) * move_spd;
+		lon = lon + cos(heading) * move_spd;
 		KEY6=false;
 	}
 	else if (KEY7){
 		KEY7=false;
 	}
 	else if (KEY8||GoHover && !Astro){// we go ahead whatever our heading
-		lat = lat + cos(cap) * move_spd;
-		lon = lon + sin(cap) * move_spd;
+		if (!Astro) vccDistance = vccDistance + SimDT * (Astro ? ASTRO_SPEED_M_S : ROVER_SPEED_M_S);
+		lat = lat + cos(heading) * move_spd;
+		lon = lon + sin(heading) * move_spd;
 		KEY8=false;
 	}
 	else if (KEY9){
@@ -314,10 +356,10 @@ void Saturn5_LEVA::MoveEVA(double SimDT)
 		//StopVesselWave(HRover);
 	}
 
-	eva.vdata[0].x = lon;
-	eva.vdata[0].y = lat;
-	eva.status = 1;
-	DefSetState(&eva);
+	eva->vdata[0].x = lon;
+	eva->vdata[0].y = lat;
+	eva->status = 1;
+	DefSetState(eva);
 
 	lastLat = lat;
 	lastLong = lon;
@@ -568,6 +610,7 @@ void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 	VECTOR3 RelRot  = {0,0,0};
 	double dist = 0.0;
 	double Vel = 0.0;
+	double heading;
 
 	StepCount++;
 
@@ -585,17 +628,34 @@ void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 		SLEVAPlayed = true;
 	}
 
-	if (!MotherShip){
+	if (!MotherShip)
 		ScanMotherShip();
-	}
-	else {
-	}
 	
+	GetStatus(evaV);
+	oapiGetHeading(GetHandle(),&heading);
+	//
+	// if the VESSELSTATUS is not in the state "landed", force it, using stored
+	// values for lat and long that are updated in MoveEVA().
+	//
+	if ((evaV.status != 1) && lastLatLongSet) {
+		evaV.vdata[0].x = lastLong;
+		evaV.vdata[0].y = lastLat;
+		evaV.vdata[0].z = heading;
+		evaV.status = 1;
+	}
+	//
+	// Get reference lat and long for the VC console, as soon as we have "landed" status
+	//
+	if (!vccInitialized && (evaV.status == 1)) {
+		vccInitLat = evaV.vdata[0].y;
+		vccInitLong = evaV.vdata[0].x;
+		vccInitialized = true;
+	}
+
 	if (hMaster){
 		sat5_lmpkd *lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hMaster);					
 		oapiGetRelativePos (GetHandle() ,hMaster, &posr);
 		oapiGetRelativeVel (GetHandle() ,hMaster , &rvel);
-		GetStatus(evaV);
 		lmvessel->GetStatus(csmV);
 		GlobalRot (posr, RelRot);
 		dist = sqrt(posr.x * posr.x + posr.y * posr.y + posr.z * posr.z);
@@ -609,10 +669,99 @@ void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 				return;
 			}
 		}
-		
 	}
 
-	MoveEVA(SimDT);
+	//
+	// update the VC console
+	//
+	if (!Astro && vccVis) {
+		// rotate the VC compass rose
+		mgtRotCompass.P.rotparam.angle = float(heading - vccCompAngle);
+		vccCompAngle = heading;
+		MeshgroupTransform(vccVis, mgtRotCompass);
+
+		// Display distance travelled (in km) since last initialization
+		double distance = vccDistance / 1000.0;
+		while (distance > 100.0) distance = distance - 100.0;
+		double digit = floor(distance/10.0);  // tens
+		double drum_rot = (digit * PI / 5.0) - vccDist100Angle;
+		vccDist100Angle = digit * PI / 5.0;
+		mgtRotDrums.P.rotparam.angle = float(drum_rot);
+		mgtRotDrums.P.rotparam.ref = LRV_DRUM_PIVOT_LOWER;
+		mgtRotDrums.ngrp = GEOM_DRUM_DIST_10_0;
+		MeshgroupTransform(vccVis, mgtRotDrums);
+		distance = distance - 10.0 * digit;
+		digit = floor(distance);  // ones
+		drum_rot = (digit * PI / 5.0) - vccDist010Angle;
+		vccDist010Angle = digit * PI / 5.0;
+		mgtRotDrums.P.rotparam.angle = float(drum_rot);
+		mgtRotDrums.ngrp = GEOM_DRUM_DIST_01_0;
+		MeshgroupTransform(vccVis, mgtRotDrums);
+		distance = distance - digit;
+		digit = floor(10.0 * distance);  // tenths
+		drum_rot = (digit * PI / 5.0) - vccDist001Angle;
+		vccDist001Angle = digit * PI / 5.0;
+		mgtRotDrums.P.rotparam.angle = float(drum_rot);
+		mgtRotDrums.ngrp = GEOM_DRUM_DIST_00_1;
+		MeshgroupTransform(vccVis, mgtRotDrums);
+
+		if (vccInitialized) {  // we need the reference lat and long for this ...
+			// Display bearing to last reference point (usually the LM)
+			double bearing = Degree(CalcSphericalBearing(_V(vccInitLong, vccInitLat, 0.0), evaV.vdata[0]));
+			bearing = bearing - 90.0;  // correct bearing to local North
+			while (bearing < 0.0) bearing += 360.0;
+			digit = floor(bearing/100.0);  // hundreds
+			drum_rot = (digit * PI / 5.0) - vccBear100Angle;
+			vccBear100Angle = digit * PI / 5.0;
+			mgtRotDrums.P.rotparam.angle = float(drum_rot);
+			mgtRotDrums.P.rotparam.ref = LRV_DRUM_PIVOT_UPPER;
+			mgtRotDrums.ngrp = GEOM_DRUM_BEAR_100;
+			MeshgroupTransform(vccVis, mgtRotDrums);
+			bearing = bearing - 100.0 * digit;
+			digit = floor(bearing/10.0);  // tens
+			drum_rot = (digit * PI / 5.0) - vccBear010Angle;
+			vccBear010Angle = digit * PI / 5.0;
+			mgtRotDrums.P.rotparam.angle = float(drum_rot);
+			mgtRotDrums.ngrp = GEOM_DRUM_BEAR_010;
+			MeshgroupTransform(vccVis, mgtRotDrums);
+			bearing = bearing - 10.0 * digit;
+			digit = floor(bearing);  // ones
+			drum_rot = (digit * PI / 5.0) - vccBear001Angle;
+			vccBear001Angle = digit * PI / 5.0;
+			mgtRotDrums.P.rotparam.angle = float(drum_rot);
+			mgtRotDrums.ngrp = GEOM_DRUM_BEAR_001;
+			MeshgroupTransform(vccVis, mgtRotDrums);
+
+			// Display range (in km) to last reference point (usually the LM)
+			double range = CalcSphericalDistance(_V(vccInitLong, vccInitLat, 0.0), evaV.vdata[0], oapiGetSize(evaV.rbody))/1000.0;
+			if (range < 0.0) range = -range;
+			while (range > 100.0) range = range - 100.0;
+			digit = floor(range/10.0);  // tens
+			drum_rot = (digit * PI / 5.0) - vccRange100Angle;
+			vccRange100Angle = digit * PI / 5.0;
+			mgtRotDrums.P.rotparam.angle = float(drum_rot);
+			mgtRotDrums.P.rotparam.ref = LRV_DRUM_PIVOT_LOWER;
+			mgtRotDrums.ngrp = GEOM_DRUM_RNGE_10_0;
+			MeshgroupTransform(vccVis, mgtRotDrums);
+			range = range - 10.0 * digit;
+			digit = floor(range);  // ones
+			drum_rot = (digit * PI / 5.0) - vccRange010Angle;
+			vccRange010Angle = digit * PI / 5.0;
+			mgtRotDrums.P.rotparam.angle = float(drum_rot);
+			mgtRotDrums.ngrp = GEOM_DRUM_RNGE_01_0;
+			MeshgroupTransform(vccVis, mgtRotDrums);
+			range = range - digit;
+			digit = floor(10.0 * range);  // tenths
+			drum_rot = (digit * PI / 5.0) - vccRange001Angle;
+			vccRange001Angle = digit * PI / 5.0;
+			mgtRotDrums.P.rotparam.angle = float(drum_rot);
+			mgtRotDrums.ngrp = GEOM_DRUM_RNGE_00_1;
+			MeshgroupTransform(vccVis, mgtRotDrums);
+		}
+	}
+
+
+	MoveEVA(SimDT, &evaV, heading);
 
 	if (GoRover && Astro){
 		SetRoverStage();
@@ -663,6 +812,19 @@ void Saturn5_LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
             ParseScenarioLine (line, vs);
         }
     }
+}
+
+
+	
+	
+void Saturn5_LEVA::clbkVisualCreated (VISHANDLE vis, int refcount)
+{
+	vccVis = vis;
+}
+
+void Saturn5_LEVA::clbkVisualDestroyed (VISHANDLE vis, int refcount)
+{
+	vccVis = NULL;
 }
 
 
