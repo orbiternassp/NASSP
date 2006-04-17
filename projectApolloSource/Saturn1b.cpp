@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/03/30 01:59:37  movieman523
+  *	Added RCS to SM DLL.
+  *	
   *	Revision 1.47  2006/03/30 00:14:46  movieman523
   *	First pass at SM DLL.
   *	
@@ -840,13 +843,12 @@ void Saturn1b::Timestep (double simt, double simdt)
 		if(simt>0.5)
 			AttitudeLaunch4();
 
-		if (RPswitch15.GetState() && SivbLmSepSwitch.GetState()){
+		if (SivbLmSepSwitch.GetState()){
 			if (ASTPMission) {
 				//sprintf(oapiDebugString() ,"click %f");
 				SivbLmSepSwitch = false;
 				if (ReadyAstp||ReadyAstp1||dockstate==3) {
 					bManualUnDock = true;
-					RPswitch15 = false;
 				}
 			}
 		}

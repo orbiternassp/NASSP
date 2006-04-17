@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.171  2006/04/17 15:16:16  movieman523
+  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
+  *	
   *	Revision 1.170  2006/04/06 19:32:49  movieman523
   *	More Apollo 13 support.
   *	
@@ -827,8 +830,6 @@ protected:
 	TimerUpdateSwitch MissionTimerSecondsSwitch;
 
 	IMUCageSwitch IMUGuardedCageSwitch;
-
-	ThreePosSwitch RPswitch15;
 
 	SwitchRow SMRCSHelium1Row;
 	SaturnValveSwitch SMRCSHelium1ASwitch;
@@ -1883,9 +1884,6 @@ protected:
 	bool CMCswitch;
 	bool SCswitch;
 
-	ToggleSwitch LPswitch6;
-	ToggleSwitch LPswitch7;
-
 	// old stuff end
 
 	//
@@ -2111,13 +2109,6 @@ protected:
 	double LastDCVoltDisplay;
 	double LastDCAmpDisplay;
 	double LastThrustDisplay;
-
-	// old stuff begin
-
-	SwitchRow P15Row;
-	SwitchRow LPSRow;
-
-	// old stuff end
 
 	//
 	// LM PAD

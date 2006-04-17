@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.161  2006/04/17 18:14:27  movieman523
+  *	Added flashing borders to all switches (I think).
+  *	
   *	Revision 1.160  2006/04/17 15:16:16  movieman523
   *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
   *	
@@ -2715,17 +2718,6 @@ void Saturn::SetSwitches(int panel) {
 	OxygenSurgeTankRotary.Init      (  0, 0, 78, 78, srf[SRF_ECSROTARY], srf[SRF_BORDER_78x78], OxygenRotariesRow);
 	OxygenSMSupplyRotary.Init       (106, 0, 78, 78, srf[SRF_ECSROTARY], srf[SRF_BORDER_78x78], OxygenRotariesRow);
 	OxygenRepressPackageRotary.Init (212, 0, 78, 78, srf[SRF_ECSROTARY], srf[SRF_BORDER_78x78], OxygenRotariesRow);
-	
-	// old stuff
-
-	P15Row.Init(AID_SPS_GIMBAL_SWITCHES, MainPanel);
-
-	LPSRow.Init(AID_LEM_POWER_SWITCH, MainPanel);
-
-	LPswitch6.Init( 45, 7, 23, 20, srf[6], 0, P15Row);
-	LPswitch7.Init(119, 7, 23, 20, srf[6], 0, P15Row);
-
-	RPswitch15.Init(0, 0, 23, 20, srf[23], 0, LPSRow);
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -5299,7 +5291,6 @@ void Saturn::InitSwitches() {
 	// Old stuff. Delete when no longer required.
 	//
 
-	RPswitch15=1;
 	RPswitch17 = false;
 
 	CMCswitch = true;
@@ -5441,8 +5432,6 @@ int Saturn::GetLPSwitchState()
 
 	state.word = 0;
 	state.u.LPswitch5 = OrbiterAttitudeToggle;
-	state.u.LPswitch6 = LPswitch6;
-	state.u.LPswitch7 = LPswitch7;
 	state.u.SCswitch = SCswitch;
 
 	return state.word;
@@ -5455,8 +5444,6 @@ void Saturn::SetLPSwitchState(int s)
 
 	state.word = s;
 	OrbiterAttitudeToggle = state.u.LPswitch5;
-	LPswitch6 = state.u.LPswitch6;
-	LPswitch7 = state.u.LPswitch7;
 	SCswitch = state.u.SCswitch;
 }
 
