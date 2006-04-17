@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/03/27 19:22:44  quetalsi
+  *	Bugfix RCS PRPLNT switches and wired to brakers.
+  *	
   *	Revision 1.10  2006/02/22 18:50:51  tschachim
   *	Bugfixes for Apollo 4-6.
   *	
@@ -59,7 +62,7 @@ class Saturn;
 class SaturnToggleSwitch : public ToggleSwitch {
 public:
 	SaturnToggleSwitch() { sat = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int xoffset = 0, int yoffset = 0);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int xoffset = 0, int yoffset = 0);
 
 protected:
 	Saturn *sat;
@@ -68,7 +71,7 @@ protected:
 class SaturnThreePosSwitch : public ThreePosSwitch {
 public:
 	SaturnThreePosSwitch() { sat = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
 
 protected:
 	Saturn *sat;
@@ -77,7 +80,7 @@ protected:
 class SaturnValveSwitch: public SaturnThreePosSwitch {
 public:
 	SaturnValveSwitch() { Valve = 0; Indicator = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 
@@ -91,7 +94,7 @@ protected:
 class SaturnPropValveSwitch: public SaturnThreePosSwitch {
 public:
 	SaturnPropValveSwitch() { Valve1 = 0; Valve2 = 0; Valve3 = 0; Valve4 = 0; Indicator1 = 0; Indicator2 = 0;};
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int valve1, int valve2, int valve3,
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve1, int valve2, int valve3,
 		int valve4,	IndicatorSwitch *ind1, IndicatorSwitch *ind2);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);

@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2006/04/17 15:16:16  movieman523
+  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
+  *	
   *	Revision 1.57  2006/04/12 06:27:19  dseagrav
   *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
   *	
@@ -235,6 +238,7 @@ PanelSwitchItem::PanelSwitchItem()
 
 	DisplayName = 0;
 	flashing = false;
+	visible = true;
 }
 
 char *PanelSwitchItem::GetDisplayName()
@@ -267,7 +271,6 @@ ToggleSwitch::ToggleSwitch() {
 	OurVessel = 0;
 	switchRow = 0;
 	Active = true;
-	visible = true;
 }
 
 ToggleSwitch::~ToggleSwitch() {
@@ -284,6 +287,7 @@ void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defau
 	DisplayName = dname;
 }
 
+#if 0
 void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int xoffset, int yoffset) {
 
 	x = xp;
@@ -301,6 +305,7 @@ void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow
 
 	InitSound(switchRow->panelSwitches->soundlib);
 }
+#endif
 
 void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset)
 
@@ -707,10 +712,10 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 	}
 }
 
-void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s, double amps)
+void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s, double amps)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	if (s) {
 		WireTo(s);
 	}
@@ -768,11 +773,11 @@ void AttitudeToggle::DrawSwitch(SURFHANDLE DrawSurface)
 // HUD mode toggle switches.
 //
 
-void HUDToggle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int mode, SoundLib &s)
+void HUDToggle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int mode, SoundLib &s)
 
 {
 	HUDMode = mode;
-	ToggleSwitch::Init(xp, yp, w, h, surf, s);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	row.AddSwitch(this);
 }
 
@@ -816,11 +821,11 @@ bool HUDToggle::CheckMouseClick(int event, int mx, int my)
 // NAV mode toggle switches.
 //
 
-void NavModeToggle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, VESSEL *v, int mode, SoundLib &s)
+void NavModeToggle::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, VESSEL *v, int mode, SoundLib &s)
 
 {
 	NAVMode = mode;
-	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 }
 
 void NavModeToggle::DrawSwitch(SURFHANDLE DrawSurface)
@@ -1120,6 +1125,7 @@ GuardedPushSwitch::GuardedPushSwitch() {
 	guardWidth = 0;
 	guardHeight = 0;
 	guardSurface = 0;
+	guardBorder = 0;
 	guardState = 0;
 }
 
@@ -1133,13 +1139,16 @@ void GuardedPushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int 
 	guardState = defaultGuardState;
 }
 
-void GuardedPushSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, 
+void GuardedPushSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf,
 									int xOffset, int yOffset) {
 	guardX = xp;
 	guardY = yp;
 	guardWidth = w;
 	guardHeight = h;
+
 	guardSurface = surf;
+	guardBorder = bsurf;
+	
 	guardXOffset = xOffset;
 	guardYOffset = yOffset;
 
@@ -1158,6 +1167,18 @@ void GuardedPushSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 		DoDrawSwitch(DrawSurface);
 		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
 	}
+}
+
+void GuardedPushSwitch::DrawFlash(SURFHANDLE DrawSurface)
+
+{
+	if (!visible)
+		return;
+
+	if (!guardState && guardBorder)
+		oapiBlt(DrawSurface, guardBorder, guardX, guardY, 0, 0, guardWidth, guardHeight, SURF_PREDEF_CK);
+	else
+		ToggleSwitch::DrawFlash(DrawSurface);
 }
 
 bool GuardedPushSwitch::CheckMouseClick(int event, int mx, int my) {
@@ -1357,7 +1378,10 @@ RotationalSwitch::RotationalSwitch() {
 	position = 0;
 	positionList = 0;
 	next = 0;
+
 	switchSurface = 0;
+	switchBorder = 0;
+	
 	switchRow = 0;
 
 	bitmaps[0].angle = 0;
@@ -1470,13 +1494,15 @@ void RotationalSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int d
 	scnh.RegisterSwitch(this);
 }
 
-void RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row) {
+void RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row) {
 
 	x = xp;
 	y = yp;
 	width = w;
 	height = h;
+
 	switchSurface = surf;
+	switchBorder = bsurf;
 	
 	row.AddSwitch(this);
 	switchRow = &row;
@@ -1524,6 +1550,16 @@ void RotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 		}
 		oapiBlt(drawSurface, switchSurface, x, y, bitmaps[index].xOffset * width, bitmaps[index].yOffset * height, width, height, SURF_PREDEF_CK);
 	}
+}
+
+void RotationalSwitch::DrawFlash(SURFHANDLE DrawSurface)
+
+{
+	if (!visible)
+		return;
+
+	if (switchBorder)
+		oapiBlt(DrawSurface, switchBorder, x, y, 0, 0, width, height, SURF_PREDEF_CK);
 }
 
 bool RotationalSwitch::CheckMouseClick(int event, int mx, int my) {
@@ -1655,10 +1691,10 @@ RotationalSwitchPosition::~RotationalSwitchPosition() {
 }
 
 
-void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, FDAI *F1, FDAI *F2)
+void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2)
 
 {
-	RotationalSwitch::Init(xp, yp, w, h, surf, row);
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	FDAI1 = F1;
 	FDAI2 = F2;
 
@@ -2170,10 +2206,10 @@ PanelSwitchItem* PanelSwitchScenarioHandler::GetSwitch(char *name) {
 }
 
 
-void MissionTimerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, MissionTimer *ptimer)
+void MissionTimerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, MissionTimer *ptimer)
 
 {
-	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	timer = ptimer;
 }
 
@@ -2182,10 +2218,10 @@ void MissionTimerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Swi
 // of the switch.
 //
 
-void ThreeSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3)
+void ThreeSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3)
 
 {
-	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	source1 = s1;
 	source2 = s2;
 	source3 = s3;
@@ -2231,10 +2267,10 @@ void ThreeSourceSwitch::LoadState(char *line)
 // of the switch.
 //
 
-void TwoSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2)
+void TwoSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	source1 = s1;
 	source2 = s2;
 
@@ -2286,10 +2322,10 @@ void TwoSourceSwitch::LoadState(char *line)
 // of the switch.
 //
 
-void TwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *o1, e_object *o2)
+void TwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *o1, e_object *o2)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	output1 = o1;
 	output2 = o2;
 
@@ -2337,10 +2373,10 @@ void TwoOutputSwitch::LoadState(char *line)
 // of the switch.
 //
 
-void GuardedTwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *o1, e_object *o2)
+void GuardedTwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *o1, e_object *o2)
 
 {
-	GuardedToggleSwitch::Init(xp, yp, w, h, surf, row);
+	GuardedToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	output1 = o1;
 	output2 = o2;
 
@@ -2404,10 +2440,10 @@ TimerUpdateSwitch::TimerUpdateSwitch()
 	springLoaded = SPRINGLOADEDSWITCH_CENTER;
 }
 
-void ThreeSourceTwoDestSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3, e_object *d1, e_object *d2)
+void ThreeSourceTwoDestSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3, e_object *d1, e_object *d2)
 
 {
-	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	source1 = s1;
 	source2 = s2;
 	source3 = s3;
@@ -2437,10 +2473,10 @@ void ThreeSourceTwoDestSwitch::UpdateSourceState()
 	}
 }
 
-void TimerUpdateSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int adjuster, MissionTimer *ptimer)
+void TimerUpdateSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int adjuster, MissionTimer *ptimer)
 
 {
-	MissionTimerSwitch::Init(xp, yp, w, h, surf, row, ptimer);
+	MissionTimerSwitch::Init(xp, yp, w, h, surf, bsurf, row, ptimer);
 	adjust_type = adjuster;
 }
 
@@ -2585,10 +2621,10 @@ IMUCageSwitch::IMUCageSwitch()
 	imu = 0;
 }
 
-void IMUCageSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im)
+void IMUCageSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, IMU *im)
 
 {
-	GuardedToggleSwitch::Init(xp, yp, w, h, surf, row);
+	GuardedToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	imu = im;
 }
 
@@ -2642,10 +2678,10 @@ UnguardedIMUCageSwitch::UnguardedIMUCageSwitch()
 	imu = 0;
 }
 
-void UnguardedIMUCageSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im)
+void UnguardedIMUCageSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, IMU *im)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	imu = im;
 }
 
@@ -2808,10 +2844,10 @@ void CWSPowerSwitch::SetPowerBus()
 	}
 }
 
-void CWSThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c)
+void CWSThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, CautionWarningSystem *c)
 
 {
-	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	cws = c;
 }
 
@@ -2920,33 +2956,33 @@ bool PGNSSwitch::CheckMouseClick(int event, int mx, int my)
 // class which has the generic init function to set the cws.
 //
 
-void CWSSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c)
+void CWSSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, CautionWarningSystem *c)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	cws = c;
 }
 
 
-void AGCSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, ApolloGuidance *c)
+void AGCSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	agc = c;
 }
 
-void AGCThreePoswitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, ApolloGuidance *c)
+void AGCThreePoswitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c)
 
 {
-	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	agc = c;
 }
 
 // DS20060304 SCS OBJECTS
-void BMAGPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, BMAG *Unit)
+void BMAGPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, BMAG *Unit)
 
 {
-	RotationalSwitch::Init(xp, yp, w, h, surf, row);
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	bmag = Unit;
 	
 	CheckBMAGPowerState();

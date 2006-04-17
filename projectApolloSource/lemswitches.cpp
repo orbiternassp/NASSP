@@ -20,6 +20,8 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
+  **************************** Revision History ****************************
+  *	$Log$
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -41,10 +43,10 @@
 
 #include "sat5_lmpkd.h"
 
-void LEMThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, sat5_lmpkd *s)
+void LEMThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s)
 
 {
-	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	lem = s;
 }
 
@@ -73,10 +75,10 @@ int LEMValveTalkback::GetState()
 	return 0;
 }
 
-void LEMValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, sat5_lmpkd *s, int valve, IndicatorSwitch *ind)
+void LEMValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s, int valve, IndicatorSwitch *ind)
 
 {
-	LEMThreePosSwitch::Init(xp, yp, w, h, surf, row, s);
+	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
 
 	Valve = valve;
 	Indicator = ind;
@@ -126,9 +128,11 @@ void LEMValveSwitch::CheckValve(int s)
 	}
 }
 
-void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, sat5_lmpkd *s,
-							LEM_ECA *lem_eca, int src_no){
-	LEMThreePosSwitch::Init(xp, yp, w, h, surf, row, s);
+void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s,
+							LEM_ECA *lem_eca, int src_no)
+
+{
+	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
 
 	eca = lem_eca;
 	srcno = src_no;

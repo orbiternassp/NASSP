@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/03/27 19:22:44  quetalsi
+  *	Bugfix RCS PRPLNT switches and wired to brakers.
+  *	
   *	Revision 1.11  2006/02/22 18:54:57  tschachim
   *	Bugfixes for Apollo 4-6.
   *	
@@ -77,10 +80,10 @@
 #include "saturn.h"
 
 
-void SaturnToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int xoffset, int yoffset)
+void SaturnToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int xoffset, int yoffset)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, row, xoffset, yoffset);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	sat = s;
 }
 
@@ -94,10 +97,10 @@ bool XLunarSwitch::CheckMouseClick(int event, int mx, int my)
 	return false;
 }
 
-void SaturnThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s)
+void SaturnThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s)
 
 {
-	ThreePosSwitch::Init(xp, yp, w, h, surf, row);
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	sat = s;
 }
 
@@ -153,10 +156,10 @@ int SaturnPropValveTalkback::GetState()
 	return 0;
 }
 
-void SaturnValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind)
+void SaturnValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind)
 
 {
-	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, row, s);
+	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
 
 	Valve = valve;
 	Indicator = ind;
@@ -203,11 +206,11 @@ void SaturnValveSwitch::CheckValve(int s)
 	}
 }
 
-void SaturnPropValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s, int valve1, int valve2, int valve3,
+void SaturnPropValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve1, int valve2, int valve3,
 		int valve4,	IndicatorSwitch *ind1, IndicatorSwitch *ind2)
 
 {
-	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, row, s);
+	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
 
 	Valve1 = valve1;
 	Valve2 = valve2;
