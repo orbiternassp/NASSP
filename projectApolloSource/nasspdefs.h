@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2006/04/17 15:16:16  movieman523
+  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
+  *	
   *	Revision 1.59  2006/03/12 01:13:28  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -254,7 +257,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 87; // number of bitmap handles
+const int nsurf = 106; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -333,6 +336,27 @@ const int nsurf = 87; // number of bitmap handles
 #define SRF_SPS_FONT_BLACK			84
 #define SRF_BORDER_34x29			85
 #define SRF_BORDER_34x61			86
+#define SRF_BORDER_55x111			87
+#define SRF_BORDER_44x67			88
+#define SRF_BORDER_39x38			89
+#define SRF_BORDER_92x40			90
+#define SRF_BORDER_34x33			91
+#define SRF_BORDER_29x29			92
+#define SRF_BORDER_34x31			93
+#define SRF_BORDER_50x158			94
+#define SRF_BORDER_38x49			95
+#define SRF_BORDER_34x34			96
+#define SRF_BORDER_90x90			97
+#define SRF_BORDER_84x84			98
+#define SRF_BORDER_70x70			99
+#define SRF_BORDER_23x20			100
+#define SRF_BORDER_78x78			101
+#define SRF_BORDER_32x160			102
+#define SRF_BORDER_72x72			103
+#define SRF_BORDER_75x64			104
+#define SRF_BORDER_34x39			105
+
+
 
 //
 // Earth radius and gravity constants.

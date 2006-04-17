@@ -20,6 +20,8 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
+  **************************** Revision History ****************************
+  *	$Log$
   **************************************************************************/
 
 class sat5_lmpkd;
@@ -28,7 +30,7 @@ class LEM_ECA;
 class LEMThreePosSwitch : public ThreePosSwitch {
 public:
 	LEMThreePosSwitch() { lem = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, sat5_lmpkd *s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s);
 
 protected:
 	sat5_lmpkd *lem;
@@ -37,7 +39,7 @@ protected:
 class LEMValveSwitch: public LEMThreePosSwitch {
 public:
 	LEMValveSwitch() { Valve = 0; Indicator = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, sat5_lmpkd *s, int valve, IndicatorSwitch *ind);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s, int valve, IndicatorSwitch *ind);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 
@@ -51,7 +53,7 @@ protected:
 class LEMBatterySwitch: public LEMThreePosSwitch {
 public:
 	LEMBatterySwitch() { eca = NULL; srcno=0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, sat5_lmpkd *s,
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s,
 		LEM_ECA *lem_eca, int src_no);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);

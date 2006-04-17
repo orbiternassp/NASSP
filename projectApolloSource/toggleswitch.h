@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/04/17 15:16:16  movieman523
+  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
+  *	
   *	Revision 1.44  2006/03/12 01:13:29  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -210,6 +213,8 @@ public:
 	void SetFlashing(bool flash) { flashing = flash; };
 	bool IsFlashing() { return flashing; };
 
+	void SetVisible(bool v) {visible = v; };
+
 protected:
 	bool Failed;
 	int FailedState;
@@ -217,6 +222,8 @@ protected:
 
 	bool flashing;
 	char *DisplayName;
+
+	bool visible;
 
 	PanelSwitchItem *next;
 	PanelSwitchItem *nextForScenario;
@@ -232,8 +239,10 @@ public:
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_NONE, char *dname = 0);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib &s,
 		      int xoffset = 0, int yoffset = 0);
+#if 0
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row,
 		      int xoffset = 0, int yoffset = 0);
+#endif
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
 		      int xoffset = 0, int yoffset = 0);
 	void SetSize(int w, int h) { width = w; height = h; };
@@ -243,7 +252,7 @@ public:
 	void SetSpringLoaded(int springloaded) { springLoaded = springloaded; }; 
 	virtual int GetState();
 	void SetActive(bool s);
-	void SetVisible(bool v) {visible = v; };
+
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
 	
@@ -298,7 +307,6 @@ protected:
 	int springLoaded;
 	bool Active;
 	bool SwitchToggled;
-	bool visible;
 
 	SURFHANDLE SwitchSurface;
 	SURFHANDLE BorderSurface;
@@ -327,7 +335,7 @@ class NavModeToggle: public ToggleSwitch {
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, VESSEL *v, int mode, SoundLib &s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, VESSEL *v, int mode, SoundLib &s);
 
 protected:
 	int NAVMode;
@@ -339,7 +347,7 @@ class HUDToggle: public ToggleSwitch {
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int mode, SoundLib &s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int mode, SoundLib &s);
 
 protected:
 	int	HUDMode;
@@ -364,7 +372,7 @@ public:
 class ThreeSourceSwitch : public ThreePosSwitch {
 public:
 	ThreeSourceSwitch() { source1 = source2 = source3 = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3);
 	bool CheckMouseClick(int event, int mx, int my);
 	void LoadState(char *line);
 
@@ -379,7 +387,7 @@ protected:
 class TwoSourceSwitch : public ToggleSwitch {
 public:
 	TwoSourceSwitch() { source1 = source2 = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 	void LoadState(char *line);
@@ -394,7 +402,7 @@ protected:
 class TwoOutputSwitch : public ToggleSwitch {
 public:
 	TwoOutputSwitch() { output1 = output2 = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *o1, e_object *o2);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *o1, e_object *o2);
 	bool CheckMouseClick(int event, int mx, int my);
 	void LoadState(char *line);
 
@@ -408,7 +416,7 @@ protected:
 class ThreeSourceTwoDestSwitch : public ThreeSourceSwitch {
 public:
 	ThreeSourceTwoDestSwitch() { dest1 = dest2 = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3, e_object *d1, e_object *d2);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3, e_object *d1, e_object *d2);
 
 protected:
 	void UpdateSourceState();
@@ -427,7 +435,7 @@ class MissionTimerSwitch: public ThreePosSwitch {
 
 public:
 	MissionTimerSwitch() { timer = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, MissionTimer *ptimer);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, MissionTimer *ptimer);
 
 protected:
 	MissionTimer *timer;
@@ -447,7 +455,7 @@ class TimerUpdateSwitch: public MissionTimerSwitch {
 
 public:
 	TimerUpdateSwitch();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int adjuster, MissionTimer *ptimer);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int adjuster, MissionTimer *ptimer);
 	bool CheckMouseClick(int event, int mx, int my);
 
 protected:
@@ -484,7 +492,7 @@ class CWSThreePosSwitch: public ThreePosSwitch {
 
 public:
 	CWSThreePosSwitch() { cws = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, CautionWarningSystem *c);
 
 protected:
 	CautionWarningSystem *cws;
@@ -514,7 +522,7 @@ public:
 	CircuitBrakerSwitch() { MaxAmps = 0.0; };
 
 	bool CheckMouseClick(int event, int mx, int my);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *s = 0, double amps = 30.0);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s = 0, double amps = 30.0);
 
 	double Voltage();
 	void DrawPower(double watts);
@@ -558,7 +566,7 @@ class CWSSourceSwitch: public ToggleSwitch {
 public:
 	CWSSourceSwitch() { cws = 0; };
 	bool CheckMouseClick(int event, int mx, int my);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, CautionWarningSystem *c);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, CautionWarningSystem *c);
 
 protected:
 	CautionWarningSystem *cws;
@@ -574,7 +582,7 @@ class AGCSwitch: public ToggleSwitch {
 
 public:
 	AGCSwitch() { agc = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, ApolloGuidance *c);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c);
 
 protected:
 	ApolloGuidance *agc;
@@ -584,7 +592,7 @@ class AGCThreePoswitch: public ThreePosSwitch {
 
 public:
 	AGCThreePoswitch() { agc = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, ApolloGuidance *c);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c);
 
 protected:
 	ApolloGuidance *agc;
@@ -627,7 +635,7 @@ public:
 	virtual ~GuardedToggleSwitch();
 
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded = SPRINGLOADEDSWITCH_NONE);
-	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf = 0,
+	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	void DrawFlash(SURFHANDLE DrawSurface);
@@ -659,7 +667,7 @@ protected:
 class GuardedTwoOutputSwitch : public GuardedToggleSwitch {
 public:
 	GuardedTwoOutputSwitch() { output1 = output2 = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, e_object *o1, e_object *o2);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *o1, e_object *o2);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 	void LoadState(char *line);
@@ -678,7 +686,7 @@ class IMUCageSwitch: public GuardedToggleSwitch {
 public:
 	IMUCageSwitch();
 
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, IMU *im);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 
@@ -693,7 +701,7 @@ class UnguardedIMUCageSwitch: public ToggleSwitch {
 public:
 	UnguardedIMUCageSwitch();
 
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, IMU *im);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, IMU *im);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 
@@ -710,9 +718,10 @@ public:
 	virtual ~GuardedPushSwitch();
 
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState);
-	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
+	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE dsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawFlash(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
@@ -727,7 +736,10 @@ protected:
 	int guardWidth;
 	int guardHeight;
 	int guardState;
+
 	SURFHANDLE guardSurface;
+	SURFHANDLE guardBorder;
+
 	int guardXOffset;
 	int guardYOffset;
 	Sound guardClick;
@@ -801,9 +813,10 @@ public:
 	virtual ~RotationalSwitch();
 
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultValue);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void AddPosition(int value, double angle);
 	void DrawSwitch(SURFHANDLE drawSurface);
+	void DrawFlash(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newValue);
 	void SaveState(FILEHANDLE scn);
@@ -819,7 +832,10 @@ protected:
 	int height;
 	RotationalSwitchPosition *position;
 	RotationalSwitchPosition *positionList;
+
 	SURFHANDLE switchSurface;
+	SURFHANDLE switchBorder;
+
 	Sound sclick;
 	RotationalSwitchBitmap bitmaps[RotationalSwitchBitmapCount];
 	SwitchRow *switchRow;
@@ -835,7 +851,7 @@ class BMAG;
 class BMAGPowerRotationalSwitch: public RotationalSwitch {
 public:
 	BMAGPowerRotationalSwitch() { bmag = NULL; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, BMAG *Unit);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, BMAG *Unit);
 
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newValue);
@@ -853,7 +869,7 @@ class FDAI;
 class FDAIPowerRotationalSwitch: public RotationalSwitch {
 public:
 	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, FDAI *F1, FDAI *F2);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2);
 
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newValue);
