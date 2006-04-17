@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/04/06 19:32:50  movieman523
+  *	More Apollo 13 support.
+  *	
   *	Revision 1.37  2006/04/05 19:48:05  movieman523
   *	Added low-res SM RCS meshes and updated Apollo 13.
   *	
@@ -1471,7 +1474,6 @@ void Saturn::SetAbortStage ()
 	ABORT_IND = true;
 
 	OrbiterAttitudeToggle.SetState(false);
-	LPswitch6.SetState(false);
 }
 
 bool Saturn::clbkLoadGenericCockpit ()
