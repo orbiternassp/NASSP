@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.162  2006/04/17 19:12:27  movieman523
+  *	Removed some unused switches.
+  *	
   *	Revision 1.161  2006/04/17 18:14:27  movieman523
   *	Added flashing borders to all switches (I think).
   *	
@@ -3882,8 +3885,8 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 			}
 			else {
-				PitchClusterActual = (int) (10.0 * sps_yaw_position) + 44;
-				YawClusterActual = (int) (10.0 * sps_pitch_position) + 44;
+				PitchClusterActual = (int) (10.0 * sps_pitch_position) + 44;
+				YawClusterActual = (int) (10.0 * sps_yaw_position) + 44;
 			}
 
 			dPC = (PitchClusterActual - PitchClusterCurrent);
