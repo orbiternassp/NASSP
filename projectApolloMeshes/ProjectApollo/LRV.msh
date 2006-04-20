@@ -25694,7 +25694,7 @@ GREY
 Lens
 MANY
 Material #1
-Material #11 with Tex: GOLD_LRV
+Material #11 with Tex: GOLDFOIL
 Material #18
 Material #22 with Tex: USFLAG
 Material #23 with Tex: LRV_REAR
@@ -25738,7 +25738,7 @@ MATERIAL Material #1
 1.0 1.0 1.0 1.0
 0.898 0.898 0.898 1.0 0.0
 0.0 0.0 0.0 1.0
-MATERIAL Material #11 with Tex: GOLD_LRV
+MATERIAL Material #11 with Tex: GOLDFOIL
 0.91 0.91 0.91 1.0
 0.91 0.91 0.91 1.0
 0.91 0.91 0.91 1.0 0.0
@@ -25810,7 +25810,7 @@ MATERIAL Copy Of CHEST
 0.0 0.0 0.0 1.0
 TEXTURES 9
 ProjectApollo/lrv_floo.dds
-ProjectApollo/gold_lrv.dds
+ProjectApollo/goldfoil.dds
 ProjectApollo/lrv_side.dds
 ProjectApollo/usflag.dds
 ProjectApollo/lrv_rear.dds
