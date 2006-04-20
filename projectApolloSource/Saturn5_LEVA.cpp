@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/04/17 14:23:23  redburne
+  *	First working version of new 3d LRV console
+  *	
   *	Revision 1.8  2006/01/22 18:08:38  redburne
   *	- timestep processing moved to VESSEL2 method clbkPreStep()
   *	- semi-realistic movement and turn speed values (as #defines)
@@ -93,8 +96,10 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 // Astronaut and rover movement capabilities
 //
 
-#define ROVER_SPEED_M_S 3.6  // rover speed in m/s (http://en.wikipedia.org/wiki/Lunar_rover; values on the web range from 7 mph to 10.56 mph)
+#define ROVER_SPEED_M_S 3.6  // max rover speed in m/s (http://en.wikipedia.org/wiki/Lunar_rover; values on the web range from 7 mph to 10.56 mph)
+#define ROVER_ACC_M_S2 4.0   // rover acceleration in m/s^2 (not based on real data (yet))
 #define ASTRO_SPEED_M_S 1.8  // astronaut speed in m/s (arbitrarily set to 1/2 the rover speed)
+#define ASTRO_ACC_M_S2 2.0   // astronaut acceleration in m/s^2 (arbitrarily set to 1/2 the rover acceleration)
 #define ASTRO_TURN_DEG_PER_SEC 40.0  // astronaut can turn x degrees / sec (just a convenient number)
 #define ROVER_TURN_DEG_PER_SEC 20.0  // rover can turn x degrees / sec (just a convenient number)
 
@@ -105,6 +110,7 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 static 	int refcount = 0;
 static MESHHANDLE hCMPEVA;
 static MESHHANDLE hLRV;
+static MESHHANDLE hLRVConsole;
 
 Saturn5_LEVA::Saturn5_LEVA(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
@@ -123,7 +129,6 @@ void Saturn5_LEVA::init()
 
 {
 	GoDock1=false;
-	GoHover=false;
 	starthover=false;
 	GoRover =false;
 	Astro=true;						
@@ -152,6 +157,8 @@ void Saturn5_LEVA::init()
 	lastLat = 0;
 	lastLong = 0;
 
+	speed = 0.0;
+
 	ApolloNo = 0;
 	Realism = 0;
 
@@ -166,6 +173,7 @@ void Saturn5_LEVA::init()
 	vccRange001Angle = 0.0;
 	vccRange010Angle = 0.0;
 	vccRange100Angle = 0.0;
+	vccSpeedAngle = 0.0;
 	vccInitialized = false;
 	vccInitLat = 0.0;
 	vccInitLong = 0.0;
@@ -224,10 +232,11 @@ void Saturn5_LEVA::SetRoverStage ()
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	VECTOR3 mesh_dir=_V(0,0.0,0);
-	vccMeshIdx = AddMesh(hLRV, &mesh_dir);
+	VECTOR3 mesh_adjust = _V(0.0, 0.15, 0.0);
+	SetMeshVisibilityMode(AddMesh(hLRV, &mesh_adjust), MESHVIS_ALWAYS); 
+	vccMeshIdx = AddMesh(hLRVConsole, &mesh_adjust);
 	SetMeshVisibilityMode(vccMeshIdx, MESHVIS_ALWAYS);
-	SetCameraOffset(_V(0.36, 0.54, -0.55));
+	SetCameraOffset(_V(0.36, 0.54, -0.55));  // roughly at the driver's head
 
 	//////////////////////////////////////////////////////////////////////////
 	// With vccMeshIdx, we now have all data to initialize the LRV console
@@ -235,7 +244,7 @@ void Saturn5_LEVA::SetRoverStage ()
 	//////////////////////////////////////////////////////////////////////////
     // Compass rose rotation
 	mgtRotCompass.P.rotparam.ref = LRV_COMPASS_PIVOT;
-	mgtRotCompass.P.rotparam.axis = LRV_COMPASS_AXIS;
+	mgtRotCompass.P.rotparam.axis = Normalize(LRV_COMPASS_AXIS);
 	mgtRotCompass.P.rotparam.angle = 0.0;  // dummy value
 	mgtRotCompass.nmesh = vccMeshIdx;
 	mgtRotCompass.ngrp = GEOM_COMPASS;
@@ -247,6 +256,13 @@ void Saturn5_LEVA::SetRoverStage ()
 	mgtRotDrums.nmesh = vccMeshIdx;
 	mgtRotDrums.ngrp = GEOM_DRUM_BEAR_001;  // dummy value
 	mgtRotDrums.transform = MESHGROUP_TRANSFORM::ROTATE;
+    // Speed dial rotation
+	mgtRotSpeed.P.rotparam.ref = LRV_SPEED_PIVOT;
+	mgtRotSpeed.P.rotparam.axis = Normalize(LRV_SPEED_AXIS);
+	mgtRotSpeed.P.rotparam.angle = 0.0;  // dummy value
+	mgtRotSpeed.nmesh = vccMeshIdx;
+	mgtRotSpeed.ngrp = GEOM_SPEEDDIAL;
+	mgtRotSpeed.transform = MESHGROUP_TRANSFORM::ROTATE;
 
 	double tdph = -0.9;
 	SetTouchdownPoints(_V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3));
@@ -286,11 +302,12 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 	double lat;
 	double lon;
 	double turn_spd = Radians(SimDT * (Astro ? ASTRO_TURN_DEG_PER_SEC : ROVER_TURN_DEG_PER_SEC));
-	double move_spd = SimDT * atan2(Astro ? ASTRO_SPEED_M_S : ROVER_SPEED_M_S, oapiGetSize(eva->rbody));
+	double move_spd;
 
+	// limit time acceleration (todo: turn limit off if no movement occurs)
 	double timeW = oapiGetTimeAcceleration();
-	if (timeW > 100)
-		oapiSetTimeAcceleration(100);
+		if (timeW > 100)
+			oapiSetTimeAcceleration(100);
 
 	// turn speed is only tripled when time acc is multiplied by ten:
 	turn_spd = (pow(3.0, log10(timeW))) * turn_spd / timeW;
@@ -306,61 +323,90 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 	
 	} else return;
 
-	if (KEY1){
+	// turning is identical for both LRV and astronaut
+	if (KEY1)  // turn left
+	{
 		eva->vdata[0].z = eva->vdata[0].z - turn_spd;
-		if(eva->vdata[0].z <=-2*PI){
+		if(eva->vdata[0].z <=-2*PI)
 			eva->vdata[0].z = eva->vdata[0].z + 2*PI;
-		}
-		KEY1=false;
 	}
-	else if (KEY3){
+	else if (KEY3)  // turn right
+	{
 		eva->vdata[0].z = eva->vdata[0].z + turn_spd;
-		if(eva->vdata[0].z >=2*PI){
+		if(eva->vdata[0].z >=2*PI)
 			eva->vdata[0].z = eva->vdata[0].z - 2*PI;
-		}
-		KEY3=false;
 	}
 
-	if (KEY2){  // move backward
-		if (!Astro) vccDistance = vccDistance + SimDT * (Astro ? ASTRO_SPEED_M_S : ROVER_SPEED_M_S);  // the console distance always counts up!
-		lat = lat - cos(heading) * move_spd;
-		lon = lon - sin(heading) * move_spd;
-		KEY2=false;
+
+	// movement is different for astro and lrv
+	if (Astro)
+	{
+		move_spd =  SimDT * atan2(ASTRO_SPEED_M_S, oapiGetSize(eva->rbody));  // surface speed in radians
+		if (KEY2)  // backward
+		{
+			lat = lat - cos(heading) * move_spd;
+			lon = lon - sin(heading) * move_spd;
+		}
+		else if (KEY4)  // step left
+		{
+			lat = lat + sin(heading) * move_spd;
+			lon = lon - cos(heading) * move_spd;
+		}
+		else if (KEY6)  // step right
+		{
+			lat = lat - sin(heading) * move_spd;
+			lon = lon + cos(heading) * move_spd;
+		}
+		else if (KEY8)  // forward
+		{
+			lat = lat + cos(heading) * move_spd;
+			lon = lon + sin(heading) * move_spd;
+		}
 	}
-	else if (KEY4 && Astro){
-		lat = lat + sin(heading) * move_spd;
-		lon = lon - cos(heading) * move_spd;
-		KEY4=false;
-	}
-	else if (KEY5){
-		KEY5=false;
-	}
-	else if (KEY6 && Astro){
-		lat = lat - sin(heading) * move_spd;
-		lon = lon + cos(heading) * move_spd;
-		KEY6=false;
-	}
-	else if (KEY7){
-		KEY7=false;
-	}
-	else if (KEY8||GoHover && !Astro){// we go ahead whatever our heading
-		if (!Astro) vccDistance = vccDistance + SimDT * (Astro ? ASTRO_SPEED_M_S : ROVER_SPEED_M_S);
+	else  // LRV
+	{
+		if (KEY2)  // decelerate
+		{
+			speed = speed - SimDT * ROVER_ACC_M_S2; 
+			if (speed < -ROVER_SPEED_M_S)
+				speed = -ROVER_SPEED_M_S;
+		}
+		else if (KEY5)  // stop
+		{
+		    speed = 0.0;
+		}
+		else if (KEY8)  // accelerate
+		{
+			speed = speed + SimDT * ROVER_ACC_M_S2; 
+			if (speed > ROVER_SPEED_M_S)
+				speed = ROVER_SPEED_M_S;
+		}
+
+		// move forward / backward according to current speed
+		move_spd =  SimDT * atan2(speed, oapiGetSize(eva->rbody));  // surface speed in radians
 		lat = lat + cos(heading) * move_spd;
 		lon = lon + sin(heading) * move_spd;
-		KEY8=false;
-	}
-	else if (KEY9){
-		KEY9=false;
-	} else {
-		//StopVesselWave(HAstro);
-		//StopVesselWave(HRover);
+		vccDistance = vccDistance + SimDT * fabs(speed);  // the console distance always counts up!
 	}
 
+	// reset all keys
+	KEY1 = false;
+	KEY2 = false;
+	KEY3 = false;
+	KEY4 = false;
+	KEY5 = false;
+	KEY6 = false;
+	KEY7 = false;
+	KEY8 = false;
+	KEY9 = false;
+
+	// move the vessel
 	eva->vdata[0].x = lon;
 	eva->vdata[0].y = lat;
 	eva->status = 1;
 	DefSetState(eva);
 
+	// remember last coordinates
 	lastLat = lat;
 	lastLong = lon;
 	lastLatLongSet = true;
@@ -476,12 +522,6 @@ int Saturn5_LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		}
 	}
 		
-	if (key == OAPI_KEY_G && down == true) {				
-		if (!Astro)
-			GoHover = !GoHover;	
-		return 1;
-	}
-
 	if (key == OAPI_KEY_F && down == true) {				
 		if (Astro && !FlagPlanted )
 			GoFlag = true;	
@@ -680,6 +720,13 @@ void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 		vccCompAngle = heading;
 		MeshgroupTransform(vccVis, mgtRotCompass);
 
+		// Rotate the speed dial.
+		double abs_speed_kmh = fabs(speed * 3.6);  // absolute speed in km/h
+		double speed_dial_rad = -(abs_speed_kmh - 10.0) * Radians(31.25) / 10.0;
+		mgtRotSpeed.P.rotparam.angle = float(speed_dial_rad - vccSpeedAngle);
+		vccSpeedAngle = speed_dial_rad;
+		MeshgroupTransform(vccVis, mgtRotSpeed);
+
 		// Display distance travelled (in km) since last initialization
 		double distance = vccDistance / 1000.0;
 		while (distance > 100.0) distance = distance - 100.0;
@@ -825,6 +872,18 @@ void Saturn5_LEVA::clbkVisualCreated (VISHANDLE vis, int refcount)
 void Saturn5_LEVA::clbkVisualDestroyed (VISHANDLE vis, int refcount)
 {
 	vccVis = NULL;
+	// reset the variables keeping track of console mesh animation
+	vccCompAngle = 0.0;
+	vccDist100Angle = 0.0;
+	vccDist010Angle = 0.0;
+	vccDist001Angle = 0.0;
+	vccBear100Angle = 0.0;
+	vccBear010Angle = 0.0;
+	vccBear001Angle = 0.0;
+	vccRange100Angle = 0.0;
+	vccRange010Angle = 0.0;
+	vccRange010Angle = 0.0;
+	vccSpeedAngle = 0.0;
 }
 
 
@@ -891,6 +950,7 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	if (!refcount++) {
 		hCMPEVA = oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
 		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
+		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
 	}
 
 	return new Saturn5_LEVA (hvessel, flightmodel);

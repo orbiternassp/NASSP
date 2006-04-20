@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/04/17 14:23:23  redburne
+  *	First working version of new 3d LRV console
+  *	
   *	Revision 1.4  2006/01/22 18:08:11  redburne
   *	- timestep processing moved to VESSEL2 method clbkPreStep()
   *	- semi-realistic movement and turn speed values (as #defines)
@@ -90,7 +93,6 @@ protected:
 
 	OBJHANDLE hMaster;
 	bool GoDock1;
-	bool GoHover;
 	bool starthover;
 	bool GoRover;
 	bool Astro;						
@@ -118,6 +120,8 @@ protected:
 	double lastLat;
 	double lastLong;
 
+	double speed;  // current speed in m/s for both astronaut and rover
+
 	SoundLib soundlib;
 	Sound FlagSound;
 	Sound SLEVA;
@@ -138,10 +142,12 @@ protected:
 	double vccRange001Angle;
 	double vccRange010Angle;
 	double vccRange100Angle;
+	double vccSpeedAngle;
 	bool vccInitialized;	// true, as soon as vccInitLat and vccInitLong contain usable values
 	double vccInitLat;	// latitude of last console navigation initialization (bearing and range reference point)
 	double vccInitLong;	// longitude of last console navigation initialization (bearing and range reference point)
 	double vccDistance;	// distance travelled since last console navigation initialization
 	MESHGROUP_TRANSFORM mgtRotCompass;
+	MESHGROUP_TRANSFORM mgtRotSpeed;
 	MESHGROUP_TRANSFORM mgtRotDrums;  // Bearing, distance or range "drum"
 };
