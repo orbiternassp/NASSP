@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2006/04/17 15:16:16  movieman523
+  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
+  *	
   *	Revision 1.38  2006/04/12 06:27:19  dseagrav
   *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
   *	
@@ -704,7 +707,7 @@ protected:
 	bool HatchOpen;
 	bool bManualSeparate;
 	bool ToggleEva;
-	bool EVA_IP;
+	bool CDREVA_IP;
 
 #define LMVIEW_CDR		0
 #define LMVIEW_LMP		1

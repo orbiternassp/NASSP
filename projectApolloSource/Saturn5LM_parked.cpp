@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/04/17 15:16:16  movieman523
+  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
+  *	
   *	Revision 1.44  2006/04/12 06:27:19  dseagrav
   *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
   *	
@@ -320,7 +323,7 @@ void sat5_lmpkd::Init()
 	HatchOpen=false;
 	bManualSeparate=false;
 	ToggleEva=false;
-	EVA_IP=false;
+	CDREVA_IP=false;
 	refcount = 0;
 	viewpos = LMVIEW_LMP;
 	startimer=false;
@@ -841,7 +844,7 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 			agc.SetInputChannelBit(030, 3, false);
 		}
 
-		if (EVA_IP) {
+		if (CDREVA_IP) {
 			if(!hLEVA) {
 				ToggleEVA();
 			}
@@ -1072,7 +1075,7 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
             sscanf (line+13, "%d", &status);
 		}
 		else if (!strnicmp (line, "EVA", 3)) {
-			EVA_IP = true;
+			CDREVA_IP = true;
 		} 
 		else if (!strnicmp (line, "CSWITCH", 7)) {
             SwitchState = 0;
@@ -1166,7 +1169,7 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		stage=1;
 		SetLmVesselHoverStage();
 
-		if (EVA_IP){
+		if (CDREVA_IP){
 			SetupEVA();
 		}
 		break;
@@ -1218,7 +1221,7 @@ void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 {
 	SaveDefaultState (scn);	
 	oapiWriteScenario_int (scn, "CONFIGURATION", status);
-	if (EVA_IP){
+	if (CDREVA_IP){
 		oapiWriteScenario_int (scn, "EVA", int(TO_EVA));
 	}
 

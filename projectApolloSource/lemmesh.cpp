@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2006/04/12 06:27:19  dseagrav
+  *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
+  *	
   *	Revision 1.22  2006/01/19 14:53:50  tschachim
   *	Initial Meshland support.
   *	
@@ -128,7 +131,7 @@ void sat5_lmpkd::ToggleEVA()
 {
 	ToggleEva = false;	
 	
-	if (EVA_IP) {
+	if (CDREVA_IP) {
 		// Nothing for now, the EVA is ended, when the LEVA vessel calls StopEVA
 		// TODO: Support for 2 LEVA vessels
 	}
@@ -139,7 +142,7 @@ void sat5_lmpkd::ToggleEVA()
 		// The LM must be in landed state
 		if (vs1.status != 1) return;
 
-		EVA_IP = true;
+		CDREVA_IP = true;
 
 		OBJHANDLE hbody = GetGravityRef();
 		double radius = oapiGetSize(hbody);
@@ -167,8 +170,8 @@ void sat5_lmpkd::ToggleEVA()
 void sat5_lmpkd::SetupEVA()
 
 {
-	if (EVA_IP) {
-		EVA_IP = true;
+	if (CDREVA_IP) {
+		CDREVA_IP = true;
 		// nothing for now...
 	}
 }
@@ -177,7 +180,7 @@ void sat5_lmpkd::StopEVA()
 
 {
 	// Called by LEVA vessel during destruction
-	EVA_IP = false;
+	CDREVA_IP = false;
 }
 
 void sat5_lmpkd::SetLmVesselDockStage()

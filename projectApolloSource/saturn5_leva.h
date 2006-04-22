@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/04/20 22:04:32  redburne
+  *	New movement handling for LRV;
+  *	LRV console now in separate mesh;
+  *	Speed dial added.
+  *	
   *	Revision 1.5  2006/04/17 14:23:23  redburne
   *	First working version of new 3d LRV console
   *	
@@ -108,7 +113,9 @@ protected:
 	bool KEY6;
 	bool KEY7;
 	bool KEY8;
-	bool KEY9;		
+	bool KEY9;
+	bool KEYADD;
+	bool KEYSUBTRACT;
 	bool GoFlag;		 
 	bool FlagPlanted;
 

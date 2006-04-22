@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/04/20 22:04:32  redburne
+  *	New movement handling for LRV;
+  *	LRV console now in separate mesh;
+  *	Speed dial added.
+  *	
   *	Revision 1.9  2006/04/17 14:23:23  redburne
   *	First working version of new 3d LRV console
   *	
@@ -145,6 +150,8 @@ void Saturn5_LEVA::init()
 	KEY7 = false;
 	KEY8 = false;
 	KEY9 = false;
+	KEYADD = false;
+	KEYSUBTRACT = false;
 
 	GoFlag = false;		 
 	FlagPlanted = false;
@@ -323,18 +330,35 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 	
 	} else return;
 
-	// turning is identical for both LRV and astronaut
-	if (KEY1)  // turn left
+	if (Astro)
 	{
-		eva->vdata[0].z = eva->vdata[0].z - turn_spd;
-		if(eva->vdata[0].z <=-2*PI)
-			eva->vdata[0].z = eva->vdata[0].z + 2*PI;
+		if (KEY1)  // turn left
+		{
+			eva->vdata[0].z = eva->vdata[0].z - turn_spd;
+			if(eva->vdata[0].z <=-2*PI)
+				eva->vdata[0].z = eva->vdata[0].z + 2*PI;
+		}
+		else if (KEY3)  // turn right
+		{
+			eva->vdata[0].z = eva->vdata[0].z + turn_spd;
+			if(eva->vdata[0].z >=2*PI)
+				eva->vdata[0].z = eva->vdata[0].z - 2*PI;
+		}
 	}
-	else if (KEY3)  // turn right
+	else if (speed != 0.0) //LRV
 	{
-		eva->vdata[0].z = eva->vdata[0].z + turn_spd;
-		if(eva->vdata[0].z >=2*PI)
-			eva->vdata[0].z = eva->vdata[0].z - 2*PI;
+		if (KEY1)  // turn left
+		{
+			eva->vdata[0].z = eva->vdata[0].z - turn_spd;
+			if(eva->vdata[0].z <=-2*PI)
+				eva->vdata[0].z = eva->vdata[0].z + 2*PI;
+		}
+		else if (KEY3)  // turn right
+		{
+			eva->vdata[0].z = eva->vdata[0].z + turn_spd;
+			if(eva->vdata[0].z >=2*PI)
+				eva->vdata[0].z = eva->vdata[0].z - 2*PI;
+		}
 	}
 
 
@@ -365,7 +389,7 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 	}
 	else  // LRV
 	{
-		if (KEY2)  // decelerate
+		if (KEYSUBTRACT)  // decelerate
 		{
 			speed = speed - SimDT * ROVER_ACC_M_S2; 
 			if (speed < -ROVER_SPEED_M_S)
@@ -375,7 +399,7 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 		{
 		    speed = 0.0;
 		}
-		else if (KEY8)  // accelerate
+		else if (KEYADD)  // accelerate
 		{
 			speed = speed + SimDT * ROVER_ACC_M_S2; 
 			if (speed > ROVER_SPEED_M_S)
@@ -399,6 +423,8 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 	KEY7 = false;
 	KEY8 = false;
 	KEY9 = false;
+	KEYADD = false;
+	KEYSUBTRACT = false;
 
 	// move the vessel
 	eva->vdata[0].x = lon;
@@ -469,6 +495,16 @@ int Saturn5_LEVA::clbkConsumeDirectKey(char *kstate) {
 	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD9)) {
 		KEY9 = true;
 		RESETKEY(kstate, OAPI_KEY_NUMPAD9);
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_ADD)) {
+		KEYADD = true;
+		RESETKEY(kstate, OAPI_KEY_ADD);
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_SUBTRACT)) {
+		KEYSUBTRACT = true;
+		RESETKEY(kstate, OAPI_KEY_SUBTRACT);
 	}
 
 
