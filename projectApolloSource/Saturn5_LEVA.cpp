@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/04/22 03:53:48  jasonims
+  *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
+  *	
   *	Revision 1.10  2006/04/20 22:04:32  redburne
   *	New movement handling for LRV;
   *	LRV console now in separate mesh;
@@ -349,13 +352,13 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 	{
 		if (KEY1)  // turn left
 		{
-			eva->vdata[0].z = eva->vdata[0].z - turn_spd;
+			eva->vdata[0].z = eva->vdata[0].z - (turn_spd*(speed/ROVER_SPEED_M_S));
 			if(eva->vdata[0].z <=-2*PI)
 				eva->vdata[0].z = eva->vdata[0].z + 2*PI;
 		}
 		else if (KEY3)  // turn right
 		{
-			eva->vdata[0].z = eva->vdata[0].z + turn_spd;
+			eva->vdata[0].z = eva->vdata[0].z + (turn_spd*(speed/ROVER_SPEED_M_S));
 			if(eva->vdata[0].z >=2*PI)
 				eva->vdata[0].z = eva->vdata[0].z - 2*PI;
 		}
