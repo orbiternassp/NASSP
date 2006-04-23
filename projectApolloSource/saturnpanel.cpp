@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.163  2006/04/18 13:49:10  tschachim
+  *	Bugfix GPFPI.
+  *	
   *	Revision 1.162  2006/04/17 19:12:27  movieman523
   *	Removed some unused switches.
   *	
@@ -1333,12 +1336,12 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ASCPDISPLAYROLL,								_R( 199, 1144,  229, 1156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ASCPDISPLAYPITCH,							_R( 199, 1206,  229, 1218), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ASCPDISPLAYYAW,								_R( 199, 1268,  229, 1280), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPINCROLL,									_R( 124, 1126,  140, 1142), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPDECROLL,									_R( 124, 1143,  140, 1161), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPINCPITCH,								_R( 124, 1188,  140, 1204), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPDECPITCH,								_R( 124, 1205,  140, 1223), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPINCYAW,									_R( 124, 1250,  140, 1266), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPDECYAW,									_R( 124, 1267,  140, 1285), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPINCROLL,									_R( 124, 1126,  140, 1142), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPDECROLL,									_R( 124, 1143,  140, 1161), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPINCPITCH,								_R( 124, 1188,  140, 1204), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPDECPITCH,								_R( 124, 1205,  140, 1223), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPINCYAW,									_R( 124, 1250,  140, 1266), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPDECYAW,									_R( 124, 1267,  140, 1285), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
 
 // GPFPI DISPLAYS
 		oapiRegisterPanelArea (AID_GPFPI_METERS,								_R( 629,  927,  791, 1032), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -2783,28 +2786,22 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		ascp.YawDisplayClicked();
 		return true;
 	case AID_ASCPINCROLL:
-		Sclick.play();
-		ascp.RollUpClick(event);
+		if(ascp.RollUpClick(event)){Sclick.play();}
 		return true;
-	case AID_ASCPDECROLL:
-		Sclick.play();
-		ascp.RollDnClick(event);
+	case AID_ASCPDECROLL:				
+		if(ascp.RollDnClick(event)){Sclick.play();}
 		return true;
 	case AID_ASCPINCPITCH:
-		Sclick.play();
-		ascp.PitchUpClick(event);
+		if(ascp.PitchUpClick(event)){Sclick.play();}
 		return true;
 	case AID_ASCPDECPITCH:
-		Sclick.play();
-		ascp.PitchDnClick(event);
+		if(ascp.PitchDnClick(event)){Sclick.play();}
 		return true;
 	case AID_ASCPINCYAW:
-		Sclick.play();
-		ascp.YawUpClick(event);
+		if(ascp.YawUpClick(event)){Sclick.play();}
 		return true;
 	case AID_ASCPDECYAW:
-		Sclick.play();
-		ascp.YawDnClick(event);
+		if(ascp.YawDnClick(event)){Sclick.play();}
 		return true;
 
 	case AID_MASTER_ALARM:
