@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/04/12 06:27:19  dseagrav
+  *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
+  *	
   *	Revision 1.7  2006/01/14 21:59:52  movieman523
   *	Added PanelSDK, init, timestep, save and load.
   *	
@@ -76,6 +79,7 @@ void sat5_lmpkd::ResetThrusters()
 	ActivateNavmode(NAVMODE_KILLROT);
 }
 
+/* NOT USED? DS20060413
 void sat5_lmpkd::AddRCS_LM(double TRANZ)
 {
 	UINT atthand;
@@ -315,6 +319,8 @@ UINT atthand;
 	double MaxThrust=445.0;
 	double RCSISP=2840.0;
 
+/*
+
 	th_att_lin[0]=CreateThruster (_V(2,2,-2), _V(1,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 	th_att_lin[1]=CreateThruster (_V(-2,2,-2), _V(-1,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 	th_att_lin[2]=CreateThruster (_V(2,-2,-2), _V(1,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
@@ -326,18 +332,21 @@ UINT atthand;
 
 	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
+*/
 
-	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	CreateThrusterGroup (th_att_rot,   4, THGROUP_ATT_YAWLEFT);
-	CreateThrusterGroup (th_att_rot+4,   4, THGROUP_ATT_YAWRIGHT);
+//	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+//	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+//	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+//	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+//	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+//	th_rcs[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+//	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+//	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+//	CreateThrusterGroup (th_att_rot,   4, THGROUP_ATT_YAWLEFT);
+//	CreateThrusterGroup (th_att_rot+4,   4, THGROUP_ATT_YAWRIGHT);
+//	CreateThrusterGroup (th_rcs,   1, THGROUP_ATT_YAWLEFT);
 
+	/*
 	th_att_lin[8]=CreateThruster (_V(2,2,2), _V(-1,0,0),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 	th_att_lin[9]=CreateThruster (_V(2,-2,2), _V(-1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
 	th_att_lin[10]=CreateThruster (_V(2,2,-2), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
@@ -595,623 +604,200 @@ UINT atthand;
 		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
 		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
 		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
+		*/
+/*
 }
+*/
+
 
 void sat5_lmpkd::AddRCS_LMH(double TRANZ)
 {
-
-	UINT atthand;
 	const double ATTCOOR = 1.78;
 	const double ATTCOOR2 = 1.35;
 	const double ATTZ = 2.85;
 	const double TRANCOOR = 0;
 	const double TRANCOOR2 = 0.1;
-	const double ATTWIDTH=.2;
-	const double ATTHEIGHT=.5;
+	const double ATTWIDTH=.15;
+	const double ATTHEIGHT=3;
 	const double TRANWIDTH=.2;
 	const double TRANHEIGHT=1;
 	const double RCSOFFSET=0.75;
 	const double RCSOFFSETM=0.30;
 	const double RCSOFFSETM2=0.47;
 
-//	int MaxThrust=120;
-//	double RCSISP=15000;
 	double MaxThrust=445.0;
 	double RCSISP=2840.0;
 
-	th_att_lin[0]=CreateThruster (_V(2,2,-2), _V(1,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[1]=CreateThruster (_V(-2,2,-2), _V(-1,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[2]=CreateThruster (_V(2,-2,-2), _V(1,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[3]=CreateThruster (_V(-2,-2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[4]=CreateThruster (_V(2,2,2), _V(1,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[5]=CreateThruster (_V(-2,2,2), _V(-1,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[6]=CreateThruster (_V(2,-2,2), _V(1,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[7]=CreateThruster (_V(-2,-2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
-	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
+	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
+	// A1U
+	th_rcs[0]=CreateThruster(_V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[0],ATTHEIGHT,ATTWIDTH,tex);
+	// A1F
+	th_rcs[1]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[1],ATTHEIGHT,ATTWIDTH,tex);
+	// B1L
+	th_rcs[2]=CreateThruster(_V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[2],ATTHEIGHT,ATTWIDTH,tex);
+	// B1D
+	th_rcs[3]=CreateThruster(_V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[3],ATTHEIGHT,ATTWIDTH,tex);
 
-	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	CreateThrusterGroup (th_att_rot,   4, THGROUP_ATT_YAWLEFT);
-	CreateThrusterGroup (th_att_rot+4,   4, THGROUP_ATT_YAWRIGHT);
+	// B2U
+	th_rcs[4]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[4],ATTHEIGHT,ATTWIDTH,tex);
+	// B2L
+	th_rcs[5]=CreateThruster(_V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[5],ATTHEIGHT,ATTWIDTH,tex);
+	// A2A
+	th_rcs[6]=CreateThruster(_V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[6],ATTHEIGHT,ATTWIDTH,tex);
+	// A2D
+	th_rcs[7]=CreateThruster(_V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[7],ATTHEIGHT,ATTWIDTH,tex);
 
-	th_att_lin[8]=CreateThruster (_V(2,2,2), _V(-1,0,0),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[9]=CreateThruster (_V(2,-2,2), _V(-1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[10]=CreateThruster (_V(2,2,-2), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[11]=CreateThruster (_V(2,-2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[12]=CreateThruster (_V(-2,2,2), _V(1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[13]=CreateThruster (_V(-2,2,-2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[14]=CreateThruster (_V(-2,-2,2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[15]=CreateThruster (_V(-2,-2,-2), _V(1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	// A3U
+	th_rcs[8]=CreateThruster(_V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[8],ATTHEIGHT,ATTWIDTH,tex);
+	// A3R
+	th_rcs[9]=CreateThruster(_V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[9],ATTHEIGHT,ATTWIDTH,tex);
+	// B3A
+	th_rcs[10]=CreateThruster(_V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[10],ATTHEIGHT,ATTWIDTH,tex);
+	// B3D
+	th_rcs[11]=CreateThruster(_V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[11],ATTHEIGHT,ATTWIDTH,tex);
 
-	th_att_lin[16]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[17]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[18]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[20]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[21]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[22]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[23]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	// B4U
+	th_rcs[12]=CreateThruster(_V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[12],ATTHEIGHT,ATTWIDTH,tex);
+	// B4F
+	th_rcs[13]=CreateThruster(_V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[13],ATTHEIGHT,ATTWIDTH,tex);
+	// A4R
+	th_rcs[14]=CreateThruster(_V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[14],ATTHEIGHT,ATTWIDTH,tex);
+	// A4D
+	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH,tex);
 
-	CreateThrusterGroup (th_att_lin+16,   4, THGROUP_ATT_UP);
-	CreateThrusterGroup (th_att_lin+20,   4, THGROUP_ATT_DOWN);
-	CreateThrusterGroup (th_att_lin+12,  4 , THGROUP_ATT_RIGHT);
-	CreateThrusterGroup (th_att_lin+8, 4, THGROUP_ATT_LEFT);
+	// Setup Orbiter thruster groups
+	th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
+	th_rcs_orbiter_rot[1] = th_rcs[12]; // B4U
+	th_rcs_orbiter_rot[2] = th_rcs[11]; // B3D
+	th_rcs_orbiter_rot[3] = th_rcs[7];  // A2D
+	CreateThrusterGroup (th_rcs_orbiter_rot+0, 4, THGROUP_ATT_PITCHDOWN);
+	th_rcs_orbiter_rot[4] = th_rcs[15]; // A4D
+	th_rcs_orbiter_rot[5] = th_rcs[3];  // B1D
+	th_rcs_orbiter_rot[6] = th_rcs[8];  // A3U
+	th_rcs_orbiter_rot[7] = th_rcs[4];  // B2U
+	CreateThrusterGroup (th_rcs_orbiter_rot+4, 4, THGROUP_ATT_PITCHUP);
+	th_rcs_orbiter_rot[8] = th_rcs[0];  // A1U
+	th_rcs_orbiter_rot[9] = th_rcs[4];  // B2U
+	th_rcs_orbiter_rot[10]= th_rcs[11]; // B3D
+	th_rcs_orbiter_rot[11]= th_rcs[15]; // A4D
+	CreateThrusterGroup (th_rcs_orbiter_rot+8, 4, THGROUP_ATT_BANKLEFT);
+	th_rcs_orbiter_rot[12]= th_rcs[3];  // B1D
+	th_rcs_orbiter_rot[13]= th_rcs[7];  // A2D
+	th_rcs_orbiter_rot[14]= th_rcs[12]; // B4U
+	th_rcs_orbiter_rot[15]= th_rcs[8];  // A3U
+	CreateThrusterGroup (th_rcs_orbiter_rot+12, 4,THGROUP_ATT_BANKRIGHT);
+	th_rcs_orbiter_rot[16]= th_rcs[1];  // A1F
+	th_rcs_orbiter_rot[17]= th_rcs[14]; // A4R
+	th_rcs_orbiter_rot[18]= th_rcs[10]; // B3A
+	th_rcs_orbiter_rot[19]= th_rcs[5];  // B2L
+	CreateThrusterGroup (th_rcs_orbiter_rot+16, 4,THGROUP_ATT_YAWLEFT);
+	th_rcs_orbiter_rot[20]= th_rcs[2];  // B1L
+	th_rcs_orbiter_rot[21]= th_rcs[9];  // A3R
+	th_rcs_orbiter_rot[22]= th_rcs[13]; // B4F
+	th_rcs_orbiter_rot[23]= th_rcs[6];  // A2A
+	CreateThrusterGroup (th_rcs_orbiter_rot+20, 4,THGROUP_ATT_YAWRIGHT);
 
-	th_att_rot[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	/* THRUSTER TABLE:
+		0	A1U		8	A3U
+		1	A1F		9	A3R
+		2	B1L		10	B3A
+		3	B1D		11	B3D
 
-	th_att_rot[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+		4	B2U		12	B4U
+		5	B2L		13	B4F
+		6	A2A		14	A4R
+		7	A2D		15	A4D
+	*/
 
-	CreateThrusterGroup (th_att_rot+12,   4, THGROUP_ATT_PITCHDOWN);
-	CreateThrusterGroup (th_att_rot+8,   4, THGROUP_ATT_PITCHUP);
-
-	th_att_rot[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-
-	CreateThrusterGroup (th_att_rot+20,   4, THGROUP_ATT_BANKLEFT);
-	CreateThrusterGroup (th_att_rot+16,   4, THGROUP_ATT_BANKRIGHT);
-
-
-		//lin Forward
-
-		VECTOR3	m_exhaust_pos2= _V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8);
-		VECTOR3	m_exhaust_ref2 = _V(0,0,-1);
-		VECTOR3	m_exhaust_pos3= _V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8);
-		VECTOR3 m_exhaust_ref3 = _V(0,0,-1);
-
-
-		//just for vector init
-		VECTOR3 m_exhaust_pos4= _V(ATTCOOR2+0.1,-ATTCOOR2-0.1,TRANZ+RCSOFFSET);
-		VECTOR3 m_exhaust_pos5= _V(-ATTCOOR2-0.1,-ATTCOOR2-0.1,TRANZ+RCSOFFSET);
-		VECTOR3 m_exhaust_ref4 = _V(0,0.0,1);
-		VECTOR3 m_exhaust_ref5 = _V(0,0.0,1);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,2,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,2,0);
-
-		//lin backward
-		m_exhaust_pos2= _V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10);
-		m_exhaust_ref2 = _V(-0,0,1);
-		m_exhaust_pos3= _V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10);
-		m_exhaust_ref3 = _V(-0,0,1);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,2,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,2,1);
-
-		//lin Right
-		m_exhaust_pos2= _V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25);
-		m_exhaust_ref2 = _V(-1,0,0);
-		m_exhaust_pos3= _V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17);
-		m_exhaust_ref3 = _V(-1,0,0);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,0,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,0,0);
-
-		//lin Left
-		m_exhaust_pos2= _V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17);
-		m_exhaust_ref2 = _V(1,0,0);
-		m_exhaust_pos3= _V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25);
-		m_exhaust_ref3 = _V(1,0,0);
-
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,0,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,0,1);
-
-		//lin up
-
-		m_exhaust_pos2= _V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos3= _V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref2 = _V(0,1,0);
-		m_exhaust_ref3 = _V(0,1,0);
-		m_exhaust_ref4 = _V(0,1,0);
-		m_exhaust_ref5 = _V(0,1,0);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,1);
-
-		//lin down
-		m_exhaust_pos2= _V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos3= _V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref2 = _V(0.35,-1,-0.35);
-		m_exhaust_ref3 = _V(-0.35,-1,-0.35);
-		m_exhaust_ref4 = _V(0.35,-1,0.35);
-		m_exhaust_ref5 = _V(-0.35,-1,0.35);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,0);
-
-		//Rot up
-
-		m_exhaust_pos2= _V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos3= _V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30);
-		m_exhaust_ref2 = _V(0,1,0);
-		m_exhaust_ref3 = _V(0,1,0);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref4 = _V(0.35,-1,0.35);
-		m_exhaust_ref5 = _V(-0.35,-1,0.35);
-
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-		atthand =AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-
-		//Rot down
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref4 = _V(0,1,0);
-		m_exhaust_ref5 = _V(0,1,0);
-
-		m_exhaust_pos2= _V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos3= _V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3);
-		m_exhaust_ref2 = _V(0.35,-1,-0.35);
-		m_exhaust_ref3 = _V(-0.35,-1,-0.35);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-
-		//Rot left
-
-		m_exhaust_pos2= _V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17);
-		m_exhaust_ref2 = _V(1,0,0);
-		m_exhaust_pos3= _V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8);
-		m_exhaust_ref3 = _V(0,0,-1);
-		m_exhaust_pos4= _V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25);
-		m_exhaust_ref4 = _V(-1,0,0);
-		m_exhaust_pos5= _V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10);
-		m_exhaust_ref5 = _V(-0,0,1);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-
-		//Rot right
-		m_exhaust_pos2= _V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17);
-		m_exhaust_ref2 = _V(-1,0,0);
-		m_exhaust_pos3= _V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8);
-		m_exhaust_ref3 = _V(0,0,-1);
-		m_exhaust_pos4= _V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25);
-		m_exhaust_ref4 = _V(1,0,0);
-		m_exhaust_pos5= _V(ATTCOOR-.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10);
-		m_exhaust_ref5 = _V(0,0,1);
-
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-
-		//Roll left
-		m_exhaust_pos2= _V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref2 = _V(0,1,0);
-		m_exhaust_ref4 = _V(0,1,0);
-
-		m_exhaust_pos3= _V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref3 = _V(-0.35,-1,-0.35);
-		m_exhaust_ref5 = _V(-0.35,-1,0.35);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
-
-		//Roll right
-
-		m_exhaust_pos3= _V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref3 = _V(0,1,0);
-		m_exhaust_ref5 = _V(0,1,0);
-		m_exhaust_pos2= _V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref2 = _V(0.35,-1,-0.35);
-		m_exhaust_ref4 = _V(0.35,-1,0.35);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
+//	CreateThrusterGroup (th_rcs,   1, THGROUP_ATT_YAWLEFT);
 }
 
 void sat5_lmpkd::AddRCS_LMH2(double TRANZ)
 {
-	UINT atthand;
 	const double ATTCOOR = 1.78;
 	const double ATTCOOR2 = -0.50;
 	const double ATTZ = 2.85;
 	const double TRANCOOR = 0;
 	const double TRANCOOR2 = 0.1;
-	const double ATTWIDTH=.2;
-	const double ATTHEIGHT=.5;
+	const double ATTWIDTH=.15;
+	const double ATTHEIGHT=3;
 	const double TRANWIDTH=.2;
 	const double TRANHEIGHT=1;
 	const double RCSOFFSET=0.75;
 	const double RCSOFFSETM=0.30;
 	const double RCSOFFSETM2=0.47;
 
-//	int MaxThrust=120;
-//	double RCSISP=15000;
 	double MaxThrust=445.0;
 	double RCSISP=2840.0;
 
-	th_att_lin[0]=CreateThruster (_V(2,2,-2), _V(1,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[1]=CreateThruster (_V(-2,2,-2), _V(-1,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[2]=CreateThruster (_V(2,-2,-2), _V(1,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[3]=CreateThruster (_V(-2,-2,-2), _V(-1,0,1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[4]=CreateThruster (_V(2,2,2), _V(1,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[5]=CreateThruster (_V(-2,2,2), _V(-1,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[6]=CreateThruster (_V(2,-2,2), _V(1,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[7]=CreateThruster (_V(-2,-2,2), _V(-1,0,-1),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
-	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
+	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
+	// A1U
+	th_rcs[0]=CreateThruster(_V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[0],ATTHEIGHT,ATTWIDTH,tex);
+	// A1F
+	th_rcs[1]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[1],ATTHEIGHT,ATTWIDTH,tex);
+	// B1L
+	th_rcs[2]=CreateThruster(_V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[2],ATTHEIGHT,ATTWIDTH,tex);
+	// B1D
+	th_rcs[3]=CreateThruster(_V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[3],ATTHEIGHT,ATTWIDTH,tex);
 
-	th_att_rot[2]=CreateThruster (_V(2,2,-2), _V(0,0,1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[4]=CreateThruster (_V(-2,2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[3]=CreateThruster (_V(2,-2,-2), _V(0,0,1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[5]=CreateThruster (_V(-2,-2,-2), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[7]=CreateThruster (_V(2,2,2), _V(0,0,-1),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[0]=CreateThruster (_V(-2,2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[6]=CreateThruster (_V(2,-2,2), _V(0,0,-1),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[1]=CreateThruster (_V(-2,-2,2), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	CreateThrusterGroup (th_att_rot,   4, THGROUP_ATT_YAWLEFT);
-	CreateThrusterGroup (th_att_rot+4,   4, THGROUP_ATT_YAWRIGHT);
+	// B2U
+	th_rcs[4]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[4],ATTHEIGHT,ATTWIDTH,tex);
+	// B2L
+	th_rcs[5]=CreateThruster(_V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[5],ATTHEIGHT,ATTWIDTH,tex);
+	// A2A
+	th_rcs[6]=CreateThruster(_V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[6],ATTHEIGHT,ATTWIDTH,tex);
+	// A2D
+	th_rcs[7]=CreateThruster(_V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[7],ATTHEIGHT,ATTWIDTH,tex);
 
-	th_att_lin[8]=CreateThruster (_V(2,2,2), _V(-1,0,0),   MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[9]=CreateThruster (_V(2,-2,2), _V(-1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[10]=CreateThruster (_V(2,2,-2), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[11]=CreateThruster (_V(2,-2,-2), _V(-1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[12]=CreateThruster (_V(-2,2,2), _V(1,0,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[13]=CreateThruster (_V(-2,2,-2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[14]=CreateThruster (_V(-2,-2,2), _V(1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[15]=CreateThruster (_V(-2,-2,-2), _V(1,0,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	// A3U
+	th_rcs[8]=CreateThruster(_V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[8],ATTHEIGHT,ATTWIDTH,tex);
+	// A3R
+	th_rcs[9]=CreateThruster(_V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[9],ATTHEIGHT,ATTWIDTH,tex);
+	// B3A
+	th_rcs[10]=CreateThruster(_V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[10],ATTHEIGHT,ATTWIDTH,tex);
+	// B3D
+	th_rcs[11]=CreateThruster(_V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[11],ATTHEIGHT,ATTWIDTH,tex);
 
-	th_att_lin[16]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[17]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[18]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[20]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[21]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[22]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_lin[23]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-
-	CreateThrusterGroup (th_att_lin+16,   4, THGROUP_ATT_UP);
-	CreateThrusterGroup (th_att_lin+20,   4, THGROUP_ATT_DOWN);
-	CreateThrusterGroup (th_att_lin+12,  4 , THGROUP_ATT_RIGHT);
-	CreateThrusterGroup (th_att_lin+8, 4, THGROUP_ATT_LEFT);
-
-	th_att_rot[8]=CreateThruster (_V(2,2,-2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[9]=CreateThruster (_V(-2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[12]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[13]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-
-	th_att_rot[15]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[14]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[10]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[11]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-
-	CreateThrusterGroup (th_att_rot+12,   4, THGROUP_ATT_PITCHDOWN);
-	CreateThrusterGroup (th_att_rot+8,   4, THGROUP_ATT_PITCHUP);
-
-	th_att_rot[16]=CreateThruster (_V(2,2,-2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[17]=CreateThruster (_V(2,2,2), _V(0,-1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[18]=CreateThruster (_V(-2,-2,2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[19]=CreateThruster (_V(-2,-2,-2), _V(0,1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[23]=CreateThruster (_V(-2,2,2), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[22]=CreateThruster (_V(2,-2,-2), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[20]=CreateThruster (_V(-2,2,-2), _V(0,-1,0),MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-	th_att_rot[21]=CreateThruster (_V(2,-2,2), _V(0,1,0),  MaxThrust, ph_rcslm1, RCSISP, RCSISP);
-
-	CreateThrusterGroup (th_att_rot+20,   4, THGROUP_ATT_BANKLEFT);
-	CreateThrusterGroup (th_att_rot+16,   4, THGROUP_ATT_BANKRIGHT);
-
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	//for (i = 0; i < 24; i++) vessel->AddExhaust (th_att_lin[i], 1.2, 0.18,tex);
-	//for (i = 0; i < 24; i++) vessel->AddExhaust (th_att_rot[i], 1.2, 0.18,tex);
-	//return;
-
-			//lin Forward
-
-		VECTOR3	m_exhaust_pos2= _V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8);
-		VECTOR3	m_exhaust_ref2 = _V(0,0,-1);
-		VECTOR3	m_exhaust_pos3= _V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8);
-		VECTOR3 m_exhaust_ref3 = _V(0,0,-1);
-
-
-		//just for vector init
-		VECTOR3 m_exhaust_pos4= _V(ATTCOOR2+0.1,-ATTCOOR2-0.1,TRANZ+RCSOFFSET);
-		VECTOR3 m_exhaust_pos5= _V(-ATTCOOR2-0.1,-ATTCOOR2-0.1,TRANZ+RCSOFFSET);
-		VECTOR3 m_exhaust_ref4 = _V(0,0.0,1);
-		VECTOR3 m_exhaust_ref5 = _V(0,0.0,1);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,2,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,2,0);
-
-		//lin backward
-		m_exhaust_pos2= _V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10);
-		m_exhaust_ref2 = _V(-0,0,1);
-		m_exhaust_pos3= _V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10);
-		m_exhaust_ref3 = _V(-0,0,1);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,2,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,2,1);
-
-		//lin Right
-		m_exhaust_pos2= _V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25);
-		m_exhaust_ref2 = _V(-1,0,0);
-		m_exhaust_pos3= _V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17);
-		m_exhaust_ref3 = _V(-1,0,0);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,0,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,0,0);
-
-		//lin Left
-		m_exhaust_pos2= _V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17);
-		m_exhaust_ref2 = _V(1,0,0);
-		m_exhaust_pos3= _V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25);
-		m_exhaust_ref3 = _V(1,0,0);
-
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,0,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,0,1);
-
-		//lin up
-
-		m_exhaust_pos2= _V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos3= _V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref2 = _V(0,1,0);
-		m_exhaust_ref3 = _V(0,1,0);
-		m_exhaust_ref4 = _V(0,1,0);
-		m_exhaust_ref5 = _V(0,1,0);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,1);
-
-		//lin down
-		m_exhaust_pos2= _V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos3= _V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref2 = _V(0.0,-1,-0.0);
-		m_exhaust_ref3 = _V(-0.0,-1,-0.00);
-		m_exhaust_ref4 = _V(0.0,-1,0.0);
-		m_exhaust_ref5 = _V(-0.0,-1,0.0);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_LIN,1,0);
-
-		//Rot up
-
-		m_exhaust_pos2= _V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos3= _V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30);
-		m_exhaust_ref2 = _V(0,1,0);
-		m_exhaust_ref3 = _V(0,1,0);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref4 = _V(0.35,-1,0.35);
-		m_exhaust_ref5 = _V(-0.35,-1,0.35);
-
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-		atthand =AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,0);
-
-		//Rot down
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref4 = _V(0,1,0);
-		m_exhaust_ref5 = _V(0,1,0);
-
-		m_exhaust_pos2= _V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos3= _V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3);
-		m_exhaust_ref2 = _V(0.35,-1,-0.35);
-		m_exhaust_ref3 = _V(-0.35,-1,-0.35);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,0,1);
-
-		//Rot left
-
-		m_exhaust_pos2= _V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17);
-		m_exhaust_ref2 = _V(1,0,0);
-		m_exhaust_pos3= _V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8);
-		m_exhaust_ref3 = _V(0,0,-1);
-		m_exhaust_pos4= _V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25);
-		m_exhaust_ref4 = _V(-1,0,0);
-		m_exhaust_pos5= _V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10);
-		m_exhaust_ref5 = _V(-0,0,1);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,0);
-
-		//Rot right
-		m_exhaust_pos2= _V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17);
-		m_exhaust_ref2 = _V(-1,0,0);
-		m_exhaust_pos3= _V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8);
-		m_exhaust_ref3 = _V(0,0,-1);
-		m_exhaust_pos4= _V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25);
-		m_exhaust_ref4 = _V(1,0,0);
-		m_exhaust_pos5= _V(ATTCOOR-.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10);
-		m_exhaust_ref5 = _V(0,0,1);
-
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,1,1);
-
-		//Roll left
-		m_exhaust_pos2= _V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref2 = _V(0,1,0);
-		m_exhaust_ref4 = _V(0,1,0);
-
-		m_exhaust_pos3= _V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref3 = _V(-0.35,-1,-0.35);
-		m_exhaust_ref5 = _V(-0.35,-1,0.35);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
-
-		//Roll right
-
-		m_exhaust_pos3= _V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30);
-		m_exhaust_pos5= _V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref3 = _V(0,1,0);
-		m_exhaust_ref5 = _V(0,1,0);
-		m_exhaust_pos2= _V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35);
-		m_exhaust_pos4= _V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3);
-		m_exhaust_ref2 = _V(0.35,-1,-0.35);
-		m_exhaust_ref4 = _V(0.35,-1,0.35);
-
-		atthand = AddAttExhaustRef(m_exhaust_pos2,m_exhaust_ref2,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos3,m_exhaust_ref3,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos4,m_exhaust_ref4,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
-		atthand = AddAttExhaustRef(m_exhaust_pos5,m_exhaust_ref5,ATTWIDTH,ATTHEIGHT);
-		AddAttExhaustMode(atthand,ATTMODE_ROT,2,1);
+	// B4U
+	th_rcs[12]=CreateThruster(_V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[12],ATTHEIGHT,ATTWIDTH,tex);
+	// B4F
+	th_rcs[13]=CreateThruster(_V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[13],ATTHEIGHT,ATTWIDTH,tex);
+	// A4R
+	th_rcs[14]=CreateThruster(_V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(-1,0,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[14],ATTHEIGHT,ATTWIDTH,tex);
+	// A4D
+	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, ph_rcslm1, RCSISP, RCSISP);
+	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH,tex);
 }
 
 /* OBSOLETED DS20060410
@@ -1272,6 +858,25 @@ bool sat5_lmpkd::AscentRCSArmed()
 	return AFEED1switch || AFEED2switch || AFEED3switch || AFEED4switch;
 }
 
+// DS20060302 DX8 callback for enumerating joysticks
+BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pLEM)
+{
+	class sat5_lmpkd * lem = (sat5_lmpkd*)pLEM; // Pointer to us
+	HRESULT hr;
+
+	if(lem->js_enabled > 1){  // Do we already have enough joysticks?
+		return DIENUM_STOP; } // If so, stop enumerating additional devices.
+
+	// Obtain an interface to the enumerated joystick.
+    hr = lem->dx8ppv->CreateDevice(pdidInstance->guidInstance, &lem->dx8_joystick[lem->js_enabled], NULL);
+	
+	if(FAILED(hr)) {              // Did that work?
+		return DIENUM_CONTINUE; } // No, keep enumerating (if there's more)
+
+	lem->js_enabled++;      // Otherwise, Next!
+	return DIENUM_CONTINUE; // and keep enumerating
+}
+
 void sat5_lmpkd::SystemsInit()
 
 {
@@ -1298,27 +903,255 @@ void sat5_lmpkd::SystemsInit()
 	// Temporarily wire direct to two descent batteries.
 	// Apparently unpowered (Wired to NULL) busses get 28V for some reason...
 	CDRs28VBus.WireTo(Battery1);
-	LMPs28VBus.WireTo(&ECA_1);
+	// LMPs28VBus.WireTo(&ECA_1); 
+	LMPs28VBus.WireTo(Battery2);
 
 	// RCS Main Shutoff valves
 	RCSMainSovASwitch.WireTo(&CDRs28VBus);
-	RCSMainSovBSwitch.WireTo(&LMPBatteryFeedTieCB2);
+	RCSMainSovATB.WireTo(&CDRs28VBus);
+	RCSMainSovBTB.WireTo(&LMPs28VBus);
+	RCSMainSovBSwitch.WireTo(&LMPs28VBus);
+	// RCSMainSovBSwitch.WireTo(&LMPBatteryFeedTieCB2);
+
+	// The IMU (TEMPORARY - HAX)
+	imu.WireToBuses(&CDRs28VBus, &LMPs28VBus);
+	// FDAI (TEMPORARY - HAX)
+	fdaiLeft.WireTo(&CDRs28VBus);
 
 	// Arrange for updates
 	Panelsdk.AddElectrical(&ECA_1, false);
 	
 	Panelsdk.AddElectrical(&CDRs28VBus, false);
 	Panelsdk.AddElectrical(&LMPs28VBus, false);
+
+	// DS20060413 Initialize joystick
+	HRESULT         hr;
+	js_enabled = 0;  // Disabled
+	rhc_id = -1;     // Disabled
+	rhc_rot_id = -1; // Disabled
+	rhc_sld_id = -1; // Disabled
+	rhc_rzx_id = -1; // Disabled
+	thc_id = -1;     // Disabled
+	thc_rot_id = -1; // Disabled
+	thc_sld_id = -1; // Disabled
+	thc_rzx_id = -1; // Disabled
+	thc_debug = -1;
+	rhc_debug = -1;
+	FILE *fd;
+	// Open configuration file
+	fd = fopen("Config\\ProjectApollo\\Joystick.INI","r");
+	if(fd != NULL){ // Did that work?
+		char dataline[256];
+		char *token;
+		char *parameter;
+		rhc_id = 0; // Trap!
+		while(!feof(fd)){
+			fgets(dataline,256,fd); // Yes, so read a line
+			// Get a token.
+			token = strtok(dataline," \r\n");
+			if(token != NULL){                                  // If it's not null, parse.
+				if(strncmp(token,"RHC",3)==0){                  // RHC address?
+					// Get next token, which should be JS number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						rhc_id = atoi(parameter);
+						if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"RRT",3)==0){                  // RHC ROTATOR address?
+					// Get next token, which should be ROTATOR number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						rhc_rot_id = atoi(parameter);
+						if(rhc_rot_id > 2){ rhc_rot_id = 2; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"RSL",3)==0){                  // RHC SLIDER address?
+					// Get next token, which should be SLIDER number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						rhc_sld_id = atoi(parameter);
+						if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"RZX",3)==0){                  // RHC ROTATOR address?
+					// Get next token, which should be ROTATOR number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						rhc_rzx_id = atoi(parameter);
+						if(rhc_rzx_id > 1){ rhc_rzx_id = 1; } // Be paranoid
+					}
+				}
+				/* *** THC *** */
+				if(strncmp(token,"THC",3)==0){                  // THC address?
+					// Get next token, which should be JS number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						thc_id = atoi(parameter);
+						if(thc_id > 1){ thc_id = 1; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"TRT",3)==0){                  // THC ROTATOR address?
+					// Get next token, which should be ROTATOR number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						thc_rot_id = atoi(parameter);
+						if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"TSL",3)==0){                  // THC SLIDER address?
+					// Get next token, which should be SLIDER number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						thc_sld_id = atoi(parameter);
+						if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"TZX",3)==0){                  // THC ROTATOR address?
+					// Get next token, which should be ROTATOR number
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						thc_rzx_id = atoi(parameter);
+						if(thc_rzx_id > 1){ thc_rzx_id = 1; } // Be paranoid
+					}
+				}
+				if(strncmp(token,"RDB",3)==0){					// RHC debug					
+					rhc_debug = 1;
+				}
+				if(strncmp(token,"TDB",3)==0){					// THC debug					
+					thc_debug = 1;
+				}
+			}			
+		}		
+		fclose(fd);
+		// Having read the configuration file, set up DirectX...	
+		hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
+		if(!FAILED(hr)){
+			int x=0;
+			// Enumerate attached joysticks until we find 2 or run out.
+			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+			if(js_enabled == 0){   // Did we get anything?			
+				dx8ppv->Release(); // No. Close down DirectInput
+				dx8ppv = NULL;     // otherwise it won't get closed later
+				sprintf(oapiDebugString(),"DX8JS: No joysticks found");
+			}else{
+				while(x < js_enabled){                                // For each joystick
+					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
+					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
+					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+					x++;                                              // Next!
+				}
+			}
+		}else{
+			// We can't print an error message this early in initialization, so save this reason for later investigation.
+			dx8_failure = hr;
+		}
+	}
 }
 
 void sat5_lmpkd::SystemsTimestep(double simt, double simdt) 
 
 {
+	// Joystick read
+	if(js_enabled > 0 && oapiGetFocusInterface() == this){
+	// CHECK FOR POWER HERE
+		if(thc_id != -1 && !(thc_id < js_enabled)){
+			sprintf(oapiDebugString(),"DX8JS: Joystick selected as THC does not exist.");
+		}
+		if(rhc_id != -1 && !(rhc_id < js_enabled)){
+			sprintf(oapiDebugString(),"DX8JS: Joystick selected as RHC does not exist.");
+		}
+		/* ACA OPERATION:
+
+			The LM ACA is a lot different from the CM RHC.
+			The ACA works on a D/A converter.
+			The OUT OF DETENT switch closes at .5 degrees of travel, and enables the proportional
+			voltage circuit ("A" CIRCUIT) to operate.
+			The hand controller must be moved 2 degrees to generate a count.
+			8 degrees of usable travel, at .190 degrees per count.			
+			10 degrees total travel = 42 counts.
+
+		*/
+		// Read data
+		HRESULT hr;
+		hr=dx8_joystick[rhc_id]->Poll();
+		if(FAILED(hr)){ // Did that work?
+			// Attempt to acquire the device
+			hr = dx8_joystick[rhc_id]->Acquire();
+			if(FAILED(hr)){
+				sprintf(oapiDebugString(),"DX8JS: Cannot aquire RHC");
+			}else{
+				hr=dx8_joystick[rhc_id]->Poll();
+			}
+		}		
+		dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]),&dx8_jstate[rhc_id]);
+		// Z-axis read.
+		int rhc_rot_pos = 32768; // Initialize to centered
+		if(rhc_rot_id != -1){ // If this is a rotator-type axis
+			switch(rhc_rot_id){
+				case 0:
+					rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
+				case 1:
+					rhc_rot_pos = dx8_jstate[rhc_id].lRy; break;
+				case 2:
+					rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
+			}
+		}
+		if(rhc_sld_id != -1){ // If this is a slider
+			rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
+		}
+		if(rhc_rzx_id != -1){ // If we use the native Z-axis
+			rhc_rot_pos = dx8_jstate[rhc_id].lZ;
+		}
+		// Axes have 32768 points of travel for the 13 degrees to hard stop
+		// 2520 points per degree. It breaks out of detent at .5 degres, or 1260 pulses.
+		// 480 points per count.
+		rhc_pos[0] = 0; // Initialize
+		rhc_pos[1] = 0;
+		rhc_pos[2] = 0;
+		bool out_of_detent = FALSE;
+		if(dx8_jstate[rhc_id].lX > 34028){ // Out of detent RIGHT
+			out_of_detent = TRUE;
+			rhc_pos[0] = dx8_jstate[rhc_id].lX-34028; // Results are 0 - 31507
+		}
+		if(dx8_jstate[rhc_id].lX < 31508){ // Out of detent LEFT
+			out_of_detent = TRUE;
+			rhc_pos[0] = dx8_jstate[rhc_id].lX-31508; // Results are 0 - -31508
+		}
+		if(dx8_jstate[rhc_id].lY > 34028){ // Out of detent UP
+			out_of_detent = TRUE;
+			rhc_pos[1] = dx8_jstate[rhc_id].lY-34028; // Results are 0 - 31507
+		}
+		if(dx8_jstate[rhc_id].lY < 31508){ // Out of detent DOWN
+			out_of_detent = TRUE;
+			rhc_pos[1] = dx8_jstate[rhc_id].lY-31508; // Results are 0 - -31508
+		}
+		// YAW IS REVERSED
+		if(rhc_rot_pos > 34028){ // Out of detent RIGHT
+			out_of_detent = TRUE;
+			rhc_pos[2] = 34028-rhc_rot_pos; // Results are 0 - 31507
+		}
+		if(rhc_rot_pos < 31508){ // Out of detent LEFT
+			out_of_detent = TRUE;
+			rhc_pos[2] = 31508-rhc_rot_pos; // Results are 0 - -31508
+		}
+		if(out_of_detent == TRUE){
+			agc.SetInputChannelBit(031,15,1); // ACA OUT OF DETENT
+		}else{
+			agc.SetInputChannelBit(031,15,0); 
+		}
+		// sprintf(oapiDebugString(),"RHC: POS %d = %d",rhc_rot_pos,rhc_pos[2]);
+
+	}
 	// Each timestep is passed to the SPSDK
 	// to perform internal computations on the 
 	// systems.
 
 	Panelsdk.Timestep(simt);
+
+	// After that come all other systems simesteps
+	fdaiLeft.Timestep(MissionTime, simdt);
+
 }
 
 // PANEL SDK SUPPORT
@@ -1425,40 +1258,59 @@ void LEM_ECA::UpdateFlow(double dt){
 
 void sat5_lmpkd::CheckRCS()
 {
-	// FIXME - CORRECT THESE
-	sprintf(oapiDebugString(),"CheckRCS: %d %d",GetValveState(LEM_RCS_MAIN_SOV_A),GetValveState(LEM_RCS_MAIN_SOV_B));
-	if(GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B)){
-		for(int i=8;i<16;i++){
-			SetThrusterResource(th_att_rot[i],ph_DscRCSA);
-			SetThrusterResource(th_att_lin[i+8],ph_DscRCSA);
-		}
+	/* THRUSTER TABLE:
+		0	A1U		8	A3U
+		1	A1F		9	A3R
+		2	B1L		10	B3A
+		3	B1D		11	B3D
+
+		4	B2U		12	B4U
+		5	B2L		13	B4F
+		6	A2A		14	A4R
+		7	A2D		15	A4D
+	*/
+
+	/*
+	sprintf(oapiDebugString(),"CheckRCS: %d %d %f %f",GetValveState(LEM_RCS_MAIN_SOV_A),GetValveState(LEM_RCS_MAIN_SOV_B),
+		GetPropellantMass(ph_DscRCSA),GetPropellantMass(ph_DscRCSB)); */
+
+	if(GetValveState(LEM_RCS_MAIN_SOV_A)){
+		SetThrusterResource(th_rcs[0],ph_DscRCSA);
+		SetThrusterResource(th_rcs[1],ph_DscRCSA);
+		SetThrusterResource(th_rcs[6],ph_DscRCSA);
+		SetThrusterResource(th_rcs[7],ph_DscRCSA);
+		SetThrusterResource(th_rcs[8],ph_DscRCSA);
+		SetThrusterResource(th_rcs[9],ph_DscRCSA);
+		SetThrusterResource(th_rcs[14],ph_DscRCSA);
+		SetThrusterResource(th_rcs[15],ph_DscRCSA);
 	}else{
-		for(int i=8;i<16;i++){
-			SetThrusterResource(th_att_rot[i],NULL);
-			SetThrusterResource(th_att_lin[i+8],NULL);
-		}
+		SetThrusterResource(th_rcs[0],NULL);
+		SetThrusterResource(th_rcs[1],NULL);
+		SetThrusterResource(th_rcs[6],NULL);
+		SetThrusterResource(th_rcs[7],NULL);
+		SetThrusterResource(th_rcs[8],NULL);
+		SetThrusterResource(th_rcs[9],NULL);
+		SetThrusterResource(th_rcs[14],NULL);
+		SetThrusterResource(th_rcs[15],NULL);
 	}
-	if(GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B)){
-		for(int i=0;i<8;i++){
-			SetThrusterResource(th_att_rot[i],ph_DscRCSA);
-			SetThrusterResource(th_att_lin[i+8],ph_DscRCSA);
-		}
+	if(GetValveState(LEM_RCS_MAIN_SOV_B)){
+		SetThrusterResource(th_rcs[2],ph_DscRCSB);
+		SetThrusterResource(th_rcs[3],ph_DscRCSB);
+		SetThrusterResource(th_rcs[4],ph_DscRCSB);
+		SetThrusterResource(th_rcs[5],ph_DscRCSB);
+		SetThrusterResource(th_rcs[10],ph_DscRCSB);
+		SetThrusterResource(th_rcs[11],ph_DscRCSB);
+		SetThrusterResource(th_rcs[12],ph_DscRCSB);
+		SetThrusterResource(th_rcs[13],ph_DscRCSB);
 	}else{
-		for(int i=0;i<8;i++){
-			SetThrusterResource(th_att_rot[i],NULL);
-			SetThrusterResource(th_att_lin[i+8],NULL);
-		}
+		SetThrusterResource(th_rcs[2],NULL);
+		SetThrusterResource(th_rcs[3],NULL);
+		SetThrusterResource(th_rcs[4],NULL);
+		SetThrusterResource(th_rcs[5],NULL);
+		SetThrusterResource(th_rcs[10],NULL);
+		SetThrusterResource(th_rcs[11],NULL);
+		SetThrusterResource(th_rcs[12],NULL);
+		SetThrusterResource(th_rcs[13],NULL);
 	}
-	if(GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B)){
-		for(int i=0;i<8;i++){
-			SetThrusterResource(th_att_rot[i+16],ph_DscRCSA);
-			SetThrusterResource(th_att_lin[i],ph_DscRCSA);
-		}
-	}else{
-		for(int i=0;i<8;i++){
-			SetThrusterResource(th_att_rot[i+16],NULL);
-			SetThrusterResource(th_att_lin[i],NULL);
-		}
-	}		
 	return;
 }

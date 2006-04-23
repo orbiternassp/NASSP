@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/04/17 18:14:27  movieman523
+  *	Added flashing borders to all switches (I think).
+  *	
   *	Revision 1.51  2006/04/17 15:16:16  movieman523
   *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
   *	
@@ -267,6 +270,8 @@ void sat5_lmpkd::InitPanel() {
 	ShiftTruSwitch.Register(PSH, "ShiftTruSwitch", true);
 	RateScaleSwitch.Register(PSH, "RateScaleSwitch", false);
 	ACAPropSwitch.Register(PSH, "ACAPropSwitch", true);
+	RCSMainSovATB.Register(PSH, "RCSMainSovATB", true);
+	RCSMainSovBTB.Register(PSH, "RCSMainSovBTB", true);
 	RCSMainSovASwitch.Register(PSH, "RCSMainSOVASwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	RCSMainSovBSwitch.Register(PSH, "RCSMainSOVBSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	THRContSwitch.Register(PSH, "THRContSwitch", true);
@@ -775,6 +780,7 @@ void sat5_lmpkd::InitPanel (int panel)
 //	case LMPANEL_MAIN: // LEM Main Panel
 		srf[0]						= oapiCreateSurface (LOADBMP (IDB_ECSG));
 		//srf[1]					= oapiCreateSurface (LOADBMP (IDB_INDICATORS1));
+		srf[SRF_INDICATOR]			= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
 		srf[2]						= oapiCreateSurface (LOADBMP (IDB_NEEDLE1));
 		srf[3]						= oapiCreateSurface (LOADBMP (IDB_HORIZON));
 		srf[SRF_DIGITAL]			= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
@@ -800,9 +806,13 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_LMTHREEPOSLEVER]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSLEVER));
 		srf[SRF_LMTHREEPOSSWITCH]	= oapiCreateSurface (LOADBMP (IDB_LMTHREEPOSSWITCH));
 		srf[SRF_DSKYDISP]			= oapiCreateSurface (LOADBMP (IDB_DSKY_DISP));		
+		srf[SRF_FDAI]	        	= oapiCreateSurface (LOADBMP (IDB_FDAI));
+		srf[SRF_FDAIROLL]       	= oapiCreateSurface (LOADBMP (IDB_FDAI_ROLL));
 		srf[SRF_DSKYKEY]			= oapiCreateSurface (LOADBMP (IDB_DSKY_KEY));
 		srf[SRF_SWITCHUP]			= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 		srf[SRF_LEMROTARY]			= oapiCreateSurface (LOADBMP (IDB_LEMROTARY));
+		srf[SRF_FDAIOFFFLAG]       	= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
+		srf[SRF_FDAINEEDLES]		= oapiCreateSurface (LOADBMP (IDB_FDAINEEDLES));
 		srf[SRF_CIRCUITBRAKERLEM]	= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKERLEM));
 		srf[SRF_BORDER_34x29]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
 		srf[SRF_BORDER_34x61]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
@@ -854,7 +864,12 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],				g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_LEMROTARY],			g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKERLEM],		g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_FDAI],					g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_FDAIROLL],				g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_FDAIOFFFLAG],			g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_FDAINEEDLES],			g_Param.col[4]);
 
+		//		break;
 		//
 		// Borders need to set the center color to transparent so only the outline
 		// is visible.
@@ -883,8 +898,7 @@ void sat5_lmpkd::InitPanel (int panel)
 
 
 
-//		break;
-	
+//		break;	
 //	case LMPANEL_RIGHTWINDOW: // LEM Right Window 
 //	case LMPANEL_LEFTWINDOW: // LEM Left Window 
 		
@@ -959,6 +973,9 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterMFD (MFD_LEFT,  mfds_left);
 		oapiRegisterMFD (MFD_RIGHT, mfds_right);
 
+		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 135, 625);
+		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
+
 		oapiRegisterPanelArea (AID_MFDLEFT,						    _R(  27, 1564,  452, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDRIGHT,					    _R(1032, 1564, 1457, 1918), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,              PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ABORT,							_R( 549,  870,  702,  942), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -988,6 +1005,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RIGHTMONITORSWITCHES,			_R(1400,  712, 1434,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TEMPPRESSMONROTARY,				_R( 791, 1005,  869, 1083), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACAPROPSWITCH,					_R(1012, 1012, 1046, 1051), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MAIN_SOV_TALKBACKS,				_R( 946,  870, 1040,  894), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_SOV_SWITCHES,			    _R( 941,  922, 1046,  961), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CLYCOLSUITFANROTARIES,			_R(1101,  929, 1179, 1127), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_QTYMONROTARY,					_R(1287,  989, 1365, 1067), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1200,13 +1218,13 @@ void sat5_lmpkd::SetSwitches(int panel) {
 			RightACAPropSwitch.Init(  0,  0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], RightACAPropSwitchRow);
 
 			// DS20060406 HERE WE GO!
-			RCSMainSOVSwitchRow.Init(AID_MAIN_SOV_SWITCHES, MainPanel);
-			// SMRCSHelium1ASwitch.Init (0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], SMRCSHelium1Row, this, CSM_He1_TANKA_VALVE, &SMRCSHelium1ATalkback);
-			RCSMainSovASwitch.Init  ( 0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_A, NULL);
-			RCSMainSovBSwitch.Init  (71,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_B, NULL);
+			RCSMainSOVTBRow.Init(AID_MAIN_SOV_TALKBACKS, MainPanel);
+			RCSMainSovATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, LEM_RCS_MAIN_SOV_A, this);
+			RCSMainSovBTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, LEM_RCS_MAIN_SOV_B, this);
 
-			// &RCSMainSovBTalkback
-			// Talkback.Init(0, 0, 23, 23, srf[SRF_INDICATOR], SMRCSHelium1TalkbackRow, CSM_He1_TANKA_VALVE, this);
+			RCSMainSOVSwitchRow.Init(AID_MAIN_SOV_SWITCHES, MainPanel);
+			RCSMainSovASwitch.Init  ( 0,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_A, &RCSMainSovATB);
+			RCSMainSovBSwitch.Init  (71,  0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow, this, LEM_RCS_MAIN_SOV_B, &RCSMainSovBTB);
 
 			ClycolSuitFanRotaryRow.Init(AID_CLYCOLSUITFANROTARIES, MainPanel);
 			ClycolRotary.Init (0,   0, 78, 78, srf[SRF_LEMROTARY], srf[SRF_BORDER_78x78], ClycolSuitFanRotaryRow);
@@ -2420,6 +2438,64 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_FDAI:
 		RedrawPanel_Horizon (surf);
 		return true;
+
+	case AID_FDAI_LEFT:
+		if (!fdaiDisabled){			
+			VECTOR3 euler_rates;
+			VECTOR3 attitude;
+			VECTOR3 errors;
+			int no_att = 0;
+			/*
+			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
+			switch(FDAISourceSwitch.GetState()){
+				case THREEPOSSWITCH_UP:     // 1+2 - FDAI1 shows IMU ATT / CMC ERR
+					euler_rates = gdc.rates; */
+					euler_rates = _V(0,0,0);
+					attitude = imu.GetTotalAttitude();
+					errors = _V(0,0,0);
+					/* errors = eda.ReturnCMCErrorNeedles();
+					break;
+				case THREEPOSSWITCH_DOWN:   // 1 -- ALTERNATE DIRECT MODE
+					euler_rates = gdc.rates;					
+					switch(FDAISelectSwitch.GetState()){
+						case THREEPOSSWITCH_UP:   // IMU
+							attitude = imu.GetTotalAttitude();
+							errors = eda.ReturnCMCErrorNeedles();
+							break;
+						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
+							// Get attutude
+							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
+								attitude = imu.GetTotalAttitude();
+							}else{
+								attitude = gdc.attitude;
+							}
+							errors = eda.AdjustErrorsForRoll(attitude,eda.ReturnASCPError(attitude));
+							break;
+						case THREEPOSSWITCH_DOWN: // GDC
+							attitude = gdc.attitude;
+							errors = eda.ReturnBMAG1Error();
+							break;
+					}
+					break;				
+				case THREEPOSSWITCH_CENTER: // 2
+					attitude = _V(0,0,0);   // No
+					errors = _V(0,0,0);
+					euler_rates = gdc.rates;
+					// euler_rates = _V(0,0,0); // Does not disconnect rate inputs?
+					no_att = 1;
+					break;
+			}
+			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
+			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
+			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
+			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
+			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+			*/
+			// sprintf(oapiDebugString(),"LEM FDAI PAINT");
+			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, 0, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+		}
+		return true;
+
 
 	case AID_MISSION_CLOCK:
 		MissionTimerDisplay.Render(surf, srf[SRF_DIGITAL]);

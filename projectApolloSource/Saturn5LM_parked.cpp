@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2006/04/22 03:53:48  jasonims
+  *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
+  *	
   *	Revision 1.45  2006/04/17 15:16:16  movieman523
   *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
   *	
@@ -216,6 +219,8 @@ static SoundEvent sevent        ;
 static double NextEventTime = 0.0;
 #endif
 
+static GDIParams g_Param;
+
 // ==============================================================
 // API interface
 // ==============================================================
@@ -227,6 +232,7 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	switch (ul_reason_for_call) {
 	case DLL_PROCESS_ATTACH:
 		InitGParam(hModule);
+		g_Param.hDLL = hModule; // DS20060413 Save for later
 		InitCollisionSDK();
 		break;
 
@@ -281,6 +287,7 @@ LanderVessel::LanderVessel(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel)
 }
 
 sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
+	
 	CDRs28VBus("CDR-28V-Bus",NULL),
 	LMPs28VBus("LMP-28V-Bus",NULL),
 	dsky(soundlib, agc, 015),
@@ -288,6 +295,8 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	imu(agc, Panelsdk)
 
 {
+	dllhandle = g_Param.hDLL; // DS20060413 Save for later
+
 	// VESSELSOUND **********************************************************************
 	// initialisation
 
@@ -304,6 +313,19 @@ sat5_lmpkd::~sat5_lmpkd()
     sevent.Stop();
 	sevent.Done();
 #endif
+
+	// DS20060413 release DirectX stuff
+	if(js_enabled > 0){
+		// Release joysticks
+		while(js_enabled > 0){
+			js_enabled--;
+			dx8_joystick[js_enabled]->Unacquire();
+			dx8_joystick[js_enabled]->Release();
+		}
+		dx8ppv->Release();
+		dx8ppv = NULL;
+	}
+
 }
 
 void sat5_lmpkd::Init()
@@ -312,6 +334,9 @@ void sat5_lmpkd::Init()
 	RCS_Full=true;
 	Eds=true;	
 	toggleRCS =false;
+
+	fdaiDisabled = false;
+	fdaiSmooth = false;
 
 	InitPanel();
 
@@ -349,7 +374,7 @@ void sat5_lmpkd::Init()
 	SwitchFocusToLeva = 0;
 
 	agc.ControlVessel(this);
-	imu.SetVessel(this);
+	imu.SetVessel(this,TRUE);
 
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
@@ -797,11 +822,12 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 		Sswitch1=false;
 		Undock(0);
 		}
+	/* OBSOLETED DS20060412
 	if (GetNavmodeState(NAVMODE_KILLROT)&& !ATT2switch && !ATT3switch){
 		if (GetThrusterLevel(th_att_rot[10]) <0.00001 && GetThrusterLevel(th_att_rot[18]) <0.00001 ){
 			DeactivateNavmode(NAVMODE_KILLROT);
 		}
-	}
+	} */
 	if (stage == 0)	{
 		if ((EngineArmSwitch.IsDown())  && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
@@ -1328,3 +1354,6 @@ void sat5_lmpkd::PadLoad(unsigned int address, unsigned int value)
  }
 
 
+void sat5_lmpkd::SetRCSJet(int jet,bool fire){
+	SetThrusterLevel(th_rcs[jet],fire);
+}

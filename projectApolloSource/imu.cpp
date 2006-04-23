@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/02/13 21:35:02  tschachim
+  *	Bugfix turn on process.
+  *	
   *	Revision 1.15  2006/02/12 01:07:49  tschachim
   *	Bugfix coarse align.
   *	
@@ -431,9 +434,14 @@ void IMU::Timestep(double simt)
 
 	// fill OrbiterData
 	OurVessel->GetStatus(vs);
-	double orbiterAttitudeX = vs.arot.x;
-	double orbiterAttitudeY = vs.arot.y;
-	double orbiterAttitudeZ = vs.arot.z;
+	double orbiterAttitudeX;
+	double orbiterAttitudeY;
+	double orbiterAttitudeZ;
+
+	// LM needs yaw and roll swapped from CM orientation
+	orbiterAttitudeX = vs.arot.x;
+	orbiterAttitudeY = vs.arot.y;
+	orbiterAttitudeZ = vs.arot.z;
 
 	if (!Initialized) {
 		Orbiter.Attitude.X = orbiterAttitudeX;
@@ -463,7 +471,6 @@ void IMU::Timestep(double simt)
 //		val12.Value = agc.GetInputChannel(012);
 		val12.Value = agc.GetOutputChannel(012); //TODOX15 it seems better because it is an output channel
 
-
 		if (val12.Bits.ZeroIMUCDUs) {
 			ZeroIMUCDUs();
 		}
@@ -490,12 +497,12 @@ void IMU::Timestep(double simt)
 
 			// drive gimbals to new angles		  		  				  		  	 	 	  		  	
 			// CAUTION: gimbal angles are left-handed
-		  	DriveGimbalX(-newAngles.x - Gimbal.X);
+			DriveGimbalX(-newAngles.x - Gimbal.X);
 		  	DriveGimbalY(-newAngles.y - Gimbal.Y);
 		  	DriveGimbalZ(-newAngles.z - Gimbal.Z);
-			
+
 			// PIPAs
-			acc.x = accel.x;;
+			acc.x = accel.x;
 			acc.y = accel.y;
 			acc.z = accel.z;
 
@@ -518,7 +525,7 @@ void IMU::Timestep(double simt)
 
 			pulses = RemainingPIPA.Z + (accI.z * deltaTime / 0.0585);
 			PulsePIPA(RegPIPAZ, (int) pulses);
-			RemainingPIPA.Z = pulses - (int) pulses;
+			RemainingPIPA.Z = pulses - (int) pulses;			
 		}
 
 		Orbiter.LastAttitude.X = Orbiter.Attitude.X;
@@ -540,7 +547,6 @@ void IMU::DriveGimbals(double x, double y, double z)
 	DriveGimbal(0, RegCDUX, x - Gimbal.X, 0);
 	DriveGimbal(1, RegCDUY, y - Gimbal.Y, 0);
 	DriveGimbal(2, RegCDUZ, z - Gimbal.Z, 0);
-
 	SetOrbiterAttitudeReference();
 }
 
@@ -673,7 +679,7 @@ void IMU::DriveCDUY(int cducmd)
 void IMU::DriveCDUZ(int cducmd) 
 
 {
-    DriveCDU(2, RegCDUZ, cducmd);
+	DriveCDU(2, RegCDUZ, cducmd);
 }
 
 void IMU::DriveCDU(int index, int RegCDU, int cducmd) 
@@ -699,9 +705,7 @@ void IMU::DriveCDU(int index, int RegCDU, int cducmd)
 }
 
 void IMU::SetOrbiterAttitudeReference() 
-
 {
-
 	IMU_Matrix3 t;
 
 	// transformation to navigation base coordinates
@@ -734,10 +738,15 @@ VECTOR3 IMU::GetTotalAttitude()
 
 {
 	VECTOR3 v;
-	v.x = Gimbal.X;
-	v.y = Gimbal.Y;
-	v.z = Gimbal.Z;
-
+	if(LEM){
+		v.x = Gimbal.Z;
+		v.y = Gimbal.Y;
+		v.z = Gimbal.X;
+	}else{
+		v.x = Gimbal.X;
+		v.y = Gimbal.Y;
+		v.z = Gimbal.Z;
+	}
 	return v;
 }
 

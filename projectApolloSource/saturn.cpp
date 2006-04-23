@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.130  2006/04/17 15:16:16  movieman523
+  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
+  *	
   *	Revision 1.129  2006/04/06 19:32:49  movieman523
   *	More Apollo 13 support.
   *	
@@ -740,7 +743,7 @@ void Saturn::initSaturn()
 	//
 
 	agc.ControlVessel(this);
-	imu.SetVessel(this);
+	imu.SetVessel(this,FALSE);
 	dsky.Init();
 	dsky2.Init();
 

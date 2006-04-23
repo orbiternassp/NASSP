@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by Resources.rc
+// Used by LEMResources.rc
 //
 #define AID_HORIZON                     11
 #define AID_HORIZON2                    12
@@ -50,10 +50,10 @@
 #define AID_ACVOLTS                     57
 #define AID_CMC_SWITCH                  58
 #define AID_SC_SWITCH                   59
-#define IDB_SPS_FUEL_FONT_WHITE			60
-#define IDB_SPS_FUEL_FONT_BLACK			61
-#define AID_SPS_FUEL_PERCENT_DISPLAY	62
-#define AID_SPS_OXID_PERCENT_DISPLAY	63
+#define IDB_SPS_FUEL_FONT_WHITE         60
+#define IDB_SPS_FUEL_FONT_BLACK         61
+#define AID_SPS_FUEL_PERCENT_DISPLAY    62
+#define AID_SPS_OXID_PERCENT_DISPLAY    63
 #define IDB_BORDER_34x29				64
 #define IDB_BORDER_34x61				65
 #define AID_ELS_SWITCHES                66
@@ -62,7 +62,7 @@
 #define IDB_BORDER_39x38				69
 #define AID_DCVOLTS                     70
 #define AID_FCSM_SWITCH                 71
-#define AID_GPFPI_METERS				72
+#define AID_GPFPI_METERS                72
 #define AID_DIRECT_ULLAGE_THRUST_ON_LIGHT 73
 #define AID_LV_ENGINE_LIGHTS            74
 #define AID_LV_TANK_GAUGES              75
@@ -538,23 +538,24 @@
 #define IDB_CIRCUITBRAKERLEM            809
 #define AID_ACBUSBCIRCUITBREAKERS       810
 #define AID_GDCALIGNBUTTON              811
-#define AID_ASCPDISPLAYROLL				812
-#define AID_ASCPDISPLAYPITCH			813
-#define AID_ASCPDISPLAYYAW				814
-#define AID_ASCPINCROLL					815
-#define AID_ASCPINCPITCH				816
-#define AID_ASCPINCYAW					817
-#define AID_ASCPDECROLL					818
-#define AID_ASCPDECPITCH				819
-#define AID_ASCPDECYAW					820
-#define AID_DSC_HIGH_VOLTAGE_SWITCHES	821
-#define AID_LEM_P16_CB_ROW4				822
+#define AID_ASCPDISPLAYROLL             812
+#define AID_ASCPDISPLAYPITCH            813
+#define AID_ASCPDISPLAYYAW              814
+#define AID_ASCPINCROLL                 815
+#define AID_ASCPINCPITCH                816
+#define AID_ASCPINCYAW                  817
+#define AID_ASCPDECROLL                 818
+#define AID_ASCPDECPITCH                819
+#define AID_ASCPDECYAW                  820
+#define AID_DSC_HIGH_VOLTAGE_SWITCHES   821
+#define AID_LEM_P16_CB_ROW4             822
+#define AID_MAIN_SOV_TALKBACKS          823
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        301
+#define _APS_NEXT_RESOURCE_VALUE        302
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           10001
