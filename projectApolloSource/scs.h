@@ -122,7 +122,7 @@ public: // We use these inside a timestep, so everything is public to make data 
 	bool YawDnClick(int Event);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
-
+	int mousedowncounter;                                          // Mouse Down Counter
 	VECTOR3 output;												   // Output attitude
 	Saturn *sat;												   // The spacecraft
 	int msgcounter;

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.99  2006/04/06 19:32:49  movieman523
+  *	More Apollo 13 support.
+  *	
   *	Revision 1.98  2006/04/05 00:55:06  dseagrav
   *	Bugfix: Do not read joysticks when we don't have input focus.
   *	
@@ -3732,64 +3735,168 @@ bool ASCP::YawDisplayClicked(){
 }
 
 bool ASCP::RollUpClick(int Event){
+	bool changed = false;
 	switch(Event){
-		case PANEL_MOUSE_LBDOWN:
-			output.x++; break;
-		case PANEL_MOUSE_RBDOWN:
-			output.x += 0.1; break;	
+		case PANEL_MOUSE_LBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter==1){
+				changed = true;
+				output.x++;				
+			}else{
+				if(mousedowncounter == 10){
+					output.x++;
+					changed = true;
+					mousedowncounter = 5;
+				}
+			}
+			break;
+		case PANEL_MOUSE_RBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter == 1){
+				output.x += 0.1;
+				changed = true;
+			}
+			break;
+		case PANEL_MOUSE_LBUP:
+		case PANEL_MOUSE_RBUP:
+			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
-	if(output.x >= 360){ output.x -= 360; }
+	if(output.x > 360){ output.x -= 360; }
 	RollDisplayClicked();
-	return true;
+	return changed;
 }
 
 bool ASCP::RollDnClick(int Event){
+	bool changed = false;
 	switch(Event){
-		case PANEL_MOUSE_LBDOWN:
-			output.x--; break;
-		case PANEL_MOUSE_RBDOWN:
-			output.x -= 0.1; break;	
+		case PANEL_MOUSE_LBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter==1){
+				changed = true;
+				output.x--;				
+			}else{
+				if(mousedowncounter == 10){
+					output.x--;
+					changed = true;
+					mousedowncounter = 5;
+				}
+			}
+			break;
+		case PANEL_MOUSE_RBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter == 1){
+				output.x -= 0.1;
+				changed = true;
+				mousedowncounter = 2;
+			}
+			break;
+		case PANEL_MOUSE_LBUP:
+		case PANEL_MOUSE_RBUP:
+			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
 	if(output.x < 0){ output.x += 360; }
 	RollDisplayClicked();
-	return true;
+	return changed;
 }
 
 bool ASCP::PitchUpClick(int Event){
+	bool changed = false;
 	switch(Event){
-		case PANEL_MOUSE_LBDOWN:
-			output.y++; break;
-		case PANEL_MOUSE_RBDOWN:
-			output.y += 0.1; break;	
+		case PANEL_MOUSE_LBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter==1){
+				changed = true;
+				output.y++;				
+			}else{
+				if(mousedowncounter == 10){
+					output.y++;
+					changed = true;
+					mousedowncounter = 5;
+				}
+			}
+			break;
+		case PANEL_MOUSE_RBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter == 1){
+				output.y += 0.1;
+				changed = true;
+				mousedowncounter = 2;
+			}
+			break;
+		case PANEL_MOUSE_LBUP:
+		case PANEL_MOUSE_RBUP:
+			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
 	if(output.y >= 360){ output.y -= 360; }
 	PitchDisplayClicked();
-	return true;
+	return changed;
 }
 
 bool ASCP::PitchDnClick(int Event){
+	bool changed = false;
 	switch(Event){
-		case PANEL_MOUSE_LBDOWN:
-			output.y--; break;
-		case PANEL_MOUSE_RBDOWN:
-			output.y -= 0.1; break;	
+		case PANEL_MOUSE_LBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter==1){
+				changed = true;
+				output.y--;				
+			}else{
+				if(mousedowncounter == 10){
+					output.y--;
+					changed = true;
+					mousedowncounter = 5;
+				}
+			}
+			break;
+		case PANEL_MOUSE_RBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter == 1){
+				output.y -= 0.1;
+				changed = true;
+				mousedowncounter = 2;
+			}
+			break;
+		case PANEL_MOUSE_LBUP:
+		case PANEL_MOUSE_RBUP:
+			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
 	if(output.y < 0){ output.y += 360; }
 	PitchDisplayClicked();
-	return true;
+	return changed;
 }
 
 bool ASCP::YawUpClick(int Event){
 	// Cannot click beyond 90 degrees.
+	bool changed = false;
 	switch(Event){
-		case PANEL_MOUSE_LBDOWN:
-			output.z++; break;
-		case PANEL_MOUSE_RBDOWN:
-			output.z += 0.1; break;	
+		case PANEL_MOUSE_LBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter==1){
+				changed = true;
+				output.z++;				
+			}else{
+				if(mousedowncounter == 10){
+					output.z++;
+					changed = true;
+					mousedowncounter = 5;
+				}
+			}
+			break;
+		case PANEL_MOUSE_RBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter == 1){
+				output.z += 0.1;
+				changed = true;
+				mousedowncounter = 2;
+			}
+			break;
+		case PANEL_MOUSE_LBUP:
+		case PANEL_MOUSE_RBUP:
+			mousedowncounter = 0; return false; break;
 	}
 	if(output.z > 90 && output.z < 270){ // Can't get here
 		output.z = 90;
@@ -3797,16 +3904,37 @@ bool ASCP::YawUpClick(int Event){
 	// Wrap around zero
 	if(output.z >= 360){ output.z -= 360; }
 	YawDisplayClicked();
-	return true;
+	return changed;
 }
 
 bool ASCP::YawDnClick(int Event){
 	// Cannot click beyond 270 degrees.
+	bool changed = false;
 	switch(Event){
-		case PANEL_MOUSE_LBDOWN:
-			output.z--; break;
-		case PANEL_MOUSE_RBDOWN:
-			output.z -= 0.1; break;	
+		case PANEL_MOUSE_LBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter==1){
+				changed = true;
+				output.z--;				
+			}else{
+				if(mousedowncounter == 10){
+					output.z--;
+					changed = true;
+					mousedowncounter = 5;
+				}
+			}
+			break;
+		case PANEL_MOUSE_RBPRESSED:
+			mousedowncounter++;
+			if(mousedowncounter == 1){
+				output.z -= 0.1;
+				changed = true;
+				mousedowncounter = 2;
+			}
+			break;
+		case PANEL_MOUSE_LBUP:
+		case PANEL_MOUSE_RBUP:
+			mousedowncounter = 0; return false; break;
 	}
 	if(output.z < 270 && output.z > 90){ // Can't get here
 		output.z = 270;
@@ -3814,7 +3942,7 @@ bool ASCP::YawDnClick(int Event){
 	// Wrap around zero
 	if(output.z < 0){ output.z += 360; }
 	YawDisplayClicked();
-	return true;
+	return changed;
 }
 
 
