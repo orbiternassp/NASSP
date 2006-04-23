@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/04/17 18:14:27  movieman523
+  *	Added flashing borders to all switches (I think).
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -69,6 +72,7 @@ void LEMValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switc
 int LEMValveTalkback::GetState()
 
 {
+	//sprintf(oapiDebugString(),"SRCV %f STATE %d",SRC->Voltage(),our_vessel->GetValveState(Valve));
 	if (our_vessel && (SRC->Voltage() > 20))
 		return our_vessel->GetValveState(Valve) ? 1 : 0;
 
@@ -111,7 +115,7 @@ bool LEMValveSwitch::SwitchTo(int newState)
 void LEMValveSwitch::CheckValve(int s) 
 
 {
-	sprintf(oapiDebugString(),"Switching %d",SRC->Voltage());	
+	//sprintf(oapiDebugString(),"Switching %d",SRC->Voltage());	
 	if (lem && (SRC->Voltage() > 20)) {
 		if (s == THREEPOSSWITCH_UP) {
 			lem->SetValveState(Valve, true);

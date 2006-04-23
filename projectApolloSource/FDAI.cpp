@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/04/05 16:50:30  tschachim
+  *	Bugfix OFF flag.
+  *	
   *	Revision 1.13  2006/03/12 16:48:04  movieman523
   *	Fixed compile warnings.
   *	
@@ -228,7 +231,6 @@ void FDAI::MoveBall() {
 
 void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
 				   SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth) {
-
 	if (!init) InitGL();
 
 	SetAttitude(attitude);
@@ -255,10 +257,10 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	HDC hDCTemp = CreateCompatibleDC(hDC);
 	HBITMAP hBmpTemp = (HBITMAP) SelectObject(hDCTemp, hBmpRoll);
 
-	HBITMAP hBmpRotate = RotateMemoryDC(hBmpRoll, hDCTemp, 20, 20, (float)(PI - angle), hDCRotate, rotateX, rotateY); 
-    HBITMAP hBmpXXX = CreateCompatibleBitmap(hDCRotate, rotateX, rotateY);
+	HBITMAP hBmpRotate = RotateMemoryDC(hBmpRoll, hDCTemp, 20, 20, (float)(PI - angle), hDCRotate, rotateX, rotateY); 	
+	HBITMAP hBmpXXX = CreateCompatibleBitmap(hDCRotate, rotateX, rotateY);
 	SelectObject(hDCRotate, hBmpXXX);
-	
+
 	double radius = 62;
 	// Was + 93 and 92
 	int targetX = ((int)( sin(-angle) * radius)) + 123 - ((int)(rotateX/2));

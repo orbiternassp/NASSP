@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2006/04/04 23:36:14  dseagrav
+  *	Added the beginnings of the telecom subsystem.
+  *	
   *	Revision 1.38  2006/03/12 01:13:28  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -322,7 +325,7 @@ protected:
 	virtual void ProcessChannel10(int val);
 	virtual void ProcessChannel11Bit(int bit, bool val);
 	virtual void ProcessChannel11(int val);
-	void ProcessChannel13();
+	virtual void ProcessChannel13(int val);
 	virtual void ProcessChannel160(int val);
 	virtual void ProcessChannel161(int val);
 	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);

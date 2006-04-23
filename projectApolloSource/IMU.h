@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.5  2005/12/02 19:47:19  movieman523
   *	Replaced most PowerSource code with e_object.
   *	
@@ -70,7 +73,7 @@ public:
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
-	void SetVessel(VESSEL *v) { OurVessel = v; };
+	void SetVessel(VESSEL *v, bool LEMFlag) { OurVessel = v; LEM = LEMFlag; };
 	VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
@@ -84,6 +87,7 @@ public:
 
 protected:
 
+	bool LEM; // Flag to indicate LEM mode
 	VECTOR3 CalculateAccelerations(double deltaT);
 	void DriveCDUX(int cducmd);
 	void DriveCDUY(int cducmd);

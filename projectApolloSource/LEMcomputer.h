@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.19  2005/09/20 22:38:27  lazyd
   *	Moved programs from here to apolloguidance
   *	
@@ -193,6 +196,12 @@ public:
 	void SetInputChannelBit(int channel, int bit, bool val);
 
 protected:
+
+	// DS20060413
+	void ProcessChannel13(int val);
+	void ProcessChannel5(int val);
+	void ProcessChannel6(int val);
+
 
 	void DisplayNounData(int noun);
 	void ProgPressed(int R1, int R2, int R3);

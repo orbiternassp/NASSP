@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/04/22 03:53:48  jasonims
+  *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
+  *	
   *	Revision 1.39  2006/04/17 15:16:16  movieman523
   *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
   *	
@@ -147,6 +150,12 @@
 #if !defined(_PA_SAT5_LMPKD_H)
 #define _PA_SAT5_LMPKD_H
 
+#include "FDAI.h"
+
+// DS20060413 Include DirectInput
+#define DIRECTINPUT_VERSION 0x0800
+#include "dinput.h"
+
 //
 // Valves.
 //
@@ -238,6 +247,9 @@ public:
 	bool GetValveState(int valve);
 	void SetValveState(int valve, bool open);
 
+	// DS20060416 RCS management
+	void SetRCSJet(int jet,bool fire);
+
 	//
 	// These functions must be virtual so they can be called from the Saturn V or the LEVA
 	//
@@ -249,10 +261,36 @@ public:
 	PROPELLANT_HANDLE ph_DscRCSA,ph_DscRCSB;   // Descent RCS A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc ,ph_rcslm1; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
-	// I don't know where all these extra RCSes came from.
-	// There should be only 16 of them. 4 clusters, 4 per cluster.
-	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
+	// There should be only 16 RCS. 4 clusters, 4 per cluster.
+	THRUSTER_HANDLE th_rcs[16];
+	// These RCSes are for Orbiter's use and should be deleted once the internal guidance is working.
+	THRUSTER_HANDLE th_rcs_orbiter_rot[24];
+	// THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
+
+	// DS20060413 DirectInput stuff
+	// Handle to DLL instance
+	HINSTANCE dllhandle;
+	// pointer to DirectInput class itself
+	LPDIRECTINPUT8 dx8ppv;
+	// Joysticks-Enabled flag / counter - Zero if we aren't using DirectInput, nonzero is the number of joysticks we have.
+	int js_enabled;
+	// Pointers to DirectInput joystick devices
+	LPDIRECTINPUTDEVICE8 dx8_joystick[2]; // One for THC, one for RHC, ignore extras
+	DIDEVCAPS			 dx8_jscaps[2];   // Joystick capabilities
+	DIJOYSTATE2			 dx8_jstate[2];   // Joystick state
+	HRESULT				 dx8_failure;     // DX failure reason
+	int rhc_id;							  // Joystick # for the RHC
+	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
+	int rhc_sld_id;                       // ID of SLIDER axis to use for RHC Z-axis
+	int rhc_rzx_id;                       // Flag to use native Z-axis as RHC Z-axis
+	int thc_id;                           // Joystick # for the THC
+	int thc_rot_id;						  // ID of ROTATOR axis to use for THC Z-axis
+	int thc_sld_id;                       // ID of SLIDER axis to use for THC Z-axis
+	int thc_rzx_id;                       // Flag to use native Z-axis as THC Z-axis	
+	int rhc_debug;						  // Flags to print debugging messages.
+	int thc_debug;
+	int rhc_pos[3];                       // RHC x/y/z positions
 
 protected:
 
@@ -278,8 +316,9 @@ protected:
 	void SeparateStage (UINT stage);
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
-	void AddRCS_LM(double TRANZ);
-	void AddRCS_LM2(double TRANZ);
+	// These two not used! DS20060413
+	/* void AddRCS_LM(double TRANZ);
+	void AddRCS_LM2(double TRANZ); */
 	void AddRCS_LMH(double TRANZ);
 	void AddRCS_LMH2(double TRANZ);
 	void ToggleEVA();
@@ -348,6 +387,12 @@ protected:
 	// LEM panel 1 //
 	/////////////////
 
+	FDAI fdaiLeft;
+	int fdaiDisabled;
+	int fdaiSmooth;
+
+	HBITMAP hBmpFDAIRollIndicator;
+
 	SwitchRow LeftXPointerSwitchRow;
 	ToggleSwitch LeftXPointerSwitch;
 
@@ -389,7 +434,11 @@ protected:
 	SwitchRow TempPressMonRotaryRow;
 	RotationalSwitch TempPressMonRotary;
 
-	// DS20060406 For right now...
+	// DS20060406 RCS MAIN SHUTOFF VALVES
+	SwitchRow RCSMainSOVTBRow;
+	LEMValveTalkback RCSMainSovATB;
+	LEMValveTalkback RCSMainSovBTB;
+
 	SwitchRow RCSMainSOVSwitchRow;
 	LEMValveSwitch RCSMainSovASwitch;
 	LEMValveSwitch RCSMainSovBSwitch;

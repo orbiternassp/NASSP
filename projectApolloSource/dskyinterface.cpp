@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2005/09/22 22:27:40  movieman523
+  *	Updated erasable memory display/edit functions in AGC.
+  *	
   *	Revision 1.7  2005/08/19 13:58:29  tschachim
   *	Added Channel 13 handling
   *	
@@ -229,7 +232,7 @@ void ApolloGuidance::ClearProg()
 	SetChannel10Lights(8, false);
 }
 
-void ApolloGuidance::ProcessChannel13()
+void ApolloGuidance::ProcessChannel13(int val)
 
 {
 	dsky.ProcessChannel13(OutputChannel[013]);

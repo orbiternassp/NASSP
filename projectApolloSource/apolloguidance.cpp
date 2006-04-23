@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2006/04/04 23:36:14  dseagrav
+  *	Added the beginnings of the telecom subsystem.
+  *	
   *	Revision 1.72  2006/03/12 01:13:28  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -5107,7 +5110,7 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 		break;
 
 	case 013:
-		ProcessChannel13();
+		ProcessChannel13(val);
 		break;
 
 	case 014:

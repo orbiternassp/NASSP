@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/08/10 21:54:04  movieman523
+  *	Initial IMU implementation based on 'Virtual Apollo' code.
+  *	
   **************************************************************************/
 
 #define IMUMATH_C
@@ -199,7 +202,6 @@ IMU_Matrix3 IMU::getNavigationBaseToOrbiterLocalTransformation() {
 	m.m12 = 1.0;	
 	m.m23 = -1.0;
 	m.m31 = 1.0;
-
 	return m;
 } 
 
@@ -216,11 +218,9 @@ IMU_Matrix3 IMU::getOrbiterLocalToNavigationBaseTransformation() {
 	m.m21 = -1.0;	
 	m.m32 = 1.0;
 */
-
 	m.m13 = 1.0;
 	m.m21 = 1.0;	
 	m.m32 = -1.0;
-
 	return m;
 }
 

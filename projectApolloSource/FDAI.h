@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/03/12 01:13:28  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.7  2006/03/04 22:50:52  dseagrav
   *	Added FDAI RATE logic, SPS TVC travel limited to 5.5 degrees plus or minus, added check for nonexistent joystick selection in DirectInput code. I forgot to date most of these.
   *	
@@ -44,6 +47,9 @@
   *	Initial version
   *	
   **************************************************************************/
+
+// Avoids bug in VC++
+#pragma once
 
 #include < GL\gl.h >                                
 #include < GL\glu.h >
