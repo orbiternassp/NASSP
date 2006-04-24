@@ -274,6 +274,9 @@
 #define IDB_CSM_LOWER_PANEL             493
 #define AID_CYROTANKINDICATORS          494
 #define IDB_NEEDLE1                     495
+#define AID_XPOINTER                    499
+#define AID_XPOINTERCDR                 500
+#define AID_XPOINTERLMP                 501
 #define AID_FUELCELLREACTANTSINDICATORS 502
 #define AID_FUELCELLINDICATORS          503
 #define AID_FUELCELLINDICATORSSWITCH    504
@@ -281,7 +284,6 @@
 #define AID_FUELCELLRADIATORSSWITCHES   506
 #define AID_FUELCELLPHRADTEMPINDICATORS 507
 #define AID_SEPARATIONSWITCHES          508
-#define AID_XPOINTER                    509
 #define AID_SUITCABINDELTAPMETER        510
 #define IDB_SUITCABINDELTAPMETER        511
 #define AID_SUITCOMPRDELTAPMETER        512
@@ -550,6 +552,9 @@
 #define AID_DSC_HIGH_VOLTAGE_SWITCHES   821
 #define AID_LEM_P16_CB_ROW4             822
 #define AID_MAIN_SOV_TALKBACKS          823
+
+
+
 
 // Next default values for new objects
 // 
