@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.172  2006/04/17 19:12:27  movieman523
+  *	Removed some unused switches.
+  *	
   *	Revision 1.171  2006/04/17 15:16:16  movieman523
   *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
   *	
@@ -957,7 +960,7 @@ protected:
 
 	SwitchRow CSMLightSwitchesRow;
 	ToggleSwitch RunEVALightSwitch;
-	ToggleSwitch RndzLightSwitch;
+	ThreePosSwitch RndzLightSwitch;
 	ToggleSwitch TunnelLightSwitch;
 
 	SwitchRow LMPowerSwitchRow;
