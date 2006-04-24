@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.164  2006/04/23 07:14:03  dseagrav
+  *	Holding mouse key down causes ASCP to advance until mouse key is released.
+  *	
   *	Revision 1.163  2006/04/18 13:49:10  tschachim
   *	Bugfix GPFPI.
   *	
@@ -1307,7 +1310,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ENTRYSWITCHES,      							_R( 336, 1260,  413, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LVSPSINDICATORSWITCHES,      				_R( 422, 1260,  499, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TVCGIMBALDRIVESWITCHES,      				_R( 508, 1260,  585, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CSMLIGHTSWITCHES,      						_R(1518,  279, 1663,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSMLIGHTSWITCHES,      						_R(1518,  279, 1663,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LMPOWERSWITCH,      							_R(1692,  279, 1726,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_POSTLANDINGVENTVALVELEVER,      				_R(2062,   76, 2112,  234), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_HIGHGAINANTENNAUPPERSWITCHES,      			_R(2185,  943, 2262,  972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1642,7 +1645,7 @@ void Saturn::SetSwitches(int panel) {
 
 	CSMLightSwitchesRow.Init(AID_CSMLIGHTSWITCHES, MainPanel);
 	RunEVALightSwitch.Init(  0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
-	RndzLightSwitch.Init  ( 57, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
+	RndzLightSwitch.Init  ( 57, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
 	TunnelLightSwitch.Init(111, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
 
 	LMPowerSwitchRow.Init(AID_LMPOWERSWITCH, MainPanel);
@@ -4405,7 +4408,7 @@ void Saturn::InitSwitches() {
 	TVCGimbalDriveYawSwitch.Register(PSH, "TVCGimbalDriveYawSwitch", THREEPOSSWITCH_CENTER);
 
 	RunEVALightSwitch.Register(PSH, "RunEVALightSwitch", false);
-	RndzLightSwitch.Register(PSH, "RndzLightSwitch", false);
+	RndzLightSwitch.Register(PSH, "RndzLightSwitch", THREEPOSSWITCH_CENTER);
 	TunnelLightSwitch.Register(PSH, "TunnelLightSwitch", false);
 
 	LMPowerSwitch.Register(PSH, "LMPowerSwitch", THREEPOSSWITCH_CENTER);
