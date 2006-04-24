@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.52  2006/04/17 18:14:27  movieman523
   *	Added flashing borders to all switches (I think).
   *	
@@ -1024,7 +1027,11 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_EXTERIORLTGSWITCH,				_R(1353, 1432, 1387, 1461), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL4LEFTSWITCHROW,				_R( 486, 1619,  520, 1794), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL4RIGHTSWITCHROW,			_R( 964, 1619,  998, 1794), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea (AID_XPOINTERCDR,						_R(  65,  426,  202,  559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_XPOINTERLMP,						_R(1302,  426, 1439,  559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
+
+
+
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		
 		//oapiRegisterPanelArea (AID_FUEL_DIGIT,					_R(1146,  135, 1183,  150), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,PANEL_MAP_BACKGROUND);
@@ -2412,6 +2419,13 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		RedrawPanel_XPointer(surf);
 		return true;
 
+	case AID_XPOINTERCDR:
+		RedrawPanel_XPointer(surf);
+		return true;
+
+	case AID_XPOINTERLMP:
+		RedrawPanel_XPointer(surf);
+		return true;
 
 
 
