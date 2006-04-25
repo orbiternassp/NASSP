@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/04/17 19:12:26  movieman523
+  *	Removed some unused switches.
+  *	
   *	Revision 1.48  2006/03/30 01:59:37  movieman523
   *	Added RCS to SM DLL.
   *	
@@ -190,6 +193,8 @@
 #include "saturn1b.h"
 
 #include "tracer.h"
+
+#include "CollisionSDK/CollisionSDK.h"
 
 char trace_file[] = "ProjectApollo Saturn1b.log";
 
@@ -1100,6 +1105,10 @@ void Saturn1b::clbkSetClassCaps (FILEHANDLE cfg)
 	while (oapiReadScenario_nextline (cfg, line)) {
 		ProcessConfigFileLine(cfg, line);
 	}
+
+	// Disable CollisionSDK for the moment
+	VSRegVessel(GetHandle());
+	VSDisableCollisions(GetHandle());
 }
 
 void Saturn1b::SetVehicleStats()

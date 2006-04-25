@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/03/02 14:54:39  tschachim
+  *	Velocity dependent sound disabled.
+  *	
   *	Revision 1.12  2005/12/19 16:46:33  tschachim
   *	Bugfix touchdownpoints.
   *	
@@ -80,13 +83,19 @@
 #include "saturn.h"
 
 #include "VAB.h"
+#include "ML.h"
+#include "MSS.h"
+
+#include "CollisionSDK/CollisionSDK.h"
 
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo Crawler.log";
 
 
 DLLCLBK void InitModule(HINSTANCE hModule) {
+
 	g_hDLL = hModule;
+	InitCollisionSDK();
 }
 
 
@@ -105,36 +114,34 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	velocity = 0;
 	targetHeading = 0;
-	touchdownPointHeight = -0.0001;
 	firstTimestepDone = false;
-	doAfterLVDetached = false;
-	useForce = false;
 	standalone = false;
 	reverseDirection = false;
-	padIndex = 1;	// default pad
-	showMLPedestals = true;
+
+	lastLatLongSet = false;
+	lastLat = 0;
+	lastLong = 0;
 	
 	keyAccelerate = false;
 	keyBrake= false;
 	keyLeft= false;
 	keyRight= false;
-	keyUp = false;
-	keyDown = false;
 
 	LVName[0] = 0;
+	hML = NULL;
+	hLV = NULL;;
+	hMSS = NULL;;
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 	soundlib.LoadSound(soundEngine, "CrawlerEngine.wav", BOTHVIEW_FADED_MEDIUM);
 }
 
-
 Crawler::~Crawler() {
 }
 
-
 void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
 
-	SetEmptyMass(2721);
+	SetEmptyMass(2721000);
 	SetSize(40);
 	SetPMI(_V(133, 189, 89));
 
@@ -153,8 +160,12 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
     int icr = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler"), &meshoffset);
 	SetMeshVisibilityMode(icr, MESHVIS_ALWAYS);
 
-	CreateAttachment(false, _V(1.0, 6.7, 2.0), _V(0, 1, 0), _V(1, 0, 0), "ML", false);
-	SetTouchdownPoint();
+	CreateAttachment(false, _V(0.0, 6.3, 0.0), _V(0, 1, 0), _V(1, 0, 0), "ML", false);
+
+	VSRegVessel(GetHandle());
+	double tph = 0;
+	SetTouchdownPoints(_V(  0, tph,  10), _V(-10, tph, -10), _V( 10, tph, -10));
+	VSSetTouchdownPoints(GetHandle(), _V(  0, tph,  10), _V(-10, tph, -10), _V( 10, tph, -10), -tph);
 }
 
 void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
@@ -163,13 +174,7 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 
 	if (!firstTimestepDone) DoFirstTimestep(); 
 
-	if (IsMLAttached()) maxVelocity = maxVelocity / 2.0;
-
-	int uf = useForce;
-	if (uf) {
-		if (simdt > 1) uf = false; 
-		if (simdt < 0.3) uf = true; 
-	}
+	if (IsAttached()) maxVelocity = maxVelocity / 2.0;
 
 	double head;
 	oapiGetHeading(GetHandle(), &head);
@@ -185,128 +190,73 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 		keyBrake = false;
 	}
 
-	if (!uf) {
-		VESSELSTATUS vs;
-		GetStatus(vs);
+	double lat, lon;
+	VESSELSTATUS vs;
+	GetStatus(vs);
 
-		double r = 80.0 + velocity * 10.0;
-		double dheading = velocity * simdt / r / 2.0;
+	if (vs.status == 1) {
+		lon = vs.vdata[0].x;
+		lat = vs.vdata[0].y;
+	
+	} else if (lastLatLongSet) {
+		lon = lastLong;
+		lat = lastLat;
+		vs.vdata[0].z = head;
+	
+	} else return;
 
-		if (keyLeft) {
-			vs.vdata[0].z -= dheading;
-			if(vs.vdata[0].z < 0) vs.vdata[0].z += 2.0 * PI;
-			keyLeft = false;
-		}
-		if (keyRight) {
-			vs.vdata[0].z += dheading;
-			if(vs.vdata[0].z >= 2.0 * PI) vs.vdata[0].z -= -2.0 * PI;
-			keyRight = false;
-		}
-		if (!reverseDirection) {		
-			vs.vdata[0].x += sin(head) * velocity * simdt / (1.0 * 6371010.0);
-			vs.vdata[0].y += cos(head) * velocity * simdt / (1.0 * 6371010.0);
-		} else {
-			vs.vdata[0].x -= sin(head) * velocity * simdt / (1.0 * 6371010.0);
-			vs.vdata[0].y -= cos(head) * velocity * simdt / (1.0 * 6371010.0);
-		}
-		DefSetState(&vs);
-		targetHeading = head;
+	double r = 152.4;	// 500 ft
+	double dheading = velocity * simdt / r;
+
+	// turn speed is only doubled when time acc is multiplied by ten:
+	double timeW = oapiGetTimeAcceleration();
+	dheading = (pow(5.0, log10(timeW))) * dheading / timeW;
+
+	if (keyLeft) {
+		vs.vdata[0].z -= dheading;
+		if(vs.vdata[0].z < 0) vs.vdata[0].z += 2.0 * PI;
+		keyLeft = false;
 	}
-
-	if (keyUp) {
-		touchdownPointHeight -= 0.5 * simdt;
-		SetTouchdownPoint();
-		keyUp = false;
-
-	} else if (keyDown) {
-		touchdownPointHeight += 0.5 * simdt;
-		if (touchdownPointHeight > -0.0001) touchdownPointHeight = -0.0001;
-		SetTouchdownPoint();
-		keyDown = false;
+	if (keyRight) {
+		vs.vdata[0].z += dheading;
+		if(vs.vdata[0].z >= 2.0 * PI) vs.vdata[0].z -= -2.0 * PI;
+		keyRight = false;
 	}
-
-	VECTOR3 vv;
-	GetShipAirspeedVector(vv);
-	double v = length(vv);
-
-	if (uf) {
-		if (keyLeft || keyRight) {
-			double r = 40.0 + v * 10.0;
-			double dheading = sqrt(vv.x * vv.x + vv.z * vv.z) * simdt / r;
-			double Fr = GetMass() * vv.z * vv.z / r;
-
-			if (keyLeft) {
-				targetHeading -= dheading;
-				if (targetHeading < 0) targetHeading += 2.0 * PI;				
-				keyLeft = false;
-
-			} else if (keyRight) {
-				targetHeading += dheading;
-				if (targetHeading >= 2.0 * PI) targetHeading -= 2.0 * PI;
-				keyRight = false;
-			}			
-
-			double diff = targetHeading - head;
-			if (diff > PI) diff = diff - (2.0 * PI);
-			if (diff < -PI) diff = (2.0 * PI) + diff;
-			double Fd = GetMass() * diff * __min(5000.0, 1.0 / (simdt * simdt));
-			
-			AddForce(_V( Fd, 0, 0), _V(0, 0,  1));
-			AddForce(_V(-Fd, 0, 0), _V(0, 0, -1));
-
-		} else {
-			targetHeading = head;
-		}
-
-		// lateral force
-		double F = -GetMass() * vv.x * __min(10.0, 1.0 / simdt);
-		AddForce(_V(F, 0, 0), _V(0, 0, 0));
-
-		// vertical force
-		//F = -GetMass() * vv.y * __min(10.0, 1.0 / simdt);
-		//AddForce(_V(0, F, 0), _V(0, 0, 0));
-
-		// longitudinal force
-		if (!reverseDirection) {
-			double Fa = GetMass() * (velocity - vv.z) * 1.0 / simdt;
-			AddForce(_V(0, 0, Fa), _V(0, 0, 0));
-		} else {
-			double Fa = -GetMass() * (velocity + vv.z) * 1.0 / simdt;
-			AddForce(_V(0, 0, Fa), _V(0, 0, 0));
-		}
+	if (!reverseDirection) {		
+		lon += sin(head) * velocity * simdt / oapiGetSize(GetGravityRef());
+		lat += cos(head) * velocity * simdt / oapiGetSize(GetGravityRef());
+	} else {
+		lon -= sin(head) * velocity * simdt / oapiGetSize(GetGravityRef());
+		lat -= cos(head) * velocity * simdt / oapiGetSize(GetGravityRef());
 	}
+	vs.vdata[0].x = lon;
+	vs.vdata[0].y = lat;
+	vs.status = 1;
+	DefSetState(&vs);
 
-	if (velocity != 0) 
+	lastLat = lat;
+	lastLong = lon;
+	lastLatLongSet = true;
+	targetHeading = head;
+
+	if (velocity != 0) {
 		// velocity dependent sound disabled
-		//  soundEngine.play(LOOP, (int)(127.5 + 127.5 * velocity / maxVelocity));
+		// soundEngine.play(LOOP, (int)(127.5 + 127.5 * velocity / maxVelocity));
 		soundEngine.play();
-	else
+	} else {
 		soundEngine.stop();
+	}
 
-	//sprintf(oapiDebugString(), "Force %i simdt %f vv.z %f", uf, simdt, vv.z);
-
-	/*VECTOR3 pos;
+	/* VECTOR3 pos;
 	GetRelativePos(hML, pos);
-	sprintf(oapiDebugString(), "Dist %f", length(pos));*/
+	sprintf(oapiDebugString(), "Dist %f", length(pos)); */
 }
 
 void Crawler::clbkPostStep(double simt, double simdt, double mjd) {
-
-	if (doAfterLVDetached) AfterLVDetached();
-}
-
-void Crawler::SetTouchdownPoint() {
-
-	if (touchdownPointHeight > -0.0001) touchdownPointHeight = -0.0001;
-
-	SetTouchdownPoints(_V(  0, touchdownPointHeight,  20), 
-					   _V(-10, touchdownPointHeight, -20), 
-					   _V( 10, touchdownPointHeight, -20));
 }
 
 void Crawler::DoFirstTimestep() {
 
-	SetTouchdownPoint();
 	SetView();
 
 	oapiGetHeading(GetHandle(), &targetHeading);
@@ -321,38 +271,10 @@ void Crawler::DoFirstTimestep() {
 	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 	if (!standalone) {
-		// find the Mobile Launcher and the Launch Vehicle 
-		char nameML[256], nameLV[256], buffer[256];
-		strncpy(nameML, GetName(), strlen(GetName()) - 3);
-		nameML[strlen(GetName()) - 3] = '\0';
-		strcpy(nameLV, nameML);
-		strcat(nameML, "-ML");
-
 		if (LVName[0])
-			strcpy(nameLV, LVName);
-
-		double vcount = oapiGetVesselCount();
-		for (int i = 0; i < vcount; i++)	{
-			OBJHANDLE h = oapiGetVesselByIndex(i);
-			oapiGetObjectName(h, buffer, 256);
-			if (!strcmp(nameML, buffer)){
-				hML = h;
-			}
-			else if (!strcmp(nameLV, buffer)){
-				hLV = h;
-			}
-		}
-
-		// re-attach the ML to setup the meshes
-		if (IsMLAttached()) AttachML(); else DetachML();
-
-		// tell the VAB the name of the saturn
-		OBJHANDLE hVab = oapiGetVesselByName("VAB");
-		if (hVab) {
-			VAB *vab = (VAB *) oapiGetVesselInterface(hVab);
-			vab->SetSaturnName(nameLV);
-		}
-	
+			hLV = oapiGetVesselByName(LVName);
+		hML = oapiGetVesselByName("ML");
+		hMSS = oapiGetVesselByName("MSS");
 	}
 	firstTimestepDone = true;
 }
@@ -366,20 +288,12 @@ void Crawler::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 			sscanf (line + 8, "%lf", &velocity);
 		} else if (!strnicmp (line, "TARGETHEADING", 13)) {
 			sscanf (line + 13, "%lf", &targetHeading);
-		} else if (!strnicmp (line, "TOUCHDOWNPOINTHEIGHT", 20)) {
-			sscanf (line + 20, "%lf", &touchdownPointHeight);
 		} else if (!strnicmp (line, "REVERSEDIRECTION", 16)) {
 			sscanf (line + 16, "%i", &reverseDirection);
-		} else if (!strnicmp (line, "USEFORCE", 8)) {
-			sscanf (line + 8, "%i", &useForce);
 		} else if (!strnicmp (line, "STANDALONE", 10)) {
 			sscanf (line + 10, "%i", &standalone);
-		} else if (!strnicmp (line, "PADINDEX", 8)) {
-			sscanf (line + 8, "%i", &padIndex);
 		} else if (!strnicmp (line, "LVNAME", 6)) {
 			strncpy (LVName, line + 7, 64);
-		} else if (!strnicmp (line, "SHOWMLPEDESTRALS", 16)) {
-			sscanf (line + 16, "%i", &showMLPedestals);
 		} else {
 			ParseScenarioLineEx (line, status);
 		}
@@ -400,12 +314,8 @@ void Crawler::clbkSaveState(FILEHANDLE scn) {
 
 	WriteScenario_double (scn, "VELOCITY", velocity);
 	WriteScenario_double (scn, "TARGETHEADING", targetHeading);
-	WriteScenario_double (scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
 	oapiWriteScenario_int (scn, "REVERSEDIRECTION", reverseDirection);
-	oapiWriteScenario_int (scn, "USEFORCE", useForce);
 	oapiWriteScenario_int (scn, "STANDALONE", standalone);
-	oapiWriteScenario_int (scn, "PADINDEX", padIndex);
-	oapiWriteScenario_int (scn, "SHOWMLPEDESTRALS", showMLPedestals);
 	if (LVName[0])
 		oapiWriteScenario_string (scn, "LVNAME", LVName);
 }
@@ -438,15 +348,42 @@ int Crawler::clbkConsumeDirectKey(char *kstate) {
 		RESETKEY(kstate, OAPI_KEY_NUMPAD6);
 	}
 
-	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD9)) {
-		keyUp = true;				
-		RESETKEY(kstate, OAPI_KEY_NUMPAD9);
-	}
+	// touchdown point test
+	/*
+	VESSELSTATUS vs;
+	GetStatus(vs);
 
-	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD3)) {
-		keyDown = true;				
-		RESETKEY(kstate, OAPI_KEY_NUMPAD3);
+	if (KEYDOWN (kstate, OAPI_KEY_A)) {
+		touchdownPointHeight += 0.001;
+
+		SetTouchdownPoints(_V(  0, touchdownPointHeight,  10), 
+						   _V(-10, touchdownPointHeight, -10), 
+						   _V( 10, touchdownPointHeight, -10));
+		VSSetTouchdownPoints(GetHandle(), 
+						   _V(  0, touchdownPointHeight,  10), 
+						   _V(-10, touchdownPointHeight, -10), 
+						   _V( 10, touchdownPointHeight, -10),
+						   -touchdownPointHeight);
+
+		sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
+		RESETKEY(kstate, OAPI_KEY_A);
 	}
+	if (KEYDOWN (kstate, OAPI_KEY_S)) {
+		touchdownPointHeight -= 0.001;
+
+		SetTouchdownPoints(_V(  0, touchdownPointHeight,  10), 
+						   _V(-10, touchdownPointHeight, -10), 
+						   _V( 10, touchdownPointHeight, -10));
+		VSSetTouchdownPoints(GetHandle(), 
+						   _V(  0, touchdownPointHeight,  10), 
+						   _V(-10, touchdownPointHeight, -10), 
+						   _V( 10, touchdownPointHeight, -10),
+						   -touchdownPointHeight);
+
+		sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
+		RESETKEY(kstate, OAPI_KEY_S);
+	}
+*/
 	return 0;
 }
 
@@ -459,10 +396,10 @@ int Crawler::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	}
 
 	if (key == OAPI_KEY_NUMPAD1 && down == true) {
-		if (IsMLAttached())
-			DetachML();
+		if (IsAttached())
+			Detach();
 		else
-			AttachML();
+			Attach();
 		return 1;
 	}
 
@@ -512,137 +449,71 @@ int Crawler::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				vab->UnbuildSaturnStage();
 			}
 		}
+		return 1;
 	}
 	return 0;
 }
 
-void Crawler::AttachML() {
+void Crawler::Attach() {
 
 	if (standalone) return;
 	if (velocity != 0) return;
+	if (IsAttached()) return;
 
 	ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 0);
-	VESSEL *ml = oapiGetVesselInterface(hML);
-
-	if (GetAttachmentStatus(ah) == NULL) {
-		// Is the LV attached?
-		if (GetAttachmentStatus(ml->GetAttachmentHandle(false, 0)) == NULL) return;
+	if (hML != NULL) {
+		ML *ml = (ML *)oapiGetVesselInterface(hML);
 
 		// Is the crawler close enough to the ML?
 		VECTOR3 pos;
 		GetRelativePos(hML, pos);
-		if (length(pos) > 68) return;
-
-		AttachChild(hML, ah, ml->GetAttachmentHandle(true, 0));
+		if (length(pos) < 73) {
+			if (ml->Attach()) {
+				AttachChild(hML, ah, ml->GetAttachmentHandle(true, 0));
+			}
+		}
 	}
+	if (hMSS != NULL) {
+		MSS *mss = (MSS *)oapiGetVesselInterface(hMSS);
 
-	ml->ClearMeshes();
-	ml->AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Saturn5ML"));
-
-	// Show ML pedestrals after next detach, then we are no longer in the VAB
-	showMLPedestals = true;
+		// Is the crawler close enough to the MSS?
+		VECTOR3 pos;
+		GetRelativePos(hMSS, pos);
+		if (length(pos) < 62) {
+			if (mss->Attach()) {
+				AttachChild(hMSS, ah, mss->GetAttachmentHandle(true, 0));
+			}
+		}
+	}
 }
 
-void Crawler::DetachML() {
+void Crawler::Detach() {
 
 	if (standalone) return;
 	if (velocity != 0) return;
+	if (!IsAttached()) return;
 
 	ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 0);
-	VESSEL *ml = oapiGetVesselInterface(hML);
-	ATTACHMENTHANDLE ahml = ml->GetAttachmentHandle(false, 0);
-
-	if (GetAttachmentStatus(ah) != NULL) {
-		SlowIfDesired(1.0);
-
-		// Is the crawler near launch pad?
-		OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
-		OBJHANDLE hCanaveral = oapiGetBaseByName(hEarth, "Cape Canaveral");
-		double padlng, padlat, padrad, lng, lat, rad;
-		oapiGetBasePadEquPos(hCanaveral, padIndex, &padlng, &padlat, &padrad);
-
-		GetEquPos(lng, lat, rad);
-		double dlng = (padlng - lng) * 6371010.0;
-		double dlat = (padlat - lat) * 6371010.0;
-
-		if (dlng > -5 && dlng < 5 && dlat > -8 && dlat < 2) {
-			// Detach the launch vessel from the ML
-			if (GetAttachmentStatus(ahml) != NULL) {
-				ml->DetachChild(ahml);
-			}
+	// Is ML attached?
+	if (hML == GetAttachmentStatus(ah)) {
+		ML *ml = (ML *)oapiGetVesselInterface(hML);
+		if (ml->Detach()) {
+			SlowIfDesired(1.0);
 			DetachChild(ah);
-
-			// Move ML to pad, KSC Pad 39A is hardcoded!
-/*			VESSELSTATUS vs;
-			ml->GetStatus(vs);
-			vs.vdata[0].x = -80.6082240;
-			vs.vdata[0].y = 28.6009432;
-			vs.vdata[0].z = 90.0; 
-			ml->DefSetState(&vs);
-*/
-			// Notify Saturn that we're on pad
-			Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
-			lav->LaunchVesselRolloutEnd();
-
-			doAfterLVDetached = true;
-			
-		} else {
+		}
+	}
+	// Is MSS attached?
+	if (hMSS == GetAttachmentStatus(ah)) {
+		MSS *mss = (MSS *)oapiGetVesselInterface(hMSS);
+		if (mss->Detach()) {
+			SlowIfDesired(1.0);
 			DetachChild(ah);
 		}
 	}
 
-	ml->ClearMeshes();
-	ml->AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Saturn5ML"));
-
-	if (showMLPedestals) {
-		VECTOR3 meshoffset = _V(0, -63.7, 0);
-
-		ml->AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Saturn5MLPedestals"), &meshoffset);
-	}
-
-	// set touchdown points 
-	if (GetAttachmentStatus(ahml) == NULL) {
-		ml->SetTouchdownPoints(_V(  0, -83.7,  10), 
-				  			   _V(-10, -83.7, -10), 
-							   _V( 10, -83.7, -10));
-	} else {
-		if (showMLPedestals) {
-			ml->SetTouchdownPoints(_V(  0, touchdownPointHeight - 66.7,  10), 
-				  			       _V(-10, touchdownPointHeight - 66.7, -10), 
-							       _V( 10, touchdownPointHeight - 66.7, -10));
-		} else {
-			// in VAB on the VAB pedestrals
-			ml->SetTouchdownPoints(_V(  0, -67.35,  10), 
-				  			       _V(-10, -67.35, -10), 
-							       _V( 10, -67.35, -10));
-		}
-	}
 }
 
-void Crawler::AfterLVDetached() {
-
-	// Move ML to pad, KSC Pad 39A is hardcoded!
-	VESSEL *ml = oapiGetVesselInterface(hML);
-	VESSELSTATUS vs;
-	ml->GetStatus(vs);
-	vs.vdata[0].x = -80.6082240 * RAD;
-	vs.vdata[0].y = 28.6009432 * RAD;
-	vs.vdata[0].z = 90.0 * RAD; 
-	ml->DefSetState(&vs);
-
-
-	// Move LV to pad, KSC Pad 39A is hardcoded!
-	VESSEL *lv = oapiGetVesselInterface(hLV);
-	lv->GetStatus(vs);
-	vs.vdata[0].x = -80.6082242 * RAD; 
-	vs.vdata[0].y =  28.6008442 * RAD;
-	vs.vdata[0].z = 270.0 * RAD; 
-	lv->DefSetState(&vs);
-
-	doAfterLVDetached = false;
-}
-
-bool Crawler::IsMLAttached() {
+bool Crawler::IsAttached() {
 
 	if (standalone) return false;
 
@@ -667,19 +538,6 @@ void Crawler::SetView() {
 	} else {
 		SetCameraOffset(_V(16.5, 5.2, 18.5));
 		SetCameraDefaultDirection(_V(0, 0, 1));
-	}
-}
-
-void Crawler::AttachLV() {
-
-	if (standalone) return;
-
-	VESSEL *ml = oapiGetVesselInterface(hML);
-	VESSEL *lv = oapiGetVesselInterface(hLV);
-	ATTACHMENTHANDLE ah = ml->GetAttachmentHandle(false, 0);
-
-	if (GetAttachmentStatus(ah) == NULL) {
-		ml->AttachChild(hLV, ah, lv->GetAttachmentHandle(true, 0));
 	}
 }
 

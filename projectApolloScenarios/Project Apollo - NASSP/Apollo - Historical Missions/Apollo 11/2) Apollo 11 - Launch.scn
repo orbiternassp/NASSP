@@ -31,8 +31,8 @@ END_PANEL
 BEGIN_SHIPS
 Columbia:ProjectApollo\Saturn5
   STATUS Landed Earth  
-  ; BASE Cape Canaveral:2
-  POS -80.6082242 28.6008442
+  BASE Cape Canaveral:2
+  POS -80.6080702 28.6007244
   HEADING 270.00
   FUEL 1.000
   APOLLONO 11
@@ -60,11 +60,11 @@ Columbia:ProjectApollo\Saturn5
   MOONLONG 23.4333
   MOONLAT 0.6875  
   MOONALT 0.0
-  TCP 0.5
+  TCP 4.96
   LANG English
   LEMN Eagle
 END
-AS-506-CT:ProjectApollo\Crawler
+Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
   POS -80.6527277 28.5791263
   HEADING 75.80
@@ -72,14 +72,21 @@ AS-506-CT:ProjectApollo\Crawler
   USEFORCE 1
   LVNAME Columbia
 END
-AS-506-ML:ProjectApollo\Saturn5ML
+ML:ProjectApollo\ML
   STATUS Landed Earth
-  POS -80.6082240 28.6009432
-  HEADING 90.0
+  POS -80.6080665 28.6008075
+  HEADING 0.75
+  LVNAME Columbia
 END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
-  POS -80.6536 28.5787
-  HEADING 75.96
+  POS -80.6540592 28.5785496
+  HEADING 255.04
+  LVNAME Columbia
+END
+MSS:ProjectApollo\MSS
+  STATUS Landed Earth
+  POS -80.6237309 28.5882864
+  HEADING 246.58
 END
 END_SHIPS

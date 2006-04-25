@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/21 13:31:34  tschachim
+  *	New Saturn assembly meshes.
+  *	
   *	Revision 1.3  2005/11/09 18:35:42  tschachim
   *	New Saturn assembly process.
   *	
@@ -72,8 +75,8 @@ void VAB::BuildSaturnStage() {
 
 	if (crane_Status == CRANE_BUILDING || crane_Status == CRANE_UNBUILDING) return;
 
-	if (saturnName[0] == '\0') return;
-	OBJHANDLE hLV = oapiGetVesselByName(saturnName);
+	if (LVName[0] == '\0') return;
+	OBJHANDLE hLV = oapiGetVesselByName(LVName);
 	if (!hLV) return;
 	Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
 	if (lav->GetStage() != ROLLOUT_STAGE) return;
@@ -85,7 +88,7 @@ void VAB::BuildSaturnStage() {
 		return;
 	}
 	if (lav->GetBuildStatus() >= animCraneCount) { 
-		lav->LaunchVesselBuild();
+		lav->LaunchVehicleBuild();
 		return;
 	}
 
@@ -109,15 +112,15 @@ void VAB::UnbuildSaturnStage() {
 
 	if (crane_Status == CRANE_BUILDING || crane_Status == CRANE_UNBUILDING) return;
 
-	if (saturnName[0] == '\0') return;
-	OBJHANDLE hLV = oapiGetVesselByName(saturnName);
+	if (LVName[0] == '\0') return;
+	OBJHANDLE hLV = oapiGetVesselByName(LVName);
 	if (!hLV) return;
 	Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
 	if (lav->GetStage() != ROLLOUT_STAGE) return;
 
 	if (lav->GetBuildStatus() <= 0) return;
 	if (lav->GetBuildStatus() > animCraneCount) {	
-		lav->LaunchVesselUnbuild();
+		lav->LaunchVehicleUnbuild();
 		return;
 	}
 
