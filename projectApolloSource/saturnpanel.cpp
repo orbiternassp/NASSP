@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.165  2006/04/24 21:06:33  quetalsi
+  *	Buxfix in EXT RNDZ LTS switch
+  *	
   *	Revision 1.164  2006/04/23 07:14:03  dseagrav
   *	Holding mouse key down causes ASCP to advance until mouse key is released.
   *	
@@ -2125,20 +2128,20 @@ void Saturn::SetSwitches(int panel) {
 	RightO2FlowMeter.FrameSurface = srf[SRF_SUITCABINDELTAPMETER];
 
 	EcsRadTempMetersRow.Init(AID_ECSRADTEMPMETERS, MainPanel);
-	EcsRadTempInletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsRadTempMetersRow, this);
+	EcsRadTempInletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsRadTempMetersRow, this, &ECSIndicatorsSwitch);
 	EcsRadTempPrimOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsRadTempMetersRow, this);
 
 	EcsEvapTempMetersRow.Init(AID_ECSEVAPTEMPMETERS, MainPanel);
 	EcsRadTempSecOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsEvapTempMetersRow, this);
-	GlyEvapTempOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsEvapTempMetersRow, this);
+	GlyEvapTempOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsEvapTempMetersRow, this, &ECSIndicatorsSwitch);
 
 	EcsPressMetersRow.Init(AID_ECSPRESSMETERS, MainPanel);
-	GlyEvapSteamPressMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsPressMetersRow, this);
-	GlycolDischPressMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsPressMetersRow, this);
+	GlyEvapSteamPressMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsPressMetersRow, this, &ECSIndicatorsSwitch);
+	GlycolDischPressMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsPressMetersRow, this, &ECSIndicatorsSwitch);
 
 	EcsQuantityMetersRow.Init(AID_ECSQUANTITYMETERS, MainPanel);
-	AccumQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this);
-	H2oQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this);
+	AccumQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this, &ECSIndicatorsSwitch);
+	H2oQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this, &H2oQtyIndSwitch);
 
 	EcsRadiatorIndicatorRow.Init(AID_ECSRADIATORINDICATOR, MainPanel);
 	EcsRadiatorIndicator.Init( 0, 0, 23, 23, srf[SRF_ECSINDICATOR], EcsRadiatorIndicatorRow);

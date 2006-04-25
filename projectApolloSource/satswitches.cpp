@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/04/17 18:14:27  movieman523
+  *	Added flashing borders to all switches (I think).
+  *	
   *	Revision 1.12  2006/03/27 19:22:44  quetalsi
   *	Bugfix RCS PRPLNT switches and wired to brakers.
   *	
@@ -861,10 +864,17 @@ void SaturnRightO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 }
 
 
+void SaturnEcsRadTempInletMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	ECSIndicatorsSwitch = ecsindicatorsswitch;
+}
+
 double SaturnEcsRadTempInletMeter::QueryValue()
 
 {
-	if (Sat->GetRotationalSwitchState("ECSIndicatorsSwitch") == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 1) {
 		PrimECSCoolingStatus pcs;
 		Sat->GetPrimECSCoolingStatus(pcs);
 		return pcs.RadiatorInletTempF; 
@@ -917,10 +927,17 @@ void SaturnEcsRadTempSecOutletMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfa
 }
 
 
+void SaturnGlyEvapTempOutletMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	ECSIndicatorsSwitch = ecsindicatorsswitch;
+}
+
 double SaturnGlyEvapTempOutletMeter::QueryValue()
 
 {
-	if (Sat->GetRotationalSwitchState("ECSIndicatorsSwitch") == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 1) {
 		PrimECSCoolingStatus pcs;
 		Sat->GetPrimECSCoolingStatus(pcs);
 		return pcs.EvaporatorOutletTempF; 
@@ -938,10 +955,18 @@ void SaturnGlyEvapTempOutletMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface
 	DrawNeedle(drawSurface, 45, 22, 20.0, (180.0 - v) * RAD);
 }
 
+
+void SaturnGlyEvapSteamPressMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	ECSIndicatorsSwitch = ecsindicatorsswitch;
+}
+
 double SaturnGlyEvapSteamPressMeter::QueryValue()
 
 {
-	if (Sat->GetRotationalSwitchState("ECSIndicatorsSwitch") == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 1) {
 		PrimECSCoolingStatus pcs;
 		Sat->GetPrimECSCoolingStatus(pcs);
 		return pcs.EvaporatorSteamPressurePSI; 
@@ -960,10 +985,17 @@ void SaturnGlyEvapSteamPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface
 }
 
 
+void SaturnGlycolDischPressMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	ECSIndicatorsSwitch = ecsindicatorsswitch;
+}
+
 double SaturnGlycolDischPressMeter::QueryValue()
 
 {
-	if (Sat->GetRotationalSwitchState("ECSIndicatorsSwitch") == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 1) {
 		PrimECSCoolingStatus pcs;
 		Sat->GetPrimECSCoolingStatus(pcs);
 		return pcs.RadiatorInletPressurePSI; 
@@ -982,10 +1014,17 @@ void SaturnGlycolDischPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 }
 
 
+void SaturnAccumQuantityMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	ECSIndicatorsSwitch = ecsindicatorsswitch;
+}
+
 double SaturnAccumQuantityMeter::QueryValue()
 
 {
-	if (Sat->GetRotationalSwitchState("ECSIndicatorsSwitch") == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 1) {
 		PrimECSCoolingStatus pcs;
 		Sat->GetPrimECSCoolingStatus(pcs);
 		return pcs.AccumulatorQuantityPercent; 
@@ -1004,13 +1043,20 @@ void SaturnAccumQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 }
 
 
+void SaturnH2oQuantityMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	H2oQtyIndSwitch = h2oqtyindswitch;
+}
+
 double SaturnH2oQuantityMeter::QueryValue()
 
 {
 	ECSWaterStatus ws;
 	Sat->GetECSWaterStatus(ws);
 
-	if (Sat->GetSwitchState("H2oQtyIndSwitch"))
+	if (H2oQtyIndSwitch->IsUp())
 		return ws.PotableH2oTankQuantityPercent; 
 	else
 		return ws.WasteH2oTankQuantityPercent;
