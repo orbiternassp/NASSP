@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/04/17 18:14:27  movieman523
+  *	Added flashing borders to all switches (I think).
+  *	
   *	Revision 1.11  2006/03/27 19:22:44  quetalsi
   *	Bugfix RCS PRPLNT switches and wired to brakers.
   *	
@@ -343,8 +346,12 @@ public:
 
 class SaturnEcsRadTempInletMeter: public SaturnRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	RotationalSwitch *ECSIndicatorsSwitch;
 };
 
 class SaturnEcsRadTempPrimOutletMeter: public SaturnRoundMeter {
@@ -361,32 +368,52 @@ public:
 
 class SaturnGlyEvapTempOutletMeter: public SaturnRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	RotationalSwitch *ECSIndicatorsSwitch;
 };
 
 class SaturnGlyEvapSteamPressMeter: public SaturnRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	RotationalSwitch *ECSIndicatorsSwitch;
 };
 
 class SaturnGlycolDischPressMeter: public SaturnRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	RotationalSwitch *ECSIndicatorsSwitch;
 };
 
 class SaturnAccumQuantityMeter: public SaturnRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, RotationalSwitch *ecsindicatorsswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	RotationalSwitch *ECSIndicatorsSwitch;
 };
 
 class SaturnH2oQuantityMeter: public SaturnRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	ToggleSwitch *H2oQtyIndSwitch;
 };
 
 class SaturnAccelGMeter : public SaturnRoundMeter {

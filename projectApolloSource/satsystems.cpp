@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.100  2006/04/23 07:14:01  dseagrav
+  *	Holding mouse key down causes ASCP to advance until mouse key is released.
+  *	
   *	Revision 1.99  2006/04/06 19:32:49  movieman523
   *	More Apollo 13 support.
   *	
@@ -3030,23 +3033,6 @@ bool Saturn::GetValveState(int valve)
 	return ValveState[valve];
 }
 
-
-//
-// Switch status
-//
-
-int Saturn::GetSwitchState(char *switchName) {
-
-	ToggleSwitch *s = (ToggleSwitch *) PSH.GetSwitch(switchName);
-	return s->GetState();
-}
-
-	
-int Saturn::GetRotationalSwitchState(char *switchName) {
-
-	RotationalSwitch *s = (RotationalSwitch *) PSH.GetSwitch(switchName);
-	return s->GetState();
-}
 
 //
 // Check whether the ELS is active and whether it's in auto mode.
