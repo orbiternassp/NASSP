@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/04/05 19:33:49  movieman523
+  *	Support low-res RCS mesh, saved umbilical animation state so it only happens once, revised Apollo 13 support.
+  *	
   *	Revision 1.4  2006/04/04 22:00:54  jasonims
   *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
   *	
@@ -377,10 +380,10 @@ void SM::AddEngines()
 
 	//
 	// Adjust ISP and thrust based on realism level.
+	// -> Disabled for now, wrong thrust and ISP causes weired behavior of the DAP
 	//
-
-	double RCS_ISP = (SM_RCS_ISP * (15.0 - Realism)) / 5.0;
-	double RCS_Thrust = (SM_RCS_THRUST * (15.0 - Realism)) / 5.0;
+	double RCS_ISP = SM_RCS_ISP;		// (SM_RCS_ISP * (15.0 - Realism)) / 5.0;
+	double RCS_Thrust = SM_RCS_THRUST;	// (SM_RCS_THRUST * (15.0 - Realism)) / 5.0;
 
 	const double CENTEROFFS = 0.25;
 
