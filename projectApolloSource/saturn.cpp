@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.131  2006/04/23 04:15:46  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.130  2006/04/17 15:16:16  movieman523
   *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
   *	
@@ -440,6 +443,8 @@
 #include "saturn.h"
 #include "tracer.h"
 
+#include "CollisionSDK/CollisionSDK.h"
+
 //
 // Random functions from Yaagc.
 //
@@ -456,7 +461,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 								dsky(soundlib, agc, 015),
 								dsky2(soundlib, agc, 016), 
 								imu(agc, Panelsdk), 
-								iu(soundlib, agc),
+								iu(soundlib, agc, SIISIVBSepSwitch, TLIEnableSwitch),
 								cws(SMasterAlarm, Bclick, Panelsdk),
 								dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 								NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
@@ -821,6 +826,11 @@ void Saturn::initSaturn()
 	for (i = 0; i < 8; i++) {
 		stagingvent[i] = NULL;
 	}
+
+	for (i = 0; i < 5; i++) {
+		contrail[i] = NULL;
+	}
+	contrailLevel = 0;
 
 	//
 	// Random virtual cockpit motion.
@@ -2368,6 +2378,7 @@ void Saturn::DoLaunch(double simt)
 	//
 
 	SetThrusterGroupLevel(thg_main, 1.0);
+	contrailLevel = 1.0;
 
 	//
 	// And play the launch sound.
@@ -2616,105 +2627,60 @@ void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
 	vs->rvel.z = rvel.z+rofs.z;
 }
 
-int Saturn::clbkConsumeDirectKey(char *keystate)
+int Saturn::clbkConsumeDirectKey(char *kstate)
 
 {
-	if (KEYMOD_SHIFT (keystate))
-	{
-		return 0;
+	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
+		return 0; 
 	}
-	else if (KEYMOD_CONTROL (keystate))
-	{
+
+	// position test
+	/*
+	VESSELSTATUS vs;
+	GetStatus(vs);
+	double moveStep = 1.0e-8;
+
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD2)) {
+		vs.vdata[0].x += moveStep;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD2);
 	}
-	else
-	{
-		if (KEYDOWN (keystate, OAPI_KEY_R)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_R, 1.0)) {
-				{
-					if (stage == CM_ENTRY_STAGE_SEVEN && HatchOpen) {
-						bRecovery = true;
-					}
-				}
-			return 1;
-			}
-		}
-
-		if (KEYDOWN (keystate, OAPI_KEY_5)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_5, 1.0)){
-				if (ActivateLEM){
-					ActivateLEM=false;
-				}
-				return 1;
-			}
-		}
-
-		if (KEYDOWN (keystate, OAPI_KEY_9) && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_9, 1.0)) {
-				viewpos = SATVIEW_DOCK;
-				SetView(true);
-			}
-			return 1;
-		}
-
-		if (KEYDOWN (keystate, OAPI_KEY_8)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_8, 1.0)) {
-				viewpos = SATVIEW_DMP;
-				SetView(true);
-			}
-			return 1;
-		}
-
-		if (KEYDOWN (keystate, OAPI_KEY_7)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_7, 1.0)) {
-				viewpos = SATVIEW_CMP;
-				SetView(true);
-			}
-			return 1;
-		}
-
-		if (KEYDOWN (keystate, OAPI_KEY_6)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_6, 1.0)) {
-				viewpos = SATVIEW_CDR;
-				SetView(true);
-			}
-			return 1;
-		}
-
-		//
-		// We only allow this switch in VC mode, as we need to disable the panel when selecting these
-		// cameras.
-		//
-		// For now this is limited to the Saturn V.
-		//
-
-		if (InVC && KEYDOWN (keystate, OAPI_KEY_1) && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_1, 1.0)) {
-				viewpos = SATVIEW_ENG1;
-				SetView();
-				oapiCameraAttach(GetHandle(), CAM_COCKPIT);
-			}
-			return 1;
-		}
-
-		if (InVC && KEYDOWN (keystate, OAPI_KEY_2) && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_2, 1.0)) {
-				viewpos = SATVIEW_ENG2;
-				oapiCameraAttach(GetHandle(), CAM_COCKPIT);
-				SetView();
-			}
-			return 1;
-		}
-
-		if (InVC && KEYDOWN (keystate, OAPI_KEY_3) && iu.IsTLICapable() && stage < STAGE_ORBIT_SIVB && stage >= PRELAUNCH_STAGE) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_3, 1.0)) {
-				viewpos = SATVIEW_ENG3;
-				oapiCameraAttach(GetHandle(), CAM_COCKPIT);
-				SetView();
-			}
-			return 1;
-		}
-
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD4)) {			
+		vs.vdata[0].y -= moveStep;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD4);			
 	}
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD6)) {			
+		vs.vdata[0].y += moveStep;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD6);
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD8)) {
+		vs.vdata[0].x -= moveStep;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD8);						
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD1)) {
+		vs.vdata[0].z -= 1.0e-4;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD1);						
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD3)) {
+		vs.vdata[0].z += 1.0e-4;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD3);						
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_A)) {
+		SetTouchdownPoints (_V(0, -1, -GetCOG_elev() + 0.01), _V(-1, 1, -GetCOG_elev() + 0.01), _V(1, 1, -GetCOG_elev() + 0.01));
+		RESETKEY(kstate, OAPI_KEY_A);
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_S)) {
+		SetTouchdownPoints (_V(0, -1, -GetCOG_elev() - 0.01), _V(-1, 1, -GetCOG_elev() - 0.01), _V(1, 1, -GetCOG_elev() - 0.01));
+		RESETKEY(kstate, OAPI_KEY_S);
+	}
+	sprintf(oapiDebugString(), "GetCOG_elev %f", GetCOG_elev());
+	*/
+
 	return 0;
 }
 
@@ -2797,13 +2763,80 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	// Separate stages and undock with keypress if REALISM 0
 	if (!Realism && key == OAPI_KEY_S && down == true) {
-
 		if (stage == CSM_LEM_STAGE) {			
 			bManualUnDock = true;
 		
 		} else {
 			bManualSeparate = true;
 		}
+		return 1;
+	}
+
+	if (key == OAPI_KEY_R && down == true) {
+		if (stage == CM_ENTRY_STAGE_SEVEN && HatchOpen) {
+			bRecovery = true;
+		}
+		return 1;
+	}
+
+	if (key == OAPI_KEY_5 && down == true) {
+		if (ActivateLEM) {
+			ActivateLEM = false;
+		}
+		return 1;
+	}
+
+	if (key == OAPI_KEY_9 && down == true && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
+		viewpos = SATVIEW_DOCK;
+		SetView(true);
+		return 1;
+	}
+
+	if (key == OAPI_KEY_8 && down == true) {
+		viewpos = SATVIEW_DMP;
+		SetView(true);
+		return 1;
+	}
+
+	if (key == OAPI_KEY_7 && down == true) {
+		viewpos = SATVIEW_CMP;
+		SetView(true);
+		return 1;
+	}
+
+	if (key == OAPI_KEY_6 && down == true) {
+		viewpos = SATVIEW_CDR;
+		SetView(true);
+		return 1;
+	}
+
+
+	//
+	// We only allow this switch in VC mode, as we need to disable the panel when selecting these
+	// cameras.
+	//
+	// For now this is limited to the Saturn V.
+	//
+
+	if (key == OAPI_KEY_1 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+		viewpos = SATVIEW_ENG1;
+		SetView();
+		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
+		return 1;
+	}
+
+	if (key == OAPI_KEY_2 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+		viewpos = SATVIEW_ENG2;
+		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
+		SetView();
+		return 1;
+	}
+
+	if (key == OAPI_KEY_3 && down == true && InVC && iu.IsTLICapable() && stage < STAGE_ORBIT_SIVB && stage >= PRELAUNCH_STAGE) {
+		viewpos = SATVIEW_ENG3;
+		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
+		SetView();
+		return 1;
 	}
 	return 0;
 }
@@ -2837,10 +2870,10 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 
 	//
 	// Adjust ISP and thrust based on realism level.
+	// -> Disabled for now, wrong thrust and ISP causes weired behavior of the DAP
 	//
-
-	double RCS_ISP = (SM_RCS_ISP * (15.0 - Realism)) / 5.0;
-	double RCS_Thrust = (MaxThrust * (15.0 - Realism)) / 5.0;
+	double RCS_ISP = SM_RCS_ISP;	// (SM_RCS_ISP * (15.0 - Realism)) / 5.0;
+	double RCS_Thrust = MaxThrust;	// (MaxThrust * (15.0 - Realism)) / 5.0;
 
 	//
 	// CM RCS Propellant tanks
@@ -3122,6 +3155,7 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	switch (ul_reason_for_call) {
 	case DLL_PROCESS_ATTACH:
 		SetupgParam(hModule);
+		InitCollisionSDK();
 		break;
 
 	case DLL_PROCESS_DETACH:
@@ -3135,6 +3169,7 @@ void Saturn::LaunchCountdown(double simt)
 {
 	if (GetEngineLevel(ENGINE_MAIN) > 0 && MissionTime <= (-8.9)) {
 		SetThrusterGroupLevel(thg_main, 0);
+		contrailLevel = 0;
 	}
 
 	if (oapiGetTimeAcceleration() > 100)
@@ -3230,6 +3265,7 @@ void Saturn::LaunchCountdown(double simt)
 			thrst = (0.9 / 2.9) * (MissionTime + 4.9);
 		}
 		SetThrusterGroupLevel(thg_main, thrst);
+		contrailLevel = thrst;
 
 		double amt = (thrst) * 0.1;
 		JostleViewpoint(amt);
