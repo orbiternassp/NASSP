@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/02/21 12:01:47  tschachim
+  *	Moved TLI sequence to the IU.
+  *	
   **************************************************************************/
 
 #if !defined(_PA_IU_H)
@@ -29,11 +32,12 @@
 
 class Saturn;
 class SoundLib;
+class XLunarSwitch;
 
 class IU {
 
 public:
-	IU(SoundLib &s, CSMcomputer &cmc);
+	IU(SoundLib &s, CSMcomputer &cmc, GuardedToggleSwitch &siisivsepswitch, XLunarSwitch &tlienableswitch);
 	virtual ~IU();
 	void Timestep(double simt, double simdt);
 	void ChannelOutput(int address, int value);
@@ -78,6 +82,8 @@ protected:
 	Saturn *OurVessel;
 	SoundLib &soundlib;
 	CSMcomputer &agc;
+	GuardedToggleSwitch &SIISIVBSepSwitch;
+	XLunarSwitch &TLIEnableSwitch;
 	int Realism;
 	bool Crewed;
 	bool TLICapable;

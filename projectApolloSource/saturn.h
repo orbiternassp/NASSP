@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.173  2006/04/24 21:06:33  quetalsi
+  *	Buxfix in EXT RNDZ LTS switch
+  *	
   *	Revision 1.172  2006/04/17 19:12:27  movieman523
   *	Removed some unused switches.
   *	
@@ -520,10 +523,10 @@ public:
 
 	bool DisplayingPropellantQuantity();
 
-	// called by crawler 
-	virtual void LaunchVesselRolloutEnd() {};	// after arrival on launch pad
-	virtual void LaunchVesselBuild() {};		// build/unbuild during assembly
-	virtual void LaunchVesselUnbuild() {};
+	// Called by Crawler/ML
+	virtual void LaunchVehicleRolloutEnd() {};	// after arrival on launch pad
+	virtual void LaunchVehicleBuild() {};		// build/unbuild during assembly
+	virtual void LaunchVehicleUnbuild() {};
 	
 	int GetBuildStatus() { return buildstatus; }
 	int GetStage() { return stage; };
@@ -562,8 +565,6 @@ public:
 	void CheckRCSState();
 	void SetRCSThrusters(THRUSTER_HANDLE *th, PROPELLANT_HANDLE ph);
 	void CheckSMSystemsState();
-	int GetSwitchState(char *switchName);
-	int GetRotationalSwitchState(char *switchName);
 	bool PyrosArmed();
 	bool SECSLogicActive();
 	void SlowIfDesired();
@@ -2401,7 +2402,6 @@ protected:
 	virtual void ActivatePrelaunchVenting() = 0;
 	virtual void DeactivatePrelaunchVenting() = 0;
 
-
 	//
 	// Save/Load support functions.
 	//
@@ -2517,6 +2517,8 @@ protected:
 
 	PSTREAM_HANDLE prelaunchvent[3];
 	PSTREAM_HANDLE stagingvent[8];
+	PSTREAM_HANDLE contrail[5];
+	double contrailLevel;
 
 	CMRCSPropellant CMRCS1;
 	CMRCSPropellant CMRCS2;

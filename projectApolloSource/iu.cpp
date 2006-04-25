@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/02/22 18:47:35  tschachim
+  *	Bugfixes for Apollo 4-6.
+  *	
   *	Revision 1.2  2006/02/21 12:19:52  tschachim
   *	Moved TLI sequence to the IU.
   *	
@@ -46,7 +49,8 @@
 #include "saturn.h"
 
 
-IU::IU(SoundLib &s, CSMcomputer &cmc) : soundlib(s), agc(cmc)
+IU::IU(SoundLib &s, CSMcomputer &cmc, GuardedToggleSwitch &siisivsepswitch, XLunarSwitch &tlienableswitch) 
+	   : soundlib(s), agc(cmc), SIISIVBSepSwitch(siisivsepswitch), TLIEnableSwitch(tlienableswitch)
 
 {
 	TLIBurnTime = 0.0;
@@ -130,9 +134,8 @@ void IU::Timestep(double simt, double simdt)
 	}
 
 	// Switches to inhibit TLI
-	// TODO: Introduce event handling when the new SPSDK arrives.
-	bool XLunarSwitch = (OurVessel->GetSwitchState("TLIEnableSwitch") == TOGGLESWITCH_UP);
-	bool SIISIVBSepSwitch = (OurVessel->GetSwitchState("SIISIVBSepSwitch") == TOGGLESWITCH_UP);
+	bool XLunar = (TLIEnableSwitch.GetState() == TOGGLESWITCH_UP);
+	bool SIISIVBSep = (SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP);
 
 	if (TLICapable) {
 		switch (State) {
@@ -185,7 +188,7 @@ void IU::Timestep(double simt, double simdt)
 			if (TLIBurnStart) { 
 				
 				// TLI Inhibit
-				if (!XLunarSwitch) {
+				if (!XLunar) {
 
 					TLIBurnStart = false;
 				
@@ -221,7 +224,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (!XLunarSwitch) {
+			if (!XLunar) {
 				OurVessel->ClearSIISep();
 				TLIInhibit();
 			}				
@@ -241,7 +244,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (!XLunarSwitch) {
+			if (!XLunar) {
 				TLIInhibit();
 			}				
 			break;
@@ -256,7 +259,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (!XLunarSwitch) {
+			if (!XLunar) {
 				TLIInhibit();
 			}				
 			break;
@@ -278,7 +281,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (!XLunarSwitch) {
+			if (!XLunar) {
 				OurVessel->ClearSIISep();
 				TLIInhibit();
 			}				
@@ -294,7 +297,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (!XLunarSwitch) {
+			if (!XLunar) {
 				OurVessel->ClearSIISep();
 
 				OurVessel->SetAttitudeLinLevel(2, 0);
@@ -319,7 +322,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (SIISIVBSepSwitch) {
+			if (SIISIVBSep) {
 				OurVessel->SetAttitudeLinLevel(2, 0);
 				OurVessel->SetThrusterGroupLevel(*thg_aps, 0.0);
 				SepS.stop();
@@ -343,7 +346,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (SIISIVBSepSwitch) {
+			if (SIISIVBSep) {
 				OurVessel->SetAttitudeLinLevel(2, 0);
 				OurVessel->SetThrusterGroupLevel(*thg_aps, 0.0);
 				SepS.stop();
@@ -369,7 +372,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (SIISIVBSepSwitch) {
+			if (SIISIVBSep) {
 				OurVessel->SetAttitudeLinLevel(2, 0);
 				Scount.stop();
 
@@ -387,7 +390,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (SIISIVBSepSwitch) {
+			if (SIISIVBSep) {
 				OurVessel->SetAttitudeLinLevel(2, 0);
 				OurVessel->ClearEngineIndicator(1);
 				Scount.stop();
@@ -409,7 +412,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (SIISIVBSepSwitch) {
+			if (SIISIVBSep) {
 				OurVessel->SetAttitudeLinLevel(2, 0);
 				OurVessel->ClearEngineIndicator(1);
 
@@ -429,7 +432,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (SIISIVBSepSwitch) {
+			if (SIISIVBSep) {
 				OurVessel->SetAttitudeLinLevel(2, 0);
 				OurVessel->ClearEngineIndicator(1);
 
@@ -458,7 +461,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (SIISIVBSepSwitch) {
+			if (SIISIVBSep) {
 				OurVessel->SetAttitudeLinLevel(2, 0);
 				OurVessel->ClearEngineIndicator(1);
 
@@ -507,7 +510,7 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (SIISIVBSepSwitch) {
+			if (SIISIVBSep) {
 				if (OurVessel->GetMissionTime() >= NextMissionEventTime + 10.0) {	// non-permanent inhibit only until T+00:12, NextMissionEventTime is ignition + 2s
 					State++;
 
