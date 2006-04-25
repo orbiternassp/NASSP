@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2005/11/23 21:36:55  movieman523
+  *	Allow specification of LV name in scenario file.
+  *	
   *	Revision 1.8  2005/10/31 19:18:39  tschachim
   *	Bugfixes.
   *	
@@ -62,24 +65,22 @@ public:
 protected:
 	double velocity;
 	double targetHeading;
-	double touchdownPointHeight;
 	int reverseDirection;
-	int useForce;
 	int standalone;
-	int padIndex;
-	int showMLPedestals;
-
 	bool firstTimestepDone;
-	bool doAfterLVDetached;
+
+	bool lastLatLongSet;
+	double lastLat;
+	double lastLong;
+
 	bool keyAccelerate;
 	bool keyBrake;
 	bool keyLeft;
 	bool keyRight;
-	bool keyUp;
-	bool keyDown;
 
 	OBJHANDLE hML;
 	OBJHANDLE hLV;
+	OBJHANDLE hMSS;
 	
 	SoundLib soundlib;
 	Sound soundEngine;
@@ -87,12 +88,9 @@ protected:
 	char LVName[256];
 
 	void DoFirstTimestep();
-	void SetTouchdownPoint();
-	bool IsMLAttached();
-	void AttachML();
-	void DetachML();
-	void AfterLVDetached();
-	void AttachLV();
+	bool IsAttached();
+	void Attach();
+	void Detach();
 	void ToggleDirection();
 	void SetView();
 	void SlowIfDesired(double timeAcceleration);
