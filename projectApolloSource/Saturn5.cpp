@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2006/04/06 19:32:47  movieman523
+  *	More Apollo 13 support.
+  *	
   *	Revision 1.75  2006/04/06 00:54:46  movieman523
   *	Fixed bug in saving Apollo 13 state and added blowing off of panel 4.
   *	
@@ -272,6 +275,8 @@
 #include "saturn.h"
 #include "saturnv.h"
 #include "tracer.h"
+
+#include "CollisionSDK/CollisionSDK.h"
 
 //
 // Set the file name for the tracer code.
@@ -695,6 +700,10 @@ void SaturnV::clbkSetClassCaps (FILEHANDLE cfg)
 	while (oapiReadScenario_nextline (cfg, line)) {
 		ProcessConfigFileLine(cfg, line);
 	}
+
+	// Disable CollisionSDK for the moment
+	VSRegVessel(GetHandle());
+	VSDisableCollisions(GetHandle());
 }
 
 void SaturnV::StageOne(double simt, double simdt)
@@ -708,18 +717,28 @@ void SaturnV::StageOne(double simt, double simdt)
 	double amt = (MainLevel) * 0.4;
 	JostleViewpoint(amt);
 
-	if (vs.status == 1 ){
+	if (vs.status == 1) {
 		MoveEVA();
 	}
 
-	if (GetEngineLevel(ENGINE_MAIN) <0.3 && MissionTime <100 && EDSSwitch.GetState() && MissionTime > 10){
+	if (GetEngineLevel(ENGINE_MAIN) < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10) {
 		bAbort = true;
 	}
 
+	// Control contrail
+	if (MissionTime > 12)
+		contrailLevel = 0;
+	else if (MissionTime > 7)
+		contrailLevel = (12.0 - MissionTime) / 100.0;
+	else if (MissionTime > 2)
+		contrailLevel = 1.38 - 0.95 / 5.0 * MissionTime;
+	else
+		contrailLevel = 1;
+	//sprintf(oapiDebugString(), "contrailLevel %f", contrailLevel);
+
+
 	switch (StageState) {
-
 	case 0:
-
 		//
 		// Shut down center engine at 6% fuel or if acceleration goes
 		// over 3.98g, or at planned shutdown time.
@@ -2185,11 +2204,11 @@ int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 		if (stage == ROLLOUT_STAGE) {
 			if (key == OAPI_KEY_B && down == true) {
-				LaunchVesselBuild();
+				LaunchVehicleBuild();
 				return 1;
 			}
 			if (key == OAPI_KEY_U && down == true) {
-				LaunchVesselUnbuild();
+				LaunchVehicleUnbuild();
 				return 1;
 			}
 		}
@@ -2198,14 +2217,14 @@ int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
 
-void SaturnV::LaunchVesselRolloutEnd() {
+void SaturnV::LaunchVehicleRolloutEnd() {
 	// called by crawler after arrival on launch pad
 
 	SetFirstStage();
 	SetStage(ONPAD_STAGE);
 }
 
-void SaturnV::LaunchVesselBuild() {
+void SaturnV::LaunchVehicleBuild() {
 	// called by crawler
 	
 	if (stage == ROLLOUT_STAGE && buildstatus < 5) {
@@ -2214,7 +2233,7 @@ void SaturnV::LaunchVesselBuild() {
 	}
 }
 
-void SaturnV::LaunchVesselUnbuild() {
+void SaturnV::LaunchVehicleUnbuild() {
 	// called by crawler
 
 	if (stage == ROLLOUT_STAGE && buildstatus > 0) {
