@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/01/26 03:07:49  movieman523
+  *	Quick hack to support low-res mesh.
+  *	
   *	Revision 1.6  2006/01/24 13:45:29  tschachim
   *	More and longer thrust and exhaust texture for the retros.
   *	
@@ -295,7 +298,7 @@ void S1C::AddEngines()
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
 	int i;
 	for (i = 0; i < 4; i++)
-		AddExhaust (th_retro[i], 15.0, 1.0, tex);
+		AddExhaust (th_retro[i], 15.0, 0.6, tex);
 
 	double Offset1st = -23.1;
 
