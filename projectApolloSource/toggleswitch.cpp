@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2006/04/17 18:20:11  movieman523
+  *	Removed #if 0 code.
+  *	
   *	Revision 1.59  2006/04/17 18:14:27  movieman523
   *	Added flashing borders to all switches (I think).
   *	
@@ -2033,7 +2036,7 @@ void IndicatorSwitch::SaveState(FILEHANDLE scn) {
 void IndicatorSwitch::LoadState(char *line) {
 
 	char buffer[100];
-	bool st;
+	int st=FALSE; // Avoids crash bug
 
 	sscanf(line, "%s %i", buffer, &st); 
 	if (!strnicmp(buffer, name, strlen(name))) {

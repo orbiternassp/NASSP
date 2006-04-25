@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.26  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -1360,19 +1363,20 @@ void LEMcomputer::ProcessChannel13(int val){
 	ch13.Value = val;
 	if(ch13.Bits.EnableRHCCounter && ch13.Bits.RHCRead){
 		int rhc_count[3];
-		rhc_count[0] = lem->rhc_pos[0]/480;
-		rhc_count[1] = lem->rhc_pos[1]/480;
-		rhc_count[2] = lem->rhc_pos[2]/480;
-
-		WriteMemory(042,rhc_count[1]); // PITCH == 042
-		WriteMemory(043,rhc_count[2]); // YAW   == 043
-		WriteMemory(044,rhc_count[0]); // ROLL  == 044
-
-		sprintf(oapiDebugString(),"LM CH13: %o [RHC COUNTER ENA] [RHC READ] SENT %d",val,rhc_count[0]);
-
+		rhc_count[0] = lem->rhc_pos[0]/550;
+		rhc_count[1] = lem->rhc_pos[1]/550;
+		rhc_count[2] = lem->rhc_pos[2]/550;
+		
+		WriteMemory(042,rhc_count[1]); // PITCH 
+		WriteMemory(043,rhc_count[2]); // YAW   
+		WriteMemory(044,rhc_count[0]); // ROLL  
+		/*
+		sprintf(oapiDebugString(),"LM CH13: %o RHC: SENT %d %d %d",val,
+			rhc_count[0],rhc_count[1],rhc_count[2]);
 		return;
+		*/
 	}
-	sprintf(oapiDebugString(),"LM CH13: %o",val);	
+//	sprintf(oapiDebugString(),"LM CH13: %o",val);	
 
 }
 

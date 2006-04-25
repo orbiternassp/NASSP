@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.1  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -199,9 +202,15 @@ IMU_Matrix3 IMU::getNavigationBaseToOrbiterLocalTransformation() {
 	m.m23 = 1.0;
 	m.m31 = 1.0;
 */
-	m.m12 = 1.0;	
-	m.m23 = -1.0;
-	m.m31 = 1.0;
+	if(LEM){
+		m.m12 = 1.0;	
+		m.m21 = 1.0;
+		m.m33 = 1.0;
+	}else{
+		m.m12 = 1.0;	
+		m.m23 = -1.0;
+		m.m31 = 1.0;
+	}
 	return m;
 } 
 
@@ -218,9 +227,15 @@ IMU_Matrix3 IMU::getOrbiterLocalToNavigationBaseTransformation() {
 	m.m21 = -1.0;	
 	m.m32 = 1.0;
 */
-	m.m13 = 1.0;
-	m.m21 = 1.0;	
-	m.m32 = -1.0;
+	if(LEM){
+		m.m12 = 1.0;
+		m.m21 = 1.0;	
+		m.m33 = 1.0;
+	}else{
+		m.m13 = 1.0;
+		m.m21 = 1.0;	
+		m.m32 = -1.0;
+	}
 	return m;
 }
 
