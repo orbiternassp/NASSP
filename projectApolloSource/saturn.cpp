@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.132  2006/04/25 13:43:45  tschachim
+  *	Removed GetXXXSwitchState. New first stage exhaust.
+  *	
   *	Revision 1.131  2006/04/23 04:15:46  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -2776,7 +2779,9 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		if (stage == CM_ENTRY_STAGE_SEVEN && HatchOpen) {
 			bRecovery = true;
 		}
-		return 1;
+		// This key is also used by Orbiter, so we return 0
+		// TODO: get rid of this key at all and do it by using the panel
+		return 0;
 	}
 
 	if (key == OAPI_KEY_5 && down == true) {
