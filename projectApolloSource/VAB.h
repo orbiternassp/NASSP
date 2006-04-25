@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/11/21 13:31:34  tschachim
+  *	New Saturn assembly meshes.
+  *	
   *	Revision 1.2  2005/11/09 18:41:03  tschachim
   *	New Saturn assembly process.
   *	
@@ -40,15 +43,16 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	void clbkSaveState(FILEHANDLE scn);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+	//int clbkConsumeDirectKey(char *kstate);
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
 	void clbkPostCreation();
 
-	void ToggleHighBay1Door();
-	void ToggleHighBay3Door();
-	void BuildSaturnStage();
-	void UnbuildSaturnStage();
-	void SetSaturnName(char *name) { strcpy(saturnName, name); };
+	// Called by Crawler
+	virtual void ToggleHighBay1Door();
+	virtual void ToggleHighBay3Door();
+	virtual void BuildSaturnStage();
+	virtual void UnbuildSaturnStage();
 
 protected:
 	bool firstTimestepDone;
@@ -89,8 +93,8 @@ protected:
 	double highBay1Door_Proc;
 	double highBay3Door_Proc;
 
-	char saturnName[256];
-	int saturnVisible;
+	char LVName[256];
+	int LVVisible;
 
 	SoundLib soundlib;
 	Sound soundEngine;
