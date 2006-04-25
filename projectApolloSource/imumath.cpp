@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/04/25 08:11:27  dseagrav
+  *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
+  *	
   *	Revision 1.2  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -191,17 +194,12 @@ IMU_Vector3 IMU::getRotationAnglesZYX(IMU_Matrix3 m) {
 
 IMU_Matrix3 IMU::getNavigationBaseToOrbiterLocalTransformation() {
 	
-	// This transformation assumes that spacecraft azimuth - orbiter heading = 180 deg
 	IMU_Matrix3 m;
 	int i;
 	
 	for (i = 0; i < 9; i++) {
 		m.data[i] = 0.0;
 	}
-/*	m.m12 = -1.0;	
-	m.m23 = 1.0;
-	m.m31 = 1.0;
-*/
 	if(LEM){
 		m.m12 = 1.0;	
 		m.m21 = 1.0;
@@ -216,17 +214,12 @@ IMU_Matrix3 IMU::getNavigationBaseToOrbiterLocalTransformation() {
 
 IMU_Matrix3 IMU::getOrbiterLocalToNavigationBaseTransformation() {
 	
-	// This transformation assumes that spacecraft azimuth - orbiter heading = 180 deg
 	IMU_Matrix3 m;
 	int i;
 	
 	for (i = 0; i < 9; i++) {
 		m.data[i] = 0.0;
 	}
-/*	m.m13 = 1.0;
-	m.m21 = -1.0;	
-	m.m32 = 1.0;
-*/
 	if(LEM){
 		m.m12 = 1.0;
 		m.m21 = 1.0;	
