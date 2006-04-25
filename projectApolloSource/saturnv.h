@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2006/02/21 12:02:26  tschachim
+  *	Moved TLI sequence to the IU.
+  *	
   *	Revision 1.22  2006/01/31 01:26:18  lazyd
   *	Autopilot change
   *	
@@ -109,9 +112,9 @@ public:
 	void initSaturnV();
 
 	// called by crawler 
-	void LaunchVesselRolloutEnd();		// after arrival on launch pad
-	void LaunchVesselBuild();			// build/unbuild during assembly
-	void LaunchVesselUnbuild();
+	void LaunchVehicleRolloutEnd();		// after arrival on launch pad
+	void LaunchVehicleBuild();			// build/unbuild during assembly
+	void LaunchVehicleUnbuild();
 
 	//
 	// Functions that external code shouldn't need to access.

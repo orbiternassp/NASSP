@@ -2,7 +2,7 @@
   This file is part of Project Apollo - NASSP
   Copyright 2004-2005
 
-  VAB Transporter vessel
+  VAB vessel
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/02/21 12:18:29  tschachim
+  *	Fixes to make code build with MS C++ 2005
+  *	
   *	Revision 1.6  2006/01/09 19:26:03  tschachim
   *	More attempts to make code build on MS C++ 2005
   *	
@@ -62,12 +65,15 @@
 #include "IMU.h"
 #include "saturn.h"
 
+#include "CollisionSDK/CollisionSDK.h"
+
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo VAB.log";
 
 
 DLLCLBK void InitModule(HINSTANCE hModule) {
 	g_hDLL = hModule;
+	InitCollisionSDK();
 }
 
 
@@ -93,12 +99,16 @@ VAB::VAB(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	highBay3Door_Status = DOOR_CLOSED;
 	highBay3Door_Proc = 0;
 	crane_Status = CRANE_BEGIN;
-	crane_Proc = 0.00001;
+
+	// TODO Initial crane position disabled until the new VAB arrives
+	// crane_Proc = 0.00001;
+	crane_Proc = 0;	
+
 	platform_Proc = 0;
 	saturnStage1_Proc = 0;
 	adjustSaturnStage1 = false;
-	saturnName[0] = '\0';
-	saturnVisible = false;
+	LVName[0] = '\0';
+	LVVisible = false;
 
 	int i;
 	for (i = 0; i < 5; i++) {
@@ -190,8 +200,11 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 		SetMeshVisibilityMode(meshindexSaturn[i], MESHVIS_NEVER);
 
 	DefineAnimations();
-	SetTouchdownPoints(_V(0, -78, 9), _V(-4, -78, -9), _V(4, -78, -9));
+	SetTouchdownPoints(_V(0, -80.45, 10), _V(-10, -80.45, -10), _V(10, -80.45, -10));
 	SetCameraOffset(_V(-27.0, -12.0, -48.0));
+
+	VSRegVessel(GetHandle());
+	VSDisableCollisions(GetHandle());
 }
 
 void VAB::DefineAnimations() {
@@ -535,8 +548,8 @@ void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 		} else {
 			// Get the saturn
 			Saturn *lav = 0;
-			if (saturnName[0] != '\0') {
-				OBJHANDLE hLV = oapiGetVesselByName(saturnName);
+			if (LVName[0] != '\0') {
+				OBJHANDLE hLV = oapiGetVesselByName(LVName);
 				if (hLV) {
 					lav = (Saturn *) oapiGetVesselInterface(hLV);
 				}
@@ -568,15 +581,15 @@ void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 				else
 					crane_Status = CRANE_END;
 
-				if (!saturnVisible && crane_Proc > 0.00001 && crane_Proc < 0.8 && lav) {
+				if (!LVVisible && crane_Proc > 0.00001 && crane_Proc < 0.8 && lav) {
 					SetSaturnMeshVisibilityMode(lav->GetBuildStatus(), MESHVIS_ALWAYS);
-					saturnVisible = true;
+					LVVisible = true;
 				}
 				
-				if (saturnVisible && crane_Proc >= 0.8 && lav) {
+				if (LVVisible && crane_Proc >= 0.8 && lav) {
 					SetSaturnMeshVisibilityMode(lav->GetBuildStatus(), MESHVIS_NEVER);
-					lav->LaunchVesselBuild();
-					saturnVisible = false;
+					lav->LaunchVehicleBuild();
+					LVVisible = false;
 				} 
 
 				// Platforms
@@ -593,15 +606,15 @@ void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 				else
 					crane_Status = CRANE_BEGIN;
 
-				if (!saturnVisible && crane_Proc > 0.00001 && crane_Proc < 0.8 && lav) {
+				if (!LVVisible && crane_Proc > 0.00001 && crane_Proc < 0.8 && lav) {
 					SetSaturnMeshVisibilityMode(lav->GetBuildStatus() - 1, MESHVIS_ALWAYS);
-					lav->LaunchVesselUnbuild();
-					saturnVisible = true;
+					lav->LaunchVehicleUnbuild();
+					LVVisible = true;
 				} 
 			
-				if (saturnVisible && crane_Proc <= 0.00001 && lav) {
+				if (LVVisible && crane_Proc <= 0.00001 && lav) {
 					SetSaturnMeshVisibilityMode(lav->GetBuildStatus(), MESHVIS_NEVER);
-					saturnVisible = false;
+					LVVisible = false;
 				}
 
 				// Platforms
@@ -669,11 +682,11 @@ void VAB::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	char *line;
 
 	while (oapiReadScenario_nextline (scn, line)) {
-	//	if (!strnicmp (line, "VELOCITY", 8)) {
-	//		sscanf (line + 8, "%lf", &velocity);
-	//	} else {
+		if (!strnicmp (line, "LVNAME", 6)) {
+			strncpy (LVName, line + 7, 64);
+		} else {
 			ParseScenarioLineEx (line, status);
-	//	}
+		}
 	}
 }
 
@@ -681,7 +694,8 @@ void VAB::clbkSaveState(FILEHANDLE scn) {
 
 	VESSEL2::clbkSaveState (scn);
 
-	//oapiWriteScenario_int (scn, "PADINDEX", padIndex);
+	if (LVName[0])
+		oapiWriteScenario_string (scn, "LVNAME", LVName);
 }
 
 int VAB::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
@@ -711,3 +725,57 @@ int VAB::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return 0;
 }
 
+/*
+int VAB::clbkConsumeDirectKey(char *kstate) {
+
+	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
+		return 0; 
+	}
+
+	VESSELSTATUS vs;
+	GetStatus(vs);
+
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD2)) {
+		vs.vdata[0].x += 5.0e-9;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD2);
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD4)) {			
+		vs.vdata[0].y -= 5.0e-9;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD4);			
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD6)) {			
+		vs.vdata[0].y += 5.0e-9;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD6);
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD8)) {
+		vs.vdata[0].x -= 5.0e-9;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD8);						
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD1)) {
+		vs.vdata[0].z -= 1.0e-3;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD1);						
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD3)) {
+		vs.vdata[0].z += 1.0e-3;
+		DefSetState(&vs);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD3);						
+	}
+
+	if (KEYDOWN (kstate, OAPI_KEY_A)) {
+		SetTouchdownPoints (_V(0, -GetCOG_elev() + 0.01, 1), _V(-1, -GetCOG_elev() + 0.01, -1), _V(1, -GetCOG_elev() + 0.01, -1));
+		sprintf(oapiDebugString(), "COG_elev %f", GetCOG_elev());
+		RESETKEY(kstate, OAPI_KEY_A);
+	}
+	if (KEYDOWN (kstate, OAPI_KEY_S)) {
+		SetTouchdownPoints (_V(0, -GetCOG_elev() - 0.01, 1), _V(-1, -GetCOG_elev() - 0.01, -1), _V(1, -GetCOG_elev() - 0.01, -1));
+		sprintf(oapiDebugString(), "COG_elev %f", GetCOG_elev());
+		RESETKEY(kstate, OAPI_KEY_S);
+	}
+	return 0;
+}
+*/
