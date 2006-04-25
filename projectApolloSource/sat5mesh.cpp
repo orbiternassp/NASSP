@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/03/30 00:21:37  movieman523
+  *	Pass empty mass correctly and remember to check in SM files :).
+  *	
   *	Revision 1.50  2006/03/30 00:14:46  movieman523
   *	First pass at SM DLL.
   *	
@@ -205,12 +208,12 @@
 #include "sm.h"
 
 PARTICLESTREAMSPEC srb_contrail = {
-	0, 12.0, 5, 150.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
-	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
-	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
+	0, 12.0, 20, 150.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_PLIN, 0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 0.8, 0.8
 };
 
-
+/*
 PARTICLESTREAMSPEC srb_exhaust = {
 	0,		// flag
 	8.0,	// size
@@ -224,21 +227,20 @@ PARTICLESTREAMSPEC srb_exhaust = {
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
 };
-/*
+*/
 PARTICLESTREAMSPEC srb_exhaust = {
 	0,		// flag
 	2.85,	// size
-	150000,	// rate
+	1500,	// rate
 	60.0,	// velocity
 	0.0,	// velocity distribution
-	0.2,	// lifetime
-	-1.0,	// growthrate
+	1.0,	// lifetime
+	2.0,	// growthrate
 	0.0,	// atmslowdown 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 1.0,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-1140, 1.0
 };
-*/
 
 PARTICLESTREAMSPEC solid_exhaust = {
 	0, 0.5, 250, 35.0, 0.1, 0.15, 0.5, 1.0, 
@@ -593,16 +595,24 @@ void SaturnV::SetFirstStage ()
 	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
 	for (i = 0; i < 5; i++) AddExhaust (th_main[i], 120.0, 3.5, exhaust_tex);
 
-	AddExhaustStream (th_main[0], MAIN4a_Vector+_V(0,0,-30), &srb_contrail);
-	AddExhaustStream (th_main[0], MAIN4a_Vector+_V(0,0,-25), &srb_exhaust);
-	AddExhaustStream (th_main[1], MAIN2a_Vector+_V(0,0,-30), &srb_contrail);
-	AddExhaustStream (th_main[1], MAIN2a_Vector+_V(0,0,-25), &srb_exhaust);
-	AddExhaustStream (th_main[2], MAIN1a_Vector+_V(0,0,-30), &srb_contrail);
-	AddExhaustStream (th_main[2], MAIN1a_Vector+_V(0,0,-25), &srb_exhaust);
-	AddExhaustStream (th_main[3], MAIN3a_Vector+_V(0,0,-30), &srb_contrail);
-	AddExhaustStream (th_main[3], MAIN3a_Vector+_V(0,0,-25), &srb_exhaust);
-	AddExhaustStream (th_main[4], MAIN5a_Vector+_V(0,0,-30), &srb_contrail);
-	AddExhaustStream (th_main[4], MAIN5a_Vector+_V(0,0,-25), &srb_exhaust);
+	AddExhaustStream (th_main[0], MAIN4a_Vector+_V(0,0,-18), &srb_exhaust);
+	AddExhaustStream (th_main[1], MAIN2a_Vector+_V(0,0,-18), &srb_exhaust);
+	AddExhaustStream (th_main[2], MAIN1a_Vector+_V(0,0,-18), &srb_exhaust);
+	AddExhaustStream (th_main[3], MAIN3a_Vector+_V(0,0,-18), &srb_exhaust);
+	AddExhaustStream (th_main[4], MAIN5a_Vector+_V(0,0,-18), &srb_exhaust);
+
+	// Contrail
+	for (i = 0; i < 5; i++) {
+		if (contrail[i]) {
+			DelExhaustStream(contrail[i]);
+			contrail[i] = NULL;
+		}
+	}
+	contrail[0] = AddParticleStream(&srb_contrail, MAIN4a_Vector+_V(0,0,-25), _V( 0,0,-1), &contrailLevel);
+	contrail[1] = AddParticleStream(&srb_contrail, MAIN2a_Vector+_V(0,0,-25), _V( 0,0,-1), &contrailLevel);
+	contrail[2] = AddParticleStream(&srb_contrail, MAIN1a_Vector+_V(0,0,-25), _V( 0,0,-1), &contrailLevel);
+	contrail[3] = AddParticleStream(&srb_contrail, MAIN3a_Vector+_V(0,0,-25), _V( 0,0,-1), &contrailLevel);
+	contrail[4] = AddParticleStream(&srb_contrail, MAIN5a_Vector+_V(0,0,-25), _V( 0,0,-1), &contrailLevel);
 
 	// ************************ visual parameters **********************************
 
