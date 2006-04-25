@@ -8,11 +8,11 @@ BEGIN_ENVIRONMENT
 END_ENVIRONMENT
 
 BEGIN_FOCUS
-  Ship AS-506-CT
+  Ship Crawler-Transporter
 END_FOCUS
 
 BEGIN_CAMERA
-  TARGET AS-506-CT
+  TARGET Crawler-Transporter
   MODE Extern
   POS 7.69 156.99 -25.93
   TRACKMODE TargetRelative
@@ -35,7 +35,7 @@ Columbia:ProjectApollo\Saturn5
   STATUS Landed Earth  
   BASE Cape Canaveral:2
   HEADING 270.00
-  ATTACHED 0:0,AS-506-ML    
+  ATTACHED 0:0,ML    
   FUEL 1.000
   APOLLONO 11
   NASSPVER 60050
@@ -63,27 +63,33 @@ Columbia:ProjectApollo\Saturn5
   MOONLONG 23.4333
   MOONLAT 0.6875  
   MOONALT 0.0
-  TCP 0.5
+  TCP 4.96
   LANG English
   LEMN Eagle
 END
-AS-506-CT:ProjectApollo\Crawler
+Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
   POS -80.6527277 28.5791263
   HEADING 75.80
   NAVFREQ 0 0
-  USEFORCE 1
-  SHOWMLPEDESTRALS 0
   LVNAME Columbia
 END
-AS-506-ML:ProjectApollo\Saturn5ML
+ML:ProjectApollo\ML
   STATUS Landed Earth
-  POS -80.6537895 28.5788873
-  HEADING 165.96
+  POS -80.6538134 28.5788758
+  HEADING 75.04
+  TOUCHDOWNPOINTHEIGHT -71.827
+  LVNAME Columbia
 END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
-  POS -80.6536 28.5787
-  HEADING 75.96
+  POS -80.6540592 28.5785496
+  HEADING 255.04
+  LVNAME Columbia
+END
+MSS:ProjectApollo\MSS
+  STATUS Landed Earth
+  POS -80.6237309 28.5882864
+  HEADING 246.58
 END
 END_SHIPS
