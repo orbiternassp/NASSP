@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2006/04/25 08:11:27  dseagrav
+  *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
+  *	
   *	Revision 1.60  2006/04/17 18:20:11  movieman523
   *	Removed #if 0 code.
   *	
@@ -2036,11 +2039,11 @@ void IndicatorSwitch::SaveState(FILEHANDLE scn) {
 void IndicatorSwitch::LoadState(char *line) {
 
 	char buffer[100];
-	int st=FALSE; // Avoids crash bug
+	int st = FALSE; // Avoids crash bug
 
 	sscanf(line, "%s %i", buffer, &st); 
 	if (!strnicmp(buffer, name, strlen(name))) {
-		state = st;
+		state = (st != 0);
 		if (state) 
 			displayState = 3.0;
 		else
