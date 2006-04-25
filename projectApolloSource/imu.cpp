@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.16  2006/02/13 21:35:02  tschachim
   *	Bugfix turn on process.
   *	
@@ -741,7 +744,7 @@ VECTOR3 IMU::GetTotalAttitude()
 	if(LEM){
 		v.x = Gimbal.Z;
 		v.y = Gimbal.Y;
-		v.z = Gimbal.X;
+		v.z = -Gimbal.X;
 	}else{
 		v.x = Gimbal.X;
 		v.y = Gimbal.Y;

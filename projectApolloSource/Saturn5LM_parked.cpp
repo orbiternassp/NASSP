@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.46  2006/04/22 03:53:48  jasonims
   *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
   *	
@@ -301,6 +304,13 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	// initialisation
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
+
+	// Force to NULL to avoid stupid VC++ optimization failure
+	int x=0;
+	while(x<N_LEM_VALVES){
+		pLEMValves[x] = NULL;
+		x++;
+	}
 
 	Init();
 	SystemsInit();

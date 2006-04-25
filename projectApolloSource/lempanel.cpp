@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/04/24 20:58:18  jasonims
+  *	Got the X-Pointers working on the main-panel.
+  *	
   *	Revision 1.53  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -1029,8 +1032,6 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PANEL4RIGHTSWITCHROW,			_R( 964, 1619,  998, 1794), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_XPOINTERCDR,						_R(  65,  426,  202,  559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_XPOINTERLMP,						_R(1302,  426, 1439,  559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
-
-
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		
@@ -2426,8 +2427,6 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_XPOINTERLMP:
 		RedrawPanel_XPointer(surf);
 		return true;
-
-
 
 	case AID_CONTACTLIGHT1:
 	case AID_CONTACTLIGHT2:
