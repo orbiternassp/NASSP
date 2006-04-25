@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/04/25 08:11:27  dseagrav
+  *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
+  *	
   *	Revision 1.17  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -471,9 +474,7 @@ void IMU::Timestep(double simt)
 		Orbiter.Attitude.Y = orbiterAttitudeY;
 		Orbiter.Attitude.Z = orbiterAttitudeZ;
 				
-//		val12.Value = agc.GetInputChannel(012);
-		val12.Value = agc.GetOutputChannel(012); //TODOX15 it seems better because it is an output channel
-
+		val12.Value = agc.GetOutputChannel(012);
 		if (val12.Bits.ZeroIMUCDUs) {
 			ZeroIMUCDUs();
 		}
