@@ -70,7 +70,6 @@ Crawler-Transporter:ProjectApollo\Crawler
   POS -80.6527277 28.5791263
   HEADING 75.80
   NAVFREQ 0 0
-  USEFORCE 1
   LVNAME Columbia
 END
 ML:ProjectApollo\ML
