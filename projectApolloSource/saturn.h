@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.174  2006/04/25 13:39:50  tschachim
+  *	Removed GetXXXSwitchState.
+  *	
   *	Revision 1.173  2006/04/24 21:06:33  quetalsi
   *	Buxfix in EXT RNDZ LTS switch
   *	
@@ -611,6 +614,13 @@ protected:
 	bool autopilot;
 	bool SIISepState;
 	bool ABORT_IND;
+
+	//
+	// Checklists.
+	//
+
+	bool useChecklists;
+	char lastChecklist[256];
 
 	bool DeleteLaunchSite;
 
@@ -2644,6 +2654,9 @@ protected:
 
 	// InitSaturn is called twice, but some things must run only once
 	bool InitSaturnCalled;
+
+	int LMPadLoadCount;
+	int LMPadValueCount;
 	
 	// DS20060305 Friend Class List Added for SCS objects
 	friend class GDC;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.133  2006/04/25 17:56:08  tschachim
+  *	Bugfix Keyboard.
+  *	
   *	Revision 1.132  2006/04/25 13:43:45  tschachim
   *	Removed GetXXXSwitchState. New first stage exhaust.
   *	
@@ -655,11 +658,20 @@ void Saturn::initSaturn()
 	hCrawler = 0;
 
 	//
+	// Checklists.
+	//
+
+	useChecklists = false;
+	lastChecklist[0] = 0;
+
+	//
 	// LM PAD data.
 	//
 
 	LMPadCount = 0;
 	LMPad = 0;
+	LMPadLoadCount = 0;
+	LMPadValueCount = 0;
 
 	//
 	// State for damping electrical meter display.
@@ -1199,6 +1211,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "DLS", DeleteLaunchSite ? 1 : 0);
 	oapiWriteScenario_int (scn, "LOWRES", LowRes ? 1 : 0);
+	oapiWriteScenario_int (scn, "CHECKLISTS", useChecklists ? 1 : 0);
 
 	if (Realism != REALISM_DEFAULT) {
 		oapiWriteScenario_int (scn, "REALISM", Realism);
@@ -1367,6 +1380,9 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	}
 
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
+
+	if (useChecklists && lastChecklist[0])
+		oapiWriteScenario_string (scn, "CHECKL", lastChecklist);
 
 	if (LEMName[0])
 		oapiWriteScenario_string (scn, "LEMN", LEMName);
@@ -1647,9 +1663,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	int SwitchState = 0;
 	int nasspver = 0, status = 0;
 	int n, DummyLoad;
-	int LMPadLoadCount = 0, LMPadValueCount = 0;
 
-   if (!strnicmp (line, "CONFIGURATION", 13)) {
+    if (!strnicmp (line, "CONFIGURATION", 13)) {
         sscanf (line+13, "%d", &status);
 	}
 	else if (!strnicmp (line, "NASSPVER", 8)) {
@@ -1711,6 +1726,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "LOWRES", 6)) {
         sscanf (line+6, "%d", &DummyLoad);
 		LowRes = (DummyLoad != 0);
+	}
+	else if (!strnicmp (line, "CHECKLISTS", 10)) {
+        sscanf (line+10, "%d", &DummyLoad);
+		useChecklists = (DummyLoad != 0);
 	}
 	else if (!strnicmp (line, "SICSHUT", 7)) {
 		sscanf (line + 7, "%f", &ftcp);
@@ -2044,6 +2063,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "LANG", 4)) {
 		strncpy (AudioLanguage, line + 5, 64);
+	}
+	else if (!strnicmp(line, "CHECKL", 6)) {
+		strncpy (lastChecklist, line + 7, 255);
 	}
 	else if (!strnicmp(line, "LEMN", 4)) {
 		strncpy (LEMName, line + 5, 64);
