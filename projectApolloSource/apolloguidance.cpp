@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.73  2006/04/04 23:36:14  dseagrav
   *	Added the beginnings of the telecom subsystem.
   *	
@@ -5501,7 +5504,6 @@ void ApolloGuidance::PadLoad(unsigned int address, unsigned int value)
 {
 	if (Yaagc) {
 		WriteMemory(address, value);
-		PadLoaded = true;
 	}
 }
 
