@@ -334,10 +334,10 @@ Odyssey:ProjectApollo/Saturn5
   LMPAD 3432 00000
 AGC_BEGIN
   YAAGC 1
-; Launch Azimuth?
-  EMEM2633 6316
-  EMEM2634 20000
 AGC_END
+; Launch Azimuth?
+  CMPAD2633 6316
+  CMPAD2634 20000
 END
 AS-508-CT:ProjectApollo\Crawler
   STATUS Landed Earth
