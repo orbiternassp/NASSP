@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.175  2006/04/29 23:16:56  movieman523
+  *	Fixed LMPAD and added CHECKLISTS option to scenario file.
+  *	
   *	Revision 1.174  2006/04/25 13:39:50  tschachim
   *	Removed GetXXXSwitchState.
   *	
@@ -2680,6 +2683,7 @@ const VECTOR3 OFS_MAINCHUTE =  { 0, -2, 9};
 
 extern MESHHANDLE hSM;
 extern MESHHANDLE hCM;
+extern MESHHANDLE hCMInt;
 extern MESHHANDLE hFHC;
 extern MESHHANDLE hCMP;
 extern MESHHANDLE hCREW;

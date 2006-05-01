@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/04/25 20:21:09  jasonims
+  *	More Mesh Offset Updates.... Including removing extra code thanks to CM, Hatch, and Crew all aligned on same axis.  Only one Mesh offset required for all three
+  *	
   *	Revision 1.40  2006/04/25 19:25:08  jasonims
   *	More Mesh Offset Updates.... Including removing extra code thanks to CM, Hatch, and Crew all aligned on same axis.  Only one Mesh offset required for all three
   *	
@@ -183,6 +186,7 @@ MESHHANDLE hSMSIMBAY;
 MESHHANDLE hCM;
 MESHHANDLE hCM2;
 MESHHANDLE hCMP;
+MESHHANDLE hCMInt;
 MESHHANDLE hCREW;
 MESHHANDLE hFHO;
 MESHHANDLE hFHC;
@@ -236,25 +240,26 @@ void SaturnInitMeshes()
 	LOAD_MESH(hSMhga, "ProjectApollo/SM-HGA");
 	LOAD_MESH(hSMCRYO, "ProjectApollo/SM-CRYO");
 	LOAD_MESH(hSMSIMBAY, "ProjectApollo/SM-SIMBAY");
-	LOAD_MESH(hCM, "ProjectApollo/sat5CM");
-	LOAD_MESH(hCM2, "ProjectApollo/sat5CM2");
-	LOAD_MESH(hCMP, "ProjectApollo/SAT5CMP");
-	LOAD_MESH(hCREW, "ProjectApollo/SAT5CREW");
-	LOAD_MESH(hFHC, "ProjectApollo/SAT5HC");
-	LOAD_MESH(hFHO, "ProjectApollo/SAT5HO");
-	LOAD_MESH(hCM2B, "ProjectApollo/SAT5CM2B");
-	LOAD_MESH(hprobe, "ProjectApollo/sat5probe");
-	LOAD_MESH(hCMBALLOON, "ProjectApollo/CM_Balloons");
-	LOAD_MESH(hCRB, "ProjectApollo/nSATURN1_CRB");
-	LOAD_MESH(hCMB, "ProjectApollo/SAT5CMB");
+	LOAD_MESH(hCM, "ProjectApollo/CM");
+	LOAD_MESH(hCM2, "ProjectApollo/CM-Recov");
+	LOAD_MESH(hCMP, "ProjectApollo/CM-CMP");
+	LOAD_MESH(hCMInt, "ProjectApollo/CM-Interior");
+	LOAD_MESH(hCREW, "ProjectApollo/CM-CREW");
+	LOAD_MESH(hFHC, "ProjectApollo/CM-HatchC");
+	LOAD_MESH(hFHO, "ProjectApollo/CM-HatchO");
+	LOAD_MESH(hCM2B, "ProjectApollo/CMB-Recov");
+	LOAD_MESH(hprobe, "ProjectApollo/CM-Probe");
+	LOAD_MESH(hCMBALLOON, "ProjectApollo/CM-Balloons");
+	LOAD_MESH(hCRB, "ProjectApollo/CM-CrewRecovery");
+	LOAD_MESH(hCMB, "ProjectApollo/CMB");
 	LOAD_MESH(hChute30, "ProjectApollo/Apollo_2chute");
 	LOAD_MESH(hChute31, "ProjectApollo/Apollo_3chuteEX");
 	LOAD_MESH(hChute32, "ProjectApollo/Apollo_3chuteHD");
 	LOAD_MESH(hApollochute, "ProjectApollo/Apollo_3chute");
-	LOAD_MESH(hFHC2, "ProjectApollo/SAT5HC2");
+	LOAD_MESH(hFHC2, "ProjectApollo/CMB-HatchC");
 	LOAD_MESH(hsat5tower, "ProjectApollo/BoostCover");
-	LOAD_MESH(hFHO2, "ProjectApollo/SAT5HO2");
-	LOAD_MESH(hCMPEVA, "ProjectApollo/nSATURN1_CMP_EVA");
+	LOAD_MESH(hFHO2, "ProjectApollo/CMB-HatchO");
+	LOAD_MESH(hCMPEVA, "ProjectApollo/CM-CMPEVA");
 }
 
 void Saturn::AddSM(double offset, bool showSPS)
@@ -316,6 +321,9 @@ void Saturn::ToggelHatch()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 	//Don't Forget the Hatch
 	if (HatchOpen){
 		meshidx = AddMesh(hFHC, &mesh_dir);
@@ -363,6 +371,9 @@ void Saturn::ToggelHatch2()
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
+
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	//Don't Forget the Hatch
 	
@@ -417,6 +428,9 @@ void Saturn::ToggleEVA()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -445,6 +459,9 @@ void Saturn::ToggleEVA()
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -504,6 +521,9 @@ void Saturn::SetupEVA()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -550,6 +570,9 @@ void Saturn::SetRecovery()
 		meshidx = AddMesh (hCRB, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
+
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	SetTouchdownPoints (_V(0,-1.0,-2.0), _V(-.7,.7,-2.0), _V(.7,.7,-2.0));
 	SetView(-1.35);
@@ -653,6 +676,9 @@ void Saturn::SetCSMStage ()
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
+
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	mesh_dir=_V(0,0,35.90-CGOffset);
 	probeidx=AddMesh (hprobe, &mesh_dir);
@@ -765,6 +791,9 @@ void Saturn::SetCSM2Stage ()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 
 	AddRCSJets(0.18, SM_RCS_THRUST);
@@ -824,6 +853,9 @@ void Saturn::SetReentryStage ()
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
+
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	SetView(-0.15);
 
@@ -890,6 +922,9 @@ void Saturn::StageSeven(double simt)
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 		AddRCS_CM(CM_RCS_THRUST);
 
 		SetStage(CM_ENTRY_STAGE);
@@ -925,6 +960,9 @@ void Saturn::StageEight(double simt)
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 	else {
 		ClearMeshes();
@@ -946,6 +984,9 @@ void Saturn::StageEight(double simt)
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	AddRCS_CM(CM_RCS_THRUST);
@@ -1019,6 +1060,9 @@ void Saturn::SetChuteStage1()
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 	else {
 		ClearMeshes();
@@ -1040,6 +1084,8 @@ void Saturn::SetChuteStage1()
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	AddRCS_CM(CM_RCS_THRUST);
@@ -1106,6 +1152,8 @@ void Saturn::SetChuteStage2()
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 	else {
 		ClearMeshes();
@@ -1127,6 +1175,8 @@ void Saturn::SetChuteStage2()
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	AddRCS_CM(CM_RCS_THRUST);
@@ -1190,6 +1240,8 @@ void Saturn::SetChuteStage3()
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 	else {
 		ClearMeshes();
@@ -1211,6 +1263,8 @@ void Saturn::SetChuteStage3()
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	mesh_dir=_V(0,-1.3,17);
@@ -1269,6 +1323,8 @@ void Saturn::SetChuteStage4()
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 	else{
 		ClearMeshes();
@@ -1290,6 +1346,8 @@ void Saturn::SetChuteStage4()
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 	mesh_dir = OFS_MAINCHUTE;
 	meshidx=AddMesh (hApollochute, &mesh_dir);
@@ -1360,6 +1418,8 @@ void Saturn::SetSplashStage()
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	AddRCS_CM(CM_RCS_THRUST);
 
@@ -1412,6 +1472,8 @@ void Saturn::SetAbortStage ()
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	//VECTOR3 bdir = _V(0,0,1);
 	//ReEntryID = AddExhaustRef(EXHAUST_CUSTOM,_V(0,0,-0.5), 0, 0, &bdir);

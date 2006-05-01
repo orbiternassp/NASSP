@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2006/03/30 00:21:37  movieman523
+  *	Pass empty mass correctly and remember to check in SM files :).
+  *	
   *	Revision 1.34  2006/03/30 00:14:46  movieman523
   *	First pass at SM DLL.
   *	
@@ -244,16 +247,17 @@ void Saturn1b::SetFirstStage ()
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 		//
 		// And the Crew.
 		//
 
 		if (Crewed) {
-			mesh_dir=_V(0,0.15,34.95);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-			mesh_dir=_V(0,0.15,34.95);
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
@@ -386,16 +390,17 @@ void Saturn1b::SetSecondStage ()
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 		//
 		// And the Crew
 		//
 
 		if (Crewed) {
-			mesh_dir=_V(0,0.15,22.7);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-			mesh_dir=_V(0,0.15,22.7);
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
@@ -404,7 +409,6 @@ void Saturn1b::SetSecondStage ()
 		// Don't Forget the Hatch
 		//
 
-		mesh_dir=_V(0.02,1.35,35.29-12.25);
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -506,16 +510,17 @@ void Saturn1b::SetSecondStage1 ()
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 		//
 		// And the Crew
 		//
 
 		if (Crewed) {
-			mesh_dir=_V(0,0.15,22.7);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-			mesh_dir=_V(0,0.15,22.7);
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
@@ -524,7 +529,6 @@ void Saturn1b::SetSecondStage1 ()
 		// Don't Forget the Hatch
 		//
 
-		mesh_dir=_V(0.02,1.35,35.29-12.25);
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -625,16 +629,17 @@ void Saturn1b::SetSecondStage2 ()
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 		//
 		// And the Crew
 		//
 
 		if (Crewed) {
-			mesh_dir=_V(0,0.15,22.7);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-			mesh_dir=_V(0,0.15,22.7);
 			meshidx = AddMesh (hCREW, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
@@ -643,7 +648,6 @@ void Saturn1b::SetSecondStage2 ()
 		// Don't Forget the Hatch
 		//
 
-		mesh_dir=_V(0.02,1.35,35.29-12.25);
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -721,18 +725,18 @@ void Saturn1b::SetASTPStage ()
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 	//Don't Forget the Hatch
-	mesh_dir=_V(0.02,1.35,34.54-12.25-21.5);
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	// And the Crew
 	if (Crewed) {
-		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0.15,34.25-12.25-21.5);
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
