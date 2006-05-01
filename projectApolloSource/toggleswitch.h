@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/04/17 18:20:11  movieman523
+  *	Removed #if 0 code.
+  *	
   *	Revision 1.46  2006/04/17 18:14:27  movieman523
   *	Added flashing borders to all switches (I think).
   *	
@@ -909,11 +912,11 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	virtual int GetState() { return state; };
-	int operator=(const bool b) { state = b; return state; };
-	operator bool() {return state; };
+	int operator=(const int b) { state = b; return state; };
+	operator int() {return state; };
 
 protected:
-	bool state;
+	int state; // Changed to INT for extended capabilities hackery
 	double displayState;	//0: false, 1: moving, 2: moving, 3: true
 	int	x;
 	int y;

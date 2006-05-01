@@ -552,9 +552,8 @@
 #define AID_DSC_HIGH_VOLTAGE_SWITCHES   821
 #define AID_LEM_P16_CB_ROW4             822
 #define AID_MAIN_SOV_TALKBACKS          823
-
-
-
+#define AID_DSC_BATTERY_TALKBACKS       824
+#define AID_DSC_LOW_VOLTAGE_SWITCHES    825
 
 // Next default values for new objects
 // 

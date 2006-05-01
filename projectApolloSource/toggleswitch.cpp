@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2006/04/25 13:54:07  tschachim
+  *	Warning removed.
+  *	
   *	Revision 1.61  2006/04/25 08:11:27  dseagrav
   *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
   *	
@@ -2028,6 +2031,12 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 
 	if (displayState > 3.0) displayState = 3.0;
 	if (displayState < 0.0) displayState = 0.0;
+
+	// Cheating beyond normal saves switch subclasses and associated etcetera
+	if (displayState == 3.0 && GetState() > 1){
+		displayState += (GetState()-1);
+	}
+
 	oapiBlt(drawSurface, switchSurface, x, y, width * (int)displayState, 0, width, height);
 }
 

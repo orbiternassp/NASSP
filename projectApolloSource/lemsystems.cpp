@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/04/23 04:15:46  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.8  2006/04/12 06:27:19  dseagrav
   *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
   *	
@@ -899,6 +902,9 @@ void sat5_lmpkd::SystemsInit()
 	ECA_1.dc_source_lo_a = Battery1;
 	ECA_1.dc_source_hi_b = Battery2;
 	ECA_1.dc_source_lo_b = LunarBattery;
+	ECA_1.dc_source_a_tb = &DSCBattery1TB;
+	*ECA_1.dc_source_a_tb = FALSE; // Initialize to off
+	DSCBattery1TB.WireTo(&ECA_1);
 
 	// Temporarily wire direct to two descent batteries.
 	// Apparently unpowered (Wired to NULL) busses get 28V for some reason...
@@ -1072,37 +1078,6 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 			10 degrees total travel = 42 counts.
 
 		*/
-		// Read data
-		HRESULT hr;
-		hr=dx8_joystick[rhc_id]->Poll();
-		if(FAILED(hr)){ // Did that work?
-			// Attempt to acquire the device
-			hr = dx8_joystick[rhc_id]->Acquire();
-			if(FAILED(hr)){
-				sprintf(oapiDebugString(),"DX8JS: Cannot aquire RHC");
-			}else{
-				hr=dx8_joystick[rhc_id]->Poll();
-			}
-		}		
-		dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]),&dx8_jstate[rhc_id]);
-		// Z-axis read.
-		int rhc_rot_pos = 32768; // Initialize to centered
-		if(rhc_rot_id != -1){ // If this is a rotator-type axis
-			switch(rhc_rot_id){
-				case 0:
-					rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
-				case 1:
-					rhc_rot_pos = dx8_jstate[rhc_id].lRy; break;
-				case 2:
-					rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
-			}
-		}
-		if(rhc_sld_id != -1){ // If this is a slider
-			rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
-		}
-		if(rhc_rzx_id != -1){ // If we use the native Z-axis
-			rhc_rot_pos = dx8_jstate[rhc_id].lZ;
-		}
 		// Axes have 32768 points of travel for the 13 degrees to hard stop
 		// 2520 points per degree. It breaks out of detent at .5 degres, or 1260 pulses.
 		// 480 points per count.
@@ -1110,30 +1085,66 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 		rhc_pos[1] = 0;
 		rhc_pos[2] = 0;
 		bool out_of_detent = FALSE;
-		if(dx8_jstate[rhc_id].lX > 34028){ // Out of detent RIGHT
-			out_of_detent = TRUE;
-			rhc_pos[0] = dx8_jstate[rhc_id].lX-34028; // Results are 0 - 31507
-		}
-		if(dx8_jstate[rhc_id].lX < 31508){ // Out of detent LEFT
-			out_of_detent = TRUE;
-			rhc_pos[0] = dx8_jstate[rhc_id].lX-31508; // Results are 0 - -31508
-		}
-		if(dx8_jstate[rhc_id].lY > 34028){ // Out of detent UP
-			out_of_detent = TRUE;
-			rhc_pos[1] = dx8_jstate[rhc_id].lY-34028; // Results are 0 - 31507
-		}
-		if(dx8_jstate[rhc_id].lY < 31508){ // Out of detent DOWN
-			out_of_detent = TRUE;
-			rhc_pos[1] = dx8_jstate[rhc_id].lY-31508; // Results are 0 - -31508
-		}
-		// YAW IS REVERSED
-		if(rhc_rot_pos > 34028){ // Out of detent RIGHT
-			out_of_detent = TRUE;
-			rhc_pos[2] = 34028-rhc_rot_pos; // Results are 0 - 31507
-		}
-		if(rhc_rot_pos < 31508){ // Out of detent LEFT
-			out_of_detent = TRUE;
-			rhc_pos[2] = 31508-rhc_rot_pos; // Results are 0 - -31508
+
+		// Read data
+		HRESULT hr;
+		if(rhc_id != -1 && dx8_joystick[rhc_id] != NULL){
+			hr=dx8_joystick[rhc_id]->Poll();
+			if(FAILED(hr)){ // Did that work?
+				// Attempt to acquire the device
+				hr = dx8_joystick[rhc_id]->Acquire();
+				if(FAILED(hr)){
+					sprintf(oapiDebugString(),"DX8JS: Cannot aquire RHC");
+				}else{
+					hr=dx8_joystick[rhc_id]->Poll();
+				}
+			}		
+			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]),&dx8_jstate[rhc_id]);
+			// Z-axis read.
+			int rhc_rot_pos = 32768; // Initialize to centered
+			if(rhc_rot_id != -1){ // If this is a rotator-type axis
+				switch(rhc_rot_id){
+					case 0:
+						rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
+					case 1:
+						rhc_rot_pos = dx8_jstate[rhc_id].lRy; break;
+					case 2:
+						rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
+				}
+			}
+			if(rhc_sld_id != -1){ // If this is a slider
+				rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
+			}
+			if(rhc_rzx_id != -1){ // If we use the native Z-axis
+				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
+			}	
+			if(dx8_jstate[rhc_id].lX > 34028){ // Out of detent RIGHT
+				out_of_detent = TRUE;
+				rhc_pos[0] = dx8_jstate[rhc_id].lX-34028; // Results are 0 - 31507
+			}
+			if(dx8_jstate[rhc_id].lX < 31508){ // Out of detent LEFT
+				out_of_detent = TRUE;
+				rhc_pos[0] = dx8_jstate[rhc_id].lX-31508; // Results are 0 - -31508
+			}
+			if(dx8_jstate[rhc_id].lY > 34028){ // Out of detent UP
+				out_of_detent = TRUE;
+				rhc_pos[1] = dx8_jstate[rhc_id].lY-34028; // Results are 0 - 31507
+			}
+			if(dx8_jstate[rhc_id].lY < 31508){ // Out of detent DOWN
+				out_of_detent = TRUE;
+				rhc_pos[1] = dx8_jstate[rhc_id].lY-31508; // Results are 0 - -31508
+			}
+			// YAW IS REVERSED
+			if(rhc_rot_pos > 34028){ // Out of detent RIGHT
+				out_of_detent = TRUE;
+				rhc_pos[2] = 34028-rhc_rot_pos; // Results are 0 - 31507
+			}
+			if(rhc_rot_pos < 31508){ // Out of detent LEFT
+				out_of_detent = TRUE;
+				rhc_pos[2] = 31508-rhc_rot_pos; // Results are 0 - -31508
+			}
+		}else{
+			// No JS
 		}
 		if(out_of_detent == TRUE){
 			agc.SetInputChannelBit(031,15,1); // ACA OUT OF DETENT
@@ -1146,12 +1157,10 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 	// Each timestep is passed to the SPSDK
 	// to perform internal computations on the 
 	// systems.
-
 	Panelsdk.Timestep(simt);
 
 	// After that come all other systems simesteps
 	fdaiLeft.Timestep(MissionTime, simdt);
-
 }
 
 // PANEL SDK SUPPORT
@@ -1196,11 +1205,15 @@ bool sat5_lmpkd::GetValveState(int valve)
 
 LEM_ECA::LEM_ECA(){
 	lem = NULL;
+	dc_source_a_tb = NULL;
+	dc_source_b_tb = NULL;
+	dc_source_c_tb = NULL;
 }
 
 void LEM_ECA::Init(sat5_lmpkd *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b){
 	lem = s;
-	input = 0;
+	input_a = 0;
+	input_b = 0;
 	dc_source_hi_a = hi_a;
 	dc_source_hi_b = hi_b;
 	dc_source_lo_a = lo_a;
@@ -1214,45 +1227,111 @@ void LEM_ECA::DrawPower(double watts)
 };
 
 void LEM_ECA::UpdateFlow(double dt){
-	
+
+	// ECA INPUTS CAN BE PARALLELED, BUT NOT IN THE SAME CHANNEL
+	// That is, Battery 1 and 2 can be on at the same time, 
 	//sprintf(oapiDebugString(),"ECA Input = %d Voltage %f Load %f",input,Volts,power_load);
 	// Draw power from the source, and retake voltage, etc.
-	switch(input){
-		case 1: // HV 1
+
+	int csrc=0;                             // Current Sources Operational
+	double PowerDrawPerSource = power_load; // Current to draw, per source
+	
+	// Find active sources
+	switch(input_a){
+		case 1:
 			if(dc_source_hi_a != NULL){
-				dc_source_hi_a->DrawPower(power_load); // Draw 1:1
+				csrc++;
 			}
 			break;
-		case 2: // LV 1
-			break;
-		case 3: // HV 2
-			if(dc_source_hi_b != NULL){
-				dc_source_hi_b->DrawPower(power_load); // Draw 1:1
+		case 2:
+			if(dc_source_lo_a != NULL){
+				csrc++;
 			}
-			break;
-		case 4: // LV 2
 			break;
 	}
+	switch(input_b){
+		case 1:
+			if(dc_source_hi_b != NULL){
+				csrc++;
+			}
+			break;
+		case 2:
+			if(dc_source_lo_b != NULL){
+				csrc++;
+			}
+			break;
+	}
+	// Compute draw
+	if(csrc > 1){
+		PowerDrawPerSource /= 2;
+	}
+	// Now take power
+	switch(input_a){
+		case 1:
+			if(dc_source_hi_a != NULL){
+				dc_source_hi_a->DrawPower(PowerDrawPerSource); // Draw 1:1
+			}
+			break;
+		case 2:
+			if(dc_source_lo_a != NULL){
+				// Draw low
+				dc_source_hi_a->DrawPower(PowerDrawPerSource*1.06); // Draw 6% more
+			}
+			break;
+	}
+	switch(input_b){
+		case 1:
+			if(dc_source_hi_b != NULL){
+				dc_source_hi_b->DrawPower(PowerDrawPerSource); // Draw 1:1
+			}
+			break;
+		case 2:
+			if(dc_source_lo_b != NULL){
+				dc_source_hi_b->DrawPower(PowerDrawPerSource*1.06); // Draw 6% more
+			}
+			break;
+	}
+	
 	// Reset for next pass.
 	e_object::UpdateFlow(dt);
+
+	double A_Volts = 0;
+	double A_Amperes = 0;
+	double B_Volts = 0;
+	double B_Amperes = 0;
+
 	// Resupply from source
-	switch(input){
+	switch(input_a){
 		case 1: // HV 1
 			if(dc_source_hi_a != NULL){
-				Volts = dc_source_hi_a->Voltage();
-				Amperes = dc_source_hi_a->Current();
+				A_Volts = dc_source_hi_a->Voltage();
+				A_Amperes = dc_source_hi_a->Current();
 			}
 			break;
 		case 2: // LV 1
 			break;
-		case 3: // HV 2
+	}
+	switch(input_b){
+		case 1: // HV 2
 			if(dc_source_hi_b != NULL){
-				Volts = dc_source_hi_b->Voltage();
-				Amperes = dc_source_hi_b->Current();
+				B_Volts = dc_source_hi_b->Voltage();
+				B_Amperes = dc_source_hi_b->Current();
 			}
 			break;
-		case 4: // LV 2
+		case 2: // LV 2
 			break;
+	}
+	if(csrc > 1){
+		Volts = (A_Volts + B_Volts) / 2;
+		Amperes = A_Amperes+B_Amperes;
+	}else{
+		if(input_a != 0){ // Only one (or no) input
+			Volts = A_Volts;
+			Amperes = A_Amperes;
+		}else{
+			Volts = B_Volts;
+			Amperes = B_Amperes;
+		}
 	}
 }
 

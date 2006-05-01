@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/04/23 04:15:46  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.40  2006/04/22 03:53:48  jasonims
   *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
   *	
@@ -198,12 +201,16 @@ public:
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
 
+	IndicatorSwitch *dc_source_a_tb;    // Pointer at TB #1
+	IndicatorSwitch *dc_source_b_tb;    // Pointer at TB #2
+	IndicatorSwitch *dc_source_c_tb;    // Pointer at TB #3 (LUNAR STAY battery for later model LM)
 	sat5_lmpkd *lem;					// Pointer at LEM
 	e_object *dc_source_hi_a;			// An ECA has four inputs - Two HV inputs, and two LV inputs.
 	e_object *dc_source_hi_b;
 	e_object *dc_source_lo_a;
 	e_object *dc_source_lo_b;
-	int input;                          // Input selector
+	int input_a;                        // A-side input selector
+	int input_b;                        // B-side input selector
 };
 
 class sat5_lmpkd : public VESSEL2, public PanelSwitchListener {
@@ -732,6 +739,12 @@ protected:
 	LEMBatterySwitch DSCSEBat2LVSwitch;
 	LEMBatterySwitch DSCCDRBat3LVSwitch;
 	LEMBatterySwitch DSCCDRBat4LVSwitch;	
+
+	SwitchRow DSCBatteryTBSwitchRow;
+	IndicatorSwitch DSCBattery1TB;
+	IndicatorSwitch DSCBattery2TB;
+	IndicatorSwitch DSCBattery3TB;
+	IndicatorSwitch DSCBattery4TB;
 
 	//////////////////
 	// LEM panel 16 //
