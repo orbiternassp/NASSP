@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/04/23 04:15:46  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.2  2006/04/17 18:14:27  movieman523
   *	Added flashing borders to all switches (I think).
   *	
@@ -150,28 +153,44 @@ bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
 			case THREEPOSSWITCH_UP:
 				switch(srcno){
 					case 1: // HV 1
-						eca->input = 1;
+						eca->input_a = 1;
+						if(eca->dc_source_a_tb != NULL){
+ 							*eca->dc_source_a_tb = 1;
+						}
 						break;
 					case 2: // LV 1
-						eca->input = 2;
+						eca->input_a = 2;
+						if(eca->dc_source_a_tb != NULL){
+ 							*eca->dc_source_a_tb = 2;
+						}
 						break;
 					case 3: // HV 2
-						eca->input = 3;
+						eca->input_b = 1;
+						if(eca->dc_source_b_tb != NULL){
+ 							*eca->dc_source_b_tb = 1;
+						}
 						break;
 					case 4: // LV 2
-						eca->input = 4;
+						eca->input_b = 2;
+						if(eca->dc_source_b_tb != NULL){
+ 							*eca->dc_source_b_tb = 2;
+						}
 						break;
 				}
 				break;
 			case THREEPOSSWITCH_DOWN:
 				switch(srcno){
 					case 1: // HV 1
-						break;
 					case 2: // LV 1
+						if(eca->dc_source_a_tb != NULL){
+ 							*eca->dc_source_a_tb = FALSE;
+						}
 						break;
 					case 3: // HV 2
-						break;
 					case 4: // LV 2
+						if(eca->dc_source_b_tb != NULL){
+ 							*eca->dc_source_b_tb = FALSE;
+						}
 						break;
 				}
 				break;
