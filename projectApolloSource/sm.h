@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/04/05 19:33:49  movieman523
+  *	Support low-res RCS mesh, saved umbilical animation state so it only happens once, revised Apollo 13 support.
+  *	
   *	Revision 1.3  2006/04/04 22:00:54  jasonims
   *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
   *	
@@ -149,6 +152,10 @@ protected:
 	double MissionTime;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
+
+	double Heat;
+
+	SURFHANDLE CMTex;
 
 	PROPELLANT_HANDLE ph_rcsa, ph_rcsb, ph_rcsc, ph_rcsd;
 	THRUSTER_HANDLE th_att_lin[24], th_att_rot[24], th_rcs_a[4], th_rcs_b[4], th_rcs_c[4], th_rcs_d[4];

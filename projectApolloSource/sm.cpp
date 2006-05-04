@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/04/25 13:45:06  tschachim
+  *	Fixed RCS.
+  *	
   *	Revision 1.5  2006/04/05 19:33:49  movieman523
   *	Support low-res RCS mesh, saved umbilical animation state so it only happens once, revised Apollo 13 support.
   *	
@@ -135,6 +138,10 @@ void SM::InitSM()
 	showPanel4 = true;
 	showPanel5 = true;
 	showPanel6 = true;
+
+	CMTex = oapiRegisterReentryTexture("reentry");
+
+	Heat = 0.0;
 }
 
 const double SMVO = 0.0;//-0.14;
@@ -203,6 +210,8 @@ void SM::SetSM()
 
 	AddEngines ();
 
+	if (CMTex)
+		SetReentryTexture(CMTex,1e6,5,0.7);
 }
 
 void SM::clbkPreStep(double simt, double simdt, double mjd)
@@ -243,6 +252,10 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 		}
 		break;
 
+	//
+	// Start rolling after two seconds.
+	//
+
 	case SM_STATE_RCS_ROLL_START:
 		if (MissionTime >= NextMissionEventTime) {
 			SetThrusterLevel(th_rcs_a[1], 1.0);
@@ -254,6 +267,9 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 		}
 		break;
 
+	//
+	// Stop the roll.
+	//
 
 	case SM_STATE_RCS_ROLL_STOP:
 		if (MissionTime >= NextMissionEventTime) {
@@ -262,6 +278,26 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 			SetThrusterLevel(th_rcs_c[1], 0.0);
 			SetThrusterLevel(th_rcs_d[1], 0.0);
 			State = SM_STATE_WAITING;
+		}
+		break;
+
+	//
+	// Wait until destroyed. Break up the SM as it burns up in
+	// the atmosphere.
+	//
+
+	case SM_STATE_WAITING:
+		if (MissionTime >= NextMissionEventTime) {
+			NextMissionEventTime = MissionTime + 1.0;
+
+			//
+			// Do heating calculations and break up when we get too hot.
+			//
+
+			Heat -= 100.0;
+
+			if (Heat < 0.0)
+				Heat = 0.0;
 		}
 		break;
 
@@ -281,6 +317,7 @@ void SM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "REALISM", Realism);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "FMASS", MainFuel);
+	oapiWriteScenario_float (scn, "HEAT", Heat);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
@@ -515,6 +552,10 @@ void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp (line, "FMASS", 5)) {
 			sscanf (line+5, "%g", &flt);
 			MainFuel = flt;
+		}
+		else if (!strnicmp (line, "HEAT", 4)) {
+			sscanf (line + 4, "%g", &flt);
+			Heat = flt;
 		}
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &flt);
