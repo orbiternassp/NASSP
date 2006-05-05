@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/04/22 04:15:41  jasonims
+  *	Turning now relative to speed...
+  *	
   *	Revision 1.11  2006/04/22 03:53:48  jasonims
   *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
   *	
@@ -116,7 +119,7 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 //
 
 static 	int refcount = 0;
-static MESHHANDLE hCMPEVA;
+static MESHHANDLE hCDREVA;
 static MESHHANDLE hLRV;
 static MESHHANDLE hLRVConsole;
 
@@ -217,7 +220,7 @@ void Saturn5_LEVA::SetAstroStage ()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 	VECTOR3 mesh_dir=_V(0,0,0);
-    AddMesh (hCMPEVA, &mesh_dir);
+    AddMesh (hCDREVA, &mesh_dir);
 	SetCameraOffset(_V(0,1.6,0));
 	
 	double tdph = -0.8;
@@ -987,7 +990,7 @@ void Saturn5_LEVA::SaveState(FILEHANDLE scn)
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hCMPEVA = oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
+		hCDREVA = oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
 		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
 		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
 	}
