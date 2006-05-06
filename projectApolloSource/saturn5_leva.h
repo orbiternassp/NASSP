@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/04/22 03:53:48  jasonims
+  *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
+  *	
   *	Revision 1.6  2006/04/20 22:04:32  redburne
   *	New movement handling for LRV;
   *	LRV console now in separate mesh;
@@ -68,7 +71,6 @@ public:
 	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
 
 	void SetAstroStage ();
-	void SetRoverStage ();
 	void init();
 	void LoadState(FILEHANDLE scn, VESSELSTATUS *vs);
 	void SaveState(FILEHANDLE scn);
@@ -99,7 +101,8 @@ protected:
 	OBJHANDLE hMaster;
 	bool GoDock1;
 	bool starthover;
-	bool GoRover;
+	bool LRVDeployed;
+	void ToggleLRV();
 	bool Astro;						
 	bool MotherShip;
 	char EVAName[256];

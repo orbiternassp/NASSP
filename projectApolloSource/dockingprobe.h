@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/02/01 18:27:11  tschachim
+  *	Pyros and secs logic necessary for retraction.
+  *	Automatic retraction if REALISM 0.
+  *	
   *	Revision 1.3  2006/01/14 20:58:16  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -50,6 +54,7 @@ public:
 
 	double GetStatus() { return Status; }
 	bool GetDocked() { return Docked; }
+	bool ProbeExtended;
 	void SetEnabled(bool e) { Enabled = e; }
 	void Extend();
 	void Retract();

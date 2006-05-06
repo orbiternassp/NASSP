@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/05/01 03:33:22  jasonims
+  *	New CM and all the fixin's....
+  *	
   *	Revision 1.53  2006/04/25 19:25:07  jasonims
   *	More Mesh Offset Updates.... Including removing extra code thanks to CM, Hatch, and Crew all aligned on same axis.  Only one Mesh offset required for all three
   *	
@@ -661,7 +664,10 @@ void SaturnV::SetFirstStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -752,7 +758,10 @@ void SaturnV::SetSecondStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -906,7 +915,10 @@ void SaturnV::SetSecondStage1 ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1051,7 +1063,10 @@ void SaturnV::SetSecondStage2 ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1066,8 +1081,11 @@ void SaturnV::SetSecondStage2 ()
 
 	SetView(23.1-STG1O, false);
 
-	mesh_dir=_V(0,0,24.8-STG1O);
-	probeidx=AddMesh (hprobe, &mesh_dir);
+	if (dockingprobe.ProbeExtended){
+		probeidx = AddMesh (hprobeext, &mesh_dir);
+	}else {
+		probeidx = AddMesh (hprobe, &mesh_dir);
+	}
 	// ************************* propellant specs **********************************
 	if (!ph_2nd)
 		ph_2nd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
@@ -1148,7 +1166,10 @@ void SaturnV::SetThirdStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1161,8 +1182,11 @@ void SaturnV::SetThirdStage ()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	mesh_dir=_V(0,0,24.8-STG2O);
-	probeidx=AddMesh (hprobe, &mesh_dir);
+	if (dockingprobe.ProbeExtended){
+		probeidx = AddMesh (hprobeext, &mesh_dir);
+	}else {
+		probeidx = AddMesh (hprobe, &mesh_dir);
+	}
 
 	VECTOR3 dockpos = {0,0,24.8-STG2O};
 	VECTOR3 dockdir = {0,0,1};

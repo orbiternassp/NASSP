@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/05/01 03:33:22  jasonims
+  *	New CM and all the fixin's....
+  *	
   *	Revision 1.41  2006/04/25 20:21:09  jasonims
   *	More Mesh Offset Updates.... Including removing extra code thanks to CM, Hatch, and Crew all aligned on same axis.  Only one Mesh offset required for all three
   *	
@@ -187,11 +190,13 @@ MESHHANDLE hCM;
 MESHHANDLE hCM2;
 MESHHANDLE hCMP;
 MESHHANDLE hCMInt;
+MESHHANDLE hCMVC;
 MESHHANDLE hCREW;
 MESHHANDLE hFHO;
 MESHHANDLE hFHC;
 MESHHANDLE hCM2B;
 MESHHANDLE hprobe;
+MESHHANDLE hprobeext;
 MESHHANDLE hCMBALLOON;
 MESHHANDLE hCRB;
 MESHHANDLE hApollochute;
@@ -244,11 +249,13 @@ void SaturnInitMeshes()
 	LOAD_MESH(hCM2, "ProjectApollo/CM-Recov");
 	LOAD_MESH(hCMP, "ProjectApollo/CM-CMP");
 	LOAD_MESH(hCMInt, "ProjectApollo/CM-Interior");
+	LOAD_MESH(hCMVC, "ProjectApollo/CM-VC");
 	LOAD_MESH(hCREW, "ProjectApollo/CM-CREW");
 	LOAD_MESH(hFHC, "ProjectApollo/CM-HatchC");
 	LOAD_MESH(hFHO, "ProjectApollo/CM-HatchO");
 	LOAD_MESH(hCM2B, "ProjectApollo/CMB-Recov");
 	LOAD_MESH(hprobe, "ProjectApollo/CM-Probe");
+	LOAD_MESH(hprobeext, "ProjectApollo/CM-ProbeExtended");
 	LOAD_MESH(hCMBALLOON, "ProjectApollo/CM-Balloons");
 	LOAD_MESH(hCRB, "ProjectApollo/CM-CrewRecovery");
 	LOAD_MESH(hCMB, "ProjectApollo/CMB");
@@ -322,7 +329,10 @@ void Saturn::ToggelHatch()
 	}
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	//Don't Forget the Hatch
 	if (HatchOpen){
@@ -340,8 +350,11 @@ void Saturn::ToggelHatch()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	if (dockstate <=4 ){
-		mesh_dir =_V(0,0,35.90-12.25-21.5);
-		probeidx = AddMesh (hprobe, &mesh_dir);
+		if (dockingprobe.ProbeExtended){
+			probeidx = AddMesh (hprobeext, &mesh_dir);
+		}else {
+			probeidx = AddMesh (hprobe, &mesh_dir);
+		}
 	}
 }
 
@@ -358,22 +371,22 @@ void Saturn::ToggelHatch2()
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	mesh_dir=_V(0,-0.1,-0.2);
 	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	if (Crewed) {
-		mesh_dir=_V(0,0,-1.2);
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0,-1.2);
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	//Don't Forget the Hatch
 	
@@ -429,7 +442,10 @@ void Saturn::ToggleEVA()
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -440,8 +456,11 @@ void Saturn::ToggleEVA()
 
 		HatchOpen = true;
 		if (dockstate <=4 ){
-			mesh_dir=_V(0,0,35.90-12.25-21.5);
-			probeidx = AddMesh (hprobe, &mesh_dir);
+			if (dockingprobe.ProbeExtended){
+				probeidx = AddMesh (hprobeext, &mesh_dir);
+			}else {
+				probeidx = AddMesh (hprobe, &mesh_dir);
+			}
 		}
 	}
 	else {
@@ -461,7 +480,10 @@ void Saturn::ToggleEVA()
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -473,8 +495,11 @@ void Saturn::ToggleEVA()
 		HatchOpen= true;
 
 		if (dockstate <=4 ){
-			mesh_dir=_V(0,0,35.90-12.25-21.5);
-			probeidx=AddMesh (hprobe, &mesh_dir);
+			if (dockingprobe.ProbeExtended){
+				probeidx = AddMesh (hprobeext, &mesh_dir);
+			}else {
+				probeidx = AddMesh (hprobe, &mesh_dir);
+			}
 		}
 
 		VESSELSTATUS vs1;
@@ -522,7 +547,10 @@ void Saturn::SetupEVA()
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 		meshidx = AddMesh (hCM, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -534,8 +562,11 @@ void Saturn::SetupEVA()
 		HatchOpen = true;
 
 		if (dockstate <=4 ){
-			mesh_dir =_V(0,0,35.90-12.25-21.5);
-			probeidx = AddMesh (hprobe, &mesh_dir);
+			if (dockingprobe.ProbeExtended){
+				probeidx = AddMesh (hprobeext, &mesh_dir);
+			}else {
+				probeidx = AddMesh (hprobe, &mesh_dir);
+			}
 		}
 	}
 }
@@ -561,9 +592,14 @@ void Saturn::SetRecovery()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	HatchOpen = true;
-	mesh_dir =_V(0,-0.1,-0.2);
 	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	if (Crewed) {
 		mesh_dir =_V(2.7,1.8,-1.5);
@@ -571,8 +607,7 @@ void Saturn::SetRecovery()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+
 
 	SetTouchdownPoints (_V(0,-1.0,-2.0), _V(-.7,.7,-2.0), _V(.7,.7,-2.0));
 	SetView(-1.35);
@@ -678,10 +713,16 @@ void Saturn::SetCSMStage ()
 	}
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
-	mesh_dir=_V(0,0,35.90-CGOffset);
-	probeidx=AddMesh (hprobe, &mesh_dir);
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+
+	if (dockingprobe.ProbeExtended){
+		probeidx = AddMesh (hprobeext, &mesh_dir);
+	}else {
+		probeidx = AddMesh (hprobe, &mesh_dir);
+	}
 
 	VECTOR3 dockpos = {0,0,35.90-CGOffset};
 	VECTOR3 dockdir = {0,0,1};
@@ -792,7 +833,10 @@ void Saturn::SetCSM2Stage ()
 	}
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	SetEngineLevel(ENGINE_MAIN, 0.0);
 
@@ -855,7 +899,10 @@ void Saturn::SetReentryStage ()
 	}
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	SetView(-0.15);
 
@@ -923,7 +970,10 @@ void Saturn::StageSeven(double simt)
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 		AddRCS_CM(CM_RCS_THRUST);
 
@@ -962,7 +1012,10 @@ void Saturn::StageEight(double simt)
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 	else {
 		ClearMeshes();
@@ -986,7 +1039,10 @@ void Saturn::StageEight(double simt)
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 
 	AddRCS_CM(CM_RCS_THRUST);
@@ -1062,7 +1118,10 @@ void Saturn::SetChuteStage1()
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 	else {
 		ClearMeshes();
@@ -1085,7 +1144,10 @@ void Saturn::SetChuteStage1()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 
 	AddRCS_CM(CM_RCS_THRUST);
@@ -1153,7 +1215,10 @@ void Saturn::SetChuteStage2()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 	else {
 		ClearMeshes();
@@ -1176,7 +1241,10 @@ void Saturn::SetChuteStage2()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 
 	AddRCS_CM(CM_RCS_THRUST);
@@ -1241,7 +1309,10 @@ void Saturn::SetChuteStage3()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 	else {
 		ClearMeshes();
@@ -1264,7 +1335,10 @@ void Saturn::SetChuteStage3()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 
 	mesh_dir=_V(0,-1.3,17);
@@ -1324,7 +1398,10 @@ void Saturn::SetChuteStage4()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 	else{
 		ClearMeshes();
@@ -1347,7 +1424,10 @@ void Saturn::SetChuteStage4()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hCMVC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	}
 	mesh_dir = OFS_MAINCHUTE;
 	meshidx=AddMesh (hApollochute, &mesh_dir);
@@ -1406,12 +1486,10 @@ void Saturn::SetSplashStage()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	mesh_dir=_V(0,-0.1,-0.2);
 	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	if (Crewed) {
-		mesh_dir=_V(0,0,-1.2);
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -1419,7 +1497,10 @@ void Saturn::SetSplashStage()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	AddRCS_CM(CM_RCS_THRUST);
 
@@ -1473,7 +1554,10 @@ void Saturn::SetAbortStage ()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	meshidx = AddMesh (hCMVC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 	//VECTOR3 bdir = _V(0,0,1);
 	//ReEntryID = AddExhaustRef(EXHAUST_CUSTOM,_V(0,0,-0.5), 0, 0, &bdir);

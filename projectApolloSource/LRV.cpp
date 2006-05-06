@@ -21,7 +21,10 @@
   See http://nassp.sourceforge.net/license/ for more details.
 
   **************************** Revision History ****************************
-  *	$Log$	
+  *	$Log$
+  *	Revision 1.1  2006/05/05 21:30:06  movieman523
+  *	Added beginnings of LRV code.
+  *		
   **************************************************************************/
 
 #define ORBITER_MODULE
@@ -53,7 +56,7 @@
 // Set the file name for the tracer code.
 //
 
-char trace_file[] = "ProjectApollo LEVA.log";
+char trace_file[] = "ProjectApollo LRV.log";
 
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -8.935};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, 9.25-12.25};
@@ -68,9 +71,6 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 
 #define ROVER_SPEED_M_S 3.6  // max rover speed in m/s (http://en.wikipedia.org/wiki/Lunar_rover; values on the web range from 7 mph to 10.56 mph)
 #define ROVER_ACC_M_S2 4.0   // rover acceleration in m/s^2 (not based on real data (yet))
-#define ASTRO_SPEED_M_S 1.8  // astronaut speed in m/s (arbitrarily set to 1/2 the rover speed)
-#define ASTRO_ACC_M_S2 2.0   // astronaut acceleration in m/s^2 (arbitrarily set to 1/2 the rover acceleration)
-#define ASTRO_TURN_DEG_PER_SEC 40.0  // astronaut can turn x degrees / sec (just a convenient number)
 #define ROVER_TURN_DEG_PER_SEC 20.0  // rover can turn x degrees / sec (just a convenient number)
 
 //
@@ -78,7 +78,6 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 //
 
 static 	int refcount = 0;
-static MESHHANDLE hCDREVA;
 static MESHHANDLE hLRV;
 static MESHHANDLE hLRVConsole;
 
@@ -98,10 +97,9 @@ LRV::~LRV()
 void LRV::init()
 
 {
-	GoDock1=false;
+	//GoDock1=false;
 	starthover=false;
-	GoRover =false;
-	Astro=true;						
+	GoRover =true;
 	MotherShip=false;
 	EVAName[0]=0;
 	CSMName[0]=0;
@@ -117,9 +115,6 @@ void LRV::init()
 	KEY9 = false;
 	KEYADD = false;
 	KEYSUBTRACT = false;
-
-	GoFlag = false;		 
-	FlagPlanted = false;
 
 	FirstTimestep = true;
 	SLEVAPlayed = false;
@@ -159,35 +154,9 @@ void LRV::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	init();
 	VSRegVessel(GetHandle());
-	SetAstroStage();
+	SetRoverStage();
 }
 		 
-void LRV::SetAstroStage ()
-{
-	SetEmptyMass(115);
-	SetSize(2);
-	SetPMI(_V(5,5,5));
-
-	SetSurfaceFrictionCoeff(0.005, 0.5);
-	SetRotDrag (_V(0, 0, 0));
-	SetCW(0, 0, 0, 0);
-	SetPitchMomentScale(0);
-	SetBankMomentScale(0);
-	SetLiftCoeffFunc(0); 
-		
-	ClearMeshes();
-    ClearExhaustRefs();
-    ClearAttExhaustRefs();
-	VECTOR3 mesh_dir=_V(0,0,0);
-    AddMesh (hCDREVA, &mesh_dir);
-	SetCameraOffset(_V(0,1.6,0));
-	
-	double tdph = -0.8;
-	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
-	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1), -tdph); // GetCOG_elev());
-	Astro = true;
-}
-
 void LRV::SetRoverStage ()
 {
 	SetEmptyMass(250);
@@ -240,7 +209,6 @@ void LRV::SetRoverStage ()
 	SetTouchdownPoints(_V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3));
 	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3), -tdph); // GetCOG_elev());
 
-	Astro=false;
 }
 
 void LRV::ScanMotherShip()
@@ -256,7 +224,7 @@ void LRV::ScanMotherShip()
 		strcpy(EVAName,GetName());
 		oapiGetObjectName(hMaster,CSMName,256);
 		strcpy(MSName,CSMName);
-		strcat(CSMName,"-LEVA");
+		strcat(CSMName,"-LRV");
 		if (strcmp(CSMName, EVAName)==0){
 			MotherShip=true;
 			i=int(VessCount);
@@ -267,13 +235,13 @@ void LRV::ScanMotherShip()
 	}
 }
 
-void LRV::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
+void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 {
-	TRACESETUP("MoveEVA");
+	TRACESETUP("MoveLRV");
 
 	double lat;
 	double lon;
-	double turn_spd = Radians(SimDT * (Astro ? ASTRO_TURN_DEG_PER_SEC : ROVER_TURN_DEG_PER_SEC));
+	double turn_spd = Radians(SimDT * ROVER_TURN_DEG_PER_SEC);
 	double move_spd;
 
 	// limit time acceleration (todo: turn limit off if no movement occurs)
@@ -295,22 +263,7 @@ void LRV::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 	
 	} else return;
 
-	if (Astro)
-	{
-		if (KEY1)  // turn left
-		{
-			eva->vdata[0].z = eva->vdata[0].z - turn_spd;
-			if(eva->vdata[0].z <=-2*PI)
-				eva->vdata[0].z = eva->vdata[0].z + 2*PI;
-		}
-		else if (KEY3)  // turn right
-		{
-			eva->vdata[0].z = eva->vdata[0].z + turn_spd;
-			if(eva->vdata[0].z >=2*PI)
-				eva->vdata[0].z = eva->vdata[0].z - 2*PI;
-		}
-	}
-	else if (speed != 0.0) //LRV
+	if (speed != 0.0) //LRV
 	{
 		if (KEY1)  // turn left
 		{
@@ -328,31 +281,8 @@ void LRV::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 
 
 	// movement is different for astro and lrv
-	if (Astro)
-	{
-		move_spd =  SimDT * atan2(ASTRO_SPEED_M_S, oapiGetSize(eva->rbody));  // surface speed in radians
-		if (KEY2)  // backward
-		{
-			lat = lat - cos(heading) * move_spd;
-			lon = lon - sin(heading) * move_spd;
-		}
-		else if (KEY4)  // step left
-		{
-			lat = lat + sin(heading) * move_spd;
-			lon = lon - cos(heading) * move_spd;
-		}
-		else if (KEY6)  // step right
-		{
-			lat = lat - sin(heading) * move_spd;
-			lon = lon + cos(heading) * move_spd;
-		}
-		else if (KEY8)  // forward
-		{
-			lat = lat + cos(heading) * move_spd;
-			lon = lon + sin(heading) * move_spd;
-		}
-	}
-	else  // LRV
+
+	if (GoRover) // LRV
 	{
 		if (KEYSUBTRACT)  // decelerate
 		{
@@ -505,13 +435,6 @@ int LRV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0; 
 	}
 
-	if (key == OAPI_KEY_E && down == true) {				
-		if (Astro) {
-			GoDock1 = !GoDock1;
-		}				
-		return 1;
-	}
-
 	//
 	// V switches to rover if applicable.
 	//
@@ -523,69 +446,7 @@ int LRV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		}
 	}
 		
-	if (key == OAPI_KEY_F && down == true) {				
-		if (Astro && !FlagPlanted )
-			GoFlag = true;	
-		return 1;
-	}
-
 	return 0;
-}
-
-void LRV::SetFlag()
-
-{
-	VESSELSTATUS vs1;
-
-	GetStatus(vs1);
-	VECTOR3 ofs1 = _V(3,0,0);
-	VECTOR3 vel1 = _V(0,0,0);
-	VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
-	Local2Rel (ofs1, vs1.rpos);
-	GlobalRot (vel1, rofs1);
-	vs1.rvel.x = rvel1.x+rofs1.x;
-	vs1.rvel.y = rvel1.y+rofs1.y;
-	vs1.rvel.z = rvel1.z+rofs1.z;
-
-	double cm ;
-	double lat;
-	double lon;
-	double cap;
-
-	oapiGetHeading(GetHandle(),&cap);
-	lon=vs1.vdata[0].x;
-	lat=vs1.vdata[0].y;
-	cm = 5.36e-7;
-	lat = lat - sin(cap) * cm;
-	lon = lon + cos(cap) * cm;
-	vs1.vdata[0].x=lon;
-	vs1.vdata[0].y=lat;
-
-	//
-	// Create the flag. For NEP support we load per-mission config if it exists.
-	//
-	
-	char VName[256]="";
-	char FName[256];
-
-	sprintf(FName, "ProjectApollo/Apollo%d/sat5flag.cfg", ApolloNo);
-	strcpy (VName, GetName()); strcat (VName, "-FLAG");
-
-	FILE *fp = fopen(FName, "rt");
-	if (fp) {
-		fclose(fp);
-		sprintf(FName, "ProjectApollo/Apollo%d/sat5flag", ApolloNo);
-		oapiCreateVessel(VName, FName, vs1);
-	}
-	else {
-		oapiCreateVessel(VName,"ProjectApollo/sat5flag",vs1);
-	}
-
-	FlagPlanted = true;
-	GoFlag = false;
-
-	FlagSound.play();
-	FlagSound.done();
 }
 
 void LRV::SetMissionPath()
@@ -597,11 +458,11 @@ void LRV::SetMissionPath()
 	soundlib.SetSoundLibMissionPath(MissionName);
 }
 
-void LRV::SetEVAStats(EVASettings &evas)
+void LRV::SetLRVStats(LRVSettings &lrvs)
 
 {
-	ApolloNo = evas.MissionNo;
-	Realism = evas.Realism;
+	ApolloNo = lrvs.MissionNo;
+	Realism = lrvs.Realism;
 	StateSet = true;
 }
 
@@ -622,8 +483,6 @@ void LRV::DoFirstTimestep()
 
 		if (!SLEVAPlayed)
 			soundlib.LoadMissionSound(SLEVA, LEVA_SOUND, LEVA_SOUND);
-		if (!FlagPlanted)
-			soundlib.LoadMissionSound(FlagSound, FLAG_SPEECH, FLAG_SPEECH);
 
 		//
 		// Turn off pretty much everything that Orbitersound does by default.
@@ -676,7 +535,7 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 	oapiGetHeading(GetHandle(),&heading);
 	//
 	// if the VESSELSTATUS is not in the state "landed", force it, using stored
-	// values for lat and long that are updated in MoveEVA().
+	// values for lat and long that are updated in MoveLRV().
 	//
 	if ((evaV.status != 1) && lastLatLongSet) {
 		evaV.vdata[0].x = lastLong;
@@ -701,7 +560,7 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 		GlobalRot (posr, RelRot);
 		dist = sqrt(posr.x * posr.x + posr.y * posr.y + posr.z * posr.z);
 		Vel = sqrt(rvel.x * rvel.x + rvel.y * rvel.y + rvel.z * rvel.z);
-		if (GoDock1) {						
+		/*if (GoDock1) {						
 			if (dist <= 6.00550) {
 				GoDock1 = false;
 				lmvessel->StopEVA();
@@ -709,13 +568,13 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 				oapiDeleteVessel(GetHandle());
 				return;
 			}
-		}
+		}*/
 	}
 
 	//
 	// update the VC console
 	//
-	if (!Astro && vccVis) {
+	if (vccVis) {
 		// rotate the VC compass rose
 		mgtRotCompass.P.rotparam.angle = float(heading - vccCompAngle);
 		vccCompAngle = heading;
@@ -809,17 +668,10 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 	}
 
 
-	MoveEVA(SimDT, &evaV, heading);
+	MoveLRV(SimDT, &evaV, heading);
 
-	if (GoRover && Astro){
+	if (GoRover){
 		SetRoverStage();
-	}
-	else if(!GoRover && !Astro){
-		SetAstroStage();
-	}
-
-	if (GoFlag && !FlagPlanted) {
-		SetFlag();
 	}
 
 	// touchdown point test
@@ -845,10 +697,8 @@ void LRV::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
 			sscanf(line + 5, "%d", &s);
 			SetMainState(s);
 
-			if (!Astro) {
-				GoRover = true;
-				SetEngineLevel(ENGINE_HOVER,1);
-			}
+			GoRover = true;
+			SetEngineLevel(ENGINE_HOVER,1);
 		}
 		else if (!strnicmp (line, "MISSIONNO", 9)) {
 			sscanf(line + 9, "%d", &ApolloNo);
@@ -896,10 +746,8 @@ DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
 
 typedef union {
 	struct {
-		unsigned int FlagPlanted:1;
 		unsigned int StateSet:1;
 		unsigned int SLEVAPlayed:1;
-		unsigned int Astro:1;
 	} u;
 	unsigned int word;
 } MainLEVAState;
@@ -910,10 +758,8 @@ int LRV::GetMainState()
 	MainLEVAState s;
 
 	s.word = 0;
-	s.u.FlagPlanted = FlagPlanted;
 	s.u.StateSet = StateSet;
 	s.u.SLEVAPlayed = SLEVAPlayed;
-	s.u.Astro = Astro;
 
 	return s.word;
 }
@@ -924,10 +770,8 @@ void LRV::SetMainState(int n)
 	MainLEVAState s;
 
 	s.word = n;
-	FlagPlanted = (s.u.FlagPlanted != 0);
 	StateSet = (s.u.StateSet != 0);
 	SLEVAPlayed = (s.u.SLEVAPlayed != 0);
-	Astro = (s.u.Astro != 0);
 }
 
 void LRV::SaveState(FILEHANDLE scn)
@@ -949,7 +793,6 @@ void LRV::SaveState(FILEHANDLE scn)
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hCDREVA = oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
 		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
 		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
 	}
