@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.176  2006/05/01 03:33:22  jasonims
+  *	New CM and all the fixin's....
+  *	
   *	Revision 1.175  2006/04/29 23:16:56  movieman523
   *	Fixed LMPAD and added CHECKLISTS option to scenario file.
   *	
@@ -459,7 +462,6 @@ public:
 
 	void SetAutopilot(bool ap) { autopilot = ap; };
 	bool GetAutopilot() { return autopilot; };
-
 	void SetSIISep() { SIISepState = true; };
 	void ClearSIISep() { SIISepState = false; };
 	void SetEngineIndicator(int i);
@@ -2206,7 +2208,9 @@ protected:
 	unsigned int	viewpos;
 
 	UINT probeidx;
+	
 	bool ActivateASTP;
+	//bool ProbeExtended;
 	bool FIRSTCSM;
 	bool bManualSeparate;
 	bool bManualUnDock;
@@ -2684,11 +2688,13 @@ const VECTOR3 OFS_MAINCHUTE =  { 0, -2, 9};
 extern MESHHANDLE hSM;
 extern MESHHANDLE hCM;
 extern MESHHANDLE hCMInt;
+extern MESHHANDLE hCMVC;
 extern MESHHANDLE hFHC;
 extern MESHHANDLE hCMP;
 extern MESHHANDLE hCREW;
 extern MESHHANDLE hSMhga;
 extern MESHHANDLE hprobe;
+extern MESHHANDLE hprobeext;
 extern MESHHANDLE hsat5tower;
 extern MESHHANDLE hFHO2;
 

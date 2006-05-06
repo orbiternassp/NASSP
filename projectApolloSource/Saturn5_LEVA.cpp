@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/05/05 14:17:26  jasonims
+  *	*** empty log message ***
+  *	
   *	Revision 1.12  2006/04/22 04:15:41  jasonims
   *	Turning now relative to speed...
   *	
@@ -85,6 +88,7 @@
 #include "sat5_lmpkd.h"
 
 #include "saturn5_leva.h"
+#include "LRV.h"
 #include "lrv_console.h"
 #include "tracer.h"
 
@@ -123,6 +127,10 @@ static MESHHANDLE hCDREVA;
 static MESHHANDLE hLRV;
 static MESHHANDLE hLRVConsole;
 
+
+
+
+
 Saturn5_LEVA::Saturn5_LEVA(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
@@ -139,9 +147,9 @@ Saturn5_LEVA::~Saturn5_LEVA()
 void Saturn5_LEVA::init()
 
 {
+	LRVDeployed=false;
 	GoDock1=false;
 	starthover=false;
-	GoRover =false;
 	Astro=true;						
 	MotherShip=false;
 	EVAName[0]=0;
@@ -229,59 +237,39 @@ void Saturn5_LEVA::SetAstroStage ()
 	Astro = true;
 }
 
-void Saturn5_LEVA::SetRoverStage ()
+void Saturn5_LEVA::ToggleLRV()
+
 {
-	SetEmptyMass(250);
-	SetSize(10);
-	SetPMI(_V(15,15,15));
+	if (LRVDeployed) {
+		// Nothing for now, only one LRV per mission.
+	}
+	else {
+		VESSELSTATUS vs1;
+		GetStatus(vs1);
 
-	SetSurfaceFrictionCoeff(0.005, 0.5);
-	SetRotDrag(_V(0, 0, 0));
-	SetCW(0, 0, 0, 0);
-	SetPitchMomentScale(0);
-	SetBankMomentScale(0);
-	SetLiftCoeffFunc(0); 
+		// The LM must be in landed state
+		if (vs1.status != 1) return;
 
-    ClearMeshes();
-    ClearExhaustRefs();
-    ClearAttExhaustRefs();
-	VECTOR3 mesh_adjust = _V(0.0, 0.15, 0.0);
-	SetMeshVisibilityMode(AddMesh(hLRV, &mesh_adjust), MESHVIS_ALWAYS); 
-	vccMeshIdx = AddMesh(hLRVConsole, &mesh_adjust);
-	SetMeshVisibilityMode(vccMeshIdx, MESHVIS_ALWAYS);
-	SetCameraOffset(_V(0.36, 0.54, -0.55));  // roughly at the driver's head
+		LRVDeployed = true;
 
-	//////////////////////////////////////////////////////////////////////////
-	// With vccMeshIdx, we now have all data to initialize the LRV console
-	// transformation matrices:
-	//////////////////////////////////////////////////////////////////////////
-    // Compass rose rotation
-	mgtRotCompass.P.rotparam.ref = LRV_COMPASS_PIVOT;
-	mgtRotCompass.P.rotparam.axis = Normalize(LRV_COMPASS_AXIS);
-	mgtRotCompass.P.rotparam.angle = 0.0;  // dummy value
-	mgtRotCompass.nmesh = vccMeshIdx;
-	mgtRotCompass.ngrp = GEOM_COMPASS;
-	mgtRotCompass.transform = MESHGROUP_TRANSFORM::ROTATE;
-    // Bearing, distance or range drum (shared for all drums)
-	mgtRotDrums.P.rotparam.ref = LRV_DRUM_PIVOT_UPPER;  // dummy value
-	mgtRotDrums.P.rotparam.axis = LRV_DRUM_AXIS;
-	mgtRotDrums.P.rotparam.angle = 0.0;  // dummy value
-	mgtRotDrums.nmesh = vccMeshIdx;
-	mgtRotDrums.ngrp = GEOM_DRUM_BEAR_001;  // dummy value
-	mgtRotDrums.transform = MESHGROUP_TRANSFORM::ROTATE;
-    // Speed dial rotation
-	mgtRotSpeed.P.rotparam.ref = LRV_SPEED_PIVOT;
-	mgtRotSpeed.P.rotparam.axis = Normalize(LRV_SPEED_AXIS);
-	mgtRotSpeed.P.rotparam.angle = 0.0;  // dummy value
-	mgtRotSpeed.nmesh = vccMeshIdx;
-	mgtRotSpeed.ngrp = GEOM_SPEEDDIAL;
-	mgtRotSpeed.transform = MESHGROUP_TRANSFORM::ROTATE;
+		OBJHANDLE hbody = GetGravityRef();
+		double radius = oapiGetSize(hbody);
+		vs1.vdata[0].x += 4.5 * sin(vs1.vdata[0].z) / radius;
+		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
 
-	double tdph = -0.9;
-	SetTouchdownPoints(_V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3));
-	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3), -tdph); // GetCOG_elev());
+		char VName[256]="";
+		strcpy (VName, GetName()); strcat (VName, "-LEVA");
+		hLRV = oapiCreateVessel(VName,"ProjectApollo/LRV",vs1);
+		
+		LRV *lrv = (LRV *) oapiGetVesselInterface(hLRV);
+		if (lrv) {
+			LRVSettings lrvs;
 
-	Astro=false;
+			lrvs.MissionNo = ApolloNo;
+			lrvs.Realism = Realism;
+			lrv->SetLRVStats(lrvs);
+		}
+	}
 }
 
 void Saturn5_LEVA::ScanMotherShip()
@@ -559,7 +547,7 @@ int Saturn5_LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (key == OAPI_KEY_V && down == true) {				
 		if ((ApolloNo > 14) || (ApolloNo == 0) || (!Realism)) {
-			GoRover = !GoRover;
+			ToggleLRV();
 			return 1;
 		}
 	}
@@ -852,10 +840,7 @@ void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 
 	MoveEVA(SimDT, &evaV, heading);
 
-	if (GoRover && Astro){
-		SetRoverStage();
-	}
-	else if(!GoRover && !Astro){
+	if(!Astro){
 		SetAstroStage();
 	}
 
@@ -887,7 +872,7 @@ void Saturn5_LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
 			SetMainState(s);
 
 			if (!Astro) {
-				GoRover = true;
+				Astro = true;
 				SetEngineLevel(ENGINE_HOVER,1);
 			}
 		}

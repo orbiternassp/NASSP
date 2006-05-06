@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/05/05 21:30:06  movieman523
+  *	Added beginnings of LRV code.
+  *	
   **************************************************************************/
 
 typedef struct {
@@ -29,7 +32,7 @@ typedef struct {
 	int MissionNo;
 	int Realism;
 
-} EVASettings;
+} LRVSettings;
 
 class LRV: public VESSEL2 {
 
@@ -44,7 +47,6 @@ public:
 	void clbkVisualCreated (VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
 
-	void SetAstroStage ();
 	void SetRoverStage ();
 	void init();
 	void LoadState(FILEHANDLE scn, VESSELSTATUS *vs);
@@ -55,13 +57,12 @@ public:
 	// to process the function.
 	//
 
-	virtual void SetEVAStats(EVASettings &evas);
+	virtual void SetLRVStats(LRVSettings &lrvs);
 
 private:
 
 	void ScanMotherShip();
-	void MoveEVA(double SimDT, VESSELSTATUS *eva, double heading);
-	void SetFlag();
+	void MoveLRV(double SimDT, VESSELSTATUS *eva, double heading);
 	void SetMissionPath();
 	void DoFirstTimestep();
 	void SetMainState(int s);
@@ -74,10 +75,9 @@ protected:
 	int Realism;
 
 	OBJHANDLE hMaster;
-	bool GoDock1;
+	//bool GoDock1
 	bool starthover;
 	bool GoRover;
-	bool Astro;						
 	bool MotherShip;
 	char EVAName[256];
 	char CSMName[256];
@@ -93,8 +93,6 @@ protected:
 	bool KEY9;
 	bool KEYADD;
 	bool KEYSUBTRACT;
-	bool GoFlag;		 
-	bool FlagPlanted;
 
 	bool FirstTimestep;
 	bool SLEVAPlayed;
@@ -107,7 +105,6 @@ protected:
 	double speed;  // current speed in m/s for both astronaut and rover
 
 	SoundLib soundlib;
-	Sound FlagSound;
 	Sound SLEVA;
 
 	// touchdown point test
