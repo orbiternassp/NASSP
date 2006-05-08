@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/05/06 06:00:35  jasonims
+  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
+  *	
   *	Revision 1.7  2006/04/22 03:53:48  jasonims
   *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
   *	
@@ -106,7 +109,7 @@ protected:
 	bool Astro;						
 	bool MotherShip;
 	char EVAName[256];
-	char CSMName[256];
+	char LEMName[256];
 	char MSName[256];
 	bool KEY1;
 	bool KEY2;
@@ -139,25 +142,4 @@ protected:
 	// touchdown point test
 	// double touchdownPointHeight;
 
-	// VC console
-	int vccMeshIdx;
-	VISHANDLE vccVis;
-	double vccCompAngle;
-	double vccBear001Angle;
-	double vccBear010Angle;
-	double vccBear100Angle;
-	double vccDist001Angle;
-	double vccDist010Angle;
-	double vccDist100Angle;
-	double vccRange001Angle;
-	double vccRange010Angle;
-	double vccRange100Angle;
-	double vccSpeedAngle;
-	bool vccInitialized;	// true, as soon as vccInitLat and vccInitLong contain usable values
-	double vccInitLat;	// latitude of last console navigation initialization (bearing and range reference point)
-	double vccInitLong;	// longitude of last console navigation initialization (bearing and range reference point)
-	double vccDistance;	// distance travelled since last console navigation initialization
-	MESHGROUP_TRANSFORM mgtRotCompass;
-	MESHGROUP_TRANSFORM mgtRotSpeed;
-	MESHGROUP_TRANSFORM mgtRotDrums;  // Bearing, distance or range "drum"
 };
