@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/05/06 06:00:35  jasonims
+  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
+  *	
   *	Revision 1.13  2006/05/05 14:17:26  jasonims
   *	*** empty log message ***
   *	
@@ -153,7 +156,7 @@ void Saturn5_LEVA::init()
 	Astro=true;						
 	MotherShip=false;
 	EVAName[0]=0;
-	CSMName[0]=0;
+	LEMName[0]=0;
 	MSName[0]=0;
 	KEY1 = false;
 	KEY2 = false;
@@ -183,22 +186,6 @@ void Saturn5_LEVA::init()
 	ApolloNo = 0;
 	Realism = 0;
 
-	// LRV Console
-	vccCompAngle = 0.0; // North
-	vccBear001Angle = 0.0;
-	vccBear010Angle = 0.0;
-	vccBear100Angle = 0.0;
-	vccDist001Angle = 0.0;
-	vccDist010Angle = 0.0;
-	vccDist100Angle = 0.0;
-	vccRange001Angle = 0.0;
-	vccRange010Angle = 0.0;
-	vccRange100Angle = 0.0;
-	vccSpeedAngle = 0.0;
-	vccInitialized = false;
-	vccInitLat = 0.0;
-	vccInitLong = 0.0;
-	vccDistance = 0.0;
 
 	// touchdown point test
 	// touchdownPointHeight = -0.8;
@@ -258,7 +245,7 @@ void Saturn5_LEVA::ToggleLRV()
 		vs1.vdata[0].y += 4.5 * cos(vs1.vdata[0].z) / radius;
 
 		char VName[256]="";
-		strcpy (VName, GetName()); strcat (VName, "-LEVA");
+		strcpy (VName, GetName()); strcat (VName, "-LRV");
 		hLRV = oapiCreateVessel(VName,"ProjectApollo/LRV",vs1);
 		
 		LRV *lrv = (LRV *) oapiGetVesselInterface(hLRV);
@@ -283,15 +270,15 @@ void Saturn5_LEVA::ScanMotherShip()
 	{
 		hMaster=oapiGetVesselByIndex(i);
 		strcpy(EVAName,GetName());
-		oapiGetObjectName(hMaster,CSMName,256);
-		strcpy(MSName,CSMName);
-		strcat(CSMName,"-LEVA");
-		if (strcmp(CSMName, EVAName)==0){
+		oapiGetObjectName(hMaster,LEMName,256);
+		strcpy(MSName,LEMName);
+		strcat(LEMName,"-LEVA");
+		if (strcmp(LEMName, EVAName)==0){
 			MotherShip=true;
 			i=int(VessCount);
 		}
 		else{
-			strcpy(CSMName,"");
+			strcpy(LEMName,"");
 		}
 	}
 }
@@ -339,22 +326,6 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 				eva->vdata[0].z = eva->vdata[0].z - 2*PI;
 		}
 	}
-	else if (speed != 0.0) //LRV
-	{
-		if (KEY1)  // turn left
-		{
-			eva->vdata[0].z = eva->vdata[0].z - (turn_spd*(speed/ROVER_SPEED_M_S));
-			if(eva->vdata[0].z <=-2*PI)
-				eva->vdata[0].z = eva->vdata[0].z + 2*PI;
-		}
-		else if (KEY3)  // turn right
-		{
-			eva->vdata[0].z = eva->vdata[0].z + (turn_spd*(speed/ROVER_SPEED_M_S));
-			if(eva->vdata[0].z >=2*PI)
-				eva->vdata[0].z = eva->vdata[0].z - 2*PI;
-		}
-	}
-
 
 	// movement is different for astro and lrv
 	if (Astro)
@@ -381,31 +352,7 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 			lon = lon + sin(heading) * move_spd;
 		}
 	}
-	else  // LRV
-	{
-		if (KEYSUBTRACT)  // decelerate
-		{
-			speed = speed - SimDT * ROVER_ACC_M_S2; 
-			if (speed < -ROVER_SPEED_M_S)
-				speed = -ROVER_SPEED_M_S;
-		}
-		else if (KEY5)  // stop
-		{
-		    speed = 0.0;
-		}
-		else if (KEYADD)  // accelerate
-		{
-			speed = speed + SimDT * ROVER_ACC_M_S2; 
-			if (speed > ROVER_SPEED_M_S)
-				speed = ROVER_SPEED_M_S;
-		}
 
-		// move forward / backward according to current speed
-		move_spd =  SimDT * atan2(speed, oapiGetSize(eva->rbody));  // surface speed in radians
-		lat = lat + cos(heading) * move_spd;
-		lon = lon + sin(heading) * move_spd;
-		vccDistance = vccDistance + SimDT * fabs(speed);  // the console distance always counts up!
-	}
 
 	// reset all keys
 	KEY1 = false;
@@ -716,11 +663,6 @@ void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 	//
 	// Get reference lat and long for the VC console, as soon as we have "landed" status
 	//
-	if (!vccInitialized && (evaV.status == 1)) {
-		vccInitLat = evaV.vdata[0].y;
-		vccInitLong = evaV.vdata[0].x;
-		vccInitialized = true;
-	}
 
 	if (hMaster){
 		sat5_lmpkd *lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hMaster);					
@@ -740,103 +682,6 @@ void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 			}
 		}
 	}
-
-	//
-	// update the VC console
-	//
-	if (!Astro && vccVis) {
-		// rotate the VC compass rose
-		mgtRotCompass.P.rotparam.angle = float(heading - vccCompAngle);
-		vccCompAngle = heading;
-		MeshgroupTransform(vccVis, mgtRotCompass);
-
-		// Rotate the speed dial.
-		double abs_speed_kmh = fabs(speed * 3.6);  // absolute speed in km/h
-		double speed_dial_rad = -(abs_speed_kmh - 10.0) * Radians(31.25) / 10.0;
-		mgtRotSpeed.P.rotparam.angle = float(speed_dial_rad - vccSpeedAngle);
-		vccSpeedAngle = speed_dial_rad;
-		MeshgroupTransform(vccVis, mgtRotSpeed);
-
-		// Display distance travelled (in km) since last initialization
-		double distance = vccDistance / 1000.0;
-		while (distance > 100.0) distance = distance - 100.0;
-		double digit = floor(distance/10.0);  // tens
-		double drum_rot = (digit * PI / 5.0) - vccDist100Angle;
-		vccDist100Angle = digit * PI / 5.0;
-		mgtRotDrums.P.rotparam.angle = float(drum_rot);
-		mgtRotDrums.P.rotparam.ref = LRV_DRUM_PIVOT_LOWER;
-		mgtRotDrums.ngrp = GEOM_DRUM_DIST_10_0;
-		MeshgroupTransform(vccVis, mgtRotDrums);
-		distance = distance - 10.0 * digit;
-		digit = floor(distance);  // ones
-		drum_rot = (digit * PI / 5.0) - vccDist010Angle;
-		vccDist010Angle = digit * PI / 5.0;
-		mgtRotDrums.P.rotparam.angle = float(drum_rot);
-		mgtRotDrums.ngrp = GEOM_DRUM_DIST_01_0;
-		MeshgroupTransform(vccVis, mgtRotDrums);
-		distance = distance - digit;
-		digit = floor(10.0 * distance);  // tenths
-		drum_rot = (digit * PI / 5.0) - vccDist001Angle;
-		vccDist001Angle = digit * PI / 5.0;
-		mgtRotDrums.P.rotparam.angle = float(drum_rot);
-		mgtRotDrums.ngrp = GEOM_DRUM_DIST_00_1;
-		MeshgroupTransform(vccVis, mgtRotDrums);
-
-		if (vccInitialized) {  // we need the reference lat and long for this ...
-			// Display bearing to last reference point (usually the LM)
-			double bearing = Degree(CalcSphericalBearing(_V(vccInitLong, vccInitLat, 0.0), evaV.vdata[0]));
-			bearing = bearing - 90.0;  // correct bearing to local North
-			while (bearing < 0.0) bearing += 360.0;
-			digit = floor(bearing/100.0);  // hundreds
-			drum_rot = (digit * PI / 5.0) - vccBear100Angle;
-			vccBear100Angle = digit * PI / 5.0;
-			mgtRotDrums.P.rotparam.angle = float(drum_rot);
-			mgtRotDrums.P.rotparam.ref = LRV_DRUM_PIVOT_UPPER;
-			mgtRotDrums.ngrp = GEOM_DRUM_BEAR_100;
-			MeshgroupTransform(vccVis, mgtRotDrums);
-			bearing = bearing - 100.0 * digit;
-			digit = floor(bearing/10.0);  // tens
-			drum_rot = (digit * PI / 5.0) - vccBear010Angle;
-			vccBear010Angle = digit * PI / 5.0;
-			mgtRotDrums.P.rotparam.angle = float(drum_rot);
-			mgtRotDrums.ngrp = GEOM_DRUM_BEAR_010;
-			MeshgroupTransform(vccVis, mgtRotDrums);
-			bearing = bearing - 10.0 * digit;
-			digit = floor(bearing);  // ones
-			drum_rot = (digit * PI / 5.0) - vccBear001Angle;
-			vccBear001Angle = digit * PI / 5.0;
-			mgtRotDrums.P.rotparam.angle = float(drum_rot);
-			mgtRotDrums.ngrp = GEOM_DRUM_BEAR_001;
-			MeshgroupTransform(vccVis, mgtRotDrums);
-
-			// Display range (in km) to last reference point (usually the LM)
-			double range = CalcSphericalDistance(_V(vccInitLong, vccInitLat, 0.0), evaV.vdata[0], oapiGetSize(evaV.rbody))/1000.0;
-			if (range < 0.0) range = -range;
-			while (range > 100.0) range = range - 100.0;
-			digit = floor(range/10.0);  // tens
-			drum_rot = (digit * PI / 5.0) - vccRange100Angle;
-			vccRange100Angle = digit * PI / 5.0;
-			mgtRotDrums.P.rotparam.angle = float(drum_rot);
-			mgtRotDrums.P.rotparam.ref = LRV_DRUM_PIVOT_LOWER;
-			mgtRotDrums.ngrp = GEOM_DRUM_RNGE_10_0;
-			MeshgroupTransform(vccVis, mgtRotDrums);
-			range = range - 10.0 * digit;
-			digit = floor(range);  // ones
-			drum_rot = (digit * PI / 5.0) - vccRange010Angle;
-			vccRange010Angle = digit * PI / 5.0;
-			mgtRotDrums.P.rotparam.angle = float(drum_rot);
-			mgtRotDrums.ngrp = GEOM_DRUM_RNGE_01_0;
-			MeshgroupTransform(vccVis, mgtRotDrums);
-			range = range - digit;
-			digit = floor(10.0 * range);  // tenths
-			drum_rot = (digit * PI / 5.0) - vccRange001Angle;
-			vccRange001Angle = digit * PI / 5.0;
-			mgtRotDrums.P.rotparam.angle = float(drum_rot);
-			mgtRotDrums.ngrp = GEOM_DRUM_RNGE_00_1;
-			MeshgroupTransform(vccVis, mgtRotDrums);
-		}
-	}
-
 
 	MoveEVA(SimDT, &evaV, heading);
 
@@ -893,24 +738,10 @@ void Saturn5_LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
 	
 void Saturn5_LEVA::clbkVisualCreated (VISHANDLE vis, int refcount)
 {
-	vccVis = vis;
 }
 
 void Saturn5_LEVA::clbkVisualDestroyed (VISHANDLE vis, int refcount)
 {
-	vccVis = NULL;
-	// reset the variables keeping track of console mesh animation
-	vccCompAngle = 0.0;
-	vccDist100Angle = 0.0;
-	vccDist010Angle = 0.0;
-	vccDist001Angle = 0.0;
-	vccBear100Angle = 0.0;
-	vccBear010Angle = 0.0;
-	vccBear001Angle = 0.0;
-	vccRange100Angle = 0.0;
-	vccRange010Angle = 0.0;
-	vccRange010Angle = 0.0;
-	vccSpeedAngle = 0.0;
 }
 
 
