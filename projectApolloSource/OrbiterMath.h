@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #ifndef ORBITER_MATH_H
@@ -91,17 +94,6 @@ void inline GetRotMatrixZ(double Angle, MATRIX3 &RotMatrixZ)
 
 // Note that some of these vector operations have actually been added into the new version of
 // Orbiter.
-
-// Divide a vector by a scalar double
-inline VECTOR3 operator/ (const VECTOR3 &a, double b)
-{
-	VECTOR3 c;
-	c.x = a.x / b;
-	c.y = a.y / b;
-	c.z = a.z / b;
-
-	return c;
-}
 
 // Divide a vector by an integer scalar
 inline VECTOR3 operator/ (const VECTOR3 &a, int b)
