@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2005/02/04 00:22:26  tschachim
+  *	fixed typo
+  *
   *	Revision 1.2  2005/01/31 15:08:28  tschachim
   *	added include
   *
@@ -35,3 +38,5 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+// test
