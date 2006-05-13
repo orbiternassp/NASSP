@@ -1,4 +1,5 @@
-<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Project Apollo - CVS</title><link type="text/css" href="../styles.css" rel="stylesheet"><meta content="DocBook XSL Stylesheets V1.29" name="generator"><link rel="home" href="../index.html" title="Virtual Apollo"><link rel="up" href="ch01.html" title="Chapter  Introduction"><link rel="previous" href="ch01s02.html" title="Installation"><link rel="next" href="ch01s06.html" title="Authors and contributors"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><table height="65" cellspacing="0" cellpadding="0" border="0"><tr height="65"><td rowspan="2"><a href="../"><img border="0" height="79" width="432" src="../images/jboss.gif"></a></td><td valign="top" align="right" width="100%" background="../images/gbar.gif" rowspan="2">&nbsp;</td>
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Project Apollo - CVS</title><link type="text/css" href="../styles.css" rel="stylesheet"><meta content="DocBook XSL Stylesheets V1.29" name="generator"><link rel="home" href="../index.html" title="Virtual Apollo"><link rel="up" href="ch01.html" title="Chapter  Introduction"><link rel="previous" href="ch01s02.html" title="Installation"><link rel="next" href="ch01s06.html" title="Authors and contributors">
+</head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><table height="65" cellspacing="0" cellpadding="0" border="0"><tr height="65"><td rowspan="2"><a href="../"><img border="0" height="79" width="432" src="../images/jboss.gif"></a></td><td valign="top" align="right" width="100%" background="../images/gbar.gif" rowspan="2">&nbsp;</td>
 </tr><tr></tr></table><div class="section"><a name="N1005E"></a><div class="titlepage"><div>
   <h2 class="title" style="clear: all"><a name="N1005E"></a><span class="title">Introduction to CVS</span></h2>
 </div></div>
@@ -23,13 +24,15 @@
 		<li>Enter the following settings in the "Checkout Module" window:
 			<ul type="square">
 				<li>Protocol: Secure Shell (:ext:)</li>
-				<li>Server: cvs.sourceforge.net</li>
+				<li>Server: nassp.cvs.sourceforge.net</li>
 				<li>Repository folder: /cvsroot/nassp</li>
 				<li>User name: &lt;YourUNIXName&gt;</li>
 				<li>Module: projectApollo</li>
 			</ul><p>
-			After that your CVSROOT should look like this:<p>
-			<b>:ext:&lt;YourUNIXName&gt;@cvs.sourceforge.net:/cvsroot/nassp</b><p>
+			After that your CVSROOT should look like this:
+			<p>
+			<b>:ext:&lt;YourUNIXName&gt;@nassp.cvs.sourceforge.net:/cvsroot/nassp</b>
+			<p>
 			whereas &lt;YourUNIXName&gt; is your SourceForge login. All settings are case-sensitive!
 		 <p></li>
 		 <li>Press "OK". TortoiseCVS downloads now the current version of the Project Apollo sources to your computer. This will take some time...<p></li>
@@ -37,21 +40,31 @@
 		 This includes the following files at the moment:
 		 <p>Orbiter (<a href="http://www.orbitersim.com">http://www.orbitersim.com</a>)
 		 <ul type="square">
-		 <li>orbiter050116_base.zip
-        </li><li>orbiter050116_htex.zip
-        </li><li>orbiter050116_sdk.zip <p>
-        </li><li>orbiter050216patch_base.zip
-        </li><li>orbiter050216patch_sdk.zip</li></ul>
-		<p>OrbiterSound (<a href="http://orbiter.dansteph.com">http://orbiter.dansteph.com</a>)
-		<ul type="square">
-		 <li>OrbiterSound30.exe </li></ul>
-		<p>Orbiter and OrbiterSound should not overwrite any of the CVS files.
-		<p>
-		 </li>
-		 <li>To develop you will find the Project Apollo workspace file for Microsoft Visual C++ 6.0 in the  &quot;ProjectApollo&quot; source folder (&quot;C:\ProjectApollo\Orbitersdk\samples\ProjectApollo\ProjectApollo.dsw&quot;). All available projects are included in this workspace. Since there are no modules in the repository first you have to compile the sources (or install them from the file release).
+		 <li>orbiter060504_base.zip</li>
+		 <li>orbiter060504_sdk.zip</li>
+		 
+		<p><em>Optional:</em></p>
+        
+          <li>Earth060504_L10.zip</li>
+          <li>Moon060504_L8.zip
+            <p>You can install every other Planetary extension package, too.</p>
+          </li>
+          </ul>
+         <p>OrbiterSound (<a href="http://orbiter.dansteph.com">http://orbiter.dansteph.com</a>)
+		  <ul type="square">
+		    <li>OrbiterSound30.exe </li>
+	       </ul>
+		  <p>Orbiter and OrbiterSound should not overwrite any of the CVS files.
+		  <p>
+		    </li>
+	  <li>Optionally you can install  the latest  Project Apollo - NASSP &quot;Meshland Pack&quot;. You'll find detailed instructions the zip file here: <a href="http://nassp.sf.net/user/betatesting.html">http://nassp.sf.net/user/betatesting.html</a>. Start Orbiter, go to the &quot;Modules&quot; tab and activate the &quot;MeshLand&quot; module.        <p>           
+</li>
+         <li>To develop you will find the Project Apollo workspace file for Microsoft Visual C++ 6.0 in the &quot;ProjectApollo&quot; source folder (&quot;C:\ProjectApollo\Orbitersdk\samples\ProjectApollo\ProjectApollo.dsw&quot;). All available projects are included in this workspace. Since there are no modules in the repository first you have to compile the sources (or install them from the file release).
 		 The projects should have a clean debug and release configuration, please try if you can work with them WITHOUT
-changing them and please report problems to an administrator or at the forum, we'll try to help you as soon as possible.<p></li>
-<li>That all, now you can try if Orbiter and Project Apollo is running normally. You'll find the proper scenarios in the &quot;Project Apollo - NASSP&quot; scenario folder. </li>
+changing them and please report problems to an administrator or at the forum, we'll try to help you as soon as possible.
+           <p>           
+      </li>
+      <li>That all, now you can try if Orbiter and Project Apollo is running normally. You'll find the proper scenarios in the &quot;Project Apollo - NASSP&quot; scenario folder. </li>
     </ul>
 	<h3>Edit a file</h3>
 	<p>To change a file you first have to do a CVS Edit with the file (by choosing  &quot;CVS Edit&quot; in the Tortoise context menu). After that the file is no longer read only and the CVS server knows that you are editing the file. You can check which files are edited by other users (or by yourself) with the &quot;Show edited files...&quot; in the Tortoise context menu.</p>
