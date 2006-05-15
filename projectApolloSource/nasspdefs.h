@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2006/04/17 18:14:27  movieman523
+  *	Added flashing borders to all switches (I think).
+  *	
   *	Revision 1.60  2006/04/17 15:16:16  movieman523
   *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
   *	
@@ -208,7 +211,15 @@
 #if !defined(_PA_NASSPDEFS_H)
 #define _PA_NASSPDEFS_H
 
-#define NASSP_VERSION 60050
+//
+// Compatibility warning crap.
+//
+
+#if _MSC_VER > 1300
+#define strnicmp _strnicmp
+#endif 
+
+#define NASSP_VERSION 70000
 #define REALISM_DEFAULT 5
 
 typedef struct {
