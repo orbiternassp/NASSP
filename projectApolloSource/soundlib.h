@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/02/21 11:52:26  tschachim
+  *	Fixes to make code build with MS C++ 2005
+  *	
   *	Revision 1.7  2006/01/09 19:26:03  tschachim
   *	More attempts to make code build on MS C++ 2005
   *	
@@ -120,7 +123,8 @@ protected:
 
 #define SOUNDFLAG_COMMS			0x0010
 
-#define VOLUME_COMMS	0
+#define VOLUME_COMMS	1
+#define VOLUME_COMMS2	2
 
 class SoundLib {
 

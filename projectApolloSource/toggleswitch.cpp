@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2006/05/01 08:52:50  dseagrav
+  *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
+  *	
   *	Revision 1.62  2006/04/25 13:54:07  tschachim
   *	Warning removed.
   *	
@@ -1936,6 +1939,10 @@ void VolumeThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf,
 	ThumbwheelSwitch::Init(xp, yp, w, h, surf, row);
 	sl = s;
 	volume_class = vclass;
+
+	if (sl) {
+		sl->SetVolume(volume_class, state * 10);
+	}
 }
 
 //

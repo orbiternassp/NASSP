@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.166  2006/04/25 13:57:36  tschachim
+  *	Removed GetXXXSwitchState.
+  *	
   *	Revision 1.165  2006/04/24 21:06:33  quetalsi
   *	Buxfix in EXT RNDZ LTS switch
   *	
@@ -2484,7 +2487,7 @@ void Saturn::SetSwitches(int panel) {
 	LeftModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftModeIntercomVOXSensThumbwheelSwitchRow);
 
 	LeftPowerMasterVolumeThumbwheelSwitchRow.Init(AID_LEFTPOWERMASTERVOLUMETHUMBWHEEL, MainPanel);
-	LeftPowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftPowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS, &soundlib);
+	LeftPowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftPowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS2, &soundlib);
 
 	LeftPadCommVolumeThumbwheelSwitchRow.Init(AID_LEFTPADCOMMVOLUMETHUMBWHEEL, MainPanel);
 	LeftPadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftPadCommVolumeThumbwheelSwitchRow);
