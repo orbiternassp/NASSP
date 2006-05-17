@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/01/09 19:26:03  tschachim
+  *	More attempts to make code build on MS C++ 2005
+  *	
   *	Revision 1.7  2005/11/26 16:30:50  movieman523
   *	Fixed retros and trying to fix TLI audio.
   *	
@@ -455,7 +458,15 @@ int SoundLib::GetSoundVolume(int flags, int volume)
 
 {
 	if (flags & SOUNDFLAG_COMMS) {
-		volume = (volume * MasterVolume[VOLUME_COMMS]) / 100;
+		//
+		// There are two master volume controls, so use the
+		// highest volume set.
+		//
+		int mv = MasterVolume[VOLUME_COMMS];
+		if (MasterVolume[VOLUME_COMMS2] > mv)
+			mv = MasterVolume[VOLUME_COMMS2];
+
+		volume = (volume * mv) / 100;
 	}
 
 	return volume;
