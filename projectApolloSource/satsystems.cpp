@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.101  2006/04/25 13:48:53  tschachim
+  *	Removed GetXXXSwitchState.
+  *	
   *	Revision 1.100  2006/04/23 07:14:01  dseagrav
   *	Holding mouse key down causes ASCP to advance until mouse key is released.
   *	
@@ -3282,14 +3285,19 @@ void GDC::TimeStep(double simt){
 	double orbiterAttitudeZ = vs.arot.z;
 
 	// Get rates from the appropriate BMAG
+	// GDC attitude is based on RATE data, not ATT data.
 	switch(sat->BMAGRollSwitch.GetState()){
 		case THREEPOSSWITCH_UP:     // RATE2
 			rates.z = sat->bmag2.rates.z;
-			if(!roll_bmag_failed){ roll_bmag_failed = 1; } // Fail it
+			if(sat->bmag2.powered){
+				if(roll_bmag_failed){ attitude.x = 0; Initialized=FALSE; roll_bmag_failed = 0; } // Force align to zero
+			}else{
+				if(!roll_bmag_failed){ roll_bmag_failed = 1; } // Fail it
+			}
 			break;
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
 			rates.z = sat->bmag2.rates.z;
-			if(sat->bmag1.powered){
+			if(sat->bmag2.powered){
 				if(roll_bmag_failed){ attitude.x = 0; Initialized=FALSE; roll_bmag_failed = 0; } // Force align to zero
 			}else{
 				if(!roll_bmag_failed){ roll_bmag_failed = 1; } // Fail it
@@ -3297,17 +3305,25 @@ void GDC::TimeStep(double simt){
 			break;
 		case THREEPOSSWITCH_DOWN:   // RATE1
 			rates.z = sat->bmag1.rates.z;
-			if(!roll_bmag_failed){ roll_bmag_failed = 1; } // Fail it
+			if(sat->bmag1.powered){
+				if(roll_bmag_failed){ attitude.x = 0; Initialized=FALSE; roll_bmag_failed = 0; } // Force align to zero
+			}else{
+				if(!roll_bmag_failed){ roll_bmag_failed = 1; } // Fail it
+			}
 			break;			
 	}
 	switch(sat->BMAGPitchSwitch.GetState()){
 		case THREEPOSSWITCH_UP:     // RATE2
 			rates.x = sat->bmag2.rates.x;
-			if(!pitch_bmag_failed){ pitch_bmag_failed = 1; } // Fail it
+			if(sat->bmag2.powered){
+				if(pitch_bmag_failed){ attitude.y = 0; Initialized=FALSE; pitch_bmag_failed = 0; } // Force align to zero
+			}else{
+				if(!pitch_bmag_failed){ pitch_bmag_failed = 1; } // Fail it				
+			}
 			break;
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
 			rates.x = sat->bmag2.rates.x;
-			if(sat->bmag1.powered){
+			if(sat->bmag2.powered){
 				if(pitch_bmag_failed){ attitude.y = 0; Initialized=FALSE; pitch_bmag_failed = 0; } // Force align to zero
 			}else{
 				if(!pitch_bmag_failed){ pitch_bmag_failed = 1; } // Fail it				
@@ -3315,18 +3331,26 @@ void GDC::TimeStep(double simt){
 			break;
 		case THREEPOSSWITCH_DOWN:   // RATE1
 			rates.x = sat->bmag1.rates.x;
-			if(!pitch_bmag_failed){ pitch_bmag_failed = 1; } // Fail it
+			if(sat->bmag1.powered){
+				if(pitch_bmag_failed){ attitude.y = 0; Initialized=FALSE; pitch_bmag_failed = 0; } // Force align to zero
+			}else{
+				if(!pitch_bmag_failed){ pitch_bmag_failed = 1; } // Fail it				
+			}
 			break;			
 	}
 
 	switch(sat->BMAGYawSwitch.GetState()){
 		case THREEPOSSWITCH_UP:     // RATE2
 			rates.y = sat->bmag2.rates.y;
-			if(!yaw_bmag_failed){ yaw_bmag_failed = 1; } // Fail it
+			if(sat->bmag2.powered){
+				if(yaw_bmag_failed){ attitude.z = 0; Initialized=FALSE; yaw_bmag_failed = 0; } // Force align to zero
+			}else{ 
+				if(!yaw_bmag_failed){ yaw_bmag_failed = 1; } // Fail it
+			}
 			break;
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
 			rates.y = sat->bmag2.rates.y;
-			if(sat->bmag1.powered){
+			if(sat->bmag2.powered){
 				if(yaw_bmag_failed){ attitude.z = 0; Initialized=FALSE; yaw_bmag_failed = 0; } // Force align to zero
 			}else{ 
 				if(!yaw_bmag_failed){ yaw_bmag_failed = 1; } // Fail it
@@ -3334,7 +3358,11 @@ void GDC::TimeStep(double simt){
 			break;
 		case THREEPOSSWITCH_DOWN:   // RATE1
 			rates.y = sat->bmag1.rates.y;
-			if(!yaw_bmag_failed){ yaw_bmag_failed = 1; } // Fail it
+			if(sat->bmag1.powered){
+				if(yaw_bmag_failed){ attitude.z = 0; Initialized=FALSE; yaw_bmag_failed = 0; } // Force align to zero
+			}else{ 
+				if(!yaw_bmag_failed){ yaw_bmag_failed = 1; } // Fail it
+			}
 			break;
 	}					
 	
@@ -4808,7 +4836,9 @@ void ECA::TimeStep(){
 		// RATE DAMPING
 		// If not overridden by something else (Proportional mode or attitude errors)
 		// and ATT mode is off, do this.
-		if(cmd_rate.x == 0 && sat->BMAGRollSwitch.GetState() != THREEPOSSWITCH_CENTER){ 
+		// This used to check for BMAG switches being out of center. Now it checks for the presence of a failed
+		// BMAG.
+		if(cmd_rate.x == 0 && sat->gdc.roll_bmag_failed != 0){ 
 			switch(sat->AttRateSwitch.GetState()){
 				case TOGGLESWITCH_UP:    // HIGH RATE
 					// MAX RATE 20 dps roll
@@ -4824,7 +4854,7 @@ void ECA::TimeStep(){
 					break;
 			}
 		}
-		if(cmd_rate.y == 0 && sat->BMAGPitchSwitch.GetState() != THREEPOSSWITCH_CENTER){ 
+		if(cmd_rate.y == 0 && sat->gdc.pitch_bmag_failed != 0){ 
 			switch(sat->AttRateSwitch.GetState()){
 				case TOGGLESWITCH_UP:    // HIGH RATE
 					// MAX RATE 7 dps
@@ -4840,7 +4870,7 @@ void ECA::TimeStep(){
 					break;
 			}
 		}
-		if(cmd_rate.z == 0 && sat->BMAGYawSwitch.GetState() != THREEPOSSWITCH_CENTER){ 
+		if(cmd_rate.z == 0 && sat->gdc.yaw_bmag_failed != 0){ 
 			switch(sat->AttRateSwitch.GetState()){
 				case TOGGLESWITCH_UP:    // HIGH RATE
 					// MAX RATE 7 dps
