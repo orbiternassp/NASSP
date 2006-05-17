@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2006/04/25 13:48:02  tschachim
+  *	New first stage exhaust.
+  *	
   *	Revision 1.76  2006/04/06 19:32:47  movieman523
   *	More Apollo 13 support.
   *	
@@ -300,17 +303,7 @@ const double  CSM_ISP          = 773*SEC;
 
 static int refcount = 0;
 
-//
-// The BODGE_FACTOR is subtracted from the empty mass of the SII
-// stage to increase the amount of available fuel when the SIVB
-// reaches orbit. This is totally unrealistic, but makes the mission
-// easier to fly!
-//
-/*
-#define BODGE_FACTOR	10000 // 0
-*/
-#define BODGE_FACTOR	0 // 0
-const double BASE_SII_MASS = 42400 + 3490 - BODGE_FACTOR;		// Stage + SII/SIVB interstage
+const double BASE_SII_MASS = 42400 + 3490;		// Stage + SII/SIVB interstage
 
 GDIParams g_Param;
 
