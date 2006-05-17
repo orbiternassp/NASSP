@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2005/11/15 05:42:54  flydba
+  *	*** empty log message ***
+  *	
   *	Revision 1.14  2005/08/29 19:16:43  tschachim
   *	Rendering of the DSKY keys.
   *	
@@ -179,9 +182,6 @@ void DSKY::SendKeyCode(int val)
 void DSKY::KeyRel()
 
 {
-	if (!agc.OutOfReset() || agc.OnStandby())
-		return;
-
 	KeyClick();
 	SendKeyCode(25);
 }
@@ -189,9 +189,6 @@ void DSKY::KeyRel()
 void DSKY::VerbPressed()
 
 {
-	if (!agc.OutOfReset() || agc.OnStandby())
-		return;
-
 	KeyClick();
 
 	VerbFlashing = false;
@@ -201,9 +198,6 @@ void DSKY::VerbPressed()
 void DSKY::NounPressed()
 
 {	
-	if (!agc.OutOfReset() || agc.OnStandby())
-		return;
-
 	KeyClick();
 
 	NounFlashing = false;
@@ -213,9 +207,6 @@ void DSKY::NounPressed()
 void DSKY::EnterPressed()
 
 {
-	if (!agc.OutOfReset() || agc.OnStandby())
-		return;
-
 	KeyClick();
 	SendKeyCode(28);
 }
@@ -223,9 +214,6 @@ void DSKY::EnterPressed()
 void DSKY::ClearPressed()
 
 {
-	if (!agc.OutOfReset() || agc.OnStandby())
-		return;
-
 	KeyClick();
 	SendKeyCode(30);
 }
@@ -233,9 +221,6 @@ void DSKY::ClearPressed()
 void DSKY::PlusPressed()
 
 {
-	if (!agc.OutOfReset() || agc.OnStandby())
-		return;
-
 	KeyClick();
 	SendKeyCode(26);
 }
@@ -243,9 +228,6 @@ void DSKY::PlusPressed()
 void DSKY::MinusPressed()
 
 {
-	if (!agc.OutOfReset() || agc.OnStandby())
-		return;
-
 	KeyClick();
 	SendKeyCode(27);
 }
@@ -253,9 +235,6 @@ void DSKY::MinusPressed()
 void DSKY::ProgPressed()
 
 {
-	if (!agc.OutOfReset())
-		return;
-
 	KeyClick();
 
 	agc.SetInputChannelBit(032, 14, true);
@@ -264,18 +243,12 @@ void DSKY::ProgPressed()
 void DSKY::ProgReleased()
 
 {
-	if (!agc.OutOfReset())
-		return;
-
 	agc.SetInputChannelBit(032, 14, false);
 }
 
 void DSKY::ResetPressed()
 
 {
-	if (!agc.OutOfReset() || agc.OnStandby())
-		return;
-
 	KeyClick();
 	SendKeyCode(18);
 }
@@ -341,14 +314,16 @@ void DSKY::ProcessChannel13(int val)
 	// StandbyLight (TODO: PRO key?
 	if (out_val.Bits.EnableStandby || out_val.Bits.TestAlarms) {
 		SetStby(true);
-	} else {
+	}
+	else {
 		SetStby(false);
 	}
 
 	// RestartLight (TODO other conditions)
 	if (out_val.Bits.TestAlarms) {
 		SetRestart(true);
-	} else {
+	}
+	else {
 		SetRestart(false);
 	}
 }

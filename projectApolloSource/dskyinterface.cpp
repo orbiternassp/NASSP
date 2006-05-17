@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.8  2005/09/22 22:27:40  movieman523
   *	Updated erasable memory display/edit functions in AGC.
   *	
@@ -516,10 +519,15 @@ void ApolloGuidance::ProcessInputChannel15(int val)
 
 {
 	//
+	// Do nothing until the AGC has reset.
+	//
+	if (!OutOfReset())
+		return;
+
+	//
 	// The DSKY keys (other than Prog) come through on this
 	// channel.
 	//
-
 	switch (val) {
 	case 1:
 	case 2:
@@ -584,6 +592,12 @@ void ApolloGuidance::ProgKeyPressed()
 
 {
 	//
+	// Do nothing until the AGC has reset.
+	//
+	if (!OutOfReset())
+		return;
+
+	//
 	// If AGC is in standby mode, then start it up.
 	//
 
@@ -640,6 +654,13 @@ void ApolloGuidance::ProgKeyPressed()
 void ApolloGuidance::ResetPressed()
 
 {
+	//
+	// If AGC is in standby mode, do nothing.
+	//
+	if (OnStandby()) {
+		return;
+	}
+
 	RSetPressed();
 
 	UpdateAll();
@@ -656,12 +677,26 @@ void ApolloGuidance::ReleaseKeyboard()
 void ApolloGuidance::KeyRel()
 
 {
+	//
+	// If AGC is in standby mode, do nothing.
+	//
+	if (OnStandby()) {
+		return;
+	}
+
 	ReleaseKeyboard();
 }
 
 void ApolloGuidance::VerbPressed()
 
 {
+	//
+	// If AGC is in standby mode, do nothing.
+	//
+	if (OnStandby()) {
+		return;
+	}
+
 	if (EnteringNoun) {
 		LightOprErr();
 		return;
@@ -681,6 +716,13 @@ void ApolloGuidance::VerbPressed()
 void ApolloGuidance::NounPressed()
 
 {
+	//
+	// If AGC is in standby mode, do nothing.
+	//
+	if (OnStandby()) {
+		return;
+	}
+
 	if (EnteringVerb) {
 		LightOprErr();
 		return;
@@ -699,6 +741,13 @@ void ApolloGuidance::NounPressed()
 void ApolloGuidance::EnterPressed()
 
 {
+	//
+	// If AGC is in standby mode, do nothing.
+	//
+	if (OnStandby()) {
+		return;
+	}
+
 	//
 	// Must complete entering the data before pressing
 	// ENTER.
@@ -806,6 +855,13 @@ void ApolloGuidance::UpdateEntry()
 void ApolloGuidance::ClearPressed()
 
 {
+	//
+	// If AGC is in standby mode, do nothing.
+	//
+	if (OnStandby()) {
+		return;
+	}
+
 	if (EnteringData) {
 		EnterPos = 0;
 		strncpy (FiveDigitEntry, "      ", 6);
@@ -819,6 +875,13 @@ void ApolloGuidance::ClearPressed()
 void ApolloGuidance::PlusPressed()
 
 {
+	//
+	// If AGC is in standby mode, do nothing.
+	//
+	if (OnStandby()) {
+		return;
+	}
+
 	if (EnteringData && !EnterPos) {
 		EnterPositive = true;
 		StartFiveDigitEntry(false);
@@ -833,6 +896,13 @@ void ApolloGuidance::PlusPressed()
 void ApolloGuidance::MinusPressed()
 
 {
+	//
+	// If AGC is in standby mode, do nothing.
+	//
+	if (OnStandby()) {
+		return;
+	}
+
 	if (EnteringData && !EnterPos) {
 		EnterPositive = false;
 		StartFiveDigitEntry(false);
@@ -848,6 +918,13 @@ void ApolloGuidance::MinusPressed()
 void ApolloGuidance::NumberPressed(int n)
 
 {
+	//
+	// If AGC is in standby mode, do nothing.
+	//
+	if (OnStandby()) {
+		return;
+	}
+
 	if (EnteringOctal && n > 7) {
 		LightOprErr();
 		return;
