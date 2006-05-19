@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2006/04/30 20:46:51  tschachim
+  *	Bugfix CMPAD.
+  *	
   *	Revision 1.74  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -1471,13 +1474,6 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 
 	TIME1 += (int)((simt - LastTimestep) * 1600.0);
 
-	if (OnStandby()) {
-		DCPower.DrawPower(15.0);
-	}
-	else {
-		DCPower.DrawPower(115.0);
-	}
-
 	//
 	// Get position and velocity data since it's generally useful.
 	//
@@ -1633,6 +1629,17 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 	}
 
 	return false;
+}
+
+void ApolloGuidance::SystemTimestep(double simdt) 
+
+{
+	if (OnStandby()) {
+		DCPower.DrawPower(22.9);
+	}
+	else {
+		DCPower.DrawPower(106.0);
+	}
 }
 
 //
@@ -4861,7 +4868,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 bool ApolloGuidance::IsPowered()
 
 {
-	if (DCPower.Voltage() > 20.0)
+	if (DCPower.Voltage() > SP_MIN_DCVOLTAGE)
 		return true;
 
 	//

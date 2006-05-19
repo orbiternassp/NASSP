@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/04/25 13:52:06  tschachim
+  *	Removed GetXXXSwitchState.
+  *	
   *	Revision 1.12  2006/04/17 18:14:27  movieman523
   *	Added flashing borders to all switches (I think).
   *	
@@ -420,4 +423,47 @@ class SaturnAccelGMeter : public SaturnRoundMeter {
 public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+};
+
+class DirectO2RotationalSwitch: public RotationalSwitch {
+public:
+	DirectO2RotationalSwitch() { Pipe = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newValue);
+
+protected:
+	void CheckValve();
+
+	h_Pipe *Pipe;
+};
+
+class SaturnEcsGlycolPumpsSwitch: public RotationalSwitch {
+public:
+	SaturnEcsGlycolPumpsSwitch(PanelSDK &p) : ACBus1(0, p), ACBus2(0, p) { GlycolPump = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Pump *p,
+		      CircuitBrakerSwitch* ac1a, CircuitBrakerSwitch* ac1b, CircuitBrakerSwitch* ac1c,
+			  CircuitBrakerSwitch* ac2a, CircuitBrakerSwitch* ac2b, CircuitBrakerSwitch* ac2c);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newValue);
+	void LoadState(char *line);
+
+protected:
+	void CheckPump();
+
+	Pump *GlycolPump;
+	ThreeWayPowerMerge ACBus1;
+	ThreeWayPowerMerge ACBus2;
+};
+
+class SaturnSuitCompressorSwitch: public ThreeSourceSwitch {
+public:
+	SaturnSuitCompressorSwitch(PanelSDK &p) : ACBus1(0, p), ACBus2(0, p) { };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
+		      CircuitBrakerSwitch* ac1a, CircuitBrakerSwitch* ac1b, CircuitBrakerSwitch* ac1c,
+			  CircuitBrakerSwitch* ac2a, CircuitBrakerSwitch* ac2b, CircuitBrakerSwitch* ac2c);
+
+protected:
+	ThreeWayPowerMerge ACBus1;
+	ThreeWayPowerMerge ACBus2;
 };

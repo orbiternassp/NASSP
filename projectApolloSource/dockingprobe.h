@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/05/06 06:00:35  jasonims
+  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
+  *	
   *	Revision 1.4  2006/02/01 18:27:11  tschachim
   *	Pyros and secs logic necessary for retraction.
   *	Automatic retraction if REALISM 0.
@@ -61,11 +64,12 @@ public:
 	void SetIgnoreNextDockEvent() { IgnoreNextDockEvent = true; };
 	void DockEvent(int dock, OBJHANDLE connected);
 	void TimeStep(double simt, double simdt);
+	void SystemTimestep(double simdt);
 	void RegisterVessel(Saturn *v) { OurVessel = v; };
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
-	bool IsPowered() { return DCPower.Voltage() > 20.0; };
+	bool IsPowered() { return DCPower.Voltage() > SP_MIN_DCVOLTAGE; };
 	void SetRealism(int r) { Realism = r; };
 
 protected:

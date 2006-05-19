@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/04/25 13:54:44  tschachim
+  *	Removed GetXXXSwitchState.
+  *	
   *	Revision 1.13  2006/04/17 18:14:27  movieman523
   *	Added flashing borders to all switches (I think).
   *	
@@ -1080,4 +1083,115 @@ void SaturnAccelGMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	v = (-v * 180.0 / 12.0) + 180.0;
 	DrawNeedle (drawSurface, 40, 40, 35.0, v * RAD);
+}
+
+
+void DirectO2RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p)
+
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	Pipe = p;
+}
+
+bool DirectO2RotationalSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
+		CheckValve();
+		return true;
+	}
+	return false;
+}
+
+bool DirectO2RotationalSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
+		CheckValve();
+		return true;
+	}
+	return false;
+}
+
+void DirectO2RotationalSwitch::CheckValve()
+
+{
+	if (GetState() == 3) {
+		Pipe->in->h_open = SP_VALVE_CLOSE;
+		Pipe->flowMax = 0;
+	
+	} else if (GetState() == 2) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 0.35 / LBH;
+
+	} else if (GetState() == 1) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 0.6 / LBH;
+
+	} else if (GetState() == 0) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 1.1 / LBH;
+	}
+}
+
+
+void SaturnEcsGlycolPumpsSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Pump *p,
+									  CircuitBrakerSwitch* ac1a, CircuitBrakerSwitch* ac1b, CircuitBrakerSwitch* ac1c,
+									  CircuitBrakerSwitch* ac2a, CircuitBrakerSwitch* ac2b, CircuitBrakerSwitch* ac2c)
+
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	GlycolPump = p;
+	ACBus1.WireToBuses(ac1a, ac1b, ac1c);
+	ACBus2.WireToBuses(ac2a, ac2b, ac2c);
+	CheckPump();
+}
+
+bool SaturnEcsGlycolPumpsSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
+		CheckPump();
+		return true;
+	}
+	return false;
+}
+
+bool SaturnEcsGlycolPumpsSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
+		CheckPump();
+		return true;
+	}
+	return false;
+}
+
+void SaturnEcsGlycolPumpsSwitch::LoadState(char *line)
+
+{
+	RotationalSwitch::LoadState(line);
+	CheckPump();
+}
+
+void SaturnEcsGlycolPumpsSwitch::CheckPump()
+
+{
+	if (GetState() == 2) 
+		GlycolPump->WireTo(NULL);
+	else if (GetState() == 1 || GetState() == 3) 
+		GlycolPump->WireTo(&ACBus1);
+	else
+		GlycolPump->WireTo(&ACBus2);
+}
+
+
+void SaturnSuitCompressorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
+									  CircuitBrakerSwitch* ac1a, CircuitBrakerSwitch* ac1b, CircuitBrakerSwitch* ac1c,
+									  CircuitBrakerSwitch* ac2a, CircuitBrakerSwitch* ac2b, CircuitBrakerSwitch* ac2c)
+
+{
+	ACBus1.WireToBuses(ac1a, ac1b, ac1c);
+	ACBus2.WireToBuses(ac2a, ac2b, ac2c);
+	ThreeSourceSwitch::Init(xp, yp, w, h, surf, bsurf, row, &ACBus1, NULL, &ACBus2);
 }

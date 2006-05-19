@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/04/25 14:00:22  tschachim
+  *	New KSC.
+  *	
   **************************************************************************/
 
 #define ORBITER_MODULE
@@ -56,7 +59,9 @@ char trace_file[] = "ProjectApollo ML.log";
 #define STATE_CMARM2			3
 #define STATE_SICINTERTANKARM	4
 #define STATE_SICFORWARDARM		5
-#define STATE_LIFTOFF			6
+#define STATE_LIFTOFFSTREAM		6
+#define STATE_LIFTOFF			7
+#define STATE_POSTLIFTOFF		8
 
 // Pad and VAB coordinates
 #define VAB_LON -80.6538134
@@ -68,7 +73,22 @@ char trace_file[] = "ProjectApollo ML.log";
 #define PAD_LV_LON -80.6080702 
 #define PAD_LV_LAT 28.6007244
 
- 
+
+PARTICLESTREAMSPEC liftoffStreamSpec = {
+	0, 
+	12.0,	// size
+	50,		// rate
+	120.0,	// velocity
+	0.5,	// velocity distribution
+	6.0,	// lifetime
+	4,		// growthrate
+	0.4,	// atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_PLIN, 0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 0.7, 0.7
+};
+
+
 DLLCLBK void InitModule(HINSTANCE hModule) {
 
 	g_hDLL = hModule;
@@ -106,6 +126,12 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	swingarmProc = 0;
 	mastProc = 0;
 
+	int i;
+	for (i = 0; i < 2; i++) {
+		liftoffStream[i] = NULL;
+	}
+	liftoffStreamLevel = 0;
+
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 }
 
@@ -126,6 +152,9 @@ void ML::clbkSetClassCaps(FILEHANDLE cfg) {
 	SetMeshVisibilityMode(meshindexML, MESHVIS_ALWAYS);
 
 	DefineAnimations();
+
+	liftoffStream[0] = AddParticleStream(&liftoffStreamSpec, _V(0, -80, 0), _V(0, 0.4,  1), &liftoffStreamLevel);
+	liftoffStream[1] = AddParticleStream(&liftoffStreamSpec, _V(0, -80, 0), _V(0, 0.4, -1), &liftoffStreamLevel);
 
 	SetTouchdownPointHeight(touchdownPointHeight);
 
@@ -258,16 +287,31 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
 		}
 
-		// T-1s or later?
+		// T-4.9s or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() > -1) {
+		if (sat->GetMissionTime() > -4.9) {
 			s1cforwardarmProc = 1;
 			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
-			state = STATE_LIFTOFF;
+			state = STATE_LIFTOFFSTREAM;
 		}
 		break;
 
+	case STATE_LIFTOFFSTREAM:
+		if (!hLV) break;
+		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() < -2.0)
+			liftoffStreamLevel = (sat->GetMissionTime() + 4.9) / 2.9;
+		else
+			liftoffStreamLevel = 1;
+
+		// T-1s or later?
+		if (sat->GetMissionTime() > -1) {
+			state = STATE_LIFTOFF;
+		}
+		break;
+	
 	case STATE_LIFTOFF:
 		// Move swingarms
 		if (swingarmProc < 1) {
@@ -280,6 +324,25 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			mastProc = min(1.0, mastProc + simdt / 2.0);
 			SetAnimation(mastAnim, mastProc);
 		}
+
+		liftoffStreamLevel = 1;
+
+		// T+8s or later?
+		if (!hLV) break;
+		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (sat->GetMissionTime() > 8) {
+			state = STATE_POSTLIFTOFF;
+		}		
+		break;
+
+	case STATE_POSTLIFTOFF:
+
+		if (!hLV) break;
+		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (sat->GetMissionTime() < 13.0)
+			liftoffStreamLevel = (sat->GetMissionTime() - 13.0) / -5.0;
+		else
+			liftoffStreamLevel = 0;
 		break;
 	}
 

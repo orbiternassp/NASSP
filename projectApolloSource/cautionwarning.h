@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.12  2005/12/19 16:41:01  tschachim
   *	InhibitNextMasterAlarm for realism 0.
   *	
@@ -93,6 +96,7 @@ public:
 
 	virtual void LightTest(int state);
 	virtual void TimeStep(double simt);
+	virtual void SystemTimestep(double simdt); 
 	void SetMode(int mode);
 	void SetSource(int source) { Source = source; };
 	void SetPowerBus(int bus);

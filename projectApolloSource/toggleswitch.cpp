@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2006/05/17 18:42:35  movieman523
+  *	Partial fix for loading sound volume from scenario.
+  *	
   *	Revision 1.63  2006/05/01 08:52:50  dseagrav
   *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
   *	
@@ -1686,12 +1689,17 @@ RotationalSwitchPosition::~RotationalSwitchPosition() {
 }
 
 
-void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2)
-
+void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2,
+    					 		     e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2)
 {
 	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	FDAI1 = F1;
 	FDAI2 = F2;
+
+	DCSource1 = dc1;
+	DCSource2 = dc2;
+	ACSource1 = ac1;
+	ACSource2 = ac2;
 
 	CheckFDAIPowerState();
 }
@@ -1706,23 +1714,23 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 {
 	switch (GetState()) {
 	case 0:
-		FDAI1->WireTo(0);
-		FDAI2->WireTo(0);
+		FDAI1->WireTo(NULL, NULL);
+		FDAI2->WireTo(NULL, NULL);
 		break;
 
 	case 1:
-		FDAI1->WireTo(this);
-		FDAI2->WireTo(0);
+		FDAI1->WireTo(DCSource1, ACSource1);
+		FDAI2->WireTo(NULL, NULL);
 		break;
 
 	case 2:
-		FDAI1->WireTo(0);
-		FDAI2->WireTo(this);
+		FDAI1->WireTo(NULL, NULL);
+		FDAI2->WireTo(DCSource2, ACSource2);
 		break;
 
 	case 3:
-		FDAI1->WireTo(this);
-		FDAI2->WireTo(this);
+		FDAI1->WireTo(DCSource1, ACSource1);
+		FDAI2->WireTo(DCSource2, ACSource2);
 		break;
 	}
 }
@@ -1941,7 +1949,7 @@ void VolumeThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf,
 	volume_class = vclass;
 
 	if (sl) {
-		sl->SetVolume(volume_class, state * 10);
+		sl->SetVolume(volume_class, (int) (state * (100.0 / 9.0)));
 	}
 }
 
@@ -1955,7 +1963,7 @@ bool VolumeThumbwheelSwitch::CheckMouseClick(int event, int mx, int my)
 	bool ret = ThumbwheelSwitch::CheckMouseClick(event, mx, my);
 
 	if (ret && sl) {
-		sl->SetVolume(volume_class, state * 10);
+		sl->SetVolume(volume_class, (int) (state * (100.0 / 9.0)));
 	}
 
 	return ret;
@@ -1971,7 +1979,7 @@ void VolumeThumbwheelSwitch::LoadState(char *line)
 	ThumbwheelSwitch::LoadState(line);
 
 	if (sl) {
-		sl->SetVolume(volume_class, state * 10);
+		sl->SetVolume(volume_class, (int) (state * (100.0 / 9.0)));
 	}
 }
 
@@ -2243,6 +2251,16 @@ bool ThreeSourceSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 
+	return false;
+}
+
+bool ThreeSourceSwitch::SwitchTo(int newState)
+
+{
+	if (ToggleSwitch::SwitchTo(newState)) {
+		UpdateSourceState();
+		return true;
+	}
 	return false;
 }
 

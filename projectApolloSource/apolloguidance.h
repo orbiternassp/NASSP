@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.39  2006/04/04 23:36:14  dseagrav
   *	Added the beginnings of the telecom subsystem.
   *	
@@ -194,6 +197,7 @@ public:
 	bool CommonProceedNoData();
 
 	virtual void Timestep(double simt, double simdt) = 0;
+	virtual void SystemTimestep(double simdt); 
 
 	void SetVesselStats(double ISP, double Thrust, bool MainIsHover);
 	void ControlVessel(VESSEL *v) { OurVessel = v; };

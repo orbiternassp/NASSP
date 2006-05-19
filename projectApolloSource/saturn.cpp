@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.134  2006/04/29 23:16:56  movieman523
+  *	Fixed LMPAD and added CHECKLISTS option to scenario file.
+  *	
   *	Revision 1.133  2006/04/25 17:56:08  tschachim
   *	Bugfix Keyboard.
   *	
@@ -125,306 +128,6 @@
   *	Revision 1.100  2006/01/15 19:50:48  movieman523
   *	Don't delete launch site until we reach orbit.
   *	
-  *	Revision 1.99  2006/01/15 02:38:59  movieman523
-  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
-  *	
-  *	Revision 1.98  2006/01/15 01:23:19  movieman523
-  *	Put 'phantom' RCS thrusters back in and adjusted RCS thrust and ISP based on REALISM value.
-  *	
-  *	Revision 1.97  2006/01/14 20:58:16  movieman523
-  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
-  *	
-  *	Revision 1.96  2006/01/14 18:57:49  movieman523
-  *	First stages of pyro and SECS simulation.
-  *	
-  *	Revision 1.95  2006/01/14 00:54:35  movieman523
-  *	Hacky wiring of sequential systems and pyro arm switches.
-  *	
-  *	Revision 1.94  2006/01/12 14:51:41  tschachim
-  *	Added prelaunch tank venting.
-  *	
-  *	Revision 1.93  2006/01/11 22:34:20  movieman523
-  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
-  *	
-  *	Revision 1.92  2006/01/11 02:59:43  movieman523
-  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
-  *	
-  *	Revision 1.91  2006/01/11 02:16:25  movieman523
-  *	Added RCS propellant quantity gauge.
-  *	
-  *	Revision 1.90  2006/01/10 23:45:35  movieman523
-  *	Revised RCS ISP and thrust to historical values.
-  *	
-  *	Revision 1.89  2006/01/10 23:20:51  movieman523
-  *	SM RCS is now enabled per quad.
-  *	
-  *	Revision 1.88  2006/01/10 20:49:50  movieman523
-  *	Added CM RCS propellant dump and revised thrust display.
-  *	
-  *	Revision 1.87  2006/01/10 19:34:44  movieman523
-  *	Fixed AC bus switches and added ELS Logic/Auto support.
-  *	
-  *	Revision 1.86  2006/01/09 21:56:44  movieman523
-  *	Added support for LEM and CSM AGC PAD loads in scenario file.
-  *	
-  *	Revision 1.85  2006/01/08 19:04:30  movieman523
-  *	Wired up AC bus switches in a quick and hacky manner.
-  *	
-  *	Revision 1.84  2006/01/08 16:15:20  movieman523
-  *	For now, hard-wire batteries to buses when CM is seperated from SM.
-  *	
-  *	Revision 1.83  2006/01/08 14:51:24  movieman523
-  *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
-  *	
-  *	Revision 1.82  2006/01/08 04:37:50  movieman523
-  *	Added camera 3.
-  *	
-  *	Revision 1.81  2006/01/08 04:00:24  movieman523
-  *	Added first two engineering cameras.
-  *	
-  *	Revision 1.80  2006/01/07 03:28:28  movieman523
-  *	Removed a lot of unused switches and wired up the FDAI power switch.
-  *	
-  *	Revision 1.79  2006/01/07 00:43:58  movieman523
-  *	Added non-essential buses, though there's nothing connected to them at the moment.
-  *	
-  *	Revision 1.78  2006/01/06 22:55:53  movieman523
-  *	Fixed SM seperation and cut off fuel cell power when it happens.
-  *	
-  *	Revision 1.77  2006/01/06 21:40:15  movieman523
-  *	Quick hack for damping electrical meters.
-  *	
-  *	Revision 1.76  2006/01/05 11:59:59  tschachim
-  *	New dockingprobe handling, bugfixes.
-  *	
-  *	Revision 1.75  2006/01/04 23:06:03  movieman523
-  *	Moved meshes into ProjectApollo directory and renamed a few.
-  *	
-  *	Revision 1.74  2005/12/19 16:37:32  tschachim
-  *	Realism modes, checklist actions.
-  *	
-  *	Revision 1.73  2005/12/13 10:12:20  tschachim
-  *	Bugfix pointer initialization.
-  *	
-  *	Revision 1.72  2005/11/25 20:59:49  movieman523
-  *	Added thrust decay for SIVb in TLI burn. Still needs tweaking.
-  *	
-  *	Revision 1.71  2005/11/25 02:03:47  movieman523
-  *	Fixed mixture-ratio change code and made it more realistic.
-  *	
-  *	Revision 1.70  2005/11/25 00:02:16  movieman523
-  *	Trying to make Apollo 11 work 'by the numbers'.
-  *	
-  *	Revision 1.69  2005/11/24 20:31:23  movieman523
-  *	Added support for engine thrust decay during launch.
-  *	
-  *	Revision 1.68  2005/11/24 01:07:54  movieman523
-  *	Removed code for panel lights which were being set incorrectly. Plus a bit of tidying.
-  *	
-  *	Revision 1.67  2005/11/23 01:43:13  movieman523
-  *	Added SII stage DLL.
-  *	
-  *	Revision 1.66  2005/11/20 21:46:31  movieman523
-  *	Added initial volume control support.
-  *	
-  *	Revision 1.65  2005/11/18 22:11:22  movieman523
-  *	Added seperate heat and electrical power usage for boilers. Revised cabin fan code.
-  *	
-  *	Revision 1.64  2005/11/16 20:21:39  movieman523
-  *	CSM/LEM renaming changes.
-  *	
-  *	Revision 1.63  2005/11/16 00:18:49  movieman523
-  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
-  *	
-  *	Revision 1.62  2005/11/09 18:16:38  tschachim
-  *	New Saturn assembly process.
-  *	
-  *	Revision 1.61  2005/10/19 11:40:40  tschachim
-  *	FDAIs optionally disabled.
-  *	
-  *	Revision 1.60  2005/10/13 15:52:24  tschachim
-  *	Fixed the panel change bug.
-  *	
-  *	Revision 1.59  2005/10/11 16:41:10  tschachim
-  *	More REALISM 0 automatisms, added COAS, bugfixes.
-  *	
-  *	Revision 1.58  2005/09/30 11:24:37  tschachim
-  *	Saving/Loading of lastSystemsMissionTime.
-  *	
-  *	Revision 1.57  2005/08/24 23:29:31  movieman523
-  *	Fixed event timer reset.
-  *	
-  *	Revision 1.56  2005/08/24 00:30:00  movieman523
-  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
-  *	
-  *	Revision 1.55  2005/08/23 22:18:47  movieman523
-  *	SPS switch now works.
-  *	
-  *	Revision 1.54  2005/08/23 21:29:03  movieman523
-  *	RCS state is now only checked when a stage event occurs or when a valve is opened or closed, not every timestep.
-  *	
-  *	Revision 1.53  2005/08/23 20:13:12  movieman523
-  *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
-  *	
-  *	Revision 1.52  2005/08/22 19:47:33  movieman523
-  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
-  *	
-  *	Revision 1.51  2005/08/21 22:21:00  movieman523
-  *	Fixed SM RCS and activated SIVB RCS at all times for now.
-  *	
-  *	Revision 1.50  2005/08/21 17:21:10  movieman523
-  *	Added event timer display.
-  *	
-  *	Revision 1.49  2005/08/21 16:23:32  movieman523
-  *	Added more alarms.
-  *	
-  *	Revision 1.48  2005/08/21 13:13:43  movieman523
-  *	Wired in a few caution and warning lights.
-  *	
-  *	Revision 1.47  2005/08/20 17:50:41  movieman523
-  *	Added FDAI state save and load.
-  *	
-  *	Revision 1.46  2005/08/20 11:14:52  movieman523
-  *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
-  *	
-  *	Revision 1.45  2005/08/19 21:33:20  movieman523
-  *	Added initial random failure support.
-  *	
-  *	Revision 1.44  2005/08/19 20:05:44  movieman523
-  *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
-  *	
-  *	Revision 1.43  2005/08/19 18:38:13  movieman523
-  *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
-  *	
-  *	Revision 1.42  2005/08/18 22:15:22  movieman523
-  *	Wired up second DSKY, to accurately match the real hardware.
-  *	
-  *	Revision 1.41  2005/08/18 20:54:16  movieman523
-  *	Added Main Release switch and wired it up to the parachutes.
-  *	
-  *	Revision 1.40  2005/08/18 19:12:21  movieman523
-  *	Added Event Timer switches and null Event Timer class.
-  *	
-  *	Revision 1.39  2005/08/18 00:22:53  movieman523
-  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
-  *	
-  *	Revision 1.38  2005/08/17 00:01:59  movieman523
-  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
-  *	
-  *	Revision 1.37  2005/08/16 20:55:23  movieman523
-  *	Added first saturn-specific switch for Xlunar Inject.
-  *	
-  *	Revision 1.36  2005/08/15 18:48:50  movieman523
-  *	Moved the stage destroy code into a generic function for Saturn V and 1b.
-  *	
-  *	Revision 1.35  2005/08/15 02:37:57  movieman523
-  *	SM RCS is now wired up.
-  *	
-  *	Revision 1.34  2005/08/14 15:25:43  movieman523
-  *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
-  *	
-  *	Revision 1.33  2005/08/13 20:20:17  movieman523
-  *	Created MissionTimer class and wired it into the LEM and CSM.
-  *	
-  *	Revision 1.32  2005/08/13 14:59:24  movieman523
-  *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
-  *	
-  *	Revision 1.31  2005/08/13 14:21:36  movieman523
-  *	Added beginnings of caution and warning system.
-  *	
-  *	Revision 1.30  2005/08/12 23:15:49  movieman523
-  *	Added switches to update mission time display.
-  *	
-  *	Revision 1.29  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.28  2005/08/09 02:28:27  movieman523
-  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
-  *	
-  *	Revision 1.27  2005/08/08 20:32:58  movieman523
-  *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
-  *	
-  *	Revision 1.26  2005/08/06 01:25:27  movieman523
-  *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
-  *	
-  *	Revision 1.25  2005/08/06 01:12:52  movieman523
-  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
-  *	
-  *	Revision 1.24  2005/08/05 13:04:25  tschachim
-  *	Fixed panel initialization
-  *	
-  *	Revision 1.23  2005/08/01 19:07:47  movieman523
-  *	Genericised code to deal with SM destruction on re-entry, and did some tidying up of Saturn 1b code.
-  *	
-  *	Revision 1.22  2005/07/31 11:59:41  movieman523
-  *	Added first mixture ratio shift to Saturn 1b.
-  *	
-  *	Revision 1.21  2005/07/31 01:43:13  movieman523
-  *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
-  *	
-  *	Revision 1.20  2005/07/30 16:09:28  tschachim
-  *	Added systemsState for the internal systems
-  *	
-  *	Revision 1.19  2005/07/30 02:05:48  movieman523
-  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
-  *	
-  *	Revision 1.18  2005/07/29 23:05:38  movieman523
-  *	Added Inertial Guidance Mode start time to scenario file.
-  *	
-  *	Revision 1.17  2005/07/29 22:44:05  movieman523
-  *	Pitch program, SI center shutdown time, SII center shutdown time and SII PU shift time can now all be specified in the scenario files.
-  *	
-  *	Revision 1.16  2005/07/19 16:21:56  tschachim
-  *	Docking radar sound only for CSM_LEM_STAGE
-  *	
-  *	Revision 1.15  2005/06/06 12:02:45  tschachim
-  *	New switches, PanelSwitchScenarioHandler
-  *	
-  *	Revision 1.14  2005/05/31 02:12:08  movieman523
-  *	Updated pre-entry burn variables and wrote most of the code to handle them.
-  *	
-  *	Revision 1.13  2005/05/31 00:17:33  movieman523
-  *	Added CSMACCEL variables for unmanned flights which made burns just before re-entry to raise velocity to levels similar to a return from the moon.
-  *	
-  *	Revision 1.12  2005/05/18 23:34:23  movieman523
-  *	Added roughly correct masses for the various Saturn payloads.
-  *	
-  *	Revision 1.11  2005/05/02 12:55:02  tschachim
-  *	PanelsdkLogFile test code
-  *	
-  *	Revision 1.10  2005/04/22 13:58:19  tschachim
-  *	Introduced PanelSDK
-  *	Some changes because of the new panels
-  *	
-  *	Revision 1.9  2005/04/14 23:12:43  movieman523
-  *	Added post-splashdown audio support. Unfortunately I can't test this at the moment as the control panel switches for getting out of the CM after splashdown aren't working :).
-  *	
-  *	However, it's pretty simple code, so 90+% likely to work.
-  *	
-  *	Revision 1.8  2005/03/19 03:39:13  chode99
-  *	Fixed bug that prevented some switch states from being set by the scenario file.
-  *	
-  *	Revision 1.7  2005/03/14 01:40:30  chode99
-  *	Fixed the positions of the SIVB RCS thrusters in Saturn V and Saturn IB
-  *	
-  *	Revision 1.6  2005/03/13 21:17:20  chode99
-  *	Added code to compute accurate axial g force for panel display.
-  *	
-  *	Revision 1.5  2005/03/09 00:26:15  chode99
-  *	Added code to support SII retros.
-  *	
-  *	Revision 1.4  2005/03/03 17:57:37  tschachim
-  *	panel handling
-  *	
-  *	Revision 1.3  2005/02/19 00:03:57  movieman523
-  *	Reduced volume of APS sound playback.
-  *	
-  *	Revision 1.2  2005/02/18 00:43:07  movieman523
-  *	Added new Apollo 13 sound support.
-  *	
-  *	Revision 1.1  2005/02/11 12:54:07  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -463,41 +166,46 @@ extern "C" {
 //extern FILE *PanelsdkLogFile;
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
-								agc(soundlib, dsky, dsky2, imu, Panelsdk, iu), 
-								dsky(soundlib, agc, 015),
-								dsky2(soundlib, agc, 016), 
-								imu(agc, Panelsdk), 
-								iu(soundlib, agc, SIISIVBSepSwitch, TLIEnableSwitch),
-								cws(SMasterAlarm, Bclick, Panelsdk),
-								dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
-								NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
-								NonEssBus2("Non-Essential-Bus2", &InstrumentLightingNonESSCircuitBraker),
-								ACBus1PhaseA("AC-Bus1-PhaseA", 115, &ACBus1Source),
-								ACBus1PhaseB("AC-Bus1-PhaseB", 115, &ACBus1Source),
-								ACBus1PhaseC("AC-Bus1-PhaseC", 115, &ACBus1Source),
-								ACBus2PhaseA("AC-Bus2-PhaseA", 115, &ACBus2Source),
-								ACBus2PhaseB("AC-Bus2-PhaseB", 115, &ACBus2Source),
-								ACBus2PhaseC("AC-Bus2-PhaseC", 115, &ACBus2Source),
-								ACBus1Source(0, Panelsdk),
-								ACBus2Source(0, Panelsdk),
-								ACBus1("ACBus1", Panelsdk),
-								ACBus2("ACBus2", Panelsdk),
-								DCBusASource(0, Panelsdk),
-								DCBusBSource(0, Panelsdk),
-								BatteryBusA("Battery-Bus-A", Panelsdk),
-								BatteryBusB("Battery-Bus-B", Panelsdk),
-								PyroBusA("Pyro-Bus-A", Panelsdk),
-								PyroBusB("Pyro-Bus-B", Panelsdk),
-								BatteryRelayBus("Battery-Relay-Bus", Panelsdk),
-								SECSLogicPower("SECS-Logic-Power", Panelsdk),
-								PyroPower("Pyro-Power", Panelsdk),
-								SwitchPower("Switch-Power", Panelsdk),
-								SMQuadARCS(ph_rcs0),
-								SMQuadBRCS(ph_rcs1),
-								SMQuadCRCS(ph_rcs2),
-								SMQuadDRCS(ph_rcs3),
-								CMRCS1(ph_rcs_cm_1),CMRCS2(ph_rcs_cm_2),
-								CMSMPyros("CM-SM-Pyros", Panelsdk)
+
+	agc(soundlib, dsky, dsky2, imu, Panelsdk, iu), 
+	dsky(soundlib, agc, 015),
+	dsky2(soundlib, agc, 016), 
+	imu(agc, Panelsdk), 
+	iu(soundlib, agc, SIISIVBSepSwitch, TLIEnableSwitch),
+	cws(SMasterAlarm, Bclick, Panelsdk),
+	dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
+	NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
+	NonEssBus2("Non-Essential-Bus2", &InstrumentLightingNonESSCircuitBraker),
+	ACBus1PhaseA("AC-Bus1-PhaseA", 115, &ACBus1Source),
+	ACBus1PhaseB("AC-Bus1-PhaseB", 115, &ACBus1Source),
+	ACBus1PhaseC("AC-Bus1-PhaseC", 115, &ACBus1Source),
+	ACBus2PhaseA("AC-Bus2-PhaseA", 115, &ACBus2Source),
+	ACBus2PhaseB("AC-Bus2-PhaseB", 115, &ACBus2Source),
+	ACBus2PhaseC("AC-Bus2-PhaseC", 115, &ACBus2Source),
+	ACBus1Source(0, Panelsdk),
+	ACBus2Source(0, Panelsdk),
+	ACBus1("ACBus1", Panelsdk),
+	ACBus2("ACBus2", Panelsdk),
+	DCBusASource("DCBusASource", Panelsdk),
+	DCBusBSource("DCBusBSource", Panelsdk),
+	BatteryBusA("Battery-Bus-A", Panelsdk),
+	BatteryBusB("Battery-Bus-B", Panelsdk),
+	PyroBusA("Pyro-Bus-A", Panelsdk),
+	PyroBusB("Pyro-Bus-B", Panelsdk),
+	BatteryRelayBus("Battery-Relay-Bus", Panelsdk),
+	SECSLogicPower("SECS-Logic-Power", Panelsdk),
+	PyroPower("Pyro-Power", Panelsdk),
+	SwitchPower("Switch-Power", Panelsdk),
+	SMQuadARCS(ph_rcs0),
+	SMQuadBRCS(ph_rcs1),
+	SMQuadCRCS(ph_rcs2),
+	SMQuadDRCS(ph_rcs3),
+	CMRCS1(ph_rcs_cm_1),CMRCS2(ph_rcs_cm_2),
+	CMSMPyros("CM-SM-Pyros", Panelsdk),
+	EcsGlycolPumpsSwitch(Panelsdk),
+	SuitCompressor1Switch(Panelsdk),
+	SuitCompressor2Switch(Panelsdk)
+
 {
 	InitSaturnCalled = false;
 	autopilot = false;

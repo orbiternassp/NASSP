@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/05/01 08:52:50  dseagrav
+  *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
+  *	
   *	Revision 1.47  2006/04/17 18:20:11  movieman523
   *	Removed #if 0 code.
   *	
@@ -377,6 +380,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3);
 	bool CheckMouseClick(int event, int mx, int my);
 	void LoadState(char *line);
+	bool SwitchTo(int newState);
 
 protected:
 	virtual void UpdateSourceState();
@@ -870,8 +874,9 @@ class FDAI;
 
 class FDAIPowerRotationalSwitch: public RotationalSwitch {
 public:
-	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2);
+	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = NULL; ACSource1 = ACSource2 = DCSource1 = DCSource2 = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2, 
+		      e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2);
 
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newValue);
@@ -880,8 +885,8 @@ public:
 protected:
 	void CheckFDAIPowerState();
 
-	FDAI *FDAI1;
-	FDAI *FDAI2;
+	FDAI *FDAI1, *FDAI2;
+	e_object *DCSource1, *DCSource2, *ACSource1, *ACSource2;
 };
 
 class PowerStateRotationalSwitch: public RotationalSwitch {

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.177  2006/05/06 06:00:35  jasonims
+  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
+  *	
   *	Revision 1.176  2006/05/01 03:33:22  jasonims
   *	New CM and all the fixin's....
   *	
@@ -831,12 +834,12 @@ protected:
 	ToggleSwitch FCReacsValvesSwitch;
 	ToggleSwitch H2PurgeLineSwitch;
 
-	ThreePosSwitch FuelCellPumps1Switch;
-	ThreePosSwitch FuelCellPumps2Switch;
-	ThreePosSwitch FuelCellPumps3Switch;
+	ThreeSourceSwitch FuelCellPumps1Switch;
+	ThreeSourceSwitch FuelCellPumps2Switch;
+	ThreeSourceSwitch FuelCellPumps3Switch;
 
-	ThreePosSwitch SuitCompressor1Switch;
-	ThreePosSwitch SuitCompressor2Switch;
+	SaturnSuitCompressorSwitch SuitCompressor1Switch;
+	SaturnSuitCompressorSwitch SuitCompressor2Switch;
 
 	TimerControlSwitch MissionTimerSwitch;
 	CWSModeSwitch CautionWarningModeSwitch;
@@ -1280,7 +1283,7 @@ protected:
 	ThreePosSwitch SuitCircuitH2oAccumOnSwitch;
 	ThreePosSwitch SuitCircuitHeatExchSwitch;
 	ThreePosSwitch SecCoolantLoopEvapSwitch;
-	ThreePosSwitch SecCoolantLoopPumpSwitch;
+	ThreeSourceSwitch SecCoolantLoopPumpSwitch;
 	ToggleSwitch H2oQtyIndSwitch;
 	ToggleSwitch GlycolEvapTempInSwitch;
 	ToggleSwitch GlycolEvapSteamPressAutoManSwitch;
@@ -1292,7 +1295,7 @@ protected:
 	ThumbwheelSwitch CabinTempAutoControlSwitch;
 
 	SwitchRow EcsGlycolPumpsSwitchRow;
-	RotationalSwitch EcsGlycolPumpsSwitch;
+	SaturnEcsGlycolPumpsSwitch EcsGlycolPumpsSwitch;
 
 	//
 	// High gain antenna
@@ -1848,8 +1851,8 @@ protected:
 	ToggleSwitch LogicPowerSwitch;
 
 	SwitchRow SIGCondDriverBiasPowerSwitchesRow;
-	ThreePosSwitch SIGCondDriverBiasPower1Switch;
-	ThreePosSwitch SIGCondDriverBiasPower2Switch;
+	ThreeSourceSwitch SIGCondDriverBiasPower1Switch;
+	ThreeSourceSwitch SIGCondDriverBiasPower2Switch;
 
 	//////////////////////
 	// Panel 7 rotaries //
@@ -1873,7 +1876,7 @@ protected:
 	BMAGPowerRotationalSwitch BMAGPowerRotary2Switch;
 
 	SwitchRow DirectO2RotaryRow;
-	RotationalSwitch DirectO2RotarySwitch;
+	DirectO2RotationalSwitch DirectO2RotarySwitch;
 
 	//////////////////////
 	// Panel 325/326    //
@@ -1918,9 +1921,10 @@ protected:
 	#define SATSYSTEMS_CREWINGRESS_1	200
 	#define SATSYSTEMS_CREWINGRESS_2	210
 	#define SATSYSTEMS_CABINCLOSEOUT	300
-	#define SATSYSTEMS_READYTOLAUNCH    400
-	#define SATSYSTEMS_CABINVENTING		500
-	#define SATSYSTEMS_FLIGHT			600
+	#define SATSYSTEMS_GSECONNECTED		400
+	#define SATSYSTEMS_READYTOLAUNCH    500
+	#define SATSYSTEMS_CABINVENTING		600
+	#define SATSYSTEMS_FLIGHT			700
 
 	int systemsState;
 	bool firstSystemsTimeStepDone;
@@ -2119,10 +2123,11 @@ protected:
 
 	h_HeatExchanger *PrimCabinHeatExchanger;
 	h_HeatExchanger *SecCabinHeatExchanger;
-	Boiler *CabinHeater;
-
 	h_HeatExchanger *PrimEcsRadiatorExchanger1;
 	h_HeatExchanger *PrimEcsRadiatorExchanger2;
+	Boiler *CabinHeater;
+	AtmRegen *SuitCompressor1;
+	AtmRegen *SuitCompressor2;
 
 	double LastACVoltDisplay;
 	double LastDCVoltDisplay;
@@ -2354,7 +2359,6 @@ protected:
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start);
-	void FuelCellPumpsSwitchToggled(ToggleSwitch *s, int *pump);
 	void CabinTempAutoSwitchToggled();
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	double SetPitchApo();
@@ -2364,7 +2368,7 @@ protected:
 	void ProbeSound();
 	void CabinFanSound();
 	void StopCabinFanSound();
-	void CheckCabinFans();
+	void CabinFansSystemTimestep();
 	void ButtonClick();
 	void GuardClick();
 	void FuelCell();
@@ -2377,6 +2381,8 @@ protected:
 	void GenericTimestep(double simt, double simdt);
 	void SystemsInit();
 	void SystemsTimestep(double simt, double simdt);
+	void SystemsInternalTimestep(double simdt);
+	void JoystickTimestep();
 	void SetSIVBThrusters(bool active);
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);
 	void AttitudeLaunchSIVB();

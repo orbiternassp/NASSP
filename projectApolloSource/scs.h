@@ -21,6 +21,8 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
+ **************************** Revision History ****************************
+  *	$Log$
   **************************************************************************/
 
 // DS20060304 SCS objects
@@ -30,12 +32,14 @@ class BMAG {
 	// Body-Mounted Attitude Gyro
 public: // We use these inside a timestep, so everything is public to make data access as fast as possible.
 	BMAG();                                                                  // Cons
-	void Init(Saturn *vessel, e_object *dcbus, ThreeWayPowerMerge *acbus);   // Initialization
+	void Init(Saturn *vessel, e_object *dcbus, e_object *acbus, Boiler *h);	 // Initialization
 	void TimeStep();                                                         // Update function
+	void SystemTimestep(double simdt);
 	e_object *dc_source;                                                     // DC source for gyro heater
-	ThreeWayPowerMerge *ac_source;                                           // 3-Phase AC source for gyro
+	e_object *ac_source;													 // 3-Phase AC source for gyro
 	e_object *dc_bus;					  	          					     // DC source to use when powered
-	ThreeWayPowerMerge *ac_bus;                                              // 3-Phase AC source to use when powered
+	e_object *ac_bus;														 // 3-Phase AC source to use when powered
+	Boiler *heater;															 // Heat coldplates when powered
 	int temperature;                                                         // Temperature
 	VECTOR3 rates;                                                           // Detected rotation acceleration
 	Saturn *sat;                                                             // Pointer to ship we're attached to
@@ -57,6 +61,7 @@ public: // We use these inside a timestep, so everything is public to make data 
 	GDC();                          //  Cons
 	void Init(Saturn *vessel);	    // Initialization
 	void TimeStep(double simt);     // TimeStep
+	void SystemTimestep(double simdt);
 	bool AlignGDC();                // Alignment Switch Pressed
 	void SaveState(FILEHANDLE scn); // SaveState callback
 	void LoadState(FILEHANDLE scn); // LoadState callback
@@ -150,6 +155,7 @@ public: // Same stuff about speed and I'm lazy too.
 	void Init(Saturn *vessel);										// Initialization
 	void SetThruster(int thruster,bool Active);                     // Set Thruster Level for CMC
 	void TimeStep();                                                // Timestep
+	void SystemTimestep(double simdt);
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
 	bool SPSActive;                                                 // SPS Active notification
 	bool DirectPitchActive,DirectYawActive,DirectRollActive;        // Direct axis fire notification
@@ -162,6 +168,8 @@ public:
 	ECA();
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep();                                                // Timestep
+	void SystemTimestep(double simdt);
+
 	long rhc_x,rhc_y,rhc_z;											// RHC position
 	long thc_x,thc_y,thc_z;											// THC position
 	int accel_roll_trigger;                                         // Joystick triggered roll thrust in ACCEL CMD mode
