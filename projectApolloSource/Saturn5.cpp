@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2006/05/17 02:11:51  movieman523
+  *	Removed BODGE_FACTOR.
+  *	
   *	Revision 1.77  2006/04/25 13:48:02  tschachim
   *	New first stage exhaust.
   *	
@@ -277,6 +280,7 @@
 
 #include "saturn.h"
 #include "saturnv.h"
+#include "s1c.h"
 #include "tracer.h"
 
 #include "CollisionSDK/CollisionSDK.h"
@@ -779,6 +783,21 @@ void SaturnV::StageOne(double simt, double simdt)
 		//
 
 		if ((actualFUEL <= 5) || (MissionTime >= (FirstStageShutdownTime - 10.0))) {
+
+			// Create hidden SIC vessel
+			char VName[256];
+			VESSELSTATUS vs;
+
+			GetStatus(vs);
+			GetApolloName(VName);
+			strcat (VName, "-STG1");
+			hstg1 = oapiCreateVessel(VName,"ProjectApollo/sat5stg1", vs);
+
+			// Load only the necessary meshes
+			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
+			stage1->LoadMeshes(LowRes);
+
+			// Play countdown
 			Sctdw.play(NOLOOP, 245);
 			StageState++;
 		}
