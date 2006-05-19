@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2006/02/28 20:40:32  quetalsi
+  *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
+  *	
   *	Revision 1.22  2006/02/23 22:46:41  quetalsi
   *	Added AC ovevoltage control and Bugfix
   *	
@@ -551,7 +554,6 @@ void CSMCautionWarningSystem::RenderLightPanel(SURFHANDLE surf, SURFHANDLE light
 			if (LightTest || (LightState[i] && (Mode != CWS_MODE_ACK || MasterAlarmPressed))) {
 				if (!IsFailed(i + base) && LightPowered(i + base)) {
 					oapiBlt(surf, lightsurf, column * 53, row * 18, column * 53 + sdx, row * 18 + sdy, 50, 16);
-					DCPower.DrawPower(1.0);
 				}
 			}
 			i++;
