@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.1  2006/04/25 14:00:22  tschachim
   *	New KSC.
   *	
@@ -358,6 +362,7 @@ void ML::clbkPostStep (double simt, double simdt, double mjd) {
 		VESSELSTATUS vs;
 		GetStatus(vs);
 
+		vs.status = 1;
 		vs.vdata[0].x = PAD_LON * RAD;
 		vs.vdata[0].y = PAD_LAT * RAD;
 		vs.vdata[0].z = 0.75 * RAD; 
@@ -370,6 +375,7 @@ void ML::clbkPostStep (double simt, double simdt, double mjd) {
 		VESSELSTATUS vs;
 		GetStatus(vs);
 
+		vs.status = 1;
 		vs.vdata[0].x = VAB_LON * RAD;
 		vs.vdata[0].y = VAB_LAT * RAD;
 		vs.vdata[0].z = 75.04 * RAD; 
@@ -384,6 +390,7 @@ void ML::clbkPostStep (double simt, double simdt, double mjd) {
 			Saturn *sat = (Saturn *) oapiGetVesselInterface(hLV);
 			sat->GetStatus(vs);
 
+			vs.status = 1;
 			vs.vdata[0].x = PAD_LV_LON * RAD;
 			vs.vdata[0].y = PAD_LV_LAT * RAD;
 			vs.vdata[0].z = 270.0 * RAD; 
