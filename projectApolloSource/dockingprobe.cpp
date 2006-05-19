@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/05/06 06:00:35  jasonims
+  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
+  *	
   *	Revision 1.4  2006/02/01 18:26:04  tschachim
   *	Pyros and secs logic necessary for retraction.
   *	Automatic retraction if REALISM 0.
@@ -174,8 +177,6 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		} else {
 			Status += 0.33 * simdt;
 		}
-		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet
-
 	} else if (ExtendingRetracting < 0) {
 		if (Status <= DOCKINGPROBE_STATUS_RETRACTED) {
 			Status = DOCKINGPROBE_STATUS_RETRACTED;
@@ -184,6 +185,13 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		} else {
 			Status -= 0.33 * simdt;
 		}	
+	}
+}
+
+void DockingProbe::SystemTimestep(double simdt) 
+
+{
+	if (ExtendingRetracting) {
 		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet
 	}
 }

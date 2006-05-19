@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.14  2006/04/05 16:50:30  tschachim
   *	Bugfix OFF flag.
   *	
@@ -84,7 +87,13 @@ FDAI::FDAI() {
 	ScrX = 0;
 	ScrY = 0;
 	now = _V(0, 0, 0);
+	lastRates = _V(0, 0, 0);
+	lastErrors = _V(0, 0, 0);
 	lastPaintTime = -1;
+
+	DCSource = NULL;
+	ACSource = NULL;
+	noAC = false;
 }
 
 void FDAI::InitGL() {
@@ -231,6 +240,7 @@ void FDAI::MoveBall() {
 
 void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
 				   SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth) {
+
 	if (!init) InitGL();
 
 	SetAttitude(attitude);
@@ -289,6 +299,11 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	// 10 is 0.17453 radians and conversion factor 360.969460
 	// Conversion rates are 3609.694608, 721.938921, and 72.193892
 	// Offset = Conversion * Rate
+
+	if (IsPowered())
+		lastRates = rates;
+	else
+		rates = lastRates;
 	
 	switch(ratescale){
 		case 2: // THREEPOSSWITCH_UP:
@@ -323,6 +338,12 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	// Draw Roll-Error Needle
 	// 122,42 is the center, 41 px left-right variance, 11 px up-down variance.
 	// 0.268292 px down per pixel left.
+
+	if (IsPowered())
+		lastErrors = errors;
+	else
+		errors = lastErrors;
+
 	targetY = (int)(fabs(errors.x) * 0.268292);
 	oapiBlt (surf, hFDAINeedles, 122+(int)errors.x, 42+targetY, 0, 0, 2, 72-targetY, SURF_PREDEF_CK);
 	// Draw Pitch-Error Needle
@@ -341,11 +362,18 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 void FDAI::Timestep(double simt, double simdt) {
 
 	//
-	// Dummy value for power usage for now.
+	// Nothing for now.
 	//
+}
 
-	if (IsPowered())
-		DrawPower(100);
+void FDAI::SystemTimestep(double simdt) {
+
+	if (IsPowered()) {
+		if (DCSource) 
+			DCSource->DrawPower(252.3);
+		if (ACSource)
+			ACSource->DrawPower(3.3);
+	}
 }
 
 int FDAI::LoadOGLBitmap(char *filename) {
@@ -700,14 +728,16 @@ HBITMAP RotateMemoryDC(HBITMAP hBmpSrc, HDC hdcSrc, int SrcX, int SrcY, float an
 bool FDAI::IsPowered()
 
 {
-	//
-	// I suspect the FDAI really runs off AC, not DC, but for now we'll just use the main DC
-	// bus to power it.
-	//
+	if (ACSource && DCSource) {
+		if (ACSource->Voltage() > SP_MIN_ACVOLTAGE && DCSource->Voltage() > SP_MIN_DCVOLTAGE)
+			return true;
+	}
 
-	if (SRC && SRC->Voltage() > 25.0)
-		return true;
-
+	// TODO: temporary hack for the LM
+	if (noAC && DCSource) {
+		if (DCSource->Voltage() > SP_MIN_DCVOLTAGE)
+			return true;
+	}
 	return false;
 }
 
@@ -727,6 +757,12 @@ void FDAI::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	oapiWriteScenario_float(scn, "NWX", now.x);
 	oapiWriteScenario_float(scn, "NWY", now.y);
 	oapiWriteScenario_float(scn, "NWZ", now.z);
+	oapiWriteScenario_float(scn, "RATESX", lastRates.x);
+	oapiWriteScenario_float(scn, "RATESY", lastRates.y);
+	oapiWriteScenario_float(scn, "RATESZ", lastRates.z);
+	oapiWriteScenario_float(scn, "ERRORSX", lastErrors.x);
+	oapiWriteScenario_float(scn, "ERRORSY", lastErrors.y);
+	oapiWriteScenario_float(scn, "ERRORSZ", lastErrors.z);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -764,6 +800,30 @@ void FDAI::LoadState(FILEHANDLE scn, char *end_str)
 		else if (!strnicmp (line, "NWZ", 3)) {
 			sscanf(line + 3, "%f", &flt);
 			now.z = flt;
+		}
+		else if (!strnicmp (line, "RATESX", 6)) {
+			sscanf(line + 6, "%f", &flt);
+			lastRates.x = flt;
+		}
+		else if (!strnicmp (line, "RATESY", 6)) {
+			sscanf(line + 6, "%f", &flt);
+			lastRates.y = flt;
+		}
+		else if (!strnicmp (line, "RATESZ", 6)) {
+			sscanf(line + 6, "%f", &flt);
+			lastRates.z = flt;
+		}
+		else if (!strnicmp (line, "ERRORSX", 7)) {
+			sscanf(line + 7, "%f", &flt);
+			lastErrors.x = flt;
+		}
+		else if (!strnicmp (line, "ERRORSY", 7)) {
+			sscanf(line + 7, "%f", &flt);
+			lastErrors.y = flt;
+		}
+		else if (!strnicmp (line, "ERRORSZ", 7)) {
+			sscanf(line + 7, "%f", &flt);
+			lastErrors.z = flt;
 		}
 	}
 }

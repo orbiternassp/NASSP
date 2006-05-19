@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/04/25 14:00:22  tschachim
+  *	New KSC.
+  *	
   **************************************************************************/
 
 class ML: public VESSEL2 {
@@ -66,6 +69,9 @@ protected:
 	double s1cforwardarmProc;
 	double swingarmProc;
 	double mastProc;
+
+	PSTREAM_HANDLE liftoffStream[2];
+	double liftoffStreamLevel;
 
 	void DoFirstTimestep();
 	double GetDistanceTo(double lon, double lat);

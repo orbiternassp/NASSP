@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.6  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -70,6 +73,7 @@ public:
 	void Init();
 	void ChannelOutput(int address, int value);
 	void Timestep(double simt);
+	void SystemTimestep(double simdt); 
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
@@ -77,6 +81,7 @@ public:
 	VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
+	void WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b);
 
 	bool IsCaged();
 	bool IsPowered();
@@ -175,6 +180,8 @@ protected:
 	VECTOR3 Velocity;
 
 	PowerMerge DCPower;
+	PowerMerge DCHeaterPower;
+	Boiler *IMUHeater;
 
 	double LastTime;	// in seconds
 };

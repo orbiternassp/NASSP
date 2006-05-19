@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   **************************** Revision History ****************************/
 
 #include <stdio.h>
@@ -53,5 +56,5 @@ void SECS::Timestep(double simt, double simdt)
 bool SECS::IsPowered()
 
 {
-	return Voltage() > 20.0;
+	return Voltage() > SP_MIN_DCVOLTAGE;
 }

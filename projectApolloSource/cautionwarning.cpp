@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/01/14 20:58:15  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.14  2006/01/05 11:24:10  tschachim
   *	Introduced InhibitNextMasterAlarm.
   *	
@@ -152,7 +155,7 @@ bool CautionWarningSystem::IsPowered()
 
 	case CWS_POWER_SUPPLY_1:
 	case CWS_POWER_SUPPLY_2:
-		if (DCPower.Voltage() > 25.0)
+		if (DCPower.Voltage() > SP_MIN_DCVOLTAGE)
 			return true;
 		return false;
 
@@ -168,7 +171,7 @@ bool CautionWarningSystem::IsPowered()
 bool CautionWarningSystem::LightsPowered()
 
 {
-	if (DCPower.Voltage() > 25.0)
+	if (DCPower.Voltage() > SP_MIN_DCVOLTAGE)
 		return true;
 
 	return false;
@@ -188,7 +191,7 @@ void CautionWarningSystem::SetPowerBus(int bus)
 
 
 //
-// The timestep code will validate all the spacecraft systems and ligt the lights as required. Obviously
+// The timestep code will validate all the spacecraft systems and light the lights as required. Obviously
 // much of this code will be CSM-specific or LEM-specific, so we'll probably want to derive CSM and LEM
 // caution and warning systems which do their processing and then call this code for generic processing.
 //
@@ -207,20 +210,20 @@ void CautionWarningSystem::TimeStep(double simt)
 			MasterAlarmSound.play(NOLOOP,255);
 		}
 	}
+}
 
-	//
-	// These numbers are just made up for now.
-	//
+void CautionWarningSystem::SystemTimestep(double simdt) 
 
+{
 	double consumption = 0.0;
 
 	if (IsPowered()) {
-		consumption += 5.0;
+		consumption += 11.4;
 		if (MasterAlarmLit)
-			consumption += 2.0;
+			consumption += 2.0;			// This number is just made up for now.
 	}
 	if (MasterAlarmLit && LightsPowered())
-		consumption += 1.0;
+		consumption += 1.0;				// This number is just made up for now.
 
 	DCPower.DrawPower(consumption);
 }

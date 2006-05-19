@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/04/25 13:33:43  tschachim
+  *	Comment removed.
+  *	
   *	Revision 1.18  2006/04/25 08:11:27  dseagrav
   *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
   *	
@@ -112,7 +115,7 @@
 
 
 
-IMU::IMU(ApolloGuidance & comp, PanelSDK &p) : agc(comp), DCPower(0, p)
+IMU::IMU(ApolloGuidance & comp, PanelSDK &p) : agc(comp), DCPower(0, p), DCHeaterPower(0, p)
 
 {
 	Init();
@@ -399,7 +402,15 @@ VECTOR3 IMU::CalculateAccelerations(double deltaT)
 bool IMU::IsPowered()
 
 {
-	return DCPower.Voltage() > 20.0;
+	return DCPower.Voltage() > SP_MIN_DCVOLTAGE && IMUHeater->pumping;
+}
+
+void IMU::WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b)
+
+{ 
+	IMUHeater = heater;
+	DCHeaterPower.WireToBuses(a, b);
+	IMUHeater->WireTo(&DCHeaterPower);
 }
 
 void IMU::Timestep(double simt) 
@@ -426,11 +437,6 @@ void IMU::Timestep(double simt)
 	//
 	// If we get here, we're powered up.
 	//
-
-	if (Caged)
-		DCPower.DrawPower(61.7);
-	else
-		DCPower.DrawPower(325.0);
 
 	if (!TurnedOn) {
 		return;
@@ -538,6 +544,18 @@ void IMU::Timestep(double simt)
 		LastTime = simt;
 	}	
 }
+
+void IMU::SystemTimestep(double simdt) 
+
+{
+	if (Operate) {
+		if (Caged)
+			DCPower.DrawPower(61.7);
+		else
+			DCPower.DrawPower(325.0);
+	}
+}
+
 
 void IMU::PulsePIPA(int RegPIPA, int pulses) 
 

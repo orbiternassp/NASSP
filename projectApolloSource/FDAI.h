@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.8  2006/03/12 01:13:28  dseagrav
   *	Added lots of SCS items and FDAI stuff.
   *	
@@ -54,13 +57,14 @@
 #include < GL\gl.h >                                
 #include < GL\glu.h >
 
-class FDAI : public e_object {
+class FDAI {
 
 public:
 	FDAI();
 	virtual ~FDAI();
 	void RegisterMe(int index, int x, int y);
 	void Timestep(double simt, double simdt);
+	void SystemTimestep(double simdt);
 	void PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI, 
 		         SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth);
 
@@ -68,6 +72,9 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	bool IsPowered();
+	void WireTo(e_object *dc, e_object *ac) { DCSource = dc; ACSource = ac; };
+	// TODO: temporary hack for the LM
+	void WireTo(e_object *dc) { DCSource = dc; noAC = true; };
 
 protected:
 	int ScrX;
@@ -75,7 +82,7 @@ protected:
 	int idx;			//index on the panel list 
 	int init;
 	int list_name; //we store the rendering into a display list
-	VECTOR3 now, target;
+	VECTOR3 now, target, lastRates, lastErrors;
 	double lastPaintTime, over_rate;
 
 	//some stuff for OpenGL
@@ -84,6 +91,9 @@ protected:
 	HBITMAP hBMP;
 	HBITMAP hBMP_old;
 	GLUquadricObj *quadObj;
+
+	e_object *DCSource, *ACSource;
+	bool noAC;
 
 	void InitGL();
 	void MoveBall();
