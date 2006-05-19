@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/04/25 13:35:31  tschachim
+  *	Improved retro-exhaust.
+  *	
   *	Revision 1.7  2006/01/26 03:07:49  movieman523
   *	Quick hack to support low-res mesh.
   *	
@@ -58,22 +61,6 @@
 #include <stdio.h>
 #include <string.h>
 
-//
-// Meshes are globally loaded.
-//
-
-static MESHHANDLE hsat5stg1, hsat5stg1low;
-
-void S1cLoadMeshes()
-
-{
-	//
-	// Saturn V
-	//
-
-	hsat5stg1 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg1");
-	hsat5stg1low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg1");
-}
 
 S1C::S1C (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
@@ -84,12 +71,17 @@ S1C::S1C (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 	// We need to turn off most of the Orbitersound options.
 	//
 
+/*	TODO: The sound initialization seems to take a lot of time (up to 5s on my system) 
+    causing problems during creation of the S1C. Since the sound inside the S1C isn't very important
+	it's disabled for the moment. 
+	
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
 	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
 	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
 	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
+*/
 }
 
 S1C::~S1C()
@@ -103,7 +95,7 @@ void S1C::InitS1c()
 {
 	int i;
 
-	State = S1C_STATE_SHUTTING_DOWN;
+	State = SIC_STATE_HIDDEN;
 
 	ph_retro = 0;
 	ph_main = 0;
@@ -128,6 +120,9 @@ void S1C::InitS1c()
 
 	CurrentThrust = 0.0;
 
+	hsat5stg1 = 0;
+	hsat5stg1low = 0;
+
 	for (i = 0; i < 4; i++)
 		th_retro[i] = 0;
 
@@ -138,9 +133,6 @@ void S1C::SetS1c()
 
 {
 	ClearMeshes();
-	VECTOR3 mesh_dir=_V(0,0,0);
-
-	double mass = EmptyMass;
 
 	ClearThrusterDefinitions();
 	
@@ -157,18 +149,7 @@ void S1C::SetS1c()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	UINT meshidx;
-
-	if (LowRes) {
-		meshidx = AddMesh (hsat5stg1low, &mesh_dir);
-	}
-	else {
-		meshidx = AddMesh (hsat5stg1, &mesh_dir);
-	}
-
-	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
-
-	SetEmptyMass (mass);
+	SetEmptyMass (EmptyMass);
 
 	VECTOR3 v = {4.0, 0, 15.0};
 	VECTOR3 v2 = {-0.15, 0, 1.0};
@@ -176,13 +157,14 @@ void S1C::SetS1c()
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(v2);
 	SetCameraOffset(v);
-
-	AddEngines ();
 }
 
 void S1C::clbkPreStep(double simt, double simdt, double mjd)
 
-{
+{	
+	if (State == SIC_STATE_HIDDEN) {
+		return;
+	}
 
 	MissionTime += simdt;
 
@@ -278,14 +260,15 @@ void S1C::AddEngines()
 	VECTOR3 m_exhaust_pos4= { 4,-4, -14};
 	VECTOR3 m_exhaust_pos5= { 4, 4, -14};
 
-	// Double propellant, half thrust just because of "eye-candy"
-	if (!ph_retro)
-		ph_retro = CreatePropellantResource(51.6 * 2. * RetroNum);
+	// 10 times propellant, 1/10th thrust, otherwise the retros aren't visible
+	if (!ph_retro) {
+		ph_retro = CreatePropellantResource(51.6 * 10. * RetroNum);
+	}
 
 	if (!ph_main && MainFuel > 0.0)
 		ph_main = CreatePropellantResource(MainFuel);
 
-	double thrust = 382000. / 2.;
+	double thrust = 382000. / 10.;
 
 	if (!th_retro[0]) {
 		th_retro[0] = CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro, 4000);
@@ -395,14 +378,29 @@ void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
         }
 	}
 
-	SetS1c();
+	LoadMeshes(LowRes); 
+	if (State > SIC_STATE_HIDDEN)
+		ShowS1c();
+		
 }
 
 void S1C::clbkSetClassCaps (FILEHANDLE cfg)
 
 {
 	VESSEL2::clbkSetClassCaps (cfg);
-	InitS1c();
+	SetS1c();
+}
+
+void S1C::LoadMeshes(bool lowres)
+
+{
+	LowRes = lowres;
+	if (LowRes) {
+		hsat5stg1low = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5stg1");
+	}
+	else {
+		hsat5stg1 = oapiLoadMeshGlobal("ProjectApollo/sat5stg1");
+	}
 }
 
 void S1C::clbkDockEvent(int dock, OBJHANDLE connected)
@@ -451,38 +449,42 @@ void S1C::SetState(S1CSettings &state)
 		CurrentThrust = state.CurrentThrust;
 	}
 
-	SetS1c();
+	ShowS1c();
+	State = S1C_STATE_SHUTTING_DOWN;
 }
 
-static int refcount = 0;
+void S1C::ShowS1c()
+
+{
+	SetEmptyMass(EmptyMass);
+
+	UINT meshidx;
+	VECTOR3 mesh_dir = _V(0,0,0);
+	if (LowRes) {
+		if (hsat5stg1low) {
+			meshidx = AddMesh(hsat5stg1low, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+		}
+	}
+	else {
+		if (hsat5stg1) {
+			meshidx = AddMesh(hsat5stg1, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+		}
+	}
+	AddEngines();
+}
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 
 {
-	VESSEL *v;
-
-	if (!refcount++) {
-		S1cLoadMeshes();
-	}
-
-	v = new S1C (hvessel, flightmodel);
-	return v;
+	return new S1C(hvessel, flightmodel);
 }
 
 
 DLLCLBK void ovcExit (VESSEL *vessel)
 
 {
-	--refcount;
-
-	if (!refcount) {
-
-		//
-		// This code could tidy up allocations when refcount == 0
-		//
-
-	}
-
 	if (vessel) 
 		delete (S1C *)vessel;
 }

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2006/05/06 06:00:35  jasonims
+  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
+  *	
   *	Revision 1.54  2006/05/01 03:33:22  jasonims
   *	New CM and all the fixin's....
   *	
@@ -217,7 +220,15 @@
 #include "sm.h"
 
 PARTICLESTREAMSPEC srb_contrail = {
-	0, 12.0, 20, 150.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
+	0, 
+	12.0,	// size
+	20,		// rate
+	150.0,	// velocity
+	0.3,	// velocity distribution
+	3.0,	// lifetime
+	4,		// growthrate
+	3.5,	// atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_PLIN, 0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.8, 0.8
 };
@@ -242,8 +253,8 @@ PARTICLESTREAMSPEC srb_exhaust = {
 	2.85,	// size
 	1500,	// rate
 	60.0,	// velocity
-	0.0,	// velocity distribution
-	1.0,	// lifetime
+	0.1,	// velocity distribution
+	1.5,	// lifetime
 	2.0,	// growthrate
 	0.0,	// atmslowdown 
 	PARTICLESTREAMSPEC::EMISSIVE,
@@ -280,7 +291,7 @@ PARTICLESTREAMSPEC prelaunchvent1_spec = {
 	2,		// lifetime
 	0.2,	// growthrate
 	0.5,    // atmslowdown 
-	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.25, 0.25,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.25, 0.25
 };
@@ -294,7 +305,7 @@ PARTICLESTREAMSPEC prelaunchvent2_spec = {
 	1,		// lifetime
 	0.1,	// growthrate
 	0.7,    // atmslowdown
-	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.2, 0.2,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.2, 0.2
 };
@@ -308,7 +319,7 @@ PARTICLESTREAMSPEC prelaunchvent3_spec = {
 	1,		// lifetime
 	0.2,	// growthrate
 	0.9,    // atmslowdown
-	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 0.1, 0.1,
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
 };
@@ -1377,33 +1388,30 @@ void SaturnV::SeparateStage (int stage)
 		StageS.play(NOLOOP, 255);
 
 		//
-		// Seperate off the S1C stage and initialise it.
+		// Seperate off the S1C stage and show it.
 		//
 
-		char VName[256];
+		if (hstg1) {
+			S1CSettings S1Config;
 
-		GetApolloName(VName);
-		strcat (VName, "-STG1");
-		hstg1 = oapiCreateVessel(VName,"ProjectApollo/sat5stg1",vs1);
+			S1Config.SettingsType = (S1C_SETTINGS_MASS|S1C_SETTINGS_FUEL|S1C_SETTINGS_GENERAL|S1C_SETTINGS_ENGINES);
 
-		S1CSettings S1Config;
+			S1Config.RetroNum = SI_RetroNum;
+			S1Config.EmptyMass = SI_EmptyMass;
+			S1Config.MainFuelKg = GetPropellantMass(ph_1st);
+			S1Config.MissionTime = MissionTime;
+			S1Config.Realism = Realism;
+			S1Config.VehicleNo = VehicleNo;
+			S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
+			S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
+			S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
+			S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
+			S1Config.LowRes = LowRes;
 
-		S1Config.SettingsType = (S1C_SETTINGS_MASS|S1C_SETTINGS_FUEL|S1C_SETTINGS_GENERAL|S1C_SETTINGS_ENGINES);
-
-		S1Config.RetroNum = SI_RetroNum;
-		S1Config.EmptyMass = SI_EmptyMass;
-		S1Config.MainFuelKg = GetPropellantMass(ph_1st);
-		S1Config.MissionTime = MissionTime;
-		S1Config.Realism = Realism;
-		S1Config.VehicleNo = VehicleNo;
-		S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
-		S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
-		S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
-		S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
-		S1Config.LowRes = LowRes;
-
-		S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
-		stage1->SetState(S1Config);
+			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
+			stage1->SetState(S1Config);
+			stage1->DefSetState(&vs1);
+		}
 
 		SetSecondStage ();
 

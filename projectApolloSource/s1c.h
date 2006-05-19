@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/01/26 03:07:49  movieman523
+  *	Quick hack to support low-res mesh.
+  *	
   *	Revision 1.2  2006/01/08 04:00:24  movieman523
   *	Added first two engineering cameras.
   *	
@@ -67,6 +70,7 @@ typedef struct {
 // Stage states.
 //
 
+#define SIC_STATE_HIDDEN           -1
 #define S1C_STATE_SHUTTING_DOWN		0
 #define S1C_STATE_WAITING			1
 
@@ -92,6 +96,7 @@ public:
 	// Must be virtual so it can be called from other DLLs.
 	//
 	virtual void SetState(S1CSettings &state);
+	virtual void LoadMeshes(bool lowres);
 
 protected:
 
@@ -100,6 +105,7 @@ protected:
 	void SetS1c();
 	void InitS1c();
 	void AddEngines();
+	void ShowS1c();
 
 	int GetMainState();
 	void SetMainState(int s);
@@ -126,6 +132,7 @@ protected:
 	double ISP_FIRST_SL;
 	double CurrentThrust;
 
+	MESHHANDLE hsat5stg1, hsat5stg1low;
 	THRUSTER_HANDLE th_retro[4], th_main[5];
 	THGROUP_HANDLE thg_retro, thg_main;
 	PROPELLANT_HANDLE ph_retro, ph_main;
