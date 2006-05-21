@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/05/19 13:46:56  tschachim
+  *	Smoother S-IC staging.
+  *	
   *	Revision 1.55  2006/05/06 06:00:35  jasonims
   *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
   *	
@@ -1392,10 +1395,11 @@ void SaturnV::SeparateStage (int stage)
 		//
 
 		if (hstg1) {
+			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
+			stage1->DefSetState(&vs1);
+
 			S1CSettings S1Config;
-
 			S1Config.SettingsType = (S1C_SETTINGS_MASS|S1C_SETTINGS_FUEL|S1C_SETTINGS_GENERAL|S1C_SETTINGS_ENGINES);
-
 			S1Config.RetroNum = SI_RetroNum;
 			S1Config.EmptyMass = SI_EmptyMass;
 			S1Config.MainFuelKg = GetPropellantMass(ph_1st);
@@ -1407,10 +1411,7 @@ void SaturnV::SeparateStage (int stage)
 			S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
 			S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
 			S1Config.LowRes = LowRes;
-
-			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
 			stage1->SetState(S1Config);
-			stage1->DefSetState(&vs1);
 		}
 
 		SetSecondStage ();
