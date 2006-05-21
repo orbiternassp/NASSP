@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/05/19 13:46:56  tschachim
+  *	Smoother S-IC staging.
+  *	
   *	Revision 1.8  2006/04/25 13:35:31  tschachim
   *	Improved retro-exhaust.
   *	
@@ -260,16 +263,14 @@ void S1C::AddEngines()
 	VECTOR3 m_exhaust_pos4= { 4,-4, -14};
 	VECTOR3 m_exhaust_pos5= { 4, 4, -14};
 
-	// 10 times propellant, 1/10th thrust, otherwise the retros aren't visible
 	if (!ph_retro) {
-		ph_retro = CreatePropellantResource(51.6 * 10. * RetroNum);
+		ph_retro = CreatePropellantResource(51.6 * RetroNum);
 	}
 
 	if (!ph_main && MainFuel > 0.0)
 		ph_main = CreatePropellantResource(MainFuel);
 
-	double thrust = 382000. / 10.;
-
+	double thrust = 382000.;
 	if (!th_retro[0]) {
 		th_retro[0] = CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro, 4000);
 		th_retro[1] = CreateThruster (m_exhaust_pos3, _V(0.1, -0.1, -0.9), thrust, ph_retro, 4000);
@@ -284,7 +285,6 @@ void S1C::AddEngines()
 		AddExhaust (th_retro[i], 15.0, 0.6, tex);
 
 	double Offset1st = -23.1;
-
 	VECTOR3 m_exhaust_ref = {0,0,-1};
     VECTOR3 MAIN4a_Vector= {3,3,Offset1st+0.5};
 	VECTOR3 MAIN2a_Vector={-3,-3,Offset1st+0.5};
