@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.178  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.177  2006/05/06 06:00:35  jasonims
   *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
   *	
@@ -525,7 +529,11 @@ public:
 	int clbkConsumeDirectKey(char *keystate);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	bool clbkLoadVC (int id);
+	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
+	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	virtual void Timestep(double simt, double simdt) = 0;
+
+	void InitVC (int vc);
 
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
@@ -2277,6 +2285,7 @@ protected:
 	SURFHANDLE SMExhaustTex;
 	SURFHANDLE SMMETex;
 	SURFHANDLE CMTex;
+	//TODO SURFHANDLEs for VC
 
 	//
 	// Hardware support.
