@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/01/08 14:51:24  movieman523
+  *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
+  *	
   *	Revision 1.11  2006/01/08 04:37:50  movieman523
   *	Added camera 3.
   *	
@@ -82,9 +85,37 @@
 #include "tracer.h"
 
 
+
+void Saturn::InitVC (int vc)
+{
+	//int i;
+	TRACESETUP("Saturn::InitVC");
+
+	switch (vc) {
+	case 0:
+		sprintf(oapiDebugString(), "init-ing...");
+		//LOAD SURFACES
+		//srf[#] = oapiCreateSurface (LOADBMP (BMP_IDENITIFIER}};   oapiSetSurfaceColourKey (srf[#], 0);
+		
+		//reset state flags (see DeltaGlider for similar)
+		break;
+	}
+}
+
 bool Saturn::clbkLoadVC (int id)
 {
 	TRACESETUP("Saturn::clbkLoadVC");
+
+	//SURFHANDLE tex# = oapiGetTextureHandle (vcmeshidentifier, meshgroup#);
+	//int i;
+
+	ReleaseSurfaces();
+	InitVC (id);
+	
+	//SetCameraDefaultDirection (_V(0,0,1));
+	//default camera direction: forward
+	//SetCameraShiftRange (_V(#,#,#), _V(#,#,#), _V(#,#,#));
+	// leaning forward/left/right
 
 	switch (id) {
 	case 0:
@@ -92,12 +123,126 @@ bool Saturn::clbkLoadVC (int id)
 		InVC = true;
 		InPanel = false;
 		SetView();
+
+		//register areas and AreaClickmodes
+		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
+		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
+		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
+		oapiVCRegisterArea (AID_ABORT_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical (AID_ABORT_BUTTON, _V(0.55,0.6,0.44),0.02);
+		oapiVCRegisterArea (AID_MASTER_ALARM, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Spherical (AID_MASTER_ALARM, _V(0.804,0.653,0.463),0.015);
+		oapiVCRegisterArea (AID_DSKY_KEY, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Quadrilateral (AID_DSKY_KEY, _V(0.442,0.5,0.407), _V(0.258,0.5,0.407), _V(0.258,0.424,0.38), _V(0.442,0.424,0.38));
+        
+		//sprintf(oapiDebugString(), "VC areas loaded...");
 		return true;
+	default:
+		return false;
+	}
+}
+
+// --------------------------------------------------------------
+// Respond to virtual cockpit mouse event
+// --------------------------------------------------------------
+bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
+{
+	TRACESETUP("Saturn::clbkVCMouseEvent");
+	switch (id) {
+	//case areaidentifier:
+	    //event stuff here
+		//return true;
+	//case areaidentifier:
+		//blah blah blah
+		//return true;
+	//}
+	case AID_ABORT_BUTTON:
+		sprintf(oapiDebugString(), "Aborting...");
+		bAbort = true;
+		ButtonClick();
+		return true;
+
+	case AID_MASTER_ALARM:
+	//case AID_MASTER_ALARM2:
+	//case AID_MASTER_ALARM3:
+		sprintf(oapiDebugString(), "Alarming...");
+		return cws.CheckMasterAlarmMouseClick(event);
+
+	case AID_DSKY_KEY:
+		sprintf(oapiDebugString(), "DSKY-ing...");
+		int mx;
+		int my;
+
+		mx = int(p.x * 288);
+		my = int(p.y * 121);
+
+		if (event & PANEL_MOUSE_LBDOWN) {
+			dsky.ProcessKeyPress(mx, my);
+		} else if (event & PANEL_MOUSE_LBUP) {
+			dsky.ProcessKeyRelease(mx, my);
+		}
+		return true;
+
+	/*case AID_DSKY2_KEY:
+		if (event & PANEL_MOUSE_LBDOWN) {
+			dsky2.ProcessKeyPress(mx, my);
+		} else if (event & PANEL_MOUSE_LBUP) {
+			dsky2.ProcessKeyRelease(mx, my);
+		}
+		return true;*/
+	}
+	return false;
+}
+
+// --------------------------------------------------------------
+// Respond to virtual cockpit area redraw request
+// --------------------------------------------------------------
+bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
+{
+	TRACESETUP("Saturn::clbkVCRedrawEvent");
+	//int i;
+
+	switch (id) {
+	//case areaidentifier
+	//	Redraw Panel stuff
+	//	return true if dynamic texture modified, false if not
+
+	/*
+	
+	case AID_DSKY_KEY:
+		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
+		return true;
+
+	case AID_ABORT_BUTTON:
+		if (ABORT_IND) {
+			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
+		}
+		else {
+			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
+		}
+		return true;
+		
+	case AID_MASTER_ALARM:
+		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_LEFT);
+		return true;
+
+	case AID_MASTER_ALARM2:
+		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_RIGHT);
+		return true;
+
+	case AID_MASTER_ALARM3:
+		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_NONE);
+		return true;
+
+		*/
+	case AID_MASTER_ALARM:
+		return false;
 
 	default:
 		return false;
 	}
 }
+
 
 void Saturn::JostleViewpoint(double amount)
 
@@ -151,7 +296,7 @@ void Saturn::SetView(double offset, bool update_direction)
 
 {
 	VECTOR3 v;
-
+	TRACESETUP("Saturn::SetView");
 	CurrentViewOffset = offset;
 
 	if (viewpos >= SATVIEW_ENG1) {
@@ -267,6 +412,5 @@ void Saturn::SetView(double offset, bool update_direction)
 		v.y += ViewOffsety;
 		v.z += ViewOffsetz;
 	}
-
 	SetCameraOffset(v);
 }
