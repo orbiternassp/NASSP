@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/05/19 13:46:56  tschachim
+  *	Smoother S-IC staging.
+  *	
   *	Revision 1.3  2006/01/26 03:07:49  movieman523
   *	Quick hack to support low-res mesh.
   *	
@@ -44,6 +47,7 @@ typedef struct {
 	int VehicleNo;
 	int Realism;
 	int RetroNum;
+	int EngineNum;
 
 	double THRUST_FIRST_VAC;
 	double ISP_FIRST_VAC;
@@ -54,6 +58,8 @@ typedef struct {
 	double CurrentThrust;
 
 	bool LowRes;
+	bool S4Interstage;
+	bool Stretched;
 
 } S1CSettings;
 
@@ -115,9 +121,12 @@ protected:
 	int State;
 	int Realism;
 	int RetroNum;
+	int EngineNum;
 
 	bool RetrosFired;
 	bool LowRes;
+	bool S4Interstage;
+	bool Stretched;
 
 	double EmptyMass;
 	double PayloadMass;
@@ -132,7 +141,7 @@ protected:
 	double ISP_FIRST_SL;
 	double CurrentThrust;
 
-	MESHHANDLE hsat5stg1, hsat5stg1low;
+	MESHHANDLE hsat5stg1, hsat5stg1low, hS4Interstage;
 	THRUSTER_HANDLE th_retro[4], th_main[5];
 	THGROUP_HANDLE thg_retro, thg_main;
 	PROPELLANT_HANDLE ph_retro, ph_main;
