@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2006/05/19 13:46:56  tschachim
+  *	Smoother S-IC staging.
+  *	
   *	Revision 1.78  2006/05/17 02:11:51  movieman523
   *	Removed BODGE_FACTOR.
   *	
@@ -354,6 +357,8 @@ void SaturnV::initSaturnV()
 	//
 
 	initSaturn();
+
+	strcpy(StagesString, "S1C:SII:SIVB:CSM");
 
 	//
 	// Default ISP and thrust values.
@@ -1961,6 +1966,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		}
 		else{
 			SetFirstStage();
+			SetFirstStageEngines();
 			//ShiftCentreOfMass (_V(0,0,STG0O));	// Seems to be useless...
 		}
 
@@ -1971,19 +1977,15 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		break;
 
 	case LAUNCH_STAGE_TWO:
-		SetSecondStage();
-		break;
-
 	case LAUNCH_STAGE_TWO_ISTG_JET:
-		SetSecondStage1();
-		break;
-
 	case LAUNCH_STAGE_TWO_TWR_JET:
-		SetSecondStage2();
+		SetSecondStage();
+		SetSecondStageEngines();
 		break;
 
 	case LAUNCH_STAGE_SIVB:
 		SetThirdStage();
+		SetThirdStageEngines();
 		if (StageState >= 4) {
 			AddRCS_S4B();
 		}
@@ -1991,6 +1993,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	case STAGE_ORBIT_SIVB:
 		SetThirdStage();
+		SetThirdStageEngines();
 		AddRCS_S4B();
 		//
 		// Always enable SIVB RCS for now, once we hit orbit.
@@ -2233,6 +2236,8 @@ void SaturnV::LaunchVehicleRolloutEnd() {
 	// called by crawler after arrival on launch pad
 
 	SetFirstStage();
+	SetFirstStageEngines();
+
 	SetStage(ONPAD_STAGE);
 }
 

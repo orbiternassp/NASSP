@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.135  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.134  2006/04/29 23:16:56  movieman523
   *	Fixed LMPAD and added CHECKLISTS option to scenario file.
   *	
@@ -255,8 +259,13 @@ void Saturn::initSaturn()
 	ApolloNo = 0;
 	TCPO = 0.0;
 
+	StagesString[0] = 0;
+
 	FirstTimestep = true;
 	GenericFirstTimestep = true;
+
+	InterstageAttached = true;
+	LESAttached = true;
 
 	TLICapableBooster = false;
 
@@ -523,6 +532,7 @@ void Saturn::initSaturn()
 	ph_rcs_cm_2 = 0;
 	ph_sps = 0;
 	ph_sep = 0;
+	ph_sep2 = 0;
 	ph_o2_vent = 0;
 
 	//
@@ -599,6 +609,7 @@ void Saturn::initSaturn()
 	for (i = 0; i < 8; i++) {
 		th_ull[i] = 0;
 		th_sep[i] = 0;
+		th_sep2[i] = 0;
 		stagingvent[i] = NULL;
 	}
 
@@ -917,6 +928,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "THRUSTA", ThrustAdjust);
 	oapiWriteScenario_float (scn, "MR", MixtureRatio);
 
+//	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
+
 	oapiWriteScenario_int (scn, "DLS", DeleteLaunchSite ? 1 : 0);
 	oapiWriteScenario_int (scn, "LOWRES", LowRes ? 1 : 0);
 	oapiWriteScenario_int (scn, "CHECKLISTS", useChecklists ? 1 : 0);
@@ -936,6 +949,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	}
 
 	oapiWriteScenario_int (scn, "MAINSTATE",  GetMainState());
+	oapiWriteScenario_int (scn, "ATTACHSTATE",  GetAttachState());
 	oapiWriteScenario_int (scn, "LIGHTSTATE",  GetLightState());
 	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
 	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
@@ -1140,7 +1154,7 @@ typedef union {
 		unsigned LEMdatatransfer:1;
 		unsigned PostSplashdownPlayed:1;
 		unsigned IGMEnabled:1;
-		unsigned UNUSED:1;
+		unsigned unused_3:1;
 		unsigned MissionTimerEnabled:1;
 		unsigned EventTimerEnabled:1;
 		unsigned EventTimerRunning:1;
@@ -1209,6 +1223,37 @@ void Saturn::SetMainState(int s)
 	SkylabCM = (state.u.SkylabCM != 0);
 	S1bPanel = (state.u.S1bPanel != 0);
 	NoHGA = (state.u.NoHGA != 0);
+}
+
+typedef union {
+	struct {
+		unsigned InterstageAttached:1;
+		unsigned LESAttached:1;
+	} u;
+	unsigned long word;
+} AttachState;
+
+
+int Saturn::GetAttachState()
+
+{
+	AttachState state;
+
+	state.word = 0;
+	state.u.InterstageAttached = InterstageAttached;
+	state.u.LESAttached = LESAttached;
+
+	return state.word;
+}
+
+void Saturn::SetAttachState(int s)
+
+{
+	AttachState state;
+
+	state.word = s;
+	LESAttached = (state.u.LESAttached != 0);
+	InterstageAttached = (state.u.InterstageAttached != 0);
 }
 
 //
@@ -1405,8 +1450,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line+5, "%g", &ftcp);
 		DockAngle = ftcp;
 	}
-	else if (!strnicmp (line, "STAGE", 5)) {
-		sscanf (line+5, "%d", &stage);
+	else if (!strnicmp(line, "STAGECONFIG", 11)) {
+		strncpy (StagesString, line + 12, 256);
 	}
 	else if (!strnicmp (line, "TOHDG", 5)) {
 		sscanf (line+5, "%g", &ftcp);
@@ -1482,6 +1527,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
         SwitchState = 0;
 		sscanf (line+9, "%d", &SwitchState);
 		SetMainState(SwitchState);
+	}
+	else if (!strnicmp (line, "ATTACHSTATE", 11)) {
+        SwitchState = 0;
+		sscanf (line+11, "%d", &SwitchState);
+		SetAttachState(SwitchState);
 	}
 	else if (!strnicmp (line, "A13STATE", 8)) {
         SwitchState = 0;
@@ -1837,6 +1887,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line + 2, "%f", &ftcp);
 		MixtureRatio = ftcp;
 	}
+	else if (!strnicmp (line, "STAGE", 5)) {
+		sscanf (line+5, "%d", &stage);
+	}
 	else
 		return false;
 
@@ -1869,7 +1922,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// find.
 	//
 
-	srandom(VehicleNo + (int) vstatus + time(0));
+	srandom(VehicleNo + (int) vstatus + (int) time(0));
 
 	//
 	// At some point we should reorder these checks by length, to minimise the chances
@@ -2877,6 +2930,17 @@ void Saturn::AddRCS_S4B()
 	AddExhaust (th_att_lin[1], 7, 0.15);
 
 	thg_aps = CreateThrusterGroup (th_att_lin,   2, THGROUP_ATT_FORWARD);
+}
+
+
+void Saturn::FireSeperationThrusters(THRUSTER_HANDLE *pth)
+
+{
+	int i;
+	for (i = 0; i < 8; i++)
+	{
+		SetThrusterLevel(pth[i], 1.0);
+	}
 }
 
 // ==============================================================
