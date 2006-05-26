@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/05/21 15:42:54  tschachim
+  *	Bugfix S-IC staging
+  *	
   *	Revision 1.9  2006/05/19 13:46:56  tschachim
   *	Smoother S-IC staging.
   *	
@@ -109,9 +112,12 @@ void S1C::InitS1c()
 	EmptyMass = 50000.0;
 	MainFuel = 5000.0;
 	Realism = REALISM_DEFAULT;
+	EngineNum = 5;
 
 	RetrosFired = false;
 	LowRes = false;
+	S4Interstage = false;
+	Stretched = false;
 
 	MissionTime = MINUS_INFINITY;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -184,7 +190,7 @@ void S1C::clbkPreStep(double simt, double simdt, double mjd)
 			SetThrusterGroupLevel(thg_retro, 1.0);
 			RetrosFired = true;
 		}
-		
+
 		if (CurrentThrust > 0.0) {
 			CurrentThrust -= simdt;
 			for (int i = 0; i < 4; i++) {
@@ -232,6 +238,8 @@ typedef union {
 	struct {
 		unsigned int RetrosFired:1;
 		unsigned int LowRes:1;
+		unsigned int S4Interstage:1;
+		unsigned int Stretched:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -244,6 +252,8 @@ int S1C::GetMainState()
 	state.word = 0;
 	state.u.RetrosFired = RetrosFired;
 	state.u.LowRes = LowRes;
+	state.u.S4Interstage = S4Interstage;
+	state.u.Stretched = Stretched;
 
 	return state.word;
 }
@@ -251,58 +261,100 @@ int S1C::GetMainState()
 void S1C::AddEngines()
 
 {
+	int i;
+	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
+
 	//
 	// Just in case someone removes all the retros, do nothing.
 	//
 
-	if (!RetroNum)
-		return;
+	if (RetroNum)
+	{
+		//
+		// If we have the SIVb interstage attached, assume the retros are at the front, not
+		// at the back.
+		//
+		if (S4Interstage)
+		{
+			double posZ = 23.5;
 
-	VECTOR3 m_exhaust_pos2= {-4,-4, -14};
-	VECTOR3 m_exhaust_pos3= {-4, 4, -14};
-	VECTOR3 m_exhaust_pos4= { 4,-4, -14};
-	VECTOR3 m_exhaust_pos5= { 4, 4, -14};
+			VECTOR3 m_exhaust_pos2= {-2.83,-2.83,posZ};
+			VECTOR3 m_exhaust_pos3= {-2.83,2.83,posZ};
+			VECTOR3 m_exhaust_ref2 = {0.1,0.1,-1};
+			VECTOR3 m_exhaust_ref3 = {0.1,-0.1,-1};
+			VECTOR3 m_exhaust_pos4= {2.83,-2.83,posZ};
+			VECTOR3 m_exhaust_pos5= {2.83,2.83,posZ};
+			VECTOR3 m_exhaust_ref4 = {-0.1,0.1,-1};
+			VECTOR3 m_exhaust_ref5 = {-0.1,-0.1,-1};
 
-	if (!ph_retro) {
-		ph_retro = CreatePropellantResource(51.6 * RetroNum);
+			if (!ph_retro)
+				ph_retro = CreatePropellantResource(66.0 * RetroNum);
+
+			double thrust = 175500;
+
+			if (!th_retro[0]) {
+				th_retro[0] = CreateThruster (m_exhaust_pos2, m_exhaust_ref2, thrust, ph_retro, 4000);
+				th_retro[1] = CreateThruster (m_exhaust_pos3, m_exhaust_ref3, thrust, ph_retro, 4000);
+				th_retro[2] = CreateThruster (m_exhaust_pos4, m_exhaust_ref4, thrust, ph_retro, 4000);
+				th_retro[3] = CreateThruster (m_exhaust_pos5, m_exhaust_ref5, thrust, ph_retro, 4000);
+			}
+
+			thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);
+
+			for (i = 0; i < 4; i++)
+				AddExhaust (th_retro[i], 8.0, 0.2);
+		}
+		else
+		{
+			VECTOR3 m_exhaust_pos2= {-4,-4, -14};
+			VECTOR3 m_exhaust_pos3= {-4, 4, -14};
+			VECTOR3 m_exhaust_pos4= { 4,-4, -14};
+			VECTOR3 m_exhaust_pos5= { 4, 4, -14};
+
+			if (!ph_retro) {
+				ph_retro = CreatePropellantResource(51.6 * RetroNum);
+			}
+
+			double thrust = 382000.;
+			if (!th_retro[0]) {
+				th_retro[0] = CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro, 4000);
+				th_retro[1] = CreateThruster (m_exhaust_pos3, _V(0.1, -0.1, -0.9), thrust, ph_retro, 4000);
+				th_retro[2] = CreateThruster (m_exhaust_pos4, _V(-0.1, 0.1, -0.9), thrust, ph_retro, 4000);
+				th_retro[3] = CreateThruster (m_exhaust_pos5, _V(-0.1, -0.1, -0.9), thrust, ph_retro, 4000);
+			}
+
+			thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);
+
+			for (i = 0; i < 4; i++)
+				AddExhaust (th_retro[i], 15.0, 0.6, tex);
+		}
 	}
 
-	if (!ph_main && MainFuel > 0.0)
-		ph_main = CreatePropellantResource(MainFuel);
+	if (EngineNum)
+	{
+		if (!ph_main && MainFuel > 0.0)
+			ph_main = CreatePropellantResource(MainFuel);
 
-	double thrust = 382000.;
-	if (!th_retro[0]) {
-		th_retro[0] = CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro, 4000);
-		th_retro[1] = CreateThruster (m_exhaust_pos3, _V(0.1, -0.1, -0.9), thrust, ph_retro, 4000);
-		th_retro[2] = CreateThruster (m_exhaust_pos4, _V(-0.1, 0.1, -0.9), thrust, ph_retro, 4000);
-		th_retro[3] = CreateThruster (m_exhaust_pos5, _V(-0.1, -0.1, -0.9), thrust, ph_retro, 4000);
+		double Offset1st = -23.1;
+		VECTOR3 m_exhaust_ref = {0,0,-1};
+		VECTOR3 MAIN4a_Vector= {3,3,Offset1st+0.5};
+		VECTOR3 MAIN2a_Vector={-3,-3,Offset1st+0.5};
+		VECTOR3 MAIN1a_Vector= {-3,3,Offset1st+0.5};
+		VECTOR3 MAIN3a_Vector={3,-3,Offset1st+0.5};
+		VECTOR3 MAIN5a_Vector={0,0,Offset1st+0.5};
+
+		// orbiter main thrusters
+
+		th_main[0] = CreateThruster (MAIN4a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
+		th_main[1] = CreateThruster (MAIN2a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
+		th_main[2] = CreateThruster (MAIN1a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
+		th_main[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
+		th_main[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
+
+		thg_main = CreateThrusterGroup (th_main, EngineNum, THGROUP_MAIN);
+		for (i = 0; i < EngineNum; i++) 
+			AddExhaust (th_main[i], 120.0, 3.5, tex);
 	}
-
-	thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
-	int i;
-	for (i = 0; i < 4; i++)
-		AddExhaust (th_retro[i], 15.0, 0.6, tex);
-
-	double Offset1st = -23.1;
-	VECTOR3 m_exhaust_ref = {0,0,-1};
-    VECTOR3 MAIN4a_Vector= {3,3,Offset1st+0.5};
-	VECTOR3 MAIN2a_Vector={-3,-3,Offset1st+0.5};
-	VECTOR3 MAIN1a_Vector= {-3,3,Offset1st+0.5};
-	VECTOR3 MAIN3a_Vector={3,-3,Offset1st+0.5};
-	VECTOR3 MAIN5a_Vector={0,0,Offset1st+0.5};
-
-	// orbiter main thrusters
-
-	th_main[0] = CreateThruster (MAIN4a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[1] = CreateThruster (MAIN2a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[2] = CreateThruster (MAIN1a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , ph_main, ISP_FIRST_VAC, ISP_FIRST_SL);
-	th_main[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
-
-	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
-	for (i = 0; i < 5; i++) 
-		AddExhaust (th_main[i], 120.0, 3.5, tex);
 }
 
 void S1C::SetMainState(int s)
@@ -314,6 +366,8 @@ void S1C::SetMainState(int s)
 
 	RetrosFired = (state.u.RetrosFired != 0);
 	LowRes = (state.u.LowRes != 0);
+	S4Interstage = (state.u.S4Interstage != 0);
+	Stretched = (state.u.Stretched != 0);
 }
 
 void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -380,8 +434,7 @@ void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 
 	LoadMeshes(LowRes); 
 	if (State > SIC_STATE_HIDDEN)
-		ShowS1c();
-		
+		ShowS1c();	
 }
 
 void S1C::clbkSetClassCaps (FILEHANDLE cfg)
@@ -401,6 +454,8 @@ void S1C::LoadMeshes(bool lowres)
 	else {
 		hsat5stg1 = oapiLoadMeshGlobal("ProjectApollo/sat5stg1");
 	}
+
+	hS4Interstage = oapiLoadMeshGlobal("ProjectApollo/sat5stg2intstg");
 }
 
 void S1C::clbkDockEvent(int dock, OBJHANDLE connected)
@@ -432,6 +487,8 @@ void S1C::SetState(S1CSettings &state)
 		Realism = state.Realism;
 		RetroNum = state.RetroNum;
 		LowRes = state.LowRes;
+		Stretched = state.Stretched;
+		S4Interstage = state.S4Interstage;
 	}
 
 	if (state.SettingsType & S1C_SETTINGS_MASS) {
@@ -447,6 +504,13 @@ void S1C::SetState(S1CSettings &state)
 		ISP_FIRST_SL = state.ISP_FIRST_SL;
 		ISP_FIRST_VAC = state.ISP_FIRST_VAC;
 		CurrentThrust = state.CurrentThrust;
+		EngineNum = state.EngineNum;
+
+		if (EngineNum < 0)
+			EngineNum = 0;
+
+		if (EngineNum > 5)
+			EngineNum = 5;
 	}
 
 	ShowS1c();
@@ -472,6 +536,14 @@ void S1C::ShowS1c()
 			SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 		}
 	}
+
+	if (S4Interstage && hS4Interstage)
+	{
+		mesh_dir = _V(0, 0, 12.35);
+		meshidx = AddMesh(hS4Interstage, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+	}
+
 	AddEngines();
 }
 

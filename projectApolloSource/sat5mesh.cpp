@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2006/05/21 15:42:54  tschachim
+  *	Bugfix S-IC staging
+  *	
   *	Revision 1.56  2006/05/19 13:46:56  tschachim
   *	Smoother S-IC staging.
   *	
@@ -1411,6 +1414,10 @@ void SaturnV::SeparateStage (int stage)
 			S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
 			S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
 			S1Config.LowRes = LowRes;
+			S1Config.Stretched = false;
+			S1Config.S4Interstage = false;
+			S1Config.EngineNum = 5;
+
 			stage1->SetState(S1Config);
 		}
 
