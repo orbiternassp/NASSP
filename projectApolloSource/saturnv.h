@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2006/04/25 13:40:22  tschachim
+  *	New KSC.
+  *	
   *	Revision 1.23  2006/02/21 12:02:26  tschachim
   *	Moved TLI sequence to the IU.
   *	
@@ -124,10 +127,11 @@ private:
 
 	void BuildFirstStage (int bstate);
 	void SetFirstStage ();
+	void SetFirstStageEngines ();
 	void SetSecondStage ();
-	void SetSecondStage1 ();
-	void SetSecondStage2 ();
+	void SetSecondStageEngines ();
 	void SetThirdStage ();
+	void SetThirdStageEngines ();
 	MESHHANDLE GetInterstageMesh();
 	void AttitudeLaunch1();
 	void AttitudeLaunch2();

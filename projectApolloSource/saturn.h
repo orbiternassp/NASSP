@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.179  2006/05/25 04:04:53  jasonims
+  *	Initial VC Stop point...unknown why buttons not working yet, but skeleton of VC panel programming is there...
+  *	
   *	Revision 1.178  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -627,9 +630,14 @@ protected:
 	// State that needs to be saved.
 	//
 
+	char StagesString[256];
+
 	bool autopilot;
 	bool SIISepState;
 	bool ABORT_IND;
+
+	bool InterstageAttached;
+	bool LESAttached;
 
 	//
 	// Checklists.
@@ -2450,6 +2458,8 @@ protected:
 	void SetCP6SwitchState(int s);
 	int GetMainState();
 	void SetMainState(int s);
+	int GetAttachState();
+	void SetAttachState(int s);
 	int GetLaunchState();
 	void SetLaunchState(int s);
 	int GetA13State();
@@ -2491,6 +2501,8 @@ protected:
 	bool CheckForLaunchShutdown();
 	void SetGenericStageState();
 	void DestroyStages(double simt);
+
+	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 
 	void LoadDefaultSounds();
 
@@ -2534,16 +2546,16 @@ protected:
 	// General engine resources.
 	//
 
-	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3, ph_rcs_cm_1,ph_rcs_cm_2, ph_sps, ph_sep; // handles for propellant resources
+	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3, ph_rcs_cm_1,ph_rcs_cm_2, ph_sps, ph_sep, ph_sep2; // handles for propellant resources
 	PROPELLANT_HANDLE ph_o2_vent;
 
 	THGROUP_HANDLE thg_main,thg_ull,thg_ver;		          // handles for thruster groups
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
-	THRUSTER_HANDLE th_main[5],th_ull[8],th_ver[3] ,th_att_cm[12];               // handles for orbiter main engines
-	THRUSTER_HANDLE th_sps[1],th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
+	THRUSTER_HANDLE th_main[5], th_ull[8], th_ver[3], th_att_cm[12];               // handles for orbiter main engines
+	THRUSTER_HANDLE th_sps[1], th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THRUSTER_HANDLE	th_aps[3];
-	THRUSTER_HANDLE	th_sep[8];
+	THRUSTER_HANDLE	th_sep[8], th_sep2[8];
 	THRUSTER_HANDLE th_rcs_a[8], th_rcs_b[8], th_rcs_c[8], th_rcs_d[8];		// RCS quads. Entry zero is not used, to match Apollo numbering
 	THRUSTER_HANDLE th_o2_vent;
 

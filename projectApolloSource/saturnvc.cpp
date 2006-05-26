@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/05/25 04:04:53  jasonims
+  *	Initial VC Stop point...unknown why buttons not working yet, but skeleton of VC panel programming is there...
+  *	
   *	Revision 1.12  2006/01/08 14:51:24  movieman523
   *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
   *	
@@ -383,15 +386,15 @@ void Saturn::SetView(double offset, bool update_direction)
 		//
 		switch (viewpos) {
 			case SATVIEW_CDR:
-			v = _V(-0.6, 0.7, offset);
+			v = _V(-0.6, 0.9, offset);
 			break;
 
 			case SATVIEW_CMP:
-			v = _V(0, 0.7, offset);
+			v = _V(0, 0.9, offset);
 			break;
 
 			case SATVIEW_DMP:
-			v = _V(0.6, 0.7, offset);
+			v = _V(0.6, 0.9, offset);
 			break;
 
 			case SATVIEW_DOCK:
