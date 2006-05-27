@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2006/05/01 03:33:21  jasonims
+  *	New CM and all the fixin's....
+  *	
   *	Revision 1.35  2006/03/30 00:21:37  movieman523
   *	Pass empty mass correctly and remember to check in SM files :).
   *	
@@ -262,7 +265,8 @@ void Saturn1b::SetFirstStage ()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 
-		mesh_dir=_V(0,0,40.10);
+		TowerOffset = 40.10;
+		mesh_dir=_V(0, 0, TowerOffset);
 		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
@@ -412,7 +416,8 @@ void Saturn1b::SetSecondStage ()
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0,40.10-12.25);
+		TowerOffset = 40.10-12.25;
+		mesh_dir=_V(0, 0, TowerOffset);
 		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
@@ -532,7 +537,8 @@ void Saturn1b::SetSecondStage1 ()
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0,40.1-12.25);
+		TowerOffset = 40.1-12.25;
+		mesh_dir=_V(0, 0, TowerOffset);
 		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
@@ -950,7 +956,7 @@ void Saturn1b::DockStage (UINT dockstatus)
 	}
 }
 
-void Saturn1b::SeparateStage (int stage)
+void Saturn1b::SeparateStage (int new_stage)
 
 {
 	VESSELSTATUS vs1;

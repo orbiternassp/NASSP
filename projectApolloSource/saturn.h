@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.181  2006/05/27 00:54:28  movieman523
+  *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
+  *	
   *	Revision 1.180  2006/05/26 22:01:50  movieman523
   *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
   *	
@@ -2021,6 +2024,9 @@ protected:
 	double aHAcc;
 	double aZAcc;
 
+	double TowerOffset;
+	double S4Offset;
+
 	double actualVEL;
 	double actualALT;
 	double actualFUEL;
@@ -2421,6 +2427,11 @@ protected:
 	void AttitudeLaunchSIVB();
 	virtual void AutoPilot(double autoT) = 0;
 	virtual void SeparateStage (int stage) = 0;
+	virtual void ConfigureStageMeshes(int stage_state) = 0;
+	virtual void ConfigureStageEngines(int stage_state) = 0;
+
+	void JettisonLET();
+
 	void StageOrbitSIVB(double simt, double simdt);
 	void JostleViewpoint(double amount);
 	double CalculateApogeeTime();

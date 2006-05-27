@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2006/05/27 00:54:28  movieman523
+  *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
+  *	
   *	Revision 1.80  2006/05/26 22:01:50  movieman523
   *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
   *	
@@ -866,8 +869,16 @@ void SaturnV::StageOne(double simt, double simdt)
 			ClearEngineIndicators();
 			bManualSeparate = false;
 			SeparationS.play(NOLOOP, 245);
-			SeparateStage (stage);
-			SetStage(LAUNCH_STAGE_TWO);
+
+			if (SaturnType != SAT_INT20)
+			{
+				SeparateStage (LAUNCH_STAGE_TWO);
+				SetStage(LAUNCH_STAGE_TWO);
+			}
+			else {
+				SeparateStage (LAUNCH_STAGE_SIVB);
+				SetStage(LAUNCH_STAGE_SIVB);
+			}
 		}
 		else {
 
@@ -1016,55 +1027,22 @@ void SaturnV::StageTwo(double simt)
 
 		if (MissionTime >= NextMissionEventTime || bManualSeparate) {
 
-			SeparateStage (stage);
-			SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
+			SeparateStage (LAUNCH_STAGE_TWO_TWR_JET);
+			SetStage(LAUNCH_STAGE_TWO_TWR_JET);
 			bManualSeparate = false;
 			SIISepState = false;
 
-			NextMissionEventTime += 5.7;
-
 			//
-			// Override if required.
+			// Tower jettison at 36.2 seconds after SIC shutdown if not previously
+			// specified.
 			//
 
-			if (LESJettisonTime < NextMissionEventTime) {
-				NextMissionEventTime = LESJettisonTime;
+			if (LESJettisonTime > 999.0)
+			{
+				LESJettisonTime = MissionTime + 5.7;
 			}
 		}
 		break;
-	}
-}
-
-void SaturnV::StageThree(double simt)
-
-{
-	double MainLevel = GetEngineLevel(ENGINE_MAIN);
-
-	double amt = (MainLevel) * 0.2;
-	JostleViewpoint(amt);
-
-    if (AutopilotActive()) {
-		AutoPilot(MissionTime);
-	}
-	else {
-		AttitudeLaunch2();
-	}
-
-	//
-	// Tower jettison at 36.2 seconds after SIC shutdown.
-	//
-
-	if ((MissionTime >= NextMissionEventTime && (TowerJett1Switch.GetState() == THREEPOSSWITCH_DOWN || TowerJett2Switch.GetState() == THREEPOSSWITCH_DOWN)) || 
-		bManualSeparate || 
-		GetFuelMass() == 0 || 
-		TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
-		TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
-	{
-		SeparateStage (stage);
-		SetStage(LAUNCH_STAGE_TWO_TWR_JET);
-		bManualSeparate = false;
-		// Enable docking probe because the tower is gone
-		dockingprobe.SetEnabled(true);
 	}
 }
 
@@ -1156,7 +1134,7 @@ void SaturnV::StageFour(double simt, double simdt)
 			StageState++;
 
 			if (!LaunchFail.u.SIIAutoSepFail) {
-				SeparateStage (stage);
+				SeparateStage (LAUNCH_STAGE_SIVB);
 				SetStage(LAUNCH_STAGE_SIVB);
 			}
 		}
@@ -1203,14 +1181,14 @@ void SaturnV::StageFour(double simt, double simdt)
 
 	if (bManualSeparate || SIISIVBSepSwitch.GetState()) {
 		bManualSeparate = false;
-		SeparateStage (stage);
+		SeparateStage (LAUNCH_STAGE_SIVB);
 		ClearEngineIndicators();
 		NextMissionEventTime = MissionTime;
 		SetStage(LAUNCH_STAGE_SIVB);
 	}
 
 	if (bAbort) {
-		SeparateStage (stage);
+		SeparateStage (LAUNCH_STAGE_SIVB);
 		SetEngineIndicators();
 		StartAbort();
 		SetStage(LAUNCH_STAGE_SIVB);
@@ -1677,7 +1655,7 @@ void SaturnV::StageSix(double simt)
 	if (CMSMPyros.Blown())
 	{
 		if (dockstate <= 1 || dockstate >= 3) {
-			SeparateStage (stage);
+			SeparateStage (CM_STAGE);
 			bManualSeparate = false;
 			SetStage(CM_STAGE);
 		}
@@ -1777,7 +1755,7 @@ void SaturnV::Timestep(double simt, double simdt)
 			bAbort = false;
 		} else {
 			SetEngineLevel(ENGINE_MAIN, 0);
-			SeparateStage(stage);
+			SeparateStage(CSM_ABORT_STAGE);
 			StartAbort();
 			SetStage(CSM_ABORT_STAGE);
 			bAbort = false;
@@ -1828,6 +1806,18 @@ void SaturnV::Timestep(double simt, double simdt)
 		}
 	}
 
+	if (LESAttached)
+	{
+		if ((MissionTime >= LESJettisonTime && (TowerJett1Switch.GetState() == THREEPOSSWITCH_DOWN || TowerJett2Switch.GetState() == THREEPOSSWITCH_DOWN)) || 
+			TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
+			TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
+		{
+			JettisonLET();
+			// Enable docking probe because the tower is gone
+			dockingprobe.SetEnabled(true);
+		}
+	}
+
 	switch (stage) {
 
 	case LAUNCH_STAGE_ONE:
@@ -1839,9 +1829,6 @@ void SaturnV::Timestep(double simt, double simdt)
 		break;
 
 	case LAUNCH_STAGE_TWO_ISTG_JET:
-		StageThree(simt);
-		break;
-
 	case LAUNCH_STAGE_TWO_TWR_JET:
 		StageFour(simt, simdt);
 		break;
@@ -1892,7 +1879,7 @@ void SaturnV::Timestep(double simt, double simdt)
 
 			if ((bManualSeparate || GetAltitude() < 500) && PyrosArmed())
 			{
-				SeparateStage (stage);
+				SeparateStage (CM_STAGE);
 				SetStage(CM_STAGE);
 				bManualSeparate=false;
 				abortTimer = 0;
@@ -2096,6 +2083,75 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	CheckRCSState();
 }
 
+void SaturnV::ConfigureStageMeshes(int stage_state)
+
+{
+	ClearMeshes();
+
+	//
+	// This code all needs to be fixed up.
+	//
+
+	switch (stage_state) {
+
+	case ROLLOUT_STAGE:
+	case ONPAD_STAGE:
+	case LAUNCH_STAGE_ONE:
+	case PRELAUNCH_STAGE:
+		if (buildstatus < 6){
+			BuildFirstStage(buildstatus);
+		}
+		else {
+			SetFirstStage();
+		}
+		break;
+
+	case LAUNCH_STAGE_TWO:
+	case LAUNCH_STAGE_TWO_ISTG_JET:
+	case LAUNCH_STAGE_TWO_TWR_JET:
+		SetSecondStage();
+		break;
+
+	case LAUNCH_STAGE_SIVB:
+	case STAGE_ORBIT_SIVB:
+		SetThirdStage();
+		break;
+
+	case CSM_LEM_STAGE:
+		SetCSMStage();
+		break;
+	}
+}
+
+void SaturnV::ConfigureStageEngines(int stage_state)
+{
+
+	//
+	// This code all needs to be fixed up.
+	//
+
+	switch (stage_state) {
+
+	case ROLLOUT_STAGE:
+	case ONPAD_STAGE:
+	case LAUNCH_STAGE_ONE:
+	case PRELAUNCH_STAGE:
+		SetFirstStageEngines();
+		break;
+
+	case LAUNCH_STAGE_TWO:
+	case LAUNCH_STAGE_TWO_ISTG_JET:
+	case LAUNCH_STAGE_TWO_TWR_JET:
+		SetSecondStageEngines (-STG1O);
+		break;
+
+	case LAUNCH_STAGE_SIVB:
+	case STAGE_ORBIT_SIVB:
+		SetThirdStageEngines(-STG2O);
+		break;
+	}
+}
+
 void SaturnV::StageLaunchSIVB(double simt)
 
 {
@@ -2243,7 +2299,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 	{
 		SepS.stop();
 		bManualSeparate = false;
-		SeparateStage (stage);
+		SeparateStage (CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort){
 			SPSswitch.SetState(TOGGLESWITCH_UP);

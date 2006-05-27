@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.137  2006/05/27 00:54:28  movieman523
+  *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
+  *	
   *	Revision 1.136  2006/05/26 22:01:50  movieman523
   *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
   *	
@@ -2970,7 +2973,8 @@ void Saturn::FireSeperationThrusters(THRUSTER_HANDLE *pth)
 	int i;
 	for (i = 0; i < 8; i++)
 	{
-		SetThrusterLevel(pth[i], 1.0);
+		if (pth[i])
+			SetThrusterLevel(pth[i], 1.0);
 	}
 }
 
@@ -3710,7 +3714,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	{
 		if (SECSLogicActive() && PyrosArmed()) {
 			bManualSeparate = false;
-			SeparateStage(stage);
+			SeparateStage(CSM_LEM_STAGE);
 			SetStage(CSM_LEM_STAGE);
 			soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 			if (bAbort) {

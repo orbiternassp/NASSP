@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/05/27 00:54:28  movieman523
+  *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
+  *	
   *	Revision 1.50  2006/04/25 13:53:25  tschachim
   *	New KSC.
   *	
@@ -500,7 +503,7 @@ void Saturn1b::StageOne(double simt, double simdt)
 		if (MissionTime >= NextMissionEventTime) {
 			SShutS.done();
 			ClearEngineIndicators();
-			SeparateStage (stage);
+			SeparateStage (LAUNCH_STAGE_TWO);
 			bManualSeparate = false;
 			SeparationS.play(NOLOOP, 245);
 			SetStage(LAUNCH_STAGE_TWO);
@@ -633,7 +636,7 @@ void Saturn1b::StageStartSIVB(double simt)
 			TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
 			TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
 		{
-			SeparateStage(stage);
+			SeparateStage(LAUNCH_STAGE_SIVB);
 			TowerJS.play();
 			TowerJS.done();
 			SetStage(LAUNCH_STAGE_SIVB);
@@ -651,7 +654,7 @@ void Saturn1b::StageStartSIVB(double simt)
 	{
 		SepS.stop();
 		bManualSeparate = false;
-		SeparateStage (stage);
+		SeparateStage (CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort){
 			SPSswitch.SetState(TOGGLESWITCH_UP);
@@ -731,7 +734,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	if (bManualSeparate || bAbort)
 	{
 		bManualSeparate = false;
-		SeparateStage(stage);
+		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 		if (bAbort){
@@ -840,7 +843,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 		} 
 		else {
 			SetEngineLevel(ENGINE_MAIN, 0);
-			SeparateStage(stage);
+			SeparateStage(CSM_ABORT_STAGE);
 			StartAbort();
 			stage = CSM_ABORT_STAGE;
 			bAbort = false;
@@ -917,7 +920,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 
 		if (CMSMPyros.Blown())
 		{
-			SeparateStage (stage);
+			SeparateStage (CM_STAGE);
 			bManualSeparate=false;
 			SetStage(CM_STAGE);
 		}
@@ -962,7 +965,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 			}
 		if ((bManualSeparate ||  altlow) && PyrosArmed())
 			{
-				SeparateStage (stage);
+				SeparateStage (CM_STAGE);
 				SetStage(CM_STAGE);
 				bManualSeparate=false;
 				abortTimer = 0;
@@ -1096,6 +1099,20 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 	CheckSPSState();
 	CheckRCSState();
+}
+
+void Saturn1b::ConfigureStageMeshes(int stage_state)
+{
+	//
+	// Dummy for now.
+	//
+}
+
+void Saturn1b::ConfigureStageEngines(int stage_state)
+{
+	//
+	// Dummy for now.
+	//
 }
 
 void Saturn1b::clbkSetClassCaps (FILEHANDLE cfg)

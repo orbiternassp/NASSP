@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2006/05/27 00:54:28  movieman523
+  *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
+  *	
   *	Revision 1.25  2006/05/26 22:01:50  movieman523
   *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
   *	
@@ -163,10 +166,12 @@ protected:
 
 	void StageOne(double simt, double simdt);
 	void StageTwo(double simt);
-	void StageThree(double simt);
 	void StageFour(double simt, double simdt);
 	void StageSix(double simt);
 	void StageLaunchSIVB(double simt);
+
+	void ConfigureStageMeshes(int stage_state);
+	void ConfigureStageEngines(int stage_state);
 
 	//
 	// Mission-support functions.

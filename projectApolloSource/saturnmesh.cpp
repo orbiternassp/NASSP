@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/05/06 06:00:35  jasonims
+  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
+  *	
   *	Revision 1.42  2006/05/01 03:33:22  jasonims
   *	New CM and all the fixin's....
   *	
@@ -1534,7 +1537,9 @@ void Saturn::SetAbortStage ()
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	mesh_dir=_V(0,0,38.0-12.25-21.5-1.5+1);
+	TowerOffset = 38.0-12.25-21.5-1.5+1;
+
+	mesh_dir=_V(0, 0, TowerOffset);
 	meshidx = AddMesh (hsat5tower, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -1635,4 +1640,47 @@ bool Saturn::clbkLoadGenericCockpit ()
 	InPanel = false;
 	SetView();
 	return true;
+}
+
+//
+// Generic function to jettison the escape tower.
+//
+
+void Saturn::JettisonLET()
+
+{
+	VECTOR3 ofs1 = _V(0.0, 0.0, TowerOffset); // OFS_TOWER;
+	VECTOR3 vel1 = _V(15.0,15.0,106.0);
+
+	VESSELSTATUS vs1;
+	GetStatus (vs1);
+
+	vs1.eng_main = vs1.eng_hovr = 0.0;
+
+	VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
+
+	Local2Rel (ofs1, vs1.rpos);
+
+	GlobalRot (vel1, rofs1);
+
+	vs1.rvel.x = rvel1.x+rofs1.x;
+	vs1.rvel.y = rvel1.y+rofs1.y;
+	vs1.rvel.z = rvel1.z+rofs1.z;
+
+	vs1.vrot.x = 0.0;
+	vs1.vrot.y = 0.0;
+	vs1.vrot.z = 0.0;
+
+	TowerJS.play();
+	TowerJS.done();
+
+	char VName[256];
+
+	GetApolloName(VName);
+	strcat (VName, "-TWR");
+
+	hesc1 = oapiCreateVessel(VName,"ProjectApollo/sat5btower",vs1);
+	LESAttached = false;
+
+	ConfigureStageMeshes(stage);
 }
