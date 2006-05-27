@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.180  2006/05/26 22:01:50  movieman523
+  *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
+  *	
   *	Revision 1.179  2006/05/25 04:04:53  jasonims
   *	Initial VC Stop point...unknown why buttons not working yet, but skeleton of VC panel programming is there...
   *	
@@ -1932,6 +1935,12 @@ protected:
 	int stage;
 	int StageState;
 
+	//
+	// Saturn type.
+	//
+
+	int SaturnType;
+
 	#define SATSYSTEMS_NONE				  0
 	#define SATSYSTEMS_PRELAUNCH		100
 	#define SATSYSTEMS_CREWINGRESS_1	200
@@ -1945,10 +1954,6 @@ protected:
 	int systemsState;
 	bool firstSystemsTimeStepDone;
 	double lastSystemsMissionTime;
-
-	//
-	// End saved state.
-	//
 
 	//
 	// Stage masses: should really be saved, but probably aren't at the
@@ -1974,7 +1979,6 @@ protected:
 	double SI_EmptyMass;
 	double SI_FuelMass;
 
-
 	bool SI_MassLoaded;
 	bool SII_MassLoaded;
 	bool S4B_MassLoaded;
@@ -1990,6 +1994,18 @@ protected:
 	double Stage1Mass;
 	double Stage2Mass;
 	double Stage3Mass;
+
+	//
+	// Engine numbers.
+	//
+
+	int SI_EngineNum;
+	int SII_EngineNum;
+	int SIII_EngineNum;
+
+	//
+	// Indicator lights.
+	//
 
 	bool ENGIND[9];
 	bool LAUNCHIND[8];

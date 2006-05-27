@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2006/05/26 22:01:50  movieman523
+  *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
+  *	
   *	Revision 1.24  2006/04/25 13:40:22  tschachim
   *	New KSC.
   *	
@@ -129,9 +132,11 @@ private:
 	void SetFirstStage ();
 	void SetFirstStageEngines ();
 	void SetSecondStage ();
-	void SetSecondStageEngines ();
+	void SetSecondStageMesh (double offset);
+	void SetSecondStageEngines (double offset);
 	void SetThirdStage ();
-	void SetThirdStageEngines ();
+	void SetThirdStageMesh (double offset);
+	void SetThirdStageEngines (double offset);
 	MESHHANDLE GetInterstageMesh();
 	void AttitudeLaunch1();
 	void AttitudeLaunch2();

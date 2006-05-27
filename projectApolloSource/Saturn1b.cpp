@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/04/25 13:53:25  tschachim
+  *	New KSC.
+  *	
   *	Revision 1.49  2006/04/17 19:12:26  movieman523
   *	Removed some unused switches.
   *	
@@ -253,6 +256,8 @@ void Saturn1b::initSaturn1b()
 	//
 
 	initSaturn();
+
+	SaturnType = SAT_SATURN1B;
 
 	RelPos = _V(0.0,0.0,0.0);
 
