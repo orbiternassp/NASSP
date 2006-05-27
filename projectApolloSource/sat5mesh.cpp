@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2006/05/27 00:54:28  movieman523
+  *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
+  *	
   *	Revision 1.59  2006/05/26 22:01:50  movieman523
   *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
   *	
@@ -890,7 +893,9 @@ void SaturnV::SetThirdStage ()
 
 void SaturnV::SetThirdStageMesh (double offset)
 {
-	VECTOR3 mesh_dir=_V(0,0,2. + offset);
+	S4Offset = 2.0 + offset;
+
+	VECTOR3 mesh_dir=_V(0, 0, S4Offset);
 
 	AddMesh (hStage3Mesh, &mesh_dir);
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
@@ -935,7 +940,8 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 	if (LESAttached)
 	{
-		mesh_dir=_V(0, 0, 28.2 + offset);
+		TowerOffset = 28.2 + offset;
+		mesh_dir=_V(0, 0, TowerOffset);
 		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
@@ -1049,7 +1055,7 @@ void SaturnV::SetThirdStageEngines (double offset)
 	bAbtlocked = false;
 }
 
-void SaturnV::SeparateStage (int stage)
+void SaturnV::SeparateStage (int new_stage)
 
 {
 	VESSELSTATUS vs1;
@@ -1086,13 +1092,12 @@ void SaturnV::SeparateStage (int stage)
 
 	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && !bAbort|| stage == CSM_ABORT_STAGE && !bAbort)
 	{
-		ofs1 = OFS_TOWER;
+		ofs1 = _V(0.0, 0.0, TowerOffset); // OFS_TOWER;
 		vel1 = _V(15.0,15.0,106.0);
 	}
 
 	if (stage == LAUNCH_STAGE_TWO && bAbort || stage == LAUNCH_STAGE_TWO_ISTG_JET && bAbort)
 	{
-
 		ofs1= OFS_ABORT2;
 		vel1 = _V(0,0,-4.0);
 	}
@@ -1105,7 +1110,7 @@ void SaturnV::SeparateStage (int stage)
 
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 	{
-	 	ofs1 = OFS_STAGE3;
+	 	ofs1 = _V(0.0, 0.0, S4Offset); // OFS_STAGE3;
 		vel1 = _V(0,0,-0.135);
 	}
 
@@ -1192,8 +1197,8 @@ void SaturnV::SeparateStage (int stage)
 			stage1->SetState(S1Config);
 		}
 
-		SetSecondStage ();
-		SetSecondStageEngines (-STG1O);
+		ConfigureStageMeshes (new_stage);
+		ConfigureStageEngines (new_stage);
 
 		//
 		// Fire 'seperation' thrusters.
@@ -1251,27 +1256,7 @@ void SaturnV::SeparateStage (int stage)
 			FireSeperationThrusters(th_sep2);
 		}
 
-		SetSecondStage ();
-	}
-
-	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && !bAbort )
-	{
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
-
-		TowerJS.play();
-		TowerJS.done();
-
-		char VName[256];
-
-		GetApolloName(VName);
-		strcat (VName, "-TWR");
-
-		hesc1 = oapiCreateVessel(VName,"ProjectApollo/sat5btower",vs1);
-		LESAttached = false;
-
-		SetSecondStage ();
+		ConfigureStageMeshes (new_stage);
 	}
 
 	if (stage == LAUNCH_STAGE_TWO_TWR_JET)
@@ -1314,8 +1299,8 @@ void SaturnV::SeparateStage (int stage)
 		SII *stage2 = (SII *) oapiGetVesselInterface(hstg2);
 		stage2->SetState(S2Config);
 
-		SetThirdStage();
-		SetThirdStageEngines(-STG2O);
+		ConfigureStageMeshes(new_stage);
+		ConfigureStageEngines(new_stage);
 
 		//
 		// Fire 'seperation' thrusters.
