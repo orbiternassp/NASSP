@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2006/05/26 22:01:50  movieman523
+  *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
+  *	
   *	Revision 1.79  2006/05/19 13:46:56  tschachim
   *	Smoother S-IC staging.
   *	
@@ -360,6 +363,8 @@ void SaturnV::initSaturnV()
 
 	strcpy(StagesString, "S1C:SII:SIVB:CSM");
 
+	SaturnType = SAT_SATURNV;
+
 	//
 	// Default ISP and thrust values.
 	//
@@ -378,6 +383,14 @@ void SaturnV::initSaturnV()
 	THRUST_FIRST_VAC	= 8062309;
 	THRUST_SECOND_VAC  = 1023000;
 	THRUST_THIRD_VAC = 1023000;
+
+	//
+	// Engines per stage.
+	//
+
+	SI_EngineNum = 5;
+	SII_EngineNum = 5;
+	SIII_EngineNum = 1;
 
 	//
 	// State variables.
@@ -448,15 +461,30 @@ SaturnV::~SaturnV()
 void SaturnV::CalculateStageMass ()
 
 {
-	SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
-	SII_Mass = SII_EmptyMass + SII_FuelMass + (SII_UllageNum * 175);
-	S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
-	SM_Mass = SM_EmptyMass + SM_FuelMass;
-	CM_Mass = CM_EmptyMass + CM_FuelMass;
+	if (SaturnType != SAT_INT20)
+	{
+		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
+		SII_Mass = SII_EmptyMass + SII_FuelMass + (SII_UllageNum * 175);
+		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		CM_Mass = CM_EmptyMass + CM_FuelMass;
 
-	Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
-	Stage2Mass = Stage3Mass + SII_EmptyMass + S4B_FuelMass + Abort_Mass + Interstage_Mass;
-	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass;
+		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
+		Stage2Mass = Stage3Mass + SII_EmptyMass + S4B_FuelMass + Abort_Mass + Interstage_Mass;
+		Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass;
+	}
+	else
+	{
+		SI_Mass = SI_EmptyMass + SI_FuelMass + (SI_RetroNum * 125);
+		SII_Mass = 0;
+		S4B_Mass = S4B_EmptyMass + S4B_FuelMass;
+		SM_Mass = SM_EmptyMass + SM_FuelMass;
+		CM_Mass = CM_EmptyMass + CM_FuelMass;
+
+		Stage3Mass = S4B_EmptyMass + S4PL_Mass + SM_Mass + CM_Mass;
+		Stage2Mass = 0;
+		Stage1Mass = Stage3Mass + SI_EmptyMass + S4B_FuelMass + Abort_Mass;
+	}
 }
 
 void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
@@ -746,28 +774,44 @@ void SaturnV::StageOne(double simt, double simdt)
 		// over 3.98g, or at planned shutdown time.
 		//
 
-		if ((actualFUEL <= 6) || (MissionTime >= FirstStageCentreShutdownTime)) {
-			//
-			// Set center engine light.
-			//
-			SetEngineIndicator(5);
+		if ((actualFUEL <= 6) || (MissionTime >= FirstStageCentreShutdownTime)) 
+		{
+			if (SI_EngineNum < 5)
+			{
+				//
+				// Shut down engines 2 and 4.
+				//
+				// Currently our engine thruster numbers don't match NASA engine numbers!
+				//
+				SetEngineIndicator(2);
+				SetThrusterResource(th_main[1], NULL);
+				SetEngineIndicator(4);
+				SetThrusterResource(th_main[0], NULL);
+			}
+			else
+			{
+				//
+				// Shut down center engine.
+				//
+				SetEngineIndicator(5);
+				SetThrusterResource(th_main[4], NULL);
+			}
 
 			//
 			// Clear liftoff light now - Apollo 15 checklist
 			//
 			ClearLiftoffLight();
-			SetThrusterResource(th_main[4], NULL);
-
 
 			//
 			// Checklist actions
 			//
 
+			//
 			// EDS auto off
+			//
 			EDSSwitch.SwitchTo(TOGGLESWITCH_DOWN);
 			TwoEngineOutAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
 			LVRateAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
-
 
 			NextMissionEventTime = MissionTime + 1.0;
 			StageState++;
@@ -820,9 +864,9 @@ void SaturnV::StageOne(double simt, double simdt)
 	case 4:
 		if (MissionTime >= NextMissionEventTime) {
 			ClearEngineIndicators();
-			SeparateStage (stage);
 			bManualSeparate = false;
 			SeparationS.play(NOLOOP, 245);
+			SeparateStage (stage);
 			SetStage(LAUNCH_STAGE_TWO);
 		}
 		else {
@@ -1949,6 +1993,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	GetScenarioState(scn, status);
 
+	ClearMeshes();
 	SetupMeshes();
 
 	//
@@ -1980,12 +2025,12 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	case LAUNCH_STAGE_TWO_ISTG_JET:
 	case LAUNCH_STAGE_TWO_TWR_JET:
 		SetSecondStage();
-		SetSecondStageEngines();
+		SetSecondStageEngines(-STG1O);
 		break;
 
 	case LAUNCH_STAGE_SIVB:
 		SetThirdStage();
-		SetThirdStageEngines();
+		SetThirdStageEngines(-STG2O);
 		if (StageState >= 4) {
 			AddRCS_S4B();
 		}
@@ -1993,7 +2038,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	case STAGE_ORBIT_SIVB:
 		SetThirdStage();
-		SetThirdStageEngines();
+		SetThirdStageEngines(-STG2O);
 		AddRCS_S4B();
 		//
 		// Always enable SIVB RCS for now, once we hit orbit.

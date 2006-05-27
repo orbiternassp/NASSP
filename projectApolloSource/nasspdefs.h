@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2006/05/15 22:56:53  movieman523
+  *	Added VC2005 solution and project files.
+  *	
   *	Revision 1.61  2006/04/17 18:14:27  movieman523
   *	Added flashing borders to all switches (I think).
   *	
@@ -450,6 +453,16 @@ inline double KelvinToFahrenheit(double kelvin) {
 #define PAYLOAD_TARGET	5
 #define PAYLOAD_LTA6	6
 #define PAYLOAD_EMPTY	7
+
+//
+// Saturn types.
+//
+
+#define SAT_UNKNOWN		0
+#define SAT_SATURNV		1
+#define SAT_SATURN1B	2
+#define SAT_SATURN1		3
+#define SAT_INT20		4
 
 //
 // Internal systems.

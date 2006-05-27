@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2006/05/26 22:01:50  movieman523
+  *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
+  *	
   *	Revision 1.58  2006/05/26 18:42:54  movieman523
   *	Updated S1C DLL to support INT-20 stage.
   *	
@@ -354,6 +357,7 @@ static MESHHANDLE hsat5intstg4;
 static MESHHANDLE hsat5intstg8;
 static MESHHANDLE hsat5stg2;
 static MESHHANDLE hsat5stg2base;
+static MESHHANDLE hsat5stg2interstage;
 static MESHHANDLE hsat5stg3;
 static MESHHANDLE hsat5stg3base;
 static MESHHANDLE hsat5stg31;
@@ -397,6 +401,7 @@ void LoadSat5Meshes()
 	LOAD_MESH(hsat5stg2low, "ProjectApollo/LowRes/sat5stg2");
 	LOAD_MESH(hsat5stg2, "ProjectApollo/sat5stg2");
 	LOAD_MESH(hsat5stg2base, "ProjectApollo/sat5stg2base");
+	LOAD_MESH(hsat5stg2interstage, "ProjectApollo/sat5stg2intstg");
 
 	LOAD_MESH(hsat5stg3low, "ProjectApollo/LowRes/sat5stg3");
 	LOAD_MESH(hsat5stg31low, "ProjectApollo/LowRes/sat5stg31");
@@ -579,8 +584,10 @@ void SaturnV::SetFirstStage ()
 
 	double EmptyMass = Stage1Mass - (InterstageAttached ? 0.0 : Interstage_Mass) - (LESAttached ? 0.0 : Abort_Mass);
 
+	//
 	// *********************** physical parameters *********************************
-	DelThrusterGroup(THGROUP_MAIN,true);
+	//
+
     SetSize (59.5);
 	SetEmptyMass (EmptyMass);
 	SetPMI (_V(1147,1147,116.60));
@@ -592,7 +599,9 @@ void SaturnV::SetFirstStage ()
 	SetLiftCoeffFunc (0);
 	SetSurfaceFrictionCoeff(10e90,10e90);
 
+	//
 	// ************************ visual parameters **********************************
+	//
 
 	ClearMeshes();
 	UINT meshidx;
@@ -603,74 +612,30 @@ void SaturnV::SetFirstStage ()
 	meshidx = AddMesh (hStage1Mesh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
-	if (InterstageAttached)
+	if (SaturnType == SAT_INT20)
 	{
-		mesh_dir=_V(0,0,-30.5+STG0O);
-		meshidx = AddMesh (GetInterstageMesh(), &mesh_dir);
+		mesh_dir = _V(0, 0, 12.35-54.0+STG0O);
+		meshidx = AddMesh (hsat5stg2interstage, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+		SetThirdStageMesh(STG0O - 24.5);
 	}
-
-	mesh_dir=_V(0,0,-17.2+STG0O);
-	meshidx = AddMesh (hStage2Mesh, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
-
-	mesh_dir=_V(0,0,2.+STG0O);
-	AddMesh (hStage3Mesh, &mesh_dir);
-	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
-		mesh_dir=_V(0,0,12+STG0O);
-		AddMesh (hLMPKD, &mesh_dir);
-	}
-	mesh_dir=_V(-1.48,-1.48,14.55+STG0O);
-	AddMesh (hStageSLA1Mesh, &mesh_dir);
-	mesh_dir=_V(1.48,-1.48,14.55+STG0O);
-	AddMesh (hStageSLA2Mesh, &mesh_dir);
-	mesh_dir=_V(1.48,1.48,14.55+STG0O);
-    AddMesh (hStageSLA3Mesh, &mesh_dir);
-	mesh_dir=_V(-1.48,1.48,14.55+STG0O);
-    AddMesh (hStageSLA4Mesh, &mesh_dir);
-
-	AddSM(19.1+STG0O, false);
-
-	mesh_dir=_V(0,0,23.25+STG0O);
-	meshidx = AddMesh (hCM, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
-
-	meshidx = AddMesh (hCMVC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
-
-	meshidx = AddMesh (hFHC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-	
-	if (Crewed) {
-		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-	}
-
-	if (LESAttached)
+	else
 	{
-		mesh_dir=_V(0,0,28.2+STG0O);
-		meshidx = AddMesh (hsat5tower, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetSecondStageMesh(STG0O);
 	}
-
-	SetView(23.1+STG0O, false);
 
 	buildstatus = 6;
 
 	EnableTransponder (true);
 
+	//
 	// **************************** NAV radios *************************************
+	//
 
 	InitNavRadios (4);
-	CMCswitch= true;
-	SCswitch= true;
-		bAbtlocked =false;
+	CMCswitch = true;
+	SCswitch = true;
+	bAbtlocked =false;
 }
 
 void SaturnV::SetFirstStageEngines ()
@@ -680,12 +645,18 @@ void SaturnV::SetFirstStageEngines ()
 
 	ClearThrusterDefinitions();
 
+	//
 	// ************************* propellant specs **********************************
+	//
+
 	if (!ph_1st)
 		ph_1st  = CreatePropellantResource(SI_FuelMass); //1st stage Propellant
+
 	SetDefaultPropellantResource (ph_1st); // display 1st stage propellant level in generic HUD
-	
+
+	//
 	// *********************** thruster definitions ********************************
+	//
 
 	Offset1st = -75.1+STG0O;
 	VECTOR3 m_exhaust_ref = {0,0,-1};
@@ -702,7 +673,9 @@ void SaturnV::SetFirstStageEngines ()
 	else
 		pph = ph_1st;
 
+	//
 	// orbiter main thrusters
+	//
 
 	th_main[0] = CreateThruster (MAIN4a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[1] = CreateThruster (MAIN2a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
@@ -710,8 +683,8 @@ void SaturnV::SetFirstStageEngines ()
 	th_main[3] = CreateThruster (MAIN3a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[4] = CreateThruster (MAIN5a_Vector, _V( 0,0,1), THRUST_FIRST_VAC , pph, ISP_FIRST_VAC, ISP_FIRST_SL);
 
-	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
-	for (i = 0; i < 5; i++) AddExhaust (th_main[i], 120.0, 3.5, exhaust_tex);
+	thg_main = CreateThrusterGroup (th_main, SI_EngineNum, THGROUP_MAIN);
+	for (i = 0; i < SI_EngineNum; i++) AddExhaust (th_main[i], 120.0, 3.5, exhaust_tex);
 
 	AddExhaustStream (th_main[0], MAIN4a_Vector+_V(0,0,-18), &srb_exhaust);
 	AddExhaustStream (th_main[1], MAIN2a_Vector+_V(0,0,-18), &srb_exhaust);
@@ -720,7 +693,7 @@ void SaturnV::SetFirstStageEngines ()
 	AddExhaustStream (th_main[4], MAIN5a_Vector+_V(0,0,-18), &srb_exhaust);
 
 	// Contrail
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < SI_EngineNum; i++) {
 		if (contrail[i]) {
 			DelExhaustStream(contrail[i]);
 			contrail[i] = NULL;
@@ -737,11 +710,8 @@ void SaturnV::SetFirstStageEngines ()
 
 void SaturnV::SetSecondStage ()
 {
-	const double ATTWIDTH=.2;
-	const double ATTHEIGHT=.5;
 	TRACESETUP("SetSecondStage");
 
-	UINT meshidx;
 	ClearMeshes();
 
 	double EmptyMass = Stage2Mass - (InterstageAttached ? 0.0 : Interstage_Mass) - (LESAttached ? 0.0 : Abort_Mass);
@@ -757,75 +727,33 @@ void SaturnV::SetSecondStage ()
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
 
-	VECTOR3 mesh_dir;
-
-	if (InterstageAttached)
-	{
-		mesh_dir=_V(0,0,-30.5-STG1O);
-		meshidx = AddMesh (GetInterstageMesh(), &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
-	}
-
-	mesh_dir=_V(0,0,-17.2-STG1O);
-	meshidx = AddMesh (hStage2Mesh, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
-
-	mesh_dir=_V(0,0,2.-STG1O);
-	meshidx = AddMesh (hStage3Mesh, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
-
-	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
-		mesh_dir=_V(0,0,12-STG1O);
-		AddMesh (hLMPKD, &mesh_dir);
-	}
-
-	mesh_dir=_V(-1.48,-1.48,14.55-STG1O);
-	AddMesh (hStageSLA1Mesh, &mesh_dir);
-	mesh_dir=_V(1.48,-1.48,14.55-STG1O);
-	AddMesh (hStageSLA2Mesh, &mesh_dir);
-	mesh_dir=_V(1.48,1.48,14.55-STG1O);
-    AddMesh (hStageSLA3Mesh, &mesh_dir);
-	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
-    AddMesh (hStageSLA4Mesh, &mesh_dir);
-
-	AddSM(19.1-STG1O, false);
-
-	mesh_dir=_V(0,0,23.25-STG1O);
-	meshidx = AddMesh (hCM, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
-
-	meshidx = AddMesh (hCMVC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
-
-	meshidx = AddMesh (hFHC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	if (Crewed) 
-	{
-		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-	}
-
-	if (LESAttached)
-	{
-		mesh_dir=_V(0,0,28.2-STG1O);
-		meshidx = AddMesh (hsat5tower, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-	}
-
-	SetView(23.1-STG1O, false);
+	SetSecondStageMesh(-STG1O);
 
 	LAUNCHIND[6] = InterstageAttached;
 	bAbtlocked = false;
 }
 
-void SaturnV::SetSecondStageEngines()
+void SaturnV::SetSecondStageMesh(double offset)
+
+{
+	VECTOR3 mesh_dir;
+	UINT meshidx;
+
+	if (InterstageAttached)
+	{
+		mesh_dir=_V(0,0,-30.5 + offset);
+		meshidx = AddMesh (GetInterstageMesh(), &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+	}
+
+	mesh_dir=_V(0,0,-17.2 + offset);
+	meshidx = AddMesh (hStage2Mesh, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
+
+	SetThirdStageMesh(offset);
+}
+
+void SaturnV::SetSecondStageEngines(double offset)
 
 {
     ClearThrusterDefinitions();
@@ -835,29 +763,35 @@ void SaturnV::SetSecondStageEngines()
 		ph_1st = 0;
 	}
 
+	//
 	// ************************* propellant specs **********************************
+	//
+
 	if (!ph_2nd)
 		ph_2nd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_2nd); // display 2nd stage propellant level in generic HUD
 
+	//
 	// *********************** thruster definitions ********************************
+	//
+
 	int i;
 
-	VECTOR3 m_exhaust_pos1= {-1.8,-1.8,-33.5-STG1O};
-	VECTOR3 m_exhaust_pos2= {1.8,1.8,-33.5-STG1O};
-	VECTOR3 m_exhaust_pos3= {-1.8,1.8,-33.5-STG1O};
-	VECTOR3 m_exhaust_pos4 = {1.8,-1.8,-33.5-STG1O};
-	VECTOR3 m_exhaust_pos5 = {0,0,-33.5-STG1O};
-	VECTOR3 s_exhaust_pos = {0, 0, -35.0-STG1O};
+	VECTOR3 m_exhaust_pos1= {-1.8,-1.8,-33.5 + offset};
+	VECTOR3 m_exhaust_pos2= {1.8,1.8,-33.5 + offset};
+	VECTOR3 m_exhaust_pos3= {-1.8,1.8,-33.5 + offset};
+	VECTOR3 m_exhaust_pos4 = {1.8,-1.8,-33.5 + offset};
+	VECTOR3 m_exhaust_pos5 = {0,0,-33.5 + offset};
+	VECTOR3 s_exhaust_pos = {0, 0, -35.0 + offset};
 
-	VECTOR3	m_exhaust_pos6= _V(0,5.07,-33.15-STG1O);
-	VECTOR3 m_exhaust_pos7= _V(0,-5.07,-33.15-STG1O);
-	VECTOR3	m_exhaust_pos8= _V(5.07,0,-33.15-STG1O);
-	VECTOR3 m_exhaust_pos9= _V(-5.07,0,-33.15-STG1O);
-	VECTOR3	m_exhaust_pos10= _V(3.55,3.7,-33.15-STG1O);
-	VECTOR3 m_exhaust_pos11= _V(3.55,-3.7,-33.15-STG1O);
-	VECTOR3	m_exhaust_pos12= _V(-3.55,3.7,-33.15-STG1O);
-	VECTOR3 m_exhaust_pos13= _V(-3.55,-3.7,-33.15-STG1O);
+	VECTOR3	m_exhaust_pos6= _V(0,5.07,-33.15 + offset);
+	VECTOR3 m_exhaust_pos7= _V(0,-5.07,-33.15 + offset);
+	VECTOR3	m_exhaust_pos8= _V(5.07,0,-33.15 + offset);
+	VECTOR3 m_exhaust_pos9= _V(-5.07,0,-33.15 + offset);
+	VECTOR3	m_exhaust_pos10= _V(3.55,3.7,-33.15 + offset);
+	VECTOR3 m_exhaust_pos11= _V(3.55,-3.7,-33.15 + offset);
+	VECTOR3	m_exhaust_pos12= _V(-3.55,3.7,-33.15 + offset);
+	VECTOR3 m_exhaust_pos13= _V(-3.55,-3.7,-33.15 + offset);
 
 	//
 	// Seperation 'thruster'.
@@ -896,8 +830,6 @@ void SaturnV::SetSecondStageEngines()
 
 	for (i = 0; i < 8; i++) {
 		AddExhaustStream (th_sep2[i], &seperation_junk);
-		if (!InterstageAttached)
-			SetThrusterLevel(th_sep2[i], 1.0);
 	}
 
 	//
@@ -908,15 +840,13 @@ void SaturnV::SetSecondStageEngines()
 	th_main[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_main[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_SECOND_VAC , ph_2nd, ISP_SECOND_VAC, ISP_SECOND_SL);
-	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
 
-	for (i = 0; i < 5; i++)
+	thg_main = CreateThrusterGroup (th_main, SII_EngineNum, THGROUP_MAIN);
+
+	for (i = 0; i < SII_EngineNum; i++)
 		AddExhaust (th_main[i], 25.0, 1.5, SMMETex);
 
-	SetThrusterGroupLevel(thg_main, 0.0);
-
 	if (SII_UllageNum) {
-
 		th_ull[0] = CreateThruster (m_exhaust_pos10, _V( 0,0,1),100000 , ph_2nd, 3000);
 		th_ull[1] = CreateThruster (m_exhaust_pos11, _V( 0,0,1),100000, ph_2nd, 3000);
 		th_ull[2] = CreateThruster (m_exhaust_pos12, _V( 0,0,1),100000, ph_2nd, 3000);
@@ -937,11 +867,12 @@ void SaturnV::SetSecondStageEngines()
 	SetSIICMixtureRatio(MixtureRatio);
 }
 
-void SaturnV::SetThirdStage ()
-{
-	TRACESETUP("SetThirdStage");
 
+void SaturnV::SetThirdStage ()
+
+{
 	ClearMeshes();
+	TRACESETUP("SetThirdStage");
 
 	SetSize (15.5);
 	SetCOG_elev (15.225);
@@ -953,25 +884,32 @@ void SaturnV::SetThirdStage ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-	VECTOR3 mesh_dir=_V(0,0,2.-STG2O);
+
+	SetThirdStageMesh(-STG2O);
+}
+
+void SaturnV::SetThirdStageMesh (double offset)
+{
+	VECTOR3 mesh_dir=_V(0,0,2. + offset);
 
 	AddMesh (hStage3Mesh, &mesh_dir);
 	if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
-		mesh_dir=_V(0,0,12-STG2O);
+		mesh_dir=_V(0,0,12 + offset);
 		AddMesh (hLMPKD, &mesh_dir);
 	}
-	mesh_dir=_V(-1.48,-1.48,14.55-STG2O);
+
+	mesh_dir=_V(-1.48,-1.48,14.55 + offset);
 	AddMesh (hStageSLA1Mesh, &mesh_dir);
-	mesh_dir=_V(1.48,-1.48,14.55-STG2O);
+	mesh_dir=_V(1.48,-1.48,14.55 + offset);
 	AddMesh (hStageSLA2Mesh, &mesh_dir);
-	mesh_dir=_V(1.48,1.48,14.55-STG2O);
+	mesh_dir=_V(1.48,1.48,14.55 + offset);
     AddMesh (hStageSLA3Mesh, &mesh_dir);
-	mesh_dir=_V(-1.48,1.48,14.55-STG2O);
+	mesh_dir=_V(-1.48,1.48,14.55 + offset);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
 
-	AddSM(19.1-STG2O, false);
+	AddSM(19.1 + offset, false);
 
-	mesh_dir=_V(0, 0, 23.25-STG2O);
+	mesh_dir=_V(0, 0, 23.25 + offset);
 
 	UINT meshidx;
 	meshidx = AddMesh (hCM, &mesh_dir);
@@ -995,25 +933,34 @@ void SaturnV::SetThirdStage ()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	if (dockingprobe.ProbeExtended)
+	if (LESAttached)
 	{
-		probeidx = AddMesh (hprobeext, &mesh_dir);
+		mesh_dir=_V(0, 0, 28.2 + offset);
+		meshidx = AddMesh (hsat5tower, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
-	else 
+	else
 	{
-		probeidx = AddMesh (hprobe, &mesh_dir);
+		if (dockingprobe.ProbeExtended)
+		{
+			probeidx = AddMesh (hprobeext, &mesh_dir);
+		}
+		else 
+		{
+			probeidx = AddMesh (hprobe, &mesh_dir);
+		}
 	}
 
-	VECTOR3 dockpos = {0,0,24.8-STG2O};
+	VECTOR3 dockpos = {0,0,24.8 + offset};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {0,1,0};
 	SetDockParams(dockpos, dockdir, dockrot);
 
-	SetCameraOffset (_V(-1,1.0,32.4-STG2O));
-	SetView(23.1-STG2O, false);
+	SetCameraOffset (_V(-1,1.0,32.4 + offset));
+	SetView(23.1 + offset, false);
 }
 
-void SaturnV::SetThirdStageEngines ()
+void SaturnV::SetThirdStageEngines (double offset)
 {
 	DelThrusterGroup(THGROUP_MAIN, true);
     ClearThrusterDefinitions();
@@ -1038,16 +985,18 @@ void SaturnV::SetThirdStageEngines ()
 		ph_sep2 = 0;
 	}
 
+	//
 	// *********************** thruster definitions ********************************
+	//
 
-	VECTOR3	s_exhaust_pos1= _V(2.55,2.55,-3.6-STG2O);
-	VECTOR3 s_exhaust_pos2= _V(2.55,-2.55,-3.6-STG2O);
-	VECTOR3	s_exhaust_pos3= _V(-2.55,2.55,-3.6-STG2O);
-	VECTOR3 s_exhaust_pos4= _V(-2.55,-2.55,-3.6-STG2O);
-	VECTOR3	s_exhaust_pos6= _V(0,3.6,-3.6-STG2O);
-	VECTOR3 s_exhaust_pos7= _V(0,-3.6,-3.6-STG2O);
-	VECTOR3	s_exhaust_pos8= _V(3.6,0,-3.6-STG2O);
-	VECTOR3 s_exhaust_pos9= _V(-3.6,0,-3.6-STG2O);
+	VECTOR3	s_exhaust_pos1= _V(2.55,2.55,-3.6 + offset);
+	VECTOR3 s_exhaust_pos2= _V(2.55,-2.55,-3.6 + offset);
+	VECTOR3	s_exhaust_pos3= _V(-2.55,2.55,-3.6 + offset);
+	VECTOR3 s_exhaust_pos4= _V(-2.55,-2.55,-3.6 + offset);
+	VECTOR3	s_exhaust_pos6= _V(0,3.6,-3.6 + offset);
+	VECTOR3 s_exhaust_pos7= _V(0,-3.6,-3.6 + offset);
+	VECTOR3	s_exhaust_pos8= _V(3.6,0,-3.6 + offset);
+	VECTOR3 s_exhaust_pos9= _V(-3.6,0,-3.6 + offset);
 
 	//
 	// Seperation 'thrusters'.
@@ -1073,15 +1022,19 @@ void SaturnV::SetThirdStageEngines ()
 		}
 	}
 
-	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
+	VECTOR3 m_exhaust_pos1= {0,0,-8. + offset};
+
+	//
 	// orbiter main thrusters
+	//
+
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_THIRD_VAC, ph_3rd, ISP_THIRD_VAC);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
 	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
 
-	VECTOR3	u_exhaust_pos6= _V(3.6, -0.425, -3.6-STG2O);
-	VECTOR3 u_exhaust_pos7= _V(-3.6, 0.925, -3.6-STG2O);
+	VECTOR3	u_exhaust_pos6= _V(3.6, -0.425, -3.6 + offset);
+	VECTOR3 u_exhaust_pos7= _V(-3.6, 0.925, -3.6 + offset);
 
 	th_ver[0] = CreateThruster (u_exhaust_pos6, _V( -0.4,0.0,1), 311 , ph_3rd, 45790.85);
 	th_ver[1] = CreateThruster (u_exhaust_pos7, _V( 0.4,0.0,1), 311 , ph_3rd, 45790.85);
@@ -1101,7 +1054,6 @@ void SaturnV::SeparateStage (int stage)
 {
 	VESSELSTATUS vs1;
 	VESSELSTATUS vs2;
-	int i;
 
 	VECTOR3 ofs1 = _V(0,0,0);
 	VECTOR3 ofs2 = _V(0,0,0);
@@ -1234,14 +1186,14 @@ void SaturnV::SeparateStage (int stage)
 			S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
 			S1Config.LowRes = LowRes;
 			S1Config.Stretched = false;
-			S1Config.S4Interstage = false;
-			S1Config.EngineNum = 5;
+			S1Config.S4Interstage = (SaturnType == SAT_INT20);
+			S1Config.EngineNum = SI_EngineNum;
 
 			stage1->SetState(S1Config);
 		}
 
 		SetSecondStage ();
-		SetSecondStageEngines ();
+		SetSecondStageEngines (-STG1O);
 
 		//
 		// Fire 'seperation' thrusters.
@@ -1363,7 +1315,7 @@ void SaturnV::SeparateStage (int stage)
 		stage2->SetState(S2Config);
 
 		SetThirdStage();
-		SetThirdStageEngines();
+		SetThirdStageEngines(-STG2O);
 
 		//
 		// Fire 'seperation' thrusters.
@@ -1778,12 +1730,14 @@ void SaturnV::DockStage (UINT dockstatus)
 void SaturnV::ActivatePrelaunchVenting()
 
 {
+	//
 	// "tank venting" particle streams
+	//
 	static double lvl = 1.0;
 
 	if (!prelaunchvent[0]) prelaunchvent[0] = AddParticleStream(&prelaunchvent1_spec, _V(-5.5, -1,   -24.0 + STG0O), _V(-1,  0, 0), &lvl);
-	if (!prelaunchvent[1]) prelaunchvent[1] = AddParticleStream(&prelaunchvent2_spec, _V(-3.7, -3.7, -38.0 + STG0O), _V(-1, -1, 0), &lvl);
 	if (!prelaunchvent[2]) prelaunchvent[2] = AddParticleStream(&prelaunchvent3_spec, _V(-3.5,  1,    -3.5 + STG0O), _V(-1,  0, 0), &lvl);
+	if (!prelaunchvent[1]) prelaunchvent[1] = AddParticleStream(&prelaunchvent2_spec, _V(-3.7, -3.7, -38.0 + STG0O), _V(-1, -1, 0), &lvl);
 }
 
 void SaturnV::DeactivatePrelaunchVenting()
@@ -1828,7 +1782,9 @@ void SaturnV::ActivateStagingVent()
 void SaturnV::DeactivateStagingVent()
 
 {
+	//
 	// "staging vent" particle streams
+	//
 	int i;
 
 	for (i = 0; i < 8; i++) {

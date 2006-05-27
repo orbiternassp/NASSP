@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.136  2006/05/26 22:01:50  movieman523
+  *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
+  *	
   *	Revision 1.135  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -258,6 +261,7 @@ void Saturn::initSaturn()
 	VehicleNo = 600;
 	ApolloNo = 0;
 	TCPO = 0.0;
+	SaturnType = SAT_UNKNOWN;
 
 	StagesString[0] = 0;
 
@@ -516,6 +520,10 @@ void Saturn::initSaturn()
 	S1_ThrustLoaded = false;
 	S2_ThrustLoaded = false;
 	S3_ThrustLoaded = false;
+
+	SI_EngineNum = 0;
+	SII_EngineNum = 0;
+	SIII_EngineNum = 0;
 
 	//
 	// Propellant handles.
@@ -913,6 +921,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "STAGE", stage);
 	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
+	oapiWriteScenario_int (scn, "SATTYPE", SaturnType);
 	oapiWriteScenario_int (scn, "DOCKSTATE", dockstate);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
 	oapiWriteScenario_float (scn, "TOAPO", agc.GetDesiredApogee());
@@ -971,6 +980,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_float (scn, "T1V", THRUST_FIRST_VAC);
 		oapiWriteScenario_float (scn, "I1S", ISP_FIRST_SL);
 		oapiWriteScenario_float (scn, "I1V", ISP_FIRST_VAC);
+		oapiWriteScenario_int (scn, "SIENG", SI_EngineNum);
 	}
 
 	if (stage < STAGE_ORBIT_SIVB) {
@@ -986,6 +996,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_float (scn, "I3V", ISP_THIRD_VAC);
 		oapiWriteScenario_float (scn, "ISTGJT", InterstageSepTime);
 		oapiWriteScenario_float (scn, "LESJT", LESJettisonTime);
+		oapiWriteScenario_int (scn, "SIIENG", SII_EngineNum);
 
 		//
 		// Save pitch program.
@@ -1009,6 +1020,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	}
 
 	if (stage < CSM_LEM_STAGE) {
+		oapiWriteScenario_int (scn, "SIIIENG", SIII_EngineNum);
 		oapiWriteScenario_int (scn, "LAUNCHSTATE", GetLaunchState());
 	}
 
@@ -1239,7 +1251,11 @@ int Saturn::GetAttachState()
 {
 	AttachState state;
 
-	state.word = 0;
+	//
+	// Default to everything attached, for future compatibility.
+	//
+
+	state.word = 0x7fffffff;
 	state.u.InterstageAttached = InterstageAttached;
 	state.u.LESAttached = LESAttached;
 
@@ -1500,6 +1516,18 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line + 7, "%f", &ftcp);
 		SecondStageShutdownTime = ftcp;
 	}
+	else if (!strnicmp (line, "SIENG", 5)) {
+		sscanf (line + 5, "%d", &SI_EngineNum);
+	}
+	else if (!strnicmp (line, "SIIENG", 6)) {
+		sscanf (line + 6, "%d", &SII_EngineNum);
+	}
+	else if (!strnicmp (line, "SIIIENG", 7)) {
+		sscanf (line + 7, "%d", &SIII_EngineNum);
+	}
+	else if (!strnicmp (line, "SIIENG", 6)) {
+		sscanf (line + 6, "%d", &SII_EngineNum);
+	}
 	else if (!strnicmp (line, "ISTGJT", 6)) {
 		sscanf (line + 6, "%f", &ftcp);
 		InterstageSepTime = ftcp;
@@ -1613,6 +1641,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "APOLLONO", 8)) {
 		sscanf (line+8, "%d", &ApolloNo);
+	}
+	else if (!strnicmp (line, "SATTYPE", 7)) {
+		sscanf (line+7, "%d", &SaturnType);
 	}
 	else if (!strnicmp (line, "DOCKSTATE", 9)) {
         sscanf (line+9, "%d", &dockstate);
