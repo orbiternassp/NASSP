@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/05/27 11:50:04  movieman523
+  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
+  *	
   *	Revision 1.13  2006/01/27 22:11:38  movieman523
   *	Added support for low-res Saturn 1b.
   *	
@@ -98,6 +101,7 @@ protected:
 	void SetSecondStage2 ();
 
 	void ConfigureStageMeshes(int stage_state);
+	void ConfigureStageEngines(int stage_state);
 
 	void SetASTPStage ();
 	void clbkLoadStateEx (FILEHANDLE scn, void *vs);
