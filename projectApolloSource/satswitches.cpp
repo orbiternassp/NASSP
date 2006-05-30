@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.14  2006/04/25 13:54:44  tschachim
   *	Removed GetXXXSwitchState.
   *	
@@ -129,7 +133,7 @@ void SaturnValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Sw
 int SaturnValveTalkback::GetState()
 
 {
-	if (our_vessel && (SRC->Voltage() > 20))
+	if (our_vessel && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
 		return our_vessel->GetValveState(Valve) ? 1 : 0;
 
 	return 0;
@@ -156,7 +160,7 @@ void SaturnPropValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf
 int SaturnPropValveTalkback::GetState()
 
 {
-	if (our_vessel && (SRC->Voltage() > 20))
+	if (our_vessel && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
 		return (our_vessel->GetValveState(Valve1) ? 1 : 0) && (our_vessel->GetValveState(Valve2) ? 1 : 0);
 
 	return 0;
@@ -198,7 +202,7 @@ bool SaturnValveSwitch::SwitchTo(int newState)
 void SaturnValveSwitch::CheckValve(int s) 
 
 {
-	if (sat && (SRC->Voltage() > 20)) {
+	if (sat && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
 		if (s == THREEPOSSWITCH_UP) {
 			sat->SetValveState(Valve, true);
 			if (Indicator)
@@ -253,7 +257,7 @@ bool SaturnPropValveSwitch::SwitchTo(int newState)
 void SaturnPropValveSwitch::CheckValve(int s) 
 
 {
-	if (sat && (SRC->Voltage() > 20)) {
+	if (sat && (SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
 		if (s == THREEPOSSWITCH_UP) {
 			sat->SetValveState(Valve1, true);
 			sat->SetValveState(Valve2, true);
@@ -1072,6 +1076,7 @@ void SaturnH2oQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	DrawNeedle(drawSurface, 45, 22, 20.0, (180.0 - v) * RAD);
 }
 
+
 double SaturnAccelGMeter::QueryValue()
 
 {
@@ -1194,4 +1199,137 @@ void SaturnSuitCompressorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE s
 	ACBus1.WireToBuses(ac1a, ac1b, ac1c);
 	ACBus2.WireToBuses(ac2a, ac2b, ac2c);
 	ThreeSourceSwitch::Init(xp, yp, w, h, surf, bsurf, row, &ACBus1, NULL, &ACBus2);
+}
+
+
+void SaturnACVoltMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *acindicatorswitch)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	ACIndicatorSwitch = acindicatorswitch;
+}
+
+double SaturnACVoltMeter::QueryValue()
+
+{
+	return ACIndicatorSwitch->Voltage();
+}
+
+void SaturnACVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	v = 225.0 -  4.5 * (v - 85.0);	
+	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
+}
+
+
+void DCBusIndicatorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DCBusController *d, int fc)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row);
+	dcbus = d;
+	fuelcell = fc;
+}
+
+int DCBusIndicatorSwitch::GetState()
+
+{
+	if (dcbus->IsFuelCellConnected(fuelcell))
+		return 1;
+	else
+		return 0;
+}
+
+
+void SaturnFuelCellConnectSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int fc, DCBusController *dcController)
+
+{
+	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
+
+	fuelCell = fc;
+	dcBusController = dcController;
+}
+
+bool SaturnFuelCellConnectSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
+		CheckFuelCell(GetState());
+		return true;
+	}
+
+	return false;
+}
+
+bool SaturnFuelCellConnectSwitch::SwitchTo(int newState)
+
+{
+	if (SaturnThreePosSwitch::SwitchTo(newState)) {
+		// some of these switches are spring-loaded, 
+		// so we have to use newState here
+		CheckFuelCell(newState);
+		return true;
+	}
+
+	return false;
+}
+
+void SaturnFuelCellConnectSwitch::CheckFuelCell(int s) 
+
+{
+	if (s == THREEPOSSWITCH_UP) {
+		dcBusController->ConnectFuelCell(fuelCell, true);
+	}
+	else if (s == THREEPOSSWITCH_DOWN) {
+		dcBusController->ConnectFuelCell(fuelCell, false);
+	}
+}
+
+
+void SaturnDCVoltMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	DCIndicatorSwitch = dcindicatorswitch;
+}
+
+double SaturnDCVoltMeter::QueryValue()
+
+{
+	return DCIndicatorSwitch->Voltage();
+}
+
+void SaturnDCVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	v = 225.0 -  9.0 * (v - 17.5);	
+	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
+}
+
+
+void SaturnDCAmpMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	DCIndicatorSwitch = dcindicatorswitch;
+}
+
+double SaturnDCAmpMeter::QueryValue()
+
+{
+	// Battery Charger
+	if (DCIndicatorSwitch->GetState() == 7)
+		return DCIndicatorSwitch->Current() * 20.0;
+
+	return DCIndicatorSwitch->Current();
+}
+
+void SaturnDCAmpMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	v = 225.0 -  2.25 * (v + 10.0);	
+	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
 }

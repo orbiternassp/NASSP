@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.138  2006/05/27 11:50:04  movieman523
+  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
+  *	
   *	Revision 1.137  2006/05/27 00:54:28  movieman523
   *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
   *	
@@ -196,8 +199,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	ACBus2Source(0, Panelsdk),
 	ACBus1("ACBus1", Panelsdk),
 	ACBus2("ACBus2", Panelsdk),
-	DCBusASource("DCBusASource", Panelsdk),
-	DCBusBSource("DCBusBSource", Panelsdk),
+	MainBusAController("MainBusAController", Panelsdk),
+	MainBusBController("MainBusBController", Panelsdk),
 	BatteryBusA("Battery-Bus-A", Panelsdk),
 	BatteryBusB("Battery-Bus-B", Panelsdk),
 	PyroBusA("Pyro-Bus-A", Panelsdk),
@@ -214,7 +217,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	CMSMPyros("CM-SM-Pyros", Panelsdk),
 	EcsGlycolPumpsSwitch(Panelsdk),
 	SuitCompressor1Switch(Panelsdk),
-	SuitCompressor2Switch(Panelsdk)
+	SuitCompressor2Switch(Panelsdk),
+	BatteryCharger("BatteryCharger", Panelsdk)
 
 {
 	InitSaturnCalled = false;
@@ -398,15 +402,7 @@ void Saturn::initSaturn()
 	LMPadValueCount = 0;
 
 	//
-	// State for damping electrical meter display.
-	//
-
-	LastACVoltDisplay = 0.0;
-	LastDCVoltDisplay = 0.0;
-	LastDCAmpDisplay = 0.0;
-
-	//
-	// And thrust/AoA meter.
+	// State for damping thrust/AoA meter.
 	//
 
 	LastThrustDisplay = 0.0;
@@ -3466,6 +3462,10 @@ bool Saturn::CheckForLaunchShutdown()
 			//
 			// Checklist actions
 			//
+
+			// Un-Tie batteries from buses
+			MainBusTieBatAcSwitch.SwitchTo(THREEPOSSWITCH_DOWN);
+			MainBusTieBatBcSwitch.SwitchTo(THREEPOSSWITCH_DOWN);
 
 			// Unlatch FC valves
 			FCReacsValvesSwitch.SwitchTo(TOGGLESWITCH_UP);

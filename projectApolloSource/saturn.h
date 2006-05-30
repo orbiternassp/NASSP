@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.182  2006/05/27 11:50:04  movieman523
+  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
+  *	
   *	Revision 1.181  2006/05/27 00:54:28  movieman523
   *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
   *	
@@ -462,6 +465,8 @@ typedef struct {
 	double MainBusBVoltage;
 	bool Enabled_DC_A_CWS;
 	bool Enabled_DC_B_CWS;
+	bool Reset_DC_A_CWS;
+	bool Reset_DC_B_CWS;
 	bool Fc_Disconnected;
 } MainBusStatus;
 
@@ -1090,7 +1095,7 @@ protected:
 	PowerStateRotationalSwitch DCIndicatorsRotary;
 
 	SwitchRow BatteryChargeRotaryRow;
-	PowerStateRotationalSwitch BatteryChargeRotary;
+	RotationalSwitch BatteryChargeRotary;
 
 	SwitchRow ACIndicatorRotaryRow;
 	PowerStateRotationalSwitch ACIndicatorRotary;
@@ -1108,21 +1113,32 @@ protected:
 	TwoSourceSwitch AcBus2Switch3;
 	ThreeSourceSwitch AcBus2ResetSwitch;
 
-	IndicatorSwitch MainBusBIndicator1;
-	IndicatorSwitch MainBusBIndicator2;
-	IndicatorSwitch MainBusBIndicator3;
-	IndicatorSwitch MainBusAIndicator1;
-	IndicatorSwitch MainBusAIndicator2;
-	IndicatorSwitch MainBusAIndicator3;
-	ThreePosSwitch MainBusBSwitch1;
-	ThreePosSwitch MainBusBSwitch2;
-	ThreePosSwitch MainBusBSwitch3;
+	DCBusIndicatorSwitch MainBusBIndicator1;
+	DCBusIndicatorSwitch MainBusBIndicator2;
+	DCBusIndicatorSwitch MainBusBIndicator3;
+	DCBusIndicatorSwitch MainBusAIndicator1;
+	DCBusIndicatorSwitch MainBusAIndicator2;
+	DCBusIndicatorSwitch MainBusAIndicator3;
+	SaturnFuelCellConnectSwitch MainBusBSwitch1;
+	SaturnFuelCellConnectSwitch MainBusBSwitch2;
+	SaturnFuelCellConnectSwitch MainBusBSwitch3;
 	ThreeSourceSwitch MainBusBResetSwitch;
-	ThreePosSwitch MainBusASwitch1;
-	ThreePosSwitch MainBusASwitch2;
-	ThreePosSwitch MainBusASwitch3;
+	SaturnFuelCellConnectSwitch MainBusASwitch1;
+	SaturnFuelCellConnectSwitch MainBusASwitch2;
+	SaturnFuelCellConnectSwitch MainBusASwitch3;
 	ThreeSourceSwitch MainBusAResetSwitch;
-	
+
+	//
+	// Electrical meters
+	SwitchRow ACVoltMeterRow;
+	SaturnACVoltMeter ACVoltMeter;
+
+	SwitchRow DCVoltMeterRow;
+	SaturnDCVoltMeter DCVoltMeter;
+
+	SwitchRow DCAmpMeterRow;
+	SaturnDCAmpMeter DCAmpMeter;
+
 	//
 	// FDAI control switches.
 	//
@@ -1419,8 +1435,8 @@ protected:
 	CircuitBrakerSwitch BatteryChargerBatACircuitBraker;
 	CircuitBrakerSwitch BatteryChargerBatBCircuitBraker;
 	CircuitBrakerSwitch BatteryChargerMnACircuitBraker;
-	CircuitBrakerSwitch BatteryChargerMNBCircuitBraker;
-	CircuitBrakerSwitch BatteryChargerAcPWRCircuitBraker;
+	CircuitBrakerSwitch BatteryChargerMnBCircuitBraker;
+	CircuitBrakerSwitch BatteryChargerAcPwrCircuitBraker;
 
 	// Instrument lighting circuit brakers
 
@@ -1598,7 +1614,7 @@ protected:
 	ThreePosSwitch MainBusTieBatBcSwitch;
 
 	SwitchRow BatCHGRSwitchRow;
-	ToggleSwitch BatCHGRSwitch;
+	ThreeSourceSwitch BatCHGRSwitch;
 
 	SwitchRow NonessBusSwitchRow;
 	ThreePosSwitch NonessBusSwitch;
@@ -1949,7 +1965,8 @@ protected:
 	#define SATSYSTEMS_CREWINGRESS_1	200
 	#define SATSYSTEMS_CREWINGRESS_2	210
 	#define SATSYSTEMS_CABINCLOSEOUT	300
-	#define SATSYSTEMS_GSECONNECTED		400
+	#define SATSYSTEMS_GSECONNECTED_1	400
+	#define SATSYSTEMS_GSECONNECTED_2	410
 	#define SATSYSTEMS_READYTOLAUNCH    500
 	#define SATSYSTEMS_CABINVENTING		600
 	#define SATSYSTEMS_FLIGHT			700
@@ -2109,9 +2126,8 @@ protected:
 	DCbus NonEssBus1;
 	DCbus NonEssBus2;
 
-
-	ThreeWayPowerMerge DCBusASource;
-	ThreeWayPowerMerge DCBusBSource;
+	DCBusController MainBusAController;
+	DCBusController MainBusBController;
 
 	//
 	// Inverters.
@@ -2151,6 +2167,8 @@ protected:
 
 	PowerMerge BatteryRelayBus;
 
+	BatteryCharger BatteryCharger;
+
 	PowerMerge PyroBusA;
 	PowerMerge PyroBusB;
 
@@ -2167,9 +2185,6 @@ protected:
 	AtmRegen *SuitCompressor1;
 	AtmRegen *SuitCompressor2;
 
-	double LastACVoltDisplay;
-	double LastDCVoltDisplay;
-	double LastDCAmpDisplay;
 	double LastThrustDisplay;
 
 	//
@@ -2393,7 +2408,6 @@ protected:
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
-	void RedrawPanel_ElectricMeter (SURFHANDLE surf, double fraction, int srf_id, double &last_val);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);

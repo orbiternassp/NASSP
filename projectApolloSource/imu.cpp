@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.19  2006/04/25 13:33:43  tschachim
   *	Comment removed.
   *	
@@ -165,6 +169,7 @@ void IMU::Init()
 	Velocity.z = 0;
 
 	OurVessel = 0;
+	IMUHeater = 0;
 
 	ZeroIMUCDUs();
 	LastTime = -1;
@@ -390,6 +395,7 @@ VECTOR3 IMU::CalculateAccelerations(double deltaT)
 	// total gravity
 	GravityAcceleration = GravityAcceleration + gb;
 
+	// sprintf(oapiDebugString(), "Total Gravity %f", Acceleration + GravityAcceleration);
 
 	// ***********************************************************
 	// store for next timestep
@@ -402,7 +408,9 @@ VECTOR3 IMU::CalculateAccelerations(double deltaT)
 bool IMU::IsPowered()
 
 {
-	return DCPower.Voltage() > SP_MIN_DCVOLTAGE && IMUHeater->pumping;
+	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) return false;
+	if (IMUHeater && !IMUHeater->pumping) return false;
+	return true;
 }
 
 void IMU::WireHeaterToBuses(Boiler *heater, e_object *a, e_object *b)

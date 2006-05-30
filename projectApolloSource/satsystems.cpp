@@ -1,4 +1,4 @@
-/*	***************************************************************************
+/****************************************************************************
   This file is part of Project Apollo - NASSP
   Copyright 2004-2005 Jean-Luc Rocca-Serra, Mark Grant
 
@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.103  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.102  2006/05/17 03:45:12  dseagrav
   *	Corrected GDC attitude determination in RATE1/RATE2 modes, corrected ECA handling of negative attitude input
   *	
@@ -390,6 +394,9 @@ void Saturn::SystemsInit() {
 
 	e_object *eo;
 
+	//
+	// Inverters
+	//
 	Inverter1 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_1");
 	Inverter2 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_2");
 	Inverter3 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_3");
@@ -398,39 +405,31 @@ void Saturn::SystemsInit() {
 	Inverter2->WireTo(&InverterControl2CircuitBraker);
 	Inverter3->WireTo(&InverterControl3CircuitBraker);
 
-	MainBusA = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_A");
-	MainBusB = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_B");
-
-	DCBusASource.WireToBuses(&MainBusASwitch1, &MainBusASwitch2, &MainBusASwitch3);
-	DCBusBSource.WireToBuses(&MainBusBSwitch1, &MainBusBSwitch2, &MainBusBSwitch3);
-
-	MainBusA->WireTo(&DCBusASource);
-	MainBusB->WireTo(&DCBusBSource);
-	
+	//
+	// AC Bus 1
+	//
 	ACBus1Source.WireToBuses(&AcBus1Switch1, &AcBus1Switch2, &AcBus1Switch3);
-	ACBus2Source.WireToBuses(&AcBus2Switch1, &AcBus2Switch2, &AcBus2Switch3);
-
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_1");
-	eo->WireTo(&ACBus1);
 
 	ACBus1PhaseA.WireTo(&ACBus1Source);
 	ACBus1PhaseB.WireTo(&ACBus1Source);
 	ACBus1PhaseC.WireTo(&ACBus1Source);
+	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
 
-	BatteryRelayBus.WireToBuses( &BATRLYBusBatACircuitBraker, &BATRLYBusBatBCircuitBraker);
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_1");
+	eo->WireTo(&ACBus1);
 
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_2");
-	eo->WireTo(&ACBus2);
+	//
+	// AC Bus 2
+	//
+	ACBus2Source.WireToBuses(&AcBus2Switch1, &AcBus2Switch2, &AcBus2Switch3);
 
 	ACBus2PhaseA.WireTo(&ACBus2Source);
 	ACBus2PhaseB.WireTo(&ACBus2Source);
 	ACBus2PhaseC.WireTo(&ACBus2Source);
-
-	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
 	ACBus2.WireToBuses(&ACBus2PhaseA, &ACBus2PhaseB, &ACBus2PhaseC);
-
-	PyroPower.WireToBuses(&PyroArmASwitch, &PyroArmBSwitch);
-	SECSLogicPower.WireToBuses(&Logic1Switch, &Logic2Switch);
+	
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_2");
+	eo->WireTo(&ACBus2);
 
 	//
 	// For now we register these systems so that the panel SDK will update
@@ -438,11 +437,9 @@ void Saturn::SystemsInit() {
 	// if we're not careful.
 	//
 
-
 	Panelsdk.AddElectrical(&ACBus1PhaseA, false);
 	Panelsdk.AddElectrical(&ACBus1PhaseB, false);
 	Panelsdk.AddElectrical(&ACBus1PhaseC, false);
-
 	Panelsdk.AddElectrical(&ACBus2PhaseA, false);
 	Panelsdk.AddElectrical(&ACBus2PhaseB, false);
 	Panelsdk.AddElectrical(&ACBus2PhaseC, false);
@@ -488,11 +485,43 @@ void Saturn::SystemsInit() {
 	// Wire battery buses to batteries.
 	//
 
-	BatteryBusA.WireToBuses(EntryBatteryA, EntryBatteryB, EntryBatteryC);
-	BatteryBusB.WireToBuses(EntryBatteryA, EntryBatteryB, EntryBatteryC);
+	BatteryBusA.WireToBuses(EntryBatteryA, NULL, NULL);		// TODO Bat C can be connected to BatBus A via the BAT C TO BAT BUS A cb on panel 250, which is currently not available 
+	BatteryBusB.WireToBuses(EntryBatteryB, NULL, NULL);		// TODO Bat C can be connected to BatBus B via the BAT C TO BAT BUS B cb on panel 250, which is currently not available
 
 	PyroBusA.WireToBuses(EntryBatteryA, PyroBatteryA);
 	PyroBusB.WireToBuses(EntryBatteryB, PyroBatteryB);
+
+	BatteryRelayBus.WireToBuses( &BATRLYBusBatACircuitBraker, &BATRLYBusBatBCircuitBraker);
+
+	//
+	// Main Buses
+	//
+
+	MainBusA = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_A");
+	MainBusB = (DCbus *) Panelsdk.GetPointerByString("ELECTRIC:DC_B");
+	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_GSE");
+
+	MainBusA->WireTo(MainBusAController.GetBusSource());
+	MainBusB->WireTo(MainBusBController.GetBusSource());
+
+	MainBusAController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
+		                    &BatteryBusA, EntryBatteryC, eo);	// TODO Bat C should be connected via the MAIN A - BAT C cb on panel 275, which is currently not available
+
+	MainBusBController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
+		                    &BatteryBusB, EntryBatteryC, eo);	// TODO Bat C should be connected via the MAIN B - BAT C cb on panel 275, which is currently not available
+	
+	MainBusAController.ConnectFuelCell(2, true);	// Default state of MainBusASwitch2
+
+	//
+	// Battery Charger
+	//
+
+	BatteryCharger.Init(EntryBatteryA, EntryBatteryB, EntryBatteryC,
+		                &BatteryChargerBatACircuitBraker, &BatteryChargerBatBCircuitBraker, EntryBatteryC,
+						&BatteryChargerMnACircuitBraker, &BatteryChargerMnBCircuitBraker, &BatteryChargerAcPwrCircuitBraker);
+
+	EntryBatteryA->WireTo(&BatteryChargerBatACircuitBraker);
+	EntryBatteryB->WireTo(&BatteryChargerBatBCircuitBraker);
 
 	//
 	// Generic power source for switches, tied to both Bus A and
@@ -500,6 +529,9 @@ void Saturn::SystemsInit() {
 	//
 
 	SwitchPower.WireToBuses(MainBusA, MainBusB);
+
+	PyroPower.WireToBuses(&PyroArmASwitch, &PyroArmBSwitch);
+	SECSLogicPower.WireToBuses(&Logic1Switch, &Logic2Switch);
 
 	//
 	// ECS devices
@@ -867,15 +899,20 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				PrimEcsRadiatorExchanger1->SetLength(8.0);
 				PrimEcsRadiatorExchanger2->SetLength(8.0);
 
+				// GSE provides electrical power
+				MainBusAController.SetGSEState(1);
+				MainBusBController.SetGSEState(1);
+
+				// Reduce fuel cell cooling power because of low fuel cell load
+				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 3.0;
+				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 3.0;
+				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 3.0;
+
+
 				//
 				// Checklist actions
 				//
 				
-				// Temporary fix because of too low power load
-				// FuelCellRadiators1Switch.SwitchTo(THREEPOSSWITCH_DOWN);  
-				// FuelCellRadiators2Switch.SwitchTo(THREEPOSSWITCH_DOWN);  
-				// FuelCellRadiators3Switch.SwitchTo(THREEPOSSWITCH_DOWN);  
-
 				// Activate CMC
 				GNComputerMnACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
 				GNComputerMnBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
@@ -974,11 +1011,11 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
 					if (scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) {	// Suit Cabin delta p is established
 
-						// Open cabin pressure regulator, max flow to 0.4 lb/h  
+						// Open cabin pressure regulator, max flow to 0.25 lb/h  
 						open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
 						*open = SP_VALVE_OPEN;
 						fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOWMAX");
-						*fMax = 0.25 / LBH; //0.4 / LBH;
+						*fMax = 0.25 / LBH; 
 
 						// Close cabin to suit circuit return value
 						open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
@@ -999,7 +1036,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 					// Cabin leak
 					size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-					*size = (float) 0.0002; //0.0005;
+					*size = (float) 0.0002; 
 					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
 					*open = SP_VALVE_OPEN;
 
@@ -1017,11 +1054,41 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					if (Realism && oapiGetTimeAcceleration() > 1.0)
 						oapiSetTimeAcceleration(1.0);
 
+
 					//
 					// Checklist actions
 					//
 
-					// Turn on SM RCS
+					// Turn off cabin fans (AOH2 4.2.1.6)
+					CabinFan1Switch.SwitchTo(TOGGLESWITCH_DOWN);
+					CabinFan2Switch.SwitchTo(TOGGLESWITCH_DOWN);
+
+					// Turn on BMAGs (AOH2 4.2.2.1)
+					// TODO
+
+					// TVC check, power buses (AOH2 4.2.2.2)
+					MainBusASwitch1.SwitchTo(THREEPOSSWITCH_UP);
+					MainBusASwitch2.SwitchTo(THREEPOSSWITCH_UP);
+					MainBusBSwitch3.SwitchTo(THREEPOSSWITCH_UP);
+
+					// Turn on sequencial logic and arm pyros (AOH2 4.2.2.6)
+					ArmBatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+					ArmBatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);					
+					LogicBatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+					LogicBatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+
+					Logic1Switch.SwitchTo(TOGGLESWITCH_UP);
+					Logic2Switch.SwitchTo(TOGGLESWITCH_UP);
+					PyroArmASwitch.SwitchTo(TOGGLESWITCH_UP);
+					PyroArmBSwitch.SwitchTo(TOGGLESWITCH_UP);
+
+					// Turn off cyro fans
+					H2Fan1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+					H2Fan2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+					O2Fan1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+					O2Fan2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+
+					// Turn on SM RCS (AOH2 4.2.2.7)
 					SMRCSHelium1ASwitch.SwitchTo(THREEPOSSWITCH_UP); 
 					SMRCSHelium1BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
 					SMRCSHelium1CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
@@ -1041,49 +1108,51 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					SMRCSProp2BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
 					SMRCSProp2CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
 					SMRCSProp2DSwitch.SwitchTo(THREEPOSSWITCH_UP); 
+					
 
-					// Turn on sequencial logic and arm pryros
-					ArmBatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-					ArmBatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);					
-					LogicBatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-					LogicBatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+					// Next state
+					systemsState = SATSYSTEMS_GSECONNECTED_1;
+					lastSystemsMissionTime = MissionTime; 
+				}
+				break;	
 
-					Logic1Switch.SwitchTo(TOGGLESWITCH_UP);
-					Logic2Switch.SwitchTo(TOGGLESWITCH_UP);
-					PyroArmASwitch.SwitchTo(TOGGLESWITCH_UP);
-					PyroArmBSwitch.SwitchTo(TOGGLESWITCH_UP);
-						
-					// Turn off cabin fans
-					CabinFan1Switch.SwitchTo(TOGGLESWITCH_DOWN);
-					CabinFan2Switch.SwitchTo(TOGGLESWITCH_DOWN);
+			case SATSYSTEMS_GSECONNECTED_1:
+				if (MissionTime >= -900) {	// 15min before launch
 
-					// Turn off cyro fans
-					H2Fan1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-					H2Fan2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-					O2Fan1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-					O2Fan2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
+					// Disable GSE electrical power 
+					// Reference: Apollo 15 Flight Journal (http://history.nasa.gov/ap15fj/01launch_to_earth_orbit.htm)
+					MainBusAController.SetGSEState(0);
+					MainBusBController.SetGSEState(0);
 
-					// EDS auto on
+					// Set fuel cell cooling power to normal
+					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR1:RAD") = 6.8;
+					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 6.8;
+					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 6.8;
+
+
+					//
+					// Checklist actions
+					//
+
+					// EDS auto on (AOH2 4.2.3)
 					EDSSwitch.SwitchTo(TOGGLESWITCH_UP);
 					
 					// Latch FC valves
 					FCReacsValvesSwitch.SwitchTo(TOGGLESWITCH_DOWN);
 
-					// Temporary solution to enable medium heating of the primary coolant loop. 
-					// HighGainAntennaPitchPositionSwitch.SwitchTo(3);
-
 
 					// Next state
-					systemsState = SATSYSTEMS_GSECONNECTED;
+					systemsState = SATSYSTEMS_GSECONNECTED_2;
 					lastSystemsMissionTime = MissionTime; 
 				}
-				break;	
+				break;
 
-			case SATSYSTEMS_GSECONNECTED:
+			case SATSYSTEMS_GSECONNECTED_2:
 				if (MissionTime >= -135) {	// 2min 15sec before launch
 					// Disable GSE devices
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
+
 
 					//
 					// Checklist actions
@@ -1091,6 +1160,10 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 					// Bypass primary radiators
 					GlycolToRadiatorsLever.SwitchTo(TOGGLESWITCH_DOWN);
+
+					// Tie batteries to buses
+					MainBusTieBatAcSwitch.SwitchTo(THREEPOSSWITCH_UP);
+					MainBusTieBatBcSwitch.SwitchTo(THREEPOSSWITCH_UP);
 
 					// Next state
 					systemsState = SATSYSTEMS_READYTOLAUNCH;
@@ -1166,8 +1239,8 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 					// Close Direct O2 valve
 					DirectO2RotarySwitch.SwitchTo(3);
-				
-					
+									
+
 					// Next state
 					systemsState = SATSYSTEMS_FLIGHT;
 					lastSystemsMissionTime = MissionTime; 
@@ -1184,15 +1257,21 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 #ifdef _DEBUG
 
-/*		sprintf(oapiDebugString(), "Bus A = %3.3fA/%3.3fV, Bus B = %3.3fA/%3.3fV, AC Bus 1 = %3.3fA/%3.3fV, AC Bus 2 = %3.3fA/%3.3fV, Batt A = %3.3fV, Batt B = %3.3fV", 
+/*		sprintf(oapiDebugString(), "Bus A = %3.1fA/%3.1fV, Bus B = %3.1fA/%3.1fV, AC Bus 1 = %3.1fA/%3.1fV, AC Bus 2 = %3.1fA/%3.1fV, Batt A = %3.1fV, Batt B = %3.1fV FC1 %3.1fV/%3.1fA", 
 			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
-			ACBus1Source.Current(), ACBus1Source.Voltage(), ACBus2Source.Current(), ACBus2Source.Voltage(), EntryBatteryA->Voltage(), EntryBatteryB->Voltage());
+			ACBus1Source.Current(), ACBus1Source.Voltage(), ACBus2Source.Current(), ACBus2Source.Voltage(), EntryBatteryA->Voltage(), EntryBatteryB->Voltage(), FuelCells[0]->Voltage(), FuelCells[0]->Current());
 */
-//		sprintf(oapiDebugString(), "FC1 %3.3fV/%3.3fA/%3.3fW FC2 %3.3fV/%3.3fA/%3.3fW FC3 %3.3fV/%3.3fA/%3.3fW",
-//			FuelCells[0]->Voltage(), FuelCells[0]->Current(), FuelCells[0]->PowerLoad(),
-//			FuelCells[1]->Voltage(), FuelCells[1]->Current(), FuelCells[1]->PowerLoad(),
-//			FuelCells[2]->Voltage(), FuelCells[2]->Current(), FuelCells[2]->PowerLoad());
-
+/*		sprintf(oapiDebugString(), "Bus A %3.1fA/%3.1fV, Bus B %3.1fA/%3.1fV, Batt A %3.1fV/%3.1fA/%.3f, Batt B %3.1fV/%.3f Batt C %3.1fV/%.3f Charg %2.1fV/%3.1fA FC1 %3.1fV/%3.1fA", 
+			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
+			EntryBatteryA->Voltage(), EntryBatteryA->Current(), EntryBatteryA->Capacity() / 5508000.0, EntryBatteryB->Voltage(), EntryBatteryB->Capacity() / 5508000.0, EntryBatteryC->Voltage(), EntryBatteryC->Capacity() / 5508000.0,
+			BatteryCharger.Voltage(), BatteryCharger.Current(),
+			FuelCells[0]->Voltage(), FuelCells[0]->Current());
+*/
+/*		sprintf(oapiDebugString(), "FC1 %3.3fV/%3.3fA/%3.3fW FC2 %3.3fV/%3.3fA/%3.3fW FC3 %3.3fV/%3.3fA/%3.3fW",
+			FuelCells[0]->Voltage(), FuelCells[0]->Current(), FuelCells[0]->PowerLoad(),
+			FuelCells[1]->Voltage(), FuelCells[1]->Current(), FuelCells[1]->PowerLoad(),
+			FuelCells[2]->Voltage(), FuelCells[2]->Current(), FuelCells[2]->PowerLoad());
+*/
 
 	double *massCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *tempCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
@@ -2964,8 +3043,10 @@ void Saturn::GetMainBusStatus(MainBusStatus &ms)
 	ms.MainBusAVoltage = 0.0;
 	ms.MainBusBVoltage = 0.0;
 	
-	ms.Enabled_DC_A_CWS = (MainBusAResetSwitch.Voltage() > 20);
-	ms.Enabled_DC_B_CWS = (MainBusBResetSwitch.Voltage() > 20);
+	ms.Enabled_DC_A_CWS = (MainBusAResetSwitch.Voltage() > SP_MIN_DCVOLTAGE);
+	ms.Enabled_DC_B_CWS = (MainBusBResetSwitch.Voltage() > SP_MIN_DCVOLTAGE);
+	ms.Reset_DC_A_CWS = MainBusAResetSwitch.IsUp();
+	ms.Reset_DC_B_CWS = MainBusBResetSwitch.IsUp();
 	
 	if (&MainBusA) {
 		ms.MainBusAVoltage = MainBusA->Voltage();}
@@ -2973,16 +3054,8 @@ void Saturn::GetMainBusStatus(MainBusStatus &ms)
 	if (&MainBusB) {
 		ms.MainBusBVoltage = MainBusB->Voltage();}
 
-	if (( MainBusASwitch1.IsCenter() && !MainBusAIndicator1 ) ||
-		( MainBusASwitch2.IsCenter() && !MainBusAIndicator2 ) ||
-		( MainBusASwitch3.IsCenter() && !MainBusAIndicator3 ) ||
-		( MainBusBSwitch1.IsCenter() && !MainBusBIndicator1 ) ||
-		( MainBusBSwitch2.IsCenter() && !MainBusBIndicator2 ) ||
-		( MainBusBSwitch3.IsCenter() && !MainBusBIndicator3 ))
-		ms.Fc_Disconnected = true;
-	else
-		ms.Fc_Disconnected = false;
-
+	ms.Fc_Disconnected = MainBusAController.IsFuelCellDisconnectAlarm() || 
+		                 MainBusBController.IsFuelCellDisconnectAlarm();
 }
 
 //
@@ -3001,6 +3074,7 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 	as.Phase2Voltage = 0.0;
 	as.Phase3Voltage = 0.0;
 	as.Enabled_AC_CWS = true;
+	as.Reset_AC_CWS = false;
 
 	switch (busno) {
 	case 1:
@@ -3012,7 +3086,8 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Voltage = ACBus1PhaseA.Voltage();
 		as.Phase2Voltage = ACBus1PhaseB.Voltage();
 		as.Phase3Voltage = ACBus1PhaseC.Voltage();
-		as.Enabled_AC_CWS = (AcBus1ResetSwitch.Voltage() > 20);
+		as.Enabled_AC_CWS = (AcBus1ResetSwitch.Voltage() > SP_MIN_DCVOLTAGE);
+		as.Reset_AC_CWS = AcBus1ResetSwitch.IsUp();
 		break;
 
 	case 2:
@@ -3024,7 +3099,8 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 		as.Phase1Voltage = ACBus2PhaseA.Voltage();
 		as.Phase2Voltage = ACBus2PhaseB.Voltage();
 		as.Phase3Voltage = ACBus2PhaseC.Voltage();
-		as.Enabled_AC_CWS = (AcBus2ResetSwitch.Voltage() > 20);
+		as.Enabled_AC_CWS = (AcBus2ResetSwitch.Voltage() > SP_MIN_DCVOLTAGE);
+		as.Reset_AC_CWS = AcBus2ResetSwitch.IsUp();
 		break;
 	}
 }
@@ -3335,6 +3411,9 @@ void GDC::SystemTimestep(double simdt) {
 
 	// Do we have power?
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2) return;  // Switched off
+
+	if (sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
+	    sat->StabContSystemAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) return;
 
 	sat->StabContSystemAc1CircuitBraker.DrawPower(10.4); 
 	sat->StabContSystemAc2CircuitBraker.DrawPower(3.4); 	
@@ -4342,6 +4421,10 @@ void RJEC::Init(Saturn *vessel){
 }
 
 void RJEC::SystemTimestep(double simdt) {
+
+	// Ensure AC power
+	if (sat->SIGCondDriverBiasPower1Switch.Voltage() < SP_MIN_ACVOLTAGE || 
+	    sat->SIGCondDriverBiasPower2Switch.Voltage() < SP_MIN_ACVOLTAGE) return;
 
 	sat->SIGCondDriverBiasPower1Switch.DrawPower(2.3); 
 	sat->SIGCondDriverBiasPower2Switch.DrawPower(0.2); 	
