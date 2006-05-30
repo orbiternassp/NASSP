@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/05/06 06:00:35  jasonims
+  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
+  *	
   *	Revision 1.1  2006/05/05 21:30:06  movieman523
   *	Added beginnings of LRV code.
   *		
@@ -174,8 +177,12 @@ void LRV::SetRoverStage ()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 	VECTOR3 mesh_adjust = _V(0.0, 0.15, 0.0);
-	SetMeshVisibilityMode(AddMesh(hLRV, &mesh_adjust), MESHVIS_ALWAYS); 
+	// ???: The next two lines have been exchanged to make the console animations work
+	//      with the buggy Orbiter 2006 MeshTransform(). This is a temporary fix which,
+	//      as a side effect, will cause problems with all animations of the main LRV
+	//      mesh (as soon as they are added ...).
 	vccMeshIdx = AddMesh(hLRVConsole, &mesh_adjust);
+	SetMeshVisibilityMode(AddMesh(hLRV, &mesh_adjust), MESHVIS_ALWAYS); 
 	SetMeshVisibilityMode(vccMeshIdx, MESHVIS_ALWAYS);
 	SetCameraOffset(_V(0.36, 0.54, -0.55));  // roughly at the driver's head
 
