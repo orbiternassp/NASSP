@@ -9438,6 +9438,6 @@ MATERIAL ap-plata
 1.0 1.0 1.0 1.0 35.0
 0.0 0.0 0.0 1.0
 TEXTURES 3
-tompa_cm.dds
-CM_DT2.dds
-slastereP.dds
+ProjectApollo/tompa_cm.dds
+ProjectApollo/CM_DT2.dds
+ProjectApollo/slastereP.dds
