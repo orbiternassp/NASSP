@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/03/08 02:24:21  movieman523
+  *	Added event timer and fuel display.
+  *	
   *	Revision 1.7  2006/01/05 11:26:56  tschachim
   *	The missiontimer is now enabled by default.
   *	
@@ -54,6 +57,7 @@
 #include "soundlib.h"
 #include "nasspsound.h"
 
+#include "powersource.h"
 #include "missiontimer.h"
 
 MissionTimer::MissionTimer()
@@ -84,6 +88,9 @@ void MissionTimer::Reset()
 void MissionTimer::UpdateHours(int n)
 
 {
+	if (!IsPowered())
+		return;
+
 	if (CountUp == TIMER_COUNT_UP) {
 		hours += n;
 	}
@@ -102,6 +109,9 @@ void MissionTimer::UpdateHours(int n)
 void MissionTimer::UpdateMinutes(int n)
 
 {
+	if (!IsPowered())
+		return;
+
 	if (CountUp == TIMER_COUNT_UP) {
 		minutes += n;
 	}
@@ -120,6 +130,9 @@ void MissionTimer::UpdateMinutes(int n)
 void MissionTimer::UpdateSeconds(int n)
 
 {
+	if (!IsPowered())
+		return;
+
 	if (CountUp == TIMER_COUNT_UP) {
 		seconds += n;
 	}
@@ -143,6 +156,9 @@ void MissionTimer::UpdateSeconds(int n)
 void MissionTimer::Timestep(double simt, double deltat)
 
 {
+	if (!IsPowered())
+		return;
+
 	if (Running && Enabled && (CountUp != TIMER_COUNT_NONE)) {
 		double t = GetTime();
 
@@ -195,6 +211,9 @@ void MissionTimer::SetTime(double t)
 void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 
 {
+	if (!IsPowered())
+		return;
+
 	int Curdigit, Curdigit2;
 
 	// Hour display on three digit

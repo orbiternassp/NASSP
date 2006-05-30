@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/04/25 08:11:27  dseagrav
+  *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
+  *	
   *	Revision 1.47  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -385,6 +388,16 @@ void sat5_lmpkd::Init()
 
 	agc.ControlVessel(this);
 	imu.SetVessel(this,TRUE);
+
+	//
+	// HACK:
+	// Not sure where these should be wired to.
+	// HACK:
+	//
+
+	dsky.Init(&ECA_1);
+	MissionTimerDisplay.WireTo(&ECA_1);
+	EventTimerDisplay.WireTo(&ECA_1);
 
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);

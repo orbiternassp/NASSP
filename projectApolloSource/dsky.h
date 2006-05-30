@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2005/08/29 19:15:03  tschachim
+  *	Rendering of the DSKY keys.
+  *	
   *	Revision 1.9  2005/08/19 13:43:42  tschachim
   *	Channel 13 handling
   *	
@@ -51,7 +54,7 @@
   *	
   **************************************************************************/
 
-class DSKY
+class DSKY : public e_object
 
 {
 public:
@@ -59,7 +62,7 @@ public:
 	DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel = 015);
 	virtual ~DSKY();
 
-	void Init();
+	void Init(e_object *powered);
 	void Reset();
 
 	//
@@ -145,6 +148,8 @@ public:
 	void ProcessChannel13(int val);
 	void ProcessChannel11Bit(int bit, bool val);
 	void ProcessChannel11(int val);
+
+	bool IsPowered() { return Voltage() > 25.0; };
 
 	//
 	// Helper functions.

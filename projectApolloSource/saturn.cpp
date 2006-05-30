@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.140  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.139  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -488,8 +491,11 @@ void Saturn::initSaturn()
 
 	agc.ControlVessel(this);
 	imu.SetVessel(this,FALSE);
-	dsky.Init();
-	dsky2.Init();
+	dsky.Init(&GaugePower);
+	dsky2.Init(&GaugePower);
+
+	MissionTimerDisplay.WireTo(&GaugePower);
+	EventTimerDisplay.WireTo(&GaugePower);
 
 	//
 	// Propellant sources.
