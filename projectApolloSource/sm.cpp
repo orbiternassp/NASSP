@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/05/04 20:46:50  movieman523
+  *	Added re-entry texture and started heat tracking.
+  *	
   *	Revision 1.6  2006/04/25 13:45:06  tschachim
   *	Fixed RCS.
   *	
@@ -141,7 +144,7 @@ void SM::InitSM()
 
 	CMTex = oapiRegisterReentryTexture("reentry");
 
-	Heat = 0.0;
+	Temperature = 250.0;
 }
 
 const double SMVO = 0.0;//-0.14;
@@ -291,13 +294,44 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 			NextMissionEventTime = MissionTime + 1.0;
 
 			//
-			// Do heating calculations and break up when we get too hot.
+			// Do heating calculations and break up when we get too hot. These
+			// only need to be approximate, since we just want to time breakup
+			// based on how tough the re-entry is.
 			//
 
-			Heat -= 100.0;
+			//
+			// approximate SM area:
+			// total: 116
+			// front: 12.5
+			//
+			// So we can assume it radiates away from 116 and absorbs from 12.5
+			// for a simple measure.
+			//
 
-			if (Heat < 0.0)
-				Heat = 0.0;
+			//
+			// This should be the heat flux in watts per square meter.
+			//
+
+			double heatflux = GetDynPressure() * GetAirspeed();
+			double heatinput = heatflux * 12.5;
+
+			double heatrad = 5.67e-8 * 116 * pow(Temperature, 4);
+			double Heat = (heatinput - heatrad) * simdt;
+
+			//
+			// Adjust temperature.
+			//
+
+			Temperature += Heat / 1000.0; // Need thermal capacity
+
+			//
+			// Set a sane lowest temperature.
+			//
+
+			if (Temperature < 200.0)
+			{
+				Temperature = 200.0;
+			}
 		}
 		break;
 
@@ -317,7 +351,7 @@ void SM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "REALISM", Realism);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "FMASS", MainFuel);
-	oapiWriteScenario_float (scn, "HEAT", Heat);
+	oapiWriteScenario_float (scn, "HEAT", Temperature);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
@@ -555,7 +589,7 @@ void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp (line, "HEAT", 4)) {
 			sscanf (line + 4, "%g", &flt);
-			Heat = flt;
+			Temperature = flt;
 		}
 		else if (!strnicmp(line, "MISSNTIME", 9)) {
             sscanf (line+9, "%f", &flt);

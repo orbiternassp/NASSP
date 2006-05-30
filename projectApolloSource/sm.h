@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/05/04 20:46:50  movieman523
+  *	Added re-entry texture and started heat tracking.
+  *	
   *	Revision 1.4  2006/04/05 19:33:49  movieman523
   *	Support low-res RCS mesh, saved umbilical animation state so it only happens once, revised Apollo 13 support.
   *	
@@ -153,7 +156,7 @@ protected:
 	double NextMissionEventTime;
 	double LastMissionEventTime;
 
-	double Heat;
+	double Temperature;
 
 	SURFHANDLE CMTex;
 

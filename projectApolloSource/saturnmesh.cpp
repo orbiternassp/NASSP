@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/05/27 11:50:04  movieman523
+  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
+  *	
   *	Revision 1.43  2006/05/06 06:00:35  jasonims
   *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
   *	
@@ -1683,4 +1686,9 @@ void Saturn::JettisonLET()
 	LESAttached = false;
 
 	ConfigureStageMeshes(stage);
+
+	if (Crewed) {
+		SwindowS.play();
+	}
+	SwindowS.done();
 }

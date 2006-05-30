@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.169  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.168  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -1544,7 +1547,7 @@ void Saturn::SetSwitches(int panel) {
 	// SATPANEL_MAIN
 	//
 
-	AccelGMeterRow.Init(AID_GMETER, MainPanel);
+	AccelGMeterRow.Init(AID_GMETER, MainPanel, &GaugePower);
 	AccelGMeter.Init(g_Param.pen[4], g_Param.pen[4], AccelGMeterRow, this);
 
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
@@ -1689,7 +1692,7 @@ void Saturn::SetSwitches(int panel) {
 	// RCS Gauges.
 	//
 
-	RCSGaugeRow.Init(AID_RCS_GAUGES, MainPanel);
+	RCSGaugeRow.Init(AID_RCS_GAUGES, MainPanel, &GaugePower);
 	RCSQuantityGauge.Init(srf[SRF_NEEDLE], RCSGaugeRow, &RCSIndicatorsSwitch, this);
 
 	//
@@ -2071,7 +2074,7 @@ void Saturn::SetSwitches(int panel) {
 	DCAmpMeter.Init(g_Param.pen[4], g_Param.pen[4], DCAmpMeterRow, this, &DCIndicatorsRotary);
 	DCAmpMeter.FrameSurface = srf[SRF_DCAMPS];
 
-	CryoTankMetersRow.Init(AID_CYROTANKINDICATORS, MainPanel);
+	CryoTankMetersRow.Init(AID_CYROTANKINDICATORS, MainPanel, &GaugePower);
 	H2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 	H2Pressure2Meter.Init(2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 	O2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this, &O2PressIndSwitch);
@@ -2081,24 +2084,24 @@ void Saturn::SetSwitches(int panel) {
 	O2Quantity1Meter.Init("O2", 1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 	O2Quantity2Meter.Init("O2", 2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 
-	FuelCellMetersRow.Init(AID_FUELCELLINDICATORS, MainPanel);
+	FuelCellMetersRow.Init(AID_FUELCELLINDICATORS, MainPanel, &GaugePower);
 	FuelCellH2FlowMeter.Init(srf[SRF_NEEDLE], FuelCellMetersRow, this, &FuelCellIndicatorsSwitch);
 	FuelCellO2FlowMeter.Init(srf[SRF_NEEDLE], FuelCellMetersRow, this, &FuelCellIndicatorsSwitch);
 	FuelCellTempMeter.Init(srf[SRF_NEEDLE], FuelCellMetersRow, this, &FuelCellIndicatorsSwitch);
 	FuelCellCondenserTempMeter.Init(srf[SRF_NEEDLE], FuelCellMetersRow, this, &FuelCellIndicatorsSwitch);
 
-	CabinMetersRow.Init(AID_CABININDICATORS, MainPanel);
+	CabinMetersRow.Init(AID_CABININDICATORS, MainPanel, &GaugePower);
 	SuitTempMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
 	CabinTempMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
 	SuitPressMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
 	CabinPressMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
 	PartPressCO2Meter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
 
-	SuitComprDeltaPMeterRow.Init(AID_SUITCOMPRDELTAPMETER, MainPanel);
+	SuitComprDeltaPMeterRow.Init(AID_SUITCOMPRDELTAPMETER, MainPanel, &GaugePower);
 	SuitComprDeltaPMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitComprDeltaPMeterRow, this);
 	LeftO2FlowMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitComprDeltaPMeterRow, this);
 
-	SuitCabinDeltaPMeterRow.Init(AID_SUITCABINDELTAPMETER, MainPanel);
+	SuitCabinDeltaPMeterRow.Init(AID_SUITCABINDELTAPMETER, MainPanel, &GaugePower);
 	SuitCabinDeltaPMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitCabinDeltaPMeterRow, this);
 	SuitCabinDeltaPMeter.FrameSurface = srf[SRF_SUITCABINDELTAPMETER];
 	RightO2FlowMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitCabinDeltaPMeterRow, this);
@@ -2108,19 +2111,19 @@ void Saturn::SetSwitches(int panel) {
 	EcsRadTempInletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsRadTempMetersRow, this, &ECSIndicatorsSwitch);
 	EcsRadTempPrimOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsRadTempMetersRow, this);
 
-	EcsEvapTempMetersRow.Init(AID_ECSEVAPTEMPMETERS, MainPanel);
+	EcsEvapTempMetersRow.Init(AID_ECSEVAPTEMPMETERS, MainPanel, &GaugePower);
 	EcsRadTempSecOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsEvapTempMetersRow, this);
 	GlyEvapTempOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsEvapTempMetersRow, this, &ECSIndicatorsSwitch);
 
-	EcsPressMetersRow.Init(AID_ECSPRESSMETERS, MainPanel);
+	EcsPressMetersRow.Init(AID_ECSPRESSMETERS, MainPanel, &GaugePower);
 	GlyEvapSteamPressMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsPressMetersRow, this, &ECSIndicatorsSwitch);
 	GlycolDischPressMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsPressMetersRow, this, &ECSIndicatorsSwitch);
 
-	EcsQuantityMetersRow.Init(AID_ECSQUANTITYMETERS, MainPanel);
+	EcsQuantityMetersRow.Init(AID_ECSQUANTITYMETERS, MainPanel, &GaugePower);
 	AccumQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this, &ECSIndicatorsSwitch);
 	H2oQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this, &H2oQtyIndSwitch);
 
-	EcsRadiatorIndicatorRow.Init(AID_ECSRADIATORINDICATOR, MainPanel);
+	EcsRadiatorIndicatorRow.Init(AID_ECSRADIATORINDICATOR, MainPanel, &GaugePower);
 	EcsRadiatorIndicator.Init( 0, 0, 23, 23, srf[SRF_ECSINDICATOR], EcsRadiatorIndicatorRow);
 
 	EcsRadiatorSwitchesRow.Init(AID_ECSRADIATORSWITCHES, MainPanel);

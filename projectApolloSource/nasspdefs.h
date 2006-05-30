@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2006/05/27 00:54:28  movieman523
+  *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
+  *	
   *	Revision 1.62  2006/05/15 22:56:53  movieman523
   *	Added VC2005 solution and project files.
   *	
@@ -220,6 +223,7 @@
 
 #if _MSC_VER > 1300
 #define strnicmp _strnicmp
+#define stricmp _stricmp
 #endif 
 
 #define NASSP_VERSION 70000

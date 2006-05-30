@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.104  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.103  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -529,6 +532,7 @@ void Saturn::SystemsInit() {
 	//
 
 	SwitchPower.WireToBuses(MainBusA, MainBusB);
+	GaugePower.WireToBuses(MainBusA, MainBusB);
 
 	PyroPower.WireToBuses(&PyroArmASwitch, &PyroArmBSwitch);
 	SECSLogicPower.WireToBuses(&Logic1Switch, &Logic2Switch);
