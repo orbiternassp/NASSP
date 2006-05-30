@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/05/17 01:50:45  movieman523
+  *	Fixed DSKY key-clicks (bug 1375310).
+  *	
   *	Revision 1.15  2005/11/15 05:42:54  flydba
   *	*** empty log message ***
   *	
@@ -140,9 +143,10 @@ DSKY::~DSKY()
 	//
 }
 
-void DSKY::Init()
+void DSKY::Init(e_object *powered)
 
 {
+	WireTo(powered);
 	Reset();
 	FirstTimeStep = true;
 }
@@ -333,6 +337,7 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 {
 	if (lit) {
 		oapiBlt(surf, lights, dstx, dsty, dstx + 101, dsty + 0, 49, 23);
+		DrawPower(5);
 	}
 	else {
 		oapiBlt(surf, lights, dstx, dsty, dstx + 0, dsty + 0, 49, 23);
@@ -342,6 +347,9 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 
 {
+	if (!IsPowered())
+		return;
+
 	//
 	// Check the lights.
 	//
@@ -559,6 +567,9 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
 
 {
+	if (!IsPowered())
+		return;
+
 	oapiBlt(surf, disp, 66,   3, 35,  0, 35, 10, SURF_PREDEF_CK);
 	oapiBlt(surf, disp, 66,  38, 35, 10, 35, 10, SURF_PREDEF_CK);
 	oapiBlt(surf, disp,  6,  38, 35, 20, 35, 10, SURF_PREDEF_CK);

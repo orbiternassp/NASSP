@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/03/08 02:24:21  movieman523
+  *	Added event timer and fuel display.
+  *	
   *	Revision 1.4  2005/08/24 23:29:31  movieman523
   *	Fixed event timer reset.
   *	
@@ -40,7 +43,7 @@
 #if !defined(_PA_MISSIONTIMER_H)
 #define _PA_MISSIONTIMER_H
 
-class MissionTimer {
+class MissionTimer : public e_object {
 
 public:
 	MissionTimer();
@@ -65,6 +68,8 @@ public:
 	virtual void Render(SURFHANDLE surf, SURFHANDLE digits);
 
 protected:
+
+	bool IsPowered() { return Voltage() > 25.0; };
 
 	//
 	// These are expected to be saved by the owning class.
