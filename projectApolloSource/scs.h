@@ -21,8 +21,12 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
- **************************** Revision History ****************************
+  **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   **************************************************************************/
 
 // DS20060304 SCS objects

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/01/14 20:58:16  movieman523
+  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
+  *	
   *	Revision 1.9  2006/01/10 19:34:44  movieman523
   *	Fixed AC bus switches and added ELS Logic/Auto support.
   *	
@@ -138,8 +141,7 @@ void PowerSDKObject::DrawPower(double watts)
 }
 
 //
-// Tie power together from two sources. For now we just take the
-// largest voltage from both sources.
+// Tie power together from two sources. 
 //
 
 PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
@@ -157,36 +159,27 @@ PowerMerge::PowerMerge(char *i_name, PanelSDK &p) : sdk(p)
 double PowerMerge::Voltage()
 
 {
-	double VoltsA = 0.0, VoltsB = 0.0;
+	double VoltsA = 0;
+	double VoltsB = 0;
 
-	if (BusA)
-		VoltsA = BusA->Voltage();
-	if (BusB)
-		VoltsB = BusB->Voltage();
+	if (BusA) VoltsA = BusA->Voltage();
+	if (BusB) VoltsB = BusB->Voltage();
 
-	if (VoltsA > VoltsB)
-		return VoltsA;
+	if (VoltsA != 0 && VoltsB != 0) return (VoltsA + VoltsB) / 2.0;
+	if (VoltsA != 0) return VoltsA;
+	if (VoltsB != 0) return VoltsB;
 
-	return VoltsB;
+	return 0;
 }
 
 double PowerMerge::Current()
 
 {
-	double Volts = 0.0;
-	double VoltsA = 0.0, VoltsB = 0.0;
-
-	if (BusA)
-		VoltsA = BusA->Voltage();
-	if (BusB)
-		VoltsB = BusB->Voltage();
-
-	Volts = VoltsA + VoltsB;
+	double Volts = Voltage();
 
 	if (Volts > 0.0) {
 		return power_load / Volts;
 	}
-
 	return 0.0;
 }
 
@@ -215,49 +208,37 @@ void PowerMerge::DrawPower(double watts)
 }
 
 //
-// Tie power together from three sources. For now we just take the
-// largest voltage from all sources.
+// Tie power together from three sources. 
 //
 
 double ThreeWayPowerMerge::Voltage()
 
 {
-	double Volts1 = 0.0, Volts2 = 0.0, Volts3 = 0.0;
-	double MaxVolts;
+	double Volts1 = 0;
+	double Volts2 = 0;
+	double Volts3 = 0;
 
-	if (Phase1)
-		Volts1 = Phase1->Voltage();
-	if (Phase2)
-		Volts2 = Phase2->Voltage();
-	if (Phase3)
-		Volts3 = Phase3->Voltage();
+	if (Phase1)	Volts1 = Phase1->Voltage();
+	if (Phase2)	Volts2 = Phase2->Voltage();
+	if (Phase3)	Volts3 = Phase3->Voltage();
 
-	MaxVolts = Volts1;
+	if (Volts1 != 0 && Volts2 != 0 && Volts3 != 0) return (Volts1 + Volts2 + Volts3) / 3.0;
 
-	if (Volts2 > Volts1)
-		MaxVolts = Volts2;
-	if (Volts3 > MaxVolts)
-		MaxVolts = Volts3;
+	if (Volts1 != 0 && Volts2 != 0) return (Volts1 + Volts2) / 2.0;
+	if (Volts1 != 0 && Volts3 != 0) return (Volts1 + Volts3) / 2.0;
+	if (Volts2 != 0 && Volts3 != 0) return (Volts2 + Volts3) / 2.0;
 
-	return MaxVolts;
+	if (Volts1 != 0) return Volts1;
+	if (Volts2 != 0) return Volts2;
+	if (Volts3 != 0) return Volts3;
+
+	return 0;
 }
 
 double ThreeWayPowerMerge::Current()
 
 {
-	double Volts = 0.0;
-	double VoltsA = 0.0;
-	double VoltsB = 0.0;
-	double VoltsC = 0.0;
-
-	if (Phase1)
-		VoltsA = Phase1->Voltage();
-	if (Phase2)
-		VoltsB = Phase2->Voltage();
-	if (Phase3)
-		VoltsC = Phase3->Voltage();
-
-	Volts = VoltsA + VoltsB + VoltsC;
+	double Volts = Voltage();
 
 	if (Volts > 0.0) {
 		return power_load / Volts;
@@ -309,4 +290,290 @@ void ThreeWayPowerMerge::DrawPower(double watts)
 		if (Phase3)
 			Phase3->DrawPower(watts * VoltsC / Volts);
 	}
+}
+
+void ThreeWayPowerMerge::WireToBus(int bus, e_object* e)
+
+{
+	if (bus == 1) Phase1 = e;
+	if (bus == 2) Phase2 = e;
+	if (bus == 3) Phase3 = e;
+}
+
+bool ThreeWayPowerMerge::IsBusConnected(int bus)
+
+{
+	if (bus == 1) return (Phase1 != NULL);
+	if (bus == 2) return (Phase2 != NULL);
+	if (bus == 3) return (Phase3 != NULL);
+	return false;
+}
+
+
+DCBusController::DCBusController(char *i_name, PanelSDK &p) : 
+	sdk(p), fcPower(0, p), batPower(0, p), busPower(0, p)
+
+{
+	if (i_name)
+		strcpy(name, i_name);
+
+	fuelcell1 = 0;
+	fuelcell2 = 0;
+	fuelcell3 = 0;
+	battery1 = 0;
+	battery2 = 0;
+	gseBattery = 0;
+	fcDisconnectAlarm[1] = false;
+	fcDisconnectAlarm[2] = false;
+	fcDisconnectAlarm[3] = false;
+	tieState = 0;
+	gseState = 0;
+
+	sdk.AddElectrical(this, false);
+}
+
+void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse)
+
+{
+	fuelcell1 = fc1;
+	fuelcell2 = fc2;
+	fuelcell3 = fc3;
+
+	battery1 = bat1;
+	battery2 = bat2;
+	gseBattery = gse;
+
+	busPower.WireToBuses(&fcPower, &batPower, NULL);
+}
+
+void DCBusController::ConnectFuelCell(int fc, bool connect)
+
+{
+	if (connect) {
+		if (fc == 1) {
+			fcPower.WireToBus(1, fuelcell1);
+		} else if (fc == 2) {
+			fcPower.WireToBus(2, fuelcell2);
+		} else if (fc == 3) {
+			fcPower.WireToBus(3, fuelcell3);
+		}
+	} else {
+		if (fc == 1) {
+			fcPower.WireToBus(1, NULL);
+		} else if (fc == 2) {
+			fcPower.WireToBus(2, NULL);
+		} else if (fc == 3) {
+			fcPower.WireToBus(3, NULL);
+		}
+	}
+	fcDisconnectAlarm[fc] = false;
+}
+
+void DCBusController::refresh(double dt)
+
+{
+	// Disconnect because of to high current
+	if (fuelcell1->Current() > 75.0 && fcPower.IsBusConnected(1)) {
+		fcPower.WireToBus(1, NULL);
+		fcDisconnectAlarm[1] = true;
+	}
+	if (fuelcell2->Current() > 75.0 && fcPower.IsBusConnected(2)) {
+		fcPower.WireToBus(2, NULL);
+		fcDisconnectAlarm[2] = true;
+	}
+	if (fuelcell3->Current() > 75.0 && fcPower.IsBusConnected(3)) {
+		fcPower.WireToBus(3, NULL);
+		fcDisconnectAlarm[3] = true;
+	}
+
+	// Disconnect because of reverse current
+	if (busPower.Voltage() > 0) {
+		if (fuelcell1->Voltage() <= 0 && fcPower.IsBusConnected(1)) {
+			fcPower.WireToBus(1, NULL);
+			fcDisconnectAlarm[1] = true;
+		}
+		if (fuelcell2->Voltage() <= 0 && fcPower.IsBusConnected(2)) {
+			fcPower.WireToBus(2, NULL);
+			fcDisconnectAlarm[2] = true;
+		}
+		if (fuelcell3->Voltage() <= 0 && fcPower.IsBusConnected(3)) {
+			fcPower.WireToBus(3, NULL);
+			fcDisconnectAlarm[3] = true;
+		}
+	}
+
+	// Main bus tie
+	if (tieState == 2) {
+		batPower.WireToBuses(battery1, battery2);
+
+	} else if (tieState == 1) {
+		// Auto
+		if (fcPower.Voltage() > 0 || (gseState && gseBattery->Voltage() > 0)) {
+			batPower.WireToBuses(NULL, NULL);
+		} else {
+			batPower.WireToBuses(battery1, battery2);
+		}
+
+	} else {
+		batPower.WireToBuses(NULL, NULL);
+	}
+}
+
+bool DCBusController::IsFuelCellConnected(int fc)
+
+{
+	return fcPower.IsBusConnected(fc);
+}
+
+bool DCBusController::IsFuelCellDisconnectAlarm()
+
+{
+	return fcDisconnectAlarm[1] || fcDisconnectAlarm[2] || fcDisconnectAlarm[3];
+}
+
+void DCBusController::SetGSEState(int s) 
+
+{ 
+	gseState = s; 
+	if (gseState)
+		busPower.WireToBus(3, gseBattery);
+	else
+		busPower.WireToBus(3, NULL);
+}
+
+void DCBusController::Load(char *line)
+
+{
+	int fc1, fc2, fc3, gse;
+	
+	sscanf (line,"    <DCBUSCONTROLLER> %s %i %i %i %i", name, &fc1, &fc2, &fc3, &tieState, &gse);
+	if (fc1) fcPower.WireToBus(1, fuelcell1);
+	if (fc2) fcPower.WireToBus(2, fuelcell2);
+	if (fc3) fcPower.WireToBus(3, fuelcell3);
+	// tieState is evaluated in refresh()	
+	SetGSEState(gse);
+}
+
+void DCBusController::Save(FILEHANDLE scn)
+
+{
+	char cbuf[1000];
+	sprintf (cbuf, "%s %i %i %i %i %i", name, IsFuelCellConnected(1) ? 1 : 0, 
+								  		      IsFuelCellConnected(2) ? 1 : 0, 
+										      IsFuelCellConnected(3) ? 1 : 0,
+										      tieState, gseState);
+
+	oapiWriteScenario_string (scn, "    <DCBUSCONTROLLER> ", cbuf);
+}
+
+
+BatteryCharger::BatteryCharger(char *i_name, PanelSDK &p) : 
+	sdk(p), dcPower(0, p)
+
+{
+	if (i_name)
+		strcpy(name, i_name);
+
+	SRC = NULL;
+
+	battery1 = NULL;
+	battery2 = NULL;
+	battery3 = NULL;
+	batSupply1 = NULL;
+	batSupply2 = NULL;
+	batSupply3 = NULL;
+	currentBattery = NULL;
+	acPower = NULL;
+
+	sdk.AddElectrical(this, false);
+}
+
+void BatteryCharger::Init(e_object *bat1, e_object *bat2, e_object *bat3, 
+					      e_object *batSup1, e_object *batSup2, e_object *batSup3,
+			              e_object *dc1, e_object *dc2, e_object *ac)
+{
+	battery1 = bat1;
+	battery2 = bat2;
+	battery3 = bat3;
+
+	batSupply1 = batSup1;
+	batSupply2 = batSup2;
+	batSupply3 = batSup3;
+
+	dcPower.WireToBuses(dc1, dc2);
+	acPower = ac;
+}
+
+void BatteryCharger::Charge(int bat)
+
+{
+	if (bat == 0) {
+		batSupply1->WireTo(NULL);
+		batSupply2->WireTo(NULL);
+		batSupply3->WireTo(NULL);
+		currentBattery = NULL;
+
+	} else if (bat == 1) {
+		batSupply1->WireTo(this);
+		batSupply2->WireTo(NULL);
+		batSupply3->WireTo(NULL);
+		currentBattery = battery1;
+
+	} else if (bat == 2) {
+		batSupply1->WireTo(NULL);
+		batSupply2->WireTo(this);
+		batSupply3->WireTo(NULL);
+		currentBattery = battery2;
+
+	} else if (bat == 3) {
+		batSupply1->WireTo(NULL);
+		batSupply2->WireTo(NULL);
+		batSupply3->WireTo(this);
+		currentBattery = battery3;
+	}
+}
+
+void BatteryCharger::UpdateFlow(double dt)
+
+{
+	e_object::UpdateFlow(dt);
+
+	if (currentBattery && dcPower.Voltage() > SP_MIN_DCVOLTAGE && acPower->Voltage() > SP_MIN_ACVOLTAGE) {
+		Volts = max(10.0, currentBattery->Voltage());
+	} else {
+		Volts = 0;
+		Amperes = 0;
+	}
+}
+
+void BatteryCharger::DrawPower(double watts)
+{ 
+	power_load += watts;
+	dcPower.DrawPower(1.4 * watts);
+	acPower->DrawPower(0.92 * watts);
+}
+
+void BatteryCharger::Load(char *line)
+
+{
+	int bat;
+	
+	sscanf (line,"    <BATTERYCHARGER> %s %i", name, &bat);
+	Charge(bat);
+}
+
+void BatteryCharger::Save(FILEHANDLE scn)
+
+{
+	char cbuf[1000];
+
+	int bat;
+
+	bat = 0;
+	if (currentBattery == battery1) bat = 1;
+	if (currentBattery == battery2) bat = 2;
+	if (currentBattery == battery3) bat = 3;
+
+	sprintf (cbuf, "%s %i", name, bat);
+	oapiWriteScenario_string (scn, "    <BATTERYCHARGER> ", cbuf);
 }

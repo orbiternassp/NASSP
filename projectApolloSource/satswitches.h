@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.13  2006/04/25 13:52:06  tschachim
   *	Removed GetXXXSwitchState.
   *	
@@ -64,6 +68,7 @@
   **************************************************************************/
 
 class Saturn;
+class DCBusController;
 
 class SaturnToggleSwitch : public ToggleSwitch {
 public:
@@ -467,3 +472,64 @@ protected:
 	ThreeWayPowerMerge ACBus1;
 	ThreeWayPowerMerge ACBus2;
 };
+
+class SaturnACVoltMeter: public SaturnRoundMeter {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *acindicatorswitch);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+	SURFHANDLE FrameSurface;
+
+protected:
+	PowerStateRotationalSwitch *ACIndicatorSwitch;
+};
+
+class SaturnDCVoltMeter: public SaturnRoundMeter {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+	SURFHANDLE FrameSurface;
+
+protected:
+	PowerStateRotationalSwitch *DCIndicatorSwitch;
+};
+
+class SaturnDCAmpMeter: public SaturnRoundMeter {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+	SURFHANDLE FrameSurface;
+
+protected:
+	PowerStateRotationalSwitch *DCIndicatorSwitch;
+};
+
+class DCBusIndicatorSwitch: public IndicatorSwitch {
+public:
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DCBusController *d, int fc);
+	int GetState();
+
+protected:
+	DCBusController *dcbus;
+	int fuelcell;
+};
+
+class SaturnFuelCellConnectSwitch: public SaturnThreePosSwitch {
+public:
+	SaturnFuelCellConnectSwitch() { fuelCell = 0; dcBusController = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int fc, DCBusController *dcController);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
+
+protected:
+	void CheckFuelCell(int s);
+
+	int fuelCell;
+	DCBusController *dcBusController;
+};
+

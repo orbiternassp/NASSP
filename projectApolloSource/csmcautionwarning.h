@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/02/28 20:40:32  quetalsi
+  *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
+  *	
   *	Revision 1.14  2006/02/23 22:46:41  quetalsi
   *	Added AC ovevoltage control and Bugfix
   *	
@@ -93,6 +96,7 @@ typedef struct {
 	double Phase2Voltage;
 	double Phase3Voltage;
 	bool Enabled_AC_CWS;
+	bool Reset_AC_CWS;
 } ACBusStatus;
 
 class CSMCautionWarningSystem : public CautionWarningSystem {
@@ -115,6 +119,8 @@ protected:
 	bool LastO2FlowCheckHigh;
 	int O2FlowCheckCount;
 	int FuelCellCheckCount[4];
+	bool ACBus1Alarm, ACBus2Alarm;
+	bool ACBus1Reset, ACBus2Reset;
 
 	//
 	// Helper functions.

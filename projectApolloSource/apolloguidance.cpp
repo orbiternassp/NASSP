@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.75  2006/04/30 20:46:51  tschachim
   *	Bugfix CMPAD.
   *	
@@ -1634,6 +1638,8 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 void ApolloGuidance::SystemTimestep(double simdt) 
 
 {
+	if (!IsPowered()) return;
+
 	if (OnStandby()) {
 		DCPower.DrawPower(22.9);
 	}

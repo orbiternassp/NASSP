@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2006/05/19 11:05:43  tschachim
+  *	Bugfix infinite power consumption.
+  *	
   *	Revision 1.23  2006/02/28 20:40:32  quetalsi
   *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
   *	
@@ -128,6 +131,11 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 		FuelCellCheckCount[i] = 0;
 
 	TimeStepCount = 0;
+
+	ACBus1Alarm = false;
+	ACBus2Alarm = false;
+	ACBus1Reset = false;
+	ACBus2Reset = false;
 }
 
 //
@@ -233,7 +241,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	//
 
 	if (TimeStepCount < 100) {
-		if (TimeStepCount == 0) NextUpdateTime = simt + 20.0;
+		if (TimeStepCount == 0) NextUpdateTime = simt + 10.0;
 		TimeStepCount++;
 		return;
 	}
@@ -361,16 +369,25 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		sat->GetMainBusStatus(ms);
 
 		if (ms.Enabled_DC_A_CWS) {
-			if (ms.MainBusAVoltage <26.25) {
-				SetLight(CSM_CWS_BUS_A_UNDERVOLT, true); }
+			if (!ms.Reset_DC_A_CWS) {
+				if (ms.MainBusAVoltage < 26.25) {
+					SetLight(CSM_CWS_BUS_A_UNDERVOLT, true); 
+				}
+			} else {
+				SetLight(CSM_CWS_BUS_A_UNDERVOLT, false);
+			}
 		}
-		else SetLight(CSM_CWS_BUS_A_UNDERVOLT, false);
 		
 		if (ms.Enabled_DC_B_CWS) {
-			if (ms.MainBusBVoltage <26.25) {
-				SetLight(CSM_CWS_BUS_B_UNDERVOLT, true); }
+			if (!ms.Reset_DC_B_CWS) {
+				if (ms.MainBusBVoltage < 26.25) {
+					SetLight(CSM_CWS_BUS_B_UNDERVOLT, true); 
+				}
+			} else { 
+				SetLight(CSM_CWS_BUS_B_UNDERVOLT, false);
+			}
 		}
-		else SetLight(CSM_CWS_BUS_B_UNDERVOLT, false);
+		
 
 		SetLight(CSM_CWS_FC_BUS_DISCONNECT, ms.Fc_Disconnected);
 
@@ -382,45 +399,91 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// current actually is!
 		//
 		// AC bus undervoltage: AC_BUS1/2 light will come on if voltage on any phase is
-		// < 96 volts and reset switch is center. Lights only come off if reset switch is out of center.
+		// < 96 volts and reset switch is center. Lights only come off if reset switch is reset (up).
 		//
 		// AC bus overvoltage: AC_BUS1/2 light will come on and disconnected the inverter from the bus
-		// if voltage on any phase is > 130 volts and reset switch is center.
+		// if voltage on any phase is > 130 volts and reset switch is reset (up).
 
 		ACBusStatus as;
 
 		sat->GetACBusStatus(as, 1);
-		
 		if (as.Enabled_AC_CWS) {
-			if (ACOverloaded(as)) {
-				SetLight(CSM_CWS_AC_BUS1_OVERLOAD, true);
-				SetLight(CSM_CWS_AC_BUS1_LIGHT, true); }
-			if (ACUndervoltage(as)) SetLight(CSM_CWS_AC_BUS1_LIGHT, true);
-			if (ACOvervoltage(as)) {
-				SetLight(CSM_CWS_AC_BUS1_LIGHT, true);
-				sat->DisconectInverter(true,1); }
-		}
-		else {
-			SetLight(CSM_CWS_AC_BUS1_OVERLOAD, false);
-			SetLight(CSM_CWS_AC_BUS1_LIGHT, false);
-			sat->DisconectInverter(false,1);
+			if (!as.Reset_AC_CWS) {
+				if (ACOverloaded(as)) {
+					SetLight(CSM_CWS_AC_BUS1_OVERLOAD, true);
+					SetLight(CSM_CWS_AC_BUS1_LIGHT, true); 
+				}
+				if (ACUndervoltage(as)) 
+					SetLight(CSM_CWS_AC_BUS1_LIGHT, true);
+				if (ACOvervoltage(as)) {
+					SetLight(CSM_CWS_AC_BUS1_LIGHT, true);
+					sat->DisconectInverter(true,1); 
+				}
+
+				//
+				// I'm not really sure if this is correct, I did it because of the master alarm
+				// during the standby inverter check during prelaunch, see AOH part 2 or standard 
+				// mode checklists for more informations
+				//
+
+				if (ACBus1Reset) {
+					ACBus1Reset = false;
+					SetMasterAlarm(true);
+				}
+			}
+			else {
+				SetLight(CSM_CWS_AC_BUS1_OVERLOAD, false);
+				SetLight(CSM_CWS_AC_BUS1_LIGHT, false);
+				sat->DisconectInverter(false, 1);
+
+				if (ACBus1Alarm) {
+					ACBus1Alarm = false;
+					ACBus1Reset = true;
+				}
+			}
+		} else {
+			if (ACOverloaded(as) || ACUndervoltage(as) || ACOvervoltage(as)) {
+				ACBus1Alarm = true;
+			}
 		}
 		
 		sat->GetACBusStatus(as, 2);
-		
 		if (as.Enabled_AC_CWS) {
-			if (ACOverloaded(as)) {
-				SetLight(CSM_CWS_AC_BUS2_OVERLOAD, true);
-				SetLight(CSM_CWS_AC_BUS2_LIGHT, true); }
-			if (ACUndervoltage(as)) SetLight(CSM_CWS_AC_BUS2_LIGHT, true);
-			if (ACOvervoltage(as)) {
-				SetLight(CSM_CWS_AC_BUS2_LIGHT, true);
-				sat->DisconectInverter(true,2); }
-		}
-		else {
-			SetLight(CSM_CWS_AC_BUS2_OVERLOAD, false);
-			SetLight(CSM_CWS_AC_BUS2_LIGHT, false);
-			sat->DisconectInverter(false,2);
+			if (!as.Reset_AC_CWS) {
+				if (ACOverloaded(as)) {
+					SetLight(CSM_CWS_AC_BUS2_OVERLOAD, true);
+					SetLight(CSM_CWS_AC_BUS2_LIGHT, true); 
+				}
+				if (ACUndervoltage(as)) 
+					SetLight(CSM_CWS_AC_BUS2_LIGHT, true);
+				if (ACOvervoltage(as)) {
+					SetLight(CSM_CWS_AC_BUS2_LIGHT, true);
+					sat->DisconectInverter(true,2); 
+				}
+
+				//
+				// See AC bus 1
+				//
+
+				if (ACBus2Reset) {
+					ACBus2Reset = false;
+					SetMasterAlarm(true);
+				}
+			}
+			else {
+				SetLight(CSM_CWS_AC_BUS2_OVERLOAD, false);
+				SetLight(CSM_CWS_AC_BUS2_LIGHT, false);
+				sat->DisconectInverter(false,2);
+
+				if (ACBus2Alarm) {
+					ACBus2Alarm = false;
+					ACBus2Reset = true;
+				}
+			}
+		} else {
+			if (ACOverloaded(as) || ACUndervoltage(as) || ACOvervoltage(as)) {
+				ACBus2Alarm = true;
+			}
 		}
 
 		//
@@ -490,7 +553,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// CM RCS warning lights if pressure is below 260psi or above 330psi (AOH RCS 2.5-46).
 		//
 
-		NextUpdateTime = simt + (0.2 * oapiGetTimeAcceleration());
+		NextUpdateTime = simt + (0.1 * oapiGetTimeAcceleration());
 	}
 }
 
