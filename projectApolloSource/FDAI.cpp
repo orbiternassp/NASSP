@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.15  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -71,6 +75,8 @@
 
 #include <stdio.h>
 #include "orbitersdk.h"
+
+#include "nasspdefs.h"
 
 #include "PanelSDK/PanelSDK.h"
 #include "PanelSDK/Internals/Esystems.h"

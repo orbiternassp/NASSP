@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.48  2006/05/01 08:52:50  dseagrav
   *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
   *	
@@ -950,6 +954,9 @@ public:
 	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface) = 0;
 
 protected:
+
+	virtual double AdjustForPower(double val);
+
 	double value;
 	double displayValue;
 	double minValue;

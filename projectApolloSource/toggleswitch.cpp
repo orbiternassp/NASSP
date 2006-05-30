@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.65  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -231,6 +234,7 @@
 #include "OrbiterSoundSDK3.h"
 #include "soundlib.h"
 
+#include "nasspdefs.h"
 #include "nasspsound.h"
 
 #include "toggleswitch.h"
@@ -2133,7 +2137,7 @@ double MeterSwitch::GetDisplayValue() {
 		return displayValue;
 	}
 
-	value = QueryValue();
+	value = AdjustForPower(QueryValue());
 	if (value > maxValue) value = maxValue;
 	if (value < minValue) value = minValue;
 
@@ -2151,6 +2155,21 @@ double MeterSwitch::GetDisplayValue() {
 	}
 	lastDrawTime = oapiGetSysTime(); // oapiGetSimTime();
 	return displayValue;
+}
+
+//
+// Adjust the input value based on the voltage fed to the meter.
+//
+
+double MeterSwitch::AdjustForPower(double val)
+
+{
+	double volts = Voltage();
+
+	if (volts >= 28.0)
+		return val;
+
+	return ((val * (volts - 1.0)) / 27.0);
 }
 
 void MeterSwitch::SaveState(FILEHANDLE scn) {

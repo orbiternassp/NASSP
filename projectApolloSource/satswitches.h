@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.14  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -482,6 +485,7 @@ public:
 	SURFHANDLE FrameSurface;
 
 protected:
+	double AdjustForPower(double val) { return val; } // These are always powered by definition.
 	PowerStateRotationalSwitch *ACIndicatorSwitch;
 };
 
@@ -494,6 +498,7 @@ public:
 	SURFHANDLE FrameSurface;
 
 protected:
+	double AdjustForPower(double val) { return val; } // These are always powered by definition.
 	PowerStateRotationalSwitch *DCIndicatorSwitch;
 };
 
@@ -506,6 +511,7 @@ public:
 	SURFHANDLE FrameSurface;
 
 protected:
+	double AdjustForPower(double val) { return val; } // These are always powered by definition.
 	PowerStateRotationalSwitch *DCIndicatorSwitch;
 };
 

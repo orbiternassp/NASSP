@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.139  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.138  2006/05/27 11:50:04  movieman523
   *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
   *	
@@ -209,6 +212,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	SECSLogicPower("SECS-Logic-Power", Panelsdk),
 	PyroPower("Pyro-Power", Panelsdk),
 	SwitchPower("Switch-Power", Panelsdk),
+	GaugePower("Gauge-Power", Panelsdk),
 	SMQuadARCS(ph_rcs0),
 	SMQuadBRCS(ph_rcs1),
 	SMQuadCRCS(ph_rcs2),
@@ -923,9 +927,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "SATTYPE", SaturnType);
 	oapiWriteScenario_int (scn, "DOCKSTATE", dockstate);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
-	oapiWriteScenario_float (scn, "TOAPO", agc.GetDesiredApogee());
-	oapiWriteScenario_float (scn, "TOPER", agc.GetDesiredPerigee());
-	oapiWriteScenario_float (scn, "TOHDG", agc.GetDesiredAzimuth());
 	oapiWriteScenario_float (scn, "TCP", TCPO);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
@@ -1136,6 +1137,19 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	dockingprobe.SaveState(scn);
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
+
+	//
+	// This has to be after the AGC otherwise the AGC state will override it.
+	// Both should be saving the same information, but this is human-readable
+	// and the AGC data isn't.
+	//
+
+	if (stage < STAGE_ORBIT_SIVB)
+	{
+		oapiWriteScenario_float (scn, "TOAPO", agc.GetDesiredApogee());
+		oapiWriteScenario_float (scn, "TOPER", agc.GetDesiredPerigee());
+		oapiWriteScenario_float (scn, "TOHDG", agc.GetDesiredAzimuth());
+	}
 
 	// save the internal systems 
 	oapiWriteScenario_int(scn, "SYSTEMSSTATE", systemsState);
@@ -3330,6 +3344,13 @@ void Saturn::GenericLoadStateSetup()
 	}
 
 	//
+	// Load the window sound if the launch escape tower is attached.
+	//
+
+	if (LESAttached)
+		soundlib.LoadMissionSound(SwindowS, WINDOW_SOUND, POST_TOWER_JET_SOUND);
+
+	//
 	// Only the CSM and LEM have translational thrusters, so disable the message
 	// telling us that they're being switched in other stages.
 	//
@@ -3362,7 +3383,6 @@ void Saturn::GenericLoadStateSetup()
 		if (!UseATC)
 			soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
 
-		soundlib.LoadMissionSound(SwindowS, WINDOW_SOUND, POST_TOWER_JET_SOUND);
 		soundlib.LoadMissionSound(S2ShutS, SII_CUTOFF_SOUND, SIISHUTDOWN_SOUND);
 		soundlib.LoadMissionSound(S4CutS, GO_FOR_ORBIT_SOUND, SIVBSHUTDOWN_SOUND);
 

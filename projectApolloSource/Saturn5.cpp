@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2006/05/27 11:50:04  movieman523
+  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
+  *	
   *	Revision 1.81  2006/05/27 00:54:28  movieman523
   *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
   *	
@@ -1068,11 +1071,6 @@ void SaturnV::StageFour(double simt, double simdt)
 		else {
 			StageState = 1;
 		}
-
-		if (Crewed) {
-			SwindowS.play();
-		}
-		SwindowS.done();
 		break;
 
 	case 1:

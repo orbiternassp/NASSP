@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.183  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.182  2006/05/27 11:50:04  movieman523
   *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
   *	
@@ -2176,6 +2179,7 @@ protected:
 	PowerMerge PyroPower;
 
 	PowerMerge SwitchPower;
+	PowerMerge GaugePower;
 
 	h_HeatExchanger *PrimCabinHeatExchanger;
 	h_HeatExchanger *SecCabinHeatExchanger;
