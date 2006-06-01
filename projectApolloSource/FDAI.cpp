@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.16  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -230,9 +233,71 @@ void FDAI::SetAttitude(VECTOR3 attitude) {
 
 void FDAI::MoveBall() {
 
-	now.x = target.x;
-	now.y = target.y;
-	now.z = target.z;
+//	now.x = target.x;
+//	now.y = target.y;
+//	now.z = target.z;
+
+	double delta;
+	
+    delta = target.z - now.z;
+	if (delta > 0.05) {
+		if (delta > PI) {
+			now.z += 2 * PI;
+			MoveBall();
+			return;
+		}
+		now.z += 0.05;
+		
+	} else if (delta < -0.05) { 
+		if (delta < -PI) {
+			now.z -= 2 * PI;
+			MoveBall();
+			return;
+		}
+		now.z -= 0.05;
+	} else 
+		now.z += delta;
+
+	delta = target.y - now.y;
+	if (delta > 0.05) {
+		if (delta > PI) {
+			now.y += 2 * PI;
+			MoveBall();
+			return;
+		}
+		now.y += 0.05;
+	
+	} else if (delta < -0.05) {
+		if (delta < -PI) {
+			now.y -= 2 * PI;
+			MoveBall();
+			return;
+		}
+		now.y -= 0.05;
+	}
+	else 
+		now.y += delta;
+
+	delta = target.x - now.x;
+	if (delta > 0.05) {
+		if (delta > PI) {
+			now.x += 2 * PI;
+			MoveBall();
+			return;
+		}
+		now.x += 0.05;
+	
+	} else if (delta < -0.05) {
+		if (delta < -PI) {
+			now.x -= 2 * PI;
+			MoveBall();
+			return;
+		}
+		now.x -= 0.05;
+	}
+	else 
+		now.x += delta;
+
 	
 	glLoadIdentity(); 
 	gluLookAt(0.0,-35.0,0.0, 0.0,0.0,0.0,0.0,0.0,1.0);

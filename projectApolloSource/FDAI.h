@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.9  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -83,7 +87,7 @@ protected:
 	int init;
 	int list_name; //we store the rendering into a display list
 	VECTOR3 now, target, lastRates, lastErrors;
-	double lastPaintTime, over_rate;
+	double lastPaintTime;
 
 	//some stuff for OpenGL
 	HDC hDC2;
