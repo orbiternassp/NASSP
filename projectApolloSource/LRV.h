@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/05/06 06:00:35  jasonims
+  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
+  *	
   *	Revision 1.1  2006/05/05 21:30:06  movieman523
   *	Added beginnings of LRV code.
   *	
@@ -67,6 +70,7 @@ private:
 	void DoFirstTimestep();
 	void SetMainState(int s);
 	int GetMainState();
+	void SetNeedleAngle(int idx, double val, double min_val, double max_val);
 
 protected:
 
@@ -77,7 +81,6 @@ protected:
 	OBJHANDLE hMaster;
 	//bool GoDock1
 	bool starthover;
-	bool GoRover;
 	bool MotherShip;
 	char EVAName[256];
 	char CSMName[256];
@@ -102,13 +105,22 @@ protected:
 	double lastLat;
 	double lastLong;
 
-	double speed;  // current speed in m/s for both astronaut and rover
+	double speed;  // current speed in m/s
+	bool speedlock;  // true: lock speed change until both throttle keys are released
 
 	SoundLib soundlib;
 	Sound SLEVA;
 
 	// touchdown point test
 	// double touchdownPointHeight;
+
+	// power and temperature (currently simplistic and/or faked)
+	double Bat1Cap;  // remaining capacity of battery 1 [Ah]
+	double Bat2Cap;  // remaining capacity of battery 2 [Ah]
+	double Bat1Volt; // voltage of battery 1 [V]
+	double Bat2Volt; // voltage of battery 2 [V]
+	double Bat1Temp; // temperature of battery 1 [°F]
+	double Bat2Temp; // temperature of battery 2 [°F]
 
 	// VC console
 	int vccMeshIdx;
@@ -124,6 +136,7 @@ protected:
 	double vccRange010Angle;
 	double vccRange100Angle;
 	double vccSpeedAngle;
+	double vccNeedleAngle[8];
 	bool vccInitialized;	// true, as soon as vccInitLat and vccInitLong contain usable values
 	double vccInitLat;	// latitude of last console navigation initialization (bearing and range reference point)
 	double vccInitLong;	// longitude of last console navigation initialization (bearing and range reference point)
@@ -131,4 +144,5 @@ protected:
 	MESHGROUP_TRANSFORM mgtRotCompass;
 	MESHGROUP_TRANSFORM mgtRotSpeed;
 	MESHGROUP_TRANSFORM mgtRotDrums;  // Bearing, distance or range "drum"
+	MESHGROUP_TRANSFORM mgtRotGauges;  // rotation of the 8 needles of the four power/temp gauges
 };

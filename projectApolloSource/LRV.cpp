@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/05/30 19:32:50  redburne
+  *	Order of main LRV mesh and console mesh has been exchanged to temporarily work around an animation bug in Orbiter 2006.
+  *	
   *	Revision 1.2  2006/05/06 06:00:35  jasonims
   *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
   *	
@@ -73,7 +76,8 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 //
 
 #define ROVER_SPEED_M_S 3.6  // max rover speed in m/s (http://en.wikipedia.org/wiki/Lunar_rover; values on the web range from 7 mph to 10.56 mph)
-#define ROVER_ACC_M_S2 4.0   // rover acceleration in m/s^2 (not based on real data (yet))
+#define ROVER_ACC_M_S2 0.5   // rover acceleration in m/s^2 (roughly based on AP15 mission report: accelleration to 10 km/h in "3 vehicle lengths")
+#define ROVER_BRK_M_S2 2.0   // rover braking in m/s^2 (not based on any real data (yet))
 #define ROVER_TURN_DEG_PER_SEC 20.0  // rover can turn x degrees / sec (just a convenient number)
 
 //
@@ -83,6 +87,15 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 static 	int refcount = 0;
 static MESHHANDLE hLRV;
 static MESHHANDLE hLRVConsole;
+
+// some static data four the eight needles of the power/temp gauges
+static const double VCC_NEEDLE_MINPOS[8] = {-25.0, -25.0, -24.3, -24.3, -24.1, -24.1, -23.2, -23.2};  // angle of minimum value on scale
+static const double VCC_NEEDLE_MAXPOS[8] = {26.5, 26.5, 24.3, 24.3, 25.5, 25.5, 25.3, 25.3};  // angle of maximum value on scale
+static const int VCC_NEEDLE_GROUPS[8] = {  // GEOM groups of the eight needles
+			GEOM_NEEDLE_A, GEOM_NEEDLE_B, GEOM_NEEDLE_C, GEOM_NEEDLE_D,
+			GEOM_NEEDLE_E, GEOM_NEEDLE_F, GEOM_NEEDLE_G, GEOM_NEEDLE_H
+		};
+	
 
 LRV::LRV(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
@@ -102,7 +115,6 @@ void LRV::init()
 {
 	//GoDock1=false;
 	starthover=false;
-	GoRover =true;
 	MotherShip=false;
 	EVAName[0]=0;
 	CSMName[0]=0;
@@ -128,9 +140,18 @@ void LRV::init()
 	lastLong = 0;
 
 	speed = 0.0;
+	speedlock = false;
 
 	ApolloNo = 0;
 	Realism = 0;
+
+	// power and temperature (currently simplistic and/or faked)
+	Bat1Cap = 120;  // remaining capacity of battery 1 [Ah]
+	Bat2Cap = 121;  // remaining capacity of battery 2 [Ah]
+	Bat1Volt = 36; // voltage of battery 1 [V]
+	Bat2Volt = 37; // voltage of battery 2 [V]
+	Bat1Temp = 80; // temperature of battery 1 [°F]
+	Bat2Temp = 78; // temperature of battery 2 [°F]
 
 	// LRV Console
 	vccCompAngle = 0.0; // North
@@ -144,6 +165,8 @@ void LRV::init()
 	vccRange010Angle = 0.0;
 	vccRange100Angle = 0.0;
 	vccSpeedAngle = 0.0;
+	for (int i=0; i<8; i++)
+		vccNeedleAngle[i] = - Radians(VCC_NEEDLE_MINPOS[i]);
 	vccInitialized = false;
 	vccInitLat = 0.0;
 	vccInitLong = 0.0;
@@ -211,6 +234,13 @@ void LRV::SetRoverStage ()
 	mgtRotSpeed.nmesh = vccMeshIdx;
 	mgtRotSpeed.ngrp = GEOM_SPEEDDIAL;
 	mgtRotSpeed.transform = MESHGROUP_TRANSFORM::ROTATE;
+    // Power/temp gauge needles
+	mgtRotGauges.P.rotparam.ref = LRV_GAUGE_PIVOT;
+	mgtRotGauges.P.rotparam.axis = Normalize(LRV_DRUM_AXIS);  // same axis as drums
+	mgtRotGauges.P.rotparam.angle = 0.0;  // dummy value
+	mgtRotGauges.nmesh = vccMeshIdx;
+	mgtRotGauges.ngrp = GEOM_NEEDLE_A;  // dummy value
+	mgtRotGauges.transform = MESHGROUP_TRANSFORM::ROTATE;
 
 	double tdph = -0.9;
 	SetTouchdownPoints(_V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3));
@@ -286,34 +316,44 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 		}
 	}
 
-
-	// movement is different for astro and lrv
-
-	if (GoRover) // LRV
+	if (KEYSUBTRACT)  // decelerate
 	{
-		if (KEYSUBTRACT)  // decelerate
-		{
-			speed = speed - SimDT * ROVER_ACC_M_S2; 
-			if (speed < -ROVER_SPEED_M_S)
-				speed = -ROVER_SPEED_M_S;
+		if (speed > 0.0) {
+			// we are still braking from forward movement to standstill
+			speed = __max(0.0, speed - SimDT * ROVER_BRK_M_S2); 
+			speedlock = (speed == 0.0);  // if wheelstop: don't go into reverse until key is released
 		}
-		else if (KEY5)  // stop
+		else if (!speedlock)
 		{
-		    speed = 0.0;
+			speed = __max(-ROVER_SPEED_M_S, speed - SimDT * ROVER_ACC_M_S2); 
 		}
-		else if (KEYADD)  // accelerate
-		{
-			speed = speed + SimDT * ROVER_ACC_M_S2; 
-			if (speed > ROVER_SPEED_M_S)
-				speed = ROVER_SPEED_M_S;
-		}
-
-		// move forward / backward according to current speed
-		move_spd =  SimDT * atan2(speed, oapiGetSize(eva->rbody));  // surface speed in radians
-		lat = lat + cos(heading) * move_spd;
-		lon = lon + sin(heading) * move_spd;
-		vccDistance = vccDistance + SimDT * fabs(speed);  // the console distance always counts up!
 	}
+	else if (KEYADD)  // accelerate
+	{
+		if (speed < 0.0) {
+			// we are still braking from reverse movement to standstill
+			speed = __min(0.0, speed + SimDT * ROVER_BRK_M_S2); 
+			speedlock = (speed == 0.0);  // if wheelstop: don't accellerate until key is released
+		}
+		else if (!speedlock)
+		{
+			speed = __min(ROVER_SPEED_M_S, speed + SimDT * ROVER_ACC_M_S2); 
+		}
+	}
+	else
+	{
+		// no speed key pressed: release lock
+		speedlock = false;
+	}
+
+	// move forward / backward according to current speed
+	move_spd =  SimDT * atan2(speed, oapiGetSize(eva->rbody));  // surface speed in radians
+	lat = lat + cos(heading) * move_spd;
+	lon = lon + sin(heading) * move_spd;
+	vccDistance = vccDistance + SimDT * fabs(speed);  // the console distance always counts up!
+	// decrease battery power (by about 1.87 Ah/km [http://www.hq.nasa.gov/alsj/a15/a15mr-8.htm])
+	Bat1Cap = Bat1Cap - 0.5 * 1.87 * (speed * SimDT / 1000.0);
+	Bat2Cap = Bat2Cap - 0.5 * 1.87 * (speed * SimDT / 1000.0);
 
 	// reset all keys
 	KEY1 = false;
@@ -442,17 +482,6 @@ int LRV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0; 
 	}
 
-	//
-	// V switches to rover if applicable.
-	//
-
-	if (key == OAPI_KEY_V && down == true) {				
-		if ((ApolloNo > 14) || (ApolloNo == 0) || (!Realism)) {
-			GoRover = !GoRover;
-			return 1;
-		}
-	}
-		
 	return 0;
 }
 
@@ -504,6 +533,21 @@ void LRV::DoFirstTimestep()
 
 		FirstTimestep = false;
 	}
+}
+
+void LRV::SetNeedleAngle(int idx, double val, double min_val, double max_val)
+
+{
+	//
+	// Move one of the 8 needles of the 4 power/temp gauges
+	//
+	double pos = __min(1.0, __max(0.0, (val - min_val) / (max_val - min_val)));  // position in [0 .. 1]
+	double needle_rad = Radians(pos * (VCC_NEEDLE_MAXPOS[idx] - VCC_NEEDLE_MINPOS[idx]));
+
+	mgtRotGauges.P.rotparam.angle = float(needle_rad - vccNeedleAngle[idx]);
+	mgtRotGauges.ngrp = VCC_NEEDLE_GROUPS[idx];		
+	vccNeedleAngle[idx] = needle_rad;
+	MeshgroupTransform(vccVis, mgtRotGauges);
 }
 
 void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
@@ -594,6 +638,16 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 		vccSpeedAngle = speed_dial_rad;
 		MeshgroupTransform(vccVis, mgtRotSpeed);
 
+		// Rotate the 8 needles
+		SetNeedleAngle(0, Bat1Cap, -20.0, 130.0);
+		SetNeedleAngle(1, Bat2Cap, -20.0, 130.0); 
+		SetNeedleAngle(2, 2.0 * Bat1Volt, 0.0, 100.0);
+		SetNeedleAngle(3, 2.0 * Bat2Volt, 0.0, 100.0); 
+		SetNeedleAngle(4, Bat1Temp, 0.0, 180.0); 
+		SetNeedleAngle(5, Bat2Temp, 0.0, 180.0); 
+		SetNeedleAngle(6, 0.0, 200.0, 500.0);
+		SetNeedleAngle(7, 0.0, 200.0, 500.0); 
+
 		// Display distance travelled (in km) since last initialization
 		double distance = vccDistance / 1000.0;
 		while (distance > 100.0) distance = distance - 100.0;
@@ -677,10 +731,6 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 
 	MoveLRV(SimDT, &evaV, heading);
 
-	if (GoRover){
-		SetRoverStage();
-	}
-
 	// touchdown point test
 	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
 }
@@ -704,7 +754,6 @@ void LRV::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
 			sscanf(line + 5, "%d", &s);
 			SetMainState(s);
 
-			GoRover = true;
 			SetEngineLevel(ENGINE_HOVER,1);
 		}
 		else if (!strnicmp (line, "MISSIONNO", 9)) {
@@ -742,6 +791,8 @@ void LRV::clbkVisualDestroyed (VISHANDLE vis, int refcount)
 	vccRange010Angle = 0.0;
 	vccRange010Angle = 0.0;
 	vccSpeedAngle = 0.0;
+	for (int i=0; i<8; i++)
+		vccNeedleAngle[i] = - Radians(VCC_NEEDLE_MINPOS[i]);
 }
 
 
