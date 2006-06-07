@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/05/26 22:01:50  movieman523
+  *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
+  *	
   *	Revision 1.13  2006/05/25 04:04:53  jasonims
   *	Initial VC Stop point...unknown why buttons not working yet, but skeleton of VC panel programming is there...
   *	
@@ -96,7 +99,6 @@ void Saturn::InitVC (int vc)
 
 	switch (vc) {
 	case 0:
-		sprintf(oapiDebugString(), "init-ing...");
 		//LOAD SURFACES
 		//srf[#] = oapiCreateSurface (LOADBMP (BMP_IDENITIFIER}};   oapiSetSurfaceColourKey (srf[#], 0);
 		
@@ -114,18 +116,44 @@ bool Saturn::clbkLoadVC (int id)
 
 	ReleaseSurfaces();
 	InitVC (id);
+	InVC = true;
+	InPanel = false;
+	SetView ();
 	
 	//SetCameraDefaultDirection (_V(0,0,1));
 	//default camera direction: forward
 	//SetCameraShiftRange (_V(#,#,#), _V(#,#,#), _V(#,#,#));
 	// leaning forward/left/right
 
-	switch (id) {
-	case 0:
+	return VCRegistered;
+
+}
+
+bool Saturn::RegisterVC()
+{
+	VCRegistered = true;
+
+	switch (viewpos) {
+
+	case SATVIEW_LEFTSEAT: //can only reach as far over as middle of panel 2 and side panels
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		InVC = true;
-		InPanel = false;
-		SetView();
+
+
+		//register areas and AreaClickmodes
+		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
+		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
+		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
+		oapiVCRegisterArea (AID_ABORT_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+			oapiVCSetAreaClickmode_Spherical (AID_ABORT_BUTTON, _V(0.05,-0.303,0.593),0.02);
+		oapiVCRegisterArea (AID_MASTER_ALARM, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Spherical (AID_MASTER_ALARM, _V(-0.205,-0.243,0.61),0.015);
+		oapiVCRegisterArea (AID_DSKY_KEY, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Quadrilateral (AID_DSKY_KEY, _V(0.162,-0.397,0.557), _V(0.34,-0.397,0.557), _V(0.162,-0.474,0.53), _V(0.34,-0.474,0.53));
+        
+		return true;
+
+	case SATVIEW_CENTERSEAT: //can only reach Main Console
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 
 		//register areas and AreaClickmodes
 		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
@@ -138,9 +166,42 @@ bool Saturn::clbkLoadVC (int id)
 		oapiVCRegisterArea (AID_DSKY_KEY, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 			oapiVCSetAreaClickmode_Quadrilateral (AID_DSKY_KEY, _V(0.442,0.5,0.407), _V(0.258,0.5,0.407), _V(0.258,0.424,0.38), _V(0.442,0.424,0.38));
         
-		//sprintf(oapiDebugString(), "VC areas loaded...");
 		return true;
+
+	case SATVIEW_RIGHTSEAT: //can only reach as far over as middle of panel 2 and side panels
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+
+		//register areas and AreaClickmodes
+		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
+		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
+		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
+
+		return true;
+
+	case SATVIEW_GNPANEL: //can only reach Lower Equipment Bay
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
+		SetCameraShiftRange (_V(-0.4,0,0), _V(0,0,0), _V(0,0,0));
+
+		
+		//register areas and AreaClickmodes
+		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
+		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
+		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
+
+		return true;
+
+	case SATVIEW_LEFTDOCK: //can only control COAS and limited eye movement
+		SetCameraRotationRange(0,0,0,0);
+
+		//register areas and AreaClickmodes
+		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
+		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
+		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
+		
+		return true;
+
 	default:
+		VCRegistered = false;
 		return false;
 	}
 }
@@ -236,9 +297,9 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_MASTER_ALARM3:
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_NONE);
 		return true;
-
 		*/
-	case AID_MASTER_ALARM:
+
+	case AID_MASTER_ALARM:  //temp place holder so C++ doesn't complain
 		return false;
 
 	default:
@@ -341,7 +402,7 @@ void Saturn::SetView(double offset, bool update_direction)
 
 		case LAUNCH_STAGE_TWO_TWR_JET:
 		case LAUNCH_STAGE_SIVB:
-			viewpos = SATVIEW_CDR;
+			viewpos = SATVIEW_LEFTSEAT;
 			SetView(offset, true);
 			return;
 		}
@@ -385,30 +446,46 @@ void Saturn::SetView(double offset, bool update_direction)
 		// VC, in cockpit
 		//
 		switch (viewpos) {
-			case SATVIEW_CDR:
-			v = _V(-0.6, 0.9, offset);
+			case SATVIEW_LEFTSEAT:
+				v = _V(-0.6, 0.9, offset);
 			break;
 
-			case SATVIEW_CMP:
-			v = _V(0, 0.9, offset);
+			case SATVIEW_CENTERSEAT:
+				v = _V(0, 0.9, offset);
 			break;
 
-			case SATVIEW_DMP:
-			v = _V(0.6, 0.9, offset);
+			case SATVIEW_RIGHTSEAT:
+				v = _V(0.6, 0.9, offset);
 			break;
 
-			case SATVIEW_DOCK:
+			case SATVIEW_LEFTDOCK:
 			if (dockstate == 13) {
 				v = _V(0, 0, 2.5 + offset);
 			} else {
 				v = _V(-0.65, 1.05, 0.25 + offset);
 			}
 			break;
+			
+			case SATVIEW_RIGHTDOCK:
+			if (dockstate == 13) {
+				v = _V(0, 0, 2.5 + offset);
+			} else {
+				v = _V(0.65, 1.05, 0.25 + offset);
+			}
+			break;
+
+			case SATVIEW_GNPANEL:
+				v = _V(0.0, -0.15, 0.5 + offset);
+			break;
 		}
 
 		if (update_direction) {
 			SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+			if (viewpos == SATVIEW_GNPANEL) {
+                SetCameraDefaultDirection(_V(0.0,-1.0, 0.0));
+			}else{
+				SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+			}
 		}
 
 		v.x += ViewOffsetx;
@@ -416,4 +493,12 @@ void Saturn::SetView(double offset, bool update_direction)
 		v.z += ViewOffsetz;
 	}
 	SetCameraOffset(v);
+
+	VCCameraOffset.x = v.x - VCMeshOffset.x;
+	VCCameraOffset.y = v.y - VCMeshOffset.y;
+	VCCameraOffset.z = v.z - VCMeshOffset.z;
+	
+	if (InVC){
+		RegisterVC();
+	}
 }

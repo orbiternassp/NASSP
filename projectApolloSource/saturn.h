@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.184  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.183  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -551,6 +554,7 @@ public:
 	virtual void Timestep(double simt, double simdt) = 0;
 
 	void InitVC (int vc);
+	bool RegisterVC ();
 
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
@@ -2259,13 +2263,15 @@ protected:
 	bool ActivateS4B;
 	bool ToggleEva;
 
-	#define SATVIEW_CDR		0
-	#define SATVIEW_DMP		1
-	#define SATVIEW_CMP		2
-	#define SATVIEW_DOCK	3
-	#define SATVIEW_ENG1	4
-	#define SATVIEW_ENG2	5
-	#define SATVIEW_ENG3	6
+	#define SATVIEW_LEFTSEAT		0
+	#define SATVIEW_RIGHTSEAT		1
+	#define SATVIEW_CENTERSEAT		2
+	#define SATVIEW_LEFTDOCK		3
+	#define SATVIEW_RIGHTDOCK		4
+	#define SATVIEW_GNPANEL			5
+	#define SATVIEW_ENG1			10
+	#define SATVIEW_ENG2			11
+	#define SATVIEW_ENG3			12
 
 	unsigned int	viewpos;
 
@@ -2317,6 +2323,9 @@ protected:
 	int  PanelId;
 	bool InVC;
 	bool InPanel;
+	bool VCRegistered;
+	VECTOR3 VCCameraOffset;
+	VECTOR3 VCMeshOffset;
 	bool CheckPanelIdInTimestep;
 
 	bool KranzPlayed;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.141  2006/05/30 23:15:14  movieman523
+  *	Mission timer and DSKY now need power to operate.
+  *	
   *	Revision 1.140  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -701,7 +704,7 @@ void Saturn::initSaturn()
 	}
 	LastVelocityFilled = -1;
 
-	viewpos = SATVIEW_CDR;
+	viewpos = SATVIEW_LEFTSEAT;
 
 	probeidx = 0;
 	ToggleEva = false;
@@ -915,6 +918,9 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 {
 	TRACESETUP("Saturn::clbkPostStep");
+
+	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
+
 
 }
 
@@ -2443,6 +2449,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		DestroyStages(simt);
 		NextDestroyCheckTime = MissionTime + 1.0;
 	}
+
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
@@ -2617,7 +2624,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0;
 	}
 
-	if (key == OAPI_KEY_5 && down == true) {
+	if (key == OAPI_KEY_4 && down == true) {
 		if (ActivateLEM) {
 			ActivateLEM = false;
 		}
@@ -2625,25 +2632,35 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	}
 
 	if (key == OAPI_KEY_9 && down == true && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
-		viewpos = SATVIEW_DOCK;
+		if (viewpos == SATVIEW_LEFTDOCK){
+			viewpos = SATVIEW_RIGHTDOCK;
+		}else{
+			viewpos = SATVIEW_LEFTDOCK;
+		}
 		SetView(true);
 		return 1;
 	}
 
 	if (key == OAPI_KEY_8 && down == true) {
-		viewpos = SATVIEW_DMP;
+		viewpos = SATVIEW_RIGHTSEAT;
 		SetView(true);
 		return 1;
 	}
 
 	if (key == OAPI_KEY_7 && down == true) {
-		viewpos = SATVIEW_CMP;
+		viewpos = SATVIEW_CENTERSEAT;
 		SetView(true);
 		return 1;
 	}
 
 	if (key == OAPI_KEY_6 && down == true) {
-		viewpos = SATVIEW_CDR;
+		viewpos = SATVIEW_LEFTSEAT;
+		SetView(true);
+		return 1;
+	}
+
+	if (key == OAPI_KEY_5 && down == true) {
+		viewpos = SATVIEW_GNPANEL;
 		SetView(true);
 		return 1;
 	}
