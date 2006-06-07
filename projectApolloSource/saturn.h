@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.185  2006/06/07 02:05:04  jasonims
+  *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
+  *	
   *	Revision 1.184  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -1021,6 +1024,9 @@ protected:
 
 	SwitchRow PostLDGVentValveLeverRow;
 	CircuitBrakerSwitch PostLDGVentValveLever;
+
+	SwitchRow GDCAlignButtonRow;
+	PushSwitch GDCAlignButton;
 	
 	//
 	// Communication switches (s-band, vhf etc.)
@@ -1137,6 +1143,8 @@ protected:
 
 	//
 	// Electrical meters
+	//
+
 	SwitchRow ACVoltMeterRow;
 	SaturnACVoltMeter ACVoltMeter;
 
@@ -2595,6 +2603,7 @@ protected:
 	Sound SDockingLatch;
 	Sound SDockingExtend;
 	Sound SUndock;
+	Sound CabincloseoutS;
 
 	//
 	// General engine resources.

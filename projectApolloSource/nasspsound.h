@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/01/05 12:09:02  tschachim
+  *	New docking sound.
+  *	
   *	Revision 1.6  2005/11/15 05:43:14  flydba
   *	*** empty log message ***
   *	
@@ -88,5 +91,6 @@
 #define DOCKINGLATCH_SOUND			"DockingLatch.wav"
 #define DOCKINGEXTEND_SOUND			"DockingExtend.wav"
 #define UNDOCK_SOUND				"undocking.wav"
+#define CABINCLOSEOUT_SOUND			"cabincloseout.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"

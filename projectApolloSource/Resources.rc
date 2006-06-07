@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""winresrc.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -46,14 +46,6 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_FDAINEEDLES         BITMAP                  "FDAI_needles.bmp"
-IDB_THUMBWHEEL_LARGEFONTS BITMAP                  "thumbwheel_large_fonts.bmp"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -117,8 +109,8 @@ IDB_ROTATIONALSWITCH    BITMAP                  "RotationalSwitch.bmp"
 IDB_CSM_MAIN_PANEL      BITMAP                  "csm_main_panel.bmp"
 IDB_CSM_LEFT_PANEL      BITMAP                  "csm_left_panel.bmp"
 IDB_CSM_RIGHT_PANEL     BITMAP                  "csm_right_panel.bmp"
-IDB_CSM_LEFT_RNDZ_WINDOW BITMAP                  "csm_left_rndz_window.bmp"
-IDB_CSM_RIGHT_RNDZ_WINDOW BITMAP                  "csm_right_rndz_window.bmp"
+IDB_CSM_LEFT_RNDZ_WINDOW BITMAP                 "csm_left_rndz_window.bmp"
+IDB_CSM_RIGHT_RNDZ_WINDOW BITMAP                "csm_right_rndz_window.bmp"
 IDB_CSM_HATCH_WINDOW    BITMAP                  "csm_hatch_window.bmp"
 IDB_CSM_LOWER_PANEL     BITMAP                  "gn_lower_equip_bay.bmp"
 IDB_INDICATOR           BITMAP                  "Indicator.bmp"
@@ -139,23 +131,23 @@ IDB_ACVOLTS             BITMAP                  "ACVolts.bmp"
 IDB_DCVOLTS             BITMAP                  "DCVolts.bmp"
 IDB_DCAMPS              BITMAP                  "DCAmps.bmp"
 IDB_COAS                BITMAP                  "coas.bmp"
-IDB_THUMBWHEEL_SMALLFONTS BITMAP                  "thumbwheel_small_fonts.bmp"
+IDB_THUMBWHEEL_SMALLFONTS BITMAP                "thumbwheel_small_fonts.bmp"
 IDB_CIRCUITBRAKER       BITMAP                  "circuit_breaker.bmp"
 IDB_THREEPOSSWITCH20    BITMAP                  "threeposswitch20.bmp"
-IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL BITMAP                  "thumbwheel_small_fonts_diagonal.bmp"
+IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL BITMAP       "thumbwheel_small_fonts_diagonal.bmp"
 IDB_THREEPOSSWITCH30    BITMAP                  "threeposswitch30.bmp"
 IDB_SWITCH20            BITMAP                  "switch20.bmp"
 IDB_SWITCH30            BITMAP                  "switch30.bmp"
 IDB_CSMRIGHTWINDOWCOVER BITMAP                  "csm_right_les_window_cover.bmp"
 IDB_CSMLEFTWINDOWCOVER  BITMAP                  "csm_left_les_window_cover.bmp"
 IDB_SWITCH20LEFT        BITMAP                  "switch20_left.bmp"
-IDB_THREEPOSSWITCH20LEFT BITMAP                  "threeposswitch20_left.bmp"
+IDB_THREEPOSSWITCH20LEFT BITMAP                 "threeposswitch20_left.bmp"
 IDB_GUARDEDSWITCH20     BITMAP                  "guarded_switch20.bmp"
 IDB_SWITCHGUARDPANEL15  BITMAP                  "SwitchGuardPanel15.bmp"
-IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT BITMAP                  "Thumbwheel_small_fonts_diagonal_left.bmp"
-IDB_THREEPOSSWITCH30LEFT BITMAP                  "threeposswitch30_left.bmp"
+IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT BITMAP  "Thumbwheel_small_fonts_diagonal_left.bmp"
+IDB_THREEPOSSWITCH30LEFT BITMAP                 "threeposswitch30_left.bmp"
 IDB_SWITCH30LEFT        BITMAP                  "switch30_left.bmp"
-IDB_THREEPOSSWITCH305LEFT BITMAP                  "threeposswitch305_left.bmp"
+IDB_THREEPOSSWITCH305LEFT BITMAP                "threeposswitch305_left.bmp"
 IDB_SWITCH305LEFT       BITMAP                  "switch305_left.bmp"
 IDB_LIGHTROTARY         BITMAP                  "light_rotary.bmp"
 IDB_FDAIPOWERROTARY     BITMAP                  "FDAIPower_rotary.bmp"
@@ -166,35 +158,38 @@ IDB_GTACOVER            BITMAP                  "gta_cover.bmp"
 IDB_POSTLDGVENTVLVLEVER BITMAP                  "post_lndg_vlv_lever.bmp"
 IDB_VHFANTENNAROTARY    BITMAP                  "VHFAntenna_rotary.bmp"
 IDB_SPSMAXINDICATOR     BITMAP                  "SPSmax_indicator.bmp"
-IDB_CSM_CABIN_PRESS_PANEL BITMAP                  "csm_cabin_press_panel.bmp"
+IDB_CSM_CABIN_PRESS_PANEL BITMAP                "csm_cabin_press_panel.bmp"
 IDB_ECSROTARY           BITMAP                  "ECSRotary.bmp"
-IDB_CSMMAINPANELWINDOWCOVER BITMAP                  "csm_main_panel_les_window_cover.bmp"
-IDB_CSMRIGHTRNDZWINDOWLESCOVER BITMAP                  "csm_right_rndz_les_window_cover.bmp"
+IDB_CSMMAINPANELWINDOWCOVER BITMAP              "csm_main_panel_les_window_cover.bmp"
+IDB_CSMRIGHTRNDZWINDOWLESCOVER BITMAP           "csm_right_rndz_les_window_cover.bmp"
 IDB_GLYCOLLEVER         BITMAP                  "glycol_lever.bmp"
 IDB_FDAIOFFFLAG         BITMAP                  "FDAI_off_flag.bmp"
-IDB_SPS_FUEL_FONT_WHITE BITMAP			"fonts_white.bmp"
-IDB_SPS_FUEL_FONT_BLACK BITMAP			"fonts_black.bmp"
-IDB_BORDER_34x29	BITMAP			"border34x29.bmp"
-IDB_BORDER_34x39	BITMAP			"border34x39.bmp"
-IDB_BORDER_34x61	BITMAP			"border34x61.bmp"
-IDB_BORDER_55x111	BITMAP			"border55x111.bmp"
-IDB_BORDER_44x67	BITMAP			"border44x67.bmp"
-IDB_BORDER_39x38	BITMAP			"border39x38.bmp"
-IDB_BORDER_92x40	BITMAP			"border92x40.bmp"
-IDB_BORDER_34x33	BITMAP			"border34x33.bmp"
-IDB_BORDER_29x29	BITMAP			"border29x29.bmp"
-IDB_BORDER_34x31	BITMAP			"border34x31.bmp"
-IDB_BORDER_50x158	BITMAP			"border50x158.bmp"
-IDB_BORDER_38x49	BITMAP			"border38x49.bmp"
-IDB_BORDER_34x34	BITMAP			"border34x34.bmp"
-IDB_BORDER_90x90	BITMAP			"border90x90.bmp"
-IDB_BORDER_84x84	BITMAP			"border84x84.bmp"
-IDB_BORDER_70x70	BITMAP			"border70x70.bmp"
-IDB_BORDER_23x20	BITMAP			"border23x20.bmp"
-IDB_BORDER_78x78	BITMAP			"border78x78.bmp"
-IDB_BORDER_72x72	BITMAP			"border72x72.bmp"
-IDB_BORDER_75x64	BITMAP			"border75x64.bmp"
-IDB_BORDER_32x160	BITMAP			"border32x160.bmp"
+IDB_SPS_FUEL_FONT_WHITE BITMAP					"fonts_white.bmp"
+IDB_SPS_FUEL_FONT_BLACK BITMAP					"fonts_black.bmp"
+IDB_BORDER_34x29		BITMAP					"border34x29.bmp"
+IDB_BORDER_34x39		BITMAP					"border34x39.bmp"
+IDB_BORDER_34x61		BITMAP					"border34x61.bmp"
+IDB_BORDER_55x111		BITMAP					"border55x111.bmp"
+IDB_BORDER_44x67		BITMAP					"border44x67.bmp"
+IDB_BORDER_39x38		BITMAP					"border39x38.bmp"
+IDB_BORDER_92x40		BITMAP					"border92x40.bmp"
+IDB_BORDER_34x33		BITMAP					"border34x33.bmp"
+IDB_BORDER_29x29		BITMAP					"border29x29.bmp"
+IDB_BORDER_34x31		BITMAP					"border34x31.bmp"
+IDB_BORDER_50x158		BITMAP					"border50x158.bmp"
+IDB_BORDER_38x49		BITMAP					"border38x49.bmp"
+IDB_BORDER_34x34		BITMAP					"border34x34.bmp"
+IDB_BORDER_90x90		BITMAP					"border90x90.bmp"
+IDB_BORDER_84x84		BITMAP					"border84x84.bmp"
+IDB_BORDER_70x70		BITMAP					"border70x70.bmp"
+IDB_BORDER_23x20		BITMAP					"border23x20.bmp"
+IDB_BORDER_78x78		BITMAP					"border78x78.bmp"
+IDB_BORDER_72x72		BITMAP					"border72x72.bmp"
+IDB_BORDER_75x64		BITMAP					"border75x64.bmp"
+IDB_BORDER_32x160		BITMAP					"border32x160.bmp"
+IDB_FDAINEEDLES         BITMAP          	    "FDAI_needles.bmp"
+IDB_THUMBWHEEL_LARGEFONTS BITMAP                "thumbwheel_large_fonts.bmp"
+IDB_THUMBWHEEL_SMALL 	BITMAP                  "thumbwheel_small.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 

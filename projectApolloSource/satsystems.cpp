@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.105  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.104  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -966,6 +969,11 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					if (Realism && oapiGetTimeAcceleration() > 1.0)
 						oapiSetTimeAcceleration(1.0);
 
+					// Play cabin closeout sound
+					CabincloseoutS.play();
+					CabincloseoutS.done();
+
+
 					// Crew ingress
 					number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
 					*number = 3; 
@@ -995,9 +1003,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					// Turn on suit compressor 1
 					SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
 
-					// Turn on cabin fans
-					CabinFan1Switch.SwitchTo(TOGGLESWITCH_UP);
-					CabinFan2Switch.SwitchTo(TOGGLESWITCH_UP);
+					// Turn on water accumulator
 					SuitCircuitH2oAccumAutoSwitch.SwitchTo(THREEPOSSWITCH_UP);
 
 
@@ -1054,18 +1060,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 			case SATSYSTEMS_CABINCLOSEOUT:
 				if (MissionTime >= -1200) {	// 20min before launch
 
-					// Slow down time acceleration
-					if (Realism && oapiGetTimeAcceleration() > 1.0)
-						oapiSetTimeAcceleration(1.0);
-
-
 					//
 					// Checklist actions
 					//
-
-					// Turn off cabin fans (AOH2 4.2.1.6)
-					CabinFan1Switch.SwitchTo(TOGGLESWITCH_DOWN);
-					CabinFan2Switch.SwitchTo(TOGGLESWITCH_DOWN);
 
 					// Turn on BMAGs (AOH2 4.2.2.1)
 					// TODO
@@ -3867,46 +3864,92 @@ void GDC::LoadState(FILEHANDLE scn){
 	Initialized = TRUE;
 }
 
+//
 // ASCP
-ASCP::ASCP(){
+//
+
+ASCP::ASCP()
+
+{
 	output.x = 0;
 	output.y = 0;
 	output.z = 0;
 	sat = NULL;
+
+	rolldisplay = 0;
+	pitchdisplay = 0;
+	yawdisplay = 0;
 }
 
-void ASCP::Init(Saturn *vessel){
+void ASCP::Init(Saturn *vessel)
+
+{
 	sat = vessel;
 }
 
-void ASCP::TimeStep(){
+void ASCP::TimeStep()
+
+{
 	if(msgcounter > 0){
 		msgcounter--;
-		if(msgcounter==0){
+		if(msgcounter == 0) {
+#ifdef _DEBUG
 			sprintf(oapiDebugString(),""); // Clear message
+#endif
 		}
 	}
 }
 
 bool ASCP::RollDisplayClicked(){
 	msgcounter = 50; // Keep for 50 timesteps
+#ifdef _DEBUG
 	sprintf(oapiDebugString(),"ASCP: Roll = %05.1f",output.x);
+#endif
 	return true;
 }
 
 bool ASCP::PitchDisplayClicked(){
 	msgcounter = 50;
+#ifdef _DEBUG
 	sprintf(oapiDebugString(),"ASCP: Pitch = %05.1f",output.y);
+#endif
 	return true;
 }
 
 bool ASCP::YawDisplayClicked(){
 	msgcounter = 50;
+#ifdef _DEBUG
 	sprintf(oapiDebugString(),"ASCP: Yaw = %05.1f",output.z);
+#endif
 	return true;
 }
 
-bool ASCP::RollUpClick(int Event){
+bool ASCP::RollClick(int Event, int mx, int my)
+
+{
+	if (my > 18) {
+		if (RollUpClick(Event)) {
+			rolldisplay--;
+			if (rolldisplay < 0) {
+				rolldisplay = 4;
+			}
+			return true;
+		}
+	} else {
+		if (RollDnClick(Event)) {
+			rolldisplay++;
+			if (rolldisplay > 4) {
+				rolldisplay = 0;
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool ASCP::RollUpClick(int Event)
+
+{
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
@@ -3934,12 +3977,14 @@ bool ASCP::RollUpClick(int Event){
 			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
-	if(output.x > 360){ output.x -= 360; }
+	if(output.x > 359.9){ output.x = 0; }
 	RollDisplayClicked();
 	return changed;
 }
 
-bool ASCP::RollDnClick(int Event){
+bool ASCP::RollDnClick(int Event)
+
+{
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
@@ -3973,7 +4018,32 @@ bool ASCP::RollDnClick(int Event){
 	return changed;
 }
 
-bool ASCP::PitchUpClick(int Event){
+bool ASCP::PitchClick(int Event, int mx, int my)
+
+{
+	if (my > 18) {
+		if (PitchUpClick(Event)) {
+			pitchdisplay--;
+			if (pitchdisplay < 0) {
+				pitchdisplay = 4;
+			}
+			return true;
+		}
+	} else {
+		if (PitchDnClick(Event)) {
+			pitchdisplay++;
+			if (pitchdisplay > 4) {
+				pitchdisplay = 0;
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool ASCP::PitchUpClick(int Event)
+
+{
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
@@ -4002,12 +4072,14 @@ bool ASCP::PitchUpClick(int Event){
 			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
-	if(output.y >= 360){ output.y -= 360; }
+	if(output.y > 359.9){ output.y = 0; }
 	PitchDisplayClicked();
 	return changed;
 }
 
-bool ASCP::PitchDnClick(int Event){
+bool ASCP::PitchDnClick(int Event)
+
+{
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
@@ -4041,7 +4113,32 @@ bool ASCP::PitchDnClick(int Event){
 	return changed;
 }
 
-bool ASCP::YawUpClick(int Event){
+bool ASCP::YawClick(int Event, int mx, int my)
+
+{
+	if (my > 18) {
+		if (YawUpClick(Event)) {
+			yawdisplay--;
+			if (yawdisplay < 0) {
+				yawdisplay = 4;
+			}
+			return true;
+		}
+	} else {
+		if (YawDnClick(Event)) {
+			yawdisplay++;
+			if (yawdisplay > 4) {
+				yawdisplay = 0;
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool ASCP::YawUpClick(int Event)
+
+{
 	// Cannot click beyond 90 degrees.
 	bool changed = false;
 	switch(Event){
@@ -4074,12 +4171,14 @@ bool ASCP::YawUpClick(int Event){
 		output.z = 90;
 	}	
 	// Wrap around zero
-	if(output.z >= 360){ output.z -= 360; }
+	if(output.z > 359.9){ output.z = 0; }
 	YawDisplayClicked();
 	return changed;
 }
 
-bool ASCP::YawDnClick(int Event){
+bool ASCP::YawDnClick(int Event)
+
+{
 	// Cannot click beyond 270 degrees.
 	bool changed = false;
 	switch(Event){
@@ -4117,7 +4216,23 @@ bool ASCP::YawDnClick(int Event){
 	return changed;
 }
 
+void ASCP::PaintRoll(SURFHANDLE surf, SURFHANDLE wheel)
 
+{
+	oapiBlt(surf, wheel, 0, 0, rolldisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+}
+
+void ASCP::PaintPitch(SURFHANDLE surf, SURFHANDLE wheel)
+
+{
+	oapiBlt(surf, wheel, 0, 0, pitchdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+}
+
+void ASCP::PaintYaw(SURFHANDLE surf, SURFHANDLE wheel)
+
+{
+	oapiBlt(surf, wheel, 0, 0, yawdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+}
 
 bool ASCP::PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits){
 	char cheat[10];                       // Have plenty of room for this

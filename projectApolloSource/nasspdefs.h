@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.63  2006/05/27 00:54:28  movieman523
   *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
   *	
@@ -275,7 +278,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 106; // number of bitmap handles
+const int nsurf = 107; // number of bitmap handles
 
 #define SRF_INDICATOR				 1
 #define SRF_NEEDLE					 2
@@ -373,7 +376,7 @@ const int nsurf = 106; // number of bitmap handles
 #define SRF_BORDER_72x72			103
 #define SRF_BORDER_75x64			104
 #define SRF_BORDER_34x39			105
-
+#define SRF_THUMBWHEEL_SMALL		106
 
 
 //

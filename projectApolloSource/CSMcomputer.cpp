@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/04/06 11:28:06  tschachim
+  *	Bugfix padload and TVC.
+  *	
   *	Revision 1.46  2006/03/29 19:06:49  movieman523
   *	First support for new SM.
   *	
@@ -536,7 +539,10 @@ void CSMcomputer::Prog01(double simt)
 			AbortWithError(0210);
 			break;
 		}
-		//imu.TurnOn();
+
+		SetOutputChannelBit(012, 5, true);
+		SetOutputChannelBit(012, 5, false);
+		SetOutputChannelBit(012, 15, true);
 
 		NextProgTime = simt + 2.0;
 		ProgState++;
@@ -545,9 +551,17 @@ void CSMcomputer::Prog01(double simt)
 	case 1:
 		if (simt >= NextProgTime) {
 			LightCompActy();
-			SetOutputChannelBit(012, 5, true);
-			SetOutputChannelBit(012, 5, false);
-			SetOutputChannelBit(012, 15, true);
+
+			if (!Yaagc) {
+				//
+				// As a quick hack we drive the IMU to prelaunch orientation, 
+				// no gyro-compassing in P02 yet, so the IMU drifts in earth rate 
+				// like the GDC
+				//
+
+				imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
+			}
+
 			NextProgTime = simt + 1.0;
 			ProgState++;
 		}
