@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/04/25 13:46:04  tschachim
+  *	New KSC.
+  *	
   *	Revision 1.7  2006/02/21 12:18:29  tschachim
   *	Fixes to make code build with MS C++ 2005
   *	
@@ -157,7 +160,13 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
     meshindexVAB = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\ApolloVAB"), &meshoffset);
 	SetMeshVisibilityMode(meshindexVAB, MESHVIS_ALWAYS);
 
-	meshcountSaturn = 16;
+	//
+	// Saturn 5 assembly disabled for the moment
+	//
+
+	meshcountSaturn = 0;
+
+/*	meshcountSaturn = 16;
 	meshoffset = _V(75, -55, -66.4);
 	meshindexSaturn[0] = AddMesh(oapiLoadMeshGlobal("ProjectApollo/sat5stg1"), &meshoffset);
 
@@ -200,7 +209,7 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 		SetMeshVisibilityMode(meshindexSaturn[i], MESHVIS_NEVER);
 
 	DefineAnimations();
-	SetTouchdownPoints(_V(0, -80.45, 10), _V(-10, -80.45, -10), _V(10, -80.45, -10));
+*/	SetTouchdownPoints(_V(0, -80.45, 10), _V(-10, -80.45, -10), _V(10, -80.45, -10));
 	SetCameraOffset(_V(-27.0, -12.0, -48.0));
 
 	VSRegVessel(GetHandle());
@@ -479,9 +488,14 @@ void VAB::DefineCrane2Animation(MGROUP_TRANSFORM *mgroup[], double pickupHeight,
 
 void VAB::clbkPostCreation() {
 	
-	SetAnimation(currentAnimCrane, crane_Proc);
+	//
+	// Saturn 5 assembly disabled for the moment
+	//
+
+/*	SetAnimation(currentAnimCrane, crane_Proc);
 	SetAnimation(animPlatform, platform_Proc);
 	SetAnimation(animSaturnStage1, saturnStage1_Proc);
+*/
 }
 
 void VAB::clbkPreStep(double simt, double simdt, double mjd) {
@@ -491,8 +505,12 @@ void VAB::clbkPreStep(double simt, double simdt, double mjd) {
 
 void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 
+	//
+	// Saturn 5 assembly disabled for the moment
+	//
+
 	// High bay 1 door
-	if (highBay1Door_Status == DOOR_CLOSING || highBay1Door_Status == DOOR_OPENING) {
+/*	if (highBay1Door_Status == DOOR_CLOSING || highBay1Door_Status == DOOR_OPENING) {
 		double da = simdt / 300.0;
 		if (highBay1Door_Status == DOOR_CLOSING) {
 			if (highBay1Door_Proc > 0.0)
@@ -640,6 +658,7 @@ void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 			SetAnimation(animSaturnStage1, saturnStage1_Proc);
 		}
 	}
+*/
 }
 
 void VAB::SetSaturnMeshVisibilityMode(int buildStatus, WORD mode) {
