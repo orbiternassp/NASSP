@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2006/05/27 11:50:04  movieman523
+  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
+  *	
   *	Revision 1.60  2006/05/27 00:54:28  movieman523
   *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
   *	
@@ -925,6 +928,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 	meshidx = AddMesh (hCMVC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+	VCMeshOffset = mesh_dir;
 
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
