@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.66  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -2159,6 +2162,8 @@ double MeterSwitch::GetDisplayValue() {
 
 //
 // Adjust the input value based on the voltage fed to the meter.
+// CWS limit for main bus undervolt is 26.25 V, so we begin at 26 V 
+// with the adjustment
 //
 
 double MeterSwitch::AdjustForPower(double val)
@@ -2166,10 +2171,11 @@ double MeterSwitch::AdjustForPower(double val)
 {
 	double volts = Voltage();
 
-	if (volts >= 28.0)
+	if (volts >= 26.0)
 		return val;
 
-	return ((val * (volts - 1.0)) / 27.0);
+	// sprintf(oapiDebugString(), "MeterSwitch::AdjustForPower %s undervolt", name);
+	return ((val * (volts - 1.0)) / 25.0);
 }
 
 void MeterSwitch::SaveState(FILEHANDLE scn) {

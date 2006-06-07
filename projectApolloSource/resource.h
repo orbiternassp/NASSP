@@ -543,20 +543,19 @@
 #define AID_ASCPDISPLAYROLL             812
 #define AID_ASCPDISPLAYPITCH            813
 #define AID_ASCPDISPLAYYAW              814
-#define AID_ASCPINCROLL                 815
-#define AID_ASCPINCPITCH                816
-#define AID_ASCPINCYAW                  817
-#define AID_ASCPDECROLL                 818
-#define AID_ASCPDECPITCH                819
-#define AID_ASCPDECYAW                  820
-#define AID_DSC_HIGH_VOLTAGE_SWITCHES   821
-#define AID_LEM_P16_CB_ROW4             822
-#define AID_MAIN_SOV_TALKBACKS          823
-#define AID_DSC_BATTERY_TALKBACKS       824
-#define AID_DSC_LOW_VOLTAGE_SWITCHES    825
+#define AID_ASCPROLL                 	815
+#define AID_ASCPPITCH                 	816
+#define AID_ASCPYAW                 	817
+#define AID_DSC_HIGH_VOLTAGE_SWITCHES   818
+#define AID_LEM_P16_CB_ROW4             819
+#define AID_MAIN_SOV_TALKBACKS          820
+#define AID_DSC_BATTERY_TALKBACKS       821
+#define AID_DSC_LOW_VOLTAGE_SWITCHES    822
+#define IDB_THUMBWHEEL_SMALL			823
+
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        302

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.9  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -120,6 +123,9 @@ public: // We use these inside a timestep, so everything is public to make data 
 	bool PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits);     // Update panel image
 	bool PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits);    // Update panel image
 	bool PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits);      // Update panel image
+	void PaintRoll(SURFHANDLE surf, SURFHANDLE wheel);
+	void PaintPitch(SURFHANDLE surf, SURFHANDLE wheel);
+	void PaintYaw(SURFHANDLE surf, SURFHANDLE wheel);
 	bool RollDisplayClicked();									   // Clicked
 	bool PitchDisplayClicked();									   // Clicked
 	bool YawDisplayClicked();									   // Clicked
@@ -129,12 +135,18 @@ public: // We use these inside a timestep, so everything is public to make data 
 	bool PitchDnClick(int Event);
 	bool YawUpClick(int Event);									   // Clicked
 	bool YawDnClick(int Event);
+	bool RollClick(int Event, int mx, int my);
+	bool PitchClick(int Event, int mx, int my);
+	bool YawClick(int Event, int mx, int my);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 	int mousedowncounter;                                          // Mouse Down Counter
 	VECTOR3 output;												   // Output attitude
 	Saturn *sat;												   // The spacecraft
 	int msgcounter;
+	int rolldisplay;
+	int pitchdisplay;
+	int yawdisplay;
 };
 
 class EDA {

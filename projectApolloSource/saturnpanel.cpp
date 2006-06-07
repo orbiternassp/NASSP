@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.170  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.169  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -905,6 +908,7 @@ void Saturn::InitPanel (int panel)
 		srf[SRF_THUMBWHEEL_LARGEFONTS]	= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_LARGEFONTS));
 		srf[SRF_SPS_FONT_WHITE]			= oapiCreateSurface (LOADBMP (IDB_SPS_FUEL_FONT_WHITE));
 		srf[SRF_SPS_FONT_BLACK]			= oapiCreateSurface (LOADBMP (IDB_SPS_FUEL_FONT_BLACK));
+		srf[SRF_THUMBWHEEL_SMALL]		= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_SMALL));
 
 		//
 		// Flashing borders.
@@ -993,7 +997,8 @@ void Saturn::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_LARGEFONTS],g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_ACVOLTS],              g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_DCVOLTS],              g_Param.col[4]);
-		oapiSetSurfaceColourKey	(srf[SRF_DCAMPS],              g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_DCAMPS],               g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_SMALL],     g_Param.col[4]);
 
 		//
 		// Borders need to set the center color to transparent so only the outline
@@ -1317,35 +1322,29 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PCMBITRATESWITCH,							_R(3053, 1250, 3130, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACINVERTERSWITCHES,							_R(3182, 1050, 3345, 1279), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACINDICATORROTARY,							_R(3389, 1208, 3473, 1292), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		// DS20060305 GDC ALIGNMENT BUTTON
-		oapiRegisterPanelArea (AID_GDCALIGNBUTTON,								_R( 293, 1172,  323, 1202), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GDCALIGNBUTTON,								_R( 290, 1169,  329, 1207), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 		// DS20060306 ASCP
 		oapiRegisterPanelArea (AID_ASCPDISPLAYROLL,								_R( 199, 1144,  229, 1156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ASCPDISPLAYPITCH,							_R( 199, 1206,  229, 1218), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPDISPLAYYAW,								_R( 199, 1268,  229, 1280), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPINCROLL,									_R( 124, 1126,  140, 1142), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPDECROLL,									_R( 124, 1143,  140, 1161), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPINCPITCH,								_R( 124, 1188,  140, 1204), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPDECPITCH,								_R( 124, 1205,  140, 1223), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPINCYAW,									_R( 124, 1250,  140, 1266), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ASCPDECYAW,									_R( 124, 1267,  140, 1285), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPDISPLAYYAW,								_R( 199, 1268,  229, 1280), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);		
+		oapiRegisterPanelArea (AID_ASCPROLL,									_R( 124, 1126,  142, 1163), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPPITCH,									_R( 124, 1188,  142, 1225), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ASCPYAW,										_R( 124, 1250,  142, 1287), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
 
-// GPFPI DISPLAYS
+		// GPFPI DISPLAYS
 		oapiRegisterPanelArea (AID_GPFPI_METERS,								_R( 629,  927,  791, 1032), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
-// SPS FUEL DISPLAYS
+		// SPS FUEL DISPLAYS
 		oapiRegisterPanelArea (AID_SPS_OXID_PERCENT_DISPLAY,					_R(2664,  628, 2702,  641), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SPS_FUEL_PERCENT_DISPLAY,					_R(2664,  657, 2702,  670), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
-// Display & keyboard (DSKY), main panel uses the main DSKY.
+		// Display & keyboard (DSKY), main panel uses the main DSKY.
 		oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239,  589, 1344,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_LIGHTS,									_R(1095,  594, 1197,  714), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSKY_KEY,			                        _R(1075,  784, 1363,  905), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
-// FDAI
-		// FDAIRight was at 1120, 314
+		// FDAI
 		fdaiRight.RegisterMe(AID_FDAI_RIGHT, 1090, 284);
-		// FDAILeft was at 563, 642
 		fdaiLeft.RegisterMe(AID_FDAI_LEFT, 533, 612);
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE (IDB_FDAI_ROLLINDICATOR));
 
@@ -1637,6 +1636,9 @@ void Saturn::SetSwitches(int panel) {
 
 	PostLDGVentValveLeverRow.Init(AID_POSTLANDINGVENTVALVELEVER, MainPanel);
 	PostLDGVentValveLever.Init( 0, 0, 50, 158, srf[SRF_POSTLDGVENTVLVLEVER], srf[SRF_BORDER_50x158], PostLDGVentValveLeverRow);
+
+	GDCAlignButtonRow.Init(AID_GDCALIGNBUTTON, MainPanel);
+	GDCAlignButton.Init( 0, 0, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], GDCAlignButtonRow, 157, 119);
 
 	HighGainAntennaUpperSwitchesRow.Init(AID_HIGHGAINANTENNAUPPERSWITCHES, MainPanel);
 	GHATrackSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], HighGainAntennaUpperSwitchesRow); 
@@ -2107,7 +2109,7 @@ void Saturn::SetSwitches(int panel) {
 	RightO2FlowMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitCabinDeltaPMeterRow, this);
 	RightO2FlowMeter.FrameSurface = srf[SRF_SUITCABINDELTAPMETER];
 
-	EcsRadTempMetersRow.Init(AID_ECSRADTEMPMETERS, MainPanel);
+	EcsRadTempMetersRow.Init(AID_ECSRADTEMPMETERS, MainPanel, &GaugePower);
 	EcsRadTempInletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsRadTempMetersRow, this, &ECSIndicatorsSwitch);
 	EcsRadTempPrimOutletMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsRadTempMetersRow, this);
 
@@ -2766,38 +2768,32 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	switch (id) {
-	// DS20060305 GDC ALIGNMENT SWITCH
-	case AID_GDCALIGNBUTTON:
-		Sclick.play();
-		return gdc.AlignGDC();
-
-	// DS20060306 ASCP
+	// ASCP
 	case AID_ASCPDISPLAYROLL:
 		ascp.RollDisplayClicked();
 		return true;
+
 	case AID_ASCPDISPLAYPITCH:
 		ascp.PitchDisplayClicked();
 		return true;
+
 	case AID_ASCPDISPLAYYAW:
 		ascp.YawDisplayClicked();
 		return true;
-	case AID_ASCPINCROLL:
-		if(ascp.RollUpClick(event)){Sclick.play();}
+
+	case AID_ASCPROLL:
+		if (ascp.RollClick(event, mx, my))
+			Sclick.play();
 		return true;
-	case AID_ASCPDECROLL:				
-		if(ascp.RollDnClick(event)){Sclick.play();}
+
+	case AID_ASCPPITCH:
+		if (ascp.PitchClick(event, mx, my))
+			Sclick.play();
 		return true;
-	case AID_ASCPINCPITCH:
-		if(ascp.PitchUpClick(event)){Sclick.play();}
-		return true;
-	case AID_ASCPDECPITCH:
-		if(ascp.PitchDnClick(event)){Sclick.play();}
-		return true;
-	case AID_ASCPINCYAW:
-		if(ascp.YawUpClick(event)){Sclick.play();}
-		return true;
-	case AID_ASCPDECYAW:
-		if(ascp.YawDnClick(event)){Sclick.play();}
+
+	case AID_ASCPYAW:
+		if (ascp.YawClick(event, mx, my))
+			Sclick.play();
 		return true;
 
 	case AID_MASTER_ALARM:
@@ -3193,6 +3189,10 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 		if (DockingProbeExtdRelSwitch.IsDown() && !DockingProbeRetractSecSwitch.IsCenter()) {
 			dockingprobe.Retract();
 		}	
+
+	} else if (s == &GDCAlignButton) {
+		if (s->GetState() == 1)
+			gdc.AlignGDC();
 	}
 }
 
@@ -3589,17 +3589,32 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
 		return true;
 
-	// DS20060306 ASCP
+	// ASCP
 	case AID_ASCPDISPLAYROLL:
 		ascp.PaintRollDisplay(surf,srf[SRF_THUMBWHEEL_LARGEFONTS]);
 		return true;
+
 	case AID_ASCPDISPLAYPITCH:
 		ascp.PaintPitchDisplay(surf,srf[SRF_THUMBWHEEL_LARGEFONTS]);
 		return true;
+
 	case AID_ASCPDISPLAYYAW:
 		ascp.PaintYawDisplay(surf,srf[SRF_THUMBWHEEL_LARGEFONTS]);
 		return true;
 
+	case AID_ASCPROLL:
+		ascp.PaintRoll(surf, srf[SRF_THUMBWHEEL_SMALL]);
+		return true;
+
+	case AID_ASCPPITCH:
+		ascp.PaintPitch(surf, srf[SRF_THUMBWHEEL_SMALL]);
+		return true;
+
+	case AID_ASCPYAW:
+		ascp.PaintYaw(surf, srf[SRF_THUMBWHEEL_SMALL]);
+		return true;
+
+	// FDAIs
 	case AID_FDAI_LEFT:
 		if (!fdaiDisabled){
 			VECTOR3 euler_rates;
@@ -4321,6 +4336,8 @@ void Saturn::InitSwitches() {
 
 	PostLDGVentValveLever.Register(PSH, "PostLDGVentValveLever", 1);
 
+	GDCAlignButton.Register(PSH, "GDCAlignButton", false);
+
 	GHATrackSwitch.Register(PSH, "GHATrackSwitch", THREEPOSSWITCH_CENTER);
 	GHABeamSwitch.Register(PSH, "GHABeamSwitch", THREEPOSSWITCH_CENTER);
 
@@ -4617,8 +4634,8 @@ void Saturn::InitSwitches() {
 	SMRCSHeaterCSwitch.Register(PSH, "SMRCSHeaterCSwitch", THREEPOSSWITCH_CENTER);
 	SMRCSHeaterDSwitch.Register(PSH, "SMRCSHeaterDSwitch", THREEPOSSWITCH_CENTER);
 
-	RCSCMDSwitch.Register(PSH, "RCSCMDSwitch", THREEPOSSWITCH_CENTER);
-	RCSTrnfrSwitch.Register(PSH, "RCSTrnfrSwitch", THREEPOSSWITCH_CENTER);
+	RCSCMDSwitch.Register(PSH, "RCSCMDSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	RCSTrnfrSwitch.Register(PSH, "RCSTrnfrSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	CMRCSIsolate1.Register(PSH, "CMRCSIsolate1", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	CMRCSIsolate2.Register(PSH, "CMRCSIsolate2", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.142  2006/06/07 02:05:04  jasonims
+  *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
+  *	
   *	Revision 1.141  2006/05/30 23:15:14  movieman523
   *	Mission timer and DSKY now need power to operate.
   *	
@@ -3361,6 +3364,7 @@ void Saturn::GenericLoadStateSetup()
 		if (!UseATC) {
 			soundlib.LoadMissionSound(Scount, LAUNCH_COUNT_10_SOUND, DEFAULT_LAUNCH_COUNT_SOUND);
 			soundlib.LoadMissionSound(LaunchS, LAUNCH_SOUND, LAUNCH_SOUND);
+			soundlib.LoadMissionSound(CabincloseoutS, CABINCLOSEOUT_SOUND, CABINCLOSEOUT_SOUND);
 			Scount.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
 			LaunchS.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
 		}
