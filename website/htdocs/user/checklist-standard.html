@@ -1,7 +1,12 @@
-<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Project Apollo - Checklists (Standard)</title><link type="text/css" href="../styles.css" rel="stylesheet"><meta content="DocBook XSL Stylesheets V1.29" name="generator"><link rel="home" href="../index.html" title="Virtual Apollo">
+<html><head><META http-equiv="Content-Type" content="text/html; charset=iso-8859-1"><title>Project Apollo - Checklists (Standard)</title><link type="text/css" href="../styles.css" rel="stylesheet"><meta content="DocBook XSL Stylesheets V1.29" name="generator"><link rel="home" href="../index.html" title="Virtual Apollo">
 <style type="text/css">
 <!--
 .style1 {color: #FFFFFF}
+.style2 {
+	color: #0000FF;
+	font-style: italic;
+}
+.style3 {color: #0000FF}
 -->
 </style>
 </head>
@@ -14,7 +19,9 @@
     <dl>
       <dt> <a href="#introduction">Introduction</a></dt>
       <dt> <a href="#prelaunch">Prelaunch checklist</a></dt>
+	  <dt> <a href="#ingress">Prime Crew Ingress/Cabin Closeout</a></dt>
       <dt> <a href="#launch">Launch checklist </a></dt>
+	  <dt> <a href="#epo">Earth Parking Orbit</a></dt>
       <dt> <a href="#tli">Trans Lunar Injection (TLI) checklist</a></dt>
       <dt> <a href="#transpositionanddocking">Transposition &amp; Docking</a></dt>
       <dt> <a href="#translunarcoast">Trans Lunar Coast</a></dt>
@@ -25,6 +32,11 @@
     <p>This section contains all necessary procedures for a complete moon landing mission (or it will contain when it's complete...). They are provided in a similar form as the original operational procedures or the original checklists. Compared to the original documentation the content is slightly different at some places because of unavoidable differences between Project Apollo - NASSP and the historical Project Apollo. One major goal of Project Apollo - NASSP is to keep these differences as small as possible, of course. If you want to try the original documentation instead, you can download the original launch checklist by clicking on the Apollo 15 launch checklist image below, but not everything stated there is possible in Project Apollo - NASSP at the moment.  See <a href="#references">below</a> for more links to original documentation. </p>
     <p>Please note that the checklists are indended for scenarios with standard realism mode and are not working with &quot;quickstart mode scenarios&quot; (REALISM 0), for instructions/checklists to use quickstart scenarios please look <a href="checklist-quickstart.html">here</a>. </p>
     <p>The checklists here are intended as a reference documentation and are no tutorial or user's guide. We'll provide additional informations in separate documents (hopefully) later. </p>
+    <h4>The Apollo Guidance Computer (AGC) </h4>
+    <p>A very important device of the Apollo spacecraft is the Apollo Guidance Computer (AGC), which normally does  the guidance, navigation and control tasks. You interact with the AGC via the DSKY (Display and Keyboard), a kind of &quot;terminal&quot; for the AGC.</p>
+    <p><img src="../images/dsky.gif"></p>
+    <p>Project Apollo - NASSP offers two different AGC implementations: The &quot;NASSP AGC&quot;, which is normally used and which tries to behave similar to the real AGC but is an NASSP specific program with several differences to the real AGC. The procedures for the NASSP AGC are titled &quot;<em>[NASSP AGC]</em>&quot;, most of the procedures in the original documentation are not working with the NASSP AGC. If you use a scenario in the &quot;Project Apollo - NASSP\Apollo - Historical Missions&quot; folder, the NASSP AGC is used. </p>
+    <p>The other AGC implementation uses the Virtual AGC (<a href="http://www.ibiblio.org/apollo/index.html">http://www.ibiblio.org/apollo/index.html</a>), an Apollo Guidance Computer emulator running the original, authentic Apollo flight software (at the moment Colossus 1A, build 249 from October 28, 1968, probably flown with Apollo 8 and 9). There are some bugs and limitations (for example max. time acceleration is about 10x, saving/loading fails sometimes), so it's still &quot;experimental&quot; and intended for the advanced user, who wants to have the ultimate realism, but of course with the Virtual AGC you can do all procedures exactly as described in the original documentation. The procedures and instructions for the Virtual AGC are titled <span class="style2">&quot;[Virtual AGC]&quot; </span>and are in<span class="style3"> blue.</span> To try that please use the &quot;Project Apollo - NASSP\Virtual AGC\Apollo 8 - Prelaunch&quot; scenario.</p>
     <p>Procedural steps in this section are presented in tabular form and in sequence they occure during the mission. The following is a detailed explanation of the columnar data presented in the tabulated lists:</p>
     <table width="100%"  border="0" cellpadding="1" cellspacing="3">
       <tr>
@@ -76,50 +88,8 @@
         <th width="36%" scope="col"><span class="style1">Remarks</span></th>
       </tr>
       <tr>
-        <td rowspan="4" valign="top">-03:00:00</td>
-        <td valign="top">
-              
-          <table width="100%"  border="0" cellspacing="0" cellpadding="0">
-            <tr>
-              <td colspan="2"><em>Bypass fuel cell radiators</em></td>
-            </tr>
-            <tr>
-              <td colspan="2">&nbsp;</td>
-            </tr>
-            <tr>
-              <td colspan="2">FUEL CELL RADIATORS (3) - EMER BYPASS</td>
-            </tr>
-            <tr>
-              <td width="20%">&nbsp;</td>
-              <td width="80%">FUEL CELL RADIATORS tb (3) - bp </td>
-            </tr>
-          </table>
-        </td>
-        <td valign="top">
-          <div align="center">
-            <table width="100%"  border="0" cellspacing="0" cellpadding="0">
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td><div align="center">3</div></td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-            </table>
-          </div>          </td>
-        <td valign="top"><p><br>
-          <br>
-          Switch position is momentary.<br>
-          The EPS is still under development, so the fuel cell load is too low. This is a temporary solution to avoid alarms.</p>
-        </td>
-      </tr>
-      <tr>
-        <td valign="top">
+        <td rowspan="5" valign="top">-03:00:00</td>
+        <td valign="top">        
             <table width="100%"  border="0" cellspacing="0" cellpadding="0">
               <tr>
                 <td colspan="2"><em>C/W system activation</em></td>
@@ -139,85 +109,50 @@
                 <td>&nbsp;</td>
                 <td>push</td>
               </tr>
+              <tr>
+                <td colspan="2">&nbsp;</td>
+              </tr>
+        </table></td>
+        <td valign="top">
+          <div align="center">          </div>          <div align="center">
+            <table width="100%"  border="0" cellspacing="0" cellpadding="0">
+              <tr>
+                <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td><div align="center">2</div></td>
+              </tr>
+              <tr>
+                <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td>&nbsp;</td>
+              </tr>
             </table>
-        </td>
-        <td valign="top"><div align="center">
-          <table width="100%"  border="0" cellspacing="0" cellpadding="0">
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-            <tr>
-              <td><div align="center">2</div></td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-          </table>
-        </div></td>
-        <td valign="top"><br>
-        <br>
-        <br>
-        <br>
-        The suit compressor alarm is normal. </td>
+          </div></td>
+        <td valign="top"><p>          <br>
+          <br>
+          <br>
+        The suit compressor alarm is normal. </p>          </td>
       </tr>
       <tr>
         <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
           <tr>
-            <td colspan="2"><em>CMC power up </em></td>
-          </tr>
-          <tr>
-            <td colspan="2">&nbsp;</td>
-          </tr>
-          <tr>
-            <td colspan="2">cb G/N COMPUTER MNA - close </td>
-          </tr>
-          <tr>
-            <td colspan="2">cb G/N COMPUTER MNB - close </td>
-          </tr>
-          <tr>
-            <td colspan="2">&nbsp;</td>
-          </tr>
-          <tr>
-            <td colspan="2">Wait until DSKY lamp test complete </td>
-            </tr>
-          <tr>
-            <td width="35%">&nbsp;</td>
-            <td width="65%">STBY lt - on </td>
-          </tr>
-          <tr>
-            <td colspan="2">PRO </td>
-            </tr>
-          <tr>
-            <td>&nbsp;</td>
-            <td>STBY lt - out </td>
-          </tr>
-          <tr>
-            <td colspan="2">Key N00E </td>
-            </tr>
-          <tr>
-            <td>&nbsp;</td>
-            <td>P00</td>
+            <td width="100%"><em>CMC power up </em></td>
           </tr>
           <tr>
             <td>&nbsp;</td>
-            <td>NO ATT lt - on </td>
           </tr>
           <tr>
-            <td>Key V34E </td>
-            <td>&nbsp;</td>
+            <td>cb G/N COMPUTER MNA - close </td>
           </tr>
           <tr>
-            <td>Key V16 N33E </td>
-            <td>&nbsp;</td>
+            <td>cb G/N COMPUTER MNB - close </td>
           </tr>
           <tr>
-            <td>&nbsp;</td>
             <td>&nbsp;</td>
           </tr>
         </table></td>
@@ -234,6 +169,57 @@
           <tr>
             <td>&nbsp;</td>
           </tr>
+        </table></td>
+        <td valign="top">Activation of the command <br>
+module computer. <br></td>
+      </tr>
+      <tr>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td colspan="2"><em>[NASSP AGC]</em></td>
+          </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+          </tr>
+          <tr>
+            <td colspan="2">Wait until DSKY light test complete </td>
+          </tr>
+          <tr>
+            <td width="20%">&nbsp;</td>
+            <td width="80%">STBY lt - on </td>
+          </tr>
+          <tr>
+            <td colspan="2">PRO </td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>STBY lt - out </td>
+          </tr>
+          <tr>
+            <td colspan="2">Key N00E </td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>P00</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>NO ATT lt - on </td>
+          </tr>
+          <tr>
+            <td colspan="2">Key V34E </td>
+            </tr>
+          <tr>
+            <td colspan="2">Key V16 N33E </td>
+            </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+          </tr>
+        </table></td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
           <tr>
             <td>&nbsp;</td>
           </tr>
@@ -241,23 +227,107 @@
             <td><div align="center">2</div></td>
           </tr>
         </table></td>
-        <td valign="top">Activation of the command <br>
-          module computer. <br>
-        <br>
-        <br>
-        <br>
-        Lamp test isn't historically <br>
-        correct. <br>
-        <br>
-        <br>
-        Run program 0,
-        <br>
-        the AGC idling program.<br>
-        IMU is not turned on.<br>
-        <br>
-        Show launch countdown <br>
-        (not historically
-correct). </td>
+        <td valign="top"><br>
+          <br>
+Light test isn't historically <br>
+correct. <br>
+<br>
+<br>
+Run program 0, <br>
+the AGC idling program.<br>
+IMU is not turned on.<br>
+<br>
+Show launch countdown <br>
+(not historically correct). </td>
+      </tr>
+      <tr>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td colspan="2"><span class="style2">[Virtual AGC]</span></td>
+            </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+            </tr>
+          <tr>
+            <td colspan="2"><span class="style3">V37E 00E </span><span class="style3"></span></td>
+            </tr>
+          <tr>
+            <td width="20%">&nbsp;</td>
+            <td width="80%"><span class="style3">P00</span></td>
+          </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">If prog alarm, check if alarm code 1520 </span></td>
+            </tr>
+          <tr>
+            <td colspan="2"><span class="style3">&quot;V37 request not permitted at this time"</span></td>
+            </tr>
+          <tr>
+            <td colspan="2"><span class="style3">by V05N09E,</span> <span class="style3">then RSET and retry V37E 00E </span></td>
+            </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+            </tr>
+          <tr>
+            <td colspan="2"><span class="style3">V35E</span><span class="style3"></span></td>
+            </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td><span class="style3">F 88 88 </span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">V37E 00E</span><span class="style3"></span></td>
+            </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+            </tr>
+          <tr>
+            <td colspan="2"><span class="style3">V16 N65E </span><span class="style3"></span></td>
+            </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td><span class="style3">16 65 </span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">V37E 00E</span><span class="style3"></span></td>
+            </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+            </tr>
+        </table></td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td><div align="center" class="style3">2</div></td>
+          </tr>
+        </table></td>
+        <td valign="top"><br>
+
+<span class="style3"><br>
+Run program P00<br>
+<br>
+<br>
+This can happen every<br>
+
+V37 request. <br>
+<br>
+<br>
+          Light test
+          <br>
+          <br>
+          <br>
+          <br>
+        Shows time since power-up,<br>
+        check time synchronization<br>
+        with Orbiter.
+</span></td>
       </tr>
       <tr>
         <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
@@ -283,8 +353,30 @@ correct). </td>
             <td colspan="2">&nbsp;</td>
           </tr>
           <tr>
+            <td colspan="2"><em>[NASSP AGC]</em></td>
+          </tr>
+          <tr>
             <td width="15%">&nbsp;</td>
             <td width="85%">NO ATT lt - off</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style2">[Virtual AGC]</span></td>
+            </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td><span class="style3">NO ATT lt - on (90 sec)</span></td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td><span class="style3">NO ATT lt - off </span></td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
           </tr>
         </table></td>
         <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
@@ -296,6 +388,9 @@ correct). </td>
           </tr>
           <tr>
             <td><div align="center">5</div></td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
@@ -331,114 +426,9 @@ correct). </td>
     <p>Next the primary and secondary water-glycol coolant loops are checked and the primary water-glycol coolant loop is activated. The grey lines indicate displays or controls which are not available at the moment, please ignore these steps. </p>
     <p><img src="../images/aoh-prelaunch-glycolloopchecks1.gif"></p>
     <p><img src="../images/aoh-prelaunch-glycolloopchecks2.gif"></p>
-    <p>Now the prelaunch programs of the CMC are started, the DSKY is used for that. </p>
-    <table width="100%"  border="1" cellspacing="0">
-      <tr bgcolor="#023C8C">
-        <th width="6%" scope="col"><span class="style1">Time</span></th>
-        <th width="41%" scope="col"><span class="style1">Procedure</span></th>
-        <th width="5%" scope="col"><div align="center"><span class="style1">Panel</span></div></th>
-        <th width="48%" scope="col"><span class="style1">Remarks</span></th>
-      </tr>
-      <tr>
-        <td rowspan="4" valign="top">&nbsp;</td>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-            <tr>
-              <td colspan="2"><em>Start program P01</em></td>
-            </tr>
-            <tr>
-              <td colspan="2">&nbsp;</td>
-            </tr>
-            <tr>
-              <td colspan="2">Key V37 N01E </td>
-            </tr>
-            <tr>
-              <td width="15%">&nbsp;</td>
-              <td width="85%"> NO ATT lt - on </td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-              <td> Course align IMU </td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-              <td> NO ATT light off </td>
-            </tr>
-        </table></td>
-        <td valign="top"><div align="center">
-            <table width="100%"  border="0" cellspacing="0" cellpadding="0">
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td><div align="center">2</div></td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-            </table>
-        </div></td>
-        <td valign="top"><p> Start P01 "Prelaunch or service 
-          initialization 
-        program". </p></td>
-      </tr>
-      <tr>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-          <tr>
-            <td>&nbsp;</td>
-            <td>Change to P02 </td>
-          </tr>
-          <tr>
-            <td width="15%">&nbsp;</td>
-            <td width="85%"> F 06 29 </td>
-          </tr>
-          <tr>
-            <td colspan="2">PRO</td>
-            </tr>
-        </table></td>
-        <td valign="top">&nbsp;</td>
-        <td valign="top">Verb 06, noun 29 shows the desired launch 
-          
-          azimuth in format XXX.XX&deg;, press PRO to 
-confirm.</td>
-      </tr>
-      <tr>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-          <tr>
-            <td width="15%">&nbsp;</td>
-            <td width="85%">F 06 44 </td>
-          </tr>
-          <tr>
-            <td colspan="2">PRO</td>
-            </tr>
-        </table></td>
-        <td valign="top">&nbsp;</td>
-        <td valign="top">Noun 44 shows shows in R1 the desired apoapsis 
-and in R2 the periapsis altitude, both in format 
-XXXX.X m, press PRO to confirm.</td>
-      </tr>
-      <tr>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-          <tr>
-            <td width="15%">&nbsp;</td>
-            <td width="85%">F 06 33 </td>
-          </tr>
-          <tr>
-            <td colspan="2">Key V16E</td>
-            </tr>
-          <tr>
-            <td>&nbsp;</td>
-            <td>16 33 </td>
-          </tr>
-        </table></td>
-        <td valign="top">&nbsp;</td>
-        <td valign="top">Noun 33 shows time to lift-off, hours in R1, minutes in R2 and seconds in R3. 
-        Verb 16 monitors the countdown, that means the DSKY updates the time every 2 seconds. </td>
-      </tr>
-    </table>
-    <p>The computer is running and ready for launch, before prime crew ingress and cabin closeout some checks regarding the panel displays and controls have to be done.</p>
+    <p>Next the third inverter and the fuel cell radiators are checked. </p>
+    <p><img src="../images/aoh-prelaunch-invertercheck.gif"></p>
+    <p>Next some checks regarding the panel displays and controls have to be done and a few but very important devices have to be turned on. We begin at panel 325, which is to the left of the left side panel. </p>
     <table width="100%"  border="1" cellspacing="0">
       <tr bgcolor="#023C8C">
         <th width="6%" scope="col"><span class="style1">Time</span></th>
@@ -450,6 +440,26 @@ XXXX.X m, press PRO to confirm.</td>
         <td>&nbsp;</td>
         <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
           <tr>
+            <td>PRIM GLY TO RAD vlv  - NORM </td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+        </table></td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td><div align="center">325</div></td>
+          </tr>
+        </table></td>
+        <td valign="top">&nbsp;</td>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td colspan="2">AUTO RCS (16) - OFF </td>
+          </tr>
+          <tr>
             <td colspan="2">SECS LOGIC (both) - OFF </td>
           </tr>
           <tr>
@@ -457,6 +467,14 @@ XXXX.X m, press PRO to confirm.</td>
           </tr>
           <tr>
             <td colspan="2">cb pnl 8 - all closed except </td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>cb CM RCS HTRS (both) - open </td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>cb FLOAT BAGS (all) - open </td>
           </tr>
           <tr>
             <td width="15%">&nbsp;</td>
@@ -481,7 +499,25 @@ XXXX.X m, press PRO to confirm.</td>
         <td>&nbsp;</td>
         <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
           <tr>
+            <td>EDS PWR - OFF </td>
+          </tr>
+          <tr>
+            <td>TVC SERVO PWR (both) - OFF </td>
+          </tr>
+          <tr>
             <td>FDAI/GPI POWER - BOTH</td>
+          </tr>
+          <tr>
+            <td>LOGIC 2/3 PWR - on (up) </td>
+          </tr>
+          <tr>
+            <td>ELEC PWR - GDC/ECA </td>
+          </tr>
+          <tr>
+            <td>SIG CONDR/DR BIAS PWR (both) - AC1 or AC2 </td>
+          </tr>
+          <tr>
+            <td>BMAG PWR (both) - WARMUP </td>
           </tr>
           <tr>
             <td>&nbsp;</td>
@@ -492,13 +528,67 @@ XXXX.X m, press PRO to confirm.</td>
             <td><div align="center">7</div></td>
           </tr>
         </table></td>
-        <td valign="top">&nbsp;</td>
+        <td valign="top"><p><br>
+          <br>
+          Turn on both FDAIs.
+          <br>
+          <br>
+          Turn on GDC and ECA.<br>
+          Powers RJ/EC. Switches should<br>
+          not be set on same bus.
+          </p>
+        </td>
       </tr>
       <tr>
         <td>&nbsp;</td>
         <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
             <tr>
+              <td>CMC ATT - IMU </td>
+            </tr>
+            <tr>
               <td>ACCEL - check (+1 G) </td>
+            </tr>
+            <tr>
+              <td>FDAI SCALE - 5/1 </td>
+            </tr>
+            <tr>
+              <td>FDAI SEL - 1/2 </td>
+            </tr>
+            <tr>
+              <td>FDAI SOURCE - CMC </td>
+            </tr>
+            <tr>
+              <td>ATT SET - GDC </td>
+            </tr>
+            <tr>
+              <td>MAN ATT ROLL - RATE CMD </td>
+            </tr>
+            <tr>
+              <td>MAN ATT PITCH - ACCEL CMD </td>
+            </tr>
+            <tr>
+              <td>MAN ATT YAW - RATE CMD </td>
+            </tr>
+            <tr>
+              <td>LIM CYCLE - OFF </td>
+            </tr>
+            <tr>
+              <td>ATT DBD - MIN </td>
+            </tr>
+            <tr>
+              <td>RATE - HI</td>
+            </tr>
+            <tr>
+              <td>THC PWR - on (up) </td>
+            </tr>
+            <tr>
+              <td>RHC PWR NORM (both) - AC/DC </td>
+            </tr>
+            <tr>
+              <td>RHC PWR DIR (both) - OFF </td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
             </tr>
             <tr>
               <td>SC CONT - SCS </td>
@@ -507,7 +597,43 @@ XXXX.X m, press PRO to confirm.</td>
               <td>CMC MODE - FREE </td>
             </tr>
             <tr>
+              <td>BMAG MODE (3) - RATE 2 </td>
+            </tr>
+            <tr>
+              <td>ATT SET TW (3) - R 162&deg;, P 90&deg;, Y 0&deg; </td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td>ELS LOGIC - OFF </td>
+            </tr>
+            <tr>
+              <td>ELS AUTO - AUTO </td>
+            </tr>
+            <tr>
+              <td>CM RCS LOGIC - OFF </td>
+            </tr>
+            <tr>
+              <td>CM PRPLNT DUMP - OFF </td>
+            </tr>
+            <tr>
+              <td>CM PRPLNT PURG - off (down) </td>
+            </tr>
+            <tr>
               <td>IMU CAGE - off (down) </td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td>&alpha;/Pc IND sw - &alpha; </td>
+            </tr>
+            <tr>
+              <td>&alpha;/Pc ind - zero </td>
+            </tr>
+            <tr>
+              <td>LV IND/GPI sw - GPI </td>
             </tr>
             <tr>
               <td>EVNT TMR START - ctr </td>
@@ -533,19 +659,46 @@ XXXX.X m, press PRO to confirm.</td>
             </table>
         </div></td>
         <td valign="top"><p> <br>
-          <br>
-          <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            Activate Trans. Contr. Pwr. <br>
+            Activate Rot. Contr. Pwr. <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            These are the nominal values <br>
+            for a 72&deg; launch azimuth. <br>
+            Guarded.<br>
+            <br>
+            <br>
+            Guarded.<br>
+            Guarded.<br>
         Guarded.<br>
+        <br>
+        Switch to &alpha;.<br>
+        <br>
+        <br>
         Event timer not counting. Timer resets and starts automatically when lift-off occurs. </p></td>
       </tr>
       <tr>
         <td>&nbsp;</td>
         <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td colspan="2">SUIT CAB &#916;P ind - &gt; +2.0 inH<sub>2</sub>O </td>
+              <td colspan="2">SUIT CAB &#916;P ind - &gt; + 2.0 inH<sub>2</sub>O </td>
             </tr>
             <tr>
-              <td colspan="2">O<sub>2</sub> FLOW ind - 0 lb/hr</td>
+              <td colspan="2">O<sub>2</sub> FLOW ind - 0.4 &plusmn; 0.1 lb/hr</td>
             </tr>
             <tr>
               <td colspan="2">&nbsp;</td>
@@ -568,7 +721,7 @@ XXXX.X m, press PRO to confirm.</td>
             </tr>
             <tr>
               <td>&nbsp;</td>
-              <td>SM RCS He 1 tb (4) - bp </td>
+              <td>SM RCS He 2 tb (4) - bp </td>
             </tr>
             <tr>
               <td>&nbsp;</td>
@@ -638,9 +791,7 @@ XXXX.X m, press PRO to confirm.</td>
               <td>&nbsp;</td>
             </tr>
         </table></td>
-        <td valign="top"><br>
-      Not historically correct <br>
-      (Direct O<sub>2</sub> valve missing) <br>
+        <td valign="top"><br>      <br>      <br>
       Gray indicates probe fully <br>
       extended or retracted. <br>
       <br>
@@ -671,6 +822,12 @@ XXXX.X m, press PRO to confirm.</td>
             </tr>
             <tr>
               <td>FC 2 &amp; 3 PUMPS - AC2 </td>
+            </tr>
+            <tr>
+              <td>MN BUS TIE (2) - OFF </td>
+            </tr>
+            <tr>
+              <td>BAT CHGR - AC1</td>
             </tr>
             <tr>
               <td>cb pnl 5 - all closed </td>
@@ -715,83 +872,244 @@ XXXX.X m, press PRO to confirm.</td>
         </table></td>
         <td valign="top">&nbsp;</td>
       </tr>
-      <tr>
-        <td>&nbsp;</td>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-            <tr>
-              <td colspan="2">FC RAD (all) - off (ctr) </td>
-            </tr>
-            <tr>
-              <td colspan="2">FC RAD tb (all) - bp </td>
-            </tr>
-            <tr>
-              <td colspan="2">FC HTRS (all) - on (up) </td>
-            </tr>
-            <tr>
-              <td colspan="2">FC PURG (all) - OFF </td>
-            </tr>
-            <tr>
-              <td colspan="2">FC REACS tb (all) - gray</td>
-            </tr>
-            <tr>
-              <td colspan="2">&nbsp;</td>
-            </tr>
-            <tr>
-              <td colspan="2">FC IND sel - 1, 2, 3 </td>
-            </tr>
-            <tr>
-              <td width="15%">&nbsp;</td>
-              <td width="85%">FC H<sub>2</sub> FLOW ind - 0.01-0.05 lb/hr</td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-              <td>FC O<sub>2</sub> FLOW ind - 0.1-0.4 lb/hr</td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-              <td>FC SKIN TEMP ind - 390-450 &deg;F </td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-              <td>FC COND EXH TEMP ind - 150-175 &deg;F </td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-              <td>FC tb (2) - gray </td>
-            </tr>
-            <tr>
-              <td colspan="2">FC IND sel - 2 </td>
-            </tr>
-            <tr>
-              <td colspan="2">&nbsp;</td>
-            </tr>
-            <tr>
-              <td colspan="2">FC REAC VLV - NORM </td>
-            </tr>
-            <tr>
-              <td colspan="2">H<sub>2</sub> PURG LINE HTR - OFF </td>
-            </tr>
-            <tr>
-              <td colspan="2">&nbsp;</td>
-            </tr>
-        </table></td>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-            <tr>
-              <td><div align="center">3</div></td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-        </table></td>
-        <td valign="top"><br>
-      Temporary bugfix, see top of checklist. </td>
-      </tr>
     </table>
     <p>The last part of the panel checks is again from the <I>Apollo Operations Handbook Block II Spacecraft - Volume 2 Operational procedures reference</I> (see <a href="#references">below</a>).</p>
     <p><img src="../images/aoh-prelaunch-couchchecks1.gif"></p>
     <p><img src="../images/aoh-prelaunch-couchchecks2.gif"></p>
     <p><img src="../images/aoh-prelaunch-couchchecks3.gif"></p>
-    <p>Now the spacecraft is ready for prime crew ingress and cabin closeout. This takes place at T-01:40:00, if you use time acceleration the simulation slows down automatically at that time.</p>
+    <p><img src="../images/aoh-prelaunch-couchchecks4.gif"></p>
+    <p><img src="../images/aoh-prelaunch-couchchecks5.gif"></p>
+    <p><img src="../images/aoh-prelaunch-couchchecks6.gif"></p>
+    <p>Now the prelaunch programs of the CMC are started, the DSKY is used for that. If you use the Virtual AGC, during prelaunch the IMU platform, also called stable member (SM), is aligned to launch position. This
+    is shown in the following figure:</p>
+    <p><img src="../images/prelaunch_alignment.gif"></p>
+    <p>The NASSP AGC does no  gyro-compassing in P02 yet, so the IMU drifts in earth rate like the GDC. At lift-off the IMU is aligned again, so the IMU attitude in flight is fine. </p>
+    <table width="100%"  border="1" cellspacing="0">
+      <tr bgcolor="#023C8C">
+        <th width="6%" scope="col"><span class="style1">Time</span></th>
+        <th width="41%" scope="col"><span class="style1">Procedure</span></th>
+        <th width="5%" scope="col"><div align="center"><span class="style1">Panel</span></div></th>
+        <th width="48%" scope="col"><span class="style1">Remarks</span></th>
+      </tr>
+      <tr>
+        <td colspan="4" valign="top"><em>[NASSP AGC]</em></td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td colspan="2"><em>Start program P01</em></td>
+            </tr>
+            <tr>
+              <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+              <td colspan="2">Key V37 N01E </td>
+            </tr>
+            <tr>
+              <td width="15%">&nbsp;</td>
+              <td width="85%"> NO ATT lt - on </td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+              <td> NO ATT lt - off </td>
+            </tr>
+        </table></td>
+        <td valign="top"><div align="center">
+            <table width="100%"  border="0" cellspacing="0" cellpadding="0">
+              <tr>
+                <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td><div align="center">2</div></td>
+              </tr>
+              <tr>
+                <td>&nbsp;</td>
+              </tr>
+            </table>
+        </div></td>
+        <td valign="top"><p> Start P01 "Prelaunch or service initialization program". </p></td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td>&nbsp;</td>
+              <td>Change to P02 </td>
+            </tr>
+            <tr>
+              <td width="15%">&nbsp;</td>
+              <td width="85%"> F 06 29 </td>
+            </tr>
+            <tr>
+              <td colspan="2">PRO</td>
+            </tr>
+        </table></td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">Verb 06, noun 29 shows the desired launch azimuth in format XXX.XX&deg;, press PRO to confirm.</td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td width="15%">&nbsp;</td>
+              <td width="85%">F 06 44 </td>
+            </tr>
+            <tr>
+              <td colspan="2">PRO</td>
+            </tr>
+        </table></td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">Noun 44 shows shows in R1 the desired apoapsis and in R2 the periapsis altitude, both in format XXXX.X m, press PRO to confirm.</td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td width="15%">&nbsp;</td>
+              <td width="85%">F 06 33 </td>
+            </tr>
+            <tr>
+              <td colspan="2">Key V16E</td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+              <td>16 33 </td>
+            </tr>
+            <tr>
+              <td colspan="2">&nbsp;</td>
+            </tr>
+        </table></td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">Noun 33 shows time to lift-off, hours in R1, minutes in R2 and seconds in R3. Verb 16 monitors the countdown, that means the DSKY updates the time every 2 seconds. (not historically correct)</td>
+      </tr>
+      <tr>
+        <td colspan="4" valign="top"><span class="style2">[Virtual AGC]</span></td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td colspan="2"><span class="style3"><em>Start program P01</em></span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">&nbsp;</span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">Key V37E 01E </span></td>
+          </tr>
+          <tr>
+            <td width="15%"><span class="style3"></span></td>
+            <td width="85%"><span class="style3"> NO ATT lt - on </span></td>
+          </tr>
+          <tr>
+            <td><span class="style3"></span></td>
+            <td><span class="style3">Course align IMU</span></td>
+          </tr>
+          <tr>
+            <td><span class="style3"></span></td>
+            <td><span class="style3"> NO ATT lt - off </span></td>
+          </tr>
+          <tr>
+            <td><span class="style3"></span></td>
+            <td><span class="style3">Change to P02</span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">&nbsp;</span></td>
+            </tr>
+        </table></td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td><span class="style3"></span></td>
+          </tr>
+          <tr>
+            <td><span class="style3"></span></td>
+          </tr>
+          <tr>
+            <td><div align="center" class="style3">2</div></td>
+          </tr>
+          <tr>
+            <td><span class="style3"></span></td>
+          </tr>
+        </table></td>
+        <td valign="top"><span class="style3">After starting P01 "Prelaunch or service initialization program" the IMU changes to course align mode and drives the stable member to prelaunch position. </span>
+        <p class="style3">Then it changes automatically to P02 "Prelaunch or service gyro compassing program". Because the AGC commands during P02 are very small you can't see them at the FDAI, but you can monitor the IMU gimbal angles with <b>V16 N20E</b>.</p></td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td colspan="2"><span class="style2"><strong>Optional</strong> check/change of launch azimuth </span></td>
+          </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">Key V78E</span></td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td><span class="style3">F 06 29<br>
+              R1: Launch azimuth
+            </span></td>
+          </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">To proceed press PRO, to change: </span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">Key V21E</span></td>
+            </tr>
+          <tr>
+            <td width="15%">&nbsp;</td>
+            <td width="85%"><span class="style3"> F 21 29</span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">Key +XXXXXE </span></td>
+            </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td><span class="style3"> F 06 29</span></td>
+          </tr>
+          <tr>
+            <td colspan="2"><span class="style3">Key PRO </span></td>
+            </tr>
+          <tr>
+            <td><span class="style3"></span></td>
+            <td><span class="style3">Pulse gyros...</span></td>
+          </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+            </tr>
+        </table></td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><span class="style3">The AGC did a prelaunch alignment for the launch azimuth as it is stored in the scenario. If you like, you can check or change it. This is done with verb 78, the DSKY shows the present launch azimuth. Press <strong>PRO</strong> to continue without changing, with verb 21 you could "load component 1 into R1" and change the launch azimuth in the format  +XXX.XX&deg;. Press <strong>PRO</strong> to confirm the new setting. Press <b>CLR</b> to clear a wrong input.</span></td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td width="15%"><span class="style3"></span></td>
+            <td width="85%"><span class="style3">... to new launch position.</span></td>
+          </tr>
+          <tr>
+            <td colspan="2">&nbsp;</td>
+            </tr>
+        </table></td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><span class="style3">After pressing <b>PRO</b> the AGC changes the attitude of the stable member with gyro pulses to the new launch azimuth.</span></td>
+      </tr>
+    </table>
+    <p>The computer is running and ready for launch.</p>
+	<p>&nbsp;</p>
+    <h3><a name="ingress" id="ingress"></a>Prime Crew Ingress/Cabin Closeout</h3>
+    <p>Now the spacecraft is ready for prime crew ingress and cabin closeout. In real Apollo prime crew ingress began at T-02:40:00 and ends with closing the hatch at T-01:40:00. In between the prime crew did a lot of checks similar to the backup crew checks above.</p>
+    <p>In Project Apollo - NASSP as a simplification both events happen simultaneously and take place at T-01:40:00, the prime crew checks are left out. If you use time acceleration the simulation slows down automatically at that time and some audio of the prelaunch is played. Please make sure that you do the following steps directly or shortly after T-01:40:00.</p>
     <table width="100%"  border="1" cellspacing="0">
       <tr bgcolor="#023C8C">
         <th width="11%" scope="col"><span class="style1">Time</span></th>
@@ -812,6 +1130,13 @@ XXXX.X m, press PRO to confirm.</td>
               <td colspan="2">C/W NORM - NORM </td>
             </tr>
             <tr>
+              <td colspan="2">DIRECT O<sub>2</sub> vlv - OPEN, adj for </td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+              <td>O<sub>2</sub> FLOW ind - 0.6-0.8 lb/hr </td>
+            </tr>
+            <tr>
               <td colspan="2">SUIT COMPR 1 - AC1 </td>
             </tr>
             <tr>
@@ -821,10 +1146,6 @@ XXXX.X m, press PRO to confirm.</td>
             <tr>
               <td>&nbsp;</td>
               <td> SUIT COMPR &#916;P 0.7-0.9 psi </td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-              <td>O<sub>2</sub> FLOW ind - 0.6-0.8 lb/hr </td>
             </tr>
             <tr>
               <td>&nbsp;</td>
@@ -838,10 +1159,13 @@ XXXX.X m, press PRO to confirm.</td>
               <td colspan="2">&nbsp;</td>
             </tr>
             <tr>
-              <td colspan="2">CAB FAN (both) - on (up) </td>
+              <td colspan="2">SUIT H<sub>2</sub>O ACCUM AUTO - 1 </td>
             </tr>
             <tr>
-              <td colspan="2">SUIT H<sub>2</sub>O ACCUM AUTO - 1 </td>
+              <td colspan="2">Verify P02 </td>
+            </tr>
+            <tr>
+              <td colspan="2">&nbsp;</td>
             </tr>
         </table></td>
         <td valign="top"><div align="center">
@@ -851,6 +1175,12 @@ XXXX.X m, press PRO to confirm.</td>
               </tr>
               <tr>
                 <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td><div align="center">2</div></td>
+              </tr>
+              <tr>
+                <td><div align="center">7</div></td>
               </tr>
               <tr>
                 <td><div align="center">2</div></td>
@@ -877,11 +1207,147 @@ XXXX.X m, press PRO to confirm.</td>
           <br>
           <br>
           <br>
-          After a few minutes.
+          <br>
+          After about 10 minutes.
           </p></td>
       </tr>      
     </table>
-    <p>Now the prime crew does checks and checkouts of various systems not covered at the moment, at T-00:20:00 the final launch preparation is done. Again if you use time acceleration the simulation slows down automatically at that time.</p>
+    <p>Now the prime crew continues with the final system checks before launch. At the beginning the BMAGs (Body Mounted Attitude Gyro) are turned on, the FDAIs and the GDC (Gyro Display Coupler) are checked and the GDC is aligned to the reference attitude for a typical launch azimuth. The CSM has 2 independent devices, which provide an inertial attitude reference, the IMU and the GDC by using the  BMAGs. The IMU was aligned by P01/P02, now the GDC is aligned. </p>
+    <p>To display the various attitude informations the FDAI is used. The FDAI shows three things simultaneously: the total attitude, the attitude rate and the attitude error in respect to a defined other attitude by using the error needles.</p>
+    <p><img src="../images/prelaunch_fdai.gif"></p>
+    <p>The following table explains what the FDAIs show with the different switch settings. At first the CMC ATT switch is always switched to IMU, the GDC position is a backup for the CMC attitude, but was never used and so is not explained here. On the left side you see the various settings for the FDAI SEL, FDAI SRC and ATT SET switches, (any) means the FDAI readings don't depend on that switch. On the rigth side it is explained what attitude and error the FDAIs show, the following abbreviations are used:</p>
+    <ul>
+      <li>IMU: Current total attitude indicated by the IMU </li>
+      <li>GDC: Current total attitude indicated by the GDC</li>
+      <li>(null): No Attitude, FDAI is off.<p>
+      </li>
+      <li>CMC: Error needles are controlled by the CMC, readings depend on the CMC program (the DAP for instance).</li>
+      <li>BMAG1: The gyro precession angles reported by BMAG1. Basically, this is a backup check of the GDC. </li>
+      <li>IMU/ASCP: The error needles show the difference between the IMU attitude and the attitude currently set in the ASCP (see below).</li>
+      <li> GDC/ASCP: The error needles show the difference between the GDC attitude and the attitude currently set in the ASCP.</li>
+    </ul>    
+    <table width="100%"  border="1" cellspacing="0">
+      <tr bgcolor="#023C8C">
+        <th colspan="3" scope="col"><span class="style1">Switch Settings </span></th>
+        <th colspan="2" scope="col"><span class="style1">FDAI 1 </span></th>
+        <th colspan="2" scope="col"><span class="style1">FDAI 2 </span></th>
+      </tr>
+      <tr bgcolor="#023C8C">
+        <th width="10%" scope="col"><span class="style1">FDAI SEL</span></th>
+        <th width="11%" scope="col"><span class="style1">FDAI SRC </span></th>
+        <th width="11%" scope="col"><span class="style1">ATT SET </span></th>
+        <th width="17%" scope="col"><div align="center" class="style1">Attitude</div></th>
+        <th width="17%" scope="col"><div align="center" class="style1">Error</div></th>
+        <th width="17%" scope="col"><div align="center" class="style1">Attitude</div></th>
+        <th width="17%" scope="col"><div align="center" class="style1">Error</div></th>
+      </tr>
+      <tr>
+        <td valign="top"><div align="center">1/2</div></td>
+        <td valign="top"><div align="center">(any)</div></td>
+        <td valign="top"><div align="center">(any)</div></td>
+        <td valign="top"><div align="center">IMU</div></td>
+        <td valign="top"><div align="center">CMC</div></td>
+        <td valign="top"><div align="center">GDC</div></td>
+        <td valign="top"><div align="center">BMAG1</div></td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+      </tr>
+      <tr>
+        <td valign="top"><div align="center">1</div></td>
+        <td valign="top"><div align="center">CMC</div></td>
+        <td valign="top"><div align="center">(any)</div></td>
+        <td valign="top"><div align="center">IMU</div></td>
+        <td valign="top"><div align="center">CMC</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+      </tr>
+      <tr>
+        <td valign="top"><div align="center">1</div></td>
+        <td valign="top"><div align="center">GDC</div></td>
+        <td valign="top"><div align="center">(any)</div></td>
+        <td valign="top"><div align="center">GDC</div></td>
+        <td valign="top"><div align="center">BMAG1</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+      </tr>
+      <tr>
+        <td valign="top"><div align="center">1</div></td>
+        <td valign="top"><div align="center">ATT SET </div></td>
+        <td valign="top"><div align="center">IMU</div></td>
+        <td valign="top"><div align="center">IMU</div></td>
+        <td valign="top"><div align="center">IMU/ASCP</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+      </tr>
+      <tr>
+        <td valign="top"><div align="center">1</div></td>
+        <td valign="top"><div align="center">ATT SET </div></td>
+        <td valign="top"><div align="center">GDC</div></td>
+        <td valign="top"><div align="center">GDC</div></td>
+        <td valign="top"><div align="center">GDC/ASCP</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top">&nbsp;</td>
+      </tr>
+      <tr>
+        <td valign="top"><div align="center">2</div></td>
+        <td valign="top"><div align="center">CMC</div></td>
+        <td valign="top"><div align="center">(any)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">IMU</div></td>
+        <td valign="top"><div align="center">CMC</div></td>
+      </tr>
+      <tr>
+        <td valign="top"><div align="center">2</div></td>
+        <td valign="top"><div align="center">GDC</div></td>
+        <td valign="top"><div align="center">(any)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">GDC</div></td>
+        <td valign="top"><div align="center">BMAG1</div></td>
+      </tr>
+      <tr>
+        <td valign="top"><div align="center">2</div></td>
+        <td valign="top"><div align="center">ATT SET </div></td>
+        <td valign="top"><div align="center">IMU</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">IMU</div></td>
+        <td valign="top"><div align="center">IMU/ASCP</div></td>
+      </tr>
+      <tr>
+        <td valign="top"><div align="center">2</div></td>
+        <td valign="top"><div align="center">ATT SET </div></td>
+        <td valign="top"><div align="center">GDC</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">(null)</div></td>
+        <td valign="top"><div align="center">GDC</div></td>
+        <td valign="top"><div align="center">GDC/ASCP</div></td>
+      </tr>
+    </table>
+    <p>With the ASCP (Attitude Set Control Panel), located in the lower left corner of the main panel, you can enter a total attitude by using the thumbwheels:</p>
+    <p><img src="../images/prelaunch_ascp.gif"></p>
+    <p>If you click with the left mouse button on the upper/lower part of the thumbwheel, the attitude gets 1&deg; bigger or smaller. Hold down the mouse button for continuous change. A click with the right mouse button changes 0.1&deg; in the corresponding direction.</p>
+    <p>Finally the GDC ALIGN pushbutton stores the attitude currently set in the ASCP in the GDC, so with that you can change the GDC attitude manually and this is done in the following.</p>
+    <p><img src="../images/aoh-prelaunch-finalchecks1.gif"></p>
+    <p><img src="../images/aoh-prelaunch-finalchecks2.gif"></p>
+    <p>Now the main bus supply is configured for flight. During prelaunch and up to now the main bus power is supplied by the GSE (Ground Support Equipment), only Fuel Cell 2 is connected with Main Bus A. GSE is disconnected at T-15 min, so we have to power both buses with the fuel cells before that. </p>
     <table width="100%"  border="1" cellspacing="0">
       <tr bgcolor="#023C8C">
         <th width="11%" scope="col"><span class="style1">Time</span></th>
@@ -890,7 +1356,73 @@ XXXX.X m, press PRO to confirm.</td>
         <th width="36%" scope="col"><span class="style1">Remarks</span></th>
       </tr>
       <tr>
-        <td valign="top">-00:20:00</td>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td colspan="2"><em>Main bus  activation</em></td>
+            </tr>
+            <tr>
+              <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+              <td colspan="2">FC MNA 1 &amp; 2 - up, 3 - OFF </td>
+            </tr>
+            <tr>
+              <td width="15%">&nbsp;</td>
+              <td width="85%">FC MNA 1 &amp; 2  tb - gray, 3 tb - bp </td>
+            </tr>
+            <tr>
+              <td colspan="2">FC MNA 1 &amp; 2 - OFF, 3 - up </td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+              <td>FC MNA 1 &amp; 2 tb - bp, 3 tb - gray </td>
+            </tr>
+            <tr>
+              <td colspan="2">&nbsp;</td>
+            </tr>
+        </table></td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td><div align="center">3</div></td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td>&nbsp;</td>
+            </tr>
+        </table></td>
+        <td valign="top"><br>
+            <br>
+ Up position is momentary.<br>
+ <br> 
+  Up position is momentary.</td>
+      </tr>
+    </table>
+    <p>Next the FDAIs are set in flight configuration, the GDC attitude is aligned to the IMU attitude and the pyros and sequncial systems are armed. </p>
+    <p><img src="../images/aoh-prelaunch-finalchecks3.gif"></p>
+    <p><img src="../images/aoh-prelaunch-finalchecks4.gif"></p>
+    <p><img src="../images/aoh-prelaunch-finalchecks5.gif"></p>
+    <p>Now the SM RCS is activated, please note that most of the RCS displays and controls are not working yet. </p>
+    <table width="100%"  border="1" cellspacing="0">
+      <tr bgcolor="#023C8C">
+        <th width="11%" scope="col"><span class="style1">Time</span></th>
+        <th width="48%" scope="col"><span class="style1">Procedure</span></th>
+        <th width="5%" scope="col"><div align="center"><span class="style1">Panel</span></div></th>
+        <th width="36%" scope="col"><span class="style1">Remarks</span></th>
+      </tr>
+      <tr>
+        <td valign="top">-00:25:00</td>
         <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
           <tr>
             <td colspan="2"><em>SM RCS activation</em></td>
@@ -917,9 +1449,6 @@ XXXX.X m, press PRO to confirm.</td>
           </tr>
           <tr>
             <td colspan="2">SM RCS PROPELLANT (4) - OPEN </td>
-          </tr>
-          <tr>
-            <td colspan="2">SM RCS SEC PRPLNT FUEL PRESS (4) - OPEN </td>
           </tr>
           <tr>
             <td>&nbsp;</td>
@@ -963,231 +1492,18 @@ XXXX.X m, press PRO to confirm.</td>
         <br>
         <br>
         <br>
-        <br>
-        Not historically correct. </td>
-      </tr>
-      <tr>
-        <td valign="top">&nbsp;</td>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-            <tr>
-              <td width="100%"><em>Final launch preparation</em></td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-            <tr>
-              <td>cb SECS ARM (2) - close</td>
-            </tr>
-            <tr>
-              <td>cb SECS LOGIC (2) - close</td>
-            </tr>
-            <tr>
-              <td>SECS LOGIC (both) - on (up) </td>
-            </tr>
-            <tr>
-              <td>SECS PYRO ARM (2) - on (up)</td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-            <tr>
-              <td>CABIN FAN (both) - OFF </td>
-            </tr>
-            <tr>
-              <td>C/W NORM - BOOST </td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-            <tr>
-              <td>H<sub>2</sub> FANS (both) - off (ctr) </td>
-            </tr>
-            <tr>
-              <td>O<sub>2</sub> FANS (both) - off (ctr)</td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-            <tr>
-              <td>EDS AUTO - on (up) </td>
-            </tr>
-            <tr>
-              <td>LV RATES sw - AUTO </td>
-            </tr>
-            <tr>
-              <td>2 ENG OUT sw - AUTO </td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-            <tr>
-              <td>FC REAC VLVS - LATCH </td>
-            </tr>
-            <tr>
-              <td>&nbsp;</td>
-            </tr>
-        </table></td>
-        <td valign="top"><div align="center">
-            <table width="100%"  border="0" cellspacing="0" cellpadding="0">
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td><div align="center">8</div></td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td><div align="center">2</div></td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td><div align="center">2</div></td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td><div align="center">1</div></td>
-              </tr>
-              <tr>
-                <td><div align="center">2</div></td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td>&nbsp;</td>
-              </tr>
-              <tr>
-                <td><div align="center">3</div></td>
-              </tr>
-            </table>
-        </div></td>
-        <td valign="top"><p>&nbsp; </p></td>
-      </tr>
-      <tr>
-        <td valign="top">-00:04:00</td>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-          <tr>
-            <td width="100%"><em>Launch sequence starts</em></td>
-          </tr>
-          <tr>
-            <td>&nbsp;</td>
-          </tr>
-          <tr>
-            <td>LV ENG lts (5) - on </td>
-          </tr>
-          <tr>
-            <td>DSKY showing P02 (verify) </td>
-          </tr>
-          <tr>
-            <td>&nbsp;</td>
-          </tr>
-        </table></td>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-          <tr>
-            <td>&nbsp;</td>
-          </tr>
-          <tr>
-            <td>&nbsp;</td>
-          </tr>
-          <tr>
-            <td><div align="center">1
-              </div></td>
-          </tr>
-          <tr>
-            <td><div align="center">2</div></td>
-          </tr>
-        </table></td>
-        <td valign="top">&nbsp;</td>
-      </tr>
-      <tr>
-        <td valign="top">-00:02:15</td>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-          <tr>
-            <td colspan="2"><em>ECS launch configuration</em></td>
-          </tr>
-          <tr>
-            <td colspan="2">&nbsp;</td>
-          </tr>
-          <tr>
-            <td colspan="2">PRIM GLY TO RAD vlv - BYPASS (pull) </td>
-          </tr>
-          <tr>
-            <td width="15%">&nbsp;</td>
-            <td width="85%">PRIM GLY DISCH PRESS ind - </td>
-          </tr>
-          <tr>
-            <td>&nbsp;</td>
-            <td>37-50 psi </td>
-          </tr>
-          <tr>
-            <td>&nbsp;</td>
-            <td>PRIM ACCUM QTY ind - 25-50 % </td>
-          </tr>
-          <tr>
-            <td colspan="2">&nbsp;</td>
-          </tr>
-          <tr>
-            <td colspan="2">HIGH GAIN ANTENNA </td>
-          </tr>
-          <tr>
-            <td colspan="2">PITCH POSITION sel - 0&deg;</td>
-          </tr>
-        </table></td>
-        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
-          <tr>
-            <td>&nbsp;</td>
-          </tr>
-          <tr>
-            <td>&nbsp;</td>
-          </tr>
-          <tr>
-            <td><div align="center">325</div></td>
-          </tr>
-          <tr>
-            <td><div align="center">2</div></td>
-          </tr>
-        </table></td>
-        <td valign="top"><br>
-        <br>
-        Disable radiators during launch. <br>
-        <br>
-        <br>
-        <br>
-        <br>
-        Not historically correct, <br>
-        temporary 
-solution to <br>
-enable medium heating <br>
-of the primary coolant loop. </td>
+        </td>
       </tr>
     </table>
+	
+	<p>This are the last checklist actions before lift-off.<span class="style3"> Please note that all DSKY interaction mentioned in the original documentation can only be done if you're using the Virtual AGC. </span></p>
+    <p><img src="../images/aoh-prelaunch-launchpreparation1.gif"></p>
+    <p><img src="../images/aoh-prelaunch-launchpreparation2.gif"></p>
+    <p><img src="../images/aoh-prelaunch-launchpreparation3.gif"></p>
+    <p><img src="../images/aoh-prelaunch-launchpreparation4.gif"></p>	
 	<p>&nbsp;</p>
-    <h3><a name="launch" id="launch"></a>Launch checklist</h3>
-    <p>At T+00:00:00 the Saturn  launches automatically. The following figure shows the historical launch sequence of Apollo 16 as shown in the <I>Apollo Operations Handbook Block II Spacecraft - Volume 2 Operational procedures reference</I> (see <a href="#references">below</a>). Please note that possibly there are small differences between the checklist times if you fly other missions than Apollo 16. </p>
+	<h3><a name="launch" id="launch"></a>Launch checklist</h3>
+    <p>At T+00:00:00 the Saturn  launches automatically. The following figure shows the historical launch sequence of Apollo 16 as shown in the <I>Apollo Operations Handbook Block II Spacecraft - Volume 2 Operational procedures reference</I> (see <a href="#references">below</a>). Please note that possibly there are small differences between the checklist times if you fly other missions than Apollo 16.<span class="style3"> Please note that all DSKY interaction mentioned in the original documentation, especially the part after arriving in orbit, can only be done if you're using the Virtual AGC.</span> </p>
     <p><img src="../images/aoh-launch-boost1.gif"></p>
     <p><img src="../images/aoh-launch-boost2.gif"></p>
     <p><img src="../images/aoh-launch-boost3.gif"></p>
@@ -1196,7 +1512,11 @@ of the primary coolant loop. </td>
     <p><img src="../images/aoh-launch-boost6.gif"></p>
     <p><img src="../images/aoh-launch-boost7.gif"></p>
     <p><img src="../images/aoh-launch-boost8.gif"></p>
-    <p> After SIVB engine cutoff (SECO) the spacecraft is in an almost circular earth orbit, called "Earth Parking Orbit" (EPO). Now the postorbital insertion checks have to be done.</p>
+	<p><img src="../images/aoh-launch-boost9.gif"></p>
+    <p> <span class="style3">Please note that the DSKY interaction on the last 2 pages above can only be done if you're using the Virtual AGC.</span> With the NASSP AGC just enter V37 N00E to go to program P00. </p>
+    <p>&nbsp;</p>
+    <h3><a name="epo" id="epo"></a>Earth Parking Orbit</h3>
+    <p>After SIVB engine cutoff (SECO) the spacecraft is in an almost circular earth orbit, called "Earth Parking Orbit" (EPO). Now the postorbital insertion checks have to be done.</p>
     <table width="100%"  border="1" cellspacing="0">
       <tr bgcolor="#023C8C">
         <th width="6%" scope="col"><span class="style1">Time</span></th>
@@ -1214,6 +1534,12 @@ of the primary coolant loop. </td>
               <td>&nbsp;</td>
             </tr>
             <tr>
+              <td>EDS PWR - OFF </td>
+            </tr>
+            <tr>
+              <td>MAIN BUS TIE (2) - OFF </td>
+            </tr>
+            <tr>
               <td>SECS PYRO ARM (2) - SAFE </td>
             </tr>
             <tr>
@@ -1221,6 +1547,21 @@ of the primary coolant loop. </td>
             </tr>
             <tr>
               <td>cb SECS ARM (2) - open </td>
+            </tr>
+            <tr>
+              <td>TRANS CONT PWR - OFF </td>
+            </tr>
+            <tr>
+              <td>ROT CONTR PWR DIRECT (2) - OFF </td>
+            </tr>
+            <tr>
+              <td>BMAG MODE (3) - RATE 2 </td>
+            </tr>
+            <tr>
+              <td>LV STAGE sw - OFF (verify) </td>
+            </tr>
+            <tr>
+              <td>DIRECT O<sub>2</sub> vlv - CLOSE </td>
             </tr>
             <tr>
               <td>&nbsp;</td>
@@ -1250,6 +1591,12 @@ of the primary coolant loop. </td>
                 <td>&nbsp;</td>
               </tr>
               <tr>
+                <td><div align="center">7</div></td>
+              </tr>
+              <tr>
+                <td><div align="center">5</div></td>
+              </tr>
+              <tr>
                 <td><div align="center">8</div></td>
               </tr>
               <tr>
@@ -1257,6 +1604,21 @@ of the primary coolant loop. </td>
               </tr>
               <tr>
                 <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td><div align="center">1</div></td>
+              </tr>
+              <tr>
+                <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td>&nbsp;</td>
+              </tr>
+              <tr>
+                <td><div align="center">2</div></td>
+              </tr>
+              <tr>
+                <td><div align="center">7</div></td>
               </tr>
               <tr>
                 <td>&nbsp;</td>
@@ -1276,6 +1638,13 @@ of the primary coolant loop. </td>
             </table>
         </div></td>
         <td valign="top"><p> <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
             <br>
             <br>
             <br>
@@ -1614,6 +1983,53 @@ After a few minutes. </td>
         <td valign="top">&nbsp;</td>
         <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
           <tr>
+            <td width="100%"><em>SCS attitude reference check</em></td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td><span class="style3">This procedure only works with the Virtual AGC. </span></td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td><img src="../images/postorbit_scsattcheck.gif"></td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+        </table></td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>DSKY</td>
+          </tr>
+          <tr>
+            <td><div align="center">1</div></td>
+          </tr>
+        </table></td>
+        <td valign="top">&nbsp;</td>
+      </tr>
+      <tr>
+        <td valign="top">&nbsp;</td>
+        <td valign="top"><table width="100%"  border="0" cellspacing="0" cellpadding="0">
+          <tr>
             <td width="100%"><em>Extend docking probe</em></td>
           </tr>
           <tr>
@@ -1658,7 +2074,7 @@ After a few minutes. </td>
         Use it as explained in the Orbiter user's manual. It's probably the easiest way to do it, but it's also not very accurate.<p></li>
       <li>The build-in <strong>TransX MFD</strong><br>
       One of the best tutorials explaining how to use the TransX MFD for the TLI burn is still the NASSP 5.2 tutorial  made by SaturnV. It's available here, read the &quot;2. Translunar injection&quot; section: <a href="http://nassp.sf.net/download/OrbiterApollo11Tutorial.pdf">http://nassp.sf.net/download/OrbiterApollo11Tutorial.pdf</a><p></li>
-      <li>Jarmo Nikkanen's <strong>Interplanetary MFD (IMFD) 4.2</strong><br>
+      <li>Jarmo Nikkanen's <strong>Interplanetary MFD (IMFD) 4.2.1</strong><br>
 It's        available here: <a href="http://koti.mbnet.fi/jarmonik/Orbiter.html">http://koti.mbnet.fi/jarmonik/Orbiter.html</a>. This is probably the most accurate and pursuable way to calculate the burn, because it has a quite precise trajectory prediction. Thanks to Jarmo there's a very good tutorial how to setup an Apollo TLI burn available here: <a href="http://koti.mbnet.fi/jarmonik/TLI-FreeReturn.zip">http://koti.mbnet.fi/jarmonik/TLI-FreeReturn.zip</a> and we suggest to use it.</li>
     </ul>
     <p>The TLI burn was done in the 2nd orbit after earth orbit insertation, please keep that in mind when setting up the burn. So the time to ejection normally should be roughly about 2h 30min or 9000s, if you do the calculation directly after earth orbit insertation. </p>
@@ -2443,7 +2859,8 @@ href="http://history.nasa.gov/afj/aohindex.htm">http://history.nasa.gov/afj/aohi
       <li><I>Apollo 16 CSM Launch Checklist</I>. March 7, 1972. NASA Manned Spacecraft Center. Houston, Texas. <a href="http://history.nasa.gov/ap16fj/csmlc/csmlc.htm">http://history.nasa.gov/ap16fj/csmlc/csmlc.htm</a> </li>
     </ul>
     <p align="right"><a href="http://nassp.sourceforge.net">Back</a></p>
-  </div></div>
+  </div>
+</div>
 <table height="65" cellspacing="0" cellpadding="0" border="0">
 <tr height="65">
 <td rowspan="2"><img height="79" width="432" src="../images/gbar.gif"></td>
