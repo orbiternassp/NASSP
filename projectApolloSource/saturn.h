@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.186  2006/06/07 09:53:20  tschachim
+  *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
+  *	
   *	Revision 1.185  2006/06/07 02:05:04  jasonims
   *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
   *	
@@ -575,6 +578,7 @@ public:
 	int GetStage() { return stage; };
 	int GetApolloNo() { return ApolloNo; };
 	double GetMissionTime() { return MissionTime; };
+	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
 
 	//
 	// CWS functions.
@@ -1760,9 +1764,9 @@ protected:
 	ToggleSwitch VHFRNGSwitch;
 
 	SwitchRow FloatBagSwitchRow;
-	ToggleSwitch FloatBagSwitch1;
-	ToggleSwitch FloatBagSwitch2;
-	ToggleSwitch FloatBagSwitch3;
+	ThreePosSwitch FloatBagSwitch1;
+	ThreePosSwitch FloatBagSwitch2;
+	ThreePosSwitch FloatBagSwitch3;
 
 	SwitchRow SeqEventsContSystemSwitchesRow;
 	TwoSourceSwitch Logic1Switch;

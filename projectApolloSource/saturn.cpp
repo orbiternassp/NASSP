@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.143  2006/06/07 09:53:20  tschachim
+  *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
+  *	
   *	Revision 1.142  2006/06/07 02:05:04  jasonims
   *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
   *	
@@ -2726,12 +2729,8 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 		th_att_rot[i] = 0;
 	}
 
-	//
-	// Adjust ISP and thrust based on realism level.
-	// -> Disabled for now, wrong thrust and ISP causes weired behavior of the DAP
-	//
-	double RCS_ISP = SM_RCS_ISP;	// (SM_RCS_ISP * (15.0 - Realism)) / 5.0;
-	double RCS_Thrust = MaxThrust;	// (MaxThrust * (15.0 - Realism)) / 5.0;
+	double RCS_ISP = SM_RCS_ISP;
+	double RCS_Thrust = MaxThrust;
 
 	//
 	// CM RCS Propellant tanks
@@ -2860,13 +2859,8 @@ void Saturn::AddRCS_CM(double MaxThrust)
 	SetDefaultPropellantResource (ph_rcs_cm_1);
 	ClearThrusterDefinitions();
 
-	//
-	// Adjust ISP and thrust based on realism level.
-	//
-
-	// These will need to be re-adjusted for realism
-	double RCS_ISP = 290*G;    // (CM_RCS_ISP * (15.0 - Realism)) / 5.0;
-	double RCS_Thrust = 410; // (MaxThrust * (15.0 - Realism)) / 5.0;
+	double RCS_ISP = 290.0 * G;    // was CM_RCS_ISP
+	double RCS_Thrust = 410.0;	   // was MaxThrust = CM_RCS_THRUST
 
 	// DS20060221 Multiple Edits As Follows:
 	// A) Rearrange these so that they make more sense	
