@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.106  2006/06/07 09:53:20  tschachim
+  *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
+  *	
   *	Revision 1.105  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -3928,7 +3931,7 @@ bool ASCP::RollClick(int Event, int mx, int my)
 
 {
 	if (my > 18) {
-		if (RollUpClick(Event)) {
+		if (RollDnClick(Event)) {
 			rolldisplay--;
 			if (rolldisplay < 0) {
 				rolldisplay = 4;
@@ -3936,7 +3939,7 @@ bool ASCP::RollClick(int Event, int mx, int my)
 			return true;
 		}
 	} else {
-		if (RollDnClick(Event)) {
+		if (RollUpClick(Event)) {
 			rolldisplay++;
 			if (rolldisplay > 4) {
 				rolldisplay = 0;
@@ -3977,7 +3980,7 @@ bool ASCP::RollUpClick(int Event)
 			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
-	if(output.x > 359.9){ output.x = 0; }
+	if (output.x > 359.95) { output.x -= 360.0; }
 	RollDisplayClicked();
 	return changed;
 }
@@ -4013,7 +4016,8 @@ bool ASCP::RollDnClick(int Event)
 			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
-	if(output.x < 0){ output.x += 360; }
+	if (output.x < 0) { output.x += 360.0; }
+	if (output.x > 359.95) { output.x -= 360.0; }
 	RollDisplayClicked();
 	return changed;
 }
@@ -4022,7 +4026,7 @@ bool ASCP::PitchClick(int Event, int mx, int my)
 
 {
 	if (my > 18) {
-		if (PitchUpClick(Event)) {
+		if (PitchDnClick(Event)) {
 			pitchdisplay--;
 			if (pitchdisplay < 0) {
 				pitchdisplay = 4;
@@ -4030,7 +4034,7 @@ bool ASCP::PitchClick(int Event, int mx, int my)
 			return true;
 		}
 	} else {
-		if (PitchDnClick(Event)) {
+		if (PitchUpClick(Event)) {
 			pitchdisplay++;
 			if (pitchdisplay > 4) {
 				pitchdisplay = 0;
@@ -4072,7 +4076,7 @@ bool ASCP::PitchUpClick(int Event)
 			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
-	if(output.y > 359.9){ output.y = 0; }
+	if (output.y > 359.95) { output.y -= 360.0; }
 	PitchDisplayClicked();
 	return changed;
 }
@@ -4108,7 +4112,8 @@ bool ASCP::PitchDnClick(int Event)
 			mousedowncounter = 0; return false; break;
 	}
 	// Wrap around
-	if(output.y < 0){ output.y += 360; }
+	if (output.y < 0) { output.y += 360; }
+	if (output.y > 359.95) { output.y -= 360.0; }
 	PitchDisplayClicked();
 	return changed;
 }
@@ -4117,7 +4122,7 @@ bool ASCP::YawClick(int Event, int mx, int my)
 
 {
 	if (my > 18) {
-		if (YawUpClick(Event)) {
+		if (YawDnClick(Event)) {
 			yawdisplay--;
 			if (yawdisplay < 0) {
 				yawdisplay = 4;
@@ -4125,7 +4130,7 @@ bool ASCP::YawClick(int Event, int mx, int my)
 			return true;
 		}
 	} else {
-		if (YawDnClick(Event)) {
+		if (YawUpClick(Event)) {
 			yawdisplay++;
 			if (yawdisplay > 4) {
 				yawdisplay = 0;
@@ -4171,7 +4176,7 @@ bool ASCP::YawUpClick(int Event)
 		output.z = 90;
 	}	
 	// Wrap around zero
-	if(output.z > 359.9){ output.z = 0; }
+	if (output.z > 359.95) { output.z -= 360.0; }
 	YawDisplayClicked();
 	return changed;
 }
@@ -4211,7 +4216,8 @@ bool ASCP::YawDnClick(int Event)
 		output.z = 270;
 	}	
 	// Wrap around zero
-	if(output.z < 0){ output.z += 360; }
+	if (output.z < 0) { output.z += 360; }
+	if (output.z > 359.95) { output.z -= 360.0; }
 	YawDisplayClicked();
 	return changed;
 }
