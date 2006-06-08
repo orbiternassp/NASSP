@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/05/30 23:15:14  movieman523
+  *	Mission timer and DSKY now need power to operate.
+  *	
   *	Revision 1.16  2006/05/17 01:50:45  movieman523
   *	Fixed DSKY key-clicks (bug 1375310).
   *	
@@ -337,7 +340,8 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 {
 	if (lit) {
 		oapiBlt(surf, lights, dstx, dsty, dstx + 101, dsty + 0, 49, 23);
-		DrawPower(5);
+		// TODO Disabled for now, this has to be moved to a SystemTimestep function
+		// DrawPower(5);
 	}
 	else {
 		oapiBlt(surf, lights, dstx, dsty, dstx + 0, dsty + 0, 49, 23);
