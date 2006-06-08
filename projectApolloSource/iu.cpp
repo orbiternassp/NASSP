@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/04/25 13:41:11  tschachim
+  *	Removed GetXXXSwitchState.
+  *	
   *	Revision 1.3  2006/02/22 18:47:35  tschachim
   *	Bugfixes for Apollo 4-6.
   *	
@@ -122,7 +125,7 @@ void IU::Timestep(double simt, double simdt)
 		// Disable the engines if we're waiting for
 		// the user to start the TLI burn or if it's been done.
 		//
-		if (Realism && (State <= 107 || State >= 202)) {
+		if (Realism && !OurVessel->IsVirtualAGC() && (State <= 107 || State >= 202)) {
 			OurVessel->SetThrusterResource(*th_SIVB, NULL);
 		
 		} else {
@@ -567,7 +570,7 @@ void IU::Timestep(double simt, double simdt)
 	}
 	else {
 		if (OurVessel->GetEngineLevel(ENGINE_MAIN) <= 0) {
-			if (Realism)
+			if (Realism && !OurVessel->IsVirtualAGC())
 				OurVessel->SetThrusterResource(*th_SIVB, NULL);
 		}
 	}
@@ -577,7 +580,7 @@ void IU::TLIInhibit()
 
 {
 	OurVessel->SetThrusterLevel(*th_SIVB, 0);
-	if (Realism)
+	if (Realism&& !OurVessel->IsVirtualAGC())
 		OurVessel->SetThrusterResource(*th_SIVB, NULL);
 
 	OurVessel->DeactivateNavmode(NAVMODE_PROGRADE);
@@ -630,7 +633,7 @@ void IU::SIVBStop()
 		return;
 
 	OurVessel->SetEngineLevel(ENGINE_MAIN, 0);
-	if (Realism)
+	if (Realism && !OurVessel->IsVirtualAGC())
 		OurVessel->SetThrusterResource(*th_SIVB, NULL);
 
 	SecoSound.play();
