@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.107  2006/06/08 15:30:18  tschachim
+  *	Fixed ASCP and some default switch positions.
+  *	
   *	Revision 1.106  2006/06/07 09:53:20  tschachim
   *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
   *	
@@ -950,8 +953,11 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				SuitCircuitHeatExchSwitch.SwitchTo(THREEPOSSWITCH_UP);
 				SuitCircuitHeatExchSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
 
-				// Activate FDAIs
+				// Activate FDAIs etc.
 				FDAIPowerRotarySwitch.SwitchTo(3);
+				SCSElectronicsPowerRotarySwitch.SwitchTo(2);
+				SIGCondDriverBiasPower1Switch.SwitchTo(THREEPOSSWITCH_UP);
+				SIGCondDriverBiasPower2Switch.SwitchTo(THREEPOSSWITCH_DOWN);
 
 				// Start mission timer
 				MissionTimerSwitch.SwitchTo(THREEPOSSWITCH_UP);
@@ -1068,7 +1074,8 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					//
 
 					// Turn on BMAGs (AOH2 4.2.2.1)
-					// TODO
+					BMAGPowerRotary1Switch.SwitchTo(2);
+					BMAGPowerRotary2Switch.SwitchTo(2);
 
 					// TVC check, power buses (AOH2 4.2.2.2)
 					MainBusASwitch1.SwitchTo(THREEPOSSWITCH_UP);
