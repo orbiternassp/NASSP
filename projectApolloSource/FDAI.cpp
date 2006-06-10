@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/06/01 14:28:25  tschachim
+  *	FDAIs no longer turn immediately (Bug 1448610).
+  *	
   *	Revision 1.17  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -95,9 +98,12 @@ FDAI::FDAI() {
 	init = 0;
 	ScrX = 0;
 	ScrY = 0;
+
+	target = _V(0, 0, 0);
 	now = _V(0, 0, 0);
 	lastRates = _V(0, 0, 0);
 	lastErrors = _V(0, 0, 0);
+
 	lastPaintTime = -1;
 
 	DCSource = NULL;
