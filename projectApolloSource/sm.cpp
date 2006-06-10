@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.7  2006/05/04 20:46:50  movieman523
   *	Added re-entry texture and started heat tracking.
   *	
@@ -145,6 +148,8 @@ void SM::InitSM()
 	CMTex = oapiRegisterReentryTexture("reentry");
 
 	Temperature = 250.0;
+
+	umbilical_proc = 0;
 }
 
 const double SMVO = 0.0;//-0.14;
@@ -199,12 +204,14 @@ void SM::SetSM()
 	if (showCRYO)
 		AddMesh (hSMCRYO, &mesh_dir);
 
-	if (showSPS) {
+	if (showSPS) 
+	{
 		mesh_dir = _V(0, SMVO, -1.654);
 		AddMesh(hSMSPS, &mesh_dir);
 	}
 
-	if (showHGA) {
+	if (showHGA) 
+	{
 		mesh_dir=_V(-1.308,-1.18,-1.258);
 		AddMesh (hSMhga, &mesh_dir);
 	}
@@ -223,8 +230,9 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	MissionTime += simdt;
 
 	double da = simdt * UMBILICAL_SPEED;
-	if (umbilical_proc < 1.0){
-			umbilical_proc = min (1.0, umbilical_proc+da);
+	if (umbilical_proc < 1.0)
+	{
+		umbilical_proc = min (1.0, umbilical_proc+da);
 	}
     SetAnimation (anim_umbilical, umbilical_proc);
 
@@ -237,7 +245,8 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	// or the fuel cells stop providing power.
 	//
 
-	switch (State) {
+	switch (State) 
+	{
 
 	case SM_UMBILICALDETACH_PAUSE:
 		//Someone who knows how, please add a small Particle stream going from detach Point.
@@ -245,7 +254,8 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 		State = SM_STATE_RCS_START;
 
 	case SM_STATE_RCS_START:
-		if (MissionTime >=NextMissionEventTime) {
+		if (MissionTime >=NextMissionEventTime) 
+		{
 			SetThrusterLevel(th_rcs_a[3], 1.0);
 			SetThrusterLevel(th_rcs_b[3], 1.0);
 			SetThrusterLevel(th_rcs_c[4], 1.0);
@@ -260,7 +270,8 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	//
 
 	case SM_STATE_RCS_ROLL_START:
-		if (MissionTime >= NextMissionEventTime) {
+		if (MissionTime >= NextMissionEventTime) 
+		{
 			SetThrusterLevel(th_rcs_a[1], 1.0);
 			SetThrusterLevel(th_rcs_b[1], 1.0);
 			SetThrusterLevel(th_rcs_c[1], 1.0);
@@ -275,7 +286,8 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	//
 
 	case SM_STATE_RCS_ROLL_STOP:
-		if (MissionTime >= NextMissionEventTime) {
+		if (MissionTime >= NextMissionEventTime)
+		{
 			SetThrusterLevel(th_rcs_a[1], 0.0);
 			SetThrusterLevel(th_rcs_b[1], 0.0);
 			SetThrusterLevel(th_rcs_c[1], 0.0);
@@ -290,7 +302,8 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	//
 
 	case SM_STATE_WAITING:
-		if (MissionTime >= NextMissionEventTime) {
+		if (MissionTime >= NextMissionEventTime)
+		{
 			NextMissionEventTime = MissionTime + 1.0;
 
 			//
@@ -408,11 +421,12 @@ void SM::AddEngines()
 	//
 
 	//
-	// For now, we just don't create propellant tanks for the Apollo 13 SM. We should do something
+	// TODO: For now, we just don't create propellant tanks for the Apollo 13 SM. We should do something
 	// more sensible eventually.
 	//
 
-	if (!A13Exploded) {
+	if (!A13Exploded)
+	{
 		if (!ph_rcsa)
 			ph_rcsa = CreatePropellantResource(RCS_FUEL_PER_QUAD);
 		if (!ph_rcsb)
@@ -444,7 +458,8 @@ void SM::AddEngines()
 	// Clear any old thrusters.
 	//
 
-	for (i = 0; i < 24; i++) {
+	for (i = 0; i < 24; i++)
+	{
 		th_att_lin[i] = 0;
 		th_att_rot[i] = 0;
 	}
@@ -495,7 +510,8 @@ void SM::AddEngines()
 
 	SURFHANDLE SMExhaustTex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
 
-	for (i = 0; i < 24; i++) {
+	for (i = 0; i < 24; i++)
+	{
 		if (th_att_lin[i])
 			AddExhaust (th_att_lin[i], 1.2, 0.18, SMExhaustTex);
 	}
@@ -531,7 +547,8 @@ void SM::DefineAnimations()
 {
 
 	static UINT umbilical_group[1] = {2}; // participating groups
-	static MGROUP_ROTATE umbilical (
+	static MGROUP_ROTATE umbilical
+	(
 		0,				// mesh index
 		umbilical_group, 1,		// group list and # groups
 		_V(0,-1.9540,3.168), // rotation reference point
@@ -570,50 +587,63 @@ void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 	char *line;
 	float flt;
 
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp (line, "MAINSTATE", 9)) {
+	while (oapiReadScenario_nextline (scn, line))
+	{
+		if (!strnicmp (line, "MAINSTATE", 9))
+		{
             int MainState = 0;;
 			sscanf (line+9, "%d", &MainState);
 			SetMainState(MainState);
 		}
-		else if (!strnicmp (line, "VECHNO", 6)) {
+		else if (!strnicmp (line, "VECHNO", 6))
+		{
 			sscanf (line+6, "%d", &VehicleNo);
 		}
-		else if (!strnicmp (line, "EMASS", 5)) {
+		else if (!strnicmp (line, "EMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			EmptyMass = flt;
 		}
-		else if (!strnicmp (line, "FMASS", 5)) {
+		else if (!strnicmp (line, "FMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			MainFuel = flt;
 		}
-		else if (!strnicmp (line, "HEAT", 4)) {
+		else if (!strnicmp (line, "HEAT", 4))
+		{
 			sscanf (line + 4, "%g", &flt);
 			Temperature = flt;
 		}
-		else if (!strnicmp(line, "MISSNTIME", 9)) {
+		else if (!strnicmp(line, "MISSNTIME", 9))
+		{
             sscanf (line+9, "%f", &flt);
 			MissionTime = flt;
 		}
-		else if (!strnicmp(line, "NMISSNTIME", 10)) {
+		else if (!strnicmp(line, "NMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			NextMissionEventTime = flt;
 		}
-		else if (!strnicmp(line, "LMISSNTIME", 10)) {
+		else if (!strnicmp(line, "LMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			LastMissionEventTime = flt;
 		}
-		else if (!strnicmp (line, "STATE", 5)) {
+		else if (!strnicmp (line, "STATE", 5))
+		{
 			sscanf (line + 5, "%d", &State);
 		}
-		else if (!strnicmp (line, "REALISM", 7)) {
+		else if (!strnicmp (line, "REALISM", 7))
+		{
 			sscanf (line + 7, "%d", &Realism);
 		}
-		else if (!strnicmp (line, "UPRC", 4)) {
+		else if (!strnicmp (line, "UPRC", 4))
+		{
 			sscanf (line + 4, "%g", &flt);
 			umbilical_proc = flt;
 		}
-		else {
+		else
+		{
 			ParseScenarioLineEx (line, vstatus);
         }
 	}
@@ -636,7 +666,8 @@ void SM::clbkDockEvent(int dock, OBJHANDLE connected)
 void SM::SetState(SMSettings &state)
 
 {
-	if (state.SettingsType & SM_SETTINGS_GENERAL) {
+	if (state.SettingsType & SM_SETTINGS_GENERAL)
+	{
 		MissionTime = state.MissionTime;
 		VehicleNo = state.VehicleNo;
 		Realism = state.Realism;
@@ -647,20 +678,24 @@ void SM::SetState(SMSettings &state)
 		// If the SM exploded, panel 4 was blown off earlier.
 		//
 
-		if (A13Exploded) {
+		if (A13Exploded)
+		{
 			showPanel4 = false;
 		}
 	}
 
-	if (state.SettingsType & SM_SETTINGS_MASS) {
+	if (state.SettingsType & SM_SETTINGS_MASS)
+	{
 		EmptyMass = state.EmptyMass;
 	}
 
-	if (state.SettingsType & SM_SETTINGS_FUEL) {
+	if (state.SettingsType & SM_SETTINGS_FUEL)
+	{
 		MainFuel = state.MainFuelKg;
 	}
 
-	if (state.SettingsType & SM_SETTINGS_ENGINES) {
+	if (state.SettingsType & SM_SETTINGS_ENGINES)
+	{
 		//
 		// Nothing for now. Later we can enable or disable RCS as
 		// appropriate based on seperation state.
@@ -673,8 +708,12 @@ void SM::SetState(SMSettings &state)
 	// Now the RCS propellant resource has been created, set the
 	// fuel levels.
 	//
+	// TODO: for now we don't create RCS propellant for Apollo 13.
+	// We should do something more sensible later.
+	//
 
-	if (state.SettingsType & SM_SETTINGS_FUEL) {
+	if (state.SettingsType & SM_SETTINGS_FUEL && !A13Exploded)
+	{
 		SetPropellantMass(ph_rcsa, state.RCSAFuelKg);
 		SetPropellantMass(ph_rcsb, state.RCSBFuelKg);
 		SetPropellantMass(ph_rcsc, state.RCSCFuelKg);
@@ -689,7 +728,8 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	VESSEL *v;
 
-	if (!refcount++) {
+	if (!refcount++)
+	{
 		SMLoadMeshes();
 	}
 
@@ -703,7 +743,8 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 {
 	--refcount;
 
-	if (!refcount) {
+	if (!refcount)
+	{
 
 		//
 		// This code could tidy up allocations when refcount == 0
