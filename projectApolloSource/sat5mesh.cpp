@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.62  2006/06/07 02:05:03  jasonims
   *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
   *	
@@ -1459,12 +1462,6 @@ void SaturnV::SeparateStage (int new_stage)
 		SMVessel->SetState(SMConfig);
 
 		SetReentryStage ();
-
-		//
-		// Tell AGC the CM has seperated from the SM.
-		//
-
-		agc.SetInputChannelBit(030, 2, true);
 	}
 
 	if (stage == CM_STAGE)
@@ -1499,6 +1496,7 @@ void SaturnV::SeparateStage (int new_stage)
 
 		GetApolloName(VName); strcat (VName, "-ABORT");
 		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort1", vs1);
+
 		SetAbortStage ();
 	}
 
@@ -1514,28 +1512,15 @@ void SaturnV::SeparateStage (int new_stage)
 
 		GetApolloName(VName); strcat (VName, "-ABORT");
 		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort2", vs1);
+
 		SetAbortStage ();
 	}
 
 	if (stage == CSM_ABORT_STAGE)
 	{
-#if 0
-		char VName[256];
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
-
-		TowerJS.play(NOLOOP, 160);
-		TowerJS.done();
-
-		GetApolloName(VName); strcat (VName, "-TWR");
-		hesc1 = oapiCreateVessel (VName, "ProjectApollo/sat5btower", vs1);
-
-		LESAttached = false;
-#endif
-
 		JettisonLET();
 
+		SetStage(CM_ENTRY_STAGE);
 		SetReentryStage ();
 		ActivateNavmode(NAVMODE_KILLROT);
 	}

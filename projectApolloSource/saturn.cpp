@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.145  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.144  2006/06/08 15:30:18  tschachim
   *	Fixed ASCP and some default switch positions.
   *	
@@ -612,6 +615,7 @@ void Saturn::initSaturn()
 	//
 
 	thg_main = 0;
+	thg_let = 0;
 	thg_ull = 0;
 	thg_ver = 0;
 	thg_retro1 = 0;
@@ -681,6 +685,11 @@ void Saturn::initSaturn()
 	for (i = 0; i < 5; i++)
 	{
 		th_main[i] = 0;
+	}
+
+	for (i = 0; i < 4; i++)
+	{
+		th_let[i] = 0;
 	}
 
 	for (i = 0; i < 8; i++) {
@@ -2259,9 +2268,13 @@ void Saturn::DoLaunch(double simt)
 	// The people on the ProjectApollo mailing list believe that this is the correct
 	// behaviour for the Mission Timer, and it shouldn't run at all until liftoff.
 	//
+	// However, others believe it should free run. We haven't found a definitive
+	// answer yet.
+	//
 
 	MissionTimerDisplay.Reset();
 	MissionTimerDisplay.SetEnabled(true);
+	MissionTimerDisplay.SetRunning(true);
 	EventTimerDisplay.Reset();
 	EventTimerDisplay.SetEnabled(true);
 	EventTimerDisplay.SetRunning(true);
@@ -2283,7 +2296,8 @@ void Saturn::DoLaunch(double simt)
 	// And play the launch sound.
 	//
 
-	if (LaunchS.isValid() && !LaunchS.isPlaying()){
+	if (LaunchS.isValid() && !LaunchS.isPlaying())
+	{
 		LaunchS.play(NOLOOP,255);
 		LaunchS.done();
 	}
@@ -2435,6 +2449,20 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	agc.SetRVel(aSpeed);
 
 	SystemsTimestep(simt, simdt);
+
+	//
+	// Check for LES jettison.
+	//
+
+	if (LESAttached)
+	{
+		if ((MissionTime >= LESJettisonTime  && (stage < CSM_LEM_STAGE) && (TowerJett1Switch.GetState() == THREEPOSSWITCH_DOWN || TowerJett2Switch.GetState() == THREEPOSSWITCH_DOWN)) || 
+			TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
+			TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
+		{
+			JettisonLET();
+		}
+	}
 
 	if(stage < LAUNCH_STAGE_SIVB) {
 		if (GetNavmodeState(NAVMODE_KILLROT)) {
@@ -2872,7 +2900,7 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	th_rcs_d[4] = th_att_rot[6];
 }
 
-void Saturn::AddRCS_CM(double MaxThrust)
+void Saturn::AddRCS_CM(double MaxThrust, double offset)
 
 {	
 	// DS20060222 Extensively Modified, see comments below
@@ -2880,7 +2908,7 @@ void Saturn::AddRCS_CM(double MaxThrust)
 	const double ATTCOOR2 = 1.92;
 	const double TRANCOOR = 0;
 	const double TRANCOOR2 = 0.1;
-	const double TRANZ=-0.65;
+	const double TRANZ = -0.65 + offset;
 	const double ATTWIDTH=.15;
 	const double ATTHEIGHT=.2;
 	const double TRANWIDTH=.2;
@@ -3645,6 +3673,30 @@ void Saturn::SetGenericStageState()
 }
 
 //
+// Clear all thrusters and handles.
+//
+
+void Saturn::ClearThrusters()
+
+{
+	ClearThrusterDefinitions();
+
+	//
+	// Thruster groups.
+	//
+
+	thg_main = 0;
+	thg_let = 0;
+	thg_ull = 0;
+	thg_ver = 0;
+	thg_retro1 = 0;
+	thg_retro2 = 0;
+	thg_aps = 0;
+	th_o2_vent = 0;
+
+}
+
+//
 // Clear all propellants and handles.
 //
 
@@ -3880,6 +3932,18 @@ void Saturn::StartAbort()
 	//
 
 	EventTimerDisplay.Reset();
+	EventTimerDisplay.SetRunning(true);
+	EventTimerDisplay.SetEnabled(true);
+
+	//
+	// Fire the LET.
+	//
+
+	SetThrusterGroupLevel (thg_let, 1.0);
+
+	ABORT_IND = true;
+
+	ClearEngineIndicators();
 }
 
 void Saturn::SlowIfDesired()

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.24  2006/05/19 11:05:43  tschachim
   *	Bugfix infinite power consumption.
   *	
@@ -597,6 +600,7 @@ bool CSMCautionWarningSystem::LightPowered(int i)
 	case CSM_CWS_SPS_PRESS:
 	case CSM_CWS_CRYO_PRESS_LIGHT:
 	case CSM_CWS_GLYCOL_TEMP_LOW:
+	case CSM_CWS_FC_BUS_DISCONNECT:
 		return false;
 	}
 

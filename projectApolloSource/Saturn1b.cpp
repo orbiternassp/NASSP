@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.52  2006/05/27 11:50:04  movieman523
   *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
   *	
@@ -817,38 +820,48 @@ void Saturn1b::Timestep (double simt, double simdt)
 		}
 	}
 
-	if (hs4bM){
-		if (GetDockStatus(GetDockHandle(0)) == hs4bM) {
+	if (hs4bM)
+	{
+		if (GetDockStatus(GetDockHandle(0)) == hs4bM)
+		{
 			if(ASTPMission)
 				ReadyAstp=true;
 			dockstate=2;
 				//	sprintf(oapiDebugString() ,"S4B %f");
 		}
-		else{
+		else
+		{
 			ReadyAstp=false;
 				//	sprintf(oapiDebugString() ,"NOT S4B %f");
 		}
-		if (dockstate>=2 && !S4BASTP){
+
+		if (dockstate>=2 && !S4BASTP)
+		{
 			if(ASTPMission)
 				S4BASTP=true;
 		}
-	}else {
+	}
+	else
+	{
 		char VName[256];
 
 		strcpy (VName, GetName()); strcat (VName, "-S4BSTG");
 		hs4bM = oapiGetVesselByName(VName);
 	}
 
-	if (bAbort && stage <= LAUNCH_STAGE_TWO) {
-		if (stage < LAUNCH_STAGE_ONE) {
+	if (bAbort && stage <= LAUNCH_STAGE_TWO)
+	{
+		if (stage < LAUNCH_STAGE_ONE)
+		{
 			// No abort before launch
 			bAbort = false;
 		} 
-		else {
+		else
+		{
 			SetEngineLevel(ENGINE_MAIN, 0);
-			SeparateStage(CSM_ABORT_STAGE);
+			SeparateStage(CM_ENTRY_STAGE);
 			StartAbort();
-			stage = CSM_ABORT_STAGE;
+			SetStage(CM_ENTRY_STAGE);
 			bAbort = false;
 		}
 		return;
@@ -859,11 +872,14 @@ void Saturn1b::Timestep (double simt, double simdt)
 		if(simt>0.5)
 			AttitudeLaunch4();
 
-		if (SivbLmSepSwitch.GetState()){
-			if (ASTPMission) {
+		if (SivbLmSepSwitch.GetState())
+		{
+			if (ASTPMission)
+			{
 				//sprintf(oapiDebugString() ,"click %f");
 				SivbLmSepSwitch = false;
-				if (ReadyAstp||ReadyAstp1||dockstate==3) {
+				if (ReadyAstp||ReadyAstp1||dockstate==3)
+				{
 					bManualUnDock = true;
 				}
 			}
@@ -1118,6 +1134,50 @@ void Saturn1b::ConfigureStageMeshes(int stage_state)
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
 		SetSecondStage();
+		break;
+
+	case CSM_LEM_STAGE:
+		SetCSMStage();
+		break;
+
+	case CM_STAGE:
+		SetReentryStage();
+		break;
+
+	case CM_ENTRY_STAGE_TWO:
+		SetReentryStage();
+		break;
+
+	case CM_ENTRY_STAGE_THREE:
+		SetChuteStage1();
+		break;
+
+	case CM_ENTRY_STAGE_FOUR:
+		SetChuteStage2();
+		break;
+
+	case CM_ENTRY_STAGE_FIVE:
+		SetChuteStage3();
+		break;
+
+	case CM_ENTRY_STAGE_SIX:
+		SetChuteStage4();
+		break;
+
+	case CM_ENTRY_STAGE_SEVEN:
+		SetSplashStage();
+		break;
+
+	case CM_RECOVERY_STAGE:
+		SetRecovery();
+		break;
+
+	case CM_ENTRY_STAGE:
+		SetReentryStage();
+		break;
+
+	case CSM_ABORT_STAGE:
+		SetAbortStage();
 		break;
 	}
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.83  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -1748,15 +1751,24 @@ void SaturnV::Timestep(double simt, double simdt)
 
 	GenericTimestep(simt, simdt);
 
-	if (bAbort && stage < LAUNCH_STAGE_TWO_TWR_JET) {
-		if (stage < LAUNCH_STAGE_ONE) {
-			// No abort before launch
+	if (bAbort && LESAttached)
+	{
+		if (stage < LAUNCH_STAGE_ONE) 
+		{
+			//
+			// No abort before launch.
+			//
+			// TODO: in reality, we could abort from the pad, at least from five minutes
+			// before liftoff.
+			//
 			bAbort = false;
-		} else {
+		} 
+		else
+		{
 			SetEngineLevel(ENGINE_MAIN, 0);
-			SeparateStage(CSM_ABORT_STAGE);
+			SeparateStage(CM_ENTRY_STAGE);
 			StartAbort();
-			SetStage(CSM_ABORT_STAGE);
+			SetStage(CM_ENTRY_STAGE);
 			bAbort = false;
 		}
 		return;
@@ -1802,18 +1814,6 @@ void SaturnV::Timestep(double simt, double simdt)
 			vsistg.vrot.x += f.x;
 			vsistg.vrot.y += f.y;
 			vistg->DefSetState(&vsistg);
-		}
-	}
-
-	if (LESAttached)
-	{
-		if ((MissionTime >= LESJettisonTime && (TowerJett1Switch.GetState() == THREEPOSSWITCH_DOWN || TowerJett2Switch.GetState() == THREEPOSSWITCH_DOWN)) || 
-			TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
-			TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
-		{
-			JettisonLET();
-			// Enable docking probe because the tower is gone
-			dockingprobe.SetEnabled(true);
 		}
 	}
 
@@ -2118,6 +2118,46 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 
 	case CSM_LEM_STAGE:
 		SetCSMStage();
+		break;
+
+	case CM_STAGE:
+		SetReentryStage();
+		break;
+
+	case CM_ENTRY_STAGE_TWO:
+		SetReentryStage();
+		break;
+
+	case CM_ENTRY_STAGE_THREE:
+		SetChuteStage1();
+		break;
+
+	case CM_ENTRY_STAGE_FOUR:
+		SetChuteStage2();
+		break;
+
+	case CM_ENTRY_STAGE_FIVE:
+		SetChuteStage3();
+		break;
+
+	case CM_ENTRY_STAGE_SIX:
+		SetChuteStage4();
+		break;
+
+	case CM_ENTRY_STAGE_SEVEN:
+		SetSplashStage();
+		break;
+
+	case CM_RECOVERY_STAGE:
+		SetRecovery();
+		break;
+
+	case CM_ENTRY_STAGE:
+		SetReentryStage();
+		break;
+
+	case CSM_ABORT_STAGE:
+		SetAbortStage();
 		break;
 	}
 }
