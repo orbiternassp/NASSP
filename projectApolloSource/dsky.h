@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/05/30 23:15:14  movieman523
+  *	Mission timer and DSKY now need power to operate.
+  *	
   *	Revision 1.10  2005/08/29 19:15:03  tschachim
   *	Rendering of the DSKY keys.
   *	
@@ -122,6 +125,7 @@ public:
 	//
 
 	void Timestep(double simt);
+	void SystemTimestep(double simdt);
 
 	//
 	// Keypad interface.
@@ -170,6 +174,17 @@ protected:
 
 	void LightOprErrLight()		{ OprErrLight = true; };
 	void ClearOprErrLight()		{ OprErrLight = false; };
+
+	//
+	// Light power consumption.
+	//
+
+	int LightsLit;
+	int SegmentsLit;
+
+	//
+	// Lights state.
+	//
 
 	bool CompActy;
 	bool UplinkLight;
@@ -262,8 +277,8 @@ protected:
 	SoundLib &soundlib;
 	Sound Sclick;
 
-
 	bool FirstTimeStep;
+
 	//
 	// Local helper functions.
 	//

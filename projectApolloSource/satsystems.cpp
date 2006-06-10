@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.108  2006/06/08 17:02:24  tschachim
+  *	Added SCS checklist actions.
+  *	
   *	Revision 1.107  2006/06/08 15:30:18  tschachim
   *	Fixed ASCP and some default switch positions.
   *	
@@ -1538,6 +1541,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		fdaiLeft.SystemTimestep(tFactor);
 		fdaiRight.SystemTimestep(tFactor);
 		agc.SystemTimestep(tFactor);
+		dsky.SystemTimestep(tFactor);
 		cws.SystemTimestep(tFactor);
 		dockingprobe.SystemTimestep(tFactor);
 		imu.SystemTimestep(tFactor);
@@ -2439,6 +2443,18 @@ void Saturn::ClearLiftoffLight()
 
 {
 	LAUNCHIND[0] = false;
+}
+
+void Saturn::SetLESLight()
+
+{
+	LesMotorFireSwitch.SetLit(true);
+}
+
+void Saturn::ClearLESLight()
+
+{
+	LesMotorFireSwitch.SetLit(false);
 }
 
 void Saturn::SetLVGuidLight()
@@ -3400,7 +3416,10 @@ void BMAG::SystemTimestep(double simdt) {
 
 
 // GDC
-GDC::GDC(){
+GDC::GDC()
+{
+	int i;
+
 	rates = _V(0,0,0);	
 	attitude = _V(0,0,0);
 	sat = NULL;
@@ -3412,9 +3431,23 @@ GDC::GDC(){
 	roll_bmag_failed=0;
 	pitch_bmag_failed=0;
 	yaw_bmag_failed=0;
+
+	Orbiter.Attitude.X = 0;
+	Orbiter.Attitude.Y = 0;
+	Orbiter.Attitude.Z = 0;
+
+	Orbiter.LastAttitude.X = 0;
+	Orbiter.LastAttitude.Y = 0;
+	Orbiter.LastAttitude.Z = 0;
+
+	for (i = 0; i < 9; i++)
+		Orbiter.AttitudeReference.data[i] = 0.0;
+
+	LastTime = MINUS_INFINITY;
 }
 
-void GDC::Init(Saturn *vessel){
+void GDC::Init(Saturn *vessel)
+{
 	sat = vessel;
 }
 

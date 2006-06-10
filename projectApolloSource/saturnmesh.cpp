@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2006/06/07 02:05:04  jasonims
+  *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
+  *	
   *	Revision 1.45  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -182,6 +185,8 @@
 #include "saturn.h"
 #include "tracer.h"
 
+#include "LES.h"
+
 MESHHANDLE hSM;
 MESHHANDLE hSMRCS;
 MESHHANDLE hSMRCSLow;
@@ -238,6 +243,21 @@ PARTICLESTREAMSPEC o2_venting_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
+static PARTICLESTREAMSPEC let_exhaust = {
+	0,		// flag
+	0.5,	// size
+	25.0,	// rate
+	30.0,	// velocity
+	0.1,	// velocity distribution
+	0.25,	// lifetime
+	0.1,	// growthrate
+	0.0,	// atmslowdown 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_PSQRT, 0.5, 1.0,
+	PARTICLESTREAMSPEC::ATM_PLIN, -0.3, 1.0
+};
+
+
 void SaturnInitMeshes()
 
 {
@@ -276,6 +296,9 @@ void SaturnInitMeshes()
 	LOAD_MESH(hsat5tower, "ProjectApollo/BoostCover");
 	LOAD_MESH(hFHO2, "ProjectApollo/CMB-HatchO");
 	LOAD_MESH(hCMPEVA, "ProjectApollo/CM-CMPEVA");
+
+	SURFHANDLE contrail_tex = oapiRegisterParticleTexture ("Contrail2");
+	let_exhaust.tex = contrail_tex;
 }
 
 void Saturn::AddSM(double offset, bool showSPS)
@@ -594,10 +617,12 @@ void Saturn::SetRecovery()
 	UINT meshidx;
 
 	VECTOR3 mesh_dir=_V(0,0,-1.2);
-	if (Burned){
+	if (Burned)
+	{
 		meshidx = AddMesh (hCM2B, &mesh_dir);
 	}
-	else{
+	else
+	{
 		meshidx = AddMesh (hCM2, &mesh_dir);
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -634,6 +659,28 @@ void Saturn::SetCSMStage ()
 	ClearMeshes();
     ClearThrusterDefinitions();
 
+	//
+	// Delete any dangling propellant resources.
+	//
+
+	if (ph_ullage1)
+	{
+		DelPropellantResource(ph_ullage1);
+		ph_ullage1 = 0;
+	}
+
+	if (ph_ullage2)
+	{
+		DelPropellantResource(ph_ullage2);
+		ph_ullage2 = 0;
+	}
+
+	if (ph_ullage2)
+	{
+		DelPropellantResource(ph_ullage2);
+		ph_ullage2 = 0;
+	}
+
 	if(ph_3rd) {
 		DelPropellantResource(ph_3rd);
 		ph_3rd = 0;
@@ -644,12 +691,18 @@ void Saturn::SetCSMStage ()
 		ph_sep = 0;
 	}
 
+	if (ph_sep2) {
+		DelPropellantResource(ph_sep2);
+		ph_sep2 = 0;
+	}
+
 	SetSize (20);
 	SetCOG_elev (3.5);
 	SetEmptyMass (CM_Mass + SM_EmptyMass);
 	// ************************* propellant specs **********************************
 
-	if (!ph_sps) {
+	if (!ph_sps)
+	{
 		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage Propellant
 	}
 
@@ -686,10 +739,7 @@ void Saturn::SetCSMStage ()
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
 
-	if (FIRSTCSM) {
-		FIRSTCSM = false;
-	}
-	else if (bManualUnDock){
+	if (bManualUnDock) {
 		dockstate = 4;
 	}
 
@@ -1009,7 +1059,8 @@ void Saturn::StageEight(double simt)
 	UINT meshidx;
 	VECTOR3 mesh_dir=_V(0,0,-1);
 
-	if (Burned) {
+	if (Burned)
+	{
 		ClearMeshes();
 		mesh_dir=_V(0,0,34.40-12.25-21.5);
 		meshidx = AddMesh (hCM2B, &mesh_dir);
@@ -1020,7 +1071,8 @@ void Saturn::StageEight(double simt)
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir=_V(0,0,34.4-12.25-21.5);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1037,7 +1089,9 @@ void Saturn::StageEight(double simt)
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 		VCMeshOffset = mesh_dir;
 
-	}else {
+	}
+	else
+	{
 		ClearMeshes();
 		VECTOR3 mesh_dir=_V(0,0,34.40-12.25-21.5);
 		meshidx = AddMesh (hCM2, &mesh_dir);
@@ -1082,6 +1136,12 @@ void Saturn::StageEight(double simt)
 			break;
 		}
 	}
+
+	ApexCoverJettSwitch.SetLit(true);
+
+	//
+	// TODO: Do we need this anymore?
+	//
 
 	LAUNCHIND[1] = true;
 	SetStage(CM_ENTRY_STAGE_TWO);
@@ -1145,7 +1205,8 @@ void Saturn::SetChuteStage1()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 		VCMeshOffset = mesh_dir;
 	}
-	else {
+	else 
+	{
 		ClearMeshes();
 		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
 		meshidx = AddMesh (hCM2, &mesh_dir);
@@ -1182,6 +1243,13 @@ void Saturn::SetChuteStage1()
 	SetView(-7.25);
 	DeactivateNavmode(NAVMODE_KILLROT);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+
+	DrogueDeploySwitch.SetLit(true);
+
+	//
+	// TODO: Do we need these anymore?
+	//
+
 	LAUNCHIND[3] = true;
 	LAUNCHIND[1] = true;
 }
@@ -1280,6 +1348,11 @@ void Saturn::SetChuteStage2()
 
 	SetView(-7.25);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+
+	//
+	// TODO: Do we need these anymore?
+	//
+
 	LAUNCHIND[3] = true;
 	LAUNCHIND[1] = true;
 }
@@ -1376,6 +1449,11 @@ void Saturn::SetChuteStage3()
 
 	SetView(-7.25);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+
+	//
+	// TODO: Do we need these anymore?
+	//
+
 	LAUNCHIND[3] = true;
 	LAUNCHIND[1] = true;
 }
@@ -1431,7 +1509,8 @@ void Saturn::SetChuteStage4()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 		VCMeshOffset = mesh_dir;
 	}
-	else{
+	else
+	{
 		ClearMeshes();
 		mesh_dir=_V(0,0,34.40-12.25-21.5-7.75);
 		meshidx = AddMesh (hCM2, &mesh_dir);
@@ -1466,6 +1545,13 @@ void Saturn::SetChuteStage4()
 
 	SetView(-7.25);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
+
+	MainDeploySwitch.SetLit(true);
+
+	//
+	// TODO: Do we need these anymore?
+	//
+
 	LAUNCHIND[5]=true;
 	LAUNCHIND[3]=true;
 	LAUNCHIND[1]=true;
@@ -1542,6 +1628,9 @@ void Saturn::SetAbortStage ()
 
 	ClearMeshes();
     ClearThrusterDefinitions();
+
+	ClearPropellants();
+
 	UINT meshidx;
 	SetSize (8);
 	SetCOG_elev (2.0);
@@ -1551,6 +1640,7 @@ void Saturn::SetAbortStage ()
 	SetCrossSections (_V(9.17,7.13,7.0));
 	SetCW (5.5, 0.1, 3.4, 3.4);
 	SetRotDrag (_V(0.07,0.07,0.003));
+
 	if (GetFlightModel() >= 1)
 	{
 //		SetPitchMomentScale (-1e-5);
@@ -1559,6 +1649,7 @@ void Saturn::SetAbortStage ()
 //		CreateAirfoil(LIFT_VERTICAL, _V(-0.014,0.107,0.75), CoeffFunc, 3.5 ,11.95, 1.0);
 		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.16,1.12), CoeffFunc, 3.5 ,11.95, 1.0);
     }
+
 	ShiftCentreOfMass (_V(0,0,1.5));
 	VECTOR3 mesh_dir=_V(0,0,33.0-12.25-21.5-1.5+1);
 	meshidx = AddMesh (hCM, &mesh_dir);
@@ -1575,8 +1666,11 @@ void Saturn::SetAbortStage ()
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+	//
 	// And the Crew
-	if (Crewed) {
+	//
+	if (Crewed)
+	{
 		mesh_dir=_V(0,0,33.0-12.25-21.5-1.5+1);
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1585,6 +1679,7 @@ void Saturn::SetAbortStage ()
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
+
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
@@ -1594,54 +1689,46 @@ void Saturn::SetAbortStage ()
 
 	//VECTOR3 bdir = _V(0,0,1);
 	//ReEntryID = AddExhaustRef(EXHAUST_CUSTOM,_V(0,0,-0.5), 0, 0, &bdir);
-	if (ph_3rd)  {
-		DelPropellantResource(ph_3rd); //SPS stage Propellant
-		ph_3rd = 0;
-	}
-	if(ph_1st) {
-		DelPropellantResource(ph_1st);
-		ph_1st = 0;
-	}
-	if(ph_2nd) {
-		DelPropellantResource(ph_2nd);
-		ph_2nd = 0;
-	}
 
-	if (ph_sps)
-		DelPropellantResource(ph_sps); //SPS stage Propellant
-		ph_sps = 0;
-	if (!ph_sps)
-		ph_sps  = CreatePropellantResource(2500); //SPS stage Propellant
-	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
+	if (!ph_let)
+		ph_let  = CreatePropellantResource(1405.0);
+
+	SetDefaultPropellantResource (ph_let); // display SPS stage propellant level in generic HUD
 
 	AddRCS_CM(CM_RCS_THRUST);
 
+	//
 	// *********************** thruster definitions ********************************
+	//
 
-	// orbiter main thrusters
-	th_main[0] = CreateThruster (_V( 0,0,-6.5), _V( 0,0,1),721035 , ph_sps, 900);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+	VECTOR3 m_exhaust_pos1= _V(0.0, -0.5, TowerOffset-2.2);
+	VECTOR3 m_exhaust_pos2= _V(0.0, 0.5, TowerOffset-2.2);
+	VECTOR3 m_exhaust_pos3= _V(-0.5, 0.0, TowerOffset-2.2);
+	VECTOR3 m_exhaust_pos4 = _V(0.5, 0.0, TowerOffset-2.2);
 
-	SetThrusterLevel(th_main[0], 1.0);
+	//
+	// Main thrusters. These are only used if the jettison engines
+	// don't work.
+	//
 
-	VECTOR3 m_exhaust_pos1= {0.4,0.0,1.6};
-    VECTOR3 m_exhaust_pos2= {-0.4,0.0,1.6};
-	VECTOR3 m_exhaust_pos3= {0.0,0.1,6.8};
-	VECTOR3 m_exhaust_pos4= {0.0,0.4,1.6};
-	VECTOR3 m_exhaust_pos5= {0.0,-0.4,1.6};
-	VECTOR3 m_exhaust_ref1 = {0.65,0,-1};
-	VECTOR3 m_exhaust_ref2 = {-0.65,0,-1};
-	VECTOR3 m_exhaust_ref3 = {0,0.5,-1};
-	VECTOR3 m_exhaust_ref4 = {0.0,0.65,-1};
-	VECTOR3 m_exhaust_ref5 = {0.0,-0.65,-1};
+	th_main[0] = CreateThruster (m_exhaust_pos1, _V(0.0, 0.4, 0.7), THRUST_VAC_LET, ph_let, ISP_LET_VAC, ISP_LET_SL);
+	th_main[1] = CreateThruster (m_exhaust_pos2, _V(0.0, -0.4, 0.7),  THRUST_VAC_LET, ph_let, ISP_LET_VAC, ISP_LET_SL);
+	th_main[2] = CreateThruster (m_exhaust_pos3, _V(0.4, 0.0, 0.7), THRUST_VAC_LET, ph_let, ISP_LET_VAC, ISP_LET_SL);
+	th_main[3] = CreateThruster (m_exhaust_pos4, _V(-0.4, 0.0, 0.7), THRUST_VAC_LET, ph_let, ISP_LET_VAC, ISP_LET_SL);
 
-	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos1, 5.0, 0.15, &m_exhaust_ref1);
-	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos2, 5.0, 0.15, &m_exhaust_ref2);
-	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos3, 3.0, 0.10, &m_exhaust_ref3);
-	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos4, 5.0, 0.15, &m_exhaust_ref4);
-	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos5, 5.0, 0.15, &m_exhaust_ref5);
+	//
+	// Add exhausts
+	//
 
-	//AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos4, 5.0, 0.25, &m_exhaust_ref4);
+	int i;
+	for (i = 0; i < 4; i++)
+	{
+		AddExhaust (th_main[i], 8.0, 0.5);
+		AddExhaustStream (th_main[i], &let_exhaust);
+	}
+
+	thg_main = CreateThrusterGroup (th_main, 4, THGROUP_MAIN);
+	SetThrusterGroupLevel (thg_main, 1.0);
 
 	SetView(0.0);
 
@@ -1674,16 +1761,42 @@ bool Saturn::clbkLoadGenericCockpit ()
 // Generic function to jettison the escape tower.
 //
 
-void Saturn::JettisonLET()
+void Saturn::JettisonLET(bool UseMain)
 
 {
-	VECTOR3 ofs1 = _V(0.0, 0.0, TowerOffset); // OFS_TOWER;
-	VECTOR3 vel1 = _V(15.0,15.0,106.0);
+	//
+	// Don't do anything if the tower isn't attached!
+	//
+	if (!LESAttached)
+		return;
+
+	//
+	// If the jettison motor fails and we're trying to
+	// use it for the jettison, return.
+	//
+	// We'll always give them one way to jettison the LES as
+	// being unable to jettison it is fatal.
+	//
+	if (!UseMain && LaunchFail.u.LESJetMotorFail)
+		return;
+
+	//
+	// Otherwise jettison the LES.
+	//
+	VECTOR3 ofs1 = _V(0.0, 0.0, TowerOffset);
+	VECTOR3 vel1 = _V(0.0,0.0,0.5);
 
 	VESSELSTATUS vs1;
 	GetStatus (vs1);
 
 	vs1.eng_main = vs1.eng_hovr = 0.0;
+
+	//
+	// We must set status to zero to ensure the LET is in 'free flight'. Otherwise if we jettison
+	// on the pad, the LET thinks it's on the ground!
+	//
+
+	vs1.status = 0;
 
 	VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
 
@@ -1707,13 +1820,65 @@ void Saturn::JettisonLET()
 	GetApolloName(VName);
 	strcat (VName, "-TWR");
 
-	hesc1 = oapiCreateVessel(VName,"ProjectApollo/sat5btower",vs1);
+	hesc1 = oapiCreateVessel(VName, "ProjectApollo/LES", vs1);
 	LESAttached = false;
+
+	LESSettings LESConfig;
+
+	LESConfig.SettingsType = LES_SETTINGS_GENERAL | LES_SETTINGS_ENGINES | LES_SETTINGS_THRUST;
+
+	//
+	// Pressing the LES jettison button fires the main LET engine. The TWR JETT
+	// switches jettison the LES and fire the jettison engines.
+	//
+	// If the LES jettison button is pressed before using the TWR JETT switches,
+	// the explosive bolts won't fire, so the main LET motor will fire while
+	// still attached to the CM!
+	//
+	// See: AOH 2.9.4.8.4
+	//
+
+	LESConfig.FireMain = UseMain;
+
+	LESConfig.MissionTime = MissionTime;
+	LESConfig.Realism = Realism;
+	LESConfig.VehicleNo = VehicleNo;
+	LESConfig.LowRes = LowRes;
+	LESConfig.ISP_LET_SL = ISP_LET_SL;
+	LESConfig.ISP_LET_VAC = ISP_LET_VAC;
+	LESConfig.THRUST_VAC_LET = THRUST_VAC_LET;
+
+	//
+	// If this is the CSM abort stage, we need to transfer fuel information from
+	// the CSM LET.
+	//
+	// Usually this will be zero, so you'd better use the right jettison button!
+	//
+	// TODO: At  some point we should expand this so that we can jettison the LES
+	// while the main abort motor is running.
+	//
+
+	if (ph_let)
+	{
+		LESConfig.MainFuelKg = GetPropellantMass(ph_let);
+		LESConfig.SettingsType |= LES_SETTINGS_MAIN_FUEL;
+	}
+
+	LES *les_vessel = (LES *) oapiGetVesselInterface(hesc1);
+	les_vessel->SetState(LESConfig);
 
 	ConfigureStageMeshes(stage);
 
-	if (Crewed) {
+	if (Crewed)
+	{
 		SwindowS.play();
 	}
 	SwindowS.done();
+
+	SetLESLight();
+
+	//
+	// Enable docking probe because the tower is gone
+	//
+	dockingprobe.SetEnabled(true);
 }

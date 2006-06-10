@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.187  2006/06/08 15:30:18  tschachim
+  *	Fixed ASCP and some default switch positions.
+  *	
   *	Revision 1.186  2006/06/07 09:53:20  tschachim
   *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
   *	
@@ -383,6 +386,7 @@ typedef union {
 		unsigned EarlySICenterCutoff:1;
 		unsigned EarlySIICenterCutoff:1;
 		unsigned LETAutoJetFail:1;
+		unsigned LESJetMotorFail:1;
 		unsigned SIIAutoSepFail:1;
 	} u;
 	int word;
@@ -499,6 +503,7 @@ public:
 	void ClearSIISep() { SIISepState = false; };
 	void SetEngineIndicator(int i);
 	void ClearEngineIndicator(int i);
+	void JettisonLET(bool UseMain = false);
 
 	void UpdateLaunchTime(double t);	
 
@@ -637,6 +642,8 @@ protected:
 	void ClearEngineIndicators();
 	void SetLiftoffLight();
 	void ClearLiftoffLight();
+	void SetLESLight();
+	void ClearLESLight();
 	void SetLVGuidLight();
 	void ClearLVGuidLight();
 	void SetLVRateLight();
@@ -818,7 +825,7 @@ protected:
 	SaturnAccelGMeter AccelGMeter;
 
 	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
-	GuardedPushSwitch LesMotorFireSwitch;
+	LESMotorFireSwitch LesMotorFireSwitch;
 	GuardedPushSwitch CanardDeploySwitch;
 	GuardedPushSwitch CsmLvSepSwitch;
 	GuardedPushSwitch ApexCoverJettSwitch;
@@ -2291,7 +2298,7 @@ protected:
 	
 	bool ActivateASTP;
 	//bool ProbeExtended;
-	bool FIRSTCSM;
+
 	bool bManualSeparate;
 	bool bManualUnDock;
 	bool ASTPMission;
@@ -2408,10 +2415,13 @@ protected:
 	double ISP_SECOND_SL;//300*G;
 	double ISP_SECOND_VAC;//421*G;
 	double ISP_THIRD_VAC;//421*G;
+	double ISP_LET_VAC;
+	double ISP_LET_SL;
 
 	double THRUST_FIRST_VAC;
 	double THRUST_SECOND_VAC;//115200*G;
 	double THRUST_THIRD_VAC;
+	double THRUST_VAC_LET;
 
 	//
 	// Generic functions shared between SaturnV and Saturn1B
@@ -2465,11 +2475,11 @@ protected:
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);
 	void AttitudeLaunchSIVB();
 	virtual void AutoPilot(double autoT) = 0;
+
+	void ClearPropellants();
 	virtual void SeparateStage (int stage) = 0;
 	virtual void ConfigureStageMeshes(int stage_state) = 0;
 	virtual void ConfigureStageEngines(int stage_state) = 0;
-
-	void JettisonLET();
 
 	void StageOrbitSIVB(double simt, double simdt);
 	void JostleViewpoint(double amount);
@@ -2613,10 +2623,58 @@ protected:
 	// General engine resources.
 	//
 
-	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd, ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3, ph_rcs_cm_1,ph_rcs_cm_2, ph_sps, ph_sep, ph_sep2; // handles for propellant resources
+	//
+	// Propellant resources.
+	//
+
+	//
+	// Main fuel for stage 1, 2, and 3.
+	//
+
+	PROPELLANT_HANDLE ph_1st, ph_2nd, ph_3rd;
+
+	//
+	// SM RCS
+	//
+
+	PROPELLANT_HANDLE ph_rcs0, ph_rcs1, ph_rcs2, ph_rcs3;
+
+	//
+	// CM RCS
+	//
+
+	PROPELLANT_HANDLE ph_rcs_cm_1, ph_rcs_cm_2;
+
+	//
+	// Fake propellant for fake thrusters spewing out junk at stage
+	// seperation.
+	//
+
+	PROPELLANT_HANDLE ph_sep, ph_sep2;
+
+	//
+	// SPS and LET.
+	//
+
+	PROPELLANT_HANDLE ph_sps, ph_let;
+
+	//
+	// Ullage rockets for stage 1, 2 and 3.
+	//
+
+	PROPELLANT_HANDLE ph_ullage1, ph_ullage2, ph_ullage3;
+
+	//
+	// Fake propellant for O2 vents.
+	//
+
 	PROPELLANT_HANDLE ph_o2_vent;
 
-	THGROUP_HANDLE thg_main,thg_ull,thg_ver;		          // handles for thruster groups
+	//
+	// Thruster group handles. We have a lot of these :).
+	//
+
+	THGROUP_HANDLE thg_main, thg_ull, thg_ver;
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
 	THRUSTER_HANDLE th_main[5], th_ull[8], th_ver[3], th_att_cm[12];               // handles for orbiter main engines

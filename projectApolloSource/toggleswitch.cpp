@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2006/06/07 09:53:20  tschachim
+  *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
+  *	
   *	Revision 1.67  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -456,11 +459,15 @@ bool ToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 		return false;
 }
 
-void ToggleSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
+void ToggleSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 
-	if (state) {
+{
+	if (state)
+	{
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
-	} else {
+	}
+	else
+	{
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset + width, yOffset, width, height, SURF_PREDEF_CK);
 	}
 }
@@ -1136,6 +1143,17 @@ GuardedPushSwitch::GuardedPushSwitch() {
 	guardSurface = 0;
 	guardBorder = 0;
 	guardState = 0;
+
+	lit = false;
+}
+
+void GuardedPushSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, int lxoffset, int lyoffset)
+
+{
+	litOffsetX = lxoffset;
+	litOffsetY = lyoffset;
+
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 }
 
 GuardedPushSwitch::~GuardedPushSwitch() {
@@ -1165,14 +1183,28 @@ void GuardedPushSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 		switchRow->panelSwitches->soundlib->LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
 }
 
+void GuardedPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
+
+{
+	if (lit)
+	{
+		oapiBlt(DrawSurface, SwitchSurface, x, y, litOffsetX, litOffsetY, width, height, SURF_PREDEF_CK);
+	}
+	else
+		ToggleSwitch::DoDrawSwitch(DrawSurface);
+}
+
 void GuardedPushSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 
 	if (!visible) return;
 
-	if(guardState) {
+	if(guardState)
+	{
 		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset + guardWidth, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
 		DoDrawSwitch(DrawSurface);
-	} else {
+	}
+	else
+	{
 		DoDrawSwitch(DrawSurface);
 		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
 	}
@@ -1190,7 +1222,9 @@ void GuardedPushSwitch::DrawFlash(SURFHANDLE DrawSurface)
 		ToggleSwitch::DrawFlash(DrawSurface);
 }
 
-bool GuardedPushSwitch::CheckMouseClick(int event, int mx, int my) {
+bool GuardedPushSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
 
 	if (!visible) return false;
 
@@ -1201,13 +1235,15 @@ bool GuardedPushSwitch::CheckMouseClick(int event, int mx, int my) {
 				guardState = 0;
 				if (Active && state) SwitchToggled = true;
 				state = 0;
-			} else {
+			}
+			else {
 				guardState = 1;
 			}
 			guardClick.play();
 			return true;
 		}
-	} else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
+	}
+	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
 		if (guardState) {
 			return PushSwitch::CheckMouseClick(event, mx, my);
 		}
@@ -1219,19 +1255,25 @@ void GuardedPushSwitch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i %i", state, guardState); 
+	sprintf(buffer, "%i %i %d", state, guardState, lit ? 1 : 0); 
 	oapiWriteScenario_string(scn, name, buffer);
 }
 
 void GuardedPushSwitch::LoadState(char *line) {
 	
 	char buffer[100];
-	int st, gst;
+	int st, gst, l = 0;
 
-	sscanf(line, "%s %i %i", buffer, &st, &gst); 
+	//
+	// Note we set l to zero before the sscanf call to allow backward
+	// compatibility with old scenarios: default to unlit if the lit
+	// state isn't saved in the file.
+	//
+	sscanf(line, "%s %i %i %d", buffer, &st, &gst, &l); 
 	if (!strnicmp(buffer, name, strlen(name))) {
 		state = st;
 		guardState = gst;
+		lit = (l != 0);
 	}
 }
 

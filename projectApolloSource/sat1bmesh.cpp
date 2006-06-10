@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2006/05/27 11:50:04  movieman523
+  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
+  *	
   *	Revision 1.36  2006/05/01 03:33:21  jasonims
   *	New CM and all the fixin's....
   *	
@@ -265,10 +268,13 @@ void Saturn1b::SetFirstStage ()
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
 
-		TowerOffset = 40.10;
-		mesh_dir=_V(0, 0, TowerOffset);
-		meshidx = AddMesh (hsat5tower, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		if (LESAttached)
+		{
+			TowerOffset = 40.10;
+			mesh_dir=_V(0, 0, TowerOffset);
+			meshidx = AddMesh (hsat5tower, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
 	}
 	else {
 
@@ -348,11 +354,6 @@ void Saturn1b::SetFirstStage ()
 
 void Saturn1b::SetSecondStage ()
 {
-	ClearThrusterDefinitions();
-	if(ph_1st) {
-		DelPropellantResource(ph_1st);
-		ph_1st = 0;
-	}
 	UINT meshidx;
 	SetSize (22);
 	SetCOG_elev (15.225);
@@ -367,11 +368,9 @@ void Saturn1b::SetSecondStage ()
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	ShiftCentreOfMass (_V(0,0,12.25));
+
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
     AddMesh (hStage2Mesh, &mesh_dir);
-	mesh_dir=_V(0,0,2.2-12.25);
-	AddMesh (hInterstageMesh, &mesh_dir);
 
 	mesh_dir=_V(1.85,1.85,24.5-12.25);
     AddMesh (hStageSLA1Mesh, &mesh_dir);
@@ -382,7 +381,8 @@ void Saturn1b::SetSecondStage ()
 	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
 
-	if (SaturnHasCSM()) {
+	if (SaturnHasCSM())
+	{
 
 		//
 		// Add CSM.
@@ -401,7 +401,8 @@ void Saturn1b::SetSecondStage ()
 		// And the Crew
 		//
 
-		if (Crewed) {
+		if (Crewed)
+		{
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -416,12 +417,16 @@ void Saturn1b::SetSecondStage ()
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		TowerOffset = 40.10-12.25;
-		mesh_dir=_V(0, 0, TowerOffset);
-		meshidx = AddMesh (hsat5tower, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		if (LESAttached)
+		{
+			TowerOffset = 40.10-12.25;
+			mesh_dir=_V(0, 0, TowerOffset);
+			meshidx = AddMesh (hsat5tower, &mesh_dir);
+			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
 	}
-	else {
+	else
+	{
 
 		//
 		// Add nosecap.
@@ -430,270 +435,94 @@ void Saturn1b::SetSecondStage ()
 		mesh_dir=_V(0,0,29.77 - 12.25);
 		AddMesh (hNosecap, &mesh_dir);
 	}
-
-    SetView(22.7, false);
-
-		// ************************* propellant specs **********************************
-	if (!ph_3rd)
-		ph_3rd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
-	SetDefaultPropellantResource (ph_3rd); // display 3rd stage propellant level in generic HUD
-
-
-	// *********************** thruster definitions ********************************
-
-
-	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG1O+9};
-	// orbiter main thrusters
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
-
-//  Ullage rockets (3)
-
-	SetEngineLevel(ENGINE_MAIN, 0.0);
 
 	SetCameraOffset (_V(-1,1.0,31.15-STG1O));
-	VECTOR3	m_exhaust_pos6= _V(3.27,0.46,-2-STG1O+9);
-	VECTOR3 m_exhaust_pos7= _V(-1.65,2.86,-2-STG1O+9);
-	VECTOR3	m_exhaust_pos8= _V(-1.65,-2.86,-2-STG1O+9);
-	int i;
-	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( -0.45,0.0,1),725 , ph_3rd, 45790.85);
-	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( 0.23,-0.39,1),725 , ph_3rd, 45790.85);
-	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( 0.23,0.39,1),725 , ph_3rd, 45790.85);
-	for (i = 0; i < 3; i++)
-		AddExhaust (th_ver[i], 11.0, 0.25);
-	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
-	SetThrusterGroupLevel(thg_ver,1.0);
-
-	for (i=0;i<5;i++){
-		ENGIND[i]=false;
-	}
+    SetView(22.7, false);
 }
 
-void Saturn1b::SetSecondStage1 ()
+void Saturn1b::SetSecondStageEngines ()
+
 {
 	ClearThrusterDefinitions();
-	if(ph_1st) {
+
+	//
+	// ************************* propellant specs **********************************
+	//
+
+	if(ph_1st)
+	{
+		//
+		// Delete remaining S1c stage propellant.
+		//
 		DelPropellantResource(ph_1st);
 		ph_1st = 0;
 	}
-	UINT meshidx;
-	SetSize (25);
-	SetCOG_elev (15.225);
-	SetEmptyMass (Stage2Mass);
-	SetPMI (_V(94,94,20));
-	SetCrossSections (_V(267,267,97));
-	SetCW (0.1, 0.3, 1.4, 1.4);
-	SetRotDrag (_V(0.7,0.7,1.2));
-	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0);
-    ClearMeshes();
-    ClearExhaustRefs();
-    ClearAttExhaustRefs();
-	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
-    AddMesh (hStage2Mesh, &mesh_dir);
 
-	mesh_dir=_V(1.85,1.85,24.5-12.25);
-    AddMesh (hStageSLA1Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,1.85,24.5-12.25);
-    AddMesh (hStageSLA2Mesh, &mesh_dir);
-	mesh_dir=_V(1.85,-1.85,24.5-12.25);
-    AddMesh (hStageSLA3Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
-    AddMesh (hStageSLA4Mesh, &mesh_dir);
-
-	if (SaturnHasCSM()) {
-
-		//
-		// Add CSM.
-		//
-
-		AddSM(31-12.25, false);
-
-		mesh_dir=_V(0,0,34.95-12.25);
-		meshidx = AddMesh (hCM, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		//
-		// And the Crew
-		//
-
-		if (Crewed) {
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-		}
-
-		//
-		// Don't Forget the Hatch
-		//
-
-		meshidx = AddMesh (hFHC, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		TowerOffset = 40.1-12.25;
-		mesh_dir=_V(0, 0, TowerOffset);
-		meshidx = AddMesh (hsat5tower, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-	}
-	else {
-
-		//
-		// Add nosecap.
-		//
-
-		mesh_dir=_V(0,0,29.77 - 12.25);
-		AddMesh (hNosecap, &mesh_dir);
-	}
-
-    SetView(22.7, false);
-
-	SetCameraOffset (_V(-1,1.0,33.15-STG1O));
-		// ************************* propellant specs **********************************
 	if (!ph_3rd)
-		ph_3rd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
-	SetDefaultPropellantResource (ph_3rd); // display 3rd stage propellant level in generic HUD
+	{
+		//
+		// Create SIVB stage Propellant
+		//
 
+		ph_3rd  = CreatePropellantResource(SII_FuelMass);
+	}
 
+	if (!ph_ullage3)
+	{
+		//
+		// Create SIVB stage ullage rocket propellant
+		//
+
+		ph_ullage3  = CreatePropellantResource(80.0);
+	}
+
+	//
+	// display SIVB stage propellant level in generic HUD
+	//
+
+	SetDefaultPropellantResource (ph_3rd);
+
+	//
 	// *********************** thruster definitions ********************************
-
+	//
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG1O+9};
+
+	//
 	// orbiter main thrusters
+	//
+
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-
 	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
 
-	SetEngineLevel(ENGINE_MAIN, 0.0);;
-
-//  Ullage rockets (3)
+	//
+	//  Ullage rockets (3)
+	//
 
 	VECTOR3	m_exhaust_pos6= _V(3.27,0.46,-2-STG1O+9);
 	VECTOR3 m_exhaust_pos7= _V(-1.65,2.86,-2-STG1O+9);
 	VECTOR3	m_exhaust_pos8= _V(-1.65,-2.86,-2-STG1O+9);
+
 	int i;
-	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( -0.45,0.0,1),725 , ph_3rd, 45790.85);
-	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( 0.23,-0.39,1),725 , ph_3rd, 45790.85);
-	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( 0.23,0.39,1),725 , ph_3rd, 45790.85);
+
+	//
+	// Ullage rocket thrust and ISP is a guess for now.
+	//
+
+	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( -0.45,0.0,1), 10000, ph_ullage3, 3000);
+	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( 0.23,-0.39,1), 10000, ph_ullage3, 3000);
+	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( 0.23,0.39,1), 10000, ph_ullage3, 3000);
+
 	for (i = 0; i < 3; i++)
 		AddExhaust (th_ver[i], 11.0, 0.25);
+
 	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
-	SetThrusterGroupLevel(thg_ver,1.0);
 }
 
-void Saturn1b::SetSecondStage2 ()
-{
-	ClearThrusterDefinitions();
-	if(ph_1st) {
-		DelPropellantResource(ph_1st);
-		ph_1st = 0;
-	}
-	SetSize (25);
-	SetCOG_elev (15.225);
-	SetEmptyMass (Stage2Mass);
-	SetPMI (_V(94,94,20));
-	SetCrossSections (_V(267,267,97));
-	SetCW (0.1, 0.3, 1.4, 1.4);
-	SetRotDrag (_V(0.7,0.7,1.2));
-	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0);
-    ClearMeshes();
-    ClearExhaustRefs();
-    ClearAttExhaustRefs();
-
-	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
-    AddMesh (hStage2Mesh, &mesh_dir);
-
-	mesh_dir=_V(1.85,1.85,24.5-12.25);
-    AddMesh (hStageSLA1Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,1.85,24.5-12.25);
-    AddMesh (hStageSLA2Mesh, &mesh_dir);
-	mesh_dir=_V(1.85,-1.85,24.5-12.25);
-    AddMesh (hStageSLA3Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
-    AddMesh (hStageSLA4Mesh, &mesh_dir);
-
-	UINT meshidx;
-
-	if (SaturnHasCSM()) {
-
-		//
-		// Add CSM.
-		//
-
-		AddSM(31-12.25, false);
-
-		mesh_dir=_V(0,0,35.15-12.25);
-		meshidx = AddMesh (hCM, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		//
-		// And the Crew
-		//
-
-		if (Crewed) {
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-		}
-
-		//
-		// Don't Forget the Hatch
-		//
-
-		meshidx = AddMesh (hFHC, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		mesh_dir=_V(0,0,36.7-12.25);
-		AddMesh (hprobe, &mesh_dir);
-	}
-	else {
-
-		//
-		// Add nosecap.
-		//
-
-		mesh_dir=_V(0,0,29.77 - 12.25);
-		AddMesh (hNosecap, &mesh_dir);
-	}
-
-    SetView(22.7, false);
-		// ************************* propellant specs **********************************
-	if (!ph_3rd)
-		ph_3rd  = CreatePropellantResource(SII_FuelMass); //2nd stage Propellant
-	SetDefaultPropellantResource (ph_3rd); // display 3rd stage propellant level in generic HUD
-
-
-	// *********************** thruster definitions ********************************
-
-
-	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG1O+9};
-	// orbiter main thrusters
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-
-	thg_ver = 0;
-
-	AddExhaust (th_main[0], 25.0, 1.5, SMMETex);
-
-	SetThrusterLevel(th_main[0], 1.0);
-	SetCameraOffset (_V(-1,1.0,35.4-STG1O));
-
-	LAUNCHIND[2]=true;
-}
+//
+// Is this used anymore?
+//
 
 void Saturn1b::SetASTPStage ()
 {
@@ -933,7 +762,6 @@ void Saturn1b::DockStage (UINT dockstatus)
 				break;
 			}
 			else{
-				FIRSTCSM = false;
 				ShiftCentreOfMass (_V(0,0,-21.5));
 				SetCSMStage ();
 				SMJetS.play();
@@ -1043,7 +871,8 @@ void Saturn1b::SeparateStage (int new_stage)
 
 	if (stage == CM_STAGE)
 	{
-		if (GetAtmPressure()>35000){
+		if (GetAtmPressure()>35000)
+		{
 		}
 		SetChuteStage1 ();
 	}
@@ -1085,25 +914,24 @@ void Saturn1b::SeparateStage (int new_stage)
 		S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
 
 		stage1->SetState(S1Config);
-		SetSecondStage1 ();
+
+		SetSecondStage ();
+		SetSecondStageEngines ();
+
+		ShiftCentreOfMass (_V(0,0,12.25));
+
+		SetThrusterGroupLevel(thg_ver,1.0);
 	}
 
 	if (stage == LAUNCH_STAGE_TWO && !bAbort )
 	{
-		if (SaturnHasCSM()) {
-			vs1.vrot.x = 0.0;
-			vs1.vrot.y = 0.0;
-			vs1.vrot.z = 0.0;
-			TowerJS.play();
-
-			char VName[256];
-			GetApolloName(VName); strcat (VName, "-TWR");
-
-			hesc1 = oapiCreateVessel(VName,"ProjectApollo/nsat1btower",vs1);
+		if (SaturnHasCSM())
+		{
+			JettisonLET();
 		}
 
 		TowerJS.done();
-		SetSecondStage2 ();
+		SetSecondStage ();
 		AddRCS_S4B();
 	}
 
@@ -1143,7 +971,7 @@ void Saturn1b::SeparateStage (int new_stage)
 
 		SeparationS.play();
 
-		ShiftCentreOfMass (_V(0,0,21.5));
+		ShiftCentreOfMass (_V(0,0,1.5));
 		SetCSMStage ();
 
 		if(ASTPMission)
