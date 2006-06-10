@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.188  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.187  2006/06/08 15:30:18  tschachim
   *	Fixed ASCP and some default switch positions.
   *	
@@ -2477,6 +2480,7 @@ protected:
 	virtual void AutoPilot(double autoT) = 0;
 
 	void ClearPropellants();
+	void ClearThrusters();
 	virtual void SeparateStage (int stage) = 0;
 	virtual void ConfigureStageMeshes(int stage_state) = 0;
 	virtual void ConfigureStageEngines(int stage_state) = 0;
@@ -2571,7 +2575,7 @@ protected:
 	void SetCSMStage ();
 	void SetCSM2Stage ();
 	void SetReentryStage ();
-	void AddRCS_CM(double MaxThrust);
+	void AddRCS_CM(double MaxThrust, double offset = 0.0);
 	void SetRCS_CM();
 	void GenericTimestepStage(double simt, double simdt);
 	bool CheckForLaunchShutdown();
@@ -2674,10 +2678,11 @@ protected:
 	// Thruster group handles. We have a lot of these :).
 	//
 
-	THGROUP_HANDLE thg_main, thg_ull, thg_ver;
+	THGROUP_HANDLE thg_main, thg_ull, thg_ver, thg_let;
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
 	THRUSTER_HANDLE th_main[5], th_ull[8], th_ver[3], th_att_cm[12];               // handles for orbiter main engines
+	THRUSTER_HANDLE th_let[4];
 	THRUSTER_HANDLE th_sps[1], th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
 	THRUSTER_HANDLE	th_aps[3];
 	THRUSTER_HANDLE	th_sep[8], th_sep2[8];

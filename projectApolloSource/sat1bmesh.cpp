@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.37  2006/05/27 11:50:04  movieman523
   *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
   *	
@@ -1074,14 +1077,9 @@ void Saturn1b::SeparateStage (int new_stage)
 
 	if (stage == CSM_ABORT_STAGE)
 	{
-		char VName[256];
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
-		TowerJS.play();
-		TowerJS.done();
-		GetApolloName(VName); strcat (VName, "-TWR");
-		hesc1 = oapiCreateVessel (VName, "ProjectApollo/sat5btower", vs1);
+		JettisonLET();
+
+		SetStage(CM_ENTRY_STAGE);
 		SetReentryStage ();
 		ActivateNavmode(NAVMODE_KILLROT);
 	}

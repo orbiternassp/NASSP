@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2006/06/08 15:30:18  tschachim
+  *	Fixed ASCP and some default switch positions.
+  *	
   *	Revision 1.65  2006/06/07 09:53:19  tschachim
   *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
   *	
@@ -270,6 +273,11 @@ typedef struct {
 #define CM_ENTRY_STAGE_SIX			46
 #define CM_ENTRY_STAGE_SEVEN		47
 #define CM_RECOVERY_STAGE			48
+
+//
+// CSM_ABORT_STAGE is only for backward compatibility.
+// It can be removed soon.
+//
 
 #define CSM_ABORT_STAGE				50
 
