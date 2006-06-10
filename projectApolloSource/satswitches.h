@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.15  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -140,6 +143,22 @@ public:
 protected:
 	int Valve1, Valve2;
 	Saturn *our_vessel;
+};
+
+class SaturnGuardedPushSwitch : public GuardedPushSwitch
+{
+public:
+	SaturnGuardedPushSwitch() { sat = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *v, int xoffset = 0, int yoffset = 0, int lxoffset = 0, int lyoffset = 0);
+
+protected:
+	Saturn *sat;
+};
+
+class LESMotorFireSwitch : public SaturnGuardedPushSwitch
+{
+public:
+	bool CheckMouseClick(int event, int mx, int my);
 };
 
 class XLunarSwitch : public SaturnToggleSwitch {

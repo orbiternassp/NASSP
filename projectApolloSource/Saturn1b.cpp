@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/05/27 11:50:04  movieman523
+  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
+  *	
   *	Revision 1.51  2006/05/27 00:54:28  movieman523
   *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
   *	
@@ -1043,15 +1046,10 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		break;
 
 	case LAUNCH_STAGE_TWO:
-		SetSecondStage1();
-		break;
-
 	case LAUNCH_STAGE_SIVB:
-		SetSecondStage2();
-		break;
-
 	case STAGE_ORBIT_SIVB:
-		SetSecondStage2();
+		SetSecondStage();
+		SetSecondStageEngines();
 		AddRCS_S4B();
 		break;
 
@@ -1103,16 +1101,48 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 void Saturn1b::ConfigureStageMeshes(int stage_state)
 {
+
 	//
-	// Dummy for now.
+	// This code all needs to be fixed up.
 	//
+
+	switch (stage_state) {
+
+	case ROLLOUT_STAGE:
+	case ONPAD_STAGE:
+	case LAUNCH_STAGE_ONE:
+	case PRELAUNCH_STAGE:
+		SetFirstStage();
+		break;
+
+	case LAUNCH_STAGE_SIVB:
+	case STAGE_ORBIT_SIVB:
+		SetSecondStage();
+		break;
+	}
 }
 
 void Saturn1b::ConfigureStageEngines(int stage_state)
 {
+
 	//
-	// Dummy for now.
+	// This code all needs to be fixed up.
 	//
+
+	switch (stage_state) {
+
+	case ROLLOUT_STAGE:
+	case ONPAD_STAGE:
+	case LAUNCH_STAGE_ONE:
+	case PRELAUNCH_STAGE:
+//		SetFirstStageEngines();
+		break;
+
+	case LAUNCH_STAGE_SIVB:
+	case STAGE_ORBIT_SIVB:
+		SetSecondStageEngines();
+		break;
+	}
 }
 
 void Saturn1b::clbkSetClassCaps (FILEHANDLE cfg)

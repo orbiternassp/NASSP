@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/05/29 21:03:45  movieman523
+  *	Forgot ConfigureStageEngines().
+  *	
   *	Revision 1.14  2006/05/27 11:50:04  movieman523
   *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
   *	
@@ -82,7 +85,6 @@ protected:
 	bool ReadyAstp;
 	bool ReadyAstp1;
 	bool S4BASTP;
-	bool FIRSTCSM;
 
 	VECTOR3 RelPos;
 
@@ -97,8 +99,7 @@ protected:
 	void AutoPilot(double autoT);
 	void SetFirstStage ();
 	void SetSecondStage ();
-	void SetSecondStage1 ();
-	void SetSecondStage2 ();
+	void SetSecondStageEngines ();
 
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);

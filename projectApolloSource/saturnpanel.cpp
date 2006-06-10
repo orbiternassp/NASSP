@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.172  2006/06/08 15:30:18  tschachim
+  *	Fixed ASCP and some default switch positions.
+  *	
   *	Revision 1.171  2006/06/07 09:53:20  tschachim
   *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
   *	
@@ -1506,19 +1509,19 @@ void Saturn::SetSwitches(int panel) {
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
 	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 81);
 	LiftoffNoAutoAbortSwitch.InitGuard(  0,   1, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
-	LesMotorFireSwitch.Init			  ( 20,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 119);
+	LesMotorFireSwitch.Init			  ( 20,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, this, 0, 119, 117, 231);
 	LesMotorFireSwitch.InitGuard      (  0,  47, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
-	CanardDeploySwitch.Init           ( 20,  95, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 157);
+	CanardDeploySwitch.Init           ( 20,  95, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 157, 99, 281);
 	CanardDeploySwitch.InitGuard      (  0,  93, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
-	CsmLvSepSwitch.Init				  ( 20, 141, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 195);
+	CsmLvSepSwitch.Init				  ( 20, 141, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 195, 99, 319);
 	CsmLvSepSwitch.InitGuard		  (  0, 139, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
-	ApexCoverJettSwitch.Init          (127,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 233);
+	ApexCoverJettSwitch.Init          (127,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 233, 195, 193);
 	ApexCoverJettSwitch.InitGuard     ( 94,   1, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40], 0, 40);
-	DrogueDeploySwitch.Init			  (127,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 271);
+	DrogueDeploySwitch.Init			  (127,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 271, 195, 231);
 	DrogueDeploySwitch.InitGuard      ( 94,  47, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40], 0, 40);
-	MainDeploySwitch.Init             (127,  95, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 309);
+	MainDeploySwitch.Init             (127,  95, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 309, 195, 269);
 	MainDeploySwitch.InitGuard        ( 94,  93, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40], 0, 40);
-	CmRcsHeDumpSwitch.Init			  (127, 141, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 347);
+	CmRcsHeDumpSwitch.Init			  (127, 141, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 347, 195, 307);
 	CmRcsHeDumpSwitch.InitGuard		  ( 94, 139, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40], 0, 40);
 
 	SeparationSwitchesRow.Init(AID_SEPARATIONSWITCHES, MainPanel);
@@ -3488,16 +3491,20 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	//
 
 	//
-	// Special handling illuminated "sequencer switches"
+	// Special handling illuminated "sequencer switches".
+	//
+	// TODO: this should really be moved into the switch code.
 	//
 
-	if (LAUNCHIND[0]){
+	if (LAUNCHIND[0])
+	{
 		if (EDSSwitch.GetState())
 			LiftoffNoAutoAbortSwitch.SetOffset(78, 81);
 		else
 			LiftoffNoAutoAbortSwitch.SetOffset(234, 81);
-
-	} else {
+	}
+	else 
+	{
 		LiftoffNoAutoAbortSwitch.SetOffset(0, 81);
 	}
 

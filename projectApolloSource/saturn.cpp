@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.144  2006/06/08 15:30:18  tschachim
+  *	Fixed ASCP and some default switch positions.
+  *	
   *	Revision 1.143  2006/06/07 09:53:20  tschachim
   *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
   *	
@@ -345,7 +348,6 @@ void Saturn::initSaturn()
 	CSMPerigee = 0.0;
 
 	HatchOpen = false;
-	FIRSTCSM = false;
 	ProbeJetison = false;
 	LEMdatatransfer = false;
 	PostSplashdownPlayed = false;
@@ -400,6 +402,14 @@ void Saturn::initSaturn()
 	hVAB = 0;
 	hML = 0;
 	hCrawler = 0;
+
+	//
+	// Apollo 13 flags.
+	//
+
+	ApolloExploded = false;
+	CryoStir = false;
+	KranzPlayed = false;
 
 	//
 	// Checklists.
@@ -539,9 +549,41 @@ void Saturn::initSaturn()
 	S2_ThrustLoaded = false;
 	S3_ThrustLoaded = false;
 
+	//
+	// Set defaults so the save code doesn't explode if
+	// we don't set them later.
+	//
+
 	SI_EngineNum = 0;
 	SII_EngineNum = 0;
 	SIII_EngineNum = 0;
+
+	THRUST_FIRST_VAC = 0.0;
+	THRUST_SECOND_VAC = 0.0;
+	THRUST_THIRD_VAC = 0.0;
+
+	ISP_SECOND_VAC = 0.0;
+	ISP_SECOND_SL = 0.0;
+	ISP_THIRD_VAC = 0.0;
+
+	//
+	// LET setup.
+	//
+
+	//
+	// ISPs are estimates.
+	//
+
+	ISP_LET_SL   = 2200.0;
+	ISP_LET_VAC  = 2600.0;
+
+	//
+	// I'm not sure whether the thrust values quoted are for sea level
+	// or vacuum. If they're sea-level then we should multiply them by
+	// (ISP_VAC / ISP_SL) to get vacuum thrust.
+	//
+
+	THRUST_VAC_LET  = (653888.6 / 4.0);
 
 	//
 	// Propellant handles.
@@ -557,9 +599,13 @@ void Saturn::initSaturn()
 	ph_rcs_cm_1 = 0;
 	ph_rcs_cm_2 = 0;
 	ph_sps = 0;
+	ph_let = 0;
 	ph_sep = 0;
 	ph_sep2 = 0;
 	ph_o2_vent = 0;
+	ph_ullage1 = 0;
+	ph_ullage2 = 0;
+	ph_ullage3 = 0;
 
 	//
 	// Thruster groups.
@@ -619,16 +665,21 @@ void Saturn::initSaturn()
 
 	ClearLVGuidLight();
 	ClearLVRateLight();
+	ClearLESLight();
+	ClearLiftoffLight();
 
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 8; i++)
+	{
 		LAUNCHIND[i] = false;
 	}
 
-	for (i = 0; i < nsurf; i++) {
+	for (i = 0; i < nsurf; i++)
+	{
 		srf[i] = 0;
 	}
 
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < 5; i++)
+	{
 		th_main[i] = 0;
 	}
 
@@ -2957,7 +3008,6 @@ void Saturn::AddRCS_S4B()
 	CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
 	CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
 
-
 	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0),17400.0, ph_3rd,250000, 240000);
 	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
 	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), 17400.0, ph_3rd,250000, 240000);
@@ -2969,7 +3019,6 @@ void Saturn::AddRCS_S4B()
 	AddExhaust (th_att_rot[5], 0.6, 0.078);
 	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
-
 
 	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
 	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(1,0,0), 17400.0, ph_3rd,250000, 240000);
@@ -3596,6 +3645,43 @@ void Saturn::SetGenericStageState()
 }
 
 //
+// Clear all propellants and handles.
+//
+
+void Saturn::ClearPropellants()
+
+{
+	ClearPropellantResources();
+
+	//
+	// Zero everything.
+	//
+
+	ph_1st = 0;
+	ph_2nd = 0;
+	ph_3rd = 0;
+	ph_sps = 0;
+	ph_let = 0;
+
+	ph_rcs0 = 0;
+	ph_rcs1 = 0;
+	ph_rcs2 = 0;
+	ph_rcs3 = 0;
+
+	ph_rcs_cm_1 = 0;
+	ph_rcs_cm_2 = 0;
+
+	ph_sep = 0;
+	ph_sep2 = 0;
+
+	ph_ullage1 = 0;
+	ph_ullage2 = 0;
+	ph_ullage3 = 0;
+
+	ph_o2_vent = 0;
+}
+
+//
 // Do we have a CSM on this launcher?
 //
 
@@ -3624,7 +3710,8 @@ bool Saturn::SaturnHasCSM()
 void Saturn::SetSIVBThrusters(bool active)
 
 {
-	if (active) {
+	if (active)
+	{
 		SetThrusterResource(th_att_rot[0], ph_3rd);
 		SetThrusterResource(th_att_rot[1], ph_3rd);
 		SetThrusterResource(th_att_rot[2], ph_3rd);
@@ -3636,7 +3723,8 @@ void Saturn::SetSIVBThrusters(bool active)
 		SetThrusterResource(th_att_rot[8], ph_3rd);
 		SetThrusterResource(th_att_rot[9], ph_3rd);
 	}
-	else{
+	else
+	{
 		SetThrusterResource(th_att_rot[0], NULL);
 		SetThrusterResource(th_att_rot[1], NULL);
 		SetThrusterResource(th_att_rot[2], NULL);
@@ -3737,28 +3825,36 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	// For unmanned launches, seperate the CSM on timer.
 	//
 
-	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime - 10.)) {
+	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime - 10.))
+	{
 		SlowIfDesired();
 	}
 
-	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime)) {
+	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime))
+	{
 		SlowIfDesired();
 		bManualSeparate = true;
 		CSMSepSet = false;
 	}
 
-	if (CsmLvSepSwitch.GetState()) {
+	if (CsmLvSepSwitch.GetState())
+	{
 		bManualSeparate = true;
 	}
 
 	if ((bManualSeparate || bAbort))
 	{
-		if (SECSLogicActive() && PyrosArmed()) {
+		if (SECSLogicActive() && PyrosArmed()) 
+		{
 			bManualSeparate = false;
+
+			CsmLvSepSwitch.SetLit(true);
+
 			SeparateStage(CSM_LEM_STAGE);
 			SetStage(CSM_LEM_STAGE);
 			soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
-			if (bAbort) {
+			if (bAbort)
+			{
 				SPSswitch.SetState(true);
 				ABORT_IND = true;
 				SetThrusterGroupLevel(thg_main, 1.0);
@@ -3768,7 +3864,8 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 			}
 			return;
 		}
-		else {
+		else
+		{
 			bManualSeparate = false;
 			bAbort = false;
 		}
@@ -3912,21 +4009,30 @@ void Saturn::SetRandomFailures()
 	// Set up launch failures.
 	//
 
-	if (!LaunchFail.u.Init) {
+	if (!LaunchFail.u.Init)
+	{
 		LaunchFail.u.Init = 1;
-		if (!(random() & 15)) {
+		if (!(random() & 15))
+		{
 			LaunchFail.u.EarlySICenterCutoff = 1;
 			FirstStageCentreShutdownTime = 20.0 + ((double) (random() & 1023) / 10.0);
 		}
-		if (!(random() & 15)) {
+		if (!(random() & 15))
+		{
 			LaunchFail.u.EarlySIICenterCutoff = 1;
 			SecondStageCentreShutdownTime = 200.0 + ((double) (random() & 2047) / 10.0);
 		}
-		if (!(random() & 127)) {
+		if (!(random() & 127))
+		{
 			LaunchFail.u.LETAutoJetFail = 1;
 		}
-		if (!(random() & 63)) {
+		if (!(random() & 63))
+		{
 			LaunchFail.u.SIIAutoSepFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.u.LESJetMotorFail = 1;
 		}
 	}
 
@@ -3934,15 +4040,19 @@ void Saturn::SetRandomFailures()
 	// Set up landing failures.
 	//
 
-	if (!LandFail.u.Init) {
+	if (!LandFail.u.Init)
+	{
 		LandFail.u.Init = 1;
-		if (!(random() & 127)) {
+		if (!(random() & 127))
+		{
 			LandFail.u.CoverFail = 1;
 		}
-		if (!(random() & 127)) {
+		if (!(random() & 127))
+		{
 			LandFail.u.DrogueFail = 1;
 		}
-		if (!(random() & 127)) {
+		if (!(random() & 127)) 
+		{
 			LandFail.u.MainFail = 1;
 		}
 	}
@@ -3951,18 +4061,23 @@ void Saturn::SetRandomFailures()
 	// Set up switch failures.
 	//
 
-	if (!SwitchFail.u.Init) {
+	if (!SwitchFail.u.Init)
+	{
 		SwitchFail.u.Init = 1;
-		if (!(random() & 127)) {
+		if (!(random() & 127))
+		{
 			SwitchFail.u.TowerJett1Fail = 1;
 		}
-		else if (!(random() & 127)) {
+		else if (!(random() & 127))
+		{
 			SwitchFail.u.TowerJett2Fail = 1;
 		}
-		if (!(random() & 127)) {
+		if (!(random() & 127))
+		{
 			SwitchFail.u.SMJett1Fail = 1;
 		}
-		else if (!(random() & 127)) {
+		else if (!(random() & 127))
+		{
 			SwitchFail.u.SMJett2Fail = 1;
 		}
 
@@ -3973,7 +4088,8 @@ void Saturn::SetRandomFailures()
 		{
 			int i, n = (random() & 7) + 1;
 
-			for (i = 0; i < n; i++) {
+			for (i = 0; i < n; i++)
+			{
 				cws.FailLight(random() & 63, true);
 			}
 		}

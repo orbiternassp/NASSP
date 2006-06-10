@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.82  2006/05/27 11:50:04  movieman523
   *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
   *	
@@ -407,9 +410,7 @@ void SaturnV::initSaturnV()
 	Scorrec = false;
 	Resetjet = false;
 	Burned = false;
-	ApolloExploded = false;
-	CryoStir = false;
-	KranzPlayed = false;
+
 	EVA_IP = false;
 
 	//

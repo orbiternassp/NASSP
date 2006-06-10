@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.49  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -302,7 +305,7 @@ public:
 
 protected:
 	virtual void InitSound(SoundLib *s);
-	void DoDrawSwitch(SURFHANDLE DrawSurface);
+	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
 	bool DoCheckMouseClick(int event, int mx, int my);
 
 	int	x;
@@ -727,16 +730,23 @@ public:
 	GuardedPushSwitch();
 	virtual ~GuardedPushSwitch();
 
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
+		int xoffset = 0, int yoffset = 0, int lxoffset = 0, int lyoffset = 0);
+
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE dsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	void DrawFlash(SURFHANDLE DrawSurface);
+	void DoDrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
+
+	void SetLit(bool l) { lit = l; };
+	bool IsLit() { return lit; };
 
 	int operator=(const int b) { state = b; return state; };
 
@@ -746,6 +756,11 @@ protected:
 	int guardWidth;
 	int guardHeight;
 	int guardState;
+
+	int litOffsetX;
+	int litOffsetY;
+
+	bool lit;
 
 	SURFHANDLE guardSurface;
 	SURFHANDLE guardBorder;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/06/08 15:25:57  tschachim
+  *	Disabkled buggy DrawPower.
+  *	
   *	Revision 1.17  2006/05/30 23:15:14  movieman523
   *	Mission timer and DSKY now need power to operate.
   *	
@@ -93,6 +96,8 @@
 static char TwoSpace[] = "  ";
 static char SixSpace[] = "      ";
 
+static int SegmentCount[] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 5 };
+
 DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), agc(computer)
 
 {
@@ -117,6 +122,9 @@ void DSKY::Reset()
 	TrackerLight = false;
 	VelLight = false;
 	AltLight = false;
+
+	LightsLit = 0;
+	SegmentsLit = 0;
 
 	strcpy (Prog, TwoSpace);
 	strcpy (Verb, TwoSpace);
@@ -172,6 +180,17 @@ void DSKY::Timestep(double simt)
 		LastFlashTime = simt;
 		FlashOn = !FlashOn;
 	}
+}
+
+void DSKY::SystemTimestep(double simdt)
+
+{
+	//
+	// For now, assume 5W per lit light. We rely on the render code to
+	// track the number of lights that are lit.
+	//
+
+	DrawPower((LightsLit * 5.0) + (SegmentsLit * 0.5));
 }
 
 void DSKY::KeyClick()
@@ -319,18 +338,22 @@ void DSKY::ProcessChannel13(int val)
 	out_val.Value = val;
 
 	// StandbyLight (TODO: PRO key?
-	if (out_val.Bits.EnableStandby || out_val.Bits.TestAlarms) {
+	if (out_val.Bits.EnableStandby || out_val.Bits.TestAlarms)
+	{
 		SetStby(true);
 	}
-	else {
+	else
+	{
 		SetStby(false);
 	}
 
 	// RestartLight (TODO other conditions)
-	if (out_val.Bits.TestAlarms) {
+	if (out_val.Bits.TestAlarms)
+	{
 		SetRestart(true);
 	}
-	else {
+	else
+	{
 		SetRestart(false);
 	}
 }
@@ -340,8 +363,7 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 {
 	if (lit) {
 		oapiBlt(surf, lights, dstx, dsty, dstx + 101, dsty + 0, 49, 23);
-		// TODO Disabled for now, this has to be moved to a SystemTimestep function
-		// DrawPower(5);
+		LightsLit++;
 	}
 	else {
 		oapiBlt(surf, lights, dstx, dsty, dstx + 0, dsty + 0, 49, 23);
@@ -351,6 +373,8 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 
 {
+	LightsLit = 0;
+
 	if (!IsPowered())
 		return;
 
@@ -535,11 +559,13 @@ void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 
 	if (Str[0] != ' ') {
 		Curdigit = Str[0] - '0';
+		SegmentsLit += SegmentCount[Curdigit];
 		oapiBlt(surf,digits,dstx,dsty,16*Curdigit,0,16,19);
 	}
 
 	if (Str[1] != ' ') {
 		Curdigit = Str[1] - '0';
+		SegmentsLit += SegmentCount[Curdigit];
 		oapiBlt(surf,digits,dstx+16,dsty,16*Curdigit,0,16,19);
 	}
 }
@@ -551,15 +577,18 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	int i;
 
 	if (Str[0] == '-') {
+		SegmentsLit += 1;
 		oapiBlt(surf,digits,dstx,dsty,161,0,10,19);
 	}
 	else if (Str[0] == '+') {
+		SegmentsLit += 2;
 		oapiBlt(surf,digits,dstx,dsty,174,0,12,19);
 	}
 
 	for (i = 1; i < 6; i++) {
 		if (Str[i] != ' ') {
 			Curdigit = Str[i] - '0';
+			SegmentsLit += SegmentCount[Curdigit];
 			oapiBlt(surf, digits, dstx + (16*i), dsty, 16*Curdigit, 0, 16,19);
 		}
 		else {
@@ -571,6 +600,8 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
 
 {
+	SegmentsLit = 0;
+
 	if (!IsPowered())
 		return;
 
@@ -582,10 +613,14 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
 	oapiBlt(surf, disp,  8, 107,  0, 32, 89,  4, SURF_PREDEF_CK);
 	oapiBlt(surf, disp,  8, 141,  0, 32, 89,  4, SURF_PREDEF_CK);
 
+	SegmentsLit += 6;
+
 	if (CompActy) {
 		//
 		// Do stuff to update Comp Acty light.
 		//
+
+		SegmentsLit += 4;;
 		oapiBlt(surf, disp,  6,   4,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 

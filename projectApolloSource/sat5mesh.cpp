@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2006/06/07 02:05:03  jasonims
+  *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
+  *	
   *	Revision 1.61  2006/05/27 11:50:04  movieman523
   *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
   *	
@@ -437,7 +440,8 @@ void LoadSat5Meshes()
 void SaturnV::SetupMeshes()
 
 {
-	if (LowRes) {
+	if (LowRes)
+	{
 		hStage1Mesh = hsat5stg1low;
 		hStage2Mesh = hsat5stg2low;
 		hStage3Mesh = hsat5stg3low;
@@ -446,7 +450,8 @@ void SaturnV::SetupMeshes()
 		hStageSLA3Mesh = hsat5stg33low;
 		hStageSLA4Mesh = hsat5stg34low;
 	}
-	else {
+	else
+	{
 		hStage1Mesh = hsat5stg1;
 		hStage2Mesh = hsat5stg2;
 		hStage3Mesh = hsat5stg3;
@@ -463,7 +468,8 @@ MESHHANDLE SaturnV::GetInterstageMesh()
 	if (LowRes)
 		return hsat5intstglow;
 
-	switch (SII_UllageNum) {
+	switch (SII_UllageNum)
+	{
 	case 4:
 		return hsat5intstg4;
 
@@ -495,54 +501,65 @@ void SaturnV::BuildFirstStage (int bstate)
 	VECTOR3 m_exhaust_pos1= {3,3,Offset1st};
 	VECTOR3 mesh_dir=_V(0,0,-80.0+STG0O);
 
-	if (bstate >=1){
+	if (bstate >=1)
+	{
 		mesh_dir=_V(0,0,-54.0+STG0O);
 		AddMesh (hStage1Mesh, &mesh_dir);
 	}
 
-	if (bstate >=2){
+	if (bstate >=2)
+	{
 		mesh_dir=_V(0,0,-30.5+STG0O);
 		AddMesh (GetInterstageMesh(), &mesh_dir);
 	}
 
-	if (bstate == 2){
+	if (bstate == 2)
+	{
 		mesh_dir=_V(0,0,-17.2+STG0O);
 		AddMesh (hsat5stg2base, &mesh_dir);
 	}
 
-	if (bstate > 2){
+	if (bstate > 2)
+	{
 		mesh_dir=_V(0,0,-17.2+STG0O);
 		AddMesh (hStage2Mesh, &mesh_dir);
 	}
 
-	if (bstate ==3 ){
+	if (bstate ==3 )
+	{
 		mesh_dir=_V(0,0,2.+STG0O);
 		AddMesh (hsat5stg3base, &mesh_dir);
 	}
 
-	if (bstate > 3){
+	if (bstate > 3)
+	{
 		mesh_dir=_V(0,0,2.+STG0O);
 		AddMesh (hStage3Mesh, &mesh_dir);
 	}
 
-	if (bstate >=4){
-		if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM)){
+	if (bstate >=4)
+	{
+		if (LEM_DISPLAY && (SIVBPayload == PAYLOAD_LEM))
+		{
 			mesh_dir=_V(0,0,12+STG0O);
 			AddMesh (hLMPKD, &mesh_dir);
 		}
 	}
 
-	if (bstate >=4){
+	if (bstate >=4)
+	{
 		mesh_dir=_V(-1.48,-1.48,14.55+STG0O);
 		AddMesh (hStageSLA1Mesh, &mesh_dir);
 	}
 
-	if (bstate >=4){
+	if (bstate >=4)
+	{
 		mesh_dir=_V(1.48,-1.48,14.55+STG0O);
 		AddMesh (hStageSLA2Mesh, &mesh_dir);
 	}
 
-	if (bstate >=4){
+	if (bstate >=4)
+	{
 		mesh_dir=_V(1.48,1.48,14.55+STG0O);
 		AddMesh (hStageSLA3Mesh, &mesh_dir);
 	}
@@ -552,26 +569,31 @@ void SaturnV::BuildFirstStage (int bstate)
 		AddMesh (hStageSLA4Mesh, &mesh_dir);
 	}
 
-	if (bstate >=4){
+	if (bstate >=4)
+	{
 		AddSM(19.1+STG0O, false);
 	}
 
-	if (bstate >=4){
+	if (bstate >=4)
+	{
 		mesh_dir=_V(0,0,23.25+STG0O);
 		AddMesh (hCM, &mesh_dir);
 	}
 
-	if (bstate >=4){
+	if (bstate >=4)
+	{
 		mesh_dir=_V(0,0,23.25+STG0O);
 		AddMesh (hFHC, &mesh_dir);
 	}
 
-	if (bstate >=4){
+	if (bstate >=4)
+	{
 		mesh_dir=_V(0,0,24.8+STG0O);
 		AddMesh (hprobe, &mesh_dir);
 	}
 
-	if (bstate >=5){
+	if (bstate >=5)
+	{
 		mesh_dir=_V(0,0,28.2+STG0O);
 		AddMesh (hsat5tower, &mesh_dir);
 	}
@@ -1208,15 +1230,28 @@ void SaturnV::SeparateStage (int new_stage)
 		// Fire 'seperation' thrusters.
 		//
 
-		if (viewpos != SATVIEW_ENG1 && viewpos != SATVIEW_ENG2) {
+		if (viewpos != SATVIEW_ENG1 && viewpos != SATVIEW_ENG2) 
+		{
 			FireSeperationThrusters(th_sep);
 		}
 
-		if (viewpos == SATVIEW_ENG1) {
+		if (viewpos == SATVIEW_ENG1) 
+		{
 			oapiSetFocusObject(hstg1);
 			oapiCameraAttach(hstg1, CAM_COCKPIT);
 		}
-		ShiftCentreOfMass(_V(0, 0, STG0O + STG1O));
+
+		if (SaturnType == SAT_INT20)
+		{
+			//
+			// What's the correct value for the INT20?
+			//
+			ShiftCentreOfMass(_V(0, 0, STG0O + STG2O - 24.5));
+		}
+		else
+		{
+			ShiftCentreOfMass(_V(0, 0, STG0O + STG1O));
+		}
 	}
 
 	if (stage == LAUNCH_STAGE_TWO && !bAbort )
@@ -1256,7 +1291,8 @@ void SaturnV::SeparateStage (int new_stage)
 		// Fire 'seperation' thrusters.
 		//
 
-		if (viewpos != SATVIEW_ENG1 && viewpos != SATVIEW_ENG2) {
+		if (viewpos != SATVIEW_ENG1 && viewpos != SATVIEW_ENG2) 
+		{
 			FireSeperationThrusters(th_sep2);
 		}
 
@@ -1310,7 +1346,8 @@ void SaturnV::SeparateStage (int new_stage)
 		// Fire 'seperation' thrusters.
 		//
 
-		if (viewpos != SATVIEW_ENG1 && viewpos != SATVIEW_ENG2) {
+		if (viewpos != SATVIEW_ENG1 && viewpos != SATVIEW_ENG2)
+		{
 			FireSeperationThrusters(th_sep);
 		}
 
@@ -1354,7 +1391,6 @@ void SaturnV::SeparateStage (int new_stage)
 		SeparationS.play(NOLOOP,255);
 
 		dockstate = 1;
-		FIRSTCSM = true;
 		SetCSMStage ();
 
 		// See Saturn::SetCSMStage()
@@ -1373,17 +1409,20 @@ void SaturnV::SeparateStage (int new_stage)
 		// Play appropriate sound for SM seperation.
 		//
 
-		if (ApolloExploded) {
+		if (ApolloExploded) 
+		{
 			SSMSepExploded.play(NOLOOP, 200);
 		}
-		else {
+		else
+		{
 			SMJetS.play();
 		}
 
 		SMJetS.done();
 		SSMSepExploded.done();
 
-		if(dockstate != 5) {
+		if(dockstate != 5)
+		{
 			VECTOR3 ofs = OFS_DOCKING2;
 			VECTOR3 vel = {0.0,0.0,2.5};
 			VESSELSTATUS vs4b;
@@ -1478,8 +1517,9 @@ void SaturnV::SeparateStage (int new_stage)
 		SetAbortStage ();
 	}
 
-	if (stage == CSM_ABORT_STAGE )
+	if (stage == CSM_ABORT_STAGE)
 	{
+#if 0
 		char VName[256];
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -1490,6 +1530,12 @@ void SaturnV::SeparateStage (int new_stage)
 
 		GetApolloName(VName); strcat (VName, "-TWR");
 		hesc1 = oapiCreateVessel (VName, "ProjectApollo/sat5btower", vs1);
+
+		LESAttached = false;
+#endif
+
+		JettisonLET();
+
 		SetReentryStage ();
 		ActivateNavmode(NAVMODE_KILLROT);
 	}
@@ -1686,16 +1732,20 @@ void SaturnV::DockStage (UINT dockstatus)
 		//Time to hear the Stage separation
 		SMJetS.play(NOLOOP);
 		bManualUnDock= false;
-		if (ProbeJetison){
-			if (stage == CSM_LEM_STAGE){
+		if (ProbeJetison)
+		{
+			if (stage == CSM_LEM_STAGE)
+			{
 				SetCSM2Stage ();
 			}
 			StageS.play(NOLOOP);
 			bManualUnDock= false;
 			dockstate=5;
 		}
-		else{
-			if (stage == CSM_LEM_STAGE){
+		else
+		{
+			if (stage == CSM_LEM_STAGE)
+			{
 				SetCSMStage ();
 			}
 			SMJetS.play(NOLOOP);

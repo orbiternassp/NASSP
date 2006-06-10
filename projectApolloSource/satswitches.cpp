@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.15  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -95,6 +98,27 @@ void SaturnToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SUR
 {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	sat = s;
+}
+
+void SaturnGuardedPushSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int xoffset, int yoffset, int lxoffset, int lyoffset)
+
+{
+	GuardedPushSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset, lxoffset, lyoffset);
+	sat = s;
+}
+
+bool LESMotorFireSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (GuardedPushSwitch::CheckMouseClick(event, mx, my) && Toggled())
+	{
+		ClearToggled();
+		sat->JettisonLET(true);
+
+		return true;
+	}
+
+	return false;
 }
 
 bool XLunarSwitch::CheckMouseClick(int event, int mx, int my)
