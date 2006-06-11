@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/06/11 17:16:34  movieman523
+  *	Saturn 1b can now reach orbit again :).
+  *	
   *	Revision 1.39  2006/06/10 23:27:41  movieman523
   *	Updated abort code.
   *	
@@ -206,10 +209,6 @@ PARTICLESTREAMSPEC srb_exhaust = {
 
 void Saturn1b::SetFirstStage ()
 {
-	int i;
-	UINT meshidx;
-
-	ClearThrusterDefinitions();
 	SetSize (45);
 	SetEmptyMass (Stage1Mass);
 	SetPMI (_V(140,145,28));
@@ -220,12 +219,31 @@ void Saturn1b::SetFirstStage ()
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
 	ClearMeshes();
-	ClearExhaustRefs();
-	ClearAttExhaustRefs();
+
 	ShiftCentreOfMass (_V(0,0,8.935));
 
+	SetFirstStageMeshes(0.0);
+
+
+	SetView(34.95, false);
+
+	Offset1st = -28.5;
+	SetCameraOffset (_V(-1,1.0,35.15));
+
+	EnableTransponder (true);
+
+	// **************************** NAV radios *************************************
+
+	InitNavRadios (4);
+}
+
+void Saturn1b::SetFirstStageMeshes(double offset)
+
+{
 	double TCP=-54.485-TCPO;//STG0O;
 	SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
+
+	UINT meshidx;
 
 	VECTOR3 mesh_dir=_V(0,0,-14);
 
@@ -291,11 +309,14 @@ void Saturn1b::SetFirstStage ()
 		mesh_dir=_V(0,0,29.77);
 		AddMesh (hNosecap, &mesh_dir);
 	}
+}
 
-	SetView(34.95, false);
+void Saturn1b::SetFirstStageEngines()
 
-	Offset1st = -28.5;
-	SetCameraOffset (_V(-1,1.0,35.15));
+{
+	ClearThrusters();
+    ClearExhaustRefs();
+    ClearAttExhaustRefs();
 
 	// ************************* propellant specs **********************************
 	if (!ph_1st)
@@ -303,6 +324,8 @@ void Saturn1b::SetFirstStage ()
 	SetDefaultPropellantResource (ph_1st); // display 1st stage propellant level in generic HUD
 
 	// *********************** thruster definitions ********************************
+
+	int i;
 
 	Offset1st = -80.1;//+STG0O;
 	VECTOR3 m_exhaust_ref = {0,0,-1};
@@ -349,18 +372,10 @@ void Saturn1b::SetFirstStage ()
 	AddExhaustStream (th_main[6], m_exhaust_pos7+_V(0,0,-12), &srb_exhaust);
 	AddExhaustStream (th_main[7], m_exhaust_pos8+_V(0,0,-15), &srb_contrail);
 	AddExhaustStream (th_main[7], m_exhaust_pos8+_V(0,0,-12), &srb_exhaust);
-
-
-	EnableTransponder (true);
-
-	// **************************** NAV radios *************************************
-
-	InitNavRadios (4);
 }
 
 void Saturn1b::SetSecondStage ()
 {
-	UINT meshidx;
 	SetSize (22);
 	SetCOG_elev (15.225);
 
@@ -374,9 +389,15 @@ void Saturn1b::SetSecondStage ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
+
+	SetSecondStageMeshes(0.0);
+}
+
+void Saturn1b::SetSecondStageMeshes(double offset)
+{
     ClearMeshes();
-    ClearExhaustRefs();
-    ClearAttExhaustRefs();
+
+	UINT meshidx;
 
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
     AddMesh (hStage2Mesh, &mesh_dir);
@@ -452,7 +473,9 @@ void Saturn1b::SetSecondStage ()
 void Saturn1b::SetSecondStageEngines ()
 
 {
-	ClearThrusterDefinitions();
+	ClearThrusters();
+    ClearExhaustRefs();
+    ClearAttExhaustRefs();
 
 	//
 	// ************************* propellant specs **********************************

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.15  2006/05/29 21:03:45  movieman523
   *	Forgot ConfigureStageEngines().
   *	
@@ -98,7 +101,10 @@ protected:
 	void AttitudeLaunch4();
 	void AutoPilot(double autoT);
 	void SetFirstStage ();
+	void SetFirstStageMeshes(double offset);
+	void SetFirstStageEngines ();
 	void SetSecondStage ();
+	void SetSecondStageMeshes(double offset);
 	void SetSecondStageEngines ();
 
 	void ConfigureStageMeshes(int stage_state);
