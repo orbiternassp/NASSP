@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2006/06/10 23:27:41  movieman523
+  *	Updated abort code.
+  *	
   *	Revision 1.38  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -360,7 +363,10 @@ void Saturn1b::SetSecondStage ()
 	UINT meshidx;
 	SetSize (22);
 	SetCOG_elev (15.225);
-	SetEmptyMass (Stage2Mass + Abort_Mass);
+
+	double EmptyMass = Stage2Mass + LESAttached ? Abort_Mass : 0.0;
+
+	SetEmptyMass (EmptyMass);
 	SetPMI (_V(94,94,20));
 	SetCrossSections (_V(267,267,97));
 	SetCW (0.1, 0.3, 1.4, 1.4);
