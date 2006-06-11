@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.173  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.172  2006/06/08 15:30:18  tschachim
   *	Fixed ASCP and some default switch positions.
   *	
@@ -3692,61 +3695,86 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_ABORT_BUTTON:
-		if (ABORT_IND) {
+		if (ABORT_IND)
+		{
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
 		}
-		else {
+		else
+		{
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
 		}
 		return true;
 
 	case AID_LV_ENGINE_LIGHTS:
-		if (ENGIND[0]) {
+		if (ENGIND[0]) 
+		{
 			oapiBlt(surf,srf[12],55,44,55,44,27,27);
 		}
-		else {
+		else 
+		{
 			oapiBlt(surf,srf[12],55,44,157,44,27,27);
 		}
-		if (ENGIND[1]) {
+		if (ENGIND[1]) 
+		{
 			oapiBlt(surf,srf[12],55,98,55,98,27,27);
 		}
-		else {
+		else 
+		{
 			oapiBlt(surf,srf[12],55,98,157,98,27,27);
 		}
-		if (ENGIND[2]) {
+		if (ENGIND[2]) 
+		{
 			oapiBlt(surf,srf[12],20,98,20,98,27,27);
 		}
-		else {
+		else 
+		{
 			oapiBlt(surf,srf[12],20,98,122,98,27,27);
 		}
-		if (ENGIND[3]) {
+		if (ENGIND[3]) 
+		{
 			oapiBlt(surf,srf[12],20,44,20,44,27,27);
 		}
-		else {
+		else 
+		{
 			oapiBlt(surf,srf[12],20,44,122,44,27,27);
 		}
-		if (ENGIND[4]) {
+		if (ENGIND[4]) 
+		{
 			oapiBlt(surf,srf[12],37,71,37,71,27,27);
 		}
-		else {
+		else 
+		{
 			oapiBlt(surf,srf[12],37,71,140,71,27,27);
 		}
-		if (LVRateLight) {
+		if (LVRateLight) 
+		{
 			oapiBlt(surf,srf[12],6,4,6,4,27,27);
 		}
-		else {
+		else 
+		{
 			oapiBlt(surf,srf[12],6,4,108,4,27,27);
 		}
-		if (SIISepState) {
-			oapiBlt(surf,srf[12],37,4,37,4,27,27);
+
+		//
+		// Saturn 1b doesn't have an SII sep light.
+		//
+
+		if (SaturnType == SAT_SATURNV)
+		{
+			if (SIISepState) {
+				oapiBlt(surf,srf[12],37,4,37,4,27,27);
+			}
+			else {
+				oapiBlt(surf,srf[12],37,4,139,4,27,27);
+			}
 		}
-		else {
-			oapiBlt(surf,srf[12],37,4,139,4,27,27);
-		}
-		if (LVGuidLight) {
+
+		if (LVGuidLight)
+		{
 			oapiBlt(surf,srf[12],69,4,69,4,27,27);
 		}
-		else {
+		else
+		{
 			oapiBlt(surf,srf[12],69,4,171,4,27,27);
 		}
 		return true;
