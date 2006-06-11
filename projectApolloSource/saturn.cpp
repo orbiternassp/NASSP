@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.146  2006/06/10 23:27:41  movieman523
+  *	Updated abort code.
+  *	
   *	Revision 1.145  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -3541,6 +3544,12 @@ void Saturn::GenericLoadStateSetup()
 	//
 
 	iu.SetMissionInfo(TLICapableBooster, Crewed, Realism, &th_main[0], &ph_3rd, &thg_aps, SIVBBurnStart, SIVBApogee); 
+
+	//
+	// Disable master alarm sound on unmanned flights.
+	//
+
+	cws.SetPlaySounds(Crewed);
 }
 
 bool Saturn::CheckForLaunchShutdown()
@@ -3877,7 +3886,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	// For unmanned launches, seperate the CSM on timer.
 	//
 
-	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime - 10.))
+	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime - 20.))
 	{
 		SlowIfDesired();
 	}

@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.15  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -104,6 +108,7 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	MasterAlarmLit = false;
 	MasterAlarmPressed = false;
 	InhibitNextMasterAlarm = false;
+	PlaySounds = true;
 
 	for (int i = 0; i < 30; i++) {
 		LeftLights[i] = false;
@@ -206,7 +211,7 @@ void CautionWarningSystem::TimeStep(double simt)
 	if ((simt > MasterAlarmCycleTime) && MasterAlarm) {
 		MasterAlarmLit = !MasterAlarmLit;
 		MasterAlarmCycleTime = simt + 0.25;
-		if (MasterAlarmLit && IsPowered()) {
+		if (MasterAlarmLit && IsPowered() && PlaySounds) {
 			MasterAlarmSound.play(NOLOOP,255);
 		}
 	}

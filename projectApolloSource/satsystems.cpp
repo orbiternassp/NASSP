@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.109  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.108  2006/06/08 17:02:24  tschachim
   *	Added SCS checklist actions.
   *	
@@ -3207,22 +3210,34 @@ bool Saturn::GetValveState(int valve)
 //
 // Check whether the ELS is active and whether it's in auto mode.
 //
+// TODO: for now, if we're flying an unmanned mission we just assume
+// this is always valid. We need to do a more accurate simulation later.
+//
 
 bool Saturn::ELSActive()
 
 {
+	if (!Crewed)
+		return true;
+
 	return (ELSAutoSwitch.Voltage() > SP_MIN_DCVOLTAGE);
 }
 
 bool Saturn::ELSAuto()
 
 {
+	if (!Crewed)
+		return true;
+
 	return (ELSActive() && ELSAutoSwitch.IsUp());
 }
 
 bool Saturn::RCSLogicActive()
 
 {
+	if (!Crewed)
+		return true;
+
 	return (CMPropDumpSwitch.Voltage() > SP_MIN_DCVOLTAGE);
 }
 
@@ -3241,19 +3256,25 @@ bool Saturn::RCSPurgeActive()
 bool Saturn::PyrosArmed()
 
 {
+	if (!Crewed)
+		return true;
+
 	return (PyroPower.Voltage() > SP_MIN_DCVOLTAGE);
 }
 
 bool Saturn::SECSLogicActive() 
 
 {
+	if (!Crewed)
+		return true;
+
 	return (SECSLogicPower.Voltage() > SP_MIN_DCVOLTAGE);
 }
 
 bool Saturn::LETAttached()
 
 {
-	return (stage < LAUNCH_STAGE_TWO_TWR_JET);
+	return LESAttached;
 }
 
 bool Saturn::DisplayingPropellantQuantity()

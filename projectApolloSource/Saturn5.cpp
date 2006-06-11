@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2006/06/10 23:27:40  movieman523
+  *	Updated abort code.
+  *	
   *	Revision 1.84  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -1424,7 +1427,7 @@ void SaturnV::StageSix(double simt)
 		{
 		case 0:
 			if (CSMBurn) {
-				NextMissionEventTime = CSMBurnStart - 100.0;
+				NextMissionEventTime = CSMBurnStart - 300.0;
 				StageState++;
 			}
 			break;
@@ -1523,7 +1526,7 @@ void SaturnV::StageSix(double simt)
 					ActivateNavmode(NAVMODE_PROGRADE);
 					DeactivateSPS();
 					CSMBurn = false;
-					NextMissionEventTime = MissionTime + 200.0;
+					NextMissionEventTime = MissionTime + 500.0;
 					StageState++;
 				}
 			}
@@ -1591,7 +1594,7 @@ void SaturnV::StageSix(double simt)
 				SetThrusterGroupLevel(thg_main, 0.0);
 				DeactivateSPS();
 				CSMAccelSet = false;
-				NextMissionEventTime = MissionTime + 10.0;
+				NextMissionEventTime = MissionTime + 200.0;
 				StageState++;
 			}
 			break;
@@ -1599,7 +1602,7 @@ void SaturnV::StageSix(double simt)
 		case 14:
 			if (MissionTime >= NextMissionEventTime) {
 				ActivateNavmode(NAVMODE_KILLROT);
-				NextMissionEventTime = MissionTime + 10.0;
+				NextMissionEventTime = MissionTime + 50.0;
 				StageState++;
 			}
 			break;
