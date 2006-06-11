@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/05/01 08:52:50  dseagrav
+  *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
+  *	
   *	Revision 1.9  2006/04/23 04:15:46  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -897,20 +900,39 @@ void sat5_lmpkd::SystemsInit()
 	Battery6 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B");
 	LunarBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:LUNAR_BATTERY");
 
-	// ECA #1
+	// ECA #1 -- AP11 LM does not have lunar battery!
 	ECA_1.dc_source_hi_a = Battery1;
 	ECA_1.dc_source_lo_a = Battery1;
 	ECA_1.dc_source_hi_b = Battery2;
-	ECA_1.dc_source_lo_b = LunarBattery;
+	ECA_1.dc_source_lo_b = Battery2;
 	ECA_1.dc_source_a_tb = &DSCBattery1TB;
 	*ECA_1.dc_source_a_tb = FALSE; // Initialize to off
-	DSCBattery1TB.WireTo(&ECA_1);
+	ECA_1.dc_source_b_tb = &DSCBattery2TB;
+	*ECA_1.dc_source_b_tb = FALSE;
 
-	// Temporarily wire direct to two descent batteries.
+	// ECA #2
+	ECA_2.dc_source_hi_a = Battery3;
+	ECA_2.dc_source_lo_a = Battery3;
+	ECA_2.dc_source_hi_b = Battery4;
+	ECA_2.dc_source_lo_b = Battery4;
+	ECA_2.dc_source_a_tb = &DSCBattery3TB;
+	*ECA_2.dc_source_a_tb = FALSE; // Initialize to off
+	ECA_2.dc_source_b_tb = &DSCBattery4TB;
+	*ECA_2.dc_source_b_tb = FALSE;
+
+	// Descent battery TBs
+	DSCBattery1TB.WireTo(&ECA_1);
+	DSCBattery2TB.WireTo(&ECA_1);
+	DSCBattery3TB.WireTo(&ECA_2);
+	DSCBattery4TB.WireTo(&ECA_2);
+
+	// Output CBs (Doesn't work?)
+	LMPBatteryFeedTieCB2.WireTo(&ECA_1);
+
+	// Temporarily wire direct to the ECAs.
 	// Apparently unpowered (Wired to NULL) busses get 28V for some reason...
-	CDRs28VBus.WireTo(Battery1);
-	// LMPs28VBus.WireTo(&ECA_1); 
-	LMPs28VBus.WireTo(Battery2);
+	CDRs28VBus.WireTo(&ECA_2);
+	LMPs28VBus.WireTo(&ECA_1);
 
 	// RCS Main Shutoff valves
 	RCSMainSovASwitch.WireTo(&CDRs28VBus);
@@ -926,6 +948,7 @@ void sat5_lmpkd::SystemsInit()
 
 	// Arrange for updates
 	Panelsdk.AddElectrical(&ECA_1, false);
+	Panelsdk.AddElectrical(&ECA_2, false);
 	
 	Panelsdk.AddElectrical(&CDRs28VBus, false);
 	Panelsdk.AddElectrical(&LMPs28VBus, false);
@@ -1304,11 +1327,15 @@ void LEM_ECA::UpdateFlow(double dt){
 	switch(input_a){
 		case 1: // HV 1
 			if(dc_source_hi_a != NULL){
-				A_Volts = dc_source_hi_a->Voltage();
+				A_Volts =   dc_source_hi_a->Voltage();
 				A_Amperes = dc_source_hi_a->Current();
 			}
 			break;
 		case 2: // LV 1
+			if(dc_source_hi_a != NULL){
+				A_Volts =   (dc_source_hi_a->Voltage()*0.93);
+				A_Amperes = dc_source_hi_a->Current();
+			}
 			break;
 	}
 	switch(input_b){
@@ -1319,6 +1346,10 @@ void LEM_ECA::UpdateFlow(double dt){
 			}
 			break;
 		case 2: // LV 2
+			if(dc_source_hi_b != NULL){
+				B_Volts = (dc_source_hi_b->Voltage()*0.93);
+				B_Amperes = dc_source_hi_b->Current();
+			}
 			break;
 	}
 	if(csrc > 1){
@@ -1333,6 +1364,8 @@ void LEM_ECA::UpdateFlow(double dt){
 			Amperes = B_Amperes;
 		}
 	}
+	
+	//sprintf(oapiDebugString(),"LM_ECA: = Inputs %d %d Voltages %f %f | Load %f Output %f V",input_a,input_b,A_Volts,B_Volts,power_load,Volts);
 }
 
 void sat5_lmpkd::CheckRCS()
