@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/05/01 08:52:49  dseagrav
+  *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
+  *	
   *	Revision 1.55  2006/04/25 08:11:27  dseagrav
   *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
   *	
@@ -404,7 +407,13 @@ void sat5_lmpkd::InitPanel() {
 	DSCBattery3TB.Register(PSH, "DSCBattery3TB", true);
 	DSCBattery4TB.Register(PSH, "DSCBattery4TB", true);
 	DSCSEBat1HVSwitch.Register(PSH, "DSCSEBat1HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	DSCSEBat2HVSwitch.Register(PSH, "DSCSEBat2HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	DSCCDRBat3HVSwitch.Register(PSH, "DSCCDRBat3HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	DSCCDRBat4HVSwitch.Register(PSH, "DSCCDRBat4HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DSCSEBat1LVSwitch.Register(PSH, "DSCSEBat1LVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	DSCSEBat2LVSwitch.Register(PSH, "DSCSEBat2LVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	DSCCDRBat3LVSwitch.Register(PSH, "DSCCDRBat3LVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	DSCCDRBat4LVSwitch.Register(PSH, "DSCCDRBat4LVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
 	LMPBatteryFeedTieCB1.Register(PSH, "LMPBatteryFeedTieCB1", 1);
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
@@ -1338,12 +1347,22 @@ void sat5_lmpkd::SetSwitches(int panel) {
 			
 			DSCHiVoltageSwitchRow.Init(AID_DSC_HIGH_VOLTAGE_SWITCHES, MainPanel);
 			DSCSEBat1HVSwitch.Init( 0,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1,1);
+			DSCSEBat2HVSwitch.Init( 69,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1,3);
+			DSCCDRBat3HVSwitch.Init(151,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2,1);
+			DSCCDRBat4HVSwitch.Init(220,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2,3);
+
 
 			DSCLoVoltageSwitchRow.Init(AID_DSC_LOW_VOLTAGE_SWITCHES, MainPanel);
 			DSCSEBat1LVSwitch.Init( 0,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow, this,&ECA_1,2);
+			DSCSEBat2LVSwitch.Init( 69,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_1,4);
+			DSCCDRBat3LVSwitch.Init( 151,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_2,2);
+			DSCCDRBat4LVSwitch.Init( 220,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_2,4);
 
 			DSCBatteryTBSwitchRow.Init(AID_DSC_BATTERY_TALKBACKS, MainPanel);
-			DSCBattery1TB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
+			DSCBattery1TB.Init(0,  0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
+			DSCBattery2TB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
+			DSCBattery3TB.Init(152,0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
+			DSCBattery4TB.Init(222,0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
 
 			break;
 

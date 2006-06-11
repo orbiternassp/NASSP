@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/05/01 08:52:50  dseagrav
+  *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
+  *	
   *	Revision 1.41  2006/04/23 04:15:46  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -864,6 +867,7 @@ protected:
 
 	// ECA
 	LEM_ECA ECA_1;
+	LEM_ECA ECA_2;
 
 	// CDR and LMP 28V DC busses
 	DCbus CDRs28VBus;
