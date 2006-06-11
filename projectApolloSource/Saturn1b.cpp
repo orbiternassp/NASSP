@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/06/10 23:27:40  movieman523
+  *	Updated abort code.
+  *	
   *	Revision 1.53  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -1059,6 +1062,7 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	case LAUNCH_STAGE_ONE:
 	case PRELAUNCH_STAGE:
 		SetFirstStage();
+		SetFirstStageEngines();
 		break;
 
 	case LAUNCH_STAGE_TWO:
@@ -1121,6 +1125,8 @@ void Saturn1b::ConfigureStageMeshes(int stage_state)
 	//
 	// This code all needs to be fixed up.
 	//
+
+	ClearMeshes();
 
 	switch (stage_state) {
 
@@ -1195,7 +1201,7 @@ void Saturn1b::ConfigureStageEngines(int stage_state)
 	case ONPAD_STAGE:
 	case LAUNCH_STAGE_ONE:
 	case PRELAUNCH_STAGE:
-//		SetFirstStageEngines();
+		SetFirstStageEngines();
 		break;
 
 	case LAUNCH_STAGE_SIVB:
