@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/06/10 23:27:41  movieman523
+  *	Updated abort code.
+  *	
   *	Revision 1.47  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -650,8 +653,6 @@ void Saturn::SetRecovery()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-
-
 	SetTouchdownPoints (_V(0,-1.0,-2.0), _V(-.7,.7,-2.0), _V(.7,.7,-2.0));
 	SetView(-1.35);
 }
@@ -891,7 +892,8 @@ void Saturn::SetCSM2Stage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	// And the Crew
-	if (Crewed) {
+	if (Crewed)
+	{
 		mesh_dir=_V(0,0,34.4-CGOffset);
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -978,7 +980,8 @@ void Saturn::SetReentryStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	// And the Crew
-	if (Crewed) {
+	if (Crewed)
+	{
 		mesh_dir=_V(0,0,0);
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1055,10 +1058,11 @@ void Saturn::StageSeven(double simt)
 		dockingprobe.SetEnabled(false);
 	}
 
-	if (!Crewed) {
+	if (!Crewed)
+	{
 		switch (StageState) {
 		case 0:
-			if (GetAltitude() < 145000) {
+			if (GetAltitude() < 185000) {
 				SlowIfDesired();
 				ActivateCMRCS();
 				ActivateNavmode(NAVMODE_RETROGRADE);
@@ -1081,7 +1085,8 @@ void Saturn::StageSeven(double simt)
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir=_V(0,0,0);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1178,7 +1183,8 @@ void Saturn::StageEight(double simt)
 
 	SetView(0.5);
 
-	if (!Crewed) {
+	if (!Crewed)
+	{
 		switch (StageState) {
 		case 0:
 			if (GetAltitude() < 50000) {
@@ -1245,7 +1251,8 @@ void Saturn::SetChuteStage1()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir=_V(0, 0, offset);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1274,7 +1281,8 @@ void Saturn::SetChuteStage1()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir =_V(0,0, offset);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1355,7 +1363,8 @@ void Saturn::SetChuteStage2()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir=_V(0, 0, offset);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1383,7 +1392,8 @@ void Saturn::SetChuteStage2()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir=_V(0, 0, offset);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1460,7 +1470,8 @@ void Saturn::SetChuteStage3()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir=_V(0, 0, offset);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1487,7 +1498,8 @@ void Saturn::SetChuteStage3()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir=_V(0, 0, offset);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1559,7 +1571,8 @@ void Saturn::SetChuteStage4()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir=_V(0, 0, offset);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1587,7 +1600,8 @@ void Saturn::SetChuteStage4()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
-		if (Crewed) {
+		if (Crewed)
+		{
 			mesh_dir=_V(0, 0, offset);
 			meshidx = AddMesh (hCMP, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -1673,7 +1687,8 @@ void Saturn::SetSplashStage()
 	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
-	if (Crewed) {
+	if (Crewed)
+	{
 		meshidx = AddMesh (hCMP, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 

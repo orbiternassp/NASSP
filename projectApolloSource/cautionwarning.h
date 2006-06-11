@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.13  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -101,6 +105,7 @@ public:
 	void SetSource(int source) { Source = source; };
 	void SetPowerBus(int bus);
 	void SetMasterAlarm(bool alarm);
+	void SetPlaySounds(bool sounds) { PlaySounds = sounds; };
 	void SetInhibitNextMasterAlarm(bool i) { InhibitNextMasterAlarm = i; };
 	void MonitorVessel(VESSEL *v) { OurVessel = v; };
 
@@ -143,6 +148,7 @@ protected:
 	int LightsFailedLeft;
 	int LightsFailedRight;
 
+	bool PlaySounds;
 	bool MasterAlarmLightEnabled;
 	bool MasterAlarm;
 	bool MasterAlarmPressed;
