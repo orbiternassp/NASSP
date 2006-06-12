@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/06/11 14:45:37  movieman523
+  *	Quick fix for Apollo 4. Will need more work in the future.
+  *	
   *	Revision 1.48  2006/06/10 23:27:41  movieman523
   *	Updated abort code.
   *	
@@ -1197,7 +1200,7 @@ void Saturn::StageEight(double simt)
 		}
 	}
 
-	ApexCoverJettSwitch.SetLit(true);
+	SetApexCoverLight(true);
 
 	//
 	// TODO: Do we need this anymore?
@@ -1309,7 +1312,7 @@ void Saturn::SetChuteStage1()
 	DeactivateNavmode(NAVMODE_KILLROT);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
 
-	DrogueDeploySwitch.SetLit(true);
+	SetDrogueDeployLight(true);
 
 	//
 	// TODO: Do we need these anymore?
@@ -1618,7 +1621,7 @@ void Saturn::SetChuteStage4()
 		VCMeshOffset = mesh_dir;
 	}
 	mesh_dir = OFS_MAINCHUTE;
-	meshidx=AddMesh (hApollochute, &mesh_dir);
+	meshidx = AddMesh (hApollochute, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
 	AddRCS_CM(CM_RCS_THRUST, offset);
@@ -1626,7 +1629,7 @@ void Saturn::SetChuteStage4()
 	SetView(-7.25);
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
 
-	MainDeploySwitch.SetLit(true);
+	SetMainDeployLight(true);
 
 	//
 	// TODO: Do we need these anymore?
@@ -1850,7 +1853,7 @@ void Saturn::JettisonLET(bool UseMain)
 	}
 	SwindowS.done();
 
-	SetLESLight();
+	SetLESMotorLight(true);
 
 	//
 	// Enable docking probe because the tower is gone

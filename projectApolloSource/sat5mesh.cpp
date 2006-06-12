@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2006/06/10 23:27:41  movieman523
+  *	Updated abort code.
+  *	
   *	Revision 1.63  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -760,7 +763,7 @@ void SaturnV::SetSecondStage ()
 
 	SetSecondStageMesh(-STG1O);
 
-	LAUNCHIND[6] = InterstageAttached;
+	SIISepState = InterstageAttached;
 	bAbtlocked = false;
 }
 
@@ -915,6 +918,12 @@ void SaturnV::SetThirdStage ()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
+
+	//
+	// Clear SII Sep light just in case the interstage hung up.
+	//
+
+	ClearSIISep();
 
 	SetThirdStageMesh(-STG2O);
 }

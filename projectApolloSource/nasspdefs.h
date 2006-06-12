@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2006/06/10 23:27:41  movieman523
+  *	Updated abort code.
+  *	
   *	Revision 1.66  2006/06/08 15:30:18  tschachim
   *	Fixed ASCP and some default switch positions.
   *	
@@ -236,7 +239,15 @@
 #endif 
 
 #define NASSP_VERSION 70000
+
+//
+// Realism values.
+//
+
+#define REALISM_MIN		0
+#define REALISM_MAX		10
 #define REALISM_DEFAULT 5
+#define REALISM_PUSH_LIGHTS	4
 
 typedef struct {
 	HINSTANCE hDLL;
