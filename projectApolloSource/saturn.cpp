@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.147  2006/06/11 14:45:36  movieman523
+  *	Quick fix for Apollo 4. Will need more work in the future.
+  *	
   *	Revision 1.146  2006/06/10 23:27:41  movieman523
   *	Updated abort code.
   *	
@@ -672,7 +675,7 @@ void Saturn::initSaturn()
 
 	ClearLVGuidLight();
 	ClearLVRateLight();
-	ClearLESLight();
+	SetLESMotorLight(false);
 	ClearLiftoffLight();
 
 	for (i = 0; i < 8; i++)
@@ -3909,7 +3912,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 		{
 			bManualSeparate = false;
 
-			CsmLvSepSwitch.SetLit(true);
+			SetCSMLVSepLight(true);
 
 			SeparateStage(CSM_LEM_STAGE);
 			SetStage(CSM_LEM_STAGE);

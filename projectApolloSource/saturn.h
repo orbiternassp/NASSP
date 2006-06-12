@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.189  2006/06/10 23:27:41  movieman523
+  *	Updated abort code.
+  *	
   *	Revision 1.188  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -645,8 +648,12 @@ protected:
 	void ClearEngineIndicators();
 	void SetLiftoffLight();
 	void ClearLiftoffLight();
-	void SetLESLight();
-	void ClearLESLight();
+	void SetLESMotorLight(bool lit);
+	void SetCanardDeployLight(bool lit);
+	void SetCSMLVSepLight(bool lit);
+	void SetApexCoverLight(bool lit);
+	void SetDrogueDeployLight(bool lit);
+	void SetMainDeployLight(bool lit);
 	void SetLVGuidLight();
 	void ClearLVGuidLight();
 	void SetLVRateLight();

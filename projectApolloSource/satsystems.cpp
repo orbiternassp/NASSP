@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.110  2006/06/11 14:45:36  movieman523
+  *	Quick fix for Apollo 4. Will need more work in the future.
+  *	
   *	Revision 1.109  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -2448,16 +2451,63 @@ void Saturn::ClearLiftoffLight()
 	LAUNCHIND[0] = false;
 }
 
-void Saturn::SetLESLight()
+//
+// These switches weren't lit for real, but can be useful in low-realism
+// scenarios.
+//
+
+void Saturn::SetLESMotorLight(bool lit)
 
 {
-	LesMotorFireSwitch.SetLit(true);
+	if (lit && Realism > REALISM_PUSH_LIGHTS)
+		lit = false;
+
+	LesMotorFireSwitch.SetLit(lit);
 }
 
-void Saturn::ClearLESLight()
+void Saturn::SetCanardDeployLight(bool lit)
 
 {
-	LesMotorFireSwitch.SetLit(false);
+	if (lit && Realism > REALISM_PUSH_LIGHTS)
+		lit = false;
+
+	CanardDeploySwitch.SetLit(lit);
+}
+
+void Saturn::SetDrogueDeployLight(bool lit)
+
+{
+	if (lit && Realism > REALISM_PUSH_LIGHTS)
+		lit = false;
+
+	DrogueDeploySwitch.SetLit(lit);
+}
+
+void Saturn::SetCSMLVSepLight(bool lit)
+
+{
+	if (lit && Realism > REALISM_PUSH_LIGHTS)
+		lit = false;
+
+	CsmLvSepSwitch.SetLit(lit);
+}
+
+void Saturn::SetApexCoverLight(bool lit)
+
+{
+	if (lit && Realism > REALISM_PUSH_LIGHTS)
+		lit = false;
+
+	ApexCoverJettSwitch.SetLit(lit);
+}
+
+void Saturn::SetMainDeployLight(bool lit)
+
+{
+	if (lit && Realism > REALISM_PUSH_LIGHTS)
+		lit = false;
+
+	MainDeploySwitch.SetLit(lit);
 }
 
 void Saturn::SetLVGuidLight()
