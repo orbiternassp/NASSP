@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/01/05 19:40:53  movieman523
+  *	Added Saturn1b abort stages to build.
+  *	
   *	Revision 1.3  2006/01/04 23:06:03  movieman523
   *	Moved meshes into ProjectApollo directory and renamed a few.
   *	
@@ -46,7 +49,6 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 static int refcount = 0;
 static MESHHANDLE hSat1stg1;
 static MESHHANDLE hSat1stg2;
-static MESHHANDLE hSat1stg20;
 static MESHHANDLE hSat1stg21;
 static MESHHANDLE hSat1stg22;
 static MESHHANDLE hSat1stg23;
@@ -110,7 +112,6 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	if (!refcount++) {
 		hSat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg1");
 		hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
-		hSat1stg20 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg20");
 		hSat1stg21 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg21");
 		hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
 		hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
