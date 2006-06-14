@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/06/07 02:05:04  jasonims
+  *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
+  *	
   *	Revision 1.14  2006/05/26 22:01:50  movieman523
   *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
   *	
@@ -363,7 +366,8 @@ void Saturn::SetView(double offset, bool update_direction)
 	TRACESETUP("Saturn::SetView");
 	CurrentViewOffset = offset;
 
-	if (viewpos >= SATVIEW_ENG1) {
+	if (viewpos >= SATVIEW_ENG1)
+	{
 		VECTOR3 e1 = _V(0, 0, 0), e2 = _V(0, 0, 0), e3 = _V(0, 0, 0);	
 		VECTOR3 v1 = _V(0, 0, 0), v2 = _V(0, 0, 0), v3 = _V(0, 0, 0);
 		VECTOR3 cd;
@@ -389,6 +393,7 @@ void Saturn::SetView(double offset, bool update_direction)
 
 		case LAUNCH_STAGE_TWO:
 		case LAUNCH_STAGE_TWO_ISTG_JET:
+		case LAUNCH_STAGE_TWO_TWR_JET:
 			e2 = _V(3.5, 0.0, -31.0-STG1O);
 			v2 = _V(-0.15, 0, -1.0);
 			e3 = _V(0.0, 7.5, -10.0-STG1O);
@@ -400,7 +405,6 @@ void Saturn::SetView(double offset, bool update_direction)
 		// display anything useful.
 		//
 
-		case LAUNCH_STAGE_TWO_TWR_JET:
 		case LAUNCH_STAGE_SIVB:
 			viewpos = SATVIEW_LEFTSEAT;
 			SetView(offset, true);
