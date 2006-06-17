@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.68  2006/06/07 09:53:20  tschachim
   *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
   *	
@@ -3072,64 +3075,4 @@ void AGCThreePoswitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 {
 	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	agc = c;
-}
-
-// DS20060304 SCS OBJECTS
-void BMAGPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, BMAG *Unit)
-
-{
-	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
-	bmag = Unit;
-	
-	CheckBMAGPowerState();
-}
-
-void BMAGPowerRotationalSwitch::CheckBMAGPowerState()
-
-{
-	switch (GetState()) {
-	case 0: // OFF
-		bmag->dc_source = NULL;
-		bmag->ac_source = NULL;
-		bmag->rates = _V(0,0,0);
-		break;
-	case 1: // WARM UP
-		bmag->dc_source = bmag->dc_bus;
-		bmag->ac_source = NULL;
-		bmag->rates = _V(0,0,0);
-		break;
-	case 2: // ON
-		bmag->dc_source = bmag->dc_bus;
-		bmag->ac_source = bmag->ac_bus;
-		break;
-	}
-}
-
-bool BMAGPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {		
-		CheckBMAGPowerState();
-		return true;
-	}
-
-	return false;
-}
-
-bool BMAGPowerRotationalSwitch::SwitchTo(int newValue)
-
-{
-	if (RotationalSwitch::SwitchTo(newValue)) {
-		CheckBMAGPowerState();
-		return true;
-	}
-
-	return false;
-}
-
-void BMAGPowerRotationalSwitch::LoadState(char *line)
-
-{
-	RotationalSwitch::LoadState(line);
-	CheckBMAGPowerState();
 }
