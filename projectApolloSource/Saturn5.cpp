@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2006/06/11 14:45:36  movieman523
+  *	Quick fix for Apollo 4. Will need more work in the future.
+  *	
   *	Revision 1.85  2006/06/10 23:27:40  movieman523
   *	Updated abort code.
   *	
@@ -2358,7 +2361,7 @@ int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (FirstTimestep) return 0;
 
-	if (!KEYMOD_SHIFT(kstate) && !KEYMOD_CONTROL(kstate)) {
+	if (!KEYMOD_SHIFT(kstate) && !KEYMOD_CONTROL(kstate) && !KEYMOD_ALT(kstate)) {
 
 		if (stage == ROLLOUT_STAGE) {
 			if (key == OAPI_KEY_B && down == true) {
