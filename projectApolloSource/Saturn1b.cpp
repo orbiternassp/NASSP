@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2006/06/11 21:30:57  movieman523
+  *	Fixed Saturn 1b SIVb exhaust.
+  *	
   *	Revision 1.54  2006/06/10 23:27:40  movieman523
   *	Updated abort code.
   *	
@@ -1277,14 +1280,7 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (FirstTimestep) return 0;
 
-	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
-		return 0; 
-	}
-	
-	// Separate stages with keypress if REALISM 0
-	if (!Realism && key == OAPI_KEY_S && down == true) {
-		bManualSeparate = true;
-	}
+	// Nothing for now
 
-	return 0;
+	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
