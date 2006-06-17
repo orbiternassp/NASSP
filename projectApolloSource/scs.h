@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/06/07 09:53:20  tschachim
+  *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
+  *	
   *	Revision 1.10  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -32,16 +35,64 @@
   *	
   **************************************************************************/
 
-// DS20060304 SCS objects
 class Saturn;
 
-class BMAG {
-	// Body-Mounted Attitude Gyro
-public: // We use these inside a timestep, so everything is public to make data access as fast as possible.
+class AttitudeReference {
+
+public:
+	AttitudeReference();
+	virtual void Init(VESSEL *v);
+	virtual void Timestep(double simdt);
+	virtual void SaveState(FILEHANDLE scn); 
+	virtual void LoadState(char *line);
+	VECTOR3 GetAttitude() { return Attitude; };
+	VECTOR3 GetLastAttitude() { return LastAttitude; };
+	void SetAttitude(VECTOR3 a);
+
+protected:
+	bool AttitudeInitialized;
+	VESSEL *Vessel;
+	VECTOR3 Attitude;
+	VECTOR3 LastAttitude;
+
+	struct {					// Orbiter's state
+		VECTOR3 Attitude;
+		MATRIX3 AttitudeReference;
+	} OrbiterAttitude;
+
+	void SetOrbiterAttitudeReference();
+	MATRIX3 GetNavigationBaseToOrbiterLocalTransformation();
+	MATRIX3 GetOrbiterLocalToNavigationBaseTransformation();
+	VECTOR3 GetRotationAnglesXZY(MATRIX3 m);
+	MATRIX3 GetRotationMatrixX(double angle);
+	MATRIX3 GetRotationMatrixY(double angle);
+	MATRIX3 GetRotationMatrixZ(double angle);
+};
+
+// Body-Mounted Attitude Gyro
+
+#define BMAG1_START_STRING	"BMAG1_BEGIN"
+#define BMAG2_START_STRING	"BMAG2_BEGIN"
+#define BMAG_END_STRING	    "BMAG_END"
+
+class BMAG: public AttitudeReference {
+	
+public: 
 	BMAG();                                                                  // Cons
-	void Init(Saturn *vessel, e_object *dcbus, e_object *acbus, Boiler *h);	 // Initialization
-	void TimeStep();                                                         // Update function
+	void Init(Saturn *v, e_object *dcbus, e_object *acbus, Boiler *h);		 // Initialization
+	void Timestep(double simdt);                                             // Update function
 	void SystemTimestep(double simdt);
+	void Cage(int axis);
+	void Uncage(int axis);
+	VECTOR3 GetAttitudeError();												 // Attitude error when uncaged
+	VECTOR3 GetRates() { return rates; };
+	VECTOR3 IsUncaged() { return uncaged; };
+	bool IsPowered() { return powered; };
+	void SetPower(bool dc, bool ac);
+	void SaveState(FILEHANDLE scn); 
+	void LoadState(FILEHANDLE scn); 
+
+protected:
 	e_object *dc_source;                                                     // DC source for gyro heater
 	e_object *ac_source;													 // 3-Phase AC source for gyro
 	e_object *dc_bus;					  	          					     // DC source to use when powered
@@ -49,59 +100,30 @@ public: // We use these inside a timestep, so everything is public to make data 
 	Boiler *heater;															 // Heat coldplates when powered
 	int temperature;                                                         // Temperature
 	VECTOR3 rates;                                                           // Detected rotation acceleration
+	VECTOR3 uncaged;														 // 0 = caged, 1 = not caged (each axis)
+	VECTOR3 targetAttitude;													 // Attitude when uncaged
 	Saturn *sat;                                                             // Pointer to ship we're attached to
 	bool powered;                                                            // Data valid flag.
 };
 
-// Confusing mathematics blatantly copipe from IMU, and renamed to avoid conflict
-typedef union {      // 3x3 matrix
-	double data[9];
-	struct { double m11, m12, m13, m21, m22, m23, m31, m32, m33; };
-} GDC_Matrix3;
+
+// Gyro Display Coupler
 
 #define GDC_START_STRING	"GDC_BEGIN"
 #define GDC_END_STRING		"GDC_END"
 
-class GDC {
-	// Gyro Display Coupler
+class GDC: public AttitudeReference {
+	
 public: // We use these inside a timestep, so everything is public to make data access as fast as possible.
-	GDC();                          //  Cons
-	void Init(Saturn *vessel);	    // Initialization
-	void TimeStep(double simt);     // TimeStep
+	GDC();                          // Cons
+	void Init(Saturn *v);		    // Initialization
+	void Timestep(double simt);     // TimeStep
 	void SystemTimestep(double simdt);
 	bool AlignGDC();                // Alignment Switch Pressed
 	void SaveState(FILEHANDLE scn); // SaveState callback
 	void LoadState(FILEHANDLE scn); // LoadState callback
-	GDC_Matrix3 multiplyMatrix(GDC_Matrix3 a, GDC_Matrix3 b);
-	GDC_Matrix3 getRotationMatrixX(double angle);
-	GDC_Matrix3 getRotationMatrixY(double angle);
-	GDC_Matrix3 getRotationMatrixZ(double angle);
-	VECTOR3 getRotationAnglesXZY(GDC_Matrix3 m);
-	void SetOrbiterAttitudeReference();
-	GDC_Matrix3 getNavigationBaseToOrbiterLocalTransformation();	
-	GDC_Matrix3 getOrbiterLocalToNavigationBaseTransformation();
-	VECTOR3 rates;              // Integrated Euler rotation rates
-	VECTOR3 attitude;           // Calculated Attitude
-	double LastTime;			// in seconds
-	bool Initialized;			// Was it?
-	int roll_bmag_failed;       // Fault-finding
-	int pitch_bmag_failed;
-	int yaw_bmag_failed;
-	struct {					// Orbiter's state
-		struct {
-			double X;
-			double Y;
-			double Z;
-		} Attitude;
-		struct {
-			double X;
-			double Y;
-			double Z;
-		} LastAttitude;
-		GDC_Matrix3 AttitudeReference;
-	} Orbiter;
-	// GDC is supplied from AC1 and AC2 phase A, and from MNA and MNB.
-	// All of these are needed for it to operate!
+
+	VECTOR3 rates;					// Integrated Euler rotation rates
 	Saturn *sat;
 	// FDAI error needle data from CMC
 	int fdai_err_ena;
@@ -160,6 +182,7 @@ public: // Same stuff about speed and I'm lazy too.
 	VECTOR3 ReturnASCPError(VECTOR3 attitude);						// Return said data.
 	VECTOR3 ReturnBMAG1Error();										// See the general theme here?
 	VECTOR3 AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors);  // Adjust errors for roll so as to be FLY-TO
+	VECTOR3 CalcErrors(VECTOR3 target);
 
 	Saturn *sat;
 };
