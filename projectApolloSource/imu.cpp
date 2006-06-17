@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.20  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -796,109 +799,109 @@ void IMU::LoadState(FILEHANDLE scn)
 
 {
 	char *line;
-	float flt = 0;
+	double flt = 0;
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, IMU_END_STRING, sizeof(IMU_END_STRING)))
 			return;
 		if (!strnicmp (line, "RPX", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			RemainingPIPA.X = flt;
 		}
 		else if (!strnicmp (line, "RPY", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			RemainingPIPA.Y = flt;
 		}
 		else if (!strnicmp (line, "RPZ", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			RemainingPIPA.Z = flt;
 		}
 		else if (!strnicmp (line, "GMX", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Gimbal.X = flt;
 		}
 		else if (!strnicmp (line, "GMY", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Gimbal.Y = flt;
 		}
 		else if (!strnicmp (line, "GMZ", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Gimbal.Z = flt;
 		}
 		else if (!strnicmp (line, "OAX", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.Attitude.X = flt;
 		}
 		else if (!strnicmp (line, "OAY", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.Attitude.Y = flt;
 		}
 		else if (!strnicmp (line, "OAZ", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.Attitude.Z = flt;
 		}
 		else if (!strnicmp (line, "LAX", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.LastAttitude.X = flt;
 		}
 		else if (!strnicmp (line, "LAY", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.LastAttitude.Y = flt;
 		}
 		else if (!strnicmp (line, "LAZ", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.LastAttitude.Z = flt;
 		}
 		else if (!strnicmp (line, "VLX", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Velocity.x = flt;
 		}
 		else if (!strnicmp (line, "VLY", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Velocity.y = flt;
 		}
 		else if (!strnicmp (line, "VLZ", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Velocity.z = flt;
 		}
 		else if (!strnicmp (line, "M11", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m11 = flt;
 		}
 		else if (!strnicmp (line, "M12", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m12 = flt;
 		}
 		else if (!strnicmp (line, "M13", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m13 = flt;
 		}
 		else if (!strnicmp (line, "M21", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m21 = flt;
 		}
 		else if (!strnicmp (line, "M22", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m22 = flt;
 		}
 		else if (!strnicmp (line, "M23", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m23 = flt;
 		}
 		else if (!strnicmp (line, "M31", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m31 = flt;
 		}
 		else if (!strnicmp (line, "M32", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m32 = flt;
 		}
 		else if (!strnicmp (line, "M33", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m33 = flt;
 		}
 		else if (!strnicmp (line, "LTM", 3)) {
-			sscanf(line + 3, "%f", &flt);
+			sscanf(line + 3, "%lf", &flt);
 			LastTime = flt;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
@@ -913,36 +916,44 @@ void IMU::LoadState(FILEHANDLE scn)
 	}
 }
 
+inline void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %lf", item, d);
+	oapiWriteLine(scn, buffer);
+}
+
 void IMU::SaveState(FILEHANDLE scn)
 
 {
 	oapiWriteLine(scn, IMU_START_STRING);
 
-	oapiWriteScenario_float(scn, "RPX", RemainingPIPA.X);
-	oapiWriteScenario_float(scn, "RPY", RemainingPIPA.Y);
-	oapiWriteScenario_float(scn, "RPZ", RemainingPIPA.Z);
-	oapiWriteScenario_float(scn, "GMX", Gimbal.X);
-	oapiWriteScenario_float(scn, "GMY", Gimbal.Y);
-	oapiWriteScenario_float(scn, "GMZ", Gimbal.Z);
-	oapiWriteScenario_float(scn, "OAX", Orbiter.Attitude.X);
-	oapiWriteScenario_float(scn, "OAY", Orbiter.Attitude.Y);
-	oapiWriteScenario_float(scn, "OAZ", Orbiter.Attitude.Z);
-	oapiWriteScenario_float(scn, "LAX", Orbiter.LastAttitude.X);
-	oapiWriteScenario_float(scn, "LAY", Orbiter.LastAttitude.Y);
-	oapiWriteScenario_float(scn, "LAZ", Orbiter.LastAttitude.Z);
-	oapiWriteScenario_float(scn, "VLX", Velocity.x);
-	oapiWriteScenario_float(scn, "VLY", Velocity.y);
-	oapiWriteScenario_float(scn, "VLZ", Velocity.z);
-	oapiWriteScenario_float(scn, "M11", Orbiter.AttitudeReference.m11);
-	oapiWriteScenario_float(scn, "M12", Orbiter.AttitudeReference.m12);
-	oapiWriteScenario_float(scn, "M13", Orbiter.AttitudeReference.m13);
-	oapiWriteScenario_float(scn, "M21", Orbiter.AttitudeReference.m21);
-	oapiWriteScenario_float(scn, "M22", Orbiter.AttitudeReference.m22);
-	oapiWriteScenario_float(scn, "M23", Orbiter.AttitudeReference.m23);
-	oapiWriteScenario_float(scn, "M31", Orbiter.AttitudeReference.m31);
-	oapiWriteScenario_float(scn, "M32", Orbiter.AttitudeReference.m32);
-	oapiWriteScenario_float(scn, "M33", Orbiter.AttitudeReference.m33);
-	oapiWriteScenario_float(scn, "LTM", LastTime);
+	WriteScenario_double(scn, "RPX", RemainingPIPA.X);
+	WriteScenario_double(scn, "RPY", RemainingPIPA.Y);
+	WriteScenario_double(scn, "RPZ", RemainingPIPA.Z);
+	WriteScenario_double(scn, "GMX", Gimbal.X);
+	WriteScenario_double(scn, "GMY", Gimbal.Y);
+	WriteScenario_double(scn, "GMZ", Gimbal.Z);
+	WriteScenario_double(scn, "OAX", Orbiter.Attitude.X);
+	WriteScenario_double(scn, "OAY", Orbiter.Attitude.Y);
+	WriteScenario_double(scn, "OAZ", Orbiter.Attitude.Z);
+	WriteScenario_double(scn, "LAX", Orbiter.LastAttitude.X);
+	WriteScenario_double(scn, "LAY", Orbiter.LastAttitude.Y);
+	WriteScenario_double(scn, "LAZ", Orbiter.LastAttitude.Z);
+	WriteScenario_double(scn, "VLX", Velocity.x);
+	WriteScenario_double(scn, "VLY", Velocity.y);
+	WriteScenario_double(scn, "VLZ", Velocity.z);
+	WriteScenario_double(scn, "M11", Orbiter.AttitudeReference.m11);
+	WriteScenario_double(scn, "M12", Orbiter.AttitudeReference.m12);
+	WriteScenario_double(scn, "M13", Orbiter.AttitudeReference.m13);
+	WriteScenario_double(scn, "M21", Orbiter.AttitudeReference.m21);
+	WriteScenario_double(scn, "M22", Orbiter.AttitudeReference.m22);
+	WriteScenario_double(scn, "M23", Orbiter.AttitudeReference.m23);
+	WriteScenario_double(scn, "M31", Orbiter.AttitudeReference.m31);
+	WriteScenario_double(scn, "M32", Orbiter.AttitudeReference.m32);
+	WriteScenario_double(scn, "M33", Orbiter.AttitudeReference.m33);
+	WriteScenario_double(scn, "LTM", LastTime);
 
 	//
 	// Copy internal state to the structure.
