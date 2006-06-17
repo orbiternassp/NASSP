@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.148  2006/06/12 20:47:36  movieman523
+  *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
+  *	
   *	Revision 1.147  2006/06/11 14:45:36  movieman523
   *	Quick fix for Apollo 4. Will need more work in the future.
   *	
@@ -1215,12 +1218,17 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	imu.SaveState(scn);
 	cws.SaveState(scn);
 	iu.SaveState(scn);
-	// DS20060318 SCS OBJECTS
 	gdc.SaveState(scn);
 	ascp.SaveState(scn);
 	dockingprobe.SaveState(scn);
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
+
+	oapiWriteLine(scn, BMAG1_START_STRING);
+	bmag1.SaveState(scn);
+
+	oapiWriteLine(scn, BMAG2_START_STRING);
+	bmag2.SaveState(scn);
 
 	//
 	// This has to be after the AGC otherwise the AGC state will override it.
@@ -1977,6 +1985,12 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, GDC_START_STRING, sizeof(GDC_START_STRING))) {
 		gdc.LoadState(scn);
 	}
+	else if (!strnicmp(line, BMAG1_START_STRING, sizeof(BMAG1_START_STRING))) {
+		bmag1.LoadState(scn);
+	}
+	else if (!strnicmp(line, BMAG2_START_STRING, sizeof(BMAG2_START_STRING))) {
+		bmag2.LoadState(scn);
+	}
 	else if (!strnicmp(line, ASCP_START_STRING, sizeof(ASCP_START_STRING))) {
 		ascp.LoadState(scn);
 	}
@@ -2277,10 +2291,15 @@ void Saturn::DoLaunch(double simt)
 	// However, others believe it should free run. We haven't found a definitive
 	// answer yet.
 	//
+	// Meanwhile we have a definite answer, the prelaunch procedures in the AOH clearly 
+	// state that it runs free. Additionally do NOT call MissionTimerDisplay.SetRunning(true) here,
+	// either it's already running (which it should) or it's not, but when you let it run here, you have
+	// a running mission timer and the mission timer start switch is at stop or reset, which is not 
+	// possible electrically.
+	//
 
 	MissionTimerDisplay.Reset();
 	MissionTimerDisplay.SetEnabled(true);
-	MissionTimerDisplay.SetRunning(true);
 	EventTimerDisplay.Reset();
 	EventTimerDisplay.SetEnabled(true);
 	EventTimerDisplay.SetRunning(true);
@@ -2691,12 +2710,12 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		}
 		return 0;
 	}
-	if (KEYMOD_CONTROL(kstate)) {
+	if (KEYMOD_CONTROL(kstate) || KEYMOD_ALT(kstate)) {
 		return 0; 
 	}
 
 	// Separate stages and undock with keypress if REALISM 0
-	if (!Realism && key == OAPI_KEY_S && down == true) {
+	if (!Realism && key == OAPI_KEY_J && down == true) {
 		if (stage == CSM_LEM_STAGE) {			
 			bManualUnDock = true;
 		

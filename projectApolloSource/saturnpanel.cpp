@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.174  2006/06/11 22:05:41  movieman523
+  *	Saturn 1b doesn't have SII Sep light.
+  *	
   *	Revision 1.173  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -3604,13 +3607,13 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
 								attitude = imu.GetTotalAttitude();
 							}else{
-								attitude = gdc.attitude;
+								attitude = gdc.GetAttitude();
 							}
-							errors = eda.AdjustErrorsForRoll(attitude,eda.ReturnASCPError(attitude));
+							errors = eda.AdjustErrorsForRoll(attitude, eda.ReturnASCPError(attitude));
 							break;
 						case THREEPOSSWITCH_DOWN: // GDC
-							attitude = gdc.attitude;
-							errors = eda.ReturnBMAG1Error();
+							attitude = gdc.GetAttitude();
+							errors = eda.AdjustErrorsForRoll(attitude, eda.ReturnBMAG1Error());
 							break;
 					}
 					break;				
@@ -3640,9 +3643,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
 			switch(FDAISourceSwitch.GetState()){
 				case THREEPOSSWITCH_UP:     // 1+2 - FDAI2 shows GDC ATT / BMAG1 ERR
-					attitude = gdc.attitude;
+					attitude = gdc.GetAttitude();
 					euler_rates = gdc.rates;
-					errors = eda.ReturnBMAG1Error();
+					errors = eda.AdjustErrorsForRoll(attitude, eda.ReturnBMAG1Error());
 					break;
 				case THREEPOSSWITCH_CENTER: // 2
 					euler_rates = gdc.rates;
@@ -3656,13 +3659,13 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
 								attitude = imu.GetTotalAttitude();
 							}else{
-								attitude = gdc.attitude;
+								attitude = gdc.GetAttitude();
 							}
 							errors = eda.AdjustErrorsForRoll(attitude,eda.ReturnASCPError(attitude));
 							break;
 						case THREEPOSSWITCH_DOWN: // GDC
-							attitude = gdc.attitude;							
-							errors = eda.ReturnBMAG1Error();
+							attitude = gdc.GetAttitude();							
+							errors = eda.AdjustErrorsForRoll(attitude, eda.ReturnBMAG1Error());
 							break;
 					}
 					break;
