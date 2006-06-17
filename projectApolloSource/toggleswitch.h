@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.50  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -868,24 +871,6 @@ protected:
 	void SetValue(int newValue);
 	double AngleDiff(double a1, double a2);
 	void DeletePositions();
-};
-
-// DS20060304 SCS OBJECTS
-class BMAG;
-
-class BMAGPowerRotationalSwitch: public RotationalSwitch {
-public:
-	BMAGPowerRotationalSwitch() { bmag = NULL; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, BMAG *Unit);
-
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newValue);
-	void LoadState(char *line);
-
-protected:
-	void CheckBMAGPowerState();
-
-	BMAG *bmag;	
 };
 
 

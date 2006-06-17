@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.16  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -1356,4 +1359,59 @@ void SaturnDCAmpMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	v = 225.0 -  2.25 * (v + 10.0);	
 	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
+}
+
+
+void BMAGPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, BMAG *Unit)
+
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	bmag = Unit;
+	
+	CheckBMAGPowerState();
+}
+
+void BMAGPowerRotationalSwitch::CheckBMAGPowerState()
+
+{
+	switch (GetState()) {
+	case 0: // OFF
+		bmag->SetPower(false, false);
+		break;
+	case 1: // WARM UP
+		bmag->SetPower(true, false);
+		break;
+	case 2: // ON
+		bmag->SetPower(true, true);
+		break;
+	}
+}
+
+bool BMAGPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {		
+		CheckBMAGPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+bool BMAGPowerRotationalSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
+		CheckBMAGPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+void BMAGPowerRotationalSwitch::LoadState(char *line)
+
+{
+	RotationalSwitch::LoadState(line);
+	CheckBMAGPowerState();
 }
