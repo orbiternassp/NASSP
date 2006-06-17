@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/06/07 09:53:18  tschachim
+  *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
+  *	
   *	Revision 1.47  2006/04/06 11:28:06  tschachim
   *	Bugfix padload and TVC.
   *	
@@ -552,11 +555,11 @@ void CSMcomputer::Prog01(double simt)
 		if (simt >= NextProgTime) {
 			LightCompActy();
 
-			if (!Yaagc) {
+			// Check if the IMU is running and uncaged.
+			val30.Value = GetInputChannel(030);
+			if (!Yaagc && val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
 				//
 				// As a quick hack we drive the IMU to prelaunch orientation, 
-				// no gyro-compassing in P02 yet, so the IMU drifts in earth rate 
-				// like the GDC
 				//
 
 				imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
@@ -572,6 +575,7 @@ void CSMcomputer::Prog01(double simt)
 			ChannelValue30 val30;
 
 			LightCompActy();
+			// Check if the IMU is running and uncaged.
 			val30.Value = GetInputChannel(030);
 			if (val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
 				ClearNoAtt();
@@ -610,6 +614,17 @@ void CSMcomputer::Prog02(double simt)
 		SetVerbNounAndFlash(6, 33);
 		ProgState++;
 		break;
+	}
+
+	// Check if the IMU is running and uncaged.
+	ChannelValue30 val30;
+	val30.Value = GetInputChannel(030);
+	if (!Yaagc && val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
+		//
+		// As a quick hack we do "gyro-compassing" to maintain prelaunch orientation, 
+		//
+
+		imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
 	}
 }
 
