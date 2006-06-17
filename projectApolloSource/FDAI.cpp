@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/06/10 14:41:36  movieman523
+  *	Zero target to avoid crash on saving when unpowered.
+  *	
   *	Revision 1.18  2006/06/01 14:28:25  tschachim
   *	FDAIs no longer turn immediately (Bug 1448610).
   *	
@@ -105,6 +108,7 @@ FDAI::FDAI() {
 	lastErrors = _V(0, 0, 0);
 
 	lastPaintTime = -1;
+	newRegistered = false;
 
 	DCSource = NULL;
 	ACSource = NULL;
@@ -222,8 +226,8 @@ void FDAI::RegisterMe(int index, int x, int y) {
 	idx = index;
 	ScrX = x;
 	ScrY = y;
-	// Old size was 185 x 185
 	oapiRegisterPanelArea(index, _R(ScrX, ScrY, ScrX + 245, ScrY + 245), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+	newRegistered = true;
 }
 
 
@@ -239,71 +243,75 @@ void FDAI::SetAttitude(VECTOR3 attitude) {
 
 void FDAI::MoveBall() {
 
-//	now.x = target.x;
-//	now.y = target.y;
-//	now.z = target.z;
+	if (newRegistered) {
+		now.x = target.x;
+		now.y = target.y;
+		now.z = target.z;
 
-	double delta;
-	
-    delta = target.z - now.z;
-	if (delta > 0.05) {
-		if (delta > PI) {
-			now.z += 2 * PI;
-			MoveBall();
-			return;
-		}
-		now.z += 0.05;
+		newRegistered = false;
 		
-	} else if (delta < -0.05) { 
-		if (delta < -PI) {
-			now.z -= 2 * PI;
-			MoveBall();
-			return;
-		}
-		now.z -= 0.05;
-	} else 
-		now.z += delta;
+	} else {
+		double delta;
+		
+		delta = target.z - now.z;
+		if (delta > 0.05) {
+			if (delta > PI) {
+				now.z += 2 * PI;
+				MoveBall();
+				return;
+			}
+			now.z += 0.05;
+			
+		} else if (delta < -0.05) { 
+			if (delta < -PI) {
+				now.z -= 2 * PI;
+				MoveBall();
+				return;
+			}
+			now.z -= 0.05;
+		} else 
+			now.z += delta;
 
-	delta = target.y - now.y;
-	if (delta > 0.05) {
-		if (delta > PI) {
-			now.y += 2 * PI;
-			MoveBall();
-			return;
+		delta = target.y - now.y;
+		if (delta > 0.05) {
+			if (delta > PI) {
+				now.y += 2 * PI;
+				MoveBall();
+				return;
+			}
+			now.y += 0.05;
+		
+		} else if (delta < -0.05) {
+			if (delta < -PI) {
+				now.y -= 2 * PI;
+				MoveBall();
+				return;
+			}
+			now.y -= 0.05;
 		}
-		now.y += 0.05;
-	
-	} else if (delta < -0.05) {
-		if (delta < -PI) {
-			now.y -= 2 * PI;
-			MoveBall();
-			return;
+		else 
+			now.y += delta;
+
+		delta = target.x - now.x;
+		if (delta > 0.05) {
+			if (delta > PI) {
+				now.x += 2 * PI;
+				MoveBall();
+				return;
+			}
+			now.x += 0.05;
+		
+		} else if (delta < -0.05) {
+			if (delta < -PI) {
+				now.x -= 2 * PI;
+				MoveBall();
+				return;
+			}
+			now.x -= 0.05;
 		}
-		now.y -= 0.05;
+		else 
+			now.x += delta;
 	}
-	else 
-		now.y += delta;
-
-	delta = target.x - now.x;
-	if (delta > 0.05) {
-		if (delta > PI) {
-			now.x += 2 * PI;
-			MoveBall();
-			return;
-		}
-		now.x += 0.05;
-	
-	} else if (delta < -0.05) {
-		if (delta < -PI) {
-			now.x -= 2 * PI;
-			MoveBall();
-			return;
-		}
-		now.x -= 0.05;
-	}
-	else 
-		now.x += delta;
-
 	
 	glLoadIdentity(); 
 	gluLookAt(0.0,-35.0,0.0, 0.0,0.0,0.0,0.0,0.0,1.0);
@@ -438,9 +446,9 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 
 void FDAI::Timestep(double simt, double simdt) {
 
-	//
-	// Nothing for now.
-	//
+	// Check for external view and disable smooth movement 
+	if (oapiCameraMode() != CAM_COCKPIT)
+		newRegistered = true;
 }
 
 void FDAI::SystemTimestep(double simdt) {

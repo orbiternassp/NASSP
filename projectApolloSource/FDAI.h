@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/06/01 14:28:25  tschachim
+  *	FDAIs no longer turn immediately (Bug 1448610).
+  *	
   *	Revision 1.10  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -88,6 +91,7 @@ protected:
 	int list_name; //we store the rendering into a display list
 	VECTOR3 now, target, lastRates, lastErrors;
 	double lastPaintTime;
+	bool newRegistered;
 
 	//some stuff for OpenGL
 	HDC hDC2;
