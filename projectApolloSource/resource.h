@@ -554,6 +554,7 @@
 #define IDB_THUMBWHEEL_SMALL							823
 #define IDB_THUMBWHEEL_LARGEFONTSINV    				824
 #define IDB_SWLEVERTHREEPOS								825
+#define AID_LEM_P11_CB_ROW5             				826
 
 
 // Next default values for new objects

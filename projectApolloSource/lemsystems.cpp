@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/06/11 09:20:30  dseagrav
+  *	LM ECA #2 added, ECA low-voltage tap usage added, CDR & LMP DC busses wired to ECAs
+  *	
   *	Revision 1.10  2006/05/01 08:52:50  dseagrav
   *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
   *	
@@ -900,7 +903,7 @@ void sat5_lmpkd::SystemsInit()
 	Battery6 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B");
 	LunarBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:LUNAR_BATTERY");
 
-	// ECA #1 -- AP11 LM does not have lunar battery!
+	// ECA #1 (DESCENT stage, LMP DC bus)
 	ECA_1.dc_source_hi_a = Battery1;
 	ECA_1.dc_source_lo_a = Battery1;
 	ECA_1.dc_source_hi_b = Battery2;
@@ -910,13 +913,13 @@ void sat5_lmpkd::SystemsInit()
 	ECA_1.dc_source_b_tb = &DSCBattery2TB;
 	*ECA_1.dc_source_b_tb = FALSE;
 
-	// ECA #2
+	// ECA #2 (DESCENT stage, CDR DC bus)
 	ECA_2.dc_source_hi_a = Battery3;
 	ECA_2.dc_source_lo_a = Battery3;
 	ECA_2.dc_source_hi_b = Battery4;
 	ECA_2.dc_source_lo_b = Battery4;
 	ECA_2.dc_source_a_tb = &DSCBattery3TB;
-	*ECA_2.dc_source_a_tb = FALSE; // Initialize to off
+	*ECA_2.dc_source_a_tb = FALSE; 
 	ECA_2.dc_source_b_tb = &DSCBattery4TB;
 	*ECA_2.dc_source_b_tb = FALSE;
 
@@ -926,20 +929,20 @@ void sat5_lmpkd::SystemsInit()
 	DSCBattery3TB.WireTo(&ECA_2);
 	DSCBattery4TB.WireTo(&ECA_2);
 
-	// Output CBs (Doesn't work?)
+	// Output CBs
 	LMPBatteryFeedTieCB2.WireTo(&ECA_1);
+	CDRBatteryFeedTieCB2.WireTo(&ECA_2);
 
-	// Temporarily wire direct to the ECAs.
+	// CDR and LMP 28V DC busses.
 	// Apparently unpowered (Wired to NULL) busses get 28V for some reason...
-	CDRs28VBus.WireTo(&ECA_2);
-	LMPs28VBus.WireTo(&ECA_1);
+	CDRs28VBus.WireTo(&CDRBatteryFeedTieCB2); 
+	LMPs28VBus.WireTo(&LMPBatteryFeedTieCB2);
 
 	// RCS Main Shutoff valves
 	RCSMainSovASwitch.WireTo(&CDRs28VBus);
 	RCSMainSovATB.WireTo(&CDRs28VBus);
 	RCSMainSovBTB.WireTo(&LMPs28VBus);
 	RCSMainSovBSwitch.WireTo(&LMPs28VBus);
-	// RCSMainSovBSwitch.WireTo(&LMPBatteryFeedTieCB2);
 
 	// The IMU (TEMPORARY - HAX)
 	imu.WireToBuses(&CDRs28VBus, &LMPs28VBus);
@@ -1184,6 +1187,12 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 
 	// After that come all other systems simesteps
 	fdaiLeft.Timestep(MissionTime, simdt);
+
+	// Debug tests would go here
+	/*
+	sprintf(oapiDebugString(),"LM: LMP %f V/%f A CDR %f V/%f A",LMPs28VBus.Voltage(),LMPs28VBus.PowerLoad(),
+		CDRs28VBus.Voltage(),CDRs28VBus.PowerLoad()); */
+
 }
 
 // PANEL SDK SUPPORT
@@ -1257,37 +1266,40 @@ void LEM_ECA::UpdateFlow(double dt){
 	// Draw power from the source, and retake voltage, etc.
 
 	int csrc=0;                             // Current Sources Operational
-	double PowerDrawPerSource = power_load; // Current to draw, per source
+	double PowerDrawPerSource;              // Current to draw, per source
 	
 	// Find active sources
 	switch(input_a){
 		case 1:
-			if(dc_source_hi_a != NULL){
+			if(dc_source_hi_a != NULL && dc_source_hi_a->Voltage() > 0){
 				csrc++;
 			}
 			break;
 		case 2:
-			if(dc_source_lo_a != NULL){
+			if(dc_source_lo_a != NULL && dc_source_lo_a->Voltage() > 0){
 				csrc++;
 			}
 			break;
 	}
 	switch(input_b){
 		case 1:
-			if(dc_source_hi_b != NULL){
+			if(dc_source_hi_b != NULL && dc_source_hi_b->Voltage() > 0){
 				csrc++;
 			}
 			break;
 		case 2:
-			if(dc_source_lo_b != NULL){
+			if(dc_source_lo_b != NULL && dc_source_lo_b->Voltage() > 0){
 				csrc++;
 			}
 			break;
 	}
 	// Compute draw
 	if(csrc > 1){
-		PowerDrawPerSource /= 2;
+		PowerDrawPerSource = power_load/2;
+	}else{
+		PowerDrawPerSource = power_load;
 	}
+
 	// Now take power
 	switch(input_a){
 		case 1:
@@ -1315,9 +1327,6 @@ void LEM_ECA::UpdateFlow(double dt){
 			break;
 	}
 	
-	// Reset for next pass.
-	e_object::UpdateFlow(dt);
-
 	double A_Volts = 0;
 	double A_Amperes = 0;
 	double B_Volts = 0;
@@ -1325,6 +1334,10 @@ void LEM_ECA::UpdateFlow(double dt){
 
 	// Resupply from source
 	switch(input_a){
+		case 0: // NULL
+			A_Volts = 0;
+			A_Amperes = 0;
+			break;
 		case 1: // HV 1
 			if(dc_source_hi_a != NULL){
 				A_Volts =   dc_source_hi_a->Voltage();
@@ -1339,6 +1352,10 @@ void LEM_ECA::UpdateFlow(double dt){
 			break;
 	}
 	switch(input_b){
+		case 0: // NULL
+			B_Volts = 0;
+			B_Amperes = 0;
+			break;
 		case 1: // HV 2
 			if(dc_source_hi_b != NULL){
 				B_Volts = dc_source_hi_b->Voltage();
@@ -1352,18 +1369,29 @@ void LEM_ECA::UpdateFlow(double dt){
 			}
 			break;
 	}
-	if(csrc > 1){
-		Volts = (A_Volts + B_Volts) / 2;
-		Amperes = A_Amperes+B_Amperes;
-	}else{
-		if(input_a != 0){ // Only one (or no) input
-			Volts = A_Volts;
-			Amperes = A_Amperes;
-		}else{
-			Volts = B_Volts;
-			Amperes = B_Amperes;
-		}
+	// Final output
+	switch(csrc){
+		case 2: // DUAL
+			Volts = (A_Volts + B_Volts) / 2;
+			Amperes = A_Amperes+B_Amperes;
+			break;
+		case 1: // SINGLE
+			if(input_a != 0){ // Only one (or no) input
+				Volts = A_Volts;
+				Amperes = A_Amperes;
+			}else{
+				Volts = B_Volts;
+				Amperes = B_Amperes;
+			}
+			break;
+		default: // OFF OR OTHER
+			Volts = 0;
+			Amperes = 0;
+			break;
 	}
+
+	// Reset for next pass.
+	e_object::UpdateFlow(dt);
 	
 	//sprintf(oapiDebugString(),"LM_ECA: = Inputs %d %d Voltages %f %f | Load %f Output %f V",input_a,input_b,A_Volts,B_Volts,power_load,Volts);
 }

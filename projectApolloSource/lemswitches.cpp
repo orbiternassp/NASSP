@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/05/01 08:52:49  dseagrav
+  *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
+  *	
   *	Revision 1.3  2006/04/23 04:15:46  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -181,15 +184,35 @@ bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
 			case THREEPOSSWITCH_DOWN:
 				switch(srcno){
 					case 1: // HV 1
+						if(eca->input_a == 1){
+							if(eca->dc_source_a_tb != NULL){
+ 								*eca->dc_source_a_tb = FALSE;
+							}
+							eca->input_a = 0;
+						}
+						break;
 					case 2: // LV 1
-						if(eca->dc_source_a_tb != NULL){
- 							*eca->dc_source_a_tb = FALSE;
+						if(eca->input_a == 2){
+							if(eca->dc_source_a_tb != NULL){
+ 								*eca->dc_source_a_tb = FALSE;
+							}
+							eca->input_a = 0;
 						}
 						break;
 					case 3: // HV 2
+						if(eca->input_b == 1){
+							if(eca->dc_source_b_tb != NULL){
+ 								*eca->dc_source_b_tb = FALSE;
+							}
+							eca->input_b = 0;
+						}
+						break;
 					case 4: // LV 2
-						if(eca->dc_source_b_tb != NULL){
- 							*eca->dc_source_b_tb = FALSE;
+						if(eca->input_b == 2){
+							if(eca->dc_source_b_tb != NULL){
+ 								*eca->dc_source_b_tb = FALSE;
+							}
+							eca->input_b = 0;
 						}
 						break;
 				}
