@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/06/11 09:20:30  dseagrav
+  *	LM ECA #2 added, ECA low-voltage tap usage added, CDR & LMP DC busses wired to ECAs
+  *	
   *	Revision 1.42  2006/05/01 08:52:50  dseagrav
   *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
   *	
@@ -543,7 +546,7 @@ protected:
 	//////////////////
 	// LEM panel 11 //
 	//////////////////
-	
+
 	SwitchRow AcBusBCircuitBrakersRow;
 	CircuitBrakerSwitch SeWindHTRCircuitBraker;
 	CircuitBrakerSwitch HePQGSPropDispCircuitBraker;
@@ -555,6 +558,12 @@ protected:
 	CircuitBrakerSwitch NumLTGCircuitBraker;
 	CircuitBrakerSwitch BusTieInv2CircuitBraker;
 	CircuitBrakerSwitch BusTieInv1CircuitBraker;
+
+	SwitchRow Panel11CB5SwitchRow;
+	// Battery feed tie breakers (ECA output breakers)
+	CircuitBrakerSwitch CDRBatteryFeedTieCB1;
+	CircuitBrakerSwitch CDRBatteryFeedTieCB2;
+
 
 	bool RCS_Full;
 	bool Eds;
