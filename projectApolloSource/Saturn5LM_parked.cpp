@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/05/30 23:15:11  movieman523
+  *	Mission timer and DSKY now need power to operate.
+  *	
   *	Revision 1.48  2006/04/25 08:11:27  dseagrav
   *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
   *	
@@ -388,16 +391,6 @@ void sat5_lmpkd::Init()
 
 	agc.ControlVessel(this);
 	imu.SetVessel(this,TRUE);
-
-	//
-	// HACK:
-	// Not sure where these should be wired to.
-	// HACK:
-	//
-
-	dsky.Init(&ECA_1);
-	MissionTimerDisplay.WireTo(&ECA_1);
-	EventTimerDisplay.WireTo(&ECA_1);
 
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
@@ -784,14 +777,6 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 	double deltat = oapiGetSimStep();
 
 	MissionTime = MissionTime + deltat;
-
-	agc.Timestep(MissionTime, simdt);
-	dsky.Timestep(MissionTime);
-	imu.Timestep(MissionTime);
-
-	MissionTimerDisplay.Timestep(MissionTime, deltat);
-	EventTimerDisplay.Timestep(MissionTime, deltat);
-
 	SystemsTimestep(MissionTime, deltat);
 
 	actualVEL = (sqrt(RVEL.x *RVEL.x + RVEL.y * RVEL.y + RVEL.z * RVEL.z)/1000*3600);

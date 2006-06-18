@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/06/18 16:43:07  dseagrav
+  *	LM EPS fixes, LMP/CDR DC busses now powered thru CBs, ECA power-off bug fixed and ECA speed improvement
+  *	
   *	Revision 1.11  2006/06/11 09:20:30  dseagrav
   *	LM ECA #2 added, ECA low-voltage tap usage added, CDR & LMP DC busses wired to ECAs
   *	
@@ -944,17 +947,31 @@ void sat5_lmpkd::SystemsInit()
 	RCSMainSovBTB.WireTo(&LMPs28VBus);
 	RCSMainSovBSwitch.WireTo(&LMPs28VBus);
 
-	// The IMU (TEMPORARY - HAX)
-	imu.WireToBuses(&CDRs28VBus, &LMPs28VBus);
-	// FDAI (TEMPORARY - HAX)
+	// LGC and DSKY
+	LGC_DSKY_CB.WireTo(&CDRs28VBus);
+	agc.WirePower(&LGC_DSKY_CB,&LGC_DSKY_CB);
+	dsky.Init(&LGC_DSKY_CB);
+
+	// IMU OPERATE power (Logic DC power)
+	IMU_OPR_CB.WireTo(&CDRs28VBus);
+	imu.WireToBuses(&IMU_OPR_CB, &IMU_OPR_CB);
+	// The IMU heater should be wired to something as well, but I'm not sure how it works
+
+	// FDAI (TEMPORARY - HAX - This is a 2 amp CB? This draws almost 8 amps!)
 	fdaiLeft.WireTo(&CDRs28VBus);
+
+	//
+	// HACK:
+	// Not sure where these should be wired to.
+	MissionTimerDisplay.WireTo(&ECA_1);
+	EventTimerDisplay.WireTo(&ECA_1);
 
 	// Arrange for updates
 	Panelsdk.AddElectrical(&ECA_1, false);
 	Panelsdk.AddElectrical(&ECA_2, false);
 	
 	Panelsdk.AddElectrical(&CDRs28VBus, false);
-	Panelsdk.AddElectrical(&LMPs28VBus, false);
+	Panelsdk.AddElectrical(&LMPs28VBus, false); 
 
 	// DS20060413 Initialize joystick
 	HRESULT         hr;
@@ -1185,14 +1202,27 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 	// systems.
 	Panelsdk.Timestep(simt);
 
-	// After that come all other systems simesteps
-	fdaiLeft.Timestep(MissionTime, simdt);
+	// After that come all other systems simesteps	
+	agc.Timestep(MissionTime, simdt);						// Do work
+	agc.SystemTimestep(simdt);								// Draw power
+	dsky.Timestep(MissionTime);								// Do work
+	//dsky.SystemTimestep(simdt);						    // DSKY power draw is broken.
+	imu.Timestep(MissionTime);								// Do work
+	imu.SystemTimestep(simdt);								// Draw power
+	fdaiLeft.Timestep(MissionTime, simdt);					// Do Work
+	fdaiLeft.SystemTimestep(simdt);							// Draw Power
+	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
+	EventTimerDisplay.Timestep(MissionTime, simdt);
 
 	// Debug tests would go here
 	/*
-	sprintf(oapiDebugString(),"LM: LMP %f V/%f A CDR %f V/%f A",LMPs28VBus.Voltage(),LMPs28VBus.PowerLoad(),
-		CDRs28VBus.Voltage(),CDRs28VBus.PowerLoad()); */
-
+	double CDRAmps=0,LMPAmps=0;
+	double CDRVolts = CDRs28VBus.Voltage(),LMPVolts = LMPs28VBus.Voltage();
+	if(LMPVolts > 0){ LMPAmps = LMPs28VBus.PowerLoad()/LMPVolts; }
+	if(CDRVolts > 0){ CDRAmps = CDRs28VBus.PowerLoad()/CDRVolts; }
+	sprintf(oapiDebugString(),"LM: LMP %f V/%f A CDR %f V/%f A",LMPVolts,LMPAmps,
+		CDRVolts,CDRAmps);
+	*/
 }
 
 // PANEL SDK SUPPORT

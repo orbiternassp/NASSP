@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2006/06/18 16:43:07  dseagrav
+  *	LM EPS fixes, LMP/CDR DC busses now powered thru CBs, ECA power-off bug fixed and ECA speed improvement
+  *	
   *	Revision 1.57  2006/06/11 09:20:30  dseagrav
   *	LM ECA #2 added, ECA low-voltage tap usage added, CDR & LMP DC busses wired to ECAs
   *	
@@ -422,7 +425,9 @@ void sat5_lmpkd::InitPanel() {
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
 	CDRBatteryFeedTieCB1.Register(PSH, "CDRBatteryFeedTieCB1", 1);
 	CDRBatteryFeedTieCB2.Register(PSH, "CDRBatteryFeedTieCB2", 1);
-	
+
+	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 1);
+	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 1);
 	//
 	// Old stuff.
 	//
@@ -1148,6 +1153,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	case LMPANEL_LEFTPANEL: // LEM Left Panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW4,					_R( 184,  604, 1557,  634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 184,  777,  916,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACBUSBCIRCUITBREAKERS,			_R( 187,   85,  851,  114), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		
@@ -1373,6 +1379,10 @@ void sat5_lmpkd::SetSwitches(int panel) {
 			break;
 
 		case LMPANEL_LEFTPANEL:
+			Panel11CB4SwitchRow.Init(AID_LEM_P11_CB_ROW4, MainPanel);
+			IMU_OPR_CB.Init( 1342,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 20.0);
+			LGC_DSKY_CB.Init( 1214,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 7.5);
+
 			Panel11CB5SwitchRow.Init(AID_LEM_P11_CB_ROW5, MainPanel);
 			// In reality, two of these are paralleled.
 			// I'll just use one.
