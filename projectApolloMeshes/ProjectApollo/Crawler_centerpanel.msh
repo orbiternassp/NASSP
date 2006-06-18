@@ -10801,6 +10801,6 @@ MATERIAL material08
 1.000 1.000 1.000 1.000
 0 0 0 1
 TEXTURES 3
-Crawler_speedguage.dds
-Crawler_steeringbutton.dds
-Crawler_emergencystop.dds
+ProjectApollo\Crawler_speedguage.dds
+ProjectApollo\Crawler_steeringbutton.dds
+ProjectApollo\Crawler_emergencystop.dds
