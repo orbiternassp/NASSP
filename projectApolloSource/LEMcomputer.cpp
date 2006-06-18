@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2006/04/25 08:11:27  dseagrav
+  *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
+  *	
   *	Revision 1.27  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -864,6 +867,12 @@ bool LEMcomputer::ValidateProgram(int prog)
 void LEMcomputer::Timestep(double simt, double simdt)
 
 {
+	// If the power is out, the computer should restart.
+	/*
+	it(!IsPowered()){
+		
+	}
+	*/
 	if (GenericTimestep(simt, simdt))
 		return;
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/06/18 16:43:07  dseagrav
+  *	LM EPS fixes, LMP/CDR DC busses now powered thru CBs, ECA power-off bug fixed and ECA speed improvement
+  *	
   *	Revision 1.43  2006/06/11 09:20:30  dseagrav
   *	LM ECA #2 added, ECA low-voltage tap usage added, CDR & LMP DC busses wired to ECAs
   *	
@@ -558,6 +561,11 @@ protected:
 	CircuitBrakerSwitch NumLTGCircuitBraker;
 	CircuitBrakerSwitch BusTieInv2CircuitBraker;
 	CircuitBrakerSwitch BusTieInv1CircuitBraker;
+
+	SwitchRow Panel11CB4SwitchRow;
+	CircuitBrakerSwitch IMU_OPR_CB;
+	CircuitBrakerSwitch IMU_SBY_CB;
+	CircuitBrakerSwitch LGC_DSKY_CB;
 
 	SwitchRow Panel11CB5SwitchRow;
 	// Battery feed tie breakers (ECA output breakers)
