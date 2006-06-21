@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.175  2006/06/17 18:18:00  tschachim
+  *	Bugfixes SCS automatic modes,
+  *	Changed quickstart separation key to J.
+  *	
   *	Revision 1.174  2006/06/11 22:05:41  movieman523
   *	Saturn 1b doesn't have SII Sep light.
   *	
@@ -3226,8 +3230,9 @@ void Saturn::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 		else
 			BatteryCharger.Charge(0);
 
+	// Disabled, only for testing the ECS water-glycol cooling
+	/*
 	} else if (s == &HighGainAntennaPitchPositionSwitch) {
-		// TODO Only for testing the ECS water-glycol cooling
 		int *pump1 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER1:PUMP");
 		int *pump2 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER2:PUMP");
 		int *pump3 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER3:PUMP");
@@ -3291,6 +3296,7 @@ void Saturn::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 			*pump5 = SP_PUMP_ON;
 			*pump6 = SP_PUMP_ON;
 		}
+	*/
 	}
 }
 
