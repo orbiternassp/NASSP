@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.10  2006/01/14 20:58:16  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -446,7 +449,7 @@ void DCBusController::Load(char *line)
 {
 	int fc1, fc2, fc3, gse;
 	
-	sscanf (line,"    <DCBUSCONTROLLER> %s %i %i %i %i", name, &fc1, &fc2, &fc3, &tieState, &gse);
+	sscanf (line,"    <DCBUSCONTROLLER> %s %i %i %i %i %i", name, &fc1, &fc2, &fc3, &tieState, &gse);
 	if (fc1) fcPower.WireToBus(1, fuelcell1);
 	if (fc2) fcPower.WireToBus(2, fuelcell2);
 	if (fc3) fcPower.WireToBus(3, fuelcell3);
