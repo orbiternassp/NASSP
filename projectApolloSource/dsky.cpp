@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/06/10 14:36:44  movieman523
+  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
+  *	
   *	Revision 1.18  2006/06/08 15:25:57  tschachim
   *	Disabkled buggy DrawPower.
   *	
@@ -185,12 +188,53 @@ void DSKY::Timestep(double simt)
 void DSKY::SystemTimestep(double simdt)
 
 {
+	if (!IsPowered())
+		return;
+	
 	//
-	// For now, assume 5W per lit light. We rely on the render code to
-	// track the number of lights that are lit.
+	// The DSYK power consumption is a little bit hard to figure out. According 
+	// to the Systems Handbook the complete interior lightning draws about 30W, so
+	// we assume one DSKY draws 10W max, for now. We DO NOT rely on the render code to
+	// track the number of lights that are lit, because during pause the still called render 
+	// code causes wrong power loads
 	//
 
-	DrawPower((LightsLit * 5.0) + (SegmentsLit * 0.5));
+	//
+	// Check the lights.
+	//
+
+	LightsLit = 0;
+	if (UplinkLit()) LightsLit++;
+	if (NoAttLit()) LightsLit++;
+	if (StbyLit()) LightsLit++;
+	if (KbRelLit() && FlashOn) LightsLit++;
+	if (OprErrLit() && FlashOn) LightsLit++;
+	if (TempLit()) LightsLit++;
+	if (GimbalLockLit()) LightsLit++;
+	if (ProgLit()) LightsLit++;
+	if (RestartLit()) LightsLit++;
+	if (TrackerLit()) LightsLit++;
+
+	//
+	// Check the segments
+	//
+
+	SegmentsLit = 6;
+	if (CompActy) 
+		SegmentsLit += 4;
+
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Prog, false);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Verb, VerbFlashing);
+	SegmentsLit += TwoDigitDisplaySegmentsLit(Noun, NounFlashing);
+
+	SegmentsLit += SixDigitDisplaySegmentsLit(R1);
+	SegmentsLit += SixDigitDisplaySegmentsLit(R2);
+	SegmentsLit += SixDigitDisplaySegmentsLit(R3);
+
+	// 10 lights with together max. 6W, 184 segments with together max. 4W  
+	DrawPower((LightsLit * 0.6) + (SegmentsLit * 0.022));
+
+	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
 }
 
 void DSKY::KeyClick()
@@ -363,7 +407,6 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 {
 	if (lit) {
 		oapiBlt(surf, lights, dstx, dsty, dstx + 101, dsty + 0, 49, 23);
-		LightsLit++;
 	}
 	else {
 		oapiBlt(surf, lights, dstx, dsty, dstx + 0, dsty + 0, 49, 23);
@@ -373,8 +416,6 @@ void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, 
 void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 
 {
-	LightsLit = 0;
-
 	if (!IsPowered())
 		return;
 
@@ -557,17 +598,35 @@ void DSKY::RenderTwoDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	if (Flash && !FlashOn)
 		return;
 
-	if (Str[0] != ' ') {
+	if (Str[0] >= '0' && Str[0] <= '9') {
 		Curdigit = Str[0] - '0';
-		SegmentsLit += SegmentCount[Curdigit];
 		oapiBlt(surf,digits,dstx,dsty,16*Curdigit,0,16,19);
 	}
 
-	if (Str[1] != ' ') {
+	if (Str[1] >= '0' && Str[1] <= '9') {
 		Curdigit = Str[1] - '0';
-		SegmentsLit += SegmentCount[Curdigit];
 		oapiBlt(surf,digits,dstx+16,dsty,16*Curdigit,0,16,19);
 	}
+}
+
+int DSKY::TwoDigitDisplaySegmentsLit(char *Str, bool Flash)
+
+{
+	int Curdigit, s = 0;
+
+	if (Flash && !FlashOn)
+		return s;
+
+	if (Str[0] >= '0' && Str[0] <= '9') {
+		Curdigit = Str[0] - '0';
+		s += SegmentCount[Curdigit];
+	}
+
+	if (Str[1] >= '0' && Str[1] <= '9') {
+		Curdigit = Str[1] - '0';
+		s += SegmentCount[Curdigit];
+	}
+	return s;
 }
 
 void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str)
@@ -577,18 +636,15 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	int i;
 
 	if (Str[0] == '-') {
-		SegmentsLit += 1;
 		oapiBlt(surf,digits,dstx,dsty,161,0,10,19);
 	}
 	else if (Str[0] == '+') {
-		SegmentsLit += 2;
 		oapiBlt(surf,digits,dstx,dsty,174,0,12,19);
 	}
 
 	for (i = 1; i < 6; i++) {
-		if (Str[i] != ' ') {
+		if (Str[i] >= '0' && Str[i] <= '9') {
 			Curdigit = Str[i] - '0';
-			SegmentsLit += SegmentCount[Curdigit];
 			oapiBlt(surf, digits, dstx + (16*i), dsty, 16*Curdigit, 0, 16,19);
 		}
 		else {
@@ -597,11 +653,29 @@ void DSKY::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, i
 	}
 }
 
+int DSKY::SixDigitDisplaySegmentsLit(char *Str)
+
+{
+	int	Curdigit;
+	int i, s = 0;
+
+	if (Str[0] == '-') 
+		s += 1;
+	else if (Str[0] == '+') 
+		s += 2;
+
+	for (i = 1; i < 6; i++) {
+		if (Str[i] >= '0' && Str[i] <= '9') {
+			Curdigit = Str[i] - '0';
+			s += SegmentCount[Curdigit];
+		}
+	}
+	return s;
+}
+
 void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
 
 {
-	SegmentsLit = 0;
-
 	if (!IsPowered())
 		return;
 
@@ -613,14 +687,11 @@ void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
 	oapiBlt(surf, disp,  8, 107,  0, 32, 89,  4, SURF_PREDEF_CK);
 	oapiBlt(surf, disp,  8, 141,  0, 32, 89,  4, SURF_PREDEF_CK);
 
-	SegmentsLit += 6;
-
 	if (CompActy) {
 		//
 		// Do stuff to update Comp Acty light.
 		//
 
-		SegmentsLit += 4;;
 		oapiBlt(surf, disp,  6,   4,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 
