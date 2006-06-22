@@ -1,0 +1,11 @@
+#
+# CSM MET-based audio files.
+#
+#
+# Format:
+# Time;file-name (no .wav)
+#
+# Note that the hours must currently have three digits. That should be fixed at
+# some point.
+#
+-001:31:00;T-01-30
