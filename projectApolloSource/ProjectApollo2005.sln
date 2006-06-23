@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
+# Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASTP", "VC2005\ASTP\ASTP.vcproj", "{BAE34D87-5EAE-491C-AE6D-73B6B1E487D2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crawler", "VC2005\Crawler\Crawler.vcproj", "{BAAA2ADB-0507-4E33-9E80-23CEE3B74E37}"
@@ -53,6 +53,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sm", "VC2005\SM\sm.vcproj", "{D1B7F820-4A7A-47CB-BDB2-62E8B8C29F61}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LES", "VC2005\LES\LES.vcproj", "{0046609E-6A36-4A27-B328-D2291BF4A163}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProjectApolloMFD", "VC2005\ProjectApolloMFD\ProjectApolloMFD.vcproj", "{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -148,6 +150,10 @@ Global
 		{0046609E-6A36-4A27-B328-D2291BF4A163}.Debug|Win32.Build.0 = Debug|Win32
 		{0046609E-6A36-4A27-B328-D2291BF4A163}.Release|Win32.ActiveCfg = Release|Win32
 		{0046609E-6A36-4A27-B328-D2291BF4A163}.Release|Win32.Build.0 = Release|Win32
+		{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}.Debug|Win32.Build.0 = Debug|Win32
+		{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}.Release|Win32.ActiveCfg = Release|Win32
+		{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

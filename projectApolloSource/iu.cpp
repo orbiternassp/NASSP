@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/06/08 15:27:59  tschachim
+  *	SIVB is can be controlled manually in the Virtual AGC case
+  *	until we'll have a smarter IU.
+  *	
   *	Revision 1.4  2006/04/25 13:41:11  tschachim
   *	Removed GetXXXSwitchState.
   *	
@@ -56,8 +60,6 @@ IU::IU(SoundLib &s, CSMcomputer &cmc, GuardedToggleSwitch &siisivsepswitch, XLun
 	   : soundlib(s), agc(cmc), SIISIVBSepSwitch(siisivsepswitch), TLIEnableSwitch(tlienableswitch)
 
 {
-	TLIBurnTime = 0.0;
-	TLIBurnDeltaV = 0.0;
 	TLICapable = false;
 	TLIBurnStart = false;
 	TLIBurnDone = false;
@@ -72,16 +74,38 @@ IU::IU(SoundLib &s, CSMcomputer &cmc, GuardedToggleSwitch &siisivsepswitch, XLun
 	thg_aps = 0;
 	Realism = REALISM_DEFAULT;
 	Crewed = true;
+	VesselISP = 0;
+	VesselThrust = 0;
 
 	SIVBBurn = false;
 	SIVBBurnStart = 0;
 	SIVBApogee = 0;
+
+	//
+	// Generic thrust decay value. This still needs tweaking.
+	//
+
+	TLIBurnState = 0;
+	TLIThrustDecayDV = 6.1;
+	TLIBurnTime = 0.0;
+	TLIBurnStartTime = 0.0;
+	TLIBurnEndTime = 0.0;
+	TLIBurnDeltaV = 0.0;
+	TLICutOffVel = 0.0;
+	TLILastAltitude = 0.0;
 }
 
 IU::~IU()
 
 {
 	// Nothing for now.
+}
+
+void IU::SetVesselStats(double ISP, double Thrust)
+
+{
+	VesselISP = ISP;
+	VesselThrust = Thrust;
 }
 
 void IU::SetMissionInfo(bool tlicapable, bool crewed, int realism, THRUSTER_HANDLE *th, PROPELLANT_HANDLE *ph, 
@@ -139,6 +163,62 @@ void IU::Timestep(double simt, double simdt)
 	// Switches to inhibit TLI
 	bool XLunar = (TLIEnableSwitch.GetState() == TOGGLESWITCH_UP);
 	bool SIISIVBSep = (SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP);
+
+	// TLI burn calculations
+	switch (TLIBurnState) {
+
+		case 0:
+			// Disabled
+			break;
+
+		case 1:
+			// Waiting for sequence start
+			DoTLICalcs();
+			// Burn sequence begins 9:38 min before ignition
+			if (TLIBurnStartTime - OurVessel->GetMissionTime() <= (9.0 * 60.0 + 38.0)) {
+				if (SIVBStart()) {
+					TLIBurnState++;
+				} else {
+					TLIBurnState = 0;
+				}
+			}
+			// TLI inhibit
+			if (!XLunar) {
+				TLIBurnState = 0;
+			}				
+			break;
+
+		case 2:
+			// Waiting for ignition
+			DoTLICalcs();
+			if (OurVessel->GetEngineLevel(ENGINE_MAIN) >= 1.0) {
+				TLILastAltitude = OurVessel->GetAltitude();
+				TLIBurnState++;
+			}
+			// Inhibited?
+			if (!TLIBurnStart)
+				TLIBurnState = 0;
+			break;
+
+		case 3:
+			// Monitor burn... 
+			UpdateTLICalcs();
+
+			// ...and cut off the engine at the appropriate velocity.
+			VESSELSTATUS status;
+			OurVessel->GetStatus(status);
+			if (length(status.rvel) >= TLICutOffVel) {
+				if (TLIBurnStart) 
+					TLIBurnDone = true;
+
+				TLIBurnState = 0;
+			}
+			// Inhibited?
+			if (!TLIBurnStart)
+				TLIBurnState = 0;
+			break;
+		
+	}
 
 	if (TLICapable) {
 		switch (State) {
@@ -211,7 +291,7 @@ void IU::Timestep(double simt, double simdt)
 					// Reset time acceleration to normal.
 					oapiSetTimeAcceleration(1);
 
-					NextMissionEventTime = OurVessel->GetMissionTime() + 10.0;
+					NextMissionEventTime = OurVessel->GetMissionTime() + 38.0;
 					State++;
 				}
 			}
@@ -222,7 +302,7 @@ void IU::Timestep(double simt, double simdt)
 				OurVessel->ClearSIISep();
 
 				// Next event is 100s before ignition
-				NextMissionEventTime = OurVessel->GetMissionTime() + ((9.0 * 60.0) + 38.0 - 10.0 - 100.0); 
+				NextMissionEventTime = OurVessel->GetMissionTime() + ((9.0 * 60.0) - 100.0); 
 				State++;
 			}
 
@@ -665,6 +745,99 @@ void IU::SIVBBoiloff()
 	OurVessel->SetPropellantMass(*ph_SIVB, FuelMass);
 }
 
+bool IU::StartTLIBurn(double timeToEjection, double dV) 
+
+{
+	if (!TLICapable || TLIBurnStart || TLIBurnDone)
+		return false;
+
+	if (OurVessel->GetStage() != STAGE_ORBIT_SIVB)
+		return false;
+
+	if (TLIBurnState != 0) 
+		return false;
+
+	TLIBurnDeltaV = dV;
+	TLIBurnTime = OurVessel->GetMissionTime() + timeToEjection;
+
+	if (!DoTLICalcs())
+		return false;
+
+	// Burn sequence begins 9:38 min before ignition
+	if (TLIBurnStartTime - OurVessel->GetMissionTime() <= (9.0 * 60.0 + 38.0))
+		return false;
+
+	TLIBurnState = 1;
+	return true;
+}
+
+bool IU::DoTLICalcs()
+
+{
+	extern void PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel, double a, double Mu,
+						  double Time, VECTOR3 &NewPos, VECTOR3 &NewVel, double &NewVelMag);
+	//
+	// We know the expected deltaV, so we need to calculate the time for the burn,
+	// and the expected end velocity.
+	//
+
+	double mass = OurVessel->GetMass();
+	double isp = VesselISP;
+	double fuelmass = OurVessel->GetFuelMass();
+	double thrust = VesselThrust;
+
+	double massrequired = mass * (1.0 - exp(-((TLIBurnDeltaV - TLIThrustDecayDV) / isp)));
+
+	if (massrequired > fuelmass) {
+		return false;
+	}
+
+	double deltaT = massrequired / (thrust / isp);
+
+	//
+	// Start the burn early, subtracting half the burn length.
+	//
+
+	TLIBurnStartTime = TLIBurnTime - (deltaT / 2.0);
+	TLIBurnEndTime = TLIBurnTime + (deltaT / 2.0);
+
+	//
+	// Now calculate the cutoff velocity.
+	//
+
+	VECTOR3 Pos, Vel;
+	OurVessel->GetRelativePos(OurVessel->GetGravityRef(), Pos);
+	OurVessel->GetRelativeVel(OurVessel->GetGravityRef(), Vel);
+
+	ELEMENTS el;
+	double mjd_ref;
+	OurVessel->GetElements(el, mjd_ref);
+
+	VECTOR3 NewPos, NewVel;
+	double NewVelMag;
+
+	PredictPosVelVectors(Pos, Vel, el.a, 3.986e14,
+						  TLIBurnTime - OurVessel->GetMissionTime(), NewPos, NewVel, NewVelMag);
+
+	TLICutOffVel = NewVelMag + TLIBurnDeltaV - TLIThrustDecayDV;
+	return true;
+}
+
+void IU::UpdateTLICalcs()
+
+{
+	double MaxE = TLICutOffVel * TLICutOffVel;
+
+	OBJHANDLE hbody = OurVessel->GetGravityRef();
+	double bradius = oapiGetSize(hbody);
+	double dist = bradius + OurVessel->GetAltitude();
+	double g = (G * bradius * bradius) / (dist * dist);
+	double deltaE = 2.0 * (g * (OurVessel->GetAltitude() - TLILastAltitude));
+
+	TLILastAltitude = OurVessel->GetAltitude();
+	TLICutOffVel = sqrt(MaxE - deltaE);
+}
+
 void IU::SaveState(FILEHANDLE scn)
 
 {
@@ -676,8 +849,13 @@ void IU::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 	oapiWriteScenario_float(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 
+	oapiWriteScenario_int(scn, "TLIBURNSTATE", TLIBurnState);
 	oapiWriteScenario_float(scn, "TLITIME", TLIBurnTime);
 	oapiWriteScenario_float(scn, "TLIDV", TLIBurnDeltaV);
+	oapiWriteScenario_float(scn, "TLIBURNSTARTTIME", TLIBurnStartTime);
+	oapiWriteScenario_float(scn, "TLIBURNENDTIME", TLIBurnEndTime);
+	oapiWriteScenario_float(scn, "TLICUTOFFVEL", TLICutOffVel);
+	oapiWriteScenario_float(scn, "TLILASTALTITUDE", TLILastAltitude);
 
 	oapiWriteLine(scn, IU_END_STRING);
 }
@@ -697,9 +875,28 @@ void IU::LoadState(FILEHANDLE scn)
 			sscanf(line + 7, "%f", &flt);
 			TLIBurnTime = flt;
 		}
+		else if (!strnicmp (line, "TLIBURNSTATE", 12)) {
+			sscanf (line + 12, "%d", &TLIBurnState);
+		}
 		else if (!strnicmp (line, "TLIDV", 5)) {
 			sscanf(line + 5, "%f", &flt);
 			TLIBurnDeltaV = flt;
+		}
+		else if (!strnicmp (line, "TLIBURNSTARTTIME", 16)) {
+			sscanf(line + 16, "%f", &flt);
+			TLIBurnStartTime = flt;
+		}
+		else if (!strnicmp (line, "TLIBURNENDTIME", 14)) {
+			sscanf(line + 14, "%f", &flt);
+			TLIBurnEndTime = flt;
+		}
+		else if (!strnicmp (line, "TLICUTOFFVEL", 12)) {
+			sscanf(line + 12, "%f", &flt);
+			TLICutOffVel = flt;
+		}
+		else if (!strnicmp (line, "TLILASTALTITUDE", 15)) {
+			sscanf(line + 15, "%f", &flt);
+			TLILastAltitude = flt;
 		}
 		else if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line + 5, "%d", &State);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.87  2006/06/17 18:15:27  tschachim
+  *	Bugfix clbkConsumeBufferedKey.
+  *	
   *	Revision 1.86  2006/06/11 14:45:36  movieman523
   *	Quick fix for Apollo 4. Will need more work in the future.
   *	
@@ -569,6 +572,7 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 	//
 
 	agc.SetVesselStats(isp, thrust, false);
+	iu.SetVesselStats(isp, thrust);
 
 	MixtureRatio = ratio;
 }
@@ -608,6 +612,7 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 	//
 
 	agc.SetVesselStats(isp, thrust, false);
+	iu.SetVesselStats(isp, thrust);
 
 	MixtureRatio = ratio;
 }
