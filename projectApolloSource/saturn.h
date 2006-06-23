@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.190  2006/06/12 20:47:36  movieman523
+  *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
+  *	
   *	Revision 1.189  2006/06/10 23:27:41  movieman523
   *	Updated abort code.
   *	
@@ -590,6 +593,7 @@ public:
 	int GetApolloNo() { return ApolloNo; };
 	double GetMissionTime() { return MissionTime; };
 	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
+	IU *GetIU() { return &iu; };
 
 	//
 	// CWS functions.

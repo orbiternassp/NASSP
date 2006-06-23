@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/04/25 13:39:15  tschachim
+  *	Removed GetXXXSwitchState.
+  *	
   *	Revision 1.2  2006/02/21 12:01:47  tschachim
   *	Moved TLI sequence to the IU.
   *	
@@ -42,9 +45,13 @@ public:
 	void Timestep(double simt, double simdt);
 	void ChannelOutput(int address, int value);
 	void RegisterVessel(Saturn *v) { OurVessel = v; };
+	void SetVesselStats(double ISP, double Thrust);
 	void SetMissionInfo(bool tlicapable, bool crewed, int realism, THRUSTER_HANDLE *th, PROPELLANT_HANDLE *ph, THGROUP_HANDLE *thg, double sivbburnstart, double sivbapogee);
 	bool IsTLICapable() { return TLICapable; };
-
+	virtual bool StartTLIBurn(double timeToEjection, double dV);
+	bool IsTLIInProgress() { return (TLIBurnState != 0); }
+	double GetTLIBurnStartTime() { return TLIBurnStartTime; }
+	double GetTLIBurnEndTime() { return TLIBurnEndTime; }
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
@@ -53,6 +60,8 @@ protected:
 	void SIVBStop();
 	void SIVBBoiloff();
 	void TLIInhibit();
+	bool DoTLICalcs();
+	void UpdateTLICalcs();
 
 	bool TLIBurnStart;
 	bool TLIBurnDone;
@@ -61,9 +70,15 @@ protected:
 	double LastMissionEventTime;
 	bool FirstTimeStepDone;
 
-	// Not used for now 
+	// TLI burn calculations
+	int TLIBurnState;
 	double TLIBurnTime;
+	double TLIBurnStartTime;
+	double TLIBurnEndTime;
 	double TLIBurnDeltaV;
+	double TLICutOffVel;
+	double TLIThrustDecayDV;
+	double TLILastAltitude;
 
 	//
 	// Sounds.
@@ -87,6 +102,8 @@ protected:
 	int Realism;
 	bool Crewed;
 	bool TLICapable;
+	double VesselISP;
+	double VesselThrust;
 
 	// TODO: This stuff should be encapsuled by a "SIVBEngine" class we have a reference to here
 	// depending how the engines will be modelled when the new SPSDK arrives.
