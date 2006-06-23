@@ -82,7 +82,11 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = "C:/Program Files/orbiter-nassp/Orbitersdk/samples/ProjectApollo"
+INPUT                  = "C:/Program Files/orbiter-nassp/Orbitersdk/samples/ProjectApollo" \
+                         "c:/program files/orbiter-nassp/Orbitersdk/samples/ProjectApollo/PanelSDK" \
+                         "c:/program files/orbiter-nassp/orbiterSDK/Samples/ProjectApollo/PanelSDK/Internals" \
+                         "c:/program files/orbiter-nassp/orbiterSDK/Samples/ProjectApollo/yaAGC" \
+                         "c:/program files/orbiter-nassp/orbiterSDK/Samples/ProjectApollo/yaAGS"
 FILE_PATTERNS          = *.c \
                          *.cc \
                          *.cxx \
@@ -161,7 +165,7 @@ TREEVIEW_WIDTH         = 250
 #---------------------------------------------------------------------------
 # configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
-GENERATE_LATEX         = YES
+GENERATE_LATEX         = NO
 LATEX_OUTPUT           = latex
 LATEX_CMD_NAME         = latex
 MAKEINDEX_CMD_NAME     = makeindex
@@ -235,13 +239,13 @@ CLASS_DIAGRAMS         = NO
 HIDE_UNDOC_RELATIONS   = YES
 HAVE_DOT               = YES
 CLASS_GRAPH            = YES
-COLLABORATION_GRAPH    = YES
+COLLABORATION_GRAPH    = NO
 GROUP_GRAPHS           = YES
 UML_LOOK               = NO
 TEMPLATE_RELATIONS     = NO
 INCLUDE_GRAPH          = YES
 INCLUDED_BY_GRAPH      = YES
-CALL_GRAPH             = NO
+CALL_GRAPH             = YES
 CALLER_GRAPH           = NO
 GRAPHICAL_HIERARCHY    = YES
 DIRECTORY_GRAPH        = YES
