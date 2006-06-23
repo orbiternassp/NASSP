@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/04/25 13:51:32  tschachim
+  *	New KSC.
+  *	
   *	Revision 1.13  2006/03/02 14:54:39  tschachim
   *	Velocity dependent sound disabled.
   *	
@@ -178,14 +181,15 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 
 	double head;
 	oapiGetHeading(GetHandle(), &head);
+	double timeW = oapiGetTimeAcceleration();
 
 	if (keyAccelerate) {
-		velocity += 0.5 * simdt;
+		velocity += 0.5 * simdt * (pow(2.0, log10(timeW))) / timeW;
 		if (velocity > maxVelocity) velocity = maxVelocity;
 		keyAccelerate = false;
 	}
 	if (keyBrake) {
-		velocity -= 0.5 * simdt;
+		velocity -= 0.5 * simdt * (pow(2.0, log10(timeW))) / timeW;
 		if (velocity < 0) velocity = 0;
 		keyBrake = false;
 	}
@@ -205,11 +209,10 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	
 	} else return;
 
-	double r = 152.4;	// 500 ft
+	//double r = 152.4;	// 500 ft
+	double r = 106.7; // 350 ft
 	double dheading = velocity * simdt / r;
-
 	// turn speed is only doubled when time acc is multiplied by ten:
-	double timeW = oapiGetTimeAcceleration();
 	dheading = (pow(5.0, log10(timeW))) * dheading / timeW;
 
 	if (keyLeft) {
