@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.191  2006/06/23 11:56:48  tschachim
+  *	New Project Apollo MFD for TLI burn control.
+  *	
   *	Revision 1.190  2006/06/12 20:47:36  movieman523
   *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
   *	
@@ -299,6 +302,16 @@
   *	
   **************************************************************************/
 
+///
+/// \defgroup Saturns Saturn launch vehicle code.
+/// \brief This code supports the Saturn launch vehicles and CSM.
+///
+
+///
+/// \defgroup SepStages Seperated stages.
+/// \brief This code supports seperated stages of the Saturn launch vehicles and CSM.
+///
+
 #if !defined(_PA_SATURN_H)
 #define _PA_SATURN_H
 
@@ -379,37 +392,58 @@
 // Random failure flags.
 //
 
+///
+/// For simplicity we pack all the failure flags into uniont which combine bitfields and 32-bit ints.
+/// As a result we only need to save the int value to the scenario file, and when we load it we automatically
+/// get all the individual flags without bothering to extract them manually from the int or save and load each
+/// flag individually.
+/// \defgroup FailFlags Failure flags.
+/// \brief Collection of flags used to specify failures during the mission.
+///
+
+///
+/// \ingroup FailFlags
+/// \brief Landing failure flags.
+///
 typedef union {
 	struct {
-		unsigned Init:1;
-		unsigned CoverFail:1;
-		unsigned DrogueFail:1;
-		unsigned MainFail:1;
+		unsigned Init:1;		///< Flags have been initialised.
+		unsigned CoverFail:1;	///< Apex cover will fail to deploy automatically.
+		unsigned DrogueFail:1;	///< Drogue will fail to deploy automatically.
+		unsigned MainFail:1;	///< Main chutes will fail to deploy automatically.
 	} u;
-	int word;
+	int word;					///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
 } LandingFailures;
 
+///
+/// \ingroup FailFlags
+/// \brief Launch failure flags.
+///
 typedef union {
 	struct {
-		unsigned Init:1;
-		unsigned EarlySICenterCutoff:1;
-		unsigned EarlySIICenterCutoff:1;
-		unsigned LETAutoJetFail:1;
-		unsigned LESJetMotorFail:1;
-		unsigned SIIAutoSepFail:1;
+		unsigned Init:1;					///< Flags have been initialised.
+		unsigned EarlySICenterCutoff:1;		///< The first stage center engine will shut down early.
+		unsigned EarlySIICenterCutoff:1;	///< The second stage center engine will shut down early.
+		unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
+		unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
+		unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
 	} u;
-	int word;
+	int word;								///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
 } LaunchFailures;
 
+///
+/// \ingroup FailFlags
+/// \brief Flags specifying which control panel switches will fail.
+///
 typedef union {
 	struct {
-		unsigned Init:1;
-		unsigned TowerJett1Fail:1;
-		unsigned TowerJett2Fail:1;
-		unsigned SMJett1Fail:1;
-		unsigned SMJett2Fail:1;
+		unsigned Init:1;				///< Flags have been initialised.
+		unsigned TowerJett1Fail:1;		///< TWR JETT switch 1 will fail.
+		unsigned TowerJett2Fail:1;		///< TWR JETT switch 2 will fail.
+		unsigned SMJett1Fail:1;			///< SM JETT switch 1 will fail.
+		unsigned SMJett2Fail:1;			///< SM JETT switch 2 will fail
 	} u;
-	int word;
+	int word;							///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
 } SwitchFailures;
 
 typedef struct {
@@ -500,31 +534,104 @@ typedef struct {
 	bool TestAlarms;
 } AGCWarningStatus;
 
+///
+/// \brief Generic Saturn launch vehicle class.
+/// \ingroup Saturns
+///
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	Saturn(OBJHANDLE hObj, int fmodel);
 	virtual ~Saturn();
 
+	///
+	/// Turn the autopilot on or off.
+	/// \brief Set the autopilot state.
+	/// \param ap Autopilot on or off?
+	///
 	void SetAutopilot(bool ap) { autopilot = ap; };
+
+	///
+	/// Check whether the autopilot is enabled.
+	/// \brief Get the autopilot state.
+	/// \return Is the autopilot enabled?
+	///
 	bool GetAutopilot() { return autopilot; };
+
+	///
+	/// Turn on the SII Seperation light on the control panel.
+	/// \brief Set the SII Seperation light.
+	///
 	void SetSIISep() { SIISepState = true; };
+
+	///
+	/// Turn off the SII Seperation light on the control panel.
+	/// \brief Clear the SII Seperation light.
+	///
 	void ClearSIISep() { SIISepState = false; };
+
+	///
+	/// Turn on an engine indicator light on the control panel.
+	/// \brief Turn on engine light
+	/// \param i Specify the engine light number to turn on (1-8).
+	///
 	void SetEngineIndicator(int i);
+
+	///
+	/// Turn off an engine indicator light on the control panel.
+	/// \brief Turn off engine light
+	/// \param i Specify the engine light number to turn off (1-8).
+	///
 	void ClearEngineIndicator(int i);
+
+	///
+	/// Call this function to jettison the LET and BPC from the Saturn. This should work during any stage,
+	/// and will handle any tidying up required. If called with no LET attached, it will just return.
+	/// \brief Jettison the LET and BPC.
+	/// \param UseMain Specifies whether to use the main abort motor or the jettison motor.
+	///
 	void JettisonLET(bool UseMain = false);
 
+	///
+	/// This function can be used during the countdown to update the MissionTime. Since we launch when
+	/// MissionTime reaches zero, setting MissionTime to (-t) tells the code when to launch.
+	/// \brief Update the launch time.
+	/// \param t Specifies the time in seconds to wait before launch.
+	///
 	void UpdateLaunchTime(double t);	
 
-	//
-	// Set up the default mesh for the virtual cockpit.
-	//
-
+	///
+	/// Set up the default mesh for the virtual cockpit.
+	///
 	void DefaultCMMeshSetup();
 
+	///
+	/// Turn a Service Module RCS thruster on or off.
+	/// \brief SM RCS thruster control.
+	/// \param Quad SM RCS thruster quad.
+	/// \param Thruster Thruster number in quad.
+	/// \param Active Thruster on or off?
+	///
 	virtual void SetRCSState(int Quad, int Thruster, bool Active);
+
+	///
+	/// Turn a Command Module RCS thruster on or off.
+	/// \brief CM RCS thruster control.
+	/// \param Thruster Thruster number to control.
+	/// \param Active Thruster on or off?
+	///
 	virtual void SetCMRCSState(int Thruster, bool Active);
+
+	///
+	/// Turn Service Propulsion System engine on or off.
+	/// \brief SM SPS engine control.
+	/// \param Active Engine on or off?
+	///
 	virtual void SetSPSState(bool Active);
+
 	// DS20060226 Added
 	double sps_pitch_position;
 	double sps_yaw_position;
@@ -532,13 +639,13 @@ public:
 	virtual double SetSPSYaw(double direction);
 
 	// DS20060301 DirectInput stuff
-	// Handle to DLL instance
+	/// Handle to DLL instance
 	HINSTANCE dllhandle;
-	// pointer to DirectInput class itself
+	/// pointer to DirectInput class itself
 	LPDIRECTINPUT8 dx8ppv;
-	// Joysticks-Enabled flag / counter - Zero if we aren't using DirectInput, nonzero is the number of joysticks we have.
+	/// Joysticks-Enabled flag / counter - Zero if we aren't using DirectInput, nonzero is the number of joysticks we have.
 	int js_enabled;
-	// Pointers to DirectInput joystick devices
+	/// Pointers to DirectInput joystick devices
 	LPDIRECTINPUTDEVICE8 dx8_joystick[2]; // One for THC, one for RHC, ignore extras
 	DIDEVCAPS			 dx8_jscaps[2];   // Joystick capabilities
 	DIJOYSTATE2			 dx8_jstate[2];   // Joystick state
@@ -557,13 +664,36 @@ public:
 	//
 	// General functions that handle calls from Orbiter.
 	//
+
+	///
+	/// \brief Orbiter dock state function.
+	///
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 	bool clbkLoadGenericCockpit ();
 	bool clbkPanelMouseEvent(int id, int event, int mx, int my);
 	bool clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf);
 	void clbkMFDMode (int mfd, int mode);
+
+	///
+	/// \brief Orbiter state saving function.
+	/// \param scn Scenario file to save to.
+	///
 	void clbkSaveState (FILEHANDLE scn);
+
+	///
+	/// \brief Orbiter timestep function.
+	/// \param simt Current simulation time, in seconds since Orbiter was started.
+	/// \param simdt Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
 	void clbkPostStep (double simt, double simdt, double mjd);
+
+	///
+	/// \brief Orbiter timestep function.
+	/// \param simt Current simulation time, in seconds since Orbiter was started.
+	/// \param simdt Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
 	void clbkPreStep(double simt, double simdt, double mjd);
 	bool clbkLoadPanel (int id);
 	int clbkConsumeDirectKey(char *keystate);
@@ -571,6 +701,14 @@ public:
 	bool clbkLoadVC (int id);
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
+
+	///
+	/// This function performs all actions required to update the spacecraft state as time
+	/// passes. This is a pure virtual function implemented by the derived classes.
+	/// \brief Process time steps from Orbiter.
+	/// \param simt Current MET in seconds.
+	/// \param simdt Time in seconds since last timestep.
+	///
 	virtual void Timestep(double simt, double simdt) = 0;
 
 	void InitVC (int vc);
@@ -589,21 +727,62 @@ public:
 	virtual void LaunchVehicleUnbuild() {};
 	
 	int GetBuildStatus() { return buildstatus; }
+
+	///
+	/// \brief Get the current stage number
+	/// \return Stage number as specified in nassdefs.h
+	///
 	int GetStage() { return stage; };
+
+	///
+	/// \brief Get the Apollo mission number
+	/// \return Apollo mission number.
+	///
 	int GetApolloNo() { return ApolloNo; };
+
+	///
+	/// \brief Get the current mission elapsed time
+	/// \return Current time
+	///
 	double GetMissionTime() { return MissionTime; };
+
+	///
+	/// Since we can now run with either the Virtual AGC emulator or the C++ AGC, this function
+	/// allows you to check which we're using.
+	/// \brief Are we running a Virtual AGC?
+	/// \return True for Virtual AGC, false for C++ AGC.
+	///
 	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
+
+	///
+	/// Get a pointer to the Saturn Instrument Unit, which controls the autopilot prior to SIVb/CSM
+	/// seperation.
+	/// \brief Access the Saturn IU.
+	/// \return Pointer to IU object.
+	///
 	IU *GetIU() { return &iu; };
 
 	//
 	// CWS functions.
 	//
 
+	///
+	/// Get information on the atmosphere status in the CSM.
+	/// \brief Get atmosphere status.
+	/// \param atm Atmosphere information structure, updated by the call.
+	///
 	void GetAtmosStatus(AtmosStatus &atm);
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
 	void GetTankQuantities(TankQuantities &q);
 	void SetO2TankQuantities(double q);
+
+	///
+	/// Get information on the status of a fuel cell in the CSM.
+	/// \brief Get fuel cell status.
+	/// \param index Index of fuel cell to query (1-3)
+	/// \param fc Fuel cell information structure, updated by the call.
+	///
 	void GetFuelCellStatus(int index, FuelCellStatus &fc);
 	void GetPrimECSCoolingStatus(PrimECSCoolingStatus &pcs);
 	void GetSecECSCoolingStatus(SecECSCoolingStatus &scs);
@@ -614,62 +793,248 @@ public:
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	double GetAccelG() { return aZAcc / G; };
 
-	// LV Status Check
+	///
+	/// Get information on launch vehicle propellant tank quantities.
+	/// \brief Get LV fuel tank status.
+	/// \param LVq LV fuel tank information structure, updated by the call.
+	///
 	void GetLVTankQuantities(LVTankQuantities &LVq);
 
 	//
 	// Panel SDK support.
 	//
 	
+	///
+	/// Open or close the specified valve. This routine will also enable or disable the appropriate RCS
+	/// quads when valve states change.
+	/// \brief Set valve state
+	/// \param valve The valve number to set.
+	/// \param open Open or close the valve.
+	///
 	void SetValveState(int valve, bool open);
+
+	///
+	/// Check whether the specified valve is open or closed.
+	/// \brief Get valve state
+	/// \param valve The valve number to set.
+	/// \return True if the valve is open.
+	///
 	bool GetValveState(int valve);
+
+	///
+	/// Enable or disable the SPS based on current systems state.
+	/// \brief Check SPS state.
+	///
 	void CheckSPSState();
+
+	///
+	/// Enable or disable the RCS based on current systems state.
+	/// \brief Check RCS state.
+	///
 	void CheckRCSState();
-	void SetRCSThrusters(THRUSTER_HANDLE *th, PROPELLANT_HANDLE ph);
+
+	///
+	/// Enable or disable generic Service Module systems based on current state.
+	/// \brief Check SM systems state.
+	///
 	void CheckSMSystemsState();
+
+	///
+	/// Check whether the pyros are armed.
+	/// \brief Are pyros armed?
+	/// \return True if armed, false if not.
+	///
 	bool PyrosArmed();
+
+	///
+	/// Check whether the the Sequential Systems Logic is active.
+	/// \brief Is SECS Logic Active?
+	/// \return True if active, false if not.
+	///
 	bool SECSLogicActive();
+
+	///
+	/// If the scenario specified AUTOSLOW and time acceleration is enabled, slow it
+	/// down to 1.0.
+	/// \brief Disable time acceleration if desired.
+	///
 	void SlowIfDesired();
+
 	void ActivateS4RCS();
 	void DeactivateS4RCS();
 
 protected:
 
-	//
-	// PanelSDK functions as a interface between the
-	// actual System & Panel SDK and VESSEL class
-	//
-	// Note that this must be defined early in the file, so it will be initialised
-	// before any other classes which rely on it at creation. Don't move it further
-	// down without good reason, or you're likely to crash!
-	//
-
+	///
+	/// PanelSDK functions as a interface between the
+	/// actual System & Panel SDK and VESSEL class
+	///
+	/// Note that this must be defined early in the file, so it will be initialised
+	/// before any other classes which rely on it at creation. Don't move it further
+	/// down without good reason, or you're likely to crash!
+	///
+	/// \brief Panel SDK library.
+	///
     PanelSDK Panelsdk;
+
 	// FILE *PanelsdkLogFile;
 
 	void InitSwitches();
+
+	///
+	/// Set all engine indicator lights on the control panel.
+	/// \brief Set engine indicator lights.
+	///
 	void SetEngineIndicators();
+
+	///
+	/// Set a group of RCS thrusters to use the specified propellant source.
+	/// \brief Link RCS thrusters to propellant.
+	/// \param th Array of 8 thruster handles.
+	/// \param ph Propellant source (may be NULL).
+	///
+	void SetRCSThrusters(THRUSTER_HANDLE *th, PROPELLANT_HANDLE ph);
+
+	///
+	/// Clear all engine indicator lights on the control panel.
+	/// \brief Clear engine indicator lights.
+	///
 	void ClearEngineIndicators();
+
+	///
+	/// Turn on the liftoff light on the control panel.
+	/// \brief Set the liftoff light.
+	///
 	void SetLiftoffLight();
+
+	///
+	/// Turn off the liftoff light on the control panel.
+	/// \brief Clear the liftoff light.
+	///
 	void ClearLiftoffLight();
+
+	///
+	/// Turn the control panel LES Motor light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// as the real panel didn't have a light for this button.
+	/// \brief Set or clear the LES Motor light.
+	/// \param lit True to turn light on, false to turn light off.
+	///
 	void SetLESMotorLight(bool lit);
+
+	///
+	/// Turn the control panel Canard Deploy light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// as the real panel didn't have a light for this button.
+	/// \brief Set or clear the Canard Deploy light.
+	/// \param lit True to turn light on, false to turn light off.
+	///
 	void SetCanardDeployLight(bool lit);
+
+	///
+	/// Turn the control panel CSM/LV Sep light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// as the real panel didn't have a light for this button.
+	/// \brief Set or clear the CSM/LV Sep light.
+	/// \param lit True to turn light on, false to turn light off.
+	///
 	void SetCSMLVSepLight(bool lit);
+
+	///
+	/// Turn the control panel Apex Cover light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// as the real panel didn't have a light for this button.
+	/// \brief Set or clear the Apex Cover Sep light.
+	/// \param lit True to turn light on, false to turn light off.
+	///
 	void SetApexCoverLight(bool lit);
+
+	///
+	/// Turn the control panel Drogue Deploy light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// as the real panel didn't have a light for this button.
+	/// \brief Set or clear the Drogue Deploy light.
+	/// \param lit True to turn light on, false to turn light off.
+	///
 	void SetDrogueDeployLight(bool lit);
+
+	///
+	/// Turn the control panel Main Deploy light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// as the real panel didn't have a light for this button.
+	/// \brief Set or clear the Main Deploy light.
+	/// \param lit True to turn light on, false to turn light off.
+	///
 	void SetMainDeployLight(bool lit);
+
+	///
+	/// Turn on the LV Guidance warning light on the control panel to indicate an autopilot
+	/// failure.
+	/// \brief Set the LV Guidance light.
+	///
 	void SetLVGuidLight();
+
+	///
+	/// Turn off the LV Guidance warning light on the control panel.
+	/// \brief Clear the LV Guidance light.
+	///
 	void ClearLVGuidLight();
+
+	///
+	/// Turn on the LV Rate warning light on the control panel, indicating that the spacecraft
+	/// is turning too fast.
+	/// \brief Set the LV Rate light.
+	///
 	void SetLVRateLight();
+
+	///
+	/// Turn on the LV Rate warning light on the control panel.
+	/// \brief Set the LV Rate light.
+	///
 	void ClearLVRateLight();
 
+	///
+	/// Check whether the Earth Landing System is active.
+	/// \brief Is ELS Active?
+	/// \return True if active, false if not.
+	///
 	bool ELSActive();
+
+	///
+	/// Check whether the Earth Landing System is in AUTO mode.
+	/// \brief Is ELS in AUTO?
+	/// \return True if AUTO, false if not.
+	///
 	bool ELSAuto();
+
+	///
+	/// Check whether the Reaction Control System Logic is active.
+	/// \brief Is RCS Logic Active?
+	/// \return True if active, false if not.
+	///
 	bool RCSLogicActive();
+
+	///
+	/// Check whether the Reaction Control System propellant dump is active.
+	/// \brief Is RCS propellant dump Active?
+	/// \return True if active, false if not.
+	///
 	bool RCSDumpActive();
+
+	///
+	/// Check whether the Reaction Control System helium purge is active.
+	/// \brief Is RCS helium purge Active?
+	/// \return True if active, false if not.
+	///
 	bool RCSPurgeActive();
+
+	///
+	/// Check whether the Launch Escape Tower is attached.
+	/// \brief Is the LET still attached?
+	/// \return True if attached, false if not.
+	///
 	bool LETAttached();
 
+	///
+	/// Check whether the Saturn vehicle has a CSM. Some, like Apollo 5, flew without a CSM for
+	// LEM testing.
+	/// \brief Do we have a CSM?
+	/// \return True if CSM, false if not.
+	///
 	bool SaturnHasCSM();
 
 	//
@@ -678,11 +1043,34 @@ protected:
 
 	char StagesString[256];
 
+	///
+	/// Autopilot flag. True if autopilot enabled.
+	/// \brief Autopilot flag.
+	///
 	bool autopilot;
+
+	///
+	/// SII Sep light. True if light should be lit.
+	/// \brief SII Sep light.
+	///
 	bool SIISepState;
+
+	///
+	/// Abort light. True if ABORT light is lit.
+	/// \brief Abort light.
+	///
 	bool ABORT_IND;
 
+	///
+	/// Interstage attached flag. True if interstage is attached.
+	/// \brief Interstage flag.
+	///
 	bool InterstageAttached;
+
+	///
+	/// LESAttached flag. True if the LES is attached.
+	/// \brief LES flag.
+	///
 	bool LESAttached;
 
 	//
@@ -700,18 +1088,52 @@ protected:
 	// Current mission time and mission times for stage events.
 	//
 
+	///
+	/// The current Mission Elapsed Time. This is the main variable used for timing
+	/// automated events during the mission, giving the time in seconds from launch
+	/// (negative for the pre-launch countdown).
+	/// \brief Mission Elapsed Time.
+	///
 	double MissionTime;
+
+	///
+	/// The time in seconds of the next automated event to occur in the mission. This 
+	/// is a generic value used by the autopilot and staging code.
+	/// \brief Time of next event.
+	///
 	double NextMissionEventTime;
+
+	///
+	/// The time in seconds of the previous automated event that occur in the mission. This 
+	/// is a generic value used by the autopilot and staging code.
+	/// \brief Time of last event.
+	///
 	double LastMissionEventTime;
+
+	///
+	/// The time in seconds of the next check for destroying old stages. We destroy them when
+	/// they get too far away or too close to the ground as there's no point keeping them
+	/// hanging around when we'll never see them again.
+	/// \brief Time to next check for stage destruction.
+	///
 	double NextDestroyCheckTime;
+
+	///
+	/// The time in seconds when the next failure will occur.
+	/// \brief Time of next system failure.
+	///
 	double NextFailureTime;
 
-	//
-	// Offset from mission time for clock display on control
-	// panel, and offset of event timer from mission time.
-	//
-
+	///
+	/// Mission Timer display on control panel.
+	/// \brief Mission Timer display.
+	///
 	MissionTimer MissionTimerDisplay;
+
+	///
+	/// Event Timer display on control panel.
+	/// \brief Event Timer display.
+	///
 	EventTimer EventTimerDisplay;
 	
 	//
@@ -750,10 +1172,10 @@ protected:
 	double IGMStartTime;
 	bool IGMEnabled;
 
-	//
-	// Low-res mesh?
-	//
-
+	///
+	/// Flag for use of low-res meshes to reduce graphics lag.
+	/// \brief Using low-res meshes?
+	///
 	bool LowRes;
 
 	//
@@ -775,15 +1197,51 @@ protected:
 
 	int dockstate;
 
+	///
+	/// The Saturn vehicle number. Saturn 1b will usually be in the 200s, and Saturn V in the 500s.
+	/// \brief Saturn number.
+	///
 	int VehicleNo;
+
+	///
+	/// Apollo mission number. Some events are triggered based on the mission, so for fictional
+	/// missions this should be set to a value below 7 or above 18.
+	/// \brief Apollo mission number.
+	///
 	int ApolloNo;
 
+	///
+	/// Flag to determine whether we leave the OrbiterSound default ATC enabled. Some people like
+	/// it, so if this flag is true we allow them to use it.
+	/// \brief Orbitersound ATC enabled.
+	///
 	bool UseATC;
+
+	///
+	/// Realism is a value from 0 to 10, determining how realistic the systems simulation will be.
+	/// Zero is basically 'arcade mode' whereas 10 is as realistic as we can make it.
+	/// \brief Simulation realism level.
+	///
 	int Realism;
 
+	///
+	/// Flag to indicate that we've told the user to make a course correction.
+	/// \brief Course correction flag.
+	///
 	bool Scorrec;
+
+	///
+	/// Flag to indicate that the SM has exploded on the Apollo 13 mission.
+	/// \brief SM exploded flag.
+	///
 	bool ApolloExploded;
+
+	///
+	/// Flag to indicate that the CM has been 'burnt' by re-entry.
+	/// \brief CM burnt flag.
+	///
 	bool Burned;
+
 	bool EVA_IP;
 	bool HatchOpen;
 	bool CryoStir;
@@ -804,7 +1262,17 @@ protected:
 
 	#define PITCH_TABLE_SIZE	16
 
+	///
+	/// Table of Mission Times for pitch changes.
+	/// \brief Pitch change times.
+	///
 	double met[PITCH_TABLE_SIZE];
+
+	///
+	/// Table of pitch values at the specified mission times. The correct pitch will be
+	/// interpolated between these values.
+	/// \brief Pitch table values.
+	///
 	double cpitch[PITCH_TABLE_SIZE];
 
 	// DS20060304 SCS COMPONENTS	
@@ -823,7 +1291,14 @@ protected:
 	//
 	int coasEnabled;
 
+	///
+	/// \brief Right-hand FDAI.
+	///
 	FDAI fdaiRight;
+
+	///
+	/// \brief Left-hand FDAI.
+	///
 	FDAI fdaiLeft;
 	int fdaiDisabled;
 	int fdaiSmooth;
@@ -1250,33 +1725,30 @@ protected:
 	GuardedThreePosSwitch TowerJett1Switch;
 	GuardedThreePosSwitch TowerJett2Switch;
 
-	//
-	// Rotational Controller power switches.
-	//
-
+	///
+	/// \brief Rotational Controller power switches.
+	///
 	SwitchRow RotContrPowerRow;
 	ThreePosSwitch RotPowerNormal1Switch;
 	ThreePosSwitch RotPowerNormal2Switch;
 	ThreePosSwitch RotPowerDirect1Switch;
 	ThreePosSwitch RotPowerDirect2Switch;
 
-	//
-	// dV Thrust switches.
-	//
-
+	///
+	/// \brief dV Thrust switches.
+	///
 	SwitchRow dvThrustRow;
 	GuardedToggleSwitch dVThrust1Switch;
 	GuardedToggleSwitch dVThrust2Switch;
 
-	//
-	// SPS Switch.
-	//
-
+	///
+	/// \brief SPS Switch.
+	///
 	SaturnSPSSwitch SPSswitch;
 
-	//
-	// Cryo tank meters
-	//
+	///
+	/// \brief Cryo tank meters
+	///
 	SwitchRow CryoTankMetersRow;
 	SaturnH2PressureMeter H2Pressure1Meter;
 	SaturnH2PressureMeter H2Pressure2Meter;
@@ -1287,18 +1759,18 @@ protected:
 	SaturnCryoQuantityMeter O2Quantity1Meter;
 	SaturnCryoQuantityMeter O2Quantity2Meter;
 
-	//
-	// Fuel cell meters
-	//
+	///
+	/// \brief Fuel cell meters
+	///
 	SwitchRow FuelCellMetersRow;
 	SaturnFuelCellH2FlowMeter FuelCellH2FlowMeter;
 	SaturnFuelCellO2FlowMeter FuelCellO2FlowMeter;
 	SaturnFuelCellTempMeter FuelCellTempMeter;
 	SaturnFuelCellCondenserTempMeter FuelCellCondenserTempMeter;
 
-	//
-	// Cabin meters
-	//
+	///
+	/// \brief Cabin meters
+	///
 	SwitchRow CabinMetersRow;
 	SaturnSuitTempMeter SuitTempMeter;
 	SaturnCabinTempMeter CabinTempMeter;
@@ -1393,9 +1865,9 @@ protected:
 	SwitchRow HighGainAntennaYawPositionSwitchRow;
 	RotationalSwitch HighGainAntennaYawPositionSwitch;
 
-	//
-	// Docking probe switches
-	//
+	///
+	/// \brief Docking probe switches
+	///
 	SwitchRow DockingProbeSwitchesRow;
 	GuardedThreePosSwitch DockingProbeExtdRelSwitch;
 	ThreePosSwitch DockingProbeRetractPrimSwitch;
@@ -1986,18 +2458,22 @@ protected:
 
 	// old stuff end
 
-	//
-	// stage is the main stage of the flight. StageState is the current state within
-	// that stage.
-	//
-
+	///
+	/// Stage is the main stage of the flight.
+	/// \brief Flight stage.
+	///
 	int stage;
+
+	///
+	/// StageState is the current state within the flight stage.
+	/// \brief State within flight stage.
+	///
 	int StageState;
 
-	//
-	// Saturn type.
-	//
-
+	///
+	/// Which type of Saturn are we simulating? e.g. Saturn 1b, Saturn V, INT-20.
+	/// \brief Saturn rocket type.
+	///
 	int SaturnType;
 
 	#define SATSYSTEMS_NONE				  0
@@ -2020,13 +2496,48 @@ protected:
 	// moment.
 	//
 
+	///
+	/// Command module total mass in kg.
+	/// \brief CM total mass.
+	///
 	double CM_Mass;
+
+	///
+	/// Command module empty mass in kg.
+	/// \brief CM empty mass.
+	///
 	double CM_EmptyMass;
+
+	///
+	/// Command module fuel mass in kg.
+	/// \brief CM fuel mass.
+	///
 	double CM_FuelMass;
+
+	///
+	/// Service module total mass in kg.
+	/// \brief SM total mass.
+	///
 	double SM_Mass;
+
+	///
+	/// Service module empty mass in kg.
+	/// \brief SM empty mass.
+	///
 	double SM_EmptyMass;
+
+	///
+	/// Service module fuel mass in kg.
+	/// \brief SM fuel mass.
+	///
 	double SM_FuelMass;
+
+	///
+	/// SIVb payload mass in kg.
+	/// \brief SIVb payload mass.
+	///
 	double S4PL_Mass;
+
 	double Abort_Mass;
 	double Interstage_Mass;
 	double S4B_Mass;
@@ -2059,14 +2570,26 @@ protected:
 	// Engine numbers.
 	//
 
+	///
+	/// \brief Number of engines on stage one.
+	///
 	int SI_EngineNum;
+
+	///
+	/// \brief Number of engines on stage two.
+	///
 	int SII_EngineNum;
+
+	///
+	/// \brief Number of engines on stage three.
+	///
 	int SIII_EngineNum;
 
-	//
-	// Indicator lights.
-	//
-
+	///
+	/// Engine indicator lights on control panel: true for lit. Five used on Saturn V, eight on
+	/// Saturn 1b.
+	/// \brief Engine indicator lights.
+	///
 	bool ENGIND[9];
 	bool LAUNCHIND[8];
 	bool LVGuidLight;
@@ -2081,7 +2604,16 @@ protected:
 	double aHAcc;
 	double aZAcc;
 
+	///
+	/// Mesh offset for BPC and LET.
+	/// \brief Tower mesh offset.
+	///
 	double TowerOffset;
+
+	///
+	/// Mesh offset for SIVb.
+	/// \brief SIVb mesh offset.
+	///
 	double S4Offset;
 
 	double actualVEL;
@@ -2111,7 +2643,14 @@ protected:
 	// State variables that must be initialised but not saved.
 	//
 
+	///
+	/// \brief Flag for first timestep.
+	///
 	bool FirstTimestep;
+
+	///
+	/// \brief Flag for first call to generic timestep function.
+	///
 	bool GenericFirstTimestep;
 
 	int CurrentTimestep;
@@ -2367,6 +2906,11 @@ protected:
 	OBJHANDLE hEVA;
 
 	SoundLib soundlib;
+
+// Modif x15 to manage landing sound
+
+	SoundEvent sevent;
+	double NextSoundEventTime;
 
 	//
 	// Surfaces.
@@ -2869,4 +3413,4 @@ extern MESHHANDLE hFHO2;
 extern void SetupgParam(HINSTANCE hModule);
 extern void DeletegParam();
 
-#endif
+#endif // _PA_SATURN_H

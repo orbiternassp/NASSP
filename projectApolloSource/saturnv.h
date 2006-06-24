@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2006/05/27 11:50:04  movieman523
+  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
+  *	
   *	Revision 1.26  2006/05/27 00:54:28  movieman523
   *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
   *	
@@ -103,9 +106,16 @@
   *	
   **************************************************************************/
 
+///
+/// \brief Saturn V launch vehicle class.
+/// \ingroup Saturns
+///
 class SaturnV: public Saturn {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	SaturnV (OBJHANDLE hObj, int fmodel);
 	virtual ~SaturnV();
 
@@ -114,7 +124,18 @@ public:
 	//
 
 	void Timestep(double simt, double simdt);
+
+	///
+	/// \brief Orbiter state loading function.
+	/// \param scn Scenario file to load from.
+	/// \param status Pointer to current vessel status.
+	///
 	void clbkLoadStateEx (FILEHANDLE scn, void *status);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
 	void clbkSetClassCaps (FILEHANDLE cfg);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 
@@ -200,8 +221,19 @@ protected:
 	// End state.
 	//
 
+	///
+	/// \brief Number of retro rockets on stage one.
+	///
 	int SI_RetroNum;
+
+	///
+	/// \brief Number of retro rockets on stage two.
+	///
 	int SII_RetroNum;
+
+	///
+	/// \brief Number of ullage rockets on stage two.
+	///
 	int SII_UllageNum;
 
 	//

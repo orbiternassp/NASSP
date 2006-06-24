@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/06/21 13:11:29  tschachim
+  *	Bugfix power drawing.
+  *	
   *	Revision 1.12  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -59,6 +62,17 @@
   *	Initial version
   *	
   **************************************************************************/
+
+///
+/// \defgroup DSKY Display/Keyboard code.
+/// \brief This code supports the Apollo DSKY emulation.
+///
+
+///
+/// \ingroup DSKY
+/// DSKY simulation.
+/// \brief Generic DSKY simulation class.
+///
 
 class DSKY : public e_object
 

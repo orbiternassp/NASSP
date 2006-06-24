@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/03/12 01:13:28  dseagrav
+  *	Added lots of SCS items and FDAI stuff.
+  *	
   *	Revision 1.13  2006/02/27 00:57:48  dseagrav
   *	Added SPS thrust-vector control. Changes 20060225-20060226.
   *	
@@ -232,11 +235,27 @@ class IU;
 // Class definition.
 //
 
+///
+/// \ingroup AGC
+/// CSM AGC
+/// \brief Derived class for the CSM AGC with extra CSM-specific functionality.
+///
 class CSMcomputer: public ApolloGuidance
 
 {
 public:
 
+	///
+	/// The AGC needs to talk to various other objects in the CSM. These are passed to the
+	/// constructor so we can set references to them.
+	/// \brief CSM AGC constructor.
+	/// \param s Sound library to use for playing sound.
+	/// \param display Main control panel DSKY interface.
+	/// \param display2 Lower equipment bay DSKY interface.
+	/// \param im The CSM Inertial Measurement Unit.
+	/// \param p The Panel SDK library.
+	/// \param i The launch vehicle Instrument Unit for the launch vehicle autopilot.
+	///
 	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, IU &i);
 	virtual ~CSMcomputer();
 
@@ -256,18 +275,45 @@ public:
 	// External event handling.
 	//
 
+	///
+	/// Called to tell the AGC that liftoff has occured, and it should switch into the liftoff
+	/// program.
+	/// \brief Liftoff trigger.
+	///
 	void Liftoff(double simt);
 
 	//
 	// Data access.
 	//
 
+	///
+	/// \brief Get the desired apogee for the autopilot.
+	///
 	double GetDesiredApogee() { return DesiredApogee; };
+
+	///
+	/// \brief Get the desired perigee for the autopilot.
+	///
 	double GetDesiredPerigee() { return DesiredPerigee; };
+
+	///
+	/// \brief Get the desired launch azimuth for the autopilot.
+	///
 	double GetDesiredAzimuth() { return DesiredAzimuth; };
 
+	///
+	/// \brief Set the desired apogee for the autopilot.
+	///
 	void SetDesiredApogee(double val) { DesiredApogee = val; };
+
+	///
+	/// \brief Set the desired perigee for the autopilot.
+	///
 	void SetDesiredPerigee(double val) { DesiredPerigee = val; };
+
+	///
+	/// \brief Set the desired launch azimuth for the autopilot.
+	///
 	void SetDesiredAzimuth(double val) { DesiredAzimuth = val; };
 	void SetBurnTime(double val) { BurnTime = val; };
 
@@ -275,14 +321,48 @@ public:
 	void SetOutputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, unsigned int val);
 
+	///
+	/// Pass information about the mission to the AGC, which needs to know which vessels
+	/// it's working with, the mission it's flying, and the realism level.
+	///
+	/// Amongst other things, we need to know the mission number so that we know which version
+	/// of the Colossus software to load into the Virtual AGC.
+	///
+	/// \brief Set mission info in AGC.
+	/// \param MissionNo Apollo mission number.
+	/// \param RealismValue Current realism level.
+	/// \param OtherVessel Pointer to the LEM so that the CSM can track it for rendevouz.
+	///
 	void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
 
 protected:
 
 	void DisplayNounData(int noun);
 	void ProgPressed(int R1, int R2, int R3);
+
+	///
+	/// Approximate method to calculate 'Time of Free Fall': the time in seconds that the CM would
+	/// take to free fall to 300,000 feet if the engines were to fail at this time.
+	/// \brief Calculate TFF for DSKY display.
+	/// \param vy Vertical velocity relative to Earth in m/s.
+	/// \param r0 Current altitude in meters.
+	/// \param g Current gravitational acceleration in m/s^2
+	///
 	double CalcTFF(double vy, double r0, double g);
+
+	///
+	/// Calculate the current gravitational acceleration.
+	/// \brief Get current g.
+	/// \return Current gravitational accelerations in m/s^2.
+	///
 	double CurrentG();
+
+	///
+	/// The real CSM could only perform orbit calculations while running certain specific programs. We
+	/// simulate this through this call: the calculations will only be performed if it returns true.
+	/// \brief Can the AGC perform orbit calculations at this time?
+	/// \return True if the current program supports orbit calculation.
+	///
 	bool OrbitCalculationsValid();
 	void DisplayBankSum();
 
@@ -306,6 +386,12 @@ protected:
 	void Prog02(double simt);
 	void Prog06(double simt);
 	void Prog11(double simt);
+
+	///
+	/// Program 15 is the TLI (Trans Lunar Injection) program used to send the SIVb and CSM to the moon.
+	/// \brief Run program 15.
+	/// \param simt Current Mission Time.
+	///
 	void Prog15(double simt);
 
 	//

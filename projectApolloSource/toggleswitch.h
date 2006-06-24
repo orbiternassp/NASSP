@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/06/17 18:13:13  tschachim
+  *	Moved BMAGPowerRotationalSwitch.
+  *	
   *	Revision 1.51  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -180,6 +183,11 @@
   *
   **************************************************************************/
 
+///
+/// \defgroup PanelItems Control panel code.
+/// \brief Objects which are used to support the control panel.
+///
+
 #include "cautionwarning.h"
 
 #define TOGGLESWITCH_DOWN		0
@@ -208,6 +216,10 @@ class PanelSwitchScenarioHandler;
 
 #include "powersource.h"
 
+///
+/// Panel item base class.
+/// \ingroup PanelItems
+///
 class PanelSwitchItem: public e_object {
 
 public:
@@ -248,7 +260,10 @@ protected:
 	PanelSwitchItem *nextForScenario;
 };
 
-
+///
+/// Toggle switch base class.
+/// \ingroup PanelItems
+///
 class ToggleSwitch: public PanelSwitchItem {
 
 public:
