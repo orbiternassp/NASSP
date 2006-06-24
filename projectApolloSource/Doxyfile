@@ -87,7 +87,9 @@ INPUT                  = . \
                          ./PanelSDK/Internals \
                          ./yaAGC \
                          ./yaAGS \
-                         ../../include
+                         ../../include \
+                         ./CDK \
+                         ./CollisionSDK
 FILE_PATTERNS          = *.c \
                          *.cc \
                          *.cxx \
