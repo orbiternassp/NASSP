@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.112  2006/06/17 18:18:00  tschachim
+  *	Bugfixes SCS automatic modes,
+  *	Changed quickstart separation key to J.
+  *	
   *	Revision 1.111  2006/06/12 20:47:36  movieman523
   *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
   *	
@@ -2157,7 +2161,7 @@ void Saturn::DeactivateSPS()
 void Saturn::SetEngineIndicators()
 
 {
-	for (int i = 1; i <= 5; i++) {
+	for (int i = 1; i <= 8; i++) {
 		SetEngineIndicator(i);
 	}
 }
@@ -2165,7 +2169,7 @@ void Saturn::SetEngineIndicators()
 void Saturn::ClearEngineIndicators()
 
 {
-	for (int i = 1; i <= 5; i++) {
+	for (int i = 1; i <= 8; i++) {
 		ClearEngineIndicator(i);
 	}
 }

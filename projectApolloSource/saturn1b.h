@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/06/11 21:30:57  movieman523
+  *	Fixed Saturn 1b SIVb exhaust.
+  *	
   *	Revision 1.16  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -72,13 +75,34 @@
   *	
   **************************************************************************/
 
+///
+/// \brief Saturn V launch vehicle class.
+/// \ingroup Saturns
+///
 class Saturn1b: public Saturn {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	Saturn1b (OBJHANDLE hObj, int fmodel);
 	virtual ~Saturn1b();
 
 	void initSaturn1b();
+
+	///
+	/// \brief Orbiter state loading function.
+	/// \param scn Scenario file to load from.
+	/// \param status Pointer to current vessel status.
+	///
+	void clbkLoadStateEx (FILEHANDLE scn, void *status);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
+	void clbkSetClassCaps (FILEHANDLE cfg);
+	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 
 protected:
 
@@ -111,9 +135,6 @@ protected:
 	void ConfigureStageEngines(int stage_state);
 
 	void SetASTPStage ();
-	void clbkLoadStateEx (FILEHANDLE scn, void *vs);
-	void clbkSetClassCaps (FILEHANDLE cfg);
-	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);

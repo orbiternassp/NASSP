@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/05/17 18:42:35  movieman523
+  *	Partial fix for loading sound volume from scenario.
+  *	
   *	Revision 1.8  2006/02/21 11:52:26  tschachim
   *	Fixes to make code build with MS C++ 2005
   *	
@@ -49,15 +52,18 @@
   *	
   **************************************************************************/
 
-// X15 direct sound include to add landing sound
-#ifdef DIRECTSOUNDENABLED
-//typedef DWORD * DWORD_PTR;
-#define DWORD_PTR DWORD *
-#include "dsound.h"
-#endif
+///
+/// \defgroup Sound Audio support.
+/// \brief Code to support audio playback, either directly through DirectSound indirectly
+/// through OrbiterSound.
+///
 
+#ifndef SOUNDLIB_H
+#define SOUNDLIB_H
 
-
+///
+/// \ingroup Sound
+///
 class SoundData {
 
 public:
@@ -95,6 +101,9 @@ protected:
 
 class SoundLib;
 
+///
+/// \ingroup Sound
+///
 class Sound {
 
 public:
@@ -126,6 +135,9 @@ protected:
 #define VOLUME_COMMS	1
 #define VOLUME_COMMS2	2
 
+///
+/// \ingroup Sound
+///
 class SoundLib {
 
 public:
@@ -172,56 +184,11 @@ protected:
 	int NextSlot;
 };
 
-// MODIF x15  managing landing sound
+//
+// Another evil nested include for now so we don't have to stick it everywhere in the
+// code.
+//
 
-#ifdef DIRECTSOUNDENABLED
-class SoundEvent {
+#include "soundevents.h"
 
-public:
-	SoundEvent();
-	virtual ~SoundEvent();
-	int  isValid();
-	int  makeInvalid();
-
-	bool AlreadyPlayed();
-	int  play(SoundLib soundlib,
-		      VESSEL   *vessel,
-			  char     *names,
-			  double   *offset,
-			  int      *newbuffer,
-		      double   simcomputert,
-			  double   simt,
-			  int mode,double timeremaining,double timeafterpdi,double timetoapproach,
-		      int flags = NOLOOP, int volume = 255);
-	int  Stop();
-	int  Done();
-    int  LoadMissionLandingSoundArray(SoundLib soundlib,char *soundname);
-    int  InitDirectSound(SoundLib soundlib);
-    int  PlaySound(char *filenames,int newbuffer,double offset);
-    int SoundEvent::IsPlaying();
-	int SoundEvent::Finish(double offsetfinish);
-
-
-
-	double altitude  ;
-	int    mode      ;
-	int    met       ;
-	bool   played    ;
-	char   filenames[255] ;
-	int    offset    ;
-	double timetoignition;
-	double timeafterignition;
-	double timetoapproach;
-	int    mandatory ;
-	
-	SoundLib soundlib;
-	LPDIRECTSOUND8  m_pDS;
-	LPDIRECTSOUNDBUFFER pDSBPrimary;
-    LPDIRECTSOUNDBUFFER* apDSBuffer;
-
-    VOID*   pDSLockedBuffer     ;
-    DWORD   dwDSLockedBufferSize;
-
-
-};
-#endif
+#endif // SOUNDLIB_H

@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.149  2006/06/17 18:18:00  tschachim
+  *	Bugfixes SCS automatic modes,
+  *	Changed quickstart separation key to J.
+  *	
   *	Revision 1.148  2006/06/12 20:47:36  movieman523
   *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
   *	
@@ -527,6 +531,8 @@ void Saturn::initSaturn()
 
 	MissionTimerDisplay.WireTo(&GaugePower);
 	EventTimerDisplay.WireTo(&GaugePower);
+
+	NextSoundEventTime = MINUS_INFINITY;
 
 	//
 	// Propellant sources.
@@ -1163,10 +1169,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 			oapiWriteScenario_float (scn, "CSMACCEND", CSMAccelEnd);
 			oapiWriteScenario_float (scn, "CSMACCPITCH", CSMAccelPitch);
 		}
+	}
 
-		if (AutoSlow) {
-			oapiWriteScenario_int (scn, "AUTOSLOW", 1);
-		}
+	if (AutoSlow) {
+		oapiWriteScenario_int (scn, "AUTOSLOW", 1);
 	}
 
 	int valvestate = 0;
@@ -2239,15 +2245,6 @@ void Saturn::CheckSMSystemsState()
 			if (FuelCells[i])
 				FuelCells[i]->Disable();
 		}
-
-		//
-		// HACK: For now, hard-wire the buses to the batteries.
-		//
-
-		if (MainBusA) {
-			MainBusA->WireTo(EntryBatteryA);
-			MainBusB->WireTo(EntryBatteryB);
-		}
 	}
 }
 
@@ -2560,6 +2557,53 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		NextDestroyCheckTime = MissionTime + 1.0;
 	}
 
+#if 0
+	// Disabled for now.
+    // x15 landing sound management
+
+	char names [255]         ;
+	double     offset        ;
+	int        newbuffer     ;
+
+	if(MissionTime > NextSoundEventTime)
+	{
+		double timeAccel = oapiGetTimeAcceleration();
+
+        NextSoundEventTime = MissionTime + 1.0;
+
+		if (timeAccel > 1.0 && sevent.IsPlaying())
+		{
+			//
+			// Turn off sound if we're using time acceleration.
+			//
+
+			sevent.Stop();
+			sevent.Done();
+		}
+
+		if (timeAccel < 10.0 || AutoSlow)
+		{
+    		int todo = sevent.play(soundlib,
+					this,
+					names,
+					&offset,
+					&newbuffer,
+					0.0,
+					MissionTime,
+					3,
+					0.0,
+					0.0,
+					0.0,
+					NOLOOP,
+					255);
+			if (todo)
+			{
+				SlowIfDesired();
+				sevent.PlaySound( names, newbuffer,0);
+			}
+		}
+	} 
+#endif
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
@@ -3446,6 +3490,13 @@ void Saturn::GenericLoadStateSetup()
 	_snprintf(MissionName, 23, "Apollo%d", ApolloNo);
 	soundlib.SetSoundLibMissionPath(MissionName);
 
+#if 0
+// Disabled for now.
+// MODIF X15 manage sound
+    sevent.LoadMissionTimeSoundArray(soundlib, "csmsound.csv", MissionTime);
+    sevent.InitDirectSound(soundlib);
+#endif
+
 	//
 	// Set up options for prelaunch stage.
 	//
@@ -3936,6 +3987,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 			SeparateStage(CSM_LEM_STAGE);
 			SetStage(CSM_LEM_STAGE);
 			soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
+
 			if (bAbort)
 			{
 				SPSswitch.SetState(true);
@@ -3945,6 +3997,16 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 				autopilot= false;
 				StartAbort();
 			}
+			else if (ApolloNo == 11)
+			{
+				//
+				// Apollo 11 seperation knocked out propellant valves for RCS B.
+				//
+
+				SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, false);
+				SetValveState(CSM_SECFUEL_INSOL_VALVE_B, false);
+			}
+
 			return;
 		}
 		else
@@ -3980,7 +4042,7 @@ void Saturn::StartAbort()
 void Saturn::SlowIfDesired()
 
 {
-	if (!Crewed && AutoSlow && (oapiGetTimeAcceleration() > 1.0)) {
+	if (AutoSlow && (oapiGetTimeAcceleration() > 1.0)) {
 		oapiSetTimeAcceleration(1.0);
 	}
 }

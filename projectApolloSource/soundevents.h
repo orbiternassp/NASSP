@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/06/24 15:05:40  movieman523
+  *	New sound event files.
+  *	
   **************************************************************************/
 
 #ifndef SOUNDEVENTS_H
@@ -31,7 +34,7 @@
 // Looks like VC6.0 doesn't know about DWORD_PTR.
 //
 
-#if _MSC_VER < 1300
+#if _MSC_VER <= 1300
 typedef unsigned long *DWORD_PTR;
 #endif
 

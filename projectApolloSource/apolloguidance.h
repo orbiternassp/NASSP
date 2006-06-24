@@ -26,6 +26,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.40  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -148,6 +152,14 @@
   *	
   **************************************************************************/
 
+///
+/// \defgroup AGC Apollo Guidance Computer code.
+/// \brief This code supports the Apollo Guidance Computers on the CSM and LEM.
+///
+
+#ifndef APOLLOGUIDANCE_H
+#define APOLLOGUIDANCE_H
+
 class DSKY;
 class IMU;
 class PanelSDK;
@@ -163,8 +175,23 @@ class PanelSDK;
 // Velocity in feet per second or meters per second?
 //
 
-typedef enum MeasurementUnits { UnitImperial, UnitMetric };
+///
+/// \ingroup AGC
+/// \brief Measurement units type.
+/// Used to specify whether the C++ AGC is using Imperial or Metric units.
+///
+typedef enum MeasurementUnits
+{ 
+	UnitImperial,	///< Use Imperial units for velocity, altitude, etc.
+	UnitMetric		///< Use Metric units for velocity, altitude, etc.
+};
 
+///
+/// \ingroup AGC
+/// \brief AGC base class.
+/// This is the generic base class for an AGC, from which we derive the LEM and CSM
+/// computers.
+///
 class ApolloGuidance
 
 {
@@ -172,8 +199,21 @@ public:
 	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p);
 	virtual ~ApolloGuidance();
 
+	///
+	/// \brief Start running a program.
+	/// \param prog Program number (major mode) to start running.
+	///
 	void RunProgram(int prog);
 
+	///
+	/// This function is called when the user enters a verb and noun in order to determine
+	/// whether the combination is valid. It's a pure virtual class because it will be defined in
+	/// the derived classes: verbs and nouns for the CSM AGC aren't the same as the LEM AGC.
+	/// \brief Validate a VERB/NOUN combination.
+	/// \param verb Verb number to start running.
+	/// \param noun Noun number to start running.
+	/// \return True if the combination is valid.
+	///
 	virtual bool ValidateVerbNoun(int verb, int noun) = 0;
 	virtual void ProcessVerbNoun(int verb, int noun) = 0;
 	virtual bool ValidateProgram(int prog) = 0;
@@ -251,12 +291,53 @@ public:
 	// I/O channels.
 	//
 
+	///
+	/// Set or clear a bit in an AGC input channel. This is used to simulate the real hardware interface
+	/// to the AGC, and is required to properly connect the Virtual AGC software.
+	///
+	/// This is a virtual function so it can he hooked by derived classes to update their
+	/// state when the channel value changes. The default function here only supports the
+	/// channels which are common to the CSM and LEM.
+	///
+	/// \brief Set input channel bit.
+	/// \param channel Input channel to set.
+	/// \param bit Bit number to update.
+	/// \param val The bit value. True to set, false to clear.
+	///
+	virtual void SetInputChannelBit(int channel, int bit, bool val);
+
+	///
+	/// Set or clear a bit in an AGC output channel. This is used to simulate the real hardware interface
+	/// to the AGC, and is required to properly connect the Virtual AGC software.
+	///
+	/// This is a virtual function so it can he hooked by derived classes to update their
+	/// state when the channel value changes. The default function here only supports the
+	/// channels which are common to the CSM and LEM.
+	///
+	/// \brief Set output channel bit.
+	/// \param channel Output channel to set.
+	/// \param bit Bit number to update.
+	/// \param val The bit value. True to set, false to clear.
+	///
+	virtual void SetOutputChannelBit(int channel, int bit, bool val);
+
+	///
+	/// Set the value of an AGC input channel. This is used to simulate the real hardware interface
+	/// to the AGC, and is required to properly connect the Virtual AGC software.
+	///
+	/// This is a virtual function so it can he hooked by derived classes to update their
+	/// state when the channel value changes. The default function here only supports the
+	/// channels which are common to the CSM and LEM.
+	///
+	/// \brief Set output channel byte.
+	/// \param channel Input channel to set.
+	/// \param val Byte value to set in the channel.
+	///
+	virtual void SetOutputChannel(int channel, unsigned int val);
+
 	virtual bool GetOutputChannelBit(int channel, int bit);
 	virtual unsigned int GetOutputChannel(int channel);
 	virtual void SetInputChannel(int channel, unsigned int val);
-	virtual void SetInputChannelBit(int channel, int bit, bool val);
-	virtual void SetOutputChannelBit(int channel, int bit, bool val);
-	virtual void SetOutputChannel(int channel, unsigned int val);
 
 	bool GetInputChannelBit(int channel, int bit);
 	unsigned int GetInputChannel(int channel);
@@ -265,7 +346,15 @@ public:
 	// Virtual AGC memory access.
 	//
 
+	///
+	/// This function allows you read data back from the erasable memory in the Virtual AGC. If called on the
+	/// C++ AGC it returns zero.
+	/// \param bank Memory bank to access.
+	/// \param address Memory location within the bank to access.
+	/// \brief Return the contents of an erasable memory location
+	///
 	int GetErasable(int bank, int address);
+
 	void SetErasable(int bank, int address, int value);
 	void PadLoad(unsigned int address, unsigned int value);
 
@@ -645,10 +734,14 @@ bool ApolloGuidance::ReceiveFromSocket(unsigned char packet[4]);
 #else
 
 	
-	//
-	// Virtual AGC.
-	//
-
+	///
+	/// Virtual AGC state structure. We create this even if we don't use it, so we don't need
+	/// to faff around with allocating and deleting memory.
+	///
+	/// We don't do much with this directly, but it has to be passed to the Virtual AGC calls
+	/// so they can keep track of their state.
+	/// \brief Virtual AGC state.
+	///
 	agc_t vagc;
 #endif
 };
@@ -659,7 +752,9 @@ extern char TwoSpaceTwoFormat[];
 // Strings for state saving.
 //
 
-#define AGC_START_STRING	"AGC_BEGIN"
-#define AGC_END_STRING		"AGC_END"
+#define AGC_START_STRING	"AGC_BEGIN"		///< String to start AGC state dump in scenario file.
+#define AGC_END_STRING		"AGC_END"		///< String to end AGC state dump in scenario file.
 
-#define EMEM_ENTRIES	(8 * 0400)
+#define EMEM_ENTRIES	(8 * 0400)			///< Number of EMEM values to simulate
+
+#endif // APOLLOGUIDANCE_H

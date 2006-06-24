@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/04/23 04:15:45  dseagrav
+  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
+  *	
   *	Revision 1.20  2006/01/14 20:58:15  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -156,6 +159,11 @@ typedef union {
 	unsigned int word;
 } LEMFlagWord2;
 
+///
+/// \ingroup AGC
+/// LEM AGC
+/// \brief Derived class for the LEM AGC with extra LEM-specific functionality.
+///
 class LEMcomputer: public ApolloGuidance
 
 {
