@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/06/12 20:47:36  movieman523
+  *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
+  *	
   *	Revision 1.49  2006/06/11 14:45:37  movieman523
   *	Quick fix for Apollo 4. Will need more work in the future.
   *	
@@ -1803,7 +1806,10 @@ void Saturn::JettisonLET(bool UseMain)
 
 	LESSettings LESConfig;
 
-	LESConfig.SettingsType = LES_SETTINGS_GENERAL | LES_SETTINGS_ENGINES | LES_SETTINGS_THRUST;
+	LESConfig.SettingsType.word = 0;
+	LESConfig.SettingsType.LES_SETTINGS_GENERAL = 1;
+	LESConfig.SettingsType.LES_SETTINGS_ENGINES = 1;
+	LESConfig.SettingsType.LES_SETTINGS_THRUST = 1;
 
 	//
 	// Pressing the LES jettison button fires the main LET engine. The TWR JETT
@@ -1839,7 +1845,7 @@ void Saturn::JettisonLET(bool UseMain)
 	if (ph_let)
 	{
 		LESConfig.MainFuelKg = GetPropellantMass(ph_let);
-		LESConfig.SettingsType |= LES_SETTINGS_MAIN_FUEL;
+		LESConfig.SettingsType.LES_SETTINGS_MAIN_FUEL = 1;
 	}
 
 	LES *les_vessel = (LES *) oapiGetVesselInterface(hesc1);

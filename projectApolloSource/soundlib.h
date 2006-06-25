@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.9  2006/05/17 18:42:35  movieman523
   *	Partial fix for loading sound volume from scenario.
   *	
@@ -136,7 +139,12 @@ protected:
 #define VOLUME_COMMS2	2
 
 ///
+/// The sound library class which wraps all calls to OrbiterSound into one simple
+/// interface. Amongst other things it ensures that OrbiterSound is actually activated
+/// before making any calls, saving the caller doing so.
+///
 /// \ingroup Sound
+/// \brief Orbiter sound library.
 ///
 class SoundLib {
 
@@ -144,17 +152,48 @@ public:
 	SoundLib();
 	virtual ~SoundLib();
 
+	///
+	/// \brief Initialise library and connection to Orbitersound.
+	/// \param h Vessel handle to pass to Orbitersound.
+	/// \param soundclass The 'class' of sound to use (e.g. 'ProjectApollo'). This is 
+	/// appended to the sound path to find the right files.
+	///
 	void InitSoundLib(OBJHANDLE h, char *soundclass);
 	void LoadSound(Sound &s, char *soundname, EXTENDEDPLAY extended = DEFAULT);
 	void LoadMissionSound(Sound &s, char *soundname, char *genericname = NULL, EXTENDEDPLAY extended = DEFAULT);
 	void LoadVesselSound(Sound &s, char *soundname, EXTENDEDPLAY extended = DEFAULT);
+
+	///
+	/// The sound library can use a mission-specific path to find files in preference to the base path.
+	/// This allows you to have a set of base files (e.g. a file for lunar touchdown) and then override
+	/// them on a mission-by-mission basis.
+	///
+	/// \brief Set the mission-specific file path.
+	/// \param mission Mission-specific string to append to base path to find files (e.g. 'Apollo11').
+	///
 	void SetSoundLibMissionPath(char *mission);
+
+	///
+	/// Turn an Orbitersound option on or off. See the Orbitersound header file for the
+	/// appropriate definitions to pass to it.
+	///
+	/// \brief Control Orbitersound options.
+	/// \param option Orbitersound option number.
+	/// \param onoff Turn Orbitersound option on or off.
+	///
 	void SoundOptionOnOff(int option, int onoff);
 	void SetLanguage(char *language);
 	void SetVolume(int type, int percent);
 	int GetSoundVolume(int flags, int volume);
 
+	///
+	/// \brief Base path to sound files.
+	///
 	char basepath[256];
+
+	///
+	/// \brief Path to mission-specific sound files.
+	///
 	char missionpath[256];
 
 protected:
@@ -167,19 +206,28 @@ protected:
 
 	int MasterVolume[N_VOLUMES];
 
-//
-// OrbiterSound currently supports 60 sounds. Note that zero is
-// an invalid id and 60 is valid, so we actually allocate 61 entries
-// here.
-//
-
+///
+/// OrbiterSound currently supports 60 sounds. Note that zero is
+/// an invalid id and 60 is valid, so we actually allocate 61 entries
+/// here.
+///
 #define MAX_SOUNDS 60
 
 	SoundData sounds[MAX_SOUNDS+1];
 
+	///
+	/// \brief Path to language-specific sound files.
+	///
 	char languagepath[256];
 
+	///
+	/// \brief Is Orbitersound active? If not, we don't call it.
+	///
 	bool OrbiterSoundActive;
+
+	///
+	/// \brief Connection ID returned from initialising Orbitersound.
+	///
 	int SoundlibId;
 	int NextSlot;
 };

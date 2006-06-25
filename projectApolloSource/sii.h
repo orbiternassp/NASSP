@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/01/26 03:07:50  movieman523
+  *	Quick hack to support low-res mesh.
+  *	
   *	Revision 1.1  2005/11/23 01:43:13  movieman523
   *	Added SII stage DLL.
   *	
@@ -68,10 +71,13 @@ typedef struct {
 #define SII_STATE_SHUTTING_DOWN		0
 #define SII_STATE_WAITING			1
 
-//
-// Stage class.
-//
-
+///
+/// This code simulates the seperated SII stage. Basically it simulates thrust decay if there is any fuel 
+/// left, fires any retro rockets to push it away from the Saturn and then sits around waiting to be deleted.
+///
+/// \brief SII stage simulation.
+/// \ingroup SepStages
+///
 class SII : public VESSEL2 {
 
 public:

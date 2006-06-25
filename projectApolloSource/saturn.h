@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.192  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.191  2006/06/23 11:56:48  tschachim
   *	New Project Apollo MFD for TLI burn control.
   *	
@@ -302,16 +305,6 @@
   *	
   **************************************************************************/
 
-///
-/// \defgroup Saturns Saturn launch vehicle code.
-/// \brief This code supports the Saturn launch vehicles and CSM.
-///
-
-///
-/// \defgroup SepStages Seperated stages.
-/// \brief This code supports seperated stages of the Saturn launch vehicles and CSM.
-///
-
 #if !defined(_PA_SATURN_H)
 #define _PA_SATURN_H
 
@@ -391,15 +384,6 @@
 //
 // Random failure flags.
 //
-
-///
-/// For simplicity we pack all the failure flags into uniont which combine bitfields and 32-bit ints.
-/// As a result we only need to save the int value to the scenario file, and when we load it we automatically
-/// get all the individual flags without bothering to extract them manually from the int or save and load each
-/// flag individually.
-/// \defgroup FailFlags Failure flags.
-/// \brief Collection of flags used to specify failures during the mission.
-///
 
 ///
 /// \ingroup FailFlags

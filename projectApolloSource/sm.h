@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/05/30 22:34:33  movieman523
+  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
+  *	
   *	Revision 1.5  2006/05/04 20:46:50  movieman523
   *	Added re-entry texture and started heat tracking.
   *	
@@ -83,11 +86,18 @@ typedef struct {
 #define SM_STATE_RCS_ROLL_STOP		3
 #define SM_STATE_WAITING			4
 
-//
-// Stage class.
-//
+///
+/// \brief Speed at which the SM to CM umbilical moves away from the CM.
+///
 const double UMBILICAL_SPEED = 0.5;
 
+///
+/// This code simulates the seperated Service Module. If the SM RCS has power and fuel it fires the RCS to push
+/// the SM away from the CM and set it rotating. Then it disintegrates during re-entry.
+///
+/// \brief SM stage simulation.
+/// \ingroup SepStages
+///
 class SM : public VESSEL2 {
 
 public:
@@ -107,7 +117,6 @@ public:
 
 	double umbilical_proc;
 	UINT anim_umbilical;
-
 
 protected:
 

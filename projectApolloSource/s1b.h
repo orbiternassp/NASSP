@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/01/27 22:11:38  movieman523
+  *	Added support for low-res Saturn 1b.
+  *	
   *	Revision 1.1  2005/11/23 02:21:30  movieman523
   *	Added S1b stage.
   *	
@@ -66,10 +69,13 @@ typedef struct {
 #define S1B_STATE_SHUTTING_DOWN		0
 #define S1B_STATE_WAITING			1
 
-//
-// Stage class.
-//
-
+///
+/// This code simulates the seperated S1b stage. Basically it simulates thrust decay if there is any fuel 
+/// left, fires any retro rockets to push it away from the Saturn and then sits around waiting to be deleted.
+///
+/// \brief S1b stage simulation.
+/// \ingroup SepStages
+///
 class S1B : public VESSEL2 {
 
 public:

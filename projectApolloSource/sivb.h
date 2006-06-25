@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/01/26 19:26:31  movieman523
+  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
+  *	
   *	Revision 1.7  2006/01/26 03:07:50  movieman523
   *	Quick hack to support low-res mesh.
   *	
@@ -79,10 +82,13 @@ typedef struct {
 
 #define SIVB_STATE_WAITING		0
 
-//
-// Stage class.
-//
-
+///
+/// This code simulates the seperated SIVb stage. Basically it simulates thrust decay if there is any fuel 
+/// left, fires any retro rockets to push it away from the Saturn and then sits around waiting to be deleted.
+///
+/// \brief SIVb stage simulation.
+/// \ingroup SepStages
+///
 class SIVB : public VESSEL2 {
 
 public:

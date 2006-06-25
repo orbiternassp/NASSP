@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.1  2006/06/09 17:43:03  movieman523
   *	Added LES code and build projects.
   *	
@@ -31,59 +34,70 @@
 #define LES_H
 
 ///
+/// Flags structure indicating which of the LES settings are valid.
+/// \brief LES settings flags.
+/// \ingroup SepStageSettings
+///
+typedef union
+{
+	struct {
+		unsigned LES_SETTINGS_MASS:1; 		///< Mass settings are valid.
+		unsigned LES_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
+		unsigned LES_SETTINGS_GENERAL:1;	///< General settings (e.g. Mission Time) are valid.
+		unsigned LES_SETTINGS_ENGINES:1;	///< Engine settings (e.g. ISP) are valid.
+		unsigned LES_SETTINGS_THRUST:1;		///< Thrust setting is valid.
+		unsigned LES_SETTINGS_MAIN_FUEL:1;	///< Main fuel setting is valid, jettison fuel setting is not valid.
+	};
+	unsigned int word;						///< Set to zero to clear all flags.
+} LESSettingFlags;
+
+///
 /// Data structure passed from main vessel to LES to configure it after staging.
 /// \brief LES setup structure.
-/// \ingroup SepStages
+/// \ingroup SepStageSettings
 ///
-typedef struct {
+typedef struct 
+{
+	LESSettingFlags SettingsType;		///< Which of the settings are valid?
+	int VehicleNo;						///< Saturn vehicle number.
+	int Realism;						///< Realism value.
 
-	int SettingsType;		///< Which of the settings are valid? See flags.
-	int VehicleNo;			///< Saturn vehicle number.
-	int Realism;			///< Realism value.
+	double ISP_LET_VAC;					///< LET ISP in a vacuum
+	double ISP_LET_SL;					///< LET ISP at sea level.
 
-	double ISP_LET_VAC;		///< LET ISP in a vacuum
-	double ISP_LET_SL;		///< LET ISP at sea level.
+	double THRUST_VAC_LET;				///< LET thrust in vacuum.
 
-	double THRUST_VAC_LET;	///< LET thrust in vacuum.
+	double MissionTime;					///< Current Mission Elapsed Time.
+	double EmptyMass;					///< Empty mass of LET without fuel.
 
-	double MissionTime;		///< Current Mission Elapsed Time.
-	double EmptyMass;		///< Empty mass of LET without fuel.
+	double MainFuelKg;					///< Amount of fuel in kg available for the main abort engine.
+	double JettisonFuelKg;				///< Amount of fuel in kg available for the jettison engine.
 
-	double MainFuelKg;		///< Amount of fuel in kg available for the main abort engine.
-	double JettisonFuelKg;	///< Amount of fuel in kg available for the jettison engine.
-
-	bool FireMain;			///< Fire the main abort motors rather than jettison motor?
-	bool LowRes;			///< Use low-res mesh if available?
-
+	bool FireMain;						///< Fire the main abort motors rather than jettison motor?
+	bool LowRes;						///< Use low-res mesh if available?
 } LESSettings;
 
-//
-// Which parts of the structure are active.
-//
-
-#define LES_SETTINGS_MASS		0x01	///< Mass settings are valid.
-#define LES_SETTINGS_FUEL		0x02	///< Fuel mass settings are valid.
-#define LES_SETTINGS_GENERAL	0x04	///< General settings (e.g. Mission Time) are valid.
-#define LES_SETTINGS_ENGINES	0x08	///< Engine settings (e.g. ISP) are valid.
-#define LES_SETTINGS_THRUST		0x10	///< Thrust setting is valid.
-#define LES_SETTINGS_MAIN_FUEL	0x20	///< Main fuel setting is valid, jettison fuel setting is not valid.
-
-//
-// Stage states.
-//
-
-#define LES_STATE_SETUP				0	///< LES is waiting for setup call.
-#define LES_STATE_JETTISON			1	///< LES is firing motors to jettison.
-#define LES_STATE_WAITING			2	///< LES is idle after motor burnout.
+///
+/// Specifies the main state of the LES.
+/// \brief LES state.
+/// \ingroup SepStageSettings
+///
+typedef enum LESState
+{
+	LES_STATE_SETUP,			///< LES is waiting for setup call.
+	LES_STATE_JETTISON,			///< LES is firing motors to jettison.
+	LES_STATE_WAITING			///< LES is idle after motor burnout.
+};
 
 //
-// Stage class.
+// LES stage class.
 //
 
 ///
 /// This code simulates the jettisoned Launch Escape Tower and Boost Protective Cover. Basically
 /// it just fires the appropriate motor to push it away from the Saturn and then sits around waiting
 /// to be deleted.
+///
 /// \brief Launch Escape System simulation.
 /// \ingroup SepStages
 ///
@@ -178,7 +192,7 @@ protected:
 	///
 	/// \brief Current state for automated operations.
 	///
-	int State;
+	LESState State;
 
 	///
 	/// \brief Realism value.

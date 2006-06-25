@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/06/09 17:43:03  movieman523
+  *	Added LES code and build projects.
+  *	
   **************************************************************************/
 
 #include "orbiterSDK.h"
@@ -352,6 +355,7 @@ void LES::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 {
 	char *line;
 	float flt;
+	int i;
 
 	while (oapiReadScenario_nextline (scn, line))
 	{
@@ -417,7 +421,8 @@ void LES::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp (line, "STATE", 5))
 		{
-			sscanf (line+5, "%d", &State);
+			sscanf (line+5, "%d", &i);
+			State = (LESState) i;
 		}
 		else if (!strnicmp (line, "REALISM", 7))
 		{
@@ -447,7 +452,7 @@ void LES::clbkDockEvent(int dock, OBJHANDLE connected)
 void LES::SetState(LESSettings &state)
 
 {
-	if (state.SettingsType & LES_SETTINGS_GENERAL)
+	if (state.SettingsType.LES_SETTINGS_GENERAL)
 	{
 		MissionTime = state.MissionTime;
 		VehicleNo = state.VehicleNo;
@@ -455,28 +460,28 @@ void LES::SetState(LESSettings &state)
 		LowRes = state.LowRes;
 	}
 
-	if (state.SettingsType & LES_SETTINGS_MASS)
+	if (state.SettingsType.LES_SETTINGS_MASS)
 	{
 		EmptyMass = state.EmptyMass;
 	}
 
-	if (state.SettingsType & LES_SETTINGS_FUEL)
+	if (state.SettingsType.LES_SETTINGS_FUEL)
 	{
 		MainFuel = state.MainFuelKg;
 		JettisonFuel = state.JettisonFuelKg;
 	}
 
-	if (state.SettingsType & LES_SETTINGS_MAIN_FUEL)
+	if (state.SettingsType.LES_SETTINGS_MAIN_FUEL)
 	{
 		MainFuel = state.MainFuelKg;
 	}
 
-	if (state.SettingsType & LES_SETTINGS_ENGINES)
+	if (state.SettingsType.LES_SETTINGS_ENGINES)
 	{
 		FireMain = state.FireMain;
 	}
 
-	if (state.SettingsType & LES_SETTINGS_THRUST)
+	if (state.SettingsType.LES_SETTINGS_THRUST)
 	{
 		ISP_VAC = state.ISP_LET_VAC;
 		ISP_SL = state.ISP_LET_SL;

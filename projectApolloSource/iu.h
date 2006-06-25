@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/06/23 11:56:48  tschachim
+  *	New Project Apollo MFD for TLI burn control.
+  *	
   *	Revision 1.3  2006/04/25 13:39:15  tschachim
   *	Removed GetXXXSwitchState.
   *	
@@ -37,6 +40,12 @@ class Saturn;
 class SoundLib;
 class XLunarSwitch;
 
+///
+/// This class simulates the Saturn Instrument Unit, which flew the Saturn launch vehicle
+/// prior to the CSM seperating from the SIVb.
+/// \ingroup InternalSystems
+/// \brief Saturn IU simulation.
+///
 class IU {
 
 public:

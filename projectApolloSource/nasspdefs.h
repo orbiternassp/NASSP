@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2006/06/12 20:47:36  movieman523
+  *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
+  *	
   *	Revision 1.67  2006/06/10 23:27:41  movieman523
   *	Updated abort code.
   *	
@@ -238,17 +241,23 @@
 #define stricmp _stricmp
 #endif 
 
-#define NASSP_VERSION 70000
+#define NASSP_VERSION 70000		///< Current NASSP version.
 
 //
 // Realism values.
 //
 
-#define REALISM_MIN		0
-#define REALISM_MAX		10
-#define REALISM_DEFAULT 5
-#define REALISM_PUSH_LIGHTS	4
+#define REALISM_MIN		0		///< Lower REALISM limit.
+#define REALISM_MAX		10		///< Highest REALISM limit.
+#define REALISM_DEFAULT 5		///< Default REALISM value.
+#define REALISM_PUSH_LIGHTS	4	///< REALISM level up to which we display lit push-buttons on the control panel.
 
+///
+/// We use this structure to store generic Windows information in one place, such as logical colors,
+/// bruhes and pens for rendering, etc.
+///
+/// \brief Windows GDI paramater structure.
+///
 typedef struct {
 	HINSTANCE hDLL;
 	HFONT font[3];
@@ -290,6 +299,10 @@ typedef struct {
 // It can be removed soon.
 //
 
+///
+/// \deprecated
+/// \brief CSM is aborting.
+///
 #define CSM_ABORT_STAGE				50
 
 //
@@ -402,29 +415,32 @@ const int nsurf = 109; // number of bitmap handles
 #define SRF_THUMBWHEEL_LARGEFONTSINV				107
 #define SRF_SWLEVERTHREEPOS							108
 
-
 //
 // Earth radius and gravity constants.
 //
 
 static const double ERADIUS = 6371.0;
-const double GK    = 6.67259e-20 ;			//  Gravitational constant (km^3/(kg sec^2))
+const double GK    = 6.67259e-20 ;			///<  Gravitational constant (km^3/(kg sec^2))
 const double GKSI  = 6.67259e-20 * 1e9;
-const double PSI   = 0.000145038;			// Pa to PSI
-const double MMHG  = 0.00750064;			// Pa to mmHg
-const double INH2O = 0.00401474;			// Pa to in H2O
-const double LBH   = 7.93665;				// g/s to lb/h
+const double PSI   = 0.000145038;			///< Pa to PSI
+const double MMHG  = 0.00750064;			///< Pa to mmHg
+const double INH2O = 0.00401474;			///< Pa to in H2O
+const double LBH   = 7.93665;				///< g/s to lb/h
 
-const double TWO_PI= (PI * 2);
+const double TWO_PI= (PI * 2);				///< Twice Pi.
 
-//
-// This is a safe 'minus infinity' time to use as the default value for timers. So if you compare your
-// timer against MissionTime to decide whether to process events at a certain time interval, use this as
-// the default and any mission time should be guaranteed to be greater.
-//
-
+///
+/// This is a safe 'minus infinity' time to use as the default value for timers. So if you compare your
+/// timer against MissionTime to decide whether to process events at a certain time interval, use this as
+/// the default and any mission time should be guaranteed to be greater.
+///
+/// \brief Minus infinity time for initialising MET variables safely.
+///
 const double MINUS_INFINITY = (-1000000000.0);
 
+///
+/// \brief Convert Kelvin temperature to Fahrenheit temperature for cabin displays.
+///
 inline double KelvinToFahrenheit(double kelvin) {
 	return kelvin * 1.8 - 459.67;
 }
@@ -456,7 +472,10 @@ inline double KelvinToFahrenheit(double kelvin) {
 // Mission times for specific events.
 //
 
-#define APOLLO_13_EXPLOSION_TIME	(55.0 * 3600 + 55.0 + 10.0)
+///
+/// \brief Mission Elapsed Time when Apollo 13 Oxygen tank exploded.
+///
+#define APOLLO_13_EXPLOSION_TIME	((55.0 * 3600.0) + (55.0 * 60.0) + 10.0)
 
 //
 // We include a sizeable overlap here for the course correction earliest and latest times,
@@ -501,5 +520,90 @@ inline double KelvinToFahrenheit(double kelvin) {
 
 #define CSM_H2TANK_CAPACITY  12700.0		// in g, 28 lb
 #define CSM_O2TANK_CAPACITY 145149.0		// in g, 320 lb
+
+//
+// Define Doxygen groups. These just need to be documented in one place.
+//
+
+///
+/// \defgroup PanelItems Control panel code.
+/// \brief Objects which are used to support the control panel.
+///
+
+///
+/// \defgroup InternalSystems Internal systems simulation.
+/// \brief Objects which are used to simulate internal systems.
+///
+
+///
+/// \defgroup PanelSDK Panel SDK code.
+/// \ingroup InternalSystems
+/// \brief The Panel SDK performs low-level simulation of the physical hardware.
+///
+
+///
+/// \defgroup AGC Apollo Guidance Computer code.
+/// \ingroup InternalSystems
+/// \brief This code supports the Apollo Guidance Computers on the CSM and LEM.
+///
+
+///
+/// Flagword definitions as used by the real AGC software. These are really intended 
+/// for future expansion as the AGC simulation gets closer to the real thing.
+/// For the moment only a few of these flags are actually used.
+///
+/// Note that some flags marked as unused weren't used on the real AGC but are used to
+/// store new flags for the C++ AGC.
+///
+/// See the Apollo 15 Delco manual for full explanations of what these flags are used
+/// for in the real AGC.
+///
+/// \defgroup AGCFlags Apollo Guidance Computer flag words.
+/// \ingroup AGC
+/// \brief Flagword definitions for the Apollo Guidance Computers on the CSM and LEM.
+///
+
+///
+/// Bit definitions for the AGC I/O channels to simplify conversion between channel values
+/// and function.
+///
+/// \defgroup AGCIO Apollo Guidance Computer I/O channels.
+/// \ingroup AGC
+/// \brief I/O definitions for the Apollo Guidance Computers on the CSM and LEM.
+///
+
+///
+/// \defgroup DSKY Display/Keyboard code.
+/// \ingroup InternalSystems
+/// \brief This code supports the Apollo DSKY emulation.
+///
+
+///
+/// \defgroup Saturns Saturn launch vehicle code.
+/// \brief This code supports the Saturn launch vehicles and CSM.
+///
+
+///
+/// \defgroup SepStages Seperated stages.
+/// \ingroup Saturns
+/// \brief This code supports seperated stages of the Saturn launch vehicles and CSM.
+///
+
+///
+/// For simplicity we pack all the failure flags into uniont which combine bitfields and 32-bit ints.
+/// As a result we only need to save the int value to the scenario file, and when we load it we automatically
+/// get all the individual flags without bothering to extract them manually from the int or save and load each
+/// flag individually.
+///
+/// \defgroup FailFlags Failure flags.
+/// \ingroup Saturns
+/// \brief Collection of flags used to specify failures during the mission.
+///
+
+///
+/// \defgroup SepStageSettings Seperated stage settings.
+/// \ingroup SepStages
+/// \brief This code supports setting the state of seperated stages of the Saturn launch vehicles and CSM.
+///
 
 #endif

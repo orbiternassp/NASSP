@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/06/17 17:19:31  tschachim
+  *	Gyro-compassing for the NASSP AGC.
+  *	
   *	Revision 1.48  2006/06/07 09:53:18  tschachim
   *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
   *	
@@ -1545,10 +1548,15 @@ void CSMcomputer::WriteMemory(unsigned int loc, int val)
 	}
 }
 
-//
-// Bank checksums.
-//
-
+///
+/// Memory bank checksums for the CSM AGC running Colossus software. These are used to simulate
+/// the bank checksum display program in the C++ AGC.
+///
+/// Checksum values should either be equal to the bank number or negative bank number. Any other
+/// value shows a memory error.
+///
+/// \brief Bank checksums.
+///
 static unsigned int BankSums[] =
 {
 	077777, 063743,
