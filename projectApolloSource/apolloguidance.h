@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.41  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -152,11 +155,6 @@
   *	
   **************************************************************************/
 
-///
-/// \defgroup AGC Apollo Guidance Computer code.
-/// \brief This code supports the Apollo Guidance Computers on the CSM and LEM.
-///
-
 #ifndef APOLLOGUIDANCE_H
 #define APOLLOGUIDANCE_H
 
@@ -255,13 +253,30 @@ public:
 	void PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel,
 		double Mu, double Time, VECTOR3 &NewPos, VECTOR3 &NewVel, double &NewVelMag);
 
+	///
+	/// \brief Force the AGC to restart.
+	///
 	void ForceRestart();
 	void Startup();
 	void GoStandby();
+
+	///
+	/// \brief Is the AGC in standby mode?
+	///
 	bool OnStandby() { return (!Yaagc && Standby); };
 
+	///
+	/// \brief Is the AGC out of reset?
+	///
 	bool OutOfReset();
 
+	///
+	/// Indicate that a checklist action is required by using Verb 20 Noun 25 and the checklist
+	/// action number.
+	///
+	/// \brief Checklist action required.
+	/// \param num Checklist action number.
+	///
 	void Checklist(int num);
 	void BlankAll();
 
@@ -282,9 +297,22 @@ public:
 
 	void SetFuel(double fuel) { CurrentFuel = fuel; };
 	void SetRVel(double vel) { CurrentRVel = vel; };
+
+	///
+	/// \brief Indicate that the engines have shutdown after launch.
+	///
 	void LaunchShutdown();
 
+	///
+	/// \brief Save AGC state to scenario file.
+	/// \param scn Scenario file to save to.
+	///
 	void SaveState(FILEHANDLE scn);
+
+	///
+	/// \brief Load AGC state from scenario file.
+	/// \param scn Scenario file to load from.
+	///
 	void LoadState(FILEHANDLE scn);
 
 	//
@@ -367,13 +395,35 @@ public:
 	// Generally useful setup.
 	//
 
-	virtual void SetMissionInfo(int MissonNo, int RealismValue, char *OtherVessel = 0);
+	///
+	/// Pass information about the mission to the AGC, which needs to know which vessels
+	/// it's working with, the mission it's flying, and the realism level.
+	///
+	/// Amongst other things, we need to know the mission number so that we know which version
+	/// of the Colossus software to load into the Virtual AGC.
+	///
+	/// \brief Set mission info in AGC.
+	/// \param MissionNo Apollo mission number.
+	/// \param RealismValue Current realism level.
+	/// \param OtherVessel Pointer to the LEM so that the CSM can track it for rendevouz.
+	///
+	virtual void SetMissionInfo(int MissionNo, int RealismValue, char *OtherVessel = 0);
+
+	///
+	/// \brief Initialise the Virtual AGC.
+	/// \param binfile Path to the file containing the AGC binary code.
+	///
 	virtual void InitVirtualAGC(char *binfile);
 
 	//
 	// Power supply.
 	//
 
+	///
+	/// \brief Wire the AGC to external power buses.
+	/// \param a Power bus 1.
+	/// \param b Power bus 2.
+	///
 	void WirePower(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); PowerConnected = true; };
 	bool IsPowered();
 
@@ -383,21 +433,80 @@ protected:
 	// Various programs we can run.
 	//
 
+	///
+	/// \brief Run the reset program.
+	/// \param simt Current Mission Elapsed Time.
+	///
 	void ResetProg(double simt);
 
+	///
+	/// \brief Run Program 16.
+	/// \param simt Current Mission Elapsed Time.
+	///
 	void Prog16(double simt);
+
+	///
+	/// \brief Process Pro key while running Program 16.
+	/// \param R1 Value in DSKY R1 register.
+	/// \param R2 Value in DSKY R2 register.
+	/// \param R3 Value in DSKY R3 register.
+	///
 	void Prog16Pressed(int R1, int R2, int R3);
 
+	///
+	/// \brief Run Program 16.
+	/// \param simt Current Mission Elapsed Time.
+	///
 	void Prog17(double simt);
+
+	///
+	/// \brief Process Pro key while running Program 17.
+	/// \param R1 Value in DSKY R1 register.
+	/// \param R2 Value in DSKY R2 register.
+	/// \param R3 Value in DSKY R3 register.
+	///
 	void Prog17Pressed(int R1, int R2, int R3);
 
+	///
+	/// \brief Run Program 16.
+	/// \param simt Current Mission Elapsed Time.
+	///
 	void Prog18(double simt);
+
+	///
+	/// \brief Process Pro key while running Program 18.
+	/// \param R1 Value in DSKY R1 register.
+	/// \param R2 Value in DSKY R2 register.
+	/// \param R3 Value in DSKY R3 register.
+	///
 	void Prog18Pressed(int R1, int R2, int R3);
 
+	///
+	/// \brief Run Program 19.
+	/// \param simt Current Mission Elapsed Time.
+	///
 	void Prog19(double simt);
+
+	///
+	/// \brief Process Pro key while running Program 19.
+	/// \param R1 Value in DSKY R1 register.
+	/// \param R2 Value in DSKY R2 register.
+	/// \param R3 Value in DSKY R3 register.
+	///
 	void Prog19Pressed(int R1, int R2, int R3);
 
+	///
+	/// \brief Run Program 37.
+	/// \param simt Current Mission Elapsed Time.
+	///
 	void Prog37(double simt);
+
+	///
+	/// \brief Process Pro key while running Program 37.
+	/// \param R1 Value in DSKY R1 register.
+	/// \param R2 Value in DSKY R2 register.
+	/// \param R3 Value in DSKY R3 register.
+	///
 	void Prog37Pressed(int R1, int R2, int R3);
 
 	//
@@ -424,60 +533,231 @@ protected:
 	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);
 	public: virtual void GenerateDownrupt();
 
+	///
+	/// \brief Set the Uplink Activity light on the DSKY.
+	///
 	void LightUplink();
+
+	///
+	/// \brief Clear the Uplink Activity light on the DSKY.
+	///
 	void ClearUplink();
+
+	///
+	/// \brief Set the Computer Activity light on the DSKY.
+	///
 	void LightCompActy();
+
+	///
+	/// \brief Clear the Computer Activity light on the DSKY.
+	///
 	void ClearCompActy();
+
+	///
+	/// \brief Set the temperature warning light on the DSKY.
+	///
 	void LightTemp();
+
+	///
+	/// \brief Clear the temperature warning light on the DSKY.
+	///
 	void ClearTemp();
+
+	///
+	/// \brief Set the Keyboard Release light on the DSKY.
+	///
 	void LightKbRel();
+
+	///
+	/// \brief Clear the Keyboard Release light on the DSKY.
+	///
 	void ClearKbRel();
+
+	///
+	/// \brief Set the Operator Error light on the DSKY.
+	///
 	void LightOprErr();
+
+	///
+	/// \brief Clear the Operator Error light on the DSKY.
+	///
 	void ClearOprErr();
+
+	///
+	/// \brief Set the No Attitude light on the DSKY.
+	///
 	void LightNoAtt();
+
+	///
+	/// \brief Clear the No Attitude light on the DSKY.
+	///
 	void ClearNoAtt();
+
+	///
+	/// \brief Set the Gimbal Lock light on the DSKY.
+	///
 	void LightGimbalLock();
+
+	///
+	/// \brief Clear the Gimbal Lock light on the DSKY.
+	///
 	void ClearGimbalLock();
+
+	///
+	/// \brief Set the Tracker light on the DSKY.
+	///
 	void LightTracker();
+
+	///
+	/// \brief Clear the Tracker light on the DSKY.
+	///
 	void ClearTracker();
+
+	///
+	/// \brief Set the Program Alarm light on the DSKY.
+	///
 	void LightProg();
+
+	///
+	/// \brief Clear the Program Alarm light on the DSKY.
+	///
 	void ClearProg();
+
+	///
+	/// \brief Set the Velocity light on the DSKY.
+	///
 	void LightVel();
+
+	///
+	/// \brief Clear the Velocity light on the DSKY.
+	///
 	void ClearVel();
+
+	///
+	/// \brief Set the Altitude light on the DSKY.
+	///
 	void LightAlt();
+
+	///
+	/// \brief Clear the Altitude light on the DSKY.
+	///
 	void ClearAlt();
 
+	///
+	/// \brief Flash the Verb and Noun indicators on the DSKY.
+	///
 	void SetVerbNounFlashing();
+
+	///
+	/// \brief Stop flashing the Verb and Noun indicators on the DSKY.
+	///
 	void ClearVerbNounFlashing();
 
 	//
 	// Odds and ends.
 	//
 
+	///
+	/// Errors in the AGC are indicated by program alarm numbers. This function adds the alarm
+	/// to the list of alarms occuring and lights the Program Alarm light on the DSKY.
+	///
+	/// \brief Raise a program alarm.
+	/// \param AlarmNo The program alarm number.
+	///
 	void RaiseAlarm(int AlarmNo);
+
 	void DoOrbitBurnCalcs(double simt);
 	bool GenericTimestep(double simt, double simdt);
 	bool GenericReadMemory(unsigned int loc, int &val);
 	void GenericWriteMemory(unsigned int loc, int val);
+
+	///
+	/// This function displays a time on the DSKY in R1, R2 and R3 in the standard format used
+	/// by the AGC (hours, minutes, seconds * 100).
+	///
+	/// \brief Display a time on the DSKY.
+	/// \param t Time in seconds.
+	///
 	void DisplayTime(double t);
+
+	///
+	/// Flash Verb 37 on the DSKY to indicate that the user should switch to a new program. This
+	/// will normally be called when one program has completed (e.g. after launch shutdown).
+	///
+	/// \brief Indicate thatthe user should switch to a new program.
+	///
 	void AwaitProgram();
+
+	///
+	/// Sets a verb and noun combination and flashes them on the DSKY.
+	///
+	/// \brief Set a Verb and Noun display and flash them.
+	/// \param Verb Verb to display.
+	/// \param Noun Noun to display.
+	///
 	void SetVerbNounAndFlash(int Verb, int Noun);
+
+	///
+	/// Sets a verb and noun combination and shows them on the DSKY.
+	///
+	/// \brief Set a Verb and Noun display.
+	/// \param Verb Verb to display.
+	/// \param Noun Noun to display.
+	///
 	void SetVerbNoun(int Verb, int Noun);
 	double NewVelocity_AorP(double Mu_Planet, double &Rapo, double &Rperi, double &Rnew);
 	void KillAllThrusters();
 	void OrientForOrbitBurn(double simt);
 	void GetHoverAttitude( VECTOR3 &actatt);
+
+	///
+	/// \brief Set the thrust level of the main engine.
+	/// \param thrust Thrust level (0.0 to 1.0).
+	///
 	void BurnMainEngine(double thrust);
+
 	virtual void DisplayBankSum();
 	void DisplayEMEM(unsigned int addr);
 	virtual bool OrbitCalculationsValid() = 0;
 	void DisplayOrbitCalculations();
+
+	///
+	/// Function to take a generic time from the R1, R2 and R3 registers in the standard AGC format
+	/// (hours/minutes/seconds * 100), and put it in the BurnTime variable as a number of seconds after
+	/// the current Mission Elapsed Time.
+	///
+	/// This way, for example, the user can enter a time for a burn to start, press Pro, and after
+	/// calling UpdateBurnTime the MET for the start of the burn will be stored in BurnTime.
+	///
+	/// \brief Update the BurnTime based on the time in R1/R2/R3.
+	/// \param R1 Partial time in hours.
+	/// \param R2 Partial time in minutes.
+	/// \param R3 Partial time in hundredths of seconds.
+	///
 	void UpdateBurnTime(int R1, int R2, int R3);
 	int16_t ConvertDecimalToAGCOctal(double x, bool highByte);
 
+	///
+	/// \brief Is the AGC in power-saving Standby mode?
+	///
 	bool Standby;
+
+	///
+	/// \brief Are we running the reset program?
+	///
 	bool Reset;
+
+	///
+	/// \brief Are we in orbit or landed on a planet?
+	///
 	bool InOrbit;
+
+	///
+	/// Some generic autopilot code needs to know whether the main engine of the vessel is a normal
+	/// inline engine (CSM) or a hover engine (LEM).
+	///
+	/// \brief Is the main thruster a hover thruster?
+	///
 	bool MainThrusterIsHover;
 
 	//
@@ -508,18 +788,28 @@ protected:
 	char TwoDigitEntry[2];
 	char FiveDigitEntry[6];
 
-	//
-	// Temporary for transferring values to DSKY.
-	//
-
+	///
+	/// \brief Temporary for transferring values to DSKY.
+	///
 	char RegStr[8];
 
 	//
 	// Data entry status.
 	//
 
+	///
+	/// \brief User is entering a VERB.
+	///
 	bool EnteringVerb;
+
+	///
+	/// \brief User is entering a NOUN.
+	///
 	bool EnteringNoun;
+
+	///
+	/// \brief User is entering an octal value rather than decimal.
+	///
 	bool EnteringOctal;
 
 	int	EnterPos;
@@ -527,6 +817,12 @@ protected:
 	int	EnteringData;
 	int EnterCount;
 
+	///
+	/// When the user is entering a value in the DSKY, this tracks whether the value they're
+	/// entering is positive or negative.
+	///
+	/// \brief Entering positive or negative data?
+	///
 	bool EnterPositive;
 
 	bool KbInUse;
@@ -615,7 +911,14 @@ protected:
 	bool RetroFlag;
 	bool BurnFlag;
 
+	///
+	/// \brief The primary DSKY attached to this AGC.
+	///
 	DSKY &dsky;
+
+	///
+	/// \brief The IMU attached to this AGC.
+	///
 	IMU &imu;
 
 	int ProgRunning;
@@ -642,8 +945,20 @@ protected:
 	//
 
 	int ResetCount;
+
+	///
+	/// \brief Apollo mission number.
+	///
 	int ApolloNo;
+
+	///
+	/// \brief Realism level.
+	///
 	int Realism;
+
+	///
+	/// \brief Are we running the Virtual AGC rather than the C++ AGC?
+	///
 	bool Yaagc;
 
 	double ResetTime;
@@ -653,6 +968,10 @@ protected:
 	double CurrentTimestep;
 
 	bool isFirstTimestep;
+
+	///
+	/// \brief Have we loaded the initial startup data into the Virtual AGC?
+	///
 	bool PadLoaded;
 
 	void GetPosVel();
@@ -706,7 +1025,14 @@ protected:
 #define MAX_INPUT_CHANNELS	0200
 #define MAX_OUTPUT_CHANNELS	0200
 
+	///
+	/// \brief AGC input channel values.
+	///
 	unsigned int InputChannel[MAX_INPUT_CHANNELS + 1];
+
+	///
+	/// \brief AGC output channel values.
+	///
 	unsigned int OutputChannel[MAX_OUTPUT_CHANNELS + 1];
 
 	//
@@ -716,13 +1042,23 @@ protected:
 	PowerMerge DCPower;
 	bool PowerConnected;
 
-	//
-	// The Vessel we're controlling.
-	//
-
+	///
+	/// \brief The Vessel we're controlling.
+	///
 	VESSEL	*OurVessel;
+
+	///
+	/// \brief The sound library for the vessel we're controlling.
+	///
 	SoundLib &soundlib;
 
+	///
+	/// The rendevouz programs require the AGC to track another vessel which is the target
+	/// for the rendevouz. We need to know the name of that vessel so we can look it up in
+	/// Orbiter.
+	/// 
+	/// \brief The name of the 'other vessel' (e.g. CSM for LEM AGC, LEM for CSM AGC).
+	///
 	char OtherVesselName[64];
 
 #ifdef _DEBUG

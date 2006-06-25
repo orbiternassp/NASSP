@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   **************************** Revision History ****************************/
 
 
@@ -47,6 +50,16 @@ Pyro::Pyro(char *i_name, PanelSDK &p) : sdk(p)
 	//
 
 	sdk.AddElectrical(this, false);
+}
+
+void Pyro::SetBlown(bool b)
+
+{
+	blown = b;
+	if (!b)
+	{
+		energy = 0.0;
+	}
 }
 
 void Pyro::UpdateFlow(double dt)

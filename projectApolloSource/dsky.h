@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.13  2006/06/21 13:11:29  tschachim
   *	Bugfix power drawing.
   *	
@@ -62,11 +65,6 @@
   *	Initial version
   *	
   **************************************************************************/
-
-///
-/// \defgroup DSKY Display/Keyboard code.
-/// \brief This code supports the Apollo DSKY emulation.
-///
 
 ///
 /// \ingroup DSKY

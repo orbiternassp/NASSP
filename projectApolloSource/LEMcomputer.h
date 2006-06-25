@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.21  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -95,6 +98,9 @@
 // used.
 //
 
+///
+/// \ingroup AGCFlags
+///
 typedef union {
 	struct {
 		unsigned P66PROFL:1;
@@ -116,7 +122,9 @@ typedef union {
 	unsigned int word;
 } LEMFlagWord0;
 
-
+///
+/// \ingroup AGCFlags
+///
 typedef union {
 	struct {
 		unsigned NOTASSIGNED:1;
@@ -138,6 +146,9 @@ typedef union {
 	unsigned int word;
 } LEMFlagWord1;
 
+///
+/// \ingroup AGCFlags
+///
 typedef union {
 	struct {
 		unsigned NODOBIT:1;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.27  2006/05/27 11:50:04  movieman523
   *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
   *	
@@ -175,6 +178,12 @@ private:
 	void DockStage (UINT dockstatus);
 
 	void SetVehicleStats();
+
+	///
+	/// Calculate the mass of the various stages of the vehicle once we know
+	/// what type it is and what state it's in.
+	/// \brief Calculate stage masses.
+	///
 	void CalculateStageMass ();
 
 	void SetupMeshes();

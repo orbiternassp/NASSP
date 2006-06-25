@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.52  2006/06/17 18:13:13  tschachim
   *	Moved BMAGPowerRotationalSwitch.
   *	
@@ -183,11 +186,6 @@
   *
   **************************************************************************/
 
-///
-/// \defgroup PanelItems Control panel code.
-/// \brief Objects which are used to support the control panel.
-///
-
 #include "cautionwarning.h"
 
 #define TOGGLESWITCH_DOWN		0
@@ -217,7 +215,10 @@ class PanelSwitchScenarioHandler;
 #include "powersource.h"
 
 ///
-/// Panel item base class.
+/// This is the base class for panel items. Items using this class can be looked up by name,
+/// and are automatically saved into scenario files and loaded from them without us having to
+/// individually track each one.
+/// \brief Panel item base class.
 /// \ingroup PanelItems
 ///
 class PanelSwitchItem: public e_object {
@@ -228,7 +229,20 @@ public:
 	PanelSwitchItem *GetNext() { return next; };
 	void SetNextForScenario(PanelSwitchItem *s) { nextForScenario = s; };
 	PanelSwitchItem *GetNextForScenario() { return nextForScenario; };
+
+	///
+	/// Force an object to fail, or return it to correct operation, and set the
+	/// state it was in when it failed.
+	/// \brief Force an object to fail and set state.
+	/// \param fail True to make the object fail, false to return it to operation.
+	/// \param fail_state The state the object will fail in (e.g. switch up or switch down).
+	///
 	void SetFailed(bool fail, int fail_state = 0) { Failed = fail; FailedState = fail_state; };
+
+	///
+	/// \brief Has the object failed?
+	/// \return True if the object failed, false if it's operating normally.
+	///
 	bool IsFailed() { return Failed; };
 	char *GetName() { return name; }
 
@@ -238,22 +252,73 @@ public:
 	virtual void LoadState(char *line) = 0;
 	virtual void DrawFlash(SURFHANDLE DrawSurface) {};
 
+	///
+	/// Each object has a human-readable displayable name. Normally this will be a
+	/// pre-initialised string rather than a dynamic name, so we just copy the pointer
+	/// passed into us and don't take a copy. If you call this with a temporary string
+	/// on the stack our pointer will end up pointing to garbage after you return from
+	/// the routine which set up the string.
+	/// \brief Set the displayable name.
+	///
 	void SetDisplayName(char *s) { DisplayName = s; };
+
+	///
+	/// \brief Get the displayable name.
+	/// \return Pointer to the displayable name, or NULL.
+	///
 	char *GetDisplayName();
 
+	///
+	/// \brief Start flashing the object.
+	/// \param flash True to turn flashing on, false to turn it off.
+	///
 	void SetFlashing(bool flash) { flashing = flash; };
+
+	///
+	/// \brief Check whether flashing is enabled.
+	/// \return True if the object is flashing.
+	///
 	bool IsFlashing() { return flashing; };
 
 	void SetVisible(bool v) {visible = v; };
 
 protected:
+	///
+	/// If a switch fails, you can no longer change the state even if you can still move
+	/// the toggle. If a gauge fails it will no longer read the correct value.
+	/// \brief Has the switch failed?
+	///
 	bool Failed;
+
+	///
+	/// \brief State that the switch failed in.
+	///
 	int FailedState;
+
+	///
+	/// \brief Name of the switch.
+	///
 	char *name;
 
+	///
+	/// We can display a flashing rectangle around a switch or gauge to point the user to
+	/// it when running a checklist. For example, if they need to click a switch to continue
+	/// we can indicate the switch to click until it's in the correct state, or if they should
+	/// check a gauge reading we can flash that briefly.
+	/// \brief Is the object flashing?
+	///
 	bool flashing;
+
+	///
+	/// A human-readable object name which we can display to them when we want them to use the
+	/// object. For example 'The CSM/LV seperation switch', or 'The liquid oxygen quantity gauge.'
+	/// \brief Displayable name.
+	///
 	char *DisplayName;
 
+	///
+	/// \brief Is the object visible?
+	///
 	bool visible;
 
 	PanelSwitchItem *next;
@@ -261,7 +326,8 @@ protected:
 };
 
 ///
-/// Toggle switch base class.
+/// Generic two-position toggle switch.
+/// \brief Toggle switch base class.
 /// \ingroup PanelItems
 ///
 class ToggleSwitch: public PanelSwitchItem {
@@ -346,7 +412,10 @@ protected:
 	SwitchRow *switchRow;
 };
 
-
+///
+/// \brief Orbiter attitude-control toggle switch.
+/// \ingroup PanelItems
+///
 class AttitudeToggle: public ToggleSwitch {
 
 public:
@@ -360,6 +429,10 @@ public:
 	unsigned operator=(const unsigned b) { state = (b != 0); return (unsigned)state; };
 };
 
+///
+/// \brief Orbiter attitude-control toggle switch.
+/// \ingroup PanelItems
+///
 class NavModeToggle: public ToggleSwitch {
 
 public:
@@ -371,7 +444,10 @@ protected:
 	int NAVMode;
 };
 
-
+///
+/// \brief Orbiter HUD-mode toggle switch.
+/// \ingroup PanelItems
+///
 class HUDToggle: public ToggleSwitch {
 
 public:
@@ -383,7 +459,11 @@ protected:
 	int	HUDMode;
 };
 
-
+///
+/// Generic three-positiont toggle switch
+/// \brief Three position toggle switch base class.
+/// \ingroup PanelItems
+///
 class ThreePosSwitch: public ToggleSwitch {
 
 public:
@@ -399,6 +479,11 @@ public:
 	int operator=(const int b) { state = b; return state; };
 };
 
+///
+/// A three-position switch which can switch between three different electrical sources.
+/// \brief Three power source switch.
+/// \ingroup PanelItems
+///
 class ThreeSourceSwitch : public ThreePosSwitch {
 public:
 	ThreeSourceSwitch() { source1 = source2 = source3 = 0; };
@@ -415,6 +500,11 @@ protected:
 	e_object *source3;
 };
 
+///
+/// A two-position switch which can switch between two different electrical sources.
+/// \brief Two power source switch.
+/// \ingroup PanelItems
+///
 class TwoSourceSwitch : public ToggleSwitch {
 public:
 	TwoSourceSwitch() { source1 = source2 = 0; };
@@ -430,6 +520,11 @@ protected:
 	e_object *source2;
 };
 
+///
+/// A two-position switch which can switch its power between two different electrical outputs.
+/// \brief Two power output switch.
+/// \ingroup PanelItems
+///
 class TwoOutputSwitch : public ToggleSwitch {
 public:
 	TwoOutputSwitch() { output1 = output2 = 0; };
@@ -462,6 +557,11 @@ protected:
 
 class MissionTimer; // Forward reference for files which include this before missiontimer.h
 
+///
+/// A generic three-position switch which can control a mission timer.
+/// \brief Mission timer switch base class.
+/// \ingroup PanelItems
+///
 class MissionTimerSwitch: public ThreePosSwitch {
 
 public:
@@ -472,6 +572,11 @@ protected:
 	MissionTimer *timer;
 };
 
+///
+/// A three-position switch which controls a mission timer.
+/// \brief Mission timer control switch.
+/// \ingroup PanelItems
+///
 class TimerControlSwitch: public MissionTimerSwitch {
 
 public:
@@ -482,6 +587,11 @@ protected:
 	void SetTimer();
 };
 
+///
+/// A three-position switch which updates the time on a mission timer.
+/// \brief Mission timer time update switch.
+/// \ingroup PanelItems
+///
 class TimerUpdateSwitch: public MissionTimerSwitch {
 
 public:
@@ -495,10 +605,12 @@ protected:
 	int adjust_type;
 };
 
-//
-// Switch that starts and stops the event timer.
-//
 
+///
+/// Switch that starts and stops the event timer.
+/// \brief Event timer control switch.
+/// \ingroup PanelItems
+///
 class EventTimerControlSwitch: public MissionTimerSwitch {
 
 public:
@@ -506,10 +618,11 @@ public:
 
 };
 
-//
-// Switch that controls up/down/reset for event timer.
-//
-
+///
+/// Switch that controls count up/count down/reset for event timer.
+/// \brief Event timer count/reset switch.
+/// \ingroup PanelItems
+///
 class EventTimerResetSwitch: public MissionTimerSwitch {
 
 public:
@@ -519,6 +632,11 @@ public:
 
 class CautionWarningSystem; // Forward reference for files which include this before cautionwarning.h
 
+///
+/// A generic three-position switch which can control a caution and warning system.
+/// \brief CWS control switch base class.
+/// \ingroup PanelItems
+///
 class CWSThreePosSwitch: public ThreePosSwitch {
 
 public:
@@ -526,15 +644,27 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, CautionWarningSystem *c);
 
 protected:
+	///
+	/// \brief The caution and warning system that this switch controls.
+	///
 	CautionWarningSystem *cws;
 };
 
+///
+/// A three-position switch controlling a caution and warning system light test.
+/// \brief CWS light test switch.
+/// \ingroup PanelItems
+///
 class CWSLightTestSwitch: public CWSThreePosSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
 };
 
-
+///
+/// A two-position switch which is pushed in/out rather than toggled up/down.
+/// \brief Two-position push switch.
+/// \ingroup PanelItems
+///
 class PushSwitch: public ToggleSwitch {
 
 public:
@@ -546,7 +676,12 @@ protected:
 	virtual void InitSound(SoundLib *s);
 };
 
-
+///
+/// A two-position electrical circuit breaker switch which is pushed in and pulled out rather 
+/// than toggled up/down, and turns its electrical supply on and off as it does so.
+/// \brief Two-position circuit breaker switch.
+/// \ingroup PanelItems
+///
 class CircuitBrakerSwitch: public ToggleSwitch {
 
 public:
@@ -562,24 +697,32 @@ public:
 
 protected:
 	virtual void InitSound(SoundLib *s);
+
+	///
+	/// Maximum current which can be pulled through the circuit breaker before it automatically
+	/// pops out.
+	/// \brief Maximum safe current.
+	///
 	double MaxAmps;
 };
 
 
-//
-// Caution and warning system mode switch.
-//
-
+///
+/// A three-position switch controlling a caution and warning system operating mode.
+/// \brief CWS mode switch.
+/// \ingroup PanelItems
+///
 class CWSModeSwitch: public CWSThreePosSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 };
 
-//
-// Caution and warning system power switch.
-//
-
+///
+/// A three-position switch controlling caution and warning system power.
+/// \brief CWS power switch.
+/// \ingroup PanelItems
+///
 class CWSPowerSwitch: public CWSThreePosSwitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
@@ -589,10 +732,12 @@ protected:
 	void SetPowerBus();
 };
 
-//
-// Caution and warning system source switch.
-//
-
+///
+/// A two-position switch controlling caution and warning system source, typically switching
+/// between monitoring CSM systems and only monitoring CM systems..
+/// \brief CWS source switch.
+/// \ingroup PanelItems
+///
 class CWSSourceSwitch: public ToggleSwitch {
 public:
 	CWSSourceSwitch() { cws = 0; };
@@ -600,6 +745,9 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, CautionWarningSystem *c);
 
 protected:
+	///
+	/// \brief The caution and warning system that this switch controls.
+	///
 	CautionWarningSystem *cws;
 };
 

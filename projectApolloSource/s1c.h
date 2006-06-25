@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/05/26 18:42:54  movieman523
+  *	Updated S1C DLL to support INT-20 stage.
+  *	
   *	Revision 1.4  2006/05/19 13:46:56  tschachim
   *	Smoother S-IC staging.
   *	
@@ -80,10 +83,13 @@ typedef struct {
 #define S1C_STATE_SHUTTING_DOWN		0
 #define S1C_STATE_WAITING			1
 
-//
-// Stage class.
-//
-
+///
+/// This code simulates the S1c stage. Basically it simulates thrust decay if there is any fuel left,
+/// fires any retro rockets to push it away from the Saturn and then sits around waiting to be deleted.
+///
+/// \brief S1c stage simulation.
+/// \ingroup SepStages
+///
 class S1C : public VESSEL2 {
 
 public:

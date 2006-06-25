@@ -22,10 +22,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/01/14 18:57:49  movieman523
+  *	First stages of pyro and SECS simulation.
+  *	
   **************************** Revision History ****************************/
 
 #ifndef __SECS_H
 #define __SECS_H
+
+///
+/// This class simulates the Sequential Events Control System in the CM.
+/// \ingroup InternalSystems
+/// \brief SECS simulation.
+///
 
 class SECS : public e_object {
 
