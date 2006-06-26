@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/06/18 22:45:31  dseagrav
+  *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
+  *	
   *	Revision 1.44  2006/06/18 16:43:07  dseagrav
   *	LM EPS fixes, LMP/CDR DC busses now powered thru CBs, ECA power-off bug fixed and ECA speed improvement
   *	
@@ -222,6 +225,9 @@ public:
 	int input_b;                        // B-side input selector
 };
 
+///
+/// \ingroup LEM
+///
 class sat5_lmpkd : public VESSEL2, public PanelSwitchListener {
 
 public:

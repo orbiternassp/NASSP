@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/06/06 17:50:59  redburne
+  *	- New gauges ("working" battery capacity indicator; other values are static)
+  *	- boolean variable GoRover removed
+  *	- more realistic accelleration (much slower, probably still a bit fast)
+  *	- new speed handling: brake to standstill, release and press key again to further increase/decrease speed
+  *	
   *	Revision 1.3  2006/05/30 19:32:50  redburne
   *	Order of main LRV mesh and console mesh has been exchanged to temporarily work around an animation bug in Orbiter 2006.
   *	
@@ -735,35 +741,32 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
 }
 
-DLLCLBK void ovcLoadState (VESSEL *vessel, FILEHANDLE scn, VESSELSTATUS *vs)
-
-{
-	LRV *sv = (LRV *)vessel;
-
-	sv->LoadState(scn, vs);
-}
-
-void LRV::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
+void LRV::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 
 {
     char *line;
 	
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp (line, "STATE", 5)) {
+	while (oapiReadScenario_nextline (scn, line)) 
+	{
+		if (!strnicmp (line, "STATE", 5)) 
+		{
 			int	s;
 			sscanf(line + 5, "%d", &s);
 			SetMainState(s);
 
 			SetEngineLevel(ENGINE_HOVER,1);
 		}
-		else if (!strnicmp (line, "MISSIONNO", 9)) {
+		else if (!strnicmp (line, "MISSIONNO", 9)) 
+		{
 			sscanf(line + 9, "%d", &ApolloNo);
 		}
-		else if (!strnicmp (line, "REALISM", 7)) {
+		else if (!strnicmp (line, "REALISM", 7)) 
+		{
 			sscanf(line + 7, "%d", &Realism);
 		}
-		else {
-            ParseScenarioLine (line, vs);
+		else 
+		{
+            ParseScenarioLineEx (line, vs);
         }
     }
 }
@@ -793,13 +796,6 @@ void LRV::clbkVisualDestroyed (VISHANDLE vis, int refcount)
 	vccSpeedAngle = 0.0;
 	for (int i=0; i<8; i++)
 		vccNeedleAngle[i] = - Radians(VCC_NEEDLE_MINPOS[i]);
-}
-
-
-DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
-{
-	LRV *sv = (LRV *)vessel;
-	sv->SaveState(scn);
 }
 
 typedef union {
@@ -832,7 +828,7 @@ void LRV::SetMainState(int n)
 	SLEVAPlayed = (s.u.SLEVAPlayed != 0);
 }
 
-void LRV::SaveState(FILEHANDLE scn)
+void LRV::clbkSaveState(FILEHANDLE scn)
 
 {
 	SaveDefaultState (scn);

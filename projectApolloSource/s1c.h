@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.5  2006/05/26 18:42:54  movieman523
   *	Updated S1C DLL to support INT-20 stage.
   *	
@@ -41,47 +44,76 @@
   **************************************************************************/
 
 //
-// Data structure passed from main vessel to SIVB to configure stage.
+// Data structure passed from main vessel to S1c to configure stage.
 //
 
+///
+/// Flags structure indicating which of the S1c settings are valid.
+///
+/// \brief S1c settings flags.
+/// \ingroup SepStageSettings
+///
+union S1cSettingFlags
+{
+	struct {
+		unsigned S1C_SETTINGS_MASS:1; 		///< Mass settings are valid.
+		unsigned S1C_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
+		unsigned S1C_SETTINGS_GENERAL:1;	///< General settings (e.g. Mission Time) are valid.
+		unsigned S1C_SETTINGS_ENGINES:1;	///< Engine settings (e.g. ISP) are valid.
+	};
+	unsigned int word;						///< Set to zero to clear all flags.
+
+	///
+	/// \brief Constructor: clear all flags by default.
+	///
+	S1cSettingFlags() { word = 0; };
+};
+
+///
+/// Data structure passed from main vessel to S1c to configure it after staging.
+///
+/// \brief S1c setup structure.
+/// \ingroup SepStageSettings
+///
 typedef struct {
 
-	int SettingsType;
-	int VehicleNo;
-	int Realism;
-	int RetroNum;
-	int EngineNum;
+	S1cSettingFlags SettingsType;			///< Which settings are valid?
 
-	double THRUST_FIRST_VAC;
-	double ISP_FIRST_VAC;
-	double ISP_FIRST_SL;
-	double MissionTime;
-	double EmptyMass;
-	double MainFuelKg;
-	double CurrentThrust;
+	int VehicleNo;							///< Saturn vehicle number.
+	int Realism;							///< Realism level.
+	int RetroNum;							///< Number of retros.
+	int EngineNum;							///< Number of engines.
 
-	bool LowRes;
-	bool S4Interstage;
-	bool Stretched;
+	double THRUST_FIRST_VAC;				///< Single-engine thrust in vacuum.
+	double ISP_FIRST_VAC;					///< ISP in vacuum.
+	double ISP_FIRST_SL;					///< ISP at sea-level.
+	double MissionTime;						///< Current MET.
+	double EmptyMass;						///< Empty mass in kg.
+	double MainFuelKg;						///< Current fuel mass in kg.
+	double CurrentThrust;					///< Current thrust level (0.0 to 1.0)
+
+	bool LowRes;							///< Low-res meshes?
+	bool S4Interstage;						///< Is the SIVb interstage attached?
+	bool Stretched;							///< Is the stage stretched?
 
 } S1CSettings;
-
-//
-// Which parts of the structure are active.
-//
-
-#define S1C_SETTINGS_MASS		0x1
-#define S1C_SETTINGS_FUEL		0x2
-#define S1C_SETTINGS_GENERAL	0x4
-#define S1C_SETTINGS_ENGINES	0x8
 
 //
 // Stage states.
 //
 
-#define SIC_STATE_HIDDEN           -1
-#define S1C_STATE_SHUTTING_DOWN		0
-#define S1C_STATE_WAITING			1
+///
+/// Specifies the main state of the S1c
+///
+/// \brief S1c state.
+/// \ingroup SepStageSettings
+///
+typedef enum S1cState
+{
+	SIC_STATE_HIDDEN = -1,				///< S1c is waiting for setup call.
+	S1C_STATE_SHUTTING_DOWN,			///< S1c is firing motors to jettison.
+	S1C_STATE_WAITING					///< S1c is idle after motor burnout.
+};
 
 ///
 /// This code simulates the S1c stage. Basically it simulates thrust decay if there is any fuel left,
@@ -93,25 +125,60 @@ typedef struct {
 class S1C : public VESSEL2 {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	S1C (OBJHANDLE hObj, int fmodel);
 	virtual ~S1C();
 
+	///
+	/// \brief Orbiter state saving function.
+	/// \param scn Scenario file to save to.
+	///
 	void clbkSaveState (FILEHANDLE scn);
+
+	///
+	/// \brief Orbiter timestep function.
+	/// \param simt Current simulation time, in seconds since Orbiter was started.
+	/// \param simdt Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
 	void clbkPreStep(double simt, double simdt, double mjd);
+
+	///
+	/// \brief Orbiter state loading function.
+	/// \param scn Scenario file to load from.
+	/// \param status Pointer to current vessel status.
+	///
 	void clbkLoadStateEx (FILEHANDLE scn, void *status);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
 	void clbkSetClassCaps (FILEHANDLE cfg);
+
+	///
+	/// \brief Orbiter dock state function. Does the S1c need this?
+	///
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 	bool clbkLoadGenericCockpit ();
 	bool clbkLoadVC (int id);
 
-	//
-	// Must be virtual so it can be called from other DLLs.
-	//
+	///
+	/// Pass settings from the main DLL to the jettisoned S1c. This call must be virtual 
+	/// so it can be called from other DLLs without building in the S1c code.
+	/// \brief Setup jettisoned S1c.
+	/// \param state S1c state settings.
+	///
 	virtual void SetState(S1CSettings &state);
 	virtual void LoadMeshes(bool lowres);
 
 protected:
 
+	///
+	/// \brief Orbiter sound library.
+	///
 	SoundLib soundlib;
 
 	void SetS1c();
@@ -124,7 +191,7 @@ protected:
 
 	int MissionNo;
 	int VehicleNo;
-	int State;
+	S1cState State;
 	int Realism;
 	int RetroNum;
 	int EngineNum;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/01/26 03:07:50  movieman523
+  *	Quick hack to support low-res mesh.
+  *	
   *	Revision 1.4  2006/01/09 19:26:03  tschachim
   *	More attempts to make code build on MS C++ 2005
   *	
@@ -80,7 +83,7 @@ void SII::InitSII()
 {
 	int i;
 
-	State = SII_STATE_SHUTTING_DOWN;
+	State = SII_STATE_SETUP;
 
 	ph_retro = 0;
 	ph_main = 0;
@@ -211,8 +214,10 @@ void SII::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 }
 
-typedef union {
-	struct {
+typedef union
+{
+	struct
+	{
 		unsigned int RetrosFired:1;
 		unsigned int LowRes:1;
 	} u;
@@ -259,7 +264,8 @@ void SII::AddEngines()
 
 	double thrust = 175500;
 
-	if (!th_retro[0]) {
+	if (!th_retro[0])
+	{
 		th_retro[0] = CreateThruster (m_exhaust_pos2, m_exhaust_ref2, thrust, ph_retro, 4000);
 		th_retro[1] = CreateThruster (m_exhaust_pos3, m_exhaust_ref3, thrust, ph_retro, 4000);
 		th_retro[2] = CreateThruster (m_exhaust_pos4, m_exhaust_ref4, thrust, ph_retro, 4000);
@@ -307,58 +313,75 @@ void SII::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 	char *line;
 	float flt;
 
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp (line, "MAINSTATE", 9)) {
+	while (oapiReadScenario_nextline (scn, line))
+	{
+		if (!strnicmp (line, "MAINSTATE", 9))
+		{
             int MainState = 0;;
 			sscanf (line+9, "%d", &MainState);
 			SetMainState(MainState);
 		}
-		else if (!strnicmp (line, "VECHNO", 6)) {
+		else if (!strnicmp (line, "VECHNO", 6))
+		{
 			sscanf (line+6, "%d", &VehicleNo);
 		}
-		else if (!strnicmp (line, "EMASS", 5)) {
+		else if (!strnicmp (line, "EMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			EmptyMass = flt;
 		}
-		else if (!strnicmp (line, "FMASS", 5)) {
+		else if (!strnicmp (line, "FMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			MainFuel = flt;
 		}
-		else if (!strnicmp(line, "MISSNTIME", 9)) {
+		else if (!strnicmp(line, "MISSNTIME", 9))
+		{
             sscanf (line+9, "%f", &flt);
 			MissionTime = flt;
 		}
-		else if (!strnicmp(line, "NMISSNTIME", 10)) {
+		else if (!strnicmp(line, "NMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			NextMissionEventTime = flt;
 		}
-		else if (!strnicmp(line, "LMISSNTIME", 10)) {
+		else if (!strnicmp(line, "LMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			LastMissionEventTime = flt;
 		}
-		else if (!strnicmp(line, "T2V", 3)) {
+		else if (!strnicmp(line, "T2V", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			THRUST_SECOND_VAC = flt;
 		}
-		else if (!strnicmp(line, "I2S", 3)) {
+		else if (!strnicmp(line, "I2S", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			ISP_SECOND_SL = flt;
 		}
-		else if (!strnicmp(line, "I2V", 3)) {
+		else if (!strnicmp(line, "I2V", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			ISP_SECOND_VAC = flt;
 		}
-		else if (!strnicmp(line, "CTR", 3)) {
+		else if (!strnicmp(line, "CTR", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			CurrentThrust = flt;
 		}
-		else if (!strnicmp (line, "STATE", 5)) {
-			sscanf (line+5, "%d", &State);
+		else if (!strnicmp (line, "STATE", 5))
+		{
+			int i;
+			sscanf (line+5, "%d", &i);
+			State = (SIIState) i;
 		}
-		else if (!strnicmp (line, "REALISM", 7)) {
+		else if (!strnicmp (line, "REALISM", 7))
+		{
 			sscanf (line+7, "%d", &Realism);
 		}
-		else {
+		else
+		{
 			ParseScenarioLineEx (line, vstatus);
         }
 	}
@@ -381,7 +404,8 @@ void SII::clbkDockEvent(int dock, OBJHANDLE connected)
 void SII::SetState(SIISettings &state)
 
 {
-	if (state.SettingsType & SII_SETTINGS_GENERAL) {
+	if (state.SettingsType.SII_SETTINGS_GENERAL)
+	{
 		MissionTime = state.MissionTime;
 		VehicleNo = state.VehicleNo;
 		Realism = state.Realism;
@@ -389,20 +413,25 @@ void SII::SetState(SIISettings &state)
 		LowRes = state.LowRes;
 	}
 
-	if (state.SettingsType & SII_SETTINGS_MASS) {
+	if (state.SettingsType.SII_SETTINGS_MASS)
+	{
 		EmptyMass = state.EmptyMass;
 	}
 
-	if (state.SettingsType & SII_SETTINGS_FUEL) {
+	if (state.SettingsType.SII_SETTINGS_FUEL)
+	{
 		MainFuel = state.MainFuelKg;
 	}
 
-	if (state.SettingsType & SII_SETTINGS_ENGINES) {
+	if (state.SettingsType.SII_SETTINGS_ENGINES)
+	{
 		THRUST_SECOND_VAC = state.THRUST_SECOND_VAC;
 		ISP_SECOND_SL = state.ISP_SECOND_SL;
 		ISP_SECOND_VAC = state.ISP_SECOND_VAC;
 		CurrentThrust = state.CurrentThrust;
 	}
+
+	State = SII_STATE_SHUTTING_DOWN;
 
 	SetSII();
 }
@@ -414,7 +443,8 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	VESSEL *v;
 
-	if (!refcount++) {
+	if (!refcount++)
+	{
 		SIILoadMeshes();
 	}
 
@@ -428,7 +458,8 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 {
 	--refcount;
 
-	if (!refcount) {
+	if (!refcount)
+	{
 
 		//
 		// This code could tidy up allocations when refcount == 0

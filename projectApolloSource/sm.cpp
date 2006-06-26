@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/06/10 13:27:41  movieman523
+  *	Fixed a bunch of SM bugs.
+  *	
   *	Revision 1.8  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -115,7 +118,7 @@ SM::~SM()
 void SM::InitSM()
 
 {
-	State = SM_STATE_RCS_START;
+	State = SM_STATE_SETUP;
 
 	EmptyMass = 6100.0;
 	MainFuel = 5000.0;
@@ -335,7 +338,7 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 			// Adjust temperature.
 			//
 
-			Temperature += Heat / 1000.0; // Need thermal capacity
+			Temperature += Heat / 3000.0; // Need thermal capacity
 
 			//
 			// Set a sane lowest temperature.
@@ -344,6 +347,84 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 			if (Temperature < 200.0)
 			{
 				Temperature = 200.0;
+			}
+	
+			//
+			// Initial breakup code.
+			//
+			if (showHGA && Temperature > 1000.0)
+			{
+				showHGA = false;
+				SetSM();
+
+				//
+				// We now need to create an HGA 'vessel' falling away from the SM.
+				//
+			}
+			else if (showPanel1 && Temperature > 1400.0)
+			{
+				showPanel1 = false;
+				showCRYO = true;
+
+				SetSM();
+
+				//
+				// We now need to create a panel 'vessel' falling away from the SM.
+				//
+			}
+			else if (showPanel2 && Temperature > 1500.0)
+			{
+				showPanel2 = false;
+				SetSM();
+
+				//
+				// We now need to create a panel 'vessel' falling away from the SM.
+				//
+			}
+			else if (showPanel3 && Temperature > 1600.0)
+			{
+				showPanel3 = false;
+				SetSM();
+
+				//
+				// We now need to create a panel 'vessel' falling away from the SM.
+				//
+			}
+			else if (showPanel4 && Temperature > 1700.0)
+			{
+				showPanel4 = false;
+				SetSM();
+
+				//
+				// We now need to create a panel 'vessel' falling away from the SM.
+				//
+			}
+			else if (showPanel5 && Temperature > 1800.0)
+			{
+				showPanel5 = false;
+				SetSM();
+
+				//
+				// We now need to create a panel 'vessel' falling away from the SM.
+				//
+			}
+			else if (showPanel6 && Temperature > 1900.0)
+			{
+				showPanel6 = false;
+				SetSM();
+
+				//
+				// We now need to create a panel 'vessel' falling away from the SM.
+				//
+			}
+			else if (showSPS && Temperature > 2000.0)
+			{
+				showSPS = false;
+				SetSM();
+
+				//
+				// We now need to create an SPS 'vessel' falling away from the SM.
+				//
 			}
 		}
 		break;
@@ -631,7 +712,9 @@ void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp (line, "STATE", 5))
 		{
-			sscanf (line + 5, "%d", &State);
+			int i;
+			sscanf (line + 5, "%d", &i);
+			State = (SMState) i;
 		}
 		else if (!strnicmp (line, "REALISM", 7))
 		{
@@ -666,7 +749,7 @@ void SM::clbkDockEvent(int dock, OBJHANDLE connected)
 void SM::SetState(SMSettings &state)
 
 {
-	if (state.SettingsType & SM_SETTINGS_GENERAL)
+	if (state.SettingsType.SM_SETTINGS_GENERAL)
 	{
 		MissionTime = state.MissionTime;
 		VehicleNo = state.VehicleNo;
@@ -684,17 +767,17 @@ void SM::SetState(SMSettings &state)
 		}
 	}
 
-	if (state.SettingsType & SM_SETTINGS_MASS)
+	if (state.SettingsType.SM_SETTINGS_MASS)
 	{
 		EmptyMass = state.EmptyMass;
 	}
 
-	if (state.SettingsType & SM_SETTINGS_FUEL)
+	if (state.SettingsType.SM_SETTINGS_FUEL)
 	{
 		MainFuel = state.MainFuelKg;
 	}
 
-	if (state.SettingsType & SM_SETTINGS_ENGINES)
+	if (state.SettingsType.SM_SETTINGS_ENGINES)
 	{
 		//
 		// Nothing for now. Later we can enable or disable RCS as
@@ -712,13 +795,15 @@ void SM::SetState(SMSettings &state)
 	// We should do something more sensible later.
 	//
 
-	if (state.SettingsType & SM_SETTINGS_FUEL && !A13Exploded)
+	if (state.SettingsType.SM_SETTINGS_FUEL && !A13Exploded)
 	{
 		SetPropellantMass(ph_rcsa, state.RCSAFuelKg);
 		SetPropellantMass(ph_rcsb, state.RCSBFuelKg);
 		SetPropellantMass(ph_rcsc, state.RCSCFuelKg);
 		SetPropellantMass(ph_rcsd, state.RCSDFuelKg);
 	}
+
+	State = SM_UMBILICALDETACH_PAUSE;
 }
 
 static int refcount = 0;

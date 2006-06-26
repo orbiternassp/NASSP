@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.68  2006/06/12 20:47:36  movieman523
   *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
   *	
@@ -606,4 +609,24 @@ inline double KelvinToFahrenheit(double kelvin) {
 /// \brief This code supports setting the state of seperated stages of the Saturn launch vehicles and CSM.
 ///
 
+///
+/// \defgroup Astronauts Astronaut code.
+/// \brief This code supports the astronauts, lunar rover, etc.
+///
+
+///
+/// \defgroup AstronautSettings Astronauts settings.
+/// \ingroup Astronauts
+/// \brief This code supports setting the state of astronaut DLLs.
+///
+
+///
+/// \defgroup LEM LEM vehicle code.
+/// \brief This code supports the LEM.
+///
+
+///
+/// \defgroup Ground Ground support vehicle code.
+/// \brief This code is for the ground support (ML, VAB, etc).
+///
 #endif

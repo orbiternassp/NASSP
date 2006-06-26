@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.8  2006/01/26 19:26:31  movieman523
   *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
   *	
@@ -52,35 +55,65 @@
 // Data structure passed from main vessel to SIVB to configure stage.
 //
 
-typedef struct {
-	int SettingsType;
-	int Payload;
-	int VehicleNo;
-	int Realism;
-	double MissionTime;
-	double EmptyMass;
-	double PayloadMass;
-	double ApsFuelKg;
-	double MainFuelKg;
-	bool PanelsHinged;
-	bool SaturnVStage;
-	bool LowRes;
+///
+/// Flags structure indicating which of the SIVB settings are valid.
+///
+/// \brief SIVB settings flags.
+/// \ingroup SepStageSettings
+///
+union SIVbSettingFlags
+{
+	struct {
+		unsigned SIVB_SETTINGS_MASS:1; 		///< Mass settings are valid.
+		unsigned SIVB_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
+		unsigned SIVB_SETTINGS_GENERAL:1;	///< General settings (e.g. Mission Time) are valid.
+		unsigned SIVB_SETTINGS_PAYLOAD:1;	///< Payload settings are valid.
+	};
+	unsigned int word;						///< Set to zero to clear all flags.
+
+	///
+	/// \brief Constructor: clear all flags by default.
+	///
+	SIVbSettingFlags() { word = 0; };
+};
+
+///
+/// Data structure passed from main vessel to SIVb to configure it after staging.
+///
+/// \brief SIVb setup structure.
+/// \ingroup SepStageSettings
+///
+typedef struct 
+{
+	SIVbSettingFlags SettingsType;	///> Which settings are valid?
+
+	int Payload;					///> Payload type.
+	int VehicleNo;					///> Saturn vehicle number.
+	int Realism;					///> Realism level.
+
+	double MissionTime;				///> Current MET in seconds.
+	double EmptyMass;				///> Empty mass in kg.
+	double PayloadMass;				///> Payload mass in kg.
+	double ApsFuelKg;				///> APS fuel in kg.
+	double MainFuelKg;				///> Remaining fuel in kg.
+
+	bool PanelsHinged;				///> Are SLA panels hinged?
+	bool SaturnVStage;				///> Saturn V stage or Saturn 1b stage?
+	bool LowRes;					///> Low-res meshes?
 } SIVBSettings;
 
-//
-// Which parts of the structure are active.
-//
 
-#define SIVB_SETTINGS_MASS		0x1
-#define SIVB_SETTINGS_PAYLOAD	0x2
-#define SIVB_SETTINGS_FUEL		0x4
-#define SIVB_SETTINGS_GENERAL	0x8
-
-//
-// Stage states.
-//
-
-#define SIVB_STATE_WAITING		0
+///
+/// Specifies the main state of the SIVb
+///
+/// \brief SIVb state.
+/// \ingroup SepStageSettings
+///
+typedef enum SIVbState
+{
+	SIVB_STATE_SETUP = -1,				///< SII is waiting for setup call.
+	SIVB_STATE_WAITING					///< SII is idle after motor burnout.
+};
 
 ///
 /// This code simulates the seperated SIVb stage. Basically it simulates thrust decay if there is any fuel 
@@ -92,51 +125,87 @@ typedef struct {
 class SIVB : public VESSEL2 {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	SIVB (OBJHANDLE hObj, int fmodel);
 	virtual ~SIVB();
 
+	///
+	/// \brief Orbiter state saving function.
+	/// \param scn Scenario file to save to.
+	///
 	void clbkSaveState (FILEHANDLE scn);
+
+	///
+	/// \brief Orbiter timestep function.
+	/// \param simt Current simulation time, in seconds since Orbiter was started.
+	/// \param simdt Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
 	void clbkPreStep(double simt, double simdt, double mjd);
+
+	///
+	/// \brief Orbiter state loading function.
+	/// \param scn Scenario file to load from.
+	/// \param status Pointer to current vessel status.
+	///
 	void clbkLoadStateEx (FILEHANDLE scn, void *status);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
 	void clbkSetClassCaps (FILEHANDLE cfg);
+
+	///
+	/// \brief Orbiter dock state function.
+	///
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 
-	//
-	// Must be virtual so it can be called from other DLLs.
-	//
+	///
+	/// Pass settings from the main DLL to the jettisoned SIVb. This call must be virtual 
+	/// so it can be called from other DLLs without building in the LES code.
+	/// \brief Setup jettisoned SIVb.
+	/// \param state SIVb state settings.
+	///
 	virtual void SetState(SIVBSettings &state);
 
 protected:
 
 	void SetS4b();
+
+	///
+	/// \brief Set SIVb state.
+	///
 	void InitS4b();
 
 	int GetMainState();
 	void SetMainState(int s);
 	void GetApolloName(char *s);
-	void AddRCS_S4B();
-	void Boiloff();
+	void AddRCS_S4B();				///< Add RCS for SIVb control.
+	void Boiloff();					///< Boil off some LOX/LH2 in orbit.
 
-	int Payload;
-	int MissionNo;
-	int VehicleNo;
-	int State;
-	int Realism;
+	int Payload;					///< Payload type.
+	int MissionNo;					///< Apollo mission number.
+	int VehicleNo;					///< Saturn vehicle number.
+	SIVbState State;				///< Main stage state.
+	int Realism;					///< Realism level.
 
-	double EmptyMass;
-	double PayloadMass;
-	double MainFuel;
+	double EmptyMass;				///< Empty mass in kg.
+	double PayloadMass;				///< Payload mass in kg.
+	double MainFuel;				///< Main fuel mass in kg.
 
-	double MissionTime;
-	double NextMissionEventTime;
-	double LastMissionEventTime;
+	double MissionTime;				///< Current MET in seconds.
+	double NextMissionEventTime;	///< Next event time for automated operation.
+	double LastMissionEventTime;	///< Last event time.
 
-	bool PanelsHinged;
-	bool PanelsOpened;
-	bool SaturnVStage;
-	bool LowRes;
+	bool PanelsHinged;				///< SLA panels are hinged.
+	bool PanelsOpened;				///< SLA Panels are open.
+	bool SaturnVStage;				///< Stage from Saturn V.
+	bool LowRes;					///< Using low-res meshes.
 
-	double CurrentThrust;
+	double CurrentThrust;			///< Current thrust level (0.0 to 1.0).
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;

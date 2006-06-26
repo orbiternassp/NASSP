@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.6  2006/05/30 22:34:33  movieman523
   *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
   *	
@@ -43,48 +46,74 @@
   *	
   **************************************************************************/
 
-//
-// Data structure passed from main vessel to SIVB to configure stage.
-//
+///
+/// Flags structure indicating which of the SM  settings are valid.
+///
+/// \brief SM settings flags.
+/// \ingroup SepStageSettings
+///
+union SMSettingFlags
+{
+	struct {
+		unsigned SM_SETTINGS_MASS:1; 		///< Mass settings are valid.
+		unsigned SM_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
+		unsigned SM_SETTINGS_GENERAL:1;		///< General settings (e.g. Mission Time) are valid.
+		unsigned SM_SETTINGS_ENGINES:1;		///< Engine settings are valid.
+	};
+	unsigned int word;						///< Set to zero to clear all flags.
 
+	///
+	/// \brief Constructor: clear all flags by default.
+	///
+	SMSettingFlags() { word = 0; };
+};
+
+///
+/// Data structure passed from main vessel to SM to configure it after staging.
+///
+/// \brief SM setup structure.
+/// \ingroup SepStageSettings
+///
 typedef struct {
 
-	int SettingsType;
-	int VehicleNo;
-	int Realism;
+	SMSettingFlags SettingsType;		///< Which parts are valid.
 
-	double MissionTime;
-	double EmptyMass;
-	double MainFuelKg;
-	double RCSAFuelKg;
-	double RCSBFuelKg;
-	double RCSCFuelKg;
-	double RCSDFuelKg;
+	int VehicleNo;						///< Saturn vehicle number.
+	int Realism;						///< Realism level.
 
-	bool LowRes;
-	bool showHGA;
-	bool A13Exploded;
+	double MissionTime;					///< Current MET in seconds.
+	double EmptyMass;					///< Empty mass in kg.
+	double MainFuelKg;					///< SPS fuel in kg.
+	double RCSAFuelKg;					///< RCS Quad A fuel in kg.
+	double RCSBFuelKg;					///< RCS Quad B fuel in kg.
+	double RCSCFuelKg;					///< RCS Quad C fuel in kg.
+	double RCSDFuelKg;					///< RCS Quad B fuel in kg.
+
+	bool LowRes;						///< Using low-res meshes?
+	bool showHGA;						///< Do we have an HGA?
+	bool A13Exploded;					///< Did the SM explode on Apollo 13 mission?
 
 } SMSettings;
-
-//
-// Which parts of the structure are active.
-//
-
-#define SM_SETTINGS_MASS		0x1
-#define SM_SETTINGS_FUEL		0x2
-#define SM_SETTINGS_GENERAL	0x4
-#define SM_SETTINGS_ENGINES	0x8
 
 //
 // Stage states.
 //
 
-#define SM_UMBILICALDETACH_PAUSE	0
-#define SM_STATE_RCS_START			1
-#define SM_STATE_RCS_ROLL_START		2
-#define SM_STATE_RCS_ROLL_STOP		3
-#define SM_STATE_WAITING			4
+///
+/// Specifies the main state of the SM
+///
+/// \brief SM state.
+/// \ingroup SepStageSettings
+///
+typedef enum SMState
+{
+	SM_STATE_SETUP = -1,				///< SM is waiting for setup call.
+	SM_UMBILICALDETACH_PAUSE,			///< SM umbilical is detaching
+	SM_STATE_RCS_START,					///< SM is starting the RCS motors to jettison.
+	SM_STATE_RCS_ROLL_START,			///< SM is starting RCS roll.
+	SM_STATE_RCS_ROLL_STOP,				///< SM is stopping RCS roll.
+	SM_STATE_WAITING					///< SM is idle. RCS may still be operating.
+};
 
 ///
 /// \brief Speed at which the SM to CM umbilical moves away from the CM.
@@ -101,22 +130,51 @@ const double UMBILICAL_SPEED = 0.5;
 class SM : public VESSEL2 {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	SM (OBJHANDLE hObj, int fmodel);
 	virtual ~SM();
 
+	///
+	/// \brief Orbiter state saving function.
+	/// \param scn Scenario file to save to.
+	///
 	void clbkSaveState (FILEHANDLE scn);
+
+	///
+	/// \brief Orbiter timestep function.
+	/// \param simt Current simulation time, in seconds since Orbiter was started.
+	/// \param simdt Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
 	void clbkPreStep(double simt, double simdt, double mjd);
+
+	///
+	/// \brief Orbiter state loading function.
+	/// \param scn Scenario file to load from.
+	/// \param status Pointer to current vessel status.
+	///
 	void clbkLoadStateEx (FILEHANDLE scn, void *status);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
 	void clbkSetClassCaps (FILEHANDLE cfg);
+
+	///
+	/// \brief Orbiter dock state function. Does the SM need this?
+	///
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 
-	//
-	// Must be virtual so it can be called from other DLLs.
-	//
+	///
+	/// Pass settings from the main DLL to the jettisoned SM. This call must be virtual 
+	/// so it can be called from other DLLs without building in the LES code.
+	/// \brief Setup jettisoned SM.
+	/// \param state SM state settings.
+	///
 	virtual void SetState(SMSettings &state);
-
-	double umbilical_proc;
-	UINT anim_umbilical;
 
 protected:
 
@@ -128,47 +186,171 @@ protected:
 	int GetMainState();
 	void SetMainState(int s);
 
+	///
+	/// \brief Umbilical animation state (0.0 = attached, 1.0 = open).
+	///
+	double umbilical_proc;
+
+	///
+	/// \brief Umbilical animation ID.
+	///
+	UINT anim_umbilical;
+
+	///
+	/// \brief Apollo mission number.
+	///
 	int MissionNo;
+
+	///
+	/// \brief Saturn vehicle number.
+	///
 	int VehicleNo;
-	int State;
+
+	///
+	/// \brief Main state.
+	///
+	SMState State;
+
+	///
+	/// \brief Realism level.
+	///
 	int Realism;
 
 	bool RetrosFired;
+
+	///
+	/// \brief Using low-res meshes?
+	///
 	bool LowRes;
 
 	//
 	// Which parts to display?
 	//
 
+	///
+	/// \brief Show the SPS engine bell.
+	///
 	bool showSPS;
+
+	///
+	/// \brief Show the RCS panels.
+	///
 	bool showRCS;
+
+	///
+	/// \brief Show exterior panel 1.
+	///
 	bool showPanel1;
+
+	///
+	/// \brief Show exterior panel 2.
+	///
 	bool showPanel2;
+
+	///
+	/// \brief Show exterior panel 3.
+	///
 	bool showPanel3;
+
+	///
+	/// \brief Show exterior panel 4.
+	///
 	bool showPanel4;
+
+	///
+	/// \brief Show exterior panel 5.
+	///
 	bool showPanel5;
+
+	///
+	/// \brief Show exterior panel 6.
+	///
 	bool showPanel6;
+
+	///
+	/// \brief Show the High-Gain Antenna.
+	///
 	bool showHGA;
+
+	///
+	/// \brief Show the interior cryogenics tanks.
+	///
 	bool showCRYO;
 
+	///
+	/// \brief This is an Apollo 13 SM which exploded in flight.
+	///
 	bool A13Exploded;
 
+	///
+	/// \brief Empty mass in kg.
+	///
 	double EmptyMass;
-	double PayloadMass;
+
+	///
+	/// \brief SPS fuel in kg.
+	///
 	double MainFuel;
+
+	///
+	/// \brief RCS quad A fuel in kg.
+	///
 	double RCSAFuel;
+
+	///
+	/// \brief RCS quad B fuel in kg.
+	///
 	double RCSBFuel;
+
+	///
+	/// \brief RCS quad C fuel in kg.
+	///
 	double RCSCFuel;
+
+	///
+	/// \brief RCS quad D fuel in kg.
+	///
 	double RCSDFuel;
 
+	///
+	/// The current Mission Elapsed Time. This is the main variable used for timing
+	/// automated events during the mission, giving the time in seconds from launch
+	/// (negative for the pre-launch countdown).
+	/// \brief Mission Elapsed Time.
+	///
 	double MissionTime;
+
+	///
+	/// The time in seconds of the next automated event to occur in the mission. This 
+	/// is a generic value used by the autopilot code.
+	/// \brief Time of next event.
+	///
 	double NextMissionEventTime;
+
+	///
+	/// The time in seconds of the previous automated event that occur in the mission. This 
+	/// is a generic value used by the autopilot code.
+	/// \brief Time of last event.
+	///
 	double LastMissionEventTime;
 
+	///
+	/// \brief Temperature buildup during re-entry.
+	///
 	double Temperature;
 
+	///
+	/// \brief Re-entry texture.
+	///
 	SURFHANDLE CMTex;
 
+	///
+	/// \brief RCS quad fuel tanks.
+	///
 	PROPELLANT_HANDLE ph_rcsa, ph_rcsb, ph_rcsc, ph_rcsd;
+
+	///
+	/// \brief RCS thrusters.
+	///
 	THRUSTER_HANDLE th_att_lin[24], th_att_rot[24], th_rcs_a[4], th_rcs_b[4], th_rcs_c[4], th_rcs_d[4];
 };

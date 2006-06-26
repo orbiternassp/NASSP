@@ -22,17 +22,61 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
-class Saturn5_EVA: public VESSEL {
-
+///
+/// \ingroup Astronauts
+/// \brief Orbital EVA astronaut.
+///
+class Saturn5_EVA: public VESSEL2
+{
 public:
-
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	Saturn5_EVA (OBJHANDLE hObj, int fmodel);
 	virtual ~Saturn5_EVA();
+
+	///
+	/// \brief Initialise state.
+	///
 	void init();
-	int ConsumeKey (const char *keystate);
-	void Timestep (double simt);
+
+	///
+	/// \brief Orbiter timestep function.
+	/// \param SimT Current simulation time, in seconds since Orbiter was started.
+	/// \param SimDT Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
+	void clbkPreStep (double SimT, double SimDT, double mjd);
+
+	///
+	/// \brief Orbiter keyboard input function.
+	/// \param kstate Key state.
+	///
+	int clbkConsumeDirectKey(char *kstate);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
+	void clbkSetClassCaps (FILEHANDLE cfg);
+
+	///
+	/// \brief Orbiter state saving function.
+	/// \param scn Scenario file to save to.
+	///
+	void clbkSaveState (FILEHANDLE scn);
+
+	///
+	/// \brief Orbiter state loading function.
+	/// \param scn Scenario file to load from.
+	/// \param status Pointer to current vessel status.
+	///
+	void clbkLoadStateEx (FILEHANDLE scn, void *status);
 
 protected:
 

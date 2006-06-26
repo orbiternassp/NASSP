@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.2  2006/01/26 03:07:50  movieman523
   *	Quick hack to support low-res mesh.
   *	
@@ -32,44 +35,71 @@
   *	
   **************************************************************************/
 
-//
-// Data structure passed from main vessel to SII to configure stage.
-//
-
-typedef struct {
-
-	int SettingsType;
-	int VehicleNo;
-	int Realism;
-	int RetroNum;
-
-	double THRUST_SECOND_VAC;
-	double ISP_SECOND_VAC;
-	double ISP_SECOND_SL;
-	double MissionTime;
-	double EmptyMass;
-	double MainFuelKg;
-	double CurrentThrust;
-
-	bool LowRes;
-
-} SIISettings;
 
 //
 // Which parts of the structure are active.
 //
 
-#define SII_SETTINGS_MASS		0x1
-#define SII_SETTINGS_FUEL		0x2
-#define SII_SETTINGS_GENERAL	0x4
-#define SII_SETTINGS_ENGINES	0x8
+///
+/// Flags structure indicating which of the SII settings are valid.
+///
+/// \brief SII settings flags.
+/// \ingroup SepStageSettings
+///
+union SIISettingFlags
+{
+	struct {
+		unsigned SII_SETTINGS_MASS:1; 		///< Mass settings are valid.
+		unsigned SII_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
+		unsigned SII_SETTINGS_GENERAL:1;	///< General settings (e.g. Mission Time) are valid.
+		unsigned SII_SETTINGS_ENGINES:1;	///< Engine settings (e.g. ISP) are valid.
+	};
+	unsigned int word;						///< Set to zero to clear all flags.
 
-//
-// Stage states.
-//
+	///
+	/// \brief Constructor: clear all flags by default.
+	///
+	SIISettingFlags() { word = 0; };
+};
 
-#define SII_STATE_SHUTTING_DOWN		0
-#define SII_STATE_WAITING			1
+///
+/// Data structure passed from main vessel to SII to configure it after staging.
+///
+/// \brief SII setup structure.
+/// \ingroup SepStageSettings
+///
+typedef struct {
+
+	SIISettingFlags SettingsType;
+
+	int VehicleNo;					///< Saturn vehicle number.
+	int Realism;					///< Realism level.
+	int RetroNum;					///< Number of retros.
+
+	double THRUST_SECOND_VAC;		///< Thrust of each engine in vacuum (Newtons)
+	double ISP_SECOND_VAC;			///< ISP in vacuum.
+	double ISP_SECOND_SL;			///< ISP at sea level.
+	double MissionTime;				///< Current MET.
+	double EmptyMass;				///< Empty mass in kg.
+	double MainFuelKg;				///< Remaining fuel in kg.
+	double CurrentThrust;			///< Current engine thrust (0.0 to 1.0)
+
+	bool LowRes;					///< Use low-res meshes?
+
+} SIISettings;
+
+///
+/// Specifies the main state of the SII
+///
+/// \brief SII state.
+/// \ingroup SepStageSettings
+///
+typedef enum SIIState
+{
+	SII_STATE_SETUP = -1,				///< SII is waiting for setup call.
+	SII_STATE_SHUTTING_DOWN,			///< SII is firing motors to jettison.
+	SII_STATE_WAITING					///< SII is idle after motor burnout.
+};
 
 ///
 /// This code simulates the seperated SII stage. Basically it simulates thrust decay if there is any fuel 
@@ -81,18 +111,50 @@ typedef struct {
 class SII : public VESSEL2 {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	SII (OBJHANDLE hObj, int fmodel);
 	virtual ~SII();
 
+	///
+	/// \brief Orbiter state saving function.
+	/// \param scn Scenario file to save to.
+	///
 	void clbkSaveState (FILEHANDLE scn);
+
+	///
+	/// \brief Orbiter timestep function.
+	/// \param simt Current simulation time, in seconds since Orbiter was started.
+	/// \param simdt Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
 	void clbkPreStep(double simt, double simdt, double mjd);
+
+	///
+	/// \brief Orbiter state loading function.
+	/// \param scn Scenario file to load from.
+	/// \param status Pointer to current vessel status.
+	///
 	void clbkLoadStateEx (FILEHANDLE scn, void *status);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
 	void clbkSetClassCaps (FILEHANDLE cfg);
+
+	///
+	/// \brief Orbiter dock state function. Does the SII need this?
+	///
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 
-	//
-	// Must be virtual so it can be called from other DLLs.
-	//
+	///
+	/// Pass settings from the main DLL to the jettisoned SII. This call must be virtual 
+	/// so it can be called from other DLLs without building in the LES code.
+	/// \brief Setup jettisoned SII.
+	/// \param state SII state settings.
+	///
 	virtual void SetState(SIISettings &state);
 
 protected:
@@ -106,7 +168,7 @@ protected:
 
 	int MissionNo;
 	int VehicleNo;
-	int State;
+	SIIState State;
 	int Realism;
 	int RetroNum;
 

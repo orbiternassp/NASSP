@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/06/11 21:30:57  movieman523
+  *	Fixed Saturn 1b SIVb exhaust.
+  *	
   *	Revision 1.40  2006/06/11 17:16:34  movieman523
   *	Saturn 1b can now reach orbit again :).
   *	
@@ -728,42 +731,45 @@ void Saturn1b::DockStage (UINT dockstatus)
 	VECTOR3 ofs = _V(0,0,0);
 	VECTOR3 vel = _V(0,0,0.6);
 
-   switch (dockstatus)	{
-
+   switch (dockstatus)	
+   {
    case 2:
-		//
-		//Interface initialization for mesh modification to SIVB
-		//
-		Undock(0);
+	   {
+			//
+			//Interface initialization for mesh modification to SIVB
+			//
+			Undock(0);
 
-		//
-		// Tell the S4b that we've removed the payload.
-		//
+			//
+			// Tell the S4b that we've removed the payload.
+			//
 
-		SIVBSettings S4Config;
-		SIVB *SIVBVessel;
+			SIVBSettings S4Config;
+			SIVB *SIVBVessel;
 
-		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD;
-		S4Config.Payload = PAYLOAD_EMPTY;
+			S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
 
-		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
-		SIVBVessel->SetState(S4Config);
+			S4Config.Payload = PAYLOAD_EMPTY;
 
-		//
-		//Time to hear the Stage separation
-		//
+			SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
+			SIVBVessel->SetState(S4Config);
 
-		SMJetS.play();
+			//
+			//Time to hear the Stage separation
+			//
 
-		//
-		//Now Lets reconfigure Apollo for the DM.
-		//
+			SMJetS.play();
 
-		if (ASTPMission)
-			SetASTPStage ();
-		dockstate = 3;
-		bManualUnDock = false;
-		SetAttitudeLinLevel(2,-1);
+			//
+			//Now Lets reconfigure Apollo for the DM.
+			//
+
+			if (ASTPMission)
+				SetASTPStage ();
+			dockstate = 3;
+			bManualUnDock = false;
+			SetAttitudeLinLevel(2,-1);
+		}
 	   	break;
 
    case 3:
@@ -929,8 +935,12 @@ void Saturn1b::SeparateStage (int new_stage)
 
 		S1BSettings S1Config;
 
-		S1Config.SettingsType = (S1B_SETTINGS_MASS|S1B_SETTINGS_FUEL|S1B_SETTINGS_GENERAL|S1B_SETTINGS_ENGINES);
+		S1Config.SettingsType.S1B_SETTINGS_ENGINES = 1;
+		S1Config.SettingsType.S1B_SETTINGS_FUEL = 1;
+		S1Config.SettingsType.S1B_SETTINGS_GENERAL = 1;
+		S1Config.SettingsType.S1B_SETTINGS_MASS = 1;
 
+		S1Config.EngineNum = 8;
 		S1Config.RetroNum = 4;
 		S1Config.EmptyMass = SI_EmptyMass;
 		S1Config.MainFuelKg = GetPropellantMass(ph_1st);
@@ -986,7 +996,10 @@ void Saturn1b::SeparateStage (int new_stage)
 		// For now we'll only seperate the panels on ASTP.
 		//
 
-		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD | SIVB_SETTINGS_MASS | SIVB_SETTINGS_GENERAL | SIVB_SETTINGS_FUEL;
+		S4Config.SettingsType.SIVB_SETTINGS_FUEL = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_GENERAL = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_MASS = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
 		S4Config.Payload = SIVBPayload;
 		S4Config.PanelsHinged = !ASTPMission;
 		S4Config.VehicleNo = VehicleNo;
@@ -1037,7 +1050,10 @@ void Saturn1b::SeparateStage (int new_stage)
 
 		SMSettings SMConfig;
 
-		SMConfig.SettingsType = (SM_SETTINGS_MASS|SM_SETTINGS_FUEL|SM_SETTINGS_GENERAL|SM_SETTINGS_ENGINES);
+		SMConfig.SettingsType.SM_SETTINGS_ENGINES = 1;
+		SMConfig.SettingsType.SM_SETTINGS_FUEL = 1;
+		SMConfig.SettingsType.SM_SETTINGS_GENERAL = 1;
+		SMConfig.SettingsType.SM_SETTINGS_MASS = 1;
 
 		SMConfig.EmptyMass = SM_EmptyMass;
 		SMConfig.MainFuelKg = GetPropellantMass(ph_sps);

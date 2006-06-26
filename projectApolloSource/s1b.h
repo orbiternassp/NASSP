@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.2  2006/01/27 22:11:38  movieman523
   *	Added support for low-res Saturn 1b.
   *	
@@ -34,40 +37,71 @@
 // Data structure passed from main vessel to SIVB to configure stage.
 //
 
+///
+/// Flags structure indicating which of the S1b settings are valid.
+///
+/// \brief S1b settings flags.
+/// \ingroup SepStageSettings
+///
+union S1bSettingFlags
+{
+	struct {
+		unsigned S1B_SETTINGS_MASS:1; 		///< Mass settings are valid.
+		unsigned S1B_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
+		unsigned S1B_SETTINGS_GENERAL:1;	///< General settings (e.g. Mission Time) are valid.
+		unsigned S1B_SETTINGS_ENGINES:1;	///< Engine settings (e.g. ISP) are valid.
+	};
+	unsigned int word;						///< Set to zero to clear all flags.
+
+	///
+	/// \brief Constructor: clear all flags by default.
+	///
+	S1bSettingFlags() { word = 0; };
+};
+
+///
+/// Data structure passed from main vessel to S1b to configure it after staging.
+///
+/// \brief S1b setup structure.
+/// \ingroup SepStageSettings
+///
 typedef struct {
 
-	int SettingsType;
-	int VehicleNo;
-	int Realism;
-	int RetroNum;
+	S1bSettingFlags SettingsType;			///< Which settings are valid?
 
-	double THRUST_FIRST_VAC;
-	double ISP_FIRST_VAC;
-	double ISP_FIRST_SL;
-	double MissionTime;
-	double EmptyMass;
-	double MainFuelKg;
-	double CurrentThrust;
+	int VehicleNo;							///< Saturn vehicle number.
+	int Realism;							///< Realism level.
+	int RetroNum;							///< Number of retros.
+	int EngineNum;							///< Number of engines.
 
-	bool LowRes;
+	double THRUST_FIRST_VAC;				///< Single-engine thrust in vacuum.
+	double ISP_FIRST_VAC;					///< ISP in vacuum.
+	double ISP_FIRST_SL;					///< ISP at sea-level.
+	double MissionTime;						///< Current MET.
+	double EmptyMass;						///< Empty mass in kg.
+	double MainFuelKg;						///< Current fuel mass in kg.
+	double CurrentThrust;					///< Current thrust level (0.0 to 1.0)
+
+	bool LowRes;							///< Low-res meshes?
 
 } S1BSettings;
-
-//
-// Which parts of the structure are active.
-//
-
-#define S1B_SETTINGS_MASS		0x1
-#define S1B_SETTINGS_FUEL		0x2
-#define S1B_SETTINGS_GENERAL	0x4
-#define S1B_SETTINGS_ENGINES	0x8
 
 //
 // Stage states.
 //
 
-#define S1B_STATE_SHUTTING_DOWN		0
-#define S1B_STATE_WAITING			1
+///
+/// Specifies the main state of the S1b
+///
+/// \brief S1b state.
+/// \ingroup SepStageSettings
+///
+typedef enum S1bState
+{
+	SIB_STATE_SETUP = -1,				///< S1b is waiting for setup call.
+	S1B_STATE_SHUTTING_DOWN,			///< S1b is firing motors to jettison.
+	S1B_STATE_WAITING					///< S1b is idle after motor burnout.
+};
 
 ///
 /// This code simulates the seperated S1b stage. Basically it simulates thrust decay if there is any fuel 
@@ -79,18 +113,51 @@ typedef struct {
 class S1B : public VESSEL2 {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	S1B (OBJHANDLE hObj, int fmodel);
 	virtual ~S1B();
 
+	///
+	/// \brief Orbiter state saving function.
+	/// \param scn Scenario file to save to.
+	///
 	void clbkSaveState (FILEHANDLE scn);
+
+	///
+	/// \brief Orbiter timestep function.
+	/// \param simt Current simulation time, in seconds since Orbiter was started.
+	/// \param simdt Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
 	void clbkPreStep(double simt, double simdt, double mjd);
+
+	///
+	/// \brief Orbiter state loading function.
+	/// \param scn Scenario file to load from.
+	/// \param status Pointer to current vessel status.
+	///
 	void clbkLoadStateEx (FILEHANDLE scn, void *status);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
 	void clbkSetClassCaps (FILEHANDLE cfg);
+
+	///
+	/// \brief Orbiter dock state function. Does the S1b need this?
+	///
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 
+	///
+	/// Pass settings from the main DLL to the jettisoned S1b. This call must be virtual 
+	/// so it can be called from other DLLs without building in the S1b code.
 	//
-	// Must be virtual so it can be called from other DLLs.
-	//
+	/// \brief Setup jettisoned S1b.
+	/// \param state S1b state settings.
+	///
 	virtual void SetState(S1BSettings &state);
 
 protected:
@@ -104,9 +171,10 @@ protected:
 
 	int MissionNo;
 	int VehicleNo;
-	int State;
+	S1bState State;
 	int Realism;
 	int RetroNum;
+	int EngineNum;
 
 	bool RetrosFired;
 	bool LowRes;
