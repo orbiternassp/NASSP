@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/04/25 13:32:50  tschachim
+  *	New KSC.
+  *	
   *	Revision 1.9  2005/11/23 21:36:55  movieman523
   *	Allow specification of LV name in scenario file.
   *	
@@ -48,6 +51,9 @@
   *	
   **************************************************************************/
 
+///
+/// \ingroup Ground
+///
 class Crawler: public VESSEL2 {
 
 public:

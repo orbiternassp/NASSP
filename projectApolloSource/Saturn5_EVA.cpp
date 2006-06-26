@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/21 23:08:15  movieman523
+  *	Moved more mesh files into the ProjectApollo directory.
+  *	
   *	Revision 1.3  2005/10/19 11:31:10  tschachim
   *	Changed log file name.
   *	
@@ -54,7 +57,7 @@ static int refcount = 0;
 static MESHHANDLE hCMPEVA;
 
 Saturn5_EVA::Saturn5_EVA(OBJHANDLE hObj, int fmodel)
-: VESSEL (hObj, fmodel)
+: VESSEL2 (hObj, fmodel)
 {
 	init();
 }
@@ -91,20 +94,34 @@ Saturn5_EVA::~Saturn5_EVA()
 // ==============================================================
 // API interface
 // ==============================================================
-DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
+void Saturn5_EVA::clbkSaveState (FILEHANDLE scn)
 
 {
-	Saturn5_EVA *sv = (Saturn5_EVA *)vessel;
-	sv->SaveDefaultState (scn);
+	SaveDefaultState (scn);
+	oapiWriteScenario_int (scn, "GODOCK", GoDock1 ? 1 : 0);
 }
 
-DLLCLBK int ovcConsumeKey (VESSEL *vessel, const char *keystate)
+void Saturn5_EVA::clbkLoadStateEx(FILEHANDLE scn, void *status)
+
 {
-	Saturn5_EVA *sv = (Saturn5_EVA *)vessel;
-	return sv->ConsumeKey(keystate);
+    char *line;
+	
+	while (oapiReadScenario_nextline (scn, line)) 
+	{
+		if (!strnicmp (line, "GODOCK", 6)) 
+		{
+			int i;
+			sscanf(line + 6, "%d", &i);
+			GoDock1 = (i != 0);
+		}
+		else 
+		{
+            ParseScenarioLineEx (line, status);
+        }
+    }
 }
 
-int Saturn5_EVA::ConsumeKey (const char *keystate)
+int Saturn5_EVA::clbkConsumeDirectKey(char *keystate)
 
 {
 	if (KEYMOD_SHIFT (keystate))
@@ -117,8 +134,10 @@ int Saturn5_EVA::ConsumeKey (const char *keystate)
 	}
 	else
 	{
-		if (KEYDOWN (keystate, OAPI_KEY_E)) {
-			if (oapiAcceptDelayedKey (OAPI_KEY_E, 1.0)){
+		if (KEYDOWN (keystate, OAPI_KEY_E)) 
+		{
+			if (oapiAcceptDelayedKey (OAPI_KEY_E, 1.0))
+			{
 				GoDock1 = true;
 				return 1;
 			}
@@ -128,13 +147,7 @@ int Saturn5_EVA::ConsumeKey (const char *keystate)
 	return 0;
 }
 
-DLLCLBK void ovcTimestep (VESSEL *vessel, double simt)
-{
-	Saturn5_EVA *sv = (Saturn5_EVA *)vessel;
-	sv->Timestep(simt);
-}
-
-void Saturn5_EVA::Timestep (double simt)
+void Saturn5_EVA::clbkPreStep (double simt, double SimDT, double mjd)
 
 {
 	char EVAName[256]="";
@@ -149,7 +162,8 @@ void Saturn5_EVA::Timestep (double simt)
 	while (i<VessCount)i++;{
 	oapiGetObjectName(hMaster,MSName,256);
 	strcpy(CSMName,MSName);strcat(CSMName,"-EVA");
-		if (strcmp(CSMName,EVAName)==0) {
+		if (strcmp(CSMName,EVAName)==0)
+		{
 			i=int(VessCount);
 		}
 	}
@@ -164,7 +178,8 @@ void Saturn5_EVA::Timestep (double simt)
 	double dist = 0.0;
 	double Vel = 0.0;
 
-	if (hMaster){
+	if (hMaster)
+	{
 		csmvessel = oapiGetVesselInterface(hMaster);
 		oapiGetRelativePos (GetHandle() ,hMaster, &posr);
 		oapiGetRelativeVel (GetHandle() ,hMaster , &rvel);
@@ -198,17 +213,16 @@ void Saturn5_EVA::Timestep (double simt)
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
-	if (!refcount++) {
+	if (!refcount++)
+	{
 		hCMPEVA = oapiLoadMeshGlobal ("ProjectApollo/saturn1_CMP_EVA");
 	}
 	return new Saturn5_EVA (hvessel, flightmodel);
 }
 
-
-DLLCLBK void ovcSetClassCaps (VESSEL *vessel, FILEHANDLE cfg)
+void Saturn5_EVA::clbkSetClassCaps (FILEHANDLE cfg)
 {
-	Saturn5_EVA *sv = (Saturn5_EVA *) vessel;
-	sv->init();
+	init();
 }
 
 DLLCLBK void ovcExit (VESSEL *vessel)

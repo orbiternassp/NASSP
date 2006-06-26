@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/06/06 17:50:59  redburne
+  *	- New gauges ("working" battery capacity indicator; other values are static)
+  *	- boolean variable GoRover removed
+  *	- more realistic accelleration (much slower, probably still a bit fast)
+  *	- new speed handling: brake to standstill, release and press key again to further increase/decrease speed
+  *	
   *	Revision 1.2  2006/05/06 06:00:35  jasonims
   *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
   *	
@@ -30,30 +36,73 @@
   *	
   **************************************************************************/
 
-typedef struct {
+///
+/// \ingroup AstronautSettings
+/// \brief LRV settings.
+///
+typedef struct 
+{
 
-	int MissionNo;
-	int Realism;
+	int MissionNo;			///< Apollo mission number.
+	int Realism;			///< Realism level.
 
 } LRVSettings;
 
+///
+/// \ingroup Astronauts
+/// \brief Lunar Rover.
+///
 class LRV: public VESSEL2 {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	LRV(OBJHANDLE hObj, int fmodel);
 	virtual ~LRV();
 
+	///
+	/// \brief Orbiter timestep function.
+	/// \param SimT Current simulation time, in seconds since Orbiter was started.
+	/// \param SimDT Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
 	void clbkPreStep (double SimT, double SimDT, double mjd);
+
+	///
+	/// \brief Orbiter keyboard input function.
+	/// \param kstate Key state.
+	///
 	int clbkConsumeDirectKey(char *kstate);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
 	void clbkSetClassCaps (FILEHANDLE cfg);
+
 	void clbkVisualCreated (VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
 
+	///
+	/// \brief Setup rover.
+	///
 	void SetRoverStage ();
 	void init();
-	void LoadState(FILEHANDLE scn, VESSELSTATUS *vs);
-	void SaveState(FILEHANDLE scn);
+
+	///
+	/// \brief Orbiter state saving function.
+	/// \param scn Scenario file to save to.
+	///
+	void clbkSaveState (FILEHANDLE scn);
+
+	///
+	/// \brief Orbiter state loading function.
+	/// \param scn Scenario file to load from.
+	/// \param status Pointer to current vessel status.
+	///
+	void clbkLoadStateEx (FILEHANDLE scn, void *status);
 
 	//
 	// Virtual so it can be called from the LEM without needing to link in all the code

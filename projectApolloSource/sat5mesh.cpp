@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2006/06/12 20:47:36  movieman523
+  *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
+  *	
   *	Revision 1.64  2006/06/10 23:27:41  movieman523
   *	Updated abort code.
   *	
@@ -1216,7 +1219,12 @@ void SaturnV::SeparateStage (int new_stage)
 			stage1->DefSetState(&vs1);
 
 			S1CSettings S1Config;
-			S1Config.SettingsType = (S1C_SETTINGS_MASS|S1C_SETTINGS_FUEL|S1C_SETTINGS_GENERAL|S1C_SETTINGS_ENGINES);
+
+			S1Config.SettingsType.S1C_SETTINGS_ENGINES = 1;
+			S1Config.SettingsType.S1C_SETTINGS_FUEL = 1;
+			S1Config.SettingsType.S1C_SETTINGS_GENERAL = 1;
+			S1Config.SettingsType.S1C_SETTINGS_MASS = 1;
+
 			S1Config.RetroNum = SI_RetroNum;
 			S1Config.EmptyMass = SI_EmptyMass;
 			S1Config.MainFuelKg = GetPropellantMass(ph_1st);
@@ -1334,7 +1342,10 @@ void SaturnV::SeparateStage (int new_stage)
 
 		SIISettings S2Config;
 
-		S2Config.SettingsType = (SII_SETTINGS_MASS|SII_SETTINGS_FUEL|SII_SETTINGS_GENERAL|SII_SETTINGS_ENGINES);
+		S2Config.SettingsType.SII_SETTINGS_ENGINES = 1;
+		S2Config.SettingsType.SII_SETTINGS_FUEL = 1;
+		S2Config.SettingsType.SII_SETTINGS_GENERAL = 1;
+		S2Config.SettingsType.SII_SETTINGS_MASS = 1;
 
 		S2Config.RetroNum = SII_RetroNum;
 		S2Config.EmptyMass = SII_EmptyMass;
@@ -1385,7 +1396,11 @@ void SaturnV::SeparateStage (int new_stage)
 		// For now we'll only seperate the panels on ASTP.
 		//
 
-		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD | SIVB_SETTINGS_MASS | SIVB_SETTINGS_GENERAL | SIVB_SETTINGS_FUEL;
+		S4Config.SettingsType.word = 0;
+		S4Config.SettingsType.SIVB_SETTINGS_FUEL = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_GENERAL = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_MASS = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
 		S4Config.Payload = SIVBPayload;
 		S4Config.PanelsHinged = false;
 		S4Config.VehicleNo = VehicleNo;
@@ -1452,7 +1467,10 @@ void SaturnV::SeparateStage (int new_stage)
 
 		SMSettings SMConfig;
 
-		SMConfig.SettingsType = (SM_SETTINGS_MASS|SM_SETTINGS_FUEL|SM_SETTINGS_GENERAL|SM_SETTINGS_ENGINES);
+		SMConfig.SettingsType.SM_SETTINGS_ENGINES = 1;
+		SMConfig.SettingsType.SM_SETTINGS_FUEL = 1;
+		SMConfig.SettingsType.SM_SETTINGS_GENERAL = 1;
+		SMConfig.SettingsType.SM_SETTINGS_MASS = 1;
 
 		SMConfig.EmptyMass = SM_EmptyMass;
 		SMConfig.MainFuelKg = GetPropellantMass(ph_sps);
@@ -1616,107 +1634,109 @@ void SaturnV::DockStage (UINT dockstatus)
 
    case 2:
 
-		sat5_lmpkd *lmvessel;
-		VESSELSTATUS2 vslm2, *pv;
-		VESSELSTATUS2::DOCKINFOSPEC dckinfo;
-		char VNameLM[256];
+	   {
+			sat5_lmpkd *lmvessel;
+			VESSELSTATUS2 vslm2, *pv;
+			VESSELSTATUS2::DOCKINFOSPEC dckinfo;
+			char VNameLM[256];
 
-		Undock(0);
+			Undock(0);
 
-		//
-		// Tell the S4b that we've removed the payload.
-		//
+			//
+			// Tell the S4b that we've removed the payload.
+			//
 
-		SIVBSettings S4Config;
-		SIVB *SIVBVessel;
+			SIVBSettings S4Config;
+			SIVB *SIVBVessel;
 
-		S4Config.SettingsType = SIVB_SETTINGS_PAYLOAD;
-		S4Config.Payload = PAYLOAD_EMPTY;
+			S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
+			S4Config.Payload = PAYLOAD_EMPTY;
 
-		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
-		SIVBVessel->SetState(S4Config);
+			SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
+			SIVBVessel->SetState(S4Config);
 
-		//
-		//Time to hear the Stage separation
-		//
+			//
+			//Time to hear the Stage separation
+			//
 
-		SMJetS.play(NOLOOP,230);
+			SMJetS.play(NOLOOP,230);
 
-		//
-		//Now Lets create a real LEM and dock it
-		//
+			//
+			//Now Lets create a real LEM and dock it
+			//
 
-		dockingprobe.SetIgnoreNextDockEvent();
+			dockingprobe.SetIgnoreNextDockEvent();
 
-		
-		GetLEMName(VNameLM);
+			
+			GetLEMName(VNameLM);
 
-		vslm2.version = 2;
-		vslm2.flag = 0;
-		vslm2.fuel = 0;
-		vslm2.thruster = 0;
-		vslm2.ndockinfo = 1;
-		vslm2.dockinfo = &dckinfo;
+			vslm2.version = 2;
+			vslm2.flag = 0;
+			vslm2.fuel = 0;
+			vslm2.thruster = 0;
+			vslm2.ndockinfo = 1;
+			vslm2.dockinfo = &dckinfo;
 
-		GetStatusEx(&vslm2);
+			GetStatusEx(&vslm2);
 
-		vslm2.dockinfo[0].idx = 0;
-		vslm2.dockinfo[0].ridx = 0;
-		vslm2.dockinfo[0].rvessel = GetHandle();
-  		vslm2.ndockinfo = 1;
-		vslm2.flag = VS_DOCKINFOLIST;
-		vslm2.version = 2;
-		pv = &vslm2;
-		hLMV = oapiCreateVesselEx(VNameLM, "ProjectApollo/LEM", pv);
+			vslm2.dockinfo[0].idx = 0;
+			vslm2.dockinfo[0].ridx = 0;
+			vslm2.dockinfo[0].rvessel = GetHandle();
+  			vslm2.ndockinfo = 1;
+			vslm2.flag = VS_DOCKINFOLIST;
+			vslm2.version = 2;
+			pv = &vslm2;
+			hLMV = oapiCreateVesselEx(VNameLM, "ProjectApollo/LEM", pv);
 
-		//
-		// Initialise the state of the LEM AGC information.
-		//
+			//
+			// Initialise the state of the LEM AGC information.
+			//
 
-		LemSettings ls;
+			LemSettings ls;
 
-		ls.AutoSlow = AutoSlow;
-		ls.Crewed = Crewed;
-		ls.LandingAltitude = LMLandingAltitude;
-		ls.LandingLatitude = LMLandingLatitude;
-		ls.LandingLongitude = LMLandingLongitude;
-		strncpy (ls.language, AudioLanguage, 63);
-		strncpy (ls.CSMName, GetName(), 63);
-		ls.MissionNo = ApolloNo;
-		ls.MissionTime = MissionTime;
-		ls.Realism = Realism;
-		ls.Yaagc = agc.IsVirtualAGC();
+			ls.AutoSlow = AutoSlow;
+			ls.Crewed = Crewed;
+			ls.LandingAltitude = LMLandingAltitude;
+			ls.LandingLatitude = LMLandingLatitude;
+			ls.LandingLongitude = LMLandingLongitude;
+			strncpy (ls.language, AudioLanguage, 63);
+			strncpy (ls.CSMName, GetName(), 63);
+			ls.MissionNo = ApolloNo;
+			ls.MissionTime = MissionTime;
+			ls.Realism = Realism;
+			ls.Yaagc = agc.IsVirtualAGC();
 
-		lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hLMV);
-		lmvessel->SetLanderData(ls);
-		LEMdatatransfer = true;
+			lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hLMV);
+			lmvessel->SetLanderData(ls);
+			LEMdatatransfer = true;
 
-		GetStatusEx(&vslm2);
+			GetStatusEx(&vslm2);
 
-		vslm2.dockinfo = &dckinfo;
-		vslm2.dockinfo[0].idx = 0;
-		vslm2.dockinfo[0].ridx = 0;
-		vslm2.dockinfo[0].rvessel = hLMV;
-  		vslm2.ndockinfo = 1;
-		vslm2.flag = VS_DOCKINFOLIST;
-		vslm2.version = 2;
+			vslm2.dockinfo = &dckinfo;
+			vslm2.dockinfo[0].idx = 0;
+			vslm2.dockinfo[0].ridx = 0;
+			vslm2.dockinfo[0].rvessel = hLMV;
+  			vslm2.ndockinfo = 1;
+			vslm2.flag = VS_DOCKINFOLIST;
+			vslm2.version = 2;
 
-		DefSetStateEx(&vslm2);
+			DefSetStateEx(&vslm2);
 
-		//
-		// PAD load.
-		//
+			//
+			// PAD load.
+			//
 
-		if (LMPad && LMPadCount > 0) {
-			for (i = 0; i < LMPadCount; i++) {
-				lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
+			if (LMPad && LMPadCount > 0) {
+				for (i = 0; i < LMPadCount; i++) {
+					lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
+				}
 			}
-		}
 
-		bManualUnDock = false;
-		dockstate = 3;
-		SetAttitudeLinLevel(2,-1);
-		break;
+			bManualUnDock = false;
+			dockstate = 3;
+			SetAttitudeLinLevel(2,-1);
+			break;
+		}
 
    case 3:
 	if(bManualUnDock) {

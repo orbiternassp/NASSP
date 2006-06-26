@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/05/26 18:42:54  movieman523
+  *	Updated S1C DLL to support INT-20 stage.
+  *	
   *	Revision 1.10  2006/05/21 15:42:54  tschachim
   *	Bugfix S-IC staging
   *	
@@ -171,7 +174,8 @@ void S1C::SetS1c()
 void S1C::clbkPreStep(double simt, double simdt, double mjd)
 
 {	
-	if (State == SIC_STATE_HIDDEN) {
+	if (State == SIC_STATE_HIDDEN)
+	{
 		return;
 	}
 
@@ -183,21 +187,25 @@ void S1C::clbkPreStep(double simt, double simdt, double mjd)
 	// then do any other simulation like ejecting camera pods.
 	//
 
-	switch (State) {
-
+	switch (State)
+	{
 	case S1C_STATE_SHUTTING_DOWN:
-		if (!RetrosFired && thg_retro) {
+		if (!RetrosFired && thg_retro)
+		{
 			SetThrusterGroupLevel(thg_retro, 1.0);
 			RetrosFired = true;
 		}
 
-		if (CurrentThrust > 0.0) {
+		if (CurrentThrust > 0.0)
+		{
 			CurrentThrust -= simdt;
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < 4; i++)
+			{
 				SetThrusterLevel(th_main[i], CurrentThrust);
 			}
 		}
-		else {
+		else
+		{
 			SetThrusterGroupLevel(THGROUP_MAIN, 0.0);
 			State = S1C_STATE_WAITING;
 		}
@@ -234,8 +242,10 @@ void S1C::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 }
 
-typedef union {
-	struct {
+typedef union
+{
+	struct
+	{
 		unsigned int RetrosFired:1;
 		unsigned int LowRes:1;
 		unsigned int S4Interstage:1;
@@ -375,59 +385,76 @@ void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 {
 	char *line;
 	float flt;
+	int i;
 
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp (line, "MAINSTATE", 9)) {
+	while (oapiReadScenario_nextline (scn, line))
+	{
+		if (!strnicmp (line, "MAINSTATE", 9))
+		{
             int MainState = 0;;
 			sscanf (line+9, "%d", &MainState);
 			SetMainState(MainState);
 		}
-		else if (!strnicmp (line, "VECHNO", 6)) {
+		else if (!strnicmp (line, "VECHNO", 6))
+		{
 			sscanf (line+6, "%d", &VehicleNo);
 		}
-		else if (!strnicmp (line, "EMASS", 5)) {
+		else if (!strnicmp (line, "EMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			EmptyMass = flt;
 		}
-		else if (!strnicmp (line, "FMASS", 5)) {
+		else if (!strnicmp (line, "FMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			MainFuel = flt;
 		}
-		else if (!strnicmp(line, "MISSNTIME", 9)) {
+		else if (!strnicmp(line, "MISSNTIME", 9))
+		{
             sscanf (line+9, "%f", &flt);
 			MissionTime = flt;
 		}
-		else if (!strnicmp(line, "NMISSNTIME", 10)) {
+		else if (!strnicmp(line, "NMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			NextMissionEventTime = flt;
 		}
-		else if (!strnicmp(line, "LMISSNTIME", 10)) {
+		else if (!strnicmp(line, "LMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			LastMissionEventTime = flt;
 		}
-		else if (!strnicmp(line, "T1V", 3)) {
+		else if (!strnicmp(line, "T1V", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			THRUST_FIRST_VAC = flt;
 		}
-		else if (!strnicmp(line, "I1S", 3)) {
+		else if (!strnicmp(line, "I1S", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			ISP_FIRST_SL = flt;
 		}
-		else if (!strnicmp(line, "I1V", 3)) {
+		else if (!strnicmp(line, "I1V", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			ISP_FIRST_VAC = flt;
 		}
-		else if (!strnicmp(line, "CTR", 3)) {
+		else if (!strnicmp(line, "CTR", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			CurrentThrust = flt;
 		}
-		else if (!strnicmp (line, "STATE", 5)) {
-			sscanf (line+5, "%d", &State);
+		else if (!strnicmp (line, "STATE", 5))
+		{
+			sscanf (line+5, "%d", &i);
+			State = (S1cState) i;
 		}
-		else if (!strnicmp (line, "REALISM", 7)) {
+		else if (!strnicmp (line, "REALISM", 7))
+		{
 			sscanf (line+7, "%d", &Realism);
 		}
-		else {
+		else
+		{
 			ParseScenarioLineEx (line, vstatus);
         }
 	}
@@ -448,10 +475,12 @@ void S1C::LoadMeshes(bool lowres)
 
 {
 	LowRes = lowres;
-	if (LowRes) {
+	if (LowRes)
+	{
 		hsat5stg1low = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5stg1");
 	}
-	else {
+	else
+	{
 		hsat5stg1 = oapiLoadMeshGlobal("ProjectApollo/sat5stg1");
 	}
 
@@ -481,7 +510,8 @@ bool S1C::clbkLoadVC (int id)
 void S1C::SetState(S1CSettings &state)
 
 {
-	if (state.SettingsType & S1C_SETTINGS_GENERAL) {
+	if (state.SettingsType.S1C_SETTINGS_GENERAL)
+	{
 		MissionTime = state.MissionTime;
 		VehicleNo = state.VehicleNo;
 		Realism = state.Realism;
@@ -491,15 +521,18 @@ void S1C::SetState(S1CSettings &state)
 		S4Interstage = state.S4Interstage;
 	}
 
-	if (state.SettingsType & S1C_SETTINGS_MASS) {
+	if (state.SettingsType.S1C_SETTINGS_MASS)
+	{
 		EmptyMass = state.EmptyMass;
 	}
 
-	if (state.SettingsType & S1C_SETTINGS_FUEL) {
+	if (state.SettingsType.S1C_SETTINGS_FUEL)
+	{
 		MainFuel = state.MainFuelKg;
 	}
 
-	if (state.SettingsType & S1C_SETTINGS_ENGINES) {
+	if (state.SettingsType.S1C_SETTINGS_ENGINES)
+	{
 		THRUST_FIRST_VAC = state.THRUST_FIRST_VAC;
 		ISP_FIRST_SL = state.ISP_FIRST_SL;
 		ISP_FIRST_VAC = state.ISP_FIRST_VAC;
@@ -524,14 +557,18 @@ void S1C::ShowS1c()
 
 	UINT meshidx;
 	VECTOR3 mesh_dir = _V(0,0,0);
-	if (LowRes) {
-		if (hsat5stg1low) {
+	if (LowRes)
+	{
+		if (hsat5stg1low)
+		{
 			meshidx = AddMesh(hsat5stg1low, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 		}
 	}
-	else {
-		if (hsat5stg1) {
+	else
+	{
+		if (hsat5stg1)
+		{
 			meshidx = AddMesh(hsat5stg1, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 		}

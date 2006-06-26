@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/01/27 22:11:38  movieman523
+  *	Added support for low-res Saturn 1b.
+  *	
   *	Revision 1.4  2006/01/09 19:26:03  tschachim
   *	More attempts to make code build on MS C++ 2005
   *	
@@ -83,7 +86,7 @@ void S1B::InitS1b()
 {
 	int i;
 
-	State = S1B_STATE_SHUTTING_DOWN;
+	State = SIB_STATE_SETUP;
 
 	ph_retro = 0;
 	ph_main = 0;
@@ -138,19 +141,23 @@ void S1B::SetS1b()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	if (LowRes) {
+	if (LowRes)
+	{
 		AddMesh (hsat1stg1low, &mesh_dir);
 	}
-	else {
+	else
+	{
 		AddMesh (hsat1stg1, &mesh_dir);
 	}
 
 	mesh_dir = _V(0, 0, 16.2);
 
-	if (LowRes) {
+	if (LowRes)
+	{
 		AddMesh (hSat1intstglow, &mesh_dir);
 	}
-	else {
+	else
+	{
 		AddMesh (hSat1intstg, &mesh_dir);
 	}
 
@@ -221,8 +228,10 @@ void S1B::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 }
 
-typedef union {
-	struct {
+typedef union
+{
+	struct
+	{
 		unsigned int RetrosFired:1;
 		unsigned int LowRes:1;
 	} u;
@@ -322,58 +331,75 @@ void S1B::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 	char *line;
 	float flt;
 
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp (line, "MAINSTATE", 9)) {
+	while (oapiReadScenario_nextline (scn, line))
+	{
+		if (!strnicmp (line, "MAINSTATE", 9))
+		{
             int MainState = 0;;
 			sscanf (line+9, "%d", &MainState);
 			SetMainState(MainState);
 		}
-		else if (!strnicmp (line, "VECHNO", 6)) {
+		else if (!strnicmp (line, "VECHNO", 6))
+		{
 			sscanf (line+6, "%d", &VehicleNo);
 		}
-		else if (!strnicmp (line, "EMASS", 5)) {
+		else if (!strnicmp (line, "EMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			EmptyMass = flt;
 		}
-		else if (!strnicmp (line, "FMASS", 5)) {
+		else if (!strnicmp (line, "FMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			MainFuel = flt;
 		}
-		else if (!strnicmp(line, "MISSNTIME", 9)) {
+		else if (!strnicmp(line, "MISSNTIME", 9))
+		{
             sscanf (line+9, "%f", &flt);
 			MissionTime = flt;
 		}
-		else if (!strnicmp(line, "NMISSNTIME", 10)) {
+		else if (!strnicmp(line, "NMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			NextMissionEventTime = flt;
 		}
-		else if (!strnicmp(line, "LMISSNTIME", 10)) {
+		else if (!strnicmp(line, "LMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			LastMissionEventTime = flt;
 		}
-		else if (!strnicmp(line, "T1V", 3)) {
+		else if (!strnicmp(line, "T1V", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			THRUST_FIRST_VAC = flt;
 		}
-		else if (!strnicmp(line, "I1S", 3)) {
+		else if (!strnicmp(line, "I1S", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			ISP_FIRST_SL = flt;
 		}
-		else if (!strnicmp(line, "I1V", 3)) {
+		else if (!strnicmp(line, "I1V", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			ISP_FIRST_VAC = flt;
 		}
-		else if (!strnicmp(line, "CTR", 3)) {
+		else if (!strnicmp(line, "CTR", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			CurrentThrust = flt;
 		}
-		else if (!strnicmp (line, "STATE", 5)) {
-			sscanf (line+5, "%d", &State);
+		else if (!strnicmp (line, "STATE", 5))
+		{
+			int i;
+			sscanf (line+5, "%d", &i);
+			State = (S1bState) i;
 		}
-		else if (!strnicmp (line, "REALISM", 7)) {
+		else if (!strnicmp (line, "REALISM", 7))
+		{
 			sscanf (line+7, "%d", &Realism);
 		}
-		else {
+		else
+		{
 			ParseScenarioLineEx (line, vstatus);
         }
 	}
@@ -396,27 +422,34 @@ void S1B::clbkDockEvent(int dock, OBJHANDLE connected)
 void S1B::SetState(S1BSettings &state)
 
 {
-	if (state.SettingsType & S1B_SETTINGS_GENERAL) {
+	if (state.SettingsType.S1B_SETTINGS_GENERAL)
+	{
 		MissionTime = state.MissionTime;
 		VehicleNo = state.VehicleNo;
 		Realism = state.Realism;
 		RetroNum = state.RetroNum;
 	}
 
-	if (state.SettingsType & S1B_SETTINGS_MASS) {
+	if (state.SettingsType.S1B_SETTINGS_MASS)
+	{
 		EmptyMass = state.EmptyMass;
 	}
 
-	if (state.SettingsType & S1B_SETTINGS_FUEL) {
+	if (state.SettingsType.S1B_SETTINGS_FUEL)
+	{
 		MainFuel = state.MainFuelKg;
 	}
 
-	if (state.SettingsType & S1B_SETTINGS_ENGINES) {
+	if (state.SettingsType.S1B_SETTINGS_ENGINES)
+	{
 		THRUST_FIRST_VAC = state.THRUST_FIRST_VAC;
 		ISP_FIRST_SL = state.ISP_FIRST_SL;
 		ISP_FIRST_VAC = state.ISP_FIRST_VAC;
 		CurrentThrust = state.CurrentThrust;
+		EngineNum = state.EngineNum;
 	}
+
+	State = S1B_STATE_SHUTTING_DOWN;
 
 	SetS1b();
 }
@@ -428,7 +461,8 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	VESSEL *v;
 
-	if (!refcount++) {
+	if (!refcount++)
+	{
 		S1bLoadMeshes();
 	}
 
@@ -442,7 +476,8 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 {
 	--refcount;
 
-	if (!refcount) {
+	if (!refcount)
+	{
 
 		//
 		// This code could tidy up allocations when refcount == 0

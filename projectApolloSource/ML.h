@@ -22,11 +22,18 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.1  2006/04/25 14:00:22  tschachim
   *	New KSC.
   *	
   **************************************************************************/
 
+///
+/// \ingroup Ground
+///
 class ML: public VESSEL2 {
 
 public:

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/04/25 13:44:22  tschachim
+  *	New KSC.
+  *	
   *	Revision 1.3  2005/11/21 13:31:34  tschachim
   *	New Saturn assembly meshes.
   *	
@@ -33,6 +36,9 @@
   *	
   **************************************************************************/
 
+///
+/// \ingroup Ground
+///
 class VAB: public VESSEL2 {
 
 public:

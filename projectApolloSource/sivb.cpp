@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/01/27 22:11:38  movieman523
+  *	Added support for low-res Saturn 1b.
+  *	
   *	Revision 1.13  2006/01/26 19:26:31  movieman523
   *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
   *	
@@ -156,7 +159,7 @@ void SIVB::InitS4b()
 	Payload = PAYLOAD_EMPTY;
 	PanelsHinged = false;
 	PanelsOpened = false;
-	State = SIVB_STATE_WAITING;
+	State = SIVB_STATE_SETUP;
 	LowRes = false;
 
 	hDock = 0;
@@ -650,53 +653,69 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 	char *line;
 	float flt;
 
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp(line, "S4PL", 4)) {
+	while (oapiReadScenario_nextline (scn, line))
+	{
+		if (!strnicmp(line, "S4PL", 4))
+		{
 			sscanf(line + 4, "%d", &Payload);
 		}
-		else if (!strnicmp (line, "MAINSTATE", 9)) {
+		else if (!strnicmp (line, "MAINSTATE", 9))
+		{
             int MainState = 0;;
 			sscanf (line+9, "%d", &MainState);
 			SetMainState(MainState);
 		}
-		else if (!strnicmp (line, "VECHNO", 6)) {
+		else if (!strnicmp (line, "VECHNO", 6))
+		{
 			sscanf (line+6, "%d", &VehicleNo);
 		}
-		else if (!strnicmp (line, "EMASS", 5)) {
+		else if (!strnicmp (line, "EMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			EmptyMass = flt;
 		}
-		else if (!strnicmp (line, "PMASS", 5)) {
+		else if (!strnicmp (line, "PMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			PayloadMass = flt;
 		}
-		else if (!strnicmp (line, "FMASS", 5)) {
+		else if (!strnicmp (line, "FMASS", 5))
+		{
 			sscanf (line+5, "%g", &flt);
 			MainFuel = flt;
 		}
-		else if (!strnicmp(line, "MISSNTIME", 9)) {
+		else if (!strnicmp(line, "MISSNTIME", 9))
+		{
             sscanf (line+9, "%f", &flt);
 			MissionTime = flt;
 		}
-		else if (!strnicmp(line, "NMISSNTIME", 10)) {
+		else if (!strnicmp(line, "NMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			NextMissionEventTime = flt;
 		}
-		else if (!strnicmp(line, "LMISSNTIME", 10)) {
+		else if (!strnicmp(line, "LMISSNTIME", 10))
+		{
             sscanf (line + 10, "%f", &flt);
 			LastMissionEventTime = flt;
 		}
-		else if (!strnicmp(line, "CTR", 3)) {
+		else if (!strnicmp(line, "CTR", 3))
+		{
             sscanf (line + 3, "%f", &flt);
 			CurrentThrust = flt;
 		}
-		else if (!strnicmp (line, "STATE", 5)) {
-			sscanf (line+5, "%d", &State);
+		else if (!strnicmp (line, "STATE", 5))
+		{
+			int i;
+			sscanf (line+5, "%d", &i);
+			State = (SIVbState) i;
 		}
-		else if (!strnicmp (line, "REALISM", 7)) {
+		else if (!strnicmp (line, "REALISM", 7))
+		{
 			sscanf (line+7, "%d", &Realism);
 		}
-		else {
+		else
+		{
 			ParseScenarioLineEx (line, vstatus);
         }
 	}
@@ -719,11 +738,13 @@ void SIVB::clbkDockEvent(int dock, OBJHANDLE connected)
 void SIVB::SetState(SIVBSettings &state)
 
 {
-	if (state.SettingsType & SIVB_SETTINGS_PAYLOAD) {
+	if (state.SettingsType.SIVB_SETTINGS_PAYLOAD)
+	{
 		Payload = state.Payload;
 	}
 
-	if (state.SettingsType & SIVB_SETTINGS_GENERAL) {
+	if (state.SettingsType.SIVB_SETTINGS_GENERAL)
+	{
 		MissionTime = state.MissionTime;
 		SaturnVStage = state.SaturnVStage;
 		PanelsHinged = state.PanelsHinged;
@@ -732,14 +753,18 @@ void SIVB::SetState(SIVBSettings &state)
 		LowRes = state.LowRes;
 	}
 
-	if (state.SettingsType & SIVB_SETTINGS_MASS) {
+	if (state.SettingsType.SIVB_SETTINGS_MASS)
+	{
 		EmptyMass = state.EmptyMass;
 		PayloadMass = state.PayloadMass;
 	}
 
-	if (state.SettingsType & SIVB_SETTINGS_FUEL) {
+	if (state.SettingsType.SIVB_SETTINGS_FUEL)
+	{
 		MainFuel = state.MainFuelKg;
 	}
+
+	State = SIVB_STATE_WAITING;
 
 	SetS4b();
 }
@@ -751,7 +776,8 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	VESSEL *v;
 
-	if (!refcount++) {
+	if (!refcount++)
+	{
 		SIVbLoadMeshes();
 	}
 
@@ -765,7 +791,8 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 {
 	--refcount;
 
-	if (!refcount) {
+	if (!refcount)
+	{
 
 		//
 		// This code could tidy up allocations when refcount == 0
