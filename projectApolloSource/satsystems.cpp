@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.113  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.112  2006/06/17 18:18:00  tschachim
   *	Bugfixes SCS automatic modes,
   *	Changed quickstart separation key to J.
@@ -700,7 +703,6 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					CabincloseoutS.play();
 					CabincloseoutS.done();
 
-
 					// Crew ingress
 					number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
 					*number = 3; 
@@ -746,7 +748,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					lastSystemsMissionTime = MissionTime; 
 				} else {
 					scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-					if (scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) {	// Suit Cabin delta p is established
+					if ((scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) || stage > PRELAUNCH_STAGE) {	// Suit Cabin delta p is established
 
 						// Open cabin pressure regulator, max flow to 0.25 lb/h  
 						open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
@@ -769,7 +771,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 			case SATSYSTEMS_CREWINGRESS_2:
 				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-				if (scdp > 1.3 && MissionTime - lastSystemsMissionTime >= 10) {	// Suit Cabin delta p is established
+				if ((scdp > 1.3 && MissionTime - lastSystemsMissionTime >= 10) || stage > PRELAUNCH_STAGE) {	// Suit Cabin delta p is established
 
 					// Cabin leak
 					size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
