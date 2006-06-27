@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.193  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.192  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -3161,6 +3164,13 @@ protected:
 	Sound SDockingExtend;
 	Sound SUndock;
 	Sound CabincloseoutS;
+
+	///
+	/// Drogue deployment message.
+	///
+	/// \brief 'Drogues' sound.
+	///
+	Sound DrogueS;
 
 	//
 	// General engine resources.

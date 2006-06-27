@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/06/07 09:53:20  tschachim
+  *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
+  *	
   *	Revision 1.7  2006/01/05 12:09:02  tschachim
   *	New docking sound.
   *	
@@ -92,5 +95,6 @@
 #define DOCKINGEXTEND_SOUND			"DockingExtend.wav"
 #define UNDOCK_SOUND				"undocking.wav"
 #define CABINCLOSEOUT_SOUND			"cabincloseout.wav"
+#define DROGUES_SOUND				"drogues.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"
