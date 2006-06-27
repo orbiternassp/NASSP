@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.7  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -183,6 +186,16 @@ protected:
 	void AddEngines();
 	void DefineAnimations();
 
+	///
+	/// \brief Setup variables on first timestep.
+	///
+	void DoFirstTimestep();
+
+	///
+	/// \brief Get the Apollo vehicle name.
+	///
+	void GetApolloName(char *s);
+
 	int GetMainState();
 	void SetMainState(int s);
 
@@ -222,6 +235,11 @@ protected:
 	/// \brief Using low-res meshes?
 	///
 	bool LowRes;
+
+	///
+	/// \brief Is this the first timestep?
+	///
+	bool FirstTimestep;
 
 	//
 	// Which parts to display?
@@ -353,4 +371,9 @@ protected:
 	/// \brief RCS thrusters.
 	///
 	THRUSTER_HANDLE th_att_lin[24], th_att_rot[24], th_rcs_a[4], th_rcs_b[4], th_rcs_c[4], th_rcs_d[4];
+
+	///
+	/// \brief HGA handle.
+	///
+	OBJHANDLE hHGA;
 };
