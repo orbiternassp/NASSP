@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.150  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.149  2006/06/17 18:18:00  tschachim
   *	Bugfixes SCS automatic modes,
   *	Changed quickstart separation key to J.
@@ -3321,7 +3324,9 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			deploy = true;
 
 		if (deploy && PyrosArmed())
+		{
 			StageEight(simt);
+		}
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
@@ -3334,6 +3339,10 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		if (deploy && PyrosArmed()) {
 			SetChuteStage1();
 			LAUNCHIND[3] = true;
+
+			DrogueS.play();
+			DrogueS.done();
+
 			SetStage(CM_ENTRY_STAGE_THREE);
 		}
 		break;
@@ -3711,9 +3720,6 @@ void Saturn::SetGenericStageState()
 	switch(stage) {
 
 	case CM_STAGE:
-		SetReentryStage();
-		break;
-
 	case CM_ENTRY_STAGE_TWO:
 		SetReentryStage();
 		break;

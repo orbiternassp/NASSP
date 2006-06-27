@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.50  2006/06/12 20:47:36  movieman523
   *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
   *	
@@ -1054,6 +1057,9 @@ void Saturn::SetReentryStage ()
 	VECTOR3 dockrot = {0,1,0};
 
 	SetDockParams(dockpos, dockdir, dockrot);
+
+	if (!DrogueS.isValid())
+		soundlib.LoadMissionSound(DrogueS, DROGUES_SOUND);
 }
 
 void Saturn::StageSeven(double simt)
