@@ -3,9 +3,10 @@
 #
 #
 # Format:
-# Time;file-name (no .wav)
+# Time;file-name (without .wav)
 #
 # Note that the hours must currently have three digits. That should be fixed at
 # some point.
 #
 -001:31:00;T-01-30
+-001:07:30;T-01-27-25
