@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/06/23 11:56:48  tschachim
+  *	New Project Apollo MFD for TLI burn control.
+  *	
   **************************************************************************/
 
 #ifndef __PROJECTAPOLLOMFD_H
@@ -40,6 +43,8 @@ public:
 	bool SetTLIVelocity (char *rstr);
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
+	void StoreStatus (void) const;
+	void RecallStatus (void);
 	
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
@@ -48,6 +53,11 @@ protected:
 	DWORD width;
 	DWORD height;
 	Saturn *saturn;
+	int screen;
+
+	static struct ScreenData {
+		int screen;
+	} screenData;
 };
 
 #endif // !__PROJECTAPOLLOMFD_H

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/06/23 11:56:48  tschachim
+  *	New Project Apollo MFD for TLI burn control.
+  *	
   **************************************************************************/
 
 #define STRICT
@@ -55,6 +58,7 @@ int g_MFDmode; // identifier for new MFD mode
 
 #define PROG_NONE	0
 #define PROG_TLI	1
+#define PROG_STATUS	2
 
 #define PROGSTATE_NONE			0
 #define PROGSTATE_TLI_WAITING	1
@@ -142,6 +146,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 	width = w;
 	height = h;
 	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
+	screen = PROG_NONE;
 
 	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
 		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b")) {
@@ -159,25 +164,30 @@ ProjectApolloMFD::~ProjectApolloMFD ()
 char *ProjectApolloMFD::ButtonLabel (int bt)
 {
 	// The labels for the buttons used by our MFD mode
-	static char *labelNone[1] = {"TLI"};
+	static char *labelNone[2] = {"TLI", "STA"};
 	static char *labelTliStop[4] = {"BCK", "RUN", "T", "V"};
 	static char *labelTliRun[4] = {"BCK", "STP", "T", "V"};
+	static char *labelStatus[1] = {"BCK"};
 
-	if (g_Data.prog == PROG_TLI) {
+	if (screen == PROG_TLI) {
 		if (g_Data.progState == PROGSTATE_NONE)
 			return (bt < 4 ? labelTliStop[bt] : 0);
 		else
 			return (bt < 4 ? labelTliRun[bt] : 0);
 	}
-	return (bt < 1 ? labelNone[bt] : 0);
+	else if (screen == PROG_STATUS) {
+		return (bt < 1 ? labelStatus[bt] : 0);
+	}
+	return (bt < 2 ? labelNone[bt] : 0);
 }
 
 // Return button menus
 int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 {
 	// The menu descriptions for the buttons used by our MFD mode
-	static const MFDBUTTONMENU mnuNone[1] = {
-		{"IU TLI burn program", 0, 'T'}
+	static const MFDBUTTONMENU mnuNone[2] = {
+		{"IU TLI burn program", 0, 'T'},
+		{"Status", 0, 'S'}
 	};
 	static const MFDBUTTONMENU mnuTliStop[4] = {
 		{"Back", 0, 'B'},
@@ -191,18 +201,24 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Time to ejection", 0, 'T'},
 		{"Delta Velocity", 0, 'V'}
 	};
+	static const MFDBUTTONMENU mnuStatus[1] = {
+		{"Back", 0, 'B'}
+	};
 
-	if (g_Data.prog == PROG_TLI) {
+	if (screen == PROG_TLI) {
 		if (g_Data.progState == PROGSTATE_NONE) {
 			if (menu) *menu = mnuTliStop;
 			return 4;
 		} else {
 			if (menu) *menu = mnuTliRun;
 			return 4;
-		}				
+		}
+	} else if (screen == PROG_STATUS) {
+		if (menu) *menu = mnuStatus;
+		return 1; 
 	} else {
 		if (menu) *menu = mnuNone;
-		return 1; 
+		return 2; 
 	}
 }
 
@@ -210,36 +226,39 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 {
 	char buffer[100];
 
-	if (g_Data.prog == PROG_NONE) {
+	if (screen == PROG_NONE) {
 		if (key == OAPI_KEY_T) {
-			g_Data.prog = PROG_TLI;
-			g_Data.progState = PROGSTATE_NONE;
-			g_Data.progVessel = NULL;
+			screen = PROG_TLI;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		} else if (key == OAPI_KEY_S) {
+			screen = PROG_STATUS;
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
 		}
-	} else if (g_Data.prog == PROG_TLI) {
+	} else if (screen == PROG_TLI) {
 		if (key == OAPI_KEY_B) {
-			if (g_Data.progState == PROGSTATE_NONE) {
-				g_Data.prog = PROG_NONE;
-				InvalidateDisplay();
-				InvalidateButtons();
-				return true;
-			}
+			screen = PROG_NONE;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
 
 		} else if (key == OAPI_KEY_R && g_Data.progState == PROGSTATE_NONE) {
 			if (g_Data.tliTime >= IUSTARTTIME && g_Data.tliVelocity > 0 && saturn) {
-				g_Data.progVessel = saturn;
+				g_Data.prog = PROG_TLI;
 				g_Data.progState = PROGSTATE_TLI_WAITING;
+				g_Data.progVessel = saturn;
 				InvalidateDisplay();
 				InvalidateButtons();
 				return true;
 			}
 
 		} else if (key == OAPI_KEY_S && (g_Data.progState == PROGSTATE_TLI_WAITING || g_Data.progState == PROGSTATE_TLI_ERROR)) {
-			g_Data.progVessel = NULL;
+			g_Data.prog = PROG_NONE;
 			g_Data.progState = PROGSTATE_NONE;
+			g_Data.progVessel = NULL;
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
@@ -259,6 +278,13 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			}
 			return true;
 		}
+	} else if (screen == PROG_STATUS) {
+		if (key == OAPI_KEY_B) {
+			screen = PROG_NONE;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		}
 	}
 	return false;
 }
@@ -267,18 +293,21 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 {
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
-	static const DWORD btkeyNone[1] = { OAPI_KEY_T };
+	static const DWORD btkeyNone[2] = { OAPI_KEY_T, OAPI_KEY_S};
 	static const DWORD btkeyTliStop[4] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_T, OAPI_KEY_V };
 	static const DWORD btkeyTliRun[4] = { OAPI_KEY_B, OAPI_KEY_S, OAPI_KEY_T, OAPI_KEY_V };
+	static const DWORD btkeyStatus[1] = { OAPI_KEY_B, };
 
-	if (g_Data.prog == PROG_TLI) {
+	if (screen == PROG_TLI) {
 		if (g_Data.progState == PROGSTATE_NONE) {
 			if (bt < 4) return ConsumeKeyBuffered (btkeyTliStop[bt]);
 		} else {
 			if (bt < 4) return ConsumeKeyBuffered (btkeyTliRun[bt]);
 		}
+	} else if (screen == PROG_STATUS) {
+		if (bt < 1) return ConsumeKeyBuffered (btkeyStatus[bt]);
 	} else {		
-		if (bt < 1) return ConsumeKeyBuffered (btkeyNone[bt]);
+		if (bt < 2) return ConsumeKeyBuffered (btkeyNone[bt]);
 	}
 	return false;
 }
@@ -301,73 +330,108 @@ void ProjectApolloMFD::Update (HDC hDC)
 	SetBkMode (hDC, TRANSPARENT);
 	SetTextAlign (hDC, TA_CENTER);
 
-	if (saturn) {
-		// Draw mission time
-		SetTextColor (hDC, RGB(0, 255, 0));
-		TextOut(hDC, width / 2, (int) (height * 0.15), "Mission Time", 12);
-
-		double mt = saturn->GetMissionTime();
-		int secs = abs((int) mt);
-		int hours = (secs / 3600);
-		secs -= (hours * 3600);
-		int minutes = (secs / 60);
-		secs -= 60 * minutes;
-		if (mt < 0)
-			sprintf(buffer, "-%d:%02d:%02d", hours, minutes, secs);
-		else
-			sprintf(buffer, "%d:%02d:%02d", hours, minutes, secs);
-		TextOut(hDC, width / 2, (int) (height * 0.2), buffer, strlen(buffer));
-
-		SelectDefaultPen(hDC, 1);
-		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.3), 0);
-		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.3));
-
-		// Draw TLI stuff
-		if (g_Data.prog == PROG_TLI) {
-			TextOut(hDC, width / 2, (int) (height * 0.35), "IU TLI burn program", 19);
-			SetTextAlign (hDC, TA_LEFT);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "Status:", 7);
-			if (g_Data.progState != PROGSTATE_TLI_RUNNING)
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), "Time to ejection:", 17);
-			else
-				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), "Time to burn:", 13);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "Delta V:", 8);
-
-			SetTextAlign (hDC, TA_CENTER);
-			if (g_Data.progState == PROGSTATE_NONE) {
-				TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "OFF", 3);
-
-			} else if (g_Data.progState == PROGSTATE_TLI_WAITING) {
-				SetTextColor (hDC, RGB(255, 255, 0));
-				TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "WAITING", 7);
-				SetTextColor (hDC, RGB(0, 255, 0));
-
-			} else if (g_Data.progState == PROGSTATE_TLI_RUNNING) {
-				SetTextColor (hDC, RGB(255, 255, 0));
-				TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "RUNNING", 7);
-				SetTextColor (hDC, RGB(0, 255, 0));
-
-			} else if (g_Data.progState == PROGSTATE_TLI_ERROR) {
-				SetTextColor (hDC, RGB(255, 0, 0));
-				TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "ERROR", 5);
-				SetTextColor (hDC, RGB(0, 255, 0));
-			}
-
-			SetTextAlign (hDC, TA_LEFT);
-			sprintf(buffer, "%.0lfs", g_Data.tliTime);
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.55), buffer, strlen(buffer));
-			sprintf(buffer, "%.0lfm/s", g_Data.tliVelocity);
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.6), buffer, strlen(buffer));
-		}
-
-	} else {
+	if (!saturn) {
 		SetTextColor (hDC, RGB(255, 0, 0));
 		TextOut(hDC, width / 2, (int) (height * 0.5), "Unsupported vessel", 18);
+		return;
+	}
+
+	// Draw mission time
+	SetTextColor (hDC, RGB(0, 255, 0));
+	TextOut(hDC, width / 2, (int) (height * 0.15), "Mission Time", 12);
+
+	double mt = saturn->GetMissionTime();
+	int secs = abs((int) mt);
+	int hours = (secs / 3600);
+	secs -= (hours * 3600);
+	int minutes = (secs / 60);
+	secs -= 60 * minutes;
+	if (mt < 0)
+		sprintf(buffer, "-%d:%02d:%02d", hours, minutes, secs);
+	else
+		sprintf(buffer, "%d:%02d:%02d", hours, minutes, secs);
+	TextOut(hDC, width / 2, (int) (height * 0.2), buffer, strlen(buffer));
+
+	SelectDefaultPen(hDC, 1);
+	MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.3), 0);
+	LineTo (hDC, (int) (width * 0.95), (int) (height * 0.3));
+
+	// Draw TLI stuff
+	if (screen == PROG_TLI) {
+		TextOut(hDC, width / 2, (int) (height * 0.35), "IU TLI burn program", 19);
+		SetTextAlign (hDC, TA_LEFT);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "Status:", 7);
+		if (g_Data.progState != PROGSTATE_TLI_RUNNING)
+			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), "Time to ejection:", 17);
+		else
+			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), "Time to burn:", 13);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "Delta V:", 8);
+
+		SetTextAlign (hDC, TA_CENTER);
+		if (g_Data.progState == PROGSTATE_NONE) {
+			TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "STOP", 3);
+
+		} else if (g_Data.progState == PROGSTATE_TLI_WAITING) {
+			SetTextColor (hDC, RGB(255, 255, 0));
+			TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "WAITING", 7);
+			SetTextColor (hDC, RGB(0, 255, 0));
+
+		} else if (g_Data.progState == PROGSTATE_TLI_RUNNING) {
+			SetTextColor (hDC, RGB(255, 255, 0));
+			TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "RUNNING", 7);
+			SetTextColor (hDC, RGB(0, 255, 0));
+
+		} else if (g_Data.progState == PROGSTATE_TLI_ERROR) {
+			SetTextColor (hDC, RGB(255, 0, 0));
+			TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "ERROR", 5);
+			SetTextColor (hDC, RGB(0, 255, 0));
+		}
+
+		SetTextAlign (hDC, TA_LEFT);
+		sprintf(buffer, "%.0lfs", g_Data.tliTime);
+		TextOut(hDC, (int) (width * 0.7), (int) (height * 0.55), buffer, strlen(buffer));
+		sprintf(buffer, "%.0lfm/s", g_Data.tliVelocity);
+		TextOut(hDC, (int) (width * 0.7), (int) (height * 0.6), buffer, strlen(buffer));
+
+	// Draw status
+	} else if (screen == PROG_STATUS) {
+		TextOut(hDC, width / 2, (int) (height * 0.35), "Status", 6);
+		SetTextAlign (hDC, TA_LEFT);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "Velocity:", 9);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), "Vert. Velocity:", 15);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), "Altitude:", 9);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), "Apoapsis Alt.:", 14);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), "Periapsis Alt.:", 15);
+
+		VECTOR3 vel, hvel;
+		double vvel = 0, apDist, peDist;
+		OBJHANDLE planet = saturn->GetGravityRef();
+		saturn->GetRelativeVel(planet, vel); 
+		if (saturn->GetHorizonAirspeedVector(hvel)) {
+			vvel = hvel.y * 3.2808399;
+		}
+		saturn->GetApDist(apDist);
+		saturn->GetPeDist(peDist);
+		apDist -= 6.373338e6;
+		peDist -= 6.373338e6;
+
+		SetTextAlign (hDC, TA_RIGHT);
+		sprintf(buffer, "%.0lfft/s", length(vel) * 3.2808399);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.45), buffer, strlen(buffer));
+		sprintf(buffer, "%.0lfft/s", vvel);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.5), buffer, strlen(buffer));
+		sprintf(buffer, "%.1lfnm", saturn->GetAltitude() * 0.000539957);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.55), buffer, strlen(buffer));
+		sprintf(buffer, "%.1lfnm", apDist * 0.000539957);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
+		sprintf(buffer, "%.1lfnm", peDist * 0.000539957);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.7), buffer, strlen(buffer));
 	}
 }
 
 void ProjectApolloMFD::WriteStatus (FILEHANDLE scn) const
 {
+	oapiWriteScenario_int (scn, "SCREEN", screen);
 	oapiWriteScenario_int (scn, "PROG", g_Data.prog);
 	oapiWriteScenario_int (scn, "PROGSTATE", g_Data.progState);
 	if (g_Data.progVessel)
@@ -385,7 +449,9 @@ void ProjectApolloMFD::ReadStatus (FILEHANDLE scn)
 		if (!strnicmp(line, "END_MFD", 7))
 			return;
 
-		if (!strnicmp (line, "PROGSTATE", 9))
+		if (!strnicmp (line, "SCREEN", 6))
+			sscanf (line + 6, "%d", &screen);
+		else if (!strnicmp (line, "PROGSTATE", 9))
 			sscanf (line + 9, "%d", &g_Data.progState);
 		else if (!strnicmp (line, "PROGVESSEL", 10)) {
 			sscanf (line + 10, "%s", name);
@@ -430,6 +496,16 @@ bool ProjectApolloMFD::SetTLIVelocity (char *rstr)
 	return false;
 }
 
+void ProjectApolloMFD::StoreStatus (void) const
+{
+	screenData.screen = screen;
+}
+
+void ProjectApolloMFD::RecallStatus (void)
+{
+	screen = screenData.screen;
+}
+
 // MFD message parser
 int ProjectApolloMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
 {
@@ -451,3 +527,5 @@ bool TLIVelocityInput (void *id, char *str, void *data)
 {
 	return ((ProjectApolloMFD*)data)->SetTLIVelocity(str);
 }
+
+ProjectApolloMFD::ScreenData ProjectApolloMFD::screenData = {PROG_NONE};
