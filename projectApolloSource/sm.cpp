@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.9  2006/06/10 13:27:41  movieman523
   *	Fixed a bunch of SM bugs.
   *	
@@ -112,7 +115,19 @@ SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 SM::~SM()
 
 {
-	// Nothing for now.
+	//
+	// Unfortunately this makes Orbiter crash on shutdown.
+	//
+#if 0
+	//
+	// Delete any vessel parts which are lying around.
+	//
+	if (hHGA)
+	{
+		oapiDeleteVessel(hHGA, GetHandle());
+		hHGA = 0;
+	}
+#endif
 }
 
 void SM::InitSM()
@@ -153,6 +168,26 @@ void SM::InitSM()
 	Temperature = 250.0;
 
 	umbilical_proc = 0;
+
+	hHGA = 0;
+
+	FirstTimestep = true;
+
+	int i;
+
+	for (i = 0; i < 4; i++)
+	{
+		th_rcs_a[i] = 0;
+		th_rcs_b[i] = 0;
+		th_rcs_c[i] = 0;
+		th_rcs_d[i] = 0;
+	}
+
+	for (i = 0; i < 24; i++)
+	{
+		th_att_lin[i] = 0;
+		th_att_rot[i] = 0;
+	}
 }
 
 const double SMVO = 0.0;//-0.14;
@@ -227,10 +262,41 @@ void SM::SetSM()
 		SetReentryTexture(CMTex,1e6,5,0.7);
 }
 
+void SM::DoFirstTimestep()
+
+{
+	//
+	// Get the handles for any odds and ends that are out there.
+	//
+
+	char VName[256];
+	char ApolloName[64];
+
+	GetApolloName(ApolloName);
+
+	strcpy (VName, ApolloName); strcat (VName, "-HGA");
+	hHGA = oapiGetVesselByName(VName);
+}
+
 void SM::clbkPreStep(double simt, double simdt, double mjd)
 
 {
 	MissionTime += simdt;
+
+	if (FirstTimestep)
+	{
+		DoFirstTimestep();
+		FirstTimestep = false;
+	}
+
+	char VName[256];
+	char ApolloName[64];
+
+	VECTOR3 ofs1;
+	VECTOR3 vel1;
+	VESSELSTATUS vs1;
+
+	VECTOR3 rofs1, rvel1;
 
 	double da = simdt * UMBILICAL_SPEED;
 	if (umbilical_proc < 1.0)
@@ -250,19 +316,19 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 
 	switch (State) 
 	{
-
 	case SM_UMBILICALDETACH_PAUSE:
 		//Someone who knows how, please add a small Particle stream going from detach Point.
 		NextMissionEventTime = MissionTime + 1.0;
 		State = SM_STATE_RCS_START;
+		break;
 
 	case SM_STATE_RCS_START:
-		if (MissionTime >=NextMissionEventTime) 
+		if (MissionTime >= NextMissionEventTime) 
 		{
 			SetThrusterLevel(th_rcs_a[3], 1.0);
 			SetThrusterLevel(th_rcs_b[3], 1.0);
-			SetThrusterLevel(th_rcs_c[4], 1.0);
-			SetThrusterLevel(th_rcs_d[4], 1.0);
+			SetThrusterLevel(th_rcs_c[3], 1.0);
+			SetThrusterLevel(th_rcs_d[3], 1.0);
 			NextMissionEventTime = MissionTime + 2.0;
 			State = SM_STATE_RCS_ROLL_START;
 		}
@@ -338,7 +404,7 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 			// Adjust temperature.
 			//
 
-			Temperature += Heat / 3000.0; // Need thermal capacity
+			Temperature += Heat / 10000.0; // Need thermal capacity
 
 			//
 			// Set a sane lowest temperature.
@@ -360,6 +426,29 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				//
 				// We now need to create an HGA 'vessel' falling away from the SM.
 				//
+
+				GetApolloName(ApolloName);
+
+				strcpy (VName, ApolloName); strcat (VName, "-HGA");
+				hHGA = oapiGetVesselByName(VName);
+
+				ofs1 = _V(-1.308,-1.18,-1.258);
+				vel1 = _V(-0.2, -0.2, -0.05);
+
+				GetStatus (vs1);
+				vs1.eng_main = vs1.eng_hovr = 0.0;
+				vs1.status = 0;
+					
+				rvel1 = _V(vs1.rvel.x, vs1.rvel.y, vs1.rvel.z);
+
+				Local2Rel (ofs1, vs1.rpos);
+				GlobalRot (vel1, rofs1);
+
+				vs1.rvel.x = rvel1.x+rofs1.x;
+				vs1.rvel.y = rvel1.y+rofs1.y;
+				vs1.rvel.z = rvel1.z+rofs1.z;
+
+				hHGA = oapiCreateVessel(VName, "ProjectApollo/SM-HGA", vs1);
 			}
 			else if (showPanel1 && Temperature > 1400.0)
 			{
@@ -367,6 +456,16 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				showCRYO = true;
 
 				SetSM();
+
+				//
+				// Delete HGA.
+				//
+
+				if (hHGA)
+				{
+					oapiDeleteVessel(hHGA, GetHandle());
+					hHGA = 0;
+				}
 
 				//
 				// We now need to create a panel 'vessel' falling away from the SM.
@@ -804,6 +903,13 @@ void SM::SetState(SMSettings &state)
 	}
 
 	State = SM_UMBILICALDETACH_PAUSE;
+}
+
+
+void SM::GetApolloName(char *s)
+
+{
+	sprintf(s, "AS-%d", VehicleNo);
 }
 
 static int refcount = 0;
