@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/06/27 11:34:25  tschachim
+  *	Added status screen.
+  *	
   *	Revision 1.1  2006/06/23 11:56:48  tschachim
   *	New Project Apollo MFD for TLI burn control.
   *	
@@ -369,7 +372,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 
 		SetTextAlign (hDC, TA_CENTER);
 		if (g_Data.progState == PROGSTATE_NONE) {
-			TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "STOP", 3);
+			TextOut(hDC, (int) (width * 0.5), (int) (height * 0.45), "STOP", 4);
 
 		} else if (g_Data.progState == PROGSTATE_TLI_WAITING) {
 			SetTextColor (hDC, RGB(255, 255, 0));
