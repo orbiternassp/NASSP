@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.153  2006/06/28 01:43:32  movieman523
+  *	Partial workaround for vessel deletion crash.
+  *	
   *	Revision 1.152  2006/06/28 01:23:02  movieman523
   *	Made SM break up on re-entry. Unfortunately sound doesn't work and if I try to delete the 'parts' when the SM is deleted. Orbiter blows away.
   *	
@@ -395,8 +398,6 @@ void Saturn::initSaturn()
 	SMSep = false;
 	bStartS4B = false;
 	IGMEnabled = false;
-
-	SMPartsDeleted = false;
 
 	LowRes = false;
 
@@ -979,13 +980,11 @@ void Saturn::KillAlt(OBJHANDLE &hvessel, double altVS)
 		// We have to delete the parts first and then wait until the next timestep
 		// to delete the SM, otherwise Orbiter blows away.
 		//
-		if (hvessel == hSMJet && !SMPartsDeleted)
+		if (hvessel == hSMJet)
 		{
 			SM *vsm = (SM *) oapiGetVesselInterface(hvessel);
-			vsm->TidyUpMeshes(GetHandle());
-
-			SMPartsDeleted = true;
-			return;
+			if (vsm->TidyUpMeshes(GetHandle()))
+				return;
 		}
 
 		oapiDeleteVessel(hvessel, GetHandle());
@@ -1301,7 +1300,7 @@ typedef union {
 		unsigned EVA_IP:1;
 		unsigned ABORT_IND:1;
 		unsigned HatchOpen:1;
-		unsigned SMPartsDeleted:1;
+		unsigned unused_1:1;
 		unsigned unused_2:1;
 		unsigned LEMdatatransfer:1;
 		unsigned PostSplashdownPlayed:1;
@@ -1346,7 +1345,6 @@ int Saturn::GetMainState()
 	state.u.SkylabCM = SkylabCM;
 	state.u.S1bPanel = S1bPanel;
 	state.u.NoHGA = NoHGA;
-	state.u.SMPartsDeleted = SMPartsDeleted;
 
 	return state.word;
 }
@@ -1376,7 +1374,6 @@ void Saturn::SetMainState(int s)
 	SkylabCM = (state.u.SkylabCM != 0);
 	S1bPanel = (state.u.S1bPanel != 0);
 	NoHGA = (state.u.NoHGA != 0);
-	SMPartsDeleted = (state.u.SMPartsDeleted != 0);
 }
 
 typedef union {
