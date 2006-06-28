@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.194  2006/06/27 18:22:54  movieman523
+  *	Added 'drogues' sound.
+  *	
   *	Revision 1.193  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -2847,6 +2850,11 @@ protected:
 	bool SMSep;
 	bool bStartS4B;
 	bool Abort_Locked;
+
+	///
+	/// \brief Have we deleted the SM 'parts'?
+	///
+	bool SMPartsDeleted;
 
 	double DockAngle;
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/06/28 01:23:02  movieman523
+  *	Made SM break up on re-entry. Unfortunately sound doesn't work and if I try to delete the 'parts' when the SM is deleted. Orbiter blows away.
+  *	
   *	Revision 1.11  2006/06/27 22:29:43  movieman523
   *	HGA now breaks off of the SM on re-entry, and fixed a bug on CM/SM seperation.
   *	
@@ -360,11 +363,6 @@ void SM::TryToDelete(OBJHANDLE &handle, OBJHANDLE hCamera)
 void SM::TidyUpMeshes(OBJHANDLE hCamera)
 
 {
-	//
-	// If we delete these meshes, then Orbiter blows away. I can't find any way to stop it
-	// blowing away when deleting them, and can't see that we're doing anything wrong here.
-	//
-#if 0
 	TryToDelete(hHGA, hCamera);
 	TryToDelete(hSPS, hCamera);
 	TryToDelete(hPanel1, hCamera);
@@ -373,7 +371,6 @@ void SM::TidyUpMeshes(OBJHANDLE hCamera)
 	TryToDelete(hPanel4, hCamera);
 	TryToDelete(hPanel5, hCamera);
 	TryToDelete(hPanel6, hCamera);
-#endif
 }
 
 void SM::clbkPreStep(double simt, double simdt, double mjd)
