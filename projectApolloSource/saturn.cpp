@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.151  2006/06/27 18:22:54  movieman523
+  *	Added 'drogues' sound.
+  *	
   *	Revision 1.150  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -201,6 +204,7 @@
 
 #include "saturn.h"
 #include "tracer.h"
+#include "sm.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -961,7 +965,18 @@ void Saturn::KillAlt(OBJHANDLE &hvessel, double altVS)
 	double CurrentAlt;
 	int getit = oapiGetAltitude(hvessel, &CurrentAlt);
 
-	if ((CurrentAlt < altVS) && CurrentAlt >= 0 ){
+	if ((CurrentAlt < altVS) && CurrentAlt >= 0 )
+	{
+		//
+		// If this is the SM, we need to tidy up any seperated meshes before
+		// we delete it. We don't want them hanging around forever.
+		//
+		if (hvessel == hSMJet)
+		{
+			SM *vsm = (SM *) oapiGetVesselInterface(hvessel);
+			vsm->TidyUpMeshes(GetHandle());
+		}
+
 		oapiDeleteVessel(hvessel, GetHandle());
 		hvessel = 0;
 	}
@@ -2230,7 +2245,7 @@ void Saturn::DestroyStages(double simt)
 	//
 
 	if (hSMJet) {
-		KillAlt(hSMJet, 45000);
+		KillAlt(hSMJet, 35000);
 	}
 }
 

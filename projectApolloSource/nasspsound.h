@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/06/27 18:22:54  movieman523
+  *	Added 'drogues' sound.
+  *	
   *	Revision 1.8  2006/06/07 09:53:20  tschachim
   *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
   *	
@@ -96,5 +99,6 @@
 #define UNDOCK_SOUND				"undocking.wav"
 #define CABINCLOSEOUT_SOUND			"cabincloseout.wav"
 #define DROGUES_SOUND				"drogues.wav"
+#define CRASH_SOUND					"crash.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"

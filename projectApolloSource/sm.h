@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/06/27 22:29:43  movieman523
+  *	HGA now breaks off of the SM on re-entry, and fixed a bug on CM/SM seperation.
+  *	
   *	Revision 1.8  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -173,11 +176,20 @@ public:
 
 	///
 	/// Pass settings from the main DLL to the jettisoned SM. This call must be virtual 
-	/// so it can be called from other DLLs without building in the LES code.
+	/// so it can be called from other DLLs without building in the SM code.
 	/// \brief Setup jettisoned SM.
 	/// \param state SM state settings.
 	///
 	virtual void SetState(SMSettings &state);
+
+	///
+	/// The CSM should call this function to tidy up seperated meshes before deleting the
+	/// SM. This is virtual so it can be called from other DLLs without builing in the
+	/// SM code.
+	/// \brief Tidy up seperated meshes.
+	/// \param hCamera Saturn handle: it appears that orbiter crashes if we use the SM handle in the delete function.
+	///
+	virtual void TidyUpMeshes(OBJHANDLE hCamera);
 
 protected:
 
@@ -195,6 +207,19 @@ protected:
 	/// \brief Get the Apollo vehicle name.
 	///
 	void GetApolloName(char *s);
+
+	///
+	/// \brief If the handle isn't zero, delete the vessel.
+	/// \param handle Vessel handle to delete.
+	/// \param hCamera Camera handle.
+	///
+	void TryToDelete(OBJHANDLE &handle, OBJHANDLE hCamera);
+
+	///
+	/// \brief If the handle isn't zero, add a re-entry texture to the object.
+	/// \param handle Vessel handle to update.
+	///
+	void AddReentryTextureToObject(OBJHANDLE handle);
 
 	int GetMainState();
 	void SetMainState(int s);
@@ -370,10 +395,55 @@ protected:
 	///
 	/// \brief RCS thrusters.
 	///
-	THRUSTER_HANDLE th_att_lin[24], th_att_rot[24], th_rcs_a[4], th_rcs_b[4], th_rcs_c[4], th_rcs_d[4];
+	THRUSTER_HANDLE th_att_lin[24], th_att_rot[24], th_rcs_a[5], th_rcs_b[5], th_rcs_c[5], th_rcs_d[5];
 
 	///
-	/// \brief HGA handle.
+	/// \brief Seperated HGA handle.
 	///
 	OBJHANDLE hHGA;
+
+	///
+	/// \brief Seperated SPS handle.
+	///
+	OBJHANDLE hSPS;
+
+	///
+	/// \brief Seperated Panel 1 handle.
+	///
+	OBJHANDLE hPanel1;
+
+	///
+	/// \brief Seperated Panel 2 handle.
+	///
+	OBJHANDLE hPanel2;
+
+	///
+	/// \brief Seperated Panel 3 handle.
+	///
+	OBJHANDLE hPanel3;
+
+	///
+	/// \brief Seperated Panel 4 handle.
+	///
+	OBJHANDLE hPanel4;
+
+	///
+	/// \brief Seperated Panel 5 handle.
+	///
+	OBJHANDLE hPanel5;
+
+	///
+	/// \brief Seperated Panel 6 handle.
+	///
+	OBJHANDLE hPanel6;
+
+	///
+	/// \brief Sound library.
+	///
+	SoundLib soundlib;
+
+	///
+	/// \brief Breakup sound.
+	///
+	Sound BreakS;
 };
