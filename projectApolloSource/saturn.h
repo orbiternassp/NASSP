@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.195  2006/06/28 01:43:32  movieman523
+  *	Partial workaround for vessel deletion crash.
+  *	
   *	Revision 1.194  2006/06/27 18:22:54  movieman523
   *	Added 'drogues' sound.
   *	
@@ -2850,11 +2853,6 @@ protected:
 	bool SMSep;
 	bool bStartS4B;
 	bool Abort_Locked;
-
-	///
-	/// \brief Have we deleted the SM 'parts'?
-	///
-	bool SMPartsDeleted;
 
 	double DockAngle;
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/06/28 01:43:32  movieman523
+  *	Partial workaround for vessel deletion crash.
+  *	
   *	Revision 1.12  2006/06/28 01:23:02  movieman523
   *	Made SM break up on re-entry. Unfortunately sound doesn't work and if I try to delete the 'parts' when the SM is deleted. Orbiter blows away.
   *	
@@ -350,27 +353,41 @@ void SM::AddReentryTextureToObject(OBJHANDLE handle)
 	}
 }
 
-void SM::TryToDelete(OBJHANDLE &handle, OBJHANDLE hCamera)
+bool SM::TryToDelete(OBJHANDLE &handle, OBJHANDLE hCamera)
 
 {
 	if (handle)
 	{
 		oapiDeleteVessel(handle, hCamera);
 		handle = 0;
+
+		return true;
 	}
+
+	return false;
 }
 
-void SM::TidyUpMeshes(OBJHANDLE hCamera)
+bool SM::TidyUpMeshes(OBJHANDLE hCamera)
 
 {
-	TryToDelete(hHGA, hCamera);
-	TryToDelete(hSPS, hCamera);
-	TryToDelete(hPanel1, hCamera);
-	TryToDelete(hPanel2, hCamera);
-	TryToDelete(hPanel3, hCamera);
-	TryToDelete(hPanel4, hCamera);
-	TryToDelete(hPanel5, hCamera);
-	TryToDelete(hPanel6, hCamera);
+	if (TryToDelete(hHGA, hCamera))
+		return true;
+	if (TryToDelete(hSPS, hCamera))
+		return true;
+	if (TryToDelete(hPanel1, hCamera))
+		return true;
+	if (TryToDelete(hPanel2, hCamera))
+		return true;
+	if (TryToDelete(hPanel3, hCamera))
+		return true;
+	if (TryToDelete(hPanel4, hCamera))
+		return true;
+	if (TryToDelete(hPanel5, hCamera))
+		return true;
+	if (TryToDelete(hPanel6, hCamera))
+		return true;
+
+	return false;
 }
 
 void SM::clbkPreStep(double simt, double simdt, double mjd)

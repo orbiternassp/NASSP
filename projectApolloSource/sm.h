@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/06/28 01:23:02  movieman523
+  *	Made SM break up on re-entry. Unfortunately sound doesn't work and if I try to delete the 'parts' when the SM is deleted. Orbiter blows away.
+  *	
   *	Revision 1.9  2006/06/27 22:29:43  movieman523
   *	HGA now breaks off of the SM on re-entry, and fixed a bug on CM/SM seperation.
   *	
@@ -186,10 +189,15 @@ public:
 	/// The CSM should call this function to tidy up seperated meshes before deleting the
 	/// SM. This is virtual so it can be called from other DLLs without builing in the
 	/// SM code.
-	/// \brief Tidy up seperated meshes.
-	/// \param hCamera Saturn handle: it appears that orbiter crashes if we use the SM handle in the delete function.
 	///
-	virtual void TidyUpMeshes(OBJHANDLE hCamera);
+	/// We have to delete each mesh one at a time to avoid an Orbiter bug where it crashes
+	/// if you delete multiple vessels in the same timestep.
+	///
+	/// \brief Tidy up seperated meshes.
+	/// \param hCamera Saturn handle: probably not really needed.
+	/// \return True if it deleted a mesh, false if all meshes were deleted already.
+	///
+	virtual bool TidyUpMeshes(OBJHANDLE hCamera);
 
 protected:
 
@@ -213,7 +221,7 @@ protected:
 	/// \param handle Vessel handle to delete.
 	/// \param hCamera Camera handle.
 	///
-	void TryToDelete(OBJHANDLE &handle, OBJHANDLE hCamera);
+	bool TryToDelete(OBJHANDLE &handle, OBJHANDLE hCamera);
 
 	///
 	/// \brief If the handle isn't zero, add a re-entry texture to the object.
