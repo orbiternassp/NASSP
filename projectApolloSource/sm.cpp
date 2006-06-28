@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/06/28 02:08:11  movieman523
+  *	Full workaround for SM deletion crash: though the focus still tends to jump to something other than the CM!
+  *	
   *	Revision 1.13  2006/06/28 01:43:32  movieman523
   *	Partial workaround for vessel deletion crash.
   *	
@@ -963,19 +966,10 @@ void SM::AddEngines()
 	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,CENTEROFFS + 0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
 	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS + 0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
 
-	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
-	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
-	CreateThrusterGroup (th_att_lin+8,   2, THGROUP_ATT_RIGHT);
-	CreateThrusterGroup (th_att_lin+12, 2, THGROUP_ATT_LEFT);
-	CreateThrusterGroup (th_att_lin+16,   2, THGROUP_ATT_UP);
-	CreateThrusterGroup (th_att_lin+20,   2, THGROUP_ATT_DOWN);
-
-	CreateThrusterGroup (th_att_rot,   2, THGROUP_ATT_PITCHDOWN);
-	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_PITCHUP);
-	CreateThrusterGroup (th_att_rot+4,   2, THGROUP_ATT_YAWRIGHT);
-	CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
-	CreateThrusterGroup (th_att_rot+8,   8, THGROUP_ATT_BANKLEFT);
-	CreateThrusterGroup (th_att_rot+16,   8, THGROUP_ATT_BANKRIGHT);
+	//
+	// We don't create thruster groups here as the user shouldn't be able to control the SM after
+	// it seperates.
+	//
 
 	SURFHANDLE SMExhaustTex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
 
