@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/06/27 22:29:43  movieman523
+  *	HGA now breaks off of the SM on re-entry, and fixed a bug on CM/SM seperation.
+  *	
   *	Revision 1.10  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -58,6 +61,11 @@
 #include "orbiterSDK.h"
 
 #include "nasspdefs.h"
+#include "nasspsound.h"
+
+#include "OrbiterSoundSDK3.h"
+#include "soundlib.h"
+
 #include "sm.h"
 
 #include <stdio.h>
@@ -170,6 +178,13 @@ void SM::InitSM()
 	umbilical_proc = 0;
 
 	hHGA = 0;
+	hSPS = 0;
+	hPanel1 = 0;
+	hPanel2 = 0;
+	hPanel3 = 0;
+	hPanel4 = 0;
+	hPanel5 = 0;
+	hPanel6 = 0;
 
 	FirstTimestep = true;
 
@@ -188,6 +203,8 @@ void SM::InitSM()
 		th_att_lin[i] = 0;
 		th_att_rot[i] = 0;
 	}
+
+	soundlib.InitSoundLib(GetHandle(), SOUND_DIRECTORY);
 }
 
 const double SMVO = 0.0;//-0.14;
@@ -276,6 +293,87 @@ void SM::DoFirstTimestep()
 
 	strcpy (VName, ApolloName); strcat (VName, "-HGA");
 	hHGA = oapiGetVesselByName(VName);
+	AddReentryTextureToObject(hHGA);
+
+	strcpy (VName, ApolloName); strcat (VName, "-SPS");
+	hSPS = oapiGetVesselByName(VName);
+	AddReentryTextureToObject(hSPS);
+
+	strcpy (VName, ApolloName); strcat (VName, "-PANEL1");
+	hPanel1 = oapiGetVesselByName(VName);
+	AddReentryTextureToObject(hPanel1);
+
+	strcpy (VName, ApolloName); strcat (VName, "-PANEL2");
+	hPanel2 = oapiGetVesselByName(VName);
+	AddReentryTextureToObject(hPanel2);
+
+	strcpy (VName, ApolloName); strcat (VName, "-PANEL3");
+	hPanel3 = oapiGetVesselByName(VName);
+	AddReentryTextureToObject(hPanel3);
+
+	strcpy (VName, ApolloName); strcat (VName, "-PANEL4");
+	hPanel4 = oapiGetVesselByName(VName);
+	AddReentryTextureToObject(hPanel4);
+
+	strcpy (VName, ApolloName); strcat (VName, "-PANEL5");
+	hPanel5 = oapiGetVesselByName(VName);
+	AddReentryTextureToObject(hPanel5);
+
+	strcpy (VName, ApolloName); strcat (VName, "-PANEL6");
+	hPanel6 = oapiGetVesselByName(VName);
+	AddReentryTextureToObject(hPanel6);
+
+	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
+	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
+	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
+	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
+	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
+	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
+
+	//
+	// Orbitersound claims to load this sound but won't play it!
+	//
+	soundlib.LoadSound(BreakS, CRASH_SOUND);
+}
+
+void SM::AddReentryTextureToObject(OBJHANDLE handle)
+
+{
+	if (handle)
+	{
+		VESSEL *vSep = oapiGetVesselInterface(handle);
+		if (CMTex && vSep)
+			vSep->SetReentryTexture(CMTex,1e6,5,0.7);
+	}
+}
+
+void SM::TryToDelete(OBJHANDLE &handle, OBJHANDLE hCamera)
+
+{
+	if (handle)
+	{
+		oapiDeleteVessel(handle, hCamera);
+		handle = 0;
+	}
+}
+
+void SM::TidyUpMeshes(OBJHANDLE hCamera)
+
+{
+	//
+	// If we delete these meshes, then Orbiter blows away. I can't find any way to stop it
+	// blowing away when deleting them, and can't see that we're doing anything wrong here.
+	//
+#if 0
+	TryToDelete(hHGA, hCamera);
+	TryToDelete(hSPS, hCamera);
+	TryToDelete(hPanel1, hCamera);
+	TryToDelete(hPanel2, hCamera);
+	TryToDelete(hPanel3, hCamera);
+	TryToDelete(hPanel4, hCamera);
+	TryToDelete(hPanel5, hCamera);
+	TryToDelete(hPanel6, hCamera);
+#endif
 }
 
 void SM::clbkPreStep(double simt, double simdt, double mjd)
@@ -327,8 +425,8 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 		{
 			SetThrusterLevel(th_rcs_a[3], 1.0);
 			SetThrusterLevel(th_rcs_b[3], 1.0);
-			SetThrusterLevel(th_rcs_c[3], 1.0);
-			SetThrusterLevel(th_rcs_d[3], 1.0);
+			SetThrusterLevel(th_rcs_c[4], 1.0);
+			SetThrusterLevel(th_rcs_d[4], 1.0);
 			NextMissionEventTime = MissionTime + 2.0;
 			State = SM_STATE_RCS_ROLL_START;
 		}
@@ -404,7 +502,7 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 			// Adjust temperature.
 			//
 
-			Temperature += Heat / 10000.0; // Need thermal capacity
+			Temperature += (Heat / 1250000.0); // Need thermal capacity
 
 			//
 			// Set a sane lowest temperature.
@@ -418,7 +516,7 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 			//
 			// Initial breakup code.
 			//
-			if (showHGA && Temperature > 1000.0)
+			if (showHGA && Temperature > 600.0)
 			{
 				showHGA = false;
 				SetSM();
@@ -430,7 +528,6 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				GetApolloName(ApolloName);
 
 				strcpy (VName, ApolloName); strcat (VName, "-HGA");
-				hHGA = oapiGetVesselByName(VName);
 
 				ofs1 = _V(-1.308,-1.18,-1.258);
 				vel1 = _V(-0.2, -0.2, -0.05);
@@ -449,8 +546,11 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				vs1.rvel.z = rvel1.z+rofs1.z;
 
 				hHGA = oapiCreateVessel(VName, "ProjectApollo/SM-HGA", vs1);
+				AddReentryTextureToObject(hHGA);
+
+				BreakS.play();
 			}
-			else if (showPanel1 && Temperature > 1400.0)
+			else if (showPanel1 && Temperature > 800.0)
 			{
 				showPanel1 = false;
 				showCRYO = true;
@@ -461,17 +561,38 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				// Delete HGA.
 				//
 
-				if (hHGA)
-				{
-					oapiDeleteVessel(hHGA, GetHandle());
-					hHGA = 0;
-				}
+				TryToDelete(hHGA, GetHandle());
 
 				//
 				// We now need to create a panel 'vessel' falling away from the SM.
 				//
+
+				GetApolloName(ApolloName);
+
+				strcpy (VName, ApolloName); strcat (VName, "-PANEL1");
+
+				ofs1 = _V(0, 0, 0);
+				vel1 = _V(0.0, 1.5, 0.05);
+
+				GetStatus (vs1);
+				vs1.eng_main = vs1.eng_hovr = 0.0;
+				vs1.status = 0;
+
+				rvel1 = _V(vs1.rvel.x, vs1.rvel.y, vs1.rvel.z);
+
+				Local2Rel (ofs1, vs1.rpos);
+				GlobalRot (vel1, rofs1);
+
+				vs1.rvel.x = rvel1.x+rofs1.x;
+				vs1.rvel.y = rvel1.y+rofs1.y;
+				vs1.rvel.z = rvel1.z+rofs1.z;
+
+				hPanel1 = oapiCreateVessel(VName, "ProjectApollo/SM-Panel1", vs1);
+				AddReentryTextureToObject(hPanel1);
+
+				BreakS.play();
 			}
-			else if (showPanel2 && Temperature > 1500.0)
+			else if (showPanel2 && Temperature > 1000.0)
 			{
 				showPanel2 = false;
 				SetSM();
@@ -479,8 +600,33 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				//
 				// We now need to create a panel 'vessel' falling away from the SM.
 				//
+
+				GetApolloName(ApolloName);
+
+				strcpy (VName, ApolloName); strcat (VName, "-PANEL2");
+
+				ofs1 = _V(0, 0, 0);
+				vel1 = _V(1.0, 0.25, 0.05);
+
+				GetStatus (vs1);
+				vs1.eng_main = vs1.eng_hovr = 0.0;
+				vs1.status = 0;
+
+				rvel1 = _V(vs1.rvel.x, vs1.rvel.y, vs1.rvel.z);
+
+				Local2Rel (ofs1, vs1.rpos);
+				GlobalRot (vel1, rofs1);
+
+				vs1.rvel.x = rvel1.x+rofs1.x;
+				vs1.rvel.y = rvel1.y+rofs1.y;
+				vs1.rvel.z = rvel1.z+rofs1.z;
+
+				hPanel2 = oapiCreateVessel(VName, "ProjectApollo/SM-Panel2", vs1);
+				AddReentryTextureToObject(hPanel2);
+
+				BreakS.play();
 			}
-			else if (showPanel3 && Temperature > 1600.0)
+			else if (showPanel3 && Temperature > 1400.0)
 			{
 				showPanel3 = false;
 				SetSM();
@@ -488,6 +634,31 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				//
 				// We now need to create a panel 'vessel' falling away from the SM.
 				//
+
+				GetApolloName(ApolloName);
+
+				strcpy (VName, ApolloName); strcat (VName, "-PANEL3");
+
+				ofs1 = _V(0, 0, 0);
+				vel1 = _V(0.25, -1.0, 0.1);
+
+				GetStatus (vs1);
+				vs1.eng_main = vs1.eng_hovr = 0.0;
+				vs1.status = 0;
+
+				rvel1 = _V(vs1.rvel.x, vs1.rvel.y, vs1.rvel.z);
+
+				Local2Rel (ofs1, vs1.rpos);
+				GlobalRot (vel1, rofs1);
+
+				vs1.rvel.x = rvel1.x+rofs1.x;
+				vs1.rvel.y = rvel1.y+rofs1.y;
+				vs1.rvel.z = rvel1.z+rofs1.z;
+
+				hPanel3 = oapiCreateVessel(VName, "ProjectApollo/SM-Panel3", vs1);
+				AddReentryTextureToObject(hPanel3);
+
+				BreakS.play();
 			}
 			else if (showPanel4 && Temperature > 1700.0)
 			{
@@ -497,6 +668,31 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				//
 				// We now need to create a panel 'vessel' falling away from the SM.
 				//
+
+				GetApolloName(ApolloName);
+
+				strcpy (VName, ApolloName); strcat (VName, "-PANEL4");
+
+				ofs1 = _V(0, 0, 0);
+				vel1 = _V(0.0, -1.25, 0.1);
+
+				GetStatus (vs1);
+				vs1.eng_main = vs1.eng_hovr = 0.0;
+				vs1.status = 0;
+
+				rvel1 = _V(vs1.rvel.x, vs1.rvel.y, vs1.rvel.z);
+
+				Local2Rel (ofs1, vs1.rpos);
+				GlobalRot (vel1, rofs1);
+
+				vs1.rvel.x = rvel1.x+rofs1.x;
+				vs1.rvel.y = rvel1.y+rofs1.y;
+				vs1.rvel.z = rvel1.z+rofs1.z;
+
+				hPanel4 = oapiCreateVessel(VName, "ProjectApollo/SM-Panel4", vs1);
+				AddReentryTextureToObject(hPanel4);
+
+				BreakS.play();
 			}
 			else if (showPanel5 && Temperature > 1800.0)
 			{
@@ -506,8 +702,33 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				//
 				// We now need to create a panel 'vessel' falling away from the SM.
 				//
+
+				GetApolloName(ApolloName);
+
+				strcpy (VName, ApolloName); strcat (VName, "-PANEL5");
+
+				ofs1 = _V(0, 0, 0);
+				vel1 = _V(-0.5, 0.75, 0.01);
+
+				GetStatus (vs1);
+				vs1.eng_main = vs1.eng_hovr = 0.0;
+				vs1.status = 0;
+
+				rvel1 = _V(vs1.rvel.x, vs1.rvel.y, vs1.rvel.z);
+
+				Local2Rel (ofs1, vs1.rpos);
+				GlobalRot (vel1, rofs1);
+
+				vs1.rvel.x = rvel1.x+rofs1.x;
+				vs1.rvel.y = rvel1.y+rofs1.y;
+				vs1.rvel.z = rvel1.z+rofs1.z;
+
+				hPanel5 = oapiCreateVessel(VName, "ProjectApollo/SM-Panel5", vs1);
+				AddReentryTextureToObject(hPanel5);
+
+				BreakS.play();
 			}
-			else if (showPanel6 && Temperature > 1900.0)
+			else if (showPanel6 && Temperature > 2000.0)
 			{
 				showPanel6 = false;
 				SetSM();
@@ -515,8 +736,33 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				//
 				// We now need to create a panel 'vessel' falling away from the SM.
 				//
+
+				GetApolloName(ApolloName);
+
+				strcpy (VName, ApolloName); strcat (VName, "-PANEL6");
+
+				ofs1 = _V(0, 0, 0);
+				vel1 = _V(-0.75, 0.5, -0.025);
+
+				GetStatus (vs1);
+				vs1.eng_main = vs1.eng_hovr = 0.0;
+				vs1.status = 0;
+
+				rvel1 = _V(vs1.rvel.x, vs1.rvel.y, vs1.rvel.z);
+
+				Local2Rel (ofs1, vs1.rpos);
+				GlobalRot (vel1, rofs1);
+
+				vs1.rvel.x = rvel1.x+rofs1.x;
+				vs1.rvel.y = rvel1.y+rofs1.y;
+				vs1.rvel.z = rvel1.z+rofs1.z;
+
+				hPanel6 = oapiCreateVessel(VName, "ProjectApollo/SM-Panel6", vs1);
+				AddReentryTextureToObject(hPanel6);
+
+				BreakS.play();
 			}
-			else if (showSPS && Temperature > 2000.0)
+			else if (showSPS && Temperature > 2500.0)
 			{
 				showSPS = false;
 				SetSM();
@@ -524,6 +770,35 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 				//
 				// We now need to create an SPS 'vessel' falling away from the SM.
 				//
+
+				GetApolloName(ApolloName);
+
+				strcpy (VName, ApolloName); strcat (VName, "-SPS");
+
+				ofs1 = _V(0, SMVO, -1.654);
+				vel1 = _V(-0.5, 0.25, -0.25);
+
+				GetStatus (vs1);
+				vs1.eng_main = vs1.eng_hovr = 0.0;
+				vs1.status = 0;
+					
+				rvel1 = _V(vs1.rvel.x, vs1.rvel.y, vs1.rvel.z);
+
+				Local2Rel (ofs1, vs1.rpos);
+				GlobalRot (vel1, rofs1);
+
+				vs1.rvel.x = rvel1.x+rofs1.x;
+				vs1.rvel.y = rvel1.y+rofs1.y;
+				vs1.rvel.z = rvel1.z+rofs1.z;
+
+				vs1.vrot.x += 0.005;
+				vs1.vrot.y += 0.05;
+				vs1.vrot.z += 0.02;
+
+				hSPS = oapiCreateVessel(VName, "ProjectApollo/SM-SPS", vs1);
+				AddReentryTextureToObject(hSPS);
+
+				BreakS.play();
 			}
 		}
 		break;
