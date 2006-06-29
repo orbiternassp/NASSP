@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.76  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -4477,6 +4480,17 @@ typedef union
 	unsigned long word;
 } AGCState;
 
+
+//
+// Global variables in agc_engine.c which probably have to be saved, too
+//
+
+extern "C" {
+	extern int NextZ;
+	extern int ScalerCounter;
+	extern int ChannelRoutineCount;
+}
+
 void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 {
@@ -4575,7 +4589,8 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	//
 
 	for (i = 0; i < EMEM_ENTRIES; i++) {
-		if (ReadMemory(i, val) && val != 0) {
+		// Always save RegZ because it's set in agc_engine_init, so we have to store 0, too
+		if (ReadMemory(i, val) && (val != 0 || i == RegZ)) {
 			sprintf(fname, "EMEM%04o", i);
 			sprintf(str, "%o", val);
 			oapiWriteScenario_string (scn, fname, str);
@@ -4607,7 +4622,8 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 #ifndef AGC_SOCKET_ENABLED
 		for (i = 0; i < NUM_CHANNELS; i++) {
 			val = vagc.InputChannel[i];
-			if (val != 0) {
+			// Always save channel 030 - 033 because they're set in agc_engine_init, so we have to store 0, too
+			if (val != 0 || (i >= 030 && i <= 033)) {
 				sprintf(fname, "VICHAN%03d", i);
 				oapiWriteScenario_int (scn, fname, val);
 			}
@@ -4615,21 +4631,20 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 		oapiWriteScenario_int (scn, "VOC7", vagc.OutputChannel7);
 		oapiWriteScenario_int (scn, "IDXV", vagc.IndexValue);
-
+		oapiWriteScenario_int (scn, "NEXTZ", NextZ);
+		oapiWriteScenario_int (scn, "SCALERCOUNTER", ScalerCounter);
+		oapiWriteScenario_int (scn, "CRCOUNT", ChannelRoutineCount);
+		
 		for (i = 0; i < 16; i++) {
 			val = vagc.OutputChannel10[i];
-			if (val != 0) {
-				sprintf(fname, "V10CHAN%03d", i);
-				oapiWriteScenario_int (scn, fname, val);
-			}
+			sprintf(fname, "V10CHAN%03d", i);
+			oapiWriteScenario_int (scn, fname, val);
 		}
 
 		for (i = 0; i < (1 + NUM_INTERRUPT_TYPES); i++) {
 			val = vagc.InterruptRequests[i];
-			if (val != 0) {
-				sprintf(fname, "VINT%03d", i);
-				oapiWriteScenario_int (scn, fname, val);
-			}
+			sprintf(fname, "VINT%03d", i);
+			oapiWriteScenario_int (scn, fname, val);
 		}
 #endif
 	}
@@ -4747,14 +4762,29 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 			sscanf(line+9, "%d", &val);
 			OutputChannel[num] = val;
 		}
-		else if (!strnicmp (line, "OC7", 3)) {
+		else if (!strnicmp (line, "VOC7", 4)) {
 #ifndef AGC_SOCKET_ENABLED
-			sscanf (line+3, "%d", &vagc.OutputChannel7);
+			sscanf (line+4, "%d", &vagc.OutputChannel7);
 #endif
 		}
 		else if (!strnicmp (line, "IDXV", 4)) {
 #ifndef AGC_SOCKET_ENABLED
 			sscanf (line+4, "%d", &vagc.IndexValue);
+#endif
+		}
+		else if (!strnicmp (line, "NEXTZ", 5)) {
+#ifndef AGC_SOCKET_ENABLED
+			sscanf (line+5, "%d", &NextZ);
+#endif
+		}
+		else if (!strnicmp (line, "SCALERCOUNTER", 13)) {
+#ifndef AGC_SOCKET_ENABLED
+			sscanf (line+13, "%d", &ScalerCounter);
+#endif
+		}
+		else if (!strnicmp (line, "CRCOUNT", 7)) {
+#ifndef AGC_SOCKET_ENABLED
+			sscanf (line+7, "%d", &ChannelRoutineCount);
 #endif
 		}
 		else if (!strnicmp (line, "VINT", 4)) {

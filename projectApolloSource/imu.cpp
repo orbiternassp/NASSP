@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2006/06/17 18:11:52  tschachim
+  *	More precise saving/loading.
+  *	
   *	Revision 1.21  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -236,10 +239,9 @@ void IMU::ChannelOutput(int address, int value)
 {
 	TRACESETUP("CHANNEL OUTPUT PROCESS");
 
-char buffers[80];
-
-sprintf(buffers,"CHANNEL OUTPUT %o %o", address,value);
-TRACE(buffers);
+	char buffers[80];
+	sprintf(buffers,"CHANNEL OUTPUT %o %o", address,value);
+	TRACE(buffers);
 
 	int pulses;
 	double delta;
@@ -266,7 +268,6 @@ TRACE(buffers);
     	if (val12.Bits.ZeroIMUCDUs) {
 			ZeroIMUCDUs();
 #ifndef AGC_SOCKET_ENABLED
-// TODOX15  why ?
 			agc.SetErasable(0, RegCDUX, 0);
 			agc.SetErasable(0, RegCDUY, 0);
 			agc.SetErasable(0, RegCDUZ, 0);
@@ -577,45 +578,38 @@ void IMU::PulsePIPA(int RegPIPA, int pulses)
 void IMU::DriveGimbals(double x, double y, double z) 
 
 {
-	DriveGimbal(0, RegCDUX, x - Gimbal.X, 0);
-	DriveGimbal(1, RegCDUY, y - Gimbal.Y, 0);
-	DriveGimbal(2, RegCDUZ, z - Gimbal.Z, 0);
+	DriveGimbal(0, RegCDUX, x - Gimbal.X);
+	DriveGimbal(1, RegCDUY, y - Gimbal.Y);
+	DriveGimbal(2, RegCDUZ, z - Gimbal.Z);
 	SetOrbiterAttitudeReference();
 }
 
 void IMU::DriveGimbalX(double angle) 
 
 {
-	DriveGimbal(0, RegCDUX, angle, 0);
+	DriveGimbal(0, RegCDUX, angle);
 }
 
 void IMU::DriveGimbalY(double angle) 
 
 {
-	DriveGimbal(1, RegCDUY, angle, 0);
+	DriveGimbal(1, RegCDUY, angle);
 }
 
 void IMU::DriveGimbalZ(double angle) 
 
 {
-	DriveGimbal(2, RegCDUZ, angle, 0);
+	DriveGimbal(2, RegCDUZ, angle);
 }
 
-void IMU::DriveGimbal(int index, int RegCDU, double angle, int changeCDU) 
+void IMU::DriveGimbal(int index, int RegCDU, double angle) 
 
 {
 	TRACESETUP("DRIVE GIMBAL");
   	int  pulses; //i, delta;
 	double OldGimbal;
 	double delta;
-
 	
-    if (fabs(angle) < 1.E-5)
-	{
-		TRACE("ANGLE TROP PETIT");
-		return;
-	}
-
 	OldGimbal = Gimbals[index];
 	Gimbals[index] += angle;
 	if (Gimbals[index] >= TWO_PI) {
@@ -624,77 +618,42 @@ void IMU::DriveGimbal(int index, int RegCDU, double angle, int changeCDU)
 	if (Gimbals[index] < 0) {
 		Gimbals[index] += TWO_PI;
 	}
-	delta = Gimbals[index]-OldGimbal;
+	delta = Gimbals[index] - OldGimbal;
 	if(delta > PI)
 		delta -= TWO_PI;
 	if(delta < - PI)
 		delta += TWO_PI;
 	
-	// Gyro pulses to CDU pulses
-//	if (changeCDU && angle != 0) {
-//		imuLogMessage("Drive CDU");
-		pulses = (int)(((double)radToGyroPulses(Gimbals[index])) / 64.0);	
-/*		if (angle >= 0) {
-			delta = pulses - *RegCDU;
-			if (delta < 0) {
-				delta += 32768;		// TwoPI in CDU pulses
-			}
-    		for (i = 0; i < delta; i++) {
-				int CounterPCDU (int16_t *Counter);    		
-      			CounterPCDU(RegCDU);
-    		}
-		} else {
-			delta = *RegCDU - pulses;
-			if (delta < 0) {
-				delta += 32768;		// TwoPI in CDU pulses
-			}
-    		for (i = 0; i < delta; i++) {
-				int CounterMCDU (int16_t *Counter);    		
-      			CounterMCDU(RegCDU);
-    		}
-		}
-*/
-
-
 #ifdef AGC_SOCKET_ENABLED
 
-        int channel,i;
+    int channel,i;
 
-    	channel = RegCDU | 0x80;
-	    pulses = (int)(((double)radToGyroPulses(fabs(delta))) / 64.0);
+    channel = RegCDU | 0x80;
+	pulses = (int)(((double)radToGyroPulses(fabs(delta))) / 64.0);
+	pulses = pulses & 077777;
+	   
+	LogState( channel, "inG", pulses);
+	// sprintf(oapiDebugString(),"PCDU %d CHANNEL %o ", pulses,channel);
 
-		pulses = pulses & 077777;
-		   
-		LogState( channel, "inG", pulses);
-
-// sprintf(oapiDebugString(),"PCDU %d CHANNEL %o ", pulses,channel);
-		if(delta >=0)
-		{
- 		    for (i = 0; i < pulses; i++)
-			{
-			    agc.SetInputChannel(channel,1); // PCDU 
-			}
+	if (delta >= 0) {
+ 		for (i = 0; i < pulses; i++) {
+			agc.SetInputChannel(channel,1); // PCDU 
 		}
-		else
-		{
- 		    for (i = 0; i < pulses; i++)
-			{
-			    agc.SetInputChannel(channel,3); // MCDU 
-			}
-
+	} else {
+ 		for (i = 0; i < pulses; i++) {
+			agc.SetInputChannel(channel,3); // MCDU 
 		}
-
-
+	}
 #else
-		agc.SetErasable(0, RegCDU, (pulses & 077777));
+	// Gyro pulses to CDU pulses
+	pulses = (int)(((double)radToGyroPulses(Gimbals[index])) / 64.0);	
+	agc.SetErasable(0, RegCDU, (pulses & 077777));
+
 #endif
-//	}
-
-char buffers[80];
-sprintf(buffers,"DRIVE GIMBAL index %o REGCDU %o angle %f pulses %o",index,RegCDU,angle,pulses);
-if (pulses)
-    TRACE(buffers);
-
+	char buffers[80];
+	sprintf(buffers,"DRIVE GIMBAL index %o REGCDU %o angle %f pulses %o",index,RegCDU,angle,pulses);
+	if (pulses)
+		TRACE(buffers);
 }
 
 void IMU::DriveCDUX(int cducmd) 
@@ -719,21 +678,19 @@ void IMU::DriveCDU(int index, int RegCDU, int cducmd)
 
 {
 	TRACESETUP("DRIVECDU");
+
 	int pulses;
-
-
 	if (040000 & cducmd) {  // Negative?
-		//pulses = (cducmd - 077777) * 256;	// Coarse align
 		pulses = (040000 - cducmd) * 256;	// Coarse align
 	} else {
 		pulses = cducmd * 256;				// Coarse align
 	}	
+
 	char buffers[80];
 	sprintf(buffers,"DRIVECDU index %o RegCDU %o cducmd %o pulses %o", index,RegCDU,cducmd,pulses);
 	TRACE(buffers);
-
 	
-	DriveGimbal(index, RegCDU, gyroPulsesToRad(pulses), 1);
+	DriveGimbal(index, RegCDU, gyroPulsesToRad(pulses));
 	SetOrbiterAttitudeReference();
 }
 
