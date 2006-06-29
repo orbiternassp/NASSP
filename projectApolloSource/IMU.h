@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.7  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -101,7 +105,7 @@ protected:
 	void DriveGimbalX(double angle);
 	void DriveGimbalY(double angle);
 	void DriveGimbalZ(double angle);
-	void DriveGimbal(int index, int RegCDU, double angle, int changeCDU);
+	void DriveGimbal(int index, int RegCDU, double angle);
 	void PulsePIPA(int RegPIPA, int pulses);
 	void SetOrbiterAttitudeReference();
 	void ZeroIMUCDUs();
