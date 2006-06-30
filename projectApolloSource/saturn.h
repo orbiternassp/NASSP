@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.196  2006/06/28 02:08:11  movieman523
+  *	Full workaround for SM deletion crash: though the focus still tends to jump to something other than the CM!
+  *	
   *	Revision 1.195  2006/06/28 01:43:32  movieman523
   *	Partial workaround for vessel deletion crash.
   *	
@@ -1948,7 +1951,7 @@ protected:
 	SwitchRow InstrumentLightingCircuitBrakersRow;
 	CircuitBrakerSwitch InstrumentLightingESSMnACircuitBraker;
 	CircuitBrakerSwitch InstrumentLightingESSMnBCircuitBraker;
-	ThreeSourceSwitch InstrumentLightingNonESSCircuitBraker;
+	CircuitBrakerSwitch InstrumentLightingNonESSCircuitBraker;
 	CircuitBrakerSwitch InstrumentLightingSCIEquipSEP1CircuitBraker;
 	CircuitBrakerSwitch InstrumentLightingSCIEquipSEP2CircuitBraker;
 	CircuitBrakerSwitch InstrumentLightingSCIEquipHatchCircuitBraker;
@@ -2122,7 +2125,7 @@ protected:
 	ThreeSourceSwitch BatCHGRSwitch;
 
 	SwitchRow NonessBusSwitchRow;
-	ThreePosSwitch NonessBusSwitch;
+	ThreeSourceSwitch NonessBusSwitch;
 
 	SwitchRow InteriorLightsFloodSwitchesRow;
 	ToggleSwitch InteriorLightsFloodDimSwitch;
