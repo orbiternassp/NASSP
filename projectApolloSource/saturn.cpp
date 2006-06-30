@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.154  2006/06/28 02:08:11  movieman523
+  *	Full workaround for SM deletion crash: though the focus still tends to jump to something other than the CM!
+  *	
   *	Revision 1.153  2006/06/28 01:43:32  movieman523
   *	Partial workaround for vessel deletion crash.
   *	
@@ -234,8 +237,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	iu(soundlib, agc, SIISIVBSepSwitch, TLIEnableSwitch),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
-	NonEssBus1("Non-Essential-Bus1", &InstrumentLightingNonESSCircuitBraker),
-	NonEssBus2("Non-Essential-Bus2", &InstrumentLightingNonESSCircuitBraker),
+	NonEssBus1("Non-Essential-Bus1", &NonessBusSwitch),
+	NonEssBus2("Non-Essential-Bus2", &NonessBusSwitch),
 	ACBus1PhaseA("AC-Bus1-PhaseA", 115, &ACBus1Source),
 	ACBus1PhaseB("AC-Bus1-PhaseB", 115, &ACBus1Source),
 	ACBus1PhaseC("AC-Bus1-PhaseC", 115, &ACBus1Source),
