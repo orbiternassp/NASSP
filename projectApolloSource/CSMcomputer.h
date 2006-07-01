@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.15  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -68,6 +71,9 @@
   *	Initial version
   *	
   **************************************************************************/
+
+#if !defined(_PA_CSMCOMPUTER_H)
+#define _PA_CSMCOMPUTER_H
 
 //
 // Flagword definitions. These are really intended for future
@@ -269,6 +275,7 @@ class IU;
 
 ///
 /// CSM guidance computer.
+///
 /// \ingroup AGC
 /// \brief Derived class for the CSM AGC with extra CSM-specific functionality.
 ///
@@ -280,6 +287,7 @@ public:
 	///
 	/// The AGC needs to talk to various other objects in the CSM. These are passed to the
 	/// constructor so we can set references to them.
+	///
 	/// \brief CSM AGC constructor.
 	/// \param s Sound library to use for playing sound.
 	/// \param display Main control panel DSKY interface.
@@ -310,6 +318,7 @@ public:
 	///
 	/// Called to tell the AGC that liftoff has occured, and it should switch into the liftoff
 	/// program.
+	///
 	/// \brief Liftoff trigger.
 	///
 	void Liftoff(double simt);
@@ -363,6 +372,7 @@ protected:
 	///
 	/// Approximate method to calculate 'Time of Free Fall': the time in seconds that the CM would
 	/// take to free fall to 300,000 feet if the engines were to fail at this time.
+	///
 	/// \brief Calculate TFF for DSKY display.
 	/// \param vy Vertical velocity relative to Earth in m/s.
 	/// \param r0 Current altitude in meters.
@@ -372,6 +382,7 @@ protected:
 
 	///
 	/// Calculate the current gravitational acceleration.
+	///
 	/// \brief Get current g.
 	/// \return Current gravitational accelerations in m/s^2.
 	///
@@ -380,6 +391,7 @@ protected:
 	///
 	/// The real CSM could only perform orbit calculations while running certain specific programs. We
 	/// simulate this through this call: the calculations will only be performed if it returns true.
+	///
 	/// \brief Can the AGC perform orbit calculations at this time?
 	/// \return True if the current program supports orbit calculation.
 	///
@@ -402,9 +414,36 @@ protected:
 	// Programs we can run.
 	//
 
+	///
+	/// Program 01 simulates pre-launch IMU setup.
+	///
+	/// \brief Run program 01.
+	/// \param simt Current Mission Elapsed Time in seconds.
+	///
 	void Prog01(double simt);
+
+	///
+	/// Program 02 simulates pre-launch trajectory configuration.
+	///
+	/// \brief Run program 02.
+	/// \param simt Current Mission Elapsed Time in seconds.
+	///
 	void Prog02(double simt);
+
+	///
+	/// Program 06 puts the AGC into standby mode.
+	///
+	/// \brief Run program 06.
+	/// \param simt Current Mission Elapsed Time in seconds.
+	///
 	void Prog06(double simt);
+
+	///
+	/// Program 11 simulates the launch monitor and control program.
+	///
+	/// \brief Run program 11.
+	/// \param simt Current Mission Elapsed Time in seconds.
+	///
 	void Prog11(double simt);
 
 	///
@@ -445,6 +484,15 @@ protected:
 	unsigned int LastOut6;
 	unsigned int LastOut11;
 
+	///
+	/// \brief Second DSKY in the lower equipment bay.
+	///
 	DSKY &dsky2;
+	
+	///
+	/// \brief Saturn Instrument Unit.
+	///
 	IU &iu;
 };
+
+#endif // _PA_CSMCOMPUTER_H

@@ -22,13 +22,16 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.1  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
   **************************** Revision History ****************************/
 
-#ifndef __SECS_H
-#define __SECS_H
+#if !defined(_PA_SECS_H)
+#define _PA_SECS_H
 
 ///
 /// This class simulates the Sequential Events Control System in the CM.
@@ -47,4 +50,4 @@ public:
 
 };
 
-#endif
+#endif // _PA_SECS_H

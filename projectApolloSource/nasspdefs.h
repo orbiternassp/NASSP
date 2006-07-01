@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.69  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -579,6 +582,12 @@ inline double KelvinToFahrenheit(double kelvin) {
 /// \defgroup DSKY Display/Keyboard code.
 /// \ingroup InternalSystems
 /// \brief This code supports the Apollo DSKY emulation.
+///
+
+///
+/// \defgroup InternalSystemsState Internal systems state code.
+/// \ingroup InternalSystems
+/// \brief State variables for the internal systems.
 ///
 
 ///

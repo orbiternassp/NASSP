@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/06/11 14:45:36  movieman523
+  *	Quick fix for Apollo 4. Will need more work in the future.
+  *	
   *	Revision 1.16  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -122,7 +125,7 @@ CautionWarningSystem::~CautionWarningSystem()
 	// Nothing for now.
 }
 
-void CautionWarningSystem::LightTest(int state)
+void CautionWarningSystem::LightTest(LightTestState state)
 
 {
 	if (state != TestState) {
@@ -183,7 +186,7 @@ bool CautionWarningSystem::LightsPowered()
 }
 
 
-void CautionWarningSystem::SetPowerBus(int bus) 
+void CautionWarningSystem::SetPowerBus(CSWPowerSource bus) 
 
 { 
 	PowerBus = bus; 
@@ -236,7 +239,8 @@ void CautionWarningSystem::SystemTimestep(double simdt)
 void CautionWarningSystem::SetMasterAlarm(bool alarm)
 
 {
-	if (MasterAlarm != alarm) {
+	if (MasterAlarm != alarm)
+	{
 		MasterAlarm = alarm;
 
 		//
@@ -253,7 +257,7 @@ void CautionWarningSystem::SetMasterAlarm(bool alarm)
 // Render the lit master alarm light if required.
 //
 
-void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, int position)
+void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, CWSMasterAlarmPosition position)
 
 {
 	// In Boost-Mode only the left master alarm button is not illuminated (Apollo Operations Handbook 2.10.3)
@@ -274,12 +278,15 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)
 
 {
-	if (event & PANEL_MOUSE_LBDOWN) {
+	if (event & PANEL_MOUSE_LBDOWN)
+	{
 		MasterAlarmSound.stop();
 		SetMasterAlarm(false); 
 		MasterAlarmPressed = true;
 		ButtonSound.play(NOLOOP, 255);
-	} else if (event & PANEL_MOUSE_LBUP) {
+	}
+	else if (event & PANEL_MOUSE_LBUP)
+	{
 		MasterAlarmPressed = false;
 	}
 	return true;
@@ -289,7 +296,7 @@ bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)
 // Set operation mode. In BOOST mode the left master alarm light on the main panel is disabled.
 //
 
-void CautionWarningSystem::SetMode(int mode)
+void CautionWarningSystem::SetMode(CWSOperationMode mode)
 
 {
 	Mode = mode;
@@ -474,37 +481,47 @@ void CautionWarningSystem::LoadState(FILEHANDLE scn)
 	char *line;
 	int lights;
 
-	while (oapiReadScenario_nextline (scn, line)) {
+	while (oapiReadScenario_nextline (scn, line))
+	{
 		if (!strnicmp(line, CWS_END_STRING, sizeof(CWS_END_STRING)))
 			return;
-		if (!strnicmp (line, "MODE", 4)) {
-			sscanf (line+4, "%d", &Mode);
+		if (!strnicmp (line, "MODE", 4))
+		{
+			sscanf (line+4, "%d", &lights);
+			Mode = (CWSOperationMode) lights;
 		}
-		else if (!strnicmp (line, "TEST", 4)) {
-			sscanf (line+4, "%d", &TestState);
+		else if (!strnicmp (line, "TEST", 4))
+		{
+			sscanf (line+4, "%d", &lights);
+			TestState = (LightTestState) lights;
 		}
-		else if (!strnicmp (line, "LLIGHTS", 7)) {
+		else if (!strnicmp (line, "LLIGHTS", 7))
+		{
 			sscanf (line+7, "%d", &lights);
 			SetLightStates(LeftLights, lights);
 		}
-		else if (!strnicmp (line, "RLIGHTS", 7)) {
+		else if (!strnicmp (line, "RLIGHTS", 7))
+		{
 			sscanf (line+7, "%d", &lights);
 			SetLightStates(RightLights, lights);
 		}
-		else if (!strnicmp (line, "LFAIL", 5)) {
+		else if (!strnicmp (line, "LFAIL", 5))
+		{
 			sscanf (line+5, "%d", &LightsFailedLeft);
 		}
-		else if (!strnicmp (line, "RFAIL", 5)) {
+		else if (!strnicmp (line, "RFAIL", 5))
+		{
 			sscanf (line+5, "%d", &LightsFailedRight);
 		}
-		else if (!strnicmp (line, "STATE", 5)) {
+		else if (!strnicmp (line, "STATE", 5))
+		{
 			CWSState state;
 			sscanf (line+5, "%d", &state.word);
 
 			MasterAlarm = (state.u.MasterAlarm != 0);
 			MasterAlarmLightEnabled = (state.u.MasterAlarmLightEnabled != 0);
-			Source = state.u.Source;
-			PowerBus = state.u.PowerBus;
+			Source = (CSWSource) state.u.Source;
+			PowerBus = (CSWPowerSource) state.u.PowerBus;
 			InhibitNextMasterAlarm = (state.u.InhibitNextMasterAlarm != 0);
 		}
 	}
