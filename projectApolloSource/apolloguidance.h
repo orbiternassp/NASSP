@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.42  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -155,8 +158,8 @@
   *	
   **************************************************************************/
 
-#ifndef APOLLOGUIDANCE_H
-#define APOLLOGUIDANCE_H
+#if !defined(_PA_APOLLOGUIDANCE_H)
+#define _PA_APOLLOGUIDANCE_H
 
 class DSKY;
 class IMU;
@@ -194,7 +197,18 @@ class ApolloGuidance
 
 {
 public:
+	///
+	/// \brief Constructor.
+	/// \param s Soundlib to use for playing sounds.
+	/// \param display Primary DSKY interface.
+	/// \param im Spacecraft Inertial Measurement Unit.
+	/// \param p Panel SDK we're connected to.
+	///
 	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p);
+
+	///
+	/// \brief Destructor.
+	///
 	virtual ~ApolloGuidance();
 
 	///
@@ -213,34 +227,109 @@ public:
 	/// \return True if the combination is valid.
 	///
 	virtual bool ValidateVerbNoun(int verb, int noun) = 0;
+
+	///
+	/// \brief Process a new verb and noun combination.
+	/// \param verb The new Verb.
+	/// \param noun The new Noun.
+	///
 	virtual void ProcessVerbNoun(int verb, int noun) = 0;
+
+	///
+	/// Validate program number for programs specific to a derived
+	/// class of computer.
+	///
+	/// \brief Validate program number.
+	/// \param prog Program number.
+	/// \return True if the program is supported.
+	///
 	virtual bool ValidateProgram(int prog) = 0;
 	virtual void DisplayNounData(int noun) = 0;
+
+	///
+	/// \brief Update program status for CSM or LEM programs when the PRO key is pressed.
+	/// \param R1 Contents of DSKY register 1.
+	/// \param R2 Contents of DSKY register 2.
+	/// \param R3 Contents of DSKY register 3.
+	///
 	virtual void ProgPressed(int R1, int R2, int R3) = 0;
+
+	///
+	/// \brief Proceed in program without the user entering data, making a best guess.
+	///
 	virtual void ProceedNoData() = 0;
+
+	///
+	/// \brief Terminate the current program.
+	///
 	virtual void TerminateProgram() = 0;
 	virtual unsigned int GetFlagWord(int num) = 0;
 	virtual void SetFlagWord(int num, unsigned int val) = 0;
 	virtual bool ReadMemory(unsigned int loc, int &val) = 0;
 	virtual void WriteMemory(unsigned int loc, int val) = 0;
 
+	///
+	/// RSet will clear the two-level alarm code stack, but not the 'most
+	/// recent' alarm.
+	///
+	/// \brief RSET key was pressed.
+	///
 	void RSetPressed();
 
 	void VerbNounEntered(int verb, int noun);
 	bool ValidateCommonVerbNoun(int verb, int noun);
 	bool ValidateCommonProgram(int prog);
 	bool DisplayCommonNounData(int noun);
+
+	///
+	/// \brief Update program status for generic programs when the PRO key is pressed.
+	/// \param R1 Contents of DSKY register 1.
+	/// \param R2 Contents of DSKY register 2.
+	/// \param R3 Contents of DSKY register 3.
+	///
 	bool GenericProgPressed(int R1, int R2, int R3);
 	void ProcessCommonVerbNoun(int verb, int noun);
+
+	///
+	/// \brief Proceed in generic program without the user entering data, making a best guess.
+	///
 	bool CommonProceedNoData();
 
 	virtual void Timestep(double simt, double simdt) = 0;
 	virtual void SystemTimestep(double simdt); 
 
+	///
+	/// \brief Pass information about the spacecraft to the AGC.
+	/// \param ISP Main engine ISP.
+	/// \param Thrust Main engine thrust.
+	/// \param MainIsHover Is the main engine a hover engine?
+	///
 	void SetVesselStats(double ISP, double Thrust, bool MainIsHover);
+
+	///
+	/// \brief Set the vessel that the AGC is controlling.
+	/// \param v The vessel this AGC controls.
+	///
 	void ControlVessel(VESSEL *v) { OurVessel = v; };
+
+	///
+	/// \brief Set the Apollo mission number for this spacecraft.
+	/// \param flight The mission number.
+	///
 	void SetApolloNo(int flight) { ApolloNo = flight; };
+
+	///
+	/// \brief Get the Apollo mission number for this flight.
+	/// \return Mission number.
+	///
 	int GetApolloNo() { return ApolloNo; };
+
+	///
+	/// \brief Set the desired landing site (Moon for LEM, Earth for CSM)
+	/// \param latitude Latitude in degrees.
+	/// \param longitude Longitude in degrees.
+	/// \param altitude Altitude above surface in meters.
+	///
 	void SetDesiredLanding(double latitude, double longitude, double altitude);
 
 	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast);
@@ -278,17 +367,47 @@ public:
 	/// \param num Checklist action number.
 	///
 	void Checklist(int num);
+
+	///
+	/// \brief Blank all DSKY displays.
+	///
 	void BlankAll();
 
 	//
 	// Program helper functions.
 	//
 
+	///
+	/// \brief Countdown display for the reset program.
+	///
 	void ResetCountdown();
 	void TerminateCommonProgram();
+
+	///
+	/// \brief Abort the current program and raise a Program Alarm.
+	/// \param ErrNo Program alarm to raise.
+	///
 	void AbortWithError(int ErrNo);
+
+	///
+	/// \brief Convert from velocity in meters per second to velocity in display units based on AGC setup.
+	/// \param vel Velocity in meters per second.
+	/// \return Velocity in display units (meters per second or feet per second as appropriate).
+	///
 	double DisplayVel(double vel);
+
+	///
+	/// \brief Convert from altitude in kilometers to altitude in display units based on AGC setup.
+	/// \param alt Altitude in kilometers.
+	/// \return Altitude in display units (kilometers or nautical miles as appropriate).
+	///
 	double DisplayAlt(double alt);
+
+	///
+	/// \brief Convert from velocity in display units to velocity in meters per second based on AGC setup.
+	/// \param vel Velocity in display units (meters per second or feet per second as appropriate).
+	/// \return Velocity in meters per second.
+	///
 	double GetVel(double vel);
 
 	//
@@ -1093,4 +1212,4 @@ extern char TwoSpaceTwoFormat[];
 
 #define EMEM_ENTRIES	(8 * 0400)			///< Number of EMEM values to simulate
 
-#endif // APOLLOGUIDANCE_H
+#endif // _PA_APOLLOGUIDANCE_H
