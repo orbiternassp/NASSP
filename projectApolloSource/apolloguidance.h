@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/07/01 23:49:13  movieman523
+  *	Updated more documentation.
+  *	
   *	Revision 1.43  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -263,9 +266,35 @@ public:
 	/// \brief Terminate the current program.
 	///
 	virtual void TerminateProgram() = 0;
+
+	///
+	/// \brief Get a flagword value.
+	/// \param num Flagword number.
+	/// \return Flagword value.
+	///
 	virtual unsigned int GetFlagWord(int num) = 0;
+
+	///
+	/// \brief Set a flagword value.
+	/// \param num Flagword number.
+	/// \param val Flagword value to set.
+	///
 	virtual void SetFlagWord(int num, unsigned int val) = 0;
+
+	///
+	/// \brief Read from simulated erasable memory.
+	/// \param loc Erasable memory address.
+	/// \param val Reference to return value.
+	/// \return True if the read was from a valid address.
+	///
 	virtual bool ReadMemory(unsigned int loc, int &val) = 0;
+
+	///
+	/// \brief Write to simulated erasable memory.
+	/// \param loc Erasable memory address.
+	/// \param val Value to store in memory location.
+	/// \return True if the write was to a valid address.
+	///
 	virtual void WriteMemory(unsigned int loc, int val) = 0;
 
 	///
@@ -276,8 +305,28 @@ public:
 	///
 	void RSetPressed();
 
+	///
+	/// A new Verb and Noun have been entered. Validate them and raise an error if they can't
+	/// be validated.
+	///
+	/// \brief Process Verb/Noun entry.
+	/// \param verb New Verb.
+	/// \param noun New Noun.
+	///
 	void VerbNounEntered(int verb, int noun);
+
+	///
+	/// \brief Validate common Verb and Noun combinations which are used in both CSM and LEM.
+	/// \param verb New Verb.
+	/// \param noun New Noun.
+	///
 	bool ValidateCommonVerbNoun(int verb, int noun);
+
+	///
+	/// \brief Validate a generic program used in both CSM and LEM.
+	/// \param prog Program to validate.
+	/// \return True if it's a valid program.
+	///
 	bool ValidateCommonProgram(int prog);
 	bool DisplayCommonNounData(int noun);
 
@@ -295,6 +344,11 @@ public:
 	///
 	bool CommonProceedNoData();
 
+	///
+	/// \brief Orbiter timestep processing.
+	/// \param simt Mission time in seconds.
+	/// \param simdt Time since last timestep.
+	///
 	virtual void Timestep(double simt, double simdt) = 0;
 	virtual void SystemTimestep(double simdt); 
 
@@ -346,7 +400,15 @@ public:
 	/// \brief Force the AGC to restart.
 	///
 	void ForceRestart();
+
+	///
+	/// \brief Start the computer up from standby.
+	///
 	void Startup();
+
+	///
+	/// \brief Go to standby.
+	///
 	void GoStandby();
 
 	///
@@ -381,6 +443,10 @@ public:
 	/// \brief Countdown display for the reset program.
 	///
 	void ResetCountdown();
+
+	///
+	/// \brief Terminate a generic program.
+	///
 	void TerminateCommonProgram();
 
 	///
@@ -414,7 +480,16 @@ public:
 	// External event handlers.
 	//
 
+	///
+	/// \brief Update spacecraft fuel level.
+	/// \param fuel Fuel level.
+	///
 	void SetFuel(double fuel) { CurrentFuel = fuel; };
+
+	///
+	/// \brief Set spacecraft relative velocity.
+	/// \param vel Velocity in meters per second.
+	///
 	void SetRVel(double vel) { CurrentRVel = vel; };
 
 	///
@@ -461,6 +536,9 @@ public:
 	/// state when the channel value changes. The default function here only supports the
 	/// channels which are common to the CSM and LEM.
 	///
+	/// Note that the AGC 'bit 1' is actually 'bit 0' in today's terminology, so bit numbers
+	/// start at 1.
+	///
 	/// \brief Set output channel bit.
 	/// \param channel Output channel to set.
 	/// \param bit Bit number to update.
@@ -482,11 +560,57 @@ public:
 	///
 	virtual void SetOutputChannel(int channel, unsigned int val);
 
+	///
+	/// Get the specified bit from an output channel.
+	///
+	/// Note that the AGC 'bit 1' is actually 'bit 0' in today's terminology, so bit numbers
+	/// start at 1.
+	///
+	/// \brief Get output channel bit.
+	/// \param channel Output channel to read from.
+	/// \param bit Bit number to read.
+	/// \return True if bit is set.
+	///
 	virtual bool GetOutputChannelBit(int channel, int bit);
+
+	///
+	/// Get the value of an output channel.
+	///
+	/// \brief Get output channel value.
+	/// \param channel Output channel to read from.
+	/// \return Value of the output channel.
+	///
 	virtual unsigned int GetOutputChannel(int channel);
+
+	///
+	/// Set the value of an input channel.
+	///
+	/// \brief Set input channel value.
+	/// \param channel Input channel to set.
+	/// \param val Value to set in the input channel.
+	///
 	virtual void SetInputChannel(int channel, unsigned int val);
 
+	///
+	/// Get the specified bit from an input channel.
+	///
+	/// Note that the AGC 'bit 1' is actually 'bit 0' in today's terminology, so bit numbers
+	/// start at 1.
+	///
+	/// \brief Get input channel bit.
+	/// \param channel Input channel to read from.
+	/// \param bit Bit number to read.
+	/// \return True if bit is set.
+	///
 	bool GetInputChannelBit(int channel, int bit);
+
+	///
+	/// Get the value of an input channel.
+	///
+	/// \brief Get input channel value.
+	/// \param channel Input channel to read from.
+	/// \return Value of the input channel.
+	///
 	unsigned int GetInputChannel(int channel);
 
 	//
@@ -496,18 +620,50 @@ public:
 	///
 	/// This function allows you read data back from the erasable memory in the Virtual AGC. If called on the
 	/// C++ AGC it returns zero.
+	///
+	/// \brief Return the contents of an erasable memory location
 	/// \param bank Memory bank to access.
 	/// \param address Memory location within the bank to access.
-	/// \brief Return the contents of an erasable memory location
+	/// \return The value stored in the memory location.
 	///
 	int GetErasable(int bank, int address);
 
+	///
+	/// This function sets data in the erasable memory in the Virtual AGC. If called on the
+	/// C++ AGC it does nothing.
+	///
+	/// \param bank Memory bank to access.
+	/// \param address Memory location within the bank to access.
+	/// \param value The value to store in the memory location.
+	///
 	void SetErasable(int bank, int address, int value);
+
+	///
+	/// Load a PAD value into the AGC. Used for initialising the LEM when created.
+	///
+	/// \brief Load PAD data into the AGC.
+	/// \param address The EMEM address to update.
+	/// \param value The value to story in the memory location.
+	///
 	void PadLoad(unsigned int address, unsigned int value);
 
+	///
+	/// \brief Proces PIPA pulses from the IMU.
+	/// \param RegPIPA Register to update.
+	/// \param pulses Number of pulses.
+	///
 	void PulsePIPA(int RegPIPA, int pulses);
 
+	///
+	/// \brief Is this a Virtual AGC?
+	/// \return True for Virtual AGC, false for C++ AGC.
+	///
 	bool IsVirtualAGC() { return Yaagc; };
+
+	///
+	/// \brief Set the Virtual AGC state.
+	/// \param is_virtual True to make the AGC run with the Virtual AGC.
+	///
 	void SetVirtualAGC(bool is_virtual) { Yaagc = is_virtual; };
 
 	//
@@ -544,6 +700,11 @@ public:
 	/// \param b Power bus 2.
 	///
 	void WirePower(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); PowerConnected = true; };
+
+	///
+	/// \brief Is the AGC supplied with power.
+	/// \return True if the AGC is powered.
+	///
 	bool IsPowered();
 
 protected:
@@ -1107,12 +1268,34 @@ protected:
 	double TargetPitch;
 	double TargetYaw;
 
+	///
+	/// \brief Desired Apogee for launch or orbit change.
+	///
 	double DesiredApogee;
+
+	///
+	/// \brief Desired Perigee for launch or orbit change.
+	///
 	double DesiredPerigee;
+
+	///
+	/// \brief Desired Azimuth for launch.
+	///
 	double DesiredAzimuth;
 
+	///
+	/// \brief Desired latitude for landing (Earth for CSM or Moon for LEM).
+	///
 	double LandingLatitude;
+
+	///
+	/// \brief Desired longitude for landing (Earth for CSM or Moon for LEM).
+	///
 	double LandingLongitude;
+
+	///
+	/// \brief Desired altitude for landing on the Moon.
+	///
 	double LandingAltitude;
 	double DeltaPitchRate;
 
@@ -1129,6 +1312,9 @@ protected:
 	double MaxThrust;
 	double VesselISP;
 
+	///
+	/// \brief Estimated delta-V for SIVb engine shutdown thrust.
+	///
 	double ThrustDecayDV;
 
 	double DesiredDeltaVx;
