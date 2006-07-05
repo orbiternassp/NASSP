@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.9  2006/05/17 19:04:13  movieman523
   *	Wired up both master volume switches.
   *	
@@ -102,16 +105,22 @@ bool SoundData::isValid()
 	return valid;
 }
 
-void SoundData::play(int flags, int libflags, int volume, int playvolume)
+bool SoundData::play(int flags, int libflags, int volume, int playvolume)
 
 {
 	if (valid) {
-		PlayVesselWave3(SoundlibId, id, flags, playvolume);
+		if (!PlayVesselWave3(SoundlibId, id, flags, playvolume))
+			return false;
+
 		PlayVolume = playvolume;
 		PlayFlags = flags;
 		LibFlags = libflags;
 		BaseVolume = volume;
+
+		return true;
 	}
+
+	return false;
 }
 
 void SoundData::done()
@@ -287,17 +296,18 @@ SoundData *SoundLib::DoLoadSound(char *SoundPath, EXTENDEDPLAY extended)
 
 	s = sounds + id;
 
+	s->setFileName(SoundPath);
+
 	//
 	// So the file exists and we have a free slot. Try to load it.
 	//
 
-	if (RequestLoadVesselWave3(SoundlibId, id, SoundPath, extended) == 0)
+	if (RequestLoadVesselWave3(SoundlibId, id, s->GetFilename(), extended) == 0)
 		return 0;
 
 
 	s->setSoundlibId(SoundlibId);
 	s->setID(id);
-	s->setFileName(SoundPath);
 	s->MakeValid();
 	s->AddRef();
 
@@ -597,18 +607,18 @@ bool Sound::isPlaying()
 	return sd->isPlaying();
 }
 
-void Sound::play(int flags, int volume)
+bool Sound::play(int flags, int volume)
 
 {
 	if (valid && sd && sd->isValid()) {
 		if (soundflags & SOUNDFLAG_1XORLESS) {
 			if (oapiGetTimeAcceleration() > 1.0)
-				return;
+				return false;
 		}
 		if (soundflags & SOUNDFLAG_1XONLY) {
 			double acc = oapiGetTimeAcceleration();
 			if (acc > 1.01 || acc < 0.99)
-				return;
+				return false;
 		}
 
 		int vol = volume;
@@ -617,8 +627,10 @@ void Sound::play(int flags, int volume)
 			vol = sl->GetSoundVolume(soundflags, volume);
 		}
 
-		sd->play(flags, soundflags, volume, vol);
+		return sd->play(flags, soundflags, volume, vol);
 	}
+
+	return false;
 }
 
 void Sound::stop()
@@ -652,4 +664,317 @@ void Sound::SetSoundData(SoundData *s)
 	else {
 		valid = false;
 	}
+}
+
+TimedSound::TimedSound()
+
+{
+	mandatory = false;
+	triggerTime = 0.0;
+	soundname[0] = 0;
+
+	next = 0;
+	prev = 0;
+}
+
+TimedSound::~TimedSound()
+
+{
+}
+
+void TimedSound::AddToSoundQueue(TimedSound *previous)
+
+{
+	if (previous)
+	{
+		if (previous->next) {
+			next = previous->next;
+			next->prev = this;
+		}
+		previous->next = this;
+	}
+
+	prev = previous;
+}
+
+void TimedSound::RemoveFromQueue()
+
+{
+	if (prev)
+	{
+		prev->next = next;
+	}
+
+	if (next)
+	{
+		next->prev = prev;
+	}
+
+	prev = 0;
+	next = 0;
+}
+
+void TimedSound::SetFilename(char *s)
+
+{
+	strncpy (soundname, s, 255);
+}
+
+TimedSoundManager::TimedSoundManager(SoundLib &s) : soundlib(s)
+
+{
+	launchRelativeList = 0;
+	reentryRelativeList = 0;
+
+	LaunchSoundsLoaded = false;
+	SoundToPlay = false;
+
+	TimeToPlay = MINUS_INFINITY;
+}
+
+//
+// When deleted, delete all the timed sounds too.
+//
+TimedSoundManager::~TimedSoundManager()
+
+{
+	TimedSound *s = launchRelativeList;
+	while (s)
+	{
+		TimedSound *n = s->GetNext();
+
+		delete s;
+
+		s = n;
+	}
+}
+
+void TimedSoundManager::Timestep(double simt, double simdt, bool autoslow)
+
+{
+	if (LaunchSoundsLoaded && simt >= TimeToPlay)
+	{
+		if (SoundToPlay)
+		{
+			double timeaccel;
+
+			timeaccel = oapiGetTimeAcceleration();
+			
+			if (timeaccel > 1.0) 
+			{
+				if (!SoundIsMandatory)
+				{
+					SoundToPlay = false;
+				}
+				else
+				{
+					if (autoslow)
+					{
+						oapiSetTimeAcceleration(1.0);
+					}
+				}
+			}
+
+			if (SoundToPlay)
+			{
+				currentSound.play();
+			}
+
+			SoundToPlay = false;
+		}
+
+		//
+		// Now load the next sound.
+		//
+
+		if (!currentSound.isPlaying() && launchRelativeList)
+		{
+			currentSound.done();
+
+			soundlib.LoadMissionSound(currentSound, launchRelativeList->GetFilename(), launchRelativeList->GetFilename());
+
+			SoundToPlay = true;
+			TimeToPlay = launchRelativeList->GetPlayTime();
+			SoundIsMandatory = launchRelativeList->IsMandatory();
+
+			TimedSound *n = launchRelativeList->GetNext();
+			launchRelativeList->RemoveFromQueue();
+
+			delete launchRelativeList;
+
+			launchRelativeList = n;
+		}
+		else
+		{
+			//
+			// Reached the end of the list.
+			//
+
+			LaunchSoundsLoaded = false;
+		}
+	}
+}
+
+static int CharToInt(char c)
+
+{
+	if (c >= '0' && c <= '9')
+		return c - '0';
+
+	return 0;
+}
+
+void TimedSoundManager::LoadFromFile(char *dataFile, double MissionTime)
+
+{
+	char filePath[256];
+
+	_snprintf(filePath, 255, "%s/%s/%s", soundlib.basepath,
+		                                    soundlib.missionpath, dataFile);
+
+	FILE *fp = fopen(filePath, "rt");
+
+	char line[256];
+	bool copying;
+	int i, c;
+	TimedSound *lastLRSound = 0;
+	TimedSound *lastRRSound = 0;
+
+	while (!feof(fp))
+	{
+		copying = true;
+
+		//
+		// Read in a line.
+		//
+
+		i = 0;
+		while ((c = fgetc(fp)) != '\n' && c != EOF) {
+			if (c == '#')
+				copying = false;
+
+			if (copying)
+			{
+				line[i++] = c;
+			}
+		}
+
+		line[i] = 0;
+
+		if (i > 0)
+		{
+			int hours = 0, minutes = 0, seconds = 0;
+			double simt = 0.0;
+
+			bool timeNegative = false;
+
+			i = 0;
+
+			//
+			// Get hours.
+			//
+
+			if (line[i] == '-')
+			{
+				timeNegative = true;
+				i++;
+			}
+
+			while (line[i] != ':' && line[i])
+			{
+				hours = (hours * 10) + CharToInt(line[i]);
+				i++;
+			}
+
+			if (!line[i++])
+				continue;
+
+			//
+			// Get minutes.
+			//
+
+			while (line[i] != ':' && line[i])
+			{
+				minutes = (minutes * 10) + CharToInt(line[i]);
+				i++;
+			}
+
+			if (!line[i++])
+				continue;
+
+			//
+			// Get seconds.
+			//
+
+			while (line[i] != ';' && line[i])
+			{
+				seconds = (seconds * 10) + CharToInt(line[i]);
+				i++;
+			}
+
+			simt = (double) seconds + ((double) minutes) * 60.0 + ((double) hours * 3600.0);
+
+			if (timeNegative)
+			{
+				simt = (-simt);
+			}
+
+			if (simt >= MissionTime)
+			{
+				if (!line[i++])
+					continue;
+
+				bool launchRelative = (line[i] == 'l' || line[i] == 'L');
+
+				if (!line[i++])
+					continue;
+
+				if (line[i++] != ';')
+					continue;
+
+				bool mandatory = (line[i] == 'm' || line[i] == 'M');
+
+				if (!line[i++])
+					continue;
+
+				if (line[i++] != ';')
+					continue;
+
+				char filename[256];
+
+				strncpy(filename, line + i, 250);
+				strcat(filename, ".wav");
+
+				TimedSound *t = new TimedSound;
+
+				t->SetFilename(filename);
+				t->SetMandatory(mandatory);
+				t->SetPlayTime(simt);
+
+				if (launchRelative)
+				{
+					t->AddToSoundQueue(lastLRSound);
+					lastLRSound = t;
+
+					if (!launchRelativeList)
+					{
+						launchRelativeList = t;
+					}
+				}
+				else
+				{
+					t->AddToSoundQueue(lastRRSound);
+					lastRRSound = t;
+
+					if (!reentryRelativeList)
+					{
+						reentryRelativeList = t;
+					}
+				}
+			}
+		}
+	}
+
+	if (launchRelativeList || reentryRelativeList)
+		LaunchSoundsLoaded = true;
 }

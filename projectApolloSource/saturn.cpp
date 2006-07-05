@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.155  2006/06/30 11:53:50  tschachim
+  *	Bugfix InstrumentLightingNonESSCircuitBraker and NonessBusSwitch.
+  *	
   *	Revision 1.154  2006/06/28 02:08:11  movieman523
   *	Full workaround for SM deletion crash: though the focus still tends to jump to something other than the CM!
   *	
@@ -269,7 +272,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	EcsGlycolPumpsSwitch(Panelsdk),
 	SuitCompressor1Switch(Panelsdk),
 	SuitCompressor2Switch(Panelsdk),
-	BatteryCharger("BatteryCharger", Panelsdk)
+	BatteryCharger("BatteryCharger", Panelsdk),
+	timedSounds(soundlib)
 
 {
 	InitSaturnCalled = false;
@@ -547,8 +551,6 @@ void Saturn::initSaturn()
 
 	MissionTimerDisplay.WireTo(&GaugePower);
 	EventTimerDisplay.WireTo(&GaugePower);
-
-	NextSoundEventTime = MINUS_INFINITY;
 
 	//
 	// Propellant sources.
@@ -2588,53 +2590,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		NextDestroyCheckTime = MissionTime + 1.0;
 	}
 
-#if 0
-	// Disabled for now.
-    // x15 landing sound management
-
-	char names [255]         ;
-	double     offset        ;
-	int        newbuffer     ;
-
-	if(MissionTime > NextSoundEventTime)
-	{
-		double timeAccel = oapiGetTimeAcceleration();
-
-        NextSoundEventTime = MissionTime + 1.0;
-
-		if (timeAccel > 1.0 && sevent.IsPlaying())
-		{
-			//
-			// Turn off sound if we're using time acceleration.
-			//
-
-			sevent.Stop();
-			sevent.Done();
-		}
-
-		if (timeAccel < 10.0 || AutoSlow)
-		{
-    		int todo = sevent.play(soundlib,
-					this,
-					names,
-					&offset,
-					&newbuffer,
-					0.0,
-					MissionTime,
-					3,
-					0.0,
-					0.0,
-					0.0,
-					NOLOOP,
-					255);
-			if (todo)
-			{
-				SlowIfDesired();
-				sevent.PlaySound( names, newbuffer,0);
-			}
-		}
-	} 
-#endif
+	timedSounds.Timestep(MissionTime, simdt, AutoSlow);
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
@@ -3527,12 +3483,7 @@ void Saturn::GenericLoadStateSetup()
 	_snprintf(MissionName, 23, "Apollo%d", ApolloNo);
 	soundlib.SetSoundLibMissionPath(MissionName);
 
-#if 0
-// Disabled for now.
-// MODIF X15 manage sound
-    sevent.LoadMissionTimeSoundArray(soundlib, "csmsound.csv", MissionTime);
-    sevent.InitDirectSound(soundlib);
-#endif
+    timedSounds.LoadFromFile("csmsound.csv", MissionTime);
 
 	//
 	// Set up options for prelaunch stage.

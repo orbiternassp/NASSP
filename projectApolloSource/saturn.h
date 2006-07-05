@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.197  2006/06/30 11:53:50  tschachim
+  *	Bugfix InstrumentLightingNonESSCircuitBraker and NonessBusSwitch.
+  *	
   *	Revision 1.196  2006/06/28 02:08:11  movieman523
   *	Full workaround for SM deletion crash: though the focus still tends to jump to something other than the CM!
   *	
@@ -2903,10 +2906,7 @@ protected:
 
 	SoundLib soundlib;
 
-// Modif x15 to manage landing sound
-
-	SoundEvent sevent;
-	double NextSoundEventTime;
+	TimedSoundManager timedSounds;
 
 	//
 	// Surfaces.
