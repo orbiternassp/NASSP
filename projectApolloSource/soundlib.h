@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.10  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -74,7 +77,7 @@ public:
 	virtual ~SoundData();
 	bool isValid();
 	bool isPlaying();
-	void play(int flags, int libflags, int volume, int playvolume);
+	bool play(int flags, int libflags, int volume, int playvolume);
 	void stop();
 	void done();
 	void setID(int num) { id = num; };
@@ -87,6 +90,7 @@ public:
 	int GetPlayFlags() { return PlayFlags; };
 	int GetLibFlags() { return LibFlags; };
 	int GetBaseVolume() { return BaseVolume; };
+	char *GetFilename() { return filename; };
 
 protected:
 
@@ -117,7 +121,7 @@ public:
 	bool isPlaying();
 	void setFlags(int fl);
 	void clearFlags(int fl);
-	void play(int flags = NOLOOP, int volume = 255);
+	bool play(int flags = NOLOOP, int volume = 255);
 	void stop();
 	void done();
 	void SetSoundData(SoundData *s);
@@ -238,5 +242,128 @@ protected:
 //
 
 #include "soundevents.h"
+
+//
+// Timed sound sequencing.
+//
+
+///
+/// \brief Single timed sound.
+/// \ingroup Sound
+///
+class TimedSound
+{
+public:
+	TimedSound();
+	~TimedSound();
+
+	///
+	/// \brief Add a sound to the queue.
+	///
+	void AddToSoundQueue(TimedSound *prev);
+
+	///
+	/// \brief Remove this sound from the queue.
+	///
+	void RemoveFromQueue();
+
+	///
+	/// \brief Get the next sound in the queue.
+	///
+	TimedSound *GetNext() { return next; };
+
+	///
+	/// \brief Get the previous sound in the queue.
+	///
+	TimedSound *GetPrev() { return prev; };
+
+	double GetPlayTime() { return triggerTime; };
+	char *GetFilename() { return soundname; };
+	bool IsMandatory() { return mandatory; };
+
+	void SetPlayTime(double t) { triggerTime = t; };
+	void SetFilename(char *s);
+	void SetMandatory(bool m) { mandatory = m; };
+
+protected:
+
+	bool mandatory;
+	double triggerTime;
+	char soundname[256];
+
+	TimedSound *next;
+	TimedSound *prev;
+};
+
+///
+/// \brief Manager code for timed playback.
+/// \ingroup Sound
+///
+class TimedSoundManager
+{
+public:
+	///
+	/// \brief Constructor.
+	/// \param s Sound library to use to play sounds.
+	///
+	TimedSoundManager(SoundLib &s);
+	~TimedSoundManager();
+
+	///
+	/// \brief Timestep function to play sounds.
+	/// \param simt Current mission time  in seconds.
+	/// \param simdt Time in seconds since last timestep.
+	/// \param autoslow Slow to 1.0x if time acceleration is higher when mandatory sound is played.
+	///
+	void Timestep(double simt, double simdt, bool autoslow);
+
+	///
+	/// \brief Load the sound information from a file.
+	/// \param dataFile Name of data-file, found in the mission-specific sound directory.
+	/// \param MissionTime Current mission-time, used to skip over earlier sounds.
+	///
+	void LoadFromFile(char *dataFile, double MissionTime);
+
+protected:
+	///
+	/// \brief List of sounds that are launch-relative.
+	///
+	TimedSound *launchRelativeList;
+
+	///
+	/// \brief List of sounds that are re-entry relative.
+	///
+	TimedSound *reentryRelativeList;
+
+	///
+	/// \brief Current sound to play.
+	///
+	Sound currentSound;
+
+	///
+	/// \brief Did we load a sound to play?
+	///
+	bool SoundToPlay;
+
+	///
+	/// \brief Time to play sound.
+	///
+	double TimeToPlay;
+
+	///
+	/// \brief Is the next sound mandatory?
+	///
+	bool SoundIsMandatory;
+
+	///
+	/// \brief Any launch-relative sounds to play?
+	///
+	bool LaunchSoundsLoaded;
+
+	///
+	/// \brief Sound library to use for playback.
+	///
+	SoundLib &soundlib;
+};
 
 #endif // SOUNDLIB_H
