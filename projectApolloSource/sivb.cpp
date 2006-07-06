@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.14  2006/01/27 22:11:38  movieman523
   *	Added support for low-res Saturn 1b.
   *	
@@ -226,17 +229,20 @@ void SIVB::SetS4b()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	if (SaturnVStage) {
+	if (SaturnVStage)
+	{
 		VECTOR3 dockpos = {0,0.03, 12.4};
 		VECTOR3 dockdir = {0,0,1};
 		VECTOR3 dockrot = {-0.705,-0.705,0};
 
 		//ShiftCentreOfMass (_V(0, 0, -15.0));
 
-		if (LowRes) {
+		if (LowRes)
+		{
 			AddMesh (hsat5stg3low, &mesh_dir);
 		}
-		else {
+		else
+		{
 			AddMesh (hsat5stg3, &mesh_dir);
 		}
 		
@@ -263,6 +269,19 @@ void SIVB::SetS4b()
 			mass += PayloadMass;
 			break;
 
+		//
+		// For now the docking adapter for the SIVB to Venus test flights is simulated
+		// with the ASTP mesh.
+		//
+
+		case PAYLOAD_DOCKING_ADAPTER:
+			mesh_dir=_V(0.0, 0.0, 7.8);
+			AddMesh (hastp, &mesh_dir);
+			dockpos = _V(0.0, 0.0, 9.2);
+			SetDockParams(dockpos, dockdir, dockrot);
+			mass += PayloadMass;
+			break;
+
 		case PAYLOAD_EMPTY:
 			ClearDockDefinitions();
 			break;
@@ -270,10 +289,12 @@ void SIVB::SetS4b()
 	}
 	else {
 
-		if (LowRes) {
+		if (LowRes)
+		{
 			AddMesh (hSat1stg2low, &mesh_dir);
 		}
-		else {
+		else
+		{
 			AddMesh (hSat1stg2, &mesh_dir);
 		}
 

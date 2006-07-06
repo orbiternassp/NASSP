@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2006/07/01 23:49:13  movieman523
+  *	Updated more documentation.
+  *	
   *	Revision 1.70  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -501,14 +504,15 @@ inline double KelvinToFahrenheit(double kelvin) {
 // SIVB payloads.
 //
 
-#define PAYLOAD_LEM		0
-#define PAYLOAD_ASTP	1
-#define PAYLOAD_LTA		2
-#define PAYLOAD_LM1		3
-#define PAYLOAD_LTA8	4
-#define PAYLOAD_TARGET	5
-#define PAYLOAD_LTA6	6
-#define PAYLOAD_EMPTY	7
+#define PAYLOAD_LEM					0
+#define PAYLOAD_ASTP				1
+#define PAYLOAD_LTA					2
+#define PAYLOAD_LM1					3
+#define PAYLOAD_LTA8				4
+#define PAYLOAD_TARGET				5
+#define PAYLOAD_LTA6				6
+#define PAYLOAD_EMPTY				7
+#define PAYLOAD_DOCKING_ADAPTER		8
 
 //
 // Saturn types.
