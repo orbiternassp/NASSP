@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.156  2006/07/05 20:16:16  movieman523
+  *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
+  *	
   *	Revision 1.155  2006/06/30 11:53:50  tschachim
   *	Bugfix InstrumentLightingNonESSCircuitBraker and NonessBusSwitch.
   *	
@@ -1034,8 +1037,6 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 	TRACESETUP("Saturn::clbkPostStep");
 
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
-
-
 }
 
 void Saturn::clbkSaveState(FILEHANDLE scn)
@@ -3611,6 +3612,11 @@ void Saturn::GenericLoadStateSetup()
 	//
 
 	cws.SetPlaySounds(Crewed);
+
+	//
+	// Fake up a timestep to get Orbitersound started.
+	//
+	timedSounds.Timestep(MissionTime, 0.0, AutoSlow);
 }
 
 bool Saturn::CheckForLaunchShutdown()

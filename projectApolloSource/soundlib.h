@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/07/05 20:16:16  movieman523
+  *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
+  *	
   *	Revision 1.11  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -126,6 +129,8 @@ public:
 	void done();
 	void SetSoundData(SoundData *s);
 	void SetSoundLib(SoundLib *s) { sl = s; };
+
+	Sound& Sound::operator=(const Sound &s);
 
 protected:
 	int soundflags;
@@ -259,6 +264,7 @@ public:
 
 	///
 	/// \brief Add a sound to the queue.
+	/// \param prev Previous TimedSound in the queue (may be NULL).
 	///
 	void AddToSoundQueue(TimedSound *prev);
 
@@ -269,29 +275,89 @@ public:
 
 	///
 	/// \brief Get the next sound in the queue.
+	/// \return Pointer to next sound.
 	///
 	TimedSound *GetNext() { return next; };
 
 	///
 	/// \brief Get the previous sound in the queue.
+	/// \return Pointer to previous sound.
 	///
 	TimedSound *GetPrev() { return prev; };
 
+	///
+	/// \brief Get the time at which this should be played.
+	/// \return Time to play the sound, relative to the appropriate event (launch, re-entry, etc).
+	///
 	double GetPlayTime() { return triggerTime; };
-	char *GetFilename() { return soundname; };
-	bool IsMandatory() { return mandatory; };
 
+	///
+	/// \brief Get the sound file name.
+	/// \return Pointer to file name (without path)
+	///
+	char *GetFilename() { return soundname; };
+
+	///
+	/// \brief Is this mandatory to play?
+	/// \return True if this should always be played.
+	///
+	bool IsMandatory() { return (priority > 8); };
+
+	///
+	/// \brief Is this purely informational, only to be played at low time acceleration?
+	/// \return True if this should be skipped when time acceleration > 1.0.
+	///
+	bool IsInformational() { return (priority < 3); };
+
+	///
+	/// \brief Get the priority level.
+	/// \return Priority level (0-9).
+	///
+	int	GetPriority() { return priority; };
+
+	///
+	/// \brief Set the time that the sound should be played.
+	/// \param t Time to play relative to apropriate event.
+	///
 	void SetPlayTime(double t) { triggerTime = t; };
+
+	///
+	/// \brief Set the filename of the associated sound file.
+	/// \param s File name without path.
+	///
 	void SetFilename(char *s);
-	void SetMandatory(bool m) { mandatory = m; };
+
+	///
+	/// \brief Set the priority of this sound.
+	/// \param n Priority, from 0 to 9.
+	///
+	void SetPriority(int n);
 
 protected:
 
-	bool mandatory;
+	///
+	/// \brief Sound priority.
+	///
+	int priority;
+
+	///
+	/// \brief Sound trigger time.
+	///
 	double triggerTime;
+
+	///
+	/// \brief Sound file name.
+	///
 	char soundname[256];
 
+	///
+	/// \brief Pointer to next sound in queue.
+	///
 	TimedSound *next;
+
+	///
+	/// \brief Pointer to previous sound in queue.
+	///
 	TimedSound *prev;
 };
 
@@ -336,9 +402,14 @@ protected:
 	TimedSound *reentryRelativeList;
 
 	///
-	/// \brief Current sound to play.
+	/// \brief Current sound playing.
 	///
 	Sound currentSound;
+
+	///
+	/// \brief Next sound to play.
+	///
+	Sound nextSound;
 
 	///
 	/// \brief Did we load a sound to play?
@@ -354,6 +425,11 @@ protected:
 	/// \brief Is the next sound mandatory?
 	///
 	bool SoundIsMandatory;
+
+	///
+	/// \brief Is the next sound purely informational?
+	///
+	bool SoundIsInformational;
 
 	///
 	/// \brief Any launch-relative sounds to play?
