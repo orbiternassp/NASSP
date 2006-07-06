@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/07/05 20:16:16  movieman523
+  *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
+  *	
   *	Revision 1.10  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -110,7 +113,9 @@ bool SoundData::play(int flags, int libflags, int volume, int playvolume)
 {
 	if (valid) {
 		if (!PlayVesselWave3(SoundlibId, id, flags, playvolume))
+		{
 			return false;
+		}
 
 		PlayVolume = playvolume;
 		PlayFlags = flags;
@@ -571,6 +576,26 @@ Sound::~Sound()
 	}
 }
 
+Sound &Sound::operator=(const Sound &s)
+
+{
+	if (this != &s)
+	{
+		if (sd && valid && sd->isValid())
+		{
+			sd->done();
+		}
+
+		soundflags = s.soundflags;
+		valid = s.valid;
+		sd = s.sd;
+
+		sd->AddRef();
+		sl = s.sl;
+	}
+	return *this;
+}
+
 void Sound::setFlags(int fl)
 
 {
@@ -669,7 +694,7 @@ void Sound::SetSoundData(SoundData *s)
 TimedSound::TimedSound()
 
 {
-	mandatory = false;
+	priority = 5;
 	triggerTime = 0.0;
 	soundname[0] = 0;
 
@@ -720,6 +745,18 @@ void TimedSound::SetFilename(char *s)
 	strncpy (soundname, s, 255);
 }
 
+void TimedSound::SetPriority(int n)
+
+{
+	if (n < 0)
+		n = 0;
+
+	if (n > 9)
+		n = 9;
+
+	priority = n;
+}
+
 TimedSoundManager::TimedSoundManager(SoundLib &s) : soundlib(s)
 
 {
@@ -752,28 +789,37 @@ TimedSoundManager::~TimedSoundManager()
 void TimedSoundManager::Timestep(double simt, double simdt, bool autoslow)
 
 {
+	double timeaccel = oapiGetTimeAcceleration();
+
 	if (LaunchSoundsLoaded && simt >= TimeToPlay)
 	{
 		if (SoundToPlay)
-		{
-			double timeaccel;
-
-			timeaccel = oapiGetTimeAcceleration();
-			
+		{	
 			if (timeaccel > 1.0) 
 			{
-				if (!SoundIsMandatory)
+				if (SoundIsInformational || (!SoundIsMandatory && !autoslow))
 				{
 					SoundToPlay = false;
 				}
 				else
 				{
-					if (autoslow)
-					{
-						oapiSetTimeAcceleration(1.0);
-					}
+					oapiSetTimeAcceleration(1.0);
 				}
 			}
+
+			//
+			// Stop previous sound if need be.
+			//
+
+			if (currentSound.isPlaying())
+				currentSound.stop();
+
+			currentSound.done();
+
+			//
+			// Save away the new sound so we can stop it if time acceleration changes.
+			//
+			currentSound = nextSound;
 
 			if (SoundToPlay)
 			{
@@ -787,15 +833,16 @@ void TimedSoundManager::Timestep(double simt, double simdt, bool autoslow)
 		// Now load the next sound.
 		//
 
-		if (!currentSound.isPlaying() && launchRelativeList)
+		if (launchRelativeList)
 		{
-			currentSound.done();
+			nextSound.done();
 
-			soundlib.LoadMissionSound(currentSound, launchRelativeList->GetFilename(), launchRelativeList->GetFilename());
+			soundlib.LoadMissionSound(nextSound, launchRelativeList->GetFilename(), launchRelativeList->GetFilename());
 
 			SoundToPlay = true;
 			TimeToPlay = launchRelativeList->GetPlayTime();
 			SoundIsMandatory = launchRelativeList->IsMandatory();
+			SoundIsInformational = launchRelativeList->IsInformational();
 
 			TimedSound *n = launchRelativeList->GetNext();
 			launchRelativeList->RemoveFromQueue();
@@ -811,7 +858,13 @@ void TimedSoundManager::Timestep(double simt, double simdt, bool autoslow)
 			//
 
 			LaunchSoundsLoaded = false;
+			currentSound.done();
 		}
+	}
+	else if (timeaccel > 1.0 && currentSound.isPlaying())
+	{
+		currentSound.stop();
+		currentSound.done();
 	}
 }
 
@@ -932,7 +985,7 @@ void TimedSoundManager::LoadFromFile(char *dataFile, double MissionTime)
 				if (line[i++] != ';')
 					continue;
 
-				bool mandatory = (line[i] == 'm' || line[i] == 'M');
+				int priority = CharToInt(line[i]);
 
 				if (!line[i++])
 					continue;
@@ -948,7 +1001,7 @@ void TimedSoundManager::LoadFromFile(char *dataFile, double MissionTime)
 				TimedSound *t = new TimedSound;
 
 				t->SetFilename(filename);
-				t->SetMandatory(mandatory);
+				t->SetPriority(priority);
 				t->SetPlayTime(simt);
 
 				if (launchRelative)
