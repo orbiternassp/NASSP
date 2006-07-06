@@ -37,7 +37,7 @@ Columbia:ProjectApollo\Saturn5
   FUEL 1.000
   APOLLONO 11
   REALISM 0
-  NASSPVER 60050
+  NASSPVER 70000
   VECHNO 506
   STAGE 5
   STAGESTATUS 0
@@ -64,6 +64,7 @@ Columbia:ProjectApollo\Saturn5
   TCP 4.96
   LANG English
   LEMN Eagle
+  AUTOSLOW 1
 END
 Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
