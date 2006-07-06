@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/07/06 00:40:08  movieman523
+  *	Improved timed sound playback. Still doesn't really work due to Orbitersound not wanting to play our files.
+  *	
   *	Revision 1.11  2006/07/05 20:16:16  movieman523
   *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
   *	
@@ -887,6 +890,11 @@ void TimedSoundManager::LoadFromFile(char *dataFile, double MissionTime)
 
 	FILE *fp = fopen(filePath, "rt");
 
+	if (!fp)
+	{
+		return;
+	}
+
 	char line[256];
 	bool copying;
 	int i, c;
@@ -1030,4 +1038,6 @@ void TimedSoundManager::LoadFromFile(char *dataFile, double MissionTime)
 
 	if (launchRelativeList || reentryRelativeList)
 		LaunchSoundsLoaded = true;
+
+	fclose(fp);
 }
