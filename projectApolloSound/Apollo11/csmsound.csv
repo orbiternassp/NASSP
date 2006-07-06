@@ -3,17 +3,17 @@
 #
 #
 # Format:
-# Time;l/r;m/i;file-name (without .wav)
+# Time;l/r;0-9;file-name (without .wav)
 #
-# The second field indicates time relative to launch or re-entry, the third whether
-# it's a sound that's mandatory (always played and will slow the sim down to 1.0x if
-# AUTOSLOW is specified in the scenario) or informational (only played at time
-# acceleration of 1.0).
+# The second field indicates time relative to launch or re-entry, the third the priority
+# of the sound. 9 will always be played, low values will never be played if time acceleration
+# is over 1.0, and intermediate will be played at high time accelerations if AUTOSLOW is
+# enabled (and will slow to 1.0).
 #
 # Sounds must be specified in time order! If not, they're likely to play out of order or
 # be ignored.
 #
 # Currently only launch-relative sounds are played.
 #
--001:31:00;l;m;T-01-30
--001:07:30;l;m;T-01-27-25
+-001:31:00;l;5;T-01-30
+-001:07:30;l;5;T-01-07-25
