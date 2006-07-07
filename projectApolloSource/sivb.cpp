@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/07/06 02:13:07  movieman523
+  *	First pass at Apollo to Venus orbital test flight.
+  *	
   *	Revision 1.15  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -70,8 +73,15 @@
   **************************************************************************/
 
 #include "orbiterSDK.h"
+#include "OrbiterSoundSDK3.h"
 
 #include "nasspdefs.h"
+
+#include "soundlib.h"
+
+#include "connector.h"
+#include "iu.h"
+
 #include "sivb.h"
 
 #include <stdio.h>
@@ -103,6 +113,8 @@ static MESHHANDLE hCOAStarget;
 static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
 static MESHHANDLE hlta_2r;
+
+static SURFHANDLE SMMETex;
 
 void SIVbLoadMeshes()
 
@@ -140,6 +152,8 @@ void SIVbLoadMeshes()
 	hLMPKD = oapiLoadMeshGlobal ("ProjectApollo/LM_Parked");
 	hapollo8lta = oapiLoadMeshGlobal ("ProjectApollo/apollo8_lta");
 	hlta_2r = oapiLoadMeshGlobal ("ProjectApollo/LTA_2R");
+
+	SMMETex = oapiRegisterExhaustTexture ("Exhaust_atsme");
 }
 
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
@@ -175,6 +189,9 @@ void SIVB::InitS4b()
 	MainFuel = 5000.0;
 	Realism = REALISM_DEFAULT;
 
+	THRUST_THIRD_VAC = 1000.0;
+	ISP_THIRD_VAC = 300.0;
+
 	CurrentThrust = 0;
 
 	MissionTime = MINUS_INFINITY;
@@ -185,7 +202,27 @@ void SIVB::InitS4b()
 		th_att_rot[i] = 0;
 	for (i = 0; i < 2; i++)
 		th_att_lin[i] = 0;
+
 	th_main[0] = 0;
+
+	//
+	// Set up the connections.
+	//
+	SIVBToCSMConnector.SetType(CSM_SIVB_COMMAND);
+
+	IUDataConnector.SetSIVb(this);
+	IUCommandConnector.SetSIVb(this);
+}
+
+Connector *SIVB::GetDockingConnector()
+
+{
+	if (Payload == PAYLOAD_DOCKING_ADAPTER)
+	{
+		return &SIVBToCSMConnector;
+	}
+
+	return 0;
 }
 
 void SIVB::Boiloff()
@@ -271,13 +308,16 @@ void SIVB::SetS4b()
 
 		//
 		// For now the docking adapter for the SIVB to Venus test flights is simulated
-		// with the ASTP mesh.
+		// with the ASTP mesh and COAS target.
 		//
 
 		case PAYLOAD_DOCKING_ADAPTER:
-			mesh_dir=_V(0.0, 0.0, 7.8);
+			mesh_dir=_V(0.0, -0.15, 7.8);
 			AddMesh (hastp, &mesh_dir);
-			dockpos = _V(0.0, 0.0, 9.2);
+			mesh_dir=_V(-1.04, 1.04, 9.1);
+			AddMesh (hCOAStarget, &mesh_dir);
+			dockpos = _V(0.0, 0.0, 9.1);
+			dockrot = _V(-1.0, 0.0, 0);
 			SetDockParams(dockpos, dockdir, dockrot);
 			mass += PayloadMass;
 			break;
@@ -328,6 +368,19 @@ void SIVB::SetS4b()
 	SetEmptyMass (mass);
 
 	AddRCS_S4B();
+
+	if (Payload == PAYLOAD_DOCKING_ADAPTER)
+	{
+		iu.SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
+		iu.SetMissionInfo(true, true, Realism, 0.0, 0.0);
+
+		//
+		// Set up the IU connections.
+		//
+
+		iu.ConnectToMultiConnector(&SIVBToCSMConnector);
+		iu.ConnectToLV(&IUCommandConnector, &IUDataConnector);
+	}
 }
 
 const VECTOR3 OFS_STAGE21 =  { 1.85,1.85, 15.3};
@@ -343,7 +396,6 @@ const VECTOR3 OFS_STAGE34 =  { -1.48,1.48, 12.7};
 void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 
 {
-
 	MissionTime += simdt;
 
 	//
@@ -454,7 +506,8 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 			GetApolloName(VName); strcat (VName, "-S4B4");
 			hs4b4 = oapiCreateVessel(VName, "ProjectApollo/sat5stg34", vs5);
 		}
-		else {
+		else
+		{
 			vs2.vrot.x = 0.1;
 			vs2.vrot.y = -0.1;
 			vs2.vrot.z = 0.0;
@@ -503,6 +556,8 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// For a Saturn V SIVB, at some point it will dump all remaining fuel out the engine nozzle to
 	// thrust it out of the way of the CSM.
 	//
+
+	iu.Timestep(MissionTime, simdt);
 }
 
 
@@ -526,10 +581,14 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
 	oapiWriteScenario_float (scn, "PMASS", PayloadMass);
 	oapiWriteScenario_float (scn, "FMASS", MainFuel);
+	oapiWriteScenario_float (scn, "T3V", THRUST_THIRD_VAC);
+	oapiWriteScenario_float (scn, "I3V", ISP_THIRD_VAC);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
 	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
+
+	iu.SaveState(scn);
 }
 
 typedef union {
@@ -589,39 +648,54 @@ void SIVB::AddRCS_S4B()
 
 	VECTOR3 m_exhaust_pos1;
 	
-	if (SaturnVStage) {
+	if (SaturnVStage)
+	{
 		m_exhaust_pos1 = _V(0, 0, -11.7);
 	}
-	else {
+	else
+	{
 		m_exhaust_pos1 = _V(0, 0, -7);
 	}
 
 	//
-	// The main engine is just venting fuel through the exhaust: low thrust and low ISP.
+	// Unless this is dockable, the main engine is just venting fuel through the exhaust: low thrust and low ISP.
 	//
 
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), 1000.0, ph_main, 300.0, 300.0);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-	AddExhaust (th_main[0], 1.5, .25);
-
-//	if((ApolloNo<8)&&(ApolloNo!=6)&&(ApolloNo!=4))offset=7.7;
+	if (Payload != PAYLOAD_DOCKING_ADAPTER)
+	{
+		th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), 1000.0, ph_main, 300.0, 300.0);
+		thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+		AddExhaust (th_main[0], 1.5, .25);
+	}
+	else
+	{
+		th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_THIRD_VAC, ph_main, ISP_THIRD_VAC);
+		thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+		AddExhaust (th_main[0], 25.0, 1.5, SMMETex);
+	}
 
 	//
-	// Rotational thrusters are 150lb (666N) thrust. ISP is estimated.
+	// Rotational thrusters are 150lb (666N) thrust. ISP is estimated at 3000.0.
+	//
+	// Unfortunately Orbiter can't handle the real figures, so for rotation we use fake ones that are far
+	// more powerful.
 	//
 
-	th_att_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.25+offset), _V(0, -1,0), 666.0, ph_aps, 3000.0, 3000.0);
-	th_att_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.25+offset), _V(0,1,0), 666.0, ph_aps, 3000.0, 3000.0);
+	double THRUST_APS_ROT = 5000.0; // 666.0;
+	double ISP_APS_ROT = 100000.0; // 3000.0;
+
+	th_att_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.25+offset), _V(0, -1,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
+	th_att_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.25+offset), _V(0,1,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
 	
 	AddExhaust (th_att_rot[0], 0.6, 0.078);
 	AddExhaust (th_att_rot[1], 0.6, 0.078);
 	CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
 	CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
 
-	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
-	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
-	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
-	th_att_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+	th_att_rot[2] = CreateThruster (_V(RCSX,ATTCOOR2-0.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
+	th_att_rot[3] = CreateThruster (_V(-RCSX,-ATTCOOR2+0.2,TRANZ-0.25+offset), _V( 1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
+	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
+	th_att_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
 
 	AddExhaust (th_att_rot[2], 0.6, 0.078);
 	AddExhaust (th_att_rot[3], 0.6, 0.078);
@@ -630,10 +704,10 @@ void SIVB::AddRCS_S4B()
 	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
 
-	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
-	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
-	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
-	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(-1,0,0), 666.0, ph_aps, 3000.0, 3000.0);
+	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
+	th_att_rot[7] = CreateThruster (_V(-RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
+	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
+	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
 
 	AddExhaust (th_att_rot[6], 0.6, 0.078);
 	AddExhaust (th_att_rot[7], 0.6, 0.078);
@@ -705,6 +779,16 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line+5, "%g", &flt);
 			MainFuel = flt;
 		}
+		else if (!strnicmp(line, "T3V", 3))
+		{
+            sscanf (line + 3, "%f", &flt);
+			THRUST_THIRD_VAC = flt;
+		}
+		else if (!strnicmp(line, "I3V", 3))
+		{
+            sscanf (line + 3, "%f", &flt);
+			ISP_THIRD_VAC = flt;
+		}
 		else if (!strnicmp(line, "MISSNTIME", 9))
 		{
             sscanf (line+9, "%f", &flt);
@@ -734,6 +818,9 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp (line, "REALISM", 7))
 		{
 			sscanf (line+7, "%d", &Realism);
+		}
+		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
+			iu.LoadState(scn);
 		}
 		else
 		{
@@ -785,9 +872,83 @@ void SIVB::SetState(SIVBSettings &state)
 		MainFuel = state.MainFuelKg;
 	}
 
+	if (state.SettingsType.SIVB_SETTINGS_ENGINES)
+	{
+		THRUST_THIRD_VAC = state.THRUST_VAC;
+		ISP_THIRD_VAC = state.ISP_VAC;
+	}
+
 	State = SIVB_STATE_WAITING;
 
 	SetS4b();
+}
+
+void SIVB::EnableDisableJ2(bool Enable)
+
+{
+	if (Enable)
+	{
+		SetThrusterResource(th_main[0], ph_main);
+	}
+	else
+	{
+		SetThrusterResource(th_main[0], NULL);
+	}
+}
+
+void SIVB::SetJ2ThrustLevel(double thrust)
+
+{
+	if (th_main[0])
+		SetThrusterLevel(th_main[0], thrust);
+}
+
+void SIVB::SetAPSThrustLevel(double thrust)
+
+{
+	if (thg_aps)
+		SetThrusterGroupLevel(thg_aps, thrust);
+}
+
+double SIVB::GetJ2ThrustLevel()
+
+{
+	if (th_main[0])
+		return GetThrusterLevel(th_main[0]);
+
+	return 0.0;
+}
+
+double SIVB::GetMissionTime()
+
+{
+	return MissionTime;
+}
+
+double SIVB::GetSIVbPropellantMass()
+
+{
+	return GetPropellantMass(ph_main);
+}
+
+double SIVB::GetTotalMass()
+
+{
+	double mass = GetMass();
+
+	DOCKHANDLE hDock = GetDockHandle(0);
+
+	if (hDock)
+	{
+		OBJHANDLE hVessel = GetDockStatus(hDock);
+		if (hVessel)
+		{
+			VESSEL *v = oapiGetVesselInterface(hVessel);
+			mass += v->GetMass();
+		}
+	}
+
+	return mass;
 }
 
 static int refcount = 0;
@@ -823,4 +984,264 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 
 	if (vessel) 
 		delete (SIVB *)vessel;
+}
+
+SIVbConnector::SIVbConnector()
+
+{
+	OurVessel = 0;
+}
+
+SIVbConnector::~SIVbConnector()
+
+{
+}
+
+SIVbToIUCommandConnector::SIVbToIUCommandConnector()
+
+{
+	type = LV_IU_COMMAND;
+}
+
+SIVbToIUCommandConnector::~SIVbToIUCommandConnector()
+
+{
+}
+
+SIVbToIUDataConnector::SIVbToIUDataConnector()
+
+{
+	type = LV_IU_DATA;
+}
+
+SIVbToIUDataConnector::~SIVbToIUDataConnector()
+
+{
+}
+
+bool SIVbToIUDataConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	IULVMessageType messageType;
+
+	messageType = (IULVMessageType) m.messageType;
+
+	switch (messageType)
+	{
+	case IULV_GET_J2_THRUST_LEVEL:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetJ2ThrustLevel();
+			return true;
+		}
+		break;
+
+	case IULV_GET_STAGE:
+		m.val1.iValue = STAGE_ORBIT_SIVB;
+		return true;
+
+	case IULV_GET_MISSION_TIME:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMissionTime();
+			return true;
+		}
+		break;
+
+	case IULV_GET_ALTITUDE:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetAltitude();
+			return true;
+		}
+		break;
+
+	case IULV_GET_PROPELLANT_MASS:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_STATUS:
+		if (OurVessel)
+		{
+			VESSELSTATUS *status = (VESSELSTATUS *) m.val1.pValue;
+			VESSELSTATUS stat;
+
+			OurVessel->GetStatus(stat);
+
+			*status = stat;
+			return true;
+		}
+		break;
+
+	case IULV_GET_MASS:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetTotalMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_GRAVITY_REF:
+		if (OurVessel)
+		{
+			m.val1.hValue = OurVessel->GetGravityRef();
+			return true;
+		}
+		break;
+
+	case IULV_GET_AP_DIST:
+		if (OurVessel)
+		{
+			OurVessel->GetApDist(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAX_FUEL_MASS:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMaxFuelMass();
+			return true;
+		}
+		break;
+
+	case IULV_GET_RELATIVE_POS:
+		if (OurVessel)
+		{
+			VECTOR3 pos;
+			VECTOR3 *v = (VECTOR3 *) m.val2.pValue;
+
+			OurVessel->GetRelativePos(m.val1.hValue, pos);
+
+			v->data[0] = pos.data[0];
+			v->data[1] = pos.data[1];
+			v->data[2] = pos.data[2];
+
+			return true;
+		}
+		break;
+
+	case IULV_GET_RELATIVE_VEL:
+		if (OurVessel)
+		{
+			VECTOR3 vel;
+			VECTOR3 *v = (VECTOR3 *) m.val2.pValue;
+
+			OurVessel->GetRelativeVel(m.val1.hValue, vel);
+
+			v->data[0] = vel.data[0];
+			v->data[1] = vel.data[1];
+			v->data[2] = vel.data[2];
+
+			return true;
+		}
+		break;
+
+	case IULV_GET_ELEMENTS:
+		if (OurVessel)
+		{
+			ELEMENTS el;
+			ELEMENTS *e = (ELEMENTS *) m.val1.pValue;
+
+			m.val3.hValue = OurVessel->GetElements(el, m.val2.dValue);
+
+			*e = el;
+
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
+
+bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	IULVMessageType messageType;
+
+	messageType = (IULVMessageType) m.messageType;
+
+	switch (messageType)
+	{
+	case IULV_ACTIVATE_NAVMODE:
+		if (OurVessel)
+		{
+			OurVessel->ActivateNavmode(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_DEACTIVATE_NAVMODE:
+		if (OurVessel)
+		{
+			OurVessel->DeactivateNavmode(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_J2_THRUST_LEVEL:
+		if (OurVessel) 
+		{
+			OurVessel->SetJ2ThrustLevel(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_APS_THRUST_LEVEL:
+		if (OurVessel) 
+		{
+			OurVessel->SetAPSThrustLevel(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_ATTITUDE_LIN_LEVEL:
+		if (OurVessel) 
+		{
+			OurVessel->SetAttitudeLinLevel(m.val1.iValue, m.val2.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_ENABLE_J2:
+		if (OurVessel)
+		{
+			OurVessel->EnableDisableJ2(m.val1.bValue);
+			return true;
+		}
+		break;
+
+	//
+	// The RCS is always enabled, so don't bother turning it on and off.
+	//
+
+	case IULV_DEACTIVATE_S4RCS:
+	case IULV_ACTIVATE_S4RCS:
+		return true;
+	}
+
+	return false;
 }

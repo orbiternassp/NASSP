@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.198  2006/07/05 20:16:16  movieman523
+  *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
+  *	
   *	Revision 1.197  2006/06/30 11:53:50  tschachim
   *	Bugfix InstrumentLightingNonESSCircuitBraker and NonessBusSwitch.
   *	
@@ -330,6 +333,8 @@
 
 #include "PanelSDK/PanelSDK.h"
 
+#include "connector.h"
+#include "csmconnector.h"
 #include "cautionwarning.h"
 #include "csmcautionwarning.h"
 #include "missiontimer.h"
@@ -861,6 +866,84 @@ public:
 
 	void ActivateS4RCS();
 	void DeactivateS4RCS();
+
+	///
+	/// \brief Enable or disable the J2 engine on the SIVb.
+	/// \param Enable Engine on or off.
+	///
+	void EnableDisableJ2(bool Enable);
+
+	///
+	/// \brief Set thrust level of the SIVb J2 engine.
+	/// \param thrust Thrust level 0.0 - 1.0.
+	///
+	void SetJ2ThrustLevel(double thrust);
+
+	///
+	/// \brief Get thrust level of the SIVb J2 engine.
+	/// \return Thrust level 0.0 - 1.0.
+	///
+	double GetJ2ThrustLevel();
+
+	///
+	/// \brief Set thrust level of the SIVb APS engines.
+	/// \param thrust Thrust level 0.0 - 1.0.
+	///
+	void SetAPSThrustLevel(double thrust);
+
+	///
+	/// \brief Get propellant mass in the SIVb stage.
+	/// \return Propellant mass in kg.
+	///
+	double GetSIVbPropellantMass();
+
+	///
+	/// \brief Set propellant mass in the SIVb stage.
+	/// \param mass Propellant mass in kg.
+	///
+	void SetSIVbPropellantMass(double mass);
+
+	///
+	/// \brief Get the state of the SII/SIVb Sep switch.
+	/// \return Switch state.
+	///
+	int GetSIISIVbSepSwitchState();
+
+	///
+	/// \brief Get the state of the TLI Enable switch.
+	/// \return Switch state.
+	///
+	int GetTLIEnableSwitchState();
+
+	///
+	/// \brief Play or stop countdown sound.
+	/// \param StartStop True to start, false to stop.
+	///
+	void PlayCountSound(bool StartStop);
+
+	///
+	/// \brief Play or stop SECO sound.
+	/// \param StartStop True to start, false to stop.
+	///
+	void PlaySecoSound(bool StartStop);
+
+	///
+	/// \brief Play or stop seperation sound.
+	/// \param StartStop True to start, false to stop.
+	///
+	void PlaySepsSound(bool StartStop);
+
+	///
+	/// \brief Play or stop TLI sound.
+	/// \param StartStop True to start, false to stop.
+	///
+	void PlayTLISound(bool StartStop);
+
+	///
+	/// \brief Play or stop TLI start sound.
+	/// \param StartStop True to start, false to stop.
+	///
+	void PlayTLIStartSound(bool StartStop);
 
 protected:
 
@@ -3133,6 +3216,9 @@ protected:
 	void SetGenericStageState();
 	void DestroyStages(double simt);
 
+	void SIVBBoiloff();
+	void LookForSIVb();
+
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 
 	void LoadDefaultSounds();
@@ -3173,6 +3259,9 @@ protected:
 	Sound SDockingExtend;
 	Sound SUndock;
 	Sound CabincloseoutS;
+	Sound STLI;
+	Sound STLIStart;
+	Sound SecoSound;
 
 	///
 	/// Drogue deployment message.
@@ -3327,6 +3416,18 @@ protected:
 
 //	FILE *outstr;
 
+	//
+	// Connectors.
+	//
+
+	///
+	/// \brief Connector from CSM to IU.
+	///
+	CSMToIUConnector iuCommandConnector;
+	SaturnToIUCommandConnector sivbCommandConnector;
+	SaturnToIUDataConnector sivDataConnector;
+
+	MultiConnector CSMToSIVBConnector;
 
 	//
 	// PanelSDK pointers.

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.65  2006/06/12 20:47:36  movieman523
   *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
   *	
@@ -1401,6 +1404,7 @@ void SaturnV::SeparateStage (int new_stage)
 		S4Config.SettingsType.SIVB_SETTINGS_GENERAL = 1;
 		S4Config.SettingsType.SIVB_SETTINGS_MASS = 1;
 		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_ENGINES = 1;
 		S4Config.Payload = SIVBPayload;
 		S4Config.PanelsHinged = false;
 		S4Config.VehicleNo = VehicleNo;
@@ -1411,6 +1415,8 @@ void SaturnV::SeparateStage (int new_stage)
 		S4Config.MissionTime = MissionTime;
 		S4Config.Realism = Realism;
 		S4Config.LowRes = LowRes;
+		S4Config.ISP_VAC = ISP_THIRD_VAC;
+		S4Config.THRUST_VAC = THRUST_THIRD_VAC;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);

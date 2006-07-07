@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.114  2006/06/27 11:25:57  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.113  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -564,8 +567,15 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		dsky.Timestep(MissionTime);
 		dsky2.Timestep(MissionTime);
 		agc.Timestep(MissionTime, simdt);
-		iu.Timestep(MissionTime, simdt);
 		imu.Timestep(MissionTime);
+
+		//
+		// If we've seperated from the SIVb, the IU is history.
+		//
+		if (stage < CSM_LEM_STAGE)
+		{
+			iu.Timestep(MissionTime, simdt);
+		}	
 
 		// DS20060304 SCS updation
 		bmag1.Timestep(simdt);
