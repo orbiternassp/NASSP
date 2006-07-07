@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/07/01 23:49:13  movieman523
+  *	Updated more documentation.
+  *	
   *	Revision 1.16  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -268,6 +271,7 @@ typedef union {
 } CSMOut6;
 
 class IU;
+class CSMToIUConnector;
 
 //
 // Class definition.
@@ -296,7 +300,7 @@ public:
 	/// \param p The Panel SDK library.
 	/// \param i The launch vehicle Instrument Unit for the launch vehicle autopilot.
 	///
-	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, IU &i);
+	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i);
 	virtual ~CSMcomputer();
 
 	bool ValidateVerbNoun(int verb, int noun);
@@ -490,9 +494,9 @@ protected:
 	DSKY &dsky2;
 	
 	///
-	/// \brief Saturn Instrument Unit.
+	/// \brief Connection to Saturn Instrument Unit.
 	///
-	IU &iu;
+	CSMToIUConnector &iu;
 };
 
 #endif // _PA_CSMCOMPUTER_H

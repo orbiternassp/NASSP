@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2006/07/06 02:13:07  movieman523
+  *	First pass at Apollo to Venus orbital test flight.
+  *	
   *	Revision 1.71  2006/07/01 23:49:13  movieman523
   *	Updated more documentation.
   *	
@@ -278,6 +281,8 @@ typedef struct {
 //
 // Control stages.
 //
+
+#define NULL_STAGE					0
 
 #define ROLLOUT_STAGE				1
 #define ONPAD_STAGE					3
@@ -641,5 +646,10 @@ inline double KelvinToFahrenheit(double kelvin) {
 ///
 /// \defgroup Ground Ground support vehicle code.
 /// \brief This code is for the ground support (ML, VAB, etc).
+///
+
+///
+/// \defgroup Connectors Connector code.
+/// \brief This code is used to connect different objects together.
 ///
 #endif

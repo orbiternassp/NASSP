@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.9  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -68,6 +71,7 @@ union SIVbSettingFlags
 		unsigned SIVB_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
 		unsigned SIVB_SETTINGS_GENERAL:1;	///< General settings (e.g. Mission Time) are valid.
 		unsigned SIVB_SETTINGS_PAYLOAD:1;	///< Payload settings are valid.
+		unsigned SIVB_SETTINGS_ENGINES:1;	///< Engine settings are valid.
 	};
 	unsigned int word;						///< Set to zero to clear all flags.
 
@@ -91,6 +95,9 @@ typedef struct
 	int VehicleNo;					///> Saturn vehicle number.
 	int Realism;					///> Realism level.
 
+	double THRUST_VAC;				///> Vacuum thrust.
+	double ISP_VAC;					///> Vacuum ISP.
+
 	double MissionTime;				///> Current MET in seconds.
 	double EmptyMass;				///> Empty mass in kg.
 	double PayloadMass;				///> Payload mass in kg.
@@ -102,6 +109,49 @@ typedef struct
 	bool LowRes;					///> Low-res meshes?
 } SIVBSettings;
 
+class SIVB;
+
+///
+/// \ingroup Connectors
+/// \brief SIVB class connector base class.
+///
+class SIVbConnector : public Connector
+{
+public:
+	SIVbConnector();
+	~SIVbConnector();
+
+	void SetSIVb(SIVB *sat) { OurVessel = sat; };
+
+protected:
+	SIVB *OurVessel;
+};
+
+///
+/// \ingroup Connectors
+/// \brief SIVb to IU command connector type.
+///
+class SIVbToIUCommandConnector : public SIVbConnector
+{
+public:
+	SIVbToIUCommandConnector();
+	~SIVbToIUCommandConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
+///
+/// \ingroup Connectors
+/// \brief SIVb to IU command connector type.
+///
+class SIVbToIUDataConnector : public SIVbConnector
+{
+public:
+	SIVbToIUDataConnector();
+	~SIVbToIUDataConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
 
 ///
 /// Specifies the main state of the SIVb
@@ -171,6 +221,54 @@ public:
 	///
 	virtual void SetState(SIVBSettings &state);
 
+	///
+	/// \brief Get the docking connector. Virtual function so it can be called from the Saturn.
+	/// \return Pointer to docking connector, if it exists.
+	///
+	virtual Connector *GetDockingConnector();
+
+	///
+	/// \brief Set thrust level of the J2 engine.
+	/// \param thrust Thrust level from 0.0 to 1.0.
+	///
+	void SetJ2ThrustLevel(double thrust);
+
+	///
+	/// \brief Get thrust level of the J2 engine.
+	/// \return Thrust level from 0.0 to 1.0.
+	///
+	double GetJ2ThrustLevel();
+
+	///
+	/// \brief Set thrust level of the APS engine.
+	/// \param thrust Thrust level from 0.0 to 1.0.
+	///
+	void SetAPSThrustLevel(double thrust);
+
+	///
+	/// \brief Enable or disable the J2 engine.
+	/// \param Enable Enable if true, disable if false.
+	///
+	void EnableDisableJ2(bool Enable);
+
+	///
+	/// \brief Get mission time.
+	/// \return Mission time in seconds since launch.
+	///
+	double GetMissionTime();
+
+	///
+	/// \brief Get main propellant mass.
+	/// \return Propellant mass in kg.
+	///
+	double GetSIVbPropellantMass();
+
+	///
+	/// \brief Get total mass, including docked vessels.
+	/// \return Mass in kg.
+	///
+	double GetTotalMass();
+
 protected:
 
 	void SetS4b();
@@ -207,10 +305,33 @@ protected:
 
 	double CurrentThrust;			///< Current thrust level (0.0 to 1.0).
 
+	double THRUST_THIRD_VAC;
+	double ISP_THIRD_VAC;
+
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;
 	OBJHANDLE hs4b3;
 	OBJHANDLE hs4b4;
+
+	///
+	/// \brief Instrument Unit.
+	///
+	IU iu;
+
+	//
+	// \brief Connector from SIVb to CSM when docked.
+	//
+	MultiConnector SIVBToCSMConnector;
+
+	//
+	// \brief Data connector from SIVb to CSM when docked.
+	//
+	SIVbToIUDataConnector IUDataConnector;
+
+	//
+	// \brief Command connector from SIVb to CSM when docked.
+	//
+	SIVbToIUCommandConnector IUCommandConnector;
 
 	DOCKHANDLE hDock;
 

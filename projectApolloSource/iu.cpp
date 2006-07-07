@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/06/23 11:56:48  tschachim
+  *	New Project Apollo MFD for TLI burn control.
+  *	
   *	Revision 1.5  2006/06/08 15:27:59  tschachim
   *	SIVB is can be controlled manually in the Virtual AGC case
   *	until we'll have a smarter IU.
@@ -56,8 +59,7 @@
 #include "saturn.h"
 
 
-IU::IU(SoundLib &s, CSMcomputer &cmc, GuardedToggleSwitch &siisivsepswitch, XLunarSwitch &tlienableswitch) 
-	   : soundlib(s), agc(cmc), SIISIVBSepSwitch(siisivsepswitch), TLIEnableSwitch(tlienableswitch)
+IU::IU() 
 
 {
 	TLICapable = false;
@@ -68,10 +70,6 @@ IU::IU(SoundLib &s, CSMcomputer &cmc, GuardedToggleSwitch &siisivsepswitch, XLun
 	LastMissionEventTime = MINUS_INFINITY;
 	FirstTimeStepDone = false;
 
-	OurVessel = 0;
-	th_SIVB = 0;
-	ph_SIVB = 0;
-	thg_aps = 0;
 	Realism = REALISM_DEFAULT;
 	Crewed = true;
 	VesselISP = 0;
@@ -93,6 +91,8 @@ IU::IU(SoundLib &s, CSMcomputer &cmc, GuardedToggleSwitch &siisivsepswitch, XLun
 	TLIBurnDeltaV = 0.0;
 	TLICutOffVel = 0.0;
 	TLILastAltitude = 0.0;
+
+	commandConnector.SetIU(this);
 }
 
 IU::~IU()
@@ -108,29 +108,25 @@ void IU::SetVesselStats(double ISP, double Thrust)
 	VesselThrust = Thrust;
 }
 
-void IU::SetMissionInfo(bool tlicapable, bool crewed, int realism, THRUSTER_HANDLE *th, PROPELLANT_HANDLE *ph, 
-						THGROUP_HANDLE *thg, double sivbburnstart, double sivbapogee)
+void IU::GetVesselStats(double &ISP, double &Thrust)
+
+{
+	ISP = VesselISP;
+	Thrust = VesselThrust;
+}
+
+void IU::SetMissionInfo(bool tlicapable, bool crewed, int realism, double sivbburnstart, double sivbapogee)
 {
 	TLICapable = tlicapable;
 	Crewed = crewed;
 	Realism = realism;
-	th_SIVB = th;
-	ph_SIVB = ph;
-	thg_aps = thg;
 
 	SIVBBurnStart = sivbburnstart;
 	SIVBApogee = sivbapogee;
 
-	if (!Crewed && (SIVBApogee > 0.0) && (SIVBBurnStart > 0) && (OurVessel->GetStage() < CSM_LEM_STAGE)) {
+	if (!Crewed && (SIVBApogee > 0.0) && (SIVBBurnStart > 0) && (lvDataConnector.GetStage() < CSM_LEM_STAGE))
+	{
 		SIVBBurn = true;
-	}
-
-	if (!TLIBurnDone) { 
-		soundlib.LoadMissionSound(STLI, GO_FOR_TLI_SOUND, NULL);
-		soundlib.LoadMissionSound(STLIStart, TLI_START_SOUND, NULL);
-		soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
-		soundlib.LoadSound(Scount, COUNT10_SOUND);
-		soundlib.LoadSound(SepS, SEPMOTOR_SOUND, INTERNAL_ONLY);
 	}
 }
 
@@ -140,7 +136,9 @@ void IU::Timestep(double simt, double simdt)
 	double MainLevel;
 
 	// Only SIVB in orbit for now
-	if (OurVessel->GetStage() != STAGE_ORBIT_SIVB) return;
+	if (lvDataConnector.GetStage() != STAGE_ORBIT_SIVB) return;
+
+	double MissionTime = lvDataConnector.GetMissionTime();
 
 	// Initialization
 	if (!FirstTimeStepDone) {
@@ -149,11 +147,13 @@ void IU::Timestep(double simt, double simdt)
 		// Disable the engines if we're waiting for
 		// the user to start the TLI burn or if it's been done.
 		//
-		if (Realism && !OurVessel->IsVirtualAGC() && (State <= 107 || State >= 202)) {
-			OurVessel->SetThrusterResource(*th_SIVB, NULL);
-		
-		} else {
-			OurVessel->SetThrusterResource(*th_SIVB, *ph_SIVB);
+		if (Realism && !commandConnector.IsVirtualAGC() && (State <= 107 || State >= 202))
+		{
+			lvCommandConnector.EnableDisableJ2(false);
+		}
+		else
+		{
+			lvCommandConnector.EnableDisableJ2(true);
 		}
 		
 		FirstTimeStepDone = true;
@@ -161,8 +161,8 @@ void IU::Timestep(double simt, double simdt)
 	}
 
 	// Switches to inhibit TLI
-	bool XLunar = (TLIEnableSwitch.GetState() == TOGGLESWITCH_UP);
-	bool SIISIVBSep = (SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP);
+	bool XLunar = (commandConnector.TLIEnableSwitchState() == TOGGLESWITCH_UP);
+	bool SIISIVBSep = (commandConnector.SIISIVbSwitchState() == TOGGLESWITCH_UP);
 
 	// TLI burn calculations
 	switch (TLIBurnState) {
@@ -175,7 +175,7 @@ void IU::Timestep(double simt, double simdt)
 			// Waiting for sequence start
 			DoTLICalcs();
 			// Burn sequence begins 9:38 min before ignition
-			if (TLIBurnStartTime - OurVessel->GetMissionTime() <= (9.0 * 60.0 + 38.0)) {
+			if (TLIBurnStartTime - lvDataConnector.GetMissionTime() <= (9.0 * 60.0 + 38.0)) {
 				if (SIVBStart()) {
 					TLIBurnState++;
 				} else {
@@ -191,8 +191,8 @@ void IU::Timestep(double simt, double simdt)
 		case 2:
 			// Waiting for ignition
 			DoTLICalcs();
-			if (OurVessel->GetEngineLevel(ENGINE_MAIN) >= 1.0) {
-				TLILastAltitude = OurVessel->GetAltitude();
+			if (lvDataConnector.GetJ2ThrustLevel() >= 1.0) {
+				TLILastAltitude = lvDataConnector.GetAltitude();
 				TLIBurnState++;
 			}
 			// Inhibited?
@@ -206,7 +206,7 @@ void IU::Timestep(double simt, double simdt)
 
 			// ...and cut off the engine at the appropriate velocity.
 			VESSELSTATUS status;
-			OurVessel->GetStatus(status);
+			lvDataConnector.GetStatus(status);
 			if (length(status.rvel) >= TLICutOffVel) {
 				if (TLIBurnStart) 
 					TLIBurnDone = true;
@@ -234,9 +234,9 @@ void IU::Timestep(double simt, double simdt)
 			break;
 
 		case 1:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OurVessel->SlowIfDesired();
-				OurVessel->ActivateS4RCS();
+			if (MissionTime >= NextMissionEventTime) {
+				commandConnector.SlowIfDesired();
+				lvCommandConnector.ActivateS4RCS();
 				State++;
 			}
 			break;
@@ -247,82 +247,74 @@ void IU::Timestep(double simt, double simdt)
 			break;
 
 		case 3:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
+			if (MissionTime >= NextMissionEventTime) {
 				SIVBStart();
 				State = 100;
 			}
 			break;
 
 		case 100:
-			//
-			// Fuel boiloff every ten seconds.
-			//
-
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				SIVBBoiloff();
-
-				NextMissionEventTime = OurVessel->GetMissionTime() + 10.0;
-			}
 
 			//
 			// Detect start signal.
 			//
 
-			if (TLIBurnStart) { 
-				
+			if (TLIBurnStart) 
+			{ 
 				// TLI Inhibit
-				if (!XLunar) {
-
+				if (!XLunar)
+				{
 					TLIBurnStart = false;
-				
-				} else {
+				} 
+				else 
+				{
 				
 					//
 					// Start signal is sent 9:38 before SIVB ignition.
 					//
 
-					OurVessel->SetSIISep();
+					commandConnector.SetSIISep();
 
 					//
 					// For now we'll enable prograde autopilot.
 					//
-					OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
+					lvCommandConnector.ActivateNavmode(NAVMODE_PROGRADE);
 
 					// Reset time acceleration to normal.
 					oapiSetTimeAcceleration(1);
 
-					NextMissionEventTime = OurVessel->GetMissionTime() + 38.0;
+					NextMissionEventTime = MissionTime + 38.0;
 					State++;
 				}
 			}
 			break;
 
 		case 101:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OurVessel->ClearSIISep();
+			if (MissionTime >= NextMissionEventTime) {
+				commandConnector.ClearSIISep();
 
 				// Next event is 100s before ignition
-				NextMissionEventTime = OurVessel->GetMissionTime() + ((9.0 * 60.0) - 100.0); 
+				NextMissionEventTime = MissionTime + ((9.0 * 60.0) - 100.0); 
 				State++;
 			}
 
 			// TLI inhibit
 			if (!XLunar) {
-				OurVessel->ClearSIISep();
+				commandConnector.ClearSIISep();
 				TLIInhibit();
 			}				
 			break;
 
 		case 102:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
+			if (MissionTime >= NextMissionEventTime) {
 				
 				// Reset time acceleration to normal.
 				oapiSetTimeAcceleration(1);
 
-				STLI.play();
+				commandConnector.PlayTLISound(true);
 
 				// Next event is 84s before ignition
-				NextMissionEventTime = OurVessel->GetMissionTime() + 16.0;
+				NextMissionEventTime = MissionTime + 16.0;
 				State++;
 			}
 
@@ -333,11 +325,11 @@ void IU::Timestep(double simt, double simdt)
 			break;
 
 		case 103:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OurVessel->SetSIISep();
+			if (MissionTime >= NextMissionEventTime) {
+				commandConnector.SetSIISep();
 
 				// Next event is 82s before ignition
-				NextMissionEventTime = OurVessel->GetMissionTime() + 2.0;
+				NextMissionEventTime = MissionTime + 2.0;
 				State++;
 			}
 
@@ -352,11 +344,10 @@ void IU::Timestep(double simt, double simdt)
 			// Start ullage engines 
 			//
 
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OurVessel->SetAttitudeLinLevel(2, 1);
-
-				OurVessel->SetThrusterGroupLevel(*thg_aps, 1.0);
-				SepS.play(LOOP, 130);
+			if (MissionTime >= NextMissionEventTime) {
+				lvCommandConnector.SetAttitudeLinLevel(2, 1);
+				lvCommandConnector.SetAPSThrustLevel(1.0);
+				commandConnector.PlaySepsSound(true);
 
 				// Next event is 18s before ignition
 				NextMissionEventTime += 64.0;
@@ -364,51 +355,54 @@ void IU::Timestep(double simt, double simdt)
 			}
 
 			// TLI inhibit
-			if (!XLunar) {
-				OurVessel->ClearSIISep();
+			if (!XLunar)
+			{
+				commandConnector.ClearSIISep();
 				TLIInhibit();
 			}				
 			break;
 
 		case 105:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OurVessel->ClearSIISep();
+			if (MissionTime >= NextMissionEventTime)
+			{
+				commandConnector.ClearSIISep();
 
 				// Next event is 10.9s before ignition
-				NextMissionEventTime = OurVessel->GetMissionTime() + 7.1;
+				NextMissionEventTime = MissionTime + 7.1;
 				State++;
 			}
 
 			// TLI inhibit
-			if (!XLunar) {
-				OurVessel->ClearSIISep();
+			if (!XLunar)
+			{
+				commandConnector.ClearSIISep();
 
-				OurVessel->SetAttitudeLinLevel(2, 0);
-				OurVessel->SetThrusterGroupLevel(*thg_aps, 0.0);
-				SepS.stop();
+				lvCommandConnector.SetAttitudeLinLevel(2, 0);
+				lvCommandConnector.SetAPSThrustLevel(0.0);
+				commandConnector.PlaySepsSound(false);
 
 				TLIInhibit();
 			}				
 			break;
 
 		case 106:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
+			if (MissionTime >= NextMissionEventTime) {
 				// Reset time acceleration to normal.
 				oapiSetTimeAcceleration(1);
 
 				// And play the countdown.
-				Scount.play(NOLOOP,245);
+				commandConnector.PlayCountSound(true);
 
 				// Next event is 5s before ignition
-				NextMissionEventTime = OurVessel->GetMissionTime() + 5.9;
+				NextMissionEventTime = MissionTime + 5.9;
 				State++;
 			}
 
 			// TLI inhibit
 			if (SIISIVBSep) {
-				OurVessel->SetAttitudeLinLevel(2, 0);
-				OurVessel->SetThrusterGroupLevel(*thg_aps, 0.0);
-				SepS.stop();
+				lvCommandConnector.SetAttitudeLinLevel(2, 0);
+				lvCommandConnector.SetAPSThrustLevel(0.0);
+				commandConnector.PlaySepsSound(false);
 
 				TLIInhibit();
 			}				
@@ -419,9 +413,9 @@ void IU::Timestep(double simt, double simdt)
 			// Ullage cutoff
 			//
 
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OurVessel->SetThrusterGroupLevel(*thg_aps, 0.0);
-				SepS.stop();
+			if (MissionTime >= NextMissionEventTime) {
+				lvCommandConnector.SetAPSThrustLevel(0.0);
+				commandConnector.PlaySepsSound(false);
 
 				// Next event is 1s before ignition
 				NextMissionEventTime += 4.0;
@@ -430,23 +424,23 @@ void IU::Timestep(double simt, double simdt)
 
 			// TLI inhibit
 			if (SIISIVBSep) {
-				OurVessel->SetAttitudeLinLevel(2, 0);
-				OurVessel->SetThrusterGroupLevel(*thg_aps, 0.0);
-				SepS.stop();
+				lvCommandConnector.SetAttitudeLinLevel(2, 0);
+				lvCommandConnector.SetAPSThrustLevel(0.0);
 
-				Scount.stop();
+				commandConnector.PlaySepsSound(false);
+				commandConnector.PlayCountSound(false);
 
 				TLIInhibit();
 			}				
 			break;
 
 		case 108:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
+			if (MissionTime >= NextMissionEventTime) {
 				if (Realism)
-					OurVessel->SetThrusterResource(*th_SIVB, *ph_SIVB);
+					lvCommandConnector.EnableDisableJ2(true);
 
-				OurVessel->SetEngineIndicator(1);
-				OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
+				commandConnector.SetEngineIndicator(1);
+				lvCommandConnector.ActivateNavmode(NAVMODE_PROGRADE);
 
 				// Next event is ignition
 				LastMissionEventTime = NextMissionEventTime;
@@ -456,15 +450,15 @@ void IU::Timestep(double simt, double simdt)
 
 			// TLI inhibit
 			if (SIISIVBSep) {
-				OurVessel->SetAttitudeLinLevel(2, 0);
-				Scount.stop();
+				lvCommandConnector.SetAttitudeLinLevel(2, 0);
+				commandConnector.PlayCountSound(false);
 
 				TLIInhibit();
 			}				
 			break;
 
 		case 109:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
+			if (MissionTime >= NextMissionEventTime) {
 				// IGNITION
 				
 				LastMissionEventTime = NextMissionEventTime;
@@ -474,9 +468,9 @@ void IU::Timestep(double simt, double simdt)
 
 			// TLI inhibit
 			if (SIISIVBSep) {
-				OurVessel->SetAttitudeLinLevel(2, 0);
-				OurVessel->ClearEngineIndicator(1);
-				Scount.stop();
+				lvCommandConnector.SetAttitudeLinLevel(2, 0);
+				commandConnector.ClearEngineIndicator(1);
+				commandConnector.PlayCountSound(false);
 
 				TLIInhibit();
 			}				
@@ -484,9 +478,9 @@ void IU::Timestep(double simt, double simdt)
 
 		case 110:
 			// Engine ramps up to 90% thrust.
-			if (OurVessel->GetMissionTime() < NextMissionEventTime) {
-				double deltat = (OurVessel->GetMissionTime() - LastMissionEventTime);
-				OurVessel->SetThrusterLevel(*th_SIVB, 0.9 * deltat);
+			if (MissionTime < NextMissionEventTime) {
+				double deltat = (MissionTime - LastMissionEventTime);
+				lvCommandConnector.SetJ2ThrustLevel(0.9 * deltat);
 			}
 			else {				
 				LastMissionEventTime = NextMissionEventTime;
@@ -496,8 +490,8 @@ void IU::Timestep(double simt, double simdt)
 
 			// TLI inhibit
 			if (SIISIVBSep) {
-				OurVessel->SetAttitudeLinLevel(2, 0);
-				OurVessel->ClearEngineIndicator(1);
+				lvCommandConnector.SetAttitudeLinLevel(2, 0);
+				commandConnector.ClearEngineIndicator(1);
 
 				TLIInhibit();
 			}				
@@ -505,9 +499,9 @@ void IU::Timestep(double simt, double simdt)
 
 		case 111:
 			// Then up to 100%.
-			if (OurVessel->GetMissionTime() < NextMissionEventTime) {
-				double deltat = (OurVessel->GetMissionTime() - LastMissionEventTime);
-				OurVessel->SetThrusterLevel(*th_SIVB, 0.9 + (deltat * 0.2));
+			if (MissionTime < NextMissionEventTime) {
+				double deltat = (MissionTime - LastMissionEventTime);
+				lvCommandConnector.SetJ2ThrustLevel(0.9 + (deltat * 0.2));
 			}
 			else {
 				NextMissionEventTime += 0.5;
@@ -516,8 +510,8 @@ void IU::Timestep(double simt, double simdt)
 
 			// TLI inhibit
 			if (SIISIVBSep) {
-				OurVessel->SetAttitudeLinLevel(2, 0);
-				OurVessel->ClearEngineIndicator(1);
+				lvCommandConnector.SetAttitudeLinLevel(2, 0);
+				commandConnector.ClearEngineIndicator(1);
 
 				TLIInhibit();
 			}				
@@ -528,25 +522,28 @@ void IU::Timestep(double simt, double simdt)
 			// Engine will be at 100% thrust
 			//
 
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OurVessel->SetThrusterLevel(*th_SIVB, 1.0);
-				OurVessel->SetAttitudeLinLevel(2, 0);
-				OurVessel->ClearEngineIndicator(1);
+			if (MissionTime >= NextMissionEventTime)
+			{
+				lvCommandConnector.SetJ2ThrustLevel(1.0);
+				lvCommandConnector.SetAttitudeLinLevel(2, 0);
+				commandConnector.ClearEngineIndicator(1);
 
-				STLIStart.play();
+				commandConnector.PlayTLIStartSound(true);
 
-				if (!SIVBBurn || Crewed) {
+				if (!SIVBBurn || Crewed)
+				{
 					State = 200;
 				}
-				else {
+				else
+				{
 					State = 150;
 				}
 			}
 
 			// TLI inhibit
 			if (SIISIVBSep) {
-				OurVessel->SetAttitudeLinLevel(2, 0);
-				OurVessel->ClearEngineIndicator(1);
+				lvCommandConnector.SetAttitudeLinLevel(2, 0);
+				commandConnector.ClearEngineIndicator(1);
 
 				TLIInhibit();
 			}				
@@ -557,26 +554,26 @@ void IU::Timestep(double simt, double simdt)
 		//
 
 		case 150:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OBJHANDLE hPlanet = OurVessel->GetGravityRef();
+			if (MissionTime >= NextMissionEventTime) {
+				OBJHANDLE hPlanet = lvDataConnector.GetGravityRef();
 				double prad = oapiGetSize(hPlanet);
 				double ap;
-				OurVessel->GetApDist(ap);
+				lvDataConnector.GetApDist(ap);
 
-				OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
+				lvCommandConnector.ActivateNavmode(NAVMODE_PROGRADE);
 
 				//
 				// Burn until the orbit is about right or we're out of fuel.
 				//
 
-				if ((ap >= (prad + (SIVBApogee * 1000.0))) || (((OurVessel->GetFuelMass() * 100.0) / OurVessel->GetMaxFuelMass()) <= 0.1)) {
+				if ((ap >= (prad + (SIVBApogee * 1000.0))) || (((lvDataConnector.GetPropellantMass() * 100.0) / lvDataConnector.GetMaxFuelMass()) <= 0.1)) {
 					State = 201;
 					SIVBBurn = false;
-					OurVessel->DeactivateNavmode(NAVMODE_PROGRADE);
-					OurVessel->DeactivateS4RCS();
+					lvCommandConnector.DeactivateNavmode(NAVMODE_PROGRADE);
+					lvCommandConnector.DeactivateS4RCS();
 				}
 
-				NextMissionEventTime = OurVessel->GetMissionTime() + 0.25;
+				NextMissionEventTime = MissionTime + 0.25;
 			}
 			break;
 
@@ -586,18 +583,20 @@ void IU::Timestep(double simt, double simdt)
 			// Wait for shutdown.
 			//
 
-			OurVessel->ActivateNavmode(NAVMODE_PROGRADE);
+			lvCommandConnector.ActivateNavmode(NAVMODE_PROGRADE);
 
-			if (TLIBurnDone || OurVessel->GetPropellantMass(*ph_SIVB) == 0) {
+			if (TLIBurnDone || lvDataConnector.GetPropellantMass() < 0.001)
+			{
 				State++;
 			}
 
 			// TLI inhibit
 			if (SIISIVBSep) {
-				if (OurVessel->GetMissionTime() >= NextMissionEventTime + 10.0) {	// non-permanent inhibit only until T+00:12, NextMissionEventTime is ignition + 2s
+				if (MissionTime >= NextMissionEventTime + 10.0) {	// non-permanent inhibit only until T+00:12, NextMissionEventTime is ignition + 2s
 					State++;
-
-				} else {
+				}
+				else
+				{
 					TLIInhibit();
 				}
 			}				
@@ -609,23 +608,23 @@ void IU::Timestep(double simt, double simdt)
 			// Thrust decay.
 			//
 
-			OurVessel->SetEngineIndicator(1);
+			commandConnector.SetEngineIndicator(1);
 
-			MainLevel = OurVessel->GetThrusterLevel(*th_SIVB);
+			MainLevel = lvDataConnector.GetJ2ThrustLevel();
 			MainLevel -= (simdt * 1.2);
-			OurVessel->SetThrusterLevel(*th_SIVB, MainLevel);
+			lvCommandConnector.SetJ2ThrustLevel(MainLevel);
 
 			if (MainLevel <= 0.0) {
 				SIVBStop();
-				NextMissionEventTime = OurVessel->GetMissionTime() + 10.0 - 1.0 / 1.2;
+				NextMissionEventTime = MissionTime + 10.0 - 1.0 / 1.2;
 				State++;
 			}
 			break;
 
 		case 202:
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				OurVessel->DeactivateNavmode(NAVMODE_PROGRADE);
-				OurVessel->ClearEngineIndicator(1);
+			if (MissionTime >= NextMissionEventTime) {
+				lvCommandConnector.DeactivateNavmode(NAVMODE_PROGRADE);
+				commandConnector.ClearEngineIndicator(1);
 
 				if (Realism < 2)
 					State = 100;
@@ -637,21 +636,17 @@ void IU::Timestep(double simt, double simdt)
 		case 203:
 
 			//
-			// Engine is now dead. Just boil off the remaining
-			// fuel.
+			// Engine is now dead.
 			//
-
-			if (OurVessel->GetMissionTime() >= NextMissionEventTime) {
-				SIVBBoiloff();
-				NextMissionEventTime = OurVessel->GetMissionTime() + 10.0;
-			}
 			break;
 		}
 	}
 	else {
-		if (OurVessel->GetEngineLevel(ENGINE_MAIN) <= 0) {
-			if (Realism && !OurVessel->IsVirtualAGC())
-				OurVessel->SetThrusterResource(*th_SIVB, NULL);
+		if (lvDataConnector.GetJ2ThrustLevel() <= 0) {
+			if (Realism && !commandConnector.IsVirtualAGC())
+			{
+				lvCommandConnector.EnableDisableJ2(false);
+			}
 		}
 	}
 }
@@ -659,11 +654,13 @@ void IU::Timestep(double simt, double simdt)
 void IU::TLIInhibit()
 
 {
-	OurVessel->SetThrusterLevel(*th_SIVB, 0);
-	if (Realism&& !OurVessel->IsVirtualAGC())
-		OurVessel->SetThrusterResource(*th_SIVB, NULL);
+	lvCommandConnector.SetJ2ThrustLevel(0.0);
+	if (Realism&& !commandConnector.IsVirtualAGC())
+	{
+		lvCommandConnector.EnableDisableJ2(false);
+	}
 
-	OurVessel->DeactivateNavmode(NAVMODE_PROGRADE);
+	lvCommandConnector.DeactivateNavmode(NAVMODE_PROGRADE);
 
 	TLIBurnStart = false;
 	State = 100;
@@ -680,7 +677,7 @@ void IU::ChannelOutput(int address, int value)
 			SIVBStart();
 
 			val12.Bits.SIVBIgnitionSequenceStart = false;			
-			agc.SetOutputChannel(012, val12.Value);
+			commandConnector.SetAGCOutputChannel(012, val12.Value);
 		}
 
 		if (val12.Bits.SIVBCutoff) {
@@ -688,7 +685,7 @@ void IU::ChannelOutput(int address, int value)
 				TLIBurnDone = true;
 
 			val12.Bits.SIVBCutoff = false;			
-			agc.SetOutputChannel(012, val12.Value);
+			commandConnector.SetAGCOutputChannel(012, val12.Value);
 		}
 	}
 }
@@ -699,7 +696,7 @@ bool IU::SIVBStart()
 	if (!TLICapable || TLIBurnStart || TLIBurnDone)
 		return false;
 
-	if (OurVessel->GetStage() != STAGE_ORBIT_SIVB)
+	if (lvDataConnector.GetStage() != STAGE_ORBIT_SIVB)
 		return false;
 
 	TLIBurnStart = true;
@@ -709,40 +706,20 @@ bool IU::SIVBStart()
 void IU::SIVBStop()
 
 {
-	if (OurVessel->GetStage() != STAGE_ORBIT_SIVB)
+	if (lvDataConnector.GetStage() != STAGE_ORBIT_SIVB)
 		return;
 
-	OurVessel->SetEngineLevel(ENGINE_MAIN, 0);
-	if (Realism && !OurVessel->IsVirtualAGC())
-		OurVessel->SetThrusterResource(*th_SIVB, NULL);
+	lvCommandConnector.SetJ2ThrustLevel(0.0);
 
-	SecoSound.play();
+	if (Realism && !commandConnector.IsVirtualAGC())
+	{
+		lvCommandConnector.EnableDisableJ2(false);
+	}
+
+	commandConnector.PlaySecoSound(true);
 
 	TLIBurnStart = false;
 	TLIBurnDone = true;
-
-	Scount.done();
-	STLI.done();
-	STLIStart.done();
-	SecoSound.done();
-	SepS.done();
-}
-
-void IU::SIVBBoiloff()
-
-{
-	if (Realism < 2)
-		return;
-
-	//
-	// The SIVB stage boils off a small amount of fuel while in orbit.
-	//
-	// For the time being we'll ignore any thrust created by the venting
-	// of this fuel.
-	//
-
-	double FuelMass = OurVessel->GetPropellantMass(*ph_SIVB) * 0.99998193;
-	OurVessel->SetPropellantMass(*ph_SIVB, FuelMass);
 }
 
 bool IU::StartTLIBurn(double timeToEjection, double dV) 
@@ -751,20 +728,20 @@ bool IU::StartTLIBurn(double timeToEjection, double dV)
 	if (!TLICapable || TLIBurnStart || TLIBurnDone)
 		return false;
 
-	if (OurVessel->GetStage() != STAGE_ORBIT_SIVB)
+	if (lvDataConnector.GetStage() != STAGE_ORBIT_SIVB)
 		return false;
 
 	if (TLIBurnState != 0) 
 		return false;
 
 	TLIBurnDeltaV = dV;
-	TLIBurnTime = OurVessel->GetMissionTime() + timeToEjection;
+	TLIBurnTime = lvDataConnector.GetMissionTime() + timeToEjection;
 
 	if (!DoTLICalcs())
 		return false;
 
 	// Burn sequence begins 9:38 min before ignition
-	if (TLIBurnStartTime - OurVessel->GetMissionTime() <= (9.0 * 60.0 + 38.0))
+	if (TLIBurnStartTime - lvDataConnector.GetMissionTime() <= (9.0 * 60.0 + 38.0))
 		return false;
 
 	TLIBurnState = 1;
@@ -781,9 +758,9 @@ bool IU::DoTLICalcs()
 	// and the expected end velocity.
 	//
 
-	double mass = OurVessel->GetMass();
+	double mass = lvDataConnector.GetMass();
 	double isp = VesselISP;
-	double fuelmass = OurVessel->GetFuelMass();
+	double fuelmass = lvDataConnector.GetPropellantMass();
 	double thrust = VesselThrust;
 
 	double massrequired = mass * (1.0 - exp(-((TLIBurnDeltaV - TLIThrustDecayDV) / isp)));
@@ -806,18 +783,18 @@ bool IU::DoTLICalcs()
 	//
 
 	VECTOR3 Pos, Vel;
-	OurVessel->GetRelativePos(OurVessel->GetGravityRef(), Pos);
-	OurVessel->GetRelativeVel(OurVessel->GetGravityRef(), Vel);
+	lvDataConnector.GetRelativePos(lvDataConnector.GetGravityRef(), Pos);
+	lvDataConnector.GetRelativeVel(lvDataConnector.GetGravityRef(), Vel);
 
 	ELEMENTS el;
 	double mjd_ref;
-	OurVessel->GetElements(el, mjd_ref);
+	lvDataConnector.GetElements(el, mjd_ref);
 
 	VECTOR3 NewPos, NewVel;
 	double NewVelMag;
 
 	PredictPosVelVectors(Pos, Vel, el.a, 3.986e14,
-						  TLIBurnTime - OurVessel->GetMissionTime(), NewPos, NewVel, NewVelMag);
+						  TLIBurnTime - lvDataConnector.GetMissionTime(), NewPos, NewVel, NewVelMag);
 
 	TLICutOffVel = NewVelMag + TLIBurnDeltaV - TLIThrustDecayDV;
 	return true;
@@ -828,13 +805,14 @@ void IU::UpdateTLICalcs()
 {
 	double MaxE = TLICutOffVel * TLICutOffVel;
 
-	OBJHANDLE hbody = OurVessel->GetGravityRef();
+	OBJHANDLE hbody = lvDataConnector.GetGravityRef();
+	double alt = lvDataConnector.GetAltitude();
 	double bradius = oapiGetSize(hbody);
-	double dist = bradius + OurVessel->GetAltitude();
+	double dist = bradius + alt;
 	double g = (G * bradius * bradius) / (dist * dist);
-	double deltaE = 2.0 * (g * (OurVessel->GetAltitude() - TLILastAltitude));
+	double deltaE = 2.0 * (g * (alt - TLILastAltitude));
 
-	TLILastAltitude = OurVessel->GetAltitude();
+	TLILastAltitude = alt;
 	TLICutOffVel = sqrt(MaxE - deltaE);
 }
 
@@ -918,4 +896,612 @@ void IU::LoadState(FILEHANDLE scn)
 			LastMissionEventTime = flt;
 		}
 	}
+}
+
+void IU::ConnectToCSM(Connector *csmConnector)
+
+{
+	commandConnector.ConnectTo(csmConnector);
+}
+
+void IU::ConnectToMultiConnector(MultiConnector *csmConnector)
+
+{
+	csmConnector->AddTo(&commandConnector);
+}
+
+void IU::ConnectToLV(Connector *CommandConnector, Connector *DataConnector)
+
+{
+	lvCommandConnector.ConnectTo(CommandConnector);
+	lvDataConnector.ConnectTo(DataConnector);
+}
+
+double IU::GetMass()
+
+{
+	return lvDataConnector.GetMass();
+}
+
+double IU::GetFuelMass()
+
+{
+	return lvDataConnector.GetPropellantMass();
+}
+
+IUToCSMCommandConnector::IUToCSMCommandConnector()
+
+{
+	type = CSM_IU_COMMAND;
+	ourIU = 0;
+}
+
+IUToCSMCommandConnector::~IUToCSMCommandConnector()
+
+{
+}
+
+void IUToCSMCommandConnector::SetAGCOutputChannel(int channel, int value)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_SET_OUTPUT_CHANNEL;
+	cm.val1.iValue = channel;
+	cm.val2.iValue = value;
+
+	SendMessage(cm);
+}
+
+bool IUToCSMCommandConnector::IsVirtualAGC()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_IS_VIRTUAL_AGC;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+void IUToCSMCommandConnector::SetSIISep()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_SET_SII_SEP_LIGHT;
+	cm.val1.bValue = true;
+
+	SendMessage(cm);
+}
+
+void IUToCSMCommandConnector::ClearSIISep()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_SET_SII_SEP_LIGHT;
+	cm.val1.bValue = false;
+
+	SendMessage(cm);
+}
+
+void IUToCSMCommandConnector::SetEngineIndicator(int eng)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_SET_ENGINE_INDICATOR;
+
+	cm.val1.iValue = eng;
+	cm.val2.bValue = true;
+
+	SendMessage(cm);
+}
+
+void IUToCSMCommandConnector::ClearEngineIndicator(int eng)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_SET_ENGINE_INDICATOR;
+
+	cm.val1.iValue = eng;
+	cm.val2.bValue = false;
+
+	SendMessage(cm);
+}
+
+void IUToCSMCommandConnector::SlowIfDesired()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_SLOW_IF_DESIRED;
+
+	SendMessage(cm);
+}
+
+int IUToCSMCommandConnector::TLIEnableSwitchState()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_TLI_ENABLE_SWITCH_STATE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.iValue;
+	}
+
+	return -1;
+}
+
+int IUToCSMCommandConnector::SIISIVbSwitchState()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_GET_SIISIVBSEP_SWITCH_STATE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.iValue;
+	}
+
+	return -1;
+}
+
+void IUToCSMCommandConnector::PlayCountSound(bool StartStop)
+
+{
+	PlayStopSound(IUCSM_PLAY_COUNT_SOUND, StartStop);
+}
+
+void IUToCSMCommandConnector::PlaySecoSound(bool StartStop)
+
+{
+	PlayStopSound(IUCSM_PLAY_SECO_SOUND, StartStop);
+}
+
+void IUToCSMCommandConnector::PlaySepsSound(bool StartStop)
+
+{
+	PlayStopSound(IUCSM_PLAY_SEPS_SOUND, StartStop);
+}
+
+void IUToCSMCommandConnector::PlayTLISound(bool StartStop)
+
+{
+	PlayStopSound(IUCSM_PLAY_TLI_SOUND, StartStop);
+}
+
+void IUToCSMCommandConnector::PlayTLIStartSound(bool StartStop)
+
+{
+	PlayStopSound(IUCSM_PLAY_TLISTART_SOUND, StartStop);
+}
+
+void IUToCSMCommandConnector::PlayStopSound(IUCSMMessageType sound, bool StartStop)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = sound;
+	cm.val1.bValue = StartStop;
+
+	SendMessage(cm);
+}
+
+//
+// Process incoming messages from the CSM.
+//
+
+bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	IUCSMMessageType messageType;
+
+	messageType = (IUCSMMessageType) m.messageType;
+
+	switch (messageType)
+	{
+	case CSMIU_SET_VESSEL_STATS:
+		if (ourIU)
+		{
+			ourIU->SetVesselStats(m.val1.dValue, m.val2.dValue);
+		}
+		return true;
+
+	case CSMIU_START_TLI_BURN:
+		if (ourIU)
+		{
+			ourIU->StartTLIBurn(m.val1.dValue, m.val2.dValue);
+		}
+		return true;
+
+	case CSMIU_IS_TLI_CAPABLE:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->IsTLICapable();
+			return true;
+		}
+		break;
+
+	case CSMIU_CHANNEL_OUTPUT:
+		if (ourIU)
+		{
+			ourIU->ChannelOutput(m.val1.iValue, m.val2.iValue);
+			return true;
+		}
+		break;
+
+	case CSMIU_GET_VESSEL_STATS:
+		if (ourIU)
+		{
+			ourIU->GetVesselStats(m.val1.dValue, m.val2.dValue);
+			return true;
+		}
+		break;
+
+	case CSMIU_GET_VESSEL_MASS:
+		if (ourIU)
+		{
+			m.val1.dValue = ourIU->GetMass();
+			return true;
+		}
+		break;
+
+	case CSMIU_GET_VESSEL_FUEL:
+		if (ourIU)
+		{
+			m.val1.dValue = ourIU->GetFuelMass();
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
+
+IUToLVCommandConnector::IUToLVCommandConnector()
+
+{
+	type = LV_IU_COMMAND;
+}
+
+IUToLVCommandConnector::~IUToLVCommandConnector()
+
+{
+}
+
+void IUToLVCommandConnector::EnableDisableJ2(bool Enable)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_ENABLE_J2;
+	cm.val1.bValue = Enable;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetJ2ThrustLevel(double thrust)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_J2_THRUST_LEVEL;
+	cm.val1.dValue = thrust;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetAPSThrustLevel(double thrust)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_APS_THRUST_LEVEL;
+	cm.val1.dValue = thrust;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetAttitudeLinLevel(int a1, int a2)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_SET_ATTITUDE_LIN_LEVEL;
+	cm.val1.iValue = a1;
+	cm.val2.iValue = a2;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::ActivateNavmode(int mode)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_ACTIVATE_NAVMODE;
+	cm.val1.iValue = mode;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::DeactivateNavmode(int mode)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_DEACTIVATE_NAVMODE;
+	cm.val1.iValue = mode;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::DeactivateS4RCS()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_DEACTIVATE_S4RCS;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::ActivateS4RCS()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_ACTIVATE_S4RCS;
+
+	SendMessage(cm);
+}
+
+IUToLVDataConnector::IUToLVDataConnector()
+
+{
+	type = LV_IU_DATA;
+}
+
+IUToLVDataConnector::~IUToLVDataConnector()
+
+{
+}
+
+double IUToLVDataConnector::GetMissionTime()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_MISSION_TIME;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return MINUS_INFINITY;
+}
+
+
+double IUToLVDataConnector::GetMass()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_MASS;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+
+int IUToLVDataConnector::GetStage()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_STAGE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.iValue;
+	}
+
+	return NULL_STAGE;
+}
+
+double IUToLVDataConnector::GetJ2ThrustLevel()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_J2_THRUST_LEVEL;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVDataConnector::GetAltitude()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_ALTITUDE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVDataConnector::GetPropellantMass()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_PROPELLANT_MASS;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVDataConnector::GetMaxFuelMass()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_MAX_FUEL_MASS;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+void IUToLVDataConnector::GetStatus(VESSELSTATUS &status)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_STATUS;
+	cm.val1.pValue = &status;
+
+	SendMessage(cm);
+}
+
+OBJHANDLE IUToLVDataConnector::GetGravityRef()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_GRAVITY_REF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.hValue;
+	}
+
+	return 0;
+}
+
+void IUToLVDataConnector::GetApDist(double &d)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_GRAVITY_REF;
+
+	if (SendMessage(cm))
+	{
+		d = cm.val1.dValue;
+	}
+
+	d = 0.0;
+}
+
+void IUToLVDataConnector::GetRelativePos(OBJHANDLE ref, VECTOR3 &v)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_RELATIVE_POS;
+	cm.val1.hValue = ref;
+	cm.val2.pValue = &v;
+
+	SendMessage(cm);
+}
+
+void IUToLVDataConnector::GetRelativeVel(OBJHANDLE ref, VECTOR3 &v)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_RELATIVE_VEL;
+	cm.val1.hValue = ref;
+	cm.val2.pValue = &v;
+
+	SendMessage(cm);
+}
+
+OBJHANDLE IUToLVDataConnector::GetElements (ELEMENTS &el, double &mjd_ref)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_DATA;
+	cm.messageType = IULV_GET_ELEMENTS;
+	cm.val1.pValue = &el;
+
+	if (SendMessage(cm))
+	{
+		mjd_ref = cm.val2.dValue;
+		return cm.val3.hValue;
+	}
+
+	return 0;
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.158  2006/07/06 02:13:07  movieman523
+  *	First pass at Apollo to Venus orbital test flight.
+  *	
   *	Revision 1.157  2006/07/06 00:40:08  movieman523
   *	Improved timed sound playback. Still doesn't really work due to Orbitersound not wanting to play our files.
   *	
@@ -223,6 +226,7 @@
 #include "saturn.h"
 #include "tracer.h"
 #include "sm.h"
+#include "sivb.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -239,11 +243,10 @@ extern "C" {
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
 
-	agc(soundlib, dsky, dsky2, imu, Panelsdk, iu), 
+	agc(soundlib, dsky, dsky2, imu, Panelsdk, iuCommandConnector), 
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
-	imu(agc, Panelsdk), 
-	iu(soundlib, agc, SIISIVBSepSwitch, TLIEnableSwitch),
+	imu(agc, Panelsdk),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 	NonEssBus1("Non-Essential-Bus1", &NonessBusSwitch),
@@ -279,7 +282,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	SuitCompressor1Switch(Panelsdk),
 	SuitCompressor2Switch(Panelsdk),
 	BatteryCharger("BatteryCharger", Panelsdk),
-	timedSounds(soundlib)
+	timedSounds(soundlib),
+	iuCommandConnector(agc)
 
 {
 	InitSaturnCalled = false;
@@ -293,7 +297,6 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 
 	cws.MonitorVessel(this);
 	dockingprobe.RegisterVessel(this);
-	iu.RegisterVessel(this);
 }
 
 Saturn::~Saturn()
@@ -557,6 +560,16 @@ void Saturn::initSaturn()
 
 	MissionTimerDisplay.WireTo(&GaugePower);
 	EventTimerDisplay.WireTo(&GaugePower);
+
+	//
+	// Configure connectors.
+	//
+
+	iuCommandConnector.SetSaturn(this);
+	sivbCommandConnector.SetSaturn(this);
+	sivDataConnector.SetSaturn(this);
+
+	CSMToSIVBConnector.SetType(CSM_SIVB_COMMAND);
 
 	//
 	// Propellant sources.
@@ -1003,10 +1016,54 @@ void Saturn::KillAlt(OBJHANDLE &hvessel, double altVS)
 	}
 }
 
+void Saturn::LookForSIVb()
+
+{
+	if (!hs4bM)
+	{
+		char VName[256];
+		char ApolloName[64];
+
+		GetApolloName(ApolloName);
+
+		strcpy (VName, ApolloName); strcat (VName, "-S4BSTG");
+		hs4bM = oapiGetVesselByName(VName);
+	}
+}
 
 void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
 
 {
+	if (connected)
+	{
+		if (!hs4bM)
+		{
+			//
+			// Find the SIVb if we don't know where it is.
+			//
+			LookForSIVb();
+		}
+
+		if (connected == hs4bM)
+		{
+			//
+			// MGFIX: This should really only be done when the docking probe is retracted for a hard
+			// dock.
+			//
+			SIVB *SIVBVessel = (SIVB *) oapiGetVesselInterface(connected);
+			Connector *SIVbConnector = SIVBVessel->GetDockingConnector();
+
+			if (SIVbConnector)
+			{
+				CSMToSIVBConnector.ConnectTo(SIVbConnector);
+			}
+		}
+	}
+	else
+	{
+		CSMToSIVBConnector.Disconnect();
+	}
+
 	dockingprobe.DockEvent(dock, connected); 
 }
 
@@ -1260,7 +1317,15 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	agc.SaveState(scn);
 	imu.SaveState(scn);
 	cws.SaveState(scn);
-	iu.SaveState(scn);
+
+	//
+	// If we've seperated from the SIVb, the IU is history.
+	//
+	if (stage < CSM_LEM_STAGE)
+	{
+		iu.SaveState(scn);
+	}
+
 	gdc.SaveState(scn);
 	ascp.SaveState(scn);
 	dockingprobe.SaveState(scn);
@@ -2194,7 +2259,7 @@ void Saturn::UpdatePayloadMass()
 		break;
 
 	case PAYLOAD_DOCKING_ADAPTER:
-		S4PL_Mass = 2000;		// Estimate.
+		S4PL_Mass = 2000.0 + 8000.0;		// Estimate at 8,000kg of batteries plus 2,000kg docking adapter.
 		break;
 
 	default:
@@ -3469,6 +3534,20 @@ void Saturn::GenericLoadStateSetup()
 	}
 
 	//
+	// Set up connectors.
+	//
+
+	if (stage >= CSM_LEM_STAGE)
+	{
+		CSMToSIVBConnector.AddTo(&iuCommandConnector);
+	}
+	else
+	{
+		iu.ConnectToCSM(&iuCommandConnector);
+		iu.ConnectToLV(&sivbCommandConnector, &sivDataConnector);
+	}
+
+	//
 	// Disable cabin fans.
 	//
 
@@ -3567,6 +3646,9 @@ void Saturn::GenericLoadStateSetup()
 
 	if (stage <= CSM_LEM_STAGE) {
 		soundlib.LoadMissionSound(SMJetS, SM_SEP_SOUND, DEFAULT_SM_SEP_SOUND);
+		soundlib.LoadMissionSound(STLI, GO_FOR_TLI_SOUND, NULL);
+		soundlib.LoadMissionSound(STLIStart, TLI_START_SOUND, NULL);
+		soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
 	}
 
 	if (stage == CM_RECOVERY_STAGE)
@@ -3612,7 +3694,7 @@ void Saturn::GenericLoadStateSetup()
 	// Initialize the IU
 	//
 
-	iu.SetMissionInfo(TLICapableBooster, Crewed, Realism, &th_main[0], &ph_3rd, &thg_aps, SIVBBurnStart, SIVBApogee); 
+	iu.SetMissionInfo(TLICapableBooster, Crewed, Realism, SIVBBurnStart, SIVBApogee); 
 
 	//
 	// Disable master alarm sound on unmanned flights.
@@ -3938,6 +4020,24 @@ void Saturn::LoadDefaultSounds()
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
 
+void Saturn::SIVBBoiloff()
+
+{
+	if (Realism < 2)
+		return;
+
+	//
+	// The SIVB stage boils off a small amount of fuel while in orbit.
+	//
+	// For the time being we'll ignore any thrust created by the venting
+	// of this fuel.
+	//
+
+	double FuelMass = GetPropellantMass(ph_3rd) * 0.99998193;
+	SetPropellantMass(ph_3rd, FuelMass);
+}
+
+
 void Saturn::StageOrbitSIVB(double simt, double simdt)
 
 {
@@ -3952,6 +4052,17 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 
 	if (!UseATC)
 		soundlib.SoundOptionOnOff(PLAYRADIOATC, TRUE);
+
+	//
+	// Fuel boiloff every ten seconds.
+	//
+
+	if (MissionTime >= NextMissionEventTime) 
+	{
+		if (GetThrusterLevel(th_main[0]) < 0.5)
+			SIVBBoiloff();
+		NextMissionEventTime = MissionTime + 10.0;
+	}
 
 	//
 	// For unmanned launches, seperate the CSM on timer.
@@ -3985,6 +4096,21 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 			SeparateStage(CSM_LEM_STAGE);
 			SetStage(CSM_LEM_STAGE);
 			soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
+
+			//
+			// MGFIX: these shouldn't be deleted here as they may be needed later on if we do
+			// a docked TLI burn.
+			//
+
+			STLI.done();
+			STLIStart.done();
+			SecoSound.done();
+
+			iuCommandConnector.Disconnect();
+			sivbCommandConnector.Disconnect();
+			iuCommandConnector.Disconnect();
+
+			CSMToSIVBConnector.AddTo(&iuCommandConnector);
 
 			if (bAbort)
 			{
@@ -4250,6 +4376,129 @@ void Saturn::SetRandomFailures()
 		}
 	}
 
+}
+
+void Saturn::SetJ2ThrustLevel(double thrust)
+
+{
+	if (stage != STAGE_ORBIT_SIVB || !th_main[0])
+		return;
+
+	SetThrusterLevel(th_main[0], thrust);
+}
+
+void Saturn::EnableDisableJ2(bool Enable)
+
+{
+	if (stage != STAGE_ORBIT_SIVB || !th_main[0] || !ph_3rd)
+		return;
+
+	if (Enable)
+	{
+		SetThrusterResource(th_main[0], ph_3rd);
+	}
+	else
+	{
+		SetThrusterResource(th_main[0], NULL);
+	}
+}
+
+double Saturn::GetJ2ThrustLevel()
+
+{
+	if (stage != STAGE_ORBIT_SIVB || !th_main[0])
+		return 0.0;
+
+	return GetThrusterLevel(th_main[0]);
+}
+
+void Saturn::SetAPSThrustLevel(double thrust)
+
+{
+	if (stage != STAGE_ORBIT_SIVB || !thg_aps)
+		return;
+
+	SetThrusterGroupLevel(thg_aps, thrust);
+}
+
+double Saturn::GetSIVbPropellantMass()
+
+{
+	if (stage > STAGE_ORBIT_SIVB)
+		return 0.0;
+
+	if (stage < LAUNCH_STAGE_SIVB)
+		return S4B_FuelMass;
+
+	return GetPropellantMass(ph_3rd);
+}
+
+void Saturn::SetSIVbPropellantMass(double mass)
+
+{
+	if (stage > STAGE_ORBIT_SIVB)
+		return;
+
+	if (stage < LAUNCH_STAGE_SIVB)
+	{
+		S4B_FuelMass = mass;
+		return;
+	}
+
+	SetPropellantMass(ph_3rd, mass);
+}
+
+int Saturn::GetTLIEnableSwitchState()
+
+{
+	return TLIEnableSwitch.GetState();
+}
+
+int Saturn::GetSIISIVbSepSwitchState()
+
+{
+	return SIISIVBSepSwitch.GetState();
+}
+
+void Saturn::PlayCountSound(bool StartStop)
+
+{
+	if (StartStop)
+	{
+		Scount.play(NOLOOP,245);
+	}
+	else
+	{
+		Scount.stop();
+	}
+}
+
+void Saturn::PlaySecoSound(bool StartStop)
+
+{
+}
+
+void Saturn::PlaySepsSound(bool StartStop)
+
+{
+	if (StartStop)
+	{
+		SepS.play(LOOP, 130);
+	}
+	else
+	{
+		SepS.stop();
+	}
+}
+
+void Saturn::PlayTLISound(bool StartStop)
+
+{
+}
+
+void Saturn::PlayTLIStartSound(bool StartStop)
+
+{
 }
 
 //

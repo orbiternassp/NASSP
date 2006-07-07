@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.49  2006/06/17 17:19:31  tschachim
   *	Gyro-compassing for the NASSP AGC.
   *	
@@ -193,7 +196,7 @@
 
 #include "ioChannels.h"
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, IU &i) : 
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i) : 
 	ApolloGuidance(s, display, im, p), dsky2(display2), iu(i)
 
 {
@@ -770,9 +773,9 @@ void CSMcomputer::DoTLICalcs(double simt)
 	// and the expected end velocity.
 	//
 
-	double mass = OurVessel->GetMass();
+	double mass = iu.GetMass();
 	double isp = VesselISP;
-	double fuelmass = OurVessel->GetFuelMass();
+	double fuelmass = iu.GetFuelMass();
 	double thrust = MaxThrust;
 
 	double massrequired = mass * (1.0 - exp(-((DesiredDeltaV - ThrustDecayDV) / isp)));
@@ -867,6 +870,12 @@ void CSMcomputer::Prog15(double simt)
 		break;
 
 	case 4:
+		//
+		// Update state.
+		//
+
+		iu.GetVesselStats(VesselISP, MaxThrust);
+
 		DoTLICalcs(simt);
 
 		SetVerbNounAndFlash(6, 95);
@@ -884,7 +893,8 @@ void CSMcomputer::Prog15(double simt)
 	//
 
 	case 5:
-		if (simt > NextEventTime) {
+		if (simt > NextEventTime)
+		{
 			LightCompActy();
 			LightUplink();
 			SetOutputChannelBit(012, 13, true);
@@ -895,7 +905,8 @@ void CSMcomputer::Prog15(double simt)
 		break;
 
 	case 6:
-		if (simt > NextEventTime) {
+		if (simt > NextEventTime)
+		{
 			LightCompActy();
 			DoTLICalcs(simt);
 			ClearUplink();
@@ -934,7 +945,8 @@ void CSMcomputer::Prog15(double simt)
 		break;
 
 	case 9:
-		if (simt >= NextEventTime) {
+		if (simt >= NextEventTime) 
+		{
 			DoTLICalcs(simt);
 
 			if (simt > (BurnStartTime - 20)) {
@@ -995,8 +1007,8 @@ void CSMcomputer::Prog15(double simt)
 	// Ignition!
 
 	case 15:
-		if (OurVessel->GetEngineLevel(ENGINE_MAIN) >= 1.0) {
-
+		if (OurVessel->GetEngineLevel(ENGINE_MAIN) >= 1.0) 
+		{
 			LightCompActy();
 			ProgState++;
 		}
@@ -1006,7 +1018,8 @@ void CSMcomputer::Prog15(double simt)
 		//
 
 	case 16:
-		if (simt > NextEventTime) {
+		if (simt > NextEventTime)
+		{
 			UpdateTLICalcs(simt);
 			NextEventTime = simt + 0.5;
 		}
