@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/07/09 00:07:07  movieman523
+  *	Initial tidy-up of connector code.
+  *	
   *	Revision 1.17  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -119,6 +122,21 @@ static MESHHANDLE hlta_2r;
 
 static SURFHANDLE SMMETex;
 
+// "fuel venting" particle streams
+static PARTICLESTREAMSPEC fuel_venting_spec = {
+	0,		// flag
+	0.8,	// size
+	30,		// rate
+	2,	    // velocity
+	0.5,    // velocity distribution
+	20,		// lifetime
+	0.15,	// growthrate
+	0.5,    // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.6, 0.6,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
 void SIVbLoadMeshes()
 
 {
@@ -182,6 +200,9 @@ void SIVB::InitS4b()
 	State = SIVB_STATE_SETUP;
 	LowRes = false;
 
+	J2IsActive = false;
+	FuelVenting = false;
+
 	hDock = 0;
 	ph_aps = 0;
 	ph_main = 0;
@@ -211,9 +232,10 @@ void SIVB::InitS4b()
 	//
 	// Set up the connections.
 	//
-	SIVBToCSMConnector.SetType(CSM_SIVB_COMMAND);
+	SIVBToCSMConnector.SetType(CSM_SIVB_DOCKING);
 
 	IUCommandConnector.SetSIVb(this);
+	csmCommandConnector.SetSIVb(this);
 }
 
 Connector *SIVB::GetDockingConnector()
@@ -382,6 +404,8 @@ void SIVB::SetS4b()
 
 		iu.ConnectToMultiConnector(&SIVBToCSMConnector);
 		iu.ConnectToLV(&IUCommandConnector);
+
+		SIVBToCSMConnector.AddTo(&csmCommandConnector);
 	}
 }
 
@@ -599,6 +623,8 @@ typedef union {
 		unsigned PanelsOpened:1;
 		unsigned SaturnVStage:1;
 		unsigned LowRes:1;
+		unsigned J2IsActive:1;
+		unsigned FuelVenting:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -613,8 +639,67 @@ int SIVB::GetMainState()
 	state.u.PanelsOpened = PanelsOpened;
 	state.u.SaturnVStage = SaturnVStage;
 	state.u.LowRes = LowRes;
+	state.u.J2IsActive = J2IsActive;
+	state.u.FuelVenting = FuelVenting;
 
 	return state.word;
+}
+
+void SIVB::SetVentingThruster()
+
+{
+	//
+	// Clear old thrusters.
+	//
+	if (thg_main)
+		DelThrusterGroup(THGROUP_MAIN, true);
+
+	th_main[0] = CreateThruster (mainExhaustPos, _V( 0,0,1), 1000.0, ph_main, 300.0, 300.0);
+	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+
+	AddExhaustStream(th_main[0], &fuel_venting_spec);
+
+	J2IsActive = false;
+}
+
+void SIVB::SetActiveJ2Thruster()
+
+{
+	//
+	// Clear old thrusters.
+	//
+	if (thg_main)
+		DelThrusterGroup(THGROUP_MAIN, true);
+
+	th_main[0] = CreateThruster (mainExhaustPos, _V( 0,0,1), THRUST_THIRD_VAC, ph_main, ISP_THIRD_VAC);
+	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
+	AddExhaust (th_main[0], 25.0, 1.5, SMMETex);
+
+	J2IsActive = true;
+}
+
+void SIVB::StartVenting()
+
+{
+	if (!J2IsActive && th_main[0])
+	{
+		FuelVenting = true;
+
+		EnableDisableJ2(true);
+		SetThrusterLevel(th_main[0], 1.0);
+	}
+}
+
+void SIVB::StopVenting()
+
+{
+	if (!J2IsActive && th_main[0])
+	{
+		FuelVenting = false;
+
+		SetThrusterLevel(th_main[0], 0.0);
+		EnableDisableJ2(false);
+	}
 }
 
 void SIVB::AddRCS_S4B()
@@ -633,10 +718,12 @@ void SIVB::AddRCS_S4B()
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
 	double offset;
 
-	if (SaturnVStage) {
+	if (SaturnVStage)
+	{
 		offset = -2.05;
 	}
-	else {
+	else
+	{
 		offset = 2.65;
 	}
 
@@ -647,33 +734,27 @@ void SIVB::AddRCS_S4B()
 		ph_main = CreatePropellantResource(MainFuel);
 
 	SetDefaultPropellantResource (ph_main);
-
-	VECTOR3 m_exhaust_pos1;
 	
 	if (SaturnVStage)
 	{
-		m_exhaust_pos1 = _V(0, 0, -11.7);
+		mainExhaustPos = _V(0, 0, -11.7);
 	}
 	else
 	{
-		m_exhaust_pos1 = _V(0, 0, -7);
+		mainExhaustPos = _V(0, 0, -7);
 	}
 
 	//
 	// Unless this is dockable, the main engine is just venting fuel through the exhaust: low thrust and low ISP.
 	//
 
-	if (Payload != PAYLOAD_DOCKING_ADAPTER)
+	if (J2IsActive)
 	{
-		th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), 1000.0, ph_main, 300.0, 300.0);
-		thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-		AddExhaust (th_main[0], 1.5, .25);
+		SetActiveJ2Thruster();
 	}
 	else
 	{
-		th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_THIRD_VAC, ph_main, ISP_THIRD_VAC);
-		thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-		AddExhaust (th_main[0], 25.0, 1.5, SMMETex);
+		SetVentingThruster();
 	}
 
 	//
@@ -720,15 +801,19 @@ void SIVB::AddRCS_S4B()
 	CreateThrusterGroup (th_att_rot+8, 2, THGROUP_ATT_YAWRIGHT);
 
 	//
-	// APS thrusters are 320N (72 pounds) thrust
+	// APS linear thrusters are 320N (72 pounds) thrust
 	//
-
 	th_att_lin[0] = CreateThruster (_V(0,ATTCOOR2-0.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_aps, 3000.0, 3000.0);
 	th_att_lin[1] = CreateThruster (_V(0,-ATTCOOR2+.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_aps, 3000.0, 3000.0);
 	AddExhaust (th_att_lin[0], 7, 0.15);
 	AddExhaust (th_att_lin[1], 7, 0.15);
 
 	thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_ATT_FORWARD);
+
+	if (FuelVenting)
+	{
+		StartVenting();
+	}
 }
 
 void SIVB::SetMainState(int s)
@@ -742,6 +827,8 @@ void SIVB::SetMainState(int s)
 	PanelsHinged = (state.u.PanelsHinged != 0);
 	PanelsOpened = (state.u.PanelsOpened != 0);
 	LowRes = (state.u.LowRes != 0);
+	J2IsActive = (state.u.J2IsActive);
+	FuelVenting = (state.u.FuelVenting);
 }
 
 void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -851,6 +938,11 @@ void SIVB::SetState(SIVBSettings &state)
 	if (state.SettingsType.SIVB_SETTINGS_PAYLOAD)
 	{
 		Payload = state.Payload;
+
+		if (Payload == PAYLOAD_DOCKING_ADAPTER)
+		{
+			J2IsActive = true;
+		}
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_GENERAL)
@@ -888,7 +980,7 @@ void SIVB::SetState(SIVBSettings &state)
 void SIVB::EnableDisableJ2(bool Enable)
 
 {
-	if (Enable)
+	if (Enable || FuelVenting)
 	{
 		SetThrusterResource(th_main[0], ph_main);
 	}
@@ -896,6 +988,12 @@ void SIVB::EnableDisableJ2(bool Enable)
 	{
 		SetThrusterResource(th_main[0], NULL);
 	}
+}
+
+bool SIVB::IsVenting()
+
+{
+	return FuelVenting;
 }
 
 void SIVB::SetJ2ThrustLevel(double thrust)
@@ -938,7 +1036,7 @@ double SIVB::GetTotalMass()
 {
 	double mass = GetMass();
 
-	DOCKHANDLE hDock = GetDockHandle(0);
+	hDock = GetDockHandle(0);
 
 	if (hDock)
 	{
@@ -1195,6 +1293,13 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_J2_DONE:
+		if (OurVessel)
+		{
+			OurVessel->SetVentingThruster();
+		}
+		break;
+
 	//
 	// The RCS is always enabled, so don't bother turning it on and off.
 	//
@@ -1202,6 +1307,79 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 	case IULV_DEACTIVATE_S4RCS:
 	case IULV_ACTIVATE_S4RCS:
 		return true;
+	}
+
+	return false;
+}
+
+CSMToSIVBCommandConnector::CSMToSIVBCommandConnector()
+
+{
+	type = CSM_SIVB_COMMAND;
+}
+
+CSMToSIVBCommandConnector::~CSMToSIVBCommandConnector()
+
+{
+}
+
+bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	CSMSIVBMessageType messageType;
+
+	messageType = (CSMSIVBMessageType) m.messageType;
+
+	switch (messageType)
+	{
+	case CSMSIVB_IS_VENTING:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->IsVenting();
+			return true;
+		}
+		break;
+
+	case CSMSIVB_IS_VENTABLE:
+		if (OurVessel)
+		{
+			m.val1.bValue = true;
+			return true;
+		}
+		break;
+
+	case CSMSIVB_START_VENTING:
+		if (OurVessel)
+		{
+			OurVessel->StartVenting();
+			return true;
+		}
+		break;
+
+	case CSMSIVB_STOP_VENTING:
+		if (OurVessel)
+		{
+			OurVessel->StopVenting();
+			return true;
+		}
+		break;
+
+	case CSMSIVB_GET_VESSEL_FUEL:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
+			return true;
+		}
+		break;
 	}
 
 	return false;

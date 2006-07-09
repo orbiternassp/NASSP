@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.17  2006/07/01 23:49:13  movieman523
   *	Updated more documentation.
   *	
@@ -272,6 +275,7 @@ typedef union {
 
 class IU;
 class CSMToIUConnector;
+class CSMToSIVBControlConnector;
 
 //
 // Class definition.
@@ -298,9 +302,10 @@ public:
 	/// \param display2 Lower equipment bay DSKY interface.
 	/// \param im The CSM Inertial Measurement Unit.
 	/// \param p The Panel SDK library.
-	/// \param i The launch vehicle Instrument Unit for the launch vehicle autopilot.
+	/// \param i The launch vehicle Instrument Unit connector for the launch vehicle autopilot.
+	/// \param sivb The CSM to SIVb command connector (e.g. for fuel venting).
 	///
-	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i);
+	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb);
 	virtual ~CSMcomputer();
 
 	bool ValidateVerbNoun(int verb, int noun);
@@ -458,6 +463,17 @@ protected:
 	///
 	void Prog15(double simt);
 
+	///
+	/// Program 59 is a generic docked vessel control program, which didn't exist in real life.
+	///
+	/// Enter 00001 to start venting program. The DSKY will display remaining SIVb fuel in R1,
+	/// press PRO to start or stop venting.
+	///
+	/// \brief Run program 59.
+	/// \param simt Current Mission Time.
+	///
+	void Prog59(double simt);
+
 	//
 	// Program support
 	//
@@ -469,8 +485,29 @@ protected:
 	// Program input processing.
 	//
 
+	///
+	/// \brief Process PRO key during Prog 02.
+	/// \param R1 Value in DSKY register R1.
+	/// \param R2 Value in DSKY register R2.
+	/// \param R3 Value in DSKY register R3.
+	///
 	void Prog02Pressed(int R1, int R2, int R3);
+
+	///
+	/// \brief Process PRO key during Prog 15.
+	/// \param R1 Value in DSKY register R1.
+	/// \param R2 Value in DSKY register R2.
+	/// \param R3 Value in DSKY register R3.
+	///
 	void Prog15Pressed(int R1, int R2, int R3);
+
+	///
+	/// \brief Process PRO key during Prog 59.
+	/// \param R1 Value in DSKY register R1.
+	/// \param R2 Value in DSKY register R2.
+	/// \param R3 Value in DSKY register R3.
+	///
+	void Prog59Pressed(int R1, int R2, int R3);
 
 	//
 	// Program data.
@@ -488,6 +525,8 @@ protected:
 	unsigned int LastOut6;
 	unsigned int LastOut11;
 
+	unsigned int VesselStatusDisplay;
+
 	///
 	/// \brief Second DSKY in the lower equipment bay.
 	///
@@ -497,6 +536,11 @@ protected:
 	/// \brief Connection to Saturn Instrument Unit.
 	///
 	CSMToIUConnector &iu;
+
+	///
+	/// \brief Connection to Saturn launch vehicle.
+	///
+	CSMToSIVBControlConnector &lv;
 };
 
 #endif // _PA_CSMCOMPUTER_H

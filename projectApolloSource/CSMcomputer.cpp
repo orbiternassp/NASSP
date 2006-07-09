@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.50  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -196,14 +199,16 @@
 
 #include "ioChannels.h"
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i) : 
-	ApolloGuidance(s, display, im, p), dsky2(display2), iu(i)
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb) : 
+	ApolloGuidance(s, display, im, p), dsky2(display2), iu(i), lv(sivb)
 
 {
 	BurnTime = 0;
 	BurnStartTime = 0;
 	CutOffVel = 0;
 	lastOrbitalElementsTime = 0;
+
+	VesselStatusDisplay = 0;
 
 	MainThrusterIsHover = false;
 
@@ -419,6 +424,17 @@ void CSMcomputer::DisplayNounData(int noun)
 		SetR3((int)(DisplayAlt(CurrentAlt) / 1000));
 		break;
 
+	case 39:
+		SetR1(VesselStatusDisplay);
+		break;
+
+	case 76:
+		{
+			double FMass = lv.GetFuelMass();
+			SetR1((int) FMass);
+		}
+		break;
+
 	//
 	// 73: altitude, velocity, AoA
 	//
@@ -517,6 +533,9 @@ bool CSMcomputer::ValidateProgram(int prog)
 
 	case 15:
 		return iu.IsTLICapable();
+
+	case 59:
+		return lv.IsVentable();
 	}
 
 	return false;
@@ -695,7 +714,6 @@ void CSMcomputer::Prog02Pressed(int R1, int R2, int R3)
 // Program 06: standby.
 //
 
-
 void CSMcomputer::Prog06(double simt)
 
 {
@@ -836,6 +854,23 @@ void CSMcomputer::UpdateTLICalcs(double simt)
 	LightCompActy();
 	LastAlt = CurrentAlt;
 	CutOffVel = sqrt(MaxE - deltaE);
+}
+
+void CSMcomputer::Prog59(double simt)
+
+{
+	switch (ProgState)
+	{
+	case 0:
+		SetVerbNounAndFlash(06, 39);
+		ProgState++;
+		break;
+
+	case 100:
+		SetVerbNounAndFlash(16, 76);
+		ProgState++;
+		break;
+	}
 }
 
 void CSMcomputer::Prog15(double simt)
@@ -1113,6 +1148,46 @@ void CSMcomputer::Prog15Pressed(int R1, int R2, int R3)
 	}
 }
 
+
+//
+// Data entry for Prog 59.
+//
+
+void CSMcomputer::Prog59Pressed(int R1, int R2, int R3)
+
+{
+	switch (ProgState)
+	{
+	case 1:
+		if (R1 > 0 && R1 < 2)
+		{
+			ProgState = 100 * R1;
+			VesselStatusDisplay = R1;
+			return;
+		}
+		break;
+
+	case 101:
+		if (lv.IsVentable())
+		{
+			if (!lv.IsVenting())
+			{
+				lv.StartVenting();
+			}
+			else
+			{
+				lv.StopVenting();
+			}
+			return;
+		}
+		break;
+
+	default:
+		LightOprErr();
+		break;
+	}
+}
+
 void CSMcomputer::Timestep(double simt, double simdt)
 
 {
@@ -1243,6 +1318,13 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			Prog15(simt);
 			break;
 
+		//
+		// 59: Docking program.
+		//
+
+		case 59:
+			Prog59(simt);
+			break;
 
 		}
 	}
@@ -1383,6 +1465,10 @@ void CSMcomputer::ProgPressed(int R1, int R2, int R3)
 	case 15:
 		Prog15Pressed(R1, R2, R3);
 		return;
+
+	case 59:
+		Prog59Pressed(R1, R2, R3);
+		return;
 	}
 
 	LightOprErr();
@@ -1507,6 +1593,11 @@ bool CSMcomputer::ReadMemory(unsigned int loc, int &val)
 		case 0114:
 			val = (int)(LandingLongitude*100000000-((int) (LandingLongitude * 1000.0))*100000);
 			return true;
+
+		case 0115:
+			val = VesselStatusDisplay;
+			return true;
+
 		default:
 			break;
 		}
@@ -1549,6 +1640,10 @@ void CSMcomputer::WriteMemory(unsigned int loc, int val)
 
 		case 0114:
 			LandingLongitude = LandingLongitude+((double) val) / 100000000.0;
+			break;
+
+		case 0115:
+			VesselStatusDisplay = val;
 			break;
 
 		default:

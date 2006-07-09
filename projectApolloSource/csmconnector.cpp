@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/07/09 00:07:07  movieman523
+  *	Initial tidy-up of connector code.
+  *	
   *	Revision 1.1  2006/07/07 19:35:04  movieman523
   *	First version.
   *	
@@ -40,10 +43,14 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
+
+#include "connector.h"
+
 #include "csmcomputer.h"
 #include "IMU.h"
 
 #include "saturn.h"
+#include "sivb.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -227,6 +234,12 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	//
+	// For now we don't do anything when disabling the J2 for good.
+	//
+	case IULV_J2_DONE:
+		return true;
+
 	case IULV_SET_J2_THRUST_LEVEL:
 		if (OurVessel) 
 		{
@@ -376,7 +389,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 			OurVessel->LoadTLISounds();
 			return true;
 		}
-		return false;
 		break;
 
 	case IUCSM_PLAY_COUNT_SOUND:
@@ -503,6 +515,113 @@ void CSMToIUConnector::ChannelOutput(int channel, int value)
 	cm.messageType = CSMIU_CHANNEL_OUTPUT;
 	cm.val1.iValue = channel;
 	cm.val2.iValue = value;
+
+	SendMessage(cm);
+}
+
+CSMToSIVBControlConnector::CSMToSIVBControlConnector(CSMcomputer &c) : agc(c)
+
+{
+	type = CSM_SIVB_COMMAND;
+}
+
+CSMToSIVBControlConnector::~CSMToSIVBControlConnector()
+
+{
+}
+
+//
+// For now we don't process any messages from the SIVB.
+//
+bool CSMToSIVBControlConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	CSMSIVBMessageType messageType;
+
+	messageType = (CSMSIVBMessageType) m.messageType;
+
+	return false;
+}
+
+bool CSMToSIVBControlConnector::IsVentable()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = CSMSIVB_IS_VENTABLE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool CSMToSIVBControlConnector::IsVenting()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = CSMSIVB_IS_VENTING;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+double CSMToSIVBControlConnector::GetFuelMass()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = CSMSIVB_GET_VESSEL_FUEL;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	//
+	// Non-zero return just in case the calling code tries to divide
+	// by it.
+	//
+	return 0.01;
+}
+
+void CSMToSIVBControlConnector::StartVenting()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = CSMSIVB_START_VENTING;
+
+	SendMessage(cm);
+}
+
+void CSMToSIVBControlConnector::StopVenting()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = CSMSIVB_STOP_VENTING;
 
 	SendMessage(cm);
 }

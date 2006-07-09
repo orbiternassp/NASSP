@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.200  2006/07/09 00:07:07  movieman523
+  *	Initial tidy-up of connector code.
+  *	
   *	Revision 1.199  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -3441,6 +3444,11 @@ protected:
 	SaturnToIUCommandConnector sivbCommandConnector;
 
 	MultiConnector CSMToSIVBConnector;
+
+	///
+	/// \brief SIVb control connector for venting.
+	///
+	CSMToSIVBControlConnector sivbControlConnector;
 
 	//
 	// PanelSDK pointers.
