@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/07/09 00:07:07  movieman523
+  *	Initial tidy-up of connector code.
+  *	
   *	Revision 1.1  2006/07/07 19:35:04  movieman523
   *	First version.
   *	
@@ -67,6 +70,29 @@ public:
 
 	double GetMass();
 	double GetFuelMass();
+
+protected:
+	CSMcomputer &agc;
+};
+
+///
+/// \ingroup Connectors
+/// \brief CSM to SIVb connector type.
+///
+class CSMToSIVBControlConnector : public SaturnConnector
+{
+public:
+	CSMToSIVBControlConnector(CSMcomputer &c);
+	~CSMToSIVBControlConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+	bool IsVentable();
+	bool IsVenting();
+
+	double GetFuelMass();
+	void StartVenting();
+	void StopVenting();
 
 protected:
 	CSMcomputer &agc;

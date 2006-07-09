@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/07/09 00:07:07  movieman523
+  *	Initial tidy-up of connector code.
+  *	
   *	Revision 1.11  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -144,6 +147,19 @@ public:
 };
 
 ///
+/// \ingroup Connectors
+/// \brief CSM to SIVb command connector type.
+///
+class CSMToSIVBCommandConnector : public SIVbConnector
+{
+public:
+	CSMToSIVBCommandConnector();
+	~CSMToSIVBCommandConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
+///
 /// Specifies the main state of the SIVb
 ///
 /// \brief SIVb state.
@@ -259,20 +275,65 @@ public:
 	///
 	double GetTotalMass();
 
-protected:
+	///
+	/// \brief Set up engines as fuel venting thurster.
+	///
+	void SetVentingThruster();
 
-	void SetS4b();
+	///
+	/// \brief Set up active J2 engine.
+	///
+	void SetActiveJ2Thruster();
+
+	///
+	/// \brief Start venting.
+	///
+	void StartVenting();
+
+	///
+	/// \brief Stop venting.
+	///
+	void StopVenting();
+
+	///
+	/// \brief Is the SIVb venting fuel?
+	/// \return True if venting.
+	///
+	bool IsVenting();
+
+protected:
 
 	///
 	/// \brief Set SIVb state.
 	///
+	void SetS4b();
+
+	///
+	/// \brief Initialise SIVb state.
+	///
 	void InitS4b();
 
+	///
+	/// \brief Get the main state flags as a 32-bit value to save to the scenario file.
+	/// \return 32-bit flags value.
+	///
 	int GetMainState();
+
+	///
+	/// \brief Set the main state flags from a 32-bit value loaded from the scenario file.
+	/// \param s 32-bit flags value.
+	///
 	void SetMainState(int s);
+
+	///
+	/// \brief Get the spacecraft name based on the Apollo mission and vehicle number.
+	/// \param s String to hold the spacecraft name.
+	///
 	void GetApolloName(char *s);
 	void AddRCS_S4B();				///< Add RCS for SIVb control.
 	void Boiloff();					///< Boil off some LOX/LH2 in orbit.
+
+	VECTOR3	mainExhaustPos;			///< Position of main thruster exhaust.
 
 	int Payload;					///< Payload type.
 	int MissionNo;					///< Apollo mission number.
@@ -292,11 +353,13 @@ protected:
 	bool PanelsOpened;				///< SLA Panels are open.
 	bool SaturnVStage;				///< Stage from Saturn V.
 	bool LowRes;					///< Using low-res meshes.
+	bool J2IsActive;				///< Is the J2 active for burns?
+	bool FuelVenting;				///< Is the SIVb venting fuel?
 
 	double CurrentThrust;			///< Current thrust level (0.0 to 1.0).
 
-	double THRUST_THIRD_VAC;
-	double ISP_THIRD_VAC;
+	double THRUST_THIRD_VAC;		///< J2 engine thrust vacuum level in Newtons.
+	double ISP_THIRD_VAC;			///< J2 engine ISP in vacuum.
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;
@@ -308,19 +371,40 @@ protected:
 	///
 	IU iu;
 
-	//
-	// \brief Connector from SIVb to CSM when docked.
-	//
+	///
+	/// \brief Connector from SIVb to CSM when docked.
+	///
 	MultiConnector SIVBToCSMConnector;
 
-	//
-	// \brief Command connector from SIVb to CSM when docked.
-	//
+	///
+	/// \brief Command connector from SIVb to IU.
+	///
 	SIVbToIUCommandConnector IUCommandConnector;
 
+	///
+	/// \brief Command connector from CSM to SIVb.
+	///
+	CSMToSIVBCommandConnector csmCommandConnector;
+
+	///
+	/// \brief Handle of docked vessel.
+	///
 	DOCKHANDLE hDock;
 
 	THRUSTER_HANDLE th_att_rot[10], th_main[1], th_att_lin[2];                 // handles for APS engines
 	THGROUP_HANDLE thg_aps, thg_main;
 	PROPELLANT_HANDLE ph_aps, ph_main;
+};
+
+///
+/// \ingroup Connectors
+/// \brief Message type to send from the CSM to the SIVb.
+///
+enum CSMSIVBMessageType
+{
+	CSMSIVB_GET_VESSEL_FUEL,				///< Get vessel fuel.
+	CSMSIVB_IS_VENTABLE,					///< Is this a ventable vessel?
+	CSMSIVB_IS_VENTING,						///< Is the vessel venting fuel?
+	CSMSIVB_START_VENTING,					///< Start fuel venting.
+	CSMSIVB_STOP_VENTING,					///< Stop fuel venting.
 };

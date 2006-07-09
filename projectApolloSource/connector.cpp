@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/07/07 19:35:24  movieman523
+  *	First version.
+  *	
   **************************************************************************/
 
 #include "orbiterSDK.h"
@@ -138,6 +141,9 @@ bool MultiConnector::AddTo(Connector *other)
 {
 	int i;
 
+	if (!other)
+		return false;
+
 	//
 	// First check this isn't already connected.
 	//
@@ -147,6 +153,19 @@ bool MultiConnector::AddTo(Connector *other)
 		{
 			other->connectedTo = this;
 			return true;
+		}
+	}
+
+	//
+	// Only one connector of each type.
+	//
+	ConnectorType otherType = other->GetType();
+
+	for (i = 0; i < N_MULTICONNECT_INPUTS; i++)
+	{
+		if (Inputs[i] && Inputs[i]->GetType() == otherType)
+		{
+			return false;
 		}
 	}
 

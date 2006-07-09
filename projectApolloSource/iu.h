@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/07/09 00:07:07  movieman523
+  *	Initial tidy-up of connector code.
+  *	
   *	Revision 1.6  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -89,6 +92,7 @@ enum IULVMessageType
 	IULV_ACTIVATE_S4RCS,					///< Activate the SIVb RCS.
 	IULV_DEACTIVATE_S4RCS,					///< Deactivate the SIVb RCS.
 	IULV_SET_ATTITUDE_LIN_LEVEL,			///< Set thruster levels.
+	IULV_J2_DONE,							///< J2 is now done, turn it into a vent.
 
 	IULV_GET_STAGE,							///< Get mission stage.
 	IULV_GET_STATUS,						///< Get vessel status.
@@ -162,6 +166,7 @@ public:
 	void EnableDisableJ2(bool Enable);
 	void SetJ2ThrustLevel(double thrust);
 	void SetAPSThrustLevel(double thrust);
+	void SetVentingThruster();
 
 	void DeactivateNavmode(int mode);
 	void ActivateNavmode(int mode);

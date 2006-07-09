@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.160  2006/07/09 00:07:07  movieman523
+  *	Initial tidy-up of connector code.
+  *	
   *	Revision 1.159  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -246,7 +249,7 @@ extern "C" {
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
 
-	agc(soundlib, dsky, dsky2, imu, Panelsdk, iuCommandConnector), 
+	agc(soundlib, dsky, dsky2, imu, Panelsdk, iuCommandConnector, sivbControlConnector), 
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),
@@ -286,7 +289,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	SuitCompressor2Switch(Panelsdk),
 	BatteryCharger("BatteryCharger", Panelsdk),
 	timedSounds(soundlib),
-	iuCommandConnector(agc)
+	iuCommandConnector(agc),
+	sivbControlConnector(agc)
 
 {
 	InitSaturnCalled = false;
@@ -571,7 +575,7 @@ void Saturn::initSaturn()
 	iuCommandConnector.SetSaturn(this);
 	sivbCommandConnector.SetSaturn(this);
 
-	CSMToSIVBConnector.SetType(CSM_SIVB_COMMAND);
+	CSMToSIVBConnector.SetType(CSM_SIVB_DOCKING);
 
 	//
 	// Propellant sources.
@@ -3568,6 +3572,7 @@ void Saturn::GenericLoadStateSetup()
 	if (stage >= CSM_LEM_STAGE)
 	{
 		CSMToSIVBConnector.AddTo(&iuCommandConnector);
+		CSMToSIVBConnector.AddTo(&sivbControlConnector);
 	}
 	else
 	{
@@ -4129,8 +4134,10 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 
 			iuCommandConnector.Disconnect();
 			sivbCommandConnector.Disconnect();
+			sivbControlConnector.Disconnect();
 
 			CSMToSIVBConnector.AddTo(&iuCommandConnector);
+			CSMToSIVBConnector.AddTo(&sivbControlConnector);
 
 			if (bAbort)
 			{

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/07/09 00:07:07  movieman523
+  *	Initial tidy-up of connector code.
+  *	
   *	Revision 1.7  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -56,11 +59,13 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
+
+#include "connector.h"
 #include "csmcomputer.h"
 #include "IMU.h"
 
 #include "saturn.h"
-
+#include "sivb.h"
 
 IU::IU() 
 
@@ -721,6 +726,7 @@ void IU::SIVBStop()
 		return;
 
 	lvCommandConnector.SetJ2ThrustLevel(0.0);
+	lvCommandConnector.SetVentingThruster();
 
 	if (Realism && !commandConnector.IsVirtualAGC())
 	{
@@ -1252,6 +1258,17 @@ void IUToLVCommandConnector::SetJ2ThrustLevel(double thrust)
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_SET_J2_THRUST_LEVEL;
 	cm.val1.dValue = thrust;
+
+	SendMessage(cm);
+}
+
+void IUToLVCommandConnector::SetVentingThruster()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_J2_DONE;
 
 	SendMessage(cm);
 }

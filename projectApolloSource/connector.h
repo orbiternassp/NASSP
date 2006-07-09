@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/07/09 00:07:07  movieman523
+  *	Initial tidy-up of connector code.
+  *	
   *	Revision 1.1  2006/07/07 19:35:24  movieman523
   *	First version.
   *	
@@ -39,6 +42,7 @@ enum ConnectorType
 	NO_CONNECTION,				///< Dummy.
 	CSM_IU_COMMAND,				///< Passes commands and data between CSM and IU.
 	LV_IU_COMMAND,				///< Passes commands between launch vehicle and IU.
+	CSM_SIVB_DOCKING,			///< Docking connector between CSM and SIVb.
 	CSM_SIVB_COMMAND,			///< Passes commands and data between CSM and SIVb.
 };
 
