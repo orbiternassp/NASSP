@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.10  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -136,19 +139,6 @@ class SIVbToIUCommandConnector : public SIVbConnector
 public:
 	SIVbToIUCommandConnector();
 	~SIVbToIUCommandConnector();
-
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
-};
-
-///
-/// \ingroup Connectors
-/// \brief SIVb to IU command connector type.
-///
-class SIVbToIUDataConnector : public SIVbConnector
-{
-public:
-	SIVbToIUDataConnector();
-	~SIVbToIUDataConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 };
@@ -322,11 +312,6 @@ protected:
 	// \brief Connector from SIVb to CSM when docked.
 	//
 	MultiConnector SIVBToCSMConnector;
-
-	//
-	// \brief Data connector from SIVb to CSM when docked.
-	//
-	SIVbToIUDataConnector IUDataConnector;
 
 	//
 	// \brief Command connector from SIVb to CSM when docked.

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.6  2006/06/23 11:56:48  tschachim
   *	New Project Apollo MFD for TLI burn control.
   *	
@@ -124,7 +127,7 @@ void IU::SetMissionInfo(bool tlicapable, bool crewed, int realism, double sivbbu
 	SIVBBurnStart = sivbburnstart;
 	SIVBApogee = sivbapogee;
 
-	if (!Crewed && (SIVBApogee > 0.0) && (SIVBBurnStart > 0) && (lvDataConnector.GetStage() < CSM_LEM_STAGE))
+	if (!Crewed && (SIVBApogee > 0.0) && (SIVBBurnStart > 0) && (lvCommandConnector.GetStage() < CSM_LEM_STAGE))
 	{
 		SIVBBurn = true;
 	}
@@ -136,9 +139,12 @@ void IU::Timestep(double simt, double simdt)
 	double MainLevel;
 
 	// Only SIVB in orbit for now
-	if (lvDataConnector.GetStage() != STAGE_ORBIT_SIVB) return;
+	if (lvCommandConnector.GetStage() != STAGE_ORBIT_SIVB) return;
 
-	double MissionTime = lvDataConnector.GetMissionTime();
+	//
+	// Update mission time.
+	//
+	MissionTime = simt;
 
 	// Initialization
 	if (!FirstTimeStepDone) {
@@ -175,10 +181,13 @@ void IU::Timestep(double simt, double simdt)
 			// Waiting for sequence start
 			DoTLICalcs();
 			// Burn sequence begins 9:38 min before ignition
-			if (TLIBurnStartTime - lvDataConnector.GetMissionTime() <= (9.0 * 60.0 + 38.0)) {
-				if (SIVBStart()) {
+			if (TLIBurnStartTime - MissionTime <= (9.0 * 60.0 + 38.0)) {
+				if (SIVBStart()) 
+				{
 					TLIBurnState++;
-				} else {
+				} 
+				else 
+				{
 					TLIBurnState = 0;
 				}
 			}
@@ -191,8 +200,8 @@ void IU::Timestep(double simt, double simdt)
 		case 2:
 			// Waiting for ignition
 			DoTLICalcs();
-			if (lvDataConnector.GetJ2ThrustLevel() >= 1.0) {
-				TLILastAltitude = lvDataConnector.GetAltitude();
+			if (lvCommandConnector.GetJ2ThrustLevel() >= 1.0) {
+				TLILastAltitude = lvCommandConnector.GetAltitude();
 				TLIBurnState++;
 			}
 			// Inhibited?
@@ -206,7 +215,7 @@ void IU::Timestep(double simt, double simdt)
 
 			// ...and cut off the engine at the appropriate velocity.
 			VESSELSTATUS status;
-			lvDataConnector.GetStatus(status);
+			lvCommandConnector.GetStatus(status);
 			if (length(status.rvel) >= TLICutOffVel) {
 				if (TLIBurnStart) 
 					TLIBurnDone = true;
@@ -555,10 +564,10 @@ void IU::Timestep(double simt, double simdt)
 
 		case 150:
 			if (MissionTime >= NextMissionEventTime) {
-				OBJHANDLE hPlanet = lvDataConnector.GetGravityRef();
+				OBJHANDLE hPlanet = lvCommandConnector.GetGravityRef();
 				double prad = oapiGetSize(hPlanet);
 				double ap;
-				lvDataConnector.GetApDist(ap);
+				lvCommandConnector.GetApDist(ap);
 
 				lvCommandConnector.ActivateNavmode(NAVMODE_PROGRADE);
 
@@ -566,7 +575,7 @@ void IU::Timestep(double simt, double simdt)
 				// Burn until the orbit is about right or we're out of fuel.
 				//
 
-				if ((ap >= (prad + (SIVBApogee * 1000.0))) || (((lvDataConnector.GetPropellantMass() * 100.0) / lvDataConnector.GetMaxFuelMass()) <= 0.1)) {
+				if ((ap >= (prad + (SIVBApogee * 1000.0))) || (((lvCommandConnector.GetPropellantMass() * 100.0) / lvCommandConnector.GetMaxFuelMass()) <= 0.1)) {
 					State = 201;
 					SIVBBurn = false;
 					lvCommandConnector.DeactivateNavmode(NAVMODE_PROGRADE);
@@ -585,7 +594,7 @@ void IU::Timestep(double simt, double simdt)
 
 			lvCommandConnector.ActivateNavmode(NAVMODE_PROGRADE);
 
-			if (TLIBurnDone || lvDataConnector.GetPropellantMass() < 0.001)
+			if (TLIBurnDone || lvCommandConnector.GetPropellantMass() < 0.001)
 			{
 				State++;
 			}
@@ -610,7 +619,7 @@ void IU::Timestep(double simt, double simdt)
 
 			commandConnector.SetEngineIndicator(1);
 
-			MainLevel = lvDataConnector.GetJ2ThrustLevel();
+			MainLevel = lvCommandConnector.GetJ2ThrustLevel();
 			MainLevel -= (simdt * 1.2);
 			lvCommandConnector.SetJ2ThrustLevel(MainLevel);
 
@@ -642,7 +651,7 @@ void IU::Timestep(double simt, double simdt)
 		}
 	}
 	else {
-		if (lvDataConnector.GetJ2ThrustLevel() <= 0) {
+		if (lvCommandConnector.GetJ2ThrustLevel() <= 0) {
 			if (Realism && !commandConnector.IsVirtualAGC())
 			{
 				lvCommandConnector.EnableDisableJ2(false);
@@ -696,8 +705,10 @@ bool IU::SIVBStart()
 	if (!TLICapable || TLIBurnStart || TLIBurnDone)
 		return false;
 
-	if (lvDataConnector.GetStage() != STAGE_ORBIT_SIVB)
+	if (lvCommandConnector.GetStage() != STAGE_ORBIT_SIVB)
 		return false;
+
+	commandConnector.LoadTLISounds();
 
 	TLIBurnStart = true;
 	return true;
@@ -706,7 +717,7 @@ bool IU::SIVBStart()
 void IU::SIVBStop()
 
 {
-	if (lvDataConnector.GetStage() != STAGE_ORBIT_SIVB)
+	if (lvCommandConnector.GetStage() != STAGE_ORBIT_SIVB)
 		return;
 
 	lvCommandConnector.SetJ2ThrustLevel(0.0);
@@ -717,6 +728,7 @@ void IU::SIVBStop()
 	}
 
 	commandConnector.PlaySecoSound(true);
+	commandConnector.ClearTLISounds();
 
 	TLIBurnStart = false;
 	TLIBurnDone = true;
@@ -728,20 +740,20 @@ bool IU::StartTLIBurn(double timeToEjection, double dV)
 	if (!TLICapable || TLIBurnStart || TLIBurnDone)
 		return false;
 
-	if (lvDataConnector.GetStage() != STAGE_ORBIT_SIVB)
+	if (lvCommandConnector.GetStage() != STAGE_ORBIT_SIVB)
 		return false;
 
 	if (TLIBurnState != 0) 
 		return false;
 
 	TLIBurnDeltaV = dV;
-	TLIBurnTime = lvDataConnector.GetMissionTime() + timeToEjection;
+	TLIBurnTime = MissionTime + timeToEjection;
 
 	if (!DoTLICalcs())
 		return false;
 
 	// Burn sequence begins 9:38 min before ignition
-	if (TLIBurnStartTime - lvDataConnector.GetMissionTime() <= (9.0 * 60.0 + 38.0))
+	if (TLIBurnStartTime - MissionTime <= (9.0 * 60.0 + 38.0))
 		return false;
 
 	TLIBurnState = 1;
@@ -758,9 +770,9 @@ bool IU::DoTLICalcs()
 	// and the expected end velocity.
 	//
 
-	double mass = lvDataConnector.GetMass();
+	double mass = lvCommandConnector.GetMass();
 	double isp = VesselISP;
-	double fuelmass = lvDataConnector.GetPropellantMass();
+	double fuelmass = lvCommandConnector.GetPropellantMass();
 	double thrust = VesselThrust;
 
 	double massrequired = mass * (1.0 - exp(-((TLIBurnDeltaV - TLIThrustDecayDV) / isp)));
@@ -783,18 +795,19 @@ bool IU::DoTLICalcs()
 	//
 
 	VECTOR3 Pos, Vel;
-	lvDataConnector.GetRelativePos(lvDataConnector.GetGravityRef(), Pos);
-	lvDataConnector.GetRelativeVel(lvDataConnector.GetGravityRef(), Vel);
+	OBJHANDLE GravityRef = lvCommandConnector.GetGravityRef();
+	lvCommandConnector.GetRelativePos(GravityRef, Pos);
+	lvCommandConnector.GetRelativeVel(GravityRef, Vel);
 
 	ELEMENTS el;
 	double mjd_ref;
-	lvDataConnector.GetElements(el, mjd_ref);
+	lvCommandConnector.GetElements(el, mjd_ref);
 
 	VECTOR3 NewPos, NewVel;
 	double NewVelMag;
 
 	PredictPosVelVectors(Pos, Vel, el.a, 3.986e14,
-						  TLIBurnTime - lvDataConnector.GetMissionTime(), NewPos, NewVel, NewVelMag);
+						  TLIBurnTime - MissionTime, NewPos, NewVel, NewVelMag);
 
 	TLICutOffVel = NewVelMag + TLIBurnDeltaV - TLIThrustDecayDV;
 	return true;
@@ -805,8 +818,8 @@ void IU::UpdateTLICalcs()
 {
 	double MaxE = TLICutOffVel * TLICutOffVel;
 
-	OBJHANDLE hbody = lvDataConnector.GetGravityRef();
-	double alt = lvDataConnector.GetAltitude();
+	OBJHANDLE hbody = lvCommandConnector.GetGravityRef();
+	double alt = lvCommandConnector.GetAltitude();
 	double bradius = oapiGetSize(hbody);
 	double dist = bradius + alt;
 	double g = (G * bradius * bradius) / (dist * dist);
@@ -910,23 +923,22 @@ void IU::ConnectToMultiConnector(MultiConnector *csmConnector)
 	csmConnector->AddTo(&commandConnector);
 }
 
-void IU::ConnectToLV(Connector *CommandConnector, Connector *DataConnector)
+void IU::ConnectToLV(Connector *CommandConnector)
 
 {
 	lvCommandConnector.ConnectTo(CommandConnector);
-	lvDataConnector.ConnectTo(DataConnector);
 }
 
 double IU::GetMass()
 
 {
-	return lvDataConnector.GetMass();
+	return lvCommandConnector.GetMass();
 }
 
 double IU::GetFuelMass()
 
 {
-	return lvDataConnector.GetPropellantMass();
+	return lvCommandConnector.GetPropellantMass();
 }
 
 IUToCSMCommandConnector::IUToCSMCommandConnector()
@@ -1063,6 +1075,28 @@ int IUToCSMCommandConnector::SIISIVbSwitchState()
 	}
 
 	return -1;
+}
+
+void IUToCSMCommandConnector::LoadTLISounds()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_LOAD_TLI_SOUNDS;
+
+	SendMessage(cm);
+}
+
+void IUToCSMCommandConnector::ClearTLISounds()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_CLEAR_TLI_SOUNDS;
+
+	SendMessage(cm);
 }
 
 void IUToCSMCommandConnector::PlayCountSound(bool StartStop)
@@ -1293,40 +1327,12 @@ void IUToLVCommandConnector::ActivateS4RCS()
 	SendMessage(cm);
 }
 
-IUToLVDataConnector::IUToLVDataConnector()
-
-{
-	type = LV_IU_DATA;
-}
-
-IUToLVDataConnector::~IUToLVDataConnector()
-
-{
-}
-
-double IUToLVDataConnector::GetMissionTime()
+double IUToLVCommandConnector::GetMass()
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
-	cm.messageType = IULV_GET_MISSION_TIME;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return MINUS_INFINITY;
-}
-
-
-double IUToLVDataConnector::GetMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_MASS;
 
 	if (SendMessage(cm))
@@ -1338,12 +1344,12 @@ double IUToLVDataConnector::GetMass()
 }
 
 
-int IUToLVDataConnector::GetStage()
+int IUToLVCommandConnector::GetStage()
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_STAGE;
 
 	if (SendMessage(cm))
@@ -1354,12 +1360,12 @@ int IUToLVDataConnector::GetStage()
 	return NULL_STAGE;
 }
 
-double IUToLVDataConnector::GetJ2ThrustLevel()
+double IUToLVCommandConnector::GetJ2ThrustLevel()
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_J2_THRUST_LEVEL;
 
 	if (SendMessage(cm))
@@ -1370,12 +1376,12 @@ double IUToLVDataConnector::GetJ2ThrustLevel()
 	return 0.0;
 }
 
-double IUToLVDataConnector::GetAltitude()
+double IUToLVCommandConnector::GetAltitude()
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_ALTITUDE;
 
 	if (SendMessage(cm))
@@ -1386,12 +1392,12 @@ double IUToLVDataConnector::GetAltitude()
 	return 0.0;
 }
 
-double IUToLVDataConnector::GetPropellantMass()
+double IUToLVCommandConnector::GetPropellantMass()
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_PROPELLANT_MASS;
 
 	if (SendMessage(cm))
@@ -1402,12 +1408,12 @@ double IUToLVDataConnector::GetPropellantMass()
 	return 0.0;
 }
 
-double IUToLVDataConnector::GetMaxFuelMass()
+double IUToLVCommandConnector::GetMaxFuelMass()
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_MAX_FUEL_MASS;
 
 	if (SendMessage(cm))
@@ -1418,24 +1424,24 @@ double IUToLVDataConnector::GetMaxFuelMass()
 	return 0.0;
 }
 
-void IUToLVDataConnector::GetStatus(VESSELSTATUS &status)
+void IUToLVCommandConnector::GetStatus(VESSELSTATUS &status)
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_STATUS;
 	cm.val1.pValue = &status;
 
 	SendMessage(cm);
 }
 
-OBJHANDLE IUToLVDataConnector::GetGravityRef()
+OBJHANDLE IUToLVCommandConnector::GetGravityRef()
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_GRAVITY_REF;
 
 	if (SendMessage(cm))
@@ -1446,12 +1452,12 @@ OBJHANDLE IUToLVDataConnector::GetGravityRef()
 	return 0;
 }
 
-void IUToLVDataConnector::GetApDist(double &d)
+void IUToLVCommandConnector::GetApDist(double &d)
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_GRAVITY_REF;
 
 	if (SendMessage(cm))
@@ -1462,12 +1468,12 @@ void IUToLVDataConnector::GetApDist(double &d)
 	d = 0.0;
 }
 
-void IUToLVDataConnector::GetRelativePos(OBJHANDLE ref, VECTOR3 &v)
+void IUToLVCommandConnector::GetRelativePos(OBJHANDLE ref, VECTOR3 &v)
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_RELATIVE_POS;
 	cm.val1.hValue = ref;
 	cm.val2.pValue = &v;
@@ -1475,12 +1481,12 @@ void IUToLVDataConnector::GetRelativePos(OBJHANDLE ref, VECTOR3 &v)
 	SendMessage(cm);
 }
 
-void IUToLVDataConnector::GetRelativeVel(OBJHANDLE ref, VECTOR3 &v)
+void IUToLVCommandConnector::GetRelativeVel(OBJHANDLE ref, VECTOR3 &v)
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_RELATIVE_VEL;
 	cm.val1.hValue = ref;
 	cm.val2.pValue = &v;
@@ -1488,12 +1494,12 @@ void IUToLVDataConnector::GetRelativeVel(OBJHANDLE ref, VECTOR3 &v)
 	SendMessage(cm);
 }
 
-OBJHANDLE IUToLVDataConnector::GetElements (ELEMENTS &el, double &mjd_ref)
+OBJHANDLE IUToLVCommandConnector::GetElements (ELEMENTS &el, double &mjd_ref)
 
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_DATA;
+	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_ELEMENTS;
 	cm.val1.pValue = &el;
 

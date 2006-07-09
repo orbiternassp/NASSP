@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.16  2006/07/06 02:13:07  movieman523
   *	First pass at Apollo to Venus orbital test flight.
   *	
@@ -210,7 +213,6 @@ void SIVB::InitS4b()
 	//
 	SIVBToCSMConnector.SetType(CSM_SIVB_COMMAND);
 
-	IUDataConnector.SetSIVb(this);
 	IUCommandConnector.SetSIVb(this);
 }
 
@@ -379,7 +381,7 @@ void SIVB::SetS4b()
 		//
 
 		iu.ConnectToMultiConnector(&SIVBToCSMConnector);
-		iu.ConnectToLV(&IUCommandConnector, &IUDataConnector);
+		iu.ConnectToLV(&IUCommandConnector);
 	}
 }
 
@@ -1008,18 +1010,7 @@ SIVbToIUCommandConnector::~SIVbToIUCommandConnector()
 {
 }
 
-SIVbToIUDataConnector::SIVbToIUDataConnector()
-
-{
-	type = LV_IU_DATA;
-}
-
-SIVbToIUDataConnector::~SIVbToIUDataConnector()
-
-{
-}
-
-bool SIVbToIUDataConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 
 {
 	//
@@ -1048,14 +1039,6 @@ bool SIVbToIUDataConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	case IULV_GET_STAGE:
 		m.val1.iValue = STAGE_ORBIT_SIVB;
 		return true;
-
-	case IULV_GET_MISSION_TIME:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMissionTime();
-			return true;
-		}
-		break;
 
 	case IULV_GET_ALTITUDE:
 		if (OurVessel)
@@ -1163,29 +1146,7 @@ bool SIVbToIUDataConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 			return true;
 		}
 		break;
-	}
 
-	return false;
-}
-
-bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-
-{
-	//
-	// Sanity check.
-	//
-
-	if (m.destination != type)
-	{
-		return false;
-	}
-
-	IULVMessageType messageType;
-
-	messageType = (IULVMessageType) m.messageType;
-
-	switch (messageType)
-	{
 	case IULV_ACTIVATE_NAVMODE:
 		if (OurVessel)
 		{

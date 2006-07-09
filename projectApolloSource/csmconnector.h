@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/07/07 19:35:04  movieman523
+  *	First version.
+  *	
   **************************************************************************/
 
 #if !defined(_PA_CSMCONNECTOR_H)
@@ -78,19 +81,6 @@ class SaturnToIUCommandConnector : public SaturnConnector
 public:
 	SaturnToIUCommandConnector();
 	~SaturnToIUCommandConnector();
-
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
-};
-
-///
-/// \ingroup Connectors
-/// \brief Saturn to IU command connector type.
-///
-class SaturnToIUDataConnector : public SaturnConnector
-{
-public:
-	SaturnToIUDataConnector();
-	~SaturnToIUDataConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 };
