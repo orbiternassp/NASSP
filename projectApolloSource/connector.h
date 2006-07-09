@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/07/07 19:35:24  movieman523
+  *	First version.
+  *	
   **************************************************************************/
 
 #if !defined(_PA_CONNECTOR_H)
@@ -36,7 +39,6 @@ enum ConnectorType
 	NO_CONNECTION,				///< Dummy.
 	CSM_IU_COMMAND,				///< Passes commands and data between CSM and IU.
 	LV_IU_COMMAND,				///< Passes commands between launch vehicle and IU.
-	LV_IU_DATA,					///< Passes data between launch vehicle and IU.
 	CSM_SIVB_COMMAND,			///< Passes commands and data between CSM and SIVb.
 };
 

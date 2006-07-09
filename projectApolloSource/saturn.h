@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.199  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.198  2006/07/05 20:16:16  movieman523
   *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
   *	
@@ -914,6 +917,16 @@ public:
 	/// \return Switch state.
 	///
 	int GetTLIEnableSwitchState();
+
+	///
+	/// \brief Load sounds required for TLI burn.
+	///
+	void LoadTLISounds();
+
+	///
+	/// \brief Clear TLI sounds.
+	///
+	void ClearTLISounds();
 
 	///
 	/// \brief Play or stop countdown sound.
@@ -2905,6 +2918,7 @@ protected:
 	double CSMAccelPitch;
 
 	bool TLICapableBooster;
+	bool TLISoundsLoaded;
 	bool SkylabSM;
 	bool NoHGA;
 	bool SkylabCM;
@@ -3425,7 +3439,6 @@ protected:
 	///
 	CSMToIUConnector iuCommandConnector;
 	SaturnToIUCommandConnector sivbCommandConnector;
-	SaturnToIUDataConnector sivDataConnector;
 
 	MultiConnector CSMToSIVBConnector;
 

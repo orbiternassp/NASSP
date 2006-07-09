@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.5  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -55,11 +58,13 @@ enum IUCSMMessageType
 	IUCSM_SET_ENGINE_INDICATOR,				///< Set or clear an engine indicator.
 	IUCSM_GET_SIISIVBSEP_SWITCH_STATE,		///< State of SII/SIVb Sep switch.
 	IUCSM_GET_TLI_ENABLE_SWITCH_STATE,		///< State of TLI Enable switch.
+	IUCSM_LOAD_TLI_SOUNDS,					///< Load sounds required for TLI burn.
 	IUCSM_PLAY_COUNT_SOUND,					///< Play/stop countdown sound.
 	IUCSM_PLAY_SECO_SOUND,					///< Play/stop SECO sound.
 	IUCSM_PLAY_SEPS_SOUND,					///< Play/stop Seperation sound.
 	IUCSM_PLAY_TLI_SOUND,					///< Play/stop TLI sound.
 	IUCSM_PLAY_TLISTART_SOUND,				///< Play/stop TLI start sound.
+	IUCSM_CLEAR_TLI_SOUNDS,					///< Unload the sounds required for the TLI burn.
 
 	CSMIU_SET_VESSEL_STATS,					///< Set the vessel stats in the IU.
 	CSMIU_START_TLI_BURN,					///< Start the TLI burn.
@@ -87,7 +92,6 @@ enum IULVMessageType
 
 	IULV_GET_STAGE,							///< Get mission stage.
 	IULV_GET_STATUS,						///< Get vessel status.
-	IULV_GET_MISSION_TIME,					///< Get the mission time.
 	IULV_GET_J2_THRUST_LEVEL,				///< Get the J2 engine thrust level.
 	IULV_GET_ALTITUDE,						///< Get the current altitude.
 	IULV_GET_PROPELLANT_MASS,				///< Get the propellant mass.
@@ -129,6 +133,9 @@ public:
 	// Sound functions.
 	//
 
+	void LoadTLISounds();
+	void ClearTLISounds();
+
 	void PlayCountSound(bool StartStop);
 	void PlaySecoSound(bool StartStop);
 	void PlaySepsSound(bool StartStop);
@@ -163,20 +170,8 @@ public:
 	void ActivateS4RCS();
 
 	void SetAttitudeLinLevel(int a1, int a2);
-};
-
-///
-/// \ingroup Connectors
-/// \brief IU to LV data connector.
-///
-class IUToLVDataConnector : public Connector
-{
-public:
-	IUToLVDataConnector();
-	~IUToLVDataConnector();
 
 	int GetStage();
-	double GetMissionTime();
 	double GetAltitude();
 	double GetJ2ThrustLevel();
 	double GetPropellantMass();
@@ -206,6 +201,12 @@ class IU {
 public:
 	IU();
 	virtual ~IU();
+
+	///
+	/// \brief Timestep function.
+	/// \param simt The current Mission Elapsed Time in seconds from launch.
+	/// \param simdt The time in seconds since the last timestep call.
+	///
 	void Timestep(double simt, double simdt);
 	void ChannelOutput(int address, int value);
 	void SetVesselStats(double ISP, double Thrust);
@@ -234,7 +235,7 @@ public:
 
 	virtual void ConnectToCSM(Connector *csmConnector);
 	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
-	virtual void ConnectToLV(Connector *CommandConnector, Connector *DataConnector);
+	virtual void ConnectToLV(Connector *CommandConnector);
 
 protected:
 	bool SIVBStart();
@@ -280,6 +281,11 @@ protected:
 	double SIVBApogee;
 
 	///
+	/// \brief Mission Elapsed Time, passed into the IU from the spacecraft.
+	///
+	double MissionTime;
+
+	///
 	/// \brief Connector to CSM.
 	///
 	IUToCSMCommandConnector commandConnector;
@@ -288,11 +294,6 @@ protected:
 	/// \brief Connector to launch vehicle.
 	///
 	IUToLVCommandConnector lvCommandConnector;
-
-	///
-	/// \brief Data connector to launch vehicle.
-	///
-	IUToLVDataConnector lvDataConnector;
 };
 
 //

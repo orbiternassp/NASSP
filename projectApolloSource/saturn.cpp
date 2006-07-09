@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.159  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.158  2006/07/06 02:13:07  movieman523
   *	First pass at Apollo to Venus orbital test flight.
   *	
@@ -567,7 +570,6 @@ void Saturn::initSaturn()
 
 	iuCommandConnector.SetSaturn(this);
 	sivbCommandConnector.SetSaturn(this);
-	sivDataConnector.SetSaturn(this);
 
 	CSMToSIVBConnector.SetType(CSM_SIVB_COMMAND);
 
@@ -1379,7 +1381,7 @@ typedef union {
 		unsigned LEMdatatransfer:1;
 		unsigned PostSplashdownPlayed:1;
 		unsigned IGMEnabled:1;
-		unsigned unused_3:1;
+		unsigned TLISoundsLoaded:1;
 		unsigned MissionTimerEnabled:1;
 		unsigned EventTimerEnabled:1;
 		unsigned EventTimerRunning:1;
@@ -1419,6 +1421,7 @@ int Saturn::GetMainState()
 	state.u.SkylabCM = SkylabCM;
 	state.u.S1bPanel = S1bPanel;
 	state.u.NoHGA = NoHGA;
+	state.u.TLISoundsLoaded = TLISoundsLoaded;
 
 	return state.word;
 }
@@ -1448,6 +1451,7 @@ void Saturn::SetMainState(int s)
 	SkylabCM = (state.u.SkylabCM != 0);
 	S1bPanel = (state.u.S1bPanel != 0);
 	NoHGA = (state.u.NoHGA != 0);
+	TLISoundsLoaded = (state.u.TLISoundsLoaded != 0);
 }
 
 typedef union {
@@ -3518,6 +3522,28 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	}
 }
 
+void Saturn::LoadTLISounds()
+
+{
+	soundlib.LoadMissionSound(SMJetS, SM_SEP_SOUND, DEFAULT_SM_SEP_SOUND);
+	soundlib.LoadMissionSound(STLI, GO_FOR_TLI_SOUND, NULL);
+	soundlib.LoadMissionSound(STLIStart, TLI_START_SOUND, NULL);
+	soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
+
+	TLISoundsLoaded = true;
+}
+
+void Saturn::ClearTLISounds()
+
+{
+	SMJetS.done();
+	STLI.done();
+	STLIStart.done();
+	SecoSound.done();
+
+	TLISoundsLoaded = false;
+}
+
 void Saturn::GenericLoadStateSetup()
 
 {
@@ -3526,10 +3552,12 @@ void Saturn::GenericLoadStateSetup()
 	// otherwise.
 	//
 
-	if (stage != CSM_LEM_STAGE) {
+	if (stage != CSM_LEM_STAGE)
+	{
 		OrbiterAttitudeToggle.SetActive(false);
 	}
-	else {
+	else
+	{
 		OrbiterAttitudeToggle.SetActive(true);
 	}
 
@@ -3544,7 +3572,7 @@ void Saturn::GenericLoadStateSetup()
 	else
 	{
 		iu.ConnectToCSM(&iuCommandConnector);
-		iu.ConnectToLV(&sivbCommandConnector, &sivDataConnector);
+		iu.ConnectToLV(&sivbCommandConnector);
 	}
 
 	//
@@ -3604,10 +3632,12 @@ void Saturn::GenericLoadStateSetup()
 	// telling us that they're being switched in other stages.
 	//
 
-	if (stage != CSM_LEM_STAGE) {
+	if (stage != CSM_LEM_STAGE)
+	{
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
 	}
-	else {
+	else
+	{
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 	}
 
@@ -3644,11 +3674,9 @@ void Saturn::GenericLoadStateSetup()
 		soundlib.LoadSound(SepS, SEPMOTOR_SOUND, INTERNAL_ONLY);
 	}
 
-	if (stage <= CSM_LEM_STAGE) {
-		soundlib.LoadMissionSound(SMJetS, SM_SEP_SOUND, DEFAULT_SM_SEP_SOUND);
-		soundlib.LoadMissionSound(STLI, GO_FOR_TLI_SOUND, NULL);
-		soundlib.LoadMissionSound(STLIStart, TLI_START_SOUND, NULL);
-		soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
+	if (TLISoundsLoaded)
+	{
+		LoadTLISounds();
 	}
 
 	if (stage == CM_RECOVERY_STAGE)
@@ -4097,18 +4125,10 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 			SetStage(CSM_LEM_STAGE);
 			soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 
-			//
-			// MGFIX: these shouldn't be deleted here as they may be needed later on if we do
-			// a docked TLI burn.
-			//
-
-			STLI.done();
-			STLIStart.done();
-			SecoSound.done();
+			ClearTLISounds();
 
 			iuCommandConnector.Disconnect();
 			sivbCommandConnector.Disconnect();
-			iuCommandConnector.Disconnect();
 
 			CSMToSIVBConnector.AddTo(&iuCommandConnector);
 

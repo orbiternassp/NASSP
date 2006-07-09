@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/07/07 19:35:04  movieman523
+  *	First version.
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -85,103 +88,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 
 	switch (messageType)
 	{
-	case IULV_ACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->ActivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->DeactivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_J2_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetJ2ThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_APS_THRUST_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAPSThrustLevel(m.val1.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_ATTITUDE_LIN_LEVEL:
-		if (OurVessel) 
-		{
-			OurVessel->SetAttitudeLinLevel(m.val1.iValue, m.val2.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_ACTIVATE_S4RCS:
-		if (OurVessel)
-		{
-			OurVessel->ActivateS4RCS();
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_S4RCS:
-		if (OurVessel)
-		{
-			OurVessel->DeactivateS4RCS();
-			return true;
-		}
-		break;
-
-	case IULV_ENABLE_J2:
-		if (OurVessel)
-		{
-			OurVessel->EnableDisableJ2(m.val1.bValue);
-			return true;
-		}
-		break;
-	}
-
-	return false;
-}
-
-SaturnToIUDataConnector::SaturnToIUDataConnector()
-
-{
-	type = LV_IU_DATA;
-}
-
-SaturnToIUDataConnector::~SaturnToIUDataConnector()
-
-{
-}
-
-bool SaturnToIUDataConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-
-{
-	//
-	// Sanity check.
-	//
-
-	if (m.destination != type)
-	{
-		return false;
-	}
-
-	IULVMessageType messageType;
-
-	messageType = (IULVMessageType) m.messageType;
-
-	switch (messageType)
-	{
 	case IULV_GET_J2_THRUST_LEVEL:
 		if (OurVessel)
 		{
@@ -194,14 +100,6 @@ bool SaturnToIUDataConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 		if (OurVessel)
 		{
 			m.val1.iValue = OurVessel->GetStage();
-			return true;
-		}
-		break;
-
-	case IULV_GET_MISSION_TIME:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMissionTime();
 			return true;
 		}
 		break;
@@ -312,6 +210,70 @@ bool SaturnToIUDataConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 			return true;
 		}
 		break;
+
+	case IULV_ACTIVATE_NAVMODE:
+		if (OurVessel)
+		{
+			OurVessel->ActivateNavmode(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_DEACTIVATE_NAVMODE:
+		if (OurVessel)
+		{
+			OurVessel->DeactivateNavmode(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_J2_THRUST_LEVEL:
+		if (OurVessel) 
+		{
+			OurVessel->SetJ2ThrustLevel(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_APS_THRUST_LEVEL:
+		if (OurVessel) 
+		{
+			OurVessel->SetAPSThrustLevel(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_ATTITUDE_LIN_LEVEL:
+		if (OurVessel) 
+		{
+			OurVessel->SetAttitudeLinLevel(m.val1.iValue, m.val2.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_ACTIVATE_S4RCS:
+		if (OurVessel)
+		{
+			OurVessel->ActivateS4RCS();
+			return true;
+		}
+		break;
+
+	case IULV_DEACTIVATE_S4RCS:
+		if (OurVessel)
+		{
+			OurVessel->DeactivateS4RCS();
+			return true;
+		}
+		break;
+
+	case IULV_ENABLE_J2:
+		if (OurVessel)
+		{
+			OurVessel->EnableDisableJ2(m.val1.bValue);
+			return true;
+		}
+		break;
 	}
 
 	return false;
@@ -408,6 +370,15 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
+	case IUCSM_LOAD_TLI_SOUNDS:
+		if (OurVessel)
+		{
+			OurVessel->LoadTLISounds();
+			return true;
+		}
+		return false;
+		break;
+
 	case IUCSM_PLAY_COUNT_SOUND:
 		if (OurVessel)
 		{
@@ -444,6 +415,14 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		if (OurVessel)
 		{
 			OurVessel->PlayTLIStartSound(m.val1.bValue);
+			return true;
+		}
+		break;
+
+	case IUCSM_CLEAR_TLI_SOUNDS:
+		if (OurVessel)
+		{
+			OurVessel->ClearTLISounds();
 			return true;
 		}
 		break;
