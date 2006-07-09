@@ -1,6 +1,8 @@
 BEGIN_DESC
-Apollo to Venus Phase A test mission approaching orbit-raising burn. Enable Prograde on the SIVb after loading the
+Apollo to Venus Phase-A test mission approaching orbit-raising burn. Enable Prograde on the SIVb after loading the
 scenario, as Orbiter can't re-orient to prograde very well by itself when two spacecraft are docked.
+
+After the burn, use Prog 59 in the AGC to vent remaining propellant from the SIVb so the fuel tanks can be used for habitation.
 END_DESC
 
 BEGIN_ENVIRONMENT
