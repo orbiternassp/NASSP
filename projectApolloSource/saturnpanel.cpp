@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.177  2006/06/30 11:53:50  tschachim
+  *	Bugfix InstrumentLightingNonESSCircuitBraker and NonessBusSwitch.
+  *	
   *	Revision 1.176  2006/06/21 13:40:15  tschachim
   *	Disabled testing code of the ECS water-glycol cooling
   *	
@@ -883,6 +886,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_THUMBWHEEL_SMALL]						= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_SMALL));
 	srf[SRF_THUMBWHEEL_LARGEFONTSINV] 				= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_LARGEFONTSINV));
 	srf[SRF_SWLEVERTHREEPOS] 						= oapiCreateSurface (LOADBMP (IDB_SWLEVERTHREEPOS));
+	srf[SRF_ORDEAL_ROTARY] 							= oapiCreateSurface (LOADBMP (IDB_ORDEAL_ROTARY));
 	
 
 	//
@@ -974,6 +978,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_SMALL],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_LARGEFONTSINV],				g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_SWLEVERTHREEPOS],						g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_ORDEAL_ROTARY],						g_Param.col[4]);
 
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1473,6 +1478,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_GLYCOLTORADIATORSLEVER,			_R(1218,   46, 1250,  206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_GLYCOLRESERVOIRROTARIES,			_R(1226,  705, 1304,  995), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_OXYGENROTARIES,					_R(1228, 1146, 1518, 1224), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R( 418,   43,  661,  161), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ORDEALROTARY,					_R( 709,   63,  793,  147), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
 		break;
@@ -2692,6 +2699,18 @@ void Saturn::SetSwitches(int panel) {
 	OxygenSurgeTankRotary.Init      (  0, 0, 78, 78, srf[SRF_ECSROTARY], srf[SRF_BORDER_78x78], OxygenRotariesRow);
 	OxygenSMSupplyRotary.Init       (106, 0, 78, 78, srf[SRF_ECSROTARY], srf[SRF_BORDER_78x78], OxygenRotariesRow);
 	OxygenRepressPackageRotary.Init (212, 0, 78, 78, srf[SRF_ECSROTARY], srf[SRF_BORDER_78x78], OxygenRotariesRow);
+
+	ORDEALSwitchesRow.Init(AID_ORDEALSWITCHES, MainPanel);
+	ORDEALFDAI1Switch.Init	 (  0,  0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+	ORDEALFDAI2Switch.Init	 (113,  0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+	ORDEALEarthSwitch.Init	 (209,  0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+	ORDEALLightingSwitch.Init(  0, 89, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow); 
+	ORDEALModeSwitch.Init	 (160, 89, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);	
+	ORDEALSlewSwitch.Init	 (209, 89, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+
+	ORDEALRotaryRow.Init(AID_ORDEALROTARY, MainPanel);
+	ORDEALAltSetRotary.Init(  0, 0, 84, 84, srf[SRF_ORDEAL_ROTARY], srf[SRF_BORDER_84x84], ORDEALRotaryRow);
+
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -5016,6 +5035,15 @@ void Saturn::InitSwitches() {
 	OxygenRepressPackageRotary.AddPosition(2, 120);
 	OxygenRepressPackageRotary.Register(PSH, "OxygenRepressPackageRotary", 2);
 
+	ORDEALAltSetRotary.AddPosition(0, 240);
+	ORDEALAltSetRotary.AddPosition(1, 270);
+	ORDEALAltSetRotary.AddPosition(2, 330);
+	ORDEALAltSetRotary.AddPosition(3,   0);
+	ORDEALAltSetRotary.AddPosition(4,  60);
+	ORDEALAltSetRotary.AddPosition(5,  90);
+	ORDEALAltSetRotary.AddPosition(6, 150);
+	ORDEALAltSetRotary.Register(PSH, "ORDEALAltSetRotary", 3);
+
 	OrbiterAttitudeToggle.SetActive(false);		// saved in LPSwitchState.LPswitch5
 
 	EpsSensorSignalDcMnaCircuitBraker.Register(PSH, "EpsSensorSignalDcMnaCircuitBraker", 1);
@@ -5218,6 +5246,13 @@ void Saturn::InitSwitches() {
 
 	GlycolToRadiatorsLever.Register(PSH, "GlycolToRadiatorsLever", 1);
 
+	ORDEALFDAI1Switch.Register(PSH, "ORDEALFDAI1Switch", false);
+	ORDEALFDAI2Switch.Register(PSH, "ORDEALFDAI2Switch", false);
+	ORDEALEarthSwitch.Register(PSH, "ORDEALEarthSwitch", THREEPOSSWITCH_CENTER);
+	ORDEALLightingSwitch.Register(PSH, "ORDEALLightingSwitch", THREEPOSSWITCH_CENTER);
+	ORDEALModeSwitch.Register(PSH, "ORDEALModeSwitch", false);	
+	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", false);
+	
 	//
 	// Old stuff. Delete when no longer required.
 	//

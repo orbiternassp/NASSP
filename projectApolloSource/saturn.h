@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.201  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.200  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
@@ -2542,6 +2545,21 @@ protected:
 	RotationalSwitch OxygenSurgeTankRotary;
 	RotationalSwitch OxygenSMSupplyRotary;
 	RotationalSwitch OxygenRepressPackageRotary;
+
+	///////////////////////
+	// Panel 13 switches //
+	///////////////////////
+
+	SwitchRow ORDEALSwitchesRow;
+	ToggleSwitch ORDEALFDAI1Switch;
+	ToggleSwitch ORDEALFDAI2Switch;
+	ThreePosSwitch ORDEALEarthSwitch;
+	ThreePosSwitch ORDEALLightingSwitch; 
+	ToggleSwitch ORDEALModeSwitch;	
+	ToggleSwitch ORDEALSlewSwitch;
+
+	SwitchRow ORDEALRotaryRow;
+	RotationalSwitch ORDEALAltSetRotary;
 
 	//
 	// OLD Switches: delete these as and when we can do so.
