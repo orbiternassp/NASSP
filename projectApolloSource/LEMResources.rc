@@ -147,5 +147,6 @@ IDB_BORDER_78x78	BITMAP			"border78x78.bmp"
 IDB_BORDER_72x72	BITMAP			"border72x72.bmp"
 IDB_BORDER_75x64	BITMAP			"border75x64.bmp"
 IDB_BORDER_32x160	BITMAP			"border32x160.bmp"
+IDB_LEM_COAS1		BITMAP			"coas_lem1.bmp" 
 #endif    // Französisch (Frankreich) resources
 

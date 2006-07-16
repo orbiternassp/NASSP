@@ -556,6 +556,9 @@
 #define IDB_SWLEVERTHREEPOS								825
 #define AID_LEM_P11_CB_ROW5             				826
 #define AID_LEM_P11_CB_ROW4             				827
+#define IDB_LEM_COAS1									828
+#define AID_LEM_COAS1									829
+#define AID_LEMCOAS1SWITCH								830 
 
 
 // Next default values for new objects
