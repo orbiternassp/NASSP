@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2006/07/16 02:54:10  flydba
+  *	New COAS bitmap added.
+  *	
   *	Revision 1.73  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -330,7 +333,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 110; // number of bitmap handles
+const int nsurf = 111; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -432,6 +435,7 @@ const int nsurf = 110; // number of bitmap handles
 #define SRF_THUMBWHEEL_LARGEFONTSINV				107
 #define SRF_SWLEVERTHREEPOS							108
 #define SRF_LEM_COAS1								109
+#define SRF_ORDEAL_ROTARY							110
 
 //
 // Earth radius and gravity constants.
