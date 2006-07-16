@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.45  2006/06/18 22:45:31  dseagrav
   *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
   *	
@@ -780,6 +783,13 @@ protected:
 	// Battery feed tie breakers (ECA output breakers)
 	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
 	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
+
+	///////////////////////////
+	// LEM Rendezvous Window //
+	///////////////////////////
+
+	SwitchRow LEMCoas1SwitchRow;
+	ToggleSwitch LEMCoas1Switch;
 
 	bool FirstTimestep;
 
