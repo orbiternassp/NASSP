@@ -559,6 +559,9 @@
 #define IDB_LEM_COAS1									828
 #define AID_LEM_COAS1									829
 #define AID_LEMCOAS1SWITCH								830 
+#define IDB_ORDEAL_ROTARY								831
+#define AID_ORDEALSWITCHES								832
+#define AID_ORDEALROTARY								833
 
 
 // Next default values for new objects
