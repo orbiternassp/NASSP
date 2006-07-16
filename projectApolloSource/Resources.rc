@@ -192,6 +192,7 @@ IDB_THUMBWHEEL_LARGEFONTS 					BITMAP  "thumbwheel_large_fonts.bmp"
 IDB_THUMBWHEEL_SMALL 						BITMAP  "thumbwheel_small.bmp"
 IDB_THUMBWHEEL_LARGEFONTSINV 				BITMAP  "thumbwheel_large_fonts_inv.bmp"
 IDB_SWLEVERTHREEPOS 						BITMAP  "switch_lever_threepos.bmp"
+IDB_ORDEAL_ROTARY						BITMAP	"ORDEAL_rotary.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
