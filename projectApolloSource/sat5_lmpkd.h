@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/07/16 02:55:55  flydba
+  *	New COAS added on the rendezvous window.
+  *	
   *	Revision 1.46  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -788,8 +791,7 @@ protected:
 	// LEM Rendezvous Window //
 	///////////////////////////
 
-	SwitchRow LEMCoas1SwitchRow;
-	ToggleSwitch LEMCoas1Switch;
+	int LEMCoas1Enabled;
 
 	bool FirstTimestep;
 
