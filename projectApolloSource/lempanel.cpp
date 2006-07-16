@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2006/06/18 22:45:31  dseagrav
+  *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
+  *	
   *	Revision 1.58  2006/06/18 16:43:07  dseagrav
   *	LM EPS fixes, LMP/CDR DC busses now powered thru CBs, ECA power-off bug fixed and ECA speed improvement
   *	
@@ -428,6 +431,8 @@ void sat5_lmpkd::InitPanel() {
 
 	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 1);
 	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 1);
+
+	//LEMCoas1Switch.Register(PSH, "LEMCoas1Switch", false);
 	//
 	// Old stuff.
 	//
@@ -849,6 +854,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_CIRCUITBRAKERLEM]	= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKERLEM));
 		srf[SRF_BORDER_34x29]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
 		srf[SRF_BORDER_34x61]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
+		srf[SRF_LEM_COAS1]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 
 		//
 		// Flashing borders.
@@ -874,6 +880,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_BORDER_32x160]			= oapiCreateSurface (LOADBMP (IDB_BORDER_32x160));
 		srf[SRF_BORDER_72x72]			= oapiCreateSurface (LOADBMP (IDB_BORDER_72x72));
 		srf[SRF_BORDER_75x64]			= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
+		srf[SRF_LEM_COAS1]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 
 
 
@@ -1147,6 +1154,8 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	case LMPANEL_RNDZWINDOW: // LEM Rendezvous Window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
+		oapiRegisterPanelArea (AID_LEM_COAS1,				_R( 518, 0, 1053, 535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		
 		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
 		break;
 
@@ -1387,8 +1396,12 @@ void sat5_lmpkd::SetSwitches(int panel) {
 			// In reality, two of these are paralleled.
 			// I'll just use one.
 			CDRBatteryFeedTieCB2.Init( 66,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &ECA_2, 100.0);
-			break;
+			
+		case LMPANEL_RNDZWINDOW:	
+			//LEMCoas1SwitchRow.Init(AID_LEM_COAS1, MainPanel);
+			//LEMCoas1Switch.Init(0, 0, 535, 535, srf[SRF_LEM_COAS1], LEMCoas1SwitchRow);
 
+			break;
 	}
 }
 
