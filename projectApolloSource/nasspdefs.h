@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.72  2006/07/06 02:13:07  movieman523
   *	First pass at Apollo to Venus orbital test flight.
   *	
@@ -327,7 +330,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 109; // number of bitmap handles
+const int nsurf = 110; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -428,6 +431,7 @@ const int nsurf = 109; // number of bitmap handles
 #define SRF_THUMBWHEEL_SMALL						106
 #define SRF_THUMBWHEEL_LARGEFONTSINV				107
 #define SRF_SWLEVERTHREEPOS							108
+#define SRF_LEM_COAS1								109
 
 //
 // Earth radius and gravity constants.
