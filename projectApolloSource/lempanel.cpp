@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2006/07/16 02:53:13  flydba
+  *	New COAS added for the rendezvous window.
+  *	
   *	Revision 1.59  2006/06/18 22:45:31  dseagrav
   *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
   *	
@@ -432,7 +435,8 @@ void sat5_lmpkd::InitPanel() {
 	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 1);
 	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 1);
 
-	//LEMCoas1Switch.Register(PSH, "LEMCoas1Switch", false);
+	LEMCoas1Enabled = false;
+	
 	//
 	// Old stuff.
 	//
@@ -908,6 +912,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_FDAIROLL],				g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_FDAIOFFFLAG],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_FDAINEEDLES],			g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_LEM_COAS1],			g_Param.col[4]);
 
 		//		break;
 		//
@@ -1154,7 +1159,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	case LMPANEL_RNDZWINDOW: // LEM Rendezvous Window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
-		oapiRegisterPanelArea (AID_LEM_COAS1,				_R( 518, 0, 1053, 535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_COAS1,				_R( 518, 0, 1053, 535), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
 		break;
@@ -1397,10 +1402,6 @@ void sat5_lmpkd::SetSwitches(int panel) {
 			// I'll just use one.
 			CDRBatteryFeedTieCB2.Init( 66,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &ECA_2, 100.0);
 			
-		case LMPANEL_RNDZWINDOW:	
-			//LEMCoas1SwitchRow.Init(AID_LEM_COAS1, MainPanel);
-			//LEMCoas1Switch.Init(0, 0, 535, 535, srf[SRF_LEM_COAS1], LEMCoas1SwitchRow);
-
 			break;
 	}
 }
@@ -1554,9 +1555,13 @@ bool sat5_lmpkd::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		MousePanel_MFDButton(MFD_RIGHT, event, mx, my);
 		return true;
 
-
-
-
+	case AID_LEM_COAS1:
+		if (LEMCoas1Enabled)
+			LEMCoas1Enabled = false;
+		else
+			LEMCoas1Enabled = true;
+		SwitchClick();
+		return true;
 
 	case AID_DESCENT_HE:
 		if (my >=30 && my <=42 ){
@@ -2484,6 +2489,14 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 			RedrawPanel_MFDButton (surf, MFD_RIGHT, 0, 24, 58);	
 			RedrawPanel_MFDButton (surf, MFD_RIGHT, 1, 402, 58);	
+		}
+		return true;
+
+	case AID_LEM_COAS1:
+		if (LEMCoas1Enabled) {
+			oapiBlt(surf, srf[SRF_LEM_COAS1], 0, 0, 0, 0, 535, 535, SURF_PREDEF_CK);
+		} else {
+			oapiBlt(surf, srf[SRF_LEM_COAS1], 0, 0, 0, 535, 535, 535, SURF_PREDEF_CK);
 		}
 		return true;
 
