@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/06/23 11:58:07  tschachim
+  *	Smaller turning diameter
+  *	Slower acceleration/braking during time acceleration.
+  *	
   *	Revision 1.14  2006/04/25 13:51:32  tschachim
   *	New KSC.
   *	
@@ -166,7 +170,7 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
 	CreateAttachment(false, _V(0.0, 6.3, 0.0), _V(0, 1, 0), _V(1, 0, 0), "ML", false);
 
 	VSRegVessel(GetHandle());
-	double tph = 0;
+	double tph = -0.01;
 	SetTouchdownPoints(_V(  0, tph,  10), _V(-10, tph, -10), _V( 10, tph, -10));
 	VSSetTouchdownPoints(GetHandle(), _V(  0, tph,  10), _V(-10, tph, -10), _V( 10, tph, -10), -tph);
 }
@@ -251,7 +255,7 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	}
 
 	/* VECTOR3 pos;
-	GetRelativePos(hML, pos);
+	GetRelativePos(hMSS, pos);
 	sprintf(oapiDebugString(), "Dist %f", length(pos)); */
 }
 
@@ -482,7 +486,7 @@ void Crawler::Attach() {
 		// Is the crawler close enough to the MSS?
 		VECTOR3 pos;
 		GetRelativePos(hMSS, pos);
-		if (length(pos) < 62) {
+		if (length(pos) < 67) {
 			if (mss->Attach()) {
 				AttachChild(hMSS, ah, mss->GetAttachmentHandle(true, 0));
 			}

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/05/19 16:44:01  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.2  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -68,14 +71,14 @@ char trace_file[] = "ProjectApollo ML.log";
 #define STATE_POSTLIFTOFF		8
 
 // Pad and VAB coordinates
-#define VAB_LON -80.6538134
-#define VAB_LAT 28.5788758
+#define VAB_LON -80.6527053
+#define VAB_LAT 28.5793875
 
-#define PAD_LON -80.6080665 
-#define PAD_LAT 28.6008075
+#define PAD_LON -80.6069608 
+#define PAD_LAT 28.6013186
 
-#define PAD_LV_LON -80.6080702 
-#define PAD_LV_LAT 28.6007244
+#define PAD_LV_LON -80.6069645 
+#define PAD_LV_LAT 28.6012355
 
 
 PARTICLESTREAMSPEC liftoffStreamSpec = {
@@ -119,7 +122,7 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	moveToPad = false;
 	moveToVab = false;
 	moveLVToPad = false;
-	touchdownPointHeight = -90.837;		// pad height
+	touchdownPointHeight = -85.287; // pad height
 	hLV = 0;
 	state = STATE_ROLLOUT;
 
@@ -365,7 +368,7 @@ void ML::clbkPostStep (double simt, double simdt, double mjd) {
 		vs.status = 1;
 		vs.vdata[0].x = PAD_LON * RAD;
 		vs.vdata[0].y = PAD_LAT * RAD;
-		vs.vdata[0].z = 0.75 * RAD; 
+		vs.vdata[0].z = 0.43 * RAD; 
 		DefSetState(&vs);
 		moveToPad = false;
 	}
@@ -431,7 +434,7 @@ bool ML::Detach() {
 	// Is the pad near?
 	if (GetDistanceTo(PAD_LON, PAD_LAT) < 10.0) {
 		
-		SetTouchdownPointHeight(-90.837);
+		SetTouchdownPointHeight(-85.287);
 		moveToPad = true;
 		return true;
 	}
