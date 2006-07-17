@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/04/25 14:00:22  tschachim
+  *	New KSC.
+  *	
   **************************************************************************/
 
 #define ORBITER_MODULE
@@ -50,12 +53,13 @@ HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo MSS.log";
 
 // Pad and park coordinates
-#define PARK_LON -80.6237309
-#define PARK_LAT 28.5882864
+#define PARK_LON -80.6236987
+#define PARK_LAT 28.5882240
 
-#define PAD_LON -80.6080701 
-#define PAD_LAT 28.6004090
+#define PAD_LON -80.6069644
+#define PAD_LAT 28.6009201
  
+
 DLLCLBK void InitModule(HINSTANCE hModule) {
 
 	g_hDLL = hModule;
@@ -82,7 +86,7 @@ MSS::MSS(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	moveToPad = false;
 	moveToVab = false;
 	moveLVToPad = false;
-	touchdownPointHeight = -60.8;		// park height
+	touchdownPointHeight = -65.85;		// park height
 	hLV = 0;
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
@@ -129,6 +133,7 @@ void MSS::clbkPostStep (double simt, double simdt, double mjd) {
 		VESSELSTATUS vs;
 		GetStatus(vs);
 
+		vs.status = 1;
 		vs.vdata[0].x = PAD_LON * RAD;
 		vs.vdata[0].y = PAD_LAT * RAD;
 		vs.vdata[0].z = 180.26 * RAD; 
@@ -141,13 +146,13 @@ void MSS::clbkPostStep (double simt, double simdt, double mjd) {
 		VESSELSTATUS vs;
 		GetStatus(vs);
 
+		vs.status = 1;
 		vs.vdata[0].x = PARK_LON * RAD;
 		vs.vdata[0].y = PARK_LAT * RAD;
-		vs.vdata[0].z = 246.58 * RAD; 
+		vs.vdata[0].z = 244.99 * RAD; 
 		DefSetState(&vs);
 		moveToVab = false;
 	}
-
 }
 
 void MSS::DoFirstTimestep() {
@@ -189,7 +194,7 @@ bool MSS::Detach() {
 	// Is the parking near?
 	if (GetDistanceTo(PARK_LON, PARK_LAT) < 10.0) {
 		
-		SetTouchdownPointHeight(-60.8);
+		SetTouchdownPointHeight(-65.85);
 		moveToVab = true;
 		return true;
 	}

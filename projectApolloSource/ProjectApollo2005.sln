@@ -56,6 +56,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LES", "VC2005\LES\LES.vcpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProjectApolloMFD", "VC2005\ProjectApolloMFD\ProjectApolloMFD.vcproj", "{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Floodlight", "VC2005\Floodlight\Floodlight.vcproj", "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -154,6 +156,10 @@ Global
 		{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}.Debug|Win32.Build.0 = Debug|Win32
 		{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}.Release|Win32.ActiveCfg = Release|Win32
 		{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}.Release|Win32.Build.0 = Release|Win32
+		{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}.Debug|Win32.Build.0 = Debug|Win32
+		{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}.Release|Win32.ActiveCfg = Release|Win32
+		{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
