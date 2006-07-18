@@ -35,7 +35,7 @@
     <h4>The Apollo Guidance Computer (AGC) </h4>
     <p>A very important device of the Apollo spacecraft is the Apollo Guidance Computer (AGC), which normally does  the guidance, navigation and control tasks. You interact with the AGC via the DSKY (Display and Keyboard), a kind of &quot;terminal&quot; for the AGC.</p>
     <p><img src="../images/dsky.gif"></p>
-    <p>Project Apollo - NASSP offers two different AGC implementations: The &quot;NASSP AGC&quot;, which is normally used and which tries to behave similar to the real AGC but is an NASSP specific program with several differences to the real AGC. The procedures for the NASSP AGC are titled &quot;<em>[NASSP AGC]</em>&quot;, most of the procedures in the original documentation are not working with the NASSP AGC. If you use a scenario in the &quot;Project Apollo - NASSP\Apollo - Historical Missions&quot; folder, for example the &quot;Project Apollo - NASSP\Apollo - Historical Missions\Apollo 11\2) Apollo 11 - Launch&quot;, the NASSP AGC is used. </p>
+    <p>Project Apollo - NASSP offers two different AGC implementations: The &quot;NASSP AGC&quot;, which is normally used and which tries to behave similar to the real AGC but is an NASSP specific program with several differences to the real AGC. The procedures for the NASSP AGC are titled &quot;<em>[NASSP AGC]</em>&quot;, most of the procedures in the original documentation are not working with the NASSP AGC. If you use a scenario in the &quot;Project Apollo - NASSP\Apollo - Historical Missions&quot; folder, for example the &quot;Project Apollo - NASSP\Apollo - Historical Missions\Apollo 11\3. Apollo 11 - Launch&quot;, the NASSP AGC is used. </p>
     <p>The other AGC implementation uses the Virtual AGC (<a href="http://www.ibiblio.org/apollo/index.html">http://www.ibiblio.org/apollo/index.html</a>), an Apollo Guidance Computer emulator running the original, authentic Apollo flight software (at the moment Colossus 1A, build 249 from October 28, 1968, probably flown with Apollo 8 and 9). There are some bugs and limitations (for example max. time acceleration is about 10x, saving/loading fails sometimes), so it's still &quot;experimental&quot; and intended for the advanced user, who wants to have the ultimate realism, but of course with the Virtual AGC you can do all procedures exactly as described in the original documentation. The procedures and instructions for the Virtual AGC are titled <span class="style2">&quot;[Virtual AGC]&quot; </span>and are in<span class="style3"> blue.</span> To try that please use the &quot;Project Apollo - NASSP\Virtual AGC\Apollo 8 - Launch&quot; scenario.</p>
     <p>Procedural steps in this section are presented in tabular form and in sequence they occure during the mission. The following is a detailed explanation of the columnar data presented in the tabulated lists:</p>
     <table width="100%"  border="0" cellpadding="1" cellspacing="3">
@@ -1222,7 +1222,7 @@ V37 request. <br>
       <li>(null): No Attitude, FDAI is off.<p>
       </li>
       <li>CMC: Error needles are controlled by the CMC, readings depend on the CMC program (the DAP for instance).</li>
-      <li>BMAG1: The gyro precession angles reported by BMAG1. Basically, this is a backup check of the GDC. </li>
+      <li>BMAG1: If BMAG 1 is uncaged in attitude hold mode (ATT1/RATE2 mode) the error needles show the difference between the GDC attitude and the BMAG 1 attitude.</li>
       <li>IMU/ASCP: The error needles show the difference between the IMU attitude and the attitude currently set in the ASCP (see below).</li>
       <li> GDC/ASCP: The error needles show the difference between the GDC attitude and the attitude currently set in the ASCP.</li>
     </ul>    
@@ -1372,11 +1372,11 @@ V37 request. <br>
               <td width="85%">FC MNA 1 &amp; 2  tb - gray, 3 tb - bp </td>
             </tr>
             <tr>
-              <td colspan="2">FC MNA 1 &amp; 2 - OFF, 3 - up </td>
+              <td colspan="2">FC MNB 1 &amp; 2 - OFF, 3 - up </td>
             </tr>
             <tr>
               <td>&nbsp;</td>
-              <td>FC MNA 1 &amp; 2 tb - bp, 3 tb - gray </td>
+              <td>FC MNB 1 &amp; 2 tb - bp, 3 tb - gray </td>
             </tr>
             <tr>
               <td colspan="2">&nbsp;</td>
