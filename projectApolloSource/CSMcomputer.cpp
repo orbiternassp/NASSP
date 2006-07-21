@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.51  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -429,10 +432,35 @@ void CSMcomputer::DisplayNounData(int noun)
 		break;
 
 	case 76:
+		switch (VesselStatusDisplay) 
 		{
-			double FMass = lv.GetFuelMass();
-			SetR1((int) FMass);
+		case 1:
+			{
+				//
+				// Fuel mass in kg.
+				//
+				double FMass = lv.GetFuelMass();
+				SetR2((int) FMass);
+			}
+			break;
+
+		case 2:
+			{
+				double capacity, drain;
+				lv.GetMainBatteryPower(capacity, drain);
+
+				//
+				// Battery power in kWh x 10.
+				//
+				SetR2((int) (capacity / 360000.0));
+				//
+				// Power drain in watts.
+				//
+				SetR3((int) drain);
+			}
+			break;
 		}
+		SetR1(VesselStatusDisplay);
 		break;
 
 	//
@@ -867,6 +895,7 @@ void CSMcomputer::Prog59(double simt)
 		break;
 
 	case 100:
+	case 200:
 		SetVerbNounAndFlash(16, 76);
 		ProgState++;
 		break;
@@ -1159,7 +1188,7 @@ void CSMcomputer::Prog59Pressed(int R1, int R2, int R3)
 	switch (ProgState)
 	{
 	case 1:
-		if (R1 > 0 && R1 < 2)
+		if (R1 > 0 && R1 < 3)
 		{
 			ProgState = 100 * R1;
 			VesselStatusDisplay = R1;

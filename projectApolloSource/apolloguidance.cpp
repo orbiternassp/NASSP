@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2006/06/29 22:38:44  tschachim
+  *	Bugfix saving/loading
+  *	
   *	Revision 1.77  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -1694,7 +1697,8 @@ void ApolloGuidance::VerbNounEntered(int verb, int noun)
 	// light.
 	//
 
-	LightOprErr();
+	if (verb != 21)
+		LightOprErr();
 }
 
 void ApolloGuidance::SetMissionInfo(int MissionNo, int RealismValue, char *OtherName) 

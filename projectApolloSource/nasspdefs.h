@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2006/07/16 17:41:49  flydba
+  *	New ORDEAL rotary bitmap added.
+  *	
   *	Revision 1.74  2006/07/16 02:54:10  flydba
   *	New COAS bitmap added.
   *	
@@ -333,7 +336,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 111; // number of bitmap handles
+const int nsurf = 112; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -342,6 +345,7 @@ const int nsurf = 111; // number of bitmap handles
 #define SRF_SWITCHLEVER								 7
 #define SRF_SWITCHGUARDS							 8
 #define SRF_ABORT									 9
+#define SRF_LV_ENG									12
 #define SRF_ALTIMETER								14
 #define SRF_THRUSTMETER								16
 #define SRF_SEQUENCERSWITCHES						17
@@ -436,6 +440,7 @@ const int nsurf = 111; // number of bitmap handles
 #define SRF_SWLEVERTHREEPOS							108
 #define SRF_LEM_COAS1								109
 #define SRF_ORDEAL_ROTARY							110
+#define SRF_LV_ENG_S1B								111
 
 //
 // Earth radius and gravity constants.

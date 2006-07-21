@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.2  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
@@ -44,6 +47,7 @@ enum ConnectorType
 	LV_IU_COMMAND,				///< Passes commands between launch vehicle and IU.
 	CSM_SIVB_DOCKING,			///< Docking connector between CSM and SIVb.
 	CSM_SIVB_COMMAND,			///< Passes commands and data between CSM and SIVb.
+	CSM_SIVB_POWER,				///< Power connection from SIVB to CSM.
 };
 
 //

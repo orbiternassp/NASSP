@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/06/17 18:14:52  tschachim
+  *	Bugfix clbkConsumeBufferedKey.
+  *	
   *	Revision 1.55  2006/06/11 21:30:57  movieman523
   *	Fixed Saturn 1b SIVb exhaust.
   *	
@@ -348,6 +351,14 @@ void Saturn1b::initSaturn1b()
 
 	SI_EmptyMass = 41594;
 	SI_FuelMass = 407100;
+
+	//
+	// Engines per stage.
+	//
+
+	SI_EngineNum = 8;
+	SII_EngineNum = 1;
+	SIII_EngineNum = 1;
 }
 
 void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
@@ -486,6 +497,10 @@ void Saturn1b::StageOne(double simt, double simdt)
 
 		if ((actualFUEL <= 2) || (MissionTime >= FirstStageCentreShutdownTime)) { // || (aHAcc > (3.98*G)))) {
 			SetEngineIndicator(5);
+			SetEngineIndicator(6);
+			SetEngineIndicator(7);
+			SetEngineIndicator(8);
+
 			SetThrusterResource(th_main[4],NULL);
 			SetThrusterResource(th_main[5],NULL);
 			SetThrusterResource(th_main[6],NULL);
@@ -512,7 +527,8 @@ void Saturn1b::StageOne(double simt, double simdt)
 		break;
 
 	case 2:
-		if (MissionTime >= NextMissionEventTime) {
+		if (MissionTime >= NextMissionEventTime)
+		{
 			SShutS.done();
 			ClearEngineIndicators();
 			SeparateStage (LAUNCH_STAGE_TWO);
@@ -520,13 +536,15 @@ void Saturn1b::StageOne(double simt, double simdt)
 			SeparationS.play(NOLOOP, 245);
 			SetStage(LAUNCH_STAGE_TWO);
 		}
-		else {
+		else
+		{
 
 			//
 			// Engine thrust decay.
 			//
 
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < 4; i++)
+			{
 				double Level = GetThrusterLevel(th_main[i]);
 				Level -= (simdt * 1.2);
 				SetThrusterLevel(th_main[i], Level);
@@ -535,10 +553,12 @@ void Saturn1b::StageOne(double simt, double simdt)
 		return;
 	}
 
-	if (autopilot && CMCswitch) {
+	if (autopilot && CMCswitch)
+	{
 		AutoPilot(MissionTime);
 	}
-	else {
+	else
+	{
 		AttitudeLaunch1();
 	}
 }
@@ -550,14 +570,17 @@ void Saturn1b::StageOne(double simt, double simdt)
 void Saturn1b::StageStartSIVB(double simt)
 
 {
-	if (autopilot && CMCswitch) {
+	if (autopilot && CMCswitch)
+	{
 		AutoPilot(MissionTime);
 	}
-	else {
+	else
+	{
 		AttitudeLaunchSIVB();
 	}
 
-	switch (StageState) {
+	switch (StageState)
+	{
 
 	case 0:
 		SepS.play(LOOP, 130);
@@ -568,7 +591,8 @@ void Saturn1b::StageStartSIVB(double simt)
 		break;
 
 	case 1:
-		if (MissionTime >= NextMissionEventTime) {
+		if (MissionTime >= NextMissionEventTime)
+		{
 			LastMissionEventTime = NextMissionEventTime;
 			NextMissionEventTime += 2.5;
 			SetEngineIndicator(1);
@@ -581,17 +605,20 @@ void Saturn1b::StageStartSIVB(double simt)
 	//
 
 	case 2:
-		if (MissionTime  < NextMissionEventTime) {
+		if (MissionTime  < NextMissionEventTime)
+		{
 			double deltat = MissionTime - LastMissionEventTime;
 			SetThrusterLevel(th_main[0], 0.9 * (deltat / 2.5));
 		}
-		else {
+		else
+		{
 			SetThrusterLevel(th_main[0], 0.9);
 			LastMissionEventTime = NextMissionEventTime;
 			NextMissionEventTime += 2.1;
 			StageState++;
 		}
-		if (GetThrusterLevel(th_main[0]) > 0.65) {
+		if (GetThrusterLevel(th_main[0]) > 0.65) 
+		{
 			ClearEngineIndicator(1);
 		}
 		break;
@@ -601,11 +628,13 @@ void Saturn1b::StageStartSIVB(double simt)
 	//
 
 	case 3:
-		if (MissionTime  < NextMissionEventTime) {
+		if (MissionTime  < NextMissionEventTime)
+		{
 			double deltat = MissionTime - LastMissionEventTime;
 			SetThrusterLevel(th_main[0], 0.9 + (deltat / 21.0));
 		}
-		else {
+		else
+		{
 			SetThrusterLevel(th_main[0], 1.0);
 			SepS.stop();
 			AddRCS_S4B();
@@ -620,7 +649,8 @@ void Saturn1b::StageStartSIVB(double simt)
 	//
 
 	case 4:
-		if (MissionTime >= NextMissionEventTime) {
+		if (MissionTime >= NextMissionEventTime)
+		{
 			SetSIVBThrusters(true);
 			SetSIVBMixtureRatio(5.5);
 			NextMissionEventTime = MissionTime + 17.95;
@@ -658,7 +688,8 @@ void Saturn1b::StageStartSIVB(double simt)
 		return;
 	}
 
-	if(CsmLvSepSwitch.GetState()) {
+	if(CsmLvSepSwitch.GetState())
+	{
 		bManualSeparate = true;
 	}
 
@@ -668,7 +699,8 @@ void Saturn1b::StageStartSIVB(double simt)
 		bManualSeparate = false;
 		SeparateStage (CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
-		if (bAbort){
+		if (bAbort)
+		{
 			SPSswitch.SetState(TOGGLESWITCH_UP);
 			ABORT_IND = true;
 			StartAbort();
@@ -682,14 +714,17 @@ void Saturn1b::StageStartSIVB(double simt)
 void Saturn1b::StageLaunchSIVB(double simt)
 
 {
-    if (autopilot && CMCswitch) {
+    if (autopilot && CMCswitch)
+	{
 		AutoPilot(MissionTime);
 	}
-	else {
+	else
+	{
 		AttitudeLaunchSIVB();
 	}
 
-	switch (StageState) {
+	switch (StageState)
+	{
 
 	case 0:
 		SetThrusterLevel(th_main[0], 1.0);

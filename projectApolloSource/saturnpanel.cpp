@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.178  2006/07/16 17:43:07  flydba
+  *	Switches and rotary on panel 13 (ORDEAL) now work.
+  *	
   *	Revision 1.177  2006/06/30 11:53:50  tschachim
   *	Bugfix InstrumentLightingNonESSCircuitBraker and NonessBusSwitch.
   *	
@@ -818,7 +821,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_ABORT]									= oapiCreateSurface (LOADBMP (IDB_ABORT));
 	srf[10]											= oapiCreateSurface (LOADBMP (IDB_ANNUN));
 	srf[11]											= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
-	srf[12]											= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
+	srf[SRF_LV_ENG]									= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
 	srf[13]											= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
 	srf[SRF_ALTIMETER]								= oapiCreateSurface (LOADBMP (IDB_ALTIMETER));
 	//srf[15]										= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
@@ -887,7 +890,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_THUMBWHEEL_LARGEFONTSINV] 				= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_LARGEFONTSINV));
 	srf[SRF_SWLEVERTHREEPOS] 						= oapiCreateSurface (LOADBMP (IDB_SWLEVERTHREEPOS));
 	srf[SRF_ORDEAL_ROTARY] 							= oapiCreateSurface (LOADBMP (IDB_ORDEAL_ROTARY));
-	
+	srf[SRF_LV_ENG_S1B]								= oapiCreateSurface (LOADBMP (IDB_LV_ENGINE_LIGHTS_S1B));
 
 	//
 	// Flashing borders.
@@ -3509,6 +3512,19 @@ void Saturn::StopMasterAlarm()
 	cws.SetMasterAlarm(false);
 }
 
+void Saturn::RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs)
+
+{
+	if (EngineOn)
+	{
+		oapiBlt(dest, src, xoffs, yoffs, xoffs, yoffs, 29, 29);
+	}
+	else
+	{
+		oapiBlt(dest, src, xoffs, yoffs, xoffs + 101, yoffs, 29, 29);
+	}
+}
+
 bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 {
@@ -3737,46 +3753,64 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_LV_ENGINE_LIGHTS:
-		if (ENGIND[0]) 
 		{
-			oapiBlt(surf,srf[12],55,44,55,44,27,27);
+			if (SI_EngineNum > 5)
+			{
+				RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_LV_ENG_S1B], 64, 42);
+				RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_LV_ENG_S1B], 64, 98);
+				RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_LV_ENG_S1B], 8, 98);
+				RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_LV_ENG_S1B], 7, 43);
+				RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_LV_ENG_S1B], 36, 41);
+				RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_LV_ENG_S1B], 51, 69);
+				RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_LV_ENG_S1B], 36, 98);
+				RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_LV_ENG_S1B], 22, 69);
+			}
+			else
+			{
+				if (ENGIND[0]) 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],55,44,55,44,27,27);
+				}
+				else 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],55,44,157,44,27,27);
+				}
+
+				if (ENGIND[1]) 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],55,98,55,98,27,27);
+				}
+				else 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],55,98,157,98,27,27);
+				}
+				if (ENGIND[2]) 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],20,98,20,98,27,27);
+				}
+				else 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],20,98,122,98,27,27);
+				}
+				if (ENGIND[3]) 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],20,44,20,44,27,27);
+				}
+				else 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],20,44,122,44,27,27);
+				}
+				if (ENGIND[4]) 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],37,71,37,71,27,27);
+				}
+				else 
+				{
+					oapiBlt(surf,srf[SRF_LV_ENG],37,71,140,71,27,27);
+				}
+			}
 		}
-		else 
-		{
-			oapiBlt(surf,srf[12],55,44,157,44,27,27);
-		}
-		if (ENGIND[1]) 
-		{
-			oapiBlt(surf,srf[12],55,98,55,98,27,27);
-		}
-		else 
-		{
-			oapiBlt(surf,srf[12],55,98,157,98,27,27);
-		}
-		if (ENGIND[2]) 
-		{
-			oapiBlt(surf,srf[12],20,98,20,98,27,27);
-		}
-		else 
-		{
-			oapiBlt(surf,srf[12],20,98,122,98,27,27);
-		}
-		if (ENGIND[3]) 
-		{
-			oapiBlt(surf,srf[12],20,44,20,44,27,27);
-		}
-		else 
-		{
-			oapiBlt(surf,srf[12],20,44,122,44,27,27);
-		}
-		if (ENGIND[4]) 
-		{
-			oapiBlt(surf,srf[12],37,71,37,71,27,27);
-		}
-		else 
-		{
-			oapiBlt(surf,srf[12],37,71,140,71,27,27);
-		}
+
 		if (LVRateLight) 
 		{
 			oapiBlt(surf,srf[12],6,4,6,4,27,27);
@@ -3792,10 +3826,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 		if (SaturnType == SAT_SATURNV)
 		{
-			if (SIISepState) {
+			if (SIISepState)
+			{
 				oapiBlt(surf,srf[12],37,4,37,4,27,27);
 			}
-			else {
+			else
+			{
 				oapiBlt(surf,srf[12],37,4,139,4,27,27);
 			}
 		}

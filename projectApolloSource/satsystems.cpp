@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.115  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.114  2006/06/27 11:25:57  tschachim
   *	Bugfix
   *	
@@ -2173,7 +2176,8 @@ void Saturn::DeactivateSPS()
 void Saturn::SetEngineIndicators()
 
 {
-	for (int i = 1; i <= 8; i++) {
+	for (int i = 1; i <= 8; i++) 
+	{
 		SetEngineIndicator(i);
 	}
 }
@@ -2181,7 +2185,8 @@ void Saturn::SetEngineIndicators()
 void Saturn::ClearEngineIndicators()
 
 {
-	for (int i = 1; i <= 8; i++) {
+	for (int i = 1; i <= 8; i++) 
+	{
 		ClearEngineIndicator(i);
 	}
 }

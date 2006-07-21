@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.12  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
@@ -59,6 +62,9 @@
   *	Initial SIVb implementation.
   *	
   **************************************************************************/
+
+#if !defined(_PA_SIVB_H)
+#define _PA_SIVB_H
 
 //
 // Data structure passed from main vessel to SIVB to configure stage.
@@ -301,7 +307,32 @@ public:
 	///
 	bool IsVenting();
 
+	///
+	/// \brief Get main battery power.
+	/// \return Power in joules.
+	///
+	double GetMainBatteryPower();
+
+	///
+	/// \brief Get main battery power drain.
+	/// \return Power in joules.
+	///
+	double GetMainBatteryPowerDrain();
+
 protected:
+	///
+	/// PanelSDK functions as a interface between the
+	/// actual System & Panel SDK and VESSEL class
+	///
+	/// Note that this must be defined early in the file, so it will be initialised
+	/// before any other classes which rely on it at creation. Don't move it further
+	/// down without good reason, or you're likely to crash!
+	///
+	/// \brief Panel SDK library.
+	///
+    PanelSDK Panelsdk;
+
+	bool PanelSDKInitalised;
 
 	///
 	/// \brief Set SIVb state.
@@ -391,6 +422,8 @@ protected:
 	///
 	DOCKHANDLE hDock;
 
+	Battery *MainBattery;
+
 	THRUSTER_HANDLE th_att_rot[10], th_main[1], th_att_lin[2];                 // handles for APS engines
 	THGROUP_HANDLE thg_aps, thg_main;
 	PROPELLANT_HANDLE ph_aps, ph_main;
@@ -403,8 +436,11 @@ protected:
 enum CSMSIVBMessageType
 {
 	CSMSIVB_GET_VESSEL_FUEL,				///< Get vessel fuel.
+	CSMSIVB_GET_MAIN_BATTERY_POWER,			///< Get the main battery power level.
 	CSMSIVB_IS_VENTABLE,					///< Is this a ventable vessel?
 	CSMSIVB_IS_VENTING,						///< Is the vessel venting fuel?
 	CSMSIVB_START_VENTING,					///< Start fuel venting.
 	CSMSIVB_STOP_VENTING,					///< Stop fuel venting.
 };
+
+#endif // _PA_SIVB_H

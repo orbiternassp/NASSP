@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.9  2006/01/14 20:58:16  movieman523
   *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
   *	
@@ -102,6 +105,24 @@ protected:
 	e_object *Phase3;
 };
 
+class NWayPowerMerge : public PowerSource {
+public:
+	NWayPowerMerge(char *i_name, PanelSDK &p, int nSources);
+	~NWayPowerMerge();
+
+	double Voltage();
+	void DrawPower(double watts);
+	void WireToBus(int bus, e_object* e);
+	bool IsBusConnected(int bus);
+	double Current();
+
+protected:
+	PanelSDK &sdk;
+
+	int nSources;
+	e_object **sources;
+};
+
 class PowerBreaker : public PowerSource {
 
 public:
@@ -153,7 +174,7 @@ protected:
 	e_object *battery1, *battery2;
 	e_object *gseBattery;
 
-	ThreeWayPowerMerge busPower;
+	NWayPowerMerge busPower;
 	ThreeWayPowerMerge fcPower;
 	PowerMerge batPower;
 	bool fcDisconnectAlarm[4];
@@ -187,5 +208,58 @@ protected:
 	e_object *currentBattery;
 };
 
+class Connector;
+
+///
+/// \brief Connector object: sends messages to a connector, rather than to the next e_object
+/// in the chain. Mostly used for connecting to another vessel.
+///
+class PowerSourceConnectorObject : public e_object
+{
+public:
+	PowerSourceConnectorObject();
+	void SetConnector(Connector *c) { connect = c; };
+
+	double Voltage();
+	double Current();
+	void UpdateFlow(double dt);
+	void DrawPower(double watts);
+
+protected:
+	Connector *connect;
+};
+
+///
+/// \brief Connector object: receives messages from a connector, rather than the next e_object
+/// in the chain. Mostly used for connecting to another vessel.
+///
+class PowerDrainConnectorObject : public e_object
+{
+public:
+	PowerDrainConnectorObject();
+
+	void SetConnector(Connector *c) { connect = c; };
+
+	void ProcessUpdateFlow(double dt);
+	void ProcessDrawPower(double watts);
+	void refresh(double dt);
+
+protected:
+	Connector *connect;
+
+	double PowerDraw;
+};
+
+///
+/// \ingroup Connectors
+/// \brief Message type to process electric power through a connector.
+///
+enum PowerSourceMessageType
+{
+	POWERCON_GET_VOLTAGE,					///< Get voltage.
+	POWERCON_GET_CURRENT,					///< Get current.
+	POWERCON_DRAW_POWER,					///< Draw power from connector.
+	POWERCON_UPDATE_FLOW,					///< Update power flow.
+};
 
 #endif

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.18  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
@@ -82,8 +85,10 @@
 #include "OrbiterSoundSDK3.h"
 
 #include "nasspdefs.h"
-
 #include "soundlib.h"
+
+#include "PanelSDK/PanelSDK.h"
+#include "PanelSDK/Internals/Esystems.h"
 
 #include "connector.h"
 #include "iu.h"
@@ -180,6 +185,8 @@ void SIVbLoadMeshes()
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
+	PanelSDKInitalised = false;
+
 	InitS4b();
 }
 
@@ -236,6 +243,15 @@ void SIVB::InitS4b()
 
 	IUCommandConnector.SetSIVb(this);
 	csmCommandConnector.SetSIVb(this);
+
+	if (!PanelSDKInitalised)
+	{
+		Panelsdk.RegisterVessel(this);
+		Panelsdk.InitFromFile("ProjectApollo\\SIVBSystems");
+		PanelSDKInitalised = true;
+	}
+
+	MainBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY");
 }
 
 Connector *SIVB::GetDockingConnector()
@@ -584,6 +600,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	//
 
 	iu.Timestep(MissionTime, simdt);
+	Panelsdk.Timestep(MissionTime);
 }
 
 
@@ -615,6 +632,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 
 	iu.SaveState(scn);
+	Panelsdk.Save(scn);
 }
 
 typedef union {
@@ -701,6 +719,30 @@ void SIVB::StopVenting()
 		EnableDisableJ2(false);
 	}
 }
+
+double SIVB::GetMainBatteryPower()
+
+{
+	if (MainBattery)
+	{
+		return MainBattery->Capacity();
+	}
+
+	return 0.0;
+}
+
+
+double SIVB::GetMainBatteryPowerDrain()
+
+{
+	if (MainBattery)
+	{
+		return MainBattery->power_load;
+	}
+
+	return 0.0;
+}
+
 
 void SIVB::AddRCS_S4B()
 
@@ -910,6 +952,9 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
 			iu.LoadState(scn);
+		}
+		else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
+			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
 		else
 		{
@@ -1377,6 +1422,15 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
+			return true;
+		}
+		break;
+
+	case CSMSIVB_GET_MAIN_BATTERY_POWER:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMainBatteryPower();
+			m.val2.dValue = OurVessel->GetMainBatteryPowerDrain();
 			return true;
 		}
 		break;

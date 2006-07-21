@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.202  2006/07/16 17:43:42  flydba
+  *	Switches and rotary on panel 13 (ORDEAL) now work.
+  *	
   *	Revision 1.201  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -3147,6 +3150,8 @@ protected:
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);
 	void AttitudeLaunchSIVB();
 	virtual void AutoPilot(double autoT) = 0;
+
+	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs);
 
 	void ClearPropellants();
 	void ClearThrusters();
