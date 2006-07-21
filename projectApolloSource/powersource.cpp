@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/06/21 12:54:12  tschachim
+  *	Bugfix.
+  *	
   *	Revision 1.11  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -65,6 +68,7 @@
 #include "PanelSDK/Internals/Esystems.h"
 
 #include "powersource.h"
+#include "connector.h"
 
 PowerSource::PowerSource()
 
@@ -312,9 +316,114 @@ bool ThreeWayPowerMerge::IsBusConnected(int bus)
 	return false;
 }
 
+NWayPowerMerge::NWayPowerMerge(char *i_name, PanelSDK &p, int n) : sdk(p)
+
+{
+	if (i_name)
+		strcpy (name, i_name);
+
+	nSources = n;
+	sources = new e_object *[nSources];
+
+	int i;
+
+	for (i = 0; i < nSources; i++)
+	{
+		sources[i] = 0;
+	}
+
+	//
+	// Register with the Panel SDK so it will call our update function.
+	//
+
+	sdk.AddElectrical(this, false);
+}
+
+NWayPowerMerge::~NWayPowerMerge()
+
+{
+	if (sources)
+		delete[] sources;
+}
+
+double NWayPowerMerge::Voltage()
+
+{
+	double V = 0;
+
+	int i;
+	int activeSources = 0;
+
+	for (i = 0; i < nSources; i++)
+	{
+		if (sources[i])
+		{
+			double VS = sources[i]->Voltage();
+			if (VS != 0)
+			{
+				V += VS;
+				activeSources++;
+			}
+		}
+	}
+
+	if (!activeSources)
+		return 0.0;
+
+	return V / (double) activeSources;
+}
+
+double NWayPowerMerge::Current()
+
+{
+	double Volts = Voltage();
+
+	if (Volts > 0.0)
+	{
+		return power_load / Volts;
+	}
+	return 0.0;
+}
+
+void NWayPowerMerge::DrawPower(double watts)
+
+{
+	double Volts = Voltage();
+
+	power_load += watts;
+
+	if (Volts > 0.0)
+	{
+		int i;
+
+		for (i = 0; i < nSources; i++)
+		{
+			if (sources[i])
+			{
+				sources[i]->DrawPower(watts * sources[i]->Voltage() / Volts);
+			}
+		}
+	}
+}
+
+bool NWayPowerMerge::IsBusConnected(int bus)
+
+{
+	if (bus < 1 || bus > nSources)
+		return false;
+
+	return (sources[bus - 1] != 0);
+}
+
+void NWayPowerMerge::WireToBus(int bus, e_object* e)
+
+{
+	if (bus > 0 && bus <= nSources)
+		sources[bus - 1] = e;
+}
 
 DCBusController::DCBusController(char *i_name, PanelSDK &p) : 
-	sdk(p), fcPower(0, p), batPower(0, p), busPower(0, p)
+	sdk(p), fcPower(0, p), batPower(0, p), busPower(0, p, 4)
 
 {
 	if (i_name)
@@ -346,7 +455,10 @@ void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object
 	battery2 = bat2;
 	gseBattery = gse;
 
-	busPower.WireToBuses(&fcPower, &batPower, NULL);
+	busPower.WireToBus(1, &fcPower);
+	busPower.WireToBus(2, &batPower);
+	busPower.WireToBus(3, NULL);		// Source 3 is for ground power.
+	busPower.WireToBus(4, NULL);		// Source 4 is for docked vessel power.
 }
 
 void DCBusController::ConnectFuelCell(int fc, bool connect)
@@ -579,4 +691,80 @@ void BatteryCharger::Save(FILEHANDLE scn)
 
 	sprintf (cbuf, "%s %i", name, bat);
 	oapiWriteScenario_string (scn, "    <BATTERYCHARGER> ", cbuf);
+}
+
+PowerSourceConnectorObject::PowerSourceConnectorObject()
+
+{
+	connect = 0;
+}
+
+double PowerSourceConnectorObject::Voltage()
+
+{
+	if (connect)
+	{
+		ConnectorMessage cm;
+
+		cm.destination = connect->GetType();
+		cm.messageType = POWERCON_GET_VOLTAGE;
+
+		if (connect->SendMessage(cm))
+		{
+			return cm.val1.dValue;
+		}
+	}	
+
+	return 0.0;
+}
+
+double PowerSourceConnectorObject::Current()
+
+{
+	if (connect)
+	{
+		ConnectorMessage cm;
+
+		cm.destination = connect->GetType();
+		cm.messageType = POWERCON_GET_CURRENT;
+
+		if (connect->SendMessage(cm))
+		{
+			return cm.val1.dValue;
+		}
+	}	
+
+	return 0.0;
+}
+
+void PowerSourceConnectorObject::DrawPower(double watts)
+
+{
+	if (connect)
+	{
+		ConnectorMessage cm;
+
+		cm.destination = connect->GetType();
+		cm.messageType = POWERCON_DRAW_POWER;
+
+		cm.val1.dValue = watts;
+
+		connect->SendMessage(cm);
+	}
+}
+
+void PowerSourceConnectorObject::UpdateFlow(double dt)
+
+{
+	if (connect)
+	{
+		ConnectorMessage cm;
+
+		cm.destination = connect->GetType();
+		cm.messageType = POWERCON_UPDATE_FLOW;
+
+		cm.val1.dValue = dt;
+
+		connect->SendMessage(cm);
+	}
 }

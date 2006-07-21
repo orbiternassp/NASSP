@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+# Visual C++ Express 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASTP", "VC2005\ASTP\ASTP.vcproj", "{BAE34D87-5EAE-491C-AE6D-73B6B1E487D2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crawler", "VC2005\Crawler\Crawler.vcproj", "{BAAA2ADB-0507-4E33-9E80-23CEE3B74E37}"
@@ -19,6 +19,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LEM", "VC2005\LEM\LEM.vcpro
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SIVb", "VC2005\SIVb\SIVb.vcproj", "{1FD6B39B-FC9F-4219-AB56-4F7D698EEEC4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{98EC3BF0-C9FF-4C38-91E1-159D8F3700C1} = {98EC3BF0-C9FF-4C38-91E1-159D8F3700C1}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sat1Abort1", "VC2005\Sat1Abort1\Sat1Abort1.vcproj", "{1C98109C-791B-4563-AA9C-D02963D2AEC1}"
 EndProject

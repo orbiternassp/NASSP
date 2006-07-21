@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.161  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.160  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
@@ -3275,9 +3278,7 @@ void Saturn::LaunchCountdown(double simt)
 			// Engine lights on.
 			//
 
-			for (int i = 0; i < 8; i++) {
-				ENGIND[i] = true;
-			}
+			SetEngineIndicators();
 			StageState++;
 		}
 		break;
@@ -3332,14 +3333,16 @@ void Saturn::LaunchCountdown(double simt)
 			thrst = 0.9 + (0.05 * (MissionTime + 2.0));
 
 			//
-			// Engine lights off.
+			// Engine lights off. This should really be done per-engine,
+			// based on thrust level.
 			//
-
-			for (int i = 0; i < 5; i++) {
-				ENGIND[i] = false;
+			for (int i = 1; i <= SI_EngineNum; i++)
+			{
+				ClearEngineIndicator(i);
 			}
 		}
-		else {
+		else
+		{
 			thrst = (0.9 / 2.9) * (MissionTime + 4.9);
 		}
 		SetThrusterGroupLevel(thg_main, thrst);

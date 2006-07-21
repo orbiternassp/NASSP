@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.2  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
@@ -602,6 +605,24 @@ double CSMToSIVBControlConnector::GetFuelMass()
 	// by it.
 	//
 	return 0.01;
+}
+
+void CSMToSIVBControlConnector::GetMainBatteryPower(double &capacity, double &drain)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = CSMSIVB_GET_MAIN_BATTERY_POWER;
+
+	if (SendMessage(cm))
+	{
+		capacity = cm.val1.dValue;
+		drain = cm.val2.dValue;
+		return;
+	}
+
+	capacity = drain = 0.0;
 }
 
 void CSMToSIVBControlConnector::StartVenting()

@@ -106,6 +106,7 @@
 #define IDB_BORDER_72x72								113
 #define IDB_BORDER_75x64								114
 #define IDB_BORDER_34x39								115
+#define IDB_LV_ENGINE_LIGHTS_S1B						116
 #define IDB_SWITCH2                     				152
 #define IDB_SWITCH3                     				153
 #define IDB_VPITCH                      				154

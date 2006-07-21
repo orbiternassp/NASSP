@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.2  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
@@ -91,6 +94,8 @@ public:
 	bool IsVenting();
 
 	double GetFuelMass();
+	void GetMainBatteryPower(double &capacity, double &drain);
+
 	void StartVenting();
 	void StopVenting();
 
