@@ -22,10 +22,14 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/04/17 18:14:27  movieman523
+  *	Added flashing borders to all switches (I think).
+  *	
   **************************************************************************/
 
 class sat5_lmpkd;
 class LEM_ECA;
+class LEM_INV;
 
 class LEMThreePosSwitch : public ThreePosSwitch {
 public:
@@ -65,6 +69,21 @@ protected:
 	LEM_ECA *eca;
 //	IndicatorSwitch *Indicator;
 };
+
+class LEMInverterSwitch: public LEMThreePosSwitch {
+public:
+	LEMInverterSwitch() { inv1 = NULL; inv2 = NULL; };
+class LEM_ECA;	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s, LEM_INV *lem_inv_1, LEM_INV *lem_inv_2);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
+	bool ChangeState(int newState);
+
+protected:
+	void CheckValve(int s);
+	LEM_INV *inv1;
+	LEM_INV *inv2;
+};
+
 
 class LEMValveTalkback : public IndicatorSwitch {
 public:

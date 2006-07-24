@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.53  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -695,15 +698,18 @@ public:
 
 	int operator=(const int b) { state = b; return state; };
 
-protected:
-	virtual void InitSound(SoundLib *s);
-
 	///
 	/// Maximum current which can be pulled through the circuit breaker before it automatically
 	/// pops out.
 	/// \brief Maximum safe current.
 	///
 	double MaxAmps;
+	/// This has to be set early in initialization, otherwise MaxLoad is referred to before assignment
+	/// when loading a scenario. See the MaxAmps setting happening in the LM systems init as the systems are wired.
+
+protected:
+	virtual void InitSound(SoundLib *s);
+
 };
 
 

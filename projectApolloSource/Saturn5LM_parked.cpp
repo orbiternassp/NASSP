@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/06/18 22:45:31  dseagrav
+  *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
+  *	
   *	Revision 1.49  2006/05/30 23:15:11  movieman523
   *	Mission timer and DSKY now need power to operate.
   *	
@@ -299,6 +302,8 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	
 	CDRs28VBus("CDR-28V-Bus",NULL),
 	LMPs28VBus("LMP-28V-Bus",NULL),
+	ACBusA("AC-Bus-A",NULL),
+	ACBusB("AC-Bus-B",NULL),
 	dsky(soundlib, agc, 015),
 	agc(soundlib, dsky, imu, Panelsdk),
 	imu(agc, Panelsdk)
@@ -1169,6 +1174,12 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 			imu.LoadState(scn);
 		}
+		else if (!strnicmp (line, "ECA_1_START",sizeof("ECA_1_START"))) {
+			ECA_1.LoadState(scn,"ECA_1_END");
+		}
+		else if (!strnicmp (line, "ECA_2_START",sizeof("ECA_2_START"))) {
+			ECA_2.LoadState(scn,"ECA_2_END");
+		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
 		}
@@ -1227,6 +1238,25 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 	soundlib.SetLanguage(AudioLanguage);
 	LoadDefaultSounds();
+
+	// Also cause the AC busses to wire up
+	switch(EPSInverterSwitch.GetState()){
+		case THREEPOSSWITCH_UP:      // INV 2
+			INV_1.active = 0;
+			INV_2.active = 1; 
+			ACBusA.WireTo(&AC_A_INV_2_FEED_CB);
+			ACBusB.WireTo(&AC_B_INV_2_FEED_CB);
+			break;
+		case THREEPOSSWITCH_CENTER:  // INV 1
+			INV_1.active = 1;
+			INV_2.active = 0; 
+			ACBusA.WireTo(&AC_A_INV_1_FEED_CB);
+			ACBusB.WireTo(&AC_B_INV_1_FEED_CB);
+			break;
+		case THREEPOSSWITCH_DOWN:    // OFF	
+			break;                   // Handled later
+	}
+
 }
 
 void sat5_lmpkd::clbkSetClassCaps (FILEHANDLE cfg) {
@@ -1297,6 +1327,8 @@ void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
+	ECA_1.SaveState(scn,"ECA_1_START","ECA_1_END");
+	ECA_2.SaveState(scn,"ECA_2_START","ECA_2_END");
 
 	//
 	// Save the Panel SDK state.
