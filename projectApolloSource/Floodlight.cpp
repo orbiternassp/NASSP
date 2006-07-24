@@ -22,9 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.1  2006/04/25 14:00:22  tschachim
-  *	New KSC.
-  *	
+  *	Revision 1.1  2006/07/17 19:33:36  tschachim
+  *	Small improvements of LC39.
+  *
   **************************************************************************/
 
 #define ORBITER_MODULE
@@ -239,16 +239,20 @@ void Floodlight::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 		}
 		else if (!strnicmp (line, "LIGHT", 5)) {
 			sscanf (line + 5, "%d", &i);
-			sscanf (line + 5, "%d %lf %lf %lf %lf %lf %lf %lf", &i, 
-				&exhaustPos[i].x, &exhaustPos[i].y, &exhaustPos[i].z,
-				&exhaustDir[i][0], &exhaustDir[i][1],
-				&exhaustSize[i][0], &exhaustSize[i][1]); 
+			if (i < MAXEXHAUST) {
+				sscanf (line + 5, "%d %lf %lf %lf %lf %lf %lf %lf", &i, 
+					&exhaustPos[i].x, &exhaustPos[i].y, &exhaustPos[i].z,
+					&exhaustDir[i][0], &exhaustDir[i][1],
+					&exhaustSize[i][0], &exhaustSize[i][1]);
+			}
 		}
 		else {
 			ParseScenarioLineEx (line, status);
 		}
 	}
 	SetTouchdownPointHeight(touchdownPointHeight);
+	if (exhausts >= MAXEXHAUST)
+		exhausts = MAXEXHAUST - 1;
 }
 
 void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
