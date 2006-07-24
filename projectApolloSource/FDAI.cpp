@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/07/24 06:41:29  dseagrav
+  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
+  *	
   *	Revision 1.20  2006/06/17 17:49:33  tschachim
   *	Bugfix smoother movement.
   *	
@@ -456,12 +459,12 @@ void FDAI::Timestep(double simt, double simdt) {
 
 void FDAI::SystemTimestep(double simdt) {
 
-	// These numbers are adjusted for the LM.
+	// These numbers are adjusted for the CSM, I don't know if the LM is different.
 	if (IsPowered()) {
 		if (DCSource) 
-			DCSource->DrawPower(3.3); // This was 252.3 which is way wrong even for the AC side
+			DCSource->DrawPower(25.7); // Apollo 15 G&C checklist, page 44: Both FDAIs use 58W AC and DC alltogether
 		if (ACSource)
-			ACSource->DrawPower(200.0); // It probably went here, which was 3.3. 200 = 1.73A
+			ACSource->DrawPower(3.3); // CSM Systems Handbook, Power distibution matrix
 	}
 }
 
