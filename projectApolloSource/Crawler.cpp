@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/07/17 19:33:36  tschachim
+  *	Small improvements of LC39.
+  *	
   *	Revision 1.15  2006/06/23 11:58:07  tschachim
   *	Smaller turning diameter
   *	Slower acceleration/braking during time acceleration.
@@ -214,7 +217,8 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	} else return;
 
 	//double r = 152.4;	// 500 ft
-	double r = 106.7; // 350 ft
+	//double r = 106.7; // 350 ft
+	double r = 45; // 150 ft
 	double dheading = velocity * simdt / r;
 	// turn speed is only doubled when time acc is multiplied by ten:
 	dheading = (pow(5.0, log10(timeW))) * dheading / timeW;
