@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2006/07/16 16:20:52  flydba
+  *	COAS on the overhead rendezvous window now works.
+  *	
   *	Revision 1.60  2006/07/16 02:53:13  flydba
   *	New COAS added for the rendezvous window.
   *	
@@ -329,17 +332,6 @@ void sat5_lmpkd::InitPanel() {
 	RightACA4JetSwitch.Register(PSH, "RightACA4JetSwitch", false);
 	RightTTCATranslSwitch.Register(PSH, "RightTTCATranslSwitch", false);
 
-	SeWindHTRCircuitBraker.Register(PSH, "SeWindHTRCircuitBraker", 1);
-	HePQGSPropDispCircuitBraker.Register(PSH, "HePQGSPropDispCircuitBraker", 1);
-	SBDAntCircuitBraker.Register(PSH, "SBDAntCircuitBraker", 1);
-	OrdealCircuitBraker.Register(PSH, "OrdealCircuitBraker", 1);
-	AQSCircuitBraker.Register(PSH, "AOTLampCircuitBraker", 1);
-	AOTLampCircuitBraker.Register(PSH, "AOTLampCircuitBraker", 1);
-	SeFDAICircuitBraker.Register(PSH, "SeFDAICircuitBraker", 1);
-	NumLTGCircuitBraker.Register(PSH, "NumLTGCircuitBraker", 1);
-	BusTieInv2CircuitBraker.Register(PSH, "BusTieInv2CircuitBraker", 1);
-	BusTieInv1CircuitBraker.Register(PSH, "BusTieInv1CircuitBraker", 1);
-
 	HeliumMonRotary.AddPosition(0, 290);
 	HeliumMonRotary.AddPosition(1, 315);
 	HeliumMonRotary.AddPosition(2, 340);
@@ -418,6 +410,7 @@ void sat5_lmpkd::InitPanel() {
 	DSCBattery2TB.Register(PSH, "DSCBattery2TB", true);
 	DSCBattery3TB.Register(PSH, "DSCBattery3TB", true);
 	DSCBattery4TB.Register(PSH, "DSCBattery4TB", true);
+	EPSInverterSwitch.Register(PSH,"EPSInverterSwitch",THREEPOSSWITCH_DOWN);
 	DSCSEBat1HVSwitch.Register(PSH, "DSCSEBat1HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DSCSEBat2HVSwitch.Register(PSH, "DSCSEBat2HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DSCCDRBat3HVSwitch.Register(PSH, "DSCCDRBat3HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
@@ -427,11 +420,20 @@ void sat5_lmpkd::InitPanel() {
 	DSCCDRBat3LVSwitch.Register(PSH, "DSCCDRBat3LVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DSCCDRBat4LVSwitch.Register(PSH, "DSCCDRBat4LVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
+	LMPInverter2CB.Register(PSH,"LMPInverter2CB",1);
 	LMPBatteryFeedTieCB1.Register(PSH, "LMPBatteryFeedTieCB1", 1);
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
 	CDRBatteryFeedTieCB1.Register(PSH, "CDRBatteryFeedTieCB1", 1);
 	CDRBatteryFeedTieCB2.Register(PSH, "CDRBatteryFeedTieCB2", 1);
+	CDRInverter1CB.Register(PSH,"CDRInverter1CB",1);
 
+	AC_A_INV_1_FEED_CB.Register(PSH,"AC_A_INV_1_FEED_CB",1);
+	AC_A_INV_2_FEED_CB.Register(PSH,"AC_A_INV_2_FEED_CB",1);
+	AC_B_INV_1_FEED_CB.Register(PSH,"AC_B_INV_1_FEED_CB",1);
+	AC_B_INV_2_FEED_CB.Register(PSH,"AC_B_INV_2_FEED_CB",1);
+
+	CDR_FDAI_DC_CB.Register(PSH,"CDR_FDAI_DC_CB",1);
+	CDR_FDAI_AC_CB.Register(PSH,"CDR_FDAI_AC_CB",1);
 	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 1);
 	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 1);
 
@@ -1167,9 +1169,10 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	case LMPANEL_LEFTPANEL: // LEM Left Panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW1,					_R( 184,  85,  1433,  115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW2,					_R( 184,  258, 1433,  288), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW4,					_R( 184,  604, 1557,  634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 184,  777,  916,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ACBUSBCIRCUITBREAKERS,			_R( 187,   85,  851,  114), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 184,  777,  916,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);		
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
@@ -1177,6 +1180,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	case LMPANEL_RIGHTPANEL: // LEM Right Panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
+		oapiRegisterPanelArea (AID_LM_EPS_LEFT_CONTROLS,            _R( 314,  728, 542,  913), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW4,					_R( 173,  604, 1415, 634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_BATTERY_TALKBACKS,	        _R( 572,  741, 888,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_HIGH_VOLTAGE_SWITCHES,	    _R( 568,  795, 895,  830), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1351,32 +1355,24 @@ void sat5_lmpkd::SetSwitches(int panel) {
 			Panel4RightSwitchRow.Init(AID_PANEL4RIGHTSWITCHROW, MainPanel);
 			RightACA4JetSwitch.Init   (0,   0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel4RightSwitchRow);
 			RightTTCATranslSwitch.Init(0, 136, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel4RightSwitchRow);
-
-			AcBusBCircuitBrakersRow.Init(AID_ACBUSBCIRCUITBREAKERS, MainPanel);
-			SeWindHTRCircuitBraker.Init     (   0,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
-			HePQGSPropDispCircuitBraker.Init(  64,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
-			SBDAntCircuitBraker.Init        ( 128,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
-			OrdealCircuitBraker.Init        ( 192,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
-			AQSCircuitBraker.Init           ( 315,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
-			AOTLampCircuitBraker.Init       ( 379,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
-			SeFDAICircuitBraker.Init        ( 443,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
-			NumLTGCircuitBraker.Init        ( 507,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
-			BusTieInv2CircuitBraker.Init    ( 571,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
-			BusTieInv1CircuitBraker.Init    ( 635,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], AcBusBCircuitBrakersRow);
 			break;
 
 		case LMPANEL_RIGHTPANEL: // LEM Right Panel
+			// 173
 			Panel16CB4SwitchRow.Init(AID_LEM_P16_CB_ROW4, MainPanel);
 			// In reality, two of these are paralleled.
 			// I'll just use one.
+			LMPInverter2CB.Init( 576, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 30.0);
 			LMPBatteryFeedTieCB2.Init( 1211,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &ECA_1, 100.0);
-			
+
+			EPSLeftControlArea.Init(AID_LM_EPS_LEFT_CONTROLS,MainPanel);
+			EPSInverterSwitch.Init( 142, 135, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39],EPSLeftControlArea, this, &INV_1, &INV_2);
+
 			DSCHiVoltageSwitchRow.Init(AID_DSC_HIGH_VOLTAGE_SWITCHES, MainPanel);
 			DSCSEBat1HVSwitch.Init( 0,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1,1);
 			DSCSEBat2HVSwitch.Init( 69,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1,3);
 			DSCCDRBat3HVSwitch.Init(151,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2,1);
 			DSCCDRBat4HVSwitch.Init(220,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2,3);
-
 
 			DSCLoVoltageSwitchRow.Init(AID_DSC_LOW_VOLTAGE_SWITCHES, MainPanel);
 			DSCSEBat1LVSwitch.Init( 0,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow, this,&ECA_1,2);
@@ -1393,6 +1389,17 @@ void sat5_lmpkd::SetSwitches(int panel) {
 			break;
 
 		case LMPANEL_LEFTPANEL:
+			// 184
+			Panel11CB1SwitchRow.Init(AID_LEM_P11_CB_ROW1, MainPanel);
+			AC_A_INV_1_FEED_CB.Init( 765, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &INV_1, 5.0);
+			AC_A_INV_2_FEED_CB.Init( 701, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &INV_2, 5.0);
+			AC_B_INV_1_FEED_CB.Init( 637, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &INV_1, 5.0);
+			AC_B_INV_2_FEED_CB.Init( 573, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &INV_2, 5.0);
+
+			Panel11CB2SwitchRow.Init(AID_LEM_P11_CB_ROW2, MainPanel);
+			CDR_FDAI_DC_CB.Init( 893, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB2SwitchRow, &CDRs28VBus, 2.0);
+			CDR_FDAI_AC_CB.Init( 1214, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB2SwitchRow, &ACBusA, 2.0);
+
 			Panel11CB4SwitchRow.Init(AID_LEM_P11_CB_ROW4, MainPanel);
 			IMU_OPR_CB.Init( 1342,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 20.0);
 			LGC_DSKY_CB.Init( 1214,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 7.5);
@@ -1401,6 +1408,7 @@ void sat5_lmpkd::SetSwitches(int panel) {
 			// In reality, two of these are paralleled.
 			// I'll just use one.
 			CDRBatteryFeedTieCB2.Init( 66,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &ECA_2, 100.0);
+			CDRInverter1CB.Init( 638, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &ECA_2, 30.0);
 			
 			break;
 	}

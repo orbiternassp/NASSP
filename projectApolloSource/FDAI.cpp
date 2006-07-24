@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/06/17 17:49:33  tschachim
+  *	Bugfix smoother movement.
+  *	
   *	Revision 1.19  2006/06/10 14:41:36  movieman523
   *	Zero target to avoid crash on saving when unpowered.
   *	
@@ -453,11 +456,12 @@ void FDAI::Timestep(double simt, double simdt) {
 
 void FDAI::SystemTimestep(double simdt) {
 
+	// These numbers are adjusted for the LM.
 	if (IsPowered()) {
 		if (DCSource) 
-			DCSource->DrawPower(252.3);
+			DCSource->DrawPower(3.3); // This was 252.3 which is way wrong even for the AC side
 		if (ACSource)
-			ACSource->DrawPower(3.3);
+			ACSource->DrawPower(200.0); // It probably went here, which was 3.3. 200 = 1.73A
 	}
 }
 

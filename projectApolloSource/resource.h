@@ -539,7 +539,7 @@
 #define AID_PANEL4LEFTSWITCHROW         				807
 #define AID_PANEL4RIGHTSWITCHROW        				808
 #define IDB_CIRCUITBRAKERLEM            				809
-#define AID_ACBUSBCIRCUITBREAKERS       				810
+// #define AID_ACBUSBCIRCUITBREAKERS       				810 DEPRECIATED
 #define AID_GDCALIGNBUTTON              				811
 #define AID_ASCPDISPLAYROLL             				812
 #define AID_ASCPDISPLAYPITCH            				813
@@ -563,7 +563,9 @@
 #define IDB_ORDEAL_ROTARY								831
 #define AID_ORDEALSWITCHES								832
 #define AID_ORDEALROTARY								833
-
+#define AID_LM_EPS_LEFT_CONTROLS                        834
+#define AID_LEM_P11_CB_ROW2								835
+#define AID_LEM_P11_CB_ROW1								836
 
 // Next default values for new objects
 //

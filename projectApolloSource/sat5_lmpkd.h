@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/07/16 16:21:31  flydba
+  *	COAS on the overhead rendezvous window now works.
+  *	
   *	Revision 1.47  2006/07/16 02:55:55  flydba
   *	New COAS added on the rendezvous window.
   *	
@@ -218,6 +221,8 @@ public:
 	void Init(sat5_lmpkd *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b); // Init
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
 
 	IndicatorSwitch *dc_source_a_tb;    // Pointer at TB #1
 	IndicatorSwitch *dc_source_b_tb;    // Pointer at TB #2
@@ -230,6 +235,19 @@ public:
 	int input_a;                        // A-side input selector
 	int input_b;                        // B-side input selector
 };
+
+// Inverter
+class LEM_INV : public e_object {
+public:
+	LEM_INV();							// Cons
+	void Init(sat5_lmpkd *s);
+	void UpdateFlow(double dt);
+	void DrawPower(double watts);
+	int active;
+	sat5_lmpkd *lem;					// Pointer at LM
+	e_object *dc_input;
+};
+
 
 ///
 /// \ingroup LEM
@@ -562,17 +580,18 @@ protected:
 	// LEM panel 11 //
 	//////////////////
 
-	SwitchRow AcBusBCircuitBrakersRow;
-	CircuitBrakerSwitch SeWindHTRCircuitBraker;
-	CircuitBrakerSwitch HePQGSPropDispCircuitBraker;
-	CircuitBrakerSwitch SBDAntCircuitBraker;
-	CircuitBrakerSwitch OrdealCircuitBraker;
-	CircuitBrakerSwitch AQSCircuitBraker;
-	CircuitBrakerSwitch AOTLampCircuitBraker;
-	CircuitBrakerSwitch SeFDAICircuitBraker;
-	CircuitBrakerSwitch NumLTGCircuitBraker;
-	CircuitBrakerSwitch BusTieInv2CircuitBraker;
-	CircuitBrakerSwitch BusTieInv1CircuitBraker;
+	SwitchRow Panel11CB1SwitchRow;
+	// I have to get to these from the inverter select switch class
+	public:
+	CircuitBrakerSwitch AC_A_INV_1_FEED_CB;
+	CircuitBrakerSwitch AC_A_INV_2_FEED_CB;
+	CircuitBrakerSwitch AC_B_INV_1_FEED_CB;
+	CircuitBrakerSwitch AC_B_INV_2_FEED_CB;
+	protected:
+
+	SwitchRow Panel11CB2SwitchRow;
+	CircuitBrakerSwitch CDR_FDAI_DC_CB;
+	CircuitBrakerSwitch CDR_FDAI_AC_CB;
 
 	SwitchRow Panel11CB4SwitchRow;
 	CircuitBrakerSwitch IMU_OPR_CB;
@@ -583,7 +602,8 @@ protected:
 	// Battery feed tie breakers (ECA output breakers)
 	CircuitBrakerSwitch CDRBatteryFeedTieCB1;
 	CircuitBrakerSwitch CDRBatteryFeedTieCB2;
-
+	// AC Inverter 1 feed
+	CircuitBrakerSwitch CDRInverter1CB;
 
 	bool RCS_Full;
 	bool Eds;
@@ -760,6 +780,9 @@ protected:
 	// LEM panel 14 //
 	//////////////////
 
+	SwitchRow EPSLeftControlArea;
+	LEMInverterSwitch EPSInverterSwitch;
+
 	SwitchRow DSCHiVoltageSwitchRow;
 	LEMBatterySwitch DSCSEBat1HVSwitch;
 	LEMBatterySwitch DSCSEBat2HVSwitch;
@@ -783,6 +806,7 @@ protected:
 	//////////////////
 
 	SwitchRow Panel16CB4SwitchRow;
+	CircuitBrakerSwitch LMPInverter2CB;
 	// Battery feed tie breakers (ECA output breakers)
 	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
 	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
@@ -908,7 +932,18 @@ protected:
 	DCbus CDRs28VBus;
 	DCbus LMPs28VBus;
 
+	// AC Bus A and B
+	// This is a cheat. the ACbus class actually simulates an inverter, which is bad for the LM.
+	// So we fake it out with a DC bus instead.
+	// Also, I have to get to these from the inverter select switch class
+	public:
+	DCbus ACBusA;
+	DCbus ACBusB;
+	protected:
 
+	// AC inverters
+	LEM_INV INV_1;
+	LEM_INV INV_2;
 };
 
 extern void LEMLoadMeshes();

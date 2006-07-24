@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/06/18 22:45:31  dseagrav
+  *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
+  *	
   *	Revision 1.5  2006/06/18 16:43:07  dseagrav
   *	LM EPS fixes, LMP/CDR DC busses now powered thru CBs, ECA power-off bug fixed and ECA speed improvement
   *	
@@ -221,6 +224,64 @@ bool LEMBatterySwitch::SwitchTo(int newState)
 		return true;
 	}
 
+	return false;
+}
+
+// INVERTER SWITCH
+
+void LEMInverterSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s,
+							LEM_INV *lem_inv_1, LEM_INV *lem_inv_2)
+{
+	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
+
+	inv1 = lem_inv_1;
+	inv2 = lem_inv_2;
+}
+
+bool LEMInverterSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (LEMThreePosSwitch::CheckMouseClick(event, mx, my)) {
+		return ChangeState(state);		
+	}	
+	return false;
+}
+
+bool LEMInverterSwitch::ChangeState(int newState){
+	switch(newState){
+		case THREEPOSSWITCH_UP:      // INV 2			
+			if(inv1 != NULL){ inv1->active = 0; }
+			if(inv2 != NULL){ inv2->active = 1; }
+			lem->ACBusA.WireTo(&lem->AC_A_INV_2_FEED_CB);
+			lem->ACBusB.WireTo(&lem->AC_B_INV_2_FEED_CB);
+			break;
+		case THREEPOSSWITCH_CENTER:  // INV 1
+			if(inv1 != NULL){ inv1->active = 1; }
+			if(inv2 != NULL){ inv2->active = 0; }			
+			lem->ACBusA.WireTo(&lem->AC_A_INV_1_FEED_CB);
+			lem->ACBusB.WireTo(&lem->AC_B_INV_1_FEED_CB);
+			break;
+		case THREEPOSSWITCH_DOWN:    // OFF				
+			if(inv1 != NULL){ inv1->active = 0; }
+			if(inv2 != NULL){ inv2->active = 0; }
+			lem->ACBusA.WireTo(NULL); 
+			lem->ACBusB.WireTo(NULL); 
+			lem->ACBusA.Volts = 0;
+			lem->ACBusB.Volts = 0;
+			break;
+	}
+	return true;	
+}
+
+bool LEMInverterSwitch::SwitchTo(int newState)
+{
+	sprintf(oapiDebugString(),"NewState %d",newState);
+	if (LEMThreePosSwitch::SwitchTo(newState)) {
+		// some of these switches are spring-loaded, 
+		// so we have to use newState here
+		// CheckValve(newState);
+		return true;
+	}
 	return false;
 }
 

@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2006/06/17 18:13:13  tschachim
+  *	Moved BMAGPowerRotationalSwitch.
+  *	
   *	Revision 1.69  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -504,12 +507,12 @@ void ToggleSwitch::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int (scn, name, state);
 }
 
-void ToggleSwitch::LoadState(char *line) {
-
+void ToggleSwitch::LoadState(char *line){
+	// Load state
 	char buffer[100];
-	int st;
+	int st=0;
 
-	sscanf(line, "%s %i", buffer, &st); 
+	sscanf(line, "%s %i", buffer, &st);
 	if (!strnicmp(buffer, name, strlen(name))) {
 		state = st;
 	}
@@ -704,8 +707,9 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 	// Do nothing if the breaker is open.
 	//
 
-	if (state == 0)
+	if (state == 0){
 		return;
+	}
 
 	//
 	// Check the current isn't over the max rating, and if it is then
@@ -717,6 +721,7 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 		if (volts > 0.0) {
 			double amps = watts / volts;
 			if (amps > MaxAmps) {
+				// sprintf(oapiDebugString(),"CB: Break! Amps = %f MaxAmps = %f",amps,MaxAmps);
 				state = 0;
 				SwitchToggled = true;
 
@@ -2125,11 +2130,16 @@ void IndicatorSwitch::LoadState(char *line) {
 
 	sscanf(line, "%s %i", buffer, &st); 
 	if (!strnicmp(buffer, name, strlen(name))) {
-		state = (st != 0);
-		if (state) 
+		state = st;
+		if (state != 0){
 			displayState = 3.0;
-		else
+		}else{
 			displayState = 0.0;
+		}
+		// Cheating beyond normal saves switch subclasses and associated etcetera
+		if (displayState == 3.0 && state > 1){
+			displayState += (state - 1);
+		}
 	}
 }
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/06/18 22:45:31  dseagrav
+  *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
+  *	
   *	Revision 1.12  2006/06/18 16:43:07  dseagrav
   *	LM EPS fixes, LMP/CDR DC busses now powered thru CBs, ECA power-off bug fixed and ECA speed improvement
   *	
@@ -932,14 +935,39 @@ void sat5_lmpkd::SystemsInit()
 	DSCBattery3TB.WireTo(&ECA_2);
 	DSCBattery4TB.WireTo(&ECA_2);
 
-	// Output CBs
+	// ECA Output CBs
+	LMPBatteryFeedTieCB2.MaxAmps = 100.0;
 	LMPBatteryFeedTieCB2.WireTo(&ECA_1);
+	CDRBatteryFeedTieCB2.MaxAmps = 100.0;
 	CDRBatteryFeedTieCB2.WireTo(&ECA_2);
 
 	// CDR and LMP 28V DC busses.
 	// Apparently unpowered (Wired to NULL) busses get 28V for some reason...
 	CDRs28VBus.WireTo(&CDRBatteryFeedTieCB2); 
 	LMPs28VBus.WireTo(&LMPBatteryFeedTieCB2);
+
+	// AC Inverter CBs
+	CDRInverter1CB.MaxAmps = 30.0;
+	CDRInverter1CB.WireTo(&CDRs28VBus);
+	// AC Inverters
+	INV_1.dc_input = &CDRInverter1CB;
+	INV_2.dc_input = &LMPInverter2CB; 
+	// AC bus input breakers
+	AC_A_INV_1_FEED_CB.MaxAmps = 5.0;
+	AC_A_INV_1_FEED_CB.WireTo(&INV_1);
+	AC_B_INV_1_FEED_CB.MaxAmps = 5.0;
+	AC_B_INV_1_FEED_CB.WireTo(&INV_1);
+	AC_A_INV_2_FEED_CB.MaxAmps = 5.0;
+	AC_A_INV_2_FEED_CB.WireTo(&INV_2);
+	AC_B_INV_2_FEED_CB.MaxAmps = 5.0;
+	AC_B_INV_2_FEED_CB.WireTo(&INV_2);
+
+	// AC busses
+	ACBusA.Volts = 0;
+	ACBusA.WireTo(NULL);
+	ACBusB.Volts = 0;
+	ACBusB.WireTo(NULL);
+	// Situation load will wire these to their breakers later if needed
 
 	// RCS Main Shutoff valves
 	RCSMainSovASwitch.WireTo(&CDRs28VBus);
@@ -948,17 +976,25 @@ void sat5_lmpkd::SystemsInit()
 	RCSMainSovBSwitch.WireTo(&LMPs28VBus);
 
 	// LGC and DSKY
+	LGC_DSKY_CB.MaxAmps = 7.5;
 	LGC_DSKY_CB.WireTo(&CDRs28VBus);
 	agc.WirePower(&LGC_DSKY_CB,&LGC_DSKY_CB);
 	dsky.Init(&LGC_DSKY_CB);
 
 	// IMU OPERATE power (Logic DC power)
+	IMU_OPR_CB.MaxAmps = 20.0;
 	IMU_OPR_CB.WireTo(&CDRs28VBus);
 	imu.WireToBuses(&IMU_OPR_CB, &IMU_OPR_CB);
 	// The IMU heater should be wired to something as well, but I'm not sure how it works
 
-	// FDAI (TEMPORARY - HAX - This is a 2 amp CB? This draws almost 8 amps!)
-	fdaiLeft.WireTo(&CDRs28VBus);
+	// The FDAI has two CBs, AC and DC, and both are 2 amp CBs
+	// CDR FDAI
+	CDR_FDAI_DC_CB.MaxAmps = 2.0;
+	CDR_FDAI_DC_CB.WireTo(&CDRs28VBus);
+	CDR_FDAI_AC_CB.MaxAmps = 2.0;
+	CDR_FDAI_AC_CB.WireTo(&ACBusA);
+	// And the CDR FDAI itself	
+	fdaiLeft.WireTo(&CDR_FDAI_DC_CB,&CDR_FDAI_AC_CB);
 
 	//
 	// HACK:
@@ -972,6 +1008,9 @@ void sat5_lmpkd::SystemsInit()
 	
 	Panelsdk.AddElectrical(&CDRs28VBus, false);
 	Panelsdk.AddElectrical(&LMPs28VBus, false); 
+
+	Panelsdk.AddElectrical(&INV_1, false);
+	Panelsdk.AddElectrical(&INV_2, false);
 
 	// DS20060413 Initialize joystick
 	HRESULT         hr;
@@ -1219,10 +1258,10 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 	double CDRAmps=0,LMPAmps=0;
 	double CDRVolts = CDRs28VBus.Voltage(),LMPVolts = LMPs28VBus.Voltage();
 	if(LMPVolts > 0){ LMPAmps = LMPs28VBus.PowerLoad()/LMPVolts; }
-	if(CDRVolts > 0){ CDRAmps = CDRs28VBus.PowerLoad()/CDRVolts; }
-	sprintf(oapiDebugString(),"LM: LMP %f V/%f A CDR %f V/%f A",LMPVolts,LMPAmps,
-		CDRVolts,CDRAmps);
-	*/
+	if(CDRVolts > 0){ CDRAmps = CDRs28VBus.PowerLoad()/CDRVolts; }	
+	sprintf(oapiDebugString(),"LM: LMP %f V/%f A CDR %f V/%f A | AC-A %f V AC-B %f V",LMPVolts,LMPAmps,
+		CDRVolts,CDRAmps,ACBusA.Voltage(), ACBusB.Voltage());
+		*/
 }
 
 // PANEL SDK SUPPORT
@@ -1280,6 +1319,36 @@ void LEM_ECA::Init(sat5_lmpkd *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_
 	dc_source_hi_b = hi_b;
 	dc_source_lo_a = lo_a;
 	dc_source_lo_b = lo_b;
+}
+
+void LEM_ECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+
+{
+	oapiWriteLine(scn, start_str);
+	oapiWriteScenario_float(scn, "INPUT_A", input_a);
+	oapiWriteScenario_float(scn, "INPUT_B", input_b);
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_ECA::LoadState(FILEHANDLE scn, char *end_str)
+
+{
+	char *line;
+	int dec = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp (line, "INPUT_A", 7)) {
+			sscanf(line + 7, "%d", &dec);
+			input_a = dec;
+		}
+		if (!strnicmp (line, "INPUT_B", 7)) {
+			sscanf(line + 7, "%d", &dec);
+			input_b = dec;
+		}
+	}
 }
 
 void LEM_ECA::DrawPower(double watts)
@@ -1425,6 +1494,59 @@ void LEM_ECA::UpdateFlow(double dt){
 	
 	//sprintf(oapiDebugString(),"LM_ECA: = Inputs %d %d Voltages %f %f | Load %f Output %f V",input_a,input_b,A_Volts,B_Volts,power_load,Volts);
 }
+
+// AC INVERTER
+
+LEM_INV::LEM_INV(){
+	lem = NULL;
+	active = 0;
+	dc_input = NULL;
+}
+
+void LEM_INV::Init(sat5_lmpkd *s){
+	lem = s;
+}
+
+void LEM_INV::DrawPower(double watts)
+
+{ 
+	power_load += watts;
+};
+
+void LEM_INV::UpdateFlow(double dt){
+
+	// Reset these before pass
+	Volts = 0;
+	Amperes = 0;
+
+	// If not active, die.
+	if(!active){ return; }
+
+	if(dc_input != NULL){
+		// First take power from source
+		dc_input->DrawPower(power_load*2.5);  // Add inefficiency
+		// Then supply the bus
+		if(dc_input->Voltage() > 24){		  // Above 24V input
+			Volts = 115.0;                    // Regulator supplies 115V
+		}else{                                // Otherwise
+			Volts = dc_input->Voltage()*4.8;  // Falls out of regulation
+		}                                     // until the load trips the CB
+		Amperes = power_load/Volts;           // AC load amps
+	}
+
+	// Debug
+	/*
+	if(dc_input->Voltage() > 0){
+		sprintf(oapiDebugString(),"INV: DC V = %f A = %f | AC LOAD = %f V = %f A = %f",
+			dc_input->Voltage(),(power_load/dc_input->Voltage()*2.5),power_load,Volts,Amperes);
+	}else{
+		sprintf(oapiDebugString(),"INV: INPUT V = %f LOAD = %f",dc_input->Voltage(),power_load);
+	}
+	*/
+	// Reset for next pass
+	e_object::UpdateFlow(dt);
+}
+
 
 void sat5_lmpkd::CheckRCS()
 {
