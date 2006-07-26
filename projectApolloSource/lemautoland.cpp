@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2006/02/06 23:08:26  lazyd
+  *	Fixed P64-to-P66 problem if landing mesh is small
+  *	
   *	Revision 1.38  2006/01/21 15:46:10  lazyd
   *	Checks for VS_NO_ALT if no mesh altitude is available, alt=0
   *	
@@ -353,9 +356,9 @@ void LEMcomputer::Prog63(double simt)
 //			actatt.y=down*(-prograde)*asin(lrproj.z)*acos(upproj.z);
 			actatt.z=down*prograde*asin(lrproj.y);
 
-			CurrentVelX=-actatt.x*DEG*100.;
-			CurrentVelY=actatt.y*DEG*100.;
-			CurrentVelZ=actatt.z*DEG*100.;
+			CurrentPitch=-actatt.x*DEG*100.;
+			CurrentRoll=actatt.y*DEG*100.;
+			CurrentYaw=actatt.z*DEG*100.;
 //			sprintf(oapiDebugString(),"att= %.2f %.2f %.2f", actatt*DEG);
 			tgtatt.x=PI/2.;
 			tgtatt.y=0.0;
@@ -707,9 +710,9 @@ void LEMcomputer::Prog63Pressed(int R1, int R2, int R3)
 	// PRO on time of ignition...
 	//
 	case 3:
-		CurrentVelX=(-PI/2.)*DEG*100.;
-		CurrentVelY=0.;
-		CurrentVelZ=0.;
+		CurrentPitch=(-PI/2.)*DEG*100.;
+		CurrentRoll=0.;
+		CurrentYaw=0.;
 		ProgState++;
 		return;
 

@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2006/07/03 18:37:00  movieman523
+  *	Bunch more documentation.
+  *	
   *	Revision 1.44  2006/07/01 23:49:13  movieman523
   *	Updated more documentation.
   *	
@@ -990,6 +993,11 @@ protected:
 	void OrientForOrbitBurn(double simt);
 	void GetHoverAttitude( VECTOR3 &actatt);
 
+	// TODO Dirty Hack for the AGC++ attitude control, 
+	// remove this and use I/O channels and pulsed thrusters 
+	// identical to the VAGC instead
+	virtual void SetAttitudeRotLevel(VECTOR3 level) = 0;
+
 	///
 	/// \brief Set the thrust level of the main engine.
 	/// \param thrust Thrust level (0.0 to 1.0).
@@ -1263,6 +1271,9 @@ protected:
 	double CurrentVelZ;
 	double CurrentFuel;
 	double CurrentAlt;
+	double CurrentRoll;
+	double CurrentPitch;
+	double CurrentYaw;
 
 	double TargetRoll;
 	double TargetPitch;

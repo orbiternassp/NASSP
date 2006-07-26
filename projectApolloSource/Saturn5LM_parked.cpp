@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/07/24 06:41:29  dseagrav
+  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
+  *	
   *	Revision 1.50  2006/06/18 22:45:31  dseagrav
   *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
   *	
@@ -1165,6 +1168,9 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "LANDED", 6)) {
 			sscanf (line+6, "%d", &Landed);
 		}
+		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
+			sscanf (line + 12, "%i", &fdaiDisabled);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -1305,6 +1311,7 @@ void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "LANDED", Landed);
+	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
@@ -1394,6 +1401,21 @@ void sat5_lmpkd::PadLoad(unsigned int address, unsigned int value)
  }
 
 
-void sat5_lmpkd::SetRCSJet(int jet,bool fire){
-	SetThrusterLevel(th_rcs[jet],fire);
+void sat5_lmpkd::SetRCSJet(int jet, bool fire) {
+
+	// TODO Only for the Virtual AGC for now
+	if (agc.IsVirtualAGC()) {
+		SetThrusterLevel(th_rcs[jet], fire);
+	}
 }
+
+
+// TODO Dirty Hack for the AGC++ attitude control, 
+// remove this and use I/O channels and pulsed thrusters 
+// identical to the VAGC instead
+
+void sat5_lmpkd::SetRCSJetLevel(int jet, double level) {
+
+	SetThrusterLevel(th_rcs[jet], level);
+}
+

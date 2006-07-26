@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2006/07/21 23:04:34  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.78  2006/06/29 22:38:44  tschachim
   *	Bugfix saving/loading
   *	
@@ -332,15 +335,17 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	DesiredPerigee = 0.0;
 	DesiredDeltaV = 0.0;
 	DesiredAzimuth = 0.0;
-
 	DesiredDeltaVx = 0.0;
 	DesiredDeltaVy = 0.0;
 	DesiredDeltaVz = 0.0;
-
 	DesiredPlaneChange = 0.0;
 	DesiredLAN = 0.0;
 
 	DeltaPitchRate = 0.0;
+
+	CurrentRoll = 0.0;
+	CurrentPitch = 0.0;
+	CurrentYaw = 0.0;
 
 	//
 	// Expected dV from thrust decay of engine.
@@ -2157,7 +2162,7 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast)
 			}
 		}
 	}
-	OurVessel->SetAttitudeRotLevel(Level);
+	SetAttitudeRotLevel(Level);
 }
 
 
@@ -3679,9 +3684,9 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 			}
 		}
 	}
-	OurVessel->SetAttitudeRotLevel(Level);
-
+	SetAttitudeRotLevel(Level);
 }
+
 /*
 void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 {

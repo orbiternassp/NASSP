@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/07/24 06:41:30  dseagrav
+  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
+  *	
   *	Revision 1.48  2006/07/16 16:21:31  flydba
   *	COAS on the overhead rendezvous window now works.
   *	
@@ -295,7 +298,7 @@ public:
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
-
+	void SetRCSJetLevel(int jet, double level);
 	//
 	// These functions must be virtual so they can be called from the Saturn V or the LEVA
 	//

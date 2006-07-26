@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.22  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -266,6 +269,8 @@ protected:
 	bool OrbitCalculationsValid();
 	bool DescentPhase();
 	bool AscentPhase();
+	void SetAttitudeRotLevel(VECTOR3 level);
+
 
 	LEMFlagWord0 FlagWord0;
 	LEMFlagWord1 FlagWord1;
