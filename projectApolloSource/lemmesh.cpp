@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2006/04/22 03:53:48  jasonims
+  *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
+  *	
   *	Revision 1.23  2006/04/12 06:27:19  dseagrav
   *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
   *	
@@ -268,6 +271,8 @@ void sat5_lmpkd::SetLmVesselDockStage()
 
 	// Descent stage attached.
 	agc.SetInputChannelBit(030, 2, true);
+
+	CheckRCS();
 }
 
 void sat5_lmpkd::SetLmVesselHoverStage()
@@ -357,6 +362,8 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 
 	// Descent stage attached.
 	agc.SetInputChannelBit(030, 2, true);
+
+	CheckRCS();
 }
 
 
@@ -443,6 +450,8 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 
 	// Descent stage detached.
 	agc.SetInputChannelBit(030, 2, false);
+
+	CheckRCS();
 }
 
 void sat5_lmpkd::SeparateStage (UINT stage)
