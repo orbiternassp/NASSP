@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2006/06/18 22:45:30  dseagrav
+  *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
+  *	
   *	Revision 1.28  2006/04/25 08:11:27  dseagrav
   *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
   *	
@@ -252,20 +255,15 @@ void LEMcomputer::DisplayNounData(int noun)
 			SetR3(tsps);
 		}
 		break;
+
 	//
 	// 18: pitch, roll and yaw angles
 	//
 
 	case 18:
-		{
-		double pitch, roll, yaw;
-		pitch=CurrentVelX;
-		roll=CurrentVelY;
-		yaw=CurrentVelZ;
-		SetR1((int) pitch);
-		SetR2((int) roll);
-		SetR3((int) yaw);
-		}
+		SetR1((int) CurrentPitch);
+		SetR2((int) CurrentRoll);
+		SetR3((int) CurrentYaw);
 		break;
 
 	//
@@ -1444,3 +1442,80 @@ void LEMcomputer::ProcessChannel6(int val){
 	}
 	*/
 }
+
+
+// TODO Dirty Hack for the AGC++ attitude control, 
+// remove this and use I/O channels and pulsed thrusters 
+// identical to the VAGC instead
+
+void LEMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
+
+	int i;
+	double l[16];
+
+	for (i = 0; i < 16; i++) {
+		l[i] = 0;
+	}
+
+	// Pitch
+	if (level.x < 0) {
+		l[0] -= level.x;
+		l[7] -= level.x;
+		l[11] -= level.x;
+		l[12] -= level.x;
+	}
+	else {
+		l[3] += level.x;
+		l[4] += level.x;
+		l[8] += level.x;
+		l[15] += level.x;
+	}
+
+	// Roll
+	if (level.z < 0) {
+		l[0] -= level.z;
+		l[4] -= level.z;
+		l[11] -= level.z;
+		l[15] -= level.z;
+	}
+	else {
+		l[3] += level.z;
+		l[7] += level.z;
+		l[8] += level.z;
+		l[12] += level.z;
+	}
+
+	// Yaw
+	if (level.y > 0) {
+		l[1] += level.y;
+		l[5] += level.y;
+		l[10] += level.y;
+		l[14] += level.y;
+	}
+	else {
+		l[2] -= level.y;
+		l[6] -= level.y;
+		l[9] -= level.y;
+		l[13] -= level.y;
+	}
+
+	// Renormalize
+	for (i = 0; i < 16; i++) {
+		if (l[i] > 1) {
+			l[i] = 1;
+		}
+	}
+
+	for (i = 0; i < 16; i++) {
+		if (l[i] < -1) {
+			l[i] = -1;
+		}
+	}
+
+	// Set thrust
+	sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+	for (i = 0; i < 16; i++) {
+		lem->SetRCSJetLevel(i, l[i]);
+	}
+}
+

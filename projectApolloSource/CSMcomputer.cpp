@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/07/21 23:04:34  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.52  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -2154,4 +2157,16 @@ void CSMcomputer::ProcessChannel161(int val){
 		}				
 		error = sat->SetSPSYaw(tvc_yaw_cmd);
 	}
+}
+
+
+// TODO Dirty Hack for the AGC++ attitude control, 
+// remove this and use I/O channels and pulsed thrusters 
+// identical to the VAGC instead
+
+void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
+
+	// This is not tested and perhaps not working 
+	OurVessel->SetAttitudeRotLevel(level);
+
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.18  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -406,6 +409,7 @@ protected:
 	///
 	bool OrbitCalculationsValid();
 	void DisplayBankSum();
+	void SetAttitudeRotLevel(VECTOR3 level);
 
 	void ProcessChannel5(int val);
 	void ProcessChannel6(int val);
