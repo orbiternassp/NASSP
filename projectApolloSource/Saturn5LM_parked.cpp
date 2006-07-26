@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/07/26 15:42:02  tschachim
+  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
+  *	
   *	Revision 1.51  2006/07/24 06:41:29  dseagrav
   *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
   *	
@@ -323,6 +326,10 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	int x=0;
 	while(x<N_LEM_VALVES){
 		pLEMValves[x] = NULL;
+
+		// TODO Dirty hack until valvestate gets saved
+		ValveState[x] = true;
+
 		x++;
 	}
 
