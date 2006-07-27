@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/07/26 15:42:02  tschachim
+  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
+  *	
   *	Revision 1.53  2006/07/21 23:04:34  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -462,8 +465,23 @@ void CSMcomputer::DisplayNounData(int noun)
 				SetR3((int) drain);
 			}
 			break;
+
+		case 3:
+			{
+				double volts, current;
+				lv.GetMainBatteryElectrics(volts, current);
+
+				//
+				// Voltage x 100.
+				//
+				SetR2((int) (volts * 100.0));
+				//
+				// Current x 100.
+				//
+				SetR3((int) (current * 100.0));
+			}
+			break;
 		}
-		SetR1(VesselStatusDisplay);
 		break;
 
 	//
@@ -899,7 +917,9 @@ void CSMcomputer::Prog59(double simt)
 
 	case 100:
 	case 200:
+	case 300:
 		SetVerbNounAndFlash(16, 76);
+		SetR1(VesselStatusDisplay);
 		ProgState++;
 		break;
 	}
@@ -1190,15 +1210,6 @@ void CSMcomputer::Prog59Pressed(int R1, int R2, int R3)
 {
 	switch (ProgState)
 	{
-	case 1:
-		if (R1 > 0 && R1 < 3)
-		{
-			ProgState = 100 * R1;
-			VesselStatusDisplay = R1;
-			return;
-		}
-		break;
-
 	case 101:
 		if (lv.IsVentable())
 		{
@@ -1215,9 +1226,16 @@ void CSMcomputer::Prog59Pressed(int R1, int R2, int R3)
 		break;
 
 	default:
-		LightOprErr();
+		if (R1 > 0 && R1 < 4)
+		{
+			ProgState = 100 * R1;
+			VesselStatusDisplay = R1;
+			return;
+		}
 		break;
 	}
+
+	LightOprErr();
 }
 
 void CSMcomputer::Timestep(double simt, double simdt)
