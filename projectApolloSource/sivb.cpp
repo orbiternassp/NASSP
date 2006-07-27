@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.20  2006/07/21 23:04:35  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -754,6 +757,28 @@ double SIVB::GetMainBatteryPowerDrain()
 	return 0.0;
 }
 
+double SIVB::GetMainBatteryVoltage()
+
+{
+	if (MainBattery)
+	{
+		return MainBattery->Voltage();
+	}
+
+	return 0.0;
+}
+
+
+double SIVB::GetMainBatteryCurrent()
+
+{
+	if (MainBattery)
+	{
+		return MainBattery->Current();
+	}
+
+	return 0.0;
+}
 
 void SIVB::AddRCS_S4B()
 
@@ -1442,6 +1467,15 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 		{
 			m.val1.dValue = OurVessel->GetMainBatteryPower();
 			m.val2.dValue = OurVessel->GetMainBatteryPowerDrain();
+			return true;
+		}
+		break;
+
+	case CSMSIVB_GET_MAIN_BATTERY_ELECTRICS:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetMainBatteryVoltage();
+			m.val2.dValue = OurVessel->GetMainBatteryCurrent();
 			return true;
 		}
 		break;

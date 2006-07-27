@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/07/21 23:04:34  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.3  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -623,6 +626,24 @@ void CSMToSIVBControlConnector::GetMainBatteryPower(double &capacity, double &dr
 	}
 
 	capacity = drain = 0.0;
+}
+
+void CSMToSIVBControlConnector::GetMainBatteryElectrics(double &volts, double &current)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = CSMSIVB_GET_MAIN_BATTERY_ELECTRICS;
+
+	if (SendMessage(cm))
+	{
+		volts = cm.val1.dValue;
+		current = cm.val2.dValue;
+		return;
+	}
+
+	volts = current = 0.0;
 }
 
 void CSMToSIVBControlConnector::StartVenting()

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.14  2006/07/21 23:04:35  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -322,6 +325,18 @@ public:
 	///
 	double GetMainBatteryPowerDrain();
 
+	///
+	/// \brief Get main battery voltage.
+	/// \return Voltage in volts.
+	///
+	double GetMainBatteryVoltage();
+
+	///
+	/// \brief Get main battery current.
+	/// \return Current in amps.
+	///
+	double GetMainBatteryCurrent();
+
 protected:
 	///
 	/// PanelSDK functions as a interface between the
@@ -443,6 +458,7 @@ enum CSMSIVBMessageType
 {
 	CSMSIVB_GET_VESSEL_FUEL,				///< Get vessel fuel.
 	CSMSIVB_GET_MAIN_BATTERY_POWER,			///< Get the main battery power level.
+	CSMSIVB_GET_MAIN_BATTERY_ELECTRICS,		///< Get the main battery voltage and current.
 	CSMSIVB_IS_VENTABLE,					///< Is this a ventable vessel?
 	CSMSIVB_IS_VENTING,						///< Is the vessel venting fuel?
 	CSMSIVB_START_VENTING,					///< Start fuel venting.
