@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.28  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -169,7 +172,6 @@ private:
 	void AttitudeLaunch2();
 	void AttitudeLaunch4();
 	void AutoPilot(double autoT);
-	void LinearGuidance(VECTOR3 &target, double &pitch, double &yaw);
 	void SetSIICMixtureRatio (double ratio);
 	void SetSIVbCMixtureRatio(double ratio);
 	void MoveEVA();

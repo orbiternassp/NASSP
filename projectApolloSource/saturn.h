@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.205  2006/07/27 22:38:57  movieman523
+  *	Added CSM to LEM power connector.
+  *	
   *	Revision 1.204  2006/07/27 20:40:06  movieman523
   *	We can now draw power from the SIVb in the Apollo to Venus scenario.
   *	
@@ -3155,6 +3158,7 @@ protected:
 	void SetSIVBThrusters(bool active);
 	void LimitSetThrusterDir (THRUSTER_HANDLE th, const VECTOR3 &dir);
 	void AttitudeLaunchSIVB();
+	void LinearGuidance(VECTOR3 &target, double &pitch, double &yaw);
 	virtual void AutoPilot(double autoT) = 0;
 
 	void RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src, int xoffs, int yoffs);
