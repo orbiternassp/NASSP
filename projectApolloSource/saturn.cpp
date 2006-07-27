@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.163  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.162  2006/07/21 23:04:35  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -239,6 +242,8 @@
 #include "tracer.h"
 #include "sm.h"
 #include "sivb.h"
+#include "lemcomputer.h"
+#include "sat5_lmpkd.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -274,6 +279,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	ACBus1("ACBus1", Panelsdk),
 	ACBus2("ACBus2", Panelsdk),
 	SIVBToCSMPowerSource("SIVBToCSMPower", Panelsdk),
+	CSMToLEMPowerDrain("CSMToLEMPower", Panelsdk),
 	MainBusAController("MainBusAController", Panelsdk),
 	MainBusBController("MainBusBController", Panelsdk),
 	BatteryBusA("Battery-Bus-A", Panelsdk),
@@ -584,6 +590,11 @@ void Saturn::initSaturn()
 
 	CSMToSIVBConnector.SetType(CSM_SIVB_DOCKING);
 	SIVBToCSMPowerConnector.SetType(CSM_SIVB_POWER);
+
+	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
+	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
+	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
+
 	SIVBToCSMPowerSource.SetConnector(&SIVBToCSMPowerConnector);
 
 	//
@@ -1073,10 +1084,26 @@ void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
 				CSMToSIVBConnector.ConnectTo(SIVbConnector);
 			}
 		}
+
+		if (connected == hLMV)
+		{
+			//
+			// MGFIX: This should really only be done when the docking probe is retracted for a hard
+			// dock.
+			//
+			sat5_lmpkd *LEMVessel = (sat5_lmpkd *) oapiGetVesselInterface(connected);
+			Connector *LEMConnector = LEMVessel->GetDockingConnector();
+
+			if (LEMConnector)
+			{
+				CSMToLEMConnector.ConnectTo(LEMConnector);
+			}
+		}
 	}
 	else
 	{
 		CSMToSIVBConnector.Disconnect();
+		CSMToLEMConnector.Disconnect();
 	}
 
 	dockingprobe.DockEvent(dock, connected); 
@@ -3590,6 +3617,7 @@ void Saturn::GenericLoadStateSetup()
 	}
 
 	CSMToSIVBConnector.AddTo(&SIVBToCSMPowerConnector);
+	CSMToLEMConnector.AddTo(&CSMToLEMPowerConnector);
 
 	//
 	// Disable cabin fans.

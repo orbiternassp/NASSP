@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/07/26 19:05:20  tschachim
+  *	RCS enabled by default until state is saved properly.
+  *	
   *	Revision 1.52  2006/07/26 15:42:02  tschachim
   *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
   *	
@@ -206,6 +209,8 @@
 #include "tracer.h"
 #include "CollisionSDK/CollisionSDK.h"
 
+#include "connector.h"
+
 char trace_file[] = "ProjectApollo LM.log";
 
 
@@ -312,6 +317,7 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	ACBusB("AC-Bus-B",NULL),
 	dsky(soundlib, agc, 015),
 	agc(soundlib, dsky, imu, Panelsdk),
+	CSMToLEMPowerSource("CSMToLEMPower", Panelsdk),
 	imu(agc, Panelsdk)
 
 {
@@ -428,6 +434,12 @@ void sat5_lmpkd::Init()
 	soundlib.SetLanguage(AudioLanguage);
 
 	SoundsLoaded = false;
+
+	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
+	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
+
+	LEMToCSMConnector.AddTo(&CSMToLEMPowerConnector);
+	CSMToLEMPowerSource.SetConnector(&CSMToLEMPowerConnector);
 
 	//
 	// Panel flash.
@@ -1368,6 +1380,12 @@ bool sat5_lmpkd::clbkLoadGenericCockpit ()
 	SetView();
 
 	return true;
+}
+
+Connector *sat5_lmpkd::GetDockingConnector()
+
+{
+	return &LEMToCSMConnector;
 }
 
 //

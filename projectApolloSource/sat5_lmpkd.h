@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/07/26 15:42:02  tschachim
+  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
+  *	
   *	Revision 1.49  2006/07/24 06:41:30  dseagrav
   *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
   *	
@@ -198,6 +201,8 @@
 #include "lemswitches.h"
 #include "missiontimer.h"
 
+#include "connector.h"
+
 typedef struct {
 
 	double LandingLatitude;
@@ -306,7 +311,8 @@ public:
 	virtual void SetLanderData(LemSettings &ls);
 	virtual void PadLoad(unsigned int address, unsigned int value);
 	virtual void StopEVA();
-	
+	virtual Connector *GetDockingConnector();
+
 	PROPELLANT_HANDLE ph_DscRCSA,ph_DscRCSB;   // Descent RCS A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc ,ph_rcslm1; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
@@ -905,6 +911,18 @@ protected:
 	Sound Vox;
 	Sound Afire;
 	Sound Slanding;
+
+	//
+	// Connectors.
+	//
+
+	///
+	/// \brief Connector from LEM to CSM when docked.
+	///
+	MultiConnector LEMToCSMConnector;
+
+	PowerSourceConnectorObject CSMToLEMPowerSource;
+	Connector CSMToLEMPowerConnector;
 
 	char AudioLanguage[64];
 
