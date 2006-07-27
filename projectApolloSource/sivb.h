@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/07/21 23:04:35  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.13  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -416,6 +419,9 @@ protected:
 	/// \brief Command connector from CSM to SIVb.
 	///
 	CSMToSIVBCommandConnector csmCommandConnector;
+
+	PowerDrainConnectorObject SIVBToCSMPowerDrain;
+	PowerDrainConnector SIVBToCSMPowerConnector;
 
 	///
 	/// \brief Handle of docked vessel.

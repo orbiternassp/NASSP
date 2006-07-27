@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/07/21 23:04:35  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.10  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -156,7 +159,7 @@ class DCBusController : public e_object {
 
 public:
 	DCBusController(char *i_name, PanelSDK &p);
-	void Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse);
+	void Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp);
 	void refresh(double dt);
 	void ConnectFuelCell(int fc, bool connect);
 	bool IsFuelCellConnected(int fc);
@@ -217,7 +220,7 @@ class Connector;
 class PowerSourceConnectorObject : public e_object
 {
 public:
-	PowerSourceConnectorObject();
+	PowerSourceConnectorObject(char *i_name, PanelSDK &p);
 	void SetConnector(Connector *c) { connect = c; };
 
 	double Voltage();
@@ -236,18 +239,20 @@ protected:
 class PowerDrainConnectorObject : public e_object
 {
 public:
-	PowerDrainConnectorObject();
+	PowerDrainConnectorObject(char *i_name, PanelSDK &sdk);
 
 	void SetConnector(Connector *c) { connect = c; };
 
 	void ProcessUpdateFlow(double dt);
 	void ProcessDrawPower(double watts);
 	void refresh(double dt);
+	void Disconnected();
 
 protected:
 	Connector *connect;
 
 	double PowerDraw;
+	double PowerDrawn;
 };
 
 ///

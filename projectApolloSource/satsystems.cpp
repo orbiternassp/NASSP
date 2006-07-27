@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.116  2006/07/21 23:04:35  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.115  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -243,10 +246,10 @@ void Saturn::SystemsInit() {
 	MainBusB->WireTo(MainBusBController.GetBusSource());
 
 	MainBusAController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &BatteryBusA, EntryBatteryC, eo);	// TODO Bat C should be connected via the MAIN A - BAT C cb on panel 275, which is currently not available
+		                    &BatteryBusA, EntryBatteryC, eo, &SIVBToCSMPowerSource);	// TODO Bat C should be connected via the MAIN A - BAT C cb on panel 275, which is currently not available
 
 	MainBusBController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &BatteryBusB, EntryBatteryC, eo);	// TODO Bat C should be connected via the MAIN B - BAT C cb on panel 275, which is currently not available
+		                    &BatteryBusB, EntryBatteryC, eo, &SIVBToCSMPowerSource);	// TODO Bat C should be connected via the MAIN B - BAT C cb on panel 275, which is currently not available
 	
 	MainBusAController.ConnectFuelCell(2, true);	// Default state of MainBusASwitch2
 
