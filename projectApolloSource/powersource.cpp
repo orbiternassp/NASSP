@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/07/21 23:04:34  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.12  2006/06/21 12:54:12  tschachim
   *	Bugfix.
   *	
@@ -343,7 +346,10 @@ NWayPowerMerge::~NWayPowerMerge()
 
 {
 	if (sources)
+	{
 		delete[] sources;
+		sources = 0;
+	}
 }
 
 double NWayPowerMerge::Voltage()
@@ -358,7 +364,7 @@ double NWayPowerMerge::Voltage()
 	{
 		if (sources[i])
 		{
-			double VS = sources[i]->Voltage();
+			double VS = fabs(sources[i]->Voltage());
 			if (VS != 0)
 			{
 				V += VS;
@@ -388,10 +394,29 @@ double NWayPowerMerge::Current()
 void NWayPowerMerge::DrawPower(double watts)
 
 {
-	double Volts = Voltage();
+	double Volts = 0.0;
+	int i;
+
+	//
+	// Sum the voltage from all sources.
+	//
+	for (i = 0; i < nSources; i++)
+	{
+		if (sources[i])
+		{
+			double VS = fabs(sources[i]->Voltage());
+			if (VS != 0)
+			{
+				Volts += VS;
+			}
+		}
+	}
 
 	power_load += watts;
 
+	//
+	// Divide the power drain up across the sources by voltage.
+	//
 	if (Volts > 0.0)
 	{
 		int i;
@@ -400,7 +425,7 @@ void NWayPowerMerge::DrawPower(double watts)
 		{
 			if (sources[i])
 			{
-				sources[i]->DrawPower(watts * sources[i]->Voltage() / Volts);
+				sources[i]->DrawPower(watts * fabs(sources[i]->Voltage()) / Volts);
 			}
 		}
 	}
@@ -444,7 +469,7 @@ DCBusController::DCBusController(char *i_name, PanelSDK &p) :
 	sdk.AddElectrical(this, false);
 }
 
-void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse)
+void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp)
 
 {
 	fuelcell1 = fc1;
@@ -458,7 +483,7 @@ void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object
 	busPower.WireToBus(1, &fcPower);
 	busPower.WireToBus(2, &batPower);
 	busPower.WireToBus(3, NULL);		// Source 3 is for ground power.
-	busPower.WireToBus(4, NULL);		// Source 4 is for docked vessel power.
+	busPower.WireToBus(4, vp);			// Source 4 is for docked vessel power.
 }
 
 void DCBusController::ConnectFuelCell(int fc, bool connect)
@@ -693,10 +718,14 @@ void BatteryCharger::Save(FILEHANDLE scn)
 	oapiWriteScenario_string (scn, "    <BATTERYCHARGER> ", cbuf);
 }
 
-PowerSourceConnectorObject::PowerSourceConnectorObject()
+PowerSourceConnectorObject::PowerSourceConnectorObject(char *i_name, PanelSDK &sdk)
 
 {
+	if (i_name)
+		strcpy (name, i_name);
+
 	connect = 0;
+	sdk.AddElectrical(this, false);
 }
 
 double PowerSourceConnectorObject::Voltage()
@@ -767,4 +796,43 @@ void PowerSourceConnectorObject::UpdateFlow(double dt)
 
 		connect->SendMessage(cm);
 	}
+}
+
+PowerDrainConnectorObject::PowerDrainConnectorObject(char *i_name, PanelSDK &sdk)
+
+{
+	if (i_name)
+		strcpy (name, i_name);
+
+	PowerDraw = 0.0;
+	PowerDrawn = 0.0;
+
+	connect = 0;
+
+	sdk.AddElectrical(this, false);
+}
+
+void PowerDrainConnectorObject::ProcessUpdateFlow(double dt)
+
+{
+	PowerDraw = PowerDrawn;
+	PowerDrawn = 0.0;
+}
+
+void PowerDrainConnectorObject::ProcessDrawPower(double watts)
+
+{
+	PowerDrawn += watts;
+}
+
+void PowerDrainConnectorObject::refresh(double dt)
+
+{
+	DrawPower(PowerDraw);
+}
+
+void PowerDrainConnectorObject::Disconnected()
+
+{
+	PowerDrawn = PowerDraw = 0.0;
 }

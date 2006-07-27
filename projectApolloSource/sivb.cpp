@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/07/21 23:04:35  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.19  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -90,6 +93,7 @@
 #include "PanelSDK/PanelSDK.h"
 #include "PanelSDK/Internals/Esystems.h"
 
+#include "powersource.h"
 #include "connector.h"
 #include "iu.h"
 
@@ -182,7 +186,8 @@ void SIVbLoadMeshes()
 	SMMETex = oapiRegisterExhaustTexture ("Exhaust_atsme");
 }
 
-SIVB::SIVB (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
+SIVB::SIVB (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel),
+		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk)
 
 {
 	PanelSDKInitalised = false;
@@ -244,6 +249,9 @@ void SIVB::InitS4b()
 	IUCommandConnector.SetSIVb(this);
 	csmCommandConnector.SetSIVb(this);
 
+	SIVBToCSMPowerConnector.SetType(CSM_SIVB_POWER);
+	SIVBToCSMPowerConnector.SetPowerDrain(&SIVBToCSMPowerDrain);
+
 	if (!PanelSDKInitalised)
 	{
 		Panelsdk.RegisterVessel(this);
@@ -252,6 +260,8 @@ void SIVB::InitS4b()
 	}
 
 	MainBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY");
+
+	SIVBToCSMPowerDrain.WireTo(MainBattery);
 }
 
 Connector *SIVB::GetDockingConnector()
@@ -422,6 +432,7 @@ void SIVB::SetS4b()
 		iu.ConnectToLV(&IUCommandConnector);
 
 		SIVBToCSMConnector.AddTo(&csmCommandConnector);
+		SIVBToCSMConnector.AddTo(&SIVBToCSMPowerConnector);
 	}
 }
 

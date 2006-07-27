@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.162  2006/07/21 23:04:35  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.161  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -270,6 +273,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	ACBus2Source(0, Panelsdk),
 	ACBus1("ACBus1", Panelsdk),
 	ACBus2("ACBus2", Panelsdk),
+	SIVBToCSMPowerSource("SIVBToCSMPower", Panelsdk),
 	MainBusAController("MainBusAController", Panelsdk),
 	MainBusBController("MainBusBController", Panelsdk),
 	BatteryBusA("Battery-Bus-A", Panelsdk),
@@ -579,6 +583,8 @@ void Saturn::initSaturn()
 	sivbCommandConnector.SetSaturn(this);
 
 	CSMToSIVBConnector.SetType(CSM_SIVB_DOCKING);
+	SIVBToCSMPowerConnector.SetType(CSM_SIVB_POWER);
+	SIVBToCSMPowerSource.SetConnector(&SIVBToCSMPowerConnector);
 
 	//
 	// Propellant sources.
@@ -3582,6 +3588,8 @@ void Saturn::GenericLoadStateSetup()
 		iu.ConnectToCSM(&iuCommandConnector);
 		iu.ConnectToLV(&sivbCommandConnector);
 	}
+
+	CSMToSIVBConnector.AddTo(&SIVBToCSMPowerConnector);
 
 	//
 	// Disable cabin fans.

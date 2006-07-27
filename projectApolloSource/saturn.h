@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.203  2006/07/21 23:04:35  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.202  2006/07/16 17:43:42  flydba
   *	Switches and rotary on panel 13 (ORDEAL) now work.
   *	
@@ -3472,6 +3475,9 @@ protected:
 	/// \brief SIVb control connector for venting.
 	///
 	CSMToSIVBControlConnector sivbControlConnector;
+
+	PowerSourceConnectorObject SIVBToCSMPowerSource;
+	Connector SIVBToCSMPowerConnector;
 
 	//
 	// PanelSDK pointers.

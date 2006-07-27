@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/07/21 23:04:34  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.3  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -138,6 +141,11 @@ public:
 	virtual void Disconnect();
 
 	///
+	/// \brief Has been disconnected from the far end of the connection.
+	///
+	virtual void Disconnected();
+
+	///
 	/// Send a message through the connector. Note that the receiver can update the value in the
 	/// connector message, in order to return data to the caller.
 	///
@@ -192,11 +200,33 @@ public:
 	virtual bool AddTo(Connector *other);
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+	void Disconnect();
 
 #define N_MULTICONNECT_INPUTS 16
 
 private:
 	Connector *Inputs[N_MULTICONNECT_INPUTS];
+};
+
+class PowerDrainConnectorObject;
+
+///
+/// \ingroup Connectors
+/// \brief Connector class for power drain.
+///
+class PowerDrainConnector : public Connector
+{
+public:
+	PowerDrainConnector();
+	~PowerDrainConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+	void Disconnected();
+
+	void SetPowerDrain(PowerDrainConnectorObject *p);
+
+private:
+	PowerDrainConnectorObject *power_drain;
 };
 
 #endif // _PA_CONNECTOR_H

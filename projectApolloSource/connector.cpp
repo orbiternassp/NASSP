@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.1  2006/07/07 19:35:24  movieman523
   *	First version.
   *	
@@ -30,6 +33,11 @@
 #include "orbiterSDK.h"
 
 #include "nasspdefs.h"
+
+#include "PanelSDK/PanelSDK.h"
+#include "PanelSDK/Internals/Esystems.h"
+
+#include "powersource.h"
 #include "connector.h"
 
 #include <stdio.h>
@@ -60,6 +68,14 @@ void Connector::Disconnect()
 		connectedTo->connectedTo = 0;
 		connectedTo = 0;
 	}
+}
+
+void Connector::Disconnected()
+
+{
+	//
+	// Do nothing by default.
+	//
 }
 
 bool Connector::ConnectTo(Connector *other)
@@ -218,3 +234,104 @@ bool MultiConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	return false;
 }
 
+void MultiConnector::Disconnect()
+
+{
+	int i;
+
+	//
+	// Tell all our connectors that we've disconnected.
+	//
+	for (i = 0; i < N_MULTICONNECT_INPUTS; i++)
+	{
+		if (Inputs[i])
+		{
+			Inputs[i]->Disconnected();
+		}
+	}
+
+	Connector::Disconnect();
+}
+
+PowerDrainConnector::PowerDrainConnector()
+
+{
+	power_drain = 0;
+}
+
+PowerDrainConnector::~PowerDrainConnector()
+
+{
+}
+
+void PowerDrainConnector::SetPowerDrain(PowerDrainConnectorObject *p)
+
+{
+	power_drain = p;
+}
+
+void PowerDrainConnector::Disconnected()
+
+{
+	//
+	// If we've disconnected then stop drawing power.
+	//
+	if (power_drain)
+	{
+		power_drain->Disconnected();
+	}
+}
+
+bool PowerDrainConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	PowerSourceMessageType messageType;
+
+	messageType = (PowerSourceMessageType) m.messageType;
+
+	switch (messageType)
+	{
+	case POWERCON_GET_VOLTAGE:
+		if (power_drain)
+		{
+			m.val1.dValue = power_drain->Voltage();
+			return true;
+		}
+		break;
+
+	case POWERCON_GET_CURRENT:
+		if (power_drain)
+		{
+			m.val1.dValue = power_drain->Current();
+			return true;
+		}
+		break;
+
+	case POWERCON_DRAW_POWER:
+		if (power_drain)
+		{
+			power_drain->ProcessDrawPower(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case POWERCON_UPDATE_FLOW:
+		if (power_drain)
+		{
+			power_drain->ProcessUpdateFlow(m.val1.dValue);
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
