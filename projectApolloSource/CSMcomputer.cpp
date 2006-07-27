@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2006/07/27 21:30:47  movieman523
+  *	Added display of SIVb battery voltage and current.
+  *	
   *	Revision 1.54  2006/07/26 15:42:02  tschachim
   *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
   *	
@@ -466,6 +469,9 @@ void CSMcomputer::DisplayNounData(int noun)
 			}
 			break;
 
+		//
+		// 3: SIVb battery voltage and current.
+		//
 		case 3:
 			{
 				double volts, current;
@@ -474,11 +480,33 @@ void CSMcomputer::DisplayNounData(int noun)
 				//
 				// Voltage x 100.
 				//
-				SetR2((int) (volts * 100.0));
+				int vi = (int) (volts * 100.0);
+				int vd100 = vi / 100;
+				int vR2 = (vd100 * 1000) + (vi - (vd100 * 100));
+
+				SetR2(vR2);
+				SetR2Format(TwoSpaceTwoFormat);
+
 				//
 				// Current x 100.
 				//
-				SetR3((int) (current * 100.0));
+				int ci = (int) (current * 100.0);
+				int cd100 = ci / 100;
+				int cR3 = (cd100 * 1000) + (ci - (cd100 * 100));
+
+				//
+				// Sanity check.
+				//
+				if (current > 99.99)
+				{
+					cR3 = 99099;
+				}
+
+				//
+				// Display it.
+				//
+				SetR3(cR3);
+				SetR3Format(TwoSpaceTwoFormat);
 			}
 			break;
 		}

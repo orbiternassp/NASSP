@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.4  2006/07/21 23:04:34  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -49,8 +52,10 @@ enum ConnectorType
 	CSM_IU_COMMAND,				///< Passes commands and data between CSM and IU.
 	LV_IU_COMMAND,				///< Passes commands between launch vehicle and IU.
 	CSM_SIVB_DOCKING,			///< Docking connector between CSM and SIVb.
+	CSM_LEM_DOCKING,			///< Docking connector between CSM and LEM.
 	CSM_SIVB_COMMAND,			///< Passes commands and data between CSM and SIVb.
 	CSM_SIVB_POWER,				///< Power connection from SIVB to CSM.
+	LEM_CSM_POWER,				///< Power connection from CSM to LEM.
 };
 
 //

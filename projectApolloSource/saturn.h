@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.204  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.203  2006/07/21 23:04:35  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -3470,6 +3473,7 @@ protected:
 	SaturnToIUCommandConnector sivbCommandConnector;
 
 	MultiConnector CSMToSIVBConnector;
+	MultiConnector CSMToLEMConnector;
 
 	///
 	/// \brief SIVb control connector for venting.
@@ -3478,6 +3482,9 @@ protected:
 
 	PowerSourceConnectorObject SIVBToCSMPowerSource;
 	Connector SIVBToCSMPowerConnector;
+
+	PowerDrainConnectorObject CSMToLEMPowerDrain;
+	PowerDrainConnector CSMToLEMPowerConnector;
 
 	//
 	// PanelSDK pointers.
