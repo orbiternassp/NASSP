@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/04/17 19:12:27  movieman523
+  *	Removed some unused switches.
+  *	
   *	Revision 1.5  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -239,6 +242,7 @@ void Saturn1b::AttitudeLaunch4()
 
 void Saturn1b::AutoPilot(double autoT)
 {
+	const double GRAVITY=6.67259e-11;
 	static int first_time=1;
 	static int t = 0;
 	static int out_level=0;
@@ -453,12 +457,35 @@ void Saturn1b::AutoPilot(double autoT)
 	}
 	else if (altitude > 4500) {
 
+	// ###
+		bank = GetBank();
+		bank = bank*180./PI;
+		if(bank > 90) bank = bank - 180;
+		else if(bank < -90) bank = bank + 180;
+
+		AtempR=-bank/20.0;
+		if(fabs(bank) < 0.3) AtempR=0.0;
+	// ####
+
 		// navigation
 		pitch = GetPitch();
 		pitch = pitch*180./PI;
 
 		if (IGMEnabled) {
-			pitch_c = SetPitchApo();
+//			pitch_c = SetPitchApo();
+			VECTOR3 target;
+			double pit, yaw;
+			OBJHANDLE hbody=GetGravityRef();
+			double bradius=oapiGetSize(hbody);
+			double bmass=oapiGetMass(hbody);
+			double mu=GRAVITY*bmass;
+			double altco=agc.GetDesiredApogee()*1000.0;
+			double velo=sqrt(mu/(bradius+altco));
+			target.x=velo-0.234;
+			target.y=0.0;
+			target.z=altco;
+			LinearGuidance(target, pit, yaw);
+			AtempP=(pit*DEG-pitch)/30.0;
 		}
 		else {
 			 // guidance
@@ -470,7 +497,7 @@ void Saturn1b::AutoPilot(double autoT)
 
 			if ((SatApo >= ((agc.GetDesiredApogee() *.90) + ERADIUS)*1000) || MissionTime >= IGMStartTime)
 				IGMEnabled = true;
-		}
+// ###	}
 		level = pitch_c - pitch;
 
 	//sprintf(oapiDebugString(), "Autopilot Pitch Mode%f", elemSaturn1B.a );
@@ -500,6 +527,9 @@ void Saturn1b::AutoPilot(double autoT)
 			AtempP = 0.0;
 			AtempR = 0.0;
 			AtempY = 0.0;
+		}
+
+// ###
 		}
 	}
 
