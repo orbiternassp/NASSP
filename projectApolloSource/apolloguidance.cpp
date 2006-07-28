@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2006/07/26 15:42:02  tschachim
+  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
+  *	
   *	Revision 1.79  2006/07/21 23:04:34  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -4503,7 +4506,7 @@ extern "C" {
 void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 {
-	char fname[32], str[10];
+	char fname[32], str[32];
 	int i;
 	int val;
 
@@ -4534,7 +4537,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "EDAT", EnteringData);
 		oapiWriteScenario_int (scn, "ECNT", EnterCount);
 
-		memset(str, 0, 10);
+		memset(str, 0, 32);
 
 		strncpy(str, TwoDigitEntry, 2);
 		oapiWriteScenario_string (scn, "E2", str);
