@@ -1,9 +1,6 @@
 BEGIN_DESC
 Wally Schirra, Walt Cunningham and Donn Eisele take the most complex machine yet created,
-the Apollo CSM, on its first test flight, Oct 11th 1968. 
-Scenario starts on the pad LC34 at T-3h00, crew ingress at T-2h25.
-Azimuth launch is 72.00°
-
+the Apollo CSM, on its first test flight, Oct 11th 1968. The scenario starts on the pad LC34 at T-3h00min, crew ingress is at T-1h40min. (AS-205)
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -30,11 +27,12 @@ BEGIN_SHIPS
 AS-205:ProjectApollo/Saturn1B
   STATUS Landed Earth
   BASE Cape Canaveral:3
+  POS -80.5643392 28.5150791
   HEADING 270.00
   FUEL 1.000
   APOLLONO 7
   S4PL 5
-  NASSPVER 60050
+  NASSPVER 70000
   STAGE 5
   STAGESTATUS 0
   DOCKSTATE 0
@@ -49,6 +47,7 @@ AS-205:ProjectApollo/Saturn1B
   LESJT 166.54
   SIIPUT 455.77
   LANG English
+  AUTOSLOW 1
 AGC_BEGIN
   YAAGC 1
 AGC_END
@@ -157,5 +156,12 @@ AGC_END
   CMPAD3043 73117
   CMPAD3074 20324
   CMPAD3075 27777
+END
+VAB:ProjectApollo\VAB
+  STATUS Landed Earth
+  POS -80.6529535 28.5790607
+  HEADING 255.04
+  LVNAME AS-205
+END  
 END_SHIPS
  
