@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.206  2006/07/27 23:24:11  tschachim
+  *	The Saturn 1b now has the Saturn V IGM autopilot.
+  *	
   *	Revision 1.205  2006/07/27 22:38:57  movieman523
   *	Added CSM to LEM power connector.
   *	
@@ -976,6 +979,16 @@ public:
 	///
 	void PlayTLIStartSound(bool StartStop);
 
+	///
+	/// \brief We've hard docked, so check connections.
+	///
+	void HaveHardDocked();
+
+	///
+	/// \brief We've extended the docking probe, so disconnect connections.
+	///
+	void Undocking();
+
 protected:
 
 	///
@@ -1149,6 +1162,16 @@ protected:
 	/// \return True if CSM, false if not.
 	///
 	bool SaturnHasCSM();
+
+	///
+	/// \brief Set up connectors on docking.
+	///
+	void DockConnectors();
+
+	///
+	/// \brief Disconnect connectors on undocking.
+	///
+	void UndockConnectors();
 
 	//
 	// State that needs to be saved.
@@ -3268,6 +3291,7 @@ protected:
 
 	void SIVBBoiloff();
 	void LookForSIVb();
+	void LookForLEM();
 
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 

@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.5  2006/05/06 06:00:35  jasonims
   *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
   *	
@@ -101,6 +105,12 @@ void DockingProbe::Extend()
 	}
 }
 
+bool DockingProbe::IsHardDocked()
+
+{
+	return (Docked && (Status == DOCKINGPROBE_STATUS_RETRACTED));
+}
+
 void DockingProbe::Retract()
 
 {
@@ -173,7 +183,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		if (Status >= DOCKINGPROBE_STATUS_EXTENDED) {
 			Status = DOCKINGPROBE_STATUS_EXTENDED;
 			ExtendingRetracting = 0;
-		
+			OurVessel->Undocking();
 		} else {
 			Status += 0.33 * simdt;
 		}
@@ -181,7 +191,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		if (Status <= DOCKINGPROBE_STATUS_RETRACTED) {
 			Status = DOCKINGPROBE_STATUS_RETRACTED;
 			ExtendingRetracting = 0;
-		
+			OurVessel->HaveHardDocked();		
 		} else {
 			Status -= 0.33 * simdt;
 		}	
@@ -206,6 +216,15 @@ void DockingProbe::DoFirstTimeStep()
 		if (OurVessel->GetDockStatus(d) != NULL) {
 			Docked = true;
 		}
+	}
+
+	if (IsHardDocked())
+	{
+		OurVessel->HaveHardDocked();
+	}
+	else
+	{
+		OurVessel->Undocking();
 	}
 }
 

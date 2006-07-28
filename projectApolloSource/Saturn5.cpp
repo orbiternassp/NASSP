@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.88  2006/06/23 11:56:48  tschachim
+  *	New Project Apollo MFD for TLI burn control.
+  *	
   *	Revision 1.87  2006/06/17 18:15:27  tschachim
   *	Bugfix clbkConsumeBufferedKey.
   *	
@@ -1713,8 +1716,9 @@ void SaturnV::DoFirstTimestep(double simt)
 	hesc1= oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-STG1");
 	hstg1= oapiGetVesselByName(VName);
-	strcpy (VName, ApolloName); strcat (VName, "-S4BSTG");
-	hs4bM= oapiGetVesselByName(VName);
+
+	LookForSIVb();
+
 	strcpy (VName, ApolloName); strcat (VName, "-S4B1");
 	hs4b1 = oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-S4B2");
@@ -1726,8 +1730,7 @@ void SaturnV::DoFirstTimestep(double simt)
 	strcpy (VName, ApolloName); strcat (VName, "-SM");
 	hSMJet = oapiGetVesselByName(VName);
 
-	GetLEMName(VName);
-	hLMV = oapiGetVesselByName(VName);
+	LookForLEM();
 
 	strcpy (VName, ApolloName); strcat (VName, "-DCKPRB");
 	hPROBE = oapiGetVesselByName(VName);

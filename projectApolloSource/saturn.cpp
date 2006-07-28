@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.164  2006/07/27 22:38:57  movieman523
+  *	Added CSM to LEM power connector.
+  *	
   *	Revision 1.163  2006/07/27 20:40:06  movieman523
   *	We can now draw power from the SIVb in the Apollo to Venus scenario.
   *	
@@ -1057,56 +1060,109 @@ void Saturn::LookForSIVb()
 	}
 }
 
+void Saturn::LookForLEM()
+
+{
+	if (!hLMV)
+	{
+		char VName[256];
+		GetLEMName(VName);
+		hLMV = oapiGetVesselByName(VName);
+	}
+}
+
+void Saturn::UndockConnectors()
+
+{
+	CSMToSIVBConnector.Disconnect();
+	CSMToLEMConnector.Disconnect();
+}
+
+void Saturn::DockConnectors()
+
+{
+	DOCKHANDLE d = GetDockHandle(0);
+
+	if (!d)
+		return;
+
+	OBJHANDLE connected = GetDockStatus(d);
+
+	if (!hs4bM)
+	{
+		//
+		// Find the SIVb if we don't know where it is.
+		//
+		LookForSIVb();
+	}
+
+	if (!hLMV)
+	{
+		LookForLEM();
+	}
+
+	if (connected == hs4bM)
+	{
+		//
+		// MGFIX: This should really only be done when the docking probe is retracted for a hard
+		// dock.
+		//
+		SIVB *SIVBVessel = (SIVB *) oapiGetVesselInterface(connected);
+		Connector *SIVbConnector = SIVBVessel->GetDockingConnector();
+
+		if (SIVbConnector)
+		{
+			CSMToSIVBConnector.ConnectTo(SIVbConnector);
+		}
+	}
+
+	if (connected == hLMV)
+	{
+		//
+		// MGFIX: This should really only be done when the docking probe is retracted for a hard
+		// dock.
+		//
+		sat5_lmpkd *LEMVessel = (sat5_lmpkd *) oapiGetVesselInterface(connected);
+		Connector *LEMConnector = LEMVessel->GetDockingConnector();
+
+		if (LEMConnector)
+		{
+			CSMToLEMConnector.ConnectTo(LEMConnector);
+		}
+	}
+}
+
 void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
 
 {
+	//
+	// Ensure the docking probe is updated first.
+	//
+	dockingprobe.DockEvent(dock, connected); 
+
 	if (connected)
 	{
-		if (!hs4bM)
+		if (dockingprobe.IsHardDocked())
 		{
-			//
-			// Find the SIVb if we don't know where it is.
-			//
-			LookForSIVb();
-		}
-
-		if (connected == hs4bM)
-		{
-			//
-			// MGFIX: This should really only be done when the docking probe is retracted for a hard
-			// dock.
-			//
-			SIVB *SIVBVessel = (SIVB *) oapiGetVesselInterface(connected);
-			Connector *SIVbConnector = SIVBVessel->GetDockingConnector();
-
-			if (SIVbConnector)
-			{
-				CSMToSIVBConnector.ConnectTo(SIVbConnector);
-			}
-		}
-
-		if (connected == hLMV)
-		{
-			//
-			// MGFIX: This should really only be done when the docking probe is retracted for a hard
-			// dock.
-			//
-			sat5_lmpkd *LEMVessel = (sat5_lmpkd *) oapiGetVesselInterface(connected);
-			Connector *LEMConnector = LEMVessel->GetDockingConnector();
-
-			if (LEMConnector)
-			{
-				CSMToLEMConnector.ConnectTo(LEMConnector);
-			}
+			DockConnectors();
 		}
 	}
 	else
 	{
-		CSMToSIVBConnector.Disconnect();
-		CSMToLEMConnector.Disconnect();
+		UndockConnectors();
 	}
+}
 
-	dockingprobe.DockEvent(dock, connected); 
+void Saturn::HaveHardDocked()
+
+{
+	DockConnectors();
+}
+
+void Saturn::Undocking()
+
+{
+	UndockConnectors();
 }
 
 void Saturn::clbkPreStep(double simt, double simdt, double mjd)

@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.5  2006/05/06 06:00:35  jasonims
   *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
   *	
@@ -57,6 +61,7 @@ public:
 
 	double GetStatus() { return Status; }
 	bool GetDocked() { return Docked; }
+	bool IsHardDocked();
 	bool ProbeExtended;
 	void SetEnabled(bool e) { Enabled = e; }
 	void Extend();
