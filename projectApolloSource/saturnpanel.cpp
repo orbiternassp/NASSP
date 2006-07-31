@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.180  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.179  2006/07/21 23:04:35  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -1047,7 +1050,7 @@ bool Saturn::clbkLoadPanel (int id) {
 	switch(id) {
 	case SATPANEL_LOWER:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL));
-		oapiSetPanelNeighbours(-1, -1, SATPANEL_MAIN, -1);
+		oapiSetPanelNeighbours(-1, -1, SATPANEL_MAIN, SATPANEL_TELESCOPE);
 		break;
 
 	case SATPANEL_MAIN:
@@ -1083,6 +1086,16 @@ bool Saturn::clbkLoadPanel (int id) {
 	case SATPANEL_CABIN_PRESS_PANEL:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_CABIN_PRESS_PANEL));
 		oapiSetPanelNeighbours(-1, SATPANEL_LEFT, -1, -1);
+		break;
+
+	case SATPANEL_SEXTANT:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT));
+		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, -1, SATPANEL_LOWER);
+		break;
+
+	case SATPANEL_TELESCOPE:
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE));
+		oapiSetPanelNeighbours( SATPANEL_SEXTANT, -1, -1, SATPANEL_LOWER);
 		break;
 
 	}
@@ -1488,6 +1501,18 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ORDEALROTARY,					_R( 709,   63,  793,  147), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+		break;
+
+	case SATPANEL_SEXTANT: // Sextant
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+
+		SetCameraDefaultDirection(_V(0.0, -0.83867, 0.544639));
+		break;
+
+	case SATPANEL_TELESCOPE: // Telescope
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+
+		SetCameraDefaultDirection(_V(0.0, -0.83867, 0.544639));
 		break;
 	
 	}

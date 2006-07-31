@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.207  2006/07/28 02:06:58  movieman523
+  *	Now need to hard dock to get the connectors connected.
+  *	
   *	Revision 1.206  2006/07/27 23:24:11  tschachim
   *	The Saturn 1b now has the Saturn V IGM autopilot.
   *	
@@ -3043,10 +3046,13 @@ protected:
 #define SATPANEL_RIGHT_RNDZ_WINDOW	5
 #define SATPANEL_HATCH_WINDOW		6
 #define SATPANEL_CABIN_PRESS_PANEL	7
+#define SATPANEL_TELESCOPE			8
+#define SATPANEL_SEXTANT			9
 
 	int  PanelId;
 	bool InVC;
 	bool InPanel;
+	bool InOptics;
 	bool VCRegistered;
 	VECTOR3 VCCameraOffset;
 	VECTOR3 VCMeshOffset;
