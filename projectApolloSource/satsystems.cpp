@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.117  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.116  2006/07/21 23:04:35  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -1004,9 +1007,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 #ifdef _DEBUG
 
-/*		sprintf(oapiDebugString(), "Bus A = %3.1fA/%3.1fV, Bus B = %3.1fA/%3.1fV, AC Bus 1 = %3.1fA/%3.1fV, AC Bus 2 = %3.1fA/%3.1fV, Batt A = %3.1fV, Batt B = %3.1fV FC1 %3.1fV/%3.1fA", 
+/*		sprintf(oapiDebugString(), "Bus A = %3.1fA/%3.1fV, Bus B = %3.1fA/%3.1fV, AC Bus 1 = %3.1fA/%3.1fV, AC Bus 2 = %3.1fA/%3.1fV, Batt A = %3.1fV/%3.1fA, Batt B = %3.1fV FC1 %3.1fV/%3.1fA", 
 			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
-			ACBus1Source.Current(), ACBus1Source.Voltage(), ACBus2Source.Current(), ACBus2Source.Voltage(), EntryBatteryA->Voltage(), EntryBatteryB->Voltage(), FuelCells[0]->Voltage(), FuelCells[0]->Current());
+			ACBus1Source.Current(), ACBus1Source.Voltage(), ACBus2Source.Current(), ACBus2Source.Voltage(), EntryBatteryA->Voltage(), EntryBatteryA->Current(), EntryBatteryB->Voltage(), FuelCells[0]->Voltage(), FuelCells[0]->Current());
 */
 /*		sprintf(oapiDebugString(), "Bus A %3.1fA/%3.1fV, Bus B %3.1fA/%3.1fV, Batt A %3.1fV/%3.1fA/%.3f, Batt B %3.1fV/%.3f Batt C %3.1fV/%.3f Charg %2.1fV/%3.1fA FC1 %3.1fV/%3.1fA", 
 			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
