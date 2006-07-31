@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/06/27 12:08:58  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.2  2006/06/27 11:34:25  tschachim
   *	Added status screen.
   *	
@@ -152,7 +155,9 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 	screen = PROG_NONE;
 
 	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b")) {
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
 		saturn = (Saturn *)vessel;
 	}
 }
