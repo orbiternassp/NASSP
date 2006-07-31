@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.5  2006/01/27 22:11:38  movieman523
   *	Added support for low-res Saturn 1b.
   *	
@@ -47,27 +50,6 @@
 #include <stdio.h>
 #include <string.h>
 
-//
-// Meshes are globally loaded.
-//
-
-static MESHHANDLE hsat1stg1;
-static MESHHANDLE hSat1intstg;
-static MESHHANDLE hsat1stg1low;
-static MESHHANDLE hSat1intstglow;
-
-void S1bLoadMeshes()
-
-{
-	//
-	// S1b meshes
-	//
-
-	hsat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg1");
-	hSat1intstg = oapiLoadMeshGlobal ("ProjectApollo/nsat1intstg");
-	hsat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/LowRes/nsat1stg1");
-	hSat1intstg = oapiLoadMeshGlobal ("ProjectApollo/LowRes/nsat1intstg");
-}
 
 S1B::S1B (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
@@ -86,7 +68,10 @@ void S1B::InitS1b()
 {
 	int i;
 
-	State = SIB_STATE_SETUP;
+	State = SIB_STATE_HIDDEN;
+
+	hsat1stg1 = 0;
+	hSat1intstg = 0;
 
 	ph_retro = 0;
 	ph_main = 0;
@@ -122,10 +107,6 @@ void S1B::SetS1b()
 
 {
 	ClearMeshes();
-	VECTOR3 mesh_dir=_V(0,0,0);
-
-	double mass = EmptyMass;
-
 	ClearThrusterDefinitions();
 	
 	SetSize (20);
@@ -141,34 +122,17 @@ void S1B::SetS1b()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	if (LowRes)
-	{
-		AddMesh (hsat1stg1low, &mesh_dir);
-	}
-	else
-	{
-		AddMesh (hsat1stg1, &mesh_dir);
-	}
-
-	mesh_dir = _V(0, 0, 16.2);
-
-	if (LowRes)
-	{
-		AddMesh (hSat1intstglow, &mesh_dir);
-	}
-	else
-	{
-		AddMesh (hSat1intstg, &mesh_dir);
-	}
-
-	SetEmptyMass (mass);
-
-	AddEngines ();
+	SetEmptyMass (EmptyMass);
 }
 
 void S1B::clbkPreStep(double simt, double simdt, double mjd)
 
 {
+	if (State == SIB_STATE_HIDDEN)
+	{
+		return;
+	}
+
 	MissionTime += simdt;
 
 	//
@@ -404,20 +368,40 @@ void S1B::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
         }
 	}
 
-	SetS1b();
+	LoadMeshes(LowRes); 
+	if (State > SIB_STATE_HIDDEN)
+		ShowS1b();	
+
 }
 
 void S1B::clbkSetClassCaps (FILEHANDLE cfg)
 
 {
 	VESSEL2::clbkSetClassCaps (cfg);
-	InitS1b();
+	SetS1b();
+}
+
+void S1B::LoadMeshes(bool lowres)
+
+{
+	LowRes = lowres;
+	if (LowRes)
+	{
+		hsat1stg1 = oapiLoadMeshGlobal("ProjectApollo/LowRes/nsat1stg1");
+		hsat1stg1 = oapiLoadMeshGlobal("ProjectApollo/LowRes/nsat1stg1");
+	}
+	else
+	{
+		hsat1stg1 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg1");
+		hSat1intstg = oapiLoadMeshGlobal("ProjectApollo/nsat1intstg");
+	}	
 }
 
 void S1B::clbkDockEvent(int dock, OBJHANDLE connected)
 
 {
 }
+
 
 void S1B::SetState(S1BSettings &state)
 
@@ -449,42 +433,34 @@ void S1B::SetState(S1BSettings &state)
 		EngineNum = state.EngineNum;
 	}
 
+	ShowS1b();
 	State = S1B_STATE_SHUTTING_DOWN;
-
-	SetS1b();
 }
 
-static int refcount = 0;
+void S1B::ShowS1b()
+
+{
+	SetEmptyMass(EmptyMass);
+
+	VECTOR3 mesh_dir=_V(0,0,0);
+	AddMesh(hsat1stg1, &mesh_dir);
+
+	mesh_dir = _V(0, 0, 16.2);
+	AddMesh(hSat1intstg, &mesh_dir);
+
+	AddEngines();
+}
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 
 {
-	VESSEL *v;
-
-	if (!refcount++)
-	{
-		S1bLoadMeshes();
-	}
-
-	v = new S1B (hvessel, flightmodel);
-	return v;
+	return new S1B(hvessel, flightmodel);
 }
 
 
 DLLCLBK void ovcExit (VESSEL *vessel)
 
 {
-	--refcount;
-
-	if (!refcount)
-	{
-
-		//
-		// This code could tidy up allocations when refcount == 0
-		//
-
-	}
-
 	if (vessel) 
 		delete (S1B *)vessel;
 }

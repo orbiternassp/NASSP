@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.41  2006/06/11 21:30:57  movieman523
   *	Fixed Saturn 1b SIVb exhaust.
   *	
@@ -223,10 +226,7 @@ void Saturn1b::SetFirstStage ()
 	SetLiftCoeffFunc (0);
 	ClearMeshes();
 
-	ShiftCentreOfMass (_V(0,0,8.935));
-
 	SetFirstStageMeshes(0.0);
-
 
 	SetView(34.95, false);
 
@@ -301,6 +301,17 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 			mesh_dir=_V(0, 0, TowerOffset);
 			meshidx = AddMesh (hsat5tower, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		}
+		else
+		{
+			if (dockingprobe.ProbeExtended)
+			{
+				probeidx = AddMesh (hprobeext, &mesh_dir);
+			}
+			else 
+			{
+				probeidx = AddMesh (hprobe, &mesh_dir);
+			}
 		}
 	}
 	else {
@@ -457,6 +468,17 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 			meshidx = AddMesh (hsat5tower, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		}
+		else
+		{
+			if (dockingprobe.ProbeExtended)
+			{
+				probeidx = AddMesh (hprobeext, &mesh_dir);
+			}
+			else 
+			{
+				probeidx = AddMesh (hprobe, &mesh_dir);
+			}
+		}
 	}
 	else
 	{
@@ -609,6 +631,15 @@ void Saturn1b::SetASTPStage ()
 
 		meshidx = AddMesh (hCREW, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	}
+
+	if (dockingprobe.ProbeExtended)
+	{
+		probeidx = AddMesh (hprobeext, &mesh_dir);
+	}
+	else 
+	{
+		probeidx = AddMesh (hprobe, &mesh_dir);
 	}
 
 	mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
@@ -929,33 +960,32 @@ void Saturn1b::SeparateStage (int new_stage)
 		// Create S1b stage and set it up.
 		//
 
-		char VName[256];
-		strcpy (VName, GetName()); strcat (VName, "-STG1");
-		hstg1 = oapiCreateVessel(VName,"ProjectApollo/nsat1stg1", vs1);
+		if (hstg1) {
+			S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
+			stage1->DefSetState(&vs1);
 
-		S1BSettings S1Config;
+			S1BSettings S1Config;
 
-		S1Config.SettingsType.S1B_SETTINGS_ENGINES = 1;
-		S1Config.SettingsType.S1B_SETTINGS_FUEL = 1;
-		S1Config.SettingsType.S1B_SETTINGS_GENERAL = 1;
-		S1Config.SettingsType.S1B_SETTINGS_MASS = 1;
+			S1Config.SettingsType.S1B_SETTINGS_ENGINES = 1;
+			S1Config.SettingsType.S1B_SETTINGS_FUEL = 1;
+			S1Config.SettingsType.S1B_SETTINGS_GENERAL = 1;
+			S1Config.SettingsType.S1B_SETTINGS_MASS = 1;
 
-		S1Config.EngineNum = 8;
-		S1Config.RetroNum = 4;
-		S1Config.EmptyMass = SI_EmptyMass;
-		S1Config.MainFuelKg = GetPropellantMass(ph_1st);
-		S1Config.MissionTime = MissionTime;
-		S1Config.Realism = Realism;
-		S1Config.VehicleNo = VehicleNo;
-		S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
-		S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
-		S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
-		S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
-		S1Config.LowRes = LowRes;
+			S1Config.EngineNum = 8;
+			S1Config.RetroNum = 4;
+			S1Config.EmptyMass = SI_EmptyMass;
+			S1Config.MainFuelKg = GetPropellantMass(ph_1st);
+			S1Config.MissionTime = MissionTime;
+			S1Config.Realism = Realism;
+			S1Config.VehicleNo = VehicleNo;
+			S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
+			S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;
+			S1Config.THRUST_FIRST_VAC = THRUST_FIRST_VAC;
+			S1Config.CurrentThrust = GetThrusterLevel(th_main[0]);
+			S1Config.LowRes = LowRes;
 
-		S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
-
-		stage1->SetState(S1Config);
+			stage1->SetState(S1Config);
+		}
 
 		SetSecondStage ();
 		SetSecondStageEngines ();
