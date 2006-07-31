@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.181  2006/07/31 00:05:59  jasonims
+  *	Set up Optics panels...
+  *	
   *	Revision 1.180  2006/07/27 20:40:06  movieman523
   *	We can now draw power from the SIVb in the Apollo to Venus scenario.
   *	
@@ -1095,7 +1098,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	case SATPANEL_TELESCOPE:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE));
-		oapiSetPanelNeighbours( SATPANEL_SEXTANT, -1, -1, SATPANEL_LOWER);
+		oapiSetPanelNeighbours( SATPANEL_SEXTANT, -1, SATPANEL_LOWER, SATPANEL_LOWER);
 		break;
 
 	}
@@ -1507,12 +1510,14 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		SetCameraDefaultDirection(_V(0.0, -0.83867, 0.544639));
+		InitOptics = SATPANEL_SEXTANT;
 		break;
 
 	case SATPANEL_TELESCOPE: // Telescope
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		SetCameraDefaultDirection(_V(0.0, -0.83867, 0.544639));
+		InitOptics = SATPANEL_TELESCOPE;
 		break;
 	
 	}
@@ -1529,6 +1534,12 @@ bool Saturn::clbkLoadPanel (int id) {
 	}
 	InVC = false;
 	InPanel = true;
+
+	if (id == SATPANEL_SEXTANT || SATPANEL_TELESCOPE) {
+		InOptics = true;
+	}else{
+		InOptics = false;
+	}
 
 	//
 	// Set view parameter
