@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.165  2006/07/28 02:06:57  movieman523
+  *	Now need to hard dock to get the connectors connected.
+  *	
   *	Revision 1.164  2006/07/27 22:38:57  movieman523
   *	Added CSM to LEM power connector.
   *	
@@ -1087,6 +1090,9 @@ void Saturn::DockConnectors()
 		return;
 
 	OBJHANDLE connected = GetDockStatus(d);
+
+	if (!connected)
+		return;
 
 	if (!hs4bM)
 	{
@@ -2787,7 +2793,7 @@ void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
 int Saturn::clbkConsumeDirectKey(char *kstate)
 
 {
-	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
+	if (KEYMOD_SHIFT(kstate) || KEYMOD_ALT(kstate)) {
 		return 0; 
 	}
 
@@ -2796,6 +2802,9 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 	VESSELSTATUS vs;
 	GetStatus(vs);
 	double moveStep = 1.0e-8;
+
+	if (KEYMOD_CONTROL(kstate))
+		moveStep = 1.0e-9;
 
 	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD2)) {
 		vs.vdata[0].x += moveStep;
@@ -2837,7 +2846,7 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 	}
 	sprintf(oapiDebugString(), "GetCOG_elev %f", GetCOG_elev());
 	*/
-
+	
 	return 0;
 }
 
