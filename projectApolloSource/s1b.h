@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.3  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -98,7 +101,7 @@ typedef struct {
 ///
 typedef enum S1bState
 {
-	SIB_STATE_SETUP = -1,				///< S1b is waiting for setup call.
+	SIB_STATE_HIDDEN = -1,				///< S1b is waiting for setup call.
 	S1B_STATE_SHUTTING_DOWN,			///< S1b is firing motors to jettison.
 	S1B_STATE_WAITING					///< S1b is idle after motor burnout.
 };
@@ -159,12 +162,14 @@ public:
 	/// \param state S1b state settings.
 	///
 	virtual void SetState(S1BSettings &state);
+	virtual void LoadMeshes(bool lowres);
 
 protected:
 
 	void SetS1b();
 	void InitS1b();
 	void AddEngines();
+	void ShowS1b();
 
 	int GetMainState();
 	void SetMainState(int s);
@@ -192,6 +197,7 @@ protected:
 	double ISP_FIRST_SL;
 	double CurrentThrust;
 
+	MESHHANDLE hsat1stg1, hSat1intstg;
 	THRUSTER_HANDLE th_retro[4], th_main[8];
 	THGROUP_HANDLE thg_retro, thg_main;
 	PROPELLANT_HANDLE ph_retro, ph_main;

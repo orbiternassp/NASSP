@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2006/07/21 23:04:34  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.56  2006/06/17 18:14:52  tschachim
   *	Bugfix clbkConsumeBufferedKey.
   *	
@@ -210,8 +213,9 @@
 #include "IMU.h"
 
 #include "saturn.h"
-
 #include "saturn1b.h"
+
+#include "s1b.h"
 
 #include "tracer.h"
 
@@ -508,6 +512,20 @@ void Saturn1b::StageOne(double simt, double simdt)
 			ClearLiftoffLight();
 			SShutS.play(NOLOOP,235);
 			SShutS.done();
+
+			// Create hidden SIB vessel
+			char VName[256];
+			VESSELSTATUS vs;
+
+			GetStatus(vs);
+			strcpy (VName, GetName()); 
+			strcat (VName, "-STG1");
+			hstg1 = oapiCreateVessel(VName,"ProjectApollo/nsat1stg1", vs);
+
+			// Load only the necessary meshes
+			S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
+			stage1->LoadMeshes(LowRes);
+
 			StageState++;
 		}
 		break;

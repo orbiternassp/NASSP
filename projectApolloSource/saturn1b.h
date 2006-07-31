@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/06/24 15:40:06  movieman523
+  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
+  *	
   *	Revision 1.17  2006/06/11 21:30:57  movieman523
   *	Fixed Saturn 1b SIVb exhaust.
   *	
@@ -151,7 +154,7 @@ protected:
 	void DeactivatePrelaunchVenting() {};
 };
 
-const VECTOR3 OFS_STAGE1 =  { 0, 0, -26};
+const VECTOR3 OFS_STAGE1 =  { 0, 0, -14};
 const VECTOR3 OFS_STAGE12 =  { 0, 0, -9.935};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, -24 + 1.45};
 const VECTOR3 OFS_STAGE21 =  { 1.85,1.85,32};
