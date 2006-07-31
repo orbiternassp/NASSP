@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/07/27 21:30:47  movieman523
+  *	Added display of SIVb battery voltage and current.
+  *	
   *	Revision 1.15  2006/07/27 20:40:06  movieman523
   *	We can now draw power from the SIVb in the Apollo to Venus scenario.
   *	
@@ -448,6 +451,11 @@ protected:
 	THRUSTER_HANDLE th_att_rot[10], th_main[1], th_att_lin[2];                 // handles for APS engines
 	THGROUP_HANDLE thg_aps, thg_main;
 	PROPELLANT_HANDLE ph_aps, ph_main;
+
+	UINT panelAnim;
+	double panelProc;
+	int panelTimestepCount;
+	int panelMesh1, panelMesh2, panelMesh3, panelMesh4;
 };
 
 ///
