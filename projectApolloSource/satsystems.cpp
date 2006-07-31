@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.118  2006/07/31 12:28:16  tschachim
+  *	More debug prints.
+  *	
   *	Revision 1.117  2006/07/27 20:40:06  movieman523
   *	We can now draw power from the SIVb in the Apollo to Venus scenario.
   *	
@@ -3195,4 +3198,18 @@ double Saturn::SetSPSYaw(double direction){
 		sprintf(oapiDebugString(),"");
 	}
 	return(error);
+}
+
+void Saturn::UpdateOptics()
+{
+	if (InitOptics == SATPANEL_SEXTANT){
+		oapiCameraSetCockpitDir (OpticsShaft, SextTrunion, true);
+		InitOptics = 0;
+	}else if (InitOptics == SATPANEL_TELESCOPE){
+		oapiCameraSetCockpitDir (OpticsShaft, TeleTrunion, true);
+		InitOptics = 0;
+	}else{
+		InitOptics = 0;
+	}
+
 }

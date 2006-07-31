@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.166  2006/07/31 12:26:21  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.165  2006/07/28 02:06:57  movieman523
   *	Now need to hard dock to get the connectors connected.
   *	
@@ -735,6 +738,11 @@ void Saturn::initSaturn()
 
 	InVC = false;
 	InPanel = false;
+	InOptics = false;
+	InitOptics = 0;
+	OpticsShaft = 0.0;
+	SextTrunion = 0.0;
+	TeleTrunion = 0.0;
 	CheckPanelIdInTimestep = false;
 
 	//
@@ -2770,7 +2778,16 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	}
 
 	timedSounds.Timestep(MissionTime, simdt, AutoSlow);
+
+	//
+	// Optics visual update
+	//
+	if (InOptics == true){
+		UpdateOptics();
+	}
 }
+
+
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
 {

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.208  2006/07/31 00:05:59  jasonims
+  *	Set up Optics panels...
+  *	
   *	Revision 1.207  2006/07/28 02:06:58  movieman523
   *	Now need to hard dock to get the connectors connected.
   *	
@@ -730,6 +733,11 @@ public:
 	int clbkConsumeDirectKey(char *keystate);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	bool clbkLoadVC (int id);
+	int InitOptics;
+	void UpdateOptics ();
+	double OpticsShaft;
+	double SextTrunion;
+	double TeleTrunion;
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 
