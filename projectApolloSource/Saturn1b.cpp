@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2006/07/31 12:25:03  tschachim
+  *	Smoother staging.
+  *	
   *	Revision 1.57  2006/07/21 23:04:34  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -657,6 +660,22 @@ void Saturn1b::StageStartSIVB(double simt)
 			SepS.stop();
 			AddRCS_S4B();
 			SetThrusterGroupLevel(thg_ver, 0.0);
+
+
+			//
+			// Checklist actions
+			//
+
+			// EDS auto off
+			EDSSwitch.SwitchTo(TOGGLESWITCH_DOWN);
+			TwoEngineOutAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
+			LVRateAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
+
+			// Activate primary evaporator
+			GlycolEvapSteamPressAutoManSwitch.SwitchTo(TOGGLESWITCH_UP);
+			GlycolEvapH2oFlowSwitch.SwitchTo(THREEPOSSWITCH_UP);
+
+
 			NextMissionEventTime = MissionTime + 2.05;
 			StageState++;
 		}
