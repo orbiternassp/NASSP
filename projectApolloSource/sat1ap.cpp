@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/07/27 23:24:11  tschachim
+  *	The Saturn 1b now has the Saturn V IGM autopilot.
+  *	
   *	Revision 1.6  2006/04/17 19:12:27  movieman523
   *	Removed some unused switches.
   *	
@@ -457,7 +460,7 @@ void Saturn1b::AutoPilot(double autoT)
 	}
 	else if (altitude > 4500) {
 
-	// ###
+		// Damp roll motion
 		bank = GetBank();
 		bank = bank*180./PI;
 		if(bank > 90) bank = bank - 180;
@@ -465,14 +468,12 @@ void Saturn1b::AutoPilot(double autoT)
 
 		AtempR=-bank/20.0;
 		if(fabs(bank) < 0.3) AtempR=0.0;
-	// ####
 
 		// navigation
 		pitch = GetPitch();
 		pitch = pitch*180./PI;
 
 		if (IGMEnabled) {
-//			pitch_c = SetPitchApo();
 			VECTOR3 target;
 			double pit, yaw;
 			OBJHANDLE hbody=GetGravityRef();
@@ -497,39 +498,37 @@ void Saturn1b::AutoPilot(double autoT)
 
 			if ((SatApo >= ((agc.GetDesiredApogee() *.90) + ERADIUS)*1000) || MissionTime >= IGMStartTime)
 				IGMEnabled = true;
-// ###	}
-		level = pitch_c - pitch;
+		
+			level = pitch_c - pitch;
 
-	//sprintf(oapiDebugString(), "Autopilot Pitch Mode%f", elemSaturn1B.a );
+			//sprintf(oapiDebugString(), "Autopilot Pitch Mode%f", elemSaturn1B.a );
 
-		if (fabs(level)<10 && StopRot){	// above atmosphere, soft correction
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-			StopRot = false;
-		}
-		if (fabs(level)<0.05){	// above atmosphere, soft correction
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-		else if (level>0 && fabs(vsp.vrot.z) < 0.09){
-			AtempP = -(fabs(level)/10);
-			if (AtempP < -1.0)AtempP = -1.0;
-			if(rhoriz.z>0)AtempP = -AtempP;
-		}
-		else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
-			AtempP = (fabs(level)/10);
-			if (AtempP > 1.0) AtempP = 1.0;
-			if(rhoriz.z>0)AtempP = -AtempP;
-		}
-		else {
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-
-// ###
+			if (fabs(level)<10 && StopRot){	// above atmosphere, soft correction
+				AtempP = 0.0;
+				AtempR = 0.0;
+				AtempY = 0.0;
+				StopRot = false;
+			}
+			if (fabs(level)<0.05){	// above atmosphere, soft correction
+				AtempP = 0.0;
+				AtempR = 0.0;
+				AtempY = 0.0;
+			}
+			else if (level>0 && fabs(vsp.vrot.z) < 0.09){
+				AtempP = -(fabs(level)/10);
+				if (AtempP < -1.0)AtempP = -1.0;
+				if(rhoriz.z>0)AtempP = -AtempP;
+			}
+			else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
+				AtempP = (fabs(level)/10);
+				if (AtempP > 1.0) AtempP = 1.0;
+				if(rhoriz.z>0)AtempP = -AtempP;
+			}
+			else {
+				AtempP = 0.0;
+				AtempR = 0.0;
+				AtempY = 0.0;
+			}
 		}
 	}
 
