@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2006/07/31 12:24:06  tschachim
+  *	Smoother staging.
+  *	
   *	Revision 1.42  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -198,6 +201,8 @@ static MESHHANDLE hastp;
 static MESHHANDLE hastp2;
 static MESHHANDLE hCOAStarget;
 
+static SURFHANDLE exhaust_tex;
+
 //
 // Same for particle streams.
 //
@@ -212,6 +217,14 @@ PARTICLESTREAMSPEC srb_exhaust = {
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
 };
+
+PARTICLESTREAMSPEC solid_exhaust = {
+	0, 0.5, 250, 35.0, 0.1, 0.15, 0.5, 1.0, 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
+	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
+};
+
 
 void Saturn1b::SetFirstStage ()
 {
@@ -571,9 +584,10 @@ void Saturn1b::SetSecondStageEngines ()
 	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( 0.23,-0.39,1), 10000, ph_ullage3, 3000);
 	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( 0.23,0.39,1), 10000, ph_ullage3, 3000);
 
-	for (i = 0; i < 3; i++)
-		AddExhaust (th_ver[i], 11.0, 0.25);
-
+	for (i = 0; i < 3; i++) {
+		AddExhaust(th_ver[i], 11.0, 0.25, exhaust_tex);
+		AddExhaustStream(th_ver[i], &solid_exhaust);
+	}
 	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
 }
 
@@ -1182,6 +1196,8 @@ void Saturn1bLoadMeshes()
 	hastp2 = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
 	hNosecap = oapiLoadMeshGlobal ("ProjectApollo/nsat1aerocap");
+
+	exhaust_tex = oapiRegisterExhaustTexture ("Exhaust2");
 }
 
 //
