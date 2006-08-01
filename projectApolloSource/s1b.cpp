@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/07/31 12:23:16  tschachim
+  *	Smoother staging.
+  *	
   *	Revision 1.6  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -49,6 +52,14 @@
 
 #include <stdio.h>
 #include <string.h>
+
+
+PARTICLESTREAMSPEC solid_exhaust = {
+	0, 0.5, 250, 35.0, 0.1, 0.15, 0.5, 1.0, 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
+	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
+};
 
 
 S1B::S1B (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
@@ -247,8 +258,11 @@ void S1B::AddEngines()
 	thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);
 
 	int i;
-	for (i = 0; i < 4; i++)
-		AddExhaust (th_retro[i], 8.0, 0.2);
+	SURFHANDLE tex = oapiRegisterExhaustTexture("Exhaust2");
+	for (i = 0; i < 4; i++) {
+		AddExhaust(th_retro[i], 8.0, 0.2, tex);
+		AddExhaustStream(th_retro[i], &solid_exhaust);
+	}
 
 	double Offset1st = -65.5;
 
@@ -271,11 +285,9 @@ void S1B::AddEngines()
 	th_main[6] = CreateThruster (m_exhaust_pos7, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
 	th_main[7] = CreateThruster (m_exhaust_pos8, _V( 0,0,1), THRUST_FIRST_VAC , 0, ISP_FIRST_VAC, ISP_FIRST_SL);
 
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
 	thg_main = CreateThrusterGroup (th_main, 8, THGROUP_MAIN);
 	for (i = 0; i < 8; i++)
 		AddExhaust (th_main[i], 60.0, 0.80, tex);
-
 }
 
 void S1B::SetMainState(int s)
