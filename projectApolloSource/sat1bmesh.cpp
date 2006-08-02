@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.44  2006/08/01 16:05:57  tschachim
+  *	Improved staging exhausts.
+  *	
   *	Revision 1.43  2006/07/31 12:24:06  tschachim
   *	Smoother staging.
   *	
@@ -1087,7 +1090,7 @@ void Saturn1b::SeparateStage (int new_stage)
 			vs4b.vrot.y = 0.0;
 			vs4b.vrot.z = 0.0;
 			GetApolloName(VName); strcat (VName, "-DCKPRB");
-			hPROBE = oapiCreateVessel(VName, "ProjectApollo/nsat1probe", vs4b);
+			hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
 		}
 		GetApolloName(VName); strcat (VName, "-SM");
 		hSMJet = oapiCreateVessel(VName, "ProjectApollo/SM", vs1);
