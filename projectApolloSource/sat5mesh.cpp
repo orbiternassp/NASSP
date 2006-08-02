@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2006/07/07 19:44:58  movieman523
+  *	First version of connector support.
+  *	
   *	Revision 1.66  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -1465,7 +1468,7 @@ void SaturnV::SeparateStage (int new_stage)
 			vs4b.vrot.y = 0.0;
 			vs4b.vrot.z = 0.0;
 			GetApolloName(VName); strcat (VName, "-DCKPRB");
-			hPROBE = oapiCreateVessel(VName, "ProjectApollo/sat1probe", vs4b);
+			hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
 		}
 
 		GetApolloName(VName); strcat (VName, "-SM");
