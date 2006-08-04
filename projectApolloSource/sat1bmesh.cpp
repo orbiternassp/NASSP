@@ -331,7 +331,7 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 			SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 		}else{
-			mesh_dir=_V(0,0,35.15);
+			mesh_dir=_V(0,0,35.25);
 			meshidx = AddMesh (hCM, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -486,17 +486,17 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		// Add CSM.
 		//
 
-		AddSM(31.0, false);
+		AddSM(31.0-12.25, false);
 
 		if (LESAttached)
 		{
 		
-			TowerOffset = 40.10;
+			TowerOffset = 40.10-12.25;
 			mesh_dir=_V(0, 0, TowerOffset);
 			meshidx = AddMesh (hsat5tower, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 		
-            mesh_dir=_V(0,0,35.25);
+            mesh_dir=_V(0,0,35.25-12.25);
 			meshidx = AddMesh (hCM, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
@@ -524,7 +524,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 			SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 		}else{
-			mesh_dir=_V(0,0,35.15);
+			mesh_dir=_V(0,0,35.25-12.25);
 			meshidx = AddMesh (hCM, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -568,7 +568,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		// Add nosecap.
 		//
 
-		mesh_dir=_V(0,0,29.77);
+		mesh_dir=_V(0,0,29.77-12.25);
 		AddMesh (hNosecap, &mesh_dir);
 	}
 
