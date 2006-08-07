@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2006/07/31 12:27:49  tschachim
+  *	Hinged SLA panels for Apollo 7.
+  *	
   *	Revision 1.22  2006/07/27 21:30:47  movieman523
   *	Added display of SIVb battery voltage and current.
   *	
@@ -95,6 +98,7 @@
 
 #include "nasspdefs.h"
 #include "soundlib.h"
+#include "OrbiterMath.h"
 
 #include "PanelSDK/PanelSDK.h"
 #include "PanelSDK/Internals/Esystems.h"
@@ -152,6 +156,19 @@ static PARTICLESTREAMSPEC fuel_venting_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
+//
+// Spew out particles to simulate the junk thrown out by stage
+// seperation explosives.
+//
+
+PARTICLESTREAMSPEC seperation_junk = {
+	0, 0.08,  200, 4.0, 2.0, 1.5, -0.02, 1.0, 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
+
 void SIVbLoadMeshes()
 
 {
@@ -190,6 +207,7 @@ void SIVbLoadMeshes()
 	hlta_2r = oapiLoadMeshGlobal ("ProjectApollo/LTA_2R");
 
 	SMMETex = oapiRegisterExhaustTexture ("Exhaust_atsme");
+	seperation_junk.tex = oapiRegisterParticleTexture ("Contrail2");;
 }
 
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel),
@@ -225,6 +243,7 @@ void SIVB::InitS4b()
 	ph_aps = 0;
 	ph_main = 0;
 	thg_aps = 0;
+	thg_sep = 0;
 
 	EmptyMass = 15000.0;
 	PayloadMass = 0.0;
@@ -385,25 +404,35 @@ void SIVB::SetS4b()
 			break;
 		}
 
-		if (!PanelsOpened) {
-			mesh_dir = _V(-1.48,-1.48,12.55);
+		if (PanelsHinged || !PanelsOpened) {
+			mesh_dir = _V(-1.48, -1.48, 12.55);
 			panelMesh1 = AddMesh(hsat5stg31, &mesh_dir);
-			mesh_dir = _V(1.48,-1.48,12.55);
+			mesh_dir = _V(1.48, -1.48, 12.55);
 			panelMesh2 = AddMesh(hsat5stg32, &mesh_dir);
-			mesh_dir = _V(1.48,1.48,12.55);
+			mesh_dir = _V(1.48, 1.48, 12.55);
 			panelMesh3 = AddMesh(hsat5stg33, &mesh_dir);
-			mesh_dir = _V(-1.48,1.48,12.55);
+			mesh_dir = _V(-1.48, 1.48, 12.55);
 			panelMesh4 = AddMesh(hsat5stg34, &mesh_dir);
+
+			static MGROUP_ROTATE panel1(panelMesh1, NULL, 0, _V(-0.6, -0.6, -3.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
+			static MGROUP_ROTATE panel2(panelMesh2, NULL, 0, _V( 0.6, -0.6, -3.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
+			static MGROUP_ROTATE panel3(panelMesh3, NULL, 0, _V( 0.6,  0.6, -3.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
+			static MGROUP_ROTATE panel4(panelMesh4, NULL, 0, _V(-0.6,  0.6, -3.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
+	
+			panelAnim = CreateAnimation(0.0);
+			AddAnimationComponent(panelAnim, 0, 1, &panel1);
+			AddAnimationComponent(panelAnim, 0, 1, &panel2);
+			AddAnimationComponent(panelAnim, 0, 1, &panel3);
+			AddAnimationComponent(panelAnim, 0, 1, &panel4);
+
+			SetAnimation(panelAnim, panelProc);
 		}
 	}
 	else {
-
-		if (LowRes)
-		{
+		if (LowRes)	{
 			AddMesh (hSat1stg2low, &mesh_dir);
 		}
-		else
-		{
+		else {
 			AddMesh (hSat1stg2, &mesh_dir);
 		}
 
@@ -433,30 +462,7 @@ void SIVB::SetS4b()
 			break;
 		}
 
-		if (PanelsHinged) {
-			mesh_dir=_V(1.85,1.85,15.25);
-			int mesh1 = AddMesh(hSat1stg21, &mesh_dir);
-			mesh_dir=_V(-1.85,1.85,15.25);
-			int mesh2 = AddMesh(hSat1stg22, &mesh_dir);
-			mesh_dir=_V(1.85,-1.85,15.25);
-			int mesh3 = AddMesh(hSat1stg23, &mesh_dir);
-			mesh_dir=_V(-1.85,-1.85,15.25);
-			int mesh4 = AddMesh(hSat1stg24, &mesh_dir);
-
-			static MGROUP_ROTATE panel1(mesh1, NULL, 0, _V( 0.25,  0.25, -1.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
-			static MGROUP_ROTATE panel2(mesh2, NULL, 0, _V(-0.25,  0.25, -1.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
-			static MGROUP_ROTATE panel3(mesh3, NULL, 0, _V( 0.25, -0.25, -1.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
-			static MGROUP_ROTATE panel4(mesh4, NULL, 0, _V(-0.25, -0.25, -1.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
-	
-			panelAnim = CreateAnimation(0.0);
-			AddAnimationComponent(panelAnim, 0, 1, &panel1);
-			AddAnimationComponent(panelAnim, 0, 1, &panel2);
-			AddAnimationComponent(panelAnim, 0, 1, &panel3);
-			AddAnimationComponent(panelAnim, 0, 1, &panel4);
-
-			SetAnimation(panelAnim, panelProc);
-
-		} else if (!PanelsOpened) {
+		if (PanelsHinged || !PanelsOpened) {
 			mesh_dir=_V(1.85,1.85,15.25);
 			panelMesh1 = AddMesh(hSat1stg21, &mesh_dir);
 			mesh_dir=_V(-1.85,1.85,15.25);
@@ -465,10 +471,23 @@ void SIVB::SetS4b()
 			panelMesh3 = AddMesh(hSat1stg23, &mesh_dir);
 			mesh_dir=_V(-1.85,-1.85,15.25);
 			panelMesh4 = AddMesh(hSat1stg24, &mesh_dir);
+
+			static MGROUP_ROTATE panel1(panelMesh1, NULL, 0, _V( 0.25,  0.25, -1.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
+			static MGROUP_ROTATE panel2(panelMesh2, NULL, 0, _V(-0.25,  0.25, -1.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
+			static MGROUP_ROTATE panel3(panelMesh3, NULL, 0, _V( 0.25, -0.25, -1.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
+			static MGROUP_ROTATE panel4(panelMesh4, NULL, 0, _V(-0.25, -0.25, -1.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
+	
+			panelAnim = CreateAnimation(0.0);
+			AddAnimationComponent(panelAnim, 0, 1, &panel1);
+			AddAnimationComponent(panelAnim, 0, 1, &panel2);
+			AddAnimationComponent(panelAnim, 0, 1, &panel3);
+			AddAnimationComponent(panelAnim, 0, 1, &panel4);
+
+			SetAnimation(panelAnim, panelProc);
 		}
 	}
 
-	SetEmptyMass (mass);
+	SetEmptyMass(mass);
 
 	AddRCS_S4B();
 
@@ -489,16 +508,6 @@ void SIVB::SetS4b()
 	}
 }
 
-const VECTOR3 OFS_STAGE21 =  { 1.85,1.85, 15.3};
-const VECTOR3 OFS_STAGE22 =  { -1.85,1.85, 15.3};
-const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85, 15.3};
-const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85, 15.3};
-
-const VECTOR3 OFS_STAGE31 =  { -1.48,-1.48, 12.7};
-const VECTOR3 OFS_STAGE32 =  { 1.48,-1.48, 12.7};
-const VECTOR3 OFS_STAGE33 =  { 1.48,1.48, 12.7};
-const VECTOR3 OFS_STAGE34 =  { -1.48,1.48, 12.7};
-
 void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 
 {
@@ -508,152 +517,201 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// Seperate or open the SLA panels.
 	//
 
-	if (panelTimestepCount < 10) {
+	if (panelTimestepCount < 2) {
 		panelTimestepCount++;
 	} else {
 		if (PanelsHinged) {
 			if (panelProc < 1) {
-				panelProc = min(1.0, panelProc + simdt / 20.0);
+				// Activate separation junk
+				if (thg_sep)
+					SetThrusterGroupLevel(thg_sep, 1);
+
+				panelProc = min(1.0, panelProc + simdt / 10.0);
 				SetAnimation(panelAnim, panelProc);
 			}
 		}
-		else if (!PanelsOpened) {
-			char VName[256];
+		else if (!PanelsOpened) {			
+			if (panelProc < 1) {
+				// Activate separation junk
+				if (thg_sep)
+					SetThrusterGroupLevel(thg_sep, 1);
 
-			//
-			// I'm not sure that all this code is really needed, but
-			// it came from saturn1bmesh.cpp.
-			//
-
-			VESSELSTATUS vs2;
-			VESSELSTATUS vs3;
-			VESSELSTATUS vs4;
-			VESSELSTATUS vs5;
-			VECTOR3 ofs2 = _V(0,0,0);
-			VECTOR3 ofs3 = _V(0,0,0);
-			VECTOR3 ofs4 = _V(0,0,0);
-			VECTOR3 ofs5 = _V(0,0,0);
-			VECTOR3 vel2 = _V(0,0,0);
-			VECTOR3 vel3 = _V(0,0,0);
-			VECTOR3 vel4 = _V(0,0,0);
-			VECTOR3 vel5 = _V(0,0,0);
-
-			GetStatus (vs2);
-			GetStatus (vs3);
-			GetStatus (vs4);
-			GetStatus (vs5);
-
-			vs2.eng_main = vs2.eng_hovr = 0.0;
-			vs3.eng_main = vs3.eng_hovr = 0.0;
-			vs4.eng_main = vs4.eng_hovr = 0.0;
-			vs5.eng_main = vs5.eng_hovr = 0.0;
-
-			if (SaturnVStage) {
-				ofs2 = OFS_STAGE31;
-				vel2 = _V(-0.5,-0.5,-0.55);
-				ofs3 = OFS_STAGE32;
-				vel3 = _V(0.5,-0.5,-0.55);
-				ofs4 = OFS_STAGE33;
-				vel4 = _V(0.5,0.5,-0.55);
-				ofs5 = OFS_STAGE34;
-				vel5 = _V(-0.5,0.5,-0.55);
-			}
+				panelProc = min(1.0, panelProc + simdt / 10.0);
+				SetAnimation(panelAnim, panelProc);
+			} 
 			else {
-				ofs2 = OFS_STAGE21;
-				vel2 = _V(0.5,0.5,-0.55);
-				ofs3 = OFS_STAGE22;
-				vel3 = _V(-0.5,0.5,-0.55);
-				ofs4 = OFS_STAGE23;
-				vel4 = _V(0.5,-0.5,-0.55);
-				ofs5 = OFS_STAGE24;
-				vel5 = _V(-0.5,-0.5,-0.55);
+				char VName[256];
+
+				//
+				// I'm not sure that all this code is really needed, but
+				// it came from saturn1bmesh.cpp.
+				//
+
+				VESSELSTATUS vs2;
+				VESSELSTATUS vs3;
+				VESSELSTATUS vs4;
+				VESSELSTATUS vs5;
+				VECTOR3 ofs2 = _V(0,0,0);
+				VECTOR3 ofs3 = _V(0,0,0);
+				VECTOR3 ofs4 = _V(0,0,0);
+				VECTOR3 ofs5 = _V(0,0,0);
+				VECTOR3 vel2 = _V(0,0,0);
+				VECTOR3 vel3 = _V(0,0,0);
+				VECTOR3 vel4 = _V(0,0,0);
+				VECTOR3 vel5 = _V(0,0,0);
+
+				GetStatus (vs2);
+				GetStatus (vs3);
+				GetStatus (vs4);
+				GetStatus (vs5);
+
+				vs2.eng_main = vs2.eng_hovr = 0.0;
+				vs3.eng_main = vs3.eng_hovr = 0.0;
+				vs4.eng_main = vs4.eng_hovr = 0.0;
+				vs5.eng_main = vs5.eng_hovr = 0.0;
+
+				if (SaturnVStage) {
+					ofs2 = _V(-3.25, -3.3, 12.2);
+					vel2 = _V(-0.5, -0.5, -0.55);
+					ofs3 = _V(3.25, -3.3, 12.2);
+					vel3 = _V(0.5, -0.5, -0.55);
+					ofs4 = _V(3.25, 3.3, 12.2);
+					vel4 = _V(0.5, 0.5, -0.55);
+					ofs5 = _V(-3.25, 3.3, 12.2);
+					vel5 = _V(-0.5, 0.5, -0.55);
+				}
+				else {
+					ofs2 = _V(2.5, 2.5, 15.0);
+					vel2 = _V(0.5, 0.5, -0.55);
+					ofs3 = _V(-2.5, 2.5, 15.0);
+					vel3 = _V(-0.5, 0.5, -0.55);
+					ofs4 = _V(2.5, -2.5, 15.0);
+					vel4 = _V(0.5, -0.5, -0.55);
+					ofs5 = _V(-2.5, -2.5, 15.0);
+					vel5 = _V(-0.5, -0.5, -0.55);
+				}
+
+				VECTOR3 rofs2, rvel2 = {vs2.rvel.x, vs2.rvel.y, vs2.rvel.z};
+				VECTOR3 rofs3, rvel3 = {vs3.rvel.x, vs3.rvel.y, vs3.rvel.z};
+				VECTOR3 rofs4, rvel4 = {vs4.rvel.x, vs4.rvel.y, vs4.rvel.z};
+				VECTOR3 rofs5, rvel5 = {vs5.rvel.x, vs5.rvel.y, vs5.rvel.z};
+				Local2Rel (ofs2, vs2.rpos);
+				Local2Rel (ofs3, vs3.rpos);
+				Local2Rel (ofs4, vs4.rpos);
+				Local2Rel (ofs5, vs5.rpos);
+				GlobalRot (vel2, rofs2);
+				GlobalRot (vel3, rofs3);
+				GlobalRot (vel4, rofs4);
+				GlobalRot (vel5, rofs5);
+				vs2.rvel.x = rvel2.x+rofs2.x;
+				vs2.rvel.y = rvel2.y+rofs2.y;
+				vs2.rvel.z = rvel2.z+rofs2.z;
+				vs3.rvel.x = rvel3.x+rofs3.x;
+				vs3.rvel.y = rvel3.y+rofs3.y;
+				vs3.rvel.z = rvel3.z+rofs3.z;
+				vs4.rvel.x = rvel4.x+rofs4.x;
+				vs4.rvel.y = rvel4.y+rofs4.y;
+				vs4.rvel.z = rvel4.z+rofs4.z;
+				vs5.rvel.x = rvel5.x+rofs5.x;
+				vs5.rvel.y = rvel5.y+rofs5.y;
+				vs5.rvel.z = rvel5.z+rofs5.z;
+	
+				//
+				// This should be rationalised really to use the same parameters
+				// with different config files.
+				//
+
+				if (SaturnVStage) {
+					vs2.vrot.x = -0.1;
+					vs2.vrot.y = 0.1;
+					vs2.vrot.z = 0.0;
+					vs3.vrot.x = -0.1;
+					vs3.vrot.y = -0.1;
+					vs3.vrot.z = 0.0;
+					vs4.vrot.x = 0.1;
+					vs4.vrot.y = -0.1;
+					vs4.vrot.z = 0.0;
+					vs5.vrot.x = 0.1;
+					vs5.vrot.y = 0.1;
+					vs5.vrot.z = 0.0;
+				
+					GetApolloName(VName); strcat (VName, "-S4B1");
+					hs4b1 = oapiCreateVessel(VName, "ProjectApollo/sat5stg31", vs2);
+					GetApolloName(VName); strcat (VName, "-S4B2");
+					hs4b2 = oapiCreateVessel(VName, "ProjectApollo/sat5stg32", vs3);
+					GetApolloName(VName); strcat (VName, "-S4B3");
+					hs4b3 = oapiCreateVessel(VName, "ProjectApollo/sat5stg33", vs4);
+					GetApolloName(VName); strcat (VName, "-S4B4");
+					hs4b4 = oapiCreateVessel(VName, "ProjectApollo/sat5stg34", vs5);
+
+					MATRIX3 rv, rx, ry, rz, rnx, rny, rnz;
+					GetRotationMatrix(rv);
+					GetRotMatrixX(34.5 * RAD, rx); 
+					GetRotMatrixX(-34.5 * RAD, rnx); 
+					GetRotMatrixY(30 * RAD, ry); 
+					GetRotMatrixY(-30 * RAD, rny); 
+					GetRotMatrixZ(9.5 * RAD, rz); 
+					GetRotMatrixZ(-9.5 * RAD, rnz); 
+
+					VESSEL *v = (VESSEL *) oapiGetVesselInterface(hs4b1);
+					v->SetRotationMatrix(mul(rv, mul(rz, mul(ry, rnx))));			
+					v = (VESSEL *) oapiGetVesselInterface(hs4b2);
+					v->SetRotationMatrix(mul(rv, mul(rnz, mul(rny, rnx))));			
+					v = (VESSEL *) oapiGetVesselInterface(hs4b3);
+					v->SetRotationMatrix(mul(rv, mul(rz, mul(rny, rx))));			
+					v = (VESSEL *) oapiGetVesselInterface(hs4b4);
+					v->SetRotationMatrix(mul(rv, mul(rnz, mul(ry, rx))));			
+				}
+				else {
+					vs2.vrot.x = 0.1;
+					vs2.vrot.y = -0.1;
+					vs2.vrot.z = 0.0;
+					vs3.vrot.x = 0.1;
+					vs3.vrot.y = 0.1;
+					vs3.vrot.z = 0.0;
+					vs4.vrot.x = -0.1;
+					vs4.vrot.y = -0.1;
+					vs4.vrot.z = 0.0;
+					vs5.vrot.x = -0.1;
+					vs5.vrot.y = 0.1;
+					vs5.vrot.z = 0.0;
+
+					GetApolloName(VName); strcat (VName, "-S4B1");
+					hs4b1 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg21", vs2);
+					GetApolloName(VName); strcat (VName, "-S4B2");
+					hs4b2 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg22", vs3);
+					GetApolloName(VName); strcat (VName, "-S4B3");
+					hs4b3 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg23", vs4);
+					GetApolloName(VName); strcat (VName, "-S4B4");
+					hs4b4 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg24", vs5);
+
+					MATRIX3 rv, rx, ry, rz, rnx, rny, rnz;
+					GetRotationMatrix(rv);
+					GetRotMatrixX(34.5 * RAD, rx); 
+					GetRotMatrixX(-34.5 * RAD, rnx); 
+					GetRotMatrixY(30.8 * RAD, ry); 
+					GetRotMatrixY(-30.8 * RAD, rny); 
+					GetRotMatrixZ(8.5 * RAD, rz); 
+					GetRotMatrixZ(-8.5 * RAD, rnz); 
+
+					VESSEL *v = (VESSEL *) oapiGetVesselInterface(hs4b1);
+					v->SetRotationMatrix(mul(rv, mul(rz, mul(rny, rx))));			
+					v = (VESSEL *) oapiGetVesselInterface(hs4b2);
+					v->SetRotationMatrix(mul(rv, mul(rnz, mul(ry, rx))));			
+					v = (VESSEL *) oapiGetVesselInterface(hs4b3);
+					v->SetRotationMatrix(mul(rv, mul(rnz, mul(rny, rnx))));			
+					v = (VESSEL *) oapiGetVesselInterface(hs4b4);
+					v->SetRotationMatrix(mul(rv, mul(rz, mul(ry, rnx))));			
+				}
+
+				// Hide meshes
+				SetMeshVisibilityMode(panelMesh1, MESHVIS_NEVER);
+				SetMeshVisibilityMode(panelMesh2, MESHVIS_NEVER);
+				SetMeshVisibilityMode(panelMesh3, MESHVIS_NEVER);
+				SetMeshVisibilityMode(panelMesh4, MESHVIS_NEVER);
+
+				PanelsOpened = true;
 			}
-
-			VECTOR3 rofs2, rvel2 = {vs2.rvel.x, vs2.rvel.y, vs2.rvel.z};
-			VECTOR3 rofs3, rvel3 = {vs3.rvel.x, vs3.rvel.y, vs3.rvel.z};
-			VECTOR3 rofs4, rvel4 = {vs4.rvel.x, vs4.rvel.y, vs4.rvel.z};
-			VECTOR3 rofs5, rvel5 = {vs5.rvel.x, vs5.rvel.y, vs5.rvel.z};
-			Local2Rel (ofs2, vs2.rpos);
-			Local2Rel (ofs3, vs3.rpos);
-			Local2Rel (ofs4, vs4.rpos);
-			Local2Rel (ofs5, vs5.rpos);
-			GlobalRot (vel2, rofs2);
-			GlobalRot (vel3, rofs3);
-			GlobalRot (vel4, rofs4);
-			GlobalRot (vel5, rofs5);
-			vs2.rvel.x = rvel2.x+rofs2.x;
-			vs2.rvel.y = rvel2.y+rofs2.y;
-			vs2.rvel.z = rvel2.z+rofs2.z;
-			vs3.rvel.x = rvel3.x+rofs3.x;
-			vs3.rvel.y = rvel3.y+rofs3.y;
-			vs3.rvel.z = rvel3.z+rofs3.z;
-			vs4.rvel.x = rvel4.x+rofs4.x;
-			vs4.rvel.y = rvel4.y+rofs4.y;
-			vs4.rvel.z = rvel4.z+rofs4.z;
-			vs5.rvel.x = rvel5.x+rofs5.x;
-			vs5.rvel.y = rvel5.y+rofs5.y;
-			vs5.rvel.z = rvel5.z+rofs5.z;
-
-			//
-			// This should be rationalised really to use the same parameters
-			// with different config files.
-			//
-
-			if (SaturnVStage) {
-				vs2.vrot.x = -0.1;
-				vs2.vrot.y = 0.1;
-				vs2.vrot.z = 0.0;
-				vs3.vrot.x = -0.1;
-				vs3.vrot.y = -0.1;
-				vs3.vrot.z = 0.0;
-				vs4.vrot.x = 0.1;
-				vs4.vrot.y = -0.1;
-				vs4.vrot.z = 0.0;
-				vs5.vrot.x = 0.1;
-				vs5.vrot.y = 0.1;
-				vs5.vrot.z = 0.0;
-
-				GetApolloName(VName); strcat (VName, "-S4B1");
-				hs4b1 = oapiCreateVessel(VName, "ProjectApollo/sat5stg31", vs2);
-				GetApolloName(VName); strcat (VName, "-S4B2");
-				hs4b2 = oapiCreateVessel(VName, "ProjectApollo/sat5stg32", vs3);
-				GetApolloName(VName); strcat (VName, "-S4B3");
-				hs4b3 = oapiCreateVessel(VName, "ProjectApollo/sat5stg33", vs4);
-				GetApolloName(VName); strcat (VName, "-S4B4");
-				hs4b4 = oapiCreateVessel(VName, "ProjectApollo/sat5stg34", vs5);
-			}
-			else
-			{
-				vs2.vrot.x = 0.1;
-				vs2.vrot.y = -0.1;
-				vs2.vrot.z = 0.0;
-				vs3.vrot.x = 0.1;
-				vs3.vrot.y = 0.1;
-				vs3.vrot.z = 0.0;
-				vs4.vrot.x = -0.1;
-				vs4.vrot.y = -0.1;
-				vs4.vrot.z = 0.0;
-				vs5.vrot.x = -0.1;
-				vs5.vrot.y = 0.1;
-				vs5.vrot.z = 0.0;
-
-				GetApolloName(VName); strcat (VName, "-S4B1");
-				hs4b1 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg21", vs2);
-				GetApolloName(VName); strcat (VName, "-S4B2");
-				hs4b2 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg22", vs3);
-				GetApolloName(VName); strcat (VName, "-S4B3");
-				hs4b3 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg23", vs4);
-				GetApolloName(VName); strcat (VName, "-S4B4");
-				hs4b4 = oapiCreateVessel(VName, "ProjectApollo/nsat1stg24", vs5);
-			}
-
-			// Hide meshes
-			SetMeshVisibilityMode(panelMesh1, MESHVIS_NEVER);
-			SetMeshVisibilityMode(panelMesh2, MESHVIS_NEVER);
-			SetMeshVisibilityMode(panelMesh3, MESHVIS_NEVER);
-			SetMeshVisibilityMode(panelMesh4, MESHVIS_NEVER);
-
-			PanelsOpened = true;
 		}
 	}
 
@@ -930,7 +988,7 @@ void SIVB::AddRCS_S4B()
 	AddExhaust (th_att_rot[3], 0.6, 0.078);
 	AddExhaust (th_att_rot[4], 0.6, 0.078);
 	AddExhaust (th_att_rot[5], 0.6, 0.078);
-	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_BANKLEFT);
+	CreateThrusterGroup (th_att_rot+2, 2, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
 
 	th_att_rot[6] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
@@ -943,7 +1001,7 @@ void SIVB::AddRCS_S4B()
 	AddExhaust (th_att_rot[8], 0.6, 0.078);
 	AddExhaust (th_att_rot[9], 0.6, 0.078);
 
-	CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
+	CreateThrusterGroup (th_att_rot+6, 2, THGROUP_ATT_YAWLEFT);
 	CreateThrusterGroup (th_att_rot+8, 2, THGROUP_ATT_YAWRIGHT);
 
 	//
@@ -960,6 +1018,45 @@ void SIVB::AddRCS_S4B()
 	{
 		StartVenting();
 	}
+
+
+	//
+	// Seperation junk 'thrusters'.
+	//
+
+	int i;
+	double junkOffset;
+
+	if (SaturnVStage)
+		junkOffset = 15;
+	else
+		junkOffset = 20;
+
+	VECTOR3	s_exhaust_pos1= _V(1.41,1.41,junkOffset);
+	VECTOR3 s_exhaust_pos2= _V(1.41,-1.41,junkOffset);
+	VECTOR3	s_exhaust_pos3= _V(-1.41,1.41,junkOffset);
+	VECTOR3 s_exhaust_pos4= _V(-1.41,-1.41,junkOffset);
+	VECTOR3	s_exhaust_pos6= _V(0,2.0,junkOffset);
+	VECTOR3 s_exhaust_pos7= _V(0,-2.0,junkOffset);
+	VECTOR3	s_exhaust_pos8= _V(2.0,0,junkOffset);
+	VECTOR3 s_exhaust_pos9= _V(-2.0,0,junkOffset);
+
+	PROPELLANT_HANDLE ph_sep = CreatePropellantResource(0.2);
+
+	THRUSTER_HANDLE th_sep[8];
+	th_sep[0] = CreateThruster (s_exhaust_pos1, _V( -1,-1,0), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[1] = CreateThruster (s_exhaust_pos2, _V( -1,1,0), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[2] = CreateThruster (s_exhaust_pos3, _V( 1,-1,0), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[3] = CreateThruster (s_exhaust_pos4, _V( 1,1,0), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[4] = CreateThruster (s_exhaust_pos6, _V( 0,-1,0), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[5] = CreateThruster (s_exhaust_pos7, _V( 0,1,0), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[6] = CreateThruster (s_exhaust_pos8, _V( -1,0,0), 1.0, ph_sep, 10.0, 10.0);
+	th_sep[7] = CreateThruster (s_exhaust_pos9, _V( 1,0,0), 1.0, ph_sep, 10.0, 10.0);
+
+	for (i = 0; i < 8; i++) {
+		AddExhaustStream(th_sep[i], &seperation_junk);
+	}
+	thg_sep = CreateThrusterGroup(th_sep, 8, THGROUP_USER);
 }
 
 void SIVB::SetMainState(int s)
@@ -1127,7 +1224,6 @@ void SIVB::SetState(SIVBSettings &state)
 	}
 
 	State = SIVB_STATE_WAITING;
-
 	SetS4b();
 }
 
