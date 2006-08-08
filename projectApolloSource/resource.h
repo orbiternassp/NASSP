@@ -203,6 +203,7 @@
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
 #define AID_VSI2                        304
+#define AID_OPTICSCLKAREA				310
 #define AID_FUELCELLRADIATORSINDICATORS 403
 #define AID_FUELCELLREACTANTSSWITCHES   410
 #define ADI_MAINBUSAINDICATORS          411
@@ -567,6 +568,7 @@
 #define AID_LM_EPS_LEFT_CONTROLS        834
 #define AID_LEM_P11_CB_ROW2             835
 #define AID_LEM_P11_CB_ROW1             836
+
 
 // Next default values for new objects
 // 

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.119  2006/07/31 15:58:31  jasonims
+  *	*** empty log message ***
+  *	
   *	Revision 1.118  2006/07/31 12:28:16  tschachim
   *	More debug prints.
   *	
@@ -3200,16 +3203,70 @@ double Saturn::SetSPSYaw(double direction){
 	return(error);
 }
 
-void Saturn::UpdateOptics()
+void Saturn::UpdateOptics(double mx, double my)
 {
+	double Shaft,Trunion;
+
 	if (InitOptics == SATPANEL_SEXTANT){
 		oapiCameraSetCockpitDir (OpticsShaft, SextTrunion, true);
+		oapiCameraSetAperture (0.04363);
+		Shaft = OpticsShaft;
+		Trunion = SextTrunion;
 		InitOptics = 0;
 	}else if (InitOptics == SATPANEL_TELESCOPE){
 		oapiCameraSetCockpitDir (OpticsShaft, TeleTrunion, true);
+		oapiCameraSetAperture (0.5236);
+		Shaft = OpticsShaft;
+		Trunion = TeleTrunion;
 		InitOptics = 0;
 	}else{
 		InitOptics = 0;
 	}
 
+	CameraAperture = oapiCameraAperture();
+	double dx,dy;
+		
+	switch(ControllerSpeedSwitch.GetState()){
+		case THREEPOSSWITCH_UP:
+			dx = 20 * 3.14159 / 180;
+			dy = 10 * 3.14159 / 180;
+			break;
+		case THREEPOSSWITCH_CENTER:
+			dx = 10 * 3.14159 / 180;
+			dy = 5 * 3.14159 / 180;
+			break;
+		case THREEPOSSWITCH_DOWN:
+			dx = 4 * 3.14159 / 180;
+			dy = 2 * 3.14159 / 180;
+			break;
+	}
+
+	if (ControllerCouplingSwitch.IsUp()){
+		Shaft = Shaft + (mx / 430) * dx;
+		Trunion = Trunion + (my /430) * dy;
+	}else{
+		//Do nothing because I haven't figured out how to rectify the coordinate systems to make the matrix transformation work.
+	}
+	
+	//Set Limits
+	if (Trunion < 0){
+		Trunion = 0;
+	}else if (Trunion > (3.14159/2)){
+		Trunion = 3.14159/2;
+	}else if (Shaft > (3.14159*3/2)){
+		Shaft = (3.14159*3/2);
+	}
+
+	//Update View
+	oapiCameraSetCockpitDir (Shaft, Trunion, true);
+
+	//Save for next event
+	if (PanelId = SATPANEL_SEXTANT){
+		SextTrunion = Trunion;
+	}else{
+		TeleTrunion = Trunion;
+	}
+	OpticsShaft = Shaft;
+
+	
 }

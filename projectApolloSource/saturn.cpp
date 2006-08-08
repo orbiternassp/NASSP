@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.167  2006/07/31 15:58:31  jasonims
+  *	*** empty log message ***
+  *	
   *	Revision 1.166  2006/07/31 12:26:21  tschachim
   *	Bugfix
   *	
@@ -2782,9 +2785,9 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	//
 	// Optics visual update
 	//
-	if (InOptics == true){
-		UpdateOptics();
-	}
+	//if (InOptics == true){
+	//	UpdateOptics(0,0);
+	//}
 }
 
 

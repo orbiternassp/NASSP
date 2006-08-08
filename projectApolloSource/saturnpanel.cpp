@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.183  2006/08/03 20:35:54  flydba
+  *	Bitmaps updated, changes on some panel areas done.
+  *	
   *	Revision 1.182  2006/07/31 15:58:31  jasonims
   *	*** empty log message ***
   *	
@@ -1096,7 +1099,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	case SATPANEL_SEXTANT:
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT));
-		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, -1, SATPANEL_LOWER);
+		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, SATPANEL_LOWER, SATPANEL_LOWER);
 		break;
 
 	case SATPANEL_TELESCOPE:
@@ -1356,6 +1359,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_MFDMAINRIGHT,								_R(1785, 1060, 2144, 1360), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 
 
+		oapiCameraSetAperture (RAD * 35.0);
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 
@@ -1408,6 +1412,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_BMAGPOWERROTARY2,							_R( 585, 1507,  669, 1591), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DIRECTO2ROTARY,								_R( 685, 1575,  755, 1645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 
+		oapiCameraSetAperture (RAD * 30.0);
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
 		break;
 
@@ -1470,6 +1475,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		
 		//oapiRegisterPanelArea (AID_RIGHTWINDOWCOVER,							_R( 609,  237, 1134,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
+		oapiCameraSetAperture (RAD * 30.0);
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;
 
@@ -1482,18 +1488,21 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SM_RCS_MODE,     _R( 719,  791,  852,  864), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_COAS,		    _R( 469,    0, 1152,  539), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
 
+		oapiCameraSetAperture (RAD * 15.0);
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 
 	case SATPANEL_RIGHT_RNDZ_WINDOW: // right rendezvous window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
+		oapiCameraSetAperture (RAD * 15.0);
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 
 	case SATPANEL_HATCH_WINDOW: // hatch window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
+		oapiCameraSetAperture (RAD * 15.0);
 		SetCameraDefaultDirection(_V(0.0, 0.83867, 0.544639));
 		break;
 
@@ -1511,15 +1520,25 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	case SATPANEL_SEXTANT: // Sextant
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+		
+		oapiRegisterPanelArea (AID_OPTICSCLKAREA,					_R( 270,   95, 1130,  955), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, -0.83867, 0.544639));
+		oapiCameraSetAperture (RAD * 5);
+		TargetShaft = 0;
+		TargetTrunion = 0;
 		InitOptics = SATPANEL_SEXTANT;
 		break;
 
 	case SATPANEL_TELESCOPE: // Telescope
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
+		oapiRegisterPanelArea (AID_OPTICSCLKAREA,					_R( 270,   95, 1130,  955), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, -0.83867, 0.544639));
+		oapiCameraSetAperture (RAD * 30);
+		TargetShaft = 0;
+		TargetTrunion = 0;
 		InitOptics = SATPANEL_TELESCOPE;
 		break;
 	
@@ -2836,6 +2855,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return cws.CheckMasterAlarmMouseClick(event);
 
 	case AID_DSKY_KEY:
+
 		if (event & PANEL_MOUSE_LBDOWN) {
 			dsky.ProcessKeyPress(mx, my);
 		} else if (event & PANEL_MOUSE_LBUP) {
@@ -2933,7 +2953,11 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		SwitchClick();
 		return true;
 
-
+	case AID_OPTICSCLKAREA:
+		//mx = (mx - 430) * -1;
+		//my = (my - 430) * -1;
+		UpdateOptics(mx,my);
+		return true;
 	//
 	// Old stuff
 	//
