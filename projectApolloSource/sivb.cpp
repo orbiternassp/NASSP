@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2006/08/07 20:21:58  tschachim
+  *	A try to improve SLA panel separation.
+  *	
   *	Revision 1.23  2006/07/31 12:27:49  tschachim
   *	Hinged SLA panels for Apollo 7.
   *	
@@ -162,7 +165,7 @@ static PARTICLESTREAMSPEC fuel_venting_spec = {
 //
 
 PARTICLESTREAMSPEC seperation_junk = {
-	0, 0.08,  200, 4.0, 2.0, 1.5, -0.02, 1.0, 
+	0, 0.06,  300, 4.0, 2.0, 1.5, -0.02, 1.0, 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
