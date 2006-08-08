@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/06/14 20:55:32  movieman523
+  *	Made engineering cameras not go away when interstage seperates.
+  *	
   *	Revision 1.15  2006/06/07 02:05:04  jasonims
   *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
   *	
@@ -123,6 +126,7 @@ bool Saturn::clbkLoadVC (int id)
 	InPanel = false;
 	SetView ();
 	
+	oapiCameraSetAperture (RAD * 20);
 	//SetCameraDefaultDirection (_V(0,0,1));
 	//default camera direction: forward
 	//SetCameraShiftRange (_V(#,#,#), _V(#,#,#), _V(#,#,#));
@@ -479,6 +483,7 @@ void Saturn::SetView(double offset, bool update_direction)
 			break;
 
 			case SATVIEW_GNPANEL:
+				oapiCameraSetAperture (RAD * 35);
 				v = _V(0.0, -0.15, 0.5 + offset);
 			break;
 		}

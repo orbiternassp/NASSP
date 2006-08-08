@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.209  2006/07/31 15:58:31  jasonims
+  *	*** empty log message ***
+  *	
   *	Revision 1.208  2006/07/31 00:05:59  jasonims
   *	Set up Optics panels...
   *	
@@ -734,10 +737,13 @@ public:
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	bool clbkLoadVC (int id);
 	int InitOptics;
-	void UpdateOptics ();
+	void UpdateOptics (double mx, double my);
 	double OpticsShaft;
 	double SextTrunion;
 	double TeleTrunion;
+	double TargetShaft;
+	double TargetTrunion;
+	double CameraAperture;
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 
