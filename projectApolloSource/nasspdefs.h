@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2006/07/21 23:04:34  movieman523
+  *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
+  *	
   *	Revision 1.75  2006/07/16 17:41:49  flydba
   *	New ORDEAL rotary bitmap added.
   *	
@@ -336,7 +339,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 112; // number of bitmap handles
+const int nsurf = 113; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -441,6 +444,7 @@ const int nsurf = 112; // number of bitmap handles
 #define SRF_LEM_COAS1								109
 #define SRF_ORDEAL_ROTARY							110
 #define SRF_LV_ENG_S1B								111
+#define SRF_LEM_COAS2								112
 
 //
 // Earth radius and gravity constants.
