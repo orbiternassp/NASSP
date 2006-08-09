@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.184  2006/08/08 20:23:50  jasonims
+  *	More Optics stuff and changed the Aperture settings for interior views.
+  *	
   *	Revision 1.183  2006/08/03 20:35:54  flydba
   *	Bitmaps updated, changes on some panel areas done.
   *	
@@ -1179,9 +1182,9 @@ bool Saturn::clbkLoadPanel (int id) {
 	MFDSPEC mfds_mainleft   =     {{1462, 1075, 1721, 1330}, 6, 6, 37, 37};
 	MFDSPEC mfds_mainright  =     {{1834, 1075, 2093, 1330}, 6, 6, 37, 37};
 	MFDSPEC mfds_dock		=     {{ 893,  627, 1112,  842}, 6, 6, 31, 31};
-	MFDSPEC mfds_gnlefttop  =     {{  57,  124,  316,  379}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnleftmiddle   = {{  57,  427,  316,  682}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnleftbottom   = {{  57,  731,  316,  986}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnlefttop  =     {{ 812,  124, 1071,  379}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnleftmiddle   = {{ 812,  427, 1071,  682}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnleftbottom   = {{ 812,  731, 1071,  986}, 6, 6, 37, 37};
 	MFDSPEC mfds_gnrightbottom  = {{1500,  685, 1759,  940}, 6, 6, 37, 37};
 
 	switch (id) {
@@ -1203,9 +1206,9 @@ bool Saturn::clbkLoadPanel (int id) {
         oapiRegisterMFD(MFD_LEFT , mfds_gnleftbottom);
         oapiRegisterMFD(MFD_RIGHT, mfds_gnrightbottom);
 
-		oapiRegisterPanelArea (AID_MFDGNLEFTTOP,								_R(   8,  109,  367,  409), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MFDGNLEFTMIDDLE,								_R(   8,  412,  367,  712), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MFDGNLEFTBOTTOM,								_R(   8,  716,  367, 1016), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDGNLEFTTOP,								_R( 763,  109, 1122,  409), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDGNLEFTMIDDLE,								_R( 763,  412, 1122,  712), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDGNLEFTBOTTOM,								_R( 763,  716, 1122, 1016), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MFDGNRIGHTBOTTOM,							_R(1451,  670, 1810,  970), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_GNMODESWITCH,								_R( 425,  522,  459,  551), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
@@ -1217,6 +1220,12 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYCWLIGHTS,					_R(1160,  494, 1214,  570), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LOWEREQUIPMENTBAYOPTICSLIGHTS,				_R( 423,  625,  496,  723), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	PANEL_MAP_BACKGROUND);
 
+		// Panel 101
+
+		oapiRegisterPanelArea (AID_SYSTEMTESTROTARIES,							_R(132, 216, 336, 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_RNDZXPDRSWITCH,      						_R(278, 350, 312, 379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL101LOWERSWITCHES,      				    _R(153, 486, 311, 515), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 
@@ -2490,6 +2499,18 @@ void Saturn::SetSwitches(int panel) {
 	RightIntegralRotarySwitch.Init(0, 0, 90, 90, srf[SRF_LIGHTROTARY], srf[SRF_BORDER_90x90], RightInteriorLightRotariesRow);
 	RightFloodRotarySwitch.Init( 133,  0, 90, 90, srf[SRF_LIGHTROTARY], srf[SRF_BORDER_90x90], RightInteriorLightRotariesRow);
 
+	SystemTestRotariesRow.Init(AID_SYSTEMTESTROTARIES, MainPanel);
+	LeftSystemTestRotarySwitch.Init(0, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_84x84], SystemTestRotariesRow);
+	RightSystemTestRotarySwitch.Init(120, 0, 84, 84, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_84x84], SystemTestRotariesRow);
+	
+	RNDZXPDRSwitchRow.Init(AID_RNDZXPDRSWITCH, MainPanel);
+	RNDZXPDRSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], RNDZXPDRSwitchRow);
+	
+	Panel101LowerSwitchRow.Init(AID_PANEL101LOWERSWITCHES, MainPanel);
+    CMRCSHTRSSwitch.Init   (  0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel101LowerSwitchRow);
+	WasteH2ODumpSwitch.Init( 78, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel101LowerSwitchRow);
+	UrineDumpSwitch.Init   (124, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel101LowerSwitchRow);
+	
 	//
 	// SATPANEL_LEFT
 	//
@@ -2770,7 +2791,7 @@ void Saturn::SetSwitches(int panel) {
 	ORDEALEarthSwitch.Init	 (209,  0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
 	ORDEALLightingSwitch.Init(  0, 89, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow); 
 	ORDEALModeSwitch.Init	 (160, 89, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);	
-	ORDEALSlewSwitch.Init	 (209, 89, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
+	ORDEALSlewSwitch.Init	 (209, 89, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ORDEALSwitchesRow);
 
 	ORDEALRotaryRow.Init(AID_ORDEALROTARY, MainPanel);
 	ORDEALAltSetRotary.Init(  0, 0, 84, 84, srf[SRF_ORDEAL_ROTARY], srf[SRF_BORDER_84x84], ORDEALRotaryRow);
@@ -5146,6 +5167,23 @@ void Saturn::InitSwitches() {
 	ORDEALAltSetRotary.AddPosition(6, 150);
 	ORDEALAltSetRotary.Register(PSH, "ORDEALAltSetRotary", 3);
 
+	LeftSystemTestRotarySwitch.AddPosition(0,  240);
+	LeftSystemTestRotarySwitch.AddPosition(1,  270);
+	LeftSystemTestRotarySwitch.AddPosition(2,  300);
+	LeftSystemTestRotarySwitch.AddPosition(3,  330);
+	LeftSystemTestRotarySwitch.AddPosition(4,    0);
+	LeftSystemTestRotarySwitch.AddPosition(5,   30);
+	LeftSystemTestRotarySwitch.AddPosition(6,   60);
+	LeftSystemTestRotarySwitch.AddPosition(7,   90);
+	LeftSystemTestRotarySwitch.AddPosition(8,  120);
+	LeftSystemTestRotarySwitch.Register(PSH, "LeftSystemTestRotarySwitch", 0);
+	
+	RightSystemTestRotarySwitch.AddPosition(0,  315);
+	RightSystemTestRotarySwitch.AddPosition(1,  340);
+	RightSystemTestRotarySwitch.AddPosition(2,   20);
+	RightSystemTestRotarySwitch.AddPosition(3,   45);
+	RightSystemTestRotarySwitch.Register(PSH, "RightSystemTestRotarySwitch", 0);
+
 	OrbiterAttitudeToggle.SetActive(false);		// saved in LPSwitchState.LPswitch5
 
 	EpsSensorSignalDcMnaCircuitBraker.Register(PSH, "EpsSensorSignalDcMnaCircuitBraker", 1);
@@ -5353,7 +5391,13 @@ void Saturn::InitSwitches() {
 	ORDEALEarthSwitch.Register(PSH, "ORDEALEarthSwitch", THREEPOSSWITCH_CENTER);
 	ORDEALLightingSwitch.Register(PSH, "ORDEALLightingSwitch", THREEPOSSWITCH_CENTER);
 	ORDEALModeSwitch.Register(PSH, "ORDEALModeSwitch", false);	
-	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", false);
+	ORDEALSlewSwitch.Register(PSH, "ORDEALSlewSwitch", THREEPOSSWITCH_CENTER);
+
+	RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", false);
+
+	CMRCSHTRSSwitch.Register(PSH, "CMRCSHTRSSwitch", false);
+	WasteH2ODumpSwitch.Register(PSH, "WasteH2ODumpSwitch", THREEPOSSWITCH_CENTER);
+	UrineDumpSwitch.Register(PSH, "UrineDumpSwitch", THREEPOSSWITCH_CENTER);
 	
 	//
 	// Old stuff. Delete when no longer required.
