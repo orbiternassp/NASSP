@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/07/27 22:38:57  movieman523
+  *	Added CSM to LEM power connector.
+  *	
   *	Revision 1.50  2006/07/26 15:42:02  tschachim
   *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
   *	
@@ -453,7 +456,7 @@ protected:
 
 	SwitchRow GuidContSwitchRow;
 	ToggleSwitch GuidContSwitch;
-	ToggleSwitch ModeSelSwitch;
+	ThreePosSwitch ModeSelSwitch;
 	ToggleSwitch AltRngMonSwitch;
 
 	SwitchRow LeftMonitorSwitchRow;
@@ -825,6 +828,7 @@ protected:
 	///////////////////////////
 
 	int LEMCoas1Enabled;
+	int LEMCoas2Enabled;
 
 	bool FirstTimestep;
 
