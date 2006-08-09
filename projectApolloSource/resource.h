@@ -568,6 +568,11 @@
 #define AID_LM_EPS_LEFT_CONTROLS        834
 #define AID_LEM_P11_CB_ROW2             835
 #define AID_LEM_P11_CB_ROW1             836
+#define IDB_LEM_COAS2					837
+#define AID_LEM_COAS2					838
+#define AID_SYSTEMTESTROTARIES			839
+#define AID_RNDZXPDRSWITCH				840
+#define AID_PANEL101LOWERSWITCHES		841
 
 
 // Next default values for new objects
