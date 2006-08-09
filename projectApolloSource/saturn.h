@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.210  2006/08/08 20:23:50  jasonims
+  *	More Optics stuff and changed the Aperture settings for interior views.
+  *	
   *	Revision 1.209  2006/07/31 15:58:31  jasonims
   *	*** empty log message ***
   *	
@@ -2337,6 +2340,22 @@ protected:
 	SwitchRow UPTLMSwitchRow;
 	ToggleSwitch UPTLMSwitch;
 
+	///////////////
+	// Panel 101 //
+	///////////////
+
+	SwitchRow SystemTestRotariesRow;
+	RotationalSwitch LeftSystemTestRotarySwitch;
+	RotationalSwitch RightSystemTestRotarySwitch;
+
+	SwitchRow RNDZXPDRSwitchRow;
+	ToggleSwitch RNDZXPDRSwitch;
+
+	SwitchRow Panel101LowerSwitchRow;
+	ToggleSwitch CMRCSHTRSSwitch;
+	ThreePosSwitch WasteH2ODumpSwitch;
+	ThreePosSwitch UrineDumpSwitch;
+
 	///////////////////////
 	// Panel 15 switches //
 	///////////////////////
@@ -2608,7 +2627,7 @@ protected:
 	ThreePosSwitch ORDEALEarthSwitch;
 	ThreePosSwitch ORDEALLightingSwitch; 
 	ToggleSwitch ORDEALModeSwitch;	
-	ToggleSwitch ORDEALSlewSwitch;
+	ThreePosSwitch ORDEALSlewSwitch;
 
 	SwitchRow ORDEALRotaryRow;
 	RotationalSwitch ORDEALAltSetRotary;
