@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2006/07/24 06:41:29  dseagrav
+  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
+  *	
   *	Revision 1.61  2006/07/16 16:20:52  flydba
   *	COAS on the overhead rendezvous window now works.
   *	
@@ -290,7 +293,7 @@ void sat5_lmpkd::InitPanel() {
 	IMUCageSwitch.Register(PSH,"IMUCageSwitch", TOGGLESWITCH_DOWN);
 	LeftXPointerSwitch.Register(PSH, "LeftXPointerSwitch", true);
 	GuidContSwitch.Register(PSH, "GuidContSwitch", true);
-	ModeSelSwitch.Register(PSH, "ModeSelSwitch", true);
+	ModeSelSwitch.Register(PSH, "ModeSelSwitch", THREEPOSSWITCH_UP);
 	AltRngMonSwitch.Register(PSH, "AltRngMonSwitch", true);
 	RateErrorMonSwitch.Register(PSH, "RateErrorMonSwitch", true);
 	AttitudeMonSwitch.Register(PSH, "AttitudeMonSwitch", true);
@@ -438,6 +441,7 @@ void sat5_lmpkd::InitPanel() {
 	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 1);
 
 	LEMCoas1Enabled = false;
+	LEMCoas2Enabled = true;
 	
 	//
 	// Old stuff.
@@ -861,6 +865,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_BORDER_34x29]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
 		srf[SRF_BORDER_34x61]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
 		srf[SRF_LEM_COAS1]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
+		srf[SRF_LEM_COAS2]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 
 		//
 		// Flashing borders.
@@ -887,6 +892,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		srf[SRF_BORDER_72x72]			= oapiCreateSurface (LOADBMP (IDB_BORDER_72x72));
 		srf[SRF_BORDER_75x64]			= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
 		srf[SRF_LEM_COAS1]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
+		srf[SRF_LEM_COAS2]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 
 
 
@@ -915,6 +921,7 @@ void sat5_lmpkd::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_FDAIOFFFLAG],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_FDAINEEDLES],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_LEM_COAS1],			g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_LEM_COAS2],			g_Param.col[4]);
 
 		//		break;
 		//
@@ -1052,7 +1059,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RIGHTMONITORSWITCHES,			_R(1400,  712, 1434,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TEMPPRESSMONROTARY,				_R( 791, 1005,  869, 1083), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACAPROPSWITCH,					_R(1012, 1012, 1046, 1051), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MAIN_SOV_TALKBACKS,				_R( 946,  870, 1040,  894), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MAIN_SOV_TALKBACKS,				_R( 947,  871, 1040,  894), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MAIN_SOV_SWITCHES,			    _R( 941,  922, 1046,  961), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CLYCOLSUITFANROTARIES,			_R(1101,  929, 1179, 1127), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_QTYMONROTARY,					_R(1287,  989, 1365, 1067), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1145,7 +1152,8 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 
 	case LMPANEL_LEFTWINDOW: // LEM Left Window
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
-		// Animated LEM COAS will be added here soon...
+		
+		oapiRegisterPanelArea (AID_LEM_COAS2,				_R( 662, 0,  963, 301), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
@@ -1182,7 +1190,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_LM_EPS_LEFT_CONTROLS,            _R( 314,  728, 542,  913), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW4,					_R( 173,  604, 1415, 634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_DSC_BATTERY_TALKBACKS,	        _R( 572,  741, 888,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_DSC_BATTERY_TALKBACKS,	        _R( 573,  742, 888,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_HIGH_VOLTAGE_SWITCHES,	    _R( 568,  795, 895,  830), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_LOW_VOLTAGE_SWITCHES,	    _R( 568,  866, 824,  901), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 
@@ -1239,7 +1247,7 @@ void sat5_lmpkd::SetSwitches(int panel) {
 
 			GuidContSwitchRow.Init(AID_GUIDCONTSWITCHROW, MainPanel);
 			GuidContSwitch.Init (0,   0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], GuidContSwitchRow);
-			ModeSelSwitch.Init  (0,  83, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], GuidContSwitchRow);
+			ModeSelSwitch.Init  (0,  83, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], GuidContSwitchRow);
 			AltRngMonSwitch.Init(0, 167, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], GuidContSwitchRow);
 
 			LeftMonitorSwitchRow.Init(AID_LEFTMONITORSWITCHES, MainPanel);
@@ -1568,6 +1576,14 @@ bool sat5_lmpkd::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			LEMCoas1Enabled = false;
 		else
 			LEMCoas1Enabled = true;
+		SwitchClick();
+		return true;
+
+	case AID_LEM_COAS2:
+		if (LEMCoas2Enabled)
+			LEMCoas2Enabled = false;
+		else
+			LEMCoas2Enabled = true;
 		SwitchClick();
 		return true;
 
@@ -2505,6 +2521,14 @@ bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf, srf[SRF_LEM_COAS1], 0, 0, 0, 0, 535, 535, SURF_PREDEF_CK);
 		} else {
 			oapiBlt(surf, srf[SRF_LEM_COAS1], 0, 0, 0, 535, 535, 535, SURF_PREDEF_CK);
+		}
+		return true;
+
+	case AID_LEM_COAS2:
+		if (LEMCoas2Enabled) {
+			oapiBlt(surf, srf[SRF_LEM_COAS2], 0, 0, 0, 0, 300, 300, SURF_PREDEF_CK);
+		} else {
+			oapiBlt(surf, srf[SRF_LEM_COAS2], 0, 0, 0, 300, 300, 300, SURF_PREDEF_CK);
 		}
 		return true;
 
