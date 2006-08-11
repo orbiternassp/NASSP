@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.212  2006/08/11 19:34:47  movieman523
+  *	Added code to take the docking probe with the LES on a post-abort jettison.
+  *	
   *	Revision 1.211  2006/08/09 00:46:03  flydba
   *	Panel 101 added.
   *	
@@ -3130,6 +3133,7 @@ protected:
 	CSMCautionWarningSystem cws;
 	DockingProbe dockingprobe;
 	SECS secs;
+	ELS els;
 
 	Pyro CMSMPyros;
 

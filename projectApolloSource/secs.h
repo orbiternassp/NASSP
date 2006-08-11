@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/08/11 18:44:56  movieman523
+  *	Beginnings of SECS implementation.
+  *	
   *	Revision 1.3  2006/07/01 23:49:13  movieman523
   *	Updated more documentation.
   *	
@@ -66,11 +69,42 @@ protected:
 	Saturn *OurVessel;
 };
 
+///
+/// This class simulates the Earth Landing System in the CM.
+/// \ingroup InternalSystems
+/// \brief ELS simulation.
+///
+class ELS : public e_object {
+
+public:
+	ELS();
+	virtual ~ELS();
+
+	void ControlVessel(Saturn *v);
+
+	void Timestep(double simt, double simdt);
+	bool IsPowered();
+
+	void LoadState(FILEHANDLE scn);
+	void SaveState(FILEHANDLE scn);
+
+protected:
+	int State;
+
+	double NextMissionEventTime;
+	double LastMissionEventTime;
+
+	Saturn *OurVessel;
+};
+
 //
 // Strings for state saving.
 //
 
 #define SECS_START_STRING		"SECS_BEGIN"
 #define SECS_END_STRING			"SECS_END"
+
+#define ELS_START_STRING		"ELS_BEGIN"
+#define ELS_END_STRING			"ELS_END"
 
 #endif // _PA_SECS_H

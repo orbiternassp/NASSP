@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.120  2006/08/08 20:23:50  jasonims
+  *	More Optics stuff and changed the Aperture settings for interior views.
+  *	
   *	Revision 1.119  2006/07/31 15:58:31  jasonims
   *	*** empty log message ***
   *	
@@ -603,6 +606,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		cws.TimeStep(MissionTime);
 		dockingprobe.TimeStep(MissionTime, simdt);
 		secs.Timestep(MissionTime, simdt);
+		els.Timestep(MissionTime, simdt);
 		fdaiLeft.Timestep(MissionTime, simdt);
 		fdaiRight.Timestep(MissionTime, simdt);
 		JoystickTimestep();

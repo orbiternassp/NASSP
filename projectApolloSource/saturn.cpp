@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.171  2006/08/11 20:37:46  movieman523
+  *	Added HasProbe flag for docking probe.
+  *	
   *	Revision 1.170  2006/08/11 19:34:47  movieman523
   *	Added code to take the docking probe with the LES on a post-abort jettison.
   *	
@@ -605,6 +608,7 @@ void Saturn::initSaturn()
 	//
 
 	secs.ControlVessel(this);
+	els.ControlVessel(this);
 
 	//
 	// Wire up timers.
@@ -1453,6 +1457,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	imu.SaveState(scn);
 	cws.SaveState(scn);
 	secs.SaveState(scn);
+	els.SaveState(scn);
 
 	//
 	// If we've seperated from the SIVb, the IU is history.
@@ -2260,6 +2265,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, SECS_START_STRING, sizeof(SECS_START_STRING))) {
 		secs.LoadState(scn);
+	}
+	else if (!strnicmp(line, ELS_START_STRING, sizeof(ELS_START_STRING))) {
+		els.LoadState(scn);
 	}
 	else if (!strnicmp(line, DOCKINGPROBE_START_STRING, sizeof(DOCKINGPROBE_START_STRING))) {
 		dockingprobe.LoadState(scn);

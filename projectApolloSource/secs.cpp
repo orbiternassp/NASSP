@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/08/11 19:34:47  movieman523
+  *	Added code to take the docking probe with the LES on a post-abort jettison.
+  *	
   *	Revision 1.3  2006/08/11 18:44:56  movieman523
   *	Beginnings of SECS implementation.
   *	
@@ -113,6 +116,81 @@ void SECS::LoadState(FILEHANDLE scn)
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, SECS_END_STRING, sizeof(SECS_END_STRING)))
+			return;
+
+		if (!strnicmp (line, "STATE", 5)) {
+			sscanf (line + 5, "%d", &State);
+		}
+		else if (!strnicmp (line, "NEXTMISSIONEVENTTIME", 20)) {
+			sscanf(line + 20, "%f", &flt);
+			NextMissionEventTime = flt;
+		}
+		else if (!strnicmp (line, "LASTMISSIONEVENTTIME", 20)) {
+			sscanf(line + 20, "%f", &flt);
+			LastMissionEventTime = flt;
+		}
+	}
+}
+
+
+ELS::ELS()
+
+{
+	State = 0;
+	NextMissionEventTime = MINUS_INFINITY;
+	LastMissionEventTime = MINUS_INFINITY;
+
+	OurVessel = 0;
+}
+
+ELS::~ELS()
+
+{
+}
+
+void ELS::ControlVessel(Saturn *v)
+
+{
+	OurVessel = v;
+}
+
+void ELS::Timestep(double simt, double simdt)
+
+{
+	//
+	// Nothing to do at this moment.
+	//
+
+	if (!OurVessel || !IsPowered())
+		return;
+}
+
+bool ELS::IsPowered()
+
+{
+	return Voltage() > SP_MIN_DCVOLTAGE;
+}
+
+void ELS::SaveState(FILEHANDLE scn)
+
+{
+	oapiWriteLine(scn, ELS_START_STRING);
+
+	oapiWriteScenario_int(scn, "STATE", State);
+	oapiWriteScenario_float(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
+	oapiWriteScenario_float(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
+
+	oapiWriteLine(scn, ELS_END_STRING);
+}
+
+void ELS::LoadState(FILEHANDLE scn)
+
+{
+	char *line;
+	float flt = 0;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, ELS_END_STRING, sizeof(ELS_END_STRING)))
 			return;
 
 		if (!strnicmp (line, "STATE", 5)) {
