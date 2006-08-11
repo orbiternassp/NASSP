@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/08/11 18:44:56  movieman523
+  *	Beginnings of SECS implementation.
+  *	
   *	Revision 1.2  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -80,7 +83,7 @@ void SECS::Timestep(double simt, double simdt)
 	// Nothing to do at this moment.
 	//
 
-	if (!OurVessel)
+	if (!OurVessel || !IsPowered())
 		return;
 }
 

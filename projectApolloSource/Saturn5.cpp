@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.89  2006/07/28 02:06:57  movieman523
+  *	Now need to hard dock to get the connectors connected.
+  *	
   *	Revision 1.88  2006/06/23 11:56:48  tschachim
   *	New Project Apollo MFD for TLI burn control.
   *	
@@ -388,6 +391,8 @@ void SaturnV::initSaturnV()
 	strcpy(StagesString, "S1C:SII:SIVB:CSM");
 
 	SaturnType = SAT_SATURNV;
+
+	HasProbe = true;
 
 	//
 	// Default ISP and thrust values.

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/06/27 18:22:55  movieman523
+  *	Added 'drogues' sound.
+  *	
   *	Revision 1.51  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -1752,7 +1755,7 @@ bool Saturn::clbkLoadGenericCockpit ()
 // Generic function to jettison the escape tower.
 //
 
-void Saturn::JettisonLET(bool UseMain)
+void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 
 {
 	//
@@ -1834,6 +1837,7 @@ void Saturn::JettisonLET(bool UseMain)
 	LESConfig.Realism = Realism;
 	LESConfig.VehicleNo = VehicleNo;
 	LESConfig.LowRes = LowRes;
+	LESConfig.ProbeAttached = AbortJettison && HasProbe;
 	LESConfig.ISP_LET_SL = ISP_LET_SL;
 	LESConfig.ISP_LET_VAC = ISP_LET_VAC;
 	LESConfig.THRUST_VAC_LET = THRUST_VAC_LET;
@@ -1857,6 +1861,23 @@ void Saturn::JettisonLET(bool UseMain)
 	LES *les_vessel = (LES *) oapiGetVesselInterface(hesc1);
 	les_vessel->SetState(LESConfig);
 
+	//
+	// AOH SECS page 2.9-8 says that in the case of an abort, the docking probe is pulled away
+	// from the CM by the LES when it's jettisoned.
+	//
+	if (AbortJettison)
+	{
+		dockingprobe.SetEnabled(false);
+		HasProbe = false;
+	}
+	else
+	{
+		//
+		// Enable docking probe because the tower is gone
+		//
+		dockingprobe.SetEnabled(true);
+	}
+
 	ConfigureStageMeshes(stage);
 
 	if (Crewed)
@@ -1866,9 +1887,4 @@ void Saturn::JettisonLET(bool UseMain)
 	SwindowS.done();
 
 	SetLESMotorLight(true);
-
-	//
-	// Enable docking probe because the tower is gone
-	//
-	dockingprobe.SetEnabled(true);
 }
