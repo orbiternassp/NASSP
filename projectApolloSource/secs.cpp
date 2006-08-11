@@ -22,27 +22,55 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/05/19 13:48:28  tschachim
+  *	Fixed a lot of devices and power consumptions.
+  *	DirectO2 valve added.
+  *	
   *	Revision 1.1  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
   **************************** Revision History ****************************/
 
-#include <stdio.h>
-#include "orbitersdk.h"
+#include "Orbitersdk.h"
+#include "stdio.h"
+#include "math.h"
+#include "OrbiterSoundSDK3.h"
 
-#include "PanelSDK/PanelSDK.h"
-#include "PanelSDK/Internals/Esystems.h"
+#include "soundlib.h"
+#include "nasspsound.h"
+#include "nasspdefs.h"
 
+#include "ioChannels.h"
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "dsky.h"
+
+#include "connector.h"
+#include "csmcomputer.h"
+#include "IMU.h"
+
+#include "saturn.h"
 #include "secs.h"
 
 SECS::SECS()
 
 {
+	State = 0;
+	NextMissionEventTime = MINUS_INFINITY;
+	LastMissionEventTime = MINUS_INFINITY;
+
+	OurVessel = 0;
 }
 
 SECS::~SECS()
 
 {
+}
+
+void SECS::ControlVessel(Saturn *v)
+
+{
+	OurVessel = v;
 }
 
 void SECS::Timestep(double simt, double simdt)
@@ -51,10 +79,49 @@ void SECS::Timestep(double simt, double simdt)
 	//
 	// Nothing to do at this moment.
 	//
+
+	if (!OurVessel)
+		return;
 }
 
 bool SECS::IsPowered()
 
 {
 	return Voltage() > SP_MIN_DCVOLTAGE;
+}
+
+void SECS::SaveState(FILEHANDLE scn)
+
+{
+	oapiWriteLine(scn, SECS_START_STRING);
+
+	oapiWriteScenario_int(scn, "STATE", State);
+	oapiWriteScenario_float(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
+	oapiWriteScenario_float(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
+
+	oapiWriteLine(scn, SECS_END_STRING);
+}
+
+void SECS::LoadState(FILEHANDLE scn)
+
+{
+	char *line;
+	float flt = 0;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, SECS_END_STRING, sizeof(SECS_END_STRING)))
+			return;
+
+		if (!strnicmp (line, "STATE", 5)) {
+			sscanf (line + 5, "%d", &State);
+		}
+		else if (!strnicmp (line, "NEXTMISSIONEVENTTIME", 20)) {
+			sscanf(line + 20, "%f", &flt);
+			NextMissionEventTime = flt;
+		}
+		else if (!strnicmp (line, "LASTMISSIONEVENTTIME", 20)) {
+			sscanf(line + 20, "%f", &flt);
+			LastMissionEventTime = flt;
+		}
+	}
 }

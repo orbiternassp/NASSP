@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.168  2006/08/08 20:23:50  jasonims
+  *	More Optics stuff and changed the Aperture settings for interior views.
+  *	
   *	Revision 1.167  2006/07/31 15:58:31  jasonims
   *	*** empty log message ***
   *	
@@ -589,6 +592,16 @@ void Saturn::initSaturn()
 	imu.SetVessel(this,FALSE);
 	dsky.Init(&GaugePower);
 	dsky2.Init(&GaugePower);
+
+	//
+	// Configure SECS.
+	//
+
+	secs.ControlVessel(this);
+
+	//
+	// Wire up timers.
+	//
 
 	MissionTimerDisplay.WireTo(&GaugePower);
 	EventTimerDisplay.WireTo(&GaugePower);
@@ -1432,6 +1445,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	agc.SaveState(scn);
 	imu.SaveState(scn);
 	cws.SaveState(scn);
+	secs.SaveState(scn);
 
 	//
 	// If we've seperated from the SIVb, the IU is history.
@@ -2224,6 +2238,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, CWS_START_STRING, sizeof(CWS_START_STRING))) {
 		cws.LoadState(scn);
+	}
+	else if (!strnicmp(line, SECS_START_STRING, sizeof(SECS_START_STRING))) {
+		secs.LoadState(scn);
 	}
 	else if (!strnicmp(line, DOCKINGPROBE_START_STRING, sizeof(DOCKINGPROBE_START_STRING))) {
 		dockingprobe.LoadState(scn);
