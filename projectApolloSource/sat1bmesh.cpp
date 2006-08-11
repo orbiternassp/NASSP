@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/08/04 19:01:23  jasonims
+  *	corrected many of the mesh problems experienced when on pad and during launch.
+  *	
   *	Revision 1.45  2006/08/02 04:32:05  jasonims
   *	corrected probe problem
   *	
@@ -358,13 +361,16 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 			meshidx = AddMesh (hFHC, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-			if (dockingprobe.ProbeExtended)
+			if (HasProbe)
 			{
-				probeidx = AddMesh (hprobeext, &mesh_dir);
-			}
-			else 
-			{
-				probeidx = AddMesh (hprobe, &mesh_dir);
+				if (dockingprobe.ProbeExtended)
+				{
+					probeidx = AddMesh (hprobeext, &mesh_dir);
+				}
+				else 
+				{
+					probeidx = AddMesh (hprobe, &mesh_dir);
+				}
 			}
 		}
 
@@ -551,13 +557,16 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 			meshidx = AddMesh (hFHC, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-			if (dockingprobe.ProbeExtended)
+			if (HasProbe)
 			{
-				probeidx = AddMesh (hprobeext, &mesh_dir);
-			}
-			else 
-			{
-				probeidx = AddMesh (hprobe, &mesh_dir);
+				if (dockingprobe.ProbeExtended)
+				{
+					probeidx = AddMesh (hprobeext, &mesh_dir);
+				}
+				else 
+				{
+					probeidx = AddMesh (hprobe, &mesh_dir);
+				}
 			}
 		}
 
@@ -715,13 +724,16 @@ void Saturn1b::SetASTPStage ()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	if (dockingprobe.ProbeExtended)
+	if (HasProbe)
 	{
-		probeidx = AddMesh (hprobeext, &mesh_dir);
-	}
-	else 
-	{
-		probeidx = AddMesh (hprobe, &mesh_dir);
+		if (dockingprobe.ProbeExtended)
+		{
+			probeidx = AddMesh (hprobeext, &mesh_dir);
+		}
+		else 
+		{
+			probeidx = AddMesh (hprobe, &mesh_dir);
+		}
 	}
 
 	mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
