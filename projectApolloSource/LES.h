@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.2  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -73,6 +76,7 @@ typedef struct
 	double MainFuelKg;					///< Amount of fuel in kg available for the main abort engine.
 	double JettisonFuelKg;				///< Amount of fuel in kg available for the jettison engine.
 
+	bool ProbeAttached;					///< The docking probe is attached to the LES (i.e. this is an abort jettison).
 	bool FireMain;						///< Fire the main abort motors rather than jettison motor?
 	bool LowRes;						///< Use low-res mesh if available?
 } LESSettings;
@@ -203,6 +207,11 @@ protected:
 	/// \brief Flag use of low-res meshes if possible, to reduce graphics lag.
 	///
 	bool LowRes;
+
+	///
+	/// \brief Docking probe was detached with the LES in an abort jettison.
+	///
+	bool ProbeAttached;
 
 	///
 	/// Normally the LES is jettisoned using the special jettison motor whose thrust is high enough to

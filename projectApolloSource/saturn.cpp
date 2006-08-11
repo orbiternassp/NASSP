@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.169  2006/08/11 18:44:56  movieman523
+  *	Beginnings of SECS implementation.
+  *	
   *	Revision 1.168  2006/08/08 20:23:50  jasonims
   *	More Optics stuff and changed the Aperture settings for interior views.
   *	
@@ -449,6 +452,7 @@ void Saturn::initSaturn()
 	SMSep = false;
 	bStartS4B = false;
 	IGMEnabled = false;
+	HasProbe = false;
 
 	LowRes = false;
 

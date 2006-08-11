@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.211  2006/08/09 00:46:03  flydba
+  *	Panel 101 added.
+  *	
   *	Revision 1.210  2006/08/08 20:23:50  jasonims
   *	More Optics stuff and changed the Aperture settings for interior views.
   *	
@@ -633,7 +636,7 @@ public:
 	/// \brief Jettison the LET and BPC.
 	/// \param UseMain Specifies whether to use the main abort motor or the jettison motor.
 	///
-	void JettisonLET(bool UseMain = false);
+	void JettisonLET(bool UseMain = false, bool AbortJettison = false);
 
 	///
 	/// This function can be used during the countdown to update the MissionTime. Since we launch when
@@ -3038,7 +3041,7 @@ protected:
 	UINT probeidx;
 	
 	bool ActivateASTP;
-	//bool ProbeExtended;
+	bool HasProbe;
 
 	bool bManualSeparate;
 	bool bManualUnDock;

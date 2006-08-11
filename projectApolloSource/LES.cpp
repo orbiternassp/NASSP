@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.1  2006/06/09 17:43:03  movieman523
   *	Added LES code and build projects.
   *	
@@ -40,6 +43,7 @@
 //
 
 static MESHHANDLE hLES;
+static MESHHANDLE hPROBE;
 
 //
 // Solid rocket exhausts.
@@ -90,6 +94,7 @@ void LESLoadMeshes()
 	//
 
 	hLES = oapiLoadMeshGlobal ("ProjectApollo/BoostCover");
+	hPROBE = oapiLoadMeshGlobal ("ProjectApollo/CM-Probe");
 
 	exhaust_tex = oapiRegisterExhaustTexture ("Exhaust2");
 
@@ -130,6 +135,7 @@ void LES::InitLES()
 
 	FireMain = false;
 	LowRes = false;
+	ProbeAttached = false;
 
 	MissionTime = MINUS_INFINITY;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -181,6 +187,13 @@ void LES::SetLES()
     ClearAttExhaustRefs();
 
 	AddMesh (hLES, &mesh_dir);
+
+	if (ProbeAttached)
+	{
+		mesh_dir = _V(0, 0, -4.95);
+		AddMesh(hPROBE, &mesh_dir);
+	}
+
 	SetEmptyMass (EmptyMass);
 
 	AddEngines();
@@ -256,6 +269,7 @@ typedef union {
 	struct {
 		unsigned int FireMain:1;
 		unsigned int LowRes:1;
+		unsigned int ProbeAttached:1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -268,6 +282,7 @@ int LES::GetMainState()
 	state.word = 0;
 	state.u.FireMain = FireMain;
 	state.u.LowRes = LowRes;
+	state.u.ProbeAttached = ProbeAttached;
 
 	return state.word;
 }
@@ -348,6 +363,7 @@ void LES::SetMainState(int s)
 
 	FireMain = (state.u.FireMain != 0);
 	LowRes = (state.u.LowRes != 0);
+	ProbeAttached = (state.u.ProbeAttached != 0);
 }
 
 void LES::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -458,6 +474,7 @@ void LES::SetState(LESSettings &state)
 		VehicleNo = state.VehicleNo;
 		Realism = state.Realism;
 		LowRes = state.LowRes;
+		ProbeAttached = state.ProbeAttached;
 	}
 
 	if (state.SettingsType.LES_SETTINGS_MASS)
