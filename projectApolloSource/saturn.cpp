@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.170  2006/08/11 19:34:47  movieman523
+  *	Added code to take the docking probe with the LES on a post-abort jettison.
+  *	
   *	Revision 1.169  2006/08/11 18:44:56  movieman523
   *	Beginnings of SECS implementation.
   *	
@@ -1589,6 +1592,7 @@ typedef union {
 	struct {
 		unsigned InterstageAttached:1;
 		unsigned LESAttached:1;
+		unsigned HasProbe:1;
 	} u;
 	unsigned long word;
 } AttachState;
@@ -1606,6 +1610,7 @@ int Saturn::GetAttachState()
 	state.word = 0x7fffffff;
 	state.u.InterstageAttached = InterstageAttached;
 	state.u.LESAttached = LESAttached;
+	state.u.HasProbe = HasProbe;
 
 	return state.word;
 }
@@ -1618,6 +1623,7 @@ void Saturn::SetAttachState(int s)
 	state.word = s;
 	LESAttached = (state.u.LESAttached != 0);
 	InterstageAttached = (state.u.InterstageAttached != 0);
+	HasProbe = (state.u.HasProbe != 0);
 }
 
 //
@@ -2126,6 +2132,15 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		int i;
 		sscanf(line + 8, "%d", &i);
 		AutoSlow = (i != 0);
+	}
+	else if (!strnicmp(line, "HASPROBE", 8)) {
+		//
+		// HASPROBE isn't saved in the scenario, this is solely to allow you
+		// to override the default probe state in startup scenarios.
+		//
+		int i;
+		sscanf(line + 8, "%d", &i);
+		HasProbe = (i != 0);
 	}
 	else if (!strnicmp(line, "S4PL", 4)) {
 		sscanf(line + 4, "%d", &SIVBPayload);

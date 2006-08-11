@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2006/08/02 04:32:05  jasonims
+  *	corrected probe problem
+  *	
   *	Revision 1.67  2006/07/07 19:44:58  movieman523
   *	First version of connector support.
   *	
@@ -994,13 +997,16 @@ void SaturnV::SetThirdStageMesh (double offset)
 	}
 	else
 	{
-		if (dockingprobe.ProbeExtended)
+		if (HasProbe)
 		{
-			probeidx = AddMesh (hprobeext, &mesh_dir);
-		}
-		else 
-		{
-			probeidx = AddMesh (hprobe, &mesh_dir);
+			if (dockingprobe.ProbeExtended)
+			{
+				probeidx = AddMesh (hprobeext, &mesh_dir);
+			}
+			else 
+			{
+				probeidx = AddMesh (hprobe, &mesh_dir);
+			}
 		}
 	}
 
@@ -1457,7 +1463,7 @@ void SaturnV::SeparateStage (int new_stage)
 		SMJetS.done();
 		SSMSepExploded.done();
 
-		if(dockstate != 5)
+		if(HasProbe)
 		{
 			VECTOR3 ofs = OFS_DOCKING2;
 			VECTOR3 vel = {0.0,0.0,2.5};
@@ -1469,6 +1475,8 @@ void SaturnV::SeparateStage (int new_stage)
 			vs4b.vrot.z = 0.0;
 			GetApolloName(VName); strcat (VName, "-DCKPRB");
 			hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
+
+			HasProbe = false;
 		}
 
 		GetApolloName(VName); strcat (VName, "-SM");

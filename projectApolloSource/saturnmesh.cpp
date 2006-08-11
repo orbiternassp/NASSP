@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2006/08/11 19:34:47  movieman523
+  *	Added code to take the docking probe with the LES on a post-abort jettison.
+  *	
   *	Revision 1.52  2006/06/27 18:22:55  movieman523
   *	Added 'drogues' sound.
   *	
@@ -400,10 +403,14 @@ void Saturn::ToggelHatch()
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	if (dockstate <=4 ){
-		if (dockingprobe.ProbeExtended){
+	if (HasProbe) 
+	{
+		if (dockingprobe.ProbeExtended)
+		{
 			probeidx = AddMesh (hprobeext, &mesh_dir);
-		}else {
+		}
+		else
+		{
 			probeidx = AddMesh (hprobe, &mesh_dir);
 		}
 	}
@@ -508,15 +515,20 @@ void Saturn::ToggleEVA()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		HatchOpen = true;
-		if (dockstate <=4 ){
-			if (dockingprobe.ProbeExtended){
+		if (HasProbe)
+		{
+			if (dockingprobe.ProbeExtended)
+			{
 				probeidx = AddMesh (hprobeext, &mesh_dir);
-			}else {
+			}
+			else
+			{
 				probeidx = AddMesh (hprobe, &mesh_dir);
 			}
 		}
 	}
-	else {
+	else 
+	{
 		EVA_IP = true;
 
 		ClearMeshes();
@@ -548,10 +560,14 @@ void Saturn::ToggleEVA()
 
 		HatchOpen= true;
 
-		if (dockstate <=4 ){
-			if (dockingprobe.ProbeExtended){
+		if (HasProbe)
+		{
+			if (dockingprobe.ProbeExtended)
+			{
 				probeidx = AddMesh (hprobeext, &mesh_dir);
-			}else {
+			}
+			else
+			{
 				probeidx = AddMesh (hprobe, &mesh_dir);
 			}
 		}
@@ -616,10 +632,14 @@ void Saturn::SetupEVA()
 
 		HatchOpen = true;
 
-		if (dockstate <=4 ){
-			if (dockingprobe.ProbeExtended){
+		if (HasProbe)
+		{
+			if (dockingprobe.ProbeExtended)
+			{
 				probeidx = AddMesh (hprobeext, &mesh_dir);
-			}else {
+			}
+			else
+			{
 				probeidx = AddMesh (hprobe, &mesh_dir);
 			}
 		}
@@ -800,10 +820,16 @@ void Saturn::SetCSMStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	VCMeshOffset = mesh_dir;
 
-	if (dockingprobe.ProbeExtended){
-		probeidx = AddMesh (hprobeext, &mesh_dir);
-	}else {
-		probeidx = AddMesh (hprobe, &mesh_dir);
+	if (HasProbe)
+	{
+		if (dockingprobe.ProbeExtended)
+		{
+			probeidx = AddMesh (hprobeext, &mesh_dir);
+		}
+		else
+		{
+			probeidx = AddMesh (hprobe, &mesh_dir);
+		}
 	}
 
 	VECTOR3 dockpos = {0,0,35.90-CGOffset};
