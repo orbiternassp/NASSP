@@ -2,7 +2,7 @@
   This file is part of Project Apollo - NASSP
   Copyright 2004-2005
 
-
+  EVA.h - astronaut code
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,15 +22,6 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.3  2006/08/12 14:14:18  movieman523
-  *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
-  *	
-  *	Revision 1.2  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.1  2005/02/11 12:17:55  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 ///
