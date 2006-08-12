@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/08/12 14:14:18  movieman523
+  *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
+  *	
   *	Revision 1.9  2006/05/08 04:24:16  jasonims
   *	More LRV updates...
   *	
@@ -56,37 +59,80 @@
   *	
   **************************************************************************/
 
+///
+/// \ingroup AstronautSettings
+/// \brief LEVA settings.
+///
 typedef struct {
 
-	int MissionNo;
-	int Realism;
+	int MissionNo;			///< Apollo mission number.
+	int Realism;			///< Realism level.
 
-} EVASettings;
+} LEVASettings;
 
+///
+/// \ingroup Astronauts
+/// \brief Lunar EVA astronaut.
+///
 class LEVA: public VESSEL2 {
 
 public:
+	///
+	/// \brief Standard constructor with the usual Orbiter parameters.
+	///
 	LEVA(OBJHANDLE hObj, int fmodel);
 	virtual ~LEVA();
 
+	///
+	/// \brief Orbiter timestep function.
+	/// \param SimT Current simulation time, in seconds since Orbiter was started.
+	/// \param SimDT Time in seconds since last timestep.
+	/// \param mjd Current MJD.
+	///
 	void clbkPreStep (double SimT, double SimDT, double mjd);
+
+	///
+	/// \brief Orbiter keyboard input function.
+	/// \param kstate Key state.
+	///
 	int clbkConsumeDirectKey(char *kstate);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+
+	///
+	/// \brief Orbiter class configuration function.
+	/// \param cfg File to load configuration defaults from.
+	///
 	void clbkSetClassCaps (FILEHANDLE cfg);
 	void clbkVisualCreated (VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
 
 	void SetAstroStage ();
+
+	///
+	/// \brief Initialise state.
+	///
 	void init();
+
+	///
+	/// \brief State loading function.
+	/// \param scn Scenario file to load from.
+	/// \param vs Pointer to current vessel status.
+	///
 	void LoadState(FILEHANDLE scn, VESSELSTATUS *vs);
+
+	///
+	/// \brief State saving function.
+	/// \param scn Scenario file to save to.
+	///
 	void SaveState(FILEHANDLE scn);
 
+	///
+	/// Set up the astronaut state. Virtual so it can be called from the LEM without needing to link in all the code
+	/// to process the function.
+	/// \brief EVA state initialisation.
+	/// \param evas EVA state structure.
 	//
-	// Virtual so it can be called from the LEM without needing to link in all the code
-	// to process the function.
-	//
-
-	virtual void SetEVAStats(EVASettings &evas);
+	virtual void SetEVAStats(LEVASettings &evas);
 
 private:
 
@@ -136,7 +182,7 @@ protected:
 	double lastLat;
 	double lastLong;
 
-	double speed;  // current speed in m/s for both astronaut and rover
+	double speed;		///< current speed in m/s
 
 	SoundLib soundlib;
 	Sound FlagSound;

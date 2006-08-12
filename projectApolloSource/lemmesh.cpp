@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2006/08/12 14:14:18  movieman523
+  *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
+  *	
   *	Revision 1.25  2006/07/26 19:05:20  tschachim
   *	RCS enabled by default until state is saved properly.
   *	
@@ -163,7 +166,7 @@ void sat5_lmpkd::ToggleEVA()
 
 		LEVA *leva = (LEVA *) oapiGetVesselInterface(hLEVA);
 		if (leva) {
-			EVASettings evas;
+			LEVASettings evas;
 
 			evas.MissionNo = agc.GetApolloNo();
 			evas.Realism = Realism;

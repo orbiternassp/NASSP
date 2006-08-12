@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/08/12 14:14:18  movieman523
+  *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
+  *	
   *	Revision 1.2  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -29,6 +32,17 @@
   *	Initial version
   *	
   **************************************************************************/
+
+///
+/// \ingroup AstronautSettings
+/// \brief EVA settings.
+///
+typedef struct {
+
+	int MissionNo;			///< Apollo mission number.
+	int Realism;			///< Realism level.
+
+} EVASettings;
 
 ///
 /// \ingroup Astronauts
