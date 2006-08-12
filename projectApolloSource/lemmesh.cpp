@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2006/07/26 19:05:20  tschachim
+  *	RCS enabled by default until state is saved properly.
+  *	
   *	Revision 1.24  2006/04/22 03:53:48  jasonims
   *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
   *	
@@ -158,7 +161,7 @@ void sat5_lmpkd::ToggleEVA()
 		
 		SwitchFocusToLeva = 10;
 
-		Saturn5_LEVA *leva = (Saturn5_LEVA *) oapiGetVesselInterface(hLEVA);
+		LEVA *leva = (LEVA *) oapiGetVesselInterface(hLEVA);
 		if (leva) {
 			EVASettings evas;
 

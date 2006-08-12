@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/05/08 04:24:16  jasonims
+  *	More LRV updates...
+  *	
   *	Revision 1.8  2006/05/06 06:00:35  jasonims
   *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
   *	
@@ -60,11 +63,11 @@ typedef struct {
 
 } EVASettings;
 
-class Saturn5_LEVA: public VESSEL2 {
+class LEVA: public VESSEL2 {
 
 public:
-	Saturn5_LEVA(OBJHANDLE hObj, int fmodel);
-	virtual ~Saturn5_LEVA();
+	LEVA(OBJHANDLE hObj, int fmodel);
+	virtual ~LEVA();
 
 	void clbkPreStep (double SimT, double SimDT, double mjd);
 	int clbkConsumeDirectKey(char *kstate);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.4  2005/11/21 23:08:15  movieman523
   *	Moved more mesh files into the ProjectApollo directory.
   *	
@@ -56,13 +59,13 @@ static OBJHANDLE hMaster;
 static int refcount = 0;
 static MESHHANDLE hCMPEVA;
 
-Saturn5_EVA::Saturn5_EVA(OBJHANDLE hObj, int fmodel)
+EVA::EVA(OBJHANDLE hObj, int fmodel)
 : VESSEL2 (hObj, fmodel)
 {
 	init();
 }
 
-void Saturn5_EVA::init ()
+void EVA::init ()
 {
 	GoDock1 = false;
 	SetSize (3.5);
@@ -84,7 +87,7 @@ void Saturn5_EVA::init ()
     AddMesh (hCMPEVA, &mesh_dir);
 }
 
-Saturn5_EVA::~Saturn5_EVA()
+EVA::~EVA()
 
 {
 	// Nothing for now.
@@ -94,14 +97,14 @@ Saturn5_EVA::~Saturn5_EVA()
 // ==============================================================
 // API interface
 // ==============================================================
-void Saturn5_EVA::clbkSaveState (FILEHANDLE scn)
+void EVA::clbkSaveState (FILEHANDLE scn)
 
 {
 	SaveDefaultState (scn);
 	oapiWriteScenario_int (scn, "GODOCK", GoDock1 ? 1 : 0);
 }
 
-void Saturn5_EVA::clbkLoadStateEx(FILEHANDLE scn, void *status)
+void EVA::clbkLoadStateEx(FILEHANDLE scn, void *status)
 
 {
     char *line;
@@ -121,7 +124,7 @@ void Saturn5_EVA::clbkLoadStateEx(FILEHANDLE scn, void *status)
     }
 }
 
-int Saturn5_EVA::clbkConsumeDirectKey(char *keystate)
+int EVA::clbkConsumeDirectKey(char *keystate)
 
 {
 	if (KEYMOD_SHIFT (keystate))
@@ -147,7 +150,7 @@ int Saturn5_EVA::clbkConsumeDirectKey(char *keystate)
 	return 0;
 }
 
-void Saturn5_EVA::clbkPreStep (double simt, double SimDT, double mjd)
+void EVA::clbkPreStep (double simt, double SimDT, double mjd)
 
 {
 	char EVAName[256]="";
@@ -217,10 +220,10 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	{
 		hCMPEVA = oapiLoadMeshGlobal ("ProjectApollo/saturn1_CMP_EVA");
 	}
-	return new Saturn5_EVA (hvessel, flightmodel);
+	return new EVA (hvessel, flightmodel);
 }
 
-void Saturn5_EVA::clbkSetClassCaps (FILEHANDLE cfg)
+void EVA::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	init();
 }
