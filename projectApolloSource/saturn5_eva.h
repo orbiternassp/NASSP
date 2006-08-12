@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -31,14 +34,14 @@
 /// \ingroup Astronauts
 /// \brief Orbital EVA astronaut.
 ///
-class Saturn5_EVA: public VESSEL2
+class EVA: public VESSEL2
 {
 public:
 	///
 	/// \brief Standard constructor with the usual Orbiter parameters.
 	///
-	Saturn5_EVA (OBJHANDLE hObj, int fmodel);
-	virtual ~Saturn5_EVA();
+	EVA (OBJHANDLE hObj, int fmodel);
+	virtual ~EVA();
 
 	///
 	/// \brief Initialise state.

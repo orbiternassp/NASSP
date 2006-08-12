@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.213  2006/08/11 21:16:22  movieman523
+  *	Dummy ELS implementation.
+  *	
   *	Revision 1.212  2006/08/11 19:34:47  movieman523
   *	Added code to take the docking probe with the LES on a post-abort jettison.
   *	
@@ -638,6 +641,7 @@ public:
 	/// and will handle any tidying up required. If called with no LET attached, it will just return.
 	/// \brief Jettison the LET and BPC.
 	/// \param UseMain Specifies whether to use the main abort motor or the jettison motor.
+	/// \param AbortJettison If we're jettisoning during an abort, the BPC will take the docking probe with it.
 	///
 	void JettisonLET(bool UseMain = false, bool AbortJettison = false);
 
@@ -1234,6 +1238,18 @@ protected:
 	/// \brief LES flag.
 	///
 	bool LESAttached;
+
+	///
+	/// True if the docking probe is attached.
+	/// \brief Docking probe flag.
+	///
+	bool HasProbe;
+
+	///
+	/// True if the apex cover is attached.
+	/// \brief Apex cover flag.
+	///
+	bool ApexCoverAttached;
 
 	//
 	// Checklists.
@@ -3044,7 +3060,6 @@ protected:
 	UINT probeidx;
 	
 	bool ActivateASTP;
-	bool HasProbe;
 
 	bool bManualSeparate;
 	bool bManualUnDock;

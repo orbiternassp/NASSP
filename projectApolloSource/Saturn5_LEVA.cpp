@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/05/08 04:24:16  jasonims
+  *	More LRV updates...
+  *	
   *	Revision 1.14  2006/05/06 06:00:35  jasonims
   *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
   *	
@@ -134,20 +137,20 @@ static MESHHANDLE hLRVConsole;
 
 
 
-Saturn5_LEVA::Saturn5_LEVA(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
+LEVA::LEVA(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
 	hMaster = hObj;
 	init();
 }
 
-Saturn5_LEVA::~Saturn5_LEVA()
+LEVA::~LEVA()
 
 {
 	// Nothing for now.
 }
 
-void Saturn5_LEVA::init()
+void LEVA::init()
 
 {
 	LRVDeployed=false;
@@ -191,14 +194,14 @@ void Saturn5_LEVA::init()
 	// touchdownPointHeight = -0.8;
 }
 
-void Saturn5_LEVA::clbkSetClassCaps (FILEHANDLE cfg)
+void LEVA::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	init();
 	VSRegVessel(GetHandle());
 	SetAstroStage();
 }
 		 
-void Saturn5_LEVA::SetAstroStage ()
+void LEVA::SetAstroStage ()
 {
 	SetEmptyMass(115);
 	SetSize(2);
@@ -224,7 +227,7 @@ void Saturn5_LEVA::SetAstroStage ()
 	Astro = true;
 }
 
-void Saturn5_LEVA::ToggleLRV()
+void LEVA::ToggleLRV()
 
 {
 	if (LRVDeployed) {
@@ -259,7 +262,7 @@ void Saturn5_LEVA::ToggleLRV()
 	}
 }
 
-void Saturn5_LEVA::ScanMotherShip()
+void LEVA::ScanMotherShip()
 
 {
 	double VessCount;
@@ -283,7 +286,7 @@ void Saturn5_LEVA::ScanMotherShip()
 	}
 }
 
-void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
+void LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 {
 	TRACESETUP("MoveEVA");
 
@@ -383,7 +386,7 @@ void Saturn5_LEVA::MoveEVA(double SimDT, VESSELSTATUS *eva, double heading)
 // API interface
 // ==============================================================
 
-int Saturn5_LEVA::clbkConsumeDirectKey(char *kstate) {
+int LEVA::clbkConsumeDirectKey(char *kstate) {
 
 	TRACESETUP("clbkConsumeDirectKey");
 
@@ -471,7 +474,7 @@ int Saturn5_LEVA::clbkConsumeDirectKey(char *kstate) {
 	return 0;
 }
 
-int Saturn5_LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
+int LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	TRACESETUP("clbkConsumeBufferedKey");
 
@@ -508,7 +511,7 @@ int Saturn5_LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return 0;
 }
 
-void Saturn5_LEVA::SetFlag()
+void LEVA::SetFlag()
 
 {
 	VESSELSTATUS vs1;
@@ -564,7 +567,7 @@ void Saturn5_LEVA::SetFlag()
 	FlagSound.done();
 }
 
-void Saturn5_LEVA::SetMissionPath()
+void LEVA::SetMissionPath()
 
 {
 	char MissionName[24];
@@ -573,7 +576,7 @@ void Saturn5_LEVA::SetMissionPath()
 	soundlib.SetSoundLibMissionPath(MissionName);
 }
 
-void Saturn5_LEVA::SetEVAStats(EVASettings &evas)
+void LEVA::SetEVAStats(EVASettings &evas)
 
 {
 	ApolloNo = evas.MissionNo;
@@ -581,7 +584,7 @@ void Saturn5_LEVA::SetEVAStats(EVASettings &evas)
 	StateSet = true;
 }
 
-void Saturn5_LEVA::DoFirstTimestep()
+void LEVA::DoFirstTimestep()
 
 {
 	//
@@ -616,7 +619,7 @@ void Saturn5_LEVA::DoFirstTimestep()
 	}
 }
 
-void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
+void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 
 {
 	VESSELSTATUS csmV;
@@ -700,12 +703,12 @@ void Saturn5_LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 DLLCLBK void ovcLoadState (VESSEL *vessel, FILEHANDLE scn, VESSELSTATUS *vs)
 
 {
-	Saturn5_LEVA *sv = (Saturn5_LEVA *)vessel;
+	LEVA *sv = (LEVA *)vessel;
 
 	sv->LoadState(scn, vs);
 }
 
-void Saturn5_LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
+void LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
 
 {
     char *line;
@@ -736,18 +739,18 @@ void Saturn5_LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
 
 	
 	
-void Saturn5_LEVA::clbkVisualCreated (VISHANDLE vis, int refcount)
+void LEVA::clbkVisualCreated (VISHANDLE vis, int refcount)
 {
 }
 
-void Saturn5_LEVA::clbkVisualDestroyed (VISHANDLE vis, int refcount)
+void LEVA::clbkVisualDestroyed (VISHANDLE vis, int refcount)
 {
 }
 
 
 DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
 {
-	Saturn5_LEVA *sv = (Saturn5_LEVA *)vessel;
+	LEVA *sv = (LEVA *)vessel;
 	sv->SaveState(scn);
 }
 
@@ -761,7 +764,7 @@ typedef union {
 	unsigned int word;
 } MainLEVAState;
 
-int Saturn5_LEVA::GetMainState()
+int LEVA::GetMainState()
 
 {
 	MainLEVAState s;
@@ -775,7 +778,7 @@ int Saturn5_LEVA::GetMainState()
 	return s.word;
 }
 
-void Saturn5_LEVA::SetMainState(int n)
+void LEVA::SetMainState(int n)
 
 {
 	MainLEVAState s;
@@ -787,7 +790,7 @@ void Saturn5_LEVA::SetMainState(int n)
 	Astro = (s.u.Astro != 0);
 }
 
-void Saturn5_LEVA::SaveState(FILEHANDLE scn)
+void LEVA::SaveState(FILEHANDLE scn)
 
 {
 	SaveDefaultState (scn);
@@ -811,12 +814,12 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
 	}
 
-	return new Saturn5_LEVA (hvessel, flightmodel);
+	return new LEVA (hvessel, flightmodel);
 }
 
 DLLCLBK void ovcExit (VESSEL *vessel)
 {
-	Saturn5_LEVA *sv = (Saturn5_LEVA *) vessel;
+	LEVA *sv = (LEVA *) vessel;
 
 	if (sv)
 		delete sv;

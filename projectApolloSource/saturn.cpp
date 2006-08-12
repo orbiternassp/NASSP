@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.172  2006/08/11 21:16:22  movieman523
+  *	Dummy ELS implementation.
+  *	
   *	Revision 1.171  2006/08/11 20:37:46  movieman523
   *	Added HasProbe flag for docking probe.
   *	
@@ -385,6 +388,7 @@ void Saturn::initSaturn()
 
 	InterstageAttached = true;
 	LESAttached = true;
+	ApexCoverAttached = true;
 
 	TLICapableBooster = false;
 
@@ -1598,6 +1602,7 @@ typedef union {
 		unsigned InterstageAttached:1;
 		unsigned LESAttached:1;
 		unsigned HasProbe:1;
+		unsigned ApexCoverAttached:1;
 	} u;
 	unsigned long word;
 } AttachState;
@@ -1616,6 +1621,7 @@ int Saturn::GetAttachState()
 	state.u.InterstageAttached = InterstageAttached;
 	state.u.LESAttached = LESAttached;
 	state.u.HasProbe = HasProbe;
+	state.u.ApexCoverAttached = ApexCoverAttached;
 
 	return state.word;
 }
@@ -1629,6 +1635,7 @@ void Saturn::SetAttachState(int s)
 	LESAttached = (state.u.LESAttached != 0);
 	InterstageAttached = (state.u.InterstageAttached != 0);
 	HasProbe = (state.u.HasProbe != 0);
+	ApexCoverAttached = (state.u.ApexCoverAttached != 0);
 }
 
 //
