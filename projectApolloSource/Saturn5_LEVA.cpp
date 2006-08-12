@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/08/12 14:14:18  movieman523
+  *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
+  *	
   *	Revision 1.15  2006/05/08 04:24:16  jasonims
   *	More LRV updates...
   *	
@@ -576,7 +579,7 @@ void LEVA::SetMissionPath()
 	soundlib.SetSoundLibMissionPath(MissionName);
 }
 
-void LEVA::SetEVAStats(EVASettings &evas)
+void LEVA::SetEVAStats(LEVASettings &evas)
 
 {
 	ApolloNo = evas.MissionNo;
