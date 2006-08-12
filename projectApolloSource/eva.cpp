@@ -2,7 +2,7 @@
   This file is part of Project Apollo - NASSP
   Copyright 2004-2005
 
-  ORBITER vessel module: Saturn5_EVA
+  ORBITER vessel module: EVA
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,23 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.5  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.4  2005/11/21 23:08:15  movieman523
-  *	Moved more mesh files into the ProjectApollo directory.
-  *	
-  *	Revision 1.3  2005/10/19 11:31:10  tschachim
-  *	Changed log file name.
-  *	
-  *	Revision 1.2  2005/02/11 12:48:51  tschachim
-  *	header inserted
-  *	
   **************************************************************************/
 
 #include "orbitersdk.h"
 #include "stdio.h"
-#include "saturn5_eva.h"
+#include "eva.h"
 #include "tracer.h"
 #include "math.h"
 

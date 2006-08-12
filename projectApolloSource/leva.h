@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/08/12 14:47:57  movieman523
+  *	Basic dox for LEVA.
+  *	
   *	Revision 1.10  2006/08/12 14:14:18  movieman523
   *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
   *	

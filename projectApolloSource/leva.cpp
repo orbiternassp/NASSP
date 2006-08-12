@@ -2,7 +2,7 @@
   This file is part of Project Apollo - NASSP
   Copyright 2004-2005
 
-  ORBITER vessel module: Saturn5_LEVA
+  ORBITER vessel module: LEVA
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,59 +22,6 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.16  2006/08/12 14:14:18  movieman523
-  *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
-  *	
-  *	Revision 1.15  2006/05/08 04:24:16  jasonims
-  *	More LRV updates...
-  *	
-  *	Revision 1.14  2006/05/06 06:00:35  jasonims
-  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
-  *	
-  *	Revision 1.13  2006/05/05 14:17:26  jasonims
-  *	*** empty log message ***
-  *	
-  *	Revision 1.12  2006/04/22 04:15:41  jasonims
-  *	Turning now relative to speed...
-  *	
-  *	Revision 1.11  2006/04/22 03:53:48  jasonims
-  *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
-  *	
-  *	Revision 1.10  2006/04/20 22:04:32  redburne
-  *	New movement handling for LRV;
-  *	LRV console now in separate mesh;
-  *	Speed dial added.
-  *	
-  *	Revision 1.9  2006/04/17 14:23:23  redburne
-  *	First working version of new 3d LRV console
-  *	
-  *	Revision 1.8  2006/01/22 18:08:38  redburne
-  *	- timestep processing moved to VESSEL2 method clbkPreStep()
-  *	- semi-realistic movement and turn speed values (as #defines)
-  *	- turn speed now affected by time acceleration (but only tripled when acc is multiplied by 10)
-  *	- LRV mesh visible from cockpit view (camera at driver head)
-  *	
-  *	Revision 1.7  2006/01/19 14:58:33  tschachim
-  *	Initial Meshland support.
-  *	
-  *	Revision 1.6  2005/12/28 19:11:32  movieman523
-  *	Changed some mesh paths.
-  *	
-  *	Revision 1.5  2005/12/28 16:19:10  movieman523
-  *	Should now be getting all config files from ProjectApollo directory.
-  *	
-  *	Revision 1.4  2005/11/23 00:29:38  movieman523
-  *	Added S1C DLL and revised LEVA code to look for NEP-specific flag if it exists.
-  *	
-  *	Revision 1.3  2005/10/19 11:31:10  tschachim
-  *	Changed log file name.
-  *	
-  *	Revision 1.2  2005/02/24 00:30:36  movieman523
-  *	Major revision for Orbitersound 3.0 and new Orbiter. Added new 'flag planting' sound support.
-  *	
-  *	Revision 1.1  2005/02/11 12:54:06  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #define ORBITER_MODULE
@@ -96,7 +43,7 @@
 #include "IMU.h"
 #include "sat5_lmpkd.h"
 
-#include "saturn5_leva.h"
+#include "leva.h"
 #include "LRV.h"
 #include "lrv_console.h"
 #include "tracer.h"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2006/08/12 14:47:57  movieman523
+  *	Basic dox for LEVA.
+  *	
   *	Revision 1.26  2006/08/12 14:14:18  movieman523
   *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
   *	
@@ -122,7 +125,7 @@
 
 #include "landervessel.h"
 #include "sat5_lmpkd.h"
-#include "saturn5_leva.h"
+#include "leva.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
