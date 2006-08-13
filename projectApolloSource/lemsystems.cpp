@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/08/13 06:30:49  dseagrav
+  *	LM checkpoint commit.
+  *	
   *	Revision 1.14  2006/07/24 06:41:29  dseagrav
   *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
   *	
@@ -79,6 +82,7 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
+#include "lm_channels.h"
 #include "dsky.h"
 #include "IMU.h"
 
@@ -1145,9 +1149,13 @@ void sat5_lmpkd::SystemsInit()
 void sat5_lmpkd::SystemsTimestep(double simt, double simdt) 
 
 {
+	// Zero ACA and TTCA bits in channel 31
+	LMChannelValue31 val31;
+	val31.Value = agc.GetInputChannel(031);
+	val31.Value &= 030000; // Leaves AttitudeHold and AutomaticStab alone
+
 	// Joystick read
-	if(js_enabled > 0 && oapiGetFocusInterface() == this){
-	// CHECK FOR POWER HERE
+	if(js_enabled > 0 && oapiGetFocusInterface() == this){		
 		if(thc_id != -1 && !(thc_id < js_enabled)){
 			sprintf(oapiDebugString(),"DX8JS: Joystick selected as THC does not exist.");
 		}
@@ -1171,11 +1179,12 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 		rhc_pos[0] = 0; // Initialize
 		rhc_pos[1] = 0;
 		rhc_pos[2] = 0;
-		bool out_of_detent = FALSE;
 
 		// Read data
 		HRESULT hr;
+		// Handle RHC
 		if(rhc_id != -1 && dx8_joystick[rhc_id] != NULL){
+			// CHECK FOR POWER HERE
 			hr=dx8_joystick[rhc_id]->Poll();
 			if(FAILED(hr)){ // Did that work?
 				// Attempt to acquire the device
@@ -1206,41 +1215,106 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 			}	
 			if(dx8_jstate[rhc_id].lX > 34028){ // Out of detent RIGHT
-				out_of_detent = TRUE;
+				val31.Bits.ACAOutOfDetent = 1;
+				val31.Bits.PlusAzimuth = 1;
 				rhc_pos[0] = dx8_jstate[rhc_id].lX-34028; // Results are 0 - 31507
 			}
 			if(dx8_jstate[rhc_id].lX < 31508){ // Out of detent LEFT
-				out_of_detent = TRUE;
+				val31.Bits.ACAOutOfDetent = 1;
+				val31.Bits.MinusAzimuth = 1;
 				rhc_pos[0] = dx8_jstate[rhc_id].lX-31508; // Results are 0 - -31508
 			}
 			if(dx8_jstate[rhc_id].lY > 34028){ // Out of detent UP
-				out_of_detent = TRUE;
+				val31.Bits.ACAOutOfDetent = 1;
+				val31.Bits.PlusElevation = 1;
 				rhc_pos[1] = dx8_jstate[rhc_id].lY-34028; // Results are 0 - 31507
 			}
 			if(dx8_jstate[rhc_id].lY < 31508){ // Out of detent DOWN
-				out_of_detent = TRUE;
+				val31.Bits.ACAOutOfDetent = 1;
+				val31.Bits.MinusElevation = 1;
 				rhc_pos[1] = dx8_jstate[rhc_id].lY-31508; // Results are 0 - -31508
 			}
 			// YAW IS REVERSED
 			if(rhc_rot_pos > 34028){ // Out of detent RIGHT
-				out_of_detent = TRUE;
+				val31.Bits.ACAOutOfDetent = 1;
+				val31.Bits.PlusYaw = 1;
 				rhc_pos[2] = 34028-rhc_rot_pos; // Results are 0 - 31507
 			}
 			if(rhc_rot_pos < 31508){ // Out of detent LEFT
-				out_of_detent = TRUE;
+				val31.Bits.ACAOutOfDetent = 1;
+				val31.Bits.MinusYaw = 1;
 				rhc_pos[2] = 31508-rhc_rot_pos; // Results are 0 - -31508
 			}
 		}else{
 			// No JS
 		}
-		if(out_of_detent == TRUE){
-			agc.SetInputChannelBit(031,15,1); // ACA OUT OF DETENT
-		}else{
-			agc.SetInputChannelBit(031,15,0); 
-		}
 		// sprintf(oapiDebugString(),"RHC: POS %d = %d",rhc_rot_pos,rhc_pos[2]);
-
+		// And now the THC...
+		if(thc_id != -1 && thc_id < js_enabled){
+			// CHECK FOR POWER HERE
+			int thc_voltage = 5; // HAX
+			hr=dx8_joystick[thc_id]->Poll();
+			if(FAILED(hr)){ // Did that work?
+				// Attempt to acquire the device
+				hr = dx8_joystick[thc_id]->Acquire();
+				if(FAILED(hr)){
+					sprintf(oapiDebugString(),"DX8JS: Cannot aquire THC");
+				}else{
+					hr=dx8_joystick[thc_id]->Poll();
+				}
+			}		
+			// Read data
+			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]),&dx8_jstate[thc_id]);
+			// The LM TTCA is even wierder than the CM THC...			
+			if(thc_voltage > 0){
+				if(dx8_jstate[thc_id].lX < 16384){												
+					val31.Bits.MinusY = 1;
+				}
+				if(dx8_jstate[thc_id].lY < 16384){
+					// JETS MODE
+					val31.Bits.PlusX = 1;
+				}
+				if(dx8_jstate[thc_id].lX > 49152){
+					val31.Bits.PlusY = 1;
+				}
+				if(dx8_jstate[thc_id].lY > 49152){
+					// JETS MODE
+					val31.Bits.MinusX = 1;
+				}
+				// Z-axis read.
+				int thc_rot_pos = 32768; // Initialize to centered
+				if(thc_rot_id != -1){ // If this is a rotator-type axis
+					switch(thc_rot_id){
+						case 0:
+							thc_rot_pos = dx8_jstate[thc_id].lRx; break;
+						case 1:
+							thc_rot_pos = dx8_jstate[thc_id].lRy; break;
+						case 2:
+							thc_rot_pos = dx8_jstate[thc_id].lRz; break;
+					}
+				}
+				if(thc_sld_id != -1){ // If this is a slider
+					thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
+				}
+				if(thc_rzx_id != -1){ // If we use the native Z-axis
+					thc_rot_pos = dx8_jstate[thc_id].lZ;
+				}
+				if(thc_rot_pos < 16384){
+					val31.Bits.MinusZ = 1;
+				}
+				if(thc_rot_pos > 49152){
+					val31.Bits.PlusZ = 1;
+				}
+				if(thc_debug != -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
+					thc_rot_pos); }
+			}else{
+				// No JS
+			}
+		}
 	}
+	// Write back channel data
+	agc.SetInputChannel(031,val31.Value);
+
 	// Each timestep is passed to the SPSDK
 	// to perform internal computations on the 
 	// systems.
