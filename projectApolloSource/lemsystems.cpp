@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/07/24 06:41:29  dseagrav
+  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
+  *	
   *	Revision 1.13  2006/06/18 22:45:31  dseagrav
   *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
   *	
@@ -1135,6 +1138,8 @@ void sat5_lmpkd::SystemsInit()
 			dx8_failure = hr;
 		}
 	}
+	// Initialize other systems
+	atca.Init(this);
 }
 
 void sat5_lmpkd::SystemsTimestep(double simt, double simdt) 
@@ -1248,10 +1253,14 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 	//dsky.SystemTimestep(simdt);						    // DSKY power draw is broken.
 	imu.Timestep(MissionTime);								// Do work
 	imu.SystemTimestep(simdt);								// Draw power
+	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
+	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
+	atca.Timestep(simdt);								// Do systems work
 	fdaiLeft.Timestep(MissionTime, simdt);					// Do Work
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power
 	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
 	EventTimerDisplay.Timestep(MissionTime, simdt);
+
 
 	// Debug tests would go here
 	/*
@@ -1261,7 +1270,7 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 	if(CDRVolts > 0){ CDRAmps = CDRs28VBus.PowerLoad()/CDRVolts; }	
 	sprintf(oapiDebugString(),"LM: LMP %f V/%f A CDR %f V/%f A | AC-A %f V AC-B %f V",LMPVolts,LMPAmps,
 		CDRVolts,CDRAmps,ACBusA.Voltage(), ACBusB.Voltage());
-		*/
+	*/	
 }
 
 // PANEL SDK SUPPORT

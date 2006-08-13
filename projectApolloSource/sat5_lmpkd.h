@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/08/09 00:50:37  flydba
+  *	Last missing COAS added to the left hand side window.
+  *	
   *	Revision 1.51  2006/07/27 22:38:57  movieman523
   *	Added CSM to LEM power connector.
   *	
@@ -188,6 +191,8 @@
 // DS20060413 Include DirectInput
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
+// DS20060730 Include LM SCS
+#include "lmscs.h"
 
 //
 // Valves.
@@ -969,6 +974,12 @@ protected:
 	// AC inverters
 	LEM_INV INV_1;
 	LEM_INV INV_2;
+
+	// GNC
+	ATCA atca;
+
+	// Friendclass ATCA to allow LM control
+	friend class ATCA;
 };
 
 extern void LEMLoadMeshes();

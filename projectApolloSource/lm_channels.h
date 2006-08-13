@@ -115,3 +115,25 @@ typedef union {
 	} Bits;
 	unsigned int Value;
 } LMChannelValue13;
+
+// Channel 30, GN&CS DISCRETES
+typedef union {
+	struct {
+		unsigned ABORT:1;
+		unsigned StageVerify:1;
+		unsigned EngineArmed:1;
+		unsigned ABORT_STAGE:1;
+		unsigned AutomaticThrottle:1;
+		unsigned DID:1;
+		unsigned RRCDUFailure:1;
+		unsigned spare:1;
+		unsigned IMUOperate:1;
+		unsigned GNControl:1;
+		unsigned IMUCage:1;
+		unsigned IMUCDUFailure:1;
+		unsigned IMUFailure:1;
+		unsigned ISSTurnOnRequest:1;
+		unsigned TemperatureInLimits:1;
+	} Bits;
+	unsigned int Value;
+} LMChannelValue30;
