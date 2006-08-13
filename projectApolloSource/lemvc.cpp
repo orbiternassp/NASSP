@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/11/17 03:41:33  darth_vader
+  *	Reset the VC position to the previous value. Lowered the position of the docking window viewpoint, so that the crew will not be visible anymore. However part of the CM is still "cut" ... nothing much can be done for that I'm afraid ...
+  *	
   *	Revision 1.6  2005/11/12 18:13:03  darth_vader
   *	Adjusted the camera position for the various 2D panels to something more realistic (I hope).
   *	
@@ -61,9 +64,9 @@
 #include "IMU.h"
 
 #include "landervessel.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
-void sat5_lmpkd::SetView() {
+void LEM::SetView() {
 
 	//
 	// Set camera offset
@@ -135,7 +138,7 @@ void sat5_lmpkd::SetView() {
 	}
 }
 
-bool sat5_lmpkd::clbkLoadVC (int id)
+bool LEM::clbkLoadVC (int id)
 
 {
 	switch (id) {

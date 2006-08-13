@@ -22,170 +22,6 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.53  2006/07/26 19:05:20  tschachim
-  *	RCS enabled by default until state is saved properly.
-  *	
-  *	Revision 1.52  2006/07/26 15:42:02  tschachim
-  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
-  *	
-  *	Revision 1.51  2006/07/24 06:41:29  dseagrav
-  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
-  *	
-  *	Revision 1.50  2006/06/18 22:45:31  dseagrav
-  *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
-  *	
-  *	Revision 1.49  2006/05/30 23:15:11  movieman523
-  *	Mission timer and DSKY now need power to operate.
-  *	
-  *	Revision 1.48  2006/04/25 08:11:27  dseagrav
-  *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
-  *	
-  *	Revision 1.47  2006/04/23 04:15:45  dseagrav
-  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
-  *	
-  *	Revision 1.46  2006/04/22 03:53:48  jasonims
-  *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
-  *	
-  *	Revision 1.45  2006/04/17 15:16:16  movieman523
-  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
-  *	
-  *	Revision 1.44  2006/04/12 06:27:19  dseagrav
-  *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
-  *	
-  *	Revision 1.43  2006/04/05 01:09:42  dseagrav
-  *	Allow SHIFT-NUMPAD keys to control the DSKY like the CM does.
-  *	
-  *	Revision 1.42  2006/03/08 02:24:21  movieman523
-  *	Added event timer and fuel display.
-  *	
-  *	Revision 1.41  2006/01/19 15:01:52  tschachim
-  *	Initial Meshland support.
-  *	
-  *	Revision 1.40  2006/01/14 21:59:52  movieman523
-  *	Added PanelSDK, init, timestep, save and load.
-  *	
-  *	Revision 1.39  2006/01/14 20:58:15  movieman523
-  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
-  *	
-  *	Revision 1.38  2006/01/09 21:56:44  movieman523
-  *	Added support for LEM and CSM AGC PAD loads in scenario file.
-  *	
-  *	Revision 1.37  2005/11/21 12:42:17  tschachim
-  *	New LM landed and descent stage mesh.
-  *	
-  *	Revision 1.36  2005/11/16 20:21:39  movieman523
-  *	CSM/LEM renaming changes.
-  *	
-  *	Revision 1.35  2005/10/19 11:39:11  tschachim
-  *	Changed log file name.
-  *	
-  *	Revision 1.34  2005/09/07 22:01:53  movieman523
-  *	Fixed the mission timer loading.
-  *	
-  *	Revision 1.33  2005/08/30 14:53:00  spacex15
-  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
-  *	
-  *	Revision 1.32  2005/08/22 19:47:33  movieman523
-  *	Fixed long timestep on startup, and added new Virtual AGC with EDRUPT fix.
-  *	
-  *	Revision 1.31  2005/08/18 22:15:22  movieman523
-  *	Wired up second DSKY, to accurately match the real hardware.
-  *	
-  *	Revision 1.30  2005/08/18 15:07:17  lazyd
-  *	Added third parameter to dsky
-  *	
-  *	Revision 1.29  2005/08/14 17:04:41  tschachim
-  *	Bugfix SIVB separation, sorry
-  *	
-  *	Revision 1.28  2005/08/14 16:08:20  tschachim
-  *	LM is now a VESSEL2
-  *	Changed panel restore mechanism because the CSM mechanism
-  *	caused CTDs, reason is still unknown.
-  *	
-  *	Revision 1.27  2005/08/14 15:25:43  movieman523
-  *	Based on advice from ProjectApollo list, mission timer now starts running from zero at liftoff, and doesn't run on the pad.
-  *	
-  *	Revision 1.26  2005/08/13 20:20:17  movieman523
-  *	Created MissionTimer class and wired it into the LEM and CSM.
-  *	
-  *	Revision 1.25  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.24  2005/08/10 20:00:55  spacex15
-  *	Activated 3 position lem eng arm switch
-  *	
-  *	Revision 1.23  2005/08/09 09:23:26  tschachim
-  *	Introduced toggleswitch lib
-  *	Added MFDs
-  *	Bugfix soundlib missionpath initialization
-  *	
-  *	Revision 1.22  2005/08/09 02:28:25  movieman523
-  *	Complete rewrite of the DSKY code to make it work with the real AGC I/O channels. That should now mean we can just hook up the Virtual AGC and have it work (with a few tweaks).
-  *	
-  *	Revision 1.21  2005/08/06 01:25:27  movieman523
-  *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
-  *	
-  *	Revision 1.20  2005/08/06 01:12:52  movieman523
-  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
-  *	
-  *	Revision 1.19  2005/08/06 00:03:48  movieman523
-  *	Beginnings of support for AGC I/O channels in LEM.
-  *	
-  *	Revision 1.18  2005/08/05 23:37:21  movieman523
-  *	Added AGC I/O channel simulation to make integrating Virtual AGC easier.
-  *	
-  *	Revision 1.17  2005/08/03 10:44:33  spacex15
-  *	improved audio landing synchro
-  *	
-  *	Revision 1.16  2005/08/01 21:52:06  lazyd
-  *	Added code for AbortStage
-  *	
-  *	Revision 1.15  2005/07/16 20:44:23  lazyd
-  *	Added call to start P71 when the descent stage runs out of fuel
-  *	
-  *	Revision 1.14  2005/07/14 10:06:14  spacex15
-  *	Added full apollo11 landing sound
-  *	initial release
-  *	
-  *	Revision 1.13  2005/07/07 23:47:12  movieman523
-  *	Fixed bug when saving audio language to scenario file.
-  *	
-  *	Revision 1.12  2005/07/06 14:35:03  lazyd
-  *	Rewrote key-handler to get key events
-  *	
-  *	Revision 1.11  2005/06/17 18:32:52  lazyd
-  *	Tried to fix generic cockpit view, doesn't work
-  *	
-  *	Revision 1.10  2005/06/16 13:33:03  lazyd
-  *	Fixed mistake on right redesignation
-  *	
-  *	Revision 1.9  2005/06/16 13:13:10  lazyd
-  *	Speed up response to ROD and redesignation key hits
-  *	
-  *	Revision 1.8  2005/06/15 20:33:51  lazyd
-  *	Added code to initialize InFOV
-  *	
-  *	Revision 1.7  2005/06/13 18:48:44  lazyd
-  *	Added code to catch key hits for autoland P64 and P66
-  *	
-  *	Revision 1.6  2005/06/09 14:18:23  lazyd
-  *	Added code for function SetGimbal which sets the value of GMBLswitch
-  *	
-  *	Revision 1.5  2005/05/27 15:43:08  tschachim
-  *	Fixed bug: virtual engines are always on
-  *	
-  *	Revision 1.4  2005/05/21 16:14:36  movieman523
-  *	Pass Realism and AudioLanguage correctly from CSM to LEM.
-  *	
-  *	Revision 1.3  2005/04/11 23:43:21  yogenfrutz
-  *	Added LEM Panel_ID
-  *	
-  *	Revision 1.2  2005/02/24 00:27:56  movieman523
-  *	Revised to make LEVA sounds work with Orbitersound 3.
-  *	
-  *	Revision 1.1  2005/02/11 12:54:06  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -204,8 +40,7 @@
 #include "dsky.h"
 #include "IMU.h"
 
-#include "landervessel.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 #include "tracer.h"
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -269,7 +104,7 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 
 {
-	sat5_lmpkd *lem;
+	LEM *lem;
 
 	if (!refcount++) {
 		LEMLoadMeshes();
@@ -277,7 +112,7 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	
 	// VESSELSOUND 
 
-	lem = new sat5_lmpkd(hvessel, flightmodel);
+	lem = new LEM(hvessel, flightmodel);
 	return (VESSEL *) lem;
 }
 
@@ -297,19 +132,10 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 
 	}
 
-	if (vessel) delete (sat5_lmpkd *)vessel;
+	if (vessel) delete (LEM *)vessel;
 }
 
-
-//Begin code
-
-LanderVessel::LanderVessel(OBJHANDLE hObj, int fmodel) : VESSEL (hObj, fmodel)
-
-{
-	// Nothing special to do.
-}
-
-sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
+LEM::LEM(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
 	
 	CDRs28VBus("CDR-28V-Bus",NULL),
 	LMPs28VBus("LMP-28V-Bus",NULL),
@@ -343,7 +169,7 @@ sat5_lmpkd::sat5_lmpkd(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	SystemsInit();
 }
 
-sat5_lmpkd::~sat5_lmpkd()
+LEM::~LEM()
 
 {
 #ifdef DIRECTSOUNDENABLED
@@ -365,7 +191,7 @@ sat5_lmpkd::~sat5_lmpkd()
 
 }
 
-void sat5_lmpkd::Init()
+void LEM::Init()
 
 {
 	RCS_Full=true;
@@ -471,7 +297,7 @@ void sat5_lmpkd::Init()
 	EventTimerDisplay.SetEnabled(true);
 }
 
-void sat5_lmpkd::DoFirstTimestep()
+void LEM::DoFirstTimestep()
 
 {
 	if (!SoundsLoaded) {
@@ -492,7 +318,7 @@ void sat5_lmpkd::DoFirstTimestep()
 	hLEVA=oapiGetVesselByName(VName10);
 }
 
-void sat5_lmpkd::LoadDefaultSounds()
+void LEM::LoadDefaultSounds()
 
 {
     char buffers[80];
@@ -522,7 +348,7 @@ void sat5_lmpkd::LoadDefaultSounds()
 	SoundsLoaded = true;
 }
 
-void sat5_lmpkd::AttitudeLaunch1()
+void LEM::AttitudeLaunch1()
 {
 	//Original code function by Richard Craig From MErcury Sample by Rob CONLEY
 	// Modification for NASSP specific needs by JL Rocca-Serra
@@ -603,7 +429,7 @@ void sat5_lmpkd::AttitudeLaunch1()
 
 }
 
-int sat5_lmpkd::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
+int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	// rewrote to get key events rather than monitor key state - LazyD
 
@@ -757,7 +583,7 @@ int sat5_lmpkd::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 // Timestep code.
 //
 
-void sat5_lmpkd::clbkPreStep (double simt, double simdt, double mjd) {
+void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 
 	if (CheckPanelIdInTimestep) {
 		oapiSetPanel(PanelId);
@@ -766,7 +592,7 @@ void sat5_lmpkd::clbkPreStep (double simt, double simdt, double mjd) {
 }
 
 
-void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
+void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 {
 	if (FirstTimestep)
@@ -1062,7 +888,7 @@ void sat5_lmpkd::clbkPostStep(double simt, double simdt, double mjd)
 // Set GMBLswitch
 //
 
-void sat5_lmpkd::SetGimbal(bool setting)
+void LEM::SetGimbal(bool setting)
 {
 	agc.SetInputChannelBit(032, 9, setting);
 	GMBLswitch = setting;
@@ -1072,7 +898,7 @@ void sat5_lmpkd::SetGimbal(bool setting)
 // Get Mission Time
 //
 
-void sat5_lmpkd::GetMissionTime(double &Met)
+void LEM::GetMissionTime(double &Met)
 {
 	Met = MissionTime;
 	return;
@@ -1082,7 +908,7 @@ void sat5_lmpkd::GetMissionTime(double &Met)
 // Perform the stage separation as done when P12 is running and Abort Stage is pressed
 //
 
-void sat5_lmpkd::AbortStage()
+void LEM::AbortStage()
 {
 	ButtonClick();
 	AbortFire();
@@ -1099,7 +925,7 @@ void sat5_lmpkd::AbortStage()
 // Initiate ascent.
 //
 
-void sat5_lmpkd::StartAscent()
+void LEM::StartAscent()
 
 {
 	SeparateStage(stage);
@@ -1124,7 +950,7 @@ typedef union {
 // Scenario state functions.
 //
 
-void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
+void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 {
 	char *line;
@@ -1284,20 +1110,20 @@ void sat5_lmpkd::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 }
 
-void sat5_lmpkd::clbkSetClassCaps (FILEHANDLE cfg) {
+void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
 	VSRegVessel(GetHandle());
 	SetLmVesselDockStage();
 }
 
-void sat5_lmpkd::PostCreation ()
+void LEM::PostCreation ()
 
 {
 	soundlib.SetLanguage(AudioLanguage);
 	LoadDefaultSounds();
 }
 
-void sat5_lmpkd::SetStateEx(const void *status)
+void LEM::SetStateEx(const void *status)
 
 {
 	VESSELSTATUS2 *vslm = (VESSELSTATUS2 *) status;
@@ -1305,7 +1131,7 @@ void sat5_lmpkd::SetStateEx(const void *status)
 	DefSetStateEx(status);
 }
 
-void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
+void LEM::clbkSaveState (FILEHANDLE scn)
 
 {
 	SaveDefaultState (scn);	
@@ -1369,7 +1195,7 @@ void sat5_lmpkd::clbkSaveState (FILEHANDLE scn)
 	PSH.SaveState(scn);	
 }
 
-bool sat5_lmpkd::clbkLoadGenericCockpit ()
+bool LEM::clbkLoadGenericCockpit ()
 
 {
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1382,7 +1208,7 @@ bool sat5_lmpkd::clbkLoadGenericCockpit ()
 	return true;
 }
 
-Connector *sat5_lmpkd::GetDockingConnector()
+Connector *LEM::GetDockingConnector()
 
 {
 	return &LEMToCSMConnector;
@@ -1393,7 +1219,7 @@ Connector *sat5_lmpkd::GetDockingConnector()
 // created.
 //
 
-void sat5_lmpkd::SetLanderData(LemSettings &ls)
+void LEM::SetLanderData(LemSettings &ls)
 
 {
     char buffers[80];
@@ -1419,14 +1245,14 @@ void sat5_lmpkd::SetLanderData(LemSettings &ls)
     soundlib.SetSoundLibMissionPath(buffers);
 }
 
-void sat5_lmpkd::PadLoad(unsigned int address, unsigned int value)
+void LEM::PadLoad(unsigned int address, unsigned int value)
 
 { 
 	agc.PadLoad(address, value);
  }
 
 
-void sat5_lmpkd::SetRCSJet(int jet, bool fire) {
+void LEM::SetRCSJet(int jet, bool fire) {
 
 	// TODO Only for the Virtual AGC for now
 	if (agc.IsVirtualAGC()) {
@@ -1439,7 +1265,7 @@ void sat5_lmpkd::SetRCSJet(int jet, bool fire) {
 // remove this and use I/O channels and pulsed thrusters 
 // identical to the VAGC instead
 
-void sat5_lmpkd::SetRCSJetLevel(int jet, double level) {
+void LEM::SetRCSJetLevel(int jet, double level) {
 
 	SetThrusterLevel(th_rcs[jet], level);
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/08/12 15:05:35  movieman523
+  *	Renamed EVA and LEVA files.
+  *	
   **************************************************************************/
 
 #define ORBITER_MODULE
@@ -41,7 +44,7 @@
 #include "LEMcomputer.h"
 #include "dsky.h"
 #include "IMU.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
 #include "leva.h"
 #include "LRV.h"
@@ -618,7 +621,7 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 	//
 
 	if (hMaster){
-		sat5_lmpkd *lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hMaster);					
+		LEM *lmvessel = (LEM *) oapiGetVesselInterface(hMaster);					
 		oapiGetRelativePos (GetHandle() ,hMaster, &posr);
 		oapiGetRelativeVel (GetHandle() ,hMaster , &rvel);
 		lmvessel->GetStatus(csmV);

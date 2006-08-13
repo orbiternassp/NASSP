@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2006/07/28 12:08:48  tschachim
+  *	Bugfix saving scenario.
+  *	
   *	Revision 1.80  2006/07/26 15:42:02  tschachim
   *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
   *	
@@ -1133,7 +1136,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 		{
 //			double Met;
 			double TimeToBurn = 0.0;
-//			sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+//			LEM *lem = (LEM *) OurVessel;
 //			lem->GetMissionTime(Met);
 
 			if (BurnTime > LastTimestep) {

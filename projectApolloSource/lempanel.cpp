@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2006/08/09 00:47:03  flydba
+  *	Last missing COAS added on the left hand side window.
+  *	
   *	Revision 1.62  2006/07/24 06:41:29  dseagrav
   *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
   *	
@@ -233,7 +236,7 @@
 #include "dsky.h"
 
 #include "landervessel.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
  
 #define VIEWANGLE 34
 
@@ -280,7 +283,7 @@ void FreeGParam()
 // Initialise panel to default state.
 //
 
-void sat5_lmpkd::InitPanel() {
+void LEM::InitPanel() {
 
 	AbortSwitch.Register     (PSH, "AbortSwitch", false);
 	AbortStageSwitch.Register(PSH, "AbortStageSwitch", false);
@@ -590,7 +593,7 @@ void sat5_lmpkd::InitPanel() {
 		srf[i] = 0;
 }
 
-void sat5_lmpkd::RedrawPanel_Horizon (SURFHANDLE surf)
+void LEM::RedrawPanel_Horizon (SURFHANDLE surf)
 {
 POINT pt[4];
 	static double prange = RAD*30.0;
@@ -748,7 +751,7 @@ void DrawNeedle (HDC hDC, int x, int y, double rad, double angle, HPEN pen0, HPE
 	SelectObject (hDC, oldObj);
 }
 
-void sat5_lmpkd::RedrawPanel_Thrust (SURFHANDLE surf)
+void LEM::RedrawPanel_Thrust (SURFHANDLE surf)
 
 {
 	double DispValue;
@@ -759,7 +762,7 @@ void sat5_lmpkd::RedrawPanel_Thrust (SURFHANDLE surf)
 	oapiBlt(surf,srf[2],29,(int)(67-(DispValue)*67),8,0,7,7, SURF_PREDEF_CK);//
 }
 
-void sat5_lmpkd::RedrawPanel_XPointer (SURFHANDLE surf) {
+void LEM::RedrawPanel_XPointer (SURFHANDLE surf) {
 
 	int ix, iy;
 	double vx, vy;
@@ -783,7 +786,7 @@ void sat5_lmpkd::RedrawPanel_XPointer (SURFHANDLE surf) {
 
 }
 
-void sat5_lmpkd::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
+void LEM::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
 
 	HDC hDC = oapiGetDC (surf);
 	SelectObject (hDC, g_Param.font[1]);
@@ -799,7 +802,7 @@ void sat5_lmpkd::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int x
 	oapiReleaseDC (surf, hDC);
 }
 
-void sat5_lmpkd::clbkMFDMode (int mfd, int mode) {
+void LEM::clbkMFDMode (int mfd, int mode) {
 
 	switch (mfd) {
 	case MFD_LEFT:		
@@ -811,7 +814,7 @@ void sat5_lmpkd::clbkMFDMode (int mfd, int mode) {
 	}
 }
 
-void sat5_lmpkd::ReleaseSurfaces ()
+void LEM::ReleaseSurfaces ()
 
 {
 	for (int i = 0; i < nsurf; i++)
@@ -821,7 +824,7 @@ void sat5_lmpkd::ReleaseSurfaces ()
 		}
 }
 
-void sat5_lmpkd::InitPanel (int panel)
+void LEM::InitPanel (int panel)
 
 {
 //	switch (panel) {
@@ -963,7 +966,7 @@ void sat5_lmpkd::InitPanel (int panel)
 	SetSwitches(panel);
 }
 
-bool sat5_lmpkd::clbkLoadPanel (int id) {
+bool LEM::clbkLoadPanel (int id) {
 
 	//
 	// Release all surfaces
@@ -1229,7 +1232,7 @@ bool sat5_lmpkd::clbkLoadPanel (int id) {
 	return hBmp != NULL;
 }
 
-void sat5_lmpkd::SetSwitches(int panel) {
+void LEM::SetSwitches(int panel) {
 
 	MainPanel.Init(0, this, &soundlib, this);
 
@@ -1422,7 +1425,7 @@ void sat5_lmpkd::SetSwitches(int panel) {
 	}
 }
 
-void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
+void LEM::PanelSwitchToggled(ToggleSwitch *s) {
 
 
 	if (s == &AbortSwitch) {
@@ -1461,19 +1464,19 @@ void sat5_lmpkd::PanelSwitchToggled(ToggleSwitch *s) {
     }
 }
 
-void sat5_lmpkd::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
+void LEM::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 }
 
-void sat5_lmpkd::PanelRotationalSwitchChanged(RotationalSwitch *s) {
+void LEM::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 
 }
 
-void sat5_lmpkd::PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s) {
+void LEM::PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s) {
 
 }
 
-void sat5_lmpkd::MousePanel_MFDButton(int mfd, int event, int mx, int my) {
+void LEM::MousePanel_MFDButton(int mfd, int event, int mx, int my) {
 
 	if (oapiGetMFDMode(mfd) != MFD_NONE) {
 		if (my > 330 && my < 352) {
@@ -1507,43 +1510,43 @@ void sat5_lmpkd::MousePanel_MFDButton(int mfd, int event, int mx, int my) {
 
 }
 
-void sat5_lmpkd::SwitchClick()
+void LEM::SwitchClick()
 
 {
 	Sclick.play();
 }
 
-void sat5_lmpkd::ButtonClick()
+void LEM::ButtonClick()
 
 {
 	Bclick.play(NOLOOP,255);
 }
 
-void sat5_lmpkd::GuardClick()
+void LEM::GuardClick()
 
 {
 	Gclick.play(NOLOOP,255);
 }
 
-void sat5_lmpkd::CabinFanSound()
+void LEM::CabinFanSound()
 
 {
 	CabinFans.play(LOOP,255);
 }
 
-void sat5_lmpkd::VoxSound()
+void LEM::VoxSound()
 
 {
 	Vox.play(LOOP,255);
 }
 
-void sat5_lmpkd::AbortFire()
+void LEM::AbortFire()
 
 {
 	Afire.play(NOLOOP,255);
 }
 
-bool sat5_lmpkd::clbkPanelMouseEvent (int id, int event, int mx, int my)
+bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 {
 	static int ctrl = 0;
@@ -2458,7 +2461,7 @@ bool sat5_lmpkd::clbkPanelMouseEvent (int id, int event, int mx, int my)
 	return false;
 }
 
-bool sat5_lmpkd::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf) 
+bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf) 
 
 {
 	int Curdigit;
@@ -3343,7 +3346,7 @@ typedef union {
 	unsigned long word;
 } CSwitchState;
 
-int sat5_lmpkd::GetCSwitchState()
+int LEM::GetCSwitchState()
 
 {
 	CSwitchState state;
@@ -3382,7 +3385,7 @@ int sat5_lmpkd::GetCSwitchState()
 	return state.word;
 }
 
-void sat5_lmpkd::SetCSwitchState(int s)
+void LEM::SetCSwitchState(int s)
 
 {
 	CSwitchState state;
@@ -3455,7 +3458,7 @@ typedef union {
 	unsigned long word;
 } SSwitchState;
 
-int sat5_lmpkd::GetSSwitchState()
+int LEM::GetSSwitchState()
 
 {
 	SSwitchState state;
@@ -3494,7 +3497,7 @@ int sat5_lmpkd::GetSSwitchState()
 	return state.word;
 }
 
-void sat5_lmpkd::SetSSwitchState(int s)
+void LEM::SetSSwitchState(int s)
 
 {
 	SSwitchState state;
@@ -3567,7 +3570,7 @@ typedef union {
 	unsigned long word;
 } LPSwitchState;
 
-int sat5_lmpkd::GetLPSwitchState()
+int LEM::GetLPSwitchState()
 
 {
 	LPSwitchState state;
@@ -3605,7 +3608,7 @@ int sat5_lmpkd::GetLPSwitchState()
 	return state.word;
 }
 
-void sat5_lmpkd::SetLPSwitchState(int s)
+void LEM::SetLPSwitchState(int s)
 
 {
 	LPSwitchState state;
@@ -3665,7 +3668,7 @@ typedef union {
 	unsigned long word;
 } RPSwitchState;
 
-int sat5_lmpkd::GetRPSwitchState()
+int LEM::GetRPSwitchState()
 
 {
 	RPSwitchState state;
@@ -3692,7 +3695,7 @@ int sat5_lmpkd::GetRPSwitchState()
 	return state.word;
 }
 
-void sat5_lmpkd::SetRPSwitchState(int s)
+void LEM::SetRPSwitchState(int s)
 
 {
 	RPSwitchState state;

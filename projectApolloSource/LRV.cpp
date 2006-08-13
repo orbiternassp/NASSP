@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.4  2006/06/06 17:50:59  redburne
   *	- New gauges ("working" battery capacity indicator; other values are static)
   *	- boolean variable GoRover removed
@@ -56,7 +59,7 @@
 #include "LEMcomputer.h"
 #include "dsky.h"
 #include "IMU.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
 #include "lrv.h"
 #include "lrv_console.h"
@@ -610,7 +613,7 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 	}
 
 	if (hMaster){
-		sat5_lmpkd *lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hMaster);					
+		LEM *lmvessel = (LEM *) oapiGetVesselInterface(hMaster);					
 		oapiGetRelativePos (GetHandle() ,hMaster, &posr);
 		oapiGetRelativeVel (GetHandle() ,hMaster , &rvel);
 		lmvessel->GetStatus(csmV);

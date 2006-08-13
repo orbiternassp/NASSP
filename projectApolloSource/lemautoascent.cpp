@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2005/09/05 21:09:45  lazyd
+  *	Changed this to P13
+  *	
   *	Revision 1.6  2005/08/10 21:54:04  movieman523
   *	Initial IMU implementation based on 'Virtual Apollo' code.
   *	
@@ -57,7 +60,7 @@
 #include "lemcomputer.h"
 #include "IMU.h"
 
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
 void LEMcomputer::Prog13Pressed(int R1, int R2, int R3)
 {
@@ -244,7 +247,7 @@ void LEMcomputer::Prog13 (double simt)
 	case 12:
 		if (simt >= BurnStartTime) 
 		{
-			sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+			LEM *lem = (LEM *) OurVessel;
 
 			lem->StartAscent();				
 			LastEventTime = simt;

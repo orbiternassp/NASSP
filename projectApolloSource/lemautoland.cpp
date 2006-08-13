@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2006/07/26 15:42:02  tschachim
+  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
+  *	
   *	Revision 1.39  2006/02/06 23:08:26  lazyd
   *	Fixed P64-to-P66 problem if landing mesh is small
   *	
@@ -159,7 +162,7 @@
 #include "lemcomputer.h"
 #include "IMU.h"
 
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -603,7 +606,7 @@ void LEMcomputer::Prog63(double simt)
 	case 7:
 		SetVerbNoun(6, 62);
 		if(dt <= 7.0) {
-			sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+			LEM *lem = (LEM *) OurVessel;
 			lem->SetGimbal(false);
 			OurVessel->SetAttitudeLinLevel(1,1.0);
 			ProgState++;
@@ -769,7 +772,7 @@ void LEMcomputer::Prog64(double simt)
 		ProgState++;
 	}
 	if(ProgFlag01) {
-		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+		LEM *lem = (LEM *) OurVessel;
 		lem->SetGimbal(true);
 		if (P64LOG) {
 			fprintf(outstr, "Run P66: Close file.");
@@ -985,7 +988,7 @@ void LEMcomputer::Prog65(double simt)
 		return;
 	}
 	if(ProgFlag01) {
-		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+		LEM *lem = (LEM *) OurVessel;
 		lem->SetGimbal(true);
 		if(LOGFILE) {
 			fprintf(outstr, "P66: Close file.");
@@ -1677,7 +1680,7 @@ void LEMcomputer::Prog12(double simt)
 			SetVerbNounAndFlash(99,74);
 			if(Realism == 0) {
 				ProgState++;
-				sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+				LEM *lem = (LEM *) OurVessel;
 				lem->AbortStage();
 			}
 		} else {

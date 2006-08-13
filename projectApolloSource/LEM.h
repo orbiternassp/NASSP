@@ -22,169 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.52  2006/08/09 00:50:37  flydba
-  *	Last missing COAS added to the left hand side window.
-  *	
-  *	Revision 1.51  2006/07/27 22:38:57  movieman523
-  *	Added CSM to LEM power connector.
-  *	
-  *	Revision 1.50  2006/07/26 15:42:02  tschachim
-  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
-  *	
-  *	Revision 1.49  2006/07/24 06:41:30  dseagrav
-  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
-  *	
-  *	Revision 1.48  2006/07/16 16:21:31  flydba
-  *	COAS on the overhead rendezvous window now works.
-  *	
-  *	Revision 1.47  2006/07/16 02:55:55  flydba
-  *	New COAS added on the rendezvous window.
-  *	
-  *	Revision 1.46  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.45  2006/06/18 22:45:31  dseagrav
-  *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
-  *	
-  *	Revision 1.44  2006/06/18 16:43:07  dseagrav
-  *	LM EPS fixes, LMP/CDR DC busses now powered thru CBs, ECA power-off bug fixed and ECA speed improvement
-  *	
-  *	Revision 1.43  2006/06/11 09:20:30  dseagrav
-  *	LM ECA #2 added, ECA low-voltage tap usage added, CDR & LMP DC busses wired to ECAs
-  *	
-  *	Revision 1.42  2006/05/01 08:52:50  dseagrav
-  *	LM checkpoint commit. Extended capabilities of IndicatorSwitch class to save memory, more LM ECA stuff, I forget what else changed. More work is needed yet.
-  *	
-  *	Revision 1.41  2006/04/23 04:15:46  dseagrav
-  *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
-  *	
-  *	Revision 1.40  2006/04/22 03:53:48  jasonims
-  *	Began initial support for multiple EVA's (two astronauts), as well as improving upon the LRV controls.  No longer turns while standing still.  Throttle controlled via (NUM+ and NUM-).
-  *	
-  *	Revision 1.39  2006/04/17 15:16:16  movieman523
-  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
-  *	
-  *	Revision 1.38  2006/04/12 06:27:19  dseagrav
-  *	LM checkpoint commit. The LM is not airworthy at this point. Please be patient.
-  *	
-  *	Revision 1.37  2006/03/08 02:24:21  movieman523
-  *	Added event timer and fuel display.
-  *	
-  *	Revision 1.36  2006/03/07 02:20:27  flydba
-  *	Circuit breakers added to panel 11.
-  *	
-  *	Revision 1.35  2006/03/04 13:40:34  flydba
-  *	Switches added on LEM panels 3 & 4
-  *	
-  *	Revision 1.34  2006/01/29 00:48:36  flydba
-  *	Switches added on LEM panel 2.
-  *	
-  *	Revision 1.33  2006/01/26 19:26:31  movieman523
-  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
-  *	
-  *	Revision 1.32  2006/01/22 16:38:11  flydba
-  *	Switches added on LEM panel 1.
-  *	
-  *	Revision 1.31  2006/01/19 14:55:13  tschachim
-  *	Initial Meshland support.
-  *	
-  *	Revision 1.30  2006/01/18 20:12:54  flydba
-  *	Contact lights added.
-  *	
-  *	Revision 1.29  2006/01/14 21:59:52  movieman523
-  *	Added PanelSDK, init, timestep, save and load.
-  *	
-  *	Revision 1.28  2006/01/14 20:58:16  movieman523
-  *	Revised PowerSource code to ensure that classes which must be called each timestep are registered with the Panel SDK code.
-  *	
-  *	Revision 1.27  2006/01/09 21:56:44  movieman523
-  *	Added support for LEM and CSM AGC PAD loads in scenario file.
-  *	
-  *	Revision 1.26  2005/11/28 01:13:54  movieman523
-  *	Added LEM right-hand panel.
-  *	
-  *	Revision 1.25  2005/11/21 12:42:17  tschachim
-  *	New LM landed and descent stage mesh.
-  *	
-  *	Revision 1.24  2005/11/16 20:21:39  movieman523
-  *	CSM/LEM renaming changes.
-  *	
-  *	Revision 1.23  2005/10/31 10:36:32  tschachim
-  *	New toggleswitch callback PanelThumbwheelSwitchChanged.
-  *	
-  *	Revision 1.22  2005/09/30 11:22:00  tschachim
-  *	New panel event handler.
-  *	
-  *	Revision 1.21  2005/09/22 00:40:20  flydba
-  *	AOT - Alignment Optical Telescope view and left instrument panel added to the lem
-  *	
-  *	Revision 1.20  2005/09/18 23:18:43  flydba
-  *	Lem overhead rendezvous window added...
-  *	
-  *	Revision 1.19  2005/08/30 14:53:00  spacex15
-  *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
-  *	
-  *	Revision 1.18  2005/08/14 16:08:20  tschachim
-  *	LM is now a VESSEL2
-  *	Changed panel restore mechanism because the CSM mechanism
-  *	caused CTDs, reason is still unknown.
-  *	
-  *	Revision 1.17  2005/08/13 20:20:17  movieman523
-  *	Created MissionTimer class and wired it into the LEM and CSM.
-  *	
-  *	Revision 1.16  2005/08/11 16:29:33  spacex15
-  *	Added PNGS and AGS mode control 3 pos switches
-  *	
-  *	Revision 1.15  2005/08/11 14:00:35  spacex15
-  *	Added Descent Engine Command Override switch
-  *	
-  *	Revision 1.14  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.13  2005/08/10 20:00:55  spacex15
-  *	Activated 3 position lem eng arm switch
-  *	
-  *	Revision 1.12  2005/08/09 09:17:29  tschachim
-  *	Introduced toggleswitch lib
-  *	
-  *	Revision 1.11  2005/08/06 01:25:27  movieman523
-  *	Added Realism variable to AGC and fixed a bug with the APOLLONO scenario entry in the saturn class.
-  *	
-  *	Revision 1.10  2005/08/01 21:51:11  lazyd
-  *	Added code for Abort Stage
-  *	
-  *	Revision 1.9  2005/07/16 20:43:01  lazyd
-  *	*** empty log message ***
-  *	
-  *	Revision 1.8  2005/07/14 10:06:14  spacex15
-  *	Added full apollo11 landing sound
-  *	initial release
-  *	
-  *	Revision 1.7  2005/07/06 14:33:56  lazyd
-  *	Changed ConsumeDirectKey to get key events
-  *	
-  *	Revision 1.6  2005/06/15 20:32:32  lazyd
-  *	Added two variables: bool InFOV and SaveFOV for save/restore of original view and FOV
-  *	
-  *	Revision 1.5  2005/06/09 14:17:22  lazyd
-  *	Added SetGimbal function declaration
-  *	
-  *	Revision 1.4  2005/05/21 16:14:36  movieman523
-  *	Pass Realism and AudioLanguage correctly from CSM to LEM.
-  *	
-  *	Revision 1.3  2005/04/11 23:46:17  yogenfrutz
-  *	added InPanel and Panel_ID
-  *	
-  *	Revision 1.2  2005/02/24 00:27:28  movieman523
-  *	Revisions to make LEVA sounds work.
-  *	
-  *	Revision 1.1  2005/02/11 12:17:55  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
-#if !defined(_PA_SAT5_LMPKD_H)
-#define _PA_SAT5_LMPKD_H
+#if !defined(_PA_LEM_H)
+#define _PA_LEM_H
 
 #include "FDAI.h"
 
@@ -234,7 +75,7 @@ typedef struct {
 class LEM_ECA : public e_object {
 public:
 	LEM_ECA();							// Cons
-	void Init(sat5_lmpkd *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b); // Init
+	void Init(LEM *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b); // Init
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -243,7 +84,7 @@ public:
 	IndicatorSwitch *dc_source_a_tb;    // Pointer at TB #1
 	IndicatorSwitch *dc_source_b_tb;    // Pointer at TB #2
 	IndicatorSwitch *dc_source_c_tb;    // Pointer at TB #3 (LUNAR STAY battery for later model LM)
-	sat5_lmpkd *lem;					// Pointer at LEM
+	LEM *lem;					// Pointer at LEM
 	e_object *dc_source_hi_a;			// An ECA has four inputs - Two HV inputs, and two LV inputs.
 	e_object *dc_source_hi_b;
 	e_object *dc_source_lo_a;
@@ -256,11 +97,11 @@ public:
 class LEM_INV : public e_object {
 public:
 	LEM_INV();							// Cons
-	void Init(sat5_lmpkd *s);
+	void Init(LEM *s);
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
 	int active;
-	sat5_lmpkd *lem;					// Pointer at LM
+	LEM *lem;					// Pointer at LM
 	e_object *dc_input;
 };
 
@@ -268,11 +109,11 @@ public:
 ///
 /// \ingroup LEM
 ///
-class sat5_lmpkd : public VESSEL2, public PanelSwitchListener {
+class LEM : public VESSEL2, public PanelSwitchListener {
 
 public:
-	sat5_lmpkd(OBJHANDLE hObj, int fmodel);
-	virtual ~sat5_lmpkd();
+	LEM(OBJHANDLE hObj, int fmodel);
+	virtual ~LEM();
 
 	void Init();
 	void PostCreation();
