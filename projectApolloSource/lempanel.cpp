@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.63  2006/08/09 00:47:03  flydba
   *	Last missing COAS added on the left hand side window.
   *	
@@ -235,7 +238,6 @@
 #include "IMU.h"
 #include "dsky.h"
 
-#include "landervessel.h"
 #include "LEM.h"
  
 #define VIEWANGLE 34

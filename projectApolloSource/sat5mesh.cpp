@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.69  2006/08/11 20:37:46  movieman523
   *	Added HasProbe flag for docking probe.
   *	
@@ -250,7 +253,6 @@
 #include "lemcomputer.h"
 #include "IMU.h"
 
-#include "landervessel.h"
 #include "saturn.h"
 #include "saturnv.h"
 #include "tracer.h"
