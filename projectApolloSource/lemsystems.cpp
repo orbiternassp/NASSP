@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/08/13 16:55:35  movieman523
+  *	Removed a bunch of unused files.
+  *	
   *	Revision 1.17  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -1035,6 +1038,7 @@ void LEM::SystemsInit()
 	thc_rot_id = -1; // Disabled
 	thc_sld_id = -1; // Disabled
 	thc_rzx_id = -1; // Disabled
+	thc_tjt_id = -1; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
 	FILE *fd;
@@ -1074,13 +1078,8 @@ void LEM::SystemsInit()
 						if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
 					}
 				}
-				if(strncmp(token,"RZX",3)==0){                  // RHC ROTATOR address?
-					// Get next token, which should be ROTATOR number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						rhc_rzx_id = atoi(parameter);
-						if(rhc_rzx_id > 1){ rhc_rzx_id = 1; } // Be paranoid
-					}
+				if(strncmp(token,"RZX",3)==0){                  // RHC USE-Z-AXIS?
+					rhc_rzx_id = 1;
 				}
 				/* *** THC *** */
 				if(strncmp(token,"THC",3)==0){                  // THC address?
@@ -1107,13 +1106,11 @@ void LEM::SystemsInit()
 						if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
 					}
 				}
-				if(strncmp(token,"TZX",3)==0){                  // THC ROTATOR address?
-					// Get next token, which should be ROTATOR number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						thc_rzx_id = atoi(parameter);
-						if(thc_rzx_id > 1){ thc_rzx_id = 1; } // Be paranoid
-					}
+				if(strncmp(token,"TZX",3)==0){                  // THC USE-Z-AXIS?
+					thc_rzx_id = 1; 					
+				}
+				if(strncmp(token,"TJT",3)==0){                  // THC JETS/THROTTLE Z-AXIS enable
+					thc_tjt_id = 1;					
 				}
 				if(strncmp(token,"RDB",3)==0){					// RHC debug					
 					rhc_debug = 1;
@@ -1271,23 +1268,31 @@ void LEM::SystemsTimestep(double simt, double simdt)
 			// Read data
 			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]),&dx8_jstate[thc_id]);
 			// The LM TTCA is even wierder than the CM THC...			
+			int thc_rot_pos = 32768,thc_tjt_pos=32768; // Initialize to centered			
 			if(thc_voltage > 0){
-				if(dx8_jstate[thc_id].lX < 16384){												
-					val31.Bits.MinusY = 1;
+				if(thc_tjt_id != -1){                    // If Throttle/Jets lever enabled
+					thc_tjt_pos = dx8_jstate[thc_id].lZ; // Read
 				}
-				if(dx8_jstate[thc_id].lY < 16384){
-					// JETS MODE
-					val31.Bits.PlusX = 1;
+				if(thc_tjt_pos < 10000){				 // Determine TTCA mode	
+					ttca_mode = TTCA_MODE_THROTTLE;      // THROTTLE MODE					
+					ttca_throttle_pos = dx8_jstate[thc_id].lY; // Relay throttle position
+				}else{
+					ttca_mode = TTCA_MODE_JETS;          // JETS MODE
+					ttca_throttle_pos = 32768;           // Center of axis (just in case)
+					if(dx8_jstate[thc_id].lY < 16384){
+						val31.Bits.PlusX = 1;
+					}
+					if(dx8_jstate[thc_id].lY > 49152){						
+						val31.Bits.MinusX = 1;
+					}
 				}
 				if(dx8_jstate[thc_id].lX > 49152){
 					val31.Bits.PlusY = 1;
 				}
-				if(dx8_jstate[thc_id].lY > 49152){
-					// JETS MODE
-					val31.Bits.MinusX = 1;
-				}
+				if(dx8_jstate[thc_id].lX < 16384){												
+					val31.Bits.MinusY = 1;
+				}				
 				// Z-axis read.
-				int thc_rot_pos = 32768; // Initialize to centered
 				if(thc_rot_id != -1){ // If this is a rotator-type axis
 					switch(thc_rot_id){
 						case 0:
@@ -1310,8 +1315,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 				if(thc_rot_pos > 49152){
 					val31.Bits.PlusZ = 1;
 				}
-				if(thc_debug != -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
-					thc_rot_pos); }
+				if(thc_debug == -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d TJT = %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
+					thc_rot_pos,thc_tjt_pos); }
 			}else{
 				// No JS
 			}
