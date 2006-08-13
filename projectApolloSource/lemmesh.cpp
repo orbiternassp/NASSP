@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.28  2006/08/12 15:05:35  movieman523
   *	Renamed EVA and LEVA files.
   *	
@@ -126,7 +129,6 @@
 #include "dsky.h"
 #include "IMU.h"
 
-#include "landervessel.h"
 #include "LEM.h"
 #include "leva.h"
 

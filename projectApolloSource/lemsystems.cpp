@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.16  2006/08/13 10:37:55  dseagrav
   *	TTCA enabled in JETS mode
   *	
@@ -89,7 +92,6 @@
 #include "dsky.h"
 #include "IMU.h"
 
-#include "landervessel.h"
 #include "LEM.h"
 
 void LEM::ResetThrusters()

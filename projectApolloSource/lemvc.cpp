@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.7  2005/11/17 03:41:33  darth_vader
   *	Reset the VC position to the previous value. Lowered the position of the docking window viewpoint, so that the crew will not be visible anymore. However part of the CM is still "cut" ... nothing much can be done for that I'm afraid ...
   *	
@@ -63,7 +66,6 @@
 #include "dsky.h"
 #include "IMU.h"
 
-#include "landervessel.h"
 #include "LEM.h"
 
 void LEM::SetView() {
