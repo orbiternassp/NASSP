@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.173  2006/08/12 14:14:18  movieman523
+  *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
+  *	
   *	Revision 1.172  2006/08/11 21:16:22  movieman523
   *	Dummy ELS implementation.
   *	
@@ -270,7 +273,7 @@
 #include "sm.h"
 #include "sivb.h"
 #include "lemcomputer.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -1167,7 +1170,7 @@ void Saturn::DockConnectors()
 		// MGFIX: This should really only be done when the docking probe is retracted for a hard
 		// dock.
 		//
-		sat5_lmpkd *LEMVessel = (sat5_lmpkd *) oapiGetVesselInterface(connected);
+		LEM *LEMVessel = (LEM *) oapiGetVesselInterface(connected);
 		Connector *LEMConnector = LEMVessel->GetDockingConnector();
 
 		if (LEMConnector)

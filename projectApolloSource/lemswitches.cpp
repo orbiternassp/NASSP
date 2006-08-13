@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/07/24 06:41:29  dseagrav
+  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
+  *	
   *	Revision 1.6  2006/06/18 22:45:31  dseagrav
   *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
   *	
@@ -56,9 +59,9 @@
 #include "LEMcomputer.h"
 #include "IMU.h"
 
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
-void LEMThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s)
+void LEMThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s)
 
 {
 	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
@@ -72,7 +75,7 @@ LEMValveTalkback::LEMValveTalkback()
 	our_vessel = 0;
 }
 
-void LEMValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, sat5_lmpkd *s)
+void LEMValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, LEM *s)
 
 {
 	IndicatorSwitch::Init(xp, yp, w, h, surf, row);
@@ -91,7 +94,7 @@ int LEMValveTalkback::GetState()
 	return 0;
 }
 
-void LEMValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s, int valve, IndicatorSwitch *ind)
+void LEMValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, int valve, IndicatorSwitch *ind)
 
 {
 	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
@@ -144,7 +147,7 @@ void LEMValveSwitch::CheckValve(int s)
 	}
 }
 
-void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s,
+void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
 							LEM_ECA *lem_eca, int src_no)
 
 {
@@ -229,7 +232,7 @@ bool LEMBatterySwitch::SwitchTo(int newState)
 
 // INVERTER SWITCH
 
-void LEMInverterSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s,
+void LEMInverterSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
 							LEM_INV *lem_inv_1, LEM_INV *lem_inv_2)
 {
 	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);

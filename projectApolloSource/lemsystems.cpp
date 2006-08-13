@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/08/13 10:37:55  dseagrav
+  *	TTCA enabled in JETS mode
+  *	
   *	Revision 1.15  2006/08/13 06:30:49  dseagrav
   *	LM checkpoint commit.
   *	
@@ -87,9 +90,9 @@
 #include "IMU.h"
 
 #include "landervessel.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
-void sat5_lmpkd::ResetThrusters()
+void LEM::ResetThrusters()
 
 {
 	SetAttitudeRotLevel(0, 0);
@@ -102,7 +105,7 @@ void sat5_lmpkd::ResetThrusters()
 }
 
 /* NOT USED? DS20060413
-void sat5_lmpkd::AddRCS_LM(double TRANZ)
+void LEM::AddRCS_LM(double TRANZ)
 {
 	UINT atthand;
 	const double ATTCOOR = 0;
@@ -318,7 +321,7 @@ void sat5_lmpkd::AddRCS_LM(double TRANZ)
 		AddAttExhaustMode(atthand,ATTMODE_ROT,2,0);
 }
 
-void sat5_lmpkd::AddRCS_LM2(double TRANZ)
+void LEM::AddRCS_LM2(double TRANZ)
 {
 UINT atthand;
 	const double ATTCOOR = 0;
@@ -632,7 +635,7 @@ UINT atthand;
 */
 
 
-void sat5_lmpkd::AddRCS_LMH(double TRANZ)
+void LEM::AddRCS_LMH(double TRANZ)
 {
 	const double ATTCOOR = 1.78;
 	const double ATTCOOR2 = 1.35;
@@ -750,7 +753,7 @@ void sat5_lmpkd::AddRCS_LMH(double TRANZ)
 //	CreateThrusterGroup (th_rcs,   1, THGROUP_ATT_YAWLEFT);
 }
 
-void sat5_lmpkd::AddRCS_LMH2(double TRANZ)
+void LEM::AddRCS_LMH2(double TRANZ)
 {
 	const double ATTCOOR = 1.78;
 	const double ATTCOOR2 = -0.50;
@@ -824,7 +827,7 @@ void sat5_lmpkd::AddRCS_LMH2(double TRANZ)
 
 /* OBSOLETED DS20060410
 
-void sat5_lmpkd::SetRCS(PROPELLANT_HANDLE ph_prop)
+void LEM::SetRCS(PROPELLANT_HANDLE ph_prop)
 {
 		if(ATT2switch && QUAD1switch && QUAD2switch && QUAD3switch  && QUAD4switch  && QUAD5switch  && QUAD6switch  && QUAD7switch  && QUAD8switch && GetValveState(LEM_RCS_MAIN_SOV_A) && GetValveState(LEM_RCS_MAIN_SOV_B) && ED1switch && ED4switch && RCSS1switch && RCSS2switch && RCSS3switch && RCSS4switch){
 			for(int i=8;i<16;i++){
@@ -862,19 +865,19 @@ void sat5_lmpkd::SetRCS(PROPELLANT_HANDLE ph_prop)
 	return;
 } */
 
-bool sat5_lmpkd::CabinFansActive()
+bool LEM::CabinFansActive()
 
 {
 	return CABFswitch;
 }
 
-bool sat5_lmpkd::AscentEngineArmed()
+bool LEM::AscentEngineArmed()
 
 {
 	return (EngineArmSwitch.IsUp()); //&& !ASCHE1switch && !ASCHE2switch && ED1switch && ED6switch && ED7switch && ED8switch;
 }
 
-bool sat5_lmpkd::AscentRCSArmed()
+bool LEM::AscentRCSArmed()
 
 {
 	return AFEED1switch || AFEED2switch || AFEED3switch || AFEED4switch;
@@ -883,7 +886,7 @@ bool sat5_lmpkd::AscentRCSArmed()
 // DS20060302 DX8 callback for enumerating joysticks
 BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pLEM)
 {
-	class sat5_lmpkd * lem = (sat5_lmpkd*)pLEM; // Pointer to us
+	class LEM * lem = (LEM*)pLEM; // Pointer to us
 	HRESULT hr;
 
 	if(lem->js_enabled > 1){  // Do we already have enough joysticks?
@@ -899,7 +902,7 @@ BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* 
 	return DIENUM_CONTINUE; // and keep enumerating
 }
 
-void sat5_lmpkd::SystemsInit()
+void LEM::SystemsInit()
 
 {
 	Panelsdk.RegisterVessel(this);
@@ -1146,7 +1149,7 @@ void sat5_lmpkd::SystemsInit()
 	atca.Init(this);
 }
 
-void sat5_lmpkd::SystemsTimestep(double simt, double simdt) 
+void LEM::SystemsTimestep(double simt, double simdt) 
 
 {
 	// Zero ACA and TTCA bits in channel 31
@@ -1348,7 +1351,7 @@ void sat5_lmpkd::SystemsTimestep(double simt, double simdt)
 }
 
 // PANEL SDK SUPPORT
-void sat5_lmpkd::SetValveState(int valve, bool open)
+void LEM::SetValveState(int valve, bool open)
 
 {
 	ValveState[valve] = open;
@@ -1363,7 +1366,7 @@ void sat5_lmpkd::SetValveState(int valve, bool open)
 	*/
 }
 
-bool sat5_lmpkd::GetValveState(int valve)
+bool LEM::GetValveState(int valve)
 
 {
 	//
@@ -1394,7 +1397,7 @@ LEM_ECA::LEM_ECA(){
 	dc_source_c_tb = NULL;
 }
 
-void LEM_ECA::Init(sat5_lmpkd *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b){
+void LEM_ECA::Init(LEM *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b){
 	lem = s;
 	input_a = 0;
 	input_b = 0;
@@ -1586,7 +1589,7 @@ LEM_INV::LEM_INV(){
 	dc_input = NULL;
 }
 
-void LEM_INV::Init(sat5_lmpkd *s){
+void LEM_INV::Init(LEM *s){
 	lem = s;
 }
 
@@ -1631,7 +1634,7 @@ void LEM_INV::UpdateFlow(double dt){
 }
 
 
-void sat5_lmpkd::CheckRCS()
+void LEM::CheckRCS()
 {
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U

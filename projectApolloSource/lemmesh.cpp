@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2006/08/12 15:05:35  movieman523
+  *	Renamed EVA and LEVA files.
+  *	
   *	Revision 1.27  2006/08/12 14:47:57  movieman523
   *	Basic dox for LEVA.
   *	
@@ -124,7 +127,7 @@
 #include "IMU.h"
 
 #include "landervessel.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 #include "leva.h"
 
 #include "CollisionSDK/CollisionSDK.h"
@@ -138,7 +141,7 @@ static MESHHANDLE hAstro1 ;
 static MESHHANDLE hLemProbes;
 
 
-void sat5_lmpkd::ToggleEVA()
+void LEM::ToggleEVA()
 
 {
 	ToggleEva = false;	
@@ -179,7 +182,7 @@ void sat5_lmpkd::ToggleEVA()
 }
 
 
-void sat5_lmpkd::SetupEVA()
+void LEM::SetupEVA()
 
 {
 	if (CDREVA_IP) {
@@ -188,14 +191,14 @@ void sat5_lmpkd::SetupEVA()
 	}
 }
 
-void sat5_lmpkd::StopEVA()
+void LEM::StopEVA()
 
 {
 	// Called by LEVA vessel during destruction
 	CDREVA_IP = false;
 }
 
-void sat5_lmpkd::SetLmVesselDockStage()
+void LEM::SetLmVesselDockStage()
 
 {	
 	double fuelmass;
@@ -284,7 +287,7 @@ void sat5_lmpkd::SetLmVesselDockStage()
 	CheckRCS();
 }
 
-void sat5_lmpkd::SetLmVesselHoverStage()
+void LEM::SetLmVesselHoverStage()
 {
 	double fuelmass;
 	ClearThrusterDefinitions();
@@ -376,7 +379,7 @@ void sat5_lmpkd::SetLmVesselHoverStage()
 }
 
 
-void sat5_lmpkd::SetLmAscentHoverStage()
+void LEM::SetLmAscentHoverStage()
 
 {
 	ClearThrusterDefinitions();
@@ -463,7 +466,7 @@ void sat5_lmpkd::SetLmAscentHoverStage()
 	CheckRCS();
 }
 
-void sat5_lmpkd::SeparateStage (UINT stage)
+void LEM::SeparateStage (UINT stage)
 
 {
 	ResetThrusters();
@@ -498,7 +501,7 @@ void sat5_lmpkd::SeparateStage (UINT stage)
 	}
 }
 
-void sat5_lmpkd::SetLmLandedMesh() {
+void LEM::SetLmLandedMesh() {
 
 	ClearMeshes();
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
@@ -524,7 +527,7 @@ void LEMLoadMeshes()
 // Debug routine.
 //
 
-void sat5_lmpkd::GetDockStatus()
+void LEM::GetDockStatus()
 
 {
 	VESSELSTATUS2 vslm;

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2006/08/11 20:37:46  movieman523
+  *	Added HasProbe flag for docking probe.
+  *	
   *	Revision 1.68  2006/08/02 04:32:05  jasonims
   *	corrected probe problem
   *	
@@ -251,7 +254,7 @@
 #include "saturn.h"
 #include "saturnv.h"
 #include "tracer.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
 #include "sivb.h"
 #include "sii.h"
@@ -1652,7 +1655,7 @@ void SaturnV::DockStage (UINT dockstatus)
    case 2:
 
 	   {
-			sat5_lmpkd *lmvessel;
+			LEM *lmvessel;
 			VESSELSTATUS2 vslm2, *pv;
 			VESSELSTATUS2::DOCKINFOSPEC dckinfo;
 			char VNameLM[256];
@@ -1723,7 +1726,7 @@ void SaturnV::DockStage (UINT dockstatus)
 			ls.Realism = Realism;
 			ls.Yaagc = agc.IsVirtualAGC();
 
-			lmvessel = (sat5_lmpkd *) oapiGetVesselInterface(hLMV);
+			lmvessel = (LEM *) oapiGetVesselInterface(hLMV);
 			lmvessel->SetLanderData(ls);
 			LEMdatatransfer = true;
 

@@ -22,28 +22,31 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/07/24 06:41:29  dseagrav
+  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
+  *	
   *	Revision 1.2  2006/04/17 18:14:27  movieman523
   *	Added flashing borders to all switches (I think).
   *	
   **************************************************************************/
 
-class sat5_lmpkd;
+class LEM;
 class LEM_ECA;
 class LEM_INV;
 
 class LEMThreePosSwitch : public ThreePosSwitch {
 public:
 	LEMThreePosSwitch() { lem = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s);
 
 protected:
-	sat5_lmpkd *lem;
+	LEM *lem;
 };
 
 class LEMValveSwitch: public LEMThreePosSwitch {
 public:
 	LEMValveSwitch() { Valve = 0; Indicator = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s, int valve, IndicatorSwitch *ind);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, int valve, IndicatorSwitch *ind);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 
@@ -57,7 +60,7 @@ protected:
 class LEMBatterySwitch: public LEMThreePosSwitch {
 public:
 	LEMBatterySwitch() { eca = NULL; srcno=0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s,
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
 		LEM_ECA *lem_eca, int src_no);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
@@ -73,7 +76,7 @@ protected:
 class LEMInverterSwitch: public LEMThreePosSwitch {
 public:
 	LEMInverterSwitch() { inv1 = NULL; inv2 = NULL; };
-class LEM_ECA;	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, sat5_lmpkd *s, LEM_INV *lem_inv_1, LEM_INV *lem_inv_2);
+class LEM_ECA;	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, LEM_INV *lem_inv_1, LEM_INV *lem_inv_2);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 	bool ChangeState(int newState);
@@ -88,10 +91,10 @@ protected:
 class LEMValveTalkback : public IndicatorSwitch {
 public:
 	LEMValveTalkback();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, sat5_lmpkd *v);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, LEM *v);
 	int GetState();
 
 protected:
 	int Valve;
-	sat5_lmpkd *our_vessel;
+	LEM *our_vessel;
 };

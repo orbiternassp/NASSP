@@ -22,16 +22,16 @@
 
   **************************************************************************/
 
-class sat5_lmpkd;
+class LEM;
 
 class ATCA {
 	// ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 public:
 	ATCA();                            // Cons
-	void Init(sat5_lmpkd *vessel);     // Init
+	void Init(LEM *vessel);     // Init
 	void Timestep(double simdt);       // Timestep
 
-	sat5_lmpkd *lem;
+	LEM *lem;
 };
 
 

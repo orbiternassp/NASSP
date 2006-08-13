@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2006/08/13 06:30:49  dseagrav
+  *	LM checkpoint commit.
+  *	
   *	Revision 1.30  2006/07/26 15:42:02  tschachim
   *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
   *	
@@ -128,7 +131,7 @@
 #include "IMU.h"
 #include "lemcomputer.h"
 
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
 #include "lm_channels.h"
 
@@ -344,7 +347,7 @@ void LEMcomputer::DisplayNounData(int noun)
 //		int mjd=(int)dmjd;
 //		double times=BurnTime-CurrentTimestep+(dmjd-mjd)*86400;
 		double Met;
-		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+		LEM *lem = (LEM *) OurVessel;
 		lem->GetMissionTime(Met);
 //		sprintf(oapiDebugString(),"met=%.1f",Met);
 		double times=Met+BurnStartTime-CurrentTimestep;
@@ -363,7 +366,7 @@ void LEMcomputer::DisplayNounData(int noun)
 	case 37:
 		{
 		double Met;
-		sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+		LEM *lem = (LEM *) OurVessel;
 		lem->GetMissionTime(Met);
 		double times=Met+BurnStartTime-CurrentTimestep;
 		int hou=(int) (times/3600.);
@@ -1365,7 +1368,7 @@ int LEMcomputer::SetStatus(double simcomputert,
 // DS20060413
 
 void LEMcomputer::ProcessChannel13(int val){
-	sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;	
+	LEM *lem = (LEM *) OurVessel;	
 	// SetInputChannelBit(031,15,1); // ACA OUT OF DETENT
 
 	LMChannelValue13 ch13;
@@ -1393,7 +1396,7 @@ void LEMcomputer::ProcessChannel5(int val){
 	// This is now handled inside the ATCA
 	/*
 	LMChannelValue5 ch5;
-	sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+	LEM *lem = (LEM *) OurVessel;
 	ch5.Value = val;
 	*/
 	/* THRUSTER TABLE:
@@ -1428,7 +1431,7 @@ void LEMcomputer::ProcessChannel6(int val){
 	// This is now handled inside the ATCA
 	/*
 	LMChannelValue6 ch6;
-	sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+	LEM *lem = (LEM *) OurVessel;
 	ch6.Value = val;
 	*/
 	/*
@@ -1518,7 +1521,7 @@ void LEMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 	}
 
 	// Set thrust
-	sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
+	LEM *lem = (LEM *) OurVessel;
 	for (i = 0; i < 16; i++) {
 		lem->SetRCSJetLevel(i, l[i]);
 	}

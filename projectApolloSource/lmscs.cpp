@@ -38,14 +38,14 @@
 // #include "saturn.h"
 #include "lm_channels.h"
 #include "tracer.h"
-#include "sat5_lmpkd.h"
+#include "LEM.h"
 
 // ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 ATCA::ATCA(){
 	lem = NULL;
 }
 
-void ATCA::Init(sat5_lmpkd *vessel){
+void ATCA::Init(LEM *vessel){
 	lem = vessel;
 }
 // GuidContSwitch is the Guidance Control switch
