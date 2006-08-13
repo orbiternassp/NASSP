@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2006/07/26 15:42:02  tschachim
+  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
+  *	
   *	Revision 1.29  2006/06/18 22:45:30  dseagrav
   *	LM ECA bug fix, LGC,IMU,DSKY and IMU OPR wired to CBs, IMU OPR,LGC,FDAI,and DSKY draw power
   *	
@@ -1362,8 +1365,7 @@ int LEMcomputer::SetStatus(double simcomputert,
 // DS20060413
 
 void LEMcomputer::ProcessChannel13(int val){
-	sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
-	SetInputChannelBit(030,10,1);  // LGC HAS CONTROL (TEMPORARY - HAX)	
+	sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;	
 	// SetInputChannelBit(031,15,1); // ACA OUT OF DETENT
 
 	LMChannelValue13 ch13;
@@ -1388,11 +1390,12 @@ void LEMcomputer::ProcessChannel13(int val){
 }
 
 void LEMcomputer::ProcessChannel5(int val){
+	// This is now handled inside the ATCA
+	/*
 	LMChannelValue5 ch5;
 	sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
 	ch5.Value = val;
-	SetInputChannelBit(030,10,1);  // LGC HAS CONTROL (TEMPORARY - HAX)	
-	
+	*/
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U
 		1	A1F		9	A3R
@@ -1404,7 +1407,7 @@ void LEMcomputer::ProcessChannel5(int val){
 		6	A2A		14	A4R
 		7	A2D		15	A4D
 	*/
-
+	/*
 	lem->SetRCSJet(12,(ch5.Bits.B4U != 0));
 	lem->SetRCSJet(15,(ch5.Bits.A4D != 0));
 	lem->SetRCSJet(8,(ch5.Bits.A3U != 0));
@@ -1413,7 +1416,7 @@ void LEMcomputer::ProcessChannel5(int val){
 	lem->SetRCSJet(7,(ch5.Bits.A2D != 0));
 	lem->SetRCSJet(0,(ch5.Bits.A1U != 0));
 	lem->SetRCSJet(3,(ch5.Bits.B1D != 0));
-
+	*/
 	/*
 	if(val != 0){
 		sprintf(oapiDebugString(),"LM CH5: %o CH30: %o CH31: %o",val,GetInputChannel(030),GetInputChannel(031));
@@ -1422,11 +1425,13 @@ void LEMcomputer::ProcessChannel5(int val){
 }
 
 void LEMcomputer::ProcessChannel6(int val){	
+	// This is now handled inside the ATCA
+	/*
 	LMChannelValue6 ch6;
 	sat5_lmpkd *lem = (sat5_lmpkd *) OurVessel;
 	ch6.Value = val;
-	SetInputChannelBit(030,10,1);  // LGC HAS CONTROL (TEMPORARY - HAX)	
-	
+	*/
+	/*
 	lem->SetRCSJet(10,(ch6.Bits.B3A != 0));
 	lem->SetRCSJet(13,(ch6.Bits.B4F != 0));
 	lem->SetRCSJet(1,(ch6.Bits.A1F != 0));
@@ -1435,7 +1440,7 @@ void LEMcomputer::ProcessChannel6(int val){
 	lem->SetRCSJet(9,(ch6.Bits.A3R != 0));
 	lem->SetRCSJet(14,(ch6.Bits.A4R != 0));
 	lem->SetRCSJet(2,(ch6.Bits.B1L != 0));
-
+	*/
 	/*
 	if(val != 0){
 		sprintf(oapiDebugString(),"LM CH6: %o CH30: %o CH31: %o",val,GetInputChannel(030),GetInputChannel(031));
