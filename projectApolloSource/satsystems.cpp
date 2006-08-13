@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.121  2006/08/11 21:16:21  movieman523
+  *	Dummy ELS implementation.
+  *	
   *	Revision 1.120  2006/08/08 20:23:50  jasonims
   *	More Optics stuff and changed the Aperture settings for interior views.
   *	
@@ -478,13 +481,8 @@ void Saturn::SystemsInit() {
 						if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
 					}
 				}
-				if(strncmp(token,"RZX",3)==0){                  // RHC ROTATOR address?
-					// Get next token, which should be ROTATOR number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						rhc_rzx_id = atoi(parameter);
-						if(rhc_rzx_id > 1){ rhc_rzx_id = 1; } // Be paranoid
-					}
+				if(strncmp(token,"RZX",3)==0){                  // RHC Z-AXIS ENABLE?
+					rhc_rzx_id = 1;					
 				}
 				/* *** THC *** */
 				if(strncmp(token,"THC",3)==0){                  // THC address?
@@ -511,13 +509,8 @@ void Saturn::SystemsInit() {
 						if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
 					}
 				}
-				if(strncmp(token,"TZX",3)==0){                  // THC ROTATOR address?
-					// Get next token, which should be ROTATOR number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						thc_rzx_id = atoi(parameter);
-						if(thc_rzx_id > 1){ thc_rzx_id = 1; } // Be paranoid
-					}
+				if(strncmp(token,"TZX",3)==0){                  // THC Z-AXIS-ENABLE?
+					thc_rzx_id = 1;
 				}
 				if(strncmp(token,"RDB",3)==0){					// RHC debug					
 					rhc_debug = 1;

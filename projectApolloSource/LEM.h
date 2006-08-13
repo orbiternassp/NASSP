@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/08/13 16:01:53  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   **************************************************************************/
 
 #if !defined(_PA_LEM_H)
@@ -192,9 +195,14 @@ public:
 	int thc_rot_id;						  // ID of ROTATOR axis to use for THC Z-axis
 	int thc_sld_id;                       // ID of SLIDER axis to use for THC Z-axis
 	int thc_rzx_id;                       // Flag to use native Z-axis as THC Z-axis	
+	int thc_tjt_id;                       // Flag to use axis as TTCA THROTTLE/JETS select lever
 	int rhc_debug;						  // Flags to print debugging messages.
 	int thc_debug;
 	int rhc_pos[3];                       // RHC x/y/z positions
+	int ttca_mode;                        // TTCA Throttle/Jets Mode
+#define TTCA_MODE_THROTTLE 0
+#define TTCA_MODE_JETS 1
+	int ttca_throttle_pos;                // TTCA THROTTLE-mode position
 
 protected:
 
