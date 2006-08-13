@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/08/13 23:12:41  dseagrav
+  *	Joystick improvements
+  *	
   *	Revision 1.18  2006/08/13 16:55:35  movieman523
   *	Removed a bunch of unused files.
   *	
@@ -1315,7 +1318,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 				if(thc_rot_pos > 49152){
 					val31.Bits.PlusZ = 1;
 				}
-				if(thc_debug == -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d TJT = %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
+				if(thc_debug != -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d TJT = %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
 					thc_rot_pos,thc_tjt_pos); }
 			}else{
 				// No JS
