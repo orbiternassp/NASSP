@@ -52,6 +52,28 @@ typedef union {
 	int Value;
 } LMChannelValue6;
 
+// Channel 10, DSKY
+typedef union {
+	struct {
+		unsigned RelayBit1:1;
+		unsigned RelayBit2:1;
+		unsigned VELCaution:1;
+		unsigned RelayBit4:1;
+		unsigned ALTCaution:1;
+		unsigned RelayBit6:1;
+		unsigned RelayBit7:1;
+		unsigned RelayBit8:1;
+		unsigned RelayBit9:1;
+		unsigned RelayBit10:1;
+		unsigned RelayBit11:1;
+		unsigned RelayAddr1:1;
+		unsigned RelayAddr2:1;
+		unsigned RelayAddr3:1;
+		unsigned RelayAddr4:1;
+	} Bits;
+	int Value;
+} LMChannelValue10;
+
 // Channel 11, DSKY II
 typedef union {
 	struct {
@@ -116,6 +138,44 @@ typedef union {
 	unsigned int Value;
 } LMChannelValue13;
 
+// Channel 14, IMU DISCRETES
+typedef union {
+	struct {
+		unsigned OutlinkActivity:1;
+		unsigned AltitudeRate:1;
+		unsigned AltitudeIndicator:1;
+		unsigned ThrustIndicatorDrive:1;
+		unsigned Spare:1;
+		unsigned GyroEnable:1;
+		unsigned GyroB:1;
+		unsigned GyroA:1;
+		unsigned GyroMinus:1;
+		unsigned GyroActivity:1;
+		unsigned ShaftAngleCDUDrive:1;
+		unsigned TrunnionAngleCDUDrive:1;
+		unsigned ZCDUDrive:1;
+		unsigned YCDUDrive:1;
+		unsigned XCDUDrive:1;
+	} Bits;
+	unsigned int Value;
+} LMChannelValue14;
+
+// Channel 15, MAIN DSKY
+
+// Channel 16, NAVIGATION
+typedef union {
+	struct {
+		unsigned Spare1:1;
+		unsigned Spare2:1;
+		unsigned MarkX:1;
+		unsigned MarkY:1;
+		unsigned MarkReject:1;
+		unsigned PositiveDescent:1;
+		unsigned NegativeDescent:1;
+	} Bits;
+	unsigned int Value;
+} LMChannelValue16;
+
 // Channel 30, GN&CS DISCRETES
 typedef union {
 	struct {
@@ -137,3 +197,67 @@ typedef union {
 	} Bits;
 	unsigned int Value;
 } LMChannelValue30;
+
+// Channel 31, Translation & Rotation
+typedef union {
+	struct {
+		unsigned PlusElevation:1;
+		unsigned MinusElevation:1;
+		unsigned PlusYaw:1;
+		unsigned MinusYaw:1;
+		unsigned PlusAzimuth:1;
+		unsigned MinusAzimuth:1;
+		unsigned PlusX:1;
+		unsigned MinusX:1;
+		unsigned PlusY:1;
+		unsigned MinusY:1;
+		unsigned PlusZ:1;
+		unsigned MinusZ:1;
+		unsigned AttitudeHold:1;
+		unsigned AutomaticStab:1;
+		unsigned ACAOutOfDetent:1;
+	} Bits;
+	unsigned int Value;
+} LMChannelValue31;
+
+// Channel 32, Impulse
+typedef union {
+	struct {
+		unsigned A4D_A4R_Failed:1;
+		unsigned A3U_A3R_Failed:1;
+		unsigned B4U_B4F_Failed:1;
+		unsigned B3D_B3A_Failed:1;
+		unsigned B1D_B1L_Failed:1;
+		unsigned A1U_A1F_Failed:1;
+		unsigned B2U_B2L_Failed:1;
+		unsigned A2D_A2A_Failed:1;
+		unsigned GimbalOff:1;
+		unsigned GimbalFail:1;
+	} Bits;
+	unsigned int Value;
+} LMChannelValue32;
+
+// Channel 33, Optics
+typedef union {
+	struct {
+		unsigned Spare:1;
+		unsigned RRPowerOnAuto:1;      // RR power on and RR mode = LGC
+		unsigned RRRangeLowScale:1;
+		unsigned RRDataGood:1;
+		unsigned LRDataGood:1;
+		unsigned LRPos1:1;
+		unsigned LRPos2:1;
+		unsigned LRVelocityDataGood:1;
+		unsigned LRRangeLowScale:1;
+		unsigned BlockUplink:1;
+		unsigned UplinkTooFast:1;
+		unsigned DownlinkTooFast:1;
+		unsigned PIPAFailed:1;
+		unsigned LGC:1;                // LGC Internal Malfunction
+		unsigned OscillatorAlarm:1;
+	} Bits;
+	unsigned int Value;
+} LMChannelValue33;
+
+// Channel 34, Downlink 1
+// Channel 35, Downlink 2
