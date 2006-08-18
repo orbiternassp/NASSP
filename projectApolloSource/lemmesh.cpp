@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2006/08/13 16:55:35  movieman523
+  *	Removed a bunch of unused files.
+  *	
   *	Revision 1.29  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -234,7 +237,7 @@ void LEM::SetLmVesselDockStage()
 	SetTouchdownPoints (_V(0,0,10), _V(-1,0,-10), _V(1,0,-10));
     VECTOR3 mesh_dir=_V(0.0,-0.2,0.03);
 
-	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);
+	UINT meshidx = AddMesh (hLMPKD, &mesh_dir);	
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
     if (!ph_Dsc)  
 		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
@@ -295,10 +298,10 @@ void LEM::SetLmVesselHoverStage()
 	ClearThrusterDefinitions();
 	agc.SetVesselStats(DPS_ISP, DPS_THRUST, true);
 	if(agc.GetApolloNo() < 15) {
-		SetEmptyMass(6651.0);
+		SetEmptyMass(7113.6); // Was 6651
 		fuelmass=8375.;
 	} else {
-		SetEmptyMass(7481.0);
+		SetEmptyMass(7762); // Was 7481
 		fuelmass=8891.;
 	}
 	SetSize (7);
@@ -320,8 +323,7 @@ void LEM::SetLmVesselHoverStage()
 	UINT meshidx;
 	if (Landed) {
 		meshidx = AddMesh (hLMLanded, &mesh_dir);
-	}
-	else {
+	}else{
 		UINT probeidx;
 		meshidx = AddMesh (hLMLanded, &mesh_dir);
 		probeidx = AddMesh (hLemProbes, &mesh_dir);
@@ -329,8 +331,9 @@ void LEM::SetLmVesselHoverStage()
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
     
-	if (!ph_Dsc)  
+	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
+	}
 
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 

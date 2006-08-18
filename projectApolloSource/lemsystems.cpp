@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/08/13 23:33:16  dseagrav
+  *	No comment.
+  *	
   *	Revision 1.19  2006/08/13 23:12:41  dseagrav
   *	Joystick improvements
   *	
@@ -99,6 +102,8 @@
 #include "IMU.h"
 
 #include "LEM.h"
+
+#include "CollisionSDK/CollisionSDK.h"
 
 void LEM::ResetThrusters()
 
@@ -1014,6 +1019,14 @@ void LEM::SystemsInit()
 	// And the CDR FDAI itself	
 	fdaiLeft.WireTo(&CDR_FDAI_DC_CB,&CDR_FDAI_AC_CB);
 
+	// EXPLOSIVE DEVICES SUPPLY CBs
+	EDS_CB_LG_FLAG.WireTo(&CDRs28VBus);
+	EDS_CB_LOGIC_A.WireTo(&CDRs28VBus);
+	EDS_CB_LOGIC_B.WireTo(&LMPs28VBus);
+	// EXPLOSIVE DEVICES SYSTEMS
+	EDLGTB.WireTo(&EDS_CB_LG_FLAG);
+
+
 	//
 	// HACK:
 	// Not sure where these should be wired to.
@@ -1029,6 +1042,9 @@ void LEM::SystemsInit()
 
 	Panelsdk.AddElectrical(&INV_1, false);
 	Panelsdk.AddElectrical(&INV_2, false);
+
+	// EDS
+	eds.Init(this);
 
 	// DS20060413 Initialize joystick
 	HRESULT         hr;
@@ -1342,12 +1358,12 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	imu.SystemTimestep(simdt);								// Draw power
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
-	atca.Timestep(simdt);								// Do systems work
+	atca.Timestep(simdt);								    // Do Work
 	fdaiLeft.Timestep(MissionTime, simdt);					// Do Work
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power
 	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
 	EventTimerDisplay.Timestep(MissionTime, simdt);
-
+	eds.TimeStep();                                         // Do Work
 
 	// Debug tests would go here
 	/*
@@ -1701,4 +1717,63 @@ void LEM::CheckRCS()
 		SetThrusterResource(th_rcs[13],NULL);
 	}
 	return;
+}
+
+// EXPLOSIVE DEVICES SYSTEM
+LEM_EDS::LEM_EDS(){
+	lem = NULL;
+	LG_Deployed = FALSE;
+}
+
+void LEM_EDS::Init(LEM *s){
+	lem = s;
+}
+
+void LEM_EDS::TimeStep(){
+	// Set TBs
+	// BP when descent stage detached
+	if(LG_Deployed == TRUE && lem->status < 2){ lem->EDLGTB = 1; }else{	lem->EDLGTB = 0; }
+	// Do we have power?
+	if(lem->EDS_CB_LOGIC_A.Voltage() < 20 && lem->EDS_CB_LOGIC_B.Voltage() < 20){ return; }
+	// Are we enabled?
+	if(lem->EDMasterArm.GetState() != TOGGLESWITCH_UP){ return; }
+	// PROCESS THESE IN THIS ORDER:
+	// Landing Gear Deployment
+	if(LG_Deployed == FALSE && lem->status == 0){
+		// Check?
+		if(lem->EDLGDeploy.GetState() == TOGGLESWITCH_UP){
+			// Deploy landing gear
+			lem->SetLmVesselHoverStage();
+			LG_Deployed = TRUE;
+		}
+	}
+	// RCS propellant pressurization
+	// Descent Propellant Tank Prepressurization (ambient helium)
+	// Descent Propellant Tank Prepressurization (supercritical helium)
+	// Descent Propellant Tank Venting
+	// Ascent Propellant Tank Pressurization
+	// Interstage nut-and-bolt separation and ascent stage deadfacing
+	// Interstage umbilical severance
+}
+
+void LEM_EDS::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+	oapiWriteLine(scn, start_str);
+	oapiWriteScenario_int(scn, "LG_DEP", LG_Deployed);
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_EDS::LoadState(FILEHANDLE scn,char *end_str){
+	char *line;
+	int dec = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+		if (!strnicmp (line, "LG_DEP", 6)) {
+			sscanf(line + 6, "%d", &dec);
+			LG_Deployed = dec;
+		}
+	}
+
 }

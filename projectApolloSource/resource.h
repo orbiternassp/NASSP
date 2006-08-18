@@ -573,7 +573,9 @@
 #define AID_SYSTEMTESTROTARIES			839
 #define AID_RNDZXPDRSWITCH				840
 #define AID_PANEL101LOWERSWITCHES		841
-
+#define AID_LEM_PANEL_8                 842
+#define AID_LEM_P11_CB_ROW3             843
+#define AID_LEM_P16_CB_ROW2				844
 
 // Next default values for new objects
 // 
