@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/08/13 23:12:41  dseagrav
+  *	Joystick improvements
+  *	
   *	Revision 1.1  2006/08/13 16:01:53  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -106,6 +109,18 @@ public:
 	int active;
 	LEM *lem;					// Pointer at LM
 	e_object *dc_input;
+};
+
+// EXPLOSIVE DEVICES SYSTEM
+class LEM_EDS{
+public:
+	LEM_EDS();							// Cons
+	void Init(LEM *s); // Init
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep();
+	LEM *lem;					// Pointer at LEM
+	bool LG_Deployed;
 };
 
 
@@ -459,6 +474,10 @@ protected:
 	CircuitBrakerSwitch CDR_FDAI_DC_CB;
 	CircuitBrakerSwitch CDR_FDAI_AC_CB;
 
+	SwitchRow Panel11CB3SwitchRow;
+	CircuitBrakerSwitch EDS_CB_LOGIC_A;
+	CircuitBrakerSwitch EDS_CB_LG_FLAG;
+
 	SwitchRow Panel11CB4SwitchRow;
 	CircuitBrakerSwitch IMU_OPR_CB;
 	CircuitBrakerSwitch IMU_SBY_CB;
@@ -470,6 +489,27 @@ protected:
 	CircuitBrakerSwitch CDRBatteryFeedTieCB2;
 	// AC Inverter 1 feed
 	CircuitBrakerSwitch CDRInverter1CB;
+
+	/////////////////
+	// LEM Panel 8 //
+	/////////////////
+
+	SwitchRow Panel8SwitchRow;
+	ToggleSwitch EDMasterArm;
+	ToggleSwitch EDDesVent;
+	ThreePosSwitch EDASCHeSel;
+	ToggleSwitch EDDesPrpIsol;
+	ToggleSwitch EDLGDeploy;
+	ToggleSwitch EDHePressRCS;
+	ToggleSwitch EDHePressDesStart;
+	ToggleSwitch EDHePressASC;
+	ToggleSwitch EDStage;
+	ToggleSwitch EDStageRelay;
+	ThreePosSwitch EDDesFuelVent;
+	ThreePosSwitch EDDesOxidVent;
+	IndicatorSwitch EDLGTB;
+	IndicatorSwitch EDDesFuelVentTB;
+	IndicatorSwitch EDDesOxidVentTB;
 
 	bool RCS_Full;
 	bool Eds;
@@ -671,6 +711,9 @@ protected:
 	// LEM panel 16 //
 	//////////////////
 
+	SwitchRow Panel16CB2SwitchRow;
+	CircuitBrakerSwitch EDS_CB_LOGIC_B;
+
 	SwitchRow Panel16CB4SwitchRow;
 	CircuitBrakerSwitch LMPInverter2CB;
 	// Battery feed tie breakers (ECA output breakers)
@@ -814,7 +857,7 @@ protected:
 	// AC Bus A and B
 	// This is a cheat. the ACbus class actually simulates an inverter, which is bad for the LM.
 	// So we fake it out with a DC bus instead.
-	// Also, I have to get to these from the inverter select switch class
+	// Also, I have to get to these from the inverter select switch class	
 	public:
 	DCbus ACBusA;
 	DCbus ACBusB;
@@ -826,9 +869,13 @@ protected:
 
 	// GNC
 	ATCA atca;
+	
+	// EDS
+	LEM_EDS eds;
 
-	// Friendclass ATCA to allow LM control
+	// Friend classes
 	friend class ATCA;
+	friend class LEM_EDS;
 };
 
 extern void LEMLoadMeshes();

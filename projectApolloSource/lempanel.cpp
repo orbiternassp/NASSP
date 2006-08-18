@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2006/08/13 16:55:35  movieman523
+  *	Removed a bunch of unused files.
+  *	
   *	Revision 1.64  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -428,12 +431,29 @@ void LEM::InitPanel() {
 	DSCCDRBat3LVSwitch.Register(PSH, "DSCCDRBat3LVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DSCCDRBat4LVSwitch.Register(PSH, "DSCCDRBat4LVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
+	EDS_CB_LOGIC_B.Register(PSH,"EDS_CB_LOGIC_B",1);
 	LMPInverter2CB.Register(PSH,"LMPInverter2CB",1);
 	LMPBatteryFeedTieCB1.Register(PSH, "LMPBatteryFeedTieCB1", 1);
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
 	CDRBatteryFeedTieCB1.Register(PSH, "CDRBatteryFeedTieCB1", 1);
 	CDRBatteryFeedTieCB2.Register(PSH, "CDRBatteryFeedTieCB2", 1);
 	CDRInverter1CB.Register(PSH,"CDRInverter1CB",1);
+	
+	EDMasterArm.Register(PSH,"EDMasterArm",TOGGLESWITCH_DOWN);
+	EDDesVent.Register(PSH,"EDDesVent",TOGGLESWITCH_DOWN);
+	EDASCHeSel.Register(PSH,"EDASCHeSel",THREEPOSSWITCH_CENTER);
+	EDDesPrpIsol.Register(PSH,"EDDesPrpIsol",TOGGLESWITCH_DOWN);
+	EDLGDeploy.Register(PSH,"EDLGDeploy",TOGGLESWITCH_DOWN);
+	EDHePressRCS.Register(PSH,"EDHePressRCS",TOGGLESWITCH_DOWN);
+	EDHePressDesStart.Register(PSH,"EDHePressDesStart",TOGGLESWITCH_DOWN);
+	EDHePressASC.Register(PSH,"EDHePressASC",TOGGLESWITCH_DOWN);
+	EDStage.Register(PSH,"EDStage",TOGGLESWITCH_DOWN);
+	EDStageRelay.Register(PSH,"EDStageRelay",TOGGLESWITCH_DOWN);
+	EDDesFuelVent.Register(PSH,"EDDesFuelVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
+	EDDesOxidVent.Register(PSH,"EDDesOxidVent",THREEPOSSWITCH_CENTER,SPRINGLOADEDSWITCH_CENTER);
+	EDLGTB.Register(PSH, "EDLGTB", true);
+	EDDesFuelVentTB.Register(PSH, "EDDesFuelVentTB", true);
+	EDDesOxidVentTB.Register(PSH, "EDDesOxidVentTB", true);
 
 	AC_A_INV_1_FEED_CB.Register(PSH,"AC_A_INV_1_FEED_CB",1);
 	AC_A_INV_2_FEED_CB.Register(PSH,"AC_A_INV_2_FEED_CB",1);
@@ -442,6 +462,10 @@ void LEM::InitPanel() {
 
 	CDR_FDAI_DC_CB.Register(PSH,"CDR_FDAI_DC_CB",1);
 	CDR_FDAI_AC_CB.Register(PSH,"CDR_FDAI_AC_CB",1);
+
+	EDS_CB_LOGIC_A.Register(PSH,"EDS_CB_LOGIC_A",1);
+	EDS_CB_LG_FLAG.Register(PSH,"EDS_CB_LG_FLAG",1);
+
 	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 1);
 	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 1);
 
@@ -1184,9 +1208,11 @@ bool LEM::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW1,					_R( 184,  85,  1433,  115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW2,					_R( 184,  258, 1433,  288), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW3,					_R( 184,  431, 1433,  461), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW4,					_R( 184,  604, 1557,  634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P11_CB_ROW5,					_R( 184,  777,  916,  807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);		
-		
+		oapiRegisterPanelArea (AID_LEM_PANEL_8,					    _R( 431,  916, 1574, 1258), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);		
+
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 
@@ -1194,6 +1220,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
 		oapiRegisterPanelArea (AID_LM_EPS_LEFT_CONTROLS,            _R( 314,  728, 542,  913), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW2,					_R( 173,  258, 1415, 290), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW4,					_R( 173,  604, 1415, 634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_BATTERY_TALKBACKS,	        _R( 573,  742, 888,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_HIGH_VOLTAGE_SWITCHES,	    _R( 568,  795, 895,  830), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1371,6 +1398,9 @@ void LEM::SetSwitches(int panel) {
 			break;
 
 		case LMPANEL_RIGHTPANEL: // LEM Right Panel
+			Panel16CB2SwitchRow.Init(AID_LEM_P16_CB_ROW2, MainPanel);
+			EDS_CB_LOGIC_B.Init(256, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
+			
 			// 173
 			Panel16CB4SwitchRow.Init(AID_LEM_P16_CB_ROW4, MainPanel);
 			// In reality, two of these are paralleled.
@@ -1402,7 +1432,6 @@ void LEM::SetSwitches(int panel) {
 			break;
 
 		case LMPANEL_LEFTPANEL:
-			// 184
 			Panel11CB1SwitchRow.Init(AID_LEM_P11_CB_ROW1, MainPanel);
 			AC_A_INV_1_FEED_CB.Init( 765, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &INV_1, 5.0);
 			AC_A_INV_2_FEED_CB.Init( 701, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &INV_2, 5.0);
@@ -1412,6 +1441,10 @@ void LEM::SetSwitches(int panel) {
 			Panel11CB2SwitchRow.Init(AID_LEM_P11_CB_ROW2, MainPanel);
 			CDR_FDAI_DC_CB.Init( 893, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB2SwitchRow, &CDRs28VBus, 2.0);
 			CDR_FDAI_AC_CB.Init( 1214, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB2SwitchRow, &ACBusA, 2.0);
+
+			Panel11CB3SwitchRow.Init(AID_LEM_P11_CB_ROW3, MainPanel); // 184,431 to 1433,459
+			EDS_CB_LG_FLAG.Init(1021, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 2.0);
+			EDS_CB_LOGIC_A.Init(1085, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 2.0);
 
 			Panel11CB4SwitchRow.Init(AID_LEM_P11_CB_ROW4, MainPanel);
 			IMU_OPR_CB.Init( 1342,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 20.0);
@@ -1423,6 +1456,23 @@ void LEM::SetSwitches(int panel) {
 			CDRBatteryFeedTieCB2.Init( 66,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &ECA_2, 100.0);
 			CDRInverter1CB.Init( 638, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &ECA_2, 30.0);
 			
+			// Panel 8 is  431,916 to 1574,1258
+			Panel8SwitchRow.Init(AID_LEM_PANEL_8, MainPanel);
+			EDMasterArm.Init(861-431, 978-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDDesVent.Init(935-431, 978-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDASCHeSel.Init(1002-431, 978-916, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDDesPrpIsol.Init(643-431, 978-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDLGDeploy.Init(784-431, 1078-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDHePressRCS.Init(861-431, 1078-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDHePressDesStart.Init(935-431, 1078-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDHePressASC.Init(1002-431, 1078-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDStage.Init(783-431, 1175-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDStageRelay.Init(1002-431, 1182-916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
+			EDDesFuelVent.Init(467-431, 1016-916, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
+			EDDesOxidVent.Init(540-431, 1016-916, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
+			EDLGTB.Init(790-431, 1033-916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow);
+			EDDesFuelVentTB.Init(472-431, 960-916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow);
+			EDDesOxidVentTB.Init(545-431, 960-916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow);
 			break;
 	}
 }

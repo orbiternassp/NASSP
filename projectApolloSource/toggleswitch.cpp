@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2006/07/24 06:41:30  dseagrav
+  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
+  *	
   *	Revision 1.70  2006/06/17 18:13:13  tschachim
   *	Moved BMAGPowerRotationalSwitch.
   *	
@@ -2094,25 +2097,35 @@ bool IndicatorSwitch::CheckMouseClick(int event, int mx, int my) {
 
 void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 
+	int drawState=0;
 	if (switchRow) {
 		if (switchRow->panelSwitches->listener) 
 			switchRow->panelSwitches->listener->PanelIndicatorSwitchStateRequested(this);
 	}
 
-	state = GetState();
+	// Require power if wired
+	if(SRC != NULL){
+		if(SRC->Voltage() > 0){
+			drawState = GetState();
+		}else{
+			drawState = 0;
+		}
+	}else{
+		drawState = GetState();
+	}
 
-	if (state && displayState < 3.0)
+	if (drawState && displayState < 3.0)
 		displayState += oapiGetSimStep() * 4.0;
 
-	if (!state && displayState > 0.0) 
+	if (!drawState && displayState > 0.0) 
 		displayState -= oapiGetSimStep() * 4.0;
 
 	if (displayState > 3.0) displayState = 3.0;
 	if (displayState < 0.0) displayState = 0.0;
 
 	// Cheating beyond normal saves switch subclasses and associated etcetera
-	if (displayState == 3.0 && state > 1){
-		displayState += (state - 1);
+	if (displayState == 3.0 && drawState > 1){
+		displayState += (drawState - 1);
 	}
 
 	oapiBlt(drawSurface, switchSurface, x, y, width * (int)displayState, 0, width, height);

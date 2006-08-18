@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/08/13 16:01:53  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -1046,6 +1049,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
         else if (!strnicmp (line, PANELSWITCH_START_STRING, strlen(PANELSWITCH_START_STRING))) { 
 			PSH.LoadState(scn);	
 		}
+		else if (!strnicmp (line, "LEM_EDS_START",sizeof("LEM_EDS_START"))) {
+			eds.LoadState(scn,"LEM_EDS_END");
+		}
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -1148,7 +1154,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
 	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
-	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
+	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);	
 
 	if (Realism != REALISM_DEFAULT) {
 		oapiWriteScenario_int (scn, "REALISM", Realism);
@@ -1193,6 +1199,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	//
 
 	PSH.SaveState(scn);	
+
+	// Save EDS
+	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
 }
 
 bool LEM::clbkLoadGenericCockpit ()
