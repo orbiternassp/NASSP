@@ -10,7 +10,7 @@ Real rendez vous took place after 2 days passing over Metz (North-East of France
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System Sol_NASSP5
+  System ProjectApollo\Sol
   Date MJD 42608.8655586226
 END_ENVIRONMENT
 
@@ -46,13 +46,14 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-AS-211:nSaturn1B
+AS-211:ProjectApollo\Saturn1b
   STATUS Landed Earth
-  BASE Cape Canaveral:12
+  BASE Cape Canaveral:2
+  POS -80.6069645 28.6012355
   HEADING 270.00
   FUEL 1.000
-  APOLLONO 10
-  NASSPVER 60050
+  APOLLONO 0
+  NASSPVER 70000
   VECHNO 211
   STAGE 5
   STAGESTATUS 0
@@ -64,6 +65,12 @@ AS-211:nSaturn1B
   TCP 18.0
   S4PL 1
   LANG English
+END
+ML:ProjectApollo\ML
+  STATUS Landed Earth
+  POS -80.6069608 28.6013186
+  HEADING 0.43
+  LVNAME AS-211
 END
 END_SHIPS
 
