@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2006/06/29 22:38:44  tschachim
+  *	Bugfix saving/loading
+  *	
   *	Revision 1.22  2006/06/17 18:11:52  tschachim
   *	More precise saving/loading.
   *	
@@ -412,8 +415,8 @@ VECTOR3 IMU::CalculateAccelerations(double deltaT)
 bool IMU::IsPowered()
 
 {
-	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) return false;
-	if (IMUHeater && !IMUHeater->pumping) return false;
+	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE){ return false; }
+	if (IMUHeater && !IMUHeater->pumping){ return false; }
 	return true;
 }
 

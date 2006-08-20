@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/06/29 22:38:44  tschachim
+  *	Bugfix saving/loading
+  *	
   *	Revision 1.8  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -95,7 +98,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 
 protected:
-
+	
 	bool LEM; // Flag to indicate LEM mode
 	VECTOR3 CalculateAccelerations(double deltaT);
 	void DriveCDUX(int cducmd);

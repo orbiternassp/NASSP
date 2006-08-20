@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/08/18 05:45:01  dseagrav
+  *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
+  *	
   *	Revision 1.1  2006/08/13 16:01:53  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -138,6 +141,7 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 	if (vessel) delete (LEM *)vessel;
 }
 
+// Constructor
 LEM::LEM(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
 	
 	CDRs28VBus("CDR-28V-Bus",NULL),
@@ -152,22 +156,18 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 
-	// VESSELSOUND **********************************************************************
-	// initialisation
-
+	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	// Force to NULL to avoid stupid VC++ optimization failure
 	int x=0;
 	while(x<N_LEM_VALVES){
 		pLEMValves[x] = NULL;
-
-		// TODO Dirty hack until valvestate gets saved
-		ValveState[x] = true;
-
+		ValveState[x] = FALSE;
 		x++;
 	}
 
+	// Init further down
 	Init();
 	SystemsInit();
 }
@@ -251,9 +251,8 @@ void LEM::Init()
 
 	ph_Dsc = 0;
 	ph_Asc = 0;
-	ph_DscRCSA = 0;
-	ph_DscRCSB = 0;
-	ph_rcslm1 = 0;
+	ph_RCSA = 0;
+	ph_RCSB = 0;
 
 	Realism = REALISM_DEFAULT;
 	ApolloNo = 0;
@@ -686,12 +685,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		Sswitch1=false;
 		Undock(0);
 		}
-	/* OBSOLETED DS20060412
-	if (GetNavmodeState(NAVMODE_KILLROT)&& !ATT2switch && !ATT3switch){
-		if (GetThrusterLevel(th_att_rot[10]) <0.00001 && GetThrusterLevel(th_att_rot[18]) <0.00001 ){
-			DeactivateNavmode(NAVMODE_KILLROT);
-		}
-	} */
+
 	if (stage == 0)	{
 		if ((EngineArmSwitch.IsDown())  && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
@@ -705,23 +699,9 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			agc.SetInputChannelBit(030, 3, false);
 		}
 		
-		/* OBSOLETED DS20060410
-
-		if(!AFEED1switch && !AFEED2switch && !AFEED3switch && !AFEED4switch){
-			SetRCS(ph_rcslm0);
-		} else {
-			SetRCS(ph_rcslm1);
-		} */
 
 	}else if (stage == 1 || stage == 5)	{
-		/* OBSOLETED DS20060410
-		if(!AFEED1switch && !AFEED2switch && !AFEED3switch && !AFEED4switch){
-			SetRCS(ph_rcslm0);
-		}
-		else{
-			SetRCS(ph_rcslm1);
-		}
-		*/
+
 		if ((EngineArmSwitch.IsDown() )&& !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
@@ -816,13 +796,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			SetThrusterResource(th_hover[1], NULL);
 			agc.SetInputChannelBit(030, 3, false);
 		}
-		/* OBSOLETED DS20060410
-		if (!AscentRCSArmed()) {
-			SetRCS(NULL);
-		}
-		else{
-			SetRCS(ph_rcslm1);
-		} */
 	}
 	else if (stage == 3){
 		if (AscentEngineArmed()) {
@@ -834,13 +807,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			SetThrusterResource(th_hover[1], NULL);
 			agc.SetInputChannelBit(030, 3, false);
 		}
-		/* OBSOLETED DS20060410
-		if(!AscentRCSArmed()){
-			SetRCS(NULL);
-		}
-		else{
-			SetRCS(ph_rcslm1);
-		} */
 	}
 	else if (stage == 4)
 	{	
@@ -1185,8 +1151,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
-	ECA_1.SaveState(scn,"ECA_1_START","ECA_1_END");
-	ECA_2.SaveState(scn,"ECA_2_START","ECA_2_END");
 
 	//
 	// Save the Panel SDK state.
@@ -1199,6 +1163,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	//
 
 	PSH.SaveState(scn);	
+
+	// Save ECAs
+	ECA_1.SaveState(scn,"ECA_1_START","ECA_1_END");
+	ECA_2.SaveState(scn,"ECA_2_START","ECA_2_END");
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");

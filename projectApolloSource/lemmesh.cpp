@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2006/08/18 05:45:01  dseagrav
+  *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
+  *	
   *	Revision 1.30  2006/08/13 16:55:35  movieman523
   *	Removed a bunch of unused files.
   *	
@@ -244,11 +247,11 @@ void LEM::SetLmVesselDockStage()
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
 	// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
-	if (!ph_DscRCSA) {
-		ph_DscRCSA = CreatePropellantResource(133.084001);
+	if (!ph_RCSA) {
+		ph_RCSA = CreatePropellantResource(133.084001);
 	}
-	if (!ph_DscRCSB) {
-		ph_DscRCSB = CreatePropellantResource(133.084001);
+	if (!ph_RCSB) {
+		ph_RCSB = CreatePropellantResource(133.084001);
 	}
 
 	// orbiter main thrusters
@@ -337,11 +340,11 @@ void LEM::SetLmVesselHoverStage()
 
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
 
-	if (!ph_DscRCSA){
-		ph_DscRCSA = CreatePropellantResource(133.084001);
+	if (!ph_RCSA){
+		ph_RCSA = CreatePropellantResource(133.084001);
 	}
-	if (!ph_DscRCSB){
-		ph_DscRCSB = CreatePropellantResource(133.084001);
+	if (!ph_RCSB){
+		ph_RCSB = CreatePropellantResource(133.084001);
 	}
 	
 	// orbiter main thrusters
@@ -415,10 +418,6 @@ void LEM::SetLmAscentHoverStage()
     if (!ph_Asc)  
 		ph_Asc  = CreatePropellantResource(2345); //2nd stage Propellant
 	SetDefaultPropellantResource (ph_Asc); // display 2nd stage propellant level in generic HUD
-	if (!ph_rcslm1){
-//		ph_rcslm1 = CreatePropellantResource(100);
-		ph_rcslm1 = CreatePropellantResource(287);
-	}
 	// orbiter main thrusters
 //    th_hover[0] = CreateThruster (_V( 0.0,-2.5,0.0), _V( 0,1,0), 15880, ph_Asc, 2921);
     th_hover[0] = CreateThruster (_V( 0.0,-2.5,0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
@@ -444,13 +443,6 @@ void LEM::SetLmAscentHoverStage()
 		DelPropellantResource(ph_Dsc);
 		ph_Dsc = 0;
 	}
-	if(ph_DscRCSA){
-		DelPropellantResource(ph_DscRCSA);
-	}
-	if(ph_DscRCSB){
-		DelPropellantResource(ph_DscRCSB);
-	}
-
 	
 	VECTOR3 dockpos = {0.0 ,0.58, 0.0};
 	VECTOR3 dockdir = {0,1,0};

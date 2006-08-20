@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/08/18 05:45:01  dseagrav
+  *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
+  *	
   *	Revision 1.2  2006/08/13 23:12:41  dseagrav
   *	Joystick improvements
   *	
@@ -40,6 +43,9 @@
 #include "dinput.h"
 // DS20060730 Include LM SCS
 #include "lmscs.h"
+
+// Cosmic background temperature in degrees F
+#define CMBG_TEMP -459.584392
 
 //
 // Valves.
@@ -120,7 +126,7 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep();
 	LEM *lem;					// Pointer at LEM
-	bool LG_Deployed;
+	bool LG_Deployed;           // Landing Gear Deployed Flag	
 };
 
 
@@ -180,8 +186,8 @@ public:
 	virtual void StopEVA();
 	virtual Connector *GetDockingConnector();
 
-	PROPELLANT_HANDLE ph_DscRCSA,ph_DscRCSB;   // Descent RCS A and B, replaces ph_rcslm0
-	PROPELLANT_HANDLE ph_Dsc, ph_Asc ,ph_rcslm1; // handles for propellant resources
+	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
+	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
 	// There should be only 16 RCS. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_rcs[16];
@@ -238,14 +244,10 @@ protected:
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
 	void ResetThrusters();
-	// void SetRCS(PROPELLANT_HANDLE ph_prop); OBSOLETED DS20060410	
 	void AttitudeLaunch1();
 	void SeparateStage (UINT stage);
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
-	// These two not used! DS20060413
-	/* void AddRCS_LM(double TRANZ);
-	void AddRCS_LM2(double TRANZ); */
 	void AddRCS_LMH(double TRANZ);
 	void AddRCS_LMH2(double TRANZ);
 	void ToggleEVA();
@@ -265,7 +267,6 @@ protected:
 
 	bool CabinFansActive();
 	bool AscentEngineArmed();
-	bool AscentRCSArmed();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
