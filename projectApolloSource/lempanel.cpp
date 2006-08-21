@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2006/08/18 05:45:01  dseagrav
+  *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
+  *	
   *	Revision 1.65  2006/08/13 16:55:35  movieman523
   *	Removed a bunch of unused files.
   *	
@@ -267,6 +270,7 @@ void InitGParam(HINSTANCE hModule)
 	g_Param.pen[1] = CreatePen (PS_SOLID, 3, RGB(164,164,164));
 	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB(255,0,0));
 	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB(255,0,0));
+	g_Param.pen[4] = CreatePen (PS_SOLID, 3, RGB(0,0,0));
 
 	g_Param.col[2] = oapiGetColour(154,154,154);
 	g_Param.col[3] = oapiGetColour(3,3,3);
@@ -417,11 +421,26 @@ void LEM::InitPanel() {
 	LampToneTestRotary.AddPosition(7, 110);
 	LampToneTestRotary.Register(PSH, "LampToneTestRotary", 0);
 
+	EPSMonitorSelectRotary.AddPosition(0,210);
+	EPSMonitorSelectRotary.AddPosition(1,240);
+	EPSMonitorSelectRotary.AddPosition(2,270);
+	EPSMonitorSelectRotary.AddPosition(3,300);
+	EPSMonitorSelectRotary.AddPosition(4,330);
+	EPSMonitorSelectRotary.AddPosition(5,0);
+	EPSMonitorSelectRotary.AddPosition(6,30);
+	EPSMonitorSelectRotary.AddPosition(7,60);
+	EPSMonitorSelectRotary.AddPosition(8,90);
+	EPSMonitorSelectRotary.AddPosition(9,120);
+
+	EPSMonitorSelectRotary.Register(PSH,"EPSMonitorSelectRotary",0);
+	EPSDCVoltMeter.Register(PSH,"EPSDCVoltMeter", 19, 42, 3);
+	EPSDCAmMeter.Register(PSH,"EPSDCAmMeter", 0, 120, 3);
 	DSCBattery1TB.Register(PSH, "DSCBattery1TB", true);
 	DSCBattery2TB.Register(PSH, "DSCBattery2TB", true);
 	DSCBattery3TB.Register(PSH, "DSCBattery3TB", true);
 	DSCBattery4TB.Register(PSH, "DSCBattery4TB", true);
 	EPSInverterSwitch.Register(PSH,"EPSInverterSwitch",THREEPOSSWITCH_DOWN);
+	EPSEDVoltSelect.Register(PSH,"EPSEDVoltSelect",THREEPOSSWITCH_CENTER);
 	DSCSEBat1HVSwitch.Register(PSH, "DSCSEBat1HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DSCSEBat2HVSwitch.Register(PSH, "DSCSEBat2HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	DSCCDRBat3HVSwitch.Register(PSH, "DSCCDRBat3HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
@@ -891,37 +910,39 @@ void LEM::InitPanel (int panel)
 		srf[SRF_FDAIOFFFLAG]       	= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
 		srf[SRF_FDAINEEDLES]		= oapiCreateSurface (LOADBMP (IDB_FDAINEEDLES));
 		srf[SRF_CIRCUITBRAKERLEM]	= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKERLEM));
-		srf[SRF_BORDER_34x29]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
-		srf[SRF_BORDER_34x61]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
-		srf[SRF_LEM_COAS1]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
-		srf[SRF_LEM_COAS2]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
+		srf[SRF_BORDER_34x29]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
+		srf[SRF_BORDER_34x61]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
+		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
+		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
+		srf[SRF_DCVOLTS]			= oapiCreateSurface (LOADBMP (IDB_LMDCVOLTS));
+		srf[SRF_DCAMPS]				= oapiCreateSurface (LOADBMP (IDB_LMDCAMPS));
 
 		//
 		// Flashing borders.
 		//
 
-		srf[SRF_BORDER_34x29]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
-		srf[SRF_BORDER_34x61]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
-		srf[SRF_BORDER_55x111]			= oapiCreateSurface (LOADBMP (IDB_BORDER_55x111));
-		srf[SRF_BORDER_44x67]			= oapiCreateSurface (LOADBMP (IDB_BORDER_44x67));
-		srf[SRF_BORDER_39x38]			= oapiCreateSurface (LOADBMP (IDB_BORDER_39x38));
-		srf[SRF_BORDER_92x40]			= oapiCreateSurface (LOADBMP (IDB_BORDER_92x40));
-		srf[SRF_BORDER_34x33]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x33));
-		srf[SRF_BORDER_29x29]			= oapiCreateSurface (LOADBMP (IDB_BORDER_29x29));
-		srf[SRF_BORDER_34x31]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x31));
-		srf[SRF_BORDER_50x158]			= oapiCreateSurface (LOADBMP (IDB_BORDER_50x158));
-		srf[SRF_BORDER_38x49]			= oapiCreateSurface (LOADBMP (IDB_BORDER_38x49));
-		srf[SRF_BORDER_34x34]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x34));
-		srf[SRF_BORDER_90x90]			= oapiCreateSurface (LOADBMP (IDB_BORDER_90x90));
-		srf[SRF_BORDER_84x84]			= oapiCreateSurface (LOADBMP (IDB_BORDER_84x84));
-		srf[SRF_BORDER_70x70]			= oapiCreateSurface (LOADBMP (IDB_BORDER_70x70));
-		srf[SRF_BORDER_23x20]			= oapiCreateSurface (LOADBMP (IDB_BORDER_23x20));
-		srf[SRF_BORDER_78x78]			= oapiCreateSurface (LOADBMP (IDB_BORDER_78x78));
-		srf[SRF_BORDER_32x160]			= oapiCreateSurface (LOADBMP (IDB_BORDER_32x160));
-		srf[SRF_BORDER_72x72]			= oapiCreateSurface (LOADBMP (IDB_BORDER_72x72));
-		srf[SRF_BORDER_75x64]			= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
-		srf[SRF_LEM_COAS1]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
-		srf[SRF_LEM_COAS2]				= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
+		srf[SRF_BORDER_34x29]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
+		srf[SRF_BORDER_34x61]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
+		srf[SRF_BORDER_55x111]		= oapiCreateSurface (LOADBMP (IDB_BORDER_55x111));
+		srf[SRF_BORDER_44x67]		= oapiCreateSurface (LOADBMP (IDB_BORDER_44x67));
+		srf[SRF_BORDER_39x38]		= oapiCreateSurface (LOADBMP (IDB_BORDER_39x38));
+		srf[SRF_BORDER_92x40]		= oapiCreateSurface (LOADBMP (IDB_BORDER_92x40));
+		srf[SRF_BORDER_34x33]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x33));
+		srf[SRF_BORDER_29x29]		= oapiCreateSurface (LOADBMP (IDB_BORDER_29x29));
+		srf[SRF_BORDER_34x31]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x31));
+		srf[SRF_BORDER_50x158]		= oapiCreateSurface (LOADBMP (IDB_BORDER_50x158));
+		srf[SRF_BORDER_38x49]		= oapiCreateSurface (LOADBMP (IDB_BORDER_38x49));
+		srf[SRF_BORDER_34x34]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x34));
+		srf[SRF_BORDER_90x90]		= oapiCreateSurface (LOADBMP (IDB_BORDER_90x90));
+		srf[SRF_BORDER_84x84]		= oapiCreateSurface (LOADBMP (IDB_BORDER_84x84));
+		srf[SRF_BORDER_70x70]		= oapiCreateSurface (LOADBMP (IDB_BORDER_70x70));
+		srf[SRF_BORDER_23x20]		= oapiCreateSurface (LOADBMP (IDB_BORDER_23x20));
+		srf[SRF_BORDER_78x78]		= oapiCreateSurface (LOADBMP (IDB_BORDER_78x78));
+		srf[SRF_BORDER_32x160]		= oapiCreateSurface (LOADBMP (IDB_BORDER_32x160));
+		srf[SRF_BORDER_72x72]		= oapiCreateSurface (LOADBMP (IDB_BORDER_72x72));
+		srf[SRF_BORDER_75x64]		= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
+		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
+		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 
 
 
@@ -1219,6 +1240,8 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_RIGHTPANEL: // LEM Right Panel
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
+		oapiRegisterPanelArea (AID_LM_EPS_DC_VOLTMETER,             _R( 110,  706, 209,  805), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_EPS_DC_AMMETER,               _R( 110,  818, 209,  917), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_EPS_LEFT_CONTROLS,            _R( 314,  728, 542,  913), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW2,					_R( 173,  258, 1415, 290), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW4,					_R( 173,  604, 1415, 634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
@@ -1401,15 +1424,24 @@ void LEM::SetSwitches(int panel) {
 			Panel16CB2SwitchRow.Init(AID_LEM_P16_CB_ROW2, MainPanel);
 			EDS_CB_LOGIC_B.Init(256, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
 			
-			// 173
 			Panel16CB4SwitchRow.Init(AID_LEM_P16_CB_ROW4, MainPanel);
-			// In reality, two of these are paralleled.
-			// I'll just use one.
 			LMPInverter2CB.Init( 576, 0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 30.0);
+			// In reality, two of these are paralleled. I'll just use one.
 			LMPBatteryFeedTieCB2.Init( 1211,  0, 29, 29, srf[SRF_CIRCUITBRAKERLEM], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &ECA_1, 100.0);
+			
+			EPSP14VoltMeterSwitchRow.Init(AID_LM_EPS_DC_VOLTMETER,MainPanel);
+			EPSDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14VoltMeterSwitchRow, this);
+			EPSDCVoltMeter.FrameSurface = srf[SRF_DCVOLTS];
 
+			EPSP14AmMeterSwitchRow.Init(AID_LM_EPS_DC_AMMETER,MainPanel);
+			EPSDCAmMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14AmMeterSwitchRow, this);
+			EPSDCAmMeter.FrameSurface = srf[SRF_DCAMPS];
+
+			// 314, 728
 			EPSLeftControlArea.Init(AID_LM_EPS_LEFT_CONTROLS,MainPanel);
 			EPSInverterSwitch.Init( 142, 135, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39],EPSLeftControlArea, this, &INV_1, &INV_2);
+			EPSEDVoltSelect.Init(319-314, 868-728, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], EPSLeftControlArea);
+			EPSMonitorSelectRotary.Init(434-314, 748-728, 78, 78, srf[SRF_LEMROTARY], srf[SRF_BORDER_78x78], EPSLeftControlArea);
 
 			DSCHiVoltageSwitchRow.Init(AID_DSC_HIGH_VOLTAGE_SWITCHES, MainPanel);
 			DSCSEBat1HVSwitch.Init( 0,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1,1);

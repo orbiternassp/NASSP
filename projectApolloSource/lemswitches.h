@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.3  2006/07/24 06:41:29  dseagrav
   *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
   *	
@@ -97,4 +100,39 @@ public:
 protected:
 	int Valve;
 	LEM *our_vessel;
+};
+
+// Meters
+class LEMRoundMeter : public MeterSwitch {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s);
+
+protected:
+	HPEN Pen0;
+	HPEN Pen1;
+	LEM *lem;
+
+	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
+};
+
+class LEMDCVoltMeter: public LEMRoundMeter {
+public:
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+	SURFHANDLE FrameSurface;
+
+protected:
+	double AdjustForPower(double val) { return val; } // These are always powered by definition.	
+};
+
+class LEMDCAmMeter: public LEMRoundMeter {
+public:
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+	SURFHANDLE FrameSurface;
+
+protected:
+	double AdjustForPower(double val) { return val; } // These are always powered by definition.	
 };

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/08/20 08:28:06  dseagrav
+  *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
+  *	
   *	Revision 1.3  2006/08/18 05:45:01  dseagrav
   *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
   *	
@@ -687,8 +690,16 @@ protected:
 	// LEM panel 14 //
 	//////////////////
 
+	SwitchRow EPSP14VoltMeterSwitchRow;
+	LEMDCVoltMeter EPSDCVoltMeter;
+
+	SwitchRow EPSP14AmMeterSwitchRow;
+	LEMDCAmMeter EPSDCAmMeter;
+	
 	SwitchRow EPSLeftControlArea;
+	RotationalSwitch EPSMonitorSelectRotary;
 	LEMInverterSwitch EPSInverterSwitch;
+	ThreePosSwitch EPSEDVoltSelect;
 
 	SwitchRow DSCHiVoltageSwitchRow;
 	LEMBatterySwitch DSCSEBat1HVSwitch;
@@ -877,6 +888,8 @@ protected:
 	// Friend classes
 	friend class ATCA;
 	friend class LEM_EDS;
+	friend class LEMDCVoltMeter;
+	friend class LEMDCAmMeter;
 };
 
 extern void LEMLoadMeshes();

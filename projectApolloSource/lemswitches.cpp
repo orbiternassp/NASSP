@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.7  2006/07/24 06:41:29  dseagrav
   *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
   *	
@@ -288,4 +291,154 @@ bool LEMInverterSwitch::SwitchTo(int newState)
 	return false;
 }
 
+// Meters
+void LEMRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s)
 
+{
+	MeterSwitch::Init(row);
+	Pen0 = p0;
+	Pen1 = p1;
+	lem = s;
+}
+
+void LEMRoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle)
+
+{
+	// Needle function by Rob Conley from Mercury code
+	
+	double dx = rad * cos(angle), dy = rad * sin(angle);
+	HGDIOBJ oldObj;
+
+	HDC hDC = oapiGetDC (surf);
+	oldObj = SelectObject (hDC, Pen1);
+	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
+	SelectObject (hDC, oldObj);
+	oldObj = SelectObject (hDC, Pen0);
+	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
+	SelectObject (hDC, oldObj);
+	oapiReleaseDC (surf, hDC);
+}
+
+// DC Voltmeter
+double LEMDCVoltMeter::QueryValue()
+
+{
+	switch(lem->EPSMonitorSelectRotary.GetState()){
+		case 0: // ED/OFF
+			switch(lem->EPSEDVoltSelect.GetState()){
+				case THREEPOSSWITCH_UP:		// ED Battery A
+				case THREEPOSSWITCH_DOWN:	// ED Battery B
+					return 37.1; // Fake unloaded battery
+					break;
+				case THREEPOSSWITCH_CENTER: // OFF
+					return 0;
+					break;
+				default:
+					return 0;
+					break;
+			}
+			break;
+		case 1: // Battery 1
+			if(lem->Battery1){ return(lem->Battery1->Voltage()); }else{ return 0; }
+			break;
+		case 2: // Battery 2
+			if(lem->Battery2){ return(lem->Battery2->Voltage()); }else{ return 0; }
+			break;
+		case 3: // Battery 3
+			if(lem->Battery3){ return(lem->Battery3->Voltage()); }else{ return 0; }
+			break;
+		case 4: // Battery 4
+			if(lem->Battery4){ return(lem->Battery4->Voltage()); }else{ return 0; }
+			break;
+		case 5: // Battery 5
+			if(lem->Battery5){ return(lem->Battery5->Voltage()); }else{ return 0; }
+			break;
+		case 6: // Battery 6
+			if(lem->Battery6){ return(lem->Battery6->Voltage()); }else{ return 0; }
+			break;
+		case 7: // CDR DC BUS
+			return(lem->CDRs28VBus.Voltage());
+			break;
+		case 8: // LMP DC BUS
+			return(lem->LMPs28VBus.Voltage());
+			break;
+		case 9: // AC BUS (?)
+			if(lem->ACBusA.Voltage() > 85){
+				return(lem->ACBusA.Voltage()-85);
+			}else{
+				return(0);
+			}
+			break;		
+		default:
+			return(0);
+	}
+}
+
+void LEMDCVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
+	// 40V = -35 deg and 20V = 215 deg
+	// 250 degrees of sweep across 20 volts, for 12.5 degrees per volt
+
+	// 20V = 180+35	
+	v = 240-((v-18)*12.5);
+	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
+}
+
+// DC Ammeter
+double LEMDCAmMeter::QueryValue(){	
+	switch(lem->EPSMonitorSelectRotary.GetState()){
+		case 0: // ED/OFF
+			return 0; // Means either off or unloaded ED battery
+			break;
+		case 1: // Battery 1
+			if(lem->Battery1 && lem->Battery1->Volts > 0){ 
+				return(lem->Battery1->power_load/lem->Battery1->Voltage()); }else{ return 0; }
+			break;
+		case 2: // Battery 2
+			if(lem->Battery2 && lem->Battery2->Volts > 0){
+				return(lem->Battery2->power_load/lem->Battery2->Voltage()); }else{ return 0; }
+			break;
+		case 3: // Battery 3
+			if(lem->Battery3 && lem->Battery3->Volts > 0){
+				return(lem->Battery3->power_load/lem->Battery3->Voltage()); }else{ return 0; }
+			break;
+		case 4: // Battery 4
+			if(lem->Battery4 && lem->Battery4->Volts > 0){
+				return(lem->Battery4->power_load/lem->Battery4->Voltage()); }else{ return 0; }
+			break;
+		case 5: // Battery 5
+			if(lem->Battery5 && lem->Battery5->Volts > 0){
+				return(lem->Battery5->power_load/lem->Battery5->Voltage()); }else{ return 0; }
+			break;
+		case 6: // Battery 6
+			if(lem->Battery6 && lem->Battery6->Volts > 0){
+				return(lem->Battery6->power_load/lem->Battery6->Voltage()); }else{ return 0; }
+			break;
+		case 7: // CDR DC BUS
+			if(lem->CDRs28VBus.Volts > 0){
+				return(lem->CDRs28VBus.power_load/lem->CDRs28VBus.Voltage()); }else{ return 0; }
+			break;
+		case 8: // LMP DC BUS
+			if(lem->LMPs28VBus.Volts > 0){
+				return(lem->LMPs28VBus.power_load/lem->LMPs28VBus.Voltage()); }else{ return 0; }
+			break;
+		case 9: // AC BUS (?)
+			if(lem->ACBusA.Voltage() > 0){
+				return(lem->ACBusA.power_load/lem->ACBusA.Voltage());
+			}else{
+				return(0);
+			}
+			break;		
+		default:
+			return(0);
+	}	
+}
+
+void LEMDCAmMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
+	// 100A = 90 deg and 20A = 270 deg
+	// 180 degress of sweep across 80 amps, for 2.25 degrees per amp
+	
+	v = 220-(v*2.25);
+	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
+}
