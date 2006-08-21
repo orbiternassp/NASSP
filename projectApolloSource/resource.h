@@ -203,7 +203,10 @@
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
 #define AID_VSI2                        304
-#define AID_OPTICSCLKAREA				310
+#define IDB_LMDCVOLTS                   305
+#define IDB_BITMAP1                     306
+#define IDB_LMDCAMPS                    306
+#define AID_OPTICSCLKAREA               310
 #define AID_FUELCELLRADIATORSINDICATORS 403
 #define AID_FUELCELLREACTANTSSWITCHES   410
 #define ADI_MAINBUSAINDICATORS          411
@@ -568,20 +571,22 @@
 #define AID_LM_EPS_LEFT_CONTROLS        834
 #define AID_LEM_P11_CB_ROW2             835
 #define AID_LEM_P11_CB_ROW1             836
-#define IDB_LEM_COAS2					837
-#define AID_LEM_COAS2					838
-#define AID_SYSTEMTESTROTARIES			839
-#define AID_RNDZXPDRSWITCH				840
-#define AID_PANEL101LOWERSWITCHES		841
+#define IDB_LEM_COAS2                   837
+#define AID_LEM_COAS2                   838
+#define AID_SYSTEMTESTROTARIES          839
+#define AID_RNDZXPDRSWITCH              840
+#define AID_PANEL101LOWERSWITCHES       841
 #define AID_LEM_PANEL_8                 842
 #define AID_LEM_P11_CB_ROW3             843
-#define AID_LEM_P16_CB_ROW2				844
+#define AID_LEM_P16_CB_ROW2             844
+#define AID_LM_EPS_DC_VOLTMETER         845
+#define AID_LM_EPS_DC_AMMETER           846
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        305
+#define _APS_NEXT_RESOURCE_VALUE        307
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           10001

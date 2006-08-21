@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2006/08/20 08:28:06  dseagrav
+  *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
+  *	
   *	Revision 1.21  2006/08/18 05:45:01  dseagrav
   *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
   *	
@@ -474,6 +477,10 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&INV_1, false);
 	Panelsdk.AddElectrical(&INV_2, false);
 
+	Panelsdk.AddElectrical(&ACBusA, false);
+	Panelsdk.AddElectrical(&ACBusB, false);
+
+
 	// EDS
 	eds.Init(this);
 
@@ -797,6 +804,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	eds.TimeStep();                                         // Do Work
 
 	// Debug tests would go here
+	
 	/*
 	double CDRAmps=0,LMPAmps=0;
 	double CDRVolts = CDRs28VBus.Voltage(),LMPVolts = LMPs28VBus.Voltage();
