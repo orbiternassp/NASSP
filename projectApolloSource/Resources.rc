@@ -204,6 +204,8 @@ IDB_THUMBWHEEL_LARGEFONTSINV BITMAP                  "thumbwheel_large_fonts_inv
 IDB_SWLEVERTHREEPOS     BITMAP                  "switch_lever_threepos.bmp"
 IDB_ORDEAL_ROTARY       BITMAP                  "ORDEAL_rotary.bmp"
 IDB_LV_ENGINE_LIGHTS_S1B BITMAP                  "lv_eng_s1b.bmp"
+IDB_PITCHGIMBAL_TMBWHEEL BITMAP                  "PitchGimbalThumbwheel.bmp"
+IDB_YAWGIMBAL_TMBWHEEL  BITMAP                  "YawGimbalThumbwheel.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
