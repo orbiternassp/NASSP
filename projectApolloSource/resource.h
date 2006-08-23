@@ -203,10 +203,12 @@
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
 #define AID_VSI2                        304
+#define AID_OPTICSCLKAREA               310
 #define IDB_LMDCVOLTS                   305
-#define IDB_BITMAP1                     306
 #define IDB_LMDCAMPS                    306
 #define AID_OPTICSCLKAREA               310
+#define IDB_PITCHGIMBAL_TMBWHEEL        320
+#define IDB_YAWGIMBAL_TMBWHEEL          321
 #define AID_FUELCELLRADIATORSINDICATORS 403
 #define AID_FUELCELLREACTANTSSWITCHES   410
 #define ADI_MAINBUSAINDICATORS          411
@@ -571,6 +573,7 @@
 #define AID_LM_EPS_LEFT_CONTROLS        834
 #define AID_LEM_P11_CB_ROW2             835
 #define AID_LEM_P11_CB_ROW1             836
+
 #define IDB_LEM_COAS2                   837
 #define AID_LEM_COAS2                   838
 #define AID_SYSTEMTESTROTARIES          839

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.185  2006/08/09 00:45:21  flydba
+  *	Panel 101 added and some corrections done.
+  *	
   *	Revision 1.184  2006/08/08 20:23:50  jasonims
   *	More Optics stuff and changed the Aperture settings for interior views.
   *	
@@ -1345,6 +1348,8 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		// GPFPI DISPLAYS
 		oapiRegisterPanelArea (AID_GPFPI_METERS,								_R( 629,  927,  791, 1032), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		//oapiRegisterPanelArea (AID_GPFPI_YAWTMBWHEEL,							_R(
+		//oapiRegisterPanelArea (AID_GPFPI_PITCHTMBWHEEL,							_R(
 
 		// SPS FUEL DISPLAYS
 		oapiRegisterPanelArea (AID_SPS_OXID_PERCENT_DISPLAY,					_R(2664,  628, 2702,  641), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
