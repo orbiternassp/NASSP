@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.5  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -110,13 +113,22 @@ LRV::LRV(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
 	hMaster = hObj;
+	DefineAnimations();
 	init();
 }
 
 LRV::~LRV()
 
 {
-	// Nothing for now.
+	// delete wheel;  Delete all animation subsets...
+	delete frwheel;
+	delete flwheel;
+	delete rrwheel;
+	delete rlwheel;
+	delete frtire;
+	delete fltire;
+	delete rrtire;
+	delete rltire;
 }
 
 void LRV::init()
@@ -183,6 +195,7 @@ void LRV::init()
 
 	// touchdown point test
 	// touchdownPointHeight = -0.8;
+	
 }
 
 void LRV::clbkSetClassCaps (FILEHANDLE cfg)
@@ -191,7 +204,72 @@ void LRV::clbkSetClassCaps (FILEHANDLE cfg)
 	VSRegVessel(GetHandle());
 	SetRoverStage();
 }
-		 
+
+void LRV::DefineAnimations ()
+{
+	static UINT fntrgtfendergrp[1] = {17}; //front right fender groups
+	static UINT fntlftfendergrp[1] = {21}; //front left fender groups
+	static UINT rearrgtfendergrp[1] = {20}; //rear right fender groups
+	static UINT rearlftfendergrp[1] = {22}; //rear left fender groups
+
+	static MGROUP_ROTATE fntrgtfender (LRVMeshIndex, fntrgtfendergrp, 1, _V(-0.46,-0.502,0.916), _V(0,0,1), (float)(PI/6));
+	static MGROUP_ROTATE fntlftfender (LRVMeshIndex, fntlftfendergrp, 1, _V(0.46,-0.502,0.916), _V(0,0,1), (float)(PI/6));
+	static MGROUP_ROTATE rearrgtfender (LRVMeshIndex, rearrgtfendergrp, 1, _V(-0.46,-0.502,-1.385), _V(0,0,1), (float)(PI/6));
+	static MGROUP_ROTATE rearlftfender (LRVMeshIndex, rearlftfendergrp, 1, _V(0.46,-0.502,-1.385), _V(0,0,1), (float)(PI/6));
+
+	static UINT fntrgtwheelgrp[4] = {1,28,34,52}; //front right wheel groups
+	static UINT fntlftwheelgrp[4] = {2,27,35,51}; //front left wheel groups
+	static UINT rearrgtwheelgrp[2] = {7,53}; //rear right wheel groups
+	static UINT rearlftwheelgrp[2] = {3,54}; //rear left wheel groups
+
+	frwheel = new MGROUP_ROTATE (LRVMeshIndex, fntrgtwheelgrp, 4, _V(-0.842,-0.621,0.916), _V(0,1,0), (float)(.25*PI));
+	flwheel = new MGROUP_ROTATE (LRVMeshIndex, fntlftwheelgrp, 4, _V(0.837,-0.621,0.916), _V(0,1,0), (float)(.25*PI));
+	rrwheel = new MGROUP_ROTATE (LRVMeshIndex, rearrgtwheelgrp, 2, _V(-0.842,-0.623,-1.389), _V(0,1,0), (float)(.25*PI));
+	rlwheel = new MGROUP_ROTATE (LRVMeshIndex, rearlftwheelgrp, 2, _V(0.837,-0.623,-1.389), _V(0,1,0), (float)(.25*PI));
+
+	static UINT fntrgttiregrp[4] = {36,41,63,68}; //front right tire groups
+	static UINT fntlfttiregrp[4] = {38,42,62,67}; //front left tire groups
+	static UINT rearrgttiregrp[4] = {37,40,64,69}; //rear right tire groups
+	static UINT rearlfttiregrp[4] = {39,43,65,66}; //rear left tire groups
+
+	frtire = new MGROUP_ROTATE (LRVMeshIndex, fntrgttiregrp, 4, _V(-0.976,-0.621,0.916), _V(1,0,0), (float)(2*PI));
+	fltire = new MGROUP_ROTATE (LRVMeshIndex, fntlfttiregrp, 4, _V(0.959,-0.621,0.916), _V(1,0,0), (float)(2*PI));
+	rrtire = new MGROUP_ROTATE (LRVMeshIndex, rearrgttiregrp, 4, _V(-0.976,-0.623,-1.389), _V(1,0,0), (float)(2*PI));
+	rltire = new MGROUP_ROTATE (LRVMeshIndex, rearlfttiregrp, 4, _V(0.959,-0.623,-1.389), _V(1,0,0), (float)(2*PI));
+
+
+	//SET UP ANIMATIONS
+
+	anim_fntrgtfender = CreateAnimation (0.5);
+	fr_fender = AddAnimationComponent (anim_fntrgtfender, 0, 1, &fntrgtfender);
+	anim_fntrgtwheel = CreateAnimation (0.5);
+	fr_wheel = AddAnimationComponent (anim_fntrgtwheel, 0, 1, frwheel, fr_fender);
+	anim_fntrgttire = CreateAnimation (0.0);
+	AddAnimationComponent (anim_fntrgttire, 0, 1, frtire, fr_wheel);
+
+	anim_fntlftfender = CreateAnimation (0.5);
+	fl_fender = AddAnimationComponent (anim_fntlftfender, 0, 1, &fntlftfender);
+	anim_fntlftwheel = CreateAnimation (0.5);
+	fl_wheel = AddAnimationComponent (anim_fntlftwheel, 0, 1, flwheel, fl_fender);
+	anim_fntlfttire = CreateAnimation (0.0);
+	AddAnimationComponent (anim_fntlfttire, 0, 1, fltire, fl_wheel);
+
+	anim_rearrgtfender = CreateAnimation (0.5);
+	rr_fender = AddAnimationComponent (anim_rearrgtfender, 0, 1, &rearrgtfender);
+	anim_rearrgtwheel = CreateAnimation (0.5);
+	rr_wheel = AddAnimationComponent (anim_rearrgtwheel, 0, 1, rrwheel, rr_fender);
+	anim_rearrgttire = CreateAnimation (0.0);
+	AddAnimationComponent (anim_rearrgttire, 0, 1, rrtire, rr_wheel);
+
+	anim_rearlftfender = CreateAnimation (0.5);
+	rl_fender = AddAnimationComponent (anim_rearlftfender, 0, 1, &rearlftfender);
+	anim_rearlftwheel = CreateAnimation (0.5);
+	rl_wheel = AddAnimationComponent (anim_rearlftwheel, 0, 1, rlwheel, rl_fender);
+	anim_rearlfttire = CreateAnimation (0.0);
+	AddAnimationComponent (anim_rearlfttire, 0, 1, rltire, rl_wheel);
+
+}
+
 void LRV::SetRoverStage ()
 {
 	SetEmptyMass(250);
@@ -214,7 +292,8 @@ void LRV::SetRoverStage ()
 	//      as a side effect, will cause problems with all animations of the main LRV
 	//      mesh (as soon as they are added ...).
 	vccMeshIdx = AddMesh(hLRVConsole, &mesh_adjust);
-	SetMeshVisibilityMode(AddMesh(hLRV, &mesh_adjust), MESHVIS_ALWAYS); 
+	LRVMeshIndex=AddMesh(hLRV, &mesh_adjust);
+	SetMeshVisibilityMode(LRVMeshIndex, MESHVIS_ALWAYS); 
 	SetMeshVisibilityMode(vccMeshIdx, MESHVIS_ALWAYS);
 	SetCameraOffset(_V(0.36, 0.54, -0.55));  // roughly at the driver's head
 
@@ -740,8 +819,26 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 
 	MoveLRV(SimDT, &evaV, heading);
 
+	DoAnimations();
+	
 	// touchdown point test
 	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
+}
+
+void LRV::DoAnimations ()
+{
+	SetAnimation(anim_fntrgttire, proc_tires);
+	SetAnimation(anim_fntlfttire, proc_tires);
+	SetAnimation(anim_rearrgttire, proc_tires);
+	SetAnimation(anim_rearlfttire, proc_tires);
+	SetAnimation(anim_fntrgtwheel, proc_frontwheels);
+	SetAnimation(anim_fntlftwheel, proc_frontwheels);
+	SetAnimation(anim_rearrgtwheel, proc_rearwheels);
+	SetAnimation(anim_rearlftwheel, proc_rearwheels);
+	SetAnimation(anim_fntrgtfender, proc_fntrgtfender);
+	SetAnimation(anim_fntlftfender, proc_fntlftfender);
+	SetAnimation(anim_rearrgtfender, proc_rearrgtfender);
+	SetAnimation(anim_rearlftfender, proc_rearlftfender);
 }
 
 void LRV::clbkLoadStateEx(FILEHANDLE scn, void *vs)

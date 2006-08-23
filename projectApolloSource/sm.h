@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/06/28 02:08:11  movieman523
+  *	Full workaround for SM deletion crash: though the focus still tends to jump to something other than the CM!
+  *	
   *	Revision 1.10  2006/06/28 01:23:02  movieman523
   *	Made SM break up on re-entry. Unfortunately sound doesn't work and if I try to delete the 'parts' when the SM is deleted. Orbiter blows away.
   *	
@@ -251,6 +254,11 @@ protected:
 	/// \brief Saturn vehicle number.
 	///
 	int VehicleNo;
+
+	///
+	/// \brief SM mesh identifier
+	///
+	int SMMeshIndex;
 
 	///
 	/// \brief Main state.
