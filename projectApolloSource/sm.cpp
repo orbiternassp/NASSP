@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/06/28 18:25:06  movieman523
+  *	Don't create thruster groups, because we don't want the user to be able to control the SM RCS after seperation.
+  *	
   *	Revision 1.14  2006/06/28 02:08:11  movieman523
   *	Full workaround for SM deletion crash: though the focus still tends to jump to something other than the CM!
   *	
@@ -240,7 +243,7 @@ void SM::SetSM()
 
 	VECTOR3 mesh_dir=_V(0, 0, 0);
 
-	AddMesh (hSM, &mesh_dir);
+	SMMeshIndex=AddMesh (hSM, &mesh_dir);
 
 	if (LowRes)
 		AddMesh (hSMRCSLow, &mesh_dir);
@@ -1012,7 +1015,7 @@ void SM::DefineAnimations()
 	static UINT umbilical_group[1] = {2}; // participating groups
 	static MGROUP_ROTATE umbilical
 	(
-		0,				// mesh index
+		SMMeshIndex,				// mesh index
 		umbilical_group, 1,		// group list and # groups
 		_V(0,-1.9540,3.168), // rotation reference point
 		_V(1,0,0),		// rotation axis

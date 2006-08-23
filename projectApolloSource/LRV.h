@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.3  2006/06/06 17:50:59  redburne
   *	- New gauges ("working" battery capacity indicator; other values are static)
   *	- boolean variable GoRover removed
@@ -111,6 +114,11 @@ public:
 
 	virtual void SetLRVStats(LRVSettings &lrvs);
 
+	// LRV ANIMATIONS
+
+	void DefineAnimations();
+	void DoAnimations();
+
 private:
 
 	void ScanMotherShip();
@@ -126,7 +134,34 @@ protected:
 	int ApolloNo;
 	int StepCount;
 	int Realism;
+	int LRVMeshIndex;
 
+	//Animation Related
+
+	//handles for turning tires, so they can bounce on terrain
+	ANIMATIONCOMPONENT_HANDLE fr_fender;
+	ANIMATIONCOMPONENT_HANDLE fl_fender;
+	ANIMATIONCOMPONENT_HANDLE rr_fender;
+	ANIMATIONCOMPONENT_HANDLE rl_fender;
+
+	//handles for rotating tires so they can be turned
+	ANIMATIONCOMPONENT_HANDLE fr_wheel;
+	ANIMATIONCOMPONENT_HANDLE fl_wheel;
+	ANIMATIONCOMPONENT_HANDLE rr_wheel;
+	ANIMATIONCOMPONENT_HANDLE rl_wheel;
+
+	UINT anim_fntrgtfender, anim_fntlftfender, anim_rearrgtfender, anim_rearlftfender;
+	UINT anim_fntrgtwheel, anim_fntlftwheel, anim_rearrgtwheel, anim_rearlftwheel;
+	UINT anim_fntrgttire, anim_fntlfttire, anim_rearrgttire, anim_rearlfttire;
+
+	MGROUP_TRANSFORM *frwheel, *flwheel, *rrwheel, *rlwheel;
+	MGROUP_TRANSFORM *frtire, *fltire, *rrtire, *rltire;
+
+	double proc_fntrgtfender, proc_fntlftfender, proc_rearrgtfender, proc_rearlftfender;
+	double proc_frontwheels, proc_rearwheels;
+	double proc_tires;
+
+    
 	OBJHANDLE hMaster;
 	//bool GoDock1
 	bool starthover;
