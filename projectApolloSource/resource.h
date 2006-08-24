@@ -203,10 +203,12 @@
 #define AID_VELOCITY2                   302
 #define AID_ALTITUDE2                   303
 #define AID_VSI2                        304
-#define AID_OPTICSCLKAREA               310
 #define IDB_LMDCVOLTS                   305
 #define IDB_LMDCAMPS                    306
-#define AID_OPTICSCLKAREA               310
+#define AID_OPTICSCLKAREASEXT           310
+#define AID_OPTICSCLKAREATELE           311
+#define AID_MARKBUTTON					312
+#define AID_MARKREJECT					313
 #define IDB_PITCHGIMBAL_TMBWHEEL        320
 #define IDB_YAWGIMBAL_TMBWHEEL          321
 #define AID_FUELCELLRADIATORSINDICATORS 403
