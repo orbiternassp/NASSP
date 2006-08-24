@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.186  2006/08/23 03:57:16  jasonims
+  *	*** empty log message ***
+  *	
   *	Revision 1.185  2006/08/09 00:45:21  flydba
   *	Panel 101 added and some corrections done.
   *	
@@ -1535,9 +1538,9 @@ bool Saturn::clbkLoadPanel (int id) {
 	case SATPANEL_SEXTANT: // Sextant
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_OPTICSCLKAREA,					_R( 270,   95, 1130,  955), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,					_R( 270,   95, 1130,  955), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, -0.83867, 0.544639));
+		SetCameraDefaultDirection(_V(0.0, -0.84316631, 0.53765284));
 		oapiCameraSetAperture (RAD * 5);
 		TargetShaft = 0;
 		TargetTrunion = 0;
@@ -1547,9 +1550,9 @@ bool Saturn::clbkLoadPanel (int id) {
 	case SATPANEL_TELESCOPE: // Telescope
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		oapiRegisterPanelArea (AID_OPTICSCLKAREA,					_R( 270,   95, 1130,  955), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE,					_R( 270,   95, 1130,  955), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, -0.83867, 0.544639));
+		SetCameraDefaultDirection(_V(0.0, -0.84316631, 0.53765284));
 		oapiCameraSetAperture (RAD * 30);
 		TargetShaft = 0;
 		TargetTrunion = 0;
@@ -2979,10 +2982,12 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		SwitchClick();
 		return true;
 
-	case AID_OPTICSCLKAREA:
-		//mx = (mx - 430) * -1;
-		//my = (my - 430) * -1;
-		UpdateOptics(mx,my);
+	case AID_OPTICSCLKAREASEXT:
+		//do nothing, but we will do something
+		return true;
+
+	case AID_OPTICSCLKAREATELE:
+		//do nothing, but we will do something
 		return true;
 	//
 	// Old stuff
@@ -4380,6 +4385,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		else{
 			oapiBlt(surf,srf[10],3,42,0,27,26,26);
 		}
+		return true;
+
+	case AID_OPTICSCLKAREASEXT:
+	case AID_OPTICSCLKAREATELE:
+		//write update stuff here
 		return true;
 	}
 	return false;
