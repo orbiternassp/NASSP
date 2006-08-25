@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.188  2006/08/25 05:16:51  jasonims
+  *	Passive Optics-orbiter interface is commited.  SextTrunion, TeleTrunion, and OpticsShaft are values that need to be updated in order to produce a visual change of view.
+  *	
   *	Revision 1.187  2006/08/24 15:03:20  jasonims
   *	Corrected Optics base value to 32.524 degrees.
   *	
@@ -1551,7 +1554,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		
 		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,					_R( 270,   95, 1130,  955), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, -0.84316631, 0.53765284));
+		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
 		oapiCameraSetAperture (RAD * 5);
 		SetCameraRotationRange( PI/2, PI/2, PI/2, PI/2);
 		break;
@@ -4104,7 +4107,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 		sprintf(oapiDebugString(), "Shaft %f, Trunion %f", OpticsShaft/RAD, SextTrunion/RAD);
 
-		oapiCameraSetCockpitDir (OpticsShaft, SextTrunion, true);
+		oapiCameraSetCockpitDir (-OpticsShaft, SextTrunion - PI/2, true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
 		return true;
 
 	case AID_OPTICSCLKAREATELE:
@@ -4124,7 +4127,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 		sprintf(oapiDebugString(), "Shaft %f, Trunion %f", OpticsShaft/RAD, TeleTrunion/RAD);
 
-		oapiCameraSetCockpitDir (OpticsShaft, TeleTrunion - PI/2, true);
+		oapiCameraSetCockpitDir (-OpticsShaft, TeleTrunion - PI/2, true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
 		return true;
 
 
