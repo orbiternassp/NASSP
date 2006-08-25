@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.174  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.173  2006/08/12 14:14:18  movieman523
   *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
   *	
@@ -772,8 +775,6 @@ void Saturn::initSaturn()
 
 	InVC = false;
 	InPanel = false;
-	InOptics = false;
-	InitOptics = 0;
 	OpticsShaft = 0.0;
 	SextTrunion = 0.0;
 	TeleTrunion = 0.0;
@@ -930,6 +931,7 @@ void Saturn::initSaturn()
 
 	hEVA = 0;
 
+	
 	//
 	// Timestep tracking for debugging.
 	//
@@ -2836,12 +2838,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 
 	timedSounds.Timestep(MissionTime, simdt, AutoSlow);
 
-	//
-	// Optics visual update
-	//
-	//if (InOptics == true){
-	//	UpdateOptics(0,0);
-	//}
+
 }
 
 

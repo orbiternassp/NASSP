@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.214  2006/08/12 14:14:18  movieman523
+  *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
+  *	
   *	Revision 1.213  2006/08/11 21:16:22  movieman523
   *	Dummy ELS implementation.
   *	
@@ -749,14 +752,11 @@ public:
 	int clbkConsumeDirectKey(char *keystate);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	bool clbkLoadVC (int id);
-	int InitOptics;
-	void UpdateOptics (double mx, double my);
 	double OpticsShaft;
 	double SextTrunion;
 	double TeleTrunion;
 	double TargetShaft;
 	double TargetTrunion;
-	double CameraAperture;
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 
@@ -3106,7 +3106,6 @@ protected:
 	int  PanelId;
 	bool InVC;
 	bool InPanel;
-	bool InOptics;
 	bool VCRegistered;
 	VECTOR3 VCCameraOffset;
 	VECTOR3 VCMeshOffset;

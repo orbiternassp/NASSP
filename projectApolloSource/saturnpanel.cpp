@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.187  2006/08/24 15:03:20  jasonims
+  *	Corrected Optics base value to 32.524 degrees.
+  *	
   *	Revision 1.186  2006/08/23 03:57:16  jasonims
   *	*** empty log message ***
   *	
@@ -1232,7 +1235,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RNDZXPDRSWITCH,      						_R(278, 350, 312, 379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL101LOWERSWITCHES,      				    _R(153, 486, 311, 515), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 		
-		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		break;
 
 	case SATPANEL_MAIN: // main instrument panel
@@ -1378,6 +1382,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiCameraSetAperture (RAD * 35.0);
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		break;
 
 	case SATPANEL_LEFT: // left instrument panel
@@ -1431,6 +1436,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiCameraSetAperture (RAD * 30.0);
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		break;
 
 	case SATPANEL_RIGHT: // right instrument panel
@@ -1494,6 +1500,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiCameraSetAperture (RAD * 30.0);
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		break;
 
 	case SATPANEL_LEFT_RNDZ_WINDOW: // left rendezvous window
@@ -1507,6 +1514,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiCameraSetAperture (RAD * 15.0);
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		break;
 
 	case SATPANEL_RIGHT_RNDZ_WINDOW: // right rendezvous window
@@ -1514,6 +1522,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiCameraSetAperture (RAD * 15.0);
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		break;
 
 	case SATPANEL_HATCH_WINDOW: // hatch window
@@ -1521,6 +1530,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiCameraSetAperture (RAD * 15.0);
 		SetCameraDefaultDirection(_V(0.0, 0.83867, 0.544639));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		break;
 
 	case SATPANEL_CABIN_PRESS_PANEL: // cabin pressurization controls panel
@@ -1533,30 +1543,27 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ORDEALROTARY,					_R( 709,   63,  793,  147), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		break;
 
 	case SATPANEL_SEXTANT: // Sextant
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,					_R( 270,   95, 1130,  955), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,					_R( 270,   95, 1130,  955), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, -0.84316631, 0.53765284));
 		oapiCameraSetAperture (RAD * 5);
-		TargetShaft = 0;
-		TargetTrunion = 0;
-		InitOptics = SATPANEL_SEXTANT;
+		SetCameraRotationRange( PI/2, PI/2, PI/2, PI/2);
 		break;
 
 	case SATPANEL_TELESCOPE: // Telescope
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE,					_R( 270,   95, 1130,  955), PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE,					_R( 270,   95, 1130,  955), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, -0.84316631, 0.53765284));
+		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
 		oapiCameraSetAperture (RAD * 30);
-		TargetShaft = 0;
-		TargetTrunion = 0;
-		InitOptics = SATPANEL_TELESCOPE;
+		SetCameraRotationRange( PI/2, PI/2, PI/2, PI/2);
 		break;
 	
 	}
@@ -1574,16 +1581,10 @@ bool Saturn::clbkLoadPanel (int id) {
 	InVC = false;
 	InPanel = true;
 
-	if (id == SATPANEL_SEXTANT || SATPANEL_TELESCOPE) {
-		InOptics = true;
-	}else{
-		InOptics = false;
-	}
-
 	//
 	// Set view parameter
 	//
-	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+
 	SetView();
 
 	return hBmp != NULL;
@@ -2844,6 +2845,8 @@ void DeletegParam() {
 bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 {
+	double dx,dy;
+
 	static int ctrl = 0;
 
 	if (MainPanel.CheckMouseClick(id, event, mx, my))
@@ -2983,12 +2986,55 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	case AID_OPTICSCLKAREASEXT:
-		//do nothing, but we will do something
+
+		switch(ControllerSpeedSwitch.GetState()){
+			case THREEPOSSWITCH_UP:
+				dx = 20 * PI / 180;
+				dy = 10 * PI / 180;
+				break;
+			case THREEPOSSWITCH_CENTER:
+				dx = 10 * PI / 180;
+				dy = 5 * PI / 180;
+				break;
+			case THREEPOSSWITCH_DOWN:
+				dx = 4 * PI / 180;
+				dy = 2 * PI / 180;
+				break;
+		}
+
+		if (ControllerCouplingSwitch.IsUp()){
+			OpticsShaft = OpticsShaft + ((mx-430) / 430) * dx;
+			SextTrunion = SextTrunion + ((my-430) / 430) * dy;
+		}else{
+			//Do nothing because I haven't figured out how to rectify the coordinate systems to make the matrix transformation work.
+		}
 		return true;
 
 	case AID_OPTICSCLKAREATELE:
-		//do nothing, but we will do something
+
+		switch(ControllerSpeedSwitch.GetState()){
+			case THREEPOSSWITCH_UP:
+				dx = 20 * PI / 180;
+				dy = 10 * PI / 180;
+				break;
+			case THREEPOSSWITCH_CENTER:
+				dx = 10 * PI / 180;
+				dy = 5 * PI / 180;
+				break;
+			case THREEPOSSWITCH_DOWN:
+				dx = 4 * PI / 180;
+				dy = 2 * PI / 180;
+				break;
+		}
+
+		if (ControllerCouplingSwitch.IsUp()){
+			OpticsShaft = OpticsShaft + ((mx-430) / 430) * dx;
+			TeleTrunion = TeleTrunion + ((my-430) / 430) * dy;
+		}else{
+			//Do nothing because I haven't figured out how to rectify the coordinate systems to make the matrix transformation work.
+		}
 		return true;
+
 	//
 	// Old stuff
 	//
@@ -4039,6 +4085,48 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
+	// OPTICS
+
+	case AID_OPTICSCLKAREASEXT:
+		//write update stuff here
+
+		if (OpticsShaft > RAD*270){
+	        OpticsShaft = RAD*270;
+		}else if (OpticsShaft < -(RAD*270)){
+			OpticsShaft = -(RAD*270);
+		}
+
+		if (SextTrunion < 0){
+			SextTrunion = 0;
+		}else if (SextTrunion > RAD*90){
+			SextTrunion = RAD*90;
+		}
+
+		sprintf(oapiDebugString(), "Shaft %f, Trunion %f", OpticsShaft/RAD, SextTrunion/RAD);
+
+		oapiCameraSetCockpitDir (OpticsShaft, SextTrunion, true);
+		return true;
+
+	case AID_OPTICSCLKAREATELE:
+		//write update stuff here
+		
+		if (OpticsShaft > RAD*270){
+	        OpticsShaft = (RAD*270);
+		}else if (OpticsShaft < -(RAD*270)){
+			OpticsShaft = -(RAD*270);
+		}
+
+		if (TeleTrunion < 0){
+			TeleTrunion = 0;
+		}else if (TeleTrunion > RAD*90){
+			TeleTrunion = RAD*90;
+		}
+
+		sprintf(oapiDebugString(), "Shaft %f, Trunion %f", OpticsShaft/RAD, TeleTrunion/RAD);
+
+		oapiCameraSetCockpitDir (OpticsShaft, TeleTrunion - PI/2, true);
+		return true;
+
 
 	//
 	// For now, both SPS fuel and oxidiser display the same.
@@ -4387,10 +4475,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_OPTICSCLKAREASEXT:
-	case AID_OPTICSCLKAREATELE:
-		//write update stuff here
-		return true;
+	
 	}
 	return false;
 }
