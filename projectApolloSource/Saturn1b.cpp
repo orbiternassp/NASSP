@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2006/08/01 18:46:50  tschachim
+  *	Added checklist actions.
+  *	
   *	Revision 1.58  2006/07/31 12:25:03  tschachim
   *	Smoother staging.
   *	
@@ -294,6 +297,7 @@ void Saturn1b::initSaturn1b()
 	ReadyAstp = false;
 	ReadyAstp1 = false;
 	S4BASTP = false;
+	Resetjet = false;
 
 	MasterVessel = false;
 	TargetDocked = false;
@@ -947,9 +951,6 @@ void Saturn1b::Timestep (double simt, double simdt)
 
 	if (stage == CSM_LEM_STAGE)
 	{
-		if(simt>0.5)
-			AttitudeLaunch4();
-
 		if (SivbLmSepSwitch.GetState())
 		{
 			if (ASTPMission)
@@ -978,9 +979,12 @@ void Saturn1b::Timestep (double simt, double simdt)
 			ToggleEVA();
 			}
 		}
-		if ((simt-(2+release_time))>=0){
+
+		if ((simt-(2+release_time))>=0 && Resetjet) {
 			SetAttitudeLinLevel(2,0);
-			}
+			Resetjet = false;
+		}
+
 		if (ToggleEva){
 		ToggleEVA();
 		if(ASTPMission && dockstate == 3){
@@ -1011,6 +1015,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 		if (bManualUnDock)
 		{
 			release_time = simt;
+			Resetjet = true;
 			DockStage (dockstate);
 			bManualUnDock=false;
 		}

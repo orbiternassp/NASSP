@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/07/31 12:25:38  tschachim
+  *	Smoother staging.
+  *	
   *	Revision 1.18  2006/06/24 15:40:06  movieman523
   *	Working on MET-driven audio playback. Also added initial Doxygen comments.
   *	
@@ -115,6 +118,7 @@ protected:
 	bool ReadyAstp;
 	bool ReadyAstp1;
 	bool S4BASTP;
+	bool Resetjet;
 
 	VECTOR3 RelPos;
 
