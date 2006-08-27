@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/07/27 23:24:11  tschachim
+  *	The Saturn 1b now has the Saturn V IGM autopilot.
+  *	
   *	Revision 1.4  2006/02/05 20:55:09  lazyd
   *	Added roll control (RCS) to SIVB
   *	
@@ -81,9 +84,9 @@ void Saturn::AttitudeLaunchSIVB()
 //************************************************************
 // gets manual control levels in each axis, this code copied directly from Rob Conley's Mercury Atlas
 	if(AutopilotActive()){
-		tempP =AtempP;
-		tempR =AtempR;
-		tempY =AtempY;
+		tempP = AtempP;
+		tempR = AtempR;
+		tempY = AtempY;
 	}else{
 		tempP = GetManualControlLevel(THGROUP_ATT_PITCHDOWN, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_PITCHUP, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
 		tempY = GetManualControlLevel(THGROUP_ATT_YAWLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_YAWRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
@@ -94,20 +97,20 @@ void Saturn::AttitudeLaunchSIVB()
 //Creates correction factors for rate control in each axis as a function of input level
 // and current angular velocity. Varies from 1 to 0 as angular velocity approaches command level
 // multiplied by maximum rate desired
-	if(tempR != 0.0)	{
-		rollcorrect = (1/(fabs(tempR)*0.35))*((fabs(tempR)*0.35)-fabs(ang_vel.z));
-			}
-	if(tempP != 0.0)	{
-		pitchcorrect = (1/(fabs(tempP)*0.175))*((fabs(tempP)*0.175)-fabs(ang_vel.x));
-		if((tempP > 0 && ang_vel.x > 0) || (tempP < 0 && ang_vel.x < 0))	{
-						pitchcorrect = 1;
-					}
+	if (tempR != 0.0) {
+		rollcorrect = (1./(fabs(tempR)*0.35))*((fabs(tempR)*0.35)-fabs(ang_vel.z));
 	}
-	if(tempY != 0.0)	{
-	yawcorrect = (1/(fabs(tempY)*0.175))*((fabs(tempY)*0.175)-fabs(ang_vel.y));
-	if((tempY > 0 && ang_vel.y < 0) || (tempY < 0 && ang_vel.y > 0))	{
-						yawcorrect = 1;
-					}
+	if (tempP != 0.0) {
+		pitchcorrect = (1./(fabs(tempP)*0.175))*((fabs(tempP)*0.175)-fabs(ang_vel.x));
+		if ((tempP > 0 && ang_vel.x > 0) || (tempP < 0 && ang_vel.x < 0)) {
+			pitchcorrect = 1;
+		}
+	}
+	if (tempY != 0.0) {
+		yawcorrect = (1./(fabs(tempY)*0.175))*((fabs(tempY)*0.175)-fabs(ang_vel.y));
+		if ((tempY > 0 && ang_vel.y < 0) || (tempY < 0 && ang_vel.y > 0)) {
+			yawcorrect = 1;
+		}
 	}
 //*************************************************************
 // Create deflection vectors in each axis
@@ -122,15 +125,19 @@ void Saturn::AttitudeLaunchSIVB()
 // create opposite vectors for "gyro stabilization" if command levels are 0
 
 	if(tempP==0.0) {
-		pitchvectorm=_V(0.0,0.95*ang_vel.x*2,0.0);
+		pitchvectorm=_V(0.0, 0.95 * ang_vel.x * 2., 0.0);
 	}
 	if(tempY==0.0) {
-		yawvectorm=_V(-0.95*ang_vel.y*2,0.0,0.0);
+		yawvectorm=_V(-0.95 * ang_vel.y * 2., 0.0, 0.0);
 	}
 	if(tempR==0.0) {
-		rollvectorl = _V(0.0,0.99*ang_vel.z*2,0.0);
+		rollvectorl = _V(0.0, 0.99 * ang_vel.z * 10., 0.0);
 	}
-	SetAttitudeRotLevel(2, -rollvectorl.y);
+
+	if (oapiGetSimStep() < 1 && !OrbitStabilised()) {
+		SetAttitudeRotLevel(2, -rollvectorl.y / oapiGetTimeAcceleration());
+	}
+
 //**************************************************************
 // Sets thrust vectors by simply adding up all the axis deflection vectors and the
 // "neutral" default vector
