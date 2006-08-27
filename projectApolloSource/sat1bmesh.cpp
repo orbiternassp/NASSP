@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/08/11 20:37:46  movieman523
+  *	Added HasProbe flag for docking probe.
+  *	
   *	Revision 1.47  2006/08/04 19:01:23  jasonims
   *	corrected many of the mesh problems experienced when on pad and during launch.
   *	
@@ -580,6 +583,13 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		mesh_dir=_V(0,0,29.77-12.25);
 		AddMesh (hNosecap, &mesh_dir);
 	}
+
+	// Dummy docking port so the auto burn feature of IMFD 4.2 is working
+	// Remove it when a newer release of IMFD don't need that anymore
+	VECTOR3 dockpos = {0,0,24.8 + offset};
+	VECTOR3 dockdir = {0,0,1};
+	VECTOR3 dockrot = {0,1,0};
+	SetDockParams(dockpos, dockdir, dockrot);
 
 	SetCameraOffset (_V(-1,1.0,31.15-STG1O));
     SetView(22.7, false);
