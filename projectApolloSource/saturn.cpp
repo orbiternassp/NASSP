@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.175  2006/08/25 05:16:51  jasonims
+  *	Passive Optics-orbiter interface is commited.  SextTrunion, TeleTrunion, and OpticsShaft are values that need to be updated in order to produce a visual change of view.
+  *	
   *	Revision 1.174  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -3949,6 +3952,11 @@ bool Saturn::CheckForLaunchShutdown()
 			ActivateNavmode(NAVMODE_KILLROT);
 
 			agc.LaunchShutdown();
+
+			// Reset autopilot commands
+			AtempP  = 0;
+			AtempY  = 0;
+			AtempR  = 0;
 
 			//
 			// Checklist actions
