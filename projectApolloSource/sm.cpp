@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/08/23 06:31:04  jasonims
+  *	Corrected potential SM Umbilical Animation problem.  Did all pre-set work for LRV Animations...wheels have ability to rotate, turn and bounce with shocks.  No actual implementation yet, but all that needs to be done is modify the proc_*ANIMATIONNAMEHERE* variables.  Those coming in next commit.
+  *	
   *	Revision 1.15  2006/06/28 18:25:06  movieman523
   *	Don't create thruster groups, because we don't want the user to be able to control the SM RCS after seperation.
   *	
@@ -129,7 +132,7 @@ SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
 	InitSM();
-	DefineAnimations();
+	//DefineAnimations();
 }
 
 SM::~SM()
@@ -421,7 +424,7 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	{
 		umbilical_proc = min (1.0, umbilical_proc+da);
 	}
-    SetAnimation (anim_umbilical, umbilical_proc);
+    //SetAnimation (anim_umbilical, umbilical_proc);
 
 	//
 	// See section 2.9.4.13.2 of the Apollo Operations Handbook Seq Sys section for
