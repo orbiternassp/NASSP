@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/08/23 06:31:04  jasonims
+  *	Corrected potential SM Umbilical Animation problem.  Did all pre-set work for LRV Animations...wheels have ability to rotate, turn and bounce with shocks.  No actual implementation yet, but all that needs to be done is modify the proc_*ANIMATIONNAMEHERE* variables.  Those coming in next commit.
+  *	
   *	Revision 1.6  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -195,6 +198,10 @@ void LRV::init()
 
 	// touchdown point test
 	// touchdownPointHeight = -0.8;
+
+	proc_tires = 0.0;
+	proc_frontwheels = 0.0;
+	proc_rearwheels = 0.0;
 	
 }
 
@@ -819,6 +826,8 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 
 	MoveLRV(SimDT, &evaV, heading);
 
+	UpdateAnimations(SimDT);
+
 	DoAnimations();
 	
 	// touchdown point test
@@ -827,18 +836,38 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 
 void LRV::DoAnimations ()
 {
-	SetAnimation(anim_fntrgttire, proc_tires);
-	SetAnimation(anim_fntlfttire, proc_tires);
-	SetAnimation(anim_rearrgttire, proc_tires);
-	SetAnimation(anim_rearlfttire, proc_tires);
-	SetAnimation(anim_fntrgtwheel, proc_frontwheels);
-	SetAnimation(anim_fntlftwheel, proc_frontwheels);
-	SetAnimation(anim_rearrgtwheel, proc_rearwheels);
-	SetAnimation(anim_rearlftwheel, proc_rearwheels);
-	SetAnimation(anim_fntrgtfender, proc_fntrgtfender);
-	SetAnimation(anim_fntlftfender, proc_fntlftfender);
-	SetAnimation(anim_rearrgtfender, proc_rearrgtfender);
-	SetAnimation(anim_rearlftfender, proc_rearlftfender);
+	//SetAnimation(anim_fntrgttire, proc_tires);
+	//SetAnimation(anim_fntlfttire, proc_tires);
+	//SetAnimation(anim_rearrgttire, proc_tires);
+	//SetAnimation(anim_rearlfttire, proc_tires);
+	//SetAnimation(anim_fntrgtwheel, proc_frontwheels);
+	//SetAnimation(anim_fntlftwheel, proc_frontwheels);
+	//SetAnimation(anim_rearrgtwheel, proc_rearwheels);
+	//SetAnimation(anim_rearlftwheel, proc_rearwheels);
+	//SetAnimation(anim_fntrgtfender, proc_fntrgtfender);
+	//SetAnimation(anim_fntlftfender, proc_fntlftfender);
+	//SetAnimation(anim_rearrgtfender, proc_rearrgtfender);
+	//SetAnimation(anim_rearlftfender, proc_rearlftfender);
+}
+
+void LRV::UpdateAnimations (double SimDT)
+{
+	// read speed and determine change in omega in wheel rotation in SimDT time
+
+	proc_tires = proc_tires + 0.1;
+
+	// read current turn angle and move wheels to that point (rear and foward turn opposite)
+
+	// Draw random number to see if wheels hit a bump and it's magnitude
+
+	// check to see if animations hit limits and adjust accordingly
+
+	if (proc_tires >= 1){
+		proc_tires = 0;
+	}
+
+	sprintf(oapiDebugString(), "proc_tire %f", proc_tires);
+
 }
 
 void LRV::clbkLoadStateEx(FILEHANDLE scn, void *vs)
