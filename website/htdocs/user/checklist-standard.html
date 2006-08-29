@@ -20,6 +20,7 @@
       <dt> <a href="#introduction">Introduction</a></dt>
       <dt> <a href="#prelaunch">Prelaunch checklist</a></dt>
 	  <dt> <a href="#ingress">Prime Crew Ingress/Cabin Closeout</a></dt>
+	  <dd><a href="#fdai">The FDAI</a></dd>
       <dt> <a href="#launch">Launch checklist </a></dt>
 	  <dt> <a href="#epo">Earth Parking Orbit</a></dt>
       <dt> <a href="#tli">Trans Lunar Injection (TLI) checklist</a></dt>
@@ -1248,9 +1249,41 @@ V37 request. <br>
       </tr>      
     </table>
     <p>Now the prime crew continues with the final system checks before launch. At the beginning the BMAGs (Body Mounted Attitude Gyro) are turned on, the FDAIs and the GDC (Gyro Display Coupler) are checked and the GDC is aligned to the reference attitude for a typical launch azimuth. The CSM has 2 independent devices, which provide an inertial attitude reference, the IMU and the GDC by using the  BMAGs. The IMU was aligned by P01/P02, now the GDC is aligned. </p>
-    <p>To display the various attitude informations the FDAI is used. The FDAI shows three things simultaneously: the total attitude, the attitude rate and the attitude error in respect to a defined other attitude by using the error needles.</p>
+    <h4><a name="fdai" id="fdai"></a>The FDAI </h4>
+    <p>To display the various attitude informations the FDAI is used. The FDAI shows three things simultaneously: the total attitude, the attitude rate and the attitude error in respect to a defined other attitude by using the error needles.<br> 
+</p>
     <p><img src="../images/prelaunch_fdai.gif"></p>
-    <p>The following table explains what the FDAIs show with the different switch settings. At first the CMC ATT switch is always switched to IMU, the GDC position is a backup for the CMC attitude, but was never used and so is not explained here. On the left side you see the various settings for the FDAI SEL, FDAI SRC and ATT SET switches, (any) means the FDAI readings don't depend on that switch. On the rigth side it is explained what attitude and error the FDAIs show, the following abbreviations are used:</p>
+    <p>Christophe, who is pilot by profession, explains the FDAI (and the ORDEAL) like this:</p>
+    <p>&quot;I'm a pilot  and what is very disturbing for pilots is that we understand the FDAI as an artificial horizon similar to those we know in aircraft. But in fact, although the Apollo FDAI has the same purpose than a classic horizon (to display the attitude) the goal, the operation and above all the reference are quite different. <br>
+  <br>
+  First, you have to consider that the system is composed of 2 FDAI that are identical and of 2 subsystems for giving the reference: The main one is the Inertial Measurement Unit (IMU) which could be summarized as an inertial platform. The second and backup one is Gyro Display Coupler (GDC) using BMAGs which are body mounted attitude gyros.
+  Both of the FDAI could be coupled either on the IMU or on the GDC while the standard mode is FDAI 1/IMU and FDAI2/GDC. <br>
+  <br>
+  Second, depending on which phase of the mission you are, the display you need is not always the same. And while a spacecraft is not really flying above the surface like an aircraft does, but is orbiting around a planet, the "zero reference" (I mean that you read "pitch 0&deg;", "bank 0&deg;" and "ball centered") is not necessary when the spacecraft is nose on the horizon, "wings" at level and pointing toward the heading. <br>
+  <br>
+  However, astronauts of the days of Apollo were mainly pilots and wanted to have some displays as close as they used to see on an airplane flying in atmosphere. 
+  So they used two main different mode of display:<br>
+  <br>
+  The first one is called "Inertial stellar". 
+  That means that the reference is a 3D system of coordinates which is fix relative to the stars. That does not mean that there's only one system of reference. In fact there's is one system of reference almost for each mission phase: Some of them are used many time during the flight and in order to be activated several time they are stored in the computer as some "REFSMMAT" for REference For Stable Member Matrix. If you use the Virtual AGC, you can activate those REFSMMAT while doing IMU realignment Program P52 or P54 (option 3 "REFSMMAT").</p>
+    <p>      Some others are used only once for specific maneuver, in fact one for each burn and they are computed in real time by the computer while in prethrust program and could be activated too by the P52 or P54 program (option 1 "preferred").
+      The purpose of this latest is to display the zero reference (wings at level and "ball centered") just when the spacecraft is steady at the burn attitude. In this case, if there is something wrong with the autopilot when the burn as started and the spacraft commence to drift in a wrong attitude, it's more easy for the astronaut to manually control the ship and to come back to the right attitude wich correspond to the 0&deg; in each axis. </p>
+    <p>      There are other specific systems of reference for attitude, like "lunar landing" for example. <br>
+      <br>
+      You understand easily that, if the reference is fix relative to the stars, the display will be fix too. So if for example your spacecraft is orbiting around the earth and for some reason you want to orient it in a fix attitude relative TO THE EARTH SURFACE ( that's what you call "surface relative" in orbiter way of speaking) for example because you want to turn the window and maintain it toward the ground and take some shots, the FDAI will rotate slightly as you are orbiting. Just because it is fix to the star and "you" (the ship) is not. 
+      That's something which doesn't disturb the scientists and engineers  who think with their brains, but that is totally inacceptable for you and me as some pilots who &quot;thinks with their guts&quot;  as well as the astronauts themself.
+      That the reason why the NASA developped the second mode of display: ORDEAL. <br>
+      <br>
+      ORDEAL means Orbit Rate Drive Earth And Lunar (You sometimes find Orbit Rate Drive Electronics Apollo L... something I've forgotten). 
+      It's an additionnal box installed near the left hand window inside the command module. This box could be set to automatically rotate the coupled FDAI around the pitch axis at the same rate of the orbital period. This means that, while the ship is orbiting around the earth (or moon) and rotating on itself in order to have always the same side turning toward the surface, the ORDEAL FDAI displays a FIXED reference attitude. Almost exactly like if you were sitting on a aircraft flying on atmosphere.
+      According to the historical Apollo flight plans, the Ordeal mode was the standard one used while orbiting around earth or moon, except for the burns and rendezvous maneuvers. <br>
+      <br>
+      For the end, concerning the others displays you can find on the FDAI there are:<br>
+      <br>
+      Errors needles: The yellow ones accross the ball that are like cross bar of a Flight director : they have the same purposes and are of "go to" type. But take care of the source they come from!<br>
+      <br>
+      Rate needles: the little triangles near the balls that indicates the rotating rates of the spacecraft.&quot;</p>
+    <p>The following table explains what the FDAIs show with the different switch settings. At first the CMC ATT switch is always switched to IMU, the GDC position is a backup for the CMC attitude, but was never used and so is not explained here. On the left side you see the various settings for the FDAI SEL, FDAI SRC and ATT SET switches, &quot;(any)&quot; means the FDAI readings don't depend on that switch. On the rigth side it is explained what attitude and error the FDAIs show, the following abbreviations are used:</p>
     <ul>
       <li>IMU: Current total attitude indicated by the IMU </li>
       <li>GDC: Current total attitude indicated by the GDC</li>
