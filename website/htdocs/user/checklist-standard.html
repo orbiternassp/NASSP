@@ -1266,7 +1266,7 @@ V37 request. <br>
   <br>
   The first one is called "Inertial stellar". 
   That means that the reference is a 3D system of coordinates which is fix relative to the stars. That does not mean that there's only one system of reference. In fact there's is one system of reference almost for each mission phase: Some of them are used many time during the flight and in order to be activated several time they are stored in the computer as some "REFSMMAT" for REference For Stable Member Matrix. If you use the Virtual AGC, you can activate those REFSMMAT while doing IMU realignment Program P52 or P54 (option 3 "REFSMMAT").</p>
-    <p>      Some others are used only once for specific maneuver, in fact one for each burn and they are computed in real time by the computer while in prethrust program and could be activated too by the P52 or P54 program (option 1 "preferred").
+    <p>      Some others are used only once for specific maneuver, in fact one for each burn and they are computed in real time by the computer while in thrust programs (P40's) and could be activated too by the P52 or P54 program (option 1 "preferred").
       The purpose of this latest is to display the zero reference (wings at level and "ball centered") just when the spacecraft is steady at the burn attitude. In this case, if there is something wrong with the autopilot when the burn as started and the spacraft commence to drift in a wrong attitude, it's more easy for the astronaut to manually control the ship and to come back to the right attitude wich correspond to the 0&deg; in each axis. </p>
     <p>      There are other specific systems of reference for attitude, like "lunar landing" for example. <br>
       <br>
@@ -1274,7 +1274,7 @@ V37 request. <br>
       That's something which doesn't disturb the scientists and engineers  who think with their brains, but that is totally inacceptable for you and me as some pilots who &quot;thinks with their guts&quot;  as well as the astronauts themself.
       That the reason why the NASA developped the second mode of display: ORDEAL. <br>
       <br>
-      ORDEAL means Orbit Rate Drive Earth And Lunar (You sometimes find Orbit Rate Drive Electronics Apollo L... something I've forgotten). 
+      ORDEAL means "Orbit Rate Display Earth And Lunar" or "Orbit Rate Drive Electronics for Apollo and LM", both definitions appear in the documentation.
       It's an additionnal box installed near the left hand window inside the command module. This box could be set to automatically rotate the coupled FDAI around the pitch axis at the same rate of the orbital period. This means that, while the ship is orbiting around the earth (or moon) and rotating on itself in order to have always the same side turning toward the surface, the ORDEAL FDAI displays a FIXED reference attitude. Almost exactly like if you were sitting on a aircraft flying on atmosphere.
       According to the historical Apollo flight plans, the Ordeal mode was the standard one used while orbiting around earth or moon, except for the burns and rendezvous maneuvers. <br>
       <br>
