@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2006/06/10 23:27:41  movieman523
+  *	Updated abort code.
+  *	
   *	Revision 1.25  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -276,7 +279,11 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 
 	AGCWarningStatus aws;
 	sat->GetAGCWarningStatus(aws);
-	
+
+	//
+	// ISS warning
+	//
+
 	if (aws.ISSWarning) {
 		SetLight(CSM_CWS_ISS_LIGHT, true);
 		// No Master Alarm during lamp test
@@ -286,7 +293,23 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	else {
 		SetLight(CSM_CWS_ISS_LIGHT, false);
 	}
-		
+
+	//
+	// CMC warning
+	//
+    // See http://www.ibiblio.org/apollo/Documents/BwCsmHandbookGncSection_112-114.pdf
+	// Drawing 8.1, square L4 and others. TODO Only test alarm condition yet.
+	//
+
+	if (aws.TestAlarms) {
+		SetLight(CSM_CWS_CMC_LIGHT, true);
+		// No Master Alarm during lamp test
+		SetMasterAlarm(false);
+	} 
+	else {
+		SetLight(CSM_CWS_CMC_LIGHT, false);
+	}
+	
 	//
 	// Do some checks not every timestep
 	//
