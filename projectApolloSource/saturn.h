@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.215  2006/08/25 05:16:51  jasonims
+  *	Passive Optics-orbiter interface is commited.  SextTrunion, TeleTrunion, and OpticsShaft are values that need to be updated in order to produce a visual change of view.
+  *	
   *	Revision 1.214  2006/08/12 14:14:18  movieman523
   *	Renamed EVA and LEVA classes, and added ApexCoverAttached flag to Saturn.
   *	
@@ -3128,6 +3131,7 @@ protected:
 	SURFHANDLE SMExhaustTex;
 	SURFHANDLE SMMETex;
 	SURFHANDLE CMTex;
+	SURFHANDLE J2Tex;
 	//TODO SURFHANDLEs for VC
 
 	//

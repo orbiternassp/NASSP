@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2006/08/13 16:55:35  movieman523
+  *	Removed a bunch of unused files.
+  *	
   *	Revision 1.70  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -828,11 +831,11 @@ void SaturnV::SetSecondStageEngines(double offset)
 
 	int i;
 
-	VECTOR3 m_exhaust_pos1= {-1.8,-1.8,-33.5 + offset};
-	VECTOR3 m_exhaust_pos2= {1.8,1.8,-33.5 + offset};
-	VECTOR3 m_exhaust_pos3= {-1.8,1.8,-33.5 + offset};
-	VECTOR3 m_exhaust_pos4 = {1.8,-1.8,-33.5 + offset};
-	VECTOR3 m_exhaust_pos5 = {0,0,-33.5 + offset};
+	VECTOR3 m_exhaust_pos1= {-1.8,-1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos2= {1.8,1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos3= {-1.8,1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos4 = {1.8,-1.8,-33 + offset};
+	VECTOR3 m_exhaust_pos5 = {0,0,-33 + offset};
 	VECTOR3 s_exhaust_pos = {0, 0, -35.0 + offset};
 
 	VECTOR3	m_exhaust_pos6= _V(0,5.07,-33.15 + offset);
@@ -895,7 +898,7 @@ void SaturnV::SetSecondStageEngines(double offset)
 	thg_main = CreateThrusterGroup (th_main, SII_EngineNum, THGROUP_MAIN);
 
 	for (i = 0; i < SII_EngineNum; i++)
-		AddExhaust (th_main[i], 25.0, 1.5, SMMETex);
+		AddExhaust (th_main[i], 30.0, 2.9 , J2Tex);
 
 	if (SII_UllageNum) {
 		th_ull[0] = CreateThruster (m_exhaust_pos10, _V( 0,0,1),100000 , ph_2nd, 3000);
@@ -1086,7 +1089,7 @@ void SaturnV::SetThirdStageEngines (double offset)
 		}
 	}
 
-	VECTOR3 m_exhaust_pos1= {0,0,-8. + offset};
+	VECTOR3 m_exhaust_pos1= {0,0,-9+ offset};
 
 	//
 	// orbiter main thrusters
@@ -1095,7 +1098,7 @@ void SaturnV::SetThirdStageEngines (double offset)
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_THIRD_VAC, ph_3rd, ISP_THIRD_VAC);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
-	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
+	AddExhaust (th_main[0], 30.0, 2.9 ,J2Tex);
 
 	VECTOR3	u_exhaust_pos6= _V(3.6, -0.425, -3.6 + offset);
 	VECTOR3 u_exhaust_pos7= _V(-3.6, 0.925, -3.6 + offset);

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/08/27 21:52:42  tschachim
+  *	Added dummy docking port so the auto burn feature of IMFD 4.2 is working.
+  *	
   *	Revision 1.48  2006/08/11 20:37:46  movieman523
   *	Added HasProbe flag for docking probe.
   *	
@@ -643,7 +646,7 @@ void Saturn1b::SetSecondStageEngines ()
 	// *********************** thruster definitions ********************************
 	//
 
-	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG1O+9};
+	VECTOR3 m_exhaust_pos1= {0,0,-9.-STG1O+9};
 
 	//
 	// orbiter main thrusters
@@ -651,7 +654,7 @@ void Saturn1b::SetSecondStageEngines ()
 
 	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC, ph_3rd, ISP_SECOND_VAC, ISP_SECOND_SL);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-	AddExhaust (th_main[0], 25.0, 1.5,SMMETex);
+	AddExhaust (th_main[0], 30.0, 2.9 ,J2Tex);
 
 	//
 	//  Ullage rockets (3)

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.176  2006/08/27 21:49:39  tschachim
+  *	Cancel autopilot commands after orbit insertion.
+  *	
   *	Revision 1.175  2006/08/25 05:16:51  jasonims
   *	Passive Optics-orbiter interface is commited.  SextTrunion, TeleTrunion, and OpticsShaft are values that need to be updated in order to produce a visual change of view.
   *	
@@ -928,7 +931,8 @@ void Saturn::initSaturn()
 
 	SMExhaustTex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
 	SMMETex = oapiRegisterExhaustTexture ("Exhaust_atsme");//"Exhaust2"
-	CMTex =oapiRegisterReentryTexture("reentry");
+	J2Tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust_j2");
+	CMTex =oapiRegisterReentryTexture ("reentry");
 
 	strncpy(AudioLanguage, "English", 64);
 
