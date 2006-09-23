@@ -58,7 +58,7 @@
 #define IDB_BORDER_34x61                65
 #define AID_ELS_SWITCHES                66
 #define IDB_BORDER_55x111               67
-#define IDB_BORDER_44x67                68
+#define IDB_BORDER_46x75                68
 #define IDB_BORDER_39x38                69
 #define AID_DCVOLTS                     70
 #define AID_FCSM_SWITCH                 71
@@ -78,7 +78,7 @@
 #define IDB_BORDER_50x158               85
 #define AID_SEQUENCERSWITCHES           86
 #define AID_LEM_POWER_SWITCH            87
-#define IDB_BORDER_38x49                88
+#define IDB_BORDER_38x52                88
 #define AID_SMRCS_HELIUM1_SWITCHES      89
 #define IDB_BORDER_34x34                90
 #define IDB_BORDER_90x90                91
