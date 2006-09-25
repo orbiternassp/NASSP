@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.40  2006/07/26 15:42:02  tschachim
   *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
   *	
@@ -169,7 +172,6 @@
 #define MAXOFFPLANE	44000
 #define BRAKDIST	425000
 #define PDIDIST		494000
-//#define PDIDIST		504000
 #define PDIDISTJ    508000
 #define ULLAGESEC	7
 #define OFFSET		60
@@ -181,8 +183,8 @@
 #define LOCRITJ     0.59369
 #define HICRIT      0.63
 #define HICRITJ		0.65618
-#define MAXTHROT	0.93053
-#define MAXTHROTJ   0.96895
+#define MAXTHROT	0.95868	//0.93053
+#define MAXTHROTJ   0.98531 //0.96895
 #define A15DELCO	true
 #define ABORTLOG	true
 #define P64LOG		false
@@ -875,7 +877,7 @@ void LEMcomputer::Prog64(double simt)
 		}
 		BurnEndTime=simt-ttg-10.0;
 		ttg2=ttg*ttg;
-//		sprintf(oapiDebugString(),"nit=%d  ttg=%.1f dtg=%.6f", nit,ttg,dtg);
+		//sprintf(oapiDebugString(),"nit=%d  ttg=%.1f dtg=%.6f", nit,ttg,dtg);
 		if(A15DELCO) {
 		// this is how guidance accelerations are calculated in A15Delco...
 			ttgl=ttg+LEADTIME;
@@ -979,7 +981,6 @@ void LEMcomputer::Prog65(double simt)
 	}
 
 	double vsAlt = VSGetATL(OurVessel->GetHandle());
-	if(vsAlt == VS_NO_ALT) vsAlt=0.0;
 	if (OurVessel->GroundContact() || (vsAlt != VS_NO_ALT && vsAlt < 1.0)) {
 		ProgState++;
 		OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
@@ -1028,9 +1029,11 @@ void LEMcomputer::Prog65(double simt)
 		CutOffVel=-vel.x*10.0;
 		actatt.y=BurnTime-heading;
 		DesiredApogee=vel.y*10.0;
-		cgelev=OurVessel->GetCOG_elev();		
-//		CurrentAlt=vrad-bradius-cgelev;
-		CurrentAlt=vsAlt;
+		cgelev=OurVessel->GetCOG_elev();
+		if (vsAlt == VS_NO_ALT) 
+			CurrentAlt = vrad - bradius - cgelev;
+		else
+			CurrentAlt = vsAlt;
 
 		if ((vsAlt != VS_NO_ALT && vsAlt < 1.0) ||
 			(vsAlt == VS_NO_ALT && CurrentAlt <= 0.0)) { 
@@ -1088,8 +1091,10 @@ void LEMcomputer::Prog65(double simt)
 			rbrg-=2*PI;
 		}
 		position.x=-sbdis*cos(tbrg-heading);
-//		position.y=CurrentAlt-LandingAltitude;
-		position.y=vsAlt;
+		if (vsAlt == VS_NO_ALT) 
+			position.y = CurrentAlt - LandingAltitude;
+		else
+			position.y = vsAlt;
 		position.z=sbdis*sin(tbrg-heading);
 		velocity.x=hvel*cos(cbrg-heading);
 		velocity.y=vel.y;
@@ -1223,9 +1228,12 @@ void LEMcomputer::Prog66(double simt)
 		OurVessel->GetHorizonAirspeedVector(velocity);
 		cgelev=OurVessel->GetCOG_elev();
 
-
 		double vsAlt = VSGetATL(OurVessel->GetHandle());
-		if (vsAlt != VS_NO_ALT) CurrentAlt=vsAlt;
+		if (vsAlt == VS_NO_ALT) 
+			CurrentAlt = vrad - bradius - cgelev;
+		else
+			CurrentAlt = vsAlt;
+
 		if ((vsAlt != VS_NO_ALT && vsAlt < 1.0) ||
 			(vsAlt == VS_NO_ALT && CurrentAlt <= 1.0)) { 
 
