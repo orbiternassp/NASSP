@@ -63,7 +63,6 @@ Columbia:ProjectApollo\Saturn5
   MOONALT 0.0
   LANG English
   LEMN Eagle
-  AUTOSLOW 1
 END
 Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
