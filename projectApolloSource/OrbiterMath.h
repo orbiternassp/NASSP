@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/05/08 02:20:24  movieman523
+  *	Updated for new Orbiter version.
+  *	
   *	Revision 1.1  2005/02/11 12:17:55  tschachim
   *	Initial version
   *	
@@ -116,18 +119,6 @@ inline double operator* (const VECTOR3 &a, const VECTOR3 &b)
 	c.z = a.z * b.z;
 
 	return (c.x + c.y + c.z);
-}
-
-// Negate
-inline VECTOR3 operator- (const VECTOR3 &a)
-{
-	VECTOR3 b;
-
-	b.x = -a.x;
-	b.y = -a.y;
-	b.z = -a.z;
-
-	return b;
 }
 
 // Are the vectors equal?
