@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2006/08/08 10:55:10  tschachim
+  *	*** empty log message ***
+  *	
   *	Revision 1.24  2006/08/07 20:21:58  tschachim
   *	A try to improve SLA panel separation.
   *	
@@ -270,10 +273,15 @@ void SIVB::InitS4b()
 	th_main[0] = 0;
 	panelProc = 0;
 	panelTimestepCount = 0;
-	panelMesh1 = 0;
-	panelMesh2 = 0;
-	panelMesh3 = 0;
-	panelMesh4 = 0;
+    panelMesh1SaturnV = 0;
+	panelMesh2SaturnV  = 0;
+	panelMesh3SaturnV  = 0;
+	panelMesh4SaturnV  = 0;
+    panelMesh1Saturn1b = 0;
+	panelMesh2Saturn1b  = 0;
+	panelMesh3Saturn1b  = 0;
+	panelMesh4Saturn1b  = 0;
+    panelAnim = 0;
 
 	//
 	// Set up the connections.
@@ -331,9 +339,7 @@ void SIVB::Boiloff()
 void SIVB::SetS4b()
 
 {
-	ClearMeshes();
 	VECTOR3 mesh_dir=_V(0,0,0);
-
 	double mass = EmptyMass;
 
 	ClearThrusterDefinitions();
@@ -346,7 +352,6 @@ void SIVB::SetS4b()
 	SetPitchMomentScale (0);
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
-    ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
@@ -407,29 +412,18 @@ void SIVB::SetS4b()
 			break;
 		}
 
-		if (PanelsHinged || !PanelsOpened) {
-			mesh_dir = _V(-1.48, -1.48, 12.55);
-			panelMesh1 = AddMesh(hsat5stg31, &mesh_dir);
-			mesh_dir = _V(1.48, -1.48, 12.55);
-			panelMesh2 = AddMesh(hsat5stg32, &mesh_dir);
-			mesh_dir = _V(1.48, 1.48, 12.55);
-			panelMesh3 = AddMesh(hsat5stg33, &mesh_dir);
-			mesh_dir = _V(-1.48, 1.48, 12.55);
-			panelMesh4 = AddMesh(hsat5stg34, &mesh_dir);
+        // Delete unneeded meshes
+        DelMesh(panelMesh1Saturn1b);
+        DelMesh(panelMesh2Saturn1b);
+        DelMesh(panelMesh3Saturn1b);
+        DelMesh(panelMesh4Saturn1b);
 
-			static MGROUP_ROTATE panel1(panelMesh1, NULL, 0, _V(-0.6, -0.6, -3.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
-			static MGROUP_ROTATE panel2(panelMesh2, NULL, 0, _V( 0.6, -0.6, -3.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
-			static MGROUP_ROTATE panel3(panelMesh3, NULL, 0, _V( 0.6,  0.6, -3.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
-			static MGROUP_ROTATE panel4(panelMesh4, NULL, 0, _V(-0.6,  0.6, -3.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
-	
-			panelAnim = CreateAnimation(0.0);
-			AddAnimationComponent(panelAnim, 0, 1, &panel1);
-			AddAnimationComponent(panelAnim, 0, 1, &panel2);
-			AddAnimationComponent(panelAnim, 0, 1, &panel3);
-			AddAnimationComponent(panelAnim, 0, 1, &panel4);
-
-			SetAnimation(panelAnim, panelProc);
-		}
+        if (!PanelsHinged && PanelsOpened) {
+            DelMesh(panelMesh1SaturnV);
+            DelMesh(panelMesh2SaturnV);
+            DelMesh(panelMesh3SaturnV);
+            DelMesh(panelMesh4SaturnV);
+        }
 	}
 	else {
 		if (LowRes)	{
@@ -465,32 +459,22 @@ void SIVB::SetS4b()
 			break;
 		}
 
-		if (PanelsHinged || !PanelsOpened) {
-			mesh_dir=_V(1.85,1.85,15.25);
-			panelMesh1 = AddMesh(hSat1stg21, &mesh_dir);
-			mesh_dir=_V(-1.85,1.85,15.25);
-			panelMesh2 = AddMesh(hSat1stg22, &mesh_dir);
-			mesh_dir=_V(1.85,-1.85,15.25);
-			panelMesh3 = AddMesh(hSat1stg23, &mesh_dir);
-			mesh_dir=_V(-1.85,-1.85,15.25);
-			panelMesh4 = AddMesh(hSat1stg24, &mesh_dir);
+        // Delete unneeded meshes
+        DelMesh(panelMesh1SaturnV);
+        DelMesh(panelMesh2SaturnV);
+        DelMesh(panelMesh3SaturnV);
+        DelMesh(panelMesh4SaturnV);
 
-			static MGROUP_ROTATE panel1(panelMesh1, NULL, 0, _V( 0.25,  0.25, -1.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
-			static MGROUP_ROTATE panel2(panelMesh2, NULL, 0, _V(-0.25,  0.25, -1.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
-			static MGROUP_ROTATE panel3(panelMesh3, NULL, 0, _V( 0.25, -0.25, -1.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
-			static MGROUP_ROTATE panel4(panelMesh4, NULL, 0, _V(-0.25, -0.25, -1.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
-	
-			panelAnim = CreateAnimation(0.0);
-			AddAnimationComponent(panelAnim, 0, 1, &panel1);
-			AddAnimationComponent(panelAnim, 0, 1, &panel2);
-			AddAnimationComponent(panelAnim, 0, 1, &panel3);
-			AddAnimationComponent(panelAnim, 0, 1, &panel4);
-
-			SetAnimation(panelAnim, panelProc);
-		}
+        if (!PanelsHinged && PanelsOpened) {
+            DelMesh(panelMesh1Saturn1b);
+            DelMesh(panelMesh2Saturn1b);
+            DelMesh(panelMesh3Saturn1b);
+            DelMesh(panelMesh4Saturn1b);
+        }
 	}
 
 	SetEmptyMass(mass);
+	SetAnimation(panelAnim, panelProc);
 
 	AddRCS_S4B();
 
@@ -663,7 +647,13 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 					v = (VESSEL *) oapiGetVesselInterface(hs4b3);
 					v->SetRotationMatrix(mul(rv, mul(rz, mul(rny, rx))));			
 					v = (VESSEL *) oapiGetVesselInterface(hs4b4);
-					v->SetRotationMatrix(mul(rv, mul(rnz, mul(ry, rx))));			
+					v->SetRotationMatrix(mul(rv, mul(rnz, mul(ry, rx))));
+
+				    // Delete unneeded meshes
+                    DelMesh(panelMesh1SaturnV);
+                    DelMesh(panelMesh2SaturnV);
+                    DelMesh(panelMesh3SaturnV);
+                    DelMesh(panelMesh4SaturnV);				                                            
 				}
 				else {
 					vs2.vrot.x = 0.1;
@@ -705,14 +695,13 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 					v->SetRotationMatrix(mul(rv, mul(rnz, mul(rny, rnx))));			
 					v = (VESSEL *) oapiGetVesselInterface(hs4b4);
 					v->SetRotationMatrix(mul(rv, mul(rz, mul(ry, rnx))));			
+
+				    // Delete unneeded meshes
+                    DelMesh(panelMesh1Saturn1b);
+                    DelMesh(panelMesh2Saturn1b);
+                    DelMesh(panelMesh3Saturn1b);
+                    DelMesh(panelMesh4Saturn1b);
 				}
-
-				// Hide meshes
-				SetMeshVisibilityMode(panelMesh1, MESHVIS_NEVER);
-				SetMeshVisibilityMode(panelMesh2, MESHVIS_NEVER);
-				SetMeshVisibilityMode(panelMesh3, MESHVIS_NEVER);
-				SetMeshVisibilityMode(panelMesh4, MESHVIS_NEVER);
-
 				PanelsOpened = true;
 			}
 		}
@@ -1179,6 +1168,51 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	VESSEL2::clbkSetClassCaps (cfg);
 	InitS4b();
+    
+    // Define all animations here and delete the unneeded later,
+    // otherwise Orbiter crashes
+    ClearMeshes();
+	panelAnim = CreateAnimation(0.0);
+
+    // SaturnV panel animations
+	VECTOR3 mesh_dir = _V(-1.48, -1.48, 12.55);
+	panelMesh1SaturnV = AddMesh(hsat5stg31, &mesh_dir);
+	mesh_dir = _V(1.48, -1.48, 12.55);
+	panelMesh2SaturnV  = AddMesh(hsat5stg32, &mesh_dir);
+	mesh_dir = _V(1.48, 1.48, 12.55);
+	panelMesh3SaturnV  = AddMesh(hsat5stg33, &mesh_dir);
+	mesh_dir = _V(-1.48, 1.48, 12.55);
+	panelMesh4SaturnV  = AddMesh(hsat5stg34, &mesh_dir);
+
+	static MGROUP_ROTATE panel1SaturnV(panelMesh1SaturnV, NULL, 0, _V(-0.6, -0.6, -3.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel2SaturnV(panelMesh2SaturnV, NULL, 0, _V( 0.6, -0.6, -3.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel3SaturnV(panelMesh3SaturnV, NULL, 0, _V( 0.6,  0.6, -3.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel4SaturnV(panelMesh4SaturnV, NULL, 0, _V(-0.6,  0.6, -3.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
+
+	AddAnimationComponent(panelAnim, 0, 1, &panel1SaturnV);
+	AddAnimationComponent(panelAnim, 0, 1, &panel2SaturnV);
+	AddAnimationComponent(panelAnim, 0, 1, &panel3SaturnV);
+	AddAnimationComponent(panelAnim, 0, 1, &panel4SaturnV);
+
+    // Saturn1b panel animations
+	mesh_dir = _V(1.85, 1.85, 15.25);
+    panelMesh1Saturn1b = AddMesh(hSat1stg21, &mesh_dir);
+	mesh_dir = _V(-1.85, 1.85, 15.25);
+	panelMesh2Saturn1b = AddMesh(hSat1stg22, &mesh_dir);
+	mesh_dir = _V(1.85, -1.85, 15.25);
+	panelMesh3Saturn1b = AddMesh(hSat1stg23, &mesh_dir);
+	mesh_dir = _V(-1.85, -1.85, 15.25);
+	panelMesh4Saturn1b = AddMesh(hSat1stg24, &mesh_dir);
+
+	static MGROUP_ROTATE panel1Saturn1b(panelMesh1Saturn1b, NULL, 0, _V( 0.25,  0.25, -1.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel2Saturn1b(panelMesh2Saturn1b, NULL, 0, _V(-0.25,  0.25, -1.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel3Saturn1b(panelMesh3Saturn1b, NULL, 0, _V( 0.25, -0.25, -1.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel4Saturn1b(panelMesh4Saturn1b, NULL, 0, _V(-0.25, -0.25, -1.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
+    	
+	AddAnimationComponent(panelAnim, 0, 1, &panel1Saturn1b);
+	AddAnimationComponent(panelAnim, 0, 1, &panel2Saturn1b);
+	AddAnimationComponent(panelAnim, 0, 1, &panel3Saturn1b);
+	AddAnimationComponent(panelAnim, 0, 1, &panel4Saturn1b);
 }
 
 void SIVB::clbkDockEvent(int dock, OBJHANDLE connected)

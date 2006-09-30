@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/08/07 20:21:58  tschachim
+  *	A try to improve SLA panel separation.
+  *	
   *	Revision 1.17  2006/07/31 12:27:49  tschachim
   *	Hinged SLA panels for Apollo 7.
   *	
@@ -458,7 +461,8 @@ protected:
 	UINT panelAnim;
 	double panelProc;
 	int panelTimestepCount;
-	int panelMesh1, panelMesh2, panelMesh3, panelMesh4;
+	int panelMesh1SaturnV, panelMesh2SaturnV, panelMesh3SaturnV, panelMesh4SaturnV;
+	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
 };
 
 ///
