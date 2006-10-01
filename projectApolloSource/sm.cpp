@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/08/28 14:30:35  jasonims
+  *	temperarly removed animation calls due to Orbiter2006 bug causing CTD's, when patched, will reinstate animations.
+  *	
   *	Revision 1.16  2006/08/23 06:31:04  jasonims
   *	Corrected potential SM Umbilical Animation problem.  Did all pre-set work for LRV Animations...wheels have ability to rotate, turn and bounce with shocks.  No actual implementation yet, but all that needs to be done is modify the proc_*ANIMATIONNAMEHERE* variables.  Those coming in next commit.
   *	
@@ -132,7 +135,7 @@ SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
 	InitSM();
-	//DefineAnimations();
+	DefineAnimations();
 }
 
 SM::~SM()
@@ -246,7 +249,8 @@ void SM::SetSM()
 
 	VECTOR3 mesh_dir=_V(0, 0, 0);
 
-	SMMeshIndex=AddMesh (hSM, &mesh_dir);
+	SMMeshIndex=0;
+	AddMesh (hSM, &mesh_dir);
 
 	if (LowRes)
 		AddMesh (hSMRCSLow, &mesh_dir);
@@ -424,7 +428,7 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	{
 		umbilical_proc = min (1.0, umbilical_proc+da);
 	}
-    //SetAnimation (anim_umbilical, umbilical_proc);
+    SetAnimation (anim_umbilical, umbilical_proc);
 
 	//
 	// See section 2.9.4.13.2 of the Apollo Operations Handbook Seq Sys section for
@@ -1018,7 +1022,7 @@ void SM::DefineAnimations()
 	static UINT umbilical_group[1] = {2}; // participating groups
 	static MGROUP_ROTATE umbilical
 	(
-		SMMeshIndex,				// mesh index
+		0,				// mesh index
 		umbilical_group, 1,		// group list and # groups
 		_V(0,-1.9540,3.168), // rotation reference point
 		_V(1,0,0),		// rotation axis

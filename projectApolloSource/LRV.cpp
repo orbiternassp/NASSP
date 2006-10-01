@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/08/28 14:30:35  jasonims
+  *	temperarly removed animation calls due to Orbiter2006 bug causing CTD's, when patched, will reinstate animations.
+  *	
   *	Revision 1.7  2006/08/23 06:31:04  jasonims
   *	Corrected potential SM Umbilical Animation problem.  Did all pre-set work for LRV Animations...wheels have ability to rotate, turn and bounce with shocks.  No actual implementation yet, but all that needs to be done is modify the proc_*ANIMATIONNAMEHERE* variables.  Those coming in next commit.
   *	
@@ -115,9 +118,11 @@ static const int VCC_NEEDLE_GROUPS[8] = {  // GEOM groups of the eight needles
 LRV::LRV(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
+	TRACESETUP("baseLRVfunctioncall");
 	hMaster = hObj;
-	DefineAnimations();
 	init();
+	DefineAnimations();
+
 }
 
 LRV::~LRV()
@@ -137,6 +142,9 @@ LRV::~LRV()
 void LRV::init()
 
 {
+
+	TRACESETUP("init");
+
 	//GoDock1=false;
 	starthover=false;
 	MotherShip=false;
@@ -203,17 +211,20 @@ void LRV::init()
 	proc_frontwheels = 0.0;
 	proc_rearwheels = 0.0;
 	
+	LRVMeshIndex = 1;
 }
 
 void LRV::clbkSetClassCaps (FILEHANDLE cfg)
 {
-	init();
+	TRACESETUP("clbkSetClassCaps");
 	VSRegVessel(GetHandle());
 	SetRoverStage();
 }
 
 void LRV::DefineAnimations ()
 {
+	TRACESETUP("DefineAnimations");
+
 	static UINT fntrgtfendergrp[1] = {17}; //front right fender groups
 	static UINT fntlftfendergrp[1] = {21}; //front left fender groups
 	static UINT rearrgtfendergrp[1] = {20}; //rear right fender groups
@@ -299,7 +310,7 @@ void LRV::SetRoverStage ()
 	//      as a side effect, will cause problems with all animations of the main LRV
 	//      mesh (as soon as they are added ...).
 	vccMeshIdx = AddMesh(hLRVConsole, &mesh_adjust);
-	LRVMeshIndex=AddMesh(hLRV, &mesh_adjust);
+	AddMesh(hLRV, &mesh_adjust);
 	SetMeshVisibilityMode(LRVMeshIndex, MESHVIS_ALWAYS); 
 	SetMeshVisibilityMode(vccMeshIdx, MESHVIS_ALWAYS);
 	SetCameraOffset(_V(0.36, 0.54, -0.55));  // roughly at the driver's head
@@ -600,6 +611,7 @@ void LRV::SetLRVStats(LRVSettings &lrvs)
 void LRV::DoFirstTimestep()
 
 {
+	TRACESETUP("FirstTimestep");
 	//
 	// Load mission-specific sounds _AFTER_ the LEM has called us to set the Apollo mission number.
 	//
@@ -836,10 +848,12 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 
 void LRV::DoAnimations ()
 {
-	//SetAnimation(anim_fntrgttire, proc_tires);
-	//SetAnimation(anim_fntlfttire, proc_tires);
-	//SetAnimation(anim_rearrgttire, proc_tires);
-	//SetAnimation(anim_rearlfttire, proc_tires);
+	TRACESETUP("DoAnimations");
+
+	SetAnimation(anim_fntrgttire, proc_tires);
+	SetAnimation(anim_fntlfttire, proc_tires);
+	SetAnimation(anim_rearrgttire, proc_tires);
+	SetAnimation(anim_rearlfttire, proc_tires);
 	//SetAnimation(anim_fntrgtwheel, proc_frontwheels);
 	//SetAnimation(anim_fntlftwheel, proc_frontwheels);
 	//SetAnimation(anim_rearrgtwheel, proc_rearwheels);
@@ -852,9 +866,10 @@ void LRV::DoAnimations ()
 
 void LRV::UpdateAnimations (double SimDT)
 {
+	TRACESETUP("UpdateAnimations");
 	// read speed and determine change in omega in wheel rotation in SimDT time
 
-	proc_tires = proc_tires + 0.1;
+	proc_tires = proc_tires + 0.05;
 
 	// read current turn angle and move wheels to that point (rear and foward turn opposite)
 
@@ -866,7 +881,7 @@ void LRV::UpdateAnimations (double SimDT)
 		proc_tires = 0;
 	}
 
-	sprintf(oapiDebugString(), "proc_tire %f", proc_tires);
+	sprintf(oapiDebugString(), "proc_tire %f", LRVMeshIndex/*, proc_tires*/);
 
 }
 
