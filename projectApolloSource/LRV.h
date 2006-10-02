@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/08/28 14:30:35  jasonims
+  *	temperarly removed animation calls due to Orbiter2006 bug causing CTD's, when patched, will reinstate animations.
+  *	
   *	Revision 1.5  2006/08/23 06:31:04  jasonims
   *	Corrected potential SM Umbilical Animation problem.  Did all pre-set work for LRV Animations...wheels have ability to rotate, turn and bounce with shocks.  No actual implementation yet, but all that needs to be done is modify the proc_*ANIMATIONNAMEHERE* variables.  Those coming in next commit.
   *	
@@ -195,7 +198,7 @@ protected:
 
 	double speed;  // current speed in m/s
 	bool speedlock;  // true: lock speed change until both throttle keys are released
-
+	double wheeldeflect; //current turn radius in percent total radius
 	SoundLib soundlib;
 	Sound SLEVA;
 

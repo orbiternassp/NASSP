@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/10/01 05:22:39  jasonims
+  *	Animation updated for Orbiter 2006-P1, SM working again, LRV @ 40% complete.
+  *	
   *	Revision 1.8  2006/08/28 14:30:35  jasonims
   *	temperarly removed animation calls due to Orbiter2006 bug causing CTD's, when patched, will reinstate animations.
   *	
@@ -210,6 +213,7 @@ void LRV::init()
 	proc_tires = 0.0;
 	proc_frontwheels = 0.0;
 	proc_rearwheels = 0.0;
+	wheeldeflect = 0.0;
 	
 	LRVMeshIndex = 1;
 }
@@ -225,30 +229,30 @@ void LRV::DefineAnimations ()
 {
 	TRACESETUP("DefineAnimations");
 
-	static UINT fntrgtfendergrp[1] = {17}; //front right fender groups
-	static UINT fntlftfendergrp[1] = {21}; //front left fender groups
-	static UINT rearrgtfendergrp[1] = {20}; //rear right fender groups
-	static UINT rearlftfendergrp[1] = {22}; //rear left fender groups
+	static UINT fntrgtfendergrp[1] = {16}; //front right fender groups
+	static UINT fntlftfendergrp[1] = {20}; //front left fender groups
+	static UINT rearrgtfendergrp[1] = {19}; //rear right fender groups
+	static UINT rearlftfendergrp[1] = {21}; //rear left fender groups
 
-	static MGROUP_ROTATE fntrgtfender (LRVMeshIndex, fntrgtfendergrp, 1, _V(-0.46,-0.502,0.916), _V(0,0,1), (float)(PI/6));
-	static MGROUP_ROTATE fntlftfender (LRVMeshIndex, fntlftfendergrp, 1, _V(0.46,-0.502,0.916), _V(0,0,1), (float)(PI/6));
-	static MGROUP_ROTATE rearrgtfender (LRVMeshIndex, rearrgtfendergrp, 1, _V(-0.46,-0.502,-1.385), _V(0,0,1), (float)(PI/6));
-	static MGROUP_ROTATE rearlftfender (LRVMeshIndex, rearlftfendergrp, 1, _V(0.46,-0.502,-1.385), _V(0,0,1), (float)(PI/6));
+	static MGROUP_ROTATE fntrgtfender (LRVMeshIndex, fntrgtfendergrp, 1, _V(0.46,-0.502,0.916), _V(0,0,1), (float)(PI/6));
+	static MGROUP_ROTATE fntlftfender (LRVMeshIndex, fntlftfendergrp, 1, _V(-0.46,-0.502,0.916), _V(0,0,1), (float)(PI/6));
+	static MGROUP_ROTATE rearrgtfender (LRVMeshIndex, rearrgtfendergrp, 1, _V(0.46,-0.502,-1.385), _V(0,0,1), (float)(PI/6));
+	static MGROUP_ROTATE rearlftfender (LRVMeshIndex, rearlftfendergrp, 1, _V(-0.46,-0.502,-1.385), _V(0,0,1), (float)(PI/6));
 
-	static UINT fntrgtwheelgrp[4] = {1,28,34,52}; //front right wheel groups
-	static UINT fntlftwheelgrp[4] = {2,27,35,51}; //front left wheel groups
-	static UINT rearrgtwheelgrp[2] = {7,53}; //rear right wheel groups
-	static UINT rearlftwheelgrp[2] = {3,54}; //rear left wheel groups
+	static UINT fntrgtwheelgrp[4] = {0,27,33,51}; //front right wheel groups
+	static UINT fntlftwheelgrp[4] = {1,26,34,50}; //front left wheel groups
+	static UINT rearrgtwheelgrp[2] = {6,52}; //rear right wheel groups
+	static UINT rearlftwheelgrp[2] = {2,53}; //rear left wheel groups
 
-	frwheel = new MGROUP_ROTATE (LRVMeshIndex, fntrgtwheelgrp, 4, _V(-0.842,-0.621,0.916), _V(0,1,0), (float)(.25*PI));
-	flwheel = new MGROUP_ROTATE (LRVMeshIndex, fntlftwheelgrp, 4, _V(0.837,-0.621,0.916), _V(0,1,0), (float)(.25*PI));
-	rrwheel = new MGROUP_ROTATE (LRVMeshIndex, rearrgtwheelgrp, 2, _V(-0.842,-0.623,-1.389), _V(0,1,0), (float)(.25*PI));
-	rlwheel = new MGROUP_ROTATE (LRVMeshIndex, rearlftwheelgrp, 2, _V(0.837,-0.623,-1.389), _V(0,1,0), (float)(.25*PI));
+	frwheel = new MGROUP_ROTATE (LRVMeshIndex, fntrgtwheelgrp, 4, _V(0.842,-0.621,0.916), _V(0,1,0), (float)(PI/12));
+	flwheel = new MGROUP_ROTATE (LRVMeshIndex, fntlftwheelgrp, 4, _V(-0.837,-0.621,0.916), _V(0,1,0), (float)(PI/12));
+	rrwheel = new MGROUP_ROTATE (LRVMeshIndex, rearrgtwheelgrp, 2, _V(0.842,-0.623,-1.389), _V(0,1,0), (float)(PI/12));
+	rlwheel = new MGROUP_ROTATE (LRVMeshIndex, rearlftwheelgrp, 2, _V(-0.837,-0.623,-1.389), _V(0,1,0), (float)(PI/12));
 
-	static UINT fntrgttiregrp[4] = {36,41,63,68}; //front right tire groups
-	static UINT fntlfttiregrp[4] = {38,42,62,67}; //front left tire groups
-	static UINT rearrgttiregrp[4] = {37,40,64,69}; //rear right tire groups
-	static UINT rearlfttiregrp[4] = {39,43,65,66}; //rear left tire groups
+	static UINT fntrgttiregrp[4] = {35,40,62,67}; //front right tire groups
+	static UINT fntlfttiregrp[4] = {37,41,61,66}; //front left tire groups
+	static UINT rearrgttiregrp[4] = {36,39,63,68}; //rear right tire groups
+	static UINT rearlfttiregrp[4] = {38,42,64,65}; //rear left tire groups
 
 	frtire = new MGROUP_ROTATE (LRVMeshIndex, fntrgttiregrp, 4, _V(-0.976,-0.621,0.916), _V(1,0,0), (float)(2*PI));
 	fltire = new MGROUP_ROTATE (LRVMeshIndex, fntlfttiregrp, 4, _V(0.959,-0.621,0.916), _V(1,0,0), (float)(2*PI));
@@ -380,7 +384,7 @@ void LRV::ScanMotherShip()
 
 void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 {
-	TRACESETUP("MoveLRV");
+	//TRACESETUP("MoveLRV");
 
 	double lat;
 	double lon;
@@ -406,20 +410,32 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 	
 	} else return;
 
+//modify wheeldeflect, which varies from -1 to 1, defining percentage that wheels are currently deflected
+	if (KEY1)  // turn left
+	{
+		wheeldeflect=max(-1,wheeldeflect-0.1);
+	}
+	else if (KEY3)  // turn right
+	{
+		wheeldeflect=min(1,wheeldeflect+0.1);
+	}
+
+	else if (KEY5)  // center wheels
+	{
+		wheeldeflect = 0;
+	}
+
 	if (speed != 0.0) //LRV
 	{
-		if (KEY1)  // turn left
-		{
-			eva->vdata[0].z = eva->vdata[0].z - (turn_spd*(speed/ROVER_SPEED_M_S));
-			if(eva->vdata[0].z <=-2*PI)
-				eva->vdata[0].z = eva->vdata[0].z + 2*PI;
-		}
-		else if (KEY3)  // turn right
-		{
-			eva->vdata[0].z = eva->vdata[0].z + (turn_spd*(speed/ROVER_SPEED_M_S));
-			if(eva->vdata[0].z >=2*PI)
-				eva->vdata[0].z = eva->vdata[0].z - 2*PI;
-		}
+		
+		//modify vdata to simulate turning motion
+		eva->vdata[0].z = eva->vdata[0].z + (turn_spd*(speed/ROVER_SPEED_M_S)*wheeldeflect);
+		if(eva->vdata[0].z <=-2*PI)
+			eva->vdata[0].z = eva->vdata[0].z + 2*PI;
+		else if (eva->vdata[0].z >=2*PI)
+			eva->vdata[0].z = eva->vdata[0].z - 2*PI;
+
+
 	}
 
 	if (KEYSUBTRACT)  // decelerate
@@ -854,10 +870,10 @@ void LRV::DoAnimations ()
 	SetAnimation(anim_fntlfttire, proc_tires);
 	SetAnimation(anim_rearrgttire, proc_tires);
 	SetAnimation(anim_rearlfttire, proc_tires);
-	//SetAnimation(anim_fntrgtwheel, proc_frontwheels);
-	//SetAnimation(anim_fntlftwheel, proc_frontwheels);
-	//SetAnimation(anim_rearrgtwheel, proc_rearwheels);
-	//SetAnimation(anim_rearlftwheel, proc_rearwheels);
+	SetAnimation(anim_fntrgtwheel, proc_frontwheels);
+	SetAnimation(anim_fntlftwheel, proc_frontwheels);
+	SetAnimation(anim_rearrgtwheel, proc_rearwheels);
+	SetAnimation(anim_rearlftwheel, proc_rearwheels);
 	//SetAnimation(anim_fntrgtfender, proc_fntrgtfender);
 	//SetAnimation(anim_fntlftfender, proc_fntlftfender);
 	//SetAnimation(anim_rearrgtfender, proc_rearrgtfender);
@@ -866,22 +882,32 @@ void LRV::DoAnimations ()
 
 void LRV::UpdateAnimations (double SimDT)
 {
+
+	double d_tires,d_fenders;
+
 	TRACESETUP("UpdateAnimations");
 	// read speed and determine change in omega in wheel rotation in SimDT time
+	d_tires = 0.1*(speed/ROVER_SPEED_M_S);
 
-	proc_tires = proc_tires + 0.05;
+	// TODO: Set up variable steering so we can read current turn angle and move wheels to that point (rear and foward turn opposite)
 
-	// read current turn angle and move wheels to that point (rear and foward turn opposite)
+	// TODO: Draw random number to see if wheels hit a bump and it's magnitude or determine wheel motion due to vertical accelleration by bouncing
 
-	// Draw random number to see if wheels hit a bump and it's magnitude
+
+
+	proc_tires = proc_tires + d_tires;
+
+	proc_frontwheels = ((wheeldeflect/2)+.5); //Right is positive, left is negative
+	proc_rearwheels = (0.5-(wheeldeflect/2)); //rear wheels steer opposite of front wheels
 
 	// check to see if animations hit limits and adjust accordingly
-
 	if (proc_tires >= 1){
-		proc_tires = 0;
+		proc_tires = proc_tires - 1;
+	} else if (proc_tires <= -1) {
+		proc_tires = proc_tires + 1;
 	}
 
-	sprintf(oapiDebugString(), "proc_tire %f", LRVMeshIndex/*, proc_tires*/);
+	//sprintf(oapiDebugString(), "proc_tire %f", proc_tires);
 
 }
 
