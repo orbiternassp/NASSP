@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/10/01 05:22:39  jasonims
+  *	Animation updated for Orbiter 2006-P1, SM working again, LRV @ 40% complete.
+  *	
   *	Revision 1.17  2006/08/28 14:30:35  jasonims
   *	temperarly removed animation calls due to Orbiter2006 bug causing CTD's, when patched, will reinstate animations.
   *	
@@ -1026,7 +1029,7 @@ void SM::DefineAnimations()
 		umbilical_group, 1,		// group list and # groups
 		_V(0,-1.9540,3.168), // rotation reference point
 		_V(1,0,0),		// rotation axis
-		(float)(50*PI/180) // angular rotation range
+		(float)(50.0 * PI / 180.0) // angular rotation range
 	);
 	anim_umbilical = CreateAnimation (0.0);
 	AddAnimationComponent (anim_umbilical, 0, 1, &umbilical);
