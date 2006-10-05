@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/06/17 18:18:00  tschachim
+  *	Bugfixes SCS automatic modes,
+  *	Changed quickstart separation key to J.
+  *	
   *	Revision 1.11  2006/06/07 09:53:20  tschachim
   *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
   *	
@@ -206,7 +210,7 @@ class ECA {
 public:
 	ECA();
 	void Init(Saturn *vessel);										// Initialization
-	void TimeStep();                                                // Timestep
+	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
 
 	long rhc_x,rhc_y,rhc_z;											// RHC position
@@ -221,4 +225,5 @@ public:
 	int trans_y_trigger;
 	int trans_z_trigger;
 	Saturn *sat;
+	VECTOR3 pseudorate;
 };
