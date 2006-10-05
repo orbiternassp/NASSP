@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.123  2006/08/25 05:16:51  jasonims
+  *	Passive Optics-orbiter interface is commited.  SextTrunion, TeleTrunion, and OpticsShaft are values that need to be updated in order to produce a visual change of view.
+  *	
   *	Revision 1.122  2006/08/13 23:12:41  dseagrav
   *	Joystick improvements
   *	
@@ -596,7 +599,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		bmag2.Timestep(simdt);
 		ascp.TimeStep();
 		gdc.Timestep(simdt);
-		eca.TimeStep();
+		eca.TimeStep(simdt);
 		rjec.TimeStep();
 
 		cws.TimeStep(MissionTime);

@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/06/17 18:18:00  tschachim
+  *	Bugfixes SCS automatic modes,
+  *	Changed quickstart separation key to J.
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -1756,6 +1760,7 @@ ECA::ECA(){
 	trans_x_trigger = 0;
 	trans_y_trigger = 0;
 	trans_z_trigger = 0;
+	pseudorate = _V(0,0,0);
 
 	sat = NULL;
 }
@@ -1777,7 +1782,7 @@ void ECA::SystemTimestep(double simdt) {
 	sat->SystemMnBCircuitBraker.DrawPower(10);	// TODO real power is unknown
 }
 
-void ECA::TimeStep() {
+void ECA::TimeStep(double simdt) {
 
 	// Do we have power?
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return;  // Switched off
@@ -1857,45 +1862,26 @@ void ECA::TimeStep() {
 				switch(sat->AttDeadbandSwitch.GetState()){
 					case TOGGLESWITCH_UP:   // MAX
 						// 8 degrees attitude deadband
-						if(errors.x < -0.13962634){
-							cmd_rate.x = -0.0610865238; 
-						}
-						if(errors.x > 0.13962634){
-							cmd_rate.x = 0.0610865238; 
-						}
-						if(errors.y < -0.13962634){
-							cmd_rate.y = 0.0436332313; 
-						}
-						if(errors.y > 0.13962634){
-							cmd_rate.y = -0.0436332313; 
-						}
-						if(errors.z < -0.13962634){
-							cmd_rate.z = 0.0436332313; 
-						}
-						if(errors.z > 0.13962634){
-							cmd_rate.z = -0.0436332313; 
-						}
+						// 4 degree "real" deadband, 2 degree is accomplished by the rate deadband, so we need factor 2 here					
+						if (errors.x < -4.0 * RAD)
+							cmd_rate.x = (errors.x + 4.0 * RAD) / 2.0;
+						if (errors.x > 4.0 * RAD)
+							cmd_rate.x = (errors.x - 4.0 * RAD) / 2.0;
+						if (errors.y < -4.0 * RAD)
+							cmd_rate.y = (-errors.y - 4.0 * RAD) / 2.0;
+						if (errors.y > 4.0 * RAD)
+							cmd_rate.y = (-errors.y + 4.0 * RAD) / 2.0;
+						if (errors.z < -4.0 * RAD)
+							cmd_rate.z = (-errors.z - 4.0 * RAD) / 2.0;
+						if (errors.z > 4.0 * RAD)
+							cmd_rate.z = (-errors.z + 4.0 * RAD) / 2.0;
 						break;
 					case TOGGLESWITCH_DOWN: // MIN
 						// 4 degrees attitude deadband
-						if(errors.x < -0.0698131701){
-							cmd_rate.x = -0.0610865238; 
-						}
-						if(errors.x > 0.0698131701){
-							cmd_rate.x = 0.0610865238; 
-						}
-						if(errors.y < -0.0698131701){
-							cmd_rate.y = 0.0436332313; 
-						}
-						if(errors.y > 0.0698131701){
-							cmd_rate.y = -0.0436332313; 
-						}
-						if(errors.z < -0.0698131701){
-							cmd_rate.z = 0.0436332313; 
-						}
-						if(errors.z > 0.0698131701){
-							cmd_rate.z = -0.0436332313; 
-						}
+						// 2 degree is accomplished by the rate deadband, so we need factor 2 here
+						cmd_rate.x = errors.x / 2.0;
+						cmd_rate.y = -errors.y / 2.0;
+						cmd_rate.z = -errors.z / 2.0;
 						break;
 				}
 				break;
@@ -1904,45 +1890,26 @@ void ECA::TimeStep() {
 				switch(sat->AttDeadbandSwitch.GetState()){
 					case TOGGLESWITCH_UP:   // MAX
 						// 4.2 degrees attitude deadband
-						if(errors.x < -0.0733038286){
-							cmd_rate.x = -0.00872664626; 
-						}
-						if(errors.x > 0.0733038286){
-							cmd_rate.x = 0.00872664626; 
-						}
-						if(errors.y < -0.0733038286){
-							cmd_rate.y = 0.00872664626; 
-						}
-						if(errors.y > 0.0733038286){
-							cmd_rate.y = -0.00872664626; 
-						}
-						if(errors.z < -0.0733038286){
-							cmd_rate.z = 0.00523598776; 
-						}
-						if(errors.z > 0.0733038286){
-							cmd_rate.z = -0.00523598776; 
-						}
+						// 4 degree "real" deadband, 0.2 degree is accomplished by the rate deadband					
+						if (errors.x < -4.0 * RAD)
+							cmd_rate.x = errors.x + 4.0 * RAD;
+						if (errors.x > 4.0 * RAD)
+							cmd_rate.x = errors.x - 4.0 * RAD;
+						if (errors.y < -4.0 * RAD)
+							cmd_rate.y = -errors.y - 4.0 * RAD;
+						if (errors.y > 4.0 * RAD)
+							cmd_rate.y = -errors.y + 4.0 * RAD;
+						if (errors.z < -4.0 * RAD)
+							cmd_rate.z = -errors.z - 4.0 * RAD;
+						if (errors.z > 4.0 * RAD)
+							cmd_rate.z = -errors.z + 4.0 * RAD;
 						break;
 					case TOGGLESWITCH_DOWN: // MIN
 						// 0.2 degrees attitude deadband
-						if(errors.x < -0.0034906585){
-							cmd_rate.x = -0.00872664626; 
-						}
-						if(errors.x > 0.0034906585){
-							cmd_rate.x = 0.00872664626; 
-						}
-						if(errors.y < -0.0034906585){
-							cmd_rate.y = 0.00872664626; 
-						}
-						if(errors.y > 0.0034906585){
-							cmd_rate.y = -0.00872664626; 
-						}
-						if(errors.z < -0.0034906585){
-							cmd_rate.z = 0.00523598776; 
-						}
-						if(errors.z > 0.0034906585){
-							cmd_rate.z = -0.00523598776; 
-						}
+						// This is accomplished by the rate deadband
+						cmd_rate.x = errors.x;
+						cmd_rate.y = -errors.y;
+						cmd_rate.z = -errors.z;
 						break;
 				}
 				break;
@@ -2061,33 +2028,59 @@ void ECA::TimeStep() {
 					break;
 			}
 		}
-		VECTOR3 pseudorate = _V(0,0,0);
 		// PSEUDORATE FEEDBACK
-		if(sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP){
-			// ROLL MINPULSE  = .000550 radians (4 jets, .0001375 per jet)
-			// PITCH MINPULSE = .000200 radians (2 jets, .000100 per jet)
-			// YAW MINPULSE   = .000150 radians (2 jets, .000075 per jet)
-			if(sat->rjec.ThrusterDemand[1] != 0){ pseudorate.y += .000200; }
-			if(sat->rjec.ThrusterDemand[2] != 0){ pseudorate.y -= .000200; }
-			if(sat->rjec.ThrusterDemand[3] != 0){ pseudorate.y += .000200; }
-			if(sat->rjec.ThrusterDemand[4] != 0){ pseudorate.y -= .000200; }
-
-			if(sat->rjec.ThrusterDemand[5] != 0){ pseudorate.z -= .000150; }
-			if(sat->rjec.ThrusterDemand[6] != 0){ pseudorate.z += .000150; }
-			if(sat->rjec.ThrusterDemand[7] != 0){ pseudorate.z -= .000150; }
-			if(sat->rjec.ThrusterDemand[8] != 0){ pseudorate.z += .000150; }
-
-			if(sat->rjec.ThrusterDemand[9]  != 0){ pseudorate.x += .000275; }
-			if(sat->rjec.ThrusterDemand[10] != 0){ pseudorate.x -= .000275; }
-			if(sat->rjec.ThrusterDemand[11]  != 0){ pseudorate.x += .000275; }
-			if(sat->rjec.ThrusterDemand[12] != 0){ pseudorate.x -= .000275; }
-			if(sat->rjec.ThrusterDemand[13]  != 0){ pseudorate.x += .000275; }
-			if(sat->rjec.ThrusterDemand[14] != 0){ pseudorate.x -= .000275; }
-			if(sat->rjec.ThrusterDemand[15]  != 0){ pseudorate.x += .000275; }
-			if(sat->rjec.ThrusterDemand[16] != 0){ pseudorate.x -= .000275; }
-			// sprintf(oapiDebugString(),"SCS: PR: %f+%f %f+%f %f+%f",sat->gdc.rates.z,pseudorate.x,sat->gdc.rates.x,pseudorate.y,
-			// 	sat->gdc.rates.y,pseudorate.z);
-			// sprintf(oapiDebugString(),"SCS: PSEUDORATE CALBRATION: %f %f %f",sat->gdc.rates.z,sat->gdc.rates.x,sat->gdc.rates.y);
+		if (sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP && sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER){
+			if (sat->rjec.ThrusterDemand[9] != 0 || sat->rjec.ThrusterDemand[11] != 0 ||
+			    sat->rjec.ThrusterDemand[13] != 0 || sat->rjec.ThrusterDemand[15] != 0 ) {
+				pseudorate.x += 0.1 * simdt; 
+			} else if (sat->rjec.ThrusterDemand[10] != 0 || sat->rjec.ThrusterDemand[12] != 0 ||
+			    sat->rjec.ThrusterDemand[14] != 0 || sat->rjec.ThrusterDemand[16] != 0 ) {
+				pseudorate.x -= 0.1 * simdt;
+			} else {
+				if (pseudorate.x > 0) {
+					pseudorate.x -= 0.02 * simdt; 
+					pseudorate.x = max(0, pseudorate.x);
+				} else {
+					pseudorate.x += 0.02 * simdt; 
+					pseudorate.x = min(0, pseudorate.x);
+				}
+			}
+		} else {
+			pseudorate.x = 0;
+		}
+		if (sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP && sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER){
+			if (sat->rjec.ThrusterDemand[1] != 0 || sat->rjec.ThrusterDemand[3] != 0) {
+				pseudorate.y += 0.1 * simdt; 
+			} else if (sat->rjec.ThrusterDemand[2] != 0 || sat->rjec.ThrusterDemand[4] != 0) {
+				pseudorate.y -= 0.1 * simdt;
+			} else {
+				if (pseudorate.y > 0) {
+					pseudorate.y -= 0.02 * simdt; 
+					pseudorate.y = max(0, pseudorate.y);
+				} else {
+					pseudorate.y += 0.02 * simdt; 
+					pseudorate.y = min(0, pseudorate.y);
+				}
+			}
+		} else {
+			pseudorate.y = 0;
+		}
+		if (sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP && sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER){
+			if (sat->rjec.ThrusterDemand[6] != 0 || sat->rjec.ThrusterDemand[8] != 0) {
+				pseudorate.z += 0.1 * simdt; 
+			} else if (sat->rjec.ThrusterDemand[5] != 0 || sat->rjec.ThrusterDemand[7] != 0) {
+				pseudorate.z -= 0.1 * simdt;
+			} else {
+				if (pseudorate.z > 0) {
+					pseudorate.z -= 0.02 * simdt; 
+					pseudorate.z = max(0, pseudorate.z);
+				} else {
+					pseudorate.z += 0.02 * simdt; 
+					pseudorate.z = min(0, pseudorate.z);
+				}
+			}
+		} else {
+			pseudorate.z = 0;
 		}
 
 		// Command rates done, generate rate error values
@@ -2099,6 +2092,7 @@ void ECA::TimeStep() {
 		// sprintf(oapiDebugString(),"SCS: RATE CMD r%.3f p%.3f y%.3f ERR r%.3f p%.3f y%.3f",
 		//	cmd_rate.x * DEG, cmd_rate.y * DEG, cmd_rate.z * DEG, 
 		//	rate_err.x * DEG, rate_err.y * DEG, rate_err.z * DEG);	
+		// sprintf(oapiDebugString(),"SCS PITCH rate %.3f cmd %.3f pseudo %.3f error %.3f", sat->gdc.rates.x * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
 	}
 	// ROTATION
 	if(sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN){
