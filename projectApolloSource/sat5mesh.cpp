@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2006/09/23 22:34:40  jasonims
+  *	New J-2 Engine textures...
+  *	
   *	Revision 1.71  2006/08/13 16:55:35  movieman523
   *	Removed a bunch of unused files.
   *	
@@ -1674,6 +1677,7 @@ void SaturnV::DockStage (UINT dockstatus)
 			SIVBSettings S4Config;
 			SIVB *SIVBVessel;
 
+			S4Config.SettingsType.word = 0;
 			S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
 			S4Config.Payload = PAYLOAD_EMPTY;
 
