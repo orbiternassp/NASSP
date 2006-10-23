@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/09/30 16:08:51  tschachim
+  *	Fixed animations for Orbiter 060929.
+  *	
   *	Revision 1.18  2006/08/07 20:21:58  tschachim
   *	A try to improve SLA panel separation.
   *	
@@ -463,6 +466,9 @@ protected:
 	int panelTimestepCount;
 	int panelMesh1SaturnV, panelMesh2SaturnV, panelMesh3SaturnV, panelMesh4SaturnV;
 	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
+	int meshSivb, meshPayload1, meshPayload2;
+
+	void DeleteAndResetMesh(int *mesh);
 };
 
 ///

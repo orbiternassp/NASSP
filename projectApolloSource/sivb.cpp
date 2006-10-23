@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2006/09/30 16:08:51  tschachim
+  *	Fixed animations for Orbiter 060929.
+  *	
   *	Revision 1.25  2006/08/08 10:55:10  tschachim
   *	*** empty log message ***
   *	
@@ -273,15 +276,19 @@ void SIVB::InitS4b()
 	th_main[0] = 0;
 	panelProc = 0;
 	panelTimestepCount = 0;
-    panelMesh1SaturnV = 0;
-	panelMesh2SaturnV  = 0;
-	panelMesh3SaturnV  = 0;
-	panelMesh4SaturnV  = 0;
-    panelMesh1Saturn1b = 0;
-	panelMesh2Saturn1b  = 0;
-	panelMesh3Saturn1b  = 0;
-	panelMesh4Saturn1b  = 0;
+    panelMesh1SaturnV = -1;
+	panelMesh2SaturnV  = -1;
+	panelMesh3SaturnV  = -1;
+	panelMesh4SaturnV  = -1;
+    panelMesh1Saturn1b = -1;
+	panelMesh2Saturn1b  = -1;
+	panelMesh3Saturn1b  = -1;
+	panelMesh4Saturn1b  = -1;
     panelAnim = 0;
+
+	meshSivb = -1;
+	meshPayload1 = -1;
+	meshPayload2 = -1;
 
 	//
 	// Set up the connections.
@@ -355,6 +362,11 @@ void SIVB::SetS4b()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
+	// Delete meshes
+	DeleteAndResetMesh(&meshSivb);
+	DeleteAndResetMesh(&meshPayload1);
+	DeleteAndResetMesh(&meshPayload2);
+
 	if (SaturnVStage)
 	{
 		VECTOR3 dockpos = {0,0.03, 12.4};
@@ -362,16 +374,16 @@ void SIVB::SetS4b()
 		VECTOR3 dockrot = {-0.705,-0.705,0};
 
 		if (LowRes) {
-			AddMesh(hsat5stg3low, &mesh_dir);
+			meshSivb = AddMesh(hsat5stg3low, &mesh_dir);
 		}
 		else {
-			AddMesh(hsat5stg3, &mesh_dir);
+			meshSivb = AddMesh(hsat5stg3, &mesh_dir);
 		}
 		
 		switch (Payload) {
 		case PAYLOAD_LEM:
 			mesh_dir=_V(-0.0,0, 9.8);
-			AddMesh (hLMPKD, &mesh_dir);
+			meshPayload1 = AddMesh(hLMPKD, &mesh_dir);
 			SetDockParams(dockpos, dockdir, dockrot);
 			mass += PayloadMass;
 			break;
@@ -379,14 +391,14 @@ void SIVB::SetS4b()
 		case PAYLOAD_LTA:
 		case PAYLOAD_LTA6:
 			mesh_dir=_V(0.0,0, 9.6);
-			AddMesh (hlta_2r, &mesh_dir);
+			meshPayload1 = AddMesh(hlta_2r, &mesh_dir);
 			ClearDockDefinitions();
 			mass += PayloadMass;
 			break;
 
 		case PAYLOAD_LTA8:
 			mesh_dir=_V(0.0, 0, 8.8);
-			AddMesh (hapollo8lta, &mesh_dir);
+			meshPayload1 = AddMesh(hapollo8lta, &mesh_dir);
 			ClearDockDefinitions();
 			mass += PayloadMass;
 			break;
@@ -398,9 +410,9 @@ void SIVB::SetS4b()
 
 		case PAYLOAD_DOCKING_ADAPTER:
 			mesh_dir=_V(0.0, -0.15, 7.8);
-			AddMesh (hastp, &mesh_dir);
+			meshPayload1 = AddMesh(hastp, &mesh_dir);
 			mesh_dir=_V(-1.04, 1.04, 9.1);
-			AddMesh (hCOAStarget, &mesh_dir);
+			meshPayload2 = AddMesh(hCOAStarget, &mesh_dir);
 			dockpos = _V(0.0, 0.0, 9.1);
 			dockrot = _V(-1.0, 0.0, 0);
 			SetDockParams(dockpos, dockdir, dockrot);
@@ -413,44 +425,44 @@ void SIVB::SetS4b()
 		}
 
         // Delete unneeded meshes
-        DelMesh(panelMesh1Saturn1b);
-        DelMesh(panelMesh2Saturn1b);
-        DelMesh(panelMesh3Saturn1b);
-        DelMesh(panelMesh4Saturn1b);
+		DeleteAndResetMesh(&panelMesh1Saturn1b);
+		DeleteAndResetMesh(&panelMesh2Saturn1b);
+		DeleteAndResetMesh(&panelMesh3Saturn1b);
+		DeleteAndResetMesh(&panelMesh4Saturn1b);
 
         if (!PanelsHinged && PanelsOpened) {
-            DelMesh(panelMesh1SaturnV);
-            DelMesh(panelMesh2SaturnV);
-            DelMesh(panelMesh3SaturnV);
-            DelMesh(panelMesh4SaturnV);
+			DeleteAndResetMesh(&panelMesh1SaturnV);
+			DeleteAndResetMesh(&panelMesh2SaturnV);
+			DeleteAndResetMesh(&panelMesh3SaturnV);
+			DeleteAndResetMesh(&panelMesh4SaturnV);
         }
 	}
 	else {
 		if (LowRes)	{
-			AddMesh (hSat1stg2low, &mesh_dir);
+			meshSivb = AddMesh(hSat1stg2low, &mesh_dir);
 		}
 		else {
-			AddMesh (hSat1stg2, &mesh_dir);
+			meshSivb = AddMesh(hSat1stg2, &mesh_dir);
 		}
 
 		switch (Payload) {
 
 		case PAYLOAD_TARGET:
 			mesh_dir=_V(-1.0,-1.1,13.3);
-			AddMesh (hCOAStarget, &mesh_dir);
+			meshPayload1 = AddMesh(hCOAStarget, &mesh_dir);
 			ClearDockDefinitions();
 			mass += PayloadMass;
 			break;
 
 		case PAYLOAD_ASTP:
 			mesh_dir=_V(0,0,13.3);
-			AddMesh (hastp, &mesh_dir);
+			meshPayload1 = AddMesh(hastp, &mesh_dir);
 			mass += PayloadMass;
 			break;
 
 		case PAYLOAD_LM1:
 			mesh_dir=_V(0,0,13.3);
-			AddMesh (hCOAStarget, &mesh_dir);
+			meshPayload1 = AddMesh(hCOAStarget, &mesh_dir);
 			mass += PayloadMass;
 			break;
 
@@ -460,16 +472,16 @@ void SIVB::SetS4b()
 		}
 
         // Delete unneeded meshes
-        DelMesh(panelMesh1SaturnV);
-        DelMesh(panelMesh2SaturnV);
-        DelMesh(panelMesh3SaturnV);
-        DelMesh(panelMesh4SaturnV);
+        DeleteAndResetMesh(&panelMesh1SaturnV);
+        DeleteAndResetMesh(&panelMesh2SaturnV);
+        DeleteAndResetMesh(&panelMesh3SaturnV);
+        DeleteAndResetMesh(&panelMesh4SaturnV);
 
         if (!PanelsHinged && PanelsOpened) {
-            DelMesh(panelMesh1Saturn1b);
-            DelMesh(panelMesh2Saturn1b);
-            DelMesh(panelMesh3Saturn1b);
-            DelMesh(panelMesh4Saturn1b);
+            DeleteAndResetMesh(&panelMesh1Saturn1b);
+            DeleteAndResetMesh(&panelMesh2Saturn1b);
+            DeleteAndResetMesh(&panelMesh3Saturn1b);
+            DeleteAndResetMesh(&panelMesh4Saturn1b);
         }
 	}
 
@@ -1336,6 +1348,15 @@ double SIVB::GetTotalMass()
 	}
 
 	return mass;
+}
+
+void SIVB::DeleteAndResetMesh(int *mesh) 
+
+{
+	if (*mesh != -1) {
+		DelMesh(*mesh);
+		*mesh = -1;
+	}
 }
 
 static int refcount = 0;
