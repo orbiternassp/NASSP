@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/06/24 15:05:40  movieman523
+  *	New sound event files.
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -438,8 +441,8 @@ TRACE(SoundPath);
 			}
 			else 
 			{
-				offset = soundevents[indice].met 
-					      - oldmet;
+				offset = (int) (soundevents[indice].met 
+					      - oldmet);
 			}
 		}
 		else offset = -1;
@@ -584,7 +587,7 @@ TRACE(SoundPath);
 	while (!done)
 	{
 		alt1 = soundevents[kk].altitude;
-		time1 = soundevents[kk].met;
+		time1 = (int) soundevents[kk].met;
         jj = kk + 1;
 	    while ((soundevents[jj].altitude == 0.0)&& (jj <indice))
 	    {
@@ -592,7 +595,7 @@ TRACE(SoundPath);
 	    }
 
 		alt2 = soundevents[jj].altitude;
-		time2 = soundevents[jj].met;
+		time2 = (int) soundevents[jj].met;
 
 		ii = kk +1;
 		while (ii < jj)
