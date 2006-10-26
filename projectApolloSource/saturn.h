@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.216  2006/09/23 22:34:40  jasonims
+  *	New J-2 Engine textures...
+  *	
   *	Revision 1.215  2006/08/25 05:16:51  jasonims
   *	Passive Optics-orbiter interface is commited.  SextTrunion, TeleTrunion, and OpticsShaft are values that need to be updated in order to produce a visual change of view.
   *	
@@ -510,6 +513,11 @@ typedef struct {
 } TankPressures;
 
 typedef struct {
+	double He1PressPSI;
+	double He2PressPSI;
+} CMRCSPressures;
+
+typedef struct {
 	double O2Tank1Quantity;
 	double O2Tank1QuantityKg;
 	double O2Tank2Quantity;
@@ -835,6 +843,13 @@ public:
 	void GetAtmosStatus(AtmosStatus &atm);
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
+
+	///
+	/// Get information on the Command Module RCS pressures.
+	/// \brief Get CM RCS pressures.
+	/// \param press Pressure information structure, updated by the call.
+	///
+	void GetCMRCSPressures(CMRCSPressures &press);
 	void GetTankQuantities(TankQuantities &q);
 	void SetO2TankQuantities(double q);
 
@@ -3279,7 +3294,8 @@ protected:
 	void DeactivateCSMRCS();
 	void ActivateCMRCS();
 	void DeactivateCMRCS();
-	// bool CMRCSActive();
+	bool CMRCS1Active();
+	bool CMRCS2Active();
 	bool SMRCSActive();
 	bool SMRCSAActive();
 	bool SMRCSBActive();

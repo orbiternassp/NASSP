@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.124  2006/10/05 16:09:52  tschachim
+  *	Fixed SCS attitude hold mode.
+  *	
   *	Revision 1.123  2006/08/25 05:16:51  jasonims
   *	Passive Optics-orbiter interface is commited.  SextTrunion, TeleTrunion, and OpticsShaft are values that need to be updated in order to produce a visual change of view.
   *	
@@ -2022,6 +2025,18 @@ void Saturn::DeactivateCMRCS()
 	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
 }
 
+bool Saturn::CMRCS1Active()
+
+{
+	return GetValveState(CM_RCSPROP_TANKA_VALVE);
+}
+
+bool Saturn::CMRCS2Active()
+
+{
+	return GetValveState(CM_RCSPROP_TANKB_VALVE);
+}
+
 bool Saturn::SMRCSAActive()
 
 {
@@ -2509,6 +2524,26 @@ void Saturn::GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm)
 	atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF = EcsRadTempPrimOutletMeter.GetDisplayValue();
 }
 
+void Saturn::GetCMRCSPressures(CMRCSPressures &press)
+
+{
+	press.He1PressPSI = 0.0;
+	press.He2PressPSI = 0.0;
+
+	//
+	// For now, just return a fixed pressure if it's active.
+	//
+
+	if (CMRCS1Active())
+	{
+		press.He1PressPSI = 300.0;
+	}
+
+	if (CMRCS2Active())
+	{
+		press.He2PressPSI = 300.0;
+	}
+}
 
 //
 // Get H2/O2 tank pressures.

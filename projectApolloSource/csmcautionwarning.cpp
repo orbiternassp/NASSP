@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2006/09/04 11:37:53  tschachim
+  *	Fixed CMC C/W light in case of test alarm.
+  *	
   *	Revision 1.26  2006/06/10 23:27:41  movieman523
   *	Updated abort code.
   *	
@@ -576,8 +579,24 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// SM RCS warning lights when temperature is below 75F or above 205F. In auto mode,
 		// RCS heaters (two per quad at 36W) turn on at 115F and off at 134F (AOH RCS 2.5-24).
 		//
-		// CM RCS warning lights if pressure is below 260psi or above 330psi (AOH RCS 2.5-46).
+		// CM RCS warning lights if pressure is below 260psi or above 330psi (AOH RCS 2.5-46),
+		// however, AOH 2-10.6 says that the CM RCS lights are only active in CM mode.
 		//
+
+		if (Source == CWS_SOURCE_CM)
+		{
+			CMRCSPressures press;
+
+			sat->GetCMRCSPressures(press);
+
+			SetLight(CSM_CWS_CM_RCS_1, !(press.He1PressPSI < 330.0 && press.He1PressPSI >= 260.0));
+			SetLight(CSM_CWS_CM_RCS_2, !(press.He2PressPSI < 330.0 && press.He1PressPSI >= 260.0));
+		}
+		else
+		{
+			SetLight(CSM_CWS_CM_RCS_1, false);
+			SetLight(CSM_CWS_CM_RCS_2, false);
+		}
 
 		NextUpdateTime = simt + (0.1 * oapiGetTimeAcceleration());
 	}

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/05/30 14:40:21  tschachim
+  *	Fixed fuel cell - dc bus connectivity, added battery charger
+  *	
   *	Revision 1.15  2006/02/28 20:40:32  quetalsi
   *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
   *	
@@ -144,12 +147,14 @@ protected:
 #define CSM_CWS_HIGAIN_LIMIT		6
 #define CSM_CWS_PITCH_GIMBAL2		8
 #define CSM_CWS_YAW_GIMBAL2			9
+#define CSM_CWS_CRYO_PRESS_LIGHT	10
+#define CSM_CWS_GLYCOL_TEMP_LOW		11
+#define CSM_CWS_CM_RCS_1			12
+#define CSM_CWS_CM_RCS_2			13
 #define CSM_CWS_SM_RCS_A			16
 #define CSM_CWS_SM_RCS_B			17
 #define CSM_CWS_SM_RCS_C			18
 #define CSM_CWS_SM_RCS_D			19
-#define CSM_CWS_CRYO_PRESS_LIGHT	10
-#define CSM_CWS_GLYCOL_TEMP_LOW		11
 #define CSM_CWS_FC1_LIGHT			31
 #define CSM_CWS_FC2_LIGHT			32
 #define CSM_CWS_FC3_LIGHT			33
