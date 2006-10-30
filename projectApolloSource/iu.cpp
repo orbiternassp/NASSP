@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.8  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
@@ -1475,11 +1478,12 @@ void IUToLVCommandConnector::GetApDist(double &d)
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_GRAVITY_REF;
+	cm.messageType = IULV_GET_AP_DIST;
 
 	if (SendMessage(cm))
 	{
 		d = cm.val1.dValue;
+		return;
 	}
 
 	d = 0.0;
