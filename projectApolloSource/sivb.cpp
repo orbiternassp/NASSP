@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2006/10/23 13:43:23  tschachim
+  *	Bugfix mesh handling.
+  *	
   *	Revision 1.26  2006/09/30 16:08:51  tschachim
   *	Fixed animations for Orbiter 060929.
   *	
@@ -171,7 +174,7 @@ static PARTICLESTREAMSPEC fuel_venting_spec = {
 //
 
 PARTICLESTREAMSPEC seperation_junk = {
-	0, 0.06,  300, 4.0, 2.0, 1.5, -0.02, 1.0, 
+	0, 0.04,  300, 4.0, 2.0, 1.5, -0.02, 1.0, 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
@@ -253,6 +256,7 @@ void SIVB::InitS4b()
 	ph_main = 0;
 	thg_aps = 0;
 	thg_sep = 0;
+	thg_sepPanel = 0;
 
 	EmptyMass = 15000.0;
 	PayloadMass = 0.0;
@@ -280,16 +284,30 @@ void SIVB::InitS4b()
 	panelMesh2SaturnV  = -1;
 	panelMesh3SaturnV  = -1;
 	panelMesh4SaturnV  = -1;
+    panelMesh1SaturnVLow = -1;
+	panelMesh2SaturnVLow  = -1;
+	panelMesh3SaturnVLow  = -1;
+	panelMesh4SaturnVLow  = -1;
     panelMesh1Saturn1b = -1;
 	panelMesh2Saturn1b  = -1;
 	panelMesh3Saturn1b  = -1;
 	panelMesh4Saturn1b  = -1;
     panelAnim = 0;
 
-	meshSivb = -1;
-	meshPayload1 = -1;
-	meshPayload2 = -1;
-
+	meshSivbSaturnV = -1;
+	meshSivbSaturnVLow = -1;
+	meshSivbSaturn1b = -1;
+	meshSivbSaturn1bLow = -1;
+	meshASTP_A = -1;
+	meshASTP_B = -1;
+	meshASTP2 = -1;
+	meshCOASTarget_A = -1;
+	meshCOASTarget_B = -1;
+	meshCOASTarget_C = -1;
+	meshLMPKD = -1;
+	meshApollo8LTA = -1;
+	meshLTA_2r = -1;
+ 
 	//
 	// Set up the connections.
 	//
@@ -346,7 +364,6 @@ void SIVB::Boiloff()
 void SIVB::SetS4b()
 
 {
-	VECTOR3 mesh_dir=_V(0,0,0);
 	double mass = EmptyMass;
 
 	ClearThrusterDefinitions();
@@ -361,11 +378,7 @@ void SIVB::SetS4b()
 	SetLiftCoeffFunc (0);
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-
-	// Delete meshes
-	DeleteAndResetMesh(&meshSivb);
-	DeleteAndResetMesh(&meshPayload1);
-	DeleteAndResetMesh(&meshPayload2);
+	HideAllMeshes();
 
 	if (SaturnVStage)
 	{
@@ -374,31 +387,28 @@ void SIVB::SetS4b()
 		VECTOR3 dockrot = {-0.705,-0.705,0};
 
 		if (LowRes) {
-			meshSivb = AddMesh(hsat5stg3low, &mesh_dir);
+			SetMeshVisibilityMode(meshSivbSaturnVLow, MESHVIS_EXTERNAL);
 		}
 		else {
-			meshSivb = AddMesh(hsat5stg3, &mesh_dir);
+			SetMeshVisibilityMode(meshSivbSaturnV, MESHVIS_EXTERNAL);
 		}
 		
 		switch (Payload) {
 		case PAYLOAD_LEM:
-			mesh_dir=_V(-0.0,0, 9.8);
-			meshPayload1 = AddMesh(hLMPKD, &mesh_dir);
+			SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
 			SetDockParams(dockpos, dockdir, dockrot);
 			mass += PayloadMass;
 			break;
 
 		case PAYLOAD_LTA:
 		case PAYLOAD_LTA6:
-			mesh_dir=_V(0.0,0, 9.6);
-			meshPayload1 = AddMesh(hlta_2r, &mesh_dir);
+			SetMeshVisibilityMode(meshLTA_2r, MESHVIS_EXTERNAL);
 			ClearDockDefinitions();
 			mass += PayloadMass;
 			break;
 
 		case PAYLOAD_LTA8:
-			mesh_dir=_V(0.0, 0, 8.8);
-			meshPayload1 = AddMesh(hapollo8lta, &mesh_dir);
+			SetMeshVisibilityMode(meshApollo8LTA, MESHVIS_EXTERNAL);
 			ClearDockDefinitions();
 			mass += PayloadMass;
 			break;
@@ -409,10 +419,8 @@ void SIVB::SetS4b()
 		//
 
 		case PAYLOAD_DOCKING_ADAPTER:
-			mesh_dir=_V(0.0, -0.15, 7.8);
-			meshPayload1 = AddMesh(hastp, &mesh_dir);
-			mesh_dir=_V(-1.04, 1.04, 9.1);
-			meshPayload2 = AddMesh(hCOAStarget, &mesh_dir);
+			SetMeshVisibilityMode(meshASTP_A, MESHVIS_EXTERNAL);
+			SetMeshVisibilityMode(meshCOASTarget_A, MESHVIS_EXTERNAL);
 			dockpos = _V(0.0, 0.0, 9.1);
 			dockrot = _V(-1.0, 0.0, 0);
 			SetDockParams(dockpos, dockdir, dockrot);
@@ -424,65 +432,60 @@ void SIVB::SetS4b()
 			break;
 		}
 
-        // Delete unneeded meshes
-		DeleteAndResetMesh(&panelMesh1Saturn1b);
-		DeleteAndResetMesh(&panelMesh2Saturn1b);
-		DeleteAndResetMesh(&panelMesh3Saturn1b);
-		DeleteAndResetMesh(&panelMesh4Saturn1b);
-
-        if (!PanelsHinged && PanelsOpened) {
-			DeleteAndResetMesh(&panelMesh1SaturnV);
-			DeleteAndResetMesh(&panelMesh2SaturnV);
-			DeleteAndResetMesh(&panelMesh3SaturnV);
-			DeleteAndResetMesh(&panelMesh4SaturnV);
-        }
+        // Hide unneeded meshes
+        if (PanelsHinged || !PanelsOpened) {
+			if (LowRes) {
+				SetMeshVisibilityMode(panelMesh1SaturnVLow, MESHVIS_EXTERNAL);
+				SetMeshVisibilityMode(panelMesh2SaturnVLow, MESHVIS_EXTERNAL);
+				SetMeshVisibilityMode(panelMesh3SaturnVLow, MESHVIS_EXTERNAL);
+				SetMeshVisibilityMode(panelMesh4SaturnVLow, MESHVIS_EXTERNAL);
+			}
+			else {
+				SetMeshVisibilityMode(panelMesh1SaturnV, MESHVIS_EXTERNAL);
+				SetMeshVisibilityMode(panelMesh2SaturnV, MESHVIS_EXTERNAL);
+				SetMeshVisibilityMode(panelMesh3SaturnV, MESHVIS_EXTERNAL);
+				SetMeshVisibilityMode(panelMesh4SaturnV, MESHVIS_EXTERNAL);
+			}
+		}
 	}
 	else {
-		if (LowRes)	{
-			meshSivb = AddMesh(hSat1stg2low, &mesh_dir);
+		if (LowRes) {
+			SetMeshVisibilityMode(meshSivbSaturn1bLow, MESHVIS_EXTERNAL);
 		}
 		else {
-			meshSivb = AddMesh(hSat1stg2, &mesh_dir);
+			SetMeshVisibilityMode(meshSivbSaturn1b, MESHVIS_EXTERNAL);
 		}
 
 		switch (Payload) {
 
 		case PAYLOAD_TARGET:
-			mesh_dir=_V(-1.0,-1.1,13.3);
-			meshPayload1 = AddMesh(hCOAStarget, &mesh_dir);
+			SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_EXTERNAL);
 			ClearDockDefinitions();
 			mass += PayloadMass;
 			break;
 
 		case PAYLOAD_ASTP:
-			mesh_dir=_V(0,0,13.3);
-			meshPayload1 = AddMesh(hastp, &mesh_dir);
+			SetMeshVisibilityMode(meshASTP_B, MESHVIS_EXTERNAL);
 			mass += PayloadMass;
 			break;
 
 		case PAYLOAD_LM1:
-			mesh_dir=_V(0,0,13.3);
-			meshPayload1 = AddMesh(hCOAStarget, &mesh_dir);
+			SetMeshVisibilityMode(meshCOASTarget_C, MESHVIS_EXTERNAL);
 			mass += PayloadMass;
 			break;
 
-		case  PAYLOAD_EMPTY:
+		case PAYLOAD_EMPTY:
 			ClearDockDefinitions();
 			break;
 		}
 
-        // Delete unneeded meshes
-        DeleteAndResetMesh(&panelMesh1SaturnV);
-        DeleteAndResetMesh(&panelMesh2SaturnV);
-        DeleteAndResetMesh(&panelMesh3SaturnV);
-        DeleteAndResetMesh(&panelMesh4SaturnV);
-
-        if (!PanelsHinged && PanelsOpened) {
-            DeleteAndResetMesh(&panelMesh1Saturn1b);
-            DeleteAndResetMesh(&panelMesh2Saturn1b);
-            DeleteAndResetMesh(&panelMesh3Saturn1b);
-            DeleteAndResetMesh(&panelMesh4Saturn1b);
-        }
+        // Hide unneeded meshes
+        if (PanelsHinged || !PanelsOpened) {
+			SetMeshVisibilityMode(panelMesh1Saturn1b, MESHVIS_EXTERNAL);
+			SetMeshVisibilityMode(panelMesh2Saturn1b, MESHVIS_EXTERNAL);
+			SetMeshVisibilityMode(panelMesh3Saturn1b, MESHVIS_EXTERNAL);
+			SetMeshVisibilityMode(panelMesh4Saturn1b, MESHVIS_EXTERNAL);
+       }
 	}
 
 	SetEmptyMass(mass);
@@ -661,11 +664,15 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 					v = (VESSEL *) oapiGetVesselInterface(hs4b4);
 					v->SetRotationMatrix(mul(rv, mul(rnz, mul(ry, rx))));
 
-				    // Delete unneeded meshes
-                    DelMesh(panelMesh1SaturnV);
-                    DelMesh(panelMesh2SaturnV);
-                    DelMesh(panelMesh3SaturnV);
-                    DelMesh(panelMesh4SaturnV);				                                            
+				    // Hide unneeded meshes
+					SetMeshVisibilityMode(panelMesh1SaturnV, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh2SaturnV, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh3SaturnV, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh4SaturnV, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh1SaturnVLow, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh2SaturnVLow, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh3SaturnVLow, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh4SaturnVLow, MESHVIS_NEVER);
 				}
 				else {
 					vs2.vrot.x = 0.1;
@@ -708,12 +715,17 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 					v = (VESSEL *) oapiGetVesselInterface(hs4b4);
 					v->SetRotationMatrix(mul(rv, mul(rz, mul(ry, rnx))));			
 
-				    // Delete unneeded meshes
-                    DelMesh(panelMesh1Saturn1b);
-                    DelMesh(panelMesh2Saturn1b);
-                    DelMesh(panelMesh3Saturn1b);
-                    DelMesh(panelMesh4Saturn1b);
-				}
+				    // Hide unneeded meshes
+					SetMeshVisibilityMode(panelMesh1Saturn1b, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh2Saturn1b, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh3Saturn1b, MESHVIS_NEVER);
+					SetMeshVisibilityMode(panelMesh4Saturn1b, MESHVIS_NEVER);
+ 				}
+
+				// Activate panel separation junk
+				if (thg_sepPanel)
+					SetThrusterGroupLevel(thg_sepPanel, 1);
+
 				PanelsOpened = true;
 			}
 		}
@@ -1032,9 +1044,9 @@ void SIVB::AddRCS_S4B()
 	double junkOffset;
 
 	if (SaturnVStage)
-		junkOffset = 15;
+		junkOffset = 16;
 	else
-		junkOffset = 20;
+		junkOffset = 20.5;
 
 	VECTOR3	s_exhaust_pos1= _V(1.41,1.41,junkOffset);
 	VECTOR3 s_exhaust_pos2= _V(1.41,-1.41,junkOffset);
@@ -1061,6 +1073,34 @@ void SIVB::AddRCS_S4B()
 		AddExhaustStream(th_sep[i], &seperation_junk);
 	}
 	thg_sep = CreateThrusterGroup(th_sep, 8, THGROUP_USER);
+
+	//
+	// Panel seperation junk 'thrusters'.
+	//
+
+	if (SaturnVStage)
+		junkOffset = 9.4;
+	else
+		junkOffset = 14;
+
+	double r = 2.15;
+	VECTOR3	sPanel_exhaust_pos1= _V(r,r,junkOffset);
+	VECTOR3 sPanel_exhaust_pos2= _V(r,-r,junkOffset);
+	VECTOR3	sPanel_exhaust_pos3= _V(-r,r,junkOffset);
+	VECTOR3 sPanel_exhaust_pos4= _V(-r,-r,junkOffset);
+
+	PROPELLANT_HANDLE ph_sepPanel = CreatePropellantResource(0.1);
+
+	THRUSTER_HANDLE th_sepPanel[4];
+	th_sepPanel[0] = CreateThruster (sPanel_exhaust_pos1, _V( -1,-1,0), 1.0, ph_sepPanel, 10.0, 10.0);
+	th_sepPanel[1] = CreateThruster (sPanel_exhaust_pos2, _V( -1,1,0), 1.0, ph_sepPanel, 10.0, 10.0);
+	th_sepPanel[2] = CreateThruster (sPanel_exhaust_pos3, _V( 1,-1,0), 1.0, ph_sepPanel, 10.0, 10.0);
+	th_sepPanel[3] = CreateThruster (sPanel_exhaust_pos4, _V( 1,1,0), 1.0, ph_sepPanel, 10.0, 10.0);
+
+	for (i = 0; i < 4; i++) {
+		AddExhaustStream(th_sepPanel[i], &seperation_junk);
+	}
+	thg_sepPanel = CreateThrusterGroup(th_sepPanel, 4, THGROUP_USER);
 }
 
 void SIVB::SetMainState(int s)
@@ -1189,22 +1229,34 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
     // SaturnV panel animations
 	VECTOR3 mesh_dir = _V(-1.48, -1.48, 12.55);
 	panelMesh1SaturnV = AddMesh(hsat5stg31, &mesh_dir);
+	panelMesh1SaturnVLow = AddMesh(hsat5stg31low, &mesh_dir);
 	mesh_dir = _V(1.48, -1.48, 12.55);
-	panelMesh2SaturnV  = AddMesh(hsat5stg32, &mesh_dir);
+	panelMesh2SaturnV = AddMesh(hsat5stg32, &mesh_dir);
+	panelMesh2SaturnVLow = AddMesh(hsat5stg32low, &mesh_dir);
 	mesh_dir = _V(1.48, 1.48, 12.55);
-	panelMesh3SaturnV  = AddMesh(hsat5stg33, &mesh_dir);
+	panelMesh3SaturnV = AddMesh(hsat5stg33, &mesh_dir);
+	panelMesh3SaturnVLow = AddMesh(hsat5stg33low, &mesh_dir);
 	mesh_dir = _V(-1.48, 1.48, 12.55);
 	panelMesh4SaturnV  = AddMesh(hsat5stg34, &mesh_dir);
+	panelMesh4SaturnVLow  = AddMesh(hsat5stg34low, &mesh_dir);
 
 	static MGROUP_ROTATE panel1SaturnV(panelMesh1SaturnV, NULL, 0, _V(-0.6, -0.6, -3.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
 	static MGROUP_ROTATE panel2SaturnV(panelMesh2SaturnV, NULL, 0, _V( 0.6, -0.6, -3.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
 	static MGROUP_ROTATE panel3SaturnV(panelMesh3SaturnV, NULL, 0, _V( 0.6,  0.6, -3.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
 	static MGROUP_ROTATE panel4SaturnV(panelMesh4SaturnV, NULL, 0, _V(-0.6,  0.6, -3.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel1SaturnVLow(panelMesh1SaturnVLow, NULL, 0, _V(-0.6, -0.6, -3.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel2SaturnVLow(panelMesh2SaturnVLow, NULL, 0, _V( 0.6, -0.6, -3.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel3SaturnVLow(panelMesh3SaturnVLow, NULL, 0, _V( 0.6,  0.6, -3.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel4SaturnVLow(panelMesh4SaturnVLow, NULL, 0, _V(-0.6,  0.6, -3.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
 
 	AddAnimationComponent(panelAnim, 0, 1, &panel1SaturnV);
 	AddAnimationComponent(panelAnim, 0, 1, &panel2SaturnV);
 	AddAnimationComponent(panelAnim, 0, 1, &panel3SaturnV);
 	AddAnimationComponent(panelAnim, 0, 1, &panel4SaturnV);
+	AddAnimationComponent(panelAnim, 0, 1, &panel1SaturnVLow);
+	AddAnimationComponent(panelAnim, 0, 1, &panel2SaturnVLow);
+	AddAnimationComponent(panelAnim, 0, 1, &panel3SaturnVLow);
+	AddAnimationComponent(panelAnim, 0, 1, &panel4SaturnVLow);
 
     // Saturn1b panel animations
 	mesh_dir = _V(1.85, 1.85, 15.25);
@@ -1225,6 +1277,42 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	AddAnimationComponent(panelAnim, 0, 1, &panel2Saturn1b);
 	AddAnimationComponent(panelAnim, 0, 1, &panel3Saturn1b);
 	AddAnimationComponent(panelAnim, 0, 1, &panel4Saturn1b);
+
+	// All other meshes, Add/DelMesh in SetS4b wasn't working...
+	mesh_dir = _V(0, 0, 0);
+	meshSivbSaturnVLow = AddMesh(hsat5stg3low, &mesh_dir);
+	meshSivbSaturnV = AddMesh(hsat5stg3, &mesh_dir);
+	meshSivbSaturn1bLow = AddMesh(hSat1stg2low, &mesh_dir);
+	meshSivbSaturn1b = AddMesh(hSat1stg2, &mesh_dir);
+
+	mesh_dir = _V(0, 0, 9.8);
+	meshLMPKD = AddMesh(hLMPKD, &mesh_dir);
+
+	mesh_dir = _V(0, 0, 9.6);	
+	meshLTA_2r = AddMesh(hlta_2r, &mesh_dir);
+
+	mesh_dir = _V(0.0, 0, 8.8);
+	meshApollo8LTA = AddMesh(hapollo8lta, &mesh_dir);
+
+	// ShiftMesh in SetS4b wasn't working...
+	mesh_dir = _V(0, -0.15, 7.8);
+	meshASTP_A = AddMesh(hastp, &mesh_dir);
+
+	mesh_dir = _V(0, 0, 13.3);
+	meshASTP_B = AddMesh(hastp, &mesh_dir);
+
+	// ShiftMesh in SetS4b wasn't working...
+	mesh_dir = _V(-1.04, 1.04, 9.1);
+	meshCOASTarget_A = AddMesh(hCOAStarget, &mesh_dir);
+
+	mesh_dir = _V(-1.0, -1.1, 13.3);
+	meshCOASTarget_B = AddMesh(hCOAStarget, &mesh_dir);
+
+	mesh_dir = _V(0, 0, 13.3);
+	meshCOASTarget_C = AddMesh(hCOAStarget, &mesh_dir);
+
+	meshASTP2 = AddMesh(hastp2, &mesh_dir);
+
 }
 
 void SIVB::clbkDockEvent(int dock, OBJHANDLE connected)
@@ -1350,14 +1438,36 @@ double SIVB::GetTotalMass()
 	return mass;
 }
 
-void SIVB::DeleteAndResetMesh(int *mesh) 
+void SIVB::HideAllMeshes()
 
 {
-	if (*mesh != -1) {
-		DelMesh(*mesh);
-		*mesh = -1;
-	}
+	SetMeshVisibilityMode(panelMesh1SaturnV, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh2SaturnV, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh3SaturnV, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh4SaturnV, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh1SaturnVLow, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh2SaturnVLow, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh3SaturnVLow, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh4SaturnVLow, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh1Saturn1b, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh2Saturn1b, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh3Saturn1b, MESHVIS_NEVER);
+	SetMeshVisibilityMode(panelMesh4Saturn1b, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshSivbSaturnV, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshSivbSaturnVLow, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshSivbSaturn1b, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshSivbSaturn1bLow, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshLMPKD, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshLTA_2r, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshApollo8LTA, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshASTP_A, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshASTP_B, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshASTP2, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshCOASTarget_A, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshCOASTarget_C, MESHVIS_NEVER);
 }
+
 
 static int refcount = 0;
 

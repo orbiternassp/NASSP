@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/10/23 13:43:23  tschachim
+  *	Bugfix mesh handling.
+  *	
   *	Revision 1.19  2006/09/30 16:08:51  tschachim
   *	Fixed animations for Orbiter 060929.
   *	
@@ -458,17 +461,20 @@ protected:
 	Battery *MainBattery;
 
 	THRUSTER_HANDLE th_att_rot[10], th_main[1], th_att_lin[2];                 // handles for APS engines
-	THGROUP_HANDLE thg_aps, thg_main, thg_sep;
+	THGROUP_HANDLE thg_aps, thg_main, thg_sep, thg_sepPanel;
 	PROPELLANT_HANDLE ph_aps, ph_main;
 
 	UINT panelAnim;
 	double panelProc;
 	int panelTimestepCount;
 	int panelMesh1SaturnV, panelMesh2SaturnV, panelMesh3SaturnV, panelMesh4SaturnV;
+	int panelMesh1SaturnVLow, panelMesh2SaturnVLow, panelMesh3SaturnVLow, panelMesh4SaturnVLow;
 	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
-	int meshSivb, meshPayload1, meshPayload2;
+	int meshSivbSaturnV, meshSivbSaturnVLow, meshSivbSaturn1b, meshSivbSaturn1bLow;
+	int meshASTP_A, meshASTP_B, meshASTP2, meshCOASTarget_A, meshCOASTarget_B, meshCOASTarget_C;
+	int meshLMPKD, meshApollo8LTA, meshLTA_2r;
 
-	void DeleteAndResetMesh(int *mesh);
+	void HideAllMeshes();
 };
 
 ///
