@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.217  2006/10/26 18:48:50  movieman523
+  *	Fixed up CM RCS 1 and 2 warning lights to make the 'C&WS Operational Check' work.
+  *	
   *	Revision 1.216  2006/09/23 22:34:40  jasonims
   *	New J-2 Engine textures...
   *	
@@ -399,11 +402,10 @@
 #include "dockingprobe.h"
 #include "pyro.h"
 #include "secs.h"
-// DS20060304 Include SCS
 #include "scs.h"
-// DS20060326 Include Telecom
 #include "csm_telecom.h"
-// DS20060301 Include DirectInput
+#include "sps.h"
+
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
 
@@ -689,13 +691,6 @@ public:
 	///
 	virtual void SetCMRCSState(int Thruster, bool Active);
 
-	///
-	/// Turn Service Propulsion System engine on or off.
-	/// \brief SM SPS engine control.
-	/// \param Active Engine on or off?
-	///
-	virtual void SetSPSState(bool Active);
-
 	// DS20060226 Added
 	double sps_pitch_position;
 	double sps_yaw_position;
@@ -831,6 +826,10 @@ public:
 	///
 	IU *GetIU() { return &iu; };
 
+	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
+
+	SPSEngine *GetSPSEngine() { return &SPSEngine; };
+
 	//
 	// CWS functions.
 	//
@@ -896,12 +895,6 @@ public:
 	/// \return True if the valve is open.
 	///
 	bool GetValveState(int valve);
-
-	///
-	/// Enable or disable the SPS based on current systems state.
-	/// \brief Check SPS state.
-	///
-	void CheckSPSState();
 
 	///
 	/// Enable or disable the RCS based on current systems state.
@@ -1036,6 +1029,13 @@ public:
 	/// \brief We've extended the docking probe, so disconnect connections.
 	///
 	void Undocking();
+
+	///
+	/// Check whether the Launch Escape Tower is attached.
+	/// \brief Is the LET still attached?
+	/// \return True if attached, false if not.
+	///
+	bool LETAttached();
 
 protected:
 
@@ -1195,13 +1195,6 @@ protected:
 	/// \return True if active, false if not.
 	///
 	bool RCSPurgeActive();
-
-	///
-	/// Check whether the Launch Escape Tower is attached.
-	/// \brief Is the LET still attached?
-	/// \return True if attached, false if not.
-	///
-	bool LETAttached();
 
 	///
 	/// Check whether the Saturn vehicle has a CSM. Some, like Apollo 5, flew without a CSM for
@@ -1471,7 +1464,7 @@ protected:
 	///
 	double cpitch[PITCH_TABLE_SIZE];
 
-	// DS20060304 SCS COMPONENTS	
+	// SCS components
 	BMAG bmag1;
 	BMAG bmag2;
 	GDC  gdc;
@@ -1479,7 +1472,7 @@ protected:
 	EDA  eda;
 	RJEC rjec;
 	ECA  eca;
-	// DS20060326 TELECOM EQUIPMENT
+	// Telecom equipment
 	PCM  pcm;
 
 	//
@@ -1782,6 +1775,12 @@ protected:
 	// SPS switches (panel 3)
 	//
 
+	SwitchRow SPSInjectorValveIndicatorsRow;
+	IndicatorSwitch SPSInjectorValve1Indicator;
+	IndicatorSwitch SPSInjectorValve2Indicator;
+	IndicatorSwitch SPSInjectorValve3Indicator;
+	IndicatorSwitch SPSInjectorValve4Indicator;
+
 	SwitchRow SPSTestSwitchRow;
 	ThreePosSwitch SPSTestSwitch;
 
@@ -1789,12 +1788,22 @@ protected:
 	ThreePosSwitch SPSOxidFlowValveSwitch;
 	ToggleSwitch SPSOxidFlowValveSelectorSwitch;
 
-	SwitchRow PugModeSwitchRow;
-	ThreePosSwitch PugModeSwitch;
+	SwitchRow SPSOxidFlowValveIndicatorsRow;
+	IndicatorSwitch SPSOxidFlowValveMaxIndicator;
+	IndicatorSwitch SPSOxidFlowValveMinIndicator;
+
+	SwitchRow SPSPugModeSwitchRow;
+	ThreePosSwitch SPSPugModeSwitch;
+
+	SwitchRow SPSHeliumValveIndicatorsRow;
+	IndicatorSwitch SPSHeliumValveAIndicator;
+	IndicatorSwitch SPSHeliumValveBIndicator;
 
 	SwitchRow SPSSwitchesRow;
-	ThreePosSwitch LineHTRSSwitch;
-	ThreePosSwitch PressIndSwitch;
+	ThreePosSwitch SPSHeliumValveASwitch;
+	ThreePosSwitch SPSHeliumValveBSwitch;
+	ThreePosSwitch SPSLineHTRSSwitch;
+	ThreePosSwitch SPSPressIndSwitch;
 
 	//
 	// Electricals switches & indicators
@@ -1934,13 +1943,34 @@ protected:
 	/// \brief dV Thrust switches.
 	///
 	SwitchRow dvThrustRow;
-	GuardedToggleSwitch dVThrust1Switch;
-	GuardedToggleSwitch dVThrust2Switch;
+	GuardedTwoSourceSwitch dVThrust1Switch;
+	GuardedTwoSourceSwitch dVThrust2Switch;
 
 	///
 	/// \brief SPS Switch.
 	///
 	SaturnSPSSwitch SPSswitch;
+
+	///
+	/// \brief SPS meters.
+	///
+	SwitchRow SPSOxidPercentRow;
+	SaturnSPSOxidPercentMeter SPSOxidPercentMeter;
+
+	SwitchRow SPSFuelPercentRow;
+	SaturnSPSFuelPercentMeter SPSFuelPercentMeter;
+
+	SwitchRow SPSOxidUnbalMeterRow;
+	SaturnSPSOxidUnbalMeter SPSOxidUnbalMeter;
+
+	SwitchRow SPSMetersRow;
+	SaturnSPSTempMeter SPSTempMeter;
+	SaturnSPSHeliumNitrogenPressMeter SPSHeliumNitrogenPressMeter;
+	SaturnSPSPropellantPressMeter SPSFuelPressMeter;
+	SaturnSPSPropellantPressMeter SPSOxidPressMeter;
+
+	SwitchRow LVSPSPcMeterRow;
+	SaturnLVSPSPcMeter LVSPSPcMeter;
 
 	///
 	/// \brief Cryo tank meters
@@ -2344,7 +2374,7 @@ protected:
 	//////////////////////
 
 	SwitchRow SPSGaugingSwitchRow;
-	ThreePosSwitch SPSGaugingSwitch;
+	ThreeSourceSwitch SPSGaugingSwitch;
 
 	SwitchRow TelcomSwitchesRow;
 	ThreePosSwitch TelcomGroup1Switch;
@@ -2992,8 +3022,6 @@ protected:
 	AtmRegen *SuitCompressor1;
 	AtmRegen *SuitCompressor2;
 
-	double LastThrustDisplay;
-
 	//
 	// LM PAD
 	//
@@ -3110,7 +3138,8 @@ protected:
 	bool RCS_Full;
 	bool LEMdatatransfer;
 
-#define SATPANEL_MAIN				0
+#define SATPANEL_MAIN				0 // Both have Orbiter's 
+#define SATPANEL_MAIN_LEFT		    0 // default panel id 0
 #define SATPANEL_LOWER				1
 #define SATPANEL_LEFT				2
 #define SATPANEL_RIGHT				3
@@ -3120,14 +3149,22 @@ protected:
 #define SATPANEL_CABIN_PRESS_PANEL	7
 #define SATPANEL_TELESCOPE			8
 #define SATPANEL_SEXTANT			9
+#define SATPANEL_MAIN_MIDDLE	   10
+#define SATPANEL_MAIN_RIGHT		   11	
 
 	int  PanelId;
+	int MainPanelSplitted;
 	bool InVC;
 	bool InPanel;
+	bool CheckPanelIdInTimestep;
+	bool FovFixed;
+	bool FovExternal;
+	double FovSave;
+	double FovSaveExternal;
+
 	bool VCRegistered;
 	VECTOR3 VCCameraOffset;
 	VECTOR3 VCMeshOffset;
-	bool CheckPanelIdInTimestep;
 
 	bool KranzPlayed;
 	bool PostSplashdownPlayed;
@@ -3191,6 +3228,7 @@ protected:
 	OBJHANDLE hVAB;
 	OBJHANDLE hCrawler;
 	OBJHANDLE hML;
+	OBJHANDLE hMSS;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
@@ -3222,6 +3260,10 @@ protected:
 	void SetRecovery();
 	void InitPanel(int panel);
 	void SetSwitches(int panel);
+	void AddLeftMainPanelAreas();
+	void AddLeftMiddleMainPanelAreas(int offset);
+	void AddRightMiddleMainPanelAreas(int offset);
+	void AddRightMainPanelAreas(int offset);
 	void ReleaseSurfaces();
 	void KillDist(OBJHANDLE &hvessel, double kill_dist = 5000.0);
 	void KillAlt(OBJHANDLE &hvessel,double altVS);
@@ -3245,7 +3287,6 @@ protected:
 	void CabinFansSystemTimestep();
 	void ButtonClick();
 	void GuardClick();
-	void FuelCell();
 	void SetView();
 	void SetView(double offset);
 	void SetView(bool update_direction);
@@ -3301,8 +3342,6 @@ protected:
 	bool SMRCSBActive();
 	bool SMRCSCActive();
 	bool SMRCSDActive();
-	void ActivateSPS();
-	void DeactivateSPS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
 	void SetRandomFailures();
@@ -3502,6 +3541,9 @@ protected:
 	SMRCSPropellant SMQuadCRCS;
 	SMRCSPropellant SMQuadDRCS;
 
+	SPSEngine SPSEngine;
+	SPSPropellantSource SPSPropellant;
+
 	//
 	// LEM data.
 	//
@@ -3655,6 +3697,8 @@ protected:
 	friend class ECA;
 	friend class CSMcomputer; // I want this to be able to see the GDC	
 	friend class PCM;         // Otherwise reading telemetry is a pain
+	friend class SPSPropellantSource;
+	friend class SPSEngine;
 };
 
 extern void BaseInit();

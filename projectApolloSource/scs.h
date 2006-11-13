@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/10/05 16:09:02  tschachim
+  *	Fixed SCS attitude hold mode.
+  *	
   *	Revision 1.12  2006/06/17 18:18:00  tschachim
   *	Bugfixes SCS automatic modes,
   *	Changed quickstart separation key to J.
@@ -143,9 +146,9 @@ public: // We use these inside a timestep, so everything is public to make data 
 class ASCP {
 	// Attitude Set Control Panel
 public: // We use these inside a timestep, so everything is public to make data access as fast as possible.
-	ASCP();														   // Cons
+	ASCP(Sound &clicksound);									   // Cons
 	void Init(Saturn *vessel);									   // Initialization
-	void TimeStep();									           // Timestep
+	void TimeStep(double simdt);						           // Timestep
 	bool PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits);     // Update panel image
 	bool PaintPitchDisplay(SURFHANDLE surf, SURFHANDLE digits);    // Update panel image
 	bool PaintYawDisplay(SURFHANDLE surf, SURFHANDLE digits);      // Update panel image
@@ -166,13 +169,18 @@ public: // We use these inside a timestep, so everything is public to make data 
 	bool YawClick(int Event, int mx, int my);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
+
 	int mousedowncounter;                                          // Mouse Down Counter
+	int mousedownposition;
+	double mousedownangle;
+
 	VECTOR3 output;												   // Output attitude
 	Saturn *sat;												   // The spacecraft
 	int msgcounter;
-	int rolldisplay;
-	int pitchdisplay;
-	int yawdisplay;
+	double rolldisplay;
+	double pitchdisplay;
+	double yawdisplay;
+	Sound &ClickSound;
 };
 
 class EDA {
@@ -197,12 +205,13 @@ public: // Same stuff about speed and I'm lazy too.
 	RJEC();															// Cons
 	void Init(Saturn *vessel);										// Initialization
 	void SetThruster(int thruster,bool Active);                     // Set Thruster Level for CMC
-	void TimeStep();                                                // Timestep
+	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
 	bool SPSActive;                                                 // SPS Active notification
 	bool DirectPitchActive,DirectYawActive,DirectRollActive;        // Direct axis fire notification
 	Saturn *sat;
+	double AGCActiveTimer;													// TODO Dirty Hack for the AGC++ attitude control
 };
 
 class ECA {

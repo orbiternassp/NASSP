@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.46  2006/07/26 15:42:02  tschachim
+  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
+  *	
   *	Revision 1.45  2006/07/03 18:37:00  movieman523
   *	Bunch more documentation.
   *	
@@ -1002,7 +1005,7 @@ protected:
 	/// \brief Set the thrust level of the main engine.
 	/// \param thrust Thrust level (0.0 to 1.0).
 	///
-	void BurnMainEngine(double thrust);
+	virtual void BurnMainEngine(double thrust);
 
 	virtual void DisplayBankSum();
 	void DisplayEMEM(unsigned int addr);

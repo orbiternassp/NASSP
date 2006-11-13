@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2006/07/24 06:41:30  dseagrav
+  *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
+  *	
   *	Revision 1.54  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -864,6 +867,27 @@ protected:
 	e_object *output2;
 };
 
+///
+/// A guarded two-position switch which can switch between two different electrical sources.
+/// \brief Guarded two power source switch.
+/// \ingroup PanelItems
+///
+class GuardedTwoSourceSwitch : public GuardedToggleSwitch {
+public:
+	GuardedTwoSourceSwitch() { source1 = source2 = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
+	void LoadState(char *line);
+
+protected:
+	virtual void UpdateSourceState();
+
+	e_object *source1;
+	e_object *source2;
+};
+
+
 class IMU; // Forward reference for files which include this before IMU.h
 
 class IMUCageSwitch: public GuardedToggleSwitch {
@@ -1111,6 +1135,7 @@ public:
 	MeterSwitch();
 	virtual ~MeterSwitch();
 
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, double min, double max, double time, double defaultValue);
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, double min, double max, double time);
 	void Init(SwitchRow &row);
 	void DrawSwitch(SURFHANDLE drawSurface);

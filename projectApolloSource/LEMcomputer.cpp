@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.31  2006/08/13 06:30:49  dseagrav
   *	LM checkpoint commit.
   *	
@@ -1451,10 +1454,23 @@ void LEMcomputer::ProcessChannel6(int val){
 	*/
 }
 
+void LEMcomputer::BurnMainEngine(double thrust)
 
+{
+	// TODO This function is used by the AGC++ burn programs
+	// and should simulate the VAGC behaviour, i.e. I/O channels etc.
+	// to control the main engine
+
+	OurVessel->SetEngineLevel(ENGINE_HOVER, thrust);
+
+	ApolloGuidance::BurnMainEngine(thrust);
+}
+
+//
 // TODO Dirty Hack for the AGC++ attitude control, 
 // remove this and use I/O channels and pulsed thrusters 
 // identical to the VAGC instead
+//
 
 void LEMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 

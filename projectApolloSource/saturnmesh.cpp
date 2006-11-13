@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2006/08/11 20:37:46  movieman523
+  *	Added HasProbe flag for docking probe.
+  *	
   *	Revision 1.53  2006/08/11 19:34:47  movieman523
   *	Added code to take the docking probe with the LES on a post-abort jettison.
   *	
@@ -762,7 +765,7 @@ void Saturn::SetCSMStage ()
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (_V( 0,0,-6.5), _V( 0,0,1), 100552.5 , ph_sps, 3778.5);
+	th_main[0] = CreateThruster (_V(0,0,-5), _V(0,0,1), SPS_THRUST , ph_sps, SPS_ISP);
 	DelThrusterGroup(THGROUP_MAIN,true);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
@@ -891,7 +894,7 @@ void Saturn::SetCSM2Stage ()
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (_V( 0,0,-6.5), _V( 0,0,1),100552.5 , ph_sps, 3778.5);
+	th_main[0] = CreateThruster (_V(0,0,-5), _V(0,0,1), SPS_THRUST, ph_sps, SPS_ISP);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
 	AddExhaust (th_main[0], 20.0, 2.25, SMExhaustTex);
@@ -1766,13 +1769,14 @@ bool Saturn::clbkLoadGenericCockpit ()
 	// VC-only in engineering camera view.
 	//
 
-	if (viewpos == SATVIEW_ENG1 || viewpos == SATVIEW_ENG2)
+	if (viewpos == SATVIEW_ENG1 || viewpos == SATVIEW_ENG2 || viewpos == SATVIEW_ENG3)
 		return false;
 
 	SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 	InVC = false;
 	InPanel = false;
+
 	SetView();
 	return true;
 }

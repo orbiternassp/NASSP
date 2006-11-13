@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/07/27 22:38:57  movieman523
+  *	Added CSM to LEM power connector.
+  *	
   *	Revision 1.55  2006/07/27 21:30:47  movieman523
   *	Added display of SIVb battery voltage and current.
   *	
@@ -1932,14 +1935,6 @@ void CSMcomputer::ProcessChannel11Bit(int bit, bool val)
 	dsky.ProcessChannel11Bit(bit, val);
 	dsky2.ProcessChannel11Bit(bit, val);
 
-	//
-	// Channel 11 also controls the SPS engine.
-	//
-
-	if (bit == 13) {
-		CheckEngineOnOff(GetOutputChannel(011));
-	}
-
 	LastOut11 = GetOutputChannel(011);
 }
 
@@ -1949,33 +1944,19 @@ void CSMcomputer::ProcessChannel11(int val)
 	dsky.ProcessChannel11(val);
 	dsky2.ProcessChannel11(val);
 
-	CheckEngineOnOff(val);
-
 	LastOut11 = val;
 }
 
-void CSMcomputer::CheckEngineOnOff(int val)
+void CSMcomputer::BurnMainEngine(double thrust)
 
 {
-	ChannelValue30 val30;
-	val30.Value = GetInputChannel(030);
+	// This is the same the real VAGC does
+	if (thrust)
+		SetOutputChannelBit(011, 13, 1);
+	else
+		SetOutputChannelBit(011, 13, 0);
 
-	Saturn *sat = (Saturn *) OurVessel;
-
-	if (!val30.Bits.CMSMSeperate) {
-		ChannelValue11 Current;
-		ChannelValue11 Changed;
-
-		Current.Value = val;
-		Changed.Value = (val ^ LastOut11);
-
-		if (Changed.Bits.EngineOnOff) {
-#ifdef _DEBUG
-	fprintf(out_file, "Setting SPS state = %d\n", Current.Bits.EngineOnOff);
-#endif
-			sat->SetSPSState(Current.Bits.EngineOnOff != 0);
-		}
-	}
+	ApolloGuidance::BurnMainEngine(thrust);
 }
 
 //
@@ -2211,8 +2192,16 @@ void CSMcomputer::ProcessChannel161(int val){
 // identical to the VAGC instead
 
 void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
+	
+	Saturn *sat = (Saturn *) OurVessel;
+	if (sat->SCContSwitch.IsUp()) {
+		// Ensure RJ/EC power, Auto RCS is not checked currently
+		if (sat->SIGCondDriverBiasPower1Switch.Voltage() >= SP_MIN_ACVOLTAGE && 
+			sat->SIGCondDriverBiasPower2Switch.Voltage() >= SP_MIN_ACVOLTAGE) {
 
-	// This is not tested and perhaps not working 
-	OurVessel->SetAttitudeRotLevel(level);
-
+			sat->SetAttitudeRotLevel(level);
+			// Disable RJ/EC for the AGC++ control loop
+			sat->rjec.AGCActiveTimer = 2.0; //ApolloGuidance DELTAT
+		}
+	}
 }

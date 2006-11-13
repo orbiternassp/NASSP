@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2006/08/18 05:45:01  dseagrav
+  *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
+  *	
   *	Revision 1.71  2006/07/24 06:41:30  dseagrav
   *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
   *	
@@ -2176,9 +2179,14 @@ MeterSwitch::~MeterSwitch() {
 
 void MeterSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, double min, double max, double time) {
 
+	Register(scnh, n, min, max, time, min);
+}
+
+void MeterSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, double min, double max, double time, double defaultValue) {
+
 	name = n;
-	value = min;
-	displayValue = min;
+	value = defaultValue;
+	displayValue = defaultValue;
 	minValue = min;
 	maxValue = max;
 	minMaxTime = time;
@@ -2436,6 +2444,61 @@ void TwoSourceSwitch::LoadState(char *line)
 
 {
 	ToggleSwitch::LoadState(line);
+	UpdateSourceState();
+}
+
+//
+// GuardedTwoSourceSwitch allows you to connect the output to one of two inputs based on the position
+// of the switch.
+//
+
+void GuardedTwoSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2)
+
+{
+	GuardedToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	source1 = s1;
+	source2 = s2;
+
+	UpdateSourceState();
+}
+
+bool GuardedTwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my))
+	{
+		UpdateSourceState();
+		return true;
+	}
+
+	return false;
+}
+
+bool GuardedTwoSourceSwitch::SwitchTo(int newState)
+
+{
+	if (GuardedToggleSwitch::SwitchTo(newState)) {
+		UpdateSourceState();
+		return true;
+	}
+	return false;
+}
+
+void GuardedTwoSourceSwitch::UpdateSourceState()
+
+{
+	if (IsUp()) {
+		WireTo(source1);
+	}
+	else if (IsDown()) {
+		WireTo(source2);
+	}
+}
+
+void GuardedTwoSourceSwitch::LoadState(char *line)
+
+{
+	GuardedToggleSwitch::LoadState(line);
 	UpdateSourceState();
 }
 

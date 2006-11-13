@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual C++ Express 2005
+# Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASTP", "VC2005\ASTP\ASTP.vcproj", "{BAE34D87-5EAE-491C-AE6D-73B6B1E487D2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crawler", "VC2005\Crawler\Crawler.vcproj", "{BAAA2ADB-0507-4E33-9E80-23CEE3B74E37}"
@@ -60,6 +60,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProjectApolloMFD", "VC2005\ProjectApolloMFD\ProjectApolloMFD.vcproj", "{91D2B2E0-D1EC-45B5-AEF4-52D1273652FD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Floodlight", "VC2005\Floodlight\Floodlight.vcproj", "{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProjectApolloConfigurator", "VC2005\ProjectApolloConfigurator\ProjectApolloConfigurator.vcproj", "{73EF2265-3791-4C67-89A0-9DA47D663144}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -163,6 +165,10 @@ Global
 		{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}.Debug|Win32.Build.0 = Debug|Win32
 		{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}.Release|Win32.ActiveCfg = Release|Win32
 		{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}.Release|Win32.Build.0 = Release|Win32
+		{73EF2265-3791-4C67-89A0-9DA47D663144}.Debug|Win32.ActiveCfg = Debug|Win32
+		{73EF2265-3791-4C67-89A0-9DA47D663144}.Debug|Win32.Build.0 = Debug|Win32
+		{73EF2265-3791-4C67-89A0-9DA47D663144}.Release|Win32.ActiveCfg = Release|Win32
+		{73EF2265-3791-4C67-89A0-9DA47D663144}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

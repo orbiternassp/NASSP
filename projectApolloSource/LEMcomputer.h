@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2006/07/26 15:42:02  tschachim
+  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
+  *	
   *	Revision 1.23  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -270,6 +273,12 @@ protected:
 	bool DescentPhase();
 	bool AscentPhase();
 	void SetAttitudeRotLevel(VECTOR3 level);
+	
+	///
+	/// \brief Set the thrust level of the main engine.
+	/// \param thrust Thrust level (0.0 to 1.0).
+	///
+	virtual void BurnMainEngine(double thrust);
 
 
 	LEMFlagWord0 FlagWord0;

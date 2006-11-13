@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/07/26 15:42:02  tschachim
+  *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
+  *	
   *	Revision 1.19  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -419,9 +422,15 @@ protected:
 	// DS20060226 TVC / Optics
 	void ProcessChannel160(int val);
 	void ProcessChannel161(int val);
-	void CheckEngineOnOff(int val);
 	// DS20060308 FDAI NEEDLES
 	void ProcessIMUCDUErrorCount(int channel, unsigned int val);
+
+	///
+	/// \brief Set the thrust level of the main engine.
+	/// \param thrust Thrust level (0.0 to 1.0).
+	///
+	virtual void BurnMainEngine(double thrust);
+
 
 	//
 	// Programs we can run.
