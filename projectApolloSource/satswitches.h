@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/06/17 18:13:13  tschachim
+  *	Moved BMAGPowerRotationalSwitch.
+  *	
   *	Revision 1.17  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -577,3 +580,84 @@ protected:
 	BMAG *bmag;	
 };
 
+class SaturnSPSPercentMeter : public MeterSwitch {
+public:
+	void Init(SURFHANDLE blackFontSurf, SURFHANDLE whiteFontSurf, SwitchRow &row, Saturn *s);
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	// Power is handled in SPSPropellantSource
+	// These are motor driven counters, no power 
+	// means no movement and NOT showing 0
+	virtual double AdjustForPower(double val) { return val; };
+
+	SURFHANDLE BlackFontSurface;
+	SURFHANDLE WhiteFontSurface;
+	Saturn *Sat;
+};
+
+class SaturnSPSOxidPercentMeter : public SaturnSPSPercentMeter {
+public:
+	double QueryValue();
+};
+
+class SaturnSPSFuelPercentMeter : public SaturnSPSPercentMeter {
+public:
+	double QueryValue();
+};
+
+class SaturnSPSOxidUnbalMeter : public SaturnRoundMeter {
+public:
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	// Power is handled in SPSPropellantSource
+	virtual double AdjustForPower(double val) { return val; };
+};
+
+class SaturnSPSPropellantPressMeter : public MeterSwitch {
+public:
+	void Init(SURFHANDLE surf, SwitchRow &row, 	Saturn *s, bool fuel);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	SURFHANDLE NeedleSurface;
+	Saturn *Sat;
+	bool Fuel;
+};
+
+class SaturnSPSTempMeter : public MeterSwitch {
+public:
+	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	SURFHANDLE NeedleSurface;
+	Saturn *Sat;
+};
+
+class SaturnSPSHeliumNitrogenPressMeter : public MeterSwitch {
+public:
+	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ThreePosSwitch *spspressindswitch);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	SURFHANDLE NeedleSurface;
+	Saturn *Sat;
+	ThreePosSwitch *SPSPressIndSwitch;
+};
+
+class SaturnLVSPSPcMeter : public SaturnRoundMeter {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *lvspspcindicatorswitch, SURFHANDLE frameSurface);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	ToggleSwitch *LVSPSPcIndicatorSwitch;
+	SURFHANDLE FrameSurface;
+};

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/10/26 18:48:50  movieman523
+  *	Fixed up CM RCS 1 and 2 warning lights to make the 'C&WS Operational Check' work.
+  *	
   *	Revision 1.16  2006/05/30 14:40:21  tschachim
   *	Fixed fuel cell - dc bus connectivity, added battery charger
   *	
@@ -121,6 +124,7 @@ protected:
 	double NextO2FlowCheckTime;
 	bool LastO2FlowCheckHigh;
 	int O2FlowCheckCount;
+	int SPSPressCheckCount;
 	int FuelCellCheckCount[4];
 	bool ACBus1Alarm, ACBus2Alarm;
 	bool ACBus1Reset, ACBus2Reset;

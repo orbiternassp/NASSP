@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.125  2006/10/26 18:48:50  movieman523
+  *	Fixed up CM RCS 1 and 2 warning lights to make the 'C&WS Operational Check' work.
+  *	
   *	Revision 1.124  2006/10/05 16:09:52  tschachim
   *	Fixed SCS attitude hold mode.
   *	
@@ -424,11 +427,12 @@ void Saturn::SystemsInit() {
 
 	SetValveState(CM_RCSPROP_TANKA_VALVE, false);
 	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
-	// DS20060226 SPS Gimbal reset to zero
+
+	// SPS Gimbal reset to zero
 	sps_pitch_position = 0;
 	sps_yaw_position = 0;
 
-	// DS20060304 SCS initialization
+	// SCS initialization
 	bmag1.Init(this, &SystemMnACircuitBraker, &StabContSystemAc1CircuitBraker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER1"));
 	bmag2.Init(this, &SystemMnBCircuitBraker, &StabContSystemAc2CircuitBraker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER2"));
 	gdc.Init(this);
@@ -436,10 +440,15 @@ void Saturn::SystemsInit() {
 	eda.Init(this);
 	rjec.Init(this);
 	eca.Init(this);
-	// DS20060326 Telecom initialization
+
+	// Telecom initialization
 	pcm.Init(this);
 
-	// DS20060301 Initialize joystick
+	// SPS initialization
+	SPSPropellant.Init(&GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &SPSGaugingSwitch, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
+	SPSEngine.Init(this);
+
+	// Initialize joystick
 	HRESULT         hr;
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
@@ -596,24 +605,22 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		{
 			iu.Timestep(MissionTime, simdt);
 		}	
-
-		// DS20060304 SCS updation
 		bmag1.Timestep(simdt);
 		bmag2.Timestep(simdt);
-		ascp.TimeStep();
+		ascp.TimeStep(simdt);
 		gdc.Timestep(simdt);
 		eca.TimeStep(simdt);
-		rjec.TimeStep();
-
+		rjec.TimeStep(simdt);
 		cws.TimeStep(MissionTime);
 		dockingprobe.TimeStep(MissionTime, simdt);
 		secs.Timestep(MissionTime, simdt);
 		els.Timestep(MissionTime, simdt);
 		fdaiLeft.Timestep(MissionTime, simdt);
 		fdaiRight.Timestep(MissionTime, simdt);
+		SPSPropellant.Timestep(MissionTime, simdt);
 		JoystickTimestep();
 
-		// DS20060326 Telecom updation - This is last so telemetry reflects the current state.
+		//Telecom update is last so telemetry reflects the current state.
 		pcm.TimeStep(MissionTime);
 
 		//
@@ -715,7 +722,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				MissionTimerSwitch.SwitchTo(THREEPOSSWITCH_UP);
 
 				// Open Direct O2 valve
-				DirectO2RotarySwitch.SwitchTo(2);
+				DirectO2RotarySwitch.SwitchTo(4);
 
 				
 				// Next state
@@ -758,7 +765,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					//
 		
 					// Open Direct O2 valve
-					DirectO2RotarySwitch.SwitchTo(1);
+					DirectO2RotarySwitch.SwitchTo(2);
 
 					// Turn on suit compressor 1
 					SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
@@ -1000,7 +1007,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					//
 
 					// Close Direct O2 valve
-					DirectO2RotarySwitch.SwitchTo(3);
+					DirectO2RotarySwitch.SwitchTo(6);
 									
 
 					// Next state
@@ -1163,6 +1170,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 	//double *suitExchangerPower=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITHEATEXCHANGER:POWER");
 	double *suitCRVExchangerPower=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITCIRCUITHEATEXCHANGER:POWER");
 
+/*	double *spsTemp=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE:TEMP");
+	sprintf(oapiDebugString(), "SPS-T %.1f", *spsTemp); 
+*/
 /*	sprintf(oapiDebugString(), "Pot-m %.1f T %.1f p %.1f Waste-m %.1f T %.1f p %.1f deltaP %.1f Evap %.2f", 
 		*massPotable, *tempPotable, *pressPotable * 0.000145038,
 		*massWaste, *tempWaste, *pressWaste * 0.000145038,
@@ -1298,6 +1308,8 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		gdc.SystemTimestep(tFactor);
 		eca.SystemTimestep(tFactor);
 		rjec.SystemTimestep(tFactor);
+		SPSPropellant.SystemTimestep(tFactor);
+		SPSEngine.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 
 		simdt -= tFactor;
@@ -2077,23 +2089,6 @@ bool Saturn::SMRCSActive()
 	return SMRCSAActive() && SMRCSBActive() && SMRCSCActive() && SMRCSDActive();
 }
 
-void Saturn::CheckSPSState()
-
-{
-	switch (stage) {
-	case CSM_LEM_STAGE:
-		if (SPSswitch.IsUp()){
-			SetThrusterResource(th_main[0],ph_sps);
-			agc.SetInputChannelBit(030, 3, true);
-		}
-		else{
-			SetThrusterResource(th_main[0],NULL);
-			agc.SetInputChannelBit(030, 3, false);
-		}
-		break;
-	}
-}
-
 //
 // Check whether the CM RCS is active.
 //
@@ -2189,18 +2184,6 @@ void Saturn::CheckRCSState()
 		SetRCS_CM();
 		break;
 	}
-}
-
-void Saturn::ActivateSPS()
-
-{
-	SPSswitch.SetState(TOGGLESWITCH_UP);
-}
-
-void Saturn::DeactivateSPS()
-
-{
-	SPSswitch.SetState(TOGGLESWITCH_UP);
 }
 
 void Saturn::SetEngineIndicators()
@@ -3185,15 +3168,6 @@ void Saturn::SetCMRCSState(int Thruster, bool Active)
 	double Level = Active ? 1.0 : 0.0;
 	if(th_att_cm[Thruster] == NULL){ return; } // Sanity check
 	SetThrusterLevel(th_att_cm[Thruster], Level);
-}
-
-void Saturn::SetSPSState(bool Active)
-
-{
-	rjec.SPSActive = Active;
-	if (stage == CSM_LEM_STAGE) {
-		SetThrusterGroupLevel(THGROUP_MAIN, Active ? 1.0 : 0.0);
-	}
 }
 
 // DS20060226 Added below

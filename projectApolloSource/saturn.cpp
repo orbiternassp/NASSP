@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.177  2006/09/23 22:34:40  jasonims
+  *	New J-2 Engine textures...
+  *	
   *	Revision 1.176  2006/08/27 21:49:39  tschachim
   *	Cancel autopilot commands after orbit insertion.
   *	
@@ -334,7 +337,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	SMQuadBRCS(ph_rcs1),
 	SMQuadCRCS(ph_rcs2),
 	SMQuadDRCS(ph_rcs3),
-	CMRCS1(ph_rcs_cm_1),CMRCS2(ph_rcs_cm_2),
+	CMRCS1(ph_rcs_cm_1),
+	CMRCS2(ph_rcs_cm_2),
+	SPSPropellant(ph_sps, Panelsdk),
+	SPSEngine(th_main[0]),
 	CMSMPyros("CM-SM-Pyros", Panelsdk),
 	EcsGlycolPumpsSwitch(Panelsdk),
 	SuitCompressor1Switch(Panelsdk),
@@ -342,7 +348,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	BatteryCharger("BatteryCharger", Panelsdk),
 	timedSounds(soundlib),
 	iuCommandConnector(agc),
-	sivbControlConnector(agc)
+	sivbControlConnector(agc),
+	ascp(Sclick)
 
 {
 	InitSaturnCalled = false;
@@ -508,6 +515,7 @@ void Saturn::initSaturn()
 	hVAB = 0;
 	hML = 0;
 	hCrawler = 0;
+	hMSS = 0;
 
 	//
 	// Apollo 13 flags.
@@ -532,12 +540,6 @@ void Saturn::initSaturn()
 	LMPad = 0;
 	LMPadLoadCount = 0;
 	LMPadValueCount = 0;
-
-	//
-	// State for damping thrust/AoA meter.
-	//
-
-	LastThrustDisplay = 0.0;
 
 	//
 	// Default mission time to an hour prior to launch.
@@ -659,6 +661,7 @@ void Saturn::initSaturn()
 	SMQuadDRCS.SetVessel(this);
 	CMRCS1.SetVessel(this);
 	CMRCS2.SetVessel(this);
+	SPSPropellant.SetVessel(this);
 
 	//
 	// Default masses.
@@ -668,7 +671,7 @@ void Saturn::initSaturn()
 	CM_FuelMass = 123;
 
 	SM_EmptyMass = 3110;
-	SM_FuelMass = 18413 + 3000;
+	SM_FuelMass = SPS_DEFAULT_PROPELLANT;
 
 	S4PL_Mass = 14696;
 
@@ -785,6 +788,10 @@ void Saturn::initSaturn()
 	SextTrunion = 0.0;
 	TeleTrunion = 0.0;
 	CheckPanelIdInTimestep = false;
+	FovFixed = false;
+	FovExternal = false;
+	FovSave = 0;
+	FovSaveExternal = 0;
 
 	//
 	// Save the last view offset set.
@@ -959,7 +966,10 @@ void Saturn::initSaturn()
 		// Initialize the panel
 		fdaiDisabled = false;
 		fdaiSmooth = false;
+		hBmpFDAIRollIndicator = 0;
+
 		PanelId = SATPANEL_MAIN; 		// default panel
+		MainPanelSplitted = false;
 		InitSwitches();
 
 		// "dummy" SetSwitches to enable the panel event handling
@@ -1243,6 +1253,23 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 		CheckPanelIdInTimestep = false;
 	}
 
+	//
+	// Check FOV for external view
+	//
+	if ((!oapiCameraInternal() || (oapiGetFocusInterface() != this)) && FovFixed && !FovExternal) {
+		FovSaveExternal = oapiCameraAperture();
+		oapiCameraSetAperture(FovSave);
+		FovExternal = true;	
+	}
+	if ((oapiGetFocusInterface() == this) && oapiCameraInternal() && FovFixed && FovExternal) {
+		FovSave = oapiCameraAperture();
+		oapiCameraSetAperture(FovSaveExternal);
+		FovExternal = false;	
+	}
+
+	//
+	// Subclass specific handling
+	//
 	Timestep(simt, simdt);
 }
 
@@ -1250,6 +1277,14 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 {
 	TRACESETUP("Saturn::clbkPostStep");
+
+	//
+	// The SPS engine must be in post time step 
+	// to inhibit Orbiter's thrust control
+	//
+	
+	SPSEngine.Timestep(MissionTime, simdt);
+
 
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
 }
@@ -1282,7 +1317,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
 	oapiWriteScenario_int (scn, "DLS", DeleteLaunchSite ? 1 : 0);
-	oapiWriteScenario_int (scn, "LOWRES", LowRes ? 1 : 0);
 	oapiWriteScenario_int (scn, "CHECKLISTS", useChecklists ? 1 : 0);
 
 	if (Realism != REALISM_DEFAULT) {
@@ -1464,8 +1498,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_string (scn, "LEMN", LEMName);
 
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
-	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
-	oapiWriteScenario_int (scn, "FDAISMOOTH", fdaiSmooth);
 
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	dsky2.SaveState(scn, DSKY2_START_STRING, DSKY2_END_STRING);
@@ -1486,6 +1518,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	gdc.SaveState(scn);
 	ascp.SaveState(scn);
 	dockingprobe.SaveState(scn);
+	SPSPropellant.SaveState(scn);
+	SPSEngine.SaveState(scn);
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
@@ -1515,6 +1549,17 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	// save the state of the switches
 	PSH.SaveState(scn);	
+
+
+	//
+	// This is now controlled by the launch pad configurator
+	//
+
+	// oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
+	// oapiWriteScenario_int (scn, "FDAISMOOTH", fdaiSmooth);
+	// oapiWriteScenario_int (scn, "MAINPANELSPLITTED", MainPanelSplitted);
+	// oapiWriteScenario_int (scn, "LOWRES", LowRes ? 1 : 0);
+
 }
 
 //
@@ -1810,6 +1855,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	int SwitchState = 0;
 	int nasspver = 0, status = 0;
 	int n, DummyLoad;
+	bool found;
+
+	found = true;
 
     if (!strnicmp (line, "CONFIGURATION", 13)) {
         sscanf (line+13, "%d", &status);
@@ -2307,12 +2355,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "COASENABLED", 11)) {
 		sscanf (line + 11, "%i", &coasEnabled);
 	}
-	else if (!strnicmp (line, "FDAIDISABLED", 12)) {
-		sscanf (line + 12, "%i", &fdaiDisabled);
-	}
-	else if (!strnicmp (line, "FDAISMOOTH", 10)) {
-		sscanf (line + 10, "%i", &fdaiSmooth);
-	}
 	else if (!strnicmp (line, "MR", 2)) {
 		sscanf (line + 2, "%f", &ftcp);
 		MixtureRatio = ftcp;
@@ -2321,9 +2363,31 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line+5, "%d", &stage);
 	}
 	else
-		return false;
+		found = false;
 
-	return true;
+	// Next bock because of Visual C++ compiler restriction, only 128 "else if's" allowed
+	if (!found) {
+		found = true;
+
+		if (!strnicmp(line, SPSPROPELLANT_START_STRING, sizeof(SPSPROPELLANT_START_STRING))) {
+			SPSPropellant.LoadState(scn);
+		}
+		else if (!strnicmp(line, SPSENGINE_START_STRING, sizeof(SPSENGINE_START_STRING))) {
+			SPSEngine.LoadState(scn);
+		}
+	    else if (!strnicmp (line, "FDAIDISABLED", 12)) {
+		    sscanf (line + 12, "%i", &fdaiDisabled);
+	    }
+	    else if (!strnicmp (line, "FDAISMOOTH", 10)) {
+		    sscanf (line + 10, "%i", &fdaiSmooth);
+	    }
+	    else if (!strnicmp (line, "MAINPANELSPLITTED", 17)) {
+		    sscanf (line + 17, "%i", &MainPanelSplitted);
+	    }
+		else
+			found =false;
+	}
+	return found;
 }
 
 void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
@@ -2506,6 +2570,10 @@ void Saturn::DestroyStages(double simt)
 		if (hML) {
 			KillDist(hML, 50000.0);
 		}
+
+		if (hMSS) {
+			KillDist(hMSS, 50000.0);
+		}
 	}
 
 	//
@@ -2542,7 +2610,6 @@ void Saturn::SetStage(int s)
 
 	CheckSMSystemsState();
 	CheckRCSState();
-	CheckSPSState();
 }
 
 void Saturn::DoLaunch(double simt)
@@ -2629,14 +2696,9 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		// Get the handles for any odds and ends that are out there.
 		//
 
-		char VName[256];
-		char ApolloName[64];
-
-		GetApolloName(ApolloName);
-		strcpy (VName, ApolloName); strcat (VName, "-ML");
-		hML = oapiGetVesselByName(VName);
-		strcpy (VName, ApolloName); strcat (VName, "-CT");
-		hCrawler = oapiGetVesselByName(VName);
+		hML = oapiGetVesselByName("ML");
+		hMSS = oapiGetVesselByName("MSS");
+		hCrawler = oapiGetVesselByName("Crawler-Transporter");
 		hVAB = oapiGetVesselByName("VAB");
 
 		GenericFirstTimestep = false;
@@ -2844,11 +2906,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	}
 
 	timedSounds.Timestep(MissionTime, simdt, AutoSlow);
-
-
 }
-
-
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
 {
@@ -3025,14 +3083,20 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0;
 	}
 
+	/*
+
+	It looks like ActivateLEM is an old construction, no clue what the original 
+	purpose was, but it seems to make no sense that the user can change it
+
 	if (key == OAPI_KEY_4 && down == true) {
 		if (ActivateLEM) {
 			ActivateLEM = false;
 		}
 		return 1;
 	}
+	*/
 
-	if (key == OAPI_KEY_9 && down == true && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
+	if (key == OAPI_KEY_9 && down == true && InVC && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
 		if (viewpos == SATVIEW_LEFTDOCK){
 			viewpos = SATVIEW_RIGHTDOCK;
 		}else{
@@ -3042,25 +3106,25 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 1;
 	}
 
-	if (key == OAPI_KEY_8 && down == true) {
+	if (key == OAPI_KEY_8 && down == true && InVC ) {
 		viewpos = SATVIEW_RIGHTSEAT;
 		SetView(true);
 		return 1;
 	}
 
-	if (key == OAPI_KEY_7 && down == true) {
+	if (key == OAPI_KEY_7 && down == true && InVC ) {
 		viewpos = SATVIEW_CENTERSEAT;
 		SetView(true);
 		return 1;
 	}
 
-	if (key == OAPI_KEY_6 && down == true) {
+	if (key == OAPI_KEY_6 && down == true && InVC ) {
 		viewpos = SATVIEW_LEFTSEAT;
 		SetView(true);
 		return 1;
 	}
 
-	if (key == OAPI_KEY_5 && down == true) {
+	if (key == OAPI_KEY_5 && down == true && InVC ) {
 		viewpos = SATVIEW_GNPANEL;
 		SetView(true);
 		return 1;
@@ -3074,7 +3138,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// For now this is limited to the Saturn V.
 	//
 
-	if (key == OAPI_KEY_1 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= LAUNCH_STAGE_ONE) {
+	if (key == OAPI_KEY_1 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG1;
 		SetView();
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
@@ -3088,7 +3152,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 1;
 	}
 
-	if (key == OAPI_KEY_3 && down == true && InVC && iu.IsTLICapable() && stage < STAGE_ORBIT_SIVB && stage >= PRELAUNCH_STAGE) {
+	if (key == OAPI_KEY_3 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE) {
 		viewpos = SATVIEW_ENG3;
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		SetView();
@@ -4328,7 +4392,8 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 
 			if (bAbort)
 			{
-				SPSswitch.SetState(true);
+				// TODO SPS abort handling
+				// SPSswitch.SetState(true);
 				ABORT_IND = true;
 				SetThrusterGroupLevel(thg_main, 1.0);
 				bAbort = false;
@@ -4341,8 +4406,10 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 				// Apollo 11 seperation knocked out propellant valves for RCS B.
 				//
 
-				SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, false);
-				SetValveState(CSM_SECFUEL_INSOL_VALVE_B, false);
+				if (Realism) {
+					SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, false);
+					SetValveState(CSM_SECFUEL_INSOL_VALVE_B, false);
+				}
 			}
 
 			return;
@@ -4353,6 +4420,10 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 			bAbort = false;
 		}
 	}
+
+	/* sprintf(oapiDebugString(), "SIVB thrust %.1f isp %.2f propellant %.1f", 
+		GetThrusterLevel(th_main[0]) * GetThrusterMax(th_main[0]), GetThrusterIsp(th_main[0]), GetPropellantMass(ph_3rd));
+	*/
 }
 
 void Saturn::StartAbort()

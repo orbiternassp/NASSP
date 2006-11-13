@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2006/09/23 01:55:58  flydba
+  *	Final graphics update completed.
+  *	
   *	Revision 1.77  2006/08/09 00:48:14  flydba
   *	COAS bitmap added.
   *	
@@ -342,7 +345,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 104; // number of bitmap handles
+const int nsurf = 106; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -447,6 +450,8 @@ const int nsurf = 104; // number of bitmap handles
 #define SRF_ORDEAL_ROTARY							101
 #define SRF_LV_ENG_S1B								102
 #define SRF_LEM_COAS2								103
+#define SRF_SPSMININDICATOR							104
+#define SRF_SPS_INJ_VLV								105
 
 //
 // Earth radius and gravity constants.
@@ -482,8 +487,12 @@ inline double KelvinToFahrenheit(double kelvin) {
 // Engine information.
 //
 
-#define SPS_THRUST		100552.5
-#define SPS_ISP			3778.5
+#define SPS_THRUST					91200.0	// old 100552.5
+#define SPS_ISP						 3080.0	// old 3778.5
+#define SPS_DEFAULT_PROPELLANT		18413.0
+#define SPS_NORM_OXIDIZER_FLOW		(1.6 / (1.0 + 1.6))
+
+
 //#define APS_THRUST		15880
 //#define APS_ISP			2921
 #define APS_THRUST		15600

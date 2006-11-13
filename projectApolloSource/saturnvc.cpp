@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/08/08 20:23:50  jasonims
+  *	More Optics stuff and changed the Aperture settings for interior views.
+  *	
   *	Revision 1.16  2006/06/14 20:55:32  movieman523
   *	Made engineering cameras not go away when interstage seperates.
   *	
@@ -117,23 +120,27 @@ bool Saturn::clbkLoadVC (int id)
 {
 	TRACESETUP("Saturn::clbkLoadVC");
 
-	//SURFHANDLE tex# = oapiGetTextureHandle (vcmeshidentifier, meshgroup#);
-	//int i;
+	if (viewpos == SATVIEW_ENG1 || viewpos == SATVIEW_ENG2 || viewpos == SATVIEW_ENG3)
+		return true;
 
 	ReleaseSurfaces();
-	InitVC (id);
+	InitVC(id);
+
 	InVC = true;
 	InPanel = false;
-	SetView ();
+
+	SetView(true);
 	
-	oapiCameraSetAperture (RAD * 20);
+	// Test stuff
+	//SURFHANDLE tex# = oapiGetTextureHandle (vcmeshidentifier, meshgroup#);
+	//int i;
+	//oapiCameraSetAperture (RAD * 20);
 	//SetCameraDefaultDirection (_V(0,0,1));
 	//default camera direction: forward
 	//SetCameraShiftRange (_V(#,#,#), _V(#,#,#), _V(#,#,#));
 	// leaning forward/left/right
 
 	return VCRegistered;
-
 }
 
 bool Saturn::RegisterVC()
@@ -369,7 +376,11 @@ void Saturn::SetView(double offset, bool update_direction)
 	VECTOR3 v;
 	TRACESETUP("Saturn::SetView");
 	CurrentViewOffset = offset;
+	double fov = -1;
 
+	//
+	// Engineering cameras
+	//
 	if (viewpos >= SATVIEW_ENG1)
 	{
 		VECTOR3 e1 = _V(0, 0, 0), e2 = _V(0, 0, 0), e3 = _V(0, 0, 0);	
@@ -435,6 +446,11 @@ void Saturn::SetView(double offset, bool update_direction)
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 		SetCameraDefaultDirection(cd);
 	}
+
+	// 
+	// 2D panel 
+	// Direction/rotation range is in clbkLoadPanel
+	//
 	else if (InPanel) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
 			v = _V(-1.022, 1.046, offset - 3.0);
@@ -445,54 +461,66 @@ void Saturn::SetView(double offset, bool update_direction)
 		} else {
 			v = _V(0, 0, offset - 3.0);
 		}
+
+		if (PanelId == SATPANEL_SEXTANT) { // Sextant
+			fov =  5. * RAD;
+		
+		} else if (PanelId == SATPANEL_TELESCOPE) { // Telescope
+			fov = 30. * RAD;
+		}
 	} 
-	else if (!InVC) {		// generic panel
+
+	//
+	// Generic cockpit
+	// Direction/rotation range is in clbkLoadGenericCockpit
+	//
+	else if (!InVC) {		
 		v = _V(0, 0, offset - 3.0);
 	} 
+
+	//
+	// Virtual cockpit
+	//
 	else {
-		//
-		// VC, in cockpit
-		//
 		switch (viewpos) {
 			case SATVIEW_LEFTSEAT:
 				v = _V(-0.6, 0.9, offset);
-			break;
+				break;
 
 			case SATVIEW_CENTERSEAT:
 				v = _V(0, 0.9, offset);
-			break;
+				break;
 
 			case SATVIEW_RIGHTSEAT:
 				v = _V(0.6, 0.9, offset);
-			break;
+				break;
 
 			case SATVIEW_LEFTDOCK:
-			if (dockstate == 13) {
-				v = _V(0, 0, 2.5 + offset);
-			} else {
-				v = _V(-0.65, 1.05, 0.25 + offset);
-			}
-			break;
+				if (dockstate == 13) {
+					v = _V(0, 0, 2.5 + offset);
+				} else {
+					v = _V(-0.65, 1.05, 0.25 + offset);
+				}
+				break;
 			
 			case SATVIEW_RIGHTDOCK:
-			if (dockstate == 13) {
-				v = _V(0, 0, 2.5 + offset);
-			} else {
-				v = _V(0.65, 1.05, 0.25 + offset);
-			}
-			break;
+				if (dockstate == 13) {
+					v = _V(0, 0, 2.5 + offset);
+				} else {
+					v = _V(0.65, 1.05, 0.25 + offset);
+				}
+				break;
 
 			case SATVIEW_GNPANEL:
-				oapiCameraSetAperture (RAD * 35);
 				v = _V(0.0, -0.15, 0.5 + offset);
-			break;
+				break;
 		}
 
 		if (update_direction) {
 			SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 			if (viewpos == SATVIEW_GNPANEL) {
-                SetCameraDefaultDirection(_V(0.0,-1.0, 0.0));
-			}else{
+				SetCameraDefaultDirection(_V(0.0,-1.0, 0.0));
+			} else {
 				SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			}
 		}
@@ -506,8 +534,25 @@ void Saturn::SetView(double offset, bool update_direction)
 	VCCameraOffset.x = v.x - VCMeshOffset.x;
 	VCCameraOffset.y = v.y - VCMeshOffset.y;
 	VCCameraOffset.z = v.z - VCMeshOffset.z;
-	
-	if (InVC){
+
+	if (InVC) {
 		RegisterVC();
+	}
+
+	//
+	// FOV handling
+	//
+	if (fov == -1) {
+		if (FovFixed) {
+			oapiCameraSetAperture(FovSave);
+			FovFixed = false;
+			FovExternal = false;	
+		}
+	} else {
+		if (!FovFixed) {
+			FovSave = oapiCameraAperture();
+			FovFixed = true;
+		}
+		oapiCameraSetAperture(fov);
 	}
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/06/17 18:13:13  tschachim
+  *	Moved BMAGPowerRotationalSwitch.
+  *	
   *	Revision 1.17  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -312,9 +315,7 @@ bool SaturnSPSSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (SaturnToggleSwitch::CheckMouseClick(event, mx, my)) {
-		if (sat) {
-			sat->CheckSPSState();
-		}
+		// Nothing for now
 		return true;
 	}
 
@@ -325,9 +326,7 @@ void SaturnSPSSwitch::SetState(bool s)
 
 {
 	SaturnToggleSwitch::SetState(s);
-	if (sat) {
-		sat->CheckSPSState();
-	}
+	// Nothing for now
 }
 
 void SaturnH2PressureMeter::Init(int i, SURFHANDLE surf, SwitchRow &row, Saturn *s)
@@ -1148,17 +1147,29 @@ bool DirectO2RotationalSwitch::SwitchTo(int newValue)
 void DirectO2RotationalSwitch::CheckValve()
 
 {
-	if (GetState() == 3) {
+	if (GetState() == 6) {
 		Pipe->in->h_open = SP_VALVE_CLOSE;
 		Pipe->flowMax = 0;
 	
-	} else if (GetState() == 2) {
+	} else if (GetState() == 5) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 0.175 / LBH;
+
+	} else if (GetState() == 4) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 0.35 / LBH;
 
-	} else if (GetState() == 1) {
+	} else if (GetState() == 3) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 0.475 / LBH;
+
+	} else if (GetState() == 2) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 0.6 / LBH;
+
+	} else if (GetState() == 1) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 0.85 / LBH;
 
 	} else if (GetState() == 0) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
@@ -1414,4 +1425,174 @@ void BMAGPowerRotationalSwitch::LoadState(char *line)
 {
 	RotationalSwitch::LoadState(line);
 	CheckBMAGPowerState();
+}
+
+
+void SaturnSPSPercentMeter::Init(SURFHANDLE blackFontSurf, SURFHANDLE whiteFontSurf, SwitchRow &row, Saturn *s)
+
+{
+	MeterSwitch::Init(row);
+	BlackFontSurface = blackFontSurf;
+	WhiteFontSurface = whiteFontSurf;
+	Sat = s;
+}
+
+void SaturnSPSPercentMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	int percent = (int) (v * 1000.0);
+
+	// What should the panel display with full tanks? Looks like 99.9 is the maximum.
+	if (percent > 999) {
+		percent = 999;
+	}
+
+	int digit1 = percent / 100;
+	percent -= (digit1 * 100);
+
+	int digit2 = percent / 10;
+	int digit3 = percent - (digit2 * 10);
+
+	oapiBlt(drawSurface, BlackFontSurface, 0, 0, 10 * digit1, 0, 10, 12);
+	oapiBlt(drawSurface, BlackFontSurface, 13, 0, 10 * digit2, 0, 10, 12);
+	oapiBlt(drawSurface, WhiteFontSurface, 26, 0, 11 * digit3, 0, 11, 12);
+}
+
+
+double SaturnSPSOxidPercentMeter::QueryValue()
+
+{
+	return Sat->GetSPSPropellant()->GetOxidPercent(); 
+}
+
+
+double SaturnSPSFuelPercentMeter::QueryValue()
+
+{
+	return Sat->GetSPSPropellant()->GetFuelPercent(); 
+}
+
+
+double SaturnSPSOxidUnbalMeter::QueryValue()
+
+{
+	return Sat->GetSPSPropellant()->GetOxidUnbalanceLB();
+}
+
+void SaturnSPSOxidUnbalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	v = v / 450.0 * 90.0;
+	DrawNeedle(drawSurface, 30, 31, 28.0, (180.0 - v) * RAD);
+}
+
+
+void SaturnSPSPropellantPressMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, bool fuel)
+
+{
+	MeterSwitch::Init(row);
+	NeedleSurface = surf;
+	Sat = s;
+	Fuel = fuel;
+}
+
+double SaturnSPSPropellantPressMeter::QueryValue()
+
+{
+	// Fuel and oxidizer have the same pressure for now.
+	return Sat->GetSPSPropellant()->GetPropellantPressurePSI();
+}
+
+void SaturnSPSPropellantPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	if (Fuel) {
+		oapiBlt(drawSurface, NeedleSurface, 86, (109 - (int)(v / 250.0 * 103.0)), 0, 0, 10, 10, SURF_PREDEF_CK);	
+	} else {
+		oapiBlt(drawSurface, NeedleSurface, 139, (109 - (int)(v / 250.0 * 103.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	}
+}
+
+
+void SaturnSPSTempMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s)
+
+{
+	MeterSwitch::Init(row);
+	NeedleSurface = surf;
+	Sat = s;
+}
+
+double SaturnSPSTempMeter::QueryValue()
+
+{
+	return Sat->GetSPSPropellant()->GetPropellantLineTempF();
+}
+
+void SaturnSPSTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface, 0, (109 - (int)(v / 200.0 * 103.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+}
+
+
+void SaturnSPSHeliumNitrogenPressMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ThreePosSwitch *spspressindswitch)
+
+{
+	MeterSwitch::Init(row);
+	NeedleSurface = surf;
+	Sat = s;
+	SPSPressIndSwitch = spspressindswitch;
+}
+
+double SaturnSPSHeliumNitrogenPressMeter::QueryValue()
+
+{
+	if (SPSPressIndSwitch->IsUp())
+		return Sat->GetSPSPropellant()->GetHeliumPressurePSI();
+	else
+		return Sat->GetSPSPropellant()->GetNitrogenPressurePSI();
+			
+}
+
+void SaturnSPSHeliumNitrogenPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface, 53, (109 - (int)(v / 5000.0 * 103.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+}
+
+
+void SaturnLVSPSPcMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *lvspspcindicatorswitch, SURFHANDLE frameSurface)
+
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	LVSPSPcIndicatorSwitch = lvspspcindicatorswitch;
+	FrameSurface = frameSurface;
+}
+
+double SaturnLVSPSPcMeter::QueryValue()
+
+{
+	//
+	// Note: on a real Saturn, it shows a percentage of pressure difference measured by 
+	// the Q-ball of the LES. For now it shows AoA x 10
+	//
+
+	if (LVSPSPcIndicatorSwitch->IsDown()) {
+		return Sat->GetSPSEngine()->GetChamberPressurePSI();
+
+	} else {
+		if (Sat->LETAttached() && Sat->GetDynPressure() > 100.0) {
+			return fabs((10.0 / RAD) * Sat->GetAOA());
+		} else {
+			return 0;
+		}
+	}
+}
+
+void SaturnLVSPSPcMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	v = (155.0 - v) / 160.0 * 270.0;	
+	DrawNeedle(drawSurface, 48, 45, 20.0, (v - 45.0) * RAD);
+	oapiBlt (drawSurface, FrameSurface, 0, 0, 0, 0, 95, 91, SURF_PREDEF_CK);
 }

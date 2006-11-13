@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/10/05 16:09:02  tschachim
+  *	Fixed SCS attitude hold mode.
+  *	
   *	Revision 1.1  2006/06/17 18:18:00  tschachim
   *	Bugfixes SCS automatic modes,
   *	Changed quickstart separation key to J.
@@ -692,7 +695,14 @@ void GDC::LoadState(FILEHANDLE scn){
 // ASCP
 //
 
-ASCP::ASCP()
+#define ASCP_ROLLUP		1
+#define ASCP_ROLLDOWN	2
+#define ASCP_PITCHUP	3
+#define ASCP_PITCHDOWN	4
+#define ASCP_YAWUP		5
+#define ASCP_YAWDOWN	6
+
+ASCP::ASCP(Sound &clicksound) : ClickSound(clicksound)
 
 {
 	output.x = 0;
@@ -703,6 +713,10 @@ ASCP::ASCP()
 	rolldisplay = 0;
 	pitchdisplay = 0;
 	yawdisplay = 0;
+
+	mousedowncounter = 0;
+	mousedownposition = 0;
+	mousedownangle = -3;
 }
 
 void ASCP::Init(Saturn *vessel)
@@ -711,9 +725,84 @@ void ASCP::Init(Saturn *vessel)
 	sat = vessel;
 }
 
-void ASCP::TimeStep()
+void ASCP::TimeStep(double simdt)
 
 {
+	// Mouse hold handling
+				
+	if (mousedownposition) {
+		mousedownangle += simdt * 6.0;
+		if (mousedownangle > 0) {
+			double change = floor(mousedownangle * 10.0) / 10.0;
+			mousedownangle -= change;
+			if (change > 0) {
+				ClickSound.play();
+				if (mousedownposition == ASCP_ROLLUP) {
+					output.x += change;
+					// Wrap around
+					if (output.x > 359.95) { output.x -= 360.0; }
+					
+					rolldisplay += change * 2.0;
+					if (rolldisplay > 4) rolldisplay = 0;
+				
+				} else if (mousedownposition == ASCP_ROLLDOWN) {
+					output.x -= change;
+					// Wrap around
+					if (output.x < 0) { output.x += 360.0; }
+					if (output.x > 359.95) { output.x -= 360.0; }
+
+					rolldisplay -= change * 2.0;
+					if (rolldisplay < 0) rolldisplay = 4;
+				
+				}  else if (mousedownposition == ASCP_PITCHUP) {
+					output.y += change;
+
+					// Wrap around
+					if (output.y > 359.95) { output.y -= 360.0; }
+
+					pitchdisplay += change * 2.0;
+					if (pitchdisplay > 4) pitchdisplay = 0;
+
+				}  else if (mousedownposition == ASCP_PITCHDOWN) {
+					output.y -= change;
+
+					// Wrap around
+					if (output.y < 0) { output.y += 360; }
+					if (output.y > 359.95) { output.y -= 360.0; }
+
+					pitchdisplay -= change * 2.0;
+					if (pitchdisplay < 0) pitchdisplay = 4;
+
+				}  else if (mousedownposition == ASCP_YAWUP) {
+					output.z += change;
+
+					if(output.z > 90 && output.z < 270){ // Can't get here
+						output.z = 90;
+					}	
+					// Wrap around zero
+					if (output.z > 359.95) { output.z -= 360.0; }
+
+					yawdisplay += change * 2.0;
+					if (yawdisplay > 4) yawdisplay = 0;
+
+				}  else if (mousedownposition == ASCP_YAWDOWN) {
+					output.z -= change;
+
+					if(output.z < 270 && output.z > 90){ // Can't get here
+						output.z = 270;
+					}	
+					// Wrap around zero
+					if (output.z < 0) { output.z += 360; }
+					if (output.z > 359.95) { output.z -= 360.0; }
+
+					yawdisplay -= change * 2.0;
+					if (yawdisplay < 0) yawdisplay = 4;
+				}
+			}
+		}
+	}
+	
+	// Debug messages
 	if(msgcounter > 0){
 		msgcounter--;
 		if(msgcounter == 0) {
@@ -754,17 +843,15 @@ bool ASCP::RollClick(int Event, int mx, int my)
 	if (my > 18) {
 		if (RollDnClick(Event)) {
 			rolldisplay--;
-			if (rolldisplay < 0) {
-				rolldisplay = 4;
-			}
+			if (rolldisplay < 0) rolldisplay = 4;
+			ClickSound.play();
 			return true;
 		}
 	} else {
 		if (RollUpClick(Event)) {
 			rolldisplay++;
-			if (rolldisplay > 4) {
-				rolldisplay = 0;
-			}
+			if (rolldisplay > 4) rolldisplay = 0;
+			ClickSound.play();
 			return true;
 		}
 	}
@@ -777,30 +864,31 @@ bool ASCP::RollUpClick(int Event)
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
+			mousedownposition = ASCP_ROLLUP;
 			mousedowncounter++;
-			if(mousedowncounter==1){
+			if (mousedowncounter == 1) {
 				changed = true;
-				output.x++;				
-			}else{
-				if(mousedowncounter == 10){
-					output.x++;
-					changed = true;
-					mousedowncounter = 5;
-				}
-			}
+				output.x++;
+			} 
 			break;
+
 		case PANEL_MOUSE_RBPRESSED:
 			mousedowncounter++;
-			if(mousedowncounter == 1){
+			if (mousedowncounter == 1){
 				output.x += 0.1;
 				changed = true;
-			}
+			} 
 			break;
+
 		case PANEL_MOUSE_LBUP:
 		case PANEL_MOUSE_RBUP:
-			mousedowncounter = 0; return false; break;
+			mousedowncounter = 0;
+			mousedownposition = 0;
+			mousedownangle = -3;
+			return false; 
+			break;
 	}
-	// Wrap around
+	// Wrap around 
 	if (output.x > 359.95) { output.x -= 360.0; }
 	RollDisplayClicked();
 	return changed;
@@ -812,29 +900,28 @@ bool ASCP::RollDnClick(int Event)
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
+			mousedownposition = ASCP_ROLLDOWN;
 			mousedowncounter++;
-			if(mousedowncounter==1){
+			if (mousedowncounter == 1) {
 				changed = true;
-				output.x--;				
-			}else{
-				if(mousedowncounter == 10){
-					output.x--;
-					changed = true;
-					mousedowncounter = 5;
-				}
-			}
+				output.x--;
+			} 
 			break;
+
 		case PANEL_MOUSE_RBPRESSED:
 			mousedowncounter++;
 			if(mousedowncounter == 1){
 				output.x -= 0.1;
 				changed = true;
-				mousedowncounter = 2;
 			}
 			break;
 		case PANEL_MOUSE_LBUP:
 		case PANEL_MOUSE_RBUP:
-			mousedowncounter = 0; return false; break;
+			mousedowncounter = 0;
+			mousedownposition = 0;
+			mousedownangle = -3;
+			return false; 
+			break;
 	}
 	// Wrap around
 	if (output.x < 0) { output.x += 360.0; }
@@ -849,17 +936,15 @@ bool ASCP::PitchClick(int Event, int mx, int my)
 	if (my > 18) {
 		if (PitchDnClick(Event)) {
 			pitchdisplay--;
-			if (pitchdisplay < 0) {
-				pitchdisplay = 4;
-			}
+			if (pitchdisplay < 0) pitchdisplay = 4;
+			ClickSound.play();
 			return true;
 		}
 	} else {
 		if (PitchUpClick(Event)) {
 			pitchdisplay++;
-			if (pitchdisplay > 4) {
-				pitchdisplay = 0;
-			}
+			if (pitchdisplay > 4) pitchdisplay = 0;
+			ClickSound.play();
 			return true;
 		}
 	}
@@ -872,29 +957,28 @@ bool ASCP::PitchUpClick(int Event)
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
+			mousedownposition = ASCP_PITCHUP;
 			mousedowncounter++;
-			if(mousedowncounter==1){
+			if (mousedowncounter == 1) {
 				changed = true;
-				output.y++;				
-			}else{
-				if(mousedowncounter == 10){
-					output.y++;
-					changed = true;
-					mousedowncounter = 5;
-				}
-			}
+				output.y++;
+			} 
 			break;
+
 		case PANEL_MOUSE_RBPRESSED:
 			mousedowncounter++;
 			if(mousedowncounter == 1){
 				output.y += 0.1;
 				changed = true;
-				mousedowncounter = 2;
 			}
 			break;
 		case PANEL_MOUSE_LBUP:
 		case PANEL_MOUSE_RBUP:
-			mousedowncounter = 0; return false; break;
+			mousedowncounter = 0;
+			mousedownposition = 0;
+			mousedownangle = -3;
+			return false; 
+			break;
 	}
 	// Wrap around
 	if (output.y > 359.95) { output.y -= 360.0; }
@@ -908,29 +992,27 @@ bool ASCP::PitchDnClick(int Event)
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
+			mousedownposition = ASCP_PITCHDOWN;
 			mousedowncounter++;
-			if(mousedowncounter==1){
+			if (mousedowncounter == 1) {
 				changed = true;
-				output.y--;				
-			}else{
-				if(mousedowncounter == 10){
-					output.y--;
-					changed = true;
-					mousedowncounter = 5;
-				}
-			}
+				output.y--;
+			} 
 			break;
 		case PANEL_MOUSE_RBPRESSED:
 			mousedowncounter++;
 			if(mousedowncounter == 1){
 				output.y -= 0.1;
 				changed = true;
-				mousedowncounter = 2;
 			}
 			break;
 		case PANEL_MOUSE_LBUP:
 		case PANEL_MOUSE_RBUP:
-			mousedowncounter = 0; return false; break;
+			mousedowncounter = 0;
+			mousedownposition = 0;
+			mousedownangle = -3;
+			return false; 
+			break;
 	}
 	// Wrap around
 	if (output.y < 0) { output.y += 360; }
@@ -945,17 +1027,15 @@ bool ASCP::YawClick(int Event, int mx, int my)
 	if (my > 18) {
 		if (YawDnClick(Event)) {
 			yawdisplay--;
-			if (yawdisplay < 0) {
-				yawdisplay = 4;
-			}
+			if (yawdisplay < 0) yawdisplay = 4;
+			ClickSound.play();
 			return true;
 		}
 	} else {
 		if (YawUpClick(Event)) {
 			yawdisplay++;
-			if (yawdisplay > 4) {
-				yawdisplay = 0;
-			}
+			if (yawdisplay > 4) yawdisplay = 0;
+			ClickSound.play();
 			return true;
 		}
 	}
@@ -969,29 +1049,27 @@ bool ASCP::YawUpClick(int Event)
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
+			mousedownposition = ASCP_YAWUP;
 			mousedowncounter++;
-			if(mousedowncounter==1){
+			if (mousedowncounter == 1) {
 				changed = true;
-				output.z++;				
-			}else{
-				if(mousedowncounter == 10){
-					output.z++;
-					changed = true;
-					mousedowncounter = 5;
-				}
-			}
+				output.z++;
+			} 
 			break;
 		case PANEL_MOUSE_RBPRESSED:
 			mousedowncounter++;
 			if(mousedowncounter == 1){
 				output.z += 0.1;
 				changed = true;
-				mousedowncounter = 2;
 			}
 			break;
 		case PANEL_MOUSE_LBUP:
 		case PANEL_MOUSE_RBUP:
-			mousedowncounter = 0; return false; break;
+			mousedowncounter = 0;
+			mousedownposition = 0;
+			mousedownangle = -3;
+			return false; 
+			break;
 	}
 	if(output.z > 90 && output.z < 270){ // Can't get here
 		output.z = 90;
@@ -1009,29 +1087,27 @@ bool ASCP::YawDnClick(int Event)
 	bool changed = false;
 	switch(Event){
 		case PANEL_MOUSE_LBPRESSED:
+			mousedownposition = ASCP_YAWDOWN;
 			mousedowncounter++;
-			if(mousedowncounter==1){
+			if (mousedowncounter == 1) {
 				changed = true;
-				output.z--;				
-			}else{
-				if(mousedowncounter == 10){
-					output.z--;
-					changed = true;
-					mousedowncounter = 5;
-				}
-			}
+				output.z--;
+			} 
 			break;
 		case PANEL_MOUSE_RBPRESSED:
 			mousedowncounter++;
 			if(mousedowncounter == 1){
 				output.z -= 0.1;
 				changed = true;
-				mousedowncounter = 2;
 			}
 			break;
 		case PANEL_MOUSE_LBUP:
 		case PANEL_MOUSE_RBUP:
-			mousedowncounter = 0; return false; break;
+			mousedowncounter = 0;
+			mousedownposition = 0;
+			mousedownangle = -3;
+			return false; 
+			break;
 	}
 	if(output.z < 270 && output.z > 90){ // Can't get here
 		output.z = 270;
@@ -1046,19 +1122,19 @@ bool ASCP::YawDnClick(int Event)
 void ASCP::PaintRoll(SURFHANDLE surf, SURFHANDLE wheel)
 
 {
-	oapiBlt(surf, wheel, 0, 0, rolldisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+	oapiBlt(surf, wheel, 0, 0, (int) rolldisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
 }
 
 void ASCP::PaintPitch(SURFHANDLE surf, SURFHANDLE wheel)
 
 {
-	oapiBlt(surf, wheel, 0, 0, pitchdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+	oapiBlt(surf, wheel, 0, 0, (int) pitchdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
 }
 
 void ASCP::PaintYaw(SURFHANDLE surf, SURFHANDLE wheel)
 
 {
-	oapiBlt(surf, wheel, 0, 0, yawdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
+	oapiBlt(surf, wheel, 0, 0, (int) yawdisplay * 17, 0, 17, 36, SURF_PREDEF_CK);
 }
 
 bool ASCP::PaintRollDisplay(SURFHANDLE surf, SURFHANDLE digits){
@@ -1408,6 +1484,7 @@ RJEC::RJEC() {
 	DirectPitchActive = false;
 	DirectYawActive = false;
 	DirectRollActive = false;
+	AGCActiveTimer = 0;
 
 	int x = 0;
 	while (x < 20) {
@@ -1430,7 +1507,7 @@ void RJEC::SystemTimestep(double simdt) {
 	sat->SIGCondDriverBiasPower2Switch.DrawPower(0.2); 	
 }
 
-void RJEC::TimeStep(){
+void RJEC::TimeStep(double simdt){
 	/* Thruster List:
 	CM#		SM#		INDEX#		SWITCH GROUP		ROT AXIS
 
@@ -1452,6 +1529,13 @@ void RJEC::TimeStep(){
 	xx		C2		16			ROLL A/C			-ROLL
 
 	*/
+
+	// TODO Dirty Hack for the AGC++ attitude control
+	// see CSMcomputer::SetAttitudeRotLevel(VECTOR3 level)
+	if (AGCActiveTimer > 0) {
+		AGCActiveTimer = max(0, AGCActiveTimer - simdt);
+		return;
+	}
 
 	// Ensure AC power
 	if (sat->SIGCondDriverBiasPower1Switch.Voltage() < SP_MIN_ACVOLTAGE || 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.81  2006/07/28 12:08:48  tschachim
   *	Bugfix saving scenario.
   *	
@@ -2175,13 +2178,6 @@ void ApolloGuidance :: ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast)
 void ApolloGuidance::BurnMainEngine(double thrust)
 
 {
-	if (MainThrusterIsHover) {
-		OurVessel->SetEngineLevel(ENGINE_HOVER, thrust);
-	}
-	else {
-		OurVessel->SetEngineLevel(ENGINE_MAIN, thrust);
-	}
-
 	if (thrust > 0.0)
 		BurnFlag = true;
 	else
@@ -2216,11 +2212,7 @@ void ApolloGuidance::Prog16(double simt)
 	}
 	if(ProgFlag01) {
 		if(simt > BurnEndTime) {
-			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.0);
-			} else {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
-			}
+			BurnMainEngine(0.0);
 			OurVessel->SetAttitudeRotLevel(zero);
 			oapiSetTimeAcceleration(DesiredDeltaV);
 //			fclose(outstr);
@@ -2261,7 +2253,7 @@ void ApolloGuidance::Prog16(double simt)
 				vc=sqrt(mu/(Mag(pos)));
 				dv=vt-vc;
 				if(ttp > 800.0) {
-					if(per < 100000.0) {
+					if(per < 50000.0) {
 						dv=0.0;
 						dvn=0.0;
 					}
@@ -2309,16 +2301,10 @@ void ApolloGuidance::Prog16(double simt)
 			if(burn/2.0 > ttp) {
 				DesiredDeltaV=oapiGetTimeAcceleration();
 				oapiSetTimeAcceleration(1.0);
-				if (MainThrusterIsHover) {
-					OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
-				} else {
-					OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
-				}
+				BurnMainEngine(1.0);
 				BurnStartTime=simt+burn;
 				ProgFlag01=true;
 			}
-
-
 		}
 	}
 }
@@ -2358,11 +2344,7 @@ void ApolloGuidance::Prog17(double simt)
 //		sprintf(oapiDebugString(), "Time=%.1f dV=%.3f pass=%.1f", 
 //			BurnStartTime-simt, DesiredDeltaV, DeltaPitchRate);
 		if(simt >= BurnEndTime) {
-			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.0);
-			} else {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
-			}
+			BurnMainEngine(0.0);
 			OurVessel->SetAttitudeRotLevel(zero);
 			oapiSetTimeAcceleration(DesiredDeltaV);
 //			fclose(outstr);
@@ -2389,9 +2371,9 @@ void ApolloGuidance::Prog17(double simt)
 			dt=BurnEndTime-BurnStartTime;
 			BurnEndTime=simt+dt;
 			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.1);
+				BurnMainEngine(0.1);
 			} else {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
+				BurnMainEngine(1.0);
 			}
 		}
 		return;
@@ -2691,11 +2673,7 @@ void ApolloGuidance::Prog18(double simt)
 	if(ProgState == 3) {
 //		sprintf(oapiDebugString(), "Time-to-Burn=%.1f", BurnStartTime-simt);
 		if(simt >= BurnEndTime) {
-			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.0);
-			} else {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
-			}
+			BurnMainEngine(0.0);
 			OurVessel->SetAttitudeRotLevel(zero);
 			oapiSetTimeAcceleration(DesiredDeltaV);
 			AwaitProgram();
@@ -2720,11 +2698,7 @@ void ApolloGuidance::Prog18(double simt)
 			ProgFlag01=true;
 			dt=BurnEndTime-BurnStartTime;
 			BurnEndTime=simt+dt;
-			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
-			} else {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
-			}
+			BurnMainEngine(1.0);
 		}
 	}
 }
@@ -3156,11 +3130,7 @@ void ApolloGuidance::Prog19(double simt)
 	if(ProgState == 4) {
 //		sprintf(oapiDebugString(), "burn in %.1f secs f2=%d", simt-BurnStartTime, ProgFlag02);
 		if ((simt+0.05) > BurnEndTime) {
-			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 0.0);
-			} else {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 0.0);
-			}
+			BurnMainEngine(0.0);
 			ProgFlag02=false;
 			OurVessel->SetAttitudeRotLevel(zero);
 			oapiSetTimeAcceleration(DesiredDeltaV);
@@ -3181,11 +3151,7 @@ void ApolloGuidance::Prog19(double simt)
 			dt=BurnEndTime-BurnStartTime;
 			BurnEndTime=simt+dt;
 //			sprintf(oapiDebugString(), "dt=%.1f Engine on", dt);
-			if (MainThrusterIsHover) {
-				OurVessel->SetEngineLevel(ENGINE_HOVER, 1.0);
-			} else {
-				OurVessel->SetEngineLevel(ENGINE_MAIN, 1.0);
-			}
+			BurnMainEngine(1.0);
 		}
 	}
 }

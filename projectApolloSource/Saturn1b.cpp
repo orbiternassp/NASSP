@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2006/08/27 21:57:10  tschachim
+  *	Bugfix RCS handing in CSM timestep.
+  *	
   *	Revision 1.59  2006/08/01 18:46:50  tschachim
   *	Added checklist actions.
   *	
@@ -742,7 +745,8 @@ void Saturn1b::StageStartSIVB(double simt)
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort)
 		{
-			SPSswitch.SetState(TOGGLESWITCH_UP);
+			// TODO SPS abort handling
+			// SPSswitch.SetState(TOGGLESWITCH_UP);
 			ABORT_IND = true;
 			StartAbort();
 			SetThrusterGroupLevel(thg_main, 1.0);
@@ -826,7 +830,8 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		SetStage(CSM_LEM_STAGE);
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 		if (bAbort){
-			SPSswitch.SetState(TOGGLESWITCH_UP);
+			// TODO SPS abort handling
+			// SPSswitch.SetState(TOGGLESWITCH_UP);
 			ABORT_IND = true;
 			StartAbort();
 			SetThrusterGroupLevel(thg_main, 1.0);
@@ -1192,10 +1197,8 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	}
 
 	//
-	// Enable or disable SPS and RCS.
+	// Enable or disable RCS.
 	//
-
-	CheckSPSState();
 	CheckRCSState();
 }
 
@@ -1298,11 +1301,23 @@ void Saturn1b::clbkSetClassCaps (FILEHANDLE cfg)
 	// Scan the config file for specific information about this class.
 	//
 
-	char *line;
+	char *line, buffer[1000];
 
 	while (oapiReadScenario_nextline (cfg, line)) {
 		ProcessConfigFileLine(cfg, line);
 	}
+
+	//
+	// Scan the launchpad config file.
+	//
+
+	sprintf(buffer, "%s.launchpad.cfg", GetClassName());
+	FILEHANDLE hFile = oapiOpenFile(buffer, FILE_IN, CONFIG);
+
+	while (oapiReadScenario_nextline(hFile, line)) {
+		ProcessConfigFileLine(hFile, line);
+	}
+	oapiCloseFile(hFile, FILE_IN);
 
 	// Disable CollisionSDK for the moment
 	VSRegVessel(GetHandle());

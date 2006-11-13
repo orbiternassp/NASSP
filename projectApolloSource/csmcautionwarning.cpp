@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2006/10/26 18:48:50  movieman523
+  *	Fixed up CM RCS 1 and 2 warning lights to make the 'C&WS Operational Check' work.
+  *	
   *	Revision 1.27  2006/09/04 11:37:53  tschachim
   *	Fixed CMC C/W light in case of test alarm.
   *	
@@ -136,6 +139,7 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 	NextO2FlowCheckTime = MINUS_INFINITY;
 	LastO2FlowCheckHigh = false;
 	O2FlowCheckCount = 0;
+	SPSPressCheckCount = 0;
 	for (int i = 0; i < 4; i++)
 		FuelCellCheckCount[i] = 0;
 
@@ -312,7 +316,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	else {
 		SetLight(CSM_CWS_CMC_LIGHT, false);
 	}
-	
+
 	//
 	// Do some checks not every timestep
 	//
@@ -596,6 +600,24 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		{
 			SetLight(CSM_CWS_CM_RCS_1, false);
 			SetLight(CSM_CWS_CM_RCS_2, false);
+		}
+
+		//
+		// SPS PRESS
+		// Fuel and oxidizer have the same pressure for now.
+		// See AOH C+W
+		//
+
+		double spsPress = sat->GetSPSPropellant()->GetPropellantPressurePSI();
+		if (spsPress < 157.0 || spsPress > 200.0) {
+			if (SPSPressCheckCount > 10) {			
+				SetLight(CSM_CWS_SPS_PRESS, true);
+			} else {
+				SPSPressCheckCount++;
+			}
+		} else {
+			SetLight(CSM_CWS_SPS_PRESS, false);
+			SPSPressCheckCount = 0;
 		}
 
 		NextUpdateTime = simt + (0.1 * oapiGetTimeAcceleration());

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/09/23 22:34:40  jasonims
+  *	New J-2 Engine textures...
+  *	
   *	Revision 1.49  2006/08/27 21:52:42  tschachim
   *	Added dummy docking port so the auto burn feature of IMFD 4.2 is working.
   *	
@@ -772,7 +775,7 @@ void Saturn1b::SetASTPStage ()
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG1O};
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (_V( 0,0,-6.5), _V( 0,0,1),100552.5 , ph_sps, 3778.5);
+	th_main[0] = CreateThruster (_V(0,0,-5), _V(0,0,1), SPS_THRUST, ph_sps, SPS_ISP);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
 	AddExhaust (th_main[0], 20.0, 2.25, SMMETex);

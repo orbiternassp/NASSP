@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.90  2006/08/11 19:34:47  movieman523
+  *	Added code to take the docking probe with the LES on a post-abort jettison.
+  *	
   *	Revision 1.89  2006/07/28 02:06:57  movieman523
   *	Now need to hard dock to get the connectors connected.
   *	
@@ -453,7 +456,7 @@ void SaturnV::initSaturnV()
 	SII_RetroNum = 4;
 
 	SM_EmptyMass = 6100;
-	SM_FuelMass = 20500;
+	SM_FuelMass = SPS_DEFAULT_PROPELLANT;
 
 	CM_EmptyMass = 5700;
 	CM_FuelMass = 75;
@@ -552,11 +555,11 @@ void SaturnV::SetSIICMixtureRatio (double ratio)
 	// Hardcoded ISP and thrust according to the Apollo 11 Saturn V flight evaluation report.
 	// http://klabs.org/history/history_docs/jsc_t/apollo_11_saturn_v.pdf
 
-	if (ratio == 5.5) {
+	if (ratio > 5.4 && ratio < 5.6) {	// 5.5
 		thrust = 1028303.;
 		isp = 4165.;
 	
-	} else if (ratio == 4.3) {
+	} else if (ratio > 4.2 && ratio < 4.4) {	// 4.3
 		thrust = 770692.;
 		isp = 4180.;
 
@@ -597,15 +600,18 @@ void SaturnV::SetSIVbCMixtureRatio (double ratio)
 	// Hardcoded ISP and thrust according to the Apollo 11 Saturn V flight evaluation report.
 	// http://klabs.org/history/history_docs/jsc_t/apollo_11_saturn_v.pdf
 
-	if (ratio == 4.9) {
+	if (ratio > 4.8 && ratio < 5.0) {			// 4.9
 		thrust = 901223.;
 		isp = 4202.;
 	
+	} else if (ratio > 4.4 && ratio < 4.6) {	// 4.5
+		thrust = 799000.;
+		isp = 4245.;
+
 	} else {
 		isp = GetJ2ISP(ratio);
 		thrust = THRUST_THIRD_VAC * ThrustAdjust;
 	}
-	isp = GetJ2ISP(ratio);
 
 	//
 	// For simplicity assume no ISP change at sea-level: SIVb stage should always
@@ -754,11 +760,23 @@ void SaturnV::clbkSetClassCaps (FILEHANDLE cfg)
 	// Scan the config file for specific information about this class.
 	//
 
-	char *line;
+	char *line, buffer[1000];
 
 	while (oapiReadScenario_nextline (cfg, line)) {
 		ProcessConfigFileLine(cfg, line);
 	}
+
+	//
+	// Scan the launchpad config file.
+	//
+
+	sprintf(buffer, "%s.launchpad.cfg", GetClassName());
+	FILEHANDLE hFile = oapiOpenFile(buffer, FILE_IN, CONFIG);
+
+	while (oapiReadScenario_nextline(hFile, line)) {
+		ProcessConfigFileLine(hFile, line);
+	}
+	oapiCloseFile(hFile, FILE_IN);
 
 	// Disable CollisionSDK for the moment
 	VSRegVessel(GetHandle());
@@ -1465,8 +1483,7 @@ void SaturnV::StageSix(double simt)
 		case 3:
 			if (MissionTime >= NextMissionEventTime) {
 				SlowIfDesired();
-				ActivateSPS();
-				SetThrusterGroupLevel(thg_main, 1.0);
+				SPSEngine.EnforceBurn(true);
 				NextMissionEventTime = MissionTime + 0.25;
 				StageState++;
 			}
@@ -1480,7 +1497,7 @@ void SaturnV::StageSix(double simt)
 				GetApDist(ap);
 
 				ActivateNavmode(NAVMODE_PROGRADE);
-				SetThrusterGroupLevel(thg_main, 1.0);
+				SPSEngine.EnforceBurn(true);
 
 				NextMissionEventTime = MissionTime + 0.25;
 
@@ -1490,10 +1507,9 @@ void SaturnV::StageSix(double simt)
 
 				if ((ap >= (prad + (CSMApogee * 1000.0))) || (actualFUEL <= 0.1)) {
 					StageState++;
-					SetThrusterGroupLevel(thg_main, 0.0);
 					DeactivateNavmode(NAVMODE_PROGRADE);
 					DeactivateCSMRCS();
-					DeactivateSPS();
+					SPSEngine.EnforceBurn(false);
 					NextMissionEventTime = MissionTime + CalculateApogeeTime() - 800;
 					StageState++;
 				}
@@ -1515,7 +1531,6 @@ void SaturnV::StageSix(double simt)
 			if (MissionTime >= NextMissionEventTime) {
 				SlowIfDesired();
 				ActivateCSMRCS();
-				ActivateSPS();
 				ActivateNavmode(NAVMODE_RETROGRADE);
 				NextMissionEventTime = MissionTime + CalculateApogeeTime() - 15;
 				StageState++;
@@ -1531,16 +1546,15 @@ void SaturnV::StageSix(double simt)
 				double pe;
 				GetPeDist(pe);
 
-				SetThrusterGroupLevel(thg_main, 1.0);
+				SPSEngine.EnforceBurn(true);
 				ActivateNavmode(NAVMODE_RETROGRADE);
 
 				NextMissionEventTime = MissionTime + 0.25;
 
 				if ((pe <= (prad + (CSMPerigee * 1000.0))) || (actualFUEL <= 0.1)) {
 					StageState++;
-					SetThrusterGroupLevel(thg_main, 0.0);
 					ActivateNavmode(NAVMODE_PROGRADE);
-					DeactivateSPS();
+					SPSEngine.EnforceBurn(false);
 					CSMBurn = false;
 					NextMissionEventTime = MissionTime + 500.0;
 					StageState++;
@@ -1596,9 +1610,8 @@ void SaturnV::StageSix(double simt)
 		case 12:
 			if (MissionTime >= NextMissionEventTime) {
 //				SlowIfDesired();
+//				SPSEngine.EnforceBurn(true);
 				ActivateNavmode(NAVMODE_PROGRADE);
-				ActivateSPS();
-//				SetThrusterGroupLevel(thg_main, 1.0);
 				NextMissionEventTime = CSMAccelEnd;
 				StageState++;
 			}
@@ -1607,8 +1620,7 @@ void SaturnV::StageSix(double simt)
 		case 13:
 			if (MissionTime >= NextMissionEventTime) {
 				ActivateNavmode(NAVMODE_PROGRADE);
-				SetThrusterGroupLevel(thg_main, 0.0);
-				DeactivateSPS();
+				SPSEngine.EnforceBurn(false);
 				CSMAccelSet = false;
 				NextMissionEventTime = MissionTime + 200.0;
 				StageState++;
@@ -1856,6 +1868,16 @@ void SaturnV::Timestep(double simt, double simdt)
 		break;
 
 	case STAGE_ORBIT_SIVB:
+
+		//
+		// J-2 mixture ratio
+		//
+
+		if (GetPropellantMass(ph_3rd) / GetPropellantMaxMass(ph_3rd) > 0.51)
+			SetSIVbCMixtureRatio(4.5);
+		else
+			SetSIVbCMixtureRatio(4.9);
+			
 		StageOrbitSIVB(simt, simdt);
 		break;
 	
@@ -2094,10 +2116,8 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	}
 
 	//
-	// Enable or disable SPS and RCS.
+	// Enable or disable RCS.
 	//
-
-	CheckSPSState();
 	CheckRCSState();
 }
 
@@ -2359,8 +2379,9 @@ void SaturnV::StageLaunchSIVB(double simt)
 		bManualSeparate = false;
 		SeparateStage (CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
-		if (bAbort){
-			SPSswitch.SetState(TOGGLESWITCH_UP);
+		if (bAbort) {
+			// TODO Abort mode
+			// SPSswitch.SetState(TOGGLESWITCH_UP);
 			StartAbort();
 			ABORT_IND = true;
 			SetThrusterGroupLevel(thg_main, 1.0);
@@ -2368,6 +2389,10 @@ void SaturnV::StageLaunchSIVB(double simt)
 			autopilot=false;
 		}
 	}
+
+	/* sprintf(oapiDebugString(), "SIVB thrust %.1f isp %.2f propellant %.1f", 
+		GetThrusterLevel(th_main[0]) * GetThrusterMax(th_main[0]), GetThrusterIsp(th_main[0]), GetPropellantMass(ph_3rd));
+	*/
 }
 
 int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {

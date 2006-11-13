@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2006/10/23 13:41:48  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.72  2006/09/23 22:34:40  jasonims
   *	New J-2 Engine textures...
   *	
@@ -1426,7 +1429,6 @@ void SaturnV::SeparateStage (int new_stage)
 		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
 		S4Config.SettingsType.SIVB_SETTINGS_ENGINES = 1;
 		S4Config.Payload = SIVBPayload;
-		S4Config.PanelsHinged = false;
 		S4Config.VehicleNo = VehicleNo;
 		S4Config.EmptyMass = S4B_EmptyMass;
 		S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
@@ -1437,6 +1439,11 @@ void SaturnV::SeparateStage (int new_stage)
 		S4Config.LowRes = LowRes;
 		S4Config.ISP_VAC = ISP_THIRD_VAC;
 		S4Config.THRUST_VAC = THRUST_THIRD_VAC;
+		// Apollo 4 SLA panels weren't detached (see Mission Report, NTRS 19750067802, page 535), Apollo 6?
+		if (ApolloNo == 4)
+			S4Config.PanelsHinged = true;
+		else
+			S4Config.PanelsHinged = false;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);
