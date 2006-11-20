@@ -22,11 +22,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/11/13 14:47:34  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   **************************************************************************/
 
 #if !defined(_PA_SPS_H)
 #define _PA_SPS_H
-
 
 class SPSPropellantSource : public PropellantSource {
 
@@ -43,7 +47,7 @@ public:
 	double GetPropellantPressurePSI() { return propellantPressurePSI; }
 	double GetHeliumPressurePSI() { return heliumPressurePSI; }
 	double GetNitrogenPressurePSI() { return nitrogenPressurePSI; }
-	double GetPropellantLineTempF() { return KelvinToFahrenheit(propellantLine->GetTemp()); };
+	double GetPropellantLineTempF();
 	bool IsHeliumValveAOpen() { return heliumValveAOpen; }
 	bool IsHeliumValveBOpen() { return heliumValveBOpen; }
 	bool IsOxidFlowValveMin();
