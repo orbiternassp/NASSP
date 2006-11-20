@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/11/13 14:47:34  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   **************************************************************************/
 
 #include "Orbitersdk.h"
@@ -343,6 +348,15 @@ bool SPSPropellantSource::IsGaugingPowered() {
 	if (ACPower->Voltage() < SP_MIN_ACVOLTAGE) return false;
 
 	return true;
+}
+
+double SPSPropellantSource::GetPropellantLineTempF() {
+
+	if (!our_vessel) return 0;
+	if (our_vessel->GetStage() > CSM_LEM_STAGE) return 0;
+
+	
+	return KelvinToFahrenheit(propellantLine->GetTemp());
 }
 
 void SPSPropellantSource::SaveState(FILEHANDLE scn) {

@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.28  2006/10/26 18:48:50  movieman523
   *	Fixed up CM RCS 1 and 2 warning lights to make the 'C&WS Operational Check' work.
   *	
@@ -365,12 +370,31 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			}
 
 			SetLight(CSM_CWS_CRYO_PRESS_LIGHT, LightCryo);
+
+			//
+			// SPS PRESS
+			// Fuel and oxidizer have the same pressure for now.
+			// See AOH C+W
+			//
+
+			double spsPress = sat->GetSPSPropellant()->GetPropellantPressurePSI();
+			if (spsPress < 157.0 || spsPress > 200.0) {
+				if (SPSPressCheckCount > 10) {			
+					SetLight(CSM_CWS_SPS_PRESS, true);
+				} else {
+					SPSPressCheckCount++;
+				}
+			} else {
+				SetLight(CSM_CWS_SPS_PRESS, false);
+				SPSPressCheckCount = 0;
+			}
 		}
 		else {
 			SetLight(CSM_CWS_FC1_LIGHT, false);
 			SetLight(CSM_CWS_FC2_LIGHT, false);
 			SetLight(CSM_CWS_FC3_LIGHT, false);
 			SetLight(CSM_CWS_CRYO_PRESS_LIGHT, false);
+			SetLight(CSM_CWS_SPS_PRESS, false);
 		}
 
 		AtmosStatus atm;
@@ -422,7 +446,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		}
 		
 
-		SetLight(CSM_CWS_FC_BUS_DISCONNECT, ms.Fc_Disconnected);
+		SetLight(CSM_CWS_FC_BUS_DISCONNECT, ms.Fc_Disconnected && (Source == CWS_SOURCE_CSM));
 
 		//
 		// AC bus: lights come on to indicate under or overvoltage in the AC bus.
@@ -600,24 +624,6 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		{
 			SetLight(CSM_CWS_CM_RCS_1, false);
 			SetLight(CSM_CWS_CM_RCS_2, false);
-		}
-
-		//
-		// SPS PRESS
-		// Fuel and oxidizer have the same pressure for now.
-		// See AOH C+W
-		//
-
-		double spsPress = sat->GetSPSPropellant()->GetPropellantPressurePSI();
-		if (spsPress < 157.0 || spsPress > 200.0) {
-			if (SPSPressCheckCount > 10) {			
-				SetLight(CSM_CWS_SPS_PRESS, true);
-			} else {
-				SPSPressCheckCount++;
-			}
-		} else {
-			SetLight(CSM_CWS_SPS_PRESS, false);
-			SPSPressCheckCount = 0;
 		}
 
 		NextUpdateTime = simt + (0.1 * oapiGetTimeAcceleration());
