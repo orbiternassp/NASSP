@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/10/02 11:36:46  tschachim
+  *	Bugfix animation.
+  *	
   *	Revision 1.18  2006/10/01 05:22:39  jasonims
   *	Animation updated for Orbiter 2006-P1, SM working again, LRV @ 40% complete.
   *	
@@ -139,6 +142,9 @@ SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 {
 	InitSM();
 	DefineAnimations();
+
+	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
+	soundlib.LoadSound(BreakS, CRASH_SOUND);
 }
 
 SM::~SM()
@@ -224,8 +230,6 @@ void SM::InitSM()
 		th_att_lin[i] = 0;
 		th_att_rot[i] = 0;
 	}
-
-	soundlib.InitSoundLib(GetHandle(), SOUND_DIRECTORY);
 }
 
 const double SMVO = 0.0;//-0.14;
@@ -351,11 +355,6 @@ void SM::DoFirstTimestep()
 	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
-
-	//
-	// Orbitersound claims to load this sound but won't play it!
-	//
-	soundlib.LoadSound(BreakS, CRASH_SOUND);
 }
 
 void SM::AddReentryTextureToObject(OBJHANDLE handle)
