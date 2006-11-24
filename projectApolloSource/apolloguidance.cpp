@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.82  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -5215,6 +5220,16 @@ void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 void ApolloGuidance::GenerateDownrupt(){
 	GenerateDOWNRUPT(&vagc);
 }
+
+// DS200608xx CH33 SWITCHES
+void ApolloGuidance::SetCh33Switches(unsigned int val){
+	SetCh33Bits(&vagc,val);
+}
+
+unsigned int ApolloGuidance::GetCh33Switches(){
+	return vagc.Ch33Switches; 
+}
+
 
 void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 

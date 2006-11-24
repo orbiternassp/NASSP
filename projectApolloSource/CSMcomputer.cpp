@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.56  2006/07/27 22:38:57  movieman523
   *	Added CSM to LEM power connector.
   *	
@@ -2121,6 +2126,48 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 			}
 		}else{
 			sat->gdc.fdai_err_ena = 0;
+		}
+		// If OPTICS TRACKER switch is not up
+		if(sat->ControllerTrackerSwitch.GetState() != THREEPOSSWITCH_UP){
+			// leave
+			break;
+		}else{
+			// If the switch is up, print optics register status
+			bool IssueDebug = FALSE;
+			char DebugMsg[256];
+
+			sprintf(DebugMsg,"OPTICS: ");
+			if(val12.Bits.DisengageOpticsDAC){
+				IssueDebug = TRUE;
+				sprintf(DebugMsg,"%s DISENGAGE-DAC",DebugMsg);
+			}
+			if(val12.Bits.EnableOpticsCDUErrorCounters){
+				IssueDebug = TRUE;
+				sprintf(DebugMsg,"%s ENABLE-ERR-CTR",DebugMsg);
+				/*
+				if(sat->agc.vagc.block_ocdu_err_ctr == 0){
+				  sat->agc.vagc.block_ocdu_err_ctr = 1;
+				  // Save inital values
+				  sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035];
+				  sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036];
+				}
+				*/
+			}else{
+				// sat->agc.vagc.block_ocdu_err_ctr = 0;
+			}
+			if(val12.Bits.ZeroOptics){
+				IssueDebug = TRUE;
+				sprintf(DebugMsg,"%s ZERO-OPTICS",DebugMsg);
+			}
+			if(val12.Bits.ZeroOpticsCDUs){
+				IssueDebug = TRUE;
+				sprintf(DebugMsg,"%s ZERO-CDU",DebugMsg);
+			}
+			if(IssueDebug != FALSE){
+				sprintf(oapiDebugString(),"%s",DebugMsg);
+			}else{
+				sprintf(oapiDebugString(),"OPTICS: NIL");
+			}		
 		}
 		break;
 		

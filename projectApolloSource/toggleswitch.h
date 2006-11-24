@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/11/13 14:47:34  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.55  2006/07/24 06:41:30  dseagrav
   *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
   *	
@@ -807,6 +812,11 @@ protected:
 //
 
 class CMCModeHoldFreeSwitch : public AGCThreePoswitch {
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+};
+
+class CMCOpticsModeSwitch : public AGCThreePoswitch {
 public:
 	bool CheckMouseClick(int event, int mx, int my);
 };

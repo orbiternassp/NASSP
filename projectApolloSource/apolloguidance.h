@@ -26,6 +26,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.47  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.46  2006/07/26 15:42:02  tschachim
   *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
   *	
@@ -818,6 +823,8 @@ protected:
 	virtual void ProcessChannel161(int val);
 	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);
 	public: virtual void GenerateDownrupt();
+	public: virtual void SetCh33Switches(unsigned int val);
+	public: unsigned int GetCh33Switches();
 
 	///
 	/// \brief Set the Uplink Activity light on the DSKY.

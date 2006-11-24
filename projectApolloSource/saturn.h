@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.218  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.217  2006/10/26 18:48:50  movieman523
   *	Fixed up CM RCS 1 and 2 warning lights to make the 'C&WS Operational Check' work.
   *	
@@ -2392,7 +2397,7 @@ protected:
 	/////////////////////////////
 
 	SwitchRow ModeSwitchRow;
-	ThreePosSwitch ModeSwitch;
+	CMCOpticsModeSwitch ModeSwitch;
 
 	SwitchRow ControllerSpeedSwitchRow;
 	ThreePosSwitch ControllerSpeedSwitch;

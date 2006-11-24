@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.191  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.190  2006/09/23 01:57:13  flydba
   *	Final graphics update completed.
   *	
@@ -2718,7 +2723,7 @@ void Saturn::SetSwitches(int panel) {
 	/////////////////////////////
 
 	ModeSwitchRow.Init(AID_GNMODESWITCH, MainPanel);
-	ModeSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeSwitchRow);
+	ModeSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeSwitchRow, &agc);
 
 	ControllerSpeedSwitchRow.Init(AID_CONTROLLERSPEEDSWITCH, MainPanel);
 	ControllerSpeedSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ControllerSpeedSwitchRow);
