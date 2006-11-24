@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.4  2006/01/12 00:09:07  movieman523
   *	Few fixes: Program 40 now starts and stops the SPS engine, but doesn't orient the CSM first.
   *	
@@ -233,8 +236,8 @@ typedef union {
 		unsigned Spare:1;					///< Unused.
 		unsigned RangeUnitDataGood:1;
 		unsigned Spare1:1;					///< Unused.
-		unsigned ZeroOptics:1;
-		unsigned CMCControl:1;
+		unsigned ZeroOptics:1;				///< Optics ZERO switch
+		unsigned CMCControl:1;				///< Optics under CMC control
 		unsigned NotUsed:2;					///< Unused.
 		unsigned Spare2:2;					///< Unused.
 		unsigned BlockUplinkInput:1;

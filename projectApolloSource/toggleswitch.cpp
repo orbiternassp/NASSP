@@ -25,6 +25,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2006/11/13 14:47:34  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.72  2006/08/18 05:45:01  dseagrav
   *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
   *	
@@ -3101,6 +3106,39 @@ bool CMCModeHoldFreeSwitch::CheckMouseClick(int event, int mx, int my)
 
 			agc->SetInputChannelBit(031, 13, Hold);
 			agc->SetInputChannelBit(031, 14, Free);
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//
+// CMC Optics Mode Switch
+bool CMCOpticsModeSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (AGCThreePoswitch::CheckMouseClick(event, mx, my)) {
+		if (agc) {
+			unsigned int SwitchBits;
+			SwitchBits = agc->GetCh33Switches();
+			SwitchBits &= 077707;  // Clear bits
+			if (IsUp()) {
+				SwitchBits |= 010; // CMC MODE, ZERO OFF				
+				agc->SetCh33Switches(SwitchBits);
+				return true;
+			}
+			if (IsCenter()) {
+				SwitchBits |= 030; // MANUAL MODE, ZERO OFF
+				
+				agc->SetCh33Switches(SwitchBits);
+				return true;
+			}
+			if (IsDown()) {
+				SwitchBits |= 020; // MANUAL MODE, ZERO ON
+				agc->SetCh33Switches(SwitchBits);
+				return true;
+			}
 		}
 		return true;
 	}
