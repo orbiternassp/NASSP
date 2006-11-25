@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2006/11/24 22:42:44  dseagrav
+  *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
+  *	
   *	Revision 1.83  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -5151,6 +5154,8 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 			// TVC Enable does not disconnect the IMU from this channel			
 			// (Even though it probably doesn't matter)
 			imu.ChannelOutput(channel, val);
+			// DS20060829 Allow other stuff too
+			ProcessChannel14(val);
 		}
 		break;
 
@@ -5204,6 +5209,10 @@ void ApolloGuidance::ProcessChannel6(int val)
 }
 
 // DS20060226 Stubs for optics controls and TVC
+void ApolloGuidance::ProcessChannel14(int val)
+{
+}
+
 void ApolloGuidance::ProcessChannel160(int val)
 {
 }
@@ -5228,6 +5237,23 @@ void ApolloGuidance::SetCh33Switches(unsigned int val){
 
 unsigned int ApolloGuidance::GetCh33Switches(){
 	return vagc.Ch33Switches; 
+}
+
+// DS20060903 PINC, DINC, ETC
+int ApolloGuidance::DoPINC(int16_t *Counter){
+	return(CounterPINC(Counter));
+}
+
+int ApolloGuidance::DoPCDU(int16_t *Counter){
+	return(CounterPCDU(Counter));
+}
+
+int ApolloGuidance::DoMCDU(int16_t *Counter){
+	return(CounterMCDU(Counter));
+}
+
+int ApolloGuidance::DoDINC(int CounterNum, int16_t *Counter){
+	return(CounterDINC(&vagc,CounterNum,Counter));
 }
 
 

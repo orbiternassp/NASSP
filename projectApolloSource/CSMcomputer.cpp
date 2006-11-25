@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2006/11/24 22:42:44  dseagrav
+  *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
+  *	
   *	Revision 1.57  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -2071,36 +2074,6 @@ void CSMcomputer::ProcessChannel6(int val)
 	LastOut6 = val;
 }
 
-// DS20060226 TVC / Optics control
-void CSMcomputer::ProcessChannel160(int val){
-	ChannelValue12 val12;
-	val12.Value = GetOutputChannel(012);
-	Saturn *sat = (Saturn *) OurVessel;
-	double error = 0;
-	
-	// TVC enable controls SPS gimballing.			
-	if (val12.Bits.TVCEnable) {
-		// TVC PITCH
-		int tvc_pitch_pulses = 0;
-		double tvc_pitch_cmd = 0;
-		// One pulse means .023725 degree of rotation.
-		if(val&077000){ // Negative
-			tvc_pitch_pulses = (~val)&0777;
-			if(tvc_pitch_pulses == 0){ return; } // HACK
-			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
-			tvc_pitch_cmd = 0 - tvc_pitch_cmd; // Invert
-		}else{
-			tvc_pitch_pulses = val&0777;
-			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
-		}				
-		// sprintf(oapiDebugString(),"TVC PITCH COMMAND: %d pulses, %f degrees",tvc_pitch_pulses,tvc_pitch_cmd);
-		// X/Y/Z = ??/??/??
-		// If we're out of the zero notch
-		error = sat->SetSPSPitch(tvc_pitch_cmd);
-		// Should return error value via optics error counters
-	}
-}
-
 // DS20060308 FDAI
 void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	// These pulses work like the TVC pulses.
@@ -2144,15 +2117,17 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 			if(val12.Bits.EnableOpticsCDUErrorCounters){
 				IssueDebug = TRUE;
 				sprintf(DebugMsg,"%s ENABLE-ERR-CTR",DebugMsg);
-				/*
+				// *** HACKS HERE ***
+				// If we haven't already blocked the AGC from overwriting the OCDU error registers
 				if(sat->agc.vagc.block_ocdu_err_ctr == 0){
+				  // do that
 				  sat->agc.vagc.block_ocdu_err_ctr = 1;
-				  // Save inital values
+				  // and save their inital values.
 				  sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035];
 				  sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036];
-				}
-				*/
+				}				
 			}else{
+				// This caused problems.
 				// sat->agc.vagc.block_ocdu_err_ctr = 0;
 			}
 			if(val12.Bits.ZeroOptics){
@@ -2210,6 +2185,37 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	}
 }
 
+// DS20060226 TVC / Optics control
+
+void CSMcomputer::ProcessChannel160(int val){
+	ChannelValue12 val12;
+	val12.Value = GetOutputChannel(012);
+	Saturn *sat = (Saturn *) OurVessel;
+	double error = 0;
+	
+	// TVC enable controls SPS gimballing.			
+	if (val12.Bits.TVCEnable) {
+		// TVC PITCH
+		int tvc_pitch_pulses = 0;
+		double tvc_pitch_cmd = 0;
+		// One pulse means .023725 degree of rotation.
+		if(val&077000){ // Negative
+			tvc_pitch_pulses = (~val)&0777;
+			if(tvc_pitch_pulses == 0){ return; } // HACK
+			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
+			tvc_pitch_cmd = 0 - tvc_pitch_cmd; // Invert
+		}else{
+			tvc_pitch_pulses = val&0777;
+			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
+		}				
+		// sprintf(oapiDebugString(),"TVC PITCH COMMAND: %d pulses, %f degrees",tvc_pitch_pulses,tvc_pitch_cmd);
+		// X/Y/Z = ??/??/??
+		// If we're out of the zero notch
+		error = sat->SetSPSPitch(tvc_pitch_cmd);
+		// Should return error value via optics error counters
+	}
+}
+
 void CSMcomputer::ProcessChannel161(int val){
 	ChannelValue12 val12;
 	val12.Value = GetOutputChannel(012);
@@ -2233,6 +2239,93 @@ void CSMcomputer::ProcessChannel161(int val){
 	}
 }
 
+// Pulse Counter
+// CONFIGURATION DEFINES
+// Enable the shaft and trunnion
+#define OCDU_SHAFT_ENABLED 1
+#define OCDU_TRUNNION_ENABLED 1
+// Step values in radians.
+#define OCDU_SHAFT_STEP 0.0002727076953125
+#define OCDU_TRUNNION_STEP 0.0000340884619
+
+void CSMcomputer::ProcessChannel14(int val){
+	ChannelValue12 val12;
+	ChannelValue14 val14;
+	val12.Value = GetOutputChannel(012);
+	val14.Value = val;
+	Saturn *sat = (Saturn *) OurVessel;	
+
+	if(val12.Bits.TVCEnable){
+		return; // Ignore
+	}else{
+#ifdef OCDU_SHAFT_ENABLED
+		if(val14.Bits.DriveCDUS){
+			// OPTICS SHAFT (CAN YOU DIG IT?)
+			if(sat->agc.vagc.Erasable[0][054] & 040000){ 
+				// MINUS
+				sat->OpticsShaft -= OCDU_SHAFT_STEP; 
+				if(val12.Bits.EnableOpticsCDUErrorCounters){
+					// UPDATE POSITION
+					DoMCDU(&sat->agc.vagc.Erasable[0][036]);
+					sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036];
+				}				
+				if(DoDINC(054,&sat->agc.vagc.Erasable[0][054]) != 0){ // Use DINC for anything
+					// It overflowed - Unset bit 10 (02000)
+					sat->agc.vagc.InputChannel[014] &= ~02000; 			
+				}
+				sprintf(oapiDebugString(),"SHAFT: MINUS PULSE - %o TO GO, %o MOVED", sat->agc.vagc.Erasable[0][054],sat->agc.vagc.Erasable[0][036]);
+			}else{
+				// PLUS
+				sat->OpticsShaft += OCDU_SHAFT_STEP; 
+				if(val12.Bits.EnableOpticsCDUErrorCounters){
+					// UPDATE POSITION
+					DoPCDU(&sat->agc.vagc.Erasable[0][036]);					
+					sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036]; 
+				}				
+				if(DoDINC(054,&sat->agc.vagc.Erasable[0][054]) != 0){
+					// It overflowed - Unset bit 10
+					sat->agc.vagc.InputChannel[014] &= ~02000; 			
+				}			    
+				sprintf(oapiDebugString(),"SHAFT: PLUS PULSE - %o TO GO, %o MOVED", sat->agc.vagc.Erasable[0][054],sat->agc.vagc.Erasable[0][036]);
+			}  		  
+		}
+#endif
+#ifdef OCDU_TRUNNION_ENABLED
+		if(val14.Bits.DriveCDUT){
+			// OPTICS TRUNNION
+			if(sat->agc.vagc.Erasable[0][053] & 040000){ 
+				// MINUS
+				sat->SextTrunion -= OCDU_TRUNNION_STEP; 
+				sat->TeleTrunion = sat->SextTrunion; // HACK
+				if(val12.Bits.EnableOpticsCDUErrorCounters){
+					// UPDATE POSITION
+					DoMCDU(&sat->agc.vagc.Erasable[0][035]);
+					sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035];
+				}
+				if(DoDINC(053,&sat->agc.vagc.Erasable[0][053]) != 0){ // Use DINC for anything
+					// It overflowed - Unset bit 11
+					sat->agc.vagc.InputChannel[014] &= ~04000; 					
+				}
+				sprintf(oapiDebugString(),"TRUNNION: MINUS PULSE - %o TO GO, %o MOVED", sat->agc.vagc.Erasable[0][053],sat->agc.vagc.Erasable[0][035]);				
+			}else{
+				// PLUS
+				sat->SextTrunion += OCDU_TRUNNION_STEP; 
+				sat->TeleTrunion = sat->SextTrunion; // HACK
+				if(val12.Bits.EnableOpticsCDUErrorCounters){
+					// UPDATE POSITION 					
+					DoPCDU(&sat->agc.vagc.Erasable[0][035]);					
+					sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035]; 
+				}
+				if(DoDINC(053,&sat->agc.vagc.Erasable[0][053]) != 0){
+					// It overflowed - Unset bit 11
+					sat->agc.vagc.InputChannel[014] &= ~04000; 
+				}
+				sprintf(oapiDebugString(),"TRUNNION: PLUS PULSE - %o TO GO, %o MOVED", sat->agc.vagc.Erasable[0][053],sat->agc.vagc.Erasable[0][035]);
+			}			
+		}
+#endif
+	}
+}
 
 // TODO Dirty Hack for the AGC++ attitude control, 
 // remove this and use I/O channels and pulsed thrusters 
