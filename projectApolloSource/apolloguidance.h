@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.48  2006/11/24 22:42:44  dseagrav
+  *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
+  *	
   *	Revision 1.47  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -819,12 +822,17 @@ protected:
 	virtual void ProcessChannel11Bit(int bit, bool val);
 	virtual void ProcessChannel11(int val);
 	virtual void ProcessChannel13(int val);
+	virtual void ProcessChannel14(int val);
 	virtual void ProcessChannel160(int val);
 	virtual void ProcessChannel161(int val);
 	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);
 	public: virtual void GenerateDownrupt();
 	public: virtual void SetCh33Switches(unsigned int val);
 	public: unsigned int GetCh33Switches();
+	public: virtual int DoPINC(int16_t *Counter);
+	public: virtual int DoPCDU(int16_t *Counter);
+	public: virtual int DoMCDU(int16_t *Counter);
+	public: virtual int DoDINC(int CounterNum, int16_t *Counter);
 
 	///
 	/// \brief Set the Uplink Activity light on the DSKY.

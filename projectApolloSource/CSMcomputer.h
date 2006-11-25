@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.20  2006/07/26 15:42:02  tschachim
   *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
   *	
@@ -420,6 +425,7 @@ protected:
 	void ProcessChannel11Bit(int bit, bool val);
 	void ProcessChannel11(int val);
 	// DS20060226 TVC / Optics
+	void ProcessChannel14(int val);
 	void ProcessChannel160(int val);
 	void ProcessChannel161(int val);
 	// DS20060308 FDAI NEEDLES
