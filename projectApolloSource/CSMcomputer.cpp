@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2006/11/25 11:49:21  dseagrav
+  *	Connect CM optics to vAGC. Does not work properly.
+  *	
   *	Revision 1.58  2006/11/24 22:42:44  dseagrav
   *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
   *	
@@ -2123,8 +2126,8 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 				  // do that
 				  sat->agc.vagc.block_ocdu_err_ctr = 1;
 				  // and save their inital values.
-				  sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035];
-				  sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036];
+				  // sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035];
+				  // sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036];
 				}				
 			}else{
 				// This caused problems.
@@ -2267,7 +2270,7 @@ void CSMcomputer::ProcessChannel14(int val){
 				if(val12.Bits.EnableOpticsCDUErrorCounters){
 					// UPDATE POSITION
 					DoMCDU(&sat->agc.vagc.Erasable[0][036]);
-					sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036];
+					// sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036];
 				}				
 				if(DoDINC(054,&sat->agc.vagc.Erasable[0][054]) != 0){ // Use DINC for anything
 					// It overflowed - Unset bit 10 (02000)
@@ -2280,7 +2283,7 @@ void CSMcomputer::ProcessChannel14(int val){
 				if(val12.Bits.EnableOpticsCDUErrorCounters){
 					// UPDATE POSITION
 					DoPCDU(&sat->agc.vagc.Erasable[0][036]);					
-					sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036]; 
+					// sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036]; 
 				}				
 				if(DoDINC(054,&sat->agc.vagc.Erasable[0][054]) != 0){
 					// It overflowed - Unset bit 10
@@ -2300,7 +2303,7 @@ void CSMcomputer::ProcessChannel14(int val){
 				if(val12.Bits.EnableOpticsCDUErrorCounters){
 					// UPDATE POSITION
 					DoMCDU(&sat->agc.vagc.Erasable[0][035]);
-					sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035];
+					// sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035];
 				}
 				if(DoDINC(053,&sat->agc.vagc.Erasable[0][053]) != 0){ // Use DINC for anything
 					// It overflowed - Unset bit 11
@@ -2314,7 +2317,7 @@ void CSMcomputer::ProcessChannel14(int val){
 				if(val12.Bits.EnableOpticsCDUErrorCounters){
 					// UPDATE POSITION 					
 					DoPCDU(&sat->agc.vagc.Erasable[0][035]);					
-					sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035]; 
+					// sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035]; 
 				}
 				if(DoDINC(053,&sat->agc.vagc.Erasable[0][053]) != 0){
 					// It overflowed - Unset bit 11
