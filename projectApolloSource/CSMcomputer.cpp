@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2006/11/25 20:07:28  dseagrav
+  *	Fix OCDU error counter overwriting
+  *	
   *	Revision 1.59  2006/11/25 11:49:21  dseagrav
   *	Connect CM optics to vAGC. Does not work properly.
   *	
@@ -2120,15 +2123,6 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 			if(val12.Bits.EnableOpticsCDUErrorCounters){
 				IssueDebug = TRUE;
 				sprintf(DebugMsg,"%s ENABLE-ERR-CTR",DebugMsg);
-				// *** HACKS HERE ***
-				// If we haven't already blocked the AGC from overwriting the OCDU error registers
-				if(sat->agc.vagc.block_ocdu_err_ctr == 0){
-				  // do that
-				  sat->agc.vagc.block_ocdu_err_ctr = 1;
-				  // and save their inital values.
-				  // sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035];
-				  // sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036];
-				}				
 			}else{
 				// This caused problems.
 				// sat->agc.vagc.block_ocdu_err_ctr = 0;
@@ -2189,6 +2183,12 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 }
 
 // DS20060226 TVC / Optics control
+// OPTICS CONFIGURATION DEFINES
+// Step values in radians.
+#define OCDU_SHAFT_STEP 0.000191747598876953125 
+// #define OCDU_SHAFT_STEP 0.0002727076953125
+#define OCDU_TRUNNION_STEP 0.00004793689959716796875
+// #define OCDU_TRUNNION_STEP 0.0000340884619
 
 void CSMcomputer::ProcessChannel160(int val){
 	ChannelValue12 val12;
@@ -2214,9 +2214,22 @@ void CSMcomputer::ProcessChannel160(int val){
 		// sprintf(oapiDebugString(),"TVC PITCH COMMAND: %d pulses, %f degrees",tvc_pitch_pulses,tvc_pitch_cmd);
 		// X/Y/Z = ??/??/??
 		// If we're out of the zero notch
-		error = sat->SetSPSPitch(tvc_pitch_cmd);
-		// Should return error value via optics error counters
-	}
+		error = sat->SetSPSPitch(tvc_pitch_cmd);		
+	}else{
+		// OPTICS SHAFT (CAN YOU DIG IT?)
+		int pulses;
+		if(val&040000){ // Negative
+			pulses = -((~val)&07777); 
+		} else {
+			pulses = val&07777; 
+		}
+		sat->OpticsShaft += (OCDU_SHAFT_STEP*pulses);
+		if(val12.Bits.EnableOpticsCDUErrorCounters){
+			sat->agc.vagc.Erasable[0][036] += pulses;
+			sat->agc.vagc.Erasable[0][036] &= 077777;
+		}
+		sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
+	}	
 }
 
 void CSMcomputer::ProcessChannel161(int val){
@@ -2239,17 +2252,23 @@ void CSMcomputer::ProcessChannel161(int val){
 			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
 		}				
 		error = sat->SetSPSYaw(tvc_yaw_cmd);
-	}
+	}else{
+		// OPTICS TRUNNION		
+		int pulses;
+		if(val&040000){ // Negative
+			pulses = -((~val)&07777); 
+		} else {
+			pulses = val&07777; 
+		}
+		if(val12.Bits.EnableOpticsCDUErrorCounters){
+			sat->agc.vagc.Erasable[0][035] += pulses;
+			sat->agc.vagc.Erasable[0][035] &= 077777;
+		}
+		sat->SextTrunion += (OCDU_TRUNNION_STEP*pulses); 
+		sat->TeleTrunion = sat->SextTrunion; // HACK
+		sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
+	}	
 }
-
-// Pulse Counter
-// CONFIGURATION DEFINES
-// Enable the shaft and trunnion
-#define OCDU_SHAFT_ENABLED 1
-#define OCDU_TRUNNION_ENABLED 1
-// Step values in radians.
-#define OCDU_SHAFT_STEP 0.0002727076953125
-#define OCDU_TRUNNION_STEP 0.0000340884619
 
 void CSMcomputer::ProcessChannel14(int val){
 	ChannelValue12 val12;
