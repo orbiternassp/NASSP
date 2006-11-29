@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2006/11/27 10:09:55  dseagrav
+  *	Optics fixes
+  *	
   *	Revision 1.60  2006/11/25 20:07:28  dseagrav
   *	Fix OCDU error counter overwriting
   *	
@@ -2183,12 +2186,6 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 }
 
 // DS20060226 TVC / Optics control
-// OPTICS CONFIGURATION DEFINES
-// Step values in radians.
-#define OCDU_SHAFT_STEP 0.000191747598876953125 
-// #define OCDU_SHAFT_STEP 0.0002727076953125
-#define OCDU_TRUNNION_STEP 0.00004793689959716796875
-// #define OCDU_TRUNNION_STEP 0.0000340884619
 
 void CSMcomputer::ProcessChannel160(int val){
 	ChannelValue12 val12;
