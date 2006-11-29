@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.219  2006/11/24 22:42:44  dseagrav
+  *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
+  *	
   *	Revision 1.218  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -413,6 +416,13 @@
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
+
+// OPTICS CONFIGURATION DEFINES
+// Step values in radians.
+#define OCDU_SHAFT_STEP 0.000191747598876953125 
+// #define OCDU_SHAFT_STEP 0.0002727076953125
+#define OCDU_TRUNNION_STEP 0.00004793689959716796875
+// #define OCDU_TRUNNION_STEP 0.0000340884619
 
 //
 // Valves.

@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.126  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.125  2006/10/26 18:48:50  movieman523
   *	Fixed up CM RCS 1 and 2 warning lights to make the 'C&WS Operational Check' work.
   *	
@@ -597,6 +602,40 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		dsky2.Timestep(MissionTime);
 		agc.Timestep(MissionTime, simdt);
 		imu.Timestep(MissionTime);
+
+		// Optics per-timestep is short, no need to waste a function call.
+		if(ModeSwitch.GetState() == THREEPOSSWITCH_DOWN){ // If ZERO
+			if(OpticsShaft > 0){
+				if(OpticsShaft > OCDU_SHAFT_STEP*4){
+					OpticsShaft -= OCDU_SHAFT_STEP*4;
+				}else{
+					OpticsShaft = 0;
+				}
+			}
+			if(OpticsShaft < 0){
+				if(OpticsShaft < (-OCDU_SHAFT_STEP*4)){
+					OpticsShaft += OCDU_SHAFT_STEP*4;
+				}else{
+					OpticsShaft = 0;
+				}
+			}
+			if(SextTrunion > 0){
+				if(SextTrunion > OCDU_TRUNNION_STEP*4){
+					SextTrunion -= OCDU_TRUNNION_STEP*4;
+				}else{
+					SextTrunion = 0;
+				}
+				TeleTrunion = SextTrunion; // HACK
+			}
+			if(SextTrunion < 0){
+				if(SextTrunion < (-OCDU_TRUNNION_STEP*4)){
+					SextTrunion += OCDU_TRUNNION_STEP*4;
+				}else{
+					SextTrunion = 0;
+				}
+				TeleTrunion = SextTrunion; // HACK
+			}
+		}
 
 		//
 		// If we've seperated from the SIVb, the IU is history.
