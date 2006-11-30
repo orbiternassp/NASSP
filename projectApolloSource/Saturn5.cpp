@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.91  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.90  2006/08/11 19:34:47  movieman523
   *	Added code to take the docking probe with the LES on a post-abort jettison.
   *	
@@ -2380,11 +2385,9 @@ void SaturnV::StageLaunchSIVB(double simt)
 		SeparateStage (CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort) {
-			// TODO Abort mode
-			// SPSswitch.SetState(TOGGLESWITCH_UP);
+			// TODO SPS abort handling
 			StartAbort();
 			ABORT_IND = true;
-			SetThrusterGroupLevel(thg_main, 1.0);
 			bAbort = false;
 			autopilot=false;
 		}

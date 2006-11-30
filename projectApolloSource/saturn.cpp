@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.179  2006/11/30 03:34:25  dseagrav
+  *	Added basic manual optics controls
+  *	
   *	Revision 1.178  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -4480,9 +4483,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 			if (bAbort)
 			{
 				// TODO SPS abort handling
-				// SPSswitch.SetState(true);
 				ABORT_IND = true;
-				SetThrusterGroupLevel(thg_main, 1.0);
 				bAbort = false;
 				autopilot= false;
 				StartAbort();
@@ -4528,7 +4529,8 @@ void Saturn::StartAbort()
 	// Fire the LET.
 	//
 
-	SetThrusterGroupLevel (thg_let, 1.0);
+	if (thg_let)
+		SetThrusterGroupLevel (thg_let, 1.0);
 
 	ABORT_IND = true;
 
