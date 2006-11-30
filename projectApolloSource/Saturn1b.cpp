@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.60  2006/08/27 21:57:10  tschachim
   *	Bugfix RCS handing in CSM timestep.
   *	
@@ -746,10 +751,8 @@ void Saturn1b::StageStartSIVB(double simt)
 		if (bAbort)
 		{
 			// TODO SPS abort handling
-			// SPSswitch.SetState(TOGGLESWITCH_UP);
 			ABORT_IND = true;
 			StartAbort();
-			SetThrusterGroupLevel(thg_main, 1.0);
 			bAbort = false;
 			autopilot=false;
 		}
@@ -831,10 +834,8 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 		if (bAbort){
 			// TODO SPS abort handling
-			// SPSswitch.SetState(TOGGLESWITCH_UP);
 			ABORT_IND = true;
 			StartAbort();
-			SetThrusterGroupLevel(thg_main, 1.0);
 			bAbort = false;
 			autopilot= false;
 		}
