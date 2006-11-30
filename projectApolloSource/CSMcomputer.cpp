@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2006/11/29 03:01:17  dseagrav
+  *	Cause "Zero Optics" mode to zero optics.
+  *	
   *	Revision 1.61  2006/11/27 10:09:55  dseagrav
   *	Optics fixes
   *	
@@ -1452,11 +1455,11 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			apDist -= 6.373338e6;
 			peDist -= 6.373338e6;
 
-#ifdef _DEBUG
+/* #ifdef _DEBUG
 			sprintf(oapiDebugString(), "P11 - Vel %.0f Vert. Vel %.0f Alt %.0f ApD %.0f PeD %.0f",  
 				length(vel) * 3.2808399, vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 
 				apDist * 0.000539957 * 10, peDist * 0.000539957 * 10);
-#endif
+#endif */
 
 			lastOrbitalElementsTime = simt;
 		}
