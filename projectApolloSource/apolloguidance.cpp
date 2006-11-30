@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2006/11/25 11:49:21  dseagrav
+  *	Connect CM optics to vAGC. Does not work properly.
+  *	
   *	Revision 1.84  2006/11/24 22:42:44  dseagrav
   *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
   *	
@@ -4980,17 +4983,19 @@ void ApolloGuidance::SetInputChannel(int channel, unsigned int val)
 		}
 		else {
 			// If this is a keystroke from the DSKY, generate an interrupt req.
-			if (channel == 015)
+			if (channel == 015){
 				vagc.InterruptRequests[5] = 1;
-			else if (channel == 016) // Secondary DSKY
+			}else{ if (channel == 016){ // Secondary DSKY
 				vagc.InterruptRequests[6] = 1;
+			}}
 
 			//
 			// Channels 030-034 are inverted!
 			//
 
-			if (channel >= 030 && channel <= 034)
+			if (channel >= 030 && channel <= 034){
 				val ^= 077777;
+			}
 			WriteIO(&vagc, channel, val);
 		}
 #endif
@@ -5067,6 +5072,13 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
     FormIoPacket (channel, data, (unsigned char *) packet);
 	send(ConnectionSocket,(char *)packet,4,0);
 #else
+		// If this is a keystroke from the DSKY (Or MARK/MARKREJ), generate an interrupt req.
+		if (channel == 015 && val != 0){
+			vagc.InterruptRequests[5] = 1;
+		}else{ if (channel == 016 && val != 0){ // Secondary DSKY
+			vagc.InterruptRequests[6] = 1;
+		}}
+
 		WriteIO(&vagc, channel, data);
 #endif
 

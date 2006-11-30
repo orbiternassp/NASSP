@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/11/24 22:42:44  dseagrav
+  *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
+  *	
   *	Revision 1.5  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -155,6 +158,23 @@ typedef union {
 	} Bits;
 	unsigned int Value;
 } ChannelValue14;
+
+///
+/// \ingroup AGCIO
+/// \brief CSM AGC input channel 16.
+///
+typedef union {
+	struct {
+		unsigned NavDSKY1:1;				///< NAV DSKY
+		unsigned NavDSKY2:1;				///< NAV DSKY
+		unsigned NavDSKY3:1;				///< NAV DSKY
+		unsigned NavDSKY4:1;				///< NAV DSKY
+		unsigned NavDSKY5:1;				///< NAV DSKY
+		unsigned Mark:1;					///< MARK key
+		unsigned MarkReject:1;				///< MARK REJECT key
+	} Bits;
+	unsigned int Value;
+} ChannelValue16;
 
 ///
 /// \ingroup AGCIO
