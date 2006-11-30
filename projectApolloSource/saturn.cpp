@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.178  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.177  2006/09/23 22:34:40  jasonims
   *	New J-2 Engine textures...
   *	
@@ -787,6 +792,7 @@ void Saturn::initSaturn()
 	OpticsShaft = 0.0;
 	SextTrunion = 0.0;
 	TeleTrunion = 0.0;
+	OpticsManualMovement = 0;
 	CheckPanelIdInTimestep = false;
 	FovFixed = false;
 	FovExternal = false;
@@ -3048,6 +3054,24 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				case OAPI_KEY_NUMPAD0:
 					dsky.NumberPressed(0);
 					break;
+				case OAPI_KEY_W: // Minimum impulse controller, pitch down
+					agc.SetInputChannelBit(032,2,1);
+					return 1;
+				case OAPI_KEY_S: // Minimum impulse controller, pitch up
+					agc.SetInputChannelBit(032,1,1);
+					return 1;
+				case OAPI_KEY_A: // Minimum impulse controller, yaw left
+					agc.SetInputChannelBit(032,4,1);
+					return 1;
+				case OAPI_KEY_D: // Minimum impulse controller, yaw right
+					agc.SetInputChannelBit(032,3,1);
+					return 1;
+				case OAPI_KEY_Q: // Minimum impulse controller, roll left
+					agc.SetInputChannelBit(032,6,1);
+					return 1;
+				case OAPI_KEY_E: // Minimum impulse controller, roll right
+					agc.SetInputChannelBit(032,5,1);
+					return 1;					
 			}
 		}else{
 			// KEY UP
@@ -3055,12 +3079,75 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				case OAPI_KEY_DECIMAL:
 					dsky.ProgReleased();
 					break;
+				case OAPI_KEY_W: // Minimum impulse controller, pitch down
+					agc.SetInputChannelBit(032,2,0);
+					return 1;
+				case OAPI_KEY_S: // Minimum impulse controller, pitch up
+					agc.SetInputChannelBit(032,1,0);
+					return 1;
+				case OAPI_KEY_A: // Minimum impulse controller, yaw left
+					agc.SetInputChannelBit(032,4,0);
+					return 1;
+				case OAPI_KEY_D: // Minimum impulse controller, yaw right
+					agc.SetInputChannelBit(032,3,0);
+					return 1;
+				case OAPI_KEY_Q: // Minimum impulse controller, roll left
+					agc.SetInputChannelBit(032,6,0);
+					return 1;
+				case OAPI_KEY_E: // Minimum impulse controller, roll right
+					agc.SetInputChannelBit(032,5,0);
+					return 1;
 			}
 		}
 		return 0;
 	}
 	if (KEYMOD_CONTROL(kstate) || KEYMOD_ALT(kstate)) {
 		return 0; 
+	}
+
+	// OPTICS CONTROL
+	if(down){
+		switch(key){
+			case OAPI_KEY_W: // Optics Up
+				OpticsManualMovement |= 0x01; 
+				return 1;
+			case OAPI_KEY_S: // Optics Down
+				OpticsManualMovement |= 0x02; 
+				return 1;
+			case OAPI_KEY_A: // Optics Left
+				OpticsManualMovement |= 0x04; 
+				return 1;
+			case OAPI_KEY_D: // Optics Right
+				OpticsManualMovement |= 0x08; 
+				return 1;
+			case OAPI_KEY_Q: // Optics Mark
+				agc.SetInputChannelBit(016,6,1);
+				return 1;
+			case OAPI_KEY_E: // Optics Mark Reject
+				agc.SetInputChannelBit(016,7,1);
+				return 1;
+		}
+	}else{
+		switch(key){
+			case OAPI_KEY_W: 
+				OpticsManualMovement &= 0xFE; 
+				return 1;
+			case OAPI_KEY_S: 
+				OpticsManualMovement &= 0xFD; 
+				return 1;
+			case OAPI_KEY_A: 
+				OpticsManualMovement &= 0xFB; 
+				return 1;
+			case OAPI_KEY_D: 
+				OpticsManualMovement &= 0xF7; 
+				return 1;
+			case OAPI_KEY_Q: 
+				agc.SetInputChannelBit(016,6,0);
+				return 1;
+			case OAPI_KEY_E: 
+				agc.SetInputChannelBit(016,7,0);
+				return 1;
+		}
 	}
 
 	// Separate stages and undock with keypress if REALISM 0

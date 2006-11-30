@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.127  2006/11/29 03:01:17  dseagrav
+  *	Cause "Zero Optics" mode to zero optics.
+  *	
   *	Revision 1.126  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -604,37 +607,63 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		imu.Timestep(MissionTime);
 
 		// Optics per-timestep is short, no need to waste a function call.
-		if(ModeSwitch.GetState() == THREEPOSSWITCH_DOWN){ // If ZERO
-			if(OpticsShaft > 0){
-				if(OpticsShaft > OCDU_SHAFT_STEP*4){
-					OpticsShaft -= OCDU_SHAFT_STEP*4;
-				}else{
-					OpticsShaft = 0;
+		switch(ModeSwitch.GetState()){
+			case THREEPOSSWITCH_DOWN: // ZERO OPTICS
+				if(OpticsShaft > 0){
+					if(OpticsShaft > OCDU_SHAFT_STEP*4){
+						OpticsShaft -= OCDU_SHAFT_STEP*4;
+					}else{
+						OpticsShaft = 0;
+					}
 				}
-			}
-			if(OpticsShaft < 0){
-				if(OpticsShaft < (-OCDU_SHAFT_STEP*4)){
-					OpticsShaft += OCDU_SHAFT_STEP*4;
-				}else{
-					OpticsShaft = 0;
+				if(OpticsShaft < 0){
+					if(OpticsShaft < (-OCDU_SHAFT_STEP*4)){
+						OpticsShaft += OCDU_SHAFT_STEP*4;
+					}else{
+						OpticsShaft = 0;
+					}
 				}
-			}
-			if(SextTrunion > 0){
-				if(SextTrunion > OCDU_TRUNNION_STEP*4){
-					SextTrunion -= OCDU_TRUNNION_STEP*4;
-				}else{
-					SextTrunion = 0;
+				if(SextTrunion > 0){
+					if(SextTrunion > OCDU_TRUNNION_STEP*4){
+						SextTrunion -= OCDU_TRUNNION_STEP*4;
+					}else{
+						SextTrunion = 0;
+					}
+					TeleTrunion = SextTrunion; // HACK
 				}
-				TeleTrunion = SextTrunion; // HACK
-			}
-			if(SextTrunion < 0){
-				if(SextTrunion < (-OCDU_TRUNNION_STEP*4)){
-					SextTrunion += OCDU_TRUNNION_STEP*4;
-				}else{
-					SextTrunion = 0;
+				if(SextTrunion < 0){
+					if(SextTrunion < (-OCDU_TRUNNION_STEP*4)){
+						SextTrunion += OCDU_TRUNNION_STEP*4;
+					}else{
+						SextTrunion = 0;
+					}
+					TeleTrunion = SextTrunion; // HACK
 				}
-				TeleTrunion = SextTrunion; // HACK
-			}
+				break;
+			case THREEPOSSWITCH_CENTER: // MANUAL
+				if((OpticsManualMovement&0x01) != 0 && SextTrunion < (RAD*90)){
+					SextTrunion += OCDU_TRUNNION_STEP;
+					TeleTrunion = SextTrunion; // HACK
+					agc.vagc.Erasable[0][035]++;
+					agc.vagc.Erasable[0][035] &= 077777;
+				}
+				if((OpticsManualMovement&0x02) != 0 && SextTrunion > 0){
+					SextTrunion -= OCDU_TRUNNION_STEP;
+					TeleTrunion = SextTrunion; // HACK
+					agc.vagc.Erasable[0][035]--;
+					agc.vagc.Erasable[0][035] &= 077777;
+				}
+				if((OpticsManualMovement&0x04) != 0 && OpticsShaft > -(RAD*270)){
+					OpticsShaft -= OCDU_SHAFT_STEP;					
+					agc.vagc.Erasable[0][036]--;
+					agc.vagc.Erasable[0][036] &= 077777;
+				}
+				if((OpticsManualMovement&0x08) != 0 && OpticsShaft < (RAD*270)){
+					OpticsShaft += OCDU_SHAFT_STEP;					
+					agc.vagc.Erasable[0][036]++;
+					agc.vagc.Erasable[0][036] &= 077777;
+				}
+				break;
 		}
 
 		//

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.220  2006/11/29 03:01:17  dseagrav
+  *	Cause "Zero Optics" mode to zero optics.
+  *	
   *	Revision 1.219  2006/11/24 22:42:44  dseagrav
   *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
   *	
@@ -778,6 +781,7 @@ public:
 	double TeleTrunion;
 	double TargetShaft;
 	double TargetTrunion;
+	int OpticsManualMovement;
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 
