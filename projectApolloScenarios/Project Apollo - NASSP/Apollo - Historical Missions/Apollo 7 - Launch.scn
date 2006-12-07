@@ -62,6 +62,12 @@ AS-205:ProjectApollo/Saturn1b
   LANG English
   AUTOSLOW 1
 END
+LC34:ProjectApollo\LC34
+  STATUS Landed Earth
+  POS -80.5643399 28.5150804
+  HEADING 180.05
+  LVNAME AS-205
+END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
   POS -80.6529535 28.5790607
