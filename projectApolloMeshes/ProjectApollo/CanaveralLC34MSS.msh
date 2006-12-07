@@ -20408,9 +20408,9 @@ MATERIAL Material2
 1.0 1.0 1.0 1.0 0.0
 0.0 0.0 0.0 1.0
 TEXTURES 6
-Concrete.dds
-LC34-1.dds
-LC34-4.dds
-LC34-base.dds
-LC34-3.dds
-LC34-2.dds
+ProjectApollo/Concrete.dds
+ProjectApollo/LC34-1.dds
+ProjectApollo/LC34-4.dds
+ProjectApollo/LC34-base.dds
+ProjectApollo/LC34-3.dds
+ProjectApollo/LC34-2.dds
