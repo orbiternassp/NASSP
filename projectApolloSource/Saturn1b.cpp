@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2006/11/30 14:16:12  tschachim
+  *	Bugfixes abort modes.
+  *	
   *	Revision 1.61  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -504,6 +507,17 @@ void Saturn1b::StageOne(double simt, double simdt)
 	if (MainLevel < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10) {
 		bAbort = true;
 	}
+
+	// Control contrail
+	if (MissionTime > 12)
+		contrailLevel = 0;
+	else if (MissionTime > 7)
+		contrailLevel = (12.0 - MissionTime) / 100.0;
+	else if (MissionTime > 2)
+		contrailLevel = 1.38 - 0.95 / 5.0 * MissionTime;
+	else
+		contrailLevel = 1;
+	//sprintf(oapiDebugString(), "contrailLevel %f", contrailLevel);
 
 	switch (StageState) {
 

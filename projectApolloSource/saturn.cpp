@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.180  2006/11/30 14:16:12  tschachim
+  *	Bugfixes abort modes.
+  *	
   *	Revision 1.179  2006/11/30 03:34:25  dseagrav
   *	Added basic manual optics controls
   *	
@@ -777,7 +780,7 @@ void Saturn::initSaturn()
 		stagingvent[i] = NULL;
 	}
 
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < 8; i++) {
 		contrail[i] = NULL;
 	}
 	contrailLevel = 0;

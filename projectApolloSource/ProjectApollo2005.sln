@@ -63,6 +63,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Floodlight", "VC2005\Floodl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProjectApolloConfigurator", "VC2005\ProjectApolloConfigurator\ProjectApolloConfigurator.vcproj", "{73EF2265-3791-4C67-89A0-9DA47D663144}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LC34", "VC2005\LC34\LC34.vcproj", "{7347CF0C-0A9B-4987-A811-98E7B8008B0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -169,6 +171,10 @@ Global
 		{73EF2265-3791-4C67-89A0-9DA47D663144}.Debug|Win32.Build.0 = Debug|Win32
 		{73EF2265-3791-4C67-89A0-9DA47D663144}.Release|Win32.ActiveCfg = Release|Win32
 		{73EF2265-3791-4C67-89A0-9DA47D663144}.Release|Win32.Build.0 = Release|Win32
+		{7347CF0C-0A9B-4987-A811-98E7B8008B0D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7347CF0C-0A9B-4987-A811-98E7B8008B0D}.Debug|Win32.Build.0 = Debug|Win32
+		{7347CF0C-0A9B-4987-A811-98E7B8008B0D}.Release|Win32.ActiveCfg = Release|Win32
+		{7347CF0C-0A9B-4987-A811-98E7B8008B0D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

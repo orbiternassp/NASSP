@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.221  2006/11/30 03:34:25  dseagrav
+  *	Added basic manual optics controls
+  *	
   *	Revision 1.220  2006/11/29 03:01:17  dseagrav
   *	Cause "Zero Optics" mode to zero optics.
   *	
@@ -3550,7 +3553,7 @@ protected:
 
 	PSTREAM_HANDLE prelaunchvent[3];
 	PSTREAM_HANDLE stagingvent[8];
-	PSTREAM_HANDLE contrail[5];
+	PSTREAM_HANDLE contrail[8];
 	double contrailLevel;
 
 	CMRCSPropellant CMRCS1;
