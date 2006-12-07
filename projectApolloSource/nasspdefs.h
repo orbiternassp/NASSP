@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.78  2006/09/23 01:55:58  flydba
   *	Final graphics update completed.
   *	
@@ -345,7 +350,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 106; // number of bitmap handles
+const int nsurf = 107; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -452,6 +457,7 @@ const int nsurf = 106; // number of bitmap handles
 #define SRF_LEM_COAS2								103
 #define SRF_SPSMININDICATOR							104
 #define SRF_SPS_INJ_VLV								105
+#define SRF_SM_RCS_MODE								106
 
 //
 // Earth radius and gravity constants.

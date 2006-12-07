@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.192  2006/11/24 22:42:44  dseagrav
+  *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
+  *	
   *	Revision 1.191  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -788,21 +791,21 @@ void Saturn::InitPanel (int panel)
 	// bloat the DLL.
 	//
 
-	srf[0]											= oapiCreateSurface (LOADBMP (IDB_FCSM));
+	//srf[0]											= oapiCreateSurface (LOADBMP (IDB_FCSM));
 	srf[SRF_INDICATOR]								= oapiCreateSurface (LOADBMP (IDB_INDICATOR));
 	srf[SRF_NEEDLE]									= oapiCreateSurface (LOADBMP (IDB_NEEDLE));
-	srf[3]											= oapiCreateSurface (LOADBMP (IDB_HORIZON));
+	//srf[3]											= oapiCreateSurface (LOADBMP (IDB_HORIZON));
 	srf[SRF_DIGITAL]								= oapiCreateSurface (LOADBMP (IDB_DIGITAL));
-	srf[5]											= oapiCreateSurface (LOADBMP (IDB_HORIZON2));
+	//srf[5]											= oapiCreateSurface (LOADBMP (IDB_HORIZON2));
 	srf[SRF_SWITCHUP]								= oapiCreateSurface (LOADBMP (IDB_SWITCHUP));
 	srf[SRF_SWITCHLEVER]							= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
 	srf[SRF_SWITCHGUARDS]							= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDS));
 	srf[SRF_SWITCHGUARDPANEL15]						= oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDPANEL15));
 	srf[SRF_ABORT]									= oapiCreateSurface (LOADBMP (IDB_ABORT));
-	srf[10]											= oapiCreateSurface (LOADBMP (IDB_ANNUN));
-	srf[11]											= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
+	//srf[10]											= oapiCreateSurface (LOADBMP (IDB_ANNUN));
+	//srf[11]											= oapiCreateSurface (LOADBMP (IDB_LAUNCH));
 	srf[SRF_LV_ENG]									= oapiCreateSurface (LOADBMP (IDB_LV_ENG));
-	srf[13]											= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
+	//srf[13]											= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
 	srf[SRF_ALTIMETER]								= oapiCreateSurface (LOADBMP (IDB_ALTIMETER));
 	//srf[15]										= oapiCreateSurface (LOADBMP (IDB_ANLG_GMETER));
 	srf[SRF_THRUSTMETER]							= oapiCreateSurface (LOADBMP (IDB_THRUST));
@@ -810,14 +813,14 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_DCAMPS]									= oapiCreateSurface (LOADBMP (IDB_DCAMPS));
 	srf[SRF_ACVOLTS]								= oapiCreateSurface (LOADBMP (IDB_ACVOLTS));
 	srf[SRF_SEQUENCERSWITCHES]						= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
-	srf[18]											= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
+	//srf[18]											= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM));
 	srf[SRF_MASTERALARM_BRIGHT]						= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
 	srf[SRF_DSKY]									= oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
 	srf[SRF_ALLROUND]								= oapiCreateSurface (LOADBMP (IDB_ALLROUND));
 	srf[SRF_THREEPOSSWITCH]							= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH));
 	srf[SRF_MFDFRAME]								= oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
 	srf[SRF_MFDPOWER]								= oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
-	srf[26]											= oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
+	srf[SRF_SM_RCS_MODE]							= oapiCreateSurface (LOADBMP (IDB_DOCKINGSWITCHES));
 	srf[SRF_ROTATIONALSWITCH]						= oapiCreateSurface (LOADBMP (IDB_ROTATIONALSWITCH));
 	srf[SRF_SUITCABINDELTAPMETER]					= oapiCreateSurface (LOADBMP (IDB_SUITCABINDELTAPMETER));
 	srf[SRF_THREEPOSSWITCH305]						= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH305));
@@ -904,8 +907,8 @@ void Saturn::InitPanel (int panel)
 	//
 
 	oapiSetSurfaceColourKey (srf[SRF_NEEDLE],								g_Param.col[4]);
-	oapiSetSurfaceColourKey (srf[3],										0);
-	oapiSetSurfaceColourKey (srf[5],										g_Param.col[5]);
+	//oapiSetSurfaceColourKey (srf[3],										0);
+	//oapiSetSurfaceColourKey (srf[5],										g_Param.col[5]);
 	oapiSetSurfaceColourKey (srf[SRF_SWITCHLEVER],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_SWITCHUP],								g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_SWITCHGUARDS],							g_Param.col[4]);
@@ -1268,8 +1271,8 @@ bool Saturn::clbkLoadPanel (int id) {
 
         oapiRegisterMFD (MFD_RIGHT, mfds_dock);	// MFD_USER1
 		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 851,  613, 1152,  864), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 635,  845,  655,  860), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,				       PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SM_RCS_MODE,     _R( 719,  791,  852,  864), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 865,  845,  885,  860), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,				       PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SM_RCS_MODE,     _R( 777,  791,  852,  864), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_COAS,		    _R( 469,    0, 1152,  539), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
@@ -2716,7 +2719,7 @@ void Saturn::SetSwitches(int panel) {
 	//
 
 	OrbiterAttitudeToggleRow.Init(AID_SM_RCS_MODE, MainPanel);
-	OrbiterAttitudeToggle.Init(86, 33, 23, 20, srf[SRF_SWITCHUPSMALL], srf[SRF_BORDER_23x20], OrbiterAttitudeToggleRow);
+	OrbiterAttitudeToggle.Init(28, 33, 23, 20, srf[SRF_SWITCHUPSMALL], srf[SRF_BORDER_23x20], OrbiterAttitudeToggleRow);
 
 	/////////////////////////////
 	// G&N lower equipment bay //
@@ -2809,7 +2812,7 @@ void DeletegParam() {
 bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 {
-	double dx,dy;
+	//double dx,dy;
 
 	static int ctrl = 0;
 
@@ -2946,7 +2949,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		SwitchClick();
 		return true;
 
-	case AID_OPTICSCLKAREASEXT:
+/*	case AID_OPTICSCLKAREASEXT:
 
 		switch(ControllerSpeedSwitch.GetState()){
 			case THREEPOSSWITCH_UP:
@@ -2995,7 +2998,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			//Do nothing because I haven't figured out how to rectify the coordinate systems to make the matrix transformation work.
 		}
 		return true;
-
+*/
 	//
 	// Old stuff
 	//
@@ -3703,7 +3706,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	if (id == AID_SM_RCS_MODE) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
 			if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
-				oapiBlt(surf, srf[26], 0, 0, 0, 0, 133, 73);
+				oapiBlt(surf, srf[SRF_SM_RCS_MODE], 0, 0, 0, 0, 75, 73);
 				OrbiterAttitudeToggle.SetVisible(true);
 			} else {
 				OrbiterAttitudeToggle.SetVisible(false);
@@ -4085,7 +4088,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_OPTICSCLKAREASEXT:
 		//write update stuff here
 
-		if (OpticsShaft > RAD*270){
+/*		if (OpticsShaft > RAD*270){
 	        OpticsShaft = RAD*270;
 		}else if (OpticsShaft < -(RAD*270)){
 			OpticsShaft = -(RAD*270);
@@ -4096,16 +4099,16 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}else if (SextTrunion > RAD*90){
 			SextTrunion = RAD*90;
 		}
-
+*/
 		sprintf(oapiDebugString(), "Shaft %f, Trunion %f", OpticsShaft/RAD, SextTrunion/RAD);
 
-		oapiCameraSetCockpitDir (-OpticsShaft, SextTrunion - PI/2, true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+		oapiCameraSetCockpitDir (-OpticsShaft, SextTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
 		return true;
 
 	case AID_OPTICSCLKAREATELE:
 		//write update stuff here
 		
-		if (OpticsShaft > RAD*270){
+/*		if (OpticsShaft > RAD*270){
 	        OpticsShaft = (RAD*270);
 		}else if (OpticsShaft < -(RAD*270)){
 			OpticsShaft = -(RAD*270);
@@ -4116,10 +4119,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}else if (TeleTrunion > RAD*90){
 			TeleTrunion = RAD*90;
 		}
-
+*/
 		sprintf(oapiDebugString(), "Shaft %f, Trunion %f", OpticsShaft/RAD, TeleTrunion/RAD);
 
-		oapiCameraSetCockpitDir (-OpticsShaft, TeleTrunion - PI/2, true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+		oapiCameraSetCockpitDir (-OpticsShaft, TeleTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
 		return true;
 
 	case AID_MISSION_CLOCK:
@@ -4412,7 +4415,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	//
 	// These aren't lights, they're buttons!
 	//
-
+/*
 	case AID_DIRECT_ULLAGE_THRUST_ON_LIGHT:
 		if (LAUNCHIND[6]){
 			oapiBlt(surf,srf[10],3,3,27,0,26,26);
@@ -4427,7 +4430,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf,srf[10],3,42,0,27,26,26);
 		}
 		return true;
-
+*/
 	
 	}
 	return false;

@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.50  2006/09/23 22:34:40  jasonims
   *	New J-2 Engine textures...
   *	
@@ -230,10 +235,28 @@ PARTICLESTREAMSPEC srb_contrail = {
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
 };
+
+
+/*
 PARTICLESTREAMSPEC srb_exhaust = {
 	0, 8.0, 2, 50.0, 0.1, 0.3, 12, 2.0, PARTICLESTREAMSPEC::EMISSIVE,//	0, 4.0, 20, 150.0, 0.1, 0.3, 12, 2.0, PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
+};
+*/
+
+PARTICLESTREAMSPEC srb_exhaust = {
+	0,		// flag
+	2.85,	// size
+	1500,	// rate
+	60.0,	// velocity
+	0.1,	// velocity distribution
+	1.0,	// lifetime
+	2.0,	// growthrate
+	0.0,	// atmslowdown 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 1.0,
+	PARTICLESTREAMSPEC::ATM_PLOG, 1e-1140, 1.0
 };
 
 PARTICLESTREAMSPEC solid_exhaust = {
@@ -436,26 +459,46 @@ void Saturn1b::SetFirstStageEngines()
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
 	thg_main = CreateThrusterGroup (th_main, 8, THGROUP_MAIN);
 	for (i = 0; i < 8; i++)
-		AddExhaust (th_main[i], 60.0, 0.80, tex);
+		AddExhaust(th_main[i], 30.0, 0.80, tex);
 
 	srb_exhaust.tex = oapiRegisterParticleTexture ("Contrail2");
 
-	AddExhaustStream (th_main[0], m_exhaust_pos1+_V(0,0,-15), &srb_contrail);
-	AddExhaustStream (th_main[0], m_exhaust_pos1+_V(0,0,-12), &srb_exhaust);
-	AddExhaustStream (th_main[1], m_exhaust_pos2+_V(0,0,-15), &srb_contrail);
-	AddExhaustStream (th_main[1], m_exhaust_pos2+_V(0,0,-12), &srb_exhaust);
-	AddExhaustStream (th_main[2], m_exhaust_pos3+_V(0,0,-15), &srb_contrail);
-	AddExhaustStream (th_main[2], m_exhaust_pos3+_V(0,0,-12), &srb_exhaust);
-	AddExhaustStream (th_main[3], m_exhaust_pos4+_V(0,0,-15), &srb_contrail);
-	AddExhaustStream (th_main[3], m_exhaust_pos4+_V(0,0,-12), &srb_exhaust);
-	AddExhaustStream (th_main[4], m_exhaust_pos5+_V(0,0,-15), &srb_contrail);
-	AddExhaustStream (th_main[4], m_exhaust_pos5+_V(0,0,-12), &srb_exhaust);
-	AddExhaustStream (th_main[5], m_exhaust_pos6+_V(0,0,-15), &srb_contrail);
-	AddExhaustStream (th_main[5], m_exhaust_pos6+_V(0,0,-12), &srb_exhaust);
-	AddExhaustStream (th_main[6], m_exhaust_pos7+_V(0,0,-15), &srb_contrail);
-	AddExhaustStream (th_main[6], m_exhaust_pos7+_V(0,0,-12), &srb_exhaust);
-	AddExhaustStream (th_main[7], m_exhaust_pos8+_V(0,0,-15), &srb_contrail);
-	AddExhaustStream (th_main[7], m_exhaust_pos8+_V(0,0,-12), &srb_exhaust);
+	double exhpos = -5;
+	//AddExhaustStream (th_main[0], m_exhaust_pos1+_V(0,0,-15), &srb_contrail);
+	AddExhaustStream (th_main[0], m_exhaust_pos1+_V(0,0,exhpos), &srb_exhaust);
+	//AddExhaustStream (th_main[1], m_exhaust_pos2+_V(0,0,-15), &srb_contrail);
+	AddExhaustStream (th_main[1], m_exhaust_pos2+_V(0,0,exhpos), &srb_exhaust);
+	//AddExhaustStream (th_main[2], m_exhaust_pos3+_V(0,0,-15), &srb_contrail);
+	AddExhaustStream (th_main[2], m_exhaust_pos3+_V(0,0,exhpos), &srb_exhaust);
+	//AddExhaustStream (th_main[3], m_exhaust_pos4+_V(0,0,-15), &srb_contrail);
+	AddExhaustStream (th_main[3], m_exhaust_pos4+_V(0,0,exhpos), &srb_exhaust);
+	//AddExhaustStream (th_main[4], m_exhaust_pos5+_V(0,0,-15), &srb_contrail);
+	AddExhaustStream (th_main[4], m_exhaust_pos5+_V(0,0,exhpos), &srb_exhaust);
+	//AddExhaustStream (th_main[5], m_exhaust_pos6+_V(0,0,-15), &srb_contrail);
+	AddExhaustStream (th_main[5], m_exhaust_pos6+_V(0,0,exhpos), &srb_exhaust);
+	//AddExhaustStream (th_main[6], m_exhaust_pos7+_V(0,0,-15), &srb_contrail);
+	AddExhaustStream (th_main[6], m_exhaust_pos7+_V(0,0,exhpos), &srb_exhaust);
+	//AddExhaustStream (th_main[7], m_exhaust_pos8+_V(0,0,-15), &srb_contrail);
+	AddExhaustStream (th_main[7], m_exhaust_pos8+_V(0,0,exhpos), &srb_exhaust);
+
+	// Contrail
+	for (i = 0; i < 8; i++) {
+		if (contrail[i]) {
+			DelExhaustStream(contrail[i]);
+			contrail[i] = NULL;
+		}
+	}
+
+	double conpos = -10;
+	contrail[0] = AddParticleStream(&srb_contrail, m_exhaust_pos1+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
+	contrail[1] = AddParticleStream(&srb_contrail, m_exhaust_pos2+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
+	contrail[2] = AddParticleStream(&srb_contrail, m_exhaust_pos3+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
+	contrail[3] = AddParticleStream(&srb_contrail, m_exhaust_pos4+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
+	contrail[4] = AddParticleStream(&srb_contrail, m_exhaust_pos5+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
+	contrail[5] = AddParticleStream(&srb_contrail, m_exhaust_pos6+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
+	contrail[6] = AddParticleStream(&srb_contrail, m_exhaust_pos7+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
+	contrail[7] = AddParticleStream(&srb_contrail, m_exhaust_pos8+_V(0,0,conpos), _V( 0,0,-1), &contrailLevel);
+
 }
 
 void Saturn1b::SetSecondStage ()
