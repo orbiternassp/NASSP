@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2006/12/10 20:58:45  tschachim
+  *	VC6 floating point fixes.
+  *	
   *	Revision 1.64  2006/12/10 00:47:26  dseagrav
   *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
   *	
@@ -2500,5 +2503,5 @@ void CMOptics::TimeStep(double simdt){
 		}				
 	}
 
-	sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
+	// sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
 }
