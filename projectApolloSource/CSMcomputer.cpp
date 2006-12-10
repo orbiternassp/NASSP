@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2006/12/10 00:47:26  dseagrav
+  *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
+  *	
   *	Revision 1.63  2006/11/30 14:10:51  tschachim
   *	Removed debug prints.
   *	
@@ -2301,10 +2304,10 @@ void CMOptics::SystemTimestep(double simdt) {
 	// Optics system apparently uses 124.4 watts of power to operate.
 	// This should probably vary up and down when the motors run, but I couldn't find data for it.
 	Powered = 0; // Reset
-	if(sat->GNOpticsMnACircuitBraker.Voltage() > 28){
+	if(sat->GNOpticsMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE){
 		Powered |= 1;
 	}
-	if(sat->GNOpticsMnBCircuitBraker.Voltage() > 28){
+	if(sat->GNOpticsMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE){
 		Powered |= 2;
 	}
 	switch(Powered){
@@ -2374,24 +2377,24 @@ void CMOptics::TimeStep(double simdt){
 	// Generate rates for telescope and manual mode
 	switch(sat->ControllerSpeedSwitch.GetState()){
 		case THREEPOSSWITCH_UP:       // HI
-			ShaftRate = 1775 * simdt;
-			TrunRate  = 3640 * simdt;
+			ShaftRate = 1775. * simdt;
+			TrunRate  = 3640. * simdt;
 			break;
 		case THREEPOSSWITCH_CENTER:   // MED
-			ShaftRate = 182 * simdt;
-			TrunRate  = 364 * simdt;
+			ShaftRate = 182. * simdt;
+			TrunRate  = 364. * simdt;
 			break;
 		case THREEPOSSWITCH_DOWN:     // LOW
-			ShaftRate = 18 * simdt;
-			TrunRate  = 36 * simdt;
+			ShaftRate = 18. * simdt;
+			TrunRate  = 36. * simdt;
 			break;
 	}
 
 	switch(sat->ModeSwitch.GetState()){
 		case THREEPOSSWITCH_DOWN: // ZERO OPTICS
 			// Force MANUAL HI rate for zero optics mode.
-			ShaftRate = 1775 * simdt;
-			TrunRate = 3640 * simdt;
+			ShaftRate = 1775. * simdt;
+			TrunRate = 3640. * simdt;
 
 			if(OpticsShaft > 0){
 				if(OpticsShaft > OCDU_SHAFT_STEP*ShaftRate){
@@ -2433,7 +2436,7 @@ void CMOptics::TimeStep(double simdt){
 		case THREEPOSSWITCH_CENTER: // MANUAL
 			if((OpticsManualMovement&0x01) != 0 && SextTrunion < (RAD*90)){
 				SextTrunion += OCDU_TRUNNION_STEP * TrunRate;				
-				while(abs(abs(SextTrunion)-abs(TrunionMoved)) >= OCDU_TRUNNION_STEP){					
+				while(fabs(fabs(SextTrunion)-fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP){					
 					sat->agc.vagc.Erasable[0][035]++;
 					sat->agc.vagc.Erasable[0][035] &= 077777;
 					TrunionMoved += OCDU_TRUNNION_STEP;
@@ -2441,7 +2444,7 @@ void CMOptics::TimeStep(double simdt){
 			}
 			if((OpticsManualMovement&0x02) != 0 && SextTrunion > 0){
 				SextTrunion -= OCDU_TRUNNION_STEP * TrunRate;				
-				while(abs(abs(SextTrunion)-abs(TrunionMoved)) >= OCDU_TRUNNION_STEP){					
+				while(fabs(fabs(SextTrunion)-fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP){					
 					sat->agc.vagc.Erasable[0][035]--;
 					sat->agc.vagc.Erasable[0][035] &= 077777;
 					TrunionMoved -= OCDU_TRUNNION_STEP;
@@ -2449,7 +2452,7 @@ void CMOptics::TimeStep(double simdt){
 			}
 			if((OpticsManualMovement&0x04) != 0 && OpticsShaft > -(RAD*270)){
 				OpticsShaft -= OCDU_SHAFT_STEP * ShaftRate;					
-				while(abs(abs(OpticsShaft)-abs(ShaftMoved)) >= OCDU_SHAFT_STEP){
+				while(fabs(fabs(OpticsShaft)-fabs(ShaftMoved)) >= OCDU_SHAFT_STEP){
 					sat->agc.vagc.Erasable[0][036]--;
 					sat->agc.vagc.Erasable[0][036] &= 077777;
 					ShaftMoved -= OCDU_SHAFT_STEP;
@@ -2457,7 +2460,7 @@ void CMOptics::TimeStep(double simdt){
 			}
 			if((OpticsManualMovement&0x08) != 0 && OpticsShaft < (RAD*270)){
 				OpticsShaft += OCDU_SHAFT_STEP * ShaftRate;					
-				while(abs(abs(OpticsShaft)-abs(ShaftMoved)) >= OCDU_SHAFT_STEP){
+				while(fabs(fabs(OpticsShaft)-fabs(ShaftMoved)) >= OCDU_SHAFT_STEP){
 					sat->agc.vagc.Erasable[0][036]++;
 					sat->agc.vagc.Erasable[0][036] &= 077777;
 					ShaftMoved += OCDU_SHAFT_STEP;
@@ -2496,5 +2499,6 @@ void CMOptics::TimeStep(double simdt){
 			TeleTrunion = TeleTrunionTarget;
 		}				
 	}
-	
+
+	sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
 }
