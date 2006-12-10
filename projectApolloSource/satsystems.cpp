@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.128  2006/11/30 03:34:25  dseagrav
+  *	Added basic manual optics controls
+  *	
   *	Revision 1.127  2006/11/29 03:01:17  dseagrav
   *	Cause "Zero Optics" mode to zero optics.
   *	
@@ -452,6 +455,9 @@ void Saturn::SystemsInit() {
 	// Telecom initialization
 	pcm.Init(this);
 
+	// Optics initialization
+	optics.Init(this);
+
 	// SPS initialization
 	SPSPropellant.Init(&GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &SPSGaugingSwitch, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
 	SPSEngine.Init(this);
@@ -604,67 +610,8 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		dsky.Timestep(MissionTime);
 		dsky2.Timestep(MissionTime);
 		agc.Timestep(MissionTime, simdt);
-		imu.Timestep(MissionTime);
-
-		// Optics per-timestep is short, no need to waste a function call.
-		switch(ModeSwitch.GetState()){
-			case THREEPOSSWITCH_DOWN: // ZERO OPTICS
-				if(OpticsShaft > 0){
-					if(OpticsShaft > OCDU_SHAFT_STEP*4){
-						OpticsShaft -= OCDU_SHAFT_STEP*4;
-					}else{
-						OpticsShaft = 0;
-					}
-				}
-				if(OpticsShaft < 0){
-					if(OpticsShaft < (-OCDU_SHAFT_STEP*4)){
-						OpticsShaft += OCDU_SHAFT_STEP*4;
-					}else{
-						OpticsShaft = 0;
-					}
-				}
-				if(SextTrunion > 0){
-					if(SextTrunion > OCDU_TRUNNION_STEP*4){
-						SextTrunion -= OCDU_TRUNNION_STEP*4;
-					}else{
-						SextTrunion = 0;
-					}
-					TeleTrunion = SextTrunion; // HACK
-				}
-				if(SextTrunion < 0){
-					if(SextTrunion < (-OCDU_TRUNNION_STEP*4)){
-						SextTrunion += OCDU_TRUNNION_STEP*4;
-					}else{
-						SextTrunion = 0;
-					}
-					TeleTrunion = SextTrunion; // HACK
-				}
-				break;
-			case THREEPOSSWITCH_CENTER: // MANUAL
-				if((OpticsManualMovement&0x01) != 0 && SextTrunion < (RAD*90)){
-					SextTrunion += OCDU_TRUNNION_STEP;
-					TeleTrunion = SextTrunion; // HACK
-					agc.vagc.Erasable[0][035]++;
-					agc.vagc.Erasable[0][035] &= 077777;
-				}
-				if((OpticsManualMovement&0x02) != 0 && SextTrunion > 0){
-					SextTrunion -= OCDU_TRUNNION_STEP;
-					TeleTrunion = SextTrunion; // HACK
-					agc.vagc.Erasable[0][035]--;
-					agc.vagc.Erasable[0][035] &= 077777;
-				}
-				if((OpticsManualMovement&0x04) != 0 && OpticsShaft > -(RAD*270)){
-					OpticsShaft -= OCDU_SHAFT_STEP;					
-					agc.vagc.Erasable[0][036]--;
-					agc.vagc.Erasable[0][036] &= 077777;
-				}
-				if((OpticsManualMovement&0x08) != 0 && OpticsShaft < (RAD*270)){
-					OpticsShaft += OCDU_SHAFT_STEP;					
-					agc.vagc.Erasable[0][036]++;
-					agc.vagc.Erasable[0][036] &= 077777;
-				}
-				break;
-		}
+		imu.Timestep(MissionTime);		
+		optics.TimeStep(simdt);
 
 		//
 		// If we've seperated from the SIVb, the IU is history.
@@ -1376,6 +1323,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		gdc.SystemTimestep(tFactor);
 		eca.SystemTimestep(tFactor);
 		rjec.SystemTimestep(tFactor);
+		optics.SystemTimestep(tFactor);
 		SPSPropellant.SystemTimestep(tFactor);
 		SPSEngine.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();

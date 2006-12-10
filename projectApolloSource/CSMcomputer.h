@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2006/11/25 11:49:21  dseagrav
+  *	Connect CM optics to vAGC. Does not work properly.
+  *	
   *	Revision 1.21  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -91,6 +94,11 @@
 
 #if !defined(_PA_CSMCOMPUTER_H)
 #define _PA_CSMCOMPUTER_H
+
+// OPTICS CONFIGURATION DEFINES
+// Step values in radians.
+#define OCDU_SHAFT_STEP 0.000191747598876953125 
+#define OCDU_TRUNNION_STEP 0.00004793689959716796875
 
 //
 // Flagword definitions. These are really intended for future
@@ -561,5 +569,31 @@ protected:
 	///
 	CSMToSIVBControlConnector &lv;
 };
+
+// *** CM OPTICS ***
+// I guess this can go here; it doesn't really warrant its own file, and it's part of GNC, so...
+class Saturn;
+
+class CMOptics {	
+public: 
+	CMOptics();														// Cons
+	void Init(Saturn *vessel);										// Initialization
+	void TimeStep(double simdt);                                    // Timestep
+	void SystemTimestep(double simdt);
+	void CMCShaftDrive(int val, int ch12);                          // CMC pulses
+	void CMCTrunionDrive(int val, int ch12); 
+
+	Saturn *sat;													// Our Ship
+	double OpticsShaft;												// Shaft Position
+	double SextTrunion;												// SXT Trunion
+	double TeleTrunion;												// SCT Trunion
+	double TargetShaft;												// Reserved
+	double TargetTrunion;											// Reserved
+	int OpticsManualMovement;										// Manual Movement Demand Flags
+	double ShaftMoved;												// Movement counters for manual mode
+	double TrunionMoved;
+	int Powered;                                                    // 0 = NO, 1 = MNA, 2 = MNB, 3 = Both
+};
+
 
 #endif // _PA_CSMCOMPUTER_H

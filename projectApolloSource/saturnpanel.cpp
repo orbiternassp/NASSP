@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.193  2006/12/07 18:52:43  tschachim
+  *	New LC34, Bugfixes.
+  *	
   *	Revision 1.192  2006/11/24 22:42:44  dseagrav
   *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
   *	
@@ -2360,8 +2363,8 @@ void Saturn::SetSwitches(int panel) {
 	GNIMUHTRMnBCircuitBraker.Init(214,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusB, 7.5);
 	GNComputerMnACircuitBraker.Init(251,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusA, 5.0);
 	GNComputerMnBCircuitBraker.Init(288,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusB, 5.0);
-	GNOpticsMnACircuitBraker.Init(325,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow);
-	GNOpticsMnBCircuitBraker.Init(362,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow);
+	GNOpticsMnACircuitBraker.Init(325,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusA, 10.0);
+	GNOpticsMnBCircuitBraker.Init(362,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusB, 10.0);
 
 	SuitCompressorsAc1ACircuitBrakerRow.Init(AID_SUITCOMPRESSORSAC1ACIRCUITBRAKER, MainPanel);
 	SuitCompressorsAc1ACircuitBraker.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], SuitCompressorsAc1ACircuitBrakerRow, &ACBus1PhaseA, 2.0);
@@ -4100,9 +4103,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			SextTrunion = RAD*90;
 		}
 */
-		sprintf(oapiDebugString(), "Shaft %f, Trunion %f", OpticsShaft/RAD, SextTrunion/RAD);
+		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.SextTrunion/RAD);
 
-		oapiCameraSetCockpitDir (-OpticsShaft, SextTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+		oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.SextTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
 		return true;
 
 	case AID_OPTICSCLKAREATELE:
@@ -4120,9 +4123,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			TeleTrunion = RAD*90;
 		}
 */
-		sprintf(oapiDebugString(), "Shaft %f, Trunion %f", OpticsShaft/RAD, TeleTrunion/RAD);
+		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.TeleTrunion/RAD);
 
-		oapiCameraSetCockpitDir (-OpticsShaft, TeleTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+		oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.TeleTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
 		return true;
 
 	case AID_MISSION_CLOCK:

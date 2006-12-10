@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2006/11/30 14:10:51  tschachim
+  *	Removed debug prints.
+  *	
   *	Revision 1.62  2006/11/29 03:01:17  dseagrav
   *	Cause "Zero Optics" mode to zero optics.
   *	
@@ -2216,19 +2219,7 @@ void CSMcomputer::ProcessChannel160(int val){
 		// If we're out of the zero notch
 		error = sat->SetSPSPitch(tvc_pitch_cmd);		
 	}else{
-		// OPTICS SHAFT (CAN YOU DIG IT?)
-		int pulses;
-		if(val&040000){ // Negative
-			pulses = -((~val)&07777); 
-		} else {
-			pulses = val&07777; 
-		}
-		sat->OpticsShaft += (OCDU_SHAFT_STEP*pulses);
-		if(val12.Bits.EnableOpticsCDUErrorCounters){
-			sat->agc.vagc.Erasable[0][036] += pulses;
-			sat->agc.vagc.Erasable[0][036] &= 077777;
-		}
-		sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
+		sat->optics.CMCShaftDrive(val,val12.Value);
 	}	
 }
 
@@ -2253,24 +2244,13 @@ void CSMcomputer::ProcessChannel161(int val){
 		}				
 		error = sat->SetSPSYaw(tvc_yaw_cmd);
 	}else{
-		// OPTICS TRUNNION		
-		int pulses;
-		if(val&040000){ // Negative
-			pulses = -((~val)&07777); 
-		} else {
-			pulses = val&07777; 
-		}
-		if(val12.Bits.EnableOpticsCDUErrorCounters){
-			sat->agc.vagc.Erasable[0][035] += pulses;
-			sat->agc.vagc.Erasable[0][035] &= 077777;
-		}
-		sat->SextTrunion += (OCDU_TRUNNION_STEP*pulses); 
-		sat->TeleTrunion = sat->SextTrunion; // HACK
-		sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
+		sat->optics.CMCTrunionDrive(val,val12.Value);
 	}	
 }
 
 void CSMcomputer::ProcessChannel14(int val){
+	// This entire deal is no longer necessary, but we'll leave the stub here in case it's needed later.
+	/*
 	ChannelValue12 val12;
 	ChannelValue14 val14;
 	val12.Value = GetOutputChannel(012);
@@ -2279,74 +2259,7 @@ void CSMcomputer::ProcessChannel14(int val){
 
 	if(val12.Bits.TVCEnable){
 		return; // Ignore
-	}else{
-#ifdef OCDU_SHAFT_ENABLED
-		if(val14.Bits.DriveCDUS){
-			// OPTICS SHAFT (CAN YOU DIG IT?)
-			if(sat->agc.vagc.Erasable[0][054] & 040000){ 
-				// MINUS
-				sat->OpticsShaft -= OCDU_SHAFT_STEP; 
-				if(val12.Bits.EnableOpticsCDUErrorCounters){
-					// UPDATE POSITION
-					DoMCDU(&sat->agc.vagc.Erasable[0][036]);
-					// sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036];
-				}				
-				if(DoDINC(054,&sat->agc.vagc.Erasable[0][054]) != 0){ // Use DINC for anything
-					// It overflowed - Unset bit 10 (02000)
-					sat->agc.vagc.InputChannel[014] &= ~02000; 			
-				}
-				sprintf(oapiDebugString(),"SHAFT: MINUS PULSE - %o TO GO, %o MOVED", sat->agc.vagc.Erasable[0][054],sat->agc.vagc.Erasable[0][036]);
-			}else{
-				// PLUS
-				sat->OpticsShaft += OCDU_SHAFT_STEP; 
-				if(val12.Bits.EnableOpticsCDUErrorCounters){
-					// UPDATE POSITION
-					DoPCDU(&sat->agc.vagc.Erasable[0][036]);					
-					// sat->agc.vagc.ocdu_sf_ctr = sat->agc.vagc.Erasable[0][036]; 
-				}				
-				if(DoDINC(054,&sat->agc.vagc.Erasable[0][054]) != 0){
-					// It overflowed - Unset bit 10
-					sat->agc.vagc.InputChannel[014] &= ~02000; 			
-				}			    
-				sprintf(oapiDebugString(),"SHAFT: PLUS PULSE - %o TO GO, %o MOVED", sat->agc.vagc.Erasable[0][054],sat->agc.vagc.Erasable[0][036]);
-			}  		  
-		}
-#endif
-#ifdef OCDU_TRUNNION_ENABLED
-		if(val14.Bits.DriveCDUT){
-			// OPTICS TRUNNION
-			if(sat->agc.vagc.Erasable[0][053] & 040000){ 
-				// MINUS
-				sat->SextTrunion -= OCDU_TRUNNION_STEP; 
-				sat->TeleTrunion = sat->SextTrunion; // HACK
-				if(val12.Bits.EnableOpticsCDUErrorCounters){
-					// UPDATE POSITION
-					DoMCDU(&sat->agc.vagc.Erasable[0][035]);
-					// sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035];
-				}
-				if(DoDINC(053,&sat->agc.vagc.Erasable[0][053]) != 0){ // Use DINC for anything
-					// It overflowed - Unset bit 11
-					sat->agc.vagc.InputChannel[014] &= ~04000; 					
-				}
-				sprintf(oapiDebugString(),"TRUNNION: MINUS PULSE - %o TO GO, %o MOVED", sat->agc.vagc.Erasable[0][053],sat->agc.vagc.Erasable[0][035]);				
-			}else{
-				// PLUS
-				sat->SextTrunion += OCDU_TRUNNION_STEP; 
-				sat->TeleTrunion = sat->SextTrunion; // HACK
-				if(val12.Bits.EnableOpticsCDUErrorCounters){
-					// UPDATE POSITION 					
-					DoPCDU(&sat->agc.vagc.Erasable[0][035]);					
-					// sat->agc.vagc.ocdu_tx_ctr = sat->agc.vagc.Erasable[0][035]; 
-				}
-				if(DoDINC(053,&sat->agc.vagc.Erasable[0][053]) != 0){
-					// It overflowed - Unset bit 11
-					sat->agc.vagc.InputChannel[014] &= ~04000; 
-				}
-				sprintf(oapiDebugString(),"TRUNNION: PLUS PULSE - %o TO GO, %o MOVED", sat->agc.vagc.Erasable[0][053],sat->agc.vagc.Erasable[0][035]);
-			}			
-		}
-#endif
-	}
+	} */
 }
 
 // TODO Dirty Hack for the AGC++ attitude control, 
@@ -2366,4 +2279,222 @@ void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 			sat->rjec.AGCActiveTimer = 2.0; //ApolloGuidance DELTAT
 		}
 	}
+}
+
+// CM Optics class code
+CMOptics::CMOptics(){
+	sat = NULL;
+	OpticsShaft = 0.0;
+	SextTrunion = 0.0;
+	TeleTrunion = 0.0;
+	ShaftMoved = 0.0;
+	TrunionMoved = 0.0;
+	OpticsManualMovement = 0;
+	Powered = 0;
+}
+
+void CMOptics::Init(Saturn *vessel){
+	sat = vessel;
+}
+
+void CMOptics::SystemTimestep(double simdt) {
+	// Optics system apparently uses 124.4 watts of power to operate.
+	// This should probably vary up and down when the motors run, but I couldn't find data for it.
+	Powered = 0; // Reset
+	if(sat->GNOpticsMnACircuitBraker.Voltage() > 28){
+		Powered |= 1;
+	}
+	if(sat->GNOpticsMnBCircuitBraker.Voltage() > 28){
+		Powered |= 2;
+	}
+	switch(Powered){
+		case 0: // OFF
+			break;
+		case 1: // MNA
+			sat->GNOpticsMnACircuitBraker.DrawPower(124.4);
+			break;
+		case 2: // MNB
+			sat->GNOpticsMnBCircuitBraker.DrawPower(124.4);
+			break;
+		case 3: // BOTH
+			sat->GNOpticsMnACircuitBraker.DrawPower(62.2);
+			sat->GNOpticsMnBCircuitBraker.DrawPower(62.2);
+			break;
+	}
+}
+
+void CMOptics::CMCTrunionDrive(int val,int ch12){
+	int pulses;
+	ChannelValue12 val12;
+	val12.Value = ch12;
+
+	if(Powered == 0){ return; }
+
+	if(val&040000){ // Negative
+		pulses = -((~val)&07777); 
+	} else {
+		pulses = val&07777; 
+	}
+	if(val12.Bits.EnableOpticsCDUErrorCounters){
+		sat->agc.vagc.Erasable[0][035] += pulses;
+		sat->agc.vagc.Erasable[0][035] &= 077777;
+	}
+	SextTrunion += (OCDU_TRUNNION_STEP*pulses); 
+	TrunionMoved = SextTrunion;
+	sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
+}
+
+void CMOptics::CMCShaftDrive(int val,int ch12){
+	int pulses;
+	ChannelValue12 val12;
+	val12.Value = ch12;
+
+	if(Powered == 0){ return; }
+
+	if(val&040000){ // Negative
+		pulses = -((~val)&07777); 
+	} else {
+		pulses = val&07777; 
+	}
+	OpticsShaft += (OCDU_SHAFT_STEP*pulses);
+	ShaftMoved = OpticsShaft;
+	if(val12.Bits.EnableOpticsCDUErrorCounters){
+		sat->agc.vagc.Erasable[0][036] += pulses;
+		sat->agc.vagc.Erasable[0][036] &= 077777;
+	}
+	sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
+}
+
+void CMOptics::TimeStep(double simdt){
+	double ShaftRate = 0;
+	double TrunRate = 0;
+
+	if(Powered == 0){ return; }
+
+	// Generate rates for telescope and manual mode
+	switch(sat->ControllerSpeedSwitch.GetState()){
+		case THREEPOSSWITCH_UP:       // HI
+			ShaftRate = 1775 * simdt;
+			TrunRate  = 3640 * simdt;
+			break;
+		case THREEPOSSWITCH_CENTER:   // MED
+			ShaftRate = 182 * simdt;
+			TrunRate  = 364 * simdt;
+			break;
+		case THREEPOSSWITCH_DOWN:     // LOW
+			ShaftRate = 18 * simdt;
+			TrunRate  = 36 * simdt;
+			break;
+	}
+
+	switch(sat->ModeSwitch.GetState()){
+		case THREEPOSSWITCH_DOWN: // ZERO OPTICS
+			// Force MANUAL HI rate for zero optics mode.
+			ShaftRate = 1775 * simdt;
+			TrunRate = 3640 * simdt;
+
+			if(OpticsShaft > 0){
+				if(OpticsShaft > OCDU_SHAFT_STEP*ShaftRate){
+					OpticsShaft -= OCDU_SHAFT_STEP*ShaftRate;
+					ShaftMoved = OpticsShaft;
+				}else{
+					OpticsShaft = 0;
+					ShaftMoved = 0;
+				}
+			}
+			if(OpticsShaft < 0){
+				if(OpticsShaft < (-OCDU_SHAFT_STEP*ShaftRate)){
+					OpticsShaft += OCDU_SHAFT_STEP*ShaftRate;
+					ShaftMoved = OpticsShaft;
+				}else{
+					OpticsShaft = 0;
+					ShaftMoved = 0;
+				}
+			}
+			if(SextTrunion > 0){
+				if(SextTrunion > OCDU_TRUNNION_STEP*TrunRate){
+					SextTrunion -= OCDU_TRUNNION_STEP*TrunRate;
+					TrunionMoved = SextTrunion;
+				}else{
+					SextTrunion = 0;
+					TrunionMoved = 0;
+				}				
+			}
+			if(SextTrunion < 0){
+				if(SextTrunion < (-OCDU_TRUNNION_STEP*TrunRate)){
+					SextTrunion += OCDU_TRUNNION_STEP*TrunRate;
+					TrunionMoved = SextTrunion;
+				}else{
+					SextTrunion = 0;
+					TrunionMoved = 0;
+				}				
+			}
+			break;
+		case THREEPOSSWITCH_CENTER: // MANUAL
+			if((OpticsManualMovement&0x01) != 0 && SextTrunion < (RAD*90)){
+				SextTrunion += OCDU_TRUNNION_STEP * TrunRate;				
+				while(abs(abs(SextTrunion)-abs(TrunionMoved)) >= OCDU_TRUNNION_STEP){					
+					sat->agc.vagc.Erasable[0][035]++;
+					sat->agc.vagc.Erasable[0][035] &= 077777;
+					TrunionMoved += OCDU_TRUNNION_STEP;
+				}
+			}
+			if((OpticsManualMovement&0x02) != 0 && SextTrunion > 0){
+				SextTrunion -= OCDU_TRUNNION_STEP * TrunRate;				
+				while(abs(abs(SextTrunion)-abs(TrunionMoved)) >= OCDU_TRUNNION_STEP){					
+					sat->agc.vagc.Erasable[0][035]--;
+					sat->agc.vagc.Erasable[0][035] &= 077777;
+					TrunionMoved -= OCDU_TRUNNION_STEP;
+				}
+			}
+			if((OpticsManualMovement&0x04) != 0 && OpticsShaft > -(RAD*270)){
+				OpticsShaft -= OCDU_SHAFT_STEP * ShaftRate;					
+				while(abs(abs(OpticsShaft)-abs(ShaftMoved)) >= OCDU_SHAFT_STEP){
+					sat->agc.vagc.Erasable[0][036]--;
+					sat->agc.vagc.Erasable[0][036] &= 077777;
+					ShaftMoved -= OCDU_SHAFT_STEP;
+				}
+			}
+			if((OpticsManualMovement&0x08) != 0 && OpticsShaft < (RAD*270)){
+				OpticsShaft += OCDU_SHAFT_STEP * ShaftRate;					
+				while(abs(abs(OpticsShaft)-abs(ShaftMoved)) >= OCDU_SHAFT_STEP){
+					sat->agc.vagc.Erasable[0][036]++;
+					sat->agc.vagc.Erasable[0][036] &= 077777;
+					ShaftMoved += OCDU_SHAFT_STEP;
+				}
+			}
+			break;
+	}
+
+	// TELESCOPE TRUNNION MAINTENANCE (happens in all modes)
+	// If the CMC issued pulses, they will have happened before we got here, so the sextant angle will be right.
+	// If the order of timestep() calls is changed, this will "lag".
+
+	double TeleTrunionTarget = 0;
+	switch(sat->ControllerTelescopeTrunnionSwitch.GetState()){
+		case THREEPOSSWITCH_UP:			// SLAVE TO SEXTANT			
+			TeleTrunionTarget = SextTrunion;
+			break;
+		case THREEPOSSWITCH_CENTER:		// 0 DEG
+			TeleTrunionTarget = 0;
+			break;
+		case THREEPOSSWITCH_DOWN:		// OFFSET 25 DEG
+			TeleTrunionTarget = SextTrunion + 0.218166156; // Add 12.5 degrees to sextant angle
+			break;
+	}
+	if(TeleTrunion > TeleTrunionTarget){
+		if(TeleTrunion > TeleTrunionTarget-(OCDU_TRUNNION_STEP*TrunRate)){
+			TeleTrunion -= OCDU_TRUNNION_STEP*TrunRate;				
+		}else{
+			TeleTrunion = TeleTrunionTarget;
+		}				
+	}
+	if(TeleTrunion < TeleTrunionTarget){
+		if(TeleTrunion < TeleTrunionTarget+(-OCDU_TRUNNION_STEP*TrunRate)){
+			TeleTrunion += OCDU_TRUNNION_STEP*TrunRate;
+		}else{
+			TeleTrunion = TeleTrunionTarget;
+		}				
+	}
+	
 }
