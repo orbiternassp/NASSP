@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.181  2006/12/07 18:52:43  tschachim
+  *	New LC34, Bugfixes.
+  *	
   *	Revision 1.180  2006/11/30 14:16:12  tschachim
   *	Bugfixes abort modes.
   *	
@@ -795,10 +798,6 @@ void Saturn::initSaturn()
 
 	InVC = false;
 	InPanel = false;
-	OpticsShaft = 0.0;
-	SextTrunion = 0.0;
-	TeleTrunion = 0.0;
-	OpticsManualMovement = 0;
 	CheckPanelIdInTimestep = false;
 	FovFixed = false;
 	FovExternal = false;
@@ -3115,16 +3114,16 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	if(down){
 		switch(key){
 			case OAPI_KEY_W: // Optics Up
-				OpticsManualMovement |= 0x01; 
+				optics.OpticsManualMovement |= 0x01; 
 				return 1;
 			case OAPI_KEY_S: // Optics Down
-				OpticsManualMovement |= 0x02; 
+				optics.OpticsManualMovement |= 0x02; 
 				return 1;
 			case OAPI_KEY_A: // Optics Left
-				OpticsManualMovement |= 0x04; 
+				optics.OpticsManualMovement |= 0x04; 
 				return 1;
 			case OAPI_KEY_D: // Optics Right
-				OpticsManualMovement |= 0x08; 
+				optics.OpticsManualMovement |= 0x08; 
 				return 1;
 			case OAPI_KEY_Q: // Optics Mark
 				agc.SetInputChannelBit(016,6,1);
@@ -3136,16 +3135,16 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	}else{
 		switch(key){
 			case OAPI_KEY_W: 
-				OpticsManualMovement &= 0xFE; 
+				optics.OpticsManualMovement &= 0xFE; 
 				return 1;
 			case OAPI_KEY_S: 
-				OpticsManualMovement &= 0xFD; 
+				optics.OpticsManualMovement &= 0xFD; 
 				return 1;
 			case OAPI_KEY_A: 
-				OpticsManualMovement &= 0xFB; 
+				optics.OpticsManualMovement &= 0xFB; 
 				return 1;
 			case OAPI_KEY_D: 
-				OpticsManualMovement &= 0xF7; 
+				optics.OpticsManualMovement &= 0xF7; 
 				return 1;
 			case OAPI_KEY_Q: 
 				agc.SetInputChannelBit(016,6,0);

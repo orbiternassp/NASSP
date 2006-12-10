@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.222  2006/12/07 18:52:43  tschachim
+  *	New LC34, Bugfixes.
+  *	
   *	Revision 1.221  2006/11/30 03:34:25  dseagrav
   *	Added basic manual optics controls
   *	
@@ -423,13 +426,6 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
 
-// OPTICS CONFIGURATION DEFINES
-// Step values in radians.
-#define OCDU_SHAFT_STEP 0.000191747598876953125 
-// #define OCDU_SHAFT_STEP 0.0002727076953125
-#define OCDU_TRUNNION_STEP 0.00004793689959716796875
-// #define OCDU_TRUNNION_STEP 0.0000340884619
-
 //
 // Valves.
 //
@@ -779,12 +775,6 @@ public:
 	int clbkConsumeDirectKey(char *keystate);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	bool clbkLoadVC (int id);
-	double OpticsShaft;
-	double SextTrunion;
-	double TeleTrunion;
-	double TargetShaft;
-	double TargetTrunion;
-	int OpticsManualMovement;
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 
@@ -1496,6 +1486,9 @@ protected:
 	ECA  eca;
 	// Telecom equipment
 	PCM  pcm;
+
+	// CM Optics
+	CMOptics optics;
 
 	//
 	// Switches
@@ -3219,7 +3212,7 @@ protected:
 
 	DSKY dsky;
 	DSKY dsky2;
-	CSMcomputer agc;
+	CSMcomputer agc;	
 	IMU imu;
 	IU iu;
 	CSMCautionWarningSystem cws;
@@ -3710,7 +3703,7 @@ protected:
 	int LMPadLoadCount;
 	int LMPadValueCount;
 	
-	// DS20060305 Friend Class List Added for SCS objects
+	// DS20060305 Friend Class List Added for SCS objects 
 	friend class GDC;
 	friend class BMAG;
 	friend class ASCP;
@@ -3721,6 +3714,7 @@ protected:
 	friend class PCM;         // Otherwise reading telemetry is a pain
 	friend class SPSPropellantSource;
 	friend class SPSEngine;
+	friend class CMOptics;
 };
 
 extern void BaseInit();
