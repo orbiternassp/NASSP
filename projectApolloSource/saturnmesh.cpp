@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.55  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.54  2006/08/11 20:37:46  movieman523
   *	Added HasProbe flag for docking probe.
   *	
@@ -714,10 +719,10 @@ void Saturn::SetCSMStage ()
 		ph_ullage2 = 0;
 	}
 
-	if (ph_ullage2)
+	if (ph_ullage3)
 	{
-		DelPropellantResource(ph_ullage2);
-		ph_ullage2 = 0;
+		DelPropellantResource(ph_ullage3);
+		ph_ullage3 = 0;
 	}
 
 	if(ph_3rd) {
