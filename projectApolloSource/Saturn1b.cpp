@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2006/12/07 18:52:43  tschachim
+  *	New LC34, Bugfixes.
+  *	
   *	Revision 1.62  2006/11/30 14:16:12  tschachim
   *	Bugfixes abort modes.
   *	
@@ -289,6 +292,9 @@ const double default_cpitch[PITCH_TABLE_SIZE] = {90,  80, 70, 60,  53,  45,  40,
 void Saturn1b::initSaturn1b()
 
 {
+	// Save DLL instance handle for later abuse
+	dllhandle = g_Param.hDLL;
+	
 	//
 	// Do the basic initialisation from the
 	// generic Saturn class first.
