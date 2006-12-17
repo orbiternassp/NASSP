@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2006/12/17 04:35:23  dseagrav
+  *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
+  *	
   *	Revision 1.66  2006/12/10 22:21:04  tschachim
   *	Removed debug print.
   *	
@@ -1381,17 +1384,19 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		}
 
 		// Do single timesteps to maintain sync with telemetry engine
-		SingleTimestepPrep(simt,simdt);                   // Setup
+		SingleTimestepPrep(simt,simdt);                       // Setup
 		if(LastCycled == 0){ LastCycled = (simt - simdt); }	  // Use simdt as difference if new run
-		double ThisTime = LastCycled;					  // Save here
+		double ThisTime = LastCycled;					      // Save here
 		
-		long cycles = (long)((simt - LastCycled) / 0.0000117); // Get number of CPU cycles to do
-		LastCycled += (0.0000117 * cycles);               // Preserve the remainder
+		long cycles = (long)((simt - LastCycled) / 0.00001171875); // Get number of CPU cycles to do
+		LastCycled += (0.00001171875 * cycles);                    // Preserve the remainder
 		long x = 0; 
 		while(x < cycles){
 			SingleTimestep();
-			ThisTime += 0.0000117;         // Add time
-			sat->pcm.TimeStep(ThisTime);   // and do this
+			ThisTime += 0.00001171875;                          // Add time
+			if((ThisTime - sat->pcm.last_update) > 0.00015625){ // If a step is needed
+				sat->pcm.TimeStep(ThisTime);                    // do it
+			}
 			x++;
 		}
 
