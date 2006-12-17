@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2006/12/10 22:21:04  tschachim
+  *	Removed debug print.
+  *	
   *	Revision 1.65  2006/12/10 20:58:45  tschachim
   *	VC6 floating point fixes.
   *	
@@ -1310,71 +1313,129 @@ void CSMcomputer::Timestep(double simt, double simdt)
 	if (!IsPowered())
 		return;
 
-	//
-	// Initial startup hack for Yaagc.
-	//
-	if (Yaagc && !PadLoaded) {
+	if (Yaagc){
+		//
+		// Initial startup hack for Yaagc.
+		//
+		if(!PadLoaded) {
 
 #ifndef AGC_SOCKET_ENABLED		
-		double latitude, longitude, radius, heading;
+			double latitude, longitude, radius, heading;
 
-		// init pad load
-		OurVessel->GetEquPos(longitude, latitude, radius);
-		oapiGetHeading(OurVessel->GetHandle(), &heading);
+			// init pad load
+			OurVessel->GetEquPos(longitude, latitude, radius);
+			oapiGetHeading(OurVessel->GetHandle(), &heading);
 
-		// set launch pad latitude
-		vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
-		vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
+			// set launch pad latitude
+			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
+			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
 
-		// set launch pad azimuth
-		vagc.Erasable[5][0] = (int16_t)((16384.0 * heading) / TWO_PI);
+			// set launch pad azimuth
+			vagc.Erasable[5][0] = (int16_t)((16384.0 * heading) / TWO_PI);
 
-		// Colossus 249 criterium in SetMissionInfo
-		if (ApolloNo < 15 || ApolloNo == 1301) {
+			// Colossus 249 criterium in SetMissionInfo
+			if (ApolloNo < 15 || ApolloNo == 1301) {
 			
-			// set launch pad longitude
-			if (longitude < 0) longitude += TWO_PI;
-			vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-			vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
+				// set launch pad longitude
+				if (longitude < 0){ longitude += TWO_PI; }
+				vagc.Erasable[2][0263] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
+				vagc.Erasable[2][0264] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
 
-			// set launch pad altitude
-			//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
-			vagc.Erasable[2][0272] = 0;
-			vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
+				// set launch pad altitude
+				//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
+				vagc.Erasable[2][0272] = 0;
+				vagc.Erasable[2][0273] = (int16_t) (0.5 * OurVessel->GetAltitude());
 			
-			// z-component of the normalized earth's rotational vector in basic reference coord.
-			// x and y are 0313 and 0315 and are defined in the scenario
-			vagc.Erasable[3][0317] = 037777;
-			vagc.Erasable[3][0320] = 037777;
+				// z-component of the normalized earth's rotational vector in basic reference coord.
+				// x and y are 0313 and 0315 and are defined in the scenario
+				vagc.Erasable[3][0317] = 037777;
+				vagc.Erasable[3][0320] = 037777;
 
-			// set DAP data to CSM mode 
-			vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 010002;
-			vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
+				// set DAP data to CSM mode 
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 010002;
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 			
-		} else { // Artemis 072
+			} else { // Artemis 072
 
-			// set launch pad longitude
-			if (longitude < 0) longitude += TWO_PI;
-			vagc.Erasable[2][0135] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
-			vagc.Erasable[2][0136] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
+				// set launch pad longitude
+				if (longitude < 0) longitude += TWO_PI;
+				vagc.Erasable[2][0135] = ConvertDecimalToAGCOctal(longitude / TWO_PI, true);
+				vagc.Erasable[2][0136] = ConvertDecimalToAGCOctal(longitude / TWO_PI, false);
 
-			// set launch pad altitude
-			//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
-			vagc.Erasable[2][0133] = 0;
-			vagc.Erasable[2][0134] = (int16_t) (0.5 * OurVessel->GetAltitude());
+				// set launch pad altitude
+				//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
+				vagc.Erasable[2][0133] = 0;
+				vagc.Erasable[2][0134] = (int16_t) (0.5 * OurVessel->GetAltitude());
 
-			// z-component of the normalized earth's rotational vector in basic reference coord.
-			// x and y are 0313 and 0315 and are zero
-			vagc.Erasable[3][0315] = 037777;	
-			vagc.Erasable[3][0316] = 037777;	
+				// z-component of the normalized earth's rotational vector in basic reference coord.
+				// x and y are 0313 and 0315 and are zero
+				vagc.Erasable[3][0315] = 037777;	
+				vagc.Erasable[3][0316] = 037777;	
 
-			// set DAP data to CSM mode 
-			vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 010002;
-			vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
-		}
+				// set DAP data to CSM mode 
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1) - 1] = 010002;
+				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2) - 1] = 001111;
+			}
 #endif
+			PadLoaded = true;
+		}
 
-		PadLoaded = true;
+		// Do single timesteps to maintain sync with telemetry engine
+		SingleTimestepPrep(simt,simdt);                   // Setup
+		if(LastCycled == 0){ LastCycled = (simt - simdt); }	  // Use simdt as difference if new run
+		double ThisTime = LastCycled;					  // Save here
+		
+		long cycles = (long)((simt - LastCycled) / 0.0000117); // Get number of CPU cycles to do
+		LastCycled += (0.0000117 * cycles);               // Preserve the remainder
+		long x = 0; 
+		while(x < cycles){
+			SingleTimestep();
+			ThisTime += 0.0000117;         // Add time
+			sat->pcm.TimeStep(ThisTime);   // and do this
+			x++;
+		}
+
+		//
+		// Debug output to check P11 -- Do we even need this anymore?
+		//
+		/*
+		VECTOR3 vel, hvel;
+		double vvel = 0, apDist, peDist;
+		OBJHANDLE earth = oapiGetGbodyByName("Earth");
+		OurVessel->GetRelativeVel(earth, vel); 
+		if (OurVessel->GetHorizonAirspeedVector(hvel)) {
+			vvel = hvel.y * 3.2808399;
+		}
+
+		if (lastOrbitalElementsTime == 0) {
+			apDist = 0;
+			peDist = 0;
+			lastOrbitalElementsTime = simt;
+
+		} else if (simt - lastOrbitalElementsTime >= 2.0) {
+			OurVessel->GetApDist(apDist);
+			OurVessel->GetPeDist(peDist);
+
+			apDist -= 6.373338e6;
+			peDist -= 6.373338e6;
+
+#ifdef _DEBUG
+			sprintf(oapiDebugString(), "P11 - Vel %.0f Vert. Vel %.0f Alt %.0f ApD %.0f PeD %.0f",  
+				length(vel) * 3.2808399, vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 
+				apDist * 0.000539957 * 10, peDist * 0.000539957 * 10);
+#endif 
+			lastOrbitalElementsTime = simt;
+		}
+		*/
+
+		//
+		// Check nonspherical gravity sources
+		//
+		if (!OurVessel->NonsphericalGravityEnabled()) {
+			sprintf(oapiDebugString(), "*** PLEASE ENABLE NONSPHERICAL GRAVITY SOURCES ***");
+		}
+		// Done!
+		return;
 	}
 
 	if (!GenericTimestep(simt, simdt)) {
@@ -1436,48 +1497,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			Prog59(simt);
 			break;
 
-		}
-	}
-
-	if (Yaagc) {
-
-		//
-		// Debug output to check P11
-		//
-		VECTOR3 vel, hvel;
-		double vvel = 0, apDist, peDist;
-		OBJHANDLE earth = oapiGetGbodyByName("Earth");
-		OurVessel->GetRelativeVel(earth, vel); 
-		if (OurVessel->GetHorizonAirspeedVector(hvel)) {
-			vvel = hvel.y * 3.2808399;
-		}
-
-		if (lastOrbitalElementsTime == 0) {
-			apDist = 0;
-			peDist = 0;
-			lastOrbitalElementsTime = simt;
-
-		} else if (simt - lastOrbitalElementsTime >= 2.0) {
-			OurVessel->GetApDist(apDist);
-			OurVessel->GetPeDist(peDist);
-
-			apDist -= 6.373338e6;
-			peDist -= 6.373338e6;
-
-/* #ifdef _DEBUG
-			sprintf(oapiDebugString(), "P11 - Vel %.0f Vert. Vel %.0f Alt %.0f ApD %.0f PeD %.0f",  
-				length(vel) * 3.2808399, vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 
-				apDist * 0.000539957 * 10, peDist * 0.000539957 * 10);
-#endif */
-
-			lastOrbitalElementsTime = simt;
-		}
-
-		//
-		// Check nonspherical gravity sources
-		//
-		if (!OurVessel->NonsphericalGravityEnabled()) {
-			sprintf(oapiDebugString(), "*** PLEASE ENABLE NONSPHERICAL GRAVITY SOURCES ***");
 		}
 	}
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2006/11/30 03:34:25  dseagrav
+  *	Added basic manual optics controls
+  *	
   *	Revision 1.85  2006/11/25 11:49:21  dseagrav
   *	Connect CM optics to vAGC. Does not work properly.
   *	
@@ -325,6 +328,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	Reset = false;
 	CurrentTimestep = 0;
 	LastTimestep = 0;
+	LastCycled = 0;
 	LastEventTime = 0.0;
 	InOrbit = false;
 
@@ -1498,6 +1502,21 @@ int saverr;
 }
 #endif
 
+// Do a single timestep - Used by CM to maintain sync between telemetry and vAGC.
+bool ApolloGuidance::SingleTimestepPrep(double simt, double simdt){
+	LastTimestep = CurrentTimestep;
+	CurrentTimestep = simt;
+	TIME1 += (int)((simt - LastTimestep) * 1600.0);
+
+	// Get position and velocity data since it's generally useful.
+	GetPosVel();
+	return TRUE;
+}
+
+bool ApolloGuidance::SingleTimestep(){
+	agc_engine(&vagc);
+	return TRUE;
+}
 
 bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 {
@@ -1551,15 +1570,13 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 
 	}
 #else
-			// Physical AGC timing was generated from a master 1024 KHz clock, divided by 12.
-			// This resulted in a machine cycle of just over 11.7 microseconds.
-			int cycles = (long) ((simdt) * 1024000 / 12);
+		// Physical AGC timing was generated from a master 1024 KHz clock, divided by 12.
+		// This resulted in a machine cycle of just over 11.7 microseconds.
+		int cycles = (long) ((simdt) * 1024000 / 12);
 
 		//
 		// Don't want to kill a slow PC.
 		//
-
-
 /*			TODO: Disabled for the moment because if I have a long timestep during test flights
 		          and the cycles get limited, the AGC loses time synchronisation and everything 
 			      is messed up.
@@ -1569,7 +1586,6 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 		if (cycles < 1)
 			cycles = 1;
 */
-
 		for (i = 0; i < cycles; i++) {
 			agc_engine(&vagc);
 		}
