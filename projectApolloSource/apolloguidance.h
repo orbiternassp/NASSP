@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.49  2006/11/25 11:49:21  dseagrav
+  *	Connect CM optics to vAGC. Does not work properly.
+  *	
   *	Revision 1.48  2006/11/24 22:42:44  dseagrav
   *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
   *	
@@ -968,6 +971,8 @@ protected:
 	void RaiseAlarm(int AlarmNo);
 
 	void DoOrbitBurnCalcs(double simt);
+	bool SingleTimestepPrep(double simt, double simdt);
+	bool SingleTimestep();
 	bool GenericTimestep(double simt, double simdt);
 	bool GenericReadMemory(unsigned int loc, int &val);
 	void GenericWriteMemory(unsigned int loc, int val);
@@ -1271,6 +1276,7 @@ protected:
 	double LastProgTime;
 	double NextProgTime;
 	double LastTimestep;
+	double LastCycled;
 	double CurrentTimestep;
 
 	bool isFirstTimestep;

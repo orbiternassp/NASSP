@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.129  2006/12/10 00:47:27  dseagrav
+  *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
+  *	
   *	Revision 1.128  2006/11/30 03:34:25  dseagrav
   *	Added basic manual optics controls
   *	
@@ -635,8 +638,10 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		SPSPropellant.Timestep(MissionTime, simdt);
 		JoystickTimestep();
 
-		//Telecom update is last so telemetry reflects the current state.
-		pcm.TimeStep(MissionTime);
+		//Telecom update is last so telemetry reflects the current state, unless yaAGC did it earlier
+		if(!agc.Yaagc){
+			pcm.TimeStep(MissionTime);
+		}
 
 		//
 		// Systems state handling

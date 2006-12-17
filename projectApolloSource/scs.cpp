@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/11/13 14:47:31  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.2  2006/10/05 16:09:02  tschachim
   *	Fixed SCS attitude hold mode.
   *	
@@ -2743,13 +2748,13 @@ void PCM::generate_stream_lbr(){
 			if(ch13.Bits.DownlinkWordOrderCodeBit){ data |= 0200; } // WORD ORDER BIT
 			/*
 			sprintf(oapiDebugString(),"CMC DATA: %o (%lo %lo)",data,sat->agc.GetOutputChannel(034),
-				sat->agc.GetOutputChannel(035));
-			*/			
+				sat->agc.GetOutputChannel(035));		
+				*/
 			tx_data[tx_offset] = data; 
 			break;
 		case 9: // 51DS1B COMPUTER DIGITAL DATA (40 BITS)
 		case 29:
-			data = (sat->agc.GetOutputChannel(034)&0277);
+			data = (sat->agc.GetOutputChannel(034)&0377);
 			tx_data[tx_offset] = data; 
 			break;
 		case 10: // 51DS1C COMPUTER DIGITAL DATA (40 BITS) 
@@ -2760,7 +2765,7 @@ void PCM::generate_stream_lbr(){
 			break;
 		case 11: // 51DS1D COMPUTER DIGITAL DATA (40 BITS) 
 		case 31:
-			data = (sat->agc.GetOutputChannel(035)&0277);
+			data = (sat->agc.GetOutputChannel(035)&0377);
 			tx_data[tx_offset] = data; 
 			break;
 		case 12: // 51DS1E COMPUTER DIGITAL DATA (40 BITS) 
@@ -3180,9 +3185,6 @@ void PCM::generate_stream_hbr(){
 	// 128 words per frame, 50 frames pre second
 	switch(word_addr){
 		case 0: // SYNC 1
-			// Trigger telemetry END PULSE
-			sat->agc.GenerateDownrupt();
-			// Continue
 			tx_data[tx_offset] = 05;
 			break;
 		case 1: // SYNC 2
@@ -3440,6 +3442,8 @@ void PCM::generate_stream_hbr(){
 			tx_data[tx_offset] = 0;
 			break;
 		case 31: // 51DS1A COMPUTER DIGITAL DATA (40 BITS)
+			// The very first pass through this loop will get garbage data because there was no downrupt.
+			// Generating a downrupt at 0 doesn't give the CMC enough time to get data on the busses.
 			ChannelValue13 ch13;
 			ch13.Value = sat->agc.GetOutputChannel(013);			
 			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
@@ -3451,7 +3455,7 @@ void PCM::generate_stream_hbr(){
 			tx_data[tx_offset] = data; 
 			break;
 		case 32: // 51DS1B COMPUTER DIGITAL DATA (40 BITS)
-			data = (sat->agc.GetOutputChannel(034)&0277);
+			data = (sat->agc.GetOutputChannel(034)&0377);
 			tx_data[tx_offset] = data; 
 			break;
 		case 33: // 51DS1C COMPUTER DIGITAL DATA (40 BITS)
@@ -3460,13 +3464,15 @@ void PCM::generate_stream_hbr(){
 			tx_data[tx_offset] = data; 
 			break;
 		case 34: // 51DS1C COMPUTER DIGITAL DATA (40 BITS)
-			data = (sat->agc.GetOutputChannel(035)&0277);
+			data = (sat->agc.GetOutputChannel(035)&0377);
 			tx_data[tx_offset] = data; 
 			break;
 		case 35: // 51DS1E COMPUTER DIGITAL DATA (40 BITS)
 			// PARITY OF CH 35 GOES IN TOP BIT HERE!
 			data = (sat->agc.GetOutputChannel(034)&077400)>>8;
 			tx_data[tx_offset] = data; 
+			// Trigger telemetry END PULSE
+			sat->agc.GenerateDownrupt();			
 			break;
 		case 40:
 			switch(frame_count){
@@ -4251,10 +4257,22 @@ void PCM::perform_io(){
 
 			bytesSent = send(AcceptSocket, (char *)tx_data, tx_size, 0 );
 			if(bytesSent == SOCKET_ERROR){
-				wsk_error = 1;
-				sprintf(wsk_emsg,"TELECOM: send() failed: %ld",WSAGetLastError());
-				closesocket(AcceptSocket);
-				conn_state = 1; // Accept another
+				long errnumber = WSAGetLastError();
+				switch(errnumber){
+					// KNOWN CODES that we can ignore
+					case 10053: // Software caused connection abort
+					case 10054: // Connection reset by peer
+						closesocket(AcceptSocket);
+						conn_state = 1; // Accept another
+						break;
+
+					default:           // If unknown
+						wsk_error = 1; // do this
+						sprintf(wsk_emsg,"TELECOM: send() failed: %ld",errnumber);
+						closesocket(AcceptSocket);
+						conn_state = 1; // Accept another
+						break;					
+				}
 			}
 			break;			
 	}
