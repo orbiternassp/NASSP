@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2006/12/17 18:57:47  dseagrav
+  *	Fixed wrong AGC cycle time, improved telemetry cycle allocation
+  *	
   *	Revision 1.67  2006/12/17 04:35:23  dseagrav
   *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
   *	
@@ -1401,39 +1404,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		}
 
 		//
-		// Debug output to check P11 -- Do we even need this anymore?
-		//
-		/*
-		VECTOR3 vel, hvel;
-		double vvel = 0, apDist, peDist;
-		OBJHANDLE earth = oapiGetGbodyByName("Earth");
-		OurVessel->GetRelativeVel(earth, vel); 
-		if (OurVessel->GetHorizonAirspeedVector(hvel)) {
-			vvel = hvel.y * 3.2808399;
-		}
-
-		if (lastOrbitalElementsTime == 0) {
-			apDist = 0;
-			peDist = 0;
-			lastOrbitalElementsTime = simt;
-
-		} else if (simt - lastOrbitalElementsTime >= 2.0) {
-			OurVessel->GetApDist(apDist);
-			OurVessel->GetPeDist(peDist);
-
-			apDist -= 6.373338e6;
-			peDist -= 6.373338e6;
-
-#ifdef _DEBUG
-			sprintf(oapiDebugString(), "P11 - Vel %.0f Vert. Vel %.0f Alt %.0f ApD %.0f PeD %.0f",  
-				length(vel) * 3.2808399, vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 
-				apDist * 0.000539957 * 10, peDist * 0.000539957 * 10);
-#endif 
-			lastOrbitalElementsTime = simt;
-		}
-		*/
-
-		//
 		// Check nonspherical gravity sources
 		//
 		if (!OurVessel->NonsphericalGravityEnabled()) {
@@ -2371,7 +2341,7 @@ void CMOptics::CMCTrunionDrive(int val,int ch12){
 	}
 	SextTrunion += (OCDU_TRUNNION_STEP*pulses); 
 	TrunionMoved = SextTrunion;
-	sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
+	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
 }
 
 void CMOptics::CMCShaftDrive(int val,int ch12){
@@ -2392,7 +2362,7 @@ void CMOptics::CMCShaftDrive(int val,int ch12){
 		sat->agc.vagc.Erasable[0][036] += pulses;
 		sat->agc.vagc.Erasable[0][036] &= 077777;
 	}
-	sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
+	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
 }
 
 void CMOptics::TimeStep(double simdt){
