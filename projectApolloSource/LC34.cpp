@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/12/07 18:52:43  tschachim
+  *	New LC34, Bugfixes.
+  *	
   **************************************************************************/
 
 #define ORBITER_MODULE
@@ -97,7 +100,7 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	firstTimestepDone = false;
 	LVName[0] = '\0';
-	touchdownPointHeight = -9.22; // pad height
+	touchdownPointHeight = -0.01; // pad height
 	hLV = 0;
 	state = STATE_PRELAUNCH;
 

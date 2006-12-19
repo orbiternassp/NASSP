@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/11/13 14:47:34  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.13  2006/10/05 16:09:02  tschachim
   *	Fixed SCS attitude hold mode.
   *	
@@ -94,6 +99,7 @@ public:
 	VECTOR3 GetAttitudeError();												 // Attitude error when uncaged
 	VECTOR3 GetRates() { return rates; };
 	VECTOR3 IsUncaged() { return uncaged; };
+	Boiler *GetHeater() { return heater; };
 	bool IsPowered() { return powered; };
 	void SetPower(bool dc, bool ac);
 	void SaveState(FILEHANDLE scn); 

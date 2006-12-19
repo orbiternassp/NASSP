@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/07/31 12:20:49  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.3  2006/06/27 12:08:58  tschachim
   *	Bugfix
   *	
@@ -64,7 +67,8 @@ int g_MFDmode; // identifier for new MFD mode
 
 #define PROG_NONE	0
 #define PROG_TLI	1
-#define PROG_STATUS	2
+#define PROG_GNC	2
+#define PROG_ECS	3
 
 #define PROGSTATE_NONE			0
 #define PROGSTATE_TLI_WAITING	1
@@ -172,10 +176,11 @@ ProjectApolloMFD::~ProjectApolloMFD ()
 char *ProjectApolloMFD::ButtonLabel (int bt)
 {
 	// The labels for the buttons used by our MFD mode
-	static char *labelNone[2] = {"TLI", "STA"};
+	static char *labelNone[3] = {"TLI", "GNC", "ECS"};
 	static char *labelTliStop[4] = {"BCK", "RUN", "T", "V"};
 	static char *labelTliRun[4] = {"BCK", "STP", "T", "V"};
-	static char *labelStatus[1] = {"BCK"};
+	static char *labelGNC[1] = {"BCK"};
+	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 
 	if (screen == PROG_TLI) {
 		if (g_Data.progState == PROGSTATE_NONE)
@@ -183,19 +188,23 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 		else
 			return (bt < 4 ? labelTliRun[bt] : 0);
 	}
-	else if (screen == PROG_STATUS) {
-		return (bt < 1 ? labelStatus[bt] : 0);
+	else if (screen == PROG_GNC) {
+		return (bt < 1 ? labelGNC[bt] : 0);
 	}
-	return (bt < 2 ? labelNone[bt] : 0);
+	else if (screen == PROG_ECS) {
+		return (bt < 4 ? labelECS[bt] : 0);
+	}
+	return (bt < 3 ? labelNone[bt] : 0);
 }
 
 // Return button menus
 int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 {
 	// The menu descriptions for the buttons used by our MFD mode
-	static const MFDBUTTONMENU mnuNone[2] = {
+	static const MFDBUTTONMENU mnuNone[3] = {
 		{"IU TLI burn program", 0, 'T'},
-		{"Status", 0, 'S'}
+		{"Guidance, Navigation & Control", 0, 'G'},
+		{"Environmental Control System", 0, 'E'}
 	};
 	static const MFDBUTTONMENU mnuTliStop[4] = {
 		{"Back", 0, 'B'},
@@ -209,8 +218,14 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Time to ejection", 0, 'T'},
 		{"Delta Velocity", 0, 'V'}
 	};
-	static const MFDBUTTONMENU mnuStatus[1] = {
+	static const MFDBUTTONMENU mnuGNC[1] = {
 		{"Back", 0, 'B'}
+	};
+	static const MFDBUTTONMENU mnuECS[4] = {
+		{"Back", 0, 'B'},
+		{"Crew number", 0, 'C'},
+		{"Primary coolant loop test heating", 0, 'P'},
+		{"Secondary coolant loop test heating", 0, 'S'}
 	};
 
 	if (screen == PROG_TLI) {
@@ -221,12 +236,15 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 			if (menu) *menu = mnuTliRun;
 			return 4;
 		}
-	} else if (screen == PROG_STATUS) {
-		if (menu) *menu = mnuStatus;
+	} else if (screen == PROG_GNC) {
+		if (menu) *menu = mnuGNC;
 		return 1; 
+	} else if (screen == PROG_ECS) {
+		if (menu) *menu = mnuECS;
+		return 4; 
 	} else {
 		if (menu) *menu = mnuNone;
-		return 2; 
+		return 3; 
 	}
 }
 
@@ -240,8 +258,13 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
-		} else if (key == OAPI_KEY_S) {
-			screen = PROG_STATUS;
+		} else if (key == OAPI_KEY_G) {
+			screen = PROG_GNC;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		} else if (key == OAPI_KEY_E) {
+			screen = PROG_ECS;
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
@@ -286,11 +309,33 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			}
 			return true;
 		}
-	} else if (screen == PROG_STATUS) {
+	} else if (screen == PROG_GNC) {
 		if (key == OAPI_KEY_B) {
 			screen = PROG_NONE;
 			InvalidateDisplay();
 			InvalidateButtons();
+			return true;
+		}
+	} else if (screen == PROG_ECS) {
+		if (key == OAPI_KEY_B) {
+			screen = PROG_NONE;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+
+		} else if (key == OAPI_KEY_C) {
+			bool CrewNumberInput (void *id, char *str, void *data);
+			oapiOpenInputBox ("Crew number [0-3]:", CrewNumberInput, 0, 20, (void*)this);			
+			return true;
+		
+		} else if (key == OAPI_KEY_P) {
+			bool PrimECSTestHeaterPowerInput (void *id, char *str, void *data);
+			oapiOpenInputBox ("Primary coolant loop test heater power [-3000 to 3000 Watt]:", PrimECSTestHeaterPowerInput, 0, 20, (void*)this);			
+			return true;
+
+		} else if (key == OAPI_KEY_S) {
+			bool SecECSTestHeaterPowerInput (void *id, char *str, void *data);
+			oapiOpenInputBox ("Secondary coolant loop test heater power [-3000 to 3000 Watt]:", SecECSTestHeaterPowerInput, 0, 20, (void*)this);			
 			return true;
 		}
 	}
@@ -301,10 +346,11 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 {
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
-	static const DWORD btkeyNone[2] = { OAPI_KEY_T, OAPI_KEY_S};
+	static const DWORD btkeyNone[3] = { OAPI_KEY_T, OAPI_KEY_G, OAPI_KEY_E };
 	static const DWORD btkeyTliStop[4] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_T, OAPI_KEY_V };
 	static const DWORD btkeyTliRun[4] = { OAPI_KEY_B, OAPI_KEY_S, OAPI_KEY_T, OAPI_KEY_V };
-	static const DWORD btkeyStatus[1] = { OAPI_KEY_B, };
+	static const DWORD btkeyGNC[1] = { OAPI_KEY_B, };
+	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 
 	if (screen == PROG_TLI) {
 		if (g_Data.progState == PROGSTATE_NONE) {
@@ -312,10 +358,12 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 		} else {
 			if (bt < 4) return ConsumeKeyBuffered (btkeyTliRun[bt]);
 		}
-	} else if (screen == PROG_STATUS) {
-		if (bt < 1) return ConsumeKeyBuffered (btkeyStatus[bt]);
+	} else if (screen == PROG_GNC) {
+		if (bt < 1) return ConsumeKeyBuffered (btkeyGNC[bt]);
+	} else if (screen == PROG_ECS) {
+		if (bt < 4) return ConsumeKeyBuffered (btkeyECS[bt]);
 	} else {		
-		if (bt < 2) return ConsumeKeyBuffered (btkeyNone[bt]);
+		if (bt < 3) return ConsumeKeyBuffered (btkeyNone[bt]);
 	}
 	return false;
 }
@@ -401,9 +449,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 		sprintf(buffer, "%.0lfm/s", g_Data.tliVelocity);
 		TextOut(hDC, (int) (width * 0.7), (int) (height * 0.6), buffer, strlen(buffer));
 
-	// Draw status
-	} else if (screen == PROG_STATUS) {
-		TextOut(hDC, width / 2, (int) (height * 0.35), "Status", 6);
+	// Draw GNC
+	} else if (screen == PROG_GNC) {
+		TextOut(hDC, width / 2, (int) (height * 0.35), "Guidance, Navigation & Control", 30);
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "Velocity:", 9);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), "Vert. Velocity:", 15);
@@ -434,6 +482,55 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
 		sprintf(buffer, "%.1lfnm", peDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.7), buffer, strlen(buffer));
+
+	// Draw ECS
+	} else if (screen == PROG_ECS) {
+		TextOut(hDC, width / 2, (int) (height * 0.35), "Environmental Control System", 28);
+		SetTextAlign (hDC, TA_LEFT);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "Crew status:", 12);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5),  "Crew number:", 12);
+
+		ECSStatus ecs;
+		saturn->GetECSStatus(ecs);
+
+		SetTextAlign (hDC, TA_CENTER);
+		if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
+			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.45), "OK", 2);	
+		} else {
+			SetTextColor (hDC, RGB(255, 0, 0));
+			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.45), "CRITICAL", 8);	
+			SetTextColor (hDC, RGB(0, 255, 0));
+		}
+
+		sprintf(buffer, "%d", ecs.crewNumber);
+		TextOut(hDC, (int) (width * 0.7), (int) (height * 0.5), buffer, strlen(buffer)); 
+
+		TextOut(hDC, (int) (width * 0.5), (int) (height * 0.575), "Glycol Coolant Loops", 20);
+		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.65), "Prim.", 5);
+		TextOut(hDC, (int) (width * 0.8), (int) (height * 0.65), "Sec.", 4);
+
+		SetTextAlign (hDC, TA_LEFT);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), "Heating:", 8);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), "Actual:", 7);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.75), "Test:", 5);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.85), "Total:", 6);
+
+		SetTextAlign (hDC, TA_CENTER);
+		sprintf(buffer, "%.0lfW", ecs.PrimECSHeating);
+		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.7), buffer, strlen(buffer));
+		sprintf(buffer, "%.0lfW", ecs.PrimECSTestHeating);
+		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.75), buffer, strlen(buffer));
+		sprintf(buffer, "%.0lfW", ecs.PrimECSHeating + ecs.PrimECSTestHeating);
+		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.85), buffer, strlen(buffer));
+		sprintf(buffer, "%.0lfW", ecs.SecECSHeating);
+		TextOut(hDC, (int) (width * 0.8), (int) (height * 0.7), buffer, strlen(buffer));
+		sprintf(buffer, "%.0lfW", ecs.SecECSTestHeating);
+		TextOut(hDC, (int) (width * 0.8), (int) (height * 0.75), buffer, strlen(buffer));
+		sprintf(buffer, "%.0lfW", ecs.SecECSHeating + ecs.SecECSTestHeating);
+		TextOut(hDC, (int) (width * 0.8), (int) (height * 0.85), buffer, strlen(buffer));
+
+		MoveToEx (hDC, (int) (width * 0.5), (int) (height * 0.825), 0);
+		LineTo (hDC, (int) (width * 0.9), (int) (height * 0.825));
 	}
 }
 
@@ -504,6 +601,45 @@ bool ProjectApolloMFD::SetTLIVelocity (char *rstr)
 	return false;
 }
 
+bool ProjectApolloMFD::SetCrewNumber (char *rstr)
+{
+	int n;
+
+	if (sscanf (rstr, "%d", &n) == 1 && n >= 0 && n <= 3) {
+		if (saturn)
+			saturn->SetCrewNumber(n);
+		InvalidateDisplay();
+		return true;
+	}
+	return false;
+}
+
+bool ProjectApolloMFD::SetPrimECSTestHeaterPower (char *rstr)
+{
+	double v;
+
+	if (sscanf (rstr, "%lf", &v) == 1 && v >= -3000. && v <= 3000.) {
+		if (saturn)
+			saturn->SetPrimECSTestHeaterPowerW(v);
+		InvalidateDisplay();
+		return true;
+	}
+	return false;
+}
+
+bool ProjectApolloMFD::SetSecECSTestHeaterPower (char *rstr)
+{
+	double v;
+
+	if (sscanf (rstr, "%lf", &v) == 1 && v >= -3000. && v <= 3000.) {
+		if (saturn)
+			saturn->SetSecECSTestHeaterPowerW(v);
+		InvalidateDisplay();
+		return true;
+	}
+	return false;
+}
+
 void ProjectApolloMFD::StoreStatus (void) const
 {
 	screenData.screen = screen;
@@ -534,6 +670,21 @@ bool TLITimeInput (void *id, char *str, void *data)
 bool TLIVelocityInput (void *id, char *str, void *data)
 {
 	return ((ProjectApolloMFD*)data)->SetTLIVelocity(str);
+}
+
+bool CrewNumberInput (void *id, char *str, void *data)
+{
+	return ((ProjectApolloMFD*)data)->SetCrewNumber(str);
+}
+
+bool PrimECSTestHeaterPowerInput (void *id, char *str, void *data)
+{
+	return ((ProjectApolloMFD*)data)->SetPrimECSTestHeaterPower(str);
+}
+
+bool SecECSTestHeaterPowerInput (void *id, char *str, void *data)
+{
+	return ((ProjectApolloMFD*)data)->SetSecECSTestHeaterPower(str);
 }
 
 ProjectApolloMFD::ScreenData ProjectApolloMFD::screenData = {PROG_NONE};

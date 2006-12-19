@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.18  2006/06/17 18:13:13  tschachim
   *	Moved BMAGPowerRotationalSwitch.
   *	
@@ -1153,23 +1158,23 @@ void DirectO2RotationalSwitch::CheckValve()
 	
 	} else if (GetState() == 5) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.175 / LBH;
+		Pipe->flowMax = 0.18 / LBH;
 
 	} else if (GetState() == 4) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.35 / LBH;
+		Pipe->flowMax = 0.37 / LBH;
 
 	} else if (GetState() == 3) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.475 / LBH;
+		Pipe->flowMax = 0.53 / LBH;
 
 	} else if (GetState() == 2) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.6 / LBH;
+		Pipe->flowMax = 0.7 / LBH;
 
 	} else if (GetState() == 1) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.85 / LBH;
+		Pipe->flowMax = 0.9 / LBH;
 
 	} else if (GetState() == 0) {
 		Pipe->in->h_open = SP_VALVE_OPEN;

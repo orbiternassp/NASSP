@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/05/30 23:15:14  movieman523
+  *	Mission timer and DSKY now need power to operate.
+  *	
   *	Revision 1.5  2006/03/08 02:24:21  movieman523
   *	Added event timer and fuel display.
   *	
@@ -95,6 +98,7 @@ protected:
 
 class EventTimer: public MissionTimer {
 public:
+	EventTimer();
 	void Render(SURFHANDLE surf, SURFHANDLE digits);
 
 protected:
