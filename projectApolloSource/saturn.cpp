@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.182  2006/12/10 00:47:27  dseagrav
+  *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
+  *	
   *	Revision 1.181  2006/12/07 18:52:43  tschachim
   *	New LC34, Bugfixes.
   *	
@@ -2395,6 +2398,15 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "MAINPANELSPLITTED", 17)) {
 		    sscanf (line + 17, "%i", &MainPanelSplitted);
 	    }
+		else if (!strnicmp(line, "NOHGA", 5)) {
+			//
+			// NOHGA isn't saved in the scenario, this is solely to allow you
+			// to override the default NOHGA state in startup scenarios.
+			//
+			int i;
+			sscanf(line + 5, "%d", &i);
+			NoHGA = (i != 0);
+		}
 		else
 			found =false;
 	}
@@ -4552,66 +4564,127 @@ void Saturn::SlowIfDesired()
 //
 void Saturn::GetLVTankQuantities(LVTankQuantities &LVq)
 {
-	//
-	// Clear to defaults.
-	//
-	LVq.SICQuantity = 0.0;  //current quantities
-	LVq.SIIQuantity = 0.0;
-	LVq.SIVBOxQuantity = 0.0;
-	LVq.SIVBFuelQuantity = 0.0;
-	LVq.SICFuelMass = SI_FuelMass;  //Initial amounts
-	LVq.SIIFuelMass = SII_FuelMass;
-	LVq.S4BOxMass = S4B_FuelMass;
-	LVq.S4BFuelMass = S4B_FuelMass;
+	if (SaturnType == SAT_SATURN1B) {
 
-	
-	//
-	// No tanks if we've seperated from the different stages of LV
-	//
+		//
+		// Clear to defaults, for the Saturn 1B SIC and SII quantities are the same,
+		// SIVB fuel mass is SII_FuelMass!
+		//
 
-	if (stage >= CSM_LEM_STAGE) {
-		return;
-	}
-	else if (stage >= LAUNCH_STAGE_SIVB) {
-		if (!ph_3rd){
+		LVq.SICQuantity = 0.0;  //current quantities
+		LVq.SIIQuantity = 0.0;
+		LVq.SIVBOxQuantity = 0.0;
+		LVq.SIVBFuelQuantity = 0.0;
+		LVq.SICFuelMass = SI_FuelMass;  //Initial amounts
+		LVq.SIIFuelMass = SI_FuelMass;
+		LVq.S4BOxMass = SII_FuelMass;
+		LVq.S4BFuelMass = SII_FuelMass;
+		
+		//
+		// No tanks if we've seperated from the different stages of LV
+		//
+
+		if (stage >= CSM_LEM_STAGE) {
 			return;
 		}
-		else if(ph_3rd){
-			//Someday we'll need to simulate SIVB Ox and Fuel Tanks seperately for true Guage support for now it's just done with an correction value that roughly equates to 94% fuel burned for 100% ox burned
-			LVq.SIVBOxQuantity = GetPropellantMass(ph_3rd);  
-			LVq.SIVBFuelQuantity = (GetPropellantMass(ph_3rd) + ((.0638 * S4B_FuelMass) * (1 - (GetPropellantMass(ph_3rd) / S4B_FuelMass))));
+		else if (stage >= LAUNCH_STAGE_TWO) {
+			if (!ph_3rd) {
+				return;
+			}
+			else if (ph_3rd) {
+				//Someday we'll need to simulate SIVB Ox and Fuel Tanks seperately for true Guage support for now it's just done with an correction value that roughly equates to 94% fuel burned for 100% ox burned
+				LVq.SIVBOxQuantity = GetPropellantMass(ph_3rd);  
+				LVq.SIVBFuelQuantity = (GetPropellantMass(ph_3rd) + ((.0638 * SII_FuelMass) * (1 - (GetPropellantMass(ph_3rd) / SII_FuelMass))));
+
+				// TODO Hack for LAUNCH_STAGE_TWO (= SIVB before LES jettison)
+				LVq.SIIQuantity = LVq.SIVBOxQuantity;
+				LVq.SIIFuelMass = LVq.S4BOxMass;
+				return;
+			}
+		}
+		else if (stage >= LAUNCH_STAGE_ONE) {
+			LVq.SIVBOxQuantity = SII_FuelMass;
+			LVq.SIVBFuelQuantity = SII_FuelMass;
+			if (!ph_1st) {
+				return;
+			}
+			else if (ph_1st) {
+				LVq.SICQuantity = GetPropellantMass(ph_1st);
+				LVq.SIIQuantity = GetPropellantMass(ph_1st);
+				return;
+			}
+		}
+		else {
+			LVq.SICQuantity = SI_FuelMass;
+			LVq.SIIQuantity = SI_FuelMass;
+			LVq.SIVBOxQuantity = SII_FuelMass;
+			LVq.SIVBFuelQuantity = SII_FuelMass;
 			return;
 		}
-	}
-	else if (stage >= LAUNCH_STAGE_TWO) {
-		LVq.SIVBOxQuantity = S4B_FuelMass;
-		LVq.SIVBFuelQuantity = S4B_FuelMass;
-		if (!ph_2nd){
+
+	} else {
+
+		//
+		// Clear to defaults.
+		//
+		LVq.SICQuantity = 0.0;  //current quantities
+		LVq.SIIQuantity = 0.0;
+		LVq.SIVBOxQuantity = 0.0;
+		LVq.SIVBFuelQuantity = 0.0;
+		LVq.SICFuelMass = SI_FuelMass;  //Initial amounts
+		LVq.SIIFuelMass = SII_FuelMass;
+		LVq.S4BOxMass = S4B_FuelMass;
+		LVq.S4BFuelMass = S4B_FuelMass;
+
+		
+		//
+		// No tanks if we've seperated from the different stages of LV
+		//
+
+		if (stage >= CSM_LEM_STAGE) {
 			return;
 		}
-		else if(ph_2nd){
-			LVq.SIIQuantity = GetPropellantMass(ph_2nd);
+		else if (stage >= LAUNCH_STAGE_SIVB) {
+			if (!ph_3rd){
+				return;
+			}
+			else if (ph_3rd) {
+				//Someday we'll need to simulate SIVB Ox and Fuel Tanks seperately for true Guage support for now it's just done with an correction value that roughly equates to 94% fuel burned for 100% ox burned
+				LVq.SIVBOxQuantity = GetPropellantMass(ph_3rd);  
+				LVq.SIVBFuelQuantity = (GetPropellantMass(ph_3rd) + ((.0638 * S4B_FuelMass) * (1 - (GetPropellantMass(ph_3rd) / S4B_FuelMass))));
+				return;
+			}
+		}
+		else if (stage >= LAUNCH_STAGE_TWO) {
+			LVq.SIVBOxQuantity = S4B_FuelMass;
+			LVq.SIVBFuelQuantity = S4B_FuelMass;
+			if (!ph_2nd) {
+				return;
+			}
+			else if (ph_2nd) {
+				LVq.SIIQuantity = GetPropellantMass(ph_2nd);
+				return;
+			}
+		}
+		else if (stage >= LAUNCH_STAGE_ONE) {
+			LVq.SIVBOxQuantity = S4B_FuelMass;
+			LVq.SIVBFuelQuantity = S4B_FuelMass;
+			LVq.SIIQuantity = SII_FuelMass;
+			if (!ph_1st) {
+				return;
+			}
+			else if (ph_1st) {
+				LVq.SICQuantity = GetPropellantMass(ph_1st);
+				return;
+			}
+		}
+		else {
+			LVq.SICQuantity = SI_FuelMass;
+			LVq.SIIQuantity = SII_FuelMass;
+			LVq.SIVBOxQuantity = S4B_FuelMass;
+			LVq.SIVBFuelQuantity = S4B_FuelMass;
 			return;
 		}
-	}
-	else if (stage >= LAUNCH_STAGE_ONE) {
-		LVq.SIVBOxQuantity = S4B_FuelMass;
-		LVq.SIVBFuelQuantity = S4B_FuelMass;
-		LVq.SIIQuantity = SII_FuelMass;
-		if (!ph_1st){
-			return;
-		}
-		else if(ph_1st){
-			LVq.SICQuantity = GetPropellantMass(ph_1st);
-			return;
-		}
-	}
-	else {
-		LVq.SICQuantity = SI_FuelMass;
-		LVq.SIIQuantity = SII_FuelMass;
-		LVq.SIVBOxQuantity = S4B_FuelMass;
-		LVq.SIVBFuelQuantity = S4B_FuelMass;
-		return;
 	}
 }
 

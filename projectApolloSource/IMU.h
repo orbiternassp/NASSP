@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/08/20 08:28:06  dseagrav
+  *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
+  *	
   *	Revision 1.9  2006/06/29 22:38:44  tschachim
   *	Bugfix saving/loading
   *	
@@ -93,6 +96,7 @@ public:
 	bool IsCaged();
 	bool IsPowered();
 	void SetCaged(bool val);
+	Boiler *GetHeater() { return IMUHeater; };
 
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);

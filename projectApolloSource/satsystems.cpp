@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.130  2006/12/17 04:35:24  dseagrav
+  *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
+  *	
   *	Revision 1.129  2006/12/10 00:47:27  dseagrav
   *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
   *	
@@ -325,6 +328,9 @@ void Saturn::SystemsInit() {
 	PrimEcsRadiatorExchanger1 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER1");
 	PrimEcsRadiatorExchanger2 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER2");
 	CabinHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:CABINHEATER");
+	PrimECSTestHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:PRIMECSTESTHEATER");
+	SecECSTestHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SECECSTESTHEATER");
+	Crew = (h_crew *) Panelsdk.GetPointerByString("HYDRAULIC:CREW");
 
 	SuitCompressor1 = (AtmRegen *) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER1");
 	SuitCompressor1->WireTo(&SuitCompressor1Switch);
@@ -2917,6 +2923,64 @@ void Saturn::GetECSWaterStatus(ECSWaterStatus &ws)
 	if (pWasteH2oTankQuantity) {
 		ws.WasteH2oTankQuantityPercent = (*pWasteH2oTankQuantity) / 26500.0;
 	}
+}
+
+//
+// ECS state for the ProjectApolloMFD.
+//
+
+void Saturn::GetECSStatus(ECSStatus &ecs)
+ 
+{
+	// Crew
+	ecs.crewNumber = Crew->number;
+	ecs.crewStatus = ECS_CREWSTATUS_OK;
+
+	// Crew status, TODO improve conditions
+	if (ecs.crewNumber > 0) {
+		AtmosStatus atm;
+		GetAtmosStatus(atm);
+		if (atm.SuitCO2MMHG > 10 || atm.SuitTempK > 310 || atm.SuitTempK < 270) {
+			ecs.crewStatus = ECS_CREWSTATUS_CRITICAL;
+		}
+	}
+
+	// Primary coolant loop
+	ecs.PrimECSHeating = - PrimCabinHeatExchanger->power - *(double *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITHEATEXCHANGER:POWER") 
+						 - *(double *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITCIRCUITHEATEXCHANGER:POWER");
+	if (imu.GetHeater()->pumping) 
+		ecs.PrimECSHeating += imu.GetHeater()->boiler_power;
+	if (bmag1.GetHeater()->pumping)
+		ecs.PrimECSHeating += bmag1.GetHeater()->boiler_power;
+	if (bmag2.GetHeater()->pumping)
+		ecs.PrimECSHeating += bmag2.GetHeater()->boiler_power;
+
+	ecs.PrimECSTestHeating = 0;
+	if (PrimECSTestHeater->pumping)
+		ecs.PrimECSTestHeating += PrimECSTestHeater->boiler_power;
+
+	// Secondary coolant loop
+	ecs.SecECSHeating = - SecCabinHeatExchanger->power - *(double *) Panelsdk.GetPointerByString("HYDRAULIC:SECSUITHEATEXCHANGER:POWER") 
+					    - *(double *) Panelsdk.GetPointerByString("HYDRAULIC:SECSUITCIRCUITHEATEXCHANGER:POWER");
+
+	ecs.SecECSTestHeating = 0;
+	if (SecECSTestHeater->pumping)
+		ecs.SecECSTestHeating += SecECSTestHeater->boiler_power;
+}
+
+void Saturn::SetCrewNumber(int number) {
+
+	Crew->number = number;
+}
+
+void Saturn::SetPrimECSTestHeaterPowerW(double power) {
+
+	PrimECSTestHeater->boiler_power = power;
+}
+
+void Saturn::SetSecECSTestHeaterPowerW(double power) {
+
+	SecECSTestHeater->boiler_power = power;
 }
 
 //

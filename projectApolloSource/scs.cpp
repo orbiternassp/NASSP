@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/12/17 04:35:24  dseagrav
+  *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
+  *	
   *	Revision 1.3  2006/11/13 14:47:31  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -538,7 +541,8 @@ void GDC::Init(Saturn *v)
 
 void GDC::SystemTimestep(double simdt) {
 
-	// Do we have power?
+	// Do we have power? 
+	// TODO DC power is needed, too
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2) return;  // Switched off
 
 	if (sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
@@ -551,10 +555,15 @@ void GDC::SystemTimestep(double simdt) {
 void GDC::Timestep(double simdt) {
 
 	// Do we have power?
-	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2) return;  // Switched off
-
-	if (sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
-	    sat->StabContSystemAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) return;
+	// TODO DC power is needed, too
+	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2 ||
+	    sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
+		sat->StabContSystemAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) {
+	
+		// Reset Attitude
+		SetAttitude(_V(0, 0, 0));
+		return;
+	}
 
 	// Get rates from the appropriate BMAG
 	// GDC attitude is based on RATE data, not ATT data.
@@ -710,8 +719,9 @@ void GDC::LoadState(FILEHANDLE scn){
 ASCP::ASCP(Sound &clicksound) : ClickSound(clicksound)
 
 {
-	output.x = 0;
-	output.y = 0;
+	// These are the nominal values for a 72° launch azimuth.
+	output.x = 162;
+	output.y = 90;
 	output.z = 0;
 	sat = NULL;
 

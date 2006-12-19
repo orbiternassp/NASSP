@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.18  2006/06/17 18:13:13  tschachim
   *	Moved BMAGPowerRotationalSwitch.
   *	
@@ -213,6 +218,8 @@ public:
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
+	virtual double AdjustForPower(double val) { return (Voltage() < SP_MIN_ACVOLTAGE ? 0 : val); };
+
 	char *Substance;
 	int Index;
 	SURFHANDLE NeedleSurface;

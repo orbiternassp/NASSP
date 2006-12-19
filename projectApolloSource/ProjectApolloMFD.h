@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/06/27 11:34:25  tschachim
+  *	Added status screen.
+  *	
   *	Revision 1.1  2006/06/23 11:56:48  tschachim
   *	New Project Apollo MFD for TLI burn control.
   *	
@@ -41,6 +44,10 @@ public:
 	void Update (HDC hDC);
 	bool SetTLITime (char *rstr);
 	bool SetTLIVelocity (char *rstr);
+	bool SetCrewNumber (char *rstr);
+	bool SetPrimECSTestHeaterPower (char *rstr);
+	bool SetSecECSTestHeaterPower (char *rstr);
+	
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
 	void StoreStatus (void) const;

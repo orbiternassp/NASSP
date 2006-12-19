@@ -593,6 +593,8 @@
 #define IDB_CSM_MAIN_RIGHT_PANEL                            852
 #define IDB_CSM_MAIN_MIDDLE_PANEL                           853
 #define IDB_SPS_INJ_VLV                                     854
+#define IDB_TELESCOPE_WIDE                                  855
+#define IDB_SEXTANT_WIDE                                    856
 
 
 // Next default values for new objects

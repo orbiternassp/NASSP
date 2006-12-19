@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.223  2006/12/10 00:47:27  dseagrav
+  *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
+  *	
   *	Revision 1.222  2006/12/07 18:52:43  tschachim
   *	New LC34, Bugfixes.
   *	
@@ -601,6 +604,19 @@ typedef struct {
 	double WasteH2oTankQuantityPercent;
 } ECSWaterStatus;
 
+
+#define ECS_CREWSTATUS_OK			0
+#define ECS_CREWSTATUS_CRITICAL		1
+
+typedef struct {
+	int crewNumber;
+	int crewStatus;
+	double PrimECSHeating;
+	double PrimECSTestHeating;
+	double SecECSHeating;
+	double SecECSTestHeating;
+} ECSStatus;
+
 typedef struct {
 	double MainBusAVoltage;
 	double MainBusBVoltage;
@@ -879,6 +895,10 @@ public:
 	void DisconectInverter(bool disc, int busno);
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	double GetAccelG() { return aZAcc / G; };
+	virtual void GetECSStatus(ECSStatus &ecs);
+	virtual void SetCrewNumber(int number);
+	virtual void SetPrimECSTestHeaterPowerW(double power);
+	virtual void SetSecECSTestHeaterPowerW(double power);
 
 	///
 	/// Get information on launch vehicle propellant tank quantities.
@@ -3034,8 +3054,12 @@ protected:
 	h_HeatExchanger *PrimEcsRadiatorExchanger1;
 	h_HeatExchanger *PrimEcsRadiatorExchanger2;
 	Boiler *CabinHeater;
+	Boiler *PrimECSTestHeater;
+	Boiler *SecECSTestHeater;
 	AtmRegen *SuitCompressor1;
 	AtmRegen *SuitCompressor2;
+	h_crew *Crew;
+
 
 	//
 	// LM PAD

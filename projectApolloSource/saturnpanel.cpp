@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.194  2006/12/10 00:47:27  dseagrav
+  *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
+  *	
   *	Revision 1.193  2006/12/07 18:52:43  tschachim
   *	New LC34, Bugfixes.
   *	
@@ -1027,6 +1030,20 @@ bool Saturn::clbkLoadPanel (int id) {
 		return false;
 
 	//
+	// Get screen info from the configurator
+	//
+
+	bool renderViewportIsWideScreen = false;
+	HMODULE hpac = GetModuleHandle("Modules\\Startup\\ProjectApolloConfigurator.dll");
+	if (hpac) {
+		bool (__stdcall *pacRenderViewportIsWideScreen)();
+		pacRenderViewportIsWideScreen = (bool (__stdcall *)()) GetProcAddress(hpac, "pacRenderViewportIsWideScreen");
+		if (pacRenderViewportIsWideScreen) {
+			renderViewportIsWideScreen = pacRenderViewportIsWideScreen();
+		}
+	}
+
+	//
 	// Load panel background image
 	//
 	HBITMAP hBmp;
@@ -1324,22 +1341,29 @@ bool Saturn::clbkLoadPanel (int id) {
 	}
 
 	if (id == SATPANEL_SEXTANT) { // Sextant
-		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT));
+		if (renderViewportIsWideScreen)
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT_WIDE));
+		else
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT));
 		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, SATPANEL_LOWER, SATPANEL_LOWER);
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
-		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT,					_R( 270,   95, 1130,  955), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICSCLKAREASEXT, _R(0, 0, 10, 10), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
 		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);
 	}
 
 	if (id == SATPANEL_TELESCOPE) { // Telescope
-		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE));
+		if (renderViewportIsWideScreen)
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE_WIDE));
+		else
+			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE));
 		oapiSetPanelNeighbours( SATPANEL_SEXTANT, -1, SATPANEL_LOWER, SATPANEL_LOWER);
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE,					_R( 270,   95, 1130,  955), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED,	            PANEL_MAP_BACKGROUND);
+		// Dummy area
+		oapiRegisterPanelArea (AID_OPTICSCLKAREATELE, _R(0, 0, 10, 10), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.53765284, 0.84316631));
 		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);			
@@ -2076,9 +2100,13 @@ void Saturn::SetSwitches(int panel) {
 	H2Pressure2Meter.Init(2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 	O2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this, &O2PressIndSwitch);
 	O2Pressure2Meter.Init(2, srf[SRF_NEEDLE], CryoTankMetersRow, this, &O2PressIndSwitch);
+	H2Quantity1Meter.WireTo(&ACBus1PhaseC);
 	H2Quantity1Meter.Init("H2", 1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
+	H2Quantity2Meter.WireTo(&ACBus2PhaseC);
 	H2Quantity2Meter.Init("H2", 2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
+	O2Quantity1Meter.WireTo(&ACBus1PhaseC);
 	O2Quantity1Meter.Init("O2", 1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
+	O2Quantity2Meter.WireTo(&ACBus2PhaseC);
 	O2Quantity2Meter.Init("O2", 2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 
 	FuelCellMetersRow.Init(AID_FUELCELLINDICATORS, MainPanel, &GaugePower);
@@ -3399,74 +3427,6 @@ void Saturn::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 			BatteryCharger.Charge(3);
 		else
 			BatteryCharger.Charge(0);
-
-	// Disabled, only for testing the ECS water-glycol cooling
-	/*
-	} else if (s == &HighGainAntennaPitchPositionSwitch) {
-		int *pump1 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER1:PUMP");
-		int *pump2 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER2:PUMP");
-		int *pump3 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER3:PUMP");
-		int *pump4 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER4:PUMP");
-		int *pump5 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER5:PUMP");
-		int *pump6 = (int*) Panelsdk.GetPointerByString("ELECTRIC:ECSTESTHEATER6:PUMP");
-
-		if (HighGainAntennaPitchPositionSwitch.GetState() == 0) {
-			*pump1 = SP_PUMP_OFF;
-			*pump2 = SP_PUMP_OFF;
-			*pump3 = SP_PUMP_OFF;
-			*pump4 = SP_PUMP_OFF;
-			*pump5 = SP_PUMP_OFF;
-			*pump6 = SP_PUMP_OFF;
-
-		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 1) {
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_OFF;
-			*pump3 = SP_PUMP_OFF;
-			*pump4 = SP_PUMP_OFF;
-			*pump5 = SP_PUMP_OFF;
-			*pump6 = SP_PUMP_OFF;
-
-		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 2) {
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_ON;
-			*pump3 = SP_PUMP_OFF;
-			*pump4 = SP_PUMP_OFF;
-			*pump5 = SP_PUMP_OFF;
-			*pump6 = SP_PUMP_OFF;
-
-		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 3) {
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_ON;
-			*pump3 = SP_PUMP_ON;
-			*pump4 = SP_PUMP_OFF;
-			*pump5 = SP_PUMP_OFF;
-			*pump6 = SP_PUMP_OFF;
-
-		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 4) {
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_ON;
-			*pump3 = SP_PUMP_ON;
-			*pump4 = SP_PUMP_ON;
-			*pump5 = SP_PUMP_OFF;
-			*pump6 = SP_PUMP_OFF;
-
-		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 5) {
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_ON;
-			*pump3 = SP_PUMP_ON;
-			*pump4 = SP_PUMP_ON;
-			*pump5 = SP_PUMP_ON;
-			*pump6 = SP_PUMP_OFF;
-
-		} else if (HighGainAntennaPitchPositionSwitch.GetState() == 6) {
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_ON;
-			*pump3 = SP_PUMP_ON;
-			*pump4 = SP_PUMP_ON;
-			*pump5 = SP_PUMP_ON;
-			*pump6 = SP_PUMP_ON;
-		}
-	*/
 	}
 }
 
@@ -4005,7 +3965,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 				initialized = true;
 			}
 
-			if (LVFuelTankPressIndicatorSwitch.GetState() == TOGGLESWITCH_UP){
+			if (LVFuelTankPressIndicatorSwitch.GetState() == TOGGLESWITCH_UP) {
 
 				if (stage > LAUNCH_STAGE_TWO_TWR_JET) {  
 					PitchClusterActual = (int) (89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass);
@@ -4015,7 +3975,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 					PitchClusterActual = (int) (89.0 * LVq.SIIQuantity / LVq.SIIFuelMass);
 					YawClusterActual = (int) (89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass);
 				}
-
 			}
 			else {
 				PitchClusterActual = (int) (10.0 * sps_pitch_position) + 44;

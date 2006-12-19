@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/05/30 23:15:14  movieman523
+  *	Mission timer and DSKY now need power to operate.
+  *	
   *	Revision 1.8  2006/03/08 02:24:21  movieman523
   *	Added event timer and fuel display.
   *	
@@ -279,6 +282,14 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
 	oapiBlt(surf, digits, 61, 0, 16 * (Curdigit-(Curdigit2*10)), 0, 16, 19);
+}
+
+EventTimer::EventTimer()
+
+{
+	MissionTimer();
+	// See http://history.nasa.gov/ap16fj/aoh_op_procs.htm, Backup Crew Prelaunch Checks, Pdf page 19
+	Enabled = false;
 }
 
 void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)

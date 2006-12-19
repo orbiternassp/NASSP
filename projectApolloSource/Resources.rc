@@ -167,6 +167,8 @@ IDB_CSM_MAIN_LEFT_PANEL                     BITMAP  "csm_main_left_panel.bmp"
 IDB_CSM_MAIN_RIGHT_PANEL                    BITMAP  "csm_main_right_panel.bmp"
 IDB_CSM_MAIN_MIDDLE_PANEL                   BITMAP  "csm_main_middle_panel.bmp"
 IDB_SPS_INJ_VLV                             BITMAP  "sps_injector_indicators.bmp"
+IDB_TELESCOPE_WIDE                          BITMAP  "alignment_optical_telescope_view_wide.bmp"
+IDB_SEXTANT_WIDE                            BITMAP  "sextant_view_wide.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
