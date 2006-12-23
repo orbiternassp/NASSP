@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/11/13 14:47:31  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.17  2006/08/08 20:23:50  jasonims
   *	More Optics stuff and changed the Aperture settings for interior views.
   *	
@@ -120,14 +125,14 @@ bool Saturn::clbkLoadVC (int id)
 {
 	TRACESETUP("Saturn::clbkLoadVC");
 
-	if (viewpos == SATVIEW_ENG1 || viewpos == SATVIEW_ENG2 || viewpos == SATVIEW_ENG3)
+	InVC = true;
+	InPanel = false;
+
+	if ((viewpos >= SATVIEW_ENG1) && (viewpos <= SATVIEW_ENG6))
 		return true;
 
 	ReleaseSurfaces();
 	InitVC(id);
-
-	InVC = true;
-	InPanel = false;
 
 	SetView(true);
 	
@@ -383,8 +388,8 @@ void Saturn::SetView(double offset, bool update_direction)
 	//
 	if (viewpos >= SATVIEW_ENG1)
 	{
-		VECTOR3 e1 = _V(0, 0, 0), e2 = _V(0, 0, 0), e3 = _V(0, 0, 0);	
-		VECTOR3 v1 = _V(0, 0, 0), v2 = _V(0, 0, 0), v3 = _V(0, 0, 0);
+		VECTOR3 e1 = _V(0, 0, 0), e2 = _V(0, 0, 0), e3 = _V(0, 0, 0), e4 = _V(0, 0, 0), e5 = _V(0, 0, 0), e6 = _V(0, 0, 0);	
+		VECTOR3 v1 = _V(0, 0, 0), v2 = _V(0, 0, 0), v3 = _V(0, 0, 0), v4 = _V(0, 0, 0), v5 = _V(0, 0, 0), v6 = _V(0, 0, 0);
 		VECTOR3 cd;
 
 		//
@@ -395,6 +400,12 @@ void Saturn::SetView(double offset, bool update_direction)
 		case PRELAUNCH_STAGE:
 			e3 = _V(0.0, 7.5, -10.0+STG0O);
 			v3 = _V(0.0, -0.1, -1.0);
+			e4 = _V(7.5, 0.0, -10.0+STG0O);
+			v4 = _V(-0.1, 0.0, -1.0);
+			e5 = _V(0.0, -7.5, -10.0+STG0O);
+			v5 = _V(0.0, 0.1, -1.0);
+			e6 = _V(-7.5, 0.0, -10.0+STG0O);
+			v6 = _V(0.1, 0.0, -1.0);
 			break;
 
 		case LAUNCH_STAGE_ONE:
@@ -404,6 +415,12 @@ void Saturn::SetView(double offset, bool update_direction)
 			v2 = _V(-0.15, 0, -1.0);
 			e3 = _V(0.0, 7.5, -10.0+STG0O);
 			v3 = _V(0.0, -0.1, -1.0);
+			e4 = _V(7.5, 0.0, -10.0+STG0O);
+			v4 = _V(-0.1, 0.0, -1.0);
+			e5 = _V(0.0, -7.5, -10.0+STG0O);
+			v5 = _V(0.0, 0.1, -1.0);
+			e6 = _V(-7.5, 0.0, -10.0+STG0O);
+			v6 = _V(0.1, 0.0, -1.0);
 			break;
 
 		case LAUNCH_STAGE_TWO:
@@ -413,6 +430,12 @@ void Saturn::SetView(double offset, bool update_direction)
 			v2 = _V(-0.15, 0, -1.0);
 			e3 = _V(0.0, 7.5, -10.0-STG1O);
 			v3 = _V(0.0, -0.1, -1.0);
+			e4 = _V(7.5, 0.0, -10.0-STG1O);
+			v4 = _V(-0.1, 0.0, -1.0);
+			e5 = _V(0.0, -7.5, -10.0-STG1O);
+			v5 = _V(0.0, 0.1, -1.0);
+			e6 = _V(-7.5, 0.0, -10.0-STG1O);
+			v6 = _V(0.1, 0.0, -1.0);
 			break;
 
 		//
@@ -440,6 +463,21 @@ void Saturn::SetView(double offset, bool update_direction)
 		case SATVIEW_ENG3:
 			v = e3;
 			cd = v3;
+			break;
+
+		case SATVIEW_ENG4:
+			v = e4;
+			cd = v4;
+			break;
+
+		case SATVIEW_ENG5:
+			v = e5;
+			cd = v5;
+			break;
+
+		case SATVIEW_ENG6:
+			v = e6;
+			cd = v6;
 			break;
 		}
 

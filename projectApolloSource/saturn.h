@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.224  2006/12/19 15:56:09  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.223  2006/12/10 00:47:27  dseagrav
   *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
   *	
@@ -1287,6 +1290,12 @@ protected:
 	/// \brief Docking probe flag.
 	///
 	bool HasProbe;
+
+	///
+	/// True if the parachutes are attached.
+	/// \brief Parachutes attached flag.
+	///
+	bool ChutesAttached;
 
 	///
 	/// True if the apex cover is attached.
@@ -3139,6 +3148,9 @@ protected:
 	#define SATVIEW_ENG1			10
 	#define SATVIEW_ENG2			11
 	#define SATVIEW_ENG3			12
+	#define SATVIEW_ENG4			13
+	#define SATVIEW_ENG5			14
+	#define SATVIEW_ENG6			15
 
 	unsigned int	viewpos;
 
