@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.183  2006/12/19 15:56:09  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.182  2006/12/10 00:47:27  dseagrav
   *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
   *	
@@ -425,6 +428,7 @@ void Saturn::initSaturn()
 	InterstageAttached = true;
 	LESAttached = true;
 	ApexCoverAttached = true;
+	ChutesAttached = true;
 
 	TLICapableBooster = false;
 
@@ -1604,7 +1608,7 @@ typedef union {
 		unsigned SkylabCM:1;
 		unsigned S1bPanel:1;
 		unsigned NoHGA:1;
-		unsigned viewpos:3;
+		unsigned viewpos:5;
 	} u;
 	unsigned long word;
 } MainState;
@@ -1674,6 +1678,7 @@ typedef union {
 		unsigned LESAttached:1;
 		unsigned HasProbe:1;
 		unsigned ApexCoverAttached:1;
+		unsigned ChutesAttached:1;
 	} u;
 	unsigned long word;
 } AttachState;
@@ -1693,6 +1698,7 @@ int Saturn::GetAttachState()
 	state.u.LESAttached = LESAttached;
 	state.u.HasProbe = HasProbe;
 	state.u.ApexCoverAttached = ApexCoverAttached;
+	state.u.ChutesAttached = ChutesAttached;
 
 	return state.word;
 }
@@ -1707,6 +1713,7 @@ void Saturn::SetAttachState(int s)
 	InterstageAttached = (state.u.InterstageAttached != 0);
 	HasProbe = (state.u.HasProbe != 0);
 	ApexCoverAttached = (state.u.ApexCoverAttached != 0);
+	ChutesAttached = (state.u.ChutesAttached != 0);
 }
 
 //
@@ -3256,8 +3263,33 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 1;
 	}
 
-	if (key == OAPI_KEY_3 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE) {
-		viewpos = SATVIEW_ENG3;
+	if (key == OAPI_KEY_3 && down == true && InVC && iu.IsTLICapable() && stage < LAUNCH_STAGE_SIVB && stage >= PRELAUNCH_STAGE)
+	{
+		//
+		// Key 3 switches to position 3 by default, then cycles around them.
+		//
+		switch (viewpos)
+		{
+		case SATVIEW_ENG3:
+			viewpos = SATVIEW_ENG4;
+			break;
+
+		case SATVIEW_ENG4:
+			viewpos = SATVIEW_ENG5;
+			break;
+
+		case SATVIEW_ENG5:
+			viewpos = SATVIEW_ENG6;
+			break;
+
+		case SATVIEW_ENG6:
+			viewpos = SATVIEW_ENG3;
+			break;
+
+		default:
+			viewpos = SATVIEW_ENG3;
+			break;
+		}
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		SetView();
 		return 1;
@@ -3742,7 +3774,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		if (ELSAuto() && GetAtmPressure() > 39000 && !LandFail.u.DrogueFail)
+		if (ELSAuto() && GetAtmPressure() > 39000 && !LandFail.u.DrogueFail && ChutesAttached)
 			deploy = true;
 
 		if (ELSActive() && DrogueDeploySwitch.GetState()) 
@@ -3765,7 +3797,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	//
 
 	case CM_ENTRY_STAGE_THREE:
-		if ((GetAtmPressure() > 66000 && !LandFail.u.MainFail) || (ELSActive() && MainDeploySwitch.GetState())) {
+		if (ChutesAttached && ((GetAtmPressure() > 66000 && !LandFail.u.MainFail) || (ELSActive() && MainDeploySwitch.GetState())))
+		{
 			SetChuteStage2();
 			SetStage(CM_ENTRY_STAGE_FOUR);
 			NextMissionEventTime = MissionTime + 2.5;
@@ -3773,7 +3806,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE_FOUR:
-		if (MissionTime >= NextMissionEventTime) {
+		if (ChutesAttached && (MissionTime >= NextMissionEventTime))
+		{
 			SetChuteStage3();
 			SetStage(CM_ENTRY_STAGE_FIVE);
 			NextMissionEventTime = MissionTime + 2.5;
@@ -3781,7 +3815,8 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE_FIVE:
-		if (MissionTime >= NextMissionEventTime) {
+		if (ChutesAttached && (MissionTime >= NextMissionEventTime))
+		{
 			SetChuteStage4();
 			SetStage(CM_ENTRY_STAGE_SIX);
 			LAUNCHIND[5] = true;
