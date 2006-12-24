@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/12/19 15:56:10  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.4  2006/12/17 04:35:24  dseagrav
   *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
   *	
@@ -2583,7 +2586,7 @@ void PCM::Init(Saturn *vessel){
 
 	// Set up incoming options
 	service.sin_family = AF_INET;
-	service.sin_addr.s_addr = inet_addr( "127.0.0.1" );
+	service.sin_addr.s_addr = htonl(INADDR_ANY);
 	service.sin_port = htons( 14242 );
 
 	if ( bind( m_socket, (SOCKADDR*) &service, sizeof(service) ) == SOCKET_ERROR ) {
@@ -4270,6 +4273,10 @@ void PCM::perform_io(){
 				long errnumber = WSAGetLastError();
 				switch(errnumber){
 					// KNOWN CODES that we can ignore
+					case 10035: // Operation Would Block
+						// We can ignore this entirely. It's not an error.
+						break;
+
 					case 10053: // Software caused connection abort
 					case 10054: // Connection reset by peer
 						closesocket(AcceptSocket);
