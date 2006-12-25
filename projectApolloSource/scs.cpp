@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/12/24 09:14:36  dseagrav
+  *	Telemetry enhancements, now allows connection from remote hosts.
+  *	
   *	Revision 1.5  2006/12/19 15:56:10  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -3207,7 +3210,7 @@ void PCM::generate_stream_hbr(){
 			tx_data[tx_offset] = 0267;
 			break;
 		case 3: // SYNC 4 & FRAME COUNT
-			tx_data[tx_offset] = (0300|frame_count);
+			tx_data[tx_offset] = (0300|frame_addr);
 			break;
 		case 4: // 22A1
 		case 36:
@@ -3245,7 +3248,7 @@ void PCM::generate_stream_hbr(){
 					tx_data[tx_offset] = 0; 
 					break;
 				case 3: // 11A109
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = (unsigned char)(sat->EntryBatteryB->Current() / 0.390625);
 					break;
 				case 4: // 11A145
 					tx_data[tx_offset] = 0; 
@@ -3796,7 +3799,7 @@ void PCM::generate_stream_hbr(){
 					tx_data[tx_offset] = 0; 
 					break;
 				case 2: // 11A91
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = (unsigned char)(sat->BatteryBusA.Voltage() / 0.17578125);
 					break;
 				case 3: // 11A127
 					tx_data[tx_offset] = 0; 
@@ -3834,7 +3837,7 @@ void PCM::generate_stream_hbr(){
 					tx_data[tx_offset] = 0; 
 					break;
 				case 2: // 11A93
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = (unsigned char)(sat->BatteryBusB.Voltage() / 0.17578125);
 					break;
 				case 3: // 11A129
 					tx_data[tx_offset] = 0; 
@@ -4241,11 +4244,11 @@ void PCM::generate_stream_hbr(){
 	if(word_addr > 127){
 		word_addr = 0;
 		frame_addr++;
-		if(frame_addr > 4){
+		if(frame_addr > 49){
 			frame_addr = 0;
 		}
 		frame_count++;
-		if(frame_count > 50){
+		if(frame_count > 4){
 			frame_count = 0;
 		}
 	}
