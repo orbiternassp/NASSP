@@ -188,6 +188,7 @@ public:
 	void perform_io();              // Get data from here to there
 	void generate_stream_lbr();     // Generate LBR datastream
 	void generate_stream_hbr();     // Same for HBR datastream
+	unsigned char scale_data(double data, double low, double high); // Scale data for PCM transmission
 
 	// Error control
 	int wsk_error;                  // Winsock error

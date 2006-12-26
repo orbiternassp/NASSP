@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/06/21 13:11:29  tschachim
+  *	Bugfix power drawing.
+  *	
   *	Revision 1.19  2006/06/10 14:36:44  movieman523
   *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
   *	
@@ -121,7 +124,11 @@ void DSKY::Reset()
 	TempLight = false;
 	GimbalLockLight = false;
 	ProgLight = false;
-	RestartLight = false;
+	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
+		RestartLight = true;
+	}else{
+		RestartLight = false;
+	}
 	TrackerLight = false;
 	VelLight = false;
 	AltLight = false;
@@ -321,6 +328,13 @@ void DSKY::ResetPressed()
 {
 	KeyClick();
 	SendKeyCode(18);
+	// DS20061225 If the RESTART light is lit, this resets it externally to the AGC program. CSM 104 SYS HBK pg 399
+	if(RestartLit()){
+		ClearRestart(); 
+	}
+	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
+		agc.vagc.VoltageAlarm = 0;
+	}
 }
 
 void DSKY::NumberPressed(int n)
@@ -392,7 +406,7 @@ void DSKY::ProcessChannel13(int val)
 	}
 
 	// RestartLight (TODO other conditions)
-	if (out_val.Bits.TestAlarms)
+	if (out_val.Bits.TestAlarms || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
 	{
 		SetRestart(true);
 	}
