@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/12/25 11:16:48  dseagrav
+  *	More telemetry bugfixes, corrects stupid mistakes in HBR
+  *	
   *	Revision 1.6  2006/12/24 09:14:36  dseagrav
   *	Telemetry enhancements, now allows connection from remote hosts.
   *	
@@ -2660,6 +2663,23 @@ void PCM::TimeStep(double simt){
 	}
 }
 
+// Scale data to 255 steps for transmission in the PCM datastream.
+// This function will be called lots of times inside a timestep, so it should go
+// as fast as possible!
+
+unsigned char PCM::scale_data(double data, double low, double high){
+	double step = 0;
+	
+	// First eliminate cases outside of the scales
+	if(data >= high){ return 0xFF; }
+	if(data <= low){  return 0; }
+	
+	// Now figure step value
+	step = ((high - low)/256);
+	// and return result
+	return (unsigned char)(data/step);
+}
+
 void PCM::generate_stream_lbr(){
 	unsigned char data=0;
 	// 40 words per frame, 5 frames, 1 frame per second
@@ -2682,19 +2702,19 @@ void PCM::generate_stream_lbr(){
 		case 4: 
 			switch(frame_count){
 				case 0: // 11A1 ECS: SUIT MANF ABS PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,17); 
 					break;
 				case 1: // 11A109 EPS: BAT B CURR
-					tx_data[tx_offset] = (unsigned char)(sat->EntryBatteryB->Current() / 0.390625); 
+					tx_data[tx_offset] = scale_data(sat->EntryBatteryB->Current(),0,100);
 					break;
 				case 2: // 11A46 RCS: SM HE MANF C PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,400);
 					break;
 				case 3: // 11A154 CMI: SCE NEG SUPPLY VOLTS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,-30);
 					break;
 				case 4: // 11A91 EPS: BAT BUS A VOLTS					
-					tx_data[tx_offset] = (unsigned char)(sat->BatteryBusA.Voltage() / 0.17578125);
+					tx_data[tx_offset] = scale_data(sat->BatteryBusA.Voltage(),0,45);
 					break;
 			}
 			break;
@@ -2732,7 +2752,7 @@ void PCM::generate_stream_lbr(){
 					tx_data[tx_offset] = 0; 
 					break;
 				case 4: // 11A93 BAT BUS B VOLTS
-					tx_data[tx_offset] = (unsigned char)(sat->BatteryBusB.Voltage() / 0.17578125);
+					tx_data[tx_offset] = scale_data(sat->BatteryBusB.Voltage(),0,45);
 					break;
 			}
 			break;
@@ -2818,17 +2838,17 @@ void PCM::generate_stream_lbr(){
 				case 0: // 10A138
 					tx_data[tx_offset] = 0; 
 					break;
-				case 1: // 10A141 H2 TK 1 QTY
-					tx_data[tx_offset] = 0; 
+				case 1: // 10A141 EPS: H2 TK 1 QTY
+					tx_data[tx_offset] = scale_data(0,0,100);
 					break;
 				case 2: // 10A144 H2 TK 2 QTY
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,100);
 					break;
 				case 3: // 10A147 O2 TK 1 QTY
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,100);
 					break;
 				case 4: // 10A150 O2 TK 1 PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,1050);
 					break;
 			}
 			break;
@@ -2876,13 +2896,13 @@ void PCM::generate_stream_lbr(){
 					tx_data[tx_offset] = 0; 
 					break;
 				case 1: // 10A36 H2 TK 1 PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,350);
 					break;
 				case 2: // 10A39 H2 TK 2 PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,350);
 					break;
 				case 3: // 10A42 O2 TK 2 QTY
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,100);
 					break;
 				case 4: // 10A45
 					tx_data[tx_offset] = 0; 
@@ -2898,13 +2918,13 @@ void PCM::generate_stream_lbr(){
 					tx_data[tx_offset] = 0; 
 					break;
 				case 2: // 10A54 O2 TK 1 TEMP
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,-325,80);
 					break;
 				case 3: // 10A57 O2 TK 2 TEMP
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,-325,80);
 					break;
 				case 4: // 10A60 H2 TK 1 TEMP
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,-425,-200);
 					break;
 			}
 			break;
@@ -2989,8 +3009,8 @@ void PCM::generate_stream_lbr(){
 			break;
 		case 24:
 			switch(frame_count){
-				case 0: // 11A73
-					tx_data[tx_offset] = 0; 
+				case 0: // 11A73 BAT CHRGR AMPS
+					tx_data[tx_offset] = scale_data(0,0,5);
 					break;
 				case 1: // 11A10
 					tx_data[tx_offset] = 0; 
@@ -3008,8 +3028,8 @@ void PCM::generate_stream_lbr(){
 			break;
 		case 25:
 			switch(frame_count){
-				case 0: // 11A74
-					tx_data[tx_offset] = 0; 
+				case 0: // 11A74 BAT A CUR
+					tx_data[tx_offset] = scale_data(0,0,100);
 					break;
 				case 1: // 11A11
 					tx_data[tx_offset] = 0; 
@@ -3104,10 +3124,10 @@ void PCM::generate_stream_lbr(){
 		case 36:
 			switch(frame_count){
 				case 0: // 10A63 H2 TK 2 TEMP
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,-425,-200);
 					break;
 				case 1: // 10A66 O2 TK 2 PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,1050);
 					break;
 				case 2: // 10A69
 					tx_data[tx_offset] = 0; 
@@ -3247,8 +3267,8 @@ void PCM::generate_stream_hbr(){
 				case 2: // 11A73
 					tx_data[tx_offset] = 0; 
 					break;
-				case 3: // 11A109
-					tx_data[tx_offset] = (unsigned char)(sat->EntryBatteryB->Current() / 0.390625);
+				case 3: // 11A109 BAT B CUR
+					tx_data[tx_offset] = scale_data(sat->EntryBatteryB->Current(),0,100);
 					break;
 				case 4: // 11A145
 					tx_data[tx_offset] = 0; 
@@ -3266,8 +3286,8 @@ void PCM::generate_stream_hbr(){
 				case 2: // 11A74
 					tx_data[tx_offset] = 0; 
 					break;
-				case 3: // 11A110
-					tx_data[tx_offset] = 0; 
+				case 3: // 11A110 BAT C CUR
+					tx_data[tx_offset] = scale_data(0,0,100);
 					break;
 				case 4: // 11A146
 					tx_data[tx_offset] = 0; 
@@ -3282,14 +3302,14 @@ void PCM::generate_stream_hbr(){
 				case 1: // 11A39
 					tx_data[tx_offset] = 0; 
 					break;
-				case 2: // 11A75
-					tx_data[tx_offset] = 0; 
+				case 2: // 11A75 BAT RELAY BUS VOLTS
+					tx_data[tx_offset] = scale_data(0,0,45);
 					break;
 				case 3: // 11A111
 					tx_data[tx_offset] = 0; 
 					break;
 				case 4: // 11A147 AC BUS 1 PH A VOLTS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,150);
 					break;
 			}
 			break;
@@ -3799,7 +3819,7 @@ void PCM::generate_stream_hbr(){
 					tx_data[tx_offset] = 0; 
 					break;
 				case 2: // 11A91
-					tx_data[tx_offset] = (unsigned char)(sat->BatteryBusA.Voltage() / 0.17578125);
+					tx_data[tx_offset] = scale_data(sat->BatteryBusA.Voltage(),0,45);
 					break;
 				case 3: // 11A127
 					tx_data[tx_offset] = 0; 
@@ -3815,7 +3835,7 @@ void PCM::generate_stream_hbr(){
 					tx_data[tx_offset] = 0; 
 					break;
 				case 1: // 11A56 AC BUS 2 PH A VOLTS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = scale_data(0,0,150);
 					break;
 				case 2: // 11A92
 					tx_data[tx_offset] = 0; 
@@ -3833,11 +3853,11 @@ void PCM::generate_stream_hbr(){
 				case 0: // 11A21
 					tx_data[tx_offset] = 0; 
 					break;
-				case 1: // 11A57
-					tx_data[tx_offset] = 0; 
+				case 1: // 11A57 MNA VOLTS
+					tx_data[tx_offset] = scale_data(0,0,45);
 					break;
 				case 2: // 11A93
-					tx_data[tx_offset] = (unsigned char)(sat->BatteryBusB.Voltage() / 0.17578125);
+					tx_data[tx_offset] = scale_data(sat->BatteryBusB.Voltage(),0,45);
 					break;
 				case 3: // 11A129
 					tx_data[tx_offset] = 0; 
@@ -3852,8 +3872,8 @@ void PCM::generate_stream_hbr(){
 				case 0: // 11A22
 					tx_data[tx_offset] = 0; 
 					break;
-				case 1: // 11A58
-					tx_data[tx_offset] = 0; 
+				case 1: // 11A58 MNB VOLTS
+					tx_data[tx_offset] = scale_data(0,0,45);
 					break;
 				case 2: // 11A94
 					tx_data[tx_offset] = 0; 
@@ -4063,8 +4083,8 @@ void PCM::generate_stream_hbr(){
 			break;
 		case 105:
 			switch(frame_count){
-				case 0: // 11A29
-					tx_data[tx_offset] = 0; 
+				case 0: // 11A29 FC1 N2 PRESS
+					tx_data[tx_offset] = scale_data(0,0,75);
 					break;
 				case 1: // 11A65
 					tx_data[tx_offset] = 0; 
@@ -4082,8 +4102,8 @@ void PCM::generate_stream_hbr(){
 			break;
 		case 106:
 			switch(frame_count){
-				case 0: // 11A30
-					tx_data[tx_offset] = 0; 
+				case 0: // 11A30 FC2 N2 PRESS
+					tx_data[tx_offset] = scale_data(0,0,75);
 					break;
 				case 1: // 11A66
 					tx_data[tx_offset] = 0; 
@@ -4104,8 +4124,8 @@ void PCM::generate_stream_hbr(){
 				case 0: // 11A31
 					tx_data[tx_offset] = 0; 
 					break;
-				case 1: // 11A67
-					tx_data[tx_offset] = 0; 
+				case 1: // 11A67 FC1 O2 PRESS
+					tx_data[tx_offset] = scale_data(0,0,75);
 					break;
 				case 2: // 11A103
 					tx_data[tx_offset] = 0; 
@@ -4123,8 +4143,8 @@ void PCM::generate_stream_hbr(){
 				case 0: // 11A32 
 					tx_data[tx_offset] = 0; 
 					break;
-				case 1: // 11A68
-					tx_data[tx_offset] = 0; 
+				case 1: // 11A68 FC2 O2 PRESS
+					tx_data[tx_offset] = scale_data(0,0,75);
 					break;
 				case 2: // 11A104
 					tx_data[tx_offset] = 0; 
@@ -4186,8 +4206,8 @@ void PCM::generate_stream_hbr(){
 			break;
 		case 122:
 			switch(frame_count){
-				case 0: // 11A35
-					tx_data[tx_offset] = 0; 
+				case 0: // 11A35 FC3 N2 PRESS
+					tx_data[tx_offset] = scale_data(0,0,75);
 					break;
 				case 1: // 11A71
 					tx_data[tx_offset] = 0; 
