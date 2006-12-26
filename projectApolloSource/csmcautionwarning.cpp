@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2006/11/20 16:38:27  tschachim
+  *	Bugfix CWS CM/SM separation.
+  *	
   *	Revision 1.29  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -310,16 +313,19 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 	// CMC warning
 	//
     // See http://www.ibiblio.org/apollo/Documents/BwCsmHandbookGncSection_112-114.pdf
-	// Drawing 8.1, square L4 and others. TODO Only test alarm condition yet.
+	// Drawing 8.1, square L4 and others.
 	//
 
 	if (aws.TestAlarms) {
 		SetLight(CSM_CWS_CMC_LIGHT, true);
 		// No Master Alarm during lamp test
 		SetMasterAlarm(false);
-	} 
-	else {
-		SetLight(CSM_CWS_CMC_LIGHT, false);
+	} else {
+		if(aws.CMCWarning){
+			SetLight(CSM_CWS_CMC_LIGHT, true); // The real thing
+		}else{
+			SetLight(CSM_CWS_CMC_LIGHT, false);
+		}
 	}
 
 	//

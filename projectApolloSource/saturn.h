@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.225  2006/12/23 17:01:28  movieman523
+  *	Added multiple rocket-cams. I'm not sure how to rotate the view, so it's pretty much a 'you get what you get' at the moment.
+  *	
   *	Revision 1.224  2006/12/19 15:56:09  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -631,6 +634,7 @@ typedef struct {
 } MainBusStatus;
 
 typedef struct {
+	bool CMCWarning;
 	bool ISSWarning;
 	bool TestAlarms;
 } AGCWarningStatus;

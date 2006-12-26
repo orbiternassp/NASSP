@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.87  2006/12/17 04:35:24  dseagrav
+  *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
+  *	
   *	Revision 1.86  2006/11/30 03:34:25  dseagrav
   *	Added basic manual optics controls
   *	
@@ -5209,15 +5212,11 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 		break;
 
 	case 033: 
-		{
+		/* No longer needed DS20061226
+		{			
 			ChannelValue33 val33;
 			val33.Value = val;
-			ChannelValue12 val12;
-			val12.Value = GetOutputChannel(012);
-			if(val33.Bits.ZeroOptics){ // val12.Bits.TVCEnable && 
-				sprintf(oapiDebugString(),"TVC CH33 ZERO-OPTICS");
-			}
-		}
+		} */
 		break;
 	}
 }
@@ -5366,9 +5365,10 @@ unsigned int ApolloGuidance::GetInputChannel(int channel)
 #endif
 	}
 	else {
-		if (channel < 0 || channel > MAX_INPUT_CHANNELS)
+		if (channel < 0 || channel > MAX_INPUT_CHANNELS){
 			return 0;
-
+		}
+		if(channel == 033){ return 0; } // Causes AGC++ to not throw CMC WARNING bit
 		return InputChannel[channel];
 	}
 }
