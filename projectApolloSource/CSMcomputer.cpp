@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2006/12/26 06:24:43  dseagrav
+  *	vAGC restart if not powered, AGC VOLTAGE ALARM simulated with DSKY RESTART lights, more telemetry stuff, Merry Day-After-Christmas!
+  *	
   *	Revision 1.69  2006/12/18 17:45:48  tschachim
   *	Removed debug print.
   *	
@@ -1355,11 +1358,11 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.PendDelay = 0;
 				// Don't disturb erasable core
 				// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
-				// Light OSCILLATOR FAILURE bit to signify power transient
-				unsigned int SwitchBits;
-				SwitchBits = GetCh33Switches();
-				SwitchBits &= 037777; // Channel is inverted
-				SetCh33Switches(SwitchBits); 
+				// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it
+				InputChannel[033] &= 017777;
+				vagc.InputChannel[033] &= 017777;				
+				OutputChannel[033] &= 017777;				
+				vagc.Ch33Switches &= 017777;
 				// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
 				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
 				vagc.VoltageAlarm = 1;

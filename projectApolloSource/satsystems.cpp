@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.131  2006/12/19 15:56:05  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.130  2006/12/17 04:35:24  dseagrav
   *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
   *	
@@ -3077,6 +3080,7 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 {
 	ChannelValue11 val11;
 	ChannelValue13 val13;
+	ChannelValue33 val33;
 
 	val11.Value = agc.GetOutputChannel(011);
 	if (val11.Bits.ISSWarning) 
@@ -3089,6 +3093,12 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 		aws.TestAlarms = true;
 	else
 		aws.TestAlarms = false;
+
+	val33.Value = agc.GetInputChannel(033);
+	if (val33.Bits.AGCWarning)
+		aws.CMCWarning = true;
+	else
+		aws.CMCWarning = false;
 }
 
 //
