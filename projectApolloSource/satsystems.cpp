@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.132  2006/12/26 12:58:47  dseagrav
+  *	CMC C/W lamp on restart and altered restart to compensate.
+  *	
   *	Revision 1.131  2006/12/19 15:56:05  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -1390,16 +1393,11 @@ void Saturn::JoystickTimestep()
 		HRESULT hr;
 		ChannelValue31 val31;
 		e_object *direct_power1, *direct_power2;
-		// I thought that minimum-impulse meant the controller wasn't all the way over but that's not the case.
-		// ChannelValue32 val32;
 		val31.Value = agc.GetInputChannel(031); // Get current data
-		//val32.Value = agc.GetInputChannel(032);
 		// Mask off joystick bits
 		val31.Value &= 070000;
-		//val32.Value &= 077700;
 
-		// We'll do this with a RHC first. 
-		
+		// We'll do this with a RHC first. 		
 		if(rhc_id != -1 && rhc_id < js_enabled){
 			int rhc_voltage1 = 0,rhc_voltage2 = 0;
 			int rhc_directv1 = 0,rhc_directv2 = 0;
@@ -1570,10 +1568,10 @@ void Saturn::JoystickTimestep()
 							direct_power2->DrawPower(200);
 						}
 					}else{
-						SetCMRCSState(8,1); 
-						SetCMRCSState(9,1);
-						SetCMRCSState(11,0);
-						SetCMRCSState(10,0);
+						SetCMRCSState(8,0); 
+						SetCMRCSState(9,0);
+						SetCMRCSState(11,1);
+						SetCMRCSState(10,1);
 						if(rhc_directv1 > 12){
 							direct_power1->DrawPower(100);
 						}else{
@@ -1599,10 +1597,10 @@ void Saturn::JoystickTimestep()
 							direct_power2->DrawPower(200);
 						}
 					}else{
-						SetCMRCSState(8,0); 
-						SetCMRCSState(9,0);
-						SetCMRCSState(11,1);
-						SetCMRCSState(10,1);
+						SetCMRCSState(8,1); 
+						SetCMRCSState(9,1);
+						SetCMRCSState(11,0);
+						SetCMRCSState(10,0);
 						if(rhc_directv1 > 12){
 							direct_power1->DrawPower(100);
 						}else{
@@ -1877,9 +1875,6 @@ void Saturn::JoystickTimestep()
 		}
 		// Submit data to the CPU.
 		agc.SetInputChannel(031,val31.Value);
-		//SetInputChannel(032,val32.Value);
-
-		//sprintf(oapiDebugString(),"DX8JS: RHC %d : THC %d : CH31 = %o",rhc_id,thc_id,val31.Value);
 	}
 }
 
