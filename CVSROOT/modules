@@ -50,3 +50,5 @@ projectApolloHtml -d Html projectApolloHtml
 projectApollo -a projectApolloConfig projectApolloGraphics projectApolloSound \
                  projectApolloSource projectApolloScenarios projectApolloDoc \
                  projectApolloHtml
+				 
+telemetryClient telemetryClient
