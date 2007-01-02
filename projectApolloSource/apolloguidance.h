@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.50  2006/12/17 04:35:24  dseagrav
+  *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
+  *	
   *	Revision 1.49  2006/11/25 11:49:21  dseagrav
   *	Connect CM optics to vAGC. Does not work properly.
   *	
@@ -830,6 +833,7 @@ protected:
 	virtual void ProcessChannel161(int val);
 	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);
 	public: virtual void GenerateDownrupt();
+	public: virtual void GenerateUprupt();
 	public: virtual void SetCh33Switches(unsigned int val);
 	public: unsigned int GetCh33Switches();
 	public: virtual int DoPINC(int16_t *Counter);

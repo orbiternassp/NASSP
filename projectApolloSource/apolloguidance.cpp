@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.88  2006/12/26 12:58:47  dseagrav
+  *	CMC C/W lamp on restart and altered restart to compensate.
+  *	
   *	Revision 1.87  2006/12/17 04:35:24  dseagrav
   *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
   *	
@@ -5085,6 +5088,19 @@ void ApolloGuidance::SetInputChannelBit(int channel, int bit, bool val)
 
 		if ((channel >= 030) && (channel <= 034))
 			data ^= 077777;
+
+		// Channel 33 special hack
+		if(channel == 033){
+			if(bit == 10){
+				// Update channel 33 switch bits
+				int ch33bits = GetCh33Switches();
+				if(val != 0){ ch33bits |= 001000; }else{ ch33bits &= 076777; }
+				SetCh33Switches(ch33bits);
+				// We're done here. SetCh33Switches rewrites the IO channel.
+				return;
+			}
+		}
+
 #ifdef AGC_SOCKET_ENABLED
 	unsigned char packet[4];
 // sending the packet to external YAAGC
@@ -5255,6 +5271,10 @@ void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 // DS20060402 DOWNRUPT
 void ApolloGuidance::GenerateDownrupt(){
 	GenerateDOWNRUPT(&vagc);
+}
+
+void ApolloGuidance::GenerateUprupt(){
+	GenerateUPRUPT(&vagc);
 }
 
 // DS200608xx CH33 SWITCHES

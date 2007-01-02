@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.195  2006/12/19 15:56:10  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.194  2006/12/10 00:47:27  dseagrav
   *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
   *	
@@ -1694,7 +1697,7 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSHelium2DSwitch.Init (303, 23, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSHelium2Row, this, CSM_He2_TANKD_VALVE, &SMRCSHelium2DTalkback);
 
 	CMUplinkSwitch.Init(0, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SMRCSHelium2Row, &agc);
-	CMUplinkSwitch.SetChannelData(033, 10, false);	// Down is 'Block Uplink Input'
+	CMUplinkSwitch.SetChannelData(033, 10, true);	// Down is 'Block Uplink Input'
 
 	if (!SkylabCM)
 		IUUplinkSwitch.Init(43, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SMRCSHelium2Row);

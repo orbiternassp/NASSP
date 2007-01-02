@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2006/12/26 12:58:47  dseagrav
+  *	CMC C/W lamp on restart and altered restart to compensate.
+  *	
   *	Revision 1.70  2006/12/26 06:24:43  dseagrav
   *	vAGC restart if not powered, AGC VOLTAGE ALARM simulated with DSKY RESTART lights, more telemetry stuff, Merry Day-After-Christmas!
   *	
@@ -1369,6 +1372,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				sat->dsky.LightRestart();
 				sat->dsky2.LightRestart();
 			}
+			// We should issue telemetry though.
+			sat->pcm.TimeStep(simt);
 			return;
 		}
 
