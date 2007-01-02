@@ -185,7 +185,8 @@ public:
 	sockaddr_in service;			// SOCKADDR_IN
 	SOCKET AcceptSocket;			// Accept Socket
 	int conn_state;                 // Connection State
-	void perform_io();              // Get data from here to there
+	int uplink_state;               // Uplink State
+	void perform_io(double simt);   // Get data from here to there
 	void generate_stream_lbr();     // Generate LBR datastream
 	void generate_stream_hbr();     // Same for HBR datastream
 	unsigned char scale_data(double data, double low, double high); // Scale data for PCM transmission
@@ -196,12 +197,16 @@ public:
 	
 	// PCM datastream management
 	double last_update;				// simt of last update
+	double last_rx;                 // simt of last uplink update
 	int word_addr;                  // Word address of outgoing packet
 	int frame_addr;                 // Frame address
 	int frame_count;				// Frame counter
 	int tx_size;                    // Number of words to send
 	int tx_offset;                  // Offset to use
+	int rx_offset;					// RX offset to use
+	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
+	unsigned char rx_data[1024];    // Characters recieved
 
 	Saturn *sat;					// Ship we're installed in
 };

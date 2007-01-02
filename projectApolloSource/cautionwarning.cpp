@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/07/01 23:49:13  movieman523
+  *	Updated more documentation.
+  *	
   *	Revision 1.17  2006/06/11 14:45:36  movieman523
   *	Quick fix for Apollo 4. Will need more work in the future.
   *	
@@ -109,6 +112,7 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	MasterAlarmCycleTime = MINUS_INFINITY;
 	MasterAlarm = false;
 	MasterAlarmLit = false;
+	CrewAlarmBuzz = false;
 	MasterAlarmPressed = false;
 	InhibitNextMasterAlarm = false;
 	PlaySounds = true;
@@ -211,10 +215,17 @@ void CautionWarningSystem::TimeStep(double simt)
 	// Cycle master alarm light if required, and play sound if appropriate.
 	//
 
-	if ((simt > MasterAlarmCycleTime) && MasterAlarm) {
-		MasterAlarmLit = !MasterAlarmLit;
-		MasterAlarmCycleTime = simt + 0.25;
-		if (MasterAlarmLit && IsPowered() && PlaySounds) {
+	if (simt > MasterAlarmCycleTime){
+		if(MasterAlarm) {
+			MasterAlarmLit = !MasterAlarmLit;
+		}
+		if(MasterAlarm || (UplinkTestState&010) != 0){
+			CrewAlarmBuzz = !CrewAlarmBuzz;
+			MasterAlarmCycleTime = simt + 0.25;
+		}else{
+			CrewAlarmBuzz = false;
+		}
+		if (CrewAlarmBuzz && IsPowered() && PlaySounds) {
 			MasterAlarmSound.play(NOLOOP,255);
 		}
 	}
@@ -249,6 +260,7 @@ void CautionWarningSystem::SetMasterAlarm(bool alarm)
 		//
 
 		MasterAlarmLit = false;
+		CrewAlarmBuzz = false;
 		MasterAlarmCycleTime = MINUS_INFINITY;
 	}
 }
@@ -266,7 +278,8 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 	if (LightsPowered() && (
 	       (MasterAlarmLit && (MasterAlarmLightEnabled || position != CWS_MASTERALARMPOSITION_LEFT)) || 
 	       (TestState == CWS_TEST_LIGHTS_LEFT && position == CWS_MASTERALARMPOSITION_LEFT && MasterAlarmLightEnabled) ||
-	       (TestState == CWS_TEST_LIGHTS_RIGHT && position == CWS_MASTERALARMPOSITION_RIGHT)
+	       (TestState == CWS_TEST_LIGHTS_RIGHT && position == CWS_MASTERALARMPOSITION_RIGHT) ||
+		   ((UplinkTestState&(int)position) != 0)
 	   )) {
 		//
 		// Draw the master alarm lit bitmap.

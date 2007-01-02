@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/12/26 06:24:43  dseagrav
+  *	vAGC restart if not powered, AGC VOLTAGE ALARM simulated with DSKY RESTART lights, more telemetry stuff, Merry Day-After-Christmas!
+  *	
   *	Revision 1.7  2006/12/25 11:16:48  dseagrav
   *	More telemetry bugfixes, corrects stupid mistakes in HBR
   *	
@@ -2557,16 +2560,22 @@ void ECA::TimeStep(double simdt) {
 PCM::PCM(){
 	sat = NULL;
 	conn_state = 0;
+	uplink_state = 0; rx_offset = 0;
 	wsk_error = 0;
 	last_update = 0;
+	last_rx = 0;
+	pcm_rate_override = 0;
 }
 
 void PCM::Init(Saturn *vessel){
 	sat = vessel;
 	conn_state = 0;
+	uplink_state = 0; rx_offset = 0;
 	wsk_error = 0;
 	last_update = 0;
+	last_rx = 0;
 	word_addr = 0;
+	pcm_rate_override = 0;
 	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
 	if ( iResult != NO_ERROR ){
 		sprintf(wsk_emsg,"TELECOM: Error at WSAStartup()");
@@ -2610,6 +2619,7 @@ void PCM::Init(Saturn *vessel){
 		return;
 	}
 	conn_state = 1; // INITIALIZED, LISTENING
+	uplink_state = 0; rx_offset = 0;
 }
 
 void PCM::TimeStep(double simt){
@@ -2623,43 +2633,42 @@ void PCM::TimeStep(double simt){
 	// Allow IO to check for connections, etc
 	if(conn_state != 2){
 		last_update = simt; // Don't care about rate
-		perform_io();
+		last_rx = simt;
+		perform_io(simt);
 		return;
 	}
 
 	// Generate PCM datastream
-	switch(sat->PCMBitRateSwitch.GetState()){
-		case TOGGLESWITCH_DOWN: // LOW			
-			tx_size = (int)((simt - last_update) / 0.005);
-			// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
-			if(tx_size > 0){
-				last_update = simt;
-				if(tx_size < 1024){
-					tx_offset = 0;
-					while(tx_offset < tx_size){
-						generate_stream_lbr();
-						tx_offset++;
-					}
-					perform_io();
+	if(pcm_rate_override == 1 || (pcm_rate_override == 0 && sat->PCMBitRateSwitch.GetState() == TOGGLESWITCH_DOWN)){
+		tx_size = (int)((simt - last_update) / 0.005);
+		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
+		if(tx_size > 0){
+			last_update = simt;
+			if(tx_size < 1024){
+				tx_offset = 0;
+				while(tx_offset < tx_size){
+					generate_stream_lbr();
+					tx_offset++;
 				}
-			}	
-			break;
-
-		case TOGGLESWITCH_UP:   // HIGH
-			tx_size = (int)((simt - last_update) / 0.00015625);
-			// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
-			if(tx_size > 0){
-				last_update = simt;
-				if(tx_size < 1024){
-					tx_offset = 0;
-					while(tx_offset < tx_size){
-						generate_stream_hbr();
-						tx_offset++;
-					}			
-					perform_io();
-				}
-			}	
-			break;
+				perform_io(simt);
+			}
+		}
+		return; // Don't waste time checking for HBR
+	}
+	if(pcm_rate_override == 2 || (pcm_rate_override == 0 && sat->PCMBitRateSwitch.GetState() == TOGGLESWITCH_UP)){
+		tx_size = (int)((simt - last_update) / 0.00015625);
+		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
+		if(tx_size > 0){
+			last_update = simt;
+			if(tx_size < 1024){
+				tx_offset = 0;
+				while(tx_offset < tx_size){
+					generate_stream_hbr();
+					tx_offset++;
+				}			
+				perform_io(simt);
+			}
+		}
 	}
 }
 
@@ -4274,7 +4283,7 @@ void PCM::generate_stream_hbr(){
 	}
 }
 
-void PCM::perform_io(){
+void PCM::perform_io(double simt){
 	// Do TCP IO
 	switch(conn_state){
 		case 0: // UNINITIALIZED
@@ -4289,7 +4298,7 @@ void PCM::perform_io(){
 			// Otherwise loop and try again.
 			break;
 		case 2: // CONNECTED			
-			int bytesSent;
+			int bytesSent,bytesRecv;
 
 			bytesSent = send(AcceptSocket, (char *)tx_data, tx_size, 0 );
 			if(bytesSent == SOCKET_ERROR){
@@ -4300,10 +4309,12 @@ void PCM::perform_io(){
 						// We can ignore this entirely. It's not an error.
 						break;
 
+					case 10038: // Socket isn't a socket
 					case 10053: // Software caused connection abort
 					case 10054: // Connection reset by peer
 						closesocket(AcceptSocket);
 						conn_state = 1; // Accept another
+						uplink_state = 0; rx_offset = 0;
 						break;
 
 					default:           // If unknown
@@ -4311,7 +4322,239 @@ void PCM::perform_io(){
 						sprintf(wsk_emsg,"TELECOM: send() failed: %ld",errnumber);
 						closesocket(AcceptSocket);
 						conn_state = 1; // Accept another
+						uplink_state = 0; rx_offset = 0;
 						break;					
+				}
+			}
+			// Should we recieve?
+			if(((simt - last_rx)/0.005) < 1){
+				return; // No
+			}
+			last_rx = simt;
+			bytesRecv = recv( AcceptSocket, (char *)(rx_data+rx_offset), 1, 0 );
+			if(bytesRecv == SOCKET_ERROR){
+				long errnumber = WSAGetLastError();
+				switch(errnumber){
+					// KNOWN CODES that we can ignore
+					case 10035: // Operation Would Block
+						// We can ignore this entirely. It's not an error.
+						break;
+
+					case 10053: // Software caused connection abort
+					case 10038: // Socket isn't a socket
+					case 10054: // Connection reset by peer
+						closesocket(AcceptSocket);
+						conn_state = 1; // Accept another
+						uplink_state = 0; rx_offset = 0;
+						break;
+
+					default:           // If unknown
+						wsk_error = 1; // do this
+						sprintf(wsk_emsg,"TELECOM: recv() failed: %ld",errnumber);
+						closesocket(AcceptSocket);
+						conn_state = 1; // Accept another
+						uplink_state = 0; rx_offset = 0;
+						break;					
+				}
+			}else{
+				if(bytesRecv > 0){
+					// Have Data
+					switch(uplink_state){
+						case 0: // NEW COMMAND START
+							int va,sa;
+							va = ((rx_data[rx_offset]&070)>>3);
+							sa = rx_data[rx_offset]&07;
+							// *** VEHICLE ADDRESS HARDCODED HERE *** (NASA DID THIS TOO)
+							if(va != 04){ break; }
+							switch(sa){
+								case 0: // TEST
+									rx_offset++; uplink_state=10;
+									break;
+								case 3: // CMC-UPDATA
+									rx_offset++; uplink_state=20;
+									break;
+								case 4: // CTE-UPDATE
+									rx_offset++; uplink_state=30;
+									break;
+								case 5: // RTC-SALVO
+									rx_offset++; uplink_state=40;
+									break;
+								case 6: // RTC-COMMAND
+									rx_offset++; uplink_state=50;
+									break;
+								default:
+									sprintf(oapiDebugString(),"UPLINK: UNKNOWN SYSTEM-ADDRESS %o",sa);
+									break;
+							}
+							break;
+
+						case 10: // TEST CMD
+							rx_offset = 0; uplink_state = 0; break;
+
+						case 20: // CMC UPLINK CMD
+							// Expect another byte
+							rx_offset++; uplink_state++; break;
+						case 21: // CMC UPLINK
+							{
+								int cmc_uplink_wd = rx_data[rx_offset-1];
+								cmc_uplink_wd <<= 8;
+								cmc_uplink_wd |= rx_data[rx_offset];
+								// Both uplink switches must be in ACCEPT
+								if(sat->CMUplinkSwitch.GetState() == TOGGLESWITCH_DOWN ||
+									sat->UPTLMSwitch.GetState() == TOGGLESWITCH_DOWN){
+									rx_offset = 0; uplink_state = 0; break;
+								}
+								// Must be in vAGC mode
+								if(sat->agc.Yaagc){
+									// Move to INLINK
+									sat->agc.vagc.Erasable[0][045] = cmc_uplink_wd;
+									// Cause UPRUPT
+									sat->agc.GenerateUprupt();
+								}
+								//sprintf(oapiDebugString(),"CMC UPLINK DATA %05o",cmc_uplink_wd);
+								rx_offset = 0; uplink_state = 0;
+							}
+							break;
+
+						case 30: // CTE UPDATE CMD
+							rx_offset = 0; uplink_state = 0; break;
+
+						case 40: // RTC SALVO CMD
+							switch(rx_data[rx_offset]){
+								case 030: // LATCH RELAYS FOR RESET 1
+									rx_offset = 0; uplink_state = 0; break;
+								case 032: // RESET SALVO 1
+									// SENDS RTC-COMMANDS
+									// 00 04 20 10 14 02,16 06 12 22,26 32,36
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 070: // LATCH RELAYS FOR RESET 2
+									rx_offset = 0; uplink_state = 0; break;
+								case 072: // RESET SALVO 2
+									// SENDS SENDS RTC-COMMANDS
+									// 40,50 44,54,60 64,70 74 42,46 52,56 62,66 72,76
+									rx_offset = 0; uplink_state = 0; break;
+
+								default:	
+									sprintf(oapiDebugString(),"UNKNOWN RTC SALVO CMD %o",rx_data[rx_offset]);
+									rx_offset = 0; uplink_state = 0;
+									break;
+							}
+							break;
+
+						case 50: // RTC CMD
+							switch(rx_data[rx_offset]){
+								case 00: // ABORT LT A OFF
+									{										
+										sat->cws.UplinkTestState &= 012;
+										rx_offset = 0; uplink_state = 0;
+									}
+									break;
+								case 01: // ABORT LT A ON
+									{
+										sat->cws.UplinkTestState |= 001;
+										rx_offset = 0; uplink_state = 0;
+									}
+									break;
+								case 04: // CREW ALARM OFF
+									{										
+										sat->cws.UplinkTestState &= 003;
+										rx_offset = 0; uplink_state = 0;
+									}
+									break;
+								case 05: // CREW ALARM ON
+									{
+										sat->cws.UplinkTestState |= 010;
+										rx_offset = 0; uplink_state = 0;
+									}
+									break;
+								case 06: // ABORT LT B OFF
+									{										
+										sat->cws.UplinkTestState &= 011;
+										rx_offset = 0; uplink_state = 0;
+									}
+									break;
+								case 07: // ABORT LT B ON
+									{
+										sat->cws.UplinkTestState |= 002;
+										rx_offset = 0; uplink_state = 0;
+									}
+									break;
+								
+								case 010: // ACE CMC ZERO DISABLE
+								case 011: // ACE CMC ZERO ENABLE
+								case 014: // ACE CMC ONE DISABLE
+								case 015: // ACE CMC ONE ENABLE
+									// Ignore these
+									rx_offset = 0; uplink_state = 0;
+									break;
+
+								case 022: // LATCH RELAYS FOR VHF RANGING CONTROL
+								case 023: // RANGING DISABLE
+								case 026: // RANGING RESET
+								case 027: // RANGING ENABLE
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 032: // LATCH RELAYS FOR R/T PCM CONTROL
+								case 033: // SAME
+								case 036: // R/T PCM RESET
+								case 037: // R/T PCM 1024 ON (IF 32 LATCHED) or R/T PCM OFF (IF 33 LATCHED)
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 040: // LATCH RELAYS FOR UNIFIED S-BAND SYSTEM CONTROL
+								case 041: // SAME
+								case 042: // SAME
+								case 043: // SAME
+								case 044: // FM OFF, TAPE OFF
+								case 045: // FM ON, TAPE ON
+								case 046: // POWER AMP RESET (IF 42 LATCHED), POWER AMP OFF (IF 43 LATCHED)
+								case 047: // POWER AMP HIGH (IF 42 LATCHED), POWER AMP LOW (IF 43 LATCHED)
+								case 050: // USB MODE RESET 
+								case 051: // BACKUP VOICE FM OFF
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 052: // LATCH RELAYS FOR DSE PLAYBACK MODE CONTROL
+								case 053: // SELECT LM PLAYBACK DATA
+								case 056: // PLAYBACK MODE RESET
+								case 057: // SELECT CSM PLAYBACK DATA
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 062: // LATCH RELAYS FOR DSE CONTROL
+								case 063: // SAME
+								case 064: // LATCH RELAYS FOR PCM DOWNTELEMETRY RATE CONTROL
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 065: // DOWNTLM MODE LBR
+									pcm_rate_override = 1;
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 066: // DSE RESET (IF 62 LATCHED), DSE OFF (IF 63 LATCHED)
+								case 067: // DSE RECORD (IF 62 LATCHED), DSE PLAYBACK (IF 63 LATCHED)
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 070: // DOWNTLM MODE RESET
+									pcm_rate_override = 0;
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 071: // DOWNTLM MODE HBR
+									pcm_rate_override = 2;
+									rx_offset = 0; uplink_state = 0; break;
+
+								case 072: // LATCH RELAYS FOR DSE TAPE CONTROL
+								case 073: // SAME
+								case 074: // ANTENNA SELECT RESET
+								case 075: // ANTENNA SELECT OMNI "D" 
+								case 076: // DSE TAPE RESET (IF 72 LATCHED), DSE TAPE STOP (IF 73 LATCHED)
+								case 077: // DSE TAPE FORWARD (IF 72 LATCHED), DSE TAPE REWIND (IF 73 LATCHED)
+									rx_offset = 0; uplink_state = 0; break;
+
+								default:	
+									sprintf(oapiDebugString(),"UNKNOWN RTC COMMAND %o",rx_data[rx_offset]);
+									rx_offset = 0; uplink_state = 0;
+									break;
+							}
+							break;
+					}
 				}
 			}
 			break;			

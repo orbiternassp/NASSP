@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2006/07/01 23:49:13  movieman523
+  *	Updated more documentation.
+  *	
   *	Revision 1.15  2006/06/11 14:45:36  movieman523
   *	Quick fix for Apollo 4. Will need more work in the future.
   *	
@@ -82,6 +85,7 @@ enum LightTestState
 	CWS_TEST_LIGHTS_NONE = 0,		///< Disable light test.
 	CWS_TEST_LIGHTS_LEFT = 1,		///< Test left-hand lights.
 	CWS_TEST_LIGHTS_RIGHT = 2,		///< Test right-hand lights.
+	CWS_TEST_LIGHTS_BOTH = 3,		///< Test both lights.
 };
 
 ///
@@ -291,6 +295,11 @@ public:
 	///
 	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
 
+	///
+	/// \brief What's the current light test state commanded by telemetry?
+	///
+	int UplinkTestState;
+
 protected:
 
 	///
@@ -372,6 +381,11 @@ protected:
 	/// \brief Is the master alarm lit?
 	///
 	bool MasterAlarmLit;
+
+	///
+	/// \brief Is the crew alarm buzzer on?
+	///
+	bool CrewAlarmBuzz;
 
 	///
 	/// \brief MET of next master alarm light cycle.
