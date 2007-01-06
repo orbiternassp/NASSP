@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2006/12/26 12:58:47  dseagrav
+  *	CMC C/W lamp on restart and altered restart to compensate.
+  *	
   *	Revision 1.30  2006/11/20 16:38:27  tschachim
   *	Bugfix CWS CM/SM separation.
   *	
@@ -326,6 +329,13 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		}else{
 			SetLight(CSM_CWS_CMC_LIGHT, false);
 		}
+	}
+
+	// CREW ALERT
+	if((UplinkTestState&010) != 0){
+		SetLight(CSM_CWS_CREW_ALERT,true);		
+	}else{
+		SetLight(CSM_CWS_CREW_ALERT,false);
 	}
 
 	//

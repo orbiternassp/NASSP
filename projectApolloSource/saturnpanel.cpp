@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.196  2007/01/02 01:38:25  dseagrav
+  *	Digital uplink and associated stuff.
+  *	
   *	Revision 1.195  2006/12/19 15:56:10  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -2502,8 +2505,8 @@ void Saturn::SetSwitches(int panel) {
 	SPSGaugingSwitch.Init(0, 0, 34, 33, srf[SRF_THREEPOSSWITCH305], srf[SRF_BORDER_34x33], SPSGaugingSwitchRow, &GaugingAc1CircuitBraker, NULL, &GaugingAc2CircuitBraker);
 
 	TelcomSwitchesRow.Init(AID_TELCOMSWITCHES, MainPanel);
-	TelcomGroup1Switch.Init(0, 78, 34, 33, srf[SRF_THREEPOSSWITCH305], srf[SRF_BORDER_34x33], TelcomSwitchesRow);
-	TelcomGroup2Switch.Init(56, 0, 34, 33, srf[SRF_THREEPOSSWITCH305], srf[SRF_BORDER_34x33], TelcomSwitchesRow);
+	TelcomGroup1Switch.Init(0, 78, 34, 33, srf[SRF_THREEPOSSWITCH305], srf[SRF_BORDER_34x33], TelcomSwitchesRow, &ACBus1, NULL, &ACBus2);
+	TelcomGroup2Switch.Init(56, 0, 34, 33, srf[SRF_THREEPOSSWITCH305], srf[SRF_BORDER_34x33], TelcomSwitchesRow, &ACBus1, NULL, &ACBus2);
 
 	RightInteriorLightRotariesRow.Init(AID_RIGHTINTERIORLIGHTROTARIES, MainPanel);
 	RightIntegralRotarySwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], RightInteriorLightRotariesRow);

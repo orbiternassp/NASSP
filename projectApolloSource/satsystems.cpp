@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.133  2006/12/27 12:06:35  dseagrav
+  *	Fix inverted direct roll command in CM
+  *	
   *	Revision 1.132  2006/12/26 12:58:47  dseagrav
   *	CMC C/W lamp on restart and altered restart to compensate.
   *	
@@ -1341,6 +1344,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		eca.SystemTimestep(tFactor);
 		rjec.SystemTimestep(tFactor);
 		optics.SystemTimestep(tFactor);
+		pcm.SystemTimestep(tFactor);
 		SPSPropellant.SystemTimestep(tFactor);
 		SPSEngine.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
