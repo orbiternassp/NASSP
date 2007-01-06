@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/01/06 04:44:49  dseagrav
+  *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
+  *	
   *	Revision 1.9  2007/01/02 01:38:25  dseagrav
   *	Digital uplink and associated stuff.
   *	
@@ -2627,6 +2630,17 @@ void PCM::Init(Saturn *vessel){
 
 void PCM::SystemTimestep(double simdt) {	
 	// Anything on?	
+	// Up telemetry power
+	if(sat->UPTLMSwitch2.GetState() != THREEPOSSWITCH_DOWN){
+		// Command reset?
+		if(sat->UPTLMSwitch2.GetState() != THREEPOSSWITCH_UP){
+			rx_offset = 0; uplink_state = 0; // Do that and continue
+		}
+		if(sat->FlightBus.Voltage() > 28){
+			sat->FlightBus.DrawPower(8.9);
+		}
+	}
+	// Down telemetry power
 	if(sat->TelcomGroup1Switch.Voltage() > 100){
 		if(sat->TelcomGroup2Switch.Voltage() > 100){
 			// Both
@@ -4384,6 +4398,10 @@ void PCM::perform_io(double simt){
 						break;					
 				}
 			}else{
+				// If the telemetry data-path is disconnected
+				if(sat->UPTLMSwitch1.GetState() == TOGGLESWITCH_DOWN){
+					return; // Discard the data
+				}
 				if(bytesRecv > 0){
 					// Have Data
 					switch(uplink_state){

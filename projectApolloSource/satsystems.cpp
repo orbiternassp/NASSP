@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.134  2007/01/06 04:44:49  dseagrav
+  *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
+  *	
   *	Revision 1.133  2006/12/27 12:06:35  dseagrav
   *	Fix inverted direct roll command in CM
   *	
@@ -305,6 +308,14 @@ void Saturn::SystemsInit() {
 		                    &BatteryBusB, EntryBatteryC, eo, &SIVBToCSMPowerSource);	// TODO Bat C should be connected via the MAIN B - BAT C cb on panel 275, which is currently not available
 	
 	MainBusAController.ConnectFuelCell(2, true);	// Default state of MainBusASwitch2
+
+	//
+	// Flight Bus and its feeder
+	//
+
+	FlightBusFeeder.WireToBuses(MainBusA,MainBusB);
+	FlightBus.WireTo(&FlightBusFeeder);
+	Panelsdk.AddElectrical(&FlightBus, false);
 
 	//
 	// Battery Charger

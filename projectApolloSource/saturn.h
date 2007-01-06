@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.227  2007/01/06 04:44:49  dseagrav
+  *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
+  *	
   *	Revision 1.226  2006/12/26 12:58:47  dseagrav
   *	CMC C/W lamp on restart and altered restart to compensate.
   *	
@@ -1784,7 +1787,7 @@ protected:
 	ThreePosSwitch SBandAuxSwitch2;
 
 	SwitchRow UPTLMSwitchesRow;
-	ThreePosSwitch UPTLMSwitch1;
+	ToggleSwitch   UPTLMSwitch1;
 	ThreePosSwitch UPTLMSwitch2;
 
 	SwitchRow SBandAntennaSwitchesRow;
@@ -3015,6 +3018,14 @@ protected:
 
 	DCBusController MainBusAController;
 	DCBusController MainBusBController;
+
+	//
+	// Flight Bus.
+	// This gets fed via diodes from MNA and MNB through 20-amp circuit breakers on panel 225.
+	//
+
+	DCbus FlightBus;
+	PowerMerge FlightBusFeeder;
 
 	//
 	// Inverters.
