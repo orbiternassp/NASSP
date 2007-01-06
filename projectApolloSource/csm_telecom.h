@@ -178,6 +178,7 @@ public:
 	PCM();                          // Cons
 	void Init(Saturn *vessel);	    // Initialization
 	void TimeStep(double simt);     // TimeStep
+	void SystemTimestep(double simdt); // System Timestep (consume power)
 
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data

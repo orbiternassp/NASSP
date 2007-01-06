@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2007/01/02 01:38:24  dseagrav
+  *	Digital uplink and associated stuff.
+  *	
   *	Revision 1.18  2006/07/01 23:49:13  movieman523
   *	Updated more documentation.
   *	
@@ -219,7 +222,7 @@ void CautionWarningSystem::TimeStep(double simt)
 		if(MasterAlarm) {
 			MasterAlarmLit = !MasterAlarmLit;
 		}
-		if(MasterAlarm || (UplinkTestState&010) != 0){
+		if(MasterAlarm){ // || (UplinkTestState&010) != 0){ -- Incorrect?
 			CrewAlarmBuzz = !CrewAlarmBuzz;
 			MasterAlarmCycleTime = simt + 0.25;
 		}else{

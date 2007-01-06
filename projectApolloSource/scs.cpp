@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2007/01/02 01:38:25  dseagrav
+  *	Digital uplink and associated stuff.
+  *	
   *	Revision 1.8  2006/12/26 06:24:43  dseagrav
   *	vAGC restart if not powered, AGC VOLTAGE ALARM simulated with DSKY RESTART lights, more telemetry stuff, Merry Day-After-Christmas!
   *	
@@ -2622,6 +2625,30 @@ void PCM::Init(Saturn *vessel){
 	uplink_state = 0; rx_offset = 0;
 }
 
+void PCM::SystemTimestep(double simdt) {	
+	// Anything on?	
+	if(sat->TelcomGroup1Switch.Voltage() > 100){
+		if(sat->TelcomGroup2Switch.Voltage() > 100){
+			// Both
+			sat->TelcomGroup1Switch.DrawPower(10.5);
+			sat->TelcomGroup2Switch.DrawPower(10.5);
+			return;
+		}else{
+			// Just G1
+			sat->TelcomGroup1Switch.DrawPower(21);
+			return;
+		}
+	}else{
+		if(sat->TelcomGroup2Switch.Voltage() > 100){
+			// Just G2
+			sat->TelcomGroup2Switch.DrawPower(21);
+			return;
+		}
+	}
+	// No power (has no effect for now)
+	return;
+}
+
 void PCM::TimeStep(double simt){
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
@@ -4456,13 +4483,14 @@ void PCM::perform_io(double simt){
 										rx_offset = 0; uplink_state = 0;
 									}
 									break;
-								case 04: // CREW ALARM OFF
+								case 04: // CREW ALERT OFF
 									{										
 										sat->cws.UplinkTestState &= 003;
+										
 										rx_offset = 0; uplink_state = 0;
 									}
 									break;
-								case 05: // CREW ALARM ON
+								case 05: // CREW ALERT ON
 									{
 										sat->cws.UplinkTestState |= 010;
 										rx_offset = 0; uplink_state = 0;

@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.17  2006/10/26 18:48:50  movieman523
   *	Fixed up CM RCS 1 and 2 warning lights to make the 'C&WS Operational Check' work.
   *	
@@ -169,6 +174,7 @@ protected:
 #define CSM_CWS_AC_BUS1_OVERLOAD	44
 #define CSM_CWS_AC_BUS2_OVERLOAD	45
 #define CSM_CWS_CMC_LIGHT			46
+#define CSM_CWS_CREW_ALERT			47
 #define CSM_CWS_BUS_A_UNDERVOLT		48
 #define CSM_CWS_BUS_B_UNDERVOLT		49
 #define CSM_CWS_ISS_LIGHT			50

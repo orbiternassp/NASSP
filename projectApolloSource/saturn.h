@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.226  2006/12/26 12:58:47  dseagrav
+  *	CMC C/W lamp on restart and altered restart to compensate.
+  *	
   *	Revision 1.225  2006/12/23 17:01:28  movieman523
   *	Added multiple rocket-cams. I'm not sure how to rotate the view, so it's pretty much a 'you get what you get' at the moment.
   *	
@@ -2425,8 +2428,8 @@ protected:
 	ThreeSourceSwitch SPSGaugingSwitch;
 
 	SwitchRow TelcomSwitchesRow;
-	ThreePosSwitch TelcomGroup1Switch;
-	ThreePosSwitch TelcomGroup2Switch;
+	ThreeSourceSwitch TelcomGroup1Switch;
+	ThreeSourceSwitch TelcomGroup2Switch;
 
 	////////////////////////
 	// Right window cover //
