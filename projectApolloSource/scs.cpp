@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/01/06 07:34:36  dseagrav
+  *	FLIGHT bus added, uptelemetry now draws power, UPTLM switches on MDC now operate
+  *	
   *	Revision 1.10  2007/01/06 04:44:49  dseagrav
   *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
   *	
@@ -2562,6 +2565,360 @@ void ECA::TimeStep(double simdt) {
 }
 
 // DS20060326 TELECOM OBJECTS
+
+// PREMODULATION PROCESSOR
+PMP::PMP(){
+	sat = NULL;
+}
+
+void PMP::Init(Saturn *vessel){
+	sat = vessel;
+}
+
+void PMP::SystemTimestep(double simdt) {
+	if(sat->PMPSwitch.GetState() != THREEPOSSWITCH_CENTER){
+		if(sat->FlightBus.Voltage() > 18){
+			sat->FlightBus.DrawPower(8.5);
+		}
+	}
+}
+
+void PMP::TimeStep(double simt){
+
+}
+
+// Unifed S-Band System
+USB::USB(){
+	sat = NULL;
+	fm_ena = 1; pa_ovr_1 = 1; pa_ovr_2 = 1;
+	pa_mode_1 = 0; pa_timer_1 = 0;
+	pa_mode_2 = 0; pa_timer_2 = 0;
+	xpdr_sel = THREEPOSSWITCH_CENTER; // OFF
+}
+
+void USB::Init(Saturn *vessel){
+	sat = vessel;
+	fm_ena = 1; pa_ovr_1 = 1; pa_ovr_2 = 1;
+	pa_mode_1 = 0; pa_timer_1 = 0;
+	pa_mode_2 = 0; pa_timer_2 = 0;
+	xpdr_sel = THREEPOSSWITCH_CENTER; // OFF
+}
+
+void USB::SystemTimestep(double simdt) {	
+	// S-Band Transponder power
+	if(sat->SBandNormalXPDRSwitch.GetState() != xpdr_sel){		
+		if(sat->FlightBus.Voltage() > 12){
+			sat->FlightBus.DrawPower(1); // Consume switching power
+			xpdr_sel = sat->SBandNormalXPDRSwitch.GetState();
+		}
+	}
+	switch(xpdr_sel){
+		case THREEPOSSWITCH_CENTER: // OFF
+			break; 
+		case THREEPOSSWITCH_UP:     // PRIM
+			if(sat->TelcomGroup1Switch.Voltage() > 100){ sat->TelcomGroup1Switch.DrawPower(16.5); } break;
+		case THREEPOSSWITCH_DOWN:   // SEC
+			if(sat->TelcomGroup2Switch.Voltage() > 100){ sat->TelcomGroup2Switch.DrawPower(16.5); } break;
+	}
+	// S-Band FM Transmitter power
+	if(fm_ena > 0){
+		if(fm_ena == 2){ // Forced on by up tlm
+			if(fm_opr == false && sat->FlightBus.Voltage() > 12){
+				sat->FlightBus.DrawPower(1.5); // Consume switching power
+				fm_opr = true;
+			}
+		}else{
+			if(sat->SBandAuxSwitch1.GetState() == THREEPOSSWITCH_UP){ // TAPE selected
+				if(fm_opr == false && sat->FlightBus.Voltage() > 12){
+					sat->FlightBus.DrawPower(1.5); // Consume switching power
+					fm_opr = true;
+				}
+			}else{
+				if(sat->SBandAuxSwitch2.GetState() != THREEPOSSWITCH_CENTER){ // TV or SCI selected
+					if(fm_opr == false && sat->FlightBus.Voltage() > 12){
+						sat->FlightBus.DrawPower(1.5); // Consume switching power
+						fm_opr = true;
+					}
+				}else{
+					// Both off
+					if(fm_opr == true && sat->FlightBus.Voltage() > 12){
+						sat->FlightBus.DrawPower(1.5); // Consume switching power
+						fm_opr = false;
+					}
+				}
+			}
+		}
+	}else{
+		// FM disabled by telemetry
+		if(fm_opr == true && sat->FlightBus.Voltage() > 12){
+			sat->FlightBus.DrawPower(1.5); // Consume switching power
+			fm_opr = false;
+		}
+	}
+	if(fm_opr){
+		if(sat->TelcomGroup1Switch.Voltage() > 100){ sat->TelcomGroup1Switch.DrawPower(6.7); }
+	}
+	// S-Band Power Amplifier #1
+	if(pa_ovr_1 > 0){
+		// Enabled
+		if(pa_ovr_1 > 1){
+			// TLM forced on
+			if(pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
+		}else{
+			// Normal
+			if(sat->SBandNormalPwrAmpl1Switch.GetState() == THREEPOSSWITCH_UP){
+				// Turned on
+				if(pa_mode_1 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 2; } // Start warming up
+			}else{
+				// Turned off
+				if(pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 1; } // Start shutting down
+			}
+		}
+	}else{
+		// TLM commanded off
+		if(pa_mode_1 > 1 && sat->FlightBus.Voltage() > 24){ pa_mode_1 = 1; } // Start shutting down
+	}
+	// S-Band Power Amplifier #2
+	if(pa_ovr_2 > 0){ 
+		// Enabled
+		if(pa_ovr_2 > 1){
+			// TLM forced on
+			if(pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
+		}else{
+			// Normal
+			if(sat->SBandNormalPwrAmpl1Switch.GetState() == THREEPOSSWITCH_DOWN){
+				// Turned on
+				if(pa_mode_2 == 0 && sat->FlightBus.Voltage() > 24){ pa_mode_2 = 2; } // Start warming up
+			}else{
+				// Turned off
+				if(pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24){	pa_mode_2 = 1; } // Start shutting down
+			}
+		}
+	}else{
+		// TLM commanded off
+		if(pa_mode_2 > 1 && sat->FlightBus.Voltage() > 24){	pa_mode_2 = 1; } // Start shutting down
+	}
+}
+
+void USB::TimeStep(double simt){
+	// Power Amplifier #1 
+	switch(pa_mode_1){
+		case 0: // OFF
+			break;
+		case 1: // SHUTTING DOWN
+			if(pa_timer_1 == 0){
+				pa_timer_1 = simt; // Initialize
+			}
+			// For the first .3 second of the shutdown, draw switching current.
+			if(simt < (pa_timer_1+0.3)){
+				if(sat->FlightBus.Voltage() > 24){
+					sat->FlightBus.DrawPower(350);					
+				}else{
+					// Flight bus power failed - Start over
+					pa_timer_1 = simt;
+				}
+				break;
+			}
+			// Now wait the remainder of one second for the tubes to cool
+			if(simt > (pa_timer_1+1)){
+				// Tubes are cooled, we can stop the timer.
+				pa_timer_1 = 0; pa_mode_1 = 0;
+			}
+			break;
+		case 2: // STARTING UP
+			if(pa_timer_1 == 0){
+				pa_timer_1 = simt; // Initialize
+			}
+			// For the first .3 second of the startup, draw switching current and start warming up.
+			if(simt < (pa_timer_1+0.3)){
+				if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100){
+					sat->FlightBus.DrawPower(350);
+					sat->TelcomGroup1Switch.DrawPower(15);
+				}else{
+					// Either bus power failed - Start over
+					pa_timer_1 = simt;
+				}
+				break;
+			}
+			// For the remainder of 90 seconds, warm up the tubes
+			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100){
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup1Switch.DrawPower(15);
+			}else{
+				// Either bus power failed - Start over
+				pa_timer_1 = simt; break;
+			}
+			if(simt > (pa_timer_1+90)){
+				// Tubes are warm and we're ready to operate.
+				if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_DOWN)){
+					// Change to low power
+					pa_mode_1 = 3; pa_timer_1 = 0;
+				}
+				if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_UP)){
+					// Change to high power
+					pa_mode_1 = 4; pa_timer_1 = 0;
+				}
+			}
+			break;
+		case 3: // OPERATING AT LOW POWER
+			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100){
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup1Switch.DrawPower(32);
+			}else{
+				// Either bus power failed - Start cooling
+				if(pa_timer_1 == 0){
+					pa_timer_1 = simt;
+				}
+				if(simt > (pa_timer_1+1)){ // After one second, shut down
+					pa_mode_1 = 1; break;
+				}
+			}
+			if(pa_ovr_1 == 3 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_UP)){
+				// Change to high power
+				pa_mode_1 = 4;
+			}
+			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_CENTER){
+				// Change to warm-up
+				pa_mode_1 = 2; pa_timer_1 = (simt-95);
+			}
+			break;
+		case 4: // OPERATING AT HIGH POWER
+			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup1Switch.Voltage() > 100){
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup1Switch.DrawPower(81);
+			}else{
+				// Either bus power failed - Start cooling
+				if(pa_timer_1 == 0){
+					pa_timer_1 = simt;
+				}
+				if(simt > (pa_timer_1+1)){ // After one second, shut down
+					pa_mode_1 = 1; break;
+				}
+			}
+			if(pa_ovr_1 == 2 || (pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_DOWN)){
+				// Change to low power
+				pa_mode_1 = 3;
+			}
+			if(pa_ovr_1 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_CENTER){
+				// Change to warm-up
+				pa_mode_1 = 2; pa_timer_1 = (simt-95);
+			}
+			break;
+	}
+	// Power Amplifier #2 
+	switch(pa_mode_2){
+		case 0: // OFF
+			break;
+		case 1: // SHUTTING DOWN
+			if(pa_timer_2 == 0){
+				pa_timer_2 = simt; // Initialize
+			}
+			// For the first .3 second of the shutdown, draw switching current.
+			if(simt < (pa_timer_2+0.3)){
+				if(sat->FlightBus.Voltage() > 24){
+					sat->FlightBus.DrawPower(350);					
+				}else{
+					// Flight bus power failed - Start over
+					pa_timer_2 = simt;
+				}
+				break;
+			}
+			// Now wait the remainder of one second for the tubes to cool
+			if(simt > (pa_timer_2+1)){
+				// Tubes are cooled, we can stop the timer.
+				pa_timer_2 = 0; pa_mode_2 = 0;
+			}
+			break;
+		case 2: // STARTING UP
+			if(pa_timer_2 == 0){
+				pa_timer_2 = simt; // Initialize
+			}
+			// For the first .3 second of the startup, draw switching current and start warming up.
+			if(simt < (pa_timer_2+0.3)){
+				if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100){
+					sat->FlightBus.DrawPower(350);
+					sat->TelcomGroup2Switch.DrawPower(15);
+				}else{
+					// Either bus power failed - Start over
+					pa_timer_2 = simt;
+				}
+				break;
+			}
+			// For the remainder of 90 seconds, warm up the tubes
+			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100){
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup2Switch.DrawPower(15);
+			}else{
+				// Either bus power failed - Start over
+				pa_timer_2 = simt; break;
+			}
+			if(simt > (pa_timer_2+90)){
+				// Tubes are warm and we're ready to operate.
+				if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_DOWN)){
+					// Change to low power
+					pa_mode_2 = 3; pa_timer_2 = 0;
+				}
+				if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_UP)){
+					// Change to high power
+					pa_mode_2 = 4; pa_timer_2 = 0;
+				}
+			}
+			break;
+		case 3: // OPERATING AT LOW POWER
+			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100){
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup2Switch.DrawPower(32);
+			}else{
+				// Either bus power failed - Start cooling
+				if(pa_timer_2 == 0){
+					pa_timer_2 = simt;
+				}
+				if(simt > (pa_timer_2+1)){ // After one second, shut down
+					pa_mode_2 = 1; break;
+				}
+			}
+			if(pa_ovr_2 == 3 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_UP)){
+				// Change to high power
+				pa_mode_2 = 4;
+			}
+			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_CENTER){
+				// Change to warm-up
+				pa_mode_2 = 2; pa_timer_2 = (simt-95);
+			}
+			break;
+		case 4: // OPERATING AT HIGH POWER
+			if(sat->FlightBus.Voltage() > 24 && sat->TelcomGroup2Switch.Voltage() > 100){
+				sat->FlightBus.DrawPower(5);
+				sat->TelcomGroup2Switch.DrawPower(81);
+			}else{
+				// Either bus power failed - Start cooling
+				if(pa_timer_2 == 0){
+					pa_timer_2 = simt;
+				}
+				if(simt > (pa_timer_2+1)){ // After one second, shut down
+					pa_mode_2 = 1; break;
+				}
+			}
+			if(pa_ovr_2 == 2 || (pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_DOWN)){
+				// Change to low power
+				pa_mode_2 = 3;
+			}
+			if(pa_ovr_2 == 1 && sat->SBandNormalPwrAmpl2Switch.GetState() == THREEPOSSWITCH_CENTER){
+				// Change to warm-up
+				pa_mode_2 = 2; pa_timer_2 = (simt-95);
+			}
+			break;
+	}
+	// Update PA TB
+	// CSM-104 HB says that this is on when "either pwr ampl is selected for pm operation".
+	// I assume that means it's actually amplifying and not in warmup.
+	if(pa_mode_1 > 2 || pa_mode_2 > 2){
+		sat->PwrAmplTB = true;
+	}else{
+		sat->PwrAmplTB = false;
+	}
+}
+
 // PCM SYSTEM
 PCM::PCM(){
 	sat = NULL;

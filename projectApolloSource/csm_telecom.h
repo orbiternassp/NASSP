@@ -211,3 +211,33 @@ public:
 
 	Saturn *sat;					// Ship we're installed in
 };
+
+// Premodulation Processor
+class PMP {
+public:
+	PMP();
+	void Init(Saturn *vessel);	       // Initialization
+	void TimeStep(double simt);        // TimeStep
+	void SystemTimestep(double simdt); // System Timestep
+	Saturn *sat;					   // Ship we're installed in
+};
+
+// Unified S-Band system
+// Two transponders, an FM transmitter, and a power supply
+// The transponders are used for primary communications (data and voice), and only one works at a time.
+
+class USB {
+public:
+	USB();
+	void Init(Saturn *vessel);	       // Initialization
+	void TimeStep(double simt);        // TimeStep
+	void SystemTimestep(double simdt); // System Timestep
+	Saturn *sat;					   // Ship we're installed in
+	int fm_ena;                       // FM transmitter enable relays from uptelemetry
+	int xpdr_sel;                      // Transponder select
+	bool fm_opr;                       // FM transmitter operating
+	int pa_mode_1,pa_mode_2;           // Power amplifier mode
+	double pa_timer_1,pa_timer_2;	   // Tube heater timer
+	int pa_ovr_1,pa_ovr_2;			   // PA mode override for uptelemetry channel
+};
+

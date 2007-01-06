@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.228  2007/01/06 07:34:35  dseagrav
+  *	FLIGHT bus added, uptelemetry now draws power, UPTLM switches on MDC now operate
+  *	
   *	Revision 1.227  2007/01/06 04:44:49  dseagrav
   *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
   *	
@@ -1525,6 +1528,8 @@ protected:
 	ECA  eca;
 	// Telecom equipment
 	PCM  pcm;
+	PMP	 pmp;
+	USB  usb;
 
 	// CM Optics
 	CMOptics optics;
@@ -1774,6 +1779,10 @@ protected:
 	//
 	// Communication switches (s-band, vhf etc.)
 	//
+
+	SwitchRow TelecomTBRow;
+	IndicatorSwitch PwrAmplTB;
+	IndicatorSwitch DseTapeTB;
 
 	ThreePosSwitch SBandNormalXPDRSwitch;
 	ThreePosSwitch SBandNormalPwrAmpl1Switch;
@@ -3766,6 +3775,8 @@ protected:
 	friend class ECA;
 	friend class CSMcomputer; // I want this to be able to see the GDC	
 	friend class PCM;         // Otherwise reading telemetry is a pain
+	friend class PMP;
+	friend class USB;
 	friend class SPSPropellantSource;
 	friend class SPSEngine;
 	friend class CMOptics;
