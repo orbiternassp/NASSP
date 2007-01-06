@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.135  2007/01/06 07:34:35  dseagrav
+  *	FLIGHT bus added, uptelemetry now draws power, UPTLM switches on MDC now operate
+  *	
   *	Revision 1.134  2007/01/06 04:44:49  dseagrav
   *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
   *	
@@ -482,6 +485,8 @@ void Saturn::SystemsInit() {
 	eca.Init(this);
 
 	// Telecom initialization
+	pmp.Init(this);
+	usb.Init(this);
 	pcm.Init(this);
 
 	// Optics initialization
@@ -664,10 +669,10 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		SPSPropellant.Timestep(MissionTime, simdt);
 		JoystickTimestep();
 
-		//Telecom update is last so telemetry reflects the current state, unless yaAGC did it earlier
-		if(!agc.Yaagc){
-			pcm.TimeStep(MissionTime);
-		}
+		//Telecom update is last so telemetry reflects the current state
+		if(!agc.Yaagc){ pcm.TimeStep(MissionTime); } // PCM update unless yaAGC did it earlier
+		pmp.TimeStep(MissionTime);
+		usb.TimeStep(MissionTime);
 
 		//
 		// Systems state handling
@@ -1356,6 +1361,8 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		rjec.SystemTimestep(tFactor);
 		optics.SystemTimestep(tFactor);
 		pcm.SystemTimestep(tFactor);
+		pmp.SystemTimestep(tFactor);
+		usb.SystemTimestep(tFactor);
 		SPSPropellant.SystemTimestep(tFactor);
 		SPSEngine.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();

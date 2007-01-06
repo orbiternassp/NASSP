@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.198  2007/01/06 07:34:35  dseagrav
+  *	FLIGHT bus added, uptelemetry now draws power, UPTLM switches on MDC now operate
+  *	
   *	Revision 1.197  2007/01/06 04:44:49  dseagrav
   *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
   *	
@@ -1528,6 +1531,7 @@ void Saturn::AddRightMainPanelAreas(int offset) {
 	oapiRegisterPanelArea (AID_FUELCELLREACTANTSSWITCHES,    				_R(2800 + offset,  955, 3131 + offset,  984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (ADI_MAINBUSAINDICATORS,		    				_R(2953 + offset,  758, 3062 + offset,  781), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_FUELCELLLATCHSWITCHES,	    				_R(2593 + offset, 1251, 2670 + offset, 1280), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_TELECOMTB,    								_R(3119 + offset, 1042, 3142 + offset, 1115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SBAND_NORMAL_SWITCHES,						_R(2593 + offset, 1050, 2858 + offset, 1079), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_MASTER_ALARM2,								_R(2960 + offset,  652, 3005 + offset,  688), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_DCVOLTS,										_R(3154 + offset,  761, 3253 + offset,  860), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -2017,6 +2021,10 @@ void Saturn::SetSwitches(int panel) {
 	//
 	// Communication switches (s-band, vhf etc.)
 	//
+
+	TelecomTBRow.Init(AID_TELECOMTB, MainPanel);
+	PwrAmplTB.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], TelecomTBRow);
+	DseTapeTB.Init( 0,50, 23, 23, srf[SRF_INDICATOR], TelecomTBRow);
 
 	SBandAuxSwitchesRow.Init(AID_SBANDAUXSWITCHES, MainPanel);
 	SBandAuxSwitch1.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SBandAuxSwitchesRow);
@@ -4683,6 +4691,9 @@ void Saturn::InitSwitches() {
 	SBandNormalMode1Switch.Register(PSH, "SBandNormalMode1Switch", THREEPOSSWITCH_CENTER);
 	SBandNormalMode2Switch.Register(PSH, "SBandNormalMode2Switch", THREEPOSSWITCH_CENTER);
 	SBandNormalMode3Switch.Register(PSH, "SBandNormalMode3Switch", false);
+
+	PwrAmplTB.Register(PSH, "PwrAmplTB", false);
+	DseTapeTB.Register(PSH, "DseTapeTB", false);
 
 	SBandAuxSwitch1.Register(PSH, "SBandAuxSwitch1", THREEPOSSWITCH_CENTER);
 	SBandAuxSwitch2.Register(PSH, "SBandAuxSwitch2", THREEPOSSWITCH_CENTER);
