@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.184  2006/12/23 17:01:27  movieman523
+  *	Added multiple rocket-cams. I'm not sure how to rotate the view, so it's pretty much a 'you get what you get' at the moment.
+  *	
   *	Revision 1.183  2006/12/19 15:56:09  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -349,6 +352,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	PyroBusA("Pyro-Bus-A", Panelsdk),
 	PyroBusB("Pyro-Bus-B", Panelsdk),
 	BatteryRelayBus("Battery-Relay-Bus", Panelsdk),
+	FlightBus("Flight-Bus",&FlightBusFeeder),
+	FlightBusFeeder("Flight-Bus-Feeder",Panelsdk),
 	SECSLogicPower("SECS-Logic-Power", Panelsdk),
 	PyroPower("Pyro-Power", Panelsdk),
 	SwitchPower("Switch-Power", Panelsdk),

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.197  2007/01/06 04:44:49  dseagrav
+  *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
+  *	
   *	Revision 1.196  2007/01/02 01:38:25  dseagrav
   *	Digital uplink and associated stuff.
   *	
@@ -2020,7 +2023,7 @@ void Saturn::SetSwitches(int panel) {
 	SBandAuxSwitch2.Init(53, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SBandAuxSwitchesRow);
 
 	UPTLMSwitchesRow.Init(AID_UPTLMSWITCHES, MainPanel);
-	UPTLMSwitch1.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], UPTLMSwitchesRow);
+	UPTLMSwitch1.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], UPTLMSwitchesRow);
 	UPTLMSwitch2.Init(53, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], UPTLMSwitchesRow);
 
 	SBandAntennaSwitchesRow.Init(AID_SBANDANTENNASWITCHES, MainPanel);
@@ -4684,7 +4687,7 @@ void Saturn::InitSwitches() {
 	SBandAuxSwitch1.Register(PSH, "SBandAuxSwitch1", THREEPOSSWITCH_CENTER);
 	SBandAuxSwitch2.Register(PSH, "SBandAuxSwitch2", THREEPOSSWITCH_CENTER);
 
-	UPTLMSwitch1.Register(PSH, "UPTLMSwitch1", THREEPOSSWITCH_DOWN);
+	UPTLMSwitch1.Register(PSH, "UPTLMSwitch1", TOGGLESWITCH_DOWN);
 	UPTLMSwitch2.Register(PSH, "UPTLMSwitch2", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 
 	SBandAntennaSwitch1.Register(PSH, "SBandAntennaSwitch1", THREEPOSSWITCH_CENTER);
