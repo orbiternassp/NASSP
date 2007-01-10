@@ -169,6 +169,13 @@
 
 	*/
 
+// DS20070108 Telemetry measurement types
+#define TLM_A	1
+#define TLM_DP	2
+#define TLM_DS	3
+#define TLM_E	4
+#define TLM_SRC 5
+
 // DS20060326 Telecommunications system objects
 class Saturn;
 
@@ -191,6 +198,7 @@ public:
 	void generate_stream_lbr();     // Generate LBR datastream
 	void generate_stream_hbr();     // Same for HBR datastream
 	unsigned char scale_data(double data, double low, double high); // Scale data for PCM transmission
+	unsigned char measure(int channel, int type, int ccode);
 
 	// Error control
 	int wsk_error;                  // Winsock error

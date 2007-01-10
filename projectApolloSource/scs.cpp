@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2007/01/06 23:08:32  dseagrav
+  *	More telecom stuff. A lot of the S-band signal path exists now, albeit just to consume electricity.
+  *	
   *	Revision 1.11  2007/01/06 07:34:36  dseagrav
   *	FLIGHT bus added, uptelemetry now draws power, UPTLM switches on MDC now operate
   *	
@@ -3087,6 +3090,1081 @@ unsigned char PCM::scale_data(double data, double low, double high){
 	return (unsigned char)(data/step);
 }
 
+// Fetch a telemetry data item from its channel code
+unsigned char PCM::measure(int channel, int type, int ccode){
+	// Status structures.
+	AtmosStatus atm;
+	ECSWaterStatus ws;
+	PrimECSCoolingStatus pcs;
+	SecECSCoolingStatus scs;
+
+	switch(type){
+		case TLM_A:  // ANALOG
+			switch(channel){
+				case 10: // S10A
+					switch(ccode){
+						case 1:			// UNKNOWN - HBR ONLY
+							return(0);
+						case 2:			// UNKNOWN - HBR ONLY
+							return(0);
+						case 3:			// CO2 PARTIAL PRESS
+							sat->GetAtmosStatus(atm); return(scale_data(atm.CabinCO2MMHG,0,30));
+						case 4:			// GLY EVAP BACK PRESS
+							return(scale_data(0,0.05,0.25));
+						case 5:			// UNKNOWN - HBR ONLY
+							return(0);
+						case 6:			// CABIN PRESS
+							sat->GetAtmosStatus(atm); return(scale_data(atm.CabinPressurePSI,0,17));
+						case 7:			// UNKNOWN - HBR ONLY
+							return(0);
+						case 8:			// SEC EVAP OUT STEAM PRESS
+							sat->GetSecECSCoolingStatus(scs); return(scale_data(scs.EvaporatorSteamPressurePSI,0.05,0.25));
+						case 9:			// WASTE H20 QTY
+							sat->GetECSWaterStatus(ws); return(scale_data(ws.WasteH2oTankQuantityPercent,0,100)); 
+
+						case 10:		// SPS VLV ACT PRESS PRI
+							return(scale_data(0,0,5000));
+						case 11:		// SPS VLV ACT PRESS SEC
+							return(scale_data(0,0,5000));
+						case 12:		// GLY EVAP OUT TEMP
+							sat->GetPrimECSCoolingStatus(pcs); return(scale_data(pcs.EvaporatorOutletTempF,25,75));
+						case 13:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 14:		// ENG CHAMBER PRESS
+							return(scale_data(0,0,150));
+						case 15:		// ECS RAD OUT TEMP
+							sat->GetPrimECSCoolingStatus(pcs); return(scale_data(pcs.RadiatorOutletTempF,-50,100));
+						case 16:		// HE TK TEMP
+							return(scale_data(0,-100,200));
+						case 17:		// SM ENG PKG B TEMP
+							return(scale_data(0,0,300));
+						case 18:		// CM HE TK A PRESS
+							return(scale_data(0,0,5000));
+						case 19:		// SM ENG PKG C TEMP
+							return(scale_data(0,0,300));
+
+						case 20:		// SM ENG PKG D TEMP
+							return(scale_data(0,0,300));
+						case 21:		// CM HE TK B PRESS
+							return(scale_data(0,0,5000));
+						case 22:		// DOCKING PROBE TEMP
+							return(scale_data(0,-100,300));
+						case 23:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 24:		// SM HE TK A PRESS
+							return(scale_data(0,0,5000));
+						case 25:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 26:		// OX TK 1 QTY -TOTAL AUX
+							return(scale_data(0,0,50));
+						case 27:		// SM HE TK B PRESS
+							return(scale_data(0,0,5000));
+						case 28:		// OX TK 2 QTY
+							return(scale_data(0,0,60));
+						case 29:		// FU TK 1 QTY -TOTAL AUX
+							return(scale_data(0,0,50));
+
+						case 30:		// SM HE TK C PRESS
+							return(scale_data(0,0,5000));
+						case 31:		// FU TK 2 QTY
+							return(scale_data(0,0,60));
+						case 32:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 33:		// SM HE TK D PRESS
+							return(scale_data(0,0,5000));
+						case 34:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 35:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 36:		// H2 TK 1 PRESS
+							return(scale_data(0,0,350));
+						case 37:		// SPS VLV BODY TEMP
+							return(scale_data(0,0,200));
+						case 38:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 39:		// H2 TK 2 PRESS
+							return(scale_data(0,0,350));
+
+						case 40:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 41:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 42:		// O2 TK 2 QTY
+							return(scale_data(0,0,100));
+						case 43:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 44:		// OX LINE 1 TEMP
+							return(scale_data(0,0,200));
+						case 45:		// SUIT AIR HX OUT TEMP
+							return(scale_data(0,20,95));
+						case 46:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 47:		// SPS INJECTOR FLANGE TEMP 1
+							return(scale_data(0,0,600));
+						case 48:		// PRI RAD IN TEMP
+							return(scale_data(0,55,120));
+						case 49:		// SPS INJECTOR FLANGE TEMP 2
+							return(scale_data(0,0,600));
+
+						case 50:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 51:		// FC 1 COND EXH TEMP
+							return(scale_data(0,145,250));
+						case 52:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 53:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 54:		// O2 TK 1 TEMP
+							return(scale_data(0,-325,80));
+						case 55:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 56:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 57:		// O2 TK 2 TEMP
+							return(scale_data(0,-325,80));
+						case 58:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 59:		// FU LINE 1 TEMP
+							return(scale_data(0,0,200));
+
+						case 60:		// H2 TK 1 TEMP
+							return(scale_data(0,-425,-200));
+						case 61:		// NUCLEAR PARTICLE DETECTOR TEMP
+							return(scale_data(0,-109,140));
+						case 62:		// NUCLEAR PARTICLE ANALYZER TEMP
+							return(scale_data(0,-109,140));
+						case 63:		// H2 TK 2 TEMP
+							return(scale_data(0,-425,-200));
+						case 64:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 65:		// SIDE HS BOND LOC 1 TEMP
+							return(scale_data(0,-260,600));
+						case 66:		// O2 TK 2 PRESS
+							return(scale_data(0,50,1050));
+						case 67:		// FC 3 RAD IN TEMP
+							return(scale_data(0,-50,300));
+						case 68:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 69:		// FC 3 COND EXH TEMP
+							return(scale_data(0,145,250));
+
+						case 70:		// SIDE HS BOND LOC 2 TEMP
+							return(scale_data(0,-260,600));
+						case 71:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 72:		// FC 1 SKIN TEMP
+							return(scale_data(0,80,550));
+						case 73:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 74:		// SIDE HS BOND LOC 3 TEMP
+							return(scale_data(0,-260,600));
+						case 75:		// FC 2 SKIN TEMP
+							return(scale_data(0,80,550));
+						case 76:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 77:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 78:		// FC 3 SKIN TEMP
+							return(scale_data(0,80,550));
+						case 79:		// SIDE HS BOND LOC 4 TEMP
+							return(scale_data(0,-260,600));
+
+						case 80:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 81:		// POTABLE H20 QTY
+							return(scale_data(0,0,100));
+						case 82:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 83:		// PIPA +120 VDC
+							return(scale_data(0,85,135));
+						case 84:		// CABIN TEMP
+							return(scale_data(0,40,125));
+						case 85:		// 3.2 KHz 28V SUPPLY
+							return(scale_data(0,0,31.1));
+						case 86:		// INVERTER 1 TEMP
+							return(scale_data(0,32,248));
+						case 87:		// SEC RAD IN TEMP
+							return(scale_data(0,55,120));
+						case 88:		// INVERTER 2 TEMP
+							return(scale_data(0,32,248));
+						case 89:		// INVERTER 3 TEMP
+							return(scale_data(0,32,248));
+
+						case 90:		// SEC RAD OUT TEMP
+							return(scale_data(0,30,70));
+						case 91:		// IMU 28 VAC 800Hz
+							return(scale_data(0,0,31.1));
+						case 92:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 93:		// SM HE PRESS/TEMP RATIO A
+							return(scale_data(0,0,100));
+						case 94:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 95:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 96:		// PIPA TEMP
+							return(scale_data(0,120,140));
+						case 97:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 98:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 99:		// SM HE PRESS/TEMP RATIO B
+							return(scale_data(0,0,100));
+
+						case 100:		// PRI EVAP INLET TEMP
+							return(scale_data(0,35,100));
+						case 101:		// H2O TANK - GLY RES PRESS
+							return(scale_data(0,0,50));
+						case 102:		// SM HE PRESS/TEMP RATIO C
+							return(scale_data(0,0,100));
+						case 103:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 104:		// SCI EXP #3
+							return(scale_data(0,0,100));
+						case 105:		// SM HE PRESS/TEMP RATIO D
+							return(scale_data(0,0,100));
+						case 106:		// SCI EXP #4
+							return(scale_data(0,0,100));
+						case 107:		// SCI EXP #5
+							return(scale_data(0,0,100));
+						case 108:		// SCI EXP #1
+							return(scale_data(0,0,100));
+						case 109:		// SCI EXP #6
+							return(scale_data(0,0,100));
+
+						case 110:		// SCI EXP #7
+							return(scale_data(0,0,100));
+						case 111:		// SCI EXP #2
+							return(scale_data(0,0,100));
+						case 112:		// SCI EXP #8
+							return(scale_data(0,0,100));
+						case 113:		// SCI EXP #9
+							return(scale_data(0,0,100));
+						case 114:		// H2O DUMP TEMP
+							return(scale_data(0,0,100));
+						case 115:		// SCI EXP #10
+							return(scale_data(0,0,100));
+						case 116:		// SCI EXP #11
+							return(scale_data(0,0,100));
+						case 117:		// SPS FU FEED LINE TEMP
+							return(scale_data(0,0,200));
+						case 118:		// SCI EXP #12
+							return(scale_data(0,0,100));
+						case 119:		// SCI EXP #13
+							return(scale_data(0,0,100));
+
+						case 120:		// SPS OX FEED LINE TEMP
+							return(scale_data(0,0,200));
+						case 121:		// SCI EXP #14
+							return(scale_data(0,0,100));
+						case 122:		// SCI EXP #15
+							return(scale_data(0,0,100));
+						case 123:		// FC 2 COND EXH TEMP
+							return(scale_data(0,145,250));
+						case 124:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 125:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 126:		// FC 1 RAD OUT TEMP
+							return(scale_data(0,-50,300));
+						case 127:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 128:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 129:		// FC 2 RAD OUT TEMP
+							return(scale_data(0,-50,300));
+
+						case 130:		// FC 1 RAD IN TEMP
+							return(scale_data(0,-50,300));
+						case 131:		// FC 1 RAD IN TEMP
+							return(scale_data(0,-50,300));
+						case 132:		// FC 3 RAD OUT TEMP
+							return(scale_data(0,-50,300));
+						case 133:		// GLY EVAP OUT STEAM TEMP
+							return(scale_data(0,20,95));
+						case 134:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 135:		// URINE DUMP NOZZLE TEMP
+							return(scale_data(0,0,100));
+						case 136:		// SM ENG PKG A TEMP
+							return(scale_data(0,0,300));
+						case 137:		// BAY 3 OX TK SURFACE TEMP
+							return(scale_data(0,-100,200));
+						case 138:		// TM BIAS 2.5 VDC
+							return(scale_data(0,0,5));
+						case 139:		// BAY 5 FU TK SURFACE TEMP
+							return(scale_data(0,-100,200));
+
+						case 140:		// BAY 6 FU TK SURFACE TEMP
+							return(scale_data(0,-100,200));
+						case 141:		// H2 TK 1 QTY
+							return(scale_data(0,0,100));
+						case 142:		// BAY 2 OX TK SURFACE TEMP
+							return(scale_data(0,-100,200));
+						case 143:		// OX LINE ENTRY SUMP TK TEMP
+							return(scale_data(0,-100,200));
+						case 144:		// H2 TK 2 QTY
+							return(scale_data(0,0,100));
+						case 145:		// FU LINE ENTRY SUMP TK TEMP
+							return(scale_data(0,-100,200));
+						case 146:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 147:		// O2 TK 1 QTY
+							return(scale_data(0,0,100));
+						case 148:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 149:		// DOSIMETER RATE
+							return(scale_data(0,0,5));
+
+						case 150:		// O2 TK 1 PRESS
+							return(scale_data(0,50,1050));
+
+						default:
+							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 10-A-%d",ccode);
+							break;
+					}
+					break;
+				case 11: // S11A
+					switch(ccode){
+						case 1:			// SUIT MANF ABS PRESS
+							return(scale_data(0,0,17));
+						case 2:			// SUIT COMP DELTA P
+							return(scale_data(0,0,1));
+						case 3:			// GLY PUMP OUT PRESS
+							return(scale_data(0,0,60));
+						case 4:			// ECS SURGE TANK PRESS
+							return(scale_data(0,50,1050));
+						case 5:			// PYRO BUS B VOLTS
+							return(scale_data(0,0,40));
+						case 6:			// LES LOGIC BUS B VOLTS
+							return(scale_data(0,0,40));
+						case 7:			// UNKNOWN - HBR ONLY
+							return(0);
+						case 8:			// LES LOGIC BUS A VOLTS
+							return(scale_data(0,0,40));
+						case 9:			// PYRO BUS A VOLTS
+							return(scale_data(0,0,40));
+
+						case 10:		// HE TK PRESS
+							return(scale_data(0,0,5000));
+						case 11:		// OX TK PRESS
+							return(scale_data(0,0,250));
+						case 12:		// FU TK PRESS
+							return(scale_data(0,0,250));
+						case 13:		// GLY ACCUM QTY
+							return(scale_data(0,0,100));
+						case 14:		// ECS O2 FLOW O2 SUPPLY MANF
+							return(scale_data(0,0.2,1));
+						case 15:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 16:		// DOSIMETER 2 RADIATION
+							return(scale_data(0,0,1000));
+						case 17:		// PROTON CT RATE CHAN 1
+							return(scale_data(0,1,100000));
+						case 18:		// PROTON CT RATE CHAN 2
+							return(scale_data(0,0.1,10000));
+						case 19:		// PROTON CT RATE CHAN 3
+							return(scale_data(0,0.1,10000));
+
+						case 20:		// PROTON CT RATE CHAN 4
+							return(scale_data(0,0.1,10000));
+						case 21:		// CM HE MANIF 1 PRESS
+							return(scale_data(0,0,400));
+						case 22:		// CM HE MANIF 2 PRESS
+							return(scale_data(0,0,400));
+						case 23:		// SM OX MANF A PRESS
+							return(scale_data(0,0,300));
+						case 24:		// SM OX MANF B PRESS
+							return(scale_data(0,0,300));
+						case 25:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 26:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 27:		// SM OX MANF C PRESS
+							return(scale_data(0,0,300));
+						case 28:		// SM OX MANF D PRESS
+							return(scale_data(0,0,300));
+						case 29:		// FC 1 N2 PRESS
+							return(scale_data(0,0,75));
+
+						case 30:		// FC 2 N2 PRESS
+							return(scale_data(0,0,75));
+						case 31:		// FU/OX VLV 1 POS
+							return(scale_data(0,0,90));
+						case 32:		// FU/OX VLV 2 POS
+							return(scale_data(0,0,90));
+						case 33:		// FU/OX VLV 3 POS
+							return(scale_data(0,0,90));
+						case 34:		// FU/OX VLV 4 POS
+							return(scale_data(0,0,90));
+						case 35:		// FC 3 N2 PRESS
+							return(scale_data(0,0,75));
+						case 36:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 37:		// SUIT-CABIN DELTA PRESS
+							return(scale_data(0,-5,5));
+						case 38:		// ALPHA CT RATE CHAN 1
+							return(scale_data(0,0.1,10000));
+						case 39:		// SM HE MANF A PRESS
+							return(scale_data(0,0,400));
+
+						case 40:		// SM HE MANF B PRESS
+							return(scale_data(0,0,400));
+						case 41:		// ALPHA CT RATE CHAN 2
+							return(scale_data(0,0.1,10000));
+						case 42:		// ALPHA CT RATE CHAN 3
+							return(scale_data(0,0.1,10000));
+						case 43:		// PROTON INTEG CT RATE
+							return(scale_data(0,1,100000));
+						case 44:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 45:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 46:		// SM HE MANF C PRESS
+							return(scale_data(0,0,400));
+						case 47:		// LM HEATER CURRENT
+							return(scale_data(0,0,10));
+						case 48:		// PCM HI LEVEL 85 PCT REF
+							return(scale_data(0,0,5));
+						case 49:		// PCM LO LEVEL 15 PCT REF
+							return(scale_data(0,0,1));
+
+						case 50:		// USB RCVR PHASE ERR
+							return(scale_data(0,-90000,90000));
+						case 51:		// ANGLE OF ATTACK
+							return(scale_data(0,0,5));
+						case 52:		// SHAFT CDU DAC OUT
+							return(scale_data(0,-10,10));
+						case 53:		// TRUNNION CDU DAC OUT
+							return(scale_data(0,-10,10));
+						case 54:		// IG 1X RSVR OUT SIN
+							return(scale_data(0,-50,50));
+						case 55:		// O2 SUPPLY MANF PRESS
+							return(scale_data(0,0,150));
+						case 56:		// AC BUS 2 PH A VOLTS
+							return(scale_data(0,0,150));
+						case 57:		// MAIN BUS A VOLTS
+							return(scale_data(0,0,45));
+						case 58:		// MAIN BUS B VOLTS
+							return(scale_data(0,0,45));
+						case 59:		// IG 1X RSVR OUT COS
+							return(scale_data(0,130,50));
+
+						case 60:		// MG 1X RSVR OUT SIN
+							return(scale_data(0,-50,50));
+						case 61:		// MG 1X RSVR OUT COS
+							return(scale_data(0,130,50));
+						case 62:		// OG 1X RSVR OUT SIN
+							return(scale_data(0,-50,50));
+						case 63:		// OG 1X RSVR OUT COS
+							return(scale_data(0,130,50));
+						case 64:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 65:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 66:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 67:		// FC 1 O2 PRESS
+							return(scale_data(0,0,75));
+						case 68:		// FC 2 O2 PRESS
+							return(scale_data(0,0,75));
+						case 69:		// FC 3 O2 PRESS
+							return(scale_data(0,0,75));
+
+						case 70:		// FC 1 H2 PRESS
+							return(scale_data(0,0,75));
+						case 71:		// FC 2 H2 PRESS
+							return(scale_data(0,0,75));
+						case 72:		// FC 3 H2 PRESS
+							return(scale_data(0,0,75));
+						case 73:		// BAT CHARGER AMPS
+							return(scale_data(0,0,5));
+						case 74:		// BAT A CUR
+							return(scale_data(0,0,100));
+						case 75:		// BAT RELAY BUS VOLTS
+							return(scale_data(0,0,45));
+						case 76:		// FC 1 CUR
+							return(scale_data(0,0,100));
+						case 77:		// FC 1 H2 FLOW
+							return(scale_data(0,0,0.2));
+						case 78:		// FC 2 H2 FLOW
+							return(scale_data(0,0,0.2));
+						case 79:		// FC 3 H2 FLOW
+							return(scale_data(0,0,0.2));
+
+						case 80:		// FC 1 O2 FLOW
+							return(scale_data(0,0,1.6));
+						case 81:		// FC 2 O2 FLOW
+							return(scale_data(0,0,1.6));
+						case 82:		// FC 3 O2 FLOW
+							return(scale_data(0,0,1.6));
+						case 83:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 84:		// FC 2 CUR
+							return(scale_data(0,0,100));
+						case 85:		// FC 3 CUR
+							return(scale_data(0,0,100));
+						case 86:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 87:		// PRI GLY FLOW RATE
+							return(scale_data(0,150,300));
+						case 88:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 89:		// UNKNOWN - HBR ONLY
+							return(0);
+
+						case 90:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 91:		// BAT BUS A VOLTS
+							return(scale_data(0,0,45));
+						case 92:		// SM FU MANF A PRESS
+							return(scale_data(0,0,400));
+						case 93:		// BAT BUS B VOLTS
+							return(scale_data(0,0,45));
+						case 94:		// SM FU MANF B PRESS
+							return(scale_data(0,0,400));
+						case 95:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 96:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 97:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 98:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 99:		// UNKNOWN - HBR ONLY
+							return(0);
+
+						case 100:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 101:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 102:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 103:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 104:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 105:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 106:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 107:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 108:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 109:		// BAT B CUR
+							return(scale_data(0,0,100));
+
+						case 110:		// BAT C CUR
+							return(scale_data(0,0,100));
+						case 111:		// SM FU MANF C PRESS
+							return(scale_data(0,0,400));
+						case 112:		// SM FU MANF D PRESS
+							return(scale_data(0,0,400));
+						case 113:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 114:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 115:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 116:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 117:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 118:		// SEC EVAP OUT LIQ TEMP
+							return(scale_data(0,25,75));
+						case 119:		// SENSOR EXCITATION 5V
+							return(scale_data(0,0,9));
+
+						case 120:		// SENSOR EXCITATION 10V
+							return(scale_data(0,0,15));
+						case 121:		// USB RCVR AGC VOLTAGE
+							return(scale_data(0,-130,-50));
+						case 122:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 123:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 124:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 125:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 126:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 127:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 128:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 129:		// SEC GLY ACCUM QTY
+							return(scale_data(0,0,100));
+
+						case 130:		// SM HE MANF D PRESS
+							return(scale_data(0,0,400));
+						case 131:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 132:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 133:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 134:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 135:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 136:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 137:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 138:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 139:		// UNKNOWN - HBR ONLY
+							return(0);
+
+						case 140:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 141:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 142:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 143:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 144:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 145:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 146:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 147:		// AC BUS 1 PH A VOLTS
+							return(scale_data(0,0,150));
+						case 148:		// SCE POS SUPPLY VOLTS
+							return(scale_data(0,0,30));
+						case 149:		// UNKNOWN - HBR ONLY
+							return(0);
+
+						case 150:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 151:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 152:		// FUEL SM/ENG INTERFACE P
+							return(scale_data(0,0,300));
+						case 153:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 154:		// SCE NEG SUPPLY VOLTS
+							return(scale_data(0,0,-30));
+						case 155:		// CM HE TK A TEMP
+							return(scale_data(0,0,300));
+						case 156:		// CM HE TK B TEMP
+							return(scale_data(0,0,300));
+						case 157:		// SEC GLY PUMP OUT PRESS
+							return(scale_data(0,0,60));
+						case 158:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 159:		// UNKNOWN - HBR ONLY
+							return(0);
+
+						case 160:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 161:		// OX SM/ENG INTERFACE P
+							return(scale_data(0,0,300));
+						case 162:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 163:		// SM HE TK A TEMP
+							return(scale_data(0,0,100));
+						case 164:		// SM HE TK B TEMP
+							return(scale_data(0,0,100));
+						case 165:		// SM HE TK C TEMP
+							return(scale_data(0,0,100));
+						case 166:		// SM HE TK D TEMP
+							return(scale_data(0,0,100));
+						case 167:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 168:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 169:		// DOSIMETER 1 RADIATION
+							return(scale_data(0,0,1000));
+
+						case 170:		// UNKNOWN - HBR ONLY
+						case 171:		// UNKNOWN - HBR ONLY
+						case 172:		// UNKNOWN - HBR ONLY
+						case 173:		// UNKNOWN - HBR ONLY
+						case 174:		// UNKNOWN - HBR ONLY
+						case 175:		// UNKNOWN - HBR ONLY
+						case 176:		// UNKNOWN - HBR ONLY
+						case 177:		// UNKNOWN - HBR ONLY
+						case 178:		// UNKNOWN - HBR ONLY
+						case 179:		// UNKNOWN - HBR ONLY
+
+						case 180:		// UNKNOWN - HBR ONLY
+							return(0);
+
+						default:
+							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 11-A-%d",ccode);
+							break;
+					}
+					break;
+				case 12: // S12A
+					switch(ccode){
+						case 1:			// MGA SERVO ERR IN PHASE
+							return(scale_data(0,-2.5,2.5));
+						case 2:			// IGA SERVO ERR IN PHASE
+							return(scale_data(0,-2.5,2.5));
+						case 3:			// OGA SERVO ERR IN PHASE
+							return(scale_data(0,-2.5,2.5));
+						case 4:			// ROLL ATT ERR
+							return(scale_data(0,-50,50));
+						case 5:			// SCS PITCH BODY RATE
+							return(scale_data(0,-10,10));
+						case 6:			// SCS YAW BODY RATE
+							return(scale_data(0,-10,10));
+						case 7:			// SCS ROLL BODY RATE
+							return(scale_data(0,-50,50));
+						case 8:			// PITCH GIMBL POS 1 OR 2
+							return(scale_data(0,-5,5));
+						case 9:			// CM X-AXIS ACCEL
+							return(scale_data(0,-2,10));
+						case 10:		// YAW GIMBL POS 1 OR 2
+							return(scale_data(0,-5,5));
+						case 11:		// CM Y-AXIS ACCEL
+							return(scale_data(0,-2,2));
+						case 12:		// CM Z-AXIS ACCEL
+							return(scale_data(0,-2,2));
+						case 13:		// SCS TVC YAW AUTO CMD
+							return(scale_data(0,-10,10));
+						case 14:        // UNKNOWN - HBR ONLY
+							return(0);
+						case 15:		// SCS TVC PITCH AUTO CMD
+							return(scale_data(0,-10,10));
+						case 16:		// YAW DIFF CLUTCH CURRENT
+							return(scale_data(0,-0.807,0.807));
+
+						default:
+							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 12-A-%d",ccode);
+							break;
+					}
+					break;
+				case 22: // S22A
+					switch(ccode){
+						case 1:			// ASTRO 1 EKG AXIS 2
+							return(scale_data(0,0.1,0.5));
+						case 2:			// ASTRO 1 EKG AXIS 3
+							return(scale_data(0,0.1,0.5));
+						case 3:			// ASTRO 1 EKG AXIS 1
+							return(scale_data(0,0.1,0.5));
+						case 4:			// PITCH DIFF CLUTCH CURRENT
+							return(scale_data(0,-0.807,0.807));
+						default:
+							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 22-A-%d",ccode);
+							break;
+					}
+					break;
+				case 51: // S51A
+					switch(ccode){
+						case 1:			// UNKNOWN - HBR ONLY
+						case 2:			// UNKNOWN - HBR ONLY
+						case 3:			// UNKNOWN - HBR ONLY
+						case 4:			// UNKNOWN - HBR ONLY
+							return(0);
+						case 5:			// PITCH ATT ERR
+							return(scale_data(0,-15,15));
+						case 6:			// YAW ATT ERR
+							return(scale_data(0,-15,15));
+						case 7:			// ASTRO 1 RESPIR
+							return(scale_data(0,-5,5));
+						case 8:			// ASTRO 2 RESPIR
+							return(scale_data(0,-5,5));
+						case 9:			// ASTRO 3 RESPIR
+							return(scale_data(0,-5,5));
+						case 10:		// UNKNOWN - HBR ONLY
+							return(0);
+						case 11:		// MTVC PITCH CMD
+							return(scale_data(0,-11.5,11.5));
+						case 12:		// MTVC YAW CMD
+							return(scale_data(0,-11.5,11.5));
+						case 13:		// ROT ROLL CMD
+							return(scale_data(0,-11.5,11.5));
+						case 14:		// UNKNOWN - HBR ONLY
+						case 15:
+							return(0);
+						default:
+							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 51-A-%d",ccode);
+							break;
+					}
+					break;
+				default:
+					sprintf(oapiDebugString(),"MEASURE: UNKNOWN %d-A-%d",channel,ccode);
+					break;
+			}
+			break;
+		case TLM_DS: // DIGITAL SERIAL
+			/* NOT CALLED - ONLY USED AS 51DS1 FOR CMC DOWNTELEMETRY */
+			sprintf(oapiDebugString(),"MEASURE: UNKNOWN %d-DS-%d",channel,ccode);
+			break;
+		case TLM_DP: // DIGITAL PARALLEL (SAME THING AS EVENT BITS)
+		case TLM_E:  // EVENT BITS
+			switch(channel){
+				case 10: // S10E
+					switch(ccode){
+						case 1: // S10DP1 - PCM BIT RATE CHANGE (?)
+							return(0);
+						default:
+							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 10-E-%d",ccode);
+							break;
+					}
+					break;
+				case 11: // S11E
+					switch(ccode){
+						case 2:	        // S11DP2 CTE TIME (4 WORDS, HBR ONLY)
+							return(0);
+						case 3:			// SCI EXP #17
+							return(0);
+						case 4:
+							/* 3 = SM EDS ABORT REQUEST B
+							   4 = SPS SOL DRIVER 1
+							   5 = SM EDS ABORT REQUEST A
+							   6 = MASTER CAUTION WARNING ON
+							   8 = RAD FLOW CONT SYS 1 OR 2
+								*/
+							return(0);
+						case 5:			// SCI EXP #18
+							return(0);
+						case 6:			// SCI EXP #19
+							return(0);
+						case 7:			// SCI EXP #20
+							return(0);
+						case 8:
+							/* 2 = ATT DEADBAND MIN
+							   4 = HI RATE LIMIT
+							   5 = FDAI ERR 5 RATE 5
+							   6 = FDAI SCALE ERR 50/15
+							   7 = GYRO 1 COMB SMRD
+							   8 = GYRO 2 COMB SMRD
+								*/
+							return(0);
+						case 9:
+							/* 3 = DV CG LM/CSM
+							   4 = SPS SOL DRIVER 2
+							   5 = S/C CONT SCS
+								*/
+							return(0);
+						case 10:		// SCI EXP #21
+							return(0);
+						case 11:		// SCI EXP #22
+							return(0);
+						case 12:		// SCI EXP #23
+							return(0);
+						case 13:
+							/* 3 = CREW ABORT A
+							   4 = EDS ABORT B
+							   6 = CREW ABORT B
+							   7 = EDS ABORT A
+								*/
+							return(0);
+						case 14:
+							/* 1 = EDS ABORT VOTE 1
+							   2 = EDS ABORT VOTE 2
+							   4 = EDS ABORT VOTE 3
+							   5 = DSE TAPE MOTION
+								*/
+							return(0);
+						case 15:
+							/*	2 = IMU HTR +28 VDC
+							    3 = CMC OPERATE +28 VDC
+								4 = OPTX OPERATE 28 VAC
+							    6 = CSM-LM LOCK RING SEP RELAY A
+								7 = CSM-LM LOCK RING SEP RELAY B
+								*/
+							return(0);
+						case 16:		// SCI EXP #16
+							return(0);
+						case 17:		// SCI EXP #24
+							return(0);
+						case 18:		// SCI EXP #25
+							return(0);
+						case 19:
+							/* 1 = CMC WARNING
+								*/
+							return(0);
+						case 20: // ZEROES
+						case 21: // ZEROES
+							return(0);
+						case 22:
+							/* 1 = CM-SM SEP RELAY A 
+							   3 = SCS CHANNEL ENABLE RCS A
+							   4 = TRANS CTL +X CMD
+							   5 = SLA SEP RELAY A
+							   6 = TRANS CTL -X CMD
+							   7 = CM RCS PRESS SIG A
+							   8 = TRANS CTL +Y CMD
+								*/
+							return(0);
+						case 23:
+							/* 1 = CM-SM SEP RELAY B
+							   3 = SCS CHANNEL ENABLE RCS B
+							   5 = CM RCS PRESS SIG B
+							   6 = TRANS CTL -Y CMD
+							   7 = SLA SEP RELAY B
+							   8 = TRANS CTL +Z CMD
+								*/
+							return(0);
+						case 24:
+							/* 1 = FWD HS JET A
+							   2 = TRANS CTL -Z CMD
+							   3 = DIRECT RCS #1
+							   4 = DIRECT RCS #2
+								*/
+							return(0);
+						case 25:
+							/* 1 = LIMIT CYCLE
+							   3 = MANUAL ATT PITCH ACCEL CMD
+							   4 = MANUAL ATT PITCH MIN IMP
+							   5 = MANUAL ATT YAW ACCEL CMD
+							   6 = MANUAL ATT YAW MIN IMP
+							   7 = MANUAL ATT ROLL ACCEL CMD
+							   8 = MANUAL ATT ROLL MIN IMP
+								*/
+							return(0);
+						case 26:
+							/* 5 = FWD HS JET B
+								*/
+							return(0);
+						case 27: // ZEROES
+							return(0);
+						case 28:
+							/* 1 = FC 1 PH
+							   2 = FC 2 PH
+							   3 = FC 3 PH
+							   */							   
+							return(0);
+						case 29:
+							/* 1 = DROGUE SEP RELAY A
+							   5 = MAIN CHUTE DISC RELAY A
+							   8 = MAIN DEPLOY RELAY A
+								*/
+							return(0);
+						case 30:
+							/* 3 = MAIN DEPLOY RELAY B
+							   6 = DROGUE SEP RELAY B
+							   8 = MAIN CHUTE DISC RELAY B
+								*/
+							return(0);
+						case 31: // ZEROES
+							return(0);
+						case 32:
+							/* 8 = PCM SYNC SRC INT OR EXT
+								*/
+							return(0);
+						case 33:
+							/* 1 = BMAG MODE SW-ROLL ATT 1 RT 2
+							   2 = BMAG MODE SW-ROLL RATE 2
+							   3 = BMAG MODE SW-PITCH ATT 1 RT 2
+							   4 = BMAG MODE SW-PITCH RATE 2
+							   5 = BMAG MODE SW-YAW ATT 1 RT 2
+							   6 = BMAG MODE SW-YAW RATE 2
+								*/
+							return(0);
+						default:
+							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 11-E-%d",ccode);
+							break;
+					}
+					break;
+				case 22: // S22E
+					switch(ccode){
+						case 1:
+							/* 1 = +PITCH/+X
+								*/
+							return(0);
+						case 2:
+							/* 2 = -PITCH/+X
+								*/
+							return(0);
+						case 3:
+							/* 3 = +PITCH/-X
+								*/
+							return(0);
+						case 4:
+							/* 1 = -PITCH/-X
+								*/
+							return(0);
+						case 5:
+							/* 5 = +YAW/+X
+								*/
+							return(0);
+						case 6:
+							/* 6 = -YAW/+X
+								*/
+							return(0);
+						case 7:
+							/* 7 = +YAW/-X
+								*/
+							return(0);
+						case 8:
+							/* 8 = -YAW/-X
+								*/
+							return(0);
+						case 9:
+							/* 1 = +ROLL/+Z
+								*/
+							return(0);
+						case 10:
+							/* 2 = -ROLL/-Z
+								*/
+							return(0);
+						case 11:
+							/* 3 = -ROLL/+Y
+								*/
+							return(0);
+						case 12:
+							/* 4 = +ROLL/-Y
+								*/
+							return(0);
+						case 13:
+							/* 5 = -ROLL/+Z
+								*/
+							return(0);
+						case 14:
+							/* 6 = +ROLL/-Z
+								*/
+							return(0);
+						case 15:
+							/* 7 = +ROLL/+Y
+								*/
+							return(0);
+						case 16:
+							/* 8 = -ROLL/-Y
+								*/
+							return(0);
+						default:
+							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 22-E-%d",ccode);
+							break;
+					}
+					break;
+				case 51: // S51E
+					switch(ccode){
+						case 2: // UDL VALIDITY BITS
+							return(0);
+						default:
+							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 51-E-%d",ccode);
+							break;
+					}
+					break;
+				default:
+					sprintf(oapiDebugString(),"MEASURE: UNKNOWN %d-E-%d",channel,ccode);
+					break;
+			}
+			break;
+		case TLM_SRC:  // "SRC" (channel is always 0)
+			switch(ccode){
+				case 0: // SOURCE OF ZEROES
+					return(0);
+				case 1: // SOURCE OF ONES
+					return(0xFF);
+				default:
+					sprintf(oapiDebugString(),"MEASURE: UNKNOWN SRC-%d",ccode);
+					break;
+			}
+			break;
+	}
+	return (0);
+}
+
 void PCM::generate_stream_lbr(){
 	unsigned char data=0;
 	// 40 words per frame, 5 frames, 1 frame per second
@@ -3108,77 +4186,77 @@ void PCM::generate_stream_lbr(){
 			break;
 		case 4: 
 			switch(frame_count){
-				case 0: // 11A1 ECS: SUIT MANF ABS PRESS
-					tx_data[tx_offset] = scale_data(0,0,17); 
+				case 0: // 11A1 ECS: SUIT MANF ABS PRESS					
+					tx_data[tx_offset] = measure(11,TLM_A,1);
 					break;
 				case 1: // 11A109 EPS: BAT B CURR
-					tx_data[tx_offset] = scale_data(sat->EntryBatteryB->Current(),0,100);
+					tx_data[tx_offset] = measure(11,TLM_A,109);
 					break;
 				case 2: // 11A46 RCS: SM HE MANF C PRESS
-					tx_data[tx_offset] = scale_data(0,0,400);
+					tx_data[tx_offset] = measure(11,TLM_A,46);
 					break;
 				case 3: // 11A154 CMI: SCE NEG SUPPLY VOLTS
-					tx_data[tx_offset] = scale_data(0,0,-30);
+					tx_data[tx_offset] = measure(11,TLM_A,154);
 					break;
 				case 4: // 11A91 EPS: BAT BUS A VOLTS					
-					tx_data[tx_offset] = scale_data(sat->BatteryBusA.Voltage(),0,45);
+					tx_data[tx_offset] = measure(11,TLM_A,91);
 					break;
 			}
 			break;
 		case 5:
 			switch(frame_count){
 				case 0: // 11A2 ECS: SUIT COMP DELTA P
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,2);
 					break;
 				case 1: // 11A110 EPS: BAT C CURR
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,110);
 					break;
 				case 2: // 11A47 EPS: LM HEATER CURRENT
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,47);
 					break;
 				case 3: // 11A155 RCS: CM HE TK A TEMP
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,155);
 					break;
 				case 4: // 11A92 RCS: SM FU MANF A PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,92);
 					break;
 			}
 			break;
 		case 6:
 			switch(frame_count){
 				case 0: // 11A3 ECS: GLY PUMP OUT PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,3);
 					break;
 				case 1: // 11A111 ECS: SM FU MANF C PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,111);
 					break;
 				case 2: // 11A48 PCM HI LEVEL 85 PCT REF
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,48);
 					break;
 				case 3: // 11A156 CM HE TK B TEMP
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,156);
 					break;
 				case 4: // 11A93 BAT BUS B VOLTS
-					tx_data[tx_offset] = scale_data(sat->BatteryBusB.Voltage(),0,45);
+					tx_data[tx_offset] = measure(11,TLM_A,93);
 					break;
 			}
 			break;
 		case 7:
 			switch(frame_count){
 				case 0: // 11A4 ECS SURGE TANK PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,4);
 					break;
 				case 1: // 11A112 SM FU MANF D PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,112);
 					break;
 				case 2: // 11A49 PC HI LEVEL 15 PCT REF
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,49);
 					break;
 				case 3: // 11A157 SEC GLY PUMP OUT PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,157);
 					break;
 				case 4: // 11A94 SM FU MANF B PRESS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,94);
 					break;
 			}
 			break;
@@ -3224,114 +4302,114 @@ void PCM::generate_stream_lbr(){
 		case 14:
 			switch(frame_count){
 				case 0: // 10A123
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,123);
 					break;
 				case 1: // 10A126
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,126);
 					break;
 				case 2: // 10A129
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,129);
 					break;
 				case 3: // 10A132
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,132);
 					break;
 				case 4: // 10A135
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,135);
 					break;
 			}
 			break;
 		case 15:
 			switch(frame_count){
 				case 0: // 10A138
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,138);
 					break;
 				case 1: // 10A141 EPS: H2 TK 1 QTY
-					tx_data[tx_offset] = scale_data(0,0,100);
+					tx_data[tx_offset] = measure(10,TLM_A,141);
 					break;
 				case 2: // 10A144 H2 TK 2 QTY
-					tx_data[tx_offset] = scale_data(0,0,100);
+					tx_data[tx_offset] = measure(10,TLM_A,144);
 					break;
 				case 3: // 10A147 O2 TK 1 QTY
-					tx_data[tx_offset] = scale_data(0,0,100);
+					tx_data[tx_offset] = measure(10,TLM_A,147);
 					break;
 				case 4: // 10A150 O2 TK 1 PRESS
-					tx_data[tx_offset] = scale_data(0,0,1050);
+					tx_data[tx_offset] = measure(10,TLM_A,150);
 					break;
 			}
 			break;
 		case 16:
 			switch(frame_count){
 				case 0: // 10A3
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,3);
 					break;
 				case 1: // 10A6
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,6);
 					break;
 				case 2: // 10A9
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,9);
 					break;
 				case 3: // 10A12
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,12);
 					break;
 				case 4: // 10A15
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,15);
 					break;
 			}
 			break;
 		case 17:
 			switch(frame_count){
 				case 0: // 10A18
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,18);
 					break;
 				case 1: // 10A21
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,21);
 					break;
 				case 2: // 10A24
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,24);
 					break;
 				case 3: // 10A27
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,27);
 					break;
 				case 4: // 10A30
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,30);
 					break;
 			}
 			break;
 		case 18:
 			switch(frame_count){
 				case 0: // 10A33 
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,33);
 					break;
 				case 1: // 10A36 H2 TK 1 PRESS
-					tx_data[tx_offset] = scale_data(0,0,350);
+					tx_data[tx_offset] = measure(10,TLM_A,36);
 					break;
 				case 2: // 10A39 H2 TK 2 PRESS
-					tx_data[tx_offset] = scale_data(0,0,350);
+					tx_data[tx_offset] = measure(10,TLM_A,39);
 					break;
 				case 3: // 10A42 O2 TK 2 QTY
-					tx_data[tx_offset] = scale_data(0,0,100);
+					tx_data[tx_offset] = measure(10,TLM_A,42);
 					break;
 				case 4: // 10A45
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,45);
 					break;
 			}
 			break;
 		case 19:
 			switch(frame_count){
 				case 0: // 10A48 
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,48);
 					break;
 				case 1: // 10A51
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,51);
 					break;
 				case 2: // 10A54 O2 TK 1 TEMP
-					tx_data[tx_offset] = scale_data(0,-325,80);
+					tx_data[tx_offset] = measure(10,TLM_A,54);
 					break;
 				case 3: // 10A57 O2 TK 2 TEMP
-					tx_data[tx_offset] = scale_data(0,-325,80);
+					tx_data[tx_offset] = measure(10,TLM_A,57);
 					break;
 				case 4: // 10A60 H2 TK 1 TEMP
-					tx_data[tx_offset] = scale_data(0,-425,-200);
+					tx_data[tx_offset] = measure(10,TLM_A,60);
 					break;
 			}
 			break;
@@ -3341,266 +4419,266 @@ void PCM::generate_stream_lbr(){
 			// and continue
 			switch(frame_count){
 				case 0: // 10DP1 
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_DP,1);
 					break;
 				case 1: // 11DP6
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,6); 
 					break;
 				case 2: // 11DP27
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,27); 
 					break;
 				case 3: // 11DP15
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,17); 
 					break;
 				case 4: // 11DP20
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,20); 
 					break;
 			}
 			break;
 		case 21:
 			switch(frame_count){
 				case 0: // SRC 0
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(0,TLM_SRC,0); 
 					break;
 				case 1: // 11DP7
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,7); 
 					break;
 				case 2: // 11DP28
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,28); 
 					break;
 				case 3: // 11DP16
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,16); 
 					break;
 				case 4: // 11DP21
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,21); 
 					break;
 			}
 			break;
 		case 22:
 			switch(frame_count){
 				case 0: // 11A39
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,39); 
 					break;
 				case 1: // 11A147 AC BUS 1 PH A VOLTS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,147); 
 					break;
 				case 2: // 11A84
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,84); 
 					break;
 				case 3: // 11A21
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,21); 
 					break;
 				case 4: // 11A129
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,129); 
 					break;
 			}
 			break;
 		case 23:
 			switch(frame_count){
 				case 0: // 11A40
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,40); 
 					break;
 				case 1: // 11A48
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,48); 
 					break;
 				case 2: // 11A85
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,85); 
 					break;
 				case 3: // 11A22
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,22); 
 					break;
 				case 4: // 11A130
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,130); 
 					break;
 			}
 			break;
 		case 24:
 			switch(frame_count){
 				case 0: // 11A73 BAT CHRGR AMPS
-					tx_data[tx_offset] = scale_data(0,0,5);
+					tx_data[tx_offset] = measure(11,TLM_A,73); 
 					break;
 				case 1: // 11A10
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,10); 
 					break;
 				case 2: // 11A118
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,118); 
 					break;
 				case 3: // 11A55
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,55); 
 					break;
 				case 4: // 11A163
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,163); 
 					break;
 			}
 			break;
 		case 25:
 			switch(frame_count){
 				case 0: // 11A74 BAT A CUR
-					tx_data[tx_offset] = scale_data(0,0,100);
+					tx_data[tx_offset] = measure(11,TLM_A,74); 
 					break;
 				case 1: // 11A11
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,11); 
 					break;
 				case 2: // 11A119
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,119); 
 					break;
 				case 3: // 11A56 AC BUS 2 PH A VOLTS
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,56); 
 					break;
 				case 4: // 11A164
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,164); 
 					break;
 			}
 			break;
 		case 26:
 			switch(frame_count){
 				case 0: // 11A75
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,75); 
 					break;
 				case 1: // 11A12
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,12); 
 					break;
 				case 2: // 11A120
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,120); 
 					break;
 				case 3: // 11A57
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,57); 
 					break;
 				case 4: // 11A165
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,165); 
 					break;
 			}
 			break;
 		case 27:
 			switch(frame_count){
 				case 0: // 11A76
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,76); 
 					break;
 				case 1: // 11A13
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,13); 
 					break;
 				case 2: // 11A121
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,121); 
 					break;
 				case 3: // 11A58
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,58); 
 					break;
 				case 4: // 11A166
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,166); 
 					break;
 			}
 			break;
 		case 34:
 			switch(frame_count){
 				case 0: // 11DP3
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,3); 
 					break;
 				case 1: // 11DP8
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,8); 
 					break;
 				case 2: // 11DP13
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,13); 
 					break;
 				case 3: // 11DP29
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,29); 
 					break;
 				case 4: // 11DP22
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,22); 
 					break;
 			}
 			break;
 		case 35:
 			switch(frame_count){
 				case 0: // SRC 1
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(0,TLM_SRC,1); 
 					break;
 				case 1: // 11DP9
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,9); 
 					break;
 				case 2: // 11DP14
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,14); 
 					break;
 				case 3: // 11DP17
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,17); 
 					break;
 				case 4: // 11DP23
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,23); 
 					break;
 			}
 			break;
 		case 36:
 			switch(frame_count){
 				case 0: // 10A63 H2 TK 2 TEMP
-					tx_data[tx_offset] = scale_data(0,-425,-200);
+					tx_data[tx_offset] = measure(10,TLM_A,63); 
 					break;
 				case 1: // 10A66 O2 TK 2 PRESS
-					tx_data[tx_offset] = scale_data(0,0,1050);
+					tx_data[tx_offset] = measure(10,TLM_A,66); 
 					break;
 				case 2: // 10A69
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,69); 
 					break;
 				case 3: // 10A72
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,72); 
 					break;
 				case 4: // 10A75
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,75); 
 					break;
 			}
 			break;
 		case 37:
 			switch(frame_count){
 				case 0: // 10A78
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,78); 
 					break;
 				case 1: // 10A81
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,81); 
 					break;
 				case 2: // 10A84
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,84); 
 					break;
 				case 3: // 10A87
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,87); 
 					break;
 				case 4: // 10A90
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,90); 
 					break;
 			}
 			break;
 		case 38:
 			switch(frame_count){
 				case 0: // 10A93
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,93); 
 					break;
 				case 1: // 10A96
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,96); 
 					break;
 				case 2: // 10A99
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,99); 
 					break;
 				case 3: // 10A102
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,102); 
 					break;
 				case 4: // 10A105
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,105); 
 					break;
 			}
 			break;
 		case 39:
 			switch(frame_count){
 				case 0: // 10A108
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,108); 
 					break;
 				case 1: // 10A111
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,11);  
 					break;
 				case 2: // 10A114
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,114); 
 					break;
 				case 3: // 10A117
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,117); 
 					break;
 				case 4: // 10A120
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(10,TLM_A,120); 
 					break;
 			}
 			break;
@@ -3643,246 +4721,264 @@ void PCM::generate_stream_hbr(){
 		case 36:
 		case 68:
 		case 100:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_A,1);
 			break;
 		case 5: // 22A2
 		case 37:
 		case 69:
 		case 101:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_A,2);
 			break;
 		case 6: // 22A3
 		case 38:
 		case 70:
 		case 102:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_A,3);
 			break;
 		case 7: // 22A4
 		case 39:
 		case 71:
 		case 103:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_A,4);
 			break;
 		case 8:
 			switch(frame_count){
 				case 0: // 11A1
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,1); 
 					break;
 				case 1: // 11A37
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,37); 
 					break;
 				case 2: // 11A73
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,73); 
 					break;
 				case 3: // 11A109 BAT B CUR
-					tx_data[tx_offset] = scale_data(sat->EntryBatteryB->Current(),0,100);
+					tx_data[tx_offset] = measure(11,TLM_A,109); 
 					break;
 				case 4: // 11A145
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,145); 
 					break;
 			}
 			break;
 		case 9: 
 			switch(frame_count){
 				case 0: // 11A2
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,2); 
 					break;
 				case 1: // 11A38
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,38); 
 					break;
 				case 2: // 11A74
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,74); 
 					break;
 				case 3: // 11A110 BAT C CUR
-					tx_data[tx_offset] = scale_data(0,0,100);
+					tx_data[tx_offset] = measure(11,TLM_A,110); 
 					break;
 				case 4: // 11A146
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,146); 
 					break;
 			}
 			break;
 		case 10:
 			switch(frame_count){
 				case 0: // 11A3
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,3); 
 					break;
 				case 1: // 11A39
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,39); 
 					break;
 				case 2: // 11A75 BAT RELAY BUS VOLTS
-					tx_data[tx_offset] = scale_data(0,0,45);
+					tx_data[tx_offset] = measure(11,TLM_A,75); 
 					break;
 				case 3: // 11A111
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,111); 
 					break;
 				case 4: // 11A147 AC BUS 1 PH A VOLTS
-					tx_data[tx_offset] = scale_data(0,0,150);
+					tx_data[tx_offset] = measure(11,TLM_A,147); 
 					break;
 			}
 			break;
 		case 11:
 			switch(frame_count){
 				case 0: // 11A4
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,4); 
 					break;
 				case 1: // 11A40
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,40); 
 					break;
 				case 2: // 11A76
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,76); 
 					break;
 				case 3: // 11A112
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,112); 
 					break;
 				case 4: // 11A148
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,148); 
 					break;
 			}
 			break;
 		case 12: // 12A1
 		case 76:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,1); 
 			break;
 		case 13: // 12A2
 		case 77:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,2); 
 			break;
 		case 14: // 12A3
 		case 78:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,3); 
 			break;
 		case 15: // 12A4
 		case 79:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,4); 
 			break;
 		case 16:
 			switch(frame_count){
 				case 0: // 11A5
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,5); 
 					break;
 				case 1: // 11A41
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,41); 
 					break;
 				case 2: // 11A77
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,77); 
 					break;
 				case 3: // 11A113
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,113); 
 					break;
 				case 4: // 11A149
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,149); 
 					break;
 			}
 			break;
 		case 17: // 22DP1
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_DP,1); 
 			break;
 		case 18: // 22DP2
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_DP,2); 
 			break;
-		case 19: // MAGICAL WORD SRC-0
+		case 19: 
+			switch(frame_count){
+				case 0: // 10DP1
+					tx_data[tx_offset] = measure(10,TLM_DP,1); 
+					break;
+				case 1: // SRC-0
+					tx_data[tx_offset] = measure(0,TLM_SRC,0); 
+					break;
+				case 2: // SRC-1
+					tx_data[tx_offset] = measure(0,TLM_SRC,1); 
+					break;
+				case 3: // (Zeroes?)
+					tx_data[tx_offset] = 0;
+					break;
+				case 4: // (Zeroes?)
+					tx_data[tx_offset] = 0;
+					break;
+			}
+			break;
 			tx_data[tx_offset] = 0;
 			break;
 		case 20: // 12A5
 		case 84:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,5); 
 			break;
 		case 21: // 12A6
 		case 85:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,6); 
 			break;
 		case 22: // 12A7
 		case 86:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,7); 
 			break;
 		case 23: // 12A8
 		case 87:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,8); 
 			break;
 		case 24:
 			switch(frame_count){
 				case 0: // 11A6
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,6); 
 					break;
 				case 1: // 11A42
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,42); 
 					break;
 				case 2: // 11A78
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,78); 
 					break;
 				case 3: // 11A114
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,114); 
 					break;
 				case 4: // 11A150
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,150); 
 					break;
 			}
 			break;
 		case 25:
 			switch(frame_count){
 				case 0: // 11A7
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,7); 
 					break;
 				case 1: // 11A43
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,43); 
 					break;
 				case 2: // 11A79
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,79); 
 					break;
 				case 3: // 11A115
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,115); 
 					break;
 				case 4: // 11A151
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,151); 
 					break;
 			}
 			break;
 		case 26:
 			switch(frame_count){
 				case 0: // 11A8
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,8); 
 					break;
 				case 1: // 11A44
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,44);  
 					break;
 				case 2: // 11A80
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,80); 
 					break;
 				case 3: // 11A116
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,116); 
 					break;
 				case 4: // 11A152
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,152); 
 					break;
 			}
 			break;
 		case 27:
 			switch(frame_count){
 				case 0: // 11A9
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,9); 
 					break;
 				case 1: // 11A45
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,45); 
 					break;
 				case 2: // 11A81
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,81); 
 					break;
 				case 3: // 11A117
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,117); 
 					break;
 				case 4: // 11A153
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,153); 
 					break;
 			}
 			break;
 		case 28: // 51A1
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,1); 
 			break;
 		case 29: // 51A2
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,2); 
 			break;
 		case 30: // 51A3
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,3); 
 			break;
 		case 31: // 51DS1A COMPUTER DIGITAL DATA (40 BITS)
 			// The very first pass through this loop will get garbage data because there was no downrupt.
@@ -3920,746 +5016,761 @@ void PCM::generate_stream_hbr(){
 		case 40:
 			switch(frame_count){
 				case 0: // 11A10
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,10); 
 					break;
 				case 1: // 11A46
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,46); 
 					break;
 				case 2: // 11A82
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,82); 
 					break;
 				case 3: // 11A118
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,118); 
 					break;
 				case 4: // 11A154
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,154); 
 					break;
 			}
 			break;
 		case 41:
 			switch(frame_count){
 				case 0: // 11A11
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,11); 
 					break;
 				case 1: // 11A47
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,47); 
 					break;
 				case 2: // 11A83
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,83); 
 					break;
 				case 3: // 11A119
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,119); 
 					break;
 				case 4: // 11A155
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,155); 
 					break;
 			}
 			break;
 		case 42:
 			switch(frame_count){
 				case 0: // 11A12
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,12); 
 					break;
 				case 1: // 11A48
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,48); 
 					break;
 				case 2: // 11A84
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,84); 
 					break;
 				case 3: // 11A120
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,120); 
 					break;
 				case 4: // 11A156
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,156); 
 					break;
 			}
 			break;
 		case 43:
 			switch(frame_count){
 				case 0: // 11A13
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,13); 
 					break;
 				case 1: // 11A49
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,49); 
 					break;
 				case 2: // 11A85
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,85); 
 					break;
 				case 3: // 11A121
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,121); 
 					break;
 				case 4: // 11A157
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,157); 
 					break;
 			}
 			break;
 		case 44: // 12A9
 		case 108:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,9); 
 			break;
 		case 45: // 12A10
 		case 109:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,10); 
 			break;
 		case 46: // 12A11
 		case 110:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,11); 
 			break;
 		case 47: // 12A12
 		case 111:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,12); 
 			break;
 		case 48:
 			switch(frame_count){
 				case 0: // 11A14
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,14);  
 					break;
 				case 1: // 11A50
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,50); 
 					break;
 				case 2: // 11A86
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,86); 
 					break;
 				case 3: // 11A122
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,122); 
 					break;
 				case 4: // 11A158
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,158); 
 					break;
 			}
 			break;
 		case 49: // 22DP1
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_DP,1); 
 			break;
 		case 50: // 22DP2
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_DP,2); 
 			break;
-		case 51: // MAGICAL WORD 2
-			tx_data[tx_offset] = 0;
+		case 51: // MAGICAL WORD 1
+			// 10A1
+			// 10A4
+			// 10A7
+			// ...
+			// 10A148
+			tx_data[tx_offset] = measure(10,TLM_A,1+(frame_addr*3));
 			break;
 		case 52: // 12A13
 		case 116:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,13); 
 			break;
 		case 53: // 12A14
 		case 117:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,14); 
 			break;
 		case 54: // 12A15
 		case 118:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,15); 
 			break;
 		case 55: // 12A16
 		case 119:
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(12,TLM_A,16); 
 			break;
 		case 56:
 			switch(frame_count){
 				case 0: // 11A15
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,15); 
 					break;
 				case 1: // 11A51
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,51); 
 					break;
 				case 2: // 11A87
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,87); 
 					break;
 				case 3: // 11A123
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,123); 
 					break;
 				case 4: // 11A159
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,159); 
 					break;
 			}
 			break;
 		case 57:
 			switch(frame_count){
 				case 0: // 11A16
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,16); 
 					break;
 				case 1: // 11A52
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,52); 
 					break;
 				case 2: // 11A88
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,88); 
 					break;
 				case 3: // 11A124
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,124); 
 					break;
 				case 4: // 11A160
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,160); 
 					break;
 			}
 			break;
 		case 58:
 			switch(frame_count){
 				case 0: // 11A17
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,17); 
 					break;
 				case 1: // 11A53
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,53); 
 					break;
 				case 2: // 11A89
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,89); 
 					break;
 				case 3: // 11A125
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,125); 
 					break;
 				case 4: // 11A161
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,161); 
 					break;
 			}
 			break;
 		case 59:
 			switch(frame_count){
 				case 0: // 11A18
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,18); 
 					break;
 				case 1: // 11A54
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,54); 
 					break;
 				case 2: // 11A90
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,90); 
 					break;
 				case 3: // 11A126
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,126); 
 					break;
 				case 4: // 11A162
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,162); 
 					break;
 			}
 			break;
 		case 60: // 51A4
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,4); 
 			break;
 		case 61: // 51A5
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,5); 
 			break;
 		case 62: // 51A6
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,6); 
 			break;
 		case 63: // 51A7
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,7); 
 			break;
 		case 64:
 			switch(frame_count){
 				case 0: // 11DP2A
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,2); 
 					break;
 				case 1: // 11DP6
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,6); 
 					break;
 				case 2: // 11DP13
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,13); 
 					break;
 				case 3: // 11DP20
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,20); 
 					break;
 				case 4: // 11DP27
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,27); 
 					break;
 			}
 			break;
 		case 65:
 			switch(frame_count){
 				case 0: // 11DP2B
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,2); 
 					break;
 				case 1: // 11DP7
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,7); 
 					break;
 				case 2: // 11DP14
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,14); 
 					break;
 				case 3: // 11DP21
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,21); 
 					break;
 				case 4: // 11DP28
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,28); 
 					break;
 			}
 			break;
 		case 66:
 			switch(frame_count){
 				case 0: // 11DP2C
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,2); 
 					break;
 				case 1: // 11DP8
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,8); 
 					break;
 				case 2: // 11DP15
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,15); 
 					break;
 				case 3: // 11DP22
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,22); 
 					break;
 				case 4: // 11DP29
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,29); 
 					break;
 			}
 			break;
 		case 67:
 			switch(frame_count){
 				case 0: // 11DP2D
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,2); 
 					break;
 				case 1: // 11DP9
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,9); 
 					break;
 				case 2: // 11DP16
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,16); 
 					break;
 				case 3: // 11DP23
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,23); 
 					break;
 				case 4: // 11DP30
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,30); 
 					break;
 			}
 			break;
 		case 72: 
 			switch(frame_count){
 				case 0: // 11A19
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,19); 
 					break;
 				case 1: // 11A55
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,55);  
 					break;
 				case 2: // 11A91
-					tx_data[tx_offset] = scale_data(sat->BatteryBusA.Voltage(),0,45);
+					tx_data[tx_offset] = measure(11,TLM_A,91); 
 					break;
 				case 3: // 11A127
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,127); 
 					break;
 				case 4: // 11A163
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,163); 
 					break;
 			}
 			break;
 		case 73:
 			switch(frame_count){
 				case 0: // 11A20
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,20); 
 					break;
 				case 1: // 11A56 AC BUS 2 PH A VOLTS
-					tx_data[tx_offset] = scale_data(0,0,150);
+					tx_data[tx_offset] = measure(11,TLM_A,56); 
 					break;
 				case 2: // 11A92
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,92); 
 					break;
 				case 3: // 11A128
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,128); 
 					break;
 				case 4: // 11A164
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,164); 
 					break;
 			}
 			break;
 		case 74:
 			switch(frame_count){
 				case 0: // 11A21
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,21); 
 					break;
 				case 1: // 11A57 MNA VOLTS
-					tx_data[tx_offset] = scale_data(0,0,45);
+					tx_data[tx_offset] = measure(11,TLM_A,57); 
 					break;
 				case 2: // 11A93
-					tx_data[tx_offset] = scale_data(sat->BatteryBusB.Voltage(),0,45);
+					tx_data[tx_offset] = measure(11,TLM_A,93); 
 					break;
 				case 3: // 11A129
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,129); 
 					break;
 				case 4: // 11A165
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,165); 
 					break;
 			}
 			break;
 		case 75:
 			switch(frame_count){
 				case 0: // 11A22
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,22); 
 					break;
 				case 1: // 11A58 MNB VOLTS
-					tx_data[tx_offset] = scale_data(0,0,45);
+					tx_data[tx_offset] = measure(11,TLM_A,58); 
 					break;
 				case 2: // 11A94
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,94); 
 					break;
 				case 3: // 11A130
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,130); 
 					break;
 				case 4: // 11A166
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,166); 
 					break;
 			}
 			break;
 		case 80:
 			switch(frame_count){
 				case 0: // 11A23
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,23); 
 					break;
 				case 1: // 11A59
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,59); 
 					break;
 				case 2: // 11A95
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,95); 
 					break;
 				case 3: // 11A131
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,131); 
 					break;
 				case 4: // 11A167
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,167); 
 					break;
 			}
 			break;
 		case 81: // 22DP1
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_DP,1); 
 			break;
 		case 82: // 22DP2
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_DP,2); 
 			break;
-		case 83: // MAGICAL WORD 3
-			tx_data[tx_offset] = 0;
+		case 83: // MAGICAL WORD 2
+			// 10A2
+			// 10A5
+			// 10A8
+			// ...
+			// 10A149
+			tx_data[tx_offset] = measure(10,TLM_A,2+(frame_addr*3));
 			break;
 		case 88:
 			switch(frame_count){
 				case 0: // 11A24
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,24); 
 					break;
 				case 1: // 11A60
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,60); 
 					break;
 				case 2: // 11A96
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,96); 
 					break;
 				case 3: // 11A132
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,132); 
 					break;
 				case 4: // 11A168
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,168); 
 					break;
 			}
 			break;
 		case 89:
 			switch(frame_count){
 				case 0: // 11A25
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,25); 
 					break;
 				case 1: // 11A61
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,61); 
 					break;
 				case 2: // 11A97
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,97); 
 					break;
 				case 3: // 11A133
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,133); 
 					break;
 				case 4: // 11A169
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,169); 
 					break;
 			}
 			break;
 		case 90:
 			switch(frame_count){
 				case 0: // 11A26
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,26); 
 					break;
 				case 1: // 11A62
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,62); 
 					break;
 				case 2: // 11A98
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,98); 
 					break;
 				case 3: // 11A134
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,134); 
 					break;
 				case 4: // 11A170
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,170); 
 					break;
 			}
 			break;
 		case 91:
 			switch(frame_count){
 				case 0: // 11A27
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,27); 
 					break;
 				case 1: // 11A63
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,63); 
 					break;
 				case 2: // 11A99
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,99); 
 					break;
 				case 3: // 11A135
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,135); 
 					break;
 				case 4: // 11A171
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,171); 
 					break;
 			}
 			break;
 		case 92: // 51A8
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,8); 
 			break;
 		case 93: // 51A9
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,9); 
 			break;
 		case 94: // 51A10
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,10); 
 			break;
 		case 95: // 51A11
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,11); 
 			break;
 		case 96:
 			switch(frame_count){
 				case 0: // 11DP3
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,3); 
 					break;
 				case 1: // 11DP10
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,10); 
 					break;
 				case 2: // 11DP17
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,17); 
 					break;
 				case 3: // 11DP24
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,24); 
 					break;
 				case 4: // 11DP31
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,31); 
 					break;
 			}
 			break;
 		case 97:
 			switch(frame_count){
 				case 0: // 11DP4
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,4); 
 					break;
 				case 1: // 11DP11
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,11); 
 					break;
 				case 2: // 11DP18
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,18); 
 					break;
 				case 3: // 11DP25
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,25); 
 					break;
 				case 4: // 11DP32
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,32); 
 					break;
 			}
 			break;
 		case 98:
 			switch(frame_count){
 				case 0: // 11DP5
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,5); 
 					break;
 				case 1: // 11DP12
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,12); 
 					break;
 				case 2: // 11DP19
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,19); 
 					break;
 				case 3: // 11DP26
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,26); 
 					break;
 				case 4: // 11DP33
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_DP,33); 
 					break;
 			}
 			break;
 		case 99: // 51DP2
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_DP,2); 
 			break;
 		case 104:
 			switch(frame_count){
 				case 0: // 11A28
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,28); 
 					break;
 				case 1: // 11A64
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,64); 
 					break;
 				case 2: // 11A100
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,100); 
 					break;
 				case 3: // 11A136
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,136); 
 					break;
 				case 4: // 11A172
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,172); 
 					break;
 			}
 			break;
 		case 105:
 			switch(frame_count){
 				case 0: // 11A29 FC1 N2 PRESS
-					tx_data[tx_offset] = scale_data(0,0,75);
+					tx_data[tx_offset] = measure(11,TLM_A,29); 
 					break;
 				case 1: // 11A65
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,65); 
 					break;
 				case 2: // 11A101
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,101); 
 					break;
 				case 3: // 11A137
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,137); 
 					break;
 				case 4: // 11A173
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,173); 
 					break;
 			}
 			break;
 		case 106:
 			switch(frame_count){
 				case 0: // 11A30 FC2 N2 PRESS
-					tx_data[tx_offset] = scale_data(0,0,75);
+					tx_data[tx_offset] = measure(11,TLM_A,30); 
 					break;
 				case 1: // 11A66
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,66); 
 					break;
 				case 2: // 11A102
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,102); 
 					break;
 				case 3: // 11A138
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,138); 
 					break;
 				case 4: // 11A174
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,174); 
 					break;
 			}
 			break;
 		case 107:
 			switch(frame_count){
 				case 0: // 11A31
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,31); 
 					break;
 				case 1: // 11A67 FC1 O2 PRESS
-					tx_data[tx_offset] = scale_data(0,0,75);
+					tx_data[tx_offset] = measure(11,TLM_A,67); 
 					break;
 				case 2: // 11A103
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,103); 
 					break;
 				case 3: // 11A139
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,139); 
 					break;
 				case 4: // 11A175
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,175); 
 					break;
 			}
 			break;
 		case 112:
 			switch(frame_count){
 				case 0: // 11A32 
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,32); 
 					break;
 				case 1: // 11A68 FC2 O2 PRESS
-					tx_data[tx_offset] = scale_data(0,0,75);
+					tx_data[tx_offset] = measure(11,TLM_A,68); 
 					break;
 				case 2: // 11A104
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,104); 
 					break;
 				case 3: // 11A140
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,140); 
 					break;
 				case 4: // 11A176
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,176); 
 					break;
 			}
 			break;
 		case 113: // 22DP1
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_DP,1); 
 			break;
 		case 114: // 22DP2
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(22,TLM_DP,2); 
 			break;
-		case 115: // MAGICAL WORD 4
-			tx_data[tx_offset] = 0;
+		case 115: // MAGICAL WORD 3
+			// 10A3
+			// 10A6
+			// 10A9
+			// ...
+			// 10A150
+			tx_data[tx_offset] = measure(10,TLM_A,3+(frame_addr*3));
 			break;
 		case 120:
 			switch(frame_count){
 				case 0: // 11A33 
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,33); 
 					break;
 				case 1: // 11A69
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,69); 
 					break;
 				case 2: // 11A105
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,105); 
 					break;
 				case 3: // 11A141
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,141); 
 					break;
 				case 4: // 11A177
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,177); 
 					break;
 			}
 			break;
 		case 121:
 			switch(frame_count){
 				case 0: // 11A34
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,34); 
 					break;
 				case 1: // 11A70
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,70); 
 					break;
 				case 2: // 11A106
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,106); 
 					break;
 				case 3: // 11A142
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,142); 
 					break;
 				case 4: // 11A178
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,178); 
 					break;
 			}
 			break;
 		case 122:
 			switch(frame_count){
 				case 0: // 11A35 FC3 N2 PRESS
-					tx_data[tx_offset] = scale_data(0,0,75);
+					tx_data[tx_offset] = measure(11,TLM_A,35); 
 					break;
 				case 1: // 11A71
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,71); 
 					break;
 				case 2: // 11A107
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,107); 
 					break;
 				case 3: // 11A143
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,143); 
 					break;
 				case 4: // 11A179
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,179); 
 					break;
 			}
 			break;
 		case 123:
 			switch(frame_count){
 				case 0: // 11A36
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,36); 
 					break;
 				case 1: // 11A72
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,72); 
 					break;
 				case 2: // 11A108
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,108); 
 					break;
 				case 3: // 11A143
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,143); 
 					break;
 				case 4: // 11A180
-					tx_data[tx_offset] = 0; 
+					tx_data[tx_offset] = measure(11,TLM_A,180); 
 					break;
 			}
 			break;
 		case 124: // 51A12
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,12); 
 			break;
 		case 125: // 51A13
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,13); 
 			break;
 		case 126: // 51A14
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,14); 
 			break;
 		case 127: // 51A15
-			tx_data[tx_offset] = 0;
+			tx_data[tx_offset] = measure(51,TLM_A,15); 
 			break;
 
 		// JUST IN CASE
