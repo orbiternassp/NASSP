@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.51  2007/01/02 01:38:24  dseagrav
+  *	Digital uplink and associated stuff.
+  *	
   *	Revision 1.50  2006/12/17 04:35:24  dseagrav
   *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
   *	
@@ -1341,6 +1344,7 @@ protected:
 	double LastVerb16Time;
 	double NextEventTime;
 	double LastEventTime;
+	double NextControlTime;
 
 	double BurnTime;
 	double CutOffVel;
