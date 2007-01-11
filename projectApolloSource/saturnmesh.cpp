@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.56  2006/12/16 01:18:53  tschachim
+  *	Bugfix ph_ullage3 delete.
+  *	
   *	Revision 1.55  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -1003,7 +1006,8 @@ void Saturn::SetReentryStage ()
 	SetRotDrag (_V(0.07,0.07,0.003));
 	if (GetFlightModel() >= 1)
 	{
-		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.16,1.12), CoeffFunc, 3.5 ,11.95, 1.0);
+//		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.16,1.12), CoeffFunc, 3.5 ,11.95, 1.0);
+		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.12,1.12), CoeffFunc, 3.5,11.95, 1.0);
     }
   	ShiftCentreOfMass (_V(0,0,0.5));
 
