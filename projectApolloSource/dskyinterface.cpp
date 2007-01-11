@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/05/17 01:50:45  movieman523
+  *	Fixed DSKY key-clicks (bug 1375310).
+  *	
   *	Revision 1.9  2006/04/23 04:15:45  dseagrav
   *	LEM checkpoint commit. The LEM is not yet airworthy. Please be patient.
   *	
@@ -477,7 +480,7 @@ void ApolloGuidance::StartTwoDigitEntry()
 void ApolloGuidance::UpdateTwoDigitEntry(int n)
 
 {
-	if (EnterPos > 1) {
+	if (EnterPos > 2) {
 		LightOprErr();
 		return;
 	}
@@ -495,17 +498,17 @@ void ApolloGuidance::UpdateTwoDigitEntry(int n)
 	else {
 		EnterVal += n;
 
-		if (EnteringVerb) {
-			Verb = EnterVal;
-			EnteringVerb = false;
-		}
+//		if (EnteringVerb) {
+//			Verb = EnterVal;
+//			EnteringVerb = false;
+//		}
 
-		if (EnteringNoun) {
-			Noun = EnterVal;
-			EnteringNoun = false;
-		}
+//		if (EnteringNoun) {
+//			Noun = EnterVal;
+//			EnteringNoun = false;
+//		}
 
-		ReleaseKeyboard();
+//		ReleaseKeyboard();
 	}
 
 	EnterPos++;
@@ -724,8 +727,16 @@ void ApolloGuidance::NounPressed()
 	}
 
 	if (EnteringVerb) {
-		LightOprErr();
-		return;
+		if(EnterPos!=2){
+			LightOprErr();
+			return;
+		}
+		else
+		{
+			Verb = EnterVal;
+			EnteringVerb = false;
+			ReleaseKeyboard();
+		}
 	}
 
 	NounBlanked = false;
@@ -753,84 +764,118 @@ void ApolloGuidance::EnterPressed()
 	// ENTER.
 	//
 
-	if (EnteringVerb || EnteringNoun) {
-		LightOprErr();
-		return;
-	}
-
-	ReleaseKeyboard();
-
-	ClearVerbNounFlashing();
-
-	switch (Verb) {
-
-	case 1:
-	case 11:
-		if (Noun != 2) {
+//	if (EnteringVerb || EnteringNoun) {
+//		LightOprErr();
+//		return;
+//	}
+	if (EnteringVerb){
+		if(EnterPos==2){
+			Verb = EnterVal;
+			EnteringVerb = false;
+			ReleaseKeyboard();
+		}
+		else{
 			LightOprErr();
 			return;
 		}
 
-		SetVerbNounFlashing();
+		ClearVerbNounFlashing();
 
-		R2Decimal = false;
-		R1Decimal = false;
-		DataEntryR1();
-		break;
+		switch (Verb) {
 
-	case 21:
-		if (Noun == 2) {
+		case 1:
+		case 11:
+			if (Noun != 2) {
+				LightOprErr();
+				return;
+			}
+
 			SetVerbNounFlashing();
 
 			R2Decimal = false;
 			R1Decimal = false;
-			DataEntryR1R2();
-		}
-		else {
 			DataEntryR1();
-		}
-		break;
+			break;
 
-	case 22:
-		DataEntryR2();
-		break;
+		case 21:
+			if (Noun == 2) {
+				SetVerbNounFlashing();
 
-	case 23:
-		DataEntryR3();
-		break;
+				R2Decimal = false;
+				R1Decimal = false;
+				DataEntryR1R2();
+			}
+			else {
+				DataEntryR1();
+			}
+			break;
 
-	case 24:
-		DataEntryR1R2();
-		break;
+		case 22:
+			DataEntryR2();
+			break;
 
-	case 25:
-		EnteringData = 1;
-		EnterCount = 3;
-		EnterPos = 0;
-		R1Blanked = true;
-		R2Blanked = true;
-		R3Blanked = true;
-		break;
+		case 23:
+			DataEntryR3();
+			break;
+
+		case 24:
+			DataEntryR1R2();
+			break;
+
+		case 25:
+			EnteringData = 1;
+			EnterCount = 3;
+			EnterPos = 0;
+			R1Blanked = true;
+			R2Blanked = true;
+			R3Blanked = true;
+			break;
 
 	//
 	// 33: Proceed without data.
 	//
 
-	case 33:
-		ProceedNoData();
-		break;
+		case 33:
+			ProceedNoData();
+			break;
 
 	//
 	// 34: terminate.
 	//
 
-	case 34:
-		TerminateProgram();
-		break;
+		case 34:
+			TerminateProgram();
+			break;
 
-	default:
-		VerbNounEntered(Verb, Noun);
-		break;
+		case 37:
+			NounBlanked = false;
+
+			StartTwoDigitEntry();
+
+			KbInUse = true;
+			EnteringNoun = true;
+
+			UpdateNoun();
+			break;
+
+		default:
+			VerbNounEntered(Verb, Noun);
+			break;
+		}
+		return;
+	}
+	if(EnteringNoun) {
+		if(EnterPos==2){
+			Noun = EnterVal;
+			EnteringNoun = false;
+			ReleaseKeyboard();
+			VerbNounEntered(Verb, Noun);
+			return;
+		}
+		else{
+			LightOprErr();
+			return;
+		}
 	}
 }
 
