@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.89  2007/01/02 01:38:24  dseagrav
+  *	Digital uplink and associated stuff.
+  *	
   *	Revision 1.88  2006/12/26 12:58:47  dseagrav
   *	CMC C/W lamp on restart and altered restart to compensate.
   *	
@@ -345,6 +348,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	BurnEndTime = 0;
 	CutOffVel = 0;
 	NextEventTime = 0;
+	NextControlTime = 0;
 	BankSumNum = 1;
 
 	//
