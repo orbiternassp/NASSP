@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.185  2007/01/06 07:34:35  dseagrav
+  *	FLIGHT bus added, uptelemetry now draws power, UPTLM switches on MDC now operate
+  *	
   *	Revision 1.184  2006/12/23 17:01:27  movieman523
   *	Added multiple rocket-cams. I'm not sure how to rotate the view, so it's pretty much a 'you get what you get' at the moment.
   *	
@@ -3470,10 +3473,12 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	// For thrusters - X means LEFT/RIGHT, Y means IN/OUT, Z means UP/DOWN)
 
 	// Jet #1 -- This used to be at _V(2,2,-2), _V(0,-1,0)
-	th_att_cm[0]=CreateThruster (_V(0.1,ATTCOOR2,TRANZ +0.05), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[0]=CreateThruster (_V(0.1,ATTCOOR2,TRANZ +0.05), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[0]=CreateThruster (_V(0.1,ATTCOOR2,TRANZ +0.05), _V(0,-0.81,-0.59), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[0],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	// Jet #3 
-	th_att_cm[1]=CreateThruster (_V(-0.1,ATTCOOR2,TRANZ +0.05), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[1]=CreateThruster (_V(-0.1,ATTCOOR2,TRANZ +0.05), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[1]=CreateThruster (_V(-0.1,ATTCOOR2,TRANZ +0.05), _V(0,-0.81,-0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[1],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	CreateThrusterGroup (th_att_cm,   2, THGROUP_ATT_PITCHUP);
 
@@ -3486,18 +3491,22 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	CreateThrusterGroup (th_att_cm+2,   2, THGROUP_ATT_PITCHDOWN);
 
 	// Jet #5 -- Used to be at _V(-2,2,2), _V(0,0,-1)
-	th_att_cm[4]=CreateThruster (_V(ATTCOOR2,0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[4]=CreateThruster (_V(ATTCOOR2,0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[4]=CreateThruster (_V(ATTCOOR2,0.1,TRANZ), _V(-0.81,0,-0.59), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[4],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	// Jet #7
-	th_att_cm[5]=CreateThruster (_V(ATTCOOR2,-0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[5]=CreateThruster (_V(ATTCOOR2,-0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[5]=CreateThruster (_V(ATTCOOR2,-0.1,TRANZ), _V(-0.81,0,-0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[5],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	CreateThrusterGroup (th_att_cm+4,   2, THGROUP_ATT_YAWRIGHT);
 
 	// Jet #6 -- Used to be at _V(-2,2,-2), _V(0,0,1)
-	th_att_cm[6]=CreateThruster (_V(-ATTCOOR2,0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[6]=CreateThruster (_V(-ATTCOOR2,0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[6]=CreateThruster (_V(-ATTCOOR2,0.1,TRANZ), _V(0.81,0,-0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[6],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	// Jet #8
-	th_att_cm[7]=CreateThruster (_V(-ATTCOOR2,-0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[7]=CreateThruster (_V(-ATTCOOR2,-0.1,TRANZ), _V(0,0,-1), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[7]=CreateThruster (_V(-ATTCOOR2,-0.1,TRANZ), _V(0.81,0,-0.59), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[7],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	CreateThrusterGroup (th_att_cm+6,   2, THGROUP_ATT_YAWLEFT);
 
@@ -3505,18 +3514,22 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	// Apparently the AGC expects this.
 
 	// Jet #9 -- Used to be at _V(2,2,-2)
-	th_att_cm[8]=CreateThruster (_V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[8]=CreateThruster (_V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[8]=CreateThruster (_V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0.17,-0.98,0.21), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[8],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	// Jet #11
-	th_att_cm[9]=CreateThruster (_V(-ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0,1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[9]=CreateThruster (_V(-ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0,1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[9]=CreateThruster (_V(-ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0.17,-0.98,0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[9],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	CreateThrusterGroup (th_att_cm+8,   2, THGROUP_ATT_BANKRIGHT);
 		
 	// Jet #10 -- Used to be at _V(-2,2,-2), _V(0,-1,0)
-	th_att_cm[10]=CreateThruster (_V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[10]=CreateThruster (_V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[10]=CreateThruster (_V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(-0.17,-0.98,0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[10],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	// Jet #12
-	th_att_cm[11]=CreateThruster (_V(ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0,1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+//	th_att_cm[11]=CreateThruster (_V(ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0,1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[11]=CreateThruster (_V(ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(-0.98,0.17,0.21), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[11],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	CreateThrusterGroup (th_att_cm+10,   2, THGROUP_ATT_BANKLEFT);
 }
