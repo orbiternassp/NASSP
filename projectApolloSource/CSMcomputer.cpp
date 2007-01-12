@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2007/01/11 08:22:26  chode99
+  *	Added routines for reentry autopilot P61-P67
+  *	
   *	Revision 1.67  2006/12/17 04:35:23  dseagrav
   *	Telecom bugfixes, eliminate false error on client disconnect, vAGC now gets cycles by a different method, eliminated old and unused vAGC P11 debugging code that was eating up FPS on every timestep.
   *	
@@ -413,10 +416,10 @@ void CSMcomputer::DisplayNounData(int noun)
 		if (ProgRunning == 63)
 		{
 			int R1,R2;
-			R1 = 10.0 * RANGETOGO;
-			R2 = VIO;
-			int	min = TIME5 / 60;
-			int sec = TIME5 - (min * 60);
+			R1 = (int) (10.0 * RANGETOGO);
+			R2 = (int) (VIO);
+			int	min = (int) (TIME5 / 60);
+			int sec = (int) (TIME5 - (min * 60));
 			SetR3(-(min * 1000 + sec));
 			SetR3Format(TwoSpaceTwoFormat);
 			SetR1(R1);
@@ -427,9 +430,9 @@ void CSMcomputer::DisplayNounData(int noun)
 		if ((ProgRunning >= 63)&&(ProgRunning <= 64))
 		{
 			int R1,R2,R3;
-			R1 = 10.2 * D + 0.5;
-			R2 = V;
-			R3 = 10.0 * RTOSPLASH;
+			R1 = (int) (10.2 * D + 0.5);
+			R2 = (int) (V);
+			R3 = (int) (10.0 * RTOSPLASH);
 			SetR1(R1);
 			SetR2(R2);
 			SetR3(R3);
@@ -439,9 +442,9 @@ void CSMcomputer::DisplayNounData(int noun)
 		if ((ProgRunning == 64)&&(ProgState == 9))
 		{
 			int R1,R2,R3;
-			R1 = 5730.0 * ROLLC;
-			R2 = 10.0 * XRNGERR;
-			R3 = 10.0 * DNRNGERR;
+			R1 = (int) (5730.0 * ROLLC);
+			R2 = (int) (10.0 * XRNGERR);
+			R3 = (int) (10.0 * DNRNGERR);
 			SetR1(R1);
 			SetR2(R2);
 			SetR3(R3);
@@ -452,9 +455,9 @@ void CSMcomputer::DisplayNounData(int noun)
 		if ((ProgRunning >= 63)&&(ProgRunning <= 64))
 		{
 			int R1,R2,R3;
-			R1 = 5730.0 * ROLLC;
-			R2 = V;
-			R3 = RDOT;
+			R1 = (int) (5730.0 * ROLLC);
+			R2 = (int) (V);
+			R3 = (int) (RDOT);
 			SetR1(R1);
 			SetR2(R2);
 			SetR3(R3);
@@ -464,9 +467,9 @@ void CSMcomputer::DisplayNounData(int noun)
 		if((ProgRunning == 64)&&(ProgState == 5))
 		{
 			int R1,R2,R3;
-			R1 = 5730.0 * ROLLC;
-			R2 = 100.0 * Q7 / GS;
-			R3 = V1;
+			R1 = (int) (5730.0 * ROLLC);
+			R2 = (int) (100.0 * Q7 / GS);
+			R3 = (int) (V1);
 			SetR1(R1);
 			SetR2(R2);
 			SetR3(R3);
@@ -476,9 +479,9 @@ void CSMcomputer::DisplayNounData(int noun)
 		if ((ProgRunning >= 63)&&(ProgRunning <= 64))
 		{
 			int R1,R2,R3;
-			R1 = 5730.0 * ROLLC;
-			R2 = V;
-			R3 = 10.2 * D + 0.5;
+			R1 = (int) (5730.0 * ROLLC);
+			R2 = (int) (V);
+			R3 = (int) (10.2 * D + 0.5);
 			SetR1(R1);
 			SetR2(R2);
 			SetR3(R3);
@@ -1092,8 +1095,8 @@ void CSMcomputer::Prog61(double simt)
 			lati = 57.2958 * lati;
 			while(longi < -180.0) longi += 360.0;
 			while(longi > 180.0) longi -= 360.0;
-			R1 = (lati + 0.005) * 100.0;
-			R2 = (longi + 0.005) * 100.0;
+			R1 = (int) ((lati + 0.005) * 100.0);
+			R2 = (int) ((longi + 0.005) * 100.0);
 			lati = R1 / 100.0;
 			longi = R2 / 100.0;
 			SetDesiredLanding(lati, longi, 0.0);
@@ -1124,9 +1127,9 @@ void CSMcomputer::Prog61(double simt)
 			if(abs(GAMMAEI) < 5.9) PREDGMAX = 4.0 + abs(GAMMAEI) / 6.0;
 			else if(abs(GAMMAEI) < 6.5) PREDGMAX = -12.717 + 3.0 * abs(GAMMAEI);
 			else PREDGMAX = -32.21 + 6.0 * abs(GAMMAEI);
-			R1 = PREDGMAX * 100.0;
-			R2 = VPRED;
-			R3 = GAMMAEI * 100.0;
+			R1 = (int) (PREDGMAX * 100.0);
+			R2 = (int) (VPRED);
+			R3 = (int) (GAMMAEI * 100.0);
 			SetR1(R1);
 			SetR2(R2);
 			SetR3(R3);
@@ -1183,7 +1186,7 @@ void CSMcomputer::Prog61(double simt)
 			longi = longi - theta / 57.2958;
 			while(longi < -3.1415926)longi += 6.2831852;
 			while(longi > 3.1415926)longi -= 6.2831852;
-			R1 = -63710.0 * acos(sin(lati) *  sin(0.01745 * LandingLatitude) + cos(lati) * cos(0.01745 * LandingLatitude) * cos(0.01745 * LandingLongitude - longi));
+			R1 = (int) (-63710.0 * acos(sin(lati) *  sin(0.01745 * LandingLatitude) + cos(lati) * cos(0.01745 * LandingLatitude) * cos(0.01745 * LandingLongitude - longi)));
 			if(VPRED < 7925.0) TIMETOGO = 142.7 * R1 / VPRED;
 			else TIMETOGO = R1 / 55.5;
 			theta = 0.00417807 * TIMETOGO; 
@@ -1192,14 +1195,14 @@ void CSMcomputer::Prog61(double simt)
 			while(longi > 3.1415926)longi -= 6.2831852;
 // great circle equation
 			RANGETOGO = -6371.0 * acos(sin(lati) *  sin(0.01745 * LandingLatitude) + cos(lati) * cos(0.01745 * LandingLatitude) * cos(0.01745 * LandingLongitude - longi));
-			R1= 10.0 * RANGETOGO;
+			R1= (int)(10.0 * RANGETOGO);
 			SetR1(R1);
 			energy = V * V / 2.0 - MUE / rad;
 			v2 = sqrt(2.0 * (energy + MUE / rentry5));
-			R2 = v2;
+			R2 = (int) v2;
 			SetR2(R2);
-			min = time / 60.0;
-			sec = time - 60 * min;
+			min = (int) (time / 60.0);
+			sec = (int) (time - 60 * min);
 			if (min > 59) 
 			{
 				min = 59;
@@ -1263,8 +1266,8 @@ void CSMcomputer::Prog62(double simt)
 		SetVerbNounAndFlash(6, 61);
 // R1 = Lat, R2 = Long, R3 = heads-up (+1) or down (-1)
 // Last chance to change
-		R1 = LandingLatitude*100.0;
-		R2 = LandingLongitude*100.0;
+		R1 = (int) (LandingLatitude*100.0);
+		R2 = (int) (LandingLongitude*100.0);
 		R3 = RollCode;
 		SetR1(R1);
 		SetR2(R2);
@@ -1648,6 +1651,7 @@ void CSMcomputer::Prog64(double simt)
 	double ASP1, ASPUP, ASP3, ASPDWN, ASP, DIFF, RDTR, DR, VREFF, RDOTREFF;
 	double rdotref, drefr, f2, f1, f3, f4, PREDANGLE, X, Y;
 	int thruston;
+	int i;
 	VESSELSTATUS status;
 	OBJHANDLE hPlanet;
 
@@ -1765,9 +1769,9 @@ void CSMcomputer::Prog64(double simt)
 			SELECTOR = 13;
 			SetVerbNounAndFlash(16, 67);
 			OurVessel->GetEquPos(longi,lati,radius);
-			R1 = 63710.0 * acos(sin(lati) *  sin(0.01745 * LandingLatitude) + cos(lati) * cos(0.01745 * LandingLatitude) * cos(0.01745 * LandingLongitude - longi));
-			R2 = 5730.0*lati;
-			R3 = 5730.0*longi;
+			R1 = (int) (63710.0 * acos(sin(lati) *  sin(0.01745 * LandingLatitude) + cos(lati) * cos(0.01745 * LandingLatitude) * cos(0.01745 * LandingLongitude - longi)));
+			R2 = (int) (5730.0*lati);
+			R3 = (int) (5730.0*longi);
 			SetR1(R1);
 			SetR2(R2);
 			SetR3(R3);
@@ -2067,7 +2071,7 @@ void CSMcomputer::Prog64(double simt)
 
 			case 8:
 // ---------------PREDICT3---------------
-				for (int i = 0; (i < 13) && (VREF[i+1] < V); i++);
+				for (i = 0; (i < 13) && (VREF[i+1] < V); i++);
 				frac = (V - VREF[i])/(VREF[i+1]-VREF[i]);
 				rdotref=(1.0-frac)*RDOTREF[i]+frac*RDOTREF[i+1];
 				rtogo=(1.0-frac)*RTOGO[i]+frac*RTOGO[i+1];
