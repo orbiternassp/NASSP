@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2007/01/06 04:44:48  dseagrav
+  *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
+  *	
   *	Revision 1.31  2006/12/26 12:58:47  dseagrav
   *	CMC C/W lamp on restart and altered restart to compensate.
   *	
@@ -205,24 +208,39 @@ bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus &fc, int index)
 }
 
 //
-// Check status of the AC bus.
-//
-// Currently these numbers are purely arbitrary since I don't know what the the real numbers are. They're
-// also set high since the three-phase power system doesn't work correctly yet.
+// Check status of the AC inverter overload flags.
 //
 
-bool CSMCautionWarningSystem::ACOverloaded(ACBusStatus &as)
+bool CSMCautionWarningSystem::ACOverloaded(int bus)
 
 {
-	if (as.ACBusCurrent > 32.0)
-		return true;
-	if (as.Phase1Current > 12.0)
-		return true;
-	if (as.Phase2Current > 12.0)
-		return true;
-	if (as.Phase3Current > 12.0)
-		return true;
+	Saturn *sat = (Saturn *) OurVessel;
 
+	switch(bus){
+		case 1:
+			// sprintf(oapiDebugString(),"AC1 AMPS = %f",sat->ACBus1PhaseA.Current()+sat->ACBus1PhaseB.Current()+sat->ACBus1PhaseC.Current());
+			if(sat->AcBus1Switch1.GetState() == TOGGLESWITCH_UP && sat->Inverter1->Overloaded()){
+				return true;
+			}
+			if(sat->AcBus1Switch2.GetState() == TOGGLESWITCH_UP && sat->Inverter2->Overloaded()){
+				return true;
+			}
+			if(sat->AcBus1Switch3.GetState() == TOGGLESWITCH_UP && sat->Inverter3->Overloaded()){
+				return true;
+			}
+			return false;
+		case 2:
+			if(sat->AcBus2Switch1.GetState() == TOGGLESWITCH_UP && sat->Inverter1->Overloaded()){
+				return true;
+			}
+			if(sat->AcBus2Switch2.GetState() == TOGGLESWITCH_UP && sat->Inverter2->Overloaded()){
+				return true;
+			}
+			if(sat->AcBus2Switch3.GetState() == TOGGLESWITCH_UP && sat->Inverter3->Overloaded()){
+				return true;
+			}
+			return false;
+	}
 	return false;
 }
 
@@ -468,8 +486,8 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// AC bus: lights come on to indicate under or overvoltage in the AC bus.
 		//
 		// AC bus overload: overload light will come on if total output exceeds 250% of rated current, or a
-		// single phase output exceeds 300% of rated current. However, I'm not sure what the rated
-		// current actually is!
+		// single phase output exceeds 300% of rated current, which is 27.7 and 11 amps respectively.
+		// Since the flag has to be set for at least 5 seconds, I want the inverter to set this.
 		//
 		// AC bus undervoltage: AC_BUS1/2 light will come on if voltage on any phase is
 		// < 96 volts and reset switch is center. Lights only come off if reset switch is reset (up).
@@ -482,7 +500,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		sat->GetACBusStatus(as, 1);
 		if (as.Enabled_AC_CWS) {
 			if (!as.Reset_AC_CWS) {
-				if (ACOverloaded(as)) {
+				if (ACOverloaded(1)) {
 					SetLight(CSM_CWS_AC_BUS1_OVERLOAD, true);
 					SetLight(CSM_CWS_AC_BUS1_LIGHT, true); 
 				}
@@ -515,7 +533,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 				}
 			}
 		} else {
-			if (ACOverloaded(as) || ACUndervoltage(as) || ACOvervoltage(as)) {
+			if (ACOverloaded(1) || ACUndervoltage(as) || ACOvervoltage(as)) {
 				ACBus1Alarm = true;
 			}
 		}
@@ -523,7 +541,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		sat->GetACBusStatus(as, 2);
 		if (as.Enabled_AC_CWS) {
 			if (!as.Reset_AC_CWS) {
-				if (ACOverloaded(as)) {
+				if (ACOverloaded(2)) {
 					SetLight(CSM_CWS_AC_BUS2_OVERLOAD, true);
 					SetLight(CSM_CWS_AC_BUS2_LIGHT, true); 
 				}
@@ -554,7 +572,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 				}
 			}
 		} else {
-			if (ACOverloaded(as) || ACUndervoltage(as) || ACOvervoltage(as)) {
+			if (ACOverloaded(2) || ACUndervoltage(as) || ACOvervoltage(as)) {
 				ACBus2Alarm = true;
 			}
 		}

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.229  2007/01/06 23:08:32  dseagrav
+  *	More telecom stuff. A lot of the S-band signal path exists now, albeit just to consume electricity.
+  *	
   *	Revision 1.228  2007/01/06 07:34:35  dseagrav
   *	FLIGHT bus added, uptelemetry now draws power, UPTLM switches on MDC now operate
   *	
@@ -1885,13 +1888,13 @@ protected:
 	TwoSourceSwitch MnA1Switch;
 	TwoSourceSwitch MnB2Switch;
 	ThreeSourceSwitch MnA3Switch;
-	TwoSourceSwitch AcBus1Switch1;
-	TwoSourceSwitch AcBus1Switch2;
-	TwoSourceSwitch AcBus1Switch3;
+	CMACInverterSwitch AcBus1Switch1;
+	CMACInverterSwitch AcBus1Switch2;
+	CMACInverterSwitch AcBus1Switch3;
 	ThreeSourceSwitch AcBus1ResetSwitch;
-	TwoSourceSwitch AcBus2Switch1;
-	TwoSourceSwitch AcBus2Switch2;
-	TwoSourceSwitch AcBus2Switch3;
+	CMACInverterSwitch AcBus2Switch1;
+	CMACInverterSwitch AcBus2Switch2;
+	CMACInverterSwitch AcBus2Switch3;
 	ThreeSourceSwitch AcBus2ResetSwitch;
 
 	DCBusIndicatorSwitch MainBusBIndicator1;
@@ -3048,9 +3051,6 @@ protected:
 	// AC bus 1 and 2, which are three-phase.
 	//
 
-	ThreeWayPowerMerge ACBus1Source;
-	ThreeWayPowerMerge ACBus2Source;
-
 	ACbus ACBus1PhaseA;
 	ACbus ACBus1PhaseB;
 	ACbus ACBus1PhaseC;
@@ -3780,6 +3780,8 @@ protected:
 	friend class SPSPropellantSource;
 	friend class SPSEngine;
 	friend class CMOptics;
+	friend class CSMCautionWarningSystem;
+	friend class CMACInverterSwitch;
 };
 
 extern void BaseInit();

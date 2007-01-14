@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.136  2007/01/06 23:08:32  dseagrav
+  *	More telecom stuff. A lot of the S-band signal path exists now, albeit just to consume electricity.
+  *	
   *	Revision 1.135  2007/01/06 07:34:35  dseagrav
   *	FLIGHT bus added, uptelemetry now draws power, UPTLM switches on MDC now operate
   *	
@@ -203,16 +206,21 @@ void Saturn::SystemsInit() {
 
 	Inverter1->WireTo(&InverterControl1CircuitBraker);
 	Inverter2->WireTo(&InverterControl2CircuitBraker);
-	Inverter3->WireTo(&InverterControl3CircuitBraker);
+	Inverter3->WireTo(&InverterControl3CircuitBraker);	
 
 	//
 	// AC Bus 1
 	//
-	ACBus1Source.WireToBuses(&AcBus1Switch1, &AcBus1Switch2, &AcBus1Switch3);
 
-	ACBus1PhaseA.WireTo(&ACBus1Source);
-	ACBus1PhaseB.WireTo(&ACBus1Source);
-	ACBus1PhaseC.WireTo(&ACBus1Source);
+	// This is wrong. The AC busses are connected to motor switch controls that prohibit more than one
+	// inverter from powering the same bus. One inverter can power both busses though.
+
+	// ACBus1Source.WireToBuses(&AcBus1Switch1, &AcBus1Switch2, &AcBus1Switch3);
+	
+	// ACBus1PhaseA.WireTo(&ACBus1Source);
+	// ACBus1PhaseB.WireTo(&ACBus1Source);
+	// ACBus1PhaseC.WireTo(&ACBus1Source);
+
 	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_1");
@@ -221,11 +229,11 @@ void Saturn::SystemsInit() {
 	//
 	// AC Bus 2
 	//
-	ACBus2Source.WireToBuses(&AcBus2Switch1, &AcBus2Switch2, &AcBus2Switch3);
+	// ACBus2Source.WireToBuses(&AcBus2Switch1, &AcBus2Switch2, &AcBus2Switch3);
 
-	ACBus2PhaseA.WireTo(&ACBus2Source);
-	ACBus2PhaseB.WireTo(&ACBus2Source);
-	ACBus2PhaseC.WireTo(&ACBus2Source);
+	//ACBus2PhaseA.WireTo(&ACBus2Source);
+	//ACBus2PhaseB.WireTo(&ACBus2Source);
+	//ACBus2PhaseC.WireTo(&ACBus2Source);
 	ACBus2.WireToBuses(&ACBus2PhaseA, &ACBus2PhaseB, &ACBus2PhaseC);
 	
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_2");
@@ -3075,16 +3083,30 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 	}
 }
 
+
 void Saturn::DisconectInverter(bool disc, int busno)
 
 {
 	if (disc) {
-		if (busno == 1) ACBus1Source.WireToBuses(0,0,0);
-		else ACBus2Source.WireToBuses(0,0,0);
-	}
-	else {
-		if (busno == 1) ACBus1Source.WireToBuses(&AcBus1Switch1, &AcBus1Switch2, &AcBus1Switch3);
-		else ACBus2Source.WireToBuses(&AcBus2Switch1, &AcBus2Switch2, &AcBus2Switch3);
+		if (busno == 1){
+			ACBus1PhaseA.WireTo(NULL);
+			ACBus1PhaseB.WireTo(NULL);
+			ACBus1PhaseC.WireTo(NULL);
+		}else{
+			ACBus2PhaseA.WireTo(NULL);
+			ACBus2PhaseB.WireTo(NULL);
+			ACBus2PhaseC.WireTo(NULL);
+		}
+	} else {
+		if (busno == 1){
+			if(AcBus1Switch1.GetState() == TOGGLESWITCH_UP){ AcBus1Switch1.UpdateSourceState(); }
+			if(AcBus1Switch2.GetState() == TOGGLESWITCH_UP){ AcBus1Switch2.UpdateSourceState(); }
+			if(AcBus1Switch3.GetState() == TOGGLESWITCH_UP){ AcBus1Switch3.UpdateSourceState(); }
+		}else{
+			if(AcBus2Switch1.GetState() == TOGGLESWITCH_UP){ AcBus2Switch1.UpdateSourceState(); }
+			if(AcBus2Switch2.GetState() == TOGGLESWITCH_UP){ AcBus2Switch2.UpdateSourceState(); }
+			if(AcBus2Switch3.GetState() == TOGGLESWITCH_UP){ AcBus2Switch3.UpdateSourceState(); }
+		}
 	}
 }
 

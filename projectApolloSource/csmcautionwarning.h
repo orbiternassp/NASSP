@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2007/01/06 04:44:49  dseagrav
+  *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
+  *	
   *	Revision 1.18  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -140,7 +143,7 @@ protected:
 
 	void RenderLightPanel(SURFHANDLE surf, SURFHANDLE lightsurf, bool *LightState, bool LightTest, int sdx, int sdy, int base);
 	bool FuelCellBad(FuelCellStatus &fc, int index);
-	bool ACOverloaded(ACBusStatus &as);
+	bool ACOverloaded(int bus);
 	bool ACUndervoltage(ACBusStatus &as);
 	bool ACOvervoltage(ACBusStatus &as);
 	bool LightPowered(int i);
