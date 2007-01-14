@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.186  2007/01/11 08:13:13  chode99
+  *	Changed directions of CM jets to agree with documentation to allow reentry guidance to work properly
+  *	
   *	Revision 1.185  2007/01/06 07:34:35  dseagrav
   *	FLIGHT bus added, uptelemetry now draws power, UPTLM switches on MDC now operate
   *	
@@ -336,14 +339,12 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 	NonEssBus1("Non-Essential-Bus1", &NonessBusSwitch),
 	NonEssBus2("Non-Essential-Bus2", &NonessBusSwitch),
-	ACBus1PhaseA("AC-Bus1-PhaseA", 115, &ACBus1Source),
-	ACBus1PhaseB("AC-Bus1-PhaseB", 115, &ACBus1Source),
-	ACBus1PhaseC("AC-Bus1-PhaseC", 115, &ACBus1Source),
-	ACBus2PhaseA("AC-Bus2-PhaseA", 115, &ACBus2Source),
-	ACBus2PhaseB("AC-Bus2-PhaseB", 115, &ACBus2Source),
-	ACBus2PhaseC("AC-Bus2-PhaseC", 115, &ACBus2Source),
-	ACBus1Source(0, Panelsdk),
-	ACBus2Source(0, Panelsdk),
+	ACBus1PhaseA("AC-Bus1-PhaseA", 115, NULL),
+	ACBus1PhaseB("AC-Bus1-PhaseB", 115, NULL),
+	ACBus1PhaseC("AC-Bus1-PhaseC", 115, NULL),
+	ACBus2PhaseA("AC-Bus2-PhaseA", 115, NULL),
+	ACBus2PhaseB("AC-Bus2-PhaseB", 115, NULL),
+	ACBus2PhaseC("AC-Bus2-PhaseC", 115, NULL),
 	ACBus1("ACBus1", Panelsdk),
 	ACBus2("ACBus2", Panelsdk),
 	SIVBToCSMPowerSource("SIVBToCSMPower", Panelsdk),

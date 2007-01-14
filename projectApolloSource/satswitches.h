@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/12/19 15:56:05  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.19  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -667,4 +670,22 @@ public:
 protected:
 	ToggleSwitch *LVSPSPcIndicatorSwitch;
 	SURFHANDLE FrameSurface;
+};
+
+///
+/// A two-position switch which operates the CM AC inverter motor-switches.
+/// \brief CM AC Inverter Switch
+///
+class CMACInverterSwitch : public ToggleSwitch {
+public:
+	CMACInverterSwitch() { acbus = 0; acinv = 0; sat = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,int bus,int inv,Saturn *ship);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
+	void LoadState(char *line);
+	virtual void UpdateSourceState();
+
+protected:
+	int acbus,acinv;
+	Saturn *sat;	
 };

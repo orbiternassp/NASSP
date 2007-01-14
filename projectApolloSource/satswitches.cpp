@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/12/19 15:56:04  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.19  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -1600,4 +1603,170 @@ void SaturnLVSPSPcMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	v = (155.0 - v) / 160.0 * 270.0;	
 	DrawNeedle(drawSurface, 48, 45, 20.0, (v - 45.0) * RAD);
 	oapiBlt (drawSurface, FrameSurface, 0, 0, 0, 0, 95, 91, SURF_PREDEF_CK);
+}
+
+//
+// CMACInverterSwitch allows you to connect the CM AC inverters to the CM AC busses.
+//
+
+void CMACInverterSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,int bus,int inv, Saturn *ship)
+
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	acbus = bus;
+	acinv = inv;
+	sat = ship;
+	UpdateSourceState();
+}
+
+bool CMACInverterSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ToggleSwitch::CheckMouseClick(event, mx, my))
+	{
+		UpdateSourceState();
+		return true;
+	}
+
+	return false;
+}
+
+bool CMACInverterSwitch::SwitchTo(int newState)
+
+{
+	if (ToggleSwitch::SwitchTo(newState)) {
+		UpdateSourceState();
+		return true;
+	}
+	return false;
+}
+
+void CMACInverterSwitch::UpdateSourceState()
+{	 
+	if (IsUp()) {
+		switch(acbus){
+		case 1: // AC1
+			switch(acinv){
+			case 1:
+				// Inverter 3 beats inverter 1
+				if(sat->AcBus1Switch3.GetState() == TOGGLESWITCH_UP){
+					return; // LOCKOUT
+				}
+				sat->ACBus1PhaseA.WireTo(&sat->Inverter1->PhaseA);
+				sat->ACBus1PhaseB.WireTo(&sat->Inverter1->PhaseB);
+				sat->ACBus1PhaseC.WireTo(&sat->Inverter1->PhaseC);
+				break;
+			case 2:
+				// Inverter 1 beats inverter 2
+				if(sat->AcBus1Switch1.GetState() == TOGGLESWITCH_UP){
+					return; // LOCKOUT
+				}
+				sat->ACBus1PhaseA.WireTo(&sat->Inverter2->PhaseA);
+				sat->ACBus1PhaseB.WireTo(&sat->Inverter2->PhaseB);
+				sat->ACBus1PhaseC.WireTo(&sat->Inverter2->PhaseC);
+				break;
+			case 3:
+				// Inverter 2 beats 3
+				if(sat->AcBus1Switch2.GetState() == TOGGLESWITCH_UP){
+					return; // LOCKOUT
+				}
+				sat->ACBus1PhaseA.WireTo(&sat->Inverter3->PhaseA);
+				sat->ACBus1PhaseB.WireTo(&sat->Inverter3->PhaseB);
+				sat->ACBus1PhaseC.WireTo(&sat->Inverter3->PhaseC);
+				break;
+			}
+			break;
+		case 2: // AC2
+			switch(acinv){
+			case 1:
+				if(sat->AcBus2Switch3.GetState() == TOGGLESWITCH_UP){
+					return; // LOCKOUT
+				}
+				sat->ACBus2PhaseA.WireTo(&sat->Inverter1->PhaseA);
+				sat->ACBus2PhaseB.WireTo(&sat->Inverter1->PhaseB);
+				sat->ACBus2PhaseC.WireTo(&sat->Inverter1->PhaseC);
+				break;
+			case 2:
+				if(sat->AcBus2Switch1.GetState() == TOGGLESWITCH_UP){
+					return; // LOCKOUT
+				}
+				sat->ACBus2PhaseA.WireTo(&sat->Inverter2->PhaseA);
+				sat->ACBus2PhaseB.WireTo(&sat->Inverter2->PhaseB);
+				sat->ACBus2PhaseC.WireTo(&sat->Inverter2->PhaseC);
+				break;
+			case 3:
+				if(sat->AcBus2Switch2.GetState() == TOGGLESWITCH_UP){
+					return; // LOCKOUT
+				}
+				sat->ACBus2PhaseA.WireTo(&sat->Inverter3->PhaseA);
+				sat->ACBus2PhaseB.WireTo(&sat->Inverter3->PhaseB);
+				sat->ACBus2PhaseC.WireTo(&sat->Inverter3->PhaseC);
+				break;
+			}
+			break;
+		}
+	}
+	else if (IsDown()) {
+		// SHUTTING DOWN CASE
+		switch(acbus){
+		case 1: // AC1
+			switch(acinv){
+			case 1:
+				if(sat->ACBus1PhaseA.SRC != &sat->Inverter1->PhaseA){ return; } // LOCKOUT
+				sat->ACBus1PhaseA.WireTo(NULL);
+				sat->ACBus1PhaseB.WireTo(NULL);
+				sat->ACBus1PhaseC.WireTo(NULL);
+				// Check inv 2
+				if(sat->AcBus1Switch2.GetState() == TOGGLESWITCH_UP){ sat->AcBus1Switch2.UpdateSourceState(); }
+				break;
+			case 2:
+				if(sat->ACBus1PhaseA.SRC != &sat->Inverter2->PhaseA){ return; } // LOCKOUT
+				sat->ACBus1PhaseA.WireTo(NULL);
+				sat->ACBus1PhaseB.WireTo(NULL);
+				sat->ACBus1PhaseC.WireTo(NULL);
+				if(sat->AcBus1Switch3.GetState() == TOGGLESWITCH_UP){ sat->AcBus1Switch3.UpdateSourceState(); }
+				break;
+			case 3:
+				if(sat->ACBus1PhaseA.SRC != &sat->Inverter3->PhaseA){ return; } // LOCKOUT
+				sat->ACBus1PhaseA.WireTo(NULL);
+				sat->ACBus1PhaseB.WireTo(NULL);
+				sat->ACBus1PhaseC.WireTo(NULL);
+				if(sat->AcBus1Switch1.GetState() == TOGGLESWITCH_UP){ sat->AcBus1Switch1.UpdateSourceState(); }
+				break;
+			}
+			break;
+		case 2: // AC2
+			switch(acinv){
+			case 1:
+				if(sat->ACBus2PhaseA.SRC != &sat->Inverter1->PhaseA){ return; } // LOCKOUT
+				sat->ACBus2PhaseA.WireTo(NULL);
+				sat->ACBus2PhaseB.WireTo(NULL);
+				sat->ACBus2PhaseC.WireTo(NULL);
+				if(sat->AcBus2Switch2.GetState() == TOGGLESWITCH_UP){ sat->AcBus2Switch2.UpdateSourceState(); }
+				break;
+			case 2:
+				if(sat->ACBus2PhaseA.SRC != &sat->Inverter2->PhaseA){ return; } // LOCKOUT
+				sat->ACBus2PhaseA.WireTo(NULL);
+				sat->ACBus2PhaseB.WireTo(NULL);
+				sat->ACBus2PhaseC.WireTo(NULL);
+				if(sat->AcBus2Switch3.GetState() == TOGGLESWITCH_UP){ sat->AcBus2Switch3.UpdateSourceState(); }
+				break;
+			case 3:
+				if(sat->ACBus2PhaseA.SRC != &sat->Inverter3->PhaseA){ return; } // LOCKOUT
+				sat->ACBus2PhaseA.WireTo(NULL);
+				sat->ACBus2PhaseB.WireTo(NULL);
+				sat->ACBus2PhaseC.WireTo(NULL);
+				if(sat->AcBus2Switch1.GetState() == TOGGLESWITCH_UP){ sat->AcBus2Switch1.UpdateSourceState(); }
+				break;
+			}
+			break;
+		}		
+	}
+}
+
+void CMACInverterSwitch::LoadState(char *line)
+
+{
+	ToggleSwitch::LoadState(line);
+	UpdateSourceState();
 }
