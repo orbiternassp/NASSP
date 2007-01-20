@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2006/12/19 15:56:11  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.14  2006/11/13 14:47:34  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -242,3 +245,4 @@ public:
 	Saturn *sat;
 	VECTOR3 pseudorate;
 };
+

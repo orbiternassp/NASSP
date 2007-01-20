@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2007/01/13 08:20:53  dseagrav
+  *	Moved telecommunications code to new file csm_telecom.cpp (Adjust VS6,VS2005 files accordingly please)
+  *	
   *	Revision 1.13  2007/01/10 02:57:38  dseagrav
   *	Much improved downtelemetry data-gathering method using measure()
   *	
@@ -2567,4 +2570,3 @@ void ECA::TimeStep(double simdt) {
 		trans_z_trigger=0;
 	}
 }
-
