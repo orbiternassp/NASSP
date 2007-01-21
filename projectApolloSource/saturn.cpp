@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.188  2007/01/20 02:09:51  dseagrav
+  *	Tweaked RCS positions
+  *	
   *	Revision 1.187  2007/01/14 13:02:43  dseagrav
   *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
   *	
@@ -3520,21 +3523,21 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 
 	// Jet #9 -- Used to be at _V(2,2,-2)
 //	th_att_cm[8]=CreateThruster (_V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[8]=CreateThruster (_V(ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0.17,-0.98,0.21), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[8]=CreateThruster (_V(ATTCOOR2/1.42-0.03,ATTCOOR2/1.42-0.05,TRANZ+0.11), _V(0.17,-0.98,0.21), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[8],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	// Jet #11
 //	th_att_cm[9]=CreateThruster (_V(-ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0,1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[9]=CreateThruster (_V(-ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0.17,-0.98,0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[9]=CreateThruster (_V(-ATTCOOR2/1.42+0.03,(ATTCOOR2/1.42)-0.05,TRANZ+0.11), _V(0.98,0.17,0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[9],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	CreateThrusterGroup (th_att_cm+8,   2, THGROUP_ATT_BANKRIGHT);
 		
 	// Jet #10 -- Used to be at _V(-2,2,-2), _V(0,-1,0)
 //	th_att_cm[10]=CreateThruster (_V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(0,-1,0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[10]=CreateThruster (_V(-ATTCOOR2/1.4,ATTCOOR2/1.4,TRANZ), _V(-0.17,-0.98,0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[10]=CreateThruster (_V(-ATTCOOR2/1.42-0.03,ATTCOOR2/1.42-0.15,TRANZ+0.11), _V(-0.17,-0.98,0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[10],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	// Jet #12
 //	th_att_cm[11]=CreateThruster (_V(ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(0,1,0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
-	th_att_cm[11]=CreateThruster (_V(ATTCOOR2/1.4,(ATTCOOR2/1.4)+0.1,TRANZ), _V(-0.98,0.17,0.21), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[11]=CreateThruster (_V(ATTCOOR2/1.42+0.03,(ATTCOOR2/1.42)-0.15,TRANZ+0.11), _V(-0.98,0.17,0.21), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[11],0.01,0.01); // ATTWIDTH,ATTHEIGHT);
 	CreateThrusterGroup (th_att_cm+10,   2, THGROUP_ATT_BANKLEFT);
 }
