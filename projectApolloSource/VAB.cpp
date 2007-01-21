@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/07/17 19:33:36  tschachim
+  *	Small improvements of LC39.
+  *	
   *	Revision 1.9  2006/06/07 09:35:37  tschachim
   *	Saturn 5 assembly disabled until new VAB arrives.
   *	
@@ -153,14 +156,14 @@ VAB::~VAB() {
 void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 
 	SetEmptyMass(450000000);
-	SetSize(111);
+	SetSize(160);
 
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
 	VECTOR3 meshoffset = _V(0,0,0);
-    meshindexVAB = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\ApolloVAB"), &meshoffset);
+    meshindexVAB = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\VAB_exterior"), &meshoffset);
 	SetMeshVisibilityMode(meshindexVAB, MESHVIS_ALWAYS);
 
 	//
@@ -212,7 +215,7 @@ void VAB::clbkSetClassCaps(FILEHANDLE cfg) {
 		SetMeshVisibilityMode(meshindexSaturn[i], MESHVIS_NEVER);
 */
 	DefineAnimations();
-	SetTouchdownPoints(_V(0, -80.45, 10), _V(-10, -80.45, -10), _V(10, -80.45, -10));
+	SetTouchdownPoints(_V(0, 0.05, 10), _V(-10, 0.05, -10), _V(10, 0.05, -10));
 	SetCameraOffset(_V(-27.0, -12.0, -48.0));
 
 	VSRegVessel(GetHandle());
@@ -224,38 +227,38 @@ void VAB::DefineAnimations() {
 	int i = 0;
 
 	// High bay 1 door
-	static UINT highBay1Door1_groups[1] = {43};
+	static UINT highBay1Door1_groups[1] = {98};
 	static MGROUP_TRANSLATE highBay1Door1 (0, highBay1Door1_groups, 1, _V(12, 0, 0));
 
-	static UINT highBay1Door2_groups[1] = {44};
+	static UINT highBay1Door2_groups[1] = {99};
 	static MGROUP_TRANSLATE highBay1Door2 (0, highBay1Door2_groups, 1, _V(-12, 0, 0));
 
-	static UINT highBay1Door3_groups[2] = {44, 28};
+	static UINT highBay1Door3_groups[2] = {99,100};
 	static MGROUP_TRANSLATE highBay1Door3 (0, highBay1Door3_groups, 2, _V(-12, 0, 0));
 
-	static UINT highBay1Door4_groups[2] = {43, 29};
+	static UINT highBay1Door4_groups[2] = {97,98};
 	static MGROUP_TRANSLATE highBay1Door4 (0, highBay1Door4_groups, 2, _V(12, 0, 0));
 
-	static UINT highBay1Door5_groups[1] = {81};
-	static MGROUP_TRANSLATE highBay1Door5 (0, highBay1Door5_groups, 1, _V(0, 100, 0));
+	static UINT highBay1Door5_groups[1] = {121};
+	static MGROUP_TRANSLATE highBay1Door5 (0, highBay1Door5_groups, 1, _V(0, 106, 0));
 
-	static UINT highBay1Door6_groups[1] = {80};
-	static MGROUP_TRANSLATE highBay1Door6 (0, highBay1Door6_groups, 1, _V(0, 86, 0));
+	static UINT highBay1Door6_groups[1] = {120};
+	static MGROUP_TRANSLATE highBay1Door6 (0, highBay1Door6_groups, 1, _V(0, 91.5, 0));
 
-	static UINT highBay1Door7_groups[1] = {79};
-	static MGROUP_TRANSLATE highBay1Door7 (0, highBay1Door7_groups, 1, _V(0, 72, 0));
+	static UINT highBay1Door7_groups[1] = {119};
+	static MGROUP_TRANSLATE highBay1Door7 (0, highBay1Door7_groups, 1, _V(0, 77.36, 0));
 
-	static UINT highBay1Door8_groups[1] = {78};
-	static MGROUP_TRANSLATE highBay1Door8 (0, highBay1Door8_groups, 1, _V(0, 58, 0));
+	static UINT highBay1Door8_groups[1] = {118};
+	static MGROUP_TRANSLATE highBay1Door8 (0, highBay1Door8_groups, 1, _V(0, 63, 0));
 
-	static UINT highBay1Door9_groups[1] = {77};
-	static MGROUP_TRANSLATE highBay1Door9 (0, highBay1Door9_groups, 1, _V(0, 44, 0));
+	static UINT highBay1Door9_groups[1] = {117};
+	static MGROUP_TRANSLATE highBay1Door9 (0, highBay1Door9_groups, 1, _V(0, 48, 0));
 
-	static UINT highBay1Door10_groups[1] = {76};
-	static MGROUP_TRANSLATE highBay1Door10 (0, highBay1Door10_groups, 1, _V(0, 30, 0));
+	static UINT highBay1Door10_groups[1] = {116};
+	static MGROUP_TRANSLATE highBay1Door10 (0, highBay1Door10_groups, 1, _V(0, 34, 0));
 
-	static UINT highBay1Door11_groups[1] = {75};
-	static MGROUP_TRANSLATE highBay1Door11 (0, highBay1Door11_groups, 1, _V(0, 16, 0));
+	static UINT highBay1Door11_groups[1] = {92};
+	static MGROUP_TRANSLATE highBay1Door11 (0, highBay1Door11_groups, 1, _V(0, 19.73, 0));
 
 	anim_HighBay1Door = CreateAnimation(0.0);
 	AddAnimationComponent(anim_HighBay1Door, 0,      0.3, &highBay1Door1);
@@ -272,16 +275,16 @@ void VAB::DefineAnimations() {
 
 	// High bay 3 door
 	static UINT highBay3Door1_groups[1] = {45};
-	static MGROUP_TRANSLATE highBay3Door1 (0, highBay3Door1_groups, 1, _V(12, 0, 0));
+	static MGROUP_TRANSLATE highBay3Door1 (0, highBay3Door1_groups, 1, _V(1, 0, 0));
 
 	static UINT highBay3Door2_groups[1] = {46};
-	static MGROUP_TRANSLATE highBay3Door2 (0, highBay3Door2_groups, 1, _V(-12, 0, 0));
+	static MGROUP_TRANSLATE highBay3Door2 (0, highBay3Door2_groups, 1, _V(-1, 0, 0));
 
 	static UINT highBay3Door3_groups[2] = {46, 30};
-	static MGROUP_TRANSLATE highBay3Door3 (0, highBay3Door3_groups, 2, _V(-12, 0, 0));
+	static MGROUP_TRANSLATE highBay3Door3 (0, highBay3Door3_groups, 2, _V(-1, 0, 0));
 
 	static UINT highBay3Door4_groups[2] = {45, 31};
-	static MGROUP_TRANSLATE highBay3Door4 (0, highBay3Door4_groups, 2, _V(12, 0, 0));
+	static MGROUP_TRANSLATE highBay3Door4 (0, highBay3Door4_groups, 2, _V(1, 0, 0));
 
 	static UINT highBay3Door5_groups[1] = {88};
 	static MGROUP_TRANSLATE highBay3Door5 (0, highBay3Door5_groups, 1, _V(0, 100, 0));
@@ -514,7 +517,7 @@ void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 
 	// High bay 1 door
 	if (highBay1Door_Status == DOOR_CLOSING || highBay1Door_Status == DOOR_OPENING) {
-		double da = simdt / 300.0;
+		double da = simdt / 90.0;
 		if (highBay1Door_Status == DOOR_CLOSING) {
 			if (highBay1Door_Proc > 0.0)
 				highBay1Door_Proc = max(0.0, highBay1Door_Proc - da);
@@ -532,7 +535,7 @@ void VAB::clbkPostStep (double simt, double simdt, double mjd) {
 
 	// High bay 3 door
 	if (highBay3Door_Status == DOOR_CLOSING || highBay3Door_Status == DOOR_OPENING) {
-		double da = simdt / 300.0;
+		double da = simdt / 90.0;
 		if (highBay3Door_Status == DOOR_CLOSING) {
 			if (highBay3Door_Proc > 0.0)
 				highBay3Door_Proc = max(0.0, highBay3Door_Proc - da);
