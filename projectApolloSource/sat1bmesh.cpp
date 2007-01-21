@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2006/12/07 18:52:43  tschachim
+  *	New LC34, Bugfixes.
+  *	
   *	Revision 1.51  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -692,7 +695,7 @@ void Saturn1b::SetSecondStageEngines ()
 	// *********************** thruster definitions ********************************
 	//
 
-	VECTOR3 m_exhaust_pos1= {0,0,-9.-STG1O+9};
+	VECTOR3 m_exhaust_pos1= {0,0,-9.-STG1O+10};
 
 	//
 	// orbiter main thrusters
