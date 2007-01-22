@@ -595,7 +595,13 @@
 #define IDB_SPS_INJ_VLV                                     854
 #define IDB_TELESCOPE_WIDE                                  855
 #define IDB_SEXTANT_WIDE                                    856
-#define AID_TELECOMTB										857
+#define IDB_THUMBWHEEL_GPI_PITCH                            857
+#define AID_SPSGIMBALPITCHTHUMBWHEEL                        858
+#define AID_SPSGIMBALYAWTHUMBWHEEL                          859
+#define IDB_THUMBWHEEL_GPI_YAW                              860
+#define AID_TELECOMTB										861
+#define IDB_THC                                             862
+#define AID_THC                                             863
 
 // Next default values for new objects
 //

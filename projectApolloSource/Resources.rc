@@ -169,6 +169,9 @@ IDB_CSM_MAIN_MIDDLE_PANEL                   BITMAP  "csm_main_middle_panel.bmp"
 IDB_SPS_INJ_VLV                             BITMAP  "sps_injector_indicators.bmp"
 IDB_TELESCOPE_WIDE                          BITMAP  "alignment_optical_telescope_view_wide.bmp"
 IDB_SEXTANT_WIDE                            BITMAP  "sextant_view_wide.bmp"
+IDB_THUMBWHEEL_GPI_PITCH                    BITMAP  "thumbwheel_gpi_pitch.bmp"
+IDB_THUMBWHEEL_GPI_YAW                      BITMAP  "thumbwheel_gpi_yaw.bmp"
+IDB_THC                                     BITMAP  "thc.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
