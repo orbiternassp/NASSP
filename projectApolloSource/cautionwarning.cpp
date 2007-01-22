@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2007/01/06 04:44:48  dseagrav
+  *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
+  *	
   *	Revision 1.19  2007/01/02 01:38:24  dseagrav
   *	Digital uplink and associated stuff.
   *	
@@ -119,6 +122,7 @@ CautionWarningSystem::CautionWarningSystem(Sound &mastersound, Sound &buttonsoun
 	MasterAlarmPressed = false;
 	InhibitNextMasterAlarm = false;
 	PlaySounds = true;
+	UplinkTestState = 0;
 
 	for (int i = 0; i < 30; i++) {
 		LeftLights[i] = false;
