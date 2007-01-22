@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/11/20 16:38:27  tschachim
+  *	Bugfix CWS CM/SM separation.
+  *	
   *	Revision 1.1  2006/11/13 14:47:34  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -46,6 +49,13 @@
 
 #include "saturn.h"
 
+inline void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %lf", item, d);
+	oapiWriteLine(scn, buffer);
+}
 
 SPSPropellantSource::SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) : 
 	PropellantSource(ph), DCPower(0, p) {
@@ -93,7 +103,7 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 	if (our_vessel->GetStage() < CSM_LEM_STAGE) {
 		p = our_vessel->SM_FuelMass;
 		o = p * SPS_NORM_OXIDIZER_FLOW;
-		pmax = p;
+		pmax = SPS_DEFAULT_PROPELLANT;
 
 		propellantPressurePSI = 175.0;
 		heliumPressurePSI = 3600.0;
@@ -111,7 +121,7 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 
 	} else {
 		p = our_vessel->GetPropellantMass(source_prop);
-		pmax = our_vessel->GetPropellantMaxMass(source_prop);
+		pmax = SPS_DEFAULT_PROPELLANT; 
 		
 		if (!propellantInitialized) {
 			lastPropellantMass = p;
@@ -495,7 +505,10 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	}
 
 	// CMC mode
-	if (saturn->SCContSwitch.IsUp()) {
+
+	// TODO: TVC CW is supplied by SCS LOGIC BUS 2
+	// TODO: SC CONT switch is supplied by ???
+	if (saturn->SCContSwitch.IsUp() && !saturn->THCRotary.IsClockwise()) {
 		// Check i/o channel
 		ChannelValue11 val11;
 		val11.Value = saturn->agc.GetOutputChannel(011);
@@ -569,6 +582,68 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	} else {
 		saturn->rjec.SPSActive = false;
 	}
+
+	//
+	// TVC gimbal actuators
+	//
+
+	// Get BMAG1 attitude errors
+	VECTOR3 error = saturn->bmag1.GetAttitudeError();
+	//VECTOR3 errorBefore = error;
+
+	if (error.x > 0) { // Positive Error
+		if (error.x > PI) { 
+			error.x = -(TWO_PI - error.x); 
+		}
+	} else {		  // Negative Error
+		if (error.x < -PI) {
+			error.x = TWO_PI + error.x;
+		}
+	}
+	if (error.y > 0) { 
+		if (error.y > PI) { 
+			error.y = TWO_PI - error.y; 
+		} else {
+			error.y = -error.y; 
+		}
+	} else {
+		if (error.y < -PI) {
+			error.y = -(TWO_PI + error.y); 
+		} else { 
+			error.y = -error.y;
+		}
+	}
+	if (error.z > 0) { 
+		if (error.z > PI){ 
+			error.z = -(TWO_PI - error.z); 
+		}
+	} else {
+		if (error.z < -PI) {
+			error.z = TWO_PI + error.z; 
+		}
+	}
+	// Now adjust for rotation
+	error = saturn->eda.AdjustErrorsForRoll(saturn->bmag1.GetAttitude(), error);
+
+	// TVC SCS automatic mode only when BMAG 1 uncaged and powered
+	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().x == 0) error.x = 0;
+	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().y == 0) error.y = 0;
+	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().z == 0) error.z = 0;
+
+	// sprintf(oapiDebugString(), "pitch before %.3f after %.3f - yaw before %.3f after %.3f",  errorBefore.y * DEG, error.y * DEG, errorBefore.z * DEG, -error.z * DEG);
+
+	// Do time step
+	pitchGimbalActuator.Timestep(simt, simdt, error.y, saturn->gdc.rates.x, saturn->eca.rhc_ac_y);
+	yawGimbalActuator.Timestep(simt, simdt, -error.z, -saturn->gdc.rates.y, saturn->eca.rhc_ac_z);
+
+	if (saturn->GetStage() == CSM_LEM_STAGE && spsThruster) {
+		// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
+		VECTOR3 spsvector;
+		spsvector.x = yawGimbalActuator.GetPosition() * RAD; // Convert deg to rad
+		spsvector.y = pitchGimbalActuator.GetPosition() * RAD;
+		spsvector.z = 1;
+		saturn->SetThrusterDir(spsThruster, spsvector);
+	}
 }
 
 void SPSEngine::SystemTimestep(double simdt) {
@@ -578,6 +653,9 @@ void SPSEngine::SystemTimestep(double simdt) {
 
 	if (injectorValves34Open && saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE) 
 		saturn->dVThrust2Switch.DrawPower(76.6);
+
+	pitchGimbalActuator.SystemTimestep(simdt);
+	yawGimbalActuator.SystemTimestep(simdt);
 }
 
 double SPSEngine::GetChamberPressurePSI() {
@@ -628,6 +706,290 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "ENFORCEBURN", 11)) {
 			sscanf (line+11, "%d", &i);
 			enforceBurn = (i != 0);
+		}
+	}
+}
+
+
+SPSGimbalActuator::SPSGimbalActuator() {
+
+	position = 0;
+	commandedPosition = 0;
+	cmcPosition = 0;
+	scsPosition = 0;
+	lastAttitudeError = 0;
+	activeSystem = 1;
+	motor1Running = false;
+	motor2Running = false;
+
+	saturn = 0;
+	tvcGimbalDriveSwitch = 0;
+	gimbalMotor1Switch = 0;
+	gimbalMotor2Switch = 0;
+	motor1Source = 0;
+	motor1StartSource = 0;
+	motor2Source = 0;
+	motor2StartSource = 0;
+	trimThumbwheel = 0;
+	scsTvcModeSwitch = 0;
+}
+
+SPSGimbalActuator::~SPSGimbalActuator() {
+	// Nothing for now.
+}
+
+void SPSGimbalActuator::Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
+	                         e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource,
+							 ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch) {
+
+	saturn = s;
+	tvcGimbalDriveSwitch = driveSwitch;
+	gimbalMotor1Switch = m1Switch;
+	gimbalMotor2Switch = m2Switch;
+	motor1Source = m1Source;
+	motor1StartSource = m1StartSource;
+	motor2Source = m2Source;
+	motor2StartSource = m2StartSource;
+	trimThumbwheel = tThumbwheel;
+	scsTvcModeSwitch = modeSwitch;
+}
+
+void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError, double attitudeRate, int rhcAxis) {
+
+	if (!saturn) return;
+
+	//
+	// Motors
+	//
+
+	if (motor1Running) {
+		if (gimbalMotor1Switch->IsDown() || motor1Source->Voltage() < SP_MIN_DCVOLTAGE) {
+			motor1Running = false;
+		}
+	} else {
+		if (gimbalMotor1Switch->IsUp() && motor1Source->Voltage() > SP_MIN_DCVOLTAGE && 
+			motor1StartSource->Voltage() > SP_MIN_DCVOLTAGE ) {
+			motor1Running = true;
+		}
+	}
+
+	if (motor2Running) {
+		if (gimbalMotor2Switch->IsDown() || motor2Source->Voltage() < SP_MIN_DCVOLTAGE) {
+			motor2Running = false;
+		}
+	} else {
+		if (gimbalMotor2Switch->IsUp() && motor2Source->Voltage() > SP_MIN_DCVOLTAGE && 
+			motor2StartSource->Voltage() > SP_MIN_DCVOLTAGE ) {
+			motor2Running = true;
+		}
+	}
+
+	// sprintf(oapiDebugString(), "Motor1 %d Motor2 %d", motor1Running, motor2Running);
+
+	//
+	// Process commanded position
+	//
+
+	if (saturn->SCContSwitch.IsUp() && !saturn->THCRotary.IsClockwise()) {
+		// CMC mode
+		commandedPosition = cmcPosition;
+
+	} else {		
+		// SCS modes
+		double rhcPercent = 0;
+		if (rhcAxis < 28673) { 
+			rhcPercent = (28673. - (double)rhcAxis) / 28673.; 
+		}
+		if (rhcAxis > 36863) {  
+			rhcPercent = (36863. - (double)rhcAxis) / 36863.;
+		}
+
+		// AUTO
+		if (scsTvcModeSwitch->IsUp() && !(saturn->SCContSwitch.IsDown() && saturn->THCRotary.IsClockwise())) {
+			scsPosition = attitudeError * DEG + (attitudeError - lastAttitudeError) / simdt * DEG;
+			lastAttitudeError = attitudeError;
+
+		// ACCEL CMD
+		} else if (scsTvcModeSwitch->IsDown()) {
+			scsPosition += rhcPercent * simdt;
+			
+		// RATE CMD
+		} else {
+			scsPosition = attitudeRate * DEG + rhcPercent * 5.0;	// +/- 5° per second maximum for now
+		}
+		
+		// Allow max. 4° for now
+		commandedPosition = max(min(scsPosition, 4.0), -4.0) + ((trimThumbwheel->GetState() - 8.0) / 2.0); 
+	}
+
+	//
+	// Which system is active?
+	//
+
+	// "Default" system is 1
+	activeSystem = 1;
+
+	// Switched to AUTO and THC CLOCKWISE
+	if (tvcGimbalDriveSwitch->IsCenter() && saturn->THCRotary.IsClockwise()) {
+		activeSystem = 2;
+	}
+
+	// TODO Auto switch-over because of overcurrent 
+
+	// Switched to system 2
+	if (tvcGimbalDriveSwitch->IsDown()) {
+		activeSystem = 2;
+	}
+
+	//
+	// Drive gimbals when powered
+	//
+
+	if (activeSystem == 1) {
+		if (IsSystem1Powered() && motor1Running) {
+			position = commandedPosition;  // Instant positioning	
+		}
+	} else {
+		if (IsSystem2Powered() && motor2Running) {
+			position = commandedPosition;  // Instant positioning	
+		}
+	}
+
+	// Only 5.5 degrees of travel allowed.
+	if (position > 5.5) { position = 5.5; }
+	if (position < -5.5) { position = -5.5; }
+
+	// sprintf(oapiDebugString(), "position %.3f commandedPosition %.3f cmcPosition %.3f", position, commandedPosition, cmcPosition);
+}
+
+void SPSGimbalActuator::SystemTimestep(double simdt) {
+
+	if (activeSystem == 1 && IsSystem1Powered()) {
+		DrawSystem1Power();
+	
+	} else if (IsSystem2Powered()) {
+		DrawSystem2Power();
+	}
+
+	if (motor1Running) {
+		motor1Source->DrawPower(100);	// TODO real power consumption is unknown 
+	}
+	if (motor2Running) {
+		motor2Source->DrawPower(100);	// TODO real power consumption is unknown 
+	}
+}
+
+bool SPSGimbalActuator::IsSystem1Powered() {
+
+	if (saturn->TVCServoPower1Switch.IsUp()) {
+		if (saturn->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE  && 
+			saturn->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
+			return true;
+		}
+	} else if (saturn->TVCServoPower1Switch.IsDown()) {
+		if (saturn->StabContSystemAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE  && 
+			saturn->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool SPSGimbalActuator::IsSystem2Powered() {
+
+	if (saturn->TVCServoPower2Switch.IsUp()) {
+		if (saturn->StabContSystemAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE  && 
+			saturn->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
+			return true;
+		}
+	} else if (saturn->TVCServoPower2Switch.IsDown()) {
+		if (saturn->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE  && 
+			saturn->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void SPSGimbalActuator::DrawSystem1Power() {
+
+	if (saturn->TVCServoPower1Switch.IsUp()) {
+		saturn->StabContSystemTVCAc1CircuitBraker.DrawPower(1.36);	// Systems handbook
+		saturn->SystemMnACircuitBraker.DrawPower(10);				// TODO real power consumption is unknown 
+
+	} else if (saturn->TVCServoPower1Switch.IsDown()) {
+		saturn->StabContSystemAc2CircuitBraker.DrawPower(1.36);		// Systems handbook
+		saturn->SystemMnBCircuitBraker.DrawPower(10);				// TODO real power consumption is unknown 
+	}
+}
+
+void SPSGimbalActuator::DrawSystem2Power() {
+
+	if (saturn->TVCServoPower2Switch.IsUp()) {
+		saturn->StabContSystemAc1CircuitBraker.DrawPower(1.36);		// Systems handbook
+		saturn->SystemMnACircuitBraker.DrawPower(10);				// TODO real power consumption is unknown 
+
+	} else if (saturn->TVCServoPower2Switch.IsDown()) {
+		saturn->ECATVCAc2CircuitBraker.DrawPower(1.36);				// Systems handbook
+		saturn->SystemMnBCircuitBraker.DrawPower(10);				// TODO real power consumption is unknown 
+	}
+}
+
+void SPSGimbalActuator::ChangeCMCPosition(double delta) {
+
+	cmcPosition += delta;
+}
+
+void SPSGimbalActuator::SaveState(FILEHANDLE scn) {
+
+	// START_STRING is written in Saturn
+	WriteScenario_double(scn, "POSITION", position);
+	WriteScenario_double(scn, "COMMANDEDPOSITION", commandedPosition);
+	WriteScenario_double(scn, "CMCPOSITION", cmcPosition);
+	WriteScenario_double(scn, "SCSPOSITION", scsPosition);
+	WriteScenario_double(scn, "LASTATTITUDEERROR", lastAttitudeError);
+	oapiWriteScenario_int(scn, "ACTIVESYSTEM", activeSystem);
+	oapiWriteScenario_int(scn, "MOTOR1RUNNING", (motor1Running ? 1 : 0));
+	oapiWriteScenario_int(scn, "MOTOR2RUNNING", (motor2Running ? 1 : 0));
+
+	oapiWriteLine(scn, SPSGIMBALACTUATOR_END_STRING);
+}
+
+void SPSGimbalActuator::LoadState(FILEHANDLE scn) {
+
+	char *line;
+	int i;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, SPSGIMBALACTUATOR_END_STRING, sizeof(SPSGIMBALACTUATOR_END_STRING))) {
+			return;
+		}
+
+		if (!strnicmp (line, "POSITION", 8)) {
+			sscanf(line + 8, "%lf", &position);
+		}
+		else if (!strnicmp (line, "COMMANDEDPOSITION", 17)) {
+			sscanf(line + 17, "%lf", &commandedPosition);
+		}
+		else if (!strnicmp (line, "CMCPOSITION", 11)) {
+			sscanf(line + 11, "%lf", &cmcPosition);
+		}
+		else if (!strnicmp (line, "SCSPOSITION", 11)) {
+			sscanf(line + 11, "%lf", &scsPosition);
+		}
+		else if (!strnicmp (line, "LASTATTITUDEERROR", 17)) {
+			sscanf(line + 17, "%lf", &lastAttitudeError);
+		}
+		else if (!strnicmp (line, "ACTIVESYSTEM", 12)) {
+			sscanf(line + 12, "%d", &activeSystem);
+		}
+		else if (!strnicmp (line, "MOTOR1RUNNING", 13)) {
+			sscanf(line + 13, "%d", &i);
+			motor1Running = (i != 0);
+		}
+		else if (!strnicmp (line, "MOTOR2RUNNING", 13)) {
+			sscanf(line + 13, "%d", &i);
+			motor2Running = (i != 0);
 		}
 	}
 }

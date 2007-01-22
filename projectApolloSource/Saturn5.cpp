@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.93  2007/01/11 23:08:21  chode99
+  *	New CoeffFunc lift model for CM includes Mach dependence
+  *	
   *	Revision 1.92  2006/11/30 14:16:12  tschachim
   *	Bugfixes abort modes.
   *	
@@ -463,11 +466,11 @@ void SaturnV::initSaturnV()
 	SI_RetroNum = 8;
 	SII_RetroNum = 4;
 
-	SM_EmptyMass = 6100;
+	SM_EmptyMass = 3590;	// TODO The Apollo 15-17 SM was heavier, about 4870 kg
 	SM_FuelMass = SPS_DEFAULT_PROPELLANT;
 
-	CM_EmptyMass = 5700;
-	CM_FuelMass = 75;
+	CM_EmptyMass = 5430;
+	CM_FuelMass =  CM_RCS_FUEL_PER_TANK * 2.; // The CM has 2 tanks
 
 	CalculateStageMass();
 

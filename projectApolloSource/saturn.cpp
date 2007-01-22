@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.189  2007/01/21 00:45:54  chode99
+  *	Corrected the CM roll jet direction, tweaked the position of some CM jets to coincide w/mesh
+  *	
   *	Revision 1.188  2007/01/20 02:09:51  dseagrav
   *	Tweaked RCS positions
   *	
@@ -384,7 +387,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	timedSounds(soundlib),
 	iuCommandConnector(agc),
 	sivbControlConnector(agc),
-	ascp(Sclick)
+	ascp(Sclick),
+	RHCNormalPower("RHCNormalPower", Panelsdk),
+	RHCDirect1Power("RHCDirect1Power", Panelsdk),
+	RHCDirect2Power("RHCDirect2Power", Panelsdk)
 
 {
 	InitSaturnCalled = false;
@@ -446,6 +452,7 @@ void Saturn::initSaturn()
 	ChutesAttached = true;
 
 	TLICapableBooster = false;
+	TLISoundsLoaded = false;
 
 	//
 	// Do we have the Skylab-type SM and CM?
@@ -703,10 +710,10 @@ void Saturn::initSaturn()
 	// Default masses.
 	//
 
-	CM_EmptyMass = 5440;
-	CM_FuelMass = 123;
+	CM_EmptyMass = 5430;
+	CM_FuelMass =  CM_RCS_FUEL_PER_TANK * 2.; // The CM has 2 tanks
 
-	SM_EmptyMass = 3110;
+	SM_EmptyMass = 3590;
 	SM_FuelMass = SPS_DEFAULT_PROPELLANT;
 
 	S4PL_Mass = 14696;
@@ -1553,6 +1560,13 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	dockingprobe.SaveState(scn);
 	SPSPropellant.SaveState(scn);
 	SPSEngine.SaveState(scn);
+
+	oapiWriteLine(scn, SPSGIMBALACTUATOR_PITCH_START_STRING);
+	SPSEngine.pitchGimbalActuator.SaveState(scn);
+
+	oapiWriteLine(scn, SPSGIMBALACTUATOR_YAW_START_STRING);
+	SPSEngine.yawGimbalActuator.SaveState(scn);
+	
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
 	fdaiRight.SaveState(scn, FDAI2_START_STRING, FDAI2_END_STRING);
 
@@ -2428,6 +2442,12 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			int i;
 			sscanf(line + 5, "%d", &i);
 			NoHGA = (i != 0);
+		}
+		else if (!strnicmp(line, SPSGIMBALACTUATOR_PITCH_START_STRING, sizeof(SPSGIMBALACTUATOR_PITCH_START_STRING))) {
+			SPSEngine.pitchGimbalActuator.LoadState(scn);
+		}
+		else if (!strnicmp(line, SPSGIMBALACTUATOR_YAW_START_STRING, sizeof(SPSGIMBALACTUATOR_YAW_START_STRING))) {
+			SPSEngine.yawGimbalActuator.LoadState(scn);
 		}
 		else
 			found =false;
@@ -3459,9 +3479,9 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 
 	// DS20060223 The number 154.4482019 is the combined fuel + oxidizer capacity of one pair of CM RCS tanks.
 	if (!ph_rcs_cm_1)
-		ph_rcs_cm_1 = CreatePropellantResource(154.4482019); // Was RCS_FUEL_CM
+		ph_rcs_cm_1 = CreatePropellantResource(CM_RCS_FUEL_PER_TANK); 
 	if (!ph_rcs_cm_2)
-		ph_rcs_cm_2 = CreatePropellantResource(154.4482019);
+		ph_rcs_cm_2 = CreatePropellantResource(CM_RCS_FUEL_PER_TANK);
 
 	//
 	// display rcs stage propellant level in generic HUD
@@ -3937,7 +3957,6 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 void Saturn::LoadTLISounds()
 
 {
-	soundlib.LoadMissionSound(SMJetS, SM_SEP_SOUND, DEFAULT_SM_SEP_SOUND);
 	soundlib.LoadMissionSound(STLI, GO_FOR_TLI_SOUND, NULL);
 	soundlib.LoadMissionSound(STLIStart, TLI_START_SOUND, NULL);
 	soundlib.LoadMissionSound(SecoSound, SECO_SOUND, SECO_SOUND);
@@ -4090,9 +4109,13 @@ void Saturn::GenericLoadStateSetup()
 		soundlib.LoadSound(SepS, SEPMOTOR_SOUND, INTERNAL_ONLY);
 	}
 
-	if (TLISoundsLoaded)
+	if (!TLISoundsLoaded)
 	{
 		LoadTLISounds();
+	}
+
+	if (stage <= CSM_LEM_STAGE) {
+		soundlib.LoadMissionSound(SMJetS, SM_SEP_SOUND, DEFAULT_SM_SEP_SOUND);
 	}
 
 	if (stage == CM_RECOVERY_STAGE)

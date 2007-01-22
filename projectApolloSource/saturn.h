@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.230  2007/01/14 13:02:43  dseagrav
+  *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
+  *	
   *	Revision 1.229  2007/01/06 23:08:32  dseagrav
   *	More telecom stuff. A lot of the S-band signal path exists now, albeit just to consume electricity.
   *	
@@ -743,13 +746,11 @@ public:
 	///
 	virtual void SetCMRCSState(int Thruster, bool Active);
 
-	// DS20060226 Added
-	double sps_pitch_position;
-	double sps_yaw_position;
-	virtual double SetSPSPitch(double direction);
-	virtual double SetSPSYaw(double direction);
+	//
+	// RHC/THC 
+	//
 
-	// DS20060301 DirectInput stuff
+	// DirectInput stuff
 	/// Handle to DLL instance
 	HINSTANCE dllhandle;
 	/// pointer to DirectInput class itself
@@ -1564,6 +1565,9 @@ protected:
 	SwitchRow AccelGMeterRow;
 	SaturnAccelGMeter AccelGMeter;
 
+	SwitchRow THCRotaryRow;
+	THCRotarySwitch THCRotary;
+
 	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
 	LESMotorFireSwitch LesMotorFireSwitch;
 	GuardedPushSwitch CanardDeploySwitch;
@@ -1740,7 +1744,7 @@ protected:
 	GuardedToggleSwitch GTASwitch;
 
 	SwitchRow SCContCMCModeSwitchesRow;
-	AGCIOSwitch SCContSwitch;
+	SaturnSCContSwitch SCContSwitch;
 	CMCModeHoldFreeSwitch CMCModeSwitch;
 
 	SwitchRow SCSTvcSwitchesRow;
@@ -2017,6 +2021,11 @@ protected:
 	///
 	SaturnSPSSwitch SPSswitch;
 
+	SwitchRow SPSGimbalPitchThumbwheelRow;
+	ThumbwheelSwitch SPSGimbalPitchThumbwheel;
+	SwitchRow SPSGimbalYawThumbwheelRow;
+	ThumbwheelSwitch SPSGimbalYawThumbwheel;
+
 	///
 	/// \brief SPS meters.
 	///
@@ -2037,6 +2046,12 @@ protected:
 
 	SwitchRow LVSPSPcMeterRow;
 	SaturnLVSPSPcMeter LVSPSPcMeter;
+
+	SwitchRow GPFPIMeterRow;
+	SaturnGPFPIPitchMeter GPFPIPitch1Meter;
+	SaturnGPFPIPitchMeter GPFPIPitch2Meter;
+	SaturnGPFPIYawMeter GPFPIYaw1Meter;
+	SaturnGPFPIYawMeter GPFPIYaw2Meter;
 
 	///
 	/// \brief Cryo tank meters
@@ -2701,9 +2716,9 @@ protected:
 	SwitchRow EDSPowerSwitchRow;
 	ToggleSwitch EDSPowerSwitch;
 
-	SwitchRow TVCServorPowerSwitchesRow;
-	ThreePosSwitch TVCServorPower1Switch;
-	ThreePosSwitch TVCServorPower2Switch;
+	SwitchRow TVCServoPowerSwitchesRow;
+	ThreePosSwitch TVCServoPower1Switch;
+	ThreePosSwitch TVCServoPower2Switch;
 
 	SwitchRow LogicPowerSwitchRow;
 	ToggleSwitch LogicPowerSwitch;
@@ -3095,6 +3110,14 @@ protected:
 	AtmRegen *SuitCompressor1;
 	AtmRegen *SuitCompressor2;
 	h_crew *Crew;
+
+	//
+	// RHC/THC 
+	//
+
+	PowerMerge RHCNormalPower;
+	PowerMerge RHCDirect1Power;
+	PowerMerge RHCDirect2Power;
 
 
 	//
@@ -3677,20 +3700,6 @@ protected:
 	char LEMName[64];
 
 	//
-	// GPFPI Values
-	//
-	bool initialized;
-	int PitchClusterCurrent;
-	int YawClusterCurrent;
-	int PitchClusterActual;
-	int YawClusterActual;
-	int dPC;
-	int dYC;
-
-
-//	FILE *outstr;
-
-	//
 	// Connectors.
 	//
 
@@ -3779,9 +3788,11 @@ protected:
 	friend class USB;
 	friend class SPSPropellantSource;
 	friend class SPSEngine;
+	friend class SPSGimbalActuator;
 	friend class CMOptics;
 	friend class CSMCautionWarningSystem;
 	friend class CMACInverterSwitch;
+	friend class SaturnSCControlSetter;
 };
 
 extern void BaseInit();

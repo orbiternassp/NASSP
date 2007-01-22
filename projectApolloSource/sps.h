@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/11/20 16:38:27  tschachim
+  *	Bugfix CWS CM/SM separation.
+  *	
   *	Revision 1.1  2006/11/13 14:47:34  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -82,6 +85,45 @@ protected:
 	double lastPropellantMass;
 };
 
+
+class SPSGimbalActuator {
+
+public:
+	SPSGimbalActuator();
+	virtual ~SPSGimbalActuator();
+
+	void Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
+	          e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource,
+			  ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch);
+	void Timestep(double simt, double simdt, double attitudeError, double attitudeRate, int rhcAxis);
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+	double GetPosition() { return position; }
+	void ChangeCMCPosition(double delta);
+
+protected:
+	bool IsSystem1Powered();
+	bool IsSystem2Powered();
+	void DrawSystem1Power();
+	void DrawSystem2Power();
+
+	double position;
+	double commandedPosition;
+	double cmcPosition;
+	double scsPosition;
+	double lastAttitudeError;
+	int activeSystem;
+	bool motor1Running;
+	bool motor2Running;
+
+	Saturn *saturn;
+	ThreePosSwitch *tvcGimbalDriveSwitch, *gimbalMotor1Switch, *gimbalMotor2Switch, *scsTvcModeSwitch;
+	e_object *motor1Source, *motor1StartSource, *motor2Source, *motor2StartSource;
+	ThumbwheelSwitch *trimThumbwheel;
+};
+
+
 class SPSEngine {
 
 public:
@@ -99,6 +141,9 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
+	SPSGimbalActuator pitchGimbalActuator;
+	SPSGimbalActuator yawGimbalActuator;
+
 protected:
 	bool injectorValves12Open;
 	bool injectorValves34Open;
@@ -110,7 +155,6 @@ protected:
 };
 
 
-
 //
 // Strings for state saving.
 //
@@ -120,5 +164,9 @@ protected:
 
 #define SPSENGINE_START_STRING "SPSENGINE_BEGIN"
 #define SPSENGINE_END_STRING   "SPSENGINE_END"
+
+#define SPSGIMBALACTUATOR_PITCH_START_STRING "SPSGIMBALACTUATOR_PITCH_BEGIN"
+#define SPSGIMBALACTUATOR_YAW_START_STRING "SPSGIMBALACTUATOR_YAW_BEGIN"
+#define SPSGIMBALACTUATOR_END_STRING "SPSGIMBALACTUATOR_END"
 
 #endif
