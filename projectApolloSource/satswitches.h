@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2007/01/14 13:02:42  dseagrav
+  *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
+  *	
   *	Revision 1.20  2006/12/19 15:56:05  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -672,6 +675,51 @@ protected:
 	SURFHANDLE FrameSurface;
 };
 
+class SaturnGPFPIMeter : public MeterSwitch {
+public:
+	SaturnGPFPIMeter() { DCSource = 0; ACSource = 0; }
+	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ToggleSwitch *gpfpiindswitch, int xoffset);
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void WireTo(e_object *dc, e_object *ac) { DCSource = dc; ACSource = ac; };
+	virtual double AdjustForPower(double val);
+
+protected:
+	SURFHANDLE NeedleSurface;
+	Saturn *Sat;
+	ToggleSwitch *GPFPIIndicatorSwitch;
+	e_object *DCSource, *ACSource;
+	int xOffset;
+};
+
+class SaturnGPFPIPitchMeter : public SaturnGPFPIMeter {
+public:
+	double QueryValue();
+};
+
+class SaturnGPFPIYawMeter : public SaturnGPFPIMeter {
+public:
+	double QueryValue();
+};
+
+class FDAIPowerRotationalSwitch: public RotationalSwitch {
+public:
+	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = NULL; ACSource1 = ACSource2 = DCSource1 = DCSource2 = NULL; GPFPIPitch1 = GPFPIPitch2 = GPFPIYaw1 = GPFPIYaw2 = NULL; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2, 
+		      e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2, 
+			  SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2);
+
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newValue);
+	void LoadState(char *line);
+
+protected:
+	void CheckFDAIPowerState();
+
+	FDAI *FDAI1, *FDAI2;
+	SaturnGPFPIMeter *GPFPIPitch1, *GPFPIPitch2, *GPFPIYaw1, *GPFPIYaw2;
+	e_object *DCSource1, *DCSource2, *ACSource1, *ACSource2;
+};
+
 ///
 /// A two-position switch which operates the CM AC inverter motor-switches.
 /// \brief CM AC Inverter Switch
@@ -688,4 +736,28 @@ public:
 protected:
 	int acbus,acinv;
 	Saturn *sat;	
+};
+
+class SaturnSCControlSetter {
+public:
+	void SetSCControl(Saturn *sat);
+};
+
+class SaturnSCContSwitch : public SaturnToggleSwitch, public SaturnSCControlSetter {
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
+};
+
+class THCRotarySwitch : public RotationalSwitch, public SaturnSCControlSetter  {
+public:
+	THCRotarySwitch() { sat = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newValue);
+	bool IsClockwise() { return GetState() == 2; }
+	bool IsCounterClockwise() { return GetState() == 3; }
+
+protected:
+	Saturn *sat;
 };
