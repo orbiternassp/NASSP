@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2006/11/24 22:42:44  dseagrav
+  *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
+  *	
   *	Revision 1.73  2006/11/13 14:47:34  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -1761,81 +1764,6 @@ RotationalSwitchPosition::~RotationalSwitchPosition() {
 }
 
 
-void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2,
-    					 		     e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2)
-{
-	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
-	FDAI1 = F1;
-	FDAI2 = F2;
-
-	DCSource1 = dc1;
-	DCSource2 = dc2;
-	ACSource1 = ac1;
-	ACSource2 = ac2;
-
-	CheckFDAIPowerState();
-}
-
-//
-// Wire up the FDAIs to the appropriate power source based on switch position. We wire them to this
-// switch, and higher level code can wire the switch to a suitable power source.
-//
-
-void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
-
-{
-	switch (GetState()) {
-	case 0:
-		FDAI1->WireTo(NULL, NULL);
-		FDAI2->WireTo(NULL, NULL);
-		break;
-
-	case 1:
-		FDAI1->WireTo(DCSource1, ACSource1);
-		FDAI2->WireTo(NULL, NULL);
-		break;
-
-	case 2:
-		FDAI1->WireTo(NULL, NULL);
-		FDAI2->WireTo(DCSource2, ACSource2);
-		break;
-
-	case 3:
-		FDAI1->WireTo(DCSource1, ACSource1);
-		FDAI2->WireTo(DCSource2, ACSource2);
-		break;
-	}
-}
-
-bool FDAIPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
-		CheckFDAIPowerState();
-		return true;
-	}
-
-	return false;
-}
-
-bool FDAIPowerRotationalSwitch::SwitchTo(int newValue)
-
-{
-	if (RotationalSwitch::SwitchTo(newValue)) {
-		CheckFDAIPowerState();
-		return true;
-	}
-
-	return false;
-}
-
-void FDAIPowerRotationalSwitch::LoadState(char *line)
-
-{
-	RotationalSwitch::LoadState(line);
-	CheckFDAIPowerState();
-}
-
 PowerStateRotationalSwitch::PowerStateRotationalSwitch()
 
 {
@@ -1911,9 +1839,15 @@ ThumbwheelSwitch::~ThumbwheelSwitch() {
 
 void ThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState) {
 
+	Register(scnh, n, defaultState, maximumState, false);
+}
+
+void ThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal) {
+
 	name = n;
 	state = defaultState;
 	maxState = maximumState;
+	isHorizontal = horizontal;
 	scnh.RegisterSwitch(this);
 }
 
@@ -1958,16 +1892,31 @@ bool ThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 	//
 
 	if (event == PANEL_MOUSE_LBDOWN) {
-		if (my < (y + (height / 2.0))) {
-			if (state < maxState) {
-				state++;
-				sclick.play();
+		if (isHorizontal) {
+			if (mx < (x + (width / 2.0))) {
+				if (state < maxState) {
+					state++;
+					sclick.play();
+				}
 			}
-		}
-		else {
-			if (state > 0) {
-				state--;
-				sclick.play();
+			else {
+				if (state > 0) {
+					state--;
+					sclick.play();
+				}
+			}
+		} else {
+			if (my < (y + (height / 2.0))) {
+				if (state < maxState) {
+					state++;
+					sclick.play();
+				}
+			}
+			else {
+				if (state > 0) {
+					state--;
+					sclick.play();
+				}
 			}
 		}
 	}
@@ -3081,7 +3030,6 @@ bool AGCIOSwitch::CheckMouseClick(int event, int mx, int my)
 		}
 		return true;
 	}
-
 	return false;
 }
 

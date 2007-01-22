@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2006/11/24 22:42:44  dseagrav
+  *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
+  *	
   *	Revision 1.56  2006/11/13 14:47:34  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -1048,10 +1051,10 @@ public:
 	void AddPosition(int value, double angle);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	void DrawFlash(SURFHANDLE drawSurface);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newValue);
-	void SaveState(FILEHANDLE scn);
-	void LoadState(char *line);
+	virtual bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newValue);
+	virtual void SaveState(FILEHANDLE scn);
+	virtual void LoadState(char *line);
 	int GetState();
 	int operator=(const int b);
 	operator int();
@@ -1074,26 +1077,6 @@ protected:
 	void SetValue(int newValue);
 	double AngleDiff(double a1, double a2);
 	void DeletePositions();
-};
-
-
-class FDAI;
-
-class FDAIPowerRotationalSwitch: public RotationalSwitch {
-public:
-	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = NULL; ACSource1 = ACSource2 = DCSource1 = DCSource2 = NULL; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2, 
-		      e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2);
-
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newValue);
-	void LoadState(char *line);
-
-protected:
-	void CheckFDAIPowerState();
-
-	FDAI *FDAI1, *FDAI2;
-	e_object *DCSource1, *DCSource2, *ACSource1, *ACSource2;
 };
 
 class PowerStateRotationalSwitch: public RotationalSwitch {
@@ -1178,6 +1161,7 @@ public:
 	virtual ~ThumbwheelSwitch();
 
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState);
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
@@ -1194,6 +1178,7 @@ protected:
 	int height;
 	int state;
 	int maxState;
+	bool isHorizontal;
 	SURFHANDLE switchSurface;
 	Sound sclick;
 	SwitchRow *switchRow;
