@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2007/01/22 00:17:57  dseagrav
+  *	Replaced lost commits
+  *	
   *	Revision 1.74  2007/01/12 01:36:43  movieman523
   *	Fixed warnings and make VC2005 build.
   *	
@@ -1024,7 +1027,7 @@ void CSMcomputer::Prog61(double simt)
 //		Z' = X' x Y'
 // in this system, our current position is (rad, 0,  0). 
 // We will use it to calculate the entry and splashdown points from true anomalies.
-
+		int i=0;
 		switch (ProgState)
 		{
 		case 0:
@@ -1033,7 +1036,7 @@ void CSMcomputer::Prog61(double simt)
 // R1 = Lat, R2 = Long, R3 = heads-up (+1) or down (-1)
 			OurVessel->ActivateNavmode(NAVMODE_KILLROT);
 			OurVessel->DeactivateNavmode(NAVMODE_KILLROT);
-			for(int i=1;i<9;i++)
+			for(i=1;i<9;i++)
 			{
 				SetOutputChannelBit(05,i,false);
 				SetOutputChannelBit(06,i,false);
@@ -1127,9 +1130,9 @@ void CSMcomputer::Prog61(double simt)
 // this calculation is really only good for lunar trajectory, but is still approx. correct
 // for orbital entry
 			GAMMAEI = 57.3*GAMMAEI;
-			if(abs(GAMMAEI) < 5.9) PREDGMAX = 4.0 + abs(GAMMAEI) / 6.0;
-			else if(abs(GAMMAEI) < 6.5) PREDGMAX = -12.717 + 3.0 * abs(GAMMAEI);
-			else PREDGMAX = -32.21 + 6.0 * abs(GAMMAEI);
+			if(fabs(GAMMAEI) < 5.9) PREDGMAX = 4.0 + fabs(GAMMAEI) / 6.0;
+			else if(fabs(GAMMAEI) < 6.5) PREDGMAX = -12.717 + 3.0 * fabs(GAMMAEI);
+			else PREDGMAX = -32.21 + 6.0 * fabs(GAMMAEI);
 			R1 = (int) (PREDGMAX * 100.0);
 			R2 = (int) (VPRED);
 			R3 = (int) (GAMMAEI * 100.0);
@@ -2087,7 +2090,7 @@ void CSMcomputer::Prog64(double simt)
 				if((OurVessel->GetAirspeed()-VQUIT) < 0.0)
 				{
 					ProgState++;
-					for(int i=1;i<9;i++)
+					for(i=1;i<9;i++)
 					{
 						SetOutputChannelBit(05,i,false);
 						SetOutputChannelBit(06,i,false);
@@ -2182,10 +2185,11 @@ void CSMcomputer::Prog64(double simt)
 		NextControlTime = simt + 0.1;
 		OurVessel->ActivateNavmode(NAVMODE_KILLROT);
 		OurVessel->DeactivateNavmode(NAVMODE_KILLROT);
+		int i=0;
 		switch(SELECTOR)
 		{
 		case 13:
-			for(int i=1;i<9;i++)
+			for(i=1;i<9;i++)
 			{
 				SetOutputChannelBit(05,i,false);
 				SetOutputChannelBit(06,i,false);
@@ -2969,7 +2973,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 	}
 
 	//
-	// Do nothing if we have no power (AGC++)
+	// Do nothing if we have no power (Simple AGC)
 	//
 	if (!IsPowered())
 		return;
@@ -3046,48 +3050,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			Prog64(simt);
 			break;
 
-		}
-	}
-
-	if (Yaagc) {
-
-		//
-		// Debug output to check P11
-		//
-		VECTOR3 vel, hvel;
-		double vvel = 0, apDist, peDist;
-		OBJHANDLE earth = oapiGetGbodyByName("Earth");
-		OurVessel->GetRelativeVel(earth, vel); 
-		if (OurVessel->GetHorizonAirspeedVector(hvel)) {
-			vvel = hvel.y * 3.2808399;
-		}
-
-		if (lastOrbitalElementsTime == 0) {
-			apDist = 0;
-			peDist = 0;
-			lastOrbitalElementsTime = simt;
-
-		} else if (simt - lastOrbitalElementsTime >= 2.0) {
-			OurVessel->GetApDist(apDist);
-			OurVessel->GetPeDist(peDist);
-
-			apDist -= 6.373338e6;
-			peDist -= 6.373338e6;
-
-/* #ifdef _DEBUG
-			sprintf(oapiDebugString(), "P11 - Vel %.0f Vert. Vel %.0f Alt %.0f ApD %.0f PeD %.0f",  
-				length(vel) * 3.2808399, vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 
-				apDist * 0.000539957 * 10, peDist * 0.000539957 * 10);
-#endif */
-
-			lastOrbitalElementsTime = simt;
-		}
-
-		//
-		// Check nonspherical gravity sources
-		//
-		if (!OurVessel->NonsphericalGravityEnabled()) {
-			sprintf(oapiDebugString(), "*** PLEASE ENABLE NONSPHERICAL GRAVITY SOURCES ***");
 		}
 	}
 }
@@ -3618,6 +3580,10 @@ void CSMcomputer::ProcessChannel5(int val)
 	val30.Value = GetInputChannel(030);
 
 	Saturn *sat = (Saturn *) OurVessel;
+	if (sat->SCContSwitch.IsDown() || sat->THCRotary.IsClockwise()) {
+		return;
+	}
+
 	CSMOut5 Current;
 	CSMOut5 Changed;
 
@@ -3668,7 +3634,12 @@ void CSMcomputer::ProcessChannel6(int val)
 {
 	ChannelValue30 val30;
 	val30.Value = GetInputChannel(030);
+
 	Saturn *sat = (Saturn *) OurVessel;
+	if (sat->SCContSwitch.IsDown() || sat->THCRotary.IsClockwise()) {
+		return;
+	}
+
 	CSMOut6 Current;
 	CSMOut6 Changed;
 
@@ -3816,9 +3787,10 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 	}
 }
 
-// DS20060226 TVC / Optics control
+// TVC / Optics control
 
-void CSMcomputer::ProcessChannel160(int val){
+void CSMcomputer::ProcessChannel160(int val) {
+	
 	ChannelValue12 val12;
 	val12.Value = GetOutputChannel(012);
 	Saturn *sat = (Saturn *) OurVessel;
@@ -3838,17 +3810,16 @@ void CSMcomputer::ProcessChannel160(int val){
 		}else{
 			tvc_pitch_pulses = val&0777;
 			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
-		}				
-		// sprintf(oapiDebugString(),"TVC PITCH COMMAND: %d pulses, %f degrees",tvc_pitch_pulses,tvc_pitch_cmd);
-		// X/Y/Z = ??/??/??
-		// If we're out of the zero notch
-		error = sat->SetSPSPitch(tvc_pitch_cmd);		
-	}else{
+		}		
+		sat->SPSEngine.pitchGimbalActuator.ChangeCMCPosition(tvc_pitch_cmd);
+
+	} else {
 		sat->optics.CMCShaftDrive(val,val12.Value);
 	}	
 }
 
-void CSMcomputer::ProcessChannel161(int val){
+void CSMcomputer::ProcessChannel161(int val) {
+
 	ChannelValue12 val12;
 	val12.Value = GetOutputChannel(012);
 	Saturn *sat = (Saturn *) OurVessel;
@@ -3867,8 +3838,9 @@ void CSMcomputer::ProcessChannel161(int val){
 			tvc_yaw_pulses = val&0777;
 			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
 		}				
-		error = sat->SetSPSYaw(tvc_yaw_cmd);
-	}else{
+		sat->SPSEngine.yawGimbalActuator.ChangeCMCPosition(tvc_yaw_cmd);
+
+	} else {
 		sat->optics.CMCTrunionDrive(val,val12.Value);
 	}	
 }
@@ -3894,7 +3866,7 @@ void CSMcomputer::ProcessChannel14(int val){
 void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 	
 	Saturn *sat = (Saturn *) OurVessel;
-	if (sat->SCContSwitch.IsUp()) {
+	if (sat->SCContSwitch.IsUp() && !sat->THCRotary.IsClockwise()) {
 		// Ensure RJ/EC power, Auto RCS is not checked currently
 		if (sat->SIGCondDriverBiasPower1Switch.Voltage() >= SP_MIN_ACVOLTAGE && 
 			sat->SIGCondDriverBiasPower2Switch.Voltage() >= SP_MIN_ACVOLTAGE) {
@@ -3966,7 +3938,7 @@ void CMOptics::CMCTrunionDrive(int val,int ch12){
 	}
 	SextTrunion += (OCDU_TRUNNION_STEP*pulses); 
 	TrunionMoved = SextTrunion;
-	sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
+	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
 }
 
 void CMOptics::CMCShaftDrive(int val,int ch12){
@@ -3987,7 +3959,7 @@ void CMOptics::CMCShaftDrive(int val,int ch12){
 		sat->agc.vagc.Erasable[0][036] += pulses;
 		sat->agc.vagc.Erasable[0][036] &= 077777;
 	}
-	sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
+	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
 }
 
 void CMOptics::TimeStep(double simdt){

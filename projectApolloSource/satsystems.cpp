@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.137  2007/01/14 13:02:42  dseagrav
+  *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
+  *	
   *	Revision 1.136  2007/01/06 23:08:32  dseagrav
   *	More telecom stuff. A lot of the S-band signal path exists now, albeit just to consume electricity.
   *	
@@ -212,15 +215,6 @@ void Saturn::SystemsInit() {
 	// AC Bus 1
 	//
 
-	// This is wrong. The AC busses are connected to motor switch controls that prohibit more than one
-	// inverter from powering the same bus. One inverter can power both busses though.
-
-	// ACBus1Source.WireToBuses(&AcBus1Switch1, &AcBus1Switch2, &AcBus1Switch3);
-	
-	// ACBus1PhaseA.WireTo(&ACBus1Source);
-	// ACBus1PhaseB.WireTo(&ACBus1Source);
-	// ACBus1PhaseC.WireTo(&ACBus1Source);
-
 	ACBus1.WireToBuses(&ACBus1PhaseA, &ACBus1PhaseB, &ACBus1PhaseC);
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_1");
@@ -229,11 +223,7 @@ void Saturn::SystemsInit() {
 	//
 	// AC Bus 2
 	//
-	// ACBus2Source.WireToBuses(&AcBus2Switch1, &AcBus2Switch2, &AcBus2Switch3);
 
-	//ACBus2PhaseA.WireTo(&ACBus2Source);
-	//ACBus2PhaseB.WireTo(&ACBus2Source);
-	//ACBus2PhaseC.WireTo(&ACBus2Source);
 	ACBus2.WireToBuses(&ACBus2PhaseA, &ACBus2PhaseB, &ACBus2PhaseC);
 	
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:AC_2");
@@ -479,10 +469,6 @@ void Saturn::SystemsInit() {
 	SetValveState(CM_RCSPROP_TANKA_VALVE, false);
 	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
 
-	// SPS Gimbal reset to zero
-	sps_pitch_position = 0;
-	sps_yaw_position = 0;
-
 	// SCS initialization
 	bmag1.Init(this, &SystemMnACircuitBraker, &StabContSystemAc1CircuitBraker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER1"));
 	bmag2.Init(this, &SystemMnBCircuitBraker, &StabContSystemAc2CircuitBraker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER2"));
@@ -501,10 +487,21 @@ void Saturn::SystemsInit() {
 	optics.Init(this);
 
 	// SPS initialization
-	SPSPropellant.Init(&GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &SPSGaugingSwitch, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
+	SPSPropellant.Init(&GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &SPSGaugingSwitch, 
+		               (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
 	SPSEngine.Init(this);
+	SPSEngine.pitchGimbalActuator.Init(this, &TVCGimbalDrivePitchSwitch, &Pitch1Switch, &Pitch2Switch,
+		                               MainBusA, &PitchBatACircuitBraker, MainBusB, &PitchBatBCircuitBraker,
+									   &SPSGimbalPitchThumbwheel, &SCSTvcPitchSwitch);
+	SPSEngine.yawGimbalActuator.Init(this, &TVCGimbalDriveYawSwitch, &Yaw1Switch, &Yaw2Switch,
+		                             MainBusA, &YawBatACircuitBraker, MainBusB, &YawBatBCircuitBraker,
+									 &SPSGimbalYawThumbwheel, &SCSTvcYawSwitch);
 
 	// Initialize joystick
+	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
+	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker);
+	RHCDirect2Power.WireToBuses(&ContrDirectMnA2CircuitBraker, &ContrDirectMnB2CircuitBraker);
+	
 	HRESULT         hr;
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
@@ -1085,10 +1082,6 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 #ifdef _DEBUG
 
-/*		sprintf(oapiDebugString(), "Bus A = %3.1fA/%3.1fV, Bus B = %3.1fA/%3.1fV, AC Bus 1 = %3.1fA/%3.1fV, AC Bus 2 = %3.1fA/%3.1fV, Batt A = %3.1fV/%3.1fA, Batt B = %3.1fV FC1 %3.1fV/%3.1fA", 
-			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
-			ACBus1Source.Current(), ACBus1Source.Voltage(), ACBus2Source.Current(), ACBus2Source.Voltage(), EntryBatteryA->Voltage(), EntryBatteryA->Current(), EntryBatteryB->Voltage(), FuelCells[0]->Voltage(), FuelCells[0]->Current());
-*/
 /*		sprintf(oapiDebugString(), "Bus A %3.1fA/%3.1fV, Bus B %3.1fA/%3.1fV, Batt A %3.1fV/%3.1fA/%.3f, Batt B %3.1fV/%.3f Batt C %3.1fV/%.3f Charg %2.1fV/%3.1fA FC1 %3.1fV/%3.1fA", 
 			MainBusA->Current(), MainBusA->Voltage(), MainBusB->Current(), MainBusB->Voltage(),
 			EntryBatteryA->Voltage(), EntryBatteryA->Current(), EntryBatteryA->Capacity() / 5508000.0, EntryBatteryB->Voltage(), EntryBatteryB->Capacity() / 5508000.0, EntryBatteryC->Voltage(), EntryBatteryC->Capacity() / 5508000.0,
@@ -1384,8 +1377,8 @@ void Saturn::SystemsInternalTimestep(double simdt)
 void Saturn::JoystickTimestep()
 
 {
-	// DS20060302 Read joysticks and feed data to the computer
-	// DS20060404 Do not do this if we aren't the active vessel.
+	// Read joysticks and feed data to the computer
+	// Do not do this if we aren't the active vessel.
 	if(js_enabled > 0 && oapiGetFocusInterface() == this) {
 
 		// Invert joystick configuration according to navmode in case of one joystick
@@ -1428,48 +1421,63 @@ void Saturn::JoystickTimestep()
 		val31.Value &= 070000;
 
 		// We'll do this with a RHC first. 		
-		if(rhc_id != -1 && rhc_id < js_enabled){
-			int rhc_voltage1 = 0,rhc_voltage2 = 0;
-			int rhc_directv1 = 0,rhc_directv2 = 0;
+		if (rhc_id != -1 && rhc_id < js_enabled){
+			double rhc_voltage1 = 0, rhc_voltage2 = 0;
+			double rhc_acvoltage1 = 0, rhc_acvoltage2 = 0;
+			double rhc_directv1 = 0, rhc_directv2 = 0;
 			// Since we are feeding the AGC, the RHC NORMAL power must be on.
 			// There's more than one RHC in the real ship, but ours is "both" - having the power on for either one will work.
-			// The manual says this is right, the RHC is powered from MNA for DC, and AC1/AC2 for AC
-			switch(RotPowerNormal1Switch.GetState()){
-				case THREEPOSSWITCH_UP:       // AC1
-					rhc_voltage1 = (int)ACBus1.Voltage();
-					break;
-				case THREEPOSSWITCH_DOWN:     // MNA
-					rhc_voltage1 = (int)MainBusA->Voltage();
-					break;
+			// ECA needs to be powered (AOH Display & Controls)
+			if (eca.IsPowered()) {
+				// DC Power
+				switch(RotPowerNormal1Switch.GetState()) {
+					case THREEPOSSWITCH_UP:       
+						rhc_voltage1 = RHCNormalPower.Voltage();
+						break;
+				}
+				switch(RotPowerNormal2Switch.GetState()){
+					case THREEPOSSWITCH_UP:       
+						rhc_voltage2 = RHCNormalPower.Voltage();
+						break;
+				}
+
+				// AC Power
+				switch(RotPowerNormal1Switch.GetState()){
+					case THREEPOSSWITCH_UP:       
+					case THREEPOSSWITCH_DOWN:     
+						rhc_acvoltage1 = StabContSystemAc1CircuitBraker.Voltage();
+						break;
+				}
+				switch(RotPowerNormal2Switch.GetState()){
+					case THREEPOSSWITCH_UP:       
+					case THREEPOSSWITCH_DOWN:     
+						rhc_acvoltage2 = ECATVCAc2CircuitBraker.Voltage();
+						break;
+				}
 			}
-			switch(RotPowerNormal2Switch.GetState()){
-				case THREEPOSSWITCH_UP:       // AC2
-					rhc_voltage2 = (int)ACBus2.Voltage();
-					break;
-				case THREEPOSSWITCH_DOWN:     // MNB
-					rhc_voltage2 = (int)MainBusB->Voltage();
-					break;
-			}
+
+			// Direct power
 			switch(RotPowerDirect1Switch.GetState()){
-				case THREEPOSSWITCH_UP:       // MNB
-					rhc_directv1 = (int)MainBusB->Voltage();
-					direct_power1 = MainBusB;
+				case THREEPOSSWITCH_UP:       // MNA/MNB
+					rhc_directv1 = RHCDirect1Power.Voltage();
+					direct_power1 = &RHCDirect1Power;
 					break;
 				case THREEPOSSWITCH_DOWN:     // MNA
-					rhc_directv1 = (int)MainBusA->Voltage();
-					direct_power1 = MainBusA;
+					rhc_directv1 = ContrDirectMnA1CircuitBraker.Voltage();
+					direct_power1 = &ContrDirectMnA1CircuitBraker;
 					break;
 			}
 			switch(RotPowerDirect2Switch.GetState()){
-				case THREEPOSSWITCH_UP:       // MNA
-					rhc_directv2 = (int)MainBusA->Voltage();
-					direct_power2 = MainBusA;
+				case THREEPOSSWITCH_UP:       // MNA/MNB
+					rhc_directv1 = RHCDirect1Power.Voltage();
+					direct_power1 = &RHCDirect1Power;
 					break;
 				case THREEPOSSWITCH_DOWN:     // MNB
-					rhc_directv2 = (int)MainBusB->Voltage();
-					direct_power2 = MainBusB;
+					rhc_directv2 = ContrDirectMnB2CircuitBraker.Voltage();
+					direct_power2 = &ContrDirectMnB2CircuitBraker;
 					break;
 			}
+
 			hr=dx8_joystick[rhc_id]->Poll();
 			if(FAILED(hr)){ // Did that work?
 				// Attempt to acquire the device
@@ -1488,41 +1496,19 @@ void Saturn::JoystickTimestep()
 			// This means 2730 points per degree travel. The RHC breakout switches trigger at 1.5 degrees deflection and
 			// stop at 11. So from 36863 to 62798, we trigger plus, and from 28673 to 2738 we trigger minus.
 			// The last degree of travel is reserved for the DIRECT control switches.
-			if(rhc_voltage1 > 0 || rhc_voltage2 > 0){ // NORMAL
-				if(dx8_jstate[rhc_id].lX < 28673 && dx8_jstate[rhc_id].lX > 2738){
-					switch(SCContSwitch.GetState()){
-					case TOGGLESWITCH_UP: // CMC
+			if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
+				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
+					if (dx8_jstate[rhc_id].lX < 28673 && dx8_jstate[rhc_id].lX > 2738) {
 						val31.Bits.MinusRollManualRotation = 1;
-						break;
-					case TOGGLESWITCH_DOWN: // SCS
-						break;
-					}
-				}	
-				if(dx8_jstate[rhc_id].lY < 28673 && dx8_jstate[rhc_id].lY > 2738){
-					switch(SCContSwitch.GetState()){
-					case TOGGLESWITCH_UP: // CMC
+					}					
+					if (dx8_jstate[rhc_id].lY < 28673 && dx8_jstate[rhc_id].lY > 2738) {
 						val31.Bits.MinusPitchManualRotation = 1;
-						break;
-					case TOGGLESWITCH_DOWN: // SCS
-						break;
 					}
-				}
-				if(dx8_jstate[rhc_id].lX > 36863 && dx8_jstate[rhc_id].lX < 62798){
-					switch(SCContSwitch.GetState()){
-					case TOGGLESWITCH_UP: // CMC
+					if (dx8_jstate[rhc_id].lX > 36863 && dx8_jstate[rhc_id].lX < 62798) {
 						val31.Bits.PlusRollManualRotation = 1;
-						break;
-					case TOGGLESWITCH_DOWN: // SCS
-						break;
 					}
-				}
-				if(dx8_jstate[rhc_id].lY > 36863 && dx8_jstate[rhc_id].lY < 62798){
-					switch(SCContSwitch.GetState()){
-					case TOGGLESWITCH_UP: // CMC
+					if (dx8_jstate[rhc_id].lY > 36863 && dx8_jstate[rhc_id].lY < 62798) {
 						val31.Bits.PlusPitchManualRotation = 1;
-						break;
-					case TOGGLESWITCH_DOWN: // SCS
-						break;
 					}
 				}
 			}
@@ -1544,43 +1530,47 @@ void Saturn::JoystickTimestep()
 			if(rhc_rzx_id != -1){ // If we use the native Z-axis
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 			}
-			if(rhc_voltage1 > 0 || rhc_voltage2 > 0){ // NORMAL
-				if(rhc_rot_pos < 28673 && rhc_rot_pos > 2738){
-					switch(SCContSwitch.GetState()){
-					case TOGGLESWITCH_UP: // CMC
+			if(rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
+				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
+					if (rhc_rot_pos < 28673 && rhc_rot_pos > 2738) {
 						val31.Bits.MinusYawManualRotation = 1;
-						break;
-					case TOGGLESWITCH_DOWN: // SCS
-						break;
 					}
-				}
-				if(rhc_rot_pos > 36863 && rhc_rot_pos < 62798){
-					switch(SCContSwitch.GetState()){
-					case TOGGLESWITCH_UP: // CMC
+					if (rhc_rot_pos > 36863 && rhc_rot_pos < 62798) {
 						val31.Bits.PlusYawManualRotation = 1;
-						break;
-					case TOGGLESWITCH_DOWN: // SCS
-						break;
 					}
 				}
 			}
 			// Copy data to the ECA
-			if(rhc_voltage1 > 0 || rhc_voltage2 > 0){
+			if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) {
 				eca.rhc_x = dx8_jstate[rhc_id].lX;
 				eca.rhc_y = dx8_jstate[rhc_id].lY;
 				eca.rhc_z = rhc_rot_pos;
-			}else{
+			} else {
 				eca.rhc_x = 32768;
 				eca.rhc_y = 32768;
 				eca.rhc_z = 32768;
 			}
+
+			if (rhc_acvoltage1 > SP_MIN_ACVOLTAGE || rhc_acvoltage2 > SP_MIN_ACVOLTAGE) {
+				eca.rhc_ac_x = dx8_jstate[rhc_id].lX;
+				eca.rhc_ac_y = dx8_jstate[rhc_id].lY;
+				eca.rhc_ac_z = rhc_rot_pos;
+			} else {
+				eca.rhc_ac_x = 32768;
+				eca.rhc_ac_y = 32768;
+				eca.rhc_ac_z = 32768;
+			}
+
+			//
+			// DIRECT
+			//
+
 			int rflag=0,pflag=0,yflag=0; // Direct Fire Untriggers
 			int sm_sep=0;
 			ChannelValue30 val30;
 			val30.Value = agc.GetInputChannel(030); 
 			sm_sep = val30.Bits.CMSMSeperate; // There should probably be a way for the SCS to do this if VAGC is not running
-			// DIRECT
-			if((rhc_directv1 > 12 || rhc_directv2 > 5)){
+			if((rhc_directv1 > SP_MIN_DCVOLTAGE || rhc_directv2 > SP_MIN_DCVOLTAGE)){
 				if(dx8_jstate[rhc_id].lX < 2738){
 					// MINUS ROLL
 					if(!sm_sep){						
@@ -1592,7 +1582,7 @@ void Saturn::JoystickTimestep()
 						SetRCSState(RCS_SM_QUAD_B, 1, 0); 
 						SetRCSState(RCS_SM_QUAD_C, 1, 0);
 						SetRCSState(RCS_SM_QUAD_D, 1, 0); 
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(200); // Four thrusters worth
 						}else{
 							direct_power2->DrawPower(200);
@@ -1621,7 +1611,7 @@ void Saturn::JoystickTimestep()
 						SetRCSState(RCS_SM_QUAD_B, 1, 1); 
 						SetRCSState(RCS_SM_QUAD_C, 1, 1);
 						SetRCSState(RCS_SM_QUAD_D, 1, 1); 
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(200);
 						}else{
 							direct_power2->DrawPower(200);
@@ -1631,7 +1621,7 @@ void Saturn::JoystickTimestep()
 						SetCMRCSState(9,1);
 						SetCMRCSState(11,0);
 						SetCMRCSState(10,0);
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(100);
 						}else{
 							direct_power2->DrawPower(100);
@@ -1646,7 +1636,7 @@ void Saturn::JoystickTimestep()
 						SetRCSState(RCS_SM_QUAD_A, 4, 1); 
 						SetRCSState(RCS_SM_QUAD_C, 3, 0);
 						SetRCSState(RCS_SM_QUAD_A, 3, 0); 
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(100);
 						}else{
 							direct_power2->DrawPower(100);
@@ -1656,7 +1646,7 @@ void Saturn::JoystickTimestep()
 						SetCMRCSState(1,0);
 						SetCMRCSState(2,1);
 						SetCMRCSState(3,1);
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(100);
 						}else{
 							direct_power2->DrawPower(100);
@@ -1671,7 +1661,7 @@ void Saturn::JoystickTimestep()
 						SetRCSState(RCS_SM_QUAD_A, 4, 0); 
 						SetRCSState(RCS_SM_QUAD_C, 3, 1);
 						SetRCSState(RCS_SM_QUAD_A, 3, 1); 
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(100);
 						}else{
 							direct_power2->DrawPower(100);
@@ -1681,7 +1671,7 @@ void Saturn::JoystickTimestep()
 						SetCMRCSState(1,1);
 						SetCMRCSState(2,0);
 						SetCMRCSState(3,0);
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(100);
 						}else{
 							direct_power2->DrawPower(100);
@@ -1696,7 +1686,7 @@ void Saturn::JoystickTimestep()
 						SetRCSState(RCS_SM_QUAD_D, 4, 1); 
 						SetRCSState(RCS_SM_QUAD_D, 3, 0);
 						SetRCSState(RCS_SM_QUAD_B, 3, 0); 
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(100);
 						}else{
 							direct_power2->DrawPower(100);
@@ -1706,7 +1696,7 @@ void Saturn::JoystickTimestep()
 						SetCMRCSState(5,0);
 						SetCMRCSState(6,1);
 						SetCMRCSState(7,1);
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(100);
 						}else{
 							direct_power2->DrawPower(100);
@@ -1721,7 +1711,7 @@ void Saturn::JoystickTimestep()
 						SetRCSState(RCS_SM_QUAD_B, 3, 1); 
 						SetRCSState(RCS_SM_QUAD_B, 4, 0);
 						SetRCSState(RCS_SM_QUAD_D, 4, 0); 
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(100);
 						}else{
 							direct_power2->DrawPower(100);
@@ -1731,7 +1721,7 @@ void Saturn::JoystickTimestep()
 						SetCMRCSState(5,1);
 						SetCMRCSState(6,0);
 						SetCMRCSState(7,0);
-						if(rhc_directv1 > 12){
+						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
 							direct_power1->DrawPower(100);
 						}else{
 							direct_power2->DrawPower(100);
@@ -1796,7 +1786,7 @@ void Saturn::JoystickTimestep()
 			switch(TransContrSwitch.GetState()){
 				case TOGGLESWITCH_UP: // The THC is powered from MNA or MNB automatically.
 					thc_voltage = (int)MainBusA->Voltage();
-					if(thc_voltage < 5){
+					if(thc_voltage < SP_MIN_DCVOLTAGE){
 						thc_voltage = (int)MainBusB->Voltage();
 					}
 					break;
@@ -1817,41 +1807,19 @@ void Saturn::JoystickTimestep()
 			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]),&dx8_jstate[thc_id]);
 			// The THC layout is wierd. I'm going to change it so the axes are represenative of directions that make sense.
 			// This is correct for the Space Shuttle THC anyway...
-			if(thc_voltage > 0){
-				if(dx8_jstate[thc_id].lX < 16384){							
-					switch(SCContSwitch.GetState()){
-						case TOGGLESWITCH_UP: // CMC
-							val31.Bits.MinusYTranslation = 1;
-							break;
-						case TOGGLESWITCH_DOWN: // SCS
-							break;
+			if (thc_voltage > 0) {
+				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
+					if (dx8_jstate[thc_id].lX < 16384){							
+						val31.Bits.MinusYTranslation = 1;
 					}
-				}
-				if(dx8_jstate[thc_id].lY < 16384){
-					switch(SCContSwitch.GetState()){
-						case TOGGLESWITCH_UP: // CMC
-							val31.Bits.PlusXTranslation = 1;
-							break;
-						case TOGGLESWITCH_DOWN: // SCS
-							break;
+					if (dx8_jstate[thc_id].lY < 16384){
+						val31.Bits.PlusXTranslation = 1;
 					}
-				}
-				if(dx8_jstate[thc_id].lX > 49152){
-					switch(SCContSwitch.GetState()){
-						case TOGGLESWITCH_UP: // CMC
-							val31.Bits.PlusYTranslation = 1;
-							break;
-						case TOGGLESWITCH_DOWN: // SCS
-							break;
+					if (dx8_jstate[thc_id].lX > 49152){
+						val31.Bits.PlusYTranslation = 1;
 					}
-				}
-				if(dx8_jstate[thc_id].lY > 49152){
-					switch(SCContSwitch.GetState()){
-						case TOGGLESWITCH_UP: // CMC
-							val31.Bits.MinusXTranslation = 1;
-							break;
-						case TOGGLESWITCH_DOWN: // SCS
-							break;
+					if (dx8_jstate[thc_id].lY > 49152) {
+						val31.Bits.MinusXTranslation = 1;
 					}
 				}
 				// Z-axis read.
@@ -1872,31 +1840,23 @@ void Saturn::JoystickTimestep()
 				if(thc_rzx_id != -1){ // If we use the native Z-axis
 					thc_rot_pos = dx8_jstate[thc_id].lZ;
 				}
-				if(thc_rot_pos < 16384){
-					switch(SCContSwitch.GetState()){
-						case TOGGLESWITCH_UP: // CMC
-							val31.Bits.MinusZTranslation = 1;
-							break;
-						case TOGGLESWITCH_DOWN: // SCS
-							break;
+				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
+					if (thc_rot_pos < 16384) {
+						val31.Bits.MinusZTranslation = 1;
+					}
+					if (thc_rot_pos > 49152) {
+						val31.Bits.PlusZTranslation = 1;
 					}
 				}
-				if(thc_rot_pos > 49152){
-					switch(SCContSwitch.GetState()){
-						case TOGGLESWITCH_UP: // CMC
-							val31.Bits.PlusZTranslation = 1;
-							break;
-						case TOGGLESWITCH_DOWN: // SCS
-							break;
-					}
+				if (thc_debug != -1) { 
+					sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d",dx8_jstate[thc_id].lX, dx8_jstate[thc_id].lY,	thc_rot_pos);
 				}
-				if(thc_debug != -1){ sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d",dx8_jstate[thc_id].lX,dx8_jstate[thc_id].lY,
-					thc_rot_pos); }
+
 				// Update ECA
 				eca.thc_x = dx8_jstate[thc_id].lX;
 				eca.thc_y = dx8_jstate[thc_id].lY;
 				eca.thc_z = thc_rot_pos;
-			}else{
+			} else {
 				// Power off
 				eca.thc_x = 32768;
 				eca.thc_y = 32768;
@@ -3302,49 +3262,4 @@ void Saturn::SetCMRCSState(int Thruster, bool Active)
 	double Level = Active ? 1.0 : 0.0;
 	if(th_att_cm[Thruster] == NULL){ return; } // Sanity check
 	SetThrusterLevel(th_att_cm[Thruster], Level);
-}
-
-// DS20060226 Added below
-// Should return error between commanded value and current value
-double Saturn::SetSPSPitch(double direction){
-	VECTOR3 spsvector;
-	double error = sps_pitch_position - direction;	
-	// Only 5.5 degrees of travel allowed.
-	if(direction > 5.5){ direction = 5.5; }
-	if(direction < -5.5){ direction = -5.5; }
-	sps_pitch_position += direction; // Instant positioning	
-	// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
-	spsvector.x = sps_yaw_position * 0.017453; // Convert deg to rad
-	spsvector.y = sps_pitch_position * 0.017453;
-	spsvector.z = 1;
-	SetThrusterDir(th_main[0],spsvector);
-	// If out of zero posiiton
-	if(sps_pitch_position != 0 || sps_yaw_position != 0){
-		sprintf(oapiDebugString(),"SPS: Vector P:%f Y:%f",sps_pitch_position,sps_yaw_position);
-	}else{
-		// Clear the message
-		sprintf(oapiDebugString(),"");
-	}
-	return(error);
-}
-
-double Saturn::SetSPSYaw(double direction){
-	VECTOR3 spsvector;
-	double error = sps_yaw_position - direction;	
-	// Only 5.5 degrees of travel allowed.
-	if(direction > 5.5){ direction = 5.5; }
-	if(direction < -5.5){ direction = -5.5; }
-	sps_yaw_position += direction; // Instant positioning	
-	spsvector.x = sps_yaw_position * 0.017453; // Convert deg to rad
-	spsvector.y = sps_pitch_position * 0.017453;
-	spsvector.z = 1;
-	SetThrusterDir(th_main[0],spsvector);
-	// If out of zero posiiton
-	if(sps_pitch_position != 0 || sps_yaw_position != 0){
-		sprintf(oapiDebugString(),"SPS: Vector P:%f Y:%f",sps_pitch_position,sps_yaw_position);
-	}else{
-		// Clear the message
-		sprintf(oapiDebugString(),"");
-	}
-	return(error);
 }

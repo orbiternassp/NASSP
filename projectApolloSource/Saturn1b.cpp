@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2007/01/11 08:23:58  chode99
+  *	Modified the lift function for the CM to include Mach dependency
+  *	
   *	Revision 1.64  2006/12/16 22:34:01  tschachim
   *	Bugfix dll handle
   *	
@@ -371,11 +374,11 @@ void Saturn1b::initSaturn1b()
 
 	THRUST_SECOND_VAC  = 1001000;
 
-	SM_EmptyMass = 6100;
-	SM_FuelMass = 2800;
+	SM_EmptyMass = 3290;
+	SM_FuelMass = 4416;		// Apollo 7, TODO other Saturn 1b missions
 
-	CM_EmptyMass = 5700;
-	CM_FuelMass = 75;
+	CM_EmptyMass = 5430;
+	CM_FuelMass = CM_RCS_FUEL_PER_TANK * 2.; // The CM has 2 tanks
 
 	SII_EmptyMass = 12900;
 	SII_FuelMass = 105900;

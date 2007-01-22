@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2007/01/20 02:09:51  dseagrav
+  *	Tweaked RCS positions
+  *	
   *	Revision 1.14  2007/01/13 08:20:53  dseagrav
   *	Moved telecommunications code to new file csm_telecom.cpp (Adjust VS6,VS2005 files accordingly please)
   *	
@@ -582,17 +585,6 @@ void GDC::SystemTimestep(double simdt) {
 		
 void GDC::Timestep(double simdt) {
 
-	// Do we have power?
-	// TODO DC power is needed, too
-	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2 ||
-	    sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
-		sat->StabContSystemAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) {
-	
-		// Reset Attitude
-		SetAttitude(_V(0, 0, 0));
-		return;
-	}
-
 	// Get rates from the appropriate BMAG
 	// GDC attitude is based on RATE data, not ATT data.
 	BMAG *rollBmag = NULL;
@@ -608,9 +600,9 @@ void GDC::Timestep(double simdt) {
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
 			rollBmag = &sat->bmag2;
 	
-			// Uncage Roll BMAG 1, if in RATE CMD and breakout switches open
-			if (sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER &&
-				sat->eca.rhc_x > 28673 && sat->eca.rhc_x < 36863) {
+			// Uncage Roll BMAG 1, see AOH SCS figure 2.3-11
+			if (((sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_x > 28673 && 
+				  sat->eca.rhc_x < 36863) || sat->rjec.SPSActive) && sat->GSwitch.IsDown()) {
 				sat->bmag1.Uncage(0);
 			} else {
 				sat->bmag1.Cage(0);
@@ -632,9 +624,9 @@ void GDC::Timestep(double simdt) {
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
 			pitchBmag = &sat->bmag2;
 
-			// Uncage Pitch BMAG 1, if in RATE CMD and breakout switches open
-			if (sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER &&
-				sat->eca.rhc_y > 28673 && sat->eca.rhc_y < 36863) {
+			// Uncage Pitch BMAG 1, see AOH SCS figure 2.3-11
+			if (((sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_y > 28673 && 
+				  sat->eca.rhc_y < 36863) || sat->rjec.SPSActive) && sat->GSwitch.IsDown()) {
 				sat->bmag1.Uncage(1);
 			} else {
 				sat->bmag1.Cage(1);
@@ -656,9 +648,9 @@ void GDC::Timestep(double simdt) {
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
 			yawBmag = &sat->bmag2;
 
-			// Uncage Yaw BMAG 1, if in RATE CMD and breakout switches open
-			if (sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER &&
-				sat->eca.rhc_z > 28673 && sat->eca.rhc_z < 36863) {
+			// Uncage Yaw BMAG 1, see AOH SCS figure 2.3-11
+			if (((sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_z > 28673 && 
+				  sat->eca.rhc_z < 36863) || sat->rjec.SPSActive) && sat->GSwitch.IsDown()) {
 				sat->bmag1.Uncage(2);
 			} else {
 				sat->bmag1.Cage(2);
@@ -682,15 +674,29 @@ void GDC::Timestep(double simdt) {
 	if (!rollBmag->IsPowered())  SetAttitude(_V(LastAttitude.x, Attitude.y, Attitude.z));
 	if (!pitchBmag->IsPowered()) SetAttitude(_V(Attitude.x, LastAttitude.y, Attitude.z));
 	if (!yawBmag->IsPowered())   SetAttitude(_V(Attitude.x, Attitude.y, LastAttitude.z));
+
+	// Do we have power?
+	// TODO DC power is needed, too
+	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2 ||
+	    sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
+		sat->StabContSystemAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) {
+
+		// Reset Attitude
+		SetAttitude(_V(0, 0, 0));
+		return;
+	}
 }
 
-bool GDC::AlignGDC(){
+bool GDC::AlignGDC() {
 	// User pushed the Align GDC button.
 	// Set the GDC attitude to match what's on the ASCP.
-	SetAttitude(_V(sat->ascp.output.x * 0.017453,
-				   sat->ascp.output.y * 0.017453,
-	               sat->ascp.output.z * 0.017453)); // Degrees to radians
-	return true;
+	if (sat->FDAIAttSetSwitch.IsDown()) {
+		SetAttitude(_V(sat->ascp.output.x * 0.017453,
+					   sat->ascp.output.y * 0.017453,
+					   sat->ascp.output.z * 0.017453)); // Degrees to radians
+		return true;
+	} 
+	return false;	
 }
 
 void GDC::SaveState(FILEHANDLE scn) {
@@ -1874,6 +1880,9 @@ ECA::ECA(){
 	rhc_x = 32768;
 	rhc_y = 32768;
 	rhc_z = 32768;
+	rhc_ac_x = 32768;
+	rhc_ac_y = 32768;
+	rhc_ac_z = 32768;
 	thc_x = 32768;
 	thc_y = 32768;
 	thc_z = 32768;
@@ -1892,18 +1901,26 @@ ECA::ECA(){
 	sat = NULL;
 }
 
-void ECA::Init(Saturn *vessel){
+void ECA::Init(Saturn *vessel) {
 	sat = vessel;
+}
+
+bool ECA::IsPowered() {
+
+	// Do we have power?
+	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return false;  // Switched off
+
+	// Ensure DC power
+	if (sat->SystemMnACircuitBraker.Voltage() < SP_MIN_DCVOLTAGE || 
+	    sat->SystemMnBCircuitBraker.Voltage() < SP_MIN_DCVOLTAGE) return false;
+
+	return true;
 }
 
 void ECA::SystemTimestep(double simdt) {
 
 	// Do we have power?
-	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return;  // Switched off
-
-	// Ensure DC power
-	if (sat->SystemMnACircuitBraker.Voltage() < SP_MIN_DCVOLTAGE || 
-	    sat->SystemMnBCircuitBraker.Voltage() < SP_MIN_DCVOLTAGE) return;
+	if (!IsPowered()) return;
 
 	sat->SystemMnACircuitBraker.DrawPower(10);	// TODO real power is unknown
 	sat->SystemMnBCircuitBraker.DrawPower(10);	// TODO real power is unknown
@@ -1912,13 +1929,13 @@ void ECA::SystemTimestep(double simdt) {
 void ECA::TimeStep(double simdt) {
 
 	// Do we have power?
-	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return;  // Switched off
+	if (!IsPowered()) return;
 
-	if (sat->SystemMnACircuitBraker.Voltage() < SP_MIN_DCVOLTAGE || 
-	    sat->SystemMnBCircuitBraker.Voltage() < SP_MIN_DCVOLTAGE) return;
-
-	// SCS is in control if the THC CLOCKWISE line is high (not implemented)
+	// SCS is in control if the THC is CLOCKWISE 
 	// or if the SC CONT switch is set to SCS.
+
+	// TODO: TVC CW is supplied by SCS LOGIC BUS 2
+	// TODO: SC CONT switch is supplied by ???
 	int accel_roll_flag = 0;
 	int mnimp_roll_flag = 0;
 	int accel_pitch_flag = 0;
@@ -1951,7 +1968,7 @@ void ECA::TimeStep(double simdt) {
 	}
 	// ERROR DETERMINATION
 	VECTOR3 setting,target,errors;
-	if(sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN){
+	if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) {
 		// Get BMAG1 attitude errors
 		setting = sat->bmag1.GetAttitudeError();
 		// And difference from GDC attitude (plus rate)
@@ -2019,9 +2036,9 @@ void ECA::TimeStep(double simdt) {
 						// 4.2 degrees attitude deadband
 						// 4 degree "real" deadband, 0.2 degree is accomplished by the rate deadband					
 						if (errors.x < -4.0 * RAD)
-							cmd_rate.x = errors.x + 4.0 * RAD;
+							cmd_rate.x = (errors.x + 4.0 * RAD) * 0.5; // Otherwise roll control is not stable
 						if (errors.x > 4.0 * RAD)
-							cmd_rate.x = errors.x - 4.0 * RAD;
+							cmd_rate.x = (errors.x - 4.0 * RAD) * 0.5;
 						if (errors.y < -4.0 * RAD)
 							cmd_rate.y = -errors.y - 4.0 * RAD;
 						if (errors.y > 4.0 * RAD)
@@ -2034,7 +2051,7 @@ void ECA::TimeStep(double simdt) {
 					case TOGGLESWITCH_DOWN: // MIN
 						// 0.2 degrees attitude deadband
 						// This is accomplished by the rate deadband
-						cmd_rate.x = errors.x;
+						cmd_rate.x = errors.x * 0.5;	// Otherwise roll control is not stable
 						cmd_rate.y = -errors.y;
 						cmd_rate.z = -errors.z;
 						break;
@@ -2050,23 +2067,23 @@ void ECA::TimeStep(double simdt) {
 		// Proportional Rate Demand
 		int x_def = 0, y_def = 0, z_def = 0;
 
-		if(rhc_x < 28673){ // MINUS 
-			x_def = 28673-rhc_x; 
+		if(rhc_ac_x < 28673){ // MINUS 
+			x_def = 28673-rhc_ac_x; 
 		}
-		if(rhc_x > 36863){ // PLUS 
-			x_def = (36863-rhc_x);
+		if(rhc_ac_x > 36863){ // PLUS 
+			x_def = (36863-rhc_ac_x);
 		}
-		if(rhc_y < 28673){ // MINUS 
-			y_def = 28673-rhc_y; 
+		if(rhc_ac_y < 28673){ // MINUS 
+			y_def = 28673-rhc_ac_y; 
 		}
-		if(rhc_y > 36863){ // PLUS 
-			y_def = (36863-rhc_y);
+		if(rhc_ac_y > 36863){ // PLUS 
+			y_def = (36863-rhc_ac_y);
 		}
-		if(rhc_z < 28673){ // MINUS 
-			z_def = 28673-rhc_z; 
+		if(rhc_ac_z < 28673){ // MINUS 
+			z_def = 28673-rhc_ac_z; 
 		}
-		if(rhc_z > 36863){ // PLUS 
-			z_def = (36863-rhc_z);
+		if(rhc_ac_z > 36863){ // PLUS 
+			z_def = (36863-rhc_ac_z);
 		}
 
 		double axis_percent=0;
@@ -2220,9 +2237,10 @@ void ECA::TimeStep(double simdt) {
 		//	cmd_rate.x * DEG, cmd_rate.y * DEG, cmd_rate.z * DEG, 
 		//	rate_err.x * DEG, rate_err.y * DEG, rate_err.z * DEG);	
 		// sprintf(oapiDebugString(),"SCS PITCH rate %.3f cmd %.3f pseudo %.3f error %.3f", sat->gdc.rates.x * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
+		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f error %.3f", sat->gdc.rates.z * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG);
 	}
 	// ROTATION
-	if(sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN){
+	if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN  || sat->THCRotary.IsClockwise()) {
 		switch(sat->ManualAttRollSwitch.GetState()){
 			case THREEPOSSWITCH_UP:      // ACCEL CMD
 				// ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
@@ -2508,7 +2526,7 @@ void ECA::TimeStep(double simdt) {
 	int sm_sep=0;
 	ChannelValue30 val30;
 	val30.Value = sat->agc.GetInputChannel(030); 
-	if(sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN && !sm_sep){
+	if ((sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) && !sm_sep){
 		if(thc_x < 16384){ // PLUS X
 			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(14,1); }else{ sat->rjec.SetThruster(14,0); }
 			if(accel_roll_flag > -1){ sat->rjec.SetThruster(15,1); }else{ sat->rjec.SetThruster(15,0); }

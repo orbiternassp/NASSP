@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2007/01/20 02:09:51  dseagrav
+  *	Tweaked RCS positions
+  *	
   *	Revision 1.15  2006/12/19 15:56:11  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -230,8 +233,10 @@ public:
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
+	bool IsPowered();
 
 	long rhc_x,rhc_y,rhc_z;											// RHC position
+	long rhc_ac_x,rhc_ac_y,rhc_ac_z;								// RHC AC powered position
 	long thc_x,thc_y,thc_z;											// THC position
 	int accel_roll_trigger;                                         // Joystick triggered roll thrust in ACCEL CMD mode
 	int mnimp_roll_trigger;                                         // Joystick triggered roll thrust in MIN IMP mode

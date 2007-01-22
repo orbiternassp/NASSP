@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2007/01/11 07:42:24  chode99
+  *	Changed CreateAirfoil input data to accomodate updated airfoil model
+  *	
   *	Revision 1.56  2006/12/16 01:18:53  tschachim
   *	Bugfix ph_ullage3 delete.
   *	
@@ -994,7 +997,7 @@ void Saturn::SetReentryStage ()
 
 	agc.SetInputChannelBit(030, 2, true);
 
-	double EmptyMass = 5500.0 + LESAttached ? 2000.0 : 0.0;
+	double EmptyMass = CM_EmptyMass + LESAttached ? 2000.0 : 0.0;
 
 	SetSize (6.0);
 	SetCOG_elev (2.0);
@@ -1265,7 +1268,7 @@ void Saturn::SetChuteStage1()
 	UINT meshidx;
 	SetSize (15);
 	SetCOG_elev (1);
-	SetEmptyMass (5500);
+	SetEmptyMass (CM_EmptyMass);
 	SetMaxFuelMass (100);
 	SetFuelMass (0);
 	ClearAirfoilDefinitions();
@@ -1377,7 +1380,7 @@ void Saturn::SetChuteStage2()
 	UINT meshidx;
 
 	SetCOG_elev (1);
-	SetEmptyMass (5500);
+	SetEmptyMass (CM_EmptyMass);
 	SetMaxFuelMass (100);
 	SetFuelMass (0);
 	SetMaxThrust (ENGINE_MAIN,  0);
@@ -1485,7 +1488,7 @@ void Saturn::SetChuteStage3()
 	UINT meshidx;
 	SetSize (12);
 	SetCOG_elev (1);
-	SetEmptyMass (5500);
+	SetEmptyMass (CM_EmptyMass);
 	SetMaxFuelMass (100);
 	SetFuelMass (0);
 	SetMaxThrust (ENGINE_MAIN,  0);
@@ -1591,7 +1594,7 @@ void Saturn::SetChuteStage4()
 	UINT meshidx;
 	SetSize (12);
 	SetCOG_elev (1);
-	SetEmptyMass (5500);
+	SetEmptyMass (CM_EmptyMass);
 	SetMaxFuelMass (500);
 	SetFuelMass (0);
 	SetTouchdownPoints (_V(0,0.0,0), _V(-1,0,0), _V(1,0,0));
@@ -1695,7 +1698,7 @@ void Saturn::SetSplashStage()
 	UINT meshidx;
 	SetSize (4);
 	SetCOG_elev (2);
-	SetEmptyMass (5500);
+	SetEmptyMass (CM_EmptyMass);
 	SetMaxFuelMass (0);
 	SetFuelMass (0);
 	SetMaxThrust (ENGINE_MAIN,  0);
