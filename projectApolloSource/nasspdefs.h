@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2006/12/07 18:52:43  tschachim
+  *	New LC34, Bugfixes.
+  *	
   *	Revision 1.79  2006/11/13 14:47:30  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -350,7 +353,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 107; // number of bitmap handles
+const int nsurf = 110; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -458,6 +461,9 @@ const int nsurf = 107; // number of bitmap handles
 #define SRF_SPSMININDICATOR							104
 #define SRF_SPS_INJ_VLV								105
 #define SRF_SM_RCS_MODE								106
+#define SRF_THUMBWHEEL_GPI_PITCH					107
+#define SRF_THUMBWHEEL_GPI_YAW						108
+#define SRF_THC										109
 
 //
 // Earth radius and gravity constants.
@@ -493,14 +499,11 @@ inline double KelvinToFahrenheit(double kelvin) {
 // Engine information.
 //
 
-#define SPS_THRUST					91200.0	// old 100552.5
-#define SPS_ISP						 3080.0	// old 3778.5
+#define SPS_THRUST					94000.0	
+#define SPS_ISP						 3080.0
 #define SPS_DEFAULT_PROPELLANT		18413.0
 #define SPS_NORM_OXIDIZER_FLOW		(1.6 / (1.0 + 1.6))
 
-
-//#define APS_THRUST		15880
-//#define APS_ISP			2921
 #define APS_THRUST		15600
 #define APS_ISP			2840
 #define DPS_THRUST		44910
@@ -511,10 +514,10 @@ inline double KelvinToFahrenheit(double kelvin) {
 #define SM_RCS_ISP_SL		50.0
 #define SM_RCS_THRUST		441.5
 
-#define RCS_FUEL_CM			90.0
-#define CM_RCS_ISP			(290.0 * G)
-#define CM_RCS_ISP_SL		50.0
-#define CM_RCS_THRUST		412.0
+#define CM_RCS_FUEL_PER_TANK	154.4482019	// The CM has 2 tanks
+#define CM_RCS_ISP				(290.0 * G)
+#define CM_RCS_ISP_SL			50.0
+#define CM_RCS_THRUST			412.0
 
 //
 // Mission times for specific events.
