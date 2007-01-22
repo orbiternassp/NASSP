@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2007/01/14 13:02:42  dseagrav
+  *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
+  *	
   *	Revision 1.20  2006/12/19 15:56:04  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -1602,8 +1605,176 @@ void SaturnLVSPSPcMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	v = (155.0 - v) / 160.0 * 270.0;	
 	DrawNeedle(drawSurface, 48, 45, 20.0, (v - 45.0) * RAD);
-	oapiBlt (drawSurface, FrameSurface, 0, 0, 0, 0, 95, 91, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 95, 91, SURF_PREDEF_CK);
 }
+
+
+void SaturnGPFPIMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ToggleSwitch *gpfpiindswitch, int xoffset)
+
+{
+	MeterSwitch::Init(row);
+	NeedleSurface = surf;
+	Sat = s;
+	GPFPIIndicatorSwitch = gpfpiindswitch;
+	xOffset = xoffset;
+}
+
+double SaturnGPFPIMeter::AdjustForPower(double val) 
+
+{ 
+	if (ACSource && DCSource) {
+		if (ACSource->Voltage() > SP_MIN_ACVOLTAGE && DCSource->Voltage() > SP_MIN_DCVOLTAGE)
+			return val;
+	}
+	return 0; 
+}
+
+void SaturnGPFPIMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface, xOffset,      93 - (int)v, 10, 1, 7, 8, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, xOffset + 12, 93 - (int)v,  3, 1, 7, 8, SURF_PREDEF_CK);
+}
+
+
+double SaturnGPFPIPitchMeter::QueryValue()
+
+{
+	if (GPFPIIndicatorSwitch->IsUp()) {
+		
+		LVTankQuantities LVq;
+		Sat->GetLVTankQuantities(LVq);
+		
+		if (Sat->GetStage() > LAUNCH_STAGE_TWO_TWR_JET) {  
+			return 89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass;
+		} 
+		else {
+			return 89.0 * LVq.SIIQuantity / LVq.SIIFuelMass;
+		}
+	}
+	else {
+		return (10.0 * Sat->GetSPSEngine()->pitchGimbalActuator.GetPosition()) + 44.0;
+	}
+}
+
+
+double SaturnGPFPIYawMeter::QueryValue()
+
+{
+	if (GPFPIIndicatorSwitch->IsUp()) {
+		
+		LVTankQuantities LVq;
+		Sat->GetLVTankQuantities(LVq);
+		
+		return 89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass;
+	}
+	else {
+		return (10.0 * Sat->GetSPSEngine()->yawGimbalActuator.GetPosition()) + 44.0;
+	}
+}
+
+
+void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2,
+    					 		     e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2,
+									 SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2)
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	FDAI1 = F1;
+	FDAI2 = F2;
+
+	DCSource1 = dc1;
+	DCSource2 = dc2;
+	ACSource1 = ac1;
+	ACSource2 = ac2;
+
+	GPFPIPitch1 =gpfpiPitch1;
+	GPFPIPitch2 =gpfpiPitch2;
+	GPFPIYaw1 =gpfpiYaw1;
+	GPFPIYaw2 =gpfpiYaw2;
+
+	CheckFDAIPowerState();
+}
+
+//
+// Wire up the FDAIs to the appropriate power source based on switch position. We wire them to this
+// switch, and higher level code can wire the switch to a suitable power source.
+//
+
+void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
+
+{
+	switch (GetState()) {
+	case 0:
+		FDAI1->WireTo(NULL, NULL);
+		FDAI2->WireTo(NULL, NULL);
+
+		GPFPIPitch1->WireTo(NULL, NULL);
+		GPFPIPitch2->WireTo(NULL, NULL);
+		GPFPIYaw1->WireTo(NULL, NULL);
+		GPFPIYaw2->WireTo(NULL, NULL);
+		break;
+
+	case 1:
+		FDAI1->WireTo(DCSource1, ACSource1);
+		FDAI2->WireTo(NULL, NULL);
+
+		GPFPIPitch1->WireTo(DCSource1, ACSource1);
+		GPFPIPitch2->WireTo(NULL, NULL);
+		GPFPIYaw1->WireTo(DCSource1, ACSource1);
+		GPFPIYaw2->WireTo(NULL, NULL);
+		break;
+
+	case 2:
+		FDAI1->WireTo(NULL, NULL);
+		FDAI2->WireTo(DCSource2, ACSource2);
+
+		GPFPIPitch1->WireTo(NULL, NULL);
+		GPFPIPitch2->WireTo(DCSource2, ACSource2);
+		GPFPIYaw1->WireTo(NULL, NULL);
+		GPFPIYaw2->WireTo(DCSource2, ACSource2);
+		break;
+
+	case 3:
+		FDAI1->WireTo(DCSource1, ACSource1);
+		FDAI2->WireTo(DCSource2, ACSource2);
+
+		GPFPIPitch1->WireTo(DCSource1, ACSource1);
+		GPFPIPitch2->WireTo(DCSource2, ACSource2);
+		GPFPIYaw1->WireTo(DCSource1, ACSource1);
+		GPFPIYaw2->WireTo(DCSource2, ACSource2);
+		break;
+	}
+}
+
+bool FDAIPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
+		CheckFDAIPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+bool FDAIPowerRotationalSwitch::SwitchTo(int newValue)
+
+{
+	if (RotationalSwitch::SwitchTo(newValue)) {
+		CheckFDAIPowerState();
+		return true;
+	}
+
+	return false;
+}
+
+void FDAIPowerRotationalSwitch::LoadState(char *line)
+
+{
+	RotationalSwitch::LoadState(line);
+	CheckFDAIPowerState();
+}
+
 
 //
 // CMACInverterSwitch allows you to connect the CM AC inverters to the CM AC busses.
@@ -1770,3 +1941,62 @@ void CMACInverterSwitch::LoadState(char *line)
 	ToggleSwitch::LoadState(line);
 	UpdateSourceState();
 }
+
+
+bool SaturnSCContSwitch::CheckMouseClick(int event, int mx, int my) 
+
+{
+	if (SaturnToggleSwitch::CheckMouseClick(event, mx, my)) {
+		SetSCControl(sat);
+		return true;
+	}
+	return false;
+}
+
+bool SaturnSCContSwitch::SwitchTo(int newState)
+
+{
+	if (SaturnToggleSwitch::SwitchTo(newState)) {
+		SetSCControl(sat);
+		return true;
+	}
+	return false;
+}
+
+
+void THCRotarySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s)
+
+{
+	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	sat = s;
+}
+
+bool THCRotarySwitch::CheckMouseClick(int event, int mx, int my) 
+
+{
+	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
+		SetSCControl(sat);
+		return true;
+	}
+	return false;
+}
+
+bool THCRotarySwitch::SwitchTo(int newState)
+
+{
+	if (RotationalSwitch::SwitchTo(newState)) {
+		SetSCControl(sat);
+		return true;
+	}
+	return false;
+}
+
+void SaturnSCControlSetter::SetSCControl(Saturn *sat) {
+
+	if (sat->SCContSwitch.IsUp() && !sat->THCRotary.IsClockwise()) {
+		sat->agc.SetInputChannelBit(031, 15, true);
+	} else {
+		sat->agc.SetInputChannelBit(031, 15, false);
+	}
+}
+
