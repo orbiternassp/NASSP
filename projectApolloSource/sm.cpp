@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/11/22 19:04:13  tschachim
+  *	Bugfix crash sound initialization (old way "overwrote" button sound in CM).
+  *	
   *	Revision 1.19  2006/10/02 11:36:46  tschachim
   *	Bugfix animation.
   *	
@@ -144,7 +147,9 @@ SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 	DefineAnimations();
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-	soundlib.LoadSound(BreakS, CRASH_SOUND);
+	// TODO Disabled because it "overwrites" the button sound in the CM
+	// Wait for the OrbiterSound 3.5 or higher release and check again
+	// soundlib.LoadSound(BreakS, CRASH_SOUND);
 }
 
 SM::~SM()
