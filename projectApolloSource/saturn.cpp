@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.190  2007/01/22 15:48:15  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.189  2007/01/21 00:45:54  chode99
   *	Corrected the CM roll jet direction, tweaked the position of some CM jets to coincide w/mesh
   *	
@@ -3967,7 +3970,6 @@ void Saturn::LoadTLISounds()
 void Saturn::ClearTLISounds()
 
 {
-	SMJetS.done();
 	STLI.done();
 	STLIStart.done();
 	SecoSound.done();
