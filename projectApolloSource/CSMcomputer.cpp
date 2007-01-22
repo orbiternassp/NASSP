@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2007/01/12 01:36:43  movieman523
+  *	Fixed warnings and make VC2005 build.
+  *	
   *	Revision 1.73  2007/01/11 08:22:26  chode99
   *	Added routines for reentry autopilot P61-P67
   *	
@@ -2817,13 +2820,61 @@ void CSMcomputer::Timestep(double simt, double simdt)
 	// DS20060302 For joystick stuff below
 	Saturn *sat = (Saturn *) OurVessel;
 
-	//
-	// Do nothing if we have no power.
-	//
-	if (!IsPowered())
-		return;
-
 	if (Yaagc){
+		//
+		// Do nothing if we have no power. (vAGC)
+		//
+		if (!IsPowered()){
+			// HARDWARE MUST RESTART
+			if(vagc.Erasable[0][05] != 04000){				
+				// Clear flip-flop based registers
+				vagc.Erasable[0][00] = 0;     // A
+				vagc.Erasable[0][01] = 0;     // L
+				vagc.Erasable[0][02] = 0;     // Q
+				vagc.Erasable[0][03] = 0;     // EB
+				vagc.Erasable[0][04] = 0;     // FB
+				vagc.Erasable[0][05] = 04000; // Z
+				vagc.Erasable[0][06] = 0;     // BB
+				// Clear ISR flag
+				vagc.InIsr = 0;
+				// Clear interrupt requests
+				vagc.InterruptRequests[0] = 0;
+				vagc.InterruptRequests[1] = 0;
+				vagc.InterruptRequests[2] = 0;
+				vagc.InterruptRequests[3] = 0;
+				vagc.InterruptRequests[4] = 0;
+				vagc.InterruptRequests[5] = 0;
+				vagc.InterruptRequests[6] = 0;
+				vagc.InterruptRequests[7] = 0;
+				vagc.InterruptRequests[8] = 0;
+				vagc.InterruptRequests[9] = 0;
+				vagc.InterruptRequests[10] = 0;
+				// Reset cycle counter and Extracode flags
+				vagc.CycleCounter = 0;
+				vagc.ExtraCode = 0;
+				vagc.ExtraDelay = 0;
+				// No idea about the interrupts/pending/etc so we reset those
+				vagc.AllowInterrupt = 0;				  
+				vagc.PendFlag = 0;
+				vagc.PendDelay = 0;
+				// Don't disturb erasable core
+				// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
+				// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it
+				InputChannel[033] &= 017777;
+				vagc.InputChannel[033] &= 017777;				
+				OutputChannel[033] &= 017777;				
+				vagc.Ch33Switches &= 017777;
+				// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
+				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
+				vagc.VoltageAlarm = 1;
+				sat->dsky.LightRestart();
+				sat->dsky2.LightRestart();
+			}
+			// We should issue telemetry though.
+			sat->pcm.TimeStep(simt);
+			return;
+		}
+
 		//
 		// Initial startup hack for Yaagc.
 		//
@@ -2891,52 +2942,21 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		}
 
 		// Do single timesteps to maintain sync with telemetry engine
-		SingleTimestepPrep(simt,simdt);                   // Setup
+		SingleTimestepPrep(simt,simdt);                       // Setup
 		if(LastCycled == 0){ LastCycled = (simt - simdt); }	  // Use simdt as difference if new run
-		double ThisTime = LastCycled;					  // Save here
+		double ThisTime = LastCycled;					      // Save here
 		
-		long cycles = (long)((simt - LastCycled) / 0.0000117); // Get number of CPU cycles to do
-		LastCycled += (0.0000117 * cycles);               // Preserve the remainder
+		long cycles = (long)((simt - LastCycled) / 0.00001171875); // Get number of CPU cycles to do
+		LastCycled += (0.00001171875 * cycles);                    // Preserve the remainder
 		long x = 0; 
 		while(x < cycles){
 			SingleTimestep();
-			ThisTime += 0.0000117;         // Add time
-			sat->pcm.TimeStep(ThisTime);   // and do this
+			ThisTime += 0.00001171875;                          // Add time
+			if((ThisTime - sat->pcm.last_update) > 0.00015625){ // If a step is needed
+				sat->pcm.TimeStep(ThisTime);                    // do it
+			}
 			x++;
 		}
-
-		//
-		// Debug output to check P11 -- Do we even need this anymore?
-		//
-		/*
-		VECTOR3 vel, hvel;
-		double vvel = 0, apDist, peDist;
-		OBJHANDLE earth = oapiGetGbodyByName("Earth");
-		OurVessel->GetRelativeVel(earth, vel); 
-		if (OurVessel->GetHorizonAirspeedVector(hvel)) {
-			vvel = hvel.y * 3.2808399;
-		}
-
-		if (lastOrbitalElementsTime == 0) {
-			apDist = 0;
-			peDist = 0;
-			lastOrbitalElementsTime = simt;
-
-		} else if (simt - lastOrbitalElementsTime >= 2.0) {
-			OurVessel->GetApDist(apDist);
-			OurVessel->GetPeDist(peDist);
-
-			apDist -= 6.373338e6;
-			peDist -= 6.373338e6;
-
-#ifdef _DEBUG
-			sprintf(oapiDebugString(), "P11 - Vel %.0f Vert. Vel %.0f Alt %.0f ApD %.0f PeD %.0f",  
-				length(vel) * 3.2808399, vvel, OurVessel->GetAltitude() * 0.000539957 * 10, 
-				apDist * 0.000539957 * 10, peDist * 0.000539957 * 10);
-#endif 
-			lastOrbitalElementsTime = simt;
-		}
-		*/
 
 		//
 		// Check nonspherical gravity sources
@@ -2947,6 +2967,12 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		// Done!
 		return;
 	}
+
+	//
+	// Do nothing if we have no power (AGC++)
+	//
+	if (!IsPowered())
+		return;
 
 	if (!GenericTimestep(simt, simdt)) {
 
