@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2007/01/21 18:34:12  jasonims
+  *	shifted j2 exhast
+  *	
   *	Revision 1.52  2006/12/07 18:52:43  tschachim
   *	New LC34, Bugfixes.
   *	
@@ -1219,7 +1222,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		vs1.vrot.z = 0.0;
 		SMJetS.play();
 		SMJetS.done();
-		if(dockstate !=5){
+		if (HasProbe && dockstate != 5) {	// TODO: No clue what dockstate means...
 			VECTOR3 ofs = OFS_DOCKING2;
 			VECTOR3 vel = {0.0,0.0,0.1};
 			VESSELSTATUS vs4b;
@@ -1230,6 +1233,8 @@ void Saturn1b::SeparateStage (int new_stage)
 			vs4b.vrot.z = 0.0;
 			GetApolloName(VName); strcat (VName, "-DCKPRB");
 			hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
+			HasProbe = false;
+
 		}
 		GetApolloName(VName); strcat (VName, "-SM");
 		hSMJet = oapiCreateVessel(VName, "ProjectApollo/SM", vs1);
