@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2007/01/22 15:48:19  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.2  2006/11/20 16:38:27  tschachim
   *	Bugfix CWS CM/SM separation.
   *	
@@ -159,8 +162,9 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 		} else {
 			propellantPressurePSI = 0;
 		}
-		heliumPressurePSI = 3400.0 * (p / pmax) * (p / pmax) + 200.0;
-		nitrogenPressurePSI = 700.0 * (p / pmax) + 1800.0;
+		double pMaxForPressures = our_vessel->GetPropellantMaxMass(source_prop);
+		heliumPressurePSI = 3400.0 * (p / pMaxForPressures) * (p / pMaxForPressures) + 200.0;
+		nitrogenPressurePSI = 700.0 * (p / pMaxForPressures) + 1800.0;
 	}
 
 	// Propellant masses for display
