@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2007/01/22 15:48:13  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.65  2007/01/11 08:23:58  chode99
   *	Modified the lift function for the CM to include Mach dependency
   *	
@@ -761,7 +764,9 @@ void Saturn1b::StageStartSIVB(double simt)
 			TowerJS.done();
 			SetStage(LAUNCH_STAGE_SIVB);
 			// Enable docking probe because the tower is gone
-			dockingprobe.SetEnabled(true);
+			if (HasProbe) {
+				dockingprobe.SetEnabled(true);
+			}
 		}
 		return;
 	}
