@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2007/01/22 15:48:16  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.57  2007/01/11 07:42:24  chode99
   *	Changed CreateAirfoil input data to accomodate updated airfoil model
   *	
@@ -1917,7 +1920,9 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 		//
 		// Enable docking probe because the tower is gone
 		//
-		dockingprobe.SetEnabled(true);
+		if (HasProbe) {
+			dockingprobe.SetEnabled(true);
+		}
 	}
 
 	ConfigureStageMeshes(stage);
