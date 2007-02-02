@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.138  2007/01/22 15:48:15  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.137  2007/01/14 13:02:42  dseagrav
   *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
   *	
@@ -161,7 +164,7 @@
 
 //FILE *PanelsdkLogFile;
 
-// DS20060302 DX8 callback for enumerating joysticks
+// DX8 callback for enumerating joysticks
 BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pSaturn)
 {
 	class Saturn * sat = (Saturn*)pSaturn; // Pointer to us
@@ -178,6 +181,29 @@ BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* 
 
 	sat->js_enabled++;      // Otherwise, Next!
 	return DIENUM_CONTINUE; // and keep enumerating
+}
+
+// DX8 callback for enumerating joystick axes
+BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSaturn )
+{
+	class Saturn * sat = (Saturn*)pSaturn; // Pointer to us
+
+    if (pdidoi->guidType == GUID_ZAxis) {
+		if (sat->js_current == sat->rhc_id) {
+			sat->rhc_rzx_id = 1;
+		} else {
+			sat->thc_rzx_id = 1;
+		}
+	}
+
+    if (pdidoi->guidType == GUID_RzAxis) {
+		if (sat->js_current == sat->rhc_id) {
+			sat->rhc_rot_id = 2;
+		} else {
+			sat->thc_rot_id = 2;
+		}
+	}
+    return DIENUM_CONTINUE;
 }
 
 void Saturn::SystemsInit() {
@@ -514,6 +540,8 @@ void Saturn::SystemsInit() {
 	thc_rzx_id = -1; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
+	rhc_auto = false;
+	thc_auto = false;
 
 	FILE *fd;
 	// Open configuration file
@@ -589,6 +617,12 @@ void Saturn::SystemsInit() {
 				if(strncmp(token,"TDB",3)==0){					// THC debug					
 					thc_debug = 1;
 				}
+				if (!strncmp(token,"RAUTO", 4)) {				
+					rhc_auto = true;
+				}
+				if (!strncmp(token,"TAUTO", 4)) {				
+					thc_auto = true;
+				}
 			}			
 		}		
 		fclose(fd);
@@ -611,6 +645,12 @@ void Saturn::SystemsInit() {
 						*/ 
 					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
 					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+
+					// Z-axis detection
+					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
+						js_current = x;
+						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS);
+					}
 					x++;                                              // Next!
 				}
 			}
@@ -1514,8 +1554,11 @@ void Saturn::JoystickTimestep()
 			}
 			// Z-axis read.
 			int rhc_rot_pos = 32768; // Initialize to centered
-			if(rhc_rot_id != -1){ // If this is a rotator-type axis
-				switch(rhc_rot_id){
+			if (rhc_rzx_id != -1) { // Native Z-axis first
+				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
+			}
+			if(rhc_rot_id != -1) { // Then if this is a rotator-type axis
+				switch(rhc_rot_id) {
 					case 0:
 						rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
 					case 1:
@@ -1524,11 +1567,8 @@ void Saturn::JoystickTimestep()
 						rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
 				}
 			}
-			if(rhc_sld_id != -1){ // If this is a slider
+			if(rhc_sld_id != -1) { // Finally if this is a slider
 				rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
-			}
-			if(rhc_rzx_id != -1){ // If we use the native Z-axis
-				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 			}
 			if(rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
 				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
