@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.231  2007/01/22 15:48:16  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.230  2007/01/14 13:02:43  dseagrav
   *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
   *	
@@ -772,6 +775,9 @@ public:
 	int thc_rzx_id;                       // Flag to use native Z-axis as THC Z-axis	
 	int rhc_debug;						  // Flags to print debugging messages.
 	int thc_debug;
+	bool rhc_auto;						  // RHC Z-axis auto detection
+	bool thc_auto;						  // THC Z-axis auto detection
+	int js_current;
 
 	//
 	// General functions that handle calls from Orbiter.
