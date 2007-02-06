@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/07/28 02:06:57  movieman523
+  *	Now need to hard dock to get the connectors connected.
+  *	
   *	Revision 1.6  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -94,7 +97,6 @@ void DockingProbe::Extend()
 
 	ExtendingRetracting = 1;
 	if (Status != DOCKINGPROBE_STATUS_EXTENDED) {
-		ProbeExtended = true;
 		if (Docked) {
 			OurVessel->Undock(0);
 			UndockSound.play();
@@ -124,7 +126,6 @@ void DockingProbe::Retract()
 
 	ExtendingRetracting = -1;
 	if (Status != DOCKINGPROBE_STATUS_RETRACTED) {
-		ProbeExtended = false;
 		if (Docked) {
 			LatchSound.play();
 		} else {
@@ -184,6 +185,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 			Status = DOCKINGPROBE_STATUS_EXTENDED;
 			ExtendingRetracting = 0;
 			OurVessel->Undocking();
+			OurVessel->SetDockingProbeMesh();
 		} else {
 			Status += 0.33 * simdt;
 		}
@@ -192,6 +194,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 			Status = DOCKINGPROBE_STATUS_RETRACTED;
 			ExtendingRetracting = 0;
 			OurVessel->HaveHardDocked();		
+			OurVessel->SetDockingProbeMesh();
 		} else {
 			Status -= 0.33 * simdt;
 		}	

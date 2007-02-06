@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.94  2007/01/22 15:48:14  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.93  2007/01/11 23:08:21  chode99
   *	New CoeffFunc lift model for CM includes Mach dependence
   *	
@@ -1676,20 +1679,31 @@ void SaturnV::StageSix(double simt)
 				dockstate = 2;
 				release_time = simt;
 				Resetjet = true;
-				DockStage (dockstate);
+				DockStage(dockstate);
 			}
 			bManualUnDock = false;
 		}
 		else if (GetDockStatus(GetDockHandle(0)) == hLMV) {
+			// Final LM separation
 			if (dockstate == 3 && ProbeJetison) {
-				// Final separation
-				DockStage (dockstate);
+				// Undock
 				Undock(0);
+				// Auto translation manoever
+				SetAttitudeLinLevel(2,-1);
+				release_time = simt;
+				Resetjet = true;
+				//Time to hear the Stage separation
+				SMJetS.play(NOLOOP);
 				// Disable docking probe because it's jettisoned 
 				dockingprobe.SetEnabled(false);
+				HasProbe = false;
+				SetDockingProbeMesh();
 
-			} else {
-				// Normal undocking
+				dockstate=5;
+				ProbeJetison = false;
+			}
+			// Normal LM undocking
+			else {
 				dockingprobe.Extend(); 
 			}
 			bManualUnDock = false;
@@ -1702,7 +1716,7 @@ void SaturnV::StageSix(double simt)
 	if (CMSMPyros.Blown())
 	{
 		if (dockstate <= 1 || dockstate >= 3) {
-			SeparateStage (CM_STAGE);
+			SeparateStage(CM_STAGE);
 			bManualSeparate = false;
 			SetStage(CM_STAGE);
 		}
@@ -2090,6 +2104,10 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	case CSM_LEM_STAGE:
 		SetCSMStage();
+
+		if (EVA_IP){
+			SetupEVA();
+		}
 		break;
 
 	default:
@@ -2104,20 +2122,16 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	switch (dockstate) {
 		case 1:
-				break;
+			break;
 		case 2:
-
-				break;
+			break;
 		case 3:
 			break;
 		case 4:
 			break;
 		case 5:
-			SetCSM2Stage();
-			break;
-			if (EVA_IP){
-				SetupEVA();
-			}
+			// TODO: SetCSM2Stage is buggy
+			// SetCSM2Stage ();
 			break;
 	}
 

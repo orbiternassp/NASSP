@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.191  2007/01/22 22:05:47  tschachim
+  *	Bugfix SMJetS sound.
+  *	
   *	Revision 1.190  2007/01/22 15:48:15  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -955,7 +958,8 @@ void Saturn::initSaturn()
 
 	viewpos = SATVIEW_LEFTSEAT;
 
-	probeidx = 0;
+	probeidx = -1;
+	probeextidx = -1;
 	ToggleEva = false;
 	ActivateASTP = false;
 

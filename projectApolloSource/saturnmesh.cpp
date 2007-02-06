@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2007/01/28 17:04:26  tschachim
+  *	Bugfix docking probe.
+  *	
   *	Revision 1.58  2007/01/22 15:48:16  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -420,16 +423,13 @@ void Saturn::ToggelHatch()
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	if (HasProbe) 
-	{
-		if (dockingprobe.ProbeExtended)
-		{
-			probeidx = AddMesh (hprobeext, &mesh_dir);
-		}
-		else
-		{
-			probeidx = AddMesh (hprobe, &mesh_dir);
-		}
+	if (HasProbe) {
+		probeidx = AddMesh(hprobe, &mesh_dir);
+		probeextidx = AddMesh(hprobeext, &mesh_dir);
+		SetDockingProbeMesh();
+	} else {
+		probeidx = -1;
+		probeextidx = -1;
 	}
 }
 
@@ -532,16 +532,13 @@ void Saturn::ToggleEVA()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		HatchOpen = true;
-		if (HasProbe)
-		{
-			if (dockingprobe.ProbeExtended)
-			{
-				probeidx = AddMesh (hprobeext, &mesh_dir);
-			}
-			else
-			{
-				probeidx = AddMesh (hprobe, &mesh_dir);
-			}
+		if (HasProbe) {
+			probeidx = AddMesh(hprobe, &mesh_dir);
+			probeextidx = AddMesh(hprobeext, &mesh_dir);
+			SetDockingProbeMesh();
+		} else {
+			probeidx = -1;
+			probeextidx = -1;
 		}
 	}
 	else 
@@ -577,16 +574,13 @@ void Saturn::ToggleEVA()
 
 		HatchOpen= true;
 
-		if (HasProbe)
-		{
-			if (dockingprobe.ProbeExtended)
-			{
-				probeidx = AddMesh (hprobeext, &mesh_dir);
-			}
-			else
-			{
-				probeidx = AddMesh (hprobe, &mesh_dir);
-			}
+		if (HasProbe) {
+			probeidx = AddMesh(hprobe, &mesh_dir);
+			probeextidx = AddMesh(hprobeext, &mesh_dir);
+			SetDockingProbeMesh();
+		} else {
+			probeidx = -1;
+			probeextidx = -1;
 		}
 
 		VESSELSTATUS vs1;
@@ -649,16 +643,13 @@ void Saturn::SetupEVA()
 
 		HatchOpen = true;
 
-		if (HasProbe)
-		{
-			if (dockingprobe.ProbeExtended)
-			{
-				probeidx = AddMesh (hprobeext, &mesh_dir);
-			}
-			else
-			{
-				probeidx = AddMesh (hprobe, &mesh_dir);
-			}
+		if (HasProbe) {
+			probeidx = AddMesh(hprobe, &mesh_dir);
+			probeextidx = AddMesh(hprobeext, &mesh_dir);
+			SetDockingProbeMesh();
+		} else {
+			probeidx = -1;
+			probeextidx = -1;
 		}
 	}
 }
@@ -837,16 +828,13 @@ void Saturn::SetCSMStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	VCMeshOffset = mesh_dir;
 
-	if (HasProbe)
-	{
-		if (dockingprobe.ProbeExtended)
-		{
-			probeidx = AddMesh (hprobeext, &mesh_dir);
-		}
-		else
-		{
-			probeidx = AddMesh (hprobe, &mesh_dir);
-		}
+	if (HasProbe) {
+		probeidx = AddMesh(hprobe, &mesh_dir);
+		probeextidx = AddMesh(hprobeext, &mesh_dir);
+		SetDockingProbeMesh();
+	} else {
+		probeidx = -1;
+		probeextidx = -1;
 	}
 
 	VECTOR3 dockpos = {0,0,35.90-CGOffset};
@@ -877,6 +865,26 @@ void Saturn::SetCSMStage ()
 	ActivateASTP = false;
 }
 
+void Saturn::SetDockingProbeMesh() {
+
+	if (probeidx == -1 || probeextidx == -1)
+		return;
+
+	if (HasProbe) {
+		if (dockingprobe.IsExtended()) {
+			SetMeshVisibilityMode(probeidx, MESHVIS_NEVER);
+			SetMeshVisibilityMode(probeextidx, MESHVIS_VCEXTERNAL);
+		} else {
+			SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
+			SetMeshVisibilityMode(probeextidx, MESHVIS_NEVER);
+		}
+	} else {
+		SetMeshVisibilityMode(probeidx, MESHVIS_NEVER);
+		SetMeshVisibilityMode(probeextidx, MESHVIS_NEVER);
+	}
+}
+
+/*
 void Saturn::SetCSM2Stage ()
 {
 	ClearMeshes();
@@ -985,6 +993,7 @@ void Saturn::SetCSM2Stage ()
 	ThrustAdjust = 1.0;
 	ActivateASTP = false;
 }
+*/
 
 void Saturn::SetReentryStage ()
 
@@ -1920,9 +1929,7 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 		//
 		// Enable docking probe because the tower is gone
 		//
-		if (HasProbe) {
-			dockingprobe.SetEnabled(true);
-		}
+		dockingprobe.SetEnabled(HasProbe);			
 	}
 
 	ConfigureStageMeshes(stage);

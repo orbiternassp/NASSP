@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/07/28 02:06:57  movieman523
+  *	Now need to hard dock to get the connectors connected.
+  *	
   *	Revision 1.6  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -62,7 +65,7 @@ public:
 	double GetStatus() { return Status; }
 	bool GetDocked() { return Docked; }
 	bool IsHardDocked();
-	bool ProbeExtended;
+	bool IsExtended() { return (Status == DOCKINGPROBE_STATUS_EXTENDED); };
 	void SetEnabled(bool e) { Enabled = e; }
 	void Extend();
 	void Retract();
