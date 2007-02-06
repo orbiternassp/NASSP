@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.232  2007/02/02 13:55:45  tschachim
+  *	CSM RHC/THC Z axis autodetection.
+  *	
   *	Revision 1.231  2007/01/22 15:48:16  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -1087,6 +1090,11 @@ public:
 	/// \brief We've extended the docking probe, so disconnect connections.
 	///
 	void Undocking();
+
+	///
+	/// \brief Set docking probe mesh
+	///
+	void SetDockingProbeMesh();
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -3211,6 +3219,7 @@ protected:
 	unsigned int	viewpos;
 
 	UINT probeidx;
+	UINT probeextidx;
 	
 	bool ActivateASTP;
 
@@ -3504,10 +3513,10 @@ protected:
 	void SetChuteStage3();
 	void SetChuteStage4();
 	void SetSplashStage();
-	void SetAbortStage ();
-	void SetCSMStage ();
-	void SetCSM2Stage ();
-	void SetReentryStage ();
+	void SetAbortStage();
+	void SetCSMStage();
+	// void SetCSM2Stage ();
+	void SetReentryStage();
 	void AddRCS_CM(double MaxThrust, double offset = 0.0);
 	void SetRCS_CM();
 	void GenericTimestepStage(double simt, double simdt);

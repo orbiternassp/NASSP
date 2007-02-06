@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.73  2006/10/23 13:41:48  tschachim
   *	Bugfix
   *	
@@ -1002,6 +1007,9 @@ void SaturnV::SetThirdStageMesh (double offset)
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
+	probeidx = -1;
+	probeextidx = -1;
+
 	if (LESAttached)
 	{
 		TowerOffset = 28.2 + offset;
@@ -1009,18 +1017,11 @@ void SaturnV::SetThirdStageMesh (double offset)
 		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
-	else
-	{
-		if (HasProbe)
-		{
-			if (dockingprobe.ProbeExtended)
-			{
-				probeidx = AddMesh (hprobeext, &mesh_dir);
-			}
-			else 
-			{
-				probeidx = AddMesh (hprobe, &mesh_dir);
-			}
+	else {
+		if (HasProbe) {
+			probeidx = AddMesh(hprobe, &mesh_dir);
+			probeextidx = AddMesh(hprobeext, &mesh_dir);
+			SetDockingProbeMesh();
 		}
 	}
 
@@ -1662,156 +1663,123 @@ void SaturnV::DockStage (UINT dockstatus)
 	vs5.rvel.y = rvel5.y+rofs5.y;
 	vs5.rvel.z = rvel5.z+rofs5.z;
 
-   switch (dockstatus)	{
-
-   case 1:
+	switch (dockstatus)	{
+	case 1:
 		break;
 
-   case 2:
+	case 2: {
+		LEM *lmvessel;
+		VESSELSTATUS2 vslm2, *pv;
+		VESSELSTATUS2::DOCKINFOSPEC dckinfo;
+		char VNameLM[256];
 
-	   {
-			LEM *lmvessel;
-			VESSELSTATUS2 vslm2, *pv;
-			VESSELSTATUS2::DOCKINFOSPEC dckinfo;
-			char VNameLM[256];
+		Undock(0);
 
-			Undock(0);
+		//
+		// Tell the S4b that we've removed the payload.
+		//
 
-			//
-			// Tell the S4b that we've removed the payload.
-			//
+		SIVBSettings S4Config;
+		SIVB *SIVBVessel;
 
-			SIVBSettings S4Config;
-			SIVB *SIVBVessel;
+		S4Config.SettingsType.word = 0;
+		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
+		S4Config.Payload = PAYLOAD_EMPTY;
 
-			S4Config.SettingsType.word = 0;
-			S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
-			S4Config.Payload = PAYLOAD_EMPTY;
+		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
+		SIVBVessel->SetState(S4Config);
 
-			SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
-			SIVBVessel->SetState(S4Config);
-
-			//
-			//Time to hear the Stage separation
-			//
-
-			SMJetS.play(NOLOOP,230);
-
-			//
-			//Now Lets create a real LEM and dock it
-			//
-
-			dockingprobe.SetIgnoreNextDockEvent();
-
-			
-			GetLEMName(VNameLM);
-
-			vslm2.version = 2;
-			vslm2.flag = 0;
-			vslm2.fuel = 0;
-			vslm2.thruster = 0;
-			vslm2.ndockinfo = 1;
-			vslm2.dockinfo = &dckinfo;
-
-			GetStatusEx(&vslm2);
-
-			vslm2.dockinfo[0].idx = 0;
-			vslm2.dockinfo[0].ridx = 0;
-			vslm2.dockinfo[0].rvessel = GetHandle();
-  			vslm2.ndockinfo = 1;
-			vslm2.flag = VS_DOCKINFOLIST;
-			vslm2.version = 2;
-			pv = &vslm2;
-			hLMV = oapiCreateVesselEx(VNameLM, "ProjectApollo/LEM", pv);
-
-			//
-			// Initialise the state of the LEM AGC information.
-			//
-
-			LemSettings ls;
-
-			ls.AutoSlow = AutoSlow;
-			ls.Crewed = Crewed;
-			ls.LandingAltitude = LMLandingAltitude;
-			ls.LandingLatitude = LMLandingLatitude;
-			ls.LandingLongitude = LMLandingLongitude;
-			strncpy (ls.language, AudioLanguage, 63);
-			strncpy (ls.CSMName, GetName(), 63);
-			ls.MissionNo = ApolloNo;
-			ls.MissionTime = MissionTime;
-			ls.Realism = Realism;
-			ls.Yaagc = agc.IsVirtualAGC();
-
-			lmvessel = (LEM *) oapiGetVesselInterface(hLMV);
-			lmvessel->SetLanderData(ls);
-			LEMdatatransfer = true;
-
-			GetStatusEx(&vslm2);
-
-			vslm2.dockinfo = &dckinfo;
-			vslm2.dockinfo[0].idx = 0;
-			vslm2.dockinfo[0].ridx = 0;
-			vslm2.dockinfo[0].rvessel = hLMV;
-  			vslm2.ndockinfo = 1;
-			vslm2.flag = VS_DOCKINFOLIST;
-			vslm2.version = 2;
-
-			DefSetStateEx(&vslm2);
-
-			//
-			// PAD load.
-			//
-
-			if (LMPad && LMPadCount > 0) {
-				for (i = 0; i < LMPadCount; i++) {
-					lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
-				}
-			}
-
-			bManualUnDock = false;
-			dockstate = 3;
-			SetAttitudeLinLevel(2,-1);
-			break;
-		}
-
-   case 3:
-	if(bManualUnDock) {
-		//DM Jetison preparation
-		SetAttitudeLinLevel(2,-1);
-
+		//
 		//Time to hear the Stage separation
-		SMJetS.play(NOLOOP);
-		bManualUnDock= false;
-		if (ProbeJetison)
-		{
-			if (stage == CSM_LEM_STAGE)
-			{
-				SetCSM2Stage ();
+		//
+
+		SMJetS.play(NOLOOP,230);
+
+		//
+		//Now Lets create a real LEM and dock it
+		//
+
+		dockingprobe.SetIgnoreNextDockEvent();
+
+		
+		GetLEMName(VNameLM);
+
+		vslm2.version = 2;
+		vslm2.flag = 0;
+		vslm2.fuel = 0;
+		vslm2.thruster = 0;
+		vslm2.ndockinfo = 1;
+		vslm2.dockinfo = &dckinfo;
+
+		GetStatusEx(&vslm2);
+
+		vslm2.dockinfo[0].idx = 0;
+		vslm2.dockinfo[0].ridx = 0;
+		vslm2.dockinfo[0].rvessel = GetHandle();
+  		vslm2.ndockinfo = 1;
+		vslm2.flag = VS_DOCKINFOLIST;
+		vslm2.version = 2;
+		pv = &vslm2;
+		hLMV = oapiCreateVesselEx(VNameLM, "ProjectApollo/LEM", pv);
+
+		//
+		// Initialise the state of the LEM AGC information.
+		//
+
+		LemSettings ls;
+
+		ls.AutoSlow = AutoSlow;
+		ls.Crewed = Crewed;
+		ls.LandingAltitude = LMLandingAltitude;
+		ls.LandingLatitude = LMLandingLatitude;
+		ls.LandingLongitude = LMLandingLongitude;
+		strncpy (ls.language, AudioLanguage, 63);
+		strncpy (ls.CSMName, GetName(), 63);
+		ls.MissionNo = ApolloNo;
+		ls.MissionTime = MissionTime;
+		ls.Realism = Realism;
+		ls.Yaagc = agc.IsVirtualAGC();
+
+		lmvessel = (LEM *) oapiGetVesselInterface(hLMV);
+		lmvessel->SetLanderData(ls);
+		LEMdatatransfer = true;
+
+		GetStatusEx(&vslm2);
+
+		vslm2.dockinfo = &dckinfo;
+		vslm2.dockinfo[0].idx = 0;
+		vslm2.dockinfo[0].ridx = 0;
+		vslm2.dockinfo[0].rvessel = hLMV;
+  		vslm2.ndockinfo = 1;
+		vslm2.flag = VS_DOCKINFOLIST;
+		vslm2.version = 2;
+
+		DefSetStateEx(&vslm2);
+
+		//
+		// PAD load.
+		//
+
+		if (LMPad && LMPadCount > 0) {
+			for (i = 0; i < LMPadCount; i++) {
+				lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
 			}
-			StageS.play(NOLOOP);
-			bManualUnDock= false;
-			dockstate=5;
 		}
-		else
-		{
-			if (stage == CSM_LEM_STAGE)
-			{
-				SetCSMStage ();
-			}
-			SMJetS.play(NOLOOP);
-			bManualUnDock= false;
-			ProbeJetison=true;
-			dockstate=4;
+
+		bManualUnDock = false;
+		dockstate = 3;
+		SetAttitudeLinLevel(2,-1);
 		}
-	}
-	break;
-   case 4:
+		break;
 
-	   break;
-   case 5:
+	case 3:
+		break;
 
-	   break;
+	case 4:
+		break;
 
+	case 5:
+		break;
 	}
 
 }

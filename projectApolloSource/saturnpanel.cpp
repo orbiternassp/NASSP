@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.201  2007/01/22 15:48:16  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.200  2007/01/14 13:02:43  dseagrav
   *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
   *	
@@ -5341,7 +5344,7 @@ void Saturn::InitSwitches() {
 
 	VHFAMVolumeThumbwheelSwitch.Register(PSH, "VHFAMVolumeThumbwheelSwitch", 2, 9);
 
-	ModeSwitch.Register(PSH, "ModeSwitch", THREEPOSSWITCH_DOWN);
+	ModeSwitch.Register(PSH, "ModeSwitch", THREEPOSSWITCH_CENTER);
 
 	ControllerSpeedSwitch.Register(PSH, "ControllerSpeedSwitch", THREEPOSSWITCH_UP);
 

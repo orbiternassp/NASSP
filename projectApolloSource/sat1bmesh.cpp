@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2007/01/23 14:41:57  tschachim
+  *	Bugfix docking probe jettison.
+  *	
   *	Revision 1.53  2007/01/21 18:34:12  jasonims
   *	shifted j2 exhast
   *	
@@ -328,6 +331,8 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 	mesh_dir=_V(-1.85,-1.85,24.5);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
 
+	probeidx = -1;
+	probeextidx = -1;
 	if (SaturnHasCSM()) {
 
 		//
@@ -399,19 +404,12 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 			meshidx = AddMesh (hFHC, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-			if (HasProbe)
-			{
-				if (dockingprobe.ProbeExtended)
-				{
-					probeidx = AddMesh (hprobeext, &mesh_dir);
-				}
-				else 
-				{
-					probeidx = AddMesh (hprobe, &mesh_dir);
-				}
+			if (HasProbe) {
+				probeidx = AddMesh(hprobe, &mesh_dir);
+				probeextidx = AddMesh(hprobeext, &mesh_dir);
+				SetDockingProbeMesh();
 			}
 		}
-
 	}
 	else {
 
@@ -544,6 +542,9 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
 
+	probeidx = -1;
+	probeextidx = -1;
+
 	if (SaturnHasCSM()) {
 
 		//
@@ -615,16 +616,10 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 			meshidx = AddMesh (hFHC, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-			if (HasProbe)
-			{
-				if (dockingprobe.ProbeExtended)
-				{
-					probeidx = AddMesh (hprobeext, &mesh_dir);
-				}
-				else 
-				{
-					probeidx = AddMesh (hprobe, &mesh_dir);
-				}
+			if (HasProbe) {
+				probeidx = AddMesh(hprobe, &mesh_dir);
+				probeextidx = AddMesh(hprobeext, &mesh_dir);
+				SetDockingProbeMesh();
 			}
 		}
 
@@ -741,7 +736,6 @@ void Saturn1b::SetASTPStage ()
 {
 	ClearThrusterDefinitions();
 	UINT meshidx;
-	probeidx=0;
 	SetSize (4.0);
 	SetCOG_elev (3.5);
 	SetEmptyMass (19318);
@@ -789,16 +783,13 @@ void Saturn1b::SetASTPStage ()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	if (HasProbe)
-	{
-		if (dockingprobe.ProbeExtended)
-		{
-			probeidx = AddMesh (hprobeext, &mesh_dir);
-		}
-		else 
-		{
-			probeidx = AddMesh (hprobe, &mesh_dir);
-		}
+	if (HasProbe) {
+		probeidx = AddMesh(hprobe, &mesh_dir);
+		probeextidx = AddMesh(hprobeext, &mesh_dir);
+		SetDockingProbeMesh();
+	} else {
+		probeidx = -1;
+		probeextidx = -1;
 	}
 
 	mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
@@ -981,8 +972,12 @@ void Saturn1b::DockStage (UINT dockstatus)
 				VESSEL::Create (VName2, "ProjectApollo/nSat1astp2", vs4b);
 				hAstpDM=oapiGetVesselByName(VName2);
 			}
+
+			// TODO: Fix that...
 			if (ProbeJetison){
-				SetCSM2Stage ();
+				// TODO: SetCSM2Stage is buggy
+				SetCSMStage();
+				// SetCSM2Stage ();
 				StageS.play();
 				bManualUnDock= false;
 				dockstate=4;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2007/01/28 17:04:26  tschachim
+  *	Bugfix docking probe.
+  *	
   *	Revision 1.66  2007/01/22 15:48:13  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -764,9 +767,7 @@ void Saturn1b::StageStartSIVB(double simt)
 			TowerJS.done();
 			SetStage(LAUNCH_STAGE_SIVB);
 			// Enable docking probe because the tower is gone
-			if (HasProbe) {
-				dockingprobe.SetEnabled(true);
-			}
+			dockingprobe.SetEnabled(HasProbe);			
 		}
 		return;
 	}
@@ -1208,8 +1209,9 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		case 4:
 			break;
 		case 5:
-			SetCSM2Stage();
-				break;
+			// TODO: No clue what dockstate means, but SetCSM2Stage is buggy 
+			// SetCSM2Stage();
+			break;
 		}
 
 		if (EVA_IP){
