@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/02/06 18:30:17  tschachim
+  *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
+  *	
   *	Revision 1.7  2006/07/28 02:06:57  movieman523
   *	Now need to hard dock to get the connectors connected.
   *	
@@ -64,6 +67,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 

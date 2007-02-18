@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/08/11 21:16:22  movieman523
+  *	Dummy ELS implementation.
+  *	
   *	Revision 1.4  2006/08/11 19:34:47  movieman523
   *	Added code to take the docking probe with the LES on a post-abort jettison.
   *	
@@ -54,6 +57,7 @@
 #include "connector.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 #include "secs.h"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2006/07/27 23:24:11  tschachim
+  *	The Saturn 1b now has the Saturn V IGM autopilot.
+  *	
   *	Revision 1.29  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -257,6 +260,45 @@ protected:
 	Sound S5P100;
 	Sound SRover;
 	Sound SecoSound;
+	
+	// DS20070205 LVDC++
+	// This code is here temporarily for the development of the LVDC++.
+	// Right now it only affects the Saturn V, so it's here. Later as it improves it can be applied to the S1B
+	// and moved to somewhere more appropriate.
+	// If it's here, I don't have to wait for everything saturn-derived to rebuild if I modify it.
+
+	int LVDC_Timebase;								// Time Base
+	double LVDC_TB_ETime;                           // Time elapsed since timebase start
+
+	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
+	bool LVDC_EI_On;								// Engine Indicator lights on
+	bool LVDC_IMU_Levelled;							// IMU Levelled flag
+	bool LVDC_GRR;                                  // Guidance Reference Released
+	bool LVDC_Gnd_Tgt;								// Ground Targeting Calculations completed
+
+	// These are boolean flags that are real flags in the LVDC SOFTWARE.
+	bool Aziumuth_Inclination_Mode;					// Ground Targeting uses Azimuth to determine Inclination
+	bool Azimuth_DscNodAngle_Mode;					// Ground Targeting uses Azimuth to determine Descending Nodal Angle
+	bool Direct_Ascent;                             // Direct Ascent Mode flag
+
+	// LVDC software variables, PAD-LOADED
+	double IncFromAzPoly[6];						// Inclination-From-Azimuth polynomial
+	double IncFromTimePoly[6];                      // Inclination-From-Time polynomial
+	double DNAFromAzPoly[6];						// Descending Nodal Angle from Azimuth polynomial
+	double DNAFromTimePoly[6];						// Descending Nodal Angle from Time polynomial
+
+	// PAD-LOADED TABLES
+	// The documentation calls these TABLE15 and TABLE25 but doesn't define them.
+	double CORadVecTrueAn;							// True Anomaly of predicted cutoff radius vector (TABLE15 f)
+	double XferEllipseEcc[16];						// Eccentricity of desired transfer ellipse (TABLE15 e)
+	double XferEllipseVVE[16];						// Vis-Viva Energy of desired transfer ellipse (TABLE15 C3)
+
+	// LVDC software variables, NOT PAD-LOADED
+	double Azimuth;									// Azimuth
+
+	void lvdc_init();								// Initialization
+	void lvdc_timestep(double simt, double simdt);	// LVDC timestep call
+
 };
 
 extern void LoadSat5Meshes();

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/07/24 20:47:27  orbiter_fan
+  *	Changed turn speed. Now the Crawler can turn corners just like the real one!
+  *	
   *	Revision 1.16  2006/07/17 19:33:36  tschachim
   *	Small improvements of LC39.
   *	
@@ -90,6 +93,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 #include "saturn.h"
 
 #include "VAB.h"

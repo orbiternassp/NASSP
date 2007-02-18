@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/12/19 15:55:55  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.4  2006/07/31 12:20:49  tschachim
   *	Bugfix
   *	
@@ -52,6 +55,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 #include "saturn.h"
 
 #include "MFDResource.h"

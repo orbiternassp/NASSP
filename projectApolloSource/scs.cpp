@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2007/01/22 15:48:17  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.15  2007/01/20 02:09:51  dseagrav
   *	Tweaked RCS positions
   *	
@@ -83,6 +86,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"

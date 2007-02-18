@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/12/19 15:55:54  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.1  2006/12/07 18:52:43  tschachim
   *	New LC34, Bugfixes.
   *	
@@ -45,6 +48,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 #include "saturn.h"
 
 #include "CollisionSDK/CollisionSDK.h"

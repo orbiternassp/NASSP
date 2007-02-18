@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/04/25 13:56:41  tschachim
+  *	New KSC.
+  *	
   *	Revision 1.4  2005/11/21 13:31:34  tschachim
   *	New Saturn assembly meshes.
   *	
@@ -52,6 +55,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 #include "saturn.h"
 
 

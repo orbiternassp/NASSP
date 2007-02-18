@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2006/07/27 23:24:11  tschachim
+  *	The Saturn 1b now has the Saturn V IGM autopilot.
+  *	
   *	Revision 1.16  2006/02/27 00:57:48  dseagrav
   *	Added SPS thrust-vector control. Changes 20060225-20060226.
   *	
@@ -89,6 +92,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 #include "saturnv.h"

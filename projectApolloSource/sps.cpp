@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/01/24 14:21:52  tschachim
+  *	Bugfix He and N2 pressure.
+  *	
   *	Revision 1.3  2007/01/22 15:48:19  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -48,6 +51,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 #include "ioChannels.h"
 
 #include "saturn.h"

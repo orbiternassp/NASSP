@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2007/02/06 18:30:14  tschachim
+  *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
+  *	
   *	Revision 1.67  2007/01/28 17:04:26  tschachim
   *	Bugfix docking probe.
   *	
@@ -243,6 +246,7 @@
 #include "csmcomputer.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 #include "saturn1b.h"

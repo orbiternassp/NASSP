@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.139  2007/02/02 13:55:44  tschachim
+  *	CSM RHC/THC Z axis autodetection.
+  *	
   *	Revision 1.138  2007/01/22 15:48:15  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -158,6 +161,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
@@ -523,6 +527,9 @@ void Saturn::SystemsInit() {
 		                             MainBusA, &YawBatACircuitBraker, MainBusB, &YawBatBCircuitBraker,
 									 &SPSGimbalYawThumbwheel, &SCSTvcYawSwitch);
 
+	// Ground Systems Init
+	mcc.InitCM(this);
+
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
 	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker);
@@ -718,6 +725,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		if(!agc.Yaagc){ pcm.TimeStep(MissionTime); } // PCM update unless yaAGC did it earlier
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
+
+		// Update Ground Data
+		mcc.TimeStep(MissionTime);
 
 		//
 		// Systems state handling

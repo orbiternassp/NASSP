@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/07/17 19:33:36  tschachim
+  *	Small improvements of LC39.
+  *	
   *	Revision 1.1  2006/04/25 14:00:22  tschachim
   *	New KSC.
   *	
@@ -45,6 +48,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 #include "saturn.h"
 
 #include "CollisionSDK/CollisionSDK.h"

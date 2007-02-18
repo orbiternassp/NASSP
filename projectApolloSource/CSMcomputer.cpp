@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2007/01/22 15:48:13  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.75  2007/01/22 00:17:57  dseagrav
   *	Replaced lost commits
   *	
@@ -252,6 +255,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "toggleswitch.h"
 #include "saturn.h"

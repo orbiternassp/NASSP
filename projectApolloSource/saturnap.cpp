@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/08/27 21:51:12  tschachim
+  *	Improved SIVB roll damping.
+  *	
   *	Revision 1.5  2006/07/27 23:24:11  tschachim
   *	The Saturn 1b now has the Saturn V IGM autopilot.
   *	
@@ -56,12 +59,13 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 
 void Saturn::AttitudeLaunchSIVB()
 
-{
+{	
 	VECTOR3 ang_vel;
 	GetAngularVel(ang_vel);// gets current angular velocity for stabilizer and rate control
 // variables to store each component deflection vector
