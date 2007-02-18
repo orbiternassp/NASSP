@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2006/12/23 17:01:28  movieman523
+  *	Added multiple rocket-cams. I'm not sure how to rotate the view, so it's pretty much a 'you get what you get' at the moment.
+  *	
   *	Revision 1.18  2006/11/13 14:47:31  tschachim
   *	New SPS engine.
   *	New ProjectApolloConfigurator.
@@ -99,6 +102,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 #include "saturnv.h"

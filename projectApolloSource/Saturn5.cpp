@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.95  2007/02/06 18:30:16  tschachim
+  *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
+  *	
   *	Revision 1.94  2007/01/22 15:48:14  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -327,6 +330,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 #include "saturnv.h"
@@ -383,7 +387,7 @@ SaturnV::SaturnV (OBJHANDLE hObj, int fmodel)
 
 {
 	TRACESETUP("SaturnV");
-
+	
 	hMaster = hObj;
 	initSaturnV();
 }
@@ -492,6 +496,8 @@ void SaturnV::initSaturnV()
 		met[i] = default_met[i];
 		cpitch[i] = default_cpitch[i];
 	}
+
+	lvdc_init();
 }
 
 SaturnV::~SaturnV()
@@ -959,8 +965,7 @@ void SaturnV::StageOne(double simt, double simdt)
 
 	if (AutopilotActive()) {
 		AutoPilot(MissionTime);
-	}
-	else {
+	} else {
 		AttitudeLaunch1();
 	}
 }
@@ -1789,6 +1794,9 @@ void SaturnV::DoFirstTimestep(double simt)
 	habort = oapiGetVesselByName("Saturn_Abort");
 }
 
+// Orbiter calls here via callback prior to every timestep.
+// This function must call GenericTimestep() to operate the CSM.
+
 void SaturnV::Timestep(double simt, double simdt)
 
 {
@@ -1809,6 +1817,14 @@ void SaturnV::Timestep(double simt, double simdt)
 	}
 
 	GenericTimestep(simt, simdt);
+
+	// DS20070205 LVDC++
+	if(use_lvdc){
+		lvdc_timestep(simt,simdt);
+		return;
+	}
+	// AFTER LVDC++ WORKS SATISFACTORILY EVERYTHING BELOW THIS LINE
+	// SHOULD BE SAFE TO DELETE. DO NOT ADD ANY LVDC++ CODE BELOW THIS LINE.
 
 	if (bAbort && LESAttached)
 	{
@@ -1896,6 +1912,7 @@ void SaturnV::Timestep(double simt, double simdt)
 		break;
 
 	case STAGE_ORBIT_SIVB:
+		// We get here at around T5+9.8 or so.
 
 		//
 		// J-2 mixture ratio
@@ -2333,6 +2350,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 			// When the engine shuts down, the ullage rockets
 			// fire to settle the fuel.
 			//
+			// This event makes this T5+0.04 or so
 
 			if (Realism)
 				SetThrusterResource(th_main[0], NULL);
@@ -2467,4 +2485,210 @@ void SaturnV::LaunchVehicleUnbuild() {
 		buildstatus--;
 		BuildFirstStage(buildstatus);
 	}
+}
+
+// ********** LVDC++ **********
+
+// DS20070205 LVDC++ SETUP
+void SaturnV::lvdc_init(){
+	lvimu.Init();					// Initialize IMU
+	lvimu.SetVessel(this,false);	// set vessel pointer
+	LVDC_Timebase = -1;				// Start up halted in pre-launch pre-GRR loop
+	LVDC_TB_ETime = 0;
+	// INTERNAL (NON-REAL-LVDC) FLAGS
+	LVDC_EI_On = false;
+	LVDC_IMU_Levelled = false;
+	LVDC_Gnd_Tgt = false;
+	// REAL LVDC FLAGS
+	LVDC_GRR = false;
+	// Flags in the pad-load.
+	Aziumuth_Inclination_Mode = true;
+	Azimuth_DscNodAngle_Mode = true;
+	Direct_Ascent = false; 
+}
+	
+// DS20070205 LVDC++ EXECUTION
+void SaturnV::lvdc_timestep(double simt, double simdt){
+
+	// Give a timestep to the LV IMU
+	lvimu.Timestep(simt);
+	// Update timebase ET
+	LVDC_TB_ETime += simdt;
+
+	// LVDC PROGRAM STARTS HERE
+	// Note that GenericTimestep will update MissionTime and jettison the LET.
+
+	switch(LVDC_Timebase){
+		case -1: // PRELAUNCH PRE-TB0
+			// SELECTED ITEMS FROM LaunchCountdown()
+
+			// Lock time accel to 100x
+			if (oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
+
+			// Greater than 8.9 seconds out ensure thrust stays at zero.
+			if (GetEngineLevel(ENGINE_MAIN) > 0 && MissionTime <= (-8.9)) {
+				SetThrusterGroupLevel(thg_main, 0);
+				contrailLevel = 0;
+			}
+
+			// Prelaunch tank venting between -3:00h and engine ignition
+			// No clue if the venting start time is correct
+			if (MissionTime < -10800 || MissionTime > -9) {
+				DeactivatePrelaunchVenting();
+			}else{
+				ActivatePrelaunchVenting();
+			}
+
+			// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
+			if (MissionTime < -1200){
+				sprintf(oapiDebugString(),"LVDC: T %f | AWAITING PTL INTERRUPT",MissionTime);
+				break;
+			}
+
+			// T MINUS 20 MINUTES: "PREPARE TO LAUNCH" INTERRUPT RECIEVED FROM GCC
+			if(LVDC_IMU_Levelled == false){					// If the IMU has not been set to level
+				double TO_HDG = agc.GetDesiredAzimuth();	// Get aziumuth in degrees
+				TO_HDG += 90;								// Rotate 90 degrees
+				lvimu.DriveGimbals(TO_HDG*RAD,90*RAD,0);	// And bring to alignment 
+				LVDC_IMU_Levelled = true;					// Done
+				// The IMU is STILL CAGED until GRR is released.
+			}
+
+			// Engine lights on at T-00:04:10
+			if (MissionTime >= -250 && LVDC_EI_On == false) { LVDC_EI_On = true; }
+
+			// Between PTL signal and GRR, we monitor the IMU for any failure signals and do vehicle self-tests.
+			// At GRR we transfer control to the flight program and start TB0.
+
+			// BEFORE GRR (T-00:00:17) STOPS HERE
+			if (MissionTime < -17){
+				sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %d %d %d PIPA %d %d %d | AWAITING GRR",MissionTime,
+					lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
+					lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ]);
+				break;
+			}
+
+			// GUIDANCE REF RELEASE - GO TO TB0
+			lvimu.SetCaged(false);							// Release IMU
+			LVDC_GRR = true;								// Mark event
+			oapiSetTimeAcceleration (1);					// Set time acceleration to 1
+			for (int i = 0; i < 5; i++) {					// Reconnect fuel to S1C engines
+				SetThrusterResource(th_main[i], ph_1st);
+			}
+			LVDC_Timebase = 0;								// Start TB0
+			LVDC_TB_ETime = 0;
+			// FALL INTO TB0
+
+		case 0:	// TIMEBASE 0 -- PRE-LAUNCH POST GUIDANCE REF RELEASE
+			// This is timebase 0. At this point, the LVDC is running the flight program.
+			// All diagnostics are completed.
+
+			// Perform Ground Targeting Calculations
+			if(LVDC_Gnd_Tgt == false){
+				// Time into launch window = launch time from midnight - reference time of launch from midnight
+				// azimuth = coeff. of azimuth polynomial * time into launch window
+
+				// We already have an azimuth from the AGC, we'll use that for now.
+				Azimuth = agc.GetDesiredAzimuth();
+
+				if(Aziumuth_Inclination_Mode = true){
+					// CALCULATE INCLINATION FROM AZIMUTH
+					// inclination = coeff. for inclination-from-azimuth polynomial * azimuth;
+				}else{
+					// CALCULATE INCLINATION FROM TIME INTO LAUNCH WINDOW
+					// inclination = coeff. for inclination-from-time polynomial * Time into launch window
+				}
+				if(Azimuth_DscNodAngle_Mode == true){
+					// CALCULATE DESCNEING NODAL ANGLE FROM AZIMUTH
+					// DNA = coeff. for DNA-from-inclination polynomial * Azimuth
+				}else{
+					// CALCULATE DESCNEING NODAL ANGLE FROM TIME INTO LAUNCH WINDOW
+					// DNA = coeff. for DNA-from-time polynomial * Time into launch window
+				}
+				// true anomaly of predicted cutoff radius vector = TABLE15 (time into launch window)
+				// eccentricity of transfer ellipse = TABLE15 (time into launch window)
+				// vis-viva energy of desired transfer ellipse = TABLE15 (time into launch window)
+				if(Direct_Ascent){
+					// angle from perigee vector to DNA vector = TABLE25 (time into launch window)
+					// terminal guidance freeze time = 0
+				}
+				// semilatus rectum of terminal ellipse = (earth's gravity / vis-viva energy of desired transfer ellipse) *
+				//			(eccentricity of transfer ellipse - 1)
+				// Terminal velocity constant = (semilatus rectum of terminal ellipse * earth's gravity) * .5
+				// Desired terminal radius = semilatus rectum of terminal ellipse / 
+				//			( 1 + eccentricity of transfer ellipse * cos. true anomaly of predicted cutoff radius vector ^2)
+				//			* .5
+				// Desired terminal flight-path angle =
+				// atan( (eccentricity of transfer ellipse * sin(true anomaly of predicted cutoff radius vector)) /
+				//       (1 + eccentricity of transfer ellipse * sin(true anomaly of predicted cutoff radius vector)) ))
+				LVDC_Gnd_Tgt = true;
+			}
+
+			// At 10 seconds, play the countdown sound.
+			if (MissionTime >= -10.9) {
+				if (!UseATC && Scount.isValid()) {
+					Scount.play();
+					Scount.done();
+				}
+			}
+
+			// Starting at 4.9 seconds, start to throttle up.
+			{
+				double thrst=0;
+				if (MissionTime >= -4.9) {
+					thrst = (0.9 / 2.9) * (MissionTime + 4.9);
+				}else{
+					if (MissionTime > (-2.0)) {
+						thrst = 0.9 + (0.05 * (MissionTime + 2.0));
+					}
+				}
+				SetThrusterGroupLevel(thg_main, thrst);
+				contrailLevel = thrst;
+			}
+			if(MissionTime < 0){
+				AddForce(_V(0, 0, -10. * THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
+				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | IMU XYZ %d %d %d PIPA %d %d %d",MissionTime,LVDC_TB_ETime,
+					lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
+					lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ]);
+					break;
+			}
+			// LIFTOFF TIME
+			IMUGuardedCageSwitch.SwitchTo(TOGGLESWITCH_DOWN);		// Uncage CM IMU
+			SetLiftoffLight();										// And light liftoff lamp
+			SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
+			// Start mission and event timers
+			MissionTimerDisplay.Reset();
+			MissionTimerDisplay.SetEnabled(true);
+			EventTimerDisplay.Reset();
+			EventTimerDisplay.SetEnabled(true);
+			EventTimerDisplay.SetRunning(true);
+			agc.SetInputChannelBit(030, 5, true);					// Inform AGC of liftoff
+			SetThrusterGroupLevel(thg_main, 1.0);					// Set full thrust, just in case
+			contrailLevel = 1.0;
+			if (LaunchS.isValid() && !LaunchS.isPlaying())			// And play launch sound
+			{
+				LaunchS.play(NOLOOP,255);
+				LaunchS.done();
+			}
+			// Fall into TB1
+			LVDC_Timebase = 1;
+			LVDC_TB_ETime = 0;
+
+		case 1: // TB1 -- FLIGHT PROGRAM STAGE 1
+			sprintf(oapiDebugString(),"LVDC: T %f | TB1 + %f | IMU XYZ %d %d %d PIPA %d %d %d",MissionTime,LVDC_TB_ETime,
+				lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
+				lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ]);
+			break;
+	}
+
+	// AFTER LVDC PROGRAM ACTIONS:
+	// Update engine indicators
+	if(LVDC_EI_On == true){
+		for (int i = 0; i <= 4; i++){
+			if(GetThrusterLevel(th_main[i]) > 0  && ENGIND[i] == true){  ENGIND[i] = false; } // UNLIGHT
+			if(GetThrusterLevel(th_main[i]) == 0 && ENGIND[i] == false){  ENGIND[i] = true; }   // LIGHT
+		}
+	}
+
+
 }

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.233  2007/02/06 18:30:17  tschachim
+  *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
+  *	
   *	Revision 1.232  2007/02/02 13:55:45  tschachim
   *	CSM RHC/THC Z axis autodetection.
   *	
@@ -452,6 +455,7 @@
 #include "scs.h"
 #include "csm_telecom.h"
 #include "sps.h"
+#include "mcc.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -1536,6 +1540,11 @@ protected:
 	///
 	double cpitch[PITCH_TABLE_SIZE];
 
+	// *** LVDC++ ITEMS ***
+	bool use_lvdc; // LVDC use flag
+	LVIMU lvimu;   // ST-124-M3 IMU (LV version)
+
+
 	// SCS components
 	BMAG bmag1;
 	BMAG bmag2;
@@ -1551,6 +1560,9 @@ protected:
 
 	// CM Optics
 	CMOptics optics;
+
+	// Ground Systems
+	MCC	 mcc;
 
 	//
 	// Switches

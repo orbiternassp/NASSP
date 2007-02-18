@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.192  2007/02/06 18:30:17  tschachim
+  *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
+  *	
   *	Revision 1.191  2007/01/22 22:05:47  tschachim
   *	Bugfix SMJetS sound.
   *	
@@ -323,6 +326,7 @@
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 #include "tracer.h"
@@ -477,6 +481,9 @@ void Saturn::initSaturn()
 	// Or the S1b panel with 8 engine lights?
 	//
 	S1bPanel = false;
+
+	// DS20070204 LVDC++ mode is off by default
+	use_lvdc = false;
 
 	bAbort = false;
 	ABORT_IND = false;
@@ -1560,6 +1567,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (stage < CSM_LEM_STAGE)
 	{
 		iu.SaveState(scn);
+		lvimu.SaveState(scn); // Save this here also
 	}
 
 	gdc.SaveState(scn);
@@ -2369,6 +2377,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 		imu.LoadState(scn);
 	}
+	else if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
+		lvimu.LoadState(scn);
+	}
 	else if (!strnicmp(line, GDC_START_STRING, sizeof(GDC_START_STRING))) {
 		gdc.LoadState(scn);
 	}
@@ -2456,6 +2467,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, SPSGIMBALACTUATOR_YAW_START_STRING, sizeof(SPSGIMBALACTUATOR_YAW_START_STRING))) {
 			SPSEngine.yawGimbalActuator.LoadState(scn);
 		}
+		// DS20070204 LVDC++ MODE
+	    else if (!strnicmp (line, "USE_LVDC", 8)) {
+		    use_lvdc = true;
+	    }
 		else
 			found =false;
 	}
@@ -4519,6 +4534,8 @@ void Saturn::SIVBBoiloff()
 void Saturn::StageOrbitSIVB(double simt, double simdt)
 
 {
+	// We get here at around T5+9.8 or so. The engine and ullage have both shut down.
+
 	//
 	// Post-shutdown, pre-TLI code goes here.
 	//

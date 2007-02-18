@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/10/30 18:37:58  tschachim
+  *	Bugfix IUToLVCommandConnector::GetApDist
+  *	
   *	Revision 1.9  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -66,6 +69,7 @@
 #include "connector.h"
 #include "csmcomputer.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 #include "sivb.h"

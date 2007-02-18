@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/08/01 18:21:51  tschachim
+  *	Some code cleanup.
+  *	
   *	Revision 1.7  2006/07/27 23:24:11  tschachim
   *	The Saturn 1b now has the Saturn V IGM autopilot.
   *	
@@ -62,6 +65,7 @@
 #include "csmcomputer.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "lvimu.h"
 
 #include "saturn.h"
 
