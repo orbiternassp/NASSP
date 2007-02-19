@@ -21,6 +21,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	
   **************************************************************************/
 
@@ -214,8 +217,8 @@ void MCC::TimeStep(double simdt){
 		while(x<MAX_GROUND_STATION){
 			if(GroundStations[x].Active == true){
 				// Get lateral range
-				PosDiff[0] = abs(GroundStations[x].Position[0]-CM_Position[0]);
-				PosDiff[1] = abs(GroundStations[x].Position[1]-CM_Position[1]);
+				PosDiff[0] = fabs(GroundStations[x].Position[0]-CM_Position[0]);
+				PosDiff[1] = fabs(GroundStations[x].Position[1]-CM_Position[1]);
 				LateralRange = sqrt((PosDiff[0]*PosDiff[0])+(PosDiff[1]*PosDiff[1]));
 				LateralRange *= 111123; // Nice number, isn't it? Meters per degree.
 				// Figure slant range
