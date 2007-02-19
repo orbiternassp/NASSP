@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.96  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.95  2007/02/06 18:30:16  tschachim
   *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
   *	
@@ -2508,7 +2511,9 @@ void SaturnV::lvdc_init(){
 }
 	
 // DS20070205 LVDC++ EXECUTION
-void SaturnV::lvdc_timestep(double simt, double simdt){
+void SaturnV::lvdc_timestep(double simt, double simdt) {
+
+	int i;
 
 	// Give a timestep to the LV IMU
 	lvimu.Timestep(simt);
@@ -2572,7 +2577,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt){
 			lvimu.SetCaged(false);							// Release IMU
 			LVDC_GRR = true;								// Mark event
 			oapiSetTimeAcceleration (1);					// Set time acceleration to 1
-			for (int i = 0; i < 5; i++) {					// Reconnect fuel to S1C engines
+			for (i = 0; i < 5; i++) {					// Reconnect fuel to S1C engines
 				SetThrusterResource(th_main[i], ph_1st);
 			}
 			LVDC_Timebase = 0;								// Start TB0
@@ -2684,7 +2689,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt){
 	// AFTER LVDC PROGRAM ACTIONS:
 	// Update engine indicators
 	if(LVDC_EI_On == true){
-		for (int i = 0; i <= 4; i++){
+		for (i = 0; i <= 4; i++){
 			if(GetThrusterLevel(th_main[i]) > 0  && ENGIND[i] == true){  ENGIND[i] = false; } // UNLIGHT
 			if(GetThrusterLevel(th_main[i]) == 0 && ENGIND[i] == false){  ENGIND[i] = true; }   // LIGHT
 		}

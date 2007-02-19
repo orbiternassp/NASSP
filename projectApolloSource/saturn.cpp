@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.193  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.192  2007/02/06 18:30:17  tschachim
   *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
   *	
@@ -2992,7 +2995,9 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		NextDestroyCheckTime = MissionTime + 1.0;
 	}
 
-	timedSounds.Timestep(MissionTime, simdt, AutoSlow);
+	if (stage >= ONPAD_STAGE) {
+		timedSounds.Timestep(MissionTime, simdt, AutoSlow);
+	}
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
