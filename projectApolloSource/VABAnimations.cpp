@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.5  2006/04/25 13:56:41  tschachim
   *	New KSC.
   *	
@@ -48,6 +51,7 @@
 #include "tracer.h"
 
 #include "VAB.h"
+#include "ML.h"
 
 #include "nasspdefs.h"
 #include "toggleswitch.h"
@@ -79,14 +83,21 @@ void VAB::BuildSaturnStage() {
 
 	if (crane_Status == CRANE_BUILDING || crane_Status == CRANE_UNBUILDING) return;
 
+	// Check Saturn
 	if (LVName[0] == '\0') return;
 	OBJHANDLE hLV = oapiGetVesselByName(LVName);
 	if (!hLV) return;
 	Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
 	if (lav->GetStage() != ROLLOUT_STAGE) return;
 
-	// Platforms
-	if (lav->GetBuildStatus() == animCraneCount && platform_Proc > 0) { 
+	// Check ML
+	OBJHANDLE hML = oapiGetVesselByName("ML");
+	if (!hML) return;
+	ML *ml = (ML *) oapiGetVesselInterface(hML);
+	if (!ml->IsInVAB()) return;
+
+	// Reopen platforms
+	if (lav->GetBuildStatus() == animCraneCount && platform_Proc[0] > 0) { 
 		currentAnimCrane = -1;
 		crane_Status = CRANE_BUILDING;
 		return;
@@ -100,7 +111,7 @@ void VAB::BuildSaturnStage() {
 		SetAnimation(animCrane[i], 0);
 
 	// Saturn Stage 1
-	if (lav->GetBuildStatus() == 0) {
+	if (lav->GetBuildStatus() == 0) {		
 		saturnStage1_Proc = 0.00001;
 		SetAnimation(animSaturnStage1, saturnStage1_Proc);
 	}
@@ -114,13 +125,22 @@ void VAB::BuildSaturnStage() {
 
 void VAB::UnbuildSaturnStage() {
 
+	int i = 0;
+
 	if (crane_Status == CRANE_BUILDING || crane_Status == CRANE_UNBUILDING) return;
 
+	// Check Saturn
 	if (LVName[0] == '\0') return;
 	OBJHANDLE hLV = oapiGetVesselByName(LVName);
 	if (!hLV) return;
 	Saturn *lav = (Saturn *) oapiGetVesselInterface(hLV);
 	if (lav->GetStage() != ROLLOUT_STAGE) return;
+
+	// Check ML
+	OBJHANDLE hML = oapiGetVesselByName("ML");
+	if (!hML) return;
+	ML *ml = (ML *) oapiGetVesselInterface(hML);
+	if (!ml->IsInVAB()) return;
 
 	if (lav->GetBuildStatus() <= 0) return;
 	if (lav->GetBuildStatus() > animCraneCount) {	
@@ -128,14 +148,14 @@ void VAB::UnbuildSaturnStage() {
 		return;
 	}
 
-	// Platforms
-	if (lav->GetBuildStatus() == animCraneCount && platform_Proc < 1.0) { 
+	// Close platforms
+	if (lav->GetBuildStatus() == animCraneCount && platform_Proc[0] < 1.0) { 
 		currentAnimCrane = -1;
 		crane_Status = CRANE_UNBUILDING;
 		return;
 	}
 
-	for (int i = 0; i < animCraneCount; i++) 
+	for (i = 0; i < animCraneCount; i++) 
 		SetAnimation(animCrane[i], 0);
 
 	// Saturn Stage 1

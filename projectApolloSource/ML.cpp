@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.4  2006/07/17 19:33:36  tschachim
   *	Small improvements of LC39.
   *	
@@ -64,6 +67,8 @@ HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo ML.log";
 
 // States
+#define STATE_VABBUILD		   -2
+#define STATE_VABREADY		   -1
 #define STATE_ROLLOUT			0
 #define STATE_PRELAUNCH			1
 #define STATE_CMARM1			2
@@ -75,8 +80,8 @@ char trace_file[] = "ProjectApollo ML.log";
 #define STATE_POSTLIFTOFF		8
 
 // Pad and VAB coordinates
-#define VAB_LON -80.6527053
-#define VAB_LAT 28.5793875
+#define VAB_LON -80.6526938
+#define VAB_LAT 28.5793921
 
 #define PAD_LON -80.6069608 
 #define PAD_LAT 28.6013186
@@ -191,7 +196,63 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 	if (!firstTimestepDone) DoFirstTimestep();
 	
 	switch (state) {
+	case STATE_VABBUILD:
+
+		if (craneProc < 0.25) {
+			craneProc = min(0.25, craneProc + simdt / 600.0);
+			SetAnimation(craneAnim, craneProc);
+		}
+		if (cmarmProc < 0.09) {
+			cmarmProc = min(0.09, cmarmProc + simdt / 1000.0);
+			SetAnimation(cmarmAnim, cmarmProc);
+		}
+		if (swingarmProc < 1.0) {
+			swingarmProc = min(1.0, swingarmProc + simdt / 200.0);
+			SetAnimation(swingarmAnim, swingarmProc);
+		}
+		if (s1cintertankarmProc < 1.0) {
+			s1cintertankarmProc = min(1.0, s1cintertankarmProc + simdt / 200.0);
+			SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
+		}
+		if (s1cforwardarmProc < 1.0) {
+			s1cforwardarmProc = min(1.0, s1cforwardarmProc + simdt / 200.0);
+			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
+		}
+		if (mastProc < 1.0) {
+			mastProc = min(1.0, mastProc + simdt / 100.0);
+			SetAnimation(mastAnim, mastProc);
+		}
+		break;
+
+	case STATE_VABREADY:
 	case STATE_ROLLOUT:
+
+		if (craneProc > 0) {
+			craneProc = max(0, craneProc - simdt / 600.0);
+			SetAnimation(craneAnim, craneProc);
+		}
+		if (cmarmProc > 0.00001) {
+			cmarmProc = max(0.00001, cmarmProc - simdt / 1000.0);
+			SetAnimation(cmarmAnim, cmarmProc);
+		}
+		if (swingarmProc > 0) {
+			swingarmProc = max(0, swingarmProc - simdt / 200.0);
+			SetAnimation(swingarmAnim, swingarmProc);
+		}
+		if (s1cintertankarmProc > 0) {
+			s1cintertankarmProc = max(0, s1cintertankarmProc - simdt / 200.0);
+			SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
+		}
+		if (s1cforwardarmProc > 0) {
+			s1cforwardarmProc = max(0, s1cforwardarmProc - simdt / 200.0);
+			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
+		}
+		if (mastProc > 0) {
+			mastProc = max(0, mastProc - simdt / 100.0);
+			SetAnimation(mastAnim, mastProc);
+		}
+
+		if (state == STATE_VABREADY) break;
 
 		// Detached from crawler?
 		ah = GetAttachmentHandle(true, 0);
@@ -448,12 +509,17 @@ bool ML::Detach() {
 		
 		SetTouchdownPointHeight(-71.827);
 		moveToVab = true;
+		state = STATE_VABREADY;
 		return true;
 	}
 	return false;
 }
 
 bool ML::Attach() {
+
+	// Statuscheck
+	if (state != STATE_VABREADY && state != STATE_ROLLOUT) 
+		return false;
 
 	// Is the crawler detached? 
 	ATTACHMENTHANDLE ah = GetAttachmentHandle(true, 0);
@@ -463,7 +529,27 @@ bool ML::Attach() {
 	ah = GetAttachmentHandle(false, 0);
 	if (GetAttachmentStatus(ah) == NULL) return false;
 
+	state = STATE_ROLLOUT;
 	return true;
+}
+
+void ML::SetVABBuildState() {
+
+	if (state == STATE_VABREADY) {
+		state = STATE_VABBUILD;
+	}
+}
+
+void ML::SetVABReadyState() {
+
+	if (state == STATE_VABBUILD) {
+		state = STATE_VABREADY;
+	}
+}
+
+bool ML::IsInVAB() {
+	
+	return (state == STATE_VABREADY || state == STATE_VABBUILD); 
 }
 
 double ML::GetDistanceTo(double lon, double lat) {
@@ -589,13 +675,13 @@ int ML::clbkConsumeDirectKey(char *kstate) {
 		return 0; 
 	}
 
-/*	ATTACHMENTHANDLE ah = GetAttachmentHandle(true, 0);
+/*	ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 0); 
 	VECTOR3 pos, dir, rot;
 	GetAttachmentParams (ah, pos, dir, rot);
 
-	double step = 0.01;
+	double step = 0.1;
 	if (KEYMOD_CONTROL(kstate))
-		step = 0.001;
+		step = 0.01;
 
 	if (KEYDOWN (kstate, OAPI_KEY_NUMPAD6)) {
 		pos.x -= step;
@@ -629,9 +715,9 @@ int ML::clbkConsumeDirectKey(char *kstate) {
 	}
 
 	sprintf(oapiDebugString(), "x %f y %f z %f", pos.x, pos.y, pos.z);
-*/
 
-/*	VESSELSTATUS vs;
+
+    VESSELSTATUS vs;
 	GetStatus(vs);
 	double moveStep = 1.0e-8;
 
