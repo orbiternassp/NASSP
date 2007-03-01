@@ -1,5 +1,5 @@
 BEGIN_DESC
-Neil Armstrong Mike Collins and Buzz Aldrin change history forever. The first manned Lunar Landing. July 16, 1969. The scenario starts at T-3h00min, crew ingress is at T-1h40min. (AS-506)
+Neil Armstrong, Mike Collins and Buzz Aldrin change history forever. The first manned Lunar Landing. July 16, 1969. The scenario starts at T-3h00min, crew ingress is at T-1h40min. (AS-506)
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -78,8 +78,8 @@ ML:ProjectApollo\ML
 END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
-  POS -80.6529535 28.5790607
-  HEADING 255.04
+  POS -80.6532730 28.5795280
+  HEADING 75.04
   LVNAME Columbia
 END
 MSS:ProjectApollo\MSS
