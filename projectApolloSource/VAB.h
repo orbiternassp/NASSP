@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.4  2006/04/25 13:44:22  tschachim
   *	New KSC.
   *	
@@ -64,7 +67,7 @@ protected:
 	bool firstTimestepDone;
 
 	int meshindexVAB;
-	int meshindexSaturn[16];
+	int meshindexSaturn[24];
 	int meshcountSaturn;
 
 	enum CraneStatus { 
@@ -75,14 +78,14 @@ protected:
 	} crane_Status;
 
 	UINT animCrane[5];
-	UINT currentAnimCrane;
+	int currentAnimCrane;
 	int animCraneCount;
 	double crane_Proc;
 	MGROUP_TRANSFORM *mgroupCrane[5][16];
-	MGROUP_TRANSFORM *mgroupSaturn[16][8];
-	MGROUP_TRANSFORM *mgroupCrane2[5][6];
-	UINT animPlatform;
-	double platform_Proc;
+	MGROUP_TRANSFORM *mgroupSaturn[24][8];
+	MGROUP_TRANSFORM *mgroupCrane2[5][8];
+	UINT animPlatform[5];
+	double platform_Proc[5];
 	UINT animSaturnStage1;
 	double saturnStage1_Proc;
 	bool adjustSaturnStage1;

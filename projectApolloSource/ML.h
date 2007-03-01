@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.2  2006/05/19 13:48:28  tschachim
   *	Fixed a lot of devices and power consumptions.
   *	DirectO2 valve added.
@@ -49,8 +52,12 @@ public:
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
 
+	virtual void SetVABBuildState();
+	virtual void SetVABReadyState();
 	virtual bool Detach();
 	virtual bool Attach();
+	virtual bool IsInVAB(); 
+
 
 protected:
 	bool firstTimestepDone;

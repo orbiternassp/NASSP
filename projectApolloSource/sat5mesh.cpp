@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.75  2007/02/06 18:30:17  tschachim
   *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
   *	
@@ -624,12 +627,18 @@ void SaturnV::BuildFirstStage (int bstate)
 	if (bstate >=4)
 	{
 		mesh_dir=_V(0,0,23.25+STG0O);
+		AddMesh (hCMInt, &mesh_dir);
+	}
+
+	if (bstate >=4)
+	{
+		mesh_dir=_V(0,0,23.25+STG0O);
 		AddMesh (hFHC, &mesh_dir);
 	}
 
 	if (bstate >=4)
 	{
-		mesh_dir=_V(0,0,24.8+STG0O);
+		mesh_dir=_V(0,0,23.25+STG0O);
 		AddMesh (hprobe, &mesh_dir);
 	}
 
