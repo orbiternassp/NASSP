@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.10  2006/04/25 13:32:50  tschachim
   *	New KSC.
   *	
@@ -67,6 +70,8 @@ public:
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep (double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
+	void clbkVisualCreated(VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 protected:
 	double velocity;
@@ -87,7 +92,11 @@ protected:
 	OBJHANDLE hML;
 	OBJHANDLE hLV;
 	OBJHANDLE hMSS;
-	
+	VISHANDLE vccVis;	
+	MESHGROUP_TRANSFORM vccSpeedGroup;
+	MESHGROUP_TRANSFORM vccSpeedGroupReverse;
+	double vccSpeed;
+
 	SoundLib soundlib;
 	Sound soundEngine;
 
@@ -100,4 +109,7 @@ protected:
 	void ToggleDirection();
 	void SetView();
 	void SlowIfDesired(double timeAcceleration);
+
+	VECTOR3 panelMeshoffset;
+    int panelMeshidx;
 };
