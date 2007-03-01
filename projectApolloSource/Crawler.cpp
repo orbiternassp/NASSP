@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2007/02/18 01:35:28  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.17  2006/07/24 20:47:27  orbiter_fan
   *	Changed turn speed. Now the Crawler can turn corners just like the real one!
   *	
@@ -143,11 +146,16 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	LVName[0] = 0;
 	hML = NULL;
-	hLV = NULL;;
-	hMSS = NULL;;
+	hLV = NULL;
+	hMSS = NULL;
+	vccVis = NULL;	
+	vccSpeed = 0.0;	
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 	soundlib.LoadSound(soundEngine, "CrawlerEngine.wav", BOTHVIEW_FADED_MEDIUM);
+
+	panelMeshoffset = _V(0,0,0);
+    panelMeshidx = 0;
 }
 
 Crawler::~Crawler() {
@@ -170,9 +178,29 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	VECTOR3 meshoffset = _V(0,0,0);
-    int icr = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler"), &meshoffset);
-	SetMeshVisibilityMode(icr, MESHVIS_ALWAYS);
+	panelMeshoffset = _V(16.366, 4.675, 19.812);
+    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+	SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
+
+    // Speed indicator
+	vccSpeedGroup.P.transparam.shift = _V(0, 0, 0);
+	vccSpeedGroup.nmesh = panelMeshidx;
+	vccSpeedGroup.ngrp = 58;
+	vccSpeedGroup.transform = MESHGROUP_TRANSFORM::TRANSLATE;
+
+	VECTOR3 meshoffset = _V(-15.103, 4.676, -16.777);
+    int meshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &meshoffset);
+	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+
+    // Speed indicator (reverse)
+	vccSpeedGroupReverse.P.transparam.shift = _V(0, 0, 0);
+	vccSpeedGroupReverse.nmesh = meshidx;
+	vccSpeedGroupReverse.ngrp = 58;
+	vccSpeedGroupReverse.transform = MESHGROUP_TRANSFORM::TRANSLATE;
+
+	meshoffset = _V(0, 0, 0);
+    meshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler"), &meshoffset);
+	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
 
 	CreateAttachment(false, _V(0.0, 6.3, 0.0), _V(0, 1, 0), _V(1, 0, 0), "ML", false);
 
@@ -260,6 +288,20 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 		soundEngine.play();
 	} else {
 		soundEngine.stop();
+	}
+
+	//
+	// Update the VC console
+	//
+	if (vccVis) {
+		// Speed indicators
+		double v = (velocity * 0.066) * (reverseDirection ? -1. : 1.);
+		vccSpeedGroup.P.transparam.shift.x = float(v - vccSpeed);
+		vccSpeedGroupReverse.P.transparam.shift.x = float(v - vccSpeed);
+		MeshgroupTransform(vccVis, vccSpeedGroup);
+		MeshgroupTransform(vccVis, vccSpeedGroupReverse);
+		vccSpeed = v;
+		// sprintf(oapiDebugString(), "Vel %f", velocity * (reverseDirection ? -1. : 1.) * 2.237);
 	}
 
 	/* VECTOR3 pos;
@@ -398,7 +440,58 @@ int Crawler::clbkConsumeDirectKey(char *kstate) {
 		sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
 		RESETKEY(kstate, OAPI_KEY_S);
 	}
-*/
+	*/
+
+	// Panel test
+	/*	
+	double step = 0.01;
+	if (KEYMOD_CONTROL(kstate))
+		step = 0.001;
+
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD4)) {
+		DelMesh(panelMeshidx);
+		panelMeshoffset.x += step; 
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD4);
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD6)) {
+		DelMesh(panelMeshidx);
+		panelMeshoffset.x -= step; 
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD6);
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD8)) {
+		DelMesh(panelMeshidx);
+		panelMeshoffset.y += step; 
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD8);
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD2)) {
+		DelMesh(panelMeshidx);
+		panelMeshoffset.y -= step; 
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD2);
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD1)) {
+		DelMesh(panelMeshidx);
+		panelMeshoffset.z += step; 
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD1);
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD3)) {
+		DelMesh(panelMeshidx);
+		panelMeshoffset.z -= step; 
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD3);
+	}
+	sprintf(oapiDebugString(), "panelMeshoffset x %f y %f z %f", panelMeshoffset.x, panelMeshoffset.y, panelMeshoffset.z);
+	*/
 	return 0;
 }
 
@@ -465,7 +558,7 @@ int Crawler::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			}
 		}
 		return 1;
-	}
+	} 
 	return 0;
 }
 
@@ -525,7 +618,6 @@ void Crawler::Detach() {
 			DetachChild(ah);
 		}
 	}
-
 }
 
 bool Crawler::IsAttached() {
@@ -547,12 +639,12 @@ void Crawler::ToggleDirection() {
 void Crawler::SetView() {
 
 	if (reverseDirection) {
-		SetCameraOffset(_V(-15.0, 5.2, -15.0));
-		SetCameraDefaultDirection(_V(0, 0, -1));
+		SetCameraOffset(_V(-15.0, 5.3, -16.0));
+		SetCameraDefaultDirection(_V(0, -0.309017, -0.951057));
 
 	} else {
-		SetCameraOffset(_V(16.5, 5.2, 18.5));
-		SetCameraDefaultDirection(_V(0, 0, 1));
+		SetCameraOffset(_V(16.5, 5.3, 19.6));
+		SetCameraDefaultDirection(_V(0, -0.309017, 0.951057));
 	}
 }
 
@@ -563,3 +655,14 @@ void Crawler::SlowIfDesired(double timeAcceleration) {
 	}
 }
 
+void Crawler::clbkVisualCreated(VISHANDLE vis, int refcount)
+{
+	vccVis = vis;
+}
+
+void Crawler::clbkVisualDestroyed(VISHANDLE vis, int refcount)
+{
+	vccVis = NULL;
+	// reset the variables keeping track of console mesh animation
+	vccSpeed = 0.0;
+}
