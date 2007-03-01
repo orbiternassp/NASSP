@@ -1,6 +1,5 @@
 BEGIN_DESC
-Wally Schirra, Walt Cunningham and Donn Eisele take the most complex machine yet created,
-the Apollo CSM, on its first test flight, Oct 11th 1968. The scenario starts at T-2h00min and uses the quickstart realism mode. (AS-205)
+Wally Schirra, Walt Cunningham and Donn Eisele take the most complex machine yet created, the Apollo CSM, on its first test flight, Oct 11th 1968. The scenario starts on the pad LC34 at T-2h00min and uses the quickstart realism mode. (AS-205)
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -70,8 +69,8 @@ LC34:ProjectApollo\LC34
 END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
-  POS -80.6529535 28.5790607
-  HEADING 255.04
+  POS -80.6532730 28.5795280
+  HEADING 75.04
   LVNAME AS-205
 END
 END_SHIPS

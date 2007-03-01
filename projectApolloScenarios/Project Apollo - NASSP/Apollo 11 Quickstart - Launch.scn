@@ -57,7 +57,7 @@ Columbia:ProjectApollo\Saturn5
   SIICSHUT 459.8
   SIIPUT 498.0
   SIISHUT 548.22
-  IGMST 204.1 
+  IGMST 204.1
   MOONLONG 23.4333
   MOONLAT 0.6875  
   MOONALT 0.0
@@ -68,7 +68,6 @@ Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
   POS -80.6227729 28.5885195
   HEADING 69.50
-  NAVFREQ 0 0
   LVNAME Columbia
 END
 ML:ProjectApollo\ML
@@ -79,8 +78,8 @@ ML:ProjectApollo\ML
 END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
-  POS -80.6529535 28.5790607
-  HEADING 255.04
+  POS -80.6532730 28.5795280
+  HEADING 75.04
   LVNAME Columbia
 END
 MSS:ProjectApollo\MSS
