@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2007/03/01 18:24:33  tschachim
+  *	Fixed Saturn V assembly
+  *	
   *	Revision 1.12  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -876,11 +879,11 @@ int VAB::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0;
 	}
 
-	if (key == OAPI_KEY_1 && down == true) {
+	if (key == OAPI_KEY_NUMPAD7 && down == true) {
 		ToggleHighBay1Door();			
 		return 1;
 	}
-	if (key == OAPI_KEY_3 && down == true) {
+	if (key == OAPI_KEY_NUMPAD8 && down == true) {
 		ToggleHighBay3Door();			
 		return 1;
 	}

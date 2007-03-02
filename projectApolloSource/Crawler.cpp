@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2007/03/01 17:58:26  tschachim
+  *	New VC panel
+  *	
   *	Revision 1.18  2007/02/18 01:35:28  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -105,6 +108,12 @@
 
 #include "CollisionSDK/CollisionSDK.h"
 
+// View positions
+#define VIEWPOS_FRONTCABIN	0
+#define VIEWPOS_REARCABIN	1
+#define VIEWPOS_ML			2
+
+
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo Crawler.log";
 
@@ -130,10 +139,12 @@ DLLCLBK void ovcExit(VESSEL *vessel) {
 Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	velocity = 0;
+	velocityStop = false;
 	targetHeading = 0;
+	wheeldeflect = 0;
+	viewPos = VIEWPOS_FRONTCABIN;
 	firstTimestepDone = false;
 	standalone = false;
-	reverseDirection = false;
 
 	lastLatLongSet = false;
 	lastLat = 0;
@@ -143,13 +154,18 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	keyBrake= false;
 	keyLeft= false;
 	keyRight= false;
+	keyCenter = false;
 
 	LVName[0] = 0;
 	hML = NULL;
 	hLV = NULL;
 	hMSS = NULL;
 	vccVis = NULL;	
-	vccSpeed = 0.0;	
+	vccSpeed = 0;	
+	vccSteering = 0;
+	meshidxCrawler = 0;
+	meshidxPanel = 0;
+	meshidxPanelReverse = 0;
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 	soundlib.LoadSound(soundEngine, "CrawlerEngine.wav", BOTHVIEW_FADED_MEDIUM);
@@ -178,29 +194,64 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	panelMeshoffset = _V(16.366, 4.675, 19.812);
-    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
-	SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
+	// Front cabin panel
+	VECTOR3 meshoffset = _V(16.366, 4.675, 19.812);
+    meshidxPanel = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &meshoffset);
+	SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
 
     // Speed indicator
 	vccSpeedGroup.P.transparam.shift = _V(0, 0, 0);
-	vccSpeedGroup.nmesh = panelMeshidx;
-	vccSpeedGroup.ngrp = 58;
+	vccSpeedGroup.nmesh = meshidxPanel;
+	vccSpeedGroup.ngrp = 29;
 	vccSpeedGroup.transform = MESHGROUP_TRANSFORM::TRANSLATE;
 
-	VECTOR3 meshoffset = _V(-15.103, 4.676, -16.777);
-    int meshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &meshoffset);
-	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+    // Steering wheel rotation
+	vccSteering1Group.P.rotparam.ref = _V(0.148, 0.084, 0.225);
+	vccSteering1Group.P.rotparam.axis = _V(0, 0.913545, -0.406736);
+	vccSteering1Group.P.rotparam.angle = 0.0;  
+	vccSteering1Group.nmesh = meshidxPanel;
+	vccSteering1Group.ngrp = 30;
+	vccSteering1Group.transform = MESHGROUP_TRANSFORM::ROTATE;
+	vccSteering2Group.P.rotparam.ref = _V(0.148, 0.084, 0.225);
+	vccSteering2Group.P.rotparam.axis = _V(0, 0.913545, -0.406736);
+	vccSteering2Group.P.rotparam.angle = 0.0;  
+	vccSteering2Group.nmesh = meshidxPanel;
+	vccSteering2Group.ngrp = 31;
+	vccSteering2Group.transform = MESHGROUP_TRANSFORM::ROTATE;
+
+	// Rear cabin panel
+	meshoffset = _V(-15.057, 4.675, -16.764);
+    meshidxPanelReverse = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &meshoffset);
+	SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
 
     // Speed indicator (reverse)
 	vccSpeedGroupReverse.P.transparam.shift = _V(0, 0, 0);
-	vccSpeedGroupReverse.nmesh = meshidx;
-	vccSpeedGroupReverse.ngrp = 58;
+	vccSpeedGroupReverse.nmesh = meshidxPanelReverse;
+	vccSpeedGroupReverse.ngrp = 29;
 	vccSpeedGroupReverse.transform = MESHGROUP_TRANSFORM::TRANSLATE;
 
+    // Steering wheel rotation (reverse)
+	vccSteering1GroupReverse.P.rotparam.ref = _V(0.076, 0.084, 0.33);
+	vccSteering1GroupReverse.P.rotparam.axis = _V(0, 0.913545, 0.406736);
+	vccSteering1GroupReverse.P.rotparam.angle = 0.0;  
+	vccSteering1GroupReverse.nmesh = meshidxPanelReverse;
+	vccSteering1GroupReverse.ngrp = 30;
+	vccSteering1GroupReverse.transform = MESHGROUP_TRANSFORM::ROTATE;
+	vccSteering2GroupReverse.P.rotparam.ref = _V(0.076, 0.084, 0.33);
+	vccSteering2GroupReverse.P.rotparam.axis = _V(0, 0.913545, 0.406736);
+	vccSteering2GroupReverse.P.rotparam.angle = 0.0;  
+	vccSteering2GroupReverse.nmesh = meshidxPanelReverse;
+	vccSteering2GroupReverse.ngrp = 31;
+	vccSteering2GroupReverse.transform = MESHGROUP_TRANSFORM::ROTATE;
+
+	// Panel position test
+	// panelMeshoffset = meshoffset;
+	// panelMeshidx = meshidxPanelReverse;
+
+	// Crawler
 	meshoffset = _V(0, 0, 0);
-    meshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler"), &meshoffset);
-	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+    meshidxCrawler = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler"), &meshoffset);
+	SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
 
 	CreateAttachment(false, _V(0.0, 6.3, 0.0), _V(0, 1, 0), _V(1, 0, 0), "ML", false);
 
@@ -218,20 +269,36 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 
 	if (IsAttached()) maxVelocity = maxVelocity / 2.0;
 
-	double head;
+	double head, dv;
 	oapiGetHeading(GetHandle(), &head);
 	double timeW = oapiGetTimeAcceleration();
 
-	if (keyAccelerate) {
-		velocity += 0.5 * simdt * (pow(2.0, log10(timeW))) / timeW;
+	if (((keyAccelerate && viewPos == VIEWPOS_FRONTCABIN) || (keyBrake && viewPos == VIEWPOS_REARCABIN)) && !velocityStop) {
+		dv = 0.5 * simdt * (pow(2.0, log10(timeW))) / timeW;
+		if (velocity < 0 && velocity + dv >= 0) {
+			velocity = 0;
+			velocityStop = true;
+		} else {
+			velocity += dv;
+		}
 		if (velocity > maxVelocity) velocity = maxVelocity;
-		keyAccelerate = false;
+
+	} else if (((keyBrake && viewPos == VIEWPOS_FRONTCABIN) || (keyAccelerate && viewPos == VIEWPOS_REARCABIN)) && !velocityStop) {
+		dv = -0.5 * simdt * (pow(2.0, log10(timeW))) / timeW;
+		if (velocity > 0 && velocity + dv <= 0) {
+			velocity = 0;
+			velocityStop = true;
+		} else {
+			velocity += dv;
+		}
+		if (velocity < -maxVelocity) velocity = -maxVelocity;
+	
+	} else if (!keyAccelerate && !keyBrake) {
+		velocityStop = false;
 	}
-	if (keyBrake) {
-		velocity -= 0.5 * simdt * (pow(2.0, log10(timeW))) / timeW;
-		if (velocity < 0) velocity = 0;
-		keyBrake = false;
-	}
+	// Reset flags
+	keyAccelerate = false;
+	keyBrake = false;
 
 	double lat, lon;
 	VESSELSTATUS vs;
@@ -248,30 +315,29 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	
 	} else return;
 
-	//double r = 152.4;	// 500 ft
-	//double r = 106.7; // 350 ft
+	if ((keyLeft && viewPos == VIEWPOS_FRONTCABIN) || (keyRight && viewPos == VIEWPOS_REARCABIN)) {
+		wheeldeflect = max(-1,wheeldeflect - (0.5 * simdt * (pow(2.0, log10(timeW))) / timeW));
+	
+	} else if ((keyRight && viewPos == VIEWPOS_FRONTCABIN) || (keyLeft && viewPos == VIEWPOS_REARCABIN)) {
+		wheeldeflect = min(1, wheeldeflect + (0.5 * simdt * (pow(2.0, log10(timeW))) / timeW));
+
+	} else if (keyCenter) {
+		wheeldeflect = 0;
+	}
+	keyLeft = false;
+	keyRight = false;
+	keyCenter = false;
+
 	double r = 45; // 150 ft
-	double dheading = velocity * simdt / r;
+	double dheading = wheeldeflect * velocity * simdt / r;
 	// turn speed is only doubled when time acc is multiplied by ten:
 	dheading = (pow(5.0, log10(timeW))) * dheading / timeW;
+	vs.vdata[0].z += dheading;
+	if(vs.vdata[0].z < 0) vs.vdata[0].z += 2.0 * PI;
+	if(vs.vdata[0].z >= 2.0 * PI) vs.vdata[0].z -= -2.0 * PI;
 
-	if (keyLeft) {
-		vs.vdata[0].z -= dheading;
-		if(vs.vdata[0].z < 0) vs.vdata[0].z += 2.0 * PI;
-		keyLeft = false;
-	}
-	if (keyRight) {
-		vs.vdata[0].z += dheading;
-		if(vs.vdata[0].z >= 2.0 * PI) vs.vdata[0].z -= -2.0 * PI;
-		keyRight = false;
-	}
-	if (!reverseDirection) {		
-		lon += sin(head) * velocity * simdt / oapiGetSize(GetGravityRef());
-		lat += cos(head) * velocity * simdt / oapiGetSize(GetGravityRef());
-	} else {
-		lon -= sin(head) * velocity * simdt / oapiGetSize(GetGravityRef());
-		lat -= cos(head) * velocity * simdt / oapiGetSize(GetGravityRef());
-	}
+	lon += sin(head) * velocity * simdt / oapiGetSize(GetGravityRef());
+	lat += cos(head) * velocity * simdt / oapiGetSize(GetGravityRef());
 	vs.vdata[0].x = lon;
 	vs.vdata[0].y = lat;
 	vs.status = 1;
@@ -295,13 +361,24 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 	//
 	if (vccVis) {
 		// Speed indicators
-		double v = (velocity * 0.066) * (reverseDirection ? -1. : 1.);
+		double v = (velocity * 0.066); 
 		vccSpeedGroup.P.transparam.shift.x = float(v - vccSpeed);
 		vccSpeedGroupReverse.P.transparam.shift.x = float(v - vccSpeed);
 		MeshgroupTransform(vccVis, vccSpeedGroup);
 		MeshgroupTransform(vccVis, vccSpeedGroupReverse);
 		vccSpeed = v;
-		// sprintf(oapiDebugString(), "Vel %f", velocity * (reverseDirection ? -1. : 1.) * 2.237);
+
+		// Steering wheel
+		double a = -wheeldeflect * 90.0 * RAD;
+		vccSteering1Group.P.rotparam.angle = float(a - vccSteering);
+		vccSteering2Group.P.rotparam.angle = float(a - vccSteering);
+		vccSteering1GroupReverse.P.rotparam.angle = -float(a - vccSteering);
+		vccSteering2GroupReverse.P.rotparam.angle = -float(a - vccSteering);
+		MeshgroupTransform(vccVis, vccSteering1Group);
+		MeshgroupTransform(vccVis, vccSteering2Group);
+		MeshgroupTransform(vccVis, vccSteering1GroupReverse);
+		MeshgroupTransform(vccVis, vccSteering2GroupReverse);
+		vccSteering = a;		
 	}
 
 	/* VECTOR3 pos;
@@ -345,8 +422,10 @@ void Crawler::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 			sscanf (line + 8, "%lf", &velocity);
 		} else if (!strnicmp (line, "TARGETHEADING", 13)) {
 			sscanf (line + 13, "%lf", &targetHeading);
-		} else if (!strnicmp (line, "REVERSEDIRECTION", 16)) {
-			sscanf (line + 16, "%i", &reverseDirection);
+		} else if (!strnicmp (line, "WHEELDEFLECT", 12)) {
+			sscanf (line + 12, "%lf", &wheeldeflect);
+		} else if (!strnicmp (line, "VIEWPOS", 7)) {
+			sscanf (line + 7, "%i", &viewPos);
 		} else if (!strnicmp (line, "STANDALONE", 10)) {
 			sscanf (line + 10, "%i", &standalone);
 		} else if (!strnicmp (line, "LVNAME", 6)) {
@@ -369,12 +448,13 @@ void Crawler::clbkSaveState(FILEHANDLE scn) {
 	
 	VESSEL2::clbkSaveState (scn);
 
-	WriteScenario_double (scn, "VELOCITY", velocity);
-	WriteScenario_double (scn, "TARGETHEADING", targetHeading);
-	oapiWriteScenario_int (scn, "REVERSEDIRECTION", reverseDirection);
-	oapiWriteScenario_int (scn, "STANDALONE", standalone);
+	WriteScenario_double(scn, "VELOCITY", velocity);
+	WriteScenario_double(scn, "TARGETHEADING", targetHeading);
+	WriteScenario_double(scn, "WHEELDEFLECT", wheeldeflect);	
+	oapiWriteScenario_int(scn, "VIEWPOS", viewPos);
+	oapiWriteScenario_int(scn, "STANDALONE", standalone);
 	if (LVName[0])
-		oapiWriteScenario_string (scn, "LVNAME", LVName);
+		oapiWriteScenario_string(scn, "LVNAME", LVName);
 }
 
 int Crawler::clbkConsumeDirectKey(char *kstate) {
@@ -385,24 +465,25 @@ int Crawler::clbkConsumeDirectKey(char *kstate) {
 		return 0; 
 	}
 
-	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD8)) {
+	if (KEYDOWN(kstate, OAPI_KEY_ADD)) {
 		keyAccelerate = true;				
-		RESETKEY(kstate, OAPI_KEY_NUMPAD8);
+		RESETKEY(kstate, OAPI_KEY_ADD);
 	}
-
-	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD5)) {
+	if (KEYDOWN(kstate, OAPI_KEY_SUBTRACT)) {
 		keyBrake = true;				
-		RESETKEY(kstate, OAPI_KEY_NUMPAD5);
+		RESETKEY(kstate, OAPI_KEY_SUBTRACT);
 	}
-
-	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD4)) {
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD1)) {
 		keyLeft = true;				
-		RESETKEY(kstate, OAPI_KEY_NUMPAD4);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD1);
 	}
-
-	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD6)) {
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD3)) {
 		keyRight = true;				
-		RESETKEY(kstate, OAPI_KEY_NUMPAD6);
+		RESETKEY(kstate, OAPI_KEY_NUMPAD3);
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD5)) {
+		keyCenter = true;				
+		RESETKEY(kstate, OAPI_KEY_NUMPAD5);
 	}
 
 	// touchdown point test
@@ -451,42 +532,42 @@ int Crawler::clbkConsumeDirectKey(char *kstate) {
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD4)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.x += step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD4);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD6)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.x -= step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD6);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD8)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.y += step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD8);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD2)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.y -= step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD2);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD1)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.z += step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD1);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD3)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.z -= step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD3);
 	}
@@ -503,7 +584,7 @@ int Crawler::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0; 
 	}
 
-	if (key == OAPI_KEY_NUMPAD1 && down == true) {
+	if (key == OAPI_KEY_J && down == true) {
 		if (IsAttached())
 			Detach();
 		else
@@ -511,12 +592,20 @@ int Crawler::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 1;
 	}
 
-	if (key == OAPI_KEY_NUMPAD2 && down == true) {
-		ToggleDirection();
+	if (key == OAPI_KEY_1 && down == true) {
+		SetView(VIEWPOS_FRONTCABIN);
+		return 1;
+	}
+	if (key == OAPI_KEY_2 && down == true) {
+		SetView(VIEWPOS_REARCABIN);
+		return 1;
+	}
+	if (key == OAPI_KEY_3 && down == true) {
+		SetView(VIEWPOS_ML);
 		return 1;
 	}
 
-	if (key == OAPI_KEY_1 && down == true) {
+	if (key == OAPI_KEY_NUMPAD7 && down == true) {
 		if (!standalone) {
 			OBJHANDLE hVab = oapiGetVesselByName("VAB");
 			if (hVab) {
@@ -527,7 +616,7 @@ int Crawler::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 1;
 	}
 
-	if (key == OAPI_KEY_3 && down == true) {
+	if (key == OAPI_KEY_NUMPAD8 && down == true) {
 		if (!standalone) {
 			OBJHANDLE hVab = oapiGetVesselByName("VAB");
 			if (hVab) {
@@ -628,24 +717,37 @@ bool Crawler::IsAttached() {
 	return (GetAttachmentStatus(ah) != NULL);
 }
 
-void Crawler::ToggleDirection() {
-
-	if (velocity != 0) return;
-
-	reverseDirection = !reverseDirection;
-	SetView();
+void Crawler::SetView() {
+	SetView(viewPos);
 }
 
-void Crawler::SetView() {
+void Crawler::SetView(int viewpos) {
 
-	if (reverseDirection) {
-		SetCameraOffset(_V(-15.0, 5.3, -16.0));
+	viewPos = viewpos;
+	if (viewPos == VIEWPOS_REARCABIN) {
+		SetCameraOffset(_V(-14.97, 5.3, -16.0));
 		SetCameraDefaultDirection(_V(0, -0.309017, -0.951057));
 
-	} else {
+		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
+
+	} else if (viewPos == VIEWPOS_FRONTCABIN) {
 		SetCameraOffset(_V(16.5, 5.3, 19.6));
 		SetCameraDefaultDirection(_V(0, -0.309017, 0.951057));
-	}
+
+		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
+
+	} else if (viewPos == VIEWPOS_ML) {
+		SetCameraOffset(_V(19.9, 15.4, -25.6));
+		SetCameraDefaultDirection(_V(-0.630037, 0.453991, 0.630037));
+
+		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
+		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
+		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
+	}	
 }
 
 void Crawler::SlowIfDesired(double timeAcceleration) {
@@ -664,5 +766,6 @@ void Crawler::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 {
 	vccVis = NULL;
 	// reset the variables keeping track of console mesh animation
-	vccSpeed = 0.0;
+	vccSpeed = 0;
+	vccSteering = 0;
 }
