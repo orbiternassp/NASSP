@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2007/03/01 17:58:26  tschachim
+  *	New VC panel
+  *	
   *	Revision 1.11  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -75,8 +78,10 @@ public:
 
 protected:
 	double velocity;
+	bool velocityStop;
 	double targetHeading;
-	int reverseDirection;
+	int viewPos;
+	double wheeldeflect;
 	int standalone;
 	bool firstTimestepDone;
 
@@ -88,14 +93,19 @@ protected:
 	bool keyBrake;
 	bool keyLeft;
 	bool keyRight;
+	bool keyCenter;
 
 	OBJHANDLE hML;
 	OBJHANDLE hLV;
 	OBJHANDLE hMSS;
 	VISHANDLE vccVis;	
-	MESHGROUP_TRANSFORM vccSpeedGroup;
-	MESHGROUP_TRANSFORM vccSpeedGroupReverse;
-	double vccSpeed;
+	MESHGROUP_TRANSFORM vccSpeedGroup, vccSpeedGroupReverse;
+	MESHGROUP_TRANSFORM vccSteering1Group, vccSteering2Group;
+	MESHGROUP_TRANSFORM vccSteering1GroupReverse, vccSteering2GroupReverse;
+	double vccSpeed, vccSteering;
+    int meshidxCrawler;
+    int meshidxPanel;
+	int meshidxPanelReverse;
 
 	SoundLib soundlib;
 	Sound soundEngine;
@@ -106,8 +116,8 @@ protected:
 	bool IsAttached();
 	void Attach();
 	void Detach();
-	void ToggleDirection();
 	void SetView();
+	void SetView(int viewpos);
 	void SlowIfDesired(double timeAcceleration);
 
 	VECTOR3 panelMeshoffset;

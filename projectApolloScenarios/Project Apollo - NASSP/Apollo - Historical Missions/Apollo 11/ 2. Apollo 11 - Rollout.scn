@@ -19,17 +19,6 @@ BEGIN_CAMERA
   FOV 60.00
 END_CAMERA
 
-BEGIN_MFD Left
-  TYPE Map
-  REF Earth
-  TRACK ON
-END_MFD
-
-BEGIN_MFD Right
-  TYPE Surface
-  SPDMODE 1
-END_MFD
-
 BEGIN_SHIPS
 Columbia:ProjectApollo\Saturn5
   STATUS Landed Earth  
