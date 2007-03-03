@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2007/03/03 00:14:40  tschachim
+  *	Bugfix generic cockpit.
+  *	
   *	Revision 1.20  2007/03/02 18:34:37  tschachim
   *	Improved crawler VC.
   *	
@@ -112,14 +115,16 @@
 #include "CollisionSDK/CollisionSDK.h"
 
 // View positions
-#define VIEWPOS_FRONTCABIN	0
-#define VIEWPOS_REARCABIN	1
-#define VIEWPOS_ML			2
-
+#define VIEWPOS_FRONTCABIN				0
+#define VIEWPOS_REARCABIN				1
+#define VIEWPOS_ML						2
+#define VIEWPOS_GROUND					3
+#define VIEWPOS_FRONTGANGWAY			4
+#define VIEWPOS_REARGANGWAY				5
+#define VIEWPOS_RIGHTREARGANGWAY		6
 
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo Crawler.log";
-
 
 DLLCLBK void InitModule(HINSTANCE hModule) {
 
@@ -127,12 +132,10 @@ DLLCLBK void InitModule(HINSTANCE hModule) {
 	InitCollisionSDK();
 }
 
-
 DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel) {
 
 	return new Crawler(hvessel, flightmodel);
 }
-
 
 DLLCLBK void ovcExit(VESSEL *vessel) {
 
@@ -607,6 +610,22 @@ int Crawler::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		SetView(VIEWPOS_ML);
 		return 1;
 	}
+	if (key == OAPI_KEY_4 && down == true) {
+		SetView(VIEWPOS_GROUND);
+		return 1;
+	}
+	if (key == OAPI_KEY_5 && down == true) {
+		SetView(VIEWPOS_FRONTGANGWAY);
+		return 1;
+	}
+	if (key == OAPI_KEY_6 && down == true) {
+		SetView(VIEWPOS_REARGANGWAY);
+		return 1;
+	}
+	if (key == OAPI_KEY_7 && down == true) {
+		SetView(VIEWPOS_RIGHTREARGANGWAY);
+		return 1;
+	}
 
 	if (key == OAPI_KEY_NUMPAD7 && down == true) {
 		if (!standalone) {
@@ -750,6 +769,38 @@ void Crawler::SetView(int viewpos) {
 		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
 		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
 		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
+
+	} else if (viewPos == VIEWPOS_GROUND) {
+		SetCameraOffset(_V(21.5, 1.75, 1));
+		SetCameraDefaultDirection(_V(0, 0, 1));
+
+		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
+		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
+		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
+
+	} else if (viewPos == VIEWPOS_FRONTGANGWAY) {
+		SetCameraOffset(_V(0, 4.1, 21.3));
+		SetCameraDefaultDirection(_V(0, 0, 1));
+
+		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
+
+	} else if (viewPos == VIEWPOS_REARGANGWAY) {
+		SetCameraOffset(_V(0, 4.1, -17.7));
+		SetCameraDefaultDirection(_V(0, 0, -1));
+
+		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
+
+	} else if (viewPos == VIEWPOS_RIGHTREARGANGWAY) {
+		SetCameraOffset(_V(16.4, 5.7, -12.9));
+		SetCameraDefaultDirection(_V(0, 0, -1));
+
+		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
+		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
 	}	
 }
 
