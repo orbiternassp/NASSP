@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2007/03/02 18:34:37  tschachim
+  *	Improved crawler VC.
+  *	
   *	Revision 1.19  2007/03/01 17:58:26  tschachim
   *	New VC panel
   *	
@@ -757,15 +760,22 @@ void Crawler::SlowIfDesired(double timeAcceleration) {
 	}
 }
 
-void Crawler::clbkVisualCreated(VISHANDLE vis, int refcount)
-{
+void Crawler::clbkVisualCreated(VISHANDLE vis, int refcount) {
+
 	vccVis = vis;
 }
 
-void Crawler::clbkVisualDestroyed(VISHANDLE vis, int refcount)
-{
+void Crawler::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
+	
 	vccVis = NULL;
 	// reset the variables keeping track of console mesh animation
 	vccSpeed = 0;
 	vccSteering = 0;
 }
+
+bool Crawler::clbkLoadGenericCockpit() {
+
+	SetView();
+	return true;
+}
+
