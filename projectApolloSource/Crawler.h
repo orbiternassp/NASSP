@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2007/03/02 18:34:37  tschachim
+  *	Improved crawler VC.
+  *	
   *	Revision 1.12  2007/03/01 17:58:26  tschachim
   *	New VC panel
   *	
@@ -75,6 +78,7 @@ public:
 	void clbkPostStep(double simt, double simdt, double mjd);
 	void clbkVisualCreated(VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
+	bool clbkLoadGenericCockpit();
 
 protected:
 	double velocity;
