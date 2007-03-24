@@ -602,6 +602,9 @@
 #define AID_TELECOMTB										861
 #define IDB_THC                                             862
 #define AID_THC                                             863
+#define AID_PANEL100SWITCHES								864
+#define AID_PANEL100LIGHTINGROTARIES						865
+#define AID_SCIUTILPOWERSWITCH								866
 
 // Next default values for new objects
 //

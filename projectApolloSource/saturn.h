@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.234  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.233  2007/02/06 18:30:17  tschachim
   *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
   *	
@@ -2518,6 +2521,23 @@ protected:
 	ToggleSwitch UPTLMSwitch;
 
 	///////////////
+	// Panel 100 //
+	///////////////
+
+	SwitchRow Panel100SwitchesRow;
+	ToggleSwitch UtilityPowerSwitch;
+	ToggleSwitch Panel100FloodDimSwitch;	
+	ToggleSwitch Panel100FloodFixedSwitch;
+	ToggleSwitch GNPowerOpticsSwitch;
+	GuardedToggleSwitch GNPowerIMUSwitch;
+	ThreePosSwitch Panel100RNDZXPDRSwitch;
+
+	SwitchRow Panel100LightingRoatariesRow;
+	RotationalSwitch Panel100NumericRotarySwitch;
+	RotationalSwitch Panel100FloodRotarySwitch;
+	RotationalSwitch Panel100IntegralRotarySwitch;
+	
+	///////////////
 	// Panel 101 //
 	///////////////
 
@@ -2532,6 +2552,13 @@ protected:
 	ToggleSwitch CMRCSHTRSSwitch;
 	ThreePosSwitch WasteH2ODumpSwitch;
 	ThreePosSwitch UrineDumpSwitch;
+
+	///////////////
+	// Panel 163 //
+	///////////////
+
+	SwitchRow SCIUtilPowerSwitchRow;
+	ToggleSwitch SCIUtilPowerSwitch;
 
 	///////////////////////
 	// Panel 15 switches //
