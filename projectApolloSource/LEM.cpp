@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/08/20 08:28:06  dseagrav
+  *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
+  *	
   *	Revision 1.2  2006/08/18 05:45:01  dseagrav
   *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
   *	
@@ -687,7 +690,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 
 	if (stage == 0)	{
-		if ((EngineArmSwitch.IsDown())  && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
+		if (EngineArmSwitch.IsDown()) { //  && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
 //TODOX15 is it useful to do it on every step ? surely no
@@ -702,7 +705,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 	}else if (stage == 1 || stage == 5)	{
 
-		if ((EngineArmSwitch.IsDown() )&& !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
+		if (EngineArmSwitch.IsDown()) { // && !DESHE1switch && !DESHE2switch && ED1switch && ED2switch && ED5switch){
 			SetThrusterResource(th_hover[0], ph_Dsc);
 			SetThrusterResource(th_hover[1], ph_Dsc);
 // TODOX15
