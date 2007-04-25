@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.4  2007/01/24 14:21:52  tschachim
   *	Bugfix He and N2 pressure.
   *	
@@ -460,6 +463,7 @@ void SPSPropellantSource::LoadState(FILEHANDLE scn) {
 SPSEngine::SPSEngine(THRUSTER_HANDLE &sps) :
 	spsThruster(sps) {
 
+	thrustOn = false;
 	injectorValves12Open = false;
 	injectorValves34Open = false;
 	saturn = 0;
@@ -505,27 +509,42 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	// Thrust on/off logic
 	//
 
-	bool thrustOn = false;
+	if (saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE || saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE) {
+		// SCS dV mode
+		// TODO: SC CONT switch is supplied by SCS LOGIC BUS 3
+		// TODO: TVC CW is supplied by SCS LOGIC BUS 2
+		if (saturn->SCContSwitch.IsDown() || saturn->THCRotary.IsClockwise()) {
+			if (!saturn->ems.IsdVMode()) {
+				thrustOn = false;
+			
+			} else if (saturn->ems.GetdVRangeCounter() < 0) {
+				thrustOn = false;
 
-	// SPS thrust direct on mode
-	if (saturn->SPSswitch.IsUp()) {
-		thrustOn = true;
-	}
+			} else if (saturn->ThrustOnButton.GetState() == 1) {
+				thrustOn = true;
+			}
+		}
 
-	// CMC mode
+		// CMC mode
+		// TODO: SC CONT switch is supplied by G/N IMU PWR
+		if (saturn->SCContSwitch.IsUp() && !saturn->THCRotary.IsClockwise()) {
+			// Check i/o channel
+			ChannelValue11 val11;
+			val11.Value = saturn->agc.GetOutputChannel(011);
+			if (val11.Bits.EngineOnOff) {
+				thrustOn = true;
+			} else {
+				thrustOn = false;
+			}
+		}
 
-	// TODO: TVC CW is supplied by SCS LOGIC BUS 2
-	// TODO: SC CONT switch is supplied by ???
-	if (saturn->SCContSwitch.IsUp() && !saturn->THCRotary.IsClockwise()) {
-		// Check i/o channel
-		ChannelValue11 val11;
-		val11.Value = saturn->agc.GetOutputChannel(011);
-		if (val11.Bits.EngineOnOff) {
+		// SPS thrust direct on mode
+		if (saturn->SPSswitch.IsUp()) {
 			thrustOn = true;
 		}
+	} else {
+		thrustOn = false;
 	}
-
-	// TODO SCS dV mode
 
 	//
 	// Injector valves
@@ -597,7 +616,6 @@ void SPSEngine::Timestep(double simt, double simdt) {
 
 	// Get BMAG1 attitude errors
 	VECTOR3 error = saturn->bmag1.GetAttitudeError();
-	//VECTOR3 errorBefore = error;
 
 	if (error.x > 0) { // Positive Error
 		if (error.x > PI) { 
@@ -637,8 +655,6 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().x == 0) error.x = 0;
 	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().y == 0) error.y = 0;
 	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().z == 0) error.z = 0;
-
-	// sprintf(oapiDebugString(), "pitch before %.3f after %.3f - yaw before %.3f after %.3f",  errorBefore.y * DEG, error.y * DEG, errorBefore.z * DEG, -error.z * DEG);
 
 	// Do time step
 	pitchGimbalActuator.Timestep(simt, simdt, error.y, saturn->gdc.rates.x, saturn->eca.rhc_ac_y);
@@ -683,6 +699,7 @@ double SPSEngine::GetChamberPressurePSI() {
 void SPSEngine::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, SPSENGINE_START_STRING);
+	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
 	oapiWriteScenario_int(scn, "INJECTORVALVES12OPEN", (injectorValves12Open ? 1 : 0));
 	oapiWriteScenario_int(scn, "INJECTORVALVES34OPEN", (injectorValves34Open ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENFORCEBURN", (enforceBurn ? 1 : 0));
@@ -698,6 +715,10 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, SPSENGINE_END_STRING, sizeof(SPSENGINE_END_STRING))) {
 			return;
+		}
+		else if (!strnicmp (line, "THRUSTON", 8)) {
+			sscanf (line+8, "%d", &i);
+			thrustOn = (i != 0);
 		}
 		else if (!strnicmp (line, "INJECTORVALVES12OPEN", 20)) {
 			sscanf (line+20, "%d", &i);
