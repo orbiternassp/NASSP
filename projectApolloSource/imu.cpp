@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.24  2006/08/20 08:28:06  dseagrav
   *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
   *	
@@ -163,10 +166,6 @@ void IMU::Init()
 	Orbiter.Attitude.Y = 0;
 	Orbiter.Attitude.Z = 0;
 
-	Orbiter.LastAttitude.X = 0;
-	Orbiter.LastAttitude.Y = 0;
-	Orbiter.LastAttitude.Z = 0;
-
 	Orbiter.AttitudeReference.m11 = 0;
 	Orbiter.AttitudeReference.m12 = 0;
 	Orbiter.AttitudeReference.m13 = 0;
@@ -177,9 +176,7 @@ void IMU::Init()
 	Orbiter.AttitudeReference.m32 = 0;
 	Orbiter.AttitudeReference.m33 = 0;
 
-	Velocity.x = 0;
-	Velocity.y = 0;
-	Velocity.z = 0;
+	LastWeightAcceleration = _V(0, 0, 0);
 
 	OurVessel = 0;
 	IMUHeater = 0;
@@ -252,8 +249,8 @@ void IMU::ChannelOutput(int address, int value)
 
 	int pulses;
 	double delta;
-  	IMU_Matrix3 t;
-  	IMU_Vector3 newAngles;
+  	MATRIX3 t;
+  	VECTOR3 newAngles;
     ChannelValue12 val12;
 	
 	if (address != 07 && address != 033 /*&& address != 010*/) {  	  
@@ -327,9 +324,9 @@ void IMU::ChannelOutput(int address, int value)
 		
 		// transformation to navigation base coordinates
 		// CAUTION: gimbal angles are left-handed
-		t = multiplyMatrix(getRotationMatrixY(-Gimbal.Y), t);
-		t = multiplyMatrix(getRotationMatrixZ(-Gimbal.Z), t);
-		t = multiplyMatrix(getRotationMatrixX(-Gimbal.X), t);
+		t = mul(getRotationMatrixY(-Gimbal.Y), t);
+		t = mul(getRotationMatrixZ(-Gimbal.Z), t);
+		t = mul(getRotationMatrixX(-Gimbal.X), t);
 		
 		// calculate the new gimbal angles
 		newAngles = getRotationAnglesXZY(t);
@@ -344,83 +341,11 @@ void IMU::ChannelOutput(int address, int value)
 
 }
 
-VECTOR3 IMU::CalculateAccelerations(double deltaT) 
-
-{
-	VESSELSTATUS vs;
-	VECTOR3 vel, pos, Acceleration, GravityAcceleration;
-
-	// ***********************************************************
-	// calculate acceleration caused by velocity change 
-	// according to an inertial system
-	
-	OBJHANDLE earth = oapiGetGbodyByName("Earth");
-	OurVessel->GetRelativeVel(earth, vel);
-	//OurVessel->GetGlobalVel(vel);
-
-	Acceleration = (vel - Velocity) * (1.0 / deltaT);
-
-	// Transform to Orbiter local
-	OurVessel->GetStatus(vs);
-	IMU_Matrix3	t = getRotationMatrixX(vs.arot.x);
-	t = multiplyMatrix(getRotationMatrixY(vs.arot.y), t);
-	t = multiplyMatrix(getRotationMatrixZ(vs.arot.z), t);
-
-	IMU_Vector3 acc = VECTOR3ToIMU_Vector3(Acceleration); 
-	acc = multiplyMatrixByVector(t, acc);
-	Acceleration = IMU_Vector3ToVECTOR3(acc); 
-
-
-	// ***********************************************************
-	// calculate acceleration caused by gravity
-	// Reference: page 5 of the "Guidance System Operations Plan" 
-	// www.ibiblio.org/apollo/NARA-SW/R-577-sec5-rev4-5.3-5.5.pdf
-
-	OurVessel->GetRelativePos(earth, pos);
-
-	IMU_Vector3 p = VECTOR3ToIMU_Vector3(pos); 
-	p = multiplyMatrixByVector(t, p);	
-	pos = IMU_Vector3ToVECTOR3(p); 
-
-	double distance = length(pos);
-	pos = pos * (1.0 / distance);
-
-	// "normal" force term
-	GravityAcceleration =  pos * (0.3986032e15 / (distance * distance)); 
-
-	//  non-spherical term
-	IMU_Vector3 iuz = VECTOR3ToIMU_Vector3(_V(0.0, 1.0, 0.0));
-	MATRIX3 m;
-	oapiGetPlanetObliquityMatrix(earth, &m);
-	IMU_Matrix3 im = MATRIX3ToIMU_Matrix3(m); 
-
-	iuz = multiplyMatrixByVector(im, iuz);
-	iuz = multiplyMatrixByVector(t, iuz);	
-	VECTOR3 uz = IMU_Vector3ToVECTOR3(iuz);
-	
-	double cosphi = dotp(pos, uz);
-	double k = (0.3986032e15 / (distance * distance)) * (3.0 / 2.0) * 0.10823e-2 * (6378165.0 / distance) * (6378165.0 / distance);
-	VECTOR3 gb = pos * (k * (1 - 5 * cosphi * cosphi));
-	gb = gb + uz * (k * 2 * cosphi);
-
-	// total gravity
-	GravityAcceleration = GravityAcceleration + gb;
-
-	// sprintf(oapiDebugString(), "Total Gravity %f", Acceleration + GravityAcceleration);
-
-	// ***********************************************************
-	// store for next timestep
-
-	Velocity = vel;
-
-	return Acceleration + GravityAcceleration;
-}
-
 bool IMU::IsPowered()
 
 {
-	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE){ return false; }
-	if (IMUHeater && !IMUHeater->pumping){ return false; }
+	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
+	if (IMUHeater && !IMUHeater->pumping) { return false; }
 	return true;
 }
 
@@ -438,8 +363,6 @@ void IMU::Timestep(double simt)
 	TRACESETUP("IMU::Timestep");
 
 	double deltaTime, pulses;
-	IMU_Matrix3 t;
-	IMU_Vector3 newAngles, acc, accI; 
 	ChannelValue12 val12;
 
 	if (!Operate) {
@@ -461,68 +384,82 @@ void IMU::Timestep(double simt)
 		return;
 	}
 	
-	VESSELSTATUS vs;
-
 	// fill OrbiterData
+	VESSELSTATUS vs;
 	OurVessel->GetStatus(vs);
-	double orbiterAttitudeX;
-	double orbiterAttitudeY;
-	double orbiterAttitudeZ;
 
-	// LM needs yaw and roll swapped from CM orientation
-	orbiterAttitudeX = vs.arot.x;
-	orbiterAttitudeY = vs.arot.y;
-	orbiterAttitudeZ = vs.arot.z;
+	Orbiter.Attitude.X = vs.arot.x;
+	Orbiter.Attitude.Y = vs.arot.y;
+	Orbiter.Attitude.Z = vs.arot.z;
+
+	// Vessel to Orbiter global transformation
+	MATRIX3	tinv = getRotationMatrixZ(-vs.arot.z);
+	tinv = mul(getRotationMatrixY(-vs.arot.y), tinv);
+	tinv = mul(getRotationMatrixX(-vs.arot.x), tinv);
 
 	if (!Initialized) {
-		Orbiter.Attitude.X = orbiterAttitudeX;
-		Orbiter.Attitude.Y = orbiterAttitudeY;
-		Orbiter.Attitude.Z = orbiterAttitudeZ;
 		SetOrbiterAttitudeReference();
-		
-		Orbiter.LastAttitude.X = orbiterAttitudeX;
-		Orbiter.LastAttitude.Y = orbiterAttitudeY;
-		Orbiter.LastAttitude.Z = orbiterAttitudeZ;	
-		
+
+		// Get current weight vector in vessel coordinates
+		VECTOR3 w;
+		OurVessel->GetWeightVector(w);
+
+		// Transform to Orbiter global and calculate weight acceleration
+		w = mul(tinv, w) / OurVessel->GetMass();
+		LastWeightAcceleration = w;
+
 		LastTime = simt;
 		Initialized = true;
 	} 
 	else {
 		deltaTime = (simt - LastTime);
 
-		VECTOR3 accel = CalculateAccelerations(deltaTime);
+		// Calculate accelerations
+		VECTOR3 w, f;
+		OurVessel->GetWeightVector(w);
+		OurVessel->GetForceVector(f);
+
+		// Transform to Orbiter global and calculate accelerations
+		f = mul(tinv, f) / OurVessel->GetMass();
+		w = mul(tinv, w) / OurVessel->GetMass();
+
+		// Measurements with the 2006-P1 version showed that the average of the weigth 
+		// vector of this and the last step match the force vector while in free fall
+		// The force vector matches the global velocity change of the last timestep exactly
+		VECTOR3 dw1 = w - f;
+		VECTOR3 dw2 = LastWeightAcceleration - f;	
+		VECTOR3 accel = -(dw1 + dw2) / 2.0;
+		LastWeightAcceleration = w;
 
 		// orbiter earth rotation
 		//imuState->Orbiter.Y = imuState->Orbiter.Y + (deltaTime * TwoPI / 86164.09);
 
-		Orbiter.Attitude.X = orbiterAttitudeX;
-		Orbiter.Attitude.Y = orbiterAttitudeY;
-		Orbiter.Attitude.Z = orbiterAttitudeZ;
-				
+		// Process channel bits				
 		val12.Value = agc.GetOutputChannel(012);
 		if (val12.Bits.ZeroIMUCDUs) {
 			ZeroIMUCDUs();
 		}
-		else if(val12.Bits.CoarseAlignEnable) {
+		else if (val12.Bits.CoarseAlignEnable) {
 			TRACE("CHANNEL 12 COARSE");
 			SetOrbiterAttitudeReference();
 		}
-		else if(Caged) {
+		else if (Caged) {
 			SetOrbiterAttitudeReference();
 		}
 		else {
 
 			TRACE("CHANNEL 12 NORMAL");
+
 			// Gimbals
-			t = Orbiter.AttitudeReference;
-	  		t = multiplyMatrix(getRotationMatrixX(Orbiter.Attitude.X), t);
-	  		t = multiplyMatrix(getRotationMatrixY(Orbiter.Attitude.Y), t);
-	  		t = multiplyMatrix(getRotationMatrixZ(Orbiter.Attitude.Z), t);
+			MATRIX3 t = Orbiter.AttitudeReference;
+	  		t = mul(getRotationMatrixX(Orbiter.Attitude.X), t);
+	  		t = mul(getRotationMatrixY(Orbiter.Attitude.Y), t);
+	  		t = mul(getRotationMatrixZ(Orbiter.Attitude.Z), t);
 	  		
-	  		t = multiplyMatrix(getOrbiterLocalToNavigationBaseTransformation(), t);
+	  		t = mul(getOrbiterLocalToNavigationBaseTransformation(), t);
 	  		
 			// calculate the new gimbal angles
-			newAngles = getRotationAnglesXZY(t);
+			VECTOR3 newAngles = getRotationAnglesXZY(t);
 
 			// drive gimbals to new angles		  		  				  		  	 	 	  		  	
 			// CAUTION: gimbal angles are left-handed
@@ -531,35 +468,22 @@ void IMU::Timestep(double simt)
 		  	DriveGimbalZ(-newAngles.z - Gimbal.Z);
 
 			// PIPAs
-			acc.x = accel.x;
-			acc.y = accel.y;
-			acc.z = accel.z;
-
-			// transformation to stable member coordinates
-			t = getOrbiterLocalToNavigationBaseTransformation();
-			// CAUTION: gimbal angles are left-handed
-			t = multiplyMatrix(getRotationMatrixX(Gimbal.X), t);
-	  		t = multiplyMatrix(getRotationMatrixZ(Gimbal.Z), t);
-	  		t = multiplyMatrix(getRotationMatrixY(Gimbal.Y), t);
-			accI = multiplyMatrixByVector(t, acc);
+			accel = tmul(Orbiter.AttitudeReference, accel);
+			//sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f l %.10f", accel.x, accel.y, accel.z, length(accel));								
 
 			// pulse PIPAs
-			pulses = RemainingPIPA.X + (accI.x * deltaTime / 0.0585);
+			pulses = RemainingPIPA.X + (accel.x * deltaTime / 0.0585);
 			PulsePIPA(RegPIPAX, (int) pulses);
 			RemainingPIPA.X = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Y + (accI.y * deltaTime / 0.0585);
+			pulses = RemainingPIPA.Y + (accel.y * deltaTime / 0.0585);
 			PulsePIPA(RegPIPAY, (int) pulses);
 			RemainingPIPA.Y = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Z + (accI.z * deltaTime / 0.0585);
+			pulses = RemainingPIPA.Z + (accel.z * deltaTime / 0.0585);
 			PulsePIPA(RegPIPAZ, (int) pulses);
 			RemainingPIPA.Z = pulses - (int) pulses;			
 		}
-
-		Orbiter.LastAttitude.X = Orbiter.Attitude.X;
-		Orbiter.LastAttitude.Y = Orbiter.Attitude.Y;
-		Orbiter.LastAttitude.Z = Orbiter.Attitude.Z;
 		LastTime = simt;
 	}	
 }
@@ -703,22 +627,21 @@ void IMU::DriveCDU(int index, int RegCDU, int cducmd)
 
 void IMU::SetOrbiterAttitudeReference() 
 {
-	IMU_Matrix3 t;
-
 	// transformation to navigation base coordinates
 	// CAUTION: gimbal angles are left-handed
-	t = getRotationMatrixY(-Gimbal.Y);
-	t = multiplyMatrix(getRotationMatrixZ(-Gimbal.Z), t);
-	t = multiplyMatrix(getRotationMatrixX(-Gimbal.X), t);
+	MATRIX3 t = getRotationMatrixY(-Gimbal.Y);
+	t = mul(getRotationMatrixZ(-Gimbal.Z), t);
+	t = mul(getRotationMatrixX(-Gimbal.X), t);
 	
 	// tranform to orbiter local coordinates
-	t = multiplyMatrix(getNavigationBaseToOrbiterLocalTransformation(), t);
+	t = mul(getNavigationBaseToOrbiterLocalTransformation(), t);
 	
 	// tranform to orbiter global coordinates
-	t = multiplyMatrix(getRotationMatrixZ(-Orbiter.Attitude.Z), t);
-	t = multiplyMatrix(getRotationMatrixY(-Orbiter.Attitude.Y), t);
-	t = multiplyMatrix(getRotationMatrixX(-Orbiter.Attitude.X), t);
+	t = mul(getRotationMatrixZ(-Orbiter.Attitude.Z), t);
+	t = mul(getRotationMatrixY(-Orbiter.Attitude.Y), t);
+	t = mul(getRotationMatrixX(-Orbiter.Attitude.X), t);
 
+	// "Orbiter's REFSMMAT"
 	Orbiter.AttitudeReference = t;
 }
 
@@ -804,29 +727,17 @@ void IMU::LoadState(FILEHANDLE scn)
 			sscanf(line + 3, "%lf", &flt);
 			Orbiter.Attitude.Z = flt;
 		}
-		else if (!strnicmp (line, "LAX", 3)) {
+		else if (!strnicmp (line, "WLX", 3)) {
 			sscanf(line + 3, "%lf", &flt);
-			Orbiter.LastAttitude.X = flt;
+			LastWeightAcceleration.x = flt;
 		}
-		else if (!strnicmp (line, "LAY", 3)) {
+		else if (!strnicmp (line, "WLY", 3)) {
 			sscanf(line + 3, "%lf", &flt);
-			Orbiter.LastAttitude.Y = flt;
+			LastWeightAcceleration.y = flt;
 		}
-		else if (!strnicmp (line, "LAZ", 3)) {
+		else if (!strnicmp (line, "WLZ", 3)) {
 			sscanf(line + 3, "%lf", &flt);
-			Orbiter.LastAttitude.Z = flt;
-		}
-		else if (!strnicmp (line, "VLX", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			Velocity.x = flt;
-		}
-		else if (!strnicmp (line, "VLY", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			Velocity.y = flt;
-		}
-		else if (!strnicmp (line, "VLZ", 3)) {
-			sscanf(line + 3, "%lf", &flt);
-			Velocity.z = flt;
+			LastWeightAcceleration.z = flt;
 		}
 		else if (!strnicmp (line, "M11", 3)) {
 			sscanf(line + 3, "%lf", &flt);
@@ -884,7 +795,7 @@ inline void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
 
 	char buffer[256];
 
-	sprintf(buffer, "  %s %lf", item, d);
+	sprintf(buffer, "  %s %.12lf", item, d);
 	oapiWriteLine(scn, buffer);
 }
 
@@ -902,12 +813,9 @@ void IMU::SaveState(FILEHANDLE scn)
 	WriteScenario_double(scn, "OAX", Orbiter.Attitude.X);
 	WriteScenario_double(scn, "OAY", Orbiter.Attitude.Y);
 	WriteScenario_double(scn, "OAZ", Orbiter.Attitude.Z);
-	WriteScenario_double(scn, "LAX", Orbiter.LastAttitude.X);
-	WriteScenario_double(scn, "LAY", Orbiter.LastAttitude.Y);
-	WriteScenario_double(scn, "LAZ", Orbiter.LastAttitude.Z);
-	WriteScenario_double(scn, "VLX", Velocity.x);
-	WriteScenario_double(scn, "VLY", Velocity.y);
-	WriteScenario_double(scn, "VLZ", Velocity.z);
+	WriteScenario_double(scn, "WLX", LastWeightAcceleration.x);
+	WriteScenario_double(scn, "WLY", LastWeightAcceleration.y);
+	WriteScenario_double(scn, "WLZ", LastWeightAcceleration.z);
 	WriteScenario_double(scn, "M11", Orbiter.AttitudeReference.m11);
 	WriteScenario_double(scn, "M12", Orbiter.AttitudeReference.m12);
 	WriteScenario_double(scn, "M13", Orbiter.AttitudeReference.m13);

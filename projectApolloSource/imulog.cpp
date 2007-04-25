@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/10/19 11:28:18  tschachim
+  *	Changed log file name.
+  *	
   *	Revision 1.3  2005/08/30 14:53:00  spacex15
   *	Added conditionnally defined AGC_SOCKET_ENABLED to use an external socket connected virtual AGC
   *	
@@ -146,7 +149,7 @@ void IMU::LogTimeStep(long simt)
 }
 
 
-void IMU::LogVector(char* message, IMU_Vector3 v) 
+void IMU::LogVector(char* message, VECTOR3 v) 
 
 {
 #ifdef _DEBUG
