@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2006/12/19 15:55:54  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.10  2006/08/20 08:28:06  dseagrav
   *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
   *	
@@ -64,16 +67,6 @@ class ApolloGuidance;
 
 #include "powersource.h"
 
-typedef union {      // 3 vector
-	double data[3];
-	struct { double x, y, z; };
-} IMU_Vector3;
-
-typedef union {      // 3x3 matrix
-	double data[9];
-	struct { double m11, m12, m13, m21, m22, m23, m31, m32, m33; };
-} IMU_Matrix3;
-
 class IMU {
 
 public:
@@ -103,8 +96,6 @@ public:
 
 protected:
 	
-	bool LEM; // Flag to indicate LEM mode
-	VECTOR3 CalculateAccelerations(double deltaT);
 	void DriveCDUX(int cducmd);
 	void DriveCDUY(int cducmd);
 	void DriveCDUZ(int cducmd);
@@ -124,34 +115,30 @@ protected:
 	void LogInit();
 	void LogState(int channel, char *device, int value);
 	void LogTimeStep(long time);
-	void LogVector(char* message, IMU_Vector3 v);
+	void LogVector(char* message, VECTOR3 v);
 	void LogMessage(char* s);
 
 	//
 	// Maths.
 	//
 
-	IMU_Matrix3 getRotationMatrixX(double angle);
-	IMU_Matrix3 getRotationMatrixY(double angle);
-	IMU_Matrix3 getRotationMatrixZ(double angle);
-	IMU_Matrix3 multiplyMatrix(IMU_Matrix3 a, IMU_Matrix3 b);
-	IMU_Vector3 multiplyMatrixByVector(IMU_Matrix3 m, IMU_Vector3 v);
-	IMU_Vector3 getRotationAnglesXZY(IMU_Matrix3 m);
-	IMU_Vector3 getRotationAnglesZYX(IMU_Matrix3 m);
-	IMU_Vector3 VECTOR3ToIMU_Vector3(VECTOR3 v);
-	VECTOR3 IMU_Vector3ToVECTOR3(IMU_Vector3 iv);
-	IMU_Matrix3 MATRIX3ToIMU_Matrix3(MATRIX3 m);
+	MATRIX3 getRotationMatrixX(double angle);
+	MATRIX3 getRotationMatrixY(double angle);
+	MATRIX3 getRotationMatrixZ(double angle);
+	VECTOR3 getRotationAnglesXZY(MATRIX3 m);
+	VECTOR3 getRotationAnglesZYX(MATRIX3 m);
 
 	double degToRad(double angle);
 	double radToDeg(double angle);
 	double gyroPulsesToRad(int pulses);
 	int radToGyroPulses(double angle);
 
-	IMU_Matrix3 getNavigationBaseToOrbiterLocalTransformation();
-	IMU_Matrix3 getOrbiterLocalToNavigationBaseTransformation();
+	MATRIX3 getNavigationBaseToOrbiterLocalTransformation();
+	MATRIX3 getOrbiterLocalToNavigationBaseTransformation();
 
 	ApolloGuidance &agc;
 	VESSEL *OurVessel;
+	bool LEM; // Flag to indicate LEM mode
 
 	bool Operate;
 	bool TurnedOn;
@@ -179,16 +166,11 @@ protected:
 			double Y;
 			double Z;
 		} Attitude;
-		struct {
-			double X;
-			double Y;
-			double Z;
-		} LastAttitude;
 
-		IMU_Matrix3 AttitudeReference;
+		MATRIX3 AttitudeReference;
 	} Orbiter;
 
-	VECTOR3 Velocity;
+	VECTOR3 LastWeightAcceleration;
 
 	PowerMerge DCPower;
 	PowerMerge DCHeaterPower;

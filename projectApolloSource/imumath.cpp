@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/04/25 13:36:06  tschachim
+  *	Comments removed.
+  *	
   *	Revision 1.3  2006/04/25 08:11:27  dseagrav
   *	Crash avoidance for DEBUG builds, LM IMU correction, LM still needs more work
   *	
@@ -71,10 +74,10 @@ int IMU::radToGyroPulses(double angle) {
 	return (int)((angle * 2097152.0) / TWO_PI);
 }
 
-IMU_Matrix3 IMU::getRotationMatrixX(double angle) {
+MATRIX3 IMU::getRotationMatrixX(double angle) {
 	// Returns the rotation matrix for a rotation of a given angle around the X axis (Pitch)
 	
-	IMU_Matrix3 RotMatrixX;
+	MATRIX3 RotMatrixX;
 	
 	RotMatrixX.m11 = 1;
 	RotMatrixX.m12 = 0;
@@ -89,10 +92,10 @@ IMU_Matrix3 IMU::getRotationMatrixX(double angle) {
 	return RotMatrixX;
 }
 
-IMU_Matrix3 IMU::getRotationMatrixY(double angle) {
+MATRIX3 IMU::getRotationMatrixY(double angle) {
 	// Returns the rotation matrix for a rotation of a given angle around the Y axis (Yaw)
 
-	IMU_Matrix3 RotMatrixY;
+	MATRIX3 RotMatrixY;
 	
 	RotMatrixY.m11 = cos(angle);
 	RotMatrixY.m12 = 0;
@@ -107,10 +110,10 @@ IMU_Matrix3 IMU::getRotationMatrixY(double angle) {
 	return RotMatrixY;
 }
 
-IMU_Matrix3 IMU::getRotationMatrixZ(double angle) {
+MATRIX3 IMU::getRotationMatrixZ(double angle) {
 	// Returns the rotation matrix for a rotation of a given angle around the Z axis (Roll)
 
-	IMU_Matrix3 RotMatrixZ;
+	MATRIX3 RotMatrixZ;
 	
 	RotMatrixZ.m11 = cos(angle);
 	RotMatrixZ.m12 = -sin(angle);
@@ -125,36 +128,9 @@ IMU_Matrix3 IMU::getRotationMatrixZ(double angle) {
 	return RotMatrixZ;	
 }
 
-IMU_Matrix3 IMU::multiplyMatrix(IMU_Matrix3 a, IMU_Matrix3 b) {
-
-	IMU_Matrix3 r;
+VECTOR3 IMU::getRotationAnglesXZY(MATRIX3 m) {
 	
-	r.m11 = (a.m11 * b.m11) + (a.m12 * b.m21) + (a.m13 * b.m31);
-	r.m12 = (a.m11 * b.m12) + (a.m12 * b.m22) + (a.m13 * b.m32);
-	r.m13 = (a.m11 * b.m13) + (a.m12 * b.m23) + (a.m13 * b.m33);
-	r.m21 = (a.m21 * b.m11) + (a.m22 * b.m21) + (a.m23 * b.m31);
-	r.m22 = (a.m21 * b.m12) + (a.m22 * b.m22) + (a.m23 * b.m32);
-	r.m23 = (a.m21 * b.m13) + (a.m22 * b.m23) + (a.m23 * b.m33);
-	r.m31 = (a.m31 * b.m11) + (a.m32 * b.m21) + (a.m33 * b.m31);
-	r.m32 = (a.m31 * b.m12) + (a.m32 * b.m22) + (a.m33 * b.m32);
-	r.m33 = (a.m31 * b.m13) + (a.m32 * b.m23) + (a.m33 * b.m33);	
-	return r;
-}
-
-IMU_Vector3 IMU::multiplyMatrixByVector(IMU_Matrix3 m, IMU_Vector3 v) {
-
-	IMU_Vector3 r;
-
-	r.x = (v.x * m.m11) + (v.y * m.m12) + (v.z * m.m13);
-	r.y = (v.x * m.m21) + (v.y * m.m22) + (v.z * m.m23);
-	r.z = (v.x * m.m31) + (v.y * m.m32) + (v.z * m.m33);
-
-	return r;
-}
-
-IMU_Vector3 IMU::getRotationAnglesXZY(IMU_Matrix3 m) {
-	
-	IMU_Vector3 v;
+	VECTOR3 v;
 	
 	v.z = asin(-m.m12);
 	
@@ -172,9 +148,9 @@ IMU_Vector3 IMU::getRotationAnglesXZY(IMU_Matrix3 m) {
 	return v;
 }
 
-IMU_Vector3 IMU::getRotationAnglesZYX(IMU_Matrix3 m) {
+VECTOR3 IMU::getRotationAnglesZYX(MATRIX3 m) {
 	
-	IMU_Vector3 v;
+	VECTOR3 v;
 	
 	v.y = asin(-m.m31);
 	
@@ -192,9 +168,9 @@ IMU_Vector3 IMU::getRotationAnglesZYX(IMU_Matrix3 m) {
 	return v;
 }
 
-IMU_Matrix3 IMU::getNavigationBaseToOrbiterLocalTransformation() {
+MATRIX3 IMU::getNavigationBaseToOrbiterLocalTransformation() {
 	
-	IMU_Matrix3 m;
+	MATRIX3 m;
 	int i;
 	
 	for (i = 0; i < 9; i++) {
@@ -212,9 +188,9 @@ IMU_Matrix3 IMU::getNavigationBaseToOrbiterLocalTransformation() {
 	return m;
 } 
 
-IMU_Matrix3 IMU::getOrbiterLocalToNavigationBaseTransformation() {
+MATRIX3 IMU::getOrbiterLocalToNavigationBaseTransformation() {
 	
-	IMU_Matrix3 m;
+	MATRIX3 m;
 	int i;
 	
 	for (i = 0; i < 9; i++) {
@@ -230,41 +206,4 @@ IMU_Matrix3 IMU::getOrbiterLocalToNavigationBaseTransformation() {
 		m.m32 = -1.0;
 	}
 	return m;
-}
-
-
-IMU_Vector3 IMU::VECTOR3ToIMU_Vector3(VECTOR3 v) {
-
-	IMU_Vector3 iv;
-
-	iv.x = v.x;
-	iv.y = v.y;
-	iv.z = v.z;
-	return iv;
-}
-
-VECTOR3 IMU::IMU_Vector3ToVECTOR3(IMU_Vector3 iv) {
-
-	VECTOR3 v;
-
-	v.x = iv.x;
-	v.y = iv.y;
-	v.z = iv.z;
-	return v;
-}
-
-IMU_Matrix3 IMU::MATRIX3ToIMU_Matrix3(MATRIX3 m) {
-
-	IMU_Matrix3 im;
-
-	im.m11 = m.m11;
-	im.m12 = m.m12;
-	im.m13 = m.m13;
-	im.m21 = m.m21;
-	im.m22 = m.m22;
-	im.m23 = m.m23;
-	im.m31 = m.m31;
-	im.m32 = m.m32;
-	im.m33 = m.m33;
-	return im;
 }
