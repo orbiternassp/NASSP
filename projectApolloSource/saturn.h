@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.235  2007/03/24 03:19:39  flydba
+  *	LEB and new side panels added.
+  *	
   *	Revision 1.234  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -779,14 +782,18 @@ public:
 	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       // ID of SLIDER axis to use for RHC Z-axis
 	int rhc_rzx_id;                       // Flag to use native Z-axis as RHC Z-axis
+	int rhc_pov_id;						  // ID of the cooliehat a.k.a. POV
 	int thc_id;                           // Joystick # for the THC
 	int thc_rot_id;						  // ID of ROTATOR axis to use for THC Z-axis
 	int thc_sld_id;                       // ID of SLIDER axis to use for THC Z-axis
 	int thc_rzx_id;                       // Flag to use native Z-axis as THC Z-axis	
+	int thc_pov_id;						  // ID of the cooliehat a.k.a. POV
 	int rhc_debug;						  // Flags to print debugging messages.
 	int thc_debug;
 	bool rhc_auto;						  // RHC Z-axis auto detection
 	bool thc_auto;						  // THC Z-axis auto detection
+	int rhc_thctoggle_id;				  // RHC button id for RHC/THC toggle
+	bool rhc_thctoggle_pressed;			  // Button pressed flag				  
 	int js_current;
 
 	//
@@ -891,7 +898,6 @@ public:
 	IU *GetIU() { return &iu; };
 
 	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
-
 	SPSEngine *GetSPSEngine() { return &SPSEngine; };
 
 	//
@@ -1560,6 +1566,7 @@ protected:
 	PCM  pcm;
 	PMP	 pmp;
 	USB  usb;
+	EMS  ems;
 
 	// CM Optics
 	CMOptics optics;
@@ -1585,6 +1592,21 @@ protected:
 	int fdaiSmooth;
 
 	HBITMAP hBmpFDAIRollIndicator;
+
+	// EMS
+	SwitchRow EMSFunctionSwitchRow;
+	RotationalSwitch EMSFunctionSwitch;
+
+	SwitchRow EMSModeRow;
+	ThreePosSwitch EMSModeSwitch;
+
+	SwitchRow GTASwitchRow;
+	GuardedToggleSwitch GTASwitch;
+
+	SaturnEMSDvSetSwitch EMSDvSetSwitch;
+
+	SwitchRow EMSDvDisplayRow;
+	SaturnEMSDvDisplay EMSDvDisplay;
 
 	SwitchRow IMUCageSwitchRow;
 	SwitchRow CautionWarningRow;
@@ -1762,15 +1784,6 @@ protected:
 	ThreePosSwitch BMAGRollSwitch;
 	ThreePosSwitch BMAGPitchSwitch;
 	ThreePosSwitch BMAGYawSwitch;
-
-	SwitchRow EntryModeRow;
-	ThreePosSwitch EntryModeSwitch;
-
-	SwitchRow EMSFunctionSwitchRow;
-	RotationalSwitch EMSFunctionSwitch;
-
-	SwitchRow GTASwitchRow;
-	GuardedToggleSwitch GTASwitch;
 
 	SwitchRow SCContCMCModeSwitchesRow;
 	SaturnSCContSwitch SCContSwitch;
@@ -2054,6 +2067,10 @@ protected:
 	ThumbwheelSwitch SPSGimbalPitchThumbwheel;
 	SwitchRow SPSGimbalYawThumbwheelRow;
 	ThumbwheelSwitch SPSGimbalYawThumbwheel;
+
+	SwitchRow DirectUllageThrustOnRow;
+	PushSwitch DirectUllageButton;
+	PushSwitch ThrustOnButton;
 
 	///
 	/// \brief SPS meters.
@@ -3840,6 +3857,7 @@ protected:
 	friend class PCM;         // Otherwise reading telemetry is a pain
 	friend class PMP;
 	friend class USB;
+	friend class EMS;
 	friend class SPSPropellantSource;
 	friend class SPSEngine;
 	friend class SPSGimbalActuator;
@@ -3847,6 +3865,7 @@ protected:
 	friend class CSMCautionWarningSystem;
 	friend class CMACInverterSwitch;
 	friend class SaturnSCControlSetter;
+	friend class SaturnEMSDvDisplay;
 };
 
 extern void BaseInit();

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.194  2007/02/19 16:24:45  tschachim
+  *	VC6 MCC fixes.
+  *	
   *	Revision 1.193  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -403,7 +406,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	ascp(Sclick),
 	RHCNormalPower("RHCNormalPower", Panelsdk),
 	RHCDirect1Power("RHCDirect1Power", Panelsdk),
-	RHCDirect2Power("RHCDirect2Power", Panelsdk)
+	RHCDirect2Power("RHCDirect2Power", Panelsdk),
+	ems(Panelsdk)
 
 {
 	InitSaturnCalled = false;
@@ -1335,14 +1339,19 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 {
 	TRACESETUP("Saturn::clbkPostStep");
 
-	//
-	// The SPS engine must be in post time step 
-	// to inhibit Orbiter's thrust control
-	//
-	
-	SPSEngine.Timestep(MissionTime, simdt);
+	if (stage >= PRELAUNCH_STAGE && !GenericFirstTimestep) {
 
+		//
+		// The SPS engine must be in post time step 
+		// to inhibit Orbiter's thrust control
+		//
+		
+		SPSEngine.Timestep(MissionTime, simdt);
 
+		// Better acceleration measurement stability
+		imu.Timestep(MissionTime);		
+		ems.TimeStep(simdt);
+	}
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
 }
 
@@ -1575,6 +1584,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	gdc.SaveState(scn);
 	ascp.SaveState(scn);
+	ems.SaveState(scn);
 	dockingprobe.SaveState(scn);
 	SPSPropellant.SaveState(scn);
 	SPSEngine.SaveState(scn);
@@ -2469,6 +2479,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 		else if (!strnicmp(line, SPSGIMBALACTUATOR_YAW_START_STRING, sizeof(SPSGIMBALACTUATOR_YAW_START_STRING))) {
 			SPSEngine.yawGimbalActuator.LoadState(scn);
+		}
+		else if (!strnicmp(line, EMS_START_STRING, sizeof(EMS_START_STRING))) {
+			ems.LoadState(scn);
 		}
 		// DS20070204 LVDC++ MODE
 	    else if (!strnicmp (line, "USE_LVDC", 8)) {

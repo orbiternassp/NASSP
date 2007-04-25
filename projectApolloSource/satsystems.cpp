@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.140  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.139  2007/02/02 13:55:44  tschachim
   *	CSM RHC/THC Z axis autodetection.
   *	
@@ -205,6 +208,14 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 			sat->rhc_rot_id = 2;
 		} else {
 			sat->thc_rot_id = 2;
+		}
+	}
+
+    if (pdidoi->guidType == GUID_POV) {
+		if (sat->js_current == sat->rhc_id) {
+			sat->rhc_pov_id = 0;
+		} else {
+			sat->thc_pov_id = 0;
 		}
 	}
     return DIENUM_CONTINUE;
@@ -507,6 +518,7 @@ void Saturn::SystemsInit() {
 	eda.Init(this);
 	rjec.Init(this);
 	eca.Init(this);
+	ems.Init(this);
 
 	// Telecom initialization
 	pmp.Init(this);
@@ -541,14 +553,18 @@ void Saturn::SystemsInit() {
 	rhc_rot_id = -1; // Disabled
 	rhc_sld_id = -1; // Disabled
 	rhc_rzx_id = -1; // Disabled
+	rhc_pov_id = -1; // Disabled
 	thc_id = -1;     // Disabled
 	thc_rot_id = -1; // Disabled
 	thc_sld_id = -1; // Disabled
 	thc_rzx_id = -1; // Disabled
+	thc_pov_id = -1; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
+	rhc_thctoggle_id = -1;
 	rhc_auto = false;
 	thc_auto = false;
+	rhc_thctoggle_pressed = false;
 
 	FILE *fd;
 	// Open configuration file
@@ -630,6 +646,14 @@ void Saturn::SystemsInit() {
 				if (!strncmp(token,"TAUTO", 4)) {				
 					thc_auto = true;
 				}
+				if(strncmp(token,"RTT",3)==0){                  // RHC THC toggle button id
+					// Get next token, which should be the button id
+					parameter = strtok(NULL," \r\n");
+					if(parameter != NULL){
+						rhc_thctoggle_id = atoi(parameter);
+						if(thc_id > 128){ thc_id = 128; } // Be paranoid
+					}
+				}
 			}			
 		}		
 		fclose(fd);
@@ -656,7 +680,7 @@ void Saturn::SystemsInit() {
 					// Z-axis detection
 					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
 						js_current = x;
-						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS);
+						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
 					}
 					x++;                                              // Next!
 				}
@@ -690,13 +714,12 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		SystemsInternalTimestep(simdt);
 
 		//
-		// Do the "normal" Orbiter timestep
+		// Do the "normal" Orbiter timestep, some devices are done in clbkPostStep
 		//
 
 		dsky.Timestep(MissionTime);
 		dsky2.Timestep(MissionTime);
 		agc.Timestep(MissionTime, simdt);
-		imu.Timestep(MissionTime);		
 		optics.TimeStep(simdt);
 
 		//
@@ -1414,6 +1437,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		pcm.SystemTimestep(tFactor);
 		pmp.SystemTimestep(tFactor);
 		usb.SystemTimestep(tFactor);
+		ems.SystemTimestep(tFactor);
 		SPSPropellant.SystemTimestep(tFactor);
 		SPSEngine.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
@@ -1432,7 +1456,7 @@ void Saturn::JoystickTimestep()
 	if(js_enabled > 0 && oapiGetFocusInterface() == this) {
 
 		// Invert joystick configuration according to navmode in case of one joystick
-		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_debug;
+		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
 		if ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
 			(rhc_id == -1 && thc_id != -1 && GetAttitudeMode() == RCS_ROT)) {
 
@@ -1440,18 +1464,21 @@ void Saturn::JoystickTimestep()
 			tmp_rot_id = rhc_rot_id;
 			tmp_sld_id = rhc_sld_id;
 			tmp_rzx_id = rhc_rzx_id;
+			tmp_pov_id = rhc_pov_id;
 			tmp_debug = rhc_debug;
 
 			rhc_id = thc_id;
 			rhc_rot_id = thc_rot_id;
 			rhc_sld_id = thc_sld_id;
 			rhc_rzx_id = thc_rzx_id;
+			rhc_pov_id = thc_pov_id;
 			rhc_debug = thc_debug;
 
 			thc_id = tmp_id;
 			thc_rot_id = tmp_rot_id;
 			thc_sld_id = tmp_sld_id;
 			thc_rzx_id = tmp_rzx_id;
+			thc_pov_id = tmp_pov_id;
 			thc_debug = tmp_debug;
 		}
 
@@ -1471,7 +1498,7 @@ void Saturn::JoystickTimestep()
 		val31.Value &= 070000;
 
 		// We'll do this with a RHC first. 		
-		if (rhc_id != -1 && rhc_id < js_enabled){
+		if (rhc_id != -1 && rhc_id < js_enabled) {			
 			double rhc_voltage1 = 0, rhc_voltage2 = 0;
 			double rhc_acvoltage1 = 0, rhc_acvoltage2 = 0;
 			double rhc_directv1 = 0, rhc_directv2 = 0;
@@ -1540,6 +1567,19 @@ void Saturn::JoystickTimestep()
 			}		
 			// Read data
 			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]),&dx8_jstate[rhc_id]);
+
+			// RCS mode toggle
+			if (thc_id == -1 && rhc_thctoggle_id != -1) {
+				if (dx8_jstate[rhc_id].rgbButtons[rhc_thctoggle_id]) {
+					if (!rhc_thctoggle_pressed) {
+						SetAttitudeMode(RCS_LIN);
+					}
+					rhc_thctoggle_pressed = true;
+				} else {
+					rhc_thctoggle_pressed = false;
+				}
+			}
+
 			// X and Y are well-duh kinda things. X=0 for full-left, Y = 0 for full-down
 			// Set bits according to joystick state. 32768 is center, so 16384 is the left half.
 			// The real RHC had a 12 degree travel. Our joystick travels 32768 points to full deflection.
@@ -1548,16 +1588,16 @@ void Saturn::JoystickTimestep()
 			// The last degree of travel is reserved for the DIRECT control switches.
 			if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
 				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
-					if (dx8_jstate[rhc_id].lX < 28673 && dx8_jstate[rhc_id].lX > 2738) {
+					if (dx8_jstate[rhc_id].lX < 28673) {
 						val31.Bits.MinusRollManualRotation = 1;
 					}					
-					if (dx8_jstate[rhc_id].lY < 28673 && dx8_jstate[rhc_id].lY > 2738) {
+					if (dx8_jstate[rhc_id].lY < 28673) {
 						val31.Bits.MinusPitchManualRotation = 1;
 					}
-					if (dx8_jstate[rhc_id].lX > 36863 && dx8_jstate[rhc_id].lX < 62798) {
+					if (dx8_jstate[rhc_id].lX > 36863) {
 						val31.Bits.PlusRollManualRotation = 1;
 					}
-					if (dx8_jstate[rhc_id].lY > 36863 && dx8_jstate[rhc_id].lY < 62798) {
+					if (dx8_jstate[rhc_id].lY > 36863) {
 						val31.Bits.PlusPitchManualRotation = 1;
 					}
 				}
@@ -1566,8 +1606,8 @@ void Saturn::JoystickTimestep()
 			int rhc_rot_pos = 32768; // Initialize to centered
 			if (rhc_rzx_id != -1) { // Native Z-axis first
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
-			}
-			if(rhc_rot_id != -1) { // Then if this is a rotator-type axis
+
+			} else if (rhc_rot_id != -1) { // Then if this is a rotator-type axis
 				switch(rhc_rot_id) {
 					case 0:
 						rhc_rot_pos = dx8_jstate[rhc_id].lRx; break;
@@ -1576,16 +1616,16 @@ void Saturn::JoystickTimestep()
 					case 2:
 						rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
 				}
-			}
-			if(rhc_sld_id != -1) { // Finally if this is a slider
+			} else if (rhc_sld_id != -1) { // Finally if this is a slider
 				rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
 			}
-			if(rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
+
+			if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
 				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
-					if (rhc_rot_pos < 28673 && rhc_rot_pos > 2738) {
+					if (rhc_rot_pos < 28673) {
 						val31.Bits.MinusYawManualRotation = 1;
 					}
-					if (rhc_rot_pos > 36863 && rhc_rot_pos < 62798) {
+					if (rhc_rot_pos > 36863) {
 						val31.Bits.PlusYawManualRotation = 1;
 					}
 				}
@@ -1617,9 +1657,8 @@ void Saturn::JoystickTimestep()
 
 			int rflag=0,pflag=0,yflag=0; // Direct Fire Untriggers
 			int sm_sep=0;
-			ChannelValue30 val30;
-			val30.Value = agc.GetInputChannel(030); 
-			sm_sep = val30.Bits.CMSMSeperate; // There should probably be a way for the SCS to do this if VAGC is not running
+			if (GetStage() > CSM_LEM_STAGE) sm_sep = 1;
+
 			if((rhc_directv1 > SP_MIN_DCVOLTAGE || rhc_directv2 > SP_MIN_DCVOLTAGE)){
 				if(dx8_jstate[rhc_id].lX < 2738){
 					// MINUS ROLL
@@ -1832,12 +1871,12 @@ void Saturn::JoystickTimestep()
 		}
 		// And now the THC...
 		if(thc_id != -1 && thc_id < js_enabled){
-			int thc_voltage = 0; 
+			double thc_voltage = 0; 
 			switch(TransContrSwitch.GetState()){
 				case TOGGLESWITCH_UP: // The THC is powered from MNA or MNB automatically.
-					thc_voltage = (int)MainBusA->Voltage();
+					thc_voltage = ContrAutoMnACircuitBraker.Voltage();
 					if(thc_voltage < SP_MIN_DCVOLTAGE){
-						thc_voltage = (int)MainBusB->Voltage();
+						thc_voltage = ContrAutoMnBCircuitBraker.Voltage();
 					}
 					break;
 				case TOGGLESWITCH_DOWN:
@@ -1855,26 +1894,41 @@ void Saturn::JoystickTimestep()
 			}		
 			// Read data
 			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]),&dx8_jstate[thc_id]);
-			// The THC layout is wierd. I'm going to change it so the axes are represenative of directions that make sense.
-			// This is correct for the Space Shuttle THC anyway...
-			if (thc_voltage > 0) {
+			
+			// RCS mode toggle
+			if (rhc_id == -1 && rhc_thctoggle_id != -1) {
+				if (dx8_jstate[thc_id].rgbButtons[rhc_thctoggle_id]) {
+					if (!rhc_thctoggle_pressed) {
+						SetAttitudeMode(RCS_ROT);
+					}
+					rhc_thctoggle_pressed = true;
+				} else {
+					rhc_thctoggle_pressed = false;
+				}
+			}
+
+			if (thc_voltage > SP_MIN_DCVOLTAGE) {
 				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
-					if (dx8_jstate[thc_id].lX < 16384){							
+					if (dx8_jstate[thc_id].lX < 16384) {							
 						val31.Bits.MinusYTranslation = 1;
 					}
-					if (dx8_jstate[thc_id].lY < 16384){
-						val31.Bits.PlusXTranslation = 1;
+					if (dx8_jstate[thc_id].lY < 16384) {
+						val31.Bits.PlusZTranslation = 1;
 					}
-					if (dx8_jstate[thc_id].lX > 49152){
+					if (dx8_jstate[thc_id].lX > 49152) {
 						val31.Bits.PlusYTranslation = 1;
 					}
 					if (dx8_jstate[thc_id].lY > 49152) {
-						val31.Bits.MinusXTranslation = 1;
+						val31.Bits.MinusZTranslation = 1;
 					}
 				}
 				// Z-axis read.
 				int thc_rot_pos = 32768; // Initialize to centered
-				if(thc_rot_id != -1){ // If this is a rotator-type axis
+
+				if (thc_rzx_id != -1) { // Native Z-axis first
+					thc_rot_pos = dx8_jstate[thc_id].lZ;
+				
+				} else if (thc_rot_id != -1){ // Then if this is a rotator-type axis
 					switch(thc_rot_id){
 						case 0:
 							thc_rot_pos = dx8_jstate[thc_id].lRx; break;
@@ -1883,19 +1937,28 @@ void Saturn::JoystickTimestep()
 						case 2:
 							thc_rot_pos = dx8_jstate[thc_id].lRz; break;
 					}
-				}
-				if(thc_sld_id != -1){ // If this is a slider
+				} else if(thc_sld_id != -1){ // Finally if this is a slider
 					thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
 				}
-				if(thc_rzx_id != -1){ // If we use the native Z-axis
-					thc_rot_pos = dx8_jstate[thc_id].lZ;
+
+				if (thc_pov_id != -1) {
+					DWORD dwPOV = dx8_jstate[thc_id].rgdwPOV[thc_pov_id];
+					if (LOWORD(dwPOV) != 0xFFFF) {
+						if (dwPOV > 31500 || dwPOV < 4500) {
+							thc_rot_pos = 65536;
+						} else if (dwPOV > 13500 && dwPOV < 21500) {
+							thc_rot_pos = 0;
+						}
+					}
+					//sprintf(oapiDebugString(),"THC: %d", dx8_jstate[thc_id].rgdwPOV[thc_pov_id]);
 				}
+
 				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
 					if (thc_rot_pos < 16384) {
-						val31.Bits.MinusZTranslation = 1;
+						val31.Bits.MinusXTranslation = 1;
 					}
 					if (thc_rot_pos > 49152) {
-						val31.Bits.PlusZTranslation = 1;
+						val31.Bits.PlusXTranslation = 1;
 					}
 				}
 				if (thc_debug != -1) { 
@@ -1904,8 +1967,8 @@ void Saturn::JoystickTimestep()
 
 				// Update ECA
 				eca.thc_x = dx8_jstate[thc_id].lX;
-				eca.thc_y = dx8_jstate[thc_id].lY;
-				eca.thc_z = thc_rot_pos;
+				eca.thc_y = thc_rot_pos;
+				eca.thc_z = dx8_jstate[thc_id].lY;
 			} else {
 				// Power off
 				eca.thc_x = 32768;

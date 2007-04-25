@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.204  2007/03/24 03:19:04  flydba
+  *	LEB and new side panels added.
+  *	
   *	Revision 1.203  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -905,6 +908,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_THUMBWHEEL_GPI_PITCH]  					= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_GPI_PITCH));
 	srf[SRF_THUMBWHEEL_GPI_YAW]  					= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_GPI_YAW));
 	srf[SRF_THC]				  					= oapiCreateSurface (LOADBMP (IDB_THC));
+	srf[SRF_EMS_LIGHTS]			  					= oapiCreateSurface (LOADBMP (IDB_EMS_LIGHTS));
 
 	//
 	// Flashing borders.
@@ -1434,7 +1438,6 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_ATTITUDE_CONTROL_SWITCHES,					_R( 190,  838,  482,  867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_BMAG_SWITCHES,								_R( 125, 1036,  258, 1065), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_THRUSTMETER,									_R( 498,  920,  593, 1011), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_ENTRY_MODE_SWITCH,							_R( 593,  402,  628,  432), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CMC_SWITCH,									_R( 343,  635,  377,  664), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_FDAI_SWITCHES,								_R( 265,  742,  484,  771), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_ALTIMETER,									_R( 836,   85,  973,  222), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -1445,8 +1448,6 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_EVENT_TIMER,									_R( 866,  670,  937,  688), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SPS,											_R( 299, 1051,  337, 1103), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_GMETER,										_R( 403,  605,  482,  684), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_EMSFUNCTIONSWITCH,      						_R( 595,  280,  685,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_GTASWITCH,		    						_R( 904,  288,  959,  399), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SCCONTCMCMODESWITCHES,      					_R( 383,  948,  460,  977), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SCSTVCSWITCHES,      						_R( 380, 1173,  457, 1202), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SPSGIMBALMOTORSSWITCHES,      				_R( 472, 1173,  654, 1202), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
@@ -1454,6 +1455,14 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_LVSPSINDICATORSWITCHES,      				_R( 422, 1260,  499, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_TVCGIMBALDRIVESWITCHES,      				_R( 508, 1260,  585, 1289), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_GDCALIGNBUTTON,								_R( 290, 1169,  329, 1207), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_DIRECT_ULLAGE_THRUST_ON,						_R( 370, 1037,  409, 1128), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
+	// EMS
+	oapiRegisterPanelArea (AID_EMSFUNCTIONSWITCH,      						_R( 595,  280,  685,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_GTASWITCH,		    						_R( 904,  288,  959,  399), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_ENTRY_MODE_SWITCH,							_R( 593,  402,  628,  432), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);	
+	oapiRegisterPanelArea (AID_EMSDVSETSWITCH,								_R( 910,  430,  957,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_EMSDVDISPLAY,								_R( 743,  518,  900,  539), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_SPS_LIGHT,									_R( 816,  467,  846,  483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	// ASCP
 	oapiRegisterPanelArea (AID_ASCPDISPLAYROLL,								_R( 199, 1144,  229, 1156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_ASCPDISPLAYPITCH,							_R( 199, 1206,  229, 1218), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
@@ -1831,13 +1840,6 @@ void Saturn::SetSwitches(int panel) {
 	BMAGRollSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], BMAGRow);
 	BMAGPitchSwitch.Init(49, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], BMAGRow);
 	BMAGYawSwitch.Init(99, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], BMAGRow);
-
-	//
-	// Entry mode.
-	//
-
-	EntryModeRow.Init(AID_ENTRY_MODE_SWITCH, MainPanel);
-	EntryModeSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EntryModeRow);
 
 	//
 	// CMC Att switch.
@@ -2295,6 +2297,10 @@ void Saturn::SetSwitches(int panel) {
 	GPFPIYaw1Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, &LVFuelTankPressIndicatorSwitch, 91);
 	GPFPIYaw2Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, &LVFuelTankPressIndicatorSwitch, 129);
 
+	DirectUllageThrustOnRow.Init(AID_DIRECT_ULLAGE_THRUST_ON, MainPanel);
+	DirectUllageButton.Init( 0, 0, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], DirectUllageThrustOnRow, 79, 119);
+	ThrustOnButton.Init( 0, 53, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], DirectUllageThrustOnRow, 79, 157);
+
 	//
 	// Electricals switches & indicators
 	//
@@ -2327,11 +2333,17 @@ void Saturn::SetSwitches(int panel) {
 
 	EMSFunctionSwitchRow.Init(AID_EMSFUNCTIONSWITCH, MainPanel);
 	EMSFunctionSwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], EMSFunctionSwitchRow);
+
+	EMSModeRow.Init(AID_ENTRY_MODE_SWITCH, MainPanel);
+	EMSModeSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EMSModeRow);
 	
 	GTASwitchRow.Init(AID_GTASWITCH, MainPanel);
-	GTASwitch.Init(10, 52, 34,  29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], GTASwitchRow);
+	GTASwitch.Init(10, 49, 34,  29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], GTASwitchRow);
 	GTASwitch.InitGuard(0,  0, 55, 111, srf[SRF_GTACOVER], srf[SRF_BORDER_55x111]);
 	
+	EMSDvDisplayRow.Init(AID_EMSDVDISPLAY, MainPanel, &GaugePower);
+	EMSDvDisplay.Init(srf[SRF_DIGITAL], EMSDvDisplayRow, this);
+
 	//
 	// SATPANEL_RIGHT
 	//
@@ -2577,7 +2589,7 @@ void Saturn::SetSwitches(int panel) {
 	Panel100FloodFixedSwitch.Init(113, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
 	GNPowerOpticsSwitch.Init     (200, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
 	GNPowerIMUSwitch.Init        (260, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
-	GNPowerIMUSwitch.InitGuard   (259,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_34x61], 144);
+	GNPowerIMUSwitch.InitGuard   (259,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_34x61], 180);
 	Panel100RNDZXPDRSwitch.Init  (317, 23, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
 	
 	Panel100LightingRoatariesRow.Init(AID_PANEL100LIGHTINGROTARIES, MainPanel);
@@ -2947,6 +2959,11 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		ascp.YawClick(event, mx, my);			
 		return true;
 
+	// EMS
+	case AID_EMSDVSETSWITCH:
+		return EMSDvSetSwitch.CheckMouseClick(event, mx, my);			
+
+	// CWS
 	case AID_MASTER_ALARM:
 	case AID_MASTER_ALARM2:
 	case AID_MASTER_ALARM3:
@@ -3411,6 +3428,8 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 			*pump1 = SP_PUMP_OFF;
 			*pump2 = SP_PUMP_OFF;
 		}
+	} else if (s == &EMSModeSwitch) {
+		ems.SwitchChanged();
 	}
 }
 
@@ -3498,6 +3517,8 @@ void Saturn::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 			BatteryCharger.Charge(3);
 		else
 			BatteryCharger.Charge(0);
+	} else if (s == &EMSFunctionSwitch) {
+		ems.SwitchChanged();
 	}
 }
 
@@ -3915,12 +3936,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_ABORT_BUTTON:
-		if (ABORT_IND)
-		{
+		if (ABORT_IND) {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
-		}
-		else
-		{
+		} else {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
 		}
 		return true;
@@ -4143,205 +4161,13 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-
-
-
-	//
-	// Old stuff
-	//
-/*
-	int Curdigit, Curdigit2;
-
-	case AID_GAUGES1:
-		double DispValue;
-		if (!ph_sps){
-			if(stage < CSM_LEM_STAGE){
-				DispValue = 1;
-			}else{
-				DispValue = 0;
-			}
-		}else{
-			DispValue = GetPropellantMass(ph_sps)/20500;
-		}
-		oapiBlt(surf,srf[2],0,(90-(int)(DispValue*90.0)),0,0,6,4);//
-		oapiBlt(surf,srf[2],31,(90-(int)(DispValue*90.0)),10,0,6,4);//
-		if (!ph_rcs0){
-			if(stage < CSM_LEM_STAGE){
-				DispValue = 1;
-			}else{
-				DispValue = 0;
-			}
-		}else{
-			DispValue = GetPropellantMass(ph_rcs0)/500;
-		}
-		oapiBlt(surf,srf[2],65,(90-(int)(DispValue*90.0)),0,0,6,4);//
-		if (!ph_rcs1){
-			if(stage < CM_ENTRY_STAGE){
-				DispValue = 1;
-			}else{
-				DispValue = 0;
-			}
-		}else{
-		DispValue = GetPropellantMass(ph_rcs1)/500;
-		}
-		oapiBlt(surf,srf[2],96,(int)(90-(DispValue*90.0)),10,0,6,4);//
-		return true;
-
-	case AID_LV_TANK_GAUGES:
-		if (!ph_2nd){
-			if(stage < LAUNCH_STAGE_SIVB){
-				DispValue = 1;
-			}else{
-				DispValue = 0;
-			}
-		}else{
-			DispValue = GetPropellantMass(ph_2nd)/SII_FuelMass;
-		}
-		oapiBlt(surf,srf[2],11,(67-(int)(DispValue*67.0))+3,8,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2],21,(67-(int)(DispValue*67.0))+3,0,0,7,7, SURF_PREDEF_CK);//
-		if (!ph_3rd){
-			if(stage < LAUNCH_STAGE_SIVB){
-				DispValue = 1;
-			}else{
-				DispValue = 0;
-			}
-		}else{
-			DispValue = GetPropellantMass(ph_3rd)/S4B_FuelMass;
-		}
-		oapiBlt(surf,srf[2],39,(67-(int)(DispValue*67.0))+3,8,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2],49,(67-(int)(DispValue*67.0))+3,0,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2],67,(67-(int)(DispValue*67.0))+3,8,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2],77,(67-(int)(DispValue*67.0))+3,0,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2],96,(67-(int)(DispValue*67.0))+3,8,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2],105,(67-(int)(DispValue*67.0))+3,0,0,7,7, SURF_PREDEF_CK);//
-		return true;
-
-	case AID_SMRCS_FUEL:
-		if (!ph_rcs0){
-			if(stage < CSM_LEM_STAGE){
-				DispValue = 1;
-			}else{
-				DispValue = 0;
-			}
-		}else{
-			DispValue = GetPropellantMass(ph_rcs0)/500;
-		}
-		oapiBlt(surf,srf[2],  0,(38-(int)(DispValue*38.0))+40,0,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2], 36,(60-(int)(DispValue*60.0))+17,8,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2], 67,(75-(int)(DispValue*75.0))+ 2,0,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2],104,(75-(int)(DispValue*75.0))+ 2,8,0,7,7, SURF_PREDEF_CK);//
-		return true;
-
-	case AID_SPS_FUEL:
-		if (!ph_sps){
-			if(stage < CSM_LEM_STAGE){
-				DispValue = 1;
-			}else{
-				DispValue = 0;
-			}
-		}else{
-			DispValue = GetPropellantMass(ph_sps)/20500;
-		}
-		oapiBlt(surf,srf[2],  0,(40-(int)(DispValue*40.0))+40,0,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2], 36,(63-(int)(DispValue*63.0))+17,8,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2], 64,(78-(int)(DispValue*78.0))+ 2,0,0,7,7, SURF_PREDEF_CK);//
-		oapiBlt(surf,srf[2],100,(78-(int)(DispValue*78.0))+ 2,8,0,7,7, SURF_PREDEF_CK);//
-		return true;
-
-	case AID_ALTITUDE1:
-		int TmpALT;
-		double tmpALTdec;
-		int tmpalt2;
-		if (actualALT > 999999){
-		actualALT = actualALT /1000000;
-		oapiBlt(surf,srf[SRF_DIGITAL],85,0,130,0,10,15);
-		}else if (actualALT > 9999){
-		actualALT =actualALT /1000;
-		oapiBlt(surf,srf[SRF_DIGITAL],85,0,120,0,10,15);
-		}
-
-		TmpALT = (int)actualALT;
-		tmpALTdec = actualALT-TmpALT;
-		tmpalt2 = (int)(tmpALTdec *100.0);
-
-		Curdigit=(int)actualALT/10000;
-		oapiBlt(surf,srf[SRF_DIGITAL],0,0,10*Curdigit,0,10,15);
-		Curdigit=(int)actualALT/1000;
-		Curdigit2=(int)actualALT/10000;
-		oapiBlt(surf,srf[SRF_DIGITAL],10,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=(int)actualALT/100;
-		Curdigit2=(int)actualALT/1000;
-		oapiBlt(surf,srf[SRF_DIGITAL],20,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=(int)actualALT/10;
-		Curdigit2=(int)actualALT/100;
-		oapiBlt(surf,srf[SRF_DIGITAL],30,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=(int)actualALT;
-		Curdigit2=(int)actualALT/10;
-		oapiBlt(surf,srf[SRF_DIGITAL],40,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		oapiBlt(surf,srf[SRF_DIGITAL],50,11,140,8,10,4);//dot display
-
-		Curdigit=tmpalt2/10 ;
-		Curdigit2=tmpalt2 /100;
-		oapiBlt(surf,srf[SRF_DIGITAL],60,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		Curdigit=tmpalt2 ;
-		Curdigit2=tmpalt2 /10;
-		oapiBlt(surf,srf[SRF_DIGITAL],70,0,10*(Curdigit-(Curdigit2*10)),0,10,15);
-		return true;
-
-	case AID_SC_SWITCH:
-		if(SCswitch){
-			oapiBlt(surf,srf[6],0,0,0,0,23,20);
-		}
-		else{
-			oapiBlt(surf,srf[6],0,0,23,0,23,20);
-		}
-		return true;
-
-#if 0
-	case AID_05G_LIGHT:
-		if(P115switch){
-			oapiBlt(surf,srf[SRF_ALLROUND],0,0,600,68,24,13);
-		}else{
-			oapiBlt(surf,srf[SRF_ALLROUND],0,0,600,82,24,13);
-		}
-		return true;
-#endif
-
 	case AID_SPS_LIGHT:
-		if(SPSswitch.IsUp()){
-			oapiBlt(surf,srf[SRF_ALLROUND],0,0,625,68,24,13);
-		}else{
-			oapiBlt(surf,srf[SRF_ALLROUND],0,0,625,82,24,13);
+		if (ems.SPSThrustLight()) {
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 30, 16, 30, 16);
+		} else {
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 16, 30, 16);
 		}
 		return true;
-
-	case AID_SPS_INJ_VLV:
-		if(SPSswitch.IsUp()){
-			oapiBlt(surf,srf[SRF_ALLROUND],0,0,0,168,141,32);
-		}else{
-			oapiBlt(surf,srf[SRF_ALLROUND],0,0,0,135,141,32);
-		}
-		return true;
-
-	//
-	// These aren't lights, they're buttons!
-	//
-
-	case AID_DIRECT_ULLAGE_THRUST_ON_LIGHT:
-		if (LAUNCHIND[6]){
-			oapiBlt(surf,srf[10],3,3,27,0,26,26);
-		}
-		else{
-			oapiBlt(surf,srf[10],3,3,0,0,26,26);
-		}
-		if (LAUNCHIND[7]){
-			oapiBlt(surf,srf[10],3,42,27,27,26,26);
-		}
-		else{
-			oapiBlt(surf,srf[10],3,42,0,27,26,26);
-		}
-		return true;
-*/
 	}
 	return false;
 }
@@ -4782,7 +4608,7 @@ void Saturn::InitSwitches() {
 	BMAGPitchSwitch.Register(PSH, "BMAGPitchSwitch", THREEPOSSWITCH_UP);
 	BMAGYawSwitch.Register(PSH, "BMAGYawSwitch", THREEPOSSWITCH_UP);
 
-	EntryModeSwitch.Register(PSH, "EntryModeSwitch", THREEPOSSWITCH_CENTER);
+	EMSModeSwitch.Register(PSH, "EMSModeSwitch", THREEPOSSWITCH_CENTER);
 	CMCAttSwitch.Register(PSH, "CMCAttSwitch", 1);
 
 	FDAIScaleSwitch.Register(PSH, "FDAIScaleSwitch", THREEPOSSWITCH_UP);
@@ -4856,8 +4682,8 @@ void Saturn::InitSwitches() {
 	SPSGimbalPitchThumbwheel.Register(PSH, "SPSGimbalPitchThumbwheel", 8, 16);
 	SPSGimbalYawThumbwheel.Register(PSH, "SPSGimbalYawThumbwheel", 8, 16, true);
 
-	SPSOxidPercentMeter.Register(PSH, "SPSOxidPercentMeter", 0, 0.999, 30, 0.999);
-	SPSFuelPercentMeter.Register(PSH, "SPSFuelPercentMeter", 0, 0.999, 30, 0.999);
+	SPSOxidPercentMeter.Register(PSH, "SPSOxidPercentMeter", 0, 0.999, 5, 0.999);
+	SPSFuelPercentMeter.Register(PSH, "SPSFuelPercentMeter", 0, 0.999, 5, 0.999);
 	SPSOxidUnbalMeter.Register(PSH, "SPSOxidUnbalMeter", -600, 600, 10);
 
 	SPSTempMeter.Register(PSH, "SPSTempMeter", 0, 200, 2);
@@ -4871,6 +4697,9 @@ void Saturn::InitSwitches() {
 	GPFPIPitch2Meter.Register(PSH, "GPFPIPitch2Meter", 0, 92, 2);
 	GPFPIYaw1Meter.Register(PSH, "GPFPIYaw1Meter", 0, 92, 2);
 	GPFPIYaw2Meter.Register(PSH, "GPFPIYaw2Meter", 0, 92, 2);
+
+	DirectUllageButton.Register(PSH, "DirectUllageButton", false);
+	ThrustOnButton.Register(PSH, "ThrustOnButton", false);
 
 	H2Pressure1Meter.Register(PSH, "H2Pressure1Meter", 0, 400, 10);
 	H2Pressure2Meter.Register(PSH, "H2Pressure2Meter", 0, 400, 10);
@@ -5011,6 +4840,8 @@ void Saturn::InitSwitches() {
 	EMSFunctionSwitch.AddPosition(10, 120);
 	EMSFunctionSwitch.AddPosition(11, 150);
 	EMSFunctionSwitch.Register(PSH, "EMSFunctionSwitch", 0);
+
+	EMSDvDisplay.Register(PSH, "EMSDvDisplay", -1000, 14000, 1, 0);
 
 	VHFAntennaRotarySwitch.AddPosition(0, 300);
 	VHFAntennaRotarySwitch.AddPosition(1,   0);
@@ -5448,7 +5279,8 @@ void Saturn::InitSwitches() {
 	Panel100FloodDimSwitch.Register(PSH, "Panel100FloodDimSwitch", false);	
 	Panel100FloodFixedSwitch.Register(PSH, "Panel100FloodFixedSwitch", false);
 	GNPowerOpticsSwitch.Register(PSH, "GNPowerOpticsSwitch", false);
-	GNPowerIMUSwitch.Register(PSH, "CsmLmFinalSep1Switch", TOGGLESWITCH_DOWN, false);
+	GNPowerIMUSwitch.Register(PSH, "GNPowerIMUSwitch", TOGGLESWITCH_DOWN, false);
+	GNPowerIMUSwitch.SetGuardResetsState(false);
 	Panel100RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", THREEPOSSWITCH_CENTER);
 
 	SCIUtilPowerSwitch.Register(PSH, "SCIUtilPowerSwitch", false);

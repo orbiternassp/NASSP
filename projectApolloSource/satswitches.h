@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/01/22 14:54:09  tschachim
+  *	Moved FDAIPowerRotationalSwitch from toggleswitch, added SPS TVC displays & controls.
+  *	
   *	Revision 1.21  2007/01/14 13:02:42  dseagrav
   *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
   *	
@@ -759,5 +762,31 @@ public:
 	bool IsCounterClockwise() { return GetState() == 3; }
 
 protected:
+	Saturn *sat;
+};
+
+class SaturnEMSDvDisplay : public MeterSwitch {
+public:
+	void Init(SURFHANDLE digits, SwitchRow &row, Saturn *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	virtual double AdjustForPower(double val) { return val; };
+
+	SURFHANDLE Digits;
+	Saturn *Sat;
+};
+
+class SaturnEMSDvSetSwitch {
+
+public:
+	SaturnEMSDvSetSwitch();
+	void Init(Saturn *s) { sat = s; };
+	int GetPosition() { return position; };
+	bool CheckMouseClick(int event, int mx, int my);
+
+protected:
+	int position;
 	Saturn *sat;
 };

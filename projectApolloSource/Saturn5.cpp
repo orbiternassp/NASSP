@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.97  2007/02/19 16:24:43  tschachim
+  *	VC6 MCC fixes.
+  *	
   *	Revision 1.96  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -2446,6 +2449,8 @@ int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (FirstTimestep) return 0;
 
+	// Assembly tests
+	/* 
 	if (!KEYMOD_SHIFT(kstate) && !KEYMOD_CONTROL(kstate) && !KEYMOD_ALT(kstate)) {
 
 		if (stage == ROLLOUT_STAGE) {
@@ -2459,7 +2464,7 @@ int SaturnV::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			}
 		}
 	}
-
+	*/
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
 

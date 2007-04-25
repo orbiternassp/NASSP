@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.16  2007/01/22 15:48:17  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -1590,28 +1593,50 @@ void RJEC::TimeStep(double simdt){
 		return;
 	}
 
+	// CM or SM thrusters
+	int sm_sep = 0;
+	if (sat->GetStage() > CSM_LEM_STAGE) sm_sep = 1;
+
+	// Direct ullage thrust
+	bool directUllageActive = false;
+	if (sat->DirectUllageButton.GetState() == 1 && !sm_sep) {
+		sat->SetRCSState(RCS_SM_QUAD_A, 3, 0);
+		sat->SetRCSState(RCS_SM_QUAD_A, 4, 0);
+		sat->SetRCSState(RCS_SM_QUAD_B, 3, 0);
+		sat->SetRCSState(RCS_SM_QUAD_B, 4, 0);
+		sat->SetRCSState(RCS_SM_QUAD_C, 3, 0);
+		sat->SetRCSState(RCS_SM_QUAD_C, 4, 0);
+		sat->SetRCSState(RCS_SM_QUAD_D, 3, 0);
+		sat->SetRCSState(RCS_SM_QUAD_D, 4, 0);
+
+		if (sat->DirectUllMnACircuitBraker.Voltage() >= SP_MIN_DCVOLTAGE) {   
+			sat->SetRCSState(RCS_SM_QUAD_B, 4, 1);
+			sat->SetRCSState(RCS_SM_QUAD_D, 3, 1);
+		}
+		if (sat->DirectUllMnBCircuitBraker.Voltage() >= SP_MIN_DCVOLTAGE) {   
+			sat->SetRCSState(RCS_SM_QUAD_A, 4, 1); 
+			sat->SetRCSState(RCS_SM_QUAD_C, 3, 1);
+		}
+		directUllageActive = true;
+	}
+
 	// Ensure AC power
 	if (sat->SIGCondDriverBiasPower1Switch.Voltage() < SP_MIN_ACVOLTAGE || 
 	    sat->SIGCondDriverBiasPower2Switch.Voltage() < SP_MIN_ACVOLTAGE) return;
 	
-	ChannelValue30 val30;
-	int sm_sep=0;
-	val30.Value = sat->agc.GetInputChannel(030); 
-	sm_sep = val30.Bits.CMSMSeperate; // There should probably be a way for the SCS to do this if VAGC is not running
 	int thruster = 1;
 	int thruster_lockout;
-
-	while(thruster < 17){
+	while(thruster < 17) {
 		// THRUSTER LOCKOUT CHECKING
 		thruster_lockout = 0;
 		// If it's a pitch or yaw jet, lockout on SPS thrusting
-		if(thruster < 9 && SPSActive != 0){ thruster_lockout = 1; } 
+		if (thruster < 9 && SPSActive != 0) { thruster_lockout = 1; } 
 		// Lockout on direct axes.
-		if(thruster < 5 && DirectPitchActive != 0){ thruster++; continue; } // Skip entirely
-		if(thruster > 4 && thruster < 9 && DirectYawActive != 0){ thruster++; continue; } 
-		if(thruster > 8 && DirectRollActive != 0){ thruster++; continue; } 
+		if (thruster < 5 && (DirectPitchActive != 0 || directUllageActive)) { thruster++; continue; } // Skip entirely
+		if (thruster > 4 && thruster < 9 && (DirectYawActive != 0 || directUllageActive)) { thruster++; continue; } 
+		if (thruster > 8 && DirectRollActive != 0) { thruster++; continue; } 
 		// THRUSTER PROCESSING
-		switch(thruster){
+		switch(thruster) {
 			case 1:
 				if(sat->PitchC3Switch.Voltage() > 20 && thruster_lockout == 0){
 					if(ThrusterDemand[thruster] != 0){ sat->PitchC3Switch.DrawPower(50); }
@@ -1879,7 +1904,7 @@ void RJEC::SetThruster(int thruster,bool Active){
 }
 
 // Electronic Control Assembly
-ECA::ECA(){
+ECA::ECA() {
 
 	rhc_x = 32768;
 	rhc_y = 32768;
@@ -2528,8 +2553,8 @@ void ECA::TimeStep(double simdt) {
 	// TRANSLATION HANDLING
 	int trans_x_flag=0,trans_y_flag=0,trans_z_flag=0;
 	int sm_sep=0;
-	ChannelValue30 val30;
-	val30.Value = sat->agc.GetInputChannel(030); 
+	if (sat->GetStage() > CSM_LEM_STAGE) sm_sep = 1;
+
 	if ((sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) && !sm_sep){
 		if(thc_x < 16384){ // PLUS X
 			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(14,1); }else{ sat->rjec.SetThruster(14,0); }
@@ -2541,26 +2566,26 @@ void ECA::TimeStep(double simdt) {
 			if(accel_roll_flag > -1){ sat->rjec.SetThruster(13,1); }else{ sat->rjec.SetThruster(13,0); }
 			trans_x_trigger=1; trans_x_flag=1;
 		}
-		if(thc_y < 16384){ // MINUS Y (FORWARD)
+		if(thc_y > 49152){ // MINUS Y (FORWARD)
 			if(accel_pitch_flag > -1){ sat->rjec.SetThruster(1,1); }else{ sat->rjec.SetThruster(1,0); }
 			if(accel_pitch_flag < 1 ){ sat->rjec.SetThruster(2,1); }else{ sat->rjec.SetThruster(2,0); }
 			if(accel_yaw_flag   > -1){ sat->rjec.SetThruster(5,1); }else{ sat->rjec.SetThruster(5,0); }
 			if(accel_yaw_flag   < 1 ){ sat->rjec.SetThruster(6,1); }else{ sat->rjec.SetThruster(6,0); }
 			trans_y_trigger=1; trans_y_flag=1;
 		}
-		if(thc_y > 49152){ // PLUS Y (BACKWARD)
+		if(thc_y < 16384){ // PLUS Y (BACKWARD)
 			if(accel_pitch_flag > -1){ sat->rjec.SetThruster(3,1); }else{ sat->rjec.SetThruster(3,0); }
 			if(accel_pitch_flag < 1 ){ sat->rjec.SetThruster(4,1); }else{ sat->rjec.SetThruster(4,0); }
 			if(accel_yaw_flag   > -1){ sat->rjec.SetThruster(7,1); }else{ sat->rjec.SetThruster(7,0); }
 			if(accel_yaw_flag   < 1 ){ sat->rjec.SetThruster(8,1); }else{ sat->rjec.SetThruster(8,0); }
 			trans_y_trigger=1; trans_y_flag=1;
 		}
-		if(thc_z < 16384){ // MINUS Z (UP)
+		if(thc_z > 49152){ // MINUS Z (UP)
 			if(accel_roll_flag > -1){ sat->rjec.SetThruster(11,1); }else{ sat->rjec.SetThruster(11,0); }
 			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(12,1); }else{ sat->rjec.SetThruster(12,0); }
 			trans_z_trigger=1; trans_z_flag=1;
 		}
-		if(thc_z > 49152){ // PLUS Z (DOWN)
+		if(thc_z < 16384){ // PLUS Z (DOWN)
 			if(accel_roll_flag > -1){ sat->rjec.SetThruster(9,1);  }else{ sat->rjec.SetThruster(9,0);  }
 			if(accel_roll_flag < 1 ){ sat->rjec.SetThruster(10,1); }else{ sat->rjec.SetThruster(10,0); }
 			trans_z_trigger=1; trans_z_flag=1;
@@ -2590,5 +2615,258 @@ void ECA::TimeStep(double simdt) {
 		sat->rjec.SetThruster(11,0);
 		sat->rjec.SetThruster(12,0);
 		trans_z_trigger=0;
+	}
+}
+
+
+// Entry Monitor Systen
+
+#define EMS_STATUS_OFF			0
+#define EMS_STATUS_STANDBY		1
+#define EMS_STATUS_DVSET		2
+#define EMS_STATUS_VHFRNG		3
+#define EMS_STATUS_DV			4
+#define EMS_STATUS_DV_BACKUP	5
+#define EMS_STATUS_DVTEST		6
+#define EMS_STATUS_DVTEST_DONE	7
+
+
+EMS::EMS(PanelSDK &p) : DCPower(0, p) {
+
+	status = EMS_STATUS_OFF;
+	dVInitialized = false;
+	lastWeight = _V(0, 0, 0);
+	dVRangeCounter = 0;
+	dVTestTime = 0;
+	sat = NULL;
+}
+
+void EMS::Init(Saturn *vessel) {
+	sat = vessel;
+	DCPower.WireToBuses(&sat->EMSMnACircuitBraker, &sat->EMSMnBCircuitBraker);
+}
+
+void EMS::TimeStep(double simdt) {
+
+	VESSELSTATUS vs;
+	VECTOR3 w;
+	double position;
+
+	if (!IsPowered()) {
+		status = EMS_STATUS_OFF; 
+		return;
+	}
+
+	// Turn on reset
+	if (status == EMS_STATUS_OFF && sat->EMSFunctionSwitch.GetState() != 0) {
+		SwitchChanged();
+	}
+
+	switch (status) {
+		case EMS_STATUS_DV:
+		case EMS_STATUS_DV_BACKUP:
+			sat->GetStatus(vs);
+			sat->GetWeightVector(w);
+
+			MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-vs.arot.z);
+			tinv = mul(AttitudeReference::GetRotationMatrixY(-vs.arot.y), tinv);
+			tinv = mul(AttitudeReference::GetRotationMatrixX(-vs.arot.x), tinv);
+			w = mul(tinv, w) / sat->GetMass();
+
+			if (!dVInitialized) {
+				lastWeight = w;
+				dVInitialized = true;
+
+			} else {
+				// Acceleration calculation, see IMU
+				VECTOR3 f;
+				sat->GetForceVector(f);
+				f = mul(tinv, f) / sat->GetMass();
+
+				VECTOR3 dw1 = w - f;
+				VECTOR3 dw2 = lastWeight - f;
+				lastWeight = w;
+
+				// Transform to vessel coordinates
+				MATRIX3	t = AttitudeReference::GetRotationMatrixX(vs.arot.x);
+				t = mul(AttitudeReference::GetRotationMatrixY(vs.arot.y), t);
+				t = mul(AttitudeReference::GetRotationMatrixZ(vs.arot.z), t);
+
+				VECTOR3 avg = (dw1 + dw2) / 2.0;
+				avg = mul(t, avg);	
+				double xacc = -avg.z;
+
+				// Ground test switch
+				if (sat->GTASwitch.IsUp()) {
+					// Handle different gravity and size of the Earth
+					if (sat->IsVirtualAGC()) {
+						xacc -= 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
+					} else {
+						if (sat->NonsphericalGravityEnabled()) {
+							xacc -= 9.7988;
+						} else {
+							xacc -= 9.7939;
+						}
+					}
+				}
+
+				// dV/Range display
+				if (xacc > 0 || status == EMS_STATUS_DV) {
+					dVRangeCounter -= xacc * simdt * FPS;
+					dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
+				}				
+				//sprintf(oapiDebugString(), "xacc %.10f", xacc);
+				//sprintf(oapiDebugString(), "Avg x %.10f y %.10f z %.10f l%.10f", avg.x, avg.y, avg.z, length(avg));								
+			}
+			break;
+
+		case EMS_STATUS_DVSET:
+			position = sat->EMSDvSetSwitch.GetPosition();
+			if (position == 1)
+				dVRangeCounter += 127.5 * simdt;
+			else if (position == 2)
+				dVRangeCounter += 0.25 * simdt;
+			else if (position == 3)
+				dVRangeCounter -= 127.5 * simdt;
+			else if (position == 4)
+				dVRangeCounter -= 0.25 * simdt;
+
+			dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
+			break;
+
+		case EMS_STATUS_DVTEST:
+			dVTestTime -= simdt;
+			dVRangeCounter -= 160.0 * simdt;	// AOH SCS fig. 2.3-13
+
+			if (dVTestTime < 0 || dVRangeCounter < -1000.0) {
+				if (dVTestTime < -0.176875) {	// Minimum -41.5 when starting with 1586.8
+					dVRangeCounter -= (dVTestTime + 0.176875) * 160.0;
+				}
+				dVTestTime = 0;
+				dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
+				status = EMS_STATUS_DVTEST_DONE;
+			}
+			break;
+	}
+}
+
+void EMS::SystemTimestep(double simdt) {
+
+	if (IsPowered() && !IsOff()) {
+		DCPower.DrawPower(93.28);	// see CSM Systems Handbook
+	}
+}
+
+void EMS::SwitchChanged() {
+
+	if (!IsPowered()) return;
+
+	// Turn on reset
+	if (status == EMS_STATUS_OFF && sat->EMSFunctionSwitch.GetState() != 0) {
+		dVRangeCounter = 0;
+	}
+
+	switch (sat->EMSFunctionSwitch.GetState()) {
+		case 0: // OFF
+			status = EMS_STATUS_OFF;
+			break;
+
+		case 1: // dV
+			if (sat->EMSModeSwitch.IsUp()) {
+				status = EMS_STATUS_DV;
+				dVInitialized = false;
+			} else if (sat->EMSModeSwitch.IsCenter()) {
+				status = EMS_STATUS_STANDBY;
+			} else {
+				status = EMS_STATUS_DV_BACKUP;
+				dVInitialized = false;
+			}
+			break;
+
+		case 2: // dV SET/VHF RNG
+			if (sat->EMSModeSwitch.IsDown()) {
+				status = EMS_STATUS_VHFRNG;
+			} else {
+				status = EMS_STATUS_DVSET;
+			}
+			break;
+
+		case 3: // dV TEST
+			if (sat->EMSModeSwitch.IsUp()) {
+				status = EMS_STATUS_DVTEST;
+				dVTestTime = 10.0;
+			} else {
+				status = EMS_STATUS_STANDBY;
+			}
+			break;
+
+		default:
+			status = EMS_STATUS_STANDBY;
+			break;
+	}
+	// sprintf(oapiDebugString(),"EMSFunctionSwitch %d", sat->EMSFunctionSwitch.GetState());
+}
+
+bool EMS::SPSThrustLight() {
+
+	if (!IsPowered()) return false;	
+	
+	if (status == EMS_STATUS_DVTEST) return true;
+	if (sat->SPSEngine.IsThrustOn()) return true;
+	return false;
+}
+
+bool EMS::IsOff() {
+
+	if (status == EMS_STATUS_OFF) return true;
+	return false;
+}
+
+bool EMS::IsdVMode() {
+
+	if (status == EMS_STATUS_DV) return true;
+	if (status == EMS_STATUS_DV_BACKUP) return true;
+	return false;
+}
+
+bool EMS::IsPowered() {
+
+	return DCPower.Voltage() > SP_MIN_DCVOLTAGE; 
+}
+
+void EMS::SaveState(FILEHANDLE scn) {
+
+	oapiWriteLine(scn, EMS_START_STRING);
+	oapiWriteScenario_int(scn, "STATUS", status);
+	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
+	oapiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
+	WriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
+	WriteScenario_double(scn, "DVTESTTIME", dVTestTime);
+
+	oapiWriteLine(scn, EMS_END_STRING);
+}
+
+void EMS::LoadState(FILEHANDLE scn){
+
+	int i;
+	char *line;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, EMS_END_STRING, sizeof(EMS_END_STRING))){
+			return;
+		}
+
+		if (!strnicmp (line, "STATUS", 6)) {
+			sscanf(line + 6, "%i", &status);
+		} else if (!strnicmp (line, "DVINITIALIZED", 13)) {
+			sscanf(line + 13, "%i", &i);
+			dVInitialized = (i == 1);
+		} else if (!strnicmp (line, "LASTWEIGHT", 10)) {
+			sscanf(line + 12, "%lf %lf %lf", &lastWeight.x, &lastWeight.y, &lastWeight.z);
+		} else if (!strnicmp (line, "DVRANGECOUNTER", 14)) {
+			sscanf(line + 14, "%lf", &dVRangeCounter);
+		} else if (!strnicmp (line, "DVTESTTIME", 10)) {
+			sscanf(line + 10, "%lf", &dVTestTime);
+		}	
 	}
 }

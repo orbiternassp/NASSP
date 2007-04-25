@@ -172,6 +172,7 @@ IDB_SEXTANT_WIDE                            BITMAP  "sextant_view_wide.bmp"
 IDB_THUMBWHEEL_GPI_PITCH                    BITMAP  "thumbwheel_gpi_pitch.bmp"
 IDB_THUMBWHEEL_GPI_YAW                      BITMAP  "thumbwheel_gpi_yaw.bmp"
 IDB_THC                                     BITMAP  "thc.bmp"
+IDB_EMS_LIGHTS                              BITMAP  "ems_lights.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
