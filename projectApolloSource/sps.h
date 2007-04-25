@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2007/01/22 15:48:19  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.2  2006/11/20 16:38:27  tschachim
   *	Bugfix CWS CM/SM separation.
   *	
@@ -134,6 +137,7 @@ public:
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	double GetChamberPressurePSI();
+	bool IsThrustOn() { return thrustOn; };
 	bool GetInjectorValves12Open() { return injectorValves12Open; };
 	bool GetInjectorValves34Open() { return injectorValves34Open; };
 	// Forcibly activate the SPS engine for unmanned control.
@@ -145,6 +149,7 @@ public:
 	SPSGimbalActuator yawGimbalActuator;
 
 protected:
+	bool thrustOn;
 	bool injectorValves12Open;
 	bool injectorValves34Open;
 	bool enforceBurn;
