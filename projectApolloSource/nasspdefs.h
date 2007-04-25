@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2007/01/22 14:45:32  tschachim
+  *	New resources, fixed some CSM constants.
+  *	
   *	Revision 1.80  2006/12/07 18:52:43  tschachim
   *	New LC34, Bugfixes.
   *	
@@ -353,7 +356,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 110; // number of bitmap handles
+const int nsurf = 111; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -464,6 +467,7 @@ const int nsurf = 110; // number of bitmap handles
 #define SRF_THUMBWHEEL_GPI_PITCH					107
 #define SRF_THUMBWHEEL_GPI_YAW						108
 #define SRF_THC										109
+#define SRF_EMS_LIGHTS								110
 
 //
 // Earth radius and gravity constants.
@@ -476,6 +480,7 @@ const double PSI   = 0.000145038;			///< Pa to PSI
 const double MMHG  = 0.00750064;			///< Pa to mmHg
 const double INH2O = 0.00401474;			///< Pa to in H2O
 const double LBH   = 7.93665;				///< g/s to lb/h
+const double FPS   = 3.2808399;				///< m/s to ft/s
 
 const double TWO_PI= (PI * 2);				///< Twice Pi.
 

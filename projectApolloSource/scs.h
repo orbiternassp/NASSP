@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2007/01/22 15:48:18  tschachim
+  *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
+  *	
   *	Revision 1.16  2007/01/20 02:09:51  dseagrav
   *	Tweaked RCS positions
   *	
@@ -67,6 +70,10 @@ public:
 	VECTOR3 GetLastAttitude() { return LastAttitude; };
 	void SetAttitude(VECTOR3 a);
 
+	static MATRIX3 GetRotationMatrixX(double angle);
+	static MATRIX3 GetRotationMatrixY(double angle);
+	static MATRIX3 GetRotationMatrixZ(double angle);
+
 protected:
 	bool AttitudeInitialized;
 	VESSEL *Vessel;
@@ -82,9 +89,6 @@ protected:
 	MATRIX3 GetNavigationBaseToOrbiterLocalTransformation();
 	MATRIX3 GetOrbiterLocalToNavigationBaseTransformation();
 	VECTOR3 GetRotationAnglesXZY(MATRIX3 m);
-	MATRIX3 GetRotationMatrixX(double angle);
-	MATRIX3 GetRotationMatrixY(double angle);
-	MATRIX3 GetRotationMatrixZ(double angle);
 };
 
 // Body-Mounted Attitude Gyro
@@ -251,3 +255,33 @@ public:
 	VECTOR3 pseudorate;
 };
 
+#define EMS_START_STRING	"EMS_BEGIN"
+#define EMS_END_STRING		"EMS_END"
+
+class EMS {
+
+public:
+	EMS(PanelSDK &p);
+	void Init(Saturn *vessel);										// Initialization
+	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);
+	double GetdVRangeCounter() { return dVRangeCounter; };				
+	void SwitchChanged();
+	bool SPSThrustLight();											
+	bool IsOff();
+	bool IsdVMode();
+	void SaveState(FILEHANDLE scn);                                // SaveState callback
+	void LoadState(FILEHANDLE scn);                                // LoadState callback
+
+protected:
+	bool IsPowered();
+
+	int status;
+	bool dVInitialized;
+	VECTOR3 lastWeight;
+	double dVRangeCounter;
+	double dVTestTime;
+
+	PowerMerge DCPower;
+	Saturn *sat;
+};

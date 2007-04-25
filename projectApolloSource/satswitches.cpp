@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.22  2007/01/22 14:54:09  tschachim
   *	Moved FDAIPowerRotationalSwitch from toggleswitch, added SPS TVC displays & controls.
   *	
@@ -2002,5 +2005,74 @@ void SaturnSCControlSetter::SetSCControl(Saturn *sat) {
 	} else {
 		sat->agc.SetInputChannelBit(031, 15, false);
 	}
+}
+
+
+void SaturnEMSDvDisplay::Init(SURFHANDLE digits, SwitchRow &row, Saturn *s)
+
+{
+	MeterSwitch::Init(row);
+	Digits = digits;
+	Sat = s;
+}
+
+void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE) return;
+	if (Sat->ems.IsOff()) return; 
+
+	if (v < 0) {
+		oapiBlt(drawSurface, Digits, 0, 0, 161, 0, 10, 19);
+	}
+
+	int i, Curdigit;
+	char buffer[100];
+	sprintf(buffer, "%7.1f", fabs(v));
+	for (i = 0; i < 7; i++) {
+		if (buffer[i] >= '0' && buffer[i] <= '9') {
+			Curdigit = buffer[i] - '0';
+			oapiBlt(drawSurface, Digits, (i == 6 ? 0 : 11) + 16 * i, 0, 16 * Curdigit, 0, 16, 19);
+		} else if (buffer[i] == '.') {
+			oapiBlt(drawSurface, Digits, 10 + 16 * i, 0, 200, 0, 4, 19);
+		}
+	}
+ }
+
+double SaturnEMSDvDisplay::QueryValue()
+
+{
+	return Sat->ems.GetdVRangeCounter();
+}
+
+
+SaturnEMSDvSetSwitch::SaturnEMSDvSetSwitch() {
+
+	position = 0;
+}
+
+bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	switch(event) {
+		case PANEL_MOUSE_LBPRESSED:
+			if (my < 44)
+				position = 1;
+			else
+				position = 3;
+			break;
+
+		case PANEL_MOUSE_RBPRESSED:
+			if (my < 44)
+				position = 2;
+			else
+				position = 4;
+			break;
+
+		case PANEL_MOUSE_LBUP:
+		case PANEL_MOUSE_RBUP:
+			position = 0;
+			break;
+	}
+	return true;
 }
 
