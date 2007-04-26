@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/10/02 22:23:46  jasonims
+  *	Animation updated for Orbiter 2006-P1, LRV @ 80% complete.  Wheels now rotate correctly and steer correctly to a point.  Discreet steering now supported.
+  *	
   *	Revision 1.9  2006/10/01 05:22:39  jasonims
   *	Animation updated for Orbiter 2006-P1, SM working again, LRV @ 40% complete.
   *	
@@ -883,7 +886,7 @@ void LRV::DoAnimations ()
 void LRV::UpdateAnimations (double SimDT)
 {
 
-	double d_tires,d_fenders;
+	double d_tires;
 
 	TRACESETUP("UpdateAnimations");
 	// read speed and determine change in omega in wheel rotation in SimDT time

@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.32  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -569,7 +574,7 @@ void LEMcomputer::DisplayNounData(int noun)
 
 	case 74:
 		{
-			double dt, hdga, yaw;
+			double dt;
 			
 //			oapiGetFocusHeading(&hdga);			
 			dt   = BurnStartTime - CurrentTimestep;			
