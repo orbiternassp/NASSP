@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2007/04/25 18:48:11  tschachim
+  *	EMS dV functions.
+  *	
   *	Revision 1.17  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -2665,58 +2668,60 @@ void EMS::TimeStep(double simdt) {
 	switch (status) {
 		case EMS_STATUS_DV:
 		case EMS_STATUS_DV_BACKUP:
-			sat->GetStatus(vs);
-			sat->GetWeightVector(w);
+			{
+				sat->GetStatus(vs);
+				sat->GetWeightVector(w);
 
-			MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-vs.arot.z);
-			tinv = mul(AttitudeReference::GetRotationMatrixY(-vs.arot.y), tinv);
-			tinv = mul(AttitudeReference::GetRotationMatrixX(-vs.arot.x), tinv);
-			w = mul(tinv, w) / sat->GetMass();
+				MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-vs.arot.z);
+				tinv = mul(AttitudeReference::GetRotationMatrixY(-vs.arot.y), tinv);
+				tinv = mul(AttitudeReference::GetRotationMatrixX(-vs.arot.x), tinv);
+				w = mul(tinv, w) / sat->GetMass();
 
-			if (!dVInitialized) {
-				lastWeight = w;
-				dVInitialized = true;
+				if (!dVInitialized) {
+					lastWeight = w;
+					dVInitialized = true;
 
-			} else {
-				// Acceleration calculation, see IMU
-				VECTOR3 f;
-				sat->GetForceVector(f);
-				f = mul(tinv, f) / sat->GetMass();
+				} else {
+					// Acceleration calculation, see IMU
+					VECTOR3 f;
+					sat->GetForceVector(f);
+					f = mul(tinv, f) / sat->GetMass();
 
-				VECTOR3 dw1 = w - f;
-				VECTOR3 dw2 = lastWeight - f;
-				lastWeight = w;
+					VECTOR3 dw1 = w - f;
+					VECTOR3 dw2 = lastWeight - f;
+					lastWeight = w;
 
-				// Transform to vessel coordinates
-				MATRIX3	t = AttitudeReference::GetRotationMatrixX(vs.arot.x);
-				t = mul(AttitudeReference::GetRotationMatrixY(vs.arot.y), t);
-				t = mul(AttitudeReference::GetRotationMatrixZ(vs.arot.z), t);
+					// Transform to vessel coordinates
+					MATRIX3	t = AttitudeReference::GetRotationMatrixX(vs.arot.x);
+					t = mul(AttitudeReference::GetRotationMatrixY(vs.arot.y), t);
+					t = mul(AttitudeReference::GetRotationMatrixZ(vs.arot.z), t);
 
-				VECTOR3 avg = (dw1 + dw2) / 2.0;
-				avg = mul(t, avg);	
-				double xacc = -avg.z;
+					VECTOR3 avg = (dw1 + dw2) / 2.0;
+					avg = mul(t, avg);	
+					double xacc = -avg.z;
 
-				// Ground test switch
-				if (sat->GTASwitch.IsUp()) {
-					// Handle different gravity and size of the Earth
-					if (sat->IsVirtualAGC()) {
-						xacc -= 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
-					} else {
-						if (sat->NonsphericalGravityEnabled()) {
-							xacc -= 9.7988;
+					// Ground test switch
+					if (sat->GTASwitch.IsUp()) {
+						// Handle different gravity and size of the Earth
+						if (sat->IsVirtualAGC()) {
+							xacc -= 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
 						} else {
-							xacc -= 9.7939;
+							if (sat->NonsphericalGravityEnabled()) {
+								xacc -= 9.7988;
+							} else {
+								xacc -= 9.7939;
+							}
 						}
 					}
-				}
 
-				// dV/Range display
-				if (xacc > 0 || status == EMS_STATUS_DV) {
-					dVRangeCounter -= xacc * simdt * FPS;
-					dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
-				}				
-				//sprintf(oapiDebugString(), "xacc %.10f", xacc);
-				//sprintf(oapiDebugString(), "Avg x %.10f y %.10f z %.10f l%.10f", avg.x, avg.y, avg.z, length(avg));								
+					// dV/Range display
+					if (xacc > 0 || status == EMS_STATUS_DV) {
+						dVRangeCounter -= xacc * simdt * FPS;
+						dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
+					}				
+					//sprintf(oapiDebugString(), "xacc %.10f", xacc);
+					//sprintf(oapiDebugString(), "Avg x %.10f y %.10f z %.10f l%.10f", avg.x, avg.y, avg.z, length(avg));								
+				}
 			}
 			break;
 
