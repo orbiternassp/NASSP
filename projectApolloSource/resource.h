@@ -61,7 +61,6 @@
 #define IDB_BORDER_46x75                                    68
 #define IDB_BORDER_39x38                                    69
 #define AID_DCVOLTS                                         70
-#define AID_FCSM_SWITCH                                     71
 #define AID_GPFPI_METERS                                    72
 #define AID_DIRECT_ULLAGE_THRUST_ON                         73
 #define AID_LV_ENGINE_LIGHTS                                74
@@ -155,7 +154,6 @@
 #define IDB_ILMLEMPANEL                                     219
 #define IDB_ILMDCKPANEL                                     220
 #define IDB_MAINDCKPANEL                                    221
-#define IDB_FCSM                                            222
 #define IDB_SEQUENCERSWITCHES                               223
 #define IDB_ILMGUARDSWITCH                                  224
 #define IDB_CABIN                                           240
@@ -176,7 +174,6 @@
 #define IDB_FDAI                                            255
 #define IDB_ECSG                                            256
 #define IDB_ILMECSG                                         257
-#define IDB_ILMFCSM                                         268
 #define IDB_ILMTHREEPOSSWITCH                               269
 #define IDB_MFDFRAME                                        270
 #define IDB_MFDPOWER                                        271
