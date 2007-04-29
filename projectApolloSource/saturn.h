@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.236  2007/04/25 18:48:11  tschachim
+  *	EMS dV functions.
+  *	
   *	Revision 1.235  2007/03/24 03:19:39  flydba
   *	LEB and new side panels added.
   *	
@@ -2014,8 +2017,9 @@ protected:
 	//
 
 	SwitchRow EventTimerRow;
-	ToggleSwitch FCSMSPSASwitch;
-	ToggleSwitch FCSMSPSBSwitch;
+	// The FSCM switches were removed in the real CSM
+	// ToggleSwitch FCSMSPSASwitch;
+	// ToggleSwitch FCSMSPSBSwitch;
 	EventTimerResetSwitch EventTimerUpDownSwitch;
 	EventTimerControlSwitch EventTimerControlSwitch;
 	TimerUpdateSwitch EventTimerMinutesSwitch;

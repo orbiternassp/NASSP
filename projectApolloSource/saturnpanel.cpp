@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.205  2007/04/25 18:48:11  tschachim
+  *	EMS dV functions.
+  *	
   *	Revision 1.204  2007/03/24 03:19:04  flydba
   *	LEB and new side panels added.
   *	
@@ -1946,8 +1949,8 @@ void Saturn::SetSwitches(int panel) {
 	//
 
 	EventTimerRow.Init(AID_EVENT_TIMER_SWITCHES, MainPanel);
-	FCSMSPSASwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], EventTimerRow);
-	FCSMSPSBSwitch.Init(43, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], EventTimerRow);
+	// FCSMSPSASwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], EventTimerRow);
+	// FCSMSPSBSwitch.Init(43, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], EventTimerRow);
 	EventTimerUpDownSwitch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, &EventTimerDisplay);
 	EventTimerControlSwitch.Init(129, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, &EventTimerDisplay);
 	EventTimerMinutesSwitch.Init(172, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], EventTimerRow, TIME_UPDATE_MINUTES, &EventTimerDisplay);
@@ -4645,8 +4648,8 @@ void Saturn::InitSwitches() {
 	CMPropDumpSwitch.Register(PSH, "CMPropDumpSwitch", 0, 0);
 	CPPropPurgeSwitch.Register(PSH, "CPPropPurgeSwitch", 0, 0);
 
-	FCSMSPSASwitch.Register(PSH, "FCSMSPSASwitch", 0);
-	FCSMSPSBSwitch.Register(PSH, "FCSMSPSBSwitch", 0);
+	// FCSMSPSASwitch.Register(PSH, "FCSMSPSASwitch", 0);
+	// FCSMSPSBSwitch.Register(PSH, "FCSMSPSBSwitch", 0);
 	EventTimerUpDownSwitch.Register(PSH, "EventTimerUpDownSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	EventTimerControlSwitch.Register(PSH, "EventTimerControlSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
 	EventTimerMinutesSwitch.Register(PSH, "EventTimerMinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
