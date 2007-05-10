@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2006/10/02 22:23:46  jasonims
+  *	Animation updated for Orbiter 2006-P1, LRV @ 80% complete.  Wheels now rotate correctly and steer correctly to a point.  Discreet steering now supported.
+  *	
   *	Revision 1.6  2006/08/28 14:30:35  jasonims
   *	temperarly removed animation calls due to Orbiter2006 bug causing CTD's, when patched, will reinstate animations.
   *	
@@ -165,8 +168,8 @@ protected:
 	MGROUP_TRANSFORM *frtire, *fltire, *rrtire, *rltire;
 
 	double proc_fntrgtfender, proc_fntlftfender, proc_rearrgtfender, proc_rearlftfender;
-	double proc_frontwheels, proc_rearwheels;
-	double proc_tires;
+	double proc_frontwheel_inner, proc_frontwheel_outer, proc_rearwheel_inner, proc_rearwheel_outer;
+	double proc_tires_left, proc_tires_right;
 
     
 	OBJHANDLE hMaster;
@@ -198,7 +201,8 @@ protected:
 
 	double speed;  // current speed in m/s
 	bool speedlock;  // true: lock speed change until both throttle keys are released
-	double wheeldeflect; //current turn radius in percent total radius
+	double steering; //current steering setting [-1.0 ... 1.0]
+	bool autocenter;  // true: wheel auto-centering (KP_5) in prog
 	SoundLib soundlib;
 	Sound SLEVA;
 
