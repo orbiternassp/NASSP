@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/04/26 00:18:18  movieman523
+  *	Fixed some build warnings.
+  *	
   *	Revision 1.10  2006/10/02 22:23:46  jasonims
   *	Animation updated for Orbiter 2006-P1, LRV @ 80% complete.  Wheels now rotate correctly and steer correctly to a point.  Discreet steering now supported.
   *	
@@ -102,7 +105,16 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 #define ROVER_SPEED_M_S 3.6  // max rover speed in m/s (http://en.wikipedia.org/wiki/Lunar_rover; values on the web range from 7 mph to 10.56 mph)
 #define ROVER_ACC_M_S2 0.5   // rover acceleration in m/s^2 (roughly based on AP15 mission report: accelleration to 10 km/h in "3 vehicle lengths")
 #define ROVER_BRK_M_S2 2.0   // rover braking in m/s^2 (not based on any real data (yet))
-#define ROVER_TURN_DEG_PER_SEC 20.0  // rover can turn x degrees / sec (just a convenient number)
+
+//
+// Steering geometry
+// Sources:
+//   (ST1) "Lunar Rover Operations Handbook"; http://www.hq.nasa.gov/alsj/LRV_OpsNAS8-25145.pdf
+#define MAX_WHEEL_TURN_OUTER_DEG 22.0  // max turning of outer wheel in [degrees] (ST1)
+#define MAX_WHEEL_TURN_INNER_DEG 50.0  // max turning of inner wheel in [degrees] (ST1)
+#define WHEEL_BASE_CM (2.54 * 90.0)    // wheelbase (longitudinal) in [cm] (ST1)
+#define WHEEL_TRACK_CM (2.54 * 72.0)   // wheel track (width) in [cm] (ST1)
+#define WHEEL_LOCK2LOCK_S 5.5          // lock-to-lock time [s] (ST1); lock-to-lock time is given as 5.5s (+/- 0,5s)
 
 //
 // Variables that really should be global variables.
@@ -119,7 +131,29 @@ static const int VCC_NEEDLE_GROUPS[8] = {  // GEOM groups of the eight needles
 			GEOM_NEEDLE_A, GEOM_NEEDLE_B, GEOM_NEEDLE_C, GEOM_NEEDLE_D,
 			GEOM_NEEDLE_E, GEOM_NEEDLE_F, GEOM_NEEDLE_G, GEOM_NEEDLE_H
 		};
-	
+
+// Calculate the correct Ackermann steering angle for outer wheel.
+// Arguments:
+//  inner_angle -- steering angle of inner wheel (in radians), measured from direction of travel
+double AckermannInnerToOuter(double inner_angle_rad)
+{
+	if (inner_angle_rad == 0.0) return 0.0;
+
+	if (inner_angle_rad > 0.0)
+	{
+		return (PI05) - atan((WHEEL_TRACK_CM / (0.5 * WHEEL_BASE_CM)) + tan(PI05 - inner_angle_rad));
+	} else {
+		return - ((PI05) - atan((WHEEL_TRACK_CM / (0.5 * WHEEL_BASE_CM)) + tan(PI05 + inner_angle_rad)));
+	}
+}
+
+// Calculate the turn radius for the center of the LRV based on the
+// inner wheel deflection.
+// ATTENTION: not defined for (inner_wheel_deflection_rad = 0.0)!
+double get_turn_radius_for_center(double inner_wheel_deflection_rad)
+{
+	return (0.5 * WHEEL_TRACK_CM) + (0.5 * WHEEL_BASE_CM) * tan(PI05 - inner_wheel_deflection_rad);
+}
 
 LRV::LRV(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
@@ -213,10 +247,14 @@ void LRV::init()
 	// touchdown point test
 	// touchdownPointHeight = -0.8;
 
-	proc_tires = 0.0;
-	proc_frontwheels = 0.0;
-	proc_rearwheels = 0.0;
-	wheeldeflect = 0.0;
+    proc_tires_left = 0.0;
+    proc_tires_right = 0.0;
+	proc_frontwheel_inner = 0.0;
+	proc_frontwheel_outer = 0.0;
+	proc_rearwheel_inner = 0.0;
+	proc_rearwheel_outer = 0.0;
+	steering = 0.0;
+	autocenter = false;
 	
 	LRVMeshIndex = 1;
 }
@@ -247,10 +285,10 @@ void LRV::DefineAnimations ()
 	static UINT rearrgtwheelgrp[2] = {6,52}; //rear right wheel groups
 	static UINT rearlftwheelgrp[2] = {2,53}; //rear left wheel groups
 
-	frwheel = new MGROUP_ROTATE (LRVMeshIndex, fntrgtwheelgrp, 4, _V(0.842,-0.621,0.916), _V(0,1,0), (float)(PI/12));
-	flwheel = new MGROUP_ROTATE (LRVMeshIndex, fntlftwheelgrp, 4, _V(-0.837,-0.621,0.916), _V(0,1,0), (float)(PI/12));
-	rrwheel = new MGROUP_ROTATE (LRVMeshIndex, rearrgtwheelgrp, 2, _V(0.842,-0.623,-1.389), _V(0,1,0), (float)(PI/12));
-	rlwheel = new MGROUP_ROTATE (LRVMeshIndex, rearlftwheelgrp, 2, _V(-0.837,-0.623,-1.389), _V(0,1,0), (float)(PI/12));
+	frwheel = new MGROUP_ROTATE (LRVMeshIndex, fntrgtwheelgrp, 4, _V(0.842,-0.621,0.916), _V(0,1,0), (float)(PI * 100/180));
+	flwheel = new MGROUP_ROTATE (LRVMeshIndex, fntlftwheelgrp, 4, _V(-0.837,-0.621,0.916), _V(0,1,0), (float)(PI * 100/180));
+	rrwheel = new MGROUP_ROTATE (LRVMeshIndex, rearrgtwheelgrp, 2, _V(0.842,-0.623,-1.389), _V(0,1,0), (float)(PI * 100/180));
+	rlwheel = new MGROUP_ROTATE (LRVMeshIndex, rearlftwheelgrp, 2, _V(-0.837,-0.623,-1.389), _V(0,1,0), (float)(PI * 100/180));
 
 	static UINT fntrgttiregrp[4] = {35,40,62,67}; //front right tire groups
 	static UINT fntlfttiregrp[4] = {37,41,61,66}; //front left tire groups
@@ -312,10 +350,6 @@ void LRV::SetRoverStage ()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 	VECTOR3 mesh_adjust = _V(0.0, 0.15, 0.0);
-	// ???: The next two lines have been exchanged to make the console animations work
-	//      with the buggy Orbiter 2006 MeshTransform(). This is a temporary fix which,
-	//      as a side effect, will cause problems with all animations of the main LRV
-	//      mesh (as soon as they are added ...).
 	vccMeshIdx = AddMesh(hLRVConsole, &mesh_adjust);
 	AddMesh(hLRV, &mesh_adjust);
 	SetMeshVisibilityMode(LRVMeshIndex, MESHVIS_ALWAYS); 
@@ -391,7 +425,6 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 
 	double lat;
 	double lon;
-	double turn_spd = Radians(SimDT * ROVER_TURN_DEG_PER_SEC);
 	double move_spd;
 
 	// limit time acceleration (todo: turn limit off if no movement occurs)
@@ -399,9 +432,6 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 		if (timeW > 100)
 			oapiSetTimeAcceleration(100);
 
-	// turn speed is only tripled when time acc is multiplied by ten:
-	turn_spd = (pow(3.0, log10(timeW))) * turn_spd / timeW;
-	
 	if (eva->status == 1) {
 		lon = eva->vdata[0].x;
 		lat = eva->vdata[0].y;
@@ -413,31 +443,57 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 	
 	} else return;
 
-//modify wheeldeflect, which varies from -1 to 1, defining percentage that wheels are currently deflected
+    //modify steering, which varies from -1 (full left) to 1 (full right)
 	if (KEY1)  // turn left
 	{
-		wheeldeflect=max(-1,wheeldeflect-0.1);
+		autocenter = false;
+		steering = max(-1.0, steering - 2.0 * SimDT / WHEEL_LOCK2LOCK_S);
 	}
 	else if (KEY3)  // turn right
 	{
-		wheeldeflect=min(1,wheeldeflect+0.1);
+		autocenter = false;
+		steering = min(1.0, steering + 2.0 * SimDT / WHEEL_LOCK2LOCK_S);
 	}
-
 	else if (KEY5)  // center wheels
 	{
-		wheeldeflect = 0;
+		autocenter = true;
+	}
+
+	if (autocenter)
+	{
+		if (steering > 0.00001)
+		  steering = max(0.0, steering - 2.0 * SimDT / WHEEL_LOCK2LOCK_S);
+		else if (steering < -0.00001)
+		  steering = min(0.0, steering + 2.0 * SimDT / WHEEL_LOCK2LOCK_S);
+		else
+		{
+		  steering = 0.0;
+		  autocenter = false;
+		}
 	}
 
 	if (speed != 0.0) //LRV
 	{
+		//
+		// calculate turn radius for center of LRV based on inner wheel deflection 
+		//
+		double turn_angle;
+        double inner_angle_rad = Radians(fabs(steering) * MAX_WHEEL_TURN_INNER_DEG);
+		// how far along the full circle does the LRV move (angle, not distance)?
+		if (inner_angle_rad <= PI/1000.0) // avoid singularity at 0.0 ...
+			turn_angle = 0.0;
+		else
+			turn_angle = 100.0 * speed * SimDT / get_turn_radius_for_center(inner_angle_rad);
 		
 		//modify vdata to simulate turning motion
-		eva->vdata[0].z = eva->vdata[0].z + (turn_spd*(speed/ROVER_SPEED_M_S)*wheeldeflect);
+		if (steering >= 0.0)
+		  eva->vdata[0].z = eva->vdata[0].z + turn_angle;
+		else
+		  eva->vdata[0].z = eva->vdata[0].z - turn_angle;
 		if(eva->vdata[0].z <=-2*PI)
 			eva->vdata[0].z = eva->vdata[0].z + 2*PI;
 		else if (eva->vdata[0].z >=2*PI)
 			eva->vdata[0].z = eva->vdata[0].z - 2*PI;
-
 
 	}
 
@@ -473,8 +529,8 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 
 	// move forward / backward according to current speed
 	move_spd =  SimDT * atan2(speed, oapiGetSize(eva->rbody));  // surface speed in radians
-	lat = lat + cos(heading) * move_spd;
-	lon = lon + sin(heading) * move_spd;
+	lat = lat + cos(0.5 * (heading + eva->vdata[0].z)) * move_spd;  // direction of travel is (old_heading + new_heading)/2
+	lon = lon + sin(0.5 * (heading + eva->vdata[0].z)) * move_spd;
 	vccDistance = vccDistance + SimDT * fabs(speed);  // the console distance always counts up!
 	// decrease battery power (by about 1.87 Ah/km [http://www.hq.nasa.gov/alsj/a15/a15mr-8.htm])
 	Bat1Cap = Bat1Cap - 0.5 * 1.87 * (speed * SimDT / 1000.0);
@@ -869,14 +925,23 @@ void LRV::DoAnimations ()
 {
 	TRACESETUP("DoAnimations");
 
-	SetAnimation(anim_fntrgttire, proc_tires);
-	SetAnimation(anim_fntlfttire, proc_tires);
-	SetAnimation(anim_rearrgttire, proc_tires);
-	SetAnimation(anim_rearlfttire, proc_tires);
-	SetAnimation(anim_fntrgtwheel, proc_frontwheels);
-	SetAnimation(anim_fntlftwheel, proc_frontwheels);
-	SetAnimation(anim_rearrgtwheel, proc_rearwheels);
-	SetAnimation(anim_rearlftwheel, proc_rearwheels);
+	SetAnimation(anim_fntrgttire, proc_tires_right);
+	SetAnimation(anim_fntlfttire, proc_tires_left);
+	SetAnimation(anim_rearrgttire, proc_tires_right);
+	SetAnimation(anim_rearlfttire, proc_tires_left);
+
+	if (steering > 0.0)  // right turn
+	{
+		SetAnimation(anim_fntrgtwheel, proc_frontwheel_inner);
+		SetAnimation(anim_fntlftwheel, proc_frontwheel_outer);
+		SetAnimation(anim_rearrgtwheel, proc_rearwheel_inner);
+		SetAnimation(anim_rearlftwheel, proc_rearwheel_outer);
+	} else {  // left turn or straight
+		SetAnimation(anim_fntrgtwheel, proc_frontwheel_outer);
+		SetAnimation(anim_fntlftwheel, proc_frontwheel_inner);
+		SetAnimation(anim_rearrgtwheel, proc_rearwheel_outer);
+		SetAnimation(anim_rearlftwheel, proc_rearwheel_inner);
+	}
 	//SetAnimation(anim_fntrgtfender, proc_fntrgtfender);
 	//SetAnimation(anim_fntlftfender, proc_fntlftfender);
 	//SetAnimation(anim_rearrgtfender, proc_rearrgtfender);
@@ -885,29 +950,49 @@ void LRV::DoAnimations ()
 
 void LRV::UpdateAnimations (double SimDT)
 {
-
 	double d_tires;
 
 	TRACESETUP("UpdateAnimations");
-	// read speed and determine change in omega in wheel rotation in SimDT time
-	d_tires = 0.1*(speed/ROVER_SPEED_M_S);
-
-	// TODO: Set up variable steering so we can read current turn angle and move wheels to that point (rear and foward turn opposite)
 
 	// TODO: Draw random number to see if wheels hit a bump and it's magnitude or determine wheel motion due to vertical accelleration by bouncing
 
+	double outer_steering = AckermannInnerToOuter(steering * PI * (MAX_WHEEL_TURN_INNER_DEG / 180.0)) * 180.0 / (PI * MAX_WHEEL_TURN_INNER_DEG);
+	proc_frontwheel_inner = (0.5 + 0.5 * steering); //Right is positive, left is negative
+	proc_frontwheel_outer = (0.5 + 0.5 * outer_steering); //Right is positive, left is negative
+	proc_rearwheel_inner = (0.5 - 0.5 * steering); //rear wheels steer opposite of front wheels
+	proc_rearwheel_outer = (0.5 - 0.5 * outer_steering); //rear wheels steer opposite of front wheels
 
+	// read speed and determine change in omega in wheel rotation in SimDT time
+	d_tires = 0.1*(speed/ROVER_SPEED_M_S);
+    // TODO: calculate inner and outer circle distance and vary speed accordingly
+    double inner_angle_rad = Radians(fabs(steering) * MAX_WHEEL_TURN_INNER_DEG);
+    double outer_angle_rad = Radians(fabs(outer_steering) * MAX_WHEEL_TURN_INNER_DEG);
+	double turn_radius_center_cm = get_turn_radius_for_center(inner_angle_rad);
+	double turn_radius_inner_cm = 0.5 * WHEEL_BASE_CM / cos(PI05 - inner_angle_rad);
+	double turn_radius_outer_cm = 0.5 * WHEEL_BASE_CM / cos(PI05 - outer_angle_rad);;
 
-	proc_tires = proc_tires + d_tires;
-
-	proc_frontwheels = ((wheeldeflect/2)+.5); //Right is positive, left is negative
-	proc_rearwheels = (0.5-(wheeldeflect/2)); //rear wheels steer opposite of front wheels
+	
+	if (steering > 0.0)
+	{
+		proc_tires_left = proc_tires_left + d_tires * (turn_radius_outer_cm/turn_radius_center_cm);
+		proc_tires_right = proc_tires_right + d_tires * (turn_radius_inner_cm/turn_radius_center_cm);
+	}
+	else
+	{
+		proc_tires_left = proc_tires_left + d_tires * (turn_radius_inner_cm/turn_radius_center_cm);
+		proc_tires_right = proc_tires_right + d_tires * (turn_radius_outer_cm/turn_radius_center_cm);
+	}
 
 	// check to see if animations hit limits and adjust accordingly
-	if (proc_tires >= 1){
-		proc_tires = proc_tires - 1;
-	} else if (proc_tires <= -1) {
-		proc_tires = proc_tires + 1;
+	if (proc_tires_left >= 1){
+		proc_tires_left = proc_tires_left - 1;
+	} else if (proc_tires_left <= 0) {
+		proc_tires_left = proc_tires_left + 1;
+	}
+	if (proc_tires_right >= 1){
+		proc_tires_right = proc_tires_right - 1;
+	} else if (proc_tires_right <= 0) {
+		proc_tires_right = proc_tires_right + 1;
 	}
 
 	//sprintf(oapiDebugString(), "proc_tire %f", proc_tires);
@@ -1039,3 +1124,9 @@ DLLCLBK void InitModule (HINSTANCE hModule)
 {
 	InitCollisionSDK();
 }
+
+/* just some handy code for debugging purposes ...
+char test[200];
+sprintf(test, "DBG:%f, %f", steering, outer_deflect);
+OutputDebugString(test);
+*/
