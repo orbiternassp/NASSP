@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2007/01/22 14:41:17  tschachim
+  *	Sounds disabled because it "overwrites" the button sound in the CM.
+  *	Wait for the OrbiterSound 3.5 or higher release and check again.
+  *	
   *	Revision 1.20  2006/11/22 19:04:13  tschachim
   *	Bugfix crash sound initialization (old way "overwrote" button sound in CM).
   *	
@@ -1026,7 +1030,7 @@ void SM::AddEngines()
 void SM::DefineAnimations()
 {
 
-	static UINT umbilical_group[1] = {2}; // participating groups
+	static UINT umbilical_group[1] = {1}; // participating groups
 	static MGROUP_ROTATE umbilical
 	(
 		0,				// mesh index
