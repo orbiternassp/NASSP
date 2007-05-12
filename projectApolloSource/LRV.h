@@ -22,6 +22,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/05/10 18:39:36  redburne
+  *	- new: realistic max. wheel deflection of 50 deg for inner wheel (leads to wheel-body intersections in the mesh ...)
+  *	- new: outer wheel deflection calculated accordingly (about 25 deg max)
+  *	- new: realistic wheel deflection speed (lock-to-lock in about 5.5s)
+  *	- new: gradual auto-centering
+  *	- new: "real" turning based on speed and turn radius
+  *	- new: different wheel spins for inner and outer wheels (seems a tiny, tiny bit off,  but better than before)
+  *	- fixed: wheel rotation driving backwards would stop after one turn, max.
+  *	
   *	Revision 1.7  2006/10/02 22:23:46  jasonims
   *	Animation updated for Orbiter 2006-P1, LRV @ 80% complete.  Wheels now rotate correctly and steer correctly to a point.  Discreet steering now supported.
   *	
@@ -190,6 +199,7 @@ protected:
 	bool KEY9;
 	bool KEYADD;
 	bool KEYSUBTRACT;
+	bool KEYCTRL;
 
 	bool FirstTimestep;
 	bool SLEVAPlayed;
