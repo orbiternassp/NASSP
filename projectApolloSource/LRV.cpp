@@ -22,6 +22,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2007/05/10 18:39:36  redburne
+  *	- new: realistic max. wheel deflection of 50 deg for inner wheel (leads to wheel-body intersections in the mesh ...)
+  *	- new: outer wheel deflection calculated accordingly (about 25 deg max)
+  *	- new: realistic wheel deflection speed (lock-to-lock in about 5.5s)
+  *	- new: gradual auto-centering
+  *	- new: "real" turning based on speed and turn radius
+  *	- new: different wheel spins for inner and outer wheels (seems a tiny, tiny bit off,  but better than before)
+  *	- fixed: wheel rotation driving backwards would stop after one turn, max.
+  *	
   *	Revision 1.11  2007/04/26 00:18:18  movieman523
   *	Fixed some build warnings.
   *	
@@ -110,6 +119,8 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 // Steering geometry
 // Sources:
 //   (ST1) "Lunar Rover Operations Handbook"; http://www.hq.nasa.gov/alsj/LRV_OpsNAS8-25145.pdf
+#define WHEEL_RADIUS_M (16.0 * 0.0254) // (real) wheel radius in [m]; may need adjusting to mesh dimensions
+#define WHEEL_SPIN_FUDGE_FACTOR 0.82   // adjust calculated wheel spin (should not be necessary, but is ...)
 #define MAX_WHEEL_TURN_OUTER_DEG 22.0  // max turning of outer wheel in [degrees] (ST1)
 #define MAX_WHEEL_TURN_INNER_DEG 50.0  // max turning of inner wheel in [degrees] (ST1)
 #define WHEEL_BASE_CM (2.54 * 90.0)    // wheelbase (longitudinal) in [cm] (ST1)
@@ -137,7 +148,7 @@ static const int VCC_NEEDLE_GROUPS[8] = {  // GEOM groups of the eight needles
 //  inner_angle -- steering angle of inner wheel (in radians), measured from direction of travel
 double AckermannInnerToOuter(double inner_angle_rad)
 {
-	if (inner_angle_rad == 0.0) return 0.0;
+	if (fabs(inner_angle_rad) < 0.0001) return 0.0;
 
 	if (inner_angle_rad > 0.0)
 	{
@@ -202,6 +213,7 @@ void LRV::init()
 	KEY9 = false;
 	KEYADD = false;
 	KEYSUBTRACT = false;
+	KEYCTRL = false;
 
 	FirstTimestep = true;
 	SLEVAPlayed = false;
@@ -426,6 +438,7 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 	double lat;
 	double lon;
 	double move_spd;
+	double ctrl_factor;
 
 	// limit time acceleration (todo: turn limit off if no movement occurs)
 	double timeW = oapiGetTimeAcceleration();
@@ -443,18 +456,24 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 	
 	} else return;
 
+	// if CTRL is pressed, slow steering and accel/decel by a factor of one tenth
+	if (KEYCTRL)
+		ctrl_factor = 0.1;
+	else
+		ctrl_factor = 1.0;
+
     //modify steering, which varies from -1 (full left) to 1 (full right)
 	if (KEY1)  // turn left
 	{
 		autocenter = false;
-		steering = max(-1.0, steering - 2.0 * SimDT / WHEEL_LOCK2LOCK_S);
+		steering = max(-1.0, steering - ctrl_factor * 2.0 * SimDT / WHEEL_LOCK2LOCK_S);
 	}
 	else if (KEY3)  // turn right
 	{
 		autocenter = false;
-		steering = min(1.0, steering + 2.0 * SimDT / WHEEL_LOCK2LOCK_S);
+		steering = min(1.0, steering + ctrl_factor * 2.0 * SimDT / WHEEL_LOCK2LOCK_S);
 	}
-	else if (KEY5)  // center wheels
+	else if (KEY5 | KEY2)  // center wheels
 	{
 		autocenter = true;
 	}
@@ -501,24 +520,24 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 	{
 		if (speed > 0.0) {
 			// we are still braking from forward movement to standstill
-			speed = __max(0.0, speed - SimDT * ROVER_BRK_M_S2); 
+			speed = __max(0.0, speed - ctrl_factor * SimDT * ROVER_BRK_M_S2); 
 			speedlock = (speed == 0.0);  // if wheelstop: don't go into reverse until key is released
 		}
 		else if (!speedlock)
 		{
-			speed = __max(-ROVER_SPEED_M_S, speed - SimDT * ROVER_ACC_M_S2); 
+			speed = __max(-ROVER_SPEED_M_S, speed - ctrl_factor * SimDT * ROVER_ACC_M_S2); 
 		}
 	}
 	else if (KEYADD)  // accelerate
 	{
 		if (speed < 0.0) {
 			// we are still braking from reverse movement to standstill
-			speed = __min(0.0, speed + SimDT * ROVER_BRK_M_S2); 
+			speed = __min(0.0, speed + ctrl_factor * SimDT * ROVER_BRK_M_S2); 
 			speedlock = (speed == 0.0);  // if wheelstop: don't accellerate until key is released
 		}
 		else if (!speedlock)
 		{
-			speed = __min(ROVER_SPEED_M_S, speed + SimDT * ROVER_ACC_M_S2); 
+			speed = __min(ROVER_SPEED_M_S, speed + ctrl_factor * SimDT * ROVER_ACC_M_S2); 
 		}
 	}
 	else
@@ -571,9 +590,11 @@ int LRV::clbkConsumeDirectKey(char *kstate) {
 
 	if (FirstTimestep) return 0;
 
-	if (KEYMOD_SHIFT(kstate) || KEYMOD_CONTROL(kstate)) {
+	if (KEYMOD_SHIFT(kstate)) {
 		return 0; 
 	}
+
+	KEYCTRL = KEYMOD_CONTROL(kstate);
 
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD1)) {
 		KEY1 = true;
@@ -963,14 +984,26 @@ void LRV::UpdateAnimations (double SimDT)
 	proc_rearwheel_outer = (0.5 - 0.5 * outer_steering); //rear wheels steer opposite of front wheels
 
 	// read speed and determine change in omega in wheel rotation in SimDT time
-	d_tires = 0.1*(speed/ROVER_SPEED_M_S);
-    // TODO: calculate inner and outer circle distance and vary speed accordingly
-    double inner_angle_rad = Radians(fabs(steering) * MAX_WHEEL_TURN_INNER_DEG);
-    double outer_angle_rad = Radians(fabs(outer_steering) * MAX_WHEEL_TURN_INNER_DEG);
-	double turn_radius_center_cm = get_turn_radius_for_center(inner_angle_rad);
-	double turn_radius_inner_cm = 0.5 * WHEEL_BASE_CM / cos(PI05 - inner_angle_rad);
-	double turn_radius_outer_cm = 0.5 * WHEEL_BASE_CM / cos(PI05 - outer_angle_rad);;
-
+	double inner_angle_rad, outer_angle_rad, turn_radius_center_cm, turn_radius_inner_cm, turn_radius_outer_cm;
+	d_tires = WHEEL_SPIN_FUDGE_FACTOR * (speed * SimDT) / (2.0 * PI * WHEEL_RADIUS_M);
+    // calculate inner and outer circle distance and vary speed accordingly
+	if (fabs(steering) < 0.0001)
+	{
+		// avoid inner_angle_rad = 0.0, at which point get_turn_radius_for_center() is undefined
+		
+		// the actual values are not important, they just have to be equal
+		turn_radius_inner_cm = 1.0;
+		turn_radius_outer_cm = 1.0;
+		turn_radius_center_cm = 1.0;
+	}
+	else
+	{
+		inner_angle_rad = Radians(fabs(steering) * MAX_WHEEL_TURN_INNER_DEG);
+		outer_angle_rad = Radians(fabs(outer_steering) * MAX_WHEEL_TURN_INNER_DEG);
+		turn_radius_center_cm = get_turn_radius_for_center(inner_angle_rad);
+		turn_radius_inner_cm = 0.5 * WHEEL_BASE_CM / cos(PI05 - inner_angle_rad);
+		turn_radius_outer_cm = 0.5 * WHEEL_BASE_CM / cos(PI05 - outer_angle_rad);;
+	}
 	
 	if (steering > 0.0)
 	{
@@ -984,14 +1017,14 @@ void LRV::UpdateAnimations (double SimDT)
 	}
 
 	// check to see if animations hit limits and adjust accordingly
-	if (proc_tires_left >= 1){
+	if (proc_tires_left > 1){
 		proc_tires_left = proc_tires_left - 1;
-	} else if (proc_tires_left <= 0) {
+	} else if (proc_tires_left < 0) {
 		proc_tires_left = proc_tires_left + 1;
 	}
-	if (proc_tires_right >= 1){
+	if (proc_tires_right > 1){
 		proc_tires_right = proc_tires_right - 1;
-	} else if (proc_tires_right <= 0) {
+	} else if (proc_tires_right < 0) {
 		proc_tires_right = proc_tires_right + 1;
 	}
 
