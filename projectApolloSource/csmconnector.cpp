@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.5  2006/07/27 21:30:47  movieman523
   *	Added display of SIVb battery voltage and current.
   *	
@@ -42,7 +45,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"

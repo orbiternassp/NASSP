@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2007/04/25 18:48:08  tschachim
+  *	EMS dV functions.
+  *	
   *	Revision 1.81  2007/01/22 14:45:32  tschachim
   *	New resources, fixed some CSM constants.
   *	
@@ -504,9 +507,9 @@ inline double KelvinToFahrenheit(double kelvin) {
 // Engine information.
 //
 
-#define SPS_THRUST					94000.0	
+#define SPS_THRUST					92100.0		// Apollo 7 Mission Report
 #define SPS_ISP						 3080.0
-#define SPS_DEFAULT_PROPELLANT		18413.0
+#define SPS_DEFAULT_PROPELLANT		18500.0		// Apollo 11 Mission Report
 #define SPS_NORM_OXIDIZER_FLOW		(1.6 / (1.0 + 1.6))
 
 #define APS_THRUST		15600
@@ -514,12 +517,12 @@ inline double KelvinToFahrenheit(double kelvin) {
 #define DPS_THRUST		44910
 #define DPS_ISP			3107
 
-#define RCS_FUEL_PER_QUAD	310
+#define RCS_FUEL_PER_QUAD	152.5	// Apollo 11 Mission Report, AOH
 #define SM_RCS_ISP			(290.0 * G)
 #define SM_RCS_ISP_SL		50.0
 #define SM_RCS_THRUST		441.5
 
-#define CM_RCS_FUEL_PER_TANK	154.4482019	// The CM has 2 tanks
+#define CM_RCS_FUEL_PER_TANK	55.5	// The CM has 2 tanks (Apollo 11 Mission Report)
 #define CM_RCS_ISP				(290.0 * G)
 #define CM_RCS_ISP_SL			50.0
 #define CM_RCS_THRUST			412.0

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2007/03/01 18:24:33  tschachim
+  *	Fixed Saturn V assembly
+  *	
   *	Revision 1.76  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -260,7 +263,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "Orbitersdk.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "nasspdefs.h"
@@ -473,8 +476,8 @@ void LoadSat5Meshes()
 	LOAD_MESH(hapollo8lta, "ProjectApollo/apollo8_lta");
 	LOAD_MESH(hlta_2r, "ProjectApollo/LTA_2R");
 
-	contrail_tex = oapiRegisterParticleTexture ("Contrail2");
-	exhaust_tex = oapiRegisterExhaustTexture ("Exhaust2");
+	contrail_tex = oapiRegisterParticleTexture("Contrail2");
+	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
 
 	srb_exhaust.tex = contrail_tex;
 	seperation_junk.tex = contrail_tex;
@@ -1001,6 +1004,16 @@ void SaturnV::SetThirdStageMesh (double offset)
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+	// And the Crew
+	if (Crewed) {
+		cmpidx = AddMesh (hCMP, &mesh_dir);
+		crewidx = AddMesh (hCREW, &mesh_dir);
+		SetCrewMesh();
+	} else {
+		cmpidx = -1;
+		crewidx = -1;
+	}
+
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
@@ -1010,15 +1023,6 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 	meshidx = AddMesh (hFHC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	if (Crewed) 
-	{
-		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-	}
 
 	probeidx = -1;
 	probeextidx = -1;
@@ -1127,7 +1131,7 @@ void SaturnV::SetThirdStageEngines (double offset)
 	th_ver[1] = CreateThruster (u_exhaust_pos7, _V( 0.4,0.0,1), 311 , ph_3rd, 45790.85);
 
 	for (int i = 0; i < 2; i++)
-		AddExhaust (th_ver[i], 5.0, 0.25);
+		AddExhaust (th_ver[i], 5.0, 0.25, exhaust_tex);
 
 	thg_ver = CreateThrusterGroup (th_ver, 2, THGROUP_USER);
 
@@ -1465,7 +1469,7 @@ void SaturnV::SeparateStage (int new_stage)
 		SeparationS.play(NOLOOP,255);
 
 		dockstate = 1;
-		SetCSMStage ();
+		SetCSMStage();
 
 		// See Saturn::SetCSMStage()
 		const double CGOffset = 12.25+21.5-1.8+0.35;
@@ -1537,7 +1541,10 @@ void SaturnV::SeparateStage (int new_stage)
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);
 
-		SetReentryStage ();
+		SetReentryStage();
+
+		// TODO 
+		// ShiftCentreOfMass(_V(0,0,0.5));
 	}
 
 	if (stage == CM_STAGE)
@@ -1864,3 +1871,20 @@ void SaturnV::DeactivateStagingVent()
 		}
 	}
 }
+
+void SaturnV::CreateStageOne() {
+
+	// Create hidden SIC vessel
+	char VName[256];
+	VESSELSTATUS vs;
+
+	GetStatus(vs);
+	GetApolloName(VName);
+	strcat (VName, "-STG1");
+	hstg1 = oapiCreateVessel(VName,"ProjectApollo/sat5stg1", vs);
+
+	// Load only the necessary meshes
+	S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
+	stage1->LoadMeshes(LowRes);
+}
+

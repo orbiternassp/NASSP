@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.90  2007/01/11 08:18:22  chode99
+  *	Added initialization for NextControlTime
+  *	
   *	Revision 1.89  2007/01/02 01:38:24  dseagrav
   *	Digital uplink and associated stuff.
   *	
@@ -300,7 +303,7 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #ifdef AGC_SOCKET_ENABLED
@@ -1523,9 +1526,15 @@ bool ApolloGuidance::SingleTimestepPrep(double simt, double simdt){
 	return TRUE;
 }
 
-bool ApolloGuidance::SingleTimestep(){
+bool ApolloGuidance::SingleTimestep() {
+
 	agc_engine(&vagc);
 	return TRUE;
+}
+
+void ApolloGuidance::VirtualAGCCoreDump(char *fileName) {
+
+	MakeCoreDump(&vagc, fileName); 
 }
 
 bool ApolloGuidance::GenericTimestep(double simt, double simdt)
@@ -2239,6 +2248,8 @@ void ApolloGuidance::Prog16(double simt)
 	if(ProgState == 0) {
 		ProgState++;
 		ProgFlag01=false;
+		DesiredDeltaVx = 0;
+		DesiredDeltaVy = 0;
 		BurnEndTime=simt;
 		NextEventTime=simt;
 //			char fname[8];
@@ -2260,7 +2271,7 @@ void ApolloGuidance::Prog16(double simt)
 	}
 	if(ProgState == 1) {
 		if(simt > NextEventTime) {
-			NextEventTime=simt+DELTAT;
+			NextEventTime=simt + 0.1; //+DELTAT;
 			blat=LandingLatitude*RAD;
 			blon=LandingLongitude*RAD;
 			OBJHANDLE hbody=OurVessel->GetGravityRef();
@@ -2289,12 +2300,13 @@ void ApolloGuidance::Prog16(double simt)
 				vt=sqrt(hvel.x*hvel.x+hvel.z*hvel.z);
 				vc=sqrt(mu/(Mag(pos)));
 				dv=vt-vc;
-				if(ttp > 800.0) {
-					if(per < 50000.0) {
-						dv=0.0;
-						dvn=0.0;
-					}
+				// Burn stop condition
+				if (apo < DesiredDeltaVy || per < 0.9 * DesiredDeltaVx) {
+					dv=0.0;
+					dvn=0.0;
 				}
+				//sprintf(oapiDebugString(), "apo %f per %f", apo, per);
+
 			}
 			dv=sqrt(dv*dv+dvn*dvn);
 
@@ -2336,12 +2348,21 @@ void ApolloGuidance::Prog16(double simt)
 			}
 
 			if(burn/2.0 > ttp) {
-				DesiredDeltaV=oapiGetTimeAcceleration();
+				DesiredDeltaV = oapiGetTimeAcceleration();
+				DesiredDeltaVx = per;
+				if(period <= 0.0) {
+					// hyperbolic
+					DesiredDeltaVy = per * 2.8;	// LOI1
+				} else {
+					// elliptic
+					DesiredDeltaVy = per * 1.1;	// LOI2
+				}
 				oapiSetTimeAcceleration(1.0);
 				BurnMainEngine(1.0);
-				BurnStartTime=simt+burn;
-				ProgFlag01=true;
+				BurnStartTime = simt + burn;
+				ProgFlag01 = true;
 			}
+			//sprintf(oapiDebugString(), "apo %f per %f ttp %f", apo, per, ttp);
 		}
 	}
 }
@@ -3449,7 +3470,7 @@ void ApolloGuidance::PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel
 	NewVel = (Pos * FDot) + (Vel * GDot);
 	NewVelMag = Mag(NewVel);
 }
-void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
+VECTOR3 ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
 {
 	//axis=0=x, 1=y, 2=z
 	//ref =0 body coordinates 1=local vertical
@@ -3499,9 +3520,8 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 		denom=10.0;
 	}
 	MaxThrust=OurVessel->GetMaxThrust(ENGINE_ATTITUDE);
-
-	factor=1.0;
-
+	factor = gainFactor;
+	
 	OurVessel->Local2Global(_V(0.0, 0.0, 0.0), zerogl);
 	OurVessel->Local2Global(_V(1.0, 0.0, 0.0), xgl);
 	OurVessel->Local2Global(_V(0.0, 1.0, 0.0), ygl);
@@ -3694,6 +3714,7 @@ void ApolloGuidance::OrientAxis(VECTOR3 &vec, int axis, int ref)
 		}
 	}
 	SetAttitudeRotLevel(Level);
+	return Level;
 }
 
 /*

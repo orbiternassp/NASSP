@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.52  2007/01/11 07:46:10  chode99
+  *	Added NextControlTime variable (for use by entry guidance)
+  *	
   *	Revision 1.51  2007/01/02 01:38:24  dseagrav
   *	Digital uplink and associated stuff.
   *	
@@ -410,7 +413,7 @@ public:
 	void SetDesiredLanding(double latitude, double longitude, double altitude);
 
 	void ComAttitude(VECTOR3 &actatt, VECTOR3 &tgtatt, bool fast);
-	void OrientAxis(VECTOR3 &vec, int axis, int ref);
+	VECTOR3 OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor = 1.0);
 	void OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, double &apo, double &tta, 
 				 double &per, double &ttp);
 	void EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos);
@@ -682,6 +685,11 @@ public:
 	/// \return True for Virtual AGC, false for C++ AGC.
 	///
 	bool IsVirtualAGC() { return Yaagc; };
+
+	///
+	/// \brief Triggers Virtual AGC core dump
+	///
+	void VirtualAGCCoreDump(char *fileName);
 
 	///
 	/// \brief Set the Virtual AGC state.

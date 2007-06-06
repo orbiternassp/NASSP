@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	
   **************************************************************************/
 
@@ -30,7 +33,7 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "nasspdefs.h"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.5  2006/12/19 15:55:55  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -46,7 +49,7 @@
 #include "orbitersdk.h"
 
 #include "nasspsound.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 #include "nasspdefs.h"
@@ -183,7 +186,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelNone[3] = {"TLI", "GNC", "ECS"};
 	static char *labelTliStop[4] = {"BCK", "RUN", "T", "V"};
 	static char *labelTliRun[4] = {"BCK", "STP", "T", "V"};
-	static char *labelGNC[1] = {"BCK"};
+	static char *labelGNC[2] = {"BCK", "DMP"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 
 	if (screen == PROG_TLI) {
@@ -193,7 +196,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 			return (bt < 4 ? labelTliRun[bt] : 0);
 	}
 	else if (screen == PROG_GNC) {
-		return (bt < 1 ? labelGNC[bt] : 0);
+		return (bt < 2 ? labelGNC[bt] : 0);
 	}
 	else if (screen == PROG_ECS) {
 		return (bt < 4 ? labelECS[bt] : 0);
@@ -222,8 +225,9 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Time to ejection", 0, 'T'},
 		{"Delta Velocity", 0, 'V'}
 	};
-	static const MFDBUTTONMENU mnuGNC[1] = {
-		{"Back", 0, 'B'}
+	static const MFDBUTTONMENU mnuGNC[2] = {
+		{"Back", 0, 'B'},
+		{"Virtual AGC core dump", 0, 'D'}
 	};
 	static const MFDBUTTONMENU mnuECS[4] = {
 		{"Back", 0, 'B'},
@@ -242,7 +246,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		}
 	} else if (screen == PROG_GNC) {
 		if (menu) *menu = mnuGNC;
-		return 1; 
+		return 2; 
 	} else if (screen == PROG_ECS) {
 		if (menu) *menu = mnuECS;
 		return 4; 
@@ -319,6 +323,10 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
+		} else if (key == OAPI_KEY_D) {
+			if (saturn)
+				saturn->VirtualAGCCoreDump();
+			return true;
 		}
 	} else if (screen == PROG_ECS) {
 		if (key == OAPI_KEY_B) {
@@ -353,7 +361,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyNone[3] = { OAPI_KEY_T, OAPI_KEY_G, OAPI_KEY_E };
 	static const DWORD btkeyTliStop[4] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_T, OAPI_KEY_V };
 	static const DWORD btkeyTliRun[4] = { OAPI_KEY_B, OAPI_KEY_S, OAPI_KEY_T, OAPI_KEY_V };
-	static const DWORD btkeyGNC[1] = { OAPI_KEY_B, };
+	static const DWORD btkeyGNC[2] = { OAPI_KEY_B, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 
 	if (screen == PROG_TLI) {
@@ -363,7 +371,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 			if (bt < 4) return ConsumeKeyBuffered (btkeyTliRun[bt]);
 		}
 	} else if (screen == PROG_GNC) {
-		if (bt < 1) return ConsumeKeyBuffered (btkeyGNC[bt]);
+		if (bt < 2) return ConsumeKeyBuffered (btkeyGNC[bt]);
 	} else if (screen == PROG_ECS) {
 		if (bt < 4) return ConsumeKeyBuffered (btkeyECS[bt]);
 	} else {		

@@ -23,12 +23,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:54:07  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #include <stdio.h>
 #include <math.h>
 #include "Orbitersdk.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "resource.h"

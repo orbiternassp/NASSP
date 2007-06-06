@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/03/01 18:24:32  tschachim
+  *	Fixed Saturn V assembly
+  *	
   *	Revision 1.5  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -46,7 +49,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 
@@ -574,13 +577,13 @@ void ML::SetTouchdownPointHeight(double height) {
 void ML::DefineAnimations() {
 
 	// Hammerhead crane
-	static UINT crane_groups[2] = {502, 503};
+	static UINT crane_groups[2] = {21, 22};
 	static MGROUP_ROTATE crane(meshindexML, crane_groups, 2, _V(0, 0, 13.7), _V( 0, 1, 0), (float)(0.5 * PI));
 	craneAnim = CreateAnimation(0.0);
 	AddAnimationComponent(craneAnim, 0, 1, &crane);
 
 	// CM access arm
-	static UINT cmarm_groups[2] = {484, 485};
+	static UINT cmarm_groups[2] = {11, 12};
 	static MGROUP_ROTATE cmarm1(meshindexML, cmarm_groups, 2, _V(8.6, 0, 8.6), _V( 0, 1, 0), (float)(3.0 / 180.0 * PI));
 	static MGROUP_ROTATE cmarm2(meshindexML, cmarm_groups, 2, _V(8.6, 0, 8.6), _V( 0, 1, 0), (float)(-1.0 * PI));
 	cmarmAnim = CreateAnimation(0.0);
@@ -588,26 +591,26 @@ void ML::DefineAnimations() {
 	AddAnimationComponent(cmarmAnim, 0.00001, 1,       &cmarm2);
 
 	// SIC intertank arm
-	static UINT s1cintertankarm_groups[1] = {487};
+	static UINT s1cintertankarm_groups[1] = {13};
 	static MGROUP_ROTATE s1cintertankarm(meshindexML, s1cintertankarm_groups, 1, _V(5.2, 0, 5.0), _V( 0, 1, 0), (float)(71.0 / 180.0 * PI));
 	s1cintertankarmAnim = CreateAnimation(0.0);
 	AddAnimationComponent(s1cintertankarmAnim, 0, 1, &s1cintertankarm);
 
 	// SIC forward arm
-	static UINT s1cforwardarm_groups[1] = {489};
+	static UINT s1cforwardarm_groups[1] = {14};
 	static MGROUP_ROTATE s1cforwardarm(meshindexML, s1cforwardarm_groups, 1, _V(5.3, 0, 6.5), _V( 0, 1, 0), (float)(71.0 / 180.0 * PI));
 	s1cforwardarmAnim = CreateAnimation(0.0);
 	AddAnimationComponent(s1cforwardarmAnim, 0, 1, &s1cforwardarm);
 
 	// Swingarms
-	static UINT swingarm_groups[6] = {500, 498, 496, 494, 492, 490};
+	static UINT swingarm_groups[6] = {15, 16, 17, 18, 19, 20};
 	static MGROUP_ROTATE swingarm(meshindexML, swingarm_groups, 6, _V(5.3, 0, 6.5), _V( 0, 1, 0), (float)(71.0 / 180.0 * PI));
 	swingarmAnim = CreateAnimation(0.0);
 	AddAnimationComponent(swingarmAnim, 0, 1, &swingarm);
 
 	// Masts
-	static UINT mast_groups1[1] = {13};
-	static UINT mast_groups2[2] = {15, 16};
+	static UINT mast_groups1[1] = {3};
+	static UINT mast_groups2[2] = {5, 6};
 	static MGROUP_ROTATE mast1(meshindexML, mast_groups1, 1, _V( 9.2, -53.1, 0), _V( 0, 0, 1), (float)(-42.0 / 180.0 * PI));
 	static MGROUP_ROTATE mast2(meshindexML, mast_groups2, 2, _V(-9.2, -53.1, 0), _V( 0, 0, 1), (float)(42.0 / 180.0 * PI));
 	mastAnim = CreateAnimation(0.0);

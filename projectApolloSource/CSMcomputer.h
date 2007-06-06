@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2007/01/11 07:48:57  chode99
+  *	Added constants, variables and functions needed for reentry guidance.
+  *	
   *	Revision 1.23  2006/12/10 00:47:26  dseagrav
   *	Optics code moved to class, now draws power, most switches work, manual-resolved mode not implemented
   *	
@@ -569,7 +572,6 @@ protected:
 	bool INRLSW;
 	bool GONEBY;
 	bool NOSWITCH;
-	bool FIVEGSW;
 	int ACALC;
 	int RollCode;
 	int K2ROLL;
@@ -598,23 +600,18 @@ protected:
 	double PREDGMAX;
 	double VPRED;
 	double GAMMAEI;
-	double VMAGI;
-	double THETAH;
 	double TIME5;
 	double RANGETOGO;
 	double RTOSPLASH;
 	double TIMETOGO;
 	double VIO;
-	double TTE;
 	double ROLLC;
 	double LATANG;
 	double XRNGERR;
 	double DNRNGERR;
 	double RDOT;
-	double DL;
 	double VL;
-	double LAT;
-	double LONG;
+
 	FILE *Dfile;
 	int count;
 

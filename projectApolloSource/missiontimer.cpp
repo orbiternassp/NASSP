@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/12/19 15:56:03  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.9  2006/05/30 23:15:14  movieman523
   *	Mission timer and DSKY now need power to operate.
   *	
@@ -55,7 +58,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/03/01 18:24:33  tschachim
+  *	Fixed Saturn V assembly
+  *	
   *	Revision 1.6  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -46,7 +49,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/04/23 10:44:35  tschachim
+  *	Bugfix descent engine arm.
+  *	
   *	Revision 1.3  2006/08/20 08:28:06  dseagrav
   *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
   *	
@@ -36,7 +39,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "nasspdefs.h"
@@ -243,15 +246,8 @@ void LEM::Init()
 	SwitchFocusToLeva = 0;
 
 	agc.ControlVessel(this);
-	imu.SetVessel(this,TRUE);
-
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
-	// Disabled for now because of the LEVA and the descent stage vessel
-	// TODO Enable before CSM docking
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-
+	imu.SetVessel(this, TRUE);
+	
 	ph_Dsc = 0;
 	ph_Asc = 0;
 	ph_RCSA = 0;
@@ -260,11 +256,6 @@ void LEM::Init()
 	Realism = REALISM_DEFAULT;
 	ApolloNo = 0;
 	Landed = false;
-
-	strncpy(AudioLanguage, "English", 64);
-	soundlib.SetLanguage(AudioLanguage);
-
-	SoundsLoaded = false;
 
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
@@ -300,11 +291,29 @@ void LEM::Init()
 
 	EventTimerDisplay.SetRunning(true);
 	EventTimerDisplay.SetEnabled(true);
+
+	//
+	// Initial sound setup
+	//
+
+	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
+	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
+	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
+	// Disabled for now because of the LEVA and the descent stage vessel
+	// TODO Enable before CSM docking
+	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
+
+	strncpy(AudioLanguage, "English", 64);
+	soundlib.SetLanguage(AudioLanguage);
+	SoundsLoaded = false;
+
+	exhaustTex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust_atrcs");
 }
 
 void LEM::DoFirstTimestep()
 
 {
+	// Load sounds in case of dynamic creation, otherwise during clbkLoadStageEx
 	if (!SoundsLoaded) {
 		LoadDefaultSounds();
 	}
@@ -328,6 +337,7 @@ void LEM::LoadDefaultSounds()
 {
     char buffers[80];
 
+	soundlib.SetLanguage(AudioLanguage);
 	sprintf(buffers, "Apollo%d", agc.GetApolloNo());
     soundlib.SetSoundLibMissionPath(buffers);
 
@@ -339,6 +349,7 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(StageS, "Stagesep.wav");
 	soundlib.LoadMissionSound(Scontact, LUNARCONTACT_SOUND, LUNARCONTACT_SOUND);
 	soundlib.LoadSound(Sclick, CLICK_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(Rclick, ROTARY_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(Bclick, "button.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(Gclick, "guard.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(CabinFans, "cabin.wav", INTERNAL_ONLY);
@@ -1058,11 +1069,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 	agc.SetMissionInfo(ApolloNo, Realism);
 
 	//
-	// This may not be the best place for loading sounds, but it's the best place available
-	// for now!
+	// Load sounds, this is mandatory if loading in cockpit view, 
+	// because OrbiterSound crashes when loading sounds during clbkLoadPanel
 	//
-
-	soundlib.SetLanguage(AudioLanguage);
 	LoadDefaultSounds();
 
 	// Also cause the AC busses to wire up
@@ -1089,13 +1098,6 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
 	VSRegVessel(GetHandle());
 	SetLmVesselDockStage();
-}
-
-void LEM::PostCreation ()
-
-{
-	soundlib.SetLanguage(AudioLanguage);
-	LoadDefaultSounds();
 }
 
 void LEM::SetStateEx(const void *status)
@@ -1202,7 +1204,6 @@ Connector *LEM::GetDockingConnector()
 void LEM::SetLanderData(LemSettings &ls)
 
 {
-    char buffers[80];
 	char CSMName[64];
 
 	MissionTime = ls.MissionTime;
@@ -1220,9 +1221,7 @@ void LEM::SetLanderData(LemSettings &ls)
 	agc.SetMissionInfo(ApolloNo, Realism, CSMName);
 	agc.SetVirtualAGC(ls.Yaagc);
 
-	soundlib.SetLanguage(AudioLanguage);
-	sprintf(buffers, "Apollo%d", ApolloNo);
-    soundlib.SetSoundLibMissionPath(buffers);
+	// Sounds are initialized during the first timestep
 }
 
 void LEM::PadLoad(unsigned int address, unsigned int value)

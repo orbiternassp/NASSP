@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/08/11 19:34:47  movieman523
+  *	Added code to take the docking probe with the LES on a post-abort jettison.
+  *	
   *	Revision 1.2  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -93,13 +96,11 @@ void LESLoadMeshes()
 	// Saturn V
 	//
 
-	hLES = oapiLoadMeshGlobal ("ProjectApollo/BoostCover");
-	hPROBE = oapiLoadMeshGlobal ("ProjectApollo/CM-Probe");
+	hLES = oapiLoadMeshGlobal("ProjectApollo/BoostCover");
+	hPROBE = oapiLoadMeshGlobal("ProjectApollo/CM-Probe");
 
-	exhaust_tex = oapiRegisterExhaustTexture ("Exhaust2");
-
-	SURFHANDLE contrail_tex = oapiRegisterParticleTexture ("Contrail2");
-
+	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
+	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	solid_exhaust.tex = contrail_tex;
 	srb_exhaust.tex = contrail_tex;
 }
@@ -317,13 +318,13 @@ void LES::AddEngines()
 	}
 
 	//
-	// Add exhausts. I don't understand why this doesn't work fully.
+	// Add exhausts.
 	//
 
 	int i;
 	for (i = 0; i < 2; i++)
 	{
-		AddExhaust (th_jettison[i], 5.0, 0.5);
+		AddExhaust (th_jettison[i], 5.0, 0.5, exhaust_tex);
 		AddExhaustStream (th_jettison[i], &solid_exhaust);
 		AddExhaustStream (th_jettison[i], &srb_exhaust);
 	}
@@ -349,8 +350,8 @@ void LES::AddEngines()
 
 	for (i = 0; i < 4; i++)
 	{
-		AddExhaust (th_main[i], 8.0, 0.5);
-		AddExhaustStream (th_main[i], &solid_exhaust);
+		AddExhaust(th_main[i], 8.0, 0.5);
+		AddExhaustStream(th_main[i], &solid_exhaust);
 	}
 }
 

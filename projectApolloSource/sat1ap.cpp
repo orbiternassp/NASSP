@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.8  2006/08/01 18:21:51  tschachim
   *	Some code cleanup.
   *	
@@ -52,7 +55,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "nasspdefs.h"
@@ -298,7 +301,7 @@ void Saturn1b::AutoPilot(double autoT)
 		//sprintf(oapiDebugString(), "Autopilot initial Pitch DEG %d", (int)fabs(pitch));
 		if (pitch >86) {
 			AtempP = 0.4;
-			if (rhoriz.z>0)AtempP = -0.4;
+			if (rhoriz.z>0) AtempP = -0.4;
 			AtempR = 0.0;
 			AtempY = 0.0;
 		}
@@ -310,18 +313,18 @@ void Saturn1b::AutoPilot(double autoT)
 	}
 	else if (altitude < 1200  && altitude > 250)	{
 		bank = GetBank();
-		bank = bank*180./PI;
-		if(bank > 90) bank = bank - 180;
-		else if(bank < -90) bank = bank + 180;
+		bank = bank*180. / PI;
+		if(bank > 90) bank = bank - 180.;
+		else if(bank < -90) bank = bank + 180.;
 
 //		sprintf(oapiDebugString(), "bank =  %d", (int)bank);
 
-		if (fabs(bank+(90-TO_HDG)) <15  && StopRot){
+		if (fabs(bank + (90. - TO_HDG)) < 15  && StopRot){
 				AtempP = 0.0;
 				AtempR = 0.0;
 				AtempY = 0.0;
 		}
-		if (fabs(bank+(90-TO_HDG))<0.5){
+		if (fabs(bank + (90. - TO_HDG)) < 0.5){
 			AtempP = 0.0;
 			AtempR = 0.0;
 			AtempY = 0.0;
@@ -329,17 +332,17 @@ void Saturn1b::AutoPilot(double autoT)
 
 		//sprintf(oapiDebugString(), "Autopilot Bank Mode TotalROT %f", totalRot);
 
-		if (bank > -(90-TO_HDG)+0.5){
-			AtempR = -fabs((90-TO_HDG)-bank);
-			if (AtempR < -1)AtempR = -1;
-//			if(rhoriz.z>0) AtempR = -AtempR;
+		if (bank > -(90. - TO_HDG) + 0.5){
+			AtempR = -fabs((90. - TO_HDG) - bank);
+			//if (AtempR < -1) AtempR = -1;
+			if (AtempR < -0.5) AtempR = -0.5;
 			AtempP = 0.0;
 			AtempY = 0.0;
 		}
-		else if (bank < -(90-TO_HDG)-0.5){
-			AtempR = fabs((90-TO_HDG)-bank);
-			if (AtempR > 1)AtempR = 1;
-//			if(rhoriz.z>0) AtempR = -AtempR;
+		else if (bank < -(90. - TO_HDG) - 0.5){
+			AtempR = fabs((90. - TO_HDG) - bank);
+			//if (AtempR > 1) AtempR = 1;
+			if (AtempR > 0.5) AtempR = 0.5;
 			AtempP = 0.0;
 			AtempY = 0.0;
 		}
@@ -354,25 +357,25 @@ void Saturn1b::AutoPilot(double autoT)
 		//sprintf(oapiDebugString(), "Autopilot Heading Mode DEG %f", heading);
 		bank = GetBank();
 		bank = bank*180./PI;
-		if(bank > 90) bank = bank - 180;
-		else if(bank < -90) bank = bank + 180;
+		if(bank > 90) bank = bank - 180.;
+		else if(bank < -90) bank = bank + 180.;
 
-		if (fabs(heading-TO_HDG) <10 && StopRot) {
+		if (fabs(heading - TO_HDG) < 10 && StopRot) {
 			AtempP = 0.0;
 			AtempR = 0.0;
 			AtempY = 0.0;
 		}
-		if (fabs(heading-TO_HDG) <0.5) {
+		if (fabs(heading-TO_HDG) < 0.5) {
 			AtempP = 0.0;
 			AtempR = 0.0;
 			AtempY = 0.0;
 		}
-		else if (heading > (TO_HDG +0.5) && TO_HDG <90) {
+		else if (heading > (TO_HDG + 0.5) && TO_HDG < 90) {
 			AtempP = heading - TO_HDG ;
 //			if (AtempP > 1.0) AtempP = 1.0;
 			if (AtempP > 0.15) AtempP = 0.15;
 			AtempR = -0.2;
-			if(rhoriz.z>0) 
+			if(rhoriz.z > 0) 
 			{
 //				AtempR = -AtempR;
 				AtempP = -AtempP;
@@ -380,12 +383,12 @@ void Saturn1b::AutoPilot(double autoT)
 			AtempY = 0.0;
 			//vessel->SetAttitudeRotLevel(0, -1);
 		}
-		else if (heading < (TO_HDG -0.5) && TO_HDG <90) {
+		else if (heading < (TO_HDG - 0.5) && TO_HDG < 90) {
 			AtempP = heading  - TO_HDG;
 //			if (AtempP < -1.0) AtempP = -1.0;
 			if (AtempP < -0.15) AtempP = -0.15;
 			AtempR = 0.2;
-			if(rhoriz.z>0) 
+			if(rhoriz.z > 0) 
 			{
 //				AtempR = -AtempR;
 				AtempP = -AtempP;
@@ -393,12 +396,12 @@ void Saturn1b::AutoPilot(double autoT)
 			AtempY = 0.0;
 			//vessel->SetAttitudeRotLevel(0, 1);
 		}
-		else if (heading > (TO_HDG +0.5) && TO_HDG >90) {
+		else if (heading > (TO_HDG + 0.5) && TO_HDG > 90) {
 			AtempP = -(heading - TO_HDG) ;
 //			if (AtempP < -1.0) AtempP = -1.0;
 			if (AtempP < -0.15) AtempP = -0.15;
 			AtempR = -0.2;
-			if(rhoriz.z>0) 
+			if(rhoriz.z > 0) 
 			{
 //				AtempR = -AtempR;
 				AtempP = -AtempP;
@@ -406,12 +409,12 @@ void Saturn1b::AutoPilot(double autoT)
 			AtempY = 0.0;
 			//vessel->SetAttitudeRotLevel(0, -1);
 		}
-		else if (heading < (TO_HDG -0.5) && TO_HDG >90) {
+		else if (heading < (TO_HDG - 0.5) && TO_HDG > 90) {
 			AtempP = -(heading  - TO_HDG);
 //			if (AtempP > 1.0) AtempP = 1.0;
 			if (AtempP > 0.15) AtempP = 0.15;
 			AtempR = 0.2;
-			if(rhoriz.z>0) 
+			if(rhoriz.z > 0) 
 			{
 //				AtempR = -AtempR;
 				AtempP = -AtempP;
@@ -427,11 +430,11 @@ void Saturn1b::AutoPilot(double autoT)
 	}
 	else if (altitude < 4500  && altitude > 2800) {
 		bank = GetBank();
-		bank = bank*180./PI;
+		bank = bank * 180. / PI;
 		if(bank > 90) 
-			bank = bank - 180;
+			bank = bank - 180.;
 		else if(bank < -90) 
-			bank = bank + 180;
+			bank = bank + 180.;
 		oapiGetHeading(GetHandle(),&heading);
 		heading = heading*180./PI;
 
@@ -442,13 +445,10 @@ void Saturn1b::AutoPilot(double autoT)
 
 		}
 		else if (bank < 0 && fabs(vsp.vrot.z) < 0.11) {
-			AtempR = 1.0;
-			//vessel->SetAttitudeRotLevel(2,-1 );//bank/30
+			AtempR = 0.2; // 1.0;
 		}
 		else if (bank > 0 && fabs(vsp.vrot.z) < 0.11) {
-			AtempR = -1.0;
-//			if(rhoriz.z>0)AtempR = -AtempR;
-			//vessel->SetAttitudeRotLevel(2, 1);
+			AtempR = -0.2; // -1.0;
 		}
 		else {
 			AtempP = 0.0;
@@ -460,6 +460,26 @@ void Saturn1b::AutoPilot(double autoT)
 			AtempR = 0.0;
 			AtempY = 0.0;
 			StopRot=false;
+		}
+		// zero angle-of-attack...
+		// AtempP = (GetAOA() * DEG - 0.3) / 5.0;
+		// if(AtempP < -0.2) AtempP = -0.2;
+		// if(AtempP >  0.2) AtempP = 0.2;
+
+		pitch_c = GetCPitch(autoT);
+		level = pitch_c - GetPitch() * DEG;
+		if (level > 0 && fabs(vsp.vrot.z) < 0.09){
+			AtempP = -(fabs(level) / 10.);
+			if (AtempP < -0.1) AtempP = -0.1;
+			if (rhoriz.z>0) AtempP = -AtempP;
+		}
+		else if (level < 0 && fabs(vsp.vrot.z) < 0.09) {
+			AtempP = (fabs(level) / 10.);
+			if (AtempP > 0.1) AtempP = 0.1;
+			if (rhoriz.z > 0) AtempP = -AtempP;
+		}
+		else {
+			AtempP = 0.0;						
 		}
 	}
 	else if (altitude > 4500) {
@@ -519,14 +539,14 @@ void Saturn1b::AutoPilot(double autoT)
 				AtempY = 0.0;
 			}
 			else if (level>0 && fabs(vsp.vrot.z) < 0.09){
-				AtempP = -(fabs(level)/10);
+				AtempP = -(fabs(level) / 10.);
 				if (AtempP < -1.0)AtempP = -1.0;
-				if(rhoriz.z>0)AtempP = -AtempP;
+				if (rhoriz.z>0) AtempP = -AtempP;
 			}
 			else if (level<0 && fabs(vsp.vrot.z) < 0.09) {
-				AtempP = (fabs(level)/10);
+				AtempP = (fabs(level) / 10.);
 				if (AtempP > 1.0) AtempP = 1.0;
-				if(rhoriz.z>0)AtempP = -AtempP;
+				if (rhoriz.z>0) AtempP = -AtempP;
 			}
 			else {
 				AtempP = 0.0;
@@ -535,6 +555,7 @@ void Saturn1b::AutoPilot(double autoT)
 			}
 		}
 	}
+	// sprintf(oapiDebugString(), "Alt %f Pitch %f Roll %f Yaw %f autoT %f", altitude, AtempP, AtempR, AtempY, autoT);
 
 	if (CMCswitch){
 		switch (stage){

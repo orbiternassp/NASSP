@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.206  2007/04/29 12:36:43  tschachim
+  *	Panel bugfixes.
+  *	
   *	Revision 1.205  2007/04/25 18:48:11  tschachim
   *	EMS dV functions.
   *	
@@ -345,318 +348,12 @@
   *	Revision 1.100  2005/11/17 23:32:46  movieman523
   *	Added support for specifying the maximum current for a circuit breaker. Exceed that current and the breaker pops.
   *
-  *	Revision 1.99  2005/11/17 22:06:47  movieman523
-  *	Added other electrical buses and revised cabin fan code.
-  *
-  *	Revision 1.98  2005/11/17 21:04:52  movieman523
-  *	IMU and AGC now start powered-down. Revised battery code, and wired up all batteries in CSM.
-  *
-  *	Revision 1.97  2005/11/17 19:19:12  movieman523
-  *	Added three-phase AC bus and battery buses.
-  *
-  *	Revision 1.96  2005/11/17 07:06:38  flydba
-  *	Thumbwheels on panel 6 now work, other switches on the right panel  added etc.
-  *
-  *	Revision 1.95  2005/11/17 03:43:35  flydba
-  *	COAS switch renamed...
-  *
-  *	Revision 1.94  2005/11/17 03:32:15  flydba
-  *	Changed panel number from 14 to 16, some changes...
-  *
-  *	Revision 1.93  2005/11/17 01:52:29  movieman523
-  *	Simplified setup for circuit breakers, and added battery buses.
-  *
-  *	Revision 1.92  2005/11/17 01:23:11  movieman523
-  *	Revised circuit breaker code. Now all switchers are PowerSources, so no need for the seperate PowerBreaker class.
-  *
-  *	Revision 1.91  2005/11/17 00:28:36  movieman523
-  *	Wired in AGC circuit breakers.
-  *
-  *	Revision 1.90  2005/11/16 23:14:02  movieman523
-  *	Initial support for wiring in the circuit breakers.
-  *
-  *	Revision 1.89  2005/11/16 20:43:55  flydba
-  *	New switch added on panel 14.
-  *
-  *	Revision 1.88  2005/11/16 18:43:14  flydba
-  *	All circuit breakers now set on panel 5.
-  *
-  *	Revision 1.87  2005/11/16 00:18:49  movieman523
-  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
-  *
-  *	Revision 1.86  2005/11/15 17:19:05  flydba
-  *	*** empty log message ***
-  *
-  *	Revision 1.85  2005/11/15 05:44:21  flydba
-  *	*** empty log message ***
-  *
-  *	Revision 1.84  2005/11/14 23:53:56  flydba
-  *	*** empty log message ***
-  *
-  *	Revision 1.83  2005/10/31 10:28:22  tschachim
-  *	altimeter, gmeter, cabin temp thumbwheel etc.
-  *
-  *	Revision 1.82  2005/10/19 11:43:01  tschachim
-  *	FDAIs optionally disabled.
-  *	Improved logging.
-  *
-  *	Revision 1.81  2005/10/13 15:54:03  tschachim
-  *	Fixed the panel change bug.
-  *
-  *	Revision 1.80  2005/10/12 17:55:46  tschachim
-  *	Added 2 MFDs to the main panel.
-  *
-  *	Revision 1.79  2005/10/12 11:24:17  tschachim
-  *	Added fourth MFD on G&N panel.
-  *
-  *	Revision 1.78  2005/10/11 16:45:44  tschachim
-  *	Added switches, COAS and MFDs, bugfixes.
-  *
-  *	Revision 1.77  2005/10/08 18:02:00  flydba
-  *	Left FDAI added.
-  *
-  *	Revision 1.76  2005/09/30 11:25:48  tschachim
-  *	Added ECS meters and switches.
-  *
-  *	Revision 1.75  2005/08/29 19:23:26  tschachim
-  *	Rendering of the DSKY keys. Bugfixes
-  *
-  *	Revision 1.74  2005/08/24 00:30:00  movieman523
-  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
-  *
-  *	Revision 1.73  2005/08/23 22:18:47  movieman523
-  *	SPS switch now works.
-  *
-  *	Revision 1.72  2005/08/23 20:13:12  movieman523
-  *	Added RCS talkbacks and changed AGC to use octal addresses for EMEM.
-  *
-  *	Revision 1.71  2005/08/23 03:20:00  flydba
-  *	modified master alarm bitmap and correction of some switch positions
-  *
-  *	Revision 1.70  2005/08/23 00:03:16  movieman523
-  *	Removed agc_utilities.c, as we're not actually using any functions and it has socket code that has to be commented out with every update.
-  *
-  *	Revision 1.69  2005/08/21 22:21:00  movieman523
-  *	Fixed SM RCS and activated SIVB RCS at all times for now.
-  *
-  *	Revision 1.68  2005/08/21 17:21:10  movieman523
-  *	Added event timer display.
-  *
-  *	Revision 1.67  2005/08/21 16:23:32  movieman523
-  *	Added more alarms.
-  *
-  *	Revision 1.66  2005/08/21 13:13:43  movieman523
-  *	Wired in a few caution and warning lights.
-  *
-  *	Revision 1.65  2005/08/21 11:51:59  movieman523
-  *	Initial version of CSM caution and warning lights: light test switch now works.
-  *
-  *	Revision 1.64  2005/08/20 17:21:25  movieman523
-  *	Added dv Thrust switches.
-  *
-  *	Revision 1.63  2005/08/20 11:14:52  movieman523
-  *	Added Rot Contr Pwr switches and removed a number of old switches which aren't used anymore.
-  *
-  *	Revision 1.62  2005/08/19 21:33:20  movieman523
-  *	Added initial random failure support.
-  *
-  *	Revision 1.61  2005/08/19 20:05:45  movieman523
-  *	Added abort switches. Wired in Tower Jett switches and SIVB Sep switch.
-  *
-  *	Revision 1.60  2005/08/19 18:38:13  movieman523
-  *	Wired up parachute switches properly, and added 'Comp Acty' to CSM AGC.
-  *
-  *	Revision 1.59  2005/08/19 14:04:34  tschachim
-  *	Added missing DSKY display elements and a FDAI.
-  *
-  *	Revision 1.58  2005/08/18 22:15:22  movieman523
-  *	Wired up second DSKY, to accurately match the real hardware.
-  *
-  *	Revision 1.57  2005/08/18 20:54:16  movieman523
-  *	Added Main Release switch and wired it up to the parachutes.
-  *
-  *	Revision 1.56  2005/08/18 19:12:21  movieman523
-  *	Added Event Timer switches and null Event Timer class.
-  *
-  *	Revision 1.55  2005/08/18 00:22:53  movieman523
-  *	Wired in CM Uplink switch, removed some old code, added initial support for second DSKY.
-  *
-  *	Revision 1.54  2005/08/17 22:54:26  movieman523
-  *	Added ELS and CM RCS switches.
-  *
-  *	Revision 1.53  2005/08/17 00:01:59  movieman523
-  *	Added ECS indicator switch, revised state saving, revised Timestep code to pass in the delta-time so we don't need to keep calculating it.
-  *
-  *	Revision 1.52  2005/08/16 20:55:23  movieman523
-  *	Added first saturn-specific switch for Xlunar Inject.
-  *
-  *	Revision 1.51  2005/08/16 18:54:30  movieman523
-  *	Added Altimeter and launch vehicle switches.
-  *
-  *	Revision 1.50  2005/08/16 01:37:23  movieman523
-  *	Wired in RCS Indicators rotary switch, but the switch code seems to be broken at certain angles.
-  *
-  *	Revision 1.49  2005/08/15 21:37:02  movieman523
-  *	Added FDAI switches.
-  *
-  *	Revision 1.48  2005/08/15 20:18:16  movieman523
-  *	Made thrust meter work. Unfortunately on a real CSM it's not a thrust meter :).
-  *
-  *	Revision 1.47  2005/08/15 19:47:08  movieman523
-  *	Added BMAG switches.
-  *
-  *	Revision 1.46  2005/08/15 19:25:03  movieman523
-  *	Added CSM attitude control switches and removed old ones.
-  *
-  *	Revision 1.45  2005/08/15 02:37:57  movieman523
-  *	SM RCS is now wired up.
-  *
-  *	Revision 1.44  2005/08/14 00:45:55  movieman523
-  *	Added second master alarm light.
-  *
-  *	Revision 1.43  2005/08/13 22:24:20  movieman523
-  *	Added the master alarm rendeing to CSM.
-  *
-  *	Revision 1.42  2005/08/13 20:20:17  movieman523
-  *	Created MissionTimer class and wired it into the LEM and CSM.
-  *
-  *	Revision 1.41  2005/08/13 16:41:15  movieman523
-  *	Fully wired up the CSM caution and warning switches.
-  *
-  *	Revision 1.40  2005/08/13 14:59:24  movieman523
-  *	Added initial null implementation of CSM caution and warning system, and removed 'master alarm' flag from Saturn class.
-  *
-  *	Revision 1.39  2005/08/13 14:21:36  movieman523
-  *	Added beginnings of caution and warning system.
-  *
-  *	Revision 1.38  2005/08/13 11:48:26  movieman523
-  *	Added remaining caution and warning switches to CSM (currently not wired up to anything).
-  *
-  *	Revision 1.37  2005/08/13 00:43:50  movieman523
-  *	Added more caution and warning switches.
-  *
-  *	Revision 1.36  2005/08/13 00:09:43  movieman523
-  *	Added IMU Cage switch
-  *
-  *	Revision 1.35  2005/08/12 23:15:49  movieman523
-  *	Added switches to update mission time display.
-  *
-  *	Revision 1.34  2005/08/11 01:27:26  movieman523
-  *	Added initial Virtual AGC support.
-  *
-  *	Revision 1.33  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *
-  *	Revision 1.32  2005/08/08 20:33:00  movieman523
-  *	Added initial support for offsetting the mission timer and event timer from MissionTime: the real timers could be adjusted using the switches on the control panel (which aren't wired up yet), and the event timer would reset to zero on an abort.
-  *
-  *	Revision 1.31  2005/08/05 13:14:25  tschachim
-  *	Minor fixes
-  *
-  *	Revision 1.30  2005/08/04 01:06:04  flydba
-  *	*** empty log message ***
-  *
-  *	Revision 1.29  2005/07/30 16:12:13  tschachim
-  *	Bugfix O2 FLOW meter
-  *
-  *	Revision 1.28  2005/07/19 16:25:43  tschachim
-  *	New switches
-  *
-  *	Revision 1.27  2005/07/06 22:11:31  tschachim
-  *	Finished SequencerSwitchesRow, no functionality yet
-  *
-  *	Revision 1.26  2005/07/05 17:56:59  tschachim
-  *	Fixed some switches because of spring-load
-  *
-  *	Revision 1.25  2005/06/06 12:31:29  tschachim
-  *	New switches, PanelSwitchScenarioHandler
-  *
-  *	Revision 1.24  2005/05/26 15:58:40  tschachim
-  *	New fuel cell displays and controls
-  *	Some code moved for better readability
-  *
-  *	Revision 1.23  2005/05/12 00:26:58  movieman523
-  *	Added O2 tank quantity failure on Apollo 13.
-  *
-  *	Revision 1.22  2005/05/05 21:40:56  tschachim
-  *	Introduced cryo fans, fuel cell indicators and cabin indicators
-  *
-  *	Revision 1.21  2005/04/22 16:01:54  tschachim
-  *	Removed fuel cell test-code
-  *
-  *	Revision 1.20  2005/04/22 14:10:03  tschachim
-  *	PanelSDK introduced
-  *	Panel id defines
-  *	New switches and indicators
-  *	ToggleSwitch.Init changed
-  *	SwitchListener introduced
-  *
-  *	Revision 1.19  2005/04/16 00:14:10  tschachim
-  *	fixed dsky keyboard and g&n panel lights
-  *
-  *	Revision 1.18  2005/04/10 19:27:04  flydba
-  *	*** empty log message ***
-  *
-  *	Revision 1.17  2005/04/10 16:01:40  flydba
-  *	*** empty log message ***
-  *
-  *	Revision 1.16  2005/04/10 14:29:41  flydba
-  *	*** empty log message ***
-  *
-  *	Revision 1.15  2005/04/10 03:00:47  flydba
-  *	*** empty log message ***
-  *
-  *	Revision 1.14  2005/04/10 01:52:04  flydba
-  *	*** empty log message ***
-  *
-  *	Revision 1.13  2005/04/01 15:32:51  tschachim
-  *	Added RCSIndicatorsSwitch
-  *
-  *	Revision 1.12  2005/03/16 19:40:42  tschachim
-  *	Rechanged MFDSPEC lines as in revision 1.2
-  *
-  *	Revision 1.11  2005/03/16 16:04:58  yogenfrutz
-  *	changed for splitted csm panel (resolves ATI bug)
-  *
-  *	Revision 1.10  2005/03/16 13:39:06  yogenfrutz
-  *	changed position of docking panel MFD by 1pixel lower and 1 pixel right for better look
-  *
-  *	Revision 1.9  2005/03/14 17:46:27  yogenfrutz
-  *	Added changes for "light off" docking panel MFD,yogenfrutz
-  *
-  *	Revision 1.8  2005/03/13 21:23:02  chode99
-  *	G-gauge displays the new calculation of g (aZAcc).
-  *
-  *	Revision 1.7  2005/03/11 17:54:00  tschachim
-  *	Introduced GuardedToggleSwitch and GuardedThreePosSwitch
-  *
-  *	Revision 1.6  2005/03/10 19:06:24  tschachim
-  *	fixed "one pixel" bug
-  *
-  *	Revision 1.5  2005/03/09 22:09:02  tschachim
-  *	Docking panel camera without changing direction from Yogenfrutz
-  *	Switchable docking panel MFD
-  *
-  *	Revision 1.4  2005/03/05 02:03:40  tschachim
-  *	Docking MFD is now the right MFD,
-  *	button click sound added
-  *
-  *	Revision 1.3  2005/03/03 18:00:18  tschachim
-  *	docking panel and MFD
-  *
-  *	Revision 1.2  2005/03/02 01:19:03  chode99
-  *	Changed MFDSPEC lines to be same size as LM, and added button definitions, like the LM.
-  *	For some unknown reason, this seems to prevent the CTDs that were occuring when issuing certain MFD commands.
-  *
-  *	Revision 1.1  2005/02/11 12:54:07  tschachim
-  *	Initial version
-  *
   **************************************************************************/
 
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "resource.h"
@@ -1077,12 +774,12 @@ bool Saturn::clbkLoadPanel (int id) {
 	// Load panel background image
 	//
 	HBITMAP hBmp;
-
 	MFDSPEC mfds_dock		=     {{ 893,  627, 1112,  842}, 6, 6, 31, 31};
-	MFDSPEC mfds_gnlefttop  =     {{ 812,  124, 1071,  379}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnleftmiddle   = {{ 812,  427, 1071,  682}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnleftbottom   = {{ 812,  731, 1071,  986}, 6, 6, 37, 37};
-	MFDSPEC mfds_gnrightbottom  = {{1500,  685, 1759,  940}, 6, 6, 37, 37};
+
+	MFDSPEC mfds_gnleft  =     {{ 1140 + 49,  1780 + 15, 1140 + 308, 1780 + 270}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnuser1 =     {{ 1510 + 49,  1780 + 15, 1510 + 308, 1780 + 270}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnuser2 =     {{ 1880 + 49,  1780 + 15, 1880 + 308, 1780 + 270}, 6, 6, 37, 37};
+	MFDSPEC mfds_gnright =     {{ 2250 + 49,  1780 + 15, 2250 + 308, 1780 + 270}, 6, 6, 37, 37};
 
 	if (id == SATPANEL_LOWER) { // guidance & navigation lower equipment bay
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL));
@@ -1102,15 +799,14 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea (AID_MASTER_ALARM3,								_R(2104, 1036, 2149, 1072), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
-        //oapiRegisterMFD(MFD_USER1, mfds_gnlefttop);
-        //oapiRegisterMFD(MFD_USER2, mfds_gnleftmiddle);
-        //oapiRegisterMFD(MFD_LEFT , mfds_gnleftbottom);
-        //oapiRegisterMFD(MFD_RIGHT, mfds_gnrightbottom);
-
-		//oapiRegisterPanelArea (AID_MFDGNLEFTTOP,								_R( 763,  109, 1122,  409), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_MFDGNLEFTMIDDLE,								_R( 763,  412, 1122,  712), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_MFDGNLEFTBOTTOM,								_R( 763,  716, 1122, 1016), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-		//oapiRegisterPanelArea (AID_MFDGNRIGHTBOTTOM,							_R(1451,  670, 1810,  970), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+        oapiRegisterMFD(MFD_LEFT, mfds_gnleft);
+        oapiRegisterMFD(MFD_USER1, mfds_gnuser1);
+        oapiRegisterMFD(MFD_USER2, mfds_gnuser2);
+        oapiRegisterMFD(MFD_RIGHT, mfds_gnright);		
+		oapiRegisterPanelArea (AID_MFDGNLEFT,									_R(1140, 1780, 1140 + 359, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDGNUSER1,									_R(1510, 1780, 1510 + 359, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDGNUSER2,									_R(1880, 1780, 1880 + 359, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDGNRIGHT,									_R(2250, 1780, 2250 + 359, 1780 + 300), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_GNMODESWITCH,								_R(1365,  951, 1399,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,						_R(1496,  951, 1530,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
@@ -2997,19 +2693,19 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		MousePanel_MFDButton(MFD_RIGHT, event, mx, my);
 		return true;
 
-	case AID_MFDGNLEFTTOP:
-		MousePanel_MFDButton(MFD_USER1, event, mx, my);
-		return true;
-
-	case AID_MFDGNLEFTMIDDLE:
-		MousePanel_MFDButton(MFD_USER2, event, mx, my);
-		return true;
-
-	case AID_MFDGNLEFTBOTTOM:
+	case AID_MFDGNLEFT:
 		MousePanel_MFDButton(MFD_LEFT, event, mx, my);
 		return true;
 
-	case AID_MFDGNRIGHTBOTTOM:
+	case AID_MFDGNUSER1:
+		MousePanel_MFDButton(MFD_USER1, event, mx, my);
+		return true;
+
+	case AID_MFDGNUSER2:
+		MousePanel_MFDButton(MFD_USER2, event, mx, my);
+		return true;
+
+	case AID_MFDGNRIGHT:
 		MousePanel_MFDButton(MFD_RIGHT, event, mx, my);
 		return true;
 
@@ -4105,25 +3801,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_MFDGNLEFTTOP:
-		if (oapiGetMFDMode(MFD_USER1) != MFD_NONE) {
-			oapiBlt(surf, srf[SRF_CMMFDFRAME], 0, 0, 0, 0, 358, 299);
-
-			RedrawPanel_MFDButton(surf, MFD_USER1, 0, 10, 47, 37);
-			RedrawPanel_MFDButton(surf, MFD_USER1, 1, 328, 47, 37);
-		}
-		return true;
-
-	case AID_MFDGNLEFTMIDDLE:
-		if (oapiGetMFDMode(MFD_USER2) != MFD_NONE) {
-			oapiBlt(surf, srf[SRF_CMMFDFRAME], 0, 0, 0, 0, 358, 299);
-
-			RedrawPanel_MFDButton(surf, MFD_USER2, 0, 10, 47, 37);
-			RedrawPanel_MFDButton(surf, MFD_USER2, 1, 328, 47, 37);
-		}
-		return true;
-
-	case AID_MFDGNLEFTBOTTOM:
+	case AID_MFDGNLEFT:
 		if (oapiGetMFDMode(MFD_LEFT) != MFD_NONE) {
 			oapiBlt(surf, srf[SRF_CMMFDFRAME], 0, 0, 0, 0, 358, 299);
 
@@ -4132,7 +3810,25 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_MFDGNRIGHTBOTTOM:
+	case AID_MFDGNUSER1:
+		if (oapiGetMFDMode(MFD_USER1) != MFD_NONE) {
+			oapiBlt(surf, srf[SRF_CMMFDFRAME], 0, 0, 0, 0, 358, 299);
+
+			RedrawPanel_MFDButton(surf, MFD_USER1, 0, 10, 47, 37);
+			RedrawPanel_MFDButton(surf, MFD_USER1, 1, 328, 47, 37);
+		}
+		return true;
+
+	case AID_MFDGNUSER2:
+		if (oapiGetMFDMode(MFD_USER2) != MFD_NONE) {
+			oapiBlt(surf, srf[SRF_CMMFDFRAME], 0, 0, 0, 0, 358, 299);
+
+			RedrawPanel_MFDButton(surf, MFD_USER2, 0, 10, 47, 37);
+			RedrawPanel_MFDButton(surf, MFD_USER2, 1, 328, 47, 37);
+		}
+		return true;
+
+	case AID_MFDGNRIGHT:
 		if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {
 			oapiBlt(surf, srf[SRF_CMMFDFRAME], 0, 0, 0, 0, 358, 299);
 
@@ -4180,21 +3876,21 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 	switch (mfd) {
 	case MFD_LEFT:
 		oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINLEFT);
-		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNLEFTBOTTOM);
+		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNLEFT);
 		break;
 
 	case MFD_RIGHT:
 		oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINRIGHT);
 		oapiTriggerPanelRedrawArea(SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
-		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNRIGHTBOTTOM);
+		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNRIGHT);
 		break;
 
 	case MFD_USER1:
-		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNLEFTTOP);
+		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNUSER1);
 		break;
 
 	case MFD_USER2:
-		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNLEFTMIDDLE);
+		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNUSER2);
 		break;
 
 	}
@@ -4685,8 +4381,8 @@ void Saturn::InitSwitches() {
 	SPSGimbalPitchThumbwheel.Register(PSH, "SPSGimbalPitchThumbwheel", 8, 16);
 	SPSGimbalYawThumbwheel.Register(PSH, "SPSGimbalYawThumbwheel", 8, 16, true);
 
-	SPSOxidPercentMeter.Register(PSH, "SPSOxidPercentMeter", 0, 0.999, 5, 0.999);
-	SPSFuelPercentMeter.Register(PSH, "SPSFuelPercentMeter", 0, 0.999, 5, 0.999);
+	SPSOxidPercentMeter.Register(PSH, "SPSOxidPercentMeter", 0, 0.999, 1, 0.999);
+	SPSFuelPercentMeter.Register(PSH, "SPSFuelPercentMeter", 0, 0.999, 1, 0.999);
 	SPSOxidUnbalMeter.Register(PSH, "SPSOxidUnbalMeter", -600, 600, 10);
 
 	SPSTempMeter.Register(PSH, "SPSTempMeter", 0, 200, 2);

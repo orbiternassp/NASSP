@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2007/05/12 10:26:14  redburne
+  *	2007-05-12 OP:
+  *	- fixed: wheel spin (tweaked to look more realistic; time acceleration compatible)
+  *	- new: key 2 performs auto-center, just like 5
+  *	- new: CTRL+1, CTRL+3, CTRL+PLUS, CTRL+MINUS act at one tenth the speed (good for driving at 10x)
+  *	- known issues: steering and wheel spin are still not 100% correct. The error, however, is probably smaller than the real differences caused by wheel slip, sliding, etc ...
+  *	
   *	Revision 1.12  2007/05/10 18:39:36  redburne
   *	- new: realistic max. wheel deflection of 50 deg for inner wheel (leads to wheel-body intersections in the mesh ...)
   *	- new: outer wheel deflection calculated accordingly (about 25 deg max)
@@ -77,7 +84,7 @@
 
 #include "nasspsound.h"
 #include "nasspdefs.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "OrbiterMath.h"
 
@@ -173,7 +180,6 @@ LRV::LRV(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 	hMaster = hObj;
 	init();
 	DefineAnimations();
-
 }
 
 LRV::~LRV()
@@ -193,7 +199,6 @@ LRV::~LRV()
 void LRV::init()
 
 {
-
 	TRACESETUP("init");
 
 	//GoDock1=false;
@@ -238,6 +243,7 @@ void LRV::init()
 	Bat2Temp = 78; // temperature of battery 2 [°F]
 
 	// LRV Console
+	vccVis = NULL;
 	vccCompAngle = 0.0; // North
 	vccBear001Angle = 0.0;
 	vccBear010Angle = 0.0;
@@ -440,10 +446,10 @@ void LRV::MoveLRV(double SimDT, VESSELSTATUS *eva, double heading)
 	double move_spd;
 	double ctrl_factor;
 
-	// limit time acceleration (todo: turn limit off if no movement occurs)
+	// limit time acceleration
 	double timeW = oapiGetTimeAcceleration();
-		if (timeW > 100)
-			oapiSetTimeAcceleration(100);
+	if (timeW > 100 && speed != 0.0)
+		oapiSetTimeAcceleration(100);
 
 	if (eva->status == 1) {
 		lon = eva->vdata[0].x;
@@ -756,7 +762,7 @@ void LRV::SetNeedleAngle(int idx, double val, double min_val, double max_val)
 void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 
 {
-	VESSELSTATUS csmV;
+//	VESSELSTATUS csmV;
 	VESSELSTATUS evaV;
 	VECTOR3 rdist = {0,0,0};
 	VECTOR3 posr  = {0,0,0};
@@ -782,8 +788,9 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 		SLEVAPlayed = true;
 	}
 
-	if (!MotherShip)
+/*	if (!MotherShip)
 		ScanMotherShip();
+*/
 	
 	GetStatus(evaV);
 	oapiGetHeading(GetHandle(),&heading);
@@ -806,7 +813,7 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 		vccInitialized = true;
 	}
 
-	if (hMaster){
+/*	if (hMaster){
 		LEM *lmvessel = (LEM *) oapiGetVesselInterface(hMaster);					
 		oapiGetRelativePos (GetHandle() ,hMaster, &posr);
 		oapiGetRelativeVel (GetHandle() ,hMaster , &rvel);
@@ -822,9 +829,9 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 				oapiDeleteVessel(GetHandle());
 				return;
 			}
-		}*/
+		}*//*
 	}
-
+*/
 	//
 	// update the VC console
 	//

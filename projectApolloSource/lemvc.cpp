@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2006/08/13 16:55:35  movieman523
+  *	Removed a bunch of unused files.
+  *	
   *	Revision 1.8  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -53,7 +56,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "nasspdefs.h"

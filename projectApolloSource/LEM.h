@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/08/21 03:04:38  dseagrav
+  *	This patch adds DC volt/amp meters and associated switches, which was an unholy pain in the
+  *	
   *	Revision 1.4  2006/08/20 08:28:06  dseagrav
   *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
   *	
@@ -143,7 +146,6 @@ public:
 	virtual ~LEM();
 
 	void Init();
-	void PostCreation();
 	void SetStateEx(const void *status);
 	void SetLmVesselDockStage();
 	void SetLmVesselHoverStage();
@@ -192,12 +194,13 @@ public:
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
-	// There should be only 16 RCS. 4 clusters, 4 per cluster.
+	// There are 16 RCS. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_rcs[16];
 	// These RCSes are for Orbiter's use and should be deleted once the internal guidance is working.
 	THRUSTER_HANDLE th_rcs_orbiter_rot[24];
-	// THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
+	THRUSTER_HANDLE th_rcs_orbiter_lin[16];
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
+	SURFHANDLE exhaustTex;
 
 	// DS20060413 DirectInput stuff
 	// Handle to DLL instance
@@ -812,6 +815,7 @@ protected:
 	Sound Sclick;
 	Sound Bclick;
 	Sound Gclick;
+	Sound Rclick;
 	Sound LunarAscent;
 	Sound StageS;
 	Sound S5P100;

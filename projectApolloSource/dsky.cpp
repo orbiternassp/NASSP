@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/12/26 06:24:43  dseagrav
+  *	vAGC restart if not powered, AGC VOLTAGE ALARM simulated with DSKY RESTART lights, more telemetry stuff, Merry Day-After-Christmas!
+  *	
   *	Revision 1.20  2006/06/21 13:11:29  tschachim
   *	Bugfix power drawing.
   *	
@@ -88,7 +91,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"
@@ -449,9 +452,8 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 	DSKYLightBlt(surf, lights, 52, 73, RestartLit());
 	DSKYLightBlt(surf, lights, 52, 97, TrackerLit());
 
-	//
-	// Need to add the Alt and Vel lights here for the LEM.
-	//
+	DSKYLightBlt(surf, lights, 52, 121, AltLit());
+	DSKYLightBlt(surf, lights, 52, 144, VelLit());
 }
 
 
@@ -1073,7 +1075,9 @@ void DSKY::ProcessChannel10(int val)
 
 	// 12 - set light states.
 	case 12:
+		SetVel((out_val.Value & (1 << 2)) != 0);
 		SetNoAtt((out_val.Value & (1 << 3)) != 0);
+		SetAlt((out_val.Value & (1 << 4)) != 0);
 		SetGimbalLock((out_val.Value & (1 << 5)) != 0);
 		SetTracker((out_val.Value & (1 << 7)) != 0);
 		SetProg((out_val.Value & (1 << 8)) != 0);

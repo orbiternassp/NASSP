@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.6  2006/08/27 21:51:12  tschachim
   *	Improved SIVB roll damping.
   *	
@@ -46,7 +49,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "Orbitersdk.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "resource.h"

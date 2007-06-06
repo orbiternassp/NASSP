@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2006/08/27 21:57:10  tschachim
+  *	Bugfix RCS handing in CSM timestep.
+  *	
   *	Revision 1.19  2006/07/31 12:25:38  tschachim
   *	Smoother staging.
   *	
@@ -140,6 +143,7 @@ protected:
 
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
+	void CreateStageOne();
 
 	void SetASTPStage ();
 	void SaveVehicleStats(FILEHANDLE scn);

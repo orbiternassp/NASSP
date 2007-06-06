@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.11  2006/05/26 18:42:54  movieman523
   *	Updated S1C DLL to support INT-20 stage.
   *	
@@ -59,7 +62,7 @@
   **************************************************************************/
 
 #include "orbiterSDK.h"
-#include "orbiterSoundSDK3.h"
+#include "orbiterSoundSDK35.h"
 
 #include "nasspdefs.h"
 #include "nasspsound.h"
@@ -272,7 +275,7 @@ void S1C::AddEngines()
 
 {
 	int i;
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust2");
+	SURFHANDLE tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust2");
 
 	//
 	// Just in case someone removes all the retros, do nothing.

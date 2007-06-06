@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2007/01/22 14:39:58  tschachim
+  *	Bugfix UplinkTestState.
+  *	
   *	Revision 1.20  2007/01/06 04:44:48  dseagrav
   *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
   *	
@@ -89,7 +92,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"

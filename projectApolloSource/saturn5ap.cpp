@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.17  2006/07/27 23:24:11  tschachim
   *	The Saturn 1b now has the Saturn V IGM autopilot.
   *	
@@ -79,7 +82,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "Orbitersdk.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "resource.h"
@@ -471,12 +474,20 @@ void SaturnV::AutoPilot(double autoT)
 					AtempY=(TO_HDG-(heading+slip))/20.0;
 				}
 			}
-			if(autoT > 115.0) {
+			if (autoT > 115.0) {
 				AtempY=0.0;
+				if (autoT < 120.0) {
+					if (AtempP < -0.1) AtempP = -0.1;
+					if (AtempP >  0.1) AtempP =  0.1;
+				} else {
+					if (AtempP < -0.2) AtempP = -0.2;
+					if (AtempP >  0.2) AtempP =  0.2;
+				}
 				normal=Normalize(CrossProduct(Normalize(vsp.rpos), Normalize(vsp.rvel)));
 			}
 //			sprintf(oapiDebugString(), "roll=%.3f yaw=%.3f slip=%.3f sum=%.3f hdg+slip=%.3f hdg=%.3f ay=%.3f", 
 //			asin(ygl*normal)*DEG, asin(zgl*normal)*DEG, slip, slip+asin(zgl*normal)*DEG, heading+slip, heading, AtempY);
+//			sprintf(oapiDebugString(), "autoT %f AtempP %f", autoT, AtempP);
 
 			AttitudeLaunch1();
 		break;

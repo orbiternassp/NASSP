@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.60  2007/02/06 18:30:18  tschachim
   *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
   *	
@@ -212,7 +215,7 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "resource.h"
@@ -397,12 +400,14 @@ void Saturn::ToggelHatch()
 
 	mesh_dir=_V(0,0,34.4-12.25-21.5);
 
+	// And the Crew
 	if (Crewed) {
-		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		cmpidx = AddMesh (hCMP, &mesh_dir);
+		crewidx = AddMesh (hCREW, &mesh_dir);
+		SetCrewMesh();
+	} else {
+		cmpidx = -1;
+		crewidx = -1;
 	}
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
@@ -437,15 +442,19 @@ void Saturn::ToggelHatch()
 	}
 }
 
+//
+// Toggle hatch after splashdown
+//
+
 void Saturn::ToggelHatch2()
 
 {
 	ClearMeshes();
 	UINT meshidx ;
 	VECTOR3 mesh_dir=_V(0,0,-1.2);
-	if (Burned){
+	if (Burned) {
 		meshidx = AddMesh (hCM2B, &mesh_dir);
-	}else{
+	} else {
 		meshidx = AddMesh (hCM2, &mesh_dir);
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -453,12 +462,14 @@ void Saturn::ToggelHatch2()
 	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+	// And the Crew
 	if (Crewed) {
-		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		cmpidx = AddMesh (hCMP, &mesh_dir);
+		crewidx = AddMesh (hCREW, &mesh_dir);
+		SetCrewMesh();
+	} else {
+		cmpidx = -1;
+		crewidx = -1;
 	}
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
@@ -471,12 +482,19 @@ void Saturn::ToggelHatch2()
 	//Don't Forget the Hatch
 	
 	mesh_dir=_V(0,0,-1.2);
-	if (HatchOpen){
-		meshidx = AddMesh (hFHC, &mesh_dir);
+	if (HatchOpen) {
+		if (Burned) {
+			meshidx = AddMesh (hFHC2, &mesh_dir);
+		} else {
+			meshidx = AddMesh (hFHC, &mesh_dir);
+		}
 		HatchOpen= false;
-	}
-	else{
-		meshidx = AddMesh (hFHO, &mesh_dir);
+	} else {
+		if (Burned) {
+			meshidx = AddMesh (hFHO2, &mesh_dir);
+		} else {
+			meshidx = AddMesh (hFHO, &mesh_dir);
+		}
 		HatchOpen= true;
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -513,12 +531,14 @@ void Saturn::ToggleEVA()
 
 		mesh_dir=_V(0,0,34.4-12.25-21.5);
 
+		// And the Crew
 		if (Crewed) {
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
@@ -557,10 +577,14 @@ void Saturn::ToggleEVA()
 
 		mesh_dir=_V(0,0,34.4-12.25-21.5);
 
+		// And the Crew, CMP is outside
 		if (Crewed) {
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			crewidx = -1;
 		}
+		cmpidx = -1;
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
@@ -626,10 +650,14 @@ void Saturn::SetupEVA()
 
 		mesh_dir=_V(0,0,34.4-12.25-21.5);
 
+		// And the Crew, CMP is outside
 		if (Crewed) {
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			crewidx = -1;
 		}
+		cmpidx = -1;
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
@@ -659,28 +687,29 @@ void Saturn::SetupEVA()
 }
 
 
-//check this...I think it's a bit wierd
 void Saturn::SetRecovery()
 
 {
+	SetSize(10.0);
 	ClearMeshes();
-	UINT meshidx;
 
+	UINT meshidx;
 	VECTOR3 mesh_dir=_V(0,0,-1.2);
-	if (Burned)
-	{
+	if (Burned)	{
 		meshidx = AddMesh (hCM2B, &mesh_dir);
-	}
-	else
-	{
+	} else {
 		meshidx = AddMesh (hCM2, &mesh_dir);
 	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	meshidx = AddMesh (hFHO, &mesh_dir);
+	HatchOpen = true;
+	if (Burned)	{
+		meshidx = AddMesh (hFHO2, &mesh_dir);
+	} else {
+		meshidx = AddMesh (hFHO, &mesh_dir);
+	}
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	HatchOpen = true;
 	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
@@ -697,7 +726,7 @@ void Saturn::SetRecovery()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	SetTouchdownPoints (_V(0,-1.0,-2.0), _V(-.7,.7,-2.0), _V(.7,.7,-2.0));
+	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetView(-1.35);
 }
 
@@ -744,13 +773,12 @@ void Saturn::SetCSMStage ()
 		ph_sep2 = 0;
 	}
 
-	SetSize (20);
-	SetCOG_elev (3.5);
-	SetEmptyMass (CM_Mass + SM_EmptyMass);
-	// ************************* propellant specs **********************************
+	SetSize(20);
+	SetCOG_elev(3.5);
+	SetEmptyMass(CM_Mass + SM_EmptyMass);
 
-	if (!ph_sps)
-	{
+	// ************************* propellant specs **********************************
+	if (!ph_sps) {
 		ph_sps  = CreatePropellantResource(SM_FuelMass, SM_FuelMass); //SPS stage Propellant
 	}
 
@@ -774,7 +802,7 @@ void Saturn::SetCSMStage ()
 
 	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG2O};
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (_V(0,0,-5), _V(0,0,1), SPS_THRUST , ph_sps, SPS_ISP);
+	th_main[0] = CreateThruster(_V(0,0,-5.0), _V(0,0,1), SPS_THRUST , ph_sps, SPS_ISP);
 	DelThrusterGroup(THGROUP_MAIN,true);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
@@ -803,30 +831,28 @@ void Saturn::SetCSMStage ()
 		AddMesh (hSMhga, &mesh_dir);
 	}
 
-	mesh_dir=_V(0,0,34.4-CGOffset);
+	mesh_dir=_V(0, 0, 34.4 - CGOffset);
 
 	UINT meshidx;
 	meshidx = AddMesh (hCM, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	//Don't Forget the Hatch
-	mesh_dir=_V(0,0,34.4-CGOffset);
-	meshidx = AddMesh (hFHC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
 	// And the Crew
 	if (Crewed) {
-		mesh_dir=_V(0,0,34.4-CGOffset);
-		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		mesh_dir=_V(0,0,34.4-CGOffset);
-		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		cmpidx = AddMesh (hCMP, &mesh_dir);
+		crewidx = AddMesh (hCREW, &mesh_dir);
+		SetCrewMesh();
+	} else {
+		cmpidx = -1;
+		crewidx = -1;
 	}
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	//Don't Forget the Hatch
+	meshidx = AddMesh (hFHC, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	meshidx = AddMesh (hCMVC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -887,6 +913,25 @@ void Saturn::SetDockingProbeMesh() {
 		SetMeshVisibilityMode(probeextidx, MESHVIS_NEVER);
 	}
 }
+
+void Saturn::SetCrewMesh() {
+
+	if (cmpidx != -1) {
+		if (Crewed && (Crew->number == 1 || Crew->number >= 3)) {
+			SetMeshVisibilityMode(cmpidx, MESHVIS_VCEXTERNAL);
+		} else {
+			SetMeshVisibilityMode(cmpidx, MESHVIS_NEVER);
+		}
+	}
+	if (crewidx != -1) {
+		if (Crewed && Crew->number >= 2) {
+			SetMeshVisibilityMode(crewidx, MESHVIS_VCEXTERNAL);
+		} else {
+			SetMeshVisibilityMode(crewidx, MESHVIS_NEVER);
+		}
+	}
+}
+
 
 /*
 void Saturn::SetCSM2Stage ()
@@ -1015,8 +1060,8 @@ void Saturn::SetReentryStage ()
 
 	double EmptyMass = CM_EmptyMass + LESAttached ? 2000.0 : 0.0;
 
-	SetSize (6.0);
-	SetCOG_elev (2.0);
+	SetSize(6.0);
+	SetCOG_elev(2.0);
 	SetEmptyMass (EmptyMass);
 	SetPMI (_V(12,12,7));
 	//SetPMI (_V(1.5,1.35,1.35));
@@ -1025,14 +1070,17 @@ void Saturn::SetReentryStage ()
 	SetRotDrag (_V(0.07,0.07,0.003));
 	if (GetFlightModel() >= 1)
 	{
-//		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.16,1.12), CoeffFunc, 3.5 ,11.95, 1.0);
 		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.12,1.12), CoeffFunc, 3.5,11.95, 1.0);
     }
-  	ShiftCentreOfMass (_V(0,0,0.5));
 
 	UINT meshidx;
 	VECTOR3 mesh_dir=_V(0,0,0);
-	meshidx = AddMesh (hCM, &mesh_dir);
+	if (Burned)	{
+		meshidx = AddMesh (hCMB, &mesh_dir);
+	} else {
+		meshidx = AddMesh (hCM, &mesh_dir);
+	}
+
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	if (LESAttached)
@@ -1044,24 +1092,26 @@ void Saturn::SetReentryStage ()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
-	mesh_dir = _V(0,0,0);
-	meshidx = AddMesh (hFHC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
 	// And the Crew
-	if (Crewed)
-	{
-		mesh_dir=_V(0,0,0);
-		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		mesh_dir = _V(0,0,0);
-		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	if (Crewed) {
+		cmpidx = AddMesh (hCMP, &mesh_dir);
+		crewidx = AddMesh (hCREW, &mesh_dir);
+		SetCrewMesh();
+	} else {
+		cmpidx = -1;
+		crewidx = -1;
 	}
 
+	mesh_dir = _V(0,0,0);
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	if (Burned)	{
+		meshidx = AddMesh (hFHC2, &mesh_dir);
+	} else {
+		meshidx = AddMesh (hFHC, &mesh_dir);
+	}
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	meshidx = AddMesh (hCMVC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1152,24 +1202,22 @@ void Saturn::StageSeven(double simt)
 		meshidx = AddMesh (hCMB, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0,0);
-		meshidx = AddMesh (hFHC, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
 		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir=_V(0,0,0);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0,0,0);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
 		}
 
+		mesh_dir=_V(0,0,0);
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hFHC2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1188,63 +1236,54 @@ void Saturn::StageEight(double simt)
 
 {
 	UINT meshidx;
-	VECTOR3 mesh_dir=_V(0,0,-1);
+	VECTOR3 mesh_dir=_V(0, 0, 0.65);
 
 	if (Burned)
 	{
 		ClearMeshes();
-		mesh_dir=_V(0,0,34.40-12.25-21.5);
 		meshidx = AddMesh (hCM2B, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0,0,34.40-12.25-21.5);
-		meshidx = AddMesh (hFHC, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
 		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir=_V(0,0,34.4-12.25-21.5);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0,0,34.4-12.25-21.5);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hFHC2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 		VCMeshOffset = mesh_dir;
 
-	}
-	else
-	{
+	} else {
 		ClearMeshes();
-		VECTOR3 mesh_dir=_V(0,0,34.40-12.25-21.5);
 		meshidx = AddMesh (hCM2, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	    mesh_dir=_V(0,0,34.40-12.25-21.5);
-		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		// And the Crew
 		if (Crewed) {
-			mesh_dir=_V(0,0,34.4-12.25-21.5);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0,0,34.4-12.25-21.5);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1270,47 +1309,66 @@ void Saturn::StageEight(double simt)
 	}
 
 	SetApexCoverLight(true);
+	LAUNCHIND[1] = true;	// TODO: Do we need this anymore?
 
 	//
-	// TODO: Do we need this anymore?
+	// Create the apex cover vessel
 	//
 
-	LAUNCHIND[1] = true;
+	VECTOR3 posOffset = _V(0, 0, 0);
+	VECTOR3 velOffset = _V(0, 0, 3);
+
+	VESSELSTATUS vs;
+	GetStatus(vs);
+	Local2Rel(posOffset, vs.rpos);
+	VECTOR3 vog;
+	GlobalRot(velOffset, vog);
+	vs.rvel += vog;
+
+	char VName[256]="";
+	GetApolloName(VName);
+	strcat(VName, "-APEX");
+	if (Burned) {
+		oapiCreateVessel(VName,"ProjectApollo/CMBapex", vs);
+	} else {
+		oapiCreateVessel(VName,"ProjectApollo/CMapex", vs);
+	}
+
+	// New stage
 	SetStage(CM_ENTRY_STAGE_TWO);
 }
 
 void Saturn::SetChuteStage1()
 {
 	UINT meshidx;
-	SetSize (15);
-	SetCOG_elev (1);
-	SetEmptyMass (CM_EmptyMass);
-	SetMaxFuelMass (100);
-	SetFuelMass (0);
+	SetSize(15);
+	SetCOG_elev(1);
+	SetEmptyMass(CM_EmptyMass);
+	SetMaxFuelMass(100);
+	SetFuelMass(0);
 	ClearAirfoilDefinitions();
-	SetMaxThrust (ENGINE_MAIN,  0);
-	SetMaxThrust (ENGINE_RETRO, 0);
-	SetMaxThrust (ENGINE_HOVER, 0);
-	SetMaxThrust (ENGINE_ATTITUDE, 0);
+	SetMaxThrust(ENGINE_MAIN,  0);
+	SetMaxThrust(ENGINE_RETRO, 0);
+	SetMaxThrust(ENGINE_HOVER, 0);
+	SetMaxThrust(ENGINE_ATTITUDE, 0);
 	SetEngineLevel(ENGINE_ATTITUDE,0);
 	SetEngineLevel(ENGINE_MAIN, 0.0);
-	SetPMI (_V(20,20,12));
-	SetCrossSections (_V(2.8,2.8,80.0));
-	SetCW (1.0, 1.5, 1.4, 1.4);
-	SetRotDrag (_V(0.7,0.7,1.2));
+	SetPMI(_V(20,20,12));
+	SetCrossSections(_V(2.8,2.8,80.0));
+	SetCW(1.0, 1.5, 1.4, 1.4);
+	SetRotDrag(_V(0.7,0.7,1.2));
 	if (GetFlightModel() >= 1)
 	{
-		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetPitchMomentScale(-5e-3);
+		SetBankMomentScale(-5e-3);
 	}
-	SetLiftCoeffFunc (0);
+	SetLiftCoeffFunc(0);
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	VECTOR3 mesh_dir=_V(0,0,34.40-12.25-16.5-6.5-6.25);
-
 	double offset = 34.40-12.25-21.5-7.75;
+	VECTOR3 mesh_dir=_V(0,0,offset);
 
 	if (Burned){
 		ClearMeshes();
@@ -1318,24 +1376,22 @@ void Saturn::SetChuteStage1()
 		meshidx = AddMesh (hCM2B, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0, 0, offset);
-		meshidx = AddMesh (hFHC, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
 		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0,0, offset);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		mesh_dir=_V(0, 0, offset);
+		meshidx = AddMesh (hFHC2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1348,23 +1404,22 @@ void Saturn::SetChuteStage1()
 		meshidx = AddMesh (hCM2, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+		// And the Crew
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
+		}
+
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
 		mesh_dir=_V(0,0, offset);
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir =_V(0,0, offset);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0,0, offset);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-		}
-		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1394,7 +1449,7 @@ void Saturn::SetChuteStage1()
 void Saturn::SetChuteStage2()
 {
 	UINT meshidx;
-
+	SetSize(16);
 	SetCOG_elev (1);
 	SetEmptyMass (CM_EmptyMass);
 	SetMaxFuelMass (100);
@@ -1418,11 +1473,9 @@ void Saturn::SetChuteStage2()
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	//ShiftCentreOfMass (_V(0,0,6.25));
 
 	double offset = 34.40-12.25-21.5-7.75;
-
-	VECTOR3 mesh_dir=_V(0, 0, 0);
+	VECTOR3 mesh_dir=_V(0, 0, offset);
 
 	if (Burned) {
 		ClearMeshes();
@@ -1430,52 +1483,49 @@ void Saturn::SetChuteStage2()
 		meshidx = AddMesh (hCM2B, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0, 0, offset);
-		meshidx = AddMesh (hFHC, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
 		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
 		}
+
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		mesh_dir=_V(0, 0, offset);
+		meshidx = AddMesh (hFHC2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 		VCMeshOffset = mesh_dir;
-	}
-	else
-	{
+	
+	} else {
 		ClearMeshes();
 		mesh_dir=_V(0, 0, offset);
 		meshidx = AddMesh (hCM2, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+		// And the Crew
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
+		}
+
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
 		mesh_dir=_V(0, 0, offset);
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-		}
-		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1502,34 +1552,33 @@ void Saturn::SetChuteStage2()
 void Saturn::SetChuteStage3()
 {
 	UINT meshidx;
-	SetSize (12);
-	SetCOG_elev (1);
+	SetSize(18);
+	SetCOG_elev(1);
 	SetEmptyMass (CM_EmptyMass);
-	SetMaxFuelMass (100);
-	SetFuelMass (0);
-	SetMaxThrust (ENGINE_MAIN,  0);
-	SetMaxThrust (ENGINE_RETRO, 0);
-	SetMaxThrust (ENGINE_HOVER, 0);
-	SetMaxThrust (ENGINE_ATTITUDE, 0);
+	SetMaxFuelMass(100);
+	SetFuelMass(0);
+	SetMaxThrust(ENGINE_MAIN,  0);
+	SetMaxThrust(ENGINE_RETRO, 0);
+	SetMaxThrust(ENGINE_HOVER, 0);
+	SetMaxThrust(ENGINE_ATTITUDE, 0);
 	SetEngineLevel(ENGINE_ATTITUDE,0);
 	SetEngineLevel(ENGINE_MAIN, 0.0);
-	SetPMI (_V(20,20,12));
-	SetCrossSections (_V(2.8,2.8,480.0));
-	SetCW (0.7, 1.5, 1.4, 1.4);
-	SetRotDrag (_V(0.7,0.7,1.2));
+	SetPMI(_V(20,20,12));
+	SetCrossSections(_V(2.8,2.8,480.0));
+	SetCW(0.7, 1.5, 1.4, 1.4);
+	SetRotDrag(_V(0.7,0.7,1.2));
 	if (GetFlightModel() >= 1)
 	{
-		SetPitchMomentScale (-5e-3);
-		SetBankMomentScale (-5e-3);
+		SetPitchMomentScale(-5e-3);
+		SetBankMomentScale(-5e-3);
 	}
 	SetLiftCoeffFunc (0);
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	//ShiftCentreOfMass (_V(0,0,6.25));
-	VECTOR3 mesh_dir=_V(0,0,34.40-12.25-16.5-6.5-6.25);
 
 	double offset = 34.40-12.25-21.5-7.75;
+	VECTOR3 mesh_dir=_V(0, 0, offset);
 
 	if (Burned){
 		ClearMeshes();
@@ -1537,23 +1586,22 @@ void Saturn::SetChuteStage3()
 		meshidx = AddMesh (hCM2B, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0, 0, offset);
-		meshidx = AddMesh (hFHC, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
 		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
 		}
+
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		mesh_dir=_V(0, 0, offset);
+		meshidx = AddMesh (hFHC2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1565,23 +1613,22 @@ void Saturn::SetChuteStage3()
 		meshidx = AddMesh (hCM2, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+		// And the Crew
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
+		}
+
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
 		mesh_dir=_V(0, 0, offset);
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-		}
-		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1608,29 +1655,30 @@ void Saturn::SetChuteStage3()
 void Saturn::SetChuteStage4()
 {
 	UINT meshidx;
-	SetSize (12);
-	SetCOG_elev (1);
-	SetEmptyMass (CM_EmptyMass);
-	SetMaxFuelMass (500);
-	SetFuelMass (0);
-	SetTouchdownPoints (_V(0,0.0,0), _V(-1,0,0), _V(1,0,0));
-	SetPMI (_V(20,20,12));
+	SetSize(22);
+	SetCOG_elev(8.1);
+	SetEmptyMass(CM_EmptyMass);
+	SetMaxFuelMass(500);
+	SetFuelMass(0);
+	SetTouchdownPoints(_V(0, -10, -8.1), _V(-10, 10, -8.1), _V(10, 10, -8.1));
+	SetPMI(_V(20,20,12));
 	SetCrossSections (_V(2.8,2.8,3280.0));
 	SetCW (0.7, 1.5, 1.4, 1.4);
-	SetRotDrag (_V(0.7,0.7,1.2));
+	SetRotDrag(_V(0.7, 0.7, 1.2));
+	SetSurfaceFrictionCoeff(1, 1);
+
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
 		SetBankMomentScale (-5e-3);
 	}
-	SetLiftCoeffFunc (0);
+	SetLiftCoeffFunc(0);
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	//ShiftCentreOfMass (_V(0,0,6.25));
-	VECTOR3 mesh_dir=_V(0,0,34.40-12.25-16.5-6.5-6.25);
 
 	double offset = 34.40-12.25-21.5-7.75;
+	VECTOR3 mesh_dir=_V(0, 0, offset);
 
 	if (Burned){
 		ClearMeshes();
@@ -1638,23 +1686,22 @@ void Saturn::SetChuteStage4()
 		meshidx = AddMesh (hCM2B, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-		mesh_dir=_V(0, 0, offset);
-		meshidx = AddMesh (hFHC, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
 		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
 		}
+
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		mesh_dir=_V(0, 0, offset);
+		meshidx = AddMesh (hFHC2, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1667,23 +1714,22 @@ void Saturn::SetChuteStage4()
 		meshidx = AddMesh (hCM2, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
+		// And the Crew
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		} else {
+			cmpidx = -1;
+			crewidx = -1;
+		}
+
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
 		mesh_dir=_V(0, 0, offset);
 		meshidx = AddMesh (hFHC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		// And the Crew
-		if (Crewed)
-		{
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCMP, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			mesh_dir=_V(0, 0, offset);
-			meshidx = AddMesh (hCREW, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-		}
-		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 		meshidx = AddMesh (hCMVC, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VC);
@@ -1696,7 +1742,6 @@ void Saturn::SetChuteStage4()
 	AddRCS_CM(CM_RCS_THRUST, offset);
 
 	SetView(-7.25);
-	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
 
 	SetMainDeployLight(true);
 
@@ -1712,20 +1757,21 @@ void Saturn::SetChuteStage4()
 void Saturn::SetSplashStage()
 {
 	UINT meshidx;
-	SetSize (4);
-	SetCOG_elev (2);
-	SetEmptyMass (CM_EmptyMass);
-	SetMaxFuelMass (0);
-	SetFuelMass (0);
-	SetMaxThrust (ENGINE_MAIN,  0);
-	SetMaxThrust (ENGINE_ATTITUDE, 0);
+	SetSize(6.0);
+	SetCOG_elev(2.2);
+	SetEmptyMass(CM_EmptyMass);
+	SetMaxFuelMass(0);
+	SetFuelMass(0);
+	SetMaxThrust(ENGINE_MAIN,  0);
+	SetMaxThrust(ENGINE_ATTITUDE, 0);
 	SetEngineLevel(ENGINE_ATTITUDE,0);
 	SetEngineLevel(ENGINE_MAIN, 0.0);
-	SetPMI (_V(20,20,12));
-	SetCrossSections (_V(2.8,2.8,7.0));
-	SetCW (0.5, 1.5, 1.4, 1.4);
-	SetRotDrag (_V(0.7,0.7,1.2));
-	SetTouchdownPoints (_V(0,-1.0,-2.0), _V(-.7,.7,-2.0), _V(.7,.7,-2.0));
+	SetPMI(_V(20,20,12));
+	SetCrossSections(_V(2.8,2.8,7.0));
+	SetCW(0.5, 1.5, 1.4, 1.4);
+	SetRotDrag(_V(0.7,0.7,1.2));
+	SetSurfaceFrictionCoeff(1, 1);
+	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	if (GetFlightModel() >= 1)
 	{
 		SetPitchMomentScale (-5e-3);
@@ -1735,37 +1781,31 @@ void Saturn::SetSplashStage()
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
-	//ShiftCentreOfMass (_V(0,0,6.25));
 
 	double offset = -1.2;
-
 	VECTOR3 mesh_dir=_V(0, 0, offset);
+
 	if (Burned){
 		meshidx = AddMesh (hCM2B, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hFHC2, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 	else
 	{
 		meshidx = AddMesh (hCM2, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hFHC, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	meshidx=AddMesh (hCMBALLOON, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_ALWAYS);
 
-	if (Crewed)
-	{
-		meshidx = AddMesh (hCMP, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-		meshidx = AddMesh (hCREW, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	// And the Crew
+	if (Crewed) {
+		cmpidx = AddMesh (hCMP, &mesh_dir);
+		crewidx = AddMesh (hCREW, &mesh_dir);
+		SetCrewMesh();
+	} else {
+		cmpidx = -1;
+		crewidx = -1;
 	}
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
@@ -1773,6 +1813,21 @@ void Saturn::SetSplashStage()
 	meshidx = AddMesh (hCMVC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	VCMeshOffset = mesh_dir;
+
+	if (HatchOpen) {
+		if (Burned) {
+			meshidx = AddMesh (hFHO2, &mesh_dir);
+		} else {
+			meshidx = AddMesh (hFHO, &mesh_dir);
+		}
+	} else {
+		if (Burned) {
+			meshidx = AddMesh (hFHC2, &mesh_dir);
+		} else {
+			meshidx = AddMesh (hFHC, &mesh_dir);
+		}
+	}
+	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	AddRCS_CM(CM_RCS_THRUST, offset);
 

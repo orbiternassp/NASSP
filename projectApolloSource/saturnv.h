@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.30  2006/07/27 23:24:11  tschachim
   *	The Saturn 1b now has the Saturn V IGM autopilot.
   *	
@@ -207,6 +210,7 @@ protected:
 
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
+	void CreateStageOne();
 
 	//
 	// Mission-support functions.

@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/10/23 13:32:31  tschachim
+  *	Removed warnings
+  *	
   *	Revision 1.1  2006/06/24 15:05:40  movieman523
   *	New sound event files.
   *	
@@ -33,7 +36,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "soundlib.h"

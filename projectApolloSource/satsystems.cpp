@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.141  2007/04/25 18:48:10  tschachim
+  *	EMS dV functions.
+  *	
   *	Revision 1.140  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -154,7 +157,7 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "resource.h"
 #include "nasspdefs.h"
@@ -764,15 +767,14 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 			double *pMax, *fMax, scdp;
 			float *size, *pz;
-			int *open, *number, *isopen;
+			int *open, *isopen;
 
 			switch (systemsState) {
 
 			case SATSYSTEMS_NONE:
 				
 				// No crew 
-				number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
-				*number = 0; 
+				SetCrewNumber(0);
 
 				// No leak
 				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
@@ -871,9 +873,8 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					CabincloseoutS.done();
 
 					// Crew ingress
-					number = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
-					*number = 3; 
-
+					SetCrewNumber(3);
+					
 					// Close cabin pressure regulator 
 					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
 					*open = SP_VALVE_CLOSE;
@@ -3072,6 +3073,7 @@ void Saturn::GetECSStatus(ECSStatus &ecs)
 void Saturn::SetCrewNumber(int number) {
 
 	Crew->number = number;
+	SetCrewMesh();
 }
 
 void Saturn::SetPrimECSTestHeaterPowerW(double power) {

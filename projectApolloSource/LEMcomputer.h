@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2006/11/13 14:47:30  tschachim
+  *	New SPS engine.
+  *	New ProjectApolloConfigurator.
+  *	Fixed and changed camera and FOV handling.
+  *	
   *	Revision 1.24  2006/07/26 15:42:02  tschachim
   *	Temporary fix of the lm landing autopilot until correct attitude control is ready.
   *	
@@ -221,12 +226,10 @@ public:
 	void SetInputChannelBit(int channel, int bit, bool val);
 
 protected:
-
 	// DS20060413
 	void ProcessChannel13(int val);
 	void ProcessChannel5(int val);
 	void ProcessChannel6(int val);
-
 
 	void DisplayNounData(int noun);
 	void ProgPressed(int R1, int R2, int R3);
@@ -234,7 +237,6 @@ protected:
 	void TerminateProgram();
 	// Descent, Abort, Ascent and Rendezvous routines
 	void Prog12(double simt);
-//	void Prog29(double simt);
 	void Prog30(double simt);
 	void Prog32(double simt);
 	void Prog33(double simt);
@@ -252,19 +254,10 @@ protected:
 	void Prog70(double simt);
 	void Prog71(double simt);
 	void AbortAscent(double simt);
-//	void PredictPosVelVectors(const VECTOR3 &Pos, const VECTOR3 &Vel,
-//		double Mu, double Time, VECTOR3 &NewPos, VECTOR3 &NewVel, double &NewVelMag);
-//	void Lambert(VECTOR3 &stpos, VECTOR3 &renpos, double dt, double mu, 
-//						  VECTOR3 &v1, VECTOR3 &v2);
-//	void OrientAxis(VECTOR3 &vec, int axis, int ref);
-//	void OrbitParams(VECTOR3 &rpos, VECTOR3 &rvel, double &period, double &apo, double &tta, 
-//				 double &per, double &ttp);
-//	void EquToRel(double vlat, double vlon, double vrad, VECTOR3 &pos);
 	void Phase(double &phase, double &delta);
 	void Radar(double &range, double &rate);
 	void GetIMUOrientation(int type, double arg, VECTOR3 &x, VECTOR3 &y, VECTOR3 &z);
 	void Prog12Pressed(int R1, int R2, int R3);
-//	void Prog29Pressed(int R1, int R2, int R3);
 	void Prog34Pressed(int R1, int R2, int R3);
 	void Prog41Pressed(int R1, int R2, int R3);
 	void Prog63Pressed(int R1, int R2, int R3);
@@ -272,6 +265,10 @@ protected:
 	bool OrbitCalculationsValid();
 	bool DescentPhase();
 	bool AscentPhase();
+	void ResetAttitudeLevel();
+	void AddAttitudeRotLevel(VECTOR3 level);
+	void AddAttitudeLinLevel(VECTOR3 level);
+	void AddAttitudeLinLevel(int axis, double level);
 	void SetAttitudeRotLevel(VECTOR3 level);
 	
 	///
@@ -284,6 +281,10 @@ protected:
 	LEMFlagWord0 FlagWord0;
 	LEMFlagWord1 FlagWord1;
 	LEMFlagWord2 FlagWord2;
+
+	double RCSCommand[16];
+	VECTOR3 CommandedAttitudeRotLevel;	// store current thrust levels between the guidance loop steps
+	VECTOR3 CommandedAttitudeLinLevel;	
 
 	//
 	// log file for autoland debugging
