@@ -1332,24 +1332,24 @@ GEOM 74 72 ; Cylinder01
 37 73 72
 37 56 73
 MATERIALS 4
-Mtl #0 with Tex: ProjectApollo/dooa_b with Tex: DOOA_B
+Mtl #0 with Tex: ProjectApollo/DOOA_B
 Mtl #0
-Mtl #0 with Tex: ProjectApollo/hopen with Tex: HOPEN
+Mtl #0 with Tex: ProjectApollo/HOPEN
 Mtl #2
-MATERIAL Mtl #0 with Tex: ProjectApollo/dooa_b with Tex: DOOA_B
-1.0 1.0 1.0 1.0
-1.0 1.0 1.0 1.0
-0.9 0.9 0.9 1.0 235.0
+MATERIAL Mtl #0 with Tex: ProjectApollo/DOOA_B
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0 92.0
 0.0 0.0 0.0 1.0
 MATERIAL Mtl #0
 0.772549 0.760784 0.670588 1.0
 0.772549 0.760784 0.670588 1.0
 0.9 0.9 0.9 1.0 59.0
 0.0 0.0 0.0 1.0
-MATERIAL Mtl #0 with Tex: ProjectApollo/hopen with Tex: HOPEN
-0.588 0.588 0.588 1.0
-0.0 0.0 0.0 1.0
-0.9 0.9 0.9 1.0 0.0
+MATERIAL Mtl #0 with Tex: ProjectApollo/HOPEN
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0 53.0
 0.0 0.0 0.0 1.0
 MATERIAL Mtl #2
 0.0 0.745098 0.682353 0.11

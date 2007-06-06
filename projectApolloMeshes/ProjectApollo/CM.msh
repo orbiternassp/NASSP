@@ -8659,27 +8659,27 @@ GEOM 110 144 ; Tunnel Hatch
 73 92 109
 MATERIALS 8
 Mtl #2
-Mtl #3 with Tex: ProjectApollo/tompa_cm with Tex: ProjectApollo\tompa_cm with Tex: ProjectApollo/tompa_cm
-Mtl #0 with Tex: ProjectApollo/cm_dt2 with Tex: ProjectApollo\cm_dt2 with Tex: ProjectApollo/CM_DT2
+Mtl #3 with Tex: ProjectApollo/tompa_cm
+Mtl #0 with Tex: ProjectApollo/CM_DT2
 Mtl #10
 Mtl #11
 Mtl #0
-Mtl #0 with Tex: ProjectApollo/slastereP with Tex: ProjectApollo\slastereP with Tex: ProjectApollo/slastereP
-Mtl #5 with Tex: ProjectApollo/shutte1 with Tex: shutte1 with Tex: ProjectApollo/shutte1
+Mtl #0 with Tex: ProjectApollo/slastereP
+Mtl #5 with Tex: ProjectApollo/shutte1
 MATERIAL Mtl #2
 0.72549 0.72549 0.72549 1.0
 0.72549 0.72549 0.72549 1.0
 0.9 0.9 0.9 1.0 124.0
 0.0 0.0 0.0 1.0
-MATERIAL Mtl #3 with Tex: ProjectApollo/tompa_cm with Tex: ProjectApollo\tompa_cm with Tex: ProjectApollo/tompa_cm
-0.588235 0.588235 0.588235 1.0
-0.588235 0.588235 0.588235 1.0
-0.9 0.9 0.9 1.0 92.0
+MATERIAL Mtl #3 with Tex: ProjectApollo/tompa_cm
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0 92.0
 0.0 0.0 0.0 1.0
-MATERIAL Mtl #0 with Tex: ProjectApollo/cm_dt2 with Tex: ProjectApollo\cm_dt2 with Tex: ProjectApollo/CM_DT2
-0.588 0.588 0.588 1.0
-0.0 0.0 0.0 1.0
-0.9 0.9 0.9 1.0 0.0
+MATERIAL Mtl #0 with Tex: ProjectApollo/CM_DT2
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0 0.0
 0.0 0.0 0.0 1.0
 MATERIAL Mtl #10
 0.172549 0.00392157 0.0 1.0
@@ -8696,15 +8696,15 @@ MATERIAL Mtl #0
 0.784314 0.784314 0.784314 1.0
 0.9 0.9 0.9 1.0 59.0
 0.0 0.0 0.0 1.0
-MATERIAL Mtl #0 with Tex: ProjectApollo/slastereP with Tex: ProjectApollo\slastereP with Tex: ProjectApollo/slastereP
-0.588 0.588 0.588 1.0
+MATERIAL Mtl #0 with Tex: ProjectApollo/slastereP
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0 0.0
 0.0 0.0 0.0 1.0
-0.9 0.9 0.9 1.0 0.0
-0.0 0.0 0.0 1.0
-MATERIAL Mtl #5 with Tex: ProjectApollo/shutte1 with Tex: shutte1 with Tex: ProjectApollo/shutte1
-0.588 0.588 0.588 1.0
-0.0 0.0 0.0 1.0
-0.9 0.9 0.9 1.0 0.0
+MATERIAL Mtl #5 with Tex: ProjectApollo/shutte1
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0
+1.000 1.000 1.000 1.0 92.0
 0.0 0.0 0.0 1.0
 TEXTURES 4
 ProjectApollo/tompa_cm.dds
