@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/04/25 18:49:25  tschachim
+  *	SCS dV mode.
+  *	
   *	Revision 1.3  2007/01/22 15:48:19  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -52,7 +55,6 @@ public:
 	double GetOxidUnbalanceLB();
 	double GetPropellantPressurePSI() { return propellantPressurePSI; }
 	double GetHeliumPressurePSI() { return heliumPressurePSI; }
-	double GetNitrogenPressurePSI() { return nitrogenPressurePSI; }
 	double GetPropellantLineTempF();
 	bool IsHeliumValveAOpen() { return heliumValveAOpen; }
 	bool IsHeliumValveBOpen() { return heliumValveBOpen; }
@@ -76,7 +78,6 @@ protected:
 	double propellantMaxMassToDisplay;
 	double propellantPressurePSI;
 	double heliumPressurePSI;
-	double nitrogenPressurePSI;
 	double lastPropellantMassHeliumValvesClosed;
 	bool heliumValveAOpen;
 	bool heliumValveBOpen;
@@ -140,6 +141,8 @@ public:
 	bool IsThrustOn() { return thrustOn; };
 	bool GetInjectorValves12Open() { return injectorValves12Open; };
 	bool GetInjectorValves34Open() { return injectorValves34Open; };
+	double GetNitrogenPressureAPSI() { return nitrogenPressureAPSI; };
+	double GetNitrogenPressureBPSI() { return nitrogenPressureBPSI; };
 	// Forcibly activate the SPS engine for unmanned control.
 	void EnforceBurn(bool burn) { enforceBurn = burn; }
 	void SaveState(FILEHANDLE scn);
@@ -154,6 +157,8 @@ protected:
 	bool injectorValves34Open;
 	bool enforceBurn;
 	bool engineOnCommanded;
+	double nitrogenPressureAPSI;
+	double nitrogenPressureBPSI;
 
 	Saturn *saturn;
 	THRUSTER_HANDLE &spsThruster;

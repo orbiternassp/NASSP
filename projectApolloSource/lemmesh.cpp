@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2006/08/20 08:28:06  dseagrav
+  *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
+  *	
   *	Revision 1.31  2006/08/18 05:45:01  dseagrav
   *	LM EDS now exists. Talkbacks wired to a power source will revert to BP when they lose power.
   *	
@@ -122,7 +125,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "nasspdefs.h"
@@ -220,10 +223,10 @@ void LEM::SetLmVesselDockStage()
 	//
 	mnumber=agc.GetApolloNo();
 	if(mnumber < 15) {
-		SetEmptyMass(7113.6);
+		SetEmptyMass(6565);		
 		fuelmass=8375.;
 	} else {
-		SetEmptyMass(7762);
+		SetEmptyMass(7334);
 		fuelmass=8891.;
 	}
 	SetSize (6);
@@ -255,18 +258,13 @@ void LEM::SetLmVesselDockStage()
 	}
 
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V( 0.0,-3.3,0.0), _V( 0,1,0), 44910, ph_Dsc, 3107);
-	th_hover[1] = CreateThruster (_V( 0.01,-3.3,-0.03), _V( 0,1,0), 0, ph_Dsc, 0);//this is a "virtual engine",no thrust and no fuel
-	                                                                              //needed for visual gimbaling for corrected engine flames
-
+	th_hover[0] = CreateThruster (_V(0.0  , -3.3,  0.0),  _V(0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[1] = CreateThruster (_V(0.013, -3.0, -0.03), _V(0,1,0),     0, ph_Dsc, 0);		//this is a "virtual engine",no thrust and no fuel
+																							//needed for visual gimbaling for corrected engine flames
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
+	AddExhaust(th_hover[1], 10.0, 1.2, exhaustTex);
 
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	AddExhaust (th_hover[1], 8.0, 0.65);//
-
-
-	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
 	SetCameraOffset (_V(-1,1.0,0.0));
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-1.85);
@@ -301,10 +299,10 @@ void LEM::SetLmVesselHoverStage()
 	ClearThrusterDefinitions();
 	agc.SetVesselStats(DPS_ISP, DPS_THRUST, true);
 	if(agc.GetApolloNo() < 15) {
-		SetEmptyMass(7113.6); // Was 6651
+		SetEmptyMass(6565); 
 		fuelmass=8375.;
 	} else {
-		SetEmptyMass(7762); // Was 7481
+		SetEmptyMass(7334); 
 		fuelmass=8891.;
 	}
 	SetSize (7);
@@ -348,16 +346,13 @@ void LEM::SetLmVesselHoverStage()
 	}
 	
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V( 0.0,-3.3,0.0), _V( 0,1,0), 44910, ph_Dsc, 3107);
-	th_hover[1] = CreateThruster (_V( 0.013,-3.3,-0.034), _V( 0,1,0), 0, ph_Dsc, 0);//this is a "virtual engine",no thrust and no fuel
-	                                                                                //needed for visual gimbaling for corrected engine flames
+	th_hover[0] = CreateThruster (_V(0.0  , -3.3,  0.0),   _V(0,1,0), 44910, ph_Dsc, 3107);
+	th_hover[1] = CreateThruster (_V(0.013, -2.8, -0.034), _V(0,1,0),     0, ph_Dsc, 0);	//this is a "virtual engine",no thrust and no fuel
+																							//needed for visual gimbaling for corrected engine flames
     DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	AddExhaust (th_hover[1], 8.0, 0.65);//
-	
-	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
-	
+	AddExhaust (th_hover[1], 10.0, 1.5, exhaustTex);
+		
 	SetCameraOffset (_V(-1,1.0,0.0));
 	status = 1;
 	stage = 1;
@@ -369,7 +364,6 @@ void LEM::SetLmVesselHoverStage()
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
 	InitNavRadios (4);
-	//vessel->SetEnableFocus(false);
 
 	LDGswitch=true;
 	ATT2switch=true;
@@ -395,7 +389,7 @@ void LEM::SetLmAscentHoverStage()
 	ShiftCentreOfMass(_V(0.0,3.0,0.0));
 	SetSize (5);
 	SetCOG_elev (5);
-	SetEmptyMass (2089.0);
+	SetEmptyMass (1920.0);
 	SetPMI (_V(2.8,2.29,2.37));
 	SetCrossSections (_V(21,23,17));
 	SetCW (0.1, 0.3, 1.4, 1.4);
@@ -416,22 +410,16 @@ void LEM::SetLmAscentHoverStage()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
     if (!ph_Asc)  
-		ph_Asc  = CreatePropellantResource(2345); //2nd stage Propellant
-	SetDefaultPropellantResource (ph_Asc); // display 2nd stage propellant level in generic HUD
+		ph_Asc  = CreatePropellantResource(2345.0);	// 2nd stage Propellant
+	SetDefaultPropellantResource (ph_Asc);			// Display 2nd stage propellant level in generic HUD
 	// orbiter main thrusters
-//    th_hover[0] = CreateThruster (_V( 0.0,-2.5,0.0), _V( 0,1,0), 15880, ph_Asc, 2921);
-    th_hover[0] = CreateThruster (_V( 0.0,-2.5,0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
-	th_hover[1] = CreateThruster (_V( 0.01,-2.5,0.0), _V( 0,1,0), 0, ph_Asc, 0);//this is a "virtual engine",no thrust and no fuel
-	                                                                              //needed for visual gimbaling for corrected engine flames
-
-	
+    th_hover[0] = CreateThruster (_V( 0.0,  -2.5, 0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
+	th_hover[1] = CreateThruster (_V( 0.01, -2.0, 0.0), _V( 0,1,0), 0,          ph_Asc, 0);		// this is a "virtual engine",no thrust and no fuel
+																								// needed for visual gimbaling for corrected engine flames
     DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");//"Exhaust2"
-	AddExhaust (th_hover[1], 5.0, 0.47);//
-
-
-	//vessel->SetMaxThrust (ENGINE_ATTITUDE, 480);
+	AddExhaust (th_hover[1], 6.0, 0.8, exhaustTex);
+	
 	SetCameraOffset (_V(-1,1.0,0.0));
 	status = 2;
 	stage = 2;
@@ -472,8 +460,7 @@ void LEM::SeparateStage (UINT stage)
 	VECTOR3 ofs1 = _V(0,-5,0);
 	VECTOR3 vel1 = _V(0,0,0);
 
-	if (stage == 1)
-	{
+	if (stage == 1)	{
 	    GetStatus (vs1);
 		vs1.eng_main = vs1.eng_hovr = 0.0;
 		VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
@@ -486,15 +473,14 @@ void LEM::SeparateStage (UINT stage)
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		GetStatus (vs1);
-		StageS.play(NOLOOP, 150);
+		// Wrong sound, is Saturn staging
+		// StageS.play(NOLOOP, 150);
 
 		char VName[256];
 		strcpy (VName, GetName()); strcat (VName, "-DESCENTSTG");
 		hdsc = oapiCreateVessel(VName, "ProjectApollo/sat5LMDSC", vs1);
 
 		SetLmAscentHoverStage();
-//		ENGARMswitch=ENGINE_ARMED_ASCENT;
-		//vessel->SetEngineLevel(ENGINE_HOVER,1);
 	}
 }
 

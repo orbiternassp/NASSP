@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/05/10 17:07:19  tschachim
+  *	Animation fixed because of the mesh group reduction.
+  *	
   *	Revision 1.21  2007/01/22 14:41:17  tschachim
   *	Sounds disabled because it "overwrites" the button sound in the CM.
   *	Wait for the OrbiterSound 3.5 or higher release and check again.
@@ -94,7 +97,7 @@
 #include "nasspdefs.h"
 #include "nasspsound.h"
 
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "sm.h"
@@ -151,9 +154,7 @@ SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 	DefineAnimations();
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-	// TODO Disabled because it "overwrites" the button sound in the CM
-	// Wait for the OrbiterSound 3.5 or higher release and check again
-	// soundlib.LoadSound(BreakS, CRASH_SOUND);
+	soundlib.LoadSound(BreakS, CRASH_SOUND);
 }
 
 SM::~SM()
@@ -992,12 +993,12 @@ void SM::AddEngines()
 	// it seperates.
 	//
 
-	SURFHANDLE SMExhaustTex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
+	SURFHANDLE SMExhaustTex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust_atrcs");
 
 	for (i = 0; i < 24; i++)
 	{
 		if (th_att_lin[i])
-			AddExhaust (th_att_lin[i], 1.2, 0.18, SMExhaustTex);
+			AddExhaust (th_att_lin[i], 1.2, 0.1, SMExhaustTex);
 	}
 
 	//

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/04/25 18:49:25  tschachim
+  *	SCS dV mode.
+  *	
   *	Revision 1.5  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -44,7 +47,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"
@@ -80,7 +83,6 @@ SPSPropellantSource::SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 	heliumValveBOpen = false;
 	propellantPressurePSI = 0;
 	heliumPressurePSI = 0;
-	nitrogenPressurePSI = 0;
 	lastPropellantMassHeliumValvesClosed = -1;
 
 	propellantMassToDisplay = SPS_DEFAULT_PROPELLANT;
@@ -117,7 +119,6 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 
 		propellantPressurePSI = 175.0;
 		heliumPressurePSI = 3600.0;
-		nitrogenPressurePSI = 2500.0;
 	
 	} else if (!source_prop) {
 		p = 0;
@@ -126,7 +127,6 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 
 		propellantPressurePSI = 0;
 		heliumPressurePSI = 0;
-		nitrogenPressurePSI = 0;
 		propellantInitialized = false;
 
 	} else {
@@ -171,7 +171,6 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 		}
 		double pMaxForPressures = our_vessel->GetPropellantMaxMass(source_prop);
 		heliumPressurePSI = 3400.0 * (p / pMaxForPressures) * (p / pMaxForPressures) + 200.0;
-		nitrogenPressurePSI = 700.0 * (p / pMaxForPressures) + 1800.0;
 	}
 
 	// Propellant masses for display
@@ -394,7 +393,6 @@ void SPSPropellantSource::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_float(scn, "PROPELLANTMAXMASSTODISPLAY", propellantMaxMassToDisplay);
 	oapiWriteScenario_float(scn, "PROPELLANTPRESSUREPSI", propellantPressurePSI);
 	oapiWriteScenario_float(scn, "HELIUMPRESSUREPSI", heliumPressurePSI);
-	oapiWriteScenario_float(scn, "NITROGENPRESSUREPSI", nitrogenPressurePSI);
 	oapiWriteScenario_float(scn, "LASTPROPELLANTMASSHELIUMVALVESCLOSED", lastPropellantMassHeliumValvesClosed);
 	oapiWriteScenario_int(scn, "HELIUMVALVEAOPEN", (heliumValveAOpen ? 1 : 0));
 	oapiWriteScenario_int(scn, "HELIUMVALVEBOPEN", (heliumValveBOpen ? 1 : 0));
@@ -420,9 +418,6 @@ void SPSPropellantSource::LoadState(FILEHANDLE scn) {
 		}
 		else if (!strnicmp (line, "PROPELLANTPRESSUREPSI", 21)) {
 			sscanf (line+21, "%lf", &propellantPressurePSI);
-		}
-		else if (!strnicmp (line, "NITROGENPRESSUREPSI", 19)) {
-			sscanf (line+19, "%lf", &nitrogenPressurePSI);
 		}
 		else if (!strnicmp (line, "HELIUMPRESSUREPSI", 17)) {
 			sscanf (line+17, "%lf", &heliumPressurePSI);
@@ -469,6 +464,8 @@ SPSEngine::SPSEngine(THRUSTER_HANDLE &sps) :
 	saturn = 0;
 	enforceBurn = false;
 	engineOnCommanded = false;
+	nitrogenPressureAPSI = 2500.0;
+	nitrogenPressureBPSI = 2500.0;
 }
 
 SPSEngine::~SPSEngine() {
@@ -550,20 +547,29 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	// Injector valves
 	//
 
-	if (thrustOn && saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE) {
-		if (injectorPreValveAOpen && !injectorValves12Open) {
-			injectorValves12Open = true;
+	if (saturn->GetStage() <= CSM_LEM_STAGE) {
+		if (thrustOn && saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE) {
+			if (injectorPreValveAOpen && !injectorValves12Open && nitrogenPressureAPSI > 400.0) {	// N2 pressure condition see http://www.history.nasa.gov/alsj/a11/a11transcript_pao.htm
+				injectorValves12Open = true;
+				nitrogenPressureAPSI -= 50.0;	// Average pressure decay, see Apollo 11 Mission report, 16.1.1
+			}
+		} else {
+			injectorValves12Open = false;
+		}
+
+		if (thrustOn && saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE) {
+			if (injectorPreValveBOpen && !injectorValves34Open && nitrogenPressureBPSI > 400.0) {
+				injectorValves34Open = true;
+				nitrogenPressureBPSI -= 50.0;
+			}
+		} else {
+			injectorValves34Open = false;
 		}
 	} else {
 		injectorValves12Open = false;
-	}
-
-	if (thrustOn && saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE) {
-		if (injectorPreValveBOpen && !injectorValves34Open) {
-			injectorValves34Open = true;
-		}
-	} else {
 		injectorValves34Open = false;
+		nitrogenPressureAPSI = 0;
+		nitrogenPressureBPSI = 0;
 	}
 
 	//
@@ -704,6 +710,8 @@ void SPSEngine::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "INJECTORVALVES34OPEN", (injectorValves34Open ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENFORCEBURN", (enforceBurn ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGINEONCOMMANDED", (engineOnCommanded ? 1 : 0));
+	oapiWriteScenario_float(scn, "NITROGENPRESSUREAPSI", nitrogenPressureAPSI);
+	oapiWriteScenario_float(scn, "NITROGENPRESSUREBPSI", nitrogenPressureBPSI);
 	oapiWriteLine(scn, SPSENGINE_END_STRING);
 }
 
@@ -735,6 +743,12 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "ENFORCEBURN", 11)) {
 			sscanf (line+11, "%d", &i);
 			enforceBurn = (i != 0);
+		}
+		else if (!strnicmp (line, "NITROGENPRESSUREAPSI", 20)) {
+			sscanf (line+20, "%lf", &nitrogenPressureAPSI);
+		}
+		else if (!strnicmp (line, "NITROGENPRESSUREBPSI", 20)) {
+			sscanf (line+20, "%lf", &nitrogenPressureBPSI);
 		}
 	}
 }

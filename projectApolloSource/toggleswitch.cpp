@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2007/01/22 14:47:38  tschachim
+  *	Moved FDAIPowerRotationalSwitch to satswitches, horizontal thumbwheel.
+  *	
   *	Revision 1.74  2006/11/24 22:42:44  dseagrav
   *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
   *	
@@ -257,7 +260,7 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "nasspdefs.h"

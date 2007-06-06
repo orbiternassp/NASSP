@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2006/08/21 03:04:38  dseagrav
+  *	This patch adds DC volt/amp meters and associated switches, which was an unholy pain in the
+  *	
   *	Revision 1.22  2006/08/20 08:28:06  dseagrav
   *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
   *	
@@ -93,7 +96,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "nasspdefs.h"
@@ -141,58 +144,57 @@ void LEM::AddRCS_LMH(double TRANZ)
 	double MaxThrust=445.0;
 	double RCSISP=2840.0;
 
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
 	// A1U
 	th_rcs[0]=CreateThruster(_V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[0],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[0],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A1F
 	th_rcs[1]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[1],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[1],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B1L
 	th_rcs[2]=CreateThruster(_V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[2],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[2],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B1D
 	th_rcs[3]=CreateThruster(_V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[3],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[3],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// B2U
 	th_rcs[4]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[4],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[4],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B2L
 	th_rcs[5]=CreateThruster(_V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[5],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[5],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A2A
 	th_rcs[6]=CreateThruster(_V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[6],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[6],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A2D
 	th_rcs[7]=CreateThruster(_V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[7],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[7],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// A3U
 	th_rcs[8]=CreateThruster(_V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[8],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[8],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A3R
 	th_rcs[9]=CreateThruster(_V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(-1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[9],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[9],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B3A
 	th_rcs[10]=CreateThruster(_V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[10],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[10],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B3D
 	th_rcs[11]=CreateThruster(_V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[11],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[11],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// B4U
 	th_rcs[12]=CreateThruster(_V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[12],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[12],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B4F
 	th_rcs[13]=CreateThruster(_V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[13],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[13],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A4R
 	th_rcs[14]=CreateThruster(_V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(-1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[14],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[14],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A4D
 	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// Setup Orbiter thruster groups
 	th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
@@ -225,6 +227,29 @@ void LEM::AddRCS_LMH(double TRANZ)
 	th_rcs_orbiter_rot[22]= th_rcs[13]; // B4F
 	th_rcs_orbiter_rot[23]= th_rcs[6];  // A2A
 	CreateThrusterGroup (th_rcs_orbiter_rot+20, 4,THGROUP_ATT_YAWRIGHT);
+
+	th_rcs_orbiter_lin[0] = th_rcs[3];  // B1D
+	th_rcs_orbiter_lin[1] = th_rcs[7];  // A2D
+	th_rcs_orbiter_lin[2] = th_rcs[11]; // B3D
+	th_rcs_orbiter_lin[3] = th_rcs[15]; // A4D
+	CreateThrusterGroup (th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
+	th_rcs_orbiter_lin[4] = th_rcs[0];  // A1U
+	th_rcs_orbiter_lin[5] = th_rcs[4];  // B2U
+	th_rcs_orbiter_lin[6] = th_rcs[8];  // A3U
+	th_rcs_orbiter_lin[7] = th_rcs[12]; // B4U
+	CreateThrusterGroup (th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
+	th_rcs_orbiter_lin[8] = th_rcs[9];  // A3R
+	th_rcs_orbiter_lin[9] = th_rcs[14]; // A4R
+	CreateThrusterGroup (th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
+	th_rcs_orbiter_lin[10] = th_rcs[2];  // B1L
+	th_rcs_orbiter_lin[11] = th_rcs[5];  // B2L
+	CreateThrusterGroup (th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
+	th_rcs_orbiter_lin[12] = th_rcs[6];  // A2A
+	th_rcs_orbiter_lin[13] = th_rcs[10]; // B3A
+	CreateThrusterGroup (th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
+	th_rcs_orbiter_lin[14] = th_rcs[1];  // A1F
+	th_rcs_orbiter_lin[15] = th_rcs[13]; // B4F
+	CreateThrusterGroup (th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
 
 	/* THRUSTER TABLE:
 		0	A1U		8	A3U
@@ -259,58 +284,112 @@ void LEM::AddRCS_LMH2(double TRANZ)
 	double MaxThrust=445.0;
 	double RCSISP=2840.0;
 
-	SURFHANDLE tex = oapiRegisterExhaustTexture ("Exhaust_atrcs");
 	// A1U
 	th_rcs[0]=CreateThruster(_V(-ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[0],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[0],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A1F
 	th_rcs[1]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[1],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[1],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B1L
 	th_rcs[2]=CreateThruster(_V(-ATTCOOR-0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[2],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[2],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B1D
 	th_rcs[3]=CreateThruster(_V(-ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[3],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[3],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// B2U
 	th_rcs[4]=CreateThruster(_V(-ATTCOOR+.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.30), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[4],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[4],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B2L
 	th_rcs[5]=CreateThruster(_V(-ATTCOOR-0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[5],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[5],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A2A
 	th_rcs[6]=CreateThruster(_V(-ATTCOOR+.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[6],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[6],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A2D
 	th_rcs[7]=CreateThruster(_V(-ATTCOOR+.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[7],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[7],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// A3U
 	th_rcs[8]=CreateThruster(_V(ATTCOOR-0.05,ATTCOOR2+0.0,TRANZ+RCSOFFSETM2-0.35), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[8],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[8],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A3R
 	th_rcs[9]=CreateThruster(_V(ATTCOOR+0.2,ATTCOOR2-0.35,TRANZ+RCSOFFSETM2-.25), _V(-1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[9],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[9],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B3A
 	th_rcs[10]=CreateThruster(_V(ATTCOOR-.10,ATTCOOR2-0.35,TRANZ+RCSOFFSET-0.8), _V(0,0,1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[10],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[10],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B3D
 	th_rcs[11]=CreateThruster(_V(ATTCOOR-0.1,ATTCOOR2-.65,TRANZ+RCSOFFSETM2-0.35), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[11],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[11],ATTHEIGHT,ATTWIDTH, exhaustTex);
 
 	// B4U
 	th_rcs[12]=CreateThruster(_V(ATTCOOR,ATTCOOR2+0.3,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,-1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[12],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[12],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// B4F
 	th_rcs[13]=CreateThruster(_V(ATTCOOR-.001,ATTCOOR2-0.18,TRANZ+RCSOFFSET+3.10), _V(0,0,-1), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[13],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[13],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A4R
 	th_rcs[14]=CreateThruster(_V(ATTCOOR+0.30,ATTCOOR2-0.18,TRANZ+RCSOFFSETM2+3.17), _V(-1,0,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[14],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[14],ATTHEIGHT,ATTWIDTH, exhaustTex);
 	// A4D
 	th_rcs[15]=CreateThruster(_V(ATTCOOR,ATTCOOR2-.55,TRANZ+RCSOFFSETM2-0.12+3.3), _V(0,1,0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH,tex);
+	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
+
+	// Setup Orbiter thruster groups
+	th_rcs_orbiter_rot[0] = th_rcs[0];  // A1U
+	th_rcs_orbiter_rot[1] = th_rcs[12]; // B4U
+	th_rcs_orbiter_rot[2] = th_rcs[11]; // B3D
+	th_rcs_orbiter_rot[3] = th_rcs[7];  // A2D
+	CreateThrusterGroup (th_rcs_orbiter_rot+0, 4, THGROUP_ATT_PITCHDOWN);
+	th_rcs_orbiter_rot[4] = th_rcs[15]; // A4D
+	th_rcs_orbiter_rot[5] = th_rcs[3];  // B1D
+	th_rcs_orbiter_rot[6] = th_rcs[8];  // A3U
+	th_rcs_orbiter_rot[7] = th_rcs[4];  // B2U
+	CreateThrusterGroup (th_rcs_orbiter_rot+4, 4, THGROUP_ATT_PITCHUP);
+	th_rcs_orbiter_rot[8] = th_rcs[0];  // A1U
+	th_rcs_orbiter_rot[9] = th_rcs[4];  // B2U
+	th_rcs_orbiter_rot[10]= th_rcs[11]; // B3D
+	th_rcs_orbiter_rot[11]= th_rcs[15]; // A4D
+	CreateThrusterGroup (th_rcs_orbiter_rot+8, 4, THGROUP_ATT_BANKLEFT);
+	th_rcs_orbiter_rot[12]= th_rcs[3];  // B1D
+	th_rcs_orbiter_rot[13]= th_rcs[7];  // A2D
+	th_rcs_orbiter_rot[14]= th_rcs[12]; // B4U
+	th_rcs_orbiter_rot[15]= th_rcs[8];  // A3U
+	CreateThrusterGroup (th_rcs_orbiter_rot+12, 4,THGROUP_ATT_BANKRIGHT);
+	th_rcs_orbiter_rot[16]= th_rcs[1];  // A1F
+	th_rcs_orbiter_rot[17]= th_rcs[14]; // A4R
+	th_rcs_orbiter_rot[18]= th_rcs[10]; // B3A
+	th_rcs_orbiter_rot[19]= th_rcs[5];  // B2L
+	CreateThrusterGroup (th_rcs_orbiter_rot+16, 4,THGROUP_ATT_YAWLEFT);
+	th_rcs_orbiter_rot[20]= th_rcs[2];  // B1L
+	th_rcs_orbiter_rot[21]= th_rcs[9];  // A3R
+	th_rcs_orbiter_rot[22]= th_rcs[13]; // B4F
+	th_rcs_orbiter_rot[23]= th_rcs[6];  // A2A
+	CreateThrusterGroup (th_rcs_orbiter_rot+20, 4,THGROUP_ATT_YAWRIGHT);
+
+	th_rcs_orbiter_lin[0] = th_rcs[3];  // B1D
+	th_rcs_orbiter_lin[1] = th_rcs[7];  // A2D
+	th_rcs_orbiter_lin[2] = th_rcs[11]; // B3D
+	th_rcs_orbiter_lin[3] = th_rcs[15]; // A4D
+	CreateThrusterGroup (th_rcs_orbiter_lin + 0, 4, THGROUP_ATT_UP);
+	th_rcs_orbiter_lin[4] = th_rcs[0];  // A1U
+	th_rcs_orbiter_lin[5] = th_rcs[4];  // B2U
+	th_rcs_orbiter_lin[6] = th_rcs[8];  // A3U
+	th_rcs_orbiter_lin[7] = th_rcs[12]; // B4U
+	CreateThrusterGroup (th_rcs_orbiter_lin + 4, 4, THGROUP_ATT_DOWN);
+	th_rcs_orbiter_lin[8] = th_rcs[9];  // A3R
+	th_rcs_orbiter_lin[9] = th_rcs[14]; // A4R
+	CreateThrusterGroup (th_rcs_orbiter_lin + 8, 2, THGROUP_ATT_LEFT);
+	th_rcs_orbiter_lin[10] = th_rcs[2];  // B1L
+	th_rcs_orbiter_lin[11] = th_rcs[5];  // B2L
+	CreateThrusterGroup (th_rcs_orbiter_lin + 10, 2, THGROUP_ATT_RIGHT);
+	th_rcs_orbiter_lin[12] = th_rcs[6];  // A2A
+	th_rcs_orbiter_lin[13] = th_rcs[10]; // B3A
+	CreateThrusterGroup (th_rcs_orbiter_lin + 12, 2, THGROUP_ATT_FORWARD);
+	th_rcs_orbiter_lin[14] = th_rcs[1];  // A1F
+	th_rcs_orbiter_lin[15] = th_rcs[13]; // B4F
+	CreateThrusterGroup (th_rcs_orbiter_lin + 14, 2, THGROUP_ATT_BACK);
 }
 
 bool LEM::CabinFansActive()

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2007/02/18 01:35:28  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.76  2007/01/22 15:48:13  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -245,7 +248,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"
@@ -309,6 +312,55 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, Pa
 	LastOut5 = 0;
 	LastOut6 = 0;
 	LastOut11 = 0;
+
+// autopilot variables
+	GONEPAST = false;
+	EGSW = false;
+	HIND = false;
+	LATSW = false;
+	RELVELSW = false;
+	INRLSW = false;
+	GONEBY = false;
+	NOSWITCH = false;
+	ACALC = 0;
+	RollCode = 0;
+	K2ROLL = 0;
+	SELECTOR = 0;
+	KA = 0;
+	Dzero = 0;
+	LoverD = 0;
+	Q7 = 0;
+	FACTOR = 0;
+	FACT1 = 0;
+	FACT2 = 0;
+	DIFFOLD = 0;
+	LEWD = 0;
+	DLEWD = 0;
+	A0 = 0;
+	A1 = 0;
+	VS1 = 0;
+	ALP = 0;
+	AHOOK = 0;
+	DHOOK = 0;
+	V1 = 0;
+
+// DSKY display variables
+	V = 0;
+	D = 0;
+	PREDGMAX = 0;
+	VPRED = 0;
+	GAMMAEI = 0;
+	TIME5 = 0;
+	RANGETOGO = 0;
+	RTOSPLASH = 0;
+	TIMETOGO = 0;
+	VIO = 0;
+	ROLLC = 0;
+	LATANG = 0;
+	XRNGERR = 0;
+	DNRNGERR = 0;
+	RDOT = 0;
+	VL = 0;
 }
 
 CSMcomputer::~CSMcomputer()
@@ -1049,6 +1101,10 @@ void CSMcomputer::Prog61(double simt)
 			energy = V * V / 2.0 - MUE / rad;
 			VPRED = sqrt(2.0 * (energy + MUE / (RE + 122000.0)));
 // calculate entry angle
+			if ((hm / ((RE + 122000.0) * VPRED)) > 1.0) {
+				LightOprErr();
+				return;
+			}
 			GAMMAEI = -acos(hm / ((RE + 122000.0) * VPRED));
 // calculate a nominal splashdown point, RANGETOGO is downrange distance from
 //		0.05G to splashdown. Currently derived from the real ranges flown by Apollo 7 and 11
@@ -1356,14 +1412,16 @@ void CSMcomputer::HoldAttitude(double roll,double pitch,double yaw)
 	UPx = -(GlobalUp.x*Px+GlobalUp.y*Py+GlobalUp.z*Pz);
 	UPy = GlobalUp.x*Rvec.x+GlobalUp.y*Rvec.y+GlobalUp.z*Rvec.z;
 	UPz = GlobalUp.x*Vx+GlobalUp.y*Vy+GlobalUp.z*Vz;
-	rollerror = roll - atan(UPx/UPy);
+	rollerror = roll + atan2(UPx, -UPy); 
 	OurVessel->GetShipAirspeedVector(AirSpeed);
-	pitcherror = atan (AirSpeed.y/AirSpeed.z) - pitch;
-	sliperror = yaw - atan (AirSpeed.x/AirSpeed.z);
-	while(rollerror < -3.14159) rollerror += 6.28318;
-	while(rollerror > 3.14159) rollerror -= 6.28318;
-	while(sliperror < -3.14159) sliperror += 6.28318;
-	while(sliperror > 3.14159) sliperror -= 6.28318;
+	pitcherror = atan2(-AirSpeed.y, -AirSpeed.z) - pitch;
+	sliperror = yaw - atan2(-AirSpeed.x, -AirSpeed.z);
+	while(pitcherror < -PI) pitcherror += 2.*PI;
+	while(pitcherror > PI) pitcherror -= 2.*PI;
+	while(rollerror < -PI) rollerror += 2.*PI;
+	while(rollerror > PI) rollerror -= 2.*PI;
+	while(sliperror < -PI) sliperror += 2.*PI;
+	while(sliperror > PI) sliperror -= 2.*PI;
 	OurVessel->ActivateNavmode(NAVMODE_KILLROT);
 	OurVessel->DeactivateNavmode(NAVMODE_KILLROT);
 	for(int i=1;i<9;i++)
@@ -1496,7 +1554,7 @@ void CSMcomputer::HoldAttitude(double roll,double pitch,double yaw)
 					SetOutputChannelBit(06,k,false);
 				}
 			}
-		break;
+			break;
 		}
 	}
 }
@@ -1654,14 +1712,14 @@ void CSMcomputer::Prog64(double simt)
 	double radius, radius2, dTime, rollerror, hx, hy, hz;
 	double theta,  rx, ry, rz, ctheta, stheta, xpx, xpy, xpz, rstep, vstep;
 	double sliperror, roterror, rotvel;
-	double VSQ, FIVEGSW, LEQ, THETA, THETNM, XD, VD;
+	double VSQ, LEQ, THETA, THETNM, XD, VD;
 	double LoverD1, COSG, TEM1B, frac, rtogo, bias;
 	double DVL, GAMMAL1, WT, vX, vY, vZ, mass1;
 	double GAMMAL, VBARS, E, ASKEP;
 	double ASP1, ASPUP, ASP3, ASPDWN, ASP, DIFF, RDTR, DR, VREFF, RDOTREFF;
 	double rdotref, drefr, f2, f1, f3, f4, PREDANGLE, X, Y;
-	int thruston;
-	int i;
+	bool FIVEGSW;
+	int thruston, i;
 	VESSELSTATUS status;
 	OBJHANDLE hPlanet;
 
@@ -2227,16 +2285,16 @@ void CSMcomputer::Prog64(double simt)
 //	Modeled after the real DAP equations. 
 //	Attempts to roll to commanded roll angle (ROLLC) as quickly as possible.
 			if(UPy > 0.0)
-				roll =  atan(UPx/UPy);
+				roll = atan(UPx/UPy);
 			else
-				roll = atan(UPx/UPy) - 3.14159 ;
+				roll = atan(UPx/UPy) - PI;
 			rollerror = -ROLLC - roll;
 			OurVessel->GetShipAirspeedVector(AirSpeed);
-			sliperror =  - atan (AirSpeed.x/AirSpeed.z);
-			while(rollerror < -3.14159) rollerror += 6.28318;
-			while(rollerror > 3.14159) rollerror -= 6.28318;
-			while(sliperror < -3.14159) sliperror += 6.28318;
-			while(sliperror > 3.14159) sliperror -= 6.28318;
+			sliperror = -atan(AirSpeed.x/AirSpeed.z);
+			while(rollerror < -PI) rollerror += 2.*PI;
+			while(rollerror > PI) rollerror -= 2.*PI;
+			while(sliperror < -PI) sliperror += 2.*PI;
+			while(sliperror > PI) sliperror -= 2.*PI;
 			OurVessel->ActivateNavmode(NAVMODE_KILLROT);
 			OurVessel->DeactivateNavmode(NAVMODE_KILLROT);
 			zone =0;
@@ -2950,18 +3008,20 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		}
 
 		// Do single timesteps to maintain sync with telemetry engine
-		SingleTimestepPrep(simt,simdt);                       // Setup
-		if(LastCycled == 0){ LastCycled = (simt - simdt); }	  // Use simdt as difference if new run
-		double ThisTime = LastCycled;					      // Save here
+		SingleTimestepPrep(simt, simdt);        // Setup
+		if (LastCycled == 0) {					// Use simdt as difference if new run
+			LastCycled = (simt - simdt); 
+		}	  
+		double ThisTime = LastCycled;			// Save here
 		
-		long cycles = (long)((simt - LastCycled) / 0.00001171875); // Get number of CPU cycles to do
-		LastCycled += (0.00001171875 * cycles);                    // Preserve the remainder
+		long cycles = (long)((simt - LastCycled) / 0.00001171875);	// Get number of CPU cycles to do
+		LastCycled += (0.00001171875 * cycles);						// Preserve the remainder
 		long x = 0; 
-		while(x < cycles){
+		while(x < cycles) {
 			SingleTimestep();
-			ThisTime += 0.00001171875;                          // Add time
-			if((ThisTime - sat->pcm.last_update) > 0.00015625){ // If a step is needed
-				sat->pcm.TimeStep(ThisTime);                    // do it
+			ThisTime += 0.00001171875;								// Add time
+			if((ThisTime - sat->pcm.last_update) > 0.00015625) {	// If a step is needed
+				sat->pcm.TimeStep(ThisTime);						// do it
 			}
 			x++;
 		}
@@ -3293,6 +3353,188 @@ bool CSMcomputer::ReadMemory(unsigned int loc, int &val)
 			val = VesselStatusDisplay;
 			return true;
 
+		case 0116:
+			val = (GONEPAST ? 1 : 0);
+			return true;
+
+		case 0117:
+			val = (EGSW ? 1 : 0);
+			return true;
+
+		case 0120:
+			val = (HIND ? 1 : 0);
+			return true;
+
+		case 0121:
+			val = (LATSW ? 1 : 0);
+			return true;
+
+		case 0122:
+			val = (RELVELSW ? 1 : 0);
+			return true;
+
+		case 0123:
+			val = (INRLSW ? 1 : 0);
+			return true;
+
+		case 0124:
+			val = (GONEBY ? 1 : 0);
+			return true;
+
+		case 0125:
+			val = (NOSWITCH ? 1 : 0);
+			return true;
+
+		case 0126:
+			val = ACALC;
+			return true;
+
+		case 0127:
+			val = RollCode;
+			return true;
+
+		case 0130:
+			val = K2ROLL;
+			return true;
+
+		case 0131:
+			val = SELECTOR;
+			return true;
+
+		// TODO Check scaling of all the doubles
+
+		case 0132:
+			val = (int) (KA * 100.0);
+			return true;
+
+		case 0133:
+			val = (int) (Dzero * 100.0);
+			return true;
+
+		case 0134:
+			val = (int) (LoverD * 100.0);
+			return true;
+
+		case 0135:
+			val = (int) (Q7 * 100.0);
+			return true;
+
+		case 0136:
+			val = (int) (FACTOR * 100.0);
+			return true;
+
+		case 0137:
+			val = (int) (FACT1 * 100.0);
+			return true;
+
+		case 0140:
+			val = (int) (FACT2 * 100.0);
+			return true;
+
+		case 0141:
+			val = (int) (DIFFOLD * 100.0);
+			return true;
+
+		case 0142:
+			val = (int) (LEWD * 100.0);
+			return true;
+
+		case 0143:
+			val = (int) (DLEWD * 100.0);
+			return true;
+
+		case 0144:
+			val = (int) (A0 * 100.0);
+			return true;
+
+		case 0145:
+			val = (int) (A1 * 100.0);
+			return true;
+
+		case 0146:
+			val = (int) (VS1 * 100.0);
+			return true;
+
+		case 0147:
+			val = (int) (ALP * 100.0);
+			return true;
+
+		case 0150:
+			val = (int) (AHOOK * 100.0);
+			return true;
+
+		case 0151:
+			val = (int) (DHOOK * 100.0);
+			return true;
+
+		case 0152:
+			val = (int) (V1 * 100.0);
+			return true;
+
+		case 0153:
+			val = (int) (V * 100.0);
+			return true;
+
+		case 0154:
+			val = (int) (D * 100.0);
+			return true;
+
+		case 0155:
+			val = (int) (PREDGMAX * 100.0);
+			return true;
+
+		case 0156:
+			val = (int) (VPRED * 100.0);
+			return true;
+
+		case 0157:
+			val = (int) (GAMMAEI * 100.0);
+			return true;
+
+		case 0160:
+			val = (int) (TIME5 * 100.0);
+			return true;
+
+		case 0161:
+			val = (int) (RANGETOGO * 100.0);
+			return true;
+
+		case 0162:
+			val = (int) (RTOSPLASH * 100.0);
+			return true;
+
+		case 0163:
+			val = (int) (TIMETOGO * 100.0);
+			return true;
+
+		case 0164:
+			val = (int) (VIO * 100.0);
+			return true;
+
+		case 0165:
+			val = (int) (ROLLC * 100.0);
+			return true;
+
+		case 0166:
+			val = (int) (LATANG * 100.0);
+			return true;
+
+		case 0167:
+			val = (int) (XRNGERR * 100.0);
+			return true;
+
+		case 0170:
+			val = (int) (DNRNGERR * 100.0);
+			return true;
+
+		case 0171:
+			val = (int) (RDOT * 100.0);
+			return true;
+
+		case 0172:
+			val = (int) (VL * 100.0);
+			return true;
+
 		default:
 			break;
 		}
@@ -3339,6 +3581,188 @@ void CSMcomputer::WriteMemory(unsigned int loc, int val)
 
 		case 0115:
 			VesselStatusDisplay = val;
+			break;
+
+		case 0116:
+			GONEPAST = (val == 1);
+			break;
+
+		case 0117:
+			EGSW = (val == 1);
+			break;
+
+		case 0120:
+			HIND = (val == 1);
+			break;
+
+		case 0121:
+			LATSW = (val == 1);
+			break;
+
+		case 0122:
+			RELVELSW = (val == 1);
+			break;
+
+		case 0123:
+			INRLSW = (val == 1);
+			break;
+
+		case 0124:
+			GONEBY = (val == 1);
+			break;
+
+		case 0125:
+			NOSWITCH = (val == 1);
+			break;
+
+		case 0126:
+			ACALC = val;
+			break;
+
+		case 0127:
+			RollCode = val;
+			break;
+
+		case 0130:
+			K2ROLL = val;
+			break;
+
+		case 0131:
+			SELECTOR = val;
+			break;
+
+		// TODO Check scaling of all the doubles
+
+		case 0132:
+			KA = ((double) val) / 100.0;
+			break;
+
+		case 0133:
+			Dzero = ((double) val) / 100.0;
+			break;
+
+		case 0134:
+			LoverD = ((double) val) / 100.0;
+			break;
+
+		case 0135:
+			Q7 = ((double) val) / 100.0;
+			break;
+
+		case 0136:
+			FACTOR = ((double) val) / 100.0;
+			break;
+
+		case 0137:
+			FACT1 = ((double) val) / 100.0;
+			break;
+
+		case 0140:
+			FACT2 = ((double) val) / 100.0;
+			break;
+
+		case 0141:
+			DIFFOLD = ((double) val) / 100.0;
+			break;
+
+		case 0142:
+			LEWD = ((double) val) / 100.0;
+			break;
+
+		case 0143:
+			DLEWD = ((double) val) / 100.0;
+			break;
+
+		case 0144:
+			A0 = ((double) val) / 100.0;
+			break;
+
+		case 0145:
+			A1 = ((double) val) / 100.0;
+			break;
+
+		case 0146:
+			VS1 = ((double) val) / 100.0;
+			break;
+
+		case 0147:
+			ALP = ((double) val) / 100.0;
+			break;
+
+		case 0150:
+			AHOOK = ((double) val) / 100.0;
+			break;
+
+		case 0151:
+			DHOOK = ((double) val) / 100.0;
+			break;
+
+		case 0152:
+			V1 = ((double) val) / 100.0;
+			break;
+
+		case 0153:
+			V = ((double) val) / 100.0;
+			break;
+
+		case 0154:
+			D = ((double) val) / 100.0;
+			break;
+
+		case 0155:
+			PREDGMAX = ((double) val) / 100.0;
+			break;
+
+		case 0156:
+			VPRED = ((double) val) / 100.0;
+			break;
+
+		case 0157:
+			GAMMAEI = ((double) val) / 100.0;
+			break;
+
+		case 0160:
+			TIME5 = ((double) val) / 100.0;
+			break;
+
+		case 0161:
+			RANGETOGO = ((double) val) / 100.0;
+			break;
+
+		case 0162:
+			RTOSPLASH = ((double) val) / 100.0;
+			break;
+
+		case 0163:
+			TIMETOGO = ((double) val) / 100.0;
+			break;
+
+		case 0164:
+			VIO = ((double) val) / 100.0;
+			break;
+
+		case 0165:
+			ROLLC = ((double) val) / 100.0;
+			break;
+
+		case 0166:
+			LATANG = ((double) val) / 100.0;
+			break;
+
+		case 0167:
+			XRNGERR = ((double) val) / 100.0;
+			break;
+
+		case 0170:
+			DNRNGERR = ((double) val) / 100.0;
+			break;
+
+		case 0171:
+			RDOT = ((double) val) / 100.0;
+			break;
+
+		case 0172:
+			VL = ((double) val) / 100.0;
 			break;
 
 		default:

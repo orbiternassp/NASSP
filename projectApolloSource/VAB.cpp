@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2007/03/02 18:34:37  tschachim
+  *	Improved crawler VC.
+  *	
   *	Revision 1.13  2007/03/01 18:24:33  tschachim
   *	Fixed Saturn V assembly
   *	
@@ -69,7 +72,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 
@@ -245,37 +248,37 @@ void VAB::DefineAnimations() {
 	int i = 0;
 
 	// High bay 1 door
-	static UINT highBay1Door1_groups[1] = {78};
+	static UINT highBay1Door1_groups[1] = {16};
 	static MGROUP_TRANSLATE highBay1Door1 (0, highBay1Door1_groups, 1, _V(12, 0, 0));
 
-	static UINT highBay1Door2_groups[1] = {80};
+	static UINT highBay1Door2_groups[1] = {18};
 	static MGROUP_TRANSLATE highBay1Door2 (0, highBay1Door2_groups, 1, _V(-12, 0, 0));
 
-	static UINT highBay1Door3_groups[2] = {81, 80};
+	static UINT highBay1Door3_groups[2] = {19, 18};
 	static MGROUP_TRANSLATE highBay1Door3 (0, highBay1Door3_groups, 2, _V(-12, 0, 0));
 
-	static UINT highBay1Door4_groups[2] = {79, 78};
+	static UINT highBay1Door4_groups[2] = {17, 16};
 	static MGROUP_TRANSLATE highBay1Door4 (0, highBay1Door4_groups, 2, _V(12, 0, 0));
 
-	static UINT highBay1Door5_groups[1] = {98};
+	static UINT highBay1Door5_groups[1] = {36};
 	static MGROUP_TRANSLATE highBay1Door5 (0, highBay1Door5_groups, 1, _V(0, 106, 0));
 
-	static UINT highBay1Door6_groups[1] = {97};
+	static UINT highBay1Door6_groups[1] = {35};
 	static MGROUP_TRANSLATE highBay1Door6 (0, highBay1Door6_groups, 1, _V(0, 91.5, 0));
 
-	static UINT highBay1Door7_groups[1] = {96};
+	static UINT highBay1Door7_groups[1] = {34};
 	static MGROUP_TRANSLATE highBay1Door7 (0, highBay1Door7_groups, 1, _V(0, 77.36, 0));
 
-	static UINT highBay1Door8_groups[1] = {95};
+	static UINT highBay1Door8_groups[1] = {33};
 	static MGROUP_TRANSLATE highBay1Door8 (0, highBay1Door8_groups, 1, _V(0, 63, 0));
 
-	static UINT highBay1Door9_groups[1] = {94};
+	static UINT highBay1Door9_groups[1] = {32};
 	static MGROUP_TRANSLATE highBay1Door9 (0, highBay1Door9_groups, 1, _V(0, 48, 0));
 
-	static UINT highBay1Door10_groups[1] = {93};
+	static UINT highBay1Door10_groups[1] = {31};
 	static MGROUP_TRANSLATE highBay1Door10 (0, highBay1Door10_groups, 1, _V(0, 34, 0));
 
-	static UINT highBay1Door11_groups[1] = {92};
+	static UINT highBay1Door11_groups[1] = {30};
 	static MGROUP_TRANSLATE highBay1Door11 (0, highBay1Door11_groups, 1, _V(0, 19.73, 0));
 
 	anim_HighBay1Door = CreateAnimation(0.0);
@@ -292,37 +295,37 @@ void VAB::DefineAnimations() {
 	AddAnimationComponent(anim_HighBay1Door, 0.95,   1.0, &highBay1Door11);
 
 	// High bay 3 door
-	static UINT highBay3Door1_groups[1] = {110};
+	static UINT highBay3Door1_groups[1] = {37};
 	static MGROUP_TRANSLATE highBay3Door1 (0, highBay3Door1_groups, 1, _V(12, 0, 0));
 
-	static UINT highBay3Door2_groups[1] = {112};
+	static UINT highBay3Door2_groups[1] = {39};
 	static MGROUP_TRANSLATE highBay3Door2 (0, highBay3Door2_groups, 1, _V(-12, 0, 0));
 
-	static UINT highBay3Door3_groups[2] = {112, 113};
+	static UINT highBay3Door3_groups[2] = {39, 40};
 	static MGROUP_TRANSLATE highBay3Door3 (0, highBay3Door3_groups, 2, _V(-12, 0, 0));
 
-	static UINT highBay3Door4_groups[2] = {110, 111};
+	static UINT highBay3Door4_groups[2] = {37, 38};
 	static MGROUP_TRANSLATE highBay3Door4 (0, highBay3Door4_groups, 2, _V(12, 0, 0));
 
-	static UINT highBay3Door5_groups[1] = {130};
+	static UINT highBay3Door5_groups[1] = {48};
 	static MGROUP_TRANSLATE highBay3Door5 (0, highBay3Door5_groups, 1, _V(0, 106, 0));
 
-	static UINT highBay3Door6_groups[1] = {129};
+	static UINT highBay3Door6_groups[1] = {47};
 	static MGROUP_TRANSLATE highBay3Door6 (0, highBay3Door6_groups, 1, _V(0, 91.5, 0));
 
-	static UINT highBay3Door7_groups[1] = {128};
+	static UINT highBay3Door7_groups[1] = {46};
 	static MGROUP_TRANSLATE highBay3Door7 (0, highBay3Door7_groups, 1, _V(0, 77.36, 0));
 
-	static UINT highBay3Door8_groups[1] = {127};
+	static UINT highBay3Door8_groups[1] = {45};
 	static MGROUP_TRANSLATE highBay3Door8 (0, highBay3Door8_groups, 1, _V(0, 63, 0));
 
-	static UINT highBay3Door9_groups[1] = {126};
+	static UINT highBay3Door9_groups[1] = {44};
 	static MGROUP_TRANSLATE highBay3Door9 (0, highBay3Door9_groups, 1, _V(0, 48, 0));
 
-	static UINT highBay3Door10_groups[1] = {125};
+	static UINT highBay3Door10_groups[1] = {43};
 	static MGROUP_TRANSLATE highBay3Door10 (0, highBay3Door10_groups, 1, _V(0, 34, 0));
 
-	static UINT highBay3Door11_groups[1] = {124};
+	static UINT highBay3Door11_groups[1] = {42};
 	static MGROUP_TRANSLATE highBay3Door11 (0, highBay3Door11_groups, 1, _V(0, 19.73, 0));
 
 	anim_HighBay3Door = CreateAnimation(0.0);
@@ -435,16 +438,16 @@ void VAB::DefineAnimations() {
 	AddAnimationComponent(animSaturnStage1, 0.7,      0.8,     mgroupSaturn[0][7]);
 
 	// Platforms
-	static UINT platform0L_groups[1] = {82};
-	static UINT platform0R_groups[1] = {87};
-	static UINT platform1L_groups[1] = {83};
-	static UINT platform1R_groups[1] = {88};
-	static UINT platform2L_groups[1] = {84};
-	static UINT platform2R_groups[1] = {89};
-	static UINT platform3L_groups[1] = {85};
-	static UINT platform3R_groups[1] = {90};
-	static UINT platform4L_groups[1] = {86};
-	static UINT platform4R_groups[1] = {91};
+	static UINT platform0L_groups[1] = {20};
+	static UINT platform0R_groups[1] = {25};
+	static UINT platform1L_groups[1] = {21};
+	static UINT platform1R_groups[1] = {26};
+	static UINT platform2L_groups[1] = {22};
+	static UINT platform2R_groups[1] = {27};
+	static UINT platform3L_groups[1] = {23};
+	static UINT platform3R_groups[1] = {28};
+	static UINT platform4L_groups[1] = {24};
+	static UINT platform4R_groups[1] = {29};
 	static MGROUP_TRANSLATE platform0L(0, platform0L_groups, 1, _V(-10.4, 0, 0));
 	static MGROUP_TRANSLATE platform0R(0, platform0R_groups, 1, _V(10.4, 0, 0));
 	static MGROUP_TRANSLATE platform1L(0, platform1L_groups, 1, _V(-10.4, 0, 0));
@@ -525,14 +528,14 @@ void VAB::DefineSaturnAnimation(MGROUP_TRANSFORM *mgroup[], int meshindex, doubl
 void VAB::DefineCrane2Animation(MGROUP_TRANSFORM *mgroup[], double pickupHeight, double length) {
 
 	// Crane 2
-	static UINT crane0_groups[4] = {14, 11, 12, 13};	
-	static UINT crane1_groups[5] = {14, 11, 12, 13, 15};
-	static UINT crane2_groups[1] = {14};
-	static UINT crane3_groups[2] = {11, 12};
-	static UINT crane4_groups[5] = {14, 11, 12, 13, 15};
-	static UINT crane5_groups[1] = {14};
-	static UINT crane6_groups[2] = {11, 12};
-	static UINT crane7_groups[5] = {14, 11, 12, 13, 15};
+	static UINT crane0_groups[4] = {12, 9, 10, 11};	
+	static UINT crane1_groups[5] = {12, 9, 10, 11, 13};
+	static UINT crane2_groups[1] = {12};
+	static UINT crane3_groups[2] = {9, 10};
+	static UINT crane4_groups[5] = {12, 9, 10, 11, 13};
+	static UINT crane5_groups[1] = {12};
+	static UINT crane6_groups[2] = {9, 10};
+	static UINT crane7_groups[5] = {12, 9, 10, 11, 13};
 
 	mgroup[0] = new MGROUP_TRANSLATE (0, crane0_groups,  4, _V(0, 0, -1));
 	mgroup[1] = new MGROUP_TRANSLATE (0, crane1_groups,  5, _V(120, 0, 0));

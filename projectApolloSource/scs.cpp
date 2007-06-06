@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2007/04/26 00:12:00  movieman523
+  *	Fixed build warning.
+  *	
   *	Revision 1.18  2007/04/25 18:48:11  tschachim
   *	EMS dV functions.
   *	
@@ -82,7 +85,7 @@
   **************************************************************************/
 
 #include "Orbitersdk.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "resource.h"
 #include "nasspdefs.h"

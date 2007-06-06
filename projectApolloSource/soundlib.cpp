@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/07/06 00:44:29  movieman523
+  *	Oops, don't crash if the file doesn't exist.
+  *	
   *	Revision 1.12  2006/07/06 00:40:08  movieman523
   *	Improved timed sound playback. Still doesn't really work due to Orbitersound not wanting to play our files.
   *	
@@ -67,7 +70,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "soundlib.h"
@@ -1041,3 +1044,12 @@ void TimedSoundManager::LoadFromFile(char *dataFile, double MissionTime)
 
 	fclose(fp);
 }
+
+//
+// To use OrbiterSound 3.5 with compilers older 
+// than Microsoft Visual Studio Version 2003 
+//
+
+#if defined(_MSC_VER) && (_MSC_VER < 1300) 
+void operator delete[] (void *) {}
+#endif

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/08/13 16:01:52  movieman523
+  *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
+  *	
   *	Revision 1.1  2006/08/12 15:05:35  movieman523
   *	Renamed EVA and LEVA files.
   *	
@@ -35,7 +38,7 @@
 
 #include "nasspsound.h"
 #include "nasspdefs.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "OrbiterMath.h"
 
@@ -93,7 +96,6 @@ static MESHHANDLE hLRVConsole;
 LEVA::LEVA(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
-	hMaster = hObj;
 	init();
 }
 
@@ -106,6 +108,7 @@ LEVA::~LEVA()
 void LEVA::init()
 
 {
+	hMaster = NULL;
 	LRVDeployed=false;
 	GoDock1=false;
 	starthover=false;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.5  2006/01/26 03:07:50  movieman523
   *	Quick hack to support low-res mesh.
   *	
@@ -113,7 +116,8 @@ void SII::InitSII()
 
 	th_main[0] = 0;
 
-	SMMETex = oapiRegisterExhaustTexture ("Exhaust_atsme");//"Exhaust2"
+	SMMETex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust_j2");
+	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
 }
 
 void SII::SetSII()
@@ -266,17 +270,17 @@ void SII::AddEngines()
 
 	if (!th_retro[0])
 	{
-		th_retro[0] = CreateThruster (m_exhaust_pos2, m_exhaust_ref2, thrust, ph_retro, 4000);
-		th_retro[1] = CreateThruster (m_exhaust_pos3, m_exhaust_ref3, thrust, ph_retro, 4000);
-		th_retro[2] = CreateThruster (m_exhaust_pos4, m_exhaust_ref4, thrust, ph_retro, 4000);
-		th_retro[3] = CreateThruster (m_exhaust_pos5, m_exhaust_ref5, thrust, ph_retro, 4000);
+		th_retro[0] = CreateThruster(m_exhaust_pos2, m_exhaust_ref2, thrust, ph_retro, 4000);
+		th_retro[1] = CreateThruster(m_exhaust_pos3, m_exhaust_ref3, thrust, ph_retro, 4000);
+		th_retro[2] = CreateThruster(m_exhaust_pos4, m_exhaust_ref4, thrust, ph_retro, 4000);
+		th_retro[3] = CreateThruster(m_exhaust_pos5, m_exhaust_ref5, thrust, ph_retro, 4000);
 	}
 
 	thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);
 
 	int i;
 	for (i = 0; i < 4; i++)
-		AddExhaust (th_retro[i], 8.0, 0.2);
+		AddExhaust(th_retro[i], 8.0, 0.2, exhaust_tex);
 
 	m_exhaust_pos1= _V(-1.8,-1.8,-15);
 	m_exhaust_pos2= _V(1.8,1.8,-15);
@@ -285,15 +289,15 @@ void SII::AddEngines()
 	m_exhaust_pos5 = _V(0,0,-15);
 
 	// orbiter main thrusters
-	th_main[0] = CreateThruster (m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
-	th_main[1] = CreateThruster (m_exhaust_pos2,_V( 0,0,1),  THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
-	th_main[2] = CreateThruster (m_exhaust_pos3, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
-	th_main[3] = CreateThruster (m_exhaust_pos4, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
-	th_main[4] = CreateThruster (m_exhaust_pos5, _V( 0,0,1), THRUST_SECOND_VAC , 0, ISP_SECOND_VAC, ISP_SECOND_SL);
-	thg_main = CreateThrusterGroup (th_main, 5, THGROUP_MAIN);
+	th_main[0] = CreateThruster(m_exhaust_pos1, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
+	th_main[1] = CreateThruster(m_exhaust_pos2,_V( 0,0,1),  THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
+	th_main[2] = CreateThruster(m_exhaust_pos3, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
+	th_main[3] = CreateThruster(m_exhaust_pos4, _V( 0,0,1), THRUST_SECOND_VAC , ph_main, ISP_SECOND_VAC, ISP_SECOND_SL);
+	th_main[4] = CreateThruster(m_exhaust_pos5, _V( 0,0,1), THRUST_SECOND_VAC , 0, ISP_SECOND_VAC, ISP_SECOND_SL);
+	thg_main = CreateThrusterGroup(th_main, 5, THGROUP_MAIN);
 
 	for (i = 0; i < 5; i++)
-		AddExhaust (th_main[i], 25.0, 1.5, SMMETex);
+		AddExhaust(th_main[i], 25.0, 1.5, SMMETex);
 }
 
 void SII::SetMainState(int s)

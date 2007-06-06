@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2006/11/01 00:20:44  tschachim
+  *	Next bugfix...
+  *	
   *	Revision 1.27  2006/10/23 13:43:23  tschachim
   *	Bugfix mesh handling.
   *	
@@ -106,7 +109,7 @@
   **************************************************************************/
 
 #include "orbiterSDK.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 
 #include "nasspdefs.h"
 #include "soundlib.h"
@@ -218,7 +221,7 @@ void SIVbLoadMeshes()
 	hapollo8lta = oapiLoadMeshGlobal ("ProjectApollo/apollo8_lta");
 	hlta_2r = oapiLoadMeshGlobal ("ProjectApollo/LTA_2R");
 
-	SMMETex = oapiRegisterExhaustTexture ("Exhaust_atsme");
+	SMMETex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust_j2");
 	seperation_junk.tex = oapiRegisterParticleTexture ("Contrail2");;
 }
 

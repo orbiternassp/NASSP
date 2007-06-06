@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2006/09/23 01:55:15  flydba
+  *	Final graphics update completed.
+  *	
   *	Revision 1.67  2006/08/21 03:04:38  dseagrav
   *	This patch adds DC volt/amp meters and associated switches, which was an unholy pain in the
   *	
@@ -234,7 +237,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "nasspdefs.h"

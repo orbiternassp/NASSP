@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/04/25 18:48:58  tschachim
+  *	New PIPA implementation.
+  *	
   *	Revision 1.4  2006/04/25 13:36:06  tschachim
   *	Comments removed.
   *	
@@ -43,7 +46,7 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "nasspdefs.h"

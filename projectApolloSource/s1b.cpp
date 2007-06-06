@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/08/01 16:05:57  tschachim
+  *	Improved staging exhausts.
+  *	
   *	Revision 1.7  2006/07/31 12:23:16  tschachim
   *	Smoother staging.
   *	
@@ -258,7 +261,7 @@ void S1B::AddEngines()
 	thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);
 
 	int i;
-	SURFHANDLE tex = oapiRegisterExhaustTexture("Exhaust2");
+	SURFHANDLE tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
 	for (i = 0; i < 4; i++) {
 		AddExhaust(th_retro[i], 8.0, 0.2, tex);
 		AddExhaustStream(th_retro[i], &solid_exhaust);

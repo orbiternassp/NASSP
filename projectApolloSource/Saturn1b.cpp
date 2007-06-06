@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2007/02/18 01:35:29  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	Revision 1.68  2007/02/06 18:30:14  tschachim
   *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
   *	
@@ -233,7 +236,7 @@
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "resource.h"
 
 #include "nasspdefs.h"
@@ -298,11 +301,8 @@ Saturn1b::~Saturn1b()
 // Default pitch program.
 //
 
-const double default_met[PITCH_TABLE_SIZE]    = { 0,  50, 75, 80,  90, 110, 140,   160, 170,  205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {90,  80, 70, 60,  53,  45,  40,    35,   35,  35,  20,  20,  20,  20,  20,  20};	// Commanded pitch in °
-
-//const double default_met[PITCH_TABLE_SIZE]    = { 0, 25, 60, 95, 130, 145, 152, 165, 200, 235, 270, 305, 330, 450, 500, 700};   // MET in sec
-//const double default_cpitch[PITCH_TABLE_SIZE] = {90, 90, 80, 70,  60,  55,  55,  50,  40,  30,  20,  10,   0,   0,   0,   0};	// Commanded pitch in °
+const double default_met[PITCH_TABLE_SIZE]    = { 0, 50, 75, 80, 90, 110, 140, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
+const double default_cpitch[PITCH_TABLE_SIZE] = {80, 75, 70, 60, 53,  45,  40,  38,  35,  30,  20,  20,  20,  20,  20,  20};	// Commanded pitch in °
 
 
 void Saturn1b::initSaturn1b()
@@ -331,6 +331,7 @@ void Saturn1b::initSaturn1b()
 	ReadyAstp1 = false;
 	S4BASTP = false;
 	Resetjet = false;
+	Burned = false;
 
 	MasterVessel = false;
 	TargetDocked = false;
@@ -373,10 +374,10 @@ void Saturn1b::initSaturn1b()
 
 	ISP_FIRST_SL    = 262*G;
 	ISP_FIRST_VAC   = 292*G;
-	THRUST_FIRST_VAC	= 1030200;
+	THRUST_FIRST_VAC= 1030200;
 
-	ISP_SECOND_SL   = 300*G;//300*G;
-	ISP_SECOND_VAC  = 419*G;//421*G;
+	ISP_SECOND_SL   = 300*G;
+	ISP_SECOND_VAC  = 419*G;
 
 	//
 	// Note: thrust values are _per engine_, not per stage.
@@ -384,11 +385,11 @@ void Saturn1b::initSaturn1b()
 
 	THRUST_SECOND_VAC  = 1001000;
 
-	SM_EmptyMass = 3290;
-	SM_FuelMass = 4416;		// Apollo 7, TODO other Saturn 1b missions
+	SM_EmptyMass = 3900;						// Calculated from Apollo 7 Mission Report and "Apollo by the numbers", TODO other Saturn 1b missions
+	SM_FuelMass = 4430;							// Apollo 7 (according to Mission Report), TODO other Saturn 1b missions
 
-	CM_EmptyMass = 5430;
-	CM_FuelMass = CM_RCS_FUEL_PER_TANK * 2.; // The CM has 2 tanks
+	CM_EmptyMass = 5430;						// Calculated from Apollo 11 Mission Report and "Apollo by the numbers"
+	CM_FuelMass = CM_RCS_FUEL_PER_TANK * 2.;	// The CM has 2 tanks
 
 	SII_EmptyMass = 12900;
 	SII_FuelMass = 105900;
@@ -567,19 +568,13 @@ void Saturn1b::StageOne(double simt, double simdt)
 			SShutS.play(NOLOOP,235);
 			SShutS.done();
 
-			// Create hidden SIB vessel
-			char VName[256];
-			VESSELSTATUS vs;
-
-			GetStatus(vs);
-			strcpy (VName, GetName()); 
-			strcat (VName, "-STG1");
-			hstg1 = oapiCreateVessel(VName,"ProjectApollo/nsat1stg1", vs);
-
-			// Load only the necessary meshes
-			S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
-			stage1->LoadMeshes(LowRes);
-
+			// Move hidden SIC vessel
+			if (hstg1) {
+				VESSELSTATUS vs;
+				GetStatus(vs);
+				S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
+				stage1->DefSetState(&vs);
+			}				
 			StageState++;
 		}
 		break;

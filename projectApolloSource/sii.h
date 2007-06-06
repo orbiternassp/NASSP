@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2006/06/26 19:05:36  movieman523
+  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
+  *	
   *	Revision 1.3  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -189,6 +192,7 @@ protected:
 	double CurrentThrust;
 
 	SURFHANDLE SMMETex;
+	SURFHANDLE exhaust_tex;
 
 	THRUSTER_HANDLE th_retro[4], th_main[5];
 	THGROUP_HANDLE thg_retro, thg_main;

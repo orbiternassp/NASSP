@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/01/11 01:21:34  chode99
+  *	Added ability for correct entry of "extended" verbs like. (verb - ENTER - noun - ENTER)
+  *	
   *	Revision 1.10  2006/05/17 01:50:45  movieman523
   *	Fixed DSKY key-clicks (bug 1375310).
   *	
@@ -57,7 +60,7 @@
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "nasspdefs.h"

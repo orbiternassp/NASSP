@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/07/24 19:24:50  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.1  2006/07/17 19:33:36  tschachim
   *	Small improvements of LC39.
   *
@@ -33,7 +36,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 #include "Floodlight.h"

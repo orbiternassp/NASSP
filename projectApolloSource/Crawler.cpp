@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/03/03 19:32:29  tschachim
+  *	More viewpoints.
+  *	
   *	Revision 1.21  2007/03/03 00:14:40  tschachim
   *	Bugfix generic cockpit.
   *	
@@ -93,7 +96,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "tracer.h"
 
@@ -208,7 +211,7 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
     // Speed indicator
 	vccSpeedGroup.P.transparam.shift = _V(0, 0, 0);
 	vccSpeedGroup.nmesh = meshidxPanel;
-	vccSpeedGroup.ngrp = 29;
+	vccSpeedGroup.ngrp = 10;
 	vccSpeedGroup.transform = MESHGROUP_TRANSFORM::TRANSLATE;
 
     // Steering wheel rotation
@@ -216,13 +219,13 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
 	vccSteering1Group.P.rotparam.axis = _V(0, 0.913545, -0.406736);
 	vccSteering1Group.P.rotparam.angle = 0.0;  
 	vccSteering1Group.nmesh = meshidxPanel;
-	vccSteering1Group.ngrp = 30;
+	vccSteering1Group.ngrp = 11;
 	vccSteering1Group.transform = MESHGROUP_TRANSFORM::ROTATE;
 	vccSteering2Group.P.rotparam.ref = _V(0.148, 0.084, 0.225);
 	vccSteering2Group.P.rotparam.axis = _V(0, 0.913545, -0.406736);
 	vccSteering2Group.P.rotparam.angle = 0.0;  
 	vccSteering2Group.nmesh = meshidxPanel;
-	vccSteering2Group.ngrp = 31;
+	vccSteering2Group.ngrp = 12;
 	vccSteering2Group.transform = MESHGROUP_TRANSFORM::ROTATE;
 
 	// Rear cabin panel
@@ -233,7 +236,7 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
     // Speed indicator (reverse)
 	vccSpeedGroupReverse.P.transparam.shift = _V(0, 0, 0);
 	vccSpeedGroupReverse.nmesh = meshidxPanelReverse;
-	vccSpeedGroupReverse.ngrp = 29;
+	vccSpeedGroupReverse.ngrp = 10;
 	vccSpeedGroupReverse.transform = MESHGROUP_TRANSFORM::TRANSLATE;
 
     // Steering wheel rotation (reverse)
@@ -241,13 +244,13 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
 	vccSteering1GroupReverse.P.rotparam.axis = _V(0, 0.913545, 0.406736);
 	vccSteering1GroupReverse.P.rotparam.angle = 0.0;  
 	vccSteering1GroupReverse.nmesh = meshidxPanelReverse;
-	vccSteering1GroupReverse.ngrp = 30;
+	vccSteering1GroupReverse.ngrp = 11;
 	vccSteering1GroupReverse.transform = MESHGROUP_TRANSFORM::ROTATE;
 	vccSteering2GroupReverse.P.rotparam.ref = _V(0.076, 0.084, 0.33);
 	vccSteering2GroupReverse.P.rotparam.axis = _V(0, 0.913545, 0.406736);
 	vccSteering2GroupReverse.P.rotparam.angle = 0.0;  
 	vccSteering2GroupReverse.nmesh = meshidxPanelReverse;
-	vccSteering2GroupReverse.ngrp = 31;
+	vccSteering2GroupReverse.ngrp = 12;
 	vccSteering2GroupReverse.transform = MESHGROUP_TRANSFORM::ROTATE;
 
 	// Panel position test
@@ -482,6 +485,10 @@ int Crawler::clbkConsumeDirectKey(char *kstate) {
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD1)) {
 		keyLeft = true;				
 		RESETKEY(kstate, OAPI_KEY_NUMPAD1);
+	}
+	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD2)) {
+		keyCenter = true;				
+		RESETKEY(kstate, OAPI_KEY_NUMPAD2);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD3)) {
 		keyRight = true;				

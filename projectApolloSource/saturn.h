@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.237  2007/04/29 12:36:43  tschachim
+  *	Panel bugfixes.
+  *	
   *	Revision 1.236  2007/04/25 18:48:11  tschachim
   *	EMS dV functions.
   *	
@@ -893,6 +896,11 @@ public:
 	bool IsVirtualAGC() { return agc.IsVirtualAGC(); };
 
 	///
+	/// \brief Triggers Virtual AGC core dump
+	///
+	virtual void VirtualAGCCoreDump() { agc.VirtualAGCCoreDump("ProjectApollo CMC.core"); }
+
+	///
 	/// Get a pointer to the Saturn Instrument Unit, which controls the autopilot prior to SIVb/CSM
 	/// seperation.
 	/// \brief Access the Saturn IU.
@@ -1111,6 +1119,11 @@ public:
 	/// \brief Set docking probe mesh
 	///
 	void SetDockingProbeMesh();
+
+	///
+	/// \brief Set crew mesh
+	///
+	void SetCrewMesh();
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -3280,6 +3293,8 @@ protected:
 
 	UINT probeidx;
 	UINT probeextidx;
+	UINT crewidx;
+	UINT cmpidx;
 	
 	bool ActivateASTP;
 
@@ -3357,9 +3372,9 @@ protected:
 
 	SURFHANDLE srf[nsurf + 1];  // handles for panel bitmaps. +1 for safety :).
 	SURFHANDLE SMExhaustTex;
-	SURFHANDLE SMMETex;
 	SURFHANDLE CMTex;
 	SURFHANDLE J2Tex;
+	SURFHANDLE SIVBRCSTex;
 	//TODO SURFHANDLEs for VC
 
 	//
@@ -3487,6 +3502,7 @@ protected:
 	virtual void SeparateStage (int stage) = 0;
 	virtual void ConfigureStageMeshes(int stage_state) = 0;
 	virtual void ConfigureStageEngines(int stage_state) = 0;
+	virtual void CreateStageOne() = 0;
 
 	void StageOrbitSIVB(double simt, double simdt);
 	void JostleViewpoint(double amount);

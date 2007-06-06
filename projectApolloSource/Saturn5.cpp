@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.98  2007/04/25 18:48:07  tschachim
+  *	EMS dV functions.
+  *	
   *	Revision 1.97  2007/02/19 16:24:43  tschachim
   *	VC6 MCC fixes.
   *	
@@ -321,7 +324,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "Orbitersdk.h"
-#include "OrbiterSoundSDK3.h"
+#include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
 #include "resource.h"
@@ -479,11 +482,11 @@ void SaturnV::initSaturnV()
 	SI_RetroNum = 8;
 	SII_RetroNum = 4;
 
-	SM_EmptyMass = 3590;	// TODO The Apollo 15-17 SM was heavier, about 4870 kg
 	SM_FuelMass = SPS_DEFAULT_PROPELLANT;
-
-	CM_EmptyMass = 5430;
-	CM_FuelMass =  CM_RCS_FUEL_PER_TANK * 2.; // The CM has 2 tanks
+	SM_EmptyMass = 4100;						// Calculated from Apollo 11 Mission Report and "Apollo by the numbers"
+												// TODO: The Apollo 15-17 SM was heavier, about 5500 kg
+	CM_EmptyMass = 5430;						// Calculated from Apollo 11 Mission Report and "Apollo by the numbers"
+	CM_FuelMass =  CM_RCS_FUEL_PER_TANK * 2.;	// The CM has 2 tanks
 
 	CalculateStageMass();
 
@@ -908,20 +911,13 @@ void SaturnV::StageOne(double simt, double simdt)
 		//
 
 		if ((actualFUEL <= 5) || (MissionTime >= (FirstStageShutdownTime - 10.0))) {
-
-			// Create hidden SIC vessel
-			char VName[256];
-			VESSELSTATUS vs;
-
-			GetStatus(vs);
-			GetApolloName(VName);
-			strcat (VName, "-STG1");
-			hstg1 = oapiCreateVessel(VName,"ProjectApollo/sat5stg1", vs);
-
-			// Load only the necessary meshes
-			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
-			stage1->LoadMeshes(LowRes);
-
+			// Move hidden SIC vessel
+			if (hstg1) {
+				VESSELSTATUS vs;
+				GetStatus(vs);
+				S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
+				stage1->DefSetState(&vs);
+			}				
 			// Play countdown
 			Sctdw.play(NOLOOP, 245);
 			StageState++;
