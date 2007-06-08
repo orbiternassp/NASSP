@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.196  2007/06/06 15:02:17  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.195  2007/04/25 18:48:11  tschachim
   *	EMS dV functions.
   *	
@@ -582,6 +585,7 @@ void Saturn::initSaturn()
 	hML = 0;
 	hCrawler = 0;
 	hMSS = 0;
+	hApex = 0;
 
 	//
 	// Apollo 13 flags.
@@ -2649,6 +2653,10 @@ void Saturn::DestroyStages(double simt)
 		KillDist(hPROBE);
 	}
 
+	if (hApex) {
+		KillAlt(hApex, 5);
+	}
+
 	if (hs4b1) {
 		KillDist(hs4b1);
 	}
@@ -4146,7 +4154,7 @@ void Saturn::GenericLoadStateSetup()
 		soundlib.LoadMissionSound(SMJetS, SM_SEP_SOUND, DEFAULT_SM_SEP_SOUND);
 	}
 
-	if (stage == CM_RECOVERY_STAGE)
+	if (stage >= CM_ENTRY_STAGE_SEVEN)
 	{
 		soundlib.LoadSound(Swater, WATERLOOP_SOUND);
 		soundlib.LoadMissionSound(PostSplashdownS, POSTSPLASHDOWN_SOUND, POSTSPLASHDOWN_SOUND);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2007/06/06 15:02:10  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.69  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -520,6 +523,8 @@ void Saturn1b::DoFirstTimestep(double simt)
 	hSoyuz = oapiGetVesselByName("SOYUZ19");
 	GetApolloName(VName); strcat (VName, "-INTSTG");
 	hintstg = oapiGetVesselByName(VName);
+	GetApolloName(VName); strcat (VName, "-APEX");
+	hApex = oapiGetVesselByName(VName);
 }
 
 void Saturn1b::StageOne(double simt, double simdt)

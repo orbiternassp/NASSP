@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2007/06/06 15:02:17  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.61  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -1329,9 +1332,9 @@ void Saturn::StageEight(double simt)
 	GetApolloName(VName);
 	strcat(VName, "-APEX");
 	if (Burned) {
-		oapiCreateVessel(VName,"ProjectApollo/CMBapex", vs);
+		hApex = oapiCreateVessel(VName,"ProjectApollo/CMBapex", vs);
 	} else {
-		oapiCreateVessel(VName,"ProjectApollo/CMapex", vs);
+		hApex = oapiCreateVessel(VName,"ProjectApollo/CMapex", vs);
 	}
 
 	// New stage

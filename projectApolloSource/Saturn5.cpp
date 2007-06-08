@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.99  2007/06/06 15:02:10  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.98  2007/04/25 18:48:07  tschachim
   *	EMS dV functions.
   *	
@@ -1792,6 +1795,8 @@ void SaturnV::DoFirstTimestep(double simt)
 	hintstg = oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-STG2");
 	hstg2 = oapiGetVesselByName(VName);
+	strcpy (VName, ApolloName); strcat (VName, "-APEX");
+	hApex = oapiGetVesselByName(VName);
 
 	habort = oapiGetVesselByName("Saturn_Abort");
 }

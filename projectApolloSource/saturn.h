@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.238  2007/06/06 15:02:17  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.237  2007/04/29 12:36:43  tschachim
   *	Panel bugfixes.
   *	
@@ -3420,6 +3423,7 @@ protected:
 	OBJHANDLE hCrawler;
 	OBJHANDLE hML;
 	OBJHANDLE hMSS;
+	OBJHANDLE hApex;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
