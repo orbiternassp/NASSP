@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2007/06/06 15:02:17  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.18  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -183,7 +186,9 @@ void SaturnV::AttitudeLaunch2()
 	LimitSetThrusterDir(th_main[1],pitchvectorm+yawvectorm+rollvectorl+_V( 0,0,1));//2
 	LimitSetThrusterDir(th_main[2],pitchvectorm+yawvectorm-rollvectorl+_V( 0,0,1));//1
 	LimitSetThrusterDir(th_main[3],pitchvectorm+yawvectorm+rollvectorl+_V( 0,0,1));//3
-	LimitSetThrusterDir(th_main[4],pitchvectorm+yawvectorm+_V( 0,0,1));//5	
+	// Center engine isn't gimbaled
+	// LimitSetThrusterDir(th_main[4],pitchvectorm+yawvectorm+_V( 0,0,1));//5	
+
 	// sprintf (oapiDebugString(), "roll input: %f, roll vel: %f", tempR, ang_vel.z);
 
 }
@@ -275,7 +280,9 @@ void SaturnV::AttitudeLaunch1()
 	SetThrusterDir(th_main[1],pitchvectorm+yawvectorm-rollvectorl+_V( 0,0,1));//2
 	SetThrusterDir(th_main[2],pitchvectorm+yawvectorm-rollvectorl+_V( 0,0,1));//1
 	SetThrusterDir(th_main[3],pitchvectorm+yawvectorm+rollvectorl+_V( 0,0,1));//3
-	SetThrusterDir(th_main[4],pitchvectorm+yawvectorm+_V( 0,0,1));//5
+	// Center engine isn't gimbaled
+	// SetThrusterDir(th_main[4],pitchvectorm+yawvectorm+_V( 0,0,1));//5
+
 	// sprintf (oapiDebugString(), "pitch vector: %f, roll vel: %f", tempR, ang_vel.z);
 }
 
