@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/06/06 15:02:16  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.9  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -156,16 +159,8 @@ void Saturn1b::AttitudeLaunch1()
 //**************************************************************
 // Sets thrust vectors by simply adding up all the axis deflection vectors and the
 // "neutral" default vector
-	/*
-	SetThrusterDir(th_main[0],pitchvectorm+yawvectorm+rollvectorl+_V( 0,0,1));//4
-	SetThrusterDir(th_main[1],pitchvectorm+yawvectorm-rollvectorl+_V( 0,0,1));//2
-	SetThrusterDir(th_main[2],pitchvectorm+yawvectorm+_V( 0,0,1));//1
-	SetThrusterDir(th_main[3],pitchvectorm+yawvectorm+_V( 0,0,1));//3
-	SetThrusterDir(th_main[4],pitchvectorm+yawvectorm+_V( 0,0,1));//5
-	SetThrusterDir(th_main[5],pitchvectorm+yawvectorm+_V( 0,0,1));//5
-	SetThrusterDir(th_main[6],pitchvectorm+yawvectorm+_V( 0,0,1));//5
-	SetThrusterDir(th_main[7],pitchvectorm+yawvectorm+_V( 0,0,1));//5
-	*/
+
+	// Only the four outer engines are gimbaled
 	SetThrusterDir(th_main[0],pitchvectorm+yawvectorm+rollvectorl+_V( 0,0,1));
 	SetThrusterDir(th_main[1],pitchvectorm+yawvectorm+_V( 0,0,1));
 	SetThrusterDir(th_main[2],pitchvectorm+yawvectorm-rollvectorl+_V( 0,0,1));
