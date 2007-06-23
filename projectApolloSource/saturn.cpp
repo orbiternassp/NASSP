@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.197  2007/06/08 20:08:29  tschachim
+  *	Kill apex cover vessel.
+  *	
   *	Revision 1.196  2007/06/06 15:02:17  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -2714,7 +2717,7 @@ void Saturn::CheckSMSystemsState()
 		int i;
 		for (i = 0; i < 3; i++) {
 			if (FuelCells[i])
-				FuelCells[i]->Disable();
+				FuelCells[i]->Disable();			
 		}
 	}
 }
@@ -3829,8 +3832,10 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		if (deploy && PyrosArmed()) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, -0.65));
-		} else
-			StageSeven(simt);
+		} else {
+			// DS20070622 Do not run stage seven if we still have the LET.
+			if(!LESAttached){ StageSeven(simt); }
+		}
 		break;
 
 	case CM_ENTRY_STAGE:

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2007/06/06 15:02:19  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.31  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -274,35 +277,65 @@ protected:
 	int LVDC_Timebase;								// Time Base
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
 
+	int LVDC_GP_PC;									// Guidance Program: Program Counter
+	double S1C_Sep_Time;							// S1C Separation Counter
+
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool LVDC_EI_On;								// Engine Indicator lights on
-	bool LVDC_IMU_Levelled;							// IMU Levelled flag
 	bool LVDC_GRR;                                  // Guidance Reference Released
-	bool LVDC_Gnd_Tgt;								// Ground Targeting Calculations completed
+	bool CountPIPA;									// PIPA Counter Enable
+	bool S2_Startup;								// S2 Engine Start
+	
+	// These are variables that are not specifically mentioned as being in the LVDC software.
+	double GPitch[4],GYaw[4];						// Amount of gimbal to command per thruster
+	double RateGain,ErrorGain;						// Rate Gain and Error Gain values for gimbal control law
+	VECTOR3 AttRate;                                // Attitude Change Rate
+	VECTOR3 AttitudeError;                          // Attitude Error
+	double Velocity[3];								// Velocity X/Y/Z
+	double Position[3];								// Position X/Y/Z
+
+	// Event Times
+	double T_FAIL;									// S1C Engine Failure time
+	double T_ar;									// S1C Tilt Arrest Time
+	double T_1;										// Backup timer for Pre-IGM pitch maneuver
+	double T_2;										// Time to initiate pitch freeze for S1C engine failure
+	double T_3;										// Constant pitch freeze for S1C engine failure prior to T_2
+	double T_4;										// Upper bound of validity for first segment of pitch freeze
+	double T_5;										// Upper bound of validity for second segment of pitch freeze
+	double T_6;										// Time to terminate pitch freeze after S1C engine failure
+	double dT_F;									// Period of frozen pitch in S1C
+	double T_S1,T_S2,T_S3;							// Times for Pre-IGM pitch polynomial
 
 	// These are boolean flags that are real flags in the LVDC SOFTWARE.
 	bool Aziumuth_Inclination_Mode;					// Ground Targeting uses Azimuth to determine Inclination
 	bool Azimuth_DscNodAngle_Mode;					// Ground Targeting uses Azimuth to determine Descending Nodal Angle
 	bool Direct_Ascent;                             // Direct Ascent Mode flag
+	bool S1C_Engine_Out;
+	int  T_EO1;										// Pre-IGM Engine-Out Constants
 
 	// LVDC software variables, PAD-LOADED
 	double IncFromAzPoly[6];						// Inclination-From-Azimuth polynomial
 	double IncFromTimePoly[6];                      // Inclination-From-Time polynomial
 	double DNAFromAzPoly[6];						// Descending Nodal Angle from Azimuth polynomial
 	double DNAFromTimePoly[6];						// Descending Nodal Angle from Time polynomial
+	double B_11,B_21;								// Coefficients for determining freeze time after S1C engine failure
+	double B_12,B_22;								// Coefficients for determining freeze time after S1C engine failure
 
 	// PAD-LOADED TABLES
 	// The documentation calls these TABLE15 and TABLE25 but doesn't define them.
 	double CORadVecTrueAn;							// True Anomaly of predicted cutoff radius vector (TABLE15 f)
 	double XferEllipseEcc[16];						// Eccentricity of desired transfer ellipse (TABLE15 e)
 	double XferEllipseVVE[16];						// Vis-Viva Energy of desired transfer ellipse (TABLE15 C3)
+	double Fx[5][4];								// Pre-IGM pitch polynomial
 
 	// LVDC software variables, NOT PAD-LOADED
 	double Azimuth;									// Azimuth
-
+	VECTOR3 CommandedAttitude;						// Commanded Attitude
+	VECTOR3 CurrentAttitude;						// Current Attitude
+	
 	void lvdc_init();								// Initialization
 	void lvdc_timestep(double simt, double simdt);	// LVDC timestep call
-
+	VECTOR3 lvdc_AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors); // Adjust error information for roll
 };
 
 extern void LoadSat5Meshes();

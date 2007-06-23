@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2007/06/06 15:02:15  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.1  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -136,78 +139,6 @@ void LVIMU::TurnOff()
 	}
 }
 
-VECTOR3 LVIMU::CalculateAccelerations(double deltaT) 
-
-{
-	VESSELSTATUS vs;
-	VECTOR3 vel, pos, Acceleration, GravityAcceleration;
-
-	// ***********************************************************
-	// calculate acceleration caused by velocity change 
-	// according to an inertial system
-	
-	OBJHANDLE earth = oapiGetGbodyByName("Earth");
-	OurVessel->GetRelativeVel(earth, vel);
-	//OurVessel->GetGlobalVel(vel);
-
-	Acceleration = (vel - Velocity) * (1.0 / deltaT);
-
-	// Transform to Orbiter local
-	OurVessel->GetStatus(vs);
-	LVIMU_Matrix3	t = getRotationMatrixX(vs.arot.x);
-	t = multiplyMatrix(getRotationMatrixY(vs.arot.y), t);
-	t = multiplyMatrix(getRotationMatrixZ(vs.arot.z), t);
-
-	LVIMU_Vector3 acc = VECTOR3ToLVIMU_Vector3(Acceleration); 
-	acc = multiplyMatrixByVector(t, acc);
-	Acceleration = LVIMU_Vector3ToVECTOR3(acc); 
-
-
-	// ***********************************************************
-	// calculate acceleration caused by gravity
-	// Reference: page 5 of the "Guidance System Operations Plan" 
-	// www.ibiblio.org/apollo/NARA-SW/R-577-sec5-rev4-5.3-5.5.pdf
-
-	OurVessel->GetRelativePos(earth, pos);
-
-	LVIMU_Vector3 p = VECTOR3ToLVIMU_Vector3(pos); 
-	p = multiplyMatrixByVector(t, p);	
-	pos = LVIMU_Vector3ToVECTOR3(p); 
-
-	double distance = length(pos);
-	pos = pos * (1.0 / distance);
-
-	// "normal" force term
-	GravityAcceleration =  pos * (0.3986032e15 / (distance * distance)); 
-
-	//  non-spherical term
-	LVIMU_Vector3 iuz = VECTOR3ToLVIMU_Vector3(_V(0.0, 1.0, 0.0));
-	MATRIX3 m;
-	oapiGetPlanetObliquityMatrix(earth, &m);
-	LVIMU_Matrix3 im = MATRIX3ToLVIMU_Matrix3(m); 
-
-	iuz = multiplyMatrixByVector(im, iuz);
-	iuz = multiplyMatrixByVector(t, iuz);	
-	VECTOR3 uz = LVIMU_Vector3ToVECTOR3(iuz);
-	
-	double cosphi = dotp(pos, uz);
-	double k = (0.3986032e15 / (distance * distance)) * (3.0 / 2.0) * 0.10823e-2 * (6378165.0 / distance) * (6378165.0 / distance);
-	VECTOR3 gb = pos * (k * (1 - 5 * cosphi * cosphi));
-	gb = gb + uz * (k * 2 * cosphi);
-
-	// total gravity
-	GravityAcceleration = GravityAcceleration + gb;
-
-	// sprintf(oapiDebugString(), "Total Gravity %f", Acceleration + GravityAcceleration);
-
-	// ***********************************************************
-	// store for next timestep
-
-	Velocity = vel;
-
-	return Acceleration + GravityAcceleration;
-}
-
 bool LVIMU::IsPowered()
 
 {
@@ -219,8 +150,6 @@ void LVIMU::Timestep(double simt)
 
 {
 	double deltaTime, pulses;
-	LVIMU_Matrix3 t;
-	LVIMU_Vector3 newAngles, acc, accI; 
 
 	if (!Operate) {
 		if (IsPowered())
@@ -241,64 +170,78 @@ void LVIMU::Timestep(double simt)
 		return;
 	}
 	
-	VESSELSTATUS vs;
-
 	// fill OrbiterData
+	VESSELSTATUS vs;
 	OurVessel->GetStatus(vs);
-	double orbiterAttitudeX;
-	double orbiterAttitudeY;
-	double orbiterAttitudeZ;
 
-	// LM needs yaw and roll swapped from CM orientation
-	orbiterAttitudeX = vs.arot.x;
-	orbiterAttitudeY = vs.arot.y;
-	orbiterAttitudeZ = vs.arot.z;
+	Orbiter.Attitude.X = vs.arot.x;
+	Orbiter.Attitude.Y = vs.arot.y;
+	Orbiter.Attitude.Z = vs.arot.z;
+
+	// Vessel to Orbiter global transformation
+	MATRIX3	tinv = getRotationMatrixZ(-vs.arot.z);
+	tinv = mul(getRotationMatrixY(-vs.arot.y), tinv);
+	tinv = mul(getRotationMatrixX(-vs.arot.x), tinv);
 
 	if (!Initialized) {
-		Orbiter.Attitude.X = orbiterAttitudeX;
-		Orbiter.Attitude.Y = orbiterAttitudeY;
-		Orbiter.Attitude.Z = orbiterAttitudeZ;
 		SetOrbiterAttitudeReference();
-		
-		Orbiter.LastAttitude.X = orbiterAttitudeX;
-		Orbiter.LastAttitude.Y = orbiterAttitudeY;
-		Orbiter.LastAttitude.Z = orbiterAttitudeZ;	
-		
+
+		// Get current weight vector in vessel coordinates
+		VECTOR3 w;
+		OurVessel->GetWeightVector(w);
+
+		// Transform to Orbiter global and calculate weight acceleration
+		w = mul(tinv, w) / OurVessel->GetMass();
+		LastWeightAcceleration = w;
+
 		LastTime = simt;
 		Initialized = true;
 	} 
 	else {
 		deltaTime = (simt - LastTime);
 
-		VECTOR3 accel = CalculateAccelerations(deltaTime);
+		// Calculate accelerations
+		VECTOR3 w, f;
+		OurVessel->GetWeightVector(w);
+		OurVessel->GetForceVector(f);
+
+		// Transform to Orbiter global and calculate accelerations
+		f = mul(tinv, f) / OurVessel->GetMass();
+		w = mul(tinv, w) / OurVessel->GetMass();
+
+		// Measurements with the 2006-P1 version showed that the average of the weight
+		// vector of this and the last step match the force vector while in free fall
+		// The force vector matches the global velocity change of the last timestep exactly
+		VECTOR3 dw1 = w - f;
+		VECTOR3 dw2 = LastWeightAcceleration - f;	
+		VECTOR3 accel = -(dw1 + dw2) / 2.0;
+		LastWeightAcceleration = w;
 
 		// orbiter earth rotation
-		//imuState->Orbiter.Y = imuState->Orbiter.Y + (deltaTime * TwoPI / 86164.09);
+		// imuState->Orbiter.Y = imuState->Orbiter.Y + (deltaTime * TwoPI / 86164.09);		
+		// sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f DT %f", accel.x, accel.y, accel.z, deltaTime);								
 
-		Orbiter.Attitude.X = orbiterAttitudeX;
-		Orbiter.Attitude.Y = orbiterAttitudeY;
-		Orbiter.Attitude.Z = orbiterAttitudeZ;
-				
+		// Process channel bits				
 		if (ZeroIMUCDUFlag) {
 			ZeroIMUCDUs();
 		}
-		else if(CoarseAlignEnableFlag) {
+		else if (CoarseAlignEnableFlag) {
 			SetOrbiterAttitudeReference();
 		}
-		else if(Caged) {
+		else if (Caged) {
 			SetOrbiterAttitudeReference();
 		}
 		else {
 			// Gimbals
-			t = Orbiter.AttitudeReference;
-	  		t = multiplyMatrix(getRotationMatrixX(Orbiter.Attitude.X), t);
-	  		t = multiplyMatrix(getRotationMatrixY(Orbiter.Attitude.Y), t);
-	  		t = multiplyMatrix(getRotationMatrixZ(Orbiter.Attitude.Z), t);
+			MATRIX3 t = Orbiter.AttitudeReference;
+	  		t = mul(getRotationMatrixX(Orbiter.Attitude.X), t);
+	  		t = mul(getRotationMatrixY(Orbiter.Attitude.Y), t);
+	  		t = mul(getRotationMatrixZ(Orbiter.Attitude.Z), t);
 	  		
-	  		t = multiplyMatrix(getOrbiterLocalToNavigationBaseTransformation(), t);
+	  		t = mul(getOrbiterLocalToNavigationBaseTransformation(), t);
 	  		
 			// calculate the new gimbal angles
-			newAngles = getRotationAnglesXZY(t);
+			VECTOR3 newAngles = getRotationAnglesXZY(t);
 
 			// drive gimbals to new angles		  		  				  		  	 	 	  		  	
 			// CAUTION: gimbal angles are left-handed
@@ -307,35 +250,22 @@ void LVIMU::Timestep(double simt)
 		  	DriveGimbalZ(-newAngles.z - Gimbal.Z);
 
 			// PIPAs
-			acc.x = accel.x;
-			acc.y = accel.y;
-			acc.z = accel.z;
+			accel = tmul(Orbiter.AttitudeReference, accel);
+			// sprintf(oapiDebugString(), "accel x %.10f y %.10f z %.10f DT %f", accel.x, accel.y, accel.z, deltaTime);								
 
-			// transformation to stable member coordinates
-			t = getOrbiterLocalToNavigationBaseTransformation();
-			// CAUTION: gimbal angles are left-handed
-			t = multiplyMatrix(getRotationMatrixX(Gimbal.X), t);
-	  		t = multiplyMatrix(getRotationMatrixZ(Gimbal.Z), t);
-	  		t = multiplyMatrix(getRotationMatrixY(Gimbal.Y), t);
-			accI = multiplyMatrixByVector(t, acc);
-
-			// pulse PIPAs
-			pulses = RemainingPIPA.X + (accI.x * deltaTime / 0.0585);
+			// pulse PIPAs			
+			pulses = RemainingPIPA.X + (accel.x * deltaTime / 0.0585);
 			PulsePIPA(LVRegPIPAX, (int) pulses);
 			RemainingPIPA.X = pulses - (int) pulses;
-
-			pulses = RemainingPIPA.Y + (accI.y * deltaTime / 0.0585);
+			
+			pulses = RemainingPIPA.Y + (accel.y * deltaTime / 0.0585);
 			PulsePIPA(LVRegPIPAY, (int) pulses);
 			RemainingPIPA.Y = pulses - (int) pulses;
 
-			pulses = RemainingPIPA.Z + (accI.z * deltaTime / 0.0585);
+			pulses = RemainingPIPA.Z + (accel.z * deltaTime / 0.0585);
 			PulsePIPA(LVRegPIPAZ, (int) pulses);
 			RemainingPIPA.Z = pulses - (int) pulses;			
 		}
-
-		Orbiter.LastAttitude.X = Orbiter.Attitude.X;
-		Orbiter.LastAttitude.Y = Orbiter.Attitude.Y;
-		Orbiter.LastAttitude.Z = Orbiter.Attitude.Z;
 		LastTime = simt;
 	}	
 }
@@ -433,22 +363,21 @@ void LVIMU::DriveCDU(int index, int RegCDU, int cducmd)
 
 void LVIMU::SetOrbiterAttitudeReference() 
 {
-	LVIMU_Matrix3 t;
-
 	// transformation to navigation base coordinates
 	// CAUTION: gimbal angles are left-handed
-	t = getRotationMatrixY(-Gimbal.Y);
-	t = multiplyMatrix(getRotationMatrixZ(-Gimbal.Z), t);
-	t = multiplyMatrix(getRotationMatrixX(-Gimbal.X), t);
+	MATRIX3 t = getRotationMatrixY(-Gimbal.Y);
+	t = mul(getRotationMatrixZ(-Gimbal.Z), t);
+	t = mul(getRotationMatrixX(-Gimbal.X), t);
 	
 	// tranform to orbiter local coordinates
-	t = multiplyMatrix(getNavigationBaseToOrbiterLocalTransformation(), t);
+	t = mul(getNavigationBaseToOrbiterLocalTransformation(), t);
 	
 	// tranform to orbiter global coordinates
-	t = multiplyMatrix(getRotationMatrixZ(-Orbiter.Attitude.Z), t);
-	t = multiplyMatrix(getRotationMatrixY(-Orbiter.Attitude.Y), t);
-	t = multiplyMatrix(getRotationMatrixX(-Orbiter.Attitude.X), t);
+	t = mul(getRotationMatrixZ(-Orbiter.Attitude.Z), t);
+	t = mul(getRotationMatrixY(-Orbiter.Attitude.Y), t);
+	t = mul(getRotationMatrixX(-Orbiter.Attitude.X), t);
 
+	// "Orbiter's REFSMMAT"
 	Orbiter.AttitudeReference = t;
 }
 
@@ -465,15 +394,10 @@ VECTOR3 LVIMU::GetTotalAttitude()
 
 {
 	VECTOR3 v;
-	if(LEM){
-		v.x = Gimbal.Z;
-		v.y = Gimbal.Y;
-		v.z = -Gimbal.X;
-	}else{
-		v.x = Gimbal.X;
-		v.y = Gimbal.Y;
-		v.z = Gimbal.Z;
-	}
+	// LEM FLAG HERE
+	v.x = Gimbal.X;
+	v.y = Gimbal.Y;
+	v.z = Gimbal.Z;
 	return v;
 }
 
@@ -687,10 +611,10 @@ int LVIMU::radToGyroPulses(double angle) {
 	return (int)((angle * 2097152.0) / TWO_PI);
 }
 
-LVIMU_Matrix3 LVIMU::getRotationMatrixX(double angle) {
+MATRIX3 LVIMU::getRotationMatrixX(double angle) {
 	// Returns the rotation matrix for a rotation of a given angle around the X axis (Pitch)
 	
-	LVIMU_Matrix3 RotMatrixX;
+	MATRIX3 RotMatrixX;
 	
 	RotMatrixX.m11 = 1;
 	RotMatrixX.m12 = 0;
@@ -705,10 +629,10 @@ LVIMU_Matrix3 LVIMU::getRotationMatrixX(double angle) {
 	return RotMatrixX;
 }
 
-LVIMU_Matrix3 LVIMU::getRotationMatrixY(double angle) {
+MATRIX3 LVIMU::getRotationMatrixY(double angle) {
 	// Returns the rotation matrix for a rotation of a given angle around the Y axis (Yaw)
 
-	LVIMU_Matrix3 RotMatrixY;
+	MATRIX3 RotMatrixY;
 	
 	RotMatrixY.m11 = cos(angle);
 	RotMatrixY.m12 = 0;
@@ -723,10 +647,10 @@ LVIMU_Matrix3 LVIMU::getRotationMatrixY(double angle) {
 	return RotMatrixY;
 }
 
-LVIMU_Matrix3 LVIMU::getRotationMatrixZ(double angle) {
+MATRIX3 LVIMU::getRotationMatrixZ(double angle) {
 	// Returns the rotation matrix for a rotation of a given angle around the Z axis (Roll)
 
-	LVIMU_Matrix3 RotMatrixZ;
+	MATRIX3 RotMatrixZ;
 	
 	RotMatrixZ.m11 = cos(angle);
 	RotMatrixZ.m12 = -sin(angle);
@@ -741,36 +665,9 @@ LVIMU_Matrix3 LVIMU::getRotationMatrixZ(double angle) {
 	return RotMatrixZ;	
 }
 
-LVIMU_Matrix3 LVIMU::multiplyMatrix(LVIMU_Matrix3 a, LVIMU_Matrix3 b) {
-
-	LVIMU_Matrix3 r;
+VECTOR3 LVIMU::getRotationAnglesXZY(MATRIX3 m) {
 	
-	r.m11 = (a.m11 * b.m11) + (a.m12 * b.m21) + (a.m13 * b.m31);
-	r.m12 = (a.m11 * b.m12) + (a.m12 * b.m22) + (a.m13 * b.m32);
-	r.m13 = (a.m11 * b.m13) + (a.m12 * b.m23) + (a.m13 * b.m33);
-	r.m21 = (a.m21 * b.m11) + (a.m22 * b.m21) + (a.m23 * b.m31);
-	r.m22 = (a.m21 * b.m12) + (a.m22 * b.m22) + (a.m23 * b.m32);
-	r.m23 = (a.m21 * b.m13) + (a.m22 * b.m23) + (a.m23 * b.m33);
-	r.m31 = (a.m31 * b.m11) + (a.m32 * b.m21) + (a.m33 * b.m31);
-	r.m32 = (a.m31 * b.m12) + (a.m32 * b.m22) + (a.m33 * b.m32);
-	r.m33 = (a.m31 * b.m13) + (a.m32 * b.m23) + (a.m33 * b.m33);	
-	return r;
-}
-
-LVIMU_Vector3 LVIMU::multiplyMatrixByVector(LVIMU_Matrix3 m, LVIMU_Vector3 v) {
-
-	LVIMU_Vector3 r;
-
-	r.x = (v.x * m.m11) + (v.y * m.m12) + (v.z * m.m13);
-	r.y = (v.x * m.m21) + (v.y * m.m22) + (v.z * m.m23);
-	r.z = (v.x * m.m31) + (v.y * m.m32) + (v.z * m.m33);
-
-	return r;
-}
-
-LVIMU_Vector3 LVIMU::getRotationAnglesXZY(LVIMU_Matrix3 m) {
-	
-	LVIMU_Vector3 v;
+	VECTOR3 v;
 	
 	v.z = asin(-m.m12);
 	
@@ -788,9 +685,9 @@ LVIMU_Vector3 LVIMU::getRotationAnglesXZY(LVIMU_Matrix3 m) {
 	return v;
 }
 
-LVIMU_Vector3 LVIMU::getRotationAnglesZYX(LVIMU_Matrix3 m) {
+VECTOR3 LVIMU::getRotationAnglesZYX(MATRIX3 m) {
 	
-	LVIMU_Vector3 v;
+	VECTOR3 v;
 	
 	v.y = asin(-m.m31);
 	
@@ -808,79 +705,56 @@ LVIMU_Vector3 LVIMU::getRotationAnglesZYX(LVIMU_Matrix3 m) {
 	return v;
 }
 
-LVIMU_Matrix3 LVIMU::getNavigationBaseToOrbiterLocalTransformation() {
+MATRIX3 LVIMU::getNavigationBaseToOrbiterLocalTransformation() {
 	
-	LVIMU_Matrix3 m;
+	MATRIX3 m;
 	int i;
 	
 	for (i = 0; i < 9; i++) {
 		m.data[i] = 0.0;
 	}
-	if(LEM){
-		m.m12 = 1.0;	
-		m.m21 = 1.0;
-		m.m33 = 1.0;
-	}else{
-		m.m12 = 1.0;	
-		m.m23 = -1.0;
-		m.m31 = 1.0;
-	}
+	// LEM FLAG HERE
+	m.m12 = -1.0;	
+	m.m23 = 1.0;
+	m.m31 = 1.0;
 	return m;
 } 
 
-LVIMU_Matrix3 LVIMU::getOrbiterLocalToNavigationBaseTransformation() {
+MATRIX3 LVIMU::getOrbiterLocalToNavigationBaseTransformation() {
 	
-	LVIMU_Matrix3 m;
+	MATRIX3 m;
 	int i;
 	
 	for (i = 0; i < 9; i++) {
 		m.data[i] = 0.0;
 	}
-	if(LEM){
-		m.m12 = 1.0;
-		m.m21 = 1.0;	
-		m.m33 = 1.0;
-	}else{
-		m.m13 = 1.0;
-		m.m21 = 1.0;	
-		m.m32 = -1.0;
-	}
+	// LEM FLAG HERE
+	m.m13 = 1.0;
+	m.m21 = -1.0;	
+	m.m32 = 1.0;
 	return m;
 }
 
+// LV Rate Gyro
 
-LVIMU_Vector3 LVIMU::VECTOR3ToLVIMU_Vector3(VECTOR3 v) {
-
-	LVIMU_Vector3 iv;
-
-	iv.x = v.x;
-	iv.y = v.y;
-	iv.z = v.z;
-	return iv;
+LVRG::LVRG() {
+	sat = NULL;
+	rates = _V(0,0,0);
 }
 
-VECTOR3 LVIMU::LVIMU_Vector3ToVECTOR3(LVIMU_Vector3 iv) {
-
-	VECTOR3 v;
-
-	v.x = iv.x;
-	v.y = iv.y;
-	v.z = iv.z;
-	return v;
+void LVRG::Init(VESSEL *v) {
+	// Initialize
+	sat = v;
 }
 
-LVIMU_Matrix3 LVIMU::MATRIX3ToLVIMU_Matrix3(MATRIX3 m) {
-
-	LVIMU_Matrix3 im;
-
-	im.m11 = m.m11;
-	im.m12 = m.m12;
-	im.m13 = m.m13;
-	im.m21 = m.m21;
-	im.m22 = m.m22;
-	im.m23 = m.m23;
-	im.m31 = m.m31;
-	im.m32 = m.m32;
-	im.m33 = m.m33;
-	return im;
+void LVRG::Timestep(double simdt) {
+	rates = _V(0,0,0);
+	if (sat != NULL) {
+		VECTOR3 orbiter_rates = _V(0,0,0);
+		sat->GetAngularVel(orbiter_rates); // From those, generate ROTATION RATE data.
+		rates.x = -orbiter_rates.z;
+		rates.y = orbiter_rates.x;
+		rates.z = -orbiter_rates.y;
+	}
 }
+
