@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2007/06/06 15:02:16  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.77  2007/03/01 18:24:33  tschachim
   *	Fixed Saturn V assembly
   *	
@@ -1567,6 +1570,23 @@ void SaturnV::SeparateStage (int new_stage)
 		SetSplashStage ();
 	}
 
+	// ADDED FOR PAD ABORT
+	if (stage == PRELAUNCH_STAGE && bAbort )
+	{
+		vs1.vrot.x = 0.0;
+		vs1.vrot.y = 0.0;
+		vs1.vrot.z = 0.0;
+
+		StageS.play();
+
+		char VName[256];
+
+		GetApolloName(VName); strcat (VName, "-ABORT");
+		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort1", vs1);
+
+		SetAbortStage ();
+	}
+
 	if (stage == LAUNCH_STAGE_ONE && bAbort )
 	{
 		vs1.vrot.x = 0.0;
@@ -1601,7 +1621,7 @@ void SaturnV::SeparateStage (int new_stage)
 
 	if (stage == CSM_ABORT_STAGE)
 	{
-		JettisonLET();
+		//JettisonLET();
 
 		SetStage(CM_ENTRY_STAGE);
 		SetReentryStage ();

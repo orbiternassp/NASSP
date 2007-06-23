@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2007/06/08 20:08:30  tschachim
+  *	Kill apex cover vessel.
+  *	
   *	Revision 1.62  2007/06/06 15:02:17  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -1093,10 +1096,11 @@ void Saturn::SetReentryStage ()
 		mesh_dir=_V(0, 0, TowerOffset);
 		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		mesh_dir=_V(0,0,0); // DS20070622 Ensure this is still zero if the LES is present.
 	}
 
 	// And the Crew
-	if (Crewed) {
+	if (Crewed) {		
 		cmpidx = AddMesh (hCMP, &mesh_dir);
 		crewidx = AddMesh (hCREW, &mesh_dir);
 		SetCrewMesh();

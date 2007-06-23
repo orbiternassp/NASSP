@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.100  2007/06/08 20:08:29  tschachim
+  *	Kill apex cover vessel.
+  *	
   *	Revision 1.99  2007/06/06 15:02:10  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -1827,8 +1830,11 @@ void SaturnV::Timestep(double simt, double simdt)
 
 	// DS20070205 LVDC++
 	if(use_lvdc){
-		lvdc_timestep(simt,simdt);
-		return;
+		// For other stages
+		if(stage < CSM_LEM_STAGE){
+			lvdc_timestep(simt,simdt);
+			return;
+		}
 	}
 	// AFTER LVDC++ WORKS SATISFACTORILY EVERYTHING BELOW THIS LINE
 	// SHOULD BE SAFE TO DELETE. DO NOT ADD ANY LVDC++ CODE BELOW THIS LINE.
@@ -2501,38 +2507,63 @@ void SaturnV::LaunchVehicleUnbuild() {
 // DS20070205 LVDC++ SETUP
 void SaturnV::lvdc_init(){
 	lvimu.Init();					// Initialize IMU
-	lvimu.SetVessel(this,false);	// set vessel pointer
+	lvrg.Init(this);				// LV Rate Gyro Package
+	lvimu.SetVessel(this);			// set vessel pointer
 	LVDC_Timebase = -1;				// Start up halted in pre-launch pre-GRR loop
 	LVDC_TB_ETime = 0;
+	LVDC_GP_PC = 0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	LVDC_EI_On = false;
-	LVDC_IMU_Levelled = false;
-	LVDC_Gnd_Tgt = false;
+	S1C_Sep_Time = 0;
 	// REAL LVDC FLAGS
 	LVDC_GRR = false;
+	S1C_Engine_Out = false;
 	// Flags in the pad-load.
 	Aziumuth_Inclination_Mode = true;
 	Azimuth_DscNodAngle_Mode = true;
 	Direct_Ascent = false; 
+	CountPIPA = false;
 }
 	
 // DS20070205 LVDC++ EXECUTION
 void SaturnV::lvdc_timestep(double simt, double simdt) {
 
-	int i;
+	/* **** LVDC NAVIGATION PROGRAM **** */
 
 	// Give a timestep to the LV IMU
 	lvimu.Timestep(simt);
+	// and RG
+	lvrg.Timestep(simdt);
+	// Get current attitude
+	CurrentAttitude = lvimu.GetTotalAttitude();
+	// Get rates
+	AttRate = lvrg.GetRates();
+	// If enabled, pick up the IMU data
+	if(CountPIPA){
+		Velocity[0] += (lvimu.CDURegisters[LVRegPIPAX] * 0.0585);
+		Velocity[1] += (lvimu.CDURegisters[LVRegPIPAY] * 0.0585);
+		Velocity[2] += (lvimu.CDURegisters[LVRegPIPAZ] * 0.0585);
+
+		// SUBTRACT GRAVITY
+		Velocity[0] -= (9.80665 * simdt);
+
+		Position[0] += Velocity[0]*simdt;
+		Position[1] += Velocity[1]*simdt;
+		Position[2] += Velocity[2]*simdt;
+		/*
+		sprintf(oapiDebugString(), "CV %.10f %.10f %.10f | POS %.10f %.10f %.10f",
+			Velocity[0],Velocity[1],Velocity[2],								
+			Position[0],Position[1],Position[2]);								
+		*/
+	}
 	// Update timebase ET
 	LVDC_TB_ETime += simdt;
 
-	// LVDC PROGRAM STARTS HERE
 	// Note that GenericTimestep will update MissionTime and jettison the LET.
 
-	switch(LVDC_Timebase){
-		case -1: // PRELAUNCH PRE-TB0
-			// SELECTED ITEMS FROM LaunchCountdown()
-
+	/* **** LVDC GUIDANCE PROGRAM **** */
+	switch(LVDC_GP_PC){
+		case 0: // LOOP WAITING FOR PTL
 			// Lock time accel to 100x
 			if (oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
 
@@ -2544,7 +2575,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 
 			// Prelaunch tank venting between -3:00h and engine ignition
 			// No clue if the venting start time is correct
-			if (MissionTime < -10800 || MissionTime > -9) {
+			if (MissionTime < -10800){
 				DeactivatePrelaunchVenting();
 			}else{
 				ActivatePrelaunchVenting();
@@ -2553,18 +2584,24 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
 			if (MissionTime < -1200){
 				sprintf(oapiDebugString(),"LVDC: T %f | AWAITING PTL INTERRUPT",MissionTime);
+				lvimu.ZeroIMUCDUFlag = true;					// Zero IMU CDUs
 				break;
 			}
+			// Otherwise fall into next step
+			LVDC_GP_PC = 1;
 
-			// T MINUS 20 MINUTES: "PREPARE TO LAUNCH" INTERRUPT RECIEVED FROM GCC
-			if(LVDC_IMU_Levelled == false){					// If the IMU has not been set to level
-				double TO_HDG = agc.GetDesiredAzimuth();	// Get aziumuth in degrees
-				TO_HDG += 90;								// Rotate 90 degrees
-				lvimu.DriveGimbals(TO_HDG*RAD,90*RAD,0);	// And bring to alignment 
-				LVDC_IMU_Levelled = true;					// Done
-				// The IMU is STILL CAGED until GRR is released.
+		case 1: // "PREPARE TO LAUNCH" INTERRUPT RECIEVED FROM GCC
+			{
+				lvimu.ZeroIMUCDUFlag = false;					// Release IMU CDUs
+				double TO_HDG = agc.GetDesiredAzimuth();		// Get aziumuth in degrees
+				Azimuth = TO_HDG;								// Store azimuth
+				TO_HDG = TO_HDG - 90;							// Correct for pad orientation (Trust me, it's correct)
+				lvimu.DriveGimbals(TO_HDG*RAD,0,0);				// Now bring to alignment 
 			}
+			// The IMU is STILL CAGED until GRR is released.
+			LVDC_GP_PC = 2;
 
+		case 2: // WAIT FOR GRR
 			// Engine lights on at T-00:04:10
 			if (MissionTime >= -250 && LVDC_EI_On == false) { LVDC_EI_On = true; }
 
@@ -2577,64 +2614,86 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 					lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
 					lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ]);
 				break;
-			}
+			}			
+			LVDC_GP_PC = 3; // Fall into next
+
+		case 3: // POST-GRR INITIALIZATION
+			/* **** PAD-LOADED VARIABLE INITIALIZATION (TEMPORARY) **** */
+			// PRE-IGM PITCH POLYNOMIAL
+			Fx[0][0] = 3.19840;			Fx[0][1] = -10.9607;		Fx[0][2] = 78.7826;			Fx[0][3] = 69.9191;
+			Fx[1][0] = -0.544236;		Fx[1][1] = 0.946620;		Fx[1][2] = -2.83749;		Fx[1][3] = -2.007490;
+			Fx[2][0] = 0.0351605;		Fx[2][1] = -0.0294206;		Fx[2][2] = 0.0289710;		Fx[2][3] = 0.0105367;
+			Fx[3][0] = -0.00116379;		Fx[3][1] = 0.000207717;		Fx[3][2] = -0.000178363;	Fx[3][3] = -0.0000233163;
+			Fx[4][0] = 0.0000113886;	Fx[4][1] = -0.000000439036;	Fx[4][2] = 0.000000463029;	Fx[4][3] = 0.0000000136702;
+
+			// FAILURE FREEZE COEFFICIENTS
+			B_11 = -0.62;   B_12 = 40.9;
+			B_21 = -0.3611; B_22 = 29.25;
+
+			// MISC. TIMES
+			T_ar = 153;	T_1  = 13; T_2 = 25; T_3 = 36; T_4 = 45; T_5 = 81; T_6 = 0;
+			dT_F = 0;
+			T_S1 = 35; T_S2 = 80; T_S3 = 115;
 
 			// GUIDANCE REF RELEASE - GO TO TB0
 			lvimu.SetCaged(false);							// Release IMU
 			LVDC_GRR = true;								// Mark event
 			oapiSetTimeAcceleration (1);					// Set time acceleration to 1
-			for (i = 0; i < 5; i++) {					// Reconnect fuel to S1C engines
-				SetThrusterResource(th_main[i], ph_1st);
+			SetThrusterGroupLevel(thg_main, 0);				// Ensure off
+			{	int i;
+				for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
+					SetThrusterResource(th_main[i], ph_1st);
+				}
 			}
+			CreateStageOne();								// Create hidden stage one, for later use in staging
 			LVDC_Timebase = 0;								// Start TB0
 			LVDC_TB_ETime = 0;
-			// FALL INTO TB0
+			LVDC_GP_PC = 10;								// FALL INTO TB0
 
-		case 0:	// TIMEBASE 0 -- PRE-LAUNCH POST GUIDANCE REF RELEASE
+		case 10: // AWAIT LAUNCH
 			// This is timebase 0. At this point, the LVDC is running the flight program.
 			// All diagnostics are completed.
-
+			
 			// Perform Ground Targeting Calculations
-			if(LVDC_Gnd_Tgt == false){
-				// Time into launch window = launch time from midnight - reference time of launch from midnight
-				// azimuth = coeff. of azimuth polynomial * time into launch window
+			// Time into launch window = launch time from midnight - reference time of launch from midnight
+			// azimuth = coeff. of azimuth polynomial * time into launch window
 
-				// We already have an azimuth from the AGC, we'll use that for now.
-				Azimuth = agc.GetDesiredAzimuth();
+			// We already have an azimuth from the AGC, we'll use that for now.
+			Azimuth = agc.GetDesiredAzimuth();
 
-				if(Aziumuth_Inclination_Mode = true){
-					// CALCULATE INCLINATION FROM AZIMUTH
-					// inclination = coeff. for inclination-from-azimuth polynomial * azimuth;
-				}else{
-					// CALCULATE INCLINATION FROM TIME INTO LAUNCH WINDOW
-					// inclination = coeff. for inclination-from-time polynomial * Time into launch window
-				}
-				if(Azimuth_DscNodAngle_Mode == true){
-					// CALCULATE DESCNEING NODAL ANGLE FROM AZIMUTH
-					// DNA = coeff. for DNA-from-inclination polynomial * Azimuth
-				}else{
-					// CALCULATE DESCNEING NODAL ANGLE FROM TIME INTO LAUNCH WINDOW
-					// DNA = coeff. for DNA-from-time polynomial * Time into launch window
-				}
-				// true anomaly of predicted cutoff radius vector = TABLE15 (time into launch window)
-				// eccentricity of transfer ellipse = TABLE15 (time into launch window)
-				// vis-viva energy of desired transfer ellipse = TABLE15 (time into launch window)
-				if(Direct_Ascent){
-					// angle from perigee vector to DNA vector = TABLE25 (time into launch window)
-					// terminal guidance freeze time = 0
-				}
-				// semilatus rectum of terminal ellipse = (earth's gravity / vis-viva energy of desired transfer ellipse) *
-				//			(eccentricity of transfer ellipse - 1)
-				// Terminal velocity constant = (semilatus rectum of terminal ellipse * earth's gravity) * .5
-				// Desired terminal radius = semilatus rectum of terminal ellipse / 
-				//			( 1 + eccentricity of transfer ellipse * cos. true anomaly of predicted cutoff radius vector ^2)
-				//			* .5
-				// Desired terminal flight-path angle =
-				// atan( (eccentricity of transfer ellipse * sin(true anomaly of predicted cutoff radius vector)) /
-				//       (1 + eccentricity of transfer ellipse * sin(true anomaly of predicted cutoff radius vector)) ))
-				LVDC_Gnd_Tgt = true;
+			if(Aziumuth_Inclination_Mode = true){
+				// CALCULATE INCLINATION FROM AZIMUTH
+				// inclination = coeff. for inclination-from-azimuth polynomial * azimuth;
+			}else{
+				// CALCULATE INCLINATION FROM TIME INTO LAUNCH WINDOW
+				// inclination = coeff. for inclination-from-time polynomial * Time into launch window
 			}
+			if(Azimuth_DscNodAngle_Mode == true){
+				// CALCULATE DESCNEING NODAL ANGLE FROM AZIMUTH
+				// DNA = coeff. for DNA-from-inclination polynomial * Azimuth
+			}else{
+				// CALCULATE DESCNEING NODAL ANGLE FROM TIME INTO LAUNCH WINDOW
+				// DNA = coeff. for DNA-from-time polynomial * Time into launch window
+			}
+			// true anomaly of predicted cutoff radius vector = TABLE15 (time into launch window)
+			// eccentricity of transfer ellipse = TABLE15 (time into launch window)
+			// vis-viva energy of desired transfer ellipse = TABLE15 (time into launch window)
+			if(Direct_Ascent){
+				// angle from perigee vector to DNA vector = TABLE25 (time into launch window)
+				// terminal guidance freeze time = 0
+			}
+			// semilatus rectum of terminal ellipse = (earth's gravity / vis-viva energy of desired transfer ellipse) *
+			//			(eccentricity of transfer ellipse - 1)
+			// Terminal velocity constant = (semilatus rectum of terminal ellipse * earth's gravity) * .5
+			// Desired terminal radius = semilatus rectum of terminal ellipse / 
+			//			( 1 + eccentricity of transfer ellipse * cos. true anomaly of predicted cutoff radius vector ^2)
+			//			* .5
+			// Desired terminal flight-path angle =
+			// atan( (eccentricity of transfer ellipse * sin(true anomaly of predicted cutoff radius vector)) /
+			//       (1 + eccentricity of transfer ellipse * sin(true anomaly of predicted cutoff radius vector)) ))
+			LVDC_GP_PC = 11;
 
+		case 11: // MORE TB0
 			// At 10 seconds, play the countdown sound.
 			if (MissionTime >= -10.9) {
 				if (!UseATC && Scount.isValid()) {
@@ -2643,27 +2702,36 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				}
 			}
 
+			// Shut down venting at T - 9
+			if(MissionTime > -9 && prelaunchvent[0] != NULL) { DeactivatePrelaunchVenting(); }
+
 			// Starting at 4.9 seconds, start to throttle up.
 			{
-				double thrst=0;
+				double thrst=0;				
 				if (MissionTime >= -4.9) {
 					thrst = (0.9 / 2.9) * (MissionTime + 4.9);
 				}else{
-					if (MissionTime > (-2.0)) {
+					if (MissionTime > -2.0) {
 						thrst = 0.9 + (0.05 * (MissionTime + 2.0));
 					}
 				}
-				SetThrusterGroupLevel(thg_main, thrst);
-				contrailLevel = thrst;
+				if(thrst > 0){					
+					SetThrusterGroupLevel(thg_main, thrst);
+					AddForce(_V(0, 0, -10. * THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
+					contrailLevel = thrst;				
+				}
 			}
-			if(MissionTime < 0){
-				AddForce(_V(0, 0, -10. * THRUST_FIRST_VAC), _V(0, 0, 0)); // Maintain hold-down lock
-				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | IMU XYZ %d %d %d PIPA %d %d %d",MissionTime,LVDC_TB_ETime,
+
+			if(MissionTime < 0){								
+				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | IMU XYZ %d %d %d PIPA %d %d %d",
+					MissionTime,LVDC_TB_ETime,
 					lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
-					lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ]);
-					break;
+					lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ]);					
+				break;
 			}
-			// LIFTOFF TIME
+			LVDC_GP_PC = 15;
+
+		case 15: // LIFTOFF TIME
 			IMUGuardedCageSwitch.SwitchTo(TOGGLESWITCH_DOWN);		// Uncage CM IMU
 			SetLiftoffLight();										// And light liftoff lamp
 			SetStage(LAUNCH_STAGE_ONE);								// Switch to stage one
@@ -2681,25 +2749,329 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				LaunchS.play(NOLOOP,255);
 				LaunchS.done();
 			}
+			// Enable PIPA storage
+			Position[0] = 0; Position[1] = 0; Position[2] = 0;
+			Velocity[0] = 0; Velocity[1] = 0; Velocity[2] = 0;
+			CountPIPA = true;
+			// Store pitch and roll
+			CommandedAttitude.x = CurrentAttitude.x;
+			CommandedAttitude.y = CurrentAttitude.y;
 			// Fall into TB1
 			LVDC_Timebase = 1;
 			LVDC_TB_ETime = 0;
+			LVDC_GP_PC = 20; // GO TO PRE-IGM
 
-		case 1: // TB1 -- FLIGHT PROGRAM STAGE 1
-			sprintf(oapiDebugString(),"LVDC: T %f | TB1 + %f | IMU XYZ %d %d %d PIPA %d %d %d",MissionTime,LVDC_TB_ETime,
-				lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
-				lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ]);
+		case 20: // PRE-IGM PROGRAM
+			if(S1C_Engine_Out && T_EO1 == 0){	// If S1C Engine Out and not flagged
+				T_EO1 = 1;
+				T_FAIL = MissionTime;
+			}
+			if(Position[0] > 137 || MissionTime > T_1){
+				// We're clear of the tower
+				if(MissionTime >= T_2 && T_EO1 > 0){
+					// Engine has failed, recalculate freeze time
+					if(T_FAIL <= T_2){ dT_F = T_3; }
+					if(T_2 < MissionTime && MissionTime <= T_4){ dT_F = B_11 * T_FAIL + B_12; }
+					if(T_4 < MissionTime && MissionTime <= T_5){ dT_F = B_21 * T_FAIL + B_22; }
+					if(T_5 < MissionTime){ dT_F = 0; }
+					T_6 = MissionTime + dT_F;
+					T_ar = T_ar + (0.25 * (T_ar - T_FAIL));
+				}
+				// Determine Pitch Command
+				if(MissionTime >= T_6){
+					// Continue
+					if(MissionTime > T_ar){
+						// NORMAL PITCH FREEZE
+					}else{
+						// PITCH FROM POLYNOMIAL
+						int x=0,y;
+						double Tc = MissionTime - dT_F;						
+						if(Tc < T_S1){               y = 0; }
+						if(T_S1 <= Tc && Tc < T_S2){ y = 1; }
+						if(T_S2 <= Tc && Tc < T_S3){ y = 2; }
+						if(T_S3 <= Tc){              y = 3; }
+						while(x < 5){
+							CommandedAttitude.y += (Fx[x][y] * ((double)pow(Tc,x)));
+							x++;
+						}
+						CommandedAttitude.y *= RAD;
+					}
+				}else{
+					// >= T6 PITCH FREEZE
+				}
+				// Now Roll
+				if(CommandedAttitude.x != 0){ CommandedAttitude.x = 0; }
+				// And Yaw
+				if(CommandedAttitude.z != 0){ CommandedAttitude.z = 0; }
+			}else{
+				// Not clear of the tower.
+				// S1C YAW MANEUVER
+				if(MissionTime > 1 && MissionTime < 8.75){
+					CommandedAttitude.z = 5*RAD;
+				}else{
+					CommandedAttitude.z = 0;
+				}
+				// MAINTAIN CURRENT ROLL AND PITCH COMMANDS				
+			}
+			// STEERING ANGLE LIMIT TEST GOES HERE
+
+			/*
+			// ENGINE FAIL TEST:
+			if(MissionTime > 22.5 && S1C_Engine_Out == false){
+				SetThrusterResource(th_main[1], NULL); // Should stop the engine
+				S1C_Engine_Out = true;
+			}
+			*/
+
+			// S1C CECO TRIGGER:
+			// I have two conflicting leads as to the CECO trigger.
+			// One says it happens at 4G acceleration and the other says it happens by a timer at T+135.5
+			if(LVDC_Timebase == 1 && MissionTime > 135.5){ // this->GetAccelG() > 4){
+				SetThrusterResource(th_main[4], NULL); // Should stop the engine
+				// Clear liftoff light now - Apollo 15 checklist
+				ClearLiftoffLight();
+				// Begin timebase 2
+				LVDC_Timebase = 2;
+				LVDC_TB_ETime = 0;
+			}
+
+			// S1C OECO TRIGGER
+			// Because of potential failures above changing the engine burn rates, this can't be reliably done on
+			// a timer anymore.
+			if (stage == LAUNCH_STAGE_ONE && LVDC_Timebase == 2 && GetFuelMass() <= 0.001){
+				bManualSeparate = false;
+				// Move hidden S1C
+				if (hstg1) {
+					VESSELSTATUS vs;
+					GetStatus(vs);
+					S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
+					stage1->DefSetState(&vs);
+				}				
+				// Set timer
+				S1C_Sep_Time = MissionTime;
+				// Engine Shutdown
+				int i;
+				for (i = 0; i < 5; i++){
+					SetThrusterResource(th_main[i], NULL);
+				}
+				// Begin timebase 3
+				LVDC_Timebase = 3;
+				LVDC_TB_ETime = 0;
+			}
+			// S1C SEPARATION TRIGGER
+			if(stage == LAUNCH_STAGE_ONE && S1C_Sep_Time != 0 && MissionTime >= (S1C_Sep_Time+0.7)){
+				// Drop old stage
+				SeparationS.play(NOLOOP, 245);
+				SeparateStage(LAUNCH_STAGE_TWO);
+				SetStage(LAUNCH_STAGE_TWO);
+				// Fire S2 ullage
+				if (SII_UllageNum) {
+					SetThrusterGroupLevel(thg_ull, 1.0);
+					SepS.play(LOOP, 130);
+				}
+				ActivateStagingVent();
+			}
+			// S2 ENGINE STARTUP
+			if(stage == LAUNCH_STAGE_TWO && S1C_Sep_Time != 0 && MissionTime >= (S1C_Sep_Time+1.4) && S2_Startup == false){
+				S2_Startup = true;
+				SIISepState = true;
+				SetSIICMixtureRatio(5.5);
+				DeactivateStagingVent();
+				SetThrusterGroupLevel(thg_main, 0.9);
+			}
+
+			if(stage == LAUNCH_STAGE_TWO && S1C_Sep_Time != 0 && MissionTime >= (S1C_Sep_Time+1.7) && S2_Startup == true){
+				SetThrusterGroupLevel(thg_main, 1); // Full power
+				if (SII_UllageNum)
+					SetThrusterGroupLevel(thg_ull,0.0);
+				SepS.stop();
+				S1C_Sep_Time = 0; // All done
+			}
+
+			// Drop Interstage Ring
+			if(stage == LAUNCH_STAGE_TWO && S1C_Sep_Time == 0 && LVDC_Timebase == 3 && LVDC_TB_ETime > 30.7
+				&& SIISepState == true)
+			{
+				SeparateStage (LAUNCH_STAGE_TWO_TWR_JET);
+				SetStage(LAUNCH_STAGE_TWO_TWR_JET);
+				bManualSeparate = false;
+				SIISepState = false;
+			}
+
+			// And jettison LET
+			if(stage == LAUNCH_STAGE_TWO_TWR_JET && LVDC_Timebase == 3 && LVDC_TB_ETime > 35.5 && LESAttached){
+				JettisonLET();
+			}
+			// -- END OF PRE-IGM --
 			break;
 	}
 
-	// AFTER LVDC PROGRAM ACTIONS:
-	// Update engine indicators
-	if(LVDC_EI_On == true){
-		for (i = 0; i <= 4; i++){
-			if(GetThrusterLevel(th_main[i]) > 0  && ENGIND[i] == true){  ENGIND[i] = false; } // UNLIGHT
-			if(GetThrusterLevel(th_main[i]) == 0 && ENGIND[i] == false){  ENGIND[i] = true; }   // LIGHT
-		}
+	/* **** LVDA **** */
+
+	// Compute attitude error
+	AttitudeError.x = CommandedAttitude.x - CurrentAttitude.x;
+	if (AttitudeError.x > 0) { 
+		if (AttitudeError.x > PI){ AttitudeError.x = -(TWO_PI - AttitudeError.x); }
+	} else {
+		if (AttitudeError.x < -PI) { AttitudeError.x = TWO_PI + AttitudeError.x; }
+	}
+	// PITCH ERROR
+	AttitudeError.y = CommandedAttitude.y - CurrentAttitude.y;
+	if (AttitudeError.y > 0) { 
+		if (AttitudeError.y > PI){ AttitudeError.y = -(TWO_PI - AttitudeError.y); }
+	} else {
+		if (AttitudeError.y < -PI) { AttitudeError.y = TWO_PI + AttitudeError.y; }
+	}
+	// YAW ERROR
+	AttitudeError.z = CommandedAttitude.z - CurrentAttitude.z;
+	if (AttitudeError.z > 0) { 
+		if (AttitudeError.z > PI){ AttitudeError.z = -(TWO_PI - AttitudeError.z); }
+	} else {
+		if (AttitudeError.z < -PI) { AttitudeError.z = TWO_PI + AttitudeError.z; }
 	}
 
+	// Adjust error for roll
+	AttitudeError = lvdc_AdjustErrorsForRoll(CurrentAttitude,AttitudeError);
 
+	/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
+
+	// Create gimbal demand.
+	if(stage == LAUNCH_STAGE_ONE){
+		if(MissionTime < 105){ ErrorGain = 0.9; RateGain =  0.69; }else{
+			if(MissionTime < 130){ ErrorGain = 0.45; RateGain =  0.64; }else{
+				ErrorGain = 0.32; RateGain =  0.30; }}}
+	if(stage == LAUNCH_STAGE_TWO && LVDC_Timebase == 3){
+		if(LVDC_TB_ETime < 60){ ErrorGain = 1.12; RateGain =  1.9; }else{
+			if(LVDC_TB_ETime < 190){ ErrorGain = 0.65; RateGain =  1.1; }else{
+				ErrorGain = 0.44; RateGain =  0.74; }}}
+
+	// #4
+	GPitch[0] = (ErrorGain*AttitudeError.y + RateGain*AttRate.y);
+	GYaw[0] = (ErrorGain*AttitudeError.z + RateGain*AttRate.z);
+	GYaw[0] -= -(ErrorGain*AttitudeError.x + RateGain*AttRate.x);	// Roll
+
+	// #2
+	GPitch[1] = (ErrorGain*AttitudeError.y + RateGain*AttRate.y);
+	GYaw[1] = (ErrorGain*AttitudeError.z + RateGain*AttRate.z);
+	GYaw[1] += -(ErrorGain*AttitudeError.x + RateGain*AttRate.x);	// Roll
+
+	// #1
+	GPitch[2] = (ErrorGain*AttitudeError.y + RateGain*AttRate.y);
+	GYaw[2] = (ErrorGain*AttitudeError.z + RateGain*AttRate.z);
+	GPitch[2] -= -(ErrorGain*AttitudeError.x + RateGain*AttRate.x); // Roll
+
+	// #3
+	GPitch[3] = (ErrorGain*AttitudeError.y + RateGain*AttRate.y);
+	GYaw[3] = (ErrorGain*AttitudeError.z + RateGain*AttRate.z);
+	GPitch[3] += -(ErrorGain*AttitudeError.x + RateGain*AttRate.x); // Roll
+			
+	// Gimbal angle limitation
+	int x=0;
+	while(x<4){
+		if(GPitch[x] >  0.0872664626){ GPitch[x] =  0.0872664626; }
+		if(GPitch[x] < -0.0872664626){ GPitch[x] = -0.0872664626; }
+		if(GYaw[x] >  0.0872664626){ GYaw[x] =  0.0872664626; }
+		if(GYaw[x] < -0.0872664626){ GYaw[x] = -0.0872664626; }
+		x++;
+	}
+
+	// LEFT YAW is X, UP PITCH is Y, Z is always 1
+	SetThrusterDir(th_main[0],_V(GYaw[0],GPitch[0],1)); //4 
+	SetThrusterDir(th_main[1],_V(GYaw[1],GPitch[1],1)); //2 
+	SetThrusterDir(th_main[2],_V(GYaw[2],GPitch[2],1)); //1 
+	SetThrusterDir(th_main[3],_V(GYaw[3],GPitch[3],1)); //3
+
+	// Debug if we're launched
+	if(LVDC_Timebase > 0){
+		sprintf(oapiDebugString(),"LVDC: TB%d + %f | IMU ATT %f %f %f | ERR %f %f %f | RATE %f %f %f | ALT %f",
+			LVDC_Timebase,LVDC_TB_ETime,
+			CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,
+			AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
+			AttRate.x*DEG,AttRate.y*DEG,AttRate.z*DEG,Position[0]);					
+	}
+
+	// Update engine indicators and failure flags
+	if(LVDC_EI_On == true){
+		double level;
+		int i;
+		for (i = 0; i <= 4; i++){
+			level = GetThrusterLevel(th_main[i]);
+			if(level > 0  && ENGIND[i] == true){  ENGIND[i] = false; } // UNLIGHT
+			if(level == 0 && ENGIND[i] == false){  ENGIND[i] = true; }   // LIGHT
+		}
+	}
+	if(stage == LAUNCH_STAGE_ONE && MissionTime < 12.5){
+		// Control contrail
+		if (MissionTime > 12)
+			contrailLevel = 0;
+		else if (MissionTime > 7)
+			contrailLevel = (12.0 - MissionTime) / 100.0;
+		else if (MissionTime > 2)
+			contrailLevel = 1.38 - 0.95 / 5.0 * MissionTime;
+		else
+			contrailLevel = 1;
+	}
+
+	/* **** ABORT HANDLING **** */
+	if(bAbort){
+		// ABORT MODE 1 - Use of LES to extract CM
+		// Allowed from T - 5 minutes until LES jettison.
+		if(MissionTime > -300 && LESAttached){			
+			SetEngineLevel(ENGINE_MAIN, 0);
+			SeparateStage(CM_STAGE);
+			SetStage(CM_STAGE);
+			StartAbort();
+			bAbort = false;
+			agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
+			agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
+		}
+		// All abort conditions failed, discard the abort request.
+		bAbort = false;
+	}
+
+}
+
+// Perform error adjustment.
+VECTOR3 SaturnV::lvdc_AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors)
+{
+	VECTOR3 output_errors;
+	double input_pitch = errors.y;
+	double input_yaw = errors.z;
+	double roll_percent,output_pitch,output_yaw,pitch_factor = 1;
+	if(attitude.x == 0){ // If zero or inop, return unmodified to avoid SPECIAL CASE
+		return(errors);
+	}
+	if(attitude.x > 4.712388){                    // 0 thru 90 degrees
+		roll_percent = fabs((attitude.x-TWO_PI) / 1.570796);				
+		output_pitch = input_pitch * (1-roll_percent); 
+		output_pitch += input_yaw * roll_percent;
+		output_yaw = input_yaw * (1-roll_percent);
+		output_yaw -=input_pitch * roll_percent;       
+	}
+	if(attitude.x > PI && attitude.x < 4.712388){ // 90 thru 180 degrees
+		roll_percent = (attitude.x-PI) / 1.570796;					
+		output_pitch = -(input_pitch * (1-roll_percent)); 
+		output_pitch += input_yaw * roll_percent;
+		output_yaw = -input_yaw * (1-roll_percent);
+		output_yaw -=input_pitch * roll_percent;       
+	}
+	if(attitude.x > 1.570796 && attitude.x < PI){ // 180 thru 270 degrees
+		roll_percent = fabs((attitude.x-PI) / 1.570796);
+		output_pitch = -(input_pitch * (1-roll_percent)); 
+		output_pitch -= input_yaw * roll_percent;
+		output_yaw = -input_yaw * (1-roll_percent);
+		output_yaw +=input_pitch * roll_percent;       
+	}
+	if(attitude.x > 0 && attitude.x < 1.570796){ // 270 thru 360 degrees
+		roll_percent = attitude.x / 1.570796;					
+		output_pitch = input_pitch * (1-roll_percent); 
+		output_pitch -= input_yaw * roll_percent;
+		output_yaw = input_yaw * (1-roll_percent);
+		output_yaw +=input_pitch * roll_percent;       
+	}
+
+	output_errors.x = errors.x;
+	output_errors.y = output_pitch;
+	output_errors.z = output_yaw;
+	return(output_errors);
 }

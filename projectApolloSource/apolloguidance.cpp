@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.91  2007/06/06 15:02:10  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.90  2007/01/11 08:18:22  chode99
   *	Added initialization for NextControlTime
   *	
@@ -5237,7 +5240,7 @@ void ApolloGuidance::SetOutputChannel(int channel, unsigned int val)
 	case 0174:  // FDAI ROLL CHANNEL
 	case 0175:  // FDAI PITCH CHANNEL
 	case 0176:  // FDAI YAW CHANNEL
-	case 0177:
+	case 0177:		
 		ProcessIMUCDUErrorCount(channel, val);
 		imu.ChannelOutput(channel, val);
 		break;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2007/06/06 15:02:12  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.26  2007/04/25 18:48:58  tschachim
   *	New PIPA implementation.
   *	
@@ -426,7 +429,7 @@ void IMU::Timestep(double simt)
 		f = mul(tinv, f) / OurVessel->GetMass();
 		w = mul(tinv, w) / OurVessel->GetMass();
 
-		// Measurements with the 2006-P1 version showed that the average of the weigth 
+		// Measurements with the 2006-P1 version showed that the average of the weight 
 		// vector of this and the last step match the force vector while in free fall
 		// The force vector matches the global velocity change of the last timestep exactly
 		VECTOR3 dw1 = w - f;

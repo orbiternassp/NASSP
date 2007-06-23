@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.239  2007/06/08 20:08:29  tschachim
+  *	Kill apex cover vessel.
+  *	
   *	Revision 1.238  2007/06/06 15:02:17  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -1571,6 +1574,7 @@ protected:
 	// *** LVDC++ ITEMS ***
 	bool use_lvdc; // LVDC use flag
 	LVIMU lvimu;   // ST-124-M3 IMU (LV version)
+	LVRG lvrg;	   // LV rate gyro package
 
 
 	// SCS components

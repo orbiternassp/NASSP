@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	
   **************************************************************************/
 
@@ -29,16 +32,6 @@
 
 #if !defined(_PA_LVIMU_H)
 #define _PA_LVIMU_H
-
-typedef union {      // 3 vector
-	double data[3];
-	struct { double x, y, z; };
-} LVIMU_Vector3;
-
-typedef union {      // 3x3 matrix
-	double data[9];
-	struct { double m11, m12, m13, m21, m22, m23, m31, m32, m33; };
-} LVIMU_Matrix3;
 
 // Indexes into CDURegisters
 #define LVRegCDUX  000
@@ -59,7 +52,7 @@ public:
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
-	void SetVessel(VESSEL *v, bool LEMFlag) { OurVessel = v; LEM = LEMFlag; };
+	void SetVessel(VESSEL *v) { OurVessel = v; };
 	VECTOR3 GetTotalAttitude();
 
 	bool IsCaged();
@@ -73,8 +66,6 @@ public:
 
 protected:
 	
-	bool LEM; // Flag to indicate LEM mode
-	VECTOR3 CalculateAccelerations(double deltaT);
 	void DriveCDUX(int cducmd);
 	void DriveCDUY(int cducmd);
 	void DriveCDUZ(int cducmd);
@@ -88,31 +79,26 @@ protected:
 	void ZeroIMUCDUs();
 
 	// Flags to replace IO channel discretes
-	bool ZeroIMUCDUFlag;
-	bool CoarseAlignEnableFlag;
+public: bool ZeroIMUCDUFlag;
+public: bool CoarseAlignEnableFlag;
 
 	//
 	// Maths.
 	//
 
-	LVIMU_Matrix3 getRotationMatrixX(double angle);
-	LVIMU_Matrix3 getRotationMatrixY(double angle);
-	LVIMU_Matrix3 getRotationMatrixZ(double angle);
-	LVIMU_Matrix3 multiplyMatrix(LVIMU_Matrix3 a, LVIMU_Matrix3 b);
-	LVIMU_Vector3 multiplyMatrixByVector(LVIMU_Matrix3 m, LVIMU_Vector3 v);
-	LVIMU_Vector3 getRotationAnglesXZY(LVIMU_Matrix3 m);
-	LVIMU_Vector3 getRotationAnglesZYX(LVIMU_Matrix3 m);
-	LVIMU_Vector3 VECTOR3ToLVIMU_Vector3(VECTOR3 v);
-	VECTOR3 LVIMU_Vector3ToVECTOR3(LVIMU_Vector3 iv);
-	LVIMU_Matrix3 MATRIX3ToLVIMU_Matrix3(MATRIX3 m);
+	MATRIX3 getRotationMatrixX(double angle);
+	MATRIX3 getRotationMatrixY(double angle);
+	MATRIX3 getRotationMatrixZ(double angle);
+	VECTOR3 getRotationAnglesXZY(MATRIX3 m);
+	VECTOR3 getRotationAnglesZYX(MATRIX3 m);
 
 	double degToRad(double angle);
 	double radToDeg(double angle);
 	double gyroPulsesToRad(int pulses);
 	int radToGyroPulses(double angle);
 
-	LVIMU_Matrix3 getNavigationBaseToOrbiterLocalTransformation();
-	LVIMU_Matrix3 getOrbiterLocalToNavigationBaseTransformation();
+	MATRIX3 getNavigationBaseToOrbiterLocalTransformation();
+	MATRIX3 getOrbiterLocalToNavigationBaseTransformation();
 
 	VESSEL *OurVessel;
 
@@ -148,8 +134,10 @@ protected:
 			double Z;
 		} LastAttitude;
 
-		LVIMU_Matrix3 AttitudeReference;
+		MATRIX3 AttitudeReference;
 	} Orbiter;
+
+	VECTOR3 LastWeightAcceleration;
 
 	VECTOR3 Velocity;
 
@@ -162,6 +150,20 @@ protected:
 
 #define LVIMU_START_STRING	"LVIMU_BEGIN"
 #define LVIMU_END_STRING	"LVIMU_END"
+
+// Now the LV rate gyros
+
+class LVRG {
+public: 
+	LVRG();                                                                  // Cons
+	void Init(VESSEL *v);													 // Initialization
+	void Timestep(double simdt);                                             // Update function
+	VECTOR3 GetRates() { return rates; };
+
+protected:
+	VECTOR3 rates;                                                           // Detected rotation acceleration
+	VESSEL *sat;                                                             // Pointer to ship we're attached to
+};
 
 #endif
 
