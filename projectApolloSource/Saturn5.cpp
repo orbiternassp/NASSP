@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.101  2007/06/23 21:20:36  dseagrav
+  *	LVDC++ Update: Now with Pre-IGM guidance
+  *	
   *	Revision 1.100  2007/06/08 20:08:29  tschachim
   *	Kill apex cover vessel.
   *	
@@ -1800,7 +1803,11 @@ void SaturnV::DoFirstTimestep(double simt)
 	hstg2 = oapiGetVesselByName(VName);
 	strcpy (VName, ApolloName); strcat (VName, "-APEX");
 	hApex = oapiGetVesselByName(VName);
-
+	strcpy (VName, ApolloName); strcat (VName, "-DROGUECHUTE");
+	hDrogueChute = oapiGetVesselByName(VName);
+	strcpy (VName, ApolloName); strcat (VName, "-MAINCHUTE");
+	hMainChute = oapiGetVesselByName(VName);	
+	
 	habort = oapiGetVesselByName("Saturn_Abort");
 }
 
@@ -2100,10 +2107,10 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 			//ShiftCentreOfMass (_V(0,0,STG0O));	// Seems to be useless...
 		}
 
-		if (GetEngineLevel(ENGINE_MAIN)>=0.5){
+/*		if (GetEngineLevel(ENGINE_MAIN)>=0.5){		// Seems to be useless...
 			SetMaxThrust (ENGINE_ATTITUDE, 8e5);
 		}
-
+*/
 		break;
 
 	case LAUNCH_STAGE_TWO:
@@ -2150,7 +2157,8 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	// dockstate does anymore.
 	//
 
-	switch (dockstate) {
+	// Seems to be useless...
+	/* switch (dockstate) {
 		case 1:
 			break;
 		case 2:
@@ -2163,8 +2171,8 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 			// TODO: SetCSM2Stage is buggy
 			// SetCSM2Stage ();
 			break;
-	}
-
+	} */
+	
 	GenericLoadStateSetup();
 
 	if (stage < LAUNCH_STAGE_SIVB) {

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2006/06/28 01:23:02  movieman523
+  *	Made SM break up on re-entry. Unfortunately sound doesn't work and if I try to delete the 'parts' when the SM is deleted. Orbiter blows away.
+  *	
   *	Revision 1.9  2006/06/27 18:22:54  movieman523
   *	Added 'drogues' sound.
   *	
@@ -100,5 +103,7 @@
 #define CABINCLOSEOUT_SOUND			"cabincloseout.wav"
 #define DROGUES_SOUND				"drogues.wav"
 #define CRASH_SOUND					"crash.wav"
+#define POSTLANDINGVENT_SOUND		"aircond.wav"
+#define CREWDEAD_SOUND				"crewdead.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"

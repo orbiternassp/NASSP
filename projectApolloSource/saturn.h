@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.240  2007/06/23 21:20:37  dseagrav
+  *	LVDC++ Update: Now with Pre-IGM guidance
+  *	
   *	Revision 1.239  2007/06/08 20:08:29  tschachim
   *	Kill apex cover vessel.
   *	
@@ -474,6 +477,7 @@
 #include "csm_telecom.h"
 #include "sps.h"
 #include "mcc.h"
+#include "ecs.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -652,10 +656,6 @@ typedef struct {
 	double PotableH2oTankQuantityPercent;
 	double WasteH2oTankQuantityPercent;
 } ECSWaterStatus;
-
-
-#define ECS_CREWSTATUS_OK			0
-#define ECS_CREWSTATUS_CRITICAL		1
 
 typedef struct {
 	int crewNumber;
@@ -2531,6 +2531,25 @@ protected:
 	ThreeSourceSwitch TelcomGroup1Switch;
 	ThreeSourceSwitch TelcomGroup2Switch;
 
+	///////////////////////////////
+	// Panel 275 circuit brakers //
+	///////////////////////////////
+
+	SwitchRow Panel275CircuitBrakersRow;
+	CircuitBrakerSwitch InverterPower3MainBCircuitBraker;
+	CircuitBrakerSwitch InverterPower3MainACircuitBraker;
+	CircuitBrakerSwitch InverterPower2MainBCircuitBraker;
+	CircuitBrakerSwitch InverterPower1MainACircuitBraker;
+	CircuitBrakerSwitch FlightPostLandingMainBCircuitBraker;
+	CircuitBrakerSwitch FlightPostLandingMainACircuitBraker;
+	CircuitBrakerSwitch FlightPostLandingBatCCircuitBraker;
+	CircuitBrakerSwitch FlightPostLandingBatBusBCircuitBraker;
+	CircuitBrakerSwitch FlightPostLandingBatBusACircuitBraker;
+	CircuitBrakerSwitch MainBBatBusBCircuitBraker;
+	CircuitBrakerSwitch MainBBatCCircuitBraker;
+	CircuitBrakerSwitch MainABatCCircuitBraker;
+	CircuitBrakerSwitch MainABatBusACircuitBraker;
+
 	////////////////////////
 	// Right window cover //
 	////////////////////////
@@ -2845,12 +2864,18 @@ protected:
 	SwitchRow DirectO2RotaryRow;
 	DirectO2RotationalSwitch DirectO2RotarySwitch;
 
-	//////////////////////
-	// Panel 325/326    //
-	//////////////////////
+	////////////////////////
+	// Panel 325/326 etc. //
+	////////////////////////
 
 	SwitchRow GlycolToRadiatorsLeverRow; 	
 	CircuitBrakerSwitch GlycolToRadiatorsLever;
+
+	SwitchRow CabinPressureReliefLever1Row;
+	ThumbwheelSwitch CabinPressureReliefLever1;
+
+	SwitchRow CabinPressureReliefLever2Row;
+	SaturnCabinPressureReliefLever CabinPressureReliefLever2;
 
 	SwitchRow GlycolReservoirRotariesRow;
 	RotationalSwitch GlycolReservoirInletRotary;
@@ -2861,6 +2886,9 @@ protected:
 	RotationalSwitch OxygenSurgeTankRotary;
 	RotationalSwitch OxygenSMSupplyRotary;
 	RotationalSwitch OxygenRepressPackageRotary;
+
+	SwitchRow SuitCircuitReturnValveLeverRow;
+	CircuitBrakerSwitch SuitCircuitReturnValveLever;
 
 	///////////////////////
 	// Panel 13 switches //
@@ -2918,6 +2946,7 @@ protected:
 	#define SATSYSTEMS_READYTOLAUNCH    500
 	#define SATSYSTEMS_CABINVENTING		600
 	#define SATSYSTEMS_FLIGHT			700
+	#define SATSYSTEMS_LANDING			800
 
 	int systemsState;
 	bool firstSystemsTimeStepDone;
@@ -3149,6 +3178,15 @@ protected:
 	PowerMerge FlightBusFeeder;
 
 	//
+	// Flight/Post Landing Bus.
+	// This gets fed via various circuit breakers on panel 275.
+	//
+
+	DCbus FlightPostLandingBus;
+	NWayPowerMerge FlightPostLandingBusFeeder;
+
+
+	//
 	// Inverters.
 	//
 
@@ -3194,16 +3232,29 @@ protected:
 	PowerMerge SwitchPower;
 	PowerMerge GaugePower;
 
+	//
+	// ECS
+	//
+
 	h_HeatExchanger *PrimCabinHeatExchanger;
 	h_HeatExchanger *SecCabinHeatExchanger;
 	h_HeatExchanger *PrimEcsRadiatorExchanger1;
 	h_HeatExchanger *PrimEcsRadiatorExchanger2;
+	h_HeatExchanger *SecEcsRadiatorExchanger1;
+	h_HeatExchanger *SecEcsRadiatorExchanger2;
 	Boiler *CabinHeater;
 	Boiler *PrimECSTestHeater;
 	Boiler *SecECSTestHeater;
 	AtmRegen *SuitCompressor1;
 	AtmRegen *SuitCompressor2;
 	h_crew *Crew;
+	CabinPressureRegulator CabinPressureRegulator;
+	O2DemandRegulator O2DemandRegulator;
+	CabinPressureReliefValve CabinPressureReliefValve1;
+	CabinPressureReliefValve CabinPressureReliefValve2;
+	SuitCircuitReturnValve SuitCircuitReturnValve;
+	O2SMSupply O2SMSupply;
+	CrewStatus CrewStatus;
 
 	//
 	// RHC/THC 
@@ -3212,7 +3263,6 @@ protected:
 	PowerMerge RHCNormalPower;
 	PowerMerge RHCDirect1Power;
 	PowerMerge RHCDirect2Power;
-
 
 	//
 	// LM PAD
@@ -3298,10 +3348,10 @@ protected:
 
 	unsigned int	viewpos;
 
-	UINT probeidx;
-	UINT probeextidx;
-	UINT crewidx;
-	UINT cmpidx;
+	int probeidx;
+	int probeextidx;
+	int crewidx;
+	int cmpidx;
 	
 	bool ActivateASTP;
 
@@ -3366,6 +3416,7 @@ protected:
 
 	bool KranzPlayed;
 	bool PostSplashdownPlayed;
+	bool SplashdownPlayed;
 
 	OBJHANDLE hEVA;
 
@@ -3428,6 +3479,8 @@ protected:
 	OBJHANDLE hML;
 	OBJHANDLE hMSS;
 	OBJHANDLE hApex;
+	OBJHANDLE hDrogueChute;
+	OBJHANDLE hMainChute;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
@@ -3599,8 +3652,8 @@ protected:
 	void SetSplashStage();
 	void SetAbortStage();
 	void SetCSMStage();
-	// void SetCSM2Stage ();
 	void SetReentryStage();
+	void SetReentryMeshes();
 	void AddRCS_CM(double MaxThrust, double offset = 0.0);
 	void SetRCS_CM();
 	void GenericTimestepStage(double simt, double simdt);
@@ -3655,6 +3708,8 @@ protected:
 	Sound STLI;
 	Sound STLIStart;
 	Sound SecoSound;
+	Sound PostLandingVentSound;
+	Sound CrewDeadSound;
 
 	///
 	/// Drogue deployment message.
@@ -3874,7 +3929,7 @@ protected:
 	int LMPadLoadCount;
 	int LMPadValueCount;
 	
-	// DS20060305 Friend Class List Added for SCS objects 
+	// Friend Class List for systems objects 
 	friend class GDC;
 	friend class BMAG;
 	friend class ASCP;
@@ -3894,6 +3949,8 @@ protected:
 	friend class CMACInverterSwitch;
 	friend class SaturnSCControlSetter;
 	friend class SaturnEMSDvDisplay;
+	friend class ELS;
+	friend class CrewStatus;
 };
 
 extern void BaseInit();
@@ -3901,9 +3958,8 @@ extern void SaturnInitMeshes();
 extern void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel);
 
 const double STG2O = 8;
-const double SMVO = 0.0;//-0.14;
+const double SMVO = 0.0;
 const double CREWO = 0.0;
-const VECTOR3 OFS_MAINCHUTE =  { 0, -2, 9};
 
 extern MESHHANDLE hSM;
 extern MESHHANDLE hCM;

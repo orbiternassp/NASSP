@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2007/06/06 15:02:23  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.75  2007/01/22 14:47:38  tschachim
   *	Moved FDAIPowerRotationalSwitch to satswitches, horizontal thumbwheel.
   *	
@@ -1931,6 +1934,26 @@ bool ThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 		}
 	}
 	return true;
+}
+
+bool ThumbwheelSwitch::SwitchTo(int newState) {
+
+	// Switch only with REALISM 0
+	if (switchRow) {
+		if (switchRow->panelSwitches->Realism) 
+			return false;
+	}
+
+	if (newState >= 0 && newState <= maxState && state != newState) {
+		state = newState;
+		sclick.play();
+		if (switchRow) {
+			if (switchRow->panelSwitches->listener) 
+				switchRow->panelSwitches->listener->PanelThumbwheelSwitchChanged(this);
+		}
+		return true;
+	}
+	return false;
 }
 
 void ThumbwheelSwitch::DrawSwitch(SURFHANDLE DrawSurface) {

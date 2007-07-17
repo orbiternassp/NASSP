@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/04/25 18:48:10  tschachim
+  *	EMS dV functions.
+  *	
   *	Revision 1.22  2007/01/22 14:54:09  tschachim
   *	Moved FDAIPowerRotationalSwitch from toggleswitch, added SPS TVC displays & controls.
   *	
@@ -789,4 +792,23 @@ public:
 protected:
 	int position;
 	Saturn *sat;
+};
+
+class SaturnCabinPressureReliefLever: public ThumbwheelSwitch {
+
+public:
+	SaturnCabinPressureReliefLever() { guardState = 0; };
+	virtual ~SaturnCabinPressureReliefLever() { guardClick.done(); };
+
+	void InitGuard(SURFHANDLE surf, SoundLib *soundlib);
+	void DrawSwitch(SURFHANDLE drawSurface);
+	bool CheckMouseClick(int event, int mx, int my);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+
+protected:
+	int guardState;
+
+	Sound guardClick;
+	SURFHANDLE guardSurface;
 };

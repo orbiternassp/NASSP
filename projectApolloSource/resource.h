@@ -605,6 +605,14 @@
 #define AID_EMSDVSETSWITCH                                  867
 #define AID_EMSDVDISPLAY                                    868
 #define IDB_EMS_LIGHTS                                      869
+#define IDB_SUITRETURN_LEVER                                870
+#define AID_SUITCIRCUITRETURNVALVE                          871
+#define IDB_CABINRELIEFUPPERLEVER                           872
+#define IDB_CABINRELIEFLOWERLEVER                           873
+#define AID_CABINPRESSURERELIEFLEVER1                       874
+#define AID_CABINPRESSURERELIEFLEVER2                       875
+#define IDB_CABINRELIEFGUARDLEVER                           876
+#define AID_PANEL275CIRCUITBRAKERS                          877
 
 // Next default values for new objects
 //

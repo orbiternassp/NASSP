@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2007/01/22 14:47:38  tschachim
+  *	Moved FDAIPowerRotationalSwitch to satswitches, horizontal thumbwheel.
+  *	
   *	Revision 1.57  2006/11/24 22:42:44  dseagrav
   *	Enable changing bits in AGC channel 33, enable LEB optics switch, enable tracker switch as optics status debug switch.
   *	
@@ -1165,6 +1168,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetState();
