@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2007/06/06 15:02:16  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.24  2007/04/25 18:48:09  tschachim
   *	EMS dV functions.
   *	
@@ -1174,27 +1177,27 @@ void DirectO2RotationalSwitch::CheckValve()
 	
 	} else if (GetState() == 5) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.18 / LBH;
+		Pipe->flowMax = 0.1 / LBH;
 
 	} else if (GetState() == 4) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.37 / LBH;
+		Pipe->flowMax = 0.2 / LBH;
 
 	} else if (GetState() == 3) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.53 / LBH;
+		Pipe->flowMax = 0.31 / LBH;
 
 	} else if (GetState() == 2) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.7 / LBH;
+		Pipe->flowMax = 0.41 / LBH;
 
 	} else if (GetState() == 1) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 0.9 / LBH;
+		Pipe->flowMax = 0.53 / LBH;
 
 	} else if (GetState() == 0) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
-		Pipe->flowMax = 1.1 / LBH;
+		Pipe->flowMax = 0.67 / LBH;
 	}
 }
 
@@ -2078,5 +2081,66 @@ bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my) {
 			break;
 	}
 	return true;
+}
+
+
+void SaturnCabinPressureReliefLever::InitGuard(SURFHANDLE surf, SoundLib *soundlib) { 
+	
+	guardSurface = surf;
+
+	if (!guardClick.isValid())
+		soundlib->LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
+}
+
+void SaturnCabinPressureReliefLever::DrawSwitch(SURFHANDLE drawSurface) {
+
+	oapiBlt(drawSurface, guardSurface, 0, 0, guardState * 152, 0, 152, 79, SURF_PREDEF_CK);
+	ThumbwheelSwitch::DrawSwitch(drawSurface);
+}
+
+bool SaturnCabinPressureReliefLever::CheckMouseClick(int event, int mx, int my) {
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+		if (mx <= 152 &&  my <= 79) {			
+			if (guardState) {
+				guardState = 0;
+			} else {
+				guardState = 1;
+			}
+			guardClick.play();
+			return true;
+
+		} else {
+			return false;
+		}
+	} else {
+		bool r = ThumbwheelSwitch::CheckMouseClick(event, mx, my);
+		if (state == 3 && guardState == 0) {
+			state = 2;
+			return false;
+		} else {
+			return r;
+		}
+	}
+}
+
+void SaturnCabinPressureReliefLever::SaveState(FILEHANDLE scn) {
+
+	char buffer[100];
+
+	sprintf(buffer, "%i %i", state, guardState); 
+	oapiWriteScenario_string(scn, name, buffer);
+}
+
+void SaturnCabinPressureReliefLever::LoadState(char *line) {
+
+	char buffer[100];
+	int st, gst;
+
+	sscanf(line, "%s %i %i", buffer, &st, &gst); 
+	if (!strnicmp(buffer, name, strlen(name))) {
+		state = st;
+		guardState = gst;
+	}
 }
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/06/06 15:02:10  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.6  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -508,9 +511,13 @@ void ProjectApolloMFD::Update (HDC hDC)
 		SetTextAlign (hDC, TA_CENTER);
 		if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
 			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.45), "OK", 2);	
+		} else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL) {
+			SetTextColor (hDC, RGB(255, 255, 0));
+			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.45), "CRITICAL", 8);	
+			SetTextColor (hDC, RGB(0, 255, 0));
 		} else {
 			SetTextColor (hDC, RGB(255, 0, 0));
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.45), "CRITICAL", 8);	
+			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.45), "DEAD", 4);	
 			SetTextColor (hDC, RGB(0, 255, 0));
 		}
 

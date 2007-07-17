@@ -171,6 +171,10 @@ IDB_THUMBWHEEL_GPI_PITCH                    BITMAP  "thumbwheel_gpi_pitch.bmp"
 IDB_THUMBWHEEL_GPI_YAW                      BITMAP  "thumbwheel_gpi_yaw.bmp"
 IDB_THC                                     BITMAP  "thc.bmp"
 IDB_EMS_LIGHTS                              BITMAP  "ems_lights.bmp"
+IDB_SUITRETURN_LEVER                        BITMAP  "suitreturn_lever.bmp"
+IDB_CABINRELIEFUPPERLEVER                   BITMAP  "cabin_press_upper_lever.bmp"
+IDB_CABINRELIEFLOWERLEVER                   BITMAP  "cabin_press_lower_lever.bmp"
+IDB_CABINRELIEFGUARDLEVER                   BITMAP  "cabin_press_guard_lever.bmp"
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 

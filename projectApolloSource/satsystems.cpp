@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.142  2007/06/06 15:02:16  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.141  2007/04/25 18:48:10  tschachim
   *	EMS dV functions.
   *	
@@ -333,7 +336,7 @@ void Saturn::SystemsInit() {
 	PyroBusA.WireToBuses(EntryBatteryA, PyroBatteryA);
 	PyroBusB.WireToBuses(EntryBatteryB, PyroBatteryB);
 
-	BatteryRelayBus.WireToBuses( &BATRLYBusBatACircuitBraker, &BATRLYBusBatBCircuitBraker);
+	BatteryRelayBus.WireToBuses(&BATRLYBusBatACircuitBraker, &BATRLYBusBatBCircuitBraker);
 
 	//
 	// Main Buses
@@ -347,10 +350,10 @@ void Saturn::SystemsInit() {
 	MainBusB->WireTo(MainBusBController.GetBusSource());
 
 	MainBusAController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &BatteryBusA, EntryBatteryC, eo, &SIVBToCSMPowerSource);	// TODO Bat C should be connected via the MAIN A - BAT C cb on panel 275, which is currently not available
+		                    &MainABatBusACircuitBraker, &MainABatCCircuitBraker, eo, &SIVBToCSMPowerSource);	
 
 	MainBusBController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &BatteryBusB, EntryBatteryC, eo, &SIVBToCSMPowerSource);	// TODO Bat C should be connected via the MAIN B - BAT C cb on panel 275, which is currently not available
+		                    &MainBBatBusBCircuitBraker, &MainBBatCCircuitBraker, eo, &SIVBToCSMPowerSource);
 	
 	MainBusAController.ConnectFuelCell(2, true);	// Default state of MainBusASwitch2
 
@@ -358,9 +361,21 @@ void Saturn::SystemsInit() {
 	// Flight Bus and its feeder
 	//
 
-	FlightBusFeeder.WireToBuses(MainBusA,MainBusB);
+	FlightBusFeeder.WireToBuses(MainBusA, MainBusB);
 	FlightBus.WireTo(&FlightBusFeeder);
 	Panelsdk.AddElectrical(&FlightBus, false);
+
+	//
+	// Flight/Post Landing Bus and its feeder
+	//
+
+	FlightPostLandingBusFeeder.WireToBus(1, &FlightPostLandingMainACircuitBraker);
+	FlightPostLandingBusFeeder.WireToBus(2, &FlightPostLandingMainBCircuitBraker);
+	FlightPostLandingBusFeeder.WireToBus(3, &FlightPostLandingBatBusACircuitBraker);
+	FlightPostLandingBusFeeder.WireToBus(4, &FlightPostLandingBatBusBCircuitBraker);
+	FlightPostLandingBusFeeder.WireToBus(5, &FlightPostLandingBatCCircuitBraker);
+	FlightPostLandingBus.WireTo(&FlightPostLandingBusFeeder);
+	Panelsdk.AddElectrical(&FlightPostLandingBus, false);
 
 	//
 	// Battery Charger
@@ -392,10 +407,12 @@ void Saturn::SystemsInit() {
 	SecCabinHeatExchanger = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:SECCABINHEATEXCHANGER");
 	PrimEcsRadiatorExchanger1 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER1");
 	PrimEcsRadiatorExchanger2 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMECSRADIATOREXCHANGER2");
+	SecEcsRadiatorExchanger1 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:SECECSRADIATOREXCHANGER1");
+	SecEcsRadiatorExchanger2 = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:SECECSRADIATOREXCHANGER2");
 	CabinHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:CABINHEATER");
 	PrimECSTestHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:PRIMECSTESTHEATER");
 	SecECSTestHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SECECSTESTHEATER");
-	Crew = (h_crew *) Panelsdk.GetPointerByString("HYDRAULIC:CREW");
+	Crew = (h_crew *) Panelsdk.GetPointerByString("HYDRAULIC:CREW");	 
 
 	SuitCompressor1 = (AtmRegen *) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER1");
 	SuitCompressor1->WireTo(&SuitCompressor1Switch);
@@ -404,6 +421,16 @@ void Saturn::SystemsInit() {
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:SECGLYCOLPUMP");
 	eo->WireTo(&SecCoolantLoopPumpSwitch);
+
+	CabinPressureRegulator.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR"));
+	O2DemandRegulator.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR"), (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:SUITRELIEFVALVE"));
+	CabinPressureReliefValve1.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFVALVE1"), (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET1"), this, &CabinPressureReliefLever1, &PostLDGVentValveLever, &PostLandingVentSwitch, &FLTPLCircuitBraker);
+	CabinPressureReliefValve2.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFVALVE2"), (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET2"), this, &CabinPressureReliefLever2, &PostLDGVentValveLever, &PostLandingVentSwitch, &FLTPLCircuitBraker);
+	SuitCircuitReturnValve.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET"), &SuitCircuitReturnValveLever);
+	O2SMSupply.Init((h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLY"), (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR"), 
+		            (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK"),(h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:O2REPRESSPACKAGE"), 
+					&OxygenSMSupplyRotary, &OxygenSurgeTankRotary, &OxygenRepressPackageRotary);
+	CrewStatus.Init(this);
 
 	//
 	// Wire up internal systems.
@@ -762,45 +789,30 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 			firstSystemsTimeStepDone = true;
 		}
 		else {
+			double scdp;
 			AtmosStatus atm;
 			GetAtmosStatus(atm);
 
-			double *pMax, *fMax, scdp;
-			float *size, *pz;
-			int *open, *isopen;
-
 			switch (systemsState) {
-
 			case SATSYSTEMS_NONE:
 				
 				// No crew 
 				SetCrewNumber(0);
 
 				// No leak
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
-				*open = SP_VALVE_CLOSE;
+				CabinPressureReliefValve1.SetLeakSize(0);
+				CabinPressureReliefValve2.SetLeakSize(0);
 
-				// Cabin pressure regulator to 14.7 psi
-				pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:PRESSMAX");
-				*pMax = 14.7 / PSI;	
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
-				*open = SP_VALVE_OPEN;
+				// Reset cabin pressure regulator and set to 14.7 psi
+				CabinPressureRegulator.Reset(); 
+				CabinPressureRegulator.ResetMaxFlow(); 
+				CabinPressureRegulator.SetPressurePSI(14.7);
 				
-				// Close O2 demand regulator
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT2:OPEN");
-				*open = SP_VALVE_CLOSE;
-
-				// Close cabin to suit circuit return value
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
-				*open = SP_VALVE_CLOSE;
-
-				// Open suit pressure relieve
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
-				*open = SP_VALVE_OPEN;
-
-				// Primary ECS radiators in prelaunch configuration, TODO secondary
+				// ECS radiators in prelaunch configuration
 				PrimEcsRadiatorExchanger1->SetLength(8.0);
 				PrimEcsRadiatorExchanger2->SetLength(8.0);
+				SecEcsRadiatorExchanger1->SetLength(8.0);
+				SecEcsRadiatorExchanger2->SetLength(8.0);
 
 				// GSE provides electrical power
 				MainBusAController.SetGSEState(1);
@@ -853,7 +865,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				MissionTimerSwitch.SwitchTo(THREEPOSSWITCH_UP);
 
 				// Open Direct O2 valve
-				DirectO2RotarySwitch.SwitchTo(4);
+				DirectO2RotarySwitch.SwitchTo(2);
 
 				
 				// Next state
@@ -876,26 +888,23 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					SetCrewNumber(3);
 					
 					// Close cabin pressure regulator 
-					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
-					*open = SP_VALVE_CLOSE;
+					CabinPressureRegulator.Close();
 
 					// Suit compressors to prelaunch configuration
 					SuitCompressor1->fan_cap = 110000.0;
 					SuitCompressor2->fan_cap = 110000.0;
 
-					// Open cabin to suit circuit return value
-					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
-					*open = SP_VALVE_OPEN;
-					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:PRESSMAX");
-					*pMax = 100.0 / PSI;	// that's like disabling PREG
-				
+					// Open suit relief valve and close O2 demand regulator in order to 
+					// equalize suit cabin pressure difference
+					O2DemandRegulator.Close();
+					O2DemandRegulator.OpenSuitReliefValve();
 
 					//
 					// Checklist actions
 					//
 		
 					// Open Direct O2 valve
-					DirectO2RotarySwitch.SwitchTo(2);
+					DirectO2RotarySwitch.SwitchTo(0);
 
 					// Turn on suit compressor 1
 					SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
@@ -916,19 +925,10 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					lastSystemsMissionTime = MissionTime; 
 				} else {
 					scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-					if ((scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) || stage > PRELAUNCH_STAGE) {	// Suit Cabin delta p is established
+					if ((scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) || stage > PRELAUNCH_STAGE) {	// Suit Cabin delta p is equalized
 
-						// Open cabin pressure regulator, max flow to 0.25 lb/h  
-						open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOR:OUT:OPEN");
-						*open = SP_VALVE_OPEN;
-						fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOWMAX");
-						*fMax = 0.25 / LBH; 
-
-						// Close cabin to suit circuit return value
-						open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
-						*open = SP_VALVE_CLOSE;
-						pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:PRESSMAX");
-						*pMax = 4.95 / PSI;
+						// Reset (i.e. close) suit relief valve again
+						O2DemandRegulator.ResetSuitReliefValve();
 
 						// Next state
 						systemsState = SATSYSTEMS_CREWINGRESS_2;
@@ -941,12 +941,12 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
 				if ((scdp > 1.3 && MissionTime - lastSystemsMissionTime >= 10) || stage > PRELAUNCH_STAGE) {	// Suit Cabin delta p is established
 
-					// Cabin leak
-					size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-					*size = (float) 0.0002; 
-					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
-					*open = SP_VALVE_OPEN;
+					// Reset (i.e. open) cabin pressure regulator again, max flow to 0.25 lb/h  
+					CabinPressureRegulator.SetMaxFlowLBH(0.25);
+					CabinPressureRegulator.Reset(); 
 
+					// Cabin leak
+					CabinPressureReliefValve1.SetLeakSize(0.0002);
 
 					// Next state
 					systemsState = SATSYSTEMS_CABINCLOSEOUT;
@@ -1064,6 +1064,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 					MainBusTieBatAcSwitch.SwitchTo(THREEPOSSWITCH_UP);
 					MainBusTieBatBcSwitch.SwitchTo(THREEPOSSWITCH_UP);
 
+
 					// Next state
 					systemsState = SATSYSTEMS_READYTOLAUNCH;
 					lastSystemsMissionTime = MissionTime; 
@@ -1071,40 +1072,27 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 				break;
 
 			case SATSYSTEMS_READYTOLAUNCH:
-				if (GetAtmPressure() <= 6.0 / PSI) {
-					// Cabin pressure relieve
-					size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-					*size = (float) 0.22; // 0.25;
-					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:OPEN");
-					*open = SP_VALVE_OPEN;
-					
-					// Cabin pressure regulator to 5 psi
-					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:PRESSMAX");
-					*pMax = 5.0 / PSI;
+				if (GetAtmPressure() <= 8.5 / PSI) {					
+					// Cabin pressure regulator and relief pressure to boost configuration, disable max. flow
+					CabinPressureReliefValve1.SetReliefPressurePSI(4.82); // 5 psi - 5 inH2O
+					CabinPressureRegulator.SetPressurePSI(4.7);
+					CabinPressureRegulator.ResetMaxFlow();
 
-					// Disable cabin pressure regulator max flow
-					fMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOWMAX");
-					*fMax = 0;
+					// Reset (i.e. open) O2 demand regulator
+					O2DemandRegulator.Reset();
 
-					// Open cabin to suit circuit return value
-					open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:OUT:OPEN");
-					*open = SP_VALVE_OPEN;
-
-					// Suit pressure relieve max./min. pressure
-					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITRELIEFVALVE:PRESSMAX");
-					*pMax = 0;
-					pMax = (double*) Panelsdk.GetPointerByString("HYDRAULIC:SUITRELIEFVALVE:PRESSMIN");
-					*pMax = 0;
-					size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:SIZE");
-					*size = (float) 0.08;
+					// Cabin leak
+					CabinPressureReliefValve1.SetLeakSize(0.001);
 
 					// Suit compressors to flight configuration
 					SuitCompressor1->fan_cap = 65000.0;
 					SuitCompressor2->fan_cap = 65000.0;
 
-					// Primary ECS radiators now working normally, TODO secondary
+					// ECS radiators now working normally
 					PrimEcsRadiatorExchanger1->SetLength(10.0);
 					PrimEcsRadiatorExchanger2->SetLength(10.0);
+					SecEcsRadiatorExchanger1->SetLength(10.0);
+					SecEcsRadiatorExchanger2->SetLength(10.0);
 
 					// Next state
 					systemsState = SATSYSTEMS_CABINVENTING;
@@ -1114,34 +1102,35 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 
 			case SATSYSTEMS_CABINVENTING:
 
-				size = (float*) Panelsdk.GetPointerByString("HYDRAULIC:CABIN:LEAK:SIZE");
-				open = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:OPEN");
-				isopen = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:ISOPEN");
-				pz = (float*) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE:LEAK:PZ");
+				if (SuitCircuitReturnValve.IsOpen() && GetAtmPressure() < 3. / PSI) {
+					// Cabin regulator and relief pressure to flight configuration
+					CabinPressureRegulator.SetPressurePSI(5.0);
+					CabinPressureReliefValve1.SetReliefPressurePSI(6.0); 
 
-				if (atm.CabinPressurePSI <= 5.0) {
-					// cabin leak
-					*size = (float) 0.001;	
+					// Next state
+					systemsState = SATSYSTEMS_FLIGHT;
+					lastSystemsMissionTime = MissionTime; 
 				}
-				if (atm.SuitReturnPressurePSI <= 4.87) {	
-					// Close suit pressure relieve
-					if (*isopen && !*pz)
-						*open = SP_VALVE_CLOSE;
+				break;
 
-				}
+			case SATSYSTEMS_FLIGHT:
+				if (GetAtmPressure() > 4. / PSI) {					
+					// Suit compressors to landing configuration
+					SuitCompressor1->fan_cap = 110000.0;
+					SuitCompressor2->fan_cap = 110000.0;
 
-				if (*size == (float) 0.001 && !*isopen) {
 
 					//
 					// Checklist actions
 					//
 
-					// Close Direct O2 valve
-					DirectO2RotarySwitch.SwitchTo(6);
-									
+					// Cabin pressure relief valves to boost/entry
+					CabinPressureReliefLever1.SwitchTo(2);
+					CabinPressureReliefLever2.SwitchTo(2);
+
 
 					// Next state
-					systemsState = SATSYSTEMS_FLIGHT;
+					systemsState = SATSYSTEMS_LANDING;
 					lastSystemsMissionTime = MissionTime; 
 				}
 				break;
@@ -1174,9 +1163,19 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 	double *pressCabinCO2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS");
 	double *co2removalrate=(double*)Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER1:CO2REMOVALRATE");
 
+	double *massEarth=(double*)Panelsdk.GetPointerByString("HYDRAULIC:EARTH:MASS");
+	double *tempEarth=(double*)Panelsdk.GetPointerByString("HYDRAULIC:EARTH:TEMP");
+	double *pressEarth=(double*)Panelsdk.GetPointerByString("HYDRAULIC:EARTH:PRESS");
+
 	double *O2flowCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSUREREGULATOR:FLOW");
 	double *O2flowDemand = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2DEMANDREGULATOR:FLOW");
 	double *O2flowDirect=(double*)Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE:FLOW");
+	double *suitreliefflow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITRELIEFVALVE:FLOW");
+	double *cabinreliefflow1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFVALVE1:FLOW");
+	double *cabinreliefflow2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFVALVE2:FLOW");
+	double *cabinreliefinletflow1=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET1:FLOW");
+	double *cabinreliefinletflow2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET2:FLOW");
+	double *suitcircuitreturnflow=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET:FLOW");
 
 	double *pressSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
 	double *tempSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
@@ -1211,6 +1210,13 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 	double *tempO2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:TEMP");
 	double *pressO2Tank2=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
 */
+	double *massO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:MASS");
+	double *tempO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:TEMP");
+	double *pressO2SurgeTank=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SURGETANK:PRESS");
+
+	double *massO2RepressPkg=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2REPRESSPACKAGE:MASS");
+	double *tempO2RepressPkg=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2REPRESSPACKAGE:TEMP");
+	double *pressO2RepressPkg=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2REPRESSPACKAGE:PRESS");
 
 	double *massO2SMSupply=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLY:MASS");
 	double *tempO2SMSupply=(double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SMSUPPLY:TEMP");
@@ -1331,14 +1337,17 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 */
 
 	// ECS Pressures
-/*	sprintf(oapiDebugString(), "%d SuitCompDp %.2f SuitCabDp %.2f, CabO2 %.2f, DemO2 %.2f DirO2 %.2f Cab-p %.2f T %.1f Suit-p %.2f T %.1f co2pp %.2f SuitCRV-p %.2f T %.1f", 
-		systemsState, 
+/*	sprintf(oapiDebugString(), "%.2f SCRV %.2f SR %.2f CR %.2f CRI %.2f CompDp %.2f SuitCabDp %.2f, CabO2 %.2f, DemO2 %.2f DirO2 %.2f Cab-p %.2f T %.1f Suit-p %.2f T %.1f co2pp %.2f SCRV-p %.2f T %.1f", 
+		(GetAtmPressure() - 25. / INH2O) * PSI, *suitcircuitreturnflow * LBH, *suitreliefflow * LBH, *cabinreliefflow2 * LBH, *cabinreliefinletflow2 * LBH,
 		(*pressSuit - *pressSuitCRV) * 0.000145038, (*pressSuitCRV - *pressCabin) * INH2O,
 		*O2flowCabin * LBH, *O2flowDemand * LBH, *O2flowDirect * LBH,
 		*pressCabin * 0.000145038, *tempCabin,
 		*pressSuit * 0.000145038, *tempSuit, *pressSuitCO2 * 0.00750064,
 		*pressSuitCRV * 0.000145038, *tempSuitCRV);
 */
+
+//	sprintf(oapiDebugString(), "Earth-m %.2f p %.2f T %.1f", *massEarth / 100., *pressEarth * PSI, *tempEarth);
+
 	// Cabin O2 supply
 /*	sprintf(oapiDebugString(), "O2T1-m %.1f T %.1f p %.1f O2T2-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f CAB-m %.1f T %.1f p %.1f CO2PP %.2f", 
 		*massO2Tank1 / 1000.0, *tempO2Tank1, *pressO2Tank1 * 0.000145038,
@@ -1347,7 +1356,13 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		*massO2MainReg / 1000.0, *tempO2MainReg, *pressO2MainReg * 0.000145038,
 		*massCabin, *tempCabin, *pressCabin * 0.000145038, *pressCabinCO2 * 0.00750064); 
 */
-
+/*	sprintf(oapiDebugString(), "O2ST-m %.1f T %.1f p %.1f O2RP-m %.1f T %.1f p %.1f O2SM-m %.1f T %.1f p %4.1f O2M-m %.1f T %.1f p %5.1f CAB-m %.1f T %.1f p %.1f CO2PP %.2f", 
+		*massO2SurgeTank / 1000.0, *tempO2SurgeTank, *pressO2SurgeTank * 0.000145038,
+		*massO2RepressPkg / 1000.0, *tempO2RepressPkg, *pressO2RepressPkg * 0.000145038,
+		*massO2SMSupply / 1000.0, *tempO2SMSupply, *pressO2SMSupply * 0.000145038,
+		*massO2MainReg / 1000.0, *tempO2MainReg, *pressO2MainReg * 0.000145038,
+		*massCabin, *tempCabin, *pressCabin * 0.000145038, *pressCabinCO2 * 0.00750064); 
+*/
 	// Fuel Cell, flow in lb/h
 /*	sprintf(oapiDebugString(), "FC2-T %.1f FC3-T %.1f FC1-T %.1f V %.2f A %.2f H2Flow %.3f O2Flow %.3f Rad1-T %.1f Rad2-T %.1f Rad3-T %.1f Rad4-T %.1f", 
 		*tempFC2, *tempFC3, *tempFC, *voltFC, *ampFC, *h2flowFC * 7.93665, *o2flowFC * 7.93665,
@@ -1439,8 +1454,15 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		pmp.SystemTimestep(tFactor);
 		usb.SystemTimestep(tFactor);
 		ems.SystemTimestep(tFactor);
+		els.SystemTimestep(tFactor);
 		SPSPropellant.SystemTimestep(tFactor);
 		SPSEngine.SystemTimestep(tFactor);
+		CabinPressureRegulator.SystemTimestep(tFactor);
+		O2DemandRegulator.SystemTimestep(tFactor);
+		CabinPressureReliefValve1.SystemTimestep(tFactor);
+		CabinPressureReliefValve2.SystemTimestep(tFactor);
+		SuitCircuitReturnValve.SystemTimestep(tFactor);
+		O2SMSupply.SystemTimestep(tFactor);
 		CabinFansSystemTimestep();
 
 		simdt -= tFactor;
@@ -2035,7 +2057,7 @@ bool Saturn::CabinFan1Active()
 	// For now, if any power breaker is enabled, then run the fans.
 	//
 
-	bool PowerFan1 = (ECSCabinFanAC1ACircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC1BCircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC1CCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE);
+	bool PowerFan1 = (ECSCabinFanAC1ACircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC1BCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC1CCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE);
 
 	return (CabinFan1Switch && PowerFan1);
 }
@@ -2047,7 +2069,7 @@ bool Saturn::CabinFan2Active()
 	// For now, if any power breaker is enabled, then run the fans.
 	//
 
-	bool PowerFan2 = (ECSCabinFanAC2ACircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC2BCircuitBraker.Voltage() > 20.0) || (ECSCabinFanAC2CCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE);
+	bool PowerFan2 = (ECSCabinFanAC2ACircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC2BCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC2CCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE);
 
 	return (CabinFan2Switch && PowerFan2);
 }
@@ -3036,16 +3058,7 @@ void Saturn::GetECSStatus(ECSStatus &ecs)
 {
 	// Crew
 	ecs.crewNumber = Crew->number;
-	ecs.crewStatus = ECS_CREWSTATUS_OK;
-
-	// Crew status, TODO improve conditions
-	if (ecs.crewNumber > 0) {
-		AtmosStatus atm;
-		GetAtmosStatus(atm);
-		if (atm.SuitCO2MMHG > 10 || atm.SuitTempK > 310 || atm.SuitTempK < 270) {
-			ecs.crewStatus = ECS_CREWSTATUS_CRITICAL;
-		}
-	}
+	ecs.crewStatus = CrewStatus.GetStatus();
 
 	// Primary coolant loop
 	ecs.PrimECSHeating = - PrimCabinHeatExchanger->power - *(double *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITHEATEXCHANGER:POWER") 

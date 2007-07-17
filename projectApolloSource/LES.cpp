@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/06/06 15:02:09  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.3  2006/08/11 19:34:47  movieman523
   *	Added code to take the docking probe with the LES on a post-abort jettison.
   *	
@@ -350,7 +353,7 @@ void LES::AddEngines()
 
 	for (i = 0; i < 4; i++)
 	{
-		AddExhaust(th_main[i], 8.0, 0.5);
+		AddExhaust(th_main[i], 8.0, 0.5, exhaust_tex);
 		AddExhaustStream(th_main[i], &solid_exhaust);
 	}
 }

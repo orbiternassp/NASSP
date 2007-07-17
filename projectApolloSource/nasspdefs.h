@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2007/06/06 15:02:15  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.82  2007/04/25 18:48:08  tschachim
   *	EMS dV functions.
   *	
@@ -359,7 +362,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 111; // number of bitmap handles
+const int nsurf = 115; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -471,6 +474,10 @@ const int nsurf = 111; // number of bitmap handles
 #define SRF_THUMBWHEEL_GPI_YAW						108
 #define SRF_THC										109
 #define SRF_EMS_LIGHTS								110
+#define SRF_SUITRETURN_LEVER						111
+#define SRF_CABINRELIEFUPPERLEVER					112
+#define SRF_CABINRELIEFLOWERLEVER					113
+#define SRF_CABINRELIEFGUARDLEVER					114
 
 //
 // Earth radius and gravity constants.

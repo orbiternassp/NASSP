@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2007/06/06 15:02:11  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.34  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -161,6 +164,8 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 	LastO2FlowCheckHigh = false;
 	O2FlowCheckCount = 0;
 	SPSPressCheckCount = 0;
+	CryoPressCheckCount = 0;
+	GlycolTempCheckCount = 0;
 	for (int i = 0; i < 4; i++)
 		FuelCellCheckCount[i] = 0;
 
@@ -394,7 +399,6 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 
 			bool LightCryo = false;
 			TankPressures press;
-
 			sat->GetTankPressures(press);
 
 			if (press.H2Tank1PressurePSI < 220.0 || press.H2Tank2PressurePSI < 220.0) {
@@ -410,7 +414,16 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 				LightCryo = true;
 			}
 
-			SetLight(CSM_CWS_CRYO_PRESS_LIGHT, LightCryo);
+			if (LightCryo) {
+				if (CryoPressCheckCount > 20) {			
+					SetLight(CSM_CWS_CRYO_PRESS_LIGHT, true);
+				} else {
+					CryoPressCheckCount++;
+				}
+			} else {
+				SetLight(CSM_CWS_CRYO_PRESS_LIGHT, false);
+				CryoPressCheckCount = 0;
+			}
 
 			//
 			// SPS PRESS
@@ -450,7 +463,16 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// high time acceleration.
 		//
 		
-		SetLight(CSM_CWS_GLYCOL_TEMP_LOW, (datm.DisplayedEcsRadTempPrimOutletMeterTemperatureF < -30.0));
+		if (datm.DisplayedEcsRadTempPrimOutletMeterTemperatureF < -30.0) {
+			if (GlycolTempCheckCount > 20) {			
+				SetLight(CSM_CWS_GLYCOL_TEMP_LOW, true);
+			} else {
+				GlycolTempCheckCount++;
+			}
+		} else {
+			SetLight(CSM_CWS_GLYCOL_TEMP_LOW, false);
+			GlycolTempCheckCount = 0;
+		}
 
 		//
 		// Inverter: "A temperature sensor with a range of 32 degrees to 248 degrees F is installed 
@@ -659,7 +681,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			sat->GetCMRCSPressures(press);
 
 			SetLight(CSM_CWS_CM_RCS_1, !(press.He1PressPSI < 330.0 && press.He1PressPSI >= 260.0));
-			SetLight(CSM_CWS_CM_RCS_2, !(press.He2PressPSI < 330.0 && press.He1PressPSI >= 260.0));
+			SetLight(CSM_CWS_CM_RCS_2, !(press.He2PressPSI < 330.0 && press.He2PressPSI >= 260.0));
 		}
 		else
 		{

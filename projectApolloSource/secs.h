@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/08/11 21:16:22  movieman523
+  *	Dummy ELS implementation.
+  *	
   *	Revision 1.4  2006/08/11 18:44:56  movieman523
   *	Beginnings of SECS implementation.
   *	
@@ -40,6 +43,7 @@
 #define _PA_SECS_H
 
 class Saturn;
+class FloatBag;
 
 ///
 /// This class simulates the Sequential Events Control System in the CM.
@@ -81,20 +85,27 @@ public:
 	virtual ~ELS();
 
 	void ControlVessel(Saturn *v);
-
 	void Timestep(double simt, double simdt);
-	bool IsPowered();
-
+	void SystemTimestep(double simdt);
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
+	double *GetDyeMarkerLevelRef() { return &DyeMarkerLevel; }
+
 
 protected:
-	int State;
+	double NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBrakerSwitch *cb, double simdt);
 
+	int State;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
+	double FloatBag1Size;
+	double FloatBag2Size;
+	double FloatBag3Size;
+	double DyeMarkerLevel;
+	double DyeMarkerTime;
 
 	Saturn *OurVessel;
+	FloatBag *FloatBagVessel;
 };
 
 //

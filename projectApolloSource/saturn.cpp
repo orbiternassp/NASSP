@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.198  2007/06/23 21:20:37  dseagrav
+  *	LVDC++ Update: Now with Pre-IGM guidance
+  *	
   *	Revision 1.197  2007/06/08 20:08:29  tschachim
   *	Kill apex cover vessel.
   *	
@@ -392,6 +395,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	BatteryRelayBus("Battery-Relay-Bus", Panelsdk),
 	FlightBus("Flight-Bus",&FlightBusFeeder),
 	FlightBusFeeder("Flight-Bus-Feeder",Panelsdk),
+	FlightPostLandingBus("FlightPostLanding-Bus",&FlightPostLandingBusFeeder),
+	FlightPostLandingBusFeeder("FlightPostLanding-Bus-Feeder",Panelsdk, 5),
 	SECSLogicPower("SECS-Logic-Power", Panelsdk),
 	PyroPower("Pyro-Power", Panelsdk),
 	SwitchPower("Switch-Power", Panelsdk),
@@ -416,7 +421,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	RHCNormalPower("RHCNormalPower", Panelsdk),
 	RHCDirect1Power("RHCDirect1Power", Panelsdk),
 	RHCDirect2Power("RHCDirect2Power", Panelsdk),
-	ems(Panelsdk)
+	ems(Panelsdk),
+	CabinPressureReliefValve1(PostLandingVentSound),
+	CabinPressureReliefValve2(PostLandingVentSound),
+	CrewStatus(CrewDeadSound)
 
 {
 	InitSaturnCalled = false;
@@ -535,6 +543,7 @@ void Saturn::initSaturn()
 	ProbeJetison = false;
 	LEMdatatransfer = false;
 	PostSplashdownPlayed = false;
+	SplashdownPlayed = false;
 
 	DeleteLaunchSite = true;
 
@@ -589,6 +598,8 @@ void Saturn::initSaturn()
 	hCrawler = 0;
 	hMSS = 0;
 	hApex = 0;
+	hDrogueChute = 0;
+	hMainChute = 0;
 
 	//
 	// Apollo 13 flags.
@@ -1365,6 +1376,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		// Better acceleration measurement stability
 		imu.Timestep(MissionTime);		
 		ems.TimeStep(simdt);
+		CrewStatus.Timestep(simdt);
 	}
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
 }
@@ -1634,11 +1646,18 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	// save the internal systems 
 	oapiWriteScenario_int(scn, "SYSTEMSSTATE", systemsState);
 	oapiWriteScenario_float(scn, "LSYSTEMSMISSNTIME", lastSystemsMissionTime);
+
+	CabinPressureRegulator.SaveState(scn);
+	O2DemandRegulator.SaveState(scn);
+	CabinPressureReliefValve1.SaveState(1, scn);
+	CabinPressureReliefValve2.SaveState(2, scn);
+	O2SMSupply.SaveState(scn);
+	CrewStatus.SaveState(scn);
+
 	Panelsdk.Save(scn);	
 
 	// save the state of the switches
 	PSH.SaveState(scn);	
-
 
 	//
 	// This is now controlled by the launch pad configurator
@@ -1648,7 +1667,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	// oapiWriteScenario_int (scn, "FDAISMOOTH", fdaiSmooth);
 	// oapiWriteScenario_int (scn, "MAINPANELSPLITTED", MainPanelSplitted);
 	// oapiWriteScenario_int (scn, "LOWRES", LowRes ? 1 : 0);
-
 }
 
 //
@@ -1665,7 +1683,7 @@ typedef union {
 		unsigned EVA_IP:1;
 		unsigned ABORT_IND:1;
 		unsigned HatchOpen:1;
-		unsigned unused_1:1;
+		unsigned SplashdownPlayed:1;
 		unsigned unused_2:1;
 		unsigned LEMdatatransfer:1;
 		unsigned PostSplashdownPlayed:1;
@@ -1704,6 +1722,7 @@ int Saturn::GetMainState()
 	state.u.HatchOpen = HatchOpen;
 	state.u.viewpos = viewpos;
 	state.u.LEMdatatransfer = LEMdatatransfer;
+	state.u.SplashdownPlayed = SplashdownPlayed;
 	state.u.PostSplashdownPlayed = PostSplashdownPlayed;
 	state.u.IGMEnabled = IGMEnabled;
 	state.u.SkylabSM = SkylabSM;
@@ -1729,6 +1748,7 @@ void Saturn::SetMainState(int s)
 	HatchOpen = state.u.HatchOpen;
 	viewpos = state.u.viewpos;
 	LEMdatatransfer = state.u.LEMdatatransfer;
+	SplashdownPlayed = (state.u.SplashdownPlayed != 0);
 	PostSplashdownPlayed = (state.u.PostSplashdownPlayed != 0);
 	IGMEnabled = (state.u.IGMEnabled != 0);
 	MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
@@ -2501,8 +2521,26 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "USE_LVDC", 8)) {
 		    use_lvdc = true;
 	    }
+	    else if (!strnicmp (line, "CABINPRESSUREREGULATOR", 22)) {
+		    CabinPressureRegulator.LoadState(line);
+	    }
+	    else if (!strnicmp (line, "O2DEMANDREGULATOR", 17)) {
+		    O2DemandRegulator.LoadState(line);
+	    }
+	    else if (!strnicmp (line, "CABINPRESSURERELIEFVALVE1", 25)) {
+		    CabinPressureReliefValve1.LoadState(line);
+	    }
+	    else if (!strnicmp (line, "CABINPRESSURERELIEFVALVE2", 25)) {
+		    CabinPressureReliefValve2.LoadState(line);
+	    }
+	    else if (!strnicmp (line, "O2SMSUPPLY", 10)) {
+		    O2SMSupply.LoadState(line);
+		}
+	    else if (!strnicmp (line, "CREWSTATUS", 10)) {
+		    CrewStatus.LoadState(line);
+	    }
 		else
-			found =false;
+			found = false;
 	}
 	return found;
 }
@@ -2660,6 +2698,22 @@ void Saturn::DestroyStages(double simt)
 		KillAlt(hApex, 5);
 	}
 
+	if (hDrogueChute) {
+		VESSEL *drogueChute = oapiGetVesselInterface(hDrogueChute);
+		ATTACHMENTHANDLE ah = drogueChute->GetAttachmentHandle(true, 0);
+		if (drogueChute->GetAttachmentStatus(ah) == NULL) {
+			KillAlt(hDrogueChute, 100);
+		}
+	}
+
+	if (hMainChute) {
+		VESSEL *mainChute = oapiGetVesselInterface(hMainChute);
+		ATTACHMENTHANDLE ah = mainChute->GetAttachmentHandle(true, 0);
+		if (mainChute->GetAttachmentStatus(ah) == NULL) {
+			KillAlt(hMainChute, 100);
+		}
+	}
+
 	if (hs4b1) {
 		KillDist(hs4b1);
 	}
@@ -2719,6 +2773,15 @@ void Saturn::CheckSMSystemsState()
 			if (FuelCells[i])
 				FuelCells[i]->Disable();			
 		}
+
+		// Coolant loops are disconnected, we set them to zero length, which disables them
+		PrimEcsRadiatorExchanger1->SetLength(0);
+		PrimEcsRadiatorExchanger2->SetLength(0);
+		SecEcsRadiatorExchanger1->SetLength(0);
+		SecEcsRadiatorExchanger2->SetLength(0);
+
+		// Close O2 SM supply, SM is disconnected
+		O2SMSupply.Close();
 	}
 }
 
@@ -3831,10 +3894,12 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 
 		if (deploy && PyrosArmed()) {
 			StageEight(simt);
-			ShiftCentreOfMass(_V(0, 0, -0.65));
+			ShiftCentreOfMass(_V(0, 0, 1.2));
 		} else {
 			// DS20070622 Do not run stage seven if we still have the LET.
-			if(!LESAttached){ StageSeven(simt); }
+			if (!LESAttached) { 
+				StageSeven(simt); 
+			}
 		}
 		break;
 
@@ -3847,7 +3912,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 
 		if (deploy && PyrosArmed())	{
 			StageEight(simt);
-			ShiftCentreOfMass(_V(0, 0, -0.65));
+			ShiftCentreOfMass(_V(0, 0, 1.2));
 		}
 		// sprintf(oapiDebugString(), "AtmPressure %f (37680)", GetAtmPressure());
 		break;
@@ -3860,14 +3925,23 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			deploy = true;
 
 		if (deploy && PyrosArmed()) {
-			SetChuteStage1();
-			LAUNCHIND[3] = true;
-
 			DrogueS.play();
 			DrogueS.done();
 
+			SetChuteStage1();
 			SetStage(CM_ENTRY_STAGE_THREE);
-			ShiftCentreOfMass(_V(0, 0, 7.75));
+
+			// Create the drogue chute vessel
+			VESSELSTATUS vs;
+			GetStatus(vs);
+			char VName[256]="";
+			GetApolloName(VName);
+			strcat(VName, "-DROGUECHUTE");
+			hDrogueChute = oapiCreateVessel(VName, "ProjectApollo/DrogueChute", vs);
+			VESSEL *drogueChute = oapiGetVesselInterface(hDrogueChute);
+			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
+			ATTACHMENTHANDLE ahc = drogueChute->GetAttachmentHandle(true, 0);
+			AttachChild(hDrogueChute, ah, ahc);
 		}
 		break;
 
@@ -3876,46 +3950,120 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	// the dynamic air pressure.
 	//
 
-	case CM_ENTRY_STAGE_THREE:
-		if (ChutesAttached && ((GetAtmPressure() > 66000 && !LandFail.u.MainFail) || (ELSActive() && MainDeploySwitch.GetState())))
-		{
-			SetChuteStage2();
-			SetStage(CM_ENTRY_STAGE_FOUR);
-			NextMissionEventTime = MissionTime + 2.5;
+	case CM_ENTRY_STAGE_THREE:	// Drogue chute is attached
+		if (PyrosArmed() && ChutesAttached && ((ELSAuto() && GetAtmPressure() > 66000 && !LandFail.u.MainFail) || (ELSActive() && MainDeploySwitch.GetState()))) {
+			// Detach drogue
+			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
+			DetachChild(ah);
+
+			SetChuteStage2();			  
+			SetStage(CM_ENTRY_STAGE_FOUR); 
+
+			// Create and attach the main chute vessel
+			VESSELSTATUS vs;
+			GetStatus(vs);
+			char VName[256]="";
+			GetApolloName(VName);
+			strcat(VName, "-MAINCHUTE");
+			hMainChute = oapiCreateVessel(VName, "ProjectApollo/MainChute", vs);
+			VESSEL *mainChute = oapiGetVesselInterface(hMainChute);
+			ATTACHMENTHANDLE ahc = mainChute->GetAttachmentHandle(true, 0);
+			AttachChild(hMainChute, ah, ahc);
+
+			NextMissionEventTime = MissionTime + 1.;
 		}
+		// Landing
+		if (GetAltitude() < 2.5) {
+			// Detach drogue
+			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
+			DetachChild(ah);
+
+			// Move to splash stage
+			SetSplashStage();
+			SetStage(CM_ENTRY_STAGE_SEVEN);
+			soundlib.LoadSound(Swater, WATERLOOP_SOUND);
+		}
+		// sprintf(oapiDebugString(), "Altitude %.1f", GetAltitude());
 		break;
 
 	case CM_ENTRY_STAGE_FOUR:
-		if (ChutesAttached && (MissionTime >= NextMissionEventTime))
-		{
+		if (ChutesAttached && (MissionTime >= NextMissionEventTime)) {
 			SetChuteStage3();
 			SetStage(CM_ENTRY_STAGE_FIVE);
-			NextMissionEventTime = MissionTime + 2.5;
+			NextMissionEventTime = MissionTime + 6.;
 		}
 		break;
 
 	case CM_ENTRY_STAGE_FIVE:
-		if (ChutesAttached && (MissionTime >= NextMissionEventTime))
-		{
+		if (ChutesAttached && (MissionTime >= NextMissionEventTime)) {
 			SetChuteStage4();
 			SetStage(CM_ENTRY_STAGE_SIX);
-			LAUNCHIND[5] = true;
 		}
 		break;
 
-	case CM_ENTRY_STAGE_SIX:
-		if (GetAltitude() < 8.5) {
+	case CM_ENTRY_STAGE_SIX:	// Main chute is attached		
+		if (!SplashdownPlayed && GetAltitude() < 2.5) {
 			SplashS.play(NOLOOP, 180);
 			SplashS.done();
+
+			SplashdownPlayed = true;
+			NextMissionEventTime = MissionTime + 25.;
+
+			//
+			// Checklist actions
+			//
+
+			FlightPostLandingBatBusACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+			FlightPostLandingBatBusBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+			FlightPostLandingBatCCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+
+			FlightPostLandingMainACircuitBraker.SwitchTo(TOGGLESWITCH_DOWN);
+			FlightPostLandingMainBCircuitBraker.SwitchTo(TOGGLESWITCH_DOWN);
+
+			MainBusTieBatAcSwitch.SwitchTo(THREEPOSSWITCH_DOWN);
+			MainBusTieBatBcSwitch.SwitchTo(THREEPOSSWITCH_DOWN);
+		}
+
+		if (PyrosArmed() && ChutesAttached && ELSActive() && ((MainReleaseSwitch.IsUp()) || (!Realism && SplashdownPlayed && MissionTime >= NextMissionEventTime))) {
+			// Detach Main 
+			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
+			if (GetAttachmentStatus(ah) != NULL) {
+				DetachChild(ah);
+				if (hMainChute) {
+					VESSEL *mainChute = oapiGetVesselInterface(hMainChute);
+					double F = mainChute->GetMass() * 10. / simdt;
+					mainChute->AddForce(_V(0, 0, F), _V(0,0,0));
+				}
+			}		
 			SetSplashStage();
 			SetStage(CM_ENTRY_STAGE_SEVEN);
-			ShiftCentreOfMass (_V(0, 0, -5.9));
 			soundlib.LoadSound(Swater, WATERLOOP_SOUND);
+
+			//
+			// Checklist actions
+			//
+
+			// Float bag
+			FloatBag1BatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+			FloatBag2BatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+			FloatBag3FLTPLCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
+			
+			FloatBagSwitch1.SwitchTo(THREEPOSSWITCH_UP);
+			FloatBagSwitch2.SwitchTo(THREEPOSSWITCH_UP);
+			FloatBagSwitch3.SwitchTo(THREEPOSSWITCH_UP);
+
+			// Beacon light
+			PostLandingBCNLTSwitch.SwitchTo(THREEPOSSWITCH_UP);
+
+			// Post landind vent
+			PostLDGVentValveLever.SwitchTo(TOGGLESWITCH_DOWN);
+			PostLandingVentSwitch.SwitchTo(THREEPOSSWITCH_UP);
+			
 		}
+		//sprintf(oapiDebugString(), "Altitude %.1f", GetAltitude());
 		break;
 
-	case CM_ENTRY_STAGE_SEVEN:
-
+	case CM_ENTRY_STAGE_SEVEN:	// Main chute is detached	
 		if (HatchOpen) {
 			if (!Swater.isPlaying())
 				Swater.play(LOOP);
@@ -4284,6 +4432,19 @@ bool Saturn::CheckForLaunchShutdown()
 			CabinFan1Switch.SwitchTo(TOGGLESWITCH_UP);
 			CabinFan2Switch.SwitchTo(TOGGLESWITCH_UP);
 
+			// Close direct O2 valve
+			DirectO2RotarySwitch.SwitchTo(6);
+
+			// Open suit circuit return valve
+			SuitCircuitReturnValveLever.SwitchTo(TOGGLESWITCH_DOWN);
+
+			// Cabin pressure relief valves to normal
+			CabinPressureReliefLever1.SwitchTo(1);
+			CabinPressureReliefLever2.SwitchTo(1);
+
+			// Repress package off
+			OxygenRepressPackageRotary.SwitchTo(1);
+
 			// Avoid O2 flow high alarm 
 			if (!Realism)
 				cws.SetInhibitNextMasterAlarm(true);
@@ -4529,6 +4690,8 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(SDockingLatch, DOCKINGLATCH_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(SDockingExtend, DOCKINGEXTEND_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(SUndock, UNDOCK_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(PostLandingVentSound, POSTLANDINGVENT_SOUND, BOTHVIEW_FADED_CLOSE);
+	soundlib.LoadSound(CrewDeadSound, CREWDEAD_SOUND);
 
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/06/06 15:02:20  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.6  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -63,7 +66,9 @@
 #include "lvimu.h"
 
 #include "saturn.h"
+#include "FloatBag.h"
 #include "secs.h"
+
 
 SECS::SECS()
 
@@ -147,7 +152,15 @@ ELS::ELS()
 	NextMissionEventTime = MINUS_INFINITY;
 	LastMissionEventTime = MINUS_INFINITY;
 
+	FloatBag1Size = 0;
+	FloatBag2Size = 0;
+	FloatBag3Size = 0;
+
 	OurVessel = 0;
+	FloatBagVessel = 0;
+
+	DyeMarkerLevel = 0;
+	DyeMarkerTime = 3600; // 1 hour
 }
 
 ELS::~ELS()
@@ -164,18 +177,115 @@ void ELS::ControlVessel(Saturn *v)
 void ELS::Timestep(double simt, double simdt)
 
 {
+	if (!OurVessel)	return;
+
 	//
-	// Nothing to do at this moment.
+	// Float Bags
 	//
 
-	if (!OurVessel || !IsPowered())
-		return;
+	if (!OurVessel->ApexCoverAttached) {
+		VESSELSTATUS vs;
+		OurVessel->GetStatus(vs);
+
+		if (!FloatBagVessel) {
+			char VName[256]="";
+			OurVessel->GetApolloName(VName);
+			strcat(VName, "-FLOATBAG");
+			OBJHANDLE hFloatBag = oapiGetVesselByName(VName);
+
+			// Create the float bag vessel
+			if (!hFloatBag) {
+				OBJHANDLE hFloatBag = oapiCreateVessel(VName, "ProjectApollo/FloatBag", vs);
+				FloatBagVessel = (FloatBag *) oapiGetVesselInterface(hFloatBag);
+				// Attach it
+				ATTACHMENTHANDLE ah = OurVessel->GetAttachmentHandle(false, 0);
+				ATTACHMENTHANDLE ahc = FloatBagVessel->GetAttachmentHandle(true, 0);
+				OurVessel->AttachChild(hFloatBag, ah, ahc);
+			} else {
+				FloatBagVessel = (FloatBag *) oapiGetVesselInterface(hFloatBag);
+			}
+		}
+
+		// Float Bag sizes
+		FloatBag1Size = NewFloatBagSize(FloatBag1Size, &OurVessel->FloatBagSwitch1, &OurVessel->FloatBag1BatACircuitBraker, simdt);
+		FloatBag2Size = NewFloatBagSize(FloatBag2Size, &OurVessel->FloatBagSwitch2, &OurVessel->FloatBag2BatBCircuitBraker, simdt);
+		FloatBag3Size = NewFloatBagSize(FloatBag3Size, &OurVessel->FloatBagSwitch3, &OurVessel->FloatBag3FLTPLCircuitBraker, simdt);
+		FloatBagVessel->SetBagSize(1, FloatBag1Size);
+		FloatBagVessel->SetBagSize(2, FloatBag2Size);
+		FloatBagVessel->SetBagSize(3, FloatBag3Size);
+
+		// Beacon
+		if (OurVessel->GetStage() >= CM_ENTRY_STAGE_SIX) {
+			// Extend beacon automatically
+			FloatBagVessel->ExtendBeacon();
+			// Control the light
+			if (OurVessel->FloatBag3FLTPLCircuitBraker.Voltage() < SP_MIN_DCVOLTAGE || OurVessel->PostLandingBCNLTSwitch.IsCenter()) {
+				FloatBagVessel->SetBeaconLight(false, false);
+			} else if (OurVessel->PostLandingBCNLTSwitch.IsDown()) {
+				FloatBagVessel->SetBeaconLight(true, false);
+			} else {
+				FloatBagVessel->SetBeaconLight(true, true);
+			}
+		}
+
+		// Dye marker
+		if (OurVessel->GetStage() >= CM_ENTRY_STAGE_SEVEN && DyeMarkerTime > 0) {
+			// Turned on?			
+			if (OurVessel->FloatBag3FLTPLCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && OurVessel->PostLandingDYEMarkerSwitch.IsUp()) { 
+				DyeMarkerLevel = 1;
+				DyeMarkerTime -= simdt;
+			} else {
+				DyeMarkerLevel = 0;
+			}
+		} else {
+			DyeMarkerLevel = 0;
+		}
+	}
 }
 
-bool ELS::IsPowered()
+double ELS::NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBrakerSwitch *cb, double simdt) 
 
 {
-	return Voltage() > SP_MIN_DCVOLTAGE;
+	if (cb->Voltage() > SP_MIN_DCVOLTAGE) {
+		if (sw->IsDown()) {
+			size -= simdt / (7. * 60.) * (OurVessel->Realism ? 1. : 20.);	// same as fill? Quickstart mode is faster
+			size = max(0, size);
+		} else if (sw->IsUp()) {		// TODO compressor power, panel 298
+			size += simdt / (7. * 60.) * (OurVessel->Realism ? 1. : 20.);	// Apollo 15 entry checklist
+			size = min(1, size);
+		}
+	}
+	return size;
+}
+
+void ELS::SystemTimestep(double simdt) 
+
+{
+	// Float bag compressor 1
+	if (OurVessel->FloatBag1BatACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && OurVessel->FloatBagSwitch1.IsUp()) {
+		OurVessel->BatteryBusA.DrawPower(424); // Systems handbook
+	}
+
+	// Float bag compressor 2 
+	if ((OurVessel->FloatBag2BatBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && OurVessel->FloatBagSwitch2.IsUp()) ||
+		(OurVessel->FloatBag3FLTPLCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && OurVessel->FloatBagSwitch3.IsUp())) {
+		OurVessel->BatteryBusB.DrawPower(424); // Systems handbook
+	}
+
+	// Beacon light
+	if (OurVessel->GetStage() >= CM_ENTRY_STAGE_SIX && OurVessel->FloatBag3FLTPLCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
+		// LO/HI
+		if (OurVessel->PostLandingBCNLTSwitch.IsDown()) {
+			OurVessel->FloatBag3FLTPLCircuitBraker.DrawPower(10);	// guessed
+		} else if (OurVessel->PostLandingBCNLTSwitch.IsUp()) {
+			OurVessel->FloatBag3FLTPLCircuitBraker.DrawPower(40);	// guessed
+		}
+	}
+
+	// Dye marker
+	if (DyeMarkerLevel == 1) {
+		OurVessel->FloatBag3FLTPLCircuitBraker.DrawPower(10);	// guessed
+	}
 }
 
 void ELS::SaveState(FILEHANDLE scn)
@@ -186,6 +296,11 @@ void ELS::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "STATE", State);
 	oapiWriteScenario_float(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 	oapiWriteScenario_float(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
+	oapiWriteScenario_float(scn, "FLOATBAG1SIZE", FloatBag1Size);
+	oapiWriteScenario_float(scn, "FLOATBAG2SIZE", FloatBag2Size);
+	oapiWriteScenario_float(scn, "FLOATBAG3SIZE", FloatBag3Size);
+	oapiWriteScenario_float(scn, "DYEMARKERLEVEL", DyeMarkerLevel);
+	oapiWriteScenario_float(scn, "DYEMARKERTIME", DyeMarkerTime);
 
 	oapiWriteLine(scn, ELS_END_STRING);
 }
@@ -210,6 +325,21 @@ void ELS::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "LASTMISSIONEVENTTIME", 20)) {
 			sscanf(line + 20, "%f", &flt);
 			LastMissionEventTime = flt;
+		}
+		else if (!strnicmp (line, "FLOATBAG1SIZE", 13)) {
+			sscanf (line+13, "%lf", &FloatBag1Size);
+		}
+		else if (!strnicmp (line, "FLOATBAG2SIZE", 13)) {
+			sscanf (line+13, "%lf", &FloatBag2Size);
+		}
+		else if (!strnicmp (line, "FLOATBAG3SIZE", 13)) {
+			sscanf (line+13, "%lf", &FloatBag3Size);
+		}
+		else if (!strnicmp (line, "DYEMARKERLEVEL", 14)) {
+			sscanf (line+14, "%lf", &DyeMarkerLevel);
+		}
+		else if (!strnicmp (line, "DYEMARKERTIME", 13)) {
+			sscanf (line+13, "%lf", &DyeMarkerTime);
 		}
 	}
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2007/01/14 13:02:42  dseagrav
+  *	CM AC bus feed reworked. Inverter efficiency now varies, AC busses are 3-phase all the way to the inverter, inverter switching logic implemented to match the CM motor-switch lockouts. Original AC bus feeds deleted. Inverter overload detection enabled and correct.
+  *	
   *	Revision 1.19  2007/01/06 04:44:49  dseagrav
   *	Corrected CREW ALARM command behavior, PCM downtelemetry generator now draws power
   *	
@@ -133,6 +136,8 @@ protected:
 	bool LastO2FlowCheckHigh;
 	int O2FlowCheckCount;
 	int SPSPressCheckCount;
+	int CryoPressCheckCount;
+	int GlycolTempCheckCount;
 	int FuelCellCheckCount[4];
 	bool ACBus1Alarm, ACBus2Alarm;
 	bool ACBus1Reset, ACBus2Reset;

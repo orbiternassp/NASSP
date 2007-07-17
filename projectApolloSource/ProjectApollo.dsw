@@ -27,6 +27,30 @@ Package=<4>
 
 ###############################################################################
 
+Project: "DrogueChute"=".\DrogueChute\DrogueChute.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "FloatBag"=".\FloatBag\FloatBag.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "Floodlight"=".\Floodlight\Floodlight.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -88,6 +112,18 @@ Package=<4>
 ###############################################################################
 
 Project: "MSS"=".\MSS\MSS.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "MainChute"=".\MainChute\MainChute.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
