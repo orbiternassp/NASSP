@@ -24,3 +24,4 @@ Moonwalker, the "Panel-Master" was here too ;)
 
 Moonwalker was here a second time to see how "CVS Ignore" works. I hope it works ;)
 
+Lassombra was here, checking out CVS
