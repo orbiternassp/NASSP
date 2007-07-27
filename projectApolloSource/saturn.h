@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.241  2007/07/17 14:33:09  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.240  2007/06/23 21:20:37  dseagrav
   *	LVDC++ Update: Now with Pre-IGM guidance
   *	
@@ -1596,6 +1599,9 @@ protected:
 
 	// Ground Systems
 	MCC	 mcc;
+	MC_GroundTrack  groundtrack;
+	MC_CapCom  capcom;
+
 
 	//
 	// Switches

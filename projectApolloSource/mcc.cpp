@@ -21,6 +21,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2007/06/06 15:02:15  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.2  2007/02/19 16:24:44  tschachim
   *	VC6 MCC fixes.
   *	
@@ -32,6 +35,7 @@
 
 #include "Orbitersdk.h"
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
@@ -53,7 +57,20 @@
 
 // CONS
 MCC::MCC(){
+
 	cm = NULL;
+	
+}
+
+void MCC::Init(){
+
+}
+
+void MCC::TimeStep(double simdt){
+
+}
+
+MC_GroundTrack::MC_GroundTrack(){
 	CM_DeepSpace = false;
 	LastAOSUpdate=0;
 	ClosestRange=0;
@@ -82,9 +99,11 @@ MCC::MCC(){
 	}
 }
 
-// Initialization from CM
-void MCC::InitCM(Saturn *vessel){
+
+void MC_GroundTrack::Init(Saturn *vessel) {
+
 	cm = vessel;
+
 	ClosestRange=0;
 	ClosestStation=0;
 	LastAOSUpdate=0;
@@ -197,7 +216,7 @@ void MCC::InitCM(Saturn *vessel){
 }
 
 // Timestep
-void MCC::TimeStep(double simdt){
+void MC_GroundTrack::TimeStep(double simdt){
 
 	/* AOS DETERMINATION */
 	if((LastAOSUpdate+1) < simdt){
@@ -239,5 +258,41 @@ void MCC::TimeStep(double simdt){
 			ClosestStation,GroundStations[ClosestStation].Name,ClosestRange);
 		*/
 	}
+
+}
+
+MC_CapCom::MC_CapCom(){
+
+	strcpy (language,"_en");
+	
+	strcpy (capcomdb_fname,"capcomdb");
+	strcat (capcomdb_fname,language);
+	strcat (capcomdb_fname,".npd");
+
+	strcpy (trnscrpt_fname,"transcript");
+	strcat (trnscrpt_fname,".log");
+
+}
+
+MC_CapCom::~MC_CapCom(){
+
+	trnscrpt_h = fopen(trnscrpt_fname,"w");
+	fprintf(trnscrpt_h,"END_TRANSCRIPT\n");
+	fclose(trnscrpt_h);
+
+
+}
+
+void MC_CapCom::Init(){
+
+	trnscrpt_h = fopen(trnscrpt_fname,"a");
+	fprintf(trnscrpt_h,"BEGIN_TRANSCRIPT\n");
+	fclose(trnscrpt_h);
+}
+
+void MC_CapCom::TimeStep(double simdt){
+	//trnscrpt_h = fopen(trnscrpt_fname,"a");
+	//fprintf(trnscrpt_h,"Current SimTime %f\n",simdt);
+	//fclose(trnscrpt_h);
 
 }

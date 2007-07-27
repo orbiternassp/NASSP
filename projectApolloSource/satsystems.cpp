@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.143  2007/07/17 14:33:08  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.142  2007/06/06 15:02:16  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -570,7 +573,9 @@ void Saturn::SystemsInit() {
 									 &SPSGimbalYawThumbwheel, &SCSTvcYawSwitch);
 
 	// Ground Systems Init
-	mcc.InitCM(this);
+	//mcc.InitCM(this);
+	groundtrack.Init(this);
+	capcom.Init();
 
 	// Initialize joystick
 	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
@@ -780,7 +785,9 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		usb.TimeStep(MissionTime);
 
 		// Update Ground Data
-		mcc.TimeStep(MissionTime);
+		//mcc.TimeStep(MissionTime);
+		groundtrack.TimeStep(MissionTime);
+		capcom.TimeStep(MissionTime);
 
 		//
 		// Systems state handling
