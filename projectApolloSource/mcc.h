@@ -21,6 +21,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2007/02/18 01:35:30  dseagrav
+  *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
+  *	
   *	
   **************************************************************************/
 
@@ -109,16 +112,42 @@ class MCC {
 	// Mission Control Center main class
 public:
 	MCC();															// Cons
-	void InitCM(Saturn *vessel);									// Initialization
-	void TimeStep(double simdt);                                    // Timestep
+	virtual void Init();									// Initialization
+	virtual void TimeStep(double simdt);                                    // Timestep
+
+	Saturn *cm;														// Pointer to CM
+};
+
+class MC_GroundTrack : public MCC {
+	// Derived GroundTrack class from Mission Control Center main class
+public:
+
+	MC_GroundTrack();												// Cons
+	void InitGroundStations();
+	virtual void Init(Saturn *vessel);								// Initialization
+	virtual void TimeStep(double simdt);							// Timestep
 
 	struct GroundStation GroundStations[MAX_GROUND_STATION];        // Ground Station Array
-	Saturn *cm;														// Pointer to CM
 	double LastAOSUpdate;											// Last update to AOS data
 	double CM_Position[3];                                          // CM's position and altitude
 	bool   CM_DeepSpace;                                            // CM Deep Space Mode flag	
 	double ClosestRange;											// CM range to closest ground station
 	int    ClosestStation;											// CM closest station number
-};
 
+};
+class MC_CapCom : public MCC {
+	// Derived CapCom class from Mission Control Center main class
+public:
+
+	MC_CapCom();
+	~MC_CapCom();
+	virtual void Init();
+	virtual void TimeStep(double simdt);
+
+	FILE *trnscrpt_h; // Transcript file pointer
+	FILE *capcomdb_h; // CapCom Phrase Database file pointer
+	char language[4];
+	char trnscrpt_fname[60];
+	char capcomdb_fname[60];
+};
 #endif // _PA_MCC_H
