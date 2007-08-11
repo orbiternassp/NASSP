@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2007/06/23 21:20:38  dseagrav
+  *	LVDC++ Update: Now with Pre-IGM guidance
+  *	
   *	Revision 1.32  2007/06/06 15:02:19  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -167,7 +170,7 @@ public:
 
 private:
 
-	void BuildFirstStage (int bstate);
+	void ChangeSatVBuildState (int bstate);
 	void SetFirstStage ();
 	void SetFirstStageEngines ();
 	void SetSecondStage ();

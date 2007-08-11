@@ -21,6 +21,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2007/07/27 19:57:27  jasonims
+  *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
+  *	
   *	Revision 1.1  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -143,11 +146,14 @@ public:
 	~MC_CapCom();
 	virtual void Init();
 	virtual void TimeStep(double simdt);
+	
+    int Talk(char *ID, ...);
+
 
 	FILE *trnscrpt_h; // Transcript file pointer
 	FILE *capcomdb_h; // CapCom Phrase Database file pointer
-	char language[4];
-	char trnscrpt_fname[60];
-	char capcomdb_fname[60];
+	char language;
+	char trnscrpt_fname;
+	char capcomdb_fname;
 };
 #endif // _PA_MCC_H
