@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2007/06/23 21:20:37  dseagrav
+  *	LVDC++ Update: Now with Pre-IGM guidance
+  *	
   *	Revision 1.78  2007/06/06 15:02:16  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -531,10 +534,10 @@ MESHHANDLE SaturnV::GetInterstageMesh()
 	}
 }
 
-void SaturnV::BuildFirstStage (int bstate)
+void SaturnV::ChangeSatVBuildState (int bstate)
 
 {
-	TRACESETUP("BuildFirstStage");
+	TRACESETUP("ChangeSatVBuildState");
 
 	SetSize (59.5);
 	SetEmptyMass (Stage1Mass);

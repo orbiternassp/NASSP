@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.102  2007/07/17 14:33:03  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.101  2007/06/23 21:20:36  dseagrav
   *	LVDC++ Update: Now with Pre-IGM guidance
   *	
@@ -2099,7 +2102,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	case LAUNCH_STAGE_ONE:
 	case PRELAUNCH_STAGE:
 		if (buildstatus < 6){
-			BuildFirstStage(buildstatus);
+			ChangeSatVBuildState(buildstatus);
 		}
 		else{
 			SetFirstStage();
@@ -2203,7 +2206,7 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 	case LAUNCH_STAGE_ONE:
 	case PRELAUNCH_STAGE:
 		if (buildstatus < 6){
-			BuildFirstStage(buildstatus);
+			ChangeSatVBuildState(buildstatus);
 		}
 		else {
 			SetFirstStage();
@@ -2497,7 +2500,7 @@ void SaturnV::LaunchVehicleBuild() {
 	
 	if (stage == ROLLOUT_STAGE && buildstatus < 5) {
 		buildstatus++;
-		BuildFirstStage(buildstatus);
+		ChangeSatVBuildState(buildstatus);
 	}
 }
 
@@ -2506,7 +2509,7 @@ void SaturnV::LaunchVehicleUnbuild() {
 
 	if (stage == ROLLOUT_STAGE && buildstatus > 0) {
 		buildstatus--;
-		BuildFirstStage(buildstatus);
+		ChangeSatVBuildState(buildstatus);
 	}
 }
 

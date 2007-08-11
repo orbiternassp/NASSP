@@ -21,6 +21,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/07/27 19:57:27  jasonims
+  *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
+  *	
   *	Revision 1.3  2007/06/06 15:02:15  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -263,20 +266,20 @@ void MC_GroundTrack::TimeStep(double simdt){
 
 MC_CapCom::MC_CapCom(){
 
-	strcpy (language,"_en");
+	strcpy (&language,"_en");
 	
-	strcpy (capcomdb_fname,"capcomdb");
-	strcat (capcomdb_fname,language);
-	strcat (capcomdb_fname,".npd");
+	strcpy (&capcomdb_fname,"capcomdb");
+	strcat (&capcomdb_fname,&language);
+	strcat (&capcomdb_fname,".npd");
 
-	strcpy (trnscrpt_fname,"transcript");
-	strcat (trnscrpt_fname,".log");
+	strcpy (&trnscrpt_fname,"transcript");
+	strcat (&trnscrpt_fname,".log");
 
 }
 
 MC_CapCom::~MC_CapCom(){
 
-	trnscrpt_h = fopen(trnscrpt_fname,"w");
+	trnscrpt_h = fopen(&trnscrpt_fname,"w");
 	fprintf(trnscrpt_h,"END_TRANSCRIPT\n");
 	fclose(trnscrpt_h);
 
@@ -285,14 +288,25 @@ MC_CapCom::~MC_CapCom(){
 
 void MC_CapCom::Init(){
 
-	trnscrpt_h = fopen(trnscrpt_fname,"a");
+	trnscrpt_h = fopen(&trnscrpt_fname,"a");
 	fprintf(trnscrpt_h,"BEGIN_TRANSCRIPT\n");
 	fclose(trnscrpt_h);
 }
 
 void MC_CapCom::TimeStep(double simdt){
-	//trnscrpt_h = fopen(trnscrpt_fname,"a");
+	//trnscrpt_h = fopen(&trnscrpt_fname,"a");
 	//fprintf(trnscrpt_h,"Current SimTime %f\n",simdt);
 	//fclose(trnscrpt_h);
 
+}
+
+int MC_CapCom::Talk(char *ID, ...){
+
+	va_list argptr;
+
+	va_start(argptr, ID);
+
+	va_end(argptr);
+
+	return 0;
 }
