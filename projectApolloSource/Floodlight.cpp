@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2007/06/06 15:02:07  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.2  2006/07/24 19:24:50  tschachim
   *	Bugfix
   *	
@@ -40,6 +43,7 @@
 #include "soundlib.h"
 #include "tracer.h"
 #include "Floodlight.h"
+#include "papi.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -258,14 +262,6 @@ void Floodlight::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 		exhausts = MAXEXHAUST - 1;
 }
 
-void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
-
 void Floodlight::clbkSaveState(FILEHANDLE scn) {
 
 	int i;
@@ -273,7 +269,7 @@ void Floodlight::clbkSaveState(FILEHANDLE scn) {
 
 	VESSEL2::clbkSaveState(scn);
 
-	WriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
+	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
 	oapiWriteScenario_int(scn, "CONFIGMODE", configMode);
 	oapiWriteScenario_int(scn, "LIGHTS", exhausts);
 	

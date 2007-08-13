@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.57  2007/06/06 15:02:16  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.56  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -1037,8 +1040,8 @@ void Saturn1b::SeparateStage (int new_stage)
 
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 	{
-	 	ofs1 = OFS_STAGE2;
-		vel1 = _V(0,0,-0.235);
+	 	ofs1 = _V(0, 0, -3);
+		vel1 = _V(0, 0, 0);
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1186,8 +1189,9 @@ void Saturn1b::SeparateStage (int new_stage)
 
 		SeparationS.play();
 
-		ShiftCentreOfMass (_V(0,0,1.5));
-		SetCSMStage ();
+		SetCSMStage();
+		ShiftCentreOfMass(_V(0, 0, 20.8));
+		SeparationSpeed = 0.15;
 
 		if(ASTPMission)
 			dockstate = 1;

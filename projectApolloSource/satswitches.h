@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2007/07/17 14:33:08  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.23  2007/04/25 18:48:10  tschachim
   *	EMS dV functions.
   *	
@@ -811,4 +814,24 @@ protected:
 
 	Sound guardClick;
 	SURFHANDLE guardSurface;
+};
+
+class OpticsHandcontrollerSwitch: public HandcontrollerSwitch {
+
+public:
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s);
+	bool CheckMouseClick(int event, int mx, int my);
+
+protected:
+	Saturn *sat;
+};
+
+class MinImpulseHandcontrollerSwitch: public HandcontrollerSwitch {
+
+public:
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, Saturn *s);
+	bool CheckMouseClick(int event, int mx, int my);
+
+protected:
+	Saturn *sat;
 };

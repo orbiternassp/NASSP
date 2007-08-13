@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2007/07/17 14:33:03  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.71  2007/06/08 20:08:29  tschachim
   *	Kill apex cover vessel.
   *	
@@ -1060,7 +1063,6 @@ void Saturn1b::Timestep (double simt, double simdt)
 
 
 		}
-		SetView();
 		if (dockstate == 2){
 
 		}

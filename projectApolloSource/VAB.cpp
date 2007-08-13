@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2007/06/06 15:02:10  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.14  2007/03/02 18:34:37  tschachim
   *	Improved crawler VC.
   *	
@@ -78,7 +81,6 @@
 
 #include "VAB.h"
 #include "ML.h"
-
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -87,6 +89,7 @@
 #include "IMU.h"
 #include "lvimu.h"
 #include "saturn.h"
+#include "papi.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -843,14 +846,6 @@ void VAB::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	}
 }
 
-void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
-
 void VAB::clbkSaveState(FILEHANDLE scn) {
 
 	VESSEL2::clbkSaveState (scn);
@@ -861,15 +856,15 @@ void VAB::clbkSaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "HIGHBAY1DOORSTATUS", highBay1Door_Status);
 	oapiWriteScenario_int(scn, "HIGHBAY3DOORSTATUS", highBay3Door_Status);
 	oapiWriteScenario_int(scn, "LVVISIBLE", LVVisible);
-	WriteScenario_double(scn, "CRANEPROC", crane_Proc);
-	WriteScenario_double(scn, "SATURNSTAGE1PROC", saturnStage1_Proc);
-	WriteScenario_double(scn, "HIGHBAY1DOORPROC", highBay1Door_Proc);
-	WriteScenario_double(scn, "HIGHBAY3DOORPROC", highBay3Door_Proc);
-	WriteScenario_double(scn, "PLATFORMPROC0", platform_Proc[0]);
-	WriteScenario_double(scn, "PLATFORMPROC1", platform_Proc[1]);
-	WriteScenario_double(scn, "PLATFORMPROC2", platform_Proc[2]);
-	WriteScenario_double(scn, "PLATFORMPROC3", platform_Proc[3]);
-	WriteScenario_double(scn, "PLATFORMPROC4", platform_Proc[4]);
+	papiWriteScenario_double(scn, "CRANEPROC", crane_Proc);
+	papiWriteScenario_double(scn, "SATURNSTAGE1PROC", saturnStage1_Proc);
+	papiWriteScenario_double(scn, "HIGHBAY1DOORPROC", highBay1Door_Proc);
+	papiWriteScenario_double(scn, "HIGHBAY3DOORPROC", highBay3Door_Proc);
+	papiWriteScenario_double(scn, "PLATFORMPROC0", platform_Proc[0]);
+	papiWriteScenario_double(scn, "PLATFORMPROC1", platform_Proc[1]);
+	papiWriteScenario_double(scn, "PLATFORMPROC2", platform_Proc[2]);
+	papiWriteScenario_double(scn, "PLATFORMPROC3", platform_Proc[3]);
+	papiWriteScenario_double(scn, "PLATFORMPROC4", platform_Proc[4]);
 	if (LVName[0])
 		oapiWriteScenario_string (scn, "LVNAME", LVName);
 }

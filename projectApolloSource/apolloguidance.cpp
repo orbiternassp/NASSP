@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.92  2007/06/23 21:20:37  dseagrav
+  *	LVDC++ Update: Now with Pre-IGM guidance
+  *	
   *	Revision 1.91  2007/06/06 15:02:10  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -4676,6 +4679,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "NEXTZ", NextZ);
 		oapiWriteScenario_int (scn, "SCALERCOUNTER", ScalerCounter);
 		oapiWriteScenario_int (scn, "CRCOUNT", ChannelRoutineCount);
+		oapiWriteScenario_int (scn, "CH33SWITCHES", vagc.Ch33Switches);
 		
 		for (i = 0; i < 16; i++) {
 			val = vagc.OutputChannel10[i];
@@ -4827,6 +4831,11 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "CRCOUNT", 7)) {
 #ifndef AGC_SOCKET_ENABLED
 			sscanf (line+7, "%d", &ChannelRoutineCount);
+#endif
+		}
+		else if (!strnicmp (line, "CH33SWITCHES", 12)) {
+#ifndef AGC_SOCKET_ENABLED
+			sscanf (line+12, "%d", &vagc.Ch33Switches);
 #endif
 		}
 		else if (!strnicmp (line, "VINT", 4)) {

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/06/06 15:02:08  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.3  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -44,7 +47,6 @@
 #include "tracer.h"
 
 #include "LC34.h"
-
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -53,6 +55,7 @@
 #include "IMU.h"
 #include "lvimu.h"
 #include "saturn.h"
+#include "papi.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -357,23 +360,15 @@ void LC34::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	SetTouchdownPointHeight(touchdownPointHeight);
 }
 
-void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
-
 void LC34::clbkSaveState(FILEHANDLE scn) {
 
 	VESSEL2::clbkSaveState(scn);
 
 	oapiWriteScenario_int(scn, "STATE", state);
-	WriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
-	WriteScenario_double(scn, "MSSPROC", mssProc);
-	WriteScenario_double(scn, "CMARMPROC", cmarmProc);
-	WriteScenario_double(scn, "SWINGARMPROC", swingarmProc);
+	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
+	papiWriteScenario_double(scn, "MSSPROC", mssProc);
+	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);
+	papiWriteScenario_double(scn, "SWINGARMPROC", swingarmProc);
 	if (LVName[0])
 		oapiWriteScenario_string(scn, "LVNAME", LVName);
 

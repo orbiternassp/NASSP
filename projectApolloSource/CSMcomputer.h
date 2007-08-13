@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2007/06/06 15:02:07  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.24  2007/01/11 07:48:57  chode99
   *	Added constants, variables and functions needed for reentry guidance.
   *	
@@ -733,18 +736,29 @@ public:
 	void SystemTimestep(double simdt);
 	void CMCShaftDrive(int val, int ch12);                          // CMC pulses
 	void CMCTrunionDrive(int val, int ch12); 
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 
 	Saturn *sat;													// Our Ship
+
+	int Powered;                                                    // 0 = NO, 1 = MNA, 2 = MNB, 3 = Both
+	int OpticsManualMovement;										// Manual Movement Demand Flags
 	double OpticsShaft;												// Shaft Position
 	double SextTrunion;												// SXT Trunion
 	double TeleTrunion;												// SCT Trunion
 	double TargetShaft;												// Reserved
 	double TargetTrunion;											// Reserved
-	int OpticsManualMovement;										// Manual Movement Demand Flags
 	double ShaftMoved;												// Movement counters for manual mode
 	double TrunionMoved;
-	int Powered;                                                    // 0 = NO, 1 = MNA, 2 = MNB, 3 = Both
 };
+
+
+//
+// Strings for state saving.
+//
+
+#define CMOPTICS_START_STRING "CMOPTICS_BEGIN"
+#define CMOPTICS_END_STRING   "CMOPTICS_END"
 
 
 #endif // _PA_CSMCOMPUTER_H

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/06/06 15:02:22  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.6  2007/04/25 18:49:25  tschachim
   *	SCS dV mode.
   *	
@@ -59,16 +62,9 @@
 #include "IMU.h"
 #include "lvimu.h"
 #include "ioChannels.h"
-
 #include "saturn.h"
+#include "papi.h"
 
-inline void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
 
 SPSPropellantSource::SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) : 
 	PropellantSource(ph), DCPower(0, p) {
@@ -986,11 +982,11 @@ void SPSGimbalActuator::ChangeCMCPosition(double delta) {
 void SPSGimbalActuator::SaveState(FILEHANDLE scn) {
 
 	// START_STRING is written in Saturn
-	WriteScenario_double(scn, "POSITION", position);
-	WriteScenario_double(scn, "COMMANDEDPOSITION", commandedPosition);
-	WriteScenario_double(scn, "CMCPOSITION", cmcPosition);
-	WriteScenario_double(scn, "SCSPOSITION", scsPosition);
-	WriteScenario_double(scn, "LASTATTITUDEERROR", lastAttitudeError);
+	papiWriteScenario_double(scn, "POSITION", position);
+	papiWriteScenario_double(scn, "COMMANDEDPOSITION", commandedPosition);
+	papiWriteScenario_double(scn, "CMCPOSITION", cmcPosition);
+	papiWriteScenario_double(scn, "SCSPOSITION", scsPosition);
+	papiWriteScenario_double(scn, "LASTATTITUDEERROR", lastAttitudeError);
 	oapiWriteScenario_int(scn, "ACTIVESYSTEM", activeSystem);
 	oapiWriteScenario_int(scn, "MOTOR1RUNNING", (motor1Running ? 1 : 0));
 	oapiWriteScenario_int(scn, "MOTOR2RUNNING", (motor2Running ? 1 : 0));

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2007/07/17 14:33:11  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.58  2007/01/22 14:47:38  tschachim
   *	Moved FDAIPowerRotationalSwitch to satswitches, horizontal thumbwheel.
   *	
@@ -1188,6 +1191,35 @@ protected:
 	SwitchRow *switchRow;
 };
 
+
+class HandcontrollerSwitch: public PanelSwitchItem {
+
+public:
+	HandcontrollerSwitch();
+	virtual ~HandcontrollerSwitch();
+
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, bool hasyawaxis = false);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
+	void DrawSwitch(SURFHANDLE drawSurface);
+	bool CheckMouseClick(int event, int mx, int my);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+	int GetState();
+	int operator=(const int b);
+	operator int();
+
+protected:
+	bool hasYawAxis;
+	int	x;
+	int y;
+	int width;
+	int height;
+	int state;
+	SURFHANDLE switchSurface;
+	Sound sclick;
+	SwitchRow *switchRow;
+};
+
 class SoundLib;
 
 class VolumeThumbwheelSwitch: public ThumbwheelSwitch {
@@ -1236,6 +1268,7 @@ protected:
 	friend class IndicatorSwitch;
 	friend class ThumbwheelSwitch;
 	friend class CircuitBrakerSwitch;
+	friend class HandcontrollerSwitch;
 };
 
 class PanelSwitchListener {
@@ -1275,6 +1308,7 @@ protected:
 	friend class IndicatorSwitch;
 	friend class ThumbwheelSwitch;
 	friend class CircuitBrakerSwitch;
+	friend class HandcontrollerSwitch;
 };
 
 

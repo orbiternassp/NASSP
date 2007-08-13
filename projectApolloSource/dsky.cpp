@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/06/06 15:02:12  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.21  2006/12/26 06:24:43  dseagrav
   *	vAGC restart if not powered, AGC VOLTAGE ALARM simulated with DSKY RESTART lights, more telemetry stuff, Merry Day-After-Christmas!
   *	
@@ -419,18 +422,18 @@ void DSKY::ProcessChannel13(int val)
 	}
 }
 
-void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit)
+void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset)
 
 {
 	if (lit) {
-		oapiBlt(surf, lights, dstx, dsty, dstx + 101, dsty + 0, 49, 23);
+		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 101, dsty + 0, 49, 23);
 	}
 	else {
-		oapiBlt(surf, lights, dstx, dsty, dstx + 0, dsty + 0, 49, 23);
+		oapiBlt(surf, lights, dstx + xOffset, dsty + yOffset, dstx + 0, dsty + 0, 49, 23);
 	}
 }
 
-void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
+void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOffset, bool hasAltVel)
 
 {
 	if (!IsPowered())
@@ -440,20 +443,22 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights)
 	// Check the lights.
 	//
 
-	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit());
-	DSKYLightBlt(surf, lights, 0, 25, NoAttLit());
-	DSKYLightBlt(surf, lights, 0, 49, StbyLit());
-	DSKYLightBlt(surf, lights, 0, 73, KbRelLit() && FlashOn);
-	DSKYLightBlt(surf, lights, 0, 97, OprErrLit() && FlashOn);
+	DSKYLightBlt(surf, lights, 0, 0,  UplinkLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 25, NoAttLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 49, StbyLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 73, KbRelLit() && FlashOn, xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 0, 97, OprErrLit() && FlashOn, xOffset, yOffset);
 
-	DSKYLightBlt(surf, lights, 52, 0,  TempLit());
-	DSKYLightBlt(surf, lights, 52, 25, GimbalLockLit());
-	DSKYLightBlt(surf, lights, 52, 49, ProgLit());
-	DSKYLightBlt(surf, lights, 52, 73, RestartLit());
-	DSKYLightBlt(surf, lights, 52, 97, TrackerLit());
+	DSKYLightBlt(surf, lights, 52, 0,  TempLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 52, 25, GimbalLockLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 52, 49, ProgLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 52, 73, RestartLit(), xOffset, yOffset);
+	DSKYLightBlt(surf, lights, 52, 97, TrackerLit(), xOffset, yOffset);
 
-	DSKYLightBlt(surf, lights, 52, 121, AltLit());
-	DSKYLightBlt(surf, lights, 52, 144, VelLit());
+	if (hasAltVel) {
+		DSKYLightBlt(surf, lights, 52, 121, AltLit(), xOffset, yOffset);
+		DSKYLightBlt(surf, lights, 52, 144, VelLit(), xOffset, yOffset);
+	}
 }
 
 
@@ -689,79 +694,79 @@ int DSKY::SixDigitDisplaySegmentsLit(char *Str)
 	return s;
 }
 
-void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp)
+void DSKY::RenderData(SURFHANDLE surf, SURFHANDLE digits, SURFHANDLE disp, int xOffset, int yOffset)
 
 {
 	if (!IsPowered())
 		return;
 
-	oapiBlt(surf, disp, 66,   3, 35,  0, 35, 10, SURF_PREDEF_CK);
-	oapiBlt(surf, disp, 66,  38, 35, 10, 35, 10, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  6,  38, 35, 20, 35, 10, SURF_PREDEF_CK);
+	oapiBlt(surf, disp, 66 + xOffset,   3 + yOffset, 35,  0, 35, 10, SURF_PREDEF_CK);
+	oapiBlt(surf, disp, 66 + xOffset,  38 + yOffset, 35, 10, 35, 10, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  6 + xOffset,  38 + yOffset, 35, 20, 35, 10, SURF_PREDEF_CK);
 
-	oapiBlt(surf, disp,  8,  73,  0, 32, 89,  4, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  8, 107,  0, 32, 89,  4, SURF_PREDEF_CK);
-	oapiBlt(surf, disp,  8, 141,  0, 32, 89,  4, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8 + xOffset,  73 + yOffset,  0, 32, 89,  4, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8 + xOffset, 107 + yOffset,  0, 32, 89,  4, SURF_PREDEF_CK);
+	oapiBlt(surf, disp,  8 + xOffset, 141 + yOffset,  0, 32, 89,  4, SURF_PREDEF_CK);
 
 	if (CompActy) {
 		//
 		// Do stuff to update Comp Acty light.
 		//
 
-		oapiBlt(surf, disp,  6,   4,  0,  0, 35, 31, SURF_PREDEF_CK);
+		oapiBlt(surf, disp,  6 + xOffset,   4 + yOffset,  0,  0, 35, 31, SURF_PREDEF_CK);
 	}
 
-	RenderTwoDigitDisplay(surf, digits, 67, 16, Prog, false);
-	RenderTwoDigitDisplay(surf, digits,  8, 51, Verb, VerbFlashing);
-	RenderTwoDigitDisplay(surf, digits, 67, 51, Noun, NounFlashing);
+	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 16 + yOffset, Prog, false);
+	RenderTwoDigitDisplay(surf, digits,  8 + xOffset, 51 + yOffset, Verb, VerbFlashing);
+	RenderTwoDigitDisplay(surf, digits, 67 + xOffset, 51 + yOffset, Noun, NounFlashing);
 
 	//
 	// Register contents.
 	//
 
-	RenderSixDigitDisplay(surf, digits, 3, 83, R1);
-	RenderSixDigitDisplay(surf, digits, 3, 117, R2);
-	RenderSixDigitDisplay(surf, digits, 3, 151, R3);
+	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 83 + yOffset, R1);
+	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 117 + yOffset, R2);
+	RenderSixDigitDisplay(surf, digits, 3 + xOffset, 151 + yOffset, R3);
 }
 
-void DSKY::RenderKeys(SURFHANDLE surf, SURFHANDLE keys)
+void DSKY::RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xOffset, int yOffset)
 
 {
-	DSKYKeyBlt(surf, keys, 2, 21, 0, 20, KeyDown_Verb);
-	DSKYKeyBlt(surf, keys, 2, 61, 0, 60, KeyDown_Noun);
+	DSKYKeyBlt(surf, keys, 2, 21, 0, 20, KeyDown_Verb, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2, 61, 0, 60, KeyDown_Noun, xOffset, yOffset);
 
-	DSKYKeyBlt(surf, keys, 2 + 41 * 1, 1,  41 * 1, 0,  KeyDown_Plus);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 1, 41, 41 * 1, 40, KeyDown_Minus);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 1, 81, 41 * 1, 80, KeyDown_0);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 1, 1,  41 * 1, 0,  KeyDown_Plus, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 1, 41, 41 * 1, 40, KeyDown_Minus, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 1, 81, 41 * 1, 80, KeyDown_0, xOffset, yOffset);
 
-	DSKYKeyBlt(surf, keys, 2 + 41 * 2, 1,  41 * 2, 0,  KeyDown_7);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 2, 41, 41 * 2, 40, KeyDown_4);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 2, 81, 41 * 2, 80, KeyDown_1);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 2, 1,  41 * 2, 0,  KeyDown_7, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 2, 41, 41 * 2, 40, KeyDown_4, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 2, 81, 41 * 2, 80, KeyDown_1, xOffset, yOffset);
 
-	DSKYKeyBlt(surf, keys, 2 + 41 * 3, 1,  41 * 3, 0,  KeyDown_8);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 3, 41, 41 * 3, 40, KeyDown_5);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 3, 81, 41 * 3, 80, KeyDown_2);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 3, 1,  41 * 3, 0,  KeyDown_8, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 3, 41, 41 * 3, 40, KeyDown_5, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 3, 81, 41 * 3, 80, KeyDown_2, xOffset, yOffset);
 
-	DSKYKeyBlt(surf, keys, 2 + 41 * 4, 1,  41 * 4, 0,  KeyDown_9);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 4, 41, 41 * 4, 40, KeyDown_6);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 4, 81, 41 * 4, 80, KeyDown_3);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 4, 1,  41 * 4, 0,  KeyDown_9, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 4, 41, 41 * 4, 40, KeyDown_6, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 4, 81, 41 * 4, 80, KeyDown_3, xOffset, yOffset);
 
-	DSKYKeyBlt(surf, keys, 2 + 41 * 5, 1,  41 * 5, 0,  KeyDown_Clear);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 5, 41, 41 * 5, 40, KeyDown_Prog);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 5, 81, 41 * 5, 80, KeyDown_KeyRel);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 5, 1,  41 * 5, 0,  KeyDown_Clear, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 5, 41, 41 * 5, 40, KeyDown_Prog, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 5, 81, 41 * 5, 80, KeyDown_KeyRel, xOffset, yOffset);
 
-	DSKYKeyBlt(surf, keys, 2 + 41 * 6, 21, 41 * 6, 20, KeyDown_Enter);
-	DSKYKeyBlt(surf, keys, 2 + 41 * 6, 61, 41 * 6, 60, KeyDown_Reset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 6, 21, 41 * 6, 20, KeyDown_Enter, xOffset, yOffset);
+	DSKYKeyBlt(surf, keys, 2 + 41 * 6, 61, 41 * 6, 60, KeyDown_Reset, xOffset, yOffset);
 }
 
-void DSKY::DSKYKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit) 
+void DSKY::DSKYKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset) 
 
 {
 	if (lit) {
-		oapiBlt(surf, keys, dstx, dsty, srcx, srcy, 38, 37);
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy, 38, 37);
 	}
 	else {
-		oapiBlt(surf, keys, dstx, dsty, srcx, srcy + 120, 38, 37);
+		oapiBlt(surf, keys, dstx + xOffset, dsty + yOffset, srcx, srcy + 120, 38, 37);
 	}
 }
 

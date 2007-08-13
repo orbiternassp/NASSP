@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2007/08/11 16:31:25  jasonims
+  *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
+  *	A little more Capcom...
+  *	
   *	Revision 1.79  2007/06/23 21:20:37  dseagrav
   *	LVDC++ Update: Now with Pre-IGM guidance
   *	
@@ -1202,7 +1206,7 @@ void SaturnV::SeparateStage (int new_stage)
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 	{
 	 	ofs1 = _V(0.0, 0.0, S4Offset); // OFS_STAGE3;
-		vel1 = _V(0,0,-0.135);
+		vel1 = _V(0.0 ,0.0, 0.0);
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1480,6 +1484,7 @@ void SaturnV::SeparateStage (int new_stage)
 		// See Saturn::SetCSMStage()
 		const double CGOffset = 12.25+21.5-1.8+0.35;
 		ShiftCentreOfMass(_V(0, 0, 19.1 - STG2O - 30.25 + CGOffset));
+		SeparationSpeed = 0.15;
 	}
 
 	if (stage == CSM_LEM_STAGE)
