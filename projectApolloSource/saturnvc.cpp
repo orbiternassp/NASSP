@@ -23,6 +23,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/08/13 16:06:20  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.21  2007/06/06 15:02:19  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -507,7 +513,7 @@ void Saturn::SetView(double offset, bool update_direction)
 		}
 
 		if (PanelId == SATPANEL_SEXTANT) { // Sextant
-			fov = 1.2 * RAD; 
+			fov = 1. * RAD; 
 		
 		} else if (PanelId == SATPANEL_TELESCOPE) { // Telescope
 			fov = 30. * RAD;
