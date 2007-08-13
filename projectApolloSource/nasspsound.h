@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/07/17 14:33:07  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.10  2006/06/28 01:23:02  movieman523
   *	Made SM break up on re-entry. Unfortunately sound doesn't work and if I try to delete the 'parts' when the SM is deleted. Orbiter blows away.
   *	
@@ -105,5 +108,7 @@
 #define CRASH_SOUND					"crash.wav"
 #define POSTLANDINGVENT_SOUND		"aircond.wav"
 #define CREWDEAD_SOUND				"crewdead.wav"
+#define RCSFIRE_SOUND				"attfire.wav"
+#define RCSSUSTAIN_SOUND			"attsustain.WAV"
 
 #define SOUND_DIRECTORY				"ProjectApollo"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2007/07/17 14:33:06  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.35  2007/06/06 15:02:11  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -626,7 +629,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			// starting a scenario.
 			//
 
-			if (O2FlowCheckCount > 10) {
+			if (O2FlowCheckCount > 1) {
 				if (cf > 1.0) {
 					if (LastO2FlowCheckHigh) {
 						LightO2Warning = true;

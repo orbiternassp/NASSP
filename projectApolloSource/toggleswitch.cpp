@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2007/07/17 14:33:10  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.76  2007/06/06 15:02:23  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -3174,3 +3177,125 @@ void AGCThreePoswitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	agc = c;
 }
+
+
+//
+// Handcontroller Switch
+//
+
+HandcontrollerSwitch::HandcontrollerSwitch() {
+
+	x = 0;
+	y = 0;
+	width = 0;
+	height = 0;
+	state = 0;
+	switchSurface = 0;
+	switchRow = 0;
+}
+
+HandcontrollerSwitch::~HandcontrollerSwitch() {
+	sclick.done();
+}
+
+void HandcontrollerSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, bool hasyawaxis) {
+
+	name = n;
+	hasYawAxis =hasyawaxis;
+	scnh.RegisterSwitch(this);
+}
+
+void HandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row) {
+
+	x = xp;
+	y = yp;
+	width = w;
+	height = h;
+	switchSurface = surf;
+	
+	row.AddSwitch(this);
+	switchRow = &row;
+
+	if (!sclick.isValid()) {
+		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND);
+	}
+}
+
+int HandcontrollerSwitch::GetState() {
+
+	return state;
+}
+
+bool HandcontrollerSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		//
+		// Check whether it's actually in our switch region.
+		//
+
+		if (mx < x || my < y)
+			return false;
+
+		if (mx > (x + width) || my > (y + height))
+			return false;
+
+		//
+		// Yes, so now we just need to check whether it's an on or
+		// off click.
+		//
+
+		if (mx < (x + (width / 3.))) {
+			if (my < (y + (height * 2. / 3.))) {
+				state = 2;
+				sclick.play();
+			} else if (hasYawAxis) {
+				state = 5;
+				sclick.play();
+			}
+		} else if (mx > (x + (width * 2. / 3.))) {
+			if (my < (y + (height * 2. / 3.))) {
+				state = 1;
+				sclick.play();
+			} else if (hasYawAxis) {
+				state = 6;
+				sclick.play();
+			}
+		} else {
+			if (my < (y + (height / 2.))) {
+				state = 4;
+				sclick.play();
+			} else {
+				state = 3;
+				sclick.play();
+			}
+		}
+	} else if (event == PANEL_MOUSE_LBUP) {
+		state = 0;
+		sclick.play();
+	}
+	return true;
+}
+
+void HandcontrollerSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
+
+	oapiBlt(DrawSurface, switchSurface, x, y, state * width, 0, width, height, SURF_PREDEF_CK);
+}
+
+void HandcontrollerSwitch::SaveState(FILEHANDLE scn) {
+
+	oapiWriteScenario_int (scn, name, state);
+}
+
+void HandcontrollerSwitch::LoadState(char *line) {
+
+	char buffer[100];
+	int st;
+
+	sscanf(line, "%s %i", buffer, &st); 
+	if (!strnicmp(buffer, name, strlen(name))) {
+		state = st;
+	}
+}
+

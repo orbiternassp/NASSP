@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2007/06/23 21:20:37  dseagrav
+  *	LVDC++ Update: Now with Pre-IGM guidance
+  *	
   *	Revision 1.27  2007/06/06 15:02:12  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -126,8 +129,8 @@
 
 #include "toggleswitch.h"
 #include "saturn.h"
-
 #include "tracer.h"
+#include "papi.h"
 
 #ifdef AGC_SOCKET_ENABLED
 #define RegPIPAX 037
@@ -797,41 +800,33 @@ void IMU::LoadState(FILEHANDLE scn)
 	}
 }
 
-inline void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %.12lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
-
 void IMU::SaveState(FILEHANDLE scn)
 
 {
 	oapiWriteLine(scn, IMU_START_STRING);
 
-	WriteScenario_double(scn, "RPX", RemainingPIPA.X);
-	WriteScenario_double(scn, "RPY", RemainingPIPA.Y);
-	WriteScenario_double(scn, "RPZ", RemainingPIPA.Z);
-	WriteScenario_double(scn, "GMX", Gimbal.X);
-	WriteScenario_double(scn, "GMY", Gimbal.Y);
-	WriteScenario_double(scn, "GMZ", Gimbal.Z);
-	WriteScenario_double(scn, "OAX", Orbiter.Attitude.X);
-	WriteScenario_double(scn, "OAY", Orbiter.Attitude.Y);
-	WriteScenario_double(scn, "OAZ", Orbiter.Attitude.Z);
-	WriteScenario_double(scn, "WLX", LastWeightAcceleration.x);
-	WriteScenario_double(scn, "WLY", LastWeightAcceleration.y);
-	WriteScenario_double(scn, "WLZ", LastWeightAcceleration.z);
-	WriteScenario_double(scn, "M11", Orbiter.AttitudeReference.m11);
-	WriteScenario_double(scn, "M12", Orbiter.AttitudeReference.m12);
-	WriteScenario_double(scn, "M13", Orbiter.AttitudeReference.m13);
-	WriteScenario_double(scn, "M21", Orbiter.AttitudeReference.m21);
-	WriteScenario_double(scn, "M22", Orbiter.AttitudeReference.m22);
-	WriteScenario_double(scn, "M23", Orbiter.AttitudeReference.m23);
-	WriteScenario_double(scn, "M31", Orbiter.AttitudeReference.m31);
-	WriteScenario_double(scn, "M32", Orbiter.AttitudeReference.m32);
-	WriteScenario_double(scn, "M33", Orbiter.AttitudeReference.m33);
-	WriteScenario_double(scn, "LTM", LastTime);
+	papiWriteScenario_double(scn, "RPX", RemainingPIPA.X);
+	papiWriteScenario_double(scn, "RPY", RemainingPIPA.Y);
+	papiWriteScenario_double(scn, "RPZ", RemainingPIPA.Z);
+	papiWriteScenario_double(scn, "GMX", Gimbal.X);
+	papiWriteScenario_double(scn, "GMY", Gimbal.Y);
+	papiWriteScenario_double(scn, "GMZ", Gimbal.Z);
+	papiWriteScenario_double(scn, "OAX", Orbiter.Attitude.X);
+	papiWriteScenario_double(scn, "OAY", Orbiter.Attitude.Y);
+	papiWriteScenario_double(scn, "OAZ", Orbiter.Attitude.Z);
+	papiWriteScenario_double(scn, "WLX", LastWeightAcceleration.x);
+	papiWriteScenario_double(scn, "WLY", LastWeightAcceleration.y);
+	papiWriteScenario_double(scn, "WLZ", LastWeightAcceleration.z);
+	papiWriteScenario_double(scn, "M11", Orbiter.AttitudeReference.m11);
+	papiWriteScenario_double(scn, "M12", Orbiter.AttitudeReference.m12);
+	papiWriteScenario_double(scn, "M13", Orbiter.AttitudeReference.m13);
+	papiWriteScenario_double(scn, "M21", Orbiter.AttitudeReference.m21);
+	papiWriteScenario_double(scn, "M22", Orbiter.AttitudeReference.m22);
+	papiWriteScenario_double(scn, "M23", Orbiter.AttitudeReference.m23);
+	papiWriteScenario_double(scn, "M31", Orbiter.AttitudeReference.m31);
+	papiWriteScenario_double(scn, "M32", Orbiter.AttitudeReference.m32);
+	papiWriteScenario_double(scn, "M33", Orbiter.AttitudeReference.m33);
+	papiWriteScenario_double(scn, "LTM", LastTime);
 
 	//
 	// Copy internal state to the structure.

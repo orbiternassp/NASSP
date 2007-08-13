@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2007/07/17 14:33:07  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.83  2007/06/06 15:02:15  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -362,7 +365,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 115; // number of bitmap handles
+const int nsurf = 120; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
@@ -478,6 +481,11 @@ const int nsurf = 115; // number of bitmap handles
 #define SRF_CABINRELIEFUPPERLEVER					112
 #define SRF_CABINRELIEFLOWERLEVER					113
 #define SRF_CABINRELIEFGUARDLEVER					114
+#define SRF_OPTICS_HANDCONTROLLER					115
+#define SRF_MARK_BUTTONS							116
+#define SRF_THREEPOSSWITCHSMALL						117
+#define SRF_OPTICS_DSKY								118
+#define SRF_MINIMPULSE_HANDCONTROLLER				119
 
 //
 // Earth radius and gravity constants.

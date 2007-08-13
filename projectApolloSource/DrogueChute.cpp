@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2007/07/17 14:33:11  tschachim
+  *	Added entry and post landing stuff.
+  *	
   **************************************************************************/
 
 #define ORBITER_MODULE
@@ -30,8 +33,9 @@
 #include "stdio.h"
 #include "math.h"
 #include "tracer.h"
-
 #include "DrogueChute.h"
+#include "papi.h"
+
 #include "CollisionSDK/CollisionSDK.h"
 
 HINSTANCE g_hDLL;
@@ -129,18 +133,10 @@ void DrogueChute::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	}
 }
 
-void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
-
 void DrogueChute::clbkSaveState(FILEHANDLE scn) {
 
 	VESSEL2::clbkSaveState(scn);
 
-	WriteScenario_double(scn, "PROC", proc);
+	papiWriteScenario_double(scn, "PROC", proc);
 }
 

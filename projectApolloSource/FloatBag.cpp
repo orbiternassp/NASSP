@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2007/07/17 14:33:13  tschachim
+  *	Added entry and post landing stuff.
+  *	
  *************************************************************************/
 
 #define ORBITER_MODULE
@@ -30,8 +33,9 @@
 #include "stdio.h"
 #include "math.h"
 #include "tracer.h"
-
 #include "FloatBag.h"
+#include "papi.h"
+
 #include "CollisionSDK/CollisionSDK.h"
 
 HINSTANCE g_hDLL;
@@ -209,22 +213,14 @@ void FloatBag::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	}
 }
 
-void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
-
 void FloatBag::clbkSaveState(FILEHANDLE scn) {
 
 	VESSEL2::clbkSaveState(scn);
 
-	WriteScenario_double(scn, "PROC1", proc1);
-	WriteScenario_double(scn, "PROC2", proc2);
-	WriteScenario_double(scn, "PROC3", proc3);
+	papiWriteScenario_double(scn, "PROC1", proc1);
+	papiWriteScenario_double(scn, "PROC2", proc2);
+	papiWriteScenario_double(scn, "PROC3", proc3);
 	oapiWriteScenario_int(scn, "EXTENDBEACON", (extendBeacon ? 1 : 0));
-	WriteScenario_double(scn, "PROCBEACON", procBeacon);
+	papiWriteScenario_double(scn, "PROCBEACON", procBeacon);
 }
 

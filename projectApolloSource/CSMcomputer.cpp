@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2007/06/06 15:02:07  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.77  2007/02/18 01:35:28  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -259,11 +262,10 @@
 #include "csmcomputer.h"
 #include "IMU.h"
 #include "lvimu.h"
-
 #include "toggleswitch.h"
 #include "saturn.h"
-
 #include "ioChannels.h"
+#include "papi.h"
 
 CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb) : 
 	ApolloGuidance(s, display, im, p), dsky2(display2), iu(i), lv(sivb)
@@ -2981,6 +2983,17 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				// set DAP data to CSM mode 
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 010002;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
+
+				// Synchronize clock with launch time (TEPHEM), only Apollo 7 has a proper scenario
+				if (ApolloNo == 7) {
+					double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] + 
+									vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
+									vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
+					tephem = (tephem / 8640000.) + 40038.;
+					double clock = (oapiGetSimMJD() - tephem) * 8640000. * pow((double) 2., (double) -28.);
+					vagc.Erasable[AGC_BANK(024)][AGC_ADDR(024)] = ConvertDecimalToAGCOctal(clock, true);
+					vagc.Erasable[AGC_BANK(025)][AGC_ADDR(025)] = ConvertDecimalToAGCOctal(clock, false);
+				}
 			
 			} else { // Artemis 072
 
@@ -4306,8 +4319,13 @@ void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 	}
 }
 
+
+//
 // CM Optics class code
-CMOptics::CMOptics(){
+//
+
+CMOptics::CMOptics() {
+
 	sat = NULL;
 	OpticsShaft = 0.0;
 	SextTrunion = 0.0;
@@ -4318,11 +4336,13 @@ CMOptics::CMOptics(){
 	Powered = 0;
 }
 
-void CMOptics::Init(Saturn *vessel){
+void CMOptics::Init(Saturn *vessel) {
+
 	sat = vessel;
 }
 
 void CMOptics::SystemTimestep(double simdt) {
+
 	// Optics system apparently uses 124.4 watts of power to operate.
 	// This should probably vary up and down when the motors run, but I couldn't find data for it.
 	Powered = 0; // Reset
@@ -4348,19 +4368,20 @@ void CMOptics::SystemTimestep(double simdt) {
 	}
 }
 
-void CMOptics::CMCTrunionDrive(int val,int ch12){
+void CMOptics::CMCTrunionDrive(int val,int ch12) {
+
 	int pulses;
 	ChannelValue12 val12;
 	val12.Value = ch12;
 
-	if(Powered == 0){ return; }
+	if (Powered == 0) { return; }
 
-	if(val&040000){ // Negative
+	if (val&040000){ // Negative
 		pulses = -((~val)&07777); 
 	} else {
 		pulses = val&07777; 
 	}
-	if(val12.Bits.EnableOpticsCDUErrorCounters){
+	if (val12.Bits.EnableOpticsCDUErrorCounters){
 		sat->agc.vagc.Erasable[0][035] += pulses;
 		sat->agc.vagc.Erasable[0][035] &= 077777;
 	}
@@ -4369,35 +4390,37 @@ void CMOptics::CMCTrunionDrive(int val,int ch12){
 	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
 }
 
-void CMOptics::CMCShaftDrive(int val,int ch12){
+void CMOptics::CMCShaftDrive(int val,int ch12) {
+
 	int pulses;
 	ChannelValue12 val12;
 	val12.Value = ch12;
 
-	if(Powered == 0){ return; }
+	if (Powered == 0) { return; }
 
-	if(val&040000){ // Negative
+	if (val&040000){ // Negative
 		pulses = -((~val)&07777); 
 	} else {
 		pulses = val&07777; 
 	}
 	OpticsShaft += (OCDU_SHAFT_STEP*pulses);
 	ShaftMoved = OpticsShaft;
-	if(val12.Bits.EnableOpticsCDUErrorCounters){
+	if (val12.Bits.EnableOpticsCDUErrorCounters){
 		sat->agc.vagc.Erasable[0][036] += pulses;
 		sat->agc.vagc.Erasable[0][036] &= 077777;
 	}
 	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
 }
 
-void CMOptics::TimeStep(double simdt){
+void CMOptics::TimeStep(double simdt) {
+
 	double ShaftRate = 0;
 	double TrunRate = 0;
 
-	if(Powered == 0){ return; }
+	if (Powered == 0) { return; }
 
 	// Generate rates for telescope and manual mode
-	switch(sat->ControllerSpeedSwitch.GetState()){
+	switch(sat->ControllerSpeedSwitch.GetState()) {
 		case THREEPOSSWITCH_UP:       // HI
 			ShaftRate = 1775. * simdt;
 			TrunRate  = 3640. * simdt;
@@ -4412,7 +4435,7 @@ void CMOptics::TimeStep(double simdt){
 			break;
 	}
 
-	switch(sat->ModeSwitch.GetState()){
+	switch(sat->ModeSwitch.GetState()) {
 		case THREEPOSSWITCH_DOWN: // ZERO OPTICS
 			// Force MANUAL HI rate for zero optics mode.
 			ShaftRate = 1775. * simdt;
@@ -4523,4 +4546,56 @@ void CMOptics::TimeStep(double simdt){
 	}
 
 	// sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
+}
+
+void CMOptics::SaveState(FILEHANDLE scn) {
+
+	oapiWriteLine(scn, CMOPTICS_START_STRING);
+	oapiWriteScenario_int(scn, "POWERED", Powered);
+	oapiWriteScenario_int(scn, "OPTICSMANUALMOVEMENT", OpticsManualMovement);
+	papiWriteScenario_double(scn, "OPTICSSHAFT", OpticsShaft);
+	papiWriteScenario_double(scn, "SEXTTRUNION", SextTrunion);
+	papiWriteScenario_double(scn, "TELETRUNION", TeleTrunion);
+	papiWriteScenario_double(scn, "TARGETSHAFT", TargetShaft);
+	papiWriteScenario_double(scn, "TARGETTRUNION", TargetTrunion);
+	papiWriteScenario_double(scn, "SHAFTMOVED", ShaftMoved);
+	papiWriteScenario_double(scn, "TRUNIONMOVED", TrunionMoved);
+	oapiWriteLine(scn, CMOPTICS_END_STRING);
+}
+
+void CMOptics::LoadState(FILEHANDLE scn) {
+
+	char *line;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, CMOPTICS_END_STRING, sizeof(CMOPTICS_END_STRING)))
+			return;
+		else if (!strnicmp (line, "POWERED", 7)) {
+			sscanf (line+7, "%d", &Powered);
+		}
+		else if (!strnicmp (line, "OPTICSMANUALMOVEMENT", 20)) {
+			sscanf (line+20, "%d", &OpticsManualMovement);
+		}
+		else if (!strnicmp (line, "OPTICSSHAFT", 11)) {
+			sscanf (line+11, "%lf", &OpticsShaft);
+		}
+		else if (!strnicmp (line, "SEXTTRUNION", 11)) {
+			sscanf (line+11, "%lf", &SextTrunion);
+		}
+		else if (!strnicmp (line, "TELETRUNION", 11)) {
+			sscanf (line+11, "%lf", &TeleTrunion);
+		}
+		else if (!strnicmp (line, "TARGETSHAFT", 11)) {
+			sscanf (line+11, "%lf", &TargetShaft);
+		}
+		else if (!strnicmp (line, "TARGETTRUNION", 13)) {
+			sscanf (line+13, "%lf", &TargetTrunion);
+		}
+		else if (!strnicmp (line, "SHAFTMOVED", 10)) {
+			sscanf (line+10, "%lf", &ShaftMoved);
+		}
+		else if (!strnicmp (line, "TRUNIONMOVED", 12)) {
+			sscanf (line+12, "%lf", &TrunionMoved);
+		}
+	}
 }

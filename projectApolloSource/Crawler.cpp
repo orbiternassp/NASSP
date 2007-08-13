@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/06/06 15:02:07  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.22  2007/03/03 19:32:29  tschachim
   *	More viewpoints.
   *	
@@ -101,7 +104,6 @@
 #include "tracer.h"
 
 #include "Crawler.h"
-
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -110,10 +112,10 @@
 #include "IMU.h"
 #include "lvimu.h"
 #include "saturn.h"
-
 #include "VAB.h"
 #include "ML.h"
 #include "MSS.h"
+#include "papi.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -445,21 +447,13 @@ void Crawler::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	}
 }
 
-void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
-
 void Crawler::clbkSaveState(FILEHANDLE scn) {
 	
 	VESSEL2::clbkSaveState (scn);
 
-	WriteScenario_double(scn, "VELOCITY", velocity);
-	WriteScenario_double(scn, "TARGETHEADING", targetHeading);
-	WriteScenario_double(scn, "WHEELDEFLECT", wheeldeflect);	
+	papiWriteScenario_double(scn, "VELOCITY", velocity);
+	papiWriteScenario_double(scn, "TARGETHEADING", targetHeading);
+	papiWriteScenario_double(scn, "WHEELDEFLECT", wheeldeflect);	
 	oapiWriteScenario_int(scn, "VIEWPOS", viewPos);
 	oapiWriteScenario_int(scn, "STANDALONE", standalone);
 	if (LVName[0])

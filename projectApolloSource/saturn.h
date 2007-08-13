@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.242  2007/07/27 19:57:28  jasonims
+  *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
+  *	
   *	Revision 1.241  2007/07/17 14:33:09  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -1544,7 +1547,6 @@ protected:
 	bool EVA_IP;
 	bool HatchOpen;
 	bool CryoStir;
-
 	double TCPO;
 
 	//
@@ -1607,6 +1609,7 @@ protected:
 	// Switches
 	//
 	int coasEnabled;
+	int opticsDskyEnabled;
 
 	///
 	/// \brief Right-hand FDAI.
@@ -2586,6 +2589,19 @@ protected:
 	SwitchRow UPTLMSwitchRow;
 	ToggleSwitch UPTLMSwitch;
 
+	SwitchRow OpticsHandcontrollerSwitchRow;
+	OpticsHandcontrollerSwitch OpticsHandcontrollerSwitch;
+
+	SwitchRow OpticsMarkButtonRow;
+	PushSwitch OpticsMarkButton;
+
+	SwitchRow OpticsMarkRejectButtonRow;
+	PushSwitch OpticsMarkRejectButton;
+
+	SwitchRow MinImpulseHandcontrollerSwitchRow;
+	MinImpulseHandcontrollerSwitch MinImpulseHandcontrollerSwitch;
+
+
 	///////////////
 	// Panel 100 //
 	///////////////
@@ -3360,6 +3376,7 @@ protected:
 	int cmpidx;
 	
 	bool ActivateASTP;
+	bool OrbiterAttitudeDisabled;
 
 	bool bManualSeparate;
 	bool bManualUnDock;
@@ -3371,6 +3388,7 @@ protected:
 	bool Abort_Locked;
 
 	double DockAngle;
+	double SeparationSpeed;
 
 	double AtempP;
 	double AtempY;
@@ -3412,7 +3430,7 @@ protected:
 	bool InPanel;
 	bool CheckPanelIdInTimestep;
 	bool FovFixed;
-	bool FovExternal;
+	int FovExternal;
 	double FovSave;
 	double FovSaveExternal;
 
@@ -3647,7 +3665,6 @@ protected:
 	//
 
 	void DoLaunch(double simt);
-
 	void LaunchCountdown(double simt);
 	void StageSeven(double simt);
 	void StageEight(double simt);
@@ -3666,14 +3683,12 @@ protected:
 	bool CheckForLaunchShutdown();
 	void SetGenericStageState();
 	void DestroyStages(double simt);
-
 	void SIVBBoiloff();
 	void LookForSIVb();
 	void LookForLEM();
-
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
-
 	void LoadDefaultSounds();
+	void RCSSoundTimestep();
 
 	//
 	// Sounds
@@ -3716,6 +3731,8 @@ protected:
 	Sound SecoSound;
 	Sound PostLandingVentSound;
 	Sound CrewDeadSound;
+	Sound RCSFireSound;
+	Sound RCSSustainSound;
 
 	///
 	/// Drogue deployment message.
@@ -3957,6 +3974,8 @@ protected:
 	friend class SaturnEMSDvDisplay;
 	friend class ELS;
 	friend class CrewStatus;
+	friend class OpticsHandcontrollerSwitch;
+	friend class MinImpulseHandcontrollerSwitch;
 };
 
 extern void BaseInit();

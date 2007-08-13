@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2007/06/06 15:02:20  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.19  2007/04/26 00:12:00  movieman523
   *	Fixed build warning.
   *	
@@ -99,14 +102,8 @@
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
+#include "papi.h"
 
-inline void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
 
 AttitudeReference::AttitudeReference() {
 
@@ -216,24 +213,24 @@ void AttitudeReference::SaveState(FILEHANDLE scn) {
 
 	oapiWriteScenario_int(scn, "ATTITUDEINITIALIZED", AttitudeInitialized);
 
-	WriteScenario_double(scn, "ATTITUDEX", Attitude.x);
-	WriteScenario_double(scn, "ATTITUDEY", Attitude.y);
-	WriteScenario_double(scn, "ATTITUDEZ", Attitude.z);
-	WriteScenario_double(scn, "LASTATTITUDEX", LastAttitude.x);
-	WriteScenario_double(scn, "LASTATTITUDEY", LastAttitude.y);
-	WriteScenario_double(scn, "LASTATTITUDEZ", LastAttitude.z);
-	WriteScenario_double(scn, "ORBITERATTITUDEX", OrbiterAttitude.Attitude.x);
-	WriteScenario_double(scn, "ORBITERATTITUDEY", OrbiterAttitude.Attitude.y);
-	WriteScenario_double(scn, "ORBITERATTITUDEZ", OrbiterAttitude.Attitude.z);
-	WriteScenario_double(scn, "ORBITERATTITUDEM11", OrbiterAttitude.AttitudeReference.m11);
-	WriteScenario_double(scn, "ORBITERATTITUDEM12", OrbiterAttitude.AttitudeReference.m12);
-	WriteScenario_double(scn, "ORBITERATTITUDEM13", OrbiterAttitude.AttitudeReference.m13);
-	WriteScenario_double(scn, "ORBITERATTITUDEM21", OrbiterAttitude.AttitudeReference.m21);
-	WriteScenario_double(scn, "ORBITERATTITUDEM22", OrbiterAttitude.AttitudeReference.m22);
-	WriteScenario_double(scn, "ORBITERATTITUDEM23", OrbiterAttitude.AttitudeReference.m23);
-	WriteScenario_double(scn, "ORBITERATTITUDEM31", OrbiterAttitude.AttitudeReference.m31);
-	WriteScenario_double(scn, "ORBITERATTITUDEM32", OrbiterAttitude.AttitudeReference.m32);
-	WriteScenario_double(scn, "ORBITERATTITUDEM33", OrbiterAttitude.AttitudeReference.m33);
+	papiWriteScenario_double(scn, "ATTITUDEX", Attitude.x);
+	papiWriteScenario_double(scn, "ATTITUDEY", Attitude.y);
+	papiWriteScenario_double(scn, "ATTITUDEZ", Attitude.z);
+	papiWriteScenario_double(scn, "LASTATTITUDEX", LastAttitude.x);
+	papiWriteScenario_double(scn, "LASTATTITUDEY", LastAttitude.y);
+	papiWriteScenario_double(scn, "LASTATTITUDEZ", LastAttitude.z);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEX", OrbiterAttitude.Attitude.x);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEY", OrbiterAttitude.Attitude.y);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEZ", OrbiterAttitude.Attitude.z);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEM11", OrbiterAttitude.AttitudeReference.m11);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEM12", OrbiterAttitude.AttitudeReference.m12);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEM13", OrbiterAttitude.AttitudeReference.m13);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEM21", OrbiterAttitude.AttitudeReference.m21);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEM22", OrbiterAttitude.AttitudeReference.m22);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEM23", OrbiterAttitude.AttitudeReference.m23);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEM31", OrbiterAttitude.AttitudeReference.m31);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEM32", OrbiterAttitude.AttitudeReference.m32);
+	papiWriteScenario_double(scn, "ORBITERATTITUDEM33", OrbiterAttitude.AttitudeReference.m33);
 }
 
 void AttitudeReference::LoadState(char *line) {
@@ -507,15 +504,15 @@ void BMAG::SetPower(bool dc, bool ac) {
 void BMAG::SaveState(FILEHANDLE scn) {
 
 	// START_STRING is written in Saturn
-	WriteScenario_double(scn, "UNCAGEDX", uncaged.x);
-	WriteScenario_double(scn, "UNCAGEDY", uncaged.y);
-	WriteScenario_double(scn, "UNCAGEDZ", uncaged.z);
-	WriteScenario_double(scn, "TARGETATTITUDEX", targetAttitude.x);
-	WriteScenario_double(scn, "TARGETATTITUDEY", targetAttitude.y);
-	WriteScenario_double(scn, "TARGETATTITUDEZ", targetAttitude.z);
-	WriteScenario_double(scn, "RATESX", rates.x);
-	WriteScenario_double(scn, "RATESY", rates.y);
-	WriteScenario_double(scn, "RATESZ", rates.z);
+	papiWriteScenario_double(scn, "UNCAGEDX", uncaged.x);
+	papiWriteScenario_double(scn, "UNCAGEDY", uncaged.y);
+	papiWriteScenario_double(scn, "UNCAGEDZ", uncaged.z);
+	papiWriteScenario_double(scn, "TARGETATTITUDEX", targetAttitude.x);
+	papiWriteScenario_double(scn, "TARGETATTITUDEY", targetAttitude.y);
+	papiWriteScenario_double(scn, "TARGETATTITUDEZ", targetAttitude.z);
+	papiWriteScenario_double(scn, "RATESX", rates.x);
+	papiWriteScenario_double(scn, "RATESY", rates.y);
+	papiWriteScenario_double(scn, "RATESZ", rates.z);
 	
 	AttitudeReference::SaveState(scn);
 
@@ -1979,7 +1976,7 @@ void ECA::TimeStep(double simdt) {
 	int mnimp_yaw_flag = 0;
 	VECTOR3 cmd_rate = _V(0,0,0);
 	VECTOR3 rate_err = _V(0,0,0);
-	if(mnimp_roll_trigger){
+	if (mnimp_roll_trigger) {
 		sat->rjec.SetThruster(9,0);
 		sat->rjec.SetThruster(10,0);
 		sat->rjec.SetThruster(11,0);
@@ -1989,13 +1986,13 @@ void ECA::TimeStep(double simdt) {
 		sat->rjec.SetThruster(15,0);
 		sat->rjec.SetThruster(16,0); 
 	}
-	if(mnimp_pitch_trigger){
+	if (mnimp_pitch_trigger) {
 		sat->rjec.SetThruster(1,0);
 		sat->rjec.SetThruster(2,0);
 		sat->rjec.SetThruster(3,0);
 		sat->rjec.SetThruster(4,0);
 	}
-	if(mnimp_yaw_trigger){
+	if (mnimp_yaw_trigger) {
 		sat->rjec.SetThruster(5,0);
 		sat->rjec.SetThruster(6,0);
 		sat->rjec.SetThruster(7,0);
@@ -2279,14 +2276,14 @@ void ECA::TimeStep(double simdt) {
 		switch(sat->ManualAttRollSwitch.GetState()){
 			case THREEPOSSWITCH_UP:      // ACCEL CMD
 				// ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
-				if(rhc_x < 28673 && rhc_x > 2738){  // MINUS
+				if (rhc_x < 28673) {  // MINUS
 					sat->rjec.SetThruster(10,1);
 					sat->rjec.SetThruster(12,1);
 					sat->rjec.SetThruster(14,1);
 					sat->rjec.SetThruster(16,1);
 					accel_roll_trigger=1; accel_roll_flag=-1;
 				}
-				if(rhc_x > 36863 && rhc_x < 62798){ // PLUS
+				if (rhc_x > 36863) { // PLUS
 					sat->rjec.SetThruster(9,1);
 					sat->rjec.SetThruster(11,1);
 					sat->rjec.SetThruster(13,1);
@@ -2298,7 +2295,7 @@ void ECA::TimeStep(double simdt) {
 				// Automatic mode and proportional-rate mode
 				switch(sat->AttRateSwitch.GetState()){
 					case TOGGLESWITCH_UP:    // HIGH RATE
-						if(rate_err.x > 0.034906585){
+						if (rate_err.x > 0.034906585) {
 							// ACCEL PLUS
 							sat->rjec.SetThruster(9,1);
 							sat->rjec.SetThruster(11,1);
@@ -2310,7 +2307,7 @@ void ECA::TimeStep(double simdt) {
 							sat->rjec.SetThruster(16,0);
 							accel_roll_trigger=1; accel_roll_flag=1;
 						}
-						if(rate_err.x < -0.034906585){
+						if (rate_err.x < -0.034906585) {
 							// ACCEL MINUS
 							sat->rjec.SetThruster(10,1);
 							sat->rjec.SetThruster(12,1);
@@ -2352,7 +2349,7 @@ void ECA::TimeStep(double simdt) {
 				}
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
-				if(rhc_x < 28673 && rhc_x > 2738){  // MINUS
+				if (rhc_x < 28673) {  // MINUS
 					if(!mnimp_roll_trigger){
 						sat->rjec.SetThruster(10,1);
 						sat->rjec.SetThruster(12,1);
@@ -2361,7 +2358,7 @@ void ECA::TimeStep(double simdt) {
 					}
 					mnimp_roll_trigger=1; mnimp_roll_flag=1;
 				}
-				if(rhc_x > 36863 && rhc_x < 62798){ // PLUS
+				if (rhc_x > 36863) { // PLUS
 					if(!mnimp_roll_trigger){
 						sat->rjec.SetThruster(9,1);
 						sat->rjec.SetThruster(11,1);
@@ -2376,12 +2373,12 @@ void ECA::TimeStep(double simdt) {
 		switch(sat->ManualAttPitchSwitch.GetState()){
 			case THREEPOSSWITCH_UP:      // ACCEL CMD
 				// ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
-				if(rhc_y < 28673 && rhc_y > 2738){  // MINUS
+				if (rhc_y < 28673) {  // MINUS
 					sat->rjec.SetThruster(2,1);
 					sat->rjec.SetThruster(4,1);
 					accel_pitch_trigger=1; accel_pitch_flag=-1;
 				}
-				if(rhc_y > 36863 && rhc_y < 62798){ // PLUS
+				if (rhc_y > 36863) { // PLUS
 					sat->rjec.SetThruster(1,1);
 					sat->rjec.SetThruster(3,1);
 					accel_pitch_trigger=1; accel_pitch_flag=1;
@@ -2429,14 +2426,14 @@ void ECA::TimeStep(double simdt) {
 				}
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
-				if(rhc_y < 28673 && rhc_y > 2738){  // MINUS
+				if (rhc_y < 28673) {  // MINUS
 					if(!mnimp_pitch_trigger){
 						sat->rjec.SetThruster(2,1);
 						sat->rjec.SetThruster(4,1);
 					}
 					mnimp_pitch_trigger=1; mnimp_pitch_flag=1;
 				}
-				if(rhc_y > 36863 && rhc_y < 62798){ // PLUS
+				if (rhc_y > 36863) { // PLUS
 					if(!mnimp_pitch_trigger){
 						sat->rjec.SetThruster(1,1);
 						sat->rjec.SetThruster(3,1);
@@ -2449,12 +2446,12 @@ void ECA::TimeStep(double simdt) {
 		switch(sat->ManualAttYawSwitch.GetState()){
 			case THREEPOSSWITCH_UP:      // ACCEL CMD
 				// ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
-				if(rhc_z < 28673 && rhc_z > 2738){  // MINUS
+				if (rhc_z < 28673) {  // MINUS
 					sat->rjec.SetThruster(6,1);
 					sat->rjec.SetThruster(8,1);
 					accel_yaw_trigger=1; accel_yaw_flag=-1;
 				}
-				if(rhc_z > 36863 && rhc_z < 62798){ // PLUS
+				if (rhc_z > 36863) { // PLUS
 					sat->rjec.SetThruster(5,1);
 					sat->rjec.SetThruster(7,1);
 					accel_yaw_trigger=1; accel_yaw_flag=1;
@@ -2502,14 +2499,14 @@ void ECA::TimeStep(double simdt) {
 				}
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
-				if(rhc_z < 28673 && rhc_z > 2738){  // MINUS
+				if (rhc_z < 28673) {  // MINUS
 					if(!mnimp_yaw_trigger){
 						sat->rjec.SetThruster(6,1);
 						sat->rjec.SetThruster(8,1);
 					}
 					mnimp_yaw_trigger=1; mnimp_yaw_flag=1;
 				}
-				if(rhc_z > 36863 && rhc_z < 62798){ // PLUS
+				if (rhc_z > 36863) { // PLUS
 					if(!mnimp_yaw_trigger){
 						sat->rjec.SetThruster(5,1);
 						sat->rjec.SetThruster(7,1);
@@ -2546,6 +2543,7 @@ void ECA::TimeStep(double simdt) {
 		sat->rjec.SetThruster(8,0);
 		accel_yaw_trigger=0;
 	}
+
 	// If the joystick has gone back to center after sending our min pulse, reset the one-shot
 	if(mnimp_roll_trigger && !mnimp_roll_flag){
 		mnimp_roll_trigger=0;
@@ -2556,6 +2554,8 @@ void ECA::TimeStep(double simdt) {
 	if(mnimp_yaw_trigger && !mnimp_yaw_flag){
 		mnimp_yaw_trigger=0;
 	}
+	// sprintf(oapiDebugString(),"SCS: mnimp_roll_trigger %d mnimp_roll_flag %d", mnimp_roll_trigger, mnimp_roll_flag);
+
 	// TRANSLATION HANDLING
 	int trans_x_flag=0,trans_y_flag=0,trans_z_flag=0;
 	int sm_sep=0;
@@ -2848,8 +2848,8 @@ void EMS::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "STATUS", status);
 	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
 	oapiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
-	WriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
-	WriteScenario_double(scn, "DVTESTTIME", dVTestTime);
+	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
+	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
 
 	oapiWriteLine(scn, EMS_END_STRING);
 }

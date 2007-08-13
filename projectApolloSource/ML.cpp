@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/06/06 15:02:10  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.6  2007/03/01 18:24:32  tschachim
   *	Fixed Saturn V assembly
   *	
@@ -54,7 +57,6 @@
 #include "tracer.h"
 
 #include "ML.h"
-
 #include "nasspdefs.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -63,6 +65,7 @@
 #include "IMU.h"
 #include "lvimu.h"
 #include "saturn.h"
+#include "papi.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -168,6 +171,7 @@ void ML::clbkSetClassCaps(FILEHANDLE cfg) {
 
 	VECTOR3 meshoffset = _V(0,0,0);
     meshindexML = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Saturn5ML"), &meshoffset);
+    //meshindexML = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\LUT"), &meshoffset);
 	SetMeshVisibilityMode(meshindexML, MESHVIS_ALWAYS);
 
 	DefineAnimations();
@@ -648,26 +652,18 @@ void ML::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	SetTouchdownPointHeight(touchdownPointHeight);
 }
 
-void WriteScenario_double(FILEHANDLE scn, char *item, double d) {
-
-	char buffer[256];
-
-	sprintf(buffer, "  %s %lf", item, d);
-	oapiWriteLine(scn, buffer);
-}
-
 void ML::clbkSaveState(FILEHANDLE scn) {
 
 	VESSEL2::clbkSaveState(scn);
 
 	oapiWriteScenario_int(scn, "STATE", state);
-	WriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
-	WriteScenario_double(scn, "CRANEPROC", craneProc);
-	WriteScenario_double(scn, "CMARMPROC", cmarmProc);
-	WriteScenario_double(scn, "S1CINTERTANKARMPROC", s1cintertankarmProc);
-	WriteScenario_double(scn, "S1CFORWARDARMPROC", s1cforwardarmProc);
-	WriteScenario_double(scn, "SWINGARMPROC", swingarmProc);
-	WriteScenario_double(scn, "MASTPROC", mastProc);
+	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
+	papiWriteScenario_double(scn, "CRANEPROC", craneProc);
+	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);
+	papiWriteScenario_double(scn, "S1CINTERTANKARMPROC", s1cintertankarmProc);
+	papiWriteScenario_double(scn, "S1CFORWARDARMPROC", s1cforwardarmProc);
+	papiWriteScenario_double(scn, "SWINGARMPROC", swingarmProc);
+	papiWriteScenario_double(scn, "MASTPROC", mastProc);
 	if (LVName[0])
 		oapiWriteScenario_string(scn, "LVNAME", LVName);
 }

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2007/06/06 15:02:19  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.20  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -92,25 +95,22 @@
 #include "Orbitersdk.h"
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
-
 #include "resource.h"
 
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
 #include "nasspdefs.h"
 #include "nasspsound.h"
-
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
 #include "IMU.h"
 #include "lvimu.h"
-
 #include "saturn.h"
 #include "saturnv.h"
 #include "tracer.h"
-
+#include "papi.h"
 
 
 void Saturn::InitVC (int vc)
@@ -146,7 +146,6 @@ bool Saturn::clbkLoadVC (int id)
 	// Test stuff
 	//SURFHANDLE tex# = oapiGetTextureHandle (vcmeshidentifier, meshgroup#);
 	//int i;
-	//oapiCameraSetAperture (RAD * 20);
 	//SetCameraDefaultDirection (_V(0,0,1));
 	//default camera direction: forward
 	//SetCameraShiftRange (_V(#,#,#), _V(#,#,#), _V(#,#,#));
@@ -508,7 +507,7 @@ void Saturn::SetView(double offset, bool update_direction)
 		}
 
 		if (PanelId == SATPANEL_SEXTANT) { // Sextant
-			fov =  5. * RAD;
+			fov = 1.2 * RAD; 
 		
 		} else if (PanelId == SATPANEL_TELESCOPE) { // Telescope
 			fov = 30. * RAD;
@@ -587,17 +586,23 @@ void Saturn::SetView(double offset, bool update_direction)
 	//
 	// FOV handling
 	//
-	if (fov == -1) {
-		if (FovFixed) {
-			oapiCameraSetAperture(FovSave);
-			FovFixed = false;
-			FovExternal = false;	
+
+	if (FovExternal == 0) {
+		if (fov == -1) {
+			if (FovFixed) {
+				papiCameraSetAperture(FovSave);
+				if (!GenericFirstTimestep) {
+					FovFixed = false;
+					FovExternal = 0;
+				}
+			}
+		} else {
+			if (!FovFixed && !GenericFirstTimestep) {
+				FovSave = papiCameraAperture();
+				FovFixed = true;
+			}
+			papiCameraSetAperture(fov);
 		}
-	} else {
-		if (!FovFixed) {
-			FovSave = oapiCameraAperture();
-			FovFixed = true;
-		}
-		oapiCameraSetAperture(fov);
 	}
 }
+

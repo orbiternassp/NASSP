@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.144  2007/07/27 19:57:27  jasonims
+  *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
+  *	
   *	Revision 1.143  2007/07/17 14:33:08  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -3390,11 +3393,56 @@ void Saturn::SetRCSState(int Quad, int Thruster, bool Active)
 		SetThrusterLevel(th, Level);
 }
 
-// DS20060221 Added function
 void Saturn::SetCMRCSState(int Thruster, bool Active)
 
 {
 	double Level = Active ? 1.0 : 0.0;
-	if(th_att_cm[Thruster] == NULL){ return; } // Sanity check
+	if (th_att_cm[Thruster] == NULL) return;  // Sanity check
 	SetThrusterLevel(th_att_cm[Thruster], Level);
+}
+
+void Saturn::RCSSoundTimestep() {
+
+	// In case of disabled Orbiter attitude thruster groups OrbiterSound plays no
+	// engine sound, so this needs to be done manually
+
+	int i;
+	bool on = false;
+	if (OrbiterAttitudeDisabled) {
+		// CSM RCS
+		if (stage == CSM_LEM_STAGE) {
+			for (i = 1; i < 5; i++) {
+				if (th_rcs_a[i]) {
+					if (GetThrusterLevel(th_rcs_a[i])) on = true;
+				}
+				if (th_rcs_b[i]) {
+					if (GetThrusterLevel(th_rcs_b[i])) on = true;
+				}
+				if (th_rcs_c[i]) {
+					if (GetThrusterLevel(th_rcs_c[i])) on = true;
+				}
+				if (th_rcs_d[i]) {
+					if (GetThrusterLevel(th_rcs_d[i])) on = true;
+				}
+			}
+		}
+		// CM RCS
+		if (stage >= CM_STAGE) {
+			for (i = 0; i < 12; i++) {
+				if (th_att_cm[i]) {
+					if (GetThrusterLevel(th_att_cm[i])) on = true;
+				}
+			}		
+		}
+		// Play/stop sounds
+		if (on) {
+			if (RCSFireSound.isPlaying()) {
+				RCSSustainSound.play(LOOP);
+			} else if (!RCSSustainSound.isPlaying()) {
+				RCSFireSound.play();
+			}				
+		} else {
+			RCSSustainSound.stop();
+		}
+	}
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.199  2007/07/17 14:33:08  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.198  2007/06/23 21:20:37  dseagrav
   *	LVDC++ Update: Now with Pre-IGM guidance
   *	
@@ -333,9 +336,7 @@
 
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
-
 #include "resource.h"
-
 #include "nasspdefs.h"
 #include "nasspsound.h"
 
@@ -345,13 +346,13 @@
 #include "csmcomputer.h"
 #include "IMU.h"
 #include "lvimu.h"
-
 #include "saturn.h"
 #include "tracer.h"
 #include "sm.h"
 #include "sivb.h"
 #include "lemcomputer.h"
 #include "LEM.h"
+#include "papi.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -553,6 +554,7 @@ void Saturn::initSaturn()
 	MixtureRatio = 5.5;
 
 	DockAngle = 0;
+	SeparationSpeed = 0;
 
 	AtempP  = 0;
 	AtempY  = 0;
@@ -871,7 +873,7 @@ void Saturn::initSaturn()
 	InPanel = false;
 	CheckPanelIdInTimestep = false;
 	FovFixed = false;
-	FovExternal = false;
+	FovExternal = 0;
 	FovSave = 0;
 	FovSaveExternal = 0;
 
@@ -1001,6 +1003,7 @@ void Saturn::initSaturn()
 
 	ToggleEva = false;
 	ActivateASTP = false;
+	OrbiterAttitudeDisabled = false;
 
 	//
 	// LM landing data.
@@ -1322,6 +1325,16 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 
 {
 	TRACESETUP("Saturn::clbkPreStep");
+
+	//
+	// We die horribly if you set 100x or higher acceleration during launch.
+	//
+
+	if (stage >= LAUNCH_STAGE_ONE && stage <= LAUNCH_STAGE_SIVB &&
+		oapiGetTimeAcceleration() > 10.0) {
+		oapiSetTimeAcceleration(10.0);
+	}
+
 	//
 	// You'll also die horribly if you set time acceleration at all in the
 	// early parts of the launch.
@@ -1342,15 +1355,42 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	//
 	// Check FOV for external view
 	//
-	if ((!oapiCameraInternal() || (oapiGetFocusInterface() != this)) && FovFixed && !FovExternal) {
-		FovSaveExternal = oapiCameraAperture();
-		oapiCameraSetAperture(FovSave);
-		FovExternal = true;	
+
+	// The current FOV hack doesn't work in external view, 
+	// so we need to switch back to internal view for one
+	// time step and switch then back outside again.
+	if (FovExternal == 3) {
+		oapiCameraAttach(oapiCameraTarget(), 1);
+		FovExternal = 4;
 	}
-	if ((oapiGetFocusInterface() == this) && oapiCameraInternal() && FovFixed && FovExternal) {
-		FovSave = oapiCameraAperture();
-		oapiCameraSetAperture(FovSaveExternal);
-		FovExternal = false;	
+	if (FovExternal == 2) {
+		papiCameraSetAperture(FovSave);
+		FovExternal = 3;
+	}
+	if (FovExternal == 1) {
+		oapiCameraAttach(oapiCameraTarget(), 0);
+		FovExternal = 2;
+	}
+	if ((!oapiCameraInternal() || (oapiGetFocusInterface() != this)) && FovFixed && FovExternal == 0) {
+		FovSaveExternal = papiCameraAperture();
+		FovExternal = 1;
+	}
+
+	if ((oapiGetFocusInterface() == this) && oapiCameraInternal() && FovFixed && FovExternal == 4) {
+		FovSave = papiCameraAperture();
+		papiCameraSetAperture(FovSaveExternal);
+		FovExternal = 0;	
+	}
+
+	//
+	// dV because of staging
+	//
+	if (SeparationSpeed > 0) {
+		// For unknown reasons we need twice the force. 
+		// This may be related to the staging event.
+		double F = 2. * GetMass() * SeparationSpeed / simdt;
+		AddForce(_V(0, 0, F), _V(0,0,0));
+		SeparationSpeed = 0;
 	}
 
 	//
@@ -1590,6 +1630,11 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_string (scn, "LEMN", LEMName);
 
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
+	oapiWriteScenario_int (scn, "OPTICSDSKYENABLED", opticsDskyEnabled);
+	oapiWriteScenario_int (scn, "FOVFIXED", (FovFixed ? 1 : 0));
+	oapiWriteScenario_int (scn, "FOVEXTERNAL", FovExternal);
+	papiWriteScenario_double(scn, "FOVSAVE", FovSave);
+	papiWriteScenario_double(scn, "FOVSAVEEXTERNAL", FovSaveExternal);
 
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	dsky2.SaveState(scn, DSKY2_START_STRING, DSKY2_END_STRING);
@@ -1614,6 +1659,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	dockingprobe.SaveState(scn);
 	SPSPropellant.SaveState(scn);
 	SPSEngine.SaveState(scn);
+	optics.SaveState(scn);
 
 	oapiWriteLine(scn, SPSGIMBALACTUATOR_PITCH_START_STRING);
 	SPSEngine.pitchGimbalActuator.SaveState(scn);
@@ -1966,7 +2012,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	double autopTime;
 	int SwitchState = 0;
 	int nasspver = 0, status = 0;
-	int n, DummyLoad;
+	int n, DummyLoad, i;
 	bool found;
 
 	found = true;
@@ -2504,7 +2550,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			// NOHGA isn't saved in the scenario, this is solely to allow you
 			// to override the default NOHGA state in startup scenarios.
 			//
-			int i;
 			sscanf(line + 5, "%d", &i);
 			NoHGA = (i != 0);
 		}
@@ -2539,6 +2584,28 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "CREWSTATUS", 10)) {
 		    CrewStatus.LoadState(line);
 	    }
+		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
+			optics.LoadState(scn);
+		}
+	    else if (!strnicmp (line, "ORBITERATTITUDEDISABLED", 23)) {
+		    sscanf (line + 23, "%i", &OrbiterAttitudeDisabled);
+	    }
+		else if (!strnicmp (line, "OPTICSDSKYENABLED", 17)) {
+			sscanf (line + 17, "%i", &opticsDskyEnabled);
+		}
+		else if (!strnicmp (line, "FOVFIXED", 8)) {
+			sscanf (line + 8, "%i", &i);
+			FovFixed = (i != 0);
+		}
+		else if (!strnicmp (line, "FOVEXTERNAL", 11)) {
+			sscanf (line + 11, "%i", &FovExternal);
+		}
+		else if (!strnicmp (line, "FOVSAVEEXTERNAL", 15)) {
+			sscanf (line + 15, "%lf", &FovSaveExternal);
+		}
+		else if (!strnicmp (line, "FOVSAVE", 7)) {
+			sscanf (line + 7, "%lf", &FovSave);
+		}
 		else
 			found = false;
 	}
@@ -2870,6 +2937,8 @@ void Saturn::DoLaunch(double simt)
 void Saturn::GenericTimestep(double simt, double simdt)
 
 {
+	int i;
+
 	if (GenericFirstTimestep) {
 		//
 		// Do any generic setup.
@@ -2885,6 +2954,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		hVAB = oapiGetVesselByName("VAB");
 
 		GenericFirstTimestep = false;
+		SetView();
 	}
 
 	//
@@ -2952,7 +3022,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	aVSpeed = hvel.y;
 
 	// Manage velocity cache
-	for (int i = LASTVELOCITYCOUNT - 1; i > 0; i--) {
+	for (i = LASTVELOCITYCOUNT - 1; i > 0; i--) {
 		LastVelocity[i] = LastVelocity[i - 1];
 		LastVerticalVelocity[i] = LastVerticalVelocity[i -1];
 		LastSimt[i] = LastSimt[i - 1];
@@ -3024,25 +3094,6 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	}
 
 	//
-	// We die horribly if you set 100x or higher acceleration during launch.
-	//
-
-	if (stage >= LAUNCH_STAGE_ONE && stage <= LAUNCH_STAGE_SIVB &&
-		oapiGetTimeAcceleration() > 10.0) {
-		oapiSetTimeAcceleration(10.0);
-	}
-
-	//
-	// And you'll also die horribly if you set time acceleration at all in the
-	// early parts of the launch.
-	//
-
-	if (stage == LAUNCH_STAGE_ONE && MissionTime < 50 &&
-		oapiGetTimeAcceleration() > 1.0) {
-		oapiSetTimeAcceleration(1.0);
-	}
-
-	//
 	// Only the SM has linear thrusters.
 	//
 
@@ -3091,6 +3142,8 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	if (stage >= ONPAD_STAGE) {
 		timedSounds.Timestep(MissionTime, simdt, AutoSlow);
 	}
+	RCSSoundTimestep();
+
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
@@ -3532,19 +3585,21 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,CENTEROFFS + 0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcs1, RCS_ISP, SM_RCS_ISP_SL);
 	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR3,-CENTEROFFS + 0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcs3, RCS_ISP, SM_RCS_ISP_SL);
 
-	CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
-	CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
-	CreateThrusterGroup (th_att_lin+8,   2, THGROUP_ATT_RIGHT);
-	CreateThrusterGroup (th_att_lin+12, 2, THGROUP_ATT_LEFT);
-	CreateThrusterGroup (th_att_lin+16,   2, THGROUP_ATT_UP);
-	CreateThrusterGroup (th_att_lin+20,   2, THGROUP_ATT_DOWN);
+	if (!OrbiterAttitudeDisabled) { 
+		CreateThrusterGroup (th_att_lin,   4, THGROUP_ATT_FORWARD);
+		CreateThrusterGroup (th_att_lin+4, 4, THGROUP_ATT_BACK);
+		CreateThrusterGroup (th_att_lin+8,   2, THGROUP_ATT_RIGHT);
+		CreateThrusterGroup (th_att_lin+12, 2, THGROUP_ATT_LEFT);
+		CreateThrusterGroup (th_att_lin+16,   2, THGROUP_ATT_UP);
+		CreateThrusterGroup (th_att_lin+20,   2, THGROUP_ATT_DOWN);
 
-	CreateThrusterGroup (th_att_rot,   2, THGROUP_ATT_PITCHDOWN);
-	CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_PITCHUP);
-	CreateThrusterGroup (th_att_rot+4,   2, THGROUP_ATT_YAWRIGHT);
-	CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
-	CreateThrusterGroup (th_att_rot+8,   8, THGROUP_ATT_BANKLEFT);
-	CreateThrusterGroup (th_att_rot+16,   8, THGROUP_ATT_BANKRIGHT);
+		CreateThrusterGroup (th_att_rot,   2, THGROUP_ATT_PITCHDOWN);
+		CreateThrusterGroup (th_att_rot+2,   2, THGROUP_ATT_PITCHUP);
+		CreateThrusterGroup (th_att_rot+4,   2, THGROUP_ATT_YAWRIGHT);
+		CreateThrusterGroup (th_att_rot+6,   2, THGROUP_ATT_YAWLEFT);
+		CreateThrusterGroup (th_att_rot+8,   8, THGROUP_ATT_BANKLEFT);
+		CreateThrusterGroup (th_att_rot+16,   8, THGROUP_ATT_BANKRIGHT);
+	}
 
 	for (i = 0; i < 24; i++) {
 		if (th_att_lin[i])
@@ -3608,7 +3663,7 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	// Jet #3 
 	th_att_cm[1]=CreateThruster (_V(-0.09, ATTCOOR2 - 0.07, TRANZ), _V(0, -0.81, -0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[1],1.0,0.1, SMExhaustTex);
-	CreateThrusterGroup(th_att_cm, 2, THGROUP_ATT_PITCHUP);
+	if (!OrbiterAttitudeDisabled) CreateThrusterGroup(th_att_cm, 2, THGROUP_ATT_PITCHUP);
 
 	// Jet #2
 	th_att_cm[2] = CreateThruster (_V(0.09, ATTCOOR + 0.05, TRANZ + 1.45), _V(0, -1, 0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
@@ -3616,7 +3671,7 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	// Jet #4
 	th_att_cm[3] = CreateThruster (_V(-0.09, ATTCOOR + 0.05, TRANZ + 1.45), _V(0, -1, 0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[3], 1.0, 0.1, SMExhaustTex); 
-	CreateThrusterGroup(th_att_cm + 2, 2, THGROUP_ATT_PITCHDOWN);
+	if (!OrbiterAttitudeDisabled) CreateThrusterGroup(th_att_cm + 2, 2, THGROUP_ATT_PITCHDOWN);
 
 	// Jet #5 
 	th_att_cm[4] = CreateThruster(_V(ATTCOOR2 - 0.06,  0.05, TRANZ), _V(-0.81, 0, -0.59), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
@@ -3624,7 +3679,7 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	// Jet #7
 	th_att_cm[5] = CreateThruster(_V(ATTCOOR2 - 0.06, -0.12, TRANZ), _V(-0.81, 0, -0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[5], 1.0, 0.1, SMExhaustTex); 
-	CreateThrusterGroup(th_att_cm + 4, 2, THGROUP_ATT_YAWRIGHT);
+	if (!OrbiterAttitudeDisabled) CreateThrusterGroup(th_att_cm + 4, 2, THGROUP_ATT_YAWRIGHT);
 
 	// Jet #6 
 	th_att_cm[6] = CreateThruster(_V(-ATTCOOR2 + 0.07, 0.05, TRANZ), _V(0.81, 0, -0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
@@ -3632,7 +3687,7 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	// Jet #8
 	th_att_cm[7] = CreateThruster(_V(-ATTCOOR2 + 0.07, -0.13, TRANZ), _V(0.81, 0, -0.59), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[7], 1.0, 0.1, SMExhaustTex); 
-	CreateThrusterGroup (th_att_cm + 6, 2, THGROUP_ATT_YAWLEFT);
+	if (!OrbiterAttitudeDisabled) CreateThrusterGroup (th_att_cm + 6, 2, THGROUP_ATT_YAWLEFT);
 
 	// The roll jets introduce a slight upward pitch if not corrected for.
 	// Apparently the AGC expects this.
@@ -3643,7 +3698,7 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	// Jet #11
 	th_att_cm[9] = CreateThruster(_V(-ATTCOOR2/1.42 + 0.12, (ATTCOOR2/1.42) - 0.07, TRANZ + 0.11), _V(0.98, 0.17, 0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[9], 1.0, 0.1, SMExhaustTex); 
-	CreateThrusterGroup (th_att_cm + 8, 2, THGROUP_ATT_BANKRIGHT);
+	if (!OrbiterAttitudeDisabled) CreateThrusterGroup (th_att_cm + 8, 2, THGROUP_ATT_BANKRIGHT);
 		
 	// Jet #10 ###
 	th_att_cm[10] = CreateThruster(_V(-ATTCOOR2/1.42 + 0.04, ATTCOOR2/1.42 - 0.16, TRANZ + 0.11), _V(-0.17, -0.98, 0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
@@ -3651,7 +3706,7 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	// Jet #12
 	th_att_cm[11] = CreateThruster(_V(ATTCOOR2/1.42 - 0.08, (ATTCOOR2/1.42) - 0.11, TRANZ + 0.11), _V(-0.98, 0.17, 0.21), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
 	AddExhaust(th_att_cm[11], 1.0, 0.1, SMExhaustTex); 
-	CreateThrusterGroup (th_att_cm + 10, 2, THGROUP_ATT_BANKLEFT);
+	if (!OrbiterAttitudeDisabled) CreateThrusterGroup (th_att_cm + 10, 2, THGROUP_ATT_BANKLEFT);
 }
 
 void Saturn::AddRCS_S4B()
@@ -4692,6 +4747,8 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(SUndock, UNDOCK_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(PostLandingVentSound, POSTLANDINGVENT_SOUND, BOTHVIEW_FADED_CLOSE);
 	soundlib.LoadSound(CrewDeadSound, CREWDEAD_SOUND);
+	soundlib.LoadSound(RCSFireSound, RCSFIRE_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
 
 	Sctdw.setFlags(SOUNDFLAG_1XONLY|SOUNDFLAG_COMMS);
 }
