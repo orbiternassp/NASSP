@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2007/03/03 00:14:41  tschachim
+  *	Bugfix generic cockpit.
+  *	
   *	Revision 1.13  2007/03/02 18:34:37  tschachim
   *	Improved crawler VC.
   *	
@@ -108,6 +111,10 @@ protected:
 	MESHGROUP_TRANSFORM vccSteering1GroupReverse, vccSteering2GroupReverse;
 	double vccSpeed, vccSteering;
     int meshidxCrawler;
+    int meshidxTruck1;
+	int meshidxTruck2;
+	int meshidxTruck3;
+	int meshidxTruck4;
     int meshidxPanel;
 	int meshidxPanelReverse;
 
@@ -123,6 +130,7 @@ protected:
 	void SetView();
 	void SetView(int viewpos);
 	void SlowIfDesired(double timeAcceleration);
+	void SetMeshesVisibility(WORD mode);
 
 	VECTOR3 panelMeshoffset;
     int panelMeshidx;
