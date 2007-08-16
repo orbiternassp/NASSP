@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/06/06 15:02:11  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.9  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -58,6 +61,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "OrbiterSoundSDK35.h"
+#include "orbvmath.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"
