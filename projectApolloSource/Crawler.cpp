@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2007/08/13 16:05:33  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.23  2007/06/06 15:02:07  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -175,6 +181,10 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	vccSpeed = 0;	
 	vccSteering = 0;
 	meshidxCrawler = 0;
+	meshidxTruck1 = 0;
+	meshidxTruck2 = 0;
+	meshidxTruck3 = 0;
+	meshidxTruck4 = 0;
 	meshidxPanel = 0;
 	meshidxPanelReverse = 0;
 
@@ -231,7 +241,7 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
 	vccSteering2Group.transform = MESHGROUP_TRANSFORM::ROTATE;
 
 	// Rear cabin panel
-	meshoffset = _V(-15.057, 4.675, -16.764);
+	meshoffset = _V(-15.057, 4.675, -15.298);
     meshidxPanelReverse = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &meshoffset);
 	SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
 
@@ -255,14 +265,32 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
 	vccSteering2GroupReverse.ngrp = 12;
 	vccSteering2GroupReverse.transform = MESHGROUP_TRANSFORM::ROTATE;
 
+	// Crawler
+	meshoffset = _V(0.767, 3.387, 2.534);
+    meshidxCrawler = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_Mainbody"), &meshoffset);
+	SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
+
+	// Tracks
+	MESHHANDLE track = oapiLoadMeshGlobal("ProjectApollo\\Crawler_drivetrucks");
+	meshoffset = _V(14.539, 1.765, 15.512);
+    meshidxTruck1 = AddMesh(track, &meshoffset);
+	SetMeshVisibilityMode(meshidxTruck1, MESHVIS_ALWAYS);
+
+	meshoffset = _V(-12.957, 1.765, 15.512);
+    meshidxTruck2 = AddMesh(track, &meshoffset);
+	SetMeshVisibilityMode(meshidxTruck2, MESHVIS_ALWAYS);
+
+	meshoffset = _V(14.539, 1.765, -10.359);
+    meshidxTruck3 = AddMesh(track, &meshoffset);
+	SetMeshVisibilityMode(meshidxTruck3, MESHVIS_ALWAYS);
+
+	meshoffset = _V(-12.957, 1.765, -10.359);
+    meshidxTruck4 = AddMesh(track, &meshoffset);
+	SetMeshVisibilityMode(meshidxTruck4, MESHVIS_ALWAYS);
+
 	// Panel position test
 	// panelMeshoffset = meshoffset;
-	// panelMeshidx = meshidxPanelReverse;
-
-	// Crawler
-	meshoffset = _V(0, 0, 0);
-    meshidxCrawler = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler"), &meshoffset);
-	SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
+	// panelMeshidx = meshidxTruck3;
 
 	CreateAttachment(false, _V(0.0, 6.3, 0.0), _V(0, 1, 0), _V(1, 0, 0), "ML", false);
 
@@ -531,7 +559,7 @@ int Crawler::clbkConsumeDirectKey(char *kstate) {
 	*/
 
 	// Panel test
-	/*	
+	/*		
 	double step = 0.01;
 	if (KEYMOD_CONTROL(kstate))
 		step = 0.001;
@@ -539,42 +567,42 @@ int Crawler::clbkConsumeDirectKey(char *kstate) {
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD4)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.x += step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_drivetrucks"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD4);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD6)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.x -= step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_drivetrucks"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD6);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD8)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.y += step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_drivetrucks"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD8);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD2)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.y -= step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_drivetrucks"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD2);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD1)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.z += step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_drivetrucks"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD1);
 	}
 	if (KEYDOWN(kstate, OAPI_KEY_NUMPAD3)) {
 		DelMesh(panelMeshidx);
 		panelMeshoffset.z -= step; 
-	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_centerpanel_reverse"), &panelMeshoffset);
+	    panelMeshidx = AddMesh(oapiLoadMeshGlobal("ProjectApollo\\Crawler_drivetrucks"), &panelMeshoffset);
 		SetMeshVisibilityMode(panelMeshidx, MESHVIS_ALWAYS);
 		RESETKEY(kstate, OAPI_KEY_NUMPAD3);
 	}
@@ -748,61 +776,52 @@ void Crawler::SetView(int viewpos) {
 
 	viewPos = viewpos;
 	if (viewPos == VIEWPOS_REARCABIN) {
-		SetCameraOffset(_V(-14.97, 5.3, -16.0));
+		SetCameraOffset(_V(-14.97, 5.3, -14.534));
 		SetCameraDefaultDirection(_V(0, -0.309017, -0.951057));
-
-		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
+		SetMeshesVisibility(MESHVIS_ALWAYS);
 
 	} else if (viewPos == VIEWPOS_FRONTCABIN) {
 		SetCameraOffset(_V(16.5, 5.3, 19.6));
 		SetCameraDefaultDirection(_V(0, -0.309017, 0.951057));
-
-		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
+		SetMeshesVisibility(MESHVIS_ALWAYS);
 
 	} else if (viewPos == VIEWPOS_ML) {
 		SetCameraOffset(_V(19.9, 15.4, -25.6));
 		SetCameraDefaultDirection(_V(-0.630037, 0.453991, 0.630037));
-
-		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
-		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
-		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
+		SetMeshesVisibility(MESHVIS_ALWAYS | MESHVIS_EXTPASS);
 
 	} else if (viewPos == VIEWPOS_GROUND) {
 		SetCameraOffset(_V(21.5, 1.75, 1));
 		SetCameraDefaultDirection(_V(0, 0, 1));
-
-		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
-		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
-		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS | MESHVIS_EXTPASS);
+		SetMeshesVisibility(MESHVIS_ALWAYS | MESHVIS_EXTPASS);
 
 	} else if (viewPos == VIEWPOS_FRONTGANGWAY) {
 		SetCameraOffset(_V(0, 4.1, 21.3));
 		SetCameraDefaultDirection(_V(0, 0, 1));
-
-		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
+		SetMeshesVisibility(MESHVIS_ALWAYS);
 
 	} else if (viewPos == VIEWPOS_REARGANGWAY) {
-		SetCameraOffset(_V(0, 4.1, -17.7));
+		SetCameraOffset(_V(0, 4.1, -16.234));
 		SetCameraDefaultDirection(_V(0, 0, -1));
-
-		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
+		SetMeshesVisibility(MESHVIS_ALWAYS);
 
 	} else if (viewPos == VIEWPOS_RIGHTREARGANGWAY) {
-		SetCameraOffset(_V(16.4, 5.7, -12.9));
+		SetCameraOffset(_V(16.4, 5.7, -11.434));
 		SetCameraDefaultDirection(_V(0, 0, -1));
-
-		SetMeshVisibilityMode(meshidxCrawler, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanel, MESHVIS_ALWAYS);
-		SetMeshVisibilityMode(meshidxPanelReverse, MESHVIS_ALWAYS);
+		SetMeshesVisibility(MESHVIS_ALWAYS);
 	}	
+}
+
+void Crawler::SetMeshesVisibility(WORD mode) {
+
+	SetMeshVisibilityMode(meshidxCrawler, mode);
+	SetMeshVisibilityMode(meshidxTruck1, mode);
+	SetMeshVisibilityMode(meshidxTruck2, mode);
+	SetMeshVisibilityMode(meshidxTruck3, mode);
+	SetMeshVisibilityMode(meshidxTruck4, mode);
+	SetMeshVisibilityMode(meshidxPanel, mode);
+	SetMeshVisibilityMode(meshidxPanelReverse, mode);
+
 }
 
 void Crawler::SlowIfDesired(double timeAcceleration) {
