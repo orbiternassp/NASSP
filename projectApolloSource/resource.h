@@ -144,7 +144,6 @@
 #define IDB_ILMLEMPANEL                                     219
 #define IDB_SEQUENCERSWITCHES                               223
 #define IDB_CABIN                                           240
-#define IDB_ALLROUND                                        241
 #define IDB_ILMCABIN                                        242
 #define IDB_THREEPOSSWITCH                                  244
 #define IDB_CW                                              245
