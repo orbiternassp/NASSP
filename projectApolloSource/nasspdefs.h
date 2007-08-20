@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2007/08/13 16:06:12  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.84  2007/07/17 14:33:07  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -381,7 +387,6 @@ const int nsurf = 120; // number of bitmap handles
 #define SRF_LMTWOPOSLEVER           				12
 #define SRF_MASTERALARM_BRIGHT						13
 #define SRF_DSKY									14
-#define SRF_ALLROUND								15
 #define SRF_THREEPOSSWITCH							16
 #define SRF_MFDFRAME								17
 #define SRF_MFDPOWER								18

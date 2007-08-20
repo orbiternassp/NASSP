@@ -23,6 +23,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.209  2007/08/13 16:06:19  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.208  2007/07/17 14:33:09  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -551,7 +557,6 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_SEQUENCERSWITCHES]						= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
 	srf[SRF_MASTERALARM_BRIGHT]						= oapiCreateSurface (LOADBMP (IDB_MASTER_ALARM_BRIGHT));
 	srf[SRF_DSKY]									= oapiCreateSurface (LOADBMP (IDB_DSKY_LIGHTS));
-	srf[SRF_ALLROUND]								= oapiCreateSurface (LOADBMP (IDB_ALLROUND));
 	srf[SRF_THREEPOSSWITCH]							= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH));
 	srf[SRF_MFDFRAME]								= oapiCreateSurface (LOADBMP (IDB_MFDFRAME));
 	srf[SRF_MFDPOWER]								= oapiCreateSurface (LOADBMP (IDB_MFDPOWER));
@@ -662,7 +667,6 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_ALTIMETER],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THRUSTMETER],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_SEQUENCERSWITCHES],					g_Param.col[4]);
-	oapiSetSurfaceColourKey (srf[SRF_ALLROUND],								g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH],						g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_ROTATIONALSWITCH],						g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_SUITCABINDELTAPMETER],					g_Param.col[4]);
