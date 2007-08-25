@@ -21,6 +21,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2007/08/11 16:31:25  jasonims
+  *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
+  *	A little more Capcom...
+  *	
   *	Revision 1.2  2007/07/27 19:57:27  jasonims
   *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
   *	
@@ -152,8 +156,8 @@ public:
 
 	FILE *trnscrpt_h; // Transcript file pointer
 	FILE *capcomdb_h; // CapCom Phrase Database file pointer
-	char language;
-	char trnscrpt_fname;
-	char capcomdb_fname;
+	char language[100];
+	char trnscrpt_fname[100];
+	char capcomdb_fname[100];
 };
 #endif // _PA_MCC_H

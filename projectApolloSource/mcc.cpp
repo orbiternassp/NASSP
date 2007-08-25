@@ -21,6 +21,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/08/11 16:31:25  jasonims
+  *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
+  *	A little more Capcom...
+  *	
   *	Revision 1.4  2007/07/27 19:57:27  jasonims
   *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
   *	
@@ -266,20 +270,20 @@ void MC_GroundTrack::TimeStep(double simdt){
 
 MC_CapCom::MC_CapCom(){
 
-	strcpy (&language,"_en");
+	strcpy (language,"_en");
 	
-	strcpy (&capcomdb_fname,"capcomdb");
-	strcat (&capcomdb_fname,&language);
-	strcat (&capcomdb_fname,".npd");
+	strcpy (capcomdb_fname, "capcomdb");
+	strcat (capcomdb_fname, language);
+	strcat (capcomdb_fname, ".npd");
 
-	strcpy (&trnscrpt_fname,"transcript");
-	strcat (&trnscrpt_fname,".log");
+	strcpy (trnscrpt_fname, "transcript");
+	strcat (trnscrpt_fname, ".log");
 
 }
 
 MC_CapCom::~MC_CapCom(){
 
-	trnscrpt_h = fopen(&trnscrpt_fname,"w");
+	trnscrpt_h = fopen(trnscrpt_fname,"w");
 	fprintf(trnscrpt_h,"END_TRANSCRIPT\n");
 	fclose(trnscrpt_h);
 
@@ -288,7 +292,7 @@ MC_CapCom::~MC_CapCom(){
 
 void MC_CapCom::Init(){
 
-	trnscrpt_h = fopen(&trnscrpt_fname,"a");
+	trnscrpt_h = fopen(trnscrpt_fname,"a");
 	fprintf(trnscrpt_h,"BEGIN_TRANSCRIPT\n");
 	fclose(trnscrpt_h);
 }
