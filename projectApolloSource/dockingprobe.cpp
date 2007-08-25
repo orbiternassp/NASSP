@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/08/16 07:33:29  jasonims
+  *	Created a header file named orbvmath, within it are some basic vector math functions using Orbiter's VECTOR3 and MATRIX3 types.  Has not been entirely debugged, so refrain form additional usage until I get it all checked out.
+  *	
   *	Revision 1.10  2007/06/06 15:02:11  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -61,7 +64,6 @@
 #include "stdio.h"
 #include "math.h"
 #include "OrbiterSoundSDK35.h"
-#include "orbvmath.h"
 
 #include "soundlib.h"
 #include "nasspsound.h"
