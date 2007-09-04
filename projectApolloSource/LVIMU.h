@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2007/06/23 21:20:36  dseagrav
+  *	LVDC++ Update: Now with Pre-IGM guidance
+  *	
   *	Revision 1.1  2007/02/18 01:35:30  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -86,7 +89,7 @@ public: bool CoarseAlignEnableFlag;
 	// Maths.
 	//
 
-	MATRIX3 getRotationMatrixX(double angle);
+public: MATRIX3 getRotationMatrixX(double angle);
 	MATRIX3 getRotationMatrixY(double angle);
 	MATRIX3 getRotationMatrixZ(double angle);
 	VECTOR3 getRotationAnglesXZY(MATRIX3 m);

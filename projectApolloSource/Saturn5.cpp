@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.103  2007/08/11 16:31:24  jasonims
+  *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
+  *	A little more Capcom...
+  *	
   *	Revision 1.102  2007/07/17 14:33:03  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -2538,39 +2542,75 @@ void SaturnV::lvdc_init(){
 	
 // DS20070205 LVDC++ EXECUTION
 void SaturnV::lvdc_timestep(double simt, double simdt) {
-
-	/* **** LVDC NAVIGATION PROGRAM **** */
-
-	// Give a timestep to the LV IMU
-	lvimu.Timestep(simt);
-	// and RG
-	lvrg.Timestep(simdt);
-	// Get current attitude
-	CurrentAttitude = lvimu.GetTotalAttitude();
-	// Get rates
-	AttRate = lvrg.GetRates();
-	// If enabled, pick up the IMU data
+	/* **** LVDC GUIDANCE AND NAVIGATION PROGRAM **** */	
+	lvimu.Timestep(simt);								// Give a timestep to the LV IMU
+	lvrg.Timestep(simdt);								// and RG
+	CurrentAttitude = lvimu.GetTotalAttitude();			// Get current attitude	
+	AttRate = lvrg.GetRates();							// Get rates
+	
+	// If enabled, pick up the IMU data and perform powered-flight navigation.
 	if(CountPIPA){
-		Velocity[0] += (lvimu.CDURegisters[LVRegPIPAX] * 0.0585);
-		Velocity[1] += (lvimu.CDURegisters[LVRegPIPAY] * 0.0585);
-		Velocity[2] += (lvimu.CDURegisters[LVRegPIPAZ] * 0.0585);
+		VECTOR3 Accel;
+		// Add detected acceleration
+		Accel.x = (lvimu.CDURegisters[LVRegPIPAX] * 0.0585);
+		Accel.y = (lvimu.CDURegisters[LVRegPIPAY] * 0.0585);
+		Accel.z = (lvimu.CDURegisters[LVRegPIPAZ] * 0.0585);
+		
+		// Gravitation by new method
+		// Get weight vector, it is in newtons (force)
+		GetWeightVector(WV);
+		// Divide by mass to get acceleration
+		WV.x /= GetMass(); WV.y /= GetMass(); WV.z /= GetMass();
+		// Transform to platform orientation
+		WV = mul(lvimu.getOrbiterLocalToNavigationBaseTransformation(),WV);
+		// Now cancel our attitude change
+		WV = mul(lvimu.getRotationMatrixX(CurrentAttitude.x), WV);
+		WV = mul(lvimu.getRotationMatrixY(CurrentAttitude.y), WV);
+  		WV = mul(lvimu.getRotationMatrixZ(CurrentAttitude.z), WV);
 
-		// SUBTRACT GRAVITY
-		Velocity[0] -= (9.80665 * simdt);
+		// Remove gravity acceleration from IMU accel
+		Accel.x += WV.x*simdt;
+		Accel.y += WV.y*simdt;
+		Accel.z += WV.z*simdt;
 
+		// "Instantaneous" Velocity -- I think this is +X...
+		{
+			VECTOR3 Vtemp; Vtemp = Accel;
+			Vtemp = mul(lvimu.getRotationMatrixX(-CurrentAttitude.x),Vtemp);
+			Vtemp = mul(lvimu.getRotationMatrixY(-CurrentAttitude.y),Vtemp);
+			Vtemp = mul(lvimu.getRotationMatrixZ(-CurrentAttitude.z),Vtemp);
+			V += Vtemp.x;
+		}
+
+		// Form up gravity variables
+		ddot_X_g = WV.x;
+		ddot_Y_g = WV.y;
+		ddot_Z_g = WV.z;
+
+		// Update IMU velocity
+		Velocity[0] += Accel.x;
+		Velocity[1] += Accel.y;
+		Velocity[2] += Accel.z;
+
+		// Update earth-relative velocity
+		DotS.x += Accel.x; 
+		DotS.y += Accel.y; 
+		DotS.z += Accel.z; 		
+
+		// Position launch-pad-relative
 		Position[0] += Velocity[0]*simdt;
 		Position[1] += Velocity[1]*simdt;
 		Position[2] += Velocity[2]*simdt;
-		/*
-		sprintf(oapiDebugString(), "CV %.10f %.10f %.10f | POS %.10f %.10f %.10f",
-			Velocity[0],Velocity[1],Velocity[2],								
-			Position[0],Position[1],Position[2]);								
-		*/
+				
+		// Position earth-centered
+		PosS.x += DotS.x*simdt;
+		PosS.y += DotS.y*simdt;
+		PosS.z += DotS.z*simdt;
 	}
 	// Update timebase ET
 	LVDC_TB_ETime += simdt;
 
-	// Note that GenericTimestep will update MissionTime and jettison the LET.
+	// Note that GenericTimestep will update MissionTime.
 
 	/* **** LVDC GUIDANCE PROGRAM **** */
 	switch(LVDC_GP_PC){
@@ -2629,6 +2669,9 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			LVDC_GP_PC = 3; // Fall into next
 
 		case 3: // POST-GRR INITIALIZATION
+			// DEFAULT NON-PAD-LOAD AREA
+			R_T = 0; f = 0;	V_T = 0; ups_T = 0; G_T = 0;
+
 			/* **** PAD-LOADED VARIABLE INITIALIZATION (TEMPORARY) **** */
 			// PRE-IGM PITCH POLYNOMIAL
 			Fx[0][0] = 3.19840;			Fx[0][1] = -10.9607;		Fx[0][2] = 78.7826;			Fx[0][3] = 69.9191;
@@ -2637,14 +2680,52 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			Fx[3][0] = -0.00116379;		Fx[3][1] = 0.000207717;		Fx[3][2] = -0.000178363;	Fx[3][3] = -0.0000233163;
 			Fx[4][0] = 0.0000113886;	Fx[4][1] = -0.000000439036;	Fx[4][2] = 0.000000463029;	Fx[4][3] = 0.0000000136702;
 
+			// Inclination from azimuth polynomial
+			fx[0] = 32.5597; fx[1] = -16.2615; fx[2] = 15.6919; fx[3] = -6.7370;
+			fx[4] = 26.9593; fx[5] = -28.9526; fx[6] = 9.8794;
+
+			// Descending Node Angle from azimuth polynomial
+			gx[0] = 123.2094; gx[1] = -56.5034; gx[2] = -21.6675; gx[3] = -14.5228;
+			gx[4] = 47.532;   gx[5] = -22.5502; gx[6] = 1.8946;
+
 			// FAILURE FREEZE COEFFICIENTS
 			B_11 = -0.62;   B_12 = 40.9;
 			B_21 = -0.3611; B_22 = 29.25;
 
+			// IGM
+			// Raising tau2 will crash the program.
+			// tau3 was 665,86. Raising tau3 doesn't prevent T_T from negating early
+			tau2 = 309.23; tau3 = 754; eps_1 = 0; ROV = 1.5;
+
 			// MISC. TIMES
-			T_ar = 153;	T_1  = 13; T_2 = 25; T_3 = 36; T_4 = 45; T_5 = 81; T_6 = 0;
-			dT_F = 0;
-			T_S1 = 35; T_S2 = 80; T_S3 = 115;
+			T_ar = 153; dT_F = 0; T_LET = 40.671;
+			t_1  = 13; t_2 = 25; t_3 = 36; t_4 = 45; t_5 = 81; t_6 = 0; T_c = 4.718;
+			// T_1 = 237.796;
+			T_1 = 337.796; T_2 = 99.886; Tt_3 = 120.565;
+			T_S1 = 35; T_S2 = 80; T_S3 = 115; eps_2 = 10; 
+			eps_3 = 10000; eps_4 = 8; T_1c = 342.4; 
+			t_B1 = 50; t_B3 = 0; 
+			t = 2; Tt_T = 462.965;
+
+			// MISC
+			mu = 398603200000000; // Checked correct
+			cos_phi_L = 0.877916; sin_phi_L = 0.478814; ROT = false; V_TC = 300;
+			phi_L = 28.626536; phi_M = -80.620811; LS_ALT = 6373340; LV_ALT = 80.51; UP = 0; BOOST = true;
+
+			// EXHAUST VELOCITIES AND FLOW RATES
+			V_ex1 = 4169.23; V_ex2 = 4204.26; V_ex3 = 4170.57;			// Apollo 9
+			dotM_1 = 1243.77; dotM_2 = 1009.04; dotM_3 = 248.882;
+
+			// TABLE15			
+//			TABLE15_f = 0.07725203;							// Determined by spreadsheet based on AS-507
+//			TABLE15_e = 0.974660815;						// same
+//			TABLE15_C_3 = -1541156;							// same			
+
+			TABLE15_f = 0.07725203;							// AS-507
+			TABLE15_e = 0.9745275;							// same
+			TABLE15_C_3 = -1541156;							// same			
+
+			// TABLE25
 
 			// GUIDANCE REF RELEASE - GO TO TB0
 			lvimu.SetCaged(false);							// Release IMU
@@ -2672,41 +2753,91 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			// We already have an azimuth from the AGC, we'll use that for now.
 			Azimuth = agc.GetDesiredAzimuth();
 
+			// COMPUTE Azo and Azs
+			// ** FIXME ** I NEVER DID FIND THE PROPER VALUES FOR THESE
+			// I HACKED THESE NUMBERS UP USING AN EXCEL SPREADSHEET TO GENERATE CLOSE-TO-CORRECT VALUES
+			// I HAVE NO IDEA WHAT THEY ARE SUPPOSED TO BE
+			Azo = (int)Azimuth; // Round off
+			Azs = Azimuth;		// Obviously wrong but is close to proper
+
+			// Odd - AS-507 has AZO/AZS...
+
 			if(Aziumuth_Inclination_Mode = true){
 				// CALCULATE INCLINATION FROM AZIMUTH
-				// inclination = coeff. for inclination-from-azimuth polynomial * azimuth;
+				Inclination = 0;
+				int x=0;
+				while(x < 7){
+					Inclination += fx[x] * pow((Azimuth-Azo)/Azs,x);
+					x++;
+				}
 			}else{
 				// CALCULATE INCLINATION FROM TIME INTO LAUNCH WINDOW
 				// inclination = coeff. for inclination-from-time polynomial * Time into launch window
 			}
 			if(Azimuth_DscNodAngle_Mode == true){
-				// CALCULATE DESCNEING NODAL ANGLE FROM AZIMUTH
-				// DNA = coeff. for DNA-from-inclination polynomial * Azimuth
+				// CALCULATE DESCENDING NODAL ANGLE FROM AZIMUTH
+				DescNodeAngle = 0;
+				int x=0;
+				while(x < 7){
+					DescNodeAngle += gx[x] * pow((Azimuth-Azo)/Azs,x);
+					x++;
+				}
 			}else{
 				// CALCULATE DESCNEING NODAL ANGLE FROM TIME INTO LAUNCH WINDOW
 				// DNA = coeff. for DNA-from-time polynomial * Time into launch window
 			}
-			// true anomaly of predicted cutoff radius vector = TABLE15 (time into launch window)
-			// eccentricity of transfer ellipse = TABLE15 (time into launch window)
-			// vis-viva energy of desired transfer ellipse = TABLE15 (time into launch window)
+			f = TABLE15_f;
+			e = TABLE15_e;
+			C_3 = TABLE15_C_3;
+
 			if(Direct_Ascent){
 				// angle from perigee vector to DNA vector = TABLE25 (time into launch window)
 				// terminal guidance freeze time = 0
+				sprintf(oapiDebugString(),"LVDC: DIRECT-ASCENT"); LVDC_GP_PC = 30; break; // STOP
 			}
-			// semilatus rectum of terminal ellipse = (earth's gravity / vis-viva energy of desired transfer ellipse) *
-			//			(eccentricity of transfer ellipse - 1)
-			// Terminal velocity constant = (semilatus rectum of terminal ellipse * earth's gravity) * .5
-			// Desired terminal radius = semilatus rectum of terminal ellipse / 
-			//			( 1 + eccentricity of transfer ellipse * cos. true anomaly of predicted cutoff radius vector ^2)
-			//			* .5
-			// Desired terminal flight-path angle =
-			// atan( (eccentricity of transfer ellipse * sin(true anomaly of predicted cutoff radius vector)) /
-			//       (1 + eccentricity of transfer ellipse * sin(true anomaly of predicted cutoff radius vector)) ))
+			p = (mu/C_3)*(pow(e,2)-1);
+			// p is the semi-latus rectum of the desired terminal ellipse.
+			//sprintf(oapiDebugString(),"LVDC: p %f mu %f C_3 %f e %f",
+			//	p,mu,C_3,e); LVDC_GP_PC = 30; break; // STOP
+
+			K_5 = pow((mu/p),0.5);
+
+			// R_T is desired terminal radius. It should be about 6,553,340 (180km alt)
+			// This gets garbaged because p is garbage.
+			R_T = p/(1+(e * cos(f)));
+//			sprintf(oapiDebugString(),"LVDC: R_T %f p %f e %f f %f",
+//				R_T,p,e,f); LVDC_GP_PC = 30; break; // STOP
+
+//			R_T = 6553340; // OVERRIDE FOR NOW
+
+			V_T = K_5*pow((1+((2*e)*cos(f))+pow(e,2)),0.5);
+//			sprintf(oapiDebugString(),"LVDC: V_T %f K_5 %f e %f f %f M-RES %f",
+//				V_T,K_5,e,f,pow((1+((2*e)*cos(f))+pow(e,2)),0.5)); LVDC_GP_PC = 30; break; // STOP
+
+			// For some reason the generated terminal velocity is worthless.
+			// Let's sub in this and see if it helps.
+//			V_T = 7790;
+
+			ups_T = atan((e*sin(f))/(1+(e*cos(f))));
+
+			// G MATRIX CALCULATION
+			MX_A.m11 = cos_phi_L;  MX_A.m12 = sin_phi_L*sin(Azimuth); MX_A.m13 = -(sin_phi_L*cos(Azimuth));
+			MX_A.m21 = -sin_phi_L; MX_A.m22 = cos_phi_L*sin(Azimuth); MX_A.m23 = -(cos_phi_L*cos(Azimuth));
+			MX_A.m31 = 0;          MX_A.m32 = cos(Azimuth);           MX_A.m33 = sin(Azimuth);
+
+			MX_B.m11 = cos(DescNodeAngle); MX_B.m12 = 0; MX_B.m13 = sin(DescNodeAngle);
+			MX_B.m21 = sin(DescNodeAngle)*sin(Inclination); MX_B.m22 = cos(Inclination); 
+			MX_B.m23 = -(cos(DescNodeAngle)*sin(Inclination));
+			MX_B.m31 = -(sin(DescNodeAngle)*cos(Inclination)); MX_B.m32 = sin(Inclination);
+			MX_B.m33 = cos(DescNodeAngle)*cos(Inclination);
+
+			MX_G = mul(MX_B,MX_A); // Matrix Multiply
+
 			LVDC_GP_PC = 11;
 
 		case 11: // MORE TB0
 			// At 10 seconds, play the countdown sound.
-			if (MissionTime >= -10.9) {
+			if (MissionTime >= -10.3) { // Was -10.9
 				if (!UseATC && Scount.isValid()) {
 					Scount.play();
 					Scount.done();
@@ -2734,10 +2865,10 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			}
 
 			if(MissionTime < 0){								
-				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | IMU XYZ %d %d %d PIPA %d %d %d",
+				// mu is suspect
+				sprintf(oapiDebugString(),"LVDC: T %f | TB0 + %f | p %f %f %f %f",
 					MissionTime,LVDC_TB_ETime,
-					lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
-					lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ]);					
+					p,mu,C_3,e);
 				break;
 			}
 			LVDC_GP_PC = 15;
@@ -2760,13 +2891,27 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				LaunchS.play(NOLOOP,255);
 				LaunchS.done();
 			}
-			// Enable PIPA storage
+
+			// COMPUTE INITIAL POSITIONS
+			Velocity[0] = 0; Velocity[1] = 0; Velocity[2] = 0; V = 0;
+			// PAD RELATIVE
 			Position[0] = 0; Position[1] = 0; Position[2] = 0;
-			Velocity[0] = 0; Velocity[1] = 0; Velocity[2] = 0;
+			// EARTH-CENTERED PLUMBLINE
+			
+			// FIXME: DETERMINE WHAT THESE NUMBERS ARE SOURCED FROM
+			PosS.x = LS_ALT+LV_ALT;	// Distance from Earth's center
+			PosS.y = 19228;			// ?? From Apollo 10
+			PosS.z = 1051;			// ?? From Apollo 10
+			DotS.x = 0;
+			DotS.y = 125.8;
+			DotS.z = 388.7;
+
+			// Enable PIPA storage
 			CountPIPA = true;
-			// Store pitch and roll
-			CommandedAttitude.x = CurrentAttitude.x;
-			CommandedAttitude.y = CurrentAttitude.y;
+			// Store current attitude as commands
+			CommandedAttitude.x = CurrentAttitude.x*DEG;
+			CommandedAttitude.y = CurrentAttitude.y*DEG;
+			CommandedAttitude.z = CurrentAttitude.z*DEG;
 			// Fall into TB1
 			LVDC_Timebase = 1;
 			LVDC_TB_ETime = 0;
@@ -2777,26 +2922,27 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				T_EO1 = 1;
 				T_FAIL = MissionTime;
 			}
-			if(Position[0] > 137 || MissionTime > T_1){
+			if(Position[0] > 137 || MissionTime > t_1){
 				// We're clear of the tower
-				if(MissionTime >= T_2 && T_EO1 > 0){
+				if(MissionTime >= t_2 && T_EO1 > 0){
 					// Engine has failed, recalculate freeze time
-					if(T_FAIL <= T_2){ dT_F = T_3; }
-					if(T_2 < MissionTime && MissionTime <= T_4){ dT_F = B_11 * T_FAIL + B_12; }
-					if(T_4 < MissionTime && MissionTime <= T_5){ dT_F = B_21 * T_FAIL + B_22; }
-					if(T_5 < MissionTime){ dT_F = 0; }
-					T_6 = MissionTime + dT_F;
+					if(T_FAIL <= t_2){ dT_F = t_3; }
+					if(t_2 < MissionTime && MissionTime <= t_4){ dT_F = B_11 * T_FAIL + B_12; }
+					if(t_4 < MissionTime && MissionTime <= t_5){ dT_F = B_21 * T_FAIL + B_22; }
+					if(t_5 < MissionTime){ dT_F = 0; }
+					t_6 = MissionTime + dT_F;
 					T_ar = T_ar + (0.25 * (T_ar - T_FAIL));
 				}
 				// Determine Pitch Command
-				if(MissionTime >= T_6){
+				if(MissionTime >= t_6){
 					// Continue
 					if(MissionTime > T_ar){
 						// NORMAL PITCH FREEZE
 					}else{
 						// PITCH FROM POLYNOMIAL
-						int x=0,y;
+						int x=0,y;						
 						double Tc = MissionTime - dT_F;						
+						CommandedAttitude.y = 0;
 						if(Tc < T_S1){               y = 0; }
 						if(T_S1 <= Tc && Tc < T_S2){ y = 1; }
 						if(T_S2 <= Tc && Tc < T_S3){ y = 2; }
@@ -2805,7 +2951,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 							CommandedAttitude.y += (Fx[x][y] * ((double)pow(Tc,x)));
 							x++;
 						}
-						CommandedAttitude.y *= RAD;
+						// CommandedAttitude.y *= RAD;
 					}
 				}else{
 					// >= T6 PITCH FREEZE
@@ -2818,14 +2964,13 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 				// Not clear of the tower.
 				// S1C YAW MANEUVER
 				if(MissionTime > 1 && MissionTime < 8.75){
-					CommandedAttitude.z = 5*RAD;
+					CommandedAttitude.z = 5;
 				}else{
 					CommandedAttitude.z = 0;
 				}
 				// MAINTAIN CURRENT ROLL AND PITCH COMMANDS				
 			}
-			// STEERING ANGLE LIMIT TEST GOES HERE
-
+			
 			/*
 			// ENGINE FAIL TEST:
 			if(MissionTime > 22.5 && S1C_Engine_Out == false){
@@ -2910,31 +3055,321 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			}
 
 			// And jettison LET
-			if(stage == LAUNCH_STAGE_TWO_TWR_JET && LVDC_Timebase == 3 && LVDC_TB_ETime > 35.5 && LESAttached){
+			if(stage == LAUNCH_STAGE_TWO_TWR_JET && LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET && LESAttached){
 				JettisonLET();
 			}
-			// -- END OF PRE-IGM --
+
+			// PRE-IGM TERMINATE CONDITION
+			if(stage == LAUNCH_STAGE_TWO_TWR_JET && LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET+5){
+				LVDC_GP_PC = 25; // GO TO IGM
+				IGMCycle = 0;
+				sprintf(oapiDebugString(),"TB%d+%f: ** IGM STARTING **",LVDC_Timebase,LVDC_TB_ETime);
+			}
+			// -- END OF PRE-IGM --			
 			break;
+
+		case 25: // ITERATIVE GUIDANCE MODE
+			double TimeStep; // Time since last run
+			// STAGE CHANGE AND FLAG SET LOGIC
+
+			// Should happen at 289.62 for Apollo 8
+			if(LVDC_Timebase == 3 && LVDC_TB_ETime > 336.3 && stage == LAUNCH_STAGE_TWO && MRS == false){
+				// MR Shift
+				sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break; // STOP
+				SetSIICMixtureRatio (4.3);
+				if (Crewed){ SPUShiftS.play(); }
+				SPUShiftS.done();
+			}
+
+			// IGM ONLY RUNS EVERY TWO SECONDS
+			sinceLastIGM += simdt; if(sinceLastIGM < 2){ break; } TimeStep = sinceLastIGM; sinceLastIGM = 0;
+			IGMCycle++;				// For debugging
+
+			if(HSL == false){		// If we are not in the high-speed loop
+				// IGM STAGE LOGIC
+				// No S4B Relight, No S4B Light, No S2 Cutoff, No Engine Out
+				// No MRS
+				if(T_1 < 0){	// If we're out of first-stage IGM time
+					// Do stuff
+					sprintf(oapiDebugString(),"LVDC: T_1 LT ZERO: %f @ %d (TB%d+%f)",T_1,IGMCycle,LVDC_Timebase,LVDC_TB_ETime); 
+					LVDC_GP_PC = 30; break; // STOP
+				}else{															
+					int i; F = 0;
+					for (i = 0; i <= 4; i++){ F += GetThrusterMax(th_main[i])*GetThrusterLevel(th_main[i]);	}
+					tau1 = V_ex1 * (GetMass()/F); 
+				}
+
+				// CHI-TILDE LOGIC
+				// STAGE INTEGRAL CALCULATIONS				
+				Pos4 = mul(MX_G,PosS);
+				L_1 = V_ex1 * log(tau1 / (tau1-T_1));
+				J_1 = (L_1 * tau1) - (V_ex1 * T_1);
+				S_1 = (L_1 * T_1) - J_1;
+				Q_1 = (S_1 * tau1) - ((V_ex1 * pow(T_1,2)) / 2);
+				P_1 = (J_1 * tau1) - ((V_ex1 * pow(T_1,2)) / 2);
+				U_1 = (Q_1 * tau1) - ((V_ex1 * pow(T_1,3)) / 6);
+				L_2 = V_ex2 * log(tau2 / (tau2-T_2));
+				J_2 = (L_2 * tau2) - (V_ex2 * T_2);
+				S_2 = (L_2 * T_2) - J_2;
+				Q_2 = (S_2 * tau2) - ((V_ex2 * pow(T_2,2)) / 2);
+				P_2 = (J_2 * tau2) - ((V_ex2 * pow(T_2,2)) / 2);
+				U_2 = (Q_2 * tau2) - ((V_ex2 * pow(T_2,3)) / 6);
+				L_12 = L_1 + L_2;
+				J_12 = J_1 + J_2 + (L_2 * T_1);
+				S_12 = S_1 - J_2 + (L_12 * (T_2 + T_c));
+				Q_12 = Q_1 + Q_2 + (S_2 * T_1) + (J_1 * T_2);
+				P_12 = P_1 + P_2 + (T_1 * ((2 * J_2) + (L_2 * T_1)));
+				U_12 = U_1 + U_2 + (T_1 * ((2 * Q_2) + (S_2 * T_1))) + (T_2 * P_1);
+				Lt_3 = V_ex3 * log(tau3 / (tau3-Tt_3));
+				Jt_3 = (Lt_3 * tau3) - (V_ex3 * Tt_3);
+				Lt_Y = (L_12 + Lt_3);
+
+				// SELECT RANGE OPTION				
+gtupdate:		// Target of jump from further down
+				if(Tt_T <= eps_1){
+					// RANGE ANGLE 2 (out-of orbit)
+					sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1); LVDC_GP_PC = 30; break; // STOP
+					V = pow(pow(DotS.x,2)+pow(DotS.y,2)+pow(DotS.z,2),0.5);
+					R = pow(pow(PosS.x,2)+pow(PosS.y,2)+pow(PosS.z,2),0.5);
+					sin_ups = ((PosS.x*DotS.x)+(PosS.y*DotS.y)+(PosS.z*DotS.z))/R*V;
+					cos_ups = pow(1-pow(sin_ups,2),0.5);
+					dot_phi_1 = (V*cos_ups)/R;
+					dot_phi_T = (V_T*cos(ups_T))/R_T;
+					phi_T = atan(Pos4.z/Pos4.x)+(((dot_phi_1+dot_phi_T)/2)*Tt_T);
+				}else{
+					// RANGE ANGLE 1 (into orbit)
+					d2 = (V * Tt_T) - Jt_3 + (Lt_Y * Tt_3) - ((ROV / V_ex3) * 
+						(((tau1 - T_1) * L_1) + ((tau2 - T_2) * L_2) + ((tau3 - Tt_3) * Lt_3)) *
+						(Lt_Y + V - V_T));
+					phi_T = atan(Pos4.z/Pos4.x)+(((1/R_T)*(S_12+d2))*cos(ups_T));					
+				}
+				// FREEZE TERMINAL CONDITIONS TEST
+				if(!(Tt_T <= eps_3)){
+					// UPDATE TERMINAL CONDITIONS
+					f = phi_T + alpha_D;
+					R_T = p/(1+(e*cos(f)));
+
+					// Stop here for debugging
+					sprintf(oapiDebugString(),"LVDC: R_T %f p %f e %f f %f",
+						R_T,p,e,f); LVDC_GP_PC = 30; break; // STOP
+
+					V_T = K_5 * pow(1+((2*e)*cos(f))+pow(e,2),0.5);
+					ups_T = atan((e*sin(f))/(1+(e*cos(f))));
+					G_T = -(mu*pow(R_T,2));					
+				}
+				// ROT TEST
+				if(ROT){
+					// ROTATED TERMINAL CONDITIONS (out-of-orbit)
+					sprintf(oapiDebugString(),"LVDC: ROTATED TERMINAL CNDS"); LVDC_GP_PC = 30; break; // STOP
+				}else{
+					// UNROTATED TERMINAL CONDITIONS (into-orbit)
+					xi_T = R_T;					
+					dot_zeta_T = V_T * cos(ups_T);
+					dot_xi_T = V_T * sin(ups_T);
+					ddot_zeta_GT = 0;
+					ddot_xi_GT = G_T;
+				}
+				// ROTATION TO TERMINAL COORDINATES
+				MX_phi_T.m11 = cos(phi_T);  MX_phi_T.m12 = 0; MX_phi_T.m13 = sin(phi_T);
+				MX_phi_T.m21 = 0;           MX_phi_T.m22 = 1; MX_phi_T.m23 = 0;
+				MX_phi_T.m31 = -sin(phi_T); MX_phi_T.m32 = 0; MX_phi_T.m33 = cos(phi_T);
+				MX_K = mul(MX_phi_T,MX_G);
+				PosXEZ = mul(MX_K,PosS);
+				DotXEZ = mul(MX_K,DotS);	
+				VECTOR3 RTT_T1,RTT_T2;
+				RTT_T1.x = ddot_xi_GT; RTT_T1.y = 0;        RTT_T1.z = ddot_zeta_GT;
+				RTT_T2.x = ddot_X_g;   RTT_T2.y = ddot_Y_g; RTT_T2.z = ddot_Z_g;
+				RTT_T2 = mul(MX_K,RTT_T2);
+				RTT_T1 = RTT_T1+RTT_T2;	  
+				ddot_xi_G   = 0.5*RTT_T1.x;
+				ddot_eta_G  = 0.5*RTT_T1.y;
+				ddot_zeta_G = 0.5*RTT_T1.z;
+
+				// ESTIMATED TIME-TO-GO
+				dot_dxit   = dot_xi_T - DotXEZ.x - (ddot_xi_G * Tt_T);
+				dot_detat  = (-DotXEZ.y) - (ddot_eta_G * Tt_T);
+				dot_dzetat = dot_zeta_T - DotXEZ.z - (ddot_zeta_G * Tt_T);
+				dL_3 = (((pow(dot_dxit,2)+pow(dot_detat,2)+pow(dot_dzetat,2))/Lt_Y)-Lt_Y)/2;
+				dT_3 = (dL_3 * (tau3-Tt_3))/V_ex3;
+				T_3 = Tt_3 + dT_3;
+				T_T = Tt_T + dT_3;
+
+				// TARGET PARAMETER UPDATE
+				if(!(UP > 0)){	
+					UP = 1; 
+					Tt_3 = T_3;
+					Tt_T = T_T;
+					if(Tt_T < 0){ sprintf(oapiDebugString(),"TPU: Tt_T %f @ Cycle %d (TB%d+%f)",
+						Tt_T,IGMCycle,LVDC_Timebase,LVDC_TB_ETime); LVDC_GP_PC = 30; break;	}
+					Lt_3 = Lt_3 + dL_3;
+					Lt_Y = Lt_Y + dL_3;
+					Jt_3 = Jt_3 + (dL_3*T_3);
+					// NOTE: This is perfectly valid. Just because Dijkstra and Wirth think otherwise
+					// does not mean it's gospel. I shouldn't have to defend my choice of instructions
+					// because a bunch of people read the title of the paper with no context and take
+					// it as a direct revelation from God with no further study into the issue.
+					goto gtupdate; // Recycle. 
+				}
+
+				// tchi_y AND tchi_p CALCULATIONS
+				L_3 = Lt_3 + dL_3;
+				J_3 = Jt_3 + (dL_3*T_3);
+				S_3 = (L_3*T_3)-J_3;
+				Q_3 = (S_3*tau3)-((V_ex3*pow(T_3,2))/2);
+				P_3 = (J_3*(tau3+(2*T_1c)))-((V_ex3*pow(T_3,2))/2);
+				U_3 = (Q_3*(tau3+(2*T_1c)))-((V_ex3*pow(T_3,3))/6);
+
+				// This is where velocity-to-be-gained is generated.
+
+				dot_dxi   = dot_dxit   - (ddot_xi_G   * dT_3);
+				dot_deta  = dot_detat  - (ddot_eta_G  * dT_3);
+				dot_dzeta = dot_dzetat - (ddot_zeta_G * dT_3);
+
+				// The results really look quite suspect...
+//				sprintf(oapiDebugString(),".dxi = %f | .dxit %f ..xiG %f dT_3 %f",
+//					dot_dxi,dot_dxit,ddot_xi_G,dT_3);
+
+				L_Y = L_12 + L_3;
+				tchi_y = atan(dot_deta/pow(pow(dot_dxi,2)+pow(dot_dzeta,2),0.5));
+				tchi_p = atan(dot_dxi/dot_dzeta);				
+				UP = -1;
+
+				// *** END OF CHI-TILDE LOGIC ***
+				if(Tt_T <= eps_2){
+					// Go to the test that we would be testing if HSL was true
+					K_1 = 0; K_2 = 0; K_3 = 0; K_4 = 0;
+					// See the note above if the presence of this goto bothers you.
+					goto hsl;
+				}else{
+					// *** K_i CALCULATIONS ***
+					// YAW STEERING PARAMETERS
+					J_Y = J_12 + J_3 + (L_3*T_1c);
+					S_Y = S_12 - J_3 + (L_Y*T_3);
+					Q_Y = Q_12 + Q_3 + (S_3*T_1c) + ((T_c+T_3)*J_12);
+					K_Y = L_Y/J_Y;
+					D_Y = S_Y - (K_Y*Q_Y);
+					deta = PosXEZ.y + (DotXEZ.y*T_T) + ((ddot_eta_G*pow(T_T,2))/2) + (S_Y*sin(tchi_y));
+					K_3 = deta/(D_Y*cos(tchi_y));
+					K_4 = K_Y*K_3;
+					// PITCH STEERING PARAMETERS
+					L_P = L_Y*cos(tchi_y);
+					C_2 = cos(tchi_y)+(K_3*sin(tchi_y));
+					C_4 = K_4*sin(tchi_y);
+					J_P = (J_Y*C_2) - (C_4*(P_12+P_3+(pow(T_1c,2)*L_3)));
+					S_P = (S_Y*C_2) - (C_4*Q_Y);
+					Q_P = (Q_Y*C_2) - (C_4*(U_12+U_3+(pow(T_1c,2)*S_3)+((T_3+T_c)*P_12)));
+					K_P = L_P/J_P;
+					D_P = S_P - (K_P*Q_P);
+					dxi = PosXEZ.x - xi_T + (DotXEZ.x*T_T) + ((ddot_xi_G*pow(T_T,2))/2) + (S_P*sin(tchi_p));
+					K_1 = dxi/(D_P*cos(tchi_p));
+					K_2 = K_P*K_1;
+				}
+			}else{
+hsl:			// HIGH-SPEED LOOP ENTRY
+				if(Tt_T <= eps_4 && V + V_TC >= V_T){
+					// HIGH-SPEED LOOP
+					sprintf(oapiDebugString(),"LVDC: HISPEED LOOP: %f %f %f %f %f",
+						Tt_T,eps_4,V,V_TC,V_T); LVDC_GP_PC = 30; break; // STOP
+				}
+			}
+			// GUIDANCE TIME UPDATE
+			if(BOOST){
+				if(S4B_IGN){		T_3 = T_3 - TimeStep; }else{
+				if(S2_BURNOUT){		T_c = T_c - TimeStep; }else{
+				if(MRS == false){	T_1 = T_1 - TimeStep; }else{
+				if(t_B1 <= t_B3){	T_2 = T_2 - TimeStep; }else{
+									// Here if t_B1 is bigger.
+									T_1 = (((dotM_1*(t_B3-t_B1))-(dotM_2*t_B3))*TimeStep)/(dotM_1*t_B1);
+				}}}}
+			}else{
+				// MRS TEST
+				sprintf(oapiDebugString(),"LVDC: MRS TEST"); LVDC_GP_PC = 30; break; // STOP
+			}			
+			Tt_3 = T_3;			
+			T_1c = T_1+T_2+T_c;			
+			Tt_T = T_1c+Tt_3;
+			if(Tt_T < 0){
+				sprintf(oapiDebugString(),"GTU: Tt_T %f T_1c %f Tt_3 %f @ Cycle %d",Tt_T,T_1c,Tt_3,IGMCycle);
+				LVDC_GP_PC = 30; break;
+			}
+
+			if(GATE){
+				// FREEZE CHI
+				sprintf(oapiDebugString(),"LVDC: CHI FREEZE"); LVDC_GP_PC = 30; break; // STOP
+			}else{
+				// IGM STEERING ANGLES
+				Xtt_y = tchi_y - K_3 + (K_4 * t);
+				Xtt_p = tchi_p - K_1 + (K_2 * t);
+
+				// -- COMPUTE INVERSE OF [K] --
+				// Get Determinate
+				double det = MX_K.m11 * ((MX_K.m22*MX_K.m33) - (MX_K.m32*MX_K.m23))
+						   - MX_K.m12 * ((MX_K.m21*MX_K.m33) - (MX_K.m31*MX_K.m23))
+						   + MX_K.m13 * ((MX_K.m21*MX_K.m32) - (MX_K.m31*MX_K.m22));
+				// If the determinate is less than 0.0005, this is invalid.
+				MATRIX3 MX_Ki; // TEMPORARY: Inverse of [K]
+				MX_Ki.m11 =   (MX_K.m22*MX_K.m33) - (MX_K.m23*MX_K.m32)  / det;
+				MX_Ki.m12 = -((MX_K.m12*MX_K.m33) - (MX_K.m32*MX_K.m13)) / det;
+				MX_Ki.m13 =   (MX_K.m12*MX_K.m23) - (MX_K.m22*MX_K.m13)  / det;
+				MX_Ki.m21 = -((MX_K.m21*MX_K.m33) - (MX_K.m23*MX_K.m31)) / det;
+				MX_Ki.m22 =   (MX_K.m11*MX_K.m33) - (MX_K.m31*MX_K.m13)  / det;
+				MX_Ki.m23 = -((MX_K.m11*MX_K.m23) - (MX_K.m21*MX_K.m13)) / det;
+				MX_Ki.m31 =   (MX_K.m21*MX_K.m32) - (MX_K.m31*MX_K.m22)  / det;
+				MX_Ki.m32 = -((MX_K.m11*MX_K.m32) - (MX_K.m31*MX_K.m12)) / det;
+				MX_Ki.m33 =   (MX_K.m11*MX_K.m22) - (MX_K.m12*MX_K.m21)  / det;
+				// Done
+				VECTOR3 VT; 
+				VT.x = sin(Xtt_p)*cos(Xtt_y);
+				VT.y = sin(Xtt_y);
+				VT.z = cos(Xtt_p)*cos(Xtt_y);
+				VT = mul(MX_Ki,VT);
+				X_S1 = VT.x; X_S2 = VT.y; X_S3 = VT.z;
+				
+				// FINALLY - COMMANDS!
+				double YAW,PITCH;
+				YAW   = asin(X_S2);
+				PITCH = atan(-(X_S3/X_S1));				
+
+				sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | .dXEZ %f %f %f",
+					LVDC_Timebase,LVDC_TB_ETime,
+					PITCH,YAW,
+					dot_dxi,dot_deta,dot_dzeta);
+
+				// NO TSMC
+				CommandedAttitude.y += PITCH;
+				CommandedAttitude.z += YAW;
+			}
+			break;
+
+			case 30:
+				// FREEZE FRAME
+				break;
+
+
 	}
+	// STEERING ANGLE LIMIT TEST GOES HERE
+	// YAW COMMAND LIMIT
+	if(CommandedAttitude.z < -45){ CommandedAttitude.z = -45; }
+	if(CommandedAttitude.z >  45){ CommandedAttitude.z =  45; }
 
 	/* **** LVDA **** */
 
 	// Compute attitude error
-	AttitudeError.x = CommandedAttitude.x - CurrentAttitude.x;
+	AttitudeError.x = (CommandedAttitude.x*RAD) - CurrentAttitude.x;
 	if (AttitudeError.x > 0) { 
 		if (AttitudeError.x > PI){ AttitudeError.x = -(TWO_PI - AttitudeError.x); }
 	} else {
 		if (AttitudeError.x < -PI) { AttitudeError.x = TWO_PI + AttitudeError.x; }
 	}
 	// PITCH ERROR
-	AttitudeError.y = CommandedAttitude.y - CurrentAttitude.y;
+	AttitudeError.y = (CommandedAttitude.y*RAD) - CurrentAttitude.y;
 	if (AttitudeError.y > 0) { 
 		if (AttitudeError.y > PI){ AttitudeError.y = -(TWO_PI - AttitudeError.y); }
 	} else {
 		if (AttitudeError.y < -PI) { AttitudeError.y = TWO_PI + AttitudeError.y; }
 	}
 	// YAW ERROR
-	AttitudeError.z = CommandedAttitude.z - CurrentAttitude.z;
+	AttitudeError.z = (CommandedAttitude.z*RAD) - CurrentAttitude.z;
 	if (AttitudeError.z > 0) { 
 		if (AttitudeError.z > PI){ AttitudeError.z = -(TWO_PI - AttitudeError.z); }
 	} else {
@@ -2942,7 +3377,7 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 	}
 
 	// Adjust error for roll
-	AttitudeError = lvdc_AdjustErrorsForRoll(CurrentAttitude,AttitudeError);
+	AttitudeError = lvdc_AdjustErrorsForRoll(CurrentAttitude,AttitudeError);	
 
 	/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
 
@@ -2993,13 +3428,15 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 	SetThrusterDir(th_main[3],_V(GYaw[3],GPitch[3],1)); //3
 
 	// Debug if we're launched
-	if(LVDC_Timebase > 0){
-		sprintf(oapiDebugString(),"LVDC: TB%d + %f | IMU ATT %f %f %f | ERR %f %f %f | RATE %f %f %f | ALT %f",
+	if(LVDC_Timebase > 0 && LVDC_GP_PC < 25){ // Pre-IGM		
+		sprintf(oapiDebugString(),"LVDC: TB%d + %f | PS %f %f %f | VS %f %f %f",
 			LVDC_Timebase,LVDC_TB_ETime,
-			CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,
-			AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
-			AttRate.x*DEG,AttRate.y*DEG,AttRate.z*DEG,Position[0]);					
+			PosS.x,PosS.y,PosS.z,
+			DotS.x,DotS.y,DotS.z);
+//			CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,V);								
 	}
+
+	// AttitudeError.x*DEG,AttitudeError.y*DEG,AttitudeError.z*DEG,
 
 	// Update engine indicators and failure flags
 	if(LVDC_EI_On == true){
