@@ -21,6 +21,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/08/25 12:09:30  tschachim
+  *	Bugfix.
+  *	
   *	Revision 1.5  2007/08/11 16:31:25  jasonims
   *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
   *	A little more Capcom...
@@ -283,18 +286,18 @@ MC_CapCom::MC_CapCom(){
 
 MC_CapCom::~MC_CapCom(){
 
-	trnscrpt_h = fopen(trnscrpt_fname,"w");
-	fprintf(trnscrpt_h,"END_TRANSCRIPT\n");
-	fclose(trnscrpt_h);
+//	trnscrpt_h = fopen(trnscrpt_fname,"w");
+//	fprintf(trnscrpt_h,"END_TRANSCRIPT\n");
+//	fclose(trnscrpt_h);
 
 
 }
 
 void MC_CapCom::Init(){
 
-	trnscrpt_h = fopen(trnscrpt_fname,"a");
-	fprintf(trnscrpt_h,"BEGIN_TRANSCRIPT\n");
-	fclose(trnscrpt_h);
+//	trnscrpt_h = fopen(trnscrpt_fname,"a");
+//	fprintf(trnscrpt_h,"BEGIN_TRANSCRIPT\n");
+//	fclose(trnscrpt_h);
 }
 
 void MC_CapCom::TimeStep(double simdt){
