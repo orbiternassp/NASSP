@@ -430,11 +430,9 @@
 #define AID_TVCSERVOPOWERSWITCHES                           717
 #define AID_LOGICPOWERSWITCH                                718
 #define AID_SIGCONDDRIVERBIASPOWERSWITCHES                  719
-#define IDB_LIGHTROTARY                                     720
 #define AID_LEFTINTERIORLIGHTROTARIES                       721
 #define IDB_FDAIPOWERROTARY                                 722
 #define AID_FDAIPOWERROTARY                                 723
-#define IDB_SCSBMAGROTARY                                   724
 #define AID_SCSELECTRONICSPOWERROTARY                       725
 #define AID_BMAGPOWERROTARY1                                726
 #define AID_BMAGPOWERROTARY2                                727
@@ -459,7 +457,6 @@
 #define AID_HIGHGAINANTENNAUPPERSWITCHES                    746
 #define AID_HIGHGAINANTENNAYAWPOSITIONSWITCH                747
 #define AID_HIGHGAINANTENNALOWERSWITCHES                    748
-#define IDB_VHFANTENNAROTARY                                749
 #define AID_VHFANTENNAROTARY                                750
 #define AID_SPSTESTSWITCH                                   751
 #define AID_SPSOXIDFLOWVALVESWITCHES                        752

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2007/08/20 20:57:18  tschachim
+  *	(Re)moved obsolete bitmap.
+  *	
   *	Revision 1.85  2007/08/13 16:06:12  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -424,9 +427,7 @@ const int nsurf = 120; // number of bitmap handles
 #define SRF_SWITCH30LEFT							50
 #define SRF_THREEPOSSWITCH305LEFT					51
 #define SRF_SWITCH305LEFT							52
-#define SRF_LIGHTROTARY								53
 #define SRF_FDAIPOWERROTARY							54
-#define SRF_SCSBMAGROTARY							55
 #define SRF_DIRECTO2ROTARY							56
 #define SRF_ECSGLYCOLPUMPROTARY						57
 #define SRF_GTACOVER								58
@@ -434,7 +435,6 @@ const int nsurf = 120; // number of bitmap handles
 #define SRF_ACVOLTS									60
 #define SRF_DCAMPS									61
 #define SRF_POSTLDGVENTVLVLEVER						62
-#define SRF_VHFANTENNAROTARY						63
 #define SRF_SPSMAXINDICATOR							64
 #define SRF_ECSROTARY 								65
 #define SRF_CSMMAINPANELWINDOWCOVER					66
