@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.210  2007/08/20 20:57:19  tschachim
+  *	(Re)moved obsolete bitmap.
+  *	
   *	Revision 1.209  2007/08/13 16:06:19  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -590,14 +593,11 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_SWITCH20LEFT]							= oapiCreateSurface (LOADBMP (IDB_SWITCH20LEFT));
 	srf[SRF_THREEPOSSWITCH20LEFT]					= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH20LEFT));
 	srf[SRF_GUARDEDSWITCH20]						= oapiCreateSurface (LOADBMP (IDB_GUARDEDSWITCH20));
-	srf[SRF_LIGHTROTARY]							= oapiCreateSurface (LOADBMP (IDB_LIGHTROTARY));
 	srf[SRF_FDAIPOWERROTARY]						= oapiCreateSurface (LOADBMP (IDB_FDAIPOWERROTARY));
-	srf[SRF_SCSBMAGROTARY]							= oapiCreateSurface (LOADBMP (IDB_SCSBMAGROTARY));
 	srf[SRF_DIRECTO2ROTARY]							= oapiCreateSurface (LOADBMP (IDB_DIRECTO2ROTARY));
 	srf[SRF_ECSGLYCOLPUMPROTARY]					= oapiCreateSurface (LOADBMP (IDB_ECSGLYCOLPUMPROTARY));
 	srf[SRF_GTACOVER]								= oapiCreateSurface (LOADBMP (IDB_GTACOVER));
 	srf[SRF_POSTLDGVENTVLVLEVER]					= oapiCreateSurface (LOADBMP (IDB_POSTLDGVENTVLVLEVER));
-	srf[SRF_VHFANTENNAROTARY]						= oapiCreateSurface (LOADBMP (IDB_VHFANTENNAROTARY));
 	srf[SRF_SPSMAXINDICATOR]						= oapiCreateSurface (LOADBMP (IDB_SPSMAXINDICATOR));
 	srf[SRF_SPSMININDICATOR]						= oapiCreateSurface (LOADBMP (IDB_SPSMININDICATOR));
 	srf[SRF_ECSROTARY]								= oapiCreateSurface (LOADBMP (IDB_ECSROTARY));
@@ -692,14 +692,11 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT],	g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKER],						g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSMRIGHTWINDOWCOVER],					g_Param.col[4]);
-	oapiSetSurfaceColourKey	(srf[SRF_LIGHTROTARY],							g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_FDAIPOWERROTARY],						g_Param.col[4]);
-	oapiSetSurfaceColourKey	(srf[SRF_SCSBMAGROTARY],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_DIRECTO2ROTARY],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_ECSGLYCOLPUMPROTARY],					g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_GTACOVER],								g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_POSTLDGVENTVLVLEVER],					g_Param.col[4]);
-	oapiSetSurfaceColourKey	(srf[SRF_VHFANTENNAROTARY],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_SPSMAXINDICATOR],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_SPSMININDICATOR],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_ECSROTARY],							g_Param.col[4]);	
