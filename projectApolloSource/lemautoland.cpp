@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2007/06/06 15:02:13  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.42  2006/09/25 12:46:07  tschachim
   *	Bugfix landing autopilot because of higher LM mass.
   *	
@@ -571,7 +574,10 @@ void LEMcomputer::Prog63(double simt)
 // display time from ignition and crossrange..
 	case 2:
 		SetVerbNounAndFlash(6, 61);
-		if(fabs(DesiredDeltaV) > MAXOFFPLANE) LightOprErr();
+		if (dt < 0 || fabs(DesiredDeltaV) > MAXOFFPLANE) {
+			AbortWithError(01410);	// Guidance overflow, see A15Delco
+			return;
+		}
 		if (Realism == 0) ProgState++;
 		break;
 
