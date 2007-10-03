@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2007/06/06 15:02:15  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.8  2006/08/01 16:05:57  tschachim
   *	Improved staging exhausts.
   *	
@@ -403,7 +406,7 @@ void S1B::LoadMeshes(bool lowres)
 	if (LowRes)
 	{
 		hsat1stg1 = oapiLoadMeshGlobal("ProjectApollo/LowRes/nsat1stg1");
-		hsat1stg1 = oapiLoadMeshGlobal("ProjectApollo/LowRes/nsat1stg1");
+		hSat1intstg = oapiLoadMeshGlobal("ProjectApollo/LowRes/nsat1intstg");
 	}
 	else
 	{
