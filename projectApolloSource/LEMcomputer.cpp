@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2007/06/06 15:02:09  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.34  2007/04/26 00:18:18  movieman523
   *	Fixed some build warnings.
   *	
@@ -901,11 +904,54 @@ void LEMcomputer::Timestep(double simt, double simdt)
 
 {
 	// If the power is out, the computer should restart.
-	/*
-	it(!IsPowered()){
-		
+	if (Yaagc && !IsPowered()){
+		// HARDWARE MUST RESTART
+		if(vagc.Erasable[0][05] != 04000){				
+			// Clear flip-flop based registers
+			vagc.Erasable[0][00] = 0;     // A
+			vagc.Erasable[0][01] = 0;     // L
+			vagc.Erasable[0][02] = 0;     // Q
+			vagc.Erasable[0][03] = 0;     // EB
+			vagc.Erasable[0][04] = 0;     // FB
+			vagc.Erasable[0][05] = 04000; // Z
+			vagc.Erasable[0][06] = 0;     // BB
+			// Clear ISR flag
+			vagc.InIsr = 0;
+			// Clear interrupt requests
+			vagc.InterruptRequests[0] = 0;
+			vagc.InterruptRequests[1] = 0;
+			vagc.InterruptRequests[2] = 0;
+			vagc.InterruptRequests[3] = 0;
+			vagc.InterruptRequests[4] = 0;
+			vagc.InterruptRequests[5] = 0;
+			vagc.InterruptRequests[6] = 0;
+			vagc.InterruptRequests[7] = 0;
+			vagc.InterruptRequests[8] = 0;
+			vagc.InterruptRequests[9] = 0;
+			vagc.InterruptRequests[10] = 0;
+			// Reset cycle counter and Extracode flags
+			vagc.CycleCounter = 0;
+			vagc.ExtraCode = 0;
+			vagc.ExtraDelay = 0;
+			// No idea about the interrupts/pending/etc so we reset those
+			vagc.AllowInterrupt = 0;				  
+			vagc.PendFlag = 0;
+			vagc.PendDelay = 0;
+			// Don't disturb erasable core
+			// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
+			// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it
+			InputChannel[033] &= 017777;
+			vagc.InputChannel[033] &= 017777;				
+			OutputChannel[033] &= 017777;				
+			vagc.Ch33Switches &= 017777;
+			// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
+			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
+			vagc.VoltageAlarm = 1;
+			dsky.LightRestart();
+		}
+		// and do nothing more.
+		return;
 	}
-	*/
 	if (GenericTimestep(simt, simdt))
 		return;
 
