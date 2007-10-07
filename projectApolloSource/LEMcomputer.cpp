@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2007/10/05 13:39:03  dseagrav
+  *	Cause vLGC restart if unpowered.
+  *	
   *	Revision 1.35  2007/06/06 15:02:09  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -1235,19 +1238,19 @@ void LEMcomputer::SetFlagWord(int num, unsigned int val)
 {
 	switch(num) {
 	case 0:
-		FlagWord0.word = num;
+		FlagWord0.word = val;
 		ProgFlag01 = FlagWord0.u.FREEFBIT;
 		break;
 
 	case 1:
-		FlagWord1.word = num;
+		FlagWord1.word = val;
 		ProgFlag02 = FlagWord1.u.NOTASSIGNED;
 		ProgFlag03 = FlagWord1.u.NOTASSIGNED2;
 		ProgFlag04 = FlagWord1.u.NOTASSIGNED3;
 		break;
 
 	case 2:
-		FlagWord2.word = num;
+		FlagWord2.word = val;
 		RetroFlag = FlagWord2.u.NOTASSIGNED;
 		break;
 	}
@@ -1286,11 +1289,11 @@ bool LEMcomputer::ReadMemory(unsigned int loc, int &val)
 			return true;
 
 		case 0113:
-			val = (int)(LandingLatitude*100000000-((int) (LandingLatitude * 1000.0))*100000);
+			val = (int)(LandingLatitude * 100000000.0 - ((int)(LandingLatitude * 1000.0)) * 100000.0);
 			return true;
 
 		case 0114:
-			val = (int)(LandingLongitude*100000000-((int) (LandingLongitude * 1000.0))*100000);
+			val = (int)(LandingLongitude * 100000000.0 - ((int)(LandingLongitude * 1000.0)) * 100000.0);
 			return true;
 		}
 	}
