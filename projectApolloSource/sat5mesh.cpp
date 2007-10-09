@@ -23,6 +23,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2007/08/13 16:06:14  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.80  2007/08/11 16:31:25  jasonims
   *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
   *	A little more Capcom...
@@ -1480,6 +1486,9 @@ void SaturnV::SeparateStage (int new_stage)
 
 		dockstate = 1;
 		SetCSMStage();
+
+		// Set LM landing site in the AGC for Simple AGC P16 etc.
+		agc.SetDesiredLanding(LMLandingLatitude, LMLandingLongitude, LMLandingAltitude);
 
 		// See Saturn::SetCSMStage()
 		const double CGOffset = 12.25+21.5-1.8+0.35;

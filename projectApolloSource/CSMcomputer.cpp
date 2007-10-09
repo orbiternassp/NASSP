@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2007/08/13 16:05:28  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.78  2007/06/06 15:02:07  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -3355,11 +3361,11 @@ bool CSMcomputer::ReadMemory(unsigned int loc, int &val)
 			return true;
 
 		case 0113:
-			val = (int)(LandingLatitude*100000000-((int) (LandingLatitude * 1000.0))*100000);
+			val = (int)(LandingLatitude * 100000000.0 - ((int)(LandingLatitude * 1000.0)) * 100000.0);
 			return true;
 
 		case 0114:
-			val = (int)(LandingLongitude*100000000-((int) (LandingLongitude * 1000.0))*100000);
+			val = (int)(LandingLongitude * 100000000.0 - ((int)(LandingLongitude * 1000.0)) * 100000.0);
 			return true;
 
 		case 0115:
