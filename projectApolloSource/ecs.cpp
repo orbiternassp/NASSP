@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2007/07/17 14:33:16  tschachim
+  *	Added entry and post landing stuff.
+  *	
   **************************** Revision History ****************************/
 
 #include <stdio.h>
@@ -151,7 +154,7 @@ void O2DemandRegulator::SystemTimestep(double simdt) {
 			pipe->in->Close();
 		} else {
 			double dp = suitPress - max(3.75 / PSI, cabinPress);
-			// TODO one/both regulators
+			/// \todo one/both regulators
 			pipe->in->Open();
 			pipe->P_max = max(3.75 / PSI, cabinPress) + 2.5 / INH2O;
 

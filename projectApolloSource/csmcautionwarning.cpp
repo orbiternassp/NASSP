@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2007/08/13 16:06:09  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.36  2007/07/17 14:33:06  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -274,7 +280,7 @@ bool CSMCautionWarningSystem::ACUndervoltage(ACBusStatus &as)
 bool CSMCautionWarningSystem::ACOvervoltage(ACBusStatus &as)
 
 {
-	if (as.Phase1Voltage > 130 || as.Phase2Voltage >130 || as.Phase3Voltage >130)
+	if (as.Phase1Voltage > 130 || as.Phase2Voltage > 130 || as.Phase3Voltage > 130)
 		return true;
 
 	return false;
@@ -703,7 +709,7 @@ void CSMCautionWarningSystem::RenderLights(SURFHANDLE surf, SURFHANDLE lightsurf
 		RenderLightPanel(surf, lightsurf, LeftLights, TestState == CWS_TEST_LIGHTS_LEFT, 6, 122, 0);
 	}
 	else {
-		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261, 122, 30);
+		RenderLightPanel(surf, lightsurf, RightLights, TestState == CWS_TEST_LIGHTS_RIGHT, 261, 122, CWS_LIGHTS_PER_PANEL);
 	}
 }
 

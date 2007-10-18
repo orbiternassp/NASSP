@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/08/13 16:06:09  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.22  2007/06/06 15:02:12  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -401,7 +407,8 @@ void DSKY::ProcessChannel13(int val)
 
 	out_val.Value = val;
 
-	// StandbyLight (TODO: PRO key?
+	/// \todo
+	/// StandbyLight (TODO: PRO key?
 	if (out_val.Bits.EnableStandby || out_val.Bits.TestAlarms)
 	{
 		SetStby(true);
@@ -411,7 +418,8 @@ void DSKY::ProcessChannel13(int val)
 		SetStby(false);
 	}
 
-	// RestartLight (TODO other conditions)
+	/// \todo
+	/// RestartLight (TODO other conditions)
 	if (out_val.Bits.TestAlarms || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
 	{
 		SetRestart(true);

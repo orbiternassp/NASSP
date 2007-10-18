@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/06/06 15:02:22  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.4  2007/04/25 18:49:25  tschachim
   *	SCS dV mode.
   *	
@@ -41,6 +44,9 @@
 #if !defined(_PA_SPS_H)
 #define _PA_SPS_H
 
+///
+/// \ingroup Propulsion
+///
 class SPSPropellantSource : public PropellantSource {
 
 public:
@@ -89,7 +95,9 @@ protected:
 	double lastPropellantMass;
 };
 
-
+///
+/// \ingroup Propulsion
+///
 class SPSGimbalActuator {
 
 public:
@@ -127,7 +135,9 @@ protected:
 	ThumbwheelSwitch *trimThumbwheel;
 };
 
-
+///
+/// \ingroup Propulsion
+///
 class SPSEngine {
 
 public:

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/06/06 15:02:08  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.4  2007/04/23 10:44:35  tschachim
   *	Bugfix descent engine arm.
   *	
@@ -299,8 +302,9 @@ void LEM::Init()
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
 	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
-	// Disabled for now because of the LEVA and the descent stage vessel
-	// TODO Enable before CSM docking
+	/// \todo
+	/// Disabled for now because of the LEVA and the descent stage vessel
+	/// TODO Enable before CSM docking
 	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 
 	strncpy(AudioLanguage, "English", 64);
@@ -1232,17 +1236,16 @@ void LEM::PadLoad(unsigned int address, unsigned int value)
 
 
 void LEM::SetRCSJet(int jet, bool fire) {
-
-	// TODO Only for the Virtual AGC for now
+	/// \todo Only for the Virtual AGC for now
 	if (agc.IsVirtualAGC()) {
 		SetThrusterLevel(th_rcs[jet], fire);
 	}
 }
 
 
-// TODO Dirty Hack for the AGC++ attitude control, 
-// remove this and use I/O channels and pulsed thrusters 
-// identical to the VAGC instead
+/// \todo Dirty Hack for the AGC++ attitude control, 
+/// remove this and use I/O channels and pulsed thrusters 
+/// identical to the VAGC instead
 
 void LEM::SetRCSJetLevel(int jet, double level) {
 

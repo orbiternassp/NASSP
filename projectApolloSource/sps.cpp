@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/08/13 16:06:23  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.7  2007/06/06 15:02:22  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -504,8 +510,8 @@ void SPSEngine::Timestep(double simt, double simdt) {
 
 	if (saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE || saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE) {
 		// SCS dV mode
-		// TODO: SC CONT switch is supplied by SCS LOGIC BUS 3
-		// TODO: TVC CW is supplied by SCS LOGIC BUS 2
+		/// \todo SC CONT switch is supplied by SCS LOGIC BUS 3
+		/// \todo TVC CW is supplied by SCS LOGIC BUS 2
 		if (saturn->SCContSwitch.IsDown() || saturn->THCRotary.IsClockwise()) {
 			if (!saturn->ems.IsdVMode()) {
 				thrustOn = false;
@@ -519,7 +525,7 @@ void SPSEngine::Timestep(double simt, double simdt) {
 		}
 
 		// CMC mode
-		// TODO: SC CONT switch is supplied by G/N IMU PWR
+		/// \todo SC CONT switch is supplied by G/N IMU PWR
 		if (saturn->SCContSwitch.IsUp() && !saturn->THCRotary.IsClockwise()) {
 			// Check i/o channel
 			ChannelValue11 val11;
@@ -873,7 +879,7 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 		activeSystem = 2;
 	}
 
-	// TODO Auto switch-over because of overcurrent 
+	/// \todo Auto switch-over because of overcurrent 
 
 	// Switched to system 2
 	if (tvcGimbalDriveSwitch->IsDown()) {
@@ -911,10 +917,10 @@ void SPSGimbalActuator::SystemTimestep(double simdt) {
 	}
 
 	if (motor1Running) {
-		motor1Source->DrawPower(100);	// TODO real power consumption is unknown 
+		motor1Source->DrawPower(100);	/// \todo real power consumption is unknown 
 	}
 	if (motor2Running) {
-		motor2Source->DrawPower(100);	// TODO real power consumption is unknown 
+		motor2Source->DrawPower(100);	/// \todo real power consumption is unknown 
 	}
 }
 
@@ -954,11 +960,11 @@ void SPSGimbalActuator::DrawSystem1Power() {
 
 	if (saturn->TVCServoPower1Switch.IsUp()) {
 		saturn->StabContSystemTVCAc1CircuitBraker.DrawPower(1.36);	// Systems handbook
-		saturn->SystemMnACircuitBraker.DrawPower(10);				// TODO real power consumption is unknown 
+		saturn->SystemMnACircuitBraker.DrawPower(10);				/// \todo Real power consumption is unknown 
 
 	} else if (saturn->TVCServoPower1Switch.IsDown()) {
 		saturn->StabContSystemAc2CircuitBraker.DrawPower(1.36);		// Systems handbook
-		saturn->SystemMnBCircuitBraker.DrawPower(10);				// TODO real power consumption is unknown 
+		saturn->SystemMnBCircuitBraker.DrawPower(10);				/// \todo Real power consumption is unknown 
 	}
 }
 
@@ -966,11 +972,11 @@ void SPSGimbalActuator::DrawSystem2Power() {
 
 	if (saturn->TVCServoPower2Switch.IsUp()) {
 		saturn->StabContSystemAc1CircuitBraker.DrawPower(1.36);		// Systems handbook
-		saturn->SystemMnACircuitBraker.DrawPower(10);				// TODO real power consumption is unknown 
+		saturn->SystemMnACircuitBraker.DrawPower(10);				/// \todo Real power consumption is unknown 
 
 	} else if (saturn->TVCServoPower2Switch.IsDown()) {
 		saturn->ECATVCAc2CircuitBraker.DrawPower(1.36);				// Systems handbook
-		saturn->SystemMnBCircuitBraker.DrawPower(10);				// TODO real power consumption is unknown 
+		saturn->SystemMnBCircuitBraker.DrawPower(10);				/// \todo Real power consumption is unknown 
 	}
 }
 

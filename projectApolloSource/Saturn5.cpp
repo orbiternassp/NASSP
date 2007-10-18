@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.104  2007/09/04 13:51:56  dseagrav
+  *	IGM first stage. It doesn't work yet.
+  *	
   *	Revision 1.103  2007/08/11 16:31:24  jasonims
   *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
   *	A little more Capcom...
@@ -500,7 +503,7 @@ void SaturnV::initSaturnV()
 
 	SM_FuelMass = SPS_DEFAULT_PROPELLANT;
 	SM_EmptyMass = 4100;						// Calculated from Apollo 11 Mission Report and "Apollo by the numbers"
-												// TODO: The Apollo 15-17 SM was heavier, about 5500 kg
+												/// \todo The Apollo 15-17 SM was heavier, about 5500 kg
 	CM_EmptyMass = 5430;						// Calculated from Apollo 11 Mission Report and "Apollo by the numbers"
 	CM_FuelMass =  CM_RCS_FUEL_PER_TANK * 2.;	// The CM has 2 tanks
 
@@ -1337,7 +1340,8 @@ void SaturnV::StageSix(double simt)
 
 	if (SivbLmSepSwitch.GetState()) {
 		bManualUnDock = true;
-		SivbLmSepSwitch.SetState(false); // temporary bugfix, TODO get rid of bManualUnDock, use pyros, connect this switch and fix REALSIM 0 "S" key press
+		SivbLmSepSwitch.SetState(false); // temporary bugfix.
+		/// \todo Get rid of bManualUnDock, use pyros, connect this switch and fix REALSIM 0 "S" key press
 	}
 
 	if (ApolloNo == 13) {
@@ -1860,7 +1864,7 @@ void SaturnV::Timestep(double simt, double simdt)
 			//
 			// No abort before launch.
 			//
-			// TODO: in reality, we could abort from the pad, at least from five minutes
+			// \todo In reality, we could abort from the pad, at least from five minutes
 			// before liftoff.
 			//
 			bAbort = false;
@@ -2021,7 +2025,7 @@ void SaturnV::SetVehicleStats()
 
 	if (VehicleNo > 500 && VehicleNo < 503) {
 		if (!S1_ThrustLoaded)
-			THRUST_FIRST_VAC = 7835000; // 7653000; // TODO: Temporary fix, otherwise the autopilot is not working properly, we should replace this when we figured out all parameters (masses, fuel masses etc.) of these vehicles
+			THRUST_FIRST_VAC = 7835000; // 7653000; /// \todo Temporary fix, otherwise the autopilot is not working properly, we should replace this when we figured out all parameters (masses, fuel masses etc.) of these vehicles
 		if (!S2_ThrustLoaded)
 			THRUST_SECOND_VAC = 1001000;
 		if (!S3_ThrustLoaded)
@@ -2175,7 +2179,7 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		case 4:
 			break;
 		case 5:
-			// TODO: SetCSM2Stage is buggy
+			/// \todo SetCSM2Stage is buggy
 			// SetCSM2Stage ();
 			break;
 	} */
@@ -2454,7 +2458,7 @@ void SaturnV::StageLaunchSIVB(double simt)
 		SeparateStage (CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort) {
-			// TODO SPS abort handling
+			/// \todo SPS abort handling
 			StartAbort();
 			ABORT_IND = true;
 			bAbort = false;

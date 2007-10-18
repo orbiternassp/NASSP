@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2007/08/13 16:06:15  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.26  2007/07/17 14:33:07  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -873,7 +879,7 @@ double SaturnLeftO2FlowMeter::QueryValue()
 	Sat->GetAtmosStatus(atm);
 
 	// O2 main regulator output flow 
-	// TODO: Is this the correct flow for that meter? No documentation found yet...
+	/// \todo Is this the correct flow for that meter? No documentation found yet...
 	
 	return atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH;
 }

@@ -23,6 +23,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.58  2007/08/13 16:06:14  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.57  2007/06/06 15:02:16  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -962,9 +968,9 @@ void Saturn1b::DockStage (UINT dockstatus)
 				hAstpDM=oapiGetVesselByName(VName2);
 			}
 
-			// TODO: Fix that...
+			/// \todo Fix that...
 			if (ProbeJetison){
-				// TODO: SetCSM2Stage is buggy
+				/// \todo SetCSM2Stage is buggy
 				SetCSMStage();
 				// SetCSM2Stage ();
 				StageS.play();
@@ -1207,7 +1213,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		vs1.vrot.z = 0.0;
 		SMJetS.play();
 		SMJetS.done();
-		if (HasProbe && dockstate != 5) {	// TODO: No clue what dockstate means...
+		if (HasProbe && dockstate != 5) {	/// \todo No clue what dockstate means...
 			VECTOR3 ofs = OFS_DOCKING2;
 			VECTOR3 vel = {0.0,0.0,0.1};
 			VESSELSTATUS vs4b;

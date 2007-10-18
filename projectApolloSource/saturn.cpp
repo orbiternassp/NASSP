@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.200  2007/08/13 16:06:17  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.199  2007/07/17 14:33:08  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -760,7 +766,7 @@ void Saturn::initSaturn()
 	SM_FuelMass = SPS_DEFAULT_PROPELLANT;
 
 	S4PL_Mass = 15094;							// LM mass is default (Apollo by the numbers)
-												// TODO: Apollo 15-17 LMs have about 16440 kg
+												// \todo Apollo 15-17 LMs have about 16440 kg
 
 	Abort_Mass = 4050;
 
@@ -1259,10 +1265,10 @@ void Saturn::DockConnectors()
 
 	if (connected == hs4bM)
 	{
-		//
-		// MGFIX: This should really only be done when the docking probe is retracted for a hard
-		// dock.
-		//
+		///
+		/// \todo This should really only be done when the docking probe is retracted for a hard
+		/// dock.
+		///
 		SIVB *SIVBVessel = (SIVB *) oapiGetVesselInterface(connected);
 		Connector *SIVbConnector = SIVBVessel->GetDockingConnector();
 
@@ -1274,10 +1280,10 @@ void Saturn::DockConnectors()
 
 	if (connected == hLMV)
 	{
-		//
-		// MGFIX: This should really only be done when the docking probe is retracted for a hard
-		// dock.
-		//
+		///
+		/// \todo This should really only be done when the docking probe is retracted for a hard
+		/// dock.
+		///
 		LEM *LEMVessel = (LEM *) oapiGetVesselInterface(connected);
 		Connector *LEMConnector = LEMVessel->GetDockingConnector();
 
@@ -1721,29 +1727,29 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 typedef union {
 	struct {
-		unsigned MissionTimerRunning:1;
-		unsigned SIISepState:1;
-		unsigned TLIBurnDone:1;
-		unsigned Scorrec:1;
-		unsigned Burned:1;
-		unsigned EVA_IP:1;
-		unsigned ABORT_IND:1;
-		unsigned HatchOpen:1;
-		unsigned SplashdownPlayed:1;
-		unsigned unused_2:1;
-		unsigned LEMdatatransfer:1;
-		unsigned PostSplashdownPlayed:1;
-		unsigned IGMEnabled:1;
-		unsigned TLISoundsLoaded:1;
-		unsigned MissionTimerEnabled:1;
-		unsigned EventTimerEnabled:1;
-		unsigned EventTimerRunning:1;
-		unsigned EventTimerCountUp:2;
-		unsigned SkylabSM:1;
-		unsigned SkylabCM:1;
-		unsigned S1bPanel:1;
-		unsigned NoHGA:1;
-		unsigned viewpos:5;
+		unsigned MissionTimerRunning:1;			///< Is the Mission timer running?
+		unsigned SIISepState:1;					///< State of the SII Sep light.
+		unsigned TLIBurnDone:1;					///< Have we done our TLI burn?
+		unsigned Scorrec:1;						///< Have we played the course correction sound?
+		unsigned Burned:1;						///< Has the CM been burned by re-entry heating?
+		unsigned EVA_IP:1;						///< Is an EVA in progress?
+		unsigned ABORT_IND:1;					///< State of the abort light.
+		unsigned HatchOpen:1;					///< Is the hatch open?
+		unsigned SplashdownPlayed:1;			///< Have we played the splashdown sound?
+		unsigned unused_2:1;					///< Unused bit for backwards compatibility. Can be used for other things.
+		unsigned LEMdatatransfer:1;				///< Have we transfered setup data to the LEM?
+		unsigned PostSplashdownPlayed:1;		///< Have we played the post-splashdown sound?
+		unsigned IGMEnabled:1;					///< Is the IGM guidance enabled?
+		unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
+		unsigned MissionTimerEnabled:1;			///< Is the Mission Timer enabled?
+		unsigned EventTimerEnabled:1;			///< Is the Event Timer enabled?
+		unsigned EventTimerRunning:1;			///< Is the Event Timer running?
+		unsigned EventTimerCountUp:2;			///< Is the Event Timer counting up?
+		unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
+		unsigned SkylabCM:1;					///< Is this a Skylab Command Module?
+		unsigned S1bPanel:1;					///< Is this a Command Module with a Saturn 1b panel?
+		unsigned NoHGA:1;						///< Do we have a High-Gain Antenna?
+		unsigned viewpos:5;						///< Position of the virtual cockpit viewpoint.
 	} u;
 	unsigned long word;
 } MainState;
@@ -1811,11 +1817,11 @@ void Saturn::SetMainState(int s)
 
 typedef union {
 	struct {
-		unsigned InterstageAttached:1;
-		unsigned LESAttached:1;
-		unsigned HasProbe:1;
-		unsigned ApexCoverAttached:1;
-		unsigned ChutesAttached:1;
+		unsigned InterstageAttached:1;	///< Is the interstage attached?
+		unsigned LESAttached:1;			///< Is the LES attached?
+		unsigned HasProbe:1;			///< Does the CM have a docking probe?
+		unsigned ApexCoverAttached:1;	///< Is the apex cover attached?
+		unsigned ChutesAttached:1;		///< Are the chutes attached?
 	} u;
 	unsigned long word;
 } AttachState;
@@ -1853,17 +1859,18 @@ void Saturn::SetAttachState(int s)
 	ChutesAttached = (state.u.ChutesAttached != 0);
 }
 
-//
-// State which is only required for Apollo 13
-//
-
+///
+/// \brief State which is only required for Apollo 13
+///
+/// This structure holds the flags which are used for the Apollo 13 simulation. 
+///
 typedef union {
 	struct {
-		unsigned ApolloExploded:1;
-		unsigned CryoStir:1;
-		unsigned KranzPlayed:1;
-	} u;
-	unsigned long word;
+		unsigned ApolloExploded:1;	///< Has the SM exploded yet?
+		unsigned CryoStir:1;		///< Have the crew been asked to do a cryo stir?
+		unsigned KranzPlayed:1;		///< Has the Kranz audio been played yet?
+	};
+	unsigned long word;				///< Used to return all the flags as one 32-bit word for the scenario file.
 } A13State;
 
 
@@ -1873,9 +1880,9 @@ int Saturn::GetA13State()
 	A13State state;
 
 	state.word = 0;
-	state.u.ApolloExploded = ApolloExploded;
-	state.u.CryoStir = CryoStir;
-	state.u.KranzPlayed = KranzPlayed;
+	state.ApolloExploded = ApolloExploded;
+	state.CryoStir = CryoStir;
+	state.KranzPlayed = KranzPlayed;
 
 	return state.word;
 }
@@ -1886,9 +1893,9 @@ void Saturn::SetA13State(int s)
 	A13State state;
 
 	state.word = s;
-	ApolloExploded = (state.u.ApolloExploded != 0);
-	CryoStir = (state.u.CryoStir != 0);
-	KranzPlayed = (state.u.KranzPlayed != 0);
+	ApolloExploded = (state.ApolloExploded != 0);
+	CryoStir = (state.CryoStir != 0);
+	KranzPlayed = (state.KranzPlayed != 0);
 }
 
 //
@@ -3403,8 +3410,8 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		if (stage == CM_ENTRY_STAGE_SEVEN && HatchOpen) {
 			bRecovery = true;
 		}
-		// This key is also used by Orbiter, so we return 0
-		// TODO: get rid of this key at all and do it by using the panel
+		/// This key is also used by Orbiter, so we return 0
+		/// \todo Get rid of this key at all and do it by using the panel
 		return 0;
 	}
 
@@ -4843,7 +4850,7 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 
 			if (bAbort)
 			{
-				// TODO SPS abort handling
+				/// \todo SPS abort handling
 				ABORT_IND = true;
 				bAbort = false;
 				autopilot= false;
@@ -4943,7 +4950,7 @@ void Saturn::GetLVTankQuantities(LVTankQuantities &LVq)
 				LVq.SIVBOxQuantity = GetPropellantMass(ph_3rd);  
 				LVq.SIVBFuelQuantity = (GetPropellantMass(ph_3rd) + ((.0638 * SII_FuelMass) * (1 - (GetPropellantMass(ph_3rd) / SII_FuelMass))));
 
-				// TODO Hack for LAUNCH_STAGE_TWO (= SIVB before LES jettison)
+				/// \todo Hack for LAUNCH_STAGE_TWO (= SIVB before LES jettison)
 				LVq.SIIQuantity = LVq.SIVBOxQuantity;
 				LVq.SIIFuelMass = LVq.S4BOxMass;
 				return;

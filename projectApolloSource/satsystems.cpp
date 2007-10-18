@@ -23,6 +23,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.145  2007/08/13 16:06:16  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.144  2007/07/27 19:57:27  jasonims
   *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
   *	
@@ -336,8 +342,8 @@ void Saturn::SystemsInit() {
 	// Wire battery buses to batteries.
 	//
 
-	BatteryBusA.WireToBuses(EntryBatteryA, NULL, NULL);		// TODO Bat C can be connected to BatBus A via the BAT C TO BAT BUS A cb on panel 250, which is currently not available 
-	BatteryBusB.WireToBuses(EntryBatteryB, NULL, NULL);		// TODO Bat C can be connected to BatBus B via the BAT C TO BAT BUS B cb on panel 250, which is currently not available
+	BatteryBusA.WireToBuses(EntryBatteryA, NULL, NULL);		/// \todo Bat C can be connected to BatBus A via the BAT C TO BAT BUS A cb on panel 250, which is currently not available 
+	BatteryBusB.WireToBuses(EntryBatteryB, NULL, NULL);		/// \todo Bat C can be connected to BatBus B via the BAT C TO BAT BUS B cb on panel 250, which is currently not available
 
 	PyroBusA.WireToBuses(EntryBatteryA, PyroBatteryA);
 	PyroBusB.WireToBuses(EntryBatteryB, PyroBatteryB);
@@ -3277,8 +3283,8 @@ bool Saturn::GetValveState(int valve)
 //
 // Check whether the ELS is active and whether it's in auto mode.
 //
-// TODO: for now, if we're flying an unmanned mission we just assume
-// this is always valid. We need to do a more accurate simulation later.
+/// \todo For now, if we're flying an unmanned mission we just assume
+/// this is always valid. We need to do a more accurate simulation later.
 //
 
 bool Saturn::ELSActive()

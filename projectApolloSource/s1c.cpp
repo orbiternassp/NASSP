@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2007/06/06 15:02:16  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.12  2006/06/26 19:05:36  movieman523
   *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
   *	
@@ -83,9 +86,10 @@ S1C::S1C (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 	// We need to turn off most of the Orbitersound options.
 	//
 
-/*	TODO: The sound initialization seems to take a lot of time (up to 5s on my system) 
-    causing problems during creation of the S1C. Since the sound inside the S1C isn't very important
-	it's disabled for the moment. 
+#if 0
+	/// \todo The sound initialization seems to take a lot of time (up to 5s on my system) 
+    /// causing problems during creation of the S1C. Since the sound inside the S1C isn't very important
+	/// it's disabled for the moment. 
 	
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
@@ -93,7 +97,7 @@ S1C::S1C (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
 	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
 	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-*/
+#endif
 }
 
 S1C::~S1C()

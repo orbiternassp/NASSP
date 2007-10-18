@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/06/17 17:49:33  tschachim
+  *	Bugfix smoother movement.
+  *	
   *	Revision 1.11  2006/06/01 14:28:25  tschachim
   *	FDAIs no longer turn immediately (Bug 1448610).
   *	
@@ -58,7 +61,7 @@
   *	
   **************************************************************************/
 
-// Avoids bug in VC++
+/// \bug Avoids bug in VC++
 #pragma once
 
 #include < GL\gl.h >                                
@@ -80,7 +83,7 @@ public:
 
 	bool IsPowered();
 	void WireTo(e_object *dc, e_object *ac) { DCSource = dc; ACSource = ac; };
-	// TODO: temporary hack for the LM
+	/// \todo temporary hack for the LM
 	void WireTo(e_object *dc) { DCSource = dc; noAC = true; };
 
 protected:

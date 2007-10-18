@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2007/01/02 01:38:24  dseagrav
+  *	Digital uplink and associated stuff.
+  *	
   *	Revision 1.16  2006/07/01 23:49:13  movieman523
   *	Updated more documentation.
   *	
@@ -94,9 +97,9 @@ enum LightTestState
 ///
 enum CWSOperationMode
 {
-	CWS_MODE_NORMAL = 0,
-	CWS_MODE_BOOST = 1,
-	CWS_MODE_ACK = 2
+	CWS_MODE_NORMAL = 0,			///< Normal Caution and Warning display mode.
+	CWS_MODE_BOOST = 1,				///< Boost mode, which disables the left-hand Master Alarm light.
+	CWS_MODE_ACK = 2				///< ACK mode, for use during sleep periods.
 };
 
 ///
@@ -105,9 +108,9 @@ enum CWSOperationMode
 ///
 enum CSWSource
 {
-	CWS_SOURCE_LEM = 0,
-	CWS_SOURCE_CSM = 0,
-	CWS_SOURCE_CM = 1,
+	CWS_SOURCE_LEM = 0,				///< Display Caution and Warning alarms from the LEM.
+	CWS_SOURCE_CSM = 0,				///< Display Caution and Warming alarms from the CSM.
+	CWS_SOURCE_CM = 1,				///< Display Caution and Warning alarms from the CM.
 };
 
 ///
@@ -116,9 +119,9 @@ enum CSWSource
 ///
 enum CSWPowerSource
 {
-	CWS_POWER_SUPPLY_1 = 0,
-	CWS_POWER_SUPPLY_2 = 1,
-	CWS_POWER_NONE = 2,
+	CWS_POWER_SUPPLY_1 = 0,			///< Caution and Warning system is using power supply 1
+	CWS_POWER_SUPPLY_2 = 1,			///< Caution and Warning system is using power supply 2
+	CWS_POWER_NONE = 2,				///< Caution and Warning system is not powered.
 };
 
 ///
@@ -128,8 +131,8 @@ enum CSWPowerSource
 enum CWSMasterAlarmPosition
 {
 	CWS_MASTERALARMPOSITION_NONE,
-	CWS_MASTERALARMPOSITION_LEFT,
-	CWS_MASTERALARMPOSITION_RIGHT
+	CWS_MASTERALARMPOSITION_LEFT,	///< Render the left master alarm light.
+	CWS_MASTERALARMPOSITION_RIGHT	///< Render the right master alarm light.
 };
 
 #include "powersource.h"
@@ -357,13 +360,15 @@ protected:
 	///
 	bool InhibitNextMasterAlarm;
 
+#define CWS_LIGHTS_PER_PANEL	30	///< Max number of lights on one panel. If more than 30 you'll need to change packing code.
+
 	///
 	/// Light states. You get 30 lights per panel, as that fits nicely into a 32-bit integer. In
 	/// reality, neither CSM or LEM needs that many.
 	///
 	/// \brief Left-hand light states.
 	///
-	bool LeftLights[30];
+	bool LeftLights[CWS_LIGHTS_PER_PANEL];
 
 	///
 	/// Light states. You get 30 lights per panel, as that fits nicely into a 32-bit integer. In
@@ -371,7 +376,7 @@ protected:
 	///
 	/// \brief Right-hand light states.
 	///
-	bool RightLights[30];
+	bool RightLights[CWS_LIGHTS_PER_PANEL];
 
 	//
 	// These don't have to be saved.
@@ -393,12 +398,20 @@ protected:
 	double MasterAlarmCycleTime;
 
 	///
-	/// \brief Sound to use for master alarm
+	/// \brief Sound to use for master alarm.
+	///
+	/// Note that we use a reference here, which must be set in the constructor and
+	/// cannot be changed afterwards. This avoids having to use pointers in all the code
+	/// which uses the sound.
 	///
 	Sound &MasterAlarmSound;
 
 	///
 	/// \brief Sound to use for button clicks.
+	///
+	/// Note that we use a reference here, which must be set in the constructor and
+	/// cannot be changed afterwards. This avoids having to use pointers in all the code
+	/// which uses the sound.
 	///
 	Sound &ButtonSound;
 
@@ -418,11 +431,21 @@ protected:
 
 	///
 	/// \brief Convert an array of light states to a 32-bit integer.
+	/// This function converts an internal light state array into a 32-bit integer which can be
+	/// saved in the scenario file.
+	///
+	/// \param LightState Array of light states.
+	/// \return 32-bit packed array of states.
 	///
 	int GetLightStates(bool *LightState);
 
 	///
 	/// \brief Convert a 32-bit integer into an array of light states.
+	/// This function takes a 32-bit integer which has been loaded from a scenario file, and
+	/// expands it into an internal light state array.
+	///
+	/// \param LightState Array of light states, to be set from the packed array.
+	/// \param state 32-bit packed array of light states to set in the array.
 	///
 	void SetLightStates(bool *LightState, int state);
 };

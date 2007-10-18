@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/06/06 15:02:21  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.22  2007/05/10 17:07:19  tschachim
   *	Animation fixed because of the mesh group reduction.
   *	
@@ -914,10 +917,10 @@ void SM::AddEngines()
 	// Add the RCS. SPS won't fire with SM seperated.
 	//
 
-	//
-	// TODO: For now, we just don't create propellant tanks for the Apollo 13 SM. We should do something
-	// more sensible eventually.
-	//
+	///
+	/// \todo For now, we just don't create propellant tanks for the Apollo 13 SM. We should do something
+	/// more sensible eventually.
+	///
 
 	if (!A13Exploded)
 	{
@@ -1194,10 +1197,10 @@ void SM::SetState(SMSettings &state)
 	//
 	// Now the RCS propellant resource has been created, set the
 	// fuel levels.
-	//
-	// TODO: for now we don't create RCS propellant for Apollo 13.
-	// We should do something more sensible later.
-	//
+	///
+	/// \todo For now we don't create RCS propellant for Apollo 13.
+	/// We should do something more sensible later.
+	///
 
 	if (state.SettingsType.SM_SETTINGS_FUEL && !A13Exploded)
 	{

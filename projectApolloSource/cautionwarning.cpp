@@ -1,6 +1,6 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2004-2005 Mark Grant
+  Copyright 2004-2007 Mark Grant
 
   ORBITER vessel module: Generic caution and warning system code.
 
@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/06/06 15:02:11  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.21  2007/01/22 14:39:58  tschachim
   *	Bugfix UplinkTestState.
   *	
@@ -344,9 +347,9 @@ void CautionWarningSystem::SetLight(int lightnum, bool state)
 {
 	bool *LightStates = LeftLights;
 
-	if (lightnum >= 30) {
+	if (lightnum >= CWS_LIGHTS_PER_PANEL) {
 		LightStates = RightLights;
-		lightnum -= 30;
+		lightnum -= CWS_LIGHTS_PER_PANEL;
 	}
 
 	//
@@ -394,7 +397,7 @@ int CautionWarningSystem::GetLightStates(bool *LightState)
 	int	lights = 0;
 	int mask = 1;
 
-	for (int i = 0; i < 30; i++) {
+	for (int i = 0; i < CWS_LIGHTS_PER_PANEL; i++) {
 		if (LightState[i])
 			lights |= mask;
 
@@ -409,7 +412,7 @@ void CautionWarningSystem::SetLightStates(bool *LightState, int state)
 {
 	int mask = 1;
 
-	for (int i = 0; i < 30; i++) {
+	for (int i = 0; i < CWS_LIGHTS_PER_PANEL; i++) {
 		if (state & mask) {
 			LightState[i] = true;
 		}
@@ -428,23 +431,23 @@ void CautionWarningSystem::SetLightStates(bool *LightState, int state)
 void CautionWarningSystem::FailLight(int lightnum, bool failed)
 
 {
-	if (lightnum < 0 || lightnum > 59)
+	if (lightnum < 0 || lightnum >= (CWS_LIGHTS_PER_PANEL * 2))
 		return;
 
 	if (failed) {
-		if (lightnum < 30) {
+		if (lightnum < CWS_LIGHTS_PER_PANEL) {
 			LightsFailedLeft |= (1 << lightnum);
 		}
 		else {
-			LightsFailedRight |= (1 << (lightnum - 30));
+			LightsFailedRight |= (1 << (lightnum - CWS_LIGHTS_PER_PANEL));
 		}
 	}
 	else {
-		if (lightnum < 30) {
+		if (lightnum < CWS_LIGHTS_PER_PANEL) {
 			LightsFailedLeft &= ~(1 << lightnum);
 		}
 		else {
-			LightsFailedRight &= ~(1 << (lightnum - 30));
+			LightsFailedRight &= ~(1 << (lightnum - CWS_LIGHTS_PER_PANEL));
 		}
 	}
 }
@@ -452,14 +455,14 @@ void CautionWarningSystem::FailLight(int lightnum, bool failed)
 bool CautionWarningSystem::IsFailed(int lightnum)
 
 {
-	if (lightnum < 0 || lightnum > 59)
+	if (lightnum < 0 || lightnum >= (CWS_LIGHTS_PER_PANEL*2))
 		return false;
 
-	if (lightnum < 30) {
+	if (lightnum < CWS_LIGHTS_PER_PANEL) {
 		return (LightsFailedLeft & (1 << lightnum)) != 0;
 	}
 	else {
-		return (LightsFailedRight & (1 << (lightnum - 30))) != 0;
+		return (LightsFailedRight & (1 << (lightnum - CWS_LIGHTS_PER_PANEL))) != 0;
 	}
 }
 

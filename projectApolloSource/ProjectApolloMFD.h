@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/12/19 15:55:55  tschachim
+  *	ECS test stuff, bugfixes.
+  *	
   *	Revision 1.2  2006/06/27 11:34:25  tschachim
   *	Added status screen.
   *	
@@ -33,6 +36,9 @@
 #ifndef __PROJECTAPOLLOMFD_H
 #define __PROJECTAPOLLOMFD_H
 
+///
+/// \ingroup MFD
+///
 class ProjectApolloMFD: public MFD {
 public:
 	ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel);

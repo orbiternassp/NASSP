@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2006/07/06 00:40:08  movieman523
+  *	Improved timed sound playback. Still doesn't really work due to Orbitersound not wanting to play our files.
+  *	
   *	Revision 1.12  2006/07/05 20:16:16  movieman523
   *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
   *	
@@ -60,12 +63,6 @@
   *	Initial version
   *	
   **************************************************************************/
-
-///
-/// \defgroup Sound Audio support.
-/// \brief Code to support audio playback, either directly through DirectSound indirectly
-/// through OrbiterSound.
-///
 
 #ifndef SOUNDLIB_H
 #define SOUNDLIB_H

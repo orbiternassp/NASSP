@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2007/10/09 21:49:37  tschachim
+  *	Bugfixes
+  *	
   *	Revision 1.79  2007/08/13 16:05:28  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -3420,7 +3423,7 @@ bool CSMcomputer::ReadMemory(unsigned int loc, int &val)
 			val = SELECTOR;
 			return true;
 
-		// TODO Check scaling of all the doubles
+		/// \todo Check scaling of all the doubles
 
 		case 0132:
 			val = (int) (KA * 100.0);
@@ -3650,7 +3653,7 @@ void CSMcomputer::WriteMemory(unsigned int loc, int val)
 			SELECTOR = val;
 			break;
 
-		// TODO Check scaling of all the doubles
+		/// \todo Check scaling of all the doubles
 
 		case 0132:
 			KA = ((double) val) / 100.0;
@@ -4306,9 +4309,9 @@ void CSMcomputer::ProcessChannel14(int val){
 	} */
 }
 
-// TODO Dirty Hack for the AGC++ attitude control, 
-// remove this and use I/O channels and pulsed thrusters 
-// identical to the VAGC instead
+/// \todo Dirty Hack for the AGC++ attitude control, 
+/// remove this and use I/O channels and pulsed thrusters 
+/// identical to the VAGC instead
 
 void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 	

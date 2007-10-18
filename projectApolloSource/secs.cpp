@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/07/17 14:33:10  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.7  2007/06/06 15:02:20  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -250,7 +253,7 @@ double ELS::NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBrakerSwitch
 		if (sw->IsDown()) {
 			size -= simdt / (7. * 60.) * (OurVessel->Realism ? 1. : 20.);	// same as fill? Quickstart mode is faster
 			size = max(0, size);
-		} else if (sw->IsUp()) {		// TODO compressor power, panel 298
+		} else if (sw->IsUp()) {		/// \todo Compressor power, panel 298
 			size += simdt / (7. * 60.) * (OurVessel->Realism ? 1. : 20.);	// Apollo 15 entry checklist
 			size = min(1, size);
 		}

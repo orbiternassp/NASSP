@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2007/06/06 15:02:09  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.13  2007/05/12 10:26:14  redburne
   *	2007-05-12 OP:
   *	- fixed: wheel spin (tweaked to look more realistic; time acceleration compatible)
@@ -982,8 +985,9 @@ void LRV::UpdateAnimations (double SimDT)
 
 	TRACESETUP("UpdateAnimations");
 
-	// TODO: Draw random number to see if wheels hit a bump and it's magnitude or determine wheel motion due to vertical accelleration by bouncing
-
+	///
+	/// \todo Draw random number to see if wheels hit a bump and it's magnitude or determine wheel motion due to vertical accelleration by bouncing
+	///
 	double outer_steering = AckermannInnerToOuter(steering * PI * (MAX_WHEEL_TURN_INNER_DEG / 180.0)) * 180.0 / (PI * MAX_WHEEL_TURN_INNER_DEG);
 	proc_frontwheel_inner = (0.5 + 0.5 * steering); //Right is positive, left is negative
 	proc_frontwheel_outer = (0.5 + 0.5 * outer_steering); //Right is positive, left is negative
