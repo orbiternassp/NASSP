@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2007/08/13 16:06:16  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.24  2007/07/17 14:33:08  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -524,10 +530,30 @@ protected:
 	ThreeWayPowerMerge ACBus2;
 };
 
+///
+/// \brief AC voltage meter for Saturn panel.
+///
+/// \image html ACVolts.bmp "ACVolts meter"
+///
+/// This meter displays the AC voltage on one phase of one of the CSM AC buses.
+///
+/// \ingroup PanelItems
+///
 class SaturnACVoltMeter: public SaturnRoundMeter {
 public:
+	///
+	/// \brief Initialise the meter state.
+	///
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *acindicatorswitch);
+
+	///
+	/// \brief Query the meter value.
+	///
 	double QueryValue();
+
+	///
+	/// \brief Draw the meter.
+	///
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 	SURFHANDLE FrameSurface;
@@ -537,6 +563,16 @@ protected:
 	PowerStateRotationalSwitch *ACIndicatorSwitch;
 };
 
+///
+/// \brief DC voltage meter for Saturn panel.
+///
+/// \image html DCVolts.bmp "DC voltage meter"
+///
+/// This meter displays the DC voltage of one of the numerous DC systems in the CSM (e.g. the main buses
+/// or batteries).
+///
+/// \ingroup PanelItems
+///
 class SaturnDCVoltMeter: public SaturnRoundMeter {
 public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
@@ -550,6 +586,16 @@ protected:
 	PowerStateRotationalSwitch *DCIndicatorSwitch;
 };
 
+///
+/// \brief DC current meter for Saturn panel.
+///
+/// \image html DCAmps.bmp "DC current meter"
+///
+/// This meter displays the DC current of one of the numerous DC systems in the CSM (e.g. the main buses
+/// or batteries).
+///
+/// \ingroup PanelItems
+///
 class SaturnDCAmpMeter: public SaturnRoundMeter {
 public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2007/07/17 14:33:09  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.64  2007/06/23 21:20:38  dseagrav
   *	LVDC++ Update: Now with Pre-IGM guidance
   *	
@@ -1282,7 +1285,7 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 	//
 	// Usually this will be zero, so you'd better use the right jettison button!
 	//
-	// TODO: At  some point we should expand this so that we can jettison the LES
+	// \todo At  some point we should expand this so that we can jettison the LES
 	// while the main abort motor is running.
 	//
 

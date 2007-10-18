@@ -118,13 +118,14 @@ FILE_PATTERNS          = *.c \
                          *.dox \
                          *.py
 RECURSIVE              = NO
-EXCLUDE                = 
+EXCLUDE                = dinput.h \
+                         dsound.h
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = 
 EXAMPLE_PATH           = 
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO
-IMAGE_PATH             = 
+IMAGE_PATH             = ./bitmaps
 INPUT_FILTER           = 
 FILTER_PATTERNS        = 
 FILTER_SOURCE_FILES    = NO
@@ -142,7 +143,7 @@ VERBATIM_HEADERS       = YES
 #---------------------------------------------------------------------------
 # configuration options related to the alphabetical class index
 #---------------------------------------------------------------------------
-ALPHABETICAL_INDEX     = NO
+ALPHABETICAL_INDEX     = YES
 COLS_IN_ALPHA_INDEX    = 5
 IGNORE_PREFIX          = 
 #---------------------------------------------------------------------------

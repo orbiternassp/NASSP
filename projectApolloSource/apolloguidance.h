@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.53  2007/06/06 15:02:10  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.52  2007/01/11 07:46:10  chode99
   *	Added NextControlTime variable (for use by entry guidance)
   *	
@@ -1031,9 +1034,9 @@ protected:
 	void OrientForOrbitBurn(double simt);
 	void GetHoverAttitude( VECTOR3 &actatt);
 
-	// TODO Dirty Hack for the AGC++ attitude control, 
-	// remove this and use I/O channels and pulsed thrusters 
-	// identical to the VAGC instead
+	/// \todo Dirty Hack for the AGC++ attitude control, 
+	/// remove this and use I/O channels and pulsed thrusters 
+	/// identical to the VAGC instead
 	virtual void SetAttitudeRotLevel(VECTOR3 level) = 0;
 
 	///

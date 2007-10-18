@@ -1,6 +1,6 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2004-2005
+  Copyright 2004-2007
 
   Saturn Instrument Unit header
 
@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2006/07/09 16:09:38  movieman523
+  *	Added Prog 59 for SIVb venting.
+  *	
   *	Revision 1.7  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
@@ -198,7 +201,7 @@ public:
 /// This class simulates the Saturn Instrument Unit, which flew the Saturn launch vehicle
 /// prior to the CSM seperating from the SIVb.
 ///
-/// \ingroup InternalSystems
+/// \ingroup LVSystems
 /// \brief Saturn IU simulation.
 ///
 class IU {

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2006/07/24 19:20:35  tschachim
+  *	Bugfix Power load.
+  *	
   *	Revision 1.21  2006/07/24 06:41:29  dseagrav
   *	Many changes - Rearranged / corrected FDAI power usage, added LM AC equipment, many bugfixes
   *	
@@ -825,7 +828,7 @@ bool FDAI::IsPowered()
 			return true;
 	}
 
-	// TODO: temporary hack for the LM
+	/// \todo temporary hack for the LM
 	if (noAC && DCSource) {
 		if (DCSource->Voltage() > SP_MIN_DCVOLTAGE)
 			return true;

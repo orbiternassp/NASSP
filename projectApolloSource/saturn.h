@@ -1,6 +1,6 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2004-2005
+  Copyright 2004-2007
 
   Generic Saturn class for AGC interface. As much code as possible will be shared
   here between the SaturnV and Saturn1B.
@@ -23,6 +23,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.243  2007/08/13 16:06:18  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.242  2007/07/27 19:57:28  jasonims
   *	Created MCC master class and split individual functions into sub-classes.  Initial work on CapCom routines.
   *	
@@ -574,6 +580,8 @@ typedef union {
 /// \ingroup FailFlags
 /// \brief Flags specifying which control panel switches will fail.
 ///
+/// \ingroup InternalInterface
+///
 typedef union {
 	struct {
 		unsigned Init:1;				///< Flags have been initialised.
@@ -585,6 +593,10 @@ typedef union {
 	int word;							///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
 } SwitchFailures;
 
+///
+/// \brief O2/H2 tank status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double O2Tank1PressurePSI;
 	double O2Tank2PressurePSI;
@@ -593,11 +605,19 @@ typedef struct {
 	double O2SurgeTankPressurePSI;
 } TankPressures;
 
+///
+/// \brief CM RCS pressure status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double He1PressPSI;
 	double He2PressPSI;
 } CMRCSPressures;
 
+///
+/// \brief O2/H2 tank quantities.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double O2Tank1Quantity;
 	double O2Tank1QuantityKg;
@@ -607,6 +627,10 @@ typedef struct {
 	double H2Tank2Quantity;
 } TankQuantities;
 
+///
+/// \brief Launch Vehicle tank quantities.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double SICQuantity;
 	double SIIQuantity;
@@ -618,6 +642,10 @@ typedef struct {
 	double S4BOxMass;
 } LVTankQuantities;
 
+///
+/// \brief Cabin atmosphere status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double SuitTempK;
 	double CabinTempK;
@@ -634,12 +662,20 @@ typedef struct {
 	double DirectO2FlowLBH;
 } AtmosStatus;
 
+///
+/// \brief Displayed atmosphere status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double DisplayedO2FlowLBH;
 	double DisplayedSuitComprDeltaPressurePSI;
 	double DisplayedEcsRadTempPrimOutletMeterTemperatureF;
 } DisplayedAtmosStatus;
 
+///
+/// \brief Primary ECS cooling status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double RadiatorInletPressurePSI;
 	double RadiatorInletTempF;
@@ -649,6 +685,10 @@ typedef struct {
 	double AccumulatorQuantityPercent;
 } PrimECSCoolingStatus;
 
+///
+/// \brief Secondary ECS cooling status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double RadiatorInletPressurePSI;
 	double RadiatorInletTempF;
@@ -658,11 +698,19 @@ typedef struct {
 	double AccumulatorQuantityPercent;
 } SecECSCoolingStatus;
 
+///
+/// \brief ECS water status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double PotableH2oTankQuantityPercent;
 	double WasteH2oTankQuantityPercent;
 } ECSWaterStatus;
 
+///
+/// \brief General ECS status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	int crewNumber;
 	int crewStatus;
@@ -672,6 +720,10 @@ typedef struct {
 	double SecECSTestHeating;
 } ECSStatus;
 
+///
+/// \brief Main bus status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	double MainBusAVoltage;
 	double MainBusBVoltage;
@@ -682,6 +734,10 @@ typedef struct {
 	bool Fc_Disconnected;
 } MainBusStatus;
 
+///
+/// \brief Apollo Guidance Computer warning status.
+/// \ingroup InternalInterface
+///
 typedef struct {
 	bool CMCWarning;
 	bool ISSWarning;
@@ -3457,7 +3513,8 @@ protected:
 	SURFHANDLE CMTex;
 	SURFHANDLE J2Tex;
 	SURFHANDLE SIVBRCSTex;
-	//TODO SURFHANDLEs for VC
+
+	/// \todo SURFHANDLEs for VC
 
 	//
 	// Hardware support.
@@ -3645,7 +3702,17 @@ protected:
 	void SetAttachState(int s);
 	int GetLaunchState();
 	void SetLaunchState(int s);
+
+	///
+	/// Get the Apollo 13 state flags as an int.
+	/// \return 32-bit int representing the state flags.
+	///
 	int GetA13State();
+
+	///
+	/// Set the Apollo 13 state flags based on an int value.
+	/// \param s This 32-bit int has the packed Apollo 13 flags.
+	///
 	void SetA13State(int s);
 	int GetLightState();
 	void SetLightState(int s);
@@ -3786,10 +3853,9 @@ protected:
 
 	PROPELLANT_HANDLE ph_ullage1, ph_ullage2, ph_ullage3;
 
-	//
-	// Fake propellant for O2 vents.
-	//
-
+	///
+	/// Fake propellant for O2 vents.
+	///
 	PROPELLANT_HANDLE ph_o2_vent;
 
 	//
@@ -3851,10 +3917,9 @@ protected:
 
 	double CurrentViewOffset;
 
-	//
-	// Time of last timestep call.
-	//
-
+	///
+	/// Time of last timestep call.
+	///
 	double LastTimestep;
 
 	//
@@ -3864,16 +3929,14 @@ protected:
 	double NextFlashUpdate;
 	bool PanelFlashOn;
 
-	//
-	// Audio language.
-	//
-
+	///
+	/// Audio language.
+	///
 	char AudioLanguage[64];
 
-	//
-	// LEM name
-	//
-
+	///
+	/// LEM name
+	///
 	char LEMName[64];
 
 	//

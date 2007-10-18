@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.211  2007/09/07 17:43:52  tschachim
+  *	(Re)moved obsolete bitmaps.
+  *	
   *	Revision 1.210  2007/08/20 20:57:19  tschachim
   *	(Re)moved obsolete bitmap.
   *	
@@ -3523,7 +3526,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	//
 	// Special handling illuminated "sequencer switches".
-	// TODO: this should really be moved into the switch code.
+	// \todo This should really be moved into the switch code.
 	//
 
 	if (LAUNCHIND[0])

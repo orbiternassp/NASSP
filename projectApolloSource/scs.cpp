@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2007/08/13 16:06:21  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.20  2007/06/06 15:02:20  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -583,7 +589,7 @@ void GDC::Init(Saturn *v)
 void GDC::SystemTimestep(double simdt) {
 
 	// Do we have power? 
-	// TODO DC power is needed, too
+	/// \todo DC power is needed, too
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2) return;  // Switched off
 
 	if (sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
@@ -686,7 +692,7 @@ void GDC::Timestep(double simdt) {
 	if (!yawBmag->IsPowered())   SetAttitude(_V(Attitude.x, Attitude.y, LastAttitude.z));
 
 	// Do we have power?
-	// TODO DC power is needed, too
+	/// \todo DC power is needed, too
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2 ||
 	    sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
 		sat->StabContSystemAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) {
@@ -1589,7 +1595,7 @@ void RJEC::TimeStep(double simdt){
 
 	*/
 
-	// TODO Dirty Hack for the AGC++ attitude control
+	/// \todo Dirty Hack for the AGC++ attitude control
 	// see CSMcomputer::SetAttitudeRotLevel(VECTOR3 level)
 	if (AGCActiveTimer > 0) {
 		AGCActiveTimer = max(0, AGCActiveTimer - simdt);
@@ -1954,8 +1960,8 @@ void ECA::SystemTimestep(double simdt) {
 	// Do we have power?
 	if (!IsPowered()) return;
 
-	sat->SystemMnACircuitBraker.DrawPower(10);	// TODO real power is unknown
-	sat->SystemMnBCircuitBraker.DrawPower(10);	// TODO real power is unknown
+	sat->SystemMnACircuitBraker.DrawPower(10);	/// \todo Real power is unknown
+	sat->SystemMnBCircuitBraker.DrawPower(10);	/// \todo Real power is unknown
 }
 
 void ECA::TimeStep(double simdt) {
@@ -1966,8 +1972,8 @@ void ECA::TimeStep(double simdt) {
 	// SCS is in control if the THC is CLOCKWISE 
 	// or if the SC CONT switch is set to SCS.
 
-	// TODO: TVC CW is supplied by SCS LOGIC BUS 2
-	// TODO: SC CONT switch is supplied by ???
+	/// \todo TVC CW is supplied by SCS LOGIC BUS 2
+	/// \todo SC CONT switch is supplied by ???
 	int accel_roll_flag = 0;
 	int mnimp_roll_flag = 0;
 	int accel_pitch_flag = 0;

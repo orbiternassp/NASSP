@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2007/10/07 22:29:10  tschachim
+  *	Bugfixes
+  *	
   *	Revision 1.36  2007/10/05 13:39:03  dseagrav
   *	Cause vLGC restart if unpowered.
   *	
@@ -1532,20 +1535,19 @@ void LEMcomputer::ProcessChannel6(int val){
 void LEMcomputer::BurnMainEngine(double thrust)
 
 {
-	// TODO This function is used by the AGC++ burn programs
-	// and should simulate the VAGC behaviour, i.e. I/O channels etc.
-	// to control the main engine
+	/// \todo This function is used by the AGC++ burn programs
+	/// and should simulate the VAGC behaviour, i.e. I/O channels etc.
+	/// to control the main engine
 
 	OurVessel->SetEngineLevel(ENGINE_HOVER, thrust);
 
 	ApolloGuidance::BurnMainEngine(thrust);
 }
 
-//
-// TODO Dirty Hack for the AGC++ RCS burn control, 
-// remove this and use I/O channels and pulsed thrusters 
-// identical to the VAGC instead
-//
+/// \todo Dirty Hack for the AGC++ RCS burn control, 
+/// remove this and use I/O channels and pulsed thrusters 
+/// identical to the VAGC instead
+///
 
 void LEMcomputer::ResetAttitudeLevel() {
 

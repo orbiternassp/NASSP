@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2007/08/13 16:06:07  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.72  2007/07/17 14:33:03  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -799,7 +805,7 @@ void Saturn1b::StageStartSIVB(double simt)
 		SetStage(CSM_LEM_STAGE);
 		if (bAbort)
 		{
-			// TODO SPS abort handling
+			/// \todo SPS abort handling
 			ABORT_IND = true;
 			StartAbort();
 			bAbort = false;
@@ -882,7 +888,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		SetStage(CSM_LEM_STAGE);
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 		if (bAbort){
-			// TODO SPS abort handling
+			/// \todo SPS abort handling
 			ABORT_IND = true;
 			StartAbort();
 			bAbort = false;
@@ -1223,7 +1229,7 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		case 4:
 			break;
 		case 5:
-			// TODO: No clue what dockstate means, but SetCSM2Stage is buggy 
+			/// \todo No clue what dockstate means, but SetCSM2Stage is buggy 
 			// SetCSM2Stage();
 			break;
 		}

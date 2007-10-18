@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2007/09/04 13:51:55  dseagrav
+  *	IGM first stage. It doesn't work yet.
+  *	
   *	Revision 1.2  2007/06/23 21:20:36  dseagrav
   *	LVDC++ Update: Now with Pre-IGM guidance
   *	
@@ -44,6 +47,10 @@
 #define LVRegPIPAY 004
 #define LVRegPIPAZ 005
 
+///
+/// \brief Saturn IMU simulation.
+/// \ingroup LVSystems
+///
 class LVIMU {
 
 public:

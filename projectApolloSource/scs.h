@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2007/04/25 18:48:11  tschachim
+  *	EMS dV functions.
+  *	
   *	Revision 1.17  2007/01/22 15:48:18  tschachim
   *	SPS Thrust Vector Control, RHC power supply, THC clockwise switch, bugfixes.
   *	
@@ -227,7 +230,7 @@ public: // Same stuff about speed and I'm lazy too.
 	bool SPSActive;                                                 // SPS Active notification
 	bool DirectPitchActive,DirectYawActive,DirectRollActive;        // Direct axis fire notification
 	Saturn *sat;
-	double AGCActiveTimer;													// TODO Dirty Hack for the AGC++ attitude control
+	double AGCActiveTimer;													/// \todo Dirty Hack for the AGC++ attitude control
 };
 
 class ECA {

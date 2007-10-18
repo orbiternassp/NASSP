@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2007/06/06 15:02:14  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.32  2006/08/20 08:28:06  dseagrav
   *	LM Stage Switch actually causes staging (VERY INCOMPLETE), Incorrect "Ascent RCS" removed, ECA outputs forced to 24V during initialization to prevent IMU/LGC failure on scenario load, Valves closed by default, EDS saves RCS valve states, would you like fries with that?
   *	
@@ -159,7 +162,7 @@ void LEM::ToggleEVA()
 	
 	if (CDREVA_IP) {
 		// Nothing for now, the EVA is ended, when the LEVA vessel calls StopEVA
-		// TODO: Support for 2 LEVA vessels
+		/// \todo Support for 2 LEVA vessels
 	}
 	else {
 		VESSELSTATUS vs1;
