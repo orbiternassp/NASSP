@@ -25,6 +25,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2007/08/13 16:06:24  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.77  2007/07/17 14:33:10  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -331,7 +337,9 @@ ToggleSwitch::ToggleSwitch() {
 
 	OurVessel = 0;
 	switchRow = 0;
+
 	Active = true;
+	Held = false;
 }
 
 ToggleSwitch::~ToggleSwitch() {
@@ -397,22 +405,51 @@ bool ToggleSwitch::SwitchTo(int newState) {
 			return false;
 	}
 
-	if (Active && (state != newState)) {
-		state = newState;
-		Sclick.play();
-		SwitchToggled = true;
-		if (switchRow) {
-			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
-		}
+	if (Active)
+	{
+		if (state != newState)
+		{
+			state = newState;
+			Sclick.play();
+			SwitchToggled = true;
+			if (switchRow)
+			{
+				if (switchRow->panelSwitches->listener) 
+					switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+			}
 
-		if (springLoaded != SPRINGLOADEDSWITCH_NONE) {
-			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
-			if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
+			//
+			// Reset the switch if it's spring-loaded and not held.
+			//
+			if ((springLoaded != SPRINGLOADEDSWITCH_NONE) && !IsHeld())
+			{
+				if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
+				if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
+			}
 		}
 		return true;
 	}
 	return false;
+}
+
+unsigned int ToggleSwitch::GetFlags()
+
+{
+	ToggleSwitchFlags fs;
+
+	fs.Held = Held ? 1 : 0;
+
+	return fs.flags;
+}
+
+void ToggleSwitch::SetFlags(unsigned int f)
+
+{
+	ToggleSwitchFlags fs;
+
+	fs.flags = f;
+
+	Held = (fs.Held != 0);
 }
 
 //
@@ -445,6 +482,14 @@ bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 	if (mx > (x + width) || my > (y + height))
 		return false;
 
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+
+	if (IsSpringLoaded())
+		SetHeld((ctrlState & 0x8000) != 0);
+
 	//
 	// Yes, so now we just need to check whether it's an on or
 	// off click.
@@ -452,19 +497,19 @@ bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 
 	if (event == PANEL_MOUSE_LBDOWN) {
 		if (my > (y + (height / 2.0))) {
-			if (state) {
-				state = 0;
+			if (state != TOGGLESWITCH_DOWN) {
+				state = TOGGLESWITCH_DOWN;
 				Sclick.play();
 			}
 		}
 		else {
-			if (!state) {
-				state = 1;
+			if (state != TOGGLESWITCH_UP) {
+				state = TOGGLESWITCH_UP;
 				Sclick.play();
 			}
 		}
 	}
-	else if (springLoaded != SPRINGLOADEDSWITCH_NONE && (event & PANEL_MOUSE_LBUP)) {
+	else if (IsSpringLoaded() && (event & PANEL_MOUSE_LBUP) && !IsHeld()) {
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
 	}
@@ -491,7 +536,7 @@ bool ToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 void ToggleSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 
 {
-	if (state)
+	if (IsUp())
 	{
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
 	}
@@ -501,7 +546,9 @@ void ToggleSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 	}
 }
 
-void ToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
+void ToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface)
+
+{
 	if (visible) 
 		DoDrawSwitch(DrawSurface);
 }
@@ -525,19 +572,26 @@ void ToggleSwitch::SetActive(bool s) {
 	Active = s;
 }
 
-void ToggleSwitch::SaveState(FILEHANDLE scn) {
+void ToggleSwitch::SaveState(FILEHANDLE scn)
 
-	oapiWriteScenario_int (scn, name, state);
+{
+	char buffer[1000];
+
+	sprintf(buffer, "%i %u", state, GetFlags()); 
+	oapiWriteScenario_string(scn, name, buffer);
 }
 
-void ToggleSwitch::LoadState(char *line){
+void ToggleSwitch::LoadState(char *line)
+{
 	// Load state
 	char buffer[100];
-	int st=0;
+	int st = 0;
+	unsigned int f = 0;
 
-	sscanf(line, "%s %i", buffer, &st);
+	sscanf(line, "%s %i %u", buffer, &st, &f);
 	if (!strnicmp(buffer, name, strlen(name))) {
 		state = st;
+		SetFlags(f);
 	}
 }
 
@@ -560,6 +614,14 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	if (mx > (x + width) || my > (y + height))
 		return false;
 
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+
+	if (IsSpringLoaded())
+		SetHeld((ctrlState & 0x8000) != 0);
+
 	//
 	// Yes, so now we just need to check whether it's an on or
 	// off click.
@@ -578,7 +640,9 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 				Sclick.play();
 			}
 		}
-	} else if (springLoaded != SPRINGLOADEDSWITCH_NONE && event == PANEL_MOUSE_LBUP) {		
+
+	}
+	else if (IsSpringLoaded() && event == PANEL_MOUSE_LBUP && !IsHeld()) {		
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;

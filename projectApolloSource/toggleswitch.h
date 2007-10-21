@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2007/08/13 16:06:25  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.59  2007/07/17 14:33:11  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -208,8 +214,8 @@
 
 #include "cautionwarning.h"
 
-#define TOGGLESWITCH_DOWN		0
-#define TOGGLESWITCH_UP			1
+#define TOGGLESWITCH_DOWN		0			///< Toggle switch is up.
+#define TOGGLESWITCH_UP			1			///< Toggle switch is down.
 
 #define THREEPOSSWITCH_DOWN		0
 #define THREEPOSSWITCH_CENTER	1
@@ -365,7 +371,10 @@ public:
 	void SetPosition(int xp, int yp) { x = xp; y = yp; };
 	virtual void SetState(bool s) { state = s; };
 	void SetOffset(int xo, int yo) {xOffset = xo; yOffset = yo; };
-	void SetSpringLoaded(int springloaded) { springLoaded = springloaded; }; 
+	void SetSpringLoaded(int springloaded) { springLoaded = springloaded; };
+	bool IsSpringLoaded() { return (springLoaded != SPRINGLOADEDSWITCH_NONE); };
+	void SetHeld(bool s) { Held = s; };
+	bool IsHeld() { return Held; };
 	virtual int GetState();
 	void SetActive(bool s);
 
@@ -375,8 +384,8 @@ public:
 	void DrawFlash(SURFHANDLE DrawSurface);
 	void SetBorderSurface(SURFHANDLE border) { BorderSurface = border; };
 
-	virtual bool IsUp() { return (GetState() == 1); };
-	virtual bool IsDown() { return (GetState() == 0); };
+	virtual bool IsUp() { return (GetState() == TOGGLESWITCH_UP); };
+	virtual bool IsDown() { return (GetState() == TOGGLESWITCH_DOWN); };
 	virtual bool IsCenter() { return false; };
 
 	virtual bool SwitchTo(int newState);
@@ -403,7 +412,7 @@ public:
 	bool operator&&(const bool b) { return (GetState() && b); };
 	bool operator||(const bool b) { return (GetState() || b); };
 
-	operator bool() { return (GetState() != 0); };
+	operator bool() { return (GetState() != TOGGLESWITCH_DOWN); };
 	operator int() { return (int) GetState(); };
 	operator unsigned() { return (unsigned) GetState(); };
 
@@ -411,6 +420,9 @@ protected:
 	virtual void InitSound(SoundLib *s);
 	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
 	bool DoCheckMouseClick(int event, int mx, int my);
+
+	virtual unsigned int GetFlags();
+	virtual void SetFlags(unsigned int f);
 
 	int	x;
 	int y;
@@ -423,6 +435,7 @@ protected:
 	int springLoaded;
 	bool Active;
 	bool SwitchToggled;
+	bool Held;
 
 	SURFHANDLE SwitchSurface;
 	SURFHANDLE BorderSurface;
@@ -430,6 +443,23 @@ protected:
 	Sound Sclick;
 
 	SwitchRow *switchRow;
+
+	///
+	/// Flags structure for saving state to scenario file.
+	///
+	struct ToggleSwitchFlags {
+		union {
+			struct {
+				unsigned int Held:1;	///< Is the switch held?
+			};
+			unsigned int flags;			///< Packed structure value to save.
+		};
+
+		///
+		/// Constructor. Set flags to zero.
+		///
+		ToggleSwitchFlags() { flags = 0; };
+	};
 };
 
 ///
