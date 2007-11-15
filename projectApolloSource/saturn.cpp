@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.201  2007/10/18 00:23:21  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.200  2007/08/13 16:06:17  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -3295,22 +3298,22 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 					break;
 				case OAPI_KEY_W: // Minimum impulse controller, pitch down
 					agc.SetInputChannelBit(032,2,1);
-					return 1;
+					break;
 				case OAPI_KEY_S: // Minimum impulse controller, pitch up
 					agc.SetInputChannelBit(032,1,1);
-					return 1;
+					break;
 				case OAPI_KEY_A: // Minimum impulse controller, yaw left
 					agc.SetInputChannelBit(032,4,1);
-					return 1;
+					break;
 				case OAPI_KEY_D: // Minimum impulse controller, yaw right
 					agc.SetInputChannelBit(032,3,1);
-					return 1;
+					break;
 				case OAPI_KEY_Q: // Minimum impulse controller, roll left
 					agc.SetInputChannelBit(032,6,1);
-					return 1;
+					break;
 				case OAPI_KEY_E: // Minimum impulse controller, roll right
 					agc.SetInputChannelBit(032,5,1);
-					return 1;					
+					break;
 			}
 		}else{
 			// KEY UP
@@ -3320,22 +3323,22 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 					break;
 				case OAPI_KEY_W: // Minimum impulse controller, pitch down
 					agc.SetInputChannelBit(032,2,0);
-					return 1;
+					break;
 				case OAPI_KEY_S: // Minimum impulse controller, pitch up
 					agc.SetInputChannelBit(032,1,0);
-					return 1;
+					break;
 				case OAPI_KEY_A: // Minimum impulse controller, yaw left
 					agc.SetInputChannelBit(032,4,0);
-					return 1;
+					break;
 				case OAPI_KEY_D: // Minimum impulse controller, yaw right
 					agc.SetInputChannelBit(032,3,0);
-					return 1;
+					break;
 				case OAPI_KEY_Q: // Minimum impulse controller, roll left
 					agc.SetInputChannelBit(032,6,0);
-					return 1;
+					break;
 				case OAPI_KEY_E: // Minimum impulse controller, roll right
 					agc.SetInputChannelBit(032,5,0);
-					return 1;
+					break;
 			}
 		}
 		return 0;
