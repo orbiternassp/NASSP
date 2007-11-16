@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.244  2007/10/18 00:23:22  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.243  2007/08/13 16:06:18  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -3478,7 +3481,8 @@ protected:
 #define SATPANEL_TELESCOPE			8
 #define SATPANEL_SEXTANT			9
 #define SATPANEL_MAIN_MIDDLE	   10
-#define SATPANEL_MAIN_RIGHT		   11	
+#define SATPANEL_MAIN_RIGHT		   11
+#define SATPANEL_LOWER_SMALL	   12 //Smaller (non-historic) Lower panel option
 
 	int  PanelId;
 	int MainPanelSplitted;
