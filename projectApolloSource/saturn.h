@@ -23,9 +23,6 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.245  2007/11/16 01:28:16  lassombra
-  *	Added Panel Definition for smaller Equipment Bay panel
-  *	
   *	Revision 1.244  2007/10/18 00:23:22  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -3484,12 +3481,10 @@ protected:
 #define SATPANEL_TELESCOPE			8
 #define SATPANEL_SEXTANT			9
 #define SATPANEL_MAIN_MIDDLE	   10
-#define SATPANEL_MAIN_RIGHT		   11
-#define SATPANEL_LOWER_SMALL	   12 //Smaller (non-historic) Lower panel option
+#define SATPANEL_MAIN_RIGHT		   11	
 
 	int  PanelId;
 	int MainPanelSplitted;
-	int GNC_Small;
 	bool InVC;
 	bool InPanel;
 	bool CheckPanelIdInTimestep;
