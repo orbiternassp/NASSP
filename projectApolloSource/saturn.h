@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.247  2007/11/16 06:40:45  lassombra
+  *	Reverted to 1.244 (Didn't intend to commit, hit commit instead of unedit)
+  *	
   *	Revision 1.244  2007/10/18 00:23:22  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -3472,6 +3475,7 @@ protected:
 #define SATPANEL_MAIN				0 // Both have Orbiter's 
 #define SATPANEL_MAIN_LEFT		    0 // default panel id 0
 #define SATPANEL_LOWER				1
+#define SATPANEL_LOWER_CENTER		1 // Should never have both full Lower and Center Lower available.
 #define SATPANEL_LEFT				2
 #define SATPANEL_RIGHT				3
 #define SATPANEL_LEFT_RNDZ_WINDOW	4
@@ -3481,10 +3485,13 @@ protected:
 #define SATPANEL_TELESCOPE			8
 #define SATPANEL_SEXTANT			9
 #define SATPANEL_MAIN_MIDDLE	   10
-#define SATPANEL_MAIN_RIGHT		   11	
+#define SATPANEL_MAIN_RIGHT		   11
+#define SATPANEL_LOWER_LEFT		   12
+#define SATPANEL_LOWER_RIGHT	   13
 
 	int  PanelId;
 	int MainPanelSplitted;
+	int GNSplit;
 	bool InVC;
 	bool InPanel;
 	bool CheckPanelIdInTimestep;
@@ -3600,6 +3607,11 @@ protected:
 	void AddLeftMiddleMainPanelAreas(int offset);
 	void AddRightMiddleMainPanelAreas(int offset);
 	void AddRightMainPanelAreas(int offset);
+	void AddLeftLowerPanelAreas();
+	void AddLeftCenterLowerPanelAreas(int offset);
+	void AddCenterLowerPanelAreas(int offset);
+	void AddRightCenterLowerPanelAreas(int offset);
+	void AddRightLowerPanelAreas(int offset);
 	void ReleaseSurfaces();
 	void KillDist(OBJHANDLE &hvessel, double kill_dist = 5000.0);
 	void KillAlt(OBJHANDLE &hvessel,double altVS);
