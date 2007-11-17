@@ -149,6 +149,10 @@ IDB_MARK_BUTTONS                            BITMAP  "Bitmaps\\mark_buttons.bmp"
 IDB_THREEPOSSWITCHSMALL                     BITMAP  "Bitmaps\\threeposswitchsmall.bmp"
 IDB_OPTICS_DSKY                             BITMAP  "Bitmaps\\optics_dsky.bmp"
 IDB_MINIMPULSE_HANDCONTROLLER               BITMAP  "Bitmaps\\minimpulse_handcontroller.bmp"
+IDB_CSM_LOWER_PANEL_LEFT					BITMAP	"Bitmaps\\csm_lower_equip_bay_left.bmp"
+IDB_CSM_LOWER_PANEL_CENTER					BITMAP	"Bitmaps\\csm_lower_equip_bay_center.bmp"
+IDB_CSM_LOWER_PANEL_RIGHT					BITMAP	"Bitmaps\\csm_lower_equip_bay_right.bmp"
+
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////
 
