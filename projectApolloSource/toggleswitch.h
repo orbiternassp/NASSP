@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2007/10/21 21:25:13  movieman523
+  *	Added SHIFT-click to hold spring-loaded buttons.
+  *	
   *	Revision 1.60  2007/08/13 16:06:25  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -217,19 +220,19 @@
 #define TOGGLESWITCH_DOWN		0			///< Toggle switch is up.
 #define TOGGLESWITCH_UP			1			///< Toggle switch is down.
 
-#define THREEPOSSWITCH_DOWN		0
-#define THREEPOSSWITCH_CENTER	1
-#define THREEPOSSWITCH_UP		2
+#define THREEPOSSWITCH_DOWN		0			///< Three-position switch is down.
+#define THREEPOSSWITCH_CENTER	1			///< Three-position switch is centered.
+#define THREEPOSSWITCH_UP		2			///< Three-position switch is up.
 
-#define SPRINGLOADEDSWITCH_NONE					0
-#define SPRINGLOADEDSWITCH_DOWN					1
-#define SPRINGLOADEDSWITCH_CENTER				2
-#define SPRINGLOADEDSWITCH_UP					3
+#define SPRINGLOADEDSWITCH_NONE					0		///< Switch is not spring-loaded.
+#define SPRINGLOADEDSWITCH_DOWN					1		///< Switch is spring-loaded to down.
+#define SPRINGLOADEDSWITCH_CENTER				2		///< Switch is spring-loaded to center.
+#define SPRINGLOADEDSWITCH_UP					3		///< Switch is spring-loaded to up.
 #define SPRINGLOADEDSWITCH_CENTER_SPRINGUP		4
 #define SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN	5
 
-#define PANELSWITCH_START_STRING	"PANELSWITCHES_BEGIN"
-#define PANELSWITCH_END_STRING		"PANELSWITCHES_END"
+#define PANELSWITCH_START_STRING	"PANELSWITCHES_BEGIN"	///< Beginning of saved switch states in scenario file.
+#define PANELSWITCH_END_STRING		"PANELSWITCHES_END"		///< End of saved switch states in scenario file.
 
 #define TIME_UPDATE_SECONDS	0
 #define TIME_UPDATE_MINUTES 1
@@ -270,11 +273,38 @@ public:
 	/// \return True if the object failed, false if it's operating normally.
 	///
 	bool IsFailed() { return Failed; };
+
+	///
+	/// \brief Get the name of this item.
+	/// \return Pointer to a string containing the item name.
+	///
 	char *GetName() { return name; }
 
+	///
+	/// \brief Process a mouse click which may be for this item.
+	/// \param event Mouse event type.
+	/// \param mx Mouse x position.
+	/// \param my Mouse y position.
+	/// \return True if we processed it, false if it wasn't for us.
+	///
 	virtual bool CheckMouseClick(int event, int mx, int my) = 0;
+
+	///
+	/// \brief Draw the switch with its current state and position.
+	/// \param DrawSurface Surface to draw the switch into.
+	///
 	virtual void DrawSwitch(SURFHANDLE DrawSurface) = 0;
+
+	///
+	/// \brief Save the switch state.
+	/// \param scn Scenario file to save state into.
+	///
 	virtual void SaveState(FILEHANDLE scn) = 0;
+
+	///
+	/// \brief Load state from scenario.
+	/// \param line A line from the scenario file, which may or may not be for us.
+	///
 	virtual void LoadState(char *line) = 0;
 	virtual void DrawFlash(SURFHANDLE DrawSurface) {};
 
@@ -306,6 +336,10 @@ public:
 	///
 	bool IsFlashing() { return flashing; };
 
+	///
+	/// \brief Set the visibitility state of the item.
+	/// \param v True if it's visible, false if it's not.
+	///
 	void SetVisible(bool v) {visible = v; };
 
 protected:
