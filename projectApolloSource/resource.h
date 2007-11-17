@@ -595,7 +595,9 @@
 #define AID_SWITCHTO_TELESCOPE2                             887
 #define AID_SWITCHTO_SEXTANT1                               888
 #define AID_SWITCHTO_SEXTANT2                               889
-
+#define IDB_CSM_LOWER_PANEL_LEFT							890
+#define IDB_CSM_LOWER_PANEL_CENTER							891
+#define IDB_CSM_LOWER_PANEL_RIGHT							892
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
