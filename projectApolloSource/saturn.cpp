@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.202  2007/11/15 14:06:40  tschachim
+  *	Bugfix shift key.
+  *	
   *	Revision 1.201  2007/10/18 00:23:21  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -1068,6 +1071,7 @@ void Saturn::initSaturn()
 
 		PanelId = SATPANEL_MAIN; 		// default panel
 		MainPanelSplitted = false;
+		GNSplit = false;
 		InitSwitches();
 
 		// "dummy" SetSwitches to enable the panel event handling
@@ -2555,6 +2559,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "MAINPANELSPLITTED", 17)) {
 		    sscanf (line + 17, "%i", &MainPanelSplitted);
 	    }
+		else if (!strnicmp (line, "GNSPLIT", 7)) {
+			sscanf (line + 7, "%i", &GNSplit);
+		}
 		else if (!strnicmp(line, "NOHGA", 5)) {
 			//
 			// NOHGA isn't saved in the scenario, this is solely to allow you
