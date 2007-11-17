@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2007/10/21 21:25:13  movieman523
+  *	Added SHIFT-click to hold spring-loaded buttons.
+  *	
   *	Revision 1.78  2007/08/13 16:06:24  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -421,7 +424,7 @@ bool ToggleSwitch::SwitchTo(int newState) {
 			//
 			// Reset the switch if it's spring-loaded and not held.
 			//
-			if ((springLoaded != SPRINGLOADEDSWITCH_NONE) && !IsHeld())
+			if (IsSpringLoaded() && !IsHeld())
 			{
 				if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
 				if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
@@ -664,13 +667,15 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
-void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
+void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 
+{
 	oapiBlt(DrawSurface, SwitchSurface, x, y, (state * width), 0, width, height, SURF_PREDEF_CK);
 }
 
-bool ThreePosSwitch::SwitchTo(int newState) {
+bool ThreePosSwitch::SwitchTo(int newState)
 
+{
 	// Switch only with REALISM 0
 	if (switchRow) {
 		if (switchRow->panelSwitches->Realism) 
@@ -686,7 +691,7 @@ bool ThreePosSwitch::SwitchTo(int newState) {
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 		}
 
-		if (springLoaded != SPRINGLOADEDSWITCH_NONE) {
+		if (IsSpringLoaded()) {
 			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
 			if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
 			if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;
@@ -1176,7 +1181,7 @@ bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 					}
 				}
 				// reset by spring
-				if (springLoaded != SPRINGLOADEDSWITCH_NONE ) {
+				if (IsSpringLoaded()) {
 					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
 					if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
 				}
@@ -1457,7 +1462,7 @@ bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 					}
 				}
 				// reset by spring
-				if (springLoaded != SPRINGLOADEDSWITCH_NONE ) {
+				if (IsSpringLoaded()) {
 					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
 					if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
 					if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;
