@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/10/18 00:23:23  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.21  2007/08/13 16:06:21  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -2651,6 +2654,7 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
+	ScrollOffset = 0;
 }
 
 void EMS::Init(Saturn *vessel) {

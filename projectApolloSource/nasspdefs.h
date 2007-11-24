@@ -20,6 +20,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.88  2007/10/18 00:23:20  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.87  2007/09/07 17:43:52  tschachim
   *	(Re)moved obsolete bitmaps.
   *	
@@ -662,6 +665,8 @@ const int nsurf = 120; // number of bitmap handles
 #define SRF_THREEPOSSWITCHSMALL						117
 #define SRF_OPTICS_DSKY								118
 #define SRF_MINIMPULSE_HANDCONTROLLER				119
+#define SRF_EMS_SCROLL_LEO							120
+#define SRF_EMSDVSETSWITCH							121
 
 //
 // Earth radius and gravity constants.
