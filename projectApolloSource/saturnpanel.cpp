@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.213  2007/11/17 02:49:54  lassombra
+  *	Major overhaul of lower panel.  Nothing moved visibly, but moved all panel area definitions to separate methods that allowed for split panel work.  All items to the left of panel 101 should be in Left, while panel 101 (and all items in width of 101) should be in LeftCenter.  Everything between 101 and the DSKY (including all 4 MFD's) should be in the Center.  The DSKY (and anything in it's width) should be in RightCenter.  Anything to the right of the DSKY should be in Right.
+  *	
   *	Revision 1.212  2007/10/18 00:23:23  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -635,6 +638,8 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_THREEPOSSWITCHSMALL]	 				= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCHSMALL));
 	srf[SRF_OPTICS_DSKY]	 						= oapiCreateSurface (LOADBMP (IDB_OPTICS_DSKY));
 	srf[SRF_MINIMPULSE_HANDCONTROLLER] 				= oapiCreateSurface (LOADBMP (IDB_MINIMPULSE_HANDCONTROLLER));
+	srf[SRF_EMS_SCROLL_LEO]							= oapiCreateSurface (LOADBMP (IDB_EMS_SCROLL_LEO));
+	srf[SRF_EMSDVSETSWITCH]							= oapiCreateSurface (LOADBMP (IDB_EMSDVSETSWITCH));
 
 	//
 	// Flashing borders.
@@ -732,6 +737,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_MARK_BUTTONS],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCHSMALL],					g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_MINIMPULSE_HANDCONTROLLER],			g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_EMS_SCROLL_LEO],						g_Param.col[4]);
 	
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1270,9 +1276,10 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_EMSFUNCTIONSWITCH,      						_R( 595,  280,  685,  370), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_GTASWITCH,		    						_R( 904,  288,  959,  399), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_ENTRY_MODE_SWITCH,							_R( 593,  402,  628,  432), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);	
-	oapiRegisterPanelArea (AID_EMSDVSETSWITCH,								_R( 910,  430,  957,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_EMSDVSETSWITCH,								_R( 910,  431,  957,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_EMSDVDISPLAY,								_R( 743,  518,  900,  539), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SPS_LIGHT,									_R( 816,  467,  846,  483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_EMS_SCROLL_LEO,								_R( 735,  299,  870,  435), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
 	// ASCP
 	oapiRegisterPanelArea (AID_ASCPDISPLAYROLL,								_R( 199, 1144,  229, 1156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_ASCPDISPLAYPITCH,							_R( 199, 1206,  229, 1218), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
@@ -4057,6 +4064,34 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		} else {
 			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 16, 30, 16);
 		}
+		return true;
+
+	case AID_EMS_SCROLL_LEO:
+
+		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 0, 0, 0, 0, 130, 140);
+
+		return true;
+	
+	case AID_EMSDVSETSWITCH:
+		
+		switch ((int)EMSDvSetSwitch.GetPosition()) {
+			case 1:
+				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 47, 0, 47, 85);
+				break;
+			case 2:
+				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 0, 0, 47, 85);
+				break;
+			case 3:
+				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 188, 0, 47, 85);
+				break;
+			case 4:
+				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 141, 0, 47, 85);
+				break;
+			default:
+				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 94, 0, 47, 85);
+				break;
+		}
+
 		return true;
 
 	case AID_OPTICS_DSKY:

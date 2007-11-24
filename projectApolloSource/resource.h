@@ -572,7 +572,6 @@
 #define AID_PANEL100SWITCHES                                864
 #define AID_PANEL100LIGHTINGROTARIES                        865
 #define AID_SCIUTILPOWERSWITCH                              866
-#define AID_EMSDVSETSWITCH                                  867
 #define AID_EMSDVDISPLAY                                    868
 #define IDB_EMS_LIGHTS                                      869
 #define IDB_SUITRETURN_LEVER                                870
@@ -598,6 +597,11 @@
 #define IDB_CSM_LOWER_PANEL_LEFT							890
 #define IDB_CSM_LOWER_PANEL_CENTER							891
 #define IDB_CSM_LOWER_PANEL_RIGHT							892
+#define AID_EMS_SCROLL_LEO									895
+#define IDB_EMS_SCROLL_LEO									896
+#define IDB_EMSDVSETSWITCH									897
+#define AID_EMSDVSETSWITCH                                  898
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2007/10/18 00:23:24  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.18  2007/04/25 18:48:11  tschachim
   *	EMS dV functions.
   *	
@@ -269,6 +272,7 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	double GetdVRangeCounter() { return dVRangeCounter; };				
+	int GetScrollOffset() { return ScrollOffset; };
 	void SwitchChanged();
 	bool SPSThrustLight();											
 	bool IsOff();
@@ -280,6 +284,7 @@ protected:
 	bool IsPowered();
 
 	int status;
+	int ScrollOffset;
 	bool dVInitialized;
 	VECTOR3 lastWeight;
 	double dVRangeCounter;
