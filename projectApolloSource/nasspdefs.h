@@ -20,6 +20,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.89  2007/11/24 21:28:46  jasonims
+  *	EMS Implementation Step 1 - jasonims :   EMSdVSet Switch now works, preliminary EMS Scroll work being done.
+  *	
   *	Revision 1.88  2007/10/18 00:23:20  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -548,7 +551,7 @@ typedef struct {
 // Remember that we start the surface count at 1, so nsurf must be one
 // more than the highest value here.
 //
-const int nsurf = 120; // number of bitmap handles
+const int nsurf = 122; // number of bitmap handles
 
 #define SRF_INDICATOR								 1
 #define SRF_NEEDLE									 2
