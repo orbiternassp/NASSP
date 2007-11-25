@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.249  2007/11/25 06:55:42  movieman523
+  *	Tidied up surface ID code, moving the enum from a shared include file to specific versions for the Saturn and LEM classes.
+  *	
   *	Revision 1.248  2007/11/17 02:44:48  lassombra
   *	Added constants for split lower panel id's.  Lower Center is added with same ID as full-size Lower.  Config switch decides which to display.
   *	
@@ -886,6 +889,7 @@ public:
 		SRF_OPTICS_DSKY,
 		SRF_MINIMPULSE_HANDCONTROLLER,
 		SRF_EMS_SCROLL_LEO,
+		SRF_EMS_SCROLL_BORDER,
 		SRF_EMSDVSETSWITCH,
 
 		//

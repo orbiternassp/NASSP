@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2007/11/24 21:28:46  jasonims
+  *	EMS Implementation Step 1 - jasonims :   EMSdVSet Switch now works, preliminary EMS Scroll work being done.
+  *	
   *	Revision 1.19  2007/10/18 00:23:24  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -264,6 +267,7 @@ public:
 #define EMS_START_STRING	"EMS_BEGIN"
 #define EMS_END_STRING		"EMS_END"
 
+
 class EMS {
 
 public:
@@ -274,7 +278,7 @@ public:
 	double GetdVRangeCounter() { return dVRangeCounter; };				
 	int GetScrollOffset() { return ScrollOffset; };
 	void SwitchChanged();
-	bool SPSThrustLight();											
+	bool SPSThrustLight();
 	bool IsOff();
 	bool IsdVMode();
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
@@ -284,11 +288,18 @@ protected:
 	bool IsPowered();
 
 	int status;
-	int ScrollOffset;
+	int ScrollOffset; //pixels
+	double ScrollPosition; //inches
+	double MaxScrollPosition;
 	bool dVInitialized;
 	VECTOR3 lastWeight;
 	double dVRangeCounter;
 	double dVTestTime;
+	double ThresholdIndicatorTripTime;
+	bool ThresholdIndicatorTripped;
+
+	double ScrollBitmapLength;
+	double ScrollScaling;
 
 	PowerMerge DCPower;
 	Saturn *sat;
