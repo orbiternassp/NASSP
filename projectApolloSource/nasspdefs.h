@@ -20,6 +20,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.91  2007/11/25 06:10:32  movieman523
+  *	Changed surface IDs to an enum so count is automatically updated.
+  *	
   *	Revision 1.90  2007/11/25 05:39:56  movieman523
   *	Fixed surface count.
   *	
@@ -549,139 +552,6 @@ typedef struct {
 //
 // Start putting in defines rather than hard-coded numbers.
 //
-
-///
-/// This enum gives IDs for the surface bitmaps. We don't use #defines because we want
-/// to automatically calculate the maximum number of bitmaps.
-///
-/// Note that there's now really no reason to specify the values of the ID here since
-/// the enum will assign them automatically, but it's done for historical reasons.
-///
-enum SurfaceID
-{
-	SRF_INDICATOR							=	 1,
-	SRF_NEEDLE								=	 2,
-	SRF_DIGITAL								=	 3,
-	SRF_SWITCHUP							=	 4,
-	SRF_SWITCHLEVER							=	 5,
-	SRF_SWITCHGUARDS						=	 6,
-	SRF_ABORT								=	 7,
-	SRF_LV_ENG								=	 8,
-	SRF_ALTIMETER							=	 9,
-	SRF_THRUSTMETER							=	10,
-	SRF_SEQUENCERSWITCHES					=	11,
-	SRF_LMTWOPOSLEVER           			=	12,
-	SRF_MASTERALARM_BRIGHT					=	13,
-	SRF_DSKY								=	14,
-	SRF_THREEPOSSWITCH						=	16,
-	SRF_MFDFRAME							=	17,
-	SRF_MFDPOWER							=	18,
-	SRF_ROTATIONALSWITCH					=	19,
-	SRF_SUITCABINDELTAPMETER				=	20,
-	SRF_THREEPOSSWITCH305   				=	21,
-	SRF_LMABORTBUTTON						=	22,
-	SRF_LMMFDFRAME							=	23,
-	SRF_LMTHREEPOSLEVER         			=	24,
-	SRF_LMTHREEPOSSWITCH        			=	25,
-	SRF_DSKYDISP							=	26,
-	SRF_FDAI				    			=	27,
-	SRF_FDAIROLL			    			=	28,
-	SRF_CWSLIGHTS							=	29,
-	SRF_EVENT_TIMER_DIGITS					=	30,
-	SRF_DSKYKEY								=	31,
-	SRF_ECSINDICATOR						=	32,
-	SRF_SWITCHUPSMALL						=	33,
-	SRF_CMMFDFRAME							=	34,
-	SRF_COAS								=	35,
-	SRF_THUMBWHEEL_SMALLFONTS				=	36,
-	SRF_CIRCUITBRAKER						=	37,
-	SRF_THREEPOSSWITCH20					=	38,
-	SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL		=	39,
-	SRF_THREEPOSSWITCH30					=	40,
-	SRF_SWITCH20							=	41,
-	SRF_SWITCH30							=	42,
-	SRF_CSMRIGHTWINDOWCOVER					=	43,
-	SRF_SWITCH20LEFT						=	44,
-	SRF_THREEPOSSWITCH20LEFT				=	45,
-	SRF_GUARDEDSWITCH20						=	46,
-	SRF_SWITCHGUARDPANEL15					=	47,
-	SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT	=	48,
-	SRF_THREEPOSSWITCH30LEFT				=	49,
-	SRF_SWITCH30LEFT						=	50,
-	SRF_THREEPOSSWITCH305LEFT				=	51,
-	SRF_SWITCH305LEFT						=	52,
-	SRF_FDAIPOWERROTARY						=	54,
-	SRF_DIRECTO2ROTARY						=	56,
-	SRF_ECSGLYCOLPUMPROTARY					=	57,
-	SRF_GTACOVER							=	58,
-	SRF_DCVOLTS								=	59,
-	SRF_ACVOLTS								=	60,
-	SRF_DCAMPS								=	61,
-	SRF_POSTLDGVENTVLVLEVER					=	62,
-	SRF_SPSMAXINDICATOR						=	64,
-	SRF_ECSROTARY 							=	65,
-	SRF_CSMMAINPANELWINDOWCOVER				=	66,
-	SRF_CSMRIGHTRNDZWINDOWLESCOVER 			=	67,
-	SRF_CSMLEFTWINDOWCOVER					=	68, 
-	SRF_GLYCOLLEVER							=	69,
-	SRF_LEMROTARY							=	70,
-	SRF_FDAIOFFFLAG							=	71,
-	SRF_FDAINEEDLES							=	72,
-	SRF_THUMBWHEEL_LARGEFONTS				=	73,
-	SRF_SPS_FONT_WHITE						=	74,
-	SRF_SPS_FONT_BLACK						=	75,
-	SRF_BORDER_34x29						=	76,
-	SRF_BORDER_34x61						=	77,
-	SRF_BORDER_55x111						=	78,
-	SRF_BORDER_46x75						=	79,
-	SRF_BORDER_39x38						=	80,
-	SRF_BORDER_92x40						=	81,
-	SRF_BORDER_34x33						=	82,
-	SRF_BORDER_29x29						=	83,
-	SRF_BORDER_34x31						=	84,
-	SRF_BORDER_50x158						=	85,
-	SRF_BORDER_38x52						=	86,
-	SRF_BORDER_34x34						=	87,
-	SRF_BORDER_90x90						=	88,
-	SRF_BORDER_84x84						=	89,
-	SRF_BORDER_70x70						=	90,
-	SRF_BORDER_23x20						=	91,
-	SRF_BORDER_78x78						=	92,
-	SRF_BORDER_32x160						=	93,
-	SRF_BORDER_72x72						=	94,
-	SRF_BORDER_75x64						=	95,
-	SRF_BORDER_34x39						=	96,
-	SRF_THUMBWHEEL_SMALL					=	97,
-	SRF_THUMBWHEEL_LARGEFONTSINV			=	98,
-	SRF_SWLEVERTHREEPOS						=	99,
-	SRF_LEM_COAS1							=	100,
-	SRF_ORDEAL_ROTARY						=	101,
-	SRF_LV_ENG_S1B							=	102,
-	SRF_LEM_COAS2							=	103,
-	SRF_SPSMININDICATOR						=	104,
-	SRF_SPS_INJ_VLV							=	105,
-	SRF_SM_RCS_MODE							=	106,
-	SRF_THUMBWHEEL_GPI_PITCH				=	107,
-	SRF_THUMBWHEEL_GPI_YAW					=	108,
-	SRF_THC									=	109,
-	SRF_EMS_LIGHTS							=	110,
-	SRF_SUITRETURN_LEVER					=	111,
-	SRF_CABINRELIEFUPPERLEVER				=	112,
-	SRF_CABINRELIEFLOWERLEVER				=	113,
-	SRF_CABINRELIEFGUARDLEVER				=	114,
-	SRF_OPTICS_HANDCONTROLLER				=	115,
-	SRF_MARK_BUTTONS						=	116,
-	SRF_THREEPOSSWITCHSMALL					=	117,
-	SRF_OPTICS_DSKY							=	118,
-	SRF_MINIMPULSE_HANDCONTROLLER			=	119,
-	SRF_EMS_SCROLL_LEO						=	120,
-	SRF_EMSDVSETSWITCH						=	121,
-
-	//
-	// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
-	//
-	nsurf	///< nsurf gives the count of surfaces for the array size calculation.
-};
 
 //
 // Earth radius and gravity constants.

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/06/06 15:02:09  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.5  2006/08/21 03:04:38  dseagrav
   *	This patch adds DC volt/amp meters and associated switches, which was an unholy pain in the
   *	
@@ -142,6 +145,126 @@ public:
 class LEM : public VESSEL2, public PanelSwitchListener {
 
 public:
+
+	///
+	/// This enum gives IDs for the surface bitmaps. We don't use #defines because we want
+	/// to automatically calculate the maximum number of bitmaps.
+	///
+	/// Note that this is copied from the Saturn code, so many of these values aren't actually
+	/// needed for the LEM. Tidy it up later as appropriate.
+	///
+	/// \ingroup LEM
+	///
+	enum SurfaceID
+	{
+		//
+		// First value in the enum must be set to one. Entry zero is not
+		// used.
+		//
+		SRF_INDICATOR							=	 1,
+		SRF_NEEDLE,
+		SRF_DIGITAL,
+		SRF_SWITCHUP,
+		SRF_SWITCHLEVER,
+		SRF_SWITCHGUARDS,
+		SRF_ABORT,
+		SRF_ALTIMETER,
+		SRF_THRUSTMETER,
+		SRF_SEQUENCERSWITCHES,
+		SRF_LMTWOPOSLEVER,
+		SRF_MASTERALARM_BRIGHT,
+		SRF_DSKY,
+		SRF_THREEPOSSWITCH,
+		SRF_MFDFRAME,
+		SRF_MFDPOWER,
+		SRF_ROTATIONALSWITCH,
+		SRF_SUITCABINDELTAPMETER,
+		SRF_THREEPOSSWITCH305,
+		SRF_LMABORTBUTTON,
+		SRF_LMMFDFRAME,
+		SRF_LMTHREEPOSLEVER,
+		SRF_LMTHREEPOSSWITCH,
+		SRF_DSKYDISP,
+		SRF_FDAI,
+		SRF_FDAIROLL,
+		SRF_CWSLIGHTS,
+		SRF_EVENT_TIMER_DIGITS,
+		SRF_DSKYKEY,
+		SRF_ECSINDICATOR,
+		SRF_SWITCHUPSMALL,
+		SRF_CMMFDFRAME,
+		SRF_COAS,
+		SRF_THUMBWHEEL_SMALLFONTS,
+		SRF_CIRCUITBRAKER,
+		SRF_THREEPOSSWITCH20,
+		SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL,
+		SRF_THREEPOSSWITCH30,
+		SRF_SWITCH20,
+		SRF_SWITCH30,
+		SRF_SWITCH20LEFT,
+		SRF_THREEPOSSWITCH20LEFT,
+		SRF_GUARDEDSWITCH20,
+		SRF_SWITCHGUARDPANEL15,
+		SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT48,
+		SRF_THREEPOSSWITCH30LEFT,
+		SRF_SWITCH30LEFT,
+		SRF_THREEPOSSWITCH305LEFT,
+		SRF_SWITCH305LEFT,
+		SRF_FDAIPOWERROTARY,
+		SRF_DIRECTO2ROTARY,
+		SRF_ECSGLYCOLPUMPROTARY,
+		SRF_GTACOVER,
+		SRF_DCVOLTS,
+		SRF_ACVOLTS,
+		SRF_DCAMPS,
+		SRF_POSTLDGVENTVLVLEVER,
+		SRF_SPSMAXINDICATOR,
+		SRF_ECSROTARY,
+		SRF_GLYCOLLEVER,
+		SRF_LEMROTARY,
+		SRF_FDAIOFFFLAG,
+		SRF_FDAINEEDLES,
+		SRF_THUMBWHEEL_LARGEFONTS,
+		SRF_SPS_FONT_WHITE,
+		SRF_SPS_FONT_BLACK,
+		SRF_BORDER_34x29,
+		SRF_BORDER_34x61,
+		SRF_BORDER_55x111,
+		SRF_BORDER_46x75,
+		SRF_BORDER_39x38,
+		SRF_BORDER_92x40,
+		SRF_BORDER_34x33,
+		SRF_BORDER_29x29,
+		SRF_BORDER_34x31,
+		SRF_BORDER_50x158,
+		SRF_BORDER_38x52,
+		SRF_BORDER_34x34,
+		SRF_BORDER_90x90,
+		SRF_BORDER_84x84,
+		SRF_BORDER_70x70,
+		SRF_BORDER_23x20,
+		SRF_BORDER_78x78,
+		SRF_BORDER_32x160,
+		SRF_BORDER_72x72,
+		SRF_BORDER_75x64,
+		SRF_BORDER_34x39,
+		SRF_THUMBWHEEL_SMALL,
+		SRF_THUMBWHEEL_LARGEFONTSINV,
+		SRF_SWLEVERTHREEPOS,
+		SRF_LEM_COAS1,
+		SRF_LEM_COAS2,
+		SRF_THC,
+		SRF_SUITRETURN_LEVER,
+		SRF_OPTICS_HANDCONTROLLER,
+		SRF_MARK_BUTTONS,
+		SRF_THREEPOSSWITCHSMALL,
+
+		//
+		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
+		//
+		nsurf	///< nsurf gives the count of surfaces for the array size calculation.
+	};
+
 	LEM(OBJHANDLE hObj, int fmodel);
 	virtual ~LEM();
 
