@@ -597,8 +597,10 @@
 #define IDB_CSM_LOWER_PANEL_LEFT							890
 #define IDB_CSM_LOWER_PANEL_CENTER							891
 #define IDB_CSM_LOWER_PANEL_RIGHT							892
-#define AID_EMS_SCROLL_LEO									895
-#define IDB_EMS_SCROLL_LEO									896
+#define AID_EMS_SCROLL_LEO									893
+#define IDB_EMS_SCROLL_LEO									894
+#define AID_EMS_SCROLL_BORDER								895
+#define IDB_EMS_SCROLL_BORDER								896
 #define IDB_EMSDVSETSWITCH									897
 #define AID_EMSDVSETSWITCH                                  898
 

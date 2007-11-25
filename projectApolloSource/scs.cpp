@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/11/24 21:28:46  jasonims
+  *	EMS Implementation Step 1 - jasonims :   EMSdVSet Switch now works, preliminary EMS Scroll work being done.
+  *	
   *	Revision 1.22  2007/10/18 00:23:23  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -2634,7 +2637,7 @@ void ECA::TimeStep(double simdt) {
 }
 
 
-// Entry Monitor Systen
+// Entry Monitor System
 
 #define EMS_STATUS_OFF			0
 #define EMS_STATUS_STANDBY		1
@@ -2644,6 +2647,14 @@ void ECA::TimeStep(double simdt) {
 #define EMS_STATUS_DV_BACKUP	5
 #define EMS_STATUS_DVTEST		6
 #define EMS_STATUS_DVTEST_DONE	7
+#define EMS_STATUS_RNG_SET		8
+#define EMS_STATUS_Vo_SET		9
+#define EMS_STATUS_ENTRY		10
+#define EMS_STATUS_EMS_TEST1	11
+#define EMS_STATUS_EMS_TEST2	12
+#define EMS_STATUS_EMS_TEST3	13
+#define EMS_STATUS_EMS_TEST4	14
+#define EMS_STATUS_EMS_TEST5	15
 
 
 EMS::EMS(PanelSDK &p) : DCPower(0, p) {
@@ -2655,6 +2666,16 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	dVTestTime = 0;
 	sat = NULL;
 	ScrollOffset = 0;
+	ThresholdIndicatorTripped = false;
+	ThresholdIndicatorTripTime = 0;
+
+	//
+	//  For proper scaling....
+		/*	The scroll bitmap is 2500 pixels in length, and 100 feet per sec on the dV scale is equililent to 3 pixels on the bitmap.
+			On the real scroll, 480 feet per sec is roughly equal to .263 inches of scroll.  (AOH-v1-Spacecraft Control System, pg 2.3-58)
+			Therefore, the scaling factor between pixels and inches of scroll length is 0.018263888888888888888888888888889*/
+	ScrollBitmapLength = 2500; //Pixels
+	ScrollScaling = .01826388888; // inches per pixel
 }
 
 void EMS::Init(Saturn *vessel) {
@@ -2671,6 +2692,10 @@ void EMS::TimeStep(double simdt) {
 	if (!IsPowered()) {
 		status = EMS_STATUS_OFF; 
 		return;
+	}
+
+	if (!ThresholdIndicatorTripped) {
+		// Check for .05g  Threshold Indicator requirements met.
 	}
 
 	// Turn on reset
@@ -2732,7 +2757,7 @@ void EMS::TimeStep(double simdt) {
 						dVRangeCounter -= xacc * simdt * FPS;
 						dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 					}				
-					//sprintf(oapiDebugString(), "xacc %.10f", xacc);
+					sprintf(oapiDebugString(), "xacc %.10f", xacc);
 					//sprintf(oapiDebugString(), "Avg x %.10f y %.10f z %.10f l%.10f", avg.x, avg.y, avg.z, length(avg));								
 				}
 			}
@@ -2764,6 +2789,71 @@ void EMS::TimeStep(double simdt) {
 				dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 				status = EMS_STATUS_DVTEST_DONE;
 			}
+			break;
+		
+		case EMS_STATUS_ENTRY:
+			break;
+		
+		case EMS_STATUS_Vo_SET:
+			position = sat->EMSDvSetSwitch.GetPosition();
+			if (position == 1)
+				ScrollPosition += .263 * simdt;
+			else if (position == 2)
+				ScrollPosition += .0164 * simdt;
+			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=1.0)
+				ScrollPosition -= .263 * simdt;
+			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=1.0)
+				ScrollPosition -= .0164 * simdt;
+
+			ScrollPosition = max(0.0, min(ScrollBitmapLength*ScrollScaling, ScrollPosition));
+			if (ScrollPosition >= MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
+			ScrollOffset = (int)(ScrollPosition/ScrollScaling);
+			break;
+
+		case EMS_STATUS_RNG_SET:
+			position = sat->EMSDvSetSwitch.GetPosition();
+			if (position == 1)
+				dVRangeCounter += 127.5 * simdt;
+			else if (position == 2)
+				dVRangeCounter += 0.25 * simdt;
+			else if (position == 3)
+				dVRangeCounter -= 127.5 * simdt;
+			else if (position == 4)
+				dVRangeCounter -= 0.25 * simdt;
+
+			dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
+			break;
+
+		case EMS_STATUS_EMS_TEST1:
+			position = sat->EMSDvSetSwitch.GetPosition();
+			if (position == 1)
+				ScrollPosition += .263 * simdt;
+			else if (position == 2)
+				ScrollPosition += .0164 * simdt;
+			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=1.0)
+				ScrollPosition -= .263 * simdt;
+			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=1.0)
+				ScrollPosition -= .0164 * simdt;
+
+			ScrollPosition = max(0.0, min(ScrollBitmapLength*ScrollScaling, ScrollPosition));
+			if (ScrollPosition >= MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
+			ScrollOffset = (int)(ScrollPosition/ScrollScaling);
+			break;
+
+		case EMS_STATUS_EMS_TEST5:
+			position = sat->EMSDvSetSwitch.GetPosition();
+			if (position == 1)
+				ScrollPosition += .263 * simdt;
+			else if (position == 2)
+				ScrollPosition += .0164 * simdt;
+			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=1.0)
+				ScrollPosition -= .263 * simdt;
+			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=1.0)
+				ScrollPosition -= .0164 * simdt;
+
+			ScrollPosition = max(0.0, min(ScrollBitmapLength*ScrollScaling, ScrollPosition));
+			if (ScrollPosition >= MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
+			ScrollOffset = (int)(ScrollPosition/ScrollScaling);
 			break;
 	}
 }
@@ -2816,6 +2906,31 @@ void EMS::SwitchChanged() {
 			} else {
 				status = EMS_STATUS_STANDBY;
 			}
+			break;
+
+		case 4: // ENTRY
+			status = EMS_STATUS_ENTRY;
+			break;
+		case 5: // Vo SET
+			status = EMS_STATUS_Vo_SET;
+			break;
+		case 6: // RNG SET
+			status = EMS_STATUS_RNG_SET;
+			break;
+		case 7: // TEST 5
+			status = EMS_STATUS_EMS_TEST5;
+			break;
+		case 8: // TEST 4
+			status = EMS_STATUS_EMS_TEST4;
+			break;
+		case 9: // TEST 3
+			status = EMS_STATUS_EMS_TEST3;
+			break;
+		case 10: // TEST 2
+			status = EMS_STATUS_EMS_TEST2;
+			break;
+		case 11: // TEST 1
+			status = EMS_STATUS_EMS_TEST1;
 			break;
 
 		default:
