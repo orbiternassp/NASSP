@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.105  2007/10/18 00:23:17  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.104  2007/09/04 13:51:56  dseagrav
   *	IGM first stage. It doesn't work yet.
   *	
@@ -1215,7 +1218,7 @@ void SaturnV::StageFour(double simt, double simdt)
 			NextMissionEventTime = MissionTime;
 			StageState++;
 
-			if (!LaunchFail.u.SIIAutoSepFail) {
+			if (!LaunchFail.SIIAutoSepFail) {
 				SeparateStage (LAUNCH_STAGE_SIVB);
 				SetStage(LAUNCH_STAGE_SIVB);
 			}

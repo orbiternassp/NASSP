@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.203  2007/11/17 02:45:52  lassombra
+  *	Added code to handle config option to split lower G&N bay panel.
+  *	
   *	Revision 1.202  2007/11/15 14:06:40  tschachim
   *	Bugfix shift key.
   *	
@@ -1732,63 +1735,32 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 // Scenario state functions.
 //
 
-typedef union {
-	struct {
-		unsigned MissionTimerRunning:1;			///< Is the Mission timer running?
-		unsigned SIISepState:1;					///< State of the SII Sep light.
-		unsigned TLIBurnDone:1;					///< Have we done our TLI burn?
-		unsigned Scorrec:1;						///< Have we played the course correction sound?
-		unsigned Burned:1;						///< Has the CM been burned by re-entry heating?
-		unsigned EVA_IP:1;						///< Is an EVA in progress?
-		unsigned ABORT_IND:1;					///< State of the abort light.
-		unsigned HatchOpen:1;					///< Is the hatch open?
-		unsigned SplashdownPlayed:1;			///< Have we played the splashdown sound?
-		unsigned unused_2:1;					///< Unused bit for backwards compatibility. Can be used for other things.
-		unsigned LEMdatatransfer:1;				///< Have we transfered setup data to the LEM?
-		unsigned PostSplashdownPlayed:1;		///< Have we played the post-splashdown sound?
-		unsigned IGMEnabled:1;					///< Is the IGM guidance enabled?
-		unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
-		unsigned MissionTimerEnabled:1;			///< Is the Mission Timer enabled?
-		unsigned EventTimerEnabled:1;			///< Is the Event Timer enabled?
-		unsigned EventTimerRunning:1;			///< Is the Event Timer running?
-		unsigned EventTimerCountUp:2;			///< Is the Event Timer counting up?
-		unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
-		unsigned SkylabCM:1;					///< Is this a Skylab Command Module?
-		unsigned S1bPanel:1;					///< Is this a Command Module with a Saturn 1b panel?
-		unsigned NoHGA:1;						///< Do we have a High-Gain Antenna?
-		unsigned viewpos:5;						///< Position of the virtual cockpit viewpoint.
-	} u;
-	unsigned long word;
-} MainState;
-
-
 int Saturn::GetMainState()
 
 {
 	MainState state;
 
-	state.word = 0;
-	state.u.MissionTimerRunning = MissionTimerDisplay.IsRunning();
-	state.u.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
-	state.u.EventTimerRunning = EventTimerDisplay.IsRunning();
-	state.u.EventTimerEnabled = EventTimerDisplay.IsEnabled();
-	state.u.EventTimerCountUp = EventTimerDisplay.GetCountUp();
-	state.u.SIISepState = SIISepState;
-	state.u.Scorrec = Scorrec;
-	state.u.Burned = Burned;
-	state.u.EVA_IP = EVA_IP;
-	state.u.ABORT_IND = ABORT_IND;
-	state.u.HatchOpen = HatchOpen;
-	state.u.viewpos = viewpos;
-	state.u.LEMdatatransfer = LEMdatatransfer;
-	state.u.SplashdownPlayed = SplashdownPlayed;
-	state.u.PostSplashdownPlayed = PostSplashdownPlayed;
-	state.u.IGMEnabled = IGMEnabled;
-	state.u.SkylabSM = SkylabSM;
-	state.u.SkylabCM = SkylabCM;
-	state.u.S1bPanel = S1bPanel;
-	state.u.NoHGA = NoHGA;
-	state.u.TLISoundsLoaded = TLISoundsLoaded;
+	state.MissionTimerRunning = MissionTimerDisplay.IsRunning();
+	state.MissionTimerEnabled = MissionTimerDisplay.IsEnabled();
+	state.EventTimerRunning = EventTimerDisplay.IsRunning();
+	state.EventTimerEnabled = EventTimerDisplay.IsEnabled();
+	state.EventTimerCountUp = EventTimerDisplay.GetCountUp();
+	state.SIISepState = SIISepState;
+	state.Scorrec = Scorrec;
+	state.Burned = Burned;
+	state.EVA_IP = EVA_IP;
+	state.ABORT_IND = ABORT_IND;
+	state.HatchOpen = HatchOpen;
+	state.viewpos = viewpos;
+	state.LEMdatatransfer = LEMdatatransfer;
+	state.SplashdownPlayed = SplashdownPlayed;
+	state.PostSplashdownPlayed = PostSplashdownPlayed;
+	state.IGMEnabled = IGMEnabled;
+	state.SkylabSM = SkylabSM;
+	state.SkylabCM = SkylabCM;
+	state.S1bPanel = S1bPanel;
+	state.NoHGA = NoHGA;
+	state.TLISoundsLoaded = TLISoundsLoaded;
 
 	return state.word;
 }
@@ -1799,40 +1771,28 @@ void Saturn::SetMainState(int s)
 	MainState state;
 
 	state.word = s;
-	SIISepState = state.u.SIISepState;
-	Scorrec = state.u.Scorrec;
-	Burned = state.u.Burned;
-	EVA_IP = state.u.EVA_IP;
-	ABORT_IND = state.u.ABORT_IND;
-	HatchOpen = state.u.HatchOpen;
-	viewpos = state.u.viewpos;
-	LEMdatatransfer = state.u.LEMdatatransfer;
-	SplashdownPlayed = (state.u.SplashdownPlayed != 0);
-	PostSplashdownPlayed = (state.u.PostSplashdownPlayed != 0);
-	IGMEnabled = (state.u.IGMEnabled != 0);
-	MissionTimerDisplay.SetRunning(state.u.MissionTimerRunning != 0);
-	MissionTimerDisplay.SetEnabled(state.u.MissionTimerEnabled != 0);
-	EventTimerDisplay.SetRunning(state.u.EventTimerRunning != 0);
-	EventTimerDisplay.SetEnabled(state.u.EventTimerEnabled != 0);
-	EventTimerDisplay.SetCountUp(state.u.EventTimerCountUp);
-	SkylabSM = (state.u.SkylabSM != 0);
-	SkylabCM = (state.u.SkylabCM != 0);
-	S1bPanel = (state.u.S1bPanel != 0);
-	NoHGA = (state.u.NoHGA != 0);
-	TLISoundsLoaded = (state.u.TLISoundsLoaded != 0);
+	SIISepState = state.SIISepState;
+	Scorrec = state.Scorrec;
+	Burned = state.Burned;
+	EVA_IP = state.EVA_IP;
+	ABORT_IND = state.ABORT_IND;
+	HatchOpen = state.HatchOpen;
+	viewpos = state.viewpos;
+	LEMdatatransfer = state.LEMdatatransfer;
+	SplashdownPlayed = (state.SplashdownPlayed != 0);
+	PostSplashdownPlayed = (state.PostSplashdownPlayed != 0);
+	IGMEnabled = (state.IGMEnabled != 0);
+	MissionTimerDisplay.SetRunning(state.MissionTimerRunning != 0);
+	MissionTimerDisplay.SetEnabled(state.MissionTimerEnabled != 0);
+	EventTimerDisplay.SetRunning(state.EventTimerRunning != 0);
+	EventTimerDisplay.SetEnabled(state.EventTimerEnabled != 0);
+	EventTimerDisplay.SetCountUp(state.EventTimerCountUp);
+	SkylabSM = (state.SkylabSM != 0);
+	SkylabCM = (state.SkylabCM != 0);
+	S1bPanel = (state.S1bPanel != 0);
+	NoHGA = (state.NoHGA != 0);
+	TLISoundsLoaded = (state.TLISoundsLoaded != 0);
 }
-
-typedef union {
-	struct {
-		unsigned InterstageAttached:1;	///< Is the interstage attached?
-		unsigned LESAttached:1;			///< Is the LES attached?
-		unsigned HasProbe:1;			///< Does the CM have a docking probe?
-		unsigned ApexCoverAttached:1;	///< Is the apex cover attached?
-		unsigned ChutesAttached:1;		///< Are the chutes attached?
-	} u;
-	unsigned long word;
-} AttachState;
-
 
 int Saturn::GetAttachState()
 
@@ -1844,11 +1804,11 @@ int Saturn::GetAttachState()
 	//
 
 	state.word = 0x7fffffff;
-	state.u.InterstageAttached = InterstageAttached;
-	state.u.LESAttached = LESAttached;
-	state.u.HasProbe = HasProbe;
-	state.u.ApexCoverAttached = ApexCoverAttached;
-	state.u.ChutesAttached = ChutesAttached;
+	state.InterstageAttached = InterstageAttached;
+	state.LESAttached = LESAttached;
+	state.HasProbe = HasProbe;
+	state.ApexCoverAttached = ApexCoverAttached;
+	state.ChutesAttached = ChutesAttached;
 
 	return state.word;
 }
@@ -1859,34 +1819,18 @@ void Saturn::SetAttachState(int s)
 	AttachState state;
 
 	state.word = s;
-	LESAttached = (state.u.LESAttached != 0);
-	InterstageAttached = (state.u.InterstageAttached != 0);
-	HasProbe = (state.u.HasProbe != 0);
-	ApexCoverAttached = (state.u.ApexCoverAttached != 0);
-	ChutesAttached = (state.u.ChutesAttached != 0);
+	LESAttached = (state.LESAttached != 0);
+	InterstageAttached = (state.InterstageAttached != 0);
+	HasProbe = (state.HasProbe != 0);
+	ApexCoverAttached = (state.ApexCoverAttached != 0);
+	ChutesAttached = (state.ChutesAttached != 0);
 }
-
-///
-/// \brief State which is only required for Apollo 13
-///
-/// This structure holds the flags which are used for the Apollo 13 simulation. 
-///
-typedef union {
-	struct {
-		unsigned ApolloExploded:1;	///< Has the SM exploded yet?
-		unsigned CryoStir:1;		///< Have the crew been asked to do a cryo stir?
-		unsigned KranzPlayed:1;		///< Has the Kranz audio been played yet?
-	};
-	unsigned long word;				///< Used to return all the flags as one 32-bit word for the scenario file.
-} A13State;
-
 
 int Saturn::GetA13State()
 
 {
 	A13State state;
 
-	state.word = 0;
 	state.ApolloExploded = ApolloExploded;
 	state.CryoStir = CryoStir;
 	state.KranzPlayed = KranzPlayed;
@@ -1905,26 +1849,12 @@ void Saturn::SetA13State(int s)
 	KranzPlayed = (state.KranzPlayed != 0);
 }
 
-//
-// State which is only required through the launch process.
-//
-
-typedef union {
-	struct {
-		unsigned autopilot:1;
-		unsigned TLIEnabled:1;
-	} u;
-	unsigned long word;
-} LaunchState;
-
-
 int Saturn::GetLaunchState()
 
 {
 	LaunchState state;
 
-	state.word = 0;
-	state.u.autopilot = autopilot;
+	state.autopilot = autopilot;
 
 	return state.word;
 }
@@ -1935,59 +1865,33 @@ void Saturn::SetLaunchState(int s)
 	LaunchState state;
 
 	state.word = s;
-	autopilot = (state.u.autopilot != 0);
+	autopilot = (state.autopilot != 0);
 }
-
-typedef union {
-	struct {
-		unsigned Engind0:1;
-		unsigned Engind1:1;
-		unsigned Engind2:1;
-		unsigned Engind3:1;
-		unsigned Engind4:1;
-		unsigned Engind5:1;
-		unsigned LVGuidLight:1;
-		unsigned Launchind0:1;
-		unsigned Launchind1:1;
-		unsigned Launchind2:1;
-		unsigned Launchind3:1;
-		unsigned Launchind4:1;
-		unsigned Launchind5:1;
-		unsigned Launchind6:1;
-		unsigned Launchind7:1;
-		unsigned Engind6:1;
-		unsigned Engind7:1;
-		unsigned Engind8:1;
-		unsigned LVRateLight:1;
-	} u;
-	unsigned long word;
-} LightState;
 
 int Saturn::GetLightState()
 
 {
 	LightState state;
 
-	state.word = 0;
-	state.u.Engind0 = ENGIND[0];
-	state.u.Engind1 = ENGIND[1];
-	state.u.Engind2 = ENGIND[2];
-	state.u.Engind3 = ENGIND[3];
-	state.u.Engind4 = ENGIND[4];
-	state.u.Engind5 = ENGIND[5];
-	state.u.Engind6 = ENGIND[6];
-	state.u.Engind7 = ENGIND[7];
-	state.u.Engind8 = ENGIND[8];
-	state.u.LVGuidLight = LVGuidLight;
-	state.u.Launchind0 = LAUNCHIND[0];
-	state.u.Launchind1 = LAUNCHIND[1];
-	state.u.Launchind2 = LAUNCHIND[2];
-	state.u.Launchind3 = LAUNCHIND[3];
-	state.u.Launchind4 = LAUNCHIND[4];
-	state.u.Launchind5 = LAUNCHIND[5];
-	state.u.Launchind6 = LAUNCHIND[6];
-	state.u.Launchind7 = LAUNCHIND[7];
-	state.u.LVRateLight = LVRateLight;
+	state.Engind0 = ENGIND[0];
+	state.Engind1 = ENGIND[1];
+	state.Engind2 = ENGIND[2];
+	state.Engind3 = ENGIND[3];
+	state.Engind4 = ENGIND[4];
+	state.Engind5 = ENGIND[5];
+	state.Engind6 = ENGIND[6];
+	state.Engind7 = ENGIND[7];
+	state.Engind8 = ENGIND[8];
+	state.LVGuidLight = LVGuidLight;
+	state.Launchind0 = LAUNCHIND[0];
+	state.Launchind1 = LAUNCHIND[1];
+	state.Launchind2 = LAUNCHIND[2];
+	state.Launchind3 = LAUNCHIND[3];
+	state.Launchind4 = LAUNCHIND[4];
+	state.Launchind5 = LAUNCHIND[5];
+	state.Launchind6 = LAUNCHIND[6];
+	state.Launchind7 = LAUNCHIND[7];
+	state.LVRateLight = LVRateLight;
 
 	return state.word;
 }
@@ -1998,25 +1902,25 @@ void Saturn::SetLightState(int s)
 	LightState state;
 
 	state.word = s;
-	ENGIND[0] = (state.u.Engind0 != 0);
-	ENGIND[1] = (state.u.Engind1 != 0);
-	ENGIND[2] = (state.u.Engind2 != 0);
-	ENGIND[3] = (state.u.Engind3 != 0);
-	ENGIND[4] = (state.u.Engind4 != 0);
-	ENGIND[5] = (state.u.Engind5 != 0);
-	ENGIND[6] = (state.u.Engind6 != 0);
-	ENGIND[7] = (state.u.Engind7 != 0);
-	ENGIND[8] = (state.u.Engind8 != 0);
-	LVGuidLight = (state.u.LVGuidLight != 0);
-	LAUNCHIND[0] = (state.u.Launchind0 != 0);
-	LAUNCHIND[1] = (state.u.Launchind1 != 0);
-	LAUNCHIND[2] = (state.u.Launchind2 != 0);
-	LAUNCHIND[3] = (state.u.Launchind3 != 0);
-	LAUNCHIND[4] = (state.u.Launchind4 != 0);
-	LAUNCHIND[5] = (state.u.Launchind5 != 0);
-	LAUNCHIND[6] = (state.u.Launchind6 != 0);
-	LAUNCHIND[7] = (state.u.Launchind7 != 0);
-	LVRateLight = (state.u.LVRateLight != 0);
+	ENGIND[0] = (state.Engind0 != 0);
+	ENGIND[1] = (state.Engind1 != 0);
+	ENGIND[2] = (state.Engind2 != 0);
+	ENGIND[3] = (state.Engind3 != 0);
+	ENGIND[4] = (state.Engind4 != 0);
+	ENGIND[5] = (state.Engind5 != 0);
+	ENGIND[6] = (state.Engind6 != 0);
+	ENGIND[7] = (state.Engind7 != 0);
+	ENGIND[8] = (state.Engind8 != 0);
+	LVGuidLight = (state.LVGuidLight != 0);
+	LAUNCHIND[0] = (state.Launchind0 != 0);
+	LAUNCHIND[1] = (state.Launchind1 != 0);
+	LAUNCHIND[2] = (state.Launchind2 != 0);
+	LAUNCHIND[3] = (state.Launchind3 != 0);
+	LAUNCHIND[4] = (state.Launchind4 != 0);
+	LAUNCHIND[5] = (state.Launchind5 != 0);
+	LAUNCHIND[6] = (state.Launchind6 != 0);
+	LAUNCHIND[7] = (state.Launchind7 != 0);
+	LVRateLight = (state.LVRateLight != 0);
 }
 
 bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
@@ -3958,7 +3862,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_STAGE:
-		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.u.CoverFail)
+		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.CoverFail)
 			deploy = true;
 
 		if (ELSActive() && ApexCoverJettSwitch.GetState())
@@ -3976,7 +3880,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE:
-		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.u.DrogueFail)
+		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.DrogueFail)
 			deploy = true;
 
 		if (ELSActive() && ApexCoverJettSwitch.GetState())
@@ -3990,7 +3894,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE_TWO:
-		if (ELSAuto() && GetAtmPressure() > 39000 && !LandFail.u.DrogueFail && ChutesAttached)
+		if (ELSAuto() && GetAtmPressure() > 39000 && !LandFail.DrogueFail && ChutesAttached)
 			deploy = true;
 
 		if (ELSActive() && DrogueDeploySwitch.GetState()) 
@@ -4023,7 +3927,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	//
 
 	case CM_ENTRY_STAGE_THREE:	// Drogue chute is attached
-		if (PyrosArmed() && ChutesAttached && ((ELSAuto() && GetAtmPressure() > 66000 && !LandFail.u.MainFail) || (ELSActive() && MainDeploySwitch.GetState()))) {
+		if (PyrosArmed() && ChutesAttached && ((ELSAuto() && GetAtmPressure() > 66000 && !LandFail.MainFail) || (ELSActive() && MainDeploySwitch.GetState()))) {
 			// Detach drogue
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
 			DetachChild(ah);
@@ -5103,30 +5007,30 @@ void Saturn::SetRandomFailures()
 	// Set up launch failures.
 	//
 
-	if (!LaunchFail.u.Init)
+	if (!LaunchFail.Init)
 	{
-		LaunchFail.u.Init = 1;
+		LaunchFail.Init = 1;
 		if (!(random() & 15))
 		{
-			LaunchFail.u.EarlySICenterCutoff = 1;
+			LaunchFail.EarlySICenterCutoff = 1;
 			FirstStageCentreShutdownTime = 20.0 + ((double) (random() & 1023) / 10.0);
 		}
 		if (!(random() & 15))
 		{
-			LaunchFail.u.EarlySIICenterCutoff = 1;
+			LaunchFail.EarlySIICenterCutoff = 1;
 			SecondStageCentreShutdownTime = 200.0 + ((double) (random() & 2047) / 10.0);
 		}
 		if (!(random() & 127))
 		{
-			LaunchFail.u.LETAutoJetFail = 1;
+			LaunchFail.LETAutoJetFail = 1;
 		}
 		if (!(random() & 63))
 		{
-			LaunchFail.u.SIIAutoSepFail = 1;
+			LaunchFail.SIIAutoSepFail = 1;
 		}
 		if (!(random() & 255))
 		{
-			LaunchFail.u.LESJetMotorFail = 1;
+			LaunchFail.LESJetMotorFail = 1;
 		}
 	}
 
@@ -5134,20 +5038,20 @@ void Saturn::SetRandomFailures()
 	// Set up landing failures.
 	//
 
-	if (!LandFail.u.Init)
+	if (!LandFail.Init)
 	{
-		LandFail.u.Init = 1;
+		LandFail.Init = 1;
 		if (!(random() & 127))
 		{
-			LandFail.u.CoverFail = 1;
+			LandFail.CoverFail = 1;
 		}
 		if (!(random() & 127))
 		{
-			LandFail.u.DrogueFail = 1;
+			LandFail.DrogueFail = 1;
 		}
 		if (!(random() & 127)) 
 		{
-			LandFail.u.MainFail = 1;
+			LandFail.MainFail = 1;
 		}
 	}
 
@@ -5155,24 +5059,24 @@ void Saturn::SetRandomFailures()
 	// Set up switch failures.
 	//
 
-	if (!SwitchFail.u.Init)
+	if (!SwitchFail.Init)
 	{
-		SwitchFail.u.Init = 1;
+		SwitchFail.Init = 1;
 		if (!(random() & 127))
 		{
-			SwitchFail.u.TowerJett1Fail = 1;
+			SwitchFail.TowerJett1Fail = 1;
 		}
 		else if (!(random() & 127))
 		{
-			SwitchFail.u.TowerJett2Fail = 1;
+			SwitchFail.TowerJett2Fail = 1;
 		}
 		if (!(random() & 127))
 		{
-			SwitchFail.u.SMJett1Fail = 1;
+			SwitchFail.SMJett1Fail = 1;
 		}
 		else if (!(random() & 127))
 		{
-			SwitchFail.u.SMJett2Fail = 1;
+			SwitchFail.SMJett2Fail = 1;
 		}
 
 		//
