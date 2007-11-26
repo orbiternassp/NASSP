@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.250  2007/11/25 09:07:24  jasonims
+  *	EMS Implementation Step 2 - jasonims :   EMS Scroll can slew, and some functionality set up for EMS.
+  *	
   *	Revision 1.249  2007/11/25 06:55:42  movieman523
   *	Tidied up surface ID code, moving the enum from a shared include file to specific versions for the Saturn and LEM classes.
   *	
@@ -558,57 +561,6 @@
 #define RCS_CM_RING_1		4
 #define RCS_CM_RING_2		5
 
-//
-// Random failure flags.
-//
-
-///
-/// \ingroup FailFlags
-/// \brief Landing failure flags.
-///
-typedef union {
-	struct {
-		unsigned Init:1;		///< Flags have been initialised.
-		unsigned CoverFail:1;	///< Apex cover will fail to deploy automatically.
-		unsigned DrogueFail:1;	///< Drogue will fail to deploy automatically.
-		unsigned MainFail:1;	///< Main chutes will fail to deploy automatically.
-	} u;
-	int word;					///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
-} LandingFailures;
-
-///
-/// \ingroup FailFlags
-/// \brief Launch failure flags.
-///
-typedef union {
-	struct {
-		unsigned Init:1;					///< Flags have been initialised.
-		unsigned EarlySICenterCutoff:1;		///< The first stage center engine will shut down early.
-		unsigned EarlySIICenterCutoff:1;	///< The second stage center engine will shut down early.
-		unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
-		unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
-		unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
-	} u;
-	int word;								///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
-} LaunchFailures;
-
-///
-/// \ingroup FailFlags
-/// \brief Flags specifying which control panel switches will fail.
-///
-/// \ingroup InternalInterface
-///
-typedef union {
-	struct {
-		unsigned Init:1;				///< Flags have been initialised.
-		unsigned TowerJett1Fail:1;		///< TWR JETT switch 1 will fail.
-		unsigned TowerJett2Fail:1;		///< TWR JETT switch 2 will fail.
-		unsigned SMJett1Fail:1;			///< SM JETT switch 1 will fail.
-		unsigned SMJett2Fail:1;			///< SM JETT switch 2 will fail
-	} u;
-	int word;							///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
-} SwitchFailures;
-
 ///
 /// \brief O2/H2 tank status.
 /// \ingroup InternalInterface
@@ -767,6 +719,11 @@ typedef struct {
 class Saturn: public VESSEL2, public PanelSwitchListener {
 
 public:
+
+	//
+	// First define some structures and values specific to the Saturn class. This ensures we don't
+	// have problems with using the same names for different purposes in other classes.
+	//
 	
 	///
 	/// This enum gives IDs for the surface bitmaps. We don't use #defines because we want
@@ -898,10 +855,189 @@ public:
 		nsurf	///< nsurf gives the count of surfaces for the array size calculation.
 	};
 
+	//
+	// Random failure flags, copied into unions and extracted as ints (or vice-versa).
+	//
+
+	///
+	/// \ingroup FailFlags
+	/// \brief Landing failure flags.
+	///
+	union LandingFailures {
+		struct {
+			unsigned Init:1;		///< Flags have been initialised.
+			unsigned CoverFail:1;	///< Apex cover will fail to deploy automatically.
+			unsigned DrogueFail:1;	///< Drogue will fail to deploy automatically.
+			unsigned MainFail:1;	///< Main chutes will fail to deploy automatically.
+		};
+		int word;					///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
+
+		LandingFailures() { word = 0; };
+	};
+
+	///
+	/// \ingroup FailFlags
+	/// \brief Launch failure flags.
+	///
+	union LaunchFailures {
+		struct {
+			unsigned Init:1;					///< Flags have been initialised.
+			unsigned EarlySICenterCutoff:1;		///< The first stage center engine will shut down early.
+			unsigned EarlySIICenterCutoff:1;	///< The second stage center engine will shut down early.
+			unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
+			unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
+			unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
+		};
+		int word;								///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
+
+		LaunchFailures() { word = 0; };
+	};
+
+	///
+	/// \ingroup FailFlags
+	/// \brief Flags specifying which control panel switches will fail.
+	///
+	/// \ingroup InternalInterface
+	///
+	union SwitchFailures {
+		struct {
+			unsigned Init:1;				///< Flags have been initialised.
+			unsigned TowerJett1Fail:1;		///< TWR JETT switch 1 will fail.
+			unsigned TowerJett2Fail:1;		///< TWR JETT switch 2 will fail.
+			unsigned SMJett1Fail:1;			///< SM JETT switch 1 will fail.
+			unsigned SMJett2Fail:1;			///< SM JETT switch 2 will fail
+		};
+		int word;							///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
+
+		SwitchFailures() { word = 0; };
+	};
+
+	///
+	/// \ingroup ScenarioState
+	/// \brief CSM light display state.
+	///
+	 union LightState {
+		struct {
+			unsigned Engind0:1;
+			unsigned Engind1:1;
+			unsigned Engind2:1;
+			unsigned Engind3:1;
+			unsigned Engind4:1;
+			unsigned Engind5:1;
+			unsigned LVGuidLight:1;
+			unsigned Launchind0:1;
+			unsigned Launchind1:1;
+			unsigned Launchind2:1;
+			unsigned Launchind3:1;
+			unsigned Launchind4:1;
+			unsigned Launchind5:1;
+			unsigned Launchind6:1;
+			unsigned Launchind7:1;
+			unsigned Engind6:1;
+			unsigned Engind7:1;
+			unsigned Engind8:1;
+			unsigned LVRateLight:1;
+		};
+		unsigned long word;
+
+		LightState() { word = 0; };
+	};
+
+	///
+	/// \ingroup ScenarioState
+	/// \brief State which is only required through the launch process.
+	///
+	union LaunchState {
+		struct {
+			unsigned autopilot:1;
+			unsigned TLIEnabled:1;
+		};
+		unsigned long word;
+
+		LaunchState() { word = 0; };
+	};
+
+	///
+	/// \ingroup ScenarioState
+	/// \brief State which is only required for Apollo 13
+	///
+	/// This structure holds the flags which are used for the Apollo 13 simulation. 
+	///
+	union A13State {
+		struct {
+			unsigned ApolloExploded:1;	///< Has the SM exploded yet?
+			unsigned CryoStir:1;		///< Have the crew been asked to do a cryo stir?
+			unsigned KranzPlayed:1;		///< Has the Kranz audio been played yet?
+		};
+		unsigned long word;				///< Used to return all the flags as one 32-bit word for the scenario file.
+
+		A13State() { word = 0; };
+	};
+
+	///
+	/// \ingroup ScenarioState
+	/// \brief Which parts are still attached?
+	///
+	union AttachState {
+		struct {
+			unsigned InterstageAttached:1;	///< Is the interstage attached?
+			unsigned LESAttached:1;			///< Is the LES attached?
+			unsigned HasProbe:1;			///< Does the CM have a docking probe?
+			unsigned ApexCoverAttached:1;	///< Is the apex cover attached?
+			unsigned ChutesAttached:1;		///< Are the chutes attached?
+		};
+		unsigned long word;
+
+		AttachState() { word = 0; };
+	};
+
+	///
+	/// \ingroup ScenarioState
+	/// \brief Main state flags.
+	///
+	union MainState {
+		struct {
+			unsigned MissionTimerRunning:1;			///< Is the Mission timer running?
+			unsigned SIISepState:1;					///< State of the SII Sep light.
+			unsigned TLIBurnDone:1;					///< Have we done our TLI burn?
+			unsigned Scorrec:1;						///< Have we played the course correction sound?
+			unsigned Burned:1;						///< Has the CM been burned by re-entry heating?
+			unsigned EVA_IP:1;						///< Is an EVA in progress?
+			unsigned ABORT_IND:1;					///< State of the abort light.
+			unsigned HatchOpen:1;					///< Is the hatch open?
+			unsigned SplashdownPlayed:1;			///< Have we played the splashdown sound?
+			unsigned unused_2:1;					///< Unused bit for backwards compatibility. Can be used for other things.
+			unsigned LEMdatatransfer:1;				///< Have we transfered setup data to the LEM?
+			unsigned PostSplashdownPlayed:1;		///< Have we played the post-splashdown sound?
+			unsigned IGMEnabled:1;					///< Is the IGM guidance enabled?
+			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
+			unsigned MissionTimerEnabled:1;			///< Is the Mission Timer enabled?
+			unsigned EventTimerEnabled:1;			///< Is the Event Timer enabled?
+			unsigned EventTimerRunning:1;			///< Is the Event Timer running?
+			unsigned EventTimerCountUp:2;			///< Is the Event Timer counting up?
+			unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
+			unsigned SkylabCM:1;					///< Is this a Skylab Command Module?
+			unsigned S1bPanel:1;					///< Is this a Command Module with a Saturn 1b panel?
+			unsigned NoHGA:1;						///< Do we have a High-Gain Antenna?
+			unsigned viewpos:5;						///< Position of the virtual cockpit viewpoint.
+		};
+		unsigned long word;
+
+		MainState() { word = 0; };
+	};
+
+	//
+	// Now the actual code and data for the class.
+	//
+
 	///
 	/// \brief Standard constructor with the usual Orbiter parameters.
 	///
 	Saturn(OBJHANDLE hObj, int fmodel);
+
+	///
+	/// \brief Destructor.
+	///
 	virtual ~Saturn();
 
 	///
@@ -995,26 +1131,26 @@ public:
 	/// Joysticks-Enabled flag / counter - Zero if we aren't using DirectInput, nonzero is the number of joysticks we have.
 	int js_enabled;
 	/// Pointers to DirectInput joystick devices
-	LPDIRECTINPUTDEVICE8 dx8_joystick[2]; // One for THC, one for RHC, ignore extras
-	DIDEVCAPS			 dx8_jscaps[2];   // Joystick capabilities
-	DIJOYSTATE2			 dx8_jstate[2];   // Joystick state
-	HRESULT				 dx8_failure;     // DX failure reason
-	int rhc_id;							  // Joystick # for the RHC
-	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
-	int rhc_sld_id;                       // ID of SLIDER axis to use for RHC Z-axis
-	int rhc_rzx_id;                       // Flag to use native Z-axis as RHC Z-axis
-	int rhc_pov_id;						  // ID of the cooliehat a.k.a. POV
-	int thc_id;                           // Joystick # for the THC
-	int thc_rot_id;						  // ID of ROTATOR axis to use for THC Z-axis
-	int thc_sld_id;                       // ID of SLIDER axis to use for THC Z-axis
-	int thc_rzx_id;                       // Flag to use native Z-axis as THC Z-axis	
-	int thc_pov_id;						  // ID of the cooliehat a.k.a. POV
-	int rhc_debug;						  // Flags to print debugging messages.
+	LPDIRECTINPUTDEVICE8 dx8_joystick[2]; ///< One for THC, one for RHC, ignore extras
+	DIDEVCAPS			 dx8_jscaps[2];   ///< Joystick capabilities
+	DIJOYSTATE2			 dx8_jstate[2];   ///< Joystick state
+	HRESULT				 dx8_failure;     ///< DX failure reason
+	int rhc_id;							  ///< Joystick # for the RHC
+	int rhc_rot_id;						  ///< ID of ROTATOR axis to use for RHC Z-axis
+	int rhc_sld_id;                       ///< ID of SLIDER axis to use for RHC Z-axis
+	int rhc_rzx_id;                       ///< Flag to use native Z-axis as RHC Z-axis
+	int rhc_pov_id;						  ///< ID of the cooliehat a.k.a. POV
+	int thc_id;                           ///< Joystick # for the THC
+	int thc_rot_id;						  ///< ID of ROTATOR axis to use for THC Z-axis
+	int thc_sld_id;                       ///< ID of SLIDER axis to use for THC Z-axis
+	int thc_rzx_id;                       ///< Flag to use native Z-axis as THC Z-axis	
+	int thc_pov_id;						  ///< ID of the cooliehat a.k.a. POV
+	int rhc_debug;						  ///< Flags to print debugging messages.
 	int thc_debug;
-	bool rhc_auto;						  // RHC Z-axis auto detection
-	bool thc_auto;						  // THC Z-axis auto detection
-	int rhc_thctoggle_id;				  // RHC button id for RHC/THC toggle
-	bool rhc_thctoggle_pressed;			  // Button pressed flag				  
+	bool rhc_auto;						  ///< RHC Z-axis auto detection
+	bool thc_auto;						  ///< THC Z-axis auto detection
+	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
+	bool rhc_thctoggle_pressed;			  ///< Button pressed flag				  
 	int js_current;
 
 	//
@@ -1067,6 +1203,9 @@ public:
 	///
 	virtual void Timestep(double simt, double simdt) = 0;
 
+	///
+	/// \brief Initialise a virtual cockpit view.
+	///
 	void InitVC (int vc);
 	bool RegisterVC ();
 
@@ -3659,7 +3798,7 @@ protected:
 	// Surfaces.
 	//
 
-	SURFHANDLE srf[nsurf + 1];  // handles for panel bitmaps. +1 for safety :).
+	SURFHANDLE srf[nsurf];  // handles for panel bitmaps.
 	SURFHANDLE SMExhaustTex;
 	SURFHANDLE CMTex;
 	SURFHANDLE J2Tex;

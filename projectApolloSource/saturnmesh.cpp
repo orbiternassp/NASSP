@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2007/10/18 00:23:23  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.65  2007/07/17 14:33:09  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -1208,7 +1211,7 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 	// We'll always give them one way to jettison the LES as
 	// being unable to jettison it is fatal.
 	//
-	if (!UseMain && LaunchFail.u.LESJetMotorFail)
+	if (!UseMain && LaunchFail.LESJetMotorFail)
 		return;
 
 	//

@@ -20,6 +20,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.92  2007/11/25 06:55:42  movieman523
+  *	Tidied up surface ID code, moving the enum from a shared include file to specific versions for the Saturn and LEM classes.
+  *	
   *	Revision 1.91  2007/11/25 06:10:32  movieman523
   *	Changed surface IDs to an enum so count is automatically updated.
   *	
@@ -362,6 +365,27 @@
 ///
 
 ///
+/// \defgroup ScenarioState Scenario state flags.
+/// \ingroup Config
+/// \brief Flags for scenario state.
+///
+/// For simplicity we pack various scenario flags into unions which combine bitfields and 32-bit ints.
+/// As a result we only need to save the int value to the scenario file, and when we load it we automatically
+/// get all the individual flags without bothering to extract them manually from the int or save and load each
+/// flag individually.
+///
+/// For backwards compatibility, if you remove any of these flags, change its value to 'unusedX' where X is
+/// an appropriate number to be unique in the structure; that way old scenarios won't break when we load the
+/// old value.
+///
+
+///
+/// \defgroup FailFlags Failure flags.
+/// \ingroup ScenarioState
+/// \brief Collection of flags used to specify failures during the mission.
+///
+
+///
 /// \defgroup Connectors Connector code.
 /// \brief This code is used to connect different objects together.
 ///
@@ -396,6 +420,7 @@
 /// \defgroup InternalInterface Interface to the internal systems code.
 /// \ingroup InternalSystems
 /// \brief General interface support for the internal systems.
+///
 /// This group contains functions, classes and structures used by general code to query the state of
 /// internal systems without having to call the Panel SDK code directly. This is the preferred method
 /// of querying state so that the low-level Panel SDK code can be revised without any changes to the
@@ -444,17 +469,6 @@
 ///
 /// \defgroup Saturns Saturn launch vehicle code.
 /// \brief This code supports the Saturn launch vehicles and CSM.
-///
-
-///
-/// For simplicity we pack all the failure flags into unions which combine bitfields and 32-bit ints.
-/// As a result we only need to save the int value to the scenario file, and when we load it we automatically
-/// get all the individual flags without bothering to extract them manually from the int or save and load each
-/// flag individually.
-///
-/// \defgroup FailFlags Failure flags.
-/// \ingroup Saturns
-/// \brief Collection of flags used to specify failures during the mission.
 ///
 
 ///
