@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.216  2007/11/26 17:59:06  movieman523
+  *	Assorted tidying up of state variable structures.
+  *	
   *	Revision 1.215  2007/11/25 09:07:24  jasonims
   *	EMS Implementation Step 2 - jasonims :   EMS Scroll can slew, and some functionality set up for EMS.
   *	
@@ -1286,6 +1289,7 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_EMSDVSETSWITCH,								_R( 910,  431,  957,  517), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_EMSDVDISPLAY,								_R( 743,  518,  900,  539), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SPS_LIGHT,									_R( 816,  467,  846,  483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_PT05G_LIGHT,									_R( 758,  467,  788,  483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_EMS_SCROLL_LEO,								_R( 731,  296,  875,  448), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
 	// ASCP
 	oapiRegisterPanelArea (AID_ASCPDISPLAYROLL,								_R( 199, 1144,  229, 1156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
@@ -3629,6 +3633,11 @@ void Saturn::RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src
 bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 {
+
+	HDC hDC;
+	HGDIOBJ original = NULL;
+
+
 	// Enable this to trace the redraws, but then it's running horrible slow!
 	// char tracebuffer[100];
 	// sprintf(tracebuffer, "Saturn::clbkPanelRedrawEvent id %i", id);
@@ -4073,9 +4082,27 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
+	case AID_PT05G_LIGHT:
+		if (ems.pt05GLight()) {
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 30, 0, 30, 16);
+		} else {
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 0, 30, 16);
+		}
+		return true;
+
 	case AID_EMS_SCROLL_LEO:
 
-		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
+		if(!(GTASwitch.IsUp())) {
+			hDC = oapiGetDC (srf[SRF_EMS_SCROLL_LEO]);
+			SetBkMode (hDC, TRANSPARENT);
+			original = SelectObject(hDC,GetStockObject(BLACK_PEN));
+			MoveToEx(hDC, ems.GetScribePt(2)+40,ems.GetScribePt(3), NULL);
+			LineTo(hDC, ems.GetScribePt(0)+40,ems.GetScribePt(1));
+			SelectObject(hDC,original);
+			oapiReleaseDC (srf[SRF_EMS_SCROLL_LEO], hDC);
+		}
+
+		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScribePt(0), 0, 132, 143);
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
 
 		return true;

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2007/11/25 09:07:25  jasonims
+  *	EMS Implementation Step 2 - jasonims :   EMS Scroll can slew, and some functionality set up for EMS.
+  *	
   *	Revision 1.20  2007/11/24 21:28:46  jasonims
   *	EMS Implementation Step 1 - jasonims :   EMSdVSet Switch now works, preliminary EMS Scroll work being done.
   *	
@@ -273,30 +276,51 @@ class EMS {
 public:
 	EMS(PanelSDK &p);
 	void Init(Saturn *vessel);										// Initialization
-	void TimeStep(double simdt);
+	void TimeStep(double MissionTime, double simdt);
 	void SystemTimestep(double simdt);
 	double GetdVRangeCounter() { return dVRangeCounter; };				
-	int GetScrollOffset() { return ScrollOffset; };
+	int GetScribePt(int i) { return ScribePt[i]; };
 	void SwitchChanged();
 	bool SPSThrustLight();
+	bool pt05GLight();
+	int LiftVectLight();
 	bool IsOff();
 	bool IsdVMode();
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
+	
 
 protected:
 	bool IsPowered();
+	
+	void AccelerometerTimeStep();
+	double xacc, xaccG, constG, dV;
 
 	int status;
-	int ScrollOffset; //pixels
+	int SlewScribe; //pixels
+	int GScribe; //pixels
+	int ScribePt[4];
 	double ScrollPosition; //inches
 	double MaxScrollPosition;
 	bool dVInitialized;
 	VECTOR3 lastWeight;
 	double dVRangeCounter;
 	double dVTestTime;
+
+	double temptime;
+	bool switchchangereset;
+
+	bool pt05GLightOn;
+	bool pt05GFailed;
+
+	short int LiftVectLightOn;
+
+	//Threshold Circuits
+	double InitialTripTime;
 	double ThresholdIndicatorTripTime;
+	bool ThresholdBreeched;
 	bool ThresholdIndicatorTripped;
+	bool CorridorEvaluated;
 
 	double ScrollBitmapLength;
 	double ScrollScaling;

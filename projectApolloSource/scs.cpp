@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2007/11/25 09:07:24  jasonims
+  *	EMS Implementation Step 2 - jasonims :   EMS Scroll can slew, and some functionality set up for EMS.
+  *	
   *	Revision 1.23  2007/11/24 21:28:46  jasonims
   *	EMS Implementation Step 1 - jasonims :   EMSdVSet Switch now works, preliminary EMS Scroll work being done.
   *	
@@ -2665,9 +2668,25 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
-	ScrollOffset = 0;
+	SlewScribe = 0;
+	GScribe = 0;
+
+	temptime = 0.0;
+	switchchangereset = false;
+
+	pt05GLightOn = false;
+	pt05GFailed = false;
+	LiftVectLightOn = 0;
+
+	ThresholdBreeched = false;
 	ThresholdIndicatorTripped = false;
-	ThresholdIndicatorTripTime = 0;
+	CorridorEvaluated = false;
+	InitialTripTime = 0.0;
+	ThresholdIndicatorTripTime = 0.0;
+	ScribePt[0]=0;
+	ScribePt[1]=0;
+	ScribePt[2]=0;
+	ScribePt[3]=0;
 
 	//
 	//  For proper scaling....
@@ -2681,22 +2700,80 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 void EMS::Init(Saturn *vessel) {
 	sat = vessel;
 	DCPower.WireToBuses(&sat->EMSMnACircuitBraker, &sat->EMSMnBCircuitBraker);
+
+	// Handle different gravity and size of the Earth
+	if (sat->IsVirtualAGC()) {
+		constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
+	} else {
+		if (sat->NonsphericalGravityEnabled()) {
+			constG = 9.7988;
+		} else {
+			constG = 9.7939;
+		}
+	}
 }
 
-void EMS::TimeStep(double simdt) {
+void EMS::TimeStep(double MissionTime, double simdt) {
 
-	VESSELSTATUS vs;
-	VECTOR3 w;
 	double position;
+
+	AccelerometerTimeStep();
+
+	xaccG = xacc/constG;
+	dV = xacc * simdt * FPS;
 
 	if (!IsPowered()) {
 		status = EMS_STATUS_OFF; 
 		return;
 	}
+	// If powered, drive Glevel
+	GScribe = (int)(xaccG*13.6);
 
-	if (!ThresholdIndicatorTripped) {
-		// Check for .05g  Threshold Indicator requirements met.
+	if (switchchangereset) {
+		temptime = MissionTime;
+		switchchangereset = false;
+		pt05GLightOn = false;
 	}
+
+	//Threshold and Corridor Verification Logic
+	/*
+	if (!ThresholdBreeched && sat->GetStage() >= CM_STAGE) {					//We're in the CM and .05 hasn't been tripped.
+		// Check for .05g  Threshold Indicator requirements met.
+
+		if (abs(xaccG - .05) <= .005) {												//if accerlerometer reads 0.05 +- 0.005...
+			ThresholdIndicatorTripped=true;
+			InitialTripTime=MissionTime;
+		}
+
+		//sprintf(oapiDebugString(), "xacc %.10f   dV %.10f   dX %.10f  ScrollPos: %.10f", xacc, dV, dV*simdt, ScrollPosition);
+
+		if (ThresholdIndicatorTripped) {
+			if (MissionTime-InitialTripTime >= 1.0 && abs(xaccG-.05) <= .005) {		//...for more than one second...
+				pt05GLightOn = true;
+				ThresholdBreeched = true;
+			} else if (MissionTime-InitialTripTime < 1.0 && (xaccG-.02) < 0.0) {		//... if drops below 0.02 light extengished...
+				ThresholdIndicatorTripped=false;
+				pt05GLightOn = false;
+				ThresholdBreeched = false;
+				InitialTripTime=0.0;
+			} else if (MissionTime-InitialTripTime < 1.0 && abs(xaccG-.02) <= .005) {
+				ThresholdBreeched = false;
+				pt05GLightOn = false;
+			}
+		}
+	} else if (ThresholdBreeched && !CorridorEvaluated) {
+		pt05GLightOn = true;
+		if (abs(MissionTime-InitialTripTime-10.053) >= 0.05) {
+			if (xaccG > .262) LiftVectLightOn = 1;
+			if (xaccG < .262) LiftVectLightOn = -1;
+			CorridorEvaluated = true;
+		}
+	} else if (CorridorEvaluated) {
+		if (xaccG >= 2.0) {
+			LiftVectLightOn = 0;
+		}
+	}
+	*/
 
 	// Turn on reset
 	if (status == EMS_STATUS_OFF && sat->EMSFunctionSwitch.GetState() != 0) {
@@ -2707,59 +2784,15 @@ void EMS::TimeStep(double simdt) {
 		case EMS_STATUS_DV:
 		case EMS_STATUS_DV_BACKUP:
 			{
-				sat->GetStatus(vs);
-				sat->GetWeightVector(w);
 
-				MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-vs.arot.z);
-				tinv = mul(AttitudeReference::GetRotationMatrixY(-vs.arot.y), tinv);
-				tinv = mul(AttitudeReference::GetRotationMatrixX(-vs.arot.x), tinv);
-				w = mul(tinv, w) / sat->GetMass();
+				// dV/Range display
+				if (xacc > 0 || status == EMS_STATUS_DV) {
+					dVRangeCounter -= dV;
+					dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
+				}				
+				//sprintf(oapiDebugString(), "xacc %.10f", xacc);
+				//sprintf(oapiDebugString(), "Avg x %.10f y %.10f z %.10f l%.10f", avg.x, avg.y, avg.z, length(avg));								
 
-				if (!dVInitialized) {
-					lastWeight = w;
-					dVInitialized = true;
-
-				} else {
-					// Acceleration calculation, see IMU
-					VECTOR3 f;
-					sat->GetForceVector(f);
-					f = mul(tinv, f) / sat->GetMass();
-
-					VECTOR3 dw1 = w - f;
-					VECTOR3 dw2 = lastWeight - f;
-					lastWeight = w;
-
-					// Transform to vessel coordinates
-					MATRIX3	t = AttitudeReference::GetRotationMatrixX(vs.arot.x);
-					t = mul(AttitudeReference::GetRotationMatrixY(vs.arot.y), t);
-					t = mul(AttitudeReference::GetRotationMatrixZ(vs.arot.z), t);
-
-					VECTOR3 avg = (dw1 + dw2) / 2.0;
-					avg = mul(t, avg);	
-					double xacc = -avg.z;
-
-					// Ground test switch
-					if (sat->GTASwitch.IsUp()) {
-						// Handle different gravity and size of the Earth
-						if (sat->IsVirtualAGC()) {
-							xacc -= 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
-						} else {
-							if (sat->NonsphericalGravityEnabled()) {
-								xacc -= 9.7988;
-							} else {
-								xacc -= 9.7939;
-							}
-						}
-					}
-
-					// dV/Range display
-					if (xacc > 0 || status == EMS_STATUS_DV) {
-						dVRangeCounter -= xacc * simdt * FPS;
-						dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
-					}				
-					sprintf(oapiDebugString(), "xacc %.10f", xacc);
-					//sprintf(oapiDebugString(), "Avg x %.10f y %.10f z %.10f l%.10f", avg.x, avg.y, avg.z, length(avg));								
-				}
 			}
 			break;
 
@@ -2773,8 +2806,6 @@ void EMS::TimeStep(double simdt) {
 				dVRangeCounter -= 127.5 * simdt;
 			else if (position == 4)
 				dVRangeCounter -= 0.25 * simdt;
-
-			dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 			break;
 
 		case EMS_STATUS_DVTEST:
@@ -2786,12 +2817,16 @@ void EMS::TimeStep(double simdt) {
 					dVRangeCounter -= (dVTestTime + 0.176875) * 160.0;
 				}
 				dVTestTime = 0;
-				dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 				status = EMS_STATUS_DVTEST_DONE;
 			}
 			break;
 		
 		case EMS_STATUS_ENTRY:
+			if (ThresholdBreeched || sat->EMSModeSwitch.IsDown()) {
+				ScrollPosition=ScrollPosition+(dV*(.263/480));
+				dVRangeCounter -= dV*simdt;
+				pt05GLightOn = true;
+			}
 			break;
 		
 		case EMS_STATUS_Vo_SET:
@@ -2804,10 +2839,6 @@ void EMS::TimeStep(double simdt) {
 				ScrollPosition -= .263 * simdt;
 			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=1.0)
 				ScrollPosition -= .0164 * simdt;
-
-			ScrollPosition = max(0.0, min(ScrollBitmapLength*ScrollScaling, ScrollPosition));
-			if (ScrollPosition >= MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
-			ScrollOffset = (int)(ScrollPosition/ScrollScaling);
 			break;
 
 		case EMS_STATUS_RNG_SET:
@@ -2820,8 +2851,6 @@ void EMS::TimeStep(double simdt) {
 				dVRangeCounter -= 127.5 * simdt;
 			else if (position == 4)
 				dVRangeCounter -= 0.25 * simdt;
-
-			dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 			break;
 
 		case EMS_STATUS_EMS_TEST1:
@@ -2834,10 +2863,18 @@ void EMS::TimeStep(double simdt) {
 				ScrollPosition -= .263 * simdt;
 			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=1.0)
 				ScrollPosition -= .0164 * simdt;
+			break;
 
-			ScrollPosition = max(0.0, min(ScrollBitmapLength*ScrollScaling, ScrollPosition));
-			if (ScrollPosition >= MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
-			ScrollOffset = (int)(ScrollPosition/ScrollScaling);
+		case EMS_STATUS_EMS_TEST2:
+			pt05GLightOn = true;
+			break;
+
+		case EMS_STATUS_EMS_TEST3:
+			pt05GLightOn = true;
+			break;
+
+		case EMS_STATUS_EMS_TEST4:
+			pt05GLightOn = true;
 			break;
 
 		case EMS_STATUS_EMS_TEST5:
@@ -2850,12 +2887,29 @@ void EMS::TimeStep(double simdt) {
 				ScrollPosition -= .263 * simdt;
 			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=1.0)
 				ScrollPosition -= .0164 * simdt;
-
-			ScrollPosition = max(0.0, min(ScrollBitmapLength*ScrollScaling, ScrollPosition));
-			if (ScrollPosition >= MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
-			ScrollOffset = (int)(ScrollPosition/ScrollScaling);
+			pt05GLightOn = true;
 			break;
 	}
+
+	// Limit readouts
+	dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
+	ScrollPosition = max(0.0, min(ScrollBitmapLength*ScrollScaling, ScrollPosition));
+			
+	if (sat->GTASwitch.IsUp() && sat->GetStage() >= CM_STAGE) {
+		MaxScrollPosition = ScrollPosition;
+	}else{
+		if (ScrollPosition > MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
+	}
+
+	SlewScribe = (int)(ScrollPosition/ScrollScaling);
+
+	ScribePt[2]=ScribePt[0];
+	ScribePt[3]=ScribePt[1];
+	ScribePt[0]=SlewScribe;
+	ScribePt[1]=GScribe;
+
+	//sprintf(oapiDebugString(), "ScribePt %d %d %d %d", ScribePt[0], ScribePt[1], ScribePt[2], ScribePt[3]);
+
 }
 
 void EMS::SystemTimestep(double simdt) {
@@ -2863,6 +2917,46 @@ void EMS::SystemTimestep(double simdt) {
 	if (IsPowered() && !IsOff()) {
 		DCPower.DrawPower(93.28);	// see CSM Systems Handbook
 	}
+}
+
+void EMS::AccelerometerTimeStep() {
+
+	VESSELSTATUS vs;
+	VECTOR3 w;
+
+	sat->GetStatus(vs);
+	sat->GetWeightVector(w);
+
+	MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-vs.arot.z);
+	tinv = mul(AttitudeReference::GetRotationMatrixY(-vs.arot.y), tinv);
+	tinv = mul(AttitudeReference::GetRotationMatrixX(-vs.arot.x), tinv);
+	w = mul(tinv, w) / sat->GetMass();
+
+	if (!dVInitialized) {
+		lastWeight = w;
+		dVInitialized = true;
+
+	} else {
+		// Acceleration calculation, see IMU
+		VECTOR3 f;
+		sat->GetForceVector(f);
+		f = mul(tinv, f) / sat->GetMass();
+		VECTOR3 dw1 = w - f;
+		VECTOR3 dw2 = lastWeight - f;
+		lastWeight = w;
+		// Transform to vessel coordinates
+		MATRIX3	t = AttitudeReference::GetRotationMatrixX(vs.arot.x);
+		t = mul(AttitudeReference::GetRotationMatrixY(vs.arot.y), t);
+		t = mul(AttitudeReference::GetRotationMatrixZ(vs.arot.z), t);
+		VECTOR3 avg = (dw1 + dw2) / 2.0;
+		avg = mul(t, avg);	
+		xacc = -avg.z;
+		// Ground test switch
+		if (sat->GTASwitch.IsUp()) {
+			xacc -= constG;
+		}
+	}
+
 }
 
 void EMS::SwitchChanged() {
@@ -2937,6 +3031,8 @@ void EMS::SwitchChanged() {
 			status = EMS_STATUS_STANDBY;
 			break;
 	}
+
+	switchchangereset=true;
 	// sprintf(oapiDebugString(),"EMSFunctionSwitch %d", sat->EMSFunctionSwitch.GetState());
 }
 
@@ -2947,6 +3043,20 @@ bool EMS::SPSThrustLight() {
 	if (status == EMS_STATUS_DVTEST) return true;
 	if (sat->SPSEngine.IsThrustOn()) return true;
 	return false;
+}
+
+bool EMS::pt05GLight() {
+
+	if (!IsPowered()) return false;
+	if (pt05GFailed) return false;
+	if (pt05GLightOn) return true;
+	return false;
+}
+
+int EMS::LiftVectLight() {
+
+	if (!IsPowered()) return 0;
+	return LiftVectLightOn;
 }
 
 bool EMS::IsOff() {

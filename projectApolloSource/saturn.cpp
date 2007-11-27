@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.204  2007/11/26 17:59:06  movieman523
+  *	Assorted tidying up of state variable structures.
+  *	
   *	Revision 1.203  2007/11/17 02:45:52  lassombra
   *	Added code to handle config option to split lower G&N bay panel.
   *	
@@ -1431,7 +1434,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 		// Better acceleration measurement stability
 		imu.Timestep(MissionTime);		
-		ems.TimeStep(simdt);
+		ems.TimeStep(MissionTime, simdt);
 		CrewStatus.Timestep(simdt);
 	}
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
