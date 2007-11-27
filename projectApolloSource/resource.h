@@ -572,6 +572,7 @@
 #define AID_PANEL100SWITCHES                                864
 #define AID_PANEL100LIGHTINGROTARIES                        865
 #define AID_SCIUTILPOWERSWITCH                              866
+#define AID_PT05G_LIGHT										867
 #define AID_EMSDVDISPLAY                                    868
 #define IDB_EMS_LIGHTS                                      869
 #define IDB_SUITRETURN_LEVER                                870
