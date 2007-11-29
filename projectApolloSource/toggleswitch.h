@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2007/11/17 19:37:26  movieman523
+  *	Doxygen changes and more use of IsSpringLoaded() function in place of directly testing the value of the variable. Checking this in prior to switching development work from my laptop to desktop system.
+  *	
   *	Revision 1.61  2007/10/21 21:25:13  movieman523
   *	Added SHIFT-click to hold spring-loaded buttons.
   *	
@@ -1389,3 +1392,160 @@ protected:
 	PanelSwitchItem *switchList;
 };
 
+///
+/// \brief Round meter for control panel.
+///
+/// This meter displays a value with a rotating dial.
+///
+/// \ingroup PanelItems
+///
+class RoundMeter : public MeterSwitch {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row);
+
+protected:
+	HPEN Pen0;
+	HPEN Pen1;
+
+	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
+};
+
+///
+/// \brief Electric meter for control panel.
+///
+/// This meter displays the electrical readings of one of the numerous systems in the CSM (e.g. the main buses
+/// or batteries).
+///
+/// \ingroup PanelItems
+///
+class ElectricMeter: public RoundMeter {
+public:
+	///
+	/// \brief Constructor.
+	/// \param minVal Minimum value to display (meter may show beyond it).
+	/// \param maxVal Maximum value to display (meter may show beyond it).
+	/// \param vMin Angle of meter at minimum value.
+	/// \param vMax Angle of meter at maximum value.
+	///
+	ElectricMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+
+	///
+	/// \brief Initialise the meter.
+	///
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch);
+
+	///
+	/// \brief Actually draw the switch.
+	/// \param volts Current voltage.
+	/// \param drawSurface The surface to draw to.
+	///
+	void DoDrawSwitch(double volts, SURFHANDLE drawSurface);
+
+	///
+	/// \brief Set the switch bitmap.
+	/// \param srf Frame bitmap surface.
+	/// \param x Width in pixels.
+	/// \param y Height in pixels.
+	///
+	void SetSurface(SURFHANDLE srf, int x, int y);
+
+protected:
+	double minValue;		///< The minimum value to display.
+	double maxValue;		///< The maximum value to  display.
+	double minAngle;		///< Angle at minimum voltage.
+	double maxAngle;		///< Angle at maximum voltage.
+	double ScaleFactor;		///< The internal volts to angle scale factor.
+
+	int xSize;				///< X-size of bitmap in pixels.
+	int ySize;				///< Y-size of bitmap in pixels.
+
+	///
+	/// \brief The surface to use for the meter frame.
+	///
+	SURFHANDLE FrameSurface;
+
+	double AdjustForPower(double val) { return val; } ///< These are always powered by definition.
+};
+
+///
+/// \brief DC voltage meter for control panel.
+///
+/// \image html DCVolts.bmp "DC voltage meter"
+///
+/// This meter displays the DC voltage of one of the numerous DC systems in the CSM or LEM (e.g. the main buses
+/// or batteries).
+///
+/// \ingroup PanelItems
+///
+class DCVoltMeter: public ElectricMeter {
+public:
+	///
+	/// \brief Constructor.
+	/// \param minVal Minimum voltage to display (meter may show beyond it).
+	/// \param maxVal Maximum voltage to display (meter may show beyond it).
+	/// \param vMin Angle of meter at minimum voltage.
+	/// \param vMax Angle of meter at maximum voltage.
+	///
+	DCVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+
+	///
+	/// \brief Query the voltage.
+	/// \return Current voltage.
+	///
+	double QueryValue();
+};
+
+///
+/// \brief DC current meter for control panel.
+///
+/// \image html DCAmps.bmp "DC current meter"
+///
+/// This meter displays the DC current of one of the numerous DC systems in the CSM or LEM (e.g. the main buses
+/// or batteries).
+///
+/// \ingroup PanelItems
+///
+class DCAmpMeter: public ElectricMeter {
+public:
+	///
+	/// \brief Constructor.
+	/// \param minVal Minimum current to display (meter may show beyond it).
+	/// \param maxVal Maximum current to display (meter may show beyond it).
+	/// \param vMin Angle of meter at minimum current.
+	/// \param vMax Angle of meter at maximum current.
+	///
+	DCAmpMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+
+	///
+	/// \brief Query the voltage.
+	/// \return Current voltage.
+	///
+	double QueryValue();
+};
+
+///
+/// \brief AC voltage meter for control panel.
+///
+/// \image html ACVolts.bmp "ACVolts meter"
+///
+/// This meter displays the AC voltage on one phase of one of the CSM AC buses.
+///
+/// \ingroup PanelItems
+///
+class ACVoltMeter: public ElectricMeter {
+public:
+	///
+	/// \brief Constructor.
+	/// \param minVal Minimum voltage to display (meter may show beyond it).
+	/// \param maxVal Maximum voltage to display (meter may show beyond it).
+	/// \param vMin Angle of meter at minimum voltage.
+	/// \param vMax Angle of meter at maximum voltage.
+	///
+	ACVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+
+	///
+	/// \brief Query the voltage.
+	/// \return Current voltage.
+	///
+	double QueryValue();
+};
