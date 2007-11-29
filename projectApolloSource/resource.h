@@ -604,6 +604,33 @@
 #define IDB_EMS_SCROLL_BORDER								896
 #define IDB_EMSDVSETSWITCH									897
 #define AID_EMSDVSETSWITCH                                  898
+#define IDB_ALTIMETER2										899
+#define AID_ALTIMETER2										900
+#define IDB_OXYGEN_SURGE_TANK_VALVE							901
+#define AID_OXYGEN_SURGE_TANK_VALVE							902
+#define IDB_GLYCOL_TO_RADIATORS_KNOB						903
+#define AID_GLYCOL_TO_RADIATORS_KNOB						904
+#define IDB_BORDER_31x31									905
+#define IDB_ACCUM_ROTARY									906
+#define	IDB_GLYCOL_ROTARY									907
+#define IDB_BORDER_58x58									908
+#define IDB_BORDER_160x32									909
+#define AID_GLYCOL_ROTARY									910
+#define AID_ACCUM_ROTARY									911
+#define IDB_TANK_VALVE			    						912
+#define IDB_PRESS_RELIEF_VALVE								913
+#define IDB_BORDER_57x57									914
+#define IDB_BORDER_47x47									915
+#define AID_PANEL_352										916
+#define IDB_BORDER_48x48									917
+#define IDB_CABIN_REPRESS_VALVE								918
+#define AID_CABIN_REPRESS_VALVE								919
+#define IDB_SELECTOR_INLET_ROTARY							920
+#define IDB_SELECTOR_OUTLET_ROTARY							921	
+#define AID_WATER_GLYCOL_TANKS_ROTARIES						922  
+#define IDB_BORDER_65x65									923
+#define IDB_EMERGENCY_PRESS_ROTARY							924
+#define AID_EMERGENCY_CABIN_PRESSURE_ROTARY					925  
 
 // Next default values for new objects
 //

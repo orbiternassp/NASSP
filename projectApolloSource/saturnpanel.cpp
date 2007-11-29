@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.217  2007/11/27 02:56:41  jasonims
+  *	EMS Implementation Step 3 - jasonims :   EMS Scroll is functional and plots correctly, however .05G circuitry does not work yet and is commented out.  Manual  operation does work though.  Verification needed.
+  *	
   *	Revision 1.216  2007/11/26 17:59:06  movieman523
   *	Assorted tidying up of state variable structures.
   *	
@@ -516,6 +519,80 @@ void Saturn::RedrawPanel_Alt (SURFHANDLE surf)
 	oapiBlt(surf, srf[SRF_ALTIMETER], 0, 0, 0, 0, 137, 137, SURF_PREDEF_CK);
 }
 
+void Saturn::RedrawPanel_Alt2 (SURFHANDLE surf)
+{
+	double alpha;
+	double range;
+
+	alpha = GetAltitude();
+	alpha = alpha / 0.305;
+
+#define ALTIMETER2_X_CENTER	80
+#define ALTIMETER2_Y_CENTER	80
+#define ALTIMETER2_RADIUS	70.0
+
+	//sprintf(oapiDebugString(), "altitude %f", alpha);
+	if (alpha > 50000) alpha = 50000;
+
+	if (alpha < 4001){
+		range = 120 * RAD;
+		range = range / 4000;
+		alpha = 4000 - alpha;
+		HDC hDC = oapiGetDC (surf);
+		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC (surf, hDC);
+	}
+	else if (alpha > 4001 && alpha < 6001){
+		range = 35 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		HDC hDC = oapiGetDC (surf);
+		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+185*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC (surf, hDC);
+	}
+	else if (alpha > 6001 && alpha < 8001){
+		range = 25 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		HDC hDC = oapiGetDC (surf);
+		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+165*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC (surf, hDC);
+	}
+	else if (alpha > 8001 && alpha < 10001){
+		range = 20 * RAD;
+		range = range / 2000;
+		alpha = 2000 - alpha;
+		HDC hDC = oapiGetDC (surf);
+		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+150*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC (surf, hDC);
+	}
+	else if (alpha > 10001 && alpha < 20001){
+		range = 55 * RAD;
+		range = range / 10000;
+		alpha = 10000 - alpha;
+		HDC hDC = oapiGetDC (surf);
+		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+70*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC (surf, hDC);
+	}
+	else if (alpha > 20001 && alpha < 40001){
+		range = 65 * RAD;
+		range = range / 20000;
+		alpha = 20000 - alpha;
+		HDC hDC = oapiGetDC (surf);
+		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+15*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC (surf, hDC);
+	}
+	else {
+		range = 20 * RAD;
+		range = range / 10000;
+		alpha = 10000 - alpha;
+		HDC hDC = oapiGetDC (surf);
+		DrawNeedle (hDC, ALTIMETER2_X_CENTER, ALTIMETER2_Y_CENTER, ALTIMETER2_RADIUS, (alpha*range)+10*RAD, g_Param.pen[1], g_Param.pen[4]);//(alpha * range)
+		oapiReleaseDC (surf, hDC);
+	}
+	oapiBlt(surf, srf[SRF_ALTIMETER2], 0, 0, 0, 0, 161, 161, SURF_PREDEF_CK);
+}
+
 void Saturn::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist) {
 
 	HDC hDC = oapiGetDC (surf);
@@ -650,11 +727,23 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_EMS_SCROLL_LEO]							= oapiCreateSurface (LOADBMP (IDB_EMS_SCROLL_LEO));
 	srf[SRF_EMS_SCROLL_BORDER]						= oapiCreateSurface (LOADBMP (IDB_EMS_SCROLL_BORDER));
 	srf[SRF_EMSDVSETSWITCH]							= oapiCreateSurface (LOADBMP (IDB_EMSDVSETSWITCH));
+	srf[SRF_ALTIMETER2]								= oapiCreateSurface (LOADBMP (IDB_ALTIMETER2));
+	srf[SRF_OXYGEN_SURGE_TANK_VALVE]				= oapiCreateSurface (LOADBMP (IDB_OXYGEN_SURGE_TANK_VALVE));
+	srf[SRF_GLYCOL_TO_RADIATORS_KNOB]				= oapiCreateSurface (LOADBMP (IDB_GLYCOL_TO_RADIATORS_KNOB));
+	srf[SRF_ACCUM_ROTARY]							= oapiCreateSurface (LOADBMP (IDB_ACCUM_ROTARY));
+	srf[SRF_GLYCOL_ROTARY]							= oapiCreateSurface (LOADBMP (IDB_GLYCOL_ROTARY));
+	srf[SRF_TANK_VALVE]								= oapiCreateSurface (LOADBMP (IDB_TANK_VALVE));
+	srf[SRF_PRESS_RELIEF_VALVE]						= oapiCreateSurface (LOADBMP (IDB_PRESS_RELIEF_VALVE));
+	srf[SRF_CABIN_REPRESS_VALVE]					= oapiCreateSurface (LOADBMP (IDB_CABIN_REPRESS_VALVE));
+	srf[SRF_SELECTOR_INLET_ROTARY]					= oapiCreateSurface (LOADBMP (IDB_SELECTOR_INLET_ROTARY));							
+	srf[SRF_SELECTOR_OUTLET_ROTARY]					= oapiCreateSurface (LOADBMP (IDB_SELECTOR_OUTLET_ROTARY));
+	srf[SRF_EMERGENCY_PRESS_ROTARY]					= oapiCreateSurface (LOADBMP (IDB_EMERGENCY_PRESS_ROTARY));
 
 	//
 	// Flashing borders.
 	//
 
+	srf[SRF_BORDER_31x31]			= oapiCreateSurface (LOADBMP (IDB_BORDER_31x31));
 	srf[SRF_BORDER_34x29]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
 	srf[SRF_BORDER_34x61]			= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
 	srf[SRF_BORDER_55x111]			= oapiCreateSurface (LOADBMP (IDB_BORDER_55x111));
@@ -675,6 +764,12 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_BORDER_32x160]			= oapiCreateSurface (LOADBMP (IDB_BORDER_32x160));
 	srf[SRF_BORDER_72x72]			= oapiCreateSurface (LOADBMP (IDB_BORDER_72x72));
 	srf[SRF_BORDER_75x64]			= oapiCreateSurface (LOADBMP (IDB_BORDER_75x64));
+	srf[SRF_BORDER_58x58]			= oapiCreateSurface (LOADBMP (IDB_BORDER_58x58));
+	srf[SRF_BORDER_160x32]			= oapiCreateSurface (LOADBMP (IDB_BORDER_160x32));
+	srf[SRF_BORDER_57x57]			= oapiCreateSurface (LOADBMP (IDB_BORDER_57x57));
+	srf[SRF_BORDER_47x47]			= oapiCreateSurface (LOADBMP (IDB_BORDER_47x47));
+	srf[SRF_BORDER_48x48]			= oapiCreateSurface (LOADBMP (IDB_BORDER_48x48));
+	srf[SRF_BORDER_65x65]			= oapiCreateSurface (LOADBMP (IDB_BORDER_65x65));
 
 	//
 	// Set color keys where appropriate.
@@ -748,12 +843,25 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCHSMALL],					g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_MINIMPULSE_HANDCONTROLLER],			g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_EMS_SCROLL_BORDER],					g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_ALTIMETER2],							g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_SM_RCS_MODE],							g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_OXYGEN_SURGE_TANK_VALVE],				g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_GLYCOL_TO_RADIATORS_KNOB],				g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_ACCUM_ROTARY],							g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_GLYCOL_ROTARY],						g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_TANK_VALVE],							g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_PRESS_RELIEF_VALVE],					g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CABIN_REPRESS_VALVE],					g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_SELECTOR_INLET_ROTARY],				g_Param.col[4]);							
+	oapiSetSurfaceColourKey (srf[SRF_SELECTOR_OUTLET_ROTARY],				g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_EMERGENCY_PRESS_ROTARY],				g_Param.col[4]);
 	
 	//
 	// Borders need to set the center color to transparent so only the outline
 	// is visible.
 	//
 
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_31x31],		g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_34x29],		g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_34x61],		g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_55x111],	g_Param.col[4]);
@@ -774,6 +882,12 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_32x160],	g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_72x72],		g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_75x64],		g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_58x58],		g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_160x32],	g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_57x57],		g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_47x47],		g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_48x48],		g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_65x65],		g_Param.col[4]);
 
 	SetSwitches(panel);
 }
@@ -819,7 +933,7 @@ bool Saturn::clbkLoadPanel (int id) {
 	// Load panel background image
 	//
 	HBITMAP hBmp;
-	MFDSPEC mfds_dock		=     {{ 893,  627, 1112,  842}, 6, 6, 31, 31};
+	MFDSPEC mfds_dock		=     {{1019,  784, 1238,  999}, 6, 6, 31, 31};
 
 
 	if ((id == SATPANEL_LOWER && !GNSplit)||(id == SATPANEL_LOWER_LEFT && !GNSplit)||(id == SATPANEL_LOWER_RIGHT && !GNSplit)) { // guidance & navigation lower equipment bay (unslplit
@@ -1026,7 +1140,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_BMAGPOWERROTARY2,							_R( 666, 1511,  756, 1601), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DIRECTO2ROTARY,								_R( 765, 1575,  835, 1645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SUITCIRCUITRETURNVALVE,						_R(  65, 1252,  225, 1285), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-
+		oapiRegisterPanelArea (AID_OXYGEN_SURGE_TANK_VALVE,						_R( 121,  201,  155,  235), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
@@ -1111,11 +1226,12 @@ bool Saturn::clbkLoadPanel (int id) {
 			oapiSetPanelNeighbours(-1, SATPANEL_HATCH_WINDOW, -1, SATPANEL_MAIN);
 
         oapiRegisterMFD (MFD_RIGHT, mfds_dock);	// MFD_USER1
-		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 851,  613, 1152,  864), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 865,  845,  885,  860), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,				       PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SM_RCS_MODE,     _R( 777,  791,  852,  864), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_COAS,		    _R( 469,    0, 1152,  539), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
-
+		oapiRegisterPanelArea (AID_MFDDOCK,	        _R( 979,  773, 1280, 1024), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MFDDOCK_POWER,   _R( 958, 1004,  978, 1019), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,				       PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SM_RCS_MODE,     _R(1205,  700, 1280,  773), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_COAS,		    _R( 533,    0, 1216,  620), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN,					   PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ALTIMETER2,		_R( 787,  863,  948, 1024), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					   PANEL_MAP_BACKGROUND);
+		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
@@ -1151,13 +1267,22 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiSetPanelNeighbours(-1, SATPANEL_LEFT, -1, -1);
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		oapiRegisterPanelArea (AID_GLYCOLTORADIATORSLEVER,			_R(1218,   46, 1250,  206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CABINPRESSURERELIEFLEVER1,		_R(1274,  412, 1425,  492), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CABINPRESSURERELIEFLEVER2,		_R(1161,  547, 1427,  635), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_GLYCOLRESERVOIRROTARIES,			_R(1226,  705, 1304,  995), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_OXYGENROTARIES,					_R(1228, 1146, 1518, 1224), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R( 418,   43,  661,  161), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ORDEALROTARY,					_R( 709,   63,  793,  147), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOLTORADIATORSLEVER,			_R(1488,   46, 1520,  206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABINPRESSURERELIEFLEVER1,		_R(1544,  412, 1695,  492), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABINPRESSURERELIEFLEVER2,		_R(1431,  547, 1697,  635), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOLRESERVOIRROTARIES,			_R(1496,  705, 1574,  995), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OXYGENROTARIES,					_R(1498, 1146, 1788, 1224), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ORDEALSWITCHES,					_R( 503,   44,  746,  162), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ORDEALROTARY,					_R( 794,   64,  878,  148), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OXYGEN_SURGE_TANK_VALVE,			_R(1150,  201, 1184,  235), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOL_TO_RADIATORS_KNOB,		_R( 273,  362,  304,  393), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUITCIRCUITRETURNVALVE,			_R(1094, 1252, 1254, 1284), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOL_ROTARY,					_R( 117,  978,  189, 1050), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ACCUM_ROTARY,					_R( 669, 1025,  727, 1083), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL_352,						_R(  96, 2973,  383, 3191), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CABIN_REPRESS_VALVE,				_R( 612, 3096,  660, 3144), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_WATER_GLYCOL_TANKS_ROTARIES,		_R(1001, 2965, 1085, 3182), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_EMERGENCY_CABIN_PRESSURE_ROTARY,	_R( 773, 3130,  838, 3195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -2816,7 +2941,47 @@ void Saturn::SetSwitches(int panel) {
 	ORDEALAltSetRotary.Init(  0, 0, 84, 84, srf[SRF_ORDEAL_ROTARY], srf[SRF_BORDER_84x84], ORDEALRotaryRow);
 
 	SuitCircuitReturnValveLeverRow.Init(AID_SUITCIRCUITRETURNVALVE, MainPanel);
-	SuitCircuitReturnValveLever.Init(0, 0, 160, 32, srf[SRF_SUITRETURN_LEVER], 0, SuitCircuitReturnValveLeverRow);
+	SuitCircuitReturnValveLever.Init(0, 0, 160, 32, srf[SRF_SUITRETURN_LEVER], srf[SRF_BORDER_160x32], SuitCircuitReturnValveLeverRow);
+
+	///////////////////////////
+	// Panel 375/377/378/379 //
+	///////////////////////////
+	
+	OxygenSurgeTankValveRotaryRow.Init(AID_OXYGEN_SURGE_TANK_VALVE, MainPanel);
+	OxygenSurgeTankValveRotary.Init(0, 0, 34, 34, srf[SRF_OXYGEN_SURGE_TANK_VALVE], srf[SRF_BORDER_34x34], OxygenSurgeTankValveRotaryRow);
+	
+	GlycolToRadiatorsRotaryRow.Init(AID_GLYCOL_TO_RADIATORS_KNOB, MainPanel);
+	GlycolToRadiatorsRotary.Init(0, 0, 31, 31, srf[SRF_GLYCOL_TO_RADIATORS_KNOB], srf[SRF_BORDER_31x31], GlycolToRadiatorsRotaryRow);
+
+	GlycolRotaryRow.Init(AID_GLYCOL_ROTARY, MainPanel);
+	GlycolRotary.Init(0, 0, 72, 72, srf[SRF_GLYCOL_ROTARY], srf[SRF_BORDER_72x72], GlycolRotaryRow);
+	
+	AccumRotaryRow.Init(AID_ACCUM_ROTARY, MainPanel);
+	AccumRotary.Init(0, 0, 58, 58, srf[SRF_ACCUM_ROTARY], srf[SRF_BORDER_58x58], AccumRotaryRow);
+
+	///////////////
+	// Panel 252 //
+	///////////////
+	
+	WaterControlPanelRow.Init(AID_PANEL_352, MainPanel);
+	PressureReliefRotary.Init    (121,   0, 57, 57, srf[SRF_PRESS_RELIEF_VALVE], srf[SRF_BORDER_58x58], WaterControlPanelRow);
+	WasteTankInletRotary.Init    (  0, 171, 47, 47, srf[SRF_TANK_VALVE], srf[SRF_BORDER_47x47], WaterControlPanelRow);
+	PotableTankInletRotary.Init  (119, 171, 47, 47, srf[SRF_TANK_VALVE], srf[SRF_BORDER_47x47], WaterControlPanelRow);
+	WasteTankServicingRotary.Init(239, 170, 47, 47, srf[SRF_TANK_VALVE], srf[SRF_BORDER_47x47], WaterControlPanelRow);
+
+	///////////////
+	// Panel 251 //
+	///////////////
+	
+	CabinRepressValveRotaryRow.Init(AID_CABIN_REPRESS_VALVE, MainPanel);
+	CabinRepressValveRotary.Init(0, 0, 48, 48, srf[SRF_CABIN_REPRESS_VALVE], srf[SRF_BORDER_48x48], CabinRepressValveRotaryRow);
+
+	WaterGlycolTanksRotariesRow.Init(AID_WATER_GLYCOL_TANKS_ROTARIES, MainPanel);
+	SelectorInletValveRotary.Init (0,   0, 84, 84, srf[SRF_SELECTOR_INLET_ROTARY], srf[SRF_BORDER_84x84], WaterGlycolTanksRotariesRow);
+	SelectorOutletValveRotary.Init(0, 133, 84, 84, srf[SRF_SELECTOR_OUTLET_ROTARY], srf[SRF_BORDER_84x84], WaterGlycolTanksRotariesRow);
+	
+	EmergencyCabinPressureRotaryRow.Init(AID_EMERGENCY_CABIN_PRESSURE_ROTARY, MainPanel);
+	EmergencyCabinPressureRotary.Init(0, 0, 65, 65, srf[SRF_EMERGENCY_PRESS_ROTARY], srf[SRF_BORDER_65x65], EmergencyCabinPressureRotaryRow);
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -3672,7 +3837,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	if (id == AID_SM_RCS_MODE) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
 			if (oapiGetMFDMode(MFD_RIGHT) != MFD_NONE) {	// MFD_USER1
-				oapiBlt(surf, srf[SRF_SM_RCS_MODE], 0, 0, 0, 0, 75, 73);
+				oapiBlt(surf, srf[SRF_SM_RCS_MODE], 0, 0, 0, 0, 75, 73, SURF_PREDEF_CK);
 				OrbiterAttitudeToggle.SetVisible(true);
 			} else {
 				OrbiterAttitudeToggle.SetVisible(false);
@@ -3977,6 +4142,10 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		RedrawPanel_Alt(surf);
 		return true;
 
+	case AID_ALTIMETER2:
+		RedrawPanel_Alt2(surf);
+		return true;
+
 	case AID_MASTER_ALARM:
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_LEFT);
 		return true;
@@ -4068,9 +4237,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_COAS:
 		if (coasEnabled) {
-			oapiBlt(surf, srf[SRF_COAS], 0, 0, 0, 0, 683, 539, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_COAS], 0, 0, 0, 0, 683, 620, SURF_PREDEF_CK);
 		} else {
-			oapiBlt(surf, srf[SRF_COAS], 0, 0, 0, 540, 683, 539, SURF_PREDEF_CK);
+			oapiBlt(surf, srf[SRF_COAS], 0, 0, 0, 620, 683, 620, SURF_PREDEF_CK);
 		}
 		return true;
 
@@ -5029,6 +5198,74 @@ void Saturn::InitSwitches() {
 	Panel100IntegralRotarySwitch.AddPosition(9,  120);
 	Panel100IntegralRotarySwitch.AddPosition(10, 150);
 	Panel100IntegralRotarySwitch.Register(PSH, "Panel100IntegralRotarySwitch", 0);
+
+	OxygenSurgeTankValveRotary.AddPosition(0,  330);
+	OxygenSurgeTankValveRotary.AddPosition(1,    0);
+	OxygenSurgeTankValveRotary.AddPosition(2,   30);
+	OxygenSurgeTankValveRotary.AddPosition(3,   60);
+	OxygenSurgeTankValveRotary.AddPosition(4,   90);
+	OxygenSurgeTankValveRotary.AddPosition(5,  120);
+	OxygenSurgeTankValveRotary.AddPosition(6,  150);
+	OxygenSurgeTankValveRotary.AddPosition(7,  180);
+	OxygenSurgeTankValveRotary.AddPosition(8,  210);
+	OxygenSurgeTankValveRotary.Register(PSH, "OxygenSurgeTankValveRotary", 0);
+
+	GlycolToRadiatorsRotary.AddPosition(0,  0);
+	GlycolToRadiatorsRotary.AddPosition(1, 90);
+	GlycolToRadiatorsRotary.Register(PSH, "GlycolToRadiatorsRotary", 1);
+
+	GlycolRotary.AddPosition(0, 90);
+	GlycolRotary.AddPosition(1,180);
+	GlycolRotary.Register(PSH, "GlycolRotary", 0);
+	
+	AccumRotary.AddPosition(0, 90);
+	AccumRotary.AddPosition(1,180);
+	AccumRotary.Register(PSH, "AccumRotary", 0);
+
+	PressureReliefRotary.AddPosition(0,   0);
+	PressureReliefRotary.AddPosition(1,  90);
+	PressureReliefRotary.AddPosition(2, 180);
+	PressureReliefRotary.AddPosition(3, 270);
+	PressureReliefRotary.Register(PSH, "PressureReliefRotary", 2);
+
+	WasteTankInletRotary.AddPosition(0,  0);
+	WasteTankInletRotary.AddPosition(1, 90);
+	WasteTankInletRotary.Register(PSH, "WasteTankInletRotary", 0);
+
+	PotableTankInletRotary.AddPosition(0,  0);
+	PotableTankInletRotary.AddPosition(1, 90);
+	PotableTankInletRotary.Register(PSH, "PotableTankInletRotary", 0);
+
+	WasteTankServicingRotary.AddPosition(0,  0);
+	WasteTankServicingRotary.AddPosition(1, 90);
+	WasteTankServicingRotary.Register(PSH, "WasteTankServicingRotary", 0);
+
+	CabinRepressValveRotary.AddPosition(0,  90);
+	CabinRepressValveRotary.AddPosition(1, 120);
+	CabinRepressValveRotary.AddPosition(2, 150);
+	CabinRepressValveRotary.AddPosition(3, 180);
+	CabinRepressValveRotary.AddPosition(4, 210);
+	CabinRepressValveRotary.AddPosition(5, 240);
+	CabinRepressValveRotary.AddPosition(6, 270);
+	CabinRepressValveRotary.Register(PSH, "CabinRepressValveRotary", 0);
+
+	SelectorInletValveRotary.AddPosition(0,   0);
+	SelectorInletValveRotary.AddPosition(1,  90);
+	SelectorInletValveRotary.AddPosition(2, 180);
+	SelectorInletValveRotary.AddPosition(3, 270);
+	SelectorInletValveRotary.Register(PSH, "SelectorInletValveRotary", 1);
+
+	SelectorOutletValveRotary.AddPosition(0,   0);
+	SelectorOutletValveRotary.AddPosition(1,  90);
+	SelectorOutletValveRotary.AddPosition(2, 180);
+	SelectorOutletValveRotary.AddPosition(3, 270);
+	SelectorOutletValveRotary.Register(PSH, "SelectorOutletValveRotary", 1);
+
+	EmergencyCabinPressureRotary.AddPosition(0,   0);
+	EmergencyCabinPressureRotary.AddPosition(1,  90);
+	EmergencyCabinPressureRotary.AddPosition(2, 180);
+	EmergencyCabinPressureRotary.AddPosition(3, 270);
+	EmergencyCabinPressureRotary.Register(PSH, "EmergencyCabinPressureRotary", 1);
 		
 	OrbiterAttitudeToggle.SetActive(false);		// saved in LPSwitchState.LPswitch5
 
