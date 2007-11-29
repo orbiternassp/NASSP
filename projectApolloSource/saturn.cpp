@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.205  2007/11/27 02:56:41  jasonims
+  *	EMS Implementation Step 3 - jasonims :   EMS Scroll is functional and plots correctly, however .05G circuitry does not work yet and is commented out.  Manual  operation does work though.  Verification needed.
+  *	
   *	Revision 1.204  2007/11/26 17:59:06  movieman523
   *	Assorted tidying up of state variable structures.
   *	
@@ -443,7 +446,9 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	ems(Panelsdk),
 	CabinPressureReliefValve1(PostLandingVentSound),
 	CabinPressureReliefValve2(PostLandingVentSound),
-	CrewStatus(CrewDeadSound)
+	CrewStatus(CrewDeadSound),
+	DCVoltMeter(20.0, 45.0),
+	SystemTestVoltMeter(0.0, 5.0)
 
 {
 	InitSaturnCalled = false;
