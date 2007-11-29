@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2007/11/29 21:53:20  movieman523
+  *	Generising the Volt meters.
+  *	
   *	Revision 1.30  2007/11/29 21:28:44  movieman523
   *	Electrical meters now use a common base class which handles the rendering.
   *	
@@ -833,37 +836,12 @@ void SaturnPartPressCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	else
 		oapiBlt(drawSurface, NeedleSurface,  215, (20 - (int)((v - 20.0) / 10.0 * 14.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
-void RoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row)
-
-{
-	MeterSwitch::Init(row);
-	Pen0 = p0;
-	Pen1 = p1;
-}
 
 void SaturnRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s)
 
 {
 	RoundMeter::Init(p0, p1, row);
 	Sat = s;
-}
-
-void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle)
-
-{
-	// Needle function by Rob Conley from Mercury code
-	
-	double dx = rad * cos(angle), dy = rad * sin(angle);
-	HGDIOBJ oldObj;
-
-	HDC hDC = oapiGetDC (surf);
-	oldObj = SelectObject (hDC, Pen1);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
-	SelectObject (hDC, oldObj);
-	oldObj = SelectObject (hDC, Pen0);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
-	SelectObject (hDC, oldObj);
-	oapiReleaseDC (surf, hDC);
 }
 
 double SaturnSuitComprDeltaPMeter::QueryValue()
@@ -1344,67 +1322,6 @@ void SaturnFuelCellConnectSwitch::CheckFuelCell(int s)
 	else if (s == THREEPOSSWITCH_DOWN) {
 		dcBusController->ConnectFuelCell(fuelCell, false);
 	}
-}
-
-ElectricMeter::ElectricMeter(double minVal, double maxVal, double vMin, double vMax)
-
-{
-	minValue = minVal;
-	maxValue = maxVal;
-	minAngle = vMin;
-	maxAngle = vMax;
-
-	xSize = 99;
-	ySize = 98;
-
-	ScaleFactor = (vMax - vMin) / (maxValue - minValue);
-}
-
-void ElectricMeter::SetSurface(SURFHANDLE srf, int x, int y)
-
-{
-	xSize = x;
-	ySize = y;
-	FrameSurface = srf;
-}
-
-void ElectricMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch)
-
-{
-	RoundMeter::Init(p0, p1, row);
-	WireTo(dcindicatorswitch);
-}
-
-void ElectricMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
-
-{
-	double v = minAngle + (ScaleFactor * (volts - minValue));
-	DrawNeedle(drawSurface, xSize / 2, ySize / 2, 25.0, v * RAD);
-	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, xSize, ySize, SURF_PREDEF_CK);
-}
-
-DCVoltMeter::DCVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
-	ElectricMeter(minVal, maxVal, vMin, vMax)
-
-{
-}
-
-double DCVoltMeter::QueryValue()
-
-{
-	return Voltage();
-}
-
-ACVoltMeter::ACVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
-	ElectricMeter(minVal, maxVal, vMin, vMax)
-
-{
-}
-
-double ACVoltMeter::QueryValue()
-
-{
-	return Voltage();
 }
 
 SaturnDCAmpMeter::SaturnDCAmpMeter(double minVal, double maxVal, double vMin, double vMax) :

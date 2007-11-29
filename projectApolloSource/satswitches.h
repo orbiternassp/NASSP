@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2007/11/29 21:53:20  movieman523
+  *	Generising the Volt meters.
+  *	
   *	Revision 1.28  2007/11/29 21:28:44  movieman523
   *	Electrical meters now use a common base class which handles the rendering.
   *	
@@ -378,17 +381,6 @@ public:
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 };
 
-class RoundMeter : public MeterSwitch {
-public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row);
-
-protected:
-	HPEN Pen0;
-	HPEN Pen1;
-
-	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
-};
-
 class SaturnRoundMeter : public RoundMeter {
 public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s);
@@ -544,118 +536,6 @@ public:
 protected:
 	ThreeWayPowerMerge ACBus1;
 	ThreeWayPowerMerge ACBus2;
-};
-
-///
-/// \brief Electric meter for Saturn panel.
-///
-/// This meter displays the electrical readings of one of the numerous systems in the CSM (e.g. the main buses
-/// or batteries).
-///
-/// \ingroup PanelItems
-///
-class ElectricMeter: public RoundMeter {
-public:
-	///
-	/// \brief Constructor.
-	/// \param minVal Minimum value to display (meter may show beyond it).
-	/// \param maxVal Maximum value to display (meter may show beyond it).
-	/// \param vMin Angle of meter at minimum value.
-	/// \param vMax Angle of meter at maximum value.
-	///
-	ElectricMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
-
-	///
-	/// \brief Initialise the meter.
-	///
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch);
-
-	///
-	/// \brief Actually draw the switch.
-	/// \param volts Current voltage.
-	/// \param drawSurface The surface to draw to.
-	///
-	void DoDrawSwitch(double volts, SURFHANDLE drawSurface);
-
-	///
-	/// \brief Set the switch bitmap.
-	/// \param srf Frame bitmap surface.
-	/// \param x Width in pixels.
-	/// \param y Height in pixels.
-	///
-	void SetSurface(SURFHANDLE srf, int x, int y);
-
-protected:
-	double minValue;		///< The minimum value to display.
-	double maxValue;		///< The maximum value to  display.
-	double minAngle;		///< Angle at minimum voltage.
-	double maxAngle;		///< Angle at maximum voltage.
-	double ScaleFactor;		///< The internal volts to angle scale factor.
-
-	int xSize;				///< X-size of bitmap in pixels.
-	int ySize;				///< Y-size of bitmap in pixels.
-
-	///
-	/// \brief The surface to use for the meter frame.
-	///
-	SURFHANDLE FrameSurface;
-
-	double AdjustForPower(double val) { return val; } ///< These are always powered by definition.
-};
-
-///
-/// \brief DC voltage meter for Saturn panel.
-///
-/// \image html DCVolts.bmp "DC voltage meter"
-///
-/// This meter displays the DC voltage of one of the numerous DC systems in the CSM (e.g. the main buses
-/// or batteries).
-///
-/// \ingroup PanelItems
-///
-class DCVoltMeter: public ElectricMeter {
-public:
-	///
-	/// \brief Constructor.
-	/// \param minVal Minimum voltage to display (meter may show beyond it).
-	/// \param maxVal Maximum voltage to display (meter may show beyond it).
-	/// \param vMin Angle of meter at minimum voltage.
-	/// \param vMax Angle of meter at maximum voltage.
-	///
-	DCVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
-
-	///
-	/// \brief Query the voltage.
-	/// \return Current voltage.
-	///
-	double QueryValue();
-};
-
-///
-/// \brief AC voltage meter for Saturn panel.
-///
-/// \image html ACVolts.bmp "ACVolts meter"
-///
-/// This meter displays the AC voltage on one phase of one of the CSM AC buses.
-///
-/// \ingroup PanelItems
-///
-class ACVoltMeter: public ElectricMeter {
-public:
-	///
-	/// \brief Constructor.
-	/// \param minVal Minimum voltage to display (meter may show beyond it).
-	/// \param maxVal Maximum voltage to display (meter may show beyond it).
-	/// \param vMin Angle of meter at minimum voltage.
-	/// \param vMax Angle of meter at maximum voltage.
-	///
-	ACVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
-
-	///
-	/// \brief Query the voltage.
-	/// \return Current voltage.
-	///
-	double QueryValue();
 };
 
 ///

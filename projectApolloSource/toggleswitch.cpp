@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2007/11/17 19:37:26  movieman523
+  *	Doxygen changes and more use of IsSpringLoaded() function in place of directly testing the value of the variable. Checking this in prior to switching development work from my laptop to desktop system.
+  *	
   *	Revision 1.79  2007/10/21 21:25:13  movieman523
   *	Added SHIFT-click to hold spring-loaded buttons.
   *	
@@ -2326,6 +2329,107 @@ void MeterSwitch::LoadState(char *line) {
 	}
 }
 
+void RoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row)
+
+{
+	MeterSwitch::Init(row);
+	Pen0 = p0;
+	Pen1 = p1;
+}
+
+void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle)
+
+{
+	// Needle function by Rob Conley from Mercury code
+	
+	double dx = rad * cos(angle), dy = rad * sin(angle);
+	HGDIOBJ oldObj;
+
+	HDC hDC = oapiGetDC (surf);
+	oldObj = SelectObject (hDC, Pen1);
+	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
+	SelectObject (hDC, oldObj);
+	oldObj = SelectObject (hDC, Pen0);
+	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
+	SelectObject (hDC, oldObj);
+	oapiReleaseDC (surf, hDC);
+}
+
+ElectricMeter::ElectricMeter(double minVal, double maxVal, double vMin, double vMax)
+
+{
+	minValue = minVal;
+	maxValue = maxVal;
+	minAngle = vMin;
+	maxAngle = vMax;
+
+	xSize = 99;
+	ySize = 98;
+
+	ScaleFactor = (vMax - vMin) / (maxValue - minValue);
+}
+
+void ElectricMeter::SetSurface(SURFHANDLE srf, int x, int y)
+
+{
+	xSize = x;
+	ySize = y;
+	FrameSurface = srf;
+}
+
+void ElectricMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch)
+
+{
+	RoundMeter::Init(p0, p1, row);
+	WireTo(dcindicatorswitch);
+}
+
+void ElectricMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
+
+{
+	double v = minAngle + (ScaleFactor * (volts - minValue));
+	DrawNeedle(drawSurface, xSize / 2, ySize / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, xSize, ySize, SURF_PREDEF_CK);
+}
+
+DCVoltMeter::DCVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
+	ElectricMeter(minVal, maxVal, vMin, vMax)
+
+{
+}
+
+double DCVoltMeter::QueryValue()
+
+{
+	return Voltage();
+}
+
+ACVoltMeter::ACVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
+	ElectricMeter(minVal, maxVal, vMin, vMax)
+
+{
+}
+
+double ACVoltMeter::QueryValue()
+
+{
+	return Voltage();
+}
+
+DCAmpMeter::DCAmpMeter(double minVal, double maxVal, double vMin, double vMax) :
+	ElectricMeter(minVal, maxVal, vMin, vMax)
+
+{
+}
+
+double DCAmpMeter::QueryValue()
+
+{
+	if (SRC)
+		return SRC->Current();
+
+	return 0.0;
+}
 
 //
 // Panel Switch Scenario Handler
