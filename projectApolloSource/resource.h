@@ -60,6 +60,7 @@
 #define IDB_BORDER_46x75                                    68
 #define IDB_BORDER_39x38                                    69
 #define AID_DCVOLTS                                         70
+#define AID_DCVOLTS_PANEL101								71
 #define AID_GPFPI_METERS                                    72
 #define AID_DIRECT_ULLAGE_THRUST_ON                         73
 #define AID_LV_ENGINE_LIGHTS                                74
@@ -105,6 +106,7 @@
 #define IDB_BORDER_75x64                                    114
 #define IDB_BORDER_34x39                                    115
 #define IDB_LV_ENGINE_LIGHTS_S1B                            116
+#define IDB_DCVOLTS_PANEL101								117
 #define IDB_SWITCH2                                         152
 #define IDB_SWITCH3                                         153
 #define IDB_VPITCH                                          154

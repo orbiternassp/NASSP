@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.218  2007/11/29 01:43:05  flydba
+  *	New bitmaps and working rotaries added for the left side wall panels (and a new altimeter for the left rendezvous window).
+  *	
   *	Revision 1.217  2007/11/27 02:56:41  jasonims
   *	EMS Implementation Step 3 - jasonims :   EMS Scroll is functional and plots correctly, however .05G circuitry does not work yet and is commented out.  Manual  operation does work though.  Verification needed.
   *	
@@ -650,6 +653,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_ALTIMETER]								= oapiCreateSurface (LOADBMP (IDB_ALTIMETER));
 	srf[SRF_THRUSTMETER]							= oapiCreateSurface (LOADBMP (IDB_THRUST));
 	srf[SRF_DCVOLTS]								= oapiCreateSurface (LOADBMP (IDB_DCVOLTS));
+	srf[SRF_DCVOLTS_PANEL101]						= oapiCreateSurface (LOADBMP (IDB_DCVOLTS_PANEL101));
 	srf[SRF_DCAMPS]									= oapiCreateSurface (LOADBMP (IDB_DCAMPS));
 	srf[SRF_ACVOLTS]								= oapiCreateSurface (LOADBMP (IDB_ACVOLTS));
 	srf[SRF_SEQUENCERSWITCHES]						= oapiCreateSurface (LOADBMP (IDB_SEQUENCERSWITCHES));
@@ -826,6 +830,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_ACVOLTS],								g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_DCVOLTS],								g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_DCAMPS],								g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_DCVOLTS_PANEL101],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_SMALL],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_LARGEFONTSINV],				g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_SWLEVERTHREEPOS],						g_Param.col[4]);
@@ -1559,6 +1564,7 @@ void Saturn::AddLeftLowerPanelAreas()
 void Saturn::AddLeftCenterLowerPanelAreas(int offset)
 {
 	// Panel 101
+	oapiRegisterPanelArea (AID_DCVOLTS_PANEL101,							_R(1121 + offset,  65, 1231 + offset,  175), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SYSTEMTESTROTARIES,							_R(1069 + offset,  213, 1280 + offset,  304), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_RNDZXPDRSWITCH,      						_R(1218 + offset,  350, 1252 + offset,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_PANEL101LOWERSWITCHES,      				    _R(1093 + offset,  486, 1251 + offset,  515), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
@@ -2589,7 +2595,12 @@ void Saturn::SetSwitches(int panel) {
 	SystemTestRotariesRow.Init(AID_SYSTEMTESTROTARIES, MainPanel);
 	LeftSystemTestRotarySwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], SystemTestRotariesRow);
 	RightSystemTestRotarySwitch.Init(120, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], SystemTestRotariesRow);
-	
+
+	SystemTestMeterRow.Init(AID_DCVOLTS_PANEL101, MainPanel);
+	SystemTestVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], SystemTestMeterRow, this, &LeftSystemTestRotarySwitch);
+	SystemTestVoltMeter.SetSize(110, 110);
+	SystemTestVoltMeter.FrameSurface = srf[SRF_DCVOLTS_PANEL101];
+
 	RNDZXPDRSwitchRow.Init(AID_RNDZXPDRSWITCH, MainPanel);
 	RNDZXPDRSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], RNDZXPDRSwitchRow);
 	

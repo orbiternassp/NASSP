@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2007/10/18 00:23:20  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.27  2007/08/13 16:06:15  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -1357,8 +1360,28 @@ void SaturnFuelCellConnectSwitch::CheckFuelCell(int s)
 	}
 }
 
+SaturnDCVoltMeter::SaturnDCVoltMeter(double minVolts, double maxVolts, double vMin, double vMax)
 
-void SaturnDCVoltMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch)
+{
+	minVoltage = minVolts;
+	maxVoltage = maxVolts;
+	minAngle = vMin;
+	maxAngle = vMax;
+
+	xSize = 99;
+	ySize = 98;
+
+	ScaleFactor = (vMax - vMin) / (maxVolts - minVolts);
+}
+
+void SaturnDCVoltMeter::SetSize(int x, int y)
+
+{
+	xSize = x;
+	ySize = y;
+}
+
+void SaturnDCVoltMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, e_object *dcindicatorswitch)
 
 {
 	SaturnRoundMeter::Init(p0, p1, row, s);
@@ -1371,12 +1394,12 @@ double SaturnDCVoltMeter::QueryValue()
 	return DCIndicatorSwitch->Voltage();
 }
 
-void SaturnDCVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+void SaturnDCVoltMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
 
 {
-	v = 225.0 -  9.0 * (v - 17.5);	
-	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
-	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
+	double v = minAngle + (ScaleFactor * (volts - minVoltage));
+	DrawNeedle(drawSurface, xSize / 2, ySize / 2, 25.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, xSize, ySize, SURF_PREDEF_CK);
 }
 
 

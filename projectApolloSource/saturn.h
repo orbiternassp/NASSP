@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.252  2007/11/29 01:42:02  flydba
+  *	New rotaries added for the left side wall panels (and a new altimeter for the left rendezvous window).
+  *	
   *	Revision 1.251  2007/11/26 17:59:06  movieman523
   *	Assorted tidying up of state variable structures.
   *	
@@ -793,6 +796,7 @@ public:
 		SRF_ECSGLYCOLPUMPROTARY,
 		SRF_GTACOVER,
 		SRF_DCVOLTS,
+		SRF_DCVOLTS_PANEL101,
 		SRF_ACVOLTS,
 		SRF_DCAMPS,
 		SRF_POSTLDGVENTVLVLEVER,
@@ -2365,6 +2369,9 @@ protected:
 
 	SwitchRow DCAmpMeterRow;
 	SaturnDCAmpMeter DCAmpMeter;
+
+	SwitchRow SystemTestMeterRow;
+	SaturnDCVoltMeter SystemTestVoltMeter;
 
 	//
 	// FDAI control switches.

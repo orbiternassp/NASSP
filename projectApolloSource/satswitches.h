@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2007/10/18 00:23:20  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.25  2007/08/13 16:06:16  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -575,15 +578,57 @@ protected:
 ///
 class SaturnDCVoltMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
-	double QueryValue();
-	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	///
+	/// \brief Constructor.
+	/// \param minVolts Minimum voltage to display (meter may show beyond it).
+	/// \param maxVolts Maximum voltage to display (meter may show beyond it).
+	/// \param vMin Angle of meter at minimum voltage.
+	/// \param vMax Angle of meter at maximum voltage.
+	///
+	SaturnDCVoltMeter(double minVolts, double maxVolts, double vMin = 202.5, double vMax = (-22.5));
 
+	///
+	/// \brief Initialise the meter.
+	///
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, e_object *dcindicatorswitch);
+
+	///
+	/// \brief Query the voltage.
+	/// \return Current voltage.
+	///
+	double QueryValue();
+
+	///
+	/// \brief Actually draw the switch.
+	/// \param volts Current voltage.
+	/// \param drawSurface The surface to draw to.
+	///
+	void DoDrawSwitch(double volts, SURFHANDLE drawSurface);
+
+	///
+	/// \brief Set the size of the switch bitmap in pixels.
+	/// \param x Width in pixels.
+	/// \param y Height in pixels.
+	///
+	void SetSize(int x, int y);
+
+	///
+	/// \brief The surface to use for the meter frame.
+	///
 	SURFHANDLE FrameSurface;
 
 protected:
-	double AdjustForPower(double val) { return val; } // These are always powered by definition.
-	PowerStateRotationalSwitch *DCIndicatorSwitch;
+	double minVoltage;		///< The minimum voltage display.
+	double maxVoltage;		///< The maximum voltage display.
+	double minAngle;		///< Angle at minimum voltage.
+	double maxAngle;		///< Angle at maximum voltage.
+	double ScaleFactor;		///< The internal volts to angle scale factor.
+
+	int xSize;				///< X-size of bitmap in pixels.
+	int ySize;				///< Y-size of bitmap in pixels.
+
+	double AdjustForPower(double val) { return val; } ///< These are always powered by definition.
+	e_object *DCIndicatorSwitch;	///< The object whose voltage we're displaying; typically a rotary switch.
 };
 
 ///
