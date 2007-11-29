@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2007/11/29 21:28:44  movieman523
+  *	Electrical meters now use a common base class which handles the rendering.
+  *	
   *	Revision 1.27  2007/11/29 04:56:09  movieman523
   *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
   *	
@@ -375,16 +378,23 @@ public:
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 };
 
-class SaturnRoundMeter : public MeterSwitch {
+class RoundMeter : public MeterSwitch {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s);
+	void Init(HPEN p0, HPEN p1, SwitchRow &row);
 
 protected:
 	HPEN Pen0;
 	HPEN Pen1;
-	Saturn *Sat;
 
 	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
+};
+
+class SaturnRoundMeter : public RoundMeter {
+public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s);
+
+protected:
+	Saturn *Sat;
 };
 
 class SaturnLeftO2FlowMeter : public SaturnRoundMeter {
@@ -544,7 +554,7 @@ protected:
 ///
 /// \ingroup PanelItems
 ///
-class SaturnElectricMeter: public SaturnRoundMeter {
+class ElectricMeter: public RoundMeter {
 public:
 	///
 	/// \brief Constructor.
@@ -553,12 +563,12 @@ public:
 	/// \param vMin Angle of meter at minimum value.
 	/// \param vMax Angle of meter at maximum value.
 	///
-	SaturnElectricMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+	ElectricMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
 
 	///
 	/// \brief Initialise the meter.
 	///
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, e_object *dcindicatorswitch);
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch);
 
 	///
 	/// \brief Actually draw the switch.
@@ -603,7 +613,7 @@ protected:
 ///
 /// \ingroup PanelItems
 ///
-class SaturnDCVoltMeter: public SaturnElectricMeter {
+class DCVoltMeter: public ElectricMeter {
 public:
 	///
 	/// \brief Constructor.
@@ -612,7 +622,7 @@ public:
 	/// \param vMin Angle of meter at minimum voltage.
 	/// \param vMax Angle of meter at maximum voltage.
 	///
-	SaturnDCVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+	DCVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
 
 	///
 	/// \brief Query the voltage.
@@ -630,7 +640,7 @@ public:
 ///
 /// \ingroup PanelItems
 ///
-class SaturnACVoltMeter: public SaturnElectricMeter {
+class ACVoltMeter: public ElectricMeter {
 public:
 	///
 	/// \brief Constructor.
@@ -639,7 +649,7 @@ public:
 	/// \param vMin Angle of meter at minimum voltage.
 	/// \param vMax Angle of meter at maximum voltage.
 	///
-	SaturnACVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
+	ACVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
 
 	///
 	/// \brief Query the voltage.
@@ -658,7 +668,7 @@ public:
 ///
 /// \ingroup PanelItems
 ///
-class SaturnDCAmpMeter: public SaturnElectricMeter {
+class SaturnDCAmpMeter: public ElectricMeter {
 public:
 	///
 	/// \brief Constructor.

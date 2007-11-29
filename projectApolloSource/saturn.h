@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.253  2007/11/29 04:56:09  movieman523
+  *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
+  *	
   *	Revision 1.252  2007/11/29 01:42:02  flydba
   *	New rotaries added for the left side wall panels (and a new altimeter for the left rendezvous window).
   *	
@@ -2362,16 +2365,16 @@ protected:
 	//
 
 	SwitchRow ACVoltMeterRow;
-	SaturnACVoltMeter ACVoltMeter;
+	ACVoltMeter CSMACVoltMeter;
 
 	SwitchRow DCVoltMeterRow;
-	SaturnDCVoltMeter DCVoltMeter;
+	DCVoltMeter CSMDCVoltMeter;
 
 	SwitchRow DCAmpMeterRow;
 	SaturnDCAmpMeter DCAmpMeter;
 
 	SwitchRow SystemTestMeterRow;
-	SaturnDCVoltMeter SystemTestVoltMeter;
+	DCVoltMeter SystemTestVoltMeter;
 
 	//
 	// FDAI control switches.
