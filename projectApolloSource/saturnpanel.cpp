@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.220  2007/11/29 21:28:44  movieman523
+  *	Electrical meters now use a common base class which handles the rendering.
+  *	
   *	Revision 1.219  2007/11/29 04:56:09  movieman523
   *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
   *	
@@ -2157,12 +2160,12 @@ void Saturn::SetSwitches(int panel) {
 	SBandNormalMode3Switch.Init   (	231, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29],		 SBandNormalSwitchesRow);
 
 	ACVoltMeterRow.Init(AID_ACVOLTS, MainPanel);
-	ACVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], ACVoltMeterRow, this, &ACIndicatorRotary);
-	ACVoltMeter.SetSurface(srf[SRF_ACVOLTS], 99, 98);
+	CSMACVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], ACVoltMeterRow, &ACIndicatorRotary);
+	CSMACVoltMeter.SetSurface(srf[SRF_ACVOLTS], 99, 98);
 
 	DCVoltMeterRow.Init(AID_DCVOLTS, MainPanel);
-	DCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], DCVoltMeterRow, this, &DCIndicatorsRotary);
-	DCVoltMeter.SetSurface(srf[SRF_DCVOLTS], 99, 98);
+	CSMDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], DCVoltMeterRow, &DCIndicatorsRotary);
+	CSMDCVoltMeter.SetSurface(srf[SRF_DCVOLTS], 99, 98);
 
 	DCAmpMeterRow.Init(AID_DCAMPS, MainPanel);
 	DCAmpMeter.Init(g_Param.pen[4], g_Param.pen[4], DCAmpMeterRow, this, &DCIndicatorsRotary);
@@ -2600,7 +2603,7 @@ void Saturn::SetSwitches(int panel) {
 	RightSystemTestRotarySwitch.Init(120, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], SystemTestRotariesRow);
 
 	SystemTestMeterRow.Init(AID_DCVOLTS_PANEL101, MainPanel);
-	SystemTestVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], SystemTestMeterRow, this, &LeftSystemTestRotarySwitch);
+	SystemTestVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], SystemTestMeterRow, &LeftSystemTestRotarySwitch);
 	SystemTestVoltMeter.SetSurface(srf[SRF_DCVOLTS_PANEL101], 110, 110);
 
 	RNDZXPDRSwitchRow.Init(AID_RNDZXPDRSWITCH, MainPanel);
@@ -4862,8 +4865,9 @@ void Saturn::InitSwitches() {
 	O2Quantity1Meter.Register(PSH, "O2Quantity1Meter", 0, 1, 10);
 	O2Quantity2Meter.Register(PSH, "O2Quantity2Meter", 0, 1, 10);
 
-	ACVoltMeter.Register(PSH, "ACVoltMeter", 85, 145, 3);
-	DCVoltMeter.Register(PSH, "DCVoltMeter", 17.5, 47.5, 3);
+	CSMACVoltMeter.Register(PSH, "ACVoltMeter", 85, 145, 3);
+	CSMDCVoltMeter.Register(PSH, "DCVoltMeter", 17.5, 47.5, 3);
+	SystemTestVoltMeter.Register(PSH, "SystemTestMeter", 0.0, 5.0, 3);
 	DCAmpMeter.Register(PSH, "DCAmpMeter", 0, 100, 3);
 
 	FuelCellH2FlowMeter.Register(PSH, "FuelCellH2FlowMeter", 0, 0.2, 2);

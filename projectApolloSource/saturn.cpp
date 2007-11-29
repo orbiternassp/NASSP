@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.207  2007/11/29 21:28:44  movieman523
+  *	Electrical meters now use a common base class which handles the rendering.
+  *	
   *	Revision 1.206  2007/11/29 04:56:09  movieman523
   *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
   *	
@@ -450,8 +453,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	CabinPressureReliefValve1(PostLandingVentSound),
 	CabinPressureReliefValve2(PostLandingVentSound),
 	CrewStatus(CrewDeadSound),
-	DCVoltMeter(20.0, 45.0),
-	ACVoltMeter(90.0, 140.0),
+	CSMDCVoltMeter(20.0, 45.0),
+	CSMACVoltMeter(90.0, 140.0),
 	DCAmpMeter(0.0, 100.0),
 	SystemTestVoltMeter(0.0, 5.0)
 

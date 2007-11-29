@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2007/11/29 21:28:44  movieman523
+  *	Electrical meters now use a common base class which handles the rendering.
+  *	
   *	Revision 1.29  2007/11/29 04:56:09  movieman523
   *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
   *	
@@ -830,18 +833,22 @@ void SaturnPartPressCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	else
 		oapiBlt(drawSurface, NeedleSurface,  215, (20 - (int)((v - 20.0) / 10.0 * 14.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
-
-
-void SaturnRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s)
+void RoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row)
 
 {
 	MeterSwitch::Init(row);
 	Pen0 = p0;
 	Pen1 = p1;
+}
+
+void SaturnRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s)
+
+{
+	RoundMeter::Init(p0, p1, row);
 	Sat = s;
 }
 
-void SaturnRoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle)
+void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle)
 
 {
 	// Needle function by Rob Conley from Mercury code
@@ -858,7 +865,6 @@ void SaturnRoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, do
 	SelectObject (hDC, oldObj);
 	oapiReleaseDC (surf, hDC);
 }
-
 
 double SaturnSuitComprDeltaPMeter::QueryValue()
 
@@ -1340,7 +1346,7 @@ void SaturnFuelCellConnectSwitch::CheckFuelCell(int s)
 	}
 }
 
-SaturnElectricMeter::SaturnElectricMeter(double minVal, double maxVal, double vMin, double vMax)
+ElectricMeter::ElectricMeter(double minVal, double maxVal, double vMin, double vMax)
 
 {
 	minValue = minVal;
@@ -1354,7 +1360,7 @@ SaturnElectricMeter::SaturnElectricMeter(double minVal, double maxVal, double vM
 	ScaleFactor = (vMax - vMin) / (maxValue - minValue);
 }
 
-void SaturnElectricMeter::SetSurface(SURFHANDLE srf, int x, int y)
+void ElectricMeter::SetSurface(SURFHANDLE srf, int x, int y)
 
 {
 	xSize = x;
@@ -1362,38 +1368,14 @@ void SaturnElectricMeter::SetSurface(SURFHANDLE srf, int x, int y)
 	FrameSurface = srf;
 }
 
-void SaturnElectricMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, e_object *dcindicatorswitch)
+void ElectricMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, e_object *dcindicatorswitch)
 
 {
-	SaturnRoundMeter::Init(p0, p1, row, s);
+	RoundMeter::Init(p0, p1, row);
 	WireTo(dcindicatorswitch);
 }
 
-SaturnDCVoltMeter::SaturnDCVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
-	SaturnElectricMeter(minVal, maxVal, vMin, vMax)
-
-{
-}
-
-double SaturnDCVoltMeter::QueryValue()
-
-{
-	return Voltage();
-}
-
-SaturnACVoltMeter::SaturnACVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
-	SaturnElectricMeter(minVal, maxVal, vMin, vMax)
-
-{
-}
-
-double SaturnACVoltMeter::QueryValue()
-
-{
-	return Voltage();
-}
-
-void SaturnElectricMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
+void ElectricMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
 
 {
 	double v = minAngle + (ScaleFactor * (volts - minValue));
@@ -1401,9 +1383,32 @@ void SaturnElectricMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, xSize, ySize, SURF_PREDEF_CK);
 }
 
+DCVoltMeter::DCVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
+	ElectricMeter(minVal, maxVal, vMin, vMax)
+
+{
+}
+
+double DCVoltMeter::QueryValue()
+
+{
+	return Voltage();
+}
+
+ACVoltMeter::ACVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
+	ElectricMeter(minVal, maxVal, vMin, vMax)
+
+{
+}
+
+double ACVoltMeter::QueryValue()
+
+{
+	return Voltage();
+}
 
 SaturnDCAmpMeter::SaturnDCAmpMeter(double minVal, double maxVal, double vMin, double vMax) :
-	SaturnElectricMeter(minVal, maxVal, vMin, vMax)
+	ElectricMeter(minVal, maxVal, vMin, vMax)
 
 {
 }
@@ -1411,7 +1416,7 @@ SaturnDCAmpMeter::SaturnDCAmpMeter(double minVal, double maxVal, double vMin, do
 void SaturnDCAmpMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch)
 
 {
-	SaturnElectricMeter::Init(p0, p1, row, s, dcindicatorswitch);
+	ElectricMeter::Init(p0, p1, row, dcindicatorswitch);
 	DCIndicatorSwitch = dcindicatorswitch;
 }
 
