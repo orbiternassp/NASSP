@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.251  2007/11/26 17:59:06  movieman523
+  *	Assorted tidying up of state variable structures.
+  *	
   *	Revision 1.250  2007/11/25 09:07:24  jasonims
   *	EMS Implementation Step 2 - jasonims :   EMS Scroll can slew, and some functionality set up for EMS.
   *	
@@ -746,6 +749,7 @@ public:
 		SRF_ABORT,
 		SRF_LV_ENG,
 		SRF_ALTIMETER,
+		SRF_ALTIMETER2,
 		SRF_THRUSTMETER,
 		SRF_SEQUENCERSWITCHES,
 		SRF_LMTWOPOSLEVER,
@@ -803,6 +807,7 @@ public:
 		SRF_THUMBWHEEL_LARGEFONTS,
 		SRF_SPS_FONT_WHITE,
 		SRF_SPS_FONT_BLACK,
+		SRF_BORDER_31x31,
 		SRF_BORDER_34x29,
 		SRF_BORDER_34x61,
 		SRF_BORDER_55x111,
@@ -824,6 +829,12 @@ public:
 		SRF_BORDER_72x72,
 		SRF_BORDER_75x64,
 		SRF_BORDER_34x39,
+		SRF_BORDER_58x58,
+		SRF_BORDER_160x32,
+		SRF_BORDER_57x57,
+		SRF_BORDER_47x47,
+		SRF_BORDER_48x48,
+		SRF_BORDER_65x65,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -848,6 +859,16 @@ public:
 		SRF_EMS_SCROLL_LEO,
 		SRF_EMS_SCROLL_BORDER,
 		SRF_EMSDVSETSWITCH,
+		SRF_OXYGEN_SURGE_TANK_VALVE,
+		SRF_GLYCOL_TO_RADIATORS_KNOB,
+		SRF_ACCUM_ROTARY,
+		SRF_GLYCOL_ROTARY,
+		SRF_TANK_VALVE,
+		SRF_PRESS_RELIEF_VALVE,
+		SRF_CABIN_REPRESS_VALVE,
+		SRF_SELECTOR_INLET_ROTARY,
+		SRF_SELECTOR_OUTLET_ROTARY,
+		SRF_EMERGENCY_PRESS_ROTARY,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -3254,6 +3275,46 @@ protected:
 	SwitchRow SuitCircuitReturnValveLeverRow;
 	CircuitBrakerSwitch SuitCircuitReturnValveLever;
 
+	///////////////////////////
+	// Panel 375/377/378/379 //
+	///////////////////////////
+
+	SwitchRow OxygenSurgeTankValveRotaryRow;
+	RotationalSwitch OxygenSurgeTankValveRotary;
+
+	SwitchRow GlycolToRadiatorsRotaryRow;
+	RotationalSwitch GlycolToRadiatorsRotary;
+
+	SwitchRow AccumRotaryRow;
+	RotationalSwitch AccumRotary;
+
+	SwitchRow GlycolRotaryRow;
+	RotationalSwitch GlycolRotary;
+
+	///////////////
+	// Panel 351 //
+	///////////////
+
+	SwitchRow CabinRepressValveRotaryRow;
+	RotationalSwitch CabinRepressValveRotary;
+	
+	SwitchRow WaterGlycolTanksRotariesRow;
+	RotationalSwitch SelectorInletValveRotary;
+	RotationalSwitch SelectorOutletValveRotary;
+
+	SwitchRow EmergencyCabinPressureRotaryRow;
+	RotationalSwitch EmergencyCabinPressureRotary;
+
+	///////////////
+	// Panel 352 //
+	///////////////
+
+	SwitchRow WaterControlPanelRow;
+	RotationalSwitch PressureReliefRotary;
+	RotationalSwitch WasteTankInletRotary;
+	RotationalSwitch PotableTankInletRotary;
+	RotationalSwitch WasteTankServicingRotary;
+
 	///////////////////////
 	// Panel 13 switches //
 	///////////////////////
@@ -3897,6 +3958,7 @@ protected:
 	void KillAlt(OBJHANDLE &hvessel,double altVS);
 	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_Alt (SURFHANDLE surf);
+	void RedrawPanel_Alt2 (SURFHANDLE surf);
 	void RedrawPanel_Horizon (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
 	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
