@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.219  2007/11/29 04:56:09  movieman523
+  *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
+  *	
   *	Revision 1.218  2007/11/29 01:43:05  flydba
   *	New bitmaps and working rotaries added for the left side wall panels (and a new altimeter for the left rendezvous window).
   *	
@@ -2155,15 +2158,15 @@ void Saturn::SetSwitches(int panel) {
 
 	ACVoltMeterRow.Init(AID_ACVOLTS, MainPanel);
 	ACVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], ACVoltMeterRow, this, &ACIndicatorRotary);
-	ACVoltMeter.FrameSurface = srf[SRF_ACVOLTS];
+	ACVoltMeter.SetSurface(srf[SRF_ACVOLTS], 99, 98);
 
 	DCVoltMeterRow.Init(AID_DCVOLTS, MainPanel);
 	DCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], DCVoltMeterRow, this, &DCIndicatorsRotary);
-	DCVoltMeter.FrameSurface = srf[SRF_DCVOLTS];
+	DCVoltMeter.SetSurface(srf[SRF_DCVOLTS], 99, 98);
 
 	DCAmpMeterRow.Init(AID_DCAMPS, MainPanel);
 	DCAmpMeter.Init(g_Param.pen[4], g_Param.pen[4], DCAmpMeterRow, this, &DCIndicatorsRotary);
-	DCAmpMeter.FrameSurface = srf[SRF_DCAMPS];
+	DCAmpMeter.SetSurface(srf[SRF_DCAMPS], 99, 98);
 
 	CryoTankMetersRow.Init(AID_CYROTANKINDICATORS, MainPanel, &GaugePower);
 	H2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
@@ -2598,8 +2601,7 @@ void Saturn::SetSwitches(int panel) {
 
 	SystemTestMeterRow.Init(AID_DCVOLTS_PANEL101, MainPanel);
 	SystemTestVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], SystemTestMeterRow, this, &LeftSystemTestRotarySwitch);
-	SystemTestVoltMeter.SetSize(110, 110);
-	SystemTestVoltMeter.FrameSurface = srf[SRF_DCVOLTS_PANEL101];
+	SystemTestVoltMeter.SetSurface(srf[SRF_DCVOLTS_PANEL101], 110, 110);
 
 	RNDZXPDRSwitchRow.Init(AID_RNDZXPDRSWITCH, MainPanel);
 	RNDZXPDRSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], RNDZXPDRSwitchRow);

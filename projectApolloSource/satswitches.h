@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2007/11/29 04:56:09  movieman523
+  *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
+  *	
   *	Revision 1.26  2007/10/18 00:23:20  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -534,36 +537,60 @@ protected:
 };
 
 ///
-/// \brief AC voltage meter for Saturn panel.
+/// \brief Electric meter for Saturn panel.
 ///
-/// \image html ACVolts.bmp "ACVolts meter"
-///
-/// This meter displays the AC voltage on one phase of one of the CSM AC buses.
+/// This meter displays the electrical readings of one of the numerous systems in the CSM (e.g. the main buses
+/// or batteries).
 ///
 /// \ingroup PanelItems
 ///
-class SaturnACVoltMeter: public SaturnRoundMeter {
+class SaturnElectricMeter: public SaturnRoundMeter {
 public:
 	///
-	/// \brief Initialise the meter state.
+	/// \brief Constructor.
+	/// \param minVal Minimum value to display (meter may show beyond it).
+	/// \param maxVal Maximum value to display (meter may show beyond it).
+	/// \param vMin Angle of meter at minimum value.
+	/// \param vMax Angle of meter at maximum value.
 	///
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *acindicatorswitch);
+	SaturnElectricMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
 
 	///
-	/// \brief Query the meter value.
+	/// \brief Initialise the meter.
 	///
-	double QueryValue();
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, e_object *dcindicatorswitch);
 
 	///
-	/// \brief Draw the meter.
+	/// \brief Actually draw the switch.
+	/// \param volts Current voltage.
+	/// \param drawSurface The surface to draw to.
 	///
-	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitch(double volts, SURFHANDLE drawSurface);
 
-	SURFHANDLE FrameSurface;
+	///
+	/// \brief Set the switch bitmap.
+	/// \param srf Frame bitmap surface.
+	/// \param x Width in pixels.
+	/// \param y Height in pixels.
+	///
+	void SetSurface(SURFHANDLE srf, int x, int y);
 
 protected:
-	double AdjustForPower(double val) { return val; } // These are always powered by definition.
-	PowerStateRotationalSwitch *ACIndicatorSwitch;
+	double minValue;		///< The minimum value to display.
+	double maxValue;		///< The maximum value to  display.
+	double minAngle;		///< Angle at minimum voltage.
+	double maxAngle;		///< Angle at maximum voltage.
+	double ScaleFactor;		///< The internal volts to angle scale factor.
+
+	int xSize;				///< X-size of bitmap in pixels.
+	int ySize;				///< Y-size of bitmap in pixels.
+
+	///
+	/// \brief The surface to use for the meter frame.
+	///
+	SURFHANDLE FrameSurface;
+
+	double AdjustForPower(double val) { return val; } ///< These are always powered by definition.
 };
 
 ///
@@ -576,59 +603,49 @@ protected:
 ///
 /// \ingroup PanelItems
 ///
-class SaturnDCVoltMeter: public SaturnRoundMeter {
+class SaturnDCVoltMeter: public SaturnElectricMeter {
 public:
 	///
 	/// \brief Constructor.
-	/// \param minVolts Minimum voltage to display (meter may show beyond it).
-	/// \param maxVolts Maximum voltage to display (meter may show beyond it).
+	/// \param minVal Minimum voltage to display (meter may show beyond it).
+	/// \param maxVal Maximum voltage to display (meter may show beyond it).
 	/// \param vMin Angle of meter at minimum voltage.
 	/// \param vMax Angle of meter at maximum voltage.
 	///
-	SaturnDCVoltMeter(double minVolts, double maxVolts, double vMin = 202.5, double vMax = (-22.5));
-
-	///
-	/// \brief Initialise the meter.
-	///
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, e_object *dcindicatorswitch);
+	SaturnDCVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
 
 	///
 	/// \brief Query the voltage.
 	/// \return Current voltage.
 	///
 	double QueryValue();
+};
+
+///
+/// \brief AC voltage meter for Saturn panel.
+///
+/// \image html ACVolts.bmp "ACVolts meter"
+///
+/// This meter displays the AC voltage on one phase of one of the CSM AC buses.
+///
+/// \ingroup PanelItems
+///
+class SaturnACVoltMeter: public SaturnElectricMeter {
+public:
+	///
+	/// \brief Constructor.
+	/// \param minVal Minimum voltage to display (meter may show beyond it).
+	/// \param maxVal Maximum voltage to display (meter may show beyond it).
+	/// \param vMin Angle of meter at minimum voltage.
+	/// \param vMax Angle of meter at maximum voltage.
+	///
+	SaturnACVoltMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
 
 	///
-	/// \brief Actually draw the switch.
-	/// \param volts Current voltage.
-	/// \param drawSurface The surface to draw to.
+	/// \brief Query the voltage.
+	/// \return Current voltage.
 	///
-	void DoDrawSwitch(double volts, SURFHANDLE drawSurface);
-
-	///
-	/// \brief Set the size of the switch bitmap in pixels.
-	/// \param x Width in pixels.
-	/// \param y Height in pixels.
-	///
-	void SetSize(int x, int y);
-
-	///
-	/// \brief The surface to use for the meter frame.
-	///
-	SURFHANDLE FrameSurface;
-
-protected:
-	double minVoltage;		///< The minimum voltage display.
-	double maxVoltage;		///< The maximum voltage display.
-	double minAngle;		///< Angle at minimum voltage.
-	double maxAngle;		///< Angle at maximum voltage.
-	double ScaleFactor;		///< The internal volts to angle scale factor.
-
-	int xSize;				///< X-size of bitmap in pixels.
-	int ySize;				///< Y-size of bitmap in pixels.
-
-	double AdjustForPower(double val) { return val; } ///< These are always powered by definition.
-	e_object *DCIndicatorSwitch;	///< The object whose voltage we're displaying; typically a rotary switch.
+	double QueryValue();
 };
 
 ///
@@ -641,16 +658,32 @@ protected:
 ///
 /// \ingroup PanelItems
 ///
-class SaturnDCAmpMeter: public SaturnRoundMeter {
+class SaturnDCAmpMeter: public SaturnElectricMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
-	double QueryValue();
-	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	///
+	/// \brief Constructor.
+	/// \param minVal Minimum current to display (meter may show beyond it).
+	/// \param maxVal Maximum current to display (meter may show beyond it).
+	/// \param vMin Angle of meter at minimum current.
+	/// \param vMax Angle of meter at maximum current.
+	///
+	SaturnDCAmpMeter(double minVal, double maxVal, double vMin = 202.5, double vMax = (-22.5));
 
-	SURFHANDLE FrameSurface;
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
+
+	///
+	/// \brief Query the voltage.
+	/// \return Current voltage.
+	///
+	double QueryValue();
 
 protected:
-	double AdjustForPower(double val) { return val; } // These are always powered by definition.
+	///
+	/// \brief The switch we're connected to.
+	///
+	/// The DC Amp meter in the Saturn is connected to a switch which can show different ranges based on
+	/// position. So we need to store it and get the state to determine the scale factor.
+	///
 	PowerStateRotationalSwitch *DCIndicatorSwitch;
 };
 

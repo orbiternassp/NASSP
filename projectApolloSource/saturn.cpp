@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.206  2007/11/29 04:56:09  movieman523
+  *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
+  *	
   *	Revision 1.205  2007/11/27 02:56:41  jasonims
   *	EMS Implementation Step 3 - jasonims :   EMS Scroll is functional and plots correctly, however .05G circuitry does not work yet and is commented out.  Manual  operation does work though.  Verification needed.
   *	
@@ -448,6 +451,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	CabinPressureReliefValve2(PostLandingVentSound),
 	CrewStatus(CrewDeadSound),
 	DCVoltMeter(20.0, 45.0),
+	ACVoltMeter(90.0, 140.0),
+	DCAmpMeter(0.0, 100.0),
 	SystemTestVoltMeter(0.0, 5.0)
 
 {
