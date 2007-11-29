@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2007/11/29 04:56:09  movieman523
+  *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
+  *	
   *	Revision 1.28  2007/10/18 00:23:20  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -1275,29 +1278,6 @@ void SaturnSuitCompressorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE s
 	ThreeSourceSwitch::Init(xp, yp, w, h, surf, bsurf, row, &ACBus1, NULL, &ACBus2);
 }
 
-
-void SaturnACVoltMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *acindicatorswitch)
-
-{
-	SaturnRoundMeter::Init(p0, p1, row, s);
-	ACIndicatorSwitch = acindicatorswitch;
-}
-
-double SaturnACVoltMeter::QueryValue()
-
-{
-	return ACIndicatorSwitch->Voltage();
-}
-
-void SaturnACVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
-
-{
-	v = 225.0 -  4.5 * (v - 85.0);	
-	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
-	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
-}
-
-
 void DCBusIndicatorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DCBusController *d, int fc)
 
 {
@@ -1360,53 +1340,78 @@ void SaturnFuelCellConnectSwitch::CheckFuelCell(int s)
 	}
 }
 
-SaturnDCVoltMeter::SaturnDCVoltMeter(double minVolts, double maxVolts, double vMin, double vMax)
+SaturnElectricMeter::SaturnElectricMeter(double minVal, double maxVal, double vMin, double vMax)
 
 {
-	minVoltage = minVolts;
-	maxVoltage = maxVolts;
+	minValue = minVal;
+	maxValue = maxVal;
 	minAngle = vMin;
 	maxAngle = vMax;
 
 	xSize = 99;
 	ySize = 98;
 
-	ScaleFactor = (vMax - vMin) / (maxVolts - minVolts);
+	ScaleFactor = (vMax - vMin) / (maxValue - minValue);
 }
 
-void SaturnDCVoltMeter::SetSize(int x, int y)
+void SaturnElectricMeter::SetSurface(SURFHANDLE srf, int x, int y)
 
 {
 	xSize = x;
 	ySize = y;
+	FrameSurface = srf;
 }
 
-void SaturnDCVoltMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, e_object *dcindicatorswitch)
+void SaturnElectricMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, e_object *dcindicatorswitch)
 
 {
 	SaturnRoundMeter::Init(p0, p1, row, s);
-	DCIndicatorSwitch = dcindicatorswitch;
+	WireTo(dcindicatorswitch);
+}
+
+SaturnDCVoltMeter::SaturnDCVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
+	SaturnElectricMeter(minVal, maxVal, vMin, vMax)
+
+{
 }
 
 double SaturnDCVoltMeter::QueryValue()
 
 {
-	return DCIndicatorSwitch->Voltage();
+	return Voltage();
 }
 
-void SaturnDCVoltMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
+SaturnACVoltMeter::SaturnACVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
+	SaturnElectricMeter(minVal, maxVal, vMin, vMax)
 
 {
-	double v = minAngle + (ScaleFactor * (volts - minVoltage));
+}
+
+double SaturnACVoltMeter::QueryValue()
+
+{
+	return Voltage();
+}
+
+void SaturnElectricMeter::DoDrawSwitch(double volts, SURFHANDLE drawSurface)
+
+{
+	double v = minAngle + (ScaleFactor * (volts - minValue));
 	DrawNeedle(drawSurface, xSize / 2, ySize / 2, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, xSize, ySize, SURF_PREDEF_CK);
 }
 
 
+SaturnDCAmpMeter::SaturnDCAmpMeter(double minVal, double maxVal, double vMin, double vMax) :
+	SaturnElectricMeter(minVal, maxVal, vMin, vMax)
+
+{
+}
+
 void SaturnDCAmpMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch)
 
 {
-	SaturnRoundMeter::Init(p0, p1, row, s);
+	SaturnElectricMeter::Init(p0, p1, row, s, dcindicatorswitch);
 	DCIndicatorSwitch = dcindicatorswitch;
 }
 
@@ -1419,15 +1424,6 @@ double SaturnDCAmpMeter::QueryValue()
 
 	return DCIndicatorSwitch->Current();
 }
-
-void SaturnDCAmpMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
-
-{
-	v = 225.0 -  2.25 * (v + 10.0);	
-	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
-	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
-}
-
 
 void BMAGPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, BMAG *Unit)
 
