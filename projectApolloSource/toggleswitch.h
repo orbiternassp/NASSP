@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2007/11/29 22:08:27  movieman523
+  *	Moved electric meters to generic classes in toggleswitch.cpp rather than Saturn-specific.
+  *	
   *	Revision 1.62  2007/11/17 19:37:26  movieman523
   *	Doxygen changes and more use of IsSpringLoaded() function in place of directly testing the value of the variable. Checking this in prior to switching development work from my laptop to desktop system.
   *	
@@ -1160,6 +1163,8 @@ public:
 	bool SwitchTo(int newValue);
 	void LoadState(char *line);
 	void SetSource(int num, e_object *s);
+	double Current();
+	double Voltage();
 
 protected:
 	void CheckPowerState();

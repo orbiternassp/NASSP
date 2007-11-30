@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/06/06 15:02:14  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.9  2006/08/21 03:04:38  dseagrav
   *	This patch adds DC volt/amp meters and associated switches, which was an unholy pain in the
   *	
@@ -298,28 +301,8 @@ bool LEMInverterSwitch::SwitchTo(int newState)
 void LEMRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s)
 
 {
-	MeterSwitch::Init(row);
-	Pen0 = p0;
-	Pen1 = p1;
+	RoundMeter::Init(p0, p1, row);
 	lem = s;
-}
-
-void LEMRoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle)
-
-{
-	// Needle function by Rob Conley from Mercury code
-	
-	double dx = rad * cos(angle), dy = rad * sin(angle);
-	HGDIOBJ oldObj;
-
-	HDC hDC = oapiGetDC (surf);
-	oldObj = SelectObject (hDC, Pen1);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(0.85*dx+0.5), y - (int)(0.85*dy+0.5));
-	SelectObject (hDC, oldObj);
-	oldObj = SelectObject (hDC, Pen0);
-	MoveToEx (hDC, x, y, 0); LineTo (hDC, x + (int)(dx+0.5), y - (int)(dy+0.5));
-	SelectObject (hDC, oldObj);
-	oapiReleaseDC (surf, hDC);
 }
 
 // DC Voltmeter

@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2007/11/29 22:08:27  movieman523
+  *	Moved electric meters to generic classes in toggleswitch.cpp rather than Saturn-specific.
+  *	
   *	Revision 1.80  2007/11/17 19:37:26  movieman523
   *	Doxygen changes and more use of IsSpringLoaded() function in place of directly testing the value of the variable. Checking this in prior to switching development work from my laptop to desktop system.
   *	
@@ -1860,6 +1863,30 @@ void PowerStateRotationalSwitch::CheckPowerState()
 	WireTo(sources[GetState()]);
 }
 
+double PowerStateRotationalSwitch::Current()
+
+{
+	e_object *e = sources[GetState()];
+	if (e)
+	{
+		return e->Current();
+	}
+
+	return 0.0;
+}
+
+double PowerStateRotationalSwitch::Voltage()
+
+{
+	e_object *e = sources[GetState()];
+	if (e)
+	{
+		return e->Voltage();
+	}
+
+	return 0.0;
+}
+
 bool PowerStateRotationalSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
@@ -2426,7 +2453,9 @@ double DCAmpMeter::QueryValue()
 
 {
 	if (SRC)
+	{
 		return SRC->Current();
+	}
 
 	return 0.0;
 }
