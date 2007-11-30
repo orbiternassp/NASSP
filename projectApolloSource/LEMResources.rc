@@ -94,5 +94,8 @@ IDB_INDICATOR           BITMAP                  "Bitmaps\\Indicator.bmp"
 IDB_FDAINEEDLES         BITMAP                  "Bitmaps\\FDAI_needles.bmp"
 IDB_LMDCVOLTS           BITMAP					"Bitmaps\\LMDCVolts.bmp"
 IDB_LMDCAMPS            BITMAP					"Bitmaps\\LMDCAmps.bmp"
+IDB_LMYAWDEGS		BITMAP		"Bitmaps\\lem_yaw_degs.bmp"
+IDB_LMPITCHDEGS		BITMAP		"Bitmaps\\lem_pitch_degs.bmp"
+IDB_LMSIGNALSTRENGTH	BITMAP		"Bitmaps\\lem_signal_strength.bmp"
 #endif    // Französisch (Frankreich) resources
 

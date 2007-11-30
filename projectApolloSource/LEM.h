@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/11/30 16:40:40  movieman523
+  *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
+  *	
   *	Revision 1.7  2007/11/25 06:55:42  movieman523
   *	Tidied up surface ID code, moving the enum from a shared include file to specific versions for the Saturn and LEM classes.
   *	
@@ -220,6 +223,9 @@ public:
 		SRF_DCVOLTS,
 		SRF_ACVOLTS,
 		SRF_DCAMPS,
+		SRF_LMYAWDEGS,
+		SRF_LMPITCHDEGS,
+		SRF_LMSIGNALSTRENGTH,
 		SRF_POSTLDGVENTVLVLEVER,
 		SRF_SPSMAXINDICATOR,
 		SRF_ECSROTARY,
@@ -578,6 +584,14 @@ protected:
 	SwitchRow ExteriorLTGSwitchRow;
 	ThreePosSwitch ExteriorLTGSwitch;
 
+	//
+	// Currently these are just 0-5V meters; at some point we may want
+	// to change them to a different class.
+	//
+
+	SwitchRow RaderSignalStrengthMeterRow;
+	DCVoltMeter RadarSignalStrengthMeter;
+
 	/////////////////
 	// LEM panel 4 //
 	/////////////////
@@ -849,6 +863,19 @@ protected:
 	IndicatorSwitch DSCBattery2TB;
 	IndicatorSwitch DSCBattery3TB;
 	IndicatorSwitch DSCBattery4TB;
+
+	//
+	// Currently these are just 0-5V meters; at some point we may want
+	// to change them to a different class.
+	//
+	SwitchRow ComPitchMeterRow;
+	DCVoltMeter ComPitchMeter;
+
+	SwitchRow ComYawMeterRow;
+	DCVoltMeter ComYawMeter;
+
+	SwitchRow Panel14SignalStrengthMeterRow;
+	DCVoltMeter Panel14SignalStrengthMeter;
 
 	//////////////////
 	// LEM panel 16 //

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2007/11/30 16:40:40  movieman523
+  *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
+  *	
   *	Revision 1.69  2007/06/06 15:02:14  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -937,6 +940,9 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DCVOLTS]			= oapiCreateSurface (LOADBMP (IDB_LMDCVOLTS));
 		srf[SRF_DCAMPS]				= oapiCreateSurface (LOADBMP (IDB_LMDCAMPS));
+		srf[SRF_LMYAWDEGS]			= oapiCreateSurface (LOADBMP (IDB_LMYAWDEGS));
+		srf[SRF_LMPITCHDEGS]		= oapiCreateSurface (LOADBMP (IDB_LMPITCHDEGS));
+		srf[SRF_LMSIGNALSTRENGTH]	= oapiCreateSurface (LOADBMP (IDB_LMSIGNALSTRENGTH));
 
 		//
 		// Flashing borders.
@@ -993,6 +999,9 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_FDAINEEDLES],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_LEM_COAS1],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_LEM_COAS2],			g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_LMYAWDEGS],			g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_LMPITCHDEGS],			g_Param.col[4]);
+		oapiSetSurfaceColourKey	(srf[SRF_LMSIGNALSTRENGTH],		g_Param.col[4]);
 
 		//		break;
 		//
@@ -1151,6 +1160,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PANEL4RIGHTSWITCHROW,			_R( 964, 1614,  998, 1794), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_XPOINTERCDR,						_R(  65,  426,  202,  559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_XPOINTERLMP,						_R(1302,  426, 1439,  559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LMRADARSIGNALSTRENGTH,			_R( 244, 1229,  335, 1319), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,	          PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		
@@ -1269,7 +1279,9 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_DSC_BATTERY_TALKBACKS,	        _R( 573,  742, 888,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_HIGH_VOLTAGE_SWITCHES,	    _R( 568,  796, 895,  829), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_LOW_VOLTAGE_SWITCHES,	    _R( 568,  867, 824,  900), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-
+		oapiRegisterPanelArea (AID_LMYAWDEGS,						_R( 1104, 960, 1195, 1050), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LMPITCHDEGS,						_R( 984,  960, 1075, 1050), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LMSIGNALSTRENGTH,				_R( 1053, 1083, 1144, 1173), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
 
@@ -1439,6 +1451,11 @@ void LEM::SetSwitches(int panel) {
 			Panel4RightSwitchRow.Init(AID_PANEL4RIGHTSWITCHROW, MainPanel);
 			RightACA4JetSwitch.Init   (0,   0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel4RightSwitchRow);
 			RightTTCATranslSwitch.Init(0, 141, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel4RightSwitchRow);
+
+			RaderSignalStrengthMeterRow.Init(AID_LMRADARSIGNALSTRENGTH, MainPanel);
+			RadarSignalStrengthMeter.Init(g_Param.pen[4], g_Param.pen[4], RaderSignalStrengthMeterRow, 0);
+			RadarSignalStrengthMeter.SetSurface(srf[SRF_LMSIGNALSTRENGTH], 91, 90);
+
 			break;
 
 		case LMPANEL_RIGHTPANEL: // LEM Right Panel
@@ -1481,6 +1498,18 @@ void LEM::SetSwitches(int panel) {
 			DSCBattery2TB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
 			DSCBattery3TB.Init(152,0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
 			DSCBattery4TB.Init(222,0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
+
+			ComPitchMeterRow.Init(AID_LMPITCHDEGS, MainPanel);
+			ComPitchMeter.Init(g_Param.pen[4], g_Param.pen[4], ComPitchMeterRow, 0);
+			ComPitchMeter.SetSurface(srf[SRF_LMPITCHDEGS], 91, 90);
+
+			ComYawMeterRow.Init(AID_LMYAWDEGS, MainPanel);
+			ComYawMeter.Init(g_Param.pen[4], g_Param.pen[4], ComYawMeterRow, 0);
+			ComYawMeter.SetSurface(srf[SRF_LMYAWDEGS], 91, 90);
+
+			Panel14SignalStrengthMeterRow.Init(AID_LMSIGNALSTRENGTH, MainPanel);
+			Panel14SignalStrengthMeter.Init(g_Param.pen[4], g_Param.pen[4], Panel14SignalStrengthMeterRow, 0);
+			Panel14SignalStrengthMeter.SetSurface(srf[SRF_LMSIGNALSTRENGTH], 91, 90);
 
 			break;
 

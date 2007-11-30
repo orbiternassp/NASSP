@@ -107,6 +107,13 @@
 #define IDB_BORDER_34x39                                    115
 #define IDB_LV_ENGINE_LIGHTS_S1B                            116
 #define IDB_DCVOLTS_PANEL101								117
+#define IDB_LMYAWDEGS										118
+#define IDB_LMPITCHDEGS										119
+#define IDB_LMSIGNALSTRENGTH								120
+#define AID_LMYAWDEGS										121
+#define AID_LMPITCHDEGS										122
+#define AID_LMSIGNALSTRENGTH								123
+#define AID_LMRADARSIGNALSTRENGTH							124
 #define IDB_SWITCH2                                         152
 #define IDB_SWITCH3                                         153
 #define IDB_VPITCH                                          154
