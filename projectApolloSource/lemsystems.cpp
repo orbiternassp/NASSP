@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2007/06/06 15:02:14  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.23  2006/08/21 03:04:38  dseagrav
   *	This patch adds DC volt/amp meters and associated switches, which was an unholy pain in the
   *	
@@ -502,6 +505,9 @@ void LEM::SystemsInit()
 	ACBusB.WireTo(NULL);
 	// Situation load will wire these to their breakers later if needed
 
+	// AC bus attenuator.
+	ACVoltsAttenuator.WireTo(&ACBusA);
+
 	// RCS Main Shutoff valves
 	RCSMainSovASwitch.WireTo(&CDRs28VBus);
 	RCSMainSovATB.WireTo(&CDRs28VBus);
@@ -539,7 +545,6 @@ void LEM::SystemsInit()
 	// EXPLOSIVE DEVICES SYSTEMS
 	EDLGTB.WireTo(&EDS_CB_LG_FLAG);
 
-
 	//
 	// HACK:
 	// Not sure where these should be wired to.
@@ -559,6 +564,7 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&ACBusA, false);
 	Panelsdk.AddElectrical(&ACBusB, false);
 
+	Panelsdk.AddElectrical(&ACVoltsAttenuator, false);
 
 	// EDS
 	eds.Init(this);

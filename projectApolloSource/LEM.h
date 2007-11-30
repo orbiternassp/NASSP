@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/11/25 06:55:42  movieman523
+  *	Tidied up surface ID code, moving the enum from a shared include file to specific versions for the Saturn and LEM classes.
+  *	
   *	Revision 1.6  2007/06/06 15:02:09  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -817,13 +820,15 @@ protected:
 	//////////////////
 
 	SwitchRow EPSP14VoltMeterSwitchRow;
-	LEMDCVoltMeter EPSDCVoltMeter;
+	DCVoltMeter EPSDCVoltMeter;
+
+	VoltageAttenuator ACVoltsAttenuator;
 
 	SwitchRow EPSP14AmMeterSwitchRow;
-	LEMDCAmMeter EPSDCAmMeter;
+	DCAmpMeter EPSDCAmMeter;
 	
 	SwitchRow EPSLeftControlArea;
-	RotationalSwitch EPSMonitorSelectRotary;
+	PowerStateRotationalSwitch EPSMonitorSelectRotary;
 	LEMInverterSwitch EPSInverterSwitch;
 	ThreePosSwitch EPSEDVoltSelect;
 

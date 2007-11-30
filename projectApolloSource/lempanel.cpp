@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2007/06/06 15:02:14  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.68  2006/09/23 01:55:15  flydba
   *	Final graphics update completed.
   *	
@@ -438,7 +441,19 @@ void LEM::InitPanel() {
 	EPSMonitorSelectRotary.AddPosition(8,90);
 	EPSMonitorSelectRotary.AddPosition(9,120);
 
+	EPSMonitorSelectRotary.SetSource(0, &EPSEDVoltSelect);
+	EPSMonitorSelectRotary.SetSource(1, Battery1);
+	EPSMonitorSelectRotary.SetSource(2, Battery2);
+	EPSMonitorSelectRotary.SetSource(3, Battery3);
+	EPSMonitorSelectRotary.SetSource(4, Battery4);
+	EPSMonitorSelectRotary.SetSource(5, Battery5);
+	EPSMonitorSelectRotary.SetSource(6, Battery6);
+	EPSMonitorSelectRotary.SetSource(7, &CDRs28VBus);
+	EPSMonitorSelectRotary.SetSource(8, &LMPs28VBus);
+	EPSMonitorSelectRotary.SetSource(9, &ACVoltsAttenuator);
+	
 	EPSMonitorSelectRotary.Register(PSH,"EPSMonitorSelectRotary",0);
+
 	EPSDCVoltMeter.Register(PSH,"EPSDCVoltMeter", 19, 42, 3);
 	EPSDCAmMeter.Register(PSH,"EPSDCAmMeter", 0, 120, 3);
 	DSCBattery1TB.Register(PSH, "DSCBattery1TB", true);
@@ -1436,12 +1451,12 @@ void LEM::SetSwitches(int panel) {
 			LMPBatteryFeedTieCB2.Init( 1211,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &ECA_1, 100.0);
 			
 			EPSP14VoltMeterSwitchRow.Init(AID_LM_EPS_DC_VOLTMETER,MainPanel);
-			EPSDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14VoltMeterSwitchRow, this);
-			EPSDCVoltMeter.FrameSurface = srf[SRF_DCVOLTS];
+			EPSDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14VoltMeterSwitchRow, &EPSMonitorSelectRotary);
+			EPSDCVoltMeter.SetSurface(srf[SRF_DCVOLTS], 99, 98);
 
 			EPSP14AmMeterSwitchRow.Init(AID_LM_EPS_DC_AMMETER,MainPanel);
-			EPSDCAmMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14AmMeterSwitchRow, this);
-			EPSDCAmMeter.FrameSurface = srf[SRF_DCAMPS];
+			EPSDCAmMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14AmMeterSwitchRow, &EPSMonitorSelectRotary);
+			EPSDCAmMeter.SetSurface(srf[SRF_DCAMPS], 99, 98);
 
 			// 314, 728
 			EPSLeftControlArea.Init(AID_LM_EPS_LEFT_CONTROLS,MainPanel);

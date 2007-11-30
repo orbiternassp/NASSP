@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/08/21 03:04:38  dseagrav
+  *	This patch adds DC volt/amp meters and associated switches, which was an unholy pain in the
+  *	
   *	Revision 1.4  2006/08/13 16:01:52  movieman523
   *	Renamed LEM. Think it all builds properly, I'm checking it in before the lightning knocks out the power here :).
   *	
@@ -103,16 +106,12 @@ protected:
 };
 
 // Meters
-class LEMRoundMeter : public MeterSwitch {
+class LEMRoundMeter : public RoundMeter {
 public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s);
 
 protected:
-	HPEN Pen0;
-	HPEN Pen1;
 	LEM *lem;
-
-	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
 };
 
 class LEMDCVoltMeter: public LEMRoundMeter {

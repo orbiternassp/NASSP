@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/10/18 00:23:16  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.5  2007/06/06 15:02:08  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -160,6 +163,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	dsky(soundlib, agc, 015),
 	agc(soundlib, dsky, imu, Panelsdk),
 	CSMToLEMPowerSource("CSMToLEMPower", Panelsdk),
+	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
+	EPSDCAmMeter(0, 120.0, 220.0, -50.0),
+	EPSDCVoltMeter(20.0, 40.0, 215.0, -35.0),
 	imu(agc, Panelsdk)
 
 {
@@ -169,16 +175,21 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	// Force to NULL to avoid stupid VC++ optimization failure
-	int x=0;
-	while(x<N_LEM_VALVES){
+	int x;
+	for (x = 0; x < N_LEM_VALVES; x++){
 		pLEMValves[x] = NULL;
 		ValveState[x] = FALSE;
 		x++;
 	}
 
+	//
+	// Do systems init first as other code may rely on some
+	// of the variables it sets up.
+	//
+	SystemsInit();
+
 	// Init further down
 	Init();
-	SystemsInit();
 }
 
 LEM::~LEM()
