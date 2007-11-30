@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/11/30 16:40:40  movieman523
+  *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
+  *	
   *	Revision 1.6  2007/10/18 00:23:16  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -166,6 +169,10 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
 	EPSDCAmMeter(0, 120.0, 220.0, -50.0),
 	EPSDCVoltMeter(20.0, 40.0, 215.0, -35.0),
+	ComPitchMeter(0.0, 5.0, 220.0, -50.0),
+	ComYawMeter(0.0, 5.0, 220.0, -50.0),
+	Panel14SignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
+	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	imu(agc, Panelsdk)
 
 {
