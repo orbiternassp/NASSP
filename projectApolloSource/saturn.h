@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.254  2007/11/29 21:53:20  movieman523
+  *	Generising the Volt meters.
+  *	
   *	Revision 1.253  2007/11/29 04:56:09  movieman523
   *	Made the System Test meter work (though currently it's connected to the rotary switch, which isn't connected to anything, so just displays 0V).
   *	
@@ -1013,6 +1016,8 @@ public:
 			unsigned HasProbe:1;			///< Does the CM have a docking probe?
 			unsigned ApexCoverAttached:1;	///< Is the apex cover attached?
 			unsigned ChutesAttached:1;		///< Are the chutes attached?
+			unsigned CSMAttached:1;			///< Is there a CSM?
+			unsigned NosecapAttached:1;		///< Is there an Apollo 5-style nosecap?
 		};
 		unsigned long word;
 
@@ -1744,6 +1749,18 @@ protected:
 	/// \brief Apex cover flag.
 	///
 	bool ApexCoverAttached;
+
+	///
+	/// True if there is a CSM.
+	/// \brief Nosecap attached flag.
+	///
+	bool CSMAttached;
+
+	///
+	/// True if there is an Apollo 5-style nosecap in place of a CSM.
+	/// \brief Nosecap attached flag.
+	///
+	bool NosecapAttached;
 
 	//
 	// Checklists.
@@ -3728,6 +3745,13 @@ protected:
 	double CSMSepTime;
 	bool CMSepSet;
 	double CMSepTime;
+
+	//
+	// Payload deploy time for unmanned flights with no CSM.
+	//
+
+	bool PayloadDeploySet;
+	double PayloadDeployTime;
 
 	//
 	// SIVB burn info for unmanned flights.

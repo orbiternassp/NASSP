@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2007/06/06 15:02:21  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.28  2006/11/01 00:20:44  tschachim
   *	Next bugfix...
   *	
@@ -153,6 +156,7 @@ static MESHHANDLE hCOAStarget;
 static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
 static MESHHANDLE hlta_2r;
+static MESHHANDLE hlm_1;
 
 static SURFHANDLE SMMETex;
 
@@ -200,6 +204,7 @@ void SIVbLoadMeshes()
 	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
 	hastp2 = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
+	hlm_1 = oapiLoadMeshGlobal ("ProjectApollo/LM_1");
 
 	//
 	// Saturn V
@@ -383,12 +388,12 @@ void SIVB::SetS4b()
     ClearAttExhaustRefs();
 	HideAllMeshes();
 
+	VECTOR3 dockpos = {0,0.03, 12.4};
+	VECTOR3 dockdir = {0,0,1};
+	VECTOR3 dockrot = {-0.705,-0.705,0};
+
 	if (SaturnVStage)
 	{
-		VECTOR3 dockpos = {0,0.03, 12.4};
-		VECTOR3 dockdir = {0,0,1};
-		VECTOR3 dockrot = {-0.705,-0.705,0};
-
 		if (LowRes) {
 			SetMeshVisibilityMode(meshSivbSaturnVLow, MESHVIS_EXTERNAL);
 		}
@@ -473,7 +478,13 @@ void SIVB::SetS4b()
 			break;
 
 		case PAYLOAD_LM1:
-			SetMeshVisibilityMode(meshCOASTarget_C, MESHVIS_EXTERNAL);
+			SetMeshVisibilityMode(meshLM_1, MESHVIS_EXTERNAL);
+			mass += PayloadMass;
+			break;
+
+		case PAYLOAD_LEM:
+			SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
+			SetDockParams(dockpos, dockdir, dockrot);
 			mass += PayloadMass;
 			break;
 
@@ -794,30 +805,18 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	Panelsdk.Save(scn);
 }
 
-typedef union {
-	struct {
-		unsigned PanelsHinged:1;
-		unsigned PanelsOpened:1;
-		unsigned SaturnVStage:1;
-		unsigned LowRes:1;
-		unsigned J2IsActive:1;
-		unsigned FuelVenting:1;
-	} u;
-	unsigned long word;
-} MainState;
-
 int SIVB::GetMainState()
 
 {
 	MainState state;
 
 	state.word = 0;
-	state.u.PanelsHinged = PanelsHinged;
-	state.u.PanelsOpened = PanelsOpened;
-	state.u.SaturnVStage = SaturnVStage;
-	state.u.LowRes = LowRes;
-	state.u.J2IsActive = J2IsActive;
-	state.u.FuelVenting = FuelVenting;
+	state.PanelsHinged = PanelsHinged;
+	state.PanelsOpened = PanelsOpened;
+	state.SaturnVStage = SaturnVStage;
+	state.LowRes = LowRes;
+	state.J2IsActive = J2IsActive;
+	state.FuelVenting = FuelVenting;
 
 	return state.word;
 }
@@ -1038,7 +1037,6 @@ void SIVB::AddRCS_S4B()
 		StartVenting();
 	}
 
-
 	//
 	// Seperation junk 'thrusters'.
 	//
@@ -1113,12 +1111,12 @@ void SIVB::SetMainState(int s)
 
 	state.word = s;
 
-	SaturnVStage = (state.u.SaturnVStage != 0);
-	PanelsHinged = (state.u.PanelsHinged != 0);
-	PanelsOpened = (state.u.PanelsOpened != 0);
-	LowRes = (state.u.LowRes != 0);
-	J2IsActive = (state.u.J2IsActive);
-	FuelVenting = (state.u.FuelVenting);
+	SaturnVStage = (state.SaturnVStage != 0);
+	PanelsHinged = (state.PanelsHinged != 0);
+	PanelsOpened = (state.PanelsOpened != 0);
+	LowRes = (state.LowRes != 0);
+	J2IsActive = (state.J2IsActive);
+	FuelVenting = (state.FuelVenting);
 }
 
 void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -1290,6 +1288,9 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 
 	mesh_dir = _V(0, 0, 9.8);
 	meshLMPKD = AddMesh(hLMPKD, &mesh_dir);
+
+	mesh_dir = _V(0, 0, 10.8);
+	meshLM_1 = AddMesh(hlm_1, &mesh_dir);
 
 	mesh_dir = _V(0, 0, 9.6);	
 	meshLTA_2r = AddMesh(hlta_2r, &mesh_dir);
@@ -1469,6 +1470,7 @@ void SIVB::HideAllMeshes()
 	SetMeshVisibilityMode(meshCOASTarget_A, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshCOASTarget_C, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshLM_1, MESHVIS_NEVER);
 }
 
 

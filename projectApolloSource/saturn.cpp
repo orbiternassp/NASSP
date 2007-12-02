@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.208  2007/11/29 21:53:20  movieman523
+  *	Generising the Volt meters.
+  *	
   *	Revision 1.207  2007/11/29 21:28:44  movieman523
   *	Electrical meters now use a common base class which handles the rendering.
   *	
@@ -516,6 +519,9 @@ void Saturn::initSaturn()
 	LESAttached = true;
 	ApexCoverAttached = true;
 	ChutesAttached = true;
+	CSMAttached = true;
+
+	NosecapAttached = false;
 
 	TLICapableBooster = false;
 	TLISoundsLoaded = false;
@@ -562,6 +568,9 @@ void Saturn::initSaturn()
 	CSMAccelTime = 0.0;
 	CSMAccelEnd = 0.0;
 	CSMAccelPitch = 0.0;
+
+	PayloadDeploySet = false;
+	PayloadDeployTime = 0.0;
 
 	SIVBBurnStart = 0.0;
 	SIVBApogee = 0.0;
@@ -1599,6 +1608,11 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 			oapiWriteScenario_float (scn, "CMSEP", CMSepTime);
 		}
 
+		if (PayloadDeploySet && (PayloadDeployTime >= MissionTime))
+		{
+			oapiWriteScenario_float (scn, "PLSEP", PayloadDeployTime);
+		}
+
 		if (stage <= CSM_LEM_STAGE) {
 			oapiWriteScenario_float (scn, "S4APO", SIVBApogee);
 			oapiWriteScenario_float (scn, "S4BURN", SIVBBurnStart);
@@ -1815,11 +1829,8 @@ int Saturn::GetAttachState()
 {
 	AttachState state;
 
-	//
-	// Default to everything attached, for future compatibility.
-	//
-
-	state.word = 0x7fffffff;
+	state.CSMAttached = CSMAttached;
+	state.NosecapAttached = NosecapAttached;
 	state.InterstageAttached = InterstageAttached;
 	state.LESAttached = LESAttached;
 	state.HasProbe = HasProbe;
@@ -1835,6 +1846,9 @@ void Saturn::SetAttachState(int s)
 	AttachState state;
 
 	state.word = s;
+
+	CSMAttached = (state.CSMAttached != 0);
+	NosecapAttached = (state.NosecapAttached != 0);
 	LESAttached = (state.LESAttached != 0);
 	InterstageAttached = (state.InterstageAttached != 0);
 	HasProbe = (state.HasProbe != 0);
@@ -2318,6 +2332,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf(line + 5, "%f", &ftcp);
 		CMSepTime = ftcp;
 		CMSepSet = true;
+	}
+	else if (!strnicmp(line, "PLSEP", 5)) {
+		sscanf(line + 5, "%f", &ftcp);
+		PayloadDeployTime = ftcp;
+		PayloadDeploySet = true;
 	}
 	else if (!strnicmp(line, "S4APO", 5)) {
 		sscanf(line + 5, "%f", &ftcp);
@@ -4568,15 +4587,7 @@ void Saturn::ClearPropellants()
 bool Saturn::SaturnHasCSM()
 
 {
-
-	//
-	// LM1 has a nosecap rather than a CSM.
-	//
-
-	if (SIVBPayload != PAYLOAD_LM1)
-		return true;
-
-	return false;
+	return CSMAttached;
 }
 
 //
@@ -4752,6 +4763,24 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 		CSMSepSet = false;
 	}
 
+	//
+	// For unmanned launches, seperate the payload on timer.
+	//
+
+	bool PayloadDeployed = false;
+
+	if (!Crewed && PayloadDeploySet && (MissionTime >= PayloadDeployTime - 20.))
+	{
+		SlowIfDesired();
+	}
+
+	if (!Crewed && PayloadDeploySet && (MissionTime >= PayloadDeployTime))
+	{
+		SlowIfDesired();
+		bManualSeparate = true;
+		PayloadDeployed = true;
+	}
+
 	if (CsmLvSepSwitch.GetState())
 	{
 		bManualSeparate = true;
@@ -4797,14 +4826,23 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 					SetValveState(CSM_SECFUEL_INSOL_VALVE_B, false);
 				}
 			}
-
-			return;
 		}
 		else
 		{
 			bManualSeparate = false;
 			bAbort = false;
 		}
+	}
+
+	//
+	// If the payload was deployed, delete us. Note that this just means that the SLA panels have
+	// been blown off of the SIVB; the SIVB will have to do the actual payload deployment.
+	//
+	if (PayloadDeployed && hs4bM)
+	{
+		PayloadDeploySet = false;
+		oapiSetFocusObject(hs4bM);
+		oapiDeleteVessel(GetHandle(), hs4bM);
 	}
 
 	/* sprintf(oapiDebugString(), "SIVB thrust %.1f isp %.2f propellant %.1f", 

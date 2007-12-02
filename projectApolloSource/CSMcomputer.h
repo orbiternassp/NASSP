@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2007/08/13 16:05:28  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.25  2007/06/06 15:02:07  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -723,11 +729,15 @@ protected:
 	const double F3[13] = {22.57,40.367,80.068,178.895,346.764,522.07,
 		609.39,861.175,1262.995,1813.925,2562.25,2789.8,2789.8};
 
+class Saturn;
 
 // *** CM OPTICS ***
 // I guess this can go here; it doesn't really warrant its own file, and it's part of GNC, so...
-class Saturn;
 
+///
+/// \ingroup AGC
+/// \brief CM Optics.
+///
 class CMOptics {	
 public: 
 	CMOptics();														// Cons
@@ -738,6 +748,10 @@ public:
 	void CMCTrunionDrive(int val, int ch12); 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+
+	//
+	// These should really be protected variables.
+	//
 
 	Saturn *sat;													// Our Ship
 

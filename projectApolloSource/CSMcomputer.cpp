@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2007/10/18 00:23:12  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.80  2007/10/09 21:49:37  tschachim
   *	Bugfixes
   *	
@@ -4343,6 +4346,9 @@ CMOptics::CMOptics() {
 	TrunionMoved = 0.0;
 	OpticsManualMovement = 0;
 	Powered = 0;
+
+	TargetShaft = 0;
+	TargetTrunion = 0;
 }
 
 void CMOptics::Init(Saturn *vessel) {
