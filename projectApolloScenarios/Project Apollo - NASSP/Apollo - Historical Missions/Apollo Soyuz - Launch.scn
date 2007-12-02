@@ -62,6 +62,7 @@ AS-211:ProjectApollo\Saturn1b
   TCP 18.0
   S4PL 1
   LANG English
+  ATTACHSTATE 63
 END
 ML:ProjectApollo\ML
   STATUS Landed Earth
