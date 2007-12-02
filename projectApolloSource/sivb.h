@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2006/11/01 00:20:44  tschachim
+  *	Next bugfix...
+  *	
   *	Revision 1.20  2006/10/23 13:43:23  tschachim
   *	Bugfix mesh handling.
   *	
@@ -208,6 +211,23 @@ typedef enum SIVbState
 class SIVB : public VESSEL2 {
 
 public:
+
+	///
+	/// \ingroup ScenarioState
+	/// \brief Main SIVB state-saving structure.
+	///
+	typedef union {
+		struct {
+			unsigned PanelsHinged:1;
+			unsigned PanelsOpened:1;
+			unsigned SaturnVStage:1;
+			unsigned LowRes:1;
+			unsigned J2IsActive:1;
+			unsigned FuelVenting:1;
+		};
+		unsigned long word;
+	} MainState;
+
 	///
 	/// \brief Standard constructor with the usual Orbiter parameters.
 	///
@@ -472,7 +492,7 @@ protected:
 	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
 	int meshSivbSaturnV, meshSivbSaturnVLow, meshSivbSaturn1b, meshSivbSaturn1bLow;
 	int meshASTP_A, meshASTP_B, meshASTP2, meshCOASTarget_A, meshCOASTarget_B, meshCOASTarget_C;
-	int meshLMPKD, meshApollo8LTA, meshLTA_2r;
+	int meshLMPKD, meshApollo8LTA, meshLTA_2r, meshLM_1;
 
 	void HideAllMeshes();
 };

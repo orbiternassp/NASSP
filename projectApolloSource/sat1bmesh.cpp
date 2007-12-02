@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.59  2007/10/18 00:23:20  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.58  2007/08/13 16:06:14  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -417,8 +420,9 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 				SetDockingProbeMesh();
 			}
 		}
-	} else {
-
+	}
+	else if (NosecapAttached)
+	{
 		//
 		// Add nosecap.
 		//
@@ -619,8 +623,9 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 				SetDockingProbeMesh();
 			}
 		}
-	} else {
-
+	}
+	else if (NosecapAttached)
+	{
 		//
 		// Add nosecap.
 		//

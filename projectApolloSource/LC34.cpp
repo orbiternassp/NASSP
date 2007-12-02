@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/08/13 16:06:03  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.4  2007/06/06 15:02:08  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -264,8 +270,15 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
 		if (sat->GetMissionTime() < 10.0)
 			liftoffStreamLevel = (sat->GetMissionTime() - 10.0) / -6.0;
-		else
+		else {
 			liftoffStreamLevel = 0;
+
+			//
+			// Once the stream is finished, forget about the vessel since we won't be
+			// using it again. This prevents a crash if we later delete the vessel.
+			//
+			hLV = 0;
+		}
 		break;
 	}
 }
