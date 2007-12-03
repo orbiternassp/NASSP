@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.60  2007/12/02 07:13:39  movieman523
+  *	Updates for Apollo 5 and unmanned Saturn 1b missions.
+  *	
   *	Revision 1.59  2007/10/18 00:23:20  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -1051,7 +1054,7 @@ void Saturn1b::SeparateStage (int new_stage)
 
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 	{
-	 	ofs1 = _V(0, 0, -3);
+	 	ofs1 = _V(0, 0, 1.7);
 		vel1 = _V(0, 0, 0);
 	}
 

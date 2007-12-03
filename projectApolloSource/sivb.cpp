@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2007/12/03 06:12:31  movieman523
+  *	Moved LM-1 mesh up a bit.
+  *	
   *	Revision 1.30  2007/12/02 07:13:39  movieman523
   *	Updates for Apollo 5 and unmanned Saturn 1b missions.
   *	
@@ -833,7 +836,7 @@ void SIVB::SetVentingThruster()
 	if (thg_main)
 		DelThrusterGroup(THGROUP_MAIN, true);
 
-	th_main[0] = CreateThruster (mainExhaustPos, _V( 0,0,1), 1000.0, ph_main, 300.0, 300.0);
+	th_main[0] = CreateThruster (mainExhaustPos, _V( 0,0,1), 1000.0, ph_main, 30.0, 30.0);
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
 	AddExhaustStream(th_main[0], &fuel_venting_spec);
@@ -1263,13 +1266,13 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	AddAnimationComponent(panelAnim, 0, 1, &panel4SaturnVLow);
 
     // Saturn1b panel animations
-	mesh_dir = _V(1.85, 1.85, 15.25);
+	mesh_dir = _V(1.85, 1.85, 10.55);
     panelMesh1Saturn1b = AddMesh(hSat1stg21, &mesh_dir);
-	mesh_dir = _V(-1.85, 1.85, 15.25);
+	mesh_dir = _V(-1.85, 1.85, 10.55);
 	panelMesh2Saturn1b = AddMesh(hSat1stg22, &mesh_dir);
-	mesh_dir = _V(1.85, -1.85, 15.25);
+	mesh_dir = _V(1.85, -1.85, 10.55);
 	panelMesh3Saturn1b = AddMesh(hSat1stg23, &mesh_dir);
-	mesh_dir = _V(-1.85, -1.85, 15.25);
+	mesh_dir = _V(-1.85, -1.85, 10.55);
 	panelMesh4Saturn1b = AddMesh(hSat1stg24, &mesh_dir);
 
 	static MGROUP_ROTATE panel1Saturn1b(panelMesh1Saturn1b, NULL, 0, _V( 0.25,  0.25, -1.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
@@ -1286,13 +1289,19 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	mesh_dir = _V(0, 0, 0);
 	meshSivbSaturnVLow = AddMesh(hsat5stg3low, &mesh_dir);
 	meshSivbSaturnV = AddMesh(hsat5stg3, &mesh_dir);
+
+	//
+	// Different offsets for Saturn 1b and V stages to ensure that payload
+	// offsets match.
+	//
+	mesh_dir = _V(0, 0.0, -4.7);
 	meshSivbSaturn1bLow = AddMesh(hSat1stg2low, &mesh_dir);
 	meshSivbSaturn1b = AddMesh(hSat1stg2, &mesh_dir);
 
 	mesh_dir = _V(0, 0, 9.8);
 	meshLMPKD = AddMesh(hLMPKD, &mesh_dir);
 
-	mesh_dir = _V(0, 0, 14.5);
+	mesh_dir = _V(0, 0, 9.8);
 	meshLM_1 = AddMesh(hlm_1, &mesh_dir);
 
 	mesh_dir = _V(0, 0, 9.6);	
@@ -1305,17 +1314,17 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	mesh_dir = _V(0, -0.15, 7.8);
 	meshASTP_A = AddMesh(hastp, &mesh_dir);
 
-	mesh_dir = _V(0, 0, 13.3);
+	mesh_dir = _V(0, 0, 8.6);
 	meshASTP_B = AddMesh(hastp, &mesh_dir);
 
 	// ShiftMesh in SetS4b wasn't working...
 	mesh_dir = _V(-1.04, 1.04, 9.1);
 	meshCOASTarget_A = AddMesh(hCOAStarget, &mesh_dir);
 
-	mesh_dir = _V(-1.0, -1.1, 13.3);
+	mesh_dir = _V(-1.0, -1.1, 8.6);
 	meshCOASTarget_B = AddMesh(hCOAStarget, &mesh_dir);
 
-	mesh_dir = _V(0, 0, 13.3);
+	mesh_dir = _V(0, 0, 8.6);
 	meshCOASTarget_C = AddMesh(hCOAStarget, &mesh_dir);
 
 	meshASTP2 = AddMesh(hastp2, &mesh_dir);
