@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2007/12/03 07:14:22  movieman523
+  *	Moved Saturn 1b SIVB mesh back so that payload offsets match.
+  *	
   *	Revision 1.31  2007/12/03 06:12:31  movieman523
   *	Moved LM-1 mesh up a bit.
   *	
@@ -406,45 +409,6 @@ void SIVB::SetS4b()
 		else {
 			SetMeshVisibilityMode(meshSivbSaturnV, MESHVIS_EXTERNAL);
 		}
-		
-		switch (Payload) {
-		case PAYLOAD_LEM:
-			SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
-			SetDockParams(dockpos, dockdir, dockrot);
-			mass += PayloadMass;
-			break;
-
-		case PAYLOAD_LTA:
-		case PAYLOAD_LTA6:
-			SetMeshVisibilityMode(meshLTA_2r, MESHVIS_EXTERNAL);
-			ClearDockDefinitions();
-			mass += PayloadMass;
-			break;
-
-		case PAYLOAD_LTA8:
-			SetMeshVisibilityMode(meshApollo8LTA, MESHVIS_EXTERNAL);
-			ClearDockDefinitions();
-			mass += PayloadMass;
-			break;
-
-		//
-		// For now the docking adapter for the SIVB to Venus test flights is simulated
-		// with the ASTP mesh and COAS target.
-		//
-
-		case PAYLOAD_DOCKING_ADAPTER:
-			SetMeshVisibilityMode(meshASTP_A, MESHVIS_EXTERNAL);
-			SetMeshVisibilityMode(meshCOASTarget_A, MESHVIS_EXTERNAL);
-			dockpos = _V(0.0, 0.0, 9.1);
-			dockrot = _V(-1.0, 0.0, 0);
-			SetDockParams(dockpos, dockdir, dockrot);
-			mass += PayloadMass;
-			break;
-
-		case PAYLOAD_EMPTY:
-			ClearDockDefinitions();
-			break;
-		}
 
         // Hide unneeded meshes
         if (PanelsHinged || !PanelsOpened) {
@@ -470,35 +434,6 @@ void SIVB::SetS4b()
 			SetMeshVisibilityMode(meshSivbSaturn1b, MESHVIS_EXTERNAL);
 		}
 
-		switch (Payload) {
-
-		case PAYLOAD_TARGET:
-			SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_EXTERNAL);
-			ClearDockDefinitions();
-			mass += PayloadMass;
-			break;
-
-		case PAYLOAD_ASTP:
-			SetMeshVisibilityMode(meshASTP_B, MESHVIS_EXTERNAL);
-			mass += PayloadMass;
-			break;
-
-		case PAYLOAD_LM1:
-			SetMeshVisibilityMode(meshLM_1, MESHVIS_EXTERNAL);
-			mass += PayloadMass;
-			break;
-
-		case PAYLOAD_LEM:
-			SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
-			SetDockParams(dockpos, dockdir, dockrot);
-			mass += PayloadMass;
-			break;
-
-		case PAYLOAD_EMPTY:
-			ClearDockDefinitions();
-			break;
-		}
-
         // Hide unneeded meshes
         if (PanelsHinged || !PanelsOpened) {
 			SetMeshVisibilityMode(panelMesh1Saturn1b, MESHVIS_EXTERNAL);
@@ -506,6 +441,61 @@ void SIVB::SetS4b()
 			SetMeshVisibilityMode(panelMesh3Saturn1b, MESHVIS_EXTERNAL);
 			SetMeshVisibilityMode(panelMesh4Saturn1b, MESHVIS_EXTERNAL);
        }
+	}
+
+	switch (Payload) {
+	case PAYLOAD_LEM:
+		SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
+		SetDockParams(dockpos, dockdir, dockrot);
+		mass += PayloadMass;
+		break;
+
+	case PAYLOAD_LTA:
+	case PAYLOAD_LTA6:
+		SetMeshVisibilityMode(meshLTA_2r, MESHVIS_EXTERNAL);
+		ClearDockDefinitions();
+		mass += PayloadMass;
+		break;
+
+	case PAYLOAD_LTA8:
+		SetMeshVisibilityMode(meshApollo8LTA, MESHVIS_EXTERNAL);
+		ClearDockDefinitions();
+		mass += PayloadMass;
+		break;
+
+	//
+	// For now the docking adapter for the SIVB to Venus test flights is simulated
+	// with the ASTP mesh and COAS target.
+	//
+
+	case PAYLOAD_DOCKING_ADAPTER:
+		SetMeshVisibilityMode(meshASTP_A, MESHVIS_EXTERNAL);
+		SetMeshVisibilityMode(meshCOASTarget_A, MESHVIS_EXTERNAL);
+		dockpos = _V(0.0, 0.0, 9.1);
+		dockrot = _V(-1.0, 0.0, 0);
+		SetDockParams(dockpos, dockdir, dockrot);
+		mass += PayloadMass;
+		break;
+
+	case PAYLOAD_EMPTY:
+		ClearDockDefinitions();
+		break;
+
+	case PAYLOAD_TARGET:
+		SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_EXTERNAL);
+		ClearDockDefinitions();
+		mass += PayloadMass;
+		break;
+
+	case PAYLOAD_ASTP:
+		SetMeshVisibilityMode(meshASTP_B, MESHVIS_EXTERNAL);
+		mass += PayloadMass;
+		break;
+
+	case PAYLOAD_LM1:
+		SetMeshVisibilityMode(meshLM_1, MESHVIS_EXTERNAL);
+		mass += PayloadMass;
+		break;
 	}
 
 	SetEmptyMass(mass);
@@ -944,16 +934,7 @@ void SIVB::AddRCS_S4B()
 	VECTOR3 m_exhaust_ref3 = {0,-0.1,-1};
 	VECTOR3 m_exhaust_ref4 = {-0.1,0,-1};
 	VECTOR3 m_exhaust_ref5 = {0.1,0,-1};
-	double offset;
-
-	if (SaturnVStage)
-	{
-		offset = -2.05;
-	}
-	else
-	{
-		offset = 2.65;
-	}
+	double offset = -2.05;
 
 	if (!ph_aps)
 		ph_aps  = CreatePropellantResource(275.0);
@@ -963,14 +944,7 @@ void SIVB::AddRCS_S4B()
 
 	SetDefaultPropellantResource (ph_main);
 	
-	if (SaturnVStage)
-	{
-		mainExhaustPos = _V(0, 0, -11.7);
-	}
-	else
-	{
-		mainExhaustPos = _V(0, 0, -7);
-	}
+	mainExhaustPos = _V(0, 0, -11.7);
 
 	//
 	// Unless this is dockable, the main engine is just venting fuel through the exhaust: low thrust and low ISP.
