@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2007/12/02 07:13:39  movieman523
+  *	Updates for Apollo 5 and unmanned Saturn 1b missions.
+  *	
   *	Revision 1.29  2007/06/06 15:02:21  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -1289,7 +1292,7 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	mesh_dir = _V(0, 0, 9.8);
 	meshLMPKD = AddMesh(hLMPKD, &mesh_dir);
 
-	mesh_dir = _V(0, 0, 10.8);
+	mesh_dir = _V(0, 0, 14.5);
 	meshLM_1 = AddMesh(hlm_1, &mesh_dir);
 
 	mesh_dir = _V(0, 0, 9.6);	
