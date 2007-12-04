@@ -25595,6 +25595,6 @@ MATERIAL GOLDFOIL2withTex:GOLD256
  1  1  1  1  0
  0  0  0  1
 TEXTURES 3
-GOLD256.dds 
-FLAG.dds 
-US.dds 
+ProjectApollo/GOLD256.dds 
+ProjectApollo/FLAG.dds 
+ProjectApollo/US.dds 
