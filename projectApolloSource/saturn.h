@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.255  2007/12/02 07:13:39  movieman523
+  *	Updates for Apollo 5 and unmanned Saturn 1b missions.
+  *	
   *	Revision 1.254  2007/11/29 21:53:20  movieman523
   *	Generising the Volt meters.
   *	
@@ -524,6 +527,14 @@
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
+
+
+//
+// IMFD5 communication support
+//
+
+#include "IMFD/IMFD_Client.h"
+
 
 //
 // Valves.
@@ -1226,6 +1237,7 @@ public:
 	bool clbkLoadVC (int id);
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
+	void clbkPostCreation();
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -1234,7 +1246,7 @@ public:
 	/// \param simt Current MET in seconds.
 	/// \param simdt Time in seconds since last timestep.
 	///
-	virtual void Timestep(double simt, double simdt) = 0;
+	virtual void Timestep(double simt, double simdt, double mjd) = 0;
 
 	///
 	/// \brief Initialise a virtual cockpit view.
@@ -1518,6 +1530,11 @@ public:
 	/// \return True if attached, false if not.
 	///
 	bool LETAttached();
+
+	///
+	/// \brief Returns the IMFD communication client for ProjectApolloMFD
+	///
+	virtual IMFD_Client *GetIMFDClient() { return &IMFD_Client; }; 
 
 protected:
 
@@ -3849,8 +3866,8 @@ protected:
 
 #define SATPANEL_MAIN				0 // Both have Orbiter's 
 #define SATPANEL_MAIN_LEFT		    0 // default panel id 0
-#define SATPANEL_LOWER				1
-#define SATPANEL_LOWER_CENTER		1 // Should never have both full Lower and Center Lower available.
+#define SATPANEL_GN					1
+#define SATPANEL_GN_CENTER			1 // Should never have both full Lower and Center Lower available.
 #define SATPANEL_LEFT				2
 #define SATPANEL_RIGHT				3
 #define SATPANEL_LEFT_RNDZ_WINDOW	4
@@ -3859,13 +3876,16 @@ protected:
 #define SATPANEL_CABIN_PRESS_PANEL	7
 #define SATPANEL_TELESCOPE			8
 #define SATPANEL_SEXTANT			9
-#define SATPANEL_MAIN_MIDDLE	   10
-#define SATPANEL_MAIN_RIGHT		   11
-#define SATPANEL_LOWER_LEFT		   12
-#define SATPANEL_LOWER_RIGHT	   13
+#define SATPANEL_MAIN_MIDDLE		10
+#define SATPANEL_MAIN_RIGHT			11
+#define SATPANEL_GN_LEFT			12
+#define SATPANEL_GN_RIGHT			13
+#define SATPANEL_LOWER_LEFT			14
+#define SATPANEL_LOWER_MAIN			15
+#define SATPANEL_RIGHT_CB			16
 
 	int  PanelId;
-	int MainPanelSplitted;
+	int MainPanelSplit;
 	int GNSplit;
 	bool InVC;
 	bool InPanel;
@@ -4017,9 +4037,9 @@ protected:
 	void SetView(double offset, bool update_direction);
 	void MasterAlarm();
 	void StopMasterAlarm();
-	void GenericTimestep(double simt, double simdt);
+	void GenericTimestep(double simt, double simdt, double mjd);
 	void SystemsInit();
-	void SystemsTimestep(double simt, double simdt);
+	void SystemsTimestep(double simt, double simdt, double mjd);
 	void SystemsInternalTimestep(double simdt);
 	void JoystickTimestep();
 	void SetSIVBThrusters(bool active);
@@ -4286,13 +4306,25 @@ protected:
 	double LMLandingLatitude;
 	double LMLandingLongitude;
 	double LMLandingAltitude;
+	char   LMLandingBase[256];
+	double LMLandingMJD;		// MJD of lunar landing
 
 	//
 	// Earth landing data.
 	//
 
-	double EarthLandingLatitude;
-	double EarthLandingLongitude;
+	double SplashdownLatitude;
+	double SplashdownLongitude;
+	double EntryInterfaceMJD;			// MJD of normal return entry interface
+
+	//
+	// Mission TLI and LOI parameters
+	//
+
+	double TransLunarInjectionMJD;			// MJD of TLI burn
+	double LunarOrbitInsertionMJD;			// MJD of first LOI burn
+	double FreeReturnPericynthionMJD;		// MJD of free return pericynthion
+	double FreeReturnPericynthionAltitude;	// Altitude of free return pericynthion
 
 	//
 	// Random motion.
@@ -4405,8 +4437,16 @@ protected:
 
 	int LMPadLoadCount;
 	int LMPadValueCount;
-	
+
+	//
+	// IMFD5 communication support
+	//
+
+	IMFD_Client IMFD_Client; 
+	//
 	// Friend Class List for systems objects 
+	//
+
 	friend class GDC;
 	friend class BMAG;
 	friend class ASCP;

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.221  2007/11/29 21:53:20  movieman523
+  *	Generising the Volt meters.
+  *	
   *	Revision 1.220  2007/11/29 21:28:44  movieman523
   *	Electrical meters now use a common base class which handles the rendering.
   *	
@@ -947,16 +950,11 @@ bool Saturn::clbkLoadPanel (int id) {
 	MFDSPEC mfds_dock		=     {{1019,  784, 1238,  999}, 6, 6, 31, 31};
 
 
-	if ((id == SATPANEL_LOWER && !GNSplit)||(id == SATPANEL_LOWER_LEFT && !GNSplit)||(id == SATPANEL_LOWER_RIGHT && !GNSplit)) { // guidance & navigation lower equipment bay (unslplit
+	if ((id == SATPANEL_GN && !GNSplit) || (id == SATPANEL_GN_LEFT && !GNSplit) || (id == SATPANEL_GN_RIGHT && !GNSplit)) { // guidance & navigation lower equipment bay (unsplit)
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL));
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		if (MainPanelSplitted)
-		{
-			oapiSetPanelNeighbours(-1, -1, SATPANEL_MAIN_MIDDLE, SATPANEL_TELESCOPE);
-		} else {
-			oapiSetPanelNeighbours(-1, -1, SATPANEL_MAIN, SATPANEL_TELESCOPE);
-		}
+		oapiSetPanelNeighbours(-1, -1, SATPANEL_LOWER_MAIN, SATPANEL_TELESCOPE);
 
 		AddLeftLowerPanelAreas();
 		AddLeftCenterLowerPanelAreas(0);
@@ -967,16 +965,11 @@ bool Saturn::clbkLoadPanel (int id) {
 		SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
-	if (id == SATPANEL_LOWER_LEFT && GNSplit) { // guidance & navigation lower equipment bay Left third (split)
+	if (id == SATPANEL_GN_LEFT && GNSplit) { // guidance & navigation lower equipment bay Left third (split)
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL_LEFT));
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		if (MainPanelSplitted)
-		{
-			oapiSetPanelNeighbours(-1,SATPANEL_LOWER_CENTER,SATPANEL_MAIN, SATPANEL_TELESCOPE);
-		} else {
-			oapiSetPanelNeighbours(-1,SATPANEL_LOWER_CENTER,SATPANEL_MAIN_LEFT,SATPANEL_TELESCOPE);
-		}
+		oapiSetPanelNeighbours(-1, SATPANEL_GN_CENTER, SATPANEL_LOWER_LEFT, SATPANEL_TELESCOPE);
 
 		AddLeftLowerPanelAreas();
 		AddLeftCenterLowerPanelAreas(0);
@@ -985,16 +978,11 @@ bool Saturn::clbkLoadPanel (int id) {
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
-	if (id == SATPANEL_LOWER_CENTER && GNSplit) { // guidance & navigation lower equipment bay Center third (split)
+	if (id == SATPANEL_GN_CENTER && GNSplit) { // guidance & navigation lower equipment bay Center third (split)
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL_CENTER));
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		if (MainPanelSplitted)
-		{
-			oapiSetPanelNeighbours(SATPANEL_LOWER_LEFT,SATPANEL_LOWER_RIGHT,SATPANEL_MAIN,SATPANEL_TELESCOPE);
-		} else {
-			oapiSetPanelNeighbours(SATPANEL_LOWER_LEFT,SATPANEL_LOWER_RIGHT,SATPANEL_MAIN_MIDDLE,SATPANEL_TELESCOPE);
-		}
+		oapiSetPanelNeighbours(SATPANEL_GN_LEFT, SATPANEL_GN_RIGHT, SATPANEL_LOWER_MAIN, SATPANEL_TELESCOPE);
 
 		AddLeftCenterLowerPanelAreas(-1140);
 		AddCenterLowerPanelAreas(-1140);
@@ -1005,16 +993,11 @@ bool Saturn::clbkLoadPanel (int id) {
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
-	if (id == SATPANEL_LOWER_RIGHT && GNSplit) { // guidance & navigation lower equipment bay Right third (split)
+	if (id == SATPANEL_GN_RIGHT && GNSplit) { // guidance & navigation lower equipment bay Right third (split)
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL_RIGHT));
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		if (MainPanelSplitted)
-		{
-			oapiSetPanelNeighbours(SATPANEL_LOWER_CENTER,-1,SATPANEL_MAIN,SATPANEL_TELESCOPE);
-		} else {
-			oapiSetPanelNeighbours(SATPANEL_LOWER_CENTER,-1,SATPANEL_MAIN_RIGHT,SATPANEL_TELESCOPE);
-		}
+		oapiSetPanelNeighbours(SATPANEL_GN_CENTER, -1, SATPANEL_RIGHT_CB, SATPANEL_TELESCOPE);
 
 		AddRightCenterLowerPanelAreas(-2397);
 		AddRightLowerPanelAreas(-2397);
@@ -1023,33 +1006,33 @@ bool Saturn::clbkLoadPanel (int id) {
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
-	if (MainPanelSplitted && id == SATPANEL_MAIN_LEFT) {
+	if (MainPanelSplit && id == SATPANEL_MAIN_LEFT) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_LEFT_PANEL));
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		if (GNSplit)
-		{
-			oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_MAIN_MIDDLE, SATPANEL_LEFT_RNDZ_WINDOW, SATPANEL_LOWER_LEFT);
-		} else {
-			oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_MAIN_MIDDLE, SATPANEL_LEFT_RNDZ_WINDOW, SATPANEL_LOWER);
-		}
+		oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_MAIN_MIDDLE, SATPANEL_LEFT_RNDZ_WINDOW, SATPANEL_LOWER_LEFT);
+
 		AddLeftMainPanelAreas();
 		AddLeftMiddleMainPanelAreas(0);
+
+		// Dummy 1px MFDs in order to force Orbiter to load the MFD data from the scenario
+		MFDSPEC mfds_user1 = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
+		MFDSPEC mfds_user2 = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
+		MFDSPEC mfds_right = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
+		oapiRegisterMFD(MFD_USER1, mfds_user1);
+		oapiRegisterMFD(MFD_USER2, mfds_user2);
+		oapiRegisterMFD(MFD_RIGHT, mfds_right);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
-	if (MainPanelSplitted && id == SATPANEL_MAIN_MIDDLE) {
+	if (MainPanelSplit && id == SATPANEL_MAIN_MIDDLE) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_MIDDLE_PANEL));
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		if (GNSplit)
-		{
-			oapiSetPanelNeighbours(SATPANEL_MAIN_LEFT, SATPANEL_MAIN_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER_CENTER);
-		} else {
-			oapiSetPanelNeighbours(SATPANEL_MAIN_LEFT, SATPANEL_MAIN_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER);		
-		}
+		oapiSetPanelNeighbours(SATPANEL_MAIN_LEFT, SATPANEL_MAIN_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER_MAIN);
+
 		AddLeftMiddleMainPanelAreas(-1022);
 		AddRightMiddleMainPanelAreas(-1022);
 
@@ -1057,17 +1040,12 @@ bool Saturn::clbkLoadPanel (int id) {
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
-	if (MainPanelSplitted && id == SATPANEL_MAIN_RIGHT) {
+	if (MainPanelSplit && id == SATPANEL_MAIN_RIGHT) {
 
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_RIGHT_PANEL));
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		if (GNSplit)
-		{
-			oapiSetPanelNeighbours(SATPANEL_MAIN_MIDDLE, SATPANEL_RIGHT, SATPANEL_RIGHT_RNDZ_WINDOW, SATPANEL_LOWER_RIGHT);
-		} else {
-			oapiSetPanelNeighbours(SATPANEL_MAIN_MIDDLE, SATPANEL_RIGHT, SATPANEL_RIGHT_RNDZ_WINDOW, SATPANEL_LOWER);
-		}
+		oapiSetPanelNeighbours(SATPANEL_MAIN_MIDDLE, SATPANEL_RIGHT, SATPANEL_RIGHT_RNDZ_WINDOW, SATPANEL_RIGHT_CB);
 		
 		AddRightMiddleMainPanelAreas(-1772);
 		AddRightMainPanelAreas(-1772);
@@ -1076,21 +1054,22 @@ bool Saturn::clbkLoadPanel (int id) {
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
-	if (!MainPanelSplitted && id == SATPANEL_MAIN) { // main instrument panel
+	if (!MainPanelSplit && id == SATPANEL_MAIN) { // main instrument panel
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_PANEL));
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		if (GNSplit)
-		{
-			oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER_CENTER);
-		} else {
-			oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER);
-		}
+		oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER_MAIN);
 		
 		AddLeftMainPanelAreas();
 		AddLeftMiddleMainPanelAreas(0);
 		AddRightMiddleMainPanelAreas(0);
 		AddRightMainPanelAreas(0);
+
+		// Dummy 1px MFDs in order to force Orbiter to load the MFD data from the scenario
+		MFDSPEC mfds_user1 = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
+		MFDSPEC mfds_user2 = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
+		oapiRegisterMFD(MFD_USER1, mfds_user1);
+		oapiRegisterMFD(MFD_USER2, mfds_user2);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1100,10 +1079,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_PANEL));
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		if (MainPanelSplitted) 
-			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_MAIN_LEFT, -1, -1);
+		if (MainPanelSplit) 
+			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_MAIN_LEFT, -1, SATPANEL_LOWER_LEFT);
 		else
-			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_MAIN, -1, -1);
+			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_MAIN, -1, SATPANEL_LOWER_LEFT);
 
 		oapiRegisterPanelArea (AID_LEFTCOASSWITCH,								_R(1316,   63, 1350,   94), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTTUTILITYPOWERSWITCH,						_R(1425,   81, 1459,  112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1161,10 +1140,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_PANEL));
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		if (MainPanelSplitted) 
-			oapiSetPanelNeighbours(SATPANEL_MAIN_RIGHT, -1, -1, -1);
+		if (MainPanelSplit) 
+			oapiSetPanelNeighbours(SATPANEL_MAIN_RIGHT, -1, -1, SATPANEL_RIGHT_CB);
 		else
-			oapiSetPanelNeighbours(SATPANEL_MAIN, -1, -1, -1);
+			oapiSetPanelNeighbours(SATPANEL_MAIN, -1, -1, SATPANEL_RIGHT_CB);
 
 		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 311,  881,  475,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 825, 1428,  901, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1231,7 +1210,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW));
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		if (MainPanelSplitted) 
+		if (MainPanelSplit) 
 			oapiSetPanelNeighbours(-1, SATPANEL_HATCH_WINDOW, -1, SATPANEL_MAIN_LEFT);
 		else
 			oapiSetPanelNeighbours(-1, SATPANEL_HATCH_WINDOW, -1, SATPANEL_MAIN);
@@ -1251,7 +1230,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_RNDZ_WINDOW));
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		if (MainPanelSplitted) 
+		if (MainPanelSplit) 
 			oapiSetPanelNeighbours(SATPANEL_HATCH_WINDOW, -1, -1, SATPANEL_MAIN_RIGHT);
 		else
 			oapiSetPanelNeighbours(SATPANEL_HATCH_WINDOW, -1, -1, SATPANEL_MAIN);
@@ -1264,7 +1243,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW));
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
-		if (MainPanelSplitted) 
+		if (MainPanelSplit) 
 			oapiSetPanelNeighbours(SATPANEL_LEFT_RNDZ_WINDOW, SATPANEL_RIGHT_RNDZ_WINDOW, -1, SATPANEL_MAIN_MIDDLE);
 		else
 			oapiSetPanelNeighbours(SATPANEL_LEFT_RNDZ_WINDOW, SATPANEL_RIGHT_RNDZ_WINDOW, -1, SATPANEL_MAIN);
@@ -1299,6 +1278,53 @@ bool Saturn::clbkLoadPanel (int id) {
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
+	if (id == SATPANEL_LOWER_LEFT) { 
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_LEFT_PANEL));
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+
+		if (GNSplit) 
+			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_LOWER_MAIN, SATPANEL_LEFT, SATPANEL_GN_LEFT);
+		else
+			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_LOWER_MAIN, SATPANEL_LEFT, SATPANEL_GN);
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+	}
+
+	if (id == SATPANEL_LOWER_MAIN) { 
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_MAIN_PANEL));
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+
+		int top, bottom;
+		if (GNSplit) 
+			bottom = SATPANEL_GN_CENTER;
+		else
+			bottom = SATPANEL_GN;
+
+		if (MainPanelSplit)
+			top = SATPANEL_MAIN_MIDDLE;
+		else
+			top = SATPANEL_MAIN;
+		
+		oapiSetPanelNeighbours(SATPANEL_LOWER_LEFT, SATPANEL_RIGHT_CB, top, bottom);
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+	}
+
+	if (id == SATPANEL_RIGHT_CB) { 
+		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_CB_PANEL));
+		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
+
+		if (GNSplit) 
+			oapiSetPanelNeighbours(SATPANEL_LOWER_MAIN, -1, SATPANEL_RIGHT, SATPANEL_GN_RIGHT);
+		else
+			oapiSetPanelNeighbours(SATPANEL_LOWER_MAIN, -1, SATPANEL_RIGHT, SATPANEL_GN);
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+	}
+
 	if (id == SATPANEL_SEXTANT) { // Sextant
 		if (renderViewportIsWideScreen) {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT_WIDE));
@@ -1306,7 +1332,7 @@ bool Saturn::clbkLoadPanel (int id) {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT));
 		}
 
-		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, SATPANEL_LOWER, SATPANEL_LOWER);
+		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, SATPANEL_GN, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 		
 		if (renderViewportIsWideScreen) {
@@ -1339,7 +1365,7 @@ bool Saturn::clbkLoadPanel (int id) {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE_WIDE));
 		else
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE));
-		oapiSetPanelNeighbours( SATPANEL_SEXTANT, -1, SATPANEL_LOWER, SATPANEL_LOWER);
+		oapiSetPanelNeighbours( SATPANEL_SEXTANT, -1, SATPANEL_GN, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (renderViewportIsWideScreen) {
@@ -1372,7 +1398,7 @@ bool Saturn::clbkLoadPanel (int id) {
 	//
 	// Change to desired panel next timestep.
 	//
-    if (!InPanel && id != PanelId && !(!MainPanelSplitted && (PanelId == SATPANEL_MAIN_MIDDLE || PanelId == SATPANEL_MAIN_RIGHT))) {
+    if (!InPanel && id != PanelId && !(!MainPanelSplit && (PanelId == SATPANEL_MAIN_MIDDLE || PanelId == SATPANEL_MAIN_RIGHT))) {
 		CheckPanelIdInTimestep = true;
 	} else {
 	    PanelId = id;
@@ -1476,7 +1502,7 @@ void Saturn::AddLeftMiddleMainPanelAreas(int offset) {
 
 	// MFDs
 	MFDSPEC mfds_mainleft = {{1462 + offset, 1075, 1721 + offset, 1330}, 6, 6, 37, 37};
-    oapiRegisterMFD(MFD_LEFT , mfds_mainleft);
+    oapiRegisterMFD(MFD_LEFT, mfds_mainleft);
 	oapiRegisterPanelArea (AID_MFDMAINLEFT,	    							_R(1413 + offset, 1060, 1772 + offset, 1360), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 }
 
@@ -4331,21 +4357,24 @@ void Saturn::clbkMFDMode (int mfd, int mode) {
 	switch (mfd) {
 	case MFD_LEFT:
 		oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINLEFT);
-		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNLEFT);
+		oapiTriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINLEFT);
+		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNLEFT);
 		break;
 
 	case MFD_RIGHT:
-		oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINRIGHT);
+		if (!MainPanelSplit) oapiTriggerPanelRedrawArea(SATPANEL_MAIN, AID_MFDMAINRIGHT);
+		oapiTriggerPanelRedrawArea(SATPANEL_MAIN_MIDDLE, AID_MFDMAINRIGHT);
+		oapiTriggerPanelRedrawArea(SATPANEL_MAIN_RIGHT, AID_MFDMAINRIGHT);
 		oapiTriggerPanelRedrawArea(SATPANEL_LEFT_RNDZ_WINDOW, AID_MFDDOCK);
-		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNRIGHT);
+		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNRIGHT);
 		break;
 
 	case MFD_USER1:
-		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNUSER1);
+		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER1);
 		break;
 
 	case MFD_USER2:
-		oapiTriggerPanelRedrawArea(SATPANEL_LOWER, AID_MFDGNUSER2);
+		oapiTriggerPanelRedrawArea(SATPANEL_GN, AID_MFDGNUSER2);
 		break;
 
 	}

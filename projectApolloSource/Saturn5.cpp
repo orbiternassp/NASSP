@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.106  2007/11/26 17:59:05  movieman523
+  *	Assorted tidying up of state variable structures.
+  *	
   *	Revision 1.105  2007/10/18 00:23:17  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -574,7 +577,7 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 	const int nlift = 11;
 	double factor,dfact,lfact,frac,drag,lift;
 	static const double AOA[nlift] =
-		{-180*RAD,-160*RAD,-150*RAD,-120*RAD,-90*RAD,0*RAD,90*RAD,120*RAD,150*RAD,160*RAD,180*RAD};
+		{-180.*RAD,-160.*RAD,-150.*RAD,-120.*RAD,-90.*RAD,0*RAD,90.*RAD,120.*RAD,150.*RAD,160.*RAD,180.*RAD};
 	static const double Mach[17] = {0.0,0.7,0.9,1.1,1.2,1.35,1.65,2.0,3.0,5.0,8.0,10.5,13.5,18.2,21.5,31.0,50.0};
 	static const double LFactor[17] = {0.3,0.392,0.466,0.607,0.641,0.488,0.446,0.435,0.416,0.415,0.405,0.400,0.385,0.385,0.375,0.35,0.33};
 	static const double DFactor[17] = {0.9,0.944,0.991,1.068,1.044,1.270,1.28,1.267,1.213,1.134,1.15,1.158,1.8,1.8,1.193,1.224,1.25};
@@ -1828,7 +1831,7 @@ void SaturnV::DoFirstTimestep(double simt)
 // Orbiter calls here via callback prior to every timestep.
 // This function must call GenericTimestep() to operate the CSM.
 
-void SaturnV::Timestep(double simt, double simdt)
+void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 {
 	//
@@ -1847,7 +1850,7 @@ void SaturnV::Timestep(double simt, double simdt)
 		return;
 	}
 
-	GenericTimestep(simt, simdt);
+	GenericTimestep(simt, simdt, mjd);
 
 	// DS20070205 LVDC++
 	if(use_lvdc){
@@ -1955,7 +1958,9 @@ void SaturnV::Timestep(double simt, double simdt)
 		if (GetPropellantMass(ph_3rd) / GetPropellantMaxMass(ph_3rd) > 0.51)
 			SetSIVbCMixtureRatio(4.5);
 		else
-			SetSIVbCMixtureRatio(4.9);
+			/// \todo PU-Shift during burn disabled until the IU GNC (i.e. IMFD) can handle that
+			// SetSIVbCMixtureRatio(4.9);
+			SetSIVbCMixtureRatio(4.5);
 			
 		StageOrbitSIVB(simt, simdt);
 		break;
@@ -2167,26 +2172,9 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	}
 
 	//
-	// To be perfectly honest, I'm not 100% sure what
-	// dockstate does anymore.
+	// Setup of the generic systems
 	//
 
-	// Seems to be useless...
-	/* switch (dockstate) {
-		case 1:
-			break;
-		case 2:
-			break;
-		case 3:
-			break;
-		case 4:
-			break;
-		case 5:
-			/// \todo SetCSM2Stage is buggy
-			// SetCSM2Stage ();
-			break;
-	} */
-	
 	GenericLoadStateSetup();
 
 	if (stage < LAUNCH_STAGE_SIVB) {
@@ -2194,11 +2182,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 			soundlib.LoadMissionSound(SPUShiftS, PUSHIFT_SOUND, PUSHIFT_SOUND);
 		}
 	}
-
-	//
-	// Enable or disable RCS.
-	//
-	CheckRCSState();
 }
 
 void SaturnV::ConfigureStageMeshes(int stage_state)

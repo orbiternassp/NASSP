@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.146  2007/10/18 00:23:21  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.145  2007/08/13 16:06:16  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -736,7 +739,7 @@ void Saturn::SystemsInit() {
 	}
 }
 
-void Saturn::SystemsTimestep(double simt, double simdt) {
+void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	//
 	// Don't clock the computer and the internal systems unless we're actually at pre-launch.
@@ -771,7 +774,7 @@ void Saturn::SystemsTimestep(double simt, double simdt) {
 		//
 		if (stage < CSM_LEM_STAGE)
 		{
-			iu.Timestep(MissionTime, simdt);
+			iu.Timestep(MissionTime, simdt, mjd);
 		}	
 		bmag1.Timestep(simdt);
 		bmag2.Timestep(simdt);

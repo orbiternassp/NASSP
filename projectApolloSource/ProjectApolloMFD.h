@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/10/18 00:23:17  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.3  2006/12/19 15:55:55  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -48,8 +51,6 @@ public:
 	bool ConsumeButton (int bt, int event);
 	bool ConsumeKeyBuffered (DWORD key);
 	void Update (HDC hDC);
-	bool SetTLITime (char *rstr);
-	bool SetTLIVelocity (char *rstr);
 	bool SetCrewNumber (char *rstr);
 	bool SetPrimECSTestHeaterPower (char *rstr);
 	bool SetSecECSTestHeaterPower (char *rstr);

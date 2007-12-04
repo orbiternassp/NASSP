@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2007/10/18 00:23:17  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.73  2007/08/13 16:06:07  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -427,7 +430,7 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 	const int nlift = 11;
 	double factor,dfact,lfact,frac,drag,lift;
 	static const double AOA[nlift] =
-		{-180*RAD,-160*RAD,-150*RAD,-120*RAD,-90*RAD,0*RAD,90*RAD,120*RAD,150*RAD,160*RAD,180*RAD};
+		{-180.*RAD,-160.*RAD,-150.*RAD,-120.*RAD,-90.*RAD,0*RAD,90.*RAD,120.*RAD,150.*RAD,160.*RAD,180.*RAD};
 	static const double Mach[17] = {0.0,0.7,0.9,1.1,1.2,1.35,1.65,2.0,3.0,5.0,8.0,10.5,13.5,18.2,21.5,31.0,50.0};
 	static const double LFactor[17] = {0.3,0.392,0.466,0.607,0.641,0.488,0.446,0.435,0.416,0.415,0.405,0.400,0.385,0.385,0.375,0.35,0.33};
 	static const double DFactor[17] = {0.9,0.944,0.991,1.068,1.044,1.270,1.28,1.267,1.213,1.134,1.15,1.158,1.8,1.8,1.193,1.224,1.25};
@@ -447,27 +450,6 @@ void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double 
 	*cd = drag*(frac*CD[j+1]+(1.0-frac)*CD[j]);
 	*cl = lift*(frac*CL[j+1]+(1.0-frac)*CL[j]);
 	*cm = factor*(frac*CM[j+1]+(1.0-frac)*CM[j]);
-}
-
-double LiftCoeff (double aoa)
-{
-	const int nlift = 9;
-	static const double AOA[nlift] =
-		{-180*RAD,-155*RAD,-154*RAD,-34*RAD,0*RAD,34*RAD,154*RAD,155*RAD,180*RAD};
-//static const double CL[nlift]  = {0.06375,  0.375,       0,      0,    0,
-//0,      0,      0.1275, 0.06375};
-	static const double CL[nlift]  = {0.1275,  0.3575,       0.0975,      0.0375,
-		0.0375,      0.0975, 0.3575, 0.1275};
-	static const double SCL[nlift] = {(CL[1]-CL[0])/(AOA[1]-AOA[0]),
-		(CL[2]-CL[1])/(AOA[2]-AOA[1]),
-		(CL[3]-CL[2])/(AOA[3]-AOA[2]),
-		(CL[4]-CL[3])/(AOA[4]-AOA[3]),
-		(CL[5]-CL[4])/(AOA[5]-AOA[4]), (CL[6]-CL[5])/(AOA[6]-AOA[5]),
-		(CL[7]-CL[6])/(AOA[7]-AOA[6]), (CL[8]-CL[7])/(AOA[8]-AOA[7])};
-
-	int i;
-	for (i = 0; i < nlift-1 && AOA[i+1] < aoa; i++);
-	return -(CL[i] + (aoa-AOA[i])*SCL[i]);
 }
 
 // ==============================================================
@@ -919,7 +901,7 @@ void Saturn1b::SetSIVBMixtureRatio (double ratio)
 	SetThrusterMax0 (th_main[0], THRUST_SECOND_VAC * ThrustAdjust);
 }
 
-void Saturn1b::Timestep (double simt, double simdt)
+void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 {
 	//
@@ -937,7 +919,7 @@ void Saturn1b::Timestep (double simt, double simdt)
 		return;
 	}
 
-	GenericTimestep(simt, simdt);
+	GenericTimestep(simt, simdt, mjd);
 
 	if (hAstpDM){
 		if (DestroyAstp) {
@@ -1244,8 +1226,11 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			break;
 	}
 
+	//
+	// Setup of the generic systems
+	//
+
 	GenericLoadStateSetup();
-	FirstTimestep = true;
 
 	if (stage < STAGE_ORBIT_SIVB) {
 		if (Crewed) {
@@ -1253,10 +1238,6 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		}
 	}
 
-	//
-	// Enable or disable RCS.
-	//
-	CheckRCSState();
 }
 
 void Saturn1b::ConfigureStageMeshes(int stage_state)

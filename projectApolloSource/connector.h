@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2006/07/27 22:38:57  movieman523
+  *	Added CSM to LEM power connector.
+  *	
   *	Revision 1.5  2006/07/27 20:40:06  movieman523
   *	We can now draw power from the SIVb in the Apollo to Venus scenario.
   *	
@@ -71,6 +74,7 @@ union ConnectorMessageValue
 	bool bValue;			///< Boolean message value.
 	void *pValue;			///< Pointer message value.
 	OBJHANDLE hValue;		///< Orbiter handle.
+	VECTOR3 vValue;			///< Vector message value;
 };
 
 ///
@@ -103,6 +107,11 @@ struct ConnectorMessage
 	/// \brief Message value 3.
 	///
 	ConnectorMessageValue val3;
+
+	///
+	/// \brief Message value 4.
+	///
+	ConnectorMessageValue val4;
 };
 
 ///

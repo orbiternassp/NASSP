@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/10/18 00:23:27  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.5  2007/06/06 15:02:22  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -69,6 +72,7 @@ public:
 	void SPSTestSwitchToggled();
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+	void CheckPropellantMass();
 
 protected:
 	bool IsGaugingPowered();
@@ -91,8 +95,9 @@ protected:
 	PowerMerge DCPower;
 	e_object *ACPower;
 	h_Radiator *propellantLine;
-	double propellantInitialized;
+	bool propellantInitialized;
 	double lastPropellantMass;
+	double propellantBuffer;
 };
 
 ///

@@ -20,6 +20,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.93  2007/11/26 17:59:06  movieman523
+  *	Assorted tidying up of state variable structures.
+  *	
   *	Revision 1.92  2007/11/25 06:55:42  movieman523
   *	Tidied up surface ID code, moving the enum from a shared include file to specific versions for the Saturn and LEM classes.
   *	
@@ -567,20 +570,23 @@ typedef struct {
 // Start putting in defines rather than hard-coded numbers.
 //
 
+// All inline functions and const variables should be static, see
+// http://www.orbitersim.com/Forum/Default.aspx?g=posts&m=172439#172439
+
 //
 // Earth radius and gravity constants.
 //
 
 static const double ERADIUS = 6371.0;
-const double GK    = 6.67259e-20 ;			///<  Gravitational constant (km^3/(kg sec^2))
-const double GKSI  = 6.67259e-20 * 1e9;
-const double PSI   = 0.000145038;			///< Pa to PSI
-const double MMHG  = 0.00750064;			///< Pa to mmHg
-const double INH2O = 0.00401474;			///< Pa to in H2O
-const double LBH   = 7.93665;				///< g/s to lb/h
-const double FPS   = 3.2808399;				///< m/s to ft/s
+static const double GK    = 6.67259e-20 ;			///<  Gravitational constant (km^3/(kg sec^2))
+static const double GKSI  = 6.67259e-20 * 1e9;
+static const double PSI   = 0.000145038;			///< Pa to PSI
+static const double MMHG  = 0.00750064;				///< Pa to mmHg
+static const double INH2O = 0.00401474;				///< Pa to in H2O
+static const double LBH   = 7.93665;				///< g/s to lb/h
+static const double FPS   = 3.2808399;				///< m/s to ft/s
 
-const double TWO_PI= (PI * 2);				///< Twice Pi.
+static const double TWO_PI = (PI * 2.);				///< Twice Pi.
 
 ///
 /// This is a safe 'minus infinity' time to use as the default value for timers. So if you compare your
@@ -589,12 +595,12 @@ const double TWO_PI= (PI * 2);				///< Twice Pi.
 ///
 /// \brief Minus infinity time for initialising MET variables safely.
 ///
-const double MINUS_INFINITY = (-1000000000.0);
+static const double MINUS_INFINITY = (-1000000000.0);
 
 ///
 /// \brief Convert Kelvin temperature to Fahrenheit temperature for cabin displays.
 ///
-inline double KelvinToFahrenheit(double kelvin) {
+static inline double KelvinToFahrenheit(double kelvin) {
 	return kelvin * 1.8 - 459.67;
 }
 

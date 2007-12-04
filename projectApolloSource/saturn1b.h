@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2007/06/06 15:02:17  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.20  2006/08/27 21:57:10  tschachim
   *	Bugfix RCS handing in CSM timestep.
   *	
@@ -149,7 +152,7 @@ protected:
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
-	void Timestep (double simt, double simdt);
+	void Timestep (double simt, double simdt, double mjd);
 	void DockStage (UINT dockstatus);
 	void StageOne(double simt, double simdt);
 	void StageStartSIVB(double simt);

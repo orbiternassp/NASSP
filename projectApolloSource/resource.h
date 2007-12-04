@@ -640,6 +640,10 @@
 #define IDB_BORDER_65x65									923
 #define IDB_EMERGENCY_PRESS_ROTARY							924
 #define AID_EMERGENCY_CABIN_PRESSURE_ROTARY					925  
+#define IDB_CSM_LOWER_LEFT_PANEL                            926
+#define IDB_CSM_LOWER_MAIN_PANEL                            927
+#define IDB_CSM_RIGHT_CB_PANEL                              928
+
 
 // Next default values for new objects
 //
