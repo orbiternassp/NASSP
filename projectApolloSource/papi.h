@@ -20,17 +20,99 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
+  **************************** Revision History ****************************
+  *	$Log$
   **************************************************************************/
 
-inline void papiWriteScenario_double(FILEHANDLE scn, char *item, double d) {
+// All inline functions and const variables should be static, see
+// http://www.orbitersim.com/Forum/Default.aspx?g=posts&m=172439#172439
+
+static inline void papiWriteScenario_bool(FILEHANDLE scn, char *item, bool b) {
+
+	oapiWriteScenario_int(scn, item, (b ? 1 : 0));
+}
+
+static inline void papiWriteScenario_double(FILEHANDLE scn, char *item, double d) {
 
 	char buffer[256];
 
-	sprintf(buffer, "  %s %lf", item, d);
+	sprintf(buffer, "  %s %.12lf", item, d);
 	oapiWriteLine(scn, buffer);
 }
 
-inline void papiCameraSetAperture(double fov) {
+static inline void papiWriteScenario_vec(FILEHANDLE scn, char *item, VECTOR3 v) {
+
+	char buffer[256];
+
+	sprintf(buffer, "  %s %.12lf %.12lf %.12lf", item, v.x, v.y, v.z);
+	oapiWriteLine(scn, buffer);
+}
+
+static inline bool papiReadScenario_bool(char *line, char *item, bool &b) {
+
+	char buffer[256];
+	int i = 0;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!stricmp (buffer, item)) {
+			if (sscanf(line, "%s %d", buffer, &i) == 2) {
+				b = (i != 0);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+static inline bool papiReadScenario_int(char *line, char *item, int &i) {
+
+	char buffer[256];
+	int j;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!stricmp (buffer, item)) {
+			if (sscanf(line, "%s %d", buffer, &j) == 2) {
+				i = j;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+static inline bool papiReadScenario_double(char *line, char *item, double &d) {
+
+	char buffer[256];
+	double e;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!stricmp (buffer, item)) {
+			if (sscanf(line, "%s %lf", buffer, &e) == 2) {
+				d = e;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+static inline bool papiReadScenario_vec(char *line, char *item, VECTOR3 &v) {
+
+	char buffer[256];
+	VECTOR3 w;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!stricmp (buffer, item)) {
+			if (sscanf(line, "%s %lf %lf %lf", buffer, &w.x, &w.y, &w.z) == 4) {
+				v = w;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+static inline void papiCameraSetAperture(double fov) {
 
 	// Artlav's camera aperture hack is working with the 20060929 version only
 	int version = oapiGetOrbiterVersion();
@@ -62,7 +144,7 @@ inline void papiCameraSetAperture(double fov) {
 	*pfovx=(fov*1.06869);
 }
 
-inline double papiCameraAperture() {
+static inline double papiCameraAperture() {
 
 	// Artlav's camera aperture hack is working with the 20060929 version only
 	int version = oapiGetOrbiterVersion();
