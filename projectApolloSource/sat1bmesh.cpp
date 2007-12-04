@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.61  2007/12/03 07:14:22  movieman523
+  *	Moved Saturn 1b SIVB mesh back so that payload offsets match.
+  *	
   *	Revision 1.60  2007/12/02 07:13:39  movieman523
   *	Updates for Apollo 5 and unmanned Saturn 1b missions.
   *	
@@ -338,7 +341,7 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 	AddMesh (hStage1Mesh, &mesh_dir);
 	mesh_dir=_V(0,0,2.2);
 	AddMesh (hInterstageMesh, &mesh_dir);
-	mesh_dir=_V(0,0,9.25);
+	mesh_dir=_V(0,0,13.95);
 	AddMesh (hStage2Mesh, &mesh_dir);
 	mesh_dir=_V(0,4,4.7);
     //vessel->AddMesh (hapsl, &mesh_dir);
@@ -542,7 +545,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 
 	UINT meshidx;
 
-	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
+	VECTOR3 mesh_dir=_V(0,0,13.95-12.25);
     AddMesh (hStage2Mesh, &mesh_dir);
 
 	mesh_dir=_V(1.85,1.85,24.5-12.25);

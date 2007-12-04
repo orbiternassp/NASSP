@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2007/12/03 17:53:08  movieman523
+  *	Made SIVB accept all payloads regardless of launcher, and fixed location of thrusters.
+  *	
   *	Revision 1.32  2007/12/03 07:14:22  movieman523
   *	Moved Saturn 1b SIVB mesh back so that payload offsets match.
   *	
@@ -1260,15 +1263,14 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	AddAnimationComponent(panelAnim, 0, 1, &panel4Saturn1b);
 
 	// All other meshes, Add/DelMesh in SetS4b wasn't working...
+
+	//
+	// All SIVB meshes are aligned to have the same origin. So we use the same offset
+	// for both.
+	//
 	mesh_dir = _V(0, 0, 0);
 	meshSivbSaturnVLow = AddMesh(hsat5stg3low, &mesh_dir);
 	meshSivbSaturnV = AddMesh(hsat5stg3, &mesh_dir);
-
-	//
-	// Different offsets for Saturn 1b and V stages to ensure that payload
-	// offsets match.
-	//
-	mesh_dir = _V(0, 0.0, -4.7);
 	meshSivbSaturn1bLow = AddMesh(hSat1stg2low, &mesh_dir);
 	meshSivbSaturn1b = AddMesh(hSat1stg2, &mesh_dir);
 
