@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2007/09/04 13:51:56  dseagrav
+  *	IGM first stage. It doesn't work yet.
+  *	
   *	Revision 1.34  2007/08/11 16:31:25  jasonims
   *	Changed name of BuildFirstStage to ChangeSatVBuildState  to clarify function...
   *	A little more Capcom...
@@ -145,7 +148,7 @@ public:
 	// General functions that handle calls from Orbiter.
 	//
 
-	void Timestep(double simt, double simdt);
+	void Timestep(double simt, double simdt, double mjd);
 
 	///
 	/// \brief Orbiter state loading function.

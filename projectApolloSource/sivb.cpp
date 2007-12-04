@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2007/12/04 06:51:07  movieman523
+  *	Shifted origin of Saturn 1b SIVB meshes to match Saturn V SIVB.
+  *	
   *	Revision 1.33  2007/12/03 17:53:08  movieman523
   *	Made SIVB accept all payloads regardless of launcher, and fixed location of thrusters.
   *	
@@ -767,7 +770,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	iu.Timestep(MissionTime, simdt);
+	iu.Timestep(MissionTime, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
 }
 
@@ -1642,6 +1645,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
+	case IULV_GET_GLOBAL_VEL:
+		if (OurVessel)
+		{
+			OurVessel->GetGlobalVel(*(VECTOR3 *) m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_ELEMENTS:
 		if (OurVessel)
 		{
@@ -1652,6 +1663,62 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 
 			*e = el;
 
+			return true;
+		}
+		break;
+
+	case IULV_GET_PMI:
+		if (OurVessel)
+		{
+			OurVessel->GetPMI(*(VECTOR3 *) m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_SIZE:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetSize();
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAXTHRUST:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetMaxThrust((ENGINETYPE) m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_LOCAL2GLOBAL:
+		if (OurVessel)
+		{
+			OurVessel->Local2Global(*(VECTOR3 *) m.val1.pValue, *(VECTOR3 *) m.val2.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_WEIGHTVECTOR:
+		if (OurVessel)
+		{
+			m.val2.bValue = OurVessel->GetWeightVector(*(VECTOR3 *) m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_FORCEVECTOR:
+		if (OurVessel)
+		{
+			m.val2.bValue = OurVessel->GetForceVector(*(VECTOR3 *) m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_ROTATIONMATRIX:
+		if (OurVessel)
+		{
+			OurVessel->GetRotationMatrix(*(MATRIX3 *) m.val1.pValue);
 			return true;
 		}
 		break;
@@ -1692,6 +1759,14 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel) 
 		{
 			OurVessel->SetAttitudeLinLevel(m.val1.iValue, m.val2.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_ATTITUDE_ROT_LEVEL:
+		if (OurVessel) 
+		{
+			OurVessel->SetAttitudeRotLevel(m.val1.vValue);
 			return true;
 		}
 		break;

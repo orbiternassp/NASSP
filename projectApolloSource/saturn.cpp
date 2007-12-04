@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.209  2007/12/02 07:13:39  movieman523
+  *	Updates for Apollo 5 and unmanned Saturn 1b missions.
+  *	
   *	Revision 1.208  2007/11/29 21:53:20  movieman523
   *	Generising the Volt meters.
   *	
@@ -386,6 +389,7 @@
 
 #include "CollisionSDK/CollisionSDK.h"
 
+
 //
 // Random functions from Yaagc.
 //
@@ -478,12 +482,14 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 Saturn::~Saturn()
 
 {
+	TRACESETUP("~Saturn");
+
 	if (LMPad) {
 		delete[] LMPad;
 		LMPad = 0;
 	}
 
-	// DS20060302 release DirectX stuff
+	// Release DirectX joystick stuff
 	if(js_enabled > 0){
 		// Release joysticks
 		while(js_enabled > 0){
@@ -1052,13 +1058,25 @@ void Saturn::initSaturn()
 	LMLandingLatitude = 0;
 	LMLandingLongitude = 0;
 	LMLandingAltitude = 0;
+	LMLandingBase[0] = 0;
+	LMLandingMJD = 0;
 
 	//
 	// Earth landing data.
 	//
 
-	EarthLandingLatitude = 0;
-	EarthLandingLongitude = 0;
+	SplashdownLatitude = 0;
+	SplashdownLongitude = 0;
+	EntryInterfaceMJD = 0;
+
+	//
+	// Mission TLI and LOI parameters
+	//
+
+	TransLunarInjectionMJD = 0;			
+	LunarOrbitInsertionMJD = 0;	
+	FreeReturnPericynthionMJD = 0;		
+	FreeReturnPericynthionAltitude = 0;	
 
 	//
 	// Load textures that are used a lot. Should these be global
@@ -1098,7 +1116,7 @@ void Saturn::initSaturn()
 		hBmpFDAIRollIndicator = 0;
 
 		PanelId = SATPANEL_MAIN; 		// default panel
-		MainPanelSplitted = false;
+		MainPanelSplit = false;
 		GNSplit = false;
 		InitSwitches();
 
@@ -1106,6 +1124,38 @@ void Saturn::initSaturn()
 		SetSwitches(PanelId);
 	}
 	InitSaturnCalled = true;
+}
+
+void Saturn::clbkPostCreation() {
+
+	//
+	// Check SPS propellant
+	//
+
+	SPSPropellant.CheckPropellantMass();
+
+	//
+	// IMFD5 communication support
+	//
+	
+	IMFD_Client.SetVessel(this);
+	// Set constant configuration
+	IMFDConstantConfiguration cc;
+	strcpy(cc.LandingBase, LMLandingBase);
+	strcpy(cc.TargetCelbody, "Moon");
+	cc.AZIMUTCOR = agc.GetDesiredAzimuth() - 90.0;
+	cc.MJDTLI = TransLunarInjectionMJD;
+	cc.MJDLOI = LunarOrbitInsertionMJD;
+	cc.MJDPEC = FreeReturnPericynthionMJD;
+	cc.ALTPEC = FreeReturnPericynthionAltitude;
+	cc.MJDLDG = LMLandingMJD;
+	cc.MJDSPL = EntryInterfaceMJD;
+	cc.SPL_lon = SplashdownLongitude;
+	cc.SPL_lat = SplashdownLatitude;
+	IMFD_Client.SetConstantConfiguration(cc);
+
+	// Connect to IMFD
+	IMFD_Client.Connect();
 }
 
 void Saturn::GetLEMName(char *s)
@@ -1380,6 +1430,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	// You'll also die horribly if you set time acceleration at all in the
 	// early parts of the launch.
 	//
+
 	if (stage == LAUNCH_STAGE_ONE && MissionTime < 50 &&
 		oapiGetTimeAcceleration() > 1.0) {
 		oapiSetTimeAcceleration(1.0);
@@ -1388,6 +1439,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	//
 	// Change to desired panel if necessary
 	//
+
 	if (CheckPanelIdInTimestep) {
 		oapiSetPanel(PanelId);
 		CheckPanelIdInTimestep = false;
@@ -1426,6 +1478,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	//
 	// dV because of staging
 	//
+
 	if (SeparationSpeed > 0) {
 		// For unknown reasons we need twice the force. 
 		// This may be related to the staging event.
@@ -1437,7 +1490,8 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	//
 	// Subclass specific handling
 	//
-	Timestep(simt, simdt);
+
+	Timestep(simt, simdt, mjd);
 }
 
 void Saturn::clbkPostStep (double simt, double simdt, double mjd)
@@ -1458,6 +1512,8 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		imu.Timestep(MissionTime);		
 		ems.TimeStep(MissionTime, simdt);
 		CrewStatus.Timestep(simdt);
+
+		iu.PostStep(simt, simdt, mjd);
 	}
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
 }
@@ -1581,11 +1637,14 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "CMFUELLOAD", CM_FuelMass);
 	oapiWriteScenario_float (scn, "CMMASS", CM_EmptyMass);
 
-	if (!LEMdatatransfer && iu.IsTLICapable()) {
-		oapiWriteScenario_float (scn, "MOONLAT", LMLandingLatitude);
-		oapiWriteScenario_float (scn, "MOONLONG", LMLandingLongitude);
-		oapiWriteScenario_float (scn, "MOONALT", LMLandingAltitude);
+	oapiWriteScenario_float (scn, "MOONLAT", LMLandingLatitude);
+	oapiWriteScenario_float (scn, "MOONLONG", LMLandingLongitude);
+	oapiWriteScenario_float (scn, "MOONALT", LMLandingAltitude);
+	oapiWriteScenario_float (scn, "MOONMJD", LMLandingMJD);	
+	if (LMLandingBase[0])
+		oapiWriteScenario_string (scn, "MOONBASE", LMLandingBase);
 
+	if (!LEMdatatransfer && iu.IsTLICapable()) {
 		if (LMPadCount > 0) {
 			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
 			for (i = 0; i < LMPadCount; i++) {
@@ -1594,6 +1653,15 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 			}
 		}
 	}
+
+	oapiWriteScenario_float (scn, "SPLASHLAT", SplashdownLatitude);
+	oapiWriteScenario_float (scn, "SPLASHLONG", SplashdownLongitude);
+	oapiWriteScenario_float (scn, "EARTHEIMJD", EntryInterfaceMJD);
+
+	oapiWriteScenario_float (scn, "TLIMJD", TransLunarInjectionMJD);
+	oapiWriteScenario_float (scn, "LOIMJD", LunarOrbitInsertionMJD);
+	oapiWriteScenario_float (scn, "FREERETURNPECMJD", FreeReturnPericynthionMJD);
+	oapiWriteScenario_float (scn, "FREERETURNPECALT", FreeReturnPericynthionAltitude);
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
@@ -1757,7 +1825,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	// oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 	// oapiWriteScenario_int (scn, "FDAISMOOTH", fdaiSmooth);
-	// oapiWriteScenario_int (scn, "MAINPANELSPLITTED", MainPanelSplitted);
+	// oapiWriteScenario_int (scn, "MAINPANELSPLIT", MainPanelSplit);
 	// oapiWriteScenario_int (scn, "LOWRES", LowRes ? 1 : 0);
 }
 
@@ -2495,8 +2563,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "FDAISMOOTH", 10)) {
 		    sscanf (line + 10, "%i", &fdaiSmooth);
 	    }
-	    else if (!strnicmp (line, "MAINPANELSPLITTED", 17)) {
-		    sscanf (line + 17, "%i", &MainPanelSplitted);
+	    else if (!strnicmp (line, "MAINPANELSPLIT", 14)) {
+		    sscanf (line + 14, "%i", &MainPanelSplit);
 	    }
 		else if (!strnicmp (line, "GNSPLIT", 7)) {
 			sscanf (line + 7, "%i", &GNSplit);
@@ -2561,6 +2629,41 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 		else if (!strnicmp (line, "FOVSAVE", 7)) {
 			sscanf (line + 7, "%lf", &FovSave);
+		}
+		else if (!strnicmp(line, "MOONMJD", 7)) {
+			sscanf(line + 7, "%f", &ftcp);
+			LMLandingMJD = ftcp;
+		}
+		else if (!strnicmp(line, "MOONBASE", 8)) {
+			strncpy (LMLandingBase, line + 9, 256);
+		}
+		else if (!strnicmp(line, "SPLASHLAT", 9)) {
+			sscanf(line + 9, "%f", &ftcp);
+			SplashdownLatitude = ftcp;
+		}
+		else if (!strnicmp(line, "SPLASHLONG", 10)) {
+			sscanf(line + 10, "%f", &ftcp);
+			SplashdownLongitude = ftcp;
+		}
+		else if (!strnicmp(line, "EARTHEIMJD", 10)) {
+			sscanf(line + 10, "%f", &ftcp);
+			EntryInterfaceMJD = ftcp;
+		}
+		else if (!strnicmp(line, "TLIMJD", 6)) {
+			sscanf(line + 6, "%f", &ftcp);
+			TransLunarInjectionMJD = ftcp;
+		}
+		else if (!strnicmp(line, "LOIMJD", 6)) {
+			sscanf(line + 6, "%f", &ftcp);
+			LunarOrbitInsertionMJD = ftcp;
+		}
+		else if (!strnicmp(line, "FREERETURNPECMJD", 16)) {
+			sscanf(line + 16, "%f", &ftcp);
+			FreeReturnPericynthionMJD = ftcp;
+		}
+		else if (!strnicmp(line, "FREERETURNPECALT", 16)) {
+			sscanf(line + 16, "%f", &ftcp);
+			FreeReturnPericynthionAltitude = ftcp;
 		}
 		else
 			found = false;
@@ -2890,7 +2993,7 @@ void Saturn::DoLaunch(double simt)
 	autopilot = true;
 }
 
-void Saturn::GenericTimestep(double simt, double simdt)
+void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 {
 	int i;
@@ -3027,7 +3130,7 @@ void Saturn::GenericTimestep(double simt, double simdt)
 	agc.SetFuel(actualFUEL);
 	agc.SetRVel(aSpeed);
 
-	SystemsTimestep(simt, simdt);
+	SystemsTimestep(simt, simdt, mjd);
 
 	//
 	// Check for LES jettison.
@@ -3079,7 +3182,10 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		}
 	}
 
+	//
 	// Docking radar sound only for CSM_LEM_STAGE when nothing docked
+	//
+
 	if (stage == CSM_LEM_STAGE) {
 		if (!dockingprobe.GetDocked())
 			soundlib.SoundOptionOnOff(PLAYRADARBIP, TRUE);
@@ -3090,16 +3196,43 @@ void Saturn::GenericTimestep(double simt, double simdt)
 		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 	}
 
+	//
+	// Destroy obsolete stages
+	//
+
 	if (MissionTime >= NextDestroyCheckTime) {
 		DestroyStages(simt);
 		NextDestroyCheckTime = MissionTime + 1.0;
 	}
 
+	//
+	// Actualize timed sounds
+	//
+
 	if (stage >= ONPAD_STAGE) {
 		timedSounds.Timestep(MissionTime, simdt, AutoSlow);
 	}
+
+	//
+	// Play RCS sound in case of Orbiter's attitude control is disabled
+	//
+
 	RCSSoundTimestep();
 
+	//
+	// IMFD5 communication support
+	//
+
+	IMFDVariableConfiguration vc;
+	// Set GET
+	if (MissionTime >= 0) {
+		vc.GET = MissionTime;
+	} else {
+		vc.GET = -1;
+	}
+	vc.DataTimeStamp = simt;
+	IMFD_Client.SetVariableConfiguration(vc);
+	IMFD_Client.TimeStep(); 
 }
 
 void StageTransform(VESSEL *vessel, VESSELSTATUS *vs, VECTOR3 ofs, VECTOR3 vel)
@@ -4247,10 +4380,8 @@ void Saturn::GenericLoadStateSetup()
 		//
 
 		if (!UseATC) {
-			soundlib.LoadMissionSound(Scount, LAUNCH_COUNT_10_SOUND, DEFAULT_LAUNCH_COUNT_SOUND);
 			soundlib.LoadMissionSound(LaunchS, LAUNCH_SOUND, LAUNCH_SOUND);
 			soundlib.LoadMissionSound(CabincloseoutS, CABINCLOSEOUT_SOUND, CABINCLOSEOUT_SOUND);
-			Scount.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
 			LaunchS.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
 		}
 	}
@@ -4307,6 +4438,8 @@ void Saturn::GenericLoadStateSetup()
 
 	if (stage < CSM_LEM_STAGE) {
 		soundlib.LoadSound(SepS, SEPMOTOR_SOUND, INTERNAL_ONLY);
+		soundlib.LoadMissionSound(Scount, LAUNCH_COUNT_10_SOUND, DEFAULT_LAUNCH_COUNT_SOUND);
+		Scount.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
 	}
 
 	if (!TLISoundsLoaded)
@@ -4373,6 +4506,11 @@ void Saturn::GenericLoadStateSetup()
 	// Fake up a timestep to get Orbitersound started.
 	//
 	timedSounds.Timestep(MissionTime, 0.0, AutoSlow);
+
+	//
+	// Enable or disable RCS.
+	//
+	CheckRCSState();
 }
 
 bool Saturn::CheckForLaunchShutdown()

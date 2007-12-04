@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.62  2007/12/04 06:51:07  movieman523
+  *	Shifted origin of Saturn 1b SIVB meshes to match Saturn V SIVB.
+  *	
   *	Revision 1.61  2007/12/03 07:14:22  movieman523
   *	Moved Saturn 1b SIVB mesh back so that payload offsets match.
   *	
@@ -731,6 +734,13 @@ void Saturn1b::SetSecondStageEngines ()
 		AddExhaustStream(th_ver[i], &solid_exhaust);
 	}
 	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
+
+	//
+	// Give the AGC our new stats.
+	//
+
+	agc.SetVesselStats(ISP_SECOND_VAC, THRUST_SECOND_VAC, false);
+	iu.SetVesselStats(ISP_SECOND_VAC, THRUST_SECOND_VAC);
 }
 
 //

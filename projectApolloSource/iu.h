@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2007/10/18 00:23:20  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.8  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -95,6 +98,7 @@ enum IULVMessageType
 	IULV_ACTIVATE_S4RCS,					///< Activate the SIVb RCS.
 	IULV_DEACTIVATE_S4RCS,					///< Deactivate the SIVb RCS.
 	IULV_SET_ATTITUDE_LIN_LEVEL,			///< Set thruster levels.
+	IULV_SET_ATTITUDE_ROT_LEVEL,			///< Set rotational thruster levels.
 	IULV_J2_DONE,							///< J2 is now done, turn it into a vent.
 
 	IULV_GET_STAGE,							///< Get mission stage.
@@ -109,6 +113,14 @@ enum IULVMessageType
 	IULV_GET_RELATIVE_VEL,					///< Get relative velocity.
 	IULV_GET_AP_DIST,						///< Get Ap Dist.
 	IULV_GET_ELEMENTS,						///< Get orbital elements.
+	IULV_GET_PMI,							///< Get PMI.
+	IULV_GET_SIZE,							///< Get size.
+	IULV_GET_MAXTHRUST,						///< Get max. thrust
+	IULV_LOCAL2GLOBAL,						///< Local to global
+	IULV_GET_WEIGHTVECTOR,					///< Get weight vector 
+	IULV_GET_FORCEVECTOR,					///< Get force vector
+	IULV_GET_ROTATIONMATRIX,				///< Get rotation matrix
+	IULV_GET_GLOBAL_VEL,					///< Get global vel
 };
 
 ///
@@ -178,6 +190,7 @@ public:
 	void ActivateS4RCS();
 
 	void SetAttitudeLinLevel(int a1, int a2);
+	void SetAttitudeRotLevel (VECTOR3 th);
 
 	int GetStage();
 	double GetAltitude();
@@ -186,15 +199,106 @@ public:
 	double GetMass();
 	double GetMaxFuelMass();
 	void GetStatus(VESSELSTATUS &status);
+	void GetPMI(VECTOR3 &pmi);
+	double GetSize();
+	double GetMaxThrust(ENGINETYPE eng);
+	bool GetWeightVector(VECTOR3 &w);
+	bool GetForceVector(VECTOR3 &f);
+	void GetRotationMatrix(MATRIX3 &rot);
 
+	void Local2Global(VECTOR3 &local, VECTOR3 &global);
 	void GetApDist(double &d);
 
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);
 	void GetRelativeVel(OBJHANDLE ref, VECTOR3 &v);
+	void GetGlobalVel(VECTOR3 &v);
 
-	OBJHANDLE GetElements (ELEMENTS &el, double &mjd_ref);
-
+	OBJHANDLE GetElements(ELEMENTS &el, double &mjd_ref);
 	OBJHANDLE GetGravityRef();
+};
+
+///
+/// S-IVB IU GNC
+///
+/// \ingroup LVSystems
+/// \brief S-IVB IU GNC.
+///
+class IUGNC {
+
+public:
+			 IUGNC();
+			~IUGNC();
+
+	void	Reset();
+
+	void	PostStep(double sim_mjd, double dt);
+	void	PreStep(double sim_mjd, double dt);
+
+	void	Configure(IUToLVCommandConnector *lvc, int Ref);
+	void	SetThrusterForce(double Force, double ISP, double TailOff);
+
+	VECTOR3 Get_uTD();
+	VECTOR3 Get_dV();
+	double	Get_tGO();
+	double	Get_IgnMJD() { return IgnMJD; }
+	VECTOR3 Get_vG() { return _vG; }
+	VECTOR3 Get_uTDInit() { return _uTDInit; }
+	bool	IsEngineOn() { return engine; };
+	
+	bool	ActivateP30(VECTOR3 _rign, VECTOR3 _vign, VECTOR3 _dv, double IgnMJD);
+	bool	ActivateP31(VECTOR3 _rign, VECTOR3 _vign, VECTOR3 _lap, double IgnMJD, double TgtMJD);
+
+	void LoadState(FILEHANDLE scn);
+	void SaveState(FILEHANDLE scn);
+
+private:
+
+	void    EngineOn();
+	void    EngineOff();
+
+	double	GetMass();
+	VECTOR3 Lambert(VECTOR3 init, VECTOR3 rad, double time, double mu, double dm, VECTOR3 *tv=NULL);
+
+	VECTOR3 create_vector(VECTOR3 normal, VECTOR3 zero, double angle);
+	VECTOR3 GlobalToLV(VECTOR3 _in, VECTOR3 _pos, VECTOR3 _vel);
+	VECTOR3 GlobalToP30_LVLH(VECTOR3 _in, VECTOR3 _r, VECTOR3 _v, double mass, double thrust);
+
+	// Set by IU
+	IUToLVCommandConnector *lvCommandConnector;
+	double Thrust;
+	double TailOff;
+	double ISP;
+
+	// Planet configuration
+	int Ref;
+	OBJHANDLE RefHandle;
+	double RefMu;
+	double Mass;
+
+	// ** VECTORS **
+	VECTOR3 _PIPA;
+	VECTOR3 _uTD;
+	VECTOR3 _vG;
+	VECTOR3 _r1;
+	VECTOR3 _v1;
+	VECTOR3 _ri;
+	VECTOR3 _vi;
+	VECTOR3 _r2;
+	VECTOR3 _lastWeight;
+	VECTOR3 _uTDInit;
+
+	//** FLAGS **
+	bool ExtDV;
+	bool ready;
+	bool engine;
+
+	// ** SCALARS **
+	double tGO;
+	double tBurn;
+	double IgnMJD;
+	double TInMJD;
+	double tD;
+	double CutMJD;
 };
 
 ///
@@ -215,16 +319,15 @@ public:
 	/// \param simt The current Mission Elapsed Time in seconds from launch.
 	/// \param simdt The time in seconds since the last timestep call.
 	///
-	void Timestep(double simt, double simdt);
+	void Timestep(double simt, double simdt, double mjd);
+	void PostStep(double simt, double simdt, double mjd);
 	void ChannelOutput(int address, int value);
 	void SetVesselStats(double ISP, double Thrust);
 	void GetVesselStats(double &ISP, double &Thrust);
 	void SetMissionInfo(bool tlicapable, bool crewed, int realism, double sivbburnstart, double sivbapogee);
 	bool IsTLICapable() { return TLICapable; };
-	virtual bool StartTLIBurn(double timeToEjection, double dV);
+	virtual bool StartTLIBurn(VECTOR3 RIgn, VECTOR3 VIgn, VECTOR3 dV, double MJDIgn);
 	bool IsTLIInProgress() { return (TLIBurnState != 0); }
-	double GetTLIBurnStartTime() { return TLIBurnStartTime; }
-	double GetTLIBurnEndTime() { return TLIBurnEndTime; }
 
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
@@ -250,25 +353,15 @@ protected:
 	void SIVBStop();
 	void SIVBBoiloff();
 	void TLIInhibit();
-	bool DoTLICalcs();
-	void UpdateTLICalcs();
+	VECTOR3 OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor);
 
+	int TLIBurnState;
 	bool TLIBurnStart;
 	bool TLIBurnDone;
 	int State;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
 	bool FirstTimeStepDone;
-
-	// TLI burn calculations
-	int TLIBurnState;
-	double TLIBurnTime;
-	double TLIBurnStartTime;
-	double TLIBurnEndTime;
-	double TLIBurnDeltaV;
-	double TLICutOffVel;
-	double TLIThrustDecayDV;
-	double TLILastAltitude;
 
 	//
 	// Saturn stuff
@@ -302,6 +395,12 @@ protected:
 	/// \brief Connector to launch vehicle.
 	///
 	IUToLVCommandConnector lvCommandConnector;
+
+	///
+	/// \brief Guidance
+	///
+	IUGNC GNC;
+	bool ExternalGNC;
 };
 
 //
@@ -310,5 +409,8 @@ protected:
 
 #define IU_START_STRING		"IU_BEGIN"
 #define IU_END_STRING		"IU_END"
+
+#define IUGNC_START_STRING	"IUGNC_BEGIN"
+#define IUGNC_END_STRING	"IUGNC_END"
 
 #endif

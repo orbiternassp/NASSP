@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/06/06 15:02:11  tschachim
+  *	OrbiterSound 3.5 support, various fixes and improvements.
+  *	
   *	Revision 1.6  2007/02/18 01:35:29  dseagrav
   *	MCC / LVDC++ CHECKPOINT COMMIT. No user-visible functionality added. lvimu.cpp/h and mcc.cpp/h added.
   *	
@@ -217,6 +220,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_GLOBAL_VEL:
+		if (OurVessel)
+		{
+			OurVessel->GetGlobalVel(*(VECTOR3 *) m.val1.pValue);
+			return true;
+		}
+		break;
+
 	case IULV_GET_ELEMENTS:
 		if (OurVessel)
 		{
@@ -227,6 +238,62 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 
 			*e = el;
 
+			return true;
+		}
+		break;
+
+	case IULV_GET_PMI:
+		if (OurVessel)
+		{
+			OurVessel->GetPMI(*(VECTOR3 *) m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_SIZE:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetSize();
+			return true;
+		}
+		break;
+
+	case IULV_GET_MAXTHRUST:
+		if (OurVessel)
+		{
+			m.val2.dValue = OurVessel->GetMaxThrust((ENGINETYPE) m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_LOCAL2GLOBAL:
+		if (OurVessel)
+		{
+			OurVessel->Local2Global(*(VECTOR3 *) m.val1.pValue, *(VECTOR3 *) m.val2.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_WEIGHTVECTOR:
+		if (OurVessel)
+		{
+			m.val2.bValue = OurVessel->GetWeightVector(*(VECTOR3 *) m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_FORCEVECTOR:
+		if (OurVessel)
+		{
+			m.val2.bValue = OurVessel->GetForceVector(*(VECTOR3 *) m.val1.pValue);
+			return true;
+		}
+		break;
+
+	case IULV_GET_ROTATIONMATRIX:
+		if (OurVessel)
+		{
+			OurVessel->GetRotationMatrix(*(MATRIX3 *) m.val1.pValue);
 			return true;
 		}
 		break;
@@ -273,6 +340,14 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel) 
 		{
 			OurVessel->SetAttitudeLinLevel(m.val1.iValue, m.val2.iValue);
+			return true;
+		}
+		break;
+
+	case IULV_SET_ATTITUDE_ROT_LEVEL:
+		if (OurVessel) 
+		{
+			OurVessel->SetAttitudeRotLevel(m.val1.vValue);
 			return true;
 		}
 		break;

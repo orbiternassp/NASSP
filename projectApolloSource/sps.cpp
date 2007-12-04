@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2007/10/18 00:23:25  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.8  2007/08/13 16:06:23  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -93,6 +96,7 @@ SPSPropellantSource::SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 
 	propellantInitialized = false;
 	lastPropellantMass = 0;
+	propellantBuffer = -1;
 }
 
 SPSPropellantSource::~SPSPropellantSource() {
@@ -171,8 +175,15 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 		} else {
 			propellantPressurePSI = 0;
 		}
+
+		//
+		// Helium pressure is calculated by a quadratic approximation
+		// Data points are 3600 psi with full tank (AOH), 200 psi with empty tank (guessed, otherwise it
+		// would be lower than prop. pressure) and 1500 psi at 39% (Apollo 12 flight journal, GET 081:51:57)
+		//
+
 		double pMaxForPressures = our_vessel->GetPropellantMaxMass(source_prop);
-		heliumPressurePSI = 3400.0 * (p / pMaxForPressures) * (p / pMaxForPressures) + 200.0;
+		heliumPressurePSI = 100.0 * (p / pMaxForPressures) * (p / pMaxForPressures) + 3300.0 * (p / pMaxForPressures) + 200.0;
 	}
 
 	// Propellant masses for display
@@ -384,18 +395,21 @@ double SPSPropellantSource::GetPropellantLineTempF() {
 void SPSPropellantSource::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, SPSPROPELLANT_START_STRING);
-	oapiWriteScenario_float(scn, "OXIDMASS", oxidMass);
-	oapiWriteScenario_float(scn, "PRIMOXIDFLOWVALVE", primOxidFlowValve);
-	oapiWriteScenario_float(scn, "SECOXIDFLOWVALVE", secOxidFlowValve);
-	oapiWriteScenario_float(scn, "PRIMTESTSTATUS", primTestStatus);
-	oapiWriteScenario_float(scn, "PRIMTESTTIMER", primTestTimer);
-	oapiWriteScenario_float(scn, "AUXTESTSTATUS", auxTestStatus);
-	oapiWriteScenario_float(scn, "PROPELLANTMASSTODISPLAY", propellantMassToDisplay);
-	oapiWriteScenario_float(scn, "OXIDMASSTODISPLAY", oxidMassToDisplay);
-	oapiWriteScenario_float(scn, "PROPELLANTMAXMASSTODISPLAY", propellantMaxMassToDisplay);
-	oapiWriteScenario_float(scn, "PROPELLANTPRESSUREPSI", propellantPressurePSI);
-	oapiWriteScenario_float(scn, "HELIUMPRESSUREPSI", heliumPressurePSI);
-	oapiWriteScenario_float(scn, "LASTPROPELLANTMASSHELIUMVALVESCLOSED", lastPropellantMassHeliumValvesClosed);
+	papiWriteScenario_double(scn, "OXIDMASS", oxidMass);
+	papiWriteScenario_double(scn, "PRIMOXIDFLOWVALVE", primOxidFlowValve);
+	papiWriteScenario_double(scn, "SECOXIDFLOWVALVE", secOxidFlowValve);
+	papiWriteScenario_double(scn, "PRIMTESTSTATUS", primTestStatus);
+	papiWriteScenario_double(scn, "PRIMTESTTIMER", primTestTimer);
+	papiWriteScenario_double(scn, "AUXTESTSTATUS", auxTestStatus);
+	papiWriteScenario_double(scn, "PROPMASSTODISPLAY", propellantMassToDisplay);
+	papiWriteScenario_double(scn, "OXIDMASSTODISPLAY", oxidMassToDisplay);
+	papiWriteScenario_double(scn, "PROPELLANTMAXMASSTODISPLAY", propellantMaxMassToDisplay);
+	papiWriteScenario_double(scn, "PROPELLANTPRESSUREPSI", propellantPressurePSI);
+	papiWriteScenario_double(scn, "HELIUMPRESSUREPSI", heliumPressurePSI);
+	papiWriteScenario_double(scn, "LASTPROPELLANTMASSHELIUMVALVESCLOSED", lastPropellantMassHeliumValvesClosed);
+	if (source_prop && our_vessel)
+		papiWriteScenario_double(scn, "PROPELLANTMASS", our_vessel->GetPropellantMass(source_prop));
+			
 	oapiWriteScenario_int(scn, "HELIUMVALVEAOPEN", (heliumValveAOpen ? 1 : 0));
 	oapiWriteScenario_int(scn, "HELIUMVALVEBOPEN", (heliumValveBOpen ? 1 : 0));
 	oapiWriteLine(scn, SPSPROPELLANT_END_STRING);
@@ -403,8 +417,8 @@ void SPSPropellantSource::SaveState(FILEHANDLE scn) {
 
 void SPSPropellantSource::LoadState(FILEHANDLE scn) {
 
-	char *line;
 	int i;
+	char *line;
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, SPSPROPELLANT_END_STRING, sizeof(SPSPROPELLANT_END_STRING)))
@@ -415,11 +429,11 @@ void SPSPropellantSource::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "PROPELLANTMAXMASSTODISPLAY", 26)) {
 			sscanf (line+26, "%lf", &propellantMaxMassToDisplay);
 		}
-		else if (!strnicmp (line, "PROPELLANTMASSTODISPLAY", 23)) {
-			sscanf (line+23, "%lf", &propellantMassToDisplay);
-		}
 		else if (!strnicmp (line, "PROPELLANTPRESSUREPSI", 21)) {
 			sscanf (line+21, "%lf", &propellantPressurePSI);
+		}
+		else if (!strnicmp (line, "PROPMASSTODISPLAY", 17)) {
+			sscanf (line+17, "%lf", &propellantMassToDisplay);
 		}
 		else if (!strnicmp (line, "HELIUMPRESSUREPSI", 17)) {
 			sscanf (line+17, "%lf", &heliumPressurePSI);
@@ -441,6 +455,9 @@ void SPSPropellantSource::LoadState(FILEHANDLE scn) {
 			sscanf (line+16, "%d", &i);
 			heliumValveBOpen = (i != 0);
 		}
+		else if (!strnicmp (line, "PROPELLANTMASS", 14)) {
+			sscanf (line+14, "%lf", &propellantBuffer);
+		}
 		else if (!strnicmp (line, "PRIMTESTSTATUS", 14)) {
 			sscanf (line+14, "%lf", &primTestStatus);
 		}
@@ -454,6 +471,12 @@ void SPSPropellantSource::LoadState(FILEHANDLE scn) {
 			sscanf (line+8, "%lf", &oxidMass);
 		}
 	}
+}
+
+void SPSPropellantSource::CheckPropellantMass() {
+
+	if (propellantBuffer != -1 && source_prop && our_vessel)
+		our_vessel->SetPropellantMass(source_prop, propellantBuffer);
 }
 
 
@@ -712,8 +735,8 @@ void SPSEngine::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "INJECTORVALVES34OPEN", (injectorValves34Open ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENFORCEBURN", (enforceBurn ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGINEONCOMMANDED", (engineOnCommanded ? 1 : 0));
-	oapiWriteScenario_float(scn, "NITROGENPRESSUREAPSI", nitrogenPressureAPSI);
-	oapiWriteScenario_float(scn, "NITROGENPRESSUREBPSI", nitrogenPressureBPSI);
+	papiWriteScenario_double(scn, "NITROGENPRESSUREAPSI", nitrogenPressureAPSI);
+	papiWriteScenario_double(scn, "NITROGENPRESSUREBPSI", nitrogenPressureBPSI);
 	oapiWriteLine(scn, SPSENGINE_END_STRING);
 }
 
