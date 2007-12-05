@@ -57,6 +57,7 @@ AS-225:ProjectApollo/Saturn1b
   MOONALT 0.0
   LANG English
   ATTACHSTATE 63
+  SLASTATE 150
 END
 LC34:ProjectApollo\LC34
   STATUS Landed Earth

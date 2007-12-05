@@ -57,6 +57,9 @@ AS-501:ProjectApollo/Saturn5
   CSMACCPITCH -49.13
   CMSEP 29882.6
   AUTOSLOW 1
+; Apollo 4 SLA panels weren't detached (see Mission Report, NTRS 19750067802, page 535), Apollo 6?
+; Set the state to 45 degree rotation and not detachable.
+  SLASTATE 45
 END
 Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
