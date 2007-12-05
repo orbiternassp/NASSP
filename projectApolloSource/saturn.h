@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.257  2007/12/05 19:23:29  jasonims
+  *	EMS Implementation Step 4 - jasonims :   RSI is set up to rotate, but no actual controlling of it is done.
+  *	
   *	Revision 1.256  2007/12/04 20:26:35  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -1043,6 +1046,20 @@ public:
 
 	///
 	/// \ingroup ScenarioState
+	/// \brief State related to the SLA panels.
+	///
+	union SLAState {
+		struct {
+			unsigned SLARotationLimit:8;	///< Maximum rotation limit in degrees when opening.
+			unsigned SLAWillSeparate:1;		///< Will the panels separate when they reach the limit?
+		};
+		unsigned long word;
+
+		SLAState() { word = 0; };
+	};
+
+	///
+	/// \ingroup ScenarioState
 	/// \brief Main state flags.
 	///
 	union MainState {
@@ -1784,6 +1801,19 @@ protected:
 	/// \brief Nosecap attached flag.
 	///
 	bool NosecapAttached;
+
+	///
+	/// Gives the angle to which the SLA panels will rotate; some of the Skylab missions
+	/// planned to retain the SLA panels but rotate them around 150 degrees.
+	/// \brief SLA panel rotation angle.
+	///
+	int SLARotationLimit;
+
+	///
+	/// True if the SLA panels will separate from the SIVB.
+	/// \brief SLA panels separation flag.
+	///
+	bool SLAWillSeparate;
 
 	//
 	// Checklists.
@@ -4119,6 +4149,8 @@ protected:
 	void SetAttachState(int s);
 	int GetLaunchState();
 	void SetLaunchState(int s);
+	int GetSLAState();
+	void SetSLAState(int s);
 
 	///
 	/// Get the Apollo 13 state flags as an int.

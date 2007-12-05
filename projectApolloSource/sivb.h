@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/12/02 07:13:39  movieman523
+  *	Updates for Apollo 5 and unmanned Saturn 1b missions.
+  *	
   *	Revision 1.21  2006/11/01 00:20:44  tschachim
   *	Next bugfix...
   *	
@@ -143,6 +146,8 @@ typedef struct
 	bool PanelsHinged;				///> Are SLA panels hinged?
 	bool SaturnVStage;				///> Saturn V stage or Saturn 1b stage?
 	bool LowRes;					///> Low-res meshes?
+
+	double SLARotationLimit;		///> SLA rotation limit in degrees (usually 45.0).
 } SIVBSettings;
 
 class SIVB;
@@ -190,27 +195,27 @@ public:
 };
 
 ///
-/// Specifies the main state of the SIVb
-///
-/// \brief SIVb state.
-/// \ingroup SepStageSettings
-///
-typedef enum SIVbState
-{
-	SIVB_STATE_SETUP = -1,				///< SII is waiting for setup call.
-	SIVB_STATE_WAITING					///< SII is idle after motor burnout.
-};
-
-///
 /// This code simulates the seperated SIVb stage. Basically it simulates thrust decay if there is any fuel 
 /// left, fires any retro rockets to push it away from the Saturn and then sits around waiting to be deleted.
 ///
 /// \brief SIVb stage simulation.
 /// \ingroup SepStages
 ///
-class SIVB : public VESSEL2 {
+class SIVB : public ProjectApolloConnectorVessel {
 
 public:
+
+	///
+	/// Specifies the main state of the SIVb
+	///
+	/// \brief SIVb state.
+	/// \ingroup SepStageSettings
+	///
+	typedef enum SIVbState
+	{
+		SIVB_STATE_SETUP = -1,				///< SII is waiting for setup call.
+		SIVB_STATE_WAITING					///< SII is idle after motor burnout.
+	};
 
 	///
 	/// \ingroup ScenarioState
@@ -440,6 +445,7 @@ protected:
 	bool J2IsActive;				///< Is the J2 active for burns?
 	bool FuelVenting;				///< Is the SIVb venting fuel?
 
+	double RotationLimit;			///< Panel rotation limit from 0.0 to 1.0 (1.0 = 180 degrees).
 	double CurrentThrust;			///< Current thrust level (0.0 to 1.0).
 
 	double THRUST_THIRD_VAC;		///< J2 engine thrust vacuum level in Newtons.

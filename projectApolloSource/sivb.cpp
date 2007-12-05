@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2007/12/04 20:26:37  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.34  2007/12/04 06:51:07  movieman523
   *	Shifted origin of Saturn 1b SIVB meshes to match Saturn V SIVB.
   *	
@@ -245,7 +249,7 @@ void SIVbLoadMeshes()
 	seperation_junk.tex = oapiRegisterParticleTexture ("Contrail2");;
 }
 
-SIVB::SIVB (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel),
+SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
 		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk)
 
 {
@@ -290,6 +294,7 @@ void SIVB::InitS4b()
 	ISP_THIRD_VAC = 300.0;
 
 	CurrentThrust = 0;
+	RotationLimit = 0.25;
 
 	MissionTime = MINUS_INFINITY;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -352,6 +357,11 @@ void SIVB::InitS4b()
 	MainBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY");
 
 	SIVBToCSMPowerDrain.WireTo(MainBattery);
+
+	//
+	// Register docking connector so the CSM can find it.
+	//
+	RegisterConnector(0, &SIVBToCSMConnector);
 }
 
 Connector *SIVB::GetDockingConnector()
@@ -539,22 +549,22 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 		panelTimestepCount++;
 	} else {
 		if (PanelsHinged) {
-			if (panelProc < 1) {
+			if (panelProc < RotationLimit) {
 				// Activate separation junk
 				if (thg_sep)
 					SetThrusterGroupLevel(thg_sep, 1);
 
-				panelProc = min(1.0, panelProc + simdt / 10.0);
+				panelProc = min(RotationLimit, panelProc + simdt / 40.0);
 				SetAnimation(panelAnim, panelProc);
 			}
 		}
 		else if (!PanelsOpened) {			
-			if (panelProc < 1) {
+			if (panelProc < RotationLimit) {
 				// Activate separation junk
 				if (thg_sep)
 					SetThrusterGroupLevel(thg_sep, 1);
 
-				panelProc = min(1.0, panelProc + simdt / 10.0);
+				panelProc = min(RotationLimit, panelProc + simdt / 40.0);
 				SetAnimation(panelAnim, panelProc);
 			} 
 			else {
@@ -802,6 +812,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
 	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 	oapiWriteScenario_float (scn, "PANELPROC", panelProc);
+	oapiWriteScenario_float (scn, "ROTL", RotationLimit);
 
 	iu.SaveState(scn);
 	Panelsdk.Save(scn);
@@ -1172,6 +1183,11 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
             sscanf (line + 3, "%f", &flt);
 			CurrentThrust = flt;
 		}
+		else if (!strnicmp(line, "ROTL", 4))
+		{
+            sscanf (line + 4, "%f", &flt);
+			CurrentThrust = RotationLimit;
+		}
 		else if (!strnicmp(line, "PANELPROC", 9))
 		{
             sscanf (line + 9, "%f", &flt);
@@ -1227,14 +1243,14 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	panelMesh4SaturnV  = AddMesh(hsat5stg34, &mesh_dir);
 	panelMesh4SaturnVLow  = AddMesh(hsat5stg34low, &mesh_dir);
 
-	static MGROUP_ROTATE panel1SaturnV(panelMesh1SaturnV, NULL, 0, _V(-0.6, -0.6, -3.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel2SaturnV(panelMesh2SaturnV, NULL, 0, _V( 0.6, -0.6, -3.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel3SaturnV(panelMesh3SaturnV, NULL, 0, _V( 0.6,  0.6, -3.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel4SaturnV(panelMesh4SaturnV, NULL, 0, _V(-0.6,  0.6, -3.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel1SaturnVLow(panelMesh1SaturnVLow, NULL, 0, _V(-0.6, -0.6, -3.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel2SaturnVLow(panelMesh2SaturnVLow, NULL, 0, _V( 0.6, -0.6, -3.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel3SaturnVLow(panelMesh3SaturnVLow, NULL, 0, _V( 0.6,  0.6, -3.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel4SaturnVLow(panelMesh4SaturnVLow, NULL, 0, _V(-0.6,  0.6, -3.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel1SaturnV(panelMesh1SaturnV, NULL, 0, _V(-0.6, -0.6, -3.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel2SaturnV(panelMesh2SaturnV, NULL, 0, _V( 0.6, -0.6, -3.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel3SaturnV(panelMesh3SaturnV, NULL, 0, _V( 0.6,  0.6, -3.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel4SaturnV(panelMesh4SaturnV, NULL, 0, _V(-0.6,  0.6, -3.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel1SaturnVLow(panelMesh1SaturnVLow, NULL, 0, _V(-0.6, -0.6, -3.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel2SaturnVLow(panelMesh2SaturnVLow, NULL, 0, _V( 0.6, -0.6, -3.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel3SaturnVLow(panelMesh3SaturnVLow, NULL, 0, _V( 0.6,  0.6, -3.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel4SaturnVLow(panelMesh4SaturnVLow, NULL, 0, _V(-0.6,  0.6, -3.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(1.0 * PI));
 
 	AddAnimationComponent(panelAnim, 0, 1, &panel1SaturnV);
 	AddAnimationComponent(panelAnim, 0, 1, &panel2SaturnV);
@@ -1255,10 +1271,10 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	mesh_dir = _V(-1.85, -1.85, 10.55);
 	panelMesh4Saturn1b = AddMesh(hSat1stg24, &mesh_dir);
 
-	static MGROUP_ROTATE panel1Saturn1b(panelMesh1Saturn1b, NULL, 0, _V( 0.25,  0.25, -1.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel2Saturn1b(panelMesh2Saturn1b, NULL, 0, _V(-0.25,  0.25, -1.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel3Saturn1b(panelMesh3Saturn1b, NULL, 0, _V( 0.25, -0.25, -1.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(0.25 * PI));
-	static MGROUP_ROTATE panel4Saturn1b(panelMesh4Saturn1b, NULL, 0, _V(-0.25, -0.25, -1.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(0.25 * PI));
+	static MGROUP_ROTATE panel1Saturn1b(panelMesh1Saturn1b, NULL, 0, _V( 0.25,  0.25, -1.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel2Saturn1b(panelMesh2Saturn1b, NULL, 0, _V(-0.25,  0.25, -1.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel3Saturn1b(panelMesh3Saturn1b, NULL, 0, _V( 0.25, -0.25, -1.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel4Saturn1b(panelMesh4Saturn1b, NULL, 0, _V(-0.25, -0.25, -1.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(1.0 * PI));
     	
 	AddAnimationComponent(panelAnim, 0, 1, &panel1Saturn1b);
 	AddAnimationComponent(panelAnim, 0, 1, &panel2Saturn1b);
@@ -1336,6 +1352,20 @@ void SIVB::SetState(SIVBSettings &state)
 		VehicleNo = state.VehicleNo;
 		Realism = state.Realism;
 		LowRes = state.LowRes;
+
+		//
+		// Limit rotation angle to 0-150 degrees.
+		//
+		double RotationAngle = min(150.0, state.SLARotationLimit);
+		RotationLimit = max(0.0, (RotationAngle / 180.0));
+
+		//
+		// \todo For now, only allow 45 degrees if it's not hinged. The panel release code needs to be updated for other angles.
+		//
+		if (!PanelsHinged)
+		{
+			RotationLimit = 0.25;
+		}
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_MASS)

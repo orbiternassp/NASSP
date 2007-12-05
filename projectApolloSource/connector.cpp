@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.2  2006/07/09 16:09:38  movieman523
   *	Added Prog 59 for SIVb venting.
   *	
@@ -334,4 +337,82 @@ bool PowerDrainConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	}
 
 	return false;
+}
+
+ProjectApolloConnectorVessel::ProjectApolloConnectorVessel(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
+
+{
+	int i;
+	for (i = 0; i < PACV_N_CONNECTORS; i++)
+	{
+		ConnectorList[i].port = 0;
+		ConnectorList[i].c = NULL;
+	}
+
+	ValidationValue = PACV_N_VALIDATION;
+}
+
+bool ProjectApolloConnectorVessel::ValidateVessel()
+
+{
+	return (ValidationValue == PACV_N_VALIDATION);
+}
+
+Connector *ProjectApolloConnectorVessel::GetConnector(int port, ConnectorType t)
+
+{
+	int i;
+	for (i = 0; i < PACV_N_CONNECTORS; i++)
+	{
+		if (ConnectorList[i].c && (ConnectorList[i].port == port) && (ConnectorList[i].c->GetType() == t))
+			return ConnectorList[i].c;
+	}
+
+	return NULL;
+}
+
+bool ProjectApolloConnectorVessel::RegisterConnector(int port, Connector *c)
+
+{
+	int i;
+	for (i = 0; i < PACV_N_CONNECTORS; i++)
+	{
+		if (!ConnectorList[i].c)
+		{
+			ConnectorList[i].c = c;
+			ConnectorList[i].port = port;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+Connector *GetConnector(VESSEL *v, int port, ConnectorType t)
+
+{
+	char *classname = v->GetClassName();
+
+	//
+	// If this isn't a project Apollo vessel, assume it's not the
+	// correct type.
+	//
+	if (strnicmp(classname, "ProjectApollo", 13))
+		return NULL;
+
+	//
+	// Cast it to our vessel on the assumption that it is.
+	//
+	ProjectApolloConnectorVessel *pacv = (ProjectApolloConnectorVessel *) v;
+
+	//
+	// Validate it to check that this is probably the right kind of vessel.
+	//
+	if (!pacv->ValidateVessel())
+		return NULL;
+
+	//
+	// Finally, try to get the connector.
+	//
+	return pacv->GetConnector(port, t);
 }
