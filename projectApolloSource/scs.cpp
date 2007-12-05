@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2007/11/27 02:56:42  jasonims
+  *	EMS Implementation Step 3 - jasonims :   EMS Scroll is functional and plots correctly, however .05G circuitry does not work yet and is commented out.  Manual  operation does work though.  Verification needed.
+  *	
   *	Revision 1.24  2007/11/25 09:07:24  jasonims
   *	EMS Implementation Step 2 - jasonims :   EMS Scroll can slew, and some functionality set up for EMS.
   *	
@@ -2683,10 +2686,10 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	CorridorEvaluated = false;
 	InitialTripTime = 0.0;
 	ThresholdIndicatorTripTime = 0.0;
-	ScribePt[0]=0;
-	ScribePt[1]=0;
-	ScribePt[2]=0;
-	ScribePt[3]=0;
+
+	ScribePntCnt = 1;
+	ScribePntArray[0].x = 0;
+	ScribePntArray[0].y = 0;
 
 	//
 	//  For proper scaling....
@@ -2894,21 +2897,23 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 	// Limit readouts
 	dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 	ScrollPosition = max(0.0, min(ScrollBitmapLength*ScrollScaling, ScrollPosition));
-			
+
+	// Limit reversing of scroll when in nominal operation by tracking Max position
 	if (sat->GTASwitch.IsUp() && sat->GetStage() >= CM_STAGE) {
 		MaxScrollPosition = ScrollPosition;
 	}else{
 		if (ScrollPosition > MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
 	}
 
-	SlewScribe = (int)(ScrollPosition/ScrollScaling);
+	SlewScribe = (int)(ScrollPosition/ScrollScaling) + 40; //Offset of 40 to shift the drawing correctly
 
-	ScribePt[2]=ScribePt[0];
-	ScribePt[3]=ScribePt[1];
-	ScribePt[0]=SlewScribe;
-	ScribePt[1]=GScribe;
+	if (SlewScribe != ScribePntArray[ScribePntCnt-1].x || GScribe != ScribePntArray[ScribePntCnt-1].y) {
+		if (ScribePntCnt < EMS_SCROLL_LENGTH_PX*3) ScribePntCnt++;
+	}
+	ScribePntArray[ScribePntCnt-1].y = GScribe;
+	ScribePntArray[ScribePntCnt-1].x = SlewScribe;
 
-	//sprintf(oapiDebugString(), "ScribePt %d %d %d %d", ScribePt[0], ScribePt[1], ScribePt[2], ScribePt[3]);
+	//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
 
 }
 
