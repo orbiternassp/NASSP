@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/12/04 20:26:31  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.6  2006/07/27 22:38:57  movieman523
   *	Added CSM to LEM power connector.
   *	
@@ -242,5 +246,88 @@ public:
 private:
 	PowerDrainConnectorObject *power_drain;
 };
+
+///
+/// ProjectApollo-specific vessel which allows us to get connectors to communicate
+/// while docked.
+/// \ingroup Connectors
+///
+class ProjectApolloConnectorVessel : public VESSEL2
+{
+public:
+
+	struct ConnectorDefinition
+	{
+		int port;
+		Connector *c;
+
+		ConnectorDefinition() { port = 0; c = 0; };
+	};
+
+	///
+	/// \brief Constructor.
+	///
+	ProjectApolloConnectorVessel(OBJHANDLE hObj, int fmodel);
+
+	///
+	/// Other vessels can call this function to get a connector to talk to when they
+	/// are docked. They need to specify the docking port number so we can have multiple
+	/// connectors of the same time on vessels with multiple ports; for example a space
+	/// station may supply power to each docking port.
+	///
+	/// \brief Get a pointer to a connector of specified type.
+	/// \param port Docking port number.
+	/// \param t Connector type to look for.
+	/// \return Pointer to connector if one is registered, NULL if none registered.
+	///
+	virtual Connector *GetConnector(int port, ConnectorType t);
+
+	///
+	/// This is a sanity-check. If the validation fails, then the vessel probably isn't really of this class!
+	///
+	/// \return True if this is a valid vessel.
+	///
+	bool ValidateVessel();
+
+protected:
+
+	///
+	/// \brief Register a connector for use by other vessels.
+	/// \param port Docking port number.
+	/// \param c Pointer to a connector.
+	/// \return True if registered, false if not (e.g. too many registered already).
+	///
+	bool RegisterConnector(int port, Connector *c);
+
+#define PACV_N_VALIDATION	0x5a715a75
+
+	///
+	/// We store a known value here for validation. If a vessel is not of this class then it's unlikely to
+	/// have the same value at this location and will fail to validate; unfortunately it may also crash if
+	/// the vessel happens to have been allocated at the end of the heap!
+	///
+	/// \brief Validation value.
+	///
+	unsigned int ValidationValue;
+
+#define PACV_N_CONNECTORS 16
+
+	ConnectorDefinition ConnectorList[PACV_N_CONNECTORS];
+};
+
+///
+/// \ingroup Connectors
+///
+/// This function tries to get a connector from the specified docking port on the
+/// specified vessel. It tries to determine whether the connector is a Project
+/// Apollo vessel and then tries to get the connector pointer if it is.
+///
+/// \brief Get a connector from a vessel.
+/// \param v Vessel, which may or may not be one of ours.
+/// \param port Docking port number.
+/// \param t Connector type to look for.
+/// \return Connector if found, or NULL if not.
+///
+extern Connector *GetConnector(VESSEL *v, int port, ConnectorType t);
 
 #endif // _PA_CONNECTOR_H

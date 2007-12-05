@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2007/10/09 21:49:38  tschachim
+  *	Bugfixes
+  *	
   *	Revision 1.81  2007/08/13 16:06:14  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -1473,11 +1476,8 @@ void SaturnV::SeparateStage (int new_stage)
 		S4Config.LowRes = LowRes;
 		S4Config.ISP_VAC = ISP_THIRD_VAC;
 		S4Config.THRUST_VAC = THRUST_THIRD_VAC;
-		// Apollo 4 SLA panels weren't detached (see Mission Report, NTRS 19750067802, page 535), Apollo 6?
-		if (ApolloNo == 4)
-			S4Config.PanelsHinged = true;
-		else
-			S4Config.PanelsHinged = false;
+		S4Config.PanelsHinged = !SLAWillSeparate;
+		S4Config.SLARotationLimit = (double) SLARotationLimit;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);

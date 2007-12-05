@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.210  2007/12/04 20:26:34  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.209  2007/12/02 07:13:39  movieman523
   *	Updates for Apollo 5 and unmanned Saturn 1b missions.
   *	
@@ -613,6 +617,9 @@ void Saturn::initSaturn()
 	HasProbe = false;
 
 	LowRes = false;
+
+	SLARotationLimit = 45;
+	SLAWillSeparate = true;
 
 	hStage1Mesh = 0;
 	hStage2Mesh = 0;
@@ -1627,6 +1634,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (stage < CSM_LEM_STAGE) {
 		oapiWriteScenario_int (scn, "SIIIENG", SIII_EngineNum);
 		oapiWriteScenario_int (scn, "LAUNCHSTATE", GetLaunchState());
+		oapiWriteScenario_int (scn, "SLASTATE", GetSLAState());
 	}
 
 	if (stage < CM_STAGE) {
@@ -1890,6 +1898,27 @@ void Saturn::SetMainState(int s)
 	S1bPanel = (state.S1bPanel != 0);
 	NoHGA = (state.NoHGA != 0);
 	TLISoundsLoaded = (state.TLISoundsLoaded != 0);
+}
+
+int Saturn::GetSLAState()
+
+{
+	SLAState state;
+
+	state.SLARotationLimit = SLARotationLimit;
+	state.SLAWillSeparate = SLAWillSeparate;
+
+	return state.word;
+}
+
+void Saturn::SetSLAState(int s)
+
+{
+	SLAState state;
+
+	state.word = s;
+	SLARotationLimit = state.SLARotationLimit;
+	SLAWillSeparate = state.SLAWillSeparate;
 }
 
 int Saturn::GetAttachState()
@@ -2165,6 +2194,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
         SwitchState = 0;
 		sscanf (line+8, "%d", &SwitchState);
 		SetA13State(SwitchState);
+	}
+	else if (!strnicmp (line, "SLASTATE", 8)) {
+        SwitchState = 0;
+		sscanf (line+8, "%d", &SwitchState);
+		SetSLAState(SwitchState);
 	}
 	else if (!strnicmp (line, "LAUNCHSTATE", 11)) {
         SwitchState = 0;
@@ -2541,13 +2575,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line + 2, "%f", &ftcp);
 		MixtureRatio = ftcp;
 	}
-	else if (!strnicmp (line, "STAGE", 5)) {
-		sscanf (line+5, "%d", &stage);
-	}
 	else
 		found = false;
 
-	// Next bock because of Visual C++ compiler restriction, only 128 "else if's" allowed
+	// Next block because of Visual C++ compiler restriction, only 128 "else if's" allowed
 	if (!found) {
 		found = true;
 
@@ -2568,6 +2599,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    }
 		else if (!strnicmp (line, "GNSPLIT", 7)) {
 			sscanf (line + 7, "%i", &GNSplit);
+		}
+		else if (!strnicmp (line, "STAGE", 5)) {
+			sscanf (line+5, "%d", &stage);
 		}
 		else if (!strnicmp(line, "NOHGA", 5)) {
 			//

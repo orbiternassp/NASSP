@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.63  2007/12/04 20:26:33  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.62  2007/12/04 06:51:07  movieman523
   *	Shifted origin of Saturn 1b SIVB meshes to match Saturn V SIVB.
   *	
@@ -1201,7 +1205,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		S4Config.SettingsType.SIVB_SETTINGS_MASS = 1;
 		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
 		S4Config.Payload = SIVBPayload;
-		S4Config.PanelsHinged = !ASTPMission;
+		S4Config.PanelsHinged = !SLAWillSeparate;
 		S4Config.VehicleNo = VehicleNo;
 		S4Config.EmptyMass = SII_EmptyMass;
 		S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
@@ -1210,6 +1214,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		S4Config.MissionTime = MissionTime;
 		S4Config.Realism = Realism;
 		S4Config.LowRes = LowRes;
+		S4Config.SLARotationLimit = (double) SLARotationLimit;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);

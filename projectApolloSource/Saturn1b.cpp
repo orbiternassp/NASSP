@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2007/12/04 20:26:31  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.74  2007/10/18 00:23:17  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -422,6 +426,11 @@ void Saturn1b::initSaturn1b()
 	SI_EngineNum = 8;
 	SII_EngineNum = 1;
 	SIII_EngineNum = 1;
+
+	//
+	// Default to not separating SLA panels.
+	//
+	SLAWillSeparate = false;
 }
 
 void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
