@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.223  2007/12/05 07:13:12  jasonims
+  *	EMS Implementation Step 3b - jasonims :   EMS Scroll disappearance bug fixed.  No further implementation.
+  *	
   *	Revision 1.222  2007/12/04 20:26:36  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -743,6 +746,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_MINIMPULSE_HANDCONTROLLER] 				= oapiCreateSurface (LOADBMP (IDB_MINIMPULSE_HANDCONTROLLER));
 	srf[SRF_EMS_SCROLL_LEO]							= oapiCreateSurface (LOADBMP (IDB_EMS_SCROLL_LEO));
 	srf[SRF_EMS_SCROLL_BORDER]						= oapiCreateSurface (LOADBMP (IDB_EMS_SCROLL_BORDER));
+	srf[SRF_EMS_RSI_BKGRND]                         = oapiCreateSurface (LOADBMP (IDB_EMS_RSI_BKGRND));
 	srf[SRF_EMSDVSETSWITCH]							= oapiCreateSurface (LOADBMP (IDB_EMSDVSETSWITCH));
 	srf[SRF_ALTIMETER2]								= oapiCreateSurface (LOADBMP (IDB_ALTIMETER2));
 	srf[SRF_OXYGEN_SURGE_TANK_VALVE]				= oapiCreateSurface (LOADBMP (IDB_OXYGEN_SURGE_TANK_VALVE));
@@ -1457,6 +1461,7 @@ void Saturn::AddLeftMainPanelAreas() {
 	oapiRegisterPanelArea (AID_SPS_LIGHT,									_R( 816,  467,  846,  483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_PT05G_LIGHT,									_R( 758,  467,  788,  483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_EMS_SCROLL_LEO,								_R( 731,  296,  875,  448), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_EMS_RSI_BKGRND,								_R( 602,  463,  690,  550), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
 	// ASCP
 	oapiRegisterPanelArea (AID_ASCPDISPLAYROLL,								_R( 199, 1144,  229, 1156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_ASCPDISPLAYPITCH,							_R( 199, 1206,  229, 1218), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,	                PANEL_MAP_BACKGROUND);
@@ -3846,7 +3851,8 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 {
 
 	HDC hDC;
-	HGDIOBJ original = NULL;
+	HGDIOBJ brush = NULL;
+	HGDIOBJ pen = NULL;
 
 
 	// Enable this to trace the redraws, but then it's running horrible slow!
@@ -4310,9 +4316,9 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		if(!(GTASwitch.IsUp())) {
 			hDC = oapiGetDC (srf[SRF_EMS_SCROLL_LEO]);
 			SetBkMode (hDC, TRANSPARENT);
-			original = SelectObject(hDC,GetStockObject(BLACK_PEN));
+			pen = SelectObject(hDC,GetStockObject(BLACK_PEN));
 			Polyline(hDC, ems.ScribePntArray, ems.ScribePntCnt);
-			SelectObject(hDC,original);
+			SelectObject(hDC,pen);
 			oapiReleaseDC (srf[SRF_EMS_SCROLL_LEO], hDC);
 		}
 
@@ -4320,6 +4326,19 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
 
+		return true;
+
+	case AID_EMS_RSI_BKGRND:
+		oapiBlt(surf, srf[SRF_EMS_RSI_BKGRND], 0,0,0,0,86,84);
+		hDC = oapiGetDC (srf[SRF_EMS_RSI_BKGRND]);
+		SetBkMode (hDC, TRANSPARENT);
+		pen = SelectObject(hDC,GetStockObject(WHITE_PEN));
+		Ellipse(hDC, 14,14,71,68);
+		brush = SelectObject(hDC,GetStockObject(BLACK_BRUSH));
+		Polygon(hDC, ems.RSITriangle, 3);
+		SelectObject(hDC,pen);
+		SelectObject(hDC,brush);
+		oapiReleaseDC (srf[SRF_EMS_RSI_BKGRND], hDC);
 		return true;
 	
 	case AID_EMSDVSETSWITCH:

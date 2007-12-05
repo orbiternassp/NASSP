@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.256  2007/12/04 20:26:35  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.255  2007/12/02 07:13:39  movieman523
   *	Updates for Apollo 5 and unmanned Saturn 1b missions.
   *	
@@ -879,6 +883,7 @@ public:
 		SRF_MINIMPULSE_HANDCONTROLLER,
 		SRF_EMS_SCROLL_LEO,
 		SRF_EMS_SCROLL_BORDER,
+		SRF_EMS_RSI_BKGRND,
 		SRF_EMSDVSETSWITCH,
 		SRF_OXYGEN_SURGE_TANK_VALVE,
 		SRF_GLYCOL_TO_RADIATORS_KNOB,
@@ -890,6 +895,7 @@ public:
 		SRF_SELECTOR_INLET_ROTARY,
 		SRF_SELECTOR_OUTLET_ROTARY,
 		SRF_EMERGENCY_PRESS_ROTARY,
+
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE

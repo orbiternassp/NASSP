@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2007/12/05 07:13:12  jasonims
+  *	EMS Implementation Step 3b - jasonims :   EMS Scroll disappearance bug fixed.  No further implementation.
+  *	
   *	Revision 1.25  2007/11/27 02:56:42  jasonims
   *	EMS Implementation Step 3 - jasonims :   EMS Scroll is functional and plots correctly, however .05G circuitry does not work yet and is commented out.  Manual  operation does work though.  Verification needed.
   *	
@@ -2673,6 +2676,8 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	sat = NULL;
 	SlewScribe = 0;
 	GScribe = 0;
+	constG = 9.7939; //Set initial value
+	RSIRotation = PI/2;
 
 	temptime = 0.0;
 	switchchangereset = false;
@@ -2691,6 +2696,15 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	ScribePntArray[0].x = 0;
 	ScribePntArray[0].y = 0;
 
+	//Initial position of RSI Triangle
+	RSITriangle[0].x = EMS_RSI_CENTER_X + (int)(cos(RSIRotation)*28);
+	RSITriangle[0].y = EMS_RSI_CENTER_Y - (int)(sin(RSIRotation)*28);
+	RSITriangle[1].x = EMS_RSI_CENTER_X + (int)(cos(RSIRotation)*8) - (int)(sin(RSIRotation)*8);
+	RSITriangle[1].y = EMS_RSI_CENTER_Y - (int)(cos(RSIRotation)*16) + (int)(sin(RSIRotation)*16);
+	RSITriangle[2].x = EMS_RSI_CENTER_X - (int)(cos(RSIRotation)*8) + (int)(sin(RSIRotation)*8);
+	RSITriangle[2].y = EMS_RSI_CENTER_Y - (int)(cos(RSIRotation)*16) + (int)(sin(RSIRotation)*16);
+	//Center of Rotation is 42,42
+
 	//
 	//  For proper scaling....
 		/*	The scroll bitmap is 2500 pixels in length, and 100 feet per sec on the dV scale is equililent to 3 pixels on the bitmap.
@@ -2703,17 +2717,6 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 void EMS::Init(Saturn *vessel) {
 	sat = vessel;
 	DCPower.WireToBuses(&sat->EMSMnACircuitBraker, &sat->EMSMnBCircuitBraker);
-
-	// Handle different gravity and size of the Earth
-	if (sat->IsVirtualAGC()) {
-		constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
-	} else {
-		if (sat->NonsphericalGravityEnabled()) {
-			constG = 9.7988;
-		} else {
-			constG = 9.7939;
-		}
-	}
 }
 
 void EMS::TimeStep(double MissionTime, double simdt) {
@@ -2915,6 +2918,12 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 
 	//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
 
+	if (sat->GTASwitch.IsUp()) {
+		if (RSIRotation > (2*PI)) RSIRotation = RSIRotation - 2*PI;
+		RotateRSI();
+		RSIRotation = RSIRotation + PI/360;
+	}
+
 }
 
 void EMS::SystemTimestep(double simdt) {
@@ -2957,6 +2966,18 @@ void EMS::AccelerometerTimeStep() {
 		avg = mul(t, avg);	
 		xacc = -avg.z;
 		// Ground test switch
+	
+		// Handle different gravity and size of the Earth
+		if (sat->IsVirtualAGC()) {
+			constG = 9.7916;		// the Virtual AGC needs nonspherical gravity anyway
+		} else {
+			if (sat->NonsphericalGravityEnabled()) {
+				constG = 9.7988;
+			} else {
+				constG = 9.7939;
+			}
+		}
+
 		if (sat->GTASwitch.IsUp()) {
 			xacc -= constG;
 		}
@@ -3039,6 +3060,22 @@ void EMS::SwitchChanged() {
 
 	switchchangereset=true;
 	// sprintf(oapiDebugString(),"EMSFunctionSwitch %d", sat->EMSFunctionSwitch.GetState());
+}
+
+void EMS::RotateRSI() {
+
+	double cRSIrot,sRSIrot;
+
+	cRSIrot=cos(RSIRotation);
+	sRSIrot=sin(RSIRotation);
+
+	RSITriangle[0].x = EMS_RSI_CENTER_X + (int)(cRSIrot*28);
+	RSITriangle[0].y = EMS_RSI_CENTER_Y + (int)(-sRSIrot*28);
+	RSITriangle[1].x = EMS_RSI_CENTER_X + (int)(-cRSIrot*16 + sRSIrot*8);
+	RSITriangle[1].y = EMS_RSI_CENTER_Y + (int)(cRSIrot*8 + sRSIrot*16);
+	RSITriangle[2].x = EMS_RSI_CENTER_X + (int)(-cRSIrot*16 - sRSIrot*8);
+	RSITriangle[2].y = EMS_RSI_CENTER_Y + (int)(-cRSIrot*8 + sRSIrot*16);
+	
 }
 
 bool EMS::SPSThrustLight() {

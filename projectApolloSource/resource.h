@@ -643,6 +643,8 @@
 #define IDB_CSM_LOWER_LEFT_PANEL                            926
 #define IDB_CSM_LOWER_MAIN_PANEL                            927
 #define IDB_CSM_RIGHT_CB_PANEL                              928
+#define IDB_EMS_RSI_BKGRND                                  929
+#define AID_EMS_RSI_BKGRND                                  930
 
 
 // Next default values for new objects
