@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.222  2007/12/04 20:26:36  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.221  2007/11/29 21:53:20  movieman523
   *	Generising the Volt meters.
   *	
@@ -4307,13 +4311,13 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			hDC = oapiGetDC (srf[SRF_EMS_SCROLL_LEO]);
 			SetBkMode (hDC, TRANSPARENT);
 			original = SelectObject(hDC,GetStockObject(BLACK_PEN));
-			MoveToEx(hDC, ems.GetScribePt(2)+40,ems.GetScribePt(3), NULL);
-			LineTo(hDC, ems.GetScribePt(0)+40,ems.GetScribePt(1));
+			Polyline(hDC, ems.ScribePntArray, ems.ScribePntCnt);
 			SelectObject(hDC,original);
 			oapiReleaseDC (srf[SRF_EMS_SCROLL_LEO], hDC);
 		}
 
-		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScribePt(0), 0, 132, 143);
+
+		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
 
 		return true;

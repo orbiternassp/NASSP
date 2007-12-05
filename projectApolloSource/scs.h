@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/11/27 02:56:42  jasonims
+  *	EMS Implementation Step 3 - jasonims :   EMS Scroll is functional and plots correctly, however .05G circuitry does not work yet and is commented out.  Manual  operation does work though.  Verification needed.
+  *	
   *	Revision 1.21  2007/11/25 09:07:25  jasonims
   *	EMS Implementation Step 2 - jasonims :   EMS Scroll can slew, and some functionality set up for EMS.
   *	
@@ -269,6 +272,7 @@ public:
 
 #define EMS_START_STRING	"EMS_BEGIN"
 #define EMS_END_STRING		"EMS_END"
+#define EMS_SCROLL_LENGTH_PX    2500
 
 
 class EMS {
@@ -278,8 +282,10 @@ public:
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep(double MissionTime, double simdt);
 	void SystemTimestep(double simdt);
-	double GetdVRangeCounter() { return dVRangeCounter; };				
-	int GetScribePt(int i) { return ScribePt[i]; };
+	double GetdVRangeCounter() { return dVRangeCounter; };
+	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
+	int ScribePntCnt;
+	int GetScrollOffset() { return ScribePntArray[ScribePntCnt-1].x-40; };
 	void SwitchChanged();
 	bool SPSThrustLight();
 	bool pt05GLight();
@@ -299,7 +305,6 @@ protected:
 	int status;
 	int SlewScribe; //pixels
 	int GScribe; //pixels
-	int ScribePt[4];
 	double ScrollPosition; //inches
 	double MaxScrollPosition;
 	bool dVInitialized;
