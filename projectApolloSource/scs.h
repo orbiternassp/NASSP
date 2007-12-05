@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/12/05 07:13:13  jasonims
+  *	EMS Implementation Step 3b - jasonims :   EMS Scroll disappearance bug fixed.  No further implementation.
+  *	
   *	Revision 1.22  2007/11/27 02:56:42  jasonims
   *	EMS Implementation Step 3 - jasonims :   EMS Scroll is functional and plots correctly, however .05G circuitry does not work yet and is commented out.  Manual  operation does work though.  Verification needed.
   *	
@@ -273,6 +276,8 @@ public:
 #define EMS_START_STRING	"EMS_BEGIN"
 #define EMS_END_STRING		"EMS_END"
 #define EMS_SCROLL_LENGTH_PX    2500
+#define EMS_RSI_CENTER_X        42
+#define EMS_RSI_CENTER_Y        41
 
 
 class EMS {
@@ -284,6 +289,9 @@ public:
 	void SystemTimestep(double simdt);
 	double GetdVRangeCounter() { return dVRangeCounter; };
 	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
+	POINT RSITriangle[3];
+	double GetRSIRotation() { return RSIRotation; };
+	void SetRSIRotation(double angle) { RSIRotation = angle; };
 	int ScribePntCnt;
 	int GetScrollOffset() { return ScribePntArray[ScribePntCnt-1].x-40; };
 	void SwitchChanged();
@@ -314,6 +322,9 @@ protected:
 
 	double temptime;
 	bool switchchangereset;
+
+	void RotateRSI();
+	double RSIRotation; // In radians.
 
 	bool pt05GLightOn;
 	bool pt05GFailed;

@@ -162,6 +162,7 @@ IDB_CSM_LOWER_PANEL_CENTER                  BITMAP  "Bitmaps\\csm_lower_equip_ba
 IDB_CSM_LOWER_PANEL_RIGHT                   BITMAP  "Bitmaps\\csm_lower_equip_bay_right.bmp"
 IDB_EMS_SCROLL_LEO                          BITMAP  "Bitmaps\\EMSscroll_LEO.bmp"
 IDB_EMS_SCROLL_BORDER                       BITMAP  "Bitmaps\\EMSscroll_border.bmp"
+IDB_EMS_RSI_BKGRND                          BITMAP  "Bitmaps\\EMS_RSIbkgrnd.bmp"
 IDB_EMSDVSETSWITCH                          BITMAP  "Bitmaps\\ems_button.bmp"
 IDB_ALTIMETER2                              BITMAP  "Bitmaps\\altimeter_2.bmp"
 IDB_OXYGEN_SURGE_TANK_VALVE                 BITMAP  "Bitmaps\\csm_oxygen_surge_tank_valve.bmp"
