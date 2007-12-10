@@ -1,4 +1,4 @@
-APOLLO 7 VIRTUAL AGC SCENARIO CHECKLIST v0.1
+APOLLO 7 VIRTUAL AGC SCENARIO CHECKLIST v0.2
 --------------------------------------------
 
 This checklist/flightplan is an ongoing work, evolving over the course of time as new features of NASSP are developed. For the time being, the mission can be flown, from beginning to end, using the currently documented features of the Virtual AGC. This checklist/flightplan is not absolute for all functions and maneuvers, and will require the following tools:
@@ -15,13 +15,22 @@ I would like to express that this has been tested extensively and thoroughly fro
 
 CHANGE LOG:
 -----------
-v0.1 - INITIAL RELEASE
+v0.2 -	CONDENSED SIVB/CSM SEPARATION PERIOD AND ADDED FIRST PHASING PROCEDURE
+	ADDED RENDEZVOUS PHASE TAB FOR FUTURE IMPLEMENTATION
+	CHANGED SCS POWER DOWN/UP PROCEDURES TO INCLUDE FULL G&N POWER DOWN/UP
+	CONDENSED SPS MANEUVER PROCEDURE TO INCLUDE STATE VECTOR UPDATES CLOSER TO BURN
+	ADDED ERRORS AND FAILURES TAB TO INCLUDE FUTURE IMPLEMENTATION OF RANDOM FAILURE SIMULATION
+	ADDED AND TESTED MISSION-SPECIFIC ABORT PROCEDURES INTO ERRORS AND FAILURES TAB
+	ADDED P53 ALIGNMENT PROCEDURE FOR ALIGNMENTS FOLLOWING IMU POWER DOWN/GIMBAL LOCK
+	BEGAN PREPARATIONS TO INCLUDE NEW CM PANELS/SWITCHES INTO PROCEDURES
+	REMOVED GRIDLINES
+
+v0.1 -	INITIAL RELEASE
 
 FUTURE CHANGES: (Some pending development progress)
 ---------------
 Rendezvous Procedures
 Error Recovery Procedures
-Abort Procedures
 Additional AGC and System Procedures
 More Flightplan additions and historical events
 Additional panel/switch settings
