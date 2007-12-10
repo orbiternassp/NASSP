@@ -72,7 +72,6 @@ Columbia:ProjectApollo\Saturn5
   SPLASHLAT 13.3162
   LANG English
   LEMN Eagle
-  ATTACHSTATE 63
 END
 Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
