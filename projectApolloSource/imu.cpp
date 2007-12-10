@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2007/08/13 16:06:11  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.28  2007/06/23 21:20:37  dseagrav
   *	LVDC++ Update: Now with Pre-IGM guidance
   *	
@@ -230,6 +236,8 @@ void IMU::TurnOn()
 		SetCaged(false);
 		agc.SetInputChannelBit(030, 9, true);
 		agc.SetInputChannelBit(030, 14, true);
+		// Clear IMUFail
+		agc.SetInputChannelBit(030, 13, false);
 		Operate = true;
 	}
 }
@@ -240,6 +248,12 @@ void IMU::TurnOff()
 	if (Operate) {
 		agc.SetInputChannelBit(030, 9, false);
 		agc.SetInputChannelBit(030, 14, false);
+
+		// The IMU is monitored by a separate "IMU Fail Detect Logic",
+		// which sets the IMUFail and IMUCDUFail bits of channel 030
+		// under certain conditions, see CSM systems handbook 8.1 H9.
+		// For now we just raise an IMUFail in case of an turn off.
+		agc.SetInputChannelBit(030, 13, true);
 
 		Operate = false;
 		TurnedOn = false;
