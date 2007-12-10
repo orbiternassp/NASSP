@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2007/12/04 20:26:29  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.8  2007/07/17 14:33:02  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -103,7 +107,7 @@ static struct {  // global data storage
 
 	IMFD_BURN_DATA burnData;
 	bool isRequesting;
-	bool wasRequesting;
+	bool isRequestingManually;
 	double requestMjd;
 	char *errorMessage;
 } g_Data;
@@ -128,7 +132,7 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 
 	ZeroMemory(&g_Data.burnData, sizeof(IMFD_BURN_DATA));
 	g_Data.isRequesting = false;
-	g_Data.wasRequesting = false;
+	g_Data.isRequestingManually = false;
 	g_Data.requestMjd = 0;
 	g_Data.errorMessage = "";
 }
@@ -141,16 +145,15 @@ DLLCLBK void opcDLLExit (HINSTANCE hDLL)
 
 void StartIMFDRequest() {
 
-	g_Data.wasRequesting = g_Data.progVessel->GetIMFDClient()->IsBurnDataRequesting();
 	g_Data.isRequesting = true;
-	if (!g_Data.wasRequesting)
+	if (!g_Data.progVessel->GetIMFDClient()->IsBurnDataRequesting())
 		g_Data.progVessel->GetIMFDClient()->StartBurnDataRequests();
 }
 
 void StopIMFDRequest() {
 
 	g_Data.isRequesting = false;
-	if (!g_Data.wasRequesting)
+	if (!g_Data.isRequestingManually)
 		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
 }
 
@@ -406,12 +409,17 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 
-		} else if (key == OAPI_KEY_R && !saturn->GetIMFDClient()->IsBurnDataRequesting()) {
-			saturn->GetIMFDClient()->StartBurnDataRequests();
+		} else if (key == OAPI_KEY_R && !g_Data.isRequestingManually) {						
+			if (!saturn->GetIMFDClient()->IsBurnDataRequesting()) {
+				saturn->GetIMFDClient()->StartBurnDataRequests();
+			}
+			g_Data.isRequestingManually = true;
 
-		} else if (key == OAPI_KEY_R && saturn->GetIMFDClient()->IsBurnDataRequesting()) {
-			if (!g_Data.isRequesting)
+		} else if (key == OAPI_KEY_R && g_Data.isRequestingManually) {
+			if (!g_Data.isRequesting) {
 				saturn->GetIMFDClient()->StopBurnDataRequests();
+			}
+			g_Data.isRequestingManually = false;
 		
 		} else if (key == OAPI_KEY_S && g_Data.progState == PROGSTATE_NONE) {
 			g_Data.prog = PROG_IMFDTLI;
@@ -590,12 +598,12 @@ void ProjectApolloMFD::Update (HDC hDC)
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "Status:", 7);
 		SetTextAlign (hDC, TA_CENTER);
-		if (saturn->GetIMFDClient()->IsBurnDataRequesting()) {
+		if (g_Data.isRequestingManually) {
 			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.35), "REQUESTING", 10);	
 		} else {
 			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.35), "NONE", 4);
 		}
-		if (saturn->GetIMFDClient()->IsBurnDataValid()) {
+		if (saturn->GetIMFDClient()->IsBurnDataValid() && g_Data.isRequestingManually) {
 			IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
 			if (bd.p30mode && !bd.impulsive) {
 				SetTextAlign (hDC, TA_LEFT);

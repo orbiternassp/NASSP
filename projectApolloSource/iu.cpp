@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2007/12/04 20:26:32  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.12  2007/06/06 15:02:13  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -298,7 +302,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				commandConnector.ClearSIISep();
 
 				// Next event is 100s before ignition
-				NextMissionEventTime = MissionTime + ((9.0 * 60.0) - 100.0); 
+				NextMissionEventTime += ((9.0 * 60.0) - 100.0); 
 				State++;
 			}
 
@@ -318,7 +322,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				commandConnector.PlayTLISound(true);
 
 				// Next event is 84s before ignition
-				NextMissionEventTime = MissionTime + 16.0;
+				NextMissionEventTime += 16.0;
 				State++;
 			}
 
@@ -333,7 +337,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				commandConnector.SetSIISep();
 
 				// Next event is 82s before ignition
-				NextMissionEventTime = MissionTime + 2.0;
+				NextMissionEventTime += 2.0;
 				State++;
 			}
 
@@ -371,7 +375,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				commandConnector.ClearSIISep();
 
 				// Next event is 10.9s before ignition
-				NextMissionEventTime = MissionTime + 7.1;
+				NextMissionEventTime += 7.1;
 				State++;
 			}
 
@@ -396,7 +400,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				commandConnector.PlayCountSound(true);
 
 				// Next event is 5s before ignition
-				NextMissionEventTime = MissionTime + 5.9;
+				NextMissionEventTime += 5.9;
 				State++;
 			}
 
@@ -444,8 +448,8 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				// Next event is ignition
 				LastMissionEventTime = NextMissionEventTime;
 
-				// Start the ignition sequence 0.4s early in order to compensate the thrust buildup/tail off
-				NextMissionEventTime += 0.6;
+				// Start the ignition sequence 0.29s early in order to compensate the thrust buildup/tail off
+				NextMissionEventTime += 0.71;
 				
 				State++;
 			}
@@ -662,15 +666,17 @@ void IU::Timestep(double simt, double simdt, double mjd)
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
 		}
 	} else {
-		if (State >= 101 && State <= 200) {
+		if (State >= 101 && State < 200) {
 			OrientAxis(GNC.Get_uTD(), 2, 0, 1);
 		} else if (State == 200) {
-			if (GNC.Get_tGO() > 2) {
+			if (GNC.Get_tGO() > 5) {
 				OrientAxis(GNC.Get_uTD(), 2, 0, 1);
 			} else {
 				lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
 			}
-		}
+		} else if (State >= 201 && State <= 202) {
+			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
+		}		
 	}
 	// sprintf(oapiDebugString(), "TLIBurnState %d State %d tGO %f vG x %f y %f z %f l %f Th %f", TLIBurnState, State, GNC.Get_tGO(), GNC.Get_vG().x, GNC.Get_vG().y, GNC.Get_vG().z, length(GNC.Get_vG()), lvCommandConnector.GetJ2ThrustLevel()); 
 }
