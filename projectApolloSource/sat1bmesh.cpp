@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2007/12/11 07:55:06  movieman523
+  *	Revised stage mesh handling for Saturn 1b, to help generalise the code.
+  *	
   *	Revision 1.64  2007/12/05 23:07:45  movieman523
   *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
   *	
@@ -495,21 +498,25 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 
 			//
 			// If the LES is attached, no point drawing things in the external view which can't
-			// actually be seen.
+			// actually be seen...
 			//
 			CMMode = MESHVIS_VC;
 		}
 		else if (HasProbe)
 		{
-			mesh_dir=_V(0,0,21.3 + offset);
+			mesh_dir=_V(0,0,21.2 + offset);
 			probeidx = AddMesh(hprobe, &mesh_dir);
 			probeextidx = AddMesh(hprobeext, &mesh_dir);
 			SetDockingProbeMesh();
 		}
 
-		mesh_dir=_V(0,0,21.3 + offset);
+		//
+		// ... but at least draw the CM in the external view, 
+		// otherwise the BPC is floating above the SM.
+		//
+		mesh_dir=_V(0,0,21.2 + offset);
 		meshidx = AddMesh (hCM, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, CMMode);
+		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		//
 		// And the Crew.
