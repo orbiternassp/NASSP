@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2007/12/05 23:07:45  movieman523
+  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
+  *	
   *	Revision 1.63  2007/12/04 20:26:33  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -321,7 +324,8 @@ void Saturn1b::SetFirstStage ()
 	SetLiftCoeffFunc (0);
 	ClearMeshes();
 
-	SetFirstStageMeshes(0.0);
+	SetFirstStageMeshes(-14.0);
+	SetSecondStageMeshes(13.95);
 
 	SetView(34.95, false);
 
@@ -341,107 +345,11 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 	double TCP=-54.485-TCPO;//STG0O;
 	SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.7,.7,TCP), _V(.7,.7,TCP));
 
-	UINT meshidx;
-
-	VECTOR3 mesh_dir=_V(0,0,-14);
+	VECTOR3 mesh_dir=_V(0,0,offset);
 
 	AddMesh (hStage1Mesh, &mesh_dir);
-	mesh_dir=_V(0,0,2.2);
+	mesh_dir=_V(0,0,16.2 + offset);
 	AddMesh (hInterstageMesh, &mesh_dir);
-	mesh_dir=_V(0,0,13.95);
-	AddMesh (hStage2Mesh, &mesh_dir);
-	mesh_dir=_V(0,4,4.7);
-    //vessel->AddMesh (hapsl, &mesh_dir);
-	mesh_dir=_V(0,-4,4.7);
-    //vessel->AddMesh (hapsh, &mesh_dir);
-	mesh_dir=_V(1.85,1.85,24.5);
-    AddMesh (hStageSLA1Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,1.85,24.5);
-    AddMesh (hStageSLA2Mesh, &mesh_dir);
-	mesh_dir=_V(1.85,-1.85,24.5);
-    AddMesh (hStageSLA3Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,-1.85,24.5);
-    AddMesh (hStageSLA4Mesh, &mesh_dir);
-
-	probeidx = -1;
-	probeextidx = -1;
-	crewidx = -1;
-	cmpidx = -1;
-	if (SaturnHasCSM()) {
-
-		//
-		// Add CSM.
-		//
-
-		AddSM(31.0, false);
-
-		if (LESAttached) {
-		
-			TowerOffset = 40.10;
-			mesh_dir=_V(0, 0, TowerOffset);
-			meshidx = AddMesh (hsat5tower, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-		
-            mesh_dir=_V(0,0,35.25);
-			meshidx = AddMesh (hCM, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VC);
-
-			//
-			// And the Crew.
-			//
-			if (Crewed) {
-				cmpidx = AddMesh (hCMP, &mesh_dir);
-				crewidx = AddMesh (hCREW, &mesh_dir);
-				SetCrewMesh();
-			}
-
-			meshidx = AddMesh (hCMInt, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VC);
-
-			//
-			// Don't Forget the Hatch
-			//
-			meshidx = AddMesh (hFHC, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VC);
-
-		} else {
-			mesh_dir=_V(0,0,35.25);
-			meshidx = AddMesh (hCM, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			//
-			// And the Crew.
-			//
-			if (Crewed) {
-				cmpidx = AddMesh (hCMP, &mesh_dir);
-				crewidx = AddMesh (hCREW, &mesh_dir);
-				SetCrewMesh();
-			}
-
-			meshidx = AddMesh (hCMInt, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			//
-			// Don't Forget the Hatch
-			//
-			meshidx = AddMesh (hFHC, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			if (HasProbe) {
-				probeidx = AddMesh(hprobe, &mesh_dir);
-				probeextidx = AddMesh(hprobeext, &mesh_dir);
-				SetDockingProbeMesh();
-			}
-		}
-	}
-	else if (NosecapAttached)
-	{
-		//
-		// Add nosecap.
-		//
-		mesh_dir=_V(0,0,29.77);
-		AddMesh (hNosecap, &mesh_dir);
-	}
 }
 
 void Saturn1b::SetFirstStageEngines()
@@ -543,25 +451,24 @@ void Saturn1b::SetSecondStage ()
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
 
-	SetSecondStageMeshes(0.0);
+    ClearMeshes();
+	SetSecondStageMeshes(13.95-12.25);
 }
 
 void Saturn1b::SetSecondStageMeshes(double offset)
 {
-    ClearMeshes();
-
 	UINT meshidx;
 
-	VECTOR3 mesh_dir=_V(0,0,13.95-12.25);
+	VECTOR3 mesh_dir=_V(0,0,offset);
     AddMesh (hStage2Mesh, &mesh_dir);
 
-	mesh_dir=_V(1.85,1.85,24.5-12.25);
+	mesh_dir=_V(1.85,1.85,10.55 + offset);
     AddMesh (hStageSLA1Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,1.85,24.5-12.25);
+	mesh_dir=_V(-1.85,1.85,10.55 + offset);
     AddMesh (hStageSLA2Mesh, &mesh_dir);
-	mesh_dir=_V(1.85,-1.85,24.5-12.25);
+	mesh_dir=_V(1.85,-1.85,10.55 + offset);
     AddMesh (hStageSLA3Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
+	mesh_dir=_V(-1.85,-1.85,10.55 + offset);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
 
 	probeidx = -1;
@@ -575,67 +482,53 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		// Add CSM.
 		//
 
-		AddSM(31.0-12.25, false);
+		AddSM(17.05 + offset, false);
+
+		WORD CMMode = MESHVIS_VCEXTERNAL;
 
 		if (LESAttached)
 		{
-		
-			TowerOffset = 40.10-12.25;
+			TowerOffset = 26.15 + offset;
 			mesh_dir=_V(0, 0, TowerOffset);
 			meshidx = AddMesh (hsat5tower, &mesh_dir);
 			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-		
-            mesh_dir=_V(0,0,35.25-12.25);
-			meshidx = AddMesh (hCM, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 
 			//
-			// And the Crew.
+			// If the LES is attached, no point drawing things in the external view which can't
+			// actually be seen.
 			//
-			if (Crewed) {
-				cmpidx = AddMesh (hCMP, &mesh_dir);
-				crewidx = AddMesh (hCREW, &mesh_dir);
-				SetCrewMesh();
-			}
-
-			meshidx = AddMesh (hCMInt, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VC);
-
-			//
-			// Don't Forget the Hatch
-			//
-			meshidx = AddMesh (hFHC, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VC);
-
-		} else {
-			mesh_dir=_V(0,0,35.25-12.25);
-			meshidx = AddMesh (hCM, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			//
-			// And the Crew.
-			//
-			if (Crewed) {
-				cmpidx = AddMesh (hCMP, &mesh_dir);
-				crewidx = AddMesh (hCREW, &mesh_dir);
-				SetCrewMesh();
-			}
-
-			meshidx = AddMesh (hCMInt, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			//
-			// Don't Forget the Hatch
-			//
-			meshidx = AddMesh (hFHC, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-			if (HasProbe) {
-				probeidx = AddMesh(hprobe, &mesh_dir);
-				probeextidx = AddMesh(hprobeext, &mesh_dir);
-				SetDockingProbeMesh();
-			}
+			CMMode = MESHVIS_VC;
 		}
+		else if (HasProbe)
+		{
+			mesh_dir=_V(0,0,21.3 + offset);
+			probeidx = AddMesh(hprobe, &mesh_dir);
+			probeextidx = AddMesh(hprobeext, &mesh_dir);
+			SetDockingProbeMesh();
+		}
+
+		mesh_dir=_V(0,0,21.3 + offset);
+		meshidx = AddMesh (hCM, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, CMMode);
+
+		//
+		// And the Crew.
+		//
+		if (Crewed) {
+			cmpidx = AddMesh (hCMP, &mesh_dir);
+			crewidx = AddMesh (hCREW, &mesh_dir);
+			SetCrewMesh();
+		}
+
+		meshidx = AddMesh (hCMInt, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, CMMode);
+
+		//
+		// Don't Forget the Hatch
+		//
+		meshidx = AddMesh (hFHC, &mesh_dir);
+		SetMeshVisibilityMode (meshidx, CMMode);
+
 	}
 	else if (NosecapAttached)
 	{
