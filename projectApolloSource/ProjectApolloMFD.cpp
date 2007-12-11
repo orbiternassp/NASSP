@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/12/10 17:12:56  tschachim
+  *	TLI burn fixes.
+  *	ISS alarm in case the IMU is unpowered.
+  *	
   *	Revision 1.9  2007/12/04 20:26:29  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -605,7 +609,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		}
 		if (saturn->GetIMFDClient()->IsBurnDataValid() && g_Data.isRequestingManually) {
 			IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
-			if (bd.p30mode && !bd.impulsive) {
+			if (bd.p30mode || bd.impulsive) {
 				SetTextAlign (hDC, TA_LEFT);
 				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "GET Ignition:", 13);
 
@@ -637,7 +641,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 			} else {
 				SetTextAlign (hDC, TA_CENTER);
 				SetTextColor (hDC, RGB(255, 0, 0));
-				TextOut(hDC, (int) (width * 0.5), (int) (height * 0.5), "IMFD not in Off-Axis, P30 Mode", 30);
+				TextOut(hDC, (int) (width * 0.5), (int) (height * 0.5), "IMFD not in P30 Mode", 20);
 				SetTextColor (hDC, RGB(0, 255, 0));
 			}
 		}
