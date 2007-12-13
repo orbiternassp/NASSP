@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2007/12/10 17:12:56  tschachim
+  *	TLI burn fixes.
+  *	ISS alarm in case the IMU is unpowered.
+  *	
   *	Revision 1.13  2007/12/04 20:26:32  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -292,6 +296,9 @@ void IU::Timestep(double simt, double simdt, double mjd)
 					oapiSetTimeAcceleration(1);
 
 					NextMissionEventTime = MissionTime + 38.0;
+					if (!ExternalGNC) {
+						NextMissionEventTime += ((GNC.Get_IgnMJD() - mjd) * 24. * 3600.) - (9.0 * 60.0 + 38.0);
+					}						
 					State++;
 				}
 			}
@@ -448,8 +455,8 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				// Next event is ignition
 				LastMissionEventTime = NextMissionEventTime;
 
-				// Start the ignition sequence 0.29s early in order to compensate the thrust buildup/tail off
-				NextMissionEventTime += 0.71;
+				// Start the ignition sequence 0.265s early in order to compensate the thrust buildup/tail off
+				NextMissionEventTime += 0.735;
 				
 				State++;
 			}
@@ -678,7 +685,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
 		}		
 	}
-	// sprintf(oapiDebugString(), "TLIBurnState %d State %d tGO %f vG x %f y %f z %f l %f Th %f", TLIBurnState, State, GNC.Get_tGO(), GNC.Get_vG().x, GNC.Get_vG().y, GNC.Get_vG().z, length(GNC.Get_vG()), lvCommandConnector.GetJ2ThrustLevel()); 
+	// sprintf(oapiDebugString(), "TLIBurnState %d State %d IgnMJD %.12f tGO %f vG x %f y %f z %f l %f Th %f", TLIBurnState, State, GNC.Get_IgnMJD(), GNC.Get_tGO(), GNC.Get_vG().x, GNC.Get_vG().y, GNC.Get_vG().z, length(GNC.Get_vG()), lvCommandConnector.GetJ2ThrustLevel()); 
 }
 
 void IU::PostStep(double simt, double simdt, double mjd) {
