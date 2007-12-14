@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2007/12/13 11:05:31  tschachim
+  *	Bugfix burn timing.
+  *	
   *	Revision 1.14  2007/12/10 17:12:56  tschachim
   *	TLI burn fixes.
   *	ISS alarm in case the IMU is unpowered.
@@ -668,7 +671,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 			VECTOR3 vel;
 			OBJHANDLE hbody = lvCommandConnector.GetGravityRef();
 			lvCommandConnector.GetRelativeVel(hbody, vel);
-			OrientAxis(Normalize(vel), 2, 0, 1);
+			OrientAxis(Normalize(vel), 2, 0, (State == 200 ? 5 : 1));
 		} else if (State >= 201 && State <= 202) {
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
 		}
