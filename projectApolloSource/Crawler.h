@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2007/08/16 16:49:53  tschachim
+  *	New meshes.
+  *	
   *	Revision 1.14  2007/03/03 00:14:41  tschachim
   *	Bugfix generic cockpit.
   *	
@@ -82,6 +85,8 @@ public:
 	void clbkVisualCreated(VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 	bool clbkLoadGenericCockpit();
+	// This will extract the mission time from the saturn in order to pass to ProjectApollo MFD
+	double GetMissionTime() {return MissionTime;};
 
 protected:
 	double velocity;
@@ -91,6 +96,8 @@ protected:
 	double wheeldeflect;
 	int standalone;
 	bool firstTimestepDone;
+	// Mission Time for passing to PAMFD:
+	double MissionTime;
 
 	bool lastLatLongSet;
 	double lastLat;

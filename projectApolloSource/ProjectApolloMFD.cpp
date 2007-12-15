@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/12/11 13:44:39  tschachim
+  *	Bugfix, allow impulsive requests.
+  *	
   *	Revision 1.10  2007/12/10 17:12:56  tschachim
   *	TLI burn fixes.
   *	ISS alarm in case the IMU is unpowered.
@@ -74,6 +77,7 @@
 #include "IMU.h"
 #include "lvimu.h"
 #include "saturn.h"
+#include "Crawler.h"
 #include "papi.h"
 
 #include "MFDResource.h"
@@ -259,6 +263,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 
 {
 	saturn = NULL;
+	crawler = NULL;
 	width = w;
 	height = h;
 	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
@@ -270,6 +275,10 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
 		saturn = (Saturn *)vessel;
 		g_Data.progVessel = saturn;
+	}
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Crawler") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler"))  {
+			crawler = (Crawler *)vessel;
 	}
 }
 
@@ -487,14 +496,19 @@ void ProjectApolloMFD::Update (HDC hDC)
 	if (!saturn) {
 		SetTextColor (hDC, RGB(255, 0, 0));
 		TextOut(hDC, width / 2, (int) (height * 0.5), "Unsupported vessel", 18);
-		return;
+		if (!crawler)
+			return;
 	}
 
 	// Draw mission time
 	SetTextColor (hDC, RGB(0, 255, 0));
 	TextOut(hDC, width / 2, (int) (height * 0.1), "Ground Elapsed Time", 19);
 
-	double mt = saturn->GetMissionTime();
+	double mt = 0;
+	if (!crawler)
+		mt = saturn->GetMissionTime();
+	else
+		mt = crawler->GetMissionTime();
 	int secs = abs((int) mt);
 	int hours = (secs / 3600);
 	secs -= (hours * 3600);
@@ -505,6 +519,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 	else
 		sprintf(buffer, "%d:%02d:%02d", hours, minutes, secs);
 	TextOut(hDC, width / 2, (int) (height * 0.15), buffer, strlen(buffer));
+	//If this is the crawler and not the actual Saturn, do NOTHING else!
+	if (!saturn)
+		return;
 
 	SelectDefaultPen(hDC, 1);
 	MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.25), 0);

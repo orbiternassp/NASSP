@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2007/08/16 16:49:53  tschachim
+  *	New meshes.
+  *	
   *	Revision 1.24  2007/08/13 16:05:33  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -162,6 +165,7 @@ Crawler::Crawler(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	viewPos = VIEWPOS_FRONTCABIN;
 	firstTimestepDone = false;
 	standalone = false;
+	MissionTime = 0;
 
 	lastLatLongSet = false;
 	lastLat = 0;
@@ -426,6 +430,12 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 }
 
 void Crawler::clbkPostStep(double simt, double simdt, double mjd) {
+	//This seems the best place to update our mission time off of the Saturn.
+	Saturn *lv = NULL;
+	if(!standalone)
+		// Updating internal mission time from Launch Vehichle.
+		lv = (Saturn *)oapiGetVesselInterface(hLV);
+		MissionTime = lv -> GetMissionTime();
 }
 
 void Crawler::DoFirstTimestep() {
@@ -849,4 +859,3 @@ bool Crawler::clbkLoadGenericCockpit() {
 	SetView();
 	return true;
 }
-
