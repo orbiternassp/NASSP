@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/12/04 20:26:29  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.4  2007/10/18 00:23:17  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -67,6 +71,7 @@ protected:
 	DWORD width;
 	DWORD height;
 	Saturn *saturn;
+	Crawler *crawler;
 	int screen;
 
 	static struct ScreenData {
