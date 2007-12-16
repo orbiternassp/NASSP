@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2007/12/15 19:48:26  lassombra
+  *	Added functionality to allow ProjectApollo MFD to get mission time from the Crawler as well as the Saturn.  The Crawler actually extracts the mission time from the Saturn, no updates to scenario files needed.
+  *	
   *	Revision 1.11  2007/12/11 13:44:39  tschachim
   *	Bugfix, allow impulsive requests.
   *	
@@ -269,6 +272,8 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
 	screen = PROG_NONE;
 
+	//We need to find out what type of vessel it is, so we check for the class name.
+	//Saturns have different functions than Crawlers.  But we have methods for both.
 	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
 		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
 		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
@@ -298,6 +303,10 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
 
+	//If we are working with an unsupported vehicle, we don't want to return any button labels.
+	if (!saturn) {
+		return 0;
+	}
 	if (screen == PROG_GNC) {
 		return (bt < 2 ? labelGNC[bt] : 0);
 	}
@@ -342,6 +351,11 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Toggle burn data requests", 0, 'R'},
 		{"Start S-IVB burn", 0, 'S'}
 	};
+	// We don't want to display a menu if we are in an unsupported vessel.
+	if (!saturn) {
+		menu = 0;
+		return 0;
+	}
 
 	if (screen == PROG_GNC) {
 		if (menu) *menu = mnuGNC;
@@ -365,6 +379,10 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 
 bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key) 
 {
+	//We don't want to accept keyboard commands from the wrong vessels.
+	if (!saturn)
+		return false;
+
 	if (screen == PROG_NONE) {
 		if (key == OAPI_KEY_G) {
 			screen = PROG_GNC;
@@ -456,6 +474,8 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 
 bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 {
+	//We don't have to implement a test for the correct vessel here, as it checks this already in the consume key method, which we call anyways.
+	//We only want to accept left mouse button clicks.
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
 	static const DWORD btkeyNone[3] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I };
