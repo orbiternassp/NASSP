@@ -394,34 +394,21 @@ void USB::TimeStep(double simt){
 	}
 }
 // Socket registration method (registers sockets to be deinitialized
-bool registerSocket(SOCKET sock)
+bool PCM::registerSocket(SOCKET sock)
 {
 	HMODULE hpac = GetModuleHandle("modules\\startup\\ProjectApolloConfigurator.dll");
 	if (hpac)
 	{
-		bool (__stdcall *registerSocket)(SOCKET);
-		registerSocket = (bool (__stdcall *)(SOCKET)) GetProcAddress(hpac,"defineSocket");
-		if (registerSocket)
+		bool (__cdecl *regSocket1)(SOCKET);
+		regSocket1 = (bool (__cdecl *)(SOCKET)) GetProcAddress(hpac,"defineSocket");
+		if (regSocket1)
 		{
-			if (!registerSocket(sock))
+			if (!regSocket1(sock))
 				return false;
 		}
 		else
 		{
 			return false;
-		}
-	}
-	else
-	{
-	}
-	HMODULE hpamfd = GetModuleHandle("modules\\plugin\\ProjectApolloMFD.dll");
-	if (hpamfd)
-	{
-		bool (__stdcall *defineSocket)(SOCKET);
-		defineSocket = (bool (__stdcall *)(SOCKET))GetProcAddress(hpamfd,"defineSocket");
-		if (defineSocket)
-		{
-			defineSocket(sock);
 		}
 	}
 	return true;

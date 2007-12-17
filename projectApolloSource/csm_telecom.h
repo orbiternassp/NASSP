@@ -178,7 +178,6 @@
 
 // DS20060326 Telecommunications system objects
 class Saturn;
-bool registerSocket(SOCKET sock);
 
 // PCM system
 class PCM {
@@ -217,6 +216,7 @@ public:
 	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
+	bool registerSocket(SOCKET sock);
 
 	Saturn *sat;					// Ship we're installed in
 };
