@@ -393,7 +393,39 @@ void USB::TimeStep(double simt){
 		sat->PwrAmplTB = false;
 	}
 }
-
+// Socket registration method (registers sockets to be deinitialized
+bool registerSocket(SOCKET sock)
+{
+	HMODULE hpac = GetModuleHandle("modules\\startup\\ProjectApolloConfigurator.dll");
+	if (hpac)
+	{
+		bool (__stdcall *registerSocket)(SOCKET);
+		registerSocket = (bool (__stdcall *)(SOCKET)) GetProcAddress(hpac,"defineSocket");
+		if (registerSocket)
+		{
+			if (!registerSocket(sock))
+				return false;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+	}
+	HMODULE hpamfd = GetModuleHandle("modules\\plugin\\ProjectApolloMFD.dll");
+	if (hpamfd)
+	{
+		bool (__stdcall *defineSocket)(SOCKET);
+		defineSocket = (bool (__stdcall *)(SOCKET))GetProcAddress(hpamfd,"defineSocket");
+		if (defineSocket)
+		{
+			defineSocket(sock);
+		}
+	}
+	return true;
+}
 // PCM SYSTEM
 PCM::PCM(){
 	sat = NULL;
@@ -455,6 +487,11 @@ void PCM::Init(Saturn *vessel){
 		closesocket(m_socket);
 		WSACleanup();
 		return;
+	}
+	if(!registerSocket(m_socket))
+	{
+		sprintf(wsk_emsg,"TELECOM: Failed to register socket %i for cleanup",m_socket);
+		wsk_error = 1;
 	}
 	conn_state = 1; // INITIALIZED, LISTENING
 	uplink_state = 0; rx_offset = 0;
