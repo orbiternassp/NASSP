@@ -178,6 +178,7 @@
 
 // DS20060326 Telecommunications system objects
 class Saturn;
+bool registerSocket(SOCKET sock);
 
 // PCM system
 class PCM {

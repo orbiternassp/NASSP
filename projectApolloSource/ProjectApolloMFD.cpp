@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2007/12/16 00:47:53  lassombra
+  *	Removed ability to use buttons/keystrokes when using any ship but a saturn.
+  *	
   *	Revision 1.12  2007/12/15 19:48:26  lassombra
   *	Added functionality to allow ProjectApollo MFD to get mission time from the Crawler as well as the Saturn.  The Crawler actually extracts the mission time from the Saturn, no updates to scenario files needed.
   *	
@@ -82,6 +85,7 @@
 #include "saturn.h"
 #include "Crawler.h"
 #include "papi.h"
+#include <stdio.h>
 
 #include "MFDResource.h"
 #include "ProjectApolloMFD.h"
@@ -99,6 +103,8 @@ int g_MFDmode; // identifier for new MFD mode
 #define PROG_ECS		2
 #define PROG_IMFD		3
 #define PROG_IMFDTLI	4
+//This program displays info on the current telcom socket.  For debugging only.
+#define PROG_SOCK		5
 
 #define PROGSTATE_NONE				0
 #define PROGSTATE_TLI_START			1
@@ -123,7 +129,7 @@ static struct {  // global data storage
 	char *errorMessage;
 } g_Data;
 
-
+SOCKET close_Socket = INVALID_SOCKET;
 DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 {
 	static char *name = "Project Apollo";      // MFD mode name
@@ -297,11 +303,13 @@ ProjectApolloMFD::~ProjectApolloMFD ()
 char *ProjectApolloMFD::ButtonLabel (int bt)
 {
 	// The labels for the buttons used by our MFD mode
-	static char *labelNone[3] = {"GNC", "ECS", "IMFD"};
+	//Additional button added to labelNone for testing socket work, be SURE to remove it.
+	static char *labelNone[4] = {"GNC", "ECS", "IMFD", "SOCK"};
 	static char *labelGNC[2] = {"BCK", "DMP"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
+	static char *labelSOCK[1] = {"BCK"};
 
 	//If we are working with an unsupported vehicle, we don't want to return any button labels.
 	if (!saturn) {
@@ -319,17 +327,21 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 		else
 			return (bt < 3 ? labelIMFDTliRun[bt] : 0);
 	}
-	return (bt < 3 ? labelNone[bt] : 0);
+	else if (screen == PROG_SOCK) {
+		return (bt < 1 ? labelSOCK[bt] : 0);
+	}
+	return (bt < 4 ? labelNone[bt] : 0);
 }
 
 // Return button menus
 int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 {
 	// The menu descriptions for the buttons used by our MFD mode
-	static const MFDBUTTONMENU mnuNone[3] = {
+	static const MFDBUTTONMENU mnuNone[4] = {
 		{"Guidance, Navigation & Control", 0, 'G'},
 		{"Environmental Control System", 0, 'E'},
-		{"IMFD Support", 0, 'I'}
+		{"IMFD Support", 0, 'I'},
+		{"Socket info", 0, 'S'}
 	};
 	static const MFDBUTTONMENU mnuGNC[2] = {
 		{"Back", 0, 'B'},
@@ -351,6 +363,10 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Toggle burn data requests", 0, 'R'},
 		{"Start S-IVB burn", 0, 'S'}
 	};
+	//This menu set is just for the Socket program, remove before release.
+	static const MFDBUTTONMENU mnuSOCK[1] = {
+		{"Back", 0, 'B'}
+	};
 	// We don't want to display a menu if we are in an unsupported vessel.
 	if (!saturn) {
 		menu = 0;
@@ -371,9 +387,15 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 			if (menu) *menu = mnuIMFDTliRun;
 			return 3;
 		}
-	} else {
+	}
+	else if (screen == PROG_SOCK)
+	{
+		if (menu) *menu = mnuSOCK;
+		return 1;
+	}
+	else {
 		if (menu) *menu = mnuNone;
-		return 3; 
+		return 4; 
 	}
 }
 
@@ -396,6 +418,11 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			return true;
 		} else if (key == OAPI_KEY_I) {
 			screen = PROG_IMFD;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		} else if (key == OAPI_KEY_S) {
+			screen = PROG_SOCK;
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
@@ -469,6 +496,17 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			return true;
 		} 
 	}
+	//This program is for the socket, remove before release.
+	else if (screen == PROG_SOCK)
+	{
+		if (key == OAPI_KEY_B)
+		{
+			screen = PROG_NONE;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -478,10 +516,11 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	//We only want to accept left mouse button clicks.
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
-	static const DWORD btkeyNone[3] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I };
+	static const DWORD btkeyNone[4] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_S };
 	static const DWORD btkeyGNC[2] = { OAPI_KEY_B, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
+	static const DWORD btkeySock[1] = { OAPI_KEY_B };
 
 	if (screen == PROG_GNC) {
 		if (bt < 2) return ConsumeKeyBuffered (btkeyGNC[bt]);
@@ -489,8 +528,14 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 		if (bt < 4) return ConsumeKeyBuffered (btkeyECS[bt]);
 	} else if (screen == PROG_IMFD) {
 		if (bt < 3) return ConsumeKeyBuffered (btkeyIMFD[bt]);		
-	} else {		
-		if (bt < 3) return ConsumeKeyBuffered (btkeyNone[bt]);
+	} 
+	// This program is the socket data.  Remove before release.
+	else if (screen == PROG_SOCK)
+	{
+		if (bt < 1) return ConsumeKeyBuffered (btkeySock[bt]);
+	}
+	else {		
+		if (bt < 4) return ConsumeKeyBuffered (btkeyNone[bt]);
 	}
 	return false;
 }
@@ -581,8 +626,16 @@ void ProjectApolloMFD::Update (HDC hDC)
 		sprintf(buffer, "%.1lfnm", peDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
 
+	//Draw Socket details.
+	}
+	else if (screen == PROG_SOCK)
+	{
+		TextOut(hDC, width / 2, (int) (height * 0.3), "Socket details", 14);
+		sprintf(buffer, "Socket: %i", close_Socket);
+		TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
+	}
 	// Draw ECS
-	} else if (screen == PROG_ECS) {
+	else if (screen == PROG_ECS) {
 		TextOut(hDC, width / 2, (int) (height * 0.3), "Environmental Control System", 28);
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.4), "Crew status:", 12);
@@ -848,3 +901,10 @@ bool SecECSTestHeaterPowerInput (void *id, char *str, void *data)
 }
 
 ProjectApolloMFD::ScreenData ProjectApolloMFD::screenData = {PROG_NONE};
+
+
+DLLCLBK bool defineSocket(SOCKET sockettoclose)
+{
+	close_Socket = sockettoclose;
+	return true;
+}
