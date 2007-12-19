@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2007/12/17 15:09:13  lassombra
+  *	Added function to alert Project Apollo's Configurator/MFD as to the identity of the Socket we are opening when we start the sim.  As a result, the configurator can now shutdown the socket when we close to launchpad, fixing the "TELECOM: BIND() FAILED" problem.  Also now, we have access to the socket in the MFD and can use it for various debugging purposes.
+  *	
   *	Revision 1.13  2007/12/16 00:47:53  lassombra
   *	Removed ability to use buttons/keystrokes when using any ship but a saturn.
   *	
@@ -105,6 +108,7 @@ int g_MFDmode; // identifier for new MFD mode
 #define PROG_IMFDTLI	4
 //This program displays info on the current telcom socket.  For debugging only.
 #define PROG_SOCK		5
+#define PROG_DEBUG		6
 
 #define PROGSTATE_NONE				0
 #define PROGSTATE_TLI_START			1
@@ -128,8 +132,9 @@ static struct {  // global data storage
 	double requestMjd;
 	char *errorMessage;
 } g_Data;
-
 SOCKET close_Socket = INVALID_SOCKET;
+char debugString[100];
+char debugStringBuffer[100];
 DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 {
 	static char *name = "Project Apollo";      // MFD mode name
@@ -277,6 +282,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 	height = h;
 	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
 	screen = PROG_NONE;
+	debug_frozen = false;
 
 	//We need to find out what type of vessel it is, so we check for the class name.
 	//Saturns have different functions than Crawlers.  But we have methods for both.
@@ -304,12 +310,14 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 {
 	// The labels for the buttons used by our MFD mode
 	//Additional button added to labelNone for testing socket work, be SURE to remove it.
-	static char *labelNone[4] = {"GNC", "ECS", "IMFD", "SOCK"};
+	//Additional button added at the bottom right of none for the debug string.
+	static char *labelNone[12] = {"GNC", "ECS", "IMFD", "SOCK","","","","","","","","DBG"};
 	static char *labelGNC[2] = {"BCK", "DMP"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
 	static char *labelSOCK[1] = {"BCK"};
+	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
 
 	//If we are working with an unsupported vehicle, we don't want to return any button labels.
 	if (!saturn) {
@@ -330,18 +338,29 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	else if (screen == PROG_SOCK) {
 		return (bt < 1 ? labelSOCK[bt] : 0);
 	}
-	return (bt < 4 ? labelNone[bt] : 0);
+	else if (screen == PROG_DEBUG) {
+		return (bt < 12 ? labelDEBUG[bt] : 0);
+	}
+	return (bt < 12 ? labelNone[bt] : 0);
 }
 
 // Return button menus
 int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 {
 	// The menu descriptions for the buttons used by our MFD mode
-	static const MFDBUTTONMENU mnuNone[4] = {
+	static const MFDBUTTONMENU mnuNone[12] = {
 		{"Guidance, Navigation & Control", 0, 'G'},
 		{"Environmental Control System", 0, 'E'},
 		{"IMFD Support", 0, 'I'},
-		{"Socket info", 0, 'S'}
+		{"Socket info", 0, 'S'},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{"Debug String",0,'D'}
 	};
 	static const MFDBUTTONMENU mnuGNC[2] = {
 		{"Back", 0, 'B'},
@@ -366,6 +385,20 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	//This menu set is just for the Socket program, remove before release.
 	static const MFDBUTTONMENU mnuSOCK[1] = {
 		{"Back", 0, 'B'}
+	};
+	static const MFDBUTTONMENU mnuDebug[12] = {
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{"Clear the Debug Line",0,'C'},
+		{"Freeze debug line",0,'F'},
+		{"Back",0,'B'}
 	};
 	// We don't want to display a menu if we are in an unsupported vessel.
 	if (!saturn) {
@@ -393,9 +426,14 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		if (menu) *menu = mnuSOCK;
 		return 1;
 	}
+	else if (screen == PROG_DEBUG)
+	{
+		if (menu) *menu = mnuDebug;
+		return 12;
+	}
 	else {
 		if (menu) *menu = mnuNone;
-		return 4; 
+		return 12; 
 	}
 }
 
@@ -423,6 +461,11 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			return true;
 		} else if (key == OAPI_KEY_S) {
 			screen = PROG_SOCK;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		} else if (key == OAPI_KEY_D) {
+			screen = PROG_DEBUG;
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
@@ -507,6 +550,29 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			return true;
 		}
 	}
+	else if (screen == PROG_DEBUG)
+	{
+		if (key == OAPI_KEY_B)
+		{
+			screen = PROG_NONE;
+			InvalidateDisplay();
+			InvalidateButtons();
+			return true;
+		}
+		else if (key == OAPI_KEY_F)
+		{
+			if (debug_frozen)
+				debug_frozen = false;
+			else
+				debug_frozen = true;
+			return true;
+		}
+		else if (key == OAPI_KEY_C)
+		{
+			sprintf(debugString,"");
+			return true;
+		}
+	}
 	return false;
 }
 
@@ -516,11 +582,12 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	//We only want to accept left mouse button clicks.
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
-	static const DWORD btkeyNone[4] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_S };
+	static const DWORD btkeyNone[12] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_S, 0, 0, 0, 0, 0, 0, 0, OAPI_KEY_D };
 	static const DWORD btkeyGNC[2] = { OAPI_KEY_B, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };
+	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B};
 
 	if (screen == PROG_GNC) {
 		if (bt < 2) return ConsumeKeyBuffered (btkeyGNC[bt]);
@@ -534,8 +601,12 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	{
 		if (bt < 1) return ConsumeKeyBuffered (btkeySock[bt]);
 	}
+	else if (screen == PROG_DEBUG)
+	{
+		if (bt < 12) return ConsumeKeyBuffered (btkeyDEBUG[bt]);
+	}
 	else {		
-		if (bt < 4) return ConsumeKeyBuffered (btkeyNone[bt]);
+		if (bt < 12) return ConsumeKeyBuffered (btkeyNone[bt]);
 	}
 	return false;
 }
@@ -781,6 +852,37 @@ void ProjectApolloMFD::Update (HDC hDC)
 			}
 		}
 	}
+	else if (screen == PROG_DEBUG)
+	{
+
+		if ((strcmp(debugString,debugStringBuffer)!= 0) && (strlen(debugStringBuffer) != 0) && !debug_frozen)
+		{
+			strcpy(debugString, debugStringBuffer);
+			sprintf(debugStringBuffer,"");
+		}
+		TextOut(hDC, width / 2, (int)(height * 0.3), "Debug Data",10);
+		if (strlen(debugString) > 35)
+		{
+			int i = 0;
+			double h = 0.4;
+			bool done = false;
+			while (!done)
+			{
+				if (strlen(&debugString[i]) > 35)
+				{
+					TextOut(hDC, width / 2, (int) (height * h), &debugString[i], 35);
+					i = i + 35;
+					h = h + 0.05;
+				}
+				else
+				{
+					TextOut(hDC, width / 2, (int) (height * h), &debugString[i], strlen(&debugString[i]));
+					done = true;
+				}
+			}
+		}
+		else TextOut(hDC, width / 2, (int) (height * 0.4), debugString, strlen(debugString));
+	}
 }
 
 void ProjectApolloMFD::WriteStatus (FILEHANDLE scn) const
@@ -907,4 +1009,9 @@ DLLCLBK bool defineSocket(SOCKET sockettoclose)
 {
 	close_Socket = sockettoclose;
 	return true;
+}
+
+DLLCLBK char *apolloMFDGetDebugString()
+{
+	return debugStringBuffer;
 }
