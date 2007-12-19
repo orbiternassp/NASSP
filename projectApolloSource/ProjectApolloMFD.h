@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/12/16 00:47:54  lassombra
+  *	Removed ability to use buttons/keystrokes when using any ship but a saturn.
+  *	
   *	Revision 1.6  2007/12/15 19:48:26  lassombra
   *	Added functionality to allow ProjectApollo MFD to get mission time from the Crawler as well as the Saturn.  The Crawler actually extracts the mission time from the Saturn, no updates to scenario files needed.
   *	
@@ -77,6 +80,7 @@ protected:
 	Saturn *saturn;
 	Crawler *crawler;
 	int screen;
+	bool debug_frozen;
 
 	static struct ScreenData {
 		int screen;

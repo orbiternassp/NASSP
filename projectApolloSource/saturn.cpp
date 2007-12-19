@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.211  2007/12/05 23:07:50  movieman523
+  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
+  *	
   *	Revision 1.210  2007/12/04 20:26:34  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -481,6 +484,21 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 
 	cws.MonitorVessel(this);
 	dockingprobe.RegisterVessel(this);
+
+	//Initialize the link to the MFD's debug function.
+	debugString = 0;
+	debugConnected = false;
+	HMODULE hdbg = GetModuleHandle("modules//plugin//ProjectApolloMFD.dll");
+	if (hdbg)
+	{
+		debugString = (char *(__cdecl *)()) GetProcAddress(hdbg,"apolloMFDGetDebugString");
+		if (debugString != 0)
+			debugConnected = true;
+	}
+	if (!debugConnected)
+	{
+		debugString = &oapiDebugString;
+	}
 }
 
 Saturn::~Saturn()
@@ -1505,7 +1523,11 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 {
 	TRACESETUP("Saturn::clbkPostStep");
-
+	if (debugConnected == false)
+	{
+		sprintf(debugString(), "Please enable the Project Apollo MFD on the modules tab of the launchpad.");
+		debugConnected = true;
+	}
 	if (stage >= PRELAUNCH_STAGE && !GenericFirstTimestep) {
 
 		//

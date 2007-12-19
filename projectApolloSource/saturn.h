@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.258  2007/12/05 23:07:50  movieman523
+  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
+  *	
   *	Revision 1.257  2007/12/05 19:23:29  jasonims
   *	EMS Implementation Step 4 - jasonims :   RSI is set up to rotate, but no actual controlling of it is done.
   *	
@@ -1097,6 +1100,10 @@ public:
 	// Now the actual code and data for the class.
 	//
 
+	//This simply equips us with a reference to either the mfd debug string, 
+	//or in the extreme case, the orbiter debug string
+	char *(__cdecl *debugString)();
+	bool debugConnected;
 	///
 	/// \brief Standard constructor with the usual Orbiter parameters.
 	///

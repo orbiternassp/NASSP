@@ -916,7 +916,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,50,1050));
 
 						default:
-							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 10-A-%d",ccode);
+							sprintf(sat->debugString(),"MEASURE: UNKNOWN 10-A-%d",ccode);
 							break;
 					}
 					break;
@@ -1292,7 +1292,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(0);
 
 						default:
-							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 11-A-%d",ccode);
+							sprintf(sat->debugString(),"MEASURE: UNKNOWN 11-A-%d",ccode);
 							break;
 					}
 					break;
@@ -1332,7 +1332,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,-0.807,0.807));
 
 						default:
-							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 12-A-%d",ccode);
+							sprintf(sat->debugString(),"MEASURE: UNKNOWN 12-A-%d",ccode);
 							break;
 					}
 					break;
@@ -1347,7 +1347,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 4:			// PITCH DIFF CLUTCH CURRENT
 							return(scale_data(0,-0.807,0.807));
 						default:
-							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 22-A-%d",ccode);
+							sprintf(sat->debugString(),"MEASURE: UNKNOWN 22-A-%d",ccode);
 							break;
 					}
 					break;
@@ -1380,18 +1380,18 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 15:
 							return(0);
 						default:
-							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 51-A-%d",ccode);
+							sprintf(sat->debugString(),"MEASURE: UNKNOWN 51-A-%d",ccode);
 							break;
 					}
 					break;
 				default:
-					sprintf(oapiDebugString(),"MEASURE: UNKNOWN %d-A-%d",channel,ccode);
+					sprintf(sat->debugString(),"MEASURE: UNKNOWN %d-A-%d",channel,ccode);
 					break;
 			}
 			break;
 		case TLM_DS: // DIGITAL SERIAL
 			/* NOT CALLED - ONLY USED AS 51DS1 FOR CMC DOWNTELEMETRY */
-			sprintf(oapiDebugString(),"MEASURE: UNKNOWN %d-DS-%d",channel,ccode);
+			sprintf(sat->debugString(),"MEASURE: UNKNOWN %d-DS-%d",channel,ccode);
 			break;
 		case TLM_DP: // DIGITAL PARALLEL (SAME THING AS EVENT BITS)
 		case TLM_E:  // EVENT BITS
@@ -1401,7 +1401,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 1: // S10DP1 - PCM BIT RATE CHANGE (?)
 							return(0);
 						default:
-							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 10-E-%d",ccode);
+							sprintf(sat->debugString(),"MEASURE: UNKNOWN 10-E-%d",ccode);
 							break;
 					}
 					break;
@@ -1557,7 +1557,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 								*/
 							return(0);
 						default:
-							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 11-E-%d",ccode);
+							sprintf(sat->debugString(),"MEASURE: UNKNOWN 11-E-%d",ccode);
 							break;
 					}
 					break;
@@ -1628,7 +1628,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 								*/
 							return(0);
 						default:
-							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 22-E-%d",ccode);
+							sprintf(sat->debugString(),"MEASURE: UNKNOWN 22-E-%d",ccode);
 							break;
 					}
 					break;
@@ -1637,12 +1637,12 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 2: // UDL VALIDITY BITS
 							return(0);
 						default:
-							sprintf(oapiDebugString(),"MEASURE: UNKNOWN 51-E-%d",ccode);
+							sprintf(sat->debugString(),"MEASURE: UNKNOWN 51-E-%d",ccode);
 							break;
 					}
 					break;
 				default:
-					sprintf(oapiDebugString(),"MEASURE: UNKNOWN %d-E-%d",channel,ccode);
+					sprintf(sat->debugString(),"MEASURE: UNKNOWN %d-E-%d",channel,ccode);
 					break;
 			}
 			break;
@@ -1653,7 +1653,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 				case 1: // SOURCE OF ONES
 					return(0xFF);
 				default:
-					sprintf(oapiDebugString(),"MEASURE: UNKNOWN SRC-%d",ccode);
+					sprintf(sat->debugString(),"MEASURE: UNKNOWN SRC-%d",ccode);
 					break;
 			}
 			break;
@@ -3392,7 +3392,7 @@ void PCM::perform_io(double simt){
 									rx_offset++; uplink_state=50;
 									break;
 								default:
-									sprintf(oapiDebugString(),"UPLINK: UNKNOWN SYSTEM-ADDRESS %o",sa);
+									sprintf(sat->debugString(),"UPLINK: UNKNOWN SYSTEM-ADDRESS %o",sa);
 									break;
 							}
 							break;
@@ -3445,7 +3445,7 @@ void PCM::perform_io(double simt){
 									rx_offset = 0; uplink_state = 0; break;
 
 								default:	
-									sprintf(oapiDebugString(),"UNKNOWN RTC SALVO CMD %o",rx_data[rx_offset]);
+									sprintf(sat->debugString(),"UNKNOWN RTC SALVO CMD %o",rx_data[rx_offset]);
 									rx_offset = 0; uplink_state = 0;
 									break;
 							}
@@ -3559,7 +3559,7 @@ void PCM::perform_io(double simt){
 									rx_offset = 0; uplink_state = 0; break;
 
 								default:	
-									sprintf(oapiDebugString(),"UNKNOWN RTC COMMAND %o",rx_data[rx_offset]);
+									sprintf(sat->debugString(),"UNKNOWN RTC COMMAND %o",rx_data[rx_offset]);
 									rx_offset = 0; uplink_state = 0;
 									break;
 							}
