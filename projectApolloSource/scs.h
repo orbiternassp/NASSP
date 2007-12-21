@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2007/12/05 19:23:30  jasonims
+  *	EMS Implementation Step 4 - jasonims :   RSI is set up to rotate, but no actual controlling of it is done.
+  *	
   *	Revision 1.23  2007/12/05 07:13:13  jasonims
   *	EMS Implementation Step 3b - jasonims :   EMS Scroll disappearance bug fixed.  No further implementation.
   *	
@@ -275,9 +278,9 @@ public:
 
 #define EMS_START_STRING	"EMS_BEGIN"
 #define EMS_END_STRING		"EMS_END"
-#define EMS_SCROLL_LENGTH_PX    2500
-#define EMS_RSI_CENTER_X        42
-#define EMS_RSI_CENTER_Y        41
+#define EMS_SCROLL_LENGTH_PX    2500   //Pixel length of bitmap
+#define EMS_RSI_CENTER_X        42     //Pixel center on bitmap
+#define EMS_RSI_CENTER_Y        41     //Pixel center on bitmap
 
 
 class EMS {
@@ -290,8 +293,7 @@ public:
 	double GetdVRangeCounter() { return dVRangeCounter; };
 	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
 	POINT RSITriangle[3];
-	double GetRSIRotation() { return RSIRotation; };
-	void SetRSIRotation(double angle) { RSIRotation = angle; };
+	void SetRSIRotation(double angle);
 	int ScribePntCnt;
 	int GetScrollOffset() { return ScribePntArray[ScribePntCnt-1].x-40; };
 	void SwitchChanged();
@@ -313,29 +315,35 @@ protected:
 	int status;
 	int SlewScribe; //pixels
 	int GScribe; //pixels
-	double ScrollPosition; //inches
+	double ScrollPosition; //fractional pixels
 	double MaxScrollPosition;
 	bool dVInitialized;
 	VECTOR3 lastWeight;
 	double dVRangeCounter;
 	double dVTestTime;
 
-	double temptime;
 	bool switchchangereset;
 
-	void RotateRSI();
-	double RSIRotation; // In radians.
+	void RotateRSI(double simdt);
+	double RSIRotation; // Current angle in radians.
+	double RSITarget;   // Target angle in radians.
 
 	bool pt05GLightOn;
 	bool pt05GFailed;
 
-	short int LiftVectLightOn;
+	//Comparator Circuits
+	bool pt05GComparator(double simdt);
+	bool pt02GComparator(double simdt);
+	bool InitialTrip;
+	double OneSecTimer;
+	short int VerifyCorridor();
+
+	short int LiftVectLightOn; //1 is up light, -1 is down light
 
 	//Threshold Circuits
-	double InitialTripTime;
-	double ThresholdIndicatorTripTime;
-	bool ThresholdBreeched;
-	bool ThresholdIndicatorTripped;
+	double TenSecTimer;
+	bool ThresholdBreeched; // .05G Comparator has been tripped.
+	double ThresholdBreechTime; // MissionTime that .05 Comparator is tripped
 	bool CorridorEvaluated;
 
 	double ScrollBitmapLength;

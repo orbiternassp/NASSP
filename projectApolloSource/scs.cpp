@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2007/12/05 19:23:30  jasonims
+  *	EMS Implementation Step 4 - jasonims :   RSI is set up to rotate, but no actual controlling of it is done.
+  *	
   *	Revision 1.26  2007/12/05 07:13:12  jasonims
   *	EMS Implementation Step 3b - jasonims :   EMS Scroll disappearance bug fixed.  No further implementation.
   *	
@@ -692,12 +695,28 @@ void GDC::Timestep(double simdt) {
 			yawBmag = &sat->bmag1;
 			sat->bmag1.Cage(2);
 			break;
-	}					
+	}		
+	
+	// Handling for .05G Switch:  According to AOH SCS Section 2.3.3.3.1...
+	// "...selecting backup rate (BMAG1) in yaw will automatically select the backup rate gyro (BMAG 1) in roll and vice versa..."
+	if (sat->GSwitch.IsUp() && (sat->BMAGPitchSwitch.IsDown() || sat->BMAGRollSwitch.IsDown())) {
+		rollBmag = &sat->bmag1;
+		yawBmag = &sat->bmag1;
+	}
+
 
 	AttitudeReference::Timestep(simdt);
 
 	rates.x = pitchBmag->GetRates().x;
-	rates.y = yawBmag->GetRates().y;
+	// Special Logic for Entry .05 Switch
+	if (sat->GSwitch.IsUp()) {
+		// Entry Stability Roll Transformation
+		rates.y = rollBmag->GetRates().z*tan(21.0*(PI/180)) + yawBmag->GetRates().y;
+//		sprintf(oapiDebugString(), "entry roll rate? %f", rates.y);
+	} else {
+		// Normal Operation
+		rates.y = yawBmag->GetRates().y;
+	}
 	rates.z = rollBmag->GetRates().z;
 
 	// If the current BMAG has no power it doesn't provide rates so we don't change 
@@ -721,12 +740,16 @@ void GDC::Timestep(double simdt) {
 bool GDC::AlignGDC() {
 	// User pushed the Align GDC button.
 	// Set the GDC attitude to match what's on the ASCP.
-	if (sat->FDAIAttSetSwitch.IsDown()) {
-		SetAttitude(_V(sat->ascp.output.x * 0.017453,
-					   sat->ascp.output.y * 0.017453,
-					   sat->ascp.output.z * 0.017453)); // Degrees to radians
-		return true;
-	} 
+	if (sat->EMSRollSwitch.IsDown()) {
+		if (sat->FDAIAttSetSwitch.IsDown()) {
+			SetAttitude(_V(sat->ascp.output.x * 0.017453,
+						   sat->ascp.output.y * 0.017453,
+						   sat->ascp.output.z * 0.017453)); // Degrees to radians
+			return true;
+		}
+	} else {
+		sat->ems.SetRSIRotation(sat->ascp.output.z * 0.017453);
+	}
 	return false;	
 }
 
@@ -2679,7 +2702,6 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	constG = 9.7939; //Set initial value
 	RSIRotation = PI/2;
 
-	temptime = 0.0;
 	switchchangereset = false;
 
 	pt05GLightOn = false;
@@ -2687,10 +2709,10 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	LiftVectLightOn = 0;
 
 	ThresholdBreeched = false;
-	ThresholdIndicatorTripped = false;
+	ThresholdBreechTime = 0.0;
 	CorridorEvaluated = false;
-	InitialTripTime = 0.0;
-	ThresholdIndicatorTripTime = 0.0;
+	TenSecTimer = 0.0;
+	InitialTrip = false;
 
 	ScribePntCnt = 1;
 	ScribePntArray[0].x = 0;
@@ -2709,9 +2731,10 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	//  For proper scaling....
 		/*	The scroll bitmap is 2500 pixels in length, and 100 feet per sec on the dV scale is equililent to 3 pixels on the bitmap.
 			On the real scroll, 480 feet per sec is roughly equal to .263 inches of scroll.  (AOH-v1-Spacecraft Control System, pg 2.3-58)
-			Therefore, the scaling factor between pixels and inches of scroll length is 0.018263888888888888888888888888889*/
+			Therefore, the scaling factor between pixels and inches of scroll length is 0.018263888888888888888888888888889
+			Or...      the scaling factor between pixels and ft/sec is 0.03*/
 	ScrollBitmapLength = 2500; //Pixels
-	ScrollScaling = .01826388888; // inches per pixel
+	ScrollScaling = 0.03; // pixels per ft/sec
 }
 
 void EMS::Init(Saturn *vessel) {
@@ -2732,54 +2755,12 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 		status = EMS_STATUS_OFF; 
 		return;
 	}
-	// If powered, drive Glevel
-	GScribe = (int)(xaccG*13.6);
-
+	
 	if (switchchangereset) {
-		temptime = MissionTime;
 		switchchangereset = false;
 		pt05GLightOn = false;
+		LiftVectLightOn = 0;
 	}
-
-	//Threshold and Corridor Verification Logic
-	/*
-	if (!ThresholdBreeched && sat->GetStage() >= CM_STAGE) {					//We're in the CM and .05 hasn't been tripped.
-		// Check for .05g  Threshold Indicator requirements met.
-
-		if (abs(xaccG - .05) <= .005) {												//if accerlerometer reads 0.05 +- 0.005...
-			ThresholdIndicatorTripped=true;
-			InitialTripTime=MissionTime;
-		}
-
-		//sprintf(oapiDebugString(), "xacc %.10f   dV %.10f   dX %.10f  ScrollPos: %.10f", xacc, dV, dV*simdt, ScrollPosition);
-
-		if (ThresholdIndicatorTripped) {
-			if (MissionTime-InitialTripTime >= 1.0 && abs(xaccG-.05) <= .005) {		//...for more than one second...
-				pt05GLightOn = true;
-				ThresholdBreeched = true;
-			} else if (MissionTime-InitialTripTime < 1.0 && (xaccG-.02) < 0.0) {		//... if drops below 0.02 light extengished...
-				ThresholdIndicatorTripped=false;
-				pt05GLightOn = false;
-				ThresholdBreeched = false;
-				InitialTripTime=0.0;
-			} else if (MissionTime-InitialTripTime < 1.0 && abs(xaccG-.02) <= .005) {
-				ThresholdBreeched = false;
-				pt05GLightOn = false;
-			}
-		}
-	} else if (ThresholdBreeched && !CorridorEvaluated) {
-		pt05GLightOn = true;
-		if (abs(MissionTime-InitialTripTime-10.053) >= 0.05) {
-			if (xaccG > .262) LiftVectLightOn = 1;
-			if (xaccG < .262) LiftVectLightOn = -1;
-			CorridorEvaluated = true;
-		}
-	} else if (CorridorEvaluated) {
-		if (xaccG >= 2.0) {
-			LiftVectLightOn = 0;
-		}
-	}
-	*/
 
 	// Turn on reset
 	if (status == EMS_STATUS_OFF && sat->EMSFunctionSwitch.GetState() != 0) {
@@ -2797,7 +2778,6 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 					dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 				}				
 				//sprintf(oapiDebugString(), "xacc %.10f", xacc);
-				//sprintf(oapiDebugString(), "Avg x %.10f y %.10f z %.10f l%.10f", avg.x, avg.y, avg.z, length(avg));								
 
 			}
 			break;
@@ -2828,23 +2808,41 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 			break;
 		
 		case EMS_STATUS_ENTRY:
-			if (ThresholdBreeched || sat->EMSModeSwitch.IsDown()) {
-				ScrollPosition=ScrollPosition+(dV*(.263/480));
+
+			if (ThresholdBreeched) { // if .05G comparator has been tripped
+
+				if (pt02GComparator(simdt)) ThresholdBreeched = false;
+
+				ScrollPosition=ScrollPosition+(dV*ScrollScaling); //Rough conversion of ft/sec to pixels of scroll
 				dVRangeCounter -= dV*simdt;
+
 				pt05GLightOn = true;
+				if (!CorridorEvaluated){
+					TenSecTimer -= simdt;
+					if (TenSecTimer < 0.0) {
+						LiftVectLightOn = VerifyCorridor();
+						CorridorEvaluated = true;
+					}
+				} else {
+					if (xaccG > 2) LiftVectLightOn = 0;
+				}
+			} else {
+				if (pt05GComparator(simdt)) ThresholdBreeched = true;
+				TenSecTimer = 10.0;
 			}
+
 			break;
 		
 		case EMS_STATUS_Vo_SET:
 			position = sat->EMSDvSetSwitch.GetPosition();
 			if (position == 1)
-				ScrollPosition += .263 * simdt;
+				ScrollPosition += 480*ScrollScaling * simdt;
 			else if (position == 2)
-				ScrollPosition += .0164 * simdt;
-			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=1.0)
-				ScrollPosition -= .263 * simdt;
-			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=1.0)
-				ScrollPosition -= .0164 * simdt;
+				ScrollPosition += 30*ScrollScaling * simdt;
+			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=40.0)
+				ScrollPosition -= 480*ScrollScaling * simdt;
+			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=40.0)
+				ScrollPosition -= 30*ScrollScaling * simdt;
 			break;
 
 		case EMS_STATUS_RNG_SET:
@@ -2862,13 +2860,13 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 		case EMS_STATUS_EMS_TEST1:
 			position = sat->EMSDvSetSwitch.GetPosition();
 			if (position == 1)
-				ScrollPosition += .263 * simdt;
+				ScrollPosition += 480*ScrollScaling * simdt;
 			else if (position == 2)
-				ScrollPosition += .0164 * simdt;
-			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=1.0)
-				ScrollPosition -= .263 * simdt;
-			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=1.0)
-				ScrollPosition -= .0164 * simdt;
+				ScrollPosition += 30*ScrollScaling * simdt;
+			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=40.0)
+				ScrollPosition -= 480*ScrollScaling * simdt;
+			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=40.0)
+				ScrollPosition -= 30*ScrollScaling * simdt;
 			break;
 
 		case EMS_STATUS_EMS_TEST2:
@@ -2876,30 +2874,59 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 			break;
 
 		case EMS_STATUS_EMS_TEST3:
+			position = sat->EMSDvSetSwitch.GetPosition();
+			if (position == 1)
+				dVRangeCounter += 127.5 * simdt;
+			else if (position == 2)
+				dVRangeCounter += 0.25 * simdt;
+			else if (position == 3)
+				dVRangeCounter -= 127.5 * simdt;
+			else if (position == 4)
+				dVRangeCounter -= 0.25 * simdt;
 			pt05GLightOn = true;
+			if ((TenSecTimer -= simdt) < 0.0) LiftVectLightOn = -1;
 			break;
 
 		case EMS_STATUS_EMS_TEST4:
+			if (TenSecTimer > 0.0) {
+				xaccG = 9*(1.0-(TenSecTimer/10.0));
+				TenSecTimer -= simdt;
+				dV = 2.25*constG * simdt * FPS;
+				ScrollPosition=ScrollPosition+(dV*ScrollScaling); 
+				dVRangeCounter -= dV*simdt;
+			} else {
+				TenSecTimer -= simdt;
+				if (TenSecTimer > -19.5) {
+					xaccG = 9;
+					dV = 2.3*constG * simdt * FPS;
+					ScrollPosition=ScrollPosition+(dV*ScrollScaling); 
+					dVRangeCounter -= dV*simdt;
+				}
+			}
 			pt05GLightOn = true;
 			break;
 
 		case EMS_STATUS_EMS_TEST5:
 			position = sat->EMSDvSetSwitch.GetPosition();
 			if (position == 1)
-				ScrollPosition += .263 * simdt;
+				ScrollPosition += 480*ScrollScaling * simdt;
 			else if (position == 2)
-				ScrollPosition += .0164 * simdt;
-			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=1.0)
-				ScrollPosition -= .263 * simdt;
-			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=1.0)
-				ScrollPosition -= .0164 * simdt;
+				ScrollPosition += 30*ScrollScaling * simdt;
+			else if (position == 3 && (MaxScrollPosition-ScrollPosition)<=40.0)
+				ScrollPosition -= 480*ScrollScaling * simdt;
+			else if (position == 4 && (MaxScrollPosition-ScrollPosition)<=40.0)
+				ScrollPosition -= 30*ScrollScaling * simdt;
 			pt05GLightOn = true;
+			if ((TenSecTimer -= simdt) < 0.0) LiftVectLightOn = 1;
 			break;
 	}
 
+	// If powered, drive Glevel
+	GScribe = (int)(xaccG*13.6); // 13.6 vertical pixels per G
+
 	// Limit readouts
 	dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
-	ScrollPosition = max(0.0, min(ScrollBitmapLength*ScrollScaling, ScrollPosition));
+	ScrollPosition = max(0.0, min(ScrollBitmapLength, ScrollPosition));
 
 	// Limit reversing of scroll when in nominal operation by tracking Max position
 	if (sat->GTASwitch.IsUp() && sat->GetStage() >= CM_STAGE) {
@@ -2908,9 +2935,9 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 		if (ScrollPosition > MaxScrollPosition) {MaxScrollPosition = ScrollPosition;};
 	}
 
-	SlewScribe = (int)(ScrollPosition/ScrollScaling) + 40; //Offset of 40 to shift the drawing correctly
+	SlewScribe = (int)(ScrollPosition) + 40; //Offset of 40 to shift the drawing correctly
 
-	if (SlewScribe != ScribePntArray[ScribePntCnt-1].x || GScribe != ScribePntArray[ScribePntCnt-1].y) {
+	if (SlewScribe != ScribePntArray[ScribePntCnt-1].x || GScribe != ScribePntArray[ScribePntCnt-1].y) { //If either x or y has changed, add new point to trace
 		if (ScribePntCnt < EMS_SCROLL_LENGTH_PX*3) ScribePntCnt++;
 	}
 	ScribePntArray[ScribePntCnt-1].y = GScribe;
@@ -2918,11 +2945,15 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 
 	//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
 
-	if (sat->GTASwitch.IsUp()) {
-		if (RSIRotation > (2*PI)) RSIRotation = RSIRotation - 2*PI;
-		RotateRSI();
-		RSIRotation = RSIRotation + PI/360;
+	if (sat->GSwitch.IsUp()) {
+		SetRSIRotation(RSITarget + sat->gdc.rates.z*simdt);
+		//sprintf(oapiDebugString(), "entry lift angle? %f", RSITarget);
 	}
+	if (sat->GTASwitch.IsUp()) {
+		SetRSIRotation(RSITarget + PI/360);
+	}
+	
+	RotateRSI(simdt);
 
 }
 
@@ -3038,12 +3069,15 @@ void EMS::SwitchChanged() {
 			status = EMS_STATUS_RNG_SET;
 			break;
 		case 7: // TEST 5
+			TenSecTimer = 10.0;
 			status = EMS_STATUS_EMS_TEST5;
 			break;
 		case 8: // TEST 4
+			TenSecTimer = 10.0;
 			status = EMS_STATUS_EMS_TEST4;
 			break;
 		case 9: // TEST 3
+			TenSecTimer = 10.0;
 			status = EMS_STATUS_EMS_TEST3;
 			break;
 		case 10: // TEST 2
@@ -3061,21 +3095,81 @@ void EMS::SwitchChanged() {
 	switchchangereset=true;
 	// sprintf(oapiDebugString(),"EMSFunctionSwitch %d", sat->EMSFunctionSwitch.GetState());
 }
+void EMS::SetRSIRotation(double angle) { 
 
-void EMS::RotateRSI() {
+	angle = fmod(angle+(2*PI),2*PI); //remove unwanted multiples of 2PI and avoid negative numbers
+
+	//sprintf(oapiDebugString(),"RSITarget:%f  RSIRotation:%f ", angle,RSIRotation);
+
+	RSITarget = angle;
+}
+void EMS::RotateRSI(double simdt) {
 
 	double cRSIrot,sRSIrot;
+	double error,dtheta;
+	int dir; // + : counterclockwise  - : clockwise
+
+	if (RSITarget > RSIRotation) {
+		dir = 1;
+	}else{
+		dir = -1;
+	}
+	if (abs(RSITarget - RSIRotation) > PI) dir = -dir;  // Deal with sign crossing of 0/360 value
+
+	dtheta = (50*(PI/180)*simdt); //Hardcoded rotation rate of 50 degrees per second...unknown actual value.
+	error = abs(RSITarget - RSIRotation); //Difference between desired and current value
+	if (error < dtheta) dtheta = error; //use smaller of two
+
+	RSIRotation = RSIRotation + dir*dtheta;
+
+	// Check Limits and keep within 0-2PI bounds
+	if (RSIRotation > (2*PI)) RSIRotation = RSIRotation - 2*PI;
+	if (RSIRotation < 0) RSIRotation = RSIRotation + 2*PI;
+
+	//sprintf(oapiDebugString(),"RSITarget:%f  RSIRotation:%f dir:%d", RSITarget,RSIRotation,dir);
 
 	cRSIrot=cos(RSIRotation);
 	sRSIrot=sin(RSIRotation);
 
-	RSITriangle[0].x = EMS_RSI_CENTER_X + (int)(cRSIrot*28);
-	RSITriangle[0].y = EMS_RSI_CENTER_Y + (int)(-sRSIrot*28);
-	RSITriangle[1].x = EMS_RSI_CENTER_X + (int)(-cRSIrot*16 + sRSIrot*8);
-	RSITriangle[1].y = EMS_RSI_CENTER_Y + (int)(cRSIrot*8 + sRSIrot*16);
-	RSITriangle[2].x = EMS_RSI_CENTER_X + (int)(-cRSIrot*16 - sRSIrot*8);
-	RSITriangle[2].y = EMS_RSI_CENTER_Y + (int)(-cRSIrot*8 + sRSIrot*16);
-	
+	RSITriangle[0].x = EMS_RSI_CENTER_X + (int)(sRSIrot*28);
+	RSITriangle[0].y = EMS_RSI_CENTER_Y + (int)(-cRSIrot*28);
+	RSITriangle[1].x = EMS_RSI_CENTER_X + (int)(-sRSIrot*16 + cRSIrot*8);
+	RSITriangle[1].y = EMS_RSI_CENTER_Y + (int)(sRSIrot*8 + cRSIrot*16);
+	RSITriangle[2].x = EMS_RSI_CENTER_X + (int)(-sRSIrot*16 - cRSIrot*8);
+	RSITriangle[2].y = EMS_RSI_CENTER_Y + (int)(-sRSIrot*8 + cRSIrot*16);
+
+}
+
+bool EMS::pt05GComparator(double simdt) {
+
+	if (xaccG >= 0.05 && !InitialTrip){
+		InitialTrip = true;
+		OneSecTimer = 1.0;
+		return false;
+	} else if (xaccG >= 0.05 && InitialTrip){
+		OneSecTimer -= simdt;
+	} else {
+		InitialTrip = false;
+		OneSecTimer = 0.0;
+	}
+	if (OneSecTimer < 0.0) {
+		return true;
+	}
+
+	return false;
+}
+bool EMS::pt02GComparator(double simdt) {
+
+	if (xaccG < 0.02 && ThresholdBreeched) {
+		return true;
+	}
+	return false;
+}
+
+short int EMS::VerifyCorridor() {
+	if (xaccG > .262) return 1;
+	if (xaccG < .262) return -1;
+	return 0;
 }
 
 bool EMS::SPSThrustLight() {
@@ -3127,6 +3221,12 @@ void EMS::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
 	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
 	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
+	papiWriteScenario_double(scn, "RSITARGET", RSITarget);
+	papiWriteScenario_double(scn, "SCROLLPOSITION", ScrollPosition);
+	oapiWriteScenario_int(scn, "THRESHOLDBREECHED", (ThresholdBreeched ? 1 : 0));
+	oapiWriteScenario_int(scn, "CORRIDOREVALUATED", (CorridorEvaluated ? 1 : 0));
+	papiWriteScenario_double(scn, "TENSECTIMER", TenSecTimer);
+	oapiWriteScenario_int(scn, "LIFTVECTLTON", LiftVectLightOn);
 
 	oapiWriteLine(scn, EMS_END_STRING);
 }
@@ -3152,6 +3252,20 @@ void EMS::LoadState(FILEHANDLE scn){
 			sscanf(line + 14, "%lf", &dVRangeCounter);
 		} else if (!strnicmp (line, "DVTESTTIME", 10)) {
 			sscanf(line + 10, "%lf", &dVTestTime);
-		}	
+		} else if (!strnicmp (line, "RSITARGET", 9)) {
+			sscanf(line + 9, "%lf", &RSITarget);
+		} else if (!strnicmp (line, "SCROLLPOSITION", 14)) {
+			sscanf(line + 14, "%lf", &ScrollPosition);
+		} else if (!strnicmp (line, "THRESHOLDBREECHED", 17)) {
+			sscanf(line + 17, "%i", &i);
+			ThresholdBreeched = (i == 1);
+		} else if (!strnicmp (line, "CORRIDOREVALUATED", 17)) {
+			sscanf(line + 17, "%i", &i);
+			CorridorEvaluated = (i == 1);
+		} else if (!strnicmp (line, "TENSECTIMER", 11)) {
+			sscanf(line + 11, "%lf", &TenSecTimer);
+		} else if (!strnicmp (line, "LIFTVECTLTON", 12)) {
+			sscanf(line + 12, "%lf", &LiftVectLightOn);
+		}
 	}
 }
