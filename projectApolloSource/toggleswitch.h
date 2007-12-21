@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2007/12/21 02:31:18  movieman523
+  *	Added SetState() call and some more documentation.
+  *	
   *	Revision 1.65  2007/12/21 01:00:27  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -363,6 +366,12 @@ public:
 	/// \return Current state value.
 	///
 	virtual int GetState();
+
+	///
+	/// \brief Set current state.
+	/// \param value State to set.
+	///
+	virtual void SetState(int value);
 
 protected:
 	///
