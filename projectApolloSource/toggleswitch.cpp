@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2007/12/21 01:00:23  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   *	Revision 1.82  2007/11/30 16:40:40  movieman523
   *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
   *	
@@ -1149,6 +1152,26 @@ int PanelSwitches::GetState(char *n)
 	}
 
 	return -1;
+}
+
+bool PanelSwitches::SetState(char *n, int value)
+
+{
+	PanelSwitchItem *p;
+	SwitchRow *row = RowList;
+
+	while (row) {
+		p = row->GetItemByName(n);
+		if (p)
+		{
+			p->SetState(value);
+			return true;
+		}
+
+		row = row->GetNext();
+	}
+
+	return false;
 }
 
 //
@@ -3604,6 +3627,10 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 
 	case MFD_PANEL_GET_ITEM_STATE:
 		m.val1.iValue = panel.GetState((char *) m.val1.pValue);
+		return true;
+
+	case MFD_PANEL_SET_ITEM_STATE:
+		m.val1.bValue = panel.SetState((char *) m.val1.pValue, m.val2.iValue);
 		return true;
 	}
 
