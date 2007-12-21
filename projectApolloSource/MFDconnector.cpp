@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2007/12/21 02:31:17  movieman523
+  *	Added SetState() call and some more documentation.
+  *	
   *	Revision 1.1  2007/12/21 01:00:29  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -44,8 +47,7 @@
 MFDConnector::MFDConnector()
 
 {
-	type = MFD_PANEL_INTERFACE;
-	vessel = 0;
+	SetType(MFD_PANEL_INTERFACE);
 }
 
 MFDConnector::~MFDConnector()
@@ -56,14 +58,19 @@ MFDConnector::~MFDConnector()
 bool MFDConnector::ConnectToVessel(VESSEL *v)
 
 {
-	if (vessel)
-	{
-		vessel->Disconnect();
-		vessel = 0;
-	}
+	//
+	// Disconnect in case we're already connected.
+	//
+	Disconnect();
 
-	vessel = GetConnector(v, VIRTUAL_CONNECTOR_PORT, type);
-	
+	//
+	// See if we can find the appropriate connector on the vessel.
+	//
+	Connector *vessel = GetConnector(v, VIRTUAL_CONNECTOR_PORT, type);
+
+	//
+	// Try to connect if we did.
+	//
 	if (vessel)
 	{
 		return ConnectTo(vessel);
@@ -75,20 +82,7 @@ bool MFDConnector::ConnectToVessel(VESSEL *v)
 void MFDConnector::DisconnectVessel()
 
 {
-	if (vessel)
-	{
-		vessel->Disconnect();
-		vessel = 0;
-	}
-}
-
-//
-// For now we don't process any messages from the panel.
-//
-bool MFDConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-
-{
-	return false;
+	Disconnect();
 }
 
 bool MFDConnector::SetFlashing(char *n, bool flash)

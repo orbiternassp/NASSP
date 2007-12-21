@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/12/21 01:00:10  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   *	Revision 1.4  2007/12/05 23:07:45  movieman523
   *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
   *	
@@ -311,6 +314,12 @@ bool ProjectApolloConnectorVessel::RegisterConnector(int port, Connector *c)
 Connector *GetConnector(VESSEL *v, int port, ConnectorType t)
 
 {
+	//
+	// Check for null pointer, just in case!
+	//
+	if (!v)
+		return NULL;
+
 	char *classname = v->GetClassName();
 
 	//

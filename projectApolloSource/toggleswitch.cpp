@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2007/12/21 02:31:17  movieman523
+  *	Added SetState() call and some more documentation.
+  *	
   *	Revision 1.83  2007/12/21 01:00:23  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -348,6 +351,12 @@ int PanelSwitchItem::GetState()
 		return state;
 
 	return FailedState;
+}
+
+void PanelSwitchItem::SetState(int value)
+
+{
+	state = value;
 }
 
 //

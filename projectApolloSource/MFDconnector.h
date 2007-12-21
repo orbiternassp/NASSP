@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2007/12/21 02:31:17  movieman523
+  *	Added SetState() call and some more documentation.
+  *	
   *	Revision 1.1  2007/12/21 01:00:30  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -39,8 +42,6 @@ class MFDConnector : public Connector
 public:
 	MFDConnector();
 	~MFDConnector();
-
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
 	///
 	/// Connect to a vessel. If already connected, this call will
@@ -83,7 +84,6 @@ public:
 	bool SetState(char *n, int value);
 
 protected:
-	Connector *vessel;
 };
 
 #endif // _PA_MFDCONNECTOR_H
