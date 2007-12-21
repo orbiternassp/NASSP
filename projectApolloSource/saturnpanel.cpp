@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.225  2007/12/05 19:49:55  tschachim
+  *	Fixed max. 70A for the inverter power cbs.
+  *	
   *	Revision 1.224  2007/12/05 19:23:29  jasonims
   *	EMS Implementation Step 4 - jasonims :   RSI is set up to rotate, but no actual controlling of it is done.
   *	
@@ -1921,8 +1924,8 @@ void Saturn::SetSwitches(int panel) {
 
 	FDAISwitchesRow.Init(AID_FDAI_SWITCHES, MainPanel);
 	FDAIScaleSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FDAISwitchesRow);
-	FDAISourceSwitch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FDAISwitchesRow);
-	FDAISelectSwitch.Init(142, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FDAISwitchesRow);
+	FDAISelectSwitch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FDAISwitchesRow);
+	FDAISourceSwitch.Init(142, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FDAISwitchesRow);
 	FDAIAttSetSwitch.Init(185, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], FDAISwitchesRow);
 
 	//
@@ -3954,13 +3957,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	// FDAIs
 	case AID_FDAI_LEFT:
-		if (!fdaiDisabled){
+		if (!fdaiDisabled){  // Is this FDAI enabled?
 			VECTOR3 euler_rates;
 			VECTOR3 attitude;
 			VECTOR3 errors;
 			int no_att = 0;
-			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
-			switch(FDAISourceSwitch.GetState()){
+			switch(FDAISelectSwitch.GetState()){
 				case THREEPOSSWITCH_UP:     // 1+2 - FDAI1 shows IMU ATT / CMC ERR
 					euler_rates = gdc.rates;					
 					attitude = imu.GetTotalAttitude();
@@ -3968,7 +3970,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 					break;
 				case THREEPOSSWITCH_DOWN:   // 1 -- ALTERNATE DIRECT MODE
 					euler_rates = gdc.rates;					
-					switch(FDAISelectSwitch.GetState()){
+					switch(FDAISourceSwitch.GetState()){
 						case THREEPOSSWITCH_UP:   // IMU
 							attitude = imu.GetTotalAttitude();
 							errors = eda.ReturnCMCErrorNeedles();
@@ -4005,14 +4007,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_FDAI_RIGHT:
-		if (!fdaiDisabled){
+		if (!fdaiDisabled){  // Is this FDAI enabled?
 			int no_att = 0;
 			VECTOR3 euler_rates;
 			VECTOR3 attitude;
 			VECTOR3 errors;
-			// Is this FDAI enabled?
-			// *** DANGER WILL ROBINSON: FDAISourceSwitch and FDAISelectSwitch ARE REVERSED! ***
-			switch(FDAISourceSwitch.GetState()){
+			switch(FDAISelectSwitch.GetState()){
 				case THREEPOSSWITCH_UP:     // 1+2 - FDAI2 shows GDC ATT / BMAG1 ERR
 					attitude = gdc.GetAttitude();
 					euler_rates = gdc.rates;
@@ -4021,7 +4021,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 				case THREEPOSSWITCH_CENTER: // 2
 					euler_rates = gdc.rates;
 					// Get attitude to display
-					switch(FDAISelectSwitch.GetState()){
+					switch(FDAISourceSwitch.GetState()){
 						case THREEPOSSWITCH_UP:   // IMU
 							attitude = imu.GetTotalAttitude();
 							errors = eda.ReturnCMCErrorNeedles();
@@ -4332,7 +4332,22 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_EMS_RSI_BKGRND:
+
 		oapiBlt(surf, srf[SRF_EMS_RSI_BKGRND], 0,0,0,0,86,84);
+
+		switch (ems.LiftVectLight()) {
+			case -1:
+				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 60, 6, 20, 6);
+				break;
+			case 1:
+				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 60, 22, 22, 10);
+				break;
+			case 0:
+				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 60, 0, 20, 6);
+				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 60, 12, 22, 10);
+				break;
+		}
+		
 		hDC = oapiGetDC (srf[SRF_EMS_RSI_BKGRND]);
 		SetBkMode (hDC, TRANSPARENT);
 		pen = SelectObject(hDC,GetStockObject(WHITE_PEN));
@@ -4342,6 +4357,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		SelectObject(hDC,pen);
 		SelectObject(hDC,brush);
 		oapiReleaseDC (srf[SRF_EMS_RSI_BKGRND], hDC);
+
 		return true;
 	
 	case AID_EMSDVSETSWITCH:
@@ -4822,8 +4838,8 @@ void Saturn::InitSwitches() {
 	CMCAttSwitch.Register(PSH, "CMCAttSwitch", 1);
 
 	FDAIScaleSwitch.Register(PSH, "FDAIScaleSwitch", THREEPOSSWITCH_UP);
-	FDAISourceSwitch.Register(PSH, "FDAISourceSwitch", THREEPOSSWITCH_UP);
 	FDAISelectSwitch.Register(PSH, "FDAISelectSwitch", THREEPOSSWITCH_UP);
+	FDAISourceSwitch.Register(PSH, "FDAISourceSwitch", THREEPOSSWITCH_UP);
 	FDAIAttSetSwitch.Register(PSH, "FDAIAttSetSwitch", false);
 
 	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 0, 0);
