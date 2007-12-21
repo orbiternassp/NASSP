@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2007/12/21 01:00:10  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   *	Revision 1.8  2007/12/05 23:07:45  movieman523
   *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
   *	
@@ -271,6 +274,7 @@ public:
 	{
 		MFD_PANEL_FLASH_ITEM,					///< Turn flash on or off.
 		MFD_PANEL_GET_ITEM_STATE,				///< Get the item's current state.
+		MFD_PANEL_SET_ITEM_STATE,				///< Set the item's current state.
 	};
 
 	PanelConnector(PanelSwitches &p);

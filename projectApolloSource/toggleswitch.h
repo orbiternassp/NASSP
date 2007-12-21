@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.65  2007/12/21 01:00:27  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   *	Revision 1.64  2007/11/30 16:40:40  movieman523
   *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
   *	
@@ -1397,6 +1400,7 @@ public:
 	bool SetFlashing(char *n, bool flash);
 
 	int GetState(char *n);
+	bool SetState(char *n, int value);
 
 protected:
 	VESSEL *vessel;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2007/12/21 01:00:29  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   **************************************************************************/
 
 #include "orbiterSDK.h"
@@ -106,7 +109,7 @@ bool MFDConnector::SetFlashing(char *n, bool flash)
 	return false;
 }
 
-int MFDConnector::GetValue(char *n)
+int MFDConnector::GetState(char *n)
 
 {
 	ConnectorMessage cm;
@@ -121,4 +124,22 @@ int MFDConnector::GetValue(char *n)
 	}
 
 	return (-1);
+}
+
+bool MFDConnector::SetState(char *n, int value)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_SET_ITEM_STATE;
+	cm.val1.pValue = n;
+	cm.val2.iValue = value;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
 }
