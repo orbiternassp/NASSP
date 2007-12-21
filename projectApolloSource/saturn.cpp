@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.213  2007/12/21 01:00:11  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   *	Revision 1.212  2007/12/19 02:54:26  lassombra
   *	Added function to move debug strings to the MFD.
   *	
@@ -1377,47 +1380,24 @@ void Saturn::DockConnectors()
 	if (!connected)
 		return;
 
-	if (!hs4bM)
+	VESSEL *dockedWith = oapiGetVesselInterface(connected);
+
+	//
+	// Currently we assume we're docked with port 0 on the other vessel. We
+	// should really figure out which one it is!
+	//
+	Connector *SIVbConnector = GetVesselConnector(dockedWith, 0, CSMToSIVBConnector.GetType());
+
+	if (SIVbConnector)
 	{
-		//
-		// Find the SIVb if we don't know where it is.
-		//
-		LookForSIVb();
+		CSMToSIVBConnector.ConnectTo(SIVbConnector);
 	}
 
-	if (!hLMV)
+	Connector *LEMConnector = GetVesselConnector(dockedWith, 0, CSMToLEMConnector.GetType());
+
+	if (LEMConnector)
 	{
-		LookForLEM();
-	}
-
-	if (connected == hs4bM)
-	{
-		///
-		/// \todo This should really only be done when the docking probe is retracted for a hard
-		/// dock.
-		///
-		SIVB *SIVBVessel = (SIVB *) oapiGetVesselInterface(connected);
-		Connector *SIVbConnector = SIVBVessel->GetDockingConnector();
-
-		if (SIVbConnector)
-		{
-			CSMToSIVBConnector.ConnectTo(SIVbConnector);
-		}
-	}
-
-	if (connected == hLMV)
-	{
-		///
-		/// \todo This should really only be done when the docking probe is retracted for a hard
-		/// dock.
-		///
-		LEM *LEMVessel = (LEM *) oapiGetVesselInterface(connected);
-		Connector *LEMConnector = LEMVessel->GetDockingConnector();
-
-		if (LEMConnector)
-		{
-			CSMToLEMConnector.ConnectTo(LEMConnector);
-		}
+		CSMToLEMConnector.ConnectTo(LEMConnector);
 	}
 }
 

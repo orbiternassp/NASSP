@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/12/21 02:31:17  movieman523
+  *	Added SetState() call and some more documentation.
+  *	
   *	Revision 1.9  2007/12/21 01:00:10  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -367,6 +370,6 @@ protected:
 /// \param t Connector type to look for.
 /// \return Connector if found, or NULL if not.
 ///
-extern Connector *GetConnector(VESSEL *v, int port, ConnectorType t);
+extern Connector *GetVesselConnector(VESSEL *v, int port, ConnectorType t);
 
 #endif // _PA_CONNECTOR_H

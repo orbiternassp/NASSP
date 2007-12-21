@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2007/12/05 23:07:51  movieman523
+  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
+  *	
   *	Revision 1.35  2007/12/04 20:26:37  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -362,17 +365,6 @@ void SIVB::InitS4b()
 	// Register docking connector so the CSM can find it.
 	//
 	RegisterConnector(0, &SIVBToCSMConnector);
-}
-
-Connector *SIVB::GetDockingConnector()
-
-{
-	if (Payload == PAYLOAD_DOCKING_ADAPTER)
-	{
-		return &SIVBToCSMConnector;
-	}
-
-	return 0;
 }
 
 void SIVB::Boiloff()
