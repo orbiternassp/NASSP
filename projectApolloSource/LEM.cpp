@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2007/12/21 01:00:09  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   *	Revision 1.8  2007/11/30 17:46:32  movieman523
   *	Implemented remaining meters as 0-5V voltmeters for now.
   *	
@@ -190,7 +193,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmode
 	for (x = 0; x < N_LEM_VALVES; x++){
 		pLEMValves[x] = NULL;
 		ValveState[x] = FALSE;
-		x++;
 	}
 
 	//
