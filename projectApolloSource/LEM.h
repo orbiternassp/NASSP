@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2007/11/30 17:46:32  movieman523
+  *	Implemented remaining meters as 0-5V voltmeters for now.
+  *	
   *	Revision 1.8  2007/11/30 16:40:40  movieman523
   *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
   *	
@@ -148,7 +151,7 @@ public:
 ///
 /// \ingroup LEM
 ///
-class LEM : public VESSEL2, public PanelSwitchListener {
+class LEM : public ProjectApolloConnectorVessel, public PanelSwitchListener {
 
 public:
 
@@ -987,6 +990,11 @@ protected:
 	//
 	// Connectors.
 	//
+
+	///
+	/// \brief MFD to panel connector.
+	///
+	PanelConnector MFDToPanelConnector;
 
 	///
 	/// \brief Connector from LEM to CSM when docked.

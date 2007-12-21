@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.13  2006/07/21 23:04:34  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -835,4 +838,87 @@ void PowerDrainConnectorObject::Disconnected()
 
 {
 	PowerDrawn = PowerDraw = 0.0;
+}
+
+PowerDrainConnector::PowerDrainConnector()
+
+{
+	power_drain = 0;
+}
+
+PowerDrainConnector::~PowerDrainConnector()
+
+{
+}
+
+void PowerDrainConnector::SetPowerDrain(PowerDrainConnectorObject *p)
+
+{
+	power_drain = p;
+}
+
+void PowerDrainConnector::Disconnected()
+
+{
+	//
+	// If we've disconnected then stop drawing power.
+	//
+	if (power_drain)
+	{
+		power_drain->Disconnected();
+	}
+}
+
+bool PowerDrainConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	PowerSourceMessageType messageType;
+
+	messageType = (PowerSourceMessageType) m.messageType;
+
+	switch (messageType)
+	{
+	case POWERCON_GET_VOLTAGE:
+		if (power_drain)
+		{
+			m.val1.dValue = power_drain->Voltage();
+			return true;
+		}
+		break;
+
+	case POWERCON_GET_CURRENT:
+		if (power_drain)
+		{
+			m.val1.dValue = power_drain->Current();
+			return true;
+		}
+		break;
+
+	case POWERCON_DRAW_POWER:
+		if (power_drain)
+		{
+			power_drain->ProcessDrawPower(m.val1.dValue);
+			return true;
+		}
+		break;
+
+	case POWERCON_UPDATE_FLOW:
+		if (power_drain)
+		{
+			power_drain->ProcessUpdateFlow(m.val1.dValue);
+			return true;
+		}
+		break;
+	}
+
+	return false;
 }

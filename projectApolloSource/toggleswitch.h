@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.64  2007/11/30 16:40:40  movieman523
+  *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
+  *	
   *	Revision 1.63  2007/11/29 22:08:27  movieman523
   *	Moved electric meters to generic classes in toggleswitch.cpp rather than Saturn-specific.
   *	
@@ -223,6 +226,10 @@
 
 #include "cautionwarning.h"
 
+//
+// Switch states. Only use positive numbers.
+//
+
 #define TOGGLESWITCH_DOWN		0			///< Toggle switch is up.
 #define TOGGLESWITCH_UP			1			///< Toggle switch is down.
 
@@ -348,7 +355,19 @@ public:
 	///
 	void SetVisible(bool v) {visible = v; };
 
+	///
+	/// \brief Get current state.
+	/// \return Current state value.
+	///
+	virtual int GetState();
+
 protected:
+	///
+	/// This can be interpreted in any desired manner by derived classes. Only positive values should be used.
+	/// \brief Current state.
+	///
+	int state;
+
 	///
 	/// If a switch fails, you can no longer change the state even if you can still move
 	/// the toggle. If a gauge fails it will no longer read the correct value.
@@ -415,7 +434,6 @@ public:
 	bool IsSpringLoaded() { return (springLoaded != SPRINGLOADEDSWITCH_NONE); };
 	void SetHeld(bool s) { Held = s; };
 	bool IsHeld() { return Held; };
-	virtual int GetState();
 	void SetActive(bool s);
 
 	bool Toggled() { return SwitchToggled; };
@@ -471,7 +489,6 @@ protected:
 	int xOffset;
 	int yOffset;
 
-	int state;
 	int springLoaded;
 	bool Active;
 	bool SwitchToggled;
@@ -1322,6 +1339,14 @@ public:
 	SwitchRow *GetNext() { return RowList; };
 	void SetNext(SwitchRow *s) { RowList = s; };
 
+	///
+	/// Look up a panel switch item by its name.
+	///
+	/// \param n String for panel item name.
+	/// \return Item if found, NULL if not.
+	///
+	PanelSwitchItem *GetItemByName(char *n);
+
 protected:
 	PanelSwitchItem *SwitchList;
 	SwitchRow *RowList;
@@ -1361,6 +1386,17 @@ public:
 	void AddRow(SwitchRow *s) { s->SetNext(RowList); RowList = s; };
 	void Init(int id, VESSEL *v, SoundLib *s, PanelSwitchListener *l) { PanelID = id; RowList = 0; vessel = v; soundlib = s; listener = l; };
 	void SetRealism(int r) { Realism = r; };
+
+	///
+	/// Set an item's flashing state.
+	///
+	/// \param n Item name.
+	/// \param flash True for flashing, false for not.
+	/// \return True if we found the item, false if not.
+	///
+	bool SetFlashing(char *n, bool flash);
+
+	int GetState(char *n);
 
 protected:
 	VESSEL *vessel;

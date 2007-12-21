@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/12/05 23:07:45  movieman523
+  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
+  *	
   *	Revision 1.7  2007/12/04 20:26:31  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -63,7 +66,10 @@ enum ConnectorType
 	CSM_SIVB_COMMAND,			///< Passes commands and data between CSM and SIVb.
 	CSM_SIVB_POWER,				///< Power connection from SIVB to CSM.
 	LEM_CSM_POWER,				///< Power connection from CSM to LEM.
+	MFD_PANEL_INTERFACE,		///< Connector from an MFD to a panel.
 };
+
+#define VIRTUAL_CONNECTOR_PORT	(0xffff)		///< Port ID for 'virtual' connectors which don't physically exist.
 
 //
 // The message can pass various different parameters in this union. The receiver
@@ -245,6 +251,35 @@ public:
 
 private:
 	PowerDrainConnectorObject *power_drain;
+};
+
+class PanelSwitches;
+
+///
+/// \ingroup Connectors
+/// \brief Connector class for panel interface.
+///
+class PanelConnector : public Connector
+{
+public:
+
+	///
+	/// \ingroup Connectors
+	/// \brief Message type to send from the CSM to the SIVb.
+	///
+	enum PanelConnectorMessageType
+	{
+		MFD_PANEL_FLASH_ITEM,					///< Turn flash on or off.
+		MFD_PANEL_GET_ITEM_STATE,				///< Get the item's current state.
+	};
+
+	PanelConnector(PanelSwitches &p);
+	~PanelConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+private:
+	PanelSwitches &panel;
 };
 
 ///

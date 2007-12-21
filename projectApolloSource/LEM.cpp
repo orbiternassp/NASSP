@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/11/30 17:46:32  movieman523
+  *	Implemented remaining meters as 0-5V voltmeters for now.
+  *	
   *	Revision 1.7  2007/11/30 16:40:40  movieman523
   *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
   *	
@@ -157,7 +160,7 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 }
 
 // Constructor
-LEM::LEM(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel), 
+LEM::LEM(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 	
 	CDRs28VBus("CDR-28V-Bus",NULL),
 	LMPs28VBus("LMP-28V-Bus",NULL),
@@ -173,6 +176,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel),
 	ComYawMeter(0.0, 5.0, 220.0, -50.0),
 	Panel14SignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
+	MFDToPanelConnector(MainPanel),
 	imu(agc, Panelsdk)
 
 {
@@ -330,6 +334,11 @@ void LEM::Init()
 	SoundsLoaded = false;
 
 	exhaustTex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust_atrcs");
+
+	//
+	// Register visible connectors.
+	//
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 }
 
 void LEM::DoFirstTimestep()
