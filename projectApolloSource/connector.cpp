@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/12/21 02:47:08  movieman523
+  *	Connector cleanup, and fix my build break!
+  *	
   *	Revision 1.5  2007/12/21 01:00:10  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -311,7 +314,7 @@ bool ProjectApolloConnectorVessel::RegisterConnector(int port, Connector *c)
 	return false;
 }
 
-Connector *GetConnector(VESSEL *v, int port, ConnectorType t)
+Connector *GetVesselConnector(VESSEL *v, int port, ConnectorType t)
 
 {
 	//

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/12/21 03:35:52  movieman523
+  *	Fixed LEM initialisation bug.
+  *	
   *	Revision 1.9  2007/12/21 01:00:09  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -341,6 +344,7 @@ void LEM::Init()
 	// Register visible connectors.
 	//
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
+	RegisterConnector(0, &LEMToCSMConnector);
 }
 
 void LEM::DoFirstTimestep()
@@ -1221,12 +1225,6 @@ bool LEM::clbkLoadGenericCockpit ()
 	SetView();
 
 	return true;
-}
-
-Connector *LEM::GetDockingConnector()
-
-{
-	return &LEMToCSMConnector;
 }
 
 //

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/12/21 01:00:09  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   *	Revision 1.9  2007/11/30 17:46:32  movieman523
   *	Implemented remaining meters as 0-5V voltmeters for now.
   *	
@@ -324,7 +327,6 @@ public:
 	virtual void SetLanderData(LemSettings &ls);
 	virtual void PadLoad(unsigned int address, unsigned int value);
 	virtual void StopEVA();
-	virtual Connector *GetDockingConnector();
 
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources

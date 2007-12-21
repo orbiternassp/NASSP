@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/12/05 23:07:53  movieman523
+  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
+  *	
   *	Revision 1.22  2007/12/02 07:13:39  movieman523
   *	Updates for Apollo 5 and unmanned Saturn 1b missions.
   *	
@@ -278,12 +281,6 @@ public:
 	/// \param state SIVb state settings.
 	///
 	virtual void SetState(SIVBSettings &state);
-
-	///
-	/// \brief Get the docking connector. Virtual function so it can be called from the Saturn.
-	/// \return Pointer to docking connector, if it exists.
-	///
-	virtual Connector *GetDockingConnector();
 
 	///
 	/// \brief Set thrust level of the J2 engine.

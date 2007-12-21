@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2007/12/21 02:47:08  movieman523
+  *	Connector cleanup, and fix my build break!
+  *	
   *	Revision 1.2  2007/12/21 02:31:17  movieman523
   *	Added SetState() call and some more documentation.
   *	
@@ -66,7 +69,7 @@ bool MFDConnector::ConnectToVessel(VESSEL *v)
 	//
 	// See if we can find the appropriate connector on the vessel.
 	//
-	Connector *vessel = GetConnector(v, VIRTUAL_CONNECTOR_PORT, type);
+	Connector *vessel = GetVesselConnector(v, VIRTUAL_CONNECTOR_PORT, type);
 
 	//
 	// Try to connect if we did.
