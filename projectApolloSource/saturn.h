@@ -23,6 +23,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.259  2007/12/19 02:54:26  lassombra
+  *	Added function to move debug strings to the MFD.
+  *	
+  *	MFD can display, freeze, or clear the debug strings.
+  *	
+  *	Use (Saturn *)saturn->debugString() just as you would use oapiDebugString.
+  *	
+  *	oapiDebugString can be used to output important alerts to users still, but should remain clean otherwise.
+  *	
+  *	Also, redirected all the debug statements from the Telecom to the mfd.
+  *	
   *	Revision 1.258  2007/12/05 23:07:50  movieman523
   *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
   *	
@@ -749,7 +760,7 @@ typedef struct {
 /// \brief Generic Saturn launch vehicle class.
 /// \ingroup Saturns
 ///
-class Saturn: public VESSEL2, public PanelSwitchListener {
+class Saturn: public ProjectApolloConnectorVessel, public PanelSwitchListener {
 
 public:
 
@@ -4410,6 +4421,11 @@ protected:
 	//
 	// Connectors.
 	//
+
+	///
+	/// \brief MFD to panel connector.
+	///
+	PanelConnector MFDToPanelConnector;
 
 	///
 	/// \brief Connector from CSM to IU.

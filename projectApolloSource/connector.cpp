@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/12/05 23:07:45  movieman523
+  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
+  *	
   *	Revision 1.3  2006/07/27 20:40:06  movieman523
   *	We can now draw power from the SIVb in the Apollo to Venus scenario.
   *	
@@ -254,89 +257,6 @@ void MultiConnector::Disconnect()
 	}
 
 	Connector::Disconnect();
-}
-
-PowerDrainConnector::PowerDrainConnector()
-
-{
-	power_drain = 0;
-}
-
-PowerDrainConnector::~PowerDrainConnector()
-
-{
-}
-
-void PowerDrainConnector::SetPowerDrain(PowerDrainConnectorObject *p)
-
-{
-	power_drain = p;
-}
-
-void PowerDrainConnector::Disconnected()
-
-{
-	//
-	// If we've disconnected then stop drawing power.
-	//
-	if (power_drain)
-	{
-		power_drain->Disconnected();
-	}
-}
-
-bool PowerDrainConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-
-{
-	//
-	// Sanity check.
-	//
-
-	if (m.destination != type)
-	{
-		return false;
-	}
-
-	PowerSourceMessageType messageType;
-
-	messageType = (PowerSourceMessageType) m.messageType;
-
-	switch (messageType)
-	{
-	case POWERCON_GET_VOLTAGE:
-		if (power_drain)
-		{
-			m.val1.dValue = power_drain->Voltage();
-			return true;
-		}
-		break;
-
-	case POWERCON_GET_CURRENT:
-		if (power_drain)
-		{
-			m.val1.dValue = power_drain->Current();
-			return true;
-		}
-		break;
-
-	case POWERCON_DRAW_POWER:
-		if (power_drain)
-		{
-			power_drain->ProcessDrawPower(m.val1.dValue);
-			return true;
-		}
-		break;
-
-	case POWERCON_UPDATE_FLOW:
-		if (power_drain)
-		{
-			power_drain->ProcessUpdateFlow(m.val1.dValue);
-			return true;
-		}
-		break;
-	}
-
-	return false;
 }
 
 ProjectApolloConnectorVessel::ProjectApolloConnectorVessel(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)

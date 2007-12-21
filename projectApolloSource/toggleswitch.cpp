@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2007/11/30 16:40:40  movieman523
+  *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
+  *	
   *	Revision 1.81  2007/11/29 22:08:27  movieman523
   *	Moved electric meters to generic classes in toggleswitch.cpp rather than Saturn-specific.
   *	
@@ -295,6 +298,7 @@
 #include "powersource.h"
 #include "fdai.h"
 #include "scs.h"
+#include "connector.h"
 
 // DS20060304 SCS PANEL OBJECTS
 
@@ -307,6 +311,7 @@ PanelSwitchItem::PanelSwitchItem()
 {
 	Failed = false;
 	FailedState = 0;
+	state = 0;
 
 	name = 0;
 	next = 0;
@@ -327,6 +332,22 @@ char *PanelSwitchItem::GetDisplayName()
 }
 
 //
+// Get the state. If it's failed, return the failed state.
+//
+// Note that you should always call this to get the state unless you're actually concerned with
+// the appearance of the switch rather than the functionality.
+//
+
+int PanelSwitchItem::GetState()
+
+{
+	if (!Failed)
+		return state;
+
+	return FailedState;
+}
+
+//
 // Generic toggle switch.
 //
 
@@ -336,7 +357,6 @@ ToggleSwitch::ToggleSwitch() {
 	y = 0;
 	width = 0;
 	height = 0;
-	state = 0;
 	springLoaded = SPRINGLOADEDSWITCH_NONE;
 
 	next = 0;
@@ -459,22 +479,6 @@ void ToggleSwitch::SetFlags(unsigned int f)
 	fs.flags = f;
 
 	Held = (fs.Held != 0);
-}
-
-//
-// Get the state. If it's failed, return the failed state.
-//
-// Note that you should always call this to get the state unless you're actually concerned with
-// the appearance of the switch rather than the functionality.
-//
-
-int ToggleSwitch::GetState()
-
-{
-	if (!Failed)
-		return state;
-
-	return FailedState;
 }
 
 bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
@@ -1030,6 +1034,26 @@ void SwitchRow::AddSwitch(PanelSwitchItem *s)
 		s->WireTo(RowPower);
 }
 
+PanelSwitchItem *SwitchRow::GetItemByName(char *n)
+
+{
+	if (!n)
+		return 0;
+
+	PanelSwitchItem *s = SwitchList;
+	while (s) {
+		char *nm = s->GetName();
+		if (nm && !strcmp(nm, n))
+		{
+			return s;
+		}
+
+		s = s->GetNext();
+	}
+
+	return 0;
+}
+
 void SwitchRow::Init(int area, PanelSwitches &panel, e_object *p) {
 
 	SwitchList = 0;
@@ -1086,6 +1110,45 @@ bool PanelSwitches::DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn) {
 	}
 
 	return false;
+}
+
+bool PanelSwitches::SetFlashing(char *n, bool flash)
+
+{
+	PanelSwitchItem *p;
+	SwitchRow *row = RowList;
+
+	while (row) {
+		p = row->GetItemByName(n);
+		if (p)
+		{
+			p->SetFlashing(flash);
+			return true;
+		}
+
+		row = row->GetNext();
+	}
+
+	return false;
+}
+
+int PanelSwitches::GetState(char *n)
+
+{
+	PanelSwitchItem *p;
+	SwitchRow *row = RowList;
+
+	while (row) {
+		p = row->GetItemByName(n);
+		if (p)
+		{
+			return p->GetState();
+		}
+
+		row = row->GetNext();
+	}
+
+	return -1;
 }
 
 //
@@ -3501,3 +3564,48 @@ void HandcontrollerSwitch::LoadState(char *line) {
 	}
 }
 
+//
+// Panel interface connector. This is here as it's primarily concerned
+// with handling panel calls.
+//
+
+PanelConnector::PanelConnector(PanelSwitches &p) : panel(p)
+
+{
+	type = MFD_PANEL_INTERFACE;
+}
+
+PanelConnector::~PanelConnector()
+
+{
+}
+
+bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	PanelConnectorMessageType messageType;
+
+	messageType = (PanelConnectorMessageType) m.messageType;
+
+	switch (messageType)
+	{
+	case MFD_PANEL_FLASH_ITEM:
+		m.val1.bValue = panel.SetFlashing((char *) m.val1.pValue, m.val2.bValue);
+		return true;
+
+	case MFD_PANEL_GET_ITEM_STATE:
+		m.val1.iValue = panel.GetState((char *) m.val1.pValue);
+		return true;
+	}
+
+	return false;
+}
