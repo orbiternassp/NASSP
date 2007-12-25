@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.226  2007/12/21 09:38:43  jasonims
+  *	EMS Implementation Step 5 - jasonims :   SCROLL: complete:  possible inaccuracy in velocity integration.   RSI: complete:  accurate readings, but unsure of authenticity of method, (lack of documentation found).    THRESHOLD CIRCUITRY:  complete: seems quite accurate.   CORRIDOR VERIFICATION: complete: needs testing, but appears to be correct.    RANGE:  working but inaccurate:  probable inaccuracy in range integration....unknown cause.   EMS State is saved as well.    Testing must insue.
+  *	
   *	Revision 1.225  2007/12/05 19:49:55  tschachim
   *	Fixed max. 70A for the inverter power cbs.
   *	
@@ -710,7 +713,6 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_SWITCH20]								= oapiCreateSurface (LOADBMP (IDB_SWITCH20));
 	srf[SRF_SWITCH30]								= oapiCreateSurface (LOADBMP (IDB_SWITCH30));
 	srf[SRF_SWITCH30LEFT]							= oapiCreateSurface (LOADBMP (IDB_SWITCH30LEFT));
-	srf[SRF_CSMRIGHTWINDOWCOVER]					= oapiCreateSurface (LOADBMP (IDB_CSMRIGHTWINDOWCOVER));
 	srf[SRF_SWITCH20LEFT]							= oapiCreateSurface (LOADBMP (IDB_SWITCH20LEFT));
 	srf[SRF_THREEPOSSWITCH20LEFT]					= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH20LEFT));
 	srf[SRF_GUARDEDSWITCH20]						= oapiCreateSurface (LOADBMP (IDB_GUARDEDSWITCH20));
@@ -722,9 +724,10 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_SPSMAXINDICATOR]						= oapiCreateSurface (LOADBMP (IDB_SPSMAXINDICATOR));
 	srf[SRF_SPSMININDICATOR]						= oapiCreateSurface (LOADBMP (IDB_SPSMININDICATOR));
 	srf[SRF_ECSROTARY]								= oapiCreateSurface (LOADBMP (IDB_ECSROTARY));
-	srf[SRF_CSMMAINPANELWINDOWCOVER]				= oapiCreateSurface (LOADBMP (IDB_CSMMAINPANELWINDOWCOVER));
-	srf[SRF_CSMRIGHTRNDZWINDOWLESCOVER]				= oapiCreateSurface (LOADBMP (IDB_CSMRIGHTRNDZWINDOWLESCOVER));
-	srf[SRF_CSMLEFTWINDOWCOVER]						= oapiCreateSurface (LOADBMP (IDB_CSMLEFTWINDOWCOVER));
+	srf[SRF_CSM_MNPNL_WDW_LES]						= oapiCreateSurface (LOADBMP (IDB_CSM_MNPNL_WDW_LES));
+	srf[SRF_CSM_RNDZ_WDW_LES]						= oapiCreateSurface (LOADBMP (IDB_CSM_RNDZ_WDW_LES));
+	srf[SRF_CSM_RIGHT_WDW_LES]						= oapiCreateSurface (LOADBMP (IDB_CSM_RIGHT_WDW_LES));
+	srf[SRF_CSM_LEFT_WDW_LES]						= oapiCreateSurface (LOADBMP (IDB_CSM_LEFT_WDW_LES));
 	srf[SRF_GLYCOLLEVER]							= oapiCreateSurface (LOADBMP (IDB_GLYCOLLEVER));
 	srf[SRF_FDAIOFFFLAG]       						= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
 	srf[SRF_FDAINEEDLES]							= oapiCreateSurface (LOADBMP (IDB_FDAINEEDLES));
@@ -834,7 +837,6 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL],		g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT],	g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKER],						g_Param.col[4]);
-	oapiSetSurfaceColourKey (srf[SRF_CSMRIGHTWINDOWCOVER],					g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_FDAIPOWERROTARY],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_DIRECTO2ROTARY],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_ECSGLYCOLPUMPROTARY],					g_Param.col[4]);
@@ -843,9 +845,10 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_SPSMAXINDICATOR],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_SPSMININDICATOR],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_ECSROTARY],							g_Param.col[4]);	
-	oapiSetSurfaceColourKey	(srf[SRF_CSMMAINPANELWINDOWCOVER],				g_Param.col[4]);	
-	oapiSetSurfaceColourKey	(srf[SRF_CSMRIGHTRNDZWINDOWLESCOVER],			g_Param.col[4]);
-	oapiSetSurfaceColourKey	(srf[SRF_CSMLEFTWINDOWCOVER],					g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_CSM_MNPNL_WDW_LES],					g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_CSM_RNDZ_WDW_LES],						g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_RIGHT_WDW_LES],					g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_CSM_LEFT_WDW_LES],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_GLYCOLLEVER],							g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_FDAIOFFFLAG],							g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_FDAINEEDLES],							g_Param.col[4]);
@@ -1098,6 +1101,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		else
 			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_MAIN, -1, SATPANEL_LOWER_LEFT);
 
+		oapiRegisterPanelArea (AID_CSM_LEFT_WDW_LES,							_R( 553,  244, 1062,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
+
 		oapiRegisterPanelArea (AID_LEFTCOASSWITCH,								_R(1316,   63, 1350,   94), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTTUTILITYPOWERSWITCH,						_R(1425,   81, 1459,  112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_POSTLANDINGBCNLTSWITCH,						_R(1468,   88, 1502,  119), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1159,6 +1164,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		else
 			oapiSetPanelNeighbours(SATPANEL_MAIN, -1, -1, SATPANEL_RIGHT_CB);
 
+		oapiRegisterPanelArea (AID_CSM_RIGHT_WDW_LES,							_R( 621,  244, 1130,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
+
 		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 311,  881,  475,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 825, 1428,  901, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSSWITCH,						_R( 734, 1525,  824, 1615), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1213,8 +1220,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_TELCOMSWITCHES,								_R( 672, 1416,  762, 1527), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RIGHTINTERIORLIGHTROTARIES,					_R( 319,  974,  542, 1064), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL275CIRCUITBRAKERS,				        _R(1467, 1092, 1496, 1717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		
-		//oapiRegisterPanelArea (AID_RIGHTWINDOWCOVER,							_R( 609,  237, 1134,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1248,6 +1253,8 @@ bool Saturn::clbkLoadPanel (int id) {
 			oapiSetPanelNeighbours(SATPANEL_HATCH_WINDOW, -1, -1, SATPANEL_MAIN_RIGHT);
 		else
 			oapiSetPanelNeighbours(SATPANEL_HATCH_WINDOW, -1, -1, SATPANEL_MAIN);
+
+		oapiRegisterPanelArea (AID_CSM_RNDZ_WDW_LES,	_R( 464,  103, 1105,  840), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1554,6 +1561,8 @@ void Saturn::AddRightMiddleMainPanelAreas(int offset) {
 }
 
 void Saturn::AddRightMainPanelAreas(int offset) {
+
+	oapiRegisterPanelArea (AID_CSM_MNPNL_WDW_LES,							_R(3071 + offset,    0, 3430 + offset,  160), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 
 	oapiRegisterPanelArea (AID_FUELCELLINDICATORS,		    				_R(2763 + offset,  319, 2913 + offset,  443), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_FUELCELLPHRADTEMPINDICATORS,	  				_R(2822 + offset,  490, 3019 + offset,  513), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -3918,6 +3927,32 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	//
 
 	switch (id) {
+	
+	
+	case AID_CSM_MNPNL_WDW_LES:
+		if (LESAttached) {
+			oapiBlt(surf,srf[SRF_CSM_MNPNL_WDW_LES], 0, 0, 0, 0, 355, 155, SURF_PREDEF_CK);
+		}
+		return true;
+
+	case AID_CSM_RNDZ_WDW_LES:
+		if (LESAttached) {
+			oapiBlt(surf,srf[SRF_CSM_RNDZ_WDW_LES], 0, 0, 0, 0, 638, 732, SURF_PREDEF_CK);
+		}
+		return true;
+
+	case AID_CSM_RIGHT_WDW_LES:
+		if (LESAttached) {
+			oapiBlt(surf,srf[SRF_CSM_RIGHT_WDW_LES], 0, 0, 0, 0, 506, 483, SURF_PREDEF_CK);
+		}
+		return true;
+
+	case AID_CSM_LEFT_WDW_LES:
+		if (LESAttached) {
+			oapiBlt(surf,srf[SRF_CSM_LEFT_WDW_LES], 0, 0, 0, 0, 506, 483, SURF_PREDEF_CK);
+		}
+		return true;
+
 	case AID_DSKY_LIGHTS:
 		dsky.RenderLights(surf, srf[SRF_DSKY]);
 		return true;
