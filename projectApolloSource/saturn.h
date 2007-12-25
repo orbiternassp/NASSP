@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.260  2007/12/21 01:00:22  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   *	Revision 1.259  2007/12/19 02:54:26  lassombra
   *	Added function to move debug strings to the MFD.
   *	
@@ -819,7 +822,6 @@ public:
 		SRF_THREEPOSSWITCH30,
 		SRF_SWITCH20,
 		SRF_SWITCH30,
-		SRF_CSMRIGHTWINDOWCOVER,
 		SRF_SWITCH20LEFT,
 		SRF_THREEPOSSWITCH20LEFT,
 		SRF_GUARDEDSWITCH20,
@@ -840,9 +842,10 @@ public:
 		SRF_POSTLDGVENTVLVLEVER,
 		SRF_SPSMAXINDICATOR,
 		SRF_ECSROTARY,
-		SRF_CSMMAINPANELWINDOWCOVER,
-		SRF_CSMRIGHTRNDZWINDOWLESCOVER,
-		SRF_CSMLEFTWINDOWCOVER, 
+		SRF_CSM_MNPNL_WDW_LES,
+		SRF_CSM_RNDZ_WDW_LES,
+		SRF_CSM_RIGHT_WDW_LES,
+		SRF_CSM_LEFT_WDW_LES,
 		SRF_GLYCOLLEVER,
 		SRF_FDAIOFFFLAG,
 		SRF_FDAINEEDLES,

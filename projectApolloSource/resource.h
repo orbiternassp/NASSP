@@ -645,6 +645,14 @@
 #define IDB_CSM_RIGHT_CB_PANEL                              928
 #define IDB_EMS_RSI_BKGRND                                  929
 #define AID_EMS_RSI_BKGRND                                  930
+#define IDB_CSM_MNPNL_WDW_LES								931
+#define AID_CSM_MNPNL_WDW_LES								932
+#define IDB_CSM_RNDZ_WDW_LES								933
+#define AID_CSM_RNDZ_WDW_LES								934
+#define IDB_CSM_RIGHT_WDW_LES								935
+#define AID_CSM_RIGHT_WDW_LES								936
+#define IDB_CSM_LEFT_WDW_LES								937
+#define AID_CSM_LEFT_WDW_LES								938
 
 
 // Next default values for new objects
