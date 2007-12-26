@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/10/18 00:23:13  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.22  2006/07/24 19:20:35  tschachim
   *	Bugfix Power load.
   *	
@@ -423,11 +426,11 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	// 60-176
 
 	// Draw Roll-Rate Needle
-	oapiBlt (surf, hFDAINeedles, targetX, 6, 16, 3, 12, 11, SURF_PREDEF_CK);
+	oapiBlt (surf, hFDAINeedles, targetX, 5, 16, 3, 12, 11, SURF_PREDEF_CK);
 	// Draw Pitch-Rate Needle
-	oapiBlt (surf, hFDAINeedles, 223, targetY, 28, 3, 10, 12, SURF_PREDEF_CK);
+	oapiBlt (surf, hFDAINeedles, 225, targetY, 28, 3, 10, 12, SURF_PREDEF_CK);
 	// Draw Yaw-Rate Needle
-	oapiBlt (surf, hFDAINeedles, targetZ, 222, 4, 3, 12, 11, SURF_PREDEF_CK);
+	oapiBlt (surf, hFDAINeedles, targetZ, 224, 4, 3, 12, 11, SURF_PREDEF_CK);
 
 	// Draw Roll-Error Needle
 	// 122,42 is the center, 41 px left-right variance, 11 px up-down variance.
