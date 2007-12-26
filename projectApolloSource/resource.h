@@ -653,6 +653,17 @@
 #define AID_CSM_RIGHT_WDW_LES								936
 #define IDB_CSM_LEFT_WDW_LES								937
 #define AID_CSM_LEFT_WDW_LES								938
+#define IDB_CSM_SUIT_FLOW_CONTROL_LEVER						939
+#define IDB_BORDER_87x111									940
+#define AID_SUIT_FLOW_CONTROL_LEVER_300						941
+#define AID_SUIT_FLOW_CONTROL_LEVER_301						942
+#define AID_SUIT_FLOW_CONTROL_LEVER_302						943
+#define IDB_CSM_SEC_CABIN_TEMP_VALVE						944
+#define AID_CSM_SEC_CABIN_TEMP_VALVE						945
+#define IDB_BORDER_23x23									946
+#define IDB_CSM_FOOT_PREP_WATER_LEVER						947
+#define IDB_BORDER_118x118									948
+#define AID_FOOD_PREPARATION_WATER							949
 
 
 // Next default values for new objects

@@ -130,6 +130,9 @@ IDB_BORDER_57x57                            BITMAP  "Bitmaps\\border57x57.bmp"
 IDB_BORDER_47x47                            BITMAP  "Bitmaps\\border47x47.bmp"
 IDB_BORDER_48x48                            BITMAP  "Bitmaps\\border48x48.bmp"
 IDB_BORDER_65x65                            BITMAP  "Bitmaps\\border65x65.bmp"
+IDB_BORDER_87x111                           BITMAP  "Bitmaps\\border87x111.bmp"
+IDB_BORDER_118x118			    BITMAP  "Bitmaps\\border118x118.bmp"
+IDB_BORDER_23x23			    BITMAP  "Bitmaps\\border23x23.bmp"
 IDB_FDAINEEDLES                             BITMAP  "Bitmaps\\FDAI_needles.bmp"
 IDB_THUMBWHEEL_LARGEFONTS                   BITMAP  "Bitmaps\\thumbwheel_large_fonts.bmp"
 IDB_THUMBWHEEL_SMALL                        BITMAP  "Bitmaps\\thumbwheel_small.bmp"
@@ -178,6 +181,9 @@ IDB_EMERGENCY_PRESS_ROTARY                  BITMAP  "Bitmaps\\csm_emergency_cabi
 IDB_CSM_LOWER_LEFT_PANEL                    BITMAP  "Bitmaps\\csm_lower_left_panel.bmp"
 IDB_CSM_LOWER_MAIN_PANEL                    BITMAP  "Bitmaps\\csm_lower_main_panel.bmp"
 IDB_CSM_RIGHT_CB_PANEL                      BITMAP  "Bitmaps\\csm_right_cb_panels.bmp"
+IDB_CSM_SUIT_FLOW_CONTROL_LEVER	            BITMAP  "Bitmaps\\csm_suit_flow_control_lever.bmp"
+IDB_CSM_SEC_CABIN_TEMP_VALVE		    BITMAP  "Bitmaps\\csm_secondary_cabin_temp_valve.bmp"
+IDB_CSM_FOOT_PREP_WATER_LEVER  	            BITMAP  "Bitmaps\\csm_FootPrepWater_lever.bmp"
 
 
 #endif    // French (France) resources
