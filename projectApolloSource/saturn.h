@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.261  2007/12/25 06:16:02  jasonims
+  *	Implemented LES covers on CM windows....  covers need to be redone though and pixels tweaked.
+  *	
   *	Revision 1.260  2007/12/21 01:00:22  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -880,6 +883,9 @@ public:
 		SRF_BORDER_47x47,
 		SRF_BORDER_48x48,
 		SRF_BORDER_65x65,
+		SRF_BORDER_87x111,
+		SRF_BORDER_23x23,
+		SRF_BORDER_118x118,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -915,6 +921,9 @@ public:
 		SRF_SELECTOR_INLET_ROTARY,
 		SRF_SELECTOR_OUTLET_ROTARY,
 		SRF_EMERGENCY_PRESS_ROTARY,
+		SRF_SUIT_FLOW_CONTROL_LEVER,
+		SRF_CSM_SEC_CABIN_TEMP_VALVE, 
+		SRF_CSM_FOOT_PREP_WATER_LEVER,
 
 
 		//
@@ -3350,6 +3359,26 @@ protected:
 	SwitchRow DirectO2RotaryRow;
 	DirectO2RotationalSwitch DirectO2RotarySwitch;
 
+	////////////////////////////////////
+	// Panel 300, 301, 302, 303 & 305 //
+	////////////////////////////////////
+
+	SwitchRow SuitCircuitFlow300SwitchRow;
+	ThreePosSwitch SuitCircuitFlow300Switch;
+
+	SwitchRow SuitCircuitFlow301SwitchRow;
+	ThreePosSwitch SuitCircuitFlow301Switch;
+
+	SwitchRow SuitCircuitFlow302SwitchRow;
+	ThreePosSwitch SuitCircuitFlow302Switch;
+
+	SwitchRow SecondaryCabinTempValveRow;
+	RotationalSwitch SecondaryCabinTempValve;
+
+	SwitchRow FoodPreparationWaterLeversRow;
+	RotationalSwitch FoodPreparationWaterHotLever;
+	RotationalSwitch FoodPreparationWaterColdLever;
+	
 	////////////////////////
 	// Panel 325/326 etc. //
 	////////////////////////
