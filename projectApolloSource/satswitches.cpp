@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2007/11/29 22:08:27  movieman523
+  *	Moved electric meters to generic classes in toggleswitch.cpp rather than Saturn-specific.
+  *	
   *	Revision 1.31  2007/11/29 21:53:20  movieman523
   *	Generising the Volt meters.
   *	
@@ -1989,7 +1992,7 @@ void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	for (i = 0; i < 7; i++) {
 		if (buffer[i] >= '0' && buffer[i] <= '9') {
 			Curdigit = buffer[i] - '0';
-			oapiBlt(drawSurface, Digits, (i == 6 ? 0 : 11) + 16 * i, 0, 16 * Curdigit, 0, 16, 19);
+			oapiBlt(drawSurface, Digits, (i == 6 ? 0 : 10) + 16 * i, 0, 16 * Curdigit, 0, 16, 19);
 		} else if (buffer[i] == '.') {
 			oapiBlt(drawSurface, Digits, 10 + 16 * i, 0, 200, 0, 4, 19);
 		}
