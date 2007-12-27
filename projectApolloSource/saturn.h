@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.262  2007/12/26 04:21:18  flydba
+  *	Panel 300, 301, 302, 303 and 305 now works.
+  *	
   *	Revision 1.261  2007/12/25 06:16:02  jasonims
   *	Implemented LES covers on CM windows....  covers need to be redone though and pixels tweaked.
   *	
@@ -886,6 +889,7 @@ public:
 		SRF_BORDER_87x111,
 		SRF_BORDER_23x23,
 		SRF_BORDER_118x118,
+		SRF_BORDER_38x38,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -924,6 +928,7 @@ public:
 		SRF_SUIT_FLOW_CONTROL_LEVER,
 		SRF_CSM_SEC_CABIN_TEMP_VALVE, 
 		SRF_CSM_FOOT_PREP_WATER_LEVER,
+		SRF_CSM_LM_TUNNEL_VENT_VALVE,
 
 
 		//
@@ -3359,9 +3364,79 @@ protected:
 	SwitchRow DirectO2RotaryRow;
 	DirectO2RotationalSwitch DirectO2RotarySwitch;
 
-	////////////////////////////////////
-	// Panel 300, 301, 302, 303 & 305 //
-	////////////////////////////////////
+	/////////////////
+	// Panel 10/12 //
+	/////////////////
+
+	SwitchRow LeftAudioSwitchesRow;
+	ThreePosSwitch ModeIntercomSwitch;
+	ThreePosSwitch PadComSwitch;
+	ThreePosSwitch SBandSwitch;
+
+	SwitchRow LeftAudioThumbwheelsRow;
+	ThumbwheelSwitch LeftAudioVOXSensThumbwheel;
+	ThumbwheelSwitch LeftAudioPadComVolumeThumbwheel;
+	ThumbwheelSwitch LeftAudioSBandVolumeThumbwheel;
+
+	SwitchRow CenterAudioSwitchesRow;
+	ToggleSwitch CenterSuitPowerSwitch;
+	ToggleSwitch CenterAudioControlSwitch;
+
+	SwitchRow RightAudioThumbwheelsRow;
+	ThumbwheelSwitch RightAudioMasterVolumeThumbwheel;
+	ThumbwheelSwitch RightAudioIntercomVolumeThumbwheel;
+	ThumbwheelSwitch RightAudioVHFAMVolumeThumbwheel;
+
+	SwitchRow RightAudioSwitchesRow;
+	ThreePosSwitch PowerAudioSwitch;
+	ThreePosSwitch IntercomSwitch;
+	ThreePosSwitch VHFAMSwitch;
+
+	SwitchRow LMTunnelVentValveRow;
+	RotationalSwitch LMTunnelVentValve;
+
+	///////////////
+	// Panel 227 //
+	///////////////
+
+	//SwitchRow SCIInstSwitchRow;
+	//ToggleSwitch SCIInstSwitch;
+
+	////////////////////////////////////////
+	// Panel 229 - Right Instrument Panel //
+	////////////////////////////////////////
+
+	SwitchRow UtilityCB1Row;
+	CircuitBrakerSwitch UtilityCB1;
+
+	SwitchRow UtilityCB2Row;
+	CircuitBrakerSwitch UtilityCB2;
+
+	SwitchRow EPSBatBusCBARow;
+	CircuitBrakerSwitch EPSBatBusCBA;
+
+	SwitchRow EPSBatBusCBBRow;
+	CircuitBrakerSwitch EPSBatBusCBB;
+
+	///////////////////
+	// Panel 276/278 //
+	///////////////////
+
+	SwitchRow Panel276CBRow;
+	CircuitBrakerSwitch Panel276CB1;
+	CircuitBrakerSwitch Panel276CB2;
+	CircuitBrakerSwitch Panel276CB3;
+	CircuitBrakerSwitch Panel276CB4;
+	
+	SwitchRow Panel278CBRow;
+	CircuitBrakerSwitch UprightingSystemCB1;
+	CircuitBrakerSwitch UprightingSystemCB2;
+	CircuitBrakerSwitch SIVBLMSepPyroACB;
+	CircuitBrakerSwitch SIVBLMSepPyroBCB;
+	
+	///////////////////////////////
+	// Panel 300/301/302/303/305 //
+	///////////////////////////////
 
 	SwitchRow SuitCircuitFlow300SwitchRow;
 	ThreePosSwitch SuitCircuitFlow300Switch;
