@@ -664,7 +664,21 @@
 #define IDB_CSM_FOOT_PREP_WATER_LEVER						947
 #define IDB_BORDER_118x118									948
 #define AID_FOOD_PREPARATION_WATER							949
-
+#define AID_PANEL276										950
+#define AID_PANEL278										951
+#define AID_PANEL227										952
+#define AID_PANEL229_UTILITY_CB1							953
+#define AID_PANEL229_UTILITY_CB2							954
+#define AID_PANEL229_EPS_BAT_BUS_CBA						955
+#define AID_PANEL229_EPS_BAT_BUS_CBB						956
+#define AID_PANEL10_LEFT_SWITCHES							957
+#define AID_PANEL10_LEFT_THUMWBWHEELS						958
+#define AID_PANEL10_CENTER_SWITCHES							959
+#define AID_PANEL10_RIGHT_THUMBWHEELS						960
+#define AID_PANEL10_RIGHT_SWITCHES							961
+#define IDB_BORDER_38x38									962
+#define IDB_CSM_LM_TUNNEL_VENT_VALVE						963
+#define AID_LM_TUNNEL_VENT_VALVE							964
 
 // Next default values for new objects
 //
