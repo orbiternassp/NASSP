@@ -1,4 +1,4 @@
-APOLLO 7 VIRTUAL AGC SCENARIO CHECKLIST v1.2
+APOLLO 7 VIRTUAL AGC SCENARIO CHECKLIST v1.5
 --------------------------------------------
 
 This checklist/flightplan is an ongoing work, evolving over the course of time as new features of NASSP are developed. For the time being, the mission can be flown, from beginning to end, using the currently documented features of the Virtual AGC. This checklist/flightplan is not absolute for all functions and maneuvers, and will require the following tools:
@@ -15,6 +15,7 @@ I would like to express that this has been tested extensively and thoroughly fro
 
 CHANGE LOG:
 -----------
+V1.5 -	Added panel 225
 v1.4 -	Included additional switch settings for new panels as well as panels that have not yet been fully developed
 	Refined procedures and changed a few less-obvious minor features
 
