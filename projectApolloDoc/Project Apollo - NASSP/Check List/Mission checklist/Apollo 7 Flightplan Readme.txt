@@ -15,25 +15,29 @@ I would like to express that this has been tested extensively and thoroughly fro
 
 CHANGE LOG:
 -----------
+v1.4 -	Included additional switch settings for new panels as well as panels that have not yet been fully developed
+	Refined procedures and changed a few less-obvious minor features
+
 v1.3 -	Added switch settings for panels 351, 352, 375, 377, and 379
 	Added flightplan listings and procedures for P22 & P23
 	Added Backup IMU Alignment flightplan listing and procedure for P54
 	Further improvement of existing procedures
 
-v1.2 -	CONDENSED SIVB/CSM SEPARATION PERIOD AND ADDED PHASING PROCEDURE
-	ADDED RENDEZVOUS TAB FOR FUTURE IMPLEMENTATION
-	CHANGED SCS POWER DOWN/UP PROCEDURES TO INCLUDE FULL G&N POWER DOWN/UP
-	CONDENSED SPS MANEUVER PROCEDURE TO INCLUDE STATE VECTOR UPDATES CLOSER TO BURN
-	ADDED ERRORS AND FAILURES TAB TO INCLUDE FUTURE IMPLEMENTATION OF RANDOM FAILURE SIMULATION
-	ADDED AND TESTED MISSION-SPECIFIC ABORT PROCEDURES INTO ERRORS AND FAILURES TAB
-	ADDED P53 ALIGNMENT PROCEDURE FOR ALIGNMENTS FOLLOWING IMU POWER DOWN/GIMBAL LOCK
-	BEGAN PREPARATIONS TO INCLUDE NEW CM PANELS/SWITCHES INTO PROCEDURES
-	REMOVED GRIDLINES AND IMPROVED PROCEDURES
+v1.2 -	Condensed SIVB/CSM separation period and added phasing maneuver
+	Added rendezvous tab for future implementation
+	Changed SCS power down/up procedures to include full G&N power down/up
+	Condensed SPS maneuver procedure to include state vector updates close to burn time
+	Added "Errors and Failures" tab to include future implementation of random failure simulation
+	Added and tested mission-specific abort procedures into "Errors and Failures" tab
+	Added P53 Alignment procedure for alignments following IMU power down/gimbal lock
+	Began preparations to include new CM panels/switches into procedures
+	Removed gridlines and improved procedures
 
-v1.1 -	INITIAL RELEASE
+v1.1 -	Initial release
 
 FUTURE CHANGES: (Some pending development progress)
 ---------------
+Entry EMS procedures
 Rendezvous Procedures
 Error Recovery Procedures
 Additional AGC and System Procedures
