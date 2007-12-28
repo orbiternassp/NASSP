@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.229  2007/12/27 07:08:46  flydba
+  *	Panels 10, 12, 276, 278 and the part of 229 on the right hand side panel now work.
+  *	
   *	Revision 1.228  2007/12/26 04:22:46  flydba
   *	Panel 300, 301, 302, 303 and 305 now works. A few things changed (sextant controls & new ems switch position).
   *	
@@ -1387,6 +1390,8 @@ bool Saturn::clbkLoadPanel (int id) {
 		else
 			oapiSetPanelNeighbours(SATPANEL_LOWER_MAIN, -1, SATPANEL_RIGHT, SATPANEL_GN);
 
+		oapiRegisterPanelArea (AID_PANEL225CIRCUITBRAKERS,			_R( 77, 404, 370, 833), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
@@ -2726,6 +2731,38 @@ void Saturn::SetSwitches(int panel) {
 	SCIUtilPowerSwitchRow.Init (AID_SCIUTILPOWERSWITCH, MainPanel);
 	SCIUtilPowerSwitch.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SCIUtilPowerSwitchRow);
 
+	//
+	// Panel 225
+	//
+
+	Panel225CircuitBreakersRow.Init(AID_PANEL225CIRCUITBRAKERS, MainPanel);
+	PCMTLMGroup1CB.Init			(  0, 100, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	PCMTLMGroup2CB.Init			(  0,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	FLTBusMNACB.Init			( 77, 228, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	FLTBusMNBCB.Init			( 77, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	PMPPowerPrimCB.Init			( 77,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	PMPPowerAuxCB.Init			( 77,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	VHFStationAudioLCB.Init		(170, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	VHFStationAudioCTRCB.Init	(170, 354, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	VHFStationAudioRCB.Init		(170, 313, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	UDLCB.Init					(170, 272, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	HGAFLTBus1CB.Init			(170, 231, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	HGAGroup2CB.Init			(171, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	SBandFMXMTRFLTBusCB.Init	(171,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	SBandFMXMTRGroup1CB.Init	(171,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	CentralTimingEquipMNACB.Init(264, 400, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	CentralTimingEquipMNBCB.Init(264, 357, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	RNDZXPNDRFLTBusCB.Init		(264, 314, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	SIGCondrFLTBusCB.Init		(264, 271, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	SBandPWRAmpl1FLTBusCB.Init	(264, 228, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	SBandPWRAmpl1Group1CB.Init	(264, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	SBandPWRAmpl2FLTBusCB.Init	(264,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	SBandPWRAmpl2Group1CB.Init	(264,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	
+	//
+	// Panel 275
+	//
+	
 	Panel275CircuitBrakersRow.Init(AID_PANEL275CIRCUITBRAKERS, MainPanel);
 	InverterPower3MainBCircuitBraker.Init     (  0,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, MainBusB, 70.0);
 	InverterPower3MainACircuitBraker.Init     (  0,  59, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, MainBusA, 70.0);
@@ -2741,12 +2778,20 @@ void Saturn::SetSwitches(int panel) {
 	MainABatCCircuitBraker.Init               (  0, 537, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, EntryBatteryC);
 	MainABatBusACircuitBraker.Init            (  0, 596, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel275CircuitBrakersRow, &BatteryBusA);
 	
+	//
+	// Panel 276
+	//
+	
 	Panel276CBRow.Init(AID_PANEL276, MainPanel);
 	Panel276CB1.Init( 0, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
 	Panel276CB2.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
 	Panel276CB3.Init(62, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
 	Panel276CB4.Init(62, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
 
+	//
+	// Panel 278
+	//
+	
 	Panel278CBRow.Init(AID_PANEL278, MainPanel);
 	UprightingSystemCB1.Init( 0, 50, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CBRow);
 	UprightingSystemCB2.Init( 0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CBRow);
@@ -2756,6 +2801,10 @@ void Saturn::SetSwitches(int panel) {
 	//SCIInstSwitchRow.Init(AID_PANEL227, MainPanel);
 	//SCIInstSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SCIInstSwitchRow);
 
+	//
+	// Panel 229 (Right Panel)
+	// 
+	
 	UtilityCB1Row.Init(AID_PANEL229_UTILITY_CB1, MainPanel);
 	UtilityCB1.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], UtilityCB1Row);
 
@@ -5816,6 +5865,29 @@ void Saturn::InitSwitches() {
 	EPSBatBusCBA.Register(PSH, "EPSBatBusCBA", 1);
 
 	EPSBatBusCBB.Register(PSH, "EPSBatBusCBB", 1);
+
+	PCMTLMGroup1CB.Register(PSH, "PCMTLMGroup1CB", 1);
+	PCMTLMGroup2CB.Register(PSH, "PCMTLMGroup2CB", 1);
+	FLTBusMNACB.Register(PSH, "FLTBusMNACB", 1);
+	FLTBusMNBCB.Register(PSH, "FLTBusMNBCB", 1);
+	PMPPowerPrimCB.Register(PSH, "PMPPowerPrimCB", 1);
+	PMPPowerAuxCB.Register(PSH, "PMPPowerAuxCB", 1);
+	VHFStationAudioLCB.Register(PSH, "VHFStationAudioLCB", 1);
+	VHFStationAudioCTRCB.Register(PSH, "VHFStationAudioCTRCB", 1);
+	VHFStationAudioRCB.Register(PSH, "VHFStationAudioRCB", 1);
+	UDLCB.Register(PSH, "UDLCB", 1);
+	HGAFLTBus1CB.Register(PSH, "HGAFLTBus1CB", 1);
+	HGAGroup2CB.Register(PSH, "HGAGroup2CB", 1);
+	SBandFMXMTRFLTBusCB.Register(PSH, "SBandFMXMTRFLTBusCB", 1);
+	SBandFMXMTRGroup1CB.Register(PSH, "SBandFMXMTRGroup1CB", 1);
+	CentralTimingEquipMNACB.Register(PSH, "CentralTimingEquipMNACB", 1);
+	CentralTimingEquipMNBCB.Register(PSH, "CentralTimingEquipMNBCB", 1);
+	RNDZXPNDRFLTBusCB.Register(PSH, "RNDZXPNDRFLTBusCB", 1);
+	SIGCondrFLTBusCB.Register(PSH, "SIGCondrFLTBusCB", 1);
+	SBandPWRAmpl1FLTBusCB.Register(PSH, "SBandPWRAmpl1FLTBusCB", 1);
+	SBandPWRAmpl1Group1CB.Register(PSH, "SBandPWRAmpl1Group1CB", 1);
+	SBandPWRAmpl2FLTBusCB.Register(PSH, "SBandPWRAmpl2FLTBusCB", 1);
+	SBandPWRAmpl2Group1CB.Register(PSH, "SBandPWRAmpl2Group1CB", 1);
 
 	SuitCircuitFlow300Switch.Register(PSH, "SuitCircuitFlow300Switch", THREEPOSSWITCH_UP);
 	SuitCircuitFlow301Switch.Register(PSH, "SuitCircuitFlow301Switch", THREEPOSSWITCH_UP);

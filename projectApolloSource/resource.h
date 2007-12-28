@@ -679,6 +679,7 @@
 #define IDB_BORDER_38x38									962
 #define IDB_CSM_LM_TUNNEL_VENT_VALVE						963
 #define AID_LM_TUNNEL_VENT_VALVE							964
+#define AID_PANEL225CIRCUITBRAKERS							965
 
 // Next default values for new objects
 //
