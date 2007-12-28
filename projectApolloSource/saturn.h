@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.263  2007/12/27 07:07:53  flydba
+  *	Panels 10, 12, 276, 278 and the part of 229 on the right hand side panel now work.
+  *	
   *	Revision 1.262  2007/12/26 04:21:18  flydba
   *	Panel 300, 301, 302, 303 and 305 now works.
   *	
@@ -3395,6 +3398,34 @@ protected:
 	SwitchRow LMTunnelVentValveRow;
 	RotationalSwitch LMTunnelVentValve;
 
+	///////////////
+	// Panel 225 //
+	///////////////
+	
+	SwitchRow Panel225CircuitBreakersRow;
+	CircuitBrakerSwitch PCMTLMGroup1CB;
+	CircuitBrakerSwitch PCMTLMGroup2CB;
+	CircuitBrakerSwitch FLTBusMNACB;
+	CircuitBrakerSwitch FLTBusMNBCB;
+	CircuitBrakerSwitch PMPPowerPrimCB;
+	CircuitBrakerSwitch PMPPowerAuxCB;
+	CircuitBrakerSwitch VHFStationAudioLCB;
+	CircuitBrakerSwitch VHFStationAudioCTRCB;
+	CircuitBrakerSwitch VHFStationAudioRCB;
+	CircuitBrakerSwitch UDLCB;
+	CircuitBrakerSwitch HGAFLTBus1CB;
+	CircuitBrakerSwitch HGAGroup2CB;
+	CircuitBrakerSwitch SBandFMXMTRFLTBusCB;
+	CircuitBrakerSwitch SBandFMXMTRGroup1CB;
+	CircuitBrakerSwitch CentralTimingEquipMNACB;
+	CircuitBrakerSwitch CentralTimingEquipMNBCB;
+	CircuitBrakerSwitch RNDZXPNDRFLTBusCB;
+	CircuitBrakerSwitch SIGCondrFLTBusCB;
+	CircuitBrakerSwitch SBandPWRAmpl1FLTBusCB;
+	CircuitBrakerSwitch SBandPWRAmpl1Group1CB;
+	CircuitBrakerSwitch SBandPWRAmpl2FLTBusCB;
+	CircuitBrakerSwitch SBandPWRAmpl2Group1CB;
+	
 	///////////////
 	// Panel 227 //
 	///////////////
