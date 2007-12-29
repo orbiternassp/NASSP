@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2007/12/26 04:18:09  flydba
+  *	Roll, pitch and yaw needles position fixed.
+  *	
   *	Revision 1.23  2007/10/18 00:23:13  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -426,7 +429,7 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	// 60-176
 
 	// Draw Roll-Rate Needle
-	oapiBlt (surf, hFDAINeedles, targetX, 5, 16, 3, 12, 11, SURF_PREDEF_CK);
+	oapiBlt (surf, hFDAINeedles, targetX, 4, 16, 3, 12, 11, SURF_PREDEF_CK);
 	// Draw Pitch-Rate Needle
 	oapiBlt (surf, hFDAINeedles, 225, targetY, 28, 3, 10, 12, SURF_PREDEF_CK);
 	// Draw Yaw-Rate Needle
