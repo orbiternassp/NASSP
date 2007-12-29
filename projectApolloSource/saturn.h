@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.264  2007/12/28 05:02:01  flydba
+  *	Panel 225 now works.
+  *	
   *	Revision 1.263  2007/12/27 07:07:53  flydba
   *	Panels 10, 12, 276, 278 and the part of 229 on the right hand side panel now work.
   *	
@@ -893,6 +896,7 @@ public:
 		SRF_BORDER_23x23,
 		SRF_BORDER_118x118,
 		SRF_BORDER_38x38,
+		SRF_BORDER_116x116,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -932,6 +936,7 @@ public:
 		SRF_CSM_SEC_CABIN_TEMP_VALVE, 
 		SRF_CSM_FOOT_PREP_WATER_LEVER,
 		SRF_CSM_LM_TUNNEL_VENT_VALVE,
+		SRF_CSM_WASTE_MGMT_ROTARY,
 
 
 		//
@@ -3398,9 +3403,9 @@ protected:
 	SwitchRow LMTunnelVentValveRow;
 	RotationalSwitch LMTunnelVentValve;
 
-	///////////////
-	// Panel 225 //
-	///////////////
+	///////////////////
+	// Panel 225/226 //
+	///////////////////
 	
 	SwitchRow Panel225CircuitBreakersRow;
 	CircuitBrakerSwitch PCMTLMGroup1CB;
@@ -3425,6 +3430,45 @@ protected:
 	CircuitBrakerSwitch SBandPWRAmpl1Group1CB;
 	CircuitBrakerSwitch SBandPWRAmpl2FLTBusCB;
 	CircuitBrakerSwitch SBandPWRAmpl2Group1CB;
+
+	SwitchRow Panel226CircuitBreakersRow;
+	CircuitBrakerSwitch FuelCell1PumpsACCB;
+	CircuitBrakerSwitch FuelCell1ReacsCB;
+	CircuitBrakerSwitch FuelCell1BusContCB;
+	CircuitBrakerSwitch FuelCell1PrugeCB;
+	CircuitBrakerSwitch FuelCell1RadCB;
+	CircuitBrakerSwitch CryogenicH2HTR1CB;
+	CircuitBrakerSwitch CryogenicH2HTR2CB;
+	CircuitBrakerSwitch FuelCell2PumpsACCB;
+	CircuitBrakerSwitch FuelCell2ReacsCB;
+	CircuitBrakerSwitch FuelCell2BusContCB;
+	CircuitBrakerSwitch FuelCell2PrugeCB;
+	CircuitBrakerSwitch FuelCell2RadCB;
+	CircuitBrakerSwitch CryogenicO2HTR1CB;
+	CircuitBrakerSwitch CryogenicO2HTR2CB;
+	CircuitBrakerSwitch FuelCell3PumpsACCB;
+	CircuitBrakerSwitch FuelCell3ReacsCB;
+	CircuitBrakerSwitch FuelCell3BusContCB;
+	CircuitBrakerSwitch FuelCell3PrugeCB;
+	CircuitBrakerSwitch FuelCell3RadCB;
+	CircuitBrakerSwitch CryogenicQTYAmpl1CB;
+	CircuitBrakerSwitch CryogenicQTYAmpl2CB;
+	CircuitBrakerSwitch CryogenicFanMotorsAC1ACB;
+	CircuitBrakerSwitch CryogenicFanMotorsAC1BCB;
+	CircuitBrakerSwitch CryogenicFanMotorsAC1CCB;
+	CircuitBrakerSwitch CryogenicFanMotorsAC2ACB;
+	CircuitBrakerSwitch CryogenicFanMotorsAC2BCB;
+	CircuitBrakerSwitch CryogenicFanMotorsAC2CCB;
+	CircuitBrakerSwitch LightingRndzMNACB;
+	CircuitBrakerSwitch LightingRndzMNBCB;
+	CircuitBrakerSwitch LightingFloodMNACB;
+	CircuitBrakerSwitch LightingFloodMNBCB;
+	CircuitBrakerSwitch LightingFloodFLTPLCB;
+	CircuitBrakerSwitch LightingNumIntLEBCB;
+	CircuitBrakerSwitch LightingNumIntLMDCCB;
+	CircuitBrakerSwitch LightingNumIntRMDCCB;
+	CircuitBrakerSwitch RunEVATRGTAC1CB;
+	CircuitBrakerSwitch RunEVATRGTAC2CB;
 	
 	///////////////
 	// Panel 227 //
@@ -3437,18 +3481,37 @@ protected:
 	// Panel 229 - Right Instrument Panel //
 	////////////////////////////////////////
 
-	SwitchRow UtilityCB1Row;
+	SwitchRow Panel229CircuitBreakersRow;
 	CircuitBrakerSwitch UtilityCB1;
-
-	SwitchRow UtilityCB2Row;
 	CircuitBrakerSwitch UtilityCB2;
-
-	SwitchRow EPSBatBusCBARow;
 	CircuitBrakerSwitch EPSBatBusCBA;
-
-	SwitchRow EPSBatBusCBBRow;
 	CircuitBrakerSwitch EPSBatBusCBB;
 
+	///////////////////////
+	// Panel 250/251/252 //
+	///////////////////////
+
+	SwitchRow Panel250CircuitBreakersRow;
+	CircuitBrakerSwitch PyroABusTieCB;
+	CircuitBrakerSwitch PyroABusSeqACB;
+	CircuitBrakerSwitch PyroBBusTieCB;
+	CircuitBrakerSwitch PyroBBusSeqACB;
+	CircuitBrakerSwitch BatAPWRCB;
+	CircuitBrakerSwitch BatBPWRCB;
+	CircuitBrakerSwitch BatCPWRCB;
+	CircuitBrakerSwitch BatCtoBatBusACB;
+	CircuitBrakerSwitch BatCtoBatBusBCB;
+	CircuitBrakerSwitch BatCCHRGCB;
+
+	SwitchRow WasteMGMTOvbdDrainDumpRotaryRow;
+	RotationalSwitch WasteMGMTOvbdDrainDumpRotary;
+
+	SwitchRow WasteMGMTBatteryVentRotaryRow;
+	RotationalSwitch WasteMGMTBatteryVentRotary;
+
+	SwitchRow WasteMGMTStoageVentRotaryRow;
+	RotationalSwitch WasteMGMTStoageVentRotary;
+	
 	///////////////////
 	// Panel 276/278 //
 	///////////////////

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.230  2007/12/28 05:02:41  flydba
+  *	Panel 225 now works.
+  *	
   *	Revision 1.229  2007/12/27 07:08:46  flydba
   *	Panels 10, 12, 276, 278 and the part of 229 on the right hand side panel now work.
   *	
@@ -781,6 +784,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_CSM_SEC_CABIN_TEMP_VALVE]				= oapiCreateSurface (LOADBMP (IDB_CSM_SEC_CABIN_TEMP_VALVE));
 	srf[SRF_CSM_FOOT_PREP_WATER_LEVER]				= oapiCreateSurface (LOADBMP (IDB_CSM_FOOT_PREP_WATER_LEVER));
 	srf[SRF_CSM_LM_TUNNEL_VENT_VALVE]				= oapiCreateSurface (LOADBMP (IDB_CSM_LM_TUNNEL_VENT_VALVE));
+	srf[SRF_CSM_WASTE_MGMT_ROTARY]					= oapiCreateSurface (LOADBMP (IDB_CSM_WASTE_MGMT_ROTARY));
 	//
 	// Flashing borders.
 	//
@@ -816,6 +820,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_BORDER_23x23]			= oapiCreateSurface (LOADBMP (IDB_BORDER_23x23));
 	srf[SRF_BORDER_118x118]			= oapiCreateSurface (LOADBMP (IDB_BORDER_118x118));
 	srf[SRF_BORDER_38x38]			= oapiCreateSurface (LOADBMP (IDB_BORDER_38x38));
+	srf[SRF_BORDER_116x116]			= oapiCreateSurface (LOADBMP (IDB_BORDER_116x116));
 
 	//
 	// Set color keys where appropriate.
@@ -906,6 +911,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_CSM_SEC_CABIN_TEMP_VALVE],				g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_FOOT_PREP_WATER_LEVER],			g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_LM_TUNNEL_VENT_VALVE],				g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_WASTE_MGMT_ROTARY],				g_Param.col[4]);
 	
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -939,6 +945,10 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_47x47],		g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_48x48],		g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_65x65],		g_Param.col[4]);
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_87x111],	g_Param.col[4]);			
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_23x23],		g_Param.col[4]);			
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_118x118],	g_Param.col[4]);			
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_116x116],	g_Param.col[4]);	
 
 	SetSwitches(panel);
 }
@@ -991,7 +1001,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL));
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiSetPanelNeighbours(-1, -1, SATPANEL_LOWER_MAIN, SATPANEL_TELESCOPE);
+		oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_RIGHT_CB, SATPANEL_LOWER_MAIN, SATPANEL_TELESCOPE);
 
 		AddLeftLowerPanelAreas();
 		AddLeftCenterLowerPanelAreas(0);
@@ -1243,10 +1253,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PANEL276,									_R(1399,  878, 1490,  996), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL278,									_R(1422,  549, 1527,  628), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		//oapiRegisterPanelArea (AID_PANEL227,									_R(1433,   38, 1467,   67), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL229_UTILITY_CB1,						_R( 288, 1583,  317, 1612), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL229_UTILITY_CB2,						_R( 306, 1550,  335, 1579), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL229_EPS_BAT_BUS_CBA,					_R( 409, 1649,  438, 1678), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL229_EPS_BAT_BUS_CBB,					_R( 427, 1615,  456, 1644), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL229CIRCUITBRAKERS,						_R( 288, 1550,  456, 1678), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1302,7 +1309,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_CABIN_PRESS_PANEL) { // cabin pressurization controls panel
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_CABIN_PRESS_PANEL));
-		oapiSetPanelNeighbours(-1, SATPANEL_LEFT, -1, -1);
+		oapiSetPanelNeighbours(-1, SATPANEL_LEFT, -1, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		oapiRegisterPanelArea (AID_GLYCOLTORADIATORSLEVER,			_R(1488,   46, 1520,  206), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
@@ -1390,7 +1397,12 @@ bool Saturn::clbkLoadPanel (int id) {
 		else
 			oapiSetPanelNeighbours(SATPANEL_LOWER_MAIN, -1, SATPANEL_RIGHT, SATPANEL_GN);
 
-		oapiRegisterPanelArea (AID_PANEL225CIRCUITBRAKERS,			_R( 77, 404, 370, 833), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL225CIRCUITBRAKERS,			_R(  77, 404,   370,  833), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL226CIRCUITBRAKERS,			_R( 572, 1097,  994, 1437), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL250CIRCUITBRAKERS,			_R(1203, 1735, 1758, 1764), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_WASTE_MGMT_OVBD_DUMP,			_R(1521, 1483, 1637, 1599), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_WASTE_MGMT_BATT_VENT,			_R(1920, 1470, 2036, 1586), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_WASTE_MGMT_STOAGE_VENT,			_R(1920, 1304, 2036, 1420), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -2732,7 +2744,7 @@ void Saturn::SetSwitches(int panel) {
 	SCIUtilPowerSwitch.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SCIUtilPowerSwitchRow);
 
 	//
-	// Panel 225
+	// Panel 225/226/229/250/251/252
 	//
 
 	Panel225CircuitBreakersRow.Init(AID_PANEL225CIRCUITBRAKERS, MainPanel);
@@ -2758,6 +2770,72 @@ void Saturn::SetSwitches(int panel) {
 	SBandPWRAmpl1Group1CB.Init	(264, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	SBandPWRAmpl2FLTBusCB.Init	(264,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	SBandPWRAmpl2Group1CB.Init	(264,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	
+	Panel226CircuitBreakersRow.Init(AID_PANEL226CIRCUITBRAKERS, MainPanel);
+	FuelCell1PumpsACCB.Init		 (  0, 292, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell1ReacsCB.Init		 (  0, 222, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell1BusContCB.Init		 (  0, 182, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell1PrugeCB.Init		 (  0, 121, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell1RadCB.Init			 (  0,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicH2HTR1CB.Init		 (  0,  43, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicH2HTR2CB.Init		 (  0,   4, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell2PumpsACCB.Init		 (102, 292, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell2ReacsCB.Init		 (102, 222, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell2BusContCB.Init		 (102, 182, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell2PrugeCB.Init		 (102, 121, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell2RadCB.Init			 (102,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicO2HTR1CB.Init		 (102,  43, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicO2HTR2CB.Init		 (102,   4, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell3PumpsACCB.Init		 (205, 292, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell3ReacsCB.Init		 (205, 222, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell3BusContCB.Init		 (205, 182, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell3PrugeCB.Init		 (205, 121, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	FuelCell3RadCB.Init			 (205,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicQTYAmpl1CB.Init	 (205,  43, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicQTYAmpl2CB.Init	 (205,   4, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicFanMotorsAC1ACB.Init(297, 305, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicFanMotorsAC1BCB.Init(297, 266, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicFanMotorsAC1CCB.Init(297, 227, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicFanMotorsAC2ACB.Init(297, 188, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicFanMotorsAC2BCB.Init(297, 121, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	CryogenicFanMotorsAC2CCB.Init(297,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingRndzMNACB.Init		 (297,  43, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingRndzMNBCB.Init		 (297,   4, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingFloodMNACB.Init		 (393, 311, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingFloodMNBCB.Init		 (393, 268, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingFloodFLTPLCB.Init	 (393, 225, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingNumIntLEBCB.Init	 (393, 182, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingNumIntLMDCCB.Init	 (393, 129, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingNumIntRMDCCB.Init	 (393,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	RunEVATRGTAC1CB.Init		 (393,  43, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	RunEVATRGTAC2CB.Init		 (393,   0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	
+	Panel229CircuitBreakersRow.Init(AID_PANEL229CIRCUITBRAKERS, MainPanel);
+	UtilityCB1.Init  (  0, 33, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+	UtilityCB2.Init  ( 18,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+	EPSBatBusCBA.Init(121, 99, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+	EPSBatBusCBB.Init(139, 65, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow);
+
+	Panel250CircuitBreakersRow.Init(AID_PANEL250CIRCUITBRAKERS, MainPanel);
+	PyroABusSeqACB.Init	(  0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	PyroABusTieCB.Init	( 55, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	PyroBBusTieCB.Init	(115, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	PyroBBusSeqACB.Init	(170, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	BatAPWRCB.Init		(246, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	BatBPWRCB.Init		(304, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	BatCPWRCB.Init		(362, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	BatCtoBatBusACB.Init(420, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	BatCtoBatBusBCB.Init(478, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	BatCCHRGCB.Init		(526, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow);
+	
+	WasteMGMTOvbdDrainDumpRotaryRow.Init(AID_WASTE_MGMT_OVBD_DUMP, MainPanel);	
+	WasteMGMTOvbdDrainDumpRotary.Init( 0, 0, 116, 116, srf[SRF_CSM_WASTE_MGMT_ROTARY], srf[SRF_BORDER_116x116], WasteMGMTOvbdDrainDumpRotaryRow);
+		
+	WasteMGMTBatteryVentRotaryRow.Init(AID_WASTE_MGMT_BATT_VENT, MainPanel);
+	WasteMGMTBatteryVentRotary.Init( 0, 0, 116, 116, srf[SRF_CSM_WASTE_MGMT_ROTARY], srf[SRF_BORDER_116x116], WasteMGMTBatteryVentRotaryRow);
+	
+	WasteMGMTStoageVentRotaryRow.Init(AID_WASTE_MGMT_STOAGE_VENT, MainPanel);
+	WasteMGMTStoageVentRotary.Init( 0, 0, 116, 116, srf[SRF_CSM_WASTE_MGMT_ROTARY], srf[SRF_BORDER_116x116], WasteMGMTStoageVentRotaryRow);
 	
 	//
 	// Panel 275
@@ -2800,22 +2878,6 @@ void Saturn::SetSwitches(int panel) {
 
 	//SCIInstSwitchRow.Init(AID_PANEL227, MainPanel);
 	//SCIInstSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SCIInstSwitchRow);
-
-	//
-	// Panel 229 (Right Panel)
-	// 
-	
-	UtilityCB1Row.Init(AID_PANEL229_UTILITY_CB1, MainPanel);
-	UtilityCB1.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], UtilityCB1Row);
-
-	UtilityCB2Row.Init(AID_PANEL229_UTILITY_CB2, MainPanel);
-	UtilityCB2.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], UtilityCB2Row);
-
-	EPSBatBusCBARow.Init(AID_PANEL229_EPS_BAT_BUS_CBA, MainPanel);
-	EPSBatBusCBA.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EPSBatBusCBARow);
-
-	EPSBatBusCBBRow.Init(AID_PANEL229_EPS_BAT_BUS_CBB, MainPanel);
-	EPSBatBusCBB.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], EPSBatBusCBBRow);
 
 	//
 	// SATPANEL_LEFT
@@ -5577,21 +5639,35 @@ void Saturn::InitSwitches() {
 	SecondaryCabinTempValve.AddPosition(4, 180);
 	SecondaryCabinTempValve.Register(PSH, "SecondaryCabinTempValve", 0);
 
-	FoodPreparationWaterHotLever.AddPosition(0, 270);
-	FoodPreparationWaterHotLever.AddPosition(1,   0);
-	FoodPreparationWaterHotLever.AddPosition(2,  90);
-	FoodPreparationWaterHotLever.Register(PSH, "FoodPreparationWaterHotLever", 0);
+	FoodPreparationWaterHotLever.AddPosition(0,   0);
+	FoodPreparationWaterHotLever.AddPosition(1, 270);
+	FoodPreparationWaterHotLever.Register(PSH, "FoodPreparationWaterHotLever", 1);
 
-	FoodPreparationWaterColdLever.AddPosition(0, 270);
-	FoodPreparationWaterColdLever.AddPosition(1,   0);
-	FoodPreparationWaterColdLever.AddPosition(2,  90);
-	FoodPreparationWaterColdLever.Register(PSH, "FoodPreparationWaterColdLever", 0);
+	FoodPreparationWaterColdLever.AddPosition(0,   0);
+	FoodPreparationWaterColdLever.AddPosition(1, 270);
+	FoodPreparationWaterColdLever.Register(PSH, "FoodPreparationWaterColdLever", 1);
 
 	LMTunnelVentValve.AddPosition(0, 300);
 	LMTunnelVentValve.AddPosition(1, 330);
 	LMTunnelVentValve.AddPosition(2,  30);
 	LMTunnelVentValve.AddPosition(3,  60);
 	LMTunnelVentValve.Register(PSH, "LMTunnelVentValve", 0);
+
+	WasteMGMTOvbdDrainDumpRotary.AddPosition(0,   0);
+	WasteMGMTOvbdDrainDumpRotary.AddPosition(1,  90);
+	WasteMGMTOvbdDrainDumpRotary.AddPosition(2, 180);
+	WasteMGMTOvbdDrainDumpRotary.AddPosition(3, 270);
+	WasteMGMTOvbdDrainDumpRotary.Register(PSH, "WasteMGMTOvbdDrainDumpRotary", 1);
+
+	WasteMGMTBatteryVentRotary.AddPosition(0,   0);
+	WasteMGMTBatteryVentRotary.AddPosition(1, 180);
+	WasteMGMTBatteryVentRotary.AddPosition(2, 270);
+	WasteMGMTBatteryVentRotary.Register(PSH, "WasteMGMTBatteryVentRotary", 0);
+
+	WasteMGMTStoageVentRotary.AddPosition(0,   0);
+	WasteMGMTStoageVentRotary.AddPosition(1, 180);
+	WasteMGMTStoageVentRotary.AddPosition(2, 270);
+	WasteMGMTStoageVentRotary.Register(PSH, "WasteMGMTStoageVentRotary", 1);
 		
 	OrbiterAttitudeToggle.SetActive(false);		// saved in LPSwitchState.LPswitch5
 
@@ -5858,14 +5934,6 @@ void Saturn::InitSwitches() {
 	SIVBLMSepPyroACB.Register(PSH, "SIVBLMSepPyroACB", 1);
 	SIVBLMSepPyroBCB.Register(PSH, "SIVBLMSepPyroBCB", 1);
 
-	UtilityCB1.Register(PSH, "UtilityCB1", 1);
-
-	UtilityCB2.Register(PSH, "UtilityCB2", 1);
-
-	EPSBatBusCBA.Register(PSH, "EPSBatBusCBA", 1);
-
-	EPSBatBusCBB.Register(PSH, "EPSBatBusCBB", 1);
-
 	PCMTLMGroup1CB.Register(PSH, "PCMTLMGroup1CB", 1);
 	PCMTLMGroup2CB.Register(PSH, "PCMTLMGroup2CB", 1);
 	FLTBusMNACB.Register(PSH, "FLTBusMNACB", 1);
@@ -5888,6 +5956,60 @@ void Saturn::InitSwitches() {
 	SBandPWRAmpl1Group1CB.Register(PSH, "SBandPWRAmpl1Group1CB", 1);
 	SBandPWRAmpl2FLTBusCB.Register(PSH, "SBandPWRAmpl2FLTBusCB", 1);
 	SBandPWRAmpl2Group1CB.Register(PSH, "SBandPWRAmpl2Group1CB", 1);
+
+	FuelCell1PumpsACCB.Register(PSH, "FuelCell1PumpsACCB", 1);
+	FuelCell1ReacsCB.Register(PSH, "FuelCell1ReacsCB", 1);
+	FuelCell1BusContCB.Register(PSH, "FuelCell1BusContCB", 1);
+	FuelCell1PrugeCB.Register(PSH, "FuelCell1PrugeCB", 1);
+	FuelCell1RadCB.Register(PSH, "FuelCell1RadCB", 1);
+	CryogenicH2HTR1CB.Register(PSH, "CryogenicH2HTR1CB", 1);
+	CryogenicH2HTR2CB.Register(PSH, "CryogenicH2HTR2CB", 1);
+	FuelCell2PumpsACCB.Register(PSH, "FuelCell2PumpsACCB", 1);
+	FuelCell2ReacsCB.Register(PSH, "FuelCell2ReacsCB", 1);
+	FuelCell2BusContCB.Register(PSH, "FuelCell2BusContCB", 1);
+	FuelCell2PrugeCB.Register(PSH, "FuelCell2PrugeCB", 1);
+	FuelCell2RadCB.Register(PSH, "FuelCell2RadCB", 1);
+	CryogenicO2HTR1CB.Register(PSH, "CryogenicO2HTR1CB", 1);
+	CryogenicO2HTR2CB.Register(PSH, "CryogenicO2HTR2CB", 1);
+	FuelCell3PumpsACCB.Register(PSH, "FuelCell3PumpsACCB", 1);
+	FuelCell3ReacsCB.Register(PSH, "FuelCell3ReacsCB", 1);
+	FuelCell3BusContCB.Register(PSH, "FuelCell3BusContCB", 1);
+	FuelCell3PrugeCB.Register(PSH, "FuelCell3PrugeCB", 1);
+	FuelCell3RadCB.Register(PSH, "FuelCell3RadCB", 1);
+	CryogenicQTYAmpl1CB.Register(PSH, "CryogenicQTYAmpl1CB", 1);
+	CryogenicQTYAmpl2CB.Register(PSH, "CryogenicQTYAmpl2CB", 1);
+	CryogenicFanMotorsAC1ACB.Register(PSH, "CryogenicFanMotorsAC1ACB", 1);
+	CryogenicFanMotorsAC1BCB.Register(PSH, "CryogenicFanMotorsAC1BCB", 1);
+	CryogenicFanMotorsAC1CCB.Register(PSH, "CryogenicFanMotorsAC1CCB", 1);
+	CryogenicFanMotorsAC2ACB.Register(PSH, "CryogenicFanMotorsAC2ACB", 1);
+	CryogenicFanMotorsAC2BCB.Register(PSH, "CryogenicFanMotorsAC2BCB", 1);
+	CryogenicFanMotorsAC2CCB.Register(PSH, "CryogenicFanMotorsAC2CCB", 1);
+	LightingRndzMNACB.Register(PSH, "LightingRndzMNACB", 1);
+	LightingRndzMNBCB.Register(PSH, "LightingRndzMNBCB", 1);
+	LightingFloodMNACB.Register(PSH, "LightingFloodMNACB", 1);
+	LightingFloodMNBCB.Register(PSH, "LightingFloodMNBCB", 1);
+	LightingFloodFLTPLCB.Register(PSH, "LightingFloodFLTPLCB", 1);
+	LightingNumIntLEBCB.Register(PSH, "LightingNumIntLEBCB", 1);
+	LightingNumIntLMDCCB.Register(PSH, "LightingNumIntLMDCCB", 1);
+	LightingNumIntRMDCCB.Register(PSH, "LightingNumIntRMDCCB", 1);
+	RunEVATRGTAC1CB.Register(PSH, "RunEVATRGTAC1CB", 1);
+	RunEVATRGTAC2CB.Register(PSH, "RunEVATRGTAC2CB", 1);
+
+	UtilityCB1.Register(PSH, "UtilityCB1", 1);
+	UtilityCB2.Register(PSH, "UtilityCB2", 1);
+	EPSBatBusCBA.Register(PSH, "EPSBatBusCBA", 1);
+	EPSBatBusCBB.Register(PSH, "EPSBatBusCBB", 1);
+
+	PyroABusSeqACB.Register(PSH, "PyroABusSeqACB", 1);
+	PyroABusTieCB.Register(PSH, "PyroABusTieCB", 1);
+	PyroBBusTieCB.Register(PSH, "PyroBBusTieCB", 1);
+	PyroBBusSeqACB.Register(PSH, "PyroBBusSeqACB", 1);
+	BatAPWRCB.Register(PSH, "BatAPWRCB", 1);
+	BatBPWRCB.Register(PSH, "BatBPWRCB", 1);
+	BatCPWRCB.Register(PSH, "BatCPWRCB", 1);
+	BatCtoBatBusACB.Register(PSH, "BatCtoBatBusACB", 1);
+	BatCtoBatBusBCB.Register(PSH, "BatCtoBatBusBCB", 1);
+	BatCCHRGCB.Register(PSH, "BatCCHRGCB", 1);
 
 	SuitCircuitFlow300Switch.Register(PSH, "SuitCircuitFlow300Switch", THREEPOSSWITCH_UP);
 	SuitCircuitFlow301Switch.Register(PSH, "SuitCircuitFlow301Switch", THREEPOSSWITCH_UP);
