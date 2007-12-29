@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.231  2007/12/29 08:47:18  flydba
+  *	Panels 226, 250, 251 and 252 now work.
+  *	
   *	Revision 1.230  2007/12/28 05:02:41  flydba
   *	Panel 225 now works.
   *	
@@ -983,8 +986,8 @@ bool Saturn::clbkLoadPanel (int id) {
 	bool renderViewportIsWideScreen = false;
 	HMODULE hpac = GetModuleHandle("Modules\\Startup\\ProjectApolloConfigurator.dll");
 	if (hpac) {
-		bool (__stdcall *pacRenderViewportIsWideScreen)();
-		pacRenderViewportIsWideScreen = (bool (__stdcall *)()) GetProcAddress(hpac, "pacRenderViewportIsWideScreen");
+		bool (*pacRenderViewportIsWideScreen)();
+		pacRenderViewportIsWideScreen = (bool (*)()) GetProcAddress(hpac, "pacRenderViewportIsWideScreen");
 		if (pacRenderViewportIsWideScreen) {
 			renderViewportIsWideScreen = pacRenderViewportIsWideScreen();
 		}
@@ -1062,10 +1065,10 @@ bool Saturn::clbkLoadPanel (int id) {
 		AddLeftMainPanelAreas();
 		AddLeftMiddleMainPanelAreas(0);
 
-		// Dummy 1px MFDs in order to force Orbiter to load the MFD data from the scenario
-		MFDSPEC mfds_user1 = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
-		MFDSPEC mfds_user2 = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
-		MFDSPEC mfds_right = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
+		// Dummy 1px MFDs in order to force Orbiter to load the MFD data from the scenario (needs to be 2px otherwise MapMFD crashes)
+		MFDSPEC mfds_user1 = {{ 0, 0, 2, 1}, 0, 0, 0, 0};
+		MFDSPEC mfds_user2 = {{ 0, 0, 2, 1}, 0, 0, 0, 0};
+		MFDSPEC mfds_right = {{ 0, 0, 2, 1}, 0, 0, 0, 0};
 		oapiRegisterMFD(MFD_USER1, mfds_user1);
 		oapiRegisterMFD(MFD_USER2, mfds_user2);
 		oapiRegisterMFD(MFD_RIGHT, mfds_right);
@@ -1112,9 +1115,9 @@ bool Saturn::clbkLoadPanel (int id) {
 		AddRightMiddleMainPanelAreas(0);
 		AddRightMainPanelAreas(0);
 
-		// Dummy 1px MFDs in order to force Orbiter to load the MFD data from the scenario
-		MFDSPEC mfds_user1 = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
-		MFDSPEC mfds_user2 = {{ 0, 0, 1, 1}, 0, 0, 0, 0};
+		// Dummy 1px MFDs in order to force Orbiter to load the MFD data from the scenario (needs to be 2px otherwise MapMFD crashes)
+		MFDSPEC mfds_user1 = {{ 0, 0, 2, 1}, 0, 0, 0, 0};
+		MFDSPEC mfds_user2 = {{ 0, 0, 2, 1}, 0, 0, 0, 0};
 		oapiRegisterMFD(MFD_USER1, mfds_user1);
 		oapiRegisterMFD(MFD_USER2, mfds_user2);
 
@@ -1908,6 +1911,11 @@ void Saturn::SetSwitches(int panel) {
 	SMRCSProp1Row.Init(AID_PRIM_PRPLNT_SWITCHES, MainPanel);
 
 	SMRCSHeaterASwitch.Init (2, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSProp1Row);
+//	SMRCSHeaterASwitch.Init (2, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSProp1Row, 
+//		(Boiler *) Panelsdk.GetPointerByString("ELECTRIC:PRIMSMRCSQUADAHEATER"), 0, 
+//		(Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SECSMRCSQUADAHEATER"));
+//	SMRCSHeaterASwitch.WireTo(&SMHeatersAMnBCircuitBraker);
+
 	SMRCSHeaterBSwitch.Init (45, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSProp1Row);
 	SMRCSHeaterCSwitch.Init (88, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSProp1Row);
 	SMRCSHeaterDSwitch.Init (131, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SMRCSProp1Row);
@@ -4584,7 +4592,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_EMS_SCROLL_LEO:
-
 		if(!(GTASwitch.IsUp())) {
 			hDC = oapiGetDC (srf[SRF_EMS_SCROLL_LEO]);
 			SetBkMode (hDC, TRANSPARENT);
@@ -4593,17 +4600,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			SelectObject(hDC,pen);
 			oapiReleaseDC (srf[SRF_EMS_SCROLL_LEO], hDC);
 		}
-
-
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
-
 		return true;
 
 	case AID_EMS_RSI_BKGRND:
-
 		oapiBlt(surf, srf[SRF_EMS_RSI_BKGRND], 0,0,0,0,86,84);
-
 		switch (ems.LiftVectLight()) {
 			case -1:
 				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 60, 6, 20, 6);
@@ -4626,29 +4628,26 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		SelectObject(hDC,pen);
 		SelectObject(hDC,brush);
 		oapiReleaseDC (srf[SRF_EMS_RSI_BKGRND], hDC);
-
 		return true;
 	
-	case AID_EMSDVSETSWITCH:
-		
+	case AID_EMSDVSETSWITCH:		
 		switch ((int)EMSDvSetSwitch.GetPosition()) {
 			case 1:
-				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 55, 0, 55, 91);
-				break;
-			case 2:
 				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 0, 0, 55, 91);
 				break;
+			case 2:
+				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 55, 0, 55, 91);
+				break;
 			case 3:
-				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 165, 0, 55, 91);
+				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 220, 0, 55, 91);
 				break;
 			case 4:
-				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 220, 0, 55, 91);
+				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 165, 0, 55, 91);
 				break;
 			default:
 				oapiBlt(surf, srf[SRF_EMSDVSETSWITCH], 0, 0, 110, 0, 55, 91);
 				break;
 		}
-
 		return true;
 
 	case AID_OPTICS_DSKY:
