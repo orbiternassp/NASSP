@@ -1,6 +1,19 @@
-#include <list>
-#include <queue>
-#include "ChecklistPanel.h"
+#include "Orbitersdk.h"
+#include <stdio.h>
+#include <math.h>
+#include "OrbiterSoundSDK35.h"
+#include "soundlib.h"
+#include "resource.h"
+#include "nasspdefs.h"
+#include "nasspsound.h"
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "dsky.h"
+#include "csmcomputer.h"
+#include "IMU.h"
+#include "lvimu.h"
+#include "Saturn.h"
+#include "checklistController.h"
 using namespace std;
 bool ChecklistItem::operator==(ChecklistItem input)
 {
