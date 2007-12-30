@@ -22,6 +22,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2007/12/19 02:54:26  lassombra
+  *	Added function to move debug strings to the MFD.
+  *	
+  *	MFD can display, freeze, or clear the debug strings.
+  *	
+  *	Use (Saturn *)saturn->debugString() just as you would use oapiDebugString.
+  *	
+  *	oapiDebugString can be used to output important alerts to users still, but should remain clean otherwise.
+  *	
+  *	Also, redirected all the debug statements from the Telecom to the mfd.
+  *	
   *	Revision 1.14  2007/12/17 15:09:13  lassombra
   *	Added function to alert Project Apollo's Configurator/MFD as to the identity of the Socket we are opening when we start the sim.  As a result, the configurator can now shutdown the socket when we close to launchpad, fixing the "TELECOM: BIND() FAILED" problem.  Also now, we have access to the socket in the MFD and can use it for various debugging purposes.
   *	
@@ -68,8 +79,6 @@
   *	
   **************************************************************************/
 
-#define STRICT
-#define ORBITER_MODULE
 #include "math.h"
 #include "windows.h"
 #include "orbitersdk.h"
@@ -135,7 +144,7 @@ static struct {  // global data storage
 SOCKET close_Socket = INVALID_SOCKET;
 char debugString[100];
 char debugStringBuffer[100];
-DLLCLBK void opcDLLInit (HINSTANCE hDLL)
+void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 {
 	static char *name = "Project Apollo";      // MFD mode name
 	MFDMODESPEC spec;
@@ -159,7 +168,7 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 	g_Data.errorMessage = "";
 }
 
-DLLCLBK void opcDLLExit (HINSTANCE hDLL)
+void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
 {
 	// Unregister the custom MFD mode when the module is unloaded
 	oapiUnregisterMFDMode (g_MFDmode);
@@ -180,7 +189,7 @@ void StopIMFDRequest() {
 }
 
 
-DLLCLBK void opcTimestep (double simt, double simdt, double mjd)
+void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 {
 
 	// Recover if MFD was closed and TLI is in progress
