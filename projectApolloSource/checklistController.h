@@ -1,7 +1,7 @@
 #ifndef __checklistController_h
 #define __checklistController_h
 #include <list>
-#include <queue>
+#include <deque>
 using namespace std;
 struct ChecklistItem
 {
@@ -48,7 +48,7 @@ struct ChecklistItem
 // reference to the panel switch that must be thrown, used to
 // spawn reference box
 // -------------------------------------------------------------
-	//PanelSwitchItem *item;
+	char *item;
 // -------------------------------------------------------------
 // position the switch must be moved to.  Used for auto detect
 // of checklist complete.
@@ -113,9 +113,10 @@ struct ChecklistGroup
 struct ChecklistContainer
 {
 	ChecklistGroup group;
-	list<ChecklistItem> sequence;
+	list<ChecklistItem> set;
+	list<ChecklistItem>::iterator sequence;
 };
-class ChecklistPanel
+class ChecklistController
 {
 public:
 // -------------------------------------------------------------
@@ -123,8 +124,9 @@ public:
 // to automate checklist actions.  This is essential as we need
 // to be able to automate from the file.
 // -------------------------------------------------------------
-	ChecklistPanel(/*Saturn *saturn*/);
-	~ChecklistPanel();
+	ChecklistController(Saturn *saturn);
+	ChecklistController();
+	~ChecklistController();
 // -------------------------------------------------------------
 // Pass in a ChecklistItem with group and index initialized.
 // If group is initialized to a valid group, then it is assumed
@@ -135,7 +137,7 @@ public:
 // In the event that an essential checklist is running, a selected
 // checklist will not actually start running but get placed at the
 // top of the stack to be run when the essential checklist is done.
-	void getChecklistItem(const ChecklistItem*);
+	void getChecklistItem(ChecklistItem*);
 // -------------------------------------------------------------
 // Gets list of available groups at this time.  Return is an 
 // array that should be deleted once it is not needed.  
@@ -148,14 +150,14 @@ public:
 // this situation, we need to actually tell the controller instead
 // of just jumping away.  The controller will tell us where to go.
 // -------------------------------------------------------------
-	bool failChecklistItem(const ChecklistItem*);
+	bool failChecklistItem(ChecklistItem*);
 // -------------------------------------------------------------
 // This checklist item is complete.  In the event it is the item
 // currently in the iterator, it will simply move the iterator.
 // In the event it is a checklist down the road, it will simply 
 // display completed.
 // -------------------------------------------------------------
-	bool completeChecklistItem(const ChecklistItem*);
+	bool completeChecklistItem(ChecklistItem*);
 // -------------------------------------------------------------
 // This allows setting of the autoComplete function which 
 // automatically detects if a step is already complete and marks
@@ -163,11 +165,16 @@ public:
 // returns old state.
 // -------------------------------------------------------------
 	bool autoComplete(bool);
+	void LinkCraft(Saturn *saturn);
 protected:
 private:
 	bool complete;
-	queue<ChecklistContainer> action;
-//	Saturn *sat;
+	deque<ChecklistContainer> action;
+	Saturn *sat;
+	ChecklistContainer *active;
+	list<ChecklistGroup> groups;
+	void init();
+	void init(Saturn *sat);
 };
 
 #endif
