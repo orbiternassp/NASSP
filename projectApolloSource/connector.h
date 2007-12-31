@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/12/21 18:10:28  movieman523
+  *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
+  *	
   *	Revision 1.10  2007/12/21 02:31:17  movieman523
   *	Added SetState() call and some more documentation.
   *	
@@ -278,6 +281,8 @@ public:
 		MFD_PANEL_FLASH_ITEM,					///< Turn flash on or off.
 		MFD_PANEL_GET_ITEM_STATE,				///< Get the item's current state.
 		MFD_PANEL_SET_ITEM_STATE,				///< Set the item's current state.
+		MFD_PANEL_GET_FAILED_STATE,				///< Get the item's failed state.
+		MFD_PANEL_GET_CONTROLER,				///< Get the checklist controller handle.
 	};
 
 	PanelConnector(PanelSwitches &p);
