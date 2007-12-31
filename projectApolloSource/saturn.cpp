@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.214  2007/12/21 18:10:29  movieman523
+  *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
+  *	
   *	Revision 1.213  2007/12/21 01:00:11  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -1201,6 +1204,9 @@ void Saturn::clbkPostCreation() {
 
 	// Connect to IMFD
 	IMFD_Client.Connect();
+
+	// Connect to the Checklist controller.
+	checkControl = ChecklistController(this);
 }
 
 void Saturn::GetLEMName(char *s)
@@ -5528,4 +5534,10 @@ double Saturn::CalculateApogeeTime()
 	}
 
 	return TtApo;
+}
+
+// Get checklist controller pointer
+ChecklistController *Saturn::GetChecklistControl()
+{
+	return &checkControl;
 }

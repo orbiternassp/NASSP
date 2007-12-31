@@ -26,29 +26,55 @@ bool ChecklistItem::operator==(ChecklistItem input)
 	}
 	return false;
 }
-ChecklistPanel::ChecklistPanel()
+ChecklistController::ChecklistController(Saturn *saturn)
+{
+	init(saturn);
+}
+ChecklistController::ChecklistController()
+{
+	init();
+}
+ChecklistController::~ChecklistController()
 {
 
 }
-ChecklistPanel::~ChecklistPanel()
+void ChecklistController::getChecklistItem(ChecklistItem* input)
 {
 }
-void ChecklistPanel::getChecklistItem(const ChecklistItem* input)
-{
-}
-ChecklistGroup ChecklistPanel::*getChecklistList()
+ChecklistGroup ChecklistController::*getChecklistList()
 {
 	return NULL;
 }
-bool ChecklistPanel::failChecklistItem(const ChecklistItem* input)
+bool ChecklistController::failChecklistItem(ChecklistItem* input)
 {
 	return false;
 }
-bool ChecklistPanel::completeChecklistItem(const ChecklistItem* input)
+bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 {
 	return false;
 }
-bool ChecklistPanel::autoComplete(bool)
+bool ChecklistController::autoComplete(bool)
 {
 	return false;
+}
+void ChecklistController::init()
+{
+	complete = false;
+	action = deque<ChecklistContainer>();
+	sat = saturn;
+	active = 0;
+	groups = list<ChecklistGroup>();
+	//Todo: Initial loading of complete list to groups.
+	//Todo: Initial loading of proper group to active.
+	//Todo: figure out how to save state... potentially spit out the queue in fifo order
+	//Todo: Appearance: Checklist <group name> <index>
+	//Todo: Figure out how to know when a specific event has happened.
+}
+void ChecklistController::init(Saturn *sat)
+{
+	init();
+}
+void ChecklistController::LinkCraft(Saturn *saturn)
+{
+	init(saturn);
 }

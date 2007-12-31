@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.265  2007/12/29 08:46:39  flydba
+  *	Panels 226, 250, 251 and 252 now work.
+  *	
   *	Revision 1.264  2007/12/28 05:02:01  flydba
   *	Panel 225 now works.
   *	
@@ -560,6 +563,7 @@
 #include "sps.h"
 #include "mcc.h"
 #include "ecs.h"
+#include "checklistController.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -1389,6 +1393,8 @@ public:
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
 
+	// Accessor to get checklistController
+	ChecklistController *GetChecklistControl();
 	///
 	/// Get information on the Command Module RCS pressures.
 	/// \brief Get CM RCS pressures.
@@ -2087,10 +2093,14 @@ protected:
 	MC_GroundTrack  groundtrack;
 	MC_CapCom  capcom;
 
+	// ChecklistController
+	ChecklistController checkControl;
+
 
 	//
 	// Switches
 	//
+protected:
 	int coasEnabled;
 	int opticsDskyEnabled;
 
