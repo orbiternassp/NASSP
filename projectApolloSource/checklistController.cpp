@@ -61,7 +61,6 @@ void ChecklistController::init()
 {
 	complete = false;
 	action = deque<ChecklistContainer>();
-	sat = saturn;
 	active = 0;
 	groups = list<ChecklistGroup>();
 	//Todo: Initial loading of complete list to groups.
@@ -70,9 +69,10 @@ void ChecklistController::init()
 	//Todo: Appearance: Checklist <group name> <index>
 	//Todo: Figure out how to know when a specific event has happened.
 }
-void ChecklistController::init(Saturn *sat)
+void ChecklistController::init(Saturn *saturn)
 {
 	init();
+	sat = saturn;
 }
 void ChecklistController::LinkCraft(Saturn *saturn)
 {
