@@ -1,8 +1,48 @@
 #ifndef __checklistController_h
 #define __checklistController_h
-#include <list>
+#include <vector>
 #include <deque>
+#include <set>
 using namespace std;
+struct ChecklistGroup
+{
+// -------------------------------------------------------------
+// index defined at runtime.  Use this in a ChecklistItem struct
+// to start the checklist operation of that group.
+// -------------------------------------------------------------
+	int group;
+// -------------------------------------------------------------
+// Time at which this group should be executed. (available at 
+// this time)
+// -------------------------------------------------------------
+	int time;
+// -------------------------------------------------------------
+// Event relative to which the time triggers.
+// -------------------------------------------------------------
+	int relativeEvent;
+// -------------------------------------------------------------
+// Group can be manually selected from the MFD.  All checklists
+// normally visible to the MFD have this set to true.
+// -------------------------------------------------------------
+	bool manualSelect;
+// -------------------------------------------------------------
+// Checklist can be automatically selected.  If both this and
+// manualSelect are false, the checklist will never be displayed.
+// -------------------------------------------------------------
+	bool autoSelect;
+// -------------------------------------------------------------
+// Checklist group must be executed and takes priority in auto
+// selection of checklist items over the existing item.
+// Should this be true, then at the defined time, it will begin
+// replacing the present checklist with the checklist group.
+// It will internally stack up the old group and return once the
+// group is done.
+	bool essential;
+// -------------------------------------------------------------
+// Name of the group as should be displayed on the checklist.
+// -------------------------------------------------------------
+	char *Name;
+};
 struct ChecklistItem
 {
 // -------------------------------------------------------------
@@ -30,7 +70,7 @@ struct ChecklistItem
 // -------------------------------------------------------------
 // group id to go to in the event of a failure of this check step.
 // -------------------------------------------------------------
-	int failEvent;
+	ChecklistGroup failEvent;
 // -------------------------------------------------------------
 // Text to display describing the checklist.
 // -------------------------------------------------------------
@@ -71,50 +111,22 @@ struct ChecklistItem
 // -------------------------------------------------------------
 	bool operator==(ChecklistItem input);
 };
-struct ChecklistGroup
-{
-// -------------------------------------------------------------
-// index defined at runtime.  Use this in a ChecklistItem struct
-// to start the checklist operation of that group.
-// -------------------------------------------------------------
-	int group;
-// -------------------------------------------------------------
-// Time at which this group should be executed. (available at 
-// this time)
-// -------------------------------------------------------------
-	int time;
-// -------------------------------------------------------------
-// Event relative to which the time triggers.
-// -------------------------------------------------------------
-	int relativeEvent;
-// -------------------------------------------------------------
-// Group can be manually selected from the MFD.  All checklists
-// normally visible to the MFD have this set to true.
-// -------------------------------------------------------------
-	bool manualSelect;
-// -------------------------------------------------------------
-// Checklist can be automatically selected.  If both this and
-// manualSelect are false, the checklist will never be displayed.
-// -------------------------------------------------------------
-	bool autoSelect;
-// -------------------------------------------------------------
-// Checklist group must be executed and takes priority in auto
-// selection of checklist items over the existing item.
-// Should this be true, then at the defined time, it will begin
-// replacing the present checklist with the checklist group.
-// It will internally stack up the old group and return once the
-// group is done.
-	bool essential;
-// -------------------------------------------------------------
-// Name of the group as should be displayed on the checklist.
-// -------------------------------------------------------------
-	char *Name;
-};
 struct ChecklistContainer
 {
 	ChecklistGroup group;
-	list<ChecklistItem> set;
-	list<ChecklistItem>::iterator sequence;
+	vector<ChecklistItem> set;
+	vector<ChecklistItem>::iterator sequence;
+	ChecklistContainer(ChecklistGroup groupin);
+	~ChecklistContainer();
+};
+// -------------------------------------------------------------
+// Structure implementing the compare method required to allow
+// For a sorted range of checklist groups.
+// This allows for easy and efficient finding of the items desired.
+// -------------------------------------------------------------
+struct ChecklistGroupcompare
+{
+	bool operator()(const ChecklistGroup& lhs, const ChecklistGroup& rhs);
 };
 class ChecklistController
 {
@@ -166,15 +178,17 @@ public:
 // -------------------------------------------------------------
 	bool autoComplete(bool);
 	void LinkCraft(Saturn *saturn);
+	void clbkTimestep(double missionTime);
 protected:
 private:
 	bool complete;
 	deque<ChecklistContainer> action;
 	Saturn *sat;
 	ChecklistContainer *active;
-	list<ChecklistGroup> groups;
+	set<ChecklistGroup,ChecklistGroupcompare> groups;
 	void init();
 	void init(Saturn *sat);
+	double lastMissionTime;
 };
 
 #endif
