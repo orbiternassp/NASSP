@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.215  2007/12/31 05:05:36  lassombra
+  *	Added ChecklistController class as a member of Saturn.
+  *	
+  *	Updated ChecklistController class to have, near as I can see, all the required data.
+  *	
+  *	Waiting on updates to the connector in order to be able to procede with complete implementation.
+  *	
   *	Revision 1.214  2007/12/21 18:10:29  movieman523
   *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
   *	
@@ -1206,7 +1213,7 @@ void Saturn::clbkPostCreation() {
 	IMFD_Client.Connect();
 
 	// Connect to the Checklist controller.
-	checkControl = ChecklistController(this);
+	checkControl.init();
 }
 
 void Saturn::GetLEMName(char *s)
