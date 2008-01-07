@@ -136,7 +136,6 @@ public:
 // to automate checklist actions.  This is essential as we need
 // to be able to automate from the file.
 // -------------------------------------------------------------
-	ChecklistController(Saturn *saturn);
 	ChecklistController();
 	~ChecklistController();
 // -------------------------------------------------------------
@@ -177,18 +176,39 @@ public:
 // returns old state.
 // -------------------------------------------------------------
 	bool autoComplete(bool);
-	void LinkCraft(Saturn *saturn);
 	void clbkTimestep(double missionTime);
+// -------------------------------------------------------------
+// This method does default (empty) initialization.  Can be 
+// called to indicate that the Checklist controller should do 
+// nothing.  WARNING:  once this is called, you cannot call any
+// other init function!
+// -------------------------------------------------------------
+	void init();
+// -------------------------------------------------------------
+// This method initializes any Saturn for any mission.  Uses a
+// custom checklist file where the checkFile parameter is the
+// proper path to the file.  WARNING:  once this is called, you
+// cannot call any other init function!
+// -------------------------------------------------------------
+	void init(char *checkFile);
 protected:
 private:
+	//Auto complete flag.  If true, automatically complete the checklist.
 	bool complete;
+	//flag to prevent re-init of module.  Only the constructor can call 
+	//init without locking the class in the given state.
+	bool initCalled;
+	//This is a "stackable queue" implemented by using either the push
+	//front/push back functions to allow checklist groups to be lined
+	//up for execution.
 	deque<ChecklistContainer> action;
-	Saturn *sat;
+	//The active checklist group.
 	ChecklistContainer *active;
+	//The "sorted list" of all available checklist groups.
 	set<ChecklistGroup,ChecklistGroupcompare> groups;
-	void init();
-	void init(Saturn *sat);
+	//The mission time at which the controller was last called.
 	double lastMissionTime;
+	//This is where actual "default" init happens.  Only the constructor calls this with false.
+	bool init(bool final);
 };
-
 #endif
