@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2007/12/21 02:47:08  movieman523
+  *	Connector cleanup, and fix my build break!
+  *	
   *	Revision 1.84  2007/12/21 02:31:17  movieman523
   *	Added SetState() call and some more documentation.
   *	
@@ -305,6 +308,7 @@
 #include "fdai.h"
 #include "scs.h"
 #include "connector.h"
+#include "checklistController.h"
 
 // DS20060304 SCS PANEL OBJECTS
 
@@ -1161,6 +1165,25 @@ int PanelSwitches::GetState(char *n)
 	}
 
 	return -1;
+}
+
+bool PanelSwitches::GetFailedState(char *n)
+
+{
+	PanelSwitchItem *p;
+	SwitchRow *row = RowList;
+
+	while (row) {
+		p = row->GetItemByName(n);
+		if (p)
+		{
+			return p->IsFailed();
+		}
+
+		row = row->GetNext();
+	}
+
+	return false;
 }
 
 bool PanelSwitches::SetState(char *n, int value)
@@ -3601,7 +3624,7 @@ void HandcontrollerSwitch::LoadState(char *line) {
 // with handling panel calls.
 //
 
-PanelConnector::PanelConnector(PanelSwitches &p) : panel(p)
+PanelConnector::PanelConnector(PanelSwitches &p, ChecklistController &c) : panel(p), checklist(c)
 
 {
 	type = MFD_PANEL_INTERFACE;
@@ -3640,6 +3663,18 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 
 	case MFD_PANEL_SET_ITEM_STATE:
 		m.val1.bValue = panel.SetState((char *) m.val1.pValue, m.val2.iValue);
+		return true;
+
+	case MFD_PANEL_GET_FAILED_STATE:
+		m.val1.bValue = panel.GetFailedState((char *) m.val1.pValue);
+		return true;
+
+	case MFD_PANEL_INIT_CHECKLIST:
+		m.val1.bValue = checklist.init((char *) m.val1.pValue);
+		return true;
+
+	case MFD_PANEL_CHECKLIST_AUTOCOMPLETE:
+		m.val1.bValue = checklist.autoComplete(m.val1.bValue);
 		return true;
 	}
 

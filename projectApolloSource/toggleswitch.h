@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2007/12/21 02:47:08  movieman523
+  *	Connector cleanup, and fix my build break!
+  *	
   *	Revision 1.66  2007/12/21 02:31:18  movieman523
   *	Added SetState() call and some more documentation.
   *	
@@ -1410,6 +1413,7 @@ public:
 
 	int GetState(char *n);
 	bool SetState(char *n, int value);
+	bool GetFailedState(char *n);
 
 protected:
 	VESSEL *vessel;

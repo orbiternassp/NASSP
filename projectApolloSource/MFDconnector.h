@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2007/12/21 02:47:08  movieman523
+  *	Connector cleanup, and fix my build break!
+  *	
   *	Revision 1.2  2007/12/21 02:31:17  movieman523
   *	Added SetState() call and some more documentation.
   *	
@@ -82,6 +85,23 @@ public:
 	/// \return True if call succeeded, false if failed.
 	///
 	bool SetState(char *n, int value);
+
+	///
+	/// Get the failure state of a panel item.
+	///
+	/// \param n Name of panel item.
+	/// \return True if failed, false if not (or if the connector isn't connected).
+	///
+	bool GetFailed(char *n);
+
+	///
+	/// Initialise the checklist controller.
+	///
+	/// \param checkFile Name of the checklist file.
+	///
+	bool ChecklistInit(char *checkFile);
+
+	bool ChecklistAutocomplete(bool yesno);
 
 protected:
 };

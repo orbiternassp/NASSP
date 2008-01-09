@@ -83,15 +83,17 @@ bool ChecklistController::init(bool final)
 	return true;
 	//Todo: Define the understanding that this is going to be a "inactive" controller.
 }
-void ChecklistController::init(char *checkFile)
+bool ChecklistController::init(char *checkFile)
 {
 	if(!init(true))
-		return;
+		return false;
 	//Todo: Initial loading of complete list to groups.
 	//Todo: Initial loading of proper group to active.
 	//Todo: figure out how to save state... potentially spit out the queue in fifo order
 	//Todo: Appearance: Checklist <group name> <index>
 	//Todo: Figure out how to know when a specific event has happened.
+
+	return true;
 }
 void ChecklistController::init()
 {
