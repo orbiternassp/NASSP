@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2008/01/09 01:46:45  movieman523
+  *	Added initial support for talking to checklist controller from MFD.
+  *	
   *	Revision 1.4  2007/12/21 18:10:27  movieman523
   *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
   *	
@@ -39,6 +42,7 @@
 #include "orbiterSDK.h"
 
 #include "nasspdefs.h"
+#include "checklistController.h"
 
 #include "connector.h"
 #include "MFDconnector.h"
@@ -161,23 +165,6 @@ bool MFDConnector::GetFailed(char *n)
 	return false;
 }
 
-bool MFDConnector::ChecklistInit(char *checkFile)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = PanelConnector::MFD_PANEL_INIT_CHECKLIST;
-	cm.val1.pValue = checkFile;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
 bool MFDConnector::ChecklistAutocomplete(bool yesno)
 
 {
@@ -194,3 +181,64 @@ bool MFDConnector::ChecklistAutocomplete(bool yesno)
 
 	return false;
 }
+ChecklistItem *MFDConnector::GetChecklistItem(ChecklistItem *in)
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_GET_CHECKLIST_ITEM;
+	cm.val1.pValue = in;
+
+	if (SendMessage(cm))
+	{
+		return (ChecklistItem *)cm.val1.pValue;
+	}
+
+	return NULL;
+}
+
+ChecklistGroup *MFDConnector::GetChecklistList()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_GET_CHECKLIST_LIST;
+
+	if (SendMessage(cm))
+	{
+		return (ChecklistGroup *)cm.val1.pValue;
+	}
+
+	return NULL;
+}
+bool MFDConnector::failChecklistItem(ChecklistItem* in)
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_FAIL_ITEM;
+	cm.val1.pValue = in;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+bool MFDConnector::completeChecklistItem(ChecklistItem* in)
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_COMPLETE_ITEM;
+	cm.val1.pValue = in;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+

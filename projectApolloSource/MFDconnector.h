@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2008/01/09 01:46:45  movieman523
+  *	Added initial support for talking to checklist controller from MFD.
+  *	
   *	Revision 1.3  2007/12/21 02:47:08  movieman523
   *	Connector cleanup, and fix my build break!
   *	
@@ -95,13 +98,43 @@ public:
 	bool GetFailed(char *n);
 
 	///
-	/// Initialise the checklist controller.
+	/// Tell the checklist to Auto-complete checklist items each timestep.
 	///
-	/// \param checkFile Name of the checklist file.
+	/// \param yesno setting of auto-complete
+	/// \return True if successful, false if failed.
 	///
-	bool ChecklistInit(char *checkFile);
-
 	bool ChecklistAutocomplete(bool yesno);
+
+	///
+	/// Get a checklist item with an initialized checklist item as the source pointer.
+	///
+	/// \param in checklistItem initialized to tell the controller which item to return.
+	/// \return ChecklistItem returned by controller or false if connector isn't connected.
+	///
+	ChecklistItem *GetChecklistItem (ChecklistItem *in);
+
+	///
+	/// Get a list of all allowed checklist items.
+	///
+	/// \return pointer to the first element in an array that is null terminated. (group index of last element is 0)
+	///
+	ChecklistGroup *GetChecklistList();
+
+	///
+	/// Fail a checklist item, and branch if appropriate.
+	///
+	/// \param in ChecklistItem that is to be failed.
+	/// \return true if item was successfully failed.  False otherwise.
+	///
+	bool failChecklistItem(ChecklistItem* in);
+	
+	///
+	/// Complete a checklist item.
+	///
+	/// \param in ChecklistItem that is completed.
+	/// \return true if item was successfully "completed".  False otherwise.
+	///
+	bool completeChecklistItem(ChecklistItem* in);
 
 protected:
 };
