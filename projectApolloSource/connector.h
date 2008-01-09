@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2007/12/31 00:45:17  lassombra
+  *	Added two new panel connection messages.  One gets the checklist controller reference, the other gets the failed state.  These are not implemented.
+  *	
   *	Revision 1.11  2007/12/21 18:10:28  movieman523
   *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
   *	
@@ -263,6 +266,7 @@ private:
 };
 
 class PanelSwitches;
+class ChecklistController;
 
 ///
 /// \ingroup Connectors
@@ -282,16 +286,19 @@ public:
 		MFD_PANEL_GET_ITEM_STATE,				///< Get the item's current state.
 		MFD_PANEL_SET_ITEM_STATE,				///< Set the item's current state.
 		MFD_PANEL_GET_FAILED_STATE,				///< Get the item's failed state.
-		MFD_PANEL_GET_CONTROLER,				///< Get the checklist controller handle.
+		MFD_PANEL_GET_CONTROLLER,				///< Get the checklist controller handle.
+		MFD_PANEL_INIT_CHECKLIST,				///< Initialise the checklist controller.
+		MFD_PANEL_CHECKLIST_AUTOCOMPLETE,		///< Checklist autocomplete.
 	};
 
-	PanelConnector(PanelSwitches &p);
+	PanelConnector(PanelSwitches &p, ChecklistController &c);
 	~PanelConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
 private:
 	PanelSwitches &panel;
+	ChecklistController &checklist;
 };
 
 ///

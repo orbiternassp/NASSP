@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/12/21 18:10:26  movieman523
+  *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
+  *	
   *	Revision 1.10  2007/12/21 03:35:52  movieman523
   *	Fixed LEM initialisation bug.
   *	
@@ -182,7 +185,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmode
 	ComYawMeter(0.0, 5.0, 220.0, -50.0),
 	Panel14SignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
-	MFDToPanelConnector(MainPanel),
+	MFDToPanelConnector(MainPanel, checkControl),
 	imu(agc, Panelsdk)
 
 {

@@ -190,7 +190,7 @@ public:
 // proper path to the file.  WARNING:  once this is called, you
 // cannot call any other init function!
 // -------------------------------------------------------------
-	void init(char *checkFile);
+	bool init(char *checkFile);
 protected:
 private:
 	//Auto complete flag.  If true, automatically complete the checklist.

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/12/21 18:10:27  movieman523
+  *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
+  *	
   *	Revision 1.3  2007/12/21 02:47:08  movieman523
   *	Connector cleanup, and fix my build break!
   *	
@@ -132,6 +135,57 @@ bool MFDConnector::SetState(char *n, int value)
 	cm.messageType = PanelConnector::MFD_PANEL_SET_ITEM_STATE;
 	cm.val1.pValue = n;
 	cm.val2.iValue = value;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool MFDConnector::GetFailed(char *n)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_GET_FAILED_STATE;
+	cm.val1.pValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool MFDConnector::ChecklistInit(char *checkFile)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_INIT_CHECKLIST;
+	cm.val1.pValue = checkFile;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool MFDConnector::ChecklistAutocomplete(bool yesno)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_CHECKLIST_AUTOCOMPLETE;
+	cm.val1.bValue = yesno;
 
 	if (SendMessage(cm))
 	{

@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.216  2008/01/07 08:50:38  lassombra
+  *	Set up the checklistController to not take in a specific vessel.  Will be working
+  *	 with it's state-aware implementation shortly.
+  *	
   *	Revision 1.215  2007/12/31 05:05:36  lassombra
   *	Added ChecklistController class as a member of Saturn.
   *	
@@ -483,7 +487,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	timedSounds(soundlib),
 	iuCommandConnector(agc),
 	sivbControlConnector(agc),
-	MFDToPanelConnector(MainPanel),
+	MFDToPanelConnector(MainPanel, checkControl),
 	ascp(Sclick),
 	RHCNormalPower("RHCNormalPower", Panelsdk),
 	RHCDirect1Power("RHCDirect1Power", Panelsdk),

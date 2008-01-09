@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/12/21 18:10:27  movieman523
+  *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
+  *	
   *	Revision 1.10  2007/12/21 01:00:09  movieman523
   *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
   *	
@@ -84,6 +87,7 @@
 #include "missiontimer.h"
 
 #include "connector.h"
+#include "checklistController.h"
 
 typedef struct {
 
@@ -969,6 +973,9 @@ protected:
 	int  PanelId; 
 	double SaveFOV;
 	bool CheckPanelIdInTimestep;
+
+	// ChecklistController
+	ChecklistController checkControl;
 
 	SoundLib soundlib;
 
