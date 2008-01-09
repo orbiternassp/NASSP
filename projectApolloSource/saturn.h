@@ -23,6 +23,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.266  2007/12/31 05:05:37  lassombra
+  *	Added ChecklistController class as a member of Saturn.
+  *	
+  *	Updated ChecklistController class to have, near as I can see, all the required data.
+  *	
+  *	Waiting on updates to the connector in order to be able to procede with complete implementation.
+  *	
   *	Revision 1.265  2007/12/29 08:46:39  flydba
   *	Panels 226, 250, 251 and 252 now work.
   *	
@@ -4628,6 +4635,13 @@ protected:
 	/// LEM name
 	///
 	char LEMName[64];
+
+	///
+	/// LEM checklist file
+	///
+	char LEMCheck[100];
+
+	bool LEMCheckAuto;
 
 	//
 	// Connectors.

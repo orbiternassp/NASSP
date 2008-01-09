@@ -64,3 +64,27 @@ void ChecklistController::init()
 {
 	init(true);
 }
+void ChecklistController::save(FILEHANDLE scn)
+{
+	oapiWriteScenario_string(scn,ChecklistControllerStartString,"");
+	oapiWriteScenario_string(scn,ChecklistControllerEndString,"");
+}
+void ChecklistController::load(FILEHANDLE scn)
+{
+	char *line, buffer[100];
+	line = "";
+	while (strnicmp(line,ChecklistControllerEndString,strlen(ChecklistControllerEndString)))
+	{
+		oapiReadScenario_nextline(scn,line);
+	}
+}
+bool ChecklistController::autoExecute(bool set)
+{
+	bool temp = autoexecute;
+	autoexecute = set;
+	return temp;
+}
+bool ChecklistController::autoExecute()
+{
+	return autoexecute;
+}

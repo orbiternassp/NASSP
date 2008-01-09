@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2007/12/05 23:07:46  movieman523
+  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
+  *	
   *	Revision 1.82  2007/10/09 21:49:38  tschachim
   *	Bugfixes
   *	
@@ -1796,6 +1799,9 @@ void SaturnV::DockStage (UINT dockstatus)
 		ls.MissionTime = MissionTime;
 		ls.Realism = Realism;
 		ls.Yaagc = agc.IsVirtualAGC();
+		strncpy (ls.checklistFile, LEMCheck, 100);
+		ls.checkAutoExecute = LEMCheckAuto;
+
 
 		lmvessel = (LEM *) oapiGetVesselInterface(hLMV);
 		lmvessel->SetLanderData(ls);
