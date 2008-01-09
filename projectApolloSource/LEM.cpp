@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2008/01/09 01:46:45  movieman523
+  *	Added initial support for talking to checklist controller from MFD.
+  *	
   *	Revision 1.11  2007/12/21 18:10:26  movieman523
   *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
   *	
@@ -1075,6 +1078,10 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
         else if (!strnicmp (line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
+		else if (!strnicmp (line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
+		{
+			checkControl.load(scn);
+		}
 		else 
 		{
             ParseScenarioLineEx (line, vs);
@@ -1215,6 +1222,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
+	checkControl.save(scn);
 }
 
 bool LEM::clbkLoadGenericCockpit ()
@@ -1255,6 +1263,9 @@ void LEM::SetLanderData(LemSettings &ls)
 	agc.SetMissionInfo(ApolloNo, Realism, CSMName);
 	agc.SetVirtualAGC(ls.Yaagc);
 
+	// Initialize the checklist Controller in accordance with scenario settings.
+	checkControl.init(ls.checklistFile);
+	checkControl.autoExecute(ls.checkAutoExecute);
 	// Sounds are initialized during the first timestep
 }
 

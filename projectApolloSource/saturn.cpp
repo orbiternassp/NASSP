@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.217  2008/01/09 01:46:45  movieman523
+  *	Added initial support for talking to checklist controller from MFD.
+  *	
   *	Revision 1.216  2008/01/07 08:50:38  lassombra
   *	Set up the checklistController to not take in a specific vessel.  Will be working
   *	 with it's state-aware implementation shortly.
@@ -1787,6 +1790,13 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (LEMName[0])
 		oapiWriteScenario_string (scn, "LEMN", LEMName);
 
+	if (LEMCheck[0])
+	{
+		oapiWriteScenario_string (scn, "LEMCHECK", LEMCheck);
+		oapiWriteScenario_int (scn, "LEMCHECKAUTO", int(LEMCheckAuto));
+	}
+
+
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
 	oapiWriteScenario_int (scn, "OPTICSDSKYENABLED", opticsDskyEnabled);
 	oapiWriteScenario_int (scn, "FOVFIXED", (FovFixed ? 1 : 0));
@@ -1871,6 +1881,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	// oapiWriteScenario_int (scn, "FDAISMOOTH", fdaiSmooth);
 	// oapiWriteScenario_int (scn, "MAINPANELSPLIT", MainPanelSplit);
 	// oapiWriteScenario_int (scn, "LOWRES", LowRes ? 1 : 0);
+
+	checkControl.save(scn);
 }
 
 //
@@ -2734,6 +2746,23 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, "FREERETURNPECALT", 16)) {
 			sscanf(line + 16, "%f", &ftcp);
 			FreeReturnPericynthionAltitude = ftcp;
+		}
+		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
+		{
+			checkControl.load(scn);
+		}
+		else if (!strnicmp(line, "LEMCHECK", 8))
+		{
+			strcpy(LEMCheck,line+8);
+		}
+		else if (!strnicmp(line, "LEMCHECKAUTO", 12))
+		{
+			int temp = 0;
+			sscanf(line+12, "%i", &temp);
+			if (temp != 0)
+				LEMCheckAuto = true;
+			else
+				LEMCheckAuto = false;
 		}
 		else
 			found = false;

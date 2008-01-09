@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2008/01/09 01:46:45  movieman523
+  *	Added initial support for talking to checklist controller from MFD.
+  *	
   *	Revision 1.11  2007/12/21 18:10:27  movieman523
   *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
   *	
@@ -102,6 +105,8 @@ typedef struct {
 	bool AutoSlow;
 	int Realism;
 	bool Yaagc;
+	char checklistFile[100];
+	bool checkAutoExecute;
 
 } LemSettings;
 

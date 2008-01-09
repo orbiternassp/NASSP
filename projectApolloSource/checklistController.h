@@ -1,9 +1,13 @@
 #ifndef __checklistController_h
 #define __checklistController_h
+#include "orbiterapi.h"
 #include <vector>
 #include <deque>
 #include <set>
 using namespace std;
+
+#define ChecklistControllerStartString "<checklist>"
+#define ChecklistControllerEndString "</checklist>"
 
 /// -------------------------------------------------------------
 /// Listing of available events to spawn a checklist off of.
@@ -238,6 +242,23 @@ public:
 /// function!
 /// -------------------------------------------------------------
 	bool init(char *checkFile);
+/// -------------------------------------------------------------
+/// called to save checklistController state.
+/// -------------------------------------------------------------
+	void save(FILEHANDLE scn);
+/// -------------------------------------------------------------
+/// called to load checklistController state.
+/// -------------------------------------------------------------
+	void load(FILEHANDLE scn);
+/// -------------------------------------------------------------
+/// Set the auto execute setting.  Note that this should ONLY be
+/// used by the LEM and only when it is first created.
+/// -------------------------------------------------------------
+	bool autoExecute(bool set);
+/// -------------------------------------------------------------
+/// Get the auto execute setting.
+/// -------------------------------------------------------------
+	bool autoExecute();
 protected:
 private:
 	/// Auto complete flag.  If true, automatically complete the checklist.
@@ -257,5 +278,7 @@ private:
 	double lastMissionTime;
 	///This is where actual "default" init happens.  Only the constructor calls this with false.
 	bool init(bool final);
+	///This determines whether or not the checklist gets auto executed.
+	bool autoexecute;
 };
 #endif
