@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2008/01/09 01:46:45  movieman523
+  *	Added initial support for talking to checklist controller from MFD.
+  *	
   *	Revision 1.85  2007/12/21 02:47:08  movieman523
   *	Connector cleanup, and fix my build break!
   *	
@@ -3669,12 +3672,20 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		m.val1.bValue = panel.GetFailedState((char *) m.val1.pValue);
 		return true;
 
-	case MFD_PANEL_INIT_CHECKLIST:
-		m.val1.bValue = checklist.init((char *) m.val1.pValue);
-		return true;
-
 	case MFD_PANEL_CHECKLIST_AUTOCOMPLETE:
 		m.val1.bValue = checklist.autoComplete(m.val1.bValue);
+		return true;
+	case MFD_PANEL_GET_CHECKLIST_ITEM:
+		checklist.getChecklistItem((ChecklistItem *)m.val1.pValue);
+		return true;
+	case MFD_PANEL_GET_CHECKLIST_LIST:
+		m.val1.pValue = checklist.getChecklistList();
+		return true;
+	case MFD_PANEL_FAIL_ITEM:
+		m.val1.bValue = checklist.failChecklistItem((ChecklistItem *)m.val1.pValue);
+		return true;
+	case MFD_PANEL_COMPLETE_ITEM:
+		m.val1.bValue = checklist.completeChecklistItem((ChecklistItem *)m.val1.pValue);
 		return true;
 	}
 

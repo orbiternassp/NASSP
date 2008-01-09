@@ -27,27 +27,13 @@ ChecklistController::~ChecklistController()
 void ChecklistController::getChecklistItem(ChecklistItem* input)
 {
 }
-ChecklistGroup ChecklistController::*getChecklistList()
+ChecklistGroup *ChecklistController::getChecklistList()
 {
 	return NULL;
 }
 bool ChecklistController::failChecklistItem(ChecklistItem* input)
 {
-	input->failed = true;
-	if (input->failEvent.group != -1)
-	{
-		active->sequence++;
-		action.push_front(*active);
-		active = new ChecklistContainer(input->failEvent);
-	}
-	else
-	{
-		active->sequence++;
-	}
-	input->group = -1;
-	input->index = 0;
-	getChecklistItem(input);
-	return true;
+	return false;
 }
 bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 {

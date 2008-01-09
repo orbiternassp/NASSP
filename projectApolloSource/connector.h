@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2008/01/09 01:46:45  movieman523
+  *	Added initial support for talking to checklist controller from MFD.
+  *	
   *	Revision 1.12  2007/12/31 00:45:17  lassombra
   *	Added two new panel connection messages.  One gets the checklist controller reference, the other gets the failed state.  These are not implemented.
   *	
@@ -286,9 +289,11 @@ public:
 		MFD_PANEL_GET_ITEM_STATE,				///< Get the item's current state.
 		MFD_PANEL_SET_ITEM_STATE,				///< Set the item's current state.
 		MFD_PANEL_GET_FAILED_STATE,				///< Get the item's failed state.
-		MFD_PANEL_GET_CONTROLLER,				///< Get the checklist controller handle.
-		MFD_PANEL_INIT_CHECKLIST,				///< Initialise the checklist controller.
 		MFD_PANEL_CHECKLIST_AUTOCOMPLETE,		///< Checklist autocomplete.
+		MFD_PANEL_GET_CHECKLIST_ITEM,			///< Get the an checklist item.
+		MFD_PANEL_GET_CHECKLIST_LIST,			///< Get list of allowed checklists.
+		MFD_PANEL_FAIL_ITEM,					///< Fail a checklist step.
+		MFD_PANEL_COMPLETE_ITEM,				///< Complete a checklist step.
 	};
 
 	PanelConnector(PanelSwitches &p, ChecklistController &c);
