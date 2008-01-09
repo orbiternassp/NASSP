@@ -4,18 +4,6 @@
 #include "checklistController.h"
 
 using namespace std;
-//Finds out if two checklist items refer to the same actual item.
-bool ChecklistItem::operator==(ChecklistItem input)
-{
-	if (input.group == this->group)
-	{
-		if (input.index == this->index)
-		{
-			return true;
-		}
-	}
-	return false;
-}
 ChecklistController::ChecklistController()
 {
 	init(false);
@@ -47,15 +35,6 @@ void ChecklistController::clbkTimestep(double missionTime)
 {
 	lastMissionTime = missionTime;
 }
-ChecklistContainer::ChecklistContainer(ChecklistGroup groupin)
-{
-	group = groupin;
-	set = vector<ChecklistItem>();
-	sequence = set.begin();
-}
-ChecklistContainer::~ChecklistContainer()
-{
-}
 bool ChecklistController::init(bool final)
 {
 	if (initCalled)
@@ -73,7 +52,7 @@ bool ChecklistController::init(char *checkFile)
 {
 	if(!init(true))
 		return false;
-	//Todo: Initial loading of complete list to groups.
+	//Todo: Initial loading of complete list of groups.
 	//Todo: Initial loading of proper group to active.
 	//Todo: figure out how to save state... potentially spit out the queue in fifo order
 	//Todo: Appearance: Checklist <group name> <index>
@@ -84,16 +63,4 @@ bool ChecklistController::init(char *checkFile)
 void ChecklistController::init()
 {
 	init(true);
-}
-bool ChecklistGroupcompare::operator()(const ChecklistGroup& lhs, const ChecklistGroup& rhs)
-{
-	if(lhs.relativeEvent < rhs.relativeEvent)
-		return true;
-	if(lhs.relativeEvent > rhs.relativeEvent)
-		return false;
-	if(lhs.time < rhs.time)
-		return true;
-	if(lhs.time > rhs.time)
-		return false;
-	return false;
 }
