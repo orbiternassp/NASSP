@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2007/12/05 23:07:44  movieman523
+  *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
+  *	
   *	Revision 1.75  2007/12/04 20:26:31  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -284,7 +287,6 @@
 
 char trace_file[] = "ProjectApollo Saturn1b.log";
 
-
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
 // ==============================================================
@@ -358,7 +360,8 @@ void Saturn1b::initSaturn1b()
 	MasterVessel = false;
 	TargetDocked = false;
 
-	if (strcmp(GetName(), "AS-211")==0) {
+	if (strcmp(GetName(), "AS-211")==0)
+	{
 		ASTPMission = true;
 	}
 
@@ -366,7 +369,8 @@ void Saturn1b::initSaturn1b()
 	// Pitch program.
 	//
 
-	for (int i = 0; i < PITCH_TABLE_SIZE; i++) {
+	for (int i = 0; i < PITCH_TABLE_SIZE; i++)
+	{
 		met[i] = default_met[i];
 		cpitch[i] = default_cpitch[i];
 	}
@@ -393,7 +397,6 @@ void Saturn1b::initSaturn1b()
 	// Default ISP and thrust values.
 	//
 
-
 	ISP_FIRST_SL    = 262*G;
 	ISP_FIRST_VAC   = 292*G;
 	THRUST_FIRST_VAC= 1030200;
@@ -418,6 +421,8 @@ void Saturn1b::initSaturn1b()
 
 	SI_EmptyMass = 41594;
 	SI_FuelMass = 407100;
+
+	CalculateStageMass();
 
 	//
 	// Engines per stage.
@@ -542,7 +547,8 @@ void Saturn1b::StageOne(double simt, double simdt)
 
 	double MainLevel = GetEngineLevel(ENGINE_MAIN);
 
-	if (MainLevel < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10) {
+	if (MainLevel < 0.3 && MissionTime < 100 && EDSSwitch.GetState() && MissionTime > 10)
+	{
 		bAbort = true;
 	}
 
@@ -581,7 +587,8 @@ void Saturn1b::StageOne(double simt, double simdt)
 			SShutS.done();
 
 			// Move hidden SIC vessel
-			if (hstg1) {
+			if (hstg1)
+			{
 				VESSELSTATUS vs;
 				GetStatus(vs);
 				S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
@@ -660,7 +667,6 @@ void Saturn1b::StageStartSIVB(double simt)
 
 	switch (StageState)
 	{
-
 	case 0:
 		SepS.play(LOOP, 130);
 		SetThrusterGroupLevel(thg_ver,1.0);
@@ -754,7 +760,8 @@ void Saturn1b::StageStartSIVB(double simt)
 			// Override if required.
 			//
 
-			if (LESJettisonTime < NextMissionEventTime) {
+			if (LESJettisonTime < NextMissionEventTime)
+			{
 				NextMissionEventTime = LESJettisonTime;
 			}
 
@@ -819,7 +826,6 @@ void Saturn1b::StageLaunchSIVB(double simt)
 
 	switch (StageState)
 	{
-
 	case 0:
 		SetThrusterLevel(th_main[0], 1.0);
 		SetSIVBMixtureRatio(5.5);
@@ -835,8 +841,10 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	//
 
 	case 1:
-		if (MissionTime >= SecondStagePUShiftTime) {
-			if (Crewed) {
+		if (MissionTime >= SecondStagePUShiftTime)
+		{
+			if (Crewed)
+			{
 				SPUShiftS.play();
 				SPUShiftS.done();
 			}
@@ -850,7 +858,8 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	//
 
 	case 2:
-		if (GetEngineLevel(ENGINE_MAIN) <= 0) {
+		if (GetEngineLevel(ENGINE_MAIN) <= 0)
+		{
 			NextMissionEventTime = MissionTime + 10.0;
 			S4CutS.play();
 			S4CutS.done();
@@ -868,7 +877,8 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		break;
 	}
 
-	if(CsmLvSepSwitch.GetState()) {
+	if(CsmLvSepSwitch.GetState())
+	{
 		bManualSeparate = true;
 	}
 
@@ -878,7 +888,8 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
-		if (bAbort){
+		if (bAbort)
+		{
 			/// \todo SPS abort handling
 			ABORT_IND = true;
 			StartAbort();
@@ -922,7 +933,8 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	// called again for several seconds.
 	//
 	//	sprintf (oapiDebugString(), "Dockstate: %d", dockstate);
-	if (FirstTimestep) {
+	if (FirstTimestep) 
+	{
 		DoFirstTimestep(simt);
 		FirstTimestep = false;
 		return;
@@ -930,24 +942,30 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
-	if (hAstpDM){
-		if (DestroyAstp) {
+	if (hAstpDM)
+	{
+		if (DestroyAstp)
+		{
 			Undock(0);
 			ReadyAstp1 = false;
 			oapiDeleteVessel(hAstpDM);
 			hAstpDM=NULL;
 			DestroyAstp=false;
 		}
-		if (GetDockStatus(GetDockHandle(0)) == hAstpDM ){
-			if(dockstate == 4){
+		if (GetDockStatus(GetDockHandle(0)) == hAstpDM )
+		{
+			if(dockstate == 4)
+			{
 				if(ASTPMission)
 					ReadyAstp1=true;
-			bManualUnDock = true;
+				bManualUnDock = true;
 			}
 		}
 	}
-	else{
-		if(ASTPMission) {
+	else
+	{
+		if(ASTPMission)
+		{
 			char VName[256];
 			strcpy (VName, GetName()); strcat (VName, "-ASTPDM");
 			hAstpDM = oapiGetVesselByName(VName);
@@ -961,12 +979,12 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 			if(ASTPMission)
 				ReadyAstp=true;
 			dockstate=2;
-				//	sprintf(oapiDebugString() ,"S4B %f");
+			//	sprintf(oapiDebugString() ,"S4B %f");
 		}
 		else
 		{
 			ReadyAstp=false;
-				//	sprintf(oapiDebugString() ,"NOT S4B %f");
+			//	sprintf(oapiDebugString() ,"NOT S4B %f");
 		}
 
 		if (dockstate>=2 && !S4BASTP)
@@ -1015,53 +1033,55 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 				}
 			}
 		}
-		if (CsmLmFinalSep1Switch.GetState() || CsmLmFinalSep2Switch.GetState()) {
-			if (dockstate == 3) {
+		if (CsmLmFinalSep1Switch.GetState() || CsmLmFinalSep2Switch.GetState())
+		{
+			if (dockstate == 3)
+			{
 				ProbeJetison = true;
 				bManualUnDock = true;
 			}
 		}
 
-		for (int i=0 ;i<6;i++){
+		for (int i=0 ;i<6;i++)
+		{
 			LAUNCHIND[i]=false;
 		}
 
-		if (EVA_IP){
-			if(!hEVA){
-			ToggleEVA();
+		if (EVA_IP)
+		{
+			if(!hEVA)
+			{
+				ToggleEVA();
 			}
 		}
 
-		if ((simt-(2+release_time))>=0 && Resetjet) {
+		if ((simt-(2+release_time))>=0 && Resetjet)
+		{
 			SetAttitudeLinLevel(2,0);
 			Resetjet = false;
 		}
 
-		if (ToggleEva){
-		ToggleEVA();
-		if(ASTPMission && dockstate == 3){
-//			UINT meshidx;
-//			VECTOR3 mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
-//			meshidx = AddMesh (hastp, &mesh_dir);
-//			SetMeshVisibleInternal (meshidx, true);
+		if (ToggleEva)
+		{
+			ToggleEVA();
+			if(ASTPMission && dockstate == 3){
+//				UINT meshidx;
+//				VECTOR3 mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
+//				meshidx = AddMesh (hastp, &mesh_dir);
+//				SetMeshVisibleInternal (meshidx, true);
+			}
 		}
-
-		}
-		if (bToggleHatch){
+		if (bToggleHatch)
+		{
 		ToggelHatch();
 		bToggleHatch=false;
-		if(ASTPMission && dockstate == 3){
-//			UINT meshidx;
-//			VECTOR3 mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
-//			meshidx = AddMesh (hastp, &mesh_dir);
-//			SetMeshVisibleInternal (meshidx, true);
-		}
-
-
-
-		}
-		if (dockstate == 2){
-
+			if(ASTPMission && dockstate == 3)
+			{
+//				UINT meshidx;
+//				VECTOR3 mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
+//				meshidx = AddMesh (hastp, &mesh_dir);
+//				SetMeshVisibleInternal (meshidx, true);
+			}
 		}
 		if (bManualUnDock)
 		{
@@ -1083,11 +1103,13 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 		SetEngineLevel(ENGINE_MAIN,1);
 	//sprintf(oapiDebugString(), "Mode Abort 1B%f", abortTimer);
 		//if (bManualSeparate)
-        if (GetFuelMass() == 0 && abortTimer == 0){
+        if (GetFuelMass() == 0 && abortTimer == 0)
+		{
 			LAUNCHIND[4]=true;
 			abortTimer=simt;
 		}
-		if (abortTimer>0){
+		if (abortTimer>0)
+		{
 			if ((simt-(0.5+abortTimer))>=0){
 				ActivateNavmode(NAVMODE_KILLROT);
 			}
@@ -1251,7 +1273,6 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 void Saturn1b::ConfigureStageMeshes(int stage_state)
 {
-
 	//
 	// This code all needs to be fixed up.
 	//
@@ -1320,7 +1341,6 @@ void Saturn1b::ConfigureStageMeshes(int stage_state)
 
 void Saturn1b::ConfigureStageEngines(int stage_state)
 {
-
 	//
 	// This code all needs to be fixed up.
 	//
