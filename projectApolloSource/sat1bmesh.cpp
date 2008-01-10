@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.66  2007/12/11 12:10:37  tschachim
+  *	Bugfix meshes.
+  *	
   *	Revision 1.65  2007/12/11 07:55:06  movieman523
   *	Revised stage mesh handling for Saturn 1b, to help generalise the code.
   *	
@@ -443,7 +446,7 @@ void Saturn1b::SetSecondStage ()
 	SetSize (22);
 	SetCOG_elev (15.225);
 
-	double EmptyMass = Stage2Mass + LESAttached ? Abort_Mass : 0.0;
+	double EmptyMass = Stage2Mass + (LESAttached ? Abort_Mass : 0.0);
 
 	SetEmptyMass (EmptyMass);
 	SetPMI (_V(94,94,20));
