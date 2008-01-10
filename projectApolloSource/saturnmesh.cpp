@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2007/11/26 17:59:06  movieman523
+  *	Assorted tidying up of state variable structures.
+  *	
   *	Revision 1.66  2007/10/18 00:23:23  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -728,7 +731,7 @@ void Saturn::SetReentryStage ()
 
 	agc.SetInputChannelBit(030, 2, true);
 
-	double EmptyMass = CM_EmptyMass + LESAttached ? 2000.0 : 0.0;
+	double EmptyMass = CM_EmptyMass + (LESAttached ? 2000.0 : 0.0);
 
 	SetSize(6.0);
 	if (ApexCoverAttached) {
