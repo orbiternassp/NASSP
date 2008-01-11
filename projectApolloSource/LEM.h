@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2008/01/09 15:00:20  lassombra
+  *	Added support for checklistController to save/load state.
+  *	
+  *	Added support for new scenario options LEMCHECK <lem checklist file and LEMCHECKAUTO <whether the lem should automatically execute checklists.
+  *	
+  *	Will document new options on the wiki
+  *	
   *	Revision 1.12  2008/01/09 01:46:45  movieman523
   *	Added initial support for talking to checklist controller from MFD.
   *	
@@ -97,6 +104,8 @@ typedef struct {
 	double LandingLatitude;
 	double LandingLongitude;
 	double LandingAltitude;
+	double AscentFuelKg;
+	double DescentFuelKg;
 	int MissionNo;
 	double MissionTime;
 	char language[64];

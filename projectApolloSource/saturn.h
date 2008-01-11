@@ -23,6 +23,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.267  2008/01/09 15:00:20  lassombra
+  *	Added support for checklistController to save/load state.
+  *	
+  *	Added support for new scenario options LEMCHECK <lem checklist file and LEMCHECKAUTO <whether the lem should automatically execute checklists.
+  *	
+  *	Will document new options on the wiki
+  *	
   *	Revision 1.266  2007/12/31 05:05:37  lassombra
   *	Added ChecklistController class as a member of Saturn.
   *	
@@ -4582,6 +4589,8 @@ protected:
 	double LMLandingAltitude;
 	char   LMLandingBase[256];
 	double LMLandingMJD;		// MJD of lunar landing
+	double LMDescentFuelMassKg;	///< Mass of fuel in descent stage of LEM.
+	double LMAscentFuelMassKg;	///< Mass of fuel in ascent stage of LEM.
 
 	//
 	// Earth landing data.
