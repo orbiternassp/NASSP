@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.67  2008/01/10 05:42:20  movieman523
+  *	Hopefully fix Saturn 1b mass.
+  *	
   *	Revision 1.66  2007/12/11 12:10:37  tschachim
   *	Bugfix meshes.
   *	
@@ -545,7 +548,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		//
 		// Add nosecap.
 		//
-		mesh_dir=_V(0,0,29.77-12.25);
+		mesh_dir=_V(0,0,15.8 + offset);
 		AddMesh (hNosecap, &mesh_dir);
 	}
 
