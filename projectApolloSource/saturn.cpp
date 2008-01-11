@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.218  2008/01/09 15:00:20  lassombra
+  *	Added support for checklistController to save/load state.
+  *	
+  *	Added support for new scenario options LEMCHECK <lem checklist file and LEMCHECKAUTO <whether the lem should automatically execute checklists.
+  *	
+  *	Will document new options on the wiki
+  *	
   *	Revision 1.217  2008/01/09 01:46:45  movieman523
   *	Added initial support for talking to checklist controller from MFD.
   *	
@@ -1062,6 +1069,8 @@ void Saturn::initSaturn()
 		ENGIND[i] = false;
 
 	LEMName[0] = 0;
+	LMDescentFuelMassKg = 8375.0;
+	LMAscentFuelMassKg = 2345.0;
 
 	UseATC = false;
 	Realism = REALISM_DEFAULT;
@@ -1796,6 +1805,11 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "LEMCHECKAUTO", int(LEMCheckAuto));
 	}
 
+	if (!LEMdatatransfer)
+	{
+		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
+		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
+	}
 
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
 	oapiWriteScenario_int (scn, "OPTICSDSKYENABLED", opticsDskyEnabled);
@@ -2716,6 +2730,14 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			sscanf(line + 7, "%f", &ftcp);
 			LMLandingMJD = ftcp;
 		}
+		else if (!strnicmp(line, "LMDSCFUEL", 9)) {
+			sscanf(line + 9, "%f", &ftcp);
+			LMDescentFuelMassKg = ftcp;
+		}
+		else if (!strnicmp(line, "LMASCFUEL", 9)) {
+			sscanf(line + 9, "%f", &ftcp);
+			LMAscentFuelMassKg = ftcp;
+		}
 		else if (!strnicmp(line, "MOONBASE", 8)) {
 			strncpy (LMLandingBase, line + 9, 256);
 		}
@@ -2855,7 +2877,7 @@ void Saturn::UpdatePayloadMass()
 {
 	switch (SIVBPayload) {
 	case PAYLOAD_LEM:
-		// default, do nothing.
+		S4PL_Mass = 4374.0 + LMAscentFuelMassKg + LMDescentFuelMassKg;
 		break;
 
 	case PAYLOAD_ASTP:

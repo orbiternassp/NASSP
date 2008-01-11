@@ -23,6 +23,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2008/01/09 15:00:20  lassombra
+  *	Added support for checklistController to save/load state.
+  *	
+  *	Added support for new scenario options LEMCHECK <lem checklist file and LEMCHECKAUTO <whether the lem should automatically execute checklists.
+  *	
+  *	Will document new options on the wiki
+  *	
   *	Revision 1.83  2007/12/05 23:07:46  movieman523
   *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
   *	
@@ -1793,6 +1800,8 @@ void SaturnV::DockStage (UINT dockstatus)
 		ls.LandingAltitude = LMLandingAltitude;
 		ls.LandingLatitude = LMLandingLatitude;
 		ls.LandingLongitude = LMLandingLongitude;
+		ls.AscentFuelKg = LMAscentFuelMassKg;
+		ls.DescentFuelKg = LMDescentFuelMassKg;
 		strncpy (ls.language, AudioLanguage, 63);
 		strncpy (ls.CSMName, GetName(), 63);
 		ls.MissionNo = ApolloNo;
