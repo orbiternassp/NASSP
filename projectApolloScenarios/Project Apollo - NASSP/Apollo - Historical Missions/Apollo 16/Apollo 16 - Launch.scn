@@ -58,6 +58,7 @@ Casper:ProjectApollo/Saturn5
   TCP 0.5
   LANG English
   LEMN Orion
+  LMDSCFUEL 8891.0
 END
 AS-511-CT:ProjectApollo\Crawler
   STATUS Landed Earth
