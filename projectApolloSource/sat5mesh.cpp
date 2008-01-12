@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2008/01/11 05:24:11  movieman523
+  *	Added LEM fuel masses; currently they're passed to the LEM but it ignores them.
+  *	
   *	Revision 1.84  2008/01/09 15:00:20  lassombra
   *	Added support for checklistController to save/load state.
   *	
@@ -1475,6 +1478,7 @@ void SaturnV::SeparateStage (int new_stage)
 		S4Config.SettingsType.SIVB_SETTINGS_MASS = 1;
 		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
 		S4Config.SettingsType.SIVB_SETTINGS_ENGINES = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD_INFO = 1;
 		S4Config.Payload = SIVBPayload;
 		S4Config.VehicleNo = VehicleNo;
 		S4Config.EmptyMass = S4B_EmptyMass;
@@ -1488,6 +1492,9 @@ void SaturnV::SeparateStage (int new_stage)
 		S4Config.THRUST_VAC = THRUST_THIRD_VAC;
 		S4Config.PanelsHinged = !SLAWillSeparate;
 		S4Config.SLARotationLimit = (double) SLARotationLimit;
+		strcpy(S4Config.PayloadName, LEMName);
+		S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
+		S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);

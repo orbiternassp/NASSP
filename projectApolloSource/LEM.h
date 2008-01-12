@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2008/01/11 05:24:11  movieman523
+  *	Added LEM fuel masses; currently they're passed to the LEM but it ignores them.
+  *	
   *	Revision 1.13  2008/01/09 15:00:20  lassombra
   *	Added support for checklistController to save/load state.
   *	
@@ -971,6 +974,9 @@ protected:
 	IMU imu;
 	MissionTimer MissionTimerDisplay;
 	LEMEventTimer EventTimerDisplay;
+
+	double DescentFuelMassKg;	///< Mass of fuel in descent stage of LEM.
+	double AscentFuelMassKg;	///< Mass of fuel in ascent stage of LEM.
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1

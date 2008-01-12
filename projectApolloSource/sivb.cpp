@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2007/12/21 18:10:30  movieman523
+  *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
+  *	
   *	Revision 1.36  2007/12/05 23:07:51  movieman523
   *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
   *	
@@ -338,7 +341,16 @@ void SIVB::InitS4b()
 	meshLMPKD = -1;
 	meshApollo8LTA = -1;
 	meshLTA_2r = -1;
- 
+
+	//
+	// Default payload name.
+	//
+	sprintf(PayloadName, "%s-PAYLOAD", GetName());
+
+	LMDescentFuelMassKg = 8375.0;
+	LMAscentFuelMassKg = 2345.0;
+	Payloaddatatransfer = false;
+
 	//
 	// Set up the connections.
 	//
@@ -806,6 +818,17 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "PANELPROC", panelProc);
 	oapiWriteScenario_float (scn, "ROTL", RotationLimit);
 
+	if (PayloadName[0])
+	{
+		oapiWriteScenario_string (scn, "PAYN", PayloadName);
+	}
+
+	if (!Payloaddatatransfer)
+	{
+		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
+		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
+	}
+
 	iu.SaveState(scn);
 	Panelsdk.Save(scn);
 }
@@ -822,6 +845,7 @@ int SIVB::GetMainState()
 	state.LowRes = LowRes;
 	state.J2IsActive = J2IsActive;
 	state.FuelVenting = FuelVenting;
+	state.Payloaddatatransfer = Payloaddatatransfer;
 
 	return state.word;
 }
@@ -1106,6 +1130,7 @@ void SIVB::SetMainState(int s)
 	LowRes = (state.LowRes != 0);
 	J2IsActive = (state.J2IsActive);
 	FuelVenting = (state.FuelVenting);
+	Payloaddatatransfer = (state.Payloaddatatransfer != 0);
 }
 
 void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -1190,6 +1215,17 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			int i;
 			sscanf (line+5, "%d", &i);
 			State = (SIVbState) i;
+		}
+		else if (!strnicmp(line, "PAYN", 4)) {
+			strncpy (PayloadName, line + 5, 64);
+		}
+		else if (!strnicmp(line, "LMDSCFUEL", 9)) {
+			sscanf(line + 9, "%f", &flt);
+			LMDescentFuelMassKg = flt;
+		}
+		else if (!strnicmp(line, "LMASCFUEL", 9)) {
+			sscanf(line + 9, "%f", &flt);
+			LMAscentFuelMassKg = flt;
 		}
 		else if (!strnicmp (line, "REALISM", 7))
 		{
@@ -1334,6 +1370,17 @@ void SIVB::SetState(SIVBSettings &state)
 		{
 			J2IsActive = true;
 		}
+	}
+
+	if (state.SettingsType.SIVB_SETTINGS_PAYLOAD_INFO)
+	{
+		if (state.PayloadName[0])
+		{
+			strcpy(PayloadName, state.PayloadName);
+		}
+
+		LMDescentFuelMassKg = state.LMDescentFuelMassKg;
+		LMAscentFuelMassKg = state.LMAscentFuelMassKg;
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_GENERAL)
