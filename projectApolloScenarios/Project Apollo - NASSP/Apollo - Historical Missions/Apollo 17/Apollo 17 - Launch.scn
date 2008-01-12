@@ -57,6 +57,7 @@ America:ProjectApollo/Saturn5
   TCP 0.5
   LANG English
   LEMN Challenger
+  LMDSCFUEL 8891.0
 END
 AS-512-CT:ProjectApollo\Crawler
   STATUS Landed Earth
