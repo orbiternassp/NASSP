@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2008/01/11 03:20:10  movieman523
+  *	Probably fixed nosecap position.
+  *	
   *	Revision 1.67  2008/01/10 05:42:20  movieman523
   *	Hopefully fix Saturn 1b mass.
   *	
@@ -1110,6 +1113,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		S4Config.SettingsType.SIVB_SETTINGS_GENERAL = 1;
 		S4Config.SettingsType.SIVB_SETTINGS_MASS = 1;
 		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD_INFO = 1;
 		S4Config.Payload = SIVBPayload;
 		S4Config.PanelsHinged = !SLAWillSeparate;
 		S4Config.VehicleNo = VehicleNo;
@@ -1121,6 +1125,9 @@ void Saturn1b::SeparateStage (int new_stage)
 		S4Config.Realism = Realism;
 		S4Config.LowRes = LowRes;
 		S4Config.SLARotationLimit = (double) SLARotationLimit;
+		strcpy(S4Config.PayloadName, LEMName);
+		S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
+		S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);

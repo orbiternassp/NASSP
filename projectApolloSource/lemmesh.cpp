@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2007/10/18 00:23:20  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.33  2007/06/06 15:02:14  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -298,16 +301,11 @@ void LEM::SetLmVesselDockStage()
 
 void LEM::SetLmVesselHoverStage()
 {
-	double fuelmass;
 	ClearThrusterDefinitions();
 	agc.SetVesselStats(DPS_ISP, DPS_THRUST, true);
-	if(agc.GetApolloNo() < 15) {
-		SetEmptyMass(6565); 
-		fuelmass=8375.;
-	} else {
-		SetEmptyMass(7334); 
-		fuelmass=8891.;
-	}
+
+	SetEmptyMass(AscentFuelMassKg + 4374.0);
+
 	SetSize (7);
 	SetPMI (_V(2.8,2.29,2.37));
 	SetCrossSections (_V(21,23,17));
@@ -336,7 +334,7 @@ void LEM::SetLmVesselHoverStage()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
     
 	if (!ph_Dsc){  
-		ph_Dsc  = CreatePropellantResource(fuelmass); //2nd stage Propellant
+		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	}
 
 	SetDefaultPropellantResource (ph_Dsc); // display 2nd stage propellant level in generic HUD
@@ -413,7 +411,7 @@ void LEM::SetLmAscentHoverStage()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
     if (!ph_Asc)  
-		ph_Asc  = CreatePropellantResource(2345.0);	// 2nd stage Propellant
+		ph_Asc  = CreatePropellantResource(AscentFuelMassKg);	// 2nd stage Propellant
 	SetDefaultPropellantResource (ph_Asc);			// Display 2nd stage propellant level in generic HUD
 	// orbiter main thrusters
     th_hover[0] = CreateThruster (_V( 0.0,  -2.5, 0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);

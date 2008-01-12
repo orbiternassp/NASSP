@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2008/01/09 15:00:19  lassombra
+  *	Added support for checklistController to save/load state.
+  *	
+  *	Added support for new scenario options LEMCHECK <lem checklist file and LEMCHECKAUTO <whether the lem should automatically execute checklists.
+  *	
+  *	Will document new options on the wiki
+  *	
   *	Revision 1.12  2008/01/09 01:46:45  movieman523
   *	Added initial support for talking to checklist controller from MFD.
   *	
@@ -288,6 +295,9 @@ void LEM::Init()
 	ph_Asc = 0;
 	ph_RCSA = 0;
 	ph_RCSB = 0;
+
+	DescentFuelMassKg = 8375.0;
+	AscentFuelMassKg = 2345.0;
 
 	Realism = REALISM_DEFAULT;
 	ApolloNo = 0;
@@ -1039,6 +1049,14 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp (line, "LANDED", 6)) {
 			sscanf (line+6, "%d", &Landed);
 		}
+		else if (!strnicmp(line, "DSCFUEL", 7)) {
+			sscanf(line + 7, "%f", &ftcp);
+			DescentFuelMassKg = ftcp;
+		}
+		else if (!strnicmp(line, "ASCFUEL", 7)) {
+			sscanf(line + 7, "%f", &ftcp);
+			AscentFuelMassKg = ftcp;
+		}
 		else if (!strnicmp (line, "FDAIDISABLED", 12)) {
 			sscanf (line + 12, "%i", &fdaiDisabled);
 		}
@@ -1182,6 +1200,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "LANDED", Landed);
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 
+	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
+	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);
+
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
 	}
@@ -1259,6 +1280,9 @@ void LEM::SetLanderData(LemSettings &ls)
 	AutoSlow = ls.AutoSlow;
 	Realism = ls.Realism;
 	ApolloNo = ls.MissionNo;
+
+	DescentFuelMassKg = ls.DescentFuelKg;
+	AscentFuelMassKg = ls.AscentFuelKg;
 
 	agc.SetMissionInfo(ApolloNo, Realism, CSMName);
 	agc.SetVirtualAGC(ls.Yaagc);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2007/12/21 18:10:30  movieman523
+  *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
+  *	
   *	Revision 1.23  2007/12/05 23:07:53  movieman523
   *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
   *	
@@ -109,11 +112,12 @@
 union SIVbSettingFlags
 {
 	struct {
-		unsigned SIVB_SETTINGS_MASS:1; 		///< Mass settings are valid.
-		unsigned SIVB_SETTINGS_FUEL:1;		///< Fuel mass settings are valid.
-		unsigned SIVB_SETTINGS_GENERAL:1;	///< General settings (e.g. Mission Time) are valid.
-		unsigned SIVB_SETTINGS_PAYLOAD:1;	///< Payload settings are valid.
-		unsigned SIVB_SETTINGS_ENGINES:1;	///< Engine settings are valid.
+		unsigned SIVB_SETTINGS_MASS:1; 			///< Mass settings are valid.
+		unsigned SIVB_SETTINGS_FUEL:1;			///< Fuel mass settings are valid.
+		unsigned SIVB_SETTINGS_GENERAL:1;		///< General settings (e.g. Mission Time) are valid.
+		unsigned SIVB_SETTINGS_PAYLOAD:1;		///< Payload type settings are valid.
+		unsigned SIVB_SETTINGS_ENGINES:1;		///< Engine settings are valid.
+		unsigned SIVB_SETTINGS_PAYLOAD_INFO:1;	///< Detailed payload settings (e.g. LEM name/mass) are valid.
 	};
 	unsigned int word;						///< Set to zero to clear all flags.
 
@@ -131,26 +135,35 @@ union SIVbSettingFlags
 ///
 typedef struct 
 {
-	SIVbSettingFlags SettingsType;	///> Which settings are valid?
+	SIVbSettingFlags SettingsType;	///< Which settings are valid?
 
-	int Payload;					///> Payload type.
-	int VehicleNo;					///> Saturn vehicle number.
-	int Realism;					///> Realism level.
+	int Payload;					///< Payload type.
+	int VehicleNo;					///< Saturn vehicle number.
+	int Realism;					///< Realism level.
 
-	double THRUST_VAC;				///> Vacuum thrust.
-	double ISP_VAC;					///> Vacuum ISP.
+	double THRUST_VAC;				///< Vacuum thrust.
+	double ISP_VAC;					///< Vacuum ISP.
 
-	double MissionTime;				///> Current MET in seconds.
-	double EmptyMass;				///> Empty mass in kg.
-	double PayloadMass;				///> Payload mass in kg.
-	double ApsFuelKg;				///> APS fuel in kg.
-	double MainFuelKg;				///> Remaining fuel in kg.
+	double MissionTime;				///< Current MET in seconds.
+	double EmptyMass;				///< Empty mass in kg.
+	double PayloadMass;				///< Payload mass in kg.
+	double ApsFuelKg;				///< APS fuel in kg.
+	double MainFuelKg;				///< Remaining fuel in kg.
 
-	bool PanelsHinged;				///> Are SLA panels hinged?
-	bool SaturnVStage;				///> Saturn V stage or Saturn 1b stage?
-	bool LowRes;					///> Low-res meshes?
+	bool PanelsHinged;				///< Are SLA panels hinged?
+	bool SaturnVStage;				///< Saturn V stage or Saturn 1b stage?
+	bool LowRes;					///< Low-res meshes?
 
-	double SLARotationLimit;		///> SLA rotation limit in degrees (usually 45.0).
+	double SLARotationLimit;		///< SLA rotation limit in degrees (usually 45.0).
+
+	//
+	// Payload settings.
+	//
+
+	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
+	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
+	char PayloadName[64];			///< Payload Name
+
 } SIVBSettings;
 
 class SIVB;
@@ -232,6 +245,7 @@ public:
 			unsigned LowRes:1;
 			unsigned J2IsActive:1;
 			unsigned FuelVenting:1;
+			unsigned Payloaddatatransfer:1;
 		};
 		unsigned long word;
 	} MainState;
@@ -447,6 +461,13 @@ protected:
 
 	double THRUST_THIRD_VAC;		///< J2 engine thrust vacuum level in Newtons.
 	double ISP_THIRD_VAC;			///< J2 engine ISP in vacuum.
+
+	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
+	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
+
+	char PayloadName[64];			///< Name of payload, if appropriate.
+
+	bool Payloaddatatransfer;		///< Have we transferred data to the payload?
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;
