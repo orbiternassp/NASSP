@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.219  2008/01/11 05:24:11  movieman523
+  *	Added LEM fuel masses; currently they're passed to the LEM but it ignores them.
+  *	
   *	Revision 1.218  2008/01/09 15:00:20  lassombra
   *	Added support for checklistController to save/load state.
   *	
@@ -1069,6 +1072,8 @@ void Saturn::initSaturn()
 		ENGIND[i] = false;
 
 	LEMName[0] = 0;
+	LEMCheck[0] = 0;
+	LEMCheckAuto = 0;
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
 
