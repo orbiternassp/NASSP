@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2008/01/14 01:17:06  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.8  2007/02/06 18:30:17  tschachim
   *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
   *	
@@ -76,6 +79,7 @@ public:
 	bool IsHardDocked();
 	bool IsExtended() { return (Status == DOCKINGPROBE_STATUS_EXTENDED); };
 	void SetEnabled(bool e) { Enabled = e; }
+	bool IsEnabled() { return Enabled; };
 	void Extend();
 	void Retract();
 	void SetIgnoreNextDockEvent() { IgnoreNextDockEvent = 1; };

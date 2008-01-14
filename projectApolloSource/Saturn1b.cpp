@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.79  2008/01/14 04:31:07  movieman523
+  *	Initial tidyup: ASTP should now work too.
+  *	
   *	Revision 1.78  2008/01/14 01:17:04  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -938,7 +941,6 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	// engines in a wacky direction and then not be
 	// called again for several seconds.
 	//
-	//	sprintf (oapiDebugString(), "Dockstate: %d", dockstate);
 	if (FirstTimestep) 
 	{
 		DoFirstTimestep(simt);
@@ -1222,21 +1224,6 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 	case CSM_LEM_STAGE:
 		SetCSMStage();
-
-		switch (dockstate) {
-		case 1:
-
-
-		case 2:
-				break;
-		case 3:
-		case 4:
-			break;
-		case 5:
-			/// \todo No clue what dockstate means, but SetCSM2Stage is buggy 
-			// SetCSM2Stage();
-			break;
-		}
 
 		if (EVA_IP){
 			SetupEVA();

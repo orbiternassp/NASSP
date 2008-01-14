@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.109  2008/01/14 04:31:08  movieman523
+  *	Initial tidyup: ASTP should now work too.
+  *	
   *	Revision 1.108  2008/01/14 01:17:04  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -1315,27 +1318,7 @@ void SaturnV::StageSix(double simt)
 		LAUNCHIND[i]=false;
 	}
 
-	if (hLMV && dockstate <5){
-		if (GetDockStatus(GetDockHandle(0)) == hLMV){
-			ActivateLEM=true;
-			VESSEL *lmvessel;
-			dockstate=3;
-			lmvessel=oapiGetVesselInterface(hLMV);
-			lmvessel->SetEnableFocus(true);
-		}
-		else{
-			VESSEL *lmvessel;
-			lmvessel=oapiGetVesselInterface(hLMV);
-			lmvessel->SetEnableFocus(true);
-			ActivateLEM=false;
-			dockstate=4;
-		}
-	}
-
 	if (hs4bM && hLMV){
-		if (GetDockStatus(GetDockHandle(0))==hLMV){
-			ActivateLEM=true;
-		}
 		if (GetDockStatus(GetDockHandle(0))==hs4bM){
 			ActivateS4B=true;
 		}
@@ -1345,10 +1328,8 @@ void SaturnV::StageSix(double simt)
 	}
 
 	if (CsmLmFinalSep1Switch.GetState() || CsmLmFinalSep2Switch.GetState()) {
-		if (ActivateLEM) {
-			ProbeJetison = true;
-			bManualUnDock = true;
-		}
+		ProbeJetison = true;
+		bManualUnDock = true;
 	}
 
 	if (ApolloNo == 13) {
@@ -1703,47 +1684,37 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (bManualUnDock)
+	if (bManualUnDock && GetDockHandle(0) && dockingprobe.IsEnabled())
 	{
-		if (GetDockStatus(GetDockHandle(0)) == hLMV)
+		// Final LM separation
+		if (ProbeJetison) {
+			// Undock
+			Undock(0);
+			// Auto translation manoever
+			SetAttitudeLinLevel(2,-1);
+			release_time = simt;
+			Resetjet = true;
+			//Time to hear the Stage separation
+			SMJetS.play(NOLOOP);
+			// Disable docking probe because it's jettisoned 
+			dockingprobe.SetEnabled(false);
+			HasProbe = false;
+			SetDockingProbeMesh();
+			ProbeJetison = false;
+		}
+		// Normal LM undocking
+		else
 		{
-			// Final LM separation
-			if (dockstate == 3 && ProbeJetison) {
-				// Undock
-				Undock(0);
-				// Auto translation manoever
-				SetAttitudeLinLevel(2,-1);
-				release_time = simt;
-				Resetjet = true;
-				//Time to hear the Stage separation
-				SMJetS.play(NOLOOP);
-				// Disable docking probe because it's jettisoned 
-				dockingprobe.SetEnabled(false);
-				HasProbe = false;
-				SetDockingProbeMesh();
-
-				dockstate=5;
-				ProbeJetison = false;
-			}
-			// Normal LM undocking
-			else
-			{
-				dockingprobe.Extend(); 
-			}
+			dockingprobe.Extend(); 
 		}
 		bManualUnDock = false;
 	}
 
 	if (CMSMPyros.Blown())
 	{
-		if (dockstate <= 1 || dockstate >= 3) {
-			SeparateStage(CM_STAGE);
-			bManualSeparate = false;
-			SetStage(CM_STAGE);
-		}
-		else {
-			bManualSeparate=false;
-		}
+		SeparateStage(CM_STAGE);
+		bManualSeparate = false;
+		SetStage(CM_STAGE);
 	}
 }
 
