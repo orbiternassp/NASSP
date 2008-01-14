@@ -1,8 +1,8 @@
-/***************************************************************************
+/**************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2004-2005 Jean-Luc Rocca-Serra
+  Copyright 2004-2005
 
-  ORBITER vessel module: ASTP
+
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,35 +22,52 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.2  2005/07/04 23:56:46  movieman523
-  *	New C++ version. Totally untested!
-  *	
-  *	Revision 1.1  2005/07/04 23:50:57  movieman523
-  *	Initial ASTP header file (currently a placeholder).
-  *	
   **************************************************************************/
 
-#if !defined(_PA_ASTP_H)
-#define _PA_ATSP_H
+#if !defined(_PA_PAYLOAD_H)
+#define _PA_PAYLOAD_H
 
-#include "connector.h"
-#include "payload.h"
+struct PayloadSettings {
 
-class ASTP: public Payload {
-
-public:
-
-	ASTP (OBJHANDLE hObj, int fmodel);
-	virtual ~ASTP();
-	void init();
-	void Setup();
-
-protected:
-
-	//
-	// No variables needed for now.
-	//
+	double LandingLatitude;
+	double LandingLongitude;
+	double LandingAltitude;
+	double AscentFuelKg;
+	double DescentFuelKg;
+	int MissionNo;
+	double MissionTime;
+	char language[64];
+	char CSMName[64];
+	bool Crewed;
+	bool AutoSlow;
+	int Realism;
+	bool Yaagc;
+	char checklistFile[100];
+	bool checkAutoExecute;
 
 };
 
-#endif // _PA_ASTP_H
+///
+/// This is the base class for all SIVB-launched payloads which can be
+/// separated from the SIVB.
+///
+/// \ingroup SepStages
+///
+class Payload : public ProjectApolloConnectorVessel
+{
+public:
+	///
+	/// \brief Constructor.
+	///
+	Payload(OBJHANDLE hObj, int fmodel);
+	
+	virtual ~Payload();
+
+	///
+	/// \brief Set up the payload based on the payload settings.
+	/// \param p Payload settings.
+	///
+	virtual bool SetupPayload(PayloadSettings &p);
+};
+
+#endif // _PA_PAYLOAD_H

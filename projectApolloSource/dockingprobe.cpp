@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2007/08/25 00:27:01  jasonims
+  *	*** empty log message ***
+  *	
   *	Revision 1.11  2007/08/16 07:33:29  jasonims
   *	Created a header file named orbvmath, within it are some basic vector math functions using Orbiter's VECTOR3 and MATRIX3 types.  Has not been entirely debugged, so refrain form additional usage until I get it all checked out.
   *	
@@ -92,7 +95,7 @@ DockingProbe::DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extend
 	Docked = false;
 	FirstTimeStepDone = false;
 	UndockNextTimestep = false;
-	IgnoreNextDockEvent = false;
+	IgnoreNextDockEvent = 0;
 	Realism = REALISM_DEFAULT;
 }
 
@@ -153,9 +156,9 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 {
 	if (!FirstTimeStepDone) return;
 	
-	if (IgnoreNextDockEvent) {
+	if (IgnoreNextDockEvent > 0) {
 		Docked = (connected != NULL);
-		IgnoreNextDockEvent = false;
+		IgnoreNextDockEvent--;
 		return;
 	}
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2008/01/10 01:38:49  movieman523
+  *	Updated 2008 projects, and calculate stage mass in Saturn 1b at startup for safety.
+  *	
   *	Revision 1.76  2007/12/05 23:07:44  movieman523
   *	Revised to allow SLA panel rotaton to be specified up to 150 degrees. Also start of new connector-equipped vessel code which was mixed up with the rest!
   *	
@@ -1021,18 +1024,6 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	if (stage == CSM_LEM_STAGE)
 	{
-		if (SivbLmSepSwitch.GetState())
-		{
-			if (ASTPMission)
-			{
-				//sprintf(oapiDebugString() ,"click %f");
-				SivbLmSepSwitch = false;
-				if (ReadyAstp||ReadyAstp1||dockstate==3)
-				{
-					bManualUnDock = true;
-				}
-			}
-		}
 		if (CsmLmFinalSep1Switch.GetState() || CsmLmFinalSep2Switch.GetState())
 		{
 			if (dockstate == 3)

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/07/27 21:30:47  movieman523
+  *	Added display of SIVb battery voltage and current.
+  *	
   *	Revision 1.4  2006/07/21 23:04:34  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -49,7 +52,7 @@ class CSMcomputer;
 class SaturnConnector : public Connector
 {
 public:
-	SaturnConnector();
+	SaturnConnector(Saturn *s);
 	~SaturnConnector();
 
 	void SetSaturn(Saturn *sat) { OurVessel = sat; };
@@ -65,7 +68,7 @@ protected:
 class CSMToIUConnector : public SaturnConnector
 {
 public:
-	CSMToIUConnector(CSMcomputer &c);
+	CSMToIUConnector(CSMcomputer &c, Saturn *s);
 	~CSMToIUConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
@@ -81,6 +84,8 @@ protected:
 	CSMcomputer &agc;
 };
 
+class DockingProbe;
+
 ///
 /// \ingroup Connectors
 /// \brief CSM to SIVb connector type.
@@ -88,7 +93,7 @@ protected:
 class CSMToSIVBControlConnector : public SaturnConnector
 {
 public:
-	CSMToSIVBControlConnector(CSMcomputer &c);
+	CSMToSIVBControlConnector(CSMcomputer &c, DockingProbe &probe, Saturn *s);
 	~CSMToSIVBControlConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
@@ -103,8 +108,12 @@ public:
 	void StartVenting();
 	void StopVenting();
 
+	void StartSeparationPyros();
+	void StopSeparationPyros();
+
 protected:
 	CSMcomputer &agc;
+	DockingProbe &dockingprobe;
 };
 
 ///
@@ -114,7 +123,7 @@ protected:
 class SaturnToIUCommandConnector : public SaturnConnector
 {
 public:
-	SaturnToIUCommandConnector();
+	SaturnToIUCommandConnector(Saturn *s);
 	~SaturnToIUCommandConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2008/01/12 04:14:10  movieman523
+  *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
+  *	
   *	Revision 1.13  2008/01/09 15:00:19  lassombra
   *	Added support for checklistController to save/load state.
   *	
@@ -156,7 +159,7 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 	// VESSELSOUND 
 
 	lem = new LEM(hvessel, flightmodel);
-	return (VESSEL *) lem;
+	return static_cast<VESSEL *> (lem);
 }
 
 DLLCLBK void ovcExit (VESSEL *vessel)
@@ -175,11 +178,11 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 
 	}
 
-	if (vessel) delete (LEM *)vessel;
+	if (vessel) delete static_cast<LEM *> (vessel);
 }
 
 // Constructor
-LEM::LEM(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
+LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel), 
 	
 	CDRs28VBus("CDR-28V-Bus",NULL),
 	LMPs28VBus("LMP-28V-Bus",NULL),
@@ -1168,7 +1171,7 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 void LEM::SetStateEx(const void *status)
 
 {
-	VESSELSTATUS2 *vslm = (VESSELSTATUS2 *) status;
+	const VESSELSTATUS2 *vslm = static_cast<const VESSELSTATUS2 *> (status);
 
 	DefSetStateEx(status);
 }
@@ -1264,7 +1267,7 @@ bool LEM::clbkLoadGenericCockpit ()
 // created.
 //
 
-void LEM::SetLanderData(LemSettings &ls)
+bool LEM::SetupPayload(PayloadSettings &ls)
 
 {
 	char CSMName[64];
@@ -1291,6 +1294,8 @@ void LEM::SetLanderData(LemSettings &ls)
 	checkControl.init(ls.checklistFile);
 	checkControl.autoExecute(ls.checkAutoExecute);
 	// Sounds are initialized during the first timestep
+
+	return true;
 }
 
 void LEM::PadLoad(unsigned int address, unsigned int value)

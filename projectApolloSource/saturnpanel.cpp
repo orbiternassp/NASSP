@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.232  2007/12/29 21:16:02  tschachim
+  *	Bugfix.
+  *	
   *	Revision 1.231  2007/12/29 08:47:18  flydba
   *	Panels 226, 250, 251 and 252 now work.
   *	
@@ -1790,8 +1793,9 @@ void Saturn::SetSwitches(int panel) {
 	CmSmSep2Switch.WireTo(&PyroPower);
 
 	if (!SkylabCM) {
-		SivbLmSepSwitch.Init		  (219, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow);
-		SivbLmSepSwitch.InitGuard     (218,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_34x61]);
+		SIVBPayloadSepSwitch.Init		  (219, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow);
+		SIVBPayloadSepSwitch.InitGuard     (218,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_34x61]);
+		SIVBPayloadSepSwitch.WireTo(&SECSLogicPower);
 	}
 
 	CryoTankSwitchesRow.Init(AID_CYROTANKSWITCHES, MainPanel);
@@ -4718,9 +4722,7 @@ void Saturn::InitSwitches() {
 	CmRcsHeDumpSwitch.SetGuardState(false);		// saved in CSwitchState.CMRHGswitch
 
 	if (!SkylabCM) {
-		SivbLmSepSwitch = false;					// saved in RPSwitchState.RPswitch16
-		SivbLmSepSwitch.SetGuardState(false);		// saved in RPSwitchState.RPCswitch
-		SivbLmSepSwitch.SetSpringLoaded(SPRINGLOADEDSWITCH_DOWN);
+		SIVBPayloadSepSwitch.Register(PSH, "SIVBPayloadSepSwitch", TOGGLESWITCH_DOWN, 0, SPRINGLOADEDSWITCH_DOWN);
 	}
 
 	MissionTimerSwitch.Register(PSH, "MissionTimerSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
@@ -6204,11 +6206,6 @@ int Saturn::GetRPSwitchState()
 
 	state.word = 0;
 
-	if (!SkylabCM) {
-		state.u.RPswitch16 = SivbLmSepSwitch;
-		state.u.RPCswitch = SivbLmSepSwitch.GetGuardState();
-	}
-
 	state.u.CMCswitch = CMCswitch;
 
 	return state.word;
@@ -6220,11 +6217,6 @@ void Saturn::SetRPSwitchState(int s)
 	RPSwitchState state;
 
 	state.word = s;
-
-	if (!SkylabCM) {
-		SivbLmSepSwitch = state.u.RPswitch16;
-		SivbLmSepSwitch.SetGuardState(state.u.RPCswitch);
-	}
 
 	CMCswitch = state.u.CMCswitch;
 }

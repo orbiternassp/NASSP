@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2008/01/12 04:14:10  movieman523
+  *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
+  *	
   *	Revision 1.37  2007/12/21 18:10:30  movieman523
   *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
   *	
@@ -150,7 +153,15 @@
 #include "connector.h"
 #include "iu.h"
 
+#include "toggleswitch.h"
+#include "apolloguidance.h"
+#include "dsky.h"
+#include "lemcomputer.h"
+#include "imu.h"
+
 #include "sivb.h"
+#include "astp.h"
+#include "lem.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -267,7 +278,13 @@ SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmo
 SIVB::~SIVB()
 
 {
-	// Nothing for now.
+	//
+	// Delete LM PAD data.
+	//
+	if (LMPad) {
+		delete[] LMPad;
+		LMPad = 0;
+	}
 }
 
 void SIVB::InitS4b()
@@ -350,6 +367,15 @@ void SIVB::InitS4b()
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
 	Payloaddatatransfer = false;
+
+	//
+	// LM PAD data.
+	//
+
+	LMPadCount = 0;
+	LMPad = 0;
+	LMPadLoadCount = 0;
+	LMPadValueCount = 0;
 
 	//
 	// Set up the connections.
@@ -535,9 +561,10 @@ void SIVB::SetS4b()
 		iu.ConnectToMultiConnector(&SIVBToCSMConnector);
 		iu.ConnectToLV(&IUCommandConnector);
 
-		SIVBToCSMConnector.AddTo(&csmCommandConnector);
 		SIVBToCSMConnector.AddTo(&SIVBToCSMPowerConnector);
 	}
+
+	SIVBToCSMConnector.AddTo(&csmCommandConnector);
 }
 
 void SIVB::clbkPreStep(double simt, double simdt, double mjd)
@@ -827,6 +854,14 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	{
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
+		if (LMPadCount > 0 && LMPad) {
+			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
+			char str[64];
+			for (int i = 0; i < LMPadCount; i++) {
+				sprintf(str, "%04o %05o", LMPad[i * 2], LMPad[i * 2 + 1]);
+				oapiWriteScenario_string (scn, "LMPAD", str);
+			}
+		}
 	}
 
 	iu.SaveState(scn);
@@ -1227,6 +1262,23 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf(line + 9, "%f", &flt);
 			LMAscentFuelMassKg = flt;
 		}
+		else if (!strnicmp (line, "LMPADCNT", 8)) {
+			if (!LMPad) {
+				sscanf (line+8, "%d", &LMPadCount);
+				if (LMPadCount > 0) {
+					LMPad = new unsigned int[LMPadCount * 2];
+				}
+			}
+		}
+		else if (!strnicmp (line, "LMPAD", 5)) {
+			unsigned int addr, val;
+			sscanf (line+5, "%o %o", &addr, &val);
+			LMPadValueCount++;
+			if (LMPad && LMPadLoadCount < (LMPadCount * 2)) {
+				LMPad[LMPadLoadCount++] = addr;
+				LMPad[LMPadLoadCount++] = val;
+			}
+		}
 		else if (!strnicmp (line, "REALISM", 7))
 		{
 			sscanf (line+7, "%d", &Realism);
@@ -1381,6 +1433,20 @@ void SIVB::SetState(SIVBSettings &state)
 
 		LMDescentFuelMassKg = state.LMDescentFuelMassKg;
 		LMAscentFuelMassKg = state.LMAscentFuelMassKg;
+
+		//
+		// Copy LM PAD data across.
+		//
+		LMPadCount = state.LMPadCount;
+
+		if (LMPadCount > 0) {
+			int i;
+			LMPad = new unsigned int[LMPadCount * 2];
+			for (i = 0; i < (LMPadCount * 2); i++)
+			{
+				LMPad[i] = state.LMPad[i];
+			}
+		}
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_GENERAL)
@@ -1500,6 +1566,161 @@ double SIVB::GetTotalMass()
 	}
 
 	return mass;
+}
+
+bool SIVB::PayloadIsDetachable()
+
+{
+	switch (Payload)
+	{
+	case PAYLOAD_LEM:
+	case PAYLOAD_ASTP:
+	case PAYLOAD_LM1:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+void SIVB::StartSeparationPyros()
+
+{
+	//
+	// Start separation. For now this function will probably do all the work.
+	//
+
+	if (!PayloadIsDetachable())
+	{
+		return;
+	}
+
+	//
+	// Do stuff to create a new payload vessel and dock it with the CSM.
+	//
+
+	//
+	// Try to get payload settings, or return if we fail.
+	//
+	PayloadSettings ps;
+
+	if (!csmCommandConnector.GetPayloadSettings(ps))
+	{
+		return;
+	}
+
+	//
+	// Now separate the payload.
+	//
+
+	OBJHANDLE hCSM = GetDockStatus(GetDockHandle(0));
+
+	if (!hCSM)
+	{
+		return;
+	}
+
+	VESSEL *CSMvessel = static_cast<VESSEL *> (oapiGetVesselInterface(hCSM));
+
+	if (!CSMvessel)
+	{
+		return;
+	}
+
+	switch (Payload)
+	{
+	case PAYLOAD_LEM:
+	case PAYLOAD_LM1:
+		{
+			LEM *lmvessel;
+			VESSELSTATUS2 vslm2;
+			VESSELSTATUS2::DOCKINFOSPEC dckinfo;
+
+			//
+			// Now Lets create a real LEM and dock it
+			//
+
+			//
+			// The CSM docking probe has to ignore both the undock and dock
+			// events. Otherwise it will prevent us from 'docking' to the
+			// newly created LEM.
+			//
+			csmCommandConnector.SetIgnoreNextDockEvents(2);
+
+			CSMvessel->Undock(0);
+
+			vslm2.version = 2;
+			vslm2.flag = 0;
+			vslm2.fuel = 0;
+			vslm2.thruster = 0;
+			vslm2.ndockinfo = 1;
+			vslm2.dockinfo = &dckinfo;
+
+			CSMvessel->GetStatusEx(&vslm2);
+
+			vslm2.dockinfo[0].idx = 0;
+			vslm2.dockinfo[0].ridx = 0;
+			vslm2.dockinfo[0].rvessel = hCSM;
+			vslm2.ndockinfo = 1;
+			vslm2.flag = VS_DOCKINFOLIST;
+			vslm2.version = 2;
+
+			OBJHANDLE hLMV = oapiCreateVesselEx(PayloadName, "ProjectApollo/LEM", &vslm2);
+
+			//
+			// Initialise the state of the LEM AGC information.
+			//
+
+			lmvessel = static_cast<LEM *> (oapiGetVesselInterface(hLMV));
+			lmvessel->SetupPayload(ps);
+			Payloaddatatransfer = true;
+
+			CSMvessel->GetStatusEx(&vslm2);
+
+			vslm2.dockinfo = &dckinfo;
+			vslm2.dockinfo[0].idx = 0;
+			vslm2.dockinfo[0].ridx = 0;
+			vslm2.dockinfo[0].rvessel = hLMV;
+			vslm2.ndockinfo = 1;
+			vslm2.flag = VS_DOCKINFOLIST;
+			vslm2.version = 2;
+
+			CSMvessel->DefSetStateEx(&vslm2);
+
+			//
+			// PAD load.
+			//
+
+			if (LMPad && LMPadCount > 0)
+			{
+				int i;
+				for (i = 0; i < LMPadCount; i++) {
+					lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
+				}
+			}
+
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	//
+	// Set the payload to none.
+	//
+
+	Payload = PAYLOAD_EMPTY;
+
+	SetS4b();
+}
+
+void SIVB::StopSeparationPyros()
+
+{
+	//
+	// Stop separation. For now this will probably do nothing.
+	//
 }
 
 void SIVB::HideAllMeshes()
@@ -1878,6 +2099,46 @@ CSMToSIVBCommandConnector::~CSMToSIVBCommandConnector()
 {
 }
 
+void CSMToSIVBCommandConnector::SetIgnoreNextDockEvent()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = SIVBCSM_IGNORE_DOCK_EVENT;
+
+	SendMessage(cm);
+}
+
+void CSMToSIVBCommandConnector::SetIgnoreNextDockEvents(int n)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = SIVBCSM_IGNORE_DOCK_EVENTS;
+	cm.val1.iValue = n;
+
+	SendMessage(cm);
+}
+
+bool CSMToSIVBCommandConnector::GetPayloadSettings(PayloadSettings &p)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = SIVBCSM_GET_PAYLOAD_SETTINGS;
+	cm.val1.pValue = &p;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
 bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 
 {
@@ -1924,6 +2185,22 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 		if (OurVessel)
 		{
 			OurVessel->StopVenting();
+			return true;
+		}
+		break;
+
+	case CSMSIVB_START_SEPARATION:
+		if (OurVessel)
+		{
+			OurVessel->StartSeparationPyros();
+			return true;
+		}
+		break;
+
+	case CSMSIVB_STOP_SEPARATION:
+		if (OurVessel)
+		{
+			OurVessel->StopSeparationPyros();
 			return true;
 		}
 		break;

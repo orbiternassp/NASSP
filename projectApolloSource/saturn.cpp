@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.220  2008/01/12 09:40:55  lassombra
+  *	Fixed minor bug involving saving gibberish to the scenario file reacting with ability
+  *	 to load safely later without crashing.
+  *	
   *	Revision 1.219  2008/01/11 05:24:11  movieman523
   *	Added LEM fuel masses; currently they're passed to the LEM but it ignores them.
   *	
@@ -498,8 +502,9 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SuitCompressor2Switch(Panelsdk),
 	BatteryCharger("BatteryCharger", Panelsdk),
 	timedSounds(soundlib),
-	iuCommandConnector(agc),
-	sivbControlConnector(agc),
+	iuCommandConnector(agc, this),
+	sivbControlConnector(agc, dockingprobe, this),
+	sivbCommandConnector(this),
 	MFDToPanelConnector(MainPanel, checkControl),
 	ascp(Sclick),
 	RHCNormalPower("RHCNormalPower", Panelsdk),
@@ -512,7 +517,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CSMDCVoltMeter(20.0, 45.0),
 	CSMACVoltMeter(90.0, 140.0),
 	DCAmpMeter(0.0, 100.0),
-	SystemTestVoltMeter(0.0, 5.0)
+	SystemTestVoltMeter(0.0, 5.0),
+	SIVBPayloadSepSwitch(sivbControlConnector)
 
 {
 	InitSaturnCalled = false;
@@ -1245,7 +1251,7 @@ void Saturn::GetLEMName(char *s)
 		return;
 	}
 
-	strcpy (s, GetName()); strcat (s, "-LM");
+	strcpy (s, GetName()); strcat (s, "-PL");
 }
 
 void Saturn::GetApolloName(char *s)
@@ -1358,7 +1364,7 @@ void Saturn::KillAlt(OBJHANDLE &hvessel, double altVS)
 		//
 		if (hvessel == hSMJet)
 		{
-			SM *vsm = (SM *) oapiGetVesselInterface(hvessel);
+			SM *vsm = static_cast<SM *> (oapiGetVesselInterface(hvessel));
 			if (vsm->TidyUpMeshes(GetHandle()))
 				return;
 		}
@@ -2795,6 +2801,26 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			found = false;
 	}
 	return found;
+}
+
+void Saturn::GetPayloadSettings(PayloadSettings &ls)
+
+{
+		ls.AutoSlow = AutoSlow;
+		ls.Crewed = Crewed;
+		ls.LandingAltitude = LMLandingAltitude;
+		ls.LandingLatitude = LMLandingLatitude;
+		ls.LandingLongitude = LMLandingLongitude;
+		ls.AscentFuelKg = LMAscentFuelMassKg;
+		ls.DescentFuelKg = LMDescentFuelMassKg;
+		strncpy (ls.language, AudioLanguage, 63);
+		strncpy (ls.CSMName, GetName(), 63);
+		ls.MissionNo = ApolloNo;
+		ls.MissionTime = MissionTime;
+		ls.Realism = Realism;
+		ls.Yaagc = agc.IsVirtualAGC();
+		strncpy (ls.checklistFile, LEMCheck, 100);
+		ls.checkAutoExecute = LEMCheckAuto;
 }
 
 void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)

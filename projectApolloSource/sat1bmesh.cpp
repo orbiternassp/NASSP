@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2008/01/13 08:15:51  jasonims
+  *	New Saturn IB Exhaust Texture - BETA 1.0
+  *	Feedback Desired.
+  *	
   *	Revision 1.69  2008/01/12 04:14:10  movieman523
   *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
   *	
@@ -889,6 +893,7 @@ void Saturn1b::DockStage (UINT dockstatus)
    switch (dockstatus)	
    {
    case 2:
+#if 0
 	   {
 			//
 			//Interface initialization for mesh modification to SIVB
@@ -925,6 +930,7 @@ void Saturn1b::DockStage (UINT dockstatus)
 			bManualUnDock = false;
 			SetAttitudeLinLevel(2,-1);
 		}
+#endif
 	   	break;
 
    case 3:
@@ -1170,7 +1176,12 @@ void Saturn1b::SeparateStage (int new_stage)
 		S4Config.Realism = Realism;
 		S4Config.LowRes = LowRes;
 		S4Config.SLARotationLimit = (double) SLARotationLimit;
-		strcpy(S4Config.PayloadName, LEMName);
+
+		char realLEMName[256];
+		GetLEMName(realLEMName);
+
+		strcpy(S4Config.PayloadName, realLEMName);
+
 		S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
 		S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
 

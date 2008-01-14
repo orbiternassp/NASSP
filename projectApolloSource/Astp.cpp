@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2005/11/21 23:08:15  movieman523
+  *	Moved more mesh files into the ProjectApollo directory.
+  *	
   *	Revision 1.3  2005/08/15 23:42:50  movieman523
   *	Improved ASTP a bit. Still buggy, but vaguely working.
   *	
@@ -53,7 +56,7 @@ static MESHHANDLE hapsl;
 
 
 ASTP::ASTP (OBJHANDLE hObj, int fmodel)
-: VESSEL (hObj, fmodel)
+: Payload (hObj, fmodel)
 
 {
 	init();

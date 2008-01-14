@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/12/04 20:26:31  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.7  2007/06/06 15:02:11  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -71,10 +75,10 @@
 #include <stdio.h>
 #include <string.h>
 
-SaturnConnector::SaturnConnector()
+SaturnConnector::SaturnConnector(Saturn *s)
 
 {
-	OurVessel = 0;
+	OurVessel = s;
 }
 
 SaturnConnector::~SaturnConnector()
@@ -82,7 +86,7 @@ SaturnConnector::~SaturnConnector()
 {
 }
 
-SaturnToIUCommandConnector::SaturnToIUCommandConnector()
+SaturnToIUCommandConnector::SaturnToIUCommandConnector(Saturn *s) : SaturnConnector(s)
 
 {
 	type = LV_IU_COMMAND;
@@ -146,7 +150,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	case IULV_GET_STATUS:
 		if (OurVessel)
 		{
-			VESSELSTATUS *status = (VESSELSTATUS *) m.val1.pValue;
+			VESSELSTATUS *status = static_cast<VESSELSTATUS *> (m.val1.pValue);
 			VESSELSTATUS stat;
 
 			OurVessel->GetStatus(stat);
@@ -192,7 +196,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			VECTOR3 pos;
-			VECTOR3 *v = (VECTOR3 *) m.val2.pValue;
+			VECTOR3 *v = static_cast<VECTOR3 *> (m.val2.pValue);
 
 			OurVessel->GetRelativePos(m.val1.hValue, pos);
 
@@ -208,7 +212,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			VECTOR3 vel;
-			VECTOR3 *v = (VECTOR3 *) m.val2.pValue;
+			VECTOR3 *v = static_cast<VECTOR3 *> (m.val2.pValue);
 
 			OurVessel->GetRelativeVel(m.val1.hValue, vel);
 
@@ -232,7 +236,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			ELEMENTS el;
-			ELEMENTS *e = (ELEMENTS *) m.val1.pValue;
+			ELEMENTS *e = static_cast<ELEMENTS *> (m.val1.pValue);
 
 			m.val3.hValue = OurVessel->GetElements(el, m.val2.dValue);
 
@@ -380,7 +384,7 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 	return false;
 }
 
-CSMToIUConnector::CSMToIUConnector(CSMcomputer &c) : agc(c)
+CSMToIUConnector::CSMToIUConnector(CSMcomputer &c, Saturn *s) : agc(c), SaturnConnector(s)
 
 {
 	type = CSM_IU_COMMAND;
@@ -607,7 +611,7 @@ void CSMToIUConnector::ChannelOutput(int channel, int value)
 	SendMessage(cm);
 }
 
-CSMToSIVBControlConnector::CSMToSIVBControlConnector(CSMcomputer &c) : agc(c)
+CSMToSIVBControlConnector::CSMToSIVBControlConnector(CSMcomputer &c,  DockingProbe &probe, Saturn *s) : agc(c), dockingprobe(probe), SaturnConnector(s)
 
 {
 	type = CSM_SIVB_COMMAND;
@@ -619,7 +623,7 @@ CSMToSIVBControlConnector::~CSMToSIVBControlConnector()
 }
 
 //
-// For now we don't process any messages from the SIVB.
+// For now we have to process the ignore docking event message from the SIVB.
 //
 bool CSMToSIVBControlConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 
@@ -635,9 +639,29 @@ bool CSMToSIVBControlConnector::ReceiveMessage(Connector *from, ConnectorMessage
 
 	CSMSIVBMessageType messageType;
 
-	messageType = (CSMSIVBMessageType) m.messageType;
+	messageType = static_cast<CSMSIVBMessageType> (m.messageType);
 
-	return false;
+	switch (messageType)
+	{
+	case SIVBCSM_IGNORE_DOCK_EVENT:
+		dockingprobe.SetIgnoreNextDockEvent();
+		return true;
+
+	case SIVBCSM_IGNORE_DOCK_EVENTS:
+		dockingprobe.SetIgnoreNextDockEvents(m.val1.iValue);
+		return true;
+
+	case SIVBCSM_GET_PAYLOAD_SETTINGS:
+		{
+			PayloadSettings *p = static_cast<PayloadSettings *> (m.val1.pValue);
+			OurVessel->GetPayloadSettings(*p);
+			m.val1.bValue = true;
+		}
+		return true;
+
+	default:
+		return false;
+	}
 }
 
 bool CSMToSIVBControlConnector::IsVentable()
@@ -726,6 +750,28 @@ void CSMToSIVBControlConnector::GetMainBatteryElectrics(double &volts, double &c
 	}
 
 	volts = current = 0.0;
+}
+
+void CSMToSIVBControlConnector::StartSeparationPyros()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = CSMSIVB_START_SEPARATION;
+
+	SendMessage(cm);
+}
+
+void CSMToSIVBControlConnector::StopSeparationPyros()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = CSMSIVB_STOP_SEPARATION;
+
+	SendMessage(cm);
 }
 
 void CSMToSIVBControlConnector::StartVenting()

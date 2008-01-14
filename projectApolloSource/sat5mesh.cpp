@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2008/01/12 04:14:10  movieman523
+  *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
+  *	
   *	Revision 1.85  2008/01/11 05:24:11  movieman523
   *	Added LEM fuel masses; currently they're passed to the LEM but it ignores them.
   *	
@@ -1492,12 +1495,20 @@ void SaturnV::SeparateStage (int new_stage)
 		S4Config.THRUST_VAC = THRUST_THIRD_VAC;
 		S4Config.PanelsHinged = !SLAWillSeparate;
 		S4Config.SLARotationLimit = (double) SLARotationLimit;
-		strcpy(S4Config.PayloadName, LEMName);
+
+		char realLEMName[256];
+		GetLEMName(realLEMName);
+
+		strcpy(S4Config.PayloadName, realLEMName);
 		S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
 		S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
+		S4Config.LMPad = LMPad;
+		S4Config.LMPadCount = LMPadCount;
 
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);
+
+		LEMdatatransfer = true;
 
 		SeparationS.play(NOLOOP,255);
 
@@ -1698,8 +1709,6 @@ void SaturnV::DockStage (UINT dockstatus)
 	vs4.eng_main = vs4.eng_hovr = 0.0;
 	vs5.eng_main = vs5.eng_hovr = 0.0;
 
-	int i;
-
 	if (dockstatus == 2 || dockstatus == 6)
 	{
 	 	ofs1 = RelPos;
@@ -1741,27 +1750,15 @@ void SaturnV::DockStage (UINT dockstatus)
 	case 1:
 		break;
 
-	case 2: {
+	case 2: 
+#if 0
+		{
 		LEM *lmvessel;
 		VESSELSTATUS2 vslm2, *pv;
 		VESSELSTATUS2::DOCKINFOSPEC dckinfo;
 		char VNameLM[256];
 
 		Undock(0);
-
-		//
-		// Tell the S4b that we've removed the payload.
-		//
-
-		SIVBSettings S4Config;
-		SIVB *SIVBVessel;
-
-		S4Config.SettingsType.word = 0;
-		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
-		S4Config.Payload = PAYLOAD_EMPTY;
-
-		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
-		SIVBVessel->SetState(S4Config);
 
 		//
 		//Time to hear the Stage separation
@@ -1775,7 +1772,6 @@ void SaturnV::DockStage (UINT dockstatus)
 
 		dockingprobe.SetIgnoreNextDockEvent();
 
-		
 		GetLEMName(VNameLM);
 
 		vslm2.version = 2;
@@ -1800,27 +1796,12 @@ void SaturnV::DockStage (UINT dockstatus)
 		// Initialise the state of the LEM AGC information.
 		//
 
-		LemSettings ls;
+		PayloadSettings ls;
 
-		ls.AutoSlow = AutoSlow;
-		ls.Crewed = Crewed;
-		ls.LandingAltitude = LMLandingAltitude;
-		ls.LandingLatitude = LMLandingLatitude;
-		ls.LandingLongitude = LMLandingLongitude;
-		ls.AscentFuelKg = LMAscentFuelMassKg;
-		ls.DescentFuelKg = LMDescentFuelMassKg;
-		strncpy (ls.language, AudioLanguage, 63);
-		strncpy (ls.CSMName, GetName(), 63);
-		ls.MissionNo = ApolloNo;
-		ls.MissionTime = MissionTime;
-		ls.Realism = Realism;
-		ls.Yaagc = agc.IsVirtualAGC();
-		strncpy (ls.checklistFile, LEMCheck, 100);
-		ls.checkAutoExecute = LEMCheckAuto;
-
+		GetPayloadSettings(ls);
 
 		lmvessel = (LEM *) oapiGetVesselInterface(hLMV);
-		lmvessel->SetLanderData(ls);
+		lmvessel->SetupPayload(ls);
 		LEMdatatransfer = true;
 
 		GetStatusEx(&vslm2);
@@ -1849,6 +1830,7 @@ void SaturnV::DockStage (UINT dockstatus)
 		dockstate = 3;
 		SetAttitudeLinLevel(2,-1);
 		}
+#endif
 		break;
 
 	case 3:

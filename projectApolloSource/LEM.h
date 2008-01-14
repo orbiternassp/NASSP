@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2008/01/12 04:14:10  movieman523
+  *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
+  *	
   *	Revision 1.14  2008/01/11 05:24:11  movieman523
   *	Added LEM fuel masses; currently they're passed to the LEM but it ignores them.
   *	
@@ -101,26 +104,7 @@
 
 #include "connector.h"
 #include "checklistController.h"
-
-typedef struct {
-
-	double LandingLatitude;
-	double LandingLongitude;
-	double LandingAltitude;
-	double AscentFuelKg;
-	double DescentFuelKg;
-	int MissionNo;
-	double MissionTime;
-	char language[64];
-	char CSMName[64];
-	bool Crewed;
-	bool AutoSlow;
-	int Realism;
-	bool Yaagc;
-	char checklistFile[100];
-	bool checkAutoExecute;
-
-} LemSettings;
+#include "payload.h"
 
 // Systems things
 
@@ -175,7 +159,7 @@ public:
 ///
 /// \ingroup LEM
 ///
-class LEM : public ProjectApolloConnectorVessel, public PanelSwitchListener {
+class LEM : public Payload, public PanelSwitchListener {
 
 public:
 
@@ -345,7 +329,7 @@ public:
 	// These functions must be virtual so they can be called from the Saturn V or the LEVA
 	//
 
-	virtual void SetLanderData(LemSettings &ls);
+	virtual bool SetupPayload(PayloadSettings &ls);
 	virtual void PadLoad(unsigned int address, unsigned int value);
 	virtual void StopEVA();
 
