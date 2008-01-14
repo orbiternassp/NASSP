@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.108  2008/01/14 01:17:04  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.107  2007/12/04 20:26:31  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -1702,21 +1705,8 @@ void SaturnV::StageSix(double simt)
 
 	if (bManualUnDock)
 	{
-		if (GetDockStatus(GetDockHandle(0)) == NULL) {
-			bManualUnDock = false;
-		}
-#if 0
-		else if (GetDockStatus(GetDockHandle(0)) == hs4bM) { //this check is for docking status if docked we cannot jetison ASTP
-			if (PyrosArmed() && SECSLogicActive()) {
-				dockstate = 2;
-				release_time = simt;
-				Resetjet = true;
-				DockStage(dockstate);
-			}
-			bManualUnDock = false;
-		}
-#endif
-		else if (GetDockStatus(GetDockHandle(0)) == hLMV) {
+		if (GetDockStatus(GetDockHandle(0)) == hLMV)
+		{
 			// Final LM separation
 			if (dockstate == 3 && ProbeJetison) {
 				// Undock
@@ -1736,14 +1726,12 @@ void SaturnV::StageSix(double simt)
 				ProbeJetison = false;
 			}
 			// Normal LM undocking
-			else {
+			else
+			{
 				dockingprobe.Extend(); 
 			}
-			bManualUnDock = false;
 		}
-		else {
-			bManualUnDock = false;
-		}
+		bManualUnDock = false;
 	}
 
 	if (CMSMPyros.Blown())

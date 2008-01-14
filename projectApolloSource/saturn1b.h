@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/12/04 20:26:35  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.21  2007/06/06 15:02:17  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -148,7 +152,6 @@ protected:
 	void ConfigureStageEngines(int stage_state);
 	void CreateStageOne();
 
-	void SetASTPStage ();
 	void SaveVehicleStats(FILEHANDLE scn);
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);

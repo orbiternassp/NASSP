@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2008/01/14 01:17:10  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.25  2008/01/12 04:14:10  movieman523
   *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
   *	
@@ -480,7 +483,7 @@ protected:
 
 	VECTOR3	mainExhaustPos;			///< Position of main thruster exhaust.
 
-	int Payload;					///< Payload type.
+	int PayloadType;				///< Payload type.
 	int MissionNo;					///< Apollo mission number.
 	int VehicleNo;					///< Saturn vehicle number.
 	SIVbState State;				///< Main stage state.

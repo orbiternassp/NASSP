@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2008/01/14 01:17:06  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.70  2008/01/13 08:15:51  jasonims
   *	New Saturn IB Exhaust Texture - BETA 1.0
   *	Feedback Desired.
@@ -705,102 +708,6 @@ void Saturn1b::SetSecondStageEngines ()
 	iu.SetVesselStats(ISP_SECOND_VAC, THRUST_SECOND_VAC);
 }
 
-//
-// Is this used anymore?
-//
-
-void Saturn1b::SetASTPStage ()
-{
-	ClearThrusterDefinitions();
-	UINT meshidx;
-	SetSize (4.0);
-	SetCOG_elev (3.5);
-	SetEmptyMass (19318);
-	SetEngineLevel(ENGINE_MAIN, 0.0);
-	SetPMI (_V(15,15,9.2));
-	SetCrossSections (_V(40,40,14));
-	SetCW (0.1, 0.3, 1.4, 1.4);
-	SetRotDrag (_V(0.7,0.7,0.3));
-	SetPitchMomentScale (0);
-	SetBankMomentScale (0);
-	SetLiftCoeffFunc (0);
-    ClearMeshes();
-	ClearExhaustRefs();
-    ClearAttExhaustRefs();
-
-	AddSM(30.25-12.25-21.5, true);
-
-	VECTOR3 mesh_dir;
-
-	//
-	// Skylab SM and Apollo 7 have no HGA.
-	//
-	if (!NoHGA) {
-		mesh_dir=_V(-2.2,-1.7,28.82-12.25-21.5);
-		AddMesh (hSMhga, &mesh_dir);
-	}
-
-	mesh_dir=_V(0,0,34.4-12.25-21.5);
-	meshidx = AddMesh (hCM, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	// And the Crew
-	if (Crewed) {
-		cmpidx = AddMesh (hCMP, &mesh_dir);
-		crewidx = AddMesh (hCREW, &mesh_dir);
-		SetCrewMesh();
-	} else {
-		cmpidx = -1;
-		crewidx = -1;
-	}
-
-	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	//Don't Forget the Hatch
-	meshidx = AddMesh (hFHC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	if (HasProbe) {
-		probeidx = AddMesh(hprobe, &mesh_dir);
-		probeextidx = AddMesh(hprobeext, &mesh_dir);
-		SetDockingProbeMesh();
-	} else {
-		probeidx = -1;
-		probeextidx = -1;
-	}
-
-	mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
-	meshidx = AddMesh (hastp, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-
-	VECTOR3 dockpos = {0,0,35.90-12.25-21.5+2.8};
-	VECTOR3 dockdir = {0,0,1};
-	VECTOR3 dockrot = {0,1,0};
-	SetDockParams (dockpos, dockdir, dockrot);
-
-	dockstate=3;
-
-	SetView();
-	AddRCSJets(-2.30,995);
-
-    // ************************* propellant specs **********************************
-	if (!ph_sps)  ph_sps  = CreatePropellantResource(20500,10500); //SPS stage Propellant
-	SetDefaultPropellantResource (ph_sps); // display SPS stage propellant level in generic HUD
-	if (!ph_rcs0)  ph_rcs0  = CreatePropellantResource(500); //RCS stage Propellant
-
-	// *********************** thruster definitions ********************************
-
-	VECTOR3 m_exhaust_pos1= {0,0,-8.-STG1O};
-	// orbiter main thrusters
-	th_main[0] = CreateThruster (_V(0,0,-5), _V(0,0,1), SPS_THRUST, ph_sps, SPS_ISP);
-	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
-
-	AddExhaust (th_main[0], 20.0, 2.25, SMExhaustTex);
-
-	ActivateASTP = true;
-}
-
 void Saturn1b::DockStage (UINT dockstatus)
 {
 	VESSELSTATUS vs1;
@@ -892,52 +799,10 @@ void Saturn1b::DockStage (UINT dockstatus)
 
    switch (dockstatus)	
    {
-   case 2:
-#if 0
-	   {
-			//
-			//Interface initialization for mesh modification to SIVB
-			//
-			Undock(0);
-
-			//
-			// Tell the S4b that we've removed the payload.
-			//
-
-			SIVBSettings S4Config;
-			SIVB *SIVBVessel;
-
-			S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
-
-			S4Config.Payload = PAYLOAD_EMPTY;
-
-			SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
-			SIVBVessel->SetState(S4Config);
-
-			//
-			//Time to hear the Stage separation
-			//
-
-			SMJetS.play();
-
-			//
-			//Now Lets reconfigure Apollo for the DM.
-			//
-
-			if (ASTPMission)
-				SetASTPStage ();
-			dockstate = 3;
-			bManualUnDock = false;
-			SetAttitudeLinLevel(2,-1);
-		}
-#endif
-	   	break;
-
    case 3:
 		if(bManualUnDock) {
 
 			//DM Jetison preparation
-			char VName2[256];
 			ofs = OFS_DOCKING2;
 			GetStatus (vs4b);
 			vs4b.eng_main = vs4b.eng_hovr = 0.0;
@@ -947,11 +812,6 @@ void Saturn1b::DockStage (UINT dockstatus)
 			vs4b.vrot.x = 0.0;
 			vs4b.vrot.y = 0.0;
 			vs4b.vrot.z = 0.0;
-			if(ASTPMission){
-				GetApolloName(VName2); strcat (VName2, "-ASTPDM");
-				VESSEL::Create (VName2, "ProjectApollo/nSat1astp2", vs4b);
-				hAstpDM=oapiGetVesselByName(VName2);
-			}
 
 			/// \todo Fix that...
 			if (ProbeJetison){
@@ -974,14 +834,6 @@ void Saturn1b::DockStage (UINT dockstatus)
 			}
 		}
 		break;
-   case 4:
-	   //vessel->Undock(0);
-	   if (hAstpDM){
-		//
-		   	SetASTPStage ();
-			DestroyAstp=true;
-	   }
-	   break;
 	case 5:
 	   break;
 	}

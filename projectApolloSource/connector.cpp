@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/12/21 18:10:28  movieman523
+  *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
+  *	
   *	Revision 1.6  2007/12/21 02:47:08  movieman523
   *	Connector cleanup, and fix my build break!
   *	
@@ -335,7 +338,7 @@ Connector *GetVesselConnector(VESSEL *v, int port, ConnectorType t)
 	//
 	// Cast it to our vessel on the assumption that it is.
 	//
-	ProjectApolloConnectorVessel *pacv = (ProjectApolloConnectorVessel *) v;
+	ProjectApolloConnectorVessel *pacv = static_cast<ProjectApolloConnectorVessel *> (v);
 
 	//
 	// Validate it to check that this is probably the right kind of vessel.

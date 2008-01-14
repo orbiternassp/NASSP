@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2007/12/04 20:26:36  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.35  2007/09/04 13:51:56  dseagrav
   *	IGM first stage. It doesn't work yet.
   *	
@@ -196,7 +200,6 @@ private:
 	void MoveEVA();
 
 	void SeparateStage (int stage);
-	void DockStage (UINT dockstatus);
 
 	void SetVehicleStats();
 

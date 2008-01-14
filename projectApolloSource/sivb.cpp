@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.39  2008/01/14 01:17:09  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.38  2008/01/12 04:14:10  movieman523
   *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
   *	
@@ -159,6 +162,7 @@
 #include "lemcomputer.h"
 #include "imu.h"
 
+#include "payload.h"
 #include "sivb.h"
 #include "astp.h"
 #include "lem.h"
@@ -292,7 +296,7 @@ void SIVB::InitS4b()
 {
 	int i;
 
-	Payload = PAYLOAD_EMPTY;
+	PayloadType = PAYLOAD_EMPTY;
 	PanelsHinged = false;
 	PanelsOpened = false;
 	State = SIVB_STATE_SETUP;
@@ -395,7 +399,7 @@ void SIVB::InitS4b()
 		PanelSDKInitalised = true;
 	}
 
-	MainBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY");
+	MainBattery = static_cast<Battery *> (Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY"));
 
 	SIVBToCSMPowerDrain.WireTo(MainBattery);
 
@@ -489,7 +493,7 @@ void SIVB::SetS4b()
        }
 	}
 
-	switch (Payload) {
+	switch (PayloadType) {
 	case PAYLOAD_LEM:
 		SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
 		SetDockParams(dockpos, dockdir, dockrot);
@@ -549,7 +553,7 @@ void SIVB::SetS4b()
 
 	AddRCS_S4B();
 
-	if (Payload == PAYLOAD_DOCKING_ADAPTER)
+	if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 	{
 		iu.SetVesselStats(ISP_THIRD_VAC, THRUST_THIRD_VAC);
 		iu.SetMissionInfo(true, true, Realism, 0.0, 0.0);
@@ -712,13 +716,13 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 					GetRotMatrixZ(9.5 * RAD, rz); 
 					GetRotMatrixZ(-9.5 * RAD, rnz); 
 
-					VESSEL *v = (VESSEL *) oapiGetVesselInterface(hs4b1);
+					VESSEL *v = oapiGetVesselInterface(hs4b1);
 					v->SetRotationMatrix(mul(rv, mul(rz, mul(ry, rnx))));			
-					v = (VESSEL *) oapiGetVesselInterface(hs4b2);
+					v = oapiGetVesselInterface(hs4b2);
 					v->SetRotationMatrix(mul(rv, mul(rnz, mul(rny, rnx))));			
-					v = (VESSEL *) oapiGetVesselInterface(hs4b3);
+					v = oapiGetVesselInterface(hs4b3);
 					v->SetRotationMatrix(mul(rv, mul(rz, mul(rny, rx))));			
-					v = (VESSEL *) oapiGetVesselInterface(hs4b4);
+					v = oapiGetVesselInterface(hs4b4);
 					v->SetRotationMatrix(mul(rv, mul(rnz, mul(ry, rx))));
 
 				    // Hide unneeded meshes
@@ -763,13 +767,13 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 					GetRotMatrixZ(8.5 * RAD, rz); 
 					GetRotMatrixZ(-8.5 * RAD, rnz); 
 
-					VESSEL *v = (VESSEL *) oapiGetVesselInterface(hs4b1);
+					VESSEL *v = oapiGetVesselInterface(hs4b1);
 					v->SetRotationMatrix(mul(rv, mul(rz, mul(rny, rx))));			
-					v = (VESSEL *) oapiGetVesselInterface(hs4b2);
+					v = oapiGetVesselInterface(hs4b2);
 					v->SetRotationMatrix(mul(rv, mul(rnz, mul(ry, rx))));			
-					v = (VESSEL *) oapiGetVesselInterface(hs4b3);
+					v = oapiGetVesselInterface(hs4b3);
 					v->SetRotationMatrix(mul(rv, mul(rnz, mul(rny, rnx))));			
-					v = (VESSEL *) oapiGetVesselInterface(hs4b4);
+					v = oapiGetVesselInterface(hs4b4);
 					v->SetRotationMatrix(mul(rv, mul(rz, mul(ry, rnx))));			
 
 				    // Hide unneeded meshes
@@ -828,7 +832,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 {
 	VESSEL2::clbkSaveState (scn);
 
-	oapiWriteScenario_int (scn, "S4PL", Payload);
+	oapiWriteScenario_int (scn, "S4PL", PayloadType);
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "STATE", State);
@@ -1178,7 +1182,7 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 	{
 		if (!strnicmp(line, "S4PL", 4))
 		{
-			sscanf(line + 4, "%d", &Payload);
+			sscanf(line + 4, "%d", &PayloadType);
 		}
 		else if (!strnicmp (line, "MAINSTATE", 9))
 		{
@@ -1416,9 +1420,9 @@ void SIVB::SetState(SIVBSettings &state)
 {
 	if (state.SettingsType.SIVB_SETTINGS_PAYLOAD)
 	{
-		Payload = state.Payload;
+		PayloadType = state.Payload;
 
-		if (Payload == PAYLOAD_DOCKING_ADAPTER)
+		if (PayloadType == PAYLOAD_DOCKING_ADAPTER)
 		{
 			J2IsActive = true;
 		}
@@ -1571,7 +1575,7 @@ double SIVB::GetTotalMass()
 bool SIVB::PayloadIsDetachable()
 
 {
-	switch (Payload)
+	switch (PayloadType)
 	{
 	case PAYLOAD_LEM:
 	case PAYLOAD_ASTP:
@@ -1627,69 +1631,101 @@ void SIVB::StartSeparationPyros()
 		return;
 	}
 
-	switch (Payload)
+	char *plName = 0;
+
+	//
+	// Get the payload config file name.
+	//
+
+	switch (PayloadType)
+	{
+	case PAYLOAD_LEM:
+	case PAYLOAD_LM1:
+		plName = "ProjectApollo/LEM";
+		break;
+
+	case PAYLOAD_ASTP:
+		plName = "ProjectApollo/ASTP";
+		break;
+
+	default:
+		return;
+	}
+
+	//
+	// Now we know we have a valid payload. Create it and
+	// dock it.
+	//
+
+	Payload *payloadvessel;
+	VESSELSTATUS2 vslm2;
+	VESSELSTATUS2::DOCKINFOSPEC dckinfo;
+
+	//
+	// Now Lets create a real LEM and dock it
+	//
+
+	//
+	// The CSM docking probe has to ignore both the undock and dock
+	// events. Otherwise it will prevent us from 'docking' to the
+	// newly created LEM.
+	//
+	csmCommandConnector.SetIgnoreNextDockEvents(2);
+
+	CSMvessel->Undock(0);
+
+	vslm2.version = 2;
+	vslm2.flag = 0;
+	vslm2.fuel = 0;
+	vslm2.thruster = 0;
+	vslm2.ndockinfo = 1;
+	vslm2.dockinfo = &dckinfo;
+
+	CSMvessel->GetStatusEx(&vslm2);
+
+	vslm2.dockinfo[0].idx = 0;
+	vslm2.dockinfo[0].ridx = 0;
+	vslm2.dockinfo[0].rvessel = hCSM;
+	vslm2.ndockinfo = 1;
+	vslm2.flag = VS_DOCKINFOLIST;
+	vslm2.version = 2;
+
+	OBJHANDLE hPayload = oapiCreateVesselEx(PayloadName, plName, &vslm2);
+
+	//
+	// Initialise the state of the LEM AGC information.
+	//
+
+	payloadvessel = static_cast<Payload *> (oapiGetVesselInterface(hPayload));
+	payloadvessel->SetupPayload(ps);
+	Payloaddatatransfer = true;
+
+	CSMvessel->GetStatusEx(&vslm2);
+
+	vslm2.dockinfo = &dckinfo;
+	vslm2.dockinfo[0].idx = 0;
+	vslm2.dockinfo[0].ridx = 0;
+	vslm2.dockinfo[0].rvessel = hPayload;
+	vslm2.ndockinfo = 1;
+	vslm2.flag = VS_DOCKINFOLIST;
+	vslm2.version = 2;
+
+	CSMvessel->DefSetStateEx(&vslm2);
+
+	//
+	// Finally, do any special case configuration.
+	//
+
+	switch (PayloadType)
 	{
 	case PAYLOAD_LEM:
 	case PAYLOAD_LM1:
 		{
-			LEM *lmvessel;
-			VESSELSTATUS2 vslm2;
-			VESSELSTATUS2::DOCKINFOSPEC dckinfo;
-
-			//
-			// Now Lets create a real LEM and dock it
-			//
-
-			//
-			// The CSM docking probe has to ignore both the undock and dock
-			// events. Otherwise it will prevent us from 'docking' to the
-			// newly created LEM.
-			//
-			csmCommandConnector.SetIgnoreNextDockEvents(2);
-
-			CSMvessel->Undock(0);
-
-			vslm2.version = 2;
-			vslm2.flag = 0;
-			vslm2.fuel = 0;
-			vslm2.thruster = 0;
-			vslm2.ndockinfo = 1;
-			vslm2.dockinfo = &dckinfo;
-
-			CSMvessel->GetStatusEx(&vslm2);
-
-			vslm2.dockinfo[0].idx = 0;
-			vslm2.dockinfo[0].ridx = 0;
-			vslm2.dockinfo[0].rvessel = hCSM;
-			vslm2.ndockinfo = 1;
-			vslm2.flag = VS_DOCKINFOLIST;
-			vslm2.version = 2;
-
-			OBJHANDLE hLMV = oapiCreateVesselEx(PayloadName, "ProjectApollo/LEM", &vslm2);
-
-			//
-			// Initialise the state of the LEM AGC information.
-			//
-
-			lmvessel = static_cast<LEM *> (oapiGetVesselInterface(hLMV));
-			lmvessel->SetupPayload(ps);
-			Payloaddatatransfer = true;
-
-			CSMvessel->GetStatusEx(&vslm2);
-
-			vslm2.dockinfo = &dckinfo;
-			vslm2.dockinfo[0].idx = 0;
-			vslm2.dockinfo[0].ridx = 0;
-			vslm2.dockinfo[0].rvessel = hLMV;
-			vslm2.ndockinfo = 1;
-			vslm2.flag = VS_DOCKINFOLIST;
-			vslm2.version = 2;
-
-			CSMvessel->DefSetStateEx(&vslm2);
-
 			//
 			// PAD load.
 			//
+
+			LEM *lmvessel = static_cast<LEM *> (payloadvessel);
 
 			if (LMPad && LMPadCount > 0)
 			{
@@ -1710,7 +1746,7 @@ void SIVB::StartSeparationPyros()
 	// Set the payload to none.
 	//
 
-	Payload = PAYLOAD_EMPTY;
+	PayloadType = PAYLOAD_EMPTY;
 
 	SetS4b();
 }
@@ -1787,7 +1823,7 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 	}
 
 	if (vessel) 
-		delete (SIVB *)vessel;
+		delete static_cast<SIVB *> (vessel);
 }
 
 SIVbConnector::SIVbConnector()
@@ -1861,7 +1897,7 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 	case IULV_GET_STATUS:
 		if (OurVessel)
 		{
-			VESSELSTATUS *status = (VESSELSTATUS *) m.val1.pValue;
+			VESSELSTATUS *status = static_cast<VESSELSTATUS *> (m.val1.pValue);
 			VESSELSTATUS stat;
 
 			OurVessel->GetStatus(stat);
