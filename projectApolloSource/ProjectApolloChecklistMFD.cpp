@@ -40,6 +40,7 @@ void ProjectApolloChecklistMFDopcTimestep (double simt, double simdt, double mjd
 }
 ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w,h,vessel)
 {
+	conn.ConnectToVessel(vessel);
 }
 ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 {
@@ -55,6 +56,46 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 }
 bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 {
+	// Starts the group 0 (which is right now a testing group)
+	if (bt == 0)
+	{
+		item.group = item.index = -1;
+		item.group = 0;
+		if (conn.GetChecklistItem(&item))
+			return true;
+		return true;
+	}
+	// Fails the current checklist item if possible.
+	if (bt == 1)
+	{
+		item.group = item.index = -1;
+		if (conn.GetChecklistItem(&item))
+			conn.failChecklistItem(&item);
+		return true;
+	}
+	// Completes the current checklist item if possible.
+	if (bt == 2)
+	{
+		item.group = item.index = -1;
+		if (conn.GetChecklistItem(&item))
+			conn.completeChecklistItem(&item);
+		return true;
+	}
+	// Gets the current list of available checklists.
+	if (bt == 3)
+	{
+		if (conn.GetChecklistList(&groups))
+			return true;
+		return true;
+	}
+	// Gets the current checklist item (not sure why it would be useful here).
+	if (bt == 4)
+	{
+		item.group = item.index = -1;
+		if (conn.GetChecklistItem(&item))
+			return true;
+		return true;
+	}
 	return false;
 }
 bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
@@ -63,6 +104,11 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 }
 void ProjectApolloChecklistMFD::Update (HDC hDC)
 {
+	// An example of how to simply output the text element of the "current" item.  Outputs nothing if no checklists are active yet.
+	item.group = -1;
+	item.index = -1;
+	if (conn.GetChecklistItem(&item))
+		TextOut(hDC, 0,0,item.text.c_str(),item.text.size());
 }
 void ProjectApolloChecklistMFD::WriteStatus (FILEHANDLE scn) const
 {

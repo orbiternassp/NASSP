@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2008/01/09 09:39:06  lassombra
+  *	Completed MFD<->ChecklistController interface.  Coding can now take place on two separate code paths.
+  *	
+  *	Anyone who wants to work on the MFD can at this point do so using the existing connector code.
+  *	
+  *	None of the functions will exactly DO anything at the moment, but that is being worked on.
+  *	
   *	Revision 1.5  2008/01/09 01:46:45  movieman523
   *	Added initial support for talking to checklist controller from MFD.
   *	
@@ -181,7 +188,7 @@ bool MFDConnector::ChecklistAutocomplete(bool yesno)
 
 	return false;
 }
-ChecklistItem *MFDConnector::GetChecklistItem(ChecklistItem *in)
+bool MFDConnector::GetChecklistItem(ChecklistItem *in)
 {
 	ConnectorMessage cm;
 
@@ -191,22 +198,23 @@ ChecklistItem *MFDConnector::GetChecklistItem(ChecklistItem *in)
 
 	if (SendMessage(cm))
 	{
-		return (ChecklistItem *)cm.val1.pValue;
+		return cm.val2.bValue;
 	}
 
 	return NULL;
 }
 
-ChecklistGroup *MFDConnector::GetChecklistList()
+bool MFDConnector::GetChecklistList(vector<ChecklistGroup> *in)
 {
 	ConnectorMessage cm;
 
 	cm.destination = type;
 	cm.messageType = PanelConnector::MFD_PANEL_GET_CHECKLIST_LIST;
+	cm.val1.pValue = in;
 
 	if (SendMessage(cm))
 	{
-		return (ChecklistGroup *)cm.val1.pValue;
+		return cm.val2.bValue;
 	}
 
 	return NULL;
@@ -221,7 +229,7 @@ bool MFDConnector::failChecklistItem(ChecklistItem* in)
 
 	if (SendMessage(cm))
 	{
-		return cm.val1.bValue;
+		return cm.val2.bValue;
 	}
 
 	return false;
@@ -236,7 +244,7 @@ bool MFDConnector::completeChecklistItem(ChecklistItem* in)
 
 	if (SendMessage(cm))
 	{
-		return cm.val1.bValue;
+		return cm.val2.bValue;
 	}
 
 	return false;

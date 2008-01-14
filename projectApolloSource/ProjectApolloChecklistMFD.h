@@ -1,3 +1,6 @@
+#include "Connector.h"
+#include "MFDConnector.h"
+
 class ProjectApolloChecklistMFD: public MFD {
 public:
 	ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *vessel);
@@ -11,6 +14,11 @@ public:
 	void ReadStatus (FILEHANDLE scn);
 	void StoreStatus (void) const;
 	void RecallStatus (void);
+
+	MFDConnector conn;
+
 	
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
+	ChecklistItem item;
+	vector<ChecklistGroup> groups;
 };

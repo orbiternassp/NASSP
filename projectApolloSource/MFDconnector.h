@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2008/01/09 09:39:06  lassombra
+  *	Completed MFD<->ChecklistController interface.  Coding can now take place on two separate code paths.
+  *	
+  *	Anyone who wants to work on the MFD can at this point do so using the existing connector code.
+  *	
+  *	None of the functions will exactly DO anything at the moment, but that is being worked on.
+  *	
   *	Revision 1.4  2008/01/09 01:46:45  movieman523
   *	Added initial support for talking to checklist controller from MFD.
   *	
@@ -111,14 +118,14 @@ public:
 	/// \param in checklistItem initialized to tell the controller which item to return.
 	/// \return ChecklistItem returned by controller or false if connector isn't connected.
 	///
-	ChecklistItem *GetChecklistItem (ChecklistItem *in);
+	bool GetChecklistItem (ChecklistItem *in);
 
 	///
 	/// Get a list of all allowed checklist items.
 	///
 	/// \return pointer to the first element in an array that is null terminated. (group index of last element is 0)
 	///
-	ChecklistGroup *GetChecklistList();
+	bool GetChecklistList(vector<ChecklistGroup> *in);
 
 	///
 	/// Fail a checklist item, and branch if appropriate.

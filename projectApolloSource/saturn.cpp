@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.221  2008/01/14 01:17:07  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.220  2008/01/12 09:40:55  lassombra
   *	Fixed minor bug involving saving gibberish to the scenario file reacting with ability
   *	 to load safely later without crashing.
@@ -440,6 +443,8 @@
 #include "papi.h"
 
 #include "CollisionSDK/CollisionSDK.h"
+#include <crtdbg.h>
+
 
 
 //
@@ -521,6 +526,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SIVBPayloadSepSwitch(sivbControlConnector)
 
 {
+	_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF|_CRTDBG_CHECK_ALWAYS_DF );
 	InitSaturnCalled = false;
 	autopilot = false;
 	LastTimestep = 0;

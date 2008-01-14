@@ -3,7 +3,7 @@
 #include "orbiterapi.h"
 #include <vector>
 #include <deque>
-#include <set>
+#include <string>
 using namespace std;
 
 #define ChecklistControllerStartString "<checklist>"
@@ -26,6 +26,36 @@ enum RelativeEvent
 struct ChecklistGroup
 {
 /// -------------------------------------------------------------
+/// Default constructor.
+/// -------------------------------------------------------------
+	ChecklistGroup()
+	{
+		group = -1;
+		time = 0;
+		relativeEvent = NO_TIME_DEF;
+		manualSelect = false;
+		autoSelect = false;
+		essential = false;
+		name[0] = 0;
+	}
+/// -------------------------------------------------------------
+/// Copy constructor.
+/// -------------------------------------------------------------
+	ChecklistGroup(const ChecklistGroup &temp)
+	{
+		autoSelect = temp.autoSelect;
+		essential = temp.essential;
+		group = temp.group;
+		manualSelect = temp.manualSelect;
+		relativeEvent = temp.relativeEvent;
+		time = temp.time;
+		name = temp.name;
+	}
+/// -------------------------------------------------------------
+/// Destructor
+/// -------------------------------------------------------------
+	~ChecklistGroup(){}
+/// -------------------------------------------------------------
 /// index defined at runtime.  Use this in a ChecklistItem struct
 /// to start the checklist operation of that group.
 /// -------------------------------------------------------------
@@ -34,7 +64,7 @@ struct ChecklistGroup
 /// Time at which this group should be executed. (available at 
 /// this time)
 /// -------------------------------------------------------------
-	int time;
+	double time;
 /// -------------------------------------------------------------
 /// Event relative to which the time triggers.
 /// -------------------------------------------------------------
@@ -60,7 +90,7 @@ struct ChecklistGroup
 /// -------------------------------------------------------------
 /// Name of the group as should be displayed on the checklist.
 /// -------------------------------------------------------------
-	char *Name;
+	string name;
 };
 /// -------------------------------------------------------------
 /// An individual element in a checklist program.  These elements
@@ -86,7 +116,7 @@ struct ChecklistItem
 /// Either MET (if no relativeEvent is defined) or time before or
 /// after the event.
 /// -------------------------------------------------------------
-	int time;
+	double time;
 /// -------------------------------------------------------------
 /// Event from the "events" enum listing the many managed events
 /// of this system.
@@ -96,15 +126,15 @@ struct ChecklistItem
 /// group id to go to in the event of a failure of this check step.
 /// always null when received by the MFD.
 /// -------------------------------------------------------------
-	ChecklistGroup *failEvent;
+	int failEvent;
 /// -------------------------------------------------------------
 /// Text to display describing the checklist.
 /// -------------------------------------------------------------
-	char *text;
+	string text;
 /// -------------------------------------------------------------
 /// extra text to display when the info button is pressed.
 /// -------------------------------------------------------------
-	char *info;
+	string info;
 /// -------------------------------------------------------------
 /// define whether this checklist will happen automatically in
 /// quickstart mode
@@ -114,7 +144,7 @@ struct ChecklistItem
 /// reference to the panel switch that must be thrown, used to
 /// spawn reference box
 /// -------------------------------------------------------------
-	char *item;
+	string item;
 /// -------------------------------------------------------------
 /// position the switch must be moved to.  Used for auto detect
 /// of checklist complete.
@@ -136,6 +166,27 @@ struct ChecklistItem
 /// the items, but rather is used for an internal check only.
 /// -------------------------------------------------------------
 	bool operator==(ChecklistItem input);
+/// -------------------------------------------------------------
+/// Copy Constructor, for deep copy.
+/// -------------------------------------------------------------
+	ChecklistItem()
+	{	
+		group = -1;
+		index = -1;
+		time = 0;
+		relativeEvent = NO_TIME_DEF;
+		failEvent = -1;
+		automatic = false;
+		position = 0;
+		complete = false;
+		failed = false;
+	}
+	~ChecklistItem()
+	{
+		text.clear();
+		item.clear();
+		info.clear();
+	}
 };
 /// -------------------------------------------------------------
 /// Structure containing an active checklist "program"  This
@@ -149,7 +200,7 @@ struct ChecklistContainer
 /// -------------------------------------------------------------
 /// Checklist Group that this "program" is based on.
 /// -------------------------------------------------------------
-	ChecklistGroup group;
+	ChecklistGroup program;
 /// -------------------------------------------------------------
 /// The list of elements in this "program"
 /// -------------------------------------------------------------
@@ -159,22 +210,49 @@ struct ChecklistContainer
 /// -------------------------------------------------------------
 	vector<ChecklistItem>::iterator sequence;
 /// -------------------------------------------------------------
+/// Default Constructor.  Initializes an empty container.
+/// -------------------------------------------------------------
+	ChecklistContainer(){sequence = set.begin();}
+/// -------------------------------------------------------------
 /// Constructor, requires a group to initialize from.
 /// -------------------------------------------------------------
-	ChecklistContainer(ChecklistGroup groupin);
+	ChecklistContainer(const ChecklistGroup &groupin, bool load=false);
 /// -------------------------------------------------------------
 /// Deconstructor, probably irrelevant, but included incase.
 /// -------------------------------------------------------------
 	~ChecklistContainer();
+	ChecklistContainer(const ChecklistContainer &temp);
 };
 /// -------------------------------------------------------------
-/// Structure implementing the compare method required to allow
-/// For a sorted range of checklist groups.
-/// This allows for easy and efficient finding of the items desired.
+/// A stacked queue used to store the program sequence that is
+/// used by the checklist controller.
 /// -------------------------------------------------------------
-struct ChecklistGroupcompare
+template <class T> class stackedQue: public deque<T>
 {
-	bool operator()(const ChecklistGroup& lhs, const ChecklistGroup& rhs);
+public:
+	stackedQue():deque(){}
+	~stackedQue(){}
+/// -------------------------------------------------------------
+/// Used to place an item in the front of the que (as in it is 
+/// being replaced, but execution should return here.
+/// -------------------------------------------------------------
+	void stack(const T &in){push_front(in);}
+/// -------------------------------------------------------------
+/// Used to place an item in the back of the que (as in it has 
+/// been selected by the auto-spawn system and is now ready to be
+/// used when the user gets to it.
+/// -------------------------------------------------------------
+	void que(const T &in){push_back(in);}
+/// -------------------------------------------------------------
+/// Get the next "program" to execute.
+/// -------------------------------------------------------------
+	T *retrieve()
+	{
+		T *temp;
+		temp = new T(*deque::begin());
+		deque::pop_front();
+		return temp;
+	}
 };
 /// -------------------------------------------------------------
 /// This is the actual controller.  It exists once in each vessel
@@ -197,14 +275,13 @@ public:
 /// In the event that an essential checklist is running, a selected
 /// checklist will not actually start running but get placed at the
 /// top of the stack to be run when the essential checklist is done.
-	void getChecklistItem(ChecklistItem*);
+	bool getChecklistItem(ChecklistItem*);
 /// -------------------------------------------------------------
-/// Gets list of available groups at this time.  Return is an 
-/// array that should be deleted once it is not needed.  
-/// (Maintaining a single dynamic array updated to this list 
-/// every 10 seconds or so is probably a good implementation).
+/// Basic accessor for the list of available checklist items.
+/// Access only when needed.  Not responsible for maintaining the
+/// data.
 /// -------------------------------------------------------------
-	ChecklistGroup *getChecklistList();
+	bool getChecklistList(vector<ChecklistGroup>*);
 /// -------------------------------------------------------------
 /// This checklist item is failed.  In order to properly handle
 /// this situation, we need to actually tell the controller instead
@@ -230,11 +307,13 @@ public:
 /// This method does default (empty) initialization.  Can be 
 /// called to indicate that the Checklist controller should do 
 /// nothing.  WARNING:  once this is called, you cannot call any
-/// other init function!
+/// other init function!  Should NOT be called except in the case
+/// you want to override the functions loaded by the scenario.
+/// IE you want to use an unmanned flight.
 /// -------------------------------------------------------------
 	void init();
 /// -------------------------------------------------------------
-/// This method initializes any Saturn for any mission.  Uses a
+/// This method initializes any vessel for any mission.  Uses a
 /// custom checklist file where the checkFile parameter is the
 /// proper path to the file.  Otherwise, pass in null to indicate
 /// should use default file.
@@ -259,6 +338,12 @@ public:
 /// Get the auto execute setting.
 /// -------------------------------------------------------------
 	bool autoExecute();
+/// -------------------------------------------------------------
+/// Used to link checklist controller to a vessel, required to
+/// Allow automated checklists as well as automatic checklist
+/// selection and automatic completion detection.
+/// -------------------------------------------------------------
+	bool linktoVessel(VESSEL *vessel);
 protected:
 private:
 	/// Auto complete flag.  If true, automatically complete the checklist.
@@ -269,16 +354,20 @@ private:
 	///This is a "stackable queue" implemented by using either the push
 	///front/push back functions to allow checklist groups to be lined
 	///up for execution.
-	deque<ChecklistContainer> action;
+	stackedQue<ChecklistContainer> action;
 	///The active checklist group.
-	ChecklistContainer *active;
-	///The "sorted list" of all available checklist groups.
-	set<ChecklistGroup,ChecklistGroupcompare> groups;
+	ChecklistContainer active;
+	///The list of all available checklist groups.
+	vector<ChecklistGroup> groups;
 	///The mission time at which the controller was last called.
 	double lastMissionTime;
 	///This is where actual "default" init happens.  Only the constructor calls this with false.
 	bool init(bool final);
 	///This determines whether or not the checklist gets auto executed.
 	bool autoexecute;
+	///Used to spawn new "program"
+	bool spawnCheck(int group);
 };
+
+
 #endif
