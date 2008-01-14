@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.78  2008/01/14 01:17:04  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.77  2008/01/10 01:38:49  movieman523
   *	Updated 2008 projects, and calculate stage mass in Saturn 1b at startup for safety.
   *	
@@ -1227,9 +1230,6 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		case 2:
 				break;
 		case 3:
-			if(ASTPMission)
-				SetASTPStage();
-			break;
 		case 4:
 			break;
 		case 5:
