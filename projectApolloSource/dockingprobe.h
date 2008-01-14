@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/02/06 18:30:17  tschachim
+  *	Bugfixes docking probe, CSM/LM separation. The ASTP stuff still needs fixing though.
+  *	
   *	Revision 1.7  2006/07/28 02:06:57  movieman523
   *	Now need to hard dock to get the connectors connected.
   *	
@@ -55,6 +58,12 @@
 
 class Saturn;
 
+
+///
+/// This class simulates the docking probe attached to the CM.
+/// \ingroup InternalSystems
+/// \brief Docking probe simulation.
+///
 class DockingProbe {
 
 public:
@@ -69,7 +78,8 @@ public:
 	void SetEnabled(bool e) { Enabled = e; }
 	void Extend();
 	void Retract();
-	void SetIgnoreNextDockEvent() { IgnoreNextDockEvent = true; };
+	void SetIgnoreNextDockEvent() { IgnoreNextDockEvent = 1; };
+	void SetIgnoreNextDockEvents(int n) { IgnoreNextDockEvent = n; };
 	void DockEvent(int dock, OBJHANDLE connected);
 	void TimeStep(double simt, double simdt);
 	void SystemTimestep(double simdt);
@@ -95,7 +105,13 @@ protected:
 	Saturn *OurVessel;
 	bool FirstTimeStepDone;
 	bool UndockNextTimestep;
-	bool IgnoreNextDockEvent;
+
+	///
+	/// Number of docking events to ignore. This is required in special cases, such as LEM creation, and
+	/// the state is not saved; the intention is that the count will only be set in the same timestep when
+	/// the docking events occur, so it doesn't need to be maintained over a longer period.
+	///
+	int IgnoreNextDockEvent;
 	PowerMerge DCPower;
 	int Realism;
 };

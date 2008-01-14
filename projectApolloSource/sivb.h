@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2008/01/12 04:14:10  movieman523
+  *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
+  *	
   *	Revision 1.24  2007/12/21 18:10:30  movieman523
   *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
   *	
@@ -99,6 +102,8 @@
 #if !defined(_PA_SIVB_H)
 #define _PA_SIVB_H
 
+#include "payload.h"
+
 //
 // Data structure passed from main vessel to SIVB to configure stage.
 //
@@ -117,7 +122,7 @@ union SIVbSettingFlags
 		unsigned SIVB_SETTINGS_GENERAL:1;		///< General settings (e.g. Mission Time) are valid.
 		unsigned SIVB_SETTINGS_PAYLOAD:1;		///< Payload type settings are valid.
 		unsigned SIVB_SETTINGS_ENGINES:1;		///< Engine settings are valid.
-		unsigned SIVB_SETTINGS_PAYLOAD_INFO:1;	///< Detailed payload settings (e.g. LEM name/mass) are valid.
+		unsigned SIVB_SETTINGS_PAYLOAD_INFO:1;	///< Detailed payload settings (e.g. LEM name/mass/PAD) are valid.
 	};
 	unsigned int word;						///< Set to zero to clear all flags.
 
@@ -133,7 +138,7 @@ union SIVbSettingFlags
 /// \brief SIVb setup structure.
 /// \ingroup SepStageSettings
 ///
-typedef struct 
+struct SIVBSettings 
 {
 	SIVbSettingFlags SettingsType;	///< Which settings are valid?
 
@@ -164,7 +169,12 @@ typedef struct
 	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
 	char PayloadName[64];			///< Payload Name
 
-} SIVBSettings;
+	int LMPadCount;					///< Count of LM PAD data.
+	unsigned int *LMPad;			///< LM PAD data.
+
+	SIVBSettings() { LMPad = 0; LMPadCount = 0; };
+
+};
 
 class SIVB;
 
@@ -208,6 +218,29 @@ public:
 	~CSMToSIVBCommandConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+	///
+	/// \brief Tell CSM docking probe to ignore next docking event.
+	///
+	void SetIgnoreNextDockEvent();
+
+	///
+	/// \brief Tell CSM docking probe to ignore next n docking events.
+	/// \param n Number of events to ignore.
+	///
+	void SetIgnoreNextDockEvents(int n);
+
+	///
+	/// The CSM knows what the payload should do. This is difficult to get right as some
+	/// of the data relates to the CSM which docks with the payload, and other data should
+	/// be set by the booster which launches the SIVB into space. For now we'll get all the
+	/// data from the docked CSM and we can figure out a better solution later.
+	///
+	/// \brief Get payload settings from CSM.
+	/// \param p Payload settings structure.
+	/// \return True if we got valid settings, false if not.
+	///
+	bool GetPayloadSettings(PayloadSettings &p);
 };
 
 ///
@@ -388,6 +421,16 @@ public:
 	///
 	double GetMainBatteryCurrent();
 
+	///
+	/// \brief Start payload separation.
+	///
+	void StartSeparationPyros();
+
+	///
+	/// \brief Stop payload separation.
+	///
+	void StopSeparationPyros();
+
 protected:
 	///
 	/// PanelSDK functions as a interface between the
@@ -433,6 +476,8 @@ protected:
 	void AddRCS_S4B();				///< Add RCS for SIVb control.
 	void Boiloff();					///< Boil off some LOX/LH2 in orbit.
 
+	bool PayloadIsDetachable();		///< Is the payload detachable?
+
 	VECTOR3	mainExhaustPos;			///< Position of main thruster exhaust.
 
 	int Payload;					///< Payload type.
@@ -464,6 +509,16 @@ protected:
 
 	double LMDescentFuelMassKg;		///< Mass of fuel in descent stage of LEM.
 	double LMAscentFuelMassKg;		///< Mass of fuel in ascent stage of LEM.
+
+	//
+	// LM PAD
+	//
+
+	int LMPadCount;					///< Count of LM PAD values.
+	unsigned int *LMPad;			///< LM PAD load data.
+
+	int LMPadLoadCount;
+	int LMPadValueCount;
 
 	char PayloadName[64];			///< Name of payload, if appropriate.
 
@@ -534,6 +589,11 @@ enum CSMSIVBMessageType
 	CSMSIVB_IS_VENTING,						///< Is the vessel venting fuel?
 	CSMSIVB_START_VENTING,					///< Start fuel venting.
 	CSMSIVB_STOP_VENTING,					///< Stop fuel venting.
+	CSMSIVB_START_SEPARATION,				///< Start charging separation pyros.
+	CSMSIVB_STOP_SEPARATION,				///< Stop charging separation pyros.
+	SIVBCSM_IGNORE_DOCK_EVENT,				///< CSM docking probe should ignore next docking event (for payload creation)
+	SIVBCSM_IGNORE_DOCK_EVENTS,				///< CSM docking probe should ignore next docking events (for payload creation)
+	SIVBCSM_GET_PAYLOAD_SETTINGS,			///< Get the payload settings information from the CSM.
 };
 
 #endif // _PA_SIVB_H

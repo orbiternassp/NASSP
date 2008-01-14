@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.268  2008/01/11 05:24:12  movieman523
+  *	Added LEM fuel masses; currently they're passed to the LEM but it ignores them.
+  *	
   *	Revision 1.267  2008/01/09 15:00:20  lassombra
   *	Added support for checklistController to save/load state.
   *	
@@ -578,6 +581,7 @@
 #include "mcc.h"
 #include "ecs.h"
 #include "checklistController.h"
+#include "payload.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -1391,6 +1395,11 @@ public:
 	///
 	IU *GetIU() { return &iu; };
 
+	///
+	/// \brief Get settings for the Saturn payload.
+	///
+	void GetPayloadSettings(PayloadSettings &p);
+
 	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
 	SPSEngine *GetSPSEngine() { return &SPSEngine; };
 
@@ -2172,7 +2181,7 @@ protected:
 	GuardedToggleSwitch CsmLmFinalSep2Switch;
 	GuardedTwoOutputSwitch CmSmSep1Switch;
 	GuardedTwoOutputSwitch CmSmSep2Switch;
-	GuardedToggleSwitch SivbLmSepSwitch;
+	SIVBPayloadSeparationSwitch SIVBPayloadSepSwitch;
 
 	ToggleSwitch   CabinFan1Switch;
 	ToggleSwitch   CabinFan2Switch;

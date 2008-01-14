@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.107  2007/12/04 20:26:31  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.106  2007/11/26 17:59:05  movieman523
   *	Assorted tidying up of state variable structures.
   *	
@@ -1344,12 +1348,6 @@ void SaturnV::StageSix(double simt)
 		}
 	}
 
-	if (SivbLmSepSwitch.GetState()) {
-		bManualUnDock = true;
-		SivbLmSepSwitch.SetState(false); // temporary bugfix.
-		/// \todo Get rid of bManualUnDock, use pyros, connect this switch and fix REALSIM 0 "S" key press
-	}
-
 	if (ApolloNo == 13) {
 
 		//
@@ -1707,6 +1705,7 @@ void SaturnV::StageSix(double simt)
 		if (GetDockStatus(GetDockHandle(0)) == NULL) {
 			bManualUnDock = false;
 		}
+#if 0
 		else if (GetDockStatus(GetDockHandle(0)) == hs4bM) { //this check is for docking status if docked we cannot jetison ASTP
 			if (PyrosArmed() && SECSLogicActive()) {
 				dockstate = 2;
@@ -1716,6 +1715,7 @@ void SaturnV::StageSix(double simt)
 			}
 			bManualUnDock = false;
 		}
+#endif
 		else if (GetDockStatus(GetDockHandle(0)) == hLMV) {
 			// Final LM separation
 			if (dockstate == 3 && ProbeJetison) {

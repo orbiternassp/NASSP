@@ -1,8 +1,8 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2004-2005 Jean-Luc Rocca-Serra
+  Copyright 2004-2005 Mark Grant
 
-  ORBITER vessel module: ASTP
+  ORBITER vessel module: Payload-specific code
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,35 +22,35 @@
 
   **************************** Revision History ****************************
   *	$Log$
-  *	Revision 1.2  2005/07/04 23:56:46  movieman523
-  *	New C++ version. Totally untested!
-  *	
-  *	Revision 1.1  2005/07/04 23:50:57  movieman523
-  *	Initial ASTP header file (currently a placeholder).
-  *	
   **************************************************************************/
 
-#if !defined(_PA_ASTP_H)
-#define _PA_ATSP_H
+
+#include <stdio.h>
+#include "orbitersdk.h"
+
+#include "PanelSDK/PanelSDK.h"
+#include "PanelSDK/Internals/Esystems.h"
 
 #include "connector.h"
 #include "payload.h"
 
-class ASTP: public Payload {
+Payload::Payload(OBJHANDLE hObj, int fmodel) : 
+	ProjectApolloConnectorVessel(hObj, fmodel)
+{
+}
 
-public:
+Payload::~Payload()
 
-	ASTP (OBJHANDLE hObj, int fmodel);
-	virtual ~ASTP();
-	void init();
-	void Setup();
+{
+	// Nothing for now.
+}
 
-protected:
+bool Payload::SetupPayload(PayloadSettings &p)
 
+{
 	//
-	// No variables needed for now.
+	// Nothing for now, just return success.
 	//
 
-};
-
-#endif // _PA_ASTP_H
+	return true;
+}

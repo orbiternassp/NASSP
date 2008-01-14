@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2007/12/26 04:20:14  flydba
+  *	Pixel error of the EMS deltaV indicator fixed.
+  *	
   *	Revision 1.32  2007/11/29 22:08:27  movieman523
   *	Moved electric meters to generic classes in toggleswitch.cpp rather than Saturn-specific.
   *	
@@ -2158,6 +2161,35 @@ bool MinImpulseHandcontrollerSwitch::CheckMouseClick(int event, int mx, int my) 
 			c |= 04;			
 		}		
 		sat->agc.SetInputChannel(032, c);
+		return true;
+	}
+	return false;
+}
+
+//
+// Switch to separate from the SIVB.
+//
+SIVBPayloadSeparationSwitch::SIVBPayloadSeparationSwitch(CSMToSIVBControlConnector &c) : sivb(c)
+
+{
+}
+
+bool SIVBPayloadSeparationSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	//
+	// If the switch state changes, tell the SIVB.
+	//
+	if (IsPowered() && GuardedToggleSwitch::CheckMouseClick(event, mx, my))
+	{
+		if (IsUp())
+		{
+			sivb.StartSeparationPyros();
+		}
+		else if (IsDown())
+		{
+			sivb.StopSeparationPyros();
+		}
 		return true;
 	}
 	return false;

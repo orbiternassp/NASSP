@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2007/11/29 22:08:27  movieman523
+  *	Moved electric meters to generic classes in toggleswitch.cpp rather than Saturn-specific.
+  *	
   *	Revision 1.29  2007/11/29 21:53:20  movieman523
   *	Generising the Volt meters.
   *	
@@ -828,6 +831,21 @@ protected:
 
 	Sound guardClick;
 	SURFHANDLE guardSurface;
+};
+
+class CSMToSIVBControlConnector;
+
+///
+/// Switch to separate the payload from the SIVB.
+///
+class SIVBPayloadSeparationSwitch : public GuardedToggleSwitch
+{
+public:
+	SIVBPayloadSeparationSwitch(CSMToSIVBControlConnector &c);
+	bool CheckMouseClick(int event, int mx, int my);
+
+protected:
+	CSMToSIVBControlConnector &sivb;
 };
 
 class OpticsHandcontrollerSwitch: public HandcontrollerSwitch {

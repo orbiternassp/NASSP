@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2008/01/09 01:46:45  movieman523
+  *	Added initial support for talking to checklist controller from MFD.
+  *	
   *	Revision 1.67  2007/12/21 02:47:08  movieman523
   *	Connector cleanup, and fix my build break!
   *	
@@ -375,6 +378,12 @@ public:
 	/// \param value State to set.
 	///
 	virtual void SetState(int value);
+
+	///
+	/// \brief Check the power state.
+	/// \return True if the switch is powered.
+	///
+	virtual bool IsPowered() { return Voltage() > SP_MIN_DCVOLTAGE; };
 
 protected:
 	///
