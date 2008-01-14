@@ -25,6 +25,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.87  2008/01/09 09:39:06  lassombra
+  *	Completed MFD<->ChecklistController interface.  Coding can now take place on two separate code paths.
+  *	
+  *	Anyone who wants to work on the MFD can at this point do so using the existing connector code.
+  *	
+  *	None of the functions will exactly DO anything at the moment, but that is being worked on.
+  *	
   *	Revision 1.86  2008/01/09 01:46:45  movieman523
   *	Added initial support for talking to checklist controller from MFD.
   *	
@@ -3676,16 +3683,16 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		m.val1.bValue = checklist.autoComplete(m.val1.bValue);
 		return true;
 	case MFD_PANEL_GET_CHECKLIST_ITEM:
-		checklist.getChecklistItem((ChecklistItem *)m.val1.pValue);
+		m.val2.bValue = checklist.getChecklistItem((ChecklistItem *)m.val1.pValue);
 		return true;
 	case MFD_PANEL_GET_CHECKLIST_LIST:
-		m.val1.pValue = checklist.getChecklistList();
+		m.val2.bValue = checklist.getChecklistList((vector<ChecklistGroup> *)m.val1.pValue);
 		return true;
 	case MFD_PANEL_FAIL_ITEM:
-		m.val1.bValue = checklist.failChecklistItem((ChecklistItem *)m.val1.pValue);
+		m.val2.bValue = checklist.failChecklistItem((ChecklistItem *)m.val1.pValue);
 		return true;
 	case MFD_PANEL_COMPLETE_ITEM:
-		m.val1.bValue = checklist.completeChecklistItem((ChecklistItem *)m.val1.pValue);
+		m.val2.bValue = checklist.completeChecklistItem((ChecklistItem *)m.val1.pValue);
 		return true;
 	}
 
