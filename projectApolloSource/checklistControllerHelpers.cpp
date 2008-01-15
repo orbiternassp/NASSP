@@ -25,6 +25,7 @@ ChecklistContainer::ChecklistContainer(const ChecklistGroup &groupin, bool load)
 {
 	program = groupin;
 	initSet(program,set);
+	sequence = set.begin();
 }
 // Todo: Verify
 ChecklistContainer::ChecklistContainer(const ChecklistContainer &input)
@@ -56,22 +57,21 @@ void ChecklistContainer::operator=(const ChecklistContainer &input)
 }
 // Todo: Implement
 // Cleanup Todo: Remove unnecessary Debug only constructs.
-void ChecklistContainer::initSet(const ChecklistGroup &program,vector<ChecklistItem> set)
+void ChecklistContainer::initSet(const ChecklistGroup &program,vector<ChecklistItem> &set)
 {
 #ifdef _DEBUG //Todo: remove in cleanup.
-	if (program.group == 0)
 	{
 		ChecklistItem temp;
-		temp.group = 0;
+		temp.group = program.group;
 		temp.index = 0;
 		strcpy(temp.info,"This is a special item built for debugging.  It will NOT appear in a release build.");
-		strcpy(temp.text,"Test item 1");
+		sprintf(temp.text,"%s%i","Test item 1 - group ",program.group);
 		set.push_back(temp);
 		temp.index = 1;
-		strcpy(temp.text,"Test item 2");
+		sprintf(temp.text,"%s%i","Test item 2 - group ",program.group);
 		set.push_back(temp);
 		temp.index = 2;
-		strcpy(temp.text,"Test item 3");
+		sprintf(temp.text,"%s%i","Test item 3 - group ",program.group);
 		set.push_back(temp);
 	}
 #endif

@@ -97,6 +97,14 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 			return true;
 		return true;
 	}
+	if (bt == 6)
+	{
+		item.group = 1;
+		item.index = -1;
+		if (conn.GetChecklistItem(&item))
+			return true;
+		return true;
+	}
 	return false;
 }
 bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
