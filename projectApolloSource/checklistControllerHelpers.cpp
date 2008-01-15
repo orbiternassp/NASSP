@@ -64,6 +64,7 @@ void ChecklistContainer::initSet(const ChecklistGroup &program,vector<ChecklistI
 		ChecklistItem temp;
 		temp.group = program.group;
 		temp.index = 0;
+		strcpy(temp.item,"MissionTimerSwitch");
 		strcpy(temp.info,"This is a special item built for debugging.  It will NOT appear in a release build.");
 		sprintf(temp.text,"%s%i","Test item 1 - group ",program.group);
 		set.push_back(temp);

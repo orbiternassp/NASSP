@@ -4,6 +4,9 @@
 #include <vector>
 #include <deque>
 #include <string>
+#include "orbiterSDK.h"
+#include "nasspdefs.h"
+#include "connector.h"
 using namespace std;
 
 #define ChecklistControllerStartString "<checklist>"
@@ -211,6 +214,8 @@ private:
 /// -------------------------------------------------------------
 	void initSet(const ChecklistGroup &,vector<ChecklistItem> &);
 };
+#include "MFDconnector.h" //Has to be done here because fails further up.
+
 /// -------------------------------------------------------------
 /// This is the actual controller.  It exists once in each vessel
 /// that implements the need to operate a checklist.  It keeps a 
@@ -324,6 +329,8 @@ private:
 	bool autoexecute;
 	///Used to spawn new "program"
 	bool spawnCheck(int group, bool automagic = false);
+	///Connector to the panel
+	MFDConnector conn;
 };
 
 
