@@ -21,4 +21,7 @@ public:
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 	ChecklistItem item;
 	vector<ChecklistGroup> groups;
+
+	DWORD width;
+	DWORD height;
 };

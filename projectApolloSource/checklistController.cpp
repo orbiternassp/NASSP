@@ -18,14 +18,34 @@ ChecklistController::~ChecklistController()
 //todo: implement
 bool ChecklistController::getChecklistItem(ChecklistItem* input)
 {
+	// Catcher, are we being told to initialize a checklist group?
 	if (input->group > -1)
-		return spawnCheck(input->group);
-#ifdef _DEBUG
-	if (active.program.group != -1)
-		*input = *active.sequence;
-	return true;
-#endif
-	return false;
+	{
+		if(!spawnCheck(input->group))
+			return false; // If we failed to initialize the group, stop here and FAIL.
+	}
+
+	// We are preparing to output data.
+	// Make sure we have something to output.
+	if (active.program.group == -1)
+		return false; //No active program.  Don't display anything.
+
+	if (input->index > -1) //Are we being asked for a specific input item?  Or just any old item?
+	{
+		if (input->index+active.sequence->index >= active.set.size())
+			return false; // We are being asked for an index that doesn't exist.  Can happen quite often.
+		vector<ChecklistItem>::iterator temp = active.set.begin(); //Create new iterator on the vector.
+		temp += active.sequence->index; // Move the iterator to the location of sequence.
+		temp += input->index; // Move it further forward according to the given index.
+		*input = *temp; //Set input accordingly.
+		return true; //Return.
+	}
+	else
+	{
+		*input = *active.sequence; //We just want the first item.
+		return true; //Return.
+	}
+	return false; //Catcher case, should never be hit.
 }
 //todo: Implement checklistgroup collection and return.
 bool ChecklistController::getChecklistList(vector<ChecklistGroup>*)
@@ -133,7 +153,7 @@ bool ChecklistController::autoExecute()
 {
 	return autoexecute;
 }
-//todo: Verify
+//todo: Verify - Especially Verify after checklist completion code is complete.
 bool ChecklistController::spawnCheck(int group, bool automagic)
 {
 // Code to tell the compiler to shut up about signed/unsigned mismatch.  Code is implemented in a way to verify no problems.
