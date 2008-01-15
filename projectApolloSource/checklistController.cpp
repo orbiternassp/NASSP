@@ -18,7 +18,11 @@ ChecklistController::~ChecklistController()
 //todo: implement
 bool ChecklistController::getChecklistItem(ChecklistItem* input)
 {
+	if (input->group > -1)
+		return spawnCheck(input->group);
 #ifdef _DEBUG
+	if (active.program.group != -1)
+		*input = *active.sequence;
 	return true;
 #endif
 	return false;
@@ -64,9 +68,17 @@ bool ChecklistController::init(bool final)
 		temp.essential = false;
 		temp.group = 0;
 		temp.manualSelect = true;
-		strcpy(temp.name,"Test Group");
+		strcpy(temp.name,"Test Group 1");
 		temp.relativeEvent = MISSION_TIME;
 		temp.time = -3840;
+		groups.push_back(temp);
+		temp.group = 1;
+		strcpy(temp.name,"Test Group 2");
+		temp.relativeEvent = NO_TIME_DEF;
+		temp.autoSelect = false;
+		groups.push_back(temp);
+		temp.group = 2;
+		strcpy(temp.name,"Test Group 3");
 		groups.push_back(temp);
 	}
 #endif
@@ -102,7 +114,8 @@ void ChecklistController::save(FILEHANDLE scn)
 void ChecklistController::load(FILEHANDLE scn)
 {
 	char *line, buffer[100];
-	line = "";
+	buffer[0] = 0;
+	line="";
 	while (strnicmp(line,ChecklistControllerEndString,strlen(ChecklistControllerEndString)))
 	{
 		oapiReadScenario_nextline(scn,line);
@@ -120,9 +133,128 @@ bool ChecklistController::autoExecute()
 {
 	return autoexecute;
 }
-//todo: implement
+//todo: Verify
 bool ChecklistController::spawnCheck(int group, bool automagic)
 {
-	active = ChecklistContainer(groups[group]);
-	return true;
+// Code to tell the compiler to shut up about signed/unsigned mismatch.  Code is implemented in a way to verify no problems.
+#pragma warning( push )
+#pragma warning( disable : 4018 )
+
+	// Verify input integrity:
+	if (group < 0) //ERROR, HOW DID THIS HAPPEN?
+		return false;
+	if (groups.size() <= group) // group exists?
+		return false;
+	if (!groups[group].manualSelect && !automagic) // group was selected manually which isn't allowed.
+		return false;
+	if (!groups[group].autoSelect && automagic) // group was selected automatically which isn't allowed.
+		return false;
+
+	//Possible cases:
+	//1) There is no group active - COMPLETE
+	if (active.program.group == -1)
+	{
+		// Simply spawn new checklist.
+		active = ChecklistContainer(groups[group]);
+		return true;
+	}
+	//2) group is currently active - COMPLETE
+	if (active.program.group == group)
+	{
+		// No need to do anything, we are trying to start the active checklist.
+		return true;
+	}
+	//3) group is not currently active but is on standby - COMPLETE
+	//Checking standby elements to see if it's there.
+	// init location which will serve dual purpose.  It will tell us if we found it, and where it is.
+	int location = -1;
+	for (int i=0; i < action.size(); i++)
+	{
+		if (action[i].program.group == group) // If we actually found it, save it's location.
+			location = i;
+	}
+	// Do this if it exists.
+	if (location > -1)
+	{
+		//3a) active group is essential - COMPLETE
+		if (active.program.essential)
+		{
+			// Create temporary container.
+			ChecklistContainer temp(action[location]);
+			// Now that we have our data, remove it from the que.
+			for (int i = location; i < action.size()-1; i++)
+			{
+				action[i] = action[i+1]; // Copy the next item into the current slot.
+			}
+			action.pop_back(); //Should not be a problem, this should be a duplicate at this point.
+			action.push_front(temp); //Put our new program at the very beginning.
+			return true;
+		}
+		//3b) active group is not essential. - COMPLETE
+		else
+		{
+			//We're replacing active, so put it back on the que.
+			action.push_front(active);
+			//That last action moved everything down one, save the location.
+			location++;
+			//Load up our program.
+			active = action[location];
+			// Now that we have our data, remove it from the que.
+			for (int i = location; i < action.size()-1; i++)
+			{
+				action[i] = action[i+1]; // Move items after new program up one
+			}
+			action.pop_back(); //Should not be a problem, this should be a duplicate at this point.
+			return true;
+		}
+	}
+	//4) Group needs to be initialized. - DEFAULT!
+	//4a) Group is automagic and not essential - COMPLETE
+	if (automagic && !groups[group].essential)
+	{
+		// It's auto and not essential.  We'll get to it when we get to it, throw it at the back of the que.
+		action.push_back(ChecklistContainer(groups[group]));
+		return true;
+	}
+	//4b) Group is not automagic and not essential - COMPLETE
+	if (!automagic && !groups[group].essential)
+	{
+		//4ba) Active group is essential - COMPLETE
+		if (active.program.essential)
+		{
+			// We don't override active, so just jump in the front of the line.
+			action.push_front(ChecklistContainer(groups[group]));
+			return true;
+		}
+		//4bb) Active group is not essential - COMPLETE
+		else
+		{
+			// We are overriding active, so put active back in the front of the line.
+			action.push_front(active);
+			// Now create a new active for our group.
+			active = ChecklistContainer(groups[group]);
+			return true;
+		}
+	}
+	//4c) Group is essential NOTICE: This disregards automagic completely as it ALWAYS goes to the front. - COMPLETE
+	//4ca) Active group is essential NOTICE: Don't override an essential group. - COMPLETE
+	if (active.program.essential)
+	{
+		// We NEVER override an essential group, so we'll just jump in the front of the line.
+		action.push_front(ChecklistContainer(groups[group]));
+		return true;
+	}
+	//4cb) Active group is not essential - COMPLETE
+	else
+	{
+		// Active is not essential, so push it out of the way (to the front of the line).
+		action.push_front(active);
+		// Spawn new active with our group.
+		active = ChecklistContainer(groups[group]);
+		return true;
+	}
+	// Somehow, we were unable to spawn the checklist.  Getting this return with known valid data represents a bug.
+	return false;
+// reenable warning 4018 concerning signed/unsigned mismatch.
+#pragma warning ( pop )
 }

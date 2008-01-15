@@ -209,7 +209,7 @@ private:
 /// -------------------------------------------------------------
 /// Initializer for the initializer.
 /// -------------------------------------------------------------
-	void initSet(const ChecklistGroup &,vector<ChecklistItem>);
+	void initSet(const ChecklistGroup &,vector<ChecklistItem> &);
 };
 /// -------------------------------------------------------------
 /// This is the actual controller.  It exists once in each vessel
