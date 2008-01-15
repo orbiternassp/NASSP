@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2008/01/14 15:52:33  lassombra
+  *	*Final* version of the interface for the checklist controller.  May need some more
+  *	 data, but should be accessible at this point.  For some reason getting heap errors
+  *	 in deconstructors, doing research into it.
+  *	
   *	Revision 1.6  2008/01/09 09:39:06  lassombra
   *	Completed MFD<->ChecklistController interface.  Coding can now take place on two separate code paths.
   *	
@@ -71,7 +76,19 @@ MFDConnector::~MFDConnector()
 
 {
 }
-
+bool MFDConnector::ConnectTo(Connector *other)
+{
+	if (other)
+	{
+		if (other->GetType() != type)
+		{
+			return false;
+		}
+		other->connectedTo = this;
+	}
+	connectedTo = other;
+	return true;
+}
 bool MFDConnector::ConnectToVessel(VESSEL *v)
 
 {
