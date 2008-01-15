@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2008/01/14 15:52:34  lassombra
+  *	*Final* version of the interface for the checklist controller.  May need some more
+  *	 data, but should be accessible at this point.  For some reason getting heap errors
+  *	 in deconstructors, doing research into it.
+  *	
   *	Revision 1.5  2008/01/09 09:39:06  lassombra
   *	Completed MFD<->ChecklistController interface.  Coding can now take place on two separate code paths.
   *	
@@ -64,6 +69,14 @@ public:
 	/// \return True if we succeeded.
 	///
 	bool ConnectToVessel(VESSEL *v);
+	
+	///
+	/// Do the actual connection.
+	///
+	/// \Param other, connector to connect to.
+	/// \Return true if succeded.
+	///
+	bool ConnectTo(Connector *other);
 
 	///
 	/// Disconnect from the current vessel, if connected.
