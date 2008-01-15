@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2008/01/15 17:43:59  lassombra
+  *	Allows multiple senders to attach to a single receiver.
+  *	
   *	Revision 1.6  2008/01/14 15:52:34  lassombra
   *	*Final* version of the interface for the checklist controller.  May need some more
   *	 data, but should be accessible at this point.  For some reason getting heap errors
@@ -131,6 +134,7 @@ public:
 	/// \param in checklistItem initialized to tell the controller which item to return.
 	/// \return ChecklistItem returned by controller or false if connector isn't connected.
 	///
+
 	bool GetChecklistItem (ChecklistItem *in);
 
 	///
