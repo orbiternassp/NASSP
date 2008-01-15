@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.222  2008/01/14 15:52:39  lassombra
+  *	*Final* version of the interface for the checklist controller.  May need some more
+  *	 data, but should be accessible at this point.  For some reason getting heap errors
+  *	 in deconstructors, doing research into it.
+  *	
   *	Revision 1.221  2008/01/14 01:17:07  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -1246,7 +1251,7 @@ void Saturn::clbkPostCreation() {
 	IMFD_Client.Connect();
 
 	// Connect to the Checklist controller.
-	checkControl.init();
+	checkControl.linktoVessel(this);
 }
 
 void Saturn::GetLEMName(char *s)

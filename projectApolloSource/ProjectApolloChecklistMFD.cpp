@@ -46,6 +46,16 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 }
 ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 {
+	int i = 0;
+	item.group = -1;
+	item.index = i;
+	while (conn.GetChecklistItem(&item))
+	{
+		conn.SetFlashing(item.item,false);
+		i++;
+		item.group = -1;
+		item.index = i;
+	}
 }
 char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 {
@@ -58,6 +68,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 }
 bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 {
+	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 	// Starts the group 0 (which is right now a testing group)
 	if (bt == 0)
 	{
@@ -104,6 +115,14 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 		item.index = -1;
 		if (conn.GetChecklistItem(&item))
 			return true;
+		return true;
+	}
+	if (bt == 11)
+	{
+		item.group = -1;
+		item.index = 0;
+		if (conn.GetChecklistItem(&item))
+			conn.SetFlashing(item.item,true);
 		return true;
 	}
 	return false;
