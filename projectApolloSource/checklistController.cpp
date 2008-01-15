@@ -18,6 +18,9 @@ ChecklistController::~ChecklistController()
 //todo: implement
 bool ChecklistController::getChecklistItem(ChecklistItem* input)
 {
+// Disable signed/unsigned mismatch warning, we're being careful.
+#pragma warning ( push )
+#pragma warning ( disable: 4018 )
 	// Catcher, are we being told to initialize a checklist group?
 	if (input->group > -1)
 	{
@@ -46,6 +49,8 @@ bool ChecklistController::getChecklistItem(ChecklistItem* input)
 		return true; //Return.
 	}
 	return false; //Catcher case, should never be hit.
+// Reenable warnings
+#pragma warning ( pop )
 }
 //todo: Implement checklistgroup collection and return.
 bool ChecklistController::getChecklistList(vector<ChecklistGroup>*)
@@ -57,10 +62,49 @@ bool ChecklistController::failChecklistItem(ChecklistItem* input)
 {
 	return false;
 }
-//todo: Implement stepping code.
+//todo: Verify
 bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 {
-	return false;
+// Disable signed/unsigned mismatch warning, we're being careful.
+#pragma warning ( push )
+#pragma warning ( disable: 4018 )
+	// Input Verification.
+	if (input->group != active.program.group)
+		return false;	//Simply not allowed.
+	if (input->index >= active.set.size())
+			return false; //catcher.
+
+	if (active.set[input->index] == *input) // Just in case
+	{
+		active.set[input->index].complete = true; //This hopefully won't create chaos.
+	}
+	else
+		return false;
+	
+	while (active.sequence != active.set.end() && active.sequence->complete)
+	{
+		//Turn off the flashing.
+		conn.SetFlashing(active.sequence->item,false);
+		//Move to next element.
+		active.sequence ++;
+		//Did we reach the end of the chekclist?  If so, load next.
+		while (active.program.group != -1 && active.sequence == active.set.end())
+		{
+			// Set to empty checklist item
+			active = ChecklistContainer();
+			// Determine if we have another program to switch to.
+			if (action.size() > 0)
+			{
+				// Switch to it and remove it from the que
+				active = action[0];
+				action.pop_front();
+			}
+		}
+		// Keep checking our status.
+	}
+	return true;
+// Reenable signed/unsigned mismatch checking
+#pragma warning ( pop )
 }
 //todo: implement with auto-complete part of timestep function.
 bool ChecklistController::autoComplete(bool)
@@ -277,4 +321,9 @@ bool ChecklistController::spawnCheck(int group, bool automagic)
 	return false;
 // reenable warning 4018 concerning signed/unsigned mismatch.
 #pragma warning ( pop )
+}
+//Todo: Verify
+bool ChecklistController::linktoVessel(VESSEL *vessel)
+{
+	return conn.ConnectToVessel(vessel);
 }
