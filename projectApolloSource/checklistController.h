@@ -39,23 +39,6 @@ struct ChecklistGroup
 		name[0] = 0;
 	}
 /// -------------------------------------------------------------
-/// Copy constructor.
-/// -------------------------------------------------------------
-	ChecklistGroup(const ChecklistGroup &temp)
-	{
-		autoSelect = temp.autoSelect;
-		essential = temp.essential;
-		group = temp.group;
-		manualSelect = temp.manualSelect;
-		relativeEvent = temp.relativeEvent;
-		time = temp.time;
-		name = temp.name;
-	}
-/// -------------------------------------------------------------
-/// Destructor
-/// -------------------------------------------------------------
-	~ChecklistGroup(){}
-/// -------------------------------------------------------------
 /// index defined at runtime.  Use this in a ChecklistItem struct
 /// to start the checklist operation of that group.
 /// -------------------------------------------------------------
@@ -90,7 +73,7 @@ struct ChecklistGroup
 /// -------------------------------------------------------------
 /// Name of the group as should be displayed on the checklist.
 /// -------------------------------------------------------------
-	string name;
+	char name[100];
 };
 /// -------------------------------------------------------------
 /// An individual element in a checklist program.  These elements
@@ -100,6 +83,24 @@ struct ChecklistGroup
 /// -------------------------------------------------------------
 struct ChecklistItem
 {
+/// -------------------------------------------------------------
+/// Default constructor, does a proper "empty" construction
+/// -------------------------------------------------------------
+	ChecklistItem()
+	{
+		group = -1;
+		index = -1;
+		time = 0;
+		relativeEvent = NO_TIME_DEF;
+		failEvent = -1;
+		text[0] = 0;
+		info[0] = 0;
+		automatic = false;
+		item[0] = 0;
+		position = 0;
+		complete = false;
+		failed = false;
+	}
 /// -------------------------------------------------------------
 /// index defined dynaimcally at runtime.  All available
 /// checklists have a group id retrieved from the ChecklistGroup
@@ -130,11 +131,11 @@ struct ChecklistItem
 /// -------------------------------------------------------------
 /// Text to display describing the checklist.
 /// -------------------------------------------------------------
-	string text;
+	char text[100];
 /// -------------------------------------------------------------
 /// extra text to display when the info button is pressed.
 /// -------------------------------------------------------------
-	string info;
+	char info[100];
 /// -------------------------------------------------------------
 /// define whether this checklist will happen automatically in
 /// quickstart mode
@@ -144,7 +145,7 @@ struct ChecklistItem
 /// reference to the panel switch that must be thrown, used to
 /// spawn reference box
 /// -------------------------------------------------------------
-	string item;
+	char item[100];
 /// -------------------------------------------------------------
 /// position the switch must be moved to.  Used for auto detect
 /// of checklist complete.
@@ -165,28 +166,7 @@ struct ChecklistItem
 /// not be expected to be representative of true equality between
 /// the items, but rather is used for an internal check only.
 /// -------------------------------------------------------------
-	bool operator==(ChecklistItem input);
-/// -------------------------------------------------------------
-/// Copy Constructor, for deep copy.
-/// -------------------------------------------------------------
-	ChecklistItem()
-	{	
-		group = -1;
-		index = -1;
-		time = 0;
-		relativeEvent = NO_TIME_DEF;
-		failEvent = -1;
-		automatic = false;
-		position = 0;
-		complete = false;
-		failed = false;
-	}
-	~ChecklistItem()
-	{
-		text.clear();
-		item.clear();
-		info.clear();
-	}
+	bool operator==(ChecklistItem);
 };
 /// -------------------------------------------------------------
 /// Structure containing an active checklist "program"  This
@@ -197,6 +177,22 @@ struct ChecklistItem
 /// -------------------------------------------------------------
 struct ChecklistContainer
 {
+/// -------------------------------------------------------------
+/// Default Constructor.  Initializes an empty container.
+/// -------------------------------------------------------------
+	ChecklistContainer();
+/// -------------------------------------------------------------
+/// Constructor, requires a group to initialize from.
+/// -------------------------------------------------------------
+	ChecklistContainer(const ChecklistGroup &, bool load=false);
+/// -------------------------------------------------------------
+/// Copy Constructor.
+/// -------------------------------------------------------------
+	ChecklistContainer(const ChecklistContainer &);
+/// -------------------------------------------------------------
+/// Assignment operator.
+/// -------------------------------------------------------------
+	void operator=(const ChecklistContainer &);
 /// -------------------------------------------------------------
 /// Checklist Group that this "program" is based on.
 /// -------------------------------------------------------------
@@ -209,50 +205,11 @@ struct ChecklistContainer
 /// An iterator that rests on the current step of the program.
 /// -------------------------------------------------------------
 	vector<ChecklistItem>::iterator sequence;
+private:
 /// -------------------------------------------------------------
-/// Default Constructor.  Initializes an empty container.
+/// Initializer for the initializer.
 /// -------------------------------------------------------------
-	ChecklistContainer(){sequence = set.begin();}
-/// -------------------------------------------------------------
-/// Constructor, requires a group to initialize from.
-/// -------------------------------------------------------------
-	ChecklistContainer(const ChecklistGroup &groupin, bool load=false);
-/// -------------------------------------------------------------
-/// Deconstructor, probably irrelevant, but included incase.
-/// -------------------------------------------------------------
-	~ChecklistContainer();
-	ChecklistContainer(const ChecklistContainer &temp);
-};
-/// -------------------------------------------------------------
-/// A stacked queue used to store the program sequence that is
-/// used by the checklist controller.
-/// -------------------------------------------------------------
-template <class T> class stackedQue: public deque<T>
-{
-public:
-	stackedQue():deque(){}
-	~stackedQue(){}
-/// -------------------------------------------------------------
-/// Used to place an item in the front of the que (as in it is 
-/// being replaced, but execution should return here.
-/// -------------------------------------------------------------
-	void stack(const T &in){push_front(in);}
-/// -------------------------------------------------------------
-/// Used to place an item in the back of the que (as in it has 
-/// been selected by the auto-spawn system and is now ready to be
-/// used when the user gets to it.
-/// -------------------------------------------------------------
-	void que(const T &in){push_back(in);}
-/// -------------------------------------------------------------
-/// Get the next "program" to execute.
-/// -------------------------------------------------------------
-	T *retrieve()
-	{
-		T *temp;
-		temp = new T(*deque::begin());
-		deque::pop_front();
-		return temp;
-	}
+	void initSet(const ChecklistGroup &,vector<ChecklistItem>);
 };
 /// -------------------------------------------------------------
 /// This is the actual controller.  It exists once in each vessel
@@ -354,7 +311,7 @@ private:
 	///This is a "stackable queue" implemented by using either the push
 	///front/push back functions to allow checklist groups to be lined
 	///up for execution.
-	stackedQue<ChecklistContainer> action;
+	deque<ChecklistContainer> action;
 	///The active checklist group.
 	ChecklistContainer active;
 	///The list of all available checklist groups.
@@ -366,7 +323,7 @@ private:
 	///This determines whether or not the checklist gets auto executed.
 	bool autoexecute;
 	///Used to spawn new "program"
-	bool spawnCheck(int group);
+	bool spawnCheck(int group, bool automagic = false);
 };
 
 

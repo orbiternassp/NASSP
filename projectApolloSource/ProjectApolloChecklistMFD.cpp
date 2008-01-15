@@ -61,6 +61,7 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 	{
 		item.group = item.index = -1;
 		item.group = 0;
+		strcpy(item.text,"Dummy Test Item");
 		if (conn.GetChecklistItem(&item))
 			return true;
 		return true;
@@ -105,10 +106,8 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 void ProjectApolloChecklistMFD::Update (HDC hDC)
 {
 	// An example of how to simply output the text element of the "current" item.  Outputs nothing if no checklists are active yet.
-	item.group = -1;
-	item.index = -1;
-	if (conn.GetChecklistItem(&item))
-		TextOut(hDC, 0,0,item.text.c_str(),item.text.size());
+	if ((item.group = item.index = -1,conn.GetChecklistItem(&item)))
+		TextOut(hDC, 0,0,item.text,strlen(item.text));
 }
 void ProjectApolloChecklistMFD::WriteStatus (FILEHANDLE scn) const
 {
