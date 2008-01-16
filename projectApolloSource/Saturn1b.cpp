@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.80  2008/01/14 04:48:43  movieman523
+  *	Fixed LEM separation when the LEM doesn't have the expected name.
+  *	
   *	Revision 1.79  2008/01/14 04:31:07  movieman523
   *	Initial tidyup: ASTP should now work too.
   *	
@@ -1027,74 +1030,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 		return;
 	}
 
-	if (stage == CSM_LEM_STAGE)
-	{
-		if (CsmLmFinalSep1Switch.GetState() || CsmLmFinalSep2Switch.GetState())
-		{
-			if (dockstate == 3)
-			{
-				ProbeJetison = true;
-				bManualUnDock = true;
-			}
-		}
-
-		for (int i=0 ;i<6;i++)
-		{
-			LAUNCHIND[i]=false;
-		}
-
-		if (EVA_IP)
-		{
-			if(!hEVA)
-			{
-				ToggleEVA();
-			}
-		}
-
-		if ((simt-(2+release_time))>=0 && Resetjet)
-		{
-			SetAttitudeLinLevel(2,0);
-			Resetjet = false;
-		}
-
-		if (ToggleEva)
-		{
-			ToggleEVA();
-			if(ASTPMission && dockstate == 3){
-//				UINT meshidx;
-//				VECTOR3 mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
-//				meshidx = AddMesh (hastp, &mesh_dir);
-//				SetMeshVisibleInternal (meshidx, true);
-			}
-		}
-		if (bToggleHatch)
-		{
-		ToggelHatch();
-		bToggleHatch=false;
-			if(ASTPMission && dockstate == 3)
-			{
-//				UINT meshidx;
-//				VECTOR3 mesh_dir=_V(0.0,-0.2,37.40-12.25-21.5);
-//				meshidx = AddMesh (hastp, &mesh_dir);
-//				SetMeshVisibleInternal (meshidx, true);
-			}
-		}
-		if (bManualUnDock)
-		{
-			release_time = simt;
-			Resetjet = true;
-			DockStage (dockstate);
-			bManualUnDock=false;
-		}
-
-		if (CMSMPyros.Blown())
-		{
-			SeparateStage (CM_STAGE);
-			bManualSeparate=false;
-			SetStage(CM_STAGE);
-		}
-	}
-	else  if (stage == CSM_ABORT_STAGE)
+	if (stage == CSM_ABORT_STAGE)
 	{
 		SetEngineLevel(ENGINE_MAIN,1);
 	//sprintf(oapiDebugString(), "Mode Abort 1B%f", abortTimer);

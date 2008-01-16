@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.223  2008/01/15 19:13:05  lassombra
+  *	Implemented Vessel connector and Checklist Completion step.  The third button down on the left side completes the "current" step on the temporary MFD.
+  *	
+  *	Additionally made dummy checklists reference "Mission Timer Switch" so that the flashing function can be tested.
+  *	
+  *	Finally, updated the MFD demo to show one way to do a flashing switch, and a recommended deconstructor implementation.
+  *	
   *	Revision 1.222  2008/01/14 15:52:39  lassombra
   *	*Final* version of the interface for the checklist controller.  May need some more
   *	 data, but should be accessible at this point.  For some reason getting heap errors
@@ -463,6 +470,8 @@ extern "C" {
 
 //extern FILE *PanelsdkLogFile;
 
+#pragma warning(disable:4355)
+
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 
 	agc(soundlib, dsky, dsky2, imu, Panelsdk, iuCommandConnector, sivbControlConnector), 
@@ -507,6 +516,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SPSPropellant(ph_sps, Panelsdk),
 	SPSEngine(th_main[0]),
 	CMSMPyros("CM-SM-Pyros", Panelsdk),
+	CMDockingRingPyros("CM-DockingRing-Pyros", Panelsdk),
 	EcsGlycolPumpsSwitch(Panelsdk),
 	SuitCompressor1Switch(Panelsdk),
 	SuitCompressor2Switch(Panelsdk),
@@ -673,7 +683,6 @@ void Saturn::initSaturn()
 	CSMPerigee = 0.0;
 
 	HatchOpen = false;
-	ProbeJetison = false;
 	LEMdatatransfer = false;
 	PostSplashdownPlayed = false;
 	SplashdownPlayed = false;
@@ -1099,8 +1108,6 @@ void Saturn::initSaturn()
 
 	SIISepState = false;
 	bRecovery = false;
-	ActivateLEM = false;
-	ActivateS4B = false;
 	RCS_Full = true;
 	ReadyAstp = false;
 	Abort_Locked = false;
@@ -1141,8 +1148,9 @@ void Saturn::initSaturn()
 	cmpidx = -1;
 
 	ToggleEva = false;
-	ActivateASTP = false;
 	OrbiterAttitudeDisabled = false;
+	Scorrec = false;
+	Resetjet = false;
 
 	//
 	// LM landing data.
@@ -1185,7 +1193,6 @@ void Saturn::initSaturn()
 
 	hEVA = 0;
 
-	
 	//
 	// Timestep tracking for debugging.
 	//
@@ -3660,19 +3667,6 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0;
 	}
 
-	/*
-
-	It looks like ActivateLEM is an old construction, no clue what the original 
-	purpose was, but it seems to make no sense that the user can change it
-
-	if (key == OAPI_KEY_4 && down == true) {
-		if (ActivateLEM) {
-			ActivateLEM = false;
-		}
-		return 1;
-	}
-	*/
-
 	if (key == OAPI_KEY_9 && down == true && InVC && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
 		if (viewpos == SATVIEW_LEFTDOCK){
 			viewpos = SATVIEW_RIGHTDOCK;
@@ -4190,6 +4184,10 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 	switch (stage) {
 	case PRELAUNCH_STAGE:
 		LaunchCountdown(simt);
+		break;
+
+	case CSM_LEM_STAGE:
+		StageSix(simt);
 		break;
 
 	case CM_STAGE:
@@ -5149,6 +5147,397 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	/* sprintf(oapiDebugString(), "SIVB thrust %.1f isp %.2f propellant %.1f", 
 		GetThrusterLevel(th_main[0]) * GetThrusterMax(th_main[0]), GetThrusterIsp(th_main[0]), GetPropellantMass(ph_3rd));
 	*/
+}
+
+void Saturn::StageSix(double simt)
+
+{
+	//
+	// Should we be turning off these lights here?
+	//
+
+	for (int i=0 ;i<6; i++)
+	{
+		LAUNCHIND[i]=false;
+	}
+
+	if (ApolloNo == 13) {
+
+		//
+		// Play cryo-stir audio.
+		//
+
+		if (!CryoStir && MissionTime >= (APOLLO_13_EXPLOSION_TIME - 30))
+		{
+			double TimeW = oapiGetTimeAcceleration ();
+			if (TimeW > 1){
+				oapiSetTimeAcceleration (1);
+			}
+
+			SApollo13.play(NOLOOP, 255);
+			CryoStir = true;
+		}
+
+		//
+		// Play explosion audio.
+		//
+
+		if (CryoStir && !ApolloExploded && MissionTime >= APOLLO_13_EXPLOSION_TIME) {
+			double TimeW = oapiGetTimeAcceleration ();
+			if (TimeW > 1){
+				oapiSetTimeAcceleration (1);
+			}
+
+			if (SApollo13.isValid()) {
+				SApollo13.done();
+			}
+
+			SExploded.play(NOLOOP,255);
+			SExploded.done();
+
+			MasterAlarm();
+
+			//
+			// AGC restarted as the explosion occured.
+			//
+
+			agc.ForceRestart();
+
+			ApolloExploded = true;
+
+			//
+			// Update the mesh.
+			//
+
+			SetCSMStage();
+
+			//
+			// Blow off Panel 4.
+			//
+
+			VESSELSTATUS vs1;
+
+			const double CGOffset = 12.25+21.5-1.8+0.35;
+
+			VECTOR3 vel1 = { 0.0, -0.25, 0.15 };
+			VECTOR3 ofs1 = { 0, 0, 30.25 - CGOffset};
+
+			GetStatus (vs1);
+
+			VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
+
+			Local2Rel (ofs1, vs1.rpos);
+			GlobalRot (vel1, rofs1);
+
+			vs1.rvel.x = rvel1.x+rofs1.x;
+			vs1.rvel.y = rvel1.y+rofs1.y;
+			vs1.rvel.z = rvel1.z+rofs1.z;
+			vs1.vrot.x = 0.005;
+			vs1.vrot.y = 0.05;
+			vs1.vrot.z = 0.01;
+
+			char VName[256];
+
+			GetApolloName(VName);
+			strcat (VName, "-PANEL4");
+
+			oapiCreateVessel(VName,"ProjectApollo/SM-Panel4",vs1);
+
+			//
+			// This is actually wrong because it will give us an
+			// artificially low mass for the CSM. We should just disable
+			// the engines.
+			//
+
+			SetPropellantMass(ph_sps,0);
+		}
+
+		//
+		// Play Kranz comments in the background.
+		//
+
+		if (!KranzPlayed && (MissionTime >= APOLLO_13_EXPLOSION_TIME + 30)) {
+
+			if (SExploded.isValid()) {
+				SExploded.stop();
+				SExploded.done();
+			}
+
+			SKranz.play(NOLOOP, 150);
+			SKranz.done();
+
+			KranzPlayed = true;
+		}
+
+		if (ApolloExploded && ph_o2_vent) {
+			TankQuantities t;
+			GetTankQuantities(t);
+
+			SetThrusterLevel(th_o2_vent, t.O2Tank1Quantity + 0.1);
+			SetO2TankQuantities(GetPropellantMass(ph_o2_vent) / 2.0);
+		}
+	}
+
+	//
+	// Check for course correction time and shut down time acceleration if appropriate.
+	//
+
+	if (TLICapableBooster && !Scorrec && MissionTime >= COURSE_CORRECTION_START_TIME && MissionTime < COURSE_CORRECTION_END_TIME){
+		double TimeW = oapiGetTimeAcceleration ();
+		if (TimeW > 1.0){
+			oapiSetTimeAcceleration (1.0);
+		}
+		SCorrection.play(NOLOOP,255);
+		SCorrection.done();
+		Scorrec = true;
+	}
+
+	if (EVA_IP){
+		if(!hEVA){
+			ToggleEVA();
+		}
+	}
+
+	if ((simt-(2+release_time))>=0 && Resetjet) {
+		SetAttitudeLinLevel(_V(0.0,0.0,0.0));
+		Resetjet =false;
+		release_time=0;
+	}
+
+	if (ToggleEva){
+		ToggleEVA();
+	}
+
+	if (bToggleHatch){
+		ToggelHatch();
+		bToggleHatch=false;
+	}
+
+	//
+	// Handle automation of unmanned launches.
+	//
+
+	if (!Crewed) {
+		switch (StageState)
+		{
+		case 0:
+			if (CSMBurn) {
+				NextMissionEventTime = CSMBurnStart - 300.0;
+				StageState++;
+			}
+			break;
+
+		case 1:
+			if (MissionTime >= NextMissionEventTime) {
+				ActivateCSMRCS();
+				StageState++;
+			}
+			break;
+
+		case 2:
+			SlowIfDesired();
+			ActivateNavmode(NAVMODE_PROGRADE);
+			NextMissionEventTime = CSMBurnStart;
+			StageState++;
+			break;
+
+		case 3:
+			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+				SPSEngine.EnforceBurn(true);
+				NextMissionEventTime = MissionTime + 0.25;
+				StageState++;
+			}
+			break;
+
+		case 4:
+			if (MissionTime >= NextMissionEventTime) {
+				OBJHANDLE hPlanet = GetGravityRef();
+				double prad = oapiGetSize(hPlanet);
+				double ap;
+				GetApDist(ap);
+
+				ActivateNavmode(NAVMODE_PROGRADE);
+				SPSEngine.EnforceBurn(true);
+
+				NextMissionEventTime = MissionTime + 0.25;
+
+				//
+				// Burn until the orbit is about right or we're out of fuel.
+				//
+
+				if ((ap >= (prad + (CSMApogee * 1000.0))) || (actualFUEL <= 0.1)) {
+					StageState++;
+					DeactivateNavmode(NAVMODE_PROGRADE);
+					DeactivateCSMRCS();
+					SPSEngine.EnforceBurn(false);
+					NextMissionEventTime = MissionTime + CalculateApogeeTime() - 800;
+					StageState++;
+				}
+			}
+			break;
+
+		//
+		// Get a more accurate apogee time.
+		//
+
+		case 5:
+			if (MissionTime >= NextMissionEventTime) {
+				NextMissionEventTime = MissionTime + CalculateApogeeTime() - 100;
+				StageState++;
+			}
+			break;
+
+		case 6:
+			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+				ActivateCSMRCS();
+				ActivateNavmode(NAVMODE_RETROGRADE);
+				NextMissionEventTime = MissionTime + CalculateApogeeTime() - 15;
+				StageState++;
+			}
+			break;
+
+		case 7:
+			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+
+				OBJHANDLE hPlanet = GetGravityRef();
+				double prad = oapiGetSize(hPlanet);
+				double pe;
+				GetPeDist(pe);
+
+				SPSEngine.EnforceBurn(true);
+				ActivateNavmode(NAVMODE_RETROGRADE);
+
+				NextMissionEventTime = MissionTime + 0.25;
+
+				if ((pe <= (prad + (CSMPerigee * 1000.0))) || (actualFUEL <= 0.1)) {
+					StageState++;
+					ActivateNavmode(NAVMODE_PROGRADE);
+					SPSEngine.EnforceBurn(false);
+					CSMBurn = false;
+					NextMissionEventTime = MissionTime + 500.0;
+					StageState++;
+				}
+			}
+			break;
+
+		case 8:
+			if (MissionTime >= NextMissionEventTime) {
+				DeactivateNavmode(NAVMODE_PROGRADE);
+				ActivateNavmode(NAVMODE_KILLROT);
+				NextMissionEventTime = MissionTime + 100.0;
+				StageState++;
+			}
+			break;
+
+		case 9:
+			if (MissionTime >= NextMissionEventTime) {
+				DeactivateNavmode(NAVMODE_PROGRADE);
+				DeactivateNavmode(NAVMODE_KILLROT);
+				DeactivateCSMRCS();
+				StageState++;
+			}
+			break;
+
+			//
+			// Final acceleration burn prior to entry.
+			//
+
+		case 10:
+			if (CSMAccelSet) {
+				NextMissionEventTime = CSMAccelTime - 180;
+				StageState++;
+			}
+			break;
+
+		case 11:
+			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+				ActivateCSMRCS();
+				ActivateNavmode(NAVMODE_PROGRADE);
+				NextMissionEventTime = CSMAccelTime;
+				StageState++;
+			}
+			break;
+
+		//
+		// What we really need to do here is ensure that we stay pitched down at the appropriate
+		// level relative to the local horizon. Currently this code will leave us with a perigee
+		// that's way too high, so disable it for now.
+		//
+
+		case 12:
+			if (MissionTime >= NextMissionEventTime) {
+//				SlowIfDesired();
+//				SPSEngine.EnforceBurn(true);
+				ActivateNavmode(NAVMODE_PROGRADE);
+				NextMissionEventTime = CSMAccelEnd;
+				StageState++;
+			}
+			break;
+
+		case 13:
+			if (MissionTime >= NextMissionEventTime) {
+				ActivateNavmode(NAVMODE_PROGRADE);
+				SPSEngine.EnforceBurn(false);
+				CSMAccelSet = false;
+				NextMissionEventTime = MissionTime + 200.0;
+				StageState++;
+			}
+			break;
+
+		case 14:
+			if (MissionTime >= NextMissionEventTime) {
+				ActivateNavmode(NAVMODE_KILLROT);
+				NextMissionEventTime = MissionTime + 50.0;
+				StageState++;
+			}
+			break;
+
+		case 15:
+			if (MissionTime >= NextMissionEventTime) {
+				DeactivateNavmode(NAVMODE_PROGRADE);
+				DeactivateNavmode(NAVMODE_KILLROT);
+				DeactivateCSMRCS();
+				StageState++;
+			}
+			break;
+		}
+
+		if (CMSepSet && (MissionTime >= CMSepTime)) {
+			SlowIfDesired();
+			CmSmSep1Switch.SwitchTo(TOGGLESWITCH_UP);
+			CmSmSep2Switch.SwitchTo(TOGGLESWITCH_UP);
+		}
+	}
+
+	if (CMDockingRingPyros.Blown() && HasProbe)
+	{
+		if (GetDockHandle(0))
+		{
+		// Undock
+			Undock(0);
+			// Auto translation manoever
+			SetAttitudeLinLevel(2,-1);
+			release_time = simt;
+			Resetjet = true;
+		}
+		//Time to hear the Stage separation
+		SMJetS.play(NOLOOP);
+		// Disable docking probe because it's jettisoned 
+		dockingprobe.SetEnabled(false);
+		HasProbe = false;
+		SetDockingProbeMesh();
+	}
+
+	if (CMSMPyros.Blown())
+	{
+		SeparateStage(CM_STAGE);
+		bManualSeparate = false;
+		SetStage(CM_STAGE);
+	}
 }
 
 void Saturn::StartAbort()

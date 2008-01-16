@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.233  2008/01/14 01:17:08  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.232  2007/12/29 21:16:02  tschachim
   *	Bugfix.
   *	
@@ -1779,10 +1782,12 @@ void Saturn::SetSwitches(int panel) {
 
 	SeparationSwitchesRow.Init(AID_SEPARATIONSWITCHES, MainPanel);
 	EDSSwitch.Init				  (  0,	23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow);
-	CsmLmFinalSep1Switch.Init	  ( 43, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow);
+	CsmLmFinalSep1Switch.Init	  ( 43, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow, &CMDockingRingPyros, 0);
 	CsmLmFinalSep1Switch.InitGuard( 42,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_34x61]);
-	CsmLmFinalSep2Switch.Init	  ( 87, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow);
+	CsmLmFinalSep1Switch.WireTo(&PyroPower);
+	CsmLmFinalSep2Switch.Init	  ( 87, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow, &CMDockingRingPyros, 0);
 	CsmLmFinalSep2Switch.InitGuard( 86,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_34x61]);
+	CsmLmFinalSep2Switch.WireTo(&PyroPower);
 	CmSmSep1Switch.Init			  (131, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SeparationSwitchesRow, &CMSMPyros, 0);
 	CmSmSep1Switch.InitGuard      (130,  0, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_34x61], 72);
 	CmSmSep1Switch.SetFailed(SwitchFail.SMJett1Fail != 0);
@@ -6019,9 +6024,6 @@ void Saturn::InitSwitches() {
 	//
 	// Old stuff. Delete when no longer required.
 	//
-
-	RPswitch17 = false;
-
 	CMCswitch = true;
 }
 

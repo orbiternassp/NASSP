@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2008/01/14 01:17:03  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.15  2008/01/12 04:14:10  movieman523
   *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
   *	
@@ -709,7 +712,6 @@ protected:
 	bool RPswitch14;
 	bool RPswitch15;
 	bool RPswitch16;
-	bool RPswitch17;
 
 	bool LPswitch1;
 	bool LPswitch2;

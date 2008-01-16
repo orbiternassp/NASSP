@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2008/01/14 04:31:11  movieman523
+  *	Initial tidyup: ASTP should now work too.
+  *	
   *	Revision 1.36  2007/12/04 20:26:36  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -221,7 +224,6 @@ protected:
 	void StageOne(double simt, double simdt);
 	void StageTwo(double simt);
 	void StageFour(double simt, double simdt);
-	void StageSix(double simt);
 	void StageLaunchSIVB(double simt);
 
 	void ConfigureStageMeshes(int stage_state);
@@ -249,7 +251,6 @@ protected:
 	//
 
 	bool GoHover;
-	bool Resetjet;
 
 	//
 	// End state.
@@ -276,7 +277,6 @@ protected:
 
 	Sound DockS;
 	Sound SpeedS;
-	Sound SCorrection;
 	Sound S5P100;
 	Sound SRover;
 	Sound SecoSound;
