@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2008/01/09 09:39:06  lassombra
+  *	Completed MFD<->ChecklistController interface.  Coding can now take place on two separate code paths.
+  *	
+  *	Anyone who wants to work on the MFD can at this point do so using the existing connector code.
+  *	
+  *	None of the functions will exactly DO anything at the moment, but that is being worked on.
+  *	
   *	Revision 1.13  2008/01/09 01:46:45  movieman523
   *	Added initial support for talking to checklist controller from MFD.
   *	
@@ -294,6 +301,7 @@ public:
 		MFD_PANEL_GET_CHECKLIST_LIST,			///< Get list of allowed checklists.
 		MFD_PANEL_FAIL_ITEM,					///< Fail a checklist step.
 		MFD_PANEL_COMPLETE_ITEM,				///< Complete a checklist step.
+		MFD_PANEL_CHECKLIST_AUTOCOMPLETE_QUERY	///< Find out the autocomplete state.
 	};
 
 	PanelConnector(PanelSwitches &p, ChecklistController &c);
