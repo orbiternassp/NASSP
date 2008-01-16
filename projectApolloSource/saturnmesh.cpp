@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.68  2008/01/10 05:42:20  movieman523
+  *	Hopefully fix Saturn 1b mass.
+  *	
   *	Revision 1.67  2007/11/26 17:59:06  movieman523
   *	Assorted tidying up of state variable structures.
   *	
@@ -602,10 +605,6 @@ void Saturn::SetCSMStage ()
 	SetBankMomentScale (0);
 	SetLiftCoeffFunc (0);
 
-	if (bManualUnDock) {
-		dockstate = 4;
-	}
-
 	AddSM(30.25 - CGOffset, true);
 
 	VECTOR3 mesh_dir;
@@ -679,7 +678,6 @@ void Saturn::SetCSMStage ()
 	OrbiterAttitudeToggle.SetActive(true);
 
 	ThrustAdjust = 1.0;
-	ActivateASTP = false;
 }
 
 void Saturn::SetDockingProbeMesh() {

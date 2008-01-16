@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2007/11/30 17:46:32  movieman523
+  *	Implemented remaining meters as 0-5V voltmeters for now.
+  *	
   *	Revision 1.70  2007/11/30 16:40:40  movieman523
   *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
   *	
@@ -551,7 +554,7 @@ void LEM::InitPanel() {
 	RPswitch14=false;
 	RPswitch15=false;
 	RPswitch16=false;
-	RPswitch17=false;
+
 	ATT2switch=false;
 	ATT3switch=false;
 	ATT1switch=false;
@@ -3824,7 +3827,6 @@ int LEM::GetRPSwitchState()
 	state.u.RPswitch14 = RPswitch14;
 	state.u.RPswitch15 = RPswitch15;
 	state.u.RPswitch16 = RPswitch16;
-	state.u.RPswitch17 = RPswitch17;
 
 	return state.word;
 }
@@ -3851,5 +3853,4 @@ void LEM::SetRPSwitchState(int s)
 	RPswitch14 = state.u.RPswitch14;
 	RPswitch15 = state.u.RPswitch15;
 	RPswitch16 = state.u.RPswitch16;
-	RPswitch17 = state.u.RPswitch17;
 }

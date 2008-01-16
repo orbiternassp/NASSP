@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.269  2008/01/14 01:17:07  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.268  2008/01/11 05:24:12  movieman523
   *	Added LEM fuel masses; currently they're passed to the LEM but it ignores them.
   *	
@@ -2177,8 +2180,8 @@ protected:
 	GuardedPushSwitch CmRcsHeDumpSwitch;
 
 	ToggleSwitch	    EDSSwitch;				
-	GuardedToggleSwitch CsmLmFinalSep1Switch;
-	GuardedToggleSwitch CsmLmFinalSep2Switch;
+	GuardedTwoOutputSwitch CsmLmFinalSep1Switch;
+	GuardedTwoOutputSwitch CsmLmFinalSep2Switch;
 	GuardedTwoOutputSwitch CmSmSep1Switch;
 	GuardedTwoOutputSwitch CmSmSep2Switch;
 	SIVBPayloadSeparationSwitch SIVBPayloadSepSwitch;
@@ -3668,8 +3671,6 @@ protected:
 	// old stuff begin
 	//
 
-	bool RPswitch17;
-
 	bool CMCswitch;
 	bool SCswitch;
 
@@ -4093,9 +4094,8 @@ protected:
 	bool bAbtlocked;
 	bool bRecovery;
 
-	bool ActivateLEM;
-	bool ActivateS4B;
 	bool ToggleEva;
+	bool Resetjet;
 
 	#define SATVIEW_LEFTSEAT		0
 	#define SATVIEW_RIGHTSEAT		1
@@ -4116,8 +4116,7 @@ protected:
 	int probeextidx;
 	int crewidx;
 	int cmpidx;
-	
-	bool ActivateASTP;
+
 	bool OrbiterAttitudeDisabled;
 
 	bool bManualSeparate;
@@ -4229,6 +4228,7 @@ protected:
 	ELS els;
 
 	Pyro CMSMPyros;
+	Pyro CMDockingRingPyros;
 
 	//
 	// Vessel handles.
@@ -4346,6 +4346,7 @@ protected:
 	virtual void CreateStageOne() = 0;
 
 	void StageOrbitSIVB(double simt, double simdt);
+	void StageSix(double simt);
 	void JostleViewpoint(double amount);
 	double CalculateApogeeTime();
 	void UpdatePayloadMass();
@@ -4501,6 +4502,7 @@ protected:
 	Sound CrewDeadSound;
 	Sound RCSFireSound;
 	Sound RCSSustainSound;
+	Sound SCorrection;
 
 	///
 	/// Drogue deployment message.
