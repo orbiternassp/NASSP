@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/08/13 21:39:29  tschachim
+  *	Bugfix sextant FOV.
+  *	
   *	Revision 1.22  2007/08/13 16:06:20  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -546,19 +549,11 @@ void Saturn::SetView(double offset, bool update_direction)
 				break;
 
 			case SATVIEW_LEFTDOCK:
-				if (dockstate == 13) {
-					v = _V(0, 0, 2.5 + offset);
-				} else {
-					v = _V(-0.65, 1.05, 0.25 + offset);
-				}
+				v = _V(-0.65, 1.05, 0.25 + offset);
 				break;
 			
 			case SATVIEW_RIGHTDOCK:
-				if (dockstate == 13) {
-					v = _V(0, 0, 2.5 + offset);
-				} else {
-					v = _V(0.65, 1.05, 0.25 + offset);
-				}
+				v = _V(0.65, 1.05, 0.25 + offset);
 				break;
 
 			case SATVIEW_GNPANEL:

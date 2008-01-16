@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.224  2008/01/16 04:14:24  movieman523
+  *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
+  *	
   *	Revision 1.223  2008/01/15 19:13:05  lassombra
   *	Implemented Vessel connector and Checklist Completion step.  The third button down on the left side completes the "current" step on the temporary MFD.
   *	
@@ -1113,7 +1116,6 @@ void Saturn::initSaturn()
 	Abort_Locked = false;
 
 	stage = 0;
-	dockstate = 0;
 
 	KEY1=false;
 	KEY2=false;
@@ -1615,7 +1617,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "SATTYPE", SaturnType);
-	oapiWriteScenario_int (scn, "DOCKSTATE", dockstate);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
 	oapiWriteScenario_float (scn, "TCP", TCPO);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
@@ -2369,9 +2370,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "SATTYPE", 7)) {
 		sscanf (line+7, "%d", &SaturnType);
-	}
-	else if (!strnicmp (line, "DOCKSTATE", 9)) {
-        sscanf (line+9, "%d", &dockstate);
 	}
 	else if (!strnicmp (line, "AUTOTIMER", 9)) {
         sscanf (line+9, "%f", &ftcp);

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.270  2008/01/16 04:14:24  movieman523
+  *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
+  *	
   *	Revision 1.269  2008/01/14 01:17:07  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -2011,8 +2014,6 @@ protected:
 	UINT SPSidx;
 
 	bool LEM_DISPLAY;
-
-	int dockstate;
 
 	///
 	/// The Saturn vehicle number. Saturn 1b will usually be in the 200s, and Saturn V in the 500s.

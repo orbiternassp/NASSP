@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.81  2008/01/16 04:14:23  movieman523
+  *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
+  *	
   *	Revision 1.80  2008/01/14 04:48:43  movieman523
   *	Fixed LEM separation when the LEM doesn't have the expected name.
   *	
@@ -953,65 +956,6 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
-	if (hAstpDM)
-	{
-		if (DestroyAstp)
-		{
-			Undock(0);
-			ReadyAstp1 = false;
-			oapiDeleteVessel(hAstpDM);
-			hAstpDM=NULL;
-			DestroyAstp=false;
-		}
-		if (GetDockStatus(GetDockHandle(0)) == hAstpDM )
-		{
-			if(dockstate == 4)
-			{
-				if(ASTPMission)
-					ReadyAstp1=true;
-				bManualUnDock = true;
-			}
-		}
-	}
-	else
-	{
-		if(ASTPMission)
-		{
-			char VName[256];
-			strcpy (VName, GetName()); strcat (VName, "-ASTPDM");
-			hAstpDM = oapiGetVesselByName(VName);
-		}
-	}
-
-	if (hs4bM)
-	{
-		if (GetDockStatus(GetDockHandle(0)) == hs4bM)
-		{
-			if(ASTPMission)
-				ReadyAstp=true;
-			dockstate=2;
-			//	sprintf(oapiDebugString() ,"S4B %f");
-		}
-		else
-		{
-			ReadyAstp=false;
-			//	sprintf(oapiDebugString() ,"NOT S4B %f");
-		}
-
-		if (dockstate>=2 && !S4BASTP)
-		{
-			if(ASTPMission)
-				S4BASTP=true;
-		}
-	}
-	else
-	{
-		char VName[256];
-
-		strcpy (VName, GetName()); strcat (VName, "-S4BSTG");
-		hs4bM = oapiGetVesselByName(VName);
-	}
-
 	if (bAbort && stage <= LAUNCH_STAGE_TWO)
 	{
 		if (stage < LAUNCH_STAGE_ONE)
@@ -1114,10 +1058,6 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 void Saturn1b::SaveVehicleStats(FILEHANDLE scn)
 
 {
-	if (dockstate==6) {
-		oapiWriteScenario_float (scn, "DOCKANGLE", DockAngle);
-	}
-
 	//
 	// Fuel mass on launch. This could be made generic in saturn.cpp
 	//
