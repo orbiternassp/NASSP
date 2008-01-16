@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.88  2008/01/14 04:31:10  movieman523
+  *	Initial tidyup: ASTP should now work too.
+  *	
   *	Revision 1.87  2008/01/14 01:17:06  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -1515,7 +1518,6 @@ void SaturnV::SeparateStage (int new_stage)
 
 		SeparationS.play(NOLOOP,255);
 
-		dockstate = 1;
 		SetCSMStage();
 
 		// Set LM landing site in the AGC for Simple AGC P16 etc.

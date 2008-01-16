@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2008/01/14 04:31:09  movieman523
+  *	Initial tidyup: ASTP should now work too.
+  *	
   *	Revision 1.71  2008/01/14 01:17:06  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -708,137 +711,6 @@ void Saturn1b::SetSecondStageEngines ()
 	iu.SetVesselStats(ISP_SECOND_VAC, THRUST_SECOND_VAC);
 }
 
-void Saturn1b::DockStage (UINT dockstatus)
-{
-	VESSELSTATUS vs1;
-	VESSELSTATUS vs2;
-	VESSELSTATUS vs3;
-	VESSELSTATUS vs4;
-	VESSELSTATUS vs5;
-	VECTOR3 ofs1 = _V(0,0,0);
-	VECTOR3 ofs2 = _V(0,0,0);
-	VECTOR3 ofs3 = _V(0,0,0);
-	VECTOR3 ofs4 = _V(0,0,0);
-	VECTOR3 ofs5 = _V(0,0,0);
-	VECTOR3 vel1 = _V(0,0,0);
-	VECTOR3 vel2 = _V(0,0,0);
-	VECTOR3 vel3 = _V(0,0,0);
-	VECTOR3 vel4 = _V(0,0,0);
-	VECTOR3 vel5 = _V(0,0,0);
-	SetEngineLevel(ENGINE_MAIN, 0);
-	GetStatus (vs1);
-	GetStatus (vs2);
-	GetStatus (vs3);
-	GetStatus (vs4);
-	GetStatus (vs5);
-	vs1.eng_main = vs1.eng_hovr = 0.0;
-	vs2.eng_main = vs2.eng_hovr = 0.0;
-	vs3.eng_main = vs3.eng_hovr = 0.0;
-	vs4.eng_main = vs4.eng_hovr = 0.0;
-	vs5.eng_main = vs5.eng_hovr = 0.0;
-
-	if (dockstatus == 0)
-	{
-		ofs1 = OFS_STAGE1;
-		vel1 = _V(0,0,-4.0);
-		ofs2 = OFS_TOWER;
-		vel2 = _V(2.0,2.0,12.0);
-	}
-	else if (dockstatus == 1)
-	{
-	 	ofs1 = OFS_STAGE2;
-		vel1 = _V(0,0,-0.235);
-		ofs2 = OFS_STAGE21;
-		vel2 = _V(0.5,0.5,-0.55);
-		ofs3 = OFS_STAGE22;
-		vel3 = _V(-0.5,0.5,-0.55);
-		ofs4 = OFS_STAGE23;
-		vel4 = _V(0.5,-0.5,-0.55);
-		ofs5 = OFS_STAGE24;
-		vel5 = _V(-0.5,-0.5,-0.55);
-	}
-	else if (dockstatus == 2||dockstatus == 6)
-	{
-	 	ofs1 = RelPos;
-		vel1 = _V(0,0,-0.5);
-	}
-
-	VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
-	VECTOR3 rofs2, rvel2 = {vs2.rvel.x, vs2.rvel.y, vs2.rvel.z};
-	VECTOR3 rofs3, rvel3 = {vs3.rvel.x, vs3.rvel.y, vs3.rvel.z};
-	VECTOR3 rofs4, rvel4 = {vs4.rvel.x, vs4.rvel.y, vs4.rvel.z};
-	VECTOR3 rofs5, rvel5 = {vs5.rvel.x, vs5.rvel.y, vs5.rvel.z};
-	Local2Rel (ofs1, vs1.rpos);
-	Local2Rel (ofs2, vs2.rpos);
-	Local2Rel (ofs3, vs3.rpos);
-	Local2Rel (ofs4, vs4.rpos);
-	Local2Rel (ofs5, vs5.rpos);
-	GlobalRot (vel1, rofs1);
-	GlobalRot (vel2, rofs2);
-	GlobalRot (vel3, rofs3);
-	GlobalRot (vel4, rofs4);
-	GlobalRot (vel5, rofs5);
-	vs1.rvel.x = rvel1.x+rofs1.x;
-	vs1.rvel.y = rvel1.y+rofs1.y;
-	vs1.rvel.z = rvel1.z+rofs1.z;
-	vs2.rvel.x = rvel2.x+rofs2.x;
-	vs2.rvel.y = rvel2.y+rofs2.y;
-	vs2.rvel.z = rvel2.z+rofs2.z;
-	vs3.rvel.x = rvel3.x+rofs3.x;
-	vs3.rvel.y = rvel3.y+rofs3.y;
-	vs3.rvel.z = rvel3.z+rofs3.z;
-	vs4.rvel.x = rvel4.x+rofs4.x;
-	vs4.rvel.y = rvel4.y+rofs4.y;
-	vs4.rvel.z = rvel4.z+rofs4.z;
-	vs5.rvel.x = rvel5.x+rofs5.x;
-	vs5.rvel.y = rvel5.y+rofs5.y;
-	vs5.rvel.z = rvel5.z+rofs5.z;
-	VESSELSTATUS vs4b;
-	VECTOR3 ofs = _V(0,0,0);
-	VECTOR3 vel = _V(0,0,0.6);
-
-   switch (dockstatus)	
-   {
-   case 3:
-		if(bManualUnDock) {
-
-			//DM Jetison preparation
-			ofs = OFS_DOCKING2;
-			GetStatus (vs4b);
-			vs4b.eng_main = vs4b.eng_hovr = 0.0;
-			SetEngineLevel(ENGINE_MAIN, 0);
-			StageTransform(this,&vs4b,ofs,vel);
-			vs4b.status=0;
-			vs4b.vrot.x = 0.0;
-			vs4b.vrot.y = 0.0;
-			vs4b.vrot.z = 0.0;
-
-			/// \todo Fix that...
-			if (ProbeJetison){
-				/// \todo SetCSM2Stage is buggy
-				SetCSMStage();
-				// SetCSM2Stage ();
-				StageS.play();
-				bManualUnDock= false;
-				dockstate=4;
-				ProbeJetison=false;
-				break;
-			}
-			else{
-				ShiftCentreOfMass (_V(0,0,-21.5));
-				SetCSMStage ();
-				SMJetS.play();
-				dockstate=4;
-				bManualUnDock= false;
-				break;
-			}
-		}
-		break;
-	case 5:
-	   break;
-	}
-}
-
 void Saturn1b::SeparateStage (int new_stage)
 
 {
@@ -1045,11 +917,6 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetCSMStage();
 		ShiftCentreOfMass(_V(0, 0, 20.8));
 		SeparationSpeed = 0.15;
-
-		if(ASTPMission)
-			dockstate = 1;
-		else
-			dockstate = 4;
 	}
 
 	if (stage == CSM_LEM_STAGE)
@@ -1060,7 +927,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		vs1.vrot.z = 0.0;
 		SMJetS.play();
 		SMJetS.done();
-		if (HasProbe && dockstate != 5) {	/// \todo No clue what dockstate means...
+		if (HasProbe) {
 			VECTOR3 ofs = OFS_DOCKING2;
 			VECTOR3 vel = {0.0,0.0,0.1};
 			VESSELSTATUS vs4b;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2008/01/14 04:31:10  movieman523
+  *	Initial tidyup: ASTP should now work too.
+  *	
   *	Revision 1.22  2007/12/04 20:26:35  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -156,7 +159,6 @@ protected:
 	void SeparateStage (int stage);
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt, double mjd);
-	void DockStage (UINT dockstatus);
 	void StageOne(double simt, double simdt);
 	void StageStartSIVB(double simt);
 	void StageLaunchSIVB(double simt);
