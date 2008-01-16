@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2008/01/15 19:13:05  lassombra
+  *	Implemented Vessel connector and Checklist Completion step.  The third button down on the left side completes the "current" step on the temporary MFD.
+  *	
+  *	Additionally made dummy checklists reference "Mission Timer Switch" so that the flashing function can be tested.
+  *	
+  *	Finally, updated the MFD demo to show one way to do a flashing switch, and a recommended deconstructor implementation.
+  *	
   *	Revision 1.7  2008/01/15 17:43:59  lassombra
   *	Allows multiple senders to attach to a single receiver.
   *	
@@ -142,7 +149,7 @@ public:
 	///
 	/// \return pointer to the first element in an array that is null terminated. (group index of last element is 0)
 	///
-	bool GetChecklistList(vector<ChecklistGroup> *in);
+	vector<ChecklistGroup> *GetChecklistList();
 
 	///
 	/// Fail a checklist item, and branch if appropriate.
@@ -159,6 +166,13 @@ public:
 	/// \return true if item was successfully "completed".  False otherwise.
 	///
 	bool completeChecklistItem(ChecklistItem* in);
+
+	///
+	/// Get the autoComplete status.
+	///
+	/// \return autoComplete status.
+	///
+	bool ChecklistAutocomplete();
 
 protected:
 };

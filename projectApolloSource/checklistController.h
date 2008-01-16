@@ -1,5 +1,9 @@
 #ifndef __checklistController_h
 #define __checklistController_h
+// Disable 4018 warning for the extent of this header file.
+#pragma warning ( push )
+#pragma warning ( disable:4018 )
+
 #include "orbiterapi.h"
 #include <vector>
 #include <deque>
@@ -7,7 +11,9 @@
 #include "orbiterSDK.h"
 #include "nasspdefs.h"
 #include "connector.h"
+#include "BasicExcelVC6.hpp"
 using namespace std;
+using namespace YExcel;
 
 #define ChecklistControllerStartString "<checklist>"
 #define ChecklistControllerEndString "</checklist>"
@@ -187,7 +193,7 @@ struct ChecklistContainer
 /// -------------------------------------------------------------
 /// Constructor, requires a group to initialize from.
 /// -------------------------------------------------------------
-	ChecklistContainer(const ChecklistGroup &, bool load=false);
+	ChecklistContainer(const ChecklistGroup &, BasicExcel &, const vector<ChecklistGroup> &);
 /// -------------------------------------------------------------
 /// Copy Constructor.
 /// -------------------------------------------------------------
@@ -212,8 +218,9 @@ private:
 /// -------------------------------------------------------------
 /// Initializer for the initializer.
 /// -------------------------------------------------------------
-	void initSet(const ChecklistGroup &,vector<ChecklistItem> &);
+	void initSet(const ChecklistGroup &,vector<ChecklistItem> &, BasicExcel &, const vector<ChecklistGroup> &);
 };
+
 #include "MFDconnector.h" //Has to be done here because fails further up.
 
 /// -------------------------------------------------------------
@@ -243,7 +250,7 @@ public:
 /// Access only when needed.  Not responsible for maintaining the
 /// data.
 /// -------------------------------------------------------------
-	bool getChecklistList(vector<ChecklistGroup>*);
+	vector<ChecklistGroup> *getChecklistList();
 /// -------------------------------------------------------------
 /// This checklist item is failed.  In order to properly handle
 /// this situation, we need to actually tell the controller instead
@@ -264,6 +271,7 @@ public:
 /// returns old state.
 /// -------------------------------------------------------------
 	bool autoComplete(bool);
+	bool autoComplete();
 	void clbkTimestep(double missionTime);
 /// -------------------------------------------------------------
 /// This method does default (empty) initialization.  Can be 
@@ -328,10 +336,19 @@ private:
 	///This determines whether or not the checklist gets auto executed.
 	bool autoexecute;
 	///Used to spawn new "program"
-	bool spawnCheck(int group, bool automagic = false);
+	bool spawnCheck(int group, bool fail, bool automagic = false);
 	///Connector to the panel
 	MFDConnector conn;
+	/// Used to move forward through the elements.
+	void iterate();
+	///The file reference.
+	char FileName[100];
+	/// The actual file.
+	BasicExcel file;
+	///A temporary, frequently regenerated list of all availabe manually selectable checklists.
+	vector<ChecklistGroup> groups_manual;
 };
 
-
+//Reenable 4018 warning
+#pragma warning ( pop )
 #endif

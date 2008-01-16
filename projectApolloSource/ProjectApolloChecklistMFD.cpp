@@ -97,8 +97,9 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 	// Gets the current list of available checklists.
 	if (bt == 3)
 	{
-		if (conn.GetChecklistList(&groups))
-			return true;
+		vector<ChecklistGroup> *temp = conn.GetChecklistList();
+		if (temp)
+			groups = *temp;
 		return true;
 	}
 	// Gets the current checklist item (not sure why it would be useful here).

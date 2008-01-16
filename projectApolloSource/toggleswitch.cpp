@@ -25,6 +25,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.88  2008/01/14 15:52:40  lassombra
+  *	*Final* version of the interface for the checklist controller.  May need some more
+  *	 data, but should be accessible at this point.  For some reason getting heap errors
+  *	 in deconstructors, doing research into it.
+  *	
   *	Revision 1.87  2008/01/09 09:39:06  lassombra
   *	Completed MFD<->ChecklistController interface.  Coding can now take place on two separate code paths.
   *	
@@ -3686,13 +3691,16 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		m.val2.bValue = checklist.getChecklistItem((ChecklistItem *)m.val1.pValue);
 		return true;
 	case MFD_PANEL_GET_CHECKLIST_LIST:
-		m.val2.bValue = checklist.getChecklistList((vector<ChecklistGroup> *)m.val1.pValue);
+		m.val1.pValue = checklist.getChecklistList();
 		return true;
 	case MFD_PANEL_FAIL_ITEM:
 		m.val2.bValue = checklist.failChecklistItem((ChecklistItem *)m.val1.pValue);
 		return true;
 	case MFD_PANEL_COMPLETE_ITEM:
 		m.val2.bValue = checklist.completeChecklistItem((ChecklistItem *)m.val1.pValue);
+		return true;
+	case MFD_PANEL_CHECKLIST_AUTOCOMPLETE_QUERY:
+		m.val1.bValue = checklist.autoComplete();
 		return true;
 	}
 

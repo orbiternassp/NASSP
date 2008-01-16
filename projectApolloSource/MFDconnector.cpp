@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2008/01/15 17:43:59  lassombra
+  *	Allows multiple senders to attach to a single receiver.
+  *	
   *	Revision 1.7  2008/01/14 15:52:33  lassombra
   *	*Final* version of the interface for the checklist controller.  May need some more
   *	 data, but should be accessible at this point.  For some reason getting heap errors
@@ -205,6 +208,20 @@ bool MFDConnector::ChecklistAutocomplete(bool yesno)
 
 	return false;
 }
+bool MFDConnector::ChecklistAutocomplete()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_CHECKLIST_AUTOCOMPLETE_QUERY;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
 bool MFDConnector::GetChecklistItem(ChecklistItem *in)
 {
 	ConnectorMessage cm;
@@ -221,19 +238,17 @@ bool MFDConnector::GetChecklistItem(ChecklistItem *in)
 	return NULL;
 }
 
-bool MFDConnector::GetChecklistList(vector<ChecklistGroup> *in)
+vector<ChecklistGroup> *MFDConnector::GetChecklistList()
 {
 	ConnectorMessage cm;
 
 	cm.destination = type;
 	cm.messageType = PanelConnector::MFD_PANEL_GET_CHECKLIST_LIST;
-	cm.val1.pValue = in;
 
 	if (SendMessage(cm))
 	{
-		return cm.val2.bValue;
+		return (vector<ChecklistGroup> *)cm.val1.pValue;
 	}
-
 	return NULL;
 }
 bool MFDConnector::failChecklistItem(ChecklistItem* in)
