@@ -63,6 +63,7 @@ AS-211:ProjectApollo\Saturn1b
   S4PL 1
   LANG English
   ATTACHSTATE 63
+  PAYN ASTP-DM
 END
 ML:ProjectApollo\ML
   STATUS Landed Earth
