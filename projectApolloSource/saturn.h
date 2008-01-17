@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.271  2008/01/16 05:52:07  movieman523
+  *	Removed all dockstate code.
+  *	
   *	Revision 1.270  2008/01/16 04:14:24  movieman523
   *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
   *	
@@ -1141,7 +1144,7 @@ public:
 			unsigned HatchOpen:1;					///< Is the hatch open?
 			unsigned SplashdownPlayed:1;			///< Have we played the splashdown sound?
 			unsigned unused_2:1;					///< Unused bit for backwards compatibility. Can be used for other things.
-			unsigned LEMdatatransfer:1;				///< Have we transfered setup data to the LEM?
+			unsigned PayloadDataTransfer:1;			///< Have we transfered setup data to the SIVB for the payload?
 			unsigned PostSplashdownPlayed:1;		///< Have we played the post-splashdown sound?
 			unsigned IGMEnabled:1;					///< Is the IGM guidance enabled?
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
@@ -4150,7 +4153,7 @@ protected:
 	bool StopRot;
 	bool ProbeJetison;
 	bool RCS_Full;
-	bool LEMdatatransfer;
+	bool PayloadDataTransfer;
 
 #define SATPANEL_MAIN				0 // Both have Orbiter's 
 #define SATPANEL_MAIN_LEFT		    0 // default panel id 0
@@ -4354,7 +4357,7 @@ protected:
 	double GetCPitch(double t);
 	double GetJ2ISP(double ratio);
 	void StartAbort();
-	void GetLEMName(char *s);
+	void GetPayloadName(char *s);
 	void GetApolloName(char *s);
 	void AddSM(double offet, bool showSPS);
 
@@ -4653,9 +4656,9 @@ protected:
 	char AudioLanguage[64];
 
 	///
-	/// LEM name
+	/// SIVB payload name
 	///
-	char LEMName[64];
+	char PayloadName[64];
 
 	///
 	/// LEM checklist file
