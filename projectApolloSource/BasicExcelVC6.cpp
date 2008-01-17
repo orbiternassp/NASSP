@@ -4491,7 +4491,7 @@ void BasicExcel::New(int sheets)
 bool BasicExcel::Load(const char* filename)
 {
 	if (file_.IsOpen()) file_.Close();
-	if (file_.Open(filename))
+	if (file_.Open(filename,ios_base::in))
 	{
 		workbook_ = Workbook();
 		worksheets_.clear();
