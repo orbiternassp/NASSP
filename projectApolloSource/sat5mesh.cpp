@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.89  2008/01/16 05:52:07  movieman523
+  *	Removed all dockstate code.
+  *	
   *	Revision 1.88  2008/01/14 04:31:10  movieman523
   *	Initial tidyup: ASTP should now work too.
   *	
@@ -1502,10 +1505,8 @@ void SaturnV::SeparateStage (int new_stage)
 		S4Config.PanelsHinged = !SLAWillSeparate;
 		S4Config.SLARotationLimit = (double) SLARotationLimit;
 
-		char realLEMName[256];
-		GetLEMName(realLEMName);
+		GetPayloadName(S4Config.PayloadName);
 
-		strcpy(S4Config.PayloadName, realLEMName);
 		S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
 		S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
 		S4Config.LMPad = LMPad;
@@ -1514,7 +1515,7 @@ void SaturnV::SeparateStage (int new_stage)
 		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
 		SIVBVessel->SetState(S4Config);
 
-		LEMdatatransfer = true;
+		PayloadDataTransfer = true;
 
 		SeparationS.play(NOLOOP,255);
 

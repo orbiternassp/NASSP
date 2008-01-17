@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.225  2008/01/16 05:52:07  movieman523
+  *	Removed all dockstate code.
+  *	
   *	Revision 1.224  2008/01/16 04:14:24  movieman523
   *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
   *	
@@ -686,7 +689,7 @@ void Saturn::initSaturn()
 	CSMPerigee = 0.0;
 
 	HatchOpen = false;
-	LEMdatatransfer = false;
+	PayloadDataTransfer = false;
 	PostSplashdownPlayed = false;
 	SplashdownPlayed = false;
 
@@ -1100,7 +1103,7 @@ void Saturn::initSaturn()
 	for (i = 0; i < 8; i++)
 		ENGIND[i] = false;
 
-	LEMName[0] = 0;
+	PayloadName[0] = 0;
 	LEMCheck[0] = 0;
 	LEMCheckAuto = 0;
 	LMDescentFuelMassKg = 8375.0;
@@ -1263,15 +1266,15 @@ void Saturn::clbkPostCreation() {
 	checkControl.linktoVessel(this);
 }
 
-void Saturn::GetLEMName(char *s)
+void Saturn::GetPayloadName(char *s)
 
 {
-	if (LEMName[0]) {
-		strcpy (s, LEMName);
+	if (PayloadName[0]) {
+		strcpy (s, PayloadName);
 		return;
 	}
 
-	strcpy (s, GetName()); strcat (s, "-PL");
+	strcpy (s, GetName()); strcat (s, "-PAYLOAD");
 }
 
 void Saturn::GetApolloName(char *s)
@@ -1415,7 +1418,7 @@ void Saturn::LookForLEM()
 	if (!hLMV)
 	{
 		char VName[256];
-		GetLEMName(VName);
+		GetPayloadName(VName);
 		hLMV = oapiGetVesselByName(VName);
 	}
 }
@@ -1730,7 +1733,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (LMLandingBase[0])
 		oapiWriteScenario_string (scn, "MOONBASE", LMLandingBase);
 
-	if (!LEMdatatransfer && iu.IsTLICapable()) {
+	if (!PayloadDataTransfer) {
 		if (LMPadCount > 0) {
 			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
 			for (i = 0; i < LMPadCount; i++) {
@@ -1826,8 +1829,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (useChecklists && lastChecklist[0])
 		oapiWriteScenario_string (scn, "CHECKL", lastChecklist);
 
-	if (LEMName[0])
-		oapiWriteScenario_string (scn, "LEMN", LEMName);
+	if (PayloadName[0])
+		oapiWriteScenario_string (scn, "PAYN", PayloadName);
 
 	if (LEMCheck[0])
 	{
@@ -1835,7 +1838,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "LEMCHECKAUTO", int(LEMCheckAuto));
 	}
 
-	if (!LEMdatatransfer)
+	if (!PayloadDataTransfer)
 	{
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
@@ -1950,7 +1953,7 @@ int Saturn::GetMainState()
 	state.ABORT_IND = ABORT_IND;
 	state.HatchOpen = HatchOpen;
 	state.viewpos = viewpos;
-	state.LEMdatatransfer = LEMdatatransfer;
+	state.PayloadDataTransfer = PayloadDataTransfer;
 	state.SplashdownPlayed = SplashdownPlayed;
 	state.PostSplashdownPlayed = PostSplashdownPlayed;
 	state.IGMEnabled = IGMEnabled;
@@ -1976,7 +1979,7 @@ void Saturn::SetMainState(int s)
 	ABORT_IND = state.ABORT_IND;
 	HatchOpen = state.HatchOpen;
 	viewpos = state.viewpos;
-	LEMdatatransfer = state.LEMdatatransfer;
+	PayloadDataTransfer = (state.PayloadDataTransfer != 0);
 	SplashdownPlayed = (state.SplashdownPlayed != 0);
 	PostSplashdownPlayed = (state.PostSplashdownPlayed != 0);
 	IGMEnabled = (state.IGMEnabled != 0);
@@ -2594,7 +2597,13 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		strncpy (lastChecklist, line + 7, 255);
 	}
 	else if (!strnicmp(line, "LEMN", 4)) {
-		strncpy (LEMName, line + 5, 64);
+		//
+		// LEMN (LEM name) is a synonym for PAYN (Payload name) for old scenarios.
+		//
+		strncpy (PayloadName, line + 5, 64);
+	}
+	else if (!strnicmp(line, "PAYN", 4)) {
+		strncpy (PayloadName, line + 5, 64);
 	}
 	else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 		dsky.LoadState(scn, DSKY_END_STRING);
@@ -2896,7 +2905,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// And pass it the mission number and realism settings.
 	//
 
-	agc.SetMissionInfo(ApolloNo, Realism, LEMName);
+	agc.SetMissionInfo(ApolloNo, Realism, PayloadName);
 
 	//
 	// Tell various systems the realism setting
