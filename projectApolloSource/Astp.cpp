@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2008/01/14 01:17:01  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.4  2005/11/21 23:08:15  movieman523
   *	Moved more mesh files into the ProjectApollo directory.
   *	
@@ -40,20 +43,8 @@
 #include "stdio.h"
 #include "astp.h"
 
-const VECTOR3 OFS_STAGE1 =  { 0, 0, -8.935};
-const VECTOR3 OFS_STAGE2 =  { 0, 0, 9.25-12.25};
-const VECTOR3 OFS_STAGE21 =  { 1.85,1.85,24.5-12.25};
-const VECTOR3 OFS_STAGE22 =  { -1.85,1.85,24.5-12.25};
-const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85,24.5-12.25};
-const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
-
-
 static int refcount = 0;
-static MESHHANDLE hSat1stg2;
 static MESHHANDLE hastp;
-static MESHHANDLE hapsh;
-static MESHHANDLE hapsl;
-
 
 ASTP::ASTP (OBJHANDLE hObj, int fmodel)
 : Payload (hObj, fmodel)
@@ -76,11 +67,17 @@ void ASTP::init()
 void ASTP::Setup()
 
 {
+	//
+	// These numbers are all wrong since they're for the SIVB + ASTP combo. We need
+	// to find the correct numbers to use.
+	//
+	// Currently it also only has one docking port.
+	//
 	SetSize (15);
 	SetCOG_elev (15.225);
 	SetEmptyMass (23500);
 	SetPMI (_V(94,94,20));
-	SetCrossSections (_V(267,267,97));
+	SetCrossSections (_V(5,5,5));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,1.2));
 	SetPitchMomentScale (0);
@@ -90,13 +87,7 @@ void ASTP::Setup()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
-	//
-	// Something very odd is going on here. After docking, the ASTP mesh vanishes!
-	//
-
     VECTOR3 mesh_dir=_V(0,0,0);
-    AddMesh (hSat1stg2, &mesh_dir);
-	mesh_dir=_V(0,0,13.3);
 	AddMesh (hastp, &mesh_dir);
 
 	//
@@ -105,9 +96,9 @@ void ASTP::Setup()
 	// DockRot = 0 -1 0
 	//
 
-	VECTOR3 dockpos = {0.0, -0.1, 15.0};
+	VECTOR3 dockpos = _V(0.0, 0.15, 1.2);
 	VECTOR3 dockdir = {0,0,1};
-	VECTOR3 dockrot = {0,1,0};
+	VECTOR3 dockrot = _V(-1.0, 0.0, 0);
 
 	SetDockParams(dockpos, dockdir, dockrot);
 }
@@ -119,8 +110,8 @@ void ASTP::Setup()
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
-	if (!refcount++) {
-		hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
+	if (!refcount++)
+	{
 		hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
 	}
 	return new ASTP (hvessel, flightmodel);

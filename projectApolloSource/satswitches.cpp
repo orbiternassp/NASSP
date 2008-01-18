@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.34  2008/01/14 01:17:07  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.33  2007/12/26 04:20:14  flydba
   *	Pixel error of the EMS deltaV indicator fixed.
   *	
@@ -2180,7 +2183,7 @@ bool SIVBPayloadSeparationSwitch::CheckMouseClick(int event, int mx, int my)
 	//
 	// If the switch state changes, tell the SIVB.
 	//
-	if (IsPowered() && GuardedToggleSwitch::CheckMouseClick(event, mx, my))
+	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my) && IsPowered())
 	{
 		if (IsUp())
 		{

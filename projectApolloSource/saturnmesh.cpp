@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2008/01/16 04:14:24  movieman523
+  *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
+  *	
   *	Revision 1.68  2008/01/10 05:42:20  movieman523
   *	Hopefully fix Saturn 1b mass.
   *	
@@ -101,6 +104,7 @@
 
 #include "saturn.h"
 #include "tracer.h"
+#include "sivb.h"
 
 #include "LES.h"
 
@@ -644,11 +648,13 @@ void Saturn::SetCSMStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	VCMeshOffset = mesh_dir;
 
-	if (HasProbe) {
+	if (HasProbe)
+	{
 		probeidx = AddMesh(hprobe, &mesh_dir);
 		probeextidx = AddMesh(hprobeext, &mesh_dir);
 		SetDockingProbeMesh();
-	} else {
+	} else
+	{
 		probeidx = -1;
 		probeextidx = -1;
 	}
@@ -678,6 +684,54 @@ void Saturn::SetCSMStage ()
 	OrbiterAttitudeToggle.SetActive(true);
 
 	ThrustAdjust = 1.0;
+}
+
+void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
+
+{
+		char VName[256]="";
+
+		GetApolloName(VName); strcat (VName, "-S4BSTG");
+		hs4bM = oapiCreateVessel(VName, config, vs1);
+
+		SIVBSettings S4Config;
+
+		//
+		// For now we'll only seperate the panels on ASTP.
+		//
+
+		S4Config.SettingsType.word = 0;
+		S4Config.SettingsType.SIVB_SETTINGS_FUEL = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_GENERAL = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_MASS = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_ENGINES = 1;
+		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD_INFO = 1;
+		S4Config.Payload = SIVBPayload;
+		S4Config.VehicleNo = VehicleNo;
+		S4Config.EmptyMass = S4B_EmptyMass;
+		S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
+		S4Config.PayloadMass = S4PL_Mass;
+		S4Config.SaturnVStage = SaturnVStage;
+		S4Config.MissionTime = MissionTime;
+		S4Config.Realism = Realism;
+		S4Config.LowRes = LowRes;
+		S4Config.ISP_VAC = ISP_THIRD_VAC;
+		S4Config.THRUST_VAC = THRUST_THIRD_VAC;
+		S4Config.PanelsHinged = !SLAWillSeparate;
+		S4Config.SLARotationLimit = (double) SLARotationLimit;
+
+		GetPayloadName(S4Config.PayloadName);
+
+		S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
+		S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
+		S4Config.LMPad = LMPad;
+		S4Config.LMPadCount = LMPadCount;
+
+		SIVB *SIVBVessel = static_cast<SIVB *> (oapiGetVesselInterface(hs4bM));
+		SIVBVessel->SetState(S4Config);
+
+		PayloadDataTransfer = true;
 }
 
 void Saturn::SetDockingProbeMesh() {

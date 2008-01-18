@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2008/01/14 04:31:12  movieman523
+  *	Initial tidyup: ASTP should now work too.
+  *	
   *	Revision 1.26  2008/01/14 01:17:10  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -573,7 +576,7 @@ protected:
 	int panelMesh1SaturnVLow, panelMesh2SaturnVLow, panelMesh3SaturnVLow, panelMesh4SaturnVLow;
 	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
 	int meshSivbSaturnV, meshSivbSaturnVLow, meshSivbSaturn1b, meshSivbSaturn1bLow;
-	int meshASTP_A, meshASTP_B, meshASTP2, meshCOASTarget_A, meshCOASTarget_B, meshCOASTarget_C;
+	int meshASTP_A, meshASTP_B, meshCOASTarget_A, meshCOASTarget_B, meshCOASTarget_C;
 	int meshLMPKD, meshApollo8LTA, meshLTA_2r, meshLM_1;
 
 	void HideAllMeshes();
