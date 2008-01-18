@@ -144,6 +144,19 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		TextOut(hDC, 0, (int)(height*0.1), item.text,strlen(item.text));
 	if ((item.group = -1, item.index = 3,conn.GetChecklistItem(&item)))
 		TextOut(hDC, 0, (int)(height*0.15), item.text,strlen(item.text));
+
+	if (groups.size() > 0)
+		TextOut(hDC, 0, (int)(height*0.4), groups[0].name,strlen(groups[0].name));
+	if (groups.size() > 1)
+		TextOut(hDC, 0, (int)(height*0.45), groups[1].name,strlen(groups[0].name));
+	if (groups.size() > 2)
+		TextOut(hDC, 0, (int)(height*0.5), groups[2].name,strlen(groups[0].name));
+	if (groups.size() > 3)
+		TextOut(hDC, 0, (int)(height*0.55), groups[3].name,strlen(groups[0].name));
+	if (groups.size() > 4)
+		TextOut(hDC, 0, (int)(height*0.6), groups[4].name,strlen(groups[0].name));
+	if (groups.size() > 5)
+		TextOut(hDC, 0, (int)(height*0.65), groups[5].name,strlen(groups[0].name));
 }
 void ProjectApolloChecklistMFD::WriteStatus (FILEHANDLE scn) const
 {
