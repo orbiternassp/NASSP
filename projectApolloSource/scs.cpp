@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2007/12/21 09:38:43  jasonims
+  *	EMS Implementation Step 5 - jasonims :   SCROLL: complete:  possible inaccuracy in velocity integration.   RSI: complete:  accurate readings, but unsure of authenticity of method, (lack of documentation found).    THRESHOLD CIRCUITRY:  complete: seems quite accurate.   CORRIDOR VERIFICATION: complete: needs testing, but appears to be correct.    RANGE:  working but inaccurate:  probable inaccuracy in range integration....unknown cause.   EMS State is saved as well.    Testing must insue.
+  *	
   *	Revision 1.27  2007/12/05 19:23:30  jasonims
   *	EMS Implementation Step 4 - jasonims :   RSI is set up to rotate, but no actual controlling of it is done.
   *	
@@ -2699,8 +2702,11 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	sat = NULL;
 	SlewScribe = 0;
 	GScribe = 0;
+	xacc = 9.81;
+	xaccG = 1.0;
 	constG = 9.7939; //Set initial value
 	RSIRotation = PI/2;
+	RSITarget = 0;
 
 	switchchangereset = false;
 
@@ -2711,7 +2717,8 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	ThresholdBreeched = false;
 	ThresholdBreechTime = 0.0;
 	CorridorEvaluated = false;
-	TenSecTimer = 0.0;
+	OneSecTimer = 1.0;
+	TenSecTimer = 10.0;
 	InitialTrip = false;
 
 	ScribePntCnt = 1;
@@ -2745,6 +2752,7 @@ void EMS::Init(Saturn *vessel) {
 void EMS::TimeStep(double MissionTime, double simdt) {
 
 	double position;
+	double dV;
 
 	AccelerometerTimeStep();
 
