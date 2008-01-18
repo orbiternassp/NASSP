@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2008/01/17 01:46:27  movieman523
+  *	Renamed LEMName to PayloadName and replaced LEMN with PAYN in the scenario file; reading LEMN is still supported for backward compatibility.
+  *	
   *	Revision 1.73  2008/01/16 05:52:06  movieman523
   *	Removed all dockstate code.
   *	
@@ -875,48 +878,19 @@ void Saturn1b::SeparateStage (int new_stage)
 
 	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
 	{
-		char VName[256]="";
-		SIVB *SIVBVessel;
+		vs1.vrot.x = 0.0;
+		vs1.vrot.y = 0.0;
+		vs1.vrot.z = 0.0;
 
-		GetApolloName(VName); strcat (VName, "-S4BSTG");
-		hs4bM = oapiCreateVessel(VName, "ProjectApollo/nsat1stg2", vs1);
-
-		SIVBSettings S4Config;
-
-		//
-		// For now we'll only seperate the panels on ASTP.
-		//
-
-		S4Config.SettingsType.SIVB_SETTINGS_FUEL = 1;
-		S4Config.SettingsType.SIVB_SETTINGS_GENERAL = 1;
-		S4Config.SettingsType.SIVB_SETTINGS_MASS = 1;
-		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD = 1;
-		S4Config.SettingsType.SIVB_SETTINGS_PAYLOAD_INFO = 1;
-		S4Config.Payload = SIVBPayload;
-		S4Config.PanelsHinged = !SLAWillSeparate;
-		S4Config.VehicleNo = VehicleNo;
-		S4Config.EmptyMass = SII_EmptyMass;
-		S4Config.MainFuelKg = GetPropellantMass(ph_3rd);
-		S4Config.PayloadMass = S4PL_Mass;
-		S4Config.SaturnVStage = false;
-		S4Config.MissionTime = MissionTime;
-		S4Config.Realism = Realism;
-		S4Config.LowRes = LowRes;
-		S4Config.SLARotationLimit = (double) SLARotationLimit;
-
-		GetPayloadName(S4Config.PayloadName);
-
-		S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
-		S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;
-
-		SIVBVessel = (SIVB *) oapiGetVesselInterface(hs4bM);
-		SIVBVessel->SetState(S4Config);
-
-		PayloadDataTransfer = true;
+		CreateSIVBStage("ProjectApollo/nsat1stg2", vs1, false);
 
 		SeparationS.play();
 
 		SetCSMStage();
+
+		// Set LM landing site in the AGC for Simple AGC P16 etc.
+		agc.SetDesiredLanding(LMLandingLatitude, LMLandingLongitude, LMLandingAltitude);
+
 		ShiftCentreOfMass(_V(0, 0, 20.8));
 		SeparationSpeed = 0.15;
 	}

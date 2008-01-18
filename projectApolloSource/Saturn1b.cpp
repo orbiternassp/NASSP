@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2008/01/16 05:52:06  movieman523
+  *	Removed all dockstate code.
+  *	
   *	Revision 1.81  2008/01/16 04:14:23  movieman523
   *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
   *	
@@ -438,6 +441,14 @@ void Saturn1b::initSaturn1b()
 	SI_FuelMass = 407100;
 
 	CalculateStageMass();
+
+	//
+	// Save the S4B information in the place where the Saturn class expects to find it. Maybe we should switch to
+	// using the S4B variables rather than the 'stage 2' variables?
+	//
+	S4B_EmptyMass = SII_EmptyMass;
+	S4B_FuelMass = SII_FuelMass;
+	S4B_Mass = SII_Mass;
 
 	//
 	// Engines per stage.

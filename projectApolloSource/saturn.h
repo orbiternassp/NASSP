@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.272  2008/01/17 01:46:27  movieman523
+  *	Renamed LEMName to PayloadName and replaced LEMN with PAYN in the scenario file; reading LEMN is still supported for backward compatibility.
+  *	
   *	Revision 1.271  2008/01/16 05:52:07  movieman523
   *	Removed all dockstate code.
   *	
@@ -4448,6 +4451,7 @@ protected:
 	void SetSplashStage();
 	void SetAbortStage();
 	void SetCSMStage();
+	void CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage);
 	void SetReentryStage();
 	void SetReentryMeshes();
 	void AddRCS_CM(double MaxThrust, double offset = 0.0);

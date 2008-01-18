@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.40  2008/01/14 04:31:11  movieman523
+  *	Initial tidyup: ASTP should now work too.
+  *	
   *	Revision 1.39  2008/01/14 01:17:09  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -191,7 +194,6 @@ static MESHHANDLE hsat5stg32low;
 static MESHHANDLE hsat5stg33low;
 static MESHHANDLE hsat5stg34low;
 static MESHHANDLE hastp;
-static MESHHANDLE hastp2;
 static MESHHANDLE hCOAStarget;
 static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
@@ -242,7 +244,6 @@ void SIVbLoadMeshes()
 	hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
 	hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
 	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
-	hastp2 = oapiLoadMeshGlobal ("ProjectApollo/nASTP2");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
 	hlm_1 = oapiLoadMeshGlobal ("ProjectApollo/LM_1");
 
@@ -355,7 +356,6 @@ void SIVB::InitS4b()
 	meshSivbSaturn1bLow = -1;
 	meshASTP_A = -1;
 	meshASTP_B = -1;
-	meshASTP2 = -1;
 	meshCOASTarget_A = -1;
 	meshCOASTarget_B = -1;
 	meshCOASTarget_C = -1;
@@ -539,6 +539,9 @@ void SIVB::SetS4b()
 
 	case PAYLOAD_ASTP:
 		SetMeshVisibilityMode(meshASTP_B, MESHVIS_EXTERNAL);
+		dockpos = _V(0.0, 0.15, 9.9);
+		dockrot = _V(-1.0, 0.0, 0);
+		SetDockParams(dockpos, dockdir, dockrot);
 		mass += PayloadMass;
 		break;
 
@@ -1405,9 +1408,6 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 
 	mesh_dir = _V(0, 0, 8.6);
 	meshCOASTarget_C = AddMesh(hCOAStarget, &mesh_dir);
-
-	meshASTP2 = AddMesh(hastp2, &mesh_dir);
-
 }
 
 void SIVB::clbkDockEvent(int dock, OBJHANDLE connected)
@@ -1783,7 +1783,6 @@ void SIVB::HideAllMeshes()
 	SetMeshVisibilityMode(meshApollo8LTA, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshASTP_A, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshASTP_B, MESHVIS_NEVER);
-	SetMeshVisibilityMode(meshASTP2, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshCOASTarget_A, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshCOASTarget_C, MESHVIS_NEVER);
