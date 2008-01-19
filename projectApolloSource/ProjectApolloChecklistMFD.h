@@ -19,9 +19,30 @@ public:
 
 	
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
+
+	int SelectedGroup;
+	char* SelectedGroupName;
+
 	ChecklistItem item;
+
 	vector<ChecklistGroup> groups;
 
 	DWORD width;
 	DWORD height;
+
+protected:
+
+	int screen;
+
+	bool MFDInit; // MFD has been initialized, including retrieving Available Checklists
+	int NumChkLsts;
+	bool ChkLstAutoOn;
+
+	std::string line;
+
+	int cnt;
+	
+	int TopStep;
+	int CurrentStep;
+	int HiLghtdLine;
 };
