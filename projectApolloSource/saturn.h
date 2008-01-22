@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.273  2008/01/18 05:57:23  movieman523
+  *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
+  *	
   *	Revision 1.272  2008/01/17 01:46:27  movieman523
   *	Renamed LEMName to PayloadName and replaced LEMN with PAYN in the scenario file; reading LEMN is still supported for backward compatibility.
   *	
@@ -1809,16 +1812,6 @@ protected:
 	/// \return True if CSM, false if not.
 	///
 	bool SaturnHasCSM();
-
-	///
-	/// \brief Set up connectors on docking.
-	///
-	void DockConnectors();
-
-	///
-	/// \brief Disconnect connectors on undocking.
-	///
-	void UndockConnectors();
 
 	//
 	// State that needs to be saved.

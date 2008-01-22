@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.226  2008/01/17 01:46:27  movieman523
+  *	Renamed LEMName to PayloadName and replaced LEMN with PAYN in the scenario file; reading LEMN is still supported for backward compatibility.
+  *	
   *	Revision 1.225  2008/01/16 05:52:07  movieman523
   *	Removed all dockstate code.
   *	
@@ -579,6 +582,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	// Register visible connectors.
 	//
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
+	RegisterConnector(0, &CSMToLEMConnector);
+	RegisterConnector(0, &CSMToSIVBConnector);
 }
 
 Saturn::~Saturn()
@@ -1423,47 +1428,6 @@ void Saturn::LookForLEM()
 	}
 }
 
-void Saturn::UndockConnectors()
-
-{
-	CSMToSIVBConnector.Disconnect();
-	CSMToLEMConnector.Disconnect();
-}
-
-void Saturn::DockConnectors()
-
-{
-	DOCKHANDLE d = GetDockHandle(0);
-
-	if (!d)
-		return;
-
-	OBJHANDLE connected = GetDockStatus(d);
-
-	if (!connected)
-		return;
-
-	VESSEL *dockedWith = oapiGetVesselInterface(connected);
-
-	//
-	// Currently we assume we're docked with port 0 on the other vessel. We
-	// should really figure out which one it is!
-	//
-	Connector *SIVbConnector = GetVesselConnector(dockedWith, 0, CSMToSIVBConnector.GetType());
-
-	if (SIVbConnector)
-	{
-		CSMToSIVBConnector.ConnectTo(SIVbConnector);
-	}
-
-	Connector *LEMConnector = GetVesselConnector(dockedWith, 0, CSMToLEMConnector.GetType());
-
-	if (LEMConnector)
-	{
-		CSMToLEMConnector.ConnectTo(LEMConnector);
-	}
-}
-
 void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
 
 {
@@ -1476,25 +1440,25 @@ void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
 	{
 		if (dockingprobe.IsHardDocked())
 		{
-			DockConnectors();
+			DockConnectors(0);
 		}
 	}
 	else
 	{
-		UndockConnectors();
+		UndockConnectors(0);
 	}
 }
 
 void Saturn::HaveHardDocked()
 
 {
-	DockConnectors();
+	DockConnectors(0);
 }
 
 void Saturn::Undocking()
 
 {
-	UndockConnectors();
+	UndockConnectors(0);
 }
 
 void Saturn::clbkPreStep(double simt, double simdt, double mjd)
