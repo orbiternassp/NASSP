@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2008/01/14 04:31:09  movieman523
+  *	Initial tidyup: ASTP should now work too.
+  *	
   *	Revision 1.7  2007/12/21 18:10:28  movieman523
   *	Revised docking connector code; checking in a working version prior to a rewrite to automate the docking process.
   *	
@@ -316,6 +319,52 @@ bool ProjectApolloConnectorVessel::RegisterConnector(int port, Connector *c)
 
 	return false;
 }
+
+void ProjectApolloConnectorVessel::UndockConnectors(int port)
+
+{
+	int i;
+	for (i = 0; i < PACV_N_CONNECTORS; i++)
+	{
+		if (ConnectorList[i].c && (ConnectorList[i].port == port))
+		{
+			ConnectorList[i].c->Disconnect();
+		}
+	}
+}
+
+void ProjectApolloConnectorVessel::DockConnectors(int port)
+
+{
+	DOCKHANDLE d = GetDockHandle(0);
+
+	if (!d)
+		return;
+
+	OBJHANDLE connected = GetDockStatus(d);
+
+	if (!connected)
+		return;
+
+	VESSEL *dockedWith = oapiGetVesselInterface(connected);
+
+	if (!dockedWith)
+		return;
+
+	int i;
+	for (i = 0; i < PACV_N_CONNECTORS; i++)
+	{
+		if (ConnectorList[i].c && (ConnectorList[i].port == port))
+		{
+			Connector *ours = ConnectorList[i].c;
+			Connector *theirs = GetVesselConnector(dockedWith, 0, ours->GetType());
+
+			if (theirs)
+				ours->ConnectTo(theirs);
+		}
+	}
+}
+
 
 Connector *GetVesselConnector(VESSEL *v, int port, ConnectorType t)
 

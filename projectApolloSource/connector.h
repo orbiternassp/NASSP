@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2008/01/16 19:03:04  lassombra
+  *	All but time-step, automation, and complete save/load is now implemented on the Checklist Controller (and the files that depend on it).
+  *	
+  *	All bugs in current code should hopefully be gone, but not necessarily so.
+  *	
   *	Revision 1.14  2008/01/09 09:39:06  lassombra
   *	Completed MFD<->ChecklistController interface.  Coding can now take place on two separate code paths.
   *	
@@ -355,6 +360,16 @@ public:
 	/// \return True if this is a valid vessel.
 	///
 	bool ValidateVessel();
+
+	///
+	/// \brief Set up connectors on docking.
+	///
+	void DockConnectors(int port);
+
+	///
+	/// \brief Disconnect connectors on undocking.
+	///
+	void UndockConnectors(int port);
 
 protected:
 
