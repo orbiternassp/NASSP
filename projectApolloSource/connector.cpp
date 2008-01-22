@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2008/01/22 02:55:08  movieman523
+  *	Moved DockConnectors/UndockConnectors into the base class. We now dock/undock all registered connectors on that port.
+  *	
   *	Revision 1.8  2008/01/14 04:31:09  movieman523
   *	Initial tidyup: ASTP should now work too.
   *	
@@ -336,7 +339,7 @@ void ProjectApolloConnectorVessel::UndockConnectors(int port)
 void ProjectApolloConnectorVessel::DockConnectors(int port)
 
 {
-	DOCKHANDLE d = GetDockHandle(0);
+	DOCKHANDLE d = GetDockHandle(port);
 
 	if (!d)
 		return;
@@ -356,6 +359,10 @@ void ProjectApolloConnectorVessel::DockConnectors(int port)
 	{
 		if (ConnectorList[i].c && (ConnectorList[i].port == port))
 		{
+			///
+			/// \todo Find correct docking port on other vessel, don't assume we're
+			/// always docked to port zero.
+			///
 			Connector *ours = ConnectorList[i].c;
 			Connector *theirs = GetVesselConnector(dockedWith, 0, ours->GetType());
 

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.227  2008/01/22 02:55:08  movieman523
+  *	Moved DockConnectors/UndockConnectors into the base class. We now dock/undock all registered connectors on that port.
+  *	
   *	Revision 1.226  2008/01/17 01:46:27  movieman523
   *	Renamed LEMName to PayloadName and replaced LEMN with PAYN in the scenario file; reading LEMN is still supported for backward compatibility.
   *	
@@ -488,7 +491,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),
 	cws(SMasterAlarm, Bclick, Panelsdk),
-	dockingprobe(SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
+	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 	NonEssBus1("Non-Essential-Bus1", &NonessBusSwitch),
 	NonEssBus2("Non-Essential-Bus2", &NonessBusSwitch),
 	ACBus1PhaseA("AC-Bus1-PhaseA", 115, NULL),
@@ -1440,25 +1443,25 @@ void Saturn::clbkDockEvent(int dock, OBJHANDLE connected)
 	{
 		if (dockingprobe.IsHardDocked())
 		{
-			DockConnectors(0);
+			DockConnectors(dock);
 		}
 	}
 	else
 	{
-		UndockConnectors(0);
+		UndockConnectors(dock);
 	}
 }
 
-void Saturn::HaveHardDocked()
+void Saturn::HaveHardDocked(int port)
 
 {
-	DockConnectors(0);
+	DockConnectors(port);
 }
 
-void Saturn::Undocking()
+void Saturn::Undocking(int port)
 
 {
-	UndockConnectors(0);
+	UndockConnectors(port);
 }
 
 void Saturn::clbkPreStep(double simt, double simdt, double mjd)

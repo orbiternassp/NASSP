@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2008/01/14 01:17:05  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.12  2007/08/25 00:27:01  jasonims
   *	*** empty log message ***
   *	
@@ -84,7 +87,7 @@
 #include "saturn.h"
 
 
-DockingProbe::DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extendsound, 
+DockingProbe::DockingProbe(int port, Sound &capturesound, Sound &latchsound, Sound &extendsound, 
 						   Sound &undocksound, Sound &dockfailedsound, PanelSDK &p) : 
 	                       CaptureSound(capturesound), LatchSound(latchsound), ExtendSound(extendsound), 
 						   UndockSound(undocksound), DockFailedSound(dockfailedsound), DCPower(0, p)
@@ -97,6 +100,7 @@ DockingProbe::DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extend
 	UndockNextTimestep = false;
 	IgnoreNextDockEvent = 0;
 	Realism = REALISM_DEFAULT;
+	ourPort = port;
 }
 
 DockingProbe::~DockingProbe()
@@ -114,7 +118,7 @@ void DockingProbe::Extend()
 	ExtendingRetracting = 1;
 	if (Status != DOCKINGPROBE_STATUS_EXTENDED) {
 		if (Docked) {
-			OurVessel->Undock(0);
+			OurVessel->Undock(ourPort);
 			UndockSound.play();
 		
 		} else {
@@ -192,7 +196,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 	}
 
 	if (UndockNextTimestep) {
-		OurVessel->Undock(0);
+		OurVessel->Undock(ourPort);
 		UndockNextTimestep = false;
 	}
 
@@ -200,7 +204,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		if (Status >= DOCKINGPROBE_STATUS_EXTENDED) {
 			Status = DOCKINGPROBE_STATUS_EXTENDED;
 			ExtendingRetracting = 0;
-			OurVessel->Undocking();
+			OurVessel->Undocking(ourPort);
 			OurVessel->SetDockingProbeMesh();
 		} else {
 			Status += 0.33 * simdt;
@@ -209,7 +213,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		if (Status <= DOCKINGPROBE_STATUS_RETRACTED) {
 			Status = DOCKINGPROBE_STATUS_RETRACTED;
 			ExtendingRetracting = 0;
-			OurVessel->HaveHardDocked();		
+			OurVessel->HaveHardDocked(ourPort);		
 			OurVessel->SetDockingProbeMesh();
 		} else {
 			Status -= 0.33 * simdt;
@@ -230,7 +234,7 @@ void DockingProbe::DoFirstTimeStep()
 {
 	Docked = false;
 
-	DOCKHANDLE d = OurVessel->GetDockHandle(0);
+	DOCKHANDLE d = OurVessel->GetDockHandle(ourPort);
 	if (d) {
 		if (OurVessel->GetDockStatus(d) != NULL) {
 			Docked = true;
@@ -239,11 +243,11 @@ void DockingProbe::DoFirstTimeStep()
 
 	if (IsHardDocked())
 	{
-		OurVessel->HaveHardDocked();
+		OurVessel->HaveHardDocked(ourPort);
 	}
 	else
 	{
-		OurVessel->Undocking();
+		OurVessel->Undocking(ourPort);
 	}
 }
 

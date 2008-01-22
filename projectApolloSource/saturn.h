@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.274  2008/01/22 02:55:08  movieman523
+  *	Moved DockConnectors/UndockConnectors into the base class. We now dock/undock all registered connectors on that port.
+  *	
   *	Revision 1.273  2008/01/18 05:57:23  movieman523
   *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
   *	
@@ -1617,12 +1620,12 @@ public:
 	///
 	/// \brief We've hard docked, so check connections.
 	///
-	void HaveHardDocked();
+	void HaveHardDocked(int port);
 
 	///
 	/// \brief We've extended the docking probe, so disconnect connections.
 	///
-	void Undocking();
+	void Undocking(int port);
 
 	///
 	/// \brief Set docking probe mesh
