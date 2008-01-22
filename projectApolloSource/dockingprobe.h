@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2008/01/14 04:48:44  movieman523
+  *	Fixed LEM separation when the LEM doesn't have the expected name.
+  *	
   *	Revision 1.9  2008/01/14 01:17:06  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -70,7 +73,7 @@ class Saturn;
 class DockingProbe {
 
 public:
-	DockingProbe(Sound &capturesound, Sound &latchsound, Sound &extendsound, 
+	DockingProbe(int port, Sound &capturesound, Sound &latchsound, Sound &extendsound, 
 		         Sound &undocksound, Sound &dockfailedsound, PanelSDK &p);
 	virtual ~DockingProbe();
 
@@ -118,6 +121,11 @@ protected:
 	int IgnoreNextDockEvent;
 	PowerMerge DCPower;
 	int Realism;
+
+	///
+	/// Docking port this probe is connected to.
+	///
+	int ourPort;
 };
 
 //
