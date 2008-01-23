@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.228  2008/01/22 05:22:27  movieman523
+  *	Added port number to docking probe.
+  *	
   *	Revision 1.227  2008/01/22 02:55:08  movieman523
   *	Moved DockConnectors/UndockConnectors into the base class. We now dock/undock all registered connectors on that port.
   *	
@@ -537,6 +540,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	iuCommandConnector(agc, this),
 	sivbControlConnector(agc, dockingprobe, this),
 	sivbCommandConnector(this),
+	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
 	ascp(Sclick),
 	RHCNormalPower("RHCNormalPower", Panelsdk),
@@ -1571,6 +1575,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 		iu.PostStep(simt, simdt, mjd);
 	}
+	checkControl.timestep(MissionTime,eventControl);
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
 }
 
@@ -1897,6 +1902,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	// oapiWriteScenario_int (scn, "LOWRES", LowRes ? 1 : 0);
 
 	checkControl.save(scn);
+	eventControl.save(scn);
 }
 
 //
@@ -2789,6 +2795,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			else
 				LEMCheckAuto = false;
 		}
+		else if (!strnicmp(line,SaturnEventStartString,strlen(SaturnEventStartString)))
+		{
+			eventControl.load(scn);
+		}
 		else
 			found = false;
 	}
@@ -3063,6 +3073,33 @@ void Saturn::SetStage(int s)
 
 	CheckSMSystemsState();
 	CheckRCSState();
+	
+	//
+	//Event management
+	//
+	switch (stage) 
+	{
+	case LAUNCH_STAGE_TWO:
+		eventControl.SecondStage = MissionTime;
+		break;
+	case LAUNCH_STAGE_SIVB:
+		eventControl.SIVBStage = MissionTime;
+		if (eventControl.Tower_Jettison == MINUS_INFINITY)
+			eventControl.Tower_Jettison = MissionTime;
+		break;
+	case LAUNCH_STAGE_TWO_TWR_JET:
+		eventControl.Tower_Jettison = MissionTime;
+		break;
+	case STAGE_ORBIT_SIVB:
+		eventControl.EOI = MissionTime;
+		break;
+	case CSM_LEM_STAGE:
+		eventControl.CSM_LV_SEP = MissionTime;
+		break;
+	case CM_STAGE:
+		eventControl.CSM_SEP = MissionTime;
+		break;
+	}
 }
 
 void Saturn::DoLaunch(double simt)
@@ -4289,18 +4326,10 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			NextMissionEventTime = MissionTime + 25.;
 
 			//
-			// Checklist actions
+			// Event handler
 			//
+			eventControl.splashdown = MissionTime;
 
-			FlightPostLandingBatBusACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-			FlightPostLandingBatBusBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-			FlightPostLandingBatCCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-
-			FlightPostLandingMainACircuitBraker.SwitchTo(TOGGLESWITCH_DOWN);
-			FlightPostLandingMainBCircuitBraker.SwitchTo(TOGGLESWITCH_DOWN);
-
-			MainBusTieBatAcSwitch.SwitchTo(THREEPOSSWITCH_DOWN);
-			MainBusTieBatBcSwitch.SwitchTo(THREEPOSSWITCH_DOWN);
 		}
 
 		if (PyrosArmed() && ChutesAttached && ELSActive() && ((MainReleaseSwitch.IsUp()) || (!Realism && SplashdownPlayed && MissionTime >= NextMissionEventTime))) {
@@ -4318,26 +4347,6 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			SetStage(CM_ENTRY_STAGE_SEVEN);
 			soundlib.LoadSound(Swater, WATERLOOP_SOUND);
 
-			//
-			// Checklist actions
-			//
-
-			// Float bag
-			FloatBag1BatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-			FloatBag2BatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-			FloatBag3FLTPLCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-			
-			FloatBagSwitch1.SwitchTo(THREEPOSSWITCH_UP);
-			FloatBagSwitch2.SwitchTo(THREEPOSSWITCH_UP);
-			FloatBagSwitch3.SwitchTo(THREEPOSSWITCH_UP);
-
-			// Beacon light
-			PostLandingBCNLTSwitch.SwitchTo(THREEPOSSWITCH_UP);
-
-			// Post landind vent
-			PostLDGVentValveLever.SwitchTo(TOGGLESWITCH_DOWN);
-			PostLandingVentSwitch.SwitchTo(THREEPOSSWITCH_UP);
-			
 		}
 		//sprintf(oapiDebugString(), "Altitude %.1f", GetAltitude());
 		break;
@@ -4687,55 +4696,9 @@ bool Saturn::CheckForLaunchShutdown()
 			AtempY  = 0;
 			AtempR  = 0;
 
-			//
-			// Checklist actions
-			//
-
-			// Un-Tie batteries from buses
-			MainBusTieBatAcSwitch.SwitchTo(THREEPOSSWITCH_DOWN);
-			MainBusTieBatBcSwitch.SwitchTo(THREEPOSSWITCH_DOWN);
-
-			// Unlatch FC valves
-			FCReacsValvesSwitch.SwitchTo(TOGGLESWITCH_UP);
-			CautionWarningModeSwitch.SwitchTo(THREEPOSSWITCH_UP);
-			
-			// Turn on cyro fans
-			H2Fan1Switch.SwitchTo(THREEPOSSWITCH_UP);
-			H2Fan2Switch.SwitchTo(THREEPOSSWITCH_UP);
-			O2Fan1Switch.SwitchTo(THREEPOSSWITCH_UP);
-			O2Fan2Switch.SwitchTo(THREEPOSSWITCH_UP);
-
-			// ECS flight configuration
-			EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_UP);
-			GlycolToRadiatorsLever.SwitchTo(TOGGLESWITCH_UP);
-			EcsRadiatorsHeaterPrimSwitch.SwitchTo(THREEPOSSWITCH_UP);
-			PotH2oHtrSwitch.SwitchTo(THREEPOSSWITCH_UP);
-			GlycolEvapTempInSwitch.SwitchTo(TOGGLESWITCH_UP);
-
-			// Turn on cabin fans
-			CabinFan1Switch.SwitchTo(TOGGLESWITCH_UP);
-			CabinFan2Switch.SwitchTo(TOGGLESWITCH_UP);
-
-			// Close direct O2 valve
-			DirectO2RotarySwitch.SwitchTo(6);
-
-			// Open suit circuit return valve
-			SuitCircuitReturnValveLever.SwitchTo(TOGGLESWITCH_DOWN);
-
-			// Cabin pressure relief valves to normal
-			CabinPressureReliefLever1.SwitchTo(1);
-			CabinPressureReliefLever2.SwitchTo(1);
-
-			// Repress package off
-			OxygenRepressPackageRotary.SwitchTo(1);
-
-			// Avoid O2 flow high alarm 
 			if (!Realism)
 				cws.SetInhibitNextMasterAlarm(true);
 			
-			// Extend docking probe
-			DockingProbeExtdRelSwitch.SwitchTo(THREEPOSSWITCH_UP);
-			DockingProbeExtdRelSwitch.SwitchTo(THREEPOSSWITCH_DOWN);			
 		}
 		return true;
 	}
@@ -6007,4 +5970,8 @@ double Saturn::CalculateApogeeTime()
 ChecklistController *Saturn::GetChecklistControl()
 {
 	return &checkControl;
+}
+void Saturn::TLI_Begun()
+{
+	eventControl.TLI = MissionTime;
 }

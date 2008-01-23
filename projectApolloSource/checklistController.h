@@ -12,12 +12,25 @@
 #include "nasspdefs.h"
 #include "connector.h"
 #include "BasicExcelVC6.hpp"
+#include "OrbiterSoundSDK35.h"
+#include "soundlib.h"
 using namespace std;
 using namespace YExcel;
 
 #define ChecklistControllerStartString "<checklist>"
 #define ChecklistControllerEndString "</checklist>"
+#define SaturnEventStartString "SaturnEvents"
+#define SaturnEventEndString "SaturnEvents END"
+#define ChecklistItemStartString "<item>"
+#define ChecklistItemEndString "</item>"
+#define ChecklistGroupStartString "<group>"
+#define ChecklistGroupEndString "</group>"
+#define ChecklistContainerStartString "<container>"
+#define ChecklistContainerEndString "</container>"
 
+#define DefaultChecklistFile "Doc\\Project Apollo - NASSP\\Check List\\DefaultCheck.xls"
+
+struct SaturnEvents;
 /// -------------------------------------------------------------
 /// Listing of available events to spawn a checklist off of.
 /// -------------------------------------------------------------
@@ -26,8 +39,24 @@ enum RelativeEvent
 	CHECKLIST_RELATIVE = -2, /// < check item time is relative to the beginning of the checklist.  WARNING! Not valid for groups.
 	MISSION_TIME = -1, /// < check item happens at specific MJD WARNING! could cause unexpected results if items after this become scheduled to operate before it based on a checklist event starting late.  Should primarily only be used for primary checklists!
 	NO_TIME_DEF = 0, /// < check item happens when it is reached NOTE: in auto mode, this item will inherit the state of last time-relative checklist item before it.  Groups with this definition will NOT be automated at all.
+	EARTH_ORBIT_INSERT,
+	SPLASHDOWN,
+	CSMSTARTUP,
+	SECONDSTAGE,
+	SIVBSTAGE,
+	TOWER_JETT,
+	CSM_LV_SEP,
+	CSM_SEP,
+	TLI,
+	PAYLOAD_EXTRACTION,
 };
-
+RelativeEvent checkEvent(const char*, bool Group=false);
+enum Status
+{
+	FAILED = -1,
+	PENDING = 0,
+	COMPLETE = 1
+};
 /// -------------------------------------------------------------
 /// A "checklist group" which defines an available checklist
 /// "program"
@@ -41,12 +70,29 @@ struct ChecklistGroup
 	{
 		group = -1;
 		time = 0;
+		deadline = 0;
 		relativeEvent = NO_TIME_DEF;
 		manualSelect = false;
 		autoSelect = false;
 		essential = false;
 		name[0] = 0;
+		autoSlow = false;
+		soundFile[0] = 0;
+		called = false;
 	}
+/// -------------------------------------------------------------
+/// Load this checklist group up from a file.
+/// -------------------------------------------------------------
+	void init(vector<BasicExcelCell> &);
+/// -------------------------------------------------------------
+/// Scenario handling.
+/// -------------------------------------------------------------
+	void load(FILEHANDLE);
+	void save(FILEHANDLE);
+/// -------------------------------------------------------------
+/// Check whether this group should be loaded in this timestep
+/// -------------------------------------------------------------
+	bool checkExec(double,SaturnEvents &);
 /// -------------------------------------------------------------
 /// index defined at runtime.  Use this in a ChecklistItem struct
 /// to start the checklist operation of that group.
@@ -57,6 +103,11 @@ struct ChecklistGroup
 /// this time)
 /// -------------------------------------------------------------
 	double time;
+/// -------------------------------------------------------------
+/// Time after which this group should not be executed 
+/// automatically.
+/// -------------------------------------------------------------
+	double deadline;
 /// -------------------------------------------------------------
 /// Event relative to which the time triggers.
 /// -------------------------------------------------------------
@@ -83,6 +134,18 @@ struct ChecklistGroup
 /// Name of the group as should be displayed on the checklist.
 /// -------------------------------------------------------------
 	char name[100];
+/// -------------------------------------------------------------
+/// Auto slow when this group is spawned.
+/// -------------------------------------------------------------
+	bool autoSlow;
+/// -------------------------------------------------------------
+/// name of sound file.
+/// -------------------------------------------------------------
+	char soundFile[100];
+/// -------------------------------------------------------------
+/// Boolean defining if this has been called yet.
+/// -------------------------------------------------------------
+	bool called;
 };
 /// -------------------------------------------------------------
 /// An individual element in a checklist program.  These elements
@@ -107,9 +170,21 @@ struct ChecklistItem
 		automatic = false;
 		item[0] = 0;
 		position = 0;
-		complete = false;
-		failed = false;
+		status = PENDING;
 	}
+/// -------------------------------------------------------------
+/// Load ChecklistItem from excel file
+/// -------------------------------------------------------------
+	void init(vector<BasicExcelCell> &, const vector<ChecklistGroup> &);
+/// -------------------------------------------------------------
+/// Scenario load/save.
+/// -------------------------------------------------------------
+	void load(FILEHANDLE);
+	void save(FILEHANDLE);
+/// -------------------------------------------------------------
+/// Check whether this item should be executed in this timestep
+/// -------------------------------------------------------------
+	bool checkExec(double,double,SaturnEvents &);
 /// -------------------------------------------------------------
 /// index defined dynaimcally at runtime.  All available
 /// checklists have a group id retrieved from the ChecklistGroup
@@ -161,15 +236,10 @@ struct ChecklistItem
 /// -------------------------------------------------------------
 	int position;
 /// -------------------------------------------------------------
-/// This is set to represent whether the step should be shown as
-/// already complete.
+/// This is the status of the class.  It is saved and loaded when
+/// this item is active or pending.
 /// -------------------------------------------------------------
-	bool complete;
-/// -------------------------------------------------------------
-/// This is set to represent whether the step should be shown as
-/// failed.
-/// -------------------------------------------------------------
-	bool failed;
+	Status status;
 /// -------------------------------------------------------------
 /// This is an internal operator for the class.  The output should
 /// not be expected to be representative of true equality between
@@ -193,7 +263,7 @@ struct ChecklistContainer
 /// -------------------------------------------------------------
 /// Constructor, requires a group to initialize from.
 /// -------------------------------------------------------------
-	ChecklistContainer(const ChecklistGroup &, BasicExcel &, const vector<ChecklistGroup> &);
+	ChecklistContainer(const ChecklistGroup &, ChecklistController &,double);
 /// -------------------------------------------------------------
 /// Copy Constructor.
 /// -------------------------------------------------------------
@@ -202,6 +272,11 @@ struct ChecklistContainer
 /// Assignment operator.
 /// -------------------------------------------------------------
 	void operator=(const ChecklistContainer &);
+/// -------------------------------------------------------------
+/// Scenario functions
+/// -------------------------------------------------------------
+	void save(FILEHANDLE);
+	void load(FILEHANDLE, ChecklistController &);
 /// -------------------------------------------------------------
 /// Checklist Group that this "program" is based on.
 /// -------------------------------------------------------------
@@ -214,13 +289,37 @@ struct ChecklistContainer
 /// An iterator that rests on the current step of the program.
 /// -------------------------------------------------------------
 	vector<ChecklistItem>::iterator sequence;
+/// -------------------------------------------------------------
+/// The time this checklist was started.
+/// -------------------------------------------------------------
+	double startTime;
 private:
 /// -------------------------------------------------------------
 /// Initializer for the initializer.
 /// -------------------------------------------------------------
-	void initSet(const ChecklistGroup &,vector<ChecklistItem> &, BasicExcel &, const vector<ChecklistGroup> &);
+	void initSet(const ChecklistGroup &,vector<ChecklistItem> &, ChecklistController &);
+};
+/// -------------------------------------------------------------
+/// Structure that maintains Saturn related event times.
+/// -------------------------------------------------------------
+struct SaturnEvents
+{
+	SaturnEvents();
+	void save(FILEHANDLE scn);
+	void load(FILEHANDLE scn);
+	double splashdown;	//Time of splashdown.
+	double EOI;	//Time of earth orbit insertion.
+	double CSMStartup; //Time at which the CSM is first brought online (when the scenario is started)
+	double SecondStage; //Time at which the LV goes to the second stage (if not the SIVB)
+	double SIVBStage; //Time at which the LV goes to the SIVB.
+	double Tower_Jettison; //Time at which the Escape Tower was jettisoned.
+	double CSM_LV_SEP; //Time at which the CSM left the Launch Vehicle.
+	double CSM_SEP; //Time at which the CM separates from the SM.
+	double TLI; //Time at which the TLI burn begins.
+	double Payload_Extraction; //Time at which the payload is removed from the SIVB
 };
 
+#ifndef _PA_MFDCONNECTOR_H
 #include "MFDconnector.h" //Has to be done here because fails further up.
 
 /// -------------------------------------------------------------
@@ -232,7 +331,7 @@ private:
 class ChecklistController
 {
 public:
-	ChecklistController();
+	ChecklistController(SoundLib);
 	~ChecklistController();
 /// -------------------------------------------------------------
 /// Pass in a ChecklistItem with group and index initialized.
@@ -272,7 +371,6 @@ public:
 /// -------------------------------------------------------------
 	bool autoComplete(bool);
 	bool autoComplete();
-	void clbkTimestep(double missionTime);
 /// -------------------------------------------------------------
 /// This method does default (empty) initialization.  Can be 
 /// called to indicate that the Checklist controller should do 
@@ -281,7 +379,7 @@ public:
 /// you want to override the functions loaded by the scenario.
 /// IE you want to use an unmanned flight.
 /// -------------------------------------------------------------
-	void init();
+	bool inline init();
 /// -------------------------------------------------------------
 /// This method initializes any vessel for any mission.  Uses a
 /// custom checklist file where the checkFile parameter is the
@@ -313,8 +411,18 @@ public:
 /// Allow automated checklists as well as automatic checklist
 /// selection and automatic completion detection.
 /// -------------------------------------------------------------
-	bool linktoVessel(VESSEL *vessel);
-protected:
+	bool linktoVessel(VESSEL *);
+/// -------------------------------------------------------------
+/// Timestep function.  If autoexecute is on, completes checklist
+/// items that are due.  Updates internal timer.  Only executes
+/// once per second (returns immediately other calls each second)
+/// Additionally processes "complete" steps.
+/// -------------------------------------------------------------
+	void timestep(double missiontime, SaturnEvents eventController);
+/// -------------------------------------------------------------
+/// Returns the title of the active checklist.
+/// -------------------------------------------------------------
+	char *activeName();
 private:
 	/// Auto complete flag.  If true, automatically complete the checklist.
 	bool complete;
@@ -327,28 +435,38 @@ private:
 	deque<ChecklistContainer> action;
 	///The active checklist group.
 	ChecklistContainer active;
-	///The list of all available checklist groups.
-	vector<ChecklistGroup> groups;
 	///The mission time at which the controller was last called.
 	double lastMissionTime;
 	///This is where actual "default" init happens.  Only the constructor calls this with false.
-	bool init(bool final);
+	bool init(bool);
 	///This determines whether or not the checklist gets auto executed.
 	bool autoexecute;
 	///Used to spawn new "program"
-	bool spawnCheck(int group, bool fail, bool automagic = false);
+	bool spawnCheck(int, bool, bool automagic = false);
 	///Connector to the panel
 	MFDConnector conn;
 	/// Used to move forward through the elements.
 	void iterate();
 	///The file reference.
 	char FileName[100];
-	/// The actual file.
-	BasicExcel file;
 	///A temporary, frequently regenerated list of all availabe manually selectable checklists.
 	vector<ChecklistGroup> groups_manual;
+protected:	
+	/// Access to the vessels sound handler
+	SoundLib soundLib;
+	/// Sound that needs to be played.
+	Sound checkSound;
+	/// Whether we have a sound cued up to be played.
+	bool playSound;
+	/// The actual file.
+	BasicExcel file;
+	///The list of all available checklist groups.
+	vector<ChecklistGroup> groups;
+public:
+	friend struct ChecklistContainer;
 };
 
 //Reenable 4018 warning
 #pragma warning ( pop )
+#endif
 #endif

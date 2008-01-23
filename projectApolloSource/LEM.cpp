@@ -22,6 +22,13 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2008/01/15 19:13:05  lassombra
+  *	Implemented Vessel connector and Checklist Completion step.  The third button down on the left side completes the "current" step on the temporary MFD.
+  *	
+  *	Additionally made dummy checklists reference "Mission Timer Switch" so that the flashing function can be tested.
+  *	
+  *	Finally, updated the MFD demo to show one way to do a flashing switch, and a recommended deconstructor implementation.
+  *	
   *	Revision 1.15  2008/01/14 01:17:01  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -201,6 +208,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	ComYawMeter(0.0, 5.0, 220.0, -50.0),
 	Panel14SignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
+	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
 	imu(agc, Panelsdk)
 

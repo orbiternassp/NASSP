@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2008/01/14 01:17:04  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.8  2007/12/04 20:26:31  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -527,6 +530,13 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		if (OurVessel)
 		{
 			OurVessel->ClearTLISounds();
+			return true;
+		}
+		break;
+	case IUCSM_TLI_BEGUN:
+		if (OurVessel)
+		{
+			OurVessel->TLI_Begun();
 			return true;
 		}
 		break;

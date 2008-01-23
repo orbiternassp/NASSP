@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2008/01/22 02:55:08  movieman523
+  *	Moved DockConnectors/UndockConnectors into the base class. We now dock/undock all registered connectors on that port.
+  *	
   *	Revision 1.15  2008/01/16 19:03:04  lassombra
   *	All but time-step, automation, and complete save/load is now implemented on the Checklist Controller (and the files that depend on it).
   *	
@@ -306,7 +309,8 @@ public:
 		MFD_PANEL_GET_CHECKLIST_LIST,			///< Get list of allowed checklists.
 		MFD_PANEL_FAIL_ITEM,					///< Fail a checklist step.
 		MFD_PANEL_COMPLETE_ITEM,				///< Complete a checklist step.
-		MFD_PANEL_CHECKLIST_AUTOCOMPLETE_QUERY	///< Find out the autocomplete state.
+		MFD_PANEL_CHECKLIST_AUTOCOMPLETE_QUERY,	///< Find out the autocomplete state.
+		MFD_PANEL_CHECKLIST_NAME,				///< Find out the name of the current checklist
 	};
 
 	PanelConnector(PanelSwitches &p, ChecklistController &c);

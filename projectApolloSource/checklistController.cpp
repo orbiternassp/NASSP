@@ -3,414 +3,448 @@
 #include <math.h>
 #include "checklistController.h"
 
+//Code to make the compiler shut up.
+#pragma warning ( push )
+#pragma warning ( disable:4018 )
+
 using namespace std;
-//Todo: Verify
-ChecklistController::ChecklistController()
+// Todo: Verify
+ChecklistController::ChecklistController(SoundLib sound)
 {
-	// This SHOULD be final implementation.  Any further initializing should be handled between init and load.
 	initCalled = false;
+	soundLib = sound;
+	FileName[0] = 0;
 	init(false);
 }
-//Todo: Verify
+// Todo: Verify
 ChecklistController::~ChecklistController()
 {
 }
-//todo: Verify
+// Todo: Verify
 bool ChecklistController::getChecklistItem(ChecklistItem* input)
 {
-// Disable signed/unsigned mismatch warning, we're being careful.
-#pragma warning ( push )
-#pragma warning ( disable: 4018 )
-	// Catcher, are we being told to initialize a checklist group?
-	if (input->group > -1)
+	if (input->group != -1)
 	{
-		if(!spawnCheck(input->group,false))
-			return false; // If we failed to initialize the group, stop here and FAIL.
+		spawnCheck(input->group,false);
 	}
 
-	// We are preparing to output data.
-	// Make sure we have something to output.
 	if (active.program.group == -1)
-		return false; //No active program.  Don't display anything.
+		return false;
 
-	if (input->index > -1) //Are we being asked for a specific input item?  Or just any old item?
+	if (input->index != -1)
 	{
-		if (input->index+active.sequence->index >= active.set.size())
-			return false; // We are being asked for an index that doesn't exist.  Can happen quite often.
-		vector<ChecklistItem>::iterator temp = active.set.begin(); //Create new iterator on the vector.
-		temp += active.sequence->index; // Move the iterator to the location of sequence.
-		temp += input->index; // Move it further forward according to the given index.
-		*input = *temp; //Set input accordingly.
-		return true; //Return.
+		if (input->index + active.sequence->index >= active.set.size())
+			return false;
+		*input = active.set[active.sequence->index + input->index];
+		return true;
 	}
-	else
-	{
-		*input = *active.sequence; //We just want the first item.
-		return true; //Return.
-	}
-	return false; //Catcher case, should never be hit.
-// Reenable warnings
-#pragma warning ( pop )
+	*input = *active.sequence;
+	return true;
 }
-//todo: Verify
-vector <ChecklistGroup> *ChecklistController::getChecklistList()
+// Todo: Verify
+vector<ChecklistGroup> *ChecklistController::getChecklistList()
 {
-	groups_manual = vector<ChecklistGroup>();
+	groups_manual.clear();
 	for (int i = 0; i < groups.size(); i++)
-	{
 		if (groups[i].manualSelect)
 			groups_manual.push_back(groups[i]);
-	}
+
 	return &groups_manual;
 }
-//todo: Verify
+// Todo: Verify
 bool ChecklistController::failChecklistItem(ChecklistItem* input)
 {
-	//Verify integrity of input.
+	int failure = input->failEvent;
+
 	if (input->group != active.program.group)
 		return false;
 	if (input->index >= active.set.size())
 		return false;
-
-	
-	if (active.set[input->index] == *input)
-	{
-		active.set[input->index].failed = true;
-	}
-	else
-		return false;
-
-	int failure = active.set[input->index].failEvent;
+	active.set[input->index].status = FAILED;
+	conn.SetFlashing(active.set[input->index].item,false);
 	iterate();
-	// Special handling for failure branching.
-	if (failure > -1)
-	{
-		spawnCheck(failure,true);
-	}
+
+	if (failure != -1)
+		return spawnCheck(failure,true);
 	return true;
 }
-//todo: Verify
+// Todo: Verify
 bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 {
-// Disable signed/unsigned mismatch warning, we're being careful.
-#pragma warning ( push )
-#pragma warning ( disable: 4018 )
-	// Input Verification.
 	if (input->group != active.program.group)
-		return false;	//Simply not allowed.
-	if (input->index >= active.set.size())
-			return false; //catcher.
-
-	if (active.set[input->index] == *input) // Just in case
-	{
-		active.set[input->index].complete = true; //This hopefully won't create chaos.
-	}
-	else
 		return false;
-	
+	if (input->index >= active.set.size())
+		return false;
+
+	active.set[input->index].status = COMPLETE;
+	conn.SetFlashing(active.set[input->index].item,false);
 	iterate();
 	return true;
-// Reenable signed/unsigned mismatch checking
-#pragma warning ( pop )
 }
-//todo: Verify
+// Todo: Verify
 bool ChecklistController::autoComplete(bool input)
 {
 	bool temp = complete;
 	complete = input;
 	return temp;
 }
-//todo: Verify
+// Todo: Verify
 bool ChecklistController::autoComplete()
 {
 	return complete;
 }
-//todo: Verify
-bool ChecklistController::autoExecute(bool set)
+// Todo: Verify
+bool inline ChecklistController::init()
 {
-	bool temp = autoexecute;
-	autoexecute = set;
-	return temp;
+	return init(DefaultChecklistFile);
 }
-//todo: Verify
-bool ChecklistController::autoExecute()
+// Todo: Verify
+bool ChecklistController::init(char *checkFile)
 {
-	return autoexecute;
-}
-//todo: Verify
-bool ChecklistController::spawnCheck(int group, bool fail, bool automagic)
-{
-// Code to tell the compiler to shut up about signed/unsigned mismatch.  Code is implemented in a way to verify no problems.
-#pragma warning( push )
-#pragma warning( disable : 4018 )
-
-	// Verify input integrity:
-	if (group < 0) //ERROR, HOW DID THIS HAPPEN?
-		return false;
-	if (groups.size() <= group) // group exists?
-		return false;
-	if (!fail && !groups[group].manualSelect && !automagic) // group was selected manually which isn't allowed.
-		return false;
-	if (!fail && !groups[group].autoSelect && automagic) // group was selected automatically which isn't allowed.
+	if (!init(true))
 		return false;
 
-	// Special case, we are launching a failure checklist.
-	if(fail)
+	if (!file.Load(checkFile))
+		if (!file.Load(DefaultChecklistFile))
+			return false;
+	BasicExcelWorksheet* sheet;
+	vector<BasicExcelCell> cells;
+	ChecklistGroup temp;
+
+	sheet = file.GetWorksheet("GROUPS");
+	if (sheet)
 	{
-		action.push_front(active);
-		active = ChecklistContainer(groups[group],file,groups);
-	}
-	//Possible cases:
-	//1) There is no group active - COMPLETE
-	if (active.program.group == -1)
-	{
-		// Simply spawn new checklist.
-		active = ChecklistContainer(groups[group],file,groups);
-		return true;
-	}
-	//2) group is currently active - COMPLETE
-	if (active.program.group == group)
-	{
-		// No need to do anything, we are trying to start the active checklist.
-		return true;
-	}
-	//3) group is not currently active but is on standby - COMPLETE
-	//Checking standby elements to see if it's there.
-	// init location which will serve dual purpose.  It will tell us if we found it, and where it is.
-	int location = -1;
-	for (int i=0; i < action.size(); i++)
-	{
-		if (action[i].program.group == group) // If we actually found it, save it's location.
-			location = i;
-	}
-	// Do this if it exists.
-	if (location > -1)
-	{
-		//3a) active group is essential - COMPLETE
-		if (active.program.essential)
+		for (int i = 1; i < sheet->GetTotalRows(); i++)
 		{
-			// Create temporary container.
-			ChecklistContainer temp(action[location]);
-			// Now that we have our data, remove it from the que.
-			for (int i = location; i < action.size()-1; i++)
-			{
-				action[i] = action[i+1]; // Copy the next item into the current slot.
-			}
-			action.pop_back(); //Should not be a problem, this should be a duplicate at this point.
-			action.push_front(temp); //Put our new program at the very beginning.
-			return true;
-		}
-		//3b) active group is not essential. - COMPLETE
-		else
-		{
-			//We're replacing active, so put it back on the que.
-			action.push_front(active);
-			//That last action moved everything down one, save the location.
-			location++;
-			//Load up our program.
-			active = action[location];
-			// Now that we have our data, remove it from the que.
-			for (int i = location; i < action.size()-1; i++)
-			{
-				action[i] = action[i+1]; // Move items after new program up one
-			}
-			action.pop_back(); //Should not be a problem, this should be a duplicate at this point.
-			return true;
+			for (int ii = 0; ii < 9/*Number of columns in accepted sheet*/; ii++)
+				cells.push_back(*sheet->Cell(i,ii));
+			temp.init(cells);
+			temp.group = groups.size();
+			groups.push_back(temp);
+			temp = ChecklistGroup();
+			cells = vector<BasicExcelCell>();
 		}
 	}
-	//4) Group needs to be initialized. - DEFAULT!
-	//4a) Group is automagic and not essential - COMPLETE
-	if (automagic && !groups[group].essential)
-	{
-		// It's auto and not essential.  We'll get to it when we get to it, throw it at the back of the que.
-		action.push_back(ChecklistContainer(groups[group],file,groups));
-		return true;
-	}
-	//4b) Group is not automagic and not essential - COMPLETE
-	if (!automagic && !groups[group].essential)
-	{
-		//4ba) Active group is essential - COMPLETE
-		if (active.program.essential)
-		{
-			// We don't override active, so just jump in the front of the line.
-			action.push_front(ChecklistContainer(groups[group],file,groups));
-			return true;
-		}
-		//4bb) Active group is not essential - COMPLETE
-		else
-		{
-			// We are overriding active, so put active back in the front of the line.
-			action.push_front(active);
-			// Now create a new active for our group.
-			active = ChecklistContainer(groups[group],file,groups);
-			return true;
-		}
-	}
-	//4c) Group is essential NOTICE: This disregards automagic completely as it ALWAYS goes to the front. - COMPLETE
-	//4ca) Active group is essential NOTICE: Don't override an essential group. - COMPLETE
-	if (active.program.essential)
-	{
-		// We NEVER override an essential group, so we'll just jump in the front of the line.
-		action.push_front(ChecklistContainer(groups[group],file,groups));
-		return true;
-	}
-	//4cb) Active group is not essential - COMPLETE
-	else
-	{
-		// Active is not essential, so push it out of the way (to the front of the line).
-		action.push_front(active);
-		// Spawn new active with our group.
-		active = ChecklistContainer(groups[group],file,groups);
-		return true;
-	}
-	// Somehow, we were unable to spawn the checklist.  Getting this return with known valid data represents a bug.
-	return false;
-// reenable warning 4018 concerning signed/unsigned mismatch.
-#pragma warning ( pop )
+	return true;
 }
-//Todo: Verify
-bool ChecklistController::linktoVessel(VESSEL *vessel)
-{
-	return conn.ConnectToVessel(vessel);
-}
-//Todo: Verify
-void ChecklistController::iterate()
-{
-	while (active.sequence != active.set.end() && (active.sequence->complete || active.sequence->failed))
-	{
-		//Turn off the flashing.
-		conn.SetFlashing(active.sequence->item,false);
-		//Move to next element.
-		active.sequence ++;
-		//Did we reach the end of the chekclist?  If so, load next.
-		while (active.program.group != -1 && active.sequence == active.set.end())
-		{
-			// Set to empty checklist item
-			active = ChecklistContainer();
-			// Determine if we have another program to switch to.
-			if (action.size() > 0)
-			{
-				// Switch to it and remove it from the que
-				active = action[0];
-				action.pop_front();
-			}
-		}
-		// Keep checking our status.
-	}
-}
-//todo: fully implement save/load functions. (Top level save complete)
+// Todo: Verify
 void ChecklistController::save(FILEHANDLE scn)
 {
 	oapiWriteScenario_string(scn,ChecklistControllerStartString,"");
 	oapiWriteScenario_string(scn,"FILE",FileName);
 	oapiWriteScenario_int(scn,"AUTO",autoexecute);
+
+	if (active.program.group != -1)
+		active.save(scn);
+	for (int i = 0; i < action.size(); i++)
+		action[i].save(scn);
+
+	for (int i = 0; i < groups.size(); i++)
+		if (groups[i].called)
+			groups[i].save(scn);
+
 	oapiWriteScenario_string(scn,ChecklistControllerEndString,"");
 }
-//todo: fully implement save/load functions. (Top level load complete)
+// Todo: Verify
 void ChecklistController::load(FILEHANDLE scn)
 {
-	char *line, buffer[100];
+	char *line,buffer[100];
+	line = "";
 	buffer[0] = 0;
-	line="";
 	while (strnicmp(line,ChecklistControllerEndString,strlen(ChecklistControllerEndString)))
 	{
+		bool found = false;
+		if (!found && !strnicmp(line,"FILE",4))
+		{
+			strncpy(FileName,line+5,100);
+			init(FileName);
+			found = true;
+		}
+		if (!found && !strnicmp(line,"AUTO",4))
+		{
+			int i;
+			sscanf(line+4,"%d",&i);
+			autoexecute = (i != 0);
+			found = true;
+		}
+		if (!found && !strnicmp(line,ChecklistContainerStartString,strlen(ChecklistContainerStartString)))
+		{
+			ChecklistContainer temp;
+			temp.load(scn,*this);
+			if (active.program.group == -1)
+				active = temp;
+			else
+				action.push_back(temp);
+			found = true;
+		}
+		if (!found && !strnicmp(line,ChecklistGroupStartString,strlen(ChecklistGroupStartString)))
+		{
+			oapiReadScenario_nextline(scn,line);
+			int i;
+			if (!strnicmp(line,"INDEX",5))
+			{
+				sscanf(line+5,"%d",&i);
+				groups[i].load(scn);
+			}
+			found = true;
+		}
+
 		oapiReadScenario_nextline(scn,line);
-		if (!strnicmp(line,"FILE",4))
-		{
-			char temp[100];
-			temp[0] = 0;
-			strcpy(temp,line+5);
-			init(temp);
-		}
-		if (!strnicmp(line,"AUTO",4))
-		{
-			sscanf(line+4, "%i", &autoexecute);
-		}
 	}
 	init();
 }
-//todo: assess and implement.
-void ChecklistController::clbkTimestep(double missionTime)
+// Todo: Verify
+bool ChecklistController::autoExecute(bool input)
 {
-	lastMissionTime = missionTime;
+	bool temp = autoexecute;
+	autoexecute = input;
+	return temp;
 }
-//todo: any further non-file specific initialization needed.
-bool ChecklistController::init(bool final)
+// Todo: Verify
+bool ChecklistController::autoExecute()
+{
+	return autoexecute;
+}
+// Todo: Verify
+bool ChecklistController::linktoVessel(VESSEL *vessel)
+{
+	return conn.ConnectToVessel(vessel);
+}
+
+// Todo: Verify
+bool ChecklistController::init(bool input)
 {
 	if (initCalled)
 		return false;
+	initCalled = input;
 	complete = true;
-	initCalled = final;
-	lastMissionTime = 0;
-	FileName[0] = 0;
-	if (!final)
-		autoexecute = false;
+	lastMissionTime = MINUS_INFINITY;
+	autoexecute = false;
+	playSound = false;
 
 	return true;
 }
-//todo: Verify
-bool ChecklistController::init(char *checkFile)
+// Todo: Verify
+bool ChecklistController::spawnCheck(int group,bool failed,bool automagic)
 {
-	if(!init(true))
+	// verify integrity of input.
+	if (group == -1)
+		return false; //How we got here, I don't know.
+	if (group >= groups.size())
+		return false; //Shouldn't get here, but just to be certain.
+	if (!failed && !automagic && !groups[group].manualSelect) //Not a failure spawn, not auto spawn, and not permitted to manual spawn
 		return false;
-	strcpy(FileName,checkFile);
-	//Steps: Load file, Parse Groups page.
-	if (!file.Load(checkFile))
+	if (!failed && automagic && !groups[group].autoSelect) //Not a failure spawn, auto, not permitted to be auto
+		return false;
+	if (active.program.group == group) //Already active
+		return true;
+	
+	// Begin checking if it's queued up.
+	int location = -1;
+	for (int i = 0; i < action.size(); i++)
+		if (action[i].program.group == group)
+			location = i;
+
+	// automagic, not essential, leave be
+	// otherwise process.
+	if (location > -1 && automagic && !action[location].program.essential)
+		return true;
+	ChecklistContainer temp;
+	if (location > -1)
 	{
-		if (!file.Load("Doc\\Project Apollo - NASSP\\Check List\\DefaultCheck.xls"))
-			return false;
-		else
-			strcpy(FileName,"Doc\\Project Apollo - NASSP\\Check List\\DefaultCheck.xls");
+		temp = action[location];
+		for (int i = location; i < action.size() - 1; i++)
+			action[i] = action[i+1];
+		action.pop_back();
+	}
+	else
+	{
+		temp = ChecklistContainer(groups[group],*this,lastMissionTime);
 	}
 
-	char temp[100];
-	temp[0] = 0;
-	BasicExcelWorksheet* sheet = file.GetWorksheet("GROUPS");
-	BasicExcelCell* cell = sheet->Cell(1,0);
-	int i = 1;
-	ChecklistGroup t;
-	while (cell->GetString() != 0)
+	// Use temp.
+	// Case 1: failed
+	if (failed)
 	{
-		strcpy(temp,cell->GetString());
-		// Already initialized to the first cell's contents.
-		strcpy(t.name,temp);
-		// Move to time column.
-		cell = sheet->Cell(i,1);
-		// should be stored as a double
-		t.time = cell->GetDouble();
-		// Move to relative event column.
-		cell = sheet->Cell(i,2);
-		// Should be stored as a string.
-		t.relativeEvent = NO_TIME_DEF;
-		if (cell->GetString())
+		// case a: active is empty.
+		if (active.program.group == -1)
 		{
-			strcpy(temp,cell->GetString());
-			//Relative event selection
-			if (!strnicmp(temp,"MISSION_TIME",12))
-				t.relativeEvent = MISSION_TIME;
+			active = temp;
+			return true;
 		}
-		// Move to auto select column.
-		cell = sheet->Cell(i,3);
-		// Convert from integer to boolean is natively supported.
-		t.autoSelect = (cell->GetInteger() != 0);
-		// Move to manual select column.
-		cell = sheet->Cell(i,4);
-		t.manualSelect = (cell->GetInteger() != 0);
-		// Move to essential column.
-		cell = sheet->Cell(i,5);
-		t.essential = (cell->GetInteger() != 0);
-		//Put it into the vector.
-		t.group = groups.size();
-		groups.push_back(t);
-		t = ChecklistGroup();
-		i++;
-		cell = sheet->Cell(i,0);
+		// case b: Otherwise.
+		else
+		{
+			action.push_front(active);
+			active = temp;
+			return true;
+		}
 	}
-
-	return true;
+	// Case 2: automagic
+	if (automagic)
+	{
+		// case a: active is empty
+		if (active.program.group == -1)
+		{
+			active = temp;
+			return true;
+		}
+		// case b: non-essential
+		if (!temp.program.essential)
+		{
+			action.push_back(temp);
+			return true;
+		}
+		// case c: essential
+		if (temp.program.essential)
+		{
+			// case c1:Active is essential
+			if (active.program.essential)
+			{
+				action.push_front(temp);
+				return true;
+			}
+			// case c2:Active is not essential
+			else
+			{
+				action.push_front(active);
+				active = temp;
+				return true;
+			}
+		}
+	}
+	// Case 3: manual
+	if (!automagic)
+	{
+		// case a: active is empty
+		if (active.program.group == -1)
+		{
+			active = temp;
+			return true;
+		}
+		// case b: active is essential
+		if (active.program.essential)
+		{
+			action.push_front(temp);
+			return true;
+		}
+		// case c: active is not essential.
+		if (!active.program.essential)
+		{
+			action.push_front(active);
+			active = temp;
+			return true;
+		}
+	}
+	return false; //Catcher
 }
-//todo: Verify
-void ChecklistController::init()
+// Todo: Verify
+void ChecklistController::iterate()
 {
-	init("Doc\\Project Apollo - NASSP\\Check List\\DefaultCheck.xls");
+	while (active.program.group != -1 && active.sequence->status != PENDING)
+	{
+		if (active.sequence->index == (active.set.size() - 1))
+		{
+			if (action.size() > 0)
+			{
+				active = action[0];
+				action.pop_front();
+			}
+			else
+				active = ChecklistContainer();
+		}
+		else
+			active.sequence ++;
+	}
 }
+// Todo: Verify
+void ChecklistController::timestep(double missiontime, SaturnEvents eventController)
+{
+	// Play Sound
+	if (playSound)
+	{
+		if (checkSound.play())
+			playSound = false;
+	}
+	// Even on "non executing" timesteps, we want to allow to complete at least one checklist item
+	if (complete)
+	{
+		if(active.program.group != -1 && conn.GetState(active.sequence->item) == active.sequence->position)
+			completeChecklistItem(&(*active.sequence));
+	}
+	//Exit if less than one second
+	if (missiontime < (lastMissionTime + 1.0))
+		return;
+	lastMissionTime = missiontime;
+	//Check for groups needing spawn
+	for (int i = 0; i < groups.size(); i++)
+	{
+		if (groups[i].autoSelect && !groups[i].called)
+		{
+			if(groups[i].checkExec(lastMissionTime,eventController))
+			{
+				spawnCheck(i,false,true);
+			}
+		}
+	}
+	//Do checklist items
+	if(autoexecute)
+	{
+		while (active.program.group != -1 && active.sequence->checkExec(lastMissionTime,active.startTime,eventController))
+		{
+			if (active.sequence->position < 0)
+				completeChecklistItem(&(*active.sequence));
+			else if (conn.SetState(active.sequence->item,active.sequence->position))
+				completeChecklistItem(&(*active.sequence));
+		}
+	}
+	//Check for complete checklist items
+	if (complete)
+	{
+		while (active.program.group != -1 && conn.GetState(active.sequence->item) == active.sequence->position)
+		{
+			completeChecklistItem(&(*active.sequence));
+		}
+	}
+}
+
+// Todo: Verify
+char *ChecklistController::activeName()
+{
+	if (active.program.group == -1)
+		return 0;
+	else
+		return active.program.name;
+}
+/*
+bool complete;
+bool initCalled;
+deque<ChecklistContainer> action;
+ChecklistContainer active;
+vector<ChecklistGroup> groups;
+double lastMissionTime;
+bool autoexecute;
+MFDConnector conn;
+char FileName[100];
+BasicExcel file;
+vector<ChecklistGroup> groups_manual;
+SoundLib soundLib;
+Sound checkSound;
+bool playSound;
+
+complete
+initCalled
+action
+active
+groups
+lastMissionTime
+autoexecute
+conn
+FileName
+file
+groups_manual
+soundLib
+checkSound
+playSound
+*/
+#pragma warning ( pop )

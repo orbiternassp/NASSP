@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2007/12/14 18:34:53  tschachim
+  *	Bugfix P15/unmanned attitude control.
+  *	
   *	Revision 1.15  2007/12/13 11:05:31  tschachim
   *	Bugfix burn timing.
   *	
@@ -752,6 +755,7 @@ bool IU::SIVBStart()
 		return false;
 
 	commandConnector.LoadTLISounds();
+	commandConnector.TLIBegun();
 
 	TLIBurnStart = true;
 	return true;
@@ -1314,6 +1318,14 @@ void IUToCSMCommandConnector::PlayStopSound(IUCSMMessageType sound, bool StartSt
 	cm.destination = CSM_IU_COMMAND;
 	cm.messageType = sound;
 	cm.val1.bValue = StartStop;
+
+	SendMessage(cm);
+}
+void IUToCSMCommandConnector::TLIBegun()
+{
+	ConnectorMessage cm;
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_TLI_BEGUN;
 
 	SendMessage(cm);
 }
