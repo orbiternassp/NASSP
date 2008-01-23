@@ -60,6 +60,10 @@ AS-205:ProjectApollo/Saturn1b
   LESJT 166.54
   SIIPUT 455.77
   LANG English
+<Checklist>
+FILE Doc\Project Apollo - NASSP\Check List\CSMDefaultCheck.xls
+AUTO 0
+</Checklist>
 END
 LC34:ProjectApollo\LC34
   STATUS Landed Earth
