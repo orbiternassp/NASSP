@@ -51,6 +51,10 @@ Kitty-Hawk:ProjectApollo/Saturn5
   MOONALT 0.0
   LANG English
   LEMN Antares
+<checklist>
+FILE Doc\Project Apollo - NASSP\Check List\CSMDefaultCheck.xls
+AUTO 1
+</checklist>
 END
 Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
