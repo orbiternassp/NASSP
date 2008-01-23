@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/12/04 20:26:32  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.9  2007/10/18 00:23:20  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -74,6 +78,7 @@ enum IUCSMMessageType
 	IUCSM_PLAY_TLI_SOUND,					///< Play/stop TLI sound.
 	IUCSM_PLAY_TLISTART_SOUND,				///< Play/stop TLI start sound.
 	IUCSM_CLEAR_TLI_SOUNDS,					///< Unload the sounds required for the TLI burn.
+	IUCSM_TLI_BEGUN,						///< Indicate for the event manager that the TLI burn has occured
 
 	CSMIU_SET_VESSEL_STATS,					///< Set the vessel stats in the IU.
 	CSMIU_START_TLI_BURN,					///< Start the TLI burn.
@@ -154,6 +159,7 @@ public:
 
 	void LoadTLISounds();
 	void ClearTLISounds();
+	void TLIBegun();
 
 	void PlayCountSound(bool StartStop);
 	void PlaySecoSound(bool StartStop);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2008/01/18 05:57:23  movieman523
+  *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
+  *	
   *	Revision 1.82  2008/01/16 05:52:06  movieman523
   *	Removed all dockstate code.
   *	
@@ -750,21 +753,6 @@ void Saturn1b::StageStartSIVB(double simt)
 			SepS.stop();
 			AddRCS_S4B();
 			SetThrusterGroupLevel(thg_ver, 0.0);
-
-
-			//
-			// Checklist actions
-			//
-
-			// EDS auto off
-			EDSSwitch.SwitchTo(TOGGLESWITCH_DOWN);
-			TwoEngineOutAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
-			LVRateAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
-
-			// Activate primary evaporator
-			GlycolEvapSteamPressAutoManSwitch.SwitchTo(TOGGLESWITCH_UP);
-			GlycolEvapH2oFlowSwitch.SwitchTo(THREEPOSSWITCH_UP);
-
 
 			NextMissionEventTime = MissionTime + 2.05;
 			StageState++;

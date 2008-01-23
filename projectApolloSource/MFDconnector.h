@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2008/01/16 19:03:02  lassombra
+  *	All but time-step, automation, and complete save/load is now implemented on the Checklist Controller (and the files that depend on it).
+  *	
+  *	All bugs in current code should hopefully be gone, but not necessarily so.
+  *	
   *	Revision 1.8  2008/01/15 19:13:05  lassombra
   *	Implemented Vessel connector and Checklist Completion step.  The third button down on the left side completes the "current" step on the temporary MFD.
   *	
@@ -173,6 +178,13 @@ public:
 	/// \return autoComplete status.
 	///
 	bool ChecklistAutocomplete();
+
+	///
+	/// Get the title of the current checklist
+	///
+	/// \return char *
+	///
+	char *checklistName();
 
 protected:
 };

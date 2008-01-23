@@ -25,6 +25,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.89  2008/01/16 19:03:04  lassombra
+  *	All but time-step, automation, and complete save/load is now implemented on the Checklist Controller (and the files that depend on it).
+  *	
+  *	All bugs in current code should hopefully be gone, but not necessarily so.
+  *	
   *	Revision 1.88  2008/01/14 15:52:40  lassombra
   *	*Final* version of the interface for the checklist controller.  May need some more
   *	 data, but should be accessible at this point.  For some reason getting heap errors
@@ -3701,6 +3706,9 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		return true;
 	case MFD_PANEL_CHECKLIST_AUTOCOMPLETE_QUERY:
 		m.val1.bValue = checklist.autoComplete();
+		return true;
+	case MFD_PANEL_CHECKLIST_NAME:
+		m.val1.pValue = checklist.activeName();
 		return true;
 	}
 

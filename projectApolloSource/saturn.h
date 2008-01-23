@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.275  2008/01/22 05:22:27  movieman523
+  *	Added port number to docking probe.
+  *	
   *	Revision 1.274  2008/01/22 02:55:08  movieman523
   *	Moved DockConnectors/UndockConnectors into the base class. We now dock/undock all registered connectors on that port.
   *	
@@ -1649,6 +1652,11 @@ public:
 	///
 	virtual IMFD_Client *GetIMFDClient() { return &IMFD_Client; }; 
 
+	///
+	/// \brief TLI event management
+	///
+	void TLI_Begun();
+
 protected:
 
 	///
@@ -2124,7 +2132,7 @@ protected:
 
 	// ChecklistController
 	ChecklistController checkControl;
-
+	SaturnEvents	eventControl;
 
 	//
 	// Switches

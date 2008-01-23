@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2008/01/16 19:03:02  lassombra
+  *	All but time-step, automation, and complete save/load is now implemented on the Checklist Controller (and the files that depend on it).
+  *	
+  *	All bugs in current code should hopefully be gone, but not necessarily so.
+  *	
   *	Revision 1.8  2008/01/15 17:43:59  lassombra
   *	Allows multiple senders to attach to a single receiver.
   *	
@@ -281,4 +286,15 @@ bool MFDConnector::completeChecklistItem(ChecklistItem* in)
 
 	return false;
 }
+char *MFDConnector::checklistName()
+{
+	ConnectorMessage cm;
 
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_CHECKLIST_NAME;
+	
+	if (SendMessage(cm))
+		return static_cast<char *>(cm.val1.pValue);
+
+	return 0;
+}

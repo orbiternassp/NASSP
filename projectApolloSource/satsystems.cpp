@@ -23,6 +23,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.147  2007/12/04 20:26:34  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.146  2007/10/18 00:23:21  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -843,50 +847,18 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 3.0;
 
 
+				// 
+				// Event handling.
 				//
-				// Checklist actions
-				//
+				eventControl.CSMStartup = MissionTime;
 				
-				// Activate CMC
-				GNComputerMnACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-				GNComputerMnBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-
-				// Activate IMU
-				GNIMUHTRMnACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-				GNIMUHTRMnBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-				GNIMUMnACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-				GNIMUMnBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-
-				CautionWarningPowerSwitch.SwitchTo(THREEPOSSWITCH_UP);
-				// Avoid master alarm because of power on
+				//Avoid master alarm at power up.
 				cws.SetMasterAlarm(false);
-				// Avoid suit compressor alarm 
+
+				//Inhibit Suit Circuit alarm.
 				if (!Realism)
 					cws.SetInhibitNextMasterAlarm(true);
-				// Switch directly to launch configuration
-				// To do the complete checklist next would be the lamp tests... 
-				CautionWarningModeSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
 
-				// Activate primary water-glycol coolant loop
-				EcsGlycolPumpsSwitch.SwitchTo(1);
-				EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_UP);
-				EcsRadiatorsFlowContPwrSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
-				SuitCircuitHeatExchSwitch.SwitchTo(THREEPOSSWITCH_UP);
-				SuitCircuitHeatExchSwitch.SwitchTo(THREEPOSSWITCH_CENTER);
-
-				// Activate FDAIs etc.
-				FDAIPowerRotarySwitch.SwitchTo(3);
-				SCSElectronicsPowerRotarySwitch.SwitchTo(2);
-				SIGCondDriverBiasPower1Switch.SwitchTo(THREEPOSSWITCH_UP);
-				SIGCondDriverBiasPower2Switch.SwitchTo(THREEPOSSWITCH_DOWN);
-
-				// Start mission timer
-				MissionTimerSwitch.SwitchTo(THREEPOSSWITCH_UP);
-
-				// Open Direct O2 valve
-				DirectO2RotarySwitch.SwitchTo(2);
-
-				
 				// Next state
 				systemsState = SATSYSTEMS_PRELAUNCH;
 				lastSystemsMissionTime = MissionTime; 
@@ -917,20 +889,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					// equalize suit cabin pressure difference
 					O2DemandRegulator.Close();
 					O2DemandRegulator.OpenSuitReliefValve();
-
-					//
-					// Checklist actions
-					//
-		
-					// Open Direct O2 valve
-					DirectO2RotarySwitch.SwitchTo(0);
-
-					// Turn on suit compressor 1
-					SuitCompressor1Switch.SwitchTo(THREEPOSSWITCH_UP);
-
-					// Turn on water accumulator
-					SuitCircuitH2oAccumAutoSwitch.SwitchTo(THREEPOSSWITCH_UP);
-
 
 					// Next state
 					systemsState = SATSYSTEMS_CREWINGRESS_1;
@@ -976,58 +934,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 			case SATSYSTEMS_CABINCLOSEOUT:
 				if (MissionTime >= -1200) {	// 20min before launch
 
-					//
-					// Checklist actions
-					//
-
-					// Turn on BMAGs (AOH2 4.2.2.1)
-					BMAGPowerRotary1Switch.SwitchTo(2);
-					BMAGPowerRotary2Switch.SwitchTo(2);
-
-					// TVC check, power buses (AOH2 4.2.2.2)
-					MainBusASwitch1.SwitchTo(THREEPOSSWITCH_UP);
-					MainBusASwitch2.SwitchTo(THREEPOSSWITCH_UP);
-					MainBusBSwitch3.SwitchTo(THREEPOSSWITCH_UP);
-
-					// Turn on sequencial logic and arm pyros (AOH2 4.2.2.6)
-					ArmBatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-					ArmBatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);					
-					LogicBatACircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-					LogicBatBCircuitBraker.SwitchTo(TOGGLESWITCH_UP);
-
-					Logic1Switch.SwitchTo(TOGGLESWITCH_UP);
-					Logic2Switch.SwitchTo(TOGGLESWITCH_UP);
-					PyroArmASwitch.SwitchTo(TOGGLESWITCH_UP);
-					PyroArmBSwitch.SwitchTo(TOGGLESWITCH_UP);
-
-					// Turn off cyro fans
-					H2Fan1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-					H2Fan2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-					O2Fan1Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-					O2Fan2Switch.SwitchTo(THREEPOSSWITCH_CENTER);
-
-					// Turn on SM RCS (AOH2 4.2.2.7)
-					SMRCSHelium1ASwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSHelium1BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSHelium1CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSHelium1DSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-
-					SMRCSHelium2ASwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSHelium2BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSHelium2CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSHelium2DSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-
-					SMRCSProp1ASwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSProp1BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSProp1CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSProp1DSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-
-					SMRCSProp2ASwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSProp2BSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSProp2CSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					SMRCSProp2DSwitch.SwitchTo(THREEPOSSWITCH_UP); 
-					
-
 					// Next state
 					systemsState = SATSYSTEMS_GSECONNECTED_1;
 					lastSystemsMissionTime = MissionTime; 
@@ -1047,18 +953,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 6.8;
 					*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 6.8;
 
-
-					//
-					// Checklist actions
-					//
-
-					// EDS auto on (AOH2 4.2.3)
-					EDSSwitch.SwitchTo(TOGGLESWITCH_UP);
-					
-					// Latch FC valves
-					FCReacsValvesSwitch.SwitchTo(TOGGLESWITCH_DOWN);
-
-
 					// Next state
 					systemsState = SATSYSTEMS_GSECONNECTED_2;
 					lastSystemsMissionTime = MissionTime; 
@@ -1070,19 +964,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					// Disable GSE devices
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
-
-
-					//
-					// Checklist actions
-					//
-
-					// Bypass primary radiators
-					GlycolToRadiatorsLever.SwitchTo(TOGGLESWITCH_DOWN);
-
-					// Tie batteries to buses
-					MainBusTieBatAcSwitch.SwitchTo(THREEPOSSWITCH_UP);
-					MainBusTieBatBcSwitch.SwitchTo(THREEPOSSWITCH_UP);
-
 
 					// Next state
 					systemsState = SATSYSTEMS_READYTOLAUNCH;
@@ -1137,16 +1018,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					// Suit compressors to landing configuration
 					SuitCompressor1->fan_cap = 110000.0;
 					SuitCompressor2->fan_cap = 110000.0;
-
-
-					//
-					// Checklist actions
-					//
-
-					// Cabin pressure relief valves to boost/entry
-					CabinPressureReliefLever1.SwitchTo(2);
-					CabinPressureReliefLever2.SwitchTo(2);
-
 
 					// Next state
 					systemsState = SATSYSTEMS_LANDING;
