@@ -25,6 +25,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.90  2008/01/23 01:40:09  lassombra
+  *	Implemented timestep functions and event management
+  *	
+  *	Events for Saturns are now fully implemented
+  *	
+  *	Removed all hardcoded checklists from Saturns.
+  *	
+  *	Automatic Checklists are coded into an excel file.
+  *	
+  *	Added function to get the name of the active checklist.
+  *	
+  *	ChecklistController is now 100% ready for Saturn.
+  *	
   *	Revision 1.89  2008/01/16 19:03:04  lassombra
   *	All but time-step, automation, and complete save/load is now implemented on the Checklist Controller (and the files that depend on it).
   *	
@@ -462,20 +475,19 @@ void ToggleSwitch::InitSound(SoundLib *s) {
 		s->LoadSound(Sclick, CLICK_SOUND);
 }
 
-bool ToggleSwitch::SwitchTo(int newState) {
+bool ToggleSwitch::SwitchTo(int newState, bool dontspring) {
 
 	// Switch only with REALISM 0
-	if (switchRow) {
-		if (switchRow->panelSwitches->Realism) 
-			return false;
-	}
+//	if (switchRow) {
+//		if (switchRow->panelSwitches->Realism) 
+//			return false;
+//	}
 
 	if (Active)
 	{
 		if (state != newState)
 		{
 			state = newState;
-			Sclick.play();
 			SwitchToggled = true;
 			if (switchRow)
 			{
@@ -486,7 +498,7 @@ bool ToggleSwitch::SwitchTo(int newState) {
 			//
 			// Reset the switch if it's spring-loaded and not held.
 			//
-			if (IsSpringLoaded() && !IsHeld())
+			if (IsSpringLoaded() && !IsHeld() && !dontspring)
 			{
 				if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
 				if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
@@ -547,30 +559,30 @@ bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 	if (event == PANEL_MOUSE_LBDOWN) {
 		if (my > (y + (height / 2.0))) {
 			if (state != TOGGLESWITCH_DOWN) {
-				state = TOGGLESWITCH_DOWN;
+				SwitchTo(TOGGLESWITCH_DOWN,true);
 				Sclick.play();
 			}
 		}
 		else {
 			if (state != TOGGLESWITCH_UP) {
-				state = TOGGLESWITCH_UP;
+				SwitchTo(TOGGLESWITCH_UP,true);
 				Sclick.play();
 			}
 		}
 	}
 	else if (IsSpringLoaded() && (event & PANEL_MOUSE_LBUP) && !IsHeld()) {
-		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
-		if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
 	}
 
-
+/*
 	if (Active && (state != OldState)) {
 		SwitchToggled = true;
 		if (switchRow) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 		}
-	}
+	} */
 	return true;
 }
 
@@ -643,6 +655,10 @@ void ToggleSwitch::LoadState(char *line)
 		SetFlags(f);
 	}
 }
+void ToggleSwitch::SetState(int value)
+{
+	SwitchTo(value);
+}
 
 
 //
@@ -675,41 +691,40 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	// Yes, so now we just need to check whether it's an on or
 	// off click.
 	//
-
 	if (event == PANEL_MOUSE_LBDOWN) {
 		if (my > (y + (height / 2.0))) {
 			if (state > 0) {
-				state--;
+				SwitchTo(state - 1, true);
 				Sclick.play();
 			}
 		}
 		else {
 			if (state < 2) {
-				state++;
+				SwitchTo(state + 1, true);
 				Sclick.play();
 			}
 		}
 
 	}
 	else if (IsSpringLoaded() && event == PANEL_MOUSE_LBUP && !IsHeld()) {		
-		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
-		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
-		if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP,true);
 
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
-			state = THREEPOSSWITCH_CENTER;
+			SwitchTo(THREEPOSSWITCH_CENTER,true);
 
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
-			state = THREEPOSSWITCH_CENTER;
+			SwitchTo(THREEPOSSWITCH_CENTER);
 	}
 
-	if (Active && (state != OldState)) {
+/*	if (Active && (state != OldState)) {
 		SwitchToggled = true;
 		if (switchRow) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 		}
-	}
+	}*/
 	return true;
 }
 
@@ -719,45 +734,53 @@ void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 	oapiBlt(DrawSurface, SwitchSurface, x, y, (state * width), 0, width, height, SURF_PREDEF_CK);
 }
 
-bool ThreePosSwitch::SwitchTo(int newState)
+bool ThreePosSwitch::SwitchTo(int newState, bool dontspring)
 
 {
 	// Switch only with REALISM 0
-	if (switchRow) {
-		if (switchRow->panelSwitches->Realism) 
-			return false;
-	}
+//	if (switchRow) {
+//		if (switchRow->panelSwitches->Realism) 
+//			return false;
+//	}
 
 	if (Active && (state != newState)) {
 		state = newState;
-		Sclick.play();
 		SwitchToggled = true;
 		if (switchRow) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 		}
 
-		if (IsSpringLoaded()) {
-			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
-			if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
-			if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;
+		if (IsSpringLoaded() && !dontspring && !IsHeld()) {
+			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP,true);
 
 			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
-				state = THREEPOSSWITCH_CENTER;
+				SwitchTo(THREEPOSSWITCH_CENTER,true);
 
 			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
-				state = THREEPOSSWITCH_CENTER;
+				SwitchTo(THREEPOSSWITCH_CENTER,true);
 		}
 		return true;
 	}
 	return false;
 }
-
+/*
+void ThreePosSwitch::SetState(int value)
+{
+	SwitchTo(value);
+}*/
 
 //
-// Push button like switch.
+// Push button like switch.  Now implemented as a special case of toggle switch (springloaded and special sound)
 //
+void PushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded, char *dname)
+{
+	ToggleSwitch::Register(scnh,n,defaultState,springloaded,dname);
+}
 
+// Special case check mouse click, same result top and Bottom.
 bool PushSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	int OldState = state;
@@ -767,19 +790,12 @@ bool PushSwitch::CheckMouseClick(int event, int mx, int my) {
 	if (mx > (x + width) || my > (y + height)) return false;
 
 	if (event == PANEL_MOUSE_LBDOWN) {
-		state = 1;
+		SwitchTo(1,true);
 		Sclick.play();
 	} else if (event == PANEL_MOUSE_LBUP) {
-		state = 0;
+		SwitchTo(0,true);
 	}
 
-	if (Active && (state != OldState)) {
-		SwitchToggled = true;
-		if (switchRow) {
-			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
-		}
-	}
 	return true;
 }
 
@@ -788,13 +804,26 @@ void PushSwitch::InitSound(SoundLib *s) {
 	if (!Sclick.isValid())
 		s->LoadSound(Sclick, BUTTON_SOUND);
 }
-
+/*
+void PushSwitch::SwitchTo(int newState)
+{
+	if (ToggleSwitch::SwitchTo(newState))
+	{
+		ToggleSwitch::SwitchTo(0);
+		return true;
+	}
+	return false;
+}
+void PushSwitch::SetState(int value)
+{
+	SwitchTo(value);
+}*/
 
 //
-// Circuit braker switch.
+// Circuit braker switch.  Special case of Toggle Switch
 //
 
-bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
+/*bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	int OldState = state;
 
@@ -822,7 +851,7 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 	}
 	return true;
 }
-
+*/
 double CircuitBrakerSwitch::Voltage()
 
 {
@@ -889,7 +918,7 @@ void CircuitBrakerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SU
 // Attitude mode toggle switch.
 //
 
-bool AttitudeToggle::CheckMouseClick(int event, int mx, int my)
+/*bool AttitudeToggle::CheckMouseClick(int event, int mx, int my)
 
 {
 	int OldState = state;
@@ -903,14 +932,24 @@ bool AttitudeToggle::CheckMouseClick(int event, int mx, int my)
 	if (!Active || state == OldState)
 		return true;
 
-	if (GetState()) {
-		OurVessel->SetAttitudeMode(ATTMODE_ROT);
-	}
-	else {
-		OurVessel->SetAttitudeMode(ATTMODE_LIN);
-	}
+
 
 	return true;
+}*/
+
+bool AttitudeToggle::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggleSwitch::SwitchTo(newState,dontspring))
+	{
+		if (GetState()) {
+			OurVessel->SetAttitudeMode(ATTMODE_ROT);
+		}
+		else {
+			OurVessel->SetAttitudeMode(ATTMODE_LIN);
+		}
+		return true;
+	}
+	return false;
 }
 
 void AttitudeToggle::DrawSwitch(SURFHANDLE DrawSurface)
@@ -958,7 +997,7 @@ void HUDToggle::DrawSwitch(SURFHANDLE DrawSurface)
 	DoDrawSwitch(DrawSurface);
 }
 
-bool HUDToggle::CheckMouseClick(int event, int mx, int my)
+/*bool HUDToggle::CheckMouseClick(int event, int mx, int my)
 
 {
 	int OldState = state;
@@ -977,6 +1016,23 @@ bool HUDToggle::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return true;
+}*/
+
+bool HUDToggle::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggleSwitch::SwitchTo(newState,dontspring))
+	{
+		if (GetState()) 
+		{
+			oapiSetHUDMode(HUDMode);
+		}
+		else 
+		{
+			oapiSetHUDMode(HUD_NONE) ;
+		}
+		return true;
+	}
+	return false;
 }
 
 //
@@ -1005,7 +1061,7 @@ void NavModeToggle::DrawSwitch(SURFHANDLE DrawSurface)
 	DoDrawSwitch(DrawSurface);
 }
 
-bool NavModeToggle::CheckMouseClick(int event, int mx, int my)
+/*bool NavModeToggle::CheckMouseClick(int event, int mx, int my)
 
 {
 	int OldState = state;
@@ -1024,6 +1080,23 @@ bool NavModeToggle::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return true;
+}*/
+
+bool NavModeToggle::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggleSwitch::SwitchTo(newState,dontspring))
+	{
+		if (GetState())
+		{
+			OurVessel->ActivateNavmode(NAVMode);
+		}
+		else
+		{
+			OurVessel->ActivateNavmode(NAVMode);
+		}
+		return true;
+	}
+	return false;
 }
 
 //
@@ -1321,22 +1394,15 @@ bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 				// reset by guard
 				if (guardResetsState) { 
 					if (Active && state) {
-						state = TOGGLESWITCH_DOWN;
+						SwitchTo(TOGGLESWITCH_DOWN);
 					}
 				}
 				// reset by spring
 				if (IsSpringLoaded()) {
-					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
-					if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
+					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN,true);
+					if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP,true);
 				}
 
-				if (state != OldState) {
-					SwitchToggled = true;
-					if (switchRow) {
-						if (switchRow->panelSwitches->listener) 
-							switchRow->panelSwitches->listener->PanelSwitchToggled(this);
-					}
-				}
 			} 
 			else {
 				guardState = 1;
@@ -1477,8 +1543,8 @@ bool GuardedPushSwitch::CheckMouseClick(int event, int mx, int my)
 			my >= guardY && my <= guardY + guardHeight) {			
 			if (guardState) {
 				guardState = 0;
-				if (Active && state) SwitchToggled = true;
-				state = 0;
+				if (Active && state) 
+					SwitchTo(0,true);
 			}
 			else {
 				guardState = 1;
@@ -1602,29 +1668,29 @@ bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 				// reset by guard
 				if (guardResetsState) { 
 					if (Active && state) {
-						state = THREEPOSSWITCH_DOWN;
+						SwitchTo(THREEPOSSWITCH_DOWN,true);
 					}
 				}
 				// reset by spring
 				if (IsSpringLoaded()) {
-					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = THREEPOSSWITCH_DOWN;
-					if (springLoaded == SPRINGLOADEDSWITCH_CENTER) state = THREEPOSSWITCH_CENTER;
-					if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = THREEPOSSWITCH_UP;
+					if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
+					if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
+					if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP,true);
 
 					if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
-						state = THREEPOSSWITCH_CENTER;
+						SwitchTo(THREEPOSSWITCH_CENTER,true);
 
 					if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
-						state = THREEPOSSWITCH_CENTER;
+						SwitchTo(THREEPOSSWITCH_CENTER,true);
 				}
-
+				/*
 				if (state != OldState) {
 					SwitchToggled = true;
 					if (switchRow) {
 						if (switchRow->panelSwitches->listener) 
 							switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 					}
-				}
+				}*/
 			} else {
 				guardState = 1;
 			}
@@ -1883,12 +1949,7 @@ bool RotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 	}
 
 	if (position != bestPosition) {
-		position = bestPosition;
-		sclick.play();
-		if (switchRow) {
-			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->PanelRotationalSwitchChanged(this);
-		}
+		SwitchTo(bestPosition->GetValue());
 	}
 	return true;
 }
@@ -1896,10 +1957,10 @@ bool RotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 bool RotationalSwitch::SwitchTo(int newValue) {
 
 	// Switch only with REALISM 0
-	if (switchRow) {
-		if (switchRow->panelSwitches->Realism) 
-			return false;
-	}
+//	if (switchRow) {
+//		if (switchRow->panelSwitches->Realism) 
+//			return false;
+//	}
 
 	if (!position || (position->GetValue() != newValue)) {
 		SetValue(newValue);
@@ -1976,6 +2037,11 @@ void RotationalSwitch::LoadState(char *line) {
 	}
 }
 
+void RotationalSwitch::SetState(int value)
+{
+	SwitchTo(value);
+}
+
 RotationalSwitchPosition::RotationalSwitchPosition(int v, double a) {
 
 	value = v;
@@ -2025,7 +2091,7 @@ double PowerStateRotationalSwitch::Voltage()
 	return 0.0;
 }
 
-bool PowerStateRotationalSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool PowerStateRotationalSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
@@ -2034,7 +2100,7 @@ bool PowerStateRotationalSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
 void PowerStateRotationalSwitch::SetSource(int num, e_object *s)
 
@@ -2141,48 +2207,42 @@ bool ThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 		if (isHorizontal) {
 			if (mx < (x + (width / 2.0))) {
 				if (state < maxState) {
-					state++;
+					SwitchTo(state + 1);
 					sclick.play();
 				}
 			}
 			else {
 				if (state > 0) {
-					state--;
+					SwitchTo(state - 1);
 					sclick.play();
 				}
 			}
 		} else {
 			if (my < (y + (height / 2.0))) {
 				if (state < maxState) {
-					state++;
+					SwitchTo(state + 1);
 					sclick.play();
 				}
 			}
 			else {
 				if (state > 0) {
-					state--;
+					SwitchTo(state - 1);
 					sclick.play();
 				}
 			}
 		}
 	}
 
-	if (state != OldState) {
-		if (switchRow) {
-			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->PanelThumbwheelSwitchChanged(this);
-		}
-	}
 	return true;
 }
 
 bool ThumbwheelSwitch::SwitchTo(int newState) {
 
 	// Switch only with REALISM 0
-	if (switchRow) {
-		if (switchRow->panelSwitches->Realism) 
-			return false;
-	}
+//	if (switchRow) {
+//		if (switchRow->panelSwitches->Realism) 
+//			return false;
+//	}
 
 	if (newState >= 0 && newState <= maxState && state != newState) {
 		state = newState;
@@ -2217,6 +2277,11 @@ void ThumbwheelSwitch::LoadState(char *line) {
 	}
 }
 
+void ThumbwheelSwitch::SetState(int value)
+{
+	SwitchTo(value);
+}
+
 //
 // Thumbwheel which adjusts volume levels.
 //
@@ -2244,10 +2309,10 @@ void VolumeThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf,
 // We override CheckMouseClick so we can update the volume on change.
 //
 
-bool VolumeThumbwheelSwitch::CheckMouseClick(int event, int mx, int my)
+bool VolumeThumbwheelSwitch::SwitchTo(int newState)
 
 {
-	bool ret = ThumbwheelSwitch::CheckMouseClick(event, mx, my);
+	bool ret = ThumbwheelSwitch::SwitchTo(newState);
 
 	if (ret && sl) {
 		sl->SetVolume(volume_class, (int) (state * (100.0 / 9.0)));
@@ -2672,8 +2737,7 @@ void ThreeSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURF
 	UpdateSourceState();
 }
 
-bool ThreeSourceSwitch::CheckMouseClick(int event, int mx, int my)
-
+/*bool ThreeSourceSwitch::CheckMouseClick(int event, int mx, int my)
 {
 	if (ThreePosSwitch::CheckMouseClick(event, mx, my))
 	{
@@ -2682,12 +2746,12 @@ bool ThreeSourceSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool ThreeSourceSwitch::SwitchTo(int newState)
+bool ThreeSourceSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (ToggleSwitch::SwitchTo(newState)) {
+	if (ThreePosSwitch::SwitchTo(newState,dontspring)) {
 		UpdateSourceState();
 		return true;
 	}
@@ -2715,6 +2779,12 @@ void ThreeSourceSwitch::LoadState(char *line)
 	UpdateSourceState();
 }
 
+/*void ThreeSourceSwitch::SetState(int value)
+{
+	SwitchTo(value);
+}*/
+
+
 //
 // TwoSourceSwitch allows you to connect the output to one of two inputs based on the position
 // of the switch.
@@ -2730,7 +2800,7 @@ void TwoSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHA
 	UpdateSourceState();
 }
 
-bool TwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool TwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (ToggleSwitch::CheckMouseClick(event, mx, my))
@@ -2740,12 +2810,12 @@ bool TwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool TwoSourceSwitch::SwitchTo(int newState)
+bool TwoSourceSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (ToggleSwitch::SwitchTo(newState)) {
+	if (ToggleSwitch::SwitchTo(newState,dontspring)) {
 		UpdateSourceState();
 		return true;
 	}
@@ -2770,6 +2840,11 @@ void TwoSourceSwitch::LoadState(char *line)
 	UpdateSourceState();
 }
 
+/*void TwoSourceSwitch::SetState(int value)
+{
+	SwitchTo(value);
+}*/
+
 //
 // GuardedTwoSourceSwitch allows you to connect the output to one of two inputs based on the position
 // of the switch.
@@ -2785,7 +2860,7 @@ void GuardedTwoSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf,
 	UpdateSourceState();
 }
 
-bool GuardedTwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool GuardedTwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my))
@@ -2795,12 +2870,12 @@ bool GuardedTwoSourceSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool GuardedTwoSourceSwitch::SwitchTo(int newState)
+bool GuardedTwoSourceSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (GuardedToggleSwitch::SwitchTo(newState)) {
+	if (GuardedToggleSwitch::SwitchTo(newState, dontspring)) {
 		UpdateSourceState();
 		return true;
 	}
@@ -2824,7 +2899,6 @@ void GuardedTwoSourceSwitch::LoadState(char *line)
 	GuardedToggleSwitch::LoadState(line);
 	UpdateSourceState();
 }
-
 //
 // TwoOutputSwitch allows you to connect one of the two outputs to the input based on the position
 // of the switch.
@@ -2840,7 +2914,7 @@ void TwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHA
 	UpdateSourceState();
 }
 
-bool TwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool TwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (ToggleSwitch::CheckMouseClick(event, mx, my))
@@ -2849,6 +2923,16 @@ bool TwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 
+	return false;
+}*/
+
+bool TwoOutputSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggleSwitch::SwitchTo(newState,dontspring))
+	{
+		UpdateSourceState();
+		return true;
+	}
 	return false;
 }
 
@@ -2891,7 +2975,7 @@ void GuardedTwoOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf,
 	UpdateSourceState(GetState());
 }
 
-bool GuardedTwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool GuardedTwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my))
@@ -2901,12 +2985,12 @@ bool GuardedTwoOutputSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool GuardedTwoOutputSwitch::SwitchTo(int newState)
+bool GuardedTwoOutputSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (GuardedToggleSwitch::SwitchTo(newState))
+	if (GuardedToggleSwitch::SwitchTo(newState,dontspring))
 	{
 		// some of these switches are spring-loaded, 
 		// so we have to use newState here
@@ -2939,6 +3023,11 @@ void GuardedTwoOutputSwitch::LoadState(char *line)
 {
 	GuardedToggleSwitch::LoadState(line);
 	UpdateSourceState(GetState());
+}
+
+void GuardedTwoOutputSwitch::SetState(int value)
+{
+	SwitchTo(value);
 }
 
 TimerUpdateSwitch::TimerUpdateSwitch()
@@ -3008,7 +3097,7 @@ void TimerUpdateSwitch::AdjustTime(int val)
 	}
 }
 
-bool TimerControlSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool TimerControlSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
@@ -3018,12 +3107,12 @@ bool TimerControlSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool TimerControlSwitch::SwitchTo(int newState) 
+bool TimerControlSwitch::SwitchTo(int newState, bool dontspring) 
 
 {
-	if (MissionTimerSwitch::SwitchTo(newState)) {
+	if (MissionTimerSwitch::SwitchTo(newState,dontspring)) {
 		SetTimer();
 		return true;
 	}
@@ -3053,10 +3142,18 @@ void TimerControlSwitch::SetTimer()
 // nothing.
 //
 
-bool EventTimerControlSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool EventTimerControlSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
+		return true;
+
+	return false;
+}*/
+
+bool EventTimerControlSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (MissionTimerSwitch::SwitchTo(newState,dontspring))
 	{
 		if (timer) {
 			if (IsUp()) {
@@ -3068,7 +3165,6 @@ bool EventTimerControlSwitch::CheckMouseClick(int event, int mx, int my)
 		}
 		return true;
 	}
-
 	return false;
 }
 
@@ -3076,7 +3172,7 @@ bool EventTimerControlSwitch::CheckMouseClick(int event, int mx, int my)
 // Event timer up/down/reset switch.
 //
 
-bool EventTimerResetSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool EventTimerResetSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
@@ -3098,13 +3194,35 @@ bool EventTimerResetSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
+}*/
+
+bool EventTimerResetSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (MissionTimerSwitch::SwitchTo(newState,dontspring))
+	{
+		if (timer) {
+			if (IsUp()) {
+				timer->SetCountUp(TIMER_COUNT_NONE);
+				timer->Reset();
+				timer->SetRunning(false);
+			}
+			else if (IsCenter()) {
+				timer->SetCountUp(TIMER_COUNT_UP);
+			}
+			else if (IsDown()) {
+				timer->SetCountUp(TIMER_COUNT_DOWN);
+			}
+		}
+		return true;
+	}
+	return false;
 }
 
 //
 // Generic switch to update the timer time. AdjustTime() knows whether to update the hours, minutes or seconds.
 //
 
-bool TimerUpdateSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool TimerUpdateSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
@@ -3121,6 +3239,26 @@ bool TimerUpdateSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 	else return false;
+}*/
+
+bool TimerUpdateSwitch::SwitchTo(int newstate, bool dontspring)
+{
+	if (MissionTimerSwitch::SwitchTo(newstate,dontspring))
+	{
+		//
+		// We need to increase by one if the switch is up, and ten if it's down.
+		//
+		if (IsUp())
+		{
+			AdjustTime(10);
+		}
+		else if (IsDown())
+		{
+			AdjustTime(1);
+		}
+		return true;
+	}
+	return false;
 }
 
 IMUCageSwitch::IMUCageSwitch()
@@ -3136,7 +3274,7 @@ void IMUCageSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHAND
 	imu = im;
 }
 
-bool IMUCageSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool IMUCageSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my))
@@ -3145,12 +3283,12 @@ bool IMUCageSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 	else return false;
-}
+}*/
 
-bool IMUCageSwitch::SwitchTo(int newState)
+bool IMUCageSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (GuardedToggleSwitch::SwitchTo(newState))
+	if (GuardedToggleSwitch::SwitchTo(newState, dontspring))
 	{
 		SetIMU();
 		return true;
@@ -3193,21 +3331,10 @@ void UnguardedIMUCageSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf,
 	imu = im;
 }
 
-bool UnguardedIMUCageSwitch::CheckMouseClick(int event, int mx, int my)
+bool UnguardedIMUCageSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (ToggleSwitch::CheckMouseClick(event, mx, my))
-	{
-		SetIMU();
-		return true;
-	}
-	else return false;
-}
-
-bool UnguardedIMUCageSwitch::SwitchTo(int newState)
-
-{
-	if (ToggleSwitch::SwitchTo(newState))
+	if (ToggleSwitch::SwitchTo(newState,dontspring))
 	{
 		SetIMU();
 		return true;
@@ -3237,7 +3364,7 @@ void UnguardedIMUCageSwitch::SetIMU()
 // Enable light test on caution and warning system.
 //
 
-bool CWSLightTestSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool CWSLightTestSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (CWSThreePosSwitch::CheckMouseClick(event, mx,my)) {
@@ -3260,13 +3387,36 @@ bool CWSLightTestSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
+bool CWSLightTestSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (CWSThreePosSwitch::SwitchTo(newState, dontspring))
+	{
+		if (cws)
+		{
+			if (IsUp())
+			{
+				cws->LightTest(CWS_TEST_LIGHTS_LEFT);
+			}
+			else if (IsDown())
+			{
+				cws->LightTest(CWS_TEST_LIGHTS_RIGHT);
+			}
+			else if (IsCenter())
+			{
+				cws->LightTest(CWS_TEST_LIGHTS_NONE);
+			}
+		}
+		return true;
+	}
+	return false;
+}
 //
 // Set caution and warning mode state.
 //
 
-bool CWSModeSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool CWSModeSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (CWSThreePosSwitch::CheckMouseClick(event, mx,my)) {
@@ -3285,12 +3435,12 @@ bool CWSModeSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+} */
 
-bool CWSModeSwitch::SwitchTo(int newState) 
+bool CWSModeSwitch::SwitchTo(int newState, bool dontspring) 
 
 {
-	if (CWSThreePosSwitch::SwitchTo(newState)) {
+	if (CWSThreePosSwitch::SwitchTo(newState, dontspring)) {
 		if (cws) {
 			if (IsUp()) {
 				cws->SetMode(CWS_MODE_NORMAL);
@@ -3312,7 +3462,7 @@ bool CWSModeSwitch::SwitchTo(int newState)
 // Set caution and warning power source.
 //
 
-bool CWSPowerSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool CWSPowerSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	int OldState = state;
@@ -3324,12 +3474,12 @@ bool CWSPowerSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 	return false;
-}
+}*/
 
-bool CWSPowerSwitch::SwitchTo(int newState) 
+bool CWSPowerSwitch::SwitchTo(int newState, bool dontspring) 
 
 {
-	if (CWSThreePosSwitch::SwitchTo(newState)) {
+	if (CWSThreePosSwitch::SwitchTo(newState, dontspring)) {
 		SetPowerBus();
 		return true;
 	}
@@ -3352,6 +3502,11 @@ void CWSPowerSwitch::SetPowerBus()
 	}
 }
 
+/*void CWSPowerSwitch::SetState(int value)
+{
+	SwitchTo(value);
+}*/
+
 void CWSThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, CautionWarningSystem *c)
 
 {
@@ -3363,7 +3518,7 @@ void CWSThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURF
 // Set caution and warning source (e.g. CSM/LEM or CM)
 //
 
-bool CWSSourceSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool CWSSourceSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (ToggleSwitch::CheckMouseClick(event, mx, my)) {
@@ -3379,16 +3534,51 @@ bool CWSSourceSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
+}*/
+
+bool CWSSourceSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggleSwitch::SwitchTo(newState, dontspring))
+	{
+		if (cws)
+		{
+			if (IsUp())
+			{
+				cws->SetSource(CWS_SOURCE_CSM);
+			}
+			else if (IsDown())
+			{
+				cws->SetSource(CWS_SOURCE_CM);
+			}
+		}
+		return true;
+	}
+	return false;
 }
 
 //
 // Switch that controls AGC input channels.
 //
 
-bool AGCIOSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool AGCIOSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (ToggleSwitch::CheckMouseClick(event, mx, my)) {
+		if (agc) {
+			if (IsUp()) {
+				agc->SetInputChannelBit(Channel, Bit, UpValue);
+			}
+			else if (IsDown()) {
+				agc->SetInputChannelBit(Channel, Bit, !UpValue);
+			}
+		}
+		return true;
+	}
+	return false;
+}*/
+bool AGCIOSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggleSwitch::SwitchTo(newState,dontspring)) {
 		if (agc) {
 			if (IsUp()) {
 				agc->SetInputChannelBit(Channel, Bit, UpValue);
@@ -3406,10 +3596,32 @@ bool AGCIOSwitch::CheckMouseClick(int event, int mx, int my)
 // CMC Hold/Free/Auto mode.
 //
 
-bool CMCModeHoldFreeSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool CMCModeHoldFreeSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (AGCThreePoswitch::CheckMouseClick(event, mx, my)) {
+		if (agc) {
+			bool Hold = false;
+			bool Free = false;
+
+			if (IsCenter()) {
+				Hold = true;
+			}
+			else if (IsDown()) {
+				Free = true;
+			}
+
+			agc->SetInputChannelBit(031, 13, Hold);
+			agc->SetInputChannelBit(031, 14, Free);
+		}
+		return true;
+	}
+
+	return false;
+}*/
+bool CMCModeHoldFreeSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
 		if (agc) {
 			bool Hold = false;
 			bool Free = false;
@@ -3432,10 +3644,10 @@ bool CMCModeHoldFreeSwitch::CheckMouseClick(int event, int mx, int my)
 
 //
 // CMC Optics Mode Switch
-bool CMCOpticsModeSwitch::CheckMouseClick(int event, int mx, int my)
+bool CMCOpticsModeSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (AGCThreePoswitch::CheckMouseClick(event, mx, my)) {
+	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
 		if (agc) {
 			unsigned int SwitchBits;
 			SwitchBits = agc->GetCh33Switches();
@@ -3467,10 +3679,9 @@ bool CMCOpticsModeSwitch::CheckMouseClick(int event, int mx, int my)
 // LEM PGNS switch.
 //
 
-bool PGNSSwitch::CheckMouseClick(int event, int mx, int my)
-
+bool PGNSSwitch::SwitchTo(int newState, bool dontspring)
 {
-	if (AGCThreePoswitch::CheckMouseClick(event, mx, my)) {
+	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
 		if (agc) {
 			bool Hold = false;
 			bool Free = false;

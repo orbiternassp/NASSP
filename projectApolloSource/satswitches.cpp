@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2008/01/18 05:57:23  movieman523
+  *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
+  *	
   *	Revision 1.34  2008/01/14 01:17:07  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -167,10 +170,10 @@ void SaturnGuardedPushSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf
 	sat = s;
 }
 
-bool LESMotorFireSwitch::CheckMouseClick(int event, int mx, int my)
+bool LESMotorFireSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (GuardedPushSwitch::CheckMouseClick(event, mx, my) && Toggled())
+	if (GuardedPushSwitch::SwitchTo(newState,dontspring) && Toggled())
 	{
 		ClearToggled();
 		sat->JettisonLET(true);
@@ -181,10 +184,11 @@ bool LESMotorFireSwitch::CheckMouseClick(int event, int mx, int my)
 	return false;
 }
 
-bool XLunarSwitch::CheckMouseClick(int event, int mx, int my)
+bool XLunarSwitch::SwitchTo(int newState, bool dontspring)
+
 
 {
-	if (ToggleSwitch::CheckMouseClick(event, mx, my)) {
+	if (ToggleSwitch::SwitchTo(newState,dontspring)) {
 		// Do nothing, handling is done in the IU
 		return true;
 	}
@@ -259,7 +263,7 @@ void SaturnValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURF
 	Indicator = ind;
 }
 
-bool SaturnValveSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool SaturnValveSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
@@ -268,12 +272,12 @@ bool SaturnValveSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool SaturnValveSwitch::SwitchTo(int newState)
+bool SaturnValveSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (SaturnThreePosSwitch::SwitchTo(newState)) {
+	if (SaturnThreePosSwitch::SwitchTo(newState, dontspring)) {
 		// some of these switches are spring-loaded, 
 		// so we have to use newState here
 		CheckValve(newState);
@@ -314,7 +318,7 @@ void SaturnPropValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, 
 	Indicator2 = ind2;
 }
 
-bool SaturnPropValveSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool SaturnPropValveSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
@@ -323,12 +327,12 @@ bool SaturnPropValveSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool SaturnPropValveSwitch::SwitchTo(int newState)
+bool SaturnPropValveSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (SaturnThreePosSwitch::SwitchTo(newState)) {
+	if (SaturnThreePosSwitch::SwitchTo(newState, dontspring)) {
 		// some of these switches are spring-loaded, 
 		// so we have to use newState here
 		CheckValve(newState);
@@ -365,22 +369,15 @@ void SaturnPropValveSwitch::CheckValve(int s)
 	}
 }
 
-bool SaturnSPSSwitch::CheckMouseClick(int event, int mx, int my)
+bool SaturnSPSSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (SaturnToggleSwitch::CheckMouseClick(event, mx, my)) {
+	if (SaturnToggleSwitch::SwitchTo(newState,dontspring)) {
 		// Nothing for now
 		return true;
 	}
 
 	return false;
-}
-
-void SaturnSPSSwitch::SetState(bool s)
-
-{
-	SaturnToggleSwitch::SetState(s);
-	// Nothing for now
 }
 
 void SaturnH2PressureMeter::Init(int i, SURFHANDLE surf, SwitchRow &row, Saturn *s)
@@ -1156,7 +1153,7 @@ void DirectO2RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE sur
 	Pipe = p;
 }
 
-bool DirectO2RotationalSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool DirectO2RotationalSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
@@ -1164,7 +1161,7 @@ bool DirectO2RotationalSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 	return false;
-}
+}*/
 
 bool DirectO2RotationalSwitch::SwitchTo(int newValue)
 
@@ -1222,7 +1219,7 @@ void SaturnEcsGlycolPumpsSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE s
 	CheckPump();
 }
 
-bool SaturnEcsGlycolPumpsSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool SaturnEcsGlycolPumpsSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
@@ -1230,7 +1227,7 @@ bool SaturnEcsGlycolPumpsSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 	return false;
-}
+}*/
 
 bool SaturnEcsGlycolPumpsSwitch::SwitchTo(int newValue)
 
@@ -1298,7 +1295,7 @@ void SaturnFuelCellConnectSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE 
 	dcBusController = dcController;
 }
 
-bool SaturnFuelCellConnectSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool SaturnFuelCellConnectSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
@@ -1307,12 +1304,12 @@ bool SaturnFuelCellConnectSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool SaturnFuelCellConnectSwitch::SwitchTo(int newState)
+bool SaturnFuelCellConnectSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (SaturnThreePosSwitch::SwitchTo(newState)) {
+	if (SaturnThreePosSwitch::SwitchTo(newState,dontspring)) {
 		// some of these switches are spring-loaded, 
 		// so we have to use newState here
 		CheckFuelCell(newState);
@@ -1381,7 +1378,7 @@ void BMAGPowerRotationalSwitch::CheckBMAGPowerState()
 	}
 }
 
-bool BMAGPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool BMAGPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {		
@@ -1390,7 +1387,7 @@ bool BMAGPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
 bool BMAGPowerRotationalSwitch::SwitchTo(int newValue)
 
@@ -1719,7 +1716,7 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 	}
 }
 
-bool FDAIPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool FDAIPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
@@ -1728,7 +1725,7 @@ bool FDAIPowerRotationalSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
 bool FDAIPowerRotationalSwitch::SwitchTo(int newValue)
 
@@ -1763,7 +1760,7 @@ void CMACInverterSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SUR
 	UpdateSourceState();
 }
 
-bool CMACInverterSwitch::CheckMouseClick(int event, int mx, int my)
+/*bool CMACInverterSwitch::CheckMouseClick(int event, int mx, int my)
 
 {
 	if (ToggleSwitch::CheckMouseClick(event, mx, my))
@@ -1773,12 +1770,12 @@ bool CMACInverterSwitch::CheckMouseClick(int event, int mx, int my)
 	}
 
 	return false;
-}
+}*/
 
-bool CMACInverterSwitch::SwitchTo(int newState)
+bool CMACInverterSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (ToggleSwitch::SwitchTo(newState)) {
+	if (ToggleSwitch::SwitchTo(newState,dontspring)) {
 		UpdateSourceState();
 		return true;
 	}
@@ -1916,7 +1913,7 @@ void CMACInverterSwitch::LoadState(char *line)
 }
 
 
-bool SaturnSCContSwitch::CheckMouseClick(int event, int mx, int my) 
+/*bool SaturnSCContSwitch::CheckMouseClick(int event, int mx, int my) 
 
 {
 	if (SaturnToggleSwitch::CheckMouseClick(event, mx, my)) {
@@ -1924,12 +1921,12 @@ bool SaturnSCContSwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 	return false;
-}
+}*/
 
-bool SaturnSCContSwitch::SwitchTo(int newState)
+bool SaturnSCContSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	if (SaturnToggleSwitch::SwitchTo(newState)) {
+	if (SaturnToggleSwitch::SwitchTo(newState,dontspring)) {
 		SetSCControl(sat);
 		return true;
 	}
@@ -1944,7 +1941,7 @@ void THCRotarySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHA
 	sat = s;
 }
 
-bool THCRotarySwitch::CheckMouseClick(int event, int mx, int my) 
+/*bool THCRotarySwitch::CheckMouseClick(int event, int mx, int my) 
 
 {
 	if (RotationalSwitch::CheckMouseClick(event, mx, my)) {
@@ -1952,7 +1949,7 @@ bool THCRotarySwitch::CheckMouseClick(int event, int mx, int my)
 		return true;
 	}
 	return false;
-}
+}*/
 
 bool THCRotarySwitch::SwitchTo(int newState)
 
@@ -2083,6 +2080,21 @@ bool SaturnCabinPressureReliefLever::CheckMouseClick(int event, int mx, int my) 
 	}
 }
 
+bool SaturnCabinPressureReliefLever::SwitchTo(int newState)
+{
+	if (ThumbwheelSwitch::SwitchTo(newState))
+	{
+		if(state == 3 && guardState == 0)
+		{
+			state = 2;
+			return false;
+		}
+		else
+			return true;
+	}
+	return false;
+}
+
 void SaturnCabinPressureReliefLever::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
@@ -2177,13 +2189,13 @@ SIVBPayloadSeparationSwitch::SIVBPayloadSeparationSwitch(CSMToSIVBControlConnect
 {
 }
 
-bool SIVBPayloadSeparationSwitch::CheckMouseClick(int event, int mx, int my)
+bool SIVBPayloadSeparationSwitch::SwitchTo(int newState, bool dontspring)
 
 {
 	//
 	// If the switch state changes, tell the SIVB.
 	//
-	if (GuardedToggleSwitch::CheckMouseClick(event, mx, my) && IsPowered())
+	if (GuardedToggleSwitch::SwitchTo(newState,dontspring) && IsPowered())
 	{
 		if (IsUp())
 		{
