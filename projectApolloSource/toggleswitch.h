@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2008/01/25 04:39:42  lassombra
+  *	All switches now handle change of state through SwitchTo function which is vitual
+  *	 and is called by existing mouse and connector handling methods.
+  *	
+  *	Support for delayed spring switches and other ChecklistController functionality following soon.
+  *	
   *	Revision 1.69  2008/01/14 01:17:11  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -826,7 +832,7 @@ class CircuitBrakerSwitch: public ToggleSwitch {
 public:
 	CircuitBrakerSwitch() { MaxAmps = 0.0; };
 
-	//bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClick(int event, int mx, int my);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s = 0, double amps = 30.0);
 
 	double Voltage();

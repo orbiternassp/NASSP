@@ -279,7 +279,7 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 	case SECONDSTAGE:
 		if (eventController.SecondStage != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.CSMStartup;
+			double t = lastMissionTime - eventController.SecondStage;
 			if (time <= t && t <= deadline)
 				return true;
 		}
