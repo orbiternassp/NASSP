@@ -25,6 +25,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.91  2008/01/25 04:39:42  lassombra
+  *	All switches now handle change of state through SwitchTo function which is vitual
+  *	 and is called by existing mouse and connector handling methods.
+  *	
+  *	Support for delayed spring switches and other ChecklistController functionality following soon.
+  *	
   *	Revision 1.90  2008/01/23 01:40:09  lassombra
   *	Implemented timestep functions and event management
   *	
@@ -823,7 +829,7 @@ void PushSwitch::SetState(int value)
 // Circuit braker switch.  Special case of Toggle Switch
 //
 
-/*bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
+bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	int OldState = state;
 
@@ -833,25 +839,16 @@ void PushSwitch::SetState(int value)
 
 	if (event == PANEL_MOUSE_LBDOWN) {
 		if (state) {
-			state = 0;
+			SwitchTo(0);
 			Sclick.play();
 		} else {
-			state = 1;
+			SwitchTo(1);
 			Sclick.play();
-		}
-	}
-
-	if (Active && (state != OldState)) {
-		SwitchToggled = true;
-
-		if (switchRow) {
-			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 		}
 	}
 	return true;
 }
-*/
+
 double CircuitBrakerSwitch::Voltage()
 
 {
