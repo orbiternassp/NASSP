@@ -416,6 +416,16 @@ char *ChecklistController::activeName()
 	else
 		return active.program.name;
 }
+// Todo: Verify
+bool ChecklistController::retrieveChecklistContainer(ChecklistContainer *input)
+{
+	if (input->program.group >= groups.size())
+		return false;
+	if (!groups[input->program.group].manualSelect) //Only manually selectable checklists should be reviewable.
+		return false;
+	*input = ChecklistContainer(groups[input->program.group],*this,lastMissionTime,true);
+	return true;
+}
 /*
 bool complete;
 bool initCalled;

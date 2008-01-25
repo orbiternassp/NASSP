@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.92  2008/01/25 05:58:52  lassombra
+  *	Minor bugfix
+  *	
   *	Revision 1.91  2008/01/25 04:39:42  lassombra
   *	All switches now handle change of state through SwitchTo function which is vitual
   *	 and is called by existing mouse and connector handling methods.
@@ -369,6 +372,7 @@ PanelSwitchItem::PanelSwitchItem()
 	DisplayName = 0;
 	flashing = false;
 	visible = true;
+	doTimeStep = false;
 }
 
 char *PanelSwitchItem::GetDisplayName()
@@ -424,13 +428,16 @@ ToggleSwitch::ToggleSwitch() {
 
 	Active = true;
 	Held = false;
+
+	delayable = false;
+	delayTime = 2;
 }
 
 ToggleSwitch::~ToggleSwitch() {
 	Sclick.done();
 }
 
-void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded, char *dname) {
+void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded, char *dname, bool delay, int delayT) {
 
 	name = n;
 	state = defaultState;
@@ -438,6 +445,9 @@ void ToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defau
 	scnh.RegisterSwitch(this);
 
 	DisplayName = dname;
+
+	delayable = delay;
+	delayTime = delayT;
 }
 
 void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset)
@@ -506,11 +516,16 @@ bool ToggleSwitch::SwitchTo(int newState, bool dontspring) {
 			//
 			if (IsSpringLoaded() && !IsHeld() && !dontspring)
 			{
-				if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   state = TOGGLESWITCH_DOWN;
-				if (springLoaded == SPRINGLOADEDSWITCH_UP)     state = TOGGLESWITCH_UP;
+				if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN,true);
+				if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP,true);
 			}
+			return true;
 		}
-		return true;
+		if (IsSpringLoaded() && !IsHeld() && !dontspring)
+		{
+			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   return SwitchTo(TOGGLESWITCH_DOWN,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_UP)     return SwitchTo(TOGGLESWITCH_UP,true);
+		}
 	}
 	return false;
 }
@@ -663,7 +678,27 @@ void ToggleSwitch::LoadState(char *line)
 }
 void ToggleSwitch::SetState(int value)
 {
-	SwitchTo(value);
+	if (!delayable)
+	{
+		if(SwitchTo(value))
+			Sclick.play();
+	}
+	else
+	{
+		if (SwitchTo(value,true))
+		{
+			Sclick.play();
+			doTimeStep = true;
+			resetTime = switchRow->panelSwitches->lastexecutedtime + delayTime;
+		}
+	}
+}
+void ToggleSwitch::timestep(double missionTime)
+{
+	if (missionTime <= resetTime)
+		return;
+	doTimeStep = false;
+	SwitchTo(state);
 }
 
 
@@ -748,27 +783,40 @@ bool ThreePosSwitch::SwitchTo(int newState, bool dontspring)
 //		if (switchRow->panelSwitches->Realism) 
 //			return false;
 //	}
+	if (Active)
+	{
+		if (state != newState)
+		{
+			state = newState;
+			SwitchToggled = true;
+			if (switchRow) {
+				if (switchRow->panelSwitches->listener) 
+					switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+			}
+			if (IsSpringLoaded() && !dontspring && !IsHeld()) {
+				if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
+				if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
+				if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP,true);
 
-	if (Active && (state != newState)) {
-		state = newState;
-		SwitchToggled = true;
-		if (switchRow) {
-			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+				if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
+						SwitchTo(THREEPOSSWITCH_CENTER,true);
+
+				if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
+						SwitchTo(THREEPOSSWITCH_CENTER,true);
+			}
+			return true;
 		}
-
 		if (IsSpringLoaded() && !dontspring && !IsHeld()) {
-			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
-			if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
-			if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   return SwitchTo(THREEPOSSWITCH_DOWN,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER) return SwitchTo(THREEPOSSWITCH_CENTER,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_UP)     return SwitchTo(THREEPOSSWITCH_UP,true);
 
 			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)     
-				SwitchTo(THREEPOSSWITCH_CENTER,true);
+					return SwitchTo(THREEPOSSWITCH_CENTER,true);
 
 			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
-				SwitchTo(THREEPOSSWITCH_CENTER,true);
+					return SwitchTo(THREEPOSSWITCH_CENTER,true);
 		}
-		return true;
 	}
 	return false;
 }
@@ -781,9 +829,9 @@ void ThreePosSwitch::SetState(int value)
 //
 // Push button like switch.  Now implemented as a special case of toggle switch (springloaded and special sound)
 //
-void PushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded, char *dname)
+void PushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname, bool delay, int delayT)
 {
-	ToggleSwitch::Register(scnh,n,defaultState,springloaded,dname);
+	ToggleSwitch::Register(scnh,n,defaultState,1,dname,delay,delayT);
 }
 
 // Special case check mouse click, same result top and Bottom.
@@ -1126,6 +1174,17 @@ bool SwitchRow::CheckMouseClick(int id, int event, int mx, int my) {
 	return false;
 }
 
+void SwitchRow::timestep(double missionTime)
+{
+	PanelSwitchItem *s = SwitchList;
+	while (s)
+	{
+		if (s->doTimeStep)
+			s->timestep(missionTime);
+		s = s->GetNext();
+	}
+}
+
 void SwitchRow::AddSwitch(PanelSwitchItem *s)
 
 {
@@ -1203,6 +1262,22 @@ bool PanelSwitches::CheckMouseClick(int id, int event, int mx, int my) {
 	}
 
 	return false;
+}
+
+void PanelSwitches::timestep(double missionTime)
+{
+	if (missionTime < (lastexecutedtime + 1))
+		return;
+	if (missionTime > (lastexecutedtime + 2))
+		lastexecutedtime = missionTime;
+	else
+		lastexecutedtime += 1;
+	SwitchRow *row = RowList;
+
+	while (row) {
+		row->timestep(missionTime);
+		row = row->GetNext();
+	}
 }
 
 bool PanelSwitches::DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn) {
@@ -1315,9 +1390,9 @@ GuardedToggleSwitch::~GuardedToggleSwitch() {
 	guardClick.done();
 }
 
-void GuardedToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded) {
-
-	ToggleSwitch::Register(scnh, n, defaultState, springloaded);
+void GuardedToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded, bool delay, int delayT) 
+{
+	ToggleSwitch::Register(scnh, n, defaultState, springloaded,0,delay,delayT);
 	guardState = defaultGuardState;
 }
 
@@ -1467,9 +1542,9 @@ GuardedPushSwitch::~GuardedPushSwitch() {
 	guardClick.done();
 }
 
-void GuardedPushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState) {
+void GuardedPushSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, bool delay, int delayT) {
 
-	PushSwitch::Register(scnh, n, defaultState);
+	PushSwitch::Register(scnh,n,defaultState,0,delay,delayT);
 	guardState = defaultGuardState;
 }
 
@@ -1604,9 +1679,9 @@ GuardedThreePosSwitch::~GuardedThreePosSwitch() {
 }
 
 void GuardedThreePosSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, 
-									 int springloaded) {
-
-	ThreePosSwitch::Register(scnh, n, defaultState, springloaded);
+									 int springloaded, bool delay, int delayT) 
+{
+	ThreePosSwitch::Register(scnh,n,defaultState,springloaded,0,delay,delayT);
 	guardState = defaultGuardState;
 }
 
@@ -3882,41 +3957,44 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	switch (messageType)
 	{
 	case MFD_PANEL_FLASH_ITEM:
-		m.val1.bValue = panel.SetFlashing((char *) m.val1.pValue, m.val2.bValue);
+		m.val1.bValue = panel.SetFlashing(static_cast<char *>(m.val1.pValue), m.val2.bValue);
 		return true;
 
 	case MFD_PANEL_GET_ITEM_STATE:
-		m.val1.iValue = panel.GetState((char *) m.val1.pValue);
+		m.val1.iValue = panel.GetState(static_cast<char *>(m.val1.pValue));
 		return true;
 
 	case MFD_PANEL_SET_ITEM_STATE:
-		m.val1.bValue = panel.SetState((char *) m.val1.pValue, m.val2.iValue);
+		m.val1.bValue = panel.SetState(static_cast<char *>(m.val1.pValue), m.val2.iValue);
 		return true;
 
 	case MFD_PANEL_GET_FAILED_STATE:
-		m.val1.bValue = panel.GetFailedState((char *) m.val1.pValue);
+		m.val1.bValue = panel.GetFailedState(static_cast<char *>(m.val1.pValue));
 		return true;
 
 	case MFD_PANEL_CHECKLIST_AUTOCOMPLETE:
 		m.val1.bValue = checklist.autoComplete(m.val1.bValue);
 		return true;
 	case MFD_PANEL_GET_CHECKLIST_ITEM:
-		m.val2.bValue = checklist.getChecklistItem((ChecklistItem *)m.val1.pValue);
+		m.val2.bValue = checklist.getChecklistItem(static_cast<ChecklistItem *>(m.val1.pValue));
 		return true;
 	case MFD_PANEL_GET_CHECKLIST_LIST:
 		m.val1.pValue = checklist.getChecklistList();
 		return true;
 	case MFD_PANEL_FAIL_ITEM:
-		m.val2.bValue = checklist.failChecklistItem((ChecklistItem *)m.val1.pValue);
+		m.val2.bValue = checklist.failChecklistItem(static_cast<ChecklistItem *>(m.val1.pValue));
 		return true;
 	case MFD_PANEL_COMPLETE_ITEM:
-		m.val2.bValue = checklist.completeChecklistItem((ChecklistItem *)m.val1.pValue);
+		m.val2.bValue = checklist.completeChecklistItem(static_cast<ChecklistItem *>(m.val1.pValue));
 		return true;
 	case MFD_PANEL_CHECKLIST_AUTOCOMPLETE_QUERY:
 		m.val1.bValue = checklist.autoComplete();
 		return true;
 	case MFD_PANEL_CHECKLIST_NAME:
 		m.val1.pValue = checklist.activeName();
+		return true;
+	case MFD_PANEL_RETRIEVE_CHECKLIST:
+		m.val2.bValue = checklist.retrieveChecklistContainer(static_cast<ChecklistContainer *>(m.val1.pValue));
 		return true;
 	}
 
