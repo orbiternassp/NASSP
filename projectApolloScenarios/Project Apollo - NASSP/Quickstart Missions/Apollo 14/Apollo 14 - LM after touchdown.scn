@@ -1213,10 +1213,10 @@ PANELSWITCHES_BEGIN
   THCRotary 1
   AccelGMeter -1.000000 -1.000000
 PANELSWITCHES_END
-<checklist>
+<Checklist>
 FILE Doc\Project Apollo - NASSP\Check List\CSMDefaultCheck.xls
 AUTO 1
-</checklist>
+</Checklist>
 END
 AS-509-S4BSTG:ProjectApollo/sat5stg3
   STATUS Landed Moon

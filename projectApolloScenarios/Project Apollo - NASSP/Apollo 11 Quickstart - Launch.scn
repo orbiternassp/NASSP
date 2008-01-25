@@ -72,10 +72,10 @@ Columbia:ProjectApollo\Saturn5
   SPLASHLAT 13.3162
   LANG English
   LEMN Eagle
-<checklist>
+<Checklist>
 FILE Doc\Project Apollo - NASSP\Check List\CSMDefaultCheck.xls
 AUTO 1
-</checklist>
+</Checklist>
 END
 Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
