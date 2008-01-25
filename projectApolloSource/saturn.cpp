@@ -22,6 +22,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.229  2008/01/23 01:40:09  lassombra
+  *	Implemented timestep functions and event management
+  *	
+  *	Events for Saturns are now fully implemented
+  *	
+  *	Removed all hardcoded checklists from Saturns.
+  *	
+  *	Automatic Checklists are coded into an excel file.
+  *	
+  *	Added function to get the name of the active checklist.
+  *	
+  *	ChecklistController is now 100% ready for Saturn.
+  *	
   *	Revision 1.228  2008/01/22 05:22:27  movieman523
   *	Added port number to docking probe.
   *	
@@ -1576,6 +1589,7 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		iu.PostStep(simt, simdt, mjd);
 	}
 	checkControl.timestep(MissionTime,eventControl);
+	MainPanel.timestep(MissionTime);
 	//sprintf(oapiDebugString(), "VCCamoffset %f %f %f",VCCameraOffset.x,VCCameraOffset.y,VCCameraOffset.z);
 }
 

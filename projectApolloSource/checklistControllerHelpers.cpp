@@ -344,7 +344,7 @@ ChecklistContainer::ChecklistContainer()
 	startTime = 0;
 }
 // Todo: Verify
-ChecklistContainer::ChecklistContainer(const ChecklistGroup &inprogram, ChecklistController &controller, double start)
+ChecklistContainer::ChecklistContainer(const ChecklistGroup &inprogram, ChecklistController &controller, double start, bool dontspawn)
 {
 	program = inprogram;
 	startTime = start;
@@ -355,7 +355,8 @@ ChecklistContainer::ChecklistContainer(const ChecklistGroup &inprogram, Checklis
 		controller.soundLib.LoadSound(controller.checkSound,program.soundFile);
 		controller.playSound = true;
 	}
-	controller.groups[program.group].called = true;
+	if (!dontspawn)
+		controller.groups[program.group].called = true;
 }
 // Todo: Verify
 ChecklistContainer::ChecklistContainer(const ChecklistContainer & input)

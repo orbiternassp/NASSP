@@ -263,7 +263,7 @@ struct ChecklistContainer
 /// -------------------------------------------------------------
 /// Constructor, requires a group to initialize from.
 /// -------------------------------------------------------------
-	ChecklistContainer(const ChecklistGroup &, ChecklistController &,double);
+	ChecklistContainer(const ChecklistGroup &, ChecklistController &,double, bool dontspawn = false);
 /// -------------------------------------------------------------
 /// Copy Constructor.
 /// -------------------------------------------------------------
@@ -423,6 +423,10 @@ public:
 /// Returns the title of the active checklist.
 /// -------------------------------------------------------------
 	char *activeName();
+/// -------------------------------------------------------------
+/// Returns an entire checklist
+/// -------------------------------------------------------------
+	bool retrieveChecklistContainer(ChecklistContainer *);
 private:
 	/// Auto complete flag.  If true, automatically complete the checklist.
 	bool complete;

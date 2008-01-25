@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2008/01/25 05:58:53  lassombra
+  *	Minor bugfix
+  *	
   *	Revision 1.70  2008/01/25 04:39:42  lassombra
   *	All switches now handle change of state through SwitchTo function which is vitual
   *	 and is called by existing mouse and connector handling methods.
@@ -246,7 +249,7 @@
   **************************************************************************/
 
 #include "cautionwarning.h"
-
+#include "nasspdefs.h"
 //
 // Switch states. Only use positive numbers.
 //
@@ -257,6 +260,9 @@
 #define THREEPOSSWITCH_DOWN		0			///< Three-position switch is down.
 #define THREEPOSSWITCH_CENTER	1			///< Three-position switch is centered.
 #define THREEPOSSWITCH_UP		2			///< Three-position switch is up.
+
+#define GUARDEDSWITCH_UNGUARD	101			///<SetState can open a guard from this.
+#define GUARDEDSWITCH_GUARD		102			///<SetState can close a guard from this.
 
 #define SPRINGLOADEDSWITCH_NONE					0		///< Switch is not spring-loaded.
 #define SPRINGLOADEDSWITCH_DOWN					1		///< Switch is spring-loaded to down.
@@ -285,7 +291,7 @@ class PanelSwitchScenarioHandler;
 /// \ingroup PanelItems
 ///
 class PanelSwitchItem: public e_object {
-
+friend class SwitchRow;
 public:
 	PanelSwitchItem();
 	void SetNext(PanelSwitchItem *s) { next = s; };
@@ -394,12 +400,24 @@ public:
 	///
 	virtual bool IsPowered() { return Voltage() > SP_MIN_DCVOLTAGE; };
 
+	///
+	/// \brief Timestep function, only called if doTimeStep is true
+	/// \param time - Mission time
+	///
+	virtual void timestep(double missionTime){return;}
+
+
 protected:
 	///
 	/// This can be interpreted in any desired manner by derived classes. Only positive values should be used.
 	/// \brief Current state.
 	///
 	int state;
+
+	///
+	/// boolean determining whether to call timestep.
+	///
+	bool doTimeStep;
 
 	///
 	/// If a switch fails, you can no longer change the state even if you can still move
@@ -454,7 +472,7 @@ public:
 	ToggleSwitch();
 	virtual ~ToggleSwitch();
 
-	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_NONE, char *dname = 0);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_NONE, char *dname = 0, bool delay = false, int delayT = 2);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SoundLib &s,
 		      int xoffset = 0, int yoffset = 0);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
@@ -485,6 +503,7 @@ public:
 	virtual void SaveState(FILEHANDLE scn);
 	virtual void LoadState(char *line);
 	virtual void SetState(int value); //Needed to properly process set states from toggle switches.
+	virtual void timestep(double missionTime);
 
 	//
 	// Operator overloads so we don't need to call GetState() and SetState() all
@@ -515,6 +534,10 @@ protected:
 
 	virtual unsigned int GetFlags();
 	virtual void SetFlags(unsigned int f);
+
+	bool delayable;
+	int delayTime;
+	double resetTime;
 
 	int	x;
 	int y;
@@ -810,7 +833,7 @@ public:
 class PushSwitch: public ToggleSwitch {
 
 public:
-	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_DOWN, char *dname = 0);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname = 0, bool delay = false, int delayT = 2);
 	bool CheckMouseClick(int event, int mx, int my);
 	//virtual bool SwitchTo(int newState);
 	//virtual void SetState(int value);
@@ -965,7 +988,7 @@ public:
 	GuardedToggleSwitch();
 	virtual ~GuardedToggleSwitch();
 
-	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded = SPRINGLOADEDSWITCH_NONE);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded = SPRINGLOADEDSWITCH_NONE, bool delay = false, int delayT = 2);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
@@ -1069,7 +1092,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
 		int xoffset = 0, int yoffset = 0, int lxoffset = 0, int lyoffset = 0);
 
-	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState,bool delay = false, int delayT = 2);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE dsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
@@ -1113,8 +1136,8 @@ public:
 	GuardedThreePosSwitch();
 	virtual ~GuardedThreePosSwitch();
 
-	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, 
-				  int springloaded = SPRINGLOADEDSWITCH_NONE);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, 
+				  int springloaded = SPRINGLOADEDSWITCH_NONE, bool delay = false, int delayT = 2);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
@@ -1173,7 +1196,7 @@ public:
 	RotationalSwitch();
 	virtual ~RotationalSwitch();
 
-	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultValue);
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultValue);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void AddPosition(int value, double angle);
 	void DrawSwitch(SURFHANDLE drawSurface);
@@ -1373,6 +1396,7 @@ public:
 	void Init(int area, PanelSwitches &panel, e_object *p = 0);
 	SwitchRow *GetNext() { return RowList; };
 	void SetNext(SwitchRow *s) { RowList = s; };
+	void timestep(double missionTime);
 
 	///
 	/// Look up a panel switch item by its name.
@@ -1415,12 +1439,13 @@ public:
 class PanelSwitches {
 
 public:
-	PanelSwitches() { PanelID = 0; RowList = 0; Realism = 0; };
+	PanelSwitches() { PanelID = 0; RowList = 0; Realism = 0; lastexecutedtime=MINUS_INFINITY;};
 	bool CheckMouseClick(int id, int event, int mx, int my);
 	bool DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn);
 	void AddRow(SwitchRow *s) { s->SetNext(RowList); RowList = s; };
 	void Init(int id, VESSEL *v, SoundLib *s, PanelSwitchListener *l) { PanelID = id; RowList = 0; vessel = v; soundlib = s; listener = l; };
 	void SetRealism(int r) { Realism = r; };
+	void timestep(double missionTime);
 
 	///
 	/// Set an item's flashing state.
@@ -1442,6 +1467,7 @@ protected:
 	int	PanelID;
 	SwitchRow *RowList;
 	int Realism;
+	double lastexecutedtime;
 
 	friend class ToggleSwitch;
 	friend class ThreePosSwitch;

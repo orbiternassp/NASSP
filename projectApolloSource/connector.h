@@ -22,6 +22,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2008/01/23 01:40:08  lassombra
+  *	Implemented timestep functions and event management
+  *	
+  *	Events for Saturns are now fully implemented
+  *	
+  *	Removed all hardcoded checklists from Saturns.
+  *	
+  *	Automatic Checklists are coded into an excel file.
+  *	
+  *	Added function to get the name of the active checklist.
+  *	
+  *	ChecklistController is now 100% ready for Saturn.
+  *	
   *	Revision 1.16  2008/01/22 02:55:08  movieman523
   *	Moved DockConnectors/UndockConnectors into the base class. We now dock/undock all registered connectors on that port.
   *	
@@ -311,6 +324,7 @@ public:
 		MFD_PANEL_COMPLETE_ITEM,				///< Complete a checklist step.
 		MFD_PANEL_CHECKLIST_AUTOCOMPLETE_QUERY,	///< Find out the autocomplete state.
 		MFD_PANEL_CHECKLIST_NAME,				///< Find out the name of the current checklist
+		MFD_PANEL_RETRIEVE_CHECKLIST,			///< Get an entire, non-controlled, checklist
 	};
 
 	PanelConnector(PanelSwitches &p, ChecklistController &c);

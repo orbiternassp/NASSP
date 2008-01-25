@@ -22,6 +22,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2008/01/23 01:40:07  lassombra
+  *	Implemented timestep functions and event management
+  *	
+  *	Events for Saturns are now fully implemented
+  *	
+  *	Removed all hardcoded checklists from Saturns.
+  *	
+  *	Automatic Checklists are coded into an excel file.
+  *	
+  *	Added function to get the name of the active checklist.
+  *	
+  *	ChecklistController is now 100% ready for Saturn.
+  *	
   *	Revision 1.9  2008/01/16 19:03:02  lassombra
   *	All but time-step, automation, and complete save/load is now implemented on the Checklist Controller (and the files that depend on it).
   *	
@@ -185,6 +198,13 @@ public:
 	/// \return char *
 	///
 	char *checklistName();
+
+	///
+	/// Get an entire checklist
+	///
+	/// \param ChecklistContainer with program initialized to group desired
+	///
+	bool RetrieveChecklist(ChecklistContainer *);
 
 protected:
 };
