@@ -54,10 +54,10 @@ Endeavour:ProjectApollo/Saturn5
   TCP 0.5
   LANG English
   LEMN Falcon
-<checklist>
+<Checklist>
 FILE Doc\Project Apollo - NASSP\Check List\CSMDefaultCheck.xls
 AUTO 1
-</checklist>
+</Checklist>
 END
 AS-510-CT:ProjectApollo\Crawler
   STATUS Landed Earth
