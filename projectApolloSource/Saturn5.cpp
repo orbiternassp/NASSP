@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.111  2008/01/16 04:14:24  movieman523
+  *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
+  *	
   *	Revision 1.110  2008/01/14 04:48:43  movieman523
   *	Fixed LEM separation when the LEM doesn't have the expected name.
   *	
@@ -917,17 +920,6 @@ void SaturnV::StageOne(double simt, double simdt)
 			//
 			ClearLiftoffLight();
 
-			//
-			// Checklist actions
-			//
-
-			//
-			// EDS auto off
-			//
-			EDSSwitch.SwitchTo(TOGGLESWITCH_DOWN);
-			TwoEngineOutAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
-			LVRateAutoSwitch.SwitchTo(TOGGLESWITCH_DOWN);
-
 			NextMissionEventTime = MissionTime + 1.0;
 			StageState++;
 		}
@@ -1097,15 +1089,6 @@ void SaturnV::StageTwo(double simt)
 				SetThrusterGroupLevel(thg_main, 1.0);
 
 				SepS.stop();
-
-
-				//
-				// Checklist actions
-				//
-
-				// Activate primary evaporator
-				GlycolEvapSteamPressAutoManSwitch.SwitchTo(TOGGLESWITCH_UP);
-				GlycolEvapH2oFlowSwitch.SwitchTo(THREEPOSSWITCH_UP);
 
 
 				NextMissionEventTime += 25.9;

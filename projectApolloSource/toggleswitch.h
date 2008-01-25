@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.69  2008/01/14 01:17:11  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.68  2008/01/09 01:46:45  movieman523
   *	Added initial support for talking to checklist controller from MFD.
   *	
@@ -470,11 +473,12 @@ public:
 	virtual bool IsDown() { return (GetState() == TOGGLESWITCH_DOWN); };
 	virtual bool IsCenter() { return false; };
 
-	virtual bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 	virtual void DrawSwitch(SURFHANDLE DrawSurface);
 	virtual bool CheckMouseClick(int event, int mx, int my);
 	virtual void SaveState(FILEHANDLE scn);
 	virtual void LoadState(char *line);
+	virtual void SetState(int value); //Needed to properly process set states from toggle switches.
 
 	//
 	// Operator overloads so we don't need to call GetState() and SetState() all
@@ -551,7 +555,7 @@ class AttitudeToggle: public ToggleSwitch {
 
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 	//
 	// I don't understand why this isn't inherited properly from ToggleSwitch?
@@ -568,8 +572,8 @@ class NavModeToggle: public ToggleSwitch {
 
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
-	bool CheckMouseClick(int event, int mx, int my);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, VESSEL *v, int mode, SoundLib &s);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	int NAVMode;
@@ -585,13 +589,14 @@ public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int mode, SoundLib &s);
+	virtual bool SwitchTo(int newState,bool dontspring = false);
 
 protected:
 	int	HUDMode;
 };
 
 ///
-/// Generic three-positiont toggle switch
+/// Generic three-position toggle switch
 /// \brief Three position toggle switch base class.
 /// \ingroup PanelItems
 ///
@@ -600,12 +605,12 @@ class ThreePosSwitch: public ToggleSwitch {
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 	bool IsDown() { return (GetState() == THREEPOSSWITCH_DOWN); };
 	bool IsCenter() { return (GetState() == THREEPOSSWITCH_CENTER); };
 	bool IsUp() { return (GetState() == THREEPOSSWITCH_UP); };
-	void SetState(int s) { state = s; };
+//	virtual void SetState(int value);
 
 	int operator=(const int b) { state = b; return state; };
 };
@@ -619,9 +624,9 @@ class ThreeSourceSwitch : public ThreePosSwitch {
 public:
 	ThreeSourceSwitch() { source1 = source2 = source3 = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3);
-	bool CheckMouseClick(int event, int mx, int my);
 	void LoadState(char *line);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+	//virtual void SetState(int value);
 
 protected:
 	virtual void UpdateSourceState();
@@ -640,9 +645,9 @@ class TwoSourceSwitch : public ToggleSwitch {
 public:
 	TwoSourceSwitch() { source1 = source2 = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 	void LoadState(char *line);
+	//virtual void SetState(int value);
 
 protected:
 	virtual void UpdateSourceState();
@@ -660,8 +665,8 @@ class TwoOutputSwitch : public ToggleSwitch {
 public:
 	TwoOutputSwitch() { output1 = output2 = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *o1, e_object *o2);
-	bool CheckMouseClick(int event, int mx, int my);
 	void LoadState(char *line);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	virtual void UpdateSourceState();
@@ -676,7 +681,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2, e_object *s3, e_object *d1, e_object *d2);
 
 protected:
-	void UpdateSourceState();
+	virtual void UpdateSourceState();
 
 	e_object *dest1;
 	e_object *dest2;
@@ -711,8 +716,7 @@ protected:
 class TimerControlSwitch: public MissionTimerSwitch {
 
 public:
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	void SetTimer();
@@ -728,7 +732,7 @@ class TimerUpdateSwitch: public MissionTimerSwitch {
 public:
 	TimerUpdateSwitch();
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int adjuster, MissionTimer *ptimer);
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newstate, bool dontspring = false);
 
 protected:
 	void AdjustTime(int val);
@@ -745,7 +749,7 @@ protected:
 class EventTimerControlSwitch: public MissionTimerSwitch {
 
 public:
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 };
 
@@ -757,7 +761,8 @@ public:
 class EventTimerResetSwitch: public MissionTimerSwitch {
 
 public:
-	bool CheckMouseClick(int event, int mx, int my);
+	//bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 };
 
@@ -788,7 +793,7 @@ protected:
 ///
 class CWSLightTestSwitch: public CWSThreePosSwitch {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 ///
@@ -799,7 +804,10 @@ public:
 class PushSwitch: public ToggleSwitch {
 
 public:
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded = SPRINGLOADEDSWITCH_DOWN, char *dname = 0);
 	bool CheckMouseClick(int event, int mx, int my);
+	//virtual bool SwitchTo(int newState);
+	//virtual void SetState(int value);
 
 	int operator=(const int b) { state = b; return state; };
 
@@ -818,7 +826,7 @@ class CircuitBrakerSwitch: public ToggleSwitch {
 public:
 	CircuitBrakerSwitch() { MaxAmps = 0.0; };
 
-	bool CheckMouseClick(int event, int mx, int my);
+	//bool CheckMouseClick(int event, int mx, int my);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s = 0, double amps = 30.0);
 
 	double Voltage();
@@ -848,8 +856,7 @@ protected:
 ///
 class CWSModeSwitch: public CWSThreePosSwitch {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 ///
@@ -859,8 +866,8 @@ public:
 ///
 class CWSPowerSwitch: public CWSThreePosSwitch {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+	//virtual void SetState(int value);
 
 protected:
 	void SetPowerBus();
@@ -875,8 +882,8 @@ protected:
 class CWSSourceSwitch: public ToggleSwitch {
 public:
 	CWSSourceSwitch() { cws = 0; };
-	bool CheckMouseClick(int event, int mx, int my);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, CautionWarningSystem *c);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	///
@@ -918,8 +925,8 @@ protected:
 class AGCIOSwitch: public AGCSwitch {
 public:
 	AGCIOSwitch() { Channel = 0; Bit = 0; UpValue = false; };
-	bool CheckMouseClick(int event, int mx, int my);
 	void SetChannelData(int chan, int bit, bool value) { Channel = chan; Bit = bit; UpValue = value; };
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	bool UpValue;
@@ -933,17 +940,17 @@ protected:
 
 class CMCModeHoldFreeSwitch : public AGCThreePoswitch {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 class CMCOpticsModeSwitch : public AGCThreePoswitch {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 class PGNSSwitch : public AGCThreePoswitch {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 class GuardedToggleSwitch: public ToggleSwitch {
@@ -986,9 +993,9 @@ class GuardedTwoOutputSwitch : public GuardedToggleSwitch {
 public:
 	GuardedTwoOutputSwitch() { output1 = output2 = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *o1, e_object *o2);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 	void LoadState(char *line);
+	virtual void SetState(int value);
 
 protected:
 	virtual void UpdateSourceState(int newState);
@@ -1006,8 +1013,7 @@ class GuardedTwoSourceSwitch : public GuardedToggleSwitch {
 public:
 	GuardedTwoSourceSwitch() { source1 = source2 = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s1, e_object *s2);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 	void LoadState(char *line);
 
 protected:
@@ -1026,8 +1032,7 @@ public:
 	IMUCageSwitch();
 
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, IMU *im);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	IMU *imu;
@@ -1041,8 +1046,7 @@ public:
 	UnguardedIMUCageSwitch();
 
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, IMU *im);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	IMU *imu;
@@ -1175,6 +1179,7 @@ public:
 	int GetState();
 	int operator=(const int b);
 	operator int();
+	virtual void SetState(int value);
 
 protected:
 	int	x;
@@ -1200,8 +1205,7 @@ class PowerStateRotationalSwitch: public RotationalSwitch {
 public:
 	PowerStateRotationalSwitch();
 
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newValue);
+	virtual bool SwitchTo(int newValue);
 	void LoadState(char *line);
 	void SetSource(int num, e_object *s);
 	double Current();
@@ -1290,6 +1294,7 @@ public:
 	int GetState();
 	int operator=(const int b);
 	operator int();
+	virtual void SetState(int value);
 
 protected:
 	int	x;
@@ -1340,7 +1345,7 @@ class VolumeThumbwheelSwitch: public ThumbwheelSwitch {
 public:
 	VolumeThumbwheelSwitch();
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vclass, SoundLib *s);
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState);
 	void LoadState(char *line);
 
 protected:

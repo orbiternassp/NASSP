@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2008/01/14 01:17:07  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   *	Revision 1.30  2007/11/29 22:08:27  movieman523
   *	Moved electric meters to generic classes in toggleswitch.cpp rather than Saturn-specific.
   *	
@@ -146,8 +149,7 @@ class SaturnValveSwitch: public SaturnThreePosSwitch {
 public:
 	SaturnValveSwitch() { Valve = 0; Indicator = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	void CheckValve(int s);
@@ -161,8 +163,7 @@ public:
 	SaturnPropValveSwitch() { Valve1 = 0; Valve2 = 0; Valve3 = 0; Valve4 = 0; Indicator1 = 0; Indicator2 = 0;};
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve1, int valve2, int valve3,
 		int valve4,	IndicatorSwitch *ind1, IndicatorSwitch *ind2);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	void CheckValve(int s);
@@ -206,18 +207,17 @@ protected:
 class LESMotorFireSwitch : public SaturnGuardedPushSwitch
 {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 class XLunarSwitch : public SaturnToggleSwitch {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 class SaturnSPSSwitch : public SaturnToggleSwitch {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
-	void SetState(bool s);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 class SaturnH2PressureMeter : public MeterSwitch {
@@ -502,8 +502,7 @@ class DirectO2RotationalSwitch: public RotationalSwitch {
 public:
 	DirectO2RotationalSwitch() { Pipe = NULL; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, h_Pipe *p);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newValue);
+	virtual bool SwitchTo(int newValue);
 
 protected:
 	void CheckValve();
@@ -517,8 +516,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Pump *p,
 		      CircuitBrakerSwitch* ac1a, CircuitBrakerSwitch* ac1b, CircuitBrakerSwitch* ac1c,
 			  CircuitBrakerSwitch* ac2a, CircuitBrakerSwitch* ac2b, CircuitBrakerSwitch* ac2c);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newValue);
+	virtual bool SwitchTo(int newValue);
 	void LoadState(char *line);
 
 protected:
@@ -594,8 +592,7 @@ class SaturnFuelCellConnectSwitch: public SaturnThreePosSwitch {
 public:
 	SaturnFuelCellConnectSwitch() { fuelCell = 0; dcBusController = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int fc, DCBusController *dcController);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	void CheckFuelCell(int s);
@@ -609,8 +606,7 @@ public:
 	BMAGPowerRotationalSwitch() { bmag = NULL; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, BMAG *Unit);
 
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newValue);
+	virtual bool SwitchTo(int newValue);
 	void LoadState(char *line);
 
 protected:
@@ -734,8 +730,7 @@ public:
 		      e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2, 
 			  SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2);
 
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newValue);
+	virtual bool SwitchTo(int newValue);
 	void LoadState(char *line);
 
 protected:
@@ -754,8 +749,7 @@ class CMACInverterSwitch : public ToggleSwitch {
 public:
 	CMACInverterSwitch() { acbus = 0; acinv = 0; sat = NULL; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,int bus,int inv,Saturn *ship);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = true);
 	void LoadState(char *line);
 	virtual void UpdateSourceState();
 
@@ -771,16 +765,14 @@ public:
 
 class SaturnSCContSwitch : public SaturnToggleSwitch, public SaturnSCControlSetter {
 public:
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 class THCRotarySwitch : public RotationalSwitch, public SaturnSCControlSetter  {
 public:
 	THCRotarySwitch() { sat = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool SwitchTo(int newValue);
+	virtual bool SwitchTo(int newValue);
 	bool IsClockwise() { return GetState() == 2; }
 	bool IsCounterClockwise() { return GetState() == 3; }
 
@@ -825,6 +817,7 @@ public:
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
+	virtual bool SwitchTo(int newState);
 
 protected:
 	int guardState;
@@ -842,7 +835,7 @@ class SIVBPayloadSeparationSwitch : public GuardedToggleSwitch
 {
 public:
 	SIVBPayloadSeparationSwitch(CSMToSIVBControlConnector &c);
-	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 protected:
 	CSMToSIVBControlConnector &sivb;
