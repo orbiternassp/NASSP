@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.35  2008/01/12 04:14:10  movieman523
+  *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
+  *	
   *	Revision 1.34  2007/10/18 00:23:20  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -128,6 +131,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+//#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -283,7 +288,6 @@ void LEM::SetLmVesselDockStage()
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
 	InitNavRadios (4);
-	SetEnableFocus(true);
     LDGswitch=false;
 	ATT2switch=true;
 	ATT3switch=true;
@@ -439,7 +443,6 @@ void LEM::SetLmAscentHoverStage()
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
 	InitNavRadios (4);
-	SetEnableFocus(false);
 	LDGswitch=false;
 	AFEED1switch=true;
 	AFEED2switch=true;
