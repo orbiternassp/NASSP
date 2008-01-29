@@ -21,7 +21,7 @@ public:
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 	int SelectedGroup;
-	char* SelectedGroupName;
+	char* CurrentGroupName;
 
 	ChecklistItem item;
 
