@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.94  2008/03/14 05:21:21  lassombra
+  *	Implemented basic functor based callback for all panel switch items.  Can be used in place of current panel listener.
+  *	
   *	Revision 1.93  2008/01/25 20:06:07  lassombra
   *	Implemented delayable switch functions.
   *	
@@ -392,7 +395,7 @@ PanelSwitchItem::~PanelSwitchItem()
 	if (callback)
 		delete callback;
 }
-void PanelSwitchItem::setCallback(PanelSwitchCallbackInterface *call)
+void PanelSwitchItem::SetCallback(PanelSwitchCallbackInterface *call)
 {
 	if (callback)
 		delete callback;
