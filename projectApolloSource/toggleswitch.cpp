@@ -25,6 +25,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.93  2008/01/25 20:06:07  lassombra
+  *	Implemented delayable switch functions.
+  *	
+  *	Now, all register functions on all toggle switches should take, at the end, a boolean
+  *	 for whether it is delayable, and an int for how many seconds to delay.
+  *	
+  *	Actual delay can be anywhere between the int and the int + 1.
+  *	
+  *	Function is implemented as a timestepped switch which is called intelligently from
+  *	 the panel, which now gets a timestep call.
+  *	
   *	Revision 1.92  2008/01/25 05:58:52  lassombra
   *	Minor bugfix
   *	
@@ -373,6 +384,19 @@ PanelSwitchItem::PanelSwitchItem()
 	flashing = false;
 	visible = true;
 	doTimeStep = false;
+
+	callback = 0;
+}
+PanelSwitchItem::~PanelSwitchItem()
+{
+	if (callback)
+		delete callback;
+}
+void PanelSwitchItem::setCallback(PanelSwitchCallbackInterface *call)
+{
+	if (callback)
+		delete callback;
+	callback = call;
 }
 
 char *PanelSwitchItem::GetDisplayName()
@@ -510,6 +534,8 @@ bool ToggleSwitch::SwitchTo(int newState, bool dontspring) {
 				if (switchRow->panelSwitches->listener) 
 					switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 			}
+			if (callback)
+				callback->call(this);
 
 			//
 			// Reset the switch if it's spring-loaded and not held.
@@ -793,6 +819,8 @@ bool ThreePosSwitch::SwitchTo(int newState, bool dontspring)
 				if (switchRow->panelSwitches->listener) 
 					switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 			}
+			if (callback)
+				callback->call(this);
 			if (IsSpringLoaded() && !dontspring && !IsHeld()) {
 				if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
 				if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
@@ -941,6 +969,8 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 					if (switchRow->panelSwitches->listener) 
 						switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 				}
+				if (callback)
+					callback->call(this);
 				return;
 			}
 		}
@@ -2041,6 +2071,8 @@ bool RotationalSwitch::SwitchTo(int newValue) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelRotationalSwitchChanged(this);
 		}
+		if (callback)
+			callback->call(this);
 		return true;
 	}
 	return false;
@@ -2323,6 +2355,8 @@ bool ThumbwheelSwitch::SwitchTo(int newState) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelThumbwheelSwitchChanged(this);
 		}
+		if (callback)
+			callback->call(this);
 		return true;
 	}
 	return false;
@@ -2462,6 +2496,8 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 		if (switchRow->panelSwitches->listener) 
 			switchRow->panelSwitches->listener->PanelIndicatorSwitchStateRequested(this);
 	}
+	if (callback)
+		callback->call(this);
 
 	// Require power if wired
 	if(SRC != NULL){

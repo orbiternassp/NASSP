@@ -22,6 +22,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.72  2008/01/25 20:06:07  lassombra
+  *	Implemented delayable switch functions.
+  *	
+  *	Now, all register functions on all toggle switches should take, at the end, a boolean
+  *	 for whether it is delayable, and an int for how many seconds to delay.
+  *	
+  *	Actual delay can be anywhere between the int and the int + 1.
+  *	
+  *	Function is implemented as a timestepped switch which is called intelligently from
+  *	 the panel, which now gets a timestep call.
+  *	
   *	Revision 1.71  2008/01/25 05:58:53  lassombra
   *	Minor bugfix
   *	
@@ -283,6 +294,8 @@ class PanelSwitchScenarioHandler;
 
 #include "powersource.h"
 
+
+class PanelSwitchCallbackInterface;
 ///
 /// This is the base class for panel items. Items using this class can be looked up by name,
 /// and are automatically saved into scenario files and loaded from them without us having to
@@ -294,6 +307,7 @@ class PanelSwitchItem: public e_object {
 friend class SwitchRow;
 public:
 	PanelSwitchItem();
+	~PanelSwitchItem();
 	void SetNext(PanelSwitchItem *s) { next = s; };
 	PanelSwitchItem *GetNext() { return next; };
 	void SetNextForScenario(PanelSwitchItem *s) { nextForScenario = s; };
@@ -406,6 +420,13 @@ public:
 	///
 	virtual void timestep(double missionTime){return;}
 
+	///
+	/// \brief Set a callback.  Note, make absolute sure that the old callback is properly disposed of.
+	/// \param call - New callback to use.
+	///
+	virtual void setCallback(PanelSwitchCallbackInterface* call);
+	
+
 
 protected:
 	///
@@ -459,6 +480,7 @@ protected:
 
 	PanelSwitchItem *next;
 	PanelSwitchItem *nextForScenario;
+	PanelSwitchCallbackInterface *callback;
 };
 
 ///
@@ -1652,4 +1674,39 @@ public:
 	/// \return Current voltage.
 	///
 	double QueryValue();
+};
+
+///
+/// This is going to become the core of the panel callback system.  It follows a standard
+/// functor model.  This allows each switch to call into the appropriate system rather than
+/// the old style switch/case system that was used on a listener to update systems.
+/// \brief Panel Item callback system.
+/// \ingroup PanelItems
+///
+class PanelSwitchCallbackInterface
+{
+public:
+	virtual void call(PanelSwitchItem* s) = 0;
+};
+
+///
+/// Actual Functor for the Panel Switch Callback system.
+/// \brief Panel Item callback system.
+/// \ingroup PanelItems
+///
+template <class T> class PanelSwitchCallback
+{
+private:
+	T* obj_ptr;
+	void (T::*func_ptr)(PanelSwitchItem* s);
+public:
+	PanelSwitchCallback(T* ptr_to_obj, void (T::*ptr_to_func)(PanelSwitchItem* s))
+	{
+		obj_ptr = ptr_to_obj;
+		func_ptr = ptr_to_func;
+	}
+	virtual void call(PanelSwitchItem* s)
+	{
+		(*obj_ptr.*func_ptr)(s);
+	}
 };
