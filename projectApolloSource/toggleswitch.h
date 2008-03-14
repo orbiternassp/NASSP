@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.73  2008/03/14 05:21:22  lassombra
+  *	Implemented basic functor based callback for all panel switch items.  Can be used in place of current panel listener.
+  *	
   *	Revision 1.72  2008/01/25 20:06:07  lassombra
   *	Implemented delayable switch functions.
   *	
@@ -258,6 +261,9 @@
   *	Initial version
   *
   **************************************************************************/
+
+#ifndef __toggleswitch_h
+#define __toggleswitch_h
 
 #include "cautionwarning.h"
 #include "nasspdefs.h"
@@ -1694,7 +1700,7 @@ public:
 /// \brief Panel Item callback system.
 /// \ingroup PanelItems
 ///
-template <class T> class PanelSwitchCallback
+template <class T> class PanelSwitchCallback:public PanelSwitchCallbackInterface
 {
 private:
 	T* obj_ptr;
@@ -1710,3 +1716,4 @@ public:
 		(*obj_ptr.*func_ptr)(s);
 	}
 };
+#endif
