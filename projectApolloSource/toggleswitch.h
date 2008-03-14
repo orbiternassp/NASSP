@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.74  2008/03/14 19:12:06  lassombra
+  *	Fixed functor inheritance.
+  *	
   *	Revision 1.73  2008/03/14 05:21:22  lassombra
   *	Implemented basic functor based callback for all panel switch items.  Can be used in place of current panel listener.
   *	
@@ -430,7 +433,7 @@ public:
 	/// \brief Set a callback.  Note, make absolute sure that the old callback is properly disposed of.
 	/// \param call - New callback to use.
 	///
-	virtual void setCallback(PanelSwitchCallbackInterface* call);
+	virtual void SetCallback(PanelSwitchCallbackInterface* call);
 	
 
 
