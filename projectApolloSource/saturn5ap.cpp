@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2007/06/10 20:25:12  tschachim
+  *	Fixed/clarified that center engines aren't gimbaled.
+  *	
   *	Revision 1.19  2007/06/06 15:02:17  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -82,9 +85,11 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
+#include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "Orbitersdk.h"
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
@@ -410,107 +415,101 @@ void SaturnV::AutoPilot(double autoT)
 					AtempP=(pit*DEG-pitch)/30.0;
 				}
 			}
-
 		}
 	}
 
-	if (CMCswitch){
-		double slip, aoa;
-		VECTOR3 az;
-		OBJHANDLE hbody=GetGravityRef();
-		double bradius=oapiGetSize(hbody);
-		switch (stage){
-		case LAUNCH_STAGE_ONE:
-			GetRelativePos(hbody, up);
-			up=Normalize(up);
-			agc.EquToRel(PI/2.0, 0.0, bradius, north);
-			north=Normalize(north);
-			east=Normalize(CrossProduct(north, up));
-			north=Normalize(CrossProduct(up, east));
-			az=east*sin(TO_HDG*RAD)-north*cos(TO_HDG*RAD);
-			if(autoT < 60.0) normal=Normalize(CrossProduct(up, az));
+	double slip, aoa;
+	VECTOR3 az;
+	OBJHANDLE hbody=GetGravityRef();
+	double bradius=oapiGetSize(hbody);
 
-			slip=GetSlipAngle()*DEG;
+	switch (stage) {
+	case LAUNCH_STAGE_ONE:
+		GetRelativePos(hbody, up);
+		up=Normalize(up);
+		agc.EquToRel(PI/2.0, 0.0, bradius, north);
+		north=Normalize(north);
+		east=Normalize(CrossProduct(north, up));
+		north=Normalize(CrossProduct(up, east));
+		az=east*sin(TO_HDG*RAD)-north*cos(TO_HDG*RAD);
+		if(autoT < 60.0) normal=Normalize(CrossProduct(up, az));
 
-			if(autoT < 10.) {
-				AtempR=0.0;
-				AtempY=0.0;
-				// cancel out the yaw maneuver...
-				AtempY=(-0.4+asin(zgl*normal)*DEG)/20.0;
-			}
+		slip=GetSlipAngle()*DEG;
 
-			if(autoT > 10.0 && autoT < 30.0) {
-				// roll program
-				AtempR=asin(ygl*normal)*DEG/20.0;
-				AtempY=asin(zgl*normal)*DEG/20.0;
-			}
+		if(autoT < 10.) {
+			AtempR=0.0;
+			AtempY=0.0;
+			// cancel out the yaw maneuver...
+			AtempY=(-0.4+asin(zgl*normal)*DEG)/20.0;
+		}
 
-			if(autoT > 30.0 && autoT < 45.0) {
-				//pitch and adjust for relative wind
-				AtempR=asin(ygl*normal)*DEG/20.0;
+		if(autoT > 10.0 && autoT < 30.0) {
+			// roll program
+			AtempR=asin(ygl*normal)*DEG/20.0;
+			AtempY=asin(zgl*normal)*DEG/20.0;
+		}
+
+		if(autoT > 30.0 && autoT < 45.0) {
+			//pitch and adjust for relative wind
+			AtempR=asin(ygl*normal)*DEG/20.0;
 //				AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
+			AtempY=(TO_HDG-(heading+slip))/20.0;
+		}
+		pitch = GetPitch();
+		pitch=pitch*180./PI;
+
+		pitch_c=GetCPitch(autoT);
+
+		AtempP = (pitch - pitch_c);
+		if(rhoriz.z>0)AtempP= -AtempP;
+		if (AtempP > 1.0)
+			AtempP = 1.0;
+		if (AtempP < (-1.0))
+			AtempP = -1.0;
+
+		// zero angle-of-attack...
+		if(autoT > 45.0 && autoT < 115.0) {
+			aoa=GetAOA()*DEG;
+			pitch_c=pitch+aoa-0.3;
+			AtempP=(pitch_c-pitch)/5.0;
+			if(AtempP < -0.2) AtempP=-0.2;
+			if(AtempP >  0.2) AtempP= 0.2;
+//				sprintf(oapiDebugString(), " pitch=%.3f pc=%.3f ap=%.3f", pitch, pitch_c, AtempP);
+			if(autoT < 50.0) {
+//					AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
+				AtempY=(TO_HDG-(heading+slip))/20.0;
+				// try this...
+				AtempR=asin(ygl*normal)*DEG/20.0;
+			} else {
+//					AtempY=slip/10.0;
 				AtempY=(TO_HDG-(heading+slip))/20.0;
 			}
-			pitch = GetPitch();
-			pitch=pitch*180./PI;
-
-			pitch_c=GetCPitch(autoT);
-
-			AtempP = (pitch - pitch_c);
-			if(rhoriz.z>0)AtempP= -AtempP;
-			if (AtempP > 1.0)
-				AtempP = 1.0;
-			if (AtempP < (-1.0))
-				AtempP = -1.0;
-
-			// zero angle-of-attack...
-			if(autoT > 45.0 && autoT < 115.0) {
-				aoa=GetAOA()*DEG;
-				pitch_c=pitch+aoa-0.3;
-				AtempP=(pitch_c-pitch)/5.0;
-				if(AtempP < -0.2) AtempP=-0.2;
-				if(AtempP >  0.2) AtempP= 0.2;
-//				sprintf(oapiDebugString(), " pitch=%.3f pc=%.3f ap=%.3f", pitch, pitch_c, AtempP);
-				if(autoT < 50.0) {
-//					AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
-					AtempY=(TO_HDG-(heading+slip))/20.0;
-					// try this...
-					AtempR=asin(ygl*normal)*DEG/20.0;
-				} else {
-//					AtempY=slip/10.0;
-					AtempY=(TO_HDG-(heading+slip))/20.0;
-				}
+		}
+		if (autoT > 115.0) {
+			AtempY=0.0;
+			if (autoT < 120.0) {
+				if (AtempP < -0.1) AtempP = -0.1;
+				if (AtempP >  0.1) AtempP =  0.1;
+			} else {
+				if (AtempP < -0.2) AtempP = -0.2;
+				if (AtempP >  0.2) AtempP =  0.2;
 			}
-			if (autoT > 115.0) {
-				AtempY=0.0;
-				if (autoT < 120.0) {
-					if (AtempP < -0.1) AtempP = -0.1;
-					if (AtempP >  0.1) AtempP =  0.1;
-				} else {
-					if (AtempP < -0.2) AtempP = -0.2;
-					if (AtempP >  0.2) AtempP =  0.2;
-				}
-				normal=Normalize(CrossProduct(Normalize(vsp.rpos), Normalize(vsp.rvel)));
-			}
+			normal=Normalize(CrossProduct(Normalize(vsp.rpos), Normalize(vsp.rvel)));
+		}
 //			sprintf(oapiDebugString(), "roll=%.3f yaw=%.3f slip=%.3f sum=%.3f hdg+slip=%.3f hdg=%.3f ay=%.3f", 
 //			asin(ygl*normal)*DEG, asin(zgl*normal)*DEG, slip, slip+asin(zgl*normal)*DEG, heading+slip, heading, AtempY);
 //			sprintf(oapiDebugString(), "autoT %f AtempP %f", autoT, AtempP);
 
-			AttitudeLaunch1();
+		AttitudeLaunch1();
 		break;
-			case LAUNCH_STAGE_TWO:
-			AttitudeLaunch2();
+	case LAUNCH_STAGE_TWO:
+		AttitudeLaunch2();
 		break;
-			case LAUNCH_STAGE_TWO_ISTG_JET:
-			AttitudeLaunch2();
+	case LAUNCH_STAGE_TWO_ISTG_JET:
+		AttitudeLaunch2();
 		break;
-			case LAUNCH_STAGE_TWO_TWR_JET:
-			AttitudeLaunch2();
+	case LAUNCH_STAGE_SIVB:
+		AttitudeLaunchSIVB();
 		break;
-			case LAUNCH_STAGE_SIVB:
-			AttitudeLaunchSIVB();
-		break;
-		}
 	}
-
 }

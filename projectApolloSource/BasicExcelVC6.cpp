@@ -1,3 +1,43 @@
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2008 Yap Chun Wei 
+
+  BasicExcel from http://www.codeproject.com/KB/office/BasicExcel.aspx
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************** Revision History ****************************
+  *	$Log$
+  **************************************************************************/
+
+//
+// Disable annoying warning for compilers older 
+// than Microsoft Visual Studio Version 2003 
+//
+
+#if defined(_MSC_VER) && (_MSC_VER < 1300) 
+#pragma warning(disable : 4786 ) 
+#endif
+
+// Code to make the compiler shut up.
+#pragma warning ( push )
+#pragma warning ( disable:4018 )
+#pragma warning ( disable:4996 )
+
 #include "BasicExcelVC6.hpp"
 
 namespace YCompoundFiles
@@ -2966,9 +3006,22 @@ size_t Workbook::Font::RecordSize() {return (recordSize_ = DataSize()+4);}
 
 /************************************************************************************************************/
 Workbook::XF::XF() : Record(), 
-	fontRecordIndex_(0), formatRecordIndex_(0), protectionType_(0xFFF5), alignment_(0x20), rotation_(0x00),
-	textProperties_(0x00), usedAttributes_(0x00), borderLines_(0x0000), colour1_(0x0000), colour2_(0x20C0) 
-	{code_ = CODE::XF; dataSize_ = 20; recordSize_ = 24;}	
+	fontRecordIndex_(0),
+	formatRecordIndex_(0),
+	protectionType_((short)0xFFF5),
+	alignment_(0x20),
+	rotation_(0x00),
+	textProperties_(0x00),
+	usedAttributes_(0x00),
+	borderLines_(0x0000),
+	colour1_(0x0000),
+	colour2_(0x20C0) 
+	{
+		code_ = CODE::XF; 
+		dataSize_ = 20; 
+		recordSize_ = 24;
+	}	
+
 size_t Workbook::XF::Read(const char* data)
 {
 	Record::Read(data);
@@ -3003,7 +3056,7 @@ size_t Workbook::XF::Write(char* data)
 
 /************************************************************************************************************/
 Workbook::Style::Style() : Record(),
-	XFRecordIndex_(0x8000), identifier_(0), level_(0xFF) 
+	XFRecordIndex_((short)0x8000), identifier_(0), level_((char)0xFF) 
 	{code_ = CODE::STYLE; dataSize_ = 2; recordSize_ = 6;}
 size_t Workbook::Style::Read(const char* data)
 {
@@ -4376,7 +4429,7 @@ size_t Worksheet::Window2::Write(char* data)
 // Returns true if the supplied rk value contains an integer.
 bool IsRKValueAnInteger(int rkValue)
 {
-	return (rkValue & 2);
+	return ((rkValue & 2) != 0);
 }
 
 // Returns true if the supplied rk value contains a double.
@@ -4435,7 +4488,7 @@ int GetRKValueFromDouble(double value)
 
 	int rkValue = intdouble.intvalue_;
 	rkValue <<= 2;
-	rkValue |= isMultiplied;
+	rkValue |= (isMultiplied ? 1 : 0);
 	return rkValue;
 }
 
@@ -4491,7 +4544,7 @@ void BasicExcel::New(int sheets)
 bool BasicExcel::Load(const char* filename)
 {
 	if (file_.IsOpen()) file_.Close();
-	if (file_.Open(filename,ios_base::in))
+	if (file_.Open(filename, ios_base::in))
 	{
 		workbook_ = Workbook();
 		worksheets_.clear();
@@ -5890,3 +5943,5 @@ ostream& operator<<(ostream& os, const BasicExcelCell& cell)
 }
 
 } // YExcel namespace end
+
+#pragma warning ( pop )

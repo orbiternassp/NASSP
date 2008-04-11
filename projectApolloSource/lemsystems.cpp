@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2007/11/30 16:40:40  movieman523
+  *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
+  *	
   *	Revision 1.24  2007/06/06 15:02:14  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -96,6 +99,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -444,26 +449,18 @@ void LEM::SystemsInit()
 	LunarBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:LUNAR_BATTERY");
 
 	// ECA #1 (DESCENT stage, LMP DC bus)
-	ECA_1.dc_source_hi_a = Battery1;
-	ECA_1.dc_source_lo_a = Battery1;
-	ECA_1.dc_source_hi_b = Battery2;
-	ECA_1.dc_source_lo_b = Battery2;
+	ECA_1.Init(this, Battery1, Battery2, Battery1, Battery2);
 	ECA_1.dc_source_a_tb = &DSCBattery1TB;
-	*ECA_1.dc_source_a_tb = FALSE; // Initialize to off
+	ECA_1.dc_source_a_tb->SetState(0); // Initialize to off
 	ECA_1.dc_source_b_tb = &DSCBattery2TB;
-	*ECA_1.dc_source_b_tb = FALSE;
-	ECA_1.Volts = 24; // To initialize
+	ECA_1.dc_source_b_tb->SetState(0);
 
 	// ECA #2 (DESCENT stage, CDR DC bus)
-	ECA_2.dc_source_hi_a = Battery3;
-	ECA_2.dc_source_lo_a = Battery3;
-	ECA_2.dc_source_hi_b = Battery4;
-	ECA_2.dc_source_lo_b = Battery4;
+	ECA_2.Init(this, Battery3, Battery4, Battery3, Battery4);
 	ECA_2.dc_source_a_tb = &DSCBattery3TB;
-	*ECA_2.dc_source_a_tb = FALSE; 
+	ECA_2.dc_source_a_tb->SetState(0); 
 	ECA_2.dc_source_b_tb = &DSCBattery4TB;
-	*ECA_2.dc_source_b_tb = FALSE;
-	ECA_2.Volts = 24; // To initialize
+	ECA_2.dc_source_b_tb->SetState(0);
 
 	// Descent battery TBs
 	DSCBattery1TB.WireTo(&ECA_1);
@@ -499,10 +496,8 @@ void LEM::SystemsInit()
 	AC_B_INV_2_FEED_CB.WireTo(&INV_2);
 
 	// AC busses
-	ACBusA.Volts = 0;
-	ACBusA.WireTo(NULL);
-	ACBusB.Volts = 0;
-	ACBusB.WireTo(NULL);
+	ACBusA.Disconnect();
+	ACBusB.Disconnect();
 	// Situation load will wire these to their breakers later if needed
 
 	// AC bus attenuator.
@@ -955,6 +950,7 @@ void LEM_ECA::Init(LEM *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object 
 	dc_source_hi_b = hi_b;
 	dc_source_lo_a = lo_a;
 	dc_source_lo_b = lo_b;
+	Volts = 24;
 }
 
 void LEM_ECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
@@ -1256,7 +1252,7 @@ void LEM_EDS::Init(LEM *s){
 void LEM_EDS::TimeStep(){
 	// Set TBs
 	// BP when descent stage detached
-	if(LG_Deployed == TRUE && lem->status < 2){ lem->EDLGTB = 1; }else{	lem->EDLGTB = 0; }
+	if(LG_Deployed == TRUE && lem->status < 2){ lem->EDLGTB.SetState(1); }else{	lem->EDLGTB.SetState(0); }
 	// Do we have power?
 	if(lem->EDS_CB_LOGIC_A.Voltage() < 20 && lem->EDS_CB_LOGIC_B.Voltage() < 20){ return; }
 	// Are we enabled?

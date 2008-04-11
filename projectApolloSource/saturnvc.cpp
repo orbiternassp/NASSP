@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2008/01/16 05:52:07  movieman523
+  *	Removed all dockstate code.
+  *	
   *	Revision 1.23  2007/08/13 21:39:29  tschachim
   *	Bugfix sextant FOV.
   *	
@@ -99,9 +102,11 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
+#include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "Orbitersdk.h"
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 #include "resource.h"
@@ -440,7 +445,6 @@ void Saturn::SetView(double offset, bool update_direction)
 
 		case LAUNCH_STAGE_TWO:
 		case LAUNCH_STAGE_TWO_ISTG_JET:
-		case LAUNCH_STAGE_TWO_TWR_JET:
 			e2 = _V(3.5, 0.0, -31.0-STG1O);
 			v2 = _V(-0.15, 0, -1.0);
 			e3 = _V(0.0, 7.5, -10.0-STG1O);

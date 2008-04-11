@@ -22,10 +22,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2008/01/14 01:17:11  movieman523
+  *	Numerous changes to move payload creation from the CSM to SIVB.
+  *	
   **************************************************************************/
 
 
 #include <stdio.h>
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 
 #include "PanelSDK/PanelSDK.h"

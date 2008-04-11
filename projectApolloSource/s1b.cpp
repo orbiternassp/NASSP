@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/10/03 20:24:54  tschachim
+  *	Bugfix rowres interstage mesh.
+  *	
   *	Revision 1.9  2007/06/06 15:02:15  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -51,6 +54,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbiterSDK.h"
 
 #include "nasspdefs.h"

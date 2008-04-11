@@ -20,6 +20,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.94  2007/12/04 20:26:33  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.93  2007/11/26 17:59:06  movieman523
   *	Assorted tidying up of state variable structures.
   *	
@@ -538,7 +542,6 @@ typedef struct {
 #define LAUNCH_STAGE_ONE			11		///< Stage one of the launch.
 #define LAUNCH_STAGE_TWO			12		///< Stage two of the launch, prior to interstage jettison (if appropriate).
 #define LAUNCH_STAGE_TWO_ISTG_JET	13		///< Stage two of the launch, after interstage jettison.
-#define LAUNCH_STAGE_TWO_TWR_JET	14		///< Stage two of the launch, after the automated tower jettison.
 
 #define LAUNCH_STAGE_SIVB			20		///< SIVB burn during launch.
 #define STAGE_ORBIT_SIVB			21		///< SIVB in orbit.
@@ -554,17 +557,6 @@ typedef struct {
 #define CM_ENTRY_STAGE_SIX			46
 #define CM_ENTRY_STAGE_SEVEN		47
 #define CM_RECOVERY_STAGE			48		///< CM in water waiting for recovery.
-
-//
-// CSM_ABORT_STAGE is only for backward compatibility.
-// It can be removed soon.
-//
-
-///
-/// \deprecated
-/// \brief CSM is aborting.
-///
-#define CSM_ABORT_STAGE				50
 
 //
 // Start putting in defines rather than hard-coded numbers.
@@ -604,6 +596,13 @@ static inline double KelvinToFahrenheit(double kelvin) {
 	return kelvin * 1.8 - 459.67;
 }
 
+///
+/// \brief Convert Fahrenheit temperature to Kelvin temperature.
+///
+static inline double FahrenheitToKelvin(double fahrenheit) {
+	return (fahrenheit + 459.67) / 1.8;
+}
+
 //
 // Engine information.
 //
@@ -618,15 +617,16 @@ static inline double KelvinToFahrenheit(double kelvin) {
 #define DPS_THRUST		44910
 #define DPS_ISP			3107
 
-#define RCS_FUEL_PER_QUAD	152.5	// Apollo 11 Mission Report, AOH
-#define SM_RCS_ISP			(290.0 * G)
-#define SM_RCS_ISP_SL		50.0
-#define SM_RCS_THRUST		441.5
+#define RCS_FUEL_PER_QUAD		152.5	// Apollo 11 Mission Report, AOH
+#define PRIM_RCS_FUEL_PER_QUAD	93.5	// AOH
+#define SM_RCS_ISP				(290.0 * G)
+#define SM_RCS_ISP_SL			50.0
+#define SM_RCS_THRUST			441.5
 
-#define CM_RCS_FUEL_PER_TANK	55.5	// The CM has 2 tanks (Apollo 11 Mission Report)
-#define CM_RCS_ISP				(290.0 * G)
+#define CM_RCS_FUEL_PER_TANK	55.5		// The CM has 2 tanks (Apollo 11 Mission Report)
+#define CM_RCS_ISP				(340.0 * G) // AOH, dumping takes 88s with 10 of 12 thrusters
 #define CM_RCS_ISP_SL			50.0
-#define CM_RCS_THRUST			412.0
+#define CM_RCS_THRUST			413.7		// AOH
 
 //
 // Mission times for specific events.

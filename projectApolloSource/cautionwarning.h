@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2007/10/18 00:23:18  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.17  2007/01/02 01:38:24  dseagrav
   *	Digital uplink and associated stuff.
   *	
@@ -297,6 +300,11 @@ public:
 	/// \param b Bus 2
 	///
 	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
+
+	///
+	/// \brief Checklist helper function 
+	///
+	void PushMasterAlarm();
 
 	///
 	/// \brief What's the current light test state commanded by telemetry?

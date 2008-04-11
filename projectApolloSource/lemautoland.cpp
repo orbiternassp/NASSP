@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.45  2007/10/13 17:49:46  tschachim
+  *	Rendezvous programs fixed.
+  *	
   *	Revision 1.44  2007/09/10 15:30:26  tschachim
   *	Bugfix P63.
   *	
@@ -161,6 +164,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"

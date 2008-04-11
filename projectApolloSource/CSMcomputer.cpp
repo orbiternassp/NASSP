@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.82  2007/12/02 07:13:39  movieman523
+  *	Updates for Apollo 5 and unmanned Saturn 1b missions.
+  *	
   *	Revision 1.81  2007/10/18 00:23:12  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -260,6 +263,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -4326,7 +4331,7 @@ void CSMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 
 			sat->SetAttitudeRotLevel(level);
 			// Disable RJ/EC for the AGC++ control loop
-			sat->rjec.AGCActiveTimer = 2.0; //ApolloGuidance DELTAT
+			sat->rjec.SetAGCActiveTimer(2.0); //ApolloGuidance DELTAT
 		}
 	}
 }

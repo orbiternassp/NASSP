@@ -22,14 +22,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2006/06/25 21:19:45  movieman523
+  *	Lots of Doxygen updates.
+  *	
   *	Revision 1.1  2006/01/14 18:57:49  movieman523
   *	First stages of pyro and SECS simulation.
   *	
   **************************** Revision History ****************************/
 
 
-#include <stdio.h>
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
+#include <stdio.h>
 
 #include "PanelSDK/PanelSDK.h"
 #include "PanelSDK/Internals/Esystems.h"

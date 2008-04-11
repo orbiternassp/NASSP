@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2007/10/18 00:23:16  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.37  2007/10/07 22:29:10  tschachim
   *	Bugfixes
   *	
@@ -138,6 +141,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"

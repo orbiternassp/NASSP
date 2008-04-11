@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2007/12/21 01:00:11  movieman523
+  *	Really basic Checklist MFD based on Project Apollo MFD, along with the various support functions required to make it work.
+  *	
   *	Revision 1.14  2006/07/27 20:40:06  movieman523
   *	We can now draw power from the SIVb in the Apollo to Venus scenario.
   *	
@@ -67,8 +70,10 @@
   **************************************************************************/
 
 
-#include <stdio.h>
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
+#include <stdio.h>
 
 #include "PanelSDK/PanelSDK.h"
 #include "PanelSDK/Internals/Esystems.h"
@@ -560,6 +565,16 @@ void DCBusController::refresh(double dt)
 	} else {
 		batPower.WireToBuses(NULL, NULL);
 	}
+
+	// The batteries are connected via diodes, so the battery voltage needs to be higher than the 
+	// fuel cell voltage to draw power
+	if (batPower.Voltage() > fcPower.Voltage() + .7)	// diode bias
+		busPower.WireToBus(2, &batPower);
+	else if (batPower.Voltage() < fcPower.Voltage())
+		busPower.WireToBus(2, NULL);
+
+	//if (!strcmp(name, "MainBusAController"))
+	//	sprintf(oapiDebugString(), "FC %.2f, BAT %.2f", fcPower.Voltage(), batPower.Voltage());
 }
 
 bool DCBusController::IsFuelCellConnected(int fc)

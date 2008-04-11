@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/01/04 23:06:03  movieman523
+  *	Moved meshes into ProjectApollo directory and renamed a few.
+  *	
   *	Revision 1.2  2005/11/21 23:08:15  movieman523
   *	Moved more mesh files into the ProjectApollo directory.
   *	
@@ -30,6 +33,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
 
@@ -89,7 +94,7 @@ void Sat5Abort2::init()
 	SetMaxThrust (ENGINE_RETRO, 0);
 	SetMaxThrust (ENGINE_HOVER, 0);
 	SetMaxThrust (ENGINE_ATTITUDE, 5e4);
-	SetEngineLevel(ENGINE_MAIN, 1.0);
+	SetEngineLevel(ENGINE_MAIN, 0.0);
 	SetPMI (_V(374,374,80));
 	SetCrossSections (_V(524,524,97));
 	SetCW (0.1, 0.3, 1.4, 1.4);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2007/12/15 19:48:26  lassombra
+  *	Added functionality to allow ProjectApollo MFD to get mission time from the Crawler as well as the Saturn.  The Crawler actually extracts the mission time from the Saturn, no updates to scenario files needed.
+  *	
   *	Revision 1.25  2007/08/16 16:49:53  tschachim
   *	New meshes.
   *	
@@ -104,7 +107,10 @@
 
 #define ORBITER_MODULE
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
+
 #include "stdio.h"
 #include "math.h"
 #include "nasspsound.h"

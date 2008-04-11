@@ -22,13 +22,18 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2007/10/18 00:23:19  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.1  2007/07/17 14:33:16  tschachim
   *	Added entry and post landing stuff.
   *	
   **************************** Revision History ****************************/
 
-#include <stdio.h>
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
+#include <stdio.h>
 
 #include "PanelSDK/PanelSDK.h"
 #include "PanelSDK/Internals/Hsystems.h"

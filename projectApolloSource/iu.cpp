@@ -22,6 +22,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2008/01/23 01:40:08  lassombra
+  *	Implemented timestep functions and event management
+  *	
+  *	Events for Saturns are now fully implemented
+  *	
+  *	Removed all hardcoded checklists from Saturns.
+  *	
+  *	Automatic Checklists are coded into an excel file.
+  *	
+  *	Added function to get the name of the active checklist.
+  *	
+  *	ChecklistController is now 100% ready for Saturn.
+  *	
   *	Revision 1.16  2007/12/14 18:34:53  tschachim
   *	Bugfix P15/unmanned attitude control.
   *	
@@ -72,6 +85,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -461,8 +476,8 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				// Next event is ignition
 				LastMissionEventTime = NextMissionEventTime;
 
-				// Start the ignition sequence 0.265s early in order to compensate the thrust buildup/tail off
-				NextMissionEventTime += 0.735;
+				// Start the ignition sequence 0.255s early in order to compensate the thrust buildup/tail off
+				NextMissionEventTime += 0.745;
 				
 				State++;
 			}
@@ -1041,11 +1056,11 @@ void IU::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "TLIBURNSTATE", TLIBurnState);
 	papiWriteScenario_bool(scn, "TLIBURNSTART", TLIBurnStart);
 	papiWriteScenario_bool(scn, "TLIBURNDONE", TLIBurnDone);
-	oapiWriteScenario_float(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
-	oapiWriteScenario_float(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
+	papiWriteScenario_double(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
+	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 	papiWriteScenario_bool(scn, "EXTERNALGNC", ExternalGNC);
-
 	GNC.SaveState(scn);
+
 	oapiWriteLine(scn, IU_END_STRING);
 }
 
@@ -1053,39 +1068,18 @@ void IU::LoadState(FILEHANDLE scn)
 
 {
 	char *line;
-	float flt = 0;
-	int i = 0;
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, IU_END_STRING, sizeof(IU_END_STRING)))
 			return;
 
-		if (!strnicmp (line, "TLIBURNSTATE", 12)) {
-			sscanf (line + 12, "%d", &TLIBurnState);
-		}
-		else if (!strnicmp (line, "STATE", 5)) {
-			sscanf (line + 5, "%d", &State);
-		}
-		else if (!strnicmp (line, "TLIBURNSTART", 12)) {
-			sscanf (line + 12, "%d", &i);
-			TLIBurnStart = (i != 0);
-		}
-		else if (!strnicmp (line, "TLIBURNDONE", 11)) {
-			sscanf (line + 11, "%d", &i);
-			TLIBurnDone = (i != 0);
-		}
-		else if (!strnicmp (line, "NEXTMISSIONEVENTTIME", 20)) {
-			sscanf(line + 20, "%f", &flt);
-			NextMissionEventTime = flt;
-		}
-		else if (!strnicmp (line, "LASTMISSIONEVENTTIME", 20)) {
-			sscanf(line + 20, "%f", &flt);
-			LastMissionEventTime = flt;
-		} 
-		else if (!strnicmp (line, "EXTERNALGNC", 11)) {
-			sscanf (line + 11, "%d", &i);
-			ExternalGNC = (i != 0);
-		}
+		if (papiReadScenario_int(line, "TLIBURNSTATE", TLIBurnState)); 
+		else if (papiReadScenario_int(line, "STATE", State)); 
+		else if (papiReadScenario_bool(line, "TLIBURNSTART", TLIBurnStart)); 
+		else if (papiReadScenario_bool(line, "TLIBURNDONE", TLIBurnDone)); 
+		else if (papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime)); 
+		else if (papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime)); 
+		else if (papiReadScenario_bool(line, "EXTERNALGNC", ExternalGNC)); 
 		else if (!strnicmp(line, IUGNC_START_STRING, sizeof(IUGNC_START_STRING))) {
 			GNC.LoadState(scn);
 		}

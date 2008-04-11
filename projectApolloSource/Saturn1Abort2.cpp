@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/06/13 21:41:37  movieman523
+  *	Removed non-existent (and unused) meshes.
+  *	
   *	Revision 1.4  2006/01/05 19:40:53  movieman523
   *	Added Saturn1b abort stages to build.
   *	
@@ -36,15 +39,10 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
-
-const VECTOR3 OFS_STAGE1 =  { 0, 0, -8.935};
-const VECTOR3 OFS_STAGE2 =  { 0, 0, 9.25-12.25};
-const VECTOR3 OFS_STAGE21 =  { 1.85,1.85,24.5-12.25};
-const VECTOR3 OFS_STAGE22 =  { -1.85,1.85,24.5-12.25};
-const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85,24.5-12.25};
-const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 
 static int refcount = 0;
 static MESHHANDLE hSat1stg1;
@@ -84,20 +82,18 @@ void SetSecondStage (VESSEL *vessel)
     vessel->ClearMeshes();
     vessel->ClearExhaustRefs();
     vessel->ClearAttExhaustRefs();
-	vessel->ShiftCentreOfMass (_V(0,0,12.25));
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
     vessel->AddMesh (hSat1stg2, &mesh_dir);
-	mesh_dir=_V(1.85,1.85,24.5-12.25);
+	mesh_dir=_V(1.85,1.85,19.8-12.25);
     vessel->AddMesh (hSat1stg21, &mesh_dir);
-	mesh_dir=_V(-1.85,1.85,24.5-12.25);
+	mesh_dir=_V(-1.85,1.85,19.8-12.25);
     vessel->AddMesh (hSat1stg22, &mesh_dir);
-	mesh_dir=_V(1.85,-1.85,24.5-12.25);
+	mesh_dir=_V(1.85,-1.85,19.8-12.25);
     vessel->AddMesh (hSat1stg23, &mesh_dir);
-	mesh_dir=_V(-1.85,-1.85,24.5-12.25);
+	mesh_dir=_V(-1.85,-1.85,19.8-12.25);
     vessel->AddMesh (hSat1stg24, &mesh_dir);
-	mesh_dir=_V(0,0,30.15-12.25);
+	mesh_dir=_V(0,-0.14,26.6-12.25);
 	vessel->AddMesh (hSM, &mesh_dir);
-	mesh_dir=_V(0,0,34.40-12.25);
 }
 
 

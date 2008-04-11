@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2007/12/04 20:26:38  tschachim
+  *	IMFD5 communication including a new TLI for the S-IVB IU.
+  *	Additional CSM panels.
+  *	
   *	Revision 1.9  2007/10/18 00:23:25  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -56,6 +60,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -311,6 +317,8 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 }
 
 void SPSPropellantSource::SystemTimestep(double simdt) {
+
+	if (our_vessel->GetStage() > CSM_LEM_STAGE) return;
 
 	if (heliumValveAOpen && our_vessel->HeValveMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) 
 		our_vessel->HeValveMnACircuitBraker.DrawPower(91.2);
@@ -608,7 +616,7 @@ void SPSEngine::Timestep(double simt, double simdt) {
 			// Thrust decay if propellant pressure below 170 psi 
 			double thrust = min(1, saturn->GetSPSPropellant()->GetPropellantPressurePSI() / 170.0);
 			saturn->SetThrusterLevel(spsThruster, thrust);
-			saturn->rjec.SPSActive = true;
+			saturn->rjec.SetSPSActive(true);
 			engineOnCommanded = true;
 
 		} else {
@@ -616,7 +624,7 @@ void SPSEngine::Timestep(double simt, double simdt) {
 				// Stop engine
 				saturn->SetThrusterResource(spsThruster, NULL);			
 				saturn->SetThrusterLevel(spsThruster, 0);
-				saturn->rjec.SPSActive = false;
+				saturn->rjec.SetSPSActive(false);
 				engineOnCommanded = false;
 			} else {
 				// Manual engine if REALISM 0
@@ -628,17 +636,17 @@ void SPSEngine::Timestep(double simt, double simdt) {
 					engineOnCommanded = false;
 				}
 				if (saturn->GetThrusterLevel(spsThruster) > 0) {
-					saturn->rjec.SPSActive = true;
+					saturn->rjec.SetSPSActive(true);
 					// Show all injector valves open
 					injectorValves12Open = true;
 					injectorValves34Open = true;
 				} else {
-					saturn->rjec.SPSActive = false;
+					saturn->rjec.SetSPSActive(false);
 				}
 			}
 		}
 	} else {
-		saturn->rjec.SPSActive = false;
+		saturn->rjec.SetSPSActive(false);
 	}
 
 	//
@@ -702,6 +710,8 @@ void SPSEngine::Timestep(double simt, double simdt) {
 }
 
 void SPSEngine::SystemTimestep(double simdt) {
+
+	if (saturn->GetStage() > CSM_LEM_STAGE) return;
 
 	if (injectorValves12Open && saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE) 
 		saturn->dVThrust1Switch.DrawPower(76.3);
@@ -826,6 +836,12 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 
 	if (!saturn) return;
 
+	// After CM/SM separation
+	if (saturn->GetStage() > CSM_LEM_STAGE) {
+		position = 0;
+		return;
+	}
+
 	//
 	// Motors
 	//
@@ -931,6 +947,8 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 }
 
 void SPSGimbalActuator::SystemTimestep(double simdt) {
+
+	if (saturn->GetStage() > CSM_LEM_STAGE) return;
 
 	if (activeSystem == 1 && IsSystem1Powered()) {
 		DrawSystem1Power();

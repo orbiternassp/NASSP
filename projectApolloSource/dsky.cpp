@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2007/10/18 00:23:19  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.23  2007/08/13 16:06:09  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -97,6 +100,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -407,8 +412,7 @@ void DSKY::ProcessChannel13(int val)
 
 	out_val.Value = val;
 
-	/// \todo
-	/// StandbyLight (TODO: PRO key?
+	/// \todo Standby light with PRO key?
 	if (out_val.Bits.EnableStandby || out_val.Bits.TestAlarms)
 	{
 		SetStby(true);
@@ -418,8 +422,7 @@ void DSKY::ProcessChannel13(int val)
 		SetStby(false);
 	}
 
-	/// \todo
-	/// RestartLight (TODO other conditions)
+	/// \todo Other conditions restart light
 	if (out_val.Bits.TestAlarms || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
 	{
 		SetRestart(true);

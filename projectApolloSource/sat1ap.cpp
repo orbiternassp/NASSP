@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/06/10 20:25:12  tschachim
+  *	Fixed/clarified that center engines aren't gimbaled.
+  *	
   *	Revision 1.10  2007/06/06 15:02:16  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -55,6 +58,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -103,11 +108,11 @@ void Saturn1b::AttitudeLaunch1()
 	double pitchcorrect = 0.0;
 //************************************************************
 // gets manual control levels in each axis, this code copied directly from Rob Conley's Mercury Atlas
-	if(CMCswitch && autopilot){
+	if (autopilot) {
 		tempR = AtempR ;
-		tempP =AtempP ;
-		tempY =AtempY ;
-	}else{
+		tempP = AtempP ;
+		tempY = AtempY ;
+	} else {
 		tempP = GetManualControlLevel(THGROUP_ATT_PITCHDOWN, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_PITCHUP, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
 		tempY = GetManualControlLevel(THGROUP_ATT_YAWLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_YAWRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
 		tempR = GetManualControlLevel(THGROUP_ATT_BANKLEFT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE) - GetManualControlLevel(THGROUP_ATT_BANKRIGHT, MANCTRL_ANYDEVICE, MANCTRL_ANYMODE);
@@ -552,16 +557,13 @@ void Saturn1b::AutoPilot(double autoT)
 	}
 	// sprintf(oapiDebugString(), "Alt %f Pitch %f Roll %f Yaw %f autoT %f", altitude, AtempP, AtempR, AtempY, autoT);
 
-	if (CMCswitch){
-		switch (stage){
-			case LAUNCH_STAGE_ONE:
+	switch (stage){
+		case LAUNCH_STAGE_ONE:
 			AttitudeLaunch1();
 			break;
 
-			case LAUNCH_STAGE_TWO:
-			case LAUNCH_STAGE_SIVB:
+		case LAUNCH_STAGE_SIVB:
 			AttitudeLaunchSIVB();
 			break;
-		}
 	}
 }

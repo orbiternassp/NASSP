@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2007/07/17 14:33:01  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.4  2007/06/06 15:02:09  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -36,6 +39,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbiterSDK.h"
 
 #include "nasspdefs.h"

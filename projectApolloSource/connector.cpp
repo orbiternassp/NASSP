@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2008/01/22 05:22:27  movieman523
+  *	Added port number to docking probe.
+  *	
   *	Revision 1.9  2008/01/22 02:55:08  movieman523
   *	Moved DockConnectors/UndockConnectors into the base class. We now dock/undock all registered connectors on that port.
   *	
@@ -51,6 +54,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbiterSDK.h"
 
 #include "nasspdefs.h"

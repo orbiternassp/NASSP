@@ -22,9 +22,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2006/08/12 15:05:35  movieman523
+  *	Renamed EVA and LEVA files.
+  *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
+
 #include "stdio.h"
 #include "eva.h"
 #include "tracer.h"

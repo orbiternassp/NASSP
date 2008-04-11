@@ -23,11 +23,16 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:54  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #ifndef GRAV_BODY_DATA_H
 #define GRAV_BODY_DATA_H
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 
 // All the gravitational bodies - GRAVBODY_UNKNOWN must always be last, so NUM_GRAV_BODIES (below)

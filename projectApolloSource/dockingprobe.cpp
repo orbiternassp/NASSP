@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2008/01/22 05:22:27  movieman523
+  *	Added port number to docking probe.
+  *	
   *	Revision 1.13  2008/01/14 01:17:05  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -66,6 +69,8 @@
   **************************************************************************/
 
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -113,7 +118,6 @@ void DockingProbe::Extend()
 
 {
 	if (!Enabled) return;
-	if (!IsPowered()) return;
 
 	ExtendingRetracting = 1;
 	if (Status != DOCKINGPROBE_STATUS_EXTENDED) {
@@ -137,12 +141,6 @@ void DockingProbe::Retract()
 
 {
 	if (!Enabled) return;
-	if (!IsPowered()) return;
-
-	// sequencial logic and pyros have to powered for retraction
-	if (!OurVessel) return;
-	if (!OurVessel->SECSLogicActive()) return;
-	if (!OurVessel->PyrosArmed()) return;
 
 	ExtendingRetracting = -1;
 	if (Status != DOCKINGPROBE_STATUS_RETRACTED) {
@@ -170,8 +168,8 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 		Docked = false;
 	} else {
 		Docked = true;
-		if (!Enabled || !IsPowered() || Status != DOCKINGPROBE_STATUS_EXTENDED) {
-			DockFailedSound .play(NOLOOP, 200);
+		if (!Enabled || Status != DOCKINGPROBE_STATUS_EXTENDED) {
+			DockFailedSound.play(NOLOOP, 200);
 			UndockNextTimestep = true;
 
 		} else {
@@ -218,6 +216,18 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		} else {
 			Status -= 0.33 * simdt;
 		}	
+	}
+
+	// Switching logic
+	if (OurVessel->DockingProbeExtdRelSwitch.IsUp() && IsPowered()) {
+		Extend();
+
+	} else if (OurVessel->DockingProbeExtdRelSwitch.IsDown()) {
+		if ((!OurVessel->DockingProbeRetractPrimSwitch.IsCenter() && OurVessel->DockProbeMnACircuitBraker.IsPowered() && OurVessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) ||
+			(!OurVessel->DockingProbeRetractSecSwitch.IsCenter()  && OurVessel->DockProbeMnBCircuitBraker.IsPowered() && OurVessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE)) {
+			/// \todo Each retraction system (Prim1, Prim2, Sec1, Sec2) can only be used once 
+			Retract();
+		}
 	}
 }
 
