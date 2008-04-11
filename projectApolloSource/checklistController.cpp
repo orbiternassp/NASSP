@@ -1,6 +1,36 @@
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2008 
+
+  Checklist controller
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************** Revision History ****************************
+  *	$Log$
+  **************************************************************************/
+
+
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
+#include "nasspdefs.h"
 #include "checklistController.h"
 
 //Code to make the compiler shut up.
@@ -104,9 +134,16 @@ bool ChecklistController::init(char *checkFile)
 	if (!init(true))
 		return false;
 
-	if (!file.Load(checkFile))
-		if (!file.Load(DefaultChecklistFile))
+	if (*checkFile == '\0') {
+		if (!file.Load(DefaultChecklistFile)) {
 			return false;
+		}
+	} else if (!file.Load(checkFile)) {
+		if (!file.Load(DefaultChecklistFile)) {
+			return false;
+		}
+	}
+
 	BasicExcelWorksheet* sheet;
 	vector<BasicExcelCell> cells;
 	ChecklistGroup temp;
@@ -130,16 +167,18 @@ bool ChecklistController::init(char *checkFile)
 // Todo: Verify
 void ChecklistController::save(FILEHANDLE scn)
 {
+	int i = 0;
+
 	oapiWriteScenario_string(scn,ChecklistControllerStartString,"");
 	oapiWriteScenario_string(scn,"FILE",FileName);
 	oapiWriteScenario_int(scn,"AUTO",autoexecute);
 
 	if (active.program.group != -1)
 		active.save(scn);
-	for (int i = 0; i < action.size(); i++)
+	for (i = 0; i < action.size(); i++)
 		action[i].save(scn);
 
-	for (int i = 0; i < groups.size(); i++)
+	for (i = 0; i < groups.size(); i++)
 		if (groups[i].called)
 			groups[i].save(scn);
 

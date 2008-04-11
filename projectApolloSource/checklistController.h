@@ -1,13 +1,51 @@
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2008 
+
+  Checklist controller
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************** Revision History ****************************
+  *	$Log$
+  **************************************************************************/
+
+
 #ifndef __checklistController_h
 #define __checklistController_h
+
+//
+// Disable annoying warning for compilers older 
+// than Microsoft Visual Studio Version 2003 
+//
+
+#if defined(_MSC_VER) && (_MSC_VER < 1300) 
+#pragma warning(disable : 4786 ) 
+#endif
+
 // Disable 4018 warning for the extent of this header file.
 #pragma warning ( push )
 #pragma warning ( disable:4018 )
 
-#include "orbiterapi.h"
 #include <vector>
 #include <deque>
 #include <string>
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbiterSDK.h"
 #include "nasspdefs.h"
 #include "connector.h"
@@ -28,7 +66,7 @@ using namespace YExcel;
 #define ChecklistContainerStartString "<container>"
 #define ChecklistContainerEndString "</container>"
 
-#define DefaultChecklistFile "Doc\\Project Apollo - NASSP\\Check List\\DefaultCheck.xls"
+#define DefaultChecklistFile "Doc\\Project Apollo - NASSP\\Check List\\Mission checklist\\Default Checklist.xls"
 
 struct SaturnEvents;
 /// -------------------------------------------------------------
@@ -39,16 +77,20 @@ enum RelativeEvent
 	CHECKLIST_RELATIVE = -2, /// < check item time is relative to the beginning of the checklist.  WARNING! Not valid for groups.
 	MISSION_TIME = -1, /// < check item happens at specific MJD WARNING! could cause unexpected results if items after this become scheduled to operate before it based on a checklist event starting late.  Should primarily only be used for primary checklists!
 	NO_TIME_DEF = 0, /// < check item happens when it is reached NOTE: in auto mode, this item will inherit the state of last time-relative checklist item before it.  Groups with this definition will NOT be automated at all.
-	EARTH_ORBIT_INSERT,
-	SPLASHDOWN,
-	CSMSTARTUP,
-	SECONDSTAGE,
-	SIVBSTAGE,
-	TOWER_JETT,
-	CSM_LV_SEP,
-	CSM_SEP,
+
+	BACKUP_CREW_PRELAUNCH,
+	PRIME_CREW_PRELAUNCH,
+	SECOND_STAGE_STAGING,
+	TOWER_JETTISON,
+	SIVB_STAGE_STAGING,
+	EARTH_ORBIT_INSERTION,
 	TLI,
+	CSM_LV_SEPARATION,
+	CSM_LV_SEPARATION_DONE,
 	PAYLOAD_EXTRACTION,
+	CM_SM_SEPARATION,
+	CM_SM_SEPARATION_DONE,
+	SPLASHDOWN,
 };
 RelativeEvent checkEvent(const char*, bool Group=false);
 enum Status
@@ -307,16 +349,21 @@ struct SaturnEvents
 	SaturnEvents();
 	void save(FILEHANDLE scn);
 	void load(FILEHANDLE scn);
-	double splashdown;	//Time of splashdown.
-	double EOI;	//Time of earth orbit insertion.
-	double CSMStartup; //Time at which the CSM is first brought online (when the scenario is started)
-	double SecondStage; //Time at which the LV goes to the second stage (if not the SIVB)
-	double SIVBStage; //Time at which the LV goes to the SIVB.
-	double Tower_Jettison; //Time at which the Escape Tower was jettisoned.
-	double CSM_LV_SEP; //Time at which the CSM left the Launch Vehicle.
-	double CSM_SEP; //Time at which the CM separates from the SM.
-	double TLI; //Time at which the TLI burn begins.
-	double Payload_Extraction; //Time at which the payload is removed from the SIVB
+
+	double BACKUP_CREW_PRELAUNCH;	// Time of backup crew ingress and prelaunch checks.
+	double PRIME_CREW_PRELAUNCH;	// Time of prime crew ingress and cabin closeout.
+	double SECOND_STAGE_STAGING;	// Time of S-IC/S-II staging (or S-IB/S-IVB staging in case of the Saturn 1B).
+	double TOWER_JETTISON;			// Time at which the Launch Escape Tower was jettisoned.
+	double SIVB_STAGE_STAGING;		// Time of S-II/S-IVB staging (or simultaneous with tower jettison in case of the Saturn 1B).
+	double EARTH_ORBIT_INSERTION;	// Time of Earth Parking Orbit (EPO) insertion.
+	double TLI;						// Time at which the TLI burn begins.
+	double CSM_LV_SEPARATION;		// Time at which the CSM/LV separation sequence starts 
+	double CSM_LV_SEPARATION_DONE;	// Time at which the CSM/LV separation occured 
+	/// \todo The S-IVB has no checklist controller yet
+	double PAYLOAD_EXTRACTION;		// Time at which the payload is removed from the SIVB 
+	double CM_SM_SEPARATION;		// Time at which the CM/SM separation sequence starts 
+	double CM_SM_SEPARATION_DONE;	// Time at which the CM/SM separation occured 
+	double SPLASHDOWN;				// Time of splashdown.
 };
 
 #ifndef _PA_MFDCONNECTOR_H

@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.95  2008/03/14 19:19:20  lassombra
+  *	Changed setCallback to SetCallback
+  *	
   *	Revision 1.94  2008/03/14 05:21:21  lassombra
   *	Implemented basic functor based callback for all panel switch items.  Can be used in place of current panel listener.
   *	
@@ -346,6 +349,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
@@ -365,8 +370,6 @@
 #include "scs.h"
 #include "connector.h"
 #include "checklistController.h"
-
-// DS20060304 SCS PANEL OBJECTS
 
 //
 // Generic panel switch item.
@@ -390,6 +393,7 @@ PanelSwitchItem::PanelSwitchItem()
 
 	callback = 0;
 }
+
 PanelSwitchItem::~PanelSwitchItem()
 {
 	if (callback)
@@ -432,6 +436,7 @@ void PanelSwitchItem::SetState(int value)
 {
 	state = value;
 }
+
 
 //
 // Generic toggle switch.
@@ -632,6 +637,10 @@ bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 		}
+		if (callback) 
+		{
+			callback->Call(this);
+		}
 	} */
 	return true;
 }
@@ -705,6 +714,7 @@ void ToggleSwitch::LoadState(char *line)
 		SetFlags(f);
 	}
 }
+
 void ToggleSwitch::SetState(int value)
 {
 	if (!delayable)
@@ -722,6 +732,7 @@ void ToggleSwitch::SetState(int value)
 		}
 	}
 }
+
 void ToggleSwitch::timestep(double missionTime)
 {
 	if (missionTime <= resetTime)
@@ -794,6 +805,10 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
 		}
+		if (callback) 
+		{
+			callback->Call(this);
+		}
 	}*/
 	return true;
 }
@@ -824,6 +839,7 @@ bool ThreePosSwitch::SwitchTo(int newState, bool dontspring)
 			}
 			if (callback)
 				callback->call(this);
+
 			if (IsSpringLoaded() && !dontspring && !IsHeld()) {
 				if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN,true);
 				if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER,true);
@@ -1394,6 +1410,7 @@ bool PanelSwitches::SetState(char *n, int value)
 		p = row->GetItemByName(n);
 		if (p)
 		{
+			p->Unguard();
 			p->SetState(value);
 			return true;
 		}
@@ -1401,7 +1418,11 @@ bool PanelSwitches::SetState(char *n, int value)
 		row = row->GetNext();
 	}
 
-	return false;
+	/// \todo When false is returned, the checklist controller loops infinitely, better solution?
+	// return false;
+	sprintf(oapiDebugString(),"Switch not found: %s", n);
+	return true;
+
 }
 
 //
@@ -2099,14 +2120,14 @@ double RotationalSwitch::AngleDiff(double a1, double a2) {
 	return diff;
 }
 
-int RotationalSwitch::operator=(const int b) { 
+/*int RotationalSwitch::operator=(const int b) { 
 	
 	SetValue(b);
 	if (position)
 		return position->GetValue(); 
 	else
 		return 0;
-}
+}*/
 
 RotationalSwitch::operator int() {
 
@@ -2452,6 +2473,7 @@ IndicatorSwitch::IndicatorSwitch() {
 
 	state = false;
 	displayState = 0.0;
+	failOpen = false;
 	x = 0;
 	y = 0;
 	width = 0;
@@ -2475,13 +2497,14 @@ void IndicatorSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, bool d
 	scnh.RegisterSwitch(this);
 }
 
-void IndicatorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row) {
+void IndicatorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, bool failopen) {
 
 	x = xp;
 	y = yp;
 	width = w;
 	height = h;
 	switchSurface = surf;
+	failOpen = failopen;
 	
 	row.AddSwitch(this);
 	switchRow = &row;
@@ -2503,13 +2526,13 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 		callback->call(this);
 
 	// Require power if wired
-	if(SRC != NULL){
-		if(SRC->Voltage() > 0){
+	if (SRC != NULL) {
+		if (SRC->Voltage() > SP_MIN_DCVOLTAGE) {
 			drawState = GetState();
-		}else{
-			drawState = 0;
+		} else {
+			drawState = (failOpen ? 1 : 0);
 		}
-	}else{
+	} else {
 		drawState = GetState();
 	}
 
@@ -2523,11 +2546,11 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 	if (displayState < 0.0) displayState = 0.0;
 
 	// Cheating beyond normal saves switch subclasses and associated etcetera
-	if (displayState == 3.0 && drawState > 1){
+	if (displayState == 3.0 && drawState > 1) {
 		displayState += (drawState - 1);
 	}
 
-	oapiBlt(drawSurface, switchSurface, x, y, width * (int)displayState, 0, width, height);
+	oapiBlt(drawSurface, switchSurface, x, y, width * (int) displayState, 0, width, height);
 }
 
 void IndicatorSwitch::SaveState(FILEHANDLE scn) {
@@ -3069,6 +3092,72 @@ void TwoOutputSwitch::LoadState(char *line)
 {
 	ToggleSwitch::LoadState(line);
 	UpdateSourceState();
+}
+
+
+//
+// ThreeOutputSwitch allows you to connect one of the three outputs to the input based on the position
+// of the switch.
+//
+
+void ThreeOutputSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *o1, e_object *o2, e_object *o3)
+
+{
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	output1 = o1;
+	output2 = o2;
+	output3 = o3;
+
+	UpdateSourceState();
+}
+
+/*bool ThreeOutputSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (ThreePosSwitch::CheckMouseClick(event, mx, my))
+	{
+		UpdateSourceState();
+		return true;
+	}
+
+	return false;
+}*/
+
+void ThreeOutputSwitch::UpdateSourceState()
+
+{
+	if (IsUp()) {
+		if (output1) output1->WireTo(this);
+		if (output2) output2->WireTo(0);
+		if (output3) output3->WireTo(0);
+
+	} else if (IsCenter()) {
+		if (output1) output1->WireTo(0);
+		if (output2) output2->WireTo(this);
+		if (output3) output3->WireTo(0);
+
+	} else if (IsDown()) {
+		if (output1) output1->WireTo(0);
+		if (output2) output2->WireTo(0);
+		if (output3) output3->WireTo(this);
+	}
+}
+
+void ThreeOutputSwitch::LoadState(char *line)
+
+{
+	ThreePosSwitch::LoadState(line);
+	UpdateSourceState();
+}
+
+bool ThreeOutputSwitch::SwitchTo(int newState, bool dontspring)
+
+{
+	if (ThreePosSwitch::SwitchTo(newState, dontspring)) {
+		UpdateSourceState();
+		return true;
+	}
+	return false;
 }
 
 //
@@ -4038,4 +4127,10 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	}
 
 	return false;
+}
+
+void MasterAlarmSwitch::SetState(int value) {
+
+	if (value == TOGGLESWITCH_UP)
+		cws->PushMasterAlarm();
 }

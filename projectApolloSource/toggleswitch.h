@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2008/03/14 19:19:20  lassombra
+  *	Changed setCallback to SetCallback
+  *	
   *	Revision 1.74  2008/03/14 19:12:06  lassombra
   *	Fixed functor inheritance.
   *	
@@ -269,7 +272,9 @@
 #define __toggleswitch_h
 
 #include "cautionwarning.h"
+#include "powersource.h"
 #include "nasspdefs.h"
+
 //
 // Switch states. Only use positive numbers.
 //
@@ -300,8 +305,7 @@
 
 class SwitchRow;
 class PanelSwitchScenarioHandler;
-
-#include "powersource.h"
+class PanelSwitchCallbackInterface;
 
 
 class PanelSwitchCallbackInterface;
@@ -316,7 +320,8 @@ class PanelSwitchItem: public e_object {
 friend class SwitchRow;
 public:
 	PanelSwitchItem();
-	~PanelSwitchItem();
+	virtual ~PanelSwitchItem();
+
 	void SetNext(PanelSwitchItem *s) { next = s; };
 	PanelSwitchItem *GetNext() { return next; };
 	void SetNextForScenario(PanelSwitchItem *s) { nextForScenario = s; };
@@ -434,9 +439,12 @@ public:
 	/// \param call - New callback to use.
 	///
 	virtual void SetCallback(PanelSwitchCallbackInterface* call);
+
+	///
+	/// \brief Unguard
+	///
+	virtual void Unguard() {};
 	
-
-
 protected:
 	///
 	/// This can be interpreted in any desired manner by derived classes. Only positive values should be used.
@@ -510,7 +518,7 @@ public:
 		      int xoffset = 0, int yoffset = 0);
 	void SetSize(int w, int h) { width = w; height = h; };
 	void SetPosition(int xp, int yp) { x = xp; y = yp; };
-	virtual void SetState(bool s) { state = s; };
+	//virtual void SetState(bool s) { state = s; };
 	void SetOffset(int xo, int yo) {xOffset = xo; yOffset = yo; };
 	void SetSpringLoaded(int springloaded) { springLoaded = springloaded; };
 	bool IsSpringLoaded() { return (springLoaded != SPRINGLOADEDSWITCH_NONE); };
@@ -547,7 +555,7 @@ public:
 	// going to delete all of these and remove the code which uses them.
 	//
 
-    bool operator=(const bool b) { state = (int) b; return b; };
+/*  bool operator=(const bool b) { state = (int) b; return b; };
 	int operator=(const int b) { state = b; return state; };
 	unsigned operator=(const unsigned b) { state = b; return (unsigned)state; };
 	bool operator!() { return !GetState(); };
@@ -557,7 +565,7 @@ public:
 	operator bool() { return (GetState() != TOGGLESWITCH_DOWN); };
 	operator int() { return (int) GetState(); };
 	operator unsigned() { return (unsigned) GetState(); };
-
+*/
 protected:
 	virtual void InitSound(SoundLib *s);
 	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
@@ -621,7 +629,7 @@ public:
 	// I don't understand why this isn't inherited properly from ToggleSwitch?
 	// Answer from the language reference:
 	// All overloaded operators except assignment (operator=) are inherited by derived classes.
-	unsigned operator=(const unsigned b) { state = (b != 0); return (unsigned)state; };
+//	unsigned operator=(const unsigned b) { state = (b != 0); return (unsigned)state; };
 };
 
 ///
@@ -672,7 +680,7 @@ public:
 	bool IsUp() { return (GetState() == THREEPOSSWITCH_UP); };
 //	virtual void SetState(int value);
 
-	int operator=(const int b) { state = b; return state; };
+//	int operator=(const int b) { state = b; return state; };
 };
 
 ///
@@ -733,6 +741,26 @@ protected:
 
 	e_object *output1;
 	e_object *output2;
+};
+
+///
+/// A three-position switch which can switch its power between three different electrical outputs.
+/// \brief Three power output switch.
+/// \ingroup PanelItems
+///
+class ThreeOutputSwitch : public ThreePosSwitch {
+public:
+	ThreeOutputSwitch() { output1 = output2 = output3 = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *o1, e_object *o2, e_object *o3);
+	void LoadState(char *line);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+
+protected:
+	virtual void UpdateSourceState();
+
+	e_object *output1;
+	e_object *output2;
+	e_object *output3;
 };
 
 class ThreeSourceTwoDestSwitch : public ThreeSourceSwitch {
@@ -869,7 +897,7 @@ public:
 	//virtual bool SwitchTo(int newState);
 	//virtual void SetState(int value);
 
-	int operator=(const int b) { state = b; return state; };
+//	int operator=(const int b) { state = b; return state; };
 
 protected:
 	virtual void InitSound(SoundLib *s);
@@ -892,7 +920,7 @@ public:
 	double Voltage();
 	void DrawPower(double watts);
 
-	int operator=(const int b) { state = b; return state; };
+//	int operator=(const int b) { state = b; return state; };
 
 	///
 	/// Maximum current which can be pulled through the circuit breaker before it automatically
@@ -907,7 +935,6 @@ protected:
 	virtual void InitSound(SoundLib *s);
 
 };
-
 
 ///
 /// A three-position switch controlling a caution and warning system operating mode.
@@ -949,6 +976,19 @@ protected:
 	///
 	/// \brief The caution and warning system that this switch controls.
 	///
+	CautionWarningSystem *cws;
+};
+
+///
+/// Dummy switch for checklist control
+///
+class MasterAlarmSwitch: public PushSwitch {
+
+public:
+	void Init(CautionWarningSystem *c) { cws = c; };
+	void SetState(int value);
+
+protected:
 	CautionWarningSystem *cws;
 };
 
@@ -1030,8 +1070,9 @@ public:
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
 	void SetGuardResetsState(bool s) { guardResetsState = s; };
+	void Unguard() { guardState = 1; };
 
-	int operator=(const int b) { state = b; return state; };
+//	int operator=(const int b) { state = b; return state; };
 
 protected:
 	int	guardX;
@@ -1134,11 +1175,12 @@ public:
 	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
+	void Unguard() { guardState = 1; };
 
 	void SetLit(bool l) { lit = l; };
 	bool IsLit() { return lit; };
 
-	int operator=(const int b) { state = b; return state; };
+//	int operator=(const int b) { state = b; return state; };
 
 protected:
 	int	guardX;
@@ -1178,8 +1220,9 @@ public:
 	int GetGuardState() { return guardState; };
 	void SetGuardState(bool s) { guardState = s; };
 	void SetGuardResetsState(bool s) { guardResetsState = s; };
+	void Unguard() { guardState = 1; };
 
-	int operator=(const int b) { state = b; return state; };
+//	int operator=(const int b) { state = b; return state; };
 
 protected:
 	int	guardX;
@@ -1237,7 +1280,7 @@ public:
 	virtual void SaveState(FILEHANDLE scn);
 	virtual void LoadState(char *line);
 	int GetState();
-	int operator=(const int b);
+//	int operator=(const int b);
 	operator int();
 	virtual void SetState(int value);
 
@@ -1284,18 +1327,21 @@ public:
 	virtual ~IndicatorSwitch();
 
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, bool defaultState);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, bool failopen = false);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	virtual int GetState() { return state; };
-	int operator=(const int b) { state = b; return state; };
-	operator int() {return state; };
+	virtual void SetState(int s) { state = s; };
+
+//	int operator=(const int b) { state = b; return state; };
+//	operator int() {return state; };
 
 protected:
 	int state; // Changed to INT for extended capabilities hackery
 	double displayState;	//0: false, 1: moving, 2: moving, 3: true
+	bool failOpen;
 	int	x;
 	int y;
 	int width;
@@ -1352,8 +1398,8 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetState();
-	int operator=(const int b);
-	operator int();
+//	int operator=(const int b);
+//	operator int();
 	virtual void SetState(int value);
 
 protected:
@@ -1383,8 +1429,8 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetState();
-	int operator=(const int b);
-	operator int();
+//	int operator=(const int b);
+//	operator int();
 
 protected:
 	bool hasYawAxis;
@@ -1703,7 +1749,7 @@ public:
 /// \brief Panel Item callback system.
 /// \ingroup PanelItems
 ///
-template <class T> class PanelSwitchCallback:public PanelSwitchCallbackInterface
+template <class T> class PanelSwitchCallback : public PanelSwitchCallbackInterface
 {
 private:
 	T* obj_ptr;
