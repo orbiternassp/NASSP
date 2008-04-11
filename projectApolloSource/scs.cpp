@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.29  2008/01/18 02:59:22  jasonims
+  *	EMS Implementation Step 5b - Initialization bugfix!
+  *	
   *	Revision 1.28  2007/12/21 09:38:43  jasonims
   *	EMS Implementation Step 5 - jasonims :   SCROLL: complete:  possible inaccuracy in velocity integration.   RSI: complete:  accurate readings, but unsure of authenticity of method, (lack of documentation found).    THRESHOLD CIRCUITRY:  complete: seems quite accurate.   CORRIDOR VERIFICATION: complete: needs testing, but appears to be correct.    RANGE:  working but inaccurate:  probable inaccuracy in range integration....unknown cause.   EMS State is saved as well.    Testing must insue.
   *	
@@ -114,6 +117,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
@@ -639,7 +644,7 @@ void GDC::Timestep(double simdt) {
 	
 			// Uncage Roll BMAG 1, see AOH SCS figure 2.3-11
 			if (((sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_x > 28673 && 
-				  sat->eca.rhc_x < 36863) || sat->rjec.SPSActive) && sat->GSwitch.IsDown()) {
+				  sat->eca.rhc_x < 36863) || sat->rjec.GetSPSActive()) && sat->GSwitch.IsDown()) {
 				sat->bmag1.Uncage(0);
 			} else {
 				sat->bmag1.Cage(0);
@@ -663,7 +668,7 @@ void GDC::Timestep(double simdt) {
 
 			// Uncage Pitch BMAG 1, see AOH SCS figure 2.3-11
 			if (((sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_y > 28673 && 
-				  sat->eca.rhc_y < 36863) || sat->rjec.SPSActive) && sat->GSwitch.IsDown()) {
+				  sat->eca.rhc_y < 36863) || sat->rjec.GetSPSActive()) && sat->GSwitch.IsDown()) {
 				sat->bmag1.Uncage(1);
 			} else {
 				sat->bmag1.Cage(1);
@@ -687,7 +692,7 @@ void GDC::Timestep(double simdt) {
 
 			// Uncage Yaw BMAG 1, see AOH SCS figure 2.3-11
 			if (((sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_z > 28673 && 
-				  sat->eca.rhc_z < 36863) || sat->rjec.SPSActive) && sat->GSwitch.IsDown()) {
+				  sat->eca.rhc_z < 36863) || sat->rjec.GetSPSActive()) && sat->GSwitch.IsDown()) {
 				sat->bmag1.Uncage(2);
 			} else {
 				sat->bmag1.Cage(2);
@@ -1586,31 +1591,79 @@ VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors)
 RJEC::RJEC() {
 	
 	sat = NULL;
+	AutoRCSEnableRelayA = false;
+	AutoRCSEnableRelayB = false;
+	CMTransferMotor1 = false;
+	CMTransferMotor2 = false;
 	SPSActive = false;
 	DirectPitchActive = false;
 	DirectYawActive = false;
 	DirectRollActive = false;
 	AGCActiveTimer = 0;
 
-	int x = 0;
-	while (x < 20) {
-		ThrusterDemand[x] = 0;
-		x++;
+	int i = 0;
+	while (i < 20) {
+		ThrusterDemand[i] = false;
+		PoweredSwitch[i] = NULL;
+		i++;
 	}
 }
 
-void RJEC::Init(Saturn *vessel){
+void RJEC::Init(Saturn *vessel) {
 	sat = vessel;
 }
 
 void RJEC::SystemTimestep(double simdt) {
 
-	// Ensure AC power
-	if (sat->SIGCondDriverBiasPower1Switch.Voltage() < SP_MIN_ACVOLTAGE || 
-	    sat->SIGCondDriverBiasPower2Switch.Voltage() < SP_MIN_ACVOLTAGE) return;
+	// Draw AC power
+	if (sat->SIGCondDriverBiasPower1Switch.IsPowered()) {
+		sat->SIGCondDriverBiasPower1Switch.DrawPower(2.3); 
+	}
+	if (sat->SIGCondDriverBiasPower2Switch.IsPowered()) {
+		sat->SIGCondDriverBiasPower2Switch.DrawPower(0.2); 
+	}
 
-	sat->SIGCondDriverBiasPower1Switch.DrawPower(2.3); 
-	sat->SIGCondDriverBiasPower2Switch.DrawPower(0.2); 	
+	// Thruster power
+	int i;
+	for (i = 0; i < 17; i++) {
+		if (PoweredSwitch[i] != NULL) {	
+			PoweredSwitch[i]->DrawPower(50); 
+		}
+	}
+}
+
+bool RJEC::IsThrusterPowered(ThreePosSwitch *s) {
+
+	// see AOH Figure 2.5-2
+	if (s->IsPowered() && 
+		((s->IsUp() && AutoRCSEnableRelayA && sat->ContrAutoMnACircuitBraker.IsPowered()) ||
+		 (s->IsDown() && AutoRCSEnableRelayB && sat->ContrAutoMnBCircuitBraker.IsPowered()))) {
+		return true;
+	}
+	return false;
+}
+
+void RJEC::SetRCSState(int thruster, bool cm, int smquad, int smthruster, int cmthruster, ThreePosSwitch *s, bool lockout) {
+
+	if (IsThrusterPowered(s) && !lockout) {
+		if (ThrusterDemand[thruster] != 0) { 
+			PoweredSwitch[thruster] = s;
+		}			
+		if (!cm || cmthruster < 0) {
+			sat->SetRCSState(smquad, smthruster, ThrusterDemand[thruster]); 
+			if (cmthruster >= 0) {
+				sat->SetCMRCSState(cmthruster, false);
+			}
+		} else {
+			sat->SetCMRCSState(cmthruster, ThrusterDemand[thruster]);
+			sat->SetRCSState(smquad, smthruster, false); 
+		}
+	} else {
+		sat->SetRCSState(smquad, smthruster, false); 
+		if (cmthruster >= 0) {
+			sat->SetCMRCSState(cmthruster, false);
+		}
+	}
 }
 
 void RJEC::TimeStep(double simdt){
@@ -1636,6 +1689,40 @@ void RJEC::TimeStep(double simdt){
 
 	*/
 
+	// CM/SM transfer motors
+	if (sat->RCSTrnfrSwitch.IsUp()) {
+		if (sat->RCSLogicMnACircuitBraker.IsPowered()) {
+			CMTransferMotor1 = true;
+		}
+		if (sat->RCSLogicMnBCircuitBraker.IsPowered()) {
+			CMTransferMotor2 = true;
+		}
+	} else if (sat->RCSTrnfrSwitch.IsDown()) {
+		if (sat->RCSLogicMnACircuitBraker.IsPowered()) {
+			CMTransferMotor1 = false;
+		}
+		if (sat->RCSLogicMnBCircuitBraker.IsPowered()) {
+			CMTransferMotor2 = false;
+		}
+	}
+
+	// Auto RCS enable relays
+	if (sat->RCSCMDSwitch.IsUp()) {
+		if (sat->SECSArmBatACircuitBraker.IsPowered()) {
+			AutoRCSEnableRelayA = true;
+		}
+		if (sat->SECSArmBatBCircuitBraker.IsPowered()) {
+			AutoRCSEnableRelayB = true;
+		}
+	} else if (sat->RCSCMDSwitch.IsDown()) {
+		if (sat->SECSArmBatACircuitBraker.IsPowered()) {
+			AutoRCSEnableRelayA = false;
+		}
+		if (sat->SECSArmBatBCircuitBraker.IsPowered()) {
+			AutoRCSEnableRelayB = false;
+		}
+	}
+
 	/// \todo Dirty Hack for the AGC++ attitude control
 	// see CSMcomputer::SetAttitudeRotLevel(VECTOR3 level)
 	if (AGCActiveTimer > 0) {
@@ -1643,317 +1730,147 @@ void RJEC::TimeStep(double simdt){
 		return;
 	}
 
-	// CM or SM thrusters
-	int sm_sep = 0;
-	if (sat->GetStage() > CSM_LEM_STAGE) sm_sep = 1;
-
-	// Direct ullage thrust
-	bool directUllageActive = false;
-	if (sat->DirectUllageButton.GetState() == 1 && !sm_sep) {
-		sat->SetRCSState(RCS_SM_QUAD_A, 3, 0);
-		sat->SetRCSState(RCS_SM_QUAD_A, 4, 0);
-		sat->SetRCSState(RCS_SM_QUAD_B, 3, 0);
-		sat->SetRCSState(RCS_SM_QUAD_B, 4, 0);
-		sat->SetRCSState(RCS_SM_QUAD_C, 3, 0);
-		sat->SetRCSState(RCS_SM_QUAD_C, 4, 0);
-		sat->SetRCSState(RCS_SM_QUAD_D, 3, 0);
-		sat->SetRCSState(RCS_SM_QUAD_D, 4, 0);
-
-		if (sat->DirectUllMnACircuitBraker.Voltage() >= SP_MIN_DCVOLTAGE) {   
-			sat->SetRCSState(RCS_SM_QUAD_B, 4, 1);
-			sat->SetRCSState(RCS_SM_QUAD_D, 3, 1);
-		}
-		if (sat->DirectUllMnBCircuitBraker.Voltage() >= SP_MIN_DCVOLTAGE) {   
-			sat->SetRCSState(RCS_SM_QUAD_A, 4, 1); 
-			sat->SetRCSState(RCS_SM_QUAD_C, 3, 1);
-		}
-		directUllageActive = true;
+	// Ensure AC logic power, see Systems Handbook 8.2 
+	if (!sat->SIGCondDriverBiasPower1Switch.IsPowered()) {
+		ThrusterDemand[1] = false;
+		ThrusterDemand[2] = false;
+		ThrusterDemand[4] = false;
+		ThrusterDemand[6] = false;
+		ThrusterDemand[8] = false;
+		ThrusterDemand[9] = false;
+		ThrusterDemand[12] = false;
+		ThrusterDemand[14] = false;
+	}
+	if (!sat->SIGCondDriverBiasPower2Switch.IsPowered()) {
+		ThrusterDemand[3] = false;
+		ThrusterDemand[5] = false;
+		ThrusterDemand[7] = false;
+		ThrusterDemand[10] = false;
+		ThrusterDemand[11] = false;
+		ThrusterDemand[13] = false;
+		ThrusterDemand[15] = false;
+		ThrusterDemand[16] = false;
 	}
 
-	// Ensure AC power
-	if (sat->SIGCondDriverBiasPower1Switch.Voltage() < SP_MIN_ACVOLTAGE || 
-	    sat->SIGCondDriverBiasPower2Switch.Voltage() < SP_MIN_ACVOLTAGE) return;
-	
+	// Reset thruster power demand
+	int i;
+	for (i = 0; i < 17; i++) {
+		PoweredSwitch[i] = NULL;
+	}
+
 	int thruster = 1;
-	int thruster_lockout;
+	bool thruster_lockout;
 	while(thruster < 17) {
 		// THRUSTER LOCKOUT CHECKING
 		thruster_lockout = 0;
 		// If it's a pitch or yaw jet, lockout on SPS thrusting
-		if (thruster < 9 && SPSActive != 0) { thruster_lockout = 1; } 
+		if (thruster < 9 && SPSActive) {
+			thruster_lockout = 1; 
+		} 
 		// Lockout on direct axes.
-		if (thruster < 5 && (DirectPitchActive != 0 || directUllageActive)) { thruster++; continue; } // Skip entirely
-		if (thruster > 4 && thruster < 9 && (DirectYawActive != 0 || directUllageActive)) { thruster++; continue; } 
-		if (thruster > 8 && DirectRollActive != 0) { thruster++; continue; } 
+		if (thruster < 5 && DirectPitchActive) {
+			thruster++; 
+			continue; // Skip entirely
+		} 
+		if (thruster > 4 && thruster < 9 && DirectYawActive) {
+			thruster++; 
+			continue; 
+		} 
+		if (thruster > 8 && DirectRollActive) {
+			thruster++; 
+			continue; 
+		} 
 		// THRUSTER PROCESSING
 		switch(thruster) {
-			case 1:
-				if(sat->PitchC3Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->PitchC3Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_C, 3, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(0,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_C, 3, 0); 
-					}else{
-						sat->SetCMRCSState(0,0);
-					}
-				}
-				break;
-
-			case 2:
-				if(sat->PitchA4Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->PitchA4Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_A, 4, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(2,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_A, 4, 0); 
-					}else{
-						sat->SetCMRCSState(2,0);
-					}
-				}
-				break;
-
-			case 3:
-				if(sat->PitchA3Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->PitchA3Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_A, 3, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(1,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_A, 3, 0); 
-					}else{
-						sat->SetCMRCSState(1,0);
-					}
-				}
-				break;
-
-			case 4:
-				if(sat->PitchC4Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->PitchC4Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_C, 4, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(3,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_C, 4, 0); 
-					}else{
-						sat->SetCMRCSState(3,0);
-					}
-				}
-				break;
-
-			case 5:
-				if(sat->YawD3Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->YawD3Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_D, 3, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(4,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_D, 3, 0); 
-					}else{
-						sat->SetCMRCSState(4,0);
-					}
-				}
-				break;
-
-			case 6:
-				if(sat->YawB4Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->YawB4Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_B, 4, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(6,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_B, 4, 0); 
-					}else{
-						sat->SetCMRCSState(6,0);
-					}
-				}
-				break;
-
-			case 7:
-				if(sat->YawB3Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->YawB3Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_B, 3, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(5,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_B, 3, 0); 
-					}else{
-						sat->SetCMRCSState(5,0);
-					}
-				}
-				break;
-
-			case 8:
-				if(sat->YawD4Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->YawD4Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_D, 4, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(7,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_D, 4, 0); 
-					}else{
-						sat->SetCMRCSState(7,0);
-					}
-				}
-				break;
-
-			case 9:
-				if(sat->BdRollB1Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->BdRollB1Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_B, 1, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(8,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_B, 1, 0); 
-					}else{
-						sat->SetCMRCSState(8,0);
-					}
-				}
-				break;
-
-			case 10:
-				if(sat->BdRollD2Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->BdRollD2Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_D, 2, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(10,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_D, 2, 0); 
-					}else{
-						sat->SetCMRCSState(10,0);
-					}
-				}
-				break;
-
-			case 11:
-				if(sat->BdRollD1Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->BdRollD1Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_D, 1, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(9,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_D, 1, 0); 
-					}else{
-						sat->SetCMRCSState(9,0);
-					}
-				}
-				break;
-
-			case 12:
-				if(sat->BdRollB2Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->BdRollB2Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_B, 2, ThrusterDemand[thruster]); 
-					}else{
-						sat->SetCMRCSState(11,ThrusterDemand[thruster]);
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_B, 2, 0); 
-					}else{
-						sat->SetCMRCSState(11,0);
-					}
-				}
-				break;
-
-			case 13:
-				if(sat->AcRollA1Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->AcRollA1Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_A, 1, ThrusterDemand[thruster]); 
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_A, 1, 0); 
-					}
-				}
-				break;
-
-			case 14:
-				if(sat->AcRollA2Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->AcRollA2Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_A, 2, ThrusterDemand[thruster]); 
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_A, 2, 0); 
-					}
-				}
-				break;
-
-			case 15:
-				if(sat->AcRollC1Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->AcRollC1Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_C, 1, ThrusterDemand[thruster]); 
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_C, 1, 0); 
-					}
-				}
-				break;
-
-			case 16:
-				if(sat->AcRollC2Switch.Voltage() > 20 && thruster_lockout == 0){
-					if(ThrusterDemand[thruster] != 0){ sat->AcRollC2Switch.DrawPower(50); }
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_C, 2, ThrusterDemand[thruster]); 
-					}
-				}else{
-					if(!sm_sep){
-						sat->SetRCSState(RCS_SM_QUAD_C, 2, 0); 
-					}
-				}
-				break;
+			case 1:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_C, 3,  0, &sat->PitchC3Switch,  thruster_lockout); break;
+			case 2:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_A, 4,  2, &sat->PitchA4Switch,  thruster_lockout); break;
+			case 3:	 SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_A, 3,  1, &sat->PitchA3Switch,  thruster_lockout); break;
+			case 4:	 SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_C, 4,  3, &sat->PitchC4Switch,  thruster_lockout); break;
+			case 5:	 SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_D, 3,  5, &sat->YawD3Switch,    thruster_lockout); break;
+			case 6:	 SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_B, 4,  6, &sat->YawB4Switch,    thruster_lockout); break;
+			case 7:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_B, 3,  4, &sat->YawB3Switch,    thruster_lockout); break;
+			case 8:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_D, 4,  7, &sat->YawD4Switch,    thruster_lockout); break;
+			case 9:	 SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_B, 1,  8, &sat->BdRollB1Switch, thruster_lockout); break;
+			case 10: SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_D, 2, 10, &sat->BdRollD2Switch, thruster_lockout);	break;
+			case 11: SetRCSState(thruster, CMTransferMotor2, RCS_SM_QUAD_D, 1,  9, &sat->BdRollD1Switch, thruster_lockout);	break;
+			case 12: SetRCSState(thruster, CMTransferMotor1, RCS_SM_QUAD_B, 2, 11, &sat->BdRollB2Switch, thruster_lockout);	break;
+			case 13: SetRCSState(thruster, false,            RCS_SM_QUAD_A, 1, -1, &sat->AcRollA1Switch, thruster_lockout);	break;
+			case 14: SetRCSState(thruster, false,            RCS_SM_QUAD_A, 2, -1, &sat->AcRollA2Switch, thruster_lockout);	break;
+			case 15: SetRCSState(thruster, false,            RCS_SM_QUAD_C, 1, -1, &sat->AcRollC1Switch, thruster_lockout);	break;
+			case 16: SetRCSState(thruster, false,            RCS_SM_QUAD_C, 2, -1, &sat->AcRollC2Switch, thruster_lockout);	break;
 		}
 		thruster++;
 	}		
 }
 
-void RJEC::SetThruster(int thruster,bool Active){
-	if(thruster > 0 && thruster < 20){
+void RJEC::SetThruster(int thruster, bool Active) {
+	if (thruster > 0 && thruster < 20) {
 		ThrusterDemand[thruster] = Active; // Next timestep does the work
 	}
 }
 
+bool RJEC::GetThruster(int thruster) {
+	if (thruster > 0 && thruster < 20) {
+		return ThrusterDemand[thruster];
+	}
+	return false;
+}
+
+void RJEC::SaveState(FILEHANDLE scn) {
+
+	int i;
+	char buffer[100];
+
+	oapiWriteLine(scn, RJEC_START_STRING);
+	
+	for (i = 1; i < 17; i++) {
+		sprintf(buffer, "THRUSTERDEMAND%i", i);
+		papiWriteScenario_bool(scn, buffer, ThrusterDemand[i]);
+	}
+	papiWriteScenario_bool(scn, "AUTORCSENABLERELAYA", AutoRCSEnableRelayA); 
+	papiWriteScenario_bool(scn, "AUTORCSENABLERELAYB", AutoRCSEnableRelayB); 
+	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR1", CMTransferMotor1); 
+	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR2", CMTransferMotor2); 
+	papiWriteScenario_bool(scn, "SPSACTIVE", SPSActive); 
+	papiWriteScenario_bool(scn, "DIRECTPITCHACTIVE", DirectPitchActive); 
+	papiWriteScenario_bool(scn, "DIRECTYAWACTIVE", DirectYawActive); 
+	papiWriteScenario_bool(scn, "DIRECTROLLACTIVE", DirectRollActive); 
+	papiWriteScenario_double(scn, "AGCACTIVETIMER", AGCActiveTimer); 
+
+	oapiWriteLine(scn, RJEC_END_STRING);
+}
+
+void RJEC::LoadState(FILEHANDLE scn){
+
+
+	int i, val;
+	char *line;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, RJEC_END_STRING, sizeof(RJEC_END_STRING))){
+			return;
+
+		} else if (!strnicmp (line, "THRUSTERDEMAND", 14)) {			
+			sscanf(line+14, "%i %i", &i, &val);
+			ThrusterDemand[i] = (val != 0 ? true : false);
+		}
+		papiReadScenario_bool(line, "AUTORCSENABLERELAYA", AutoRCSEnableRelayA); 
+		papiReadScenario_bool(line, "AUTORCSENABLERELAYB", AutoRCSEnableRelayB); 
+		papiReadScenario_bool(line, "CMTRANSFERMOTOR1", CMTransferMotor1); 
+		papiReadScenario_bool(line, "CMTRANSFERMOTOR2", CMTransferMotor2); 
+		papiReadScenario_bool(line, "SPSACTIVE", SPSActive); 
+		papiReadScenario_bool(line, "DIRECTPITCHACTIVE", DirectPitchActive); 
+		papiReadScenario_bool(line, "DIRECTYAWACTIVE", DirectYawActive); 
+		papiReadScenario_bool(line, "DIRECTROLLACTIVE", DirectRollActive); 
+		papiReadScenario_double(line, "AGCACTIVETIMER", AGCActiveTimer); 
+	}
+}
+
+
+//
 // Electronic Control Assembly
+//
+
 ECA::ECA() {
 
 	rhc_x = 32768;
@@ -2007,14 +1924,23 @@ void ECA::SystemTimestep(double simdt) {
 
 void ECA::TimeStep(double simdt) {
 
-	// Do we have power?
-	if (!IsPowered()) return;
-
 	// SCS is in control if the THC is CLOCKWISE 
 	// or if the SC CONT switch is set to SCS.
 
 	/// \todo TVC CW is supplied by SCS LOGIC BUS 2
 	/// \todo SC CONT switch is supplied by ???
+
+	// Do we have power?
+	if (!IsPowered()) {
+		// Turn off thrusters when in SCS control and unpowered
+		if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) {
+			for (int i = 0; i < 17; i++) {
+				sat->rjec.SetThruster(i, false);
+			}
+		}
+		return;
+	}
+
 	int accel_roll_flag = 0;
 	int mnimp_roll_flag = 0;
 	int accel_pitch_flag = 0;
@@ -2253,11 +2179,11 @@ void ECA::TimeStep(double simdt) {
 		}
 		// PSEUDORATE FEEDBACK
 		if (sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP && sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER){
-			if (sat->rjec.ThrusterDemand[9] != 0 || sat->rjec.ThrusterDemand[11] != 0 ||
-			    sat->rjec.ThrusterDemand[13] != 0 || sat->rjec.ThrusterDemand[15] != 0 ) {
+			if (sat->rjec.GetThruster(9) || sat->rjec.GetThruster(11) ||
+			    sat->rjec.GetThruster(13) || sat->rjec.GetThruster(15)) {
 				pseudorate.x += 0.1 * simdt; 
-			} else if (sat->rjec.ThrusterDemand[10] != 0 || sat->rjec.ThrusterDemand[12] != 0 ||
-			    sat->rjec.ThrusterDemand[14] != 0 || sat->rjec.ThrusterDemand[16] != 0 ) {
+			} else if (sat->rjec.GetThruster(10) || sat->rjec.GetThruster(12) ||
+			    sat->rjec.GetThruster(14) || sat->rjec.GetThruster(16)) {
 				pseudorate.x -= 0.1 * simdt;
 			} else {
 				if (pseudorate.x > 0) {
@@ -2272,9 +2198,9 @@ void ECA::TimeStep(double simdt) {
 			pseudorate.x = 0;
 		}
 		if (sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP && sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER){
-			if (sat->rjec.ThrusterDemand[1] != 0 || sat->rjec.ThrusterDemand[3] != 0) {
+			if (sat->rjec.GetThruster(1) || sat->rjec.GetThruster(3)) {
 				pseudorate.y += 0.1 * simdt; 
-			} else if (sat->rjec.ThrusterDemand[2] != 0 || sat->rjec.ThrusterDemand[4] != 0) {
+			} else if (sat->rjec.GetThruster(2) || sat->rjec.GetThruster(4)) {
 				pseudorate.y -= 0.1 * simdt;
 			} else {
 				if (pseudorate.y > 0) {
@@ -2289,9 +2215,9 @@ void ECA::TimeStep(double simdt) {
 			pseudorate.y = 0;
 		}
 		if (sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP && sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER){
-			if (sat->rjec.ThrusterDemand[6] != 0 || sat->rjec.ThrusterDemand[8] != 0) {
+			if (sat->rjec.GetThruster(6) || sat->rjec.GetThruster(8)) {
 				pseudorate.z += 0.1 * simdt; 
-			} else if (sat->rjec.ThrusterDemand[5] != 0 || sat->rjec.ThrusterDemand[7] != 0) {
+			} else if (sat->rjec.GetThruster(5) || sat->rjec.GetThruster(7)) {
 				pseudorate.z -= 0.1 * simdt;
 			} else {
 				if (pseudorate.z > 0) {
@@ -2317,9 +2243,10 @@ void ECA::TimeStep(double simdt) {
 		//	rate_err.x * DEG, rate_err.y * DEG, rate_err.z * DEG);	
 		// sprintf(oapiDebugString(),"SCS PITCH rate %.3f cmd %.3f pseudo %.3f error %.3f", sat->gdc.rates.x * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
 		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f error %.3f", sat->gdc.rates.z * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG);
-	}
-	// ROTATION
-	if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN  || sat->THCRotary.IsClockwise()) {
+
+		//
+		// ROTATION
+		//
 		switch(sat->ManualAttRollSwitch.GetState()){
 			case THREEPOSSWITCH_UP:      // ACCEL CMD
 				// ECA auto-control is inhibited. Auto fire commands are generated from the breakout switches.
@@ -2603,10 +2530,14 @@ void ECA::TimeStep(double simdt) {
 	}
 	// sprintf(oapiDebugString(),"SCS: mnimp_roll_trigger %d mnimp_roll_flag %d", mnimp_roll_trigger, mnimp_roll_flag);
 
+	//
 	// TRANSLATION HANDLING
+	//
+
 	int trans_x_flag=0,trans_y_flag=0,trans_z_flag=0;
-	int sm_sep=0;
-	if (sat->GetStage() > CSM_LEM_STAGE) sm_sep = 1;
+	// CM/SM transfer handling
+	bool sm_sep = false;
+	if (sat->rjec.GetCMTransferMotor1() || sat->rjec.GetCMTransferMotor2()) sm_sep = true;
 
 	if ((sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) && !sm_sep){
 		if(thc_x < 16384){ // PLUS X
@@ -3122,10 +3053,10 @@ void EMS::RotateRSI(double simdt) {
 	}else{
 		dir = -1;
 	}
-	if (abs(RSITarget - RSIRotation) > PI) dir = -dir;  // Deal with sign crossing of 0/360 value
+	if (fabs(RSITarget - RSIRotation) > PI) dir = -dir;  // Deal with sign crossing of 0/360 value
 
-	dtheta = (50*(PI/180)*simdt); //Hardcoded rotation rate of 50 degrees per second...unknown actual value.
-	error = abs(RSITarget - RSIRotation); //Difference between desired and current value
+	dtheta = (50.*(PI/180.)*simdt); //Hardcoded rotation rate of 50 degrees per second...unknown actual value.
+	error = fabs(RSITarget - RSIRotation); //Difference between desired and current value
 	if (error < dtheta) dtheta = error; //use smaller of two
 
 	RSIRotation = RSIRotation + dir*dtheta;

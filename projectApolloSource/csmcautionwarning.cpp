@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2007/10/18 00:23:18  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.37  2007/08/13 16:06:09  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -113,7 +116,7 @@
   *	
   *	Revision 1.9  2005/10/12 19:41:08  tschachim
   *	Reduced suit compressor alarm pressure with higher time accelerations,
-  *	TODO better solution.
+  *	Todo better solution.
   *	
   *	Revision 1.8  2005/10/11 16:31:50  tschachim
   *	Added more alarms.
@@ -141,6 +144,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
@@ -226,6 +231,27 @@ bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus &fc, int index)
 		FuelCellCheckCount[index] = 0;
 	}
 	return false;
+}
+
+//
+// Check status of a SM RCS quad.
+//
+
+bool CSMCautionWarningSystem::SMRCSBad(SMRCSPropellantSource* smrcs)
+
+{
+	bool bad = false;
+	
+	//
+	// Various conditions, see Apollo Operations Handbook 2.10.4.2
+	//
+
+	if (smrcs->GetPackageTempF() < 75) bad = true;
+	if (smrcs->GetPackageTempF() > 205) bad = true;
+
+	if (smrcs->GetPropellantPressurePSI() < 145) bad = true;
+	if (smrcs->GetPropellantPressurePSI() > 215) bad = true;
+	return bad;
 }
 
 //
@@ -451,11 +477,26 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 				SetLight(CSM_CWS_SPS_PRESS, false);
 				SPSPressCheckCount = 0;
 			}
+
+			//
+			// SM RCS
+			//
+
+			SetLight(CSM_CWS_SM_RCS_A, SMRCSBad(&sat->SMQuadARCS));
+			SetLight(CSM_CWS_SM_RCS_B, SMRCSBad(&sat->SMQuadBRCS));
+			SetLight(CSM_CWS_SM_RCS_C, SMRCSBad(&sat->SMQuadCRCS));
+			SetLight(CSM_CWS_SM_RCS_D, SMRCSBad(&sat->SMQuadDRCS));
 		}
 		else {
 			SetLight(CSM_CWS_FC1_LIGHT, false);
 			SetLight(CSM_CWS_FC2_LIGHT, false);
 			SetLight(CSM_CWS_FC3_LIGHT, false);
+
+			SetLight(CSM_CWS_SM_RCS_A, false);
+			SetLight(CSM_CWS_SM_RCS_B, false);
+			SetLight(CSM_CWS_SM_RCS_C, false);
+			SetLight(CSM_CWS_SM_RCS_D, false);
+
 			SetLight(CSM_CWS_CRYO_PRESS_LIGHT, false);
 			SetLight(CSM_CWS_SPS_PRESS, false);
 		}
@@ -546,7 +587,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 					SetLight(CSM_CWS_AC_BUS1_LIGHT, true);
 				if (ACOvervoltage(as)) {
 					SetLight(CSM_CWS_AC_BUS1_LIGHT, true);
-					sat->DisconectInverter(true,1); 
+					sat->DisconnectInverter(true,1); 
 				}
 
 				//
@@ -563,7 +604,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			else {
 				SetLight(CSM_CWS_AC_BUS1_OVERLOAD, false);
 				SetLight(CSM_CWS_AC_BUS1_LIGHT, false);
-				sat->DisconectInverter(false, 1);
+				sat->DisconnectInverter(false, 1);
 
 				if (ACBus1Alarm) {
 					ACBus1Alarm = false;
@@ -587,7 +628,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 					SetLight(CSM_CWS_AC_BUS2_LIGHT, true);
 				if (ACOvervoltage(as)) {
 					SetLight(CSM_CWS_AC_BUS2_LIGHT, true);
-					sat->DisconectInverter(true,2); 
+					sat->DisconnectInverter(true,2); 
 				}
 
 				//
@@ -602,7 +643,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 			else {
 				SetLight(CSM_CWS_AC_BUS2_OVERLOAD, false);
 				SetLight(CSM_CWS_AC_BUS2_LIGHT, false);
-				sat->DisconectInverter(false,2);
+				sat->DisconnectInverter(false,2);
 
 				if (ACBus2Alarm) {
 					ACBus2Alarm = false;
@@ -674,30 +715,20 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		SetLight(CSM_CWS_SUIT_COMPRESSOR, (datm.DisplayedSuitComprDeltaPressurePSI < 0.22));
 
 		//
-		// RCS:
-		//
-		// SM RCS warning lights when temperature is below 75F or above 205F. In auto mode,
-		// RCS heaters (two per quad at 36W) turn on at 115F and off at 134F (AOH RCS 2.5-24).
-		//
 		// CM RCS warning lights if pressure is below 260psi or above 330psi (AOH RCS 2.5-46),
 		// however, AOH 2-10.6 says that the CM RCS lights are only active in CM mode.
 		//
 
 		if (Source == CWS_SOURCE_CM)
 		{
-			CMRCSPressures press;
-
-			sat->GetCMRCSPressures(press);
-
-			SetLight(CSM_CWS_CM_RCS_1, !(press.He1PressPSI < 330.0 && press.He1PressPSI >= 260.0));
-			SetLight(CSM_CWS_CM_RCS_2, !(press.He2PressPSI < 330.0 && press.He2PressPSI >= 260.0));
+			SetLight(CSM_CWS_CM_RCS_1, !(sat->CMRCS1.GetPropellantPressurePSI() <= 330.0 && sat->CMRCS1.GetPropellantPressurePSI() >= 260.0));
+			SetLight(CSM_CWS_CM_RCS_2, !(sat->CMRCS2.GetPropellantPressurePSI() <= 330.0 && sat->CMRCS2.GetPropellantPressurePSI() >= 260.0));
 		}
 		else
 		{
 			SetLight(CSM_CWS_CM_RCS_1, false);
 			SetLight(CSM_CWS_CM_RCS_2, false);
 		}
-
 		NextUpdateTime = simt + (0.1 * oapiGetTimeAcceleration());
 	}
 }

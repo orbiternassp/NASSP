@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.112  2008/01/25 04:39:42  lassombra
+  *	All switches now handle change of state through SwitchTo function which is vitual
+  *	 and is called by existing mouse and connector handling methods.
+  *	
+  *	Support for delayed spring switches and other ChecklistController functionality following soon.
+  *	
   *	Revision 1.111  2008/01/16 04:14:24  movieman523
   *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
   *	
@@ -362,9 +368,11 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
+#include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "Orbitersdk.h"
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
@@ -460,9 +468,7 @@ void SaturnV::initSaturnV()
 	initSaturn();
 
 	strcpy(StagesString, "S1C:SII:SIVB:CSM");
-
 	SaturnType = SAT_SATURNV;
-
 	HasProbe = true;
 
 	//
@@ -499,7 +505,6 @@ void SaturnV::initSaturnV()
 	TLICapableBooster = true;
 	GoHover = false;
 	Burned = false;
-
 	EVA_IP = false;
 
 	//
@@ -964,7 +969,6 @@ void SaturnV::StageOne(double simt, double simdt)
 	case 4:
 		if (MissionTime >= NextMissionEventTime) {
 			ClearEngineIndicators();
-			bManualSeparate = false;
 			SeparationS.play(NOLOOP, 245);
 
 			if (SaturnType != SAT_INT20)
@@ -1065,7 +1069,7 @@ void SaturnV::StageTwo(double simt)
 				if (GetThrusterLevel(th_main[i]) > 0.65) {
 					ENGIND[i] = false;
 				}
-				else{
+				else {
 					ENGIND[i] = true;
 				}
 			}
@@ -1084,13 +1088,10 @@ void SaturnV::StageTwo(double simt)
 				//
 
 				if (SII_UllageNum)
-					SetThrusterGroupLevel(thg_ull,0.0);
+					SetThrusterGroupLevel(thg_ull, 0.0);
 
 				SetThrusterGroupLevel(thg_main, 1.0);
-
 				SepS.stop();
-
-
 				NextMissionEventTime += 25.9;
 
 				//
@@ -1100,7 +1101,6 @@ void SaturnV::StageTwo(double simt)
 				if (InterstageSepTime < NextMissionEventTime) {
 					NextMissionEventTime = InterstageSepTime;
 				}
-
 				StageState++;
 			}
 		}
@@ -1112,11 +1112,9 @@ void SaturnV::StageTwo(double simt)
 		// Interstage jettisoned 30.5 seconds after SIC shutdown.
 		//
 
-		if (MissionTime >= NextMissionEventTime || bManualSeparate) {
-
-			SeparateStage (LAUNCH_STAGE_TWO_TWR_JET);
-			SetStage(LAUNCH_STAGE_TWO_TWR_JET);
-			bManualSeparate = false;
+		if (MissionTime >= NextMissionEventTime) { 
+			SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
+			SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 			SIISepState = false;
 
 			//
@@ -1124,13 +1122,14 @@ void SaturnV::StageTwo(double simt)
 			// specified.
 			//
 
-			if (LESJettisonTime > 999.0)
-			{
+			if (LESJettisonTime > 999.0) {
 				LESJettisonTime = MissionTime + 5.7;
 			}
 		}
 		break;
 	}
+
+	/// \todo Manual separation and abort handling, see StageFour
 }
 
 void SaturnV::StageFour(double simt, double simdt)
@@ -1216,7 +1215,7 @@ void SaturnV::StageFour(double simt, double simdt)
 			StageState++;
 
 			if (!LaunchFail.SIIAutoSepFail) {
-				SeparateStage (LAUNCH_STAGE_SIVB);
+				SeparateStage(LAUNCH_STAGE_SIVB);
 				SetStage(LAUNCH_STAGE_SIVB);
 			}
 		}
@@ -1260,22 +1259,23 @@ void SaturnV::StageFour(double simt, double simdt)
 	else {
 		AttitudeLaunch2();
 	}
-
-	if (bManualSeparate || SIISIVBSepSwitch.GetState()) {
-		bManualSeparate = false;
-		SeparateStage (LAUNCH_STAGE_SIVB);
+	
+	// Manual separation
+	if (SIISIVBSepSwitch.GetState()) { 		
+		SeparateStage(LAUNCH_STAGE_SIVB);
+		SetStage(LAUNCH_STAGE_SIVB);
 		ClearEngineIndicators();
 		NextMissionEventTime = MissionTime;
-		SetStage(LAUNCH_STAGE_SIVB);
 	}
 
-	if (bAbort) {
-		SeparateStage (LAUNCH_STAGE_SIVB);
-		SetEngineIndicators();
-		StartAbort();
+	// Abort handling
+	if (bAbort && !LESAttached) {
+		SeparateStage(LAUNCH_STAGE_SIVB);
 		SetStage(LAUNCH_STAGE_SIVB);
-		ABORT_IND = true;
-		bAbort = true;
+		StartAbort();
+		// Disable autopilot
+		autopilot = false;
+		bAbort = false;
 	}
 }
 
@@ -1380,29 +1380,18 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 			return;
 		}
 	}
+
 	// AFTER LVDC++ WORKS SATISFACTORILY EVERYTHING BELOW THIS LINE
 	// SHOULD BE SAFE TO DELETE. DO NOT ADD ANY LVDC++ CODE BELOW THIS LINE.
 
-	if (bAbort && LESAttached)
-	{
-		if (stage < LAUNCH_STAGE_ONE) 
-		{
-			//
-			// No abort before launch.
-			//
-			// \todo In reality, we could abort from the pad, at least from five minutes
-			// before liftoff.
-			//
-			bAbort = false;
-		} 
-		else
-		{
-			SetEngineLevel(ENGINE_MAIN, 0);
-			SeparateStage(CM_ENTRY_STAGE);
-			StartAbort();
-			SetStage(CM_ENTRY_STAGE);
-			bAbort = false;
-		}
+	if (bAbort && MissionTime > -300 && LESAttached) {
+		SetEngineLevel(ENGINE_MAIN, 0);
+		SeparateStage(CM_STAGE);
+		SetStage(CM_STAGE);
+		StartAbort();
+		agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
+		agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
+		bAbort = false;
 		return;
 	}
 
@@ -1460,7 +1449,6 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 		break;
 
 	case LAUNCH_STAGE_TWO_ISTG_JET:
-	case LAUNCH_STAGE_TWO_TWR_JET:
 		StageFour(simt, simdt);
 		break;
 
@@ -1483,48 +1471,6 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 			SetSIVbCMixtureRatio(4.5);
 			
 		StageOrbitSIVB(simt, simdt);
-		break;
-
-	case CSM_ABORT_STAGE:
-		SetEngineLevel(ENGINE_MAIN,1);
-
-		//sprintf(oapiDebugString(), "Mode Abort 1B%f", abortTimer);
-
-        if (GetFuelMass() == 0 && abortTimer == 0){
-			LAUNCHIND[4]=true;
-			abortTimer=simt;
-		}
-
-		if (abortTimer>0){
-			if ((simt-(0.5+abortTimer))>=0){
-				ActivateNavmode(NAVMODE_KILLROT);
-			}
-
-			if ((simt-(1+abortTimer))>=0){
-				double pitch;
-				pitch=GetPitch();
-				if (pitch >0) {
-					SetPitchMomentScale (+5e-3);
-					SetBankMomentScale (+5e-3);
-					SetLiftCoeffFunc (0);
-				}
-			}
-
-			if (simt-(20+abortTimer)>=0)
-			{
-				bManualSeparate = true;
-				LAUNCHIND[2] = true;
-				abortTimer = 0;
-			}
-
-			if ((bManualSeparate || GetAltitude() < 500) && PyrosArmed())
-			{
-				SeparateStage (CM_STAGE);
-				SetStage(CM_STAGE);
-				bManualSeparate=false;
-				abortTimer = 0;
-			}
-		}
 		break;
 
 	default:
@@ -1639,18 +1585,11 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		else{
 			SetFirstStage();
 			SetFirstStageEngines();
-			//ShiftCentreOfMass (_V(0,0,STG0O));	// Seems to be useless...
 		}
-
-/*		if (GetEngineLevel(ENGINE_MAIN)>=0.5){		// Seems to be useless...
-			SetMaxThrust (ENGINE_ATTITUDE, 8e5);
-		}
-*/
 		break;
 
 	case LAUNCH_STAGE_TWO:
 	case LAUNCH_STAGE_TWO_ISTG_JET:
-	case LAUNCH_STAGE_TWO_TWR_JET:
 		SetSecondStage();
 		SetSecondStageEngines(-STG1O);
 		break;
@@ -1672,14 +1611,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 		//
 
 		SetSIVBThrusters(true);
-		break;
-
-	case CSM_LEM_STAGE:
-		SetCSMStage();
-
-		if (EVA_IP){
-			SetupEVA();
-		}
 		break;
 
 	default:
@@ -1725,7 +1656,6 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 
 	case LAUNCH_STAGE_TWO:
 	case LAUNCH_STAGE_TWO_ISTG_JET:
-	case LAUNCH_STAGE_TWO_TWR_JET:
 		SetSecondStage();
 		break;
 
@@ -1773,10 +1703,6 @@ void SaturnV::ConfigureStageMeshes(int stage_state)
 	case CM_ENTRY_STAGE:
 		SetReentryStage();
 		break;
-
-	case CSM_ABORT_STAGE:
-		SetAbortStage();
-		break;
 	}
 }
 
@@ -1798,7 +1724,6 @@ void SaturnV::ConfigureStageEngines(int stage_state)
 
 	case LAUNCH_STAGE_TWO:
 	case LAUNCH_STAGE_TWO_ISTG_JET:
-	case LAUNCH_STAGE_TWO_TWR_JET:
 		SetSecondStageEngines (-STG1O);
 		break;
 
@@ -1944,27 +1869,21 @@ void SaturnV::StageLaunchSIVB(double simt)
 			SetThrusterGroupLevel(thg_aps, 0);
 			NextMissionEventTime = MissionTime + 10.0;
 			SetStage(STAGE_ORBIT_SIVB);
-			bAbtlocked =true;
 		}
 		return;
 	}
 
-	if(CsmLvSepSwitch.GetState()){
-		bManualSeparate =true;
-	}
-
-	if (bManualSeparate || bAbort)
+	// Abort handling
+	if (CSMLVPyros.Blown() || (bAbort && !LESAttached))
 	{
 		SepS.stop();
-		bManualSeparate = false;
-		SeparateStage (CSM_LEM_STAGE);
+		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
-		if (bAbort) {
+		if (bAbort) {			
 			/// \todo SPS abort handling
 			StartAbort();
-			ABORT_IND = true;
 			bAbort = false;
-			autopilot=false;
+			autopilot = false;
 		}
 	}
 
@@ -2501,7 +2420,6 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			// Because of potential failures above changing the engine burn rates, this can't be reliably done on
 			// a timer anymore.
 			if (stage == LAUNCH_STAGE_ONE && LVDC_Timebase == 2 && GetFuelMass() <= 0.001){
-				bManualSeparate = false;
 				// Move hidden S1C
 				if (hstg1) {
 					VESSELSTATUS vs;
@@ -2554,19 +2472,18 @@ void SaturnV::lvdc_timestep(double simt, double simdt) {
 			if(stage == LAUNCH_STAGE_TWO && S1C_Sep_Time == 0 && LVDC_Timebase == 3 && LVDC_TB_ETime > 30.7
 				&& SIISepState == true)
 			{
-				SeparateStage (LAUNCH_STAGE_TWO_TWR_JET);
-				SetStage(LAUNCH_STAGE_TWO_TWR_JET);
-				bManualSeparate = false;
+				SeparateStage (LAUNCH_STAGE_TWO_ISTG_JET);
+				SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
 				SIISepState = false;
 			}
 
 			// And jettison LET
-			if(stage == LAUNCH_STAGE_TWO_TWR_JET && LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET && LESAttached){
+			if(stage == LAUNCH_STAGE_TWO_ISTG_JET && LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET && LESAttached){
 				JettisonLET();
 			}
 
 			// PRE-IGM TERMINATE CONDITION
-			if(stage == LAUNCH_STAGE_TWO_TWR_JET && LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET+5){
+			if(stage == LAUNCH_STAGE_TWO_ISTG_JET && LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET+5){
 				LVDC_GP_PC = 25; // GO TO IGM
 				IGMCycle = 0;
 				sprintf(oapiDebugString(),"TB%d+%f: ** IGM STARTING **",LVDC_Timebase,LVDC_TB_ETime);

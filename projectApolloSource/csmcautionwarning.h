@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2007/10/18 00:23:19  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.21  2007/07/17 14:33:07  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -130,6 +133,8 @@ typedef struct {
 	bool Reset_AC_CWS;
 } ACBusStatus;
 
+class SMRCSPropellantSource;
+
 ///
 /// \brief The CSM-specific Caution and Warning System.
 /// \ingroup InternalSystems
@@ -226,6 +231,15 @@ protected:
 	/// \return True if the cell is in a 'bad' state.
 	///
 	bool FuelCellBad(FuelCellStatus &fc, int index);
+
+	///
+	/// Check the SM RCS status to determine whether it's in a 'bad' state that we
+	/// should warn the crew about.
+	///
+	/// \param smrcs SM RCS quad.
+	/// \return True if the cell is in a 'bad' state.
+	///
+	bool SMRCSBad(SMRCSPropellantSource* smrcs);
 
 	///
 	/// Check the specified AC bus to determine whether it's overloaded.

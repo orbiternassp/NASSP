@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.26  2008/01/18 02:59:22  jasonims
+  *	EMS Implementation Step 5b - Initialization bugfix!
+  *	
   *	Revision 1.25  2007/12/21 09:38:43  jasonims
   *	EMS Implementation Step 5 - jasonims :   SCROLL: complete:  possible inaccuracy in velocity integration.   RSI: complete:  accurate readings, but unsure of authenticity of method, (lack of documentation found).    THRESHOLD CIRCUITRY:  complete: seems quite accurate.   CORRIDOR VERIFICATION: complete: needs testing, but appears to be correct.    RANGE:  working but inaccurate:  probable inaccuracy in range integration....unknown cause.   EMS State is saved as well.    Testing must insue.
   *	
@@ -239,19 +242,57 @@ public: // Same stuff about speed and I'm lazy too.
 	Saturn *sat;
 };
 
+
+#define RJEC_START_STRING	"RJEC_BEGIN"
+#define RJEC_END_STRING		"RJEC_END"
+
 class RJEC {
 	// Reaction Jet Engine Control
 public: // Same stuff about speed and I'm lazy too.
 	RJEC();															// Cons
 	void Init(Saturn *vessel);										// Initialization
-	void SetThruster(int thruster,bool Active);                     // Set Thruster Level for CMC
 	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
+
+	bool GetThruster(int thruster);
+	void SetThruster(int thruster,bool Active);                     // Set Thruster Level for CMC
+	
+	bool GetCMTransferMotor1() { return CMTransferMotor1; };
+	bool GetCMTransferMotor2() { return CMTransferMotor2; };
+	void ActivateCMTransferMotor1() { CMTransferMotor1 = true; }
+	void ActivateCMTransferMotor2() { CMTransferMotor2 = true; }
+	
+	void SetAutoRCSEnableRelayA(bool active) { AutoRCSEnableRelayA = active; }
+	void SetAutoRCSEnableRelayB(bool active) { AutoRCSEnableRelayB = active; }
+
+	bool GetSPSActive() { return SPSActive; }
+	void SetSPSActive(bool active) { SPSActive = active; }
+	
+	bool GetDirectPitchActive() { return DirectPitchActive; }
+	bool GetDirectYawActive()   { return DirectYawActive; }
+	bool GetDirectRollActive()  { return DirectRollActive; }
+	void SetDirectPitchActive(bool active) { DirectPitchActive = active; }
+	void SetDirectYawActive(bool active)   { DirectYawActive = active; }
+	void SetDirectRollActive(bool active)  { DirectRollActive = active; }
+	
+	void SetAGCActiveTimer(double timer) { AGCActiveTimer = timer; }
+
+	void SaveState(FILEHANDLE scn);                                // SaveState callback
+	void LoadState(FILEHANDLE scn);                                // LoadState callback
+
+protected:
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
+	bool AutoRCSEnableRelayA, AutoRCSEnableRelayB;					// Enable relays
+	bool CMTransferMotor1, CMTransferMotor2;						// CM/SM transfer motor switches 
 	bool SPSActive;                                                 // SPS Active notification
-	bool DirectPitchActive,DirectYawActive,DirectRollActive;        // Direct axis fire notification
+	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
+	double AGCActiveTimer;											/// \todo Dirty Hack for the AGC++ attitude control
+
 	Saturn *sat;
-	double AGCActiveTimer;													/// \todo Dirty Hack for the AGC++ attitude control
+	ThreePosSwitch *PoweredSwitch[20];                              // Set when power is drawn from this switch
+
+	void SetRCSState(int thruster, bool cm, int smquad, int smthruster, int cmthruster, ThreePosSwitch *s, bool lockout);
+	bool IsThrusterPowered(ThreePosSwitch *s);
 };
 
 class ECA {
@@ -308,7 +349,6 @@ public:
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 	
-
 protected:
 	bool IsPowered();
 	

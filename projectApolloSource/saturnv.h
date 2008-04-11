@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.38  2008/01/16 04:14:24  movieman523
+  *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
+  *	
   *	Revision 1.37  2008/01/14 04:31:11  movieman523
   *	Initial tidyup: ASTP should now work too.
   *	
@@ -463,20 +466,14 @@ extern void LoadSat5Meshes();
 const double STG0O = 20.4;
 const double STG1O = -5.25;
 const VECTOR3 OFS_STAGE1 =  { 0, 0, -54.0 + STG0O};
-const VECTOR3 OFS_STAGE12 =  { 0, 0, -30.5};
+const VECTOR3 OFS_STAGE12 =  { 0, 0, -30.5 -STG1O};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, -17.2 - STG1O};
 const VECTOR3 OFS_STAGE3 =  { 0, 0, 2. - STG2O};
 const VECTOR3 OFS_STAGE31 =  { -1.48,-1.48,5.6+STG2O+21.5};
 const VECTOR3 OFS_STAGE32 =  { 1.48,-1.48,5.6+STG2O+21.5};
 const VECTOR3 OFS_STAGE33 =  { 1.48,1.48,5.6+STG2O+21.5};
 const VECTOR3 OFS_STAGE34 =  { -1.48,1.48,5.6+STG2O+21.5};
-const VECTOR3 OFS_SM =  { 0, 0, 31.05-12.25-21.5-1.0};
-const VECTOR3 OFS_ABORT =  { 0,0,-34.40};
-const VECTOR3 OFS_ABORT2 =  { 0,0,-22.15};
-const VECTOR3 OFS_ABORT_TOWER =  { 0,0,5};
+const VECTOR3 OFS_SM = {0, 0, -2.05}; 
+const VECTOR3 OFS_ABORT =  { 0,0,STG0O};
+const VECTOR3 OFS_ABORT2 =  { 0,0,-STG1O};
 const VECTOR3 OFS_CM_CONE =  { 0, 0, 36.05-12.25-21.5};
-//const VECTOR3 OFS_MAINCHUTE =  { 0, 0, 30.15-12.25-21.5-4};
-
-const VECTOR3 OFS_TOWER =  { 0, 0, 40.05};
-const VECTOR3 OFS_DOCKING =  { 0.0,0.0,14.5};
-const VECTOR3 OFS_DOCKING2 =  { 0.0,-2.4,22.4};

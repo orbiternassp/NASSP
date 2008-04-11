@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2008/01/16 05:52:07  movieman523
+  *	Removed all dockstate code.
+  *	
   *	Revision 1.23  2008/01/14 04:31:10  movieman523
   *	Initial tidyup: ASTP should now work too.
   *	
@@ -125,14 +128,6 @@ public:
 
 protected:
 
-	bool MasterVessel;
-	bool TargetDocked;
-	bool DestroyAstp;
-	bool ReadyAstp;
-	bool ReadyAstp1;
-	bool S4BASTP;
-	bool Resetjet;
-
 	VECTOR3 RelPos;
 
 	OBJHANDLE hSoyuz;
@@ -160,7 +155,6 @@ protected:
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt, double mjd);
 	void StageOne(double simt, double simdt);
-	void StageStartSIVB(double simt);
 	void StageLaunchSIVB(double simt);
 	void SetVehicleStats();
 	void CalculateStageMass ();
@@ -170,24 +164,17 @@ protected:
 	void DeactivatePrelaunchVenting() {};
 };
 
-const VECTOR3 OFS_STAGE1 =  { 0, 0, -14};
-const VECTOR3 OFS_STAGE12 =  { 0, 0, -9.935};
+const VECTOR3 OFS_STAGE1 = { 0, 0, -14};
+const VECTOR3 OFS_STAGE12 = { 0, 0, -9.935};
 const VECTOR3 OFS_STAGE2 =  { 0, 0, -24 + 1.45};
-const VECTOR3 OFS_STAGE21 =  { 1.85,1.85,32};
-const VECTOR3 OFS_STAGE22 =  { -1.85,1.85,32};
-const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85,32};
-const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,32};
-const VECTOR3 OFS_SM =  { 0, 0, 30.15-12.25-21.5};
-const VECTOR3 OFS_ABORT =  { 0,0,-34.40};
-const VECTOR3 OFS_ABORT2 =  { 0,0,-22.15};
-const VECTOR3 OFS_ABORT_TOWER =  { 0,0,5};
-const VECTOR3 OFS_CM_CONE =  { 0, 0, 36.05-12.25-21.5};
+const VECTOR3 OFS_STAGE21 = { 1.85,1.85,32};
+const VECTOR3 OFS_STAGE22 = { -1.85,1.85,32};
+const VECTOR3 OFS_STAGE23 = { 1.85,-1.85,32};
+const VECTOR3 OFS_STAGE24 = { -1.85,-1.85,32};
+const VECTOR3 OFS_SM = { 0, 0, -2.05};
+const VECTOR3 OFS_CM_CONE = { 0, 0, 36.05-12.25-21.5};
 
-const double STG0O= 0;
-const double STG1O= 10.25;
-
-const VECTOR3 OFS_TOWER =  { 0, 0, 40.05};
-const VECTOR3 OFS_DOCKING =  { 0.0,0.0,14.5};
-const VECTOR3 OFS_DOCKING2 =  { 0.0,0.0,4.0};
+const double STG0O = 0;
+const double STG1O = 10.25;
 
 extern void Saturn1bLoadMeshes();
