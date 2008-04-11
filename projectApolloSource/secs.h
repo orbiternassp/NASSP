@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2007/07/17 14:33:10  tschachim
+  *	Added entry and post landing stuff.
+  *	
   *	Revision 1.5  2006/08/11 21:16:22  movieman523
   *	Dummy ELS implementation.
   *	
@@ -50,27 +53,30 @@ class FloatBag;
 /// \ingroup InternalSystems
 /// \brief SECS simulation.
 ///
-class SECS : public e_object {
+class SECS { 
 
 public:
 	SECS();
 	virtual ~SECS();
 
 	void ControlVessel(Saturn *v);
-
 	void Timestep(double simt, double simdt);
-	bool IsPowered();
 
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
 protected:
+	bool IsLogicPoweredAndArmedA();
+	bool IsLogicPoweredAndArmedB();
+	
 	int State;
-
 	double NextMissionEventTime;
 	double LastMissionEventTime;
 
-	Saturn *OurVessel;
+	bool PyroBusAMotor;
+	bool PyroBusBMotor;
+
+	Saturn *Sat;
 };
 
 ///
@@ -78,7 +84,7 @@ protected:
 /// \ingroup InternalSystems
 /// \brief ELS simulation.
 ///
-class ELS : public e_object {
+class ELS { 
 
 public:
 	ELS();
@@ -98,13 +104,14 @@ protected:
 	int State;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
+
 	double FloatBag1Size;
 	double FloatBag2Size;
 	double FloatBag3Size;
 	double DyeMarkerLevel;
 	double DyeMarkerTime;
 
-	Saturn *OurVessel;
+	Saturn *Sat;
 	FloatBag *FloatBagVessel;
 };
 

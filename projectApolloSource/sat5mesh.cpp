@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.91  2008/01/18 05:57:23  movieman523
+  *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
+  *	
   *	Revision 1.90  2008/01/17 01:46:27  movieman523
   *	Renamed LEMName to PayloadName and replaced LEMN with PAYN in the scenario file; reading LEMN is still supported for backward compatibility.
   *	
@@ -307,9 +310,11 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
+#include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
-#include "Orbitersdk.h"
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
 
@@ -334,7 +339,7 @@
 #include "s1c.h"
 #include "sm.h"
 
-PARTICLESTREAMSPEC srb_contrail = {
+static PARTICLESTREAMSPEC srb_contrail = {
 	0, 
 	12.0,	// size
 	20,		// rate
@@ -348,22 +353,7 @@ PARTICLESTREAMSPEC srb_contrail = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.8, 0.8
 };
 
-/*
-PARTICLESTREAMSPEC srb_exhaust = {
-	0,		// flag
-	8.0,	// size
-	20,		// rate
-	150.0,	// velocity
-	0.1,	// velocity distribution
-	0.3,	// lifetime
-	12,		// growthrate
-	2.0,	// atmslowdown 
-	PARTICLESTREAMSPEC::EMISSIVE,
-	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
-	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
-};
-*/
-PARTICLESTREAMSPEC srb_exhaust = {
+static PARTICLESTREAMSPEC srb_exhaust = {
 	0,		// flag
 	2.85,	// size
 	1500,	// rate
@@ -377,7 +367,7 @@ PARTICLESTREAMSPEC srb_exhaust = {
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-1140, 1.0
 };
 
-PARTICLESTREAMSPEC solid_exhaust = {
+static PARTICLESTREAMSPEC solid_exhaust = {
 	0, 0.5, 250, 35.0, 0.1, 0.15, 0.5, 1.0, 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
@@ -389,15 +379,22 @@ PARTICLESTREAMSPEC solid_exhaust = {
 // seperation explosives.
 //
 
-PARTICLESTREAMSPEC seperation_junk = {
-	0, 0.08,  300, 15.0, 5.0, 2.0, 0.0, 1.0, 
+static PARTICLESTREAMSPEC seperation_junk = {
+	0,		// flag
+	0.04,	// size
+	500,	// rate
+	4.0,    // velocity
+	5.0,    // velocity distribution
+	30,		// lifetime
+	0,	    // growthrate
+	0,      // atmslowdown 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
 // "prelaunch tank venting" particle streams
-PARTICLESTREAMSPEC prelaunchvent1_spec = {
+static PARTICLESTREAMSPEC prelaunchvent1_spec = {
 	0,		// flag
 	0.6,	// size
 	60,		// rate
@@ -411,7 +408,7 @@ PARTICLESTREAMSPEC prelaunchvent1_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.25, 0.25
 };
 
-PARTICLESTREAMSPEC prelaunchvent2_spec = {
+static PARTICLESTREAMSPEC prelaunchvent2_spec = {
 	0,		// flag
 	0.5,	// size
 	80,		// rate
@@ -425,7 +422,7 @@ PARTICLESTREAMSPEC prelaunchvent2_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.2, 0.2
 };
 
-PARTICLESTREAMSPEC prelaunchvent3_spec = {
+static PARTICLESTREAMSPEC prelaunchvent3_spec = {
 	0,		// flag
 	0.4,	// size
 	100,	// rate
@@ -440,7 +437,7 @@ PARTICLESTREAMSPEC prelaunchvent3_spec = {
 };
 
 // "staging vent" particle streams
-PARTICLESTREAMSPEC stagingvent_spec = {
+static PARTICLESTREAMSPEC stagingvent_spec = {
 	0,		// flag
 	2.5,	// size
 	100,	// rate
@@ -527,8 +524,8 @@ void LoadSat5Meshes()
 	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
 
 	srb_exhaust.tex = contrail_tex;
-	seperation_junk.tex = contrail_tex;
 	solid_exhaust.tex = contrail_tex;
+	seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");;
 }
 
 void SaturnV::SetupMeshes()
@@ -761,9 +758,6 @@ void SaturnV::SetFirstStage ()
 	//
 
 	InitNavRadios (4);
-	CMCswitch = true;
-	SCswitch = true;
-	bAbtlocked =false;
 }
 
 void SaturnV::SetFirstStageEngines ()
@@ -858,7 +852,6 @@ void SaturnV::SetSecondStage ()
 	SetSecondStageMesh(-STG1O);
 
 	SIISepState = InterstageAttached;
-	bAbtlocked = false;
 }
 
 void SaturnV::SetSecondStageMesh(double offset)
@@ -1104,12 +1097,16 @@ void SaturnV::SetThirdStageEngines (double offset)
     ClearThrusterDefinitions();
 
 	// ************************* propellant specs **********************************
-	if (!ph_3rd)
+
+	if (!ph_3rd) 
 		ph_3rd  = CreatePropellantResource(S4B_FuelMass); //3rd stage Propellant
+
 	SetDefaultPropellantResource (ph_3rd); // display 3rd stage propellant level in generic HUD
 
-	if(ph_2nd)
+	if (ph_2nd) {
 		DelPropellantResource(ph_2nd);
+		ph_2nd = 0;
+	}
 
 	if (ph_sep) 
 	{
@@ -1181,10 +1178,8 @@ void SaturnV::SetThirdStageEngines (double offset)
 		AddExhaust (th_ver[i], 5.0, 0.25, exhaust_tex);
 
 	thg_ver = CreateThrusterGroup (th_ver, 2, THGROUP_USER);
-
 	SetSIVbCMixtureRatio(MixtureRatio);
 
-	bAbtlocked = false;
 }
 
 void SaturnV::SeparateStage (int new_stage)
@@ -1210,7 +1205,7 @@ void SaturnV::SeparateStage (int new_stage)
 		vel1 = _V(0, 0, -4.0);
 	}
 
-	if (stage == LAUNCH_STAGE_ONE && bAbort)
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
 	{
 		ofs1= OFS_ABORT;
 		vel1 = _V(0,0,-4.0);
@@ -1222,19 +1217,13 @@ void SaturnV::SeparateStage (int new_stage)
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && !bAbort|| stage == CSM_ABORT_STAGE && !bAbort)
-	{
-		ofs1 = _V(0.0, 0.0, TowerOffset); // OFS_TOWER;
-		vel1 = _V(15.0,15.0,106.0);
-	}
-
-	if (stage == LAUNCH_STAGE_TWO && bAbort || stage == LAUNCH_STAGE_TWO_ISTG_JET && bAbort)
+	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage == CM_STAGE)
 	{
 		ofs1= OFS_ABORT2;
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if (stage == LAUNCH_STAGE_TWO_TWR_JET)
+	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage != CM_STAGE)
 	{
 	 	ofs1 = OFS_STAGE2;
 		vel1 = _V(0,0,-6.0);
@@ -1250,20 +1239,12 @@ void SaturnV::SeparateStage (int new_stage)
 	{
 	 	ofs1 = OFS_SM;
 		vel1 = _V(0,0,-0.1);
-		ofs2 = OFS_DOCKING;
-		vel2 = _V(0.0,0.0,0.6);
 	}
 
 	if (stage == CM_STAGE)
 	{
 		ofs1 = OFS_CM_CONE;
 		vel1 = _V(1.0,1.0,1.0);
-	}
-
-	if (stage == CSM_ABORT_STAGE)
-	{
-		ofs1 = OFS_ABORT_TOWER;
-		vel1 = _V(15.0,15.0,50.0);
 	}
 
 	VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
@@ -1284,9 +1265,6 @@ void SaturnV::SeparateStage (int new_stage)
 
 	if (stage == CM_ENTRY_STAGE_TWO)
 	{
-		if (GetAtmPressure()>350000){
-
-		}
 		SetChuteStage1 ();
 	}
 
@@ -1410,7 +1388,7 @@ void SaturnV::SeparateStage (int new_stage)
 		ConfigureStageMeshes (new_stage);
 	}
 
-	if (stage == LAUNCH_STAGE_TWO_TWR_JET)
+	if (stage == LAUNCH_STAGE_TWO_ISTG_JET && new_stage != CM_STAGE)
 	{
 	    vs1.vrot.x = 0.025;
 		vs1.vrot.y = 0.025;
@@ -1477,11 +1455,7 @@ void SaturnV::SeparateStage (int new_stage)
 		CreateSIVBStage("ProjectApollo/sat5stg3", vs1, true);
 
 		SeparationS.play(NOLOOP,255);
-
 		SetCSMStage();
-
-		// Set LM landing site in the AGC for Simple AGC P16 etc.
-		agc.SetDesiredLanding(LMLandingLatitude, LMLandingLongitude, LMLandingAltitude);
 
 		ShiftCentreOfMass(_V(0, 0, 13.15));
 		SeparationSpeed = 0.15;
@@ -1506,25 +1480,7 @@ void SaturnV::SeparateStage (int new_stage)
 		{
 			SMJetS.play();
 		}
-
-		SMJetS.done();
 		SSMSepExploded.done();
-
-		if(HasProbe)
-		{
-			VECTOR3 ofs = OFS_DOCKING2;
-			VECTOR3 vel = {0.0,0.0,2.5};
-			VESSELSTATUS vs4b;
-			GetStatus (vs4b);
-			StageTransform(this, &vs4b,ofs,vel);
-			vs4b.vrot.x = 0.0;
-			vs4b.vrot.y = 0.0;
-			vs4b.vrot.z = 0.0;
-			GetApolloName(VName); strcat (VName, "-DCKPRB");
-			hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
-
-			HasProbe = false;
-		}
 
 		GetApolloName(VName); strcat (VName, "-SM");
 		hSMJet = oapiCreateVessel(VName, "ProjectApollo/SM", vs1);
@@ -1552,10 +1508,19 @@ void SaturnV::SeparateStage (int new_stage)
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);
 
+		// Store CM Propellant 
+		double cmprop1 = -1;
+		double cmprop2 = -1;
+		if (ph_rcs_cm_1) cmprop1 = GetPropellantMass(ph_rcs_cm_1);
+		if (ph_rcs_cm_2) cmprop2 = GetPropellantMass(ph_rcs_cm_2);
+
 		SetReentryStage();
 
-		// TODO 
-		// ShiftCentreOfMass(_V(0,0,0.5));
+		// Restore CM Propellant
+		if (cmprop1 != -1) SetPropellantMass(ph_rcs_cm_1, cmprop1); 
+		if (cmprop2 != -1) SetPropellantMass(ph_rcs_cm_2, cmprop2); 
+
+		ShiftCentreOfMass(_V(0, 0, 2.1));
 	}
 
 	if (stage == CM_STAGE)
@@ -1578,8 +1543,7 @@ void SaturnV::SeparateStage (int new_stage)
 		SetSplashStage ();
 	}
 
-	// ADDED FOR PAD ABORT
-	if (stage == PRELAUNCH_STAGE && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -1588,14 +1552,13 @@ void SaturnV::SeparateStage (int new_stage)
 		StageS.play();
 
 		char VName[256];
-
 		GetApolloName(VName); strcat (VName, "-ABORT");
 		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort1", vs1);
-
-		SetAbortStage ();
+		SetReentryStage();
+		ShiftCentreOfMass(_V(0, 0, STG0O + 23.25));
 	}
 
-	if (stage == LAUNCH_STAGE_ONE && bAbort )
+	if ((stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET) && new_stage == CM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -1604,36 +1567,10 @@ void SaturnV::SeparateStage (int new_stage)
 		StageS.play();
 
 		char VName[256];
-
-		GetApolloName(VName); strcat (VName, "-ABORT");
-		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort1", vs1);
-
-		SetAbortStage ();
-	}
-
-	if (stage == LAUNCH_STAGE_TWO && bAbort || stage == LAUNCH_STAGE_TWO_ISTG_JET && bAbort )
-	{
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
-
-		StageS.play();
-
-		char VName[256];
-
 		GetApolloName(VName); strcat (VName, "-ABORT");
 		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort2", vs1);
-
-		SetAbortStage ();
-	}
-
-	if (stage == CSM_ABORT_STAGE)
-	{
-		//JettisonLET();
-
-		SetStage(CM_ENTRY_STAGE);
-		SetReentryStage ();
-		ActivateNavmode(NAVMODE_KILLROT);
+		SetReentryStage();
+		ShiftCentreOfMass(_V(0, 0, -STG1O + 23.25));
 	}
 }
 

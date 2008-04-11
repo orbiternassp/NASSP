@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.75  2008/01/18 05:57:23  movieman523
+  *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
+  *	
   *	Revision 1.74  2008/01/17 01:46:27  movieman523
   *	Renamed LEMName to PayloadName and replaced LEMN with PAYN in the scenario file; reading LEMN is still supported for backward compatibility.
   *	
@@ -105,153 +108,10 @@
   *	Revision 1.50  2006/09/23 22:34:40  jasonims
   *	New J-2 Engine textures...
   *	
-  *	Revision 1.49  2006/08/27 21:52:42  tschachim
-  *	Added dummy docking port so the auto burn feature of IMFD 4.2 is working.
-  *	
-  *	Revision 1.48  2006/08/11 20:37:46  movieman523
-  *	Added HasProbe flag for docking probe.
-  *	
-  *	Revision 1.47  2006/08/04 19:01:23  jasonims
-  *	corrected many of the mesh problems experienced when on pad and during launch.
-  *	
-  *	Revision 1.45  2006/08/02 04:32:05  jasonims
-  *	corrected probe problem
-  *	
-  *	Revision 1.44  2006/08/01 16:05:57  tschachim
-  *	Improved staging exhausts.
-  *	
-  *	Revision 1.43  2006/07/31 12:24:06  tschachim
-  *	Smoother staging.
-  *	
-  *	Revision 1.42  2006/06/26 19:05:36  movieman523
-  *	More doxygen, made Lunar EVA a VESSEL2, made SM breakup, made LRV use VESSEL2 save/load functions.
-  *	
-  *	Revision 1.41  2006/06/11 21:30:57  movieman523
-  *	Fixed Saturn 1b SIVb exhaust.
-  *	
-  *	Revision 1.40  2006/06/11 17:16:34  movieman523
-  *	Saturn 1b can now reach orbit again :).
-  *	
-  *	Revision 1.39  2006/06/10 23:27:41  movieman523
-  *	Updated abort code.
-  *	
-  *	Revision 1.38  2006/06/10 14:36:44  movieman523
-  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
-  *	
-  *	Revision 1.37  2006/05/27 11:50:04  movieman523
-  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
-  *	
-  *	Revision 1.36  2006/05/01 03:33:21  jasonims
-  *	New CM and all the fixin's....
-  *	
-  *	Revision 1.35  2006/03/30 00:21:37  movieman523
-  *	Pass empty mass correctly and remember to check in SM files :).
-  *	
-  *	Revision 1.34  2006/03/30 00:14:46  movieman523
-  *	First pass at SM DLL.
-  *	
-  *	Revision 1.33  2006/03/29 19:06:49  movieman523
-  *	First support for new SM.
-  *	
-  *	Revision 1.32  2006/02/22 01:03:02  movieman523
-  *	Initial Apollo 5 support.
-  *	
-  *	Revision 1.31  2006/01/27 22:11:38  movieman523
-  *	Added support for low-res Saturn 1b.
-  *	
-  *	Revision 1.30  2006/01/26 19:26:31  movieman523
-  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
-  *	
-  *	Revision 1.29  2006/01/15 02:38:59  movieman523
-  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
-  *	
-  *	Revision 1.28  2006/01/08 04:00:24  movieman523
-  *	Added first two engineering cameras.
-  *	
-  *	Revision 1.27  2006/01/06 22:55:53  movieman523
-  *	Fixed SM seperation and cut off fuel cell power when it happens.
-  *	
-  *	Revision 1.26  2006/01/05 19:40:53  movieman523
-  *	Added Saturn1b abort stages to build.
-  *	
-  *	Revision 1.25  2006/01/04 23:06:03  movieman523
-  *	Moved meshes into ProjectApollo directory and renamed a few.
-  *	
-  *	Revision 1.24  2005/12/28 16:19:10  movieman523
-  *	Should now be getting all config files from ProjectApollo directory.
-  *	
-  *	Revision 1.23  2005/11/24 20:31:23  movieman523
-  *	Added support for engine thrust decay during launch.
-  *	
-  *	Revision 1.22  2005/11/23 02:21:30  movieman523
-  *	Added S1b stage.
-  *	
-  *	Revision 1.21  2005/11/20 20:35:14  movieman523
-  *	Moved mesh files into ProjectApollo directory, and fixed RCS on Saturn V SIVb after seperation.
-  *	
-  *	Revision 1.20  2005/11/20 01:06:27  movieman523
-  *	Saturn V now uses SIVB DLL too.
-  *	
-  *	Revision 1.19  2005/11/19 22:58:32  movieman523
-  *	Pass main fuel mass from Saturn 1b to SIVb and added main thrust from venting fuel.
-  *	
-  *	Revision 1.18  2005/11/19 22:19:07  movieman523
-  *	Revised interface to update SIVB, and added payload mass and stage empty mass.
-  *	
-  *	Revision 1.17  2005/11/19 22:05:16  movieman523
-  *	Added RCS to SIVb stage after seperation.
-  *	
-  *	Revision 1.16  2005/11/19 20:54:47  movieman523
-  *	Added SIVb DLL and wired it up to Saturn 1b.
-  *	
-  *	Revision 1.15  2005/11/16 20:21:39  movieman523
-  *	CSM/LEM renaming changes.
-  *	
-  *	Revision 1.14  2005/11/16 00:18:49  movieman523
-  *	Added beginnings of really basic IU emulation. Added random failures of caution and warning lights on non-historical missions. Added initial support for Skylab CM and SM. Added LEM Name option in scenario file.
-  *	
-  *	Revision 1.13  2005/08/24 00:30:00  movieman523
-  *	Revised CM RCS code, and removed a load of switches that aren't used anymore.
-  *	
-  *	Revision 1.12  2005/08/15 23:42:50  movieman523
-  *	Improved ASTP a bit. Still buggy, but vaguely working.
-  *	
-  *	Revision 1.11  2005/08/10 21:54:04  movieman523
-  *	Initial IMU implementation based on 'Virtual Apollo' code.
-  *	
-  *	Revision 1.10  2005/08/06 01:12:52  movieman523
-  *	Added initial I/O channel support for CSM, and added Realism setting for LEM AGC.
-  *	
-  *	Revision 1.9  2005/07/31 01:43:12  movieman523
-  *	Added CM and SM fuel and empty mass to scenario file and adjusted masses to more accurately match reality.
-  *	
-  *	Revision 1.8  2005/07/30 02:05:47  movieman523
-  *	Revised Saturn 1b code. Performance and mass is now closer to reality, and I've added the mixture ratio shift late in the SIVB burn.
-  *	
-  *	Revision 1.7  2005/03/28 05:52:44  chode99
-  *	Support for defining SIVB payloads in the scenario like the Saturn V.
-  *	e.g. S4PL 5 is the Apollo 7 COAS target, 1 is the ASTP docking module.
-  *	
-  *	Revision 1.6  2005/03/26 01:46:30  chode99
-  *	Added retros to first stage.
-  *	
-  *	Revision 1.5  2005/03/24 01:42:40  chode99
-  *	Moved first stage thrusters,  added practice target for Apollo 7.
-  *	
-  *	Revision 1.4  2005/03/16 13:31:58  yogenfrutz
-  *	added missing setview and crew,so that virtual cockpit does now display correctly
-  *	
-  *	Revision 1.3  2005/03/06 03:23:26  chode99
-  *	Relocated and redirected the SIVB ullage thrusters to coincide with the mesh.
-  *	
-  *	Revision 1.2  2005/02/19 19:45:37  chode99
-  *	Moved 1 line of code (VECTOR3 mesh_dir=...) to allow compilation in .NET 2003
-  *	
-  *	Revision 1.1  2005/02/11 12:54:07  tschachim
-  *	Initial version
-  *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -641,8 +501,9 @@ void Saturn1b::SetSecondStageEngines ()
 	if(ph_1st)
 	{
 		//
-		// Delete remaining S1c stage propellant.
+		// Delete remaining S1B stage propellant.
 		//
+
 		DelPropellantResource(ph_1st);
 		ph_1st = 0;
 	}
@@ -741,25 +602,19 @@ void Saturn1b::SeparateStage (int new_stage)
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if (stage == LAUNCH_STAGE_ONE && bAbort)
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
 	{
-		ofs1= OFS_ABORT;
+		ofs1= _V(0, 0, 4.7);
 		vel1 = _V(0,0,-4.0);
 	}
 
-	if ((stage == LAUNCH_STAGE_TWO || stage == CSM_ABORT_STAGE) && !bAbort)
+	if (stage == LAUNCH_STAGE_SIVB && new_stage == CM_STAGE)
 	{
-		ofs1 = OFS_TOWER;
-		vel1 = _V(15.0,15.0,106.0);
+		ofs1= _V(0, 0, 4.7);
+		vel1 = _V(0,0,-2);
 	}
-
-	if (stage == LAUNCH_STAGE_TWO && bAbort)
-	{
-		ofs1= OFS_ABORT2;
-		vel1 = _V(0,0,-4.0);
-	}
-
-	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
+	
+	if ((stage == LAUNCH_STAGE_SIVB && new_stage != CM_STAGE) || stage == STAGE_ORBIT_SIVB)
 	{
 	 	ofs1 = _V(0, 0, 1.7);
 		vel1 = _V(0, 0, 0);
@@ -769,21 +624,12 @@ void Saturn1b::SeparateStage (int new_stage)
 	{
 	 	ofs1 = OFS_SM;
 		vel1 = _V(0, 0, -0.1);
-		ofs2 = OFS_DOCKING;
-		vel2 = _V(0.0, 0.0, 0.3);
-
 	}
 
 	if (stage == CM_STAGE)
 	{
 		ofs1 = OFS_CM_CONE;
 		vel1 = _V(1.0,1.0,1.0);
-	}
-
-	if (stage == CSM_ABORT_STAGE)
-	{
-		ofs1 = OFS_ABORT_TOWER;
-		vel1 = _V(15.0,15.0,50.0);
 	}
 
 	VECTOR3 rofs1, rvel1 = {vs1.rvel.x, vs1.rvel.y, vs1.rvel.z};
@@ -804,9 +650,6 @@ void Saturn1b::SeparateStage (int new_stage)
 
 	if (stage == CM_STAGE)
 	{
-		if (GetAtmPressure()>35000)
-		{
-		}
 		SetChuteStage1 ();
 	}
 
@@ -853,30 +696,11 @@ void Saturn1b::SeparateStage (int new_stage)
 
 		SetSecondStage ();
 		SetSecondStageEngines ();
-
 		ShiftCentreOfMass (_V(0,0,12.25));
-
 		SetThrusterGroupLevel(thg_ver,1.0);
 	}
 
-	if (stage == LAUNCH_STAGE_TWO && !bAbort )
-	{
-		if (SaturnHasCSM())
-		{
-			JettisonLET();
-		}
-
-		TowerJS.done();
-		SetSecondStage ();
-		AddRCS_S4B();
-	}
-
-	if (stage == LAUNCH_STAGE_SIVB)
-	{
-		AddRCS_S4B();
-	}
-
-	if (stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB)
+	if ((stage == LAUNCH_STAGE_SIVB && new_stage != CM_STAGE) || stage == STAGE_ORBIT_SIVB)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -885,11 +709,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		CreateSIVBStage("ProjectApollo/nsat1stg2", vs1, false);
 
 		SeparationS.play();
-
 		SetCSMStage();
-
-		// Set LM landing site in the AGC for Simple AGC P16 etc.
-		agc.SetDesiredLanding(LMLandingLatitude, LMLandingLongitude, LMLandingAltitude);
 
 		ShiftCentreOfMass(_V(0, 0, 20.8));
 		SeparationSpeed = 0.15;
@@ -902,21 +722,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		SMJetS.play();
-		SMJetS.done();
-		if (HasProbe) {
-			VECTOR3 ofs = OFS_DOCKING2;
-			VECTOR3 vel = {0.0,0.0,0.1};
-			VESSELSTATUS vs4b;
-			GetStatus (vs4b);
-			StageTransform(this, &vs4b,ofs,vel);
-			vs4b.vrot.x = 0.0;
-			vs4b.vrot.y = 0.0;
-			vs4b.vrot.z = 0.0;
-			GetApolloName(VName); strcat (VName, "-DCKPRB");
-			hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
-			HasProbe = false;
 
-		}
 		GetApolloName(VName); strcat (VName, "-SM");
 		hSMJet = oapiCreateVessel(VName, "ProjectApollo/SM", vs1);
 
@@ -943,13 +749,19 @@ void Saturn1b::SeparateStage (int new_stage)
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);
 
-		//
-		// Tell AGC the CM has seperated from the SM.
-		//
+		// Store CM Propellant 
+		double cmprop1 = -1;
+		double cmprop2 = -1;
+		if (ph_rcs_cm_1) cmprop1 = GetPropellantMass(ph_rcs_cm_1);
+		if (ph_rcs_cm_2) cmprop2 = GetPropellantMass(ph_rcs_cm_2);
 
-		agc.SetInputChannelBit(030, 2, true);
+		SetReentryStage();
 
-		SetReentryStage ();
+		// Restore CM Propellant
+		if (cmprop1 != -1) SetPropellantMass(ph_rcs_cm_1, cmprop1); 
+		if (cmprop2 != -1) SetPropellantMass(ph_rcs_cm_2, cmprop2); 
+
+		ShiftCentreOfMass(_V(0, 0, 2.1));
 	}
 
 	if (stage == CM_STAGE)
@@ -972,35 +784,28 @@ void Saturn1b::SeparateStage (int new_stage)
 		SetSplashStage ();
 	}
 
-	if (stage == LAUNCH_STAGE_ONE && bAbort )
+	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && bAbort )
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		StageS.play();
-		habort = oapiCreateVessel ("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
-		SetAbortStage ();
+		habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
+		SetReentryStage();
+		ShiftCentreOfMass(_V(0, 0, 35.15));
 	}
 
-	if (stage == LAUNCH_STAGE_TWO && bAbort )
+	if (stage == LAUNCH_STAGE_SIVB && new_stage == CM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		StageS.play();
-		habort = oapiCreateVessel ("Saturn_Abort", "ProjectApollo/Saturn1bAbort2", vs1);
-		SetAbortStage ();
+		habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort2", vs1);
+		SetReentryStage();
+		ShiftCentreOfMass(_V(0, 0, 22.9));
 	}
-
-	if (stage == CSM_ABORT_STAGE)
-	{
-		JettisonLET();
-
-		SetStage(CM_ENTRY_STAGE);
-		SetReentryStage ();
-		ActivateNavmode(NAVMODE_KILLROT);
-	}
-}
+ }
 
 //
 // Load the meshes once per DLL.

@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.32  2008/01/25 04:39:42  lassombra
+  *	All switches now handle change of state through SwitchTo function which is vitual
+  *	 and is called by existing mouse and connector handling methods.
+  *	
+  *	Support for delayed spring switches and other ChecklistController functionality following soon.
+  *	
   *	Revision 1.31  2008/01/14 01:17:07  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -126,6 +132,11 @@
 class Saturn;
 class DCBusController;
 class BMAG;
+class RCSValve;
+class SMRCSHeliumValve;
+class RCSPropellantValve;
+class SMRCSPropellantSource;
+class CMRCSPropellantSource;
 
 class SaturnToggleSwitch : public ToggleSwitch {
 public:
@@ -145,53 +156,14 @@ protected:
 	Saturn *sat;
 };
 
-class SaturnValveSwitch: public SaturnThreePosSwitch {
+class SaturnRCSValveTalkback : public IndicatorSwitch {
 public:
-	SaturnValveSwitch() { Valve = 0; Indicator = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-
-protected:
-	void CheckValve(int s);
-
-	int Valve;
-	IndicatorSwitch *Indicator;
-};
-
-class SaturnPropValveSwitch: public SaturnThreePosSwitch {
-public:
-	SaturnPropValveSwitch() { Valve1 = 0; Valve2 = 0; Valve3 = 0; Valve4 = 0; Indicator1 = 0; Indicator2 = 0;};
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve1, int valve2, int valve3,
-		int valve4,	IndicatorSwitch *ind1, IndicatorSwitch *ind2);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-
-protected:
-	void CheckValve(int s);
-
-	int Valve1, Valve2, Valve3, Valve4;
-	IndicatorSwitch *Indicator1, *Indicator2;
-};
-
-class SaturnValveTalkback : public IndicatorSwitch {
-public:
-	SaturnValveTalkback();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, Saturn *v);
+	SaturnRCSValveTalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, RCSValve *v, bool failopen);
 	int GetState();
 
 protected:
-	int Valve;
-	Saturn *our_vessel;
-};
-
-class SaturnPropValveTalkback : public IndicatorSwitch {
-public:
-	SaturnPropValveTalkback();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv1, int vlv2, Saturn *v);
-	int GetState();
-
-protected:
-	int Valve1, Valve2;
-	Saturn *our_vessel;
+	RCSValve *valve;
 };
 
 class SaturnGuardedPushSwitch : public GuardedPushSwitch
@@ -211,11 +183,6 @@ public:
 };
 
 class XLunarSwitch : public SaturnToggleSwitch {
-public:
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-};
-
-class SaturnSPSSwitch : public SaturnToggleSwitch {
 public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
@@ -276,39 +243,66 @@ protected:
 	Saturn *our_vessel;
 };
 
-class CMRCSPropellant : public PropellantSource {
-public:
-	CMRCSPropellant(PROPELLANT_HANDLE &h);
-	double Quantity();
-};
-
-class SMRCSPropellant : public PropellantSource {
-public:
-	SMRCSPropellant(PROPELLANT_HANDLE &h);
-	double Quantity();
-};
-
 class PropellantRotationalSwitch: public RotationalSwitch {
 public:
 	PropellantRotationalSwitch();
-	void SetSource(int num, PropellantSource *s);
-	PropellantSource *GetSource();
+	void SetCMSource(int num, CMRCSPropellantSource *s);
+	void SetSMSource(int num, SMRCSPropellantSource *s);
+	CMRCSPropellantSource *GetCMSource();
+	SMRCSPropellantSource *GetSMSource();
 
 protected:
-	PropellantSource *sources[16];
+	CMRCSPropellantSource *CMSources[7];
+	SMRCSPropellantSource *SMSources[7];
 };
 
 class RCSQuantityMeter : public MeterSwitch {
 public:
 	RCSQuantityMeter();
-	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s, Saturn *v);
+	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s, ToggleSwitch *indswitch);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	PropellantRotationalSwitch *source;
+	ToggleSwitch *SMRCSIndSwitch;
+	SURFHANDLE NeedleSurface;
+};
+
+class RCSFuelPressMeter : public MeterSwitch {
+public:
+	RCSFuelPressMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	PropellantRotationalSwitch *source;
 	SURFHANDLE NeedleSurface;
-	Saturn *our_vessel;
+};
+
+class RCSHeliumPressMeter : public MeterSwitch {
+public:
+	RCSHeliumPressMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	PropellantRotationalSwitch *source;
+	SURFHANDLE NeedleSurface;
+};
+
+class RCSTempMeter : public MeterSwitch {
+public:
+	RCSTempMeter();
+	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s);
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+
+protected:
+	PropellantRotationalSwitch *source;
+	SURFHANDLE NeedleSurface;
 };
 
 class SaturnFuelCellMeter : public MeterSwitch {
@@ -796,7 +790,7 @@ protected:
 class SaturnEMSDvSetSwitch {
 
 public:
-	SaturnEMSDvSetSwitch();
+	SaturnEMSDvSetSwitch(Sound &clicksound);
 	void Init(Saturn *s) { sat = s; };
 	int GetPosition() { return position; };
 	bool CheckMouseClick(int event, int mx, int my);
@@ -804,6 +798,7 @@ public:
 protected:
 	int position;
 	Saturn *sat;
+	Sound &ClickSound;
 };
 
 class SaturnCabinPressureReliefLever: public ThumbwheelSwitch {
@@ -824,21 +819,6 @@ protected:
 
 	Sound guardClick;
 	SURFHANDLE guardSurface;
-};
-
-class CSMToSIVBControlConnector;
-
-///
-/// Switch to separate the payload from the SIVB.
-///
-class SIVBPayloadSeparationSwitch : public GuardedToggleSwitch
-{
-public:
-	SIVBPayloadSeparationSwitch(CSMToSIVBControlConnector &c);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-
-protected:
-	CSMToSIVBControlConnector &sivb;
 };
 
 class OpticsHandcontrollerSwitch: public HandcontrollerSwitch {

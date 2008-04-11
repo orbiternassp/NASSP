@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2008/01/25 04:39:42  lassombra
+  *	All switches now handle change of state through SwitchTo function which is vitual
+  *	 and is called by existing mouse and connector handling methods.
+  *	
+  *	Support for delayed spring switches and other ChecklistController functionality following soon.
+  *	
   *	Revision 1.35  2008/01/18 05:57:23  movieman523
   *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
   *	
@@ -135,6 +141,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
@@ -202,183 +210,33 @@ void SaturnThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, S
 	sat = s;
 }
 
-SaturnValveTalkback::SaturnValveTalkback()
+
+SaturnRCSValveTalkback::SaturnRCSValveTalkback()
 
 {
-	Valve = 0;
-	our_vessel = 0;
+	valve = 0;
 }
 
-void SaturnValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv, Saturn *s)
+
+void SaturnRCSValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, RCSValve *v, bool failopen)
 
 {
-	IndicatorSwitch::Init(xp, yp, w, h, surf, row);
-
-	Valve = vlv;
-	our_vessel = s;
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
+	valve = v;	
 }
 
-int SaturnValveTalkback::GetState()
+int SaturnRCSValveTalkback::GetState()
 
 {
-	if (our_vessel && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
-		return our_vessel->GetValveState(Valve) ? 1 : 0;
+	if (valve && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
+		state = valve->IsOpen() ? 1 : 0;
+	else 
+		// SM RCS helium and prim. propellant talkbacks fail open
+		state = (failOpen ? 1 : 0);
 
-	return 0;
+	return state;
 }
 
-SaturnPropValveTalkback::SaturnPropValveTalkback()
-
-{
-	Valve1 = 0;
-	Valve2 = 0;
-	our_vessel = 0;
-}
-
-void SaturnPropValveTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vlv1, int vlv2, Saturn *s)
-
-{
-	IndicatorSwitch::Init(xp, yp, w, h, surf, row);
-
-	Valve1 = vlv1;
-	Valve2 = vlv2;
-	our_vessel = s;
-}
-
-int SaturnPropValveTalkback::GetState()
-
-{
-	if (our_vessel && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
-		return (our_vessel->GetValveState(Valve1) ? 1 : 0) && (our_vessel->GetValveState(Valve2) ? 1 : 0);
-
-	return 0;
-}
-
-void SaturnValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve, IndicatorSwitch *ind)
-
-{
-	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
-
-	Valve = valve;
-	Indicator = ind;
-}
-
-/*bool SaturnValveSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
-		CheckValve(GetState());
-		return true;
-	}
-
-	return false;
-}*/
-
-bool SaturnValveSwitch::SwitchTo(int newState, bool dontspring)
-
-{
-	if (SaturnThreePosSwitch::SwitchTo(newState, dontspring)) {
-		// some of these switches are spring-loaded, 
-		// so we have to use newState here
-		CheckValve(newState);
-		return true;
-	}
-
-	return false;
-}
-
-void SaturnValveSwitch::CheckValve(int s) 
-
-{
-	if (sat && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
-		if (s == THREEPOSSWITCH_UP) {
-			sat->SetValveState(Valve, true);
-			if (Indicator)
-				*Indicator = true;
-		}
-		else if (s == THREEPOSSWITCH_DOWN) {
-			sat->SetValveState(Valve, false);
-			if (Indicator)
-				*Indicator = false;
-		}
-	}
-}
-
-void SaturnPropValveSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s, int valve1, int valve2, int valve3,
-		int valve4,	IndicatorSwitch *ind1, IndicatorSwitch *ind2)
-
-{
-	SaturnThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
-
-	Valve1 = valve1;
-	Valve2 = valve2;
-	Valve3 = valve3;
-	Valve4 = valve4;
-	Indicator1 = ind1;
-	Indicator2 = ind2;
-}
-
-/*bool SaturnPropValveSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
-		CheckValve(GetState());
-		return true;
-	}
-
-	return false;
-}*/
-
-bool SaturnPropValveSwitch::SwitchTo(int newState, bool dontspring)
-
-{
-	if (SaturnThreePosSwitch::SwitchTo(newState, dontspring)) {
-		// some of these switches are spring-loaded, 
-		// so we have to use newState here
-		CheckValve(newState);
-		return true;
-	}
-
-	return false;
-}
-
-void SaturnPropValveSwitch::CheckValve(int s) 
-
-{
-	if (sat && (SRC->Voltage() > SP_MIN_DCVOLTAGE)) {
-		if (s == THREEPOSSWITCH_UP) {
-			sat->SetValveState(Valve1, true);
-			sat->SetValveState(Valve2, true);
-			sat->SetValveState(Valve3, true);
-			sat->SetValveState(Valve4, true);
-			if (Indicator1)
-				*Indicator1 = true;
-			if (Indicator2)
-				*Indicator2 = true;
-		}
-		else if (s == THREEPOSSWITCH_DOWN) {
-			sat->SetValveState(Valve1, false);
-			sat->SetValveState(Valve2, false);
-			sat->SetValveState(Valve3, false);
-			sat->SetValveState(Valve4, false);
-			if (Indicator1)
-				*Indicator1 = false;
-			if (Indicator2)
-				*Indicator2 = false;
-		}
-	}
-}
-
-bool SaturnSPSSwitch::SwitchTo(int newState, bool dontspring)
-
-{
-	if (SaturnToggleSwitch::SwitchTo(newState,dontspring)) {
-		// Nothing for now
-		return true;
-	}
-
-	return false;
-}
 
 void SaturnH2PressureMeter::Init(int i, SURFHANDLE surf, SwitchRow &row, Saturn *s)
 
@@ -531,82 +389,153 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	}
 }
 
+
 RCSQuantityMeter::RCSQuantityMeter()
+
+{
+	source = 0;
+	SMRCSIndSwitch = 0;
+	NeedleSurface = 0;
+}
+
+void RCSQuantityMeter::Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s, ToggleSwitch *indswitch)
+
+{
+	MeterSwitch::Init(row);
+	source = s;
+	SMRCSIndSwitch = indswitch;
+	NeedleSurface = surf;
+}
+
+double RCSQuantityMeter::QueryValue()
+
+{
+	if (!source) return 0.0;
+
+	// only SM data are available/displayed
+	SMRCSPropellantSource *ps = source->GetSMSource();
+	if (!ps) return 0;
+
+	if (SMRCSIndSwitch->IsDown()) {		
+		return ps->GetPropellantQuantityToDisplay();
+	}
+	return ps->GetHeliumTempF() / 100.;
+}
+
+void RCSQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  150, (108 - (int)(v * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+}
+
+
+RCSFuelPressMeter::RCSFuelPressMeter()
 
 {
 	source = 0;
 	NeedleSurface = 0;
 }
 
-void RCSQuantityMeter::Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s, Saturn *v)
+void RCSFuelPressMeter::Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s)
 
 {
 	MeterSwitch::Init(row);
 	source = s;
 	NeedleSurface = surf;
-	our_vessel = v;
 }
 
-double RCSQuantityMeter::QueryValue()
+double RCSFuelPressMeter::QueryValue()
 
 {
-	if (!source)
-		return 0.0;
+	if (!source) return 0;
 
-	PropellantSource *ps = source->GetSource();
+	SMRCSPropellantSource *ps = source->GetSMSource();
+	if (ps) return ps->GetPropellantPressurePSI();
 
-	//
-	// Offscale high error return if we're not connected.
-	//
+	CMRCSPropellantSource *cmps = source->GetCMSource();
+	if (cmps) return cmps->GetPropellantPressurePSI();
 
-	if (!ps)
-		return 1.1;
-
-	if (our_vessel->DisplayingPropellantQuantity()) {		
-		return ps->Quantity();
-	}
-
-	return ps->Temperature();
+	return 0;
 }
 
-void RCSQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+void RCSFuelPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {
-	oapiBlt(drawSurface, NeedleSurface,  150, (110 - (int)(v * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface,  95, (108 - (int)(v / 400.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 }
 
-CMRCSPropellant::CMRCSPropellant(PROPELLANT_HANDLE &h) : PropellantSource(h)
+
+RCSHeliumPressMeter::RCSHeliumPressMeter()
 
 {
+	source = 0;
+	NeedleSurface = 0;
 }
 
-double CMRCSPropellant::Quantity()
+void RCSHeliumPressMeter::Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s)
 
 {
-	if (our_vessel && our_vessel->GetStage() < CM_STAGE)
-		return 1.0;
-
-	return PropellantSource::Quantity();
+	MeterSwitch::Init(row);
+	source = s;
+	NeedleSurface = surf;
 }
 
-SMRCSPropellant::SMRCSPropellant(PROPELLANT_HANDLE &h) : PropellantSource(h)
+double RCSHeliumPressMeter::QueryValue()
 
 {
+	if (!source) return 0;
+
+	SMRCSPropellantSource *ps = source->GetSMSource();
+	if (ps) return ps->GetHeliumPressurePSI();
+
+	CMRCSPropellantSource *cmps = source->GetCMSource();
+	if (cmps) return cmps->GetHeliumPressurePSI();
+
+	return 0;
 }
 
-double SMRCSPropellant::Quantity()
+void RCSHeliumPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {
-	if (our_vessel) {
-		int stage = our_vessel->GetStage();
-		if (stage < CSM_LEM_STAGE)
-			return 1.0;
-		if (stage > CSM_LEM_STAGE)
-			return 0.0;
-	}
-
-	return PropellantSource::Quantity();
+	oapiBlt(drawSurface, NeedleSurface,  59, (108 - (int)(v / 5000.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
+
+
+RCSTempMeter::RCSTempMeter()
+
+{
+	source = 0;
+	NeedleSurface = 0;
+}
+
+void RCSTempMeter::Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s)
+
+{
+	MeterSwitch::Init(row);
+	source = s;
+	NeedleSurface = surf;
+}
+
+double RCSTempMeter::QueryValue()
+
+{
+	if (!source) return 0;
+
+	SMRCSPropellantSource *ps = source->GetSMSource();
+	if (ps) return ps->GetPackageTempF();
+
+	CMRCSPropellantSource *cmps = source->GetCMSource();
+	if (cmps) return cmps->GetHeliumTempF();
+
+	return 0;
+}
+
+void RCSTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	oapiBlt(drawSurface, NeedleSurface,  4, (108 - (int)(v / 300.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+}
+
 
 PropellantSource::PropellantSource(PROPELLANT_HANDLE &h) : source_prop(h)
 
@@ -630,28 +559,44 @@ double PropellantSource::Quantity()
 	return 0.0;
 }
 
+
 PropellantRotationalSwitch::PropellantRotationalSwitch()
 
 {
 	int i;
 
-	for (i = 0; i < 10; i++)
-		sources[i] = 0;
+	for (i = 0; i < 7; i++) {
+		CMSources[i] = 0;
+		SMSources[i] = 0;
+	}
 }
 
-void PropellantRotationalSwitch::SetSource(int num, PropellantSource *s)
+void PropellantRotationalSwitch::SetCMSource(int num, CMRCSPropellantSource *s)
 
 {
-	if (num >= 0 && num < 16)
-		sources[num] = s; 
+	if (num >= 0 && num < 7)
+		CMSources[num] = s; 
 }
 
-PropellantSource *PropellantRotationalSwitch::GetSource()
+void PropellantRotationalSwitch::SetSMSource(int num, SMRCSPropellantSource *s)
 
 {
-	PropellantSource *ps = sources[GetState()];
-	return ps;
+	if (num >= 0 && num < 7)
+		SMSources[num] = s; 
 }
+
+CMRCSPropellantSource *PropellantRotationalSwitch::GetCMSource()
+
+{
+	return CMSources[GetState()];
+}
+
+SMRCSPropellantSource *PropellantRotationalSwitch::GetSMSource()
+
+{
+	return SMSources[GetState()];
+}
+
 
 void SaturnFuelCellMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, RotationalSwitch *fuelCellIndicatorsSwitch)
 
@@ -1615,7 +1560,7 @@ double SaturnGPFPIPitchMeter::QueryValue()
 		LVTankQuantities LVq;
 		Sat->GetLVTankQuantities(LVq);
 		
-		if (Sat->GetStage() > LAUNCH_STAGE_TWO_TWR_JET) {  
+		if (Sat->GetStage() > LAUNCH_STAGE_TWO_ISTG_JET) {  
 			return 89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass;
 		} 
 		else {
@@ -2009,19 +1954,20 @@ double SaturnEMSDvDisplay::QueryValue()
 }
 
 
-SaturnEMSDvSetSwitch::SaturnEMSDvSetSwitch() {
+SaturnEMSDvSetSwitch::SaturnEMSDvSetSwitch(Sound &clicksound) : ClickSound(clicksound) {
 
 	position = 0;
 }
 
 bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my) {
 
+	int oldPos = position;
 	switch(event) {
 		case PANEL_MOUSE_LBPRESSED:
 			if (my < 44)
 				position = 1;
 			else
-				position = 3;
+				position = 3;			
 			break;
 
 		case PANEL_MOUSE_RBPRESSED:
@@ -2036,6 +1982,8 @@ bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my) {
 			position = 0;
 			break;
 	}
+	if (position && position != oldPos)
+		ClickSound.play();
 	return true;
 }
 
@@ -2181,31 +2129,4 @@ bool MinImpulseHandcontrollerSwitch::CheckMouseClick(int event, int mx, int my) 
 	return false;
 }
 
-//
-// Switch to separate from the SIVB.
-//
-SIVBPayloadSeparationSwitch::SIVBPayloadSeparationSwitch(CSMToSIVBControlConnector &c) : sivb(c)
 
-{
-}
-
-bool SIVBPayloadSeparationSwitch::SwitchTo(int newState, bool dontspring)
-
-{
-	//
-	// If the switch state changes, tell the SIVB.
-	//
-	if (GuardedToggleSwitch::SwitchTo(newState,dontspring) && IsPowered())
-	{
-		if (IsUp())
-		{
-			sivb.StartSeparationPyros();
-		}
-		else if (IsDown())
-		{
-			sivb.StopSeparationPyros();
-		}
-		return true;
-	}
-	return false;
-}

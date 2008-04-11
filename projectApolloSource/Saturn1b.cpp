@@ -22,6 +22,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.84  2008/01/23 01:40:07  lassombra
+  *	Implemented timestep functions and event management
+  *	
+  *	Events for Saturns are now fully implemented
+  *	
+  *	Removed all hardcoded checklists from Saturns.
+  *	
+  *	Automatic Checklists are coded into an excel file.
+  *	
+  *	Added function to get the name of the active checklist.
+  *	
+  *	ChecklistController is now 100% ready for Saturn.
+  *	
   *	Revision 1.83  2008/01/18 05:57:23  movieman523
   *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
   *	
@@ -279,6 +292,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -364,22 +379,11 @@ void Saturn1b::initSaturn1b()
 	initSaturn();
 
 	SaturnType = SAT_SATURN1B;
-
 	RelPos = _V(0.0,0.0,0.0);
-
 	hSoyuz = 0;
 	hAstpDM = 0;
-
-	DestroyAstp = false;
-
-	ReadyAstp = false;
-	ReadyAstp1 = false;
-	S4BASTP = false;
-	Resetjet = false;
 	Burned = false;
-
-	MasterVessel = false;
-	TargetDocked = false;
+	EVA_IP = false;
 
 	if (strcmp(GetName(), "AS-211")==0)
 	{
@@ -431,8 +435,9 @@ void Saturn1b::initSaturn1b()
 
 	THRUST_SECOND_VAC  = 1001000;
 
-	SM_EmptyMass = 3900;						// Calculated from Apollo 7 Mission Report and "Apollo by the numbers", TODO other Saturn 1b missions
-	SM_FuelMass = 4430;							// Apollo 7 (according to Mission Report), TODO other Saturn 1b missions
+	SM_EmptyMass = 3900;						// Calculated from Apollo 7 Mission Report and "Apollo by the numbers"
+	SM_FuelMass = 4430;							// Apollo 7 (according to Mission Report), 
+												/// \todo other Saturn 1b missions
 
 	CM_EmptyMass = 5430;						// Calculated from Apollo 11 Mission Report and "Apollo by the numbers"
 	CM_FuelMass = CM_RCS_FUEL_PER_TANK * 2.;	// The CM has 2 tanks
@@ -615,7 +620,7 @@ void Saturn1b::StageOne(double simt, double simdt)
 			SShutS.play(NOLOOP,235);
 			SShutS.done();
 
-			// Move hidden SIC vessel
+			// Move hidden SIB vessel
 			if (hstg1)
 			{
 				VESSELSTATUS vs;
@@ -633,7 +638,7 @@ void Saturn1b::StageOne(double simt, double simdt)
 	//
 
 	case 1:
-		if ((GetFuelMass() <= 0.001) || (MissionTime >= FirstStageShutdownTime) || bManualSeparate)
+		if (GetFuelMass() <= 0.001 || MissionTime >= FirstStageShutdownTime)
 		{
 			NextMissionEventTime = MissionTime + 0.7;
 			SetEngineIndicators();
@@ -646,20 +651,25 @@ void Saturn1b::StageOne(double simt, double simdt)
 		{
 			SShutS.done();
 			ClearEngineIndicators();
-			SeparateStage (LAUNCH_STAGE_TWO);
-			bManualSeparate = false;
+			SeparateStage (LAUNCH_STAGE_SIVB);
 			SeparationS.play(NOLOOP, 245);
-			SetStage(LAUNCH_STAGE_TWO);
-		}
-		else
-		{
+			SetStage(LAUNCH_STAGE_SIVB);
+
+			// 
+			// Tower jettison at 26.6 seconds after SIB shutdown if not previously
+			// specified.
+			//
+
+			if (LESJettisonTime > 999.0) {
+				LESJettisonTime = MissionTime + 26.6;
+			}
+		} else {
 
 			//
 			// Engine thrust decay.
 			//
 
-			for (int i = 0; i < 4; i++)
-			{
+			for (int i = 0; i < 4; i++)	{
 				double Level = GetThrusterLevel(th_main[i]);
 				Level -= (simdt * 1.2);
 				SetThrusterLevel(th_main[i], Level);
@@ -668,29 +678,19 @@ void Saturn1b::StageOne(double simt, double simdt)
 		return;
 	}
 
-	if (autopilot && CMCswitch)
-	{
+	if (autopilot) {
 		AutoPilot(MissionTime);
-	}
-	else
-	{
+	} else {
 		AttitudeLaunch1();
 	}
 }
 
-//
-// Start up the SIVB and separate the launch tower.
-//
-
-void Saturn1b::StageStartSIVB(double simt)
+void Saturn1b::StageLaunchSIVB(double simt)
 
 {
-	if (autopilot && CMCswitch)
-	{
+    if (autopilot) {
 		AutoPilot(MissionTime);
-	}
-	else
-	{
+	} else {
 		AttitudeLaunchSIVB();
 	}
 
@@ -768,93 +768,16 @@ void Saturn1b::StageStartSIVB(double simt)
 		{
 			SetSIVBThrusters(true);
 			SetSIVBMixtureRatio(5.5);
-			NextMissionEventTime = MissionTime + 17.95;
-
-			//
-			// Override if required.
-			//
-
-			if (LESJettisonTime < NextMissionEventTime)
-			{
-				NextMissionEventTime = LESJettisonTime;
-			}
 
 			StageState++;
 		}
 		break;
 
 	//
-	// Jettison LET and move on.
-	//
-
-	case 5:
-		if ((MissionTime >= NextMissionEventTime && (TowerJett1Switch.GetState() == THREEPOSSWITCH_DOWN || TowerJett2Switch.GetState() == THREEPOSSWITCH_DOWN)) || 
-			bManualSeparate || 
-			GetFuelMass() == 0 || 
-			TowerJett1Switch.GetState() == THREEPOSSWITCH_UP || 
-			TowerJett2Switch.GetState() == THREEPOSSWITCH_UP)
-		{
-			SeparateStage(LAUNCH_STAGE_SIVB);
-			TowerJS.play();
-			TowerJS.done();
-			SetStage(LAUNCH_STAGE_SIVB);
-			// Enable docking probe because the tower is gone
-			dockingprobe.SetEnabled(HasProbe);			
-		}
-		return;
-	}
-
-	if(CsmLvSepSwitch.GetState())
-	{
-		bManualSeparate = true;
-	}
-
-	if (bManualSeparate || bAbort)
-	{
-		SepS.stop();
-		bManualSeparate = false;
-		SeparateStage (CSM_LEM_STAGE);
-		SetStage(CSM_LEM_STAGE);
-		if (bAbort)
-		{
-			/// \todo SPS abort handling
-			ABORT_IND = true;
-			StartAbort();
-			bAbort = false;
-			autopilot=false;
-		}
-	}
-}
-
-void Saturn1b::StageLaunchSIVB(double simt)
-
-{
-    if (autopilot && CMCswitch)
-	{
-		AutoPilot(MissionTime);
-	}
-	else
-	{
-		AttitudeLaunchSIVB();
-	}
-
-	switch (StageState)
-	{
-	case 0:
-		SetThrusterLevel(th_main[0], 1.0);
-		SetSIVBMixtureRatio(5.5);
-		if (Crewed)
-			SwindowS.play();
-		SwindowS.done();
-		NextMissionEventTime = MissionTime + 8.65;
-		StageState++;
-		break;
-
-	//
 	// Second mixture ratio shift.
 	//
 
-	case 1:
+	case 5:
 		if (MissionTime >= SecondStagePUShiftTime)
 		{
 			if (Crewed)
@@ -871,7 +794,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 	// Shutdown.
 	//
 
-	case 2:
+	case 6:
 		if (GetEngineLevel(ENGINE_MAIN) <= 0)
 		{
 			NextMissionEventTime = MissionTime + 10.0;
@@ -891,28 +814,21 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		break;
 	}
 
-	if(CsmLvSepSwitch.GetState())
-	{
-		bManualSeparate = true;
-	}
-
-	if (bManualSeparate || bAbort)
-	{
-		bManualSeparate = false;
+	// Abort handling
+	if (CSMLVPyros.Blown() || (bAbort && !LESAttached))
+	{		
 		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
-		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
-		if (bAbort)
-		{
-			/// \todo SPS abort handling
-			ABORT_IND = true;
+		if (bAbort) {
+			/// \todo SPS abort handling			
 			StartAbort();
 			bAbort = false;
-			autopilot= false;
+			autopilot = false;
 		}
-		return;
 	}
+
 }
+
 
 //
 // Adjust the mixture ratio of the engine on the SIVB stage. This occured late in
@@ -955,83 +871,27 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	GenericTimestep(simt, simdt, mjd);
 
-	if (bAbort && stage <= LAUNCH_STAGE_TWO)
-	{
-		if (stage < LAUNCH_STAGE_ONE)
-		{
-			// No abort before launch
-			bAbort = false;
-		} 
-		else
-		{
-			SetEngineLevel(ENGINE_MAIN, 0);
-			SeparateStage(CM_ENTRY_STAGE);
-			StartAbort();
-			SetStage(CM_ENTRY_STAGE);
-			bAbort = false;
-		}
+	/// \todo LVDC++ as in Saturn V
+
+	//
+	// Abort handling
+	//
+
+	if (bAbort && MissionTime > -300 && LESAttached) {
+		SetEngineLevel(ENGINE_MAIN, 0);
+		SeparateStage(CM_STAGE);
+		SetStage(CM_STAGE);
+		StartAbort();
+		agc.SetInputChannelBit(030, 4, true); // Notify the AGC of the abort
+		agc.SetInputChannelBit(030, 5, true); // and the liftoff, if it's not set already
+		bAbort = false;
 		return;
-	}
-
-	if (stage == CSM_ABORT_STAGE)
-	{
-		SetEngineLevel(ENGINE_MAIN,1);
-	//sprintf(oapiDebugString(), "Mode Abort 1B%f", abortTimer);
-		//if (bManualSeparate)
-        if (GetFuelMass() == 0 && abortTimer == 0)
-		{
-			LAUNCHIND[4]=true;
-			abortTimer=simt;
-		}
-		if (abortTimer>0)
-		{
-			if ((simt-(0.5+abortTimer))>=0){
-				ActivateNavmode(NAVMODE_KILLROT);
-			}
-
-			if ((simt-(1+abortTimer))>=0){
-				double pitch;
-				pitch= GetPitch();
-				if (pitch >0) {
-					SetPitchMomentScale (+5e-3);
-					SetBankMomentScale (+5e-3);
-					SetLiftCoeffFunc (0);
-				}
-			}
-
-
-			if (simt-(20+abortTimer)>=0)
-			{
-				LAUNCHIND[2]=true;
-				bManualSeparate=true;
-				abortTimer = 0;
-			}
-			bool altlow=false;
-
-			double altitude=600;
-			altitude=GetAltitude();
-			if (altitude < 500 ){
-				altlow = true;
-			}
-		if ((bManualSeparate ||  altlow) && PyrosArmed())
-			{
-				SeparateStage (CM_STAGE);
-				SetStage(CM_STAGE);
-				bManualSeparate=false;
-				abortTimer = 0;
-
-			}
-		}
 	}
 
 	switch (stage) {
 
 	case LAUNCH_STAGE_ONE:
 		StageOne(simt, simdt);
-		break;
-
-	case LAUNCH_STAGE_TWO:
-		StageStartSIVB(simt);
 		break;
 
 	case LAUNCH_STAGE_SIVB:
@@ -1089,7 +949,6 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		SetFirstStageEngines();
 		break;
 
-	case LAUNCH_STAGE_TWO:
 	case LAUNCH_STAGE_SIVB:
 	case STAGE_ORBIT_SIVB:
 		SetSecondStage();
@@ -1097,17 +956,9 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		AddRCS_S4B();
 		break;
 
-	case CSM_LEM_STAGE:
-		SetCSMStage();
-
-		if (EVA_IP){
-			SetupEVA();
-		}
+	default:
+		SetGenericStageState();
 		break;
-
-		default:
-			SetGenericStageState();
-			break;
 	}
 
 	//
@@ -1184,10 +1035,6 @@ void Saturn1b::ConfigureStageMeshes(int stage_state)
 
 	case CM_ENTRY_STAGE:
 		SetReentryStage();
-		break;
-
-	case CSM_ABORT_STAGE:
-		SetAbortStage();
 		break;
 	}
 }

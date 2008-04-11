@@ -22,6 +22,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.230  2008/01/25 20:06:06  lassombra
+  *	Implemented delayable switch functions.
+  *	
+  *	Now, all register functions on all toggle switches should take, at the end, a boolean
+  *	 for whether it is delayable, and an int for how many seconds to delay.
+  *	
+  *	Actual delay can be anywhere between the int and the int + 1.
+  *	
+  *	Function is implemented as a timestepped switch which is called intelligently from
+  *	 the panel, which now gets a timestep call.
+  *	
   *	Revision 1.229  2008/01/23 01:40:09  lassombra
   *	Implemented timestep functions and event management
   *	
@@ -457,6 +468,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
@@ -486,7 +499,6 @@
 #include <crtdbg.h>
 
 
-
 //
 // Random functions from Yaagc.
 //
@@ -498,7 +510,16 @@ extern "C" {
 
 //extern FILE *PanelsdkLogFile;
 
-#pragma warning(disable:4355)
+
+//
+// CAUTION: This disables the warning, which is triggered by the use of the "this" pointer in the 
+// initializations of iuCommandConnector, sivbControlConnector and sivbCommandConnector below. 
+// This warning can ignored here, because the "this" pointer is only stored in the constructors, 
+// but not used. Except for these 3 classes the "this" pointer still should NOT be used in initializations. 
+//
+
+#pragma warning ( push )
+#pragma warning ( disable:4355 )
 
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 
@@ -524,27 +545,33 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	MainBusBController("MainBusBController", Panelsdk),
 	BatteryBusA("Battery-Bus-A", Panelsdk),
 	BatteryBusB("Battery-Bus-B", Panelsdk),
-	PyroBusA("Pyro-Bus-A", Panelsdk),
-	PyroBusB("Pyro-Bus-B", Panelsdk),
+	PyroBusAFeeder("Pyro-Bus-A-Feeder", Panelsdk),
+	PyroBusBFeeder("Pyro-Bus-B-Feeder", Panelsdk),
+	PyroBusA("Pyro-Bus-A", NULL),
+	PyroBusB("Pyro-Bus-B", NULL),
+	SECSLogicBusA("SECSLogic-Bus-A", NULL),
+	SECSLogicBusB("SECSLogic-Bus-B", NULL),	
 	BatteryRelayBus("Battery-Relay-Bus", Panelsdk),
 	FlightBus("Flight-Bus",&FlightBusFeeder),
 	FlightBusFeeder("Flight-Bus-Feeder",Panelsdk),
 	FlightPostLandingBus("FlightPostLanding-Bus",&FlightPostLandingBusFeeder),
 	FlightPostLandingBusFeeder("FlightPostLanding-Bus-Feeder",Panelsdk, 5),
-	SECSLogicPower("SECS-Logic-Power", Panelsdk),
-	PyroPower("Pyro-Power", Panelsdk),
 	SwitchPower("Switch-Power", Panelsdk),
 	GaugePower("Gauge-Power", Panelsdk),
-	SMQuadARCS(ph_rcs0),
-	SMQuadBRCS(ph_rcs1),
-	SMQuadCRCS(ph_rcs2),
-	SMQuadDRCS(ph_rcs3),
-	CMRCS1(ph_rcs_cm_1),
-	CMRCS2(ph_rcs_cm_2),
+	SMQuadARCS(ph_rcs0, Panelsdk),
+	SMQuadBRCS(ph_rcs1, Panelsdk),
+	SMQuadCRCS(ph_rcs2, Panelsdk),
+	SMQuadDRCS(ph_rcs3, Panelsdk),
+	CMRCS1(ph_rcs_cm_1, Panelsdk),
+	CMRCS2(ph_rcs_cm_2, Panelsdk),
 	SPSPropellant(ph_sps, Panelsdk),
 	SPSEngine(th_main[0]),
 	CMSMPyros("CM-SM-Pyros", Panelsdk),
+	CMSMPyrosFeeder("CM-SM-Pyros-Feeder", Panelsdk),
 	CMDockingRingPyros("CM-DockingRing-Pyros", Panelsdk),
+	CMDockingRingPyrosFeeder("CM-DockingRing-Pyros-Feeder", Panelsdk),
+	CSMLVPyros("CSM-LV-Pyros", Panelsdk),
+	CSMLVPyrosFeeder("CSM-LV-Pyros-Feeder", Panelsdk),
 	EcsGlycolPumpsSwitch(Panelsdk),
 	SuitCompressor1Switch(Panelsdk),
 	SuitCompressor2Switch(Panelsdk),
@@ -555,7 +582,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	sivbCommandConnector(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
-	ascp(Sclick),
+	ascp(ThumbClick),
 	RHCNormalPower("RHCNormalPower", Panelsdk),
 	RHCDirect1Power("RHCDirect1Power", Panelsdk),
 	RHCDirect2Power("RHCDirect2Power", Panelsdk),
@@ -567,10 +594,12 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	CSMACVoltMeter(90.0, 140.0),
 	DCAmpMeter(0.0, 100.0),
 	SystemTestVoltMeter(0.0, 5.0),
-	SIVBPayloadSepSwitch(sivbControlConnector)
+	EMSDvSetSwitch(Sclick)
+
+#pragma warning ( pop ) // disable:4355
 
 {
-	_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF|_CRTDBG_CHECK_ALWAYS_DF );
+	//_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF|_CRTDBG_CHECK_ALWAYS_DF );
 	InitSaturnCalled = false;
 	autopilot = false;
 	LastTimestep = 0;
@@ -589,7 +618,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	HMODULE hdbg = GetModuleHandle("modules//plugin//ProjectApolloMFD.dll");
 	if (hdbg)
 	{
-		debugString = (char *(__cdecl *)()) GetProcAddress(hdbg,"apolloMFDGetDebugString");
+		debugString = (char *(__cdecl *)()) GetProcAddress(hdbg,"pacMFDGetDebugString");
 		if (debugString != 0)
 			debugConnected = true;
 	}
@@ -683,8 +712,6 @@ void Saturn::initSaturn()
 	bAbort = false;
 	ABORT_IND = false;
 	LEM_DISPLAY=false;
-	bManualUnDock = false;
-	bManualSeparate = false;
 	ASTPMission = false;
 	bToggleHatch = false;
 
@@ -733,8 +760,6 @@ void Saturn::initSaturn()
 	AtempR  = 0;
 
 	StopRot = false;
-	SMSep = false;
-	bStartS4B = false;
 	IGMEnabled = false;
 	HasProbe = false;
 
@@ -787,13 +812,6 @@ void Saturn::initSaturn()
 	KranzPlayed = false;
 
 	//
-	// Checklists.
-	//
-
-	useChecklists = false;
-	lastChecklist[0] = 0;
-
-	//
 	// LM PAD data.
 	//
 
@@ -823,9 +841,6 @@ void Saturn::initSaturn()
 
 	NextFlashUpdate = MINUS_INFINITY;
 	PanelFlashOn = false;
-
-	abortTimer = 0;
-	release_time = 0;
 
 	//
 	// Defaults.
@@ -1023,14 +1038,17 @@ void Saturn::initSaturn()
 	//
 	int i;
 
+	dyemarker = NULL;
+
+	for (i = 0; i < 12; i++) {
+		cmrcsdump[i] = NULL;
+	}
 	for (i = 0; i < 3; i++) {
 		prelaunchvent[i] = NULL;
 	}
-
 	for (i = 0; i < 8; i++) {
 		stagingvent[i] = NULL;
 	}
-
 	for (i = 0; i < 8; i++) {
 		contrail[i] = NULL;
 	}
@@ -1103,14 +1121,8 @@ void Saturn::initSaturn()
 		th_aps[i] = 0;
 	}
 
-	for (i = 0; i < 12; i++) {
-		th_att_cm[i] = 0;
-	}
-
-	th_sps[0] = 0;
-
 	//
-	// SM RCS thrusters.
+	// SM RCS thrusters
 	//
 
 	for (i = 0; i < 8; i++) {
@@ -1124,6 +1136,21 @@ void Saturn::initSaturn()
 		th_att_rot[i] = 0;
 		th_att_lin[i] = 0;
 	}
+
+	//
+	// CM RCS thrusters
+	//
+
+	for (i = 0; i < 12; i++) {
+		th_att_cm[i] = 0;
+		th_att_cm_commanded[i] = false;
+	}
+
+	for (i = 0; i < 6; i++) {
+		th_att_cm_sys1[i] = 0;
+		th_att_cm_sys2[i] = 0;
+	}
+
 
 	for (i = 0; i < 8; i++)
 		ENGIND[i] = false;
@@ -1139,9 +1166,6 @@ void Saturn::initSaturn()
 
 	SIISepState = false;
 	bRecovery = false;
-	RCS_Full = true;
-	ReadyAstp = false;
-	Abort_Locked = false;
 
 	stage = 0;
 
@@ -1180,7 +1204,6 @@ void Saturn::initSaturn()
 	ToggleEva = false;
 	OrbiterAttitudeDisabled = false;
 	Scorrec = false;
-	Resetjet = false;
 
 	//
 	// LM landing data.
@@ -1208,6 +1231,10 @@ void Saturn::initSaturn()
 	LunarOrbitInsertionMJD = 0;	
 	FreeReturnPericynthionMJD = 0;		
 	FreeReturnPericynthionAltitude = 0;	
+	TransLunarInjectionOffsetLon = 0;	
+	TransLunarInjectionOffsetLat = 0;	
+	TransLunarInjectionOffsetRad = 0;	
+
 
 	//
 	// Load textures that are used a lot. Should these be global
@@ -1259,9 +1286,15 @@ void Saturn::initSaturn()
 void Saturn::clbkPostCreation() {
 
 	//
-	// Check SPS propellant
+	// Check propellants
 	//
 
+	SMQuadARCS.CheckPropellantMass();
+	SMQuadBRCS.CheckPropellantMass();
+	SMQuadCRCS.CheckPropellantMass();
+	SMQuadDRCS.CheckPropellantMass();
+	CMRCS1.CheckPropellantMass();
+	CMRCS2.CheckPropellantMass();
 	SPSPropellant.CheckPropellantMass();
 
 	//
@@ -1278,10 +1311,14 @@ void Saturn::clbkPostCreation() {
 	cc.MJDLOI = LunarOrbitInsertionMJD;
 	cc.MJDPEC = FreeReturnPericynthionMJD;
 	cc.ALTPEC = FreeReturnPericynthionAltitude;
+	cc.TLIOffsetLon = TransLunarInjectionOffsetLon; 
+	cc.TLIOffsetLat = TransLunarInjectionOffsetLat; 
+	cc.TLIOffsetRad = TransLunarInjectionOffsetRad; 
 	cc.MJDLDG = LMLandingMJD;
 	cc.MJDSPL = EntryInterfaceMJD;
 	cc.SPL_lon = SplashdownLongitude;
 	cc.SPL_lat = SplashdownLatitude;
+	cc.ApolloP30Mode = true;
 	IMFD_Client.SetConstantConfiguration(cc);
 
 	// Connect to IMFD
@@ -1607,20 +1644,19 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "SATTYPE", SaturnType);
 	oapiWriteScenario_int (scn, "PANEL_ID", PanelId);
-	oapiWriteScenario_float (scn, "TCP", TCPO);
-	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
-	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
-	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
-	oapiWriteScenario_float (scn, "NFAILTIME", NextFailureTime);
-	oapiWriteScenario_float (scn, "MTD", MissionTimerDisplay.GetTime());
-	oapiWriteScenario_float (scn, "ETD", EventTimerDisplay.GetTime());
-	oapiWriteScenario_float (scn, "THRUSTA", ThrustAdjust);
-	oapiWriteScenario_float (scn, "MR", MixtureRatio);
+	papiWriteScenario_double (scn, "TCP", TCPO);
+	papiWriteScenario_double (scn, "MISSNTIME", MissionTime);
+	papiWriteScenario_double (scn, "NMISSNTIME", NextMissionEventTime);
+	papiWriteScenario_double (scn, "LMISSNTIME", LastMissionEventTime);
+	papiWriteScenario_double (scn, "NFAILTIME", NextFailureTime);
+	papiWriteScenario_double (scn, "MTD", MissionTimerDisplay.GetTime());
+	papiWriteScenario_double (scn, "ETD", EventTimerDisplay.GetTime());
+	papiWriteScenario_double (scn, "THRUSTA", ThrustAdjust);
+	papiWriteScenario_double (scn, "MR", MixtureRatio);
 
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
 	oapiWriteScenario_int (scn, "DLS", DeleteLaunchSite ? 1 : 0);
-	oapiWriteScenario_int (scn, "CHECKLISTS", useChecklists ? 1 : 0);
 
 	if (Realism != REALISM_DEFAULT) {
 		oapiWriteScenario_int (scn, "REALISM", Realism);
@@ -1639,10 +1675,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "MAINSTATE",  GetMainState());
 	oapiWriteScenario_int (scn, "ATTACHSTATE",  GetAttachState());
 	oapiWriteScenario_int (scn, "LIGHTSTATE",  GetLightState());
-	oapiWriteScenario_int (scn, "CSWITCH",  GetCSwitchState());
-	oapiWriteScenario_int (scn, "SSWITCH",  GetSSwitchState());
-	oapiWriteScenario_int (scn, "LPSWITCH",  GetLPSwitchState());
-	oapiWriteScenario_int (scn, "RPSWITCH",  GetRPSwitchState());
 
 	//
 	// Save vessel-specific stats.
@@ -1654,27 +1686,27 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "PRELAUNCHATC",  int(UseATC));
 
 	if (stage < LAUNCH_STAGE_TWO) {
-		oapiWriteScenario_float (scn, "SICSHUT", FirstStageCentreShutdownTime);
-		oapiWriteScenario_float (scn, "SISHUT", FirstStageShutdownTime);
-		oapiWriteScenario_float (scn, "T1V", THRUST_FIRST_VAC);
-		oapiWriteScenario_float (scn, "I1S", ISP_FIRST_SL);
-		oapiWriteScenario_float (scn, "I1V", ISP_FIRST_VAC);
+		papiWriteScenario_double (scn, "SICSHUT", FirstStageCentreShutdownTime);
+		papiWriteScenario_double (scn, "SISHUT", FirstStageShutdownTime);
+		papiWriteScenario_double (scn, "T1V", THRUST_FIRST_VAC);
+		papiWriteScenario_double (scn, "I1S", ISP_FIRST_SL);
+		papiWriteScenario_double (scn, "I1V", ISP_FIRST_VAC);
 		oapiWriteScenario_int (scn, "SIENG", SI_EngineNum);
 	}
 
 	if (stage < STAGE_ORBIT_SIVB) {
 		char fname[64];
 
-		oapiWriteScenario_float (scn, "SIICSHUT", SecondStageCentreShutdownTime);
-		oapiWriteScenario_float (scn, "SIIPUT", SecondStagePUShiftTime);
-		oapiWriteScenario_float (scn, "SIISHUT", SecondStageShutdownTime);
-		oapiWriteScenario_float (scn, "T2V", THRUST_SECOND_VAC);
-		oapiWriteScenario_float (scn, "I2S", ISP_SECOND_SL);
-		oapiWriteScenario_float (scn, "I2V", ISP_SECOND_VAC);
-		oapiWriteScenario_float (scn, "T3V", THRUST_THIRD_VAC);
-		oapiWriteScenario_float (scn, "I3V", ISP_THIRD_VAC);
-		oapiWriteScenario_float (scn, "ISTGJT", InterstageSepTime);
-		oapiWriteScenario_float (scn, "LESJT", LESJettisonTime);
+		papiWriteScenario_double (scn, "SIICSHUT", SecondStageCentreShutdownTime);
+		papiWriteScenario_double (scn, "SIIPUT", SecondStagePUShiftTime);
+		papiWriteScenario_double (scn, "SIISHUT", SecondStageShutdownTime);
+		papiWriteScenario_double (scn, "T2V", THRUST_SECOND_VAC);
+		papiWriteScenario_double (scn, "I2S", ISP_SECOND_SL);
+		papiWriteScenario_double (scn, "I2V", ISP_SECOND_VAC);
+		papiWriteScenario_double (scn, "T3V", THRUST_THIRD_VAC);
+		papiWriteScenario_double (scn, "I3V", ISP_THIRD_VAC);
+		papiWriteScenario_double (scn, "ISTGJT", InterstageSepTime);
+		papiWriteScenario_double (scn, "LESJT", LESJettisonTime);
 		oapiWriteScenario_int (scn, "SIIENG", SII_EngineNum);
 
 		//
@@ -1683,19 +1715,19 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 		for (i = 0; i < PITCH_TABLE_SIZE; i++) {
 			sprintf(fname, "PMET%03d", i);
-			oapiWriteScenario_float (scn, fname, met[i]);
+			papiWriteScenario_double (scn, fname, met[i]);
 		}
 
 		for (i = 0; i < PITCH_TABLE_SIZE; i++) {
 			sprintf(fname, "CPITCH%03d", i);
-			oapiWriteScenario_float (scn, fname, cpitch[i]);
+			papiWriteScenario_double (scn, fname, cpitch[i]);
 		}
 
 		//
 		// IGM start time.
 		//
 
-		oapiWriteScenario_float (scn, "IGMST", IGMStartTime);
+		papiWriteScenario_double (scn, "IGMST", IGMStartTime);
 	}
 
 	if (stage < CSM_LEM_STAGE) {
@@ -1705,17 +1737,17 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	}
 
 	if (stage < CM_STAGE) {
-		oapiWriteScenario_float (scn, "SMFUELLOAD", SM_FuelMass);
-		oapiWriteScenario_float (scn, "SMMASS", SM_EmptyMass);
+		papiWriteScenario_double (scn, "SMFUELLOAD", SM_FuelMass);
+		papiWriteScenario_double (scn, "SMMASS", SM_EmptyMass);
 	}
 
-	oapiWriteScenario_float (scn, "CMFUELLOAD", CM_FuelMass);
-	oapiWriteScenario_float (scn, "CMMASS", CM_EmptyMass);
+	papiWriteScenario_double (scn, "CMFUELLOAD", CM_FuelMass);
+	papiWriteScenario_double (scn, "CMMASS", CM_EmptyMass);
 
-	oapiWriteScenario_float (scn, "MOONLAT", LMLandingLatitude);
-	oapiWriteScenario_float (scn, "MOONLONG", LMLandingLongitude);
-	oapiWriteScenario_float (scn, "MOONALT", LMLandingAltitude);
-	oapiWriteScenario_float (scn, "MOONMJD", LMLandingMJD);	
+	papiWriteScenario_double (scn, "MOONLAT", LMLandingLatitude);
+	papiWriteScenario_double (scn, "MOONLONG", LMLandingLongitude);
+	papiWriteScenario_double (scn, "MOONALT", LMLandingAltitude);
+	papiWriteScenario_double (scn, "MOONMJD", LMLandingMJD);	
 	if (LMLandingBase[0])
 		oapiWriteScenario_string (scn, "MOONBASE", LMLandingBase);
 
@@ -1729,107 +1761,86 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		}
 	}
 
-	oapiWriteScenario_float (scn, "SPLASHLAT", SplashdownLatitude);
-	oapiWriteScenario_float (scn, "SPLASHLONG", SplashdownLongitude);
-	oapiWriteScenario_float (scn, "EARTHEIMJD", EntryInterfaceMJD);
+	papiWriteScenario_double (scn, "SPLASHLAT", SplashdownLatitude);
+	papiWriteScenario_double (scn, "SPLASHLONG", SplashdownLongitude);
+	papiWriteScenario_double (scn, "EARTHEIMJD", EntryInterfaceMJD);
 
-	oapiWriteScenario_float (scn, "TLIMJD", TransLunarInjectionMJD);
-	oapiWriteScenario_float (scn, "LOIMJD", LunarOrbitInsertionMJD);
-	oapiWriteScenario_float (scn, "FREERETURNPECMJD", FreeReturnPericynthionMJD);
-	oapiWriteScenario_float (scn, "FREERETURNPECALT", FreeReturnPericynthionAltitude);
+	papiWriteScenario_double (scn, "TLIMJD", TransLunarInjectionMJD);
+	papiWriteScenario_double (scn, "LOIMJD", LunarOrbitInsertionMJD);
+	papiWriteScenario_double (scn, "FREERETURNPECMJD", FreeReturnPericynthionMJD);
+	papiWriteScenario_double (scn, "FREERETURNPECALT", FreeReturnPericynthionAltitude);
+	papiWriteScenario_double (scn, "TLIOFFSETLON", TransLunarInjectionOffsetLon);
+	papiWriteScenario_double (scn, "TLIOFFSETLAT", TransLunarInjectionOffsetLat);
+	papiWriteScenario_double (scn, "TLIOFFSETRAD", TransLunarInjectionOffsetRad);
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
 
 		if (CSMSepSet && (CSMSepTime >= MissionTime))
 		{
-			oapiWriteScenario_float (scn, "CSMSEP", CSMSepTime);
+			papiWriteScenario_double (scn, "CSMSEP", CSMSepTime);
 		}
 
 		if (CMSepSet && (CMSepTime >= MissionTime))
 		{
-			oapiWriteScenario_float (scn, "CMSEP", CMSepTime);
+			papiWriteScenario_double (scn, "CMSEP", CMSepTime);
 		}
 
 		if (PayloadDeploySet && (PayloadDeployTime >= MissionTime))
 		{
-			oapiWriteScenario_float (scn, "PLSEP", PayloadDeployTime);
+			papiWriteScenario_double (scn, "PLSEP", PayloadDeployTime);
 		}
 
 		if (stage <= CSM_LEM_STAGE) {
-			oapiWriteScenario_float (scn, "S4APO", SIVBApogee);
-			oapiWriteScenario_float (scn, "S4BURN", SIVBBurnStart);
+			papiWriteScenario_double (scn, "S4APO", SIVBApogee);
+			papiWriteScenario_double (scn, "S4BURN", SIVBBurnStart);
 		}
 
 		if (CSMBurn && (stage <= CM_STAGE)) {
-			oapiWriteScenario_float (scn, "CSMAPO", CSMApogee);
-			oapiWriteScenario_float (scn, "CSMPER", CSMPerigee);
-			oapiWriteScenario_float (scn, "CSMBURN", CSMBurnStart);
+			papiWriteScenario_double (scn, "CSMAPO", CSMApogee);
+			papiWriteScenario_double (scn, "CSMPER", CSMPerigee);
+			papiWriteScenario_double (scn, "CSMBURN", CSMBurnStart);
 		}
 
 		if (CSMAccelSet && (stage <= CM_STAGE))
 		{
-			oapiWriteScenario_float (scn, "CSMACCEL", CSMAccelTime);
-			oapiWriteScenario_float (scn, "CSMACCEND", CSMAccelEnd);
-			oapiWriteScenario_float (scn, "CSMACCPITCH", CSMAccelPitch);
+			papiWriteScenario_double (scn, "CSMACCEL", CSMAccelTime);
+			papiWriteScenario_double (scn, "CSMACCEND", CSMAccelEnd);
+			papiWriteScenario_double (scn, "CSMACCPITCH", CSMAccelPitch);
 		}
 	}
 
 	if (AutoSlow) {
 		oapiWriteScenario_int (scn, "AUTOSLOW", 1);
 	}
-
-	int valvestate = 0;
-	int mask = 1;
-
-	for (i = 1; i < N_CSM_VALVES; i++) {
-		if (ValveState[i])
-			valvestate |= mask;
-		mask <<= 1;
-	}
-
-	oapiWriteScenario_int (scn, "VALVESTATE", valvestate);
-
 	if (LandFail.word) {
 		oapiWriteScenario_int (scn, "LANDFAIL", LandFail.word);
 	}
-
 	if (LaunchFail.word) {
 		oapiWriteScenario_int (scn, "LAUNCHFAIL", LaunchFail.word);
 	}
-
 	if (SwitchFail.word) {
 		oapiWriteScenario_int (scn, "SWITCHFAIL", SwitchFail.word);
 	}
-
 	if (ApolloNo == 13) {
 		oapiWriteScenario_int (scn, "A13STATE", GetA13State());
 	}
-
 	if (SIVBPayload != PAYLOAD_LEM) {
 		oapiWriteScenario_int (scn, "S4PL", SIVBPayload);
 	}
-
 	oapiWriteScenario_string (scn, "LANG", AudioLanguage);
-
-	if (useChecklists && lastChecklist[0])
-		oapiWriteScenario_string (scn, "CHECKL", lastChecklist);
-
+	
 	if (PayloadName[0])
 		oapiWriteScenario_string (scn, "PAYN", PayloadName);
 
-	if (LEMCheck[0])
-	{
+	if (LEMCheck[0]) {
 		oapiWriteScenario_string (scn, "LEMCHECK", LEMCheck);
 		oapiWriteScenario_int (scn, "LEMCHECKAUTO", int(LEMCheckAuto));
 	}
-
-	if (!PayloadDataTransfer)
-	{
+	if (!PayloadDataTransfer) {
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
 	}
-
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
 	oapiWriteScenario_int (scn, "OPTICSDSKYENABLED", opticsDskyEnabled);
 	oapiWriteScenario_int (scn, "FOVFIXED", (FovFixed ? 1 : 0));
@@ -1855,12 +1866,31 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	}
 
 	gdc.SaveState(scn);
+	rjec.SaveState(scn);
 	ascp.SaveState(scn);
 	ems.SaveState(scn);
 	dockingprobe.SaveState(scn);
 	SPSPropellant.SaveState(scn);
 	SPSEngine.SaveState(scn);
 	optics.SaveState(scn);
+
+	oapiWriteLine(scn, SMRCSPROPELLANT_A_START_STRING);
+	SMQuadARCS.SaveState(scn);
+
+	oapiWriteLine(scn, SMRCSPROPELLANT_B_START_STRING);
+	SMQuadBRCS.SaveState(scn);
+
+	oapiWriteLine(scn, SMRCSPROPELLANT_C_START_STRING);
+	SMQuadCRCS.SaveState(scn);
+
+	oapiWriteLine(scn, SMRCSPROPELLANT_D_START_STRING);
+	SMQuadDRCS.SaveState(scn);
+
+	oapiWriteLine(scn, CMRCSPROPELLANT_1_START_STRING);
+	CMRCS1.SaveState(scn);
+
+	oapiWriteLine(scn, CMRCSPROPELLANT_2_START_STRING);
+	CMRCS2.SaveState(scn);
 
 	oapiWriteLine(scn, SPSGIMBALACTUATOR_PITCH_START_STRING);
 	SPSEngine.pitchGimbalActuator.SaveState(scn);
@@ -1885,14 +1915,14 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	if (stage < STAGE_ORBIT_SIVB)
 	{
-		oapiWriteScenario_float (scn, "TOAPO", agc.GetDesiredApogee());
-		oapiWriteScenario_float (scn, "TOPER", agc.GetDesiredPerigee());
-		oapiWriteScenario_float (scn, "TOHDG", agc.GetDesiredAzimuth());
+		papiWriteScenario_double (scn, "TOAPO", agc.GetDesiredApogee());
+		papiWriteScenario_double (scn, "TOPER", agc.GetDesiredPerigee());
+		papiWriteScenario_double (scn, "TOHDG", agc.GetDesiredAzimuth());
 	}
 
 	// save the internal systems 
 	oapiWriteScenario_int(scn, "SYSTEMSSTATE", systemsState);
-	oapiWriteScenario_float(scn, "LSYSTEMSMISSNTIME", lastSystemsMissionTime);
+	papiWriteScenario_double(scn, "LSYSTEMSMISSNTIME", lastSystemsMissionTime);
 
 	CabinPressureRegulator.SaveState(scn);
 	O2DemandRegulator.SaveState(scn);
@@ -2136,7 +2166,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 
 {
 	float ftcp;
-	double autopTime;
+	double autopTime, d;
 	int SwitchState = 0;
 	int nasspver = 0, status = 0;
 	int n, DummyLoad, i;
@@ -2156,13 +2186,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		agc.SetDesiredApogee(toalt);
 		agc.SetDesiredPerigee(toalt * 0.98);
 	}
-	else if (!strnicmp (line, "TOAPO", 5)) {
-        sscanf (line+5, "%f", &ftcp);
-		agc.SetDesiredApogee(ftcp);
+	else if (papiReadScenario_double(line, "TOAPO", d)) { 
+		agc.SetDesiredApogee(d);
 	}
-	else if (!strnicmp (line, "TOPER", 5)) {
-        sscanf (line+5, "%f", &ftcp);
-		agc.SetDesiredPerigee(ftcp);
+	else if (papiReadScenario_double(line, "TOPER", d)) { 
+		agc.SetDesiredPerigee(d);
 	}
 	else if (!strnicmp (line, "BUILDSTATUS", 11)) {
 		sscanf (line+11, "%d", &buildstatus);
@@ -2173,21 +2201,17 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "STAGESTATUS", 11)) {
 		sscanf (line+11, "%d", &StageState);
 	}
-	else if (!strnicmp (line, "DOCKANGLE", 9)) {
-		sscanf (line+5, "%g", &ftcp);
-		DockAngle = ftcp;
-	}
+	else if (papiReadScenario_double(line, "DOCKANGLE", DockAngle));
 	else if (!strnicmp(line, "STAGECONFIG", 11)) {
 		strncpy (StagesString, line + 12, 256);
 	}
-	else if (!strnicmp (line, "TOHDG", 5)) {
-		sscanf (line+5, "%g", &ftcp);
+	else if (papiReadScenario_double(line, "TOHDG", d)) { 
 
 		//
 		// Tell the AGC the heading we want.
 		//
 
-		agc.SetDesiredAzimuth(ftcp);
+		agc.SetDesiredAzimuth(d);
 	}
 	else if (!strnicmp (line, "VECHNO", 6)) {
         int numb;
@@ -2195,10 +2219,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		VehicleNo = numb;
 		SetVehicleStats();
 	}
-	else if (!strnicmp (line, "TCP", 3)) {
-        sscanf (line+3, "%f", &ftcp);
-		TCPO=ftcp;
-	}
+	else if (papiReadScenario_double(line, "TCP", TCPO));
 	else if (!strnicmp (line, "DLS", 3)) {
         sscanf (line+3, "%d", &DummyLoad);
 		DeleteLaunchSite = (DummyLoad != 0);
@@ -2207,26 +2228,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
         sscanf (line+6, "%d", &DummyLoad);
 		LowRes = (DummyLoad != 0);
 	}
-	else if (!strnicmp (line, "CHECKLISTS", 10)) {
-        sscanf (line+10, "%d", &DummyLoad);
-		useChecklists = (DummyLoad != 0);
-	}
-	else if (!strnicmp (line, "SICSHUT", 7)) {
-		sscanf (line + 7, "%f", &ftcp);
-		FirstStageCentreShutdownTime = ftcp;
-	}
-	else if (!strnicmp (line, "SIICSHUT", 8)) {
-		sscanf (line + 8, "%f", &ftcp);
-		SecondStageCentreShutdownTime = ftcp;
-	}
-	else if (!strnicmp (line, "SISHUT", 6)) {
-		sscanf (line + 6, "%f", &ftcp);
-		FirstStageShutdownTime = ftcp;
-	}
-	else if (!strnicmp (line, "SIISHUT", 7)) {
-		sscanf (line + 7, "%f", &ftcp);
-		SecondStageShutdownTime = ftcp;
-	}
+	else if (papiReadScenario_double(line, "SICSHUT", FirstStageCentreShutdownTime)); 
+	else if (papiReadScenario_double(line, "SIICSHUT", SecondStageCentreShutdownTime)); 
+	else if (papiReadScenario_double(line, "SISHUT", FirstStageShutdownTime)); 
+	else if (papiReadScenario_double(line, "SIISHUT", SecondStageShutdownTime)); 
 	else if (!strnicmp (line, "SIENG", 5)) {
 		sscanf (line + 5, "%d", &SI_EngineNum);
 	}
@@ -2292,15 +2297,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line+10, "%d", &SwitchState);
 		SetLightState(SwitchState);
 	}
-	else if (!strnicmp (line, "VALVESTATE", 10)) {
-		int valvestate = 0;
-		int mask = 1;
-		sscanf (line+10, "%d", &valvestate);
-		for (n = 1; n < N_CSM_VALVES; n++) {
-			ValveState[n] = ((valvestate & mask) != 0);
-			mask <<= 1;
-		}
-	}
 	else if (!strnicmp (line, "LMPADCNT", 8)) {
 		if (!LMPad) {
 			sscanf (line+8, "%d", &LMPadCount);
@@ -2334,26 +2330,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "REALISM", 7)) {
 		sscanf (line+7, "%d", &Realism);
-	}
-	else if (!strnicmp (line, "CSWITCH", 7)) {
-        SwitchState = 0;
-		sscanf (line+7, "%d", &SwitchState);
-		SetCSwitchState(SwitchState);
-	}
-	else if (!strnicmp (line, "SSWITCH", 7)) {
-        SwitchState = 0;
-		sscanf (line+7, "%d", &SwitchState);
-		SetSSwitchState(SwitchState);
-	}
-	else if (!strnicmp (line, "LPSWITCH", 8)) {
-        SwitchState = 0;
-		sscanf (line+8, "%d", &SwitchState);
-		SetLPSwitchState(SwitchState);
-	}
-	else if (!strnicmp (line, "RPSWITCH", 8)) {
-        SwitchState = 0;
-		sscanf (line+8, "%d", &SwitchState);
-		SetRPSwitchState(SwitchState);
 	}
 	else if (!strnicmp (line, "APOLLONO", 8)) {
 		sscanf (line+8, "%d", &ApolloNo);
@@ -2580,9 +2556,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "LANG", 4)) {
 		strncpy (AudioLanguage, line + 5, 64);
 	}
-	else if (!strnicmp(line, "CHECKL", 6)) {
-		strncpy (lastChecklist, line + 7, 255);
-	}
 	else if (!strnicmp(line, "LEMN", 4)) {
 		//
 		// LEMN (LEM name) is a synonym for PAYN (Payload name) for old scenarios.
@@ -2705,6 +2678,24 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, EMS_START_STRING, sizeof(EMS_START_STRING))) {
 			ems.LoadState(scn);
 		}
+		else if (!strnicmp(line, SMRCSPROPELLANT_A_START_STRING, sizeof(SMRCSPROPELLANT_A_START_STRING))) {
+			SMQuadARCS.LoadState(scn);
+		}
+		else if (!strnicmp(line, SMRCSPROPELLANT_B_START_STRING, sizeof(SMRCSPROPELLANT_B_START_STRING))) {
+			SMQuadBRCS.LoadState(scn);
+		}
+		else if (!strnicmp(line, SMRCSPROPELLANT_C_START_STRING, sizeof(SMRCSPROPELLANT_C_START_STRING))) {
+			SMQuadCRCS.LoadState(scn);
+		}
+		else if (!strnicmp(line, SMRCSPROPELLANT_D_START_STRING, sizeof(SMRCSPROPELLANT_D_START_STRING))) {
+			SMQuadDRCS.LoadState(scn);
+		}
+		else if (!strnicmp(line, CMRCSPROPELLANT_1_START_STRING, sizeof(CMRCSPROPELLANT_1_START_STRING))) {
+			CMRCS1.LoadState(scn);
+		}
+		else if (!strnicmp(line, CMRCSPROPELLANT_2_START_STRING, sizeof(CMRCSPROPELLANT_2_START_STRING))) {
+			CMRCS2.LoadState(scn);
+		}
 		// DS20070204 LVDC++ MODE
 	    else if (!strnicmp (line, "USE_LVDC", 8)) {
 		    use_lvdc = true;
@@ -2749,72 +2740,42 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "FOVSAVE", 7)) {
 			sscanf (line + 7, "%lf", &FovSave);
 		}
-		else if (!strnicmp(line, "MOONMJD", 7)) {
-			sscanf(line + 7, "%f", &ftcp);
-			LMLandingMJD = ftcp;
-		}
-		else if (!strnicmp(line, "LMDSCFUEL", 9)) {
-			sscanf(line + 9, "%f", &ftcp);
-			LMDescentFuelMassKg = ftcp;
-		}
-		else if (!strnicmp(line, "LMASCFUEL", 9)) {
-			sscanf(line + 9, "%f", &ftcp);
-			LMAscentFuelMassKg = ftcp;
-		}
+		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
+		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
+		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg)); 
 		else if (!strnicmp(line, "MOONBASE", 8)) {
 			strncpy (LMLandingBase, line + 9, 256);
 		}
-		else if (!strnicmp(line, "SPLASHLAT", 9)) {
-			sscanf(line + 9, "%f", &ftcp);
-			SplashdownLatitude = ftcp;
-		}
-		else if (!strnicmp(line, "SPLASHLONG", 10)) {
-			sscanf(line + 10, "%f", &ftcp);
-			SplashdownLongitude = ftcp;
-		}
-		else if (!strnicmp(line, "EARTHEIMJD", 10)) {
-			sscanf(line + 10, "%f", &ftcp);
-			EntryInterfaceMJD = ftcp;
-		}
-		else if (!strnicmp(line, "TLIMJD", 6)) {
-			sscanf(line + 6, "%f", &ftcp);
-			TransLunarInjectionMJD = ftcp;
-		}
-		else if (!strnicmp(line, "LOIMJD", 6)) {
-			sscanf(line + 6, "%f", &ftcp);
-			LunarOrbitInsertionMJD = ftcp;
-		}
-		else if (!strnicmp(line, "FREERETURNPECMJD", 16)) {
-			sscanf(line + 16, "%f", &ftcp);
-			FreeReturnPericynthionMJD = ftcp;
-		}
-		else if (!strnicmp(line, "FREERETURNPECALT", 16)) {
-			sscanf(line + 16, "%f", &ftcp);
-			FreeReturnPericynthionAltitude = ftcp;
-		}
-		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
-		{
+		else if (papiReadScenario_double(line, "SPLASHLAT", SplashdownLatitude)); 
+		else if (papiReadScenario_double(line, "SPLASHLONG", SplashdownLongitude)); 
+		else if (papiReadScenario_double(line, "EARTHEIMJD", EntryInterfaceMJD)); 
+		else if (papiReadScenario_double(line, "TLIMJD", TransLunarInjectionMJD)); 
+		else if (papiReadScenario_double(line, "LOIMJD", LunarOrbitInsertionMJD)); 
+		else if (papiReadScenario_double(line, "FREERETURNPECMJD", FreeReturnPericynthionMJD)); 
+		else if (papiReadScenario_double(line, "FREERETURNPECALT", FreeReturnPericynthionAltitude)); 
+		else if (papiReadScenario_double(line, "TLIOFFSETLON", TransLunarInjectionOffsetLon)); 
+		else if (papiReadScenario_double(line, "TLIOFFSETLAT", TransLunarInjectionOffsetLat)); 
+		else if (papiReadScenario_double(line, "TLIOFFSETRAD", TransLunarInjectionOffsetRad)); 
+		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString))) {
 			checkControl.load(scn);
 		}
-		else if (!strnicmp(line, "LEMCHECK", 8))
-		{
+		else if (!strnicmp(line, "LEMCHECK", 8)) {
 			strcpy(LEMCheck,line+8);
 		}
-		else if (!strnicmp(line, "LEMCHECKAUTO", 12))
-		{
+		else if (!strnicmp(line, "LEMCHECKAUTO", 12)) {
 			int temp = 0;
 			sscanf(line+12, "%i", &temp);
 			if (temp != 0)
 				LEMCheckAuto = true;
 			else
 				LEMCheckAuto = false;
-		}
-		else if (!strnicmp(line,SaturnEventStartString,strlen(SaturnEventStartString)))
-		{
+		} else if (!strnicmp(line, SaturnEventStartString, strlen(SaturnEventStartString))) {
 			eventControl.load(scn);
-		}
-		else
+		} else if (!strnicmp(line, RJEC_START_STRING, sizeof(RJEC_START_STRING))) {
+			rjec.LoadState(scn);
+		} else {
 			found = false;
+		}
 	}
 	return found;
 }
@@ -2911,6 +2872,15 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 
 	if (!ApolloNo && (Realism > 4)) {
 		SetRandomFailures();
+	}
+
+	//
+	// Enable Orbiter's attitude control for unmanned missions
+	// as long as they rely on Orbiter's navmodes (killrot etc.)
+	//
+
+	if (!Crewed) {
+		OrbiterAttitudeDisabled = false;
 	}
 }
 
@@ -3053,32 +3023,6 @@ void Saturn::DestroyStages(double simt)
 	}
 }
 
-void Saturn::CheckSMSystemsState()
-
-{
-	//
-	// If we've seperated from the SM, disable the fuel cells so they appear to have
-	// been disconnected.
-	//
-
-	if (stage >= CM_STAGE) {
-		int i;
-		for (i = 0; i < 3; i++) {
-			if (FuelCells[i])
-				FuelCells[i]->Disable();			
-		}
-
-		// Coolant loops are disconnected, we set them to zero length, which disables them
-		PrimEcsRadiatorExchanger1->SetLength(0);
-		PrimEcsRadiatorExchanger2->SetLength(0);
-		SecEcsRadiatorExchanger1->SetLength(0);
-		SecEcsRadiatorExchanger2->SetLength(0);
-
-		// Close O2 SM supply, SM is disconnected
-		O2SMSupply.Close();
-	}
-}
-
 void Saturn::SetStage(int s)
 
 {
@@ -3086,33 +3030,52 @@ void Saturn::SetStage(int s)
 	StageState = 0;
 
 	CheckSMSystemsState();
-	CheckRCSState();
 	
 	//
-	//Event management
+	// Event management
 	//
+
 	switch (stage) 
 	{
 	case LAUNCH_STAGE_TWO:
-		eventControl.SecondStage = MissionTime;
+		eventControl.SECOND_STAGE_STAGING = MissionTime;
 		break;
 	case LAUNCH_STAGE_SIVB:
-		eventControl.SIVBStage = MissionTime;
-		if (eventControl.Tower_Jettison == MINUS_INFINITY)
-			eventControl.Tower_Jettison = MissionTime;
-		break;
-	case LAUNCH_STAGE_TWO_TWR_JET:
-		eventControl.Tower_Jettison = MissionTime;
+		eventControl.SIVB_STAGE_STAGING = MissionTime;
+		// In case of the Saturn 1B, the S-IVB stage and the second stage is the same  
+		if (eventControl.SECOND_STAGE_STAGING == MINUS_INFINITY)
+			eventControl.SECOND_STAGE_STAGING = MissionTime;
 		break;
 	case STAGE_ORBIT_SIVB:
-		eventControl.EOI = MissionTime;
+		eventControl.EARTH_ORBIT_INSERTION = MissionTime;
 		break;
 	case CSM_LEM_STAGE:
-		eventControl.CSM_LV_SEP = MissionTime;
+		eventControl.CSM_LV_SEPARATION_DONE = MissionTime;
 		break;
 	case CM_STAGE:
-		eventControl.CSM_SEP = MissionTime;
+		eventControl.CM_SM_SEPARATION_DONE = MissionTime;
 		break;
+	}
+
+	//
+	// CSM/LV separation
+	//
+
+	if (stage == CSM_LEM_STAGE) {
+		SetCSMLVSepLight(true);
+
+		// Set LM landing site in the AGC for Simple AGC P16 etc.
+		agc.SetDesiredLanding(LMLandingLatitude, LMLandingLongitude, LMLandingAltitude);
+
+		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
+		ClearTLISounds();
+
+		iuCommandConnector.Disconnect();
+		sivbCommandConnector.Disconnect();
+		sivbControlConnector.Disconnect();
+
+		CSMToSIVBConnector.AddTo(&iuCommandConnector);
+		CSMToSIVBConnector.AddTo(&sivbControlConnector);
 	}
 }
 
@@ -3382,7 +3345,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	//
 
 	if (stage == CSM_LEM_STAGE) {
-		if (!dockingprobe.GetDocked())
+		if (!dockingprobe.IsDocked())
 			soundlib.SoundOptionOnOff(PLAYRADARBIP, TRUE);
 		else
 			soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
@@ -3667,29 +3630,28 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	}
 
 	// Separate stages and undock with keypress if REALISM 0
-	if (!Realism && key == OAPI_KEY_J && down == true) {
-		if (stage == CSM_LEM_STAGE) {			
-			bManualUnDock = true;
+	if (Crewed && !Realism && key == OAPI_KEY_J && down == true) {
 
+		if (stage < STAGE_ORBIT_SIVB) {
+			// Trigger abort
+			bAbort = true;
+			
+		} else if (stage < CSM_LEM_STAGE) {
+			// Raise checklist event
+			eventControl.CSM_LV_SEPARATION = MissionTime;
+
+		} else if (stage == CSM_LEM_STAGE) {			
+			// Raise checklist event
+			eventControl.CM_SM_SEPARATION = MissionTime;
+			
 		} else if (stage == CM_ENTRY_STAGE_SEVEN) {
 			if (!HatchOpen) {
 				bToggleHatch = true;
 			} else {
 				bRecovery = true;
 			}
-		} else {
-			bManualSeparate = true;
 		}
 		return 1;
-	}
-
-	if (key == OAPI_KEY_R && down == true) {
-		if (stage == CM_ENTRY_STAGE_SEVEN && HatchOpen) {
-			bRecovery = true;
-		}
-		/// This key is also used by Orbiter, so we return 0
-		/// \todo Get rid of this key at all and do it by using the panel
-		return 0;
 	}
 
 	if (key == OAPI_KEY_9 && down == true && InVC && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
@@ -3814,7 +3776,7 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	double RCS_Thrust = MaxThrust;
 
 	//
-	// CM RCS Propellant tanks
+	// SM RCS Propellant tanks
 	//
 
 	//
@@ -3904,12 +3866,28 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 	th_rcs_d[4] = th_att_rot[6];
 }
 
-void Saturn::AddRCS_CM(double MaxThrust, double offset)
+void Saturn::AddRCS_CM(double MaxThrust, double offset, bool createThrusterGroups)
 
 {	
 	const double ATTCOOR = 0.95;
 	const double ATTCOOR2 = 1.92;
 	const double TRANZ = -0.65 + offset;
+
+	static PARTICLESTREAMSPEC cmrcsdump_spec = {
+		0,		// flag
+		0.01,	// size
+		30,     // rate
+		1,	    // velocity
+		1,      // velocity distribution
+		0.5,    // lifetime
+		0.5, 	// growthrate
+		1.25,   // atmslowdown 
+		PARTICLESTREAMSPEC::DIFFUSE,
+		PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+		PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+	};
+	SURFHANDLE tex = oapiRegisterExhaustTexture("ProjectApollo/CMRCSDump");
+	cmrcsdump_spec.tex = tex;
 
 	if (!ph_rcs_cm_1)
 		ph_rcs_cm_1 = CreatePropellantResource(CM_RCS_FUEL_PER_TANK); 
@@ -3920,64 +3898,105 @@ void Saturn::AddRCS_CM(double MaxThrust, double offset)
 	// display rcs stage propellant level in generic HUD
 	//
 
-	SetDefaultPropellantResource (ph_rcs_cm_1);
-	ClearThrusterDefinitions();
+	if (stage > CSM_LEM_STAGE)
+		SetDefaultPropellantResource (ph_rcs_cm_1);
 
-	double RCS_ISP = 290.0 * G;    // was CM_RCS_ISP
-	double RCS_Thrust = 410.0;	   // was MaxThrust = CM_RCS_THRUST
+	double RCS_ISP = CM_RCS_ISP;
+	double RCS_Thrust = MaxThrust;
+
+	for (int i = 0; i < 12; i++) {
+		if (cmrcsdump[i]) 
+			DelExhaustStream(cmrcsdump[i]);
+	}
 
 	// For thrusters - X means LEFT/RIGHT, Y means IN/OUT, Z means UP/DOWN)
 
 	// Jet #1 
-	th_att_cm[0]=CreateThruster (_V(0.09, ATTCOOR2 - 0.07, TRANZ), _V(0, -0.81, -0.59), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[0] = CreateThruster (_V(0.09, ATTCOOR2 - 0.07, TRANZ), _V(0, -0.81, -0.59), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);	
+	cmrcsdump[0] = AddParticleStream(&cmrcsdump_spec, _V(0.09, ATTCOOR2 - 0.07, TRANZ), _V(0, 0.81, 0.59), CMRCS1.GetPurgeLevelRef(0));	
 	AddExhaust(th_att_cm[0],1.0,0.1, SMExhaustTex);
+
 	// Jet #3 
-	th_att_cm[1]=CreateThruster (_V(-0.09, ATTCOOR2 - 0.07, TRANZ), _V(0, -0.81, -0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	th_att_cm[1] = CreateThruster (_V(-0.09, ATTCOOR2 - 0.07, TRANZ), _V(0, -0.81, -0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[0] = AddParticleStream(&cmrcsdump_spec, _V(-0.09, ATTCOOR2 - 0.07, TRANZ), _V(0, 0.81, 0.59), CMRCS2.GetPurgeLevelRef(0));	
 	AddExhaust(th_att_cm[1],1.0,0.1, SMExhaustTex);
-	if (!OrbiterAttitudeDisabled) CreateThrusterGroup(th_att_cm, 2, THGROUP_ATT_PITCHUP);
 
 	// Jet #2
 	th_att_cm[2] = CreateThruster (_V(0.09, ATTCOOR + 0.05, TRANZ + 1.45), _V(0, -1, 0), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[2] = AddParticleStream(&cmrcsdump_spec, _V(0.09, ATTCOOR + 0.05, TRANZ + 1.45), _V(0, 1, 0), CMRCS1.GetPurgeLevelRef(1));	
 	AddExhaust(th_att_cm[2], 1.0, 0.1, SMExhaustTex);
 	// Jet #4
 	th_att_cm[3] = CreateThruster (_V(-0.09, ATTCOOR + 0.05, TRANZ + 1.45), _V(0, -1, 0), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[3] = AddParticleStream(&cmrcsdump_spec, _V(-0.09, ATTCOOR + 0.05, TRANZ + 1.45), _V(0, 1, 0), CMRCS2.GetPurgeLevelRef(1));	
 	AddExhaust(th_att_cm[3], 1.0, 0.1, SMExhaustTex); 
-	if (!OrbiterAttitudeDisabled) CreateThrusterGroup(th_att_cm + 2, 2, THGROUP_ATT_PITCHDOWN);
 
 	// Jet #5 
 	th_att_cm[4] = CreateThruster(_V(ATTCOOR2 - 0.06,  0.05, TRANZ), _V(-0.81, 0, -0.59), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[4] = AddParticleStream(&cmrcsdump_spec, _V(ATTCOOR2 - 0.06,  0.05, TRANZ), _V(0.81, 0, 0.59), CMRCS1.GetPurgeLevelRef(2));	
 	AddExhaust(th_att_cm[4], 1.0, 0.1, SMExhaustTex); 
 	// Jet #7
 	th_att_cm[5] = CreateThruster(_V(ATTCOOR2 - 0.06, -0.12, TRANZ), _V(-0.81, 0, -0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[5] = AddParticleStream(&cmrcsdump_spec, _V(ATTCOOR2 - 0.06, -0.12, TRANZ), _V(0.81, 0, 0.59), CMRCS2.GetPurgeLevelRef(2));	
 	AddExhaust(th_att_cm[5], 1.0, 0.1, SMExhaustTex); 
-	if (!OrbiterAttitudeDisabled) CreateThrusterGroup(th_att_cm + 4, 2, THGROUP_ATT_YAWRIGHT);
 
 	// Jet #6 
 	th_att_cm[6] = CreateThruster(_V(-ATTCOOR2 + 0.07, 0.05, TRANZ), _V(0.81, 0, -0.59), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[6] = AddParticleStream(&cmrcsdump_spec, _V(-ATTCOOR2 + 0.07, 0.05, TRANZ), _V(-0.81, 0, 0.59), CMRCS2.GetPurgeLevelRef(3));	
 	AddExhaust(th_att_cm[6], 1.0, 0.1, SMExhaustTex);
 	// Jet #8
 	th_att_cm[7] = CreateThruster(_V(-ATTCOOR2 + 0.07, -0.13, TRANZ), _V(0.81, 0, -0.59), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[7] = AddParticleStream(&cmrcsdump_spec, _V(-ATTCOOR2 + 0.07, -0.13, TRANZ), _V(-0.81, 0, 0.59), CMRCS1.GetPurgeLevelRef(3));	
 	AddExhaust(th_att_cm[7], 1.0, 0.1, SMExhaustTex); 
-	if (!OrbiterAttitudeDisabled) CreateThrusterGroup (th_att_cm + 6, 2, THGROUP_ATT_YAWLEFT);
 
 	// The roll jets introduce a slight upward pitch if not corrected for.
 	// Apparently the AGC expects this.
 
 	// Jet #9
 	th_att_cm[8] = CreateThruster(_V(ATTCOOR2/1.42, ATTCOOR2/1.42 - 0.2, TRANZ + 0.11), _V(0.17, -0.98, 0.21), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[8] = AddParticleStream(&cmrcsdump_spec, _V(ATTCOOR2/1.42, ATTCOOR2/1.42 - 0.2, TRANZ + 0.11), _V(-0.17, 0.98, -0.21), CMRCS1.GetPurgeLevelRef(4));	
 	AddExhaust(th_att_cm[8], 1.0, 0.1, SMExhaustTex); 
 	// Jet #11
 	th_att_cm[9] = CreateThruster(_V(-ATTCOOR2/1.42 + 0.12, (ATTCOOR2/1.42) - 0.07, TRANZ + 0.11), _V(0.98, 0.17, 0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[9] = AddParticleStream(&cmrcsdump_spec, _V(-ATTCOOR2/1.42 + 0.12, (ATTCOOR2/1.42) - 0.07, TRANZ + 0.11), _V(-0.98, -0.17, -0.21), CMRCS2.GetPurgeLevelRef(4));	
 	AddExhaust(th_att_cm[9], 1.0, 0.1, SMExhaustTex); 
-	if (!OrbiterAttitudeDisabled) CreateThrusterGroup (th_att_cm + 8, 2, THGROUP_ATT_BANKRIGHT);
 		
-	// Jet #10 ###
+	// Jet #10 
 	th_att_cm[10] = CreateThruster(_V(-ATTCOOR2/1.42 + 0.04, ATTCOOR2/1.42 - 0.16, TRANZ + 0.11), _V(-0.17, -0.98, 0.21), RCS_Thrust, ph_rcs_cm_2, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[10] = AddParticleStream(&cmrcsdump_spec, _V(-ATTCOOR2/1.42 + 0.04, ATTCOOR2/1.42 - 0.16, TRANZ + 0.11), _V(0.17, 0.98, -0.21), CMRCS2.GetPurgeLevelRef(5));	
 	AddExhaust(th_att_cm[10], 1.0, 0.1, SMExhaustTex);
 	// Jet #12
 	th_att_cm[11] = CreateThruster(_V(ATTCOOR2/1.42 - 0.08, (ATTCOOR2/1.42) - 0.11, TRANZ + 0.11), _V(-0.98, 0.17, 0.21), RCS_Thrust, ph_rcs_cm_1, RCS_ISP, CM_RCS_ISP_SL);
+	cmrcsdump[11] = AddParticleStream(&cmrcsdump_spec, _V(ATTCOOR2/1.42 - 0.08, (ATTCOOR2/1.42) - 0.11, TRANZ + 0.11), _V(0.98, -0.17, -0.21), CMRCS1.GetPurgeLevelRef(5));	
 	AddExhaust(th_att_cm[11], 1.0, 0.1, SMExhaustTex); 
-	if (!OrbiterAttitudeDisabled) CreateThrusterGroup (th_att_cm + 10, 2, THGROUP_ATT_BANKLEFT);
+
+
+	// Enable Orbter's attitude control after CM/SM separation
+	if (!OrbiterAttitudeDisabled && createThrusterGroups) {
+		CreateThrusterGroup(th_att_cm, 2, THGROUP_ATT_PITCHUP);
+		CreateThrusterGroup(th_att_cm + 2, 2, THGROUP_ATT_PITCHDOWN);
+		CreateThrusterGroup(th_att_cm + 4, 2, THGROUP_ATT_YAWRIGHT);
+		CreateThrusterGroup(th_att_cm + 6, 2, THGROUP_ATT_YAWLEFT);
+		CreateThrusterGroup(th_att_cm + 8, 2, THGROUP_ATT_BANKRIGHT);
+		CreateThrusterGroup(th_att_cm + 10, 2, THGROUP_ATT_BANKLEFT);
+	}
+
+	//
+	// Thruster helper arrays per system
+	//
+
+	th_att_cm_sys1[0] = th_att_cm[0];
+	th_att_cm_sys1[1] = th_att_cm[2];
+	th_att_cm_sys1[2] = th_att_cm[4];
+	th_att_cm_sys1[3] = th_att_cm[7];
+	th_att_cm_sys1[4] = th_att_cm[8];
+	th_att_cm_sys1[5] = th_att_cm[11];
+
+	th_att_cm_sys2[0] = th_att_cm[1];
+	th_att_cm_sys2[1] = th_att_cm[3];
+	th_att_cm_sys2[2] = th_att_cm[5];
+	th_att_cm_sys2[3] = th_att_cm[6];
+	th_att_cm_sys2[4] = th_att_cm[9];
+	th_att_cm_sys2[5] = th_att_cm[10];
 }
 
 void Saturn::AddRCS_S4B()
@@ -4216,8 +4235,14 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_STAGE:
-		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.CoverFail)
+		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.CoverFail) {
+			// Deactivate Auto RCS Enable Relays
+			rjec.SetAutoRCSEnableRelayA(false);
+			rjec.SetAutoRCSEnableRelayB(false);
+			
+			// Deploy apex cover
 			deploy = true;
+		}
 
 		if (ELSActive() && ApexCoverJettSwitch.GetState())
 			deploy = true;
@@ -4225,6 +4250,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		if (deploy && PyrosArmed()) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, 1.2));
+
 		} else {
 			// DS20070622 Do not run stage seven if we still have the LET.
 			if (!LESAttached) { 
@@ -4234,8 +4260,14 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE:
-		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.DrogueFail)
+		if (ELSAuto() && GetAtmPressure() > 37680 && !LandFail.DrogueFail) {
+			// Deactivate Auto RCS Enable Relays
+			rjec.SetAutoRCSEnableRelayA(false);
+			rjec.SetAutoRCSEnableRelayB(false);
+			
+			// Deploy apex cover
 			deploy = true;
+		}
 
 		if (ELSActive() && ApexCoverJettSwitch.GetState())
 			deploy = true;
@@ -4284,7 +4316,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		if (PyrosArmed() && ChutesAttached && ((ELSAuto() && GetAtmPressure() > 66000 && !LandFail.MainFail) || (ELSActive() && MainDeploySwitch.GetState()))) {
 			// Detach drogue
 			ATTACHMENTHANDLE ah = GetAttachmentHandle(false, 1);
-			DetachChild(ah);
+			DetachChild(ah, 1);
 
 			SetChuteStage2();			  
 			SetStage(CM_ENTRY_STAGE_FOUR); 
@@ -4342,8 +4374,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			//
 			// Event handler
 			//
-			eventControl.splashdown = MissionTime;
-
+			eventControl.SPLASHDOWN = MissionTime;
 		}
 
 		if (PyrosArmed() && ChutesAttached && ELSActive() && ((MainReleaseSwitch.IsUp()) || (!Realism && SplashdownPlayed && MissionTime >= NextMissionEventTime))) {
@@ -4397,52 +4428,6 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 			PostSplashdownPlayed = true;
 		}
 		break;
-	}
-
-	//
-	// Generic state for CM.
-	//
-
-	if (stage >= CM_STAGE) {
-		if (RCSDumpActive()) {
-			//
-			// Clear toggle state.
-			//
-			CMPropDumpSwitch.ClearToggled();
-
-			//
-			// Start burning RCS propellant. This apparently uses all RCS thrusters other
-			// than pitch up - Apollo Training: Sequential Events Control
-			//
-			// Note that before 61 seconds after launch, we should just dump the oxidiser
-			// out of the RCS, and not burn them. There's not enough time to burn up all the
-			// fuel before landing.
-			//
-
-			if (MissionTime < 61.0) {
-			}
-			else {
-				SetThrusterGroupLevel(THGROUP_ATT_PITCHDOWN, 1.0);
-				SetThrusterGroupLevel(THGROUP_ATT_YAWLEFT, 1.0);
-				SetThrusterGroupLevel(THGROUP_ATT_YAWRIGHT, 1.0);
-				SetThrusterGroupLevel(THGROUP_ATT_BANKLEFT, 1.0);
-				SetThrusterGroupLevel(THGROUP_ATT_BANKRIGHT, 1.0);
-			}
-		}
-		else if (CMPropDumpSwitch.Toggled()) {
-			//
-			// Clear toggled state so we don't end up here again.
-			//
-			CMPropDumpSwitch.ClearToggled();
-			//
-			// Stop burning RCS propellant.
-			//
-			SetThrusterGroupLevel(THGROUP_ATT_PITCHDOWN, 0.0);
-			SetThrusterGroupLevel(THGROUP_ATT_YAWLEFT, 0.0);
-			SetThrusterGroupLevel(THGROUP_ATT_YAWRIGHT, 0.0);
-			SetThrusterGroupLevel(THGROUP_ATT_BANKLEFT, 0.0);
-			SetThrusterGroupLevel(THGROUP_ATT_BANKRIGHT, 0.0);
-		}
 	}
 }
 
@@ -4573,10 +4558,6 @@ void Saturn::GenericLoadStateSetup()
 		soundlib.LoadMissionSound(SShutS, SI_CUTOFF_SOUND, SISHUTDOWN_SOUND);
 	}
 
-	if (stage < LAUNCH_STAGE_TWO_TWR_JET) {
-		soundlib.LoadSound(TowerJS, TOWERJET_SOUND);
-	}
-
 	if (stage < STAGE_ORBIT_SIVB) {
 
 		//
@@ -4595,6 +4576,7 @@ void Saturn::GenericLoadStateSetup()
 	}
 
 	if (stage < CSM_LEM_STAGE) {
+		soundlib.LoadSound(TowerJS, TOWERJET_SOUND);
 		soundlib.LoadSound(SepS, SEPMOTOR_SOUND, INTERNAL_ONLY);
 		soundlib.LoadMissionSound(Scount, LAUNCH_COUNT_10_SOUND, DEFAULT_LAUNCH_COUNT_SOUND);
 		Scount.setFlags(SOUNDFLAG_1XORLESS|SOUNDFLAG_COMMS);
@@ -4663,12 +4645,14 @@ void Saturn::GenericLoadStateSetup()
 	//
 	// Fake up a timestep to get Orbitersound started.
 	//
+
 	timedSounds.Timestep(MissionTime, 0.0, AutoSlow);
 
 	//
-	// Enable or disable RCS.
+	// Check SM devices.
 	//
-	CheckRCSState();
+
+	CheckSMSystemsState();
 }
 
 bool Saturn::CheckForLaunchShutdown()
@@ -4690,11 +4674,10 @@ bool Saturn::CheckForLaunchShutdown()
 	if ((refSaturn1B - refPREV) >= 0 &&
 		(stage == LAUNCH_STAGE_SIVB) &&
 		((elemSaturn1B.e > elemPREV.e && elemSaturn1B.e < 0.03) ||
-		(apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee() - 0.8)) &&
-		(SCswitch||CMCswitch))
+		(apogee >= agc.GetDesiredApogee() && perigee >= agc.GetDesiredPerigee() - 0.8)))
 	{
 		if (GetEngineLevel(ENGINE_MAIN) > 0){
-			SetEngineLevel(ENGINE_MAIN,0);
+			SetEngineLevel(ENGINE_MAIN, 0);
 			if (oapiGetTimeAcceleration() > 1.0)
 				oapiSetTimeAcceleration(1.0);
 
@@ -4727,6 +4710,12 @@ void Saturn::SetGenericStageState()
 
 {
 	switch(stage) {
+	case CSM_LEM_STAGE:
+		SetCSMStage();
+		if (EVA_IP) {
+			SetupEVA();
+		}
+		break;
 
 	case CM_STAGE:
 	case CM_ENTRY_STAGE_TWO:
@@ -4760,13 +4749,7 @@ void Saturn::SetGenericStageState()
 	case CM_ENTRY_STAGE:
 		SetReentryStage();
 		break;
-
-	case CSM_ABORT_STAGE:
-		SetAbortStage();
-		break;
 	}
-
-	CheckSMSystemsState();
 }
 
 //
@@ -4933,6 +4916,7 @@ void Saturn::LoadDefaultSounds()
 	soundlib.LoadSound(Sclick, CLICK_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(Bclick, BUTTON_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(Gclick, GUARD_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(ThumbClick, THUMBWHEEL_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(Psound, PROBE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(CabinFans, CMCABIN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(SMasterAlarm, MASTERALARM_SOUND, INTERNAL_ONLY);
@@ -5009,7 +4993,8 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	if (!Crewed && CSMSepSet && (MissionTime >= CSMSepTime))
 	{
 		SlowIfDesired();
-		bManualSeparate = true;
+		// Raise checklist event
+		eventControl.CSM_LV_SEPARATION = MissionTime;
 		CSMSepSet = false;
 	}
 
@@ -5027,60 +5012,34 @@ void Saturn::StageOrbitSIVB(double simt, double simdt)
 	if (!Crewed && PayloadDeploySet && (MissionTime >= PayloadDeployTime))
 	{
 		SlowIfDesired();
-		bManualSeparate = true;
 		PayloadDeployed = true;
+		// Payload deploy
+		SeparateStage(CSM_LEM_STAGE);
+		SetStage(CSM_LEM_STAGE);
 	}
 
-	if (CsmLvSepSwitch.GetState())
+	if (CSMLVPyros.Blown() || bAbort)
 	{
-		bManualSeparate = true;
-	}
+		SeparateStage(CSM_LEM_STAGE);
+		SetStage(CSM_LEM_STAGE);
 
-	if ((bManualSeparate || bAbort))
-	{
-		if (SECSLogicActive() && PyrosArmed()) 
+		if (bAbort)
 		{
-			bManualSeparate = false;
-
-			SetCSMLVSepLight(true);
-
-			SeparateStage(CSM_LEM_STAGE);
-			SetStage(CSM_LEM_STAGE);
-			soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
-
-			ClearTLISounds();
-
-			iuCommandConnector.Disconnect();
-			sivbCommandConnector.Disconnect();
-			sivbControlConnector.Disconnect();
-
-			CSMToSIVBConnector.AddTo(&iuCommandConnector);
-			CSMToSIVBConnector.AddTo(&sivbControlConnector);
-
-			if (bAbort)
-			{
-				/// \todo SPS abort handling
-				ABORT_IND = true;
-				bAbort = false;
-				autopilot= false;
-				StartAbort();
-			}
-			else if (ApolloNo == 11)
-			{
-				//
-				// Apollo 11 seperation knocked out propellant valves for RCS B.
-				//
-
-				if (Realism) {
-					SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, false);
-					SetValveState(CSM_SECFUEL_INSOL_VALVE_B, false);
-				}
-			}
-		}
-		else
-		{
-			bManualSeparate = false;
+			/// \todo SPS abort handling correct? Check also Saturn V & 1B SPS aborts
+			StartAbort();
 			bAbort = false;
+			autopilot = false;
+		}
+		else if (ApolloNo == 11)
+		{
+			//
+			// Apollo 11 seperation knocked out propellant valves for RCS Quad B.
+			//
+
+			if (Realism) {
+				SMQuadBRCS.GetPrimPropellantValve()->SetState(false);  
+				SMQuadBRCS.GetSecPropellantValve()->SetState(false);  
+			}
 		}
 	}
 
@@ -5249,12 +5208,6 @@ void Saturn::StageSix(double simt)
 		}
 	}
 
-	if ((simt-(2+release_time))>=0 && Resetjet) {
-		SetAttitudeLinLevel(_V(0.0,0.0,0.0));
-		Resetjet =false;
-		release_time=0;
-	}
-
 	if (ToggleEva){
 		ToggleEVA();
 	}
@@ -5275,6 +5228,8 @@ void Saturn::StageSix(double simt)
 			if (CSMBurn) {
 				NextMissionEventTime = CSMBurnStart - 300.0;
 				StageState++;
+			} else {
+				StageState = 10;
 			}
 			break;
 
@@ -5392,14 +5347,16 @@ void Saturn::StageSix(double simt)
 			}
 			break;
 
-			//
-			// Final acceleration burn prior to entry.
-			//
+		//
+		// Final acceleration burn prior to entry.
+		//
 
 		case 10:
 			if (CSMAccelSet) {
 				NextMissionEventTime = CSMAccelTime - 180;
 				StageState++;
+			} else {
+				StageState = 16;
 			}
 			break;
 
@@ -5413,16 +5370,14 @@ void Saturn::StageSix(double simt)
 			}
 			break;
 
-		//
-		// What we really need to do here is ensure that we stay pitched down at the appropriate
-		// level relative to the local horizon. Currently this code will leave us with a perigee
-		// that's way too high, so disable it for now.
-		//
+		/// \todo What we really need to do here is ensure that we stay pitched down at the appropriate
+		/// level relative to the local horizon. Currently this code will leave us with a perigee
+		/// that's way too high, so disable it for now.
 
 		case 12:
 			if (MissionTime >= NextMissionEventTime) {
-//				SlowIfDesired();
-//				SPSEngine.EnforceBurn(true);
+				// SlowIfDesired();
+				// SPSEngine.EnforceBurn(true);
 				ActivateNavmode(NAVMODE_PROGRADE);
 				NextMissionEventTime = CSMAccelEnd;
 				StageState++;
@@ -5434,7 +5389,7 @@ void Saturn::StageSix(double simt)
 				ActivateNavmode(NAVMODE_PROGRADE);
 				SPSEngine.EnforceBurn(false);
 				CSMAccelSet = false;
-				NextMissionEventTime = MissionTime + 200.0;
+				NextMissionEventTime = MissionTime + 10.0;
 				StageState++;
 			}
 			break;
@@ -5442,7 +5397,7 @@ void Saturn::StageSix(double simt)
 		case 14:
 			if (MissionTime >= NextMissionEventTime) {
 				ActivateNavmode(NAVMODE_KILLROT);
-				NextMissionEventTime = MissionTime + 50.0;
+				NextMissionEventTime = MissionTime + 10.0;
 				StageState++;
 			}
 			break;
@@ -5455,38 +5410,44 @@ void Saturn::StageSix(double simt)
 				StageState++;
 			}
 			break;
-		}
 
-		if (CMSepSet && (MissionTime >= CMSepTime)) {
-			SlowIfDesired();
-			CmSmSep1Switch.SwitchTo(TOGGLESWITCH_UP);
-			CmSmSep2Switch.SwitchTo(TOGGLESWITCH_UP);
+		//
+		// CM/SM separation
+		//
+
+		case 16:
+			if (CMSepSet) {
+				NextMissionEventTime = CMSepTime - 10;
+				StageState++;
+			}
+			break;
+
+		case 17:
+			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+				NextMissionEventTime = CMSepTime;
+				StageState++;
+			}
+			break;
+
+		case 18:
+			if (MissionTime >= NextMissionEventTime) {
+				SlowIfDesired();
+				// Raise checklist event
+				eventControl.CM_SM_SEPARATION = MissionTime;
+				StageState++;
+			}
+			break;
 		}
 	}
 
-	if (CMDockingRingPyros.Blown() && HasProbe)
-	{
-		if (GetDockHandle(0))
-		{
-		// Undock
-			Undock(0);
-			// Auto translation manoever
-			SetAttitudeLinLevel(2,-1);
-			release_time = simt;
-			Resetjet = true;
-		}
-		//Time to hear the Stage separation
-		SMJetS.play(NOLOOP);
-		// Disable docking probe because it's jettisoned 
-		dockingprobe.SetEnabled(false);
-		HasProbe = false;
-		SetDockingProbeMesh();
-	}
+	//
+	// CM/SM separation pyros
+	//
 
 	if (CMSMPyros.Blown())
 	{
 		SeparateStage(CM_STAGE);
-		bManualSeparate = false;
 		SetStage(CM_STAGE);
 	}
 }
@@ -5558,10 +5519,6 @@ void Saturn::GetLVTankQuantities(LVTankQuantities &LVq)
 				//Someday we'll need to simulate SIVB Ox and Fuel Tanks seperately for true Guage support for now it's just done with an correction value that roughly equates to 94% fuel burned for 100% ox burned
 				LVq.SIVBOxQuantity = GetPropellantMass(ph_3rd);  
 				LVq.SIVBFuelQuantity = (GetPropellantMass(ph_3rd) + ((.0638 * SII_FuelMass) * (1 - (GetPropellantMass(ph_3rd) / SII_FuelMass))));
-
-				/// \todo Hack for LAUNCH_STAGE_TWO (= SIVB before LES jettison)
-				LVq.SIIQuantity = LVq.SIVBOxQuantity;
-				LVq.SIIFuelMass = LVq.S4BOxMass;
 				return;
 			}
 		}

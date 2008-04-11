@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.70  2008/01/18 05:57:24  movieman523
+  *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
+  *	
   *	Revision 1.69  2008/01/16 04:14:24  movieman523
   *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
   *	
@@ -84,6 +87,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
@@ -163,19 +168,21 @@ PARTICLESTREAMSPEC o2_venting_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
+
 static PARTICLESTREAMSPEC let_exhaust = {
 	0,		// flag
 	0.5,	// size
-	25.0,	// rate
-	30.0,	// velocity
+	100.0, 	// rate
+	25.0,	// velocity
 	0.1,	// velocity distribution
-	0.25,	// lifetime
-	0.1,	// growthrate
-	0.0,	// atmslowdown 
+	0.3, 	// lifetime
+	3.0,	// growthrate
+	0.0,	// atmslowdown
 	PARTICLESTREAMSPEC::EMISSIVE,
-	PARTICLESTREAMSPEC::LVL_PSQRT, 0.5, 1.0,
-	PARTICLESTREAMSPEC::ATM_PLIN, -0.3, 1.0
+	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
+
 
 PARTICLESTREAMSPEC dyemarker_spec = {
 	0,		// flag
@@ -230,7 +237,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hFHO2, "ProjectApollo/CMB-HatchO");
 	LOAD_MESH(hCMPEVA, "ProjectApollo/CM-CMPEVA");
 
-	SURFHANDLE contrail_tex = oapiRegisterParticleTexture ("Contrail2");
+	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	let_exhaust.tex = contrail_tex;
 }
 
@@ -601,7 +608,7 @@ void Saturn::SetCSMStage ()
 	thg_main = CreateThrusterGroup (th_main, 1, THGROUP_MAIN);
 
 	AddExhaust (th_main[0], 20.0, 2.25, SMExhaustTex);
-	SetPMI (_V(12,12,7));
+	SetPMI (_V(12, 12, 7));
 	SetCrossSections (_V(40,40,14));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.3));
@@ -648,6 +655,10 @@ void Saturn::SetCSMStage ()
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	VCMeshOffset = mesh_dir;
 
+	//
+	// Docking probe
+	//
+
 	if (HasProbe)
 	{
 		probeidx = AddMesh(hprobe, &mesh_dir);
@@ -664,7 +675,21 @@ void Saturn::SetCSMStage ()
 	VECTOR3 dockrot = {0,1,0};
 	SetDockParams(dockpos, dockdir, dockrot);
 
+	//
+	// SM RCS
+	//
+
 	AddRCSJets(-0.18, SM_RCS_THRUST);
+
+	//
+	// CM RCS
+	//
+
+	AddRCS_CM(CM_RCS_THRUST, 34.4 - CGOffset, false);
+
+	//
+	// Apollo 13 special handling
+	//
 
 	if (ApolloExploded) {
 		VECTOR3 vent_pos = {0, 1.5, 30.25 - CGOffset};
@@ -678,9 +703,7 @@ void Saturn::SetCSMStage ()
 	// **************************** NAV radios *************************************
 
 	InitNavRadios (4);
-	SetEnableFocus(true);
 	EnableTransponder (true);
-
 	OrbiterAttitudeToggle.SetActive(true);
 
 	ThrustAdjust = 1.0;
@@ -776,6 +799,7 @@ void Saturn::SetReentryStage ()
 {
     ClearThrusters();
 	ClearPropellants();
+	ClearAirfoilDefinitions();
 
 	//
 	// Tell AGC the CM has seperated from the SM.
@@ -794,14 +818,14 @@ void Saturn::SetReentryStage ()
 		SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	}
 	SetEmptyMass (EmptyMass);
-	SetPMI (_V(12,12,7));
+	SetPMI (_V(12, 12, 7));
 	//SetPMI (_V(1.5,1.35,1.35));
 	SetCrossSections (_V(9.17,7.13,7.0));
 	SetCW (5.5, 0.1, 3.4, 3.4);
 	SetRotDrag (_V(0.07,0.07,0.003));
 	SetSurfaceFrictionCoeff(1, 1);
-	if (GetFlightModel() >= 1) {
-		CreateAirfoil(LIFT_VERTICAL, _V(0.0,0.12,1.12), CoeffFunc, 3.5,11.95, 1.0);
+	if (GetFlightModel() >= 1 && !LESAttached) {
+		CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.12, 1.12), CoeffFunc, 3.5, 11.95, 1.0);
     }
 
 	SetReentryMeshes();
@@ -810,9 +834,14 @@ void Saturn::SetReentryStage ()
 	} else {
 		SetView(-1.35);
 	}
-	if (CMTex) SetReentryTexture(CMTex,1e6,5,0.7);
+	if (CMTex) SetReentryTexture(CMTex, 1e6, 5, 0.7);
 
-	AddRCS_CM(CM_RCS_THRUST);
+	// CM RCS
+	if (ApexCoverAttached) {
+		AddRCS_CM(CM_RCS_THRUST);
+	} else {
+		AddRCS_CM(CM_RCS_THRUST, -1.2);
+	}
 
 	if (LESAttached) {
 		if (!ph_let)
@@ -824,9 +853,9 @@ void Saturn::SetReentryStage ()
 		// *********************** thruster definitions ********************************
 		//
 
-		VECTOR3 m_exhaust_pos1= _V(0.0, -0.5, TowerOffset-2.2);
-		VECTOR3 m_exhaust_pos2= _V(0.0, 0.5, TowerOffset-2.2);
-		VECTOR3 m_exhaust_pos3= _V(-0.5, 0.0, TowerOffset-2.2);
+		VECTOR3 m_exhaust_pos1 = _V(0.0, -0.5, TowerOffset-2.2);
+		VECTOR3 m_exhaust_pos2 = _V(0.0, 0.5, TowerOffset-2.2);
+		VECTOR3 m_exhaust_pos3 = _V(-0.5, 0.0, TowerOffset-2.2);
 		VECTOR3 m_exhaust_pos4 = _V(0.5, 0.0, TowerOffset-2.2);
 
 		//
@@ -922,22 +951,32 @@ void Saturn::SetReentryMeshes() {
 
 	meshidx = AddMesh (hCMVC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+
+	//
+	// Docking probe
+	//
+
+	if (HasProbe)
+	{
+		probeidx = AddMesh(hprobe, &mesh_dir);
+		probeextidx = AddMesh(hprobeext, &mesh_dir);
+		SetDockingProbeMesh();
+	} else
+	{
+		probeidx = -1;
+		probeextidx = -1;
+	}
 	VCMeshOffset = mesh_dir;
 }
 
 void Saturn::StageSeven(double simt)
 
 {
-	if (CsmLmFinalSep1Switch.GetState() || CsmLmFinalSep2Switch.GetState()) {
-		Undock(0);
-		dockingprobe.SetEnabled(false);
-	}
-
 	if (!Crewed)
 	{
 		switch (StageState) {
 		case 0:
-			if (GetAltitude() < 185000) {
+			if (GetAltitude() < 350000) {
 				SlowIfDesired();
 				ActivateCMRCS();
 				ActivateNavmode(NAVMODE_RETROGRADE);
@@ -953,7 +992,9 @@ void Saturn::StageSeven(double simt)
 		Burned = true;
 		SetReentryMeshes();
 
+		ClearThrusters();
 		AddRCS_CM(CM_RCS_THRUST);
+
 		SetStage(CM_ENTRY_STAGE);
 		SetView(-0.15);
 	}
@@ -968,7 +1009,9 @@ void Saturn::StageEight(double simt)
 	ApexCoverAttached = false;
 	SetReentryMeshes();
 
+	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
+
 	SetView(-1.35);
 
 	if (!Crewed)
@@ -1036,6 +1079,7 @@ void Saturn::SetChuteStage1()
 
 	SetReentryMeshes();
 	
+	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
 	SetView(-1.35);
 
@@ -1066,6 +1110,7 @@ void Saturn::SetChuteStage2()
 
 	SetReentryMeshes();
 
+	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
 	SetView(-1.35);
 }
@@ -1092,6 +1137,7 @@ void Saturn::SetChuteStage3()
 
 	SetReentryMeshes();
 
+	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
 	SetView(-1.35);
 }
@@ -1118,6 +1164,7 @@ void Saturn::SetChuteStage4()
 
 	SetReentryMeshes();
 
+	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
 	SetView(-1.35);
 
@@ -1146,10 +1193,12 @@ void Saturn::SetSplashStage()
 
 	SetReentryMeshes();
 
+	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
 
 	dyemarker_spec.tex = oapiRegisterParticleTexture("ProjectApollo/Dyemarker");
-	AddParticleStream(&dyemarker_spec, _V(-0.5, 1.5, -2), _V(-0.8660254, 0.5, 0), els.GetDyeMarkerLevelRef());
+	if (dyemarker) DelExhaustStream(dyemarker);
+	dyemarker = AddParticleStream(&dyemarker_spec, _V(-0.5, 1.5, -2), _V(-0.8660254, 0.5, 0), els.GetDyeMarkerLevelRef());
 
 	SetView(-1.35);
 }
@@ -1208,21 +1257,14 @@ void Saturn::SetRecovery()
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}
 
+	ClearThrusters();
 	AddRCS_CM(CM_RCS_THRUST, -1.2);
 
 	dyemarker_spec.tex = oapiRegisterParticleTexture("ProjectApollo/Dyemarker");
-	AddParticleStream(&dyemarker_spec, _V(-0.5, 1.5, -2), _V(-0.8660254, 0.5, 0), els.GetDyeMarkerLevelRef());
+	if (dyemarker) DelExhaustStream(dyemarker);
+	dyemarker = AddParticleStream(&dyemarker_spec, _V(-0.5, 1.5, -2), _V(-0.8660254, 0.5, 0), els.GetDyeMarkerLevelRef());
 
 	SetView(-1.35);
-}
-
-void Saturn::SetAbortStage ()
-
-{
-	SetReentryStage();
-
-	ABORT_IND = true;
-	OrbiterAttitudeToggle.SetState(false);
 }
 
 bool Saturn::clbkLoadGenericCockpit ()
@@ -1319,12 +1361,12 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 	// Pressing the LES jettison button fires the main LET engine. The TWR JETT
 	// switches jettison the LES and fire the jettison engines.
 	//
-	// If the LES jettison button is pressed before using the TWR JETT switches,
-	// the explosive bolts won't fire, so the main LET motor will fire while
-	// still attached to the CM!
-	//
-	// See: AOH 2.9.4.8.4
-	//
+	/// \todo If the LES jettison button is pressed before using the TWR JETT switches,
+	/// the explosive bolts won't fire, so the main LET motor will fire while
+	/// still attached to the CM!
+	///
+	/// See: AOH 2.9.4.8.4
+	///
 
 	LESConfig.FireMain = UseMain;
 
@@ -1343,9 +1385,9 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 	//
 	// Usually this will be zero, so you'd better use the right jettison button!
 	//
-	// \todo At  some point we should expand this so that we can jettison the LES
-	// while the main abort motor is running.
-	//
+	/// \todo At  some point we should expand this so that we can jettison the LES
+	/// while the main abort motor is running.
+	///
 
 	if (ph_let)
 	{
@@ -1382,4 +1424,30 @@ void Saturn::JettisonLET(bool UseMain, bool AbortJettison)
 	SwindowS.done();
 
 	SetLESMotorLight(true);
+
+	//
+	// Event management
+	//
+
+	if (eventControl.TOWER_JETTISON == MINUS_INFINITY)
+		eventControl.TOWER_JETTISON = MissionTime;
+}
+
+void Saturn::JettisonDockingProbe() 
+
+{
+	char VName[256];
+
+	// Use VC offset to calculate the docking probe offset
+	VECTOR3 ofs = _V(0, 0, CurrentViewOffset + 0.25);
+	VECTOR3 vel = {0.0, 0.0, 2.5};
+	VESSELSTATUS vs4b;
+	GetStatus (vs4b);
+	StageTransform(this, &vs4b,ofs,vel);
+	vs4b.vrot.x = 0.0;
+	vs4b.vrot.y = 0.0;
+	vs4b.vrot.z = 0.0;
+	GetApolloName(VName); 
+	strcat (VName, "-DCKPRB");
+	hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
 }

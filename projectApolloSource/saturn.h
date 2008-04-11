@@ -23,6 +23,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.276  2008/01/23 01:40:09  lassombra
+  *	Implemented timestep functions and event management
+  *	
+  *	Events for Saturns are now fully implemented
+  *	
+  *	Removed all hardcoded checklists from Saturns.
+  *	
+  *	Automatic Checklists are coded into an excel file.
+  *	
+  *	Added function to get the name of the active checklist.
+  *	
+  *	ChecklistController is now 100% ready for Saturn.
+  *	
   *	Revision 1.275  2008/01/22 05:22:27  movieman523
   *	Added port number to docking probe.
   *	
@@ -271,307 +284,6 @@
   *	Revision 1.200  2006/07/09 00:07:07  movieman523
   *	Initial tidy-up of connector code.
   *	
-  *	Revision 1.199  2006/07/07 19:44:58  movieman523
-  *	First version of connector support.
-  *	
-  *	Revision 1.198  2006/07/05 20:16:16  movieman523
-  *	Orbitersound-based launch-time triggered sound playback. Unfortunately it doesn't work, as Orbitersound refuses to play the files.
-  *	
-  *	Revision 1.197  2006/06/30 11:53:50  tschachim
-  *	Bugfix InstrumentLightingNonESSCircuitBraker and NonessBusSwitch.
-  *	
-  *	Revision 1.196  2006/06/28 02:08:11  movieman523
-  *	Full workaround for SM deletion crash: though the focus still tends to jump to something other than the CM!
-  *	
-  *	Revision 1.195  2006/06/28 01:43:32  movieman523
-  *	Partial workaround for vessel deletion crash.
-  *	
-  *	Revision 1.194  2006/06/27 18:22:54  movieman523
-  *	Added 'drogues' sound.
-  *	
-  *	Revision 1.193  2006/06/25 21:19:45  movieman523
-  *	Lots of Doxygen updates.
-  *	
-  *	Revision 1.192  2006/06/24 15:40:06  movieman523
-  *	Working on MET-driven audio playback. Also added initial Doxygen comments.
-  *	
-  *	Revision 1.191  2006/06/23 11:56:48  tschachim
-  *	New Project Apollo MFD for TLI burn control.
-  *	
-  *	Revision 1.190  2006/06/12 20:47:36  movieman523
-  *	Made switch lighting optional based on REALISM, and fixed SII SEP light.
-  *	
-  *	Revision 1.189  2006/06/10 23:27:41  movieman523
-  *	Updated abort code.
-  *	
-  *	Revision 1.188  2006/06/10 14:36:44  movieman523
-  *	Numerous changes. Lots of bug-fixes, new LES jettison code, lighting for guarded push switches and a partial rewrite of the Saturn 1b mesh code.
-  *	
-  *	Revision 1.187  2006/06/08 15:30:18  tschachim
-  *	Fixed ASCP and some default switch positions.
-  *	
-  *	Revision 1.186  2006/06/07 09:53:20  tschachim
-  *	Improved ASCP and GDC align button, added cabin closeout sound, bugfixes.
-  *	
-  *	Revision 1.185  2006/06/07 02:05:04  jasonims
-  *	VC Stopping place....new VC cameras added (GNPanel, Right Dock) and VC cameras renamed to reflect position.  No working buttons yet, but theoretically they're possible.
-  *	
-  *	Revision 1.184  2006/05/30 22:34:33  movieman523
-  *	Various changes. Panel switches now need power, APO and PER correctly placed in scenario fle, disabled some warnings, moved 'window' sound message to the correct place, added heat measurement to SM DLL for re-entry.
-  *	
-  *	Revision 1.183  2006/05/30 14:40:21  tschachim
-  *	Fixed fuel cell - dc bus connectivity, added battery charger
-  *	
-  *	Revision 1.182  2006/05/27 11:50:04  movieman523
-  *	Improved INT20 support, and made LET jettison work any time during launch on Saturn V.
-  *	
-  *	Revision 1.181  2006/05/27 00:54:28  movieman523
-  *	Simplified Saturn V mesh code a lot, and added beginnings ot INT-20.
-  *	
-  *	Revision 1.180  2006/05/26 22:01:50  movieman523
-  *	Revised stage handling some. Removed two of the three second-stage functions and split out the mesh and engine code.
-  *	
-  *	Revision 1.179  2006/05/25 04:04:53  jasonims
-  *	Initial VC Stop point...unknown why buttons not working yet, but skeleton of VC panel programming is there...
-  *	
-  *	Revision 1.178  2006/05/19 13:48:28  tschachim
-  *	Fixed a lot of devices and power consumptions.
-  *	DirectO2 valve added.
-  *	
-  *	Revision 1.177  2006/05/06 06:00:35  jasonims
-  *	No more venting our Astronauts into space...and no more LRV popping out of an Astronauts pocket....well sorta.
-  *	
-  *	Revision 1.176  2006/05/01 03:33:22  jasonims
-  *	New CM and all the fixin's....
-  *	
-  *	Revision 1.175  2006/04/29 23:16:56  movieman523
-  *	Fixed LMPAD and added CHECKLISTS option to scenario file.
-  *	
-  *	Revision 1.174  2006/04/25 13:39:50  tschachim
-  *	Removed GetXXXSwitchState.
-  *	
-  *	Revision 1.173  2006/04/24 21:06:33  quetalsi
-  *	Buxfix in EXT RNDZ LTS switch
-  *	
-  *	Revision 1.172  2006/04/17 19:12:27  movieman523
-  *	Removed some unused switches.
-  *	
-  *	Revision 1.171  2006/04/17 15:16:16  movieman523
-  *	Beginnings of checklist code, added support for flashing borders around control panel switches and updated a portion of the Saturn panel switches appropriately.
-  *	
-  *	Revision 1.170  2006/04/06 19:32:49  movieman523
-  *	More Apollo 13 support.
-  *	
-  *	Revision 1.169  2006/04/04 23:36:15  dseagrav
-  *	Added the beginnings of the telecom subsystem.
-  *	
-  *	Revision 1.168  2006/04/04 22:00:54  jasonims
-  *	Apollo Spacecraft Mesh offset corrections and SM Umbilical Animation.
-  *	
-  *	Revision 1.167  2006/03/30 01:59:37  movieman523
-  *	Added RCS to SM DLL.
-  *	
-  *	Revision 1.166  2006/03/30 00:14:47  movieman523
-  *	First pass at SM DLL.
-  *	
-  *	Revision 1.165  2006/03/29 19:06:50  movieman523
-  *	First support for new SM.
-  *	
-  *	Revision 1.164  2006/03/29 16:34:00  jasonims
-  *	GPFPI Meters added supporting proper LV Fuel Quantities and SPS Gimbel Position display.  LV Tank Quantities now accessable from outside Saturn class.
-  *	
-  *	Revision 1.163  2006/03/27 19:22:44  quetalsi
-  *	Bugfix RCS PRPLNT switches and wired to brakers.
-  *	
-  *	Revision 1.162  2006/03/25 00:12:42  dseagrav
-  *	SCS ECA added.
-  *	
-  *	Revision 1.161  2006/03/19 17:06:13  dseagrav
-  *	Fixed mistake with RCS TRNFR, it's a 3-position switch and is ignored for now.
-  *	
-  *	Revision 1.160  2006/03/18 22:55:55  dseagrav
-  *	Added more RJEC functionality.
-  *	
-  *	Revision 1.159  2006/03/16 04:53:21  dseagrav
-  *	Added preliminary RJEC, connected CMC to RJEC.
-  *	
-  *	Revision 1.158  2006/03/14 02:48:57  dseagrav
-  *	Added ECA object, moved FDAI redraw stuff into ECA to clean up FDAI redraw mess.
-  *	
-  *	Revision 1.157  2006/03/12 01:13:29  dseagrav
-  *	Added lots of SCS items and FDAI stuff.
-  *	
-  *	Revision 1.156  2006/03/09 20:40:22  quetalsi
-  *	Added Battery Relay Bus. Wired Inverter 1/2/3, EPS Sensor Unit DC A/B, EPS Sensor Unit AC 1/2 and Bat Rly Bus BAT A/B brakers.
-  *	
-  *	Revision 1.155  2006/03/05 00:49:48  movieman523
-  *	Wired up Auto RCS Select switches to bus A and B.
-  *	
-  *	Revision 1.154  2006/03/03 12:39:41  tschachim
-  *	Fixes for using DInput.
-  *	
-  *	Revision 1.153  2006/03/03 05:12:37  dseagrav
-  *	Added DirectInput code and THC/RHC interface. Changes 20060228-20060302
-  *	
-  *	Revision 1.152  2006/02/28 20:40:32  quetalsi
-  *	Bugfix and added CWS FC BUS DISCONNECT. Reset DC switches now work.
-  *	
-  *	Revision 1.151  2006/02/28 00:03:58  quetalsi
-  *	MainBus A & B Switches and Talkbacks woks and wired.
-  *	
-  *	Revision 1.150  2006/02/27 00:57:48  dseagrav
-  *	Added SPS thrust-vector control. Changes 20060225-20060226.
-  *	
-  *	Revision 1.149  2006/02/23 22:46:41  quetalsi
-  *	Added AC ovevoltage control and Bugfix
-  *	
-  *	Revision 1.148  2006/02/23 15:50:11  tschachim
-  *	Restored changes lost in last version.
-  *	
-  *	Revision 1.147  2006/02/23 14:13:49  dseagrav
-  *	Split CM RCS into two systems, moved CM RCS thrusters (close to) proper positions, eliminated extraneous thrusters, set ISP and thrust values to match documentation, connected CM RCS to AGC IO channels 5 and 6 per DAP documentation, changes 20060221-20060223.
-  *
-  *	Revision 1.146  2006/02/22 01:03:02  movieman523
-  *	Initial Apollo 5 support.	
-  *	
-  *	Revision 1.145  2006/02/21 12:19:21  tschachim
-  *	Moved TLI sequence to the IU.
-  *	
-  *	Revision 1.144  2006/02/13 21:43:32  tschachim
-  *	C/W ISS light.
-  *	
-  *	Revision 1.143  2006/02/02 21:38:47  lazyd
-  *	Added a variable to save orbit-normal vector for launch
-  *	
-  *	Revision 1.142  2006/02/02 18:54:16  tschachim
-  *	Smoother acceleration calculations.
-  *	
-  *	Revision 1.141  2006/02/01 18:30:48  tschachim
-  *	Pyros and secs logic cb's.
-  *	
-  *	Revision 1.140  2006/01/27 22:11:38  movieman523
-  *	Added support for low-res Saturn 1b.
-  *	
-  *	Revision 1.139  2006/01/26 19:26:31  movieman523
-  *	Now we can set any scenario state from the config file for Saturn 1b or Saturn V. Also wired up a couple of LEM switches.
-  *	
-  *	Revision 1.138  2006/01/26 03:31:57  movieman523
-  *	Less hacky low-res mesh support for Saturn V.
-  *	
-  *	Revision 1.137  2006/01/24 13:47:07  tschachim
-  *	Smoother staging with more eye-candy.
-  *	
-  *	Revision 1.136  2006/01/15 02:38:59  movieman523
-  *	Moved CoG and removed phantom thrusters. Also delete launch site when we get a reasonable distance away.
-  *	
-  *	Revision 1.135  2006/01/15 01:23:19  movieman523
-  *	Put 'phantom' RCS thrusters back in and adjusted RCS thrust and ISP based on REALISM value.
-  *	
-  *	Revision 1.134  2006/01/14 18:57:49  movieman523
-  *	First stages of pyro and SECS simulation.
-  *	
-  *	Revision 1.133  2006/01/14 12:34:16  flydba
-  *	New panel added (325/326) for cabin press control.
-  *	
-  *	Revision 1.132  2006/01/14 00:54:35  movieman523
-  *	Hacky wiring of sequential systems and pyro arm switches.
-  *	
-  *	Revision 1.131  2006/01/12 14:47:25  tschachim
-  *	Added prelaunch tank venting.
-  *	
-  *	Revision 1.130  2006/01/11 22:34:20  movieman523
-  *	Wired Virtual AGC to RCS and SPS, and added some CMC guidance control switches.
-  *	
-  *	Revision 1.129  2006/01/11 02:59:43  movieman523
-  *	Valve talkbacks now check the valve state directlry. This means they barberpole on SM sep and can't then be changed.
-  *	
-  *	Revision 1.128  2006/01/11 02:16:25  movieman523
-  *	Added RCS propellant quantity gauge.
-  *	
-  *	Revision 1.127  2006/01/10 23:20:51  movieman523
-  *	SM RCS is now enabled per quad.
-  *	
-  *	Revision 1.126  2006/01/10 21:09:30  movieman523
-  *	Improved AoA/thrust meter.
-  *	
-  *	Revision 1.125  2006/01/10 20:49:50  movieman523
-  *	Added CM RCS propellant dump and revised thrust display.
-  *	
-  *	Revision 1.124  2006/01/10 19:34:45  movieman523
-  *	Fixed AC bus switches and added ELS Logic/Auto support.
-  *	
-  *	Revision 1.123  2006/01/09 21:56:44  movieman523
-  *	Added support for LEM and CSM AGC PAD loads in scenario file.
-  *	
-  *	Revision 1.122  2006/01/08 21:43:34  movieman523
-  *	First phase of implementing inverters, and stopped PanelSDK trying to delete objects which weren't allocated with new().
-  *	
-  *	Revision 1.121  2006/01/08 19:04:30  movieman523
-  *	Wired up AC bus switches in a quick and hacky manner.
-  *	
-  *	Revision 1.120  2006/01/08 17:50:38  movieman523
-  *	Wired up electrical meter switches other than battery charger.
-  *	
-  *	Revision 1.119  2006/01/08 17:01:09  flydba
-  *	Switches added on main panel 3.
-  *	
-  *	Revision 1.118  2006/01/08 14:51:24  movieman523
-  *	Revised camera 3 position to be more photogenic, and added seperation particle effects.
-  *	
-  *	Revision 1.117  2006/01/08 04:37:50  movieman523
-  *	Added camera 3.
-  *	
-  *	Revision 1.116  2006/01/08 04:00:24  movieman523
-  *	Added first two engineering cameras.
-  *	
-  *	Revision 1.115  2006/01/07 03:28:28  movieman523
-  *	Removed a lot of unused switches and wired up the FDAI power switch.
-  *	
-  *	Revision 1.114  2006/01/07 03:16:04  flydba
-  *	Switches added on main panel 2.
-  *	
-  *	Revision 1.113  2006/01/07 01:34:08  movieman523
-  *	Added AC bus overvoltage and main bus undervolt lights.
-  *	
-  *	Revision 1.112  2006/01/07 00:43:58  movieman523
-  *	Added non-essential buses, though there's nothing connected to them at the moment.
-  *	
-  *	Revision 1.111  2006/01/06 22:55:53  movieman523
-  *	Fixed SM seperation and cut off fuel cell power when it happens.
-  *	
-  *	Revision 1.110  2006/01/06 21:40:15  movieman523
-  *	Quick hack for damping electrical meters.
-  *	
-  *	Revision 1.109  2006/01/06 20:37:18  movieman523
-  *	Made the voltage and current meters work. Currently hard-coded to main bus A and AC bus 1.
-  *	
-  *	Revision 1.108  2006/01/06 19:45:45  flydba
-  *	Switches added on main panel 1.
-  *	
-  *	Revision 1.107  2006/01/06 02:06:07  flydba
-  *	Some changes done on the main panel.
-  *	
-  *	Revision 1.106  2006/01/05 12:11:02  tschachim
-  *	New dockingprobe handling.
-  *	
-  *	Revision 1.105  2006/01/05 04:55:52  flydba
-  *	All clickable areas of the right & left hand side panels added now!
-  *	
-  *	Revision 1.104  2006/01/04 23:06:03  movieman523
-  *	Moved meshes into ProjectApollo directory and renamed a few.
-  *	
-  *	Revision 1.103  2006/01/04 01:57:08  flydba
-  *	Switches on panel 8 now set.
-  *	
-  *	Revision 1.102  2006/01/03 17:52:32  flydba
-  *	Switches on panel 9 are set up now.
-  *	
-  *	Revision 1.101  2006/01/03 03:59:16  flydba
-  *	Some changes done on panel 15.
-  *	
-  *	Revision 1.100  2005/12/19 16:39:12  tschachim
-  *	New devices.
-  *	
   **************************************************************************/
 
 #if !defined(_PA_SATURN_H)
@@ -601,6 +313,7 @@
 #include "sps.h"
 #include "mcc.h"
 #include "ecs.h"
+#include "csmrcs.h"
 #include "checklistController.h"
 #include "payload.h"
 
@@ -614,46 +327,6 @@
 
 #include "IMFD/IMFD_Client.h"
 
-
-//
-// Valves.
-//
-
-#define CSM_He1_TANKA_VALVE				1
-#define CSM_He1_TANKB_VALVE				2
-#define CSM_He1_TANKC_VALVE				3
-#define CSM_He1_TANKD_VALVE				4
-#define CSM_He2_TANKA_VALVE				5
-#define CSM_He2_TANKB_VALVE				6
-#define CSM_He2_TANKC_VALVE				7
-#define CSM_He2_TANKD_VALVE				8
-#define CSM_PRIOXID_INSOL_VALVE_A		9
-#define CSM_PRIOXID_INSOL_VALVE_B		10
-#define CSM_PRIOXID_INSOL_VALVE_C		11
-#define CSM_PRIOXID_INSOL_VALVE_D		12
-#define CSM_SECOXID_INSOL_VALVE_A		13
-#define CSM_SECOXID_INSOL_VALVE_B		14
-#define CSM_SECOXID_INSOL_VALVE_C		15
-#define CSM_SECOXID_INSOL_VALVE_D		16
-#define CSM_PRIFUEL_INSOL_VALVE_A		17
-#define CSM_PRIFUEL_INSOL_VALVE_B		18
-#define CSM_PRIFUEL_INSOL_VALVE_C		19
-#define CSM_PRIFUEL_INSOL_VALVE_D		20
-#define CSM_SECFUEL_INSOL_VALVE_A		21
-#define CSM_SECFUEL_INSOL_VALVE_B		22
-#define CSM_SECFUEL_INSOL_VALVE_C		23
-#define CSM_SECFUEL_INSOL_VALVE_D		24
-#define CSM_SECFUEL_PRESS_VALVE_A		25
-#define CSM_SECFUEL_PRESS_VALVE_B		26
-#define CSM_SECFUEL_PRESS_VALVE_C		27
-#define CSM_SECFUEL_PRESS_VALVE_D		28
-
-
-#define CM_VALVES_START					29
-#define CM_RCSPROP_TANKA_VALVE			30
-#define CM_RCSPROP_TANKB_VALVE			31
-
-#define N_CSM_VALVES	32
 
 #define RCS_SM_QUAD_A		0
 #define RCS_SM_QUAD_B		1
@@ -674,15 +347,6 @@ typedef struct {
 	double H2Tank2PressurePSI;
 	double O2SurgeTankPressurePSI;
 } TankPressures;
-
-///
-/// \brief CM RCS pressure status.
-/// \ingroup InternalInterface
-///
-typedef struct {
-	double He1PressPSI;
-	double He2PressPSI;
-} CMRCSPressures;
 
 ///
 /// \brief O2/H2 tank quantities.
@@ -1272,6 +936,9 @@ public:
 	///
 	virtual void SetCMRCSState(int Thruster, bool Active);
 
+	bool GetCMRCSStateCommanded(THRUSTER_HANDLE th);
+
+
 	//
 	// RHC/THC 
 	//
@@ -1368,8 +1035,6 @@ public:
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 
-	bool DisplayingPropellantQuantity();
-
 	// Called by Crawler/ML
 	virtual void LaunchVehicleRolloutEnd() {};	// after arrival on launch pad
 	virtual void LaunchVehicleBuild() {};		// build/unbuild during assembly
@@ -1424,6 +1089,12 @@ public:
 	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
 	SPSEngine *GetSPSEngine() { return &SPSEngine; };
 
+	///
+	/// \brief Accessor to get checklistController
+	///
+	ChecklistController *GetChecklistControl();
+
+
 	//
 	// CWS functions.
 	//
@@ -1436,15 +1107,6 @@ public:
 	void GetAtmosStatus(AtmosStatus &atm);
 	void GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm);
 	void GetTankPressures(TankPressures &press);
-
-	// Accessor to get checklistController
-	ChecklistController *GetChecklistControl();
-	///
-	/// Get information on the Command Module RCS pressures.
-	/// \brief Get CM RCS pressures.
-	/// \param press Pressure information structure, updated by the call.
-	///
-	void GetCMRCSPressures(CMRCSPressures &press);
 	void GetTankQuantities(TankQuantities &q);
 	void SetO2TankQuantities(double q);
 
@@ -1460,7 +1122,7 @@ public:
 	void GetECSWaterStatus(ECSWaterStatus &ws);
 	void GetMainBusStatus(MainBusStatus &ms);
 	void GetACBusStatus(ACBusStatus &as, int busno);
-	void DisconectInverter(bool disc, int busno);
+	void DisconnectInverter(bool disc, int busno);
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	double GetAccelG() { return aZAcc / G; };
 	virtual void GetECSStatus(ECSStatus &ecs);
@@ -1475,33 +1137,6 @@ public:
 	///
 	void GetLVTankQuantities(LVTankQuantities &LVq);
 
-	//
-	// Panel SDK support.
-	//
-	
-	///
-	/// Open or close the specified valve. This routine will also enable or disable the appropriate RCS
-	/// quads when valve states change.
-	/// \brief Set valve state
-	/// \param valve The valve number to set.
-	/// \param open Open or close the valve.
-	///
-	void SetValveState(int valve, bool open);
-
-	///
-	/// Check whether the specified valve is open or closed.
-	/// \brief Get valve state
-	/// \param valve The valve number to set.
-	/// \return True if the valve is open.
-	///
-	bool GetValveState(int valve);
-
-	///
-	/// Enable or disable the RCS based on current systems state.
-	/// \brief Check RCS state.
-	///
-	void CheckRCSState();
-
 	///
 	/// Enable or disable generic Service Module systems based on current state.
 	/// \brief Check SM systems state.
@@ -1514,13 +1149,6 @@ public:
 	/// \return True if armed, false if not.
 	///
 	bool PyrosArmed();
-
-	///
-	/// Check whether the the Sequential Systems Logic is active.
-	/// \brief Is SECS Logic Active?
-	/// \return True if active, false if not.
-	///
-	bool SECSLogicActive();
 
 	///
 	/// If the scenario specified AUTOSLOW and time acceleration is enabled, slow it
@@ -1682,14 +1310,6 @@ protected:
 	void SetEngineIndicators();
 
 	///
-	/// Set a group of RCS thrusters to use the specified propellant source.
-	/// \brief Link RCS thrusters to propellant.
-	/// \param th Array of 8 thruster handles.
-	/// \param ph Propellant source (may be NULL).
-	///
-	void SetRCSThrusters(THRUSTER_HANDLE *th, PROPELLANT_HANDLE ph);
-
-	///
 	/// Clear all engine indicator lights on the control panel.
 	/// \brief Clear engine indicator lights.
 	///
@@ -1755,6 +1375,8 @@ protected:
 	///
 	void SetMainDeployLight(bool lit);
 
+	void SetCmRcsHeDumpSwitch(bool lit);
+
 	///
 	/// Turn on the LV Guidance warning light on the control panel to indicate an autopilot
 	/// failure.
@@ -1796,33 +1418,14 @@ protected:
 	bool ELSAuto();
 
 	///
-	/// Check whether the Reaction Control System Logic is active.
-	/// \brief Is RCS Logic Active?
-	/// \return True if active, false if not.
-	///
-	bool RCSLogicActive();
-
-	///
-	/// Check whether the Reaction Control System propellant dump is active.
-	/// \brief Is RCS propellant dump Active?
-	/// \return True if active, false if not.
-	///
-	bool RCSDumpActive();
-
-	///
-	/// Check whether the Reaction Control System helium purge is active.
-	/// \brief Is RCS helium purge Active?
-	/// \return True if active, false if not.
-	///
-	bool RCSPurgeActive();
-
-	///
 	/// Check whether the Saturn vehicle has a CSM. Some, like Apollo 5, flew without a CSM for
 	// LEM testing.
 	/// \brief Do we have a CSM?
 	/// \return True if CSM, false if not.
 	///
 	bool SaturnHasCSM();
+
+	void JettisonDockingProbe();
 
 	//
 	// State that needs to be saved.
@@ -1902,13 +1505,6 @@ protected:
 	/// \brief SLA panels separation flag.
 	///
 	bool SLAWillSeparate;
-
-	//
-	// Checklists.
-	//
-
-	bool useChecklists;
-	char lastChecklist[256];
 
 	bool DeleteLaunchSite;
 
@@ -2102,42 +1698,30 @@ protected:
 	///
 	double cpitch[PITCH_TABLE_SIZE];
 
+	//
 	// *** LVDC++ ITEMS ***
+	//
 	bool use_lvdc; // LVDC use flag
 	LVIMU lvimu;   // ST-124-M3 IMU (LV version)
 	LVRG lvrg;	   // LV rate gyro package
 
-
-	// SCS components
-	BMAG bmag1;
-	BMAG bmag2;
-	GDC  gdc;
-	ASCP ascp;
-	EDA  eda;
-	RJEC rjec;
-	ECA  eca;
-	// Telecom equipment
-	PCM  pcm;
-	PMP	 pmp;
-	USB  usb;
-	EMS  ems;
-
-	// CM Optics
-	CMOptics optics;
-
+	//
 	// Ground Systems
+	//
 	MCC	 mcc;
 	MC_GroundTrack  groundtrack;
 	MC_CapCom  capcom;
 
+	//
 	// ChecklistController
+	//
 	ChecklistController checkControl;
-	SaturnEvents	eventControl;
+	SaturnEvents eventControl;
 
 	//
 	// Switches
 	//
-protected:
+
 	int coasEnabled;
 	int opticsDskyEnabled;
 
@@ -2154,6 +1738,9 @@ protected:
 	int fdaiSmooth;
 
 	HBITMAP hBmpFDAIRollIndicator;
+
+	SwitchRow MasterAlarmSwitchRow;
+	MasterAlarmSwitch MasterAlarmSwitch; 
 
 	// EMS
 	SwitchRow EMSFunctionSwitchRow;
@@ -2191,11 +1778,11 @@ protected:
 	GuardedPushSwitch CmRcsHeDumpSwitch;
 
 	ToggleSwitch	    EDSSwitch;				
-	GuardedTwoOutputSwitch CsmLmFinalSep1Switch;
-	GuardedTwoOutputSwitch CsmLmFinalSep2Switch;
-	GuardedTwoOutputSwitch CmSmSep1Switch;
-	GuardedTwoOutputSwitch CmSmSep2Switch;
-	SIVBPayloadSeparationSwitch SIVBPayloadSepSwitch;
+	GuardedToggleSwitch CsmLmFinalSep1Switch;
+	GuardedToggleSwitch CsmLmFinalSep2Switch;
+	GuardedToggleSwitch CmSmSep1Switch;
+	GuardedToggleSwitch CmSmSep2Switch;
+	GuardedToggleSwitch SIVBPayloadSepSwitch;
 
 	ToggleSwitch   CabinFan1Switch;
 	ToggleSwitch   CabinFan2Switch;
@@ -2259,28 +1846,28 @@ protected:
 	IMUCageSwitch IMUGuardedCageSwitch;
 
 	SwitchRow SMRCSHelium1Row;
-	SaturnValveSwitch SMRCSHelium1ASwitch;
-	SaturnValveSwitch SMRCSHelium1BSwitch;
-	SaturnValveSwitch SMRCSHelium1CSwitch;
-	SaturnValveSwitch SMRCSHelium1DSwitch;
+	ThreePosSwitch SMRCSHelium1ASwitch;
+	ThreePosSwitch SMRCSHelium1BSwitch;
+	ThreePosSwitch SMRCSHelium1CSwitch;
+	ThreePosSwitch SMRCSHelium1DSwitch;
 
 	SwitchRow SMRCSHelium1TalkbackRow;
-	SaturnValveTalkback SMRCSHelium1ATalkback;
-	SaturnValveTalkback SMRCSHelium1BTalkback;
-	SaturnValveTalkback SMRCSHelium1CTalkback;
-	SaturnValveTalkback SMRCSHelium1DTalkback;
+	SaturnRCSValveTalkback SMRCSHelium1ATalkback;
+	SaturnRCSValveTalkback SMRCSHelium1BTalkback;
+	SaturnRCSValveTalkback SMRCSHelium1CTalkback;
+	SaturnRCSValveTalkback SMRCSHelium1DTalkback;
 
 	SwitchRow SMRCSHelium2Row;
-	SaturnValveSwitch SMRCSHelium2ASwitch;
-	SaturnValveSwitch SMRCSHelium2BSwitch;
-	SaturnValveSwitch SMRCSHelium2CSwitch;
-	SaturnValveSwitch SMRCSHelium2DSwitch;
+	ThreePosSwitch SMRCSHelium2ASwitch;
+	ThreePosSwitch SMRCSHelium2BSwitch;
+	ThreePosSwitch SMRCSHelium2CSwitch;
+	ThreePosSwitch SMRCSHelium2DSwitch;
 
 	SwitchRow SMRCSHelium2TalkbackRow;
-	SaturnValveTalkback SMRCSHelium2ATalkback;
-	SaturnValveTalkback SMRCSHelium2BTalkback;
-	SaturnValveTalkback SMRCSHelium2CTalkback;
-	SaturnValveTalkback SMRCSHelium2DTalkback;
+	SaturnRCSValveTalkback SMRCSHelium2ATalkback;
+	SaturnRCSValveTalkback SMRCSHelium2BTalkback;
+	SaturnRCSValveTalkback SMRCSHelium2CTalkback;
+	SaturnRCSValveTalkback SMRCSHelium2DTalkback;
 
 	AGCIOSwitch CMUplinkSwitch;
 	ToggleSwitch IUUplinkSwitch;
@@ -2289,43 +1876,48 @@ protected:
 	ToggleSwitch SMRCSIndSwitch;
 
 	SwitchRow RCSGaugeRow;
-	RCSQuantityMeter RCSQuantityGauge;
+	RCSQuantityMeter RCSQuantityMeter;
+	RCSFuelPressMeter RCSFuelPressMeter;
+	RCSHeliumPressMeter RCSHeliumPressMeter;
+	RCSTempMeter RCSTempMeter;
 
 	SwitchRow SMRCSProp1Row;
-	SaturnPropValveSwitch SMRCSProp1ASwitch;
-	SaturnPropValveSwitch SMRCSProp1BSwitch;
-	SaturnPropValveSwitch SMRCSProp1CSwitch;
-	SaturnPropValveSwitch SMRCSProp1DSwitch;
+	ThreePosSwitch SMRCSProp1ASwitch;
+	ThreePosSwitch SMRCSProp1BSwitch;
+	ThreePosSwitch SMRCSProp1CSwitch;
+	ThreePosSwitch SMRCSProp1DSwitch;
 
-	ThreePosSwitch SMRCSHeaterASwitch;
-	ThreePosSwitch SMRCSHeaterBSwitch;
-	ThreePosSwitch SMRCSHeaterCSwitch;
-	ThreePosSwitch SMRCSHeaterDSwitch;
+	ThreeOutputSwitch SMRCSHeaterASwitch;
+	ThreeOutputSwitch SMRCSHeaterBSwitch;
+	ThreeOutputSwitch SMRCSHeaterCSwitch;
+	ThreeOutputSwitch SMRCSHeaterDSwitch;
 
 	SwitchRow SMRCSProp1TalkbackRow;
-	SaturnPropValveTalkback SMRCSProp1ATalkback;
-	SaturnPropValveTalkback SMRCSProp1BTalkback;
-	SaturnPropValveTalkback SMRCSProp1CTalkback;
-	SaturnPropValveTalkback SMRCSProp1DTalkback;
+	SaturnRCSValveTalkback SMRCSProp1ATalkback;
+	SaturnRCSValveTalkback SMRCSProp1BTalkback;
+	SaturnRCSValveTalkback SMRCSProp1CTalkback;
+	SaturnRCSValveTalkback SMRCSProp1DTalkback;
 
 	SwitchRow SMRCSProp2Row;
-	SaturnValveSwitch SMRCSProp2ASwitch;
-	SaturnValveSwitch SMRCSProp2BSwitch;
-	SaturnValveSwitch SMRCSProp2CSwitch;
-	SaturnValveSwitch SMRCSProp2DSwitch;
+	ThreePosSwitch SMRCSProp2ASwitch;
+	ThreePosSwitch SMRCSProp2BSwitch;
+	ThreePosSwitch SMRCSProp2CSwitch;
+	ThreePosSwitch SMRCSProp2DSwitch;
 
 	ThreePosSwitch RCSCMDSwitch;
 	ThreePosSwitch RCSTrnfrSwitch;
-	SaturnValveSwitch CMRCSIsolate1;
-	SaturnValveSwitch CMRCSIsolate2;
+
+	ThreePosSwitch CMRCSProp1Switch;
+	ThreePosSwitch CMRCSProp2Switch;
 
 	SwitchRow SMRCSProp2TalkbackRow;
-	SaturnValveTalkback CMRCSIsolate1Talkback;
-	SaturnValveTalkback CMRCSIsolate2Talkback;
-	SaturnPropValveTalkback SMRCSProp2ATalkback;
-	SaturnPropValveTalkback SMRCSProp2BTalkback;
-	SaturnPropValveTalkback SMRCSProp2CTalkback;
-	SaturnPropValveTalkback SMRCSProp2DTalkback;
+	SaturnRCSValveTalkback CMRCSProp1Talkback;
+	SaturnRCSValveTalkback CMRCSProp2Talkback;
+
+	SaturnRCSValveTalkback SMRCSProp2ATalkback;
+	SaturnRCSValveTalkback SMRCSProp2BTalkback;
+	SaturnRCSValveTalkback SMRCSProp2CTalkback;
+	SaturnRCSValveTalkback SMRCSProp2DTalkback;
 
 	SwitchRow RCSIndicatorsSwitchRow;
 	PropellantRotationalSwitch RCSIndicatorsSwitch;
@@ -2568,11 +2160,11 @@ protected:
 
 	SwitchRow ELSRow;
 	AGCIOSwitch CGSwitch;
-	GuardedTwoOutputSwitch ELSLogicSwitch;
+	GuardedToggleSwitch ELSLogicSwitch;
 	ToggleSwitch ELSAutoSwitch;
-	TwoOutputSwitch CMRCSLogicSwitch;
+	ToggleSwitch CMRCSLogicSwitch;
 	GuardedToggleSwitch CMPropDumpSwitch;
-	GuardedToggleSwitch CPPropPurgeSwitch;
+	GuardedToggleSwitch CMPropPurgeSwitch;
 
 	//
 	// Event Timer switches.
@@ -2627,7 +2219,7 @@ protected:
 	///
 	/// \brief SPS Switch.
 	///
-	SaturnSPSSwitch SPSswitch;
+	ToggleSwitch SPSswitch;
 
 	SwitchRow SPSGimbalPitchThumbwheelRow;
 	ThumbwheelSwitch SPSGimbalPitchThumbwheel;
@@ -3253,10 +2845,10 @@ protected:
 	ThreePosSwitch FloatBagSwitch3;
 
 	SwitchRow SeqEventsContSystemSwitchesRow;
-	TwoSourceSwitch Logic1Switch;
-	TwoSourceSwitch Logic2Switch;
-	TwoSourceSwitch PyroArmASwitch;
-	TwoSourceSwitch PyroArmBSwitch;
+	ToggleSwitch SECSLogic1Switch;
+	ToggleSwitch SECSLogic2Switch;
+	ToggleSwitch PyroArmASwitch;
+	ToggleSwitch PyroArmBSwitch;
 
 	//////////////////////////////
 	// Panel 8 circuit breakers //
@@ -3332,10 +2924,10 @@ protected:
 	CircuitBrakerSwitch FloatBag3FLTPLCircuitBraker;
 
 	SwitchRow SeqEventsContSysCircuitBrakerRow;
-	CircuitBrakerSwitch LogicBatACircuitBraker;
-	CircuitBrakerSwitch LogicBatBCircuitBraker;
-	CircuitBrakerSwitch ArmBatACircuitBraker;
-	CircuitBrakerSwitch ArmBatBCircuitBraker;
+	CircuitBrakerSwitch SECSLogicBatACircuitBraker;
+	CircuitBrakerSwitch SECSLogicBatBCircuitBraker;
+	CircuitBrakerSwitch SECSArmBatACircuitBraker;
+	CircuitBrakerSwitch SECSArmBatBCircuitBraker;
 
 	SwitchRow EDSCircuitBrakerRow;
 	CircuitBrakerSwitch EDS1BatACircuitBraker;
@@ -3531,24 +3123,24 @@ protected:
 	SwitchRow Panel229CircuitBreakersRow;
 	CircuitBrakerSwitch UtilityCB1;
 	CircuitBrakerSwitch UtilityCB2;
-	CircuitBrakerSwitch EPSBatBusCBA;
-	CircuitBrakerSwitch EPSBatBusCBB;
+	CircuitBrakerSwitch EPSBatBusACircuitBraker;
+	CircuitBrakerSwitch EPSBatBusBCircuitBraker;
 
 	///////////////////////
 	// Panel 250/251/252 //
 	///////////////////////
 
 	SwitchRow Panel250CircuitBreakersRow;
-	CircuitBrakerSwitch PyroABusTieCB;
-	CircuitBrakerSwitch PyroABusSeqACB;
-	CircuitBrakerSwitch PyroBBusTieCB;
-	CircuitBrakerSwitch PyroBBusSeqACB;
-	CircuitBrakerSwitch BatAPWRCB;
-	CircuitBrakerSwitch BatBPWRCB;
-	CircuitBrakerSwitch BatCPWRCB;
-	CircuitBrakerSwitch BatCtoBatBusACB;
-	CircuitBrakerSwitch BatCtoBatBusBCB;
-	CircuitBrakerSwitch BatCCHRGCB;
+	CircuitBrakerSwitch BatBusAToPyroBusTieCircuitBraker;
+	CircuitBrakerSwitch PyroASeqACircuitBraker;
+	CircuitBrakerSwitch BatBusBToPyroBusTieCircuitBraker;
+	CircuitBrakerSwitch PyroBSeqBCircuitBraker;
+	CircuitBrakerSwitch BatAPWRCircuitBraker;
+	CircuitBrakerSwitch BatBPWRCircuitBraker;
+	CircuitBrakerSwitch BatCPWRCircuitBraker;
+	CircuitBrakerSwitch BatCtoBatBusACircuitBraker;
+	CircuitBrakerSwitch BatCtoBatBusBCircuitBraker;
+	CircuitBrakerSwitch BatCCHRGCircuitBraker;
 
 	SwitchRow WasteMGMTOvbdDrainDumpRotaryRow;
 	RotationalSwitch WasteMGMTOvbdDrainDumpRotary;
@@ -3570,10 +3162,10 @@ protected:
 	CircuitBrakerSwitch Panel276CB4;
 	
 	SwitchRow Panel278CBRow;
-	CircuitBrakerSwitch UprightingSystemCB1;
-	CircuitBrakerSwitch UprightingSystemCB2;
-	CircuitBrakerSwitch SIVBLMSepPyroACB;
-	CircuitBrakerSwitch SIVBLMSepPyroBCB;
+	CircuitBrakerSwitch UprightingSystemCompressor1CircuitBraker;
+	CircuitBrakerSwitch UprightingSystemCompressor2CircuitBraker;
+	CircuitBrakerSwitch SIVBLMSepPyroACircuitBraker;
+	CircuitBrakerSwitch SIVBLMSepPyroBCircuitBraker;
 	
 	///////////////////////////////
 	// Panel 300/301/302/303/305 //
@@ -3675,17 +3267,6 @@ protected:
 
 	SwitchRow ORDEALRotaryRow;
 	RotationalSwitch ORDEALAltSetRotary;
-
-	//
-	// OLD Switches: delete these as and when we can do so.
-	//
-	// old stuff begin
-	//
-
-	bool CMCswitch;
-	bool SCswitch;
-
-	// old stuff end
 
 	///
 	/// Stage is the main stage of the flight.
@@ -3909,64 +3490,69 @@ protected:
 
 	SwitchRow SBandNormalSwitchesRow;
 
-	//
-	// Internal systems devices.
-	//
+	///////////////////////////////////////////////////////
+	// Internal systems devices.						 //
+	///////////////////////////////////////////////////////
 
+	// SCS components
+	BMAG bmag1;
+	BMAG bmag2;
+	GDC  gdc;
+	ASCP ascp;
+	EDA  eda;
+	RJEC rjec;
+	ECA  eca;
+	// Telecom equipment
+	PCM  pcm;
+	PMP	 pmp;
+	USB  usb;
+	EMS  ems;
+
+	// CM Optics
+	CMOptics optics;
+
+	// Fuel cells	
 	FCell *FuelCells[3];
+	Boiler *FuelCellHeaters[3];
+	Cooling *FuelCellCooling[3];
 
-	//
 	// O2 tanks.
-	//
-
 	h_Tank *O2Tanks[2];
+	Boiler *O2TanksHeaters[2];
+	Boiler *O2TanksFans[2];
 
-	//
+	// H2 tanks
+	h_Tank *H2Tanks[2];
+	Boiler *H2TanksHeaters[2];
+	Boiler *H2TanksFans[2];
+
 	// Main bus A and B.
-	//
-
 	DCbus *MainBusA;
 	DCbus *MainBusB;
 
-	//
 	// Non-essential buses... oddly, these are for non-essential systems.
-	//
-
 	DCbus NonEssBus1;
 	DCbus NonEssBus2;
 
 	DCBusController MainBusAController;
 	DCBusController MainBusBController;
 
-	//
 	// Flight Bus.
 	// This gets fed via diodes from MNA and MNB through 20-amp circuit breakers on panel 225.
-	//
-
 	DCbus FlightBus;
 	PowerMerge FlightBusFeeder;
 
-	//
 	// Flight/Post Landing Bus.
 	// This gets fed via various circuit breakers on panel 275.
-	//
-
 	DCbus FlightPostLandingBus;
 	NWayPowerMerge FlightPostLandingBusFeeder;
 
-
-	//
 	// Inverters.
-	//
-
 	ACInverter *Inverter1;
 	ACInverter *Inverter2;
 	ACInverter *Inverter3;
 
-	//
 	// AC bus 1 and 2, which are three-phase.
-	//
-
 	ACbus ACBus1PhaseA;
 	ACbus ACBus1PhaseB;
 	ACbus ACBus1PhaseC;
@@ -3985,26 +3571,25 @@ protected:
 	Battery *PyroBatteryA;
 	Battery *PyroBatteryB;
 
-	ThreeWayPowerMerge BatteryBusA;
-	ThreeWayPowerMerge BatteryBusB;
+	PowerMerge BatteryBusA;
+	PowerMerge BatteryBusB;
 
 	PowerMerge BatteryRelayBus;
 
 	BatteryCharger BatteryCharger;
 
-	PowerMerge PyroBusA;
-	PowerMerge PyroBusB;
+	PowerMerge PyroBusAFeeder;
+	PowerMerge PyroBusBFeeder;
+	DCbus PyroBusA;
+	DCbus PyroBusB;
 
-	PowerMerge SECSLogicPower;
-	PowerMerge PyroPower;
+	DCbus SECSLogicBusA;
+	DCbus SECSLogicBusB;
 
 	PowerMerge SwitchPower;
 	PowerMerge GaugePower;
 
-	//
 	// ECS
-	//
-
 	h_HeatExchanger *PrimCabinHeatExchanger;
 	h_HeatExchanger *SecCabinHeatExchanger;
 	h_HeatExchanger *PrimEcsRadiatorExchanger1;
@@ -4025,13 +3610,30 @@ protected:
 	O2SMSupply O2SMSupply;
 	CrewStatus CrewStatus;
 
-	//
 	// RHC/THC 
-	//
-
 	PowerMerge RHCNormalPower;
 	PowerMerge RHCDirect1Power;
 	PowerMerge RHCDirect2Power;
+
+	// CSM has two DSKYs: one is in the main panel, the other is below. For true realism we should support
+	// both.
+	DSKY dsky;
+	DSKY dsky2;
+	CSMcomputer agc;	
+	IMU imu;
+	IU iu;
+	CSMCautionWarningSystem cws;
+	DockingProbe dockingprobe;
+	SECS secs;
+	ELS els;
+
+	Pyro CMSMPyros;
+	Pyro CMDockingRingPyros;
+	Pyro CSMLVPyros;
+	PowerMerge CMSMPyrosFeeder;
+	PowerMerge CMDockingRingPyrosFeeder;
+	PowerMerge CSMLVPyrosFeeder;
+
 
 	//
 	// LM PAD
@@ -4102,11 +3704,8 @@ protected:
 	bool SkylabCM;
 	bool S1bPanel;
 	bool bAbort;
-	bool bAbtlocked;
 	bool bRecovery;
-
 	bool ToggleEva;
-	bool Resetjet;
 
 	#define SATVIEW_LEFTSEAT		0
 	#define SATVIEW_RIGHTSEAT		1
@@ -4130,14 +3729,8 @@ protected:
 
 	bool OrbiterAttitudeDisabled;
 
-	bool bManualSeparate;
-	bool bManualUnDock;
 	bool ASTPMission;
-	bool ReadyAstp;
 	bool bToggleHatch;
-	bool SMSep;
-	bool bStartS4B;
-	bool Abort_Locked;
 
 	double DockAngle;
 	double SeparationSpeed;
@@ -4145,9 +3738,6 @@ protected:
 	double AtempP;
 	double AtempY;
 	double AtempR;
-
-	double release_time;
-	double abortTimer;
 
 	ELEMENTS elemSaturn1B;
 	double refSaturn1B;
@@ -4158,9 +3748,11 @@ protected:
 	double 	Offset1st;
 
 	bool StopRot;
-	bool ProbeJetison;
-	bool RCS_Full;
 	bool PayloadDataTransfer;
+
+	//
+	// Panels
+	//
 
 #define SATPANEL_MAIN				0 // Both have Orbiter's 
 #define SATPANEL_MAIN_LEFT		    0 // default panel id 0
@@ -4193,6 +3785,10 @@ protected:
 	double FovSave;
 	double FovSaveExternal;
 
+	//
+	// Virtual cockpit
+	//
+
 	bool VCRegistered;
 	VECTOR3 VCCameraOffset;
 	VECTOR3 VCMeshOffset;
@@ -4218,28 +3814,6 @@ protected:
 	SURFHANDLE SIVBRCSTex;
 
 	/// \todo SURFHANDLEs for VC
-
-	//
-	// Hardware support.
-	//
-
-	//
-	// CSM has two DSKYs: one is in the main panel, the other is below. For true realism we should support
-	// both.
-	//
-
-	DSKY dsky;
-	DSKY dsky2;
-	CSMcomputer agc;	
-	IMU imu;
-	IU iu;
-	CSMCautionWarningSystem cws;
-	DockingProbe dockingprobe;
-	SECS secs;
-	ELS els;
-
-	Pyro CMSMPyros;
-	Pyro CMDockingRingPyros;
 
 	//
 	// Vessel handles.
@@ -4380,13 +3954,6 @@ protected:
 	void DeactivateCSMRCS();
 	void ActivateCMRCS();
 	void DeactivateCMRCS();
-	bool CMRCS1Active();
-	bool CMRCS2Active();
-	bool SMRCSActive();
-	bool SMRCSAActive();
-	bool SMRCSBActive();
-	bool SMRCSCActive();
-	bool SMRCSDActive();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
 	void SetRandomFailures();
@@ -4397,16 +3964,6 @@ protected:
 	// Save/Load support functions.
 	//
 
-	int GetCSwitchState();
-	void SetCSwitchState(int s);
-	int GetSSwitchState();
-	void SetSSwitchState(int s);
-	int GetLPSwitchState();
-	void SetLPSwitchState(int s);
-	int GetRPSwitchState();
-	void SetRPSwitchState(int s);
-	int GetCP6SwitchState();
-	void SetCP6SwitchState(int s);
 	int GetMainState();
 	void SetMainState(int s);
 	int GetAttachState();
@@ -4453,13 +4010,11 @@ protected:
 	void SetChuteStage3();
 	void SetChuteStage4();
 	void SetSplashStage();
-	void SetAbortStage();
 	void SetCSMStage();
 	void CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage);
 	void SetReentryStage();
 	void SetReentryMeshes();
-	void AddRCS_CM(double MaxThrust, double offset = 0.0);
-	void SetRCS_CM();
+	void AddRCS_CM(double MaxThrust, double offset = 0.0, bool createThrusterGroups = true);
 	void GenericTimestepStage(double simt, double simdt);
 	bool CheckForLaunchShutdown();
 	void SetGenericStageState();
@@ -4478,6 +4033,7 @@ protected:
 	Sound Sclick;
 	Sound Bclick;
 	Sound Gclick;
+	Sound ThumbClick;
 	Sound SMasterAlarm;
 	Sound LaunchS;
 	Sound Scount;
@@ -4580,28 +4136,35 @@ protected:
 	THGROUP_HANDLE thg_main, thg_ull, thg_ver, thg_let;
 	THGROUP_HANDLE thg_retro1, thg_retro2, thg_aps;
 
-	THRUSTER_HANDLE th_main[5], th_ull[8], th_ver[3], th_att_cm[12];               // handles for orbiter main engines
+	THRUSTER_HANDLE th_main[5], th_ull[8], th_ver[3];                       // handles for orbiter main engines
 	THRUSTER_HANDLE th_let[4];
-	THRUSTER_HANDLE th_sps[1], th_att_rot[24], th_att_lin[24];                 // handles for SPS engines
+	THRUSTER_HANDLE th_att_rot[24], th_att_lin[24];              
 	THRUSTER_HANDLE	th_aps[3];
 	THRUSTER_HANDLE	th_sep[8], th_sep2[8];
-	THRUSTER_HANDLE th_rcs_a[8], th_rcs_b[8], th_rcs_c[8], th_rcs_d[8];		// RCS quads. Entry zero is not used, to match Apollo numbering
+	THRUSTER_HANDLE th_rcs_a[8], th_rcs_b[8], th_rcs_c[8], th_rcs_d[8];		// SM RCS quads. Entry zero is not used, to match Apollo numbering
+	THRUSTER_HANDLE th_att_cm[12], th_att_cm_sys1[6], th_att_cm_sys2[6];    // CM RCS  
 	THRUSTER_HANDLE th_o2_vent;
+	bool th_att_cm_commanded[12];
 
+	PSTREAM_HANDLE dyemarker;
+	PSTREAM_HANDLE cmrcsdump[12];
 	PSTREAM_HANDLE prelaunchvent[3];
 	PSTREAM_HANDLE stagingvent[8];
 	PSTREAM_HANDLE contrail[8];
 	double contrailLevel;
 
-	CMRCSPropellant CMRCS1;
-	CMRCSPropellant CMRCS2;
-	SMRCSPropellant SMQuadARCS;
-	SMRCSPropellant SMQuadBRCS;
-	SMRCSPropellant SMQuadCRCS;
-	SMRCSPropellant SMQuadDRCS;
+	CMRCSPropellantSource CMRCS1;
+	CMRCSPropellantSource CMRCS2;
+
+	SMRCSPropellantSource SMQuadARCS;
+	SMRCSPropellantSource SMQuadBRCS;
+	SMRCSPropellantSource SMQuadCRCS;
+	SMRCSPropellantSource SMQuadDRCS;
 
 	SPSEngine SPSEngine;
 	SPSPropellantSource SPSPropellant;
+	Boiler *SPSPropellantLineHeaterA;
+	Boiler *SPSPropellantLineHeaterB;
 
 	//
 	// LEM data.
@@ -4631,6 +4194,9 @@ protected:
 	double LunarOrbitInsertionMJD;			// MJD of first LOI burn
 	double FreeReturnPericynthionMJD;		// MJD of free return pericynthion
 	double FreeReturnPericynthionAltitude;	// Altitude of free return pericynthion
+	double TransLunarInjectionOffsetLon;	// TLI target offset
+	double TransLunarInjectionOffsetLat;	// TLI target offset
+	double TransLunarInjectionOffsetRad;	// TLI target offset
 
 	//
 	// Random motion.
@@ -4747,9 +4313,6 @@ protected:
 	double *pPotableH2oTankQuantity;
 	double *pWasteH2oTankQuantity;
 
-	int *pCSMValves[N_CSM_VALVES];
-	bool ValveState[N_CSM_VALVES];
-
 	// InitSaturn is called twice, but some things must run only once
 	bool InitSaturnCalled;
 
@@ -4761,6 +4324,7 @@ protected:
 	//
 
 	IMFD_Client IMFD_Client; 
+
 	//
 	// Friend Class List for systems objects 
 	//
@@ -4784,10 +4348,13 @@ protected:
 	friend class CMACInverterSwitch;
 	friend class SaturnSCControlSetter;
 	friend class SaturnEMSDvDisplay;
+	friend class SECS;
 	friend class ELS;
 	friend class CrewStatus;
 	friend class OpticsHandcontrollerSwitch;
 	friend class MinImpulseHandcontrollerSwitch;
+	friend class CMRCSPropellantSource;
+	friend class DockingProbe;
 };
 
 extern void BaseInit();

@@ -23,6 +23,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.148  2008/01/23 01:40:08  lassombra
+  *	Implemented timestep functions and event management
+  *	
+  *	Events for Saturns are now fully implemented
+  *	
+  *	Removed all hardcoded checklists from Saturns.
+  *	
+  *	Automatic Checklists are coded into an excel file.
+  *	
+  *	Added function to get the name of the active checklist.
+  *	
+  *	ChecklistController is now 100% ready for Saturn.
+  *	
   *	Revision 1.147  2007/12/04 20:26:34  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -176,6 +189,8 @@
   *	Holding mouse key down causes ASCP to advance until mouse key is released.
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
@@ -316,12 +331,16 @@ void Saturn::SystemsInit() {
 	FuelCells[1] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2");
 	FuelCells[2] = (FCell *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3");
 
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING");
-	eo->WireTo(&FuelCellPumps1Switch);
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2COOLING");
-	eo->WireTo(&FuelCellPumps2Switch);
-	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3COOLING");
-	eo->WireTo(&FuelCellPumps3Switch);
+	FuelCellCooling[0] = (Cooling *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1COOLING");
+	FuelCellCooling[0]->WireTo(&FuelCellPumps1Switch);
+	FuelCellCooling[1] = (Cooling *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2COOLING");
+	FuelCellCooling[1]->WireTo(&FuelCellPumps2Switch);
+	FuelCellCooling[2] = (Cooling *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3COOLING");
+	FuelCellCooling[2]->WireTo(&FuelCellPumps3Switch);
+
+	FuelCellHeaters[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL1HEATER");
+	FuelCellHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL2HEATER");
+	FuelCellHeaters[2] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:FUELCELL3HEATER");
 
 	//
 	// O2 tanks.
@@ -329,6 +348,23 @@ void Saturn::SystemsInit() {
 
 	O2Tanks[0] = (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1");
 	O2Tanks[1] = (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2");
+
+	O2TanksHeaters[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:O2TANK1HEATER");
+	O2TanksHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:O2TANK2HEATER");
+	O2TanksFans[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:O2TANK1FAN");
+	O2TanksFans[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:O2TANK2FAN");
+
+	//
+	// H2 tanks.
+	//
+
+	H2Tanks[0] = (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1");
+	H2Tanks[1] = (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2");
+
+	H2TanksHeaters[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:H2TANK1HEATER");
+	H2TanksHeaters[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:H2TANK2HEATER");
+	H2TanksFans[0] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:H2TANK1FAN");
+	H2TanksFans[1] = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:H2TANK2FAN");
 
 	//
 	// Entry and landing batteries.
@@ -339,21 +375,40 @@ void Saturn::SystemsInit() {
 	EntryBatteryC = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_C");
 
 	//
-	// Pyro batteries.
+	// Wire battery buses to batteries.
+	//
+
+	BatteryBusA.WireToBuses(&BatAPWRCircuitBraker, &BatCtoBatBusACircuitBraker);
+	BatteryBusB.WireToBuses(&BatBPWRCircuitBraker, &BatCtoBatBusBCircuitBraker);
+
+	//
+	// Pyro devices.
 	//
 
 	PyroBatteryA = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_A");
 	PyroBatteryB = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_B");
 
+	// Pyro buses and its feeders
+	PyroBusAFeeder.WireToBuses(&PyroASeqACircuitBraker, &BatBusAToPyroBusTieCircuitBraker);
+	PyroBusBFeeder.WireToBuses(&PyroBSeqBCircuitBraker, &BatBusBToPyroBusTieCircuitBraker);	
+	Panelsdk.AddElectrical(&PyroBusA, false);
+	Panelsdk.AddElectrical(&PyroBusB, false);
+
+	// Pyros
+	CMSMPyros.WireTo(&CMSMPyrosFeeder);  
+	CMDockingRingPyros.WireTo(&CMDockingRingPyrosFeeder);
+	CSMLVPyros.WireTo(&CSMLVPyrosFeeder);	 
+
 	//
-	// Wire battery buses to batteries.
+	// SECS Logic buses
 	//
 
-	BatteryBusA.WireToBuses(EntryBatteryA, NULL, NULL);		/// \todo Bat C can be connected to BatBus A via the BAT C TO BAT BUS A cb on panel 250, which is currently not available 
-	BatteryBusB.WireToBuses(EntryBatteryB, NULL, NULL);		/// \todo Bat C can be connected to BatBus B via the BAT C TO BAT BUS B cb on panel 250, which is currently not available
+	Panelsdk.AddElectrical(&SECSLogicBusA, false);
+	Panelsdk.AddElectrical(&SECSLogicBusB, false);
 
-	PyroBusA.WireToBuses(EntryBatteryA, PyroBatteryA);
-	PyroBusB.WireToBuses(EntryBatteryB, PyroBatteryB);
+	//
+	// Battery relay bus
+	//
 
 	BatteryRelayBus.WireToBuses(&BATRLYBusBatACircuitBraker, &BATRLYBusBatBCircuitBraker);
 
@@ -401,11 +456,12 @@ void Saturn::SystemsInit() {
 	//
 
 	BatteryCharger.Init(EntryBatteryA, EntryBatteryB, EntryBatteryC,
-		                &BatteryChargerBatACircuitBraker, &BatteryChargerBatBCircuitBraker, EntryBatteryC,
+		                &BatteryChargerBatACircuitBraker, &BatteryChargerBatBCircuitBraker, &BatCCHRGCircuitBraker,
 						&BatteryChargerMnACircuitBraker, &BatteryChargerMnBCircuitBraker, &BatteryChargerAcPwrCircuitBraker);
 
 	EntryBatteryA->WireTo(&BatteryChargerBatACircuitBraker);
 	EntryBatteryB->WireTo(&BatteryChargerBatBCircuitBraker);
+	EntryBatteryC->WireTo(&BatCCHRGCircuitBraker); 
 
 	//
 	// Generic power source for switches, tied to both Bus A and
@@ -414,9 +470,6 @@ void Saturn::SystemsInit() {
 
 	SwitchPower.WireToBuses(MainBusA, MainBusB);
 	GaugePower.WireToBuses(MainBusA, MainBusB);
-
-	PyroPower.WireToBuses(&PyroArmASwitch, &PyroArmBSwitch);
-	SECSLogicPower.WireToBuses(&Logic1Switch, &Logic2Switch);
 
 	//
 	// ECS devices
@@ -461,104 +514,6 @@ void Saturn::SystemsInit() {
 	imu.WireHeaterToBuses((Boiler *) Panelsdk.GetPointerByString("ELECTRIC:IMUHEATER"), &GNIMUHTRMnACircuitBraker, &GNIMUHTRMnBCircuitBraker);
 	dockingprobe.WireTo(&DockProbeMnACircuitBraker, &DockProbeMnBCircuitBraker);   
 
-	//
-	// Default valve states. For now, everything starts closed.
-	//
-	
-	SMRCSHelium1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSHelium1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-
-	SMRCSHelium2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSHelium2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-
-	SMRCSProp1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSProp1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSProp1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSProp1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-
-	SMRCSProp2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSProp2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSProp2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSProp2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-
-	SMRCSHelium1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSHelium1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-
-	SMRCSHelium2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSHelium2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-
-	SMRCSProp1ATalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSProp1BTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSProp1CTalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSProp1DTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-
-	SMRCSProp2ATalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSProp2BTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSProp2CTalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSProp2DTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-
-	SMRCSHelium1ATalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSHelium1BTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSHelium1CTalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSHelium1DTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-
-	SMRCSHelium2ATalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSHelium2BTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSHelium2CTalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSHelium2DTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-
-	CMRCSIsolate1.WireTo(&PrplntIsolMnACircuitBraker);
-	CMRCSIsolate2.WireTo(&PrplntIsolMnBCircuitBraker);
-
-	CMRCSIsolate1Talkback.WireTo(&SMHeatersBMnACircuitBraker);
-	CMRCSIsolate2Talkback.WireTo(&SMHeatersAMnBCircuitBraker);
-
-	SetValveState(CSM_He1_TANKA_VALVE, false);
-	SetValveState(CSM_He1_TANKB_VALVE, false);
-	SetValveState(CSM_He1_TANKC_VALVE, false);
-	SetValveState(CSM_He1_TANKD_VALVE, false);
-
-	SetValveState(CSM_He2_TANKA_VALVE, false);
-	SetValveState(CSM_He2_TANKB_VALVE, false);
-	SetValveState(CSM_He2_TANKC_VALVE, false);
-	SetValveState(CSM_He2_TANKD_VALVE, false);
-
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_A, false);
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_B, false);
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_C, false);
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_D, false);
-
-	SetValveState(CSM_SECOXID_INSOL_VALVE_A, false);
-	SetValveState(CSM_SECOXID_INSOL_VALVE_B, false);
-	SetValveState(CSM_SECOXID_INSOL_VALVE_C, false);
-	SetValveState(CSM_SECOXID_INSOL_VALVE_D, false);
-
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_A, false);
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, false);
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_C, false);
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_D, false);
-
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_A, false);
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_B, false);
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_C, false);
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_D, false);
-
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_A, false);
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_B, false);
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_C, false);
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_D, false);
-
-	SetValveState(CM_RCSPROP_TANKA_VALVE, false);
-	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
-
 	// SCS initialization
 	bmag1.Init(this, &SystemMnACircuitBraker, &StabContSystemAc1CircuitBraker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER1"));
 	bmag2.Init(this, &SystemMnBCircuitBraker, &StabContSystemAc2CircuitBraker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER2"));
@@ -587,6 +542,71 @@ void Saturn::SystemsInit() {
 	SPSEngine.yawGimbalActuator.Init(this, &TVCGimbalDriveYawSwitch, &Yaw1Switch, &Yaw2Switch,
 		                             MainBusA, &YawBatACircuitBraker, MainBusB, &YawBatBCircuitBraker,
 									 &SPSGimbalYawThumbwheel, &SCSTvcYawSwitch);
+
+	SPSPropellantLineHeaterA = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA");
+	SPSPropellantLineHeaterB = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB");
+
+
+	// SM RCS initialization
+	SMQuadARCS.Init(th_rcs_a, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADA"));
+	SMQuadBRCS.Init(th_rcs_b, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADB"));
+	SMQuadCRCS.Init(th_rcs_c, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADC"));
+	SMQuadDRCS.Init(th_rcs_d, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADD"));
+
+	SMRCSHelium1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSHelium1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSHelium2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSHelium2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSHelium2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSProp1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSProp1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSProp1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSProp1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSProp2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSProp2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSProp2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
+	SMRCSProp2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+
+	SMRCSHelium1ATalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSHelium1BTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSHelium1CTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSHelium1DTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+
+	SMRCSHelium2ATalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSHelium2BTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSHelium2CTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSHelium2DTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+
+	SMRCSProp1ATalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSProp1BTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSProp1CTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSProp1DTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+
+	SMRCSProp2ATalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSProp2BTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSProp2CTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSProp2DTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	
+	SMRCSHeaterASwitch.WireTo(&SMHeatersAMnBCircuitBraker);
+	SMRCSHeaterBSwitch.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSHeaterCSwitch.WireTo(&SMHeatersCMnBCircuitBraker);
+	SMRCSHeaterDSwitch.WireTo(&SMHeatersDMnACircuitBraker);
+
+	// CM RCS initialization
+	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA);    
+	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL,    &RCSLogicMnBCircuitBraker, &PyroBusB);    
+
+	CMRCSProp1Switch.WireTo(&PrplntIsolMnACircuitBraker);
+	CMRCSProp2Switch.WireTo(&PrplntIsolMnBCircuitBraker);
+
+	CMRCSProp1Talkback.WireTo(&SMHeatersBMnACircuitBraker);
+	CMRCSProp2Talkback.WireTo(&SMHeatersAMnBCircuitBraker);
 
 	// Ground Systems Init
 	//mcc.InitCM(this);
@@ -794,9 +814,18 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		fdaiRight.Timestep(MissionTime, simdt);
 		SPSPropellant.Timestep(MissionTime, simdt);
 		JoystickTimestep();
+		SMQuadARCS.Timestep(MissionTime, simdt);
+		SMQuadBRCS.Timestep(MissionTime, simdt);
+		SMQuadCRCS.Timestep(MissionTime, simdt);
+		SMQuadDRCS.Timestep(MissionTime, simdt);
+		CMRCS1.Timestep(MissionTime, simdt);	// Must be after JoystickTimestep
+		CMRCS2.Timestep(MissionTime, simdt);
 
 		//Telecom update is last so telemetry reflects the current state
-		if(!agc.Yaagc){ pcm.TimeStep(MissionTime); } // PCM update unless yaAGC did it earlier
+		if (!agc.Yaagc) { 
+			// PCM update unless yaAGC did it earlier
+			pcm.TimeStep(MissionTime); 
+		} 
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
 
@@ -850,12 +879,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				// 
 				// Event handling.
 				//
-				eventControl.CSMStartup = MissionTime;
-				
-				//Avoid master alarm at power up.
-				cws.SetMasterAlarm(false);
+				eventControl.BACKUP_CREW_PRELAUNCH = MissionTime;
 
-				//Inhibit Suit Circuit alarm.
+				//Inhibit Suit Circuit alarm in Quickstart Mode
 				if (!Realism)
 					cws.SetInhibitNextMasterAlarm(true);
 
@@ -876,7 +902,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					CabincloseoutS.done();
 
 					// Crew ingress
-					SetCrewNumber(3);
+					if (Crewed) {
+						SetCrewNumber(3);
+					}
 					
 					// Close cabin pressure regulator 
 					CabinPressureRegulator.Close();
@@ -889,6 +917,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					// equalize suit cabin pressure difference
 					O2DemandRegulator.Close();
 					O2DemandRegulator.OpenSuitReliefValve();
+
+					//
+					// Event handling.
+					//
+					eventControl.PRIME_CREW_PRELAUNCH = MissionTime;
 
 					// Next state
 					systemsState = SATSYSTEMS_CREWINGRESS_1;
@@ -1047,6 +1080,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 			FuelCells[2]->Voltage(), FuelCells[2]->Current(), FuelCells[2]->PowerLoad());
 */
 
+/*	sprintf(oapiDebugString(), "PyroBus A %3.1fA/%3.1fV, PyroBus B %3.1fA/%3.1fV",
+		PyroBusA.Current(), PyroBusA.Voltage(), PyroBusB.Current(), PyroBusB.Voltage());
+*/
 	double *massCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:MASS");
 	double *tempCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:TEMP");
 	double *pressCabin=(double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
@@ -1192,8 +1228,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//double *suitExchangerPower=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITHEATEXCHANGER:POWER");
 	double *suitCRVExchangerPower=(double*)Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITCIRCUITHEATEXCHANGER:POWER");
 
-/*	double *spsTemp=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE:TEMP");
-	sprintf(oapiDebugString(), "SPS-T %.1f", *spsTemp); 
+	double *rcsTemp=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADA:TEMP");
+	//sprintf(oapiDebugString(), "RCS-T %.1f", KelvinToFahrenheit(*rcsTemp)); 
+
+/*	sprintf(oapiDebugString(), "RCS A PCK-T %.1f He-T %.1f p %.1f Prp-p %.1f qty %.1f", SMQuadARCS.GetPackageTempF(), SMQuadARCS.GetHeliumTempF(), 
+		SMQuadARCS.GetHeliumPressurePSI(), SMQuadARCS.GetPropellantPressurePSI(), SMQuadARCS.GetPropellantQuantityToDisplay() * 100.); 
+*/
+/*	sprintf(oapiDebugString(), "RCS C PCK-T %.1f He-T %.1f p %.1f Prp-p %.1f qty %.1f", SMQuadCRCS.GetPackageTempF(), SMQuadCRCS.GetHeliumTempF(), 
+		SMQuadCRCS.GetHeliumPressurePSI(), SMQuadCRCS.GetPropellantPressurePSI(), SMQuadCRCS.GetPropellantQuantityToDisplay() * 100.); 
 */
 /*	sprintf(oapiDebugString(), "Pot-m %.1f T %.1f p %.1f Waste-m %.1f T %.1f p %.1f deltaP %.1f Evap %.2f", 
 		*massPotable, *tempPotable, *pressPotable * 0.000145038,
@@ -1366,7 +1408,7 @@ void Saturn::JoystickTimestep()
 {
 	// Read joysticks and feed data to the computer
 	// Do not do this if we aren't the active vessel.
-	if(js_enabled > 0 && oapiGetFocusInterface() == this) {
+	if ((js_enabled > 0 || OrbiterAttitudeDisabled) && oapiGetFocusInterface() == this) {
 
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
@@ -1410,113 +1452,85 @@ void Saturn::JoystickTimestep()
 		// Mask off joystick bits
 		val31.Value &= 070000;
 
-		// We'll do this with a RHC first. 		
-		if (rhc_id != -1 && rhc_id < js_enabled) {			
-			double rhc_voltage1 = 0, rhc_voltage2 = 0;
-			double rhc_acvoltage1 = 0, rhc_acvoltage2 = 0;
-			double rhc_directv1 = 0, rhc_directv2 = 0;
-			// Since we are feeding the AGC, the RHC NORMAL power must be on.
-			// There's more than one RHC in the real ship, but ours is "both" - having the power on for either one will work.
-			// ECA needs to be powered (AOH Display & Controls)
-			if (eca.IsPowered()) {
-				// DC Power
-				switch(RotPowerNormal1Switch.GetState()) {
-					case THREEPOSSWITCH_UP:       
-						rhc_voltage1 = RHCNormalPower.Voltage();
-						break;
-				}
-				switch(RotPowerNormal2Switch.GetState()){
-					case THREEPOSSWITCH_UP:       
-						rhc_voltage2 = RHCNormalPower.Voltage();
-						break;
-				}
-
-				// AC Power
-				switch(RotPowerNormal1Switch.GetState()){
-					case THREEPOSSWITCH_UP:       
-					case THREEPOSSWITCH_DOWN:     
-						rhc_acvoltage1 = StabContSystemAc1CircuitBraker.Voltage();
-						break;
-				}
-				switch(RotPowerNormal2Switch.GetState()){
-					case THREEPOSSWITCH_UP:       
-					case THREEPOSSWITCH_DOWN:     
-						rhc_acvoltage2 = ECATVCAc2CircuitBraker.Voltage();
-						break;
-				}
-			}
-
-			// Direct power
-			switch(RotPowerDirect1Switch.GetState()){
-				case THREEPOSSWITCH_UP:       // MNA/MNB
-					rhc_directv1 = RHCDirect1Power.Voltage();
-					direct_power1 = &RHCDirect1Power;
-					break;
-				case THREEPOSSWITCH_DOWN:     // MNA
-					rhc_directv1 = ContrDirectMnA1CircuitBraker.Voltage();
-					direct_power1 = &ContrDirectMnA1CircuitBraker;
+		// We'll do this with a RHC first. 						
+		double rhc_voltage1 = 0, rhc_voltage2 = 0;
+		double rhc_acvoltage1 = 0, rhc_acvoltage2 = 0;
+		double rhc_directv1 = 0, rhc_directv2 = 0;
+		// Since we are feeding the AGC, the RHC NORMAL power must be on.
+		// There's more than one RHC in the real ship, but ours is "both" - having the power on for either one will work.
+		// ECA needs to be powered (AOH Display & Controls)
+		if (eca.IsPowered()) {
+			// DC Power
+			switch(RotPowerNormal1Switch.GetState()) {
+				case THREEPOSSWITCH_UP:       
+					rhc_voltage1 = RHCNormalPower.Voltage();
 					break;
 			}
-			switch(RotPowerDirect2Switch.GetState()){
-				case THREEPOSSWITCH_UP:       // MNA/MNB
-					rhc_directv1 = RHCDirect1Power.Voltage();
-					direct_power1 = &RHCDirect1Power;
-					break;
-				case THREEPOSSWITCH_DOWN:     // MNB
-					rhc_directv2 = ContrDirectMnB2CircuitBraker.Voltage();
-					direct_power2 = &ContrDirectMnB2CircuitBraker;
+			switch(RotPowerNormal2Switch.GetState()){
+				case THREEPOSSWITCH_UP:       
+					rhc_voltage2 = RHCNormalPower.Voltage();
 					break;
 			}
 
-			hr=dx8_joystick[rhc_id]->Poll();
-			if(FAILED(hr)){ // Did that work?
+			// AC Power
+			switch(RotPowerNormal1Switch.GetState()){
+				case THREEPOSSWITCH_UP:       
+				case THREEPOSSWITCH_DOWN:     
+					rhc_acvoltage1 = StabContSystemAc1CircuitBraker.Voltage();
+					break;
+			}
+			switch(RotPowerNormal2Switch.GetState()){
+				case THREEPOSSWITCH_UP:       
+				case THREEPOSSWITCH_DOWN:     
+					rhc_acvoltage2 = ECATVCAc2CircuitBraker.Voltage();
+					break;
+			}
+		}
+
+		// Direct power
+		switch(RotPowerDirect1Switch.GetState()){
+			case THREEPOSSWITCH_UP:       // MNA/MNB
+				rhc_directv1 = RHCDirect1Power.Voltage();
+				direct_power1 = &RHCDirect1Power;
+				break;
+			case THREEPOSSWITCH_DOWN:     // MNA
+				rhc_directv1 = ContrDirectMnA1CircuitBraker.Voltage();
+				direct_power1 = &ContrDirectMnA1CircuitBraker;
+				break;
+		}
+		switch(RotPowerDirect2Switch.GetState()){
+			case THREEPOSSWITCH_UP:       // MNA/MNB
+				rhc_directv1 = RHCDirect1Power.Voltage();
+				direct_power1 = &RHCDirect1Power;
+				break;
+			case THREEPOSSWITCH_DOWN:     // MNB
+				rhc_directv2 = ContrDirectMnB2CircuitBraker.Voltage();
+				direct_power2 = &ContrDirectMnB2CircuitBraker;
+				break;
+		}
+
+		// Initialize to centered
+		int rhc_x_pos = 32768; 
+		int rhc_y_pos = 32768; 
+		int rhc_rot_pos = 32768; 
+
+		if (rhc_id != -1 && rhc_id < js_enabled) {	
+			hr = dx8_joystick[rhc_id]->Poll();
+			if (FAILED(hr)) { // Did that work?
 				// Attempt to acquire the device
 				hr = dx8_joystick[rhc_id]->Acquire();
-				if(FAILED(hr)){
+				if (FAILED(hr)) {
 					sprintf(oapiDebugString(),"DX8JS: Cannot aquire RHC");
-				}else{
-					hr=dx8_joystick[rhc_id]->Poll();
+				} else {
+					hr = dx8_joystick[rhc_id]->Poll();
 				}
 			}		
 			// Read data
-			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]),&dx8_jstate[rhc_id]);
+			dx8_joystick[rhc_id]->GetDeviceState(sizeof(dx8_jstate[rhc_id]), &dx8_jstate[rhc_id]);
+			rhc_x_pos = dx8_jstate[rhc_id].lX;
+			rhc_y_pos = dx8_jstate[rhc_id].lY;
 
-			// RCS mode toggle
-			if (thc_id == -1 && rhc_thctoggle_id != -1) {
-				if (dx8_jstate[rhc_id].rgbButtons[rhc_thctoggle_id]) {
-					if (!rhc_thctoggle_pressed) {
-						SetAttitudeMode(RCS_LIN);
-					}
-					rhc_thctoggle_pressed = true;
-				} else {
-					rhc_thctoggle_pressed = false;
-				}
-			}
-
-			// X and Y are well-duh kinda things. X=0 for full-left, Y = 0 for full-down
-			// Set bits according to joystick state. 32768 is center, so 16384 is the left half.
-			// The real RHC had a 12 degree travel. Our joystick travels 32768 points to full deflection.
-			// This means 2730 points per degree travel. The RHC breakout switches trigger at 1.5 degrees deflection and
-			// stop at 11. So from 36863 to 62798, we trigger plus, and from 28673 to 2738 we trigger minus.
-			// The last degree of travel is reserved for the DIRECT control switches.
-			if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
-				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
-					if (dx8_jstate[rhc_id].lX < 28673) {
-						val31.Bits.MinusRollManualRotation = 1;
-					}					
-					if (dx8_jstate[rhc_id].lY < 28673) {
-						val31.Bits.MinusPitchManualRotation = 1;
-					}
-					if (dx8_jstate[rhc_id].lX > 36863) {
-						val31.Bits.PlusRollManualRotation = 1;
-					}
-					if (dx8_jstate[rhc_id].lY > 36863) {
-						val31.Bits.PlusPitchManualRotation = 1;
-					}
-				}
-			}
 			// Z-axis read.
-			int rhc_rot_pos = 32768; // Initialize to centered
 			if (rhc_rzx_id != -1) { // Native Z-axis first
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 
@@ -1533,280 +1547,473 @@ void Saturn::JoystickTimestep()
 				rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
 			}
 
-			if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
-				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
-					if (rhc_rot_pos < 28673) {
-						val31.Bits.MinusYawManualRotation = 1;
+			// RCS mode toggle
+			if (thc_id == -1 && rhc_thctoggle_id != -1) {
+				if (dx8_jstate[rhc_id].rgbButtons[rhc_thctoggle_id]) {
+					if (!rhc_thctoggle_pressed) {
+						SetAttitudeMode(RCS_LIN);
 					}
-					if (rhc_rot_pos > 36863) {
-						val31.Bits.PlusYawManualRotation = 1;
-					}
+					rhc_thctoggle_pressed = true;
+				} else {
+					rhc_thctoggle_pressed = false;
 				}
 			}
-			// Copy data to the ECA
-			if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) {
-				eca.rhc_x = dx8_jstate[rhc_id].lX;
-				eca.rhc_y = dx8_jstate[rhc_id].lY;
-				eca.rhc_z = rhc_rot_pos;
-			} else {
-				eca.rhc_x = 32768;
-				eca.rhc_y = 32768;
-				eca.rhc_z = 32768;
+		// Use Orbiter's attitude control as RHC
+		} else if (OrbiterAttitudeDisabled) {
+			// Roll
+			if (GetManualControlLevel(THGROUP_ATT_BANKLEFT) > 0) {
+				rhc_x_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_BANKLEFT)) * 32768.);
+			} else if (GetManualControlLevel(THGROUP_ATT_BANKRIGHT) > 0) {
+				rhc_x_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_BANKRIGHT) * 32768.);
 			}
-
-			if (rhc_acvoltage1 > SP_MIN_ACVOLTAGE || rhc_acvoltage2 > SP_MIN_ACVOLTAGE) {
-				eca.rhc_ac_x = dx8_jstate[rhc_id].lX;
-				eca.rhc_ac_y = dx8_jstate[rhc_id].lY;
-				eca.rhc_ac_z = rhc_rot_pos;
-			} else {
-				eca.rhc_ac_x = 32768;
-				eca.rhc_ac_y = 32768;
-				eca.rhc_ac_z = 32768;
+			// Pitch
+			if (GetManualControlLevel(THGROUP_ATT_PITCHDOWN) > 0) {
+				rhc_y_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_PITCHDOWN)) * 32768.);
+			} else if (GetManualControlLevel(THGROUP_ATT_PITCHUP) > 0) {
+				rhc_y_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_PITCHUP) * 32768.);
 			}
+			// Yaw
+			if (GetManualControlLevel(THGROUP_ATT_YAWLEFT) > 0) {
+				rhc_rot_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_YAWLEFT)) * 32768.);
+			} else if (GetManualControlLevel(THGROUP_ATT_YAWRIGHT) > 0) {
+				rhc_rot_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_YAWRIGHT) * 32768.);
+			}
+		}
 
-			//
-			// DIRECT
-			//
-
-			int rflag=0,pflag=0,yflag=0; // Direct Fire Untriggers
-			int sm_sep=0;
-			if (GetStage() > CSM_LEM_STAGE) sm_sep = 1;
-
-			if((rhc_directv1 > SP_MIN_DCVOLTAGE || rhc_directv2 > SP_MIN_DCVOLTAGE)){
-				if(dx8_jstate[rhc_id].lX < 2738){
-					// MINUS ROLL
-					if(!sm_sep){						
-						SetRCSState(RCS_SM_QUAD_A, 2, 1);
-						SetRCSState(RCS_SM_QUAD_B, 2, 1); 
-						SetRCSState(RCS_SM_QUAD_C, 2, 1);
-						SetRCSState(RCS_SM_QUAD_D, 2, 1);
-						SetRCSState(RCS_SM_QUAD_A, 1, 0);
-						SetRCSState(RCS_SM_QUAD_B, 1, 0); 
-						SetRCSState(RCS_SM_QUAD_C, 1, 0);
-						SetRCSState(RCS_SM_QUAD_D, 1, 0); 
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(200); // Four thrusters worth
-						}else{
-							direct_power2->DrawPower(200);
-						}
-					}else{
-						SetCMRCSState(8,0); 
-						SetCMRCSState(9,0);
-						SetCMRCSState(11,1);
-						SetCMRCSState(10,1);
-						if(rhc_directv1 > 12){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}
-					rjec.DirectRollActive = 1; rflag = 1;
+		// X and Y are well-duh kinda things. X=0 for full-left, Y = 0 for full-down
+		// Set bits according to joystick state. 32768 is center, so 16384 is the left half.
+		// The real RHC had a 12 degree travel. Our joystick travels 32768 points to full deflection.
+		// This means 2730 points per degree travel. The RHC breakout switches trigger at 1.5 degrees deflection and
+		// stop at 11. So from 36863 to 62798, we trigger plus, and from 28673 to 2738 we trigger minus.
+		// The last degree of travel is reserved for the DIRECT control switches.
+		if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
+			if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
+				if (rhc_x_pos < 28673) {
+					val31.Bits.MinusRollManualRotation = 1;
+				}					
+				if (rhc_y_pos < 28673) {
+					val31.Bits.MinusPitchManualRotation = 1;
 				}
-				if(dx8_jstate[rhc_id].lX > 62798){
-					// PLUS ROLL
-					if(!sm_sep){
-						SetRCSState(RCS_SM_QUAD_A, 2, 0); 
-						SetRCSState(RCS_SM_QUAD_B, 2, 0); 
-						SetRCSState(RCS_SM_QUAD_C, 2, 0);
-						SetRCSState(RCS_SM_QUAD_D, 2, 0);
-						SetRCSState(RCS_SM_QUAD_A, 1, 1);
-						SetRCSState(RCS_SM_QUAD_B, 1, 1); 
-						SetRCSState(RCS_SM_QUAD_C, 1, 1);
-						SetRCSState(RCS_SM_QUAD_D, 1, 1); 
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(200);
-						}else{
-							direct_power2->DrawPower(200);
-						}
-					}else{
-						SetCMRCSState(8,1); 
-						SetCMRCSState(9,1);
-						SetCMRCSState(11,0);
-						SetCMRCSState(10,0);
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}
-					rjec.DirectRollActive = 1; rflag = 1;
+				if (rhc_x_pos > 36863) {
+					val31.Bits.PlusRollManualRotation = 1;
 				}
-				if(dx8_jstate[rhc_id].lY < 2738){
-					// MINUS PITCH
-					if(!sm_sep){
-						SetRCSState(RCS_SM_QUAD_C, 4, 1);
-						SetRCSState(RCS_SM_QUAD_A, 4, 1); 
-						SetRCSState(RCS_SM_QUAD_C, 3, 0);
-						SetRCSState(RCS_SM_QUAD_A, 3, 0); 
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}else{
-						SetCMRCSState(0,0);
-						SetCMRCSState(1,0);
-						SetCMRCSState(2,1);
-						SetCMRCSState(3,1);
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}
-					rjec.DirectPitchActive = 1; pflag = 1;
+				if (rhc_y_pos > 36863) {
+					val31.Bits.PlusPitchManualRotation = 1;
 				}
-				if(dx8_jstate[rhc_id].lY > 62798){
-					// PLUS PITCH
-					if(!sm_sep){
-						SetRCSState(RCS_SM_QUAD_C, 4, 0);
-						SetRCSState(RCS_SM_QUAD_A, 4, 0); 
-						SetRCSState(RCS_SM_QUAD_C, 3, 1);
-						SetRCSState(RCS_SM_QUAD_A, 3, 1); 
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}else{
-						SetCMRCSState(0,1);
-						SetCMRCSState(1,1);
-						SetCMRCSState(2,0);
-						SetCMRCSState(3,0);
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}
-					rjec.DirectPitchActive = 1; pflag = 1;
+				if (rhc_rot_pos < 28673) {
+					val31.Bits.MinusYawManualRotation = 1;
 				}
-				if(rhc_rot_pos < 2738){
-					// MINUS YAW
-					if(!sm_sep){
-						SetRCSState(RCS_SM_QUAD_B, 4, 1);
-						SetRCSState(RCS_SM_QUAD_D, 4, 1); 
-						SetRCSState(RCS_SM_QUAD_D, 3, 0);
-						SetRCSState(RCS_SM_QUAD_B, 3, 0); 
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}else{
-						SetCMRCSState(4,0);
-						SetCMRCSState(5,0);
-						SetCMRCSState(6,1);
-						SetCMRCSState(7,1);
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}
-					rjec.DirectYawActive = 1; yflag = 1;
-				}
-				if(rhc_rot_pos > 62798){
-					// PLUS YAW
-					if(!sm_sep){
-						SetRCSState(RCS_SM_QUAD_D, 3, 1);
-						SetRCSState(RCS_SM_QUAD_B, 3, 1); 
-						SetRCSState(RCS_SM_QUAD_B, 4, 0);
-						SetRCSState(RCS_SM_QUAD_D, 4, 0); 
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}else{
-						SetCMRCSState(4,1);
-						SetCMRCSState(5,1);
-						SetCMRCSState(6,0);
-						SetCMRCSState(7,0);
-						if(rhc_directv1 > SP_MIN_DCVOLTAGE){
-							direct_power1->DrawPower(100);
-						}else{
-							direct_power2->DrawPower(100);
-						}
-					}
-					rjec.DirectYawActive = 1; yflag = 1;
+				if (rhc_rot_pos > 36863) {
+					val31.Bits.PlusYawManualRotation = 1;
 				}
 			}
-			if(rjec.DirectRollActive != 0 && rflag == 0){ // Turn off direct roll
-				if(!sm_sep){
+		}
+
+		// Copy data to the ECA
+		if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) {
+			eca.rhc_x = rhc_x_pos;
+			eca.rhc_y = rhc_y_pos;
+			eca.rhc_z = rhc_rot_pos;
+		} else {
+			eca.rhc_x = 32768;
+			eca.rhc_y = 32768;
+			eca.rhc_z = 32768;
+		}
+
+		if (rhc_acvoltage1 > SP_MIN_ACVOLTAGE || rhc_acvoltage2 > SP_MIN_ACVOLTAGE) {
+			eca.rhc_ac_x = rhc_x_pos;
+			eca.rhc_ac_y = rhc_y_pos;
+			eca.rhc_ac_z = rhc_rot_pos;
+		} else {
+			eca.rhc_ac_x = 32768;
+			eca.rhc_ac_y = 32768;
+			eca.rhc_ac_z = 32768;
+		}
+
+		//
+		// DIRECT
+		//
+
+		int rflag = 0, pflag = 0, yflag = 0; // Direct Fire Untriggers
+
+		// CM/SM transfer, either motor transfers all thruster, see AOH Figure 2.5-4
+		bool sm_sep = false;
+		if (rjec.GetCMTransferMotor1() || rjec.GetCMTransferMotor2()) sm_sep = true;
+
+		if ((rhc_directv1 > SP_MIN_DCVOLTAGE || rhc_directv2 > SP_MIN_DCVOLTAGE)) {
+			if (rhc_x_pos < 2738) {
+				// MINUS ROLL
+				if (!sm_sep) {						
+					SetRCSState(RCS_SM_QUAD_A, 2, 1);
+					SetRCSState(RCS_SM_QUAD_B, 2, 1); 
+					SetRCSState(RCS_SM_QUAD_C, 2, 1);
+					SetRCSState(RCS_SM_QUAD_D, 2, 1);
 					SetRCSState(RCS_SM_QUAD_A, 1, 0);
 					SetRCSState(RCS_SM_QUAD_B, 1, 0); 
 					SetRCSState(RCS_SM_QUAD_C, 1, 0);
 					SetRCSState(RCS_SM_QUAD_D, 1, 0); 
+
+					// Disable CM thrusters
+					SetCMRCSState(8,0); 
+					SetCMRCSState(9,0);
+					SetCMRCSState(11,0);
+					SetCMRCSState(10,0);
+
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(200); // Four thrusters worth
+					} else {
+						direct_power2->DrawPower(200);
+					}
+				} else {
+					SetCMRCSState(8,0); 
+					SetCMRCSState(9,0);
+					SetCMRCSState(11,1);
+					SetCMRCSState(10,1);
+
+					// Disable SM thrusters
 					SetRCSState(RCS_SM_QUAD_A, 2, 0);
 					SetRCSState(RCS_SM_QUAD_B, 2, 0); 
 					SetRCSState(RCS_SM_QUAD_C, 2, 0);
-					SetRCSState(RCS_SM_QUAD_D, 2, 0); 
-				}else{
-					SetCMRCSState(8,0);
-					SetCMRCSState(9,0);
-					SetCMRCSState(10,0);
-					SetCMRCSState(11,0);
+					SetRCSState(RCS_SM_QUAD_D, 2, 0);
+					SetRCSState(RCS_SM_QUAD_A, 1, 0);
+					SetRCSState(RCS_SM_QUAD_B, 1, 0); 
+					SetRCSState(RCS_SM_QUAD_C, 1, 0);
+					SetRCSState(RCS_SM_QUAD_D, 1, 0); 
+
+					if (rhc_directv1 > 12) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
+					}
 				}
-				rjec.DirectRollActive = 0;
+				rjec.SetDirectRollActive(true); 
+				rflag = 1;
 			}
-			if(rjec.DirectPitchActive != 0 && pflag == 0){ // Turn off direct pitch
-				if(!sm_sep){
+			if (rhc_x_pos > 62798) {
+				// PLUS ROLL
+				if (!sm_sep) {
+					SetRCSState(RCS_SM_QUAD_A, 2, 0); 
+					SetRCSState(RCS_SM_QUAD_B, 2, 0); 
+					SetRCSState(RCS_SM_QUAD_C, 2, 0);
+					SetRCSState(RCS_SM_QUAD_D, 2, 0);
+					SetRCSState(RCS_SM_QUAD_A, 1, 1);
+					SetRCSState(RCS_SM_QUAD_B, 1, 1); 
+					SetRCSState(RCS_SM_QUAD_C, 1, 1);
+					SetRCSState(RCS_SM_QUAD_D, 1, 1); 
+
+					// Disable CM thrusters
+					SetCMRCSState(8, 0); 
+					SetCMRCSState(9, 0);
+					SetCMRCSState(11, 0);
+					SetCMRCSState(10, 0);
+					
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(200);
+					} else {
+						direct_power2->DrawPower(200);
+					}
+				} else {
+					SetCMRCSState(8, 1); 
+					SetCMRCSState(9, 1);
+					SetCMRCSState(11, 0);
+					SetCMRCSState(10, 0);
+
+					// Disable SM thrusters
+					SetRCSState(RCS_SM_QUAD_A, 2, 0); 
+					SetRCSState(RCS_SM_QUAD_B, 2, 0); 
+					SetRCSState(RCS_SM_QUAD_C, 2, 0);
+					SetRCSState(RCS_SM_QUAD_D, 2, 0);
+					SetRCSState(RCS_SM_QUAD_A, 1, 0);
+					SetRCSState(RCS_SM_QUAD_B, 1, 0); 
+					SetRCSState(RCS_SM_QUAD_C, 1, 0);
+					SetRCSState(RCS_SM_QUAD_D, 1, 0); 
+
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
+					}
+				}
+				rjec.SetDirectRollActive(true); 
+				rflag = 1;
+			}
+			if (rhc_y_pos < 2738) {
+				// MINUS PITCH
+				if (!sm_sep) {
+					SetRCSState(RCS_SM_QUAD_C, 4, 1);
+					SetRCSState(RCS_SM_QUAD_A, 4, 1); 
 					SetRCSState(RCS_SM_QUAD_C, 3, 0);
 					SetRCSState(RCS_SM_QUAD_A, 3, 0); 
+				
+					// Disable CM thrusters
+					SetCMRCSState(0, 0);
+					SetCMRCSState(1, 0);
+					SetCMRCSState(2, 0);
+					SetCMRCSState(3, 0);
+
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
+					}
+				} else {
+					SetCMRCSState(0, 0);
+					SetCMRCSState(1, 0);
+					SetCMRCSState(2, 1);
+					SetCMRCSState(3, 1);
+					
+					// Disable SM thrusters
 					SetRCSState(RCS_SM_QUAD_C, 4, 0);
 					SetRCSState(RCS_SM_QUAD_A, 4, 0); 
-				}else{
-					SetCMRCSState(0,0);
-					SetCMRCSState(1,0);
-					SetCMRCSState(2,0);
-					SetCMRCSState(3,0);
+					SetRCSState(RCS_SM_QUAD_C, 3, 0);
+					SetRCSState(RCS_SM_QUAD_A, 3, 0); 
+
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
+					}
 				}
-				rjec.DirectPitchActive = 0;
+				rjec.SetDirectPitchActive(true); 
+				pflag = 1;
 			}
-			if(rjec.DirectYawActive != 0 && yflag == 0){ // Turn off direct yaw
-				if(!sm_sep){
+			if (rhc_y_pos > 62798) {
+				// PLUS PITCH
+				if (!sm_sep) {
+					SetRCSState(RCS_SM_QUAD_C, 4, 0);
+					SetRCSState(RCS_SM_QUAD_A, 4, 0); 
+					SetRCSState(RCS_SM_QUAD_C, 3, 1);
+					SetRCSState(RCS_SM_QUAD_A, 3, 1); 
+
+					// Disable CM thrusters
+					SetCMRCSState(0, 0);
+					SetCMRCSState(1, 0);
+					SetCMRCSState(2, 0);
+					SetCMRCSState(3, 0);
+
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
+					}
+				} else {
+					SetCMRCSState(0, 1);
+					SetCMRCSState(1, 1);
+					SetCMRCSState(2, 0);
+					SetCMRCSState(3, 0);
+					
+					// Disable SM thrusters
+					SetRCSState(RCS_SM_QUAD_C, 4, 0);
+					SetRCSState(RCS_SM_QUAD_A, 4, 0); 
+					SetRCSState(RCS_SM_QUAD_C, 3, 0);
+					SetRCSState(RCS_SM_QUAD_A, 3, 0); 
+					
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
+					}
+				}
+				rjec.SetDirectPitchActive(true); 
+				pflag = 1;
+			}
+			if (rhc_rot_pos < 2738) {
+				// MINUS YAW
+				if (!sm_sep) {
+					SetRCSState(RCS_SM_QUAD_B, 4, 1);
+					SetRCSState(RCS_SM_QUAD_D, 4, 1); 
+					SetRCSState(RCS_SM_QUAD_D, 3, 0);
+					SetRCSState(RCS_SM_QUAD_B, 3, 0); 
+
+					// Disable CM thrusters
+					SetCMRCSState(4, 0);
+					SetCMRCSState(5, 0);
+					SetCMRCSState(6, 0);
+					SetCMRCSState(7, 0);
+
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
+					}
+				} else {
+					SetCMRCSState(4, 0);
+					SetCMRCSState(5, 0);
+					SetCMRCSState(6, 1);
+					SetCMRCSState(7, 1);
+
+					// Disable SM thrusters
+					SetRCSState(RCS_SM_QUAD_B, 4, 0);
+					SetRCSState(RCS_SM_QUAD_D, 4, 0); 
+					SetRCSState(RCS_SM_QUAD_D, 3, 0);
+					SetRCSState(RCS_SM_QUAD_B, 3, 0); 
+
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
+					}
+				}
+				rjec.SetDirectYawActive(true);
+				yflag = 1;
+			}
+			if (rhc_rot_pos > 62798) {
+				// PLUS YAW
+				if (!sm_sep) {
+					SetRCSState(RCS_SM_QUAD_D, 3, 1);
+					SetRCSState(RCS_SM_QUAD_B, 3, 1); 
+					SetRCSState(RCS_SM_QUAD_B, 4, 0);
+					SetRCSState(RCS_SM_QUAD_D, 4, 0); 
+					
+					// Disable CM thrusters
+					SetCMRCSState(4, 0);
+					SetCMRCSState(5, 0);
+					SetCMRCSState(6, 0);
+					SetCMRCSState(7, 0);
+
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
+					}
+				} else {
+					SetCMRCSState(4, 1);
+					SetCMRCSState(5, 1);
+					SetCMRCSState(6, 0);
+					SetCMRCSState(7, 0);
+					
+					// Disable SM thrusters
 					SetRCSState(RCS_SM_QUAD_D, 3, 0);
 					SetRCSState(RCS_SM_QUAD_B, 3, 0); 
 					SetRCSState(RCS_SM_QUAD_B, 4, 0);
 					SetRCSState(RCS_SM_QUAD_D, 4, 0); 
-				}else{
-					SetCMRCSState(4,0);
-					SetCMRCSState(5,0);
-					SetCMRCSState(6,0);
-					SetCMRCSState(7,0);
-				}
-				rjec.DirectYawActive = 0;
-			}
-			
-			if(rhc_debug != -1){ sprintf(oapiDebugString(),"RHC: X/Y/Z = %d / %d / %d",dx8_jstate[rhc_id].lX,dx8_jstate[rhc_id].lY,
-				rhc_rot_pos); }
-		}
-		// And now the THC...
-		if(thc_id != -1 && thc_id < js_enabled){
-			double thc_voltage = 0; 
-			switch(TransContrSwitch.GetState()){
-				case TOGGLESWITCH_UP: // The THC is powered from MNA or MNB automatically.
-					thc_voltage = ContrAutoMnACircuitBraker.Voltage();
-					if(thc_voltage < SP_MIN_DCVOLTAGE){
-						thc_voltage = ContrAutoMnBCircuitBraker.Voltage();
+
+					if (rhc_directv1 > SP_MIN_DCVOLTAGE) {
+						direct_power1->DrawPower(100);
+					} else {
+						direct_power2->DrawPower(100);
 					}
-					break;
-				case TOGGLESWITCH_DOWN:
-					break;			
+				}
+				rjec.SetDirectYawActive(true);
+				yflag = 1;
 			}
-			hr=dx8_joystick[thc_id]->Poll();
-			if(FAILED(hr)){ // Did that work?
+		}
+		if (rjec.GetDirectRollActive() == true && rflag == 0) { // Turn off direct roll
+			if (!sm_sep) {
+				SetRCSState(RCS_SM_QUAD_A, 1, 0);
+				SetRCSState(RCS_SM_QUAD_B, 1, 0); 
+				SetRCSState(RCS_SM_QUAD_C, 1, 0);
+				SetRCSState(RCS_SM_QUAD_D, 1, 0); 
+				SetRCSState(RCS_SM_QUAD_A, 2, 0);
+				SetRCSState(RCS_SM_QUAD_B, 2, 0); 
+				SetRCSState(RCS_SM_QUAD_C, 2, 0);
+				SetRCSState(RCS_SM_QUAD_D, 2, 0); 
+			} else {
+				SetCMRCSState(8,0);
+				SetCMRCSState(9,0);
+				SetCMRCSState(10,0);
+				SetCMRCSState(11,0);
+			}
+			rjec.SetDirectRollActive(false);
+		}
+		if (rjec.GetDirectPitchActive() == true && pflag == 0) { // Turn off direct pitch
+			if (!sm_sep) {
+				SetRCSState(RCS_SM_QUAD_C, 3, 0);
+				SetRCSState(RCS_SM_QUAD_A, 3, 0); 
+				SetRCSState(RCS_SM_QUAD_C, 4, 0);
+				SetRCSState(RCS_SM_QUAD_A, 4, 0); 
+			} else {
+				SetCMRCSState(0,0);
+				SetCMRCSState(1,0);
+				SetCMRCSState(2,0);
+				SetCMRCSState(3,0);
+			}
+			rjec.SetDirectPitchActive(false);
+		}
+		if (rjec.GetDirectYawActive() == true && yflag == 0) { // Turn off direct yaw
+			if (!sm_sep) {
+				SetRCSState(RCS_SM_QUAD_D, 3, 0);
+				SetRCSState(RCS_SM_QUAD_B, 3, 0); 
+				SetRCSState(RCS_SM_QUAD_B, 4, 0);
+				SetRCSState(RCS_SM_QUAD_D, 4, 0); 
+			} else {
+				SetCMRCSState(4,0);
+				SetCMRCSState(5,0);
+				SetCMRCSState(6,0);
+				SetCMRCSState(7,0);
+			}
+			rjec.SetDirectYawActive(false);
+		}
+		
+		if (rhc_debug != -1) { 
+			sprintf(oapiDebugString(),"RHC: X/Y/Z = %d / %d / %d", rhc_x_pos, rhc_y_pos, rhc_rot_pos); 
+		}
+
+		//
+		// And now the THC...
+		//
+
+		double thc_voltage = 0; 
+		switch (TransContrSwitch.GetState()) {
+			case TOGGLESWITCH_UP: // The THC is powered from MNA or MNB automatically.
+				thc_voltage = ContrAutoMnACircuitBraker.Voltage();
+				if (thc_voltage < SP_MIN_DCVOLTAGE) {
+					thc_voltage = ContrAutoMnBCircuitBraker.Voltage();
+				}
+				break;
+			case TOGGLESWITCH_DOWN:
+				break;			
+		}
+
+		// Initialize to centered
+		int thc_x_pos = 32768; 
+		int thc_y_pos = 32768; 
+		int thc_rot_pos = 32768; 
+
+		if (thc_id != -1 && thc_id < js_enabled){
+			hr = dx8_joystick[thc_id]->Poll();
+			if (FAILED(hr)) { // Did that work?
 				// Attempt to acquire the device
 				hr = dx8_joystick[thc_id]->Acquire();
-				if(FAILED(hr)){
+				if (FAILED(hr)) {
 					sprintf(oapiDebugString(),"DX8JS: Cannot aquire THC");
-				}else{
-					hr=dx8_joystick[thc_id]->Poll();
+				} else {
+					hr = dx8_joystick[thc_id]->Poll();
 				}
 			}		
 			// Read data
-			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]),&dx8_jstate[thc_id]);
+			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]), &dx8_jstate[thc_id]);
+			thc_x_pos = dx8_jstate[thc_id].lX;
+			thc_y_pos = dx8_jstate[thc_id].lY;
+
+			// Z-axis read.
+			if (thc_rzx_id != -1) { // Native Z-axis first
+				thc_rot_pos = dx8_jstate[thc_id].lZ;
+			
+			} else if (thc_rot_id != -1){ // Then if this is a rotator-type axis
+				switch(thc_rot_id){
+					case 0:
+						thc_rot_pos = dx8_jstate[thc_id].lRx; break;
+					case 1:
+						thc_rot_pos = dx8_jstate[thc_id].lRy; break;
+					case 2:
+						thc_rot_pos = dx8_jstate[thc_id].lRz; break;
+				}
+			} else if(thc_sld_id != -1){ // Finally if this is a slider
+				thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
+			}
+
+			if (thc_pov_id != -1) {
+				DWORD dwPOV = dx8_jstate[thc_id].rgdwPOV[thc_pov_id];
+				if (LOWORD(dwPOV) != 0xFFFF) {
+					if (dwPOV > 31500 || dwPOV < 4500) {
+						thc_rot_pos = 65536;
+					} else if (dwPOV > 13500 && dwPOV < 21500) {
+						thc_rot_pos = 0;
+					}
+				}
+				//sprintf(oapiDebugString(),"THC: %d", dx8_jstate[thc_id].rgdwPOV[thc_pov_id]);
+			}
 			
 			// RCS mode toggle
 			if (rhc_id == -1 && rhc_thctoggle_id != -1) {
@@ -1820,77 +2027,109 @@ void Saturn::JoystickTimestep()
 				}
 			}
 
-			if (thc_voltage > SP_MIN_DCVOLTAGE) {
-				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
-					if (dx8_jstate[thc_id].lX < 16384) {							
-						val31.Bits.MinusYTranslation = 1;
-					}
-					if (dx8_jstate[thc_id].lY < 16384) {
-						val31.Bits.PlusZTranslation = 1;
-					}
-					if (dx8_jstate[thc_id].lX > 49152) {
-						val31.Bits.PlusYTranslation = 1;
-					}
-					if (dx8_jstate[thc_id].lY > 49152) {
-						val31.Bits.MinusZTranslation = 1;
-					}
-				}
-				// Z-axis read.
-				int thc_rot_pos = 32768; // Initialize to centered
-
-				if (thc_rzx_id != -1) { // Native Z-axis first
-					thc_rot_pos = dx8_jstate[thc_id].lZ;
-				
-				} else if (thc_rot_id != -1){ // Then if this is a rotator-type axis
-					switch(thc_rot_id){
-						case 0:
-							thc_rot_pos = dx8_jstate[thc_id].lRx; break;
-						case 1:
-							thc_rot_pos = dx8_jstate[thc_id].lRy; break;
-						case 2:
-							thc_rot_pos = dx8_jstate[thc_id].lRz; break;
-					}
-				} else if(thc_sld_id != -1){ // Finally if this is a slider
-					thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
-				}
-
-				if (thc_pov_id != -1) {
-					DWORD dwPOV = dx8_jstate[thc_id].rgdwPOV[thc_pov_id];
-					if (LOWORD(dwPOV) != 0xFFFF) {
-						if (dwPOV > 31500 || dwPOV < 4500) {
-							thc_rot_pos = 65536;
-						} else if (dwPOV > 13500 && dwPOV < 21500) {
-							thc_rot_pos = 0;
-						}
-					}
-					//sprintf(oapiDebugString(),"THC: %d", dx8_jstate[thc_id].rgdwPOV[thc_pov_id]);
-				}
-
-				if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
-					if (thc_rot_pos < 16384) {
-						val31.Bits.MinusXTranslation = 1;
-					}
-					if (thc_rot_pos > 49152) {
-						val31.Bits.PlusXTranslation = 1;
-					}
-				}
-				if (thc_debug != -1) { 
-					sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d",dx8_jstate[thc_id].lX, dx8_jstate[thc_id].lY,	thc_rot_pos);
-				}
-
-				// Update ECA
-				eca.thc_x = dx8_jstate[thc_id].lX;
-				eca.thc_y = thc_rot_pos;
-				eca.thc_z = dx8_jstate[thc_id].lY;
-			} else {
-				// Power off
-				eca.thc_x = 32768;
-				eca.thc_y = 32768;
-				eca.thc_z = 32768;
+		// Use Orbiter's attitude control as THC
+		} else if (OrbiterAttitudeDisabled) {
+			// Up/down
+			if (GetManualControlLevel(THGROUP_ATT_DOWN) > 0) {
+				thc_y_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_DOWN)) * 32768.);
+			} else if (GetManualControlLevel(THGROUP_ATT_UP) > 0) {
+				thc_y_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_UP) * 32768.);
+			}
+			// Left/right
+			if (GetManualControlLevel(THGROUP_ATT_LEFT) > 0) {
+				thc_x_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_LEFT)) * 32768.);
+			} else if (GetManualControlLevel(THGROUP_ATT_RIGHT) > 0) {
+				thc_x_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_RIGHT) * 32768.);
+			}
+			// Forward/Back
+			if (GetManualControlLevel(THGROUP_ATT_BACK) > 0) {
+				thc_rot_pos = (int) ((1. - GetManualControlLevel(THGROUP_ATT_BACK)) * 32768.);
+			} else if (GetManualControlLevel(THGROUP_ATT_FORWARD) > 0) {
+				thc_rot_pos = (int) (32768. + GetManualControlLevel(THGROUP_ATT_FORWARD) * 32768.);
 			}
 		}
-		// Submit data to the CPU.
-		agc.SetInputChannel(031,val31.Value);
+
+		if (thc_voltage > SP_MIN_DCVOLTAGE) {
+			if (SCContSwitch.IsUp() && !THCRotary.IsClockwise()) {	// CMC
+				if (thc_x_pos < 16384) {							
+					val31.Bits.MinusYTranslation = 1;
+				}
+				if (thc_y_pos < 16384) {
+					val31.Bits.PlusZTranslation = 1;
+				}
+				if (thc_x_pos > 49152) {
+					val31.Bits.PlusYTranslation = 1;
+				}
+				if (thc_y_pos > 49152) {
+					val31.Bits.MinusZTranslation = 1;
+				}
+				if (thc_rot_pos < 16384) {
+					val31.Bits.MinusXTranslation = 1;
+				}
+				if (thc_rot_pos > 49152) {
+					val31.Bits.PlusXTranslation = 1;
+				}
+			}
+			if (thc_debug != -1) { 
+				sprintf(oapiDebugString(),"THC: X/Y/Z = %d / %d / %d", thc_x_pos, thc_y_pos, thc_rot_pos);
+			}
+
+			// Update ECA
+			eca.thc_x = thc_x_pos;
+			eca.thc_y = thc_rot_pos;
+			eca.thc_z = thc_y_pos;
+		} else {
+			// Power off
+			eca.thc_x = 32768;
+			eca.thc_y = 32768;
+			eca.thc_z = 32768;
+		}
+		// Submit data to the AGC
+		agc.SetInputChannel(031, val31.Value);
+	}
+
+	//
+	// IMPORTANT: The following must be the last SetRCSState calls within a time step, especially after the RJ/EC
+	// The thrusters are turned off by the RJ/EC or the direct coil handling above.
+	//
+
+	//
+	// Direct ullage thrust
+	//
+
+	if (DirectUllageButton.GetState() == 1) {
+		if (DirectUllMnACircuitBraker.IsPowered()) {   
+			SetRCSState(RCS_SM_QUAD_B, 4, true);
+			SetRCSState(RCS_SM_QUAD_D, 3, true);
+		}
+		if (DirectUllMnBCircuitBraker.IsPowered()) {   
+			SetRCSState(RCS_SM_QUAD_A, 4, true); 
+			SetRCSState(RCS_SM_QUAD_C, 3, true);
+		}
+	}
+
+	//
+	// CM RCS propellant dump 
+	//
+	
+	// Manual control
+	if (CMPropDumpSwitch.IsUp() && CMRCSLogicSwitch.IsUp() && RCSLogicMnACircuitBraker.IsPowered()) {
+		SetCMRCSState(2, true);	
+		double d = GetThrusterLevel(th_att_cm[2]);
+		
+		SetCMRCSState(4, true);	
+		SetCMRCSState(7, true);	
+		SetCMRCSState(8, true);	
+		SetCMRCSState(11, true);	
+	}
+		
+	// Manual control
+	if (CMPropDumpSwitch.IsUp() && CMRCSLogicSwitch.IsUp() && RCSLogicMnBCircuitBraker.IsPowered()) {
+		SetCMRCSState(3, true);	
+		SetCMRCSState(5, true);	
+		SetCMRCSState(6, true);	
+		SetCMRCSState(9, true);	
+		SetCMRCSState(10, true);	
 	}
 }
 
@@ -1924,13 +2163,111 @@ void Saturn::CabinFansSystemTimestep()
 	}
 }
 
+void Saturn::CheckSMSystemsState()
+
+{
+	//
+	// Disconnect SM devices after CM/SM separation
+	//
+	
+	if (stage >= CM_STAGE) {
+
+		// Disconnect SM RCS electrical devices
+		SMRCSHelium1ASwitch.WireTo(NULL);
+		SMRCSHelium1BSwitch.WireTo(NULL);
+		SMRCSHelium1CSwitch.WireTo(NULL);
+		SMRCSHelium1DSwitch.WireTo(NULL);
+
+		SMRCSHelium2ASwitch.WireTo(NULL);
+		SMRCSHelium2BSwitch.WireTo(NULL);
+		SMRCSHelium2CSwitch.WireTo(NULL);
+		SMRCSHelium2DSwitch.WireTo(NULL);
+
+		SMRCSProp1ASwitch.WireTo(NULL);
+		SMRCSProp1BSwitch.WireTo(NULL);
+		SMRCSProp1CSwitch.WireTo(NULL);
+		SMRCSProp1DSwitch.WireTo(NULL);
+
+		SMRCSProp2ASwitch.WireTo(NULL);
+		SMRCSProp2BSwitch.WireTo(NULL);
+		SMRCSProp2CSwitch.WireTo(NULL);
+		SMRCSProp2DSwitch.WireTo(NULL);
+
+		SMRCSHelium1ATalkback.WireTo(NULL);
+		SMRCSHelium1BTalkback.WireTo(NULL);
+		SMRCSHelium1CTalkback.WireTo(NULL);
+		SMRCSHelium1DTalkback.WireTo(NULL);
+
+		SMRCSHelium2ATalkback.WireTo(NULL);
+		SMRCSHelium2BTalkback.WireTo(NULL);
+		SMRCSHelium2CTalkback.WireTo(NULL);
+		SMRCSHelium2DTalkback.WireTo(NULL);
+
+		SMRCSProp1ATalkback.WireTo(NULL);
+		SMRCSProp1BTalkback.WireTo(NULL);
+		SMRCSProp1CTalkback.WireTo(NULL);
+		SMRCSProp1DTalkback.WireTo(NULL);
+
+		SMRCSProp2ATalkback.WireTo(NULL);
+		SMRCSProp2BTalkback.WireTo(NULL);
+		SMRCSProp2CTalkback.WireTo(NULL);
+		SMRCSProp2DTalkback.WireTo(NULL);
+		
+		SMRCSHeaterASwitch.WireTo(NULL);
+		SMRCSHeaterBSwitch.WireTo(NULL);
+		SMRCSHeaterCSwitch.WireTo(NULL);
+		SMRCSHeaterDSwitch.WireTo(NULL);
+	
+		// Disable the fuel cells so they appear to have been disconnected.
+		int i;
+		for (i = 0; i < 3; i++) {
+			if (FuelCells[i])
+				FuelCells[i]->Disable();			
+		}
+
+		FuelCellCooling[0]->WireTo(NULL);
+		FuelCellCooling[1]->WireTo(NULL);
+		FuelCellCooling[2]->WireTo(NULL);
+
+		FuelCellHeaters[0]->WireTo(NULL);
+		FuelCellHeaters[1]->WireTo(NULL);
+		FuelCellHeaters[2]->WireTo(NULL);
+
+		// Cryo heaters/fans
+		O2TanksHeaters[0]->WireTo(NULL);
+		O2TanksHeaters[1]->WireTo(NULL);
+		H2TanksHeaters[0]->WireTo(NULL);
+		H2TanksHeaters[1]->WireTo(NULL);
+		O2TanksFans[0]->WireTo(NULL);
+		O2TanksFans[1]->WireTo(NULL);
+		H2TanksFans[0]->WireTo(NULL);
+		H2TanksFans[1]->WireTo(NULL);
+		
+		// SPS
+		SPSPropellantLineHeaterA->WireTo(NULL);
+		SPSPropellantLineHeaterB->WireTo(NULL);
+
+		HeValveMnACircuitBraker.WireTo(NULL);
+		HeValveMnBCircuitBraker.WireTo(NULL);
+
+		// ECS Coolant loops are disconnected, we set them to zero length, which disables them
+		PrimEcsRadiatorExchanger1->SetLength(0);
+		PrimEcsRadiatorExchanger2->SetLength(0);
+		SecEcsRadiatorExchanger1->SetLength(0);
+		SecEcsRadiatorExchanger2->SetLength(0);
+
+		// Close O2 SM supply
+		O2SMSupply.Close();
+	}
+}
+
 bool Saturn::AutopilotActive()
 
 {
 	ChannelValue12 val12;
 	val12.Value = agc.GetOutputChannel(012);
 
-	return (autopilot && CMCswitch) && !val12.Bits.EnableSIVBTakeover;
+	return autopilot && !val12.Bits.EnableSIVBTakeover;
 }
 
 bool Saturn::CabinFansActive()
@@ -1949,7 +2286,7 @@ bool Saturn::CabinFan1Active()
 
 	bool PowerFan1 = (ECSCabinFanAC1ACircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC1BCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC1CCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE);
 
-	return (CabinFan1Switch && PowerFan1);
+	return (CabinFan1Switch.IsUp() && PowerFan1);
 }
 
 bool Saturn::CabinFan2Active()
@@ -1961,7 +2298,7 @@ bool Saturn::CabinFan2Active()
 
 	bool PowerFan2 = (ECSCabinFanAC2ACircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC2BCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) || (ECSCabinFanAC2CCircuitBraker.Voltage() > SP_MIN_ACVOLTAGE);
 
-	return (CabinFan2Switch && PowerFan2);
+	return (CabinFan2Switch.IsUp() && PowerFan2);
 }
 
 //
@@ -1985,79 +2322,16 @@ void Saturn::DeactivateS4RCS()
 void Saturn::ActivateCSMRCS()
 
 {
-	SetValveState(CSM_He1_TANKA_VALVE, true);
-	SetValveState(CSM_He1_TANKB_VALVE, true);
-	SetValveState(CSM_He1_TANKC_VALVE, true);
-	SetValveState(CSM_He1_TANKD_VALVE, true);
+	/// \todo This is now handled by automatic checklists and - as in reality - activated throughout the stage. 
+	/// To restore the old functionality, a special flag would need to be introduced in SMRCSPropellantSource.
 
-	SetValveState(CSM_He2_TANKA_VALVE, true);
-	SetValveState(CSM_He2_TANKB_VALVE, true);
-	SetValveState(CSM_He2_TANKC_VALVE, true);
-	SetValveState(CSM_He2_TANKD_VALVE, true);
-
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_A, true);
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_B, true);
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_C, true);
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_D, true);
-
-	SetValveState(CSM_SECOXID_INSOL_VALVE_A, true);
-	SetValveState(CSM_SECOXID_INSOL_VALVE_B, true);
-	SetValveState(CSM_SECOXID_INSOL_VALVE_C, true);
-	SetValveState(CSM_SECOXID_INSOL_VALVE_D, true);
-
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_A, true);
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, true);
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_C, true);
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_D, true);
-
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_A, true);
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_B, true);
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_C, true);
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_D, true);
-
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_A, true);
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_B, true);
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_C, true);
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_D, true);
 }
 
 void Saturn::DeactivateCSMRCS()
 
 {
-	SetValveState(CSM_He1_TANKA_VALVE, false);
-	SetValveState(CSM_He1_TANKB_VALVE, false);
-	SetValveState(CSM_He1_TANKC_VALVE, false);
-	SetValveState(CSM_He1_TANKD_VALVE, false);
-
-	SetValveState(CSM_He2_TANKA_VALVE, false);
-	SetValveState(CSM_He2_TANKB_VALVE, false);
-	SetValveState(CSM_He2_TANKC_VALVE, false);
-	SetValveState(CSM_He2_TANKD_VALVE, false);
-
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_A, false);
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_B, false);
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_C, false);
-	SetValveState(CSM_PRIOXID_INSOL_VALVE_D, false);
-
-	SetValveState(CSM_SECOXID_INSOL_VALVE_A, false);
-	SetValveState(CSM_SECOXID_INSOL_VALVE_B, false);
-	SetValveState(CSM_SECOXID_INSOL_VALVE_C, false);
-	SetValveState(CSM_SECOXID_INSOL_VALVE_D, false);
-
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_A, false);
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_B, false);
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_C, false);
-	SetValveState(CSM_PRIFUEL_INSOL_VALVE_D, false);
-
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_A, false);
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_B, false);
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_C, false);
-	SetValveState(CSM_SECFUEL_INSOL_VALVE_D, false);
-
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_A, false);
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_B, false);
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_C, false);
-	SetValveState(CSM_SECFUEL_PRESS_VALVE_D, false);
+	/// \todo This is now handled by automatic checklists and - as in reality - activated throughout the stage. 
+	/// To restore the old functionality, a special flag would need to be introduced in SMRCSPropellantSource.
 }
 
 //
@@ -2067,164 +2341,15 @@ void Saturn::DeactivateCSMRCS()
 void Saturn::ActivateCMRCS()
 
 {
-	SetValveState(CM_RCSPROP_TANKA_VALVE, true);
-	SetValveState(CM_RCSPROP_TANKB_VALVE, true);
+	/// \todo This is now handled by automatic checklists and - as in reality - activated throughout the stage. 
+	/// To restore the old functionality, a special flag would need to be introduced in CMRCSPropellantSource.
 }
 
-void Saturn::DeactivateCMRCS()
+void Saturn::DeactivateCMRCS()	
 
 {
-	SetValveState(CM_RCSPROP_TANKA_VALVE, false);
-	SetValveState(CM_RCSPROP_TANKB_VALVE, false);
-}
-
-bool Saturn::CMRCS1Active()
-
-{
-	return GetValveState(CM_RCSPROP_TANKA_VALVE);
-}
-
-bool Saturn::CMRCS2Active()
-
-{
-	return GetValveState(CM_RCSPROP_TANKB_VALVE);
-}
-
-bool Saturn::SMRCSAActive()
-
-{
-	return ((GetValveState(CSM_He1_TANKA_VALVE) || GetValveState(CSM_He2_TANKA_VALVE)) && 
-		(GetValveState(CSM_PRIOXID_INSOL_VALVE_A) || GetValveState(CSM_SECOXID_INSOL_VALVE_A)) &&
-		(GetValveState(CSM_PRIFUEL_INSOL_VALVE_A) || (GetValveState(CSM_SECFUEL_PRESS_VALVE_A) && GetValveState(CSM_SECOXID_INSOL_VALVE_A))));
-}
-
-bool Saturn::SMRCSBActive()
-
-{
-	return ((GetValveState(CSM_He1_TANKB_VALVE) || GetValveState(CSM_He2_TANKB_VALVE)) && 
-		(GetValveState(CSM_PRIOXID_INSOL_VALVE_B) || GetValveState(CSM_SECOXID_INSOL_VALVE_B)) &&
-		(GetValveState(CSM_PRIFUEL_INSOL_VALVE_B) || (GetValveState(CSM_SECFUEL_PRESS_VALVE_B) && GetValveState(CSM_SECOXID_INSOL_VALVE_B))));
-
-}
-
-bool Saturn::SMRCSCActive()
-
-{
-	return ((GetValveState(CSM_He1_TANKC_VALVE) || GetValveState(CSM_He2_TANKC_VALVE)) && 
-		(GetValveState(CSM_PRIOXID_INSOL_VALVE_C) || GetValveState(CSM_SECOXID_INSOL_VALVE_C)) &&
-		(GetValveState(CSM_PRIFUEL_INSOL_VALVE_C) || (GetValveState(CSM_SECFUEL_PRESS_VALVE_C) && GetValveState(CSM_SECOXID_INSOL_VALVE_C))));
-
-}
-
-bool Saturn::SMRCSDActive()
-
-{
-	return ((GetValveState(CSM_He1_TANKD_VALVE) || GetValveState(CSM_He2_TANKD_VALVE)) && 
-		(GetValveState(CSM_PRIOXID_INSOL_VALVE_D) || GetValveState(CSM_SECOXID_INSOL_VALVE_D)) &&
-		(GetValveState(CSM_PRIFUEL_INSOL_VALVE_D) || (GetValveState(CSM_SECFUEL_PRESS_VALVE_D) && GetValveState(CSM_SECOXID_INSOL_VALVE_D))));
-}
-
-bool Saturn::SMRCSActive()
-
-{
-	return SMRCSAActive() && SMRCSBActive() && SMRCSCActive() && SMRCSDActive();
-}
-
-//
-// Check whether the CM RCS is active.
-//
-
-/*
-// DS20060222 Removed
-bool Saturn::CMRCSActive()
-
-{
-	//
-	// I don't think this is correct, but I'm not sure yet what the CM RCS switches do.
-	//
-
-	return GetValveState(CM_RCSPROP_TANKA_VALVE) && GetValveState(CM_RCSPROP_TANKB_VALVE);
-}
-*/
-
-// DS20060222 Rewritten
-void Saturn::SetRCS_CM()
-
-{
-	PROPELLANT_HANDLE sysa_ph,sysb_ph; // Temporary
-
-	if (th_att_cm[0]) {
-		if (GetValveState(CM_RCSPROP_TANKA_VALVE)) {		
-			// CM RCS System A
-			sysa_ph = ph_rcs_cm_1;
-		}else{
-			sysa_ph = NULL;
-		}
-		if(GetValveState(CM_RCSPROP_TANKB_VALVE)){
-			// CM RCS System B
-			sysb_ph = ph_rcs_cm_2;	
-		}else{
-			sysb_ph = NULL;
-		}		
-		// Now assign them accordingly
-		SetThrusterResource(th_att_cm[0], sysa_ph);
-		SetThrusterResource(th_att_cm[1], sysb_ph);
-		SetThrusterResource(th_att_cm[2], sysa_ph);
-		SetThrusterResource(th_att_cm[3], sysb_ph);
-		SetThrusterResource(th_att_cm[4], sysa_ph);
-		SetThrusterResource(th_att_cm[5], sysb_ph);
-		SetThrusterResource(th_att_cm[6], sysb_ph);
-		SetThrusterResource(th_att_cm[7], sysa_ph);
-		SetThrusterResource(th_att_cm[8], sysa_ph);
-		SetThrusterResource(th_att_cm[9], sysb_ph);
-		SetThrusterResource(th_att_cm[10], sysb_ph);
-		SetThrusterResource(th_att_cm[11], sysa_ph);
-	}
-}
-
-//
-// Check the state of the RCS, and enable/disable thrusters as required.
-//
-
-void Saturn::SetRCSThrusters(THRUSTER_HANDLE *th, PROPELLANT_HANDLE ph)
-
-{
-	int i;
-
-	for (i = 0; i < 8; i++) {
-		if (th[i])
-			SetThrusterResource(th[i], ph);
-	}
-}
-
-void Saturn::CheckRCSState()
-
-{
-	//
-	// Enable and disable thrusters by quad.
-	//
-	//
-
-	switch (stage) {
-	case CSM_LEM_STAGE:
-		SetRCSThrusters(th_rcs_a, SMRCSAActive() ? ph_rcs0 : 0);
-		SetRCSThrusters(th_rcs_b, SMRCSBActive() ? ph_rcs1 : 0);
-		SetRCSThrusters(th_rcs_c, SMRCSCActive() ? ph_rcs2 : 0);
-		SetRCSThrusters(th_rcs_d, SMRCSDActive() ? ph_rcs3 : 0);
-		break;
-
-	case CM_STAGE:
-	case CM_ENTRY_STAGE:
-	case CM_ENTRY_STAGE_TWO:
-	case CM_ENTRY_STAGE_THREE:
-	case CM_ENTRY_STAGE_FOUR:
-	case CM_ENTRY_STAGE_FIVE:
-	case CM_ENTRY_STAGE_SIX:
-	case CM_ENTRY_STAGE_SEVEN:
-	case CSM_ABORT_STAGE:
-		SetRCS_CM();
-		break;
-	}
+	/// \todo This is now handled by automatic checklists and - as in reality - activated throughout the stage. 
+	/// To restore the old functionality, a special flag would need to be introduced in CMRCSPropellantSource.
 }
 
 void Saturn::SetEngineIndicators()
@@ -2314,6 +2439,15 @@ void Saturn::SetMainDeployLight(bool lit)
 		lit = false;
 
 	MainDeploySwitch.SetLit(lit);
+}
+
+void Saturn::SetCmRcsHeDumpSwitch(bool lit)
+
+{
+	if (lit && Realism > REALISM_PUSH_LIGHTS)
+		lit = false;
+
+	CmRcsHeDumpSwitch.SetLit(lit);
 }
 
 void Saturn::SetLVGuidLight()
@@ -2431,10 +2565,6 @@ void Saturn::ClearPanelSDKPointers()
 	pSecECSAccumulatorQuantity = 0;
 	pPotableH2oTankQuantity = 0;
 	pWasteH2oTankQuantity = 0;
-
-	for (i = 0; i < N_CSM_VALVES; i++) {
-		pCSMValves[i] = 0;
-	}
 }
 
 //
@@ -2546,27 +2676,6 @@ void Saturn::GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm)
 	atm.DisplayedO2FlowLBH = RightO2FlowMeter.GetDisplayValue();
 	atm.DisplayedSuitComprDeltaPressurePSI = SuitComprDeltaPMeter.GetDisplayValue();
 	atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF = EcsRadTempPrimOutletMeter.GetDisplayValue();
-}
-
-void Saturn::GetCMRCSPressures(CMRCSPressures &press)
-
-{
-	press.He1PressPSI = 0.0;
-	press.He2PressPSI = 0.0;
-
-	//
-	// For now, just return a fixed pressure if it's active.
-	//
-
-	if (CMRCS1Active())
-	{
-		press.He1PressPSI = 300.0;
-	}
-
-	if (CMRCS2Active())
-	{
-		press.He2PressPSI = 300.0;
-	}
 }
 
 //
@@ -3062,7 +3171,7 @@ void Saturn::GetACBusStatus(ACBusStatus &as, int busno)
 }
 
 
-void Saturn::DisconectInverter(bool disc, int busno)
+void Saturn::DisconnectInverter(bool disc, int busno)
 
 {
 	if (disc) {
@@ -3119,115 +3228,31 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 }
 
 //
-// Open and close valves.
-//
-
-void Saturn::SetValveState(int valve, bool open)
-
-{
-	ValveState[valve] = open;
-
-	int valve_state = open ? SP_VALVE_OPEN : SP_VALVE_CLOSE;
-
-	if (pCSMValves[valve])
-		*pCSMValves[valve] = valve_state;
-
-	CheckRCSState();
-}
-
-bool Saturn::GetValveState(int valve)
-
-{
-	//
-	// First check whether the valve still exists!
-	//
-
-	if (valve < CM_VALVES_START) {
-		if (stage > CSM_LEM_STAGE)
-			return false;
-	}
-
-	if (pCSMValves[valve])
-		return (*pCSMValves[valve] == SP_VALVE_OPEN);
-
-	return ValveState[valve];
-}
-
-
-//
 // Check whether the ELS is active and whether it's in auto mode.
-//
-/// \todo For now, if we're flying an unmanned mission we just assume
-/// this is always valid. We need to do a more accurate simulation later.
 //
 
 bool Saturn::ELSActive()
 
 {
-	if (!Crewed)
-		return true;
-
-	return (ELSAutoSwitch.Voltage() > SP_MIN_DCVOLTAGE);
+	return (ELSLogicSwitch.IsUp() && (SECSLogicBusA.Voltage() > SP_MIN_DCVOLTAGE || SECSLogicBusB.Voltage() > SP_MIN_DCVOLTAGE));
 }
 
 bool Saturn::ELSAuto()
 
 {
-	if (!Crewed)
-		return true;
-
 	return (ELSActive() && ELSAutoSwitch.IsUp());
-}
-
-bool Saturn::RCSLogicActive()
-
-{
-	if (!Crewed)
-		return true;
-
-	return (CMPropDumpSwitch.Voltage() > SP_MIN_DCVOLTAGE);
-}
-
-bool Saturn::RCSDumpActive()
-
-{
-	return (RCSLogicActive() && CMPropDumpSwitch.IsUp());
-}
-
-bool Saturn::RCSPurgeActive()
-
-{
-	return ((CPPropPurgeSwitch.Voltage() > SP_MIN_DCVOLTAGE) && CPPropPurgeSwitch.IsUp());
 }
 
 bool Saturn::PyrosArmed()
 
 {
-	if (!Crewed)
-		return true;
-
-	return (PyroPower.Voltage() > SP_MIN_DCVOLTAGE);
-}
-
-bool Saturn::SECSLogicActive() 
-
-{
-	if (!Crewed)
-		return true;
-
-	return (SECSLogicPower.Voltage() > SP_MIN_DCVOLTAGE);
+	return (PyroBusA.Voltage() > SP_MIN_DCVOLTAGE || PyroBusB.Voltage() > SP_MIN_DCVOLTAGE);
 }
 
 bool Saturn::LETAttached()
 
 {
 	return LESAttached;
-}
-
-bool Saturn::DisplayingPropellantQuantity()
-
-{
-	return SMRCSIndSwitch.IsDown();
 }
 
 //
@@ -3241,10 +3266,7 @@ void Saturn::SetRCSState(int Quad, int Thruster, bool Active)
 	// Sanity check.
 	//
 
-	if (stage < CSM_LEM_STAGE)
-		return;
-
-	if (stage > CSM_LEM_STAGE && Quad < RCS_CM_RING_1)
+	if (stage != CSM_LEM_STAGE)
 		return;
 
 	THRUSTER_HANDLE th = 0;
@@ -3279,7 +3301,19 @@ void Saturn::SetCMRCSState(int Thruster, bool Active)
 	double Level = Active ? 1.0 : 0.0;
 	if (th_att_cm[Thruster] == NULL) return;  // Sanity check
 	SetThrusterLevel(th_att_cm[Thruster], Level);
+	th_att_cm_commanded[Thruster] = Active;  
 }
+
+bool Saturn::GetCMRCSStateCommanded(THRUSTER_HANDLE th) {
+
+	for (int i = 0; i < 12; i++) {
+		if (th == th_att_cm[i]) {
+			return th_att_cm_commanded[i];
+		}
+	}
+	return false;
+}
+
 
 void Saturn::RCSSoundTimestep() {
 
@@ -3307,7 +3341,7 @@ void Saturn::RCSSoundTimestep() {
 			}
 		}
 		// CM RCS
-		if (stage >= CM_STAGE) {
+		if (stage >= CSM_LEM_STAGE) {
 			for (i = 0; i < 12; i++) {
 				if (th_att_cm[i]) {
 					if (GetThrusterLevel(th_att_cm[i])) on = true;
