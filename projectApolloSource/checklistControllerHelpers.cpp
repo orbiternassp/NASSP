@@ -1,8 +1,38 @@
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2008 
+
+  Checklist controller
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************** Revision History ****************************
+  *	$Log$
+  **************************************************************************/
+
+
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "checklistController.h"
 
 // Code to make the compiler shut up.
 #pragma warning ( push )
 #pragma warning ( disable:4018 )
+#pragma warning ( disable:4996 )
 
 using namespace std;
 // Event enum methods.
@@ -11,26 +41,32 @@ RelativeEvent checkEvent(const char* input, bool Group)
 {	
 	if (!Group && !strnicmp(input,"CHECKLIST_RELATIVE",18))
 		return CHECKLIST_RELATIVE;
-	if (!strnicmp(input,"EARTH_ORBIT_INSERT",18))
-		return EARTH_ORBIT_INSERT;
+	if (!strnicmp(input,"EARTH_ORBIT_INSERTION",21))
+		return EARTH_ORBIT_INSERTION;
 	if (!strnicmp(input,"PAYLOAD_EXTRACTION",18))
 		return PAYLOAD_EXTRACTION;
 	if (!strnicmp(input,"MISSION_TIME",12))
 		return MISSION_TIME;
-	if (!strnicmp(input,"SECONDSTAGE",11))
-		return SECONDSTAGE;
-	if (!strnicmp(input,"CSM_LV_SEP",10))
-		return CSM_LV_SEP;
-	if (!strnicmp(input,"TOWER_JETT",10))
-		return TOWER_JETT;
+	if (!strnicmp(input,"SECOND_STAGE_STAGING",20))
+		return SECOND_STAGE_STAGING;
+	if (!strnicmp(input,"CSM_LV_SEPARATION_DONE",22))
+		return CSM_LV_SEPARATION_DONE;
+	if (!strnicmp(input,"CSM_LV_SEPARATION",17))
+		return CSM_LV_SEPARATION;
+	if (!strnicmp(input,"TOWER_JETTISON",14))
+		return TOWER_JETTISON;
 	if (!strnicmp(input,"SPLASHDOWN",10))
 		return SPLASHDOWN;
-	if (!strnicmp(input,"CSMSTARTUP",10))
-		return CSMSTARTUP;
-	if (!strnicmp(input,"SIVBSTAGE",9))
-		return SIVBSTAGE;
-	if (!strnicmp(input,"CSM_SEP",7))
-		return CSM_SEP;
+	if (!strnicmp(input,"BACKUP_CREW_PRELAUNCH",21))
+		return BACKUP_CREW_PRELAUNCH;
+	if (!strnicmp(input,"PRIME_CREW_PRELAUNCH",20))
+		return PRIME_CREW_PRELAUNCH;
+	if (!strnicmp(input,"SIVB_STAGE_STAGING",18))
+		return SIVB_STAGE_STAGING;
+	if (!strnicmp(input,"CM_SM_SEPARATION_DONE",21))
+		return CM_SM_SEPARATION_DONE;
+	if (!strnicmp(input,"CM_SM_SEPARATION",16))
+		return CM_SM_SEPARATION;
 	if (!strnicmp(input,"TLI",3))
 		return TLI;
 	return NO_TIME_DEF;
@@ -107,7 +143,7 @@ void ChecklistItem::save(FILEHANDLE scn)
 	oapiWriteScenario_string(scn,ChecklistItemEndString,"");
 }
 // Todo: Verify
-bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart,SaturnEvents &eventController)
+bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, SaturnEvents &eventController)
 {
 	if (!automatic)
 		return false;
@@ -125,59 +161,80 @@ bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart,Satu
 		if (time > lastMissionTime)
 			return false;
 		break;
-	case EARTH_ORBIT_INSERT:
-		if (eventController.EOI == MINUS_INFINITY)
+	case EARTH_ORBIT_INSERTION:
+		if (eventController.EARTH_ORBIT_INSERTION == MINUS_INFINITY)
 			return false;
-		t = lastMissionTime - eventController.EOI;
+		t = lastMissionTime - eventController.EARTH_ORBIT_INSERTION;
 		if (time > t)
 			return false;
 		break;
 	case SPLASHDOWN:
-		if (eventController.splashdown == MINUS_INFINITY)
+		if (eventController.SPLASHDOWN == MINUS_INFINITY)
 			return false;
-		t = lastMissionTime - eventController.splashdown;
+		t = lastMissionTime - eventController.SPLASHDOWN;
 		if (time > t)
 			return false;
 		break;
-	case CSMSTARTUP:
-		if (eventController.CSMStartup == MINUS_INFINITY)
+	case BACKUP_CREW_PRELAUNCH:
+		if (eventController.BACKUP_CREW_PRELAUNCH == MINUS_INFINITY)
 			return false;
-		t = lastMissionTime - eventController.CSMStartup;
+		t = lastMissionTime - eventController.BACKUP_CREW_PRELAUNCH;
 		if (time > t)
 			return false;
 		break;
-	case SECONDSTAGE:
-		if (eventController.SecondStage == MINUS_INFINITY)
+	case PRIME_CREW_PRELAUNCH:
+		if (eventController.PRIME_CREW_PRELAUNCH == MINUS_INFINITY)
 			return false;
-		t = lastMissionTime - eventController.SecondStage;
+		t = lastMissionTime - eventController.PRIME_CREW_PRELAUNCH;
 		if (time > t)
 			return false;
 		break;
-	case SIVBSTAGE:
-		if (eventController.SIVBStage == MINUS_INFINITY)
+	case SECOND_STAGE_STAGING:
+		if (eventController.SECOND_STAGE_STAGING == MINUS_INFINITY)
 			return false;
-		t = lastMissionTime - eventController.SIVBStage;
+		t = lastMissionTime - eventController.SECOND_STAGE_STAGING;
 		if (time > t)
 			return false;
 		break;
-	case TOWER_JETT:
-		if (eventController.Tower_Jettison == MINUS_INFINITY)
+	case SIVB_STAGE_STAGING:
+		if (eventController.SIVB_STAGE_STAGING == MINUS_INFINITY)
 			return false;
-		t = lastMissionTime - eventController.Tower_Jettison;
+		t = lastMissionTime - eventController.SIVB_STAGE_STAGING;
 		if (time > t)
 			return false;
 		break;
-	case CSM_LV_SEP:
-		if (eventController.CSM_LV_SEP == MINUS_INFINITY)
+	case TOWER_JETTISON:
+		if (eventController.TOWER_JETTISON == MINUS_INFINITY)
 			return false;
-		t = lastMissionTime - eventController.CSM_LV_SEP;
+		t = lastMissionTime - eventController.TOWER_JETTISON;
 		if (time > t)
 			return false;
 		break;
-	case CSM_SEP:
-		if (eventController.CSM_SEP == MINUS_INFINITY)
+	case CSM_LV_SEPARATION_DONE:
+		if (eventController.CSM_LV_SEPARATION_DONE == MINUS_INFINITY)
 			return false;
-		t = lastMissionTime - eventController.CSM_SEP;
+		t = lastMissionTime - eventController.CSM_LV_SEPARATION_DONE;
+		if (time > t)
+			return false;
+		break;
+	case CSM_LV_SEPARATION:
+		if (eventController.CSM_LV_SEPARATION == MINUS_INFINITY)
+			return false;
+		t = lastMissionTime - eventController.CSM_LV_SEPARATION;
+		if (time > t)
+			return false;
+		break;
+	case CM_SM_SEPARATION:
+		if (eventController.CM_SM_SEPARATION == MINUS_INFINITY)
+			return false;
+		t = lastMissionTime - eventController.CM_SM_SEPARATION;
+		if (time > t)
+			return false;
+		break;
+	case CM_SM_SEPARATION_DONE:
+		if (eventController.CM_SM_SEPARATION_DONE == MINUS_INFINITY)
+			return false;
+		t = lastMissionTime - eventController.CM_SM_SEPARATION_DONE;
 		if (time > t)
 			return false;
 		break;
@@ -189,9 +246,9 @@ bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart,Satu
 			return false;
 		break;
 	case PAYLOAD_EXTRACTION:
-		if (eventController.Payload_Extraction == MINUS_INFINITY)
+		if (eventController.PAYLOAD_EXTRACTION == MINUS_INFINITY)
 			return false;
-		t = lastMissionTime - eventController.Payload_Extraction;
+		t = lastMissionTime - eventController.PAYLOAD_EXTRACTION;
 		if (time > t)
 			return false;
 		break;
@@ -252,66 +309,90 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		if (time <= lastMissionTime && lastMissionTime <= deadline)
 			return true;
 		break;
-	case EARTH_ORBIT_INSERT:
-		if (eventController.EOI != MINUS_INFINITY)
+	case EARTH_ORBIT_INSERTION:
+		if (eventController.EARTH_ORBIT_INSERTION != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.EOI;
+			double t = lastMissionTime - eventController.EARTH_ORBIT_INSERTION;
 			if (time <= t && t <= deadline)
 				return true;
 		}
 		break;
 	case SPLASHDOWN:
-		if (eventController.splashdown != MINUS_INFINITY)
+		if (eventController.SPLASHDOWN != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.splashdown;
+			double t = lastMissionTime - eventController.SPLASHDOWN;
 			if (time <= t && t <= deadline)
 				return true;
 		}
 		break;
-	case CSMSTARTUP:
-		if (eventController.CSMStartup != MINUS_INFINITY)
+	case BACKUP_CREW_PRELAUNCH:
+		if (eventController.BACKUP_CREW_PRELAUNCH != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.CSMStartup;
+			double t = lastMissionTime - eventController.BACKUP_CREW_PRELAUNCH;
 			if (time <= t && t <= deadline)
 				return true;
 		}
 		break;
-	case SECONDSTAGE:
-		if (eventController.SecondStage != MINUS_INFINITY)
+	case PRIME_CREW_PRELAUNCH:
+		if (eventController.PRIME_CREW_PRELAUNCH != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.SecondStage;
+			double t = lastMissionTime - eventController.PRIME_CREW_PRELAUNCH;
 			if (time <= t && t <= deadline)
 				return true;
 		}
 		break;
-	case SIVBSTAGE:
-		if (eventController.SIVBStage != MINUS_INFINITY)
+	case SECOND_STAGE_STAGING:
+		if (eventController.SECOND_STAGE_STAGING != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.SIVBStage;
+			double t = lastMissionTime - eventController.SECOND_STAGE_STAGING;
 			if (time <= t && t <= deadline)
 				return true;
 		}
 		break;
-	case TOWER_JETT:
-		if (eventController.Tower_Jettison != MINUS_INFINITY)
+	case SIVB_STAGE_STAGING:
+		if (eventController.SIVB_STAGE_STAGING != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.Tower_Jettison;
+			double t = lastMissionTime - eventController.SIVB_STAGE_STAGING;
 			if (time <= t && t <= deadline)
 				return true;
 		}
 		break;
-	case CSM_LV_SEP:
-		if (eventController.CSM_LV_SEP != MINUS_INFINITY)
+	case TOWER_JETTISON:
+		if (eventController.TOWER_JETTISON != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.CSM_LV_SEP;
+			double t = lastMissionTime - eventController.TOWER_JETTISON;
 			if (time <= t && t <= deadline)
 				return true;
 		}
 		break;
-	case CSM_SEP:
-		if (eventController.CSM_SEP != MINUS_INFINITY)
+	case CSM_LV_SEPARATION_DONE:
+		if (eventController.CSM_LV_SEPARATION_DONE != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.CSM_SEP;
+			double t = lastMissionTime - eventController.CSM_LV_SEPARATION_DONE;
+			if (time <= t && t <= deadline)
+				return true;
+		}
+		break;
+	case CSM_LV_SEPARATION:
+		if (eventController.CSM_LV_SEPARATION != MINUS_INFINITY)
+		{
+			double t = lastMissionTime - eventController.CSM_LV_SEPARATION;
+			if (time <= t && t <= deadline)
+				return true;
+		}
+		break;
+	case CM_SM_SEPARATION:
+		if (eventController.CM_SM_SEPARATION != MINUS_INFINITY)
+		{
+			double t = lastMissionTime - eventController.CM_SM_SEPARATION;
+			if (time <= t && t <= deadline)
+				return true;
+		}
+		break;
+	case CM_SM_SEPARATION_DONE:
+		if (eventController.CM_SM_SEPARATION_DONE != MINUS_INFINITY)
+		{
+			double t = lastMissionTime - eventController.CM_SM_SEPARATION_DONE;
 			if (time <= t && t <= deadline)
 				return true;
 		}
@@ -325,9 +406,9 @@ bool ChecklistGroup::checkExec(double lastMissionTime,SaturnEvents &eventControl
 		}
 		break;
 	case PAYLOAD_EXTRACTION:
-		if (eventController.Payload_Extraction != MINUS_INFINITY)
+		if (eventController.PAYLOAD_EXTRACTION != MINUS_INFINITY)
 		{
-			double t = lastMissionTime - eventController.Payload_Extraction;
+			double t = lastMissionTime - eventController.PAYLOAD_EXTRACTION;
 			if (time <= t && t <= deadline)
 				return true;
 		}
@@ -460,25 +541,29 @@ void ChecklistContainer::load(FILEHANDLE scn, ChecklistController &controller)
 // Todo: Verify
 SaturnEvents::SaturnEvents()
 {
-	splashdown = EOI = CSMStartup = SecondStage = SIVBStage = Tower_Jettison = 
-		CSM_LV_SEP = CSM_SEP = TLI = Payload_Extraction = MINUS_INFINITY;
+	PRIME_CREW_PRELAUNCH = SPLASHDOWN = EARTH_ORBIT_INSERTION = BACKUP_CREW_PRELAUNCH = SECOND_STAGE_STAGING = SIVB_STAGE_STAGING = TOWER_JETTISON = 
+		CSM_LV_SEPARATION_DONE = CSM_LV_SEPARATION = CM_SM_SEPARATION_DONE = CM_SM_SEPARATION = TLI = PAYLOAD_EXTRACTION = MINUS_INFINITY;
 }
 // Todo: Verify
 void SaturnEvents::save(FILEHANDLE scn)
 {
-	oapiWriteScenario_string(scn,SaturnEventStartString,"");
-	oapiWriteScenario_float(scn,"splashdown",splashdown);
-	oapiWriteScenario_float(scn,"EOI",EOI);
-	oapiWriteScenario_float(scn,"CSMStartup",CSMStartup);
-	oapiWriteScenario_float(scn,"SecondStage",SecondStage);
-	oapiWriteScenario_float(scn,"SIVBStage",SIVBStage);
-	oapiWriteScenario_float(scn,"Tower_Jettison",Tower_Jettison);
-	oapiWriteScenario_float(scn,"CSM_LV_SEP",CSM_LV_SEP);
-	oapiWriteScenario_float(scn,"CSM_SEP",CSM_SEP);
-	oapiWriteScenario_float(scn,"TLI",TLI);
-	oapiWriteScenario_float(scn,"Payload_Extraction",Payload_Extraction);
+	oapiWriteScenario_string(scn, SaturnEventStartString, "");
 
-	oapiWriteScenario_string(scn,SaturnEventEndString,"");
+	oapiWriteScenario_float(scn, "BACKUP_CREW_PRELAUNCH", BACKUP_CREW_PRELAUNCH);
+	oapiWriteScenario_float(scn, "PRIME_CREW_PRELAUNCH", PRIME_CREW_PRELAUNCH);
+	oapiWriteScenario_float(scn, "SECOND_STAGE_STAGING", SECOND_STAGE_STAGING);
+	oapiWriteScenario_float(scn, "TOWER_JETTISON", TOWER_JETTISON);
+	oapiWriteScenario_float(scn, "SIVB_STAGE_STAGING", SIVB_STAGE_STAGING);
+	oapiWriteScenario_float(scn, "EARTH_ORBIT_INSERTION", EARTH_ORBIT_INSERTION);
+	oapiWriteScenario_float(scn, "TLI", TLI);
+	oapiWriteScenario_float(scn, "CSM_LV_SEPARATION", CSM_LV_SEPARATION);
+	oapiWriteScenario_float(scn, "CSM_LV_SEPARATION_DONE", CSM_LV_SEPARATION_DONE);
+	oapiWriteScenario_float(scn, "PAYLOAD_EXTRACTION", PAYLOAD_EXTRACTION);
+	oapiWriteScenario_float(scn, "CM_SM_SEPARATION", CM_SM_SEPARATION);
+	oapiWriteScenario_float(scn, "CM_SM_SEPARATION_DONE", CM_SM_SEPARATION_DONE);
+	oapiWriteScenario_float(scn, "SPLASHDOWN", SPLASHDOWN);
+
+	oapiWriteScenario_string(scn, SaturnEventEndString, "");
 }
 // Todo: Verify
 void SaturnEvents::load(FILEHANDLE scn)
@@ -490,58 +575,76 @@ void SaturnEvents::load(FILEHANDLE scn)
 	while (strnicmp(line,SaturnEventEndString,strlen(SaturnEventEndString)))
 	{
 		bool found = false;
-		if (!found && !strnicmp(line,"Payload_Extraction",18))
+		if (!found && !strnicmp(line,"PAYLOAD_EXTRACTION",18))
 		{
 			sscanf(line+18,"%f",&fcpt);
-			Payload_Extraction = fcpt;
+			PAYLOAD_EXTRACTION = fcpt;
 			found = true;
 		}
-		if (!found && !strnicmp(line,"Tower_Jettison",14))
+		if (!found && !strnicmp(line,"TOWER_JETTISON",14))
 		{
 			sscanf(line+14,"%f",&fcpt);
-			Tower_Jettison = fcpt;
+			TOWER_JETTISON = fcpt;
 			found = true;
 		}
-		if (!found && !strnicmp(line,"SecondStage",11))
+		if (!found && !strnicmp(line,"SECOND_STAGE_STAGING",20))
 		{
-			sscanf(line+11,"%f",&fcpt);
-			SecondStage = fcpt;
+			sscanf(line+20,"%f",&fcpt);
+			SECOND_STAGE_STAGING = fcpt;
 			found = true;
 		}
-		if (!found && !strnicmp(line,"splashdown",10))
+		if (!found && !strnicmp(line,"SPLASHDOWN",10))
 		{
 			sscanf(line + 10,"%f",&fcpt);
-			splashdown = fcpt;
+			SPLASHDOWN = fcpt;
 			found = true;
 		}
-		if (!found && !strnicmp(line,"CSMStartup",10))
+		if (!found && !strnicmp(line,"BACKUP_CREW_PRELAUNCH",21))
 		{
-			sscanf(line+10,"%f",&fcpt);
-			CSMStartup = fcpt;
+			sscanf(line+21,"%f",&fcpt);
+			BACKUP_CREW_PRELAUNCH = fcpt;
 			found = true;
 		}
-		if (!found && !strnicmp(line,"CSM_LV_SEP",10))
+		if (!found && !strnicmp(line,"PRIME_CREW_PRELAUNCH",20))
 		{
-			sscanf(line+10,"%f",&fcpt);
-			CSM_LV_SEP = fcpt;
+			sscanf(line+20,"%f",&fcpt);
+			PRIME_CREW_PRELAUNCH = fcpt;
 			found = true;
 		}
-		if (!found && !strnicmp(line,"SIVBStage",9))
+		if (!found && !strnicmp(line,"CSM_LV_SEPARATION_DONE",22))
 		{
-			sscanf(line+9,"%f",&fcpt);
-			SIVBStage = fcpt;
+			sscanf(line+22,"%f",&fcpt);
+			CSM_LV_SEPARATION_DONE = fcpt;
 			found = true;
 		}
-		if (!found && !strnicmp(line,"CSM_SEP",7))
+		if (!found && !strnicmp(line,"CSM_LV_SEPARATION",17))
 		{
-			sscanf(line+7,"%f",&fcpt);
-			CSM_SEP = fcpt;
+			sscanf(line+17,"%f",&fcpt);
+			CSM_LV_SEPARATION = fcpt;
 			found = true;
 		}
-		if (!found && !strnicmp(line,"EOI",3))
+		if (!found && !strnicmp(line,"SIVB_STAGE_STAGING",18))
 		{
-			sscanf(line+3,"%f",&fcpt);
-			EOI = fcpt;
+			sscanf(line+18,"%f",&fcpt);
+			SIVB_STAGE_STAGING = fcpt;
+			found = true;
+		}
+		if (!found && !strnicmp(line,"CM_SM_SEPARATION_DONE",21))
+		{
+			sscanf(line+21,"%f",&fcpt);
+			CM_SM_SEPARATION_DONE = fcpt;
+			found = true;
+		}
+		if (!found && !strnicmp(line,"CM_SM_SEPARATION",16))
+		{
+			sscanf(line+16,"%f",&fcpt);
+			CM_SM_SEPARATION = fcpt;
+			found = true;
+		}
+		if (!found && !strnicmp(line,"EARTH_ORBIT_INSERTION",21))
+		{
+			sscanf(line+21,"%f",&fcpt);
+			EARTH_ORBIT_INSERTION = fcpt;
 			found = true;
 		}
 		if (!found && !strnicmp(line,"TLI",3))
