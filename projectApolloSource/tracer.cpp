@@ -22,10 +22,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/12/30 03:27:54  movieman523
+  *	Hopefully fixed some compilation errors with VC++ 2005
+  *	
   *	Revision 1.1  2005/02/11 12:54:07  tschachim
   *	Initial version
   *	
   **************************************************************************/
+
+#if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
+#define _CRT_SECURE_NO_DEPRECATE 
+#endif
 
 #include <stdio.h>
 

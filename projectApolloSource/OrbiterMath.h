@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/09/29 19:35:15  tschachim
+  *	Updated for Orbiter 060929.
+  *	
   *	Revision 1.2  2006/05/08 02:20:24  movieman523
   *	Updated for new Orbiter version.
   *	
@@ -34,6 +37,8 @@
 #define ORBITER_MATH_H
 #include <math.h>
 #include <stdio.h>
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 
 

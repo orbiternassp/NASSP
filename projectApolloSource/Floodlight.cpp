@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/08/13 16:06:03  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.3  2007/06/06 15:02:07  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -35,6 +41,8 @@
 
 #define ORBITER_MODULE
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
 #include "math.h"

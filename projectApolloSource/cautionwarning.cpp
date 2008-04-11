@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2007/10/18 00:23:18  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.22  2007/06/06 15:02:11  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -92,6 +95,8 @@
   **************************************************************************/
 
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -306,10 +311,8 @@ bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)
 {
 	if (event & PANEL_MOUSE_LBDOWN)
 	{
-		MasterAlarmSound.stop();
-		SetMasterAlarm(false); 
+		PushMasterAlarm();
 		MasterAlarmPressed = true;
-		ButtonSound.play(NOLOOP, 255);
 	}
 	else if (event & PANEL_MOUSE_LBUP)
 	{
@@ -317,6 +320,16 @@ bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)
 	}
 	return true;
 }
+
+void CautionWarningSystem::PushMasterAlarm()
+
+{
+	MasterAlarmSound.stop();
+	SetMasterAlarm(false); 
+	ButtonSound.play(NOLOOP, 255);
+
+}
+
 
 //
 // Set operation mode. In BOOST mode the left master alarm light on the main panel is disabled.

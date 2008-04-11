@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2006/06/13 21:41:37  movieman523
+  *	Removed non-existent (and unused) meshes.
+  *	
   *	Revision 1.4  2006/01/05 19:40:53  movieman523
   *	Added Saturn1b abort stages to build.
   *	
@@ -36,19 +39,14 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
 
-const VECTOR3 OFS_STAGE1 =  { 0, 0, -8.935};
-const VECTOR3 OFS_STAGE2 =  { 0, 0, 9.25-12.25};
-const VECTOR3 OFS_STAGE21 =  { 1.85,1.85,24.5-12.25};
-const VECTOR3 OFS_STAGE22 =  { -1.85,1.85,24.5-12.25};
-const VECTOR3 OFS_STAGE23 =  { 1.85,-1.85,24.5-12.25};
-const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
-
-
 static int refcount = 0;
 static MESHHANDLE hSat1stg1;
+static MESHHANDLE hSat1intstg;
 static MESHHANDLE hSat1stg2;
 static MESHHANDLE hSat1stg21;
 static MESHHANDLE hSat1stg22;
@@ -82,23 +80,23 @@ void SetFirstStage (VESSEL *vessel)
 	vessel->ClearMeshes();
 	vessel->ClearExhaustRefs();
 	vessel->ClearAttExhaustRefs();
-	//vessel->ShiftCentreOfMass (_V(0,0,8.935));
 	vessel->SetTouchdownPoints (_V(0,-1.0,-22.185), _V(-.7,.7,-22.185), _V(.7,.7,-22.185));
-	VECTOR3 mesh_dir=_V(0,0,-8.935);
+	VECTOR3 mesh_dir=_V(0,0,-18.7);
 	vessel->AddMesh (hSat1stg1, &mesh_dir);
+    mesh_dir=_V(0,0,-2.5);
+	vessel->AddMesh (hSat1intstg, &mesh_dir);
     mesh_dir=_V(0,0,9.25);
 	vessel->AddMesh (hSat1stg2, &mesh_dir);
-	mesh_dir=_V(1.85,1.85,24.5);
+	mesh_dir=_V(1.85,1.85,19.8);
     vessel->AddMesh (hSat1stg21, &mesh_dir);
-	mesh_dir=_V(-1.85,1.85,24.5);
+	mesh_dir=_V(-1.85,1.85,19.8);
     vessel->AddMesh (hSat1stg22, &mesh_dir);
-	mesh_dir=_V(1.85,-1.85,24.5);
+	mesh_dir=_V(1.85,-1.85,19.8);
     vessel->AddMesh (hSat1stg23, &mesh_dir);
-	mesh_dir=_V(-1.85,-1.85,24.5);
+	mesh_dir=_V(-1.85,-1.85,19.8);
     vessel->AddMesh (hSat1stg24, &mesh_dir);
-	mesh_dir=_V(0,0,30.15);
+	mesh_dir=_V(0,-0.14,26.6);
 	vessel->AddMesh (hSM, &mesh_dir);
-	mesh_dir=_V(0,0,34.40);
 	VECTOR3 m_exhaust_pos1= {2,0,-23.5};
     VECTOR3 m_exhaust_pos2= {-2,0,-23.5};
 	VECTOR3 m_exhaust_pos3= {0,2,-23.5};
@@ -121,8 +119,9 @@ void SetFirstStage (VESSEL *vessel)
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
-if (!refcount++) {
+	if (!refcount++) {
 		hSat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg1");
+		hSat1intstg = oapiLoadMeshGlobal("ProjectApollo/nsat1intstg");
 		hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
 		hSat1stg21 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg21");
 		hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");

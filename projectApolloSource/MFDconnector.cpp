@@ -22,6 +22,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2008/01/25 20:06:05  lassombra
+  *	Implemented delayable switch functions.
+  *	
+  *	Now, all register functions on all toggle switches should take, at the end, a boolean
+  *	 for whether it is delayable, and an int for how many seconds to delay.
+  *	
+  *	Actual delay can be anywhere between the int and the int + 1.
+  *	
+  *	Function is implemented as a timestepped switch which is called intelligently from
+  *	 the panel, which now gets a timestep call.
+  *	
   *	Revision 1.10  2008/01/23 01:40:07  lassombra
   *	Implemented timestep functions and event management
   *	
@@ -72,6 +83,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbiterSDK.h"
 
 #include "nasspdefs.h"

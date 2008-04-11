@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.36  2008/01/28 15:58:47  tschachim
+  *	Bugfix EnableFocus
+  *	
   *	Revision 1.35  2008/01/12 04:14:10  movieman523
   *	Pass payload information to SIVB and have LEM use the fuel masses passed to it.
   *	
@@ -132,7 +135,7 @@
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version
-//#pragma include_alias( <fstream.h>, <fstream> )
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"

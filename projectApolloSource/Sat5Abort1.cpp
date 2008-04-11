@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2006/01/04 23:06:03  movieman523
+  *	Moved meshes into ProjectApollo directory and renamed a few.
+  *	
   *	Revision 1.2  2005/11/21 23:08:15  movieman523
   *	Moved more mesh files into the ProjectApollo directory.
   *	
@@ -30,6 +33,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
 #include "sat5abort1.h"
@@ -106,7 +111,6 @@ void Sat5Abort1::Setup()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-//	ShiftCentreOfMass (_V(0,0,STG0O));
 	double TCP=-107.0+STG0O-TCPO;
 	SetTouchdownPoints (_V(0,-1.0,0), _V(-.7,.7,0), _V(.7,.7,0));
 	VECTOR3 mesh_dir=_V(0,0,-54+STG0O);

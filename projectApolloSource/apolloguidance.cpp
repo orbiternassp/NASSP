@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.94  2007/10/07 22:29:11  tschachim
+  *	Bugfixes
+  *	
   *	Revision 1.93  2007/08/13 16:06:08  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -312,6 +315,8 @@
   **************************************************************************/
 
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
@@ -1609,18 +1614,6 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 		// This resulted in a machine cycle of just over 11.7 microseconds.
 		int cycles = (long) ((simdt) * 1024000 / 12);
 
-		//
-		// Don't want to kill a slow PC.
-		//
-/*			TODO: Disabled for the moment because if I have a long timestep during test flights
-		          and the cycles get limited, the AGC loses time synchronisation and everything 
-			      is messed up.
-
-		if (cycles > 100000)
-			cycles = 100000;
-		if (cycles < 1)
-			cycles = 1;
-*/
 		for (i = 0; i < cycles; i++) {
 			agc_engine(&vagc);
 		}

@@ -26,10 +26,15 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:55  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #ifndef PREDICTION_H
 #define PREDICTION_H
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "Elements.h"
 

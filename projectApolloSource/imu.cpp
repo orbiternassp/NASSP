@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2007/12/10 17:12:56  tschachim
+  *	TLI burn fixes.
+  *	ISS alarm in case the IMU is unpowered.
+  *	
   *	Revision 1.29  2007/08/13 16:06:11  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -115,6 +119,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>

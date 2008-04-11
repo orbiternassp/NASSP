@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2006/07/27 20:40:06  movieman523
+  *	We can now draw power from the SIVb in the Apollo to Venus scenario.
+  *	
   *	Revision 1.11  2006/07/21 23:04:35  movieman523
   *	Added Saturn 1b engine lights on panel and beginnings of electrical connector work (couldn't disentangle the changes). Be sure to get the config file for the SIVb as well.
   *	
@@ -195,7 +198,7 @@ public:
 			  e_object *dc1, e_object *dc2, e_object* ac);
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
-	void BatteryCharger::Charge(int bat);
+	void Charge(int bat);
 	void Load(char *line);
 	void Save(FILEHANDLE scn);
 

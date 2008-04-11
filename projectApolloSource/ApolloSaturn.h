@@ -23,11 +23,16 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2005/02/11 12:17:54  tschachim
+  *	Initial version
+  *	
   **************************************************************************/
 
 #ifndef __ApolloSaturn_H
 #define __ApolloSaturn_H
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 
 

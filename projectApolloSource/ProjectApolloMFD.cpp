@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2007/12/30 15:14:21  lassombra
+  *	Created new "dummy" mfd in the project apollo mfd plugin.  This plugin will now spawn both a checklist mfd and a regular mfd.  The Checklist MFD will be modified
+  *	 to interface to the checklistpanel class.
+  *	
   *	Revision 1.15  2007/12/19 02:54:26  lassombra
   *	Added function to move debug strings to the MFD.
   *	
@@ -79,10 +83,12 @@
   *	
   **************************************************************************/
 
-#include "math.h"
-#include "windows.h"
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 
+#include "math.h"
+#include "windows.h"
 #include "nasspsound.h"
 #include "OrbiterSoundSDK35.h"
 #include "soundlib.h"
@@ -141,9 +147,11 @@ static struct {  // global data storage
 	double requestMjd;
 	char *errorMessage;
 } g_Data;
-SOCKET close_Socket = INVALID_SOCKET;
-char debugString[100];
-char debugStringBuffer[100];
+
+static SOCKET close_Socket = INVALID_SOCKET;
+static char debugString[100];
+static char debugStringBuffer[100];
+
 void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 {
 	static char *name = "Project Apollo";      // MFD mode name
@@ -1014,13 +1022,13 @@ bool SecECSTestHeaterPowerInput (void *id, char *str, void *data)
 ProjectApolloMFD::ScreenData ProjectApolloMFD::screenData = {PROG_NONE};
 
 
-DLLCLBK bool defineSocket(SOCKET sockettoclose)
+DLLCLBK bool pacDefineSocket(SOCKET sockettoclose)
 {
 	close_Socket = sockettoclose;
 	return true;
 }
 
-DLLCLBK char *apolloMFDGetDebugString()
+DLLCLBK char *pacMFDGetDebugString()
 {
 	return debugStringBuffer;
 }

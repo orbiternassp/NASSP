@@ -22,6 +22,19 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2008/01/23 01:40:07  lassombra
+  *	Implemented timestep functions and event management
+  *	
+  *	Events for Saturns are now fully implemented
+  *	
+  *	Removed all hardcoded checklists from Saturns.
+  *	
+  *	Automatic Checklists are coded into an excel file.
+  *	
+  *	Added function to get the name of the active checklist.
+  *	
+  *	ChecklistController is now 100% ready for Saturn.
+  *	
   *	Revision 1.16  2008/01/15 19:13:05  lassombra
   *	Implemented Vessel connector and Checklist Completion step.  The third button down on the left side completes the "current" step on the temporary MFD.
   *	
@@ -80,6 +93,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include "stdio.h"
 #include "math.h"
@@ -359,9 +374,8 @@ void LEM::Init()
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
 	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
-	/// \todo
-	/// Disabled for now because of the LEVA and the descent stage vessel
-	/// TODO Enable before CSM docking
+	/// \todo Disabled for now because of the LEVA and the descent stage vessel
+	///		  Enable before CSM docking
 	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 
 	strncpy(AudioLanguage, "English", 64);

@@ -21,6 +21,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2007/09/04 14:22:14  jasonims
+  *	Correcting my mistakes...
+  *	
   *	Revision 1.6  2007/08/25 12:09:30  tschachim
   *	Bugfix.
   *	
@@ -43,6 +46,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <string.h>

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2007/12/29 08:44:27  flydba
+  *	FDAI needle positions finally corrected one again.
+  *	
   *	Revision 1.24  2007/12/26 04:18:09  flydba
   *	Roll, pitch and yaw needles position fixed.
   *	
@@ -97,8 +100,10 @@
   *	
   **************************************************************************/
 
-#include <stdio.h>
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
+#include <stdio.h>
 
 #include "nasspdefs.h"
 

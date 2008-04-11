@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2007/11/30 16:40:40  movieman523
+  *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
+  *	
   *	Revision 1.10  2007/06/06 15:02:14  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -51,6 +54,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
@@ -145,13 +150,13 @@ void LEMValveSwitch::CheckValve(int s)
 			lem->SetValveState(Valve, true);
 			lem->CheckRCS();
 			if (Indicator)
-				*Indicator = true;
+				Indicator->SetState(1);
 		}
 		else if (s == THREEPOSSWITCH_DOWN) {
 			lem->SetValveState(Valve, false);
 			lem->CheckRCS();
 			if (Indicator)
-				*Indicator = false;
+				Indicator->SetState(0);
 		}
 	}
 }
@@ -176,25 +181,25 @@ bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
 					case 1: // HV 1
 						eca->input_a = 1;
 						if(eca->dc_source_a_tb != NULL){
- 							*eca->dc_source_a_tb = 1;
+ 							eca->dc_source_a_tb->SetState(1);
 						}
 						break;
 					case 2: // LV 1
 						eca->input_a = 2;
 						if(eca->dc_source_a_tb != NULL){
- 							*eca->dc_source_a_tb = 2;
+ 							eca->dc_source_a_tb->SetState(2);
 						}
 						break;
 					case 3: // HV 2
 						eca->input_b = 1;
 						if(eca->dc_source_b_tb != NULL){
- 							*eca->dc_source_b_tb = 1;
+ 							eca->dc_source_b_tb->SetState(1);
 						}
 						break;
 					case 4: // LV 2
 						eca->input_b = 2;
 						if(eca->dc_source_b_tb != NULL){
- 							*eca->dc_source_b_tb = 2;
+ 							eca->dc_source_b_tb->SetState(2);
 						}
 						break;
 				}
@@ -204,14 +209,14 @@ bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
 					case 1: // HV 1
 					case 2: // LV 1
 						if(eca->dc_source_a_tb != NULL){
-							*eca->dc_source_a_tb = FALSE;
+							eca->dc_source_a_tb->SetState(0);
 						}
 						eca->input_a = 0;
 						break;
 					case 3: // HV 2
 					case 4: // LV 2
 						if(eca->dc_source_b_tb != NULL){
-							*eca->dc_source_b_tb = FALSE;
+							eca->dc_source_b_tb->SetState(0);
 						}
 						eca->input_b = 0;
 						break;
@@ -276,10 +281,8 @@ bool LEMInverterSwitch::ChangeState(int newState){
 		case THREEPOSSWITCH_DOWN:    // OFF				
 			if(inv1 != NULL){ inv1->active = 0; }
 			if(inv2 != NULL){ inv2->active = 0; }
-			lem->ACBusA.WireTo(NULL); 
-			lem->ACBusB.WireTo(NULL); 
-			lem->ACBusA.Volts = 0;
-			lem->ACBusB.Volts = 0;
+			lem->ACBusA.Disconnect();
+			lem->ACBusB.Disconnect();
 			break;
 	}
 	return true;	
@@ -377,40 +380,40 @@ double LEMDCAmMeter::QueryValue(){
 			return 0; // Means either off or unloaded ED battery
 			break;
 		case 1: // Battery 1
-			if(lem->Battery1 && lem->Battery1->Volts > 0){ 
-				return(lem->Battery1->power_load/lem->Battery1->Voltage()); }else{ return 0; }
+			if(lem->Battery1 && lem->Battery1->Voltage() > 0){ 
+				return(lem->Battery1->PowerLoad()/lem->Battery1->Voltage()); }else{ return 0; }
 			break;
 		case 2: // Battery 2
-			if(lem->Battery2 && lem->Battery2->Volts > 0){
-				return(lem->Battery2->power_load/lem->Battery2->Voltage()); }else{ return 0; }
+			if(lem->Battery2 && lem->Battery2->Voltage() > 0){
+				return(lem->Battery2->PowerLoad()/lem->Battery2->Voltage()); }else{ return 0; }
 			break;
 		case 3: // Battery 3
-			if(lem->Battery3 && lem->Battery3->Volts > 0){
-				return(lem->Battery3->power_load/lem->Battery3->Voltage()); }else{ return 0; }
+			if(lem->Battery3 && lem->Battery3->Voltage() > 0){
+				return(lem->Battery3->PowerLoad()/lem->Battery3->Voltage()); }else{ return 0; }
 			break;
 		case 4: // Battery 4
-			if(lem->Battery4 && lem->Battery4->Volts > 0){
-				return(lem->Battery4->power_load/lem->Battery4->Voltage()); }else{ return 0; }
+			if(lem->Battery4 && lem->Battery4->Voltage() > 0){
+				return(lem->Battery4->PowerLoad()/lem->Battery4->Voltage()); }else{ return 0; }
 			break;
 		case 5: // Battery 5
-			if(lem->Battery5 && lem->Battery5->Volts > 0){
-				return(lem->Battery5->power_load/lem->Battery5->Voltage()); }else{ return 0; }
+			if(lem->Battery5 && lem->Battery5->Voltage() > 0){
+				return(lem->Battery5->PowerLoad()/lem->Battery5->Voltage()); }else{ return 0; }
 			break;
 		case 6: // Battery 6
-			if(lem->Battery6 && lem->Battery6->Volts > 0){
-				return(lem->Battery6->power_load/lem->Battery6->Voltage()); }else{ return 0; }
+			if(lem->Battery6 && lem->Battery6->Voltage() > 0){
+				return(lem->Battery6->PowerLoad()/lem->Battery6->Voltage()); }else{ return 0; }
 			break;
 		case 7: // CDR DC BUS
-			if(lem->CDRs28VBus.Volts > 0){
-				return(lem->CDRs28VBus.power_load/lem->CDRs28VBus.Voltage()); }else{ return 0; }
+			if(lem->CDRs28VBus.Voltage() > 0){
+				return(lem->CDRs28VBus.PowerLoad()/lem->CDRs28VBus.Voltage()); }else{ return 0; }
 			break;
 		case 8: // LMP DC BUS
-			if(lem->LMPs28VBus.Volts > 0){
-				return(lem->LMPs28VBus.power_load/lem->LMPs28VBus.Voltage()); }else{ return 0; }
+			if(lem->LMPs28VBus.Voltage() > 0){
+				return(lem->LMPs28VBus.PowerLoad()/lem->LMPs28VBus.Voltage()); }else{ return 0; }
 			break;
 		case 9: // AC BUS (?)
 			if(lem->ACBusA.Voltage() > 0){
-				return(lem->ACBusA.power_load/lem->ACBusA.Voltage());
+				return(lem->ACBusA.PowerLoad()/lem->ACBusA.Voltage());
 			}else{
 				return(0);
 			}

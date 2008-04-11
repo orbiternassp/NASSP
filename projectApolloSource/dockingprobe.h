@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2008/01/22 05:22:27  movieman523
+  *	Added port number to docking probe.
+  *	
   *	Revision 1.10  2008/01/14 04:48:44  movieman523
   *	Fixed LEM separation when the LEM doesn't have the expected name.
   *	
@@ -78,13 +81,11 @@ public:
 	virtual ~DockingProbe();
 
 	double GetStatus() { return Status; }
-	bool GetDocked() { return Docked; }
+	bool IsDocked() { return Docked; }
 	bool IsHardDocked();
 	bool IsExtended() { return (Status == DOCKINGPROBE_STATUS_EXTENDED); };
 	void SetEnabled(bool e) { Enabled = e; }
 	bool IsEnabled() { return Enabled; };
-	void Extend();
-	void Retract();
 	void SetIgnoreNextDockEvent() { IgnoreNextDockEvent = 1; };
 	void SetIgnoreNextDockEvents(int n) { IgnoreNextDockEvent = n; };
 	void DockEvent(int dock, OBJHANDLE connected);
@@ -94,11 +95,13 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void WireTo(e_object *a, e_object *b) { DCPower.WireToBuses(a, b); };
-	bool IsPowered() { return DCPower.Voltage() > SP_MIN_DCVOLTAGE; };
 	void SetRealism(int r) { Realism = r; };
 
 protected:
 	void DoFirstTimeStep();
+	void Extend();
+	void Retract();
+	bool IsPowered() { return DCPower.Voltage() > SP_MIN_DCVOLTAGE; };
 
 	bool Enabled;
 	double Status;

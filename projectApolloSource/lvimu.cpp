@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2007/08/13 16:06:11  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.3  2007/06/23 21:20:37  dseagrav
   *	LVDC++ Update: Now with Pre-IGM guidance
   *	
@@ -36,6 +42,8 @@
 
 // This is an abbreviated ST-124 IMU for the launch vehicle's use.
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>

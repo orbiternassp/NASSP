@@ -22,11 +22,16 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2005/11/21 23:08:15  movieman523
+  *	Moved more mesh files into the ProjectApollo directory.
+  *	
   *	Revision 1.1  2005/02/11 12:54:06  tschachim
   *	Initial version
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
 #include "math.h"

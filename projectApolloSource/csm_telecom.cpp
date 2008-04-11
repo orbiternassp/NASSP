@@ -21,6 +21,8 @@
 
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
@@ -388,26 +390,22 @@ void USB::TimeStep(double simt){
 	// CSM-104 HB says that this is on when "either pwr ampl is selected for pm operation".
 	// I assume that means it's actually amplifying and not in warmup.
 	if(pa_mode_1 > 2 || pa_mode_2 > 2){
-		sat->PwrAmplTB = true;
+		sat->PwrAmplTB.SetState(1);
 	}else{
-		sat->PwrAmplTB = false;
+		sat->PwrAmplTB.SetState(0);
 	}
 }
 // Socket registration method (registers sockets to be deinitialized
 bool PCM::registerSocket(SOCKET sock)
 {
 	HMODULE hpac = GetModuleHandle("modules\\startup\\ProjectApolloConfigurator.dll");
-	if (hpac)
-	{
+	if (hpac) {
 		bool (__cdecl *regSocket1)(SOCKET);
-		regSocket1 = (bool (__cdecl *)(SOCKET)) GetProcAddress(hpac,"defineSocket");
-		if (regSocket1)
-		{
+		regSocket1 = (bool (__cdecl *)(SOCKET)) GetProcAddress(hpac,"pacDefineSocket");
+		if (regSocket1)	{
 			if (!regSocket1(sock))
 				return false;
-		}
-		else
-		{
+		} else {
 			return false;
 		}
 	}

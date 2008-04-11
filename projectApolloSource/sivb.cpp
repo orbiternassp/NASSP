@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.41  2008/01/18 05:57:24  movieman523
+  *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
+  *	
   *	Revision 1.40  2008/01/14 04:31:11  movieman523
   *	Initial tidyup: ASTP should now work too.
   *	
@@ -145,6 +148,8 @@
   *	
   **************************************************************************/
 
+// To force orbitersdk.h to use <fstream> in any compiler version
+#pragma include_alias( <fstream.h>, <fstream> )
 #include "orbiterSDK.h"
 #include "OrbiterSoundSDK35.h"
 
@@ -222,13 +227,19 @@ static PARTICLESTREAMSPEC fuel_venting_spec = {
 // seperation explosives.
 //
 
-PARTICLESTREAMSPEC seperation_junk = {
-	0, 0.04,  300, 4.0, 2.0, 1.5, -0.02, 1.0, 
+static PARTICLESTREAMSPEC seperation_junk = {
+	0,		// flag
+	0.02,	// size
+	1000,	// rate
+	0.3,    // velocity
+	5.0,    // velocity distribution
+	100,	// lifetime
+	0,	    // growthrate
+	0,      // atmslowdown 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
-
 
 void SIVbLoadMeshes()
 
@@ -267,8 +278,8 @@ void SIVbLoadMeshes()
 	hapollo8lta = oapiLoadMeshGlobal ("ProjectApollo/apollo8_lta");
 	hlta_2r = oapiLoadMeshGlobal ("ProjectApollo/LTA_2R");
 
-	SMMETex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust_j2");
-	seperation_junk.tex = oapiRegisterParticleTexture ("Contrail2");;
+	SMMETex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust_j2");
+	seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 }
 
 SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
@@ -966,7 +977,7 @@ double SIVB::GetMainBatteryPowerDrain()
 {
 	if (MainBattery)
 	{
-		return MainBattery->power_load;
+		return MainBattery->Voltage() * MainBattery->Current();
 	}
 
 	return 0.0;
@@ -1098,11 +1109,7 @@ void SIVB::AddRCS_S4B()
 
 	int i;
 	double junkOffset;
-
-	if (SaturnVStage)
-		junkOffset = 16;
-	else
-		junkOffset = 20.5;
+	junkOffset = 16;
 
 	VECTOR3	s_exhaust_pos1= _V(1.41,1.41,junkOffset);
 	VECTOR3 s_exhaust_pos2= _V(1.41,-1.41,junkOffset);
@@ -1134,10 +1141,7 @@ void SIVB::AddRCS_S4B()
 	// Panel seperation junk 'thrusters'.
 	//
 
-	if (SaturnVStage)
-		junkOffset = 9.4;
-	else
-		junkOffset = 14;
+	junkOffset = 9.4;
 
 	double r = 2.15;
 	VECTOR3	sPanel_exhaust_pos1= _V(r,r,junkOffset);
