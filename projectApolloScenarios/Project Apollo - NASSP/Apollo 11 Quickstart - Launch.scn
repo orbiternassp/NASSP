@@ -58,10 +58,13 @@ Columbia:ProjectApollo\Saturn5
   SIIPUT 498.0
   SIISHUT 548.22
   IGMST 204.1
-  TLIMJD 40418.677824
+  TLIMJD 40418.67850687053
   LOIMJD 40421.723495
   FREERETURNPECMJD 40421.723495
   FREERETURNPECALT 250000
+  TLIOFFSETLON 0
+  TLIOFFSETLAT 0.106465084371654
+  TLIOFFSETRAD 8889734.423574794
   MOONLONG 23.4333
   MOONLAT 0.6875  
   MOONALT 0.0
@@ -72,10 +75,10 @@ Columbia:ProjectApollo\Saturn5
   SPLASHLAT 13.3162
   LANG English
   LEMN Eagle
-<Checklist>
-FILE Doc\Project Apollo - NASSP\Check List\CSMDefaultCheck.xls
-AUTO 1
-</Checklist>
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
+    AUTO 1
+  </Checklist>
 END
 Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth

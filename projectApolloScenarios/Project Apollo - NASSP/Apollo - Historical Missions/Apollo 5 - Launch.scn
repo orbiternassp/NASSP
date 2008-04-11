@@ -1,5 +1,5 @@
 BEGIN_DESC
-Apollo 5 was an unmanned flight used to test the LEM in Earth orbit.
+Apollo 5 was an unmanned flight used to test the LM in Earth orbit. The scenario starts on the pad at T-1min40s. (AS-204)
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -53,6 +53,7 @@ AS-204:ProjectApollo/Saturn1B
   AUTOSLOW 1
   PLSEP 1198.5
   ATTACHSTATE 93
+ ; Apollo 5 had no CSM, so there's no checklist
 END
 LC34:ProjectApollo\LC34
   STATUS Landed Earth

@@ -52,8 +52,8 @@ Kitty-Hawk:ProjectApollo/Saturn5
   LANG English
   LEMN Antares
 <Checklist>
-FILE Doc\Project Apollo - NASSP\Check List\CSMDefaultCheck.xls
-AUTO 1
+    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
+	AUTO 1
 </Checklist>
 END
 Crawler-Transporter:ProjectApollo\Crawler
