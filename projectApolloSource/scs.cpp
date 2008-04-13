@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.30  2008/04/11 12:19:19  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.29  2008/01/18 02:59:22  jasonims
   *	EMS Implementation Step 5b - Initialization bugfix!
   *	
@@ -1818,15 +1823,20 @@ bool RJEC::GetThruster(int thruster) {
 
 void RJEC::SaveState(FILEHANDLE scn) {
 
+	oapiWriteLine(scn, RJEC_START_STRING);
+	
+	/// \todo Don't save thruster demand for now, because the controlling devices (AGC, ECA) 
+	///       doesn't store their state properly, which leads to stuck thrusters at scenario start
+	///		  or at separation events
+	/* 
 	int i;
 	char buffer[100];
-
-	oapiWriteLine(scn, RJEC_START_STRING);
 	
 	for (i = 1; i < 17; i++) {
 		sprintf(buffer, "THRUSTERDEMAND%i", i);
 		papiWriteScenario_bool(scn, buffer, ThrusterDemand[i]);
-	}
+	} 
+	*/
 	papiWriteScenario_bool(scn, "AUTORCSENABLERELAYA", AutoRCSEnableRelayA); 
 	papiWriteScenario_bool(scn, "AUTORCSENABLERELAYB", AutoRCSEnableRelayB); 
 	papiWriteScenario_bool(scn, "CMTRANSFERMOTOR1", CMTransferMotor1); 
@@ -1842,17 +1852,21 @@ void RJEC::SaveState(FILEHANDLE scn) {
 
 void RJEC::LoadState(FILEHANDLE scn){
 
-
-	int i, val;
 	char *line;
 
 	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp(line, RJEC_END_STRING, sizeof(RJEC_END_STRING))){
+		if (!strnicmp(line, RJEC_END_STRING, sizeof(RJEC_END_STRING))) {
 			return;
 
+		/// \todo Don't load thruster demand for now, because the controlling devices (AGC, ECA) 
+		///       doesn't store their state properly, which leads to stuck thrusters at scenario start
+		///		  or at separation events
+		/*
 		} else if (!strnicmp (line, "THRUSTERDEMAND", 14)) {			
+			int i, val;
 			sscanf(line+14, "%i %i", &i, &val);
 			ThrusterDemand[i] = (val != 0 ? true : false);
+		*/
 		}
 		papiReadScenario_bool(line, "AUTORCSENABLERELAYA", AutoRCSEnableRelayA); 
 		papiReadScenario_bool(line, "AUTORCSENABLERELAYB", AutoRCSEnableRelayB); 
