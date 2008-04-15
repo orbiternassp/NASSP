@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2008/04/11 11:49:34  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.24  2007/10/18 00:23:19  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -1098,5 +1101,228 @@ void DSKY::ProcessChannel10(int val)
 		SetTracker((out_val.Value & (1 << 7)) != 0);
 		SetProg((out_val.Value & (1 << 8)) != 0);
 		break;
+	}
+}
+// Callbacks to handle button presses from the panel.
+// These allow us to set up callbacks on regular panel
+// Switches instead of using special case mouse handlers.
+// Also allows for automatic checklists to perform certain duties
+// Such as V37E00E on insertion or post burn.
+
+void DSKY::VerbCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Verb = true;
+		VerbPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::NounCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Noun = true;
+		NounPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::EnterCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Enter = true;
+		EnterPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::ClearCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Clear = true;
+		ClearPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::ResetCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Reset = true;
+		ResetPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::ProgCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Prog = true;
+		ProgPressed();
+	}
+	else
+	{
+		ProgReleased();
+		ResetKeyDown();
+	}
+}
+void DSKY::PlusCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Plus = true;
+		PlusPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::MinusCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_Minus = true;
+		MinusPressed();
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::zeroCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_0 = true;
+		NumberPressed(0);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::oneCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_1 = true;
+		NumberPressed(1);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::twoCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_2 = true;
+		NumberPressed(2);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::threeCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_3 = true;
+		NumberPressed(3);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::fourCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_4 = true;
+		NumberPressed(4);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::fiveCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_5 = true;
+		NumberPressed(5);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::sixCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_6 = true;
+		NumberPressed(6);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::sevenCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_7 = true;
+		NumberPressed(7);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::eightCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_8 = true;
+		NumberPressed(8);
+	}
+	else
+	{
+		ResetKeyDown();
+	}
+}
+void DSKY::nineCallback(PanelSwitchItem* s)
+{
+	if (s->GetState() == 1)
+	{
+		KeyDown_9 = true;
+		NumberPressed(9);
+	}
+	else
+	{
+		ResetKeyDown();
 	}
 }
