@@ -22,6 +22,12 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2007/08/13 16:06:11  tschachim
+  *	Moved bitmaps to subdirectory.
+  *	New VAGC mission time pad load handling.
+  *	New telescope and sextant panels.
+  *	Fixed CSM/LV separation speed.
+  *	
   *	Revision 1.15  2006/06/25 21:19:45  movieman523
   *	Lots of Doxygen updates.
   *	
@@ -75,6 +81,7 @@
 /// \brief Generic DSKY simulation class.
 ///
 
+#include "toggleswitch.h"
 class DSKY : public e_object
 
 {
@@ -160,6 +167,25 @@ public:
 	void PlusPressed();
 	void MinusPressed();
 	void NumberPressed(int n);
+
+	void VerbCallback(PanelSwitchItem* s);
+	void NounCallback(PanelSwitchItem* s);
+	void EnterCallback(PanelSwitchItem* s);
+	void ClearCallback(PanelSwitchItem* s);
+	void ResetCallback(PanelSwitchItem* s);
+	void ProgCallback(PanelSwitchItem* s);
+	void PlusCallback(PanelSwitchItem* s);
+	void MinusCallback(PanelSwitchItem* s);
+	void zeroCallback(PanelSwitchItem* s);
+	void oneCallback(PanelSwitchItem* s);
+	void twoCallback(PanelSwitchItem* s);
+	void threeCallback(PanelSwitchItem* s);
+	void fourCallback(PanelSwitchItem* s);
+	void fiveCallback(PanelSwitchItem* s);
+	void sixCallback(PanelSwitchItem* s);
+	void sevenCallback(PanelSwitchItem* s);
+	void eightCallback(PanelSwitchItem* s);
+	void nineCallback(PanelSwitchItem* s);
 
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
