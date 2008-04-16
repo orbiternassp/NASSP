@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2008/04/11 11:49:06  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   **************************************************************************/
 
 //
@@ -37,6 +40,8 @@
 #pragma warning ( push )
 #pragma warning ( disable:4018 )
 #pragma warning ( disable:4996 )
+#pragma warning ( disable:4244 )
+#pragma warning ( disable:4715 )
 
 #include "BasicExcelVC6.hpp"
 
