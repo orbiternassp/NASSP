@@ -22,6 +22,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2007/12/19 02:54:26  lassombra
+  *	Added function to move debug strings to the MFD.
+  *
+  *	MFD can display, freeze, or clear the debug strings.
+  *
+  *	Use (Saturn *)saturn->debugString() just as you would use oapiDebugString.
+  *
+  *	oapiDebugString can be used to output important alerts to users still, but should remain clean otherwise.
+  *
+  *	Also, redirected all the debug statements from the Telecom to the mfd.
+  *
   *	Revision 1.7  2007/12/16 00:47:54  lassombra
   *	Removed ability to use buttons/keystrokes when using any ship but a saturn.
   *	
@@ -64,12 +75,18 @@ public:
 	bool SetCrewNumber (char *rstr);
 	bool SetPrimECSTestHeaterPower (char *rstr);
 	bool SetSecECSTestHeaterPower (char *rstr);
+	bool SetReferencePlanet(char *rstr);
 	
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
 	void StoreStatus (void) const;
 	void RecallStatus (void);
-	
+	//void send_agc_key(char key);
+	//void uplink_word(char * data);
+	//void UplinkStateVector(void);
+	void GetStateVector (void);	
+	int DEC2OCT(int a);
+	int irDEC2OCT(double a);
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 protected:
