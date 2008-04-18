@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2008/04/11 11:49:27  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *
   *	Revision 1.16  2007/12/30 15:14:21  lassombra
   *	Created new "dummy" mfd in the project apollo mfd plugin.  This plugin will now spawn both a checklist mfd and a regular mfd.  The Checklist MFD will be modified
   *	 to interface to the checklistpanel class.
@@ -132,6 +135,10 @@ int g_MFDmode; // identifier for new MFD mode
 #define PROGSTATE_TLI_RUNNING		4
 #define PROGSTATE_TLI_ERROR			5
 
+#define SD_RECEIVE      0x00
+#define SD_SEND         0x01
+#define SD_BOTH         0x02
+
 // Time to ejection when the IU is programmed
 #define IUSTARTTIME 900
 
@@ -146,11 +153,21 @@ static struct {  // global data storage
 	bool isRequestingManually;
 	double requestMjd;
 	char *errorMessage;
+	int emem[17];
+	int connStatus;
+	int statevectorReady;
+	int uplinkState;
+	double missionTime;
+	OBJHANDLE planet;
 } g_Data;
 
+static WSADATA wsaData;
+static SOCKET m_socket;				
+static sockaddr_in clientService;
 static SOCKET close_Socket = INVALID_SOCKET;
 static char debugString[100];
 static char debugStringBuffer[100];
+static char debugWinsock[100];
 
 void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 {
@@ -174,6 +191,19 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.isRequestingManually = false;
 	g_Data.requestMjd = 0;
 	g_Data.errorMessage = "";
+	g_Data.connStatus = 0;
+	g_Data.statevectorReady = 0;
+	g_Data.uplinkState = 0;
+	//Init Emem
+	for(int i = 0; i < 17; i++)
+		g_Data.emem[i] = 0;
+	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );
+	if ( iResult != NO_ERROR ) {
+		sprintf(debugWinsock,"Error at WSAStartup()");
+	}
+	else {
+		sprintf(debugWinsock,"Disconnected, Winsock Ready");
+	}
 }
 
 void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
@@ -196,6 +226,151 @@ void StopIMFDRequest() {
 		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
 }
 
+void send_agc_key(char key)
+	{
+		int bytesXmit = SOCKET_ERROR;
+		unsigned char cmdbuf[4];
+		cmdbuf[0] = 043; // VA,SA
+		switch(key) {
+			case 'V': // 11-000-101 11-010-001										
+				cmdbuf[1] = 0305;
+				cmdbuf[2] = 0321;
+				break;
+			case 'N': // 11-111-100 00-011-111
+				cmdbuf[1] = 0374;
+				cmdbuf[2] = 0037;
+				break;
+			case 'E': // 11-110-000 01-111-100
+				cmdbuf[1] = 0360;
+				cmdbuf[2] = 0174;
+				break;
+			case 'R': // 11-001-001 10-110-010
+				cmdbuf[1] = 0311;
+				cmdbuf[2] = 0262;
+				break;
+			case 'C': // 11-111-000 00-111-110
+				cmdbuf[1] = 0370;
+				cmdbuf[2] = 0076;
+				break;
+			case 'K': // 11-100-100 11-011-001
+				cmdbuf[1] = 0344;
+				cmdbuf[2] = 0331;
+				break;
+				case '+': // 11-101-000 10-111-010
+				cmdbuf[1] = 0350;
+				cmdbuf[2] = 0372;
+				break;
+			case '-': // 11-101-100 10-011-011
+				cmdbuf[1] = 0354;
+				cmdbuf[2] = 0233;
+				break;
+			case '1': // 10-000-111 11-000-001
+				cmdbuf[1] = 0207;
+				cmdbuf[2] = 0301;
+				break;
+			case '2': // 10-001-011 10-100-010
+				cmdbuf[1] = 0213;
+				cmdbuf[2] = 0242;
+				break;
+			case '3': // 10-001-111 10-000-011
+				cmdbuf[1] = 0217;
+				cmdbuf[2] = 0203;
+				break;
+			case '4': // 10-010-011 01-100-100
+				cmdbuf[1] = 0223;
+				cmdbuf[2] = 0144;
+				break;
+			case '5': // 10-010-111 01-000-101
+				cmdbuf[1] = 0227;
+				cmdbuf[2] = 0105;
+				break; 
+			case '6': // 10-011-011 00-100-110
+				cmdbuf[1] = 0233;
+				cmdbuf[2] = 0046;
+				break;
+			case '7': // 10-011-111 00-000-111
+				cmdbuf[1] = 0237;
+				cmdbuf[2] = 0007;
+				break;
+			case '8': // 10-100-010 11-101-000
+				cmdbuf[1] = 0242;
+				cmdbuf[2] = 0350;
+				break;
+			case '9': // 10-100-110 11-001-001
+				cmdbuf[1] = 0246;
+				cmdbuf[2] = 0311;
+				break;
+			case '0': // 11-000-001 11-110-000
+				cmdbuf[1] = 0301;
+				cmdbuf[2] = 0360;
+				break;
+			}
+ 			bytesXmit = send(m_socket,(char *)cmdbuf,3,0);			
+		}
+void uplink_word(char * data)
+{
+	for(int i = 0; i < strlen(data); i++) {
+		send_agc_key(data[i]);
+	}
+	send_agc_key('E');
+}
+
+void UplinkStateVector(double simt)
+{
+	int bytesRecv = SOCKET_ERROR;
+	char addr[256];
+	char buffer[8];
+	if(g_Data.connStatus == 0) {
+		m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );	
+		if ( m_socket == INVALID_SOCKET ) {
+			sprintf(debugWinsock,"Error at socket(): %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(addr, "127.0.0.1");
+		clientService.sin_family = AF_INET;
+		clientService.sin_addr.s_addr = inet_addr(addr);
+		clientService.sin_port = htons( 14242 );
+		if (connect( m_socket, (SOCKADDR*) &clientService, sizeof(clientService)) == SOCKET_ERROR) {
+			sprintf(debugWinsock,"Failed to connect, Error %ld",WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(debugWinsock, "Connected to 127.0.0.1");
+		g_Data.connStatus = 1;
+		g_Data.uplinkState = 0;
+		send_agc_key('V');
+		send_agc_key('7');
+		send_agc_key('1');
+		send_agc_key('E');
+		g_Data.missionTime = simt;
+	}
+	else {
+		if(simt > g_Data.missionTime + 1.0) {
+			if(g_Data.uplinkState < 17) {
+				sprintf(buffer, "%ld", g_Data.emem[g_Data.uplinkState]);
+				uplink_word(buffer);
+				g_Data.missionTime = simt;
+				g_Data.uplinkState++;
+			}
+			else if(g_Data.uplinkState == 17){
+				send_agc_key('V');
+				send_agc_key('3');
+				send_agc_key('3');
+				send_agc_key('E');
+				g_Data.missionTime = simt;
+				g_Data.uplinkState++;
+			}
+			else {
+				sprintf(debugWinsock, "Disconnected. Winsock Ready.");
+				g_Data.uplinkState = 0;
+				g_Data.statevectorReady = 0;
+				g_Data.connStatus = 0;
+				closesocket(m_socket);
+			}
+		}
+	}
+}
 
 void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 {
@@ -212,6 +387,9 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 				}
 			}
    		}
+	}
+	if (g_Data.statevectorReady == 1) {
+		UplinkStateVector(simt);
 	}
 	
 	if (g_Data.prog == PROG_IMFDTLI) {
@@ -300,6 +478,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
 	screen = PROG_NONE;
 	debug_frozen = false;
+	char buffer[8];
 
 	//We need to find out what type of vessel it is, so we check for the class name.
 	//Saturns have different functions than Crawlers.  But we have methods for both.
@@ -309,10 +488,16 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
 		saturn = (Saturn *)vessel;
 		g_Data.progVessel = saturn;
+		oapiGetObjectName(saturn->GetGravityRef(), buffer, 8);
+		if(strcmp(buffer,"Earth") == 0 || strcmp(buffer,"Moon") == 0 )
+			g_Data.planet = saturn->GetGravityRef();
+		else
+			g_Data.planet = oapiGetGbodyByName("Earth");
 	}
 	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Crawler") ||
 		!stricmp(vessel->GetClassName(), "ProjectApollo/Crawler"))  {
 			crawler = (Crawler *)vessel;
+			g_Data.planet = crawler->GetGravityRef();
 	}
 }
 
@@ -329,7 +514,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	//Additional button added to labelNone for testing socket work, be SURE to remove it.
 	//Additional button added at the bottom right of none for the debug string.
 	static char *labelNone[12] = {"GNC", "ECS", "IMFD", "SOCK","","","","","","","","DBG"};
-	static char *labelGNC[2] = {"BCK", "DMP"};
+	static char *labelGNC[6] = {"BCK", "DMP", "SV", "", "", "REF"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
@@ -341,7 +526,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 		return 0;
 	}
 	if (screen == PROG_GNC) {
-		return (bt < 2 ? labelGNC[bt] : 0);
+		return (bt < 6 ? labelGNC[bt] : 0);
 	}
 	else if (screen == PROG_ECS) {
 		return (bt < 4 ? labelECS[bt] : 0);
@@ -379,9 +564,13 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{0,0,0},
 		{"Debug String",0,'D'}
 	};
-	static const MFDBUTTONMENU mnuGNC[2] = {
+	static const MFDBUTTONMENU mnuGNC[6] = {
 		{"Back", 0, 'B'},
-		{"Virtual AGC core dump", 0, 'D'}
+		{"Virtual AGC core dump", 0, 'D'},
+		{"State Vector Update", 0, 'S'},
+		{0,0,0},
+		{0,0,0},
+		{"Reference Body", 0, 'R'}
 	};
 	static const MFDBUTTONMENU mnuECS[4] = {
 		{"Back", 0, 'B'},
@@ -425,7 +614,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 
 	if (screen == PROG_GNC) {
 		if (menu) *menu = mnuGNC;
-		return 2; 
+		return 6; 
 	} else if (screen == PROG_ECS) {
 		if (menu) *menu = mnuECS;
 		return 4; 
@@ -496,6 +685,17 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 		} else if (key == OAPI_KEY_D) {
 			if (saturn)
 				saturn->VirtualAGCCoreDump();
+			return true;
+		} else if (key == OAPI_KEY_S) {
+			if (saturn)
+				if(g_Data.statevectorReady == 0)
+					GetStateVector();
+			return true;
+		} else if (key == OAPI_KEY_R) {
+			if(g_Data.statevectorReady == 0) {
+				bool ReferencePlanetInput (void *id, char *str, void *data);
+				oapiOpenInputBox("Set Reference", ReferencePlanetInput, 0, 20, (void*)this);
+			}
 			return true;
 		}
 	} else if (screen == PROG_ECS) {
@@ -600,14 +800,14 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
 	static const DWORD btkeyNone[12] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_S, 0, 0, 0, 0, 0, 0, 0, OAPI_KEY_D };
-	static const DWORD btkeyGNC[2] = { OAPI_KEY_B, OAPI_KEY_D };
+	static const DWORD btkeyGNC[6] = { OAPI_KEY_B, OAPI_KEY_D, OAPI_KEY_S, 0, 0, OAPI_KEY_R };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B};
 
 	if (screen == PROG_GNC) {
-		if (bt < 2) return ConsumeKeyBuffered (btkeyGNC[bt]);
+		if (bt < 6) return ConsumeKeyBuffered (btkeyGNC[bt]);
 	} else if (screen == PROG_ECS) {
 		if (bt < 4) return ConsumeKeyBuffered (btkeyECS[bt]);
 	} else if (screen == PROG_IMFD) {
@@ -680,44 +880,58 @@ void ProjectApolloMFD::Update (HDC hDC)
 	MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.25), 0);
 	LineTo (hDC, (int) (width * 0.95), (int) (height * 0.25));
 
+	// Upload State Vector data to AGC
+	/*if (g_Data.statevectorReady == 1) {
+		UplinkStateVector();
+	}*/
+
 	// Draw GNC
 	if (screen == PROG_GNC) {
-		TextOut(hDC, width / 2, (int) (height * 0.3), "Guidance, Navigation & Control", 30);
+		oapiGetObjectName(g_Data.planet, buffer, 8);
+		TextOut(hDC, width / 2, (int) (height * 0.3), buffer, strlen(buffer));
+		TextOut(hDC, width / 2, (int) (height * 0.35), debugWinsock, strlen(debugWinsock));
 		SetTextAlign (hDC, TA_LEFT);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.4), "Velocity:", 9);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "Vert. Velocity:", 15);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), "Altitude:", 9);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "Apoapsis Alt.:", 14);
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), "Periapsis Alt.:", 15);
 
-		VECTOR3 vel, hvel;
-		double vvel = 0, apDist, peDist;
-		OBJHANDLE planet = saturn->GetGravityRef();
-		saturn->GetRelativeVel(planet, vel); 
-		if (saturn->GetHorizonAirspeedVector(hvel)) {
-			vvel = hvel.y * 3.2808399;
-		}
-		saturn->GetApDist(apDist);
-		saturn->GetPeDist(peDist);
-		apDist -= 6.373338e6;
-		peDist -= 6.373338e6;
-
+		sprintf(buffer, "%ld", g_Data.emem[0]);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.4), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[1]);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[2]);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[3]);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[4]);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[5]);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[6]);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[7]);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.75), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[8]);		
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), buffer, strlen(buffer));
+			
 		SetTextAlign (hDC, TA_RIGHT);
-		sprintf(buffer, "%.0lfft/s", length(vel) * 3.2808399);
-		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.4), buffer, strlen(buffer));
-		sprintf(buffer, "%.0lfft/s", vvel);
+		sprintf(buffer, "%ld", g_Data.emem[9]);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.4), buffer, strlen(buffer));		
+		sprintf(buffer, "%ld", g_Data.emem[10]);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.45), buffer, strlen(buffer));
-		sprintf(buffer, "%.1lfnm", saturn->GetAltitude() * 0.000539957);
+		sprintf(buffer, "%ld", g_Data.emem[11]);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.5), buffer, strlen(buffer));
-		sprintf(buffer, "%.1lfnm", apDist * 0.000539957);
+		sprintf(buffer, "%ld", g_Data.emem[12]);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.55), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[13]);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
-		sprintf(buffer, "%.1lfnm", peDist * 0.000539957);
+		sprintf(buffer, "%ld", g_Data.emem[14]);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[15]);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.7), buffer, strlen(buffer));
+		sprintf(buffer, "%ld", g_Data.emem[16]);
+		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.75), buffer, strlen(buffer));
 
 	//Draw Socket details.
 	}
-	else if (screen == PROG_SOCK)
-	{
+	else if (screen == PROG_SOCK) {
 		TextOut(hDC, width / 2, (int) (height * 0.3), "Socket details", 14);
 		sprintf(buffer, "Socket: %i", close_Socket);
 		TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
@@ -902,6 +1116,130 @@ void ProjectApolloMFD::Update (HDC hDC)
 	}
 }
 
+
+void ProjectApolloMFD::GetStateVector (void)
+{
+	char buffer[8];
+	double mt;
+	if (!crawler)
+		mt = saturn->GetMissionTime();
+	else
+		mt = crawler->GetMissionTime();
+	MATRIX3 q1, q2, q3;
+	VECTOR3 pos, vel;
+	int n;
+	double calc_1[7];
+	double calc_2[7];
+	double calc_3[7];
+	saturn->GetRelativePos(g_Data.planet, pos); 
+	saturn->GetRelativeVel(g_Data.planet, vel);
+	pos = _V(pos.x, pos.z, -pos.y);
+	vel = _V(vel.x, vel.z, vel.y);
+	double get = abs(mt);
+	double a_angle = 203.45*RAD;
+	double b_angle = 0.0*RAD;
+	double y_angle = 180.0*RAD;
+	q1 = _M(cos(b_angle), 0, -sin(b_angle), 0, 1, 0, sin(b_angle), 0, cos(b_angle));
+	q2 = _M(cos(y_angle), sin(y_angle), 0, -sin(y_angle), cos(y_angle), 0, 0, 0, 1);
+	q3 = _M(1, 0, 0, 0, cos(a_angle), sin(a_angle), 0, -sin(a_angle), cos(a_angle));
+	q1 = mul(q1, q2);
+	q1 = mul(q1, q3);	
+	pos = tmul(q1, pos);
+	a_angle = 23.45*RAD;
+	b_angle = 0.0*RAD;
+	y_angle = 0.0*RAD;
+	q1 = _M(cos(b_angle), 0, -sin(b_angle), 0, 1, 0, sin(b_angle), 0, cos(b_angle));
+	q2 = _M(cos(y_angle), sin(y_angle), 0, -sin(y_angle), cos(y_angle), 0, 0, 0, 1);
+	q3 = _M(1, 0, 0, 0, cos(a_angle), sin(a_angle), 0, -sin(a_angle), cos(a_angle));
+	q1 = mul(q1, q2);
+	q1 = mul(q1, q3);
+	vel = tmul(q1, vel);
+	oapiGetObjectName(g_Data.planet, buffer, 8);
+	
+	if(strcmp(buffer,"Earth") == 0) {
+		g_Data.emem[0] = 21;
+		g_Data.emem[1] = 1501;
+		g_Data.emem[2] = 1;
+		calc_1[0] = -pos.x * pow(2, -29);
+		calc_1[1] = pos.y * pow(2, -29);
+		calc_1[2] = pos.z * pow(2, -29);
+		calc_1[3] = (vel.x/100.0) * pow(2, -7);
+		calc_1[4] = (vel.y/100.0) * pow(2, -7);
+		calc_1[5] = (vel.z/100.0) * pow(2, -7);
+		calc_1[6] = (get*100.0) * pow(2, -28);
+	}
+	else if(strcmp(buffer,"Moon") == 0) {
+		g_Data.emem[0] = 21;
+		g_Data.emem[1] = 1501;
+		g_Data.emem[2] = 2;
+		calc_1[0] = -pos.x * pow(2, -27);
+		calc_1[1] = pos.y * pow(2, -27);
+		calc_1[2] = pos.z * pow(2, -27);
+		calc_1[3] = (vel.x/100.0) * pow(2, -5);
+		calc_1[4] = (vel.y/100.0) * pow(2, -5);
+		calc_1[5] = (vel.z/100.0) * pow(2, -5);
+		calc_1[6] = (get*100.0) * pow(2, -28); 
+	}
+	else {
+		g_Data.emem[0] = 0;
+		g_Data.emem[1] = 0;
+		g_Data.emem[2] = 0;
+		calc_1[0] = 0;
+		calc_1[1] = 0;
+		calc_1[2] = 0;
+		calc_1[3] = 0;
+		calc_1[4] = 0;
+		calc_1[5] = 0;
+		calc_1[6] = 0;
+	}
+	for(n = 0; n < 7; n++) {
+		calc_2[n] = fmod(calc_1[n], pow(2, -14));
+		if(calc_1[n] < 0.0)
+			calc_2[n] = -(calc_2[n]+pow(2, -14));
+		calc_3[n] = calc_1[n]-calc_2[n];
+	}
+	for(n = 0; n < 14; n+=2) {
+		g_Data.emem[n+3] = irDEC2OCT(calc_3[n/2]);
+		g_Data.emem[n+4] = irDEC2OCT(calc_2[n/2]*pow(2, 14));
+	}
+	g_Data.statevectorReady = 1;
+}
+int ProjectApolloMFD::DEC2OCT(int a)
+{
+	int base = 0;
+	int factor = 1;
+	while(a != 0){
+		base += (a%8)*factor;
+		factor *= 10;
+		a /= 8;
+	}
+	return base;
+}
+int ProjectApolloMFD::irDEC2OCT(double a)
+{
+	int oct = 0;
+	if(a < 0.0)	{
+		a*=-1.0;
+		int n = static_cast<int>(a*pow(2, 14)+0.5);
+		int bin, dec;
+		dec = 0;
+		for(int i = 0; i < 15; i++)
+		{
+			bin = n%2;
+			bin = bin*-1+1;
+			dec += bin*pow(2, i);
+			n/=2;
+		}
+		oct = DEC2OCT(dec);
+	}
+	else
+	{
+		int n = static_cast<int>(a*pow(2, 14)+0.5);
+		oct = DEC2OCT(n);
+	}
+	return oct;
+}
+
 void ProjectApolloMFD::WriteStatus (FILEHANDLE scn) const
 {
 	oapiWriteScenario_int(scn, "SCREEN", screen);
@@ -941,6 +1279,16 @@ void ProjectApolloMFD::ReadStatus (FILEHANDLE scn)
 		papiReadScenario_vec(line, "BURNDATA_VIGN", g_Data.burnData._VIgn);
 		papiReadScenario_vec(line, "BURNDATA_DVLVLH", g_Data.burnData._dV_LVLH);
 	}
+}
+
+bool ProjectApolloMFD::SetReferencePlanet (char *rstr)
+{
+	if(strcmp(rstr, "Earth") == 0 || strcmp(rstr, "Moon") == 0)
+	{
+		g_Data.planet = oapiGetGbodyByName(rstr);
+		return true;
+	}
+	return false;
 }
 
 bool ProjectApolloMFD::SetCrewNumber (char *rstr)
@@ -1002,6 +1350,11 @@ int ProjectApolloMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
 		return (int)(new ProjectApolloMFD (LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam));
 	}
 	return 0;
+}
+
+bool ReferencePlanetInput (void *id, char *str, void *data)
+{
+	return ((ProjectApolloMFD*)data)->SetReferencePlanet(str);
 }
 
 bool CrewNumberInput (void *id, char *str, void *data)
