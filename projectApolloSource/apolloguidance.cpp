@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.95  2008/04/11 11:49:32  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.94  2007/10/07 22:29:11  tschachim
   *	Bugfixes
   *	
@@ -5080,6 +5083,11 @@ void ApolloGuidance::GenerateDownrupt(){
 
 void ApolloGuidance::GenerateUprupt(){
 	GenerateUPRUPT(&vagc);
+}
+
+bool ApolloGuidance::IsUpruptActive() {
+	if (!Yaagc) return false;
+	return (IsUPRUPTActive(&vagc) == 1);
 }
 
 // DS200608xx CH33 SWITCHES

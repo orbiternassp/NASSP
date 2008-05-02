@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.54  2007/10/18 00:23:17  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.53  2007/06/06 15:02:10  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -848,6 +851,7 @@ protected:
 	virtual void ProcessIMUCDUErrorCount(int channel, unsigned int val);
 	public: virtual void GenerateDownrupt();
 	public: virtual void GenerateUprupt();
+	public: virtual bool IsUpruptActive();
 	public: virtual void SetCh33Switches(unsigned int val);
 	public: unsigned int GetCh33Switches();
 	public: virtual int DoPINC(int16_t *Counter);

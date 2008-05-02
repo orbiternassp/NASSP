@@ -487,7 +487,7 @@ void PCM::SystemTimestep(double simdt) {
 	// Up telemetry power
 	if(sat->UPTLMSwitch2.GetState() != THREEPOSSWITCH_DOWN){
 		// Command reset?
-		if(sat->UPTLMSwitch2.GetState() != THREEPOSSWITCH_UP){
+		if(sat->UPTLMSwitch2.GetState() == THREEPOSSWITCH_UP){
 			rx_offset = 0; uplink_state = 0; // Do that and continue
 		}
 		if(sat->FlightBus.Voltage() > 28){
@@ -3330,7 +3330,7 @@ void PCM::perform_io(double simt){
 				}
 			}
 			// Should we recieve?
-			if(((simt - last_rx)/0.005) < 1){
+			if (((simt - last_rx) / 0.005) < 1 || sat->agc.IsUpruptActive()) {			
 				return; // No
 			}
 			last_rx = simt;
