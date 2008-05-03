@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2008/04/23 18:51:56  bluedragon8144
+  *	Added telemetry window and vessel support for State Vector.  Cleaned up display.
+  *	
   *	Revision 1.18  2008/04/18 21:28:15  bluedragon8144
   *	Added State Vector Update (beta) to GNC window
   *	
@@ -1184,9 +1187,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 		SetTextAlign (hDC, TA_LEFT);
 		SetTextColor (hDC, RGB(128, 128, 128));
 		oapiGetObjectName(g_Data.vessel->GetHandle(), buffer, 100);
-		TextOut(hDC, (width * 0.05), (int) (height * 0.9), buffer, strlen(buffer));
+		TextOut(hDC, (int) (width * 0.05), (int) (height * 0.9), buffer, strlen(buffer));
 		oapiGetObjectName(g_Data.planet, buffer, 100);
-		TextOut(hDC, (width * 0.05), (int) (height * 0.95), buffer, strlen(buffer));
+		TextOut(hDC, (int) (width * 0.05), (int) (height * 0.95), buffer, strlen(buffer));
 	}
 	else if (screen == PROG_DEBUG)
 	{
