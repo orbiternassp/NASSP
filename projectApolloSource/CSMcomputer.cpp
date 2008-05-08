@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.83  2008/04/11 11:49:08  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.82  2007/12/02 07:13:39  movieman523
   *	Updates for Apollo 5 and unmanned Saturn 1b missions.
   *	
@@ -2954,6 +2957,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.VoltageAlarm = 1;
 				sat->dsky.LightRestart();
 				sat->dsky2.LightRestart();
+				// Reset last cycling time
+				LastCycled = 0;
 			}
 			// We should issue telemetry though.
 			sat->pcm.TimeStep(simt);
@@ -2976,8 +2981,9 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
 
-			// set launch pad azimuth
-			vagc.Erasable[5][0] = (int16_t)((16384.0 * heading) / TWO_PI);
+			// set launch pad azimuth, the VAGC wants to have the negative angle here
+			// otherwise the P11 roll error needle isn't working properly			
+			vagc.Erasable[5][0] = ConvertDecimalToAGCOctal((heading - TWO_PI) / TWO_PI, true); 
 
 			// Colossus 249 criterium in SetMissionInfo
 			if (ApolloNo < 15 || ApolloNo == 1301) {
