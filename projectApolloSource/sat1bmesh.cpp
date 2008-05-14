@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2008/04/11 12:19:05  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.75  2008/01/18 05:57:23  movieman523
   *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
   *	
@@ -395,13 +400,13 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	VECTOR3 mesh_dir=_V(0,0,offset);
     AddMesh (hStage2Mesh, &mesh_dir);
 
-	mesh_dir=_V(1.85,1.85,10.55 + offset);
+	mesh_dir=_V(2.45, 0, 10.55 + offset);
     AddMesh (hStageSLA1Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,1.85,10.55 + offset);
+	mesh_dir=_V(0, 2.45, 10.55 + offset);
     AddMesh (hStageSLA2Mesh, &mesh_dir);
-	mesh_dir=_V(1.85,-1.85,10.55 + offset);
+	mesh_dir=_V(0, -2.45, 10.55 + offset);
     AddMesh (hStageSLA3Mesh, &mesh_dir);
-	mesh_dir=_V(-1.85,-1.85,10.55 + offset);
+	mesh_dir=_V(-2.45, 0, 10.55 + offset);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
 
 	probeidx = -1;

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.28  2008/01/18 05:57:24  movieman523
+  *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
+  *	
   *	Revision 1.27  2008/01/14 04:31:12  movieman523
   *	Initial tidyup: ASTP should now work too.
   *	
@@ -570,7 +573,9 @@ protected:
 	PROPELLANT_HANDLE ph_aps, ph_main;
 
 	UINT panelAnim;
+	UINT panelAnimPlusX;
 	double panelProc;
+	double panelProcPlusX;
 	int panelTimestepCount;
 	int panelMesh1SaturnV, panelMesh2SaturnV, panelMesh3SaturnV, panelMesh4SaturnV;
 	int panelMesh1SaturnVLow, panelMesh2SaturnVLow, panelMesh3SaturnVLow, panelMesh4SaturnVLow;

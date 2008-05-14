@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.42  2008/04/11 11:50:03  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.41  2008/01/18 05:57:24  movieman523
   *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
   *	
@@ -346,6 +349,7 @@ void SIVB::InitS4b()
 
 	th_main[0] = 0;
 	panelProc = 0;
+	panelProcPlusX = 0;
 	panelTimestepCount = 0;
     panelMesh1SaturnV = -1;
 	panelMesh2SaturnV  = -1;
@@ -360,6 +364,7 @@ void SIVB::InitS4b()
 	panelMesh3Saturn1b  = -1;
 	panelMesh4Saturn1b  = -1;
     panelAnim = 0;
+	panelAnimPlusX = 0;
 
 	meshSivbSaturnV = -1;
 	meshSivbSaturnVLow = -1;
@@ -564,6 +569,7 @@ void SIVB::SetS4b()
 
 	SetEmptyMass(mass);
 	SetAnimation(panelAnim, panelProc);
+	SetAnimation(panelAnimPlusX, panelProcPlusX);
 
 	AddRCS_S4B();
 
@@ -605,6 +611,24 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 
 				panelProc = min(RotationLimit, panelProc + simdt / 40.0);
 				SetAnimation(panelAnim, panelProc);
+			}
+			// Special handling Apollo 7
+			if (VehicleNo == 205) {
+				// The +X (+Y in Apollo axes) moved to about 25° only at first, 
+				// during the rendezvous in orbit 19 (about MET 30h) the panel was found 
+				// hinged completely, so we do that at MET 15h (see Mission Report 11.7)
+				if (MissionTime < 15. * 3600.) {
+					if (panelProcPlusX < 0.1388) {
+						panelProcPlusX = min(0.1388, panelProcPlusX + simdt / 40.0);
+						SetAnimation(panelAnimPlusX, panelProcPlusX);
+					}
+				} else if (panelProcPlusX < RotationLimit) {
+					panelProcPlusX = min(RotationLimit, panelProcPlusX + simdt / 40.0);
+					SetAnimation(panelAnimPlusX, panelProcPlusX);
+				}
+			} else if (panelProcPlusX < RotationLimit) {
+				panelProcPlusX = min(RotationLimit, panelProcPlusX + simdt / 40.0);
+				SetAnimation(panelAnimPlusX, panelProcPlusX);
 			}
 		}
 		else if (!PanelsOpened) {			
@@ -861,6 +885,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
 	oapiWriteScenario_float (scn, "CTR", CurrentThrust);
 	oapiWriteScenario_float (scn, "PANELPROC", panelProc);
+	oapiWriteScenario_float (scn, "PANELPROCPLUSX", panelProcPlusX);
 	oapiWriteScenario_float (scn, "ROTL", RotationLimit);
 
 	if (PayloadName[0])
@@ -1055,11 +1080,13 @@ void SIVB::AddRCS_S4B()
 	double THRUST_APS_ROT = 5000.0; // 666.0;
 	double ISP_APS_ROT = 100000.0; // 3000.0;
 
+	SURFHANDLE SIVBRCSTex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
+
 	th_att_rot[0] = CreateThruster (_V(0,ATTCOOR2+0.15,TRANZ-0.25+offset), _V(0, -1,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
 	th_att_rot[1] = CreateThruster (_V(0,-ATTCOOR2-0.15,TRANZ-0.25+offset), _V(0,1,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
 	
-	AddExhaust (th_att_rot[0], 0.6, 0.078);
-	AddExhaust (th_att_rot[1], 0.6, 0.078);
+	AddExhaust (th_att_rot[0], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_att_rot[1], 0.6, 0.078, SIVBRCSTex);
 	CreateThrusterGroup (th_att_rot,   1, THGROUP_ATT_PITCHUP);
 	CreateThrusterGroup (th_att_rot+1, 1, THGROUP_ATT_PITCHDOWN);
 
@@ -1068,10 +1095,10 @@ void SIVB::AddRCS_S4B()
 	th_att_rot[4] = CreateThruster (_V(-RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V( 1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
 	th_att_rot[5] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
 
-	AddExhaust (th_att_rot[2], 0.6, 0.078);
-	AddExhaust (th_att_rot[3], 0.6, 0.078);
-	AddExhaust (th_att_rot[4], 0.6, 0.078);
-	AddExhaust (th_att_rot[5], 0.6, 0.078);
+	AddExhaust (th_att_rot[2], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_att_rot[3], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_att_rot[4], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_att_rot[5], 0.6, 0.078, SIVBRCSTex);
 	CreateThrusterGroup (th_att_rot+2, 2, THGROUP_ATT_BANKLEFT);
 	CreateThrusterGroup (th_att_rot+4, 2, THGROUP_ATT_BANKRIGHT);
 
@@ -1080,10 +1107,10 @@ void SIVB::AddRCS_S4B()
 	th_att_rot[8] = CreateThruster (_V(RCSX,-ATTCOOR2+.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
 	th_att_rot[9] = CreateThruster (_V(RCSX,ATTCOOR2-.2,TRANZ-0.25+offset), _V(-1,0,0), THRUST_APS_ROT, ph_aps, ISP_APS_ROT, ISP_APS_ROT);
 
-	AddExhaust (th_att_rot[6], 0.6, 0.078);
-	AddExhaust (th_att_rot[7], 0.6, 0.078);
-	AddExhaust (th_att_rot[8], 0.6, 0.078);
-	AddExhaust (th_att_rot[9], 0.6, 0.078);
+	AddExhaust (th_att_rot[6], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_att_rot[7], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_att_rot[8], 0.6, 0.078, SIVBRCSTex);
+	AddExhaust (th_att_rot[9], 0.6, 0.078, SIVBRCSTex);
 
 	CreateThrusterGroup (th_att_rot+6, 2, THGROUP_ATT_YAWLEFT);
 	CreateThrusterGroup (th_att_rot+8, 2, THGROUP_ATT_YAWRIGHT);
@@ -1093,8 +1120,8 @@ void SIVB::AddRCS_S4B()
 	//
 	th_att_lin[0] = CreateThruster (_V(0,ATTCOOR2-0.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_aps, 3000.0, 3000.0);
 	th_att_lin[1] = CreateThruster (_V(0,-ATTCOOR2+.15,TRANZ-.25+offset), _V(0,0,1), 320.0, ph_aps, 3000.0, 3000.0);
-	AddExhaust (th_att_lin[0], 7, 0.15);
-	AddExhaust (th_att_lin[1], 7, 0.15);
+	AddExhaust (th_att_lin[0], 7, 0.15, SIVBRCSTex);
+	AddExhaust (th_att_lin[1], 7, 0.15, SIVBRCSTex);
 
 	thg_aps = CreateThrusterGroup (th_att_lin, 2, THGROUP_ATT_FORWARD);
 
@@ -1249,7 +1276,12 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp(line, "ROTL", 4))
 		{
             sscanf (line + 4, "%f", &flt);
-			CurrentThrust = RotationLimit;
+			RotationLimit = flt;
+		}
+		else if (!strnicmp(line, "PANELPROCPLUSX", 14))
+		{
+            sscanf (line + 14, "%f", &flt);
+			panelProcPlusX = flt;
 		}
 		else if (!strnicmp(line, "PANELPROC", 9))
 		{
@@ -1319,6 +1351,7 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
     // otherwise Orbiter crashes
     ClearMeshes();
 	panelAnim = CreateAnimation(0.0);
+	panelAnimPlusX = CreateAnimation(0.0);
 
     // SaturnV panel animations
 	VECTOR3 mesh_dir = _V(-1.48, -1.48, 12.55);
@@ -1353,24 +1386,24 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	AddAnimationComponent(panelAnim, 0, 1, &panel4SaturnVLow);
 
     // Saturn1b panel animations
-	mesh_dir = _V(1.85, 1.85, 10.55);
+	mesh_dir = _V(2.45, 0, 10.55);
     panelMesh1Saturn1b = AddMesh(hSat1stg21, &mesh_dir);
-	mesh_dir = _V(-1.85, 1.85, 10.55);
+	mesh_dir = _V(0, 2.45, 10.55);
 	panelMesh2Saturn1b = AddMesh(hSat1stg22, &mesh_dir);
-	mesh_dir = _V(1.85, -1.85, 10.55);
+	mesh_dir = _V(0, -2.45, 10.55);
 	panelMesh3Saturn1b = AddMesh(hSat1stg23, &mesh_dir);
-	mesh_dir = _V(-1.85, -1.85, 10.55);
+	mesh_dir = _V(-2.45, 0, 10.55);
 	panelMesh4Saturn1b = AddMesh(hSat1stg24, &mesh_dir);
 
-	static MGROUP_ROTATE panel1Saturn1b(panelMesh1Saturn1b, NULL, 0, _V( 0.25,  0.25, -1.2), _V( -1,  1, 0) / length(_V( -1,  1, 0)), (float)(1.0 * PI));
-	static MGROUP_ROTATE panel2Saturn1b(panelMesh2Saturn1b, NULL, 0, _V(-0.25,  0.25, -1.2), _V( -1, -1, 0) / length(_V( -1, -1, 0)), (float)(1.0 * PI));
-	static MGROUP_ROTATE panel3Saturn1b(panelMesh3Saturn1b, NULL, 0, _V( 0.25, -0.25, -1.2), _V(  1,  1, 0) / length(_V(  1,  1, 0)), (float)(1.0 * PI));
-	static MGROUP_ROTATE panel4Saturn1b(panelMesh4Saturn1b, NULL, 0, _V(-0.25, -0.25, -1.2), _V(  1, -1, 0) / length(_V(  1, -1, 0)), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel1Saturn1b(panelMesh1Saturn1b, NULL, 0, _V( 0.37,  0,    -1.2), _V(  0,  1, 0), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel2Saturn1b(panelMesh2Saturn1b, NULL, 0, _V( 0,     0.37, -1.2), _V( -1,  0, 0), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel3Saturn1b(panelMesh3Saturn1b, NULL, 0, _V( 0,    -0.37, -1.2), _V(  1,  0, 0), (float)(1.0 * PI));
+	static MGROUP_ROTATE panel4Saturn1b(panelMesh4Saturn1b, NULL, 0, _V(-0.37,  0,    -1.2), _V(  0, -1, 0), (float)(1.0 * PI));
     	
-	AddAnimationComponent(panelAnim, 0, 1, &panel1Saturn1b);
-	AddAnimationComponent(panelAnim, 0, 1, &panel2Saturn1b);
-	AddAnimationComponent(panelAnim, 0, 1, &panel3Saturn1b);
-	AddAnimationComponent(panelAnim, 0, 1, &panel4Saturn1b);
+	AddAnimationComponent(panelAnimPlusX, 0, 1, &panel1Saturn1b);
+	AddAnimationComponent(panelAnim,	  0, 1, &panel2Saturn1b);
+	AddAnimationComponent(panelAnim,	  0, 1, &panel3Saturn1b);
+	AddAnimationComponent(panelAnim,	  0, 1, &panel4Saturn1b);
 
 	// All other meshes, Add/DelMesh in SetS4b wasn't working...
 
@@ -1407,7 +1440,7 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	mesh_dir = _V(-1.04, 1.04, 9.1);
 	meshCOASTarget_A = AddMesh(hCOAStarget, &mesh_dir);
 
-	mesh_dir = _V(-1.0, -1.1, 8.6);
+	mesh_dir = _V(-1.3, 0, 9.6);
 	meshCOASTarget_B = AddMesh(hCOAStarget, &mesh_dir);
 
 	mesh_dir = _V(0, 0, 8.6);
