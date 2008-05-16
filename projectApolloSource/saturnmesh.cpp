@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.71  2008/04/11 12:19:16  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.70  2008/01/18 05:57:24  movieman523
   *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
   *	
@@ -574,7 +579,7 @@ void Saturn::SetCSMStage ()
 		ph_sep2 = 0;
 	}
 
-	SetSize(20);
+	SetSize(10);
 	SetCOG_elev(3.5);
 	SetEmptyMass(CM_Mass + SM_EmptyMass);
 
