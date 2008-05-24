@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2008/04/11 11:49:27  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   **************************************************************************/
 
 #define STRICT
@@ -66,7 +69,7 @@ DLLCLBK void opcDLLExit(HINSTANCE hDLL)
 	ProjectApolloChecklistMFDopcDLLExit (hDLL);
 }
 
-DLLCLBK void opcTimestep(double simt, double simdt, double mjd)
+DLLCLBK void opcPreStep(double simt, double simdt, double mjd)
 {
 	ProjectApolloMFDopcTimestep (simt,simdt,mjd);
 	ProjectApolloChecklistMFDopcTimestep (simt,simdt,mjd);
