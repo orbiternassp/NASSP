@@ -22,6 +22,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2008/01/25 20:06:06  lassombra
+  *	Implemented delayable switch functions.
+  *	
+  *	Now, all register functions on all toggle switches should take, at the end, a boolean
+  *	 for whether it is delayable, and an int for how many seconds to delay.
+  *	
+  *	Actual delay can be anywhere between the int and the int + 1.
+  *	
+  *	Function is implemented as a timestepped switch which is called intelligently from
+  *	 the panel, which now gets a timestep call.
+  *	
   *	Revision 1.17  2008/01/23 01:40:08  lassombra
   *	Implemented timestep functions and event management
   *	
@@ -325,6 +336,8 @@ public:
 		MFD_PANEL_CHECKLIST_AUTOCOMPLETE_QUERY,	///< Find out the autocomplete state.
 		MFD_PANEL_CHECKLIST_NAME,				///< Find out the name of the current checklist
 		MFD_PANEL_RETRIEVE_CHECKLIST,			///< Get an entire, non-controlled, checklist
+		MFD_PANEL_CHECKLIST_FLASHING,			///< Checklist item flashing.
+		MFD_PANEL_CHECKLIST_FLASHING_QUERY,		///< Checklist item flashing.
 	};
 
 	PanelConnector(PanelSwitches &p, ChecklistController &c);

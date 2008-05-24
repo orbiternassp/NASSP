@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2008/04/11 11:49:26  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version
@@ -110,6 +113,11 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 }
 ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 {
+	/*
+	Do not do that, at least not here. The MFD gets destroyed every time you change the 
+	panel and is not constructed if the panel has no MFDs, so with this code active you cannot 
+	flash switches on the left or right panel for example.
+
 	int i = 0;
 	item.group = -1;
 	item.index = i;
@@ -120,11 +128,12 @@ ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 		item.group = -1;
 		item.index = i;
 	}
+	*/
 }
 char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 {
 
-	static char *labelCHKLST[12] = {"NAV","","INFO","","","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
+	static char *labelCHKLST[12] = {"NAV","","INFO","","FLSH","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
 	static char *labelCHKLSTNAV[12] = {"ACT","","INFO","","","AUTO","PgUP","UP","SEL","REV","DN","PgDN"};
 	static char *labelCHKLSTREV[12] = {"NAV","","INFO","","","AUTO","PgUP","UP","","","DN","PgDN"};
 	static char *labelCHKLSTINFO[12] = {"BCK","","","","","","","","FLSH","","",""};
@@ -151,7 +160,7 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{0,0,0},
 		{"More Information","About This Step",'N'},
 		{0,0,0},
-		{0,0,0},
+		{"Toggle Flashing",0,'L'},
 		{"Toggle AutoComplete",0,'A'},
 		{"Scroll Up","One Page",'<'},
 		{"Scroll Up","One Line",'U'},
@@ -228,7 +237,7 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 {
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 	
-	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
+	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,0,0,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTINFO[12] = { OAPI_KEY_B,0,0,0,0,0,0,0,OAPI_KEY_F,0,0,0};
@@ -368,8 +377,8 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		{
 			item.group = SelectedGroup;
 			item.index = CurrentStep;
-			//if (conn.GetChecklistItem(&item))
-			//	conn.completeChecklistItem(&item);
+			// if (conn.GetChecklistItem(&item))
+			// 	conn.completeChecklistItem(&item);
 			return true;
 
 			InvalidateDisplay();
@@ -380,7 +389,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		{
 			item.group = SelectedGroup;
 			item.index = CurrentStep;
-			//if (conn.GetChecklistItem(&item))
+			// if (conn.GetChecklistItem(&item))
 			//	conn.failChecklistItem(&item);
 			return true;
 
@@ -402,6 +411,13 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			//TODO: Prevent overrunning max number of items
 			InvalidateDisplay();
 			InvalidateButtons();
+			return true;
+		}
+		if (key == OAPI_KEY_L)
+		{
+			bool fl = conn.GetChecklistFlashing();
+			conn.SetChecklistFlashing(!fl);
+			InvalidateDisplay();
 			return true;
 		}
 	}
@@ -632,29 +648,39 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 
 	if (screen == PROG_CHKLST)
 	{
-
 		SelectDefaultFont(hDC, 0);
-		Title(hDC, conn.checklistName());
+		char *cn = conn.checklistName();
+		if (cn)
+			Title(hDC, cn);
 
 		SetTextAlign (hDC, TA_LEFT);
 
 		SelectDefaultPen(hDC, 1);
-		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.95), 0);
-		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.95));
+		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
+		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.94));
 
 		//display AutoToggle selection box.
 		hBr = CreateSolidBrush( RGB(0, 150, 0));
-		if (conn.ChecklistAutocomplete(ChkLstAutoOn)){
+		if (!conn.ChecklistAutocomplete()){
 			SetRect(&ShadedBox,(int) (width * 0.35),(int) (height * 0.96),(int) (width * 0.47),height-1);
-			ChkLstAutoOn = true;
 		}else{
 			SetRect(&ShadedBox,(int) (width * 0.25),(int) (height * 0.96),(int) (width * 0.34),height-1);
-			ChkLstAutoOn = false;
 		}
 		FillRect(hDC, &ShadedBox, hBr);
 		SetTextColor (hDC, RGB(0, 255, 0));
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * .05), (int) (height * .95), " AUTO:  ON  OFF", 15);
+
+		//display flashing selection box.
+		if (!conn.GetChecklistFlashing()){
+			SetRect(&ShadedBox,(int) (width * 0.83),(int) (height * 0.96),(int) (width * 0.95),height-1);
+		}else{
+			SetRect(&ShadedBox,(int) (width * 0.73),(int) (height * 0.96),(int) (width * 0.82),height-1);
+		}
+		FillRect(hDC, &ShadedBox, hBr);
+		SetTextColor (hDC, RGB(0, 255, 0));
+		SetTextAlign (hDC, TA_LEFT);
+		TextOut(hDC, (int) (width * .5), (int) (height * .95), " FLASH:  ON  OFF", 16);
 
 		//display Highlighted box
 		hBr = CreateSolidBrush( RGB(0, 100, 0));
@@ -689,7 +715,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 
 		//display AutoToggle selection box.
 		hBr = CreateSolidBrush( RGB(0, 150, 0));
-		if (ChkLstAutoOn){
+		if (!conn.ChecklistAutocomplete()){
 			SetRect(&ShadedBox,(int) (width * 0.35),(int) (height * 0.96),(int) (width * 0.47),height-1);
 		}else{
 			SetRect(&ShadedBox,(int) (width * 0.25),(int) (height * 0.96),(int) (width * 0.34),height-1);

@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2008/04/11 12:01:52  tschachim
+  *	Cleanup of the checklist events.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   **************************************************************************/
 
 
@@ -474,6 +478,11 @@ public:
 /// Returns an entire checklist
 /// -------------------------------------------------------------
 	bool retrieveChecklistContainer(ChecklistContainer *);
+
+	bool getFlashing() { return flashing; };
+
+	void setFlashing(bool f) { flashing = f; };
+
 private:
 	/// Auto complete flag.  If true, automatically complete the checklist.
 	bool complete;
@@ -502,6 +511,8 @@ private:
 	char FileName[100];
 	///A temporary, frequently regenerated list of all availabe manually selectable checklists.
 	vector<ChecklistGroup> groups_manual;
+	/// flashing the current switch
+	bool flashing;
 protected:	
 	/// Access to the vessels sound handler
 	SoundLib soundLib;

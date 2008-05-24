@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2008/04/11 11:49:14  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.11  2008/01/25 20:06:05  lassombra
   *	Implemented delayable switch functions.
   *	
@@ -253,6 +256,34 @@ bool MFDConnector::ChecklistAutocomplete()
 
 	return false;
 }
+
+void MFDConnector::SetChecklistFlashing(bool f)
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_CHECKLIST_FLASHING;
+	cm.val1.bValue = f;
+
+	SendMessage(cm);
+}
+
+bool MFDConnector::GetChecklistFlashing()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = PanelConnector::MFD_PANEL_CHECKLIST_FLASHING_QUERY;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
 bool MFDConnector::GetChecklistItem(ChecklistItem *in)
 {
 	ConnectorMessage cm;
