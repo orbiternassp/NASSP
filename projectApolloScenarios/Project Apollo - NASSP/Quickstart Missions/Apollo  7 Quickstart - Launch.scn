@@ -39,7 +39,7 @@ AS-205:ProjectApollo/Saturn1b
   STATUS Landed Earth
   BASE Cape Canaveral:3
   POS -80.5643392 28.5150791
-  HEADING 270.00
+  HEADING 280.00
   FUEL 1.000
   APOLLONO 7
   REALISM 0
@@ -60,6 +60,9 @@ AS-205:ProjectApollo/Saturn1b
   LESJT 166.54
   SIIPUT 455.77
   LANG English
+  ASCP_BEGIN
+    OPX 152.000
+  ASCP_END
   <Checklist>
     FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
 	AUTO 1
