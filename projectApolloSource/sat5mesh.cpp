@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.92  2008/04/11 12:19:07  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.91  2008/01/18 05:57:23  movieman523
   *	Moved SIVB creation code into generic Saturn function, and made ASTP sort of start to work.
   *	
@@ -364,14 +369,14 @@ static PARTICLESTREAMSPEC srb_exhaust = {
 	0.0,	// atmslowdown 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 1.0,
-	PARTICLESTREAMSPEC::ATM_PLOG, 1e-1140, 1.0
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
 static PARTICLESTREAMSPEC solid_exhaust = {
 	0, 0.5, 250, 35.0, 0.1, 0.15, 0.5, 1.0, 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
-	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
 //
