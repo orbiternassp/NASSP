@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.18  2008/04/11 12:00:53  tschachim
+  *	Cleanup of the checklist events.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   **************************************************************************/
 
 
@@ -169,9 +173,12 @@ void ChecklistController::save(FILEHANDLE scn)
 {
 	int i = 0;
 
-	oapiWriteScenario_string(scn,ChecklistControllerStartString,"");
-	oapiWriteScenario_string(scn,"FILE",FileName);
-	oapiWriteScenario_int(scn,"AUTO",autoexecute);
+	oapiWriteScenario_string(scn, ChecklistControllerStartString, "");
+	oapiWriteScenario_string(scn, "FILE", FileName);
+	oapiWriteScenario_int(scn, "AUTO", (autoexecute ? 1 : 0));
+	oapiWriteScenario_int(scn, "COMPLETE", (complete ? 1 : 0));
+	oapiWriteScenario_int(scn, "FLASHING", (flashing ? 1 : 0));
+
 
 	if (active.program.group != -1)
 		active.save(scn);
@@ -204,6 +211,20 @@ void ChecklistController::load(FILEHANDLE scn)
 			int i;
 			sscanf(line+4,"%d",&i);
 			autoexecute = (i != 0);
+			found = true;
+		}
+		if (!found && !strnicmp(line,"COMPLETE",8))
+		{
+			int i;
+			sscanf(line+8,"%d",&i);
+			complete = (i != 0);
+			found = true;
+		}
+		if (!found && !strnicmp(line,"FLASHING",8))
+		{
+			int i;
+			sscanf(line+8,"%d",&i);
+			flashing = (i != 0);
 			found = true;
 		}
 		if (!found && !strnicmp(line,ChecklistContainerStartString,strlen(ChecklistContainerStartString)))
@@ -257,6 +278,7 @@ bool ChecklistController::init(bool input)
 		return false;
 	initCalled = input;
 	complete = true;
+	flashing = false;
 	lastMissionTime = MINUS_INFINITY;
 	autoexecute = false;
 	playSound = false;
@@ -437,6 +459,12 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 				completeChecklistItem(&(*active.sequence));
 		}
 	}
+
+	// Flashing
+	if (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, eventController)) {
+		conn.SetFlashing(active.sequence->item, flashing);
+	}
+
 	//Check for complete checklist items
 	if (complete)
 	{

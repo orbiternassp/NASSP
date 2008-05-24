@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2008/04/11 11:49:32  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.18  2007/10/18 00:23:18  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -204,6 +207,11 @@ public:
 	void SetMasterAlarm(bool alarm);
 
 	///
+	/// \brief Returns the master alarm state, on or off.
+	///
+	bool GetMasterAlarm() { return MasterAlarm; };
+
+	///
 	/// \brief Turn sounds on or off.
 	/// \param sounds True to turn sounds on, false to disable them.
 	///
@@ -254,7 +262,7 @@ public:
 	/// \param alarmLit Surface for lit alarm bitmap.
 	/// \param position Which Master Alarm light we're rendering.
 	///
-	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, CWSMasterAlarmPosition position);
+	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border, CWSMasterAlarmPosition position);
 
 	///
 	/// \brief Render the lights.

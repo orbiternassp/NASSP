@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2008/04/11 11:49:32  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.23  2007/10/18 00:23:18  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -287,7 +290,7 @@ void CautionWarningSystem::SetMasterAlarm(bool alarm)
 // Render the lit master alarm light if required.
 //
 
-void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, CWSMasterAlarmPosition position)
+void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border, CWSMasterAlarmPosition position)
 
 {
 	// In Boost-Mode only the left master alarm button is not illuminated (Apollo Operations Handbook 2.10.3)
@@ -304,6 +307,8 @@ void CautionWarningSystem::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLi
 		//
 		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 45, 36);
 	}
+	if (border)
+		oapiBlt(surf, border, 0, 0, 0, 0, 45, 36, SURF_PREDEF_CK);
 }
 
 bool CautionWarningSystem::CheckMasterAlarmMouseClick(int event)
