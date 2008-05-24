@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2008/04/11 12:18:56  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.84  2008/01/23 01:40:07  lassombra
   *	Implemented timestep functions and event management
   *	
@@ -358,11 +363,11 @@ Saturn1b::~Saturn1b()
 }
 
 //
-// Default pitch program.
+// Default pitch program (according to the Apollo 7 Saturn IB Report, NTRS ID 19900067467)
 //
 
-const double default_met[PITCH_TABLE_SIZE]    = { 0, 50, 75, 80, 90, 110, 140, 160, 170, 205, 450, 480, 490, 500, 535, 700};   // MET in sec
-const double default_cpitch[PITCH_TABLE_SIZE] = {80, 75, 70, 60, 53,  45,  40,  38,  35,  30,  20,  20,  20,  20,  20,  20};	// Commanded pitch in °
+const double default_met[PITCH_TABLE_SIZE]    = { 0, 10, 20, 30, 40, 60, 80, 100, 120, 130, 135, 145, 200, 300, 400, 500};   // MET in sec
+const double default_cpitch[PITCH_TABLE_SIZE] = {90, 89, 88, 85, 80, 70, 58,  47,  38,  33,  31,  31,  35,  35,  35,  35};	// Commanded pitch in °
 
 
 void Saturn1b::initSaturn1b()
@@ -701,10 +706,14 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		SetThrusterGroupLevel(thg_ver,1.0);
 		NextMissionEventTime = MissionTime + 2.0;
 		SetSIVBMixtureRatio(5.0);
+		ActivateStagingVent();
 		StageState++;
 		break;
 
 	case 1:
+		if (MissionTime >= NextMissionEventTime - 1.0)
+			DeactivateStagingVent();
+
 		if (MissionTime >= NextMissionEventTime)
 		{
 			LastMissionEventTime = NextMissionEventTime;
@@ -727,6 +736,7 @@ void Saturn1b::StageLaunchSIVB(double simt)
 		else
 		{
 			SetThrusterLevel(th_main[0], 0.9);
+			SetThrusterGroupLevel(thg_ver, 0.0);
 			LastMissionEventTime = NextMissionEventTime;
 			NextMissionEventTime += 2.1;
 			StageState++;
@@ -752,7 +762,6 @@ void Saturn1b::StageLaunchSIVB(double simt)
 			SetThrusterLevel(th_main[0], 1.0);
 			SepS.stop();
 			AddRCS_S4B();
-			SetThrusterGroupLevel(thg_ver, 0.0);
 
 			NextMissionEventTime = MissionTime + 2.05;
 			StageState++;
