@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2008/04/11 11:50:00  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.20  2007/06/10 20:25:12  tschachim
   *	Fixed/clarified that center engines aren't gimbaled.
   *	
@@ -316,104 +319,102 @@ void SaturnV::AutoPilot(double autoT)
 	VESSELSTATUS vsp;
 	GetStatus(vsp);
 
-	if(stage > 1) {
-		double totalRot=0;
-		totalRot=vsp.vrot.x+vsp.vrot.y+vsp.vrot.z;
+	double totalRot=0;
+	totalRot=vsp.vrot.x+vsp.vrot.y+vsp.vrot.z;
 
-		if (fabs(totalRot) >= 0.025){
-	//		StopRot=true;
-		}
+	if (fabs(totalRot) >= 0.025){
+//		StopRot=true;
+	}
 
-		//
-		// Shut down the engines when we reach the desired
-		// orbit.
-		//
+	//
+	// Shut down the engines when we reach the desired
+	// orbit.
+	//
 
-		if (altitude >= 120000 && CheckForLaunchShutdown())
-			return;
+	if (altitude >= 120000 && CheckForLaunchShutdown())
+		return;
 
-	 // navigation
+ // navigation
+	pitch = GetPitch();
+	pitch = pitch*180./PI;
+	altitude = GetAltitude();
+	oapiGetHeading(GetHandle(),&heading);
+	heading = heading*180./PI;
+
+	// This vector rotation will be used to tell if heads up (rhoriz.z<0) or heads down.
+
+	HorizonRot(_V(1,0,0),rhoriz);
+
+
+ // guidance
+	pitch_c = GetCPitch(altitude);
+ // control
+	if (altitude >= 4500)	{
+		bank = GetBank();
+		bank = bank*180./PI;
+		if(bank > 90) bank = bank - 180;
+		else if(bank < -90) bank = bank + 180;
+
+		AtempR=-bank/20.0;
+		if(fabs(bank) < 0.3) AtempR=0.0;
+
+
+
+	// navigation
 		pitch = GetPitch();
-		pitch = pitch*180./PI;
+		pitch=pitch*180./PI;
 		altitude = GetAltitude();
-		oapiGetHeading(GetHandle(),&heading);
-		heading = heading*180./PI;
 
-		// This vector rotation will be used to tell if heads up (rhoriz.z<0) or heads down.
-
-		HorizonRot(_V(1,0,0),rhoriz);
-
-
-	 // guidance
-		pitch_c = GetCPitch(altitude);
 	 // control
-		if (altitude >= 4500)	{
-			bank = GetBank();
-			bank = bank*180./PI;
-			if(bank > 90) bank = bank - 180;
-			else if(bank < -90) bank = bank + 180;
+		if (IGMEnabled)
+		{
+			pitch_c = SetPitchApo();
+		}
+		else
+		{
+			double SatApo;
+			GetApDist(SatApo);
 
-			AtempR=-bank/20.0;
-			if(fabs(bank) < 0.3) AtempR=0.0;
-
-
-
-		// navigation
-			pitch = GetPitch();
-			pitch=pitch*180./PI;
-			altitude = GetAltitude();
-
-		 // control
-			if (IGMEnabled)
-			{
-				pitch_c = SetPitchApo();
+			pitch_c = GetCPitch(autoT);
+			if (MissionTime >= IGMStartTime) {
+				IGMEnabled = true;
+//				char fname[8];
+//				sprintf(fname,"asclog.txt");
+//				if(pit > 22.0*DEG) pit=22.0*DEG;
+//				outstr=fopen(fname,"w");
 			}
-			else
-			{
-				double SatApo;
-				GetApDist(SatApo);
+		}
+//		sprintf(oapiDebugString(), "t=%.1f IGM=%d pitch=%.3f cpitch=%.3f tpitch=%.3f", 
+//			autoT, IGMEnabled, pitch, pitch_c, GetCPitch(autoT));
 
-				pitch_c = GetCPitch(autoT);
-				if (MissionTime >= IGMStartTime) {
-					IGMEnabled = true;
-	//				char fname[8];
-	//				sprintf(fname,"asclog.txt");
-	//				if(pit > 22.0*DEG) pit=22.0*DEG;
-	//				outstr=fopen(fname,"w");
-				}
-			}
-	//		sprintf(oapiDebugString(), "t=%.1f IGM=%d pitch=%.3f cpitch=%.3f tpitch=%.3f", 
-	//			autoT, IGMEnabled, pitch, pitch_c, GetCPitch(autoT));
+		level = pitch_c - pitch;
+		AtempP=level/30.0;
+		AtempY=(-asin(zgl*normal)*DEG)/50.0;
 
-			level = pitch_c - pitch;
-			AtempP=level/30.0;
-			AtempY=(-asin(zgl*normal)*DEG)/50.0;
-
-			if(IGMEnabled) {
-				VECTOR3 target;
-				double pit, yaw;
-				OBJHANDLE hbody=GetGravityRef();
-				double bradius=oapiGetSize(hbody);
-				double bmass=oapiGetMass(hbody);
-				double mu=GRAVITY*bmass;
-				double altco=agc.GetDesiredApogee()*1000.0;
-				double velo=sqrt(mu/(bradius+altco));
-				if(stage == LAUNCH_STAGE_SIVB) {
-					target.x=velo-0.234;
-					target.y=0.0;
-					target.z=altco;
-					LinearGuidance(target, pit, yaw);
-					AtempP=(pit*DEG-pitch)/30.0;
+		if(IGMEnabled) {
+			VECTOR3 target;
+			double pit, yaw;
+			OBJHANDLE hbody=GetGravityRef();
+			double bradius=oapiGetSize(hbody);
+			double bmass=oapiGetMass(hbody);
+			double mu=GRAVITY*bmass;
+			double altco=agc.GetDesiredApogee()*1000.0;
+			double velo=sqrt(mu/(bradius+altco));
+			if(stage == LAUNCH_STAGE_SIVB) {
+				target.x=velo-0.234;
+				target.y=0.0;
+				target.z=altco;
+				LinearGuidance(target, pit, yaw);
+				AtempP=(pit*DEG-pitch)/30.0;
 //					AtempR=-bank/20.0;
-				} else {
-					target.x=velo-500.0;
-	//				target.y=73.0;
-					target.y=123.0;
-					target.z=altco;
-					LinearGuidance(target, pit, yaw);
-					if(pit > 26.0*RAD) pit=26.0*RAD;
-					AtempP=(pit*DEG-pitch)/30.0;
-				}
+			} else {
+				target.x=velo-500.0;
+//				target.y=73.0;
+				target.y=123.0;
+				target.z=altco;
+				LinearGuidance(target, pit, yaw);
+				if(pit > 26.0*RAD) pit=26.0*RAD;
+				AtempP=(pit*DEG-pitch)/30.0;
 			}
 		}
 	}
