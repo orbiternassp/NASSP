@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.85  2008/05/16 18:48:36  tschachim
+  *	Enabled automatic VAGC clock setting for Apollo 8 since we have a proper scenario now.
+  *	
   *	Revision 1.84  2008/05/08 21:55:50  tschachim
   *	Fixed VAGC cycle reset and AZIMUTH pad load.
   *	
@@ -875,13 +878,15 @@ void CSMcomputer::Prog01(double simt)
 			// Check if the IMU is running and uncaged.
 			val30.Value = GetInputChannel(030);
 			if (!Yaagc && val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
+
 				//
 				// As a quick hack we drive the IMU to prelaunch orientation, 
 				//
 
-				imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
+				double heading;
+				oapiGetHeading(OurVessel->GetHandle(), &heading);
+				imu.DriveGimbals(TWO_PI - heading + (DesiredAzimuth / DEG), 90.0 / DEG, 0.0);
 			}
-
 			NextProgTime = simt + 1.0;
 			ProgState++;
 		}
@@ -937,11 +942,14 @@ void CSMcomputer::Prog02(double simt)
 	ChannelValue30 val30;
 	val30.Value = GetInputChannel(030);
 	if (!Yaagc && val30.Bits.IMUOperate && !val30.Bits.IMUCage) {
+
 		//
 		// As a quick hack we do "gyro-compassing" to maintain prelaunch orientation, 
 		//
 
-		imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
+		double heading;
+		oapiGetHeading(OurVessel->GetHandle(), &heading);
+		imu.DriveGimbals(TWO_PI - heading + (DesiredAzimuth / DEG), 90.0 / DEG, 0.0);
 	}
 }
 
@@ -3909,10 +3917,11 @@ void CSMcomputer::Liftoff(double simt)
 
 		//
 		// As a quick hack we drive the IMU to prelaunch orientation 
-		// until the NASSP AGC has a working P01
 		//
 
-		imu.DriveGimbals((90.0 + DesiredAzimuth) / DEG, 90.0 / DEG, 0.0);
+		double heading;
+		oapiGetHeading(OurVessel->GetHandle(), &heading);
+		imu.DriveGimbals(TWO_PI - heading + (DesiredAzimuth / DEG), 90.0 / DEG, 0.0);
 
 		//
 		// Also, we need to reset the AGC time to zero at this point, as the real AGC did.
