@@ -183,11 +183,17 @@ IDB_EMERGENCY_PRESS_ROTARY                  BITMAP  "Bitmaps\\csm_emergency_cabi
 IDB_CSM_LOWER_LEFT_PANEL                    BITMAP  "Bitmaps\\csm_lower_left_panel.bmp"
 IDB_CSM_LOWER_MAIN_PANEL                    BITMAP  "Bitmaps\\csm_lower_main_panel.bmp"
 IDB_CSM_RIGHT_CB_PANEL                      BITMAP  "Bitmaps\\csm_right_cb_panels.bmp"
-IDB_CSM_SUIT_FLOW_CONTROL_LEVER	            BITMAP  "Bitmaps\\csm_suit_flow_control_lever.bmp"
-IDB_CSM_SEC_CABIN_TEMP_VALVE		    BITMAP  "Bitmaps\\csm_secondary_cabin_temp_valve.bmp"
-IDB_CSM_FOOT_PREP_WATER_LEVER  	            BITMAP  "Bitmaps\\csm_FootPrepWater_lever.bmp"
-IDB_CSM_LM_TUNNEL_VENT_VALVE		    BITMAP  "Bitmaps\\csm_lm_tunnel_vent_valve.bmp"
-IDB_CSM_WASTE_MGMT_ROTARY		    BITMAP  "Bitmaps\\csm_waste_mgmt_rotary.bmp"
+IDB_CSM_SUIT_FLOW_CONTROL_LEVER             BITMAP  "Bitmaps\\csm_suit_flow_control_lever.bmp"
+IDB_CSM_SEC_CABIN_TEMP_VALVE                BITMAP  "Bitmaps\\csm_secondary_cabin_temp_valve.bmp"
+IDB_CSM_FOOT_PREP_WATER_LEVER               BITMAP  "Bitmaps\\csm_FootPrepWater_lever.bmp"
+IDB_CSM_LM_TUNNEL_VENT_VALVE                BITMAP  "Bitmaps\\csm_lm_tunnel_vent_valve.bmp"
+IDB_CSM_WASTE_MGMT_ROTARY                   BITMAP  "Bitmaps\\csm_waste_mgmt_rotary.bmp"
+IDB_BORDER_45x36                            BITMAP  "Bitmaps\\border45x36.bmp"
+IDB_BORDER_17x36                            BITMAP  "Bitmaps\\border17x36.bmp"
+IDB_BORDER_33x43                            BITMAP  "Bitmaps\\border33x43.bmp"
+IDB_BORDER_36x17                            BITMAP  "Bitmaps\\border36x17.bmp"
+IDB_BORDER_150x80                           BITMAP  "Bitmaps\\border150x80.bmp"
+IDB_BORDER_200x80                           BITMAP  "Bitmaps\\border200x80.bmp"
 
 
 #endif    // French (France) resources
