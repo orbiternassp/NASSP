@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2008/05/14 21:54:02  tschachim
+  *	Fixed SLA panels orientation for the Saturn 1B, the Saturn V still needs fixing.
+  *	
   *	Revision 1.76  2008/04/11 12:19:05  tschachim
   *	New SM and CM RCS.
   *	Improved abort handling.
@@ -170,6 +173,10 @@ static SURFHANDLE exhaust_tex;
 // Same for particle streams.
 //
 
+/*
+
+--- UNUSED STREAMS ---
+
 PARTICLESTREAMSPEC srb_contrail = {
 	0, 12.0, 1, 50.0, 0.3, 4.0, 4, 3.0, PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
@@ -189,6 +196,7 @@ PARTICLESTREAMSPEC contrail_condensation = {
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
 	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
 };
+*/
 
 PARTICLESTREAMSPEC s1b_exhaust = {
 	0,		// flag
@@ -201,17 +209,8 @@ PARTICLESTREAMSPEC s1b_exhaust = {
 	0.0,	// atmslowdown 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 1.0,
-	PARTICLESTREAMSPEC::ATM_PLOG, 1e-1140, 1.0
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
-
-
-/*
-PARTICLESTREAMSPEC srb_exhaust = {
-	0, 8.0, 2, 50.0, 0.1, 0.3, 12, 2.0, PARTICLESTREAMSPEC::EMISSIVE,//	0, 4.0, 20, 150.0, 0.1, 0.3, 12, 2.0, PARTICLESTREAMSPEC::EMISSIVE,
-	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
-	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
-};
-*/
 
 PARTICLESTREAMSPEC srb_exhaust = {
 	0,		// flag
@@ -224,16 +223,30 @@ PARTICLESTREAMSPEC srb_exhaust = {
 	0.0,	// atmslowdown 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
-	PARTICLESTREAMSPEC::ATM_PLOG, 1e-1140, 1.0
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
 PARTICLESTREAMSPEC solid_exhaust = {
 	0, 0.5, 250, 35.0, 0.1, 0.15, 0.5, 1.0, 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
-	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
+// "staging vent" particle streams
+static PARTICLESTREAMSPEC stagingvent_spec = {
+	0,		// flag
+	2.5,	// size
+	100,	// rate
+	10,	    // velocity
+	2,		// velocity distribution
+	2,		// lifetime
+	2.0,	// growthrate
+	0.5,    // atmslowdown 
+	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.1, 0.1,
+	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
+};
 
 void Saturn1b::SetFirstStage ()
 {
@@ -555,9 +568,9 @@ void Saturn1b::SetSecondStageEngines ()
 	//  Ullage rockets (3)
 	//
 
-	VECTOR3	m_exhaust_pos6= _V(3.27,0.46,-2-STG1O+9);
-	VECTOR3 m_exhaust_pos7= _V(-1.65,2.86,-2-STG1O+9);
-	VECTOR3	m_exhaust_pos8= _V(-1.65,-2.86,-2-STG1O+9);
+	VECTOR3	m_exhaust_pos6= _V(-3.27,-0.46,-2-STG1O+9);
+	VECTOR3 m_exhaust_pos7= _V(1.65,2.86,-2-STG1O+9);
+	VECTOR3	m_exhaust_pos8= _V(1.65,-2.86,-2-STG1O+9);
 
 	int i;
 
@@ -565,12 +578,12 @@ void Saturn1b::SetSecondStageEngines ()
 	// Ullage rocket thrust and ISP is a guess for now.
 	//
 
-	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( -0.45,0.0,1), 10000, ph_ullage3, 3000);
-	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( 0.23,-0.39,1), 10000, ph_ullage3, 3000);
-	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( 0.23,0.39,1), 10000, ph_ullage3, 3000);
+	th_ver[0] = CreateThruster (m_exhaust_pos6, _V( 0.45,0.0,1), 10000, ph_ullage3, 3000);
+	th_ver[1] = CreateThruster (m_exhaust_pos7, _V( -0.23,-0.39,1), 10000, ph_ullage3, 3000);
+	th_ver[2] = CreateThruster (m_exhaust_pos8, _V( -0.23,0.39,1), 10000, ph_ullage3, 3000);
 
 	for (i = 0; i < 3; i++) {
-		AddExhaust(th_ver[i], 11.0, 0.25, exhaust_tex);
+		AddExhaust(th_ver[i], 7.0, 0.2, exhaust_tex);
 		AddExhaustStream(th_ver[i], &solid_exhaust);
 	}
 	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
@@ -836,6 +849,7 @@ void Saturn1bLoadMeshes()
 	hNosecap = oapiLoadMeshGlobal ("ProjectApollo/nsat1aerocap");
 
 	exhaust_tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust2");
+	solid_exhaust.tex = oapiRegisterParticleTexture("Contrail3");
 }
 
 //
@@ -879,4 +893,46 @@ void Saturn1b::CreateStageOne() {
 	// Load only the necessary meshes
 	S1B *stage1 = (S1B *) oapiGetVesselInterface(hstg1);
 	stage1->LoadMeshes(LowRes);
+}
+
+void Saturn1b::ActivateStagingVent()
+
+{
+	// "staging vent" particle streams
+	static double lvl = 1.0;
+
+	double zoffset = -2-STG1O+9;
+	VECTOR3	m_exhaust_pos6= _V(0,5.07,zoffset);
+	VECTOR3 m_exhaust_pos7= _V(0,-5.07,zoffset);
+	VECTOR3	m_exhaust_pos8= _V(5.07,0,zoffset);
+	VECTOR3 m_exhaust_pos9= _V(-5.07,0,zoffset);
+	VECTOR3	m_exhaust_pos10= _V(3.55,3.7,zoffset);
+	VECTOR3 m_exhaust_pos11= _V(3.55,-3.7,zoffset);
+	VECTOR3	m_exhaust_pos12= _V(-3.55,3.7,zoffset);
+	VECTOR3 m_exhaust_pos13= _V(-3.55,-3.7,zoffset);
+
+	if (!stagingvent[0]) stagingvent[0] = AddParticleStream (&stagingvent_spec, m_exhaust_pos10, _V( 1, 1,-1), &lvl);
+	if (!stagingvent[1]) stagingvent[1] = AddParticleStream (&stagingvent_spec, m_exhaust_pos11, _V( 1,-1,-1), &lvl);
+	if (!stagingvent[2]) stagingvent[2] = AddParticleStream (&stagingvent_spec, m_exhaust_pos12, _V(-1, 1,-1), &lvl);
+	if (!stagingvent[3]) stagingvent[3] = AddParticleStream (&stagingvent_spec, m_exhaust_pos13, _V(-1,-1,-1), &lvl);
+	if (!stagingvent[4]) stagingvent[4] = AddParticleStream (&stagingvent_spec, m_exhaust_pos6,  _V( 0, 1,-1), &lvl);
+	if (!stagingvent[5]) stagingvent[5] = AddParticleStream (&stagingvent_spec, m_exhaust_pos7,  _V( 0,-1,-1), &lvl);
+	if (!stagingvent[6]) stagingvent[6] = AddParticleStream (&stagingvent_spec, m_exhaust_pos8,  _V( 1, 0,-1), &lvl);
+	if (!stagingvent[7]) stagingvent[7] = AddParticleStream (&stagingvent_spec, m_exhaust_pos9,  _V(-1, 0,-1), &lvl);
+}
+
+void Saturn1b::DeactivateStagingVent()
+
+{
+	//
+	// "staging vent" particle streams
+	//
+	int i;
+
+	for (i = 0; i < 8; i++) {
+		if (stagingvent[i]) {
+			DelExhaustStream(stagingvent[i]);
+			stagingvent[i] = NULL;
+		}
+	}
 }
