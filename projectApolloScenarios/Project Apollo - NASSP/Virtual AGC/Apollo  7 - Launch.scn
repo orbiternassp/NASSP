@@ -28,7 +28,7 @@ AS-205:ProjectApollo/Saturn1B
   STATUS Landed Earth
   BASE Cape Canaveral:3
   POS -80.5643797 28.5150825
-  HEADING 270.00
+  HEADING 280.00
   FUEL 1.000
   APOLLONO 7
   S4PL 5
@@ -49,9 +49,12 @@ AS-205:ProjectApollo/Saturn1B
   SIIPUT 455.77
   LANG English
   AUTOSLOW 1
-AGC_BEGIN
-  YAAGC 1
-AGC_END
+  AGC_BEGIN
+    YAAGC 1
+  AGC_END
+  ASCP_BEGIN
+    OPX 152.000
+  ASCP_END
   CMPAD0110 1116
   CMPAD1351 6607
   CMPAD1352 11755
@@ -188,7 +191,10 @@ AGC_END
   CMPAD3400 2254
   CMPAD3401 1014
   CMPAD3402 76363
-  CMPAD3403 60376
+  CMPAD3403 60376 
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
+  </Checklist>
 END
 LC34:ProjectApollo\LC34
   STATUS Landed Earth
