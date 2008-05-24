@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.76  2008/04/11 12:01:55  tschachim
+  *	Cleanup of the checklist events.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.75  2008/03/14 19:19:20  lassombra
   *	Changed setCallback to SetCallback
   *	
@@ -986,6 +990,7 @@ class MasterAlarmSwitch: public PushSwitch {
 
 public:
 	void Init(CautionWarningSystem *c) { cws = c; };
+	int GetState();
 	void SetState(int value);
 
 protected:
@@ -1391,8 +1396,9 @@ public:
 
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState);
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal);
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void DrawSwitch(SURFHANDLE drawSurface);
+	void DrawFlash(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	virtual bool SwitchTo(int newState);
 	void SaveState(FILEHANDLE scn);
@@ -1411,6 +1417,7 @@ protected:
 	int maxState;
 	bool isHorizontal;
 	SURFHANDLE switchSurface;
+	SURFHANDLE switchBorder;
 	Sound sclick;
 	SwitchRow *switchRow;
 };
@@ -1450,7 +1457,7 @@ class VolumeThumbwheelSwitch: public ThumbwheelSwitch {
 
 public:
 	VolumeThumbwheelSwitch();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vclass, SoundLib *s);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int vclass, SoundLib *s);
 	virtual bool SwitchTo(int newState);
 	void LoadState(char *line);
 

@@ -25,6 +25,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.96  2008/04/11 12:01:54  tschachim
+  *	Cleanup of the checklist events.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.95  2008/03/14 19:19:20  lassombra
   *	Changed setCallback to SetCallback
   *	
@@ -2291,13 +2295,14 @@ void ThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int d
 	scnh.RegisterSwitch(this);
 }
 
-void ThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row) {
+void ThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row) {
 
 	x = xp;
 	y = yp;
 	width = w;
 	height = h;
 	switchSurface = surf;
+	switchBorder = bsurf;
 	
 	row.AddSwitch(this);
 	switchRow = &row;
@@ -2391,6 +2396,16 @@ void ThumbwheelSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	oapiBlt(DrawSurface, switchSurface, x, y, state * width, 0, width, height, SURF_PREDEF_CK);
 }
 
+void ThumbwheelSwitch::DrawFlash(SURFHANDLE DrawSurface)
+
+{
+	if (!visible)
+		return;
+
+	if (switchBorder)
+		oapiBlt(DrawSurface, switchBorder, x, y, 0, 0, width, height, SURF_PREDEF_CK);
+}
+
 void ThumbwheelSwitch::SaveState(FILEHANDLE scn) {
 
 	oapiWriteScenario_int (scn, name, state);
@@ -2423,10 +2438,10 @@ VolumeThumbwheelSwitch::VolumeThumbwheelSwitch()
 	volume_class = -1;
 }
 
-void VolumeThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, int vclass, SoundLib *s)
+void VolumeThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int vclass, SoundLib *s)
 
 {
-	ThumbwheelSwitch::Init(xp, yp, w, h, surf, row);
+	ThumbwheelSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	sl = s;
 	volume_class = vclass;
 
@@ -4124,6 +4139,12 @@ bool PanelConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	case MFD_PANEL_RETRIEVE_CHECKLIST:
 		m.val2.bValue = checklist.retrieveChecklistContainer(static_cast<ChecklistContainer *>(m.val1.pValue));
 		return true;
+	case MFD_PANEL_CHECKLIST_FLASHING_QUERY:
+		m.val1.bValue = checklist.getFlashing();
+		return true;
+	case MFD_PANEL_CHECKLIST_FLASHING:
+		checklist.setFlashing(m.val1.bValue);
+		return true;
 	}
 
 	return false;
@@ -4134,3 +4155,12 @@ void MasterAlarmSwitch::SetState(int value) {
 	if (value == TOGGLESWITCH_UP)
 		cws->PushMasterAlarm();
 }
+
+int MasterAlarmSwitch::GetState() {
+
+	if (cws->GetMasterAlarm()) {
+		return TOGGLESWITCH_DOWN;
+	}
+	return TOGGLESWITCH_UP;
+}
+

@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.277  2008/04/11 12:19:15  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.276  2008/01/23 01:40:09  lassombra
   *	Implemented timestep functions and event management
   *	
@@ -644,6 +649,12 @@ public:
 		SRF_CSM_FOOT_PREP_WATER_LEVER,
 		SRF_CSM_LM_TUNNEL_VENT_VALVE,
 		SRF_CSM_WASTE_MGMT_ROTARY,
+		SRF_BORDER_45x36,
+		SRF_BORDER_17x36,                         
+		SRF_BORDER_33x43,                        
+		SRF_BORDER_36x17,                         
+		SRF_BORDER_150x80,                      
+		SRF_BORDER_200x80,                   
 
 
 		//

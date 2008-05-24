@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.235  2008/04/11 12:19:17  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.234  2008/01/16 04:14:24  movieman523
   *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
   *	
@@ -835,6 +840,12 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_BORDER_118x118]			= oapiCreateSurface (LOADBMP (IDB_BORDER_118x118));
 	srf[SRF_BORDER_38x38]			= oapiCreateSurface (LOADBMP (IDB_BORDER_38x38));
 	srf[SRF_BORDER_116x116]			= oapiCreateSurface (LOADBMP (IDB_BORDER_116x116));
+	srf[SRF_BORDER_45x36]			= oapiCreateSurface (LOADBMP (IDB_BORDER_45x36));
+	srf[SRF_BORDER_17x36]			= oapiCreateSurface (LOADBMP (IDB_BORDER_17x36));
+	srf[SRF_BORDER_33x43]			= oapiCreateSurface (LOADBMP (IDB_BORDER_33x43));
+	srf[SRF_BORDER_36x17]			= oapiCreateSurface (LOADBMP (IDB_BORDER_36x17));
+	srf[SRF_BORDER_150x80]			= oapiCreateSurface (LOADBMP (IDB_BORDER_150x80));
+	srf[SRF_BORDER_200x80]			= oapiCreateSurface (LOADBMP (IDB_BORDER_200x80));
 
 	//
 	// Set color keys where appropriate.
@@ -963,6 +974,12 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_23x23],		g_Param.col[4]);			
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_118x118],	g_Param.col[4]);			
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_116x116],	g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_45x36],		g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_17x36],		g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_33x43],		g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_36x17],		g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_150x80],	g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_200x80],	g_Param.col[4]);	
 
 	SetSwitches(panel);
 }
@@ -1211,6 +1228,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CSM_RIGHT_WDW_LES,							_R( 621,  244, 1130,  733), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_FUELCELLPUMPSSWITCHES,      					_R( 311,  881,  475,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_TELCOMSWITCHES,								_R( 672, 1416,  762, 1527), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSWITCHES,      				_R( 825, 1428,  901, 1519), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSSWITCH,						_R( 734, 1525,  824, 1615), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EPSSENSORSIGNALDCCIRCUITBRAKERS,				_R( 856,  871,  923,  900), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -1261,7 +1279,6 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_NONESSBUSSWITCH,								_R( 763,  881,  797,  910), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_INTERIORLIGHTSFLOODSSWITCHES,				_R( 570, 1003,  649, 1032), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SPSGAUGINGSWITCH,							_R( 626, 1401,  660, 1434), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_TELCOMSWITCHES,								_R( 672, 1416,  762, 1527), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RIGHTINTERIORLIGHTROTARIES,					_R( 319,  974,  542, 1064), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL275CIRCUITBRAKERS,				        _R(1467, 1092, 1496, 1717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL276,									_R(1399,  878, 1490,  996), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -2198,10 +2215,10 @@ void Saturn::SetSwitches(int panel) {
 	SPSswitch.Init(0, 0, 38, 52, srf[SRF_SWITCHLEVER], srf[SRF_BORDER_38x52], SPSRow);
 
 	SPSGimbalPitchThumbwheelRow.Init(AID_SPSGIMBALPITCHTHUMBWHEEL, MainPanel);
-	SPSGimbalPitchThumbwheel.Init(0, 0, 17, 36, srf[SRF_THUMBWHEEL_GPI_PITCH], SPSGimbalPitchThumbwheelRow);
+	SPSGimbalPitchThumbwheel.Init(0, 0, 17, 36, srf[SRF_THUMBWHEEL_GPI_PITCH], srf[SRF_BORDER_17x36], SPSGimbalPitchThumbwheelRow);
 
 	SPSGimbalYawThumbwheelRow.Init(AID_SPSGIMBALYAWTHUMBWHEEL, MainPanel);
-	SPSGimbalYawThumbwheel.Init(0, 0, 36, 17, srf[SRF_THUMBWHEEL_GPI_YAW], SPSGimbalYawThumbwheelRow);
+	SPSGimbalYawThumbwheel.Init(0, 0, 36, 17, srf[SRF_THUMBWHEEL_GPI_YAW], srf[SRF_BORDER_36x17], SPSGimbalYawThumbwheelRow);
 
 	//
 	// Communication switches (s-band, vhf etc.)
@@ -2224,8 +2241,8 @@ void Saturn::SetSwitches(int panel) {
 	SBandAntennaSwitch2.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SBandAntennaSwitchesRow);
 
 	VHFAmThumbwheelsRow.Init(AID_VHFAMTHUMBWHEELS, MainPanel);
-	SquelchAThumbwheel.Init(0,  0, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], VHFAmThumbwheelsRow);
-	SquelchBThumbwheel.Init(0, 98, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], VHFAmThumbwheelsRow);
+	SquelchAThumbwheel.Init(0,  0, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], srf[SRF_BORDER_17x36], VHFAmThumbwheelsRow);
+	SquelchBThumbwheel.Init(0, 98, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], srf[SRF_BORDER_17x36], VHFAmThumbwheelsRow);
 
 	VHFSwitchesRow.Init(AID_VHFSWITCHES, MainPanel);
 	VHFAMASwitch.Init    (  0,  0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], VHFSwitchesRow);
@@ -2375,10 +2392,10 @@ void Saturn::SetSwitches(int panel) {
 	CabinTempAutoManSwitch.Init            (506, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29],       EcsSwitchesRow);
 
 	CabinTempAutoControlSwitchRow.Init(AID_CABINTEMPAUTOCONTROLSWITCH, MainPanel);
-	CabinTempAutoControlSwitch.Init(0, 0, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], CabinTempAutoControlSwitchRow);
+	CabinTempAutoControlSwitch.Init(0, 0, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], srf[SRF_BORDER_17x36], CabinTempAutoControlSwitchRow);
 
 	EcsGlycolPumpsSwitchRow.Init(AID_ECSGLYCOLPUMPSSWITCH, MainPanel);
-	EcsGlycolPumpsSwitch.Init(0, 0, 90, 90, srf[SRF_ECSGLYCOLPUMPROTARY], srf[SRF_BORDER_84x84], EcsGlycolPumpsSwitchRow,
+	EcsGlycolPumpsSwitch.Init(0, 0, 90, 90, srf[SRF_ECSGLYCOLPUMPROTARY], srf[SRF_BORDER_90x90], EcsGlycolPumpsSwitchRow,
 		                      (Pump *) Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP"),
 							  &ECSGlycolPumpsAc1ACircuitBraker, &ECSGlycolPumpsAc1BCircuitBraker, &ECSGlycolPumpsAc1CCircuitBraker,
 							  &ECSGlycolPumpsAc2ACircuitBraker, &ECSGlycolPumpsAc2BCircuitBraker, &ECSGlycolPumpsAc2CCircuitBraker);
@@ -2649,22 +2666,22 @@ void Saturn::SetSwitches(int panel) {
 	ECSGlycolPumpsAc2CCircuitBraker.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSGlycolPumpsAc2CCircuitBrakerRow, &ACBus2PhaseC, 2.0);
 
 	ModeIntercomVOXSensThumbwheelSwitchRow.Init(AID_MODEINTERCOMVOXSENSTHUMBWHEEL, MainPanel);
-	ModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], ModeIntercomVOXSensThumbwheelSwitchRow);
+	ModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], ModeIntercomVOXSensThumbwheelSwitchRow);
 
 	PowerMasterVolumeThumbwheelSwitchRow.Init(AID_POWERMASTERVOLUMETHUMBWHEEL, MainPanel);
-	PowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], PowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS, &soundlib);
+	PowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], PowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS, &soundlib);
 
 	PadCommVolumeThumbwheelSwitchRow.Init(AID_PADCOMMVOLUMETHUMBWHEEL, MainPanel);
-	PadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], PadCommVolumeThumbwheelSwitchRow);
+	PadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], PadCommVolumeThumbwheelSwitchRow);
 
 	IntercomVolumeThumbwheelSwitchRow.Init(AID_INTERCOMVOLUMETHUMBWHEEL, MainPanel);
-	IntercomVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], IntercomVolumeThumbwheelSwitchRow);
+	IntercomVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], IntercomVolumeThumbwheelSwitchRow);
 
 	SBandVolumeThumbwheelSwitchRow.Init(AID_SBANDVOLUMETHUMBWHEEL, MainPanel);
-	SBandVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], SBandVolumeThumbwheelSwitchRow);
+	SBandVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], SBandVolumeThumbwheelSwitchRow);
 
 	VHFAMVolumeThumbwheelSwitchRow.Init(AID_VHFVOLUMETHUMBWHEEL, MainPanel);
-	VHFAMVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], VHFAMVolumeThumbwheelSwitchRow);
+	VHFAMVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL], srf[SRF_BORDER_33x43], VHFAMVolumeThumbwheelSwitchRow);
 
 	AudioControlSwitchRow.Init(AID_AUDIOCONTROLSWITCH, MainPanel);
 	AudioControlSwitch.Init(0, 0, 34, 34, srf[SRF_SWITCH30], srf[SRF_BORDER_34x34], AudioControlSwitchRow);
@@ -2914,22 +2931,22 @@ void Saturn::SetSwitches(int panel) {
 	PostLandingVentSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH20LEFT], srf[SRF_BORDER_34x31], PostLandingVentSwitchRow);
 
 	LeftModeIntercomVOXSensThumbwheelSwitchRow.Init(AID_LEFTMODEINTERCOMVOXSENSTHUMBWHEEL, MainPanel);
-	LeftModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftModeIntercomVOXSensThumbwheelSwitchRow);
+	LeftModeIntercomVOXSensThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftModeIntercomVOXSensThumbwheelSwitchRow);
 
 	LeftPowerMasterVolumeThumbwheelSwitchRow.Init(AID_LEFTPOWERMASTERVOLUMETHUMBWHEEL, MainPanel);
-	LeftPowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftPowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS2, &soundlib);
+	LeftPowerMasterVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftPowerMasterVolumeThumbwheelSwitchRow, VOLUME_COMMS2, &soundlib);
 
 	LeftPadCommVolumeThumbwheelSwitchRow.Init(AID_LEFTPADCOMMVOLUMETHUMBWHEEL, MainPanel);
-	LeftPadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftPadCommVolumeThumbwheelSwitchRow);
+	LeftPadCommVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftPadCommVolumeThumbwheelSwitchRow);
 
 	LeftIntercomVolumeThumbwheelSwitchRow.Init(AID_LEFTINTERCOMVOLUMETHUMBWHEEL, MainPanel);
-	LeftIntercomVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftIntercomVolumeThumbwheelSwitchRow);
+	LeftIntercomVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftIntercomVolumeThumbwheelSwitchRow);
 
 	LeftSBandVolumeThumbwheelSwitchRow.Init(AID_LEFTSBANDVOLUMETHUMBWHEEL, MainPanel);
-	LeftSBandVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftSBandVolumeThumbwheelSwitchRow);
+	LeftSBandVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftSBandVolumeThumbwheelSwitchRow);
 
 	LeftVHFAMVolumeThumbwheelSwitchRow.Init(AID_LEFTVHFVOLUMETHUMBWHEEL, MainPanel);
-	LeftVHFAMVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], LeftVHFAMVolumeThumbwheelSwitchRow);
+	LeftVHFAMVolumeThumbwheelSwitch.Init(0, 0, 33, 43, srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT], srf[SRF_BORDER_33x43], LeftVHFAMVolumeThumbwheelSwitchRow);
 
 	LeftModeIntercomSwitchRow.Init(AID_LEFTMODEINTERCOMSWITCH, MainPanel);
 	LeftModeIntercomSwitch.Init(0, 0, 34, 31, srf[SRF_THREEPOSSWITCH30LEFT], srf[SRF_BORDER_34x31], LeftModeIntercomSwitchRow);
@@ -3065,18 +3082,18 @@ void Saturn::SetSwitches(int panel) {
 	IntegralRotarySwitch.Init(238,  0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], LeftInteriorLightRotariesRow);
 	
 	FDAIPowerRotaryRow.Init(AID_FDAIPOWERROTARY, MainPanel);
-	FDAIPowerRotarySwitch.Init(0,  0, 90, 90, srf[SRF_FDAIPOWERROTARY], srf[SRF_BORDER_84x84], FDAIPowerRotaryRow, &fdaiLeft, &fdaiRight,
+	FDAIPowerRotarySwitch.Init(0,  0, 90, 90, srf[SRF_FDAIPOWERROTARY], srf[SRF_BORDER_90x90], FDAIPowerRotaryRow, &fdaiLeft, &fdaiRight,
 		                       &SystemMnACircuitBraker, &SystemMnBCircuitBraker, &StabContSystemAc1CircuitBraker, &StabContSystemAc2CircuitBraker,
 							   &GPFPIPitch1Meter, &GPFPIPitch2Meter, &GPFPIYaw1Meter, &GPFPIYaw2Meter);
 
 	SCSElectronicsPowerRotaryRow.Init(AID_SCSELECTRONICSPOWERROTARY, MainPanel);
-	SCSElectronicsPowerRotarySwitch.Init(0,  0, 90, 90, srf[SRF_ECSGLYCOLPUMPROTARY], srf[SRF_BORDER_84x84], SCSElectronicsPowerRotaryRow);
+	SCSElectronicsPowerRotarySwitch.Init(0,  0, 90, 90, srf[SRF_ECSGLYCOLPUMPROTARY], srf[SRF_BORDER_90x90], SCSElectronicsPowerRotaryRow);
 
 	BMAGPowerRotary1Row.Init(AID_BMAGPOWERROTARY1, MainPanel);
-	BMAGPowerRotary1Switch.Init(0,  0, 90, 90, srf[SRF_ECSGLYCOLPUMPROTARY], srf[SRF_BORDER_84x84], BMAGPowerRotary1Row, &bmag1);
+	BMAGPowerRotary1Switch.Init(0,  0, 90, 90, srf[SRF_ECSGLYCOLPUMPROTARY], srf[SRF_BORDER_90x90], BMAGPowerRotary1Row, &bmag1);
 
 	BMAGPowerRotary2Row.Init(AID_BMAGPOWERROTARY2, MainPanel);
-	BMAGPowerRotary2Switch.Init(0,  0, 90, 90, srf[SRF_ECSGLYCOLPUMPROTARY], srf[SRF_BORDER_84x84], BMAGPowerRotary2Row, &bmag2);
+	BMAGPowerRotary2Switch.Init(0,  0, 90, 90, srf[SRF_ECSGLYCOLPUMPROTARY], srf[SRF_BORDER_90x90], BMAGPowerRotary2Row, &bmag2);
 
 	DirectO2RotaryRow.Init(AID_DIRECTO2ROTARY, MainPanel);
 	DirectO2RotarySwitch.Init(0,  0, 70, 70, srf[SRF_DIRECTO2ROTARY], srf[SRF_BORDER_70x70], DirectO2RotaryRow, (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:DIRECTO2VALVE"));
@@ -3198,18 +3215,18 @@ void Saturn::SetSwitches(int panel) {
 	SBandSwitch.Init	     (0, 226, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], LeftAudioSwitchesRow);
 
 	LeftAudioThumbwheelsRow.Init(AID_PANEL10_LEFT_THUMWBWHEELS, MainPanel);
-	LeftAudioVOXSensThumbwheel.Init     (0,   0, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], LeftAudioThumbwheelsRow);
-	LeftAudioPadComVolumeThumbwheel.Init(0, 112, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], LeftAudioThumbwheelsRow);
-	LeftAudioSBandVolumeThumbwheel.Init (0, 226, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], LeftAudioThumbwheelsRow);
+	LeftAudioVOXSensThumbwheel.Init     (0,   0, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], srf[SRF_BORDER_17x36], LeftAudioThumbwheelsRow);
+	LeftAudioPadComVolumeThumbwheel.Init(0, 112, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], srf[SRF_BORDER_17x36], LeftAudioThumbwheelsRow);
+	LeftAudioSBandVolumeThumbwheel.Init (0, 226, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], srf[SRF_BORDER_17x36], LeftAudioThumbwheelsRow);
 
 	CenterAudioSwitchesRow.Init(AID_PANEL10_CENTER_SWITCHES, MainPanel);
 	CenterSuitPowerSwitch.Init   (0,   0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CenterAudioSwitchesRow);
 	CenterAudioControlSwitch.Init(0, 114, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CenterAudioSwitchesRow);
 	
 	RightAudioThumbwheelsRow.Init(AID_PANEL10_RIGHT_THUMBWHEELS, MainPanel);
-	RightAudioMasterVolumeThumbwheel.Init  (0, 0, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], RightAudioThumbwheelsRow);
-	RightAudioIntercomVolumeThumbwheel.Init(0, 112, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], RightAudioThumbwheelsRow);
-	RightAudioVHFAMVolumeThumbwheel.Init   (0, 226, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], RightAudioThumbwheelsRow);
+	RightAudioMasterVolumeThumbwheel.Init  (0,   0, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], srf[SRF_BORDER_17x36], RightAudioThumbwheelsRow);
+	RightAudioIntercomVolumeThumbwheel.Init(0, 112, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], srf[SRF_BORDER_17x36], RightAudioThumbwheelsRow);
+	RightAudioVHFAMVolumeThumbwheel.Init   (0, 226, 17, 36, srf[SRF_THUMBWHEEL_SMALLFONTS], srf[SRF_BORDER_17x36], RightAudioThumbwheelsRow);
 	
 	RightAudioSwitchesRow.Init(AID_PANEL10_RIGHT_SWITCHES, MainPanel);
 	PowerAudioSwitch.Init(0,   0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], RightAudioSwitchesRow);
@@ -3227,10 +3244,10 @@ void Saturn::SetSwitches(int panel) {
 	GlycolToRadiatorsLever.Init(0, 0, 32, 160, srf[SRF_GLYCOLLEVER], srf[SRF_BORDER_32x160], GlycolToRadiatorsLeverRow);
 
 	CabinPressureReliefLever1Row.Init(AID_CABINPRESSURERELIEFLEVER1, MainPanel);
-	CabinPressureReliefLever1.Init(0, 0, 150, 80, srf[SRF_CABINRELIEFUPPERLEVER], CabinPressureReliefLever1Row);
+	CabinPressureReliefLever1.Init(0, 0, 150, 80, srf[SRF_CABINRELIEFUPPERLEVER], srf[SRF_BORDER_150x80], CabinPressureReliefLever1Row);
 
 	CabinPressureReliefLever2Row.Init(AID_CABINPRESSURERELIEFLEVER2, MainPanel);
-	CabinPressureReliefLever2.Init(66, 8, 200, 80, srf[SRF_CABINRELIEFLOWERLEVER], CabinPressureReliefLever2Row);
+	CabinPressureReliefLever2.Init(66, 8, 200, 80, srf[SRF_CABINRELIEFLOWERLEVER], srf[SRF_BORDER_200x80], CabinPressureReliefLever2Row);
 	CabinPressureReliefLever2.InitGuard(srf[SRF_CABINRELIEFGUARDLEVER], &soundlib);
 
 	GlycolReservoirRotariesRow.Init(AID_GLYCOLRESERVOIRROTARIES, MainPanel);
@@ -4468,15 +4485,15 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_MASTER_ALARM:
-		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_LEFT);
+		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], (PanelFlashOn && MasterAlarmSwitch.IsFlashing() ? srf[SRF_BORDER_45x36] : 0), CWS_MASTERALARMPOSITION_LEFT);
 		return true;
 
 	case AID_MASTER_ALARM2:
-		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_RIGHT);
+		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], (PanelFlashOn && MasterAlarmSwitch.IsFlashing() ? srf[SRF_BORDER_45x36] : 0), CWS_MASTERALARMPOSITION_RIGHT);
 		return true;
 
 	case AID_MASTER_ALARM3:
-		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_NONE);
+		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], (PanelFlashOn && MasterAlarmSwitch.IsFlashing() ? srf[SRF_BORDER_45x36] : 0), CWS_MASTERALARMPOSITION_NONE);
 		return true;
 
 	case AID_CWS_LIGHTS_LEFT:
