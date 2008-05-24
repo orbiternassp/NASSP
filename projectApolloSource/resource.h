@@ -684,6 +684,12 @@
 #define AID_WASTE_MGMT_OVBD_DUMP							967
 #define AID_WASTE_MGMT_BATT_VENT							968
 #define AID_WASTE_MGMT_STOAGE_VENT							969
+#define IDB_BORDER_45x36									970
+#define IDB_BORDER_17x36									971
+#define IDB_BORDER_33x43									972
+#define IDB_BORDER_36x17									973
+#define IDB_BORDER_150x80									974
+#define IDB_BORDER_200x80									975
 
 // Next default values for new objects
 //
