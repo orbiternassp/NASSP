@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2008/04/11 11:49:59  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.10  2007/10/03 20:24:54  tschachim
   *	Bugfix rowres interstage mesh.
   *	
@@ -69,7 +72,7 @@ PARTICLESTREAMSPEC solid_exhaust = {
 	0, 0.5, 250, 35.0, 0.1, 0.15, 0.5, 1.0, 
 	PARTICLESTREAMSPEC::EMISSIVE,
 	PARTICLESTREAMSPEC::LVL_PSQRT, 0, 0.5,
-	PARTICLESTREAMSPEC::ATM_PLOG, 1e-6, 0.1
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
 
@@ -418,6 +421,7 @@ void S1B::LoadMeshes(bool lowres)
 		hsat1stg1 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg1");
 		hSat1intstg = oapiLoadMeshGlobal("ProjectApollo/nsat1intstg");
 	}	
+	solid_exhaust.tex = oapiRegisterParticleTexture ("Contrail2");
 }
 
 void S1B::clbkDockEvent(int dock, OBJHANDLE connected)
