@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2008/04/11 12:19:16  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.24  2008/01/16 05:52:07  movieman523
   *	Removed all dockstate code.
   *	
@@ -159,6 +164,8 @@ protected:
 	void SetVehicleStats();
 	void CalculateStageMass ();
 	void SetSIVBMixtureRatio(double ratio);
+	void ActivateStagingVent();
+	void DeactivateStagingVent();
 	// Prelaunch tank venting not implemented for the Saturn 1b at the moment
 	void ActivatePrelaunchVenting() {};
 	void DeactivatePrelaunchVenting() {};

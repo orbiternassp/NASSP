@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2008/04/11 11:49:59  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.11  2007/06/10 20:25:12  tschachim
   *	Fixed/clarified that center engines aren't gimbaled.
   *	
@@ -264,16 +267,13 @@ void Saturn1b::AutoPilot(double autoT)
 	double bank;
 	VECTOR3 rhoriz;
 
-
 	double TO_HDG = agc.GetDesiredAzimuth();
-	char current_key=0;
 
 	AltitudePREV = altitude = GetAltitude();
 	VESSELSTATUS vsp;
 	GetStatus(vsp);
 	double totalRot=0;
 	totalRot=vsp.vrot.x+vsp.vrot.y+vsp.vrot.z;
-
 	if (fabs(totalRot) >= 0.0025){
 		StopRot = true;
 	}
@@ -289,201 +289,14 @@ void Saturn1b::AutoPilot(double autoT)
 	if (altitude >= 120000 && CheckForLaunchShutdown())
 		return;
 
- // navigation
+	// navigation
 	pitch = GetPitch();
 	pitch = pitch*180./PI;
 	//sprintf(oapiDebugString(), "Autopilot %f", altitude);
- // guidance
+	// guidance
 	pitch_c = GetCPitch(autoT);
- // control
-
-	if ((altitude < 250)  && (altitude > 150)) {
-		//sprintf(oapiDebugString(), "Autopilot initial Pitch DEG %d", (int)fabs(pitch));
-		if (pitch >86) {
-			AtempP = 0.4;
-			if (rhoriz.z>0) AtempP = -0.4;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-		else {
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-	}
-	else if (altitude < 1200  && altitude > 250)	{
-		bank = GetBank();
-		bank = bank*180. / PI;
-		if(bank > 90) bank = bank - 180.;
-		else if(bank < -90) bank = bank + 180.;
-
-//		sprintf(oapiDebugString(), "bank =  %d", (int)bank);
-
-		if (fabs(bank + (90. - TO_HDG)) < 15  && StopRot){
-				AtempP = 0.0;
-				AtempR = 0.0;
-				AtempY = 0.0;
-		}
-		if (fabs(bank + (90. - TO_HDG)) < 0.5){
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-
-		//sprintf(oapiDebugString(), "Autopilot Bank Mode TotalROT %f", totalRot);
-
-		if (bank > -(90. - TO_HDG) + 0.5){
-			AtempR = -fabs((90. - TO_HDG) - bank);
-			//if (AtempR < -1) AtempR = -1;
-			if (AtempR < -0.5) AtempR = -0.5;
-			AtempP = 0.0;
-			AtempY = 0.0;
-		}
-		else if (bank < -(90. - TO_HDG) - 0.5){
-			AtempR = fabs((90. - TO_HDG) - bank);
-			//if (AtempR > 1) AtempR = 1;
-			if (AtempR > 0.5) AtempR = 0.5;
-			AtempP = 0.0;
-			AtempY = 0.0;
-		}
-		else {
-			AtempR = 0.0;
-		}
-	}
-	else if (altitude < 2800  && altitude > 1200){
-
-		oapiGetHeading(GetHandle(),&heading);
-		heading = heading*180./PI;
-		//sprintf(oapiDebugString(), "Autopilot Heading Mode DEG %f", heading);
-		bank = GetBank();
-		bank = bank*180./PI;
-		if(bank > 90) bank = bank - 180.;
-		else if(bank < -90) bank = bank + 180.;
-
-		if (fabs(heading - TO_HDG) < 10 && StopRot) {
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-		if (fabs(heading-TO_HDG) < 0.5) {
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-		else if (heading > (TO_HDG + 0.5) && TO_HDG < 90) {
-			AtempP = heading - TO_HDG ;
-//			if (AtempP > 1.0) AtempP = 1.0;
-			if (AtempP > 0.15) AtempP = 0.15;
-			AtempR = -0.2;
-			if(rhoriz.z > 0) 
-			{
-//				AtempR = -AtempR;
-				AtempP = -AtempP;
-			}
-			AtempY = 0.0;
-			//vessel->SetAttitudeRotLevel(0, -1);
-		}
-		else if (heading < (TO_HDG - 0.5) && TO_HDG < 90) {
-			AtempP = heading  - TO_HDG;
-//			if (AtempP < -1.0) AtempP = -1.0;
-			if (AtempP < -0.15) AtempP = -0.15;
-			AtempR = 0.2;
-			if(rhoriz.z > 0) 
-			{
-//				AtempR = -AtempR;
-				AtempP = -AtempP;
-			}
-			AtempY = 0.0;
-			//vessel->SetAttitudeRotLevel(0, 1);
-		}
-		else if (heading > (TO_HDG + 0.5) && TO_HDG > 90) {
-			AtempP = -(heading - TO_HDG) ;
-//			if (AtempP < -1.0) AtempP = -1.0;
-			if (AtempP < -0.15) AtempP = -0.15;
-			AtempR = -0.2;
-			if(rhoriz.z > 0) 
-			{
-//				AtempR = -AtempR;
-				AtempP = -AtempP;
-			}
-			AtempY = 0.0;
-			//vessel->SetAttitudeRotLevel(0, -1);
-		}
-		else if (heading < (TO_HDG - 0.5) && TO_HDG > 90) {
-			AtempP = -(heading  - TO_HDG);
-//			if (AtempP > 1.0) AtempP = 1.0;
-			if (AtempP > 0.15) AtempP = 0.15;
-			AtempR = 0.2;
-			if(rhoriz.z > 0) 
-			{
-//				AtempR = -AtempR;
-				AtempP = -AtempP;
-			}
-			AtempY = 0.0;
-			//vessel->SetAttitudeRotLevel(0, 1);
-		}
-		else {
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-	}
-	else if (altitude < 4500  && altitude > 2800) {
-		bank = GetBank();
-		bank = bank * 180. / PI;
-		if(bank > 90) 
-			bank = bank - 180.;
-		else if(bank < -90) 
-			bank = bank + 180.;
-		oapiGetHeading(GetHandle(),&heading);
-		heading = heading*180./PI;
-
-		if (fabs(bank) < 0.5) {
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-
-		}
-		else if (bank < 0 && fabs(vsp.vrot.z) < 0.11) {
-			AtempR = 0.2; // 1.0;
-		}
-		else if (bank > 0 && fabs(vsp.vrot.z) < 0.11) {
-			AtempR = -0.2; // -1.0;
-		}
-		else {
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-		}
-		if (fabs(bank) < 10 && fabs(vsp.vrot.z) > 0.1) {
-			AtempP = 0.0;
-			AtempR = 0.0;
-			AtempY = 0.0;
-			StopRot=false;
-		}
-		// zero angle-of-attack...
-		// AtempP = (GetAOA() * DEG - 0.3) / 5.0;
-		// if(AtempP < -0.2) AtempP = -0.2;
-		// if(AtempP >  0.2) AtempP = 0.2;
-
-		pitch_c = GetCPitch(autoT);
-		level = pitch_c - GetPitch() * DEG;
-		if (level > 0 && fabs(vsp.vrot.z) < 0.09){
-			AtempP = -(fabs(level) / 10.);
-			if (AtempP < -0.1) AtempP = -0.1;
-			if (rhoriz.z>0) AtempP = -AtempP;
-		}
-		else if (level < 0 && fabs(vsp.vrot.z) < 0.09) {
-			AtempP = (fabs(level) / 10.);
-			if (AtempP > 0.1) AtempP = 0.1;
-			if (rhoriz.z > 0) AtempP = -AtempP;
-		}
-		else {
-			AtempP = 0.0;						
-		}
-	}
-	else if (altitude > 4500) {
-
+	// control
+	if (altitude > 4500) {
 		// Damp roll motion
 		bank = GetBank();
 		bank = bank*180./PI;
@@ -511,6 +324,9 @@ void Saturn1b::AutoPilot(double autoT)
 			target.z=altco;
 			LinearGuidance(target, pit, yaw);
 			AtempP=(pit*DEG-pitch)/30.0;
+			if (AtempP < -0.2) AtempP = -0.2;
+			if (AtempP >  0.2) AtempP =  0.2;
+			// sprintf(oapiDebugString(), "IGM - Alt %f Pitch %f autoT %f", altitude, AtempP, autoT);
 		}
 		else {
 			 // guidance
@@ -553,12 +369,110 @@ void Saturn1b::AutoPilot(double autoT)
 				AtempR = 0.0;
 				AtempY = 0.0;
 			}
+			// sprintf(oapiDebugString(), "autoT %f AtempP %f AtempR %f AtempY %f altitude %f pitch %f pitch_c %f", 
+			//  					       autoT, AtempP, AtempR, AtempY, altitude, pitch, pitch_c);
 		}
 	}
 	// sprintf(oapiDebugString(), "Alt %f Pitch %f Roll %f Yaw %f autoT %f", altitude, AtempP, AtempR, AtempY, autoT);
 
+	double slip;
+	VECTOR3 az;
+	VECTOR3 up, north, east, ygl, zgl, zerogl;
+	OBJHANDLE hbody=GetGravityRef();
+	double bradius=oapiGetSize(hbody);
+
+	// set up our reference frame
+	Local2Global(_V(0.0, 0.0, 0.0), zerogl);
+	Local2Global(_V(0.0, 1.0, 0.0), ygl);
+	Local2Global(_V(0.0, 0.0, 1.0), zgl);
+	ygl=ygl-zerogl;
+	zgl=zgl-zerogl;
+
+	oapiGetHeading(GetHandle(),&heading);
+	heading = heading*180./PI;
+
+
 	switch (stage){
 		case LAUNCH_STAGE_ONE:
+			GetRelativePos(hbody, up);
+			up=Normalize(up);
+			agc.EquToRel(PI/2.0, 0.0, bradius, north);
+			north=Normalize(north);
+			east=Normalize(CrossProduct(north, up));
+			north=Normalize(CrossProduct(up, east));
+			az=east*sin(TO_HDG*RAD)-north*cos(TO_HDG*RAD);
+			if(autoT < 60.0) normal=Normalize(CrossProduct(up, az));
+
+			slip=GetSlipAngle()*DEG;
+
+			if(autoT < 10.) {
+				AtempR=0.0;
+				AtempY=0.0;
+				// cancel out the yaw maneuver...
+				AtempY=(-0.4+asin(zgl*normal)*DEG)/20.0;
+			}
+
+			if(autoT > 10.0 && autoT < 30.0) {
+				// roll program
+				AtempR=asin(ygl*normal)*DEG/20.0;
+				AtempY=asin(zgl*normal)*DEG/20.0;
+				if (AtempR < -0.25) AtempR = -0.25;
+				if (AtempR >  0.25) AtempR =  0.25;
+			}
+
+			if(autoT > 30.0 && autoT < 45.0) {
+				//pitch and adjust for relative wind
+				AtempR=asin(ygl*normal)*DEG/20.0;
+				//AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
+				AtempY=(TO_HDG-(heading+slip))/20.0;
+				if (AtempR < -0.25) AtempR = -0.25;
+				if (AtempR >  0.25) AtempR =  0.25;
+			}
+			pitch = GetPitch();
+			pitch=pitch*180./PI;
+			pitch_c=GetCPitch(autoT);
+			AtempP = (pitch - pitch_c);
+			if(rhoriz.z>0) AtempP= -AtempP;
+			if (AtempP > 1.0) AtempP = 1.0;
+			if (AtempP < -1.0) AtempP = -1.0;
+
+			// zero angle-of-attack...
+			if(autoT > 45.0 && autoT < 115.0) {
+
+				/// \todo Disabled for now, the Saturn 1B doesn't seem to do that...
+				//double aoa=GetAOA()*DEG;
+				//pitch_c=pitch+aoa-0.3;
+
+				AtempP=(pitch_c-pitch)/5.0;
+				if(AtempP < -0.2) AtempP=-0.2;
+				if(AtempP >  0.2) AtempP= 0.2;
+				// sprintf(oapiDebugString(), " pitch=%.3f pc=%.3f ap=%.3f", pitch, pitch_c, AtempP);
+				if(autoT < 50.0) {
+					// AtempY=(slip+asin(zgl*normal)*DEG)/20.0;
+					AtempY=(TO_HDG-(heading+slip))/20.0;
+					// try this...
+					AtempR=asin(ygl*normal)*DEG/20.0;
+				} else {
+					//	AtempY=slip/10.0;
+					AtempY=(TO_HDG-(heading+slip))/20.0;
+				}
+			}
+			if (autoT > 115.0) {
+				AtempY=0.0;
+				if (autoT < 120.0) {
+					if (AtempP < -0.1) AtempP = -0.1;
+					if (AtempP >  0.1) AtempP =  0.1;
+				} else {
+					if (AtempP < -0.2) AtempP = -0.2;
+					if (AtempP >  0.2) AtempP =  0.2;
+				}
+				normal=Normalize(CrossProduct(Normalize(vsp.rpos), Normalize(vsp.rvel)));
+			}
+			// sprintf(oapiDebugString(), "roll=%.3f yaw=%.3f slip=%.3f sum=%.3f hdg+slip=%.3f hdg=%.3f ay=%.3f", 
+			//     asin(ygl*normal)*DEG, asin(zgl*normal)*DEG, slip, slip+asin(zgl*normal)*DEG, heading+slip, heading, AtempY);
+			// sprintf(oapiDebugString(), "autoT %f AtempP %f AtempR %f AtempY %f altitude %f pitch %f pitch_c %f rhoriz.z %f", 
+			//     autoT, AtempP, AtempR, AtempY, altitude, pitch, pitch_c, rhoriz.z);
+
 			AttitudeLaunch1();
 			break;
 
