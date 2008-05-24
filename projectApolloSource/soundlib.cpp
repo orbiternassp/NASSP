@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2008/04/11 11:50:05  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.14  2007/06/06 15:02:22  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -800,8 +803,10 @@ TimedSoundManager::~TimedSoundManager()
 void TimedSoundManager::Timestep(double simt, double simdt, bool autoslow)
 
 {
-	double timeaccel = oapiGetTimeAcceleration();
+	// Is OrbiterSound available?
+	if (!soundlib.IsOrbiterSoundActive()) return;
 
+	double timeaccel = oapiGetTimeAcceleration();
 	if (LaunchSoundsLoaded && simt >= TimeToPlay)
 	{
 		if (SoundToPlay)

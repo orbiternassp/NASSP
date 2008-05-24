@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2007/10/18 00:23:24  movieman523
+  *	Primarily doxygen changes; minimal functional change.
+  *	
   *	Revision 1.13  2006/07/06 00:40:08  movieman523
   *	Improved timed sound playback. Still doesn't really work due to Orbitersound not wanting to play our files.
   *	
@@ -191,16 +194,7 @@ public:
 	void SetLanguage(char *language);
 	void SetVolume(int type, int percent);
 	int GetSoundVolume(int flags, int volume);
-
-	///
-	/// \brief Base path to sound files.
-	///
-	char basepath[256];
-
-	///
-	/// \brief Path to mission-specific sound files.
-	///
-	char missionpath[256];
+	bool IsOrbiterSoundActive() { return OrbiterSoundActive; };
 
 protected:
 
@@ -222,6 +216,16 @@ protected:
 	SoundData sounds[MAX_SOUNDS+1];
 
 	///
+	/// \brief Base path to sound files.
+	///
+	char basepath[256];
+
+	///
+	/// \brief Path to mission-specific sound files.
+	///
+	char missionpath[256];
+
+	///
 	/// \brief Path to language-specific sound files.
 	///
 	char languagepath[256];
@@ -236,6 +240,10 @@ protected:
 	///
 	int SoundlibId;
 	int NextSlot;
+
+	friend class TimedSound;
+	friend class TimedSoundManager;
+	friend class SoundEvent;
 };
 
 //
