@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2008/05/03 23:27:37  tschachim
+  *	warnings fixed
+  *	
   *	Revision 1.19  2008/04/23 18:51:56  bluedragon8144
   *	Added telemetry window and vessel support for State Vector.  Cleaned up display.
   *	
@@ -163,6 +166,7 @@ static struct {  // global data storage
 	int emem[17];
 	int connStatus;
 	int statevectorReady;
+	int updateclockReady;
 	int uplinkState;
 	double missionTime;
 	OBJHANDLE planet;
@@ -201,6 +205,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.errorMessage = "";
 	g_Data.connStatus = 0;
 	g_Data.statevectorReady = 0;
+	g_Data.updateclockReady = 0;
 	g_Data.uplinkState = 0;
 	//Init Emem
 	for(int i = 0; i < 17; i++)
@@ -264,9 +269,9 @@ void send_agc_key(char key)
 				cmdbuf[1] = 0344;
 				cmdbuf[2] = 0331;
 				break;
-				case '+': // 11-101-000 10-111-010
+			case '+': // 11-101-000 10-111-010
 				cmdbuf[1] = 0350;
-				cmdbuf[2] = 0372;
+				cmdbuf[2] = 0272;
 				break;
 			case '-': // 11-101-100 10-011-011
 				cmdbuf[1] = 0354;
@@ -317,7 +322,10 @@ void send_agc_key(char key)
 		}
 void uplink_word(char * data)
 {
-	for(int i = 0; i < (int)strlen(data); i++) {
+	for(int i = 5; i > (int)strlen(data); i--) {
+		send_agc_key('0');
+	}
+	for(i = 0; i < (int)strlen(data); i++) {
 		send_agc_key(data[i]);
 	}
 	send_agc_key('E');
@@ -380,6 +388,103 @@ void UplinkStateVector(double simt)
 	}
 }
 
+void UpdateClock(double simt)
+{
+	int bytesRecv = SOCKET_ERROR;
+	char addr[256];
+	char buffer[8];
+	if(g_Data.connStatus == 0) {
+		m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );	
+		if ( m_socket == INVALID_SOCKET ) {
+			sprintf(debugWinsock,"Error at socket(): %ld", WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(addr, "127.0.0.1");
+		clientService.sin_family = AF_INET;
+		clientService.sin_addr.s_addr = inet_addr(addr);
+		clientService.sin_port = htons( 14242 );
+		if (connect( m_socket, (SOCKADDR*) &clientService, sizeof(clientService)) == SOCKET_ERROR) {
+			sprintf(debugWinsock,"Failed to connect, Error %ld",WSAGetLastError());
+			closesocket(m_socket);
+			return;
+		}
+		sprintf(debugWinsock, "Connected");
+		g_Data.connStatus = 1;
+		g_Data.uplinkState = 0;
+		send_agc_key('V');
+		send_agc_key('2');
+		send_agc_key('5');
+		send_agc_key('N');
+		send_agc_key('3');
+		send_agc_key('6');
+		send_agc_key('E');
+		g_Data.missionTime = simt;
+	}
+	else {
+		if(simt > g_Data.missionTime + 1.0) {
+			if(g_Data.uplinkState == 0) {
+				char sign = '+';
+				double mt = 0;
+				mt = g_Data.progVessel->GetMissionTime();
+				mt += 1.0;
+				int secs = abs((int) mt);
+				int hours = (secs / 3600);
+				secs -= (hours * 3600);
+				int minutes = (secs / 60);
+				secs -= 60 * minutes;
+				secs *= 100;
+				if (simt < 0)
+					sign = '-';
+				send_agc_key(sign);
+				sprintf(buffer, "%ld", hours);
+				uplink_word(buffer);
+				send_agc_key(sign);
+				sprintf(buffer, "%ld", minutes);
+				uplink_word(buffer);
+				send_agc_key(sign);
+				sprintf(buffer, "%ld", secs);
+				uplink_word(buffer);
+				g_Data.missionTime = simt;
+				g_Data.uplinkState++;
+			}
+			else if(g_Data.uplinkState == 1) {
+				send_agc_key('V');
+				send_agc_key('1');
+				send_agc_key('6');
+				send_agc_key('N');
+				send_agc_key('6');
+				send_agc_key('5');
+				send_agc_key('E');
+				g_Data.missionTime = simt;
+				g_Data.uplinkState++;
+			}
+			else if(g_Data.uplinkState == 4) {
+				send_agc_key('V');
+				send_agc_key('3');
+				send_agc_key('7');
+				send_agc_key('E');
+				send_agc_key('0');
+				send_agc_key('0');
+				send_agc_key('E');
+				g_Data.missionTime = simt;
+				g_Data.uplinkState++;
+			}
+			else if(g_Data.uplinkState == 5) {
+				sprintf(debugWinsock, "Disconnected");
+				g_Data.uplinkState = 0;
+				g_Data.updateclockReady = 0;
+				g_Data.connStatus = 0;
+				closesocket(m_socket);
+			}
+			else {
+				g_Data.missionTime = simt;
+				g_Data.uplinkState++;
+			}
+		}
+	}
+}
+
 void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 {
 
@@ -398,6 +503,9 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 	}
 	if (g_Data.statevectorReady == 2) {
 		UplinkStateVector(simt);
+	}
+	if (g_Data.updateclockReady == 2) {
+		UpdateClock(simt);
 	}
 	
 	if (g_Data.prog == PROG_IMFDTLI) {
@@ -527,7 +635,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
-	static char *labelTELE[6] = {"BCK", "SV", "", "", "SRC", "REF"};
+	static char *labelTELE[6] = {"BCK", "SV", "CLK", "", "SRC", "REF"};
 	static char *labelSOCK[1] = {"BCK"};	
 	static char *labelDEBUG[12] = {"","","","","","","","","","CLR","FRZ","BCK"};
 
@@ -600,7 +708,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	static const MFDBUTTONMENU mnuTELE[6] = {
 		{"Back", 0, 'B'},
 		{"State Vector Update", 0, 'U'},
-		{0,0,0},
+		{"Clock Update",0,'C'},
 		{0,0,0},
 		{"Source",0,'S'},
 		{"Reference Body", 0, 'R'}
@@ -715,26 +823,44 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 		} 		
 	} else if (screen == PROG_TELE) {
 		if (key == OAPI_KEY_B) {
-			if(g_Data.statevectorReady == 0) {
+			if(g_Data.statevectorReady == 0 && g_Data.updateclockReady == 0) {
 				screen = PROG_NONE;
 				InvalidateDisplay();
 				InvalidateButtons();
-			} else if(g_Data.statevectorReady == 1) {
-				g_Data.statevectorReady -= 1;
+			} else {
+				if(g_Data.statevectorReady == 1)
+					g_Data.statevectorReady -= 1;
+				if(g_Data.updateclockReady == 1)
+					g_Data.updateclockReady -= 1;
 			}
 			return true;
 		} else if (key == OAPI_KEY_U) {
-			if (saturn)
-				if (g_Data.statevectorReady == 0)
+			if (saturn) {
+				if (g_Data.statevectorReady == 0 && g_Data.updateclockReady == 0) {
+					g_Data.statevectorReady = 1;
+				}
+				else if (g_Data.statevectorReady == 1) {				
 					GetStateVector();
-				else if (g_Data.statevectorReady == 1)
-					g_Data.statevectorReady += 1;
+					g_Data.statevectorReady = 2;
+				}
+			}
+			return true;
+		} else if (key == OAPI_KEY_C) {
+			if (saturn) {
+				if (g_Data.updateclockReady == 0 && g_Data.statevectorReady == 0) {
+					g_Data.updateclockReady = 1;
+				}
+				else if (g_Data.updateclockReady == 1) {
+					g_Data.updateclockReady = 2;
+				}
+			}
 			return true;
 		} else if (key == OAPI_KEY_S) {
 			if(g_Data.statevectorReady == 0) {
 				bool SourceInput (void *id, char *str, void *data);
 				oapiOpenInputBox("Set Source", SourceInput, 0, 20, (void*)this);
 			}
+			return true;
 		} else if (key == OAPI_KEY_R) {
 			if(g_Data.statevectorReady == 0) {
 				bool ReferencePlanetInput (void *id, char *str, void *data);
@@ -847,7 +973,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyGNC[2] = { OAPI_KEY_B, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
-	static const DWORD btkeyTELE[6] = { OAPI_KEY_B, OAPI_KEY_U, 0, 0, OAPI_KEY_S, OAPI_KEY_R };
+	static const DWORD btkeyTELE[6] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_C, 0, OAPI_KEY_S, OAPI_KEY_R };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
 
@@ -1119,7 +1245,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, width / 2, (int) (height * 0.3), "Telemetry", 9);
 		sprintf(buffer, "Status: %s", debugWinsock);
 		TextOut(hDC, width / 2, (int) (height * 0.35), buffer, strlen(buffer));
-		if (g_Data.statevectorReady == 1) {
+		if (g_Data.statevectorReady == 1 || g_Data.updateclockReady == 1) {
 			sprintf(buffer, "Check");
 			TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
 			SetTextColor (hDC, RGB(255, 255, 0));
@@ -1320,7 +1446,6 @@ void ProjectApolloMFD::GetStateVector (void)
 		g_Data.emem[n+3] = irDEC2OCT(calc_3[n/2]);
 		g_Data.emem[n+4] = irDEC2OCT(calc_2[n/2]*pow(2.0, 14.0));
 	}
-	g_Data.statevectorReady = 1;
 }
 int ProjectApolloMFD::DEC2OCT(int a)
 {
