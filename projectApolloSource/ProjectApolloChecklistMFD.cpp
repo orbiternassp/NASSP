@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2008/05/24 17:30:41  tschachim
+  *	Bugfixes, new flash toggle.
+  *	
   *	Revision 1.11  2008/04/11 11:49:26  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -377,8 +380,8 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		{
 			item.group = SelectedGroup;
 			item.index = CurrentStep;
-			// if (conn.GetChecklistItem(&item))
-			// 	conn.completeChecklistItem(&item);
+			if (conn.GetChecklistItem(&item))
+				conn.completeChecklistItem(&item);
 			return true;
 
 			InvalidateDisplay();
@@ -389,8 +392,8 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		{
 			item.group = SelectedGroup;
 			item.index = CurrentStep;
-			// if (conn.GetChecklistItem(&item))
-			//	conn.failChecklistItem(&item);
+			if (conn.GetChecklistItem(&item))
+				conn.failChecklistItem(&item);
 			return true;
 
 			InvalidateDisplay();
@@ -678,6 +681,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			SetRect(&ShadedBox,(int) (width * 0.73),(int) (height * 0.96),(int) (width * 0.82),height-1);
 		}
 		FillRect(hDC, &ShadedBox, hBr);
+		DeleteObject(hBr);
 		SetTextColor (hDC, RGB(0, 255, 0));
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * .5), (int) (height * .95), " FLASH:  ON  OFF", 16);
@@ -686,6 +690,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		hBr = CreateSolidBrush( RGB(0, 100, 0));
 		SetRect(&ShadedBox,(int) (width * .05),(int) (height * (LINE0 + .01)),(int) (width * .95), (int) (height * (LINE1 + .01)));
 		FillRect(hDC, &ShadedBox, hBr);
+		DeleteObject(hBr);
 
 		//Retrieve 15 visible checklist steps  (all are displayed on two lines)
 
@@ -721,6 +726,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			SetRect(&ShadedBox,(int) (width * 0.25),(int) (height * 0.96),(int) (width * 0.34),height-1);
 		}
 		FillRect(hDC, &ShadedBox, hBr);
+		DeleteObject(hBr);
 		SetTextColor (hDC, RGB(0, 255, 0));
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * .05), (int) (height * .95), " AUTO:  ON  OFF", 15);
@@ -729,6 +735,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		hBr = CreateSolidBrush( RGB(0, 100, 0));
 		SetRect(&ShadedBox,(int) (width * .05),(int) (height * (LINE0 + HiLghtdLine * HLINE)),(int) (width * .95), (int) (height * (LINE1 + HiLghtdLine * HLINE)));
 		FillRect(hDC, &ShadedBox, hBr);
+		DeleteObject(hBr);
 
 		SelectDefaultFont(hDC, 0);
 
