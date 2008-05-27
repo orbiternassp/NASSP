@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2008/04/11 12:01:53  tschachim
+  *	Cleanup of the checklist events.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   **************************************************************************/
 
 
@@ -39,6 +43,8 @@ using namespace std;
 // Todo: Verify
 RelativeEvent checkEvent(const char* input, bool Group)
 {	
+	if (!Group && !strnicmp(input,"LAST_ITEM_RELATIVE",18))
+		return LAST_ITEM_RELATIVE;
 	if (!Group && !strnicmp(input,"CHECKLIST_RELATIVE",18))
 		return CHECKLIST_RELATIVE;
 	if (!strnicmp(input,"EARTH_ORBIT_INSERTION",21))
@@ -143,7 +149,7 @@ void ChecklistItem::save(FILEHANDLE scn)
 	oapiWriteScenario_string(scn,ChecklistItemEndString,"");
 }
 // Todo: Verify
-bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, SaturnEvents &eventController)
+bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, double lastItemTime, SaturnEvents &eventController)
 {
 	if (!automatic)
 		return false;
@@ -152,6 +158,11 @@ bool ChecklistItem::checkExec(double lastMissionTime, double checklistStart, Sat
 	double t = 0;
 	switch(relativeEvent)
 	{
+	case LAST_ITEM_RELATIVE:
+		t = lastMissionTime - lastItemTime;
+		if (time > t)
+			return false;
+		break;
 	case CHECKLIST_RELATIVE:
 		t = lastMissionTime - checklistStart;
 		if (time > t)

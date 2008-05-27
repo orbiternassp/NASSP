@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.19  2008/05/24 17:30:42  tschachim
+  *	Bugfixes, new flash toggle.
+  *	
   *	Revision 1.18  2008/04/11 12:00:53  tschachim
   *	Cleanup of the checklist events.
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
@@ -112,6 +115,7 @@ bool ChecklistController::completeChecklistItem(ChecklistItem* input)
 
 	active.set[input->index].status = COMPLETE;
 	conn.SetFlashing(active.set[input->index].item,false);
+	lastItemTime = lastMissionTime;
 	iterate();
 	return true;
 }
@@ -178,7 +182,7 @@ void ChecklistController::save(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "AUTO", (autoexecute ? 1 : 0));
 	oapiWriteScenario_int(scn, "COMPLETE", (complete ? 1 : 0));
 	oapiWriteScenario_int(scn, "FLASHING", (flashing ? 1 : 0));
-
+	oapiWriteScenario_float(scn, "LASTITEMTIME", lastItemTime);
 
 	if (active.program.group != -1)
 		active.save(scn);
@@ -225,6 +229,13 @@ void ChecklistController::load(FILEHANDLE scn)
 			int i;
 			sscanf(line+8,"%d",&i);
 			flashing = (i != 0);
+			found = true;
+		}
+		if (!found && !strnicmp(line, "LASTITEMTIME", 12))
+		{
+			float flt = 0;
+            sscanf (line + 12, "%f", &flt);
+			lastItemTime = flt;
 			found = true;
 		}
 		if (!found && !strnicmp(line,ChecklistContainerStartString,strlen(ChecklistContainerStartString)))
@@ -280,6 +291,7 @@ bool ChecklistController::init(bool input)
 	complete = true;
 	flashing = false;
 	lastMissionTime = MINUS_INFINITY;
+	lastItemTime = MINUS_INFINITY;
 	autoexecute = false;
 	playSound = false;
 
@@ -430,8 +442,10 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 	// Even on "non executing" timesteps, we want to allow to complete at least one checklist item
 	if (complete)
 	{
-		if(active.program.group != -1 && conn.GetState(active.sequence->item) == active.sequence->position)
+		if (active.program.group != -1 && conn.GetState(active.sequence->item) == active.sequence->position &&
+			active.sequence->checkExec(missiontime, active.startTime, lastItemTime, eventController)) {
 			completeChecklistItem(&(*active.sequence));
+		}
 	}
 	//Exit if less than one second
 	if (missiontime < (lastMissionTime + 1.0))
@@ -451,7 +465,7 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 	//Do checklist items
 	if(autoexecute)
 	{
-		while (active.program.group != -1 && active.sequence->checkExec(lastMissionTime,active.startTime,eventController))
+		while (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController))
 		{
 			if (active.sequence->position < 0)
 				completeChecklistItem(&(*active.sequence));
@@ -461,15 +475,15 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 	}
 
 	// Flashing
-	if (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, eventController)) {
+	if (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController)) {
 		conn.SetFlashing(active.sequence->item, flashing);
 	}
 
 	//Check for complete checklist items
 	if (complete)
 	{
-		while (active.program.group != -1 && conn.GetState(active.sequence->item) == active.sequence->position)
-		{
+		while (active.program.group != -1 && conn.GetState(active.sequence->item) == active.sequence->position &&
+			   active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController)) {
 			completeChecklistItem(&(*active.sequence));
 		}
 	}
