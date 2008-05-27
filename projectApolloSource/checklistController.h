@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2008/05/24 17:30:42  tschachim
+  *	Bugfixes, new flash toggle.
+  *	
   *	Revision 1.15  2008/04/11 12:01:52  tschachim
   *	Cleanup of the checklist events.
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
@@ -78,6 +81,7 @@ struct SaturnEvents;
 /// -------------------------------------------------------------
 enum RelativeEvent
 {
+	LAST_ITEM_RELATIVE = -3, /// < check item time is relative to the completion of the last item.  WARNING! Not valid for groups.
 	CHECKLIST_RELATIVE = -2, /// < check item time is relative to the beginning of the checklist.  WARNING! Not valid for groups.
 	MISSION_TIME = -1, /// < check item happens at specific MJD WARNING! could cause unexpected results if items after this become scheduled to operate before it based on a checklist event starting late.  Should primarily only be used for primary checklists!
 	NO_TIME_DEF = 0, /// < check item happens when it is reached NOTE: in auto mode, this item will inherit the state of last time-relative checklist item before it.  Groups with this definition will NOT be automated at all.
@@ -230,7 +234,7 @@ struct ChecklistItem
 /// -------------------------------------------------------------
 /// Check whether this item should be executed in this timestep
 /// -------------------------------------------------------------
-	bool checkExec(double,double,SaturnEvents &);
+	bool checkExec(double,double,double,SaturnEvents &);
 /// -------------------------------------------------------------
 /// index defined dynaimcally at runtime.  All available
 /// checklists have a group id retrieved from the ChecklistGroup
@@ -513,6 +517,8 @@ private:
 	vector<ChecklistGroup> groups_manual;
 	/// flashing the current switch
 	bool flashing;
+	/// Mission time when the last item was completed 
+	double lastItemTime; 
 protected:	
 	/// Access to the vessels sound handler
 	SoundLib soundLib;
