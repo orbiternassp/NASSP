@@ -690,6 +690,7 @@
 #define IDB_BORDER_36x17									973
 #define IDB_BORDER_150x80									974
 #define IDB_BORDER_200x80									975
+#define IDB_CIRCUITBRAKER_YELLOW							976
 
 // Next default values for new objects
 //

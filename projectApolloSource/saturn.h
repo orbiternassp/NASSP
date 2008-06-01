@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.278  2008/05/24 17:22:42  tschachim
+  *	Added switch borders.
+  *	
   *	Revision 1.277  2008/04/11 12:19:15  tschachim
   *	New SM and CM RCS.
   *	Improved abort handling.
@@ -541,6 +544,7 @@ public:
 		SRF_COAS,
 		SRF_THUMBWHEEL_SMALLFONTS,
 		SRF_CIRCUITBRAKER,
+		SRF_CIRCUITBRAKER_YELLOW,
 		SRF_THREEPOSSWITCH20,
 		SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL,
 		SRF_THREEPOSSWITCH30,
