@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.236  2008/05/24 17:24:11  tschachim
+  *	Added switch borders.
+  *	
   *	Revision 1.235  2008/04/11 12:19:17  tschachim
   *	New SM and CM RCS.
   *	Improved abort handling.
@@ -738,6 +741,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL]			= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL));
 	srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT]	= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT));
 	srf[SRF_CIRCUITBRAKER]          				= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
+	srf[SRF_CIRCUITBRAKER_YELLOW]          			= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER_YELLOW));
 	srf[SRF_THREEPOSSWITCH20]						= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH20));
 	srf[SRF_THREEPOSSWITCH30]						= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH30));
 	srf[SRF_THREEPOSSWITCH30LEFT]					= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH30LEFT));
@@ -883,6 +887,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL],		g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL_LEFT],	g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKER],						g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CIRCUITBRAKER_YELLOW],					g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_FDAIPOWERROTARY],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_DIRECTO2ROTARY],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_ECSGLYCOLPUMPROTARY],					g_Param.col[4]);
@@ -1250,11 +1255,11 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSAC2ACIRCUITBRAKER,			_R( 899, 1525,  928, 1554), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSAC2BCIRCUITBRAKER,			_R( 921, 1494,  950, 1523), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_SUITCOMPRESSORSAC2CCIRCUITBRAKER,			_R( 943, 1463,  972, 1492), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC1ACIRCUITBRAKER,				_R( 889, 1657,  918, 1686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC1ACIRCUITBRAKER,				_R( 889, 1658,  918, 1687), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC1BCIRCUITBRAKER,				_R( 912, 1626,  941, 1655), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC1CCIRCUITBRAKER,				_R( 935, 1594,  964, 1623), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC2ACIRCUITBRAKER,				_R( 957, 1562,  986, 1591), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC2BCIRCUITBRAKER,				_R( 980, 1530, 1009, 1559), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC2BCIRCUITBRAKER,				_R( 980, 1531, 1009, 1560), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ECSGLYCOLPUMPSAC2CCIRCUITBRAKER,				_R(1003, 1499, 1032, 1528), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RIGHTCOASSWITCH,								_R( 330,   63,  364,   94), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MODEINTERCOMVOXSENSTHUMBWHEEL,				_R( 138,  280,  171,  323), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -2622,8 +2627,8 @@ void Saturn::SetSwitches(int panel) {
 	GNPowerAc2CircuitBraker.Init(57,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, &ACBus2, 2.0);
 	GNIMUMnACircuitBraker.Init(103,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusA, 25.0);
 	GNIMUMnBCircuitBraker.Init(140,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusB, 25.0);
-	GNIMUHTRMnACircuitBraker.Init(177,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusA, 7.5);
-	GNIMUHTRMnBCircuitBraker.Init(214,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusB, 7.5);
+	GNIMUHTRMnACircuitBraker.Init(177,  0, 29, 29, srf[SRF_CIRCUITBRAKER_YELLOW], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusA, 7.5);
+	GNIMUHTRMnBCircuitBraker.Init(214,  0, 29, 29, srf[SRF_CIRCUITBRAKER_YELLOW], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusB, 7.5);
 	GNComputerMnACircuitBraker.Init(251,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusA, 5.0);
 	GNComputerMnBCircuitBraker.Init(288,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusB, 5.0);
 	GNOpticsMnACircuitBraker.Init(325,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], GNCircuitBrakersRow, MainBusA, 10.0);
@@ -2848,8 +2853,8 @@ void Saturn::SetSwitches(int panel) {
 	EPSBatBusBCircuitBraker.Init(139, 65, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, &BatteryBusB, 20.0);
 
 	Panel250CircuitBreakersRow.Init(AID_PANEL250CIRCUITBRAKERS, MainPanel);
-	BatBusAToPyroBusTieCircuitBraker.Init	(  0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatteryBusA, 20.0);
-	PyroASeqACircuitBraker.Init				( 55, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, PyroBatteryA, 20.0);
+	BatBusAToPyroBusTieCircuitBraker.Init	(  0, 0, 29, 29, srf[SRF_CIRCUITBRAKER_YELLOW], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatteryBusA, 20.0);
+	PyroASeqACircuitBraker.Init				( 55, 0, 29, 29, srf[SRF_CIRCUITBRAKER_YELLOW], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, PyroBatteryA, 20.0);
 	BatBusBToPyroBusTieCircuitBraker.Init	(115, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatteryBusB, 20.0);
 	PyroBSeqBCircuitBraker.Init				(170, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, PyroBatteryB, 20.0);
 	BatAPWRCircuitBraker.Init				(246, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, EntryBatteryA, 80.0);
