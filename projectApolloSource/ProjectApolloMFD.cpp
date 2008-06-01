@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2008/05/26 20:04:57  bluedragon8144
+  *	Added clock update function to telemetry window.
+  *	Moved state vector update function to start just before the values are uploaded, rather than calculating during the check.
+  *	
   *	Revision 1.20  2008/05/03 23:27:37  tschachim
   *	warnings fixed
   *	
@@ -322,7 +326,8 @@ void send_agc_key(char key)
 		}
 void uplink_word(char * data)
 {
-	for(int i = 5; i > (int)strlen(data); i--) {
+	int i;
+	for(i = 5; i > (int)strlen(data); i--) {
 		send_agc_key('0');
 	}
 	for(i = 0; i < (int)strlen(data); i++) {
