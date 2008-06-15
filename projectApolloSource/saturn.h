@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.279  2008/06/01 11:46:58  flydba
+  *	New circuit breaker bitmaps added.
+  *	
   *	Revision 1.278  2008/05/24 17:22:42  tschachim
   *	Added switch borders.
   *	
@@ -659,6 +662,7 @@ public:
 		SRF_BORDER_36x17,                         
 		SRF_BORDER_150x80,                      
 		SRF_BORDER_200x80,                   
+		SRF_BORDER_72x109,                   
 
 
 		//
