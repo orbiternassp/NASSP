@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.238  2008/06/01 15:10:45  tschachim
+  *	Bugfix
+  *	
   *	Revision 1.237  2008/06/01 11:47:28  flydba
   *	New circuit breaker bitmaps added.
   *	
@@ -853,6 +856,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_BORDER_36x17]			= oapiCreateSurface (LOADBMP (IDB_BORDER_36x17));
 	srf[SRF_BORDER_150x80]			= oapiCreateSurface (LOADBMP (IDB_BORDER_150x80));
 	srf[SRF_BORDER_200x80]			= oapiCreateSurface (LOADBMP (IDB_BORDER_200x80));
+	srf[SRF_BORDER_72x109]			= oapiCreateSurface (LOADBMP (IDB_BORDER_72x109));
 
 	//
 	// Set color keys where appropriate.
@@ -988,6 +992,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_36x17],		g_Param.col[4]);	
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_150x80],	g_Param.col[4]);	
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_200x80],	g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_72x109],	g_Param.col[4]);	
 
 	SetSwitches(panel);
 }
@@ -1794,7 +1799,7 @@ void Saturn::SetSwitches(int panel) {
 	AccelGMeter.Init(g_Param.pen[4], g_Param.pen[4], AccelGMeterRow, this);
 
 	THCRotaryRow.Init(AID_THC, MainPanel);
-	THCRotary.Init(0, 0, 72, 109, srf[SRF_THC], 0, THCRotaryRow, this);
+	THCRotary.Init(0, 0, 72, 109, srf[SRF_THC], srf[SRF_BORDER_72x109], THCRotaryRow, this);
 
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
 	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 81);
@@ -4993,7 +4998,7 @@ void Saturn::InitSwitches() {
 	PMPSwitch.Register(PSH, "PMPSwitch", THREEPOSSWITCH_CENTER);
 
 	PCMBitRateSwitch.Register(PSH, "PCMBitRateSwitch", false);
-	DummySwitch.Register(PSH, "PMPSwitch", THREEPOSSWITCH_CENTER);
+	DummySwitch.Register(PSH, "DummySwitch", THREEPOSSWITCH_CENTER);
 
 	MnA1Switch.Register(PSH, "MnA1Switch", true);
 	MnB2Switch.Register(PSH, "MnB2Switch", true);
@@ -5899,7 +5904,7 @@ void Saturn::InitSwitches() {
 	OpticsHandcontrollerSwitch.Register(PSH, "OpticsHandcontrollerSwitch");
 	OpticsMarkButton.Register(PSH, "OpticsMarkButton", false);
 	OpticsMarkRejectButton.Register(PSH, "OpticsMarkRejectButton", false);
-	MinImpulseHandcontrollerSwitch.Register(PSH, "OpticsMarkRejectButton", true);
+	MinImpulseHandcontrollerSwitch.Register(PSH, "MinImpulseHandcontrollerSwitch", true);
 
 	GlycolToRadiatorsLever.Register(PSH, "GlycolToRadiatorsLever", 1);
 	CabinPressureReliefLever1.Register(PSH, "CabinPressureReliefLever1", 2, 2, true);
@@ -5926,7 +5931,7 @@ void Saturn::InitSwitches() {
 	GNPowerOpticsSwitch.Register(PSH, "GNPowerOpticsSwitch", false);
 	GNPowerIMUSwitch.Register(PSH, "GNPowerIMUSwitch", TOGGLESWITCH_DOWN, false);
 	GNPowerIMUSwitch.SetGuardResetsState(false);
-	Panel100RNDZXPDRSwitch.Register(PSH, "RNDZXPDRSwitch", THREEPOSSWITCH_CENTER);
+	Panel100RNDZXPDRSwitch.Register(PSH, "Panel100RNDZXPDRSwitch", THREEPOSSWITCH_CENTER);
 
 	SCIUtilPowerSwitch.Register(PSH, "SCIUtilPowerSwitch", false);
 
