@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2008/05/27 14:45:39  tschachim
+  *	Enabled manual item completion/failure
+  *	
   *	Revision 1.12  2008/05/24 17:30:41  tschachim
   *	Bugfixes, new flash toggle.
   *	
@@ -112,8 +115,9 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 	CurrentStep = 0;
 	TopStep = 0;
 	HiLghtdLine = 0;
-
+	//SelectedGroup = -1;
 }
+
 ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 {
 	/*
@@ -137,7 +141,7 @@ char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 {
 
 	static char *labelCHKLST[12] = {"NAV","","INFO","","FLSH","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
-	static char *labelCHKLSTNAV[12] = {"ACT","","INFO","","","AUTO","PgUP","UP","SEL","REV","DN","PgDN"};
+	static char *labelCHKLSTNAV[12] = {"BCK","","INFO","","FLSH","AUTO","PgUP","UP","SEL","REV","DN","PgDN"};
 	static char *labelCHKLSTREV[12] = {"NAV","","INFO","","","AUTO","PgUP","UP","","","DN","PgDN"};
 	static char *labelCHKLSTINFO[12] = {"BCK","","","","","","","","FLSH","","",""};
 
@@ -159,7 +163,7 @@ char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 {
 	static const MFDBUTTONMENU mnuCHKLST[12] = {
-		{"Return to","Checklist Navigation",'N'},
+		{"Go to","Checklist Navigation",'N'},
 		{0,0,0},
 		{"More Information","About This Step",'N'},
 		{0,0,0},
@@ -173,11 +177,11 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Scroll Down","One Page",'>'}
 	};
 	static const MFDBUTTONMENU mnuCHKLSTNAV[12] = {
-		{"Goto Current Checklist",0,'C'},
+		{"Go back to","the Current Checklist",'C'},
 		{0,0,0},
 		{"More Information","About This Checklist",'N'},
 		{0,0,0},
-		{0,0,0},
+		{"Toggle Flashing",0,'L'},
 		{"Toggle AutoComplete",0,'A'},
 		{"Scroll Up","One Page",'<'},
 		{"Scroll Up","One Line",'U'},
@@ -241,7 +245,7 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 	
 	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
-	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT};
+	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,0,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,0,0,OAPI_KEY_D,OAPI_KEY_NEXT};
 	static const DWORD btkeyCHKLSTINFO[12] = { OAPI_KEY_B,0,0,0,0,0,0,0,OAPI_KEY_F,0,0,0};
 
@@ -335,8 +339,6 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			TopStep = 0;
 			HiLghtdLine = 0;
 
-			SelectedGroup = -1;
-
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
@@ -378,7 +380,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_S)
 		{
-			item.group = SelectedGroup;
+			item.group = -1; 
 			item.index = CurrentStep;
 			if (conn.GetChecklistItem(&item))
 				conn.completeChecklistItem(&item);
@@ -390,7 +392,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_F)
 		{
-			item.group = SelectedGroup;
+			item.group = -1; 
 			item.index = CurrentStep;
 			if (conn.GetChecklistItem(&item))
 				conn.failChecklistItem(&item);
@@ -484,9 +486,11 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			return true;
 		}
 		if (key == OAPI_KEY_S)
-		{
-			
-			SelectedGroup = CurrentStep;
+		{			
+			// This spawns the group, if possible
+			item.group = CurrentStep;
+			item.index = 0;			
+			conn.GetChecklistItem(&item);
 
 			screen = PROG_CHKLST;
 			CurrentStep = 0;
@@ -497,8 +501,9 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_R)
 		{
-			
-			SelectedGroup = CurrentStep;
+		
+			// TODO SelectedGroup would be the checklist to be reviewed
+			//SelectedGroup = CurrentStep;
 
 			screen = PROG_CHKLSTREV;
 			CurrentStep = 0;
@@ -543,6 +548,13 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
+		if (key == OAPI_KEY_L)
+		{
+			bool fl = conn.GetChecklistFlashing();
+			conn.SetChecklistFlashing(!fl);
+			InvalidateDisplay();
+			return true;
+		}
 	}
 	else if (screen == PROG_CHKLSTREV)
 	{
@@ -553,7 +565,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			TopStep = 0;
 			HiLghtdLine = 0;
 
-			SelectedGroup = -1;
+			//SelectedGroup = -1;
 
 			InvalidateDisplay();
 			InvalidateButtons();
@@ -622,7 +634,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 		}
 		if (key == OAPI_KEY_F)
 		{
-			item.group = SelectedGroup;
+			item.group = -1; 
 			item.index = CurrentStep;
 			if (conn.GetChecklistItem(&item))
 				conn.SetFlashing(item.item,true);
@@ -688,19 +700,18 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 
 		//display Highlighted box
 		hBr = CreateSolidBrush( RGB(0, 100, 0));
-		SetRect(&ShadedBox,(int) (width * .05),(int) (height * (LINE0 + .01)),(int) (width * .95), (int) (height * (LINE1 + .01)));
+		SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0 + .01)),(int) (width * .99), (int) (height * (LINE1 + .01)));
 		FillRect(hDC, &ShadedBox, hBr);
 		DeleteObject(hBr);
 
 		//Retrieve 15 visible checklist steps  (all are displayed on two lines)
 
 		//Lines 1,2,3,4,5,6,7,8,9 (index 0/1,2/3,4/5,6/7,8/9,10/11,12/13,14/15,16/17)
-		for (cnt = 0 ; cnt < 16 ; cnt++) {
+		for (cnt = 0 ; cnt < 20 ; cnt++) {
 			item.group = -1;
 			item.index = CurrentStep + cnt;
 			if (item.index >= 0){
-				if (conn.GetChecklistItem(&item)){
-										
+				if (conn.GetChecklistItem(&item)) {										
 					SetTextAlign (hDC, TA_CENTER);
 					sprintf(buffer, "%d", item.index);
 					line = buffer;
@@ -714,6 +725,9 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 	}
 	else if (screen == PROG_CHKLSTNAV)
 	{
+		SelectDefaultFont(hDC, 0);				
+		Title(hDC, "Checklist Navigation");
+
 		SelectDefaultPen(hDC, 1);
 		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
 		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.94));
@@ -726,28 +740,39 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			SetRect(&ShadedBox,(int) (width * 0.25),(int) (height * 0.96),(int) (width * 0.34),height-1);
 		}
 		FillRect(hDC, &ShadedBox, hBr);
-		DeleteObject(hBr);
 		SetTextColor (hDC, RGB(0, 255, 0));
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * .05), (int) (height * .95), " AUTO:  ON  OFF", 15);
+
+		//display flashing selection box.
+		if (!conn.GetChecklistFlashing()){
+			SetRect(&ShadedBox,(int) (width * 0.83),(int) (height * 0.96),(int) (width * 0.95),height-1);
+		}else{
+			SetRect(&ShadedBox,(int) (width * 0.73),(int) (height * 0.96),(int) (width * 0.82),height-1);
+		}
+		FillRect(hDC, &ShadedBox, hBr);
+		DeleteObject(hBr);
+		SetTextColor (hDC, RGB(0, 255, 0));
+		SetTextAlign (hDC, TA_LEFT);
+		TextOut(hDC, (int) (width * .5), (int) (height * .95), " FLASH:  ON  OFF", 16);
 		
 		//display Highlighted box
 		hBr = CreateSolidBrush( RGB(0, 100, 0));
-		SetRect(&ShadedBox,(int) (width * .05),(int) (height * (LINE0 + HiLghtdLine * HLINE)),(int) (width * .95), (int) (height * (LINE1 + HiLghtdLine * HLINE)));
+		SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0 + HiLghtdLine * HLINE + .01)),(int) (width * .99), (int) (height * (LINE1 + HiLghtdLine * HLINE + .01)));
 		FillRect(hDC, &ShadedBox, hBr);
 		DeleteObject(hBr);
 
 		SelectDefaultFont(hDC, 0);
 
 		//TODO: Handle Writing Text
-
+		/*
 		sprintf(buffer, "%d", groups.size());
 		line = buffer;
 		line = line.append(" checklists found.");
 		TextOut(hDC, (int) (width * .10), (int) (height * .05), line.c_str(), line.size());
-		
+		*/
+
 		//Set up Type for checklist display
-		SelectDefaultFont(hDC, 1);
 		SetTextAlign (hDC, TA_LEFT);
 
 		//sprintf(oapiDebugString(), "TopStep: %d  CurrentStep: %d  HighLightedStep: %d", TopStep,CurrentStep,HiLghtdLine);
