@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2008/04/11 11:49:26  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   **************************************************************************/
 
 #include "Connector.h"
@@ -46,8 +49,7 @@ public:
 	
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
-	int SelectedGroup;
-	char* CurrentGroupName;
+	//int SelectedGroup;
 
 	ChecklistItem item;
 

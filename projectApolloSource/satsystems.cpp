@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.149  2008/04/11 12:19:12  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.148  2008/01/23 01:40:08  lassombra
   *	Implemented timestep functions and event management
   *	
@@ -845,9 +850,27 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 			AtmosStatus atm;
 			GetAtmosStatus(atm);
 
+			//
+			// Prime Crew Prelaunch 
+			//
+
+			if (eventControl.PRIME_CREW_PRELAUNCH == MINUS_INFINITY) {
+				if (systemsState > SATSYSTEMS_NONE && MissionTime >= -9600) {	 // T-2h 40min before launch 
+					// Crew ingress
+					if (Crewed) {
+						SetCrewNumber(3);
+					}
+
+					//
+					// Event handling.
+					//
+					eventControl.PRIME_CREW_PRELAUNCH = MissionTime;
+				}
+			}
+
+
 			switch (systemsState) {
-			case SATSYSTEMS_NONE:
-				
+			case SATSYSTEMS_NONE:				
 				// No crew 
 				SetCrewNumber(0);
 
@@ -875,7 +898,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR2:RAD") = 3.0;
 				*(double *) Panelsdk.GetPointerByString("HYDRAULIC:FUELCELLRADIATOR3:RAD") = 3.0;
 
-
 				// 
 				// Event handling.
 				//
@@ -891,21 +913,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				break;
 
 			case SATSYSTEMS_PRELAUNCH:
-				if (MissionTime >= -6000) {	// 1h 40min before launch
-
-					// Slow down time acceleration
-					if (Realism && oapiGetTimeAcceleration() > 1.0)
-						oapiSetTimeAcceleration(1.0);
-
-					// Play cabin closeout sound
-					CabincloseoutS.play();
-					CabincloseoutS.done();
-
-					// Crew ingress
-					if (Crewed) {
-						SetCrewNumber(3);
-					}
-					
+				//	Should be triggered by the suit compressor, the Mission Time condition is just in case 
+				// the suit compressor isn't turned on until 15 min before launch
+				if ((SuitCompressor1->pumping || SuitCompressor2->pumping) || MissionTime >= -900) {
+			
 					// Close cabin pressure regulator 
 					CabinPressureRegulator.Close();
 
@@ -918,11 +929,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					O2DemandRegulator.Close();
 					O2DemandRegulator.OpenSuitReliefValve();
 
-					//
-					// Event handling.
-					//
-					eventControl.PRIME_CREW_PRELAUNCH = MissionTime;
-
 					// Next state
 					systemsState = SATSYSTEMS_CREWINGRESS_1;
 					lastSystemsMissionTime = MissionTime; 
@@ -930,26 +936,21 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				break;
 
 			case SATSYSTEMS_CREWINGRESS_1:
-				// Suit compressors running?
-				if (!SuitCompressor1->pumping && !SuitCompressor2->pumping) {
+				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
+				if ((scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) || MissionTime >= -900) {	// Suit Cabin delta p is equalized
+
+					// Reset (i.e. close) suit relief valve again
+					O2DemandRegulator.ResetSuitReliefValve();
+
+					// Next state
+					systemsState = SATSYSTEMS_CREWINGRESS_2;
 					lastSystemsMissionTime = MissionTime; 
-				} else {
-					scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-					if ((scdp > 0.0 && MissionTime - lastSystemsMissionTime >= 50) || stage > PRELAUNCH_STAGE) {	// Suit Cabin delta p is equalized
-
-						// Reset (i.e. close) suit relief valve again
-						O2DemandRegulator.ResetSuitReliefValve();
-
-						// Next state
-						systemsState = SATSYSTEMS_CREWINGRESS_2;
-						lastSystemsMissionTime = MissionTime; 
-					}
 				}
 				break;
 
 			case SATSYSTEMS_CREWINGRESS_2:
 				scdp = (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
-				if ((scdp > 1.3 && MissionTime - lastSystemsMissionTime >= 10) || stage > PRELAUNCH_STAGE) {	// Suit Cabin delta p is established
+				if ((scdp > 1.3 && MissionTime - lastSystemsMissionTime >= 10) || MissionTime >= -900) {	// Suit Cabin delta p is established
 
 					// Reset (i.e. open) cabin pressure regulator again, max flow to 0.25 lb/h  
 					CabinPressureRegulator.SetMaxFlowLBH(0.25);
@@ -965,7 +966,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 				break;
 
 			case SATSYSTEMS_CABINCLOSEOUT:
-				if (MissionTime >= -1200) {	// 20min before launch
+				if (MissionTime >= -6000) {	// 1h 40min before launch
+
+					// Play cabin closeout sound
+					CabincloseoutS.play();
+					CabincloseoutS.done();
 
 					// Next state
 					systemsState = SATSYSTEMS_GSECONNECTED_1;
@@ -1458,21 +1463,21 @@ void Saturn::JoystickTimestep()
 		double rhc_directv1 = 0, rhc_directv2 = 0;
 		// Since we are feeding the AGC, the RHC NORMAL power must be on.
 		// There's more than one RHC in the real ship, but ours is "both" - having the power on for either one will work.
-		// ECA needs to be powered (AOH Display & Controls)
-		if (eca.IsPowered()) {
-			// DC Power
-			switch(RotPowerNormal1Switch.GetState()) {
-				case THREEPOSSWITCH_UP:       
-					rhc_voltage1 = RHCNormalPower.Voltage();
-					break;
-			}
-			switch(RotPowerNormal2Switch.GetState()){
-				case THREEPOSSWITCH_UP:       
-					rhc_voltage2 = RHCNormalPower.Voltage();
-					break;
-			}
 
-			// AC Power
+		// DC Power
+		switch(RotPowerNormal1Switch.GetState()) {
+			case THREEPOSSWITCH_UP:       
+				rhc_voltage1 = RHCNormalPower.Voltage();
+				break;
+		}
+		switch(RotPowerNormal2Switch.GetState()){
+			case THREEPOSSWITCH_UP:       
+				rhc_voltage2 = RHCNormalPower.Voltage();
+				break;
+		}
+
+		// AC Power		
+		if (eca.IsPowered()) {	// ECA needs to be powered (AOH Display & Controls)
 			switch(RotPowerNormal1Switch.GetState()){
 				case THREEPOSSWITCH_UP:       
 				case THREEPOSSWITCH_DOWN:     
@@ -1500,8 +1505,8 @@ void Saturn::JoystickTimestep()
 		}
 		switch(RotPowerDirect2Switch.GetState()){
 			case THREEPOSSWITCH_UP:       // MNA/MNB
-				rhc_directv1 = RHCDirect1Power.Voltage();
-				direct_power1 = &RHCDirect1Power;
+				rhc_directv2 = RHCDirect2Power.Voltage();
+				direct_power2 = &RHCDirect2Power;
 				break;
 			case THREEPOSSWITCH_DOWN:     // MNB
 				rhc_directv2 = ContrDirectMnB2CircuitBraker.Voltage();

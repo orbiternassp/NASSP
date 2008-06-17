@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.20  2008/05/27 14:53:30  tschachim
+  *	New event LAST_ITEM_RELATIVE, bugfixes.
+  *	
   *	Revision 1.19  2008/05/24 17:30:42  tschachim
   *	Bugfixes, new flash toggle.
   *	
@@ -348,6 +351,8 @@ bool ChecklistController::spawnCheck(int group,bool failed,bool automagic)
 		// case b: Otherwise.
 		else
 		{
+			// Stop flashing just in case 
+			conn.SetFlashing(active.sequence->item, false);
 			action.push_front(active);
 			active = temp;
 			return true;
@@ -380,6 +385,8 @@ bool ChecklistController::spawnCheck(int group,bool failed,bool automagic)
 			// case c2:Active is not essential
 			else
 			{
+				// Stop flashing just in case 
+				conn.SetFlashing(active.sequence->item, false);
 				action.push_front(active);
 				active = temp;
 				return true;
@@ -404,6 +411,8 @@ bool ChecklistController::spawnCheck(int group,bool failed,bool automagic)
 		// case c: active is not essential.
 		if (!active.program.essential)
 		{
+			// Stop flashing just in case 
+			conn.SetFlashing(active.sequence->item, false);
 			action.push_front(active);
 			active = temp;
 			return true;
