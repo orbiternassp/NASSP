@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.87  2008/06/27 08:25:10  jasonims
+  *	Added DualView Mode into CSMOptics allowing for a "hacked" version of Dual Line Of Sight in the actual CSMOptics.  Press V to toggle ViewMode.
+  *	
   *	Revision 1.86  2008/05/24 17:29:42  tschachim
   *	Bugfix pad azimuth
   *	
@@ -4410,11 +4413,6 @@ void CMOptics::SystemTimestep(double simdt) {
 			sat->GNOpticsMnBCircuitBraker.DrawPower(62.2);
 			break;
 	}
-	SextDVTimer = SextDVTimer+simdt;
-	if (SextDVTimer >= 0.06666){
-		SextDVTimer = 0.0;
-		SextDVLOSTog=!SextDVLOSTog;
-	}
 
 }
 
@@ -4466,6 +4464,12 @@ void CMOptics::TimeStep(double simdt) {
 
 	double ShaftRate = 0;
 	double TrunRate = 0;
+
+	SextDVTimer = SextDVTimer+simdt;
+	if (SextDVTimer >= 0.06666){
+		SextDVTimer = 0.0;
+		SextDVLOSTog=!SextDVLOSTog;
+	}
 
 	if (Powered == 0) { return; }
 
