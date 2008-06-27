@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.86  2008/05/24 17:29:42  tschachim
+  *	Bugfix pad azimuth
+  *	
   *	Revision 1.85  2008/05/16 18:48:36  tschachim
   *	Enabled automatic VAGC clock setting for Apollo 8 since we have a proper scenario now.
   *	
@@ -4369,6 +4372,9 @@ CMOptics::CMOptics() {
 	TrunionMoved = 0.0;
 	OpticsManualMovement = 0;
 	Powered = 0;
+	SextDualView = false;
+	SextDVLOSTog = false;
+	SextDVTimer = 0.0;
 
 	TargetShaft = 0;
 	TargetTrunion = 0;
@@ -4404,6 +4410,12 @@ void CMOptics::SystemTimestep(double simdt) {
 			sat->GNOpticsMnBCircuitBraker.DrawPower(62.2);
 			break;
 	}
+	SextDVTimer = SextDVTimer+simdt;
+	if (SextDVTimer >= 0.06666){
+		SextDVTimer = 0.0;
+		SextDVLOSTog=!SextDVLOSTog;
+	}
+
 }
 
 void CMOptics::CMCTrunionDrive(int val,int ch12) {
