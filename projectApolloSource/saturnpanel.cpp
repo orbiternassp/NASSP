@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.239  2008/06/15 15:22:48  tschachim
+  *	Bugfixes switch names and borders
+  *	
   *	Revision 1.238  2008/06/01 15:10:45  tschachim
   *	Bugfix
   *	
@@ -4470,8 +4473,15 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_OPTICSCLKAREASEXT:
 		//write update stuff here
 
-		oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.SextTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+		if (optics.SextDualView && optics.SextDVLOSTog){
+			oapiCameraSetCockpitDir (0.0,-PI/2.,true); //when both are true show fixed line of sight
+		}
+		else
+		{
+			oapiCameraSetCockpitDir (-optics.OpticsShaft, optics.SextTrunion - PI/2., true); //negative allows Optics shaft to rotate clockwise positive, the PI/2 allows rotation around the perpindicular axis
+		}
 		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft/RAD, optics.SextTrunion/RAD);
+		//sprintf(oapiDebugString(), "Shaft %f, Trunion %f", optics.OpticsShaft, optics.SextTrunion);
 		return true;
 
 	case AID_OPTICSCLKAREATELE:

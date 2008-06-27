@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2007/12/02 07:13:39  movieman523
+  *	Updates for Apollo 5 and unmanned Saturn 1b missions.
+  *	
   *	Revision 1.26  2007/08/13 16:05:28  tschachim
   *	Moved bitmaps to subdirectory.
   *	New VAGC mission time pad load handling.
@@ -764,6 +767,9 @@ public:
 	double TargetTrunion;											// Reserved
 	double ShaftMoved;												// Movement counters for manual mode
 	double TrunionMoved;
+	bool SextDualView;												// Toggle logical for sextant dual-view
+	bool SextDVLOSTog;												// Alternating flag that controls LineOfSight cycling in Dual-View mode
+	double SextDVTimer;												// Governing timer to prevent view switching at greater than 15 frames per sim second
 };
 
 

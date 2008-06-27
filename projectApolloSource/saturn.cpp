@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.231  2008/04/11 12:19:14  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.230  2008/01/25 20:06:06  lassombra
   *	Implemented delayable switch functions.
   *	
@@ -3604,6 +3609,9 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				return 1;
 			case OAPI_KEY_E: // Optics Mark Reject
 				agc.SetInputChannelBit(016,7,1);
+				return 1;
+			case OAPI_KEY_V: // Change Sextant View Mode to DualView
+				optics.SextDualView = !optics.SextDualView;
 				return 1;
 		}
 	}else{
