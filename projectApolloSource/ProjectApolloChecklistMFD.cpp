@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.14  2008/06/17 16:39:07  tschachim
+  *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
+  *	
   *	Revision 1.13  2008/05/27 14:45:39  tschachim
   *	Enabled manual item completion/failure
   *	
@@ -707,19 +710,62 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		//Retrieve 15 visible checklist steps  (all are displayed on two lines)
 
 		//Lines 1,2,3,4,5,6,7,8,9 (index 0/1,2/3,4/5,6/7,8/9,10/11,12/13,14/15,16/17)
+		int StepCnt = 0;
 		for (cnt = 0 ; cnt < 20 ; cnt++) {
 			item.group = -1;
-			item.index = CurrentStep + cnt;
+			item.index = CurrentStep + StepCnt;
 			if (item.index >= 0){
-				if (conn.GetChecklistItem(&item)) {										
+				if (conn.GetChecklistItem(&item)) {
+					//Check to see if step is time dependent and print time if so
+					if (item.time != 0.0) {
+						COLORREF tempcolor;
+						tempcolor = GetTextColor(hDC);
+						SetTextColor(hDC,RGB(225, 225, 255)); 
+						SetTextAlign (hDC, TA_LEFT);
+						temptime.x = 0;
+						temptime.y = 0;
+						temptime.z = 0;
+						switch (item.relativeEvent) {
+						case MISSION_TIME:
+							temptime.x = floor(fabs(item.time)/3600);
+							temptime.y = floor((fabs(item.time)-(temptime.x*3600))/60);
+							temptime.z = fabs(item.time)-(temptime.x*3600)-(temptime.y*60);
+							if (item.time >= 0.0){
+								sprintf(buffer, "T+%d:%02d:%02d",(int) temptime.x,(int) temptime.y,(int) temptime.z);
+							}else{
+								sprintf(buffer, "T-%d:%02d:%02d",(int) temptime.x,(int) temptime.y,(int) temptime.z);
+							}
+							line = buffer;
+							TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
+							//sprintf(oapiDebugString(),"TIME: %f Hr %f Min %f Sec %f", item.time,temptime.x,temptime.y,temptime.z);
+							break;
+						case LAST_ITEM_RELATIVE:
+							temptime.y = floor((fabs(item.time)-(temptime.x*3600))/60);
+							temptime.z = fabs(item.time)-(temptime.x*3600)-(temptime.y*60);
+							if (temptime.y >= 1.0){
+								sprintf(buffer, "after %d min %02d sec",(int) temptime.y,(int) temptime.z);
+							}else{
+								sprintf(buffer, "after %d sec",(int) temptime.z);
+							}
+							line = buffer;
+							TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
+							break;
+						default:
+							break;
+						}
+						SetTextColor(hDC,tempcolor); 
+						cnt++; //go to next line to write information
+					}
+					//Print Step
 					SetTextAlign (hDC, TA_CENTER);
-					sprintf(buffer, "%d", item.index);
+					sprintf(buffer, "%d", item.time);
 					line = buffer;
 					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
 					SetTextAlign (hDC, TA_LEFT);
 					TextOut(hDC, (int) (width * .1), (int) (height * (LINE0+cnt*HLINE)), item.text, strlen(item.text));
 				}
 			}
+			StepCnt++;
 		}
 		
 	}
