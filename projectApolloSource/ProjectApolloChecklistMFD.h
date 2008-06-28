@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2008/06/17 16:39:07  tschachim
+  *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
+  *	
   *	Revision 1.6  2008/04/11 11:49:26  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -69,6 +72,7 @@ protected:
 	std::string line;
 
 	int cnt;
+	VECTOR3 temptime; //x is hr, y is min, z is sec
 	
 	int TopStep;
 	int CurrentStep;
