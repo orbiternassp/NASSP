@@ -20,6 +20,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.95  2008/04/11 11:49:49  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.94  2007/12/04 20:26:33  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
@@ -511,7 +514,6 @@
 #define REALISM_MIN		0		///< Lower REALISM limit.
 #define REALISM_MAX		10		///< Highest REALISM limit.
 #define REALISM_DEFAULT 5		///< Default REALISM value.
-#define REALISM_PUSH_LIGHTS	4	///< REALISM level up to which we display lit push-buttons on the control panel.
 
 ///
 /// We use this structure to store generic Windows information in one place, such as logical colors,
