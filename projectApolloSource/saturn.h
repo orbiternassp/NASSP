@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.280  2008/06/15 15:22:48  tschachim
+  *	Bugfixes switch names and borders
+  *	
   *	Revision 1.279  2008/06/01 11:46:58  flydba
   *	New circuit breaker bitmaps added.
   *	
@@ -988,6 +991,7 @@ public:
 	int thc_debug;
 	bool rhc_auto;						  ///< RHC Z-axis auto detection
 	bool thc_auto;						  ///< THC Z-axis auto detection
+	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
 	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag				  
 	int js_current;
@@ -1347,7 +1351,7 @@ protected:
 	void ClearLiftoffLight();
 
 	///
-	/// Turn the control panel LES Motor light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// Turn the control panel LES Motor light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
 	/// as the real panel didn't have a light for this button.
 	/// \brief Set or clear the LES Motor light.
 	/// \param lit True to turn light on, false to turn light off.
@@ -1355,7 +1359,7 @@ protected:
 	void SetLESMotorLight(bool lit);
 
 	///
-	/// Turn the control panel Canard Deploy light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// Turn the control panel Canard Deploy light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
 	/// as the real panel didn't have a light for this button.
 	/// \brief Set or clear the Canard Deploy light.
 	/// \param lit True to turn light on, false to turn light off.
@@ -1363,7 +1367,7 @@ protected:
 	void SetCanardDeployLight(bool lit);
 
 	///
-	/// Turn the control panel CSM/LV Sep light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// Turn the control panel CSM/LV Sep light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
 	/// as the real panel didn't have a light for this button.
 	/// \brief Set or clear the CSM/LV Sep light.
 	/// \param lit True to turn light on, false to turn light off.
@@ -1371,7 +1375,7 @@ protected:
 	void SetCSMLVSepLight(bool lit);
 
 	///
-	/// Turn the control panel Apex Cover light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// Turn the control panel Apex Cover light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
 	/// as the real panel didn't have a light for this button.
 	/// \brief Set or clear the Apex Cover Sep light.
 	/// \param lit True to turn light on, false to turn light off.
@@ -1379,7 +1383,7 @@ protected:
 	void SetApexCoverLight(bool lit);
 
 	///
-	/// Turn the control panel Drogue Deploy light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// Turn the control panel Drogue Deploy light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
 	/// as the real panel didn't have a light for this button.
 	/// \brief Set or clear the Drogue Deploy light.
 	/// \param lit True to turn light on, false to turn light off.
@@ -1387,7 +1391,7 @@ protected:
 	void SetDrogueDeployLight(bool lit);
 
 	///
-	/// Turn the control panel Main Deploy light on or off. If REALISM > REALISM_PUSH_LIGHTS, the light is never lit,
+	/// Turn the control panel Main Deploy light on or off. If SequencerSwitchLightingDisabled, the light is never lit,
 	/// as the real panel didn't have a light for this button.
 	/// \brief Set or clear the Main Deploy light.
 	/// \param lit True to turn light on, false to turn light off.
@@ -3716,6 +3720,18 @@ protected:
 	double CSMAccelEnd;
 	double CSMAccelPitch;
 
+	//
+	// Quickstart Mode settings
+	//
+
+	bool ChecklistAutoDisabled;
+	bool OrbiterAttitudeDisabled;
+	bool SequencerSwitchLightingDisabled;
+
+	//
+	// Misc. settings
+	//
+
 	bool TLICapableBooster;
 	bool TLISoundsLoaded;
 	bool SkylabSM;
@@ -3745,8 +3761,6 @@ protected:
 	int probeextidx;
 	int crewidx;
 	int cmpidx;
-
-	bool OrbiterAttitudeDisabled;
 
 	bool ASTPMission;
 	bool bToggleHatch;

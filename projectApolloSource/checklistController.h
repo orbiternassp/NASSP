@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.17  2008/05/27 14:53:31  tschachim
+  *	New event LAST_ITEM_RELATIVE, bugfixes.
+  *	
   *	Revision 1.16  2008/05/24 17:30:42  tschachim
   *	Bugfixes, new flash toggle.
   *	
@@ -453,8 +456,8 @@ public:
 /// -------------------------------------------------------------
 	void load(FILEHANDLE scn);
 /// -------------------------------------------------------------
-/// Set the auto execute setting.  Note that this should ONLY be
-/// used by the LEM and only when it is first created.
+/// Set the auto execute setting.  This is used by the vessel
+/// to set the launchpad configuration options setting
 /// -------------------------------------------------------------
 	bool autoExecute(bool set);
 /// -------------------------------------------------------------

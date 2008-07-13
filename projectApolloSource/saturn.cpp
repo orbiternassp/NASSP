@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.232  2008/06/27 08:25:11  jasonims
+  *	Added DualView Mode into CSMOptics allowing for a "hacked" version of Dual Line Of Sight in the actual CSMOptics.  Press V to toggle ViewMode.
+  *	
   *	Revision 1.231  2008/04/11 12:19:14  tschachim
   *	New SM and CM RCS.
   *	Improved abort handling.
@@ -1207,8 +1210,15 @@ void Saturn::initSaturn()
 	cmpidx = -1;
 
 	ToggleEva = false;
-	OrbiterAttitudeDisabled = false;
 	Scorrec = false;
+
+	//
+	// Quickstart Mode settings
+	//
+
+	ChecklistAutoDisabled = false;
+	OrbiterAttitudeDisabled = false;
+	SequencerSwitchLightingDisabled = false;
 
 	//
 	// LM landing data.
@@ -2725,10 +2735,19 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    }
 		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
 			optics.LoadState(scn);
+		} 
+		else if (!strnicmp (line, "CHECKLISTAUTODISABLED", 21)) {
+			sscanf (line + 21, "%i", &i);
+			ChecklistAutoDisabled = (i != 0);
+		} 
+		else if (!strnicmp (line, "ORBITERATTITUDEDISABLED", 23)) {
+			sscanf (line + 23, "%i", &i);
+			OrbiterAttitudeDisabled = (i != 0);
+		} 
+		else if (!strnicmp (line, "SEQUENCERSWITCHLIGHTINGDISABLED", 31)) {
+			sscanf (line + 31, "%i", &i);
+			SequencerSwitchLightingDisabled = (i != 0);
 		}
-	    else if (!strnicmp (line, "ORBITERATTITUDEDISABLED", 23)) {
-		    sscanf (line + 23, "%i", &OrbiterAttitudeDisabled);
-	    }
 		else if (!strnicmp (line, "OPTICSDSKYENABLED", 17)) {
 			sscanf (line + 17, "%i", &opticsDskyEnabled);
 		}
@@ -2880,13 +2899,26 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	}
 
 	//
+	// Realism Mode Settings
+	//
+
 	// Enable Orbiter's attitude control for unmanned missions
 	// as long as they rely on Orbiter's navmodes (killrot etc.)
-	//
 
 	if (!Crewed) {
 		OrbiterAttitudeDisabled = false;
+		ChecklistAutoDisabled = false;
 	}
+	
+	// Disable it and check some other settings when not in 
+	// Quickstart mode
+
+	else if (Realism) {
+		OrbiterAttitudeDisabled = true;
+		ChecklistAutoDisabled = true;
+		SequencerSwitchLightingDisabled = true;
+	}
+	checkControl.autoExecute(!ChecklistAutoDisabled);
 }
 
 //

@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2008/04/11 12:19:20  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.9  2007/10/18 00:23:24  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -443,10 +448,10 @@ double ELS::NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBrakerSwitch
 {
 	if (cb->Voltage() > SP_MIN_DCVOLTAGE) {
 		if (sw->IsDown()) {
-			size -= simdt / (7. * 60.) * (Sat->Realism ? 1. : 20.);	// same as fill? Quickstart mode is faster
+			size -= simdt / (7. * 60.);	// same as fill? 
 			size = max(0, size);
 		} else if (sw->IsUp() && (Sat->UprightingSystemCompressor1CircuitBraker.IsPowered() || Sat->UprightingSystemCompressor1CircuitBraker.IsPowered())) {
-			size += simdt / (7. * 60.) * (Sat->Realism ? 1. : 20.);	// Apollo 15 entry checklist
+			size += simdt / (7. * 60.);	// Apollo 15 entry checklist
 			size = min(1, size);
 		}
 	}

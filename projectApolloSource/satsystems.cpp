@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.150  2008/06/17 16:39:07  tschachim
+  *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
+  *	
   *	Revision 1.149  2008/04/11 12:19:12  tschachim
   *	New SM and CM RCS.
   *	Improved abort handling.
@@ -637,6 +640,7 @@ void Saturn::SystemsInit() {
 	thc_pov_id = -1; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
+	rhc_thctoggle = false;
 	rhc_thctoggle_id = -1;
 	rhc_auto = false;
 	thc_auto = false;
@@ -722,12 +726,18 @@ void Saturn::SystemsInit() {
 				if (!strncmp(token,"TAUTO", 4)) {				
 					thc_auto = true;
 				}
-				if(strncmp(token,"RTT",3)==0){                  // RHC THC toggle button id
+				if (strncmp(token,"RTTID",5)==0){                  // RHC THC toggle button id
 					// Get next token, which should be the button id
 					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
+					if (parameter != NULL){
 						rhc_thctoggle_id = atoi(parameter);
-						if(thc_id > 128){ thc_id = 128; } // Be paranoid
+						if (rhc_thctoggle_id > 128){ rhc_thctoggle_id = 128; } // Be paranoid
+					}
+				} else if (strncmp(token,"RTT",3)==0){                  // RHC THC toggle 
+					// Get next token, which should be the button id
+					parameter = strtok(NULL," \r\n");
+					if (parameter != NULL){
+						rhc_thctoggle = (atoi(parameter) ? true : false);
 					}
 				}
 			}			
@@ -1417,8 +1427,8 @@ void Saturn::JoystickTimestep()
 
 		// Invert joystick configuration according to navmode in case of one joystick
 		int tmp_id, tmp_rot_id, tmp_sld_id, tmp_rzx_id, tmp_pov_id, tmp_debug;
-		if ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
-			(rhc_id == -1 && thc_id != -1 && GetAttitudeMode() == RCS_ROT)) {
+		if (rhc_thctoggle && ((rhc_id != -1 && thc_id == -1 && GetAttitudeMode() == RCS_LIN) ||
+			                  (rhc_id == -1 && thc_id != -1 && GetAttitudeMode() == RCS_ROT))) {
 
 			tmp_id = rhc_id;
 			tmp_rot_id = rhc_rot_id;
@@ -1553,7 +1563,7 @@ void Saturn::JoystickTimestep()
 			}
 
 			// RCS mode toggle
-			if (thc_id == -1 && rhc_thctoggle_id != -1) {
+			if (rhc_thctoggle && thc_id == -1 && rhc_thctoggle_id != -1) {
 				if (dx8_jstate[rhc_id].rgbButtons[rhc_thctoggle_id]) {
 					if (!rhc_thctoggle_pressed) {
 						SetAttitudeMode(RCS_LIN);
@@ -2021,7 +2031,7 @@ void Saturn::JoystickTimestep()
 			}
 			
 			// RCS mode toggle
-			if (rhc_id == -1 && rhc_thctoggle_id != -1) {
+			if (rhc_thctoggle && rhc_id == -1 && rhc_thctoggle_id != -1) {
 				if (dx8_jstate[thc_id].rgbButtons[rhc_thctoggle_id]) {
 					if (!rhc_thctoggle_pressed) {
 						SetAttitudeMode(RCS_ROT);
@@ -2395,7 +2405,7 @@ void Saturn::ClearLiftoffLight()
 void Saturn::SetLESMotorLight(bool lit)
 
 {
-	if (lit && Realism > REALISM_PUSH_LIGHTS)
+	if (lit && SequencerSwitchLightingDisabled)
 		lit = false;
 
 	LesMotorFireSwitch.SetLit(lit);
@@ -2404,7 +2414,7 @@ void Saturn::SetLESMotorLight(bool lit)
 void Saturn::SetCanardDeployLight(bool lit)
 
 {
-	if (lit && Realism > REALISM_PUSH_LIGHTS)
+	if (lit && SequencerSwitchLightingDisabled)
 		lit = false;
 
 	CanardDeploySwitch.SetLit(lit);
@@ -2413,7 +2423,7 @@ void Saturn::SetCanardDeployLight(bool lit)
 void Saturn::SetDrogueDeployLight(bool lit)
 
 {
-	if (lit && Realism > REALISM_PUSH_LIGHTS)
+	if (lit && SequencerSwitchLightingDisabled)
 		lit = false;
 
 	DrogueDeploySwitch.SetLit(lit);
@@ -2422,7 +2432,7 @@ void Saturn::SetDrogueDeployLight(bool lit)
 void Saturn::SetCSMLVSepLight(bool lit)
 
 {
-	if (lit && Realism > REALISM_PUSH_LIGHTS)
+	if (lit && SequencerSwitchLightingDisabled)
 		lit = false;
 
 	CsmLvSepSwitch.SetLit(lit);
@@ -2431,7 +2441,7 @@ void Saturn::SetCSMLVSepLight(bool lit)
 void Saturn::SetApexCoverLight(bool lit)
 
 {
-	if (lit && Realism > REALISM_PUSH_LIGHTS)
+	if (lit && SequencerSwitchLightingDisabled)
 		lit = false;
 
 	ApexCoverJettSwitch.SetLit(lit);
@@ -2440,7 +2450,7 @@ void Saturn::SetApexCoverLight(bool lit)
 void Saturn::SetMainDeployLight(bool lit)
 
 {
-	if (lit && Realism > REALISM_PUSH_LIGHTS)
+	if (lit && SequencerSwitchLightingDisabled)
 		lit = false;
 
 	MainDeploySwitch.SetLit(lit);
@@ -2449,7 +2459,7 @@ void Saturn::SetMainDeployLight(bool lit)
 void Saturn::SetCmRcsHeDumpSwitch(bool lit)
 
 {
-	if (lit && Realism > REALISM_PUSH_LIGHTS)
+	if (lit && SequencerSwitchLightingDisabled)
 		lit = false;
 
 	CmRcsHeDumpSwitch.SetLit(lit);

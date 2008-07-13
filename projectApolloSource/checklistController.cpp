@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.21  2008/06/17 16:39:07  tschachim
+  *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
+  *	
   *	Revision 1.20  2008/05/27 14:53:30  tschachim
   *	New event LAST_ITEM_RELATIVE, bugfixes.
   *	
@@ -182,7 +185,6 @@ void ChecklistController::save(FILEHANDLE scn)
 
 	oapiWriteScenario_string(scn, ChecklistControllerStartString, "");
 	oapiWriteScenario_string(scn, "FILE", FileName);
-	oapiWriteScenario_int(scn, "AUTO", (autoexecute ? 1 : 0));
 	oapiWriteScenario_int(scn, "COMPLETE", (complete ? 1 : 0));
 	oapiWriteScenario_int(scn, "FLASHING", (flashing ? 1 : 0));
 	oapiWriteScenario_float(scn, "LASTITEMTIME", lastItemTime);
@@ -211,13 +213,6 @@ void ChecklistController::load(FILEHANDLE scn)
 		{
 			strncpy(FileName,line+5,100);
 			init(FileName);
-			found = true;
-		}
-		if (!found && !strnicmp(line,"AUTO",4))
-		{
-			int i;
-			sscanf(line+4,"%d",&i);
-			autoexecute = (i != 0);
 			found = true;
 		}
 		if (!found && !strnicmp(line,"COMPLETE",8))
