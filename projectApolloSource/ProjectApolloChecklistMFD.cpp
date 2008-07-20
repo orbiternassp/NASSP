@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2008/06/28 10:51:29  jasonims
+  *	Updated ChecklistMFD interface to display event times.... only MISSION_TIME and LAST_ITEM_RELATIVE implemented.
+  *	
   *	Revision 1.14  2008/06/17 16:39:07  tschachim
   *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
   *	
@@ -701,14 +704,7 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * .5), (int) (height * .95), " FLASH:  ON  OFF", 16);
 
-		//display Highlighted box
-		hBr = CreateSolidBrush( RGB(0, 100, 0));
-		SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0 + .01)),(int) (width * .99), (int) (height * (LINE1 + .01)));
-		FillRect(hDC, &ShadedBox, hBr);
-		DeleteObject(hBr);
-
 		//Retrieve 15 visible checklist steps  (all are displayed on two lines)
-
 		//Lines 1,2,3,4,5,6,7,8,9 (index 0/1,2/3,4/5,6/7,8/9,10/11,12/13,14/15,16/17)
 		int StepCnt = 0;
 		for (cnt = 0 ; cnt < 20 ; cnt++) {
@@ -716,8 +712,21 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 			item.index = CurrentStep + StepCnt;
 			if (item.index >= 0){
 				if (conn.GetChecklistItem(&item)) {
+					//display Highlighted box
+					if (StepCnt == 0) {
+						hBr = CreateSolidBrush( RGB(0, 100, 0));
+						//Check to see if step is time dependent 
+						if (item.relativeEvent != NO_TIME_DEF) {
+							SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE1 + .01)),(int) (width * .99), (int) (height * (LINE2 + .01)));
+						} else {
+							SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0 + .01)),(int) (width * .99), (int) (height * (LINE1 + .01)));
+						}
+						FillRect(hDC, &ShadedBox, hBr);
+						DeleteObject(hBr);
+					}
+
 					//Check to see if step is time dependent and print time if so
-					if (item.time != 0.0) {
+					if (item.relativeEvent != NO_TIME_DEF) {
 						COLORREF tempcolor;
 						tempcolor = GetTextColor(hDC);
 						SetTextColor(hDC,RGB(225, 225, 255)); 
@@ -736,33 +745,42 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 								sprintf(buffer, "T-%d:%02d:%02d",(int) temptime.x,(int) temptime.y,(int) temptime.z);
 							}
 							line = buffer;
-							TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
+							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
 							//sprintf(oapiDebugString(),"TIME: %f Hr %f Min %f Sec %f", item.time,temptime.x,temptime.y,temptime.z);
 							break;
 						case LAST_ITEM_RELATIVE:
 							temptime.y = floor((fabs(item.time)-(temptime.x*3600))/60);
 							temptime.z = fabs(item.time)-(temptime.x*3600)-(temptime.y*60);
 							if (temptime.y >= 1.0){
-								sprintf(buffer, "after %d min %02d sec",(int) temptime.y,(int) temptime.z);
+								sprintf(buffer, "After %d min %02d sec",(int) temptime.y,(int) temptime.z);
 							}else{
-								sprintf(buffer, "after %d sec",(int) temptime.z);
+								sprintf(buffer, "After %d sec",(int) temptime.z);
 							}
 							line = buffer;
-							TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
+							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
 							break;
+						case SECOND_STAGE_STAGING:
+							sprintf(buffer, "First Staging");
+							line = buffer;
+							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
+							break;
+						case EARTH_ORBIT_INSERTION:
+							sprintf(buffer, "Earth Orbit Insertion");
+							line = buffer;
+							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
+							break;
+
 						default:
+							sprintf(buffer, "(Unknown Event)");
+							line = buffer;
+							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
 							break;
 						}
 						SetTextColor(hDC,tempcolor); 
 						cnt++; //go to next line to write information
 					}
 					//Print Step
-					SetTextAlign (hDC, TA_CENTER);
-					sprintf(buffer, "%d", item.time);
-					line = buffer;
-					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
-					SetTextAlign (hDC, TA_LEFT);
-					TextOut(hDC, (int) (width * .1), (int) (height * (LINE0+cnt*HLINE)), item.text, strlen(item.text));
+					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), item.text, strlen(item.text));
 				}
 			}
 			StepCnt++;
