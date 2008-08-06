@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.22  2008/06/01 08:05:42  jasonims
+  *	correcting a naughty mistake...   my i is integer initialized
+  *	
   *	Revision 1.21  2008/05/26 20:04:57  bluedragon8144
   *	Added clock update function to telemetry window.
   *	Moved state vector update function to start just before the values are uploaded, rather than calculating during the check.
@@ -1376,7 +1379,7 @@ void ProjectApolloMFD::GetStateVector (void)
 	pos = _V(pos.x, pos.z, -pos.y);
 	vel = _V(vel.x, vel.z, vel.y);
 	double get = abs(mt);
-	double a_angle = 203.45*RAD;
+	double a_angle = (180.0+oapiGetPlanetObliquity("Earth"))*RAD;
 	double b_angle = 0.0*RAD;
 	double y_angle = 180.0*RAD;
 	q1 = _M(cos(b_angle), 0, -sin(b_angle), 0, 1, 0, sin(b_angle), 0, cos(b_angle));
@@ -1385,7 +1388,7 @@ void ProjectApolloMFD::GetStateVector (void)
 	q1 = mul(q1, q2);
 	q1 = mul(q1, q3);	
 	pos = tmul(q1, pos);
-	a_angle = 23.45*RAD;
+	a_angle = oapiGetPlanetObliquity("Earth")*RAD;
 	b_angle = 0.0*RAD;
 	y_angle = 0.0*RAD;
 	q1 = _M(cos(b_angle), 0, -sin(b_angle), 0, 1, 0, sin(b_angle), 0, cos(b_angle));
