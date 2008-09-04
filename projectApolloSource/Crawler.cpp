@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2008/04/11 11:49:09  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.26  2007/12/15 19:48:26  lassombra
   *	Added functionality to allow ProjectApollo MFD to get mission time from the Crawler as well as the Saturn.  The Crawler actually extracts the mission time from the Saturn, no updates to scenario files needed.
   *	
@@ -438,10 +441,11 @@ void Crawler::clbkPreStep(double simt, double simdt, double mjd) {
 void Crawler::clbkPostStep(double simt, double simdt, double mjd) {
 	//This seems the best place to update our mission time off of the Saturn.
 	Saturn *lv = NULL;
-	if(!standalone)
+	if (!standalone) {
 		// Updating internal mission time from Launch Vehichle.
 		lv = (Saturn *)oapiGetVesselInterface(hLV);
 		MissionTime = lv -> GetMissionTime();
+	}
 }
 
 void Crawler::DoFirstTimestep() {
