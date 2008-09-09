@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2008/08/06 23:08:21  bluedragon8144
+  *	Replaced obliquity constant with Orbiter's function.
+  *	
   *	Revision 1.22  2008/06/01 08:05:42  jasonims
   *	correcting a naughty mistake...   my i is integer initialized
   *	
@@ -388,7 +391,11 @@ void UplinkStateVector(double simt)
 			else {
 				sprintf(debugWinsock, "Disconnected");
 				g_Data.uplinkState = 0;
+				
+				// TODO TEST
 				g_Data.statevectorReady = 0;
+				//g_Data.statevectorReady = 1;
+				
 				g_Data.connStatus = 0;
 				closesocket(m_socket);
 			}
@@ -845,6 +852,9 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 		} else if (key == OAPI_KEY_U) {
 			if (saturn) {
 				if (g_Data.statevectorReady == 0 && g_Data.updateclockReady == 0) {
+					// TODO TEST
+					// GetStateVector();
+					
 					g_Data.statevectorReady = 1;
 				}
 				else if (g_Data.statevectorReady == 1) {				
@@ -1378,8 +1388,8 @@ void ProjectApolloMFD::GetStateVector (void)
 	g_Data.vessel->GetRelativeVel(g_Data.planet, vel);
 	pos = _V(pos.x, pos.z, -pos.y);
 	vel = _V(vel.x, vel.z, vel.y);
-	double get = abs(mt);
-	double a_angle = (180.0+oapiGetPlanetObliquity("Earth"))*RAD;
+	double get = fabs(mt);
+	double a_angle = 180.0*RAD + oapiGetPlanetObliquity(g_Data.planet);
 	double b_angle = 0.0*RAD;
 	double y_angle = 180.0*RAD;
 	q1 = _M(cos(b_angle), 0, -sin(b_angle), 0, 1, 0, sin(b_angle), 0, cos(b_angle));
@@ -1388,7 +1398,7 @@ void ProjectApolloMFD::GetStateVector (void)
 	q1 = mul(q1, q2);
 	q1 = mul(q1, q3);	
 	pos = tmul(q1, pos);
-	a_angle = oapiGetPlanetObliquity("Earth")*RAD;
+	a_angle = oapiGetPlanetObliquity(g_Data.planet);
 	b_angle = 0.0*RAD;
 	y_angle = 0.0*RAD;
 	q1 = _M(cos(b_angle), 0, -sin(b_angle), 0, 1, 0, sin(b_angle), 0, cos(b_angle));
