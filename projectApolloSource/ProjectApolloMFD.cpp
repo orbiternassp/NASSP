@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.24  2008/09/09 17:21:45  tschachim
+  *	Bugfixes GetStateVector
+  *	
   *	Revision 1.23  2008/08/06 23:08:21  bluedragon8144
   *	Replaced obliquity constant with Orbiter's function.
   *	
@@ -1455,9 +1458,10 @@ void ProjectApolloMFD::GetStateVector (void)
 		calc_1[6] = 0;
 	}
 	for(n = 0; n < 7; n++) {
-		calc_2[n] = fmod(calc_1[n], pow(2.0, -14.0));
-		if(calc_1[n] < 0.0)
-			calc_2[n] = -(calc_2[n]+pow(2.0, -14.0));
+		if(calc_1[n] >= 0.0)
+			calc_2[n] = fmod(calc_1[n], pow(2.0, -14.0));
+		else
+			calc_2[n] = -fmod(-calc_1[n], pow(2.0, -14.0));
 		calc_3[n] = calc_1[n]-calc_2[n];
 	}
 	for(n = 0; n < 14; n+=2) {
