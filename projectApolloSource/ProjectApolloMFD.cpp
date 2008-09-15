@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2008/09/14 00:41:47  bluedragon8144
+  *	fixed state vector calculation
+  *	
   *	Revision 1.24  2008/09/09 17:21:45  tschachim
   *	Bugfixes GetStateVector
   *	
@@ -1263,35 +1266,27 @@ void ProjectApolloMFD::Update (HDC hDC)
 	}
 	//Draw Telemetry
 	else if (screen == PROG_TELE) {
+		SetTextAlign (hDC, TA_CENTER);
 		TextOut(hDC, width / 2, (int) (height * 0.3), "Telemetry", 9);
 		sprintf(buffer, "Status: %s", debugWinsock);
 		TextOut(hDC, width / 2, (int) (height * 0.35), buffer, strlen(buffer));
 		if (g_Data.statevectorReady == 1 || g_Data.updateclockReady == 1) {
-			sprintf(buffer, "Check");
-			TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
-			SetTextColor (hDC, RGB(255, 255, 0));
-			sprintf(buffer, "DSKY                     ");
+			sprintf(buffer, "Checklist");
 			TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
-			SetTextColor (hDC, RGB(0, 255, 255));
-			sprintf(buffer, "   V37 E00E              ");
-			TextOut(hDC, width / 2, (int) (height * 0.5), buffer, strlen(buffer));
-			SetTextColor (hDC, RGB(255, 255, 0));
-			sprintf(buffer, "UPTLM CM (MDC 2, LEB 122)");
-			TextOut(hDC, width / 2, (int) (height * 0.55), buffer, strlen(buffer));
-			SetTextColor (hDC, RGB(0, 255, 255));
-			sprintf(buffer, "   ACCEPT (up)           ");
-			TextOut(hDC, width / 2, (int) (height * 0.6), buffer, strlen(buffer));
-			SetTextColor (hDC, RGB(255, 255, 0));
-			sprintf(buffer, "UP TLM (MDC 3)           ");
-			TextOut(hDC, width / 2, (int) (height * 0.65), buffer, strlen(buffer));
-			SetTextColor (hDC, RGB(0, 255, 255));
-			sprintf(buffer, "   DATA (up)             ");
-			TextOut(hDC, width / 2, (int) (height * 0.7), buffer, strlen(buffer));
-			SetTextColor (hDC, RGB(255, 255, 0));
-			sprintf(buffer, "PCM BIT RATE (MDC 3)     ");
-			TextOut(hDC, width / 2, (int) (height * 0.75), buffer, strlen(buffer));
-			SetTextColor (hDC, RGB(0, 255, 255));
-			sprintf(buffer, "   HIGH (up)             ");
+			SetTextAlign (hDC, TA_LEFT);
+			sprintf(buffer, "DSKY - V37E 00E");
+			TextOut(hDC, width * 0.1, (int) (height * 0.55), buffer, strlen(buffer));
+			sprintf(buffer, "UPTLM CM - ACCEPT (up)   2, 122");
+			TextOut(hDC, width * 0.1, (int) (height * 0.60), buffer, strlen(buffer));
+			sprintf(buffer, "UP TLM - DATA (up)            3");
+			TextOut(hDC, width * 0.1, (int) (height * 0.65), buffer, strlen(buffer));
+			sprintf(buffer, "PCM BIT RATE - HIGH (up)      3");
+			TextOut(hDC, width * 0.1, (int) (height * 0.7), buffer, strlen(buffer));
+			SetTextAlign (hDC, TA_CENTER);
+			if (g_Data.statevectorReady == 1) 
+				sprintf(buffer, "Press SV to start upload");
+			else
+				sprintf(buffer, "Press CLK to start upload");
 			TextOut(hDC, width / 2, (int) (height * 0.8), buffer, strlen(buffer));
 		}
 		else if(g_Data.statevectorReady == 2) {
