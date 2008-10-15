@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.281  2008/07/13 17:47:13  tschachim
+  *	Rearranged realism levels, merged Standard and Quickstart Mode.
+  *	
   *	Revision 1.280  2008/06/15 15:22:48  tschachim
   *	Bugfixes switch names and borders
   *	
@@ -396,7 +399,9 @@ typedef struct {
 ///
 typedef struct {
 	double SuitTempK;
+	double SuitTempF;
 	double CabinTempK;
+	double CabinTempF;
 	double CabinPressureMMHG;
 	double SuitPressureMMHG;
 	double SuitReturnPressureMMHG;
@@ -483,6 +488,30 @@ typedef struct {
 } MainBusStatus;
 
 ///
+/// \brief Battery bus status.
+/// \ingroup InternalInterface
+///
+typedef struct {
+	double BatBusAVoltage;
+	double BatBusACurrent;
+	double BatBusBVoltage;
+	double BatBusBCurrent;
+} BatteryBusStatus;
+
+///
+/// \brief Battery status.
+/// \ingroup InternalInterface
+///
+typedef struct {
+	double BatteryAVoltage;
+	double BatteryACurrent;
+	double BatteryBVoltage;
+	double BatteryBCurrent;
+	double BatteryCVoltage;
+	double BatteryCCurrent;
+} BatteryStatus;
+
+///
 /// \brief Apollo Guidance Computer warning status.
 /// \ingroup InternalInterface
 ///
@@ -491,6 +520,14 @@ typedef struct {
 	bool ISSWarning;
 	bool TestAlarms;
 } AGCWarningStatus;
+
+///
+/// \brief SPS status.
+/// \ingroup InternalInterface
+///
+typedef struct {
+	double chamberPressurePSI;
+} SPSStatus;
 
 ///
 /// \brief Generic Saturn launch vehicle class.
@@ -1144,7 +1181,10 @@ public:
 	void GetSecECSCoolingStatus(SecECSCoolingStatus &scs);
 	void GetECSWaterStatus(ECSWaterStatus &ws);
 	void GetMainBusStatus(MainBusStatus &ms);
+	void GetBatteryBusStatus( BatteryBusStatus &bs );
 	void GetACBusStatus(ACBusStatus &as, int busno);
+	void GetBatteryStatus( BatteryStatus &bs );
+	void GetSPSStatus( SPSStatus &ss );
 	void DisconnectInverter(bool disc, int busno);
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	double GetAccelG() { return aZAcc / G; };
