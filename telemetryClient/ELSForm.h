@@ -25,7 +25,7 @@ namespace GroundStation
 		ELSForm(void)
 		{
 			InitializeComponent();
-			this->add_Closing(new CancelEventHandler(this,ELSForm_Closing));
+			this->add_Closing(new CancelEventHandler(this, &GroundStation::ELSForm::ELSForm_Closing));
 		}
         
 	protected: 

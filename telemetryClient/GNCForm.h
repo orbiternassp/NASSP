@@ -25,7 +25,7 @@ namespace GroundStation
 		GNCForm(void)
 		{
 			InitializeComponent();
-			this->add_Closing(new CancelEventHandler(this,GNCForm_Closing));
+			this->add_Closing(new CancelEventHandler(this, &GroundStation::GNCForm::GNCForm_Closing));
 		}
         
 	protected: 

@@ -25,7 +25,7 @@ namespace GroundStation
 		StructuresForm(void)
 		{
 			InitializeComponent();
-			this->add_Closing(new CancelEventHandler(this,StructuresForm_Closing));
+			this->add_Closing(new CancelEventHandler(this, &GroundStation::StructuresForm::StructuresForm_Closing));
 		}
         
 	protected: 
@@ -305,7 +305,7 @@ namespace GroundStation
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::Fixed3D;
 			this->Name = S"StructuresForm";
 			this->Text = S"STRUCTURES ";
-			this->Load += new System::EventHandler(this, StructuresForm_Load);
+			this->Load += new System::EventHandler(this, &GroundStation::StructuresForm::StructuresForm_Load);
 			this->ResumeLayout(false);
 
 		}		
