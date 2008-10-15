@@ -198,12 +198,33 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 
 		case 74:
 			switch(framead){
+			case 1:
+				if(eps_form != NULL){
+					value = unscale_data(data,0,45);
+					sprintf(msg,"%+04.2f V",value);
+					eps_form->s11A57->Enabled = TRUE;
+					eps_form->s11A57->Text = msg;						
+				}
+				break;
 			case 2:
 				if(eps_form != NULL){
 					value = unscale_data(data,0,45);
 					sprintf(msg,"%+04.2f V",value);
 					eps_form->s11A93->Enabled = TRUE;
 					eps_form->s11A93->Text = msg;						
+				}
+				break;
+			}
+			break;
+
+		case 75:
+			switch(framead){
+			case 1:
+				if(eps_form != NULL){
+					value = unscale_data(data,0,45);
+					sprintf(msg,"%+04.2f V",value);
+					eps_form->s11A58->Enabled = TRUE;
+					eps_form->s11A58->Text = msg;						
 				}
 				break;
 			}
