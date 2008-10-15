@@ -174,7 +174,7 @@ private: System::Windows::Forms::TextBox *  s11A111;
 private: System::Windows::Forms::TextBox *  s11A28;
 private: System::Windows::Forms::TextBox *  s11A27;
 private: System::Windows::Forms::TextBox *  s11A46;
-private: System::Windows::Forms::TextBox *  s11A94;
+public: System::Windows::Forms::TextBox *  s11A94;
 private: System::Windows::Forms::TextBox *  s11A24;
 private: System::Windows::Forms::TextBox *  s11A40;
 private: System::Windows::Forms::TextBox *  s11A92;
