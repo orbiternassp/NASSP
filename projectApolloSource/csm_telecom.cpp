@@ -591,6 +591,12 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 	ECSWaterStatus ws;
 	PrimECSCoolingStatus pcs;
 	SecECSCoolingStatus scs;
+	TankPressures smTankPress;
+	ACBusStatus acStat;
+	MainBusStatus mainBusStatus;
+	BatteryBusStatus batBusStat;
+	BatteryStatus batteryStatus;
+	SPSStatus spsStatus;
 
 	switch(type){
 		case TLM_A:  // ANALOG
@@ -602,32 +608,39 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 2:			// UNKNOWN - HBR ONLY
 							return(0);
 						case 3:			// CO2 PARTIAL PRESS
-							sat->GetAtmosStatus(atm); return(scale_data(atm.CabinCO2MMHG,0,30));
+							sat->GetAtmosStatus(atm);
+							return(scale_data(atm.CabinCO2MMHG,0,30));
 						case 4:			// GLY EVAP BACK PRESS
 							return(scale_data(0,0.05,0.25));
 						case 5:			// UNKNOWN - HBR ONLY
 							return(0);
 						case 6:			// CABIN PRESS
-							sat->GetAtmosStatus(atm); return(scale_data(atm.CabinPressurePSI,0,17));
+							sat->GetAtmosStatus(atm);
+							return(scale_data(atm.CabinPressurePSI,0,17));
 						case 7:			// UNKNOWN - HBR ONLY
 							return(0);
 						case 8:			// SEC EVAP OUT STEAM PRESS
-							sat->GetSecECSCoolingStatus(scs); return(scale_data(scs.EvaporatorSteamPressurePSI,0.05,0.25));
+							sat->GetSecECSCoolingStatus(scs);
+							return(scale_data(scs.EvaporatorSteamPressurePSI,0.05,0.25));
 						case 9:			// WASTE H20 QTY
-							sat->GetECSWaterStatus(ws); return(scale_data(ws.WasteH2oTankQuantityPercent,0,100)); 
+							sat->GetECSWaterStatus(ws);
+							return(scale_data(ws.WasteH2oTankQuantityPercent,0,100)); 
 
 						case 10:		// SPS VLV ACT PRESS PRI
 							return(scale_data(0,0,5000));
 						case 11:		// SPS VLV ACT PRESS SEC
 							return(scale_data(0,0,5000));
 						case 12:		// GLY EVAP OUT TEMP
-							sat->GetPrimECSCoolingStatus(pcs); return(scale_data(pcs.EvaporatorOutletTempF,25,75));
+							sat->GetPrimECSCoolingStatus(pcs);
+							return(scale_data(pcs.EvaporatorOutletTempF,25,75));
 						case 13:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 14:		// ENG CHAMBER PRESS
-							return(scale_data(0,0,150));
+							sat->GetSPSStatus( spsStatus );
+							return(scale_data(spsStatus.chamberPressurePSI, 0, 150));
 						case 15:		// ECS RAD OUT TEMP
-							sat->GetPrimECSCoolingStatus(pcs); return(scale_data(pcs.RadiatorOutletTempF,-50,100));
+							sat->GetPrimECSCoolingStatus(pcs);
+							return(scale_data(pcs.RadiatorOutletTempF,-50,100));
 						case 16:		// HE TK TEMP
 							return(scale_data(0,-100,200));
 						case 17:		// SM ENG PKG B TEMP
@@ -671,13 +684,15 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 35:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 36:		// H2 TK 1 PRESS
-							return(scale_data(0,0,350));
+							sat->GetTankPressures( smTankPress );
+							return(scale_data(smTankPress.H2Tank1PressurePSI, 0, 350));
 						case 37:		// SPS VLV BODY TEMP
 							return(scale_data(0,0,200));
 						case 38:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 39:		// H2 TK 2 PRESS
-							return(scale_data(0,0,350));
+							sat->GetTankPressures( smTankPress );
+							return(scale_data(smTankPress.H2Tank2PressurePSI, 0, 350));
 
 						case 40:		// UNKNOWN - HBR ONLY
 							return(0);
@@ -734,7 +749,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 65:		// SIDE HS BOND LOC 1 TEMP
 							return(scale_data(0,-260,600));
 						case 66:		// O2 TK 2 PRESS
-							return(scale_data(0,50,1050));
+							sat->GetTankPressures( smTankPress );
+							return(scale_data(smTankPress.O2Tank2PressurePSI, 50, 1050));
 						case 67:		// FC 3 RAD IN TEMP
 							return(scale_data(0,-50,300));
 						case 68:		// UNKNOWN - HBR ONLY
@@ -772,7 +788,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 83:		// PIPA +120 VDC
 							return(scale_data(0,85,135));
 						case 84:		// CABIN TEMP
-							return(scale_data(0,40,125));
+							sat->GetAtmosStatus(atm);
+							return(scale_data(atm.CabinTempF, 40, 125));
 						case 85:		// 3.2 KHz 28V SUPPLY
 							return(scale_data(0,0,31.1));
 						case 86:		// INVERTER 1 TEMP
@@ -911,7 +928,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,0,5));
 
 						case 150:		// O2 TK 1 PRESS
-							return(scale_data(0,50,1050));
+							sat->GetTankPressures( smTankPress );
+							return(scale_data(smTankPress.O2Tank1PressurePSI, 50, 1050));
 
 						default:
 							sprintf(sat->debugString(),"MEASURE: UNKNOWN 10-A-%d",ccode);
@@ -927,7 +945,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 3:			// GLY PUMP OUT PRESS
 							return(scale_data(0,0,60));
 						case 4:			// ECS SURGE TANK PRESS
-							return(scale_data(0,50,1050));
+							sat->GetTankPressures( smTankPress );
+							return(scale_data(smTankPress.O2SurgeTankPressurePSI, 50, 1050));
 						case 5:			// PYRO BUS B VOLTS
 							return(scale_data(0,0,40));
 						case 6:			// LES LOGIC BUS B VOLTS
@@ -1036,11 +1055,14 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 55:		// O2 SUPPLY MANF PRESS
 							return(scale_data(0,0,150));
 						case 56:		// AC BUS 2 PH A VOLTS
-							return(scale_data(0,0,150));
+							sat->GetACBusStatus( acStat, 2 );
+							return(scale_data(acStat.Phase1Voltage, 0, 150));
 						case 57:		// MAIN BUS A VOLTS
-							return(scale_data(0,0,45));
+							sat->GetMainBusStatus( mainBusStatus );
+							return(scale_data(mainBusStatus.MainBusAVoltage, 0, 45));
 						case 58:		// MAIN BUS B VOLTS
-							return(scale_data(0,0,45));
+							sat->GetMainBusStatus( mainBusStatus );
+							return(scale_data(mainBusStatus.MainBusBVoltage, 0, 45));
 						case 59:		// IG 1X RSVR OUT COS
 							return(scale_data(0,130,50));
 
@@ -1074,7 +1096,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 73:		// BAT CHARGER AMPS
 							return(scale_data(0,0,5));
 						case 74:		// BAT A CUR
-							return(scale_data(0,0,100));
+							sat->GetBatteryStatus( batteryStatus );
+							return(scale_data( batteryStatus.BatteryACurrent, 0, 100));
 						case 75:		// BAT RELAY BUS VOLTS
 							return(scale_data(0,0,45));
 						case 76:		// FC 1 CUR
@@ -1110,11 +1133,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 90:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 91:		// BAT BUS A VOLTS
-							return(scale_data(0,0,45));
+							sat->GetBatteryBusStatus( batBusStat );
+							return(scale_data(batBusStat.BatBusAVoltage, 0, 45));
 						case 92:		// SM FU MANF A PRESS
 							return(scale_data(0,0,400));
 						case 93:		// BAT BUS B VOLTS
-							return(scale_data(0,0,45));
+							sat->GetBatteryBusStatus( batBusStat );
+							return(scale_data(batBusStat.BatBusBVoltage, 0, 45));
 						case 94:		// SM FU MANF B PRESS
 							return(scale_data(0,0,400));
 						case 95:		// UNKNOWN - HBR ONLY
@@ -1147,10 +1172,12 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 108:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 109:		// BAT B CUR
-							return(scale_data(0,0,100));
+							sat->GetBatteryStatus( batteryStatus );
+							return(scale_data(batteryStatus.BatteryBCurrent, 0, 100));
 
 						case 110:		// BAT C CUR
-							return(scale_data(0,0,100));
+							sat->GetBatteryStatus( batteryStatus );
+							return(scale_data(batteryStatus.BatteryCCurrent, 0, 100));
 						case 111:		// SM FU MANF C PRESS
 							return(scale_data(0,0,400));
 						case 112:		// SM FU MANF D PRESS
@@ -1227,7 +1254,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 146:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 147:		// AC BUS 1 PH A VOLTS
-							return(scale_data(0,0,150));
+							sat->GetACBusStatus( acStat, 1 );
+							return(scale_data(acStat.Phase1Voltage, 0, 150));
 						case 148:		// SCE POS SUPPLY VOLTS
 							return(scale_data(0,0,30));
 						case 149:		// UNKNOWN - HBR ONLY

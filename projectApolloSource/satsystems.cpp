@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.151  2008/07/13 17:47:12  tschachim
+  *	Rearranged realism levels, merged Standard and Quickstart Mode.
+  *	
   *	Revision 1.150  2008/06/17 16:39:07  tschachim
   *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
   *	
@@ -2587,6 +2590,14 @@ void Saturn::ClearPanelSDKPointers()
 //
 
 //
+// Get SPS status
+//
+void Saturn::GetSPSStatus( SPSStatus &ss )
+{
+	ss.chamberPressurePSI = SPSEngine.GetChamberPressurePSI();
+}
+
+//
 // Get atmosphere status for CM.
 //
 
@@ -2598,6 +2609,9 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	atm.CabinPressureMMHG = 0.0;
 	atm.CabinPressurePSI = 0.0;
 	atm.CabinTempK = 0.0;
+	atm.CabinTempF = 0.0;
+	atm.SuitTempK = 0.0;
+	atm.SuitTempF = 0.0;
 	atm.SuitPressureMMHG = 0.0;
 	atm.SuitPressurePSI = 0;
 	atm.CabinRegulatorFlowLBH = 0.0;
@@ -2649,6 +2663,7 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	}
 	if (pSuitTemp) {
 		atm.SuitTempK = (*pSuitTemp);
+		atm.SuitTempF = KelvinToFahrenheit( atm.SuitTempK );
 	}
 
 	if (!pCabinTemp) {
@@ -2656,6 +2671,7 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	}
 	if (pCabinTemp) {
 		atm.CabinTempK = (*pCabinTemp);
+		atm.CabinTempF = KelvinToFahrenheit( atm.CabinTempK );
 	}
 
 	if (!pCabinRegulatorFlow) {
@@ -3128,14 +3144,60 @@ void Saturn::GetMainBusStatus(MainBusStatus &ms)
 	ms.Reset_DC_A_CWS = MainBusAResetSwitch.IsUp();
 	ms.Reset_DC_B_CWS = MainBusBResetSwitch.IsUp();
 	
-	if (&MainBusA) {
-		ms.MainBusAVoltage = MainBusA->Voltage();}
+	if (MainBusA) {
+		ms.MainBusAVoltage = MainBusA->Voltage();
+	}
 
-	if (&MainBusB) {
-		ms.MainBusBVoltage = MainBusB->Voltage();}
+	if (MainBusB) {
+		ms.MainBusBVoltage = MainBusB->Voltage();
+	}
 
 	ms.Fc_Disconnected = MainBusAController.IsFuelCellDisconnectAlarm() || 
 		                 MainBusBController.IsFuelCellDisconnectAlarm();
+}
+
+//
+// Battery bus status.
+//
+
+void Saturn::GetBatteryBusStatus( BatteryBusStatus &bs )
+{
+	bs.BatBusAVoltage = BatteryBusA.Voltage();
+	bs.BatBusACurrent = BatteryBusA.Current();
+	bs.BatBusBVoltage = BatteryBusB.Voltage();
+	bs.BatBusBCurrent = BatteryBusB.Current();
+}
+
+//
+// Battery status.
+//
+
+void Saturn::GetBatteryStatus( BatteryStatus &bs )
+{
+	bs.BatteryAVoltage = 0.0;
+	bs.BatteryACurrent = 0.0;
+	bs.BatteryBVoltage = 0.0;
+	bs.BatteryBCurrent = 0.0;
+	bs.BatteryCVoltage = 0.0;
+	bs.BatteryCCurrent = 0.0;
+
+	if ( EntryBatteryA ) 
+	{
+		bs.BatteryAVoltage = EntryBatteryA->Voltage();
+		bs.BatteryACurrent = EntryBatteryA->Current();
+	}
+	
+	if ( EntryBatteryB ) 
+	{
+		bs.BatteryBVoltage = EntryBatteryB->Voltage();
+		bs.BatteryBCurrent = EntryBatteryB->Current();
+	}
+	
+	if ( EntryBatteryC ) 
+	{
+		bs.BatteryCVoltage = EntryBatteryC->Voltage();
+		bs.BatteryCCurrent = EntryBatteryC->Current();
+	}
 }
 
 //
