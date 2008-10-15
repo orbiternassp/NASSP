@@ -29,7 +29,7 @@ namespace GroundStation
 		UplinkForm(void)
 		{
 			InitializeComponent();
-			this->add_Closing(new CancelEventHandler(this,UplinkForm_Closing)); // Setup closing event
+			this->add_Closing(new CancelEventHandler(this, &GroundStation::UplinkForm::UplinkForm_Closing)); // Setup closing event
 			cmc_uplink_state = 0;
 		}
         
@@ -1062,7 +1062,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button41->Size = System::Drawing::Size(96, 23);
 			this->button41->TabIndex = 16;
 			this->button41->Text = S"RESET 1";
-			this->button41->Click += new System::EventHandler(this, button41_Click);
+			this->button41->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button41_Click);
 			// 
 			// button42
 			// 
@@ -1071,7 +1071,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button42->Size = System::Drawing::Size(96, 23);
 			this->button42->TabIndex = 17;
 			this->button42->Text = S"RESET 2";
-			this->button42->Click += new System::EventHandler(this, button42_Click);
+			this->button42->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button42_Click);
 			// 
 			// groupBox15
 			// 
@@ -1091,7 +1091,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button39->Size = System::Drawing::Size(96, 23);
 			this->button39->TabIndex = 16;
 			this->button39->Text = S"RESET";
-			this->button39->Click += new System::EventHandler(this, button39_Click);
+			this->button39->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button39_Click);
 			// 
 			// button40
 			// 
@@ -1100,7 +1100,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button40->Size = System::Drawing::Size(96, 23);
 			this->button40->TabIndex = 17;
 			this->button40->Text = S"D OMNI";
-			this->button40->Click += new System::EventHandler(this, button40_Click);
+			this->button40->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button40_Click);
 			// 
 			// groupBox14
 			// 
@@ -1122,7 +1122,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button35->Size = System::Drawing::Size(96, 23);
 			this->button35->TabIndex = 19;
 			this->button35->Text = S"REWIND";
-			this->button35->Click += new System::EventHandler(this, button35_Click);
+			this->button35->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button35_Click);
 			// 
 			// button36
 			// 
@@ -1131,7 +1131,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button36->Size = System::Drawing::Size(96, 23);
 			this->button36->TabIndex = 18;
 			this->button36->Text = S"RESET";
-			this->button36->Click += new System::EventHandler(this, button36_Click);
+			this->button36->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button36_Click);
 			// 
 			// button37
 			// 
@@ -1140,7 +1140,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button37->Size = System::Drawing::Size(96, 23);
 			this->button37->TabIndex = 16;
 			this->button37->Text = S"FORWARD";
-			this->button37->Click += new System::EventHandler(this, button37_Click);
+			this->button37->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button37_Click);
 			// 
 			// button38
 			// 
@@ -1149,7 +1149,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button38->Size = System::Drawing::Size(96, 23);
 			this->button38->TabIndex = 17;
 			this->button38->Text = S"STOP";
-			this->button38->Click += new System::EventHandler(this, button38_Click);
+			this->button38->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button38_Click);
 			// 
 			// groupBox13
 			// 
@@ -1170,7 +1170,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button32->Size = System::Drawing::Size(96, 23);
 			this->button32->TabIndex = 18;
 			this->button32->Text = S"RESET";
-			this->button32->Click += new System::EventHandler(this, button32_Click);
+			this->button32->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button32_Click);
 			// 
 			// button33
 			// 
@@ -1179,7 +1179,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button33->Size = System::Drawing::Size(96, 23);
 			this->button33->TabIndex = 16;
 			this->button33->Text = S"HIGH";
-			this->button33->Click += new System::EventHandler(this, button33_Click);
+			this->button33->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button33_Click);
 			// 
 			// button34
 			// 
@@ -1188,7 +1188,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button34->Size = System::Drawing::Size(96, 23);
 			this->button34->TabIndex = 17;
 			this->button34->Text = S"LOW";
-			this->button34->Click += new System::EventHandler(this, button34_Click);
+			this->button34->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button34_Click);
 			// 
 			// groupBox12
 			// 
@@ -1210,7 +1210,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button28->Size = System::Drawing::Size(96, 23);
 			this->button28->TabIndex = 19;
 			this->button28->Text = S"PLAYBACK";
-			this->button28->Click += new System::EventHandler(this, button28_Click);
+			this->button28->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button28_Click);
 			// 
 			// button29
 			// 
@@ -1219,7 +1219,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button29->Size = System::Drawing::Size(96, 23);
 			this->button29->TabIndex = 18;
 			this->button29->Text = S"RESET";
-			this->button29->Click += new System::EventHandler(this, button29_Click);
+			this->button29->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button29_Click);
 			// 
 			// button30
 			// 
@@ -1228,7 +1228,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button30->Size = System::Drawing::Size(96, 23);
 			this->button30->TabIndex = 16;
 			this->button30->Text = S"RECORD";
-			this->button30->Click += new System::EventHandler(this, button30_Click);
+			this->button30->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button30_Click);
 			// 
 			// button31
 			// 
@@ -1237,7 +1237,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button31->Size = System::Drawing::Size(96, 23);
 			this->button31->TabIndex = 17;
 			this->button31->Text = S"OFF";
-			this->button31->Click += new System::EventHandler(this, button31_Click);
+			this->button31->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button31_Click);
 			// 
 			// groupBox11
 			// 
@@ -1258,7 +1258,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button25->Size = System::Drawing::Size(96, 23);
 			this->button25->TabIndex = 18;
 			this->button25->Text = S"RESET";
-			this->button25->Click += new System::EventHandler(this, button25_Click);
+			this->button25->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button25_Click);
 			// 
 			// button26
 			// 
@@ -1267,7 +1267,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button26->Size = System::Drawing::Size(96, 23);
 			this->button26->TabIndex = 16;
 			this->button26->Text = S"SELECT CSM";
-			this->button26->Click += new System::EventHandler(this, button26_Click);
+			this->button26->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button26_Click);
 			// 
 			// button27
 			// 
@@ -1276,7 +1276,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button27->Size = System::Drawing::Size(96, 23);
 			this->button27->TabIndex = 17;
 			this->button27->Text = S"SELECT LM";
-			this->button27->Click += new System::EventHandler(this, button27_Click);
+			this->button27->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button27_Click);
 			// 
 			// groupBox10
 			// 
@@ -1298,7 +1298,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button21->Size = System::Drawing::Size(96, 23);
 			this->button21->TabIndex = 19;
 			this->button21->Text = S"OFF";
-			this->button21->Click += new System::EventHandler(this, button21_Click);
+			this->button21->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button21_Click);
 			// 
 			// button22
 			// 
@@ -1307,7 +1307,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button22->Size = System::Drawing::Size(96, 23);
 			this->button22->TabIndex = 18;
 			this->button22->Text = S"RESET";
-			this->button22->Click += new System::EventHandler(this, button22_Click);
+			this->button22->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button22_Click);
 			// 
 			// button23
 			// 
@@ -1316,7 +1316,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button23->Size = System::Drawing::Size(96, 23);
 			this->button23->TabIndex = 16;
 			this->button23->Text = S"HIGH";
-			this->button23->Click += new System::EventHandler(this, button23_Click);
+			this->button23->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button23_Click);
 			// 
 			// button24
 			// 
@@ -1325,7 +1325,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button24->Size = System::Drawing::Size(96, 23);
 			this->button24->TabIndex = 17;
 			this->button24->Text = S"LOW";
-			this->button24->Click += new System::EventHandler(this, button24_Click);
+			this->button24->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button24_Click);
 			// 
 			// groupBox9
 			// 
@@ -1347,7 +1347,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button20->Size = System::Drawing::Size(96, 23);
 			this->button20->TabIndex = 19;
 			this->button20->Text = S"FM/TAPE ON";
-			this->button20->Click += new System::EventHandler(this, button20_Click);
+			this->button20->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button20_Click);
 			// 
 			// button17
 			// 
@@ -1356,7 +1356,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button17->Size = System::Drawing::Size(96, 23);
 			this->button17->TabIndex = 18;
 			this->button17->Text = S"MODE RESET";
-			this->button17->Click += new System::EventHandler(this, button17_Click);
+			this->button17->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button17_Click);
 			// 
 			// button18
 			// 
@@ -1365,7 +1365,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button18->Size = System::Drawing::Size(96, 23);
 			this->button18->TabIndex = 16;
 			this->button18->Text = S"BU VOICE OFF";
-			this->button18->Click += new System::EventHandler(this, button18_Click);
+			this->button18->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button18_Click);
 			// 
 			// button19
 			// 
@@ -1374,7 +1374,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button19->Size = System::Drawing::Size(96, 23);
 			this->button19->TabIndex = 17;
 			this->button19->Text = S"FM/TAPE OFF";
-			this->button19->Click += new System::EventHandler(this, button19_Click);
+			this->button19->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button19_Click);
 			// 
 			// groupBox8
 			// 
@@ -1395,7 +1395,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button14->Size = System::Drawing::Size(96, 23);
 			this->button14->TabIndex = 18;
 			this->button14->Text = S"RESET";
-			this->button14->Click += new System::EventHandler(this, button14_Click);
+			this->button14->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button14_Click);
 			// 
 			// button15
 			// 
@@ -1404,7 +1404,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button15->Size = System::Drawing::Size(96, 23);
 			this->button15->TabIndex = 16;
 			this->button15->Text = S"1024 ON";
-			this->button15->Click += new System::EventHandler(this, button15_Click);
+			this->button15->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button15_Click);
 			// 
 			// button16
 			// 
@@ -1413,7 +1413,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button16->Size = System::Drawing::Size(96, 23);
 			this->button16->TabIndex = 17;
 			this->button16->Text = S"OFF";
-			this->button16->Click += new System::EventHandler(this, button16_Click);
+			this->button16->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button16_Click);
 			// 
 			// groupBox7
 			// 
@@ -1434,7 +1434,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button13->Size = System::Drawing::Size(96, 23);
 			this->button13->TabIndex = 18;
 			this->button13->Text = S"RESET";
-			this->button13->Click += new System::EventHandler(this, button13_Click);
+			this->button13->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button13_Click);
 			// 
 			// button11
 			// 
@@ -1443,7 +1443,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button11->Size = System::Drawing::Size(96, 23);
 			this->button11->TabIndex = 16;
 			this->button11->Text = S"ENABLE";
-			this->button11->Click += new System::EventHandler(this, button11_Click);
+			this->button11->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button11_Click);
 			// 
 			// button12
 			// 
@@ -1452,7 +1452,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button12->Size = System::Drawing::Size(96, 23);
 			this->button12->TabIndex = 17;
 			this->button12->Text = S"DISABLE";
-			this->button12->Click += new System::EventHandler(this, button12_Click);
+			this->button12->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button12_Click);
 			// 
 			// groupBox6
 			// 
@@ -1472,7 +1472,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button9->Size = System::Drawing::Size(96, 23);
 			this->button9->TabIndex = 16;
 			this->button9->Text = S"ENABLE";
-			this->button9->Click += new System::EventHandler(this, button9_Click);
+			this->button9->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button9_Click);
 			// 
 			// button10
 			// 
@@ -1481,7 +1481,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button10->Size = System::Drawing::Size(96, 23);
 			this->button10->TabIndex = 17;
 			this->button10->Text = S"DISABLE";
-			this->button10->Click += new System::EventHandler(this, button10_Click);
+			this->button10->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button10_Click);
 			// 
 			// groupBox5
 			// 
@@ -1501,7 +1501,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button7->Size = System::Drawing::Size(96, 23);
 			this->button7->TabIndex = 16;
 			this->button7->Text = S"ENABLE";
-			this->button7->Click += new System::EventHandler(this, button7_Click);
+			this->button7->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button7_Click);
 			// 
 			// button8
 			// 
@@ -1510,7 +1510,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button8->Size = System::Drawing::Size(96, 23);
 			this->button8->TabIndex = 17;
 			this->button8->Text = S"DISABLE";
-			this->button8->Click += new System::EventHandler(this, button8_Click);
+			this->button8->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button8_Click);
 			// 
 			// groupBox4
 			// 
@@ -1530,7 +1530,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button5->Size = System::Drawing::Size(96, 23);
 			this->button5->TabIndex = 16;
 			this->button5->Text = S"ON";
-			this->button5->Click += new System::EventHandler(this, button5_Click);
+			this->button5->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button5_Click);
 			// 
 			// button6
 			// 
@@ -1539,7 +1539,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button6->Size = System::Drawing::Size(96, 23);
 			this->button6->TabIndex = 17;
 			this->button6->Text = S"OFF";
-			this->button6->Click += new System::EventHandler(this, button6_Click);
+			this->button6->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button6_Click);
 			// 
 			// groupBox3
 			// 
@@ -1559,7 +1559,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button3->Size = System::Drawing::Size(96, 23);
 			this->button3->TabIndex = 16;
 			this->button3->Text = S"ON";
-			this->button3->Click += new System::EventHandler(this, button3_Click);
+			this->button3->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button3_Click);
 			// 
 			// button4
 			// 
@@ -1568,7 +1568,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button4->Size = System::Drawing::Size(96, 23);
 			this->button4->TabIndex = 17;
 			this->button4->Text = S"OFF";
-			this->button4->Click += new System::EventHandler(this, button4_Click);
+			this->button4->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button4_Click);
 			// 
 			// groupBox2
 			// 
@@ -1588,7 +1588,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->Button1->Size = System::Drawing::Size(96, 23);
 			this->Button1->TabIndex = 16;
 			this->Button1->Text = S"ON";
-			this->Button1->Click += new System::EventHandler(this, Button1_Click);
+			this->Button1->Click += new System::EventHandler(this, &GroundStation::UplinkForm::Button1_Click);
 			// 
 			// button2
 			// 
@@ -1597,7 +1597,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button2->Size = System::Drawing::Size(96, 23);
 			this->button2->TabIndex = 17;
 			this->button2->Text = S"OFF";
-			this->button2->Click += new System::EventHandler(this, button2_Click);
+			this->button2->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button2_Click);
 			// 
 			// groupBox17
 			// 
@@ -1781,7 +1781,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button63->Size = System::Drawing::Size(24, 23);
 			this->button63->TabIndex = 197;
 			this->button63->Text = S"-";
-			this->button63->Click += new System::EventHandler(this, button63_Click);
+			this->button63->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button63_Click);
 			// 
 			// button62
 			// 
@@ -1790,7 +1790,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button62->Size = System::Drawing::Size(24, 23);
 			this->button62->TabIndex = 196;
 			this->button62->Text = S"+";
-			this->button62->Click += new System::EventHandler(this, button62_Click);
+			this->button62->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button62_Click);
 			// 
 			// button61
 			// 
@@ -1799,7 +1799,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button61->Size = System::Drawing::Size(24, 23);
 			this->button61->TabIndex = 195;
 			this->button61->Text = S"0";
-			this->button61->Click += new System::EventHandler(this, button61_Click);
+			this->button61->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button61_Click);
 			// 
 			// button58
 			// 
@@ -1808,7 +1808,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button58->Size = System::Drawing::Size(24, 23);
 			this->button58->TabIndex = 194;
 			this->button58->Text = S"9";
-			this->button58->Click += new System::EventHandler(this, button58_Click);
+			this->button58->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button58_Click);
 			// 
 			// button59
 			// 
@@ -1817,7 +1817,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button59->Size = System::Drawing::Size(24, 23);
 			this->button59->TabIndex = 193;
 			this->button59->Text = S"8";
-			this->button59->Click += new System::EventHandler(this, button59_Click);
+			this->button59->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button59_Click);
 			// 
 			// button60
 			// 
@@ -1826,7 +1826,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button60->Size = System::Drawing::Size(24, 23);
 			this->button60->TabIndex = 192;
 			this->button60->Text = S"7";
-			this->button60->Click += new System::EventHandler(this, button60_Click);
+			this->button60->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button60_Click);
 			// 
 			// button55
 			// 
@@ -1835,7 +1835,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button55->Size = System::Drawing::Size(24, 23);
 			this->button55->TabIndex = 191;
 			this->button55->Text = S"6";
-			this->button55->Click += new System::EventHandler(this, button55_Click);
+			this->button55->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button55_Click);
 			// 
 			// button56
 			// 
@@ -1844,7 +1844,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button56->Size = System::Drawing::Size(24, 23);
 			this->button56->TabIndex = 190;
 			this->button56->Text = S"5";
-			this->button56->Click += new System::EventHandler(this, button56_Click);
+			this->button56->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button56_Click);
 			// 
 			// button57
 			// 
@@ -1853,7 +1853,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button57->Size = System::Drawing::Size(24, 23);
 			this->button57->TabIndex = 189;
 			this->button57->Text = S"4";
-			this->button57->Click += new System::EventHandler(this, button57_Click);
+			this->button57->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button57_Click);
 			// 
 			// button54
 			// 
@@ -1862,7 +1862,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button54->Size = System::Drawing::Size(24, 23);
 			this->button54->TabIndex = 188;
 			this->button54->Text = S"3";
-			this->button54->Click += new System::EventHandler(this, button54_Click);
+			this->button54->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button54_Click);
 			// 
 			// button53
 			// 
@@ -1871,7 +1871,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button53->Size = System::Drawing::Size(24, 23);
 			this->button53->TabIndex = 187;
 			this->button53->Text = S"2";
-			this->button53->Click += new System::EventHandler(this, button53_Click);
+			this->button53->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button53_Click);
 			// 
 			// button52
 			// 
@@ -1880,7 +1880,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button52->Size = System::Drawing::Size(24, 23);
 			this->button52->TabIndex = 186;
 			this->button52->Text = S"1";
-			this->button52->Click += new System::EventHandler(this, button52_Click);
+			this->button52->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button52_Click);
 			// 
 			// button51
 			// 
@@ -1889,7 +1889,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button51->Size = System::Drawing::Size(56, 23);
 			this->button51->TabIndex = 185;
 			this->button51->Text = S"K. REL";
-			this->button51->Click += new System::EventHandler(this, button51_Click);
+			this->button51->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button51_Click);
 			// 
 			// button50
 			// 
@@ -1898,7 +1898,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button50->Size = System::Drawing::Size(56, 23);
 			this->button50->TabIndex = 184;
 			this->button50->Text = S"CLEAR";
-			this->button50->Click += new System::EventHandler(this, button50_Click);
+			this->button50->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button50_Click);
 			// 
 			// button49
 			// 
@@ -1907,7 +1907,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button49->Size = System::Drawing::Size(56, 23);
 			this->button49->TabIndex = 183;
 			this->button49->Text = S"RESET";
-			this->button49->Click += new System::EventHandler(this, button49_Click);
+			this->button49->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button49_Click);
 			// 
 			// button48
 			// 
@@ -1916,7 +1916,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button48->Size = System::Drawing::Size(56, 23);
 			this->button48->TabIndex = 182;
 			this->button48->Text = S"ENTER";
-			this->button48->Click += new System::EventHandler(this, button48_Click);
+			this->button48->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button48_Click);
 			// 
 			// button47
 			// 
@@ -1925,7 +1925,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button47->Size = System::Drawing::Size(56, 23);
 			this->button47->TabIndex = 181;
 			this->button47->Text = S"NOUN";
-			this->button47->Click += new System::EventHandler(this, button47_Click);
+			this->button47->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button47_Click);
 			// 
 			// button46
 			// 
@@ -1934,7 +1934,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button46->Size = System::Drawing::Size(56, 23);
 			this->button46->TabIndex = 180;
 			this->button46->Text = S"VERB";
-			this->button46->Click += new System::EventHandler(this, button46_Click);
+			this->button46->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button46_Click);
 			// 
 			// label75
 			// 
@@ -2159,7 +2159,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->button64->Size = System::Drawing::Size(72, 23);
 			this->button64->TabIndex = 183;
 			this->button64->Text = S"TRANSMIT";
-			this->button64->Click += new System::EventHandler(this, button64_Click);
+			this->button64->Click += new System::EventHandler(this, &GroundStation::UplinkForm::button64_Click);
 			// 
 			// textBox26
 			// 
@@ -2539,7 +2539,7 @@ private: System::Windows::Forms::Label *  label18;
 			this->Controls->Add(this->groupBox1);
 			this->Name = S"UplinkForm";
 			this->Text = S"DIGITAL UP-DATA LINK OPERATIONS";
-			this->Load += new System::EventHandler(this, UplinkForm_Load);
+			this->Load += new System::EventHandler(this, &GroundStation::UplinkForm::UplinkForm_Load);
 			this->groupBox1->ResumeLayout(false);
 			this->groupBox16->ResumeLayout(false);
 			this->groupBox15->ResumeLayout(false);
@@ -2594,11 +2594,11 @@ private: System::Void UplinkForm_Load(System::Object *  sender, System::EventArg
 			 comboBox1->Items->Add(S"V73 OCTAL CLOCK INC");
 			 comboBox1->SelectedIndex = 0;
 			 // Setup handler
-			 comboBox1->add_SelectedIndexChanged(new EventHandler(this, P27ModeChanged));
+			 comboBox1->add_SelectedIndexChanged(new EventHandler(this, &GroundStation::UplinkForm::P27ModeChanged));
 			 // Issue a reset
 			 P27ModeChanged(NULL,NULL);
 			 // Setup handler for INDEX
-			 textBox5->add_TextChanged(new EventHandler(this, P27IndexChanged));
+			 textBox5->add_TextChanged(new EventHandler(this, &GroundStation::UplinkForm::P27IndexChanged));
 		 }
 
 private: System::Void Button1_Click(System::Object *  sender, System::EventArgs *  e)

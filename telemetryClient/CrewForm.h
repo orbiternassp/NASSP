@@ -25,7 +25,7 @@ namespace GroundStation
 		CrewForm(void)
 		{
 			InitializeComponent();
-			this->add_Closing(new CancelEventHandler(this,CrewForm_Closing));
+			this->add_Closing(new CancelEventHandler(this, &GroundStation::CrewForm::CrewForm_Closing));
 		}
         
 	protected: 

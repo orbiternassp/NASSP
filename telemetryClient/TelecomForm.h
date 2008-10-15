@@ -25,7 +25,7 @@ namespace GroundStation
 		TelecomForm(void)
 		{
 			InitializeComponent();
-			this->add_Closing(new CancelEventHandler(this,TelecomForm_Closing));
+			this->add_Closing(new CancelEventHandler(this, &GroundStation::TelecomForm::TelecomForm_Closing));
 		}
         
 	protected: 

@@ -26,7 +26,7 @@ namespace GroundStation
 		EPSForm(void)
 		{
 			InitializeComponent();
-			this->add_Closing(new CancelEventHandler(this,EPSForm_Closing));
+			this->add_Closing(new CancelEventHandler(this, &GroundStation::EPSForm::EPSForm_Closing));
 		}
         
 	protected: 

@@ -70,7 +70,7 @@ void Form1::ConnectToHost(){
 		}else{
 			StatusBox->Text = "LOCK/OUT FRAM/000 WORD/000";
 			// Kick service thread
-			ThreadStart *myThreadDelegate = new ThreadStart(this, ThreadTask);
+			ThreadStart *myThreadDelegate = new ThreadStart(this, &GroundStation::Form1::ThreadTask);
 			trd = new Thread(myThreadDelegate);
 			trd->IsBackground = true;
 			trd->Start();

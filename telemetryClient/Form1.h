@@ -159,7 +159,7 @@ namespace GroundStation
 			this->ConnectBtn->Name = S"ConnectBtn";
 			this->ConnectBtn->TabIndex = 0;
 			this->ConnectBtn->Text = S"Connect";
-			this->ConnectBtn->Click += new System::EventHandler(this, ConnectBtn_Click);
+			this->ConnectBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ConnectBtn_Click);
 			// 
 			// label1
 			// 
@@ -202,7 +202,7 @@ namespace GroundStation
 			this->ShowStrBtn->Name = S"ShowStrBtn";
 			this->ShowStrBtn->TabIndex = 5;
 			this->ShowStrBtn->Text = S"STRUCT";
-			this->ShowStrBtn->Click += new System::EventHandler(this, ShowStrBtn_Click);
+			this->ShowStrBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowStrBtn_Click);
 			// 
 			// ShowEPSBtn
 			// 
@@ -210,7 +210,7 @@ namespace GroundStation
 			this->ShowEPSBtn->Name = S"ShowEPSBtn";
 			this->ShowEPSBtn->TabIndex = 6;
 			this->ShowEPSBtn->Text = S"EPS";
-			this->ShowEPSBtn->Click += new System::EventHandler(this, ShowEPSBtn_Click);
+			this->ShowEPSBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowEPSBtn_Click);
 			// 
 			// ShowLESBtn
 			// 
@@ -218,7 +218,7 @@ namespace GroundStation
 			this->ShowLESBtn->Name = S"ShowLESBtn";
 			this->ShowLESBtn->TabIndex = 7;
 			this->ShowLESBtn->Text = S"LES/ELS";
-			this->ShowLESBtn->Click += new System::EventHandler(this, ShowLESBtn_Click);
+			this->ShowLESBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowLESBtn_Click);
 			// 
 			// ShowECSBtn
 			// 
@@ -226,7 +226,7 @@ namespace GroundStation
 			this->ShowECSBtn->Name = S"ShowECSBtn";
 			this->ShowECSBtn->TabIndex = 8;
 			this->ShowECSBtn->Text = S"ECS";
-			this->ShowECSBtn->Click += new System::EventHandler(this, ShowECSBtn_Click);
+			this->ShowECSBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowECSBtn_Click);
 			// 
 			// ShowGNBtn
 			// 
@@ -234,7 +234,7 @@ namespace GroundStation
 			this->ShowGNBtn->Name = S"ShowGNBtn";
 			this->ShowGNBtn->TabIndex = 9;
 			this->ShowGNBtn->Text = S"GNC/FLT";
-			this->ShowGNBtn->Click += new System::EventHandler(this, ShowGNBtn_Click);
+			this->ShowGNBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowGNBtn_Click);
 			// 
 			// ShowSCSBtn
 			// 
@@ -242,7 +242,7 @@ namespace GroundStation
 			this->ShowSCSBtn->Name = S"ShowSCSBtn";
 			this->ShowSCSBtn->TabIndex = 10;
 			this->ShowSCSBtn->Text = S"SCS";
-			this->ShowSCSBtn->Click += new System::EventHandler(this, ShowSCSBtn_Click);
+			this->ShowSCSBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowSCSBtn_Click);
 			// 
 			// ShowCrewBtn
 			// 
@@ -250,7 +250,7 @@ namespace GroundStation
 			this->ShowCrewBtn->Name = S"ShowCrewBtn";
 			this->ShowCrewBtn->TabIndex = 11;
 			this->ShowCrewBtn->Text = S"CREW/SCI";
-			this->ShowCrewBtn->Click += new System::EventHandler(this, ShowCrewBtn_Click);
+			this->ShowCrewBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowCrewBtn_Click);
 			// 
 			// ShowSPSBtn
 			// 
@@ -258,7 +258,7 @@ namespace GroundStation
 			this->ShowSPSBtn->Name = S"ShowSPSBtn";
 			this->ShowSPSBtn->TabIndex = 12;
 			this->ShowSPSBtn->Text = S"SPS/RCS";
-			this->ShowSPSBtn->Click += new System::EventHandler(this, ShowSPSBtn_Click);
+			this->ShowSPSBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowSPSBtn_Click);
 			// 
 			// ShowTCMBtn
 			// 
@@ -266,7 +266,7 @@ namespace GroundStation
 			this->ShowTCMBtn->Name = S"ShowTCMBtn";
 			this->ShowTCMBtn->TabIndex = 13;
 			this->ShowTCMBtn->Text = S"TELECOM";
-			this->ShowTCMBtn->Click += new System::EventHandler(this, ShowTCMBtn_Click);
+			this->ShowTCMBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowTCMBtn_Click);
 			// 
 			// groupBox1
 			// 
@@ -293,7 +293,7 @@ namespace GroundStation
 			this->ShowCMCBtn->Name = S"ShowCMCBtn";
 			this->ShowCMCBtn->TabIndex = 113;
 			this->ShowCMCBtn->Text = S"CMC DATA";
-			this->ShowCMCBtn->Click += new System::EventHandler(this, ShowCMCBtn_Click);
+			this->ShowCMCBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowCMCBtn_Click);
 			// 
 			// ShowUplinkBtn
 			// 
@@ -301,7 +301,7 @@ namespace GroundStation
 			this->ShowUplinkBtn->Name = S"ShowUplinkBtn";
 			this->ShowUplinkBtn->TabIndex = 15;
 			this->ShowUplinkBtn->Text = S"UPLINK";
-			this->ShowUplinkBtn->Click += new System::EventHandler(this, ShowUplinkBtn_Click);
+			this->ShowUplinkBtn->Click += new System::EventHandler(this, &GroundStation::Form1::ShowUplinkBtn_Click);
 			// 
 			// Form1
 			// 
@@ -317,7 +317,7 @@ namespace GroundStation
 			this->FormBorderStyle = System::Windows::Forms::FormBorderStyle::Fixed3D;
 			this->Name = S"Form1";
 			this->Text = S"Apollo Ground Station";
-			this->Load += new System::EventHandler(this, Form1_Load);
+			this->Load += new System::EventHandler(this, &GroundStation::Form1::Form1_Load);
 			this->groupBox1->ResumeLayout(false);
 			this->ResumeLayout(false);
 

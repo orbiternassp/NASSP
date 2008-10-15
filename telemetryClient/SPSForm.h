@@ -25,7 +25,7 @@ namespace GroundStation
 		SPSForm(void)
 		{
 			InitializeComponent();
-			this->add_Closing(new CancelEventHandler(this,SPSForm_Closing));
+			this->add_Closing(new CancelEventHandler(this, &GroundStation::SPSForm::SPSForm_Closing));
 		}
         
 	protected: 

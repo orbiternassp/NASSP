@@ -25,7 +25,7 @@ namespace GroundStation
 		CMCForm(void)
 		{
 			InitializeComponent();
-			this->add_Closing(new CancelEventHandler(this,CMCForm_Closing));
+			this->add_Closing(new CancelEventHandler(this, &GroundStation::CMCForm::CMCForm_Closing));
 		}
 	protected: 
 		void Dispose(Boolean disposing)
