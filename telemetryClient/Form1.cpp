@@ -375,6 +375,221 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 			}
 			break;
 
+		case 12: // 12A1 MGA SERVO ERR IN PHASE
+		case 76:
+			if(gnc_form != NULL)
+			{
+				value = unscale_data(data, -2.5,2.5);
+				sprintf(msg,"%+03.2f",value);
+				gnc_form->s12A1->Enabled = TRUE;
+				gnc_form->s12A1->Text = msg;						
+			} 
+			break;
+
+		case 13: // 12A2 IGA SERVO ERR IN PHASE
+		case 77:
+			if(gnc_form != NULL)
+			{
+				value = unscale_data(data, -2.5,2.5);
+				sprintf(msg,"%+03.2f",value);
+				gnc_form->s12A2->Enabled = TRUE;
+				gnc_form->s12A2->Text = msg;						
+			} 
+			break;
+
+		case 14: // 12A3 OGA SERVO ERR IN PHASE
+		case 78:
+			if(gnc_form != NULL)
+			{
+				value = unscale_data(data, -2.5,2.5);
+				sprintf(msg,"%+03.2f",value);
+				gnc_form->s12A3->Enabled = TRUE;
+				gnc_form->s12A3->Text = msg;						
+			} 
+			break;
+
+		case 15: // 12A4 ROLL ATT ERR
+		case 79:
+			if(scs_form != NULL)
+			{
+				value = unscale_data(data, -50, 50);
+				sprintf(msg,"%+04.2f °",value);
+				scs_form->s12A4->Enabled = TRUE;
+				scs_form->s12A4->Text = msg;						
+			} 
+			break;
+
+		case 16:
+			switch(framead)
+			{
+				case 0: // 11A5 PYRO BUS B VOLTS
+					if(els_form != NULL)
+					{
+						value = unscale_data(data, 0, 40);
+						sprintf(msg,"%04.2f V",value);
+						els_form->s11A5->Enabled = TRUE;
+						els_form->s11A5->Text = msg;						
+					} 
+					break;
+
+				case 1: // 11A41 ALPHA CT RATE CHAN 2
+					if(tcm_form != NULL){
+						value = unscale_data(data,0.1,10000);
+						sprintf(msg,"%06.0f C/S",value);
+						tcm_form->s11A41->Enabled = TRUE;
+						tcm_form->s11A41->Text = msg;						
+					}
+					break;
+
+				case 2: // 11A77 FC 1 H2 FLOW
+					if(eps_form != NULL)
+					{
+						value = unscale_data(data, 0, 0.2);
+						sprintf(msg,"%04.3f PPH",value);
+						eps_form->s11A77->Enabled = TRUE;
+						eps_form->s11A77->Text = msg;						
+					} 
+					break;
+			}
+			break;
+
+		case 20: // 12A5 SCS PITCH BODY RATE
+		case 84:
+			if(scs_form != NULL)
+			{
+				value = unscale_data(data, -10, 10);
+				sprintf(msg,"%+04.2f °",value);
+				scs_form->s12A5->Enabled = TRUE;
+				scs_form->s12A5->Text = msg;						
+			} 
+			break;
+
+		case 21: // 12A6 SCS YAW BODY RATE
+		case 85:
+			if(scs_form != NULL)
+			{
+				value = unscale_data(data, -10, 10);
+				sprintf(msg,"%+04.2f °",value);
+				scs_form->s12A6->Enabled = TRUE;
+				scs_form->s12A6->Text = msg;						
+			} 
+			break;
+
+		case 22: // 12A7 SCS ROLL BODY RATE
+		case 86:
+			if(scs_form != NULL)
+			{
+				value = unscale_data(data, -50, 50);
+				sprintf(msg,"%+04.2f °",value);
+				scs_form->s12A7->Enabled = TRUE;
+				scs_form->s12A7->Text = msg;						
+			} 
+			break;
+
+		case 23: // 12A8 PITCH GIMBL POS 1 OR 2
+		case 87:
+			if(scs_form != NULL)
+			{
+				value = unscale_data(data, -5, 5);
+				sprintf(msg,"%+04.2f °",value);
+				scs_form->s12A8->Enabled = TRUE;
+				scs_form->s12A8->Text = msg;						
+			} 
+			break;
+
+		case 24:
+			switch(framead)
+			{
+				case 0: // 11A6 LES LOGIC BUS B VOLTS
+					if (els_form != NULL)
+					{
+						value = unscale_data(data, 0, 40);
+						sprintf(msg,"%04.2f V",value);
+						els_form->s11A6->Enabled = TRUE;
+						els_form->s11A6->Text = msg;						
+					} 
+					break;
+
+				case 1: // 11A42 ALPHA CT RATE CHAN 3
+					if(tcm_form != NULL){
+						value = unscale_data(data,0.1,10000);
+						sprintf(msg,"%06.0f C/S",value);
+						tcm_form->s11A42->Enabled = TRUE;
+						tcm_form->s11A42->Text = msg;						
+					}
+					break;
+
+				case 2: // 11A78 FC 2 H2 FLOW
+					if(eps_form != NULL)
+					{
+						value = unscale_data(data, 0, 0.2);
+						sprintf(msg,"%04.3f PPH",value);
+						eps_form->s11A78->Enabled = TRUE;
+						eps_form->s11A78->Text = msg;						
+					} 
+					break;
+			}
+			break;
+
+		case 25:
+			switch(framead)
+			{
+				case 1: // 11A43 PROTON INTEG CT RATE
+					if(tcm_form != NULL){
+						value = unscale_data(data, 1, 100000);
+						sprintf(msg,"%06.0f C/S",value);
+						tcm_form->s11A43->Enabled = TRUE;
+						tcm_form->s11A43->Text = msg;						
+					}
+					break;
+
+				case 2: // 11A79 FC 3 H2 FLOW
+					if(eps_form != NULL)
+					{
+						value = unscale_data(data, 0, 0.2);
+						sprintf(msg,"%04.3f PPH",value);
+						eps_form->s11A79->Enabled = TRUE;
+						eps_form->s11A79->Text = msg;						
+					} 
+					break;
+			}
+			break;
+
+		case 26:
+			switch(framead)
+			{
+				case 0: // 11A8 LES LOGIC BUS A VOLTS
+					if (els_form != NULL)
+					{
+						value = unscale_data(data, 0, 40);
+						sprintf(msg,"%04.2f V",value);
+						els_form->s11A8->Enabled = TRUE;
+						els_form->s11A8->Text = msg;						
+					} 
+					break;
+
+				case 2: // 11A80 FC 1 O2 FLOW
+					if (eps_form != NULL)
+					{
+						value = unscale_data(data, 0, 1.6);
+						sprintf(msg,"%04.3f PPH",value);
+						eps_form->s11A80->Enabled = TRUE;
+						eps_form->s11A80->Text = msg;						
+					} 
+					break;
+
+				case 4: // 11A152 FUEL SM/ENG INTERFACE P
+					if (sps_form != NULL)
+					{
+						value = unscale_data(data, 0, 300);
+						sprintf(msg,"%04.0f PSIA",value);
+						sps_form->s11A152->Enabled = TRUE;
+						sps_form->s11A152->Text = msg;						
+					} 
+					break;
+			}
+			break;
+
 		case 31: // CMC DATA WORD
 			cmc_w0 = data&0177;
 			cmc_w0 <<= 8;

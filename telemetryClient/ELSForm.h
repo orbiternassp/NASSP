@@ -42,7 +42,7 @@ namespace GroundStation
 			this->Hide();     // Hide instead.
 		}      		
 	private: System::Windows::Forms::Label *  label19;
-	private: System::Windows::Forms::TextBox *  s11A9;
+	public: System::Windows::Forms::TextBox *  s11A9;
 	private: System::Windows::Forms::Label *  label1;
 	private: System::Windows::Forms::Label *  label2;
 	private: System::Windows::Forms::Label *  label3;
@@ -83,51 +83,51 @@ namespace GroundStation
 
 
 
-	private: System::Windows::Forms::TextBox *  s11A5;
-	private: System::Windows::Forms::TextBox *  s11E221;
-	private: System::Windows::Forms::TextBox *  s11E231;
-	private: System::Windows::Forms::TextBox *  s11E133;
-	private: System::Windows::Forms::TextBox *  s11E136;
-	private: System::Windows::Forms::TextBox *  s11E141;
-	private: System::Windows::Forms::TextBox *  s11E134;
-	private: System::Windows::Forms::TextBox *  s11E137;
-	private: System::Windows::Forms::TextBox *  s11E144;
-	private: System::Windows::Forms::TextBox *  s11E142;
-	private: System::Windows::Forms::TextBox *  s11E233;
-	private: System::Windows::Forms::TextBox *  s11E223;
-	private: System::Windows::Forms::TextBox *  s11A8;
-	private: System::Windows::Forms::TextBox *  s11A6;
-	private: System::Windows::Forms::TextBox *  s11E227;
-	private: System::Windows::Forms::TextBox *  s11E235;
-	private: System::Windows::Forms::TextBox *  s11E157;
-	private: System::Windows::Forms::TextBox *  s11E156;
-	private: System::Windows::Forms::TextBox *  s11E265;
-	private: System::Windows::Forms::TextBox *  s11E241;
+	public: System::Windows::Forms::TextBox *  s11A5;
+	public: System::Windows::Forms::TextBox *  s11E221;
+	public: System::Windows::Forms::TextBox *  s11E231;
+	public: System::Windows::Forms::TextBox *  s11E133;
+	public: System::Windows::Forms::TextBox *  s11E136;
+	public: System::Windows::Forms::TextBox *  s11E141;
+	public: System::Windows::Forms::TextBox *  s11E134;
+	public: System::Windows::Forms::TextBox *  s11E137;
+	public: System::Windows::Forms::TextBox *  s11E144;
+	public: System::Windows::Forms::TextBox *  s11E142;
+	public: System::Windows::Forms::TextBox *  s11E233;
+	public: System::Windows::Forms::TextBox *  s11E223;
+	public: System::Windows::Forms::TextBox *  s11A8;
+	public: System::Windows::Forms::TextBox *  s11A6;
+	public: System::Windows::Forms::TextBox *  s11E227;
+	public: System::Windows::Forms::TextBox *  s11E235;
+	public: System::Windows::Forms::TextBox *  s11E157;
+	public: System::Windows::Forms::TextBox *  s11E156;
+	public: System::Windows::Forms::TextBox *  s11E265;
+	public: System::Windows::Forms::TextBox *  s11E241;
 	private: System::Windows::Forms::GroupBox *  groupBox1;
 	private: System::Windows::Forms::GroupBox *  groupBox2;
-	private: System::Windows::Forms::TextBox *  s11E291;
+	public: System::Windows::Forms::TextBox *  s11E291;
 	private: System::Windows::Forms::Label *  label22;
 	private: System::Windows::Forms::Label *  label23;
 	private: System::Windows::Forms::Label *  label24;
 	private: System::Windows::Forms::Label *  label25;
 	private: System::Windows::Forms::Label *  label26;
 	private: System::Windows::Forms::Label *  label27;
-	private: System::Windows::Forms::TextBox *  s11E306;
-	private: System::Windows::Forms::TextBox *  s11E298;
-	private: System::Windows::Forms::TextBox *  s11E308;
-	private: System::Windows::Forms::TextBox *  s11E295;
-	private: System::Windows::Forms::TextBox *  s11E303;
+	public: System::Windows::Forms::TextBox *  s11E306;
+	public: System::Windows::Forms::TextBox *  s11E298;
+	public: System::Windows::Forms::TextBox *  s11E308;
+	public: System::Windows::Forms::TextBox *  s11E295;
+	public: System::Windows::Forms::TextBox *  s11E303;
 	private: System::Windows::Forms::GroupBox *  groupBox3;
 	private: System::Windows::Forms::Label *  label28;
 	private: System::Windows::Forms::Label *  label29;
 	private: System::Windows::Forms::Label *  label30;
 	private: System::Windows::Forms::Label *  label31;
 	private: System::Windows::Forms::Label *  label32;
-	private: System::Windows::Forms::TextBox *  s11E45;
-	private: System::Windows::Forms::TextBox *  s11E43;
-	private: System::Windows::Forms::TextBox *  s11E46;
-	private: System::Windows::Forms::TextBox *  s11A51;
-	private: System::Windows::Forms::TextBox *  s10A22;
+	public: System::Windows::Forms::TextBox *  s11E45;
+	public: System::Windows::Forms::TextBox *  s11E43;
+	public: System::Windows::Forms::TextBox *  s11E46;
+	public: System::Windows::Forms::TextBox *  s11A51;
+	public: System::Windows::Forms::TextBox *  s10A22;
 
 
 
