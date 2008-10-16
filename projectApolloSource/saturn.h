@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.284  2008/10/16 02:26:17  movieman523
+  *	Some more telemetry.
+  *	
   *	Revision 1.283  2008/10/16 00:48:45  movieman523
   *	More telemetry: some of these are dummy values for now.
   *	
@@ -545,6 +548,17 @@ typedef struct {
 	double BusAVoltage;
 	double BusBVoltage;
 } SECSStatus;
+
+///
+/// \brief RCS status
+/// \ingroup InternalInterface
+///
+typedef struct {
+	double PackageTempF;
+	double HeliumTempF;
+	double HeliumPressurePSI;
+	double PropellantPressurePSI;
+} RCSStatus;
 
 ///
 /// \brief SPS status.
@@ -1214,6 +1228,7 @@ public:
 	void GetPyroStatus( PyroStatus &ps );
 	void DisconnectInverter(bool disc, int busno);
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
+	void GetRCSStatus(int index, RCSStatus &rs);
 	double GetAccelG() { return aZAcc / G; };
 	virtual void GetECSStatus(ECSStatus &ecs);
 	virtual void SetCrewNumber(int number);

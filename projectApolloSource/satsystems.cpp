@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.154  2008/10/16 02:26:17  movieman523
+  *	Some more telemetry.
+  *	
   *	Revision 1.153  2008/10/16 00:48:45  movieman523
   *	More telemetry: some of these are dummy values for now.
   *	
@@ -2713,6 +2716,22 @@ void Saturn::GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm)
 	atm.DisplayedO2FlowLBH = RightO2FlowMeter.GetDisplayValue();
 	atm.DisplayedSuitComprDeltaPressurePSI = SuitComprDeltaPMeter.GetDisplayValue();
 	atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF = EcsRadTempPrimOutletMeter.GetDisplayValue();
+}
+
+void Saturn::GetRCSStatus(int index, RCSStatus &rs)
+{
+	rs.HeliumPressurePSI = 0.0;
+	rs.HeliumTempF = 0.0;
+	rs.PackageTempF = 0.0;
+	rs.PropellantPressurePSI = 0.0;
+
+	//
+	// No tanks if we've seperated from the SM
+	//
+	if (( index >= RCS_SM_QUAD_A && index <= RCS_SM_QUAD_D ) 
+		&& stage >= CM_STAGE) {
+		return;
+	}
 }
 
 void Saturn::GetSECSStatus( SECSStatus &ss )

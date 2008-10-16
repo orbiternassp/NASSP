@@ -581,7 +581,7 @@ unsigned char PCM::scale_data(double data, double low, double high){
 	// Now figure step value
 	step = ((high - low)/256);
 	// and return result
-	return (unsigned char)(data/step);
+	return (unsigned char)((data - low)/step);
 }
 
 // Fetch a telemetry data item from its channel code
@@ -956,9 +956,12 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 				case 11: // S11A
 					switch(ccode){
 						case 1:			// SUIT MANF ABS PRESS
-							return(scale_data(0,0,17));
+							sat->GetAtmosStatus(atm);
+							return(scale_data(atm.SuitPressurePSI, 0, 17));
 						case 2:			// SUIT COMP DELTA P
-							return(scale_data(0,0,1));
+							sat->GetAtmosStatus(atm);
+							// Suit compressor pressure difference
+							return(scale_data(atm.SuitPressurePSI - atm.SuitReturnPressurePSI, 0, 1));
 						case 3:			// GLY PUMP OUT PRESS
 							return(scale_data(0,0,60));
 						case 4:			// ECS SURGE TANK PRESS
@@ -979,12 +982,12 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetSECSStatus( secsStatus );
 							return(scale_data( secsStatus.BusAVoltage, 0, 40 ));
 
-						case 10:		// HE TK PRESS
-							return(scale_data(0,0,5000));
-						case 11:		// OX TK PRESS
-							return(scale_data(0,0,250));
-						case 12:		// FU TK PRESS
-							return(scale_data(0,0,250));
+						case 10:		// SPS HE TK PRESS
+							return(scale_data(sat->GetSPSPropellant()->GetHeliumPressurePSI(), 0, 5000));
+						case 11:		// SPS OX TK PRESS
+							return(scale_data(sat->GetSPSPropellant()->GetPropellantPressurePSI(), 0, 250));
+						case 12:		// SPS FU TK PRESS
+							return(scale_data(sat->GetSPSPropellant()->GetPropellantPressurePSI(), 0, 250));
 						case 13:		// GLY ACCUM QTY
 							return(scale_data(0,0,100));
 						case 14:		// ECS O2 FLOW O2 SUPPLY MANF
@@ -1036,7 +1039,9 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 36:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 37:		// SUIT-CABIN DELTA PRESS
-							return(scale_data(0,-5,5));
+							sat->GetAtmosStatus( atm );
+							return(scale_data((atm.SuitPressureMMHG - atm.CabinPressureMMHG) / 25.4,
+								-5, 5));
 						case 38:		// ALPHA CT RATE CHAN 1
 							return(scale_data(0,0.1,10000));
 						case 39:		// SM HE MANF A PRESS
@@ -1307,7 +1312,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 153:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 154:		// SCE NEG SUPPLY VOLTS
-							return(scale_data(0,0,-30));
+							return(scale_data(0, -30, 0));
 						case 155:		// CM HE TK A TEMP
 							return(scale_data(0,0,300));
 						case 156:		// CM HE TK B TEMP
@@ -2276,25 +2281,25 @@ void PCM::generate_stream_hbr(){
 		case 3: // SYNC 4 & FRAME COUNT
 			tx_data[tx_offset] = (0300|frame_addr);
 			break;
-		case 4: // 22A1
+		case 4: // 22A1 ASTRO 1 EKG AXIS 2
 		case 36:
 		case 68:
 		case 100:
 			tx_data[tx_offset] = measure(22,TLM_A,1);
 			break;
-		case 5: // 22A2
+		case 5: // 22A2 ASTRO 1 EKG AXIS 3
 		case 37:
 		case 69:
 		case 101:
 			tx_data[tx_offset] = measure(22,TLM_A,2);
 			break;
-		case 6: // 22A3
+		case 6: // 22A3 ASTRO 1 EKG AXIS 1
 		case 38:
 		case 70:
 		case 102:
 			tx_data[tx_offset] = measure(22,TLM_A,3);
 			break;
-		case 7: // 22A4
+		case 7: // 22A4 PITCH DIFF CLUTCH CURRENT
 		case 39:
 		case 71:
 		case 103:
@@ -2302,13 +2307,13 @@ void PCM::generate_stream_hbr(){
 			break;
 		case 8:
 			switch(frame_count){
-				case 0: // 11A1
+				case 0: // 11A1 SUIT MANF ABS PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,1); 
 					break;
-				case 1: // 11A37
+				case 1: // 11A37 SUIT-CABIN DELTA PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,37); 
 					break;
-				case 2: // 11A73
+				case 2: // 11A73 BAT CHARGER AMPS
 					tx_data[tx_offset] = measure(11,TLM_A,73); 
 					break;
 				case 3: // 11A109 BAT B CUR
@@ -2321,13 +2326,13 @@ void PCM::generate_stream_hbr(){
 			break;
 		case 9: 
 			switch(frame_count){
-				case 0: // 11A2
+				case 0: // 11A2 SUIT COMP DELTA P
 					tx_data[tx_offset] = measure(11,TLM_A,2); 
 					break;
-				case 1: // 11A38
+				case 1: // 11A38 ALPHA CT RATE CHAN 1
 					tx_data[tx_offset] = measure(11,TLM_A,38); 
 					break;
-				case 2: // 11A74
+				case 2: // 11A74 BAT A CUR
 					tx_data[tx_offset] = measure(11,TLM_A,74); 
 					break;
 				case 3: // 11A110 BAT C CUR
@@ -2340,16 +2345,16 @@ void PCM::generate_stream_hbr(){
 			break;
 		case 10:
 			switch(frame_count){
-				case 0: // 11A3
+				case 0: // 11A3 GLY PUMP OUT PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,3); 
 					break;
-				case 1: // 11A39
+				case 1: // 11A39 SM HE MANF A PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,39); 
 					break;
 				case 2: // 11A75 BAT RELAY BUS VOLTS
 					tx_data[tx_offset] = measure(11,TLM_A,75); 
 					break;
-				case 3: // 11A111
+				case 3: // 11A111 SM FU MANF C PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,111); 
 					break;
 				case 4: // 11A147 AC BUS 1 PH A VOLTS
@@ -2359,48 +2364,48 @@ void PCM::generate_stream_hbr(){
 			break;
 		case 11:
 			switch(frame_count){
-				case 0: // 11A4
+				case 0: // 11A4 ECS SURGE TANK PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,4); 
 					break;
-				case 1: // 11A40
+				case 1: // 11A40 SM HE MANF B PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,40); 
 					break;
-				case 2: // 11A76
+				case 2: // 11A76 FC 1 CUR
 					tx_data[tx_offset] = measure(11,TLM_A,76); 
 					break;
-				case 3: // 11A112
+				case 3: // 11A112 SM FU MANF D PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,112); 
 					break;
-				case 4: // 11A148
+				case 4: // 11A148 SCE POS SUPPLY VOLTS
 					tx_data[tx_offset] = measure(11,TLM_A,148); 
 					break;
 			}
 			break;
-		case 12: // 12A1
+		case 12: // 12A1 MGA SERVO ERR IN PHASE
 		case 76:
 			tx_data[tx_offset] = measure(12,TLM_A,1); 
 			break;
-		case 13: // 12A2
+		case 13: // 12A2 IGA SERVO ERR IN PHASE
 		case 77:
 			tx_data[tx_offset] = measure(12,TLM_A,2); 
 			break;
-		case 14: // 12A3
+		case 14: // 12A3 OGA SERVO ERR IN PHASE
 		case 78:
 			tx_data[tx_offset] = measure(12,TLM_A,3); 
 			break;
-		case 15: // 12A4
+		case 15: // 12A4 ROLL ATT ERR
 		case 79:
 			tx_data[tx_offset] = measure(12,TLM_A,4); 
 			break;
 		case 16:
 			switch(frame_count){
-				case 0: // 11A5
+				case 0: // 11A5 PYRO BUS B VOLTS
 					tx_data[tx_offset] = measure(11,TLM_A,5); 
 					break;
-				case 1: // 11A41
+				case 1: // 11A41 ALPHA CT RATE CHAN 2
 					tx_data[tx_offset] = measure(11,TLM_A,41); 
 					break;
-				case 2: // 11A77
+				case 2: // 11A77 FC 1 H2 FLOW
 					tx_data[tx_offset] = measure(11,TLM_A,77); 
 					break;
 				case 3: // 11A113
@@ -2438,31 +2443,31 @@ void PCM::generate_stream_hbr(){
 			break;
 			tx_data[tx_offset] = 0;
 			break;
-		case 20: // 12A5
+		case 20: // 12A5 SCS PITCH BODY RATE
 		case 84:
 			tx_data[tx_offset] = measure(12,TLM_A,5); 
 			break;
-		case 21: // 12A6
+		case 21: // 12A6 SCS YAW BODY RATE
 		case 85:
 			tx_data[tx_offset] = measure(12,TLM_A,6); 
 			break;
-		case 22: // 12A7
+		case 22: // 12A7 SCS ROLL BODY RATE
 		case 86:
 			tx_data[tx_offset] = measure(12,TLM_A,7); 
 			break;
-		case 23: // 12A8
+		case 23: // 12A8 PITCH GIMBL POS 1 OR 2
 		case 87:
 			tx_data[tx_offset] = measure(12,TLM_A,8); 
 			break;
 		case 24:
 			switch(frame_count){
-				case 0: // 11A6
+				case 0: // 11A6 LES LOGIC BUS B VOLTS
 					tx_data[tx_offset] = measure(11,TLM_A,6); 
 					break;
-				case 1: // 11A42
+				case 1: // 11A42 ALPHA CT RATE CHAN 3
 					tx_data[tx_offset] = measure(11,TLM_A,42); 
 					break;
-				case 2: // 11A78
+				case 2: // 11A78 FC 2 H2 FLOW
 					tx_data[tx_offset] = measure(11,TLM_A,78); 
 					break;
 				case 3: // 11A114
@@ -2478,10 +2483,10 @@ void PCM::generate_stream_hbr(){
 				case 0: // 11A7
 					tx_data[tx_offset] = measure(11,TLM_A,7); 
 					break;
-				case 1: // 11A43
+				case 1: // 11A43 PROTON INTEG CT RATE
 					tx_data[tx_offset] = measure(11,TLM_A,43); 
 					break;
-				case 2: // 11A79
+				case 2: // 11A79 FC 3 H2 FLOW
 					tx_data[tx_offset] = measure(11,TLM_A,79); 
 					break;
 				case 3: // 11A115
@@ -2494,32 +2499,32 @@ void PCM::generate_stream_hbr(){
 			break;
 		case 26:
 			switch(frame_count){
-				case 0: // 11A8
+				case 0: // 11A8 LES LOGIC BUS A VOLTS
 					tx_data[tx_offset] = measure(11,TLM_A,8); 
 					break;
 				case 1: // 11A44
 					tx_data[tx_offset] = measure(11,TLM_A,44);  
 					break;
-				case 2: // 11A80
+				case 2: // 11A80 FC 1 O2 FLOW
 					tx_data[tx_offset] = measure(11,TLM_A,80); 
 					break;
 				case 3: // 11A116
 					tx_data[tx_offset] = measure(11,TLM_A,116); 
 					break;
-				case 4: // 11A152
+				case 4: // 11A152 FUEL SM/ENG INTERFACE P
 					tx_data[tx_offset] = measure(11,TLM_A,152); 
 					break;
 			}
 			break;
 		case 27:
 			switch(frame_count){
-				case 0: // 11A9
+				case 0: // 11A9 PYRO BUS A VOLTS
 					tx_data[tx_offset] = measure(11,TLM_A,9); 
 					break;
 				case 1: // 11A45
 					tx_data[tx_offset] = measure(11,TLM_A,45); 
 					break;
-				case 2: // 11A81
+				case 2: // 11A81 FC 2 O2 FLOW
 					tx_data[tx_offset] = measure(11,TLM_A,81); 
 					break;
 				case 3: // 11A117
@@ -2574,76 +2579,76 @@ void PCM::generate_stream_hbr(){
 			break;
 		case 40:
 			switch(frame_count){
-				case 0: // 11A10
+				case 0: // 11A10 HE TK PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,10); 
 					break;
-				case 1: // 11A46
+				case 1: // 11A46 SM HE MANF C PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,46); 
 					break;
-				case 2: // 11A82
+				case 2: // 11A82 FC 3 O2 FLOW
 					tx_data[tx_offset] = measure(11,TLM_A,82); 
 					break;
-				case 3: // 11A118
+				case 3: // 11A118 SEC EVAP OUT LIQ TEMP
 					tx_data[tx_offset] = measure(11,TLM_A,118); 
 					break;
-				case 4: // 11A154
+				case 4: // 11A154 SCE NEG SUPPLY VOLTS
 					tx_data[tx_offset] = measure(11,TLM_A,154); 
 					break;
 			}
 			break;
 		case 41:
 			switch(frame_count){
-				case 0: // 11A11
+				case 0: // 11A11 OX TK PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,11); 
 					break;
-				case 1: // 11A47
+				case 1: // 11A47 LM HEATER CURRENT
 					tx_data[tx_offset] = measure(11,TLM_A,47); 
 					break;
 				case 2: // 11A83
 					tx_data[tx_offset] = measure(11,TLM_A,83); 
 					break;
-				case 3: // 11A119
+				case 3: // 11A119 SENSOR EXCITATION 5V
 					tx_data[tx_offset] = measure(11,TLM_A,119); 
 					break;
-				case 4: // 11A155
+				case 4: // 11A155 CM HE TK A TEMP
 					tx_data[tx_offset] = measure(11,TLM_A,155); 
 					break;
 			}
 			break;
 		case 42:
 			switch(frame_count){
-				case 0: // 11A12
+				case 0: // 11A12 SPS FU TK PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,12); 
 					break;
-				case 1: // 11A48
+				case 1: // 11A48 PCM HI LEVEL 85 PCT REF
 					tx_data[tx_offset] = measure(11,TLM_A,48); 
 					break;
-				case 2: // 11A84
+				case 2: // 11A84 FC 2 CUR
 					tx_data[tx_offset] = measure(11,TLM_A,84); 
 					break;
-				case 3: // 11A120
+				case 3: // 11A120 SENSOR EXCITATION 10V
 					tx_data[tx_offset] = measure(11,TLM_A,120); 
 					break;
-				case 4: // 11A156
+				case 4: // 11A156 CM HE TK B TEMP
 					tx_data[tx_offset] = measure(11,TLM_A,156); 
 					break;
 			}
 			break;
 		case 43:
 			switch(frame_count){
-				case 0: // 11A13
+				case 0: // 11A13 GLY ACCUM QTY
 					tx_data[tx_offset] = measure(11,TLM_A,13); 
 					break;
-				case 1: // 11A49
+				case 1: // 11A49 PCM LO LEVEL 15 PCT REF
 					tx_data[tx_offset] = measure(11,TLM_A,49); 
 					break;
-				case 2: // 11A85
+				case 2: // 11A85 FC 3 CUR
 					tx_data[tx_offset] = measure(11,TLM_A,85); 
 					break;
-				case 3: // 11A121
+				case 3: // 11A121 USB RCVR AGC VOLTAGE
 					tx_data[tx_offset] = measure(11,TLM_A,121); 
 					break;
-				case 4: // 11A157
+				case 4: // 11A157 SEC GLY PUMP OUT PRESS
 					tx_data[tx_offset] = measure(11,TLM_A,157); 
 					break;
 			}
