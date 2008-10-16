@@ -599,6 +599,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 	BatteryStatus batteryStatus;
 	SPSStatus spsStatus;
 	FuelCellStatus fcStatus;
+	PyroStatus pyroStatus;
+	SECSStatus secsStatus;
 
 	switch(type){
 		case TLM_A:  // ANALOG
@@ -963,15 +965,19 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetTankPressures( smTankPress );
 							return(scale_data(smTankPress.O2SurgeTankPressurePSI, 50, 1050));
 						case 5:			// PYRO BUS B VOLTS
-							return(scale_data(0,0,40));
+							sat->GetPyroStatus( pyroStatus );
+							return(scale_data(pyroStatus.BusBVoltage, 0, 40 ));
 						case 6:			// LES LOGIC BUS B VOLTS
-							return(scale_data(0,0,40));
+							sat->GetSECSStatus( secsStatus );
+							return(scale_data( secsStatus.BusBVoltage, 0, 40 ));
 						case 7:			// UNKNOWN - HBR ONLY
 							return(0);
 						case 8:			// LES LOGIC BUS A VOLTS
-							return(scale_data(0,0,40));
+							sat->GetSECSStatus( secsStatus );
+							return(scale_data( secsStatus.BusBVoltage, 0, 40 ));
 						case 9:			// PYRO BUS A VOLTS
-							return(scale_data(0,0,40));
+							sat->GetSECSStatus( secsStatus );
+							return(scale_data( secsStatus.BusAVoltage, 0, 40 ));
 
 						case 10:		// HE TK PRESS
 							return(scale_data(0,0,5000));

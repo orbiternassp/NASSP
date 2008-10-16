@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.153  2008/10/16 00:48:45  movieman523
+  *	More telemetry: some of these are dummy values for now.
+  *	
   *	Revision 1.152  2008/10/15 06:00:41  movieman523
   *	Added more telemetry data.
   *	
@@ -2710,6 +2713,18 @@ void Saturn::GetDisplayedAtmosStatus(DisplayedAtmosStatus &atm)
 	atm.DisplayedO2FlowLBH = RightO2FlowMeter.GetDisplayValue();
 	atm.DisplayedSuitComprDeltaPressurePSI = SuitComprDeltaPMeter.GetDisplayValue();
 	atm.DisplayedEcsRadTempPrimOutletMeterTemperatureF = EcsRadTempPrimOutletMeter.GetDisplayValue();
+}
+
+void Saturn::GetSECSStatus( SECSStatus &ss )
+{
+	ss.BusAVoltage = SECSLogicBusA.Voltage();
+	ss.BusBVoltage = SECSLogicBusB.Voltage();
+}
+
+void Saturn::GetPyroStatus( PyroStatus &ps )
+{
+	ps.BusAVoltage = PyroBusA.Voltage();
+	ps.BusBVoltage = PyroBusB.Voltage();
 }
 
 //
