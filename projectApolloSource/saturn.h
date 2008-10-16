@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.283  2008/10/16 00:48:45  movieman523
+  *	More telemetry: some of these are dummy values for now.
+  *	
   *	Revision 1.282  2008/10/15 06:00:41  movieman523
   *	Added more telemetry data.
   *	
@@ -524,6 +527,24 @@ typedef struct {
 	bool ISSWarning;
 	bool TestAlarms;
 } AGCWarningStatus;
+
+///
+/// \brief Pyro status.
+/// \ingroup InternalInterface
+///
+typedef struct {
+	double BusAVoltage;
+	double BusBVoltage;
+} PyroStatus;
+
+///
+/// \brief SECS status.
+/// \ingroup InternalInterface
+///
+typedef struct {
+	double BusAVoltage;
+	double BusBVoltage;
+} SECSStatus;
 
 ///
 /// \brief SPS status.
@@ -1189,6 +1210,8 @@ public:
 	void GetACBusStatus(ACBusStatus &as, int busno);
 	void GetBatteryStatus( BatteryStatus &bs );
 	void GetSPSStatus( SPSStatus &ss );
+	void GetSECSStatus( SECSStatus &ss );
+	void GetPyroStatus( PyroStatus &ps );
 	void DisconnectInverter(bool disc, int busno);
 	void GetAGCWarningStatus(AGCWarningStatus &aws);
 	double GetAccelG() { return aZAcc / G; };
