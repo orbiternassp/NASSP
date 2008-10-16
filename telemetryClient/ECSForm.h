@@ -648,7 +648,7 @@ namespace GroundStation
 			this->s11A3->Name = S"s11A3";
 			this->s11A3->Size = System::Drawing::Size(64, 20);
 			this->s11A3->TabIndex = 121;
-			this->s11A3->Text = S"XXXX PSIG";
+			this->s11A3->Text = S"XX.X PSIG";
 			// 
 			// s11A13
 			// 

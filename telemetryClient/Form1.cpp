@@ -152,16 +152,66 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 			}
 			break;		
 
+		case 4: // 22A1 ASTRO 1 EKG AXIS 2
+		case 36:
+		case 68:
+		case 100:
+			if(crw_form != NULL){
+				value = unscale_data(data, 0.1, 0.5);
+				sprintf(msg,"%05.4f MV",value);
+				crw_form->s22A1->Enabled = TRUE;
+				crw_form->s22A1->Text = msg;						
+			}
+			break;
+
+		case 5: // 22A2 ASTRO 1 EKG AXIS 3
+		case 37:
+		case 69:
+		case 101:
+			if(crw_form != NULL){
+				value = unscale_data(data, 0.1, 0.5);
+				sprintf(msg,"%05.4f MV",value);
+				crw_form->s22A2->Enabled = TRUE;
+				crw_form->s22A2->Text = msg;						
+			}
+			break;
+
+		case 6: // 22A3 ASTRO 1 EKG AXIS 1
+		case 38:
+		case 70:
+		case 102:
+			if(crw_form != NULL){
+				value = unscale_data(data, 0.1, 0.5);
+				sprintf(msg,"%05.4f MV",value);
+				crw_form->s22A3->Enabled = TRUE;
+				crw_form->s22A3->Text = msg;						
+			}
+			break;
+
+		case 7: // 22A4 PITCH DIFF CLUTCH CURRENT
+		case 39:
+		case 71:
+		case 103:
+			if ( scs_form != NULL )
+			{
+				value = unscale_data(data, 0.1, 0.5);
+				sprintf(msg,"%04.3f A",value);
+				scs_form->s22A4->Enabled = TRUE;
+				scs_form->s22A4->Text = msg;	
+			}
+			break;
+
 		case 8:
 			switch(framead){
 				case 0: // 11A1 SUIT MANF ABS PRESS
 				if(ecs_form != NULL){
 					value = unscale_data(data, 0, 17);
-					sprintf(msg,"%+03.1f PSIA",value);
+					sprintf(msg,"%03.1f PSIA",value);
 					ecs_form->s11A1->Enabled = TRUE;
 					ecs_form->s11A1->Text = msg;						
 				}
 				break;
+
 				case 1: // 11A37 SUIT-CABIN DELTA PRESS
 				if(ecs_form != NULL){
 					value = unscale_data(data, -5, 5);
@@ -173,7 +223,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 				case 2: // 11A73 BAT CHARGER AMPS
 				if(eps_form != NULL){
 					value = unscale_data(data, 0, 5);
-					sprintf(msg,"%+05.2f A",value);
+					sprintf(msg,"%05.2f A",value);
 					eps_form->s11A73->Enabled = TRUE;
 					eps_form->s11A73->Text = msg;						
 				}
@@ -181,7 +231,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 				case 3: // 11A109 BAT B CUR
 				if(eps_form != NULL){
 					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%+05.2f A",value);
+					sprintf(msg,"%05.2f A",value);
 					eps_form->s11A109->Enabled = TRUE;
 					eps_form->s11A109->Text = msg;						
 				}
@@ -203,7 +253,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 				case 1: // 11A38 ALPHA CT RATE CHAN 1
 				if(tcm_form != NULL){
 					value = unscale_data(data,0.1,10000);
-					sprintf(msg,"%+06.0f C/S",value);
+					sprintf(msg,"%06.0f C/S",value);
 					tcm_form->s11A38->Enabled = TRUE;
 					tcm_form->s11A38->Text = msg;						
 				} 
@@ -212,7 +262,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 				case 2: // 11A74 BAT A CUR
 				if(eps_form != NULL){
 					value = unscale_data(data,0,100);
-					sprintf(msg,"%+05.2f A",value);
+					sprintf(msg,"%05.2f A",value);
 					eps_form->s11A74->Enabled = TRUE;
 					eps_form->s11A74->Text = msg;						
 				} 
@@ -221,7 +271,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 				case 3:
 				if(eps_form != NULL){
 					value = unscale_data(data,0,100);
-					sprintf(msg,"%+05.2f A",value);
+					sprintf(msg,"%05.2f A",value);
 					eps_form->s11A110->Enabled = TRUE;
 					eps_form->s11A110->Text = msg;						
 				}
@@ -230,21 +280,96 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 			break;
 
 		case 10:
-			switch(framead){
+			switch(framead) 
+			{
+				case 0: // 11A3 GLY PUMP OUT PRESS
+					if(ecs_form != NULL){
+						value = unscale_data(data,0,60);
+						sprintf(msg,"%04.1f PSIG",value);
+						ecs_form->s11A3->Enabled = TRUE;
+						ecs_form->s11A3->Text = msg;						
+					} 
+					break;
+				case 1: // 11A39 SM HE MANF A PRESS
+					if(sps_form != NULL){
+						value = unscale_data(data,0,400);
+						sprintf(msg,"%04.0f PSIA",value);
+						sps_form->s11A39->Enabled = TRUE;
+						sps_form->s11A39->Text = msg;						
+					} 
+					break;
 				case 2: // 11A75 BAT RELAY BUS VOLTS
 					if(eps_form != NULL){
 						value = unscale_data(data,0,45);
-						sprintf(msg,"%+02.2f V",value);
+						sprintf(msg,"%02.2f V",value);
 						eps_form->s11A75->Enabled = TRUE;
 						eps_form->s11A75->Text = msg;						
+					}
+					break;
+				case 3: // 11A111 SM FU MANF C PRESS
+					if(sps_form != NULL){
+						value = unscale_data(data,0,400);
+						sprintf(msg,"%04.0f PSIA",value);
+						sps_form->s11A111->Enabled = TRUE;
+						sps_form->s11A111->Text = msg;						
 					} 
 					break;
 				case 4: // 11A147 AC BUS 1 PH A VOLTS
 					if(eps_form != NULL){
 						value = unscale_data(data,0,150);
-						sprintf(msg,"%+03.2f V",value);
+						sprintf(msg,"%03.2f V",value);
 						eps_form->s11A147->Enabled = TRUE;
 						eps_form->s11A147->Text = msg;						
+					} 
+					break;
+			}
+			break;
+
+		case 11:
+			switch(framead)
+			{
+				case 0: // 11A4 ECS SURGE TANK PRESS
+					if(ecs_form != NULL){
+						value = unscale_data(data, 50, 1050);
+						sprintf(msg,"%04.0f PSIG",value);
+						ecs_form->s11A4->Enabled = TRUE;
+						ecs_form->s11A4->Text = msg;						
+					} 
+					break;
+				case 1: // 11A40 SM HE MANF B PRESS
+					if(sps_form != NULL)
+					{
+						value = unscale_data(data,0,400);
+						sprintf(msg,"%04.0f PSIA",value);
+						sps_form->s11A40->Enabled = TRUE;
+						sps_form->s11A40->Text = msg;						
+					} 
+					break;
+				case 2: // 11A76 FC 1 CUR
+					if(eps_form != NULL)
+					{
+						value = unscale_data(data,0,100);
+						sprintf(msg,"%03.2f A",value);
+						eps_form->s11A76->Enabled = TRUE;
+						eps_form->s11A76->Text = msg;						
+					} 
+					break;
+				case 3: // 11A112 SM FU MANF D PRESS
+					if(sps_form != NULL)
+					{
+						value = unscale_data(data,0,400);
+						sprintf(msg,"%04.0f PSIA",value);
+						sps_form->s11A112->Enabled = TRUE;
+						sps_form->s11A112->Text = msg;						
+					} 
+					break;
+				case 4: // 11A148 SCE POS SUPPLY VOLTS
+					if(tcm_form != NULL)
+					{
+						value = unscale_data(data, 0, 30);
+						sprintf(msg,"%04.2f V",value);
+						tcm_form->s11A148->Enabled = TRUE;
+						tcm_form->s11A148->Text = msg;						
 					} 
 					break;
 			}

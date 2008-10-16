@@ -65,30 +65,30 @@ namespace GroundStation
 	private: System::Windows::Forms::Label *  label22;
 	private: System::Windows::Forms::Label *  label23;
 	private: System::Windows::Forms::Label *  label24;
-	private: System::Windows::Forms::TextBox *  s11A10;
-	private: System::Windows::Forms::TextBox *  s11A11;
-	private: System::Windows::Forms::TextBox *  s11A12;
-	private: System::Windows::Forms::TextBox *  s10A10;
-	private: System::Windows::Forms::TextBox *  s10A11;
-	private: System::Windows::Forms::TextBox *  s12A14;
-	private: System::Windows::Forms::TextBox *  s11A152;
-	private: System::Windows::Forms::TextBox *  s11A161;
-	private: System::Windows::Forms::TextBox *  s10A16;
-	private: System::Windows::Forms::TextBox *  s10A49;
-	private: System::Windows::Forms::TextBox *  s10A47;
-	private: System::Windows::Forms::TextBox *  s10A59;
-	private: System::Windows::Forms::TextBox *  s10A120;
-	private: System::Windows::Forms::TextBox *  s10A44;
-	private: System::Windows::Forms::TextBox *  s10A37;
-	private: System::Windows::Forms::TextBox *  s10A117;
-	private: System::Windows::Forms::TextBox *  s11A31;
-	private: System::Windows::Forms::TextBox *  s11A32;
-	private: System::Windows::Forms::TextBox *  s11A33;
-	private: System::Windows::Forms::TextBox *  s11A34;
-	private: System::Windows::Forms::TextBox *  s10A28;
-	private: System::Windows::Forms::TextBox *  s10A26;
-	private: System::Windows::Forms::TextBox *  s10A31;
-	private: System::Windows::Forms::TextBox *  s10A29;
+	public: System::Windows::Forms::TextBox *  s11A10;
+	public: System::Windows::Forms::TextBox *  s11A11;
+	public: System::Windows::Forms::TextBox *  s11A12;
+	public: System::Windows::Forms::TextBox *  s10A10;
+	public: System::Windows::Forms::TextBox *  s10A11;
+	public: System::Windows::Forms::TextBox *  s12A14;
+	public: System::Windows::Forms::TextBox *  s11A152;
+	public: System::Windows::Forms::TextBox *  s11A161;
+	public: System::Windows::Forms::TextBox *  s10A16;
+	public: System::Windows::Forms::TextBox *  s10A49;
+	public: System::Windows::Forms::TextBox *  s10A47;
+	public: System::Windows::Forms::TextBox *  s10A59;
+	public: System::Windows::Forms::TextBox *  s10A120;
+	public: System::Windows::Forms::TextBox *  s10A44;
+	public: System::Windows::Forms::TextBox *  s10A37;
+	public: System::Windows::Forms::TextBox *  s10A117;
+	public: System::Windows::Forms::TextBox *  s11A31;
+	public: System::Windows::Forms::TextBox *  s11A32;
+	public: System::Windows::Forms::TextBox *  s11A33;
+	public: System::Windows::Forms::TextBox *  s11A34;
+	public: System::Windows::Forms::TextBox *  s10A28;
+	public: System::Windows::Forms::TextBox *  s10A26;
+	public: System::Windows::Forms::TextBox *  s10A31;
+	public: System::Windows::Forms::TextBox *  s10A29;
 	private: System::Windows::Forms::GroupBox *  groupBox1;
 	private: System::Windows::Forms::GroupBox *  groupBox2;
 	private: System::Windows::Forms::Label *  label25;
@@ -125,14 +125,14 @@ namespace GroundStation
 	private: System::Windows::Forms::Label *  label56;
 	private: System::Windows::Forms::Label *  label57;
 	private: System::Windows::Forms::Label *  label58;
-	private: System::Windows::Forms::TextBox *  s10A18;
-	private: System::Windows::Forms::TextBox *  s10A21;
-	private: System::Windows::Forms::TextBox *  s11A22;
-	private: System::Windows::Forms::TextBox *  s11A21;
-	private: System::Windows::Forms::TextBox *  s10A27;
-	private: System::Windows::Forms::TextBox *  s10A24;
-	private: System::Windows::Forms::TextBox *  s10A33;
-	private: System::Windows::Forms::TextBox *  s10A30;
+	public: System::Windows::Forms::TextBox *  s10A18;
+	public: System::Windows::Forms::TextBox *  s10A21;
+	public: System::Windows::Forms::TextBox *  s11A22;
+	public: System::Windows::Forms::TextBox *  s11A21;
+	public: System::Windows::Forms::TextBox *  s10A27;
+	public: System::Windows::Forms::TextBox *  s10A24;
+	public: System::Windows::Forms::TextBox *  s10A33;
+	public: System::Windows::Forms::TextBox *  s10A30;
 
 
 
@@ -154,32 +154,32 @@ namespace GroundStation
 
 
 
-	private: System::Windows::Forms::TextBox *  s11A165;
-	private: System::Windows::Forms::TextBox *  s11A164;
-	private: System::Windows::Forms::TextBox *  s11A163;
-	private: System::Windows::Forms::TextBox *  s11A156;
-	private: System::Windows::Forms::TextBox *  s11A155;
-private: System::Windows::Forms::TextBox *  s11A166;
-private: System::Windows::Forms::TextBox *  s10A20;
-private: System::Windows::Forms::TextBox *  s10A19;
-private: System::Windows::Forms::TextBox *  s10A17;
-private: System::Windows::Forms::TextBox *  s10A136;
-private: System::Windows::Forms::TextBox *  s10A105;
-private: System::Windows::Forms::TextBox *  s10A102;
-private: System::Windows::Forms::TextBox *  s10A99;
-private: System::Windows::Forms::TextBox *  s10A93;
-private: System::Windows::Forms::TextBox *  s11A130;
-private: System::Windows::Forms::TextBox *  s11A112;
-private: System::Windows::Forms::TextBox *  s11A111;
-private: System::Windows::Forms::TextBox *  s11A28;
-private: System::Windows::Forms::TextBox *  s11A27;
-private: System::Windows::Forms::TextBox *  s11A46;
+	public: System::Windows::Forms::TextBox *  s11A165;
+	public: System::Windows::Forms::TextBox *  s11A164;
+	public: System::Windows::Forms::TextBox *  s11A163;
+	public: System::Windows::Forms::TextBox *  s11A156;
+	public: System::Windows::Forms::TextBox *  s11A155;
+public: System::Windows::Forms::TextBox *  s11A166;
+public: System::Windows::Forms::TextBox *  s10A20;
+public: System::Windows::Forms::TextBox *  s10A19;
+public: System::Windows::Forms::TextBox *  s10A17;
+public: System::Windows::Forms::TextBox *  s10A136;
+public: System::Windows::Forms::TextBox *  s10A105;
+public: System::Windows::Forms::TextBox *  s10A102;
+public: System::Windows::Forms::TextBox *  s10A99;
+public: System::Windows::Forms::TextBox *  s10A93;
+public: System::Windows::Forms::TextBox *  s11A130;
+public: System::Windows::Forms::TextBox *  s11A112;
+public: System::Windows::Forms::TextBox *  s11A111;
+public: System::Windows::Forms::TextBox *  s11A28;
+public: System::Windows::Forms::TextBox *  s11A27;
+public: System::Windows::Forms::TextBox *  s11A46;
 public: System::Windows::Forms::TextBox *  s11A94;
-private: System::Windows::Forms::TextBox *  s11A24;
-private: System::Windows::Forms::TextBox *  s11A40;
-private: System::Windows::Forms::TextBox *  s11A92;
-private: System::Windows::Forms::TextBox *  s11A23;
-private: System::Windows::Forms::TextBox *  s11A39;
+public: System::Windows::Forms::TextBox *  s11A24;
+public: System::Windows::Forms::TextBox *  s11A40;
+public: System::Windows::Forms::TextBox *  s11A92;
+public: System::Windows::Forms::TextBox *  s11A23;
+public: System::Windows::Forms::TextBox *  s11A39;
 
 
 
@@ -1133,7 +1133,7 @@ private: System::Windows::Forms::TextBox *  s11A39;
 			this->s11A39->Name = S"s11A39";
 			this->s11A39->Size = System::Drawing::Size(64, 20);
 			this->s11A39->TabIndex = 47;
-			this->s11A39->Text = S"XXXX PSIA";
+			this->s11A39->Text = S"XXX PSIA";
 			// 
 			// s10A33
 			// 
