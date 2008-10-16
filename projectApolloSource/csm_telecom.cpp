@@ -592,11 +592,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 	PrimECSCoolingStatus pcs;
 	SecECSCoolingStatus scs;
 	TankPressures smTankPress;
+	TankQuantities tankQuantities;
 	ACBusStatus acStat;
 	MainBusStatus mainBusStatus;
 	BatteryBusStatus batBusStat;
 	BatteryStatus batteryStatus;
 	SPSStatus spsStatus;
+	FuelCellStatus fcStatus;
 
 	switch(type){
 		case TLM_A:  // ANALOG
@@ -699,7 +701,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 41:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 42:		// O2 TK 2 QTY
-							return(scale_data(0,0,100));
+							sat->GetTankQuantities( tankQuantities );
+							return(scale_data(tankQuantities.O2Tank2Quantity * 100.0, 0, 100));
 						case 43:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 44:		// OX LINE 1 TEMP
@@ -718,7 +721,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 50:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 51:		// FC 1 COND EXH TEMP
-							return(scale_data(0,145,250));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data( fcStatus.CondenserTempF, 145, 250));
 						case 52:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 53:		// UNKNOWN - HBR ONLY
@@ -756,26 +760,30 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 68:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 69:		// FC 3 COND EXH TEMP
-							return(scale_data(0,145,250));
+							sat->GetFuelCellStatus( 3, fcStatus );
+							return(scale_data(fcStatus.CondenserTempF, 145, 250));
 
 						case 70:		// SIDE HS BOND LOC 2 TEMP
 							return(scale_data(0,-260,600));
 						case 71:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 72:		// FC 1 SKIN TEMP
-							return(scale_data(0,80,550));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data(fcStatus.TempF, 80, 550));
 						case 73:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 74:		// SIDE HS BOND LOC 3 TEMP
 							return(scale_data(0,-260,600));
 						case 75:		// FC 2 SKIN TEMP
-							return(scale_data(0,80,550));
+							sat->GetFuelCellStatus( 2, fcStatus );
+							return(scale_data(fcStatus.TempF, 80, 550));
 						case 76:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 77:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 78:		// FC 3 SKIN TEMP
-							return(scale_data(0,80,550));
+							sat->GetFuelCellStatus( 3, fcStatus );
+							return(scale_data(fcStatus.TempF, 80, 550));
 						case 79:		// SIDE HS BOND LOC 4 TEMP
 							return(scale_data(0,-260,600));
 
@@ -877,20 +885,25 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 125:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 126:		// FC 1 RAD OUT TEMP
-							return(scale_data(0,-50,300));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data(fcStatus.RadiatorTempOutF, -50, 300));
 						case 127:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 128:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 129:		// FC 2 RAD OUT TEMP
-							return(scale_data(0,-50,300));
+							sat->GetFuelCellStatus( 2, fcStatus );
+							return(scale_data(fcStatus.RadiatorTempOutF, -50, 300));
 
 						case 130:		// FC 1 RAD IN TEMP
-							return(scale_data(0,-50,300));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data(fcStatus.RadiatorTempInF, -50, 300));
 						case 131:		// FC 1 RAD IN TEMP
-							return(scale_data(0,-50,300));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data(fcStatus.RadiatorTempInF, -50, 300));
 						case 132:		// FC 3 RAD OUT TEMP
-							return(scale_data(0,-50,300));
+							sat->GetFuelCellStatus( 3, fcStatus );
+							return(scale_data(fcStatus.RadiatorTempOutF, -50, 300));
 						case 133:		// GLY EVAP OUT STEAM TEMP
 							return(scale_data(0,20,95));
 						case 134:		// UNKNOWN - HBR ONLY
@@ -915,13 +928,15 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 143:		// OX LINE ENTRY SUMP TK TEMP
 							return(scale_data(0,-100,200));
 						case 144:		// H2 TK 2 QTY
-							return(scale_data(0,0,100));
+							sat->GetTankQuantities( tankQuantities );
+							return(scale_data(tankQuantities.H2Tank2Quantity * 100.0, 0, 100));
 						case 145:		// FU LINE ENTRY SUMP TK TEMP
 							return(scale_data(0,-100,200));
 						case 146:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 147:		// O2 TK 1 QTY
-							return(scale_data(0,0,100));
+							sat->GetTankQuantities( tankQuantities );
+							return(scale_data(tankQuantities.O2Tank1Quantity * 100.0, 0, 100));
 						case 148:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 149:		// DOSIMETER RATE
@@ -1045,7 +1060,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 50:		// USB RCVR PHASE ERR
 							return(scale_data(0,-90000,90000));
 						case 51:		// ANGLE OF ATTACK
-							return(scale_data(0,0,5));
+							return(scale_data(DEG * fabs(sat->GetAOA()), 0, 5));
 						case 52:		// SHAFT CDU DAC OUT
 							return(scale_data(0,-10,10));
 						case 53:		// TRUNNION CDU DAC OUT
@@ -1081,46 +1096,62 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 66:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 67:		// FC 1 O2 PRESS
-							return(scale_data(0,0,75));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
 						case 68:		// FC 2 O2 PRESS
-							return(scale_data(0,0,75));
+							sat->GetFuelCellStatus( 2, fcStatus );
+							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
 						case 69:		// FC 3 O2 PRESS
-							return(scale_data(0,0,75));
+							sat->GetFuelCellStatus( 3, fcStatus );
+							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
 
 						case 70:		// FC 1 H2 PRESS
-							return(scale_data(0,0,75));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
 						case 71:		// FC 2 H2 PRESS
-							return(scale_data(0,0,75));
+							sat->GetFuelCellStatus( 2, fcStatus );
+							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
 						case 72:		// FC 3 H2 PRESS
-							return(scale_data(0,0,75));
+							sat->GetFuelCellStatus( 3, fcStatus );
+							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
 						case 73:		// BAT CHARGER AMPS
-							return(scale_data(0,0,5));
+							sat->GetBatteryStatus( batteryStatus );
+							return(scale_data(batteryStatus.BatteryChargerCurrent, 0, 5));
 						case 74:		// BAT A CUR
 							sat->GetBatteryStatus( batteryStatus );
 							return(scale_data( batteryStatus.BatteryACurrent, 0, 100));
 						case 75:		// BAT RELAY BUS VOLTS
 							return(scale_data(0,0,45));
 						case 76:		// FC 1 CUR
-							return(scale_data(0,0,100));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data(fcStatus.Current, 0, 100));
 						case 77:		// FC 1 H2 FLOW
-							return(scale_data(0,0,0.2));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
 						case 78:		// FC 2 H2 FLOW
-							return(scale_data(0,0,0.2));
+							sat->GetFuelCellStatus( 2, fcStatus );
+							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
 						case 79:		// FC 3 H2 FLOW
-							return(scale_data(0,0,0.2));
+							sat->GetFuelCellStatus( 3, fcStatus );
+							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
 
 						case 80:		// FC 1 O2 FLOW
-							return(scale_data(0,0,1.6));
+							sat->GetFuelCellStatus( 1, fcStatus );
+							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
 						case 81:		// FC 2 O2 FLOW
-							return(scale_data(0,0,1.6));
+							sat->GetFuelCellStatus( 2, fcStatus );
+							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
 						case 82:		// FC 3 O2 FLOW
-							return(scale_data(0,0,1.6));
+							sat->GetFuelCellStatus( 3, fcStatus );
+							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
 						case 83:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 84:		// FC 2 CUR
-							return(scale_data(0,0,100));
+							sat->GetFuelCellStatus( 2, fcStatus );
+							return(scale_data(fcStatus.Current, 0, 100));
 						case 85:		// FC 3 CUR
-							return(scale_data(0,0,100));
+							sat->GetFuelCellStatus( 3, fcStatus );
+							return(scale_data(fcStatus.Current, 0, 100));
 						case 86:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 87:		// PRI GLY FLOW RATE

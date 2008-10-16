@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.152  2008/10/15 06:00:41  movieman523
+  *	Added more telemetry data.
+  *	
   *	Revision 1.151  2008/07/13 17:47:12  tschachim
   *	Rearranged realism levels, merged Standard and Quickstart Mode.
   *	
@@ -2872,11 +2875,15 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	// Set defaults.
 	//
 
+	fc.H2PressurePSI = 0.0;
 	fc.H2FlowLBH  = 0.0;
+	fc.O2PressurePSI = 0.0;
 	fc.O2FlowLBH = 0.0;
 	fc.TempF = 0.0;
 	fc.CondenserTempF = 0.0;
 	fc.CoolingTempF = 0.0;
+	fc.RadiatorTempInF = 0.0;
+	fc.RadiatorTempOutF = 0.0;
 	fc.Voltage = 0.0;
 	fc.Current = 0.0;
 	fc.PowerOutput = 0.0;
@@ -2898,7 +2905,15 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	char buffer[1000];
 
 	fc.H2FlowLBH = f->H2_flowPerSecond * LBH;
+	if ( f->H2_SRC )
+	{
+		fc.H2PressurePSI = f->H2_SRC->GetPress() * PSI;
+	}
 	fc.O2FlowLBH = f->O2_flowPerSecond * LBH;
+	if ( f->O2_SRC )
+	{
+		fc.O2PressurePSI = f->O2_SRC->GetPress() * PSI;
+	}
 	fc.TempF = KelvinToFahrenheit(f->Temp);
 	fc.CondenserTempF = KelvinToFahrenheit(f->condenserTemp);
 
@@ -2913,6 +2928,10 @@ void Saturn::GetFuelCellStatus(int index, FuelCellStatus &fc)
 	fc.Voltage = FuelCells[index - 1]->Voltage();
 	fc.Current = FuelCells[index - 1]->Current();
 	fc.PowerOutput = FuelCells[index - 1]->PowerLoad();
+
+	// For now.
+	fc.RadiatorTempInF = fc.CoolingTempF;
+	fc.RadiatorTempOutF = fc.CoolingTempF;
 }
 
 
@@ -3180,6 +3199,7 @@ void Saturn::GetBatteryStatus( BatteryStatus &bs )
 	bs.BatteryBCurrent = 0.0;
 	bs.BatteryCVoltage = 0.0;
 	bs.BatteryCCurrent = 0.0;
+	bs.BatteryChargerCurrent = BatteryCharger.Current();
 
 	if ( EntryBatteryA ) 
 	{
