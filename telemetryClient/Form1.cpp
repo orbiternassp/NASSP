@@ -590,6 +590,31 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 			}
 			break;
 
+		case 27:
+			switch(framead)
+			{
+				case 0: // 11A9 PYRO BUS A VOLTS
+					if (els_form != NULL)
+					{
+						value = unscale_data(data, 0, 40);
+						sprintf(msg,"%04.2f V",value);
+						els_form->s11A9->Enabled = TRUE;
+						els_form->s11A9->Text = msg;						
+					} 
+					break;
+
+				case 2: // 11A81 FC 2 O2 FLOW
+					if (eps_form != NULL)
+					{
+						value = unscale_data(data, 0, 1.6);
+						sprintf(msg,"%04.3f PPH",value);
+						eps_form->s11A81->Enabled = TRUE;
+						eps_form->s11A81->Text = msg;						
+					} 
+					break;
+			}
+			break;
+
 		case 31: // CMC DATA WORD
 			cmc_w0 = data&0177;
 			cmc_w0 <<= 8;
@@ -606,6 +631,215 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 			break;
 		case 35: // CMC DATA WORD
 			parse_cmc();
+			break;
+
+		case 40:
+			switch(framead)
+			{
+				case 0: // 11A10 SPS HE TK PRESS
+					if (sps_form != NULL)
+					{
+						value = unscale_data(data, 0, 5000);
+						sprintf(msg,"%04.0f PSIA",value);
+						sps_form->s11A10->Enabled = TRUE;
+						sps_form->s11A10->Text = msg;								
+					} 
+					break;
+
+				case 1: // 11A46 SM HE MANF C PRESS
+					if(sps_form != NULL)
+					{
+						value = unscale_data(data,0,400);
+						sprintf(msg,"%04.0f PSIA",value);
+						sps_form->s11A46->Enabled = TRUE;
+						sps_form->s11A46->Text = msg;						
+					} 
+					break;
+
+				case 2: // 11A82 FC 3 O2 FLOW
+					if (eps_form != NULL)
+					{
+						value = unscale_data(data, 0, 1.6);
+						sprintf(msg,"%04.3f PPH",value);
+						eps_form->s11A82->Enabled = TRUE;
+						eps_form->s11A82->Text = msg;						
+					} 
+					break;
+
+				case 3: // 11A118 SEC EVAP OUT LIQ TEMP
+					if ( ecs_form != NULL )
+					{
+						value = unscale_data(data, 25, 75);
+						sprintf(msg,"%05.2f °F",value);
+						ecs_form->s11A118->Enabled = TRUE;
+						ecs_form->s11A118->Text = msg;						
+					} 
+					break;
+
+				case 4: // 11A154 SCE NEG SUPPLY VOLTS
+					if ( tcm_form != NULL )
+					{
+						value = unscale_data(data, -30, 0);
+						sprintf(msg,"%04.2f V",value);
+						tcm_form->s11A154->Enabled = TRUE;
+						tcm_form->s11A154->Text = msg;						
+					} 
+					break;
+			}
+			break;
+
+		case 41:
+			switch(framead)
+			{
+				case 0: // 11A11 SPS OX TK PRESS
+					if (sps_form != NULL)
+					{
+						value = unscale_data(data, 0, 250);
+						sprintf(msg,"%04.0f PSIA",value);
+						sps_form->s11A11->Enabled = TRUE;
+						sps_form->s11A11->Text = msg;								
+					}
+					break;
+
+				case 1: // 11A47 LM HEATER CURRENT
+					if (eps_form != NULL)
+					{
+						value = unscale_data(data, 0, 10);
+						sprintf(msg,"%05.2f A",value);
+						eps_form->s11A47->Enabled = TRUE;
+						eps_form->s11A47->Text = msg;						
+					}
+
+				case 3: // 11A119 SENSOR EXCITATION 5V
+					if ( tcm_form != NULL )
+					{
+						value = unscale_data(data, 0, 9);
+						sprintf(msg,"%04.2f V",value);
+						tcm_form->s11A119->Enabled = TRUE;
+						tcm_form->s11A119->Text = msg;						
+					}
+					break;
+
+				case 4: // 11A155 CM HE TK A TEMP
+					if (sps_form != NULL)
+					{
+						value = unscale_data(data, 0, 300);
+						sprintf(msg,"%05.2f °F",value);
+						sps_form->s11A155->Enabled = TRUE;
+						sps_form->s11A155->Text = msg;								
+					}
+					break;
+			}
+			break;
+
+		case 42:
+			switch(framead)
+			{
+				case 0: // 11A12 SPS FU TK PRESS
+					if (sps_form != NULL)
+					{
+						value = unscale_data(data, 0, 250);
+						sprintf(msg,"%04.0f PSIA",value);
+						sps_form->s11A12->Enabled = TRUE;
+						sps_form->s11A12->Text = msg;								
+					}
+					break;
+
+				case 1: // 11A48 PCM HI LEVEL 85 PCT REF
+					if ( tcm_form != NULL )
+					{
+						value = unscale_data(data, 0, 5);
+						sprintf(msg,"%04.2f V",value);
+						tcm_form->s11A48->Enabled = TRUE;
+						tcm_form->s11A48->Text = msg;						
+					}
+					break;
+
+				case 2: // 11A84 FC 2 CUR
+					if ( eps_form != NULL )
+					{
+						value = unscale_data(data,0,100);
+						sprintf(msg,"%03.2f A",value);
+						eps_form->s11A84->Enabled = TRUE;
+						eps_form->s11A84->Text = msg;						
+					}
+					break;
+
+				case 3: // 11A120 SENSOR EXCITATION 10V
+					if ( tcm_form != NULL )
+					{
+						value = unscale_data(data, 0, 15);
+						sprintf(msg,"%04.2f V",value);
+						tcm_form->s11A120->Enabled = TRUE;
+						tcm_form->s11A120->Text = msg;						
+					}
+					break;
+
+				case 4: // 11A156 CM HE TK B TEMP
+					if (sps_form != NULL)
+					{
+						value = unscale_data(data, 0, 300);
+						sprintf(msg,"%05.2f °F",value);
+						sps_form->s11A156->Enabled = TRUE;
+						sps_form->s11A156->Text = msg;								
+					}
+					break;
+			}
+			break;
+
+		case 43:
+			switch(framead)
+			{
+				case 0: // 11A13 GLY ACCUM QTY
+					if ( ecs_form != NULL )
+					{
+						value = unscale_data(data, 0, 100);
+						sprintf(msg,"%05.2f %",value);
+						ecs_form->s11A13->Enabled = TRUE;
+						ecs_form->s11A13->Text = msg;						
+					}
+					break;
+
+				case 1: // 11A49 PCM LO LEVEL 15 PCT REF
+					if ( tcm_form != NULL )
+					{
+						value = unscale_data(data, 0, 1);
+						sprintf(msg,"%04.2f V",value);
+						tcm_form->s11A49->Enabled = TRUE;
+						tcm_form->s11A49->Text = msg;						
+					}
+					break;
+
+				case 2: // 11A85 FC 3 CUR
+					if ( eps_form != NULL )
+					{
+						value = unscale_data(data,0,100);
+						sprintf(msg,"%03.2f A",value);
+						eps_form->s11A85->Enabled = TRUE;
+						eps_form->s11A85->Text = msg;						
+					}
+					break;
+
+				case 3: // 11A121 USB RCVR AGC VOLTAGE
+					if ( tcm_form != NULL )
+					{
+						value = unscale_data(data, -130, -50);
+						sprintf(msg,"%+04.1f DBM",value);
+						tcm_form->s11A121->Enabled = TRUE;
+						tcm_form->s11A121->Text = msg;						
+					}
+					break;
+
+				case 4: // 11A157 SEC GLY PUMP OUT PRESS
+					if ( ecs_form != NULL )
+					{
+						value = unscale_data(data, 0, 60);
+						sprintf(msg,"%04.0f PSIG",value);
+						ecs_form->s11A157->Enabled = TRUE;
+						ecs_form->s11A157->Text = msg;						
+					}
+					break;
+			}
 			break;
 
 		case 72:
