@@ -112,7 +112,7 @@ double Form1::unscale_data(unsigned char data,double low,double high){
 	if(data == 0){    return low;  }
 	if(data == 0xFF){ return high; }
 	step = ((high - low)/256);
-	return (data*step);
+	return (data*step) + low;
 }
 
 // HBR datastream parsing
@@ -154,14 +154,99 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 
 		case 8:
 			switch(framead){
-				case 3:
+				case 0: // 11A1 SUIT MANF ABS PRESS
+				if(ecs_form != NULL){
+					value = unscale_data(data, 0, 17);
+					sprintf(msg,"%+03.1f PSIA",value);
+					ecs_form->s11A1->Enabled = TRUE;
+					ecs_form->s11A1->Text = msg;						
+				}
+				break;
+				case 1: // 11A37 SUIT-CABIN DELTA PRESS
+				if(ecs_form != NULL){
+					value = unscale_data(data, -5, 5);
+					sprintf(msg,"%+03.2f IN",value);
+					ecs_form->s11A37->Enabled = TRUE;
+					ecs_form->s11A37->Text = msg;						
+				}
+				break;
+				case 2: // 11A73 BAT CHARGER AMPS
 				if(eps_form != NULL){
-					value = unscale_data(data,0,100);
+					value = unscale_data(data, 0, 5);
+					sprintf(msg,"%+05.2f A",value);
+					eps_form->s11A73->Enabled = TRUE;
+					eps_form->s11A73->Text = msg;						
+				}
+				break;
+				case 3: // 11A109 BAT B CUR
+				if(eps_form != NULL){
+					value = unscale_data(data, 0, 100);
 					sprintf(msg,"%+05.2f A",value);
 					eps_form->s11A109->Enabled = TRUE;
 					eps_form->s11A109->Text = msg;						
 				}
 				break;
+			}
+			break;
+
+		case 9:
+			switch(framead){
+				case 0: // 11A2 SUIT COMP DELTA P
+				if(ecs_form != NULL){
+					value = unscale_data(data, 0, 1 );
+					sprintf(msg,"%+03.2f PSID",value);
+					ecs_form->s11A2->Enabled = TRUE;
+					ecs_form->s11A2->Text = msg;						
+				} 
+				break;
+
+				case 1: // 11A38 ALPHA CT RATE CHAN 1
+				if(tcm_form != NULL){
+					value = unscale_data(data,0.1,10000);
+					sprintf(msg,"%+06.0f C/S",value);
+					tcm_form->s11A38->Enabled = TRUE;
+					tcm_form->s11A38->Text = msg;						
+				} 
+				break;
+
+				case 2: // 11A74 BAT A CUR
+				if(eps_form != NULL){
+					value = unscale_data(data,0,100);
+					sprintf(msg,"%+05.2f A",value);
+					eps_form->s11A74->Enabled = TRUE;
+					eps_form->s11A74->Text = msg;						
+				} 
+				break;
+
+				case 3:
+				if(eps_form != NULL){
+					value = unscale_data(data,0,100);
+					sprintf(msg,"%+05.2f A",value);
+					eps_form->s11A110->Enabled = TRUE;
+					eps_form->s11A110->Text = msg;						
+				}
+				break;
+			}
+			break;
+
+		case 10:
+			switch(framead){
+				case 2: // 11A75 BAT RELAY BUS VOLTS
+					if(eps_form != NULL){
+						value = unscale_data(data,0,45);
+						sprintf(msg,"%+02.2f V",value);
+						eps_form->s11A75->Enabled = TRUE;
+						eps_form->s11A75->Text = msg;						
+					} 
+					break;
+				case 4: // 11A147 AC BUS 1 PH A VOLTS
+					if(eps_form != NULL){
+						value = unscale_data(data,0,150);
+						sprintf(msg,"%+03.2f V",value);
+						eps_form->s11A147->Enabled = TRUE;
+						eps_form->s11A147->Text = msg;						
+					} 
+					break;
 			}
 			break;
 
