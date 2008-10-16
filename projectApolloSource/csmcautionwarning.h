@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.23  2008/04/11 12:19:02  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.22  2007/10/18 00:23:19  movieman523
   *	Primarily doxygen changes; minimal functional change.
   *	
@@ -106,10 +111,14 @@
 ///
 typedef struct {
 	double H2FlowLBH;			///< H2 flow in pounds per hour.
+	double H2PressurePSI;		///< H2 pressure in PSI
 	double O2FlowLBH;			///< O2 flow in pounds per hour.
+	double O2PressurePSI;		///< O2 pressure in PSI.
 	double TempF;				///< Temperature in fahrenheit.
 	double CondenserTempF;		///< Condensor temperature in fahrenheit.
 	double CoolingTempF;		///< Cooling temperature in fahrenheit.
+	double RadiatorTempInF;		///< Radiator input temperature in fahrenheit.
+	double RadiatorTempOutF;	///< Radiator output temperature in fahrenheit.
 	double Voltage;				///< Output voltage.
 	double Current;				///< Output current.
 	double PowerOutput;			///< Output power.

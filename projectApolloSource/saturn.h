@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.282  2008/10/15 06:00:41  movieman523
+  *	Added more telemetry data.
+  *	
   *	Revision 1.281  2008/07/13 17:47:13  tschachim
   *	Rearranged realism levels, merged Standard and Quickstart Mode.
   *	
@@ -509,6 +512,7 @@ typedef struct {
 	double BatteryBCurrent;
 	double BatteryCVoltage;
 	double BatteryCCurrent;
+	double BatteryChargerCurrent;
 } BatteryStatus;
 
 ///

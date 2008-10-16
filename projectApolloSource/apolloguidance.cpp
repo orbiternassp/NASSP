@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.96  2008/05/02 16:46:16  tschachim
+  *	Bugfixes uplink telemetry.
+  *	
   *	Revision 1.95  2008/04/11 11:49:32  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -1070,7 +1073,7 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 				SetR1Format("XXX XX");
 			}
 			alt = OurVessel->GetAltitude();
-			SetR2((int) (alt/100.0));
+			SetR2((int) (DisplayAlt( alt )/100.0));
 			SetR3((int) (DeltaPitchRate/100.0));
 		}
 		return true;
@@ -1262,8 +1265,8 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 
 			dv = sqrt(pow(DesiredDeltaVx,2) + pow(DesiredDeltaVy,2) + pow(DesiredDeltaVz,2));
 
-			SetR1((int)(apd / 10));
-			SetR2((int)(ped / 10));
+			SetR1((int)( DisplayAlt( apd ) / 10));
+			SetR2((int)( DisplayAlt( ped ) / 10));
 			SetR3((int)dv);
 		}
 		return true;
@@ -1308,12 +1311,12 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 			SetR3((int)DisplayAlt(OurVessel->GetAltitude()) / 1000);
 		}
 		else if (ProgRunning == 37) {
-			SetR1((int)(DesiredApogee * 10.0));
-			SetR2((int)(DesiredPerigee * 10.0));
+			SetR1((int)(DisplayAlt( DesiredApogee ) * 10.0));
+			SetR2((int)(DisplayAlt( DesiredPerigee ) * 10.0));
 		}
 		else {
-			SetR1((int)(DesiredApogee * 100.0));
-			SetR2((int)(DesiredPerigee * 100.0));
+			SetR1((int)(DisplayAlt( DesiredApogee ) * 100.0));
+			SetR2((int)(DisplayAlt( DesiredPerigee ) * 100.0));
 			if (ProgRunning == 10) {
 				SetR3((int)(DesiredAzimuth * 100.0));
 			}
@@ -1338,8 +1341,8 @@ bool ApolloGuidance::DisplayCommonNounData(int noun)
 			if (min > 99)
 				min = 99;
 
-			SetR1((int)dv);
-			SetR2((int)DesiredDeltaV);
+			SetR1((int) DisplayVel( dv ));
+			SetR2((int)DisplayVel( DesiredDeltaV ));
 			SetR3(min * 1000 + sec);
 			SetR3Format("XXX XX");
 		}			
