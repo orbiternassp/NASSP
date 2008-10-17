@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2008/10/17 03:14:21  movieman523
+  *	More low bit-rate decoding.
+  *	
   **************************************************************************/
 
 #include "stdafx.h"
@@ -124,20 +127,29 @@ void Form1::ConnectToHost(){
 // Control disabling
 void Form1::end_lbr()
 {
+	// We should disable all the data displays here.
 }
 
 void Form1::end_hbr()
 {
+	// We should disable all the data displays here.
 }
 
 // Unscale PCM data to original value
-double Form1::unscale_data(unsigned char data,double low,double high){
-	double step = 0;
+double Form1::unscale_data( unsigned char data, double low, double high )
+{
+	if ( data == 0 )
+	{    
+		return low;
+	}
 
-	if(data == 0){    return low;  }
-	if(data == 0xFF){ return high; }
-	step = ((high - low)/256);
-	return (data*step) + low;
+	if ( data == 0xFF )
+	{
+		return high;
+	}
+
+	double step = ( ( high - low ) / 256.0);
+	return ( data * step ) + low;
 }
 
 void Form1::showValue( System::Windows::Forms::TextBox *tb, char *msg )
@@ -2942,35 +2954,85 @@ void Form1::parse_lbr(unsigned char data, int bytect){
 			break;
 
 		case 6:
-			switch(framect){
-				case 4:
+			switch(framect)
+			{
+				case 0: // 11A3 ECS: GLY PUMP OUT PRESS
+					display( data, 11, TLM_A, 3 );
+					break;
+
+				case 1: // 11A111 ECS: SM FU MANF C PRESS
+					display( data, 11, TLM_A, 111 );
+					break;
+
+				case 2: // 11A48 PCM HI LEVEL 85 PCT REF
+					display( data, 11, TLM_A, 48 );
+					break;
+
+				case 3: // 11A156 CM HE TK B TEMP
+					display( data, 11, TLM_A, 156 );
+					break;
+
+				case 4: // 11A93 BAT BUS B VOLTS
 					display( data, 11, TLM_A, 93 );
 					break;
 			}
 			break;
+
+		case 7:
+			switch(framect)
+			{
+				case 0: // 11A4 ECS SURGE TANK PRESS
+					display( data, 11, TLM_A, 4 );
+					break;
+
+				case 1: // 11A112 SM FU MANF D PRESS
+					display( data, 11, TLM_A, 112 );
+					break;
+
+				case 2: // 11A49 PC HI LEVEL 15 PCT REF
+					display( data, 11, TLM_A, 49 );
+					break;
+
+				case 3: // 11A157 SEC GLY PUMP OUT PRESS
+					display( data, 11, TLM_A, 157 );
+					break;
+
+				case 4: // 11A94 SM FU MANF B PRESS
+					display( data, 11, TLM_A, 94);
+					break;
+			}
+			break;
+
 		case 8:
 		case 28: // CMC DATA WORD
 			cmc_w0 = data&0177;
 			cmc_w0 <<= 8;
 			break;
+
 		case 9:
 		case 29: // CMC DATA WORD
 			cmc_w0 |= data&0377;
 			break;
+
 		case 10:
 		case 30: // CMC DATA WORD
 			cmc_w1 = data&0177;
 			cmc_w1 <<= 8;
 			break;
+
 		case 11:
 		case 31: // CMC DATA WORD
 			cmc_w1 |= data&0377;
 			break;
+
 		case 12:
 		case 32: // CMC DATA WORD
 			parse_cmc();
 			break;
 
+		case 13: // 51DP2 UP-DATA-LINK VALIDITY BITS (4 BITS)
+		case 33:
+			break;
 
 	}
 }
