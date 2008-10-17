@@ -579,9 +579,9 @@ unsigned char PCM::scale_data(double data, double low, double high){
 	if(data <= low){  return 0; }
 	
 	// Now figure step value
-	step = ((high - low)/256);
+	step = ( ( high - low ) / 256.0);
 	// and return result
-	return (unsigned char)((data - low)/step);
+	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
 }
 
 // Fetch a telemetry data item from its channel code
@@ -601,6 +601,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 	FuelCellStatus fcStatus;
 	PyroStatus pyroStatus;
 	SECSStatus secsStatus;
+	RCSStatus rcsStatus;
 
 	switch(type){
 		case TLM_A:  // ANALOG
@@ -648,14 +649,17 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 16:		// HE TK TEMP
 							return(scale_data(0,-100,200));
 						case 17:		// SM ENG PKG B TEMP
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_SM_QUAD_B, rcsStatus );
+							return(scale_data(rcsStatus.PackageTempF, 0, 300));
 						case 18:		// CM HE TK A PRESS
 							return(scale_data(0,0,5000));
 						case 19:		// SM ENG PKG C TEMP
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_SM_QUAD_C, rcsStatus );
+							return(scale_data(rcsStatus.PackageTempF, 0, 300));
 
 						case 20:		// SM ENG PKG D TEMP
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
+							return(scale_data(rcsStatus.PackageTempF, 0, 300));
 						case 21:		// CM HE TK B PRESS
 							return(scale_data(0,0,5000));
 						case 22:		// DOCKING PROBE TEMP
@@ -663,26 +667,34 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 23:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 24:		// SM HE TK A PRESS
-							return(scale_data(0,0,5000));
+							sat->GetRCSStatus( RCS_SM_QUAD_A, rcsStatus );
+							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
+
 						case 25:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 26:		// OX TK 1 QTY -TOTAL AUX
 							return(scale_data(0,0,50));
 						case 27:		// SM HE TK B PRESS
-							return(scale_data(0,0,5000));
+							sat->GetRCSStatus( RCS_SM_QUAD_B, rcsStatus );
+							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
+
 						case 28:		// OX TK 2 QTY
 							return(scale_data(0,0,60));
 						case 29:		// FU TK 1 QTY -TOTAL AUX
 							return(scale_data(0,0,50));
 
 						case 30:		// SM HE TK C PRESS
-							return(scale_data(0,0,5000));
+							sat->GetRCSStatus( RCS_SM_QUAD_C, rcsStatus );
+							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
+
 						case 31:		// FU TK 2 QTY
 							return(scale_data(0,0,60));
 						case 32:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 33:		// SM HE TK D PRESS
-							return(scale_data(0,0,5000));
+							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
+							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
+
 						case 34:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 35:		// UNKNOWN - HBR ONLY
@@ -805,14 +817,16 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 86:		// INVERTER 1 TEMP
 							return(scale_data(0,32,248));
 						case 87:		// SEC RAD IN TEMP
-							return(scale_data(0,55,120));
+							sat->GetSecECSCoolingStatus(scs);
+							return(scale_data(scs.RadiatorInletTempF, 55, 120));
 						case 88:		// INVERTER 2 TEMP
 							return(scale_data(0,32,248));
 						case 89:		// INVERTER 3 TEMP
 							return(scale_data(0,32,248));
 
 						case 90:		// SEC RAD OUT TEMP
-							return(scale_data(0,30,70));
+							sat->GetSecECSCoolingStatus(scs);
+							return(scale_data(scs.RadiatorOutletTempF, 30, 70));
 						case 91:		// IMU 28 VAC 800Hz
 							return(scale_data(0,0,31.1));
 						case 92:		// UNKNOWN - HBR ONLY
@@ -1235,7 +1249,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 117:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 118:		// SEC EVAP OUT LIQ TEMP
-							return(scale_data(0,25,75));
+							sat->GetSecECSCoolingStatus(scs);
+							return(scale_data(scs.EvaporatorOutletTempF, 25, 75));
 						case 119:		// SENSOR EXCITATION 5V
 							return(scale_data(0,0,9));
 
@@ -1258,7 +1273,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 128:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 129:		// SEC GLY ACCUM QTY
-							return(scale_data(0,0,100));
+							sat->GetSecECSCoolingStatus(scs);
+							return(scale_data(scs.AccumulatorQuantityPercent, 0, 100));
 
 						case 130:		// SM HE MANF D PRESS
 							return(scale_data(0,0,400));

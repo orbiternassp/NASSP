@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.155  2008/10/16 07:12:10  movieman523
+  *	Telemetry changes.
+  *	
   *	Revision 1.154  2008/10/16 02:26:17  movieman523
   *	Some more telemetry.
   *	
@@ -2731,6 +2734,38 @@ void Saturn::GetRCSStatus(int index, RCSStatus &rs)
 	if (( index >= RCS_SM_QUAD_A && index <= RCS_SM_QUAD_D ) 
 		&& stage >= CM_STAGE) {
 		return;
+	}
+
+	// SM tanks.
+	if ( index >= RCS_SM_QUAD_A && index <= RCS_SM_QUAD_D )
+	{
+		SMRCSPropellantSource *pRcs = 0;
+		switch ( index )
+		{
+		case RCS_SM_QUAD_A:
+			pRcs = &SMQuadARCS;
+			break;
+
+		case RCS_SM_QUAD_B:
+			pRcs = &SMQuadBRCS;
+			break;
+
+		case RCS_SM_QUAD_C:
+			pRcs = &SMQuadCRCS;
+			break;
+
+		case RCS_SM_QUAD_D:
+			pRcs = &SMQuadDRCS;
+			break;
+		}
+
+		if ( pRcs )
+		{
+			rs.HeliumPressurePSI = pRcs->GetHeliumPressurePSI();
+			rs.HeliumTempF = pRcs->GetHeliumTempF();
+			rs.PackageTempF = pRcs->GetPackageTempF();
+			rs.PropellantPressurePSI = pRcs->GetPropellantPressurePSI();
+		}
 	}
 }
 

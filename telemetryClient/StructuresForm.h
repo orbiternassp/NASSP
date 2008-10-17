@@ -43,24 +43,24 @@ namespace GroundStation
 		}      		
 	private: System::Windows::Forms::Label *  label1;
 	private: System::Windows::Forms::Label *  label2;
-	private: System::Windows::Forms::TextBox *  s10A65;
-	private: System::Windows::Forms::TextBox *  s10A70;
+	public: System::Windows::Forms::TextBox *  s10A65;
+	public: System::Windows::Forms::TextBox *  s10A70;
 	private: System::Windows::Forms::Label *  label3;
-	private: System::Windows::Forms::TextBox *  s10A74;
+	public: System::Windows::Forms::TextBox *  s10A74;
 	private: System::Windows::Forms::Label *  label4;
-	private: System::Windows::Forms::TextBox *  s10A79;
+	public: System::Windows::Forms::TextBox *  s10A79;
 	private: System::Windows::Forms::Label *  label5;
-	private: System::Windows::Forms::TextBox *  s10A142;
+	public: System::Windows::Forms::TextBox *  s10A142;
 	private: System::Windows::Forms::Label *  label6;
 	private: System::Windows::Forms::Label *  label7;
 	private: System::Windows::Forms::Label *  label8;
-	private: System::Windows::Forms::TextBox *  s10A137;
-	private: System::Windows::Forms::TextBox *  s10A139;
-	private: System::Windows::Forms::TextBox *  s10A140;
+	public: System::Windows::Forms::TextBox *  s10A137;
+	public: System::Windows::Forms::TextBox *  s10A139;
+	public: System::Windows::Forms::TextBox *  s10A140;
 	private: System::Windows::Forms::Label *  label9;
 	private: System::Windows::Forms::Label *  label10;
-	private: System::Windows::Forms::TextBox *  s10A143;
-	private: System::Windows::Forms::TextBox *  s10A145;
+	public: System::Windows::Forms::TextBox *  s10A143;
+	public: System::Windows::Forms::TextBox *  s10A145;
 
 
 
