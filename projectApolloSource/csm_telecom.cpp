@@ -1865,26 +1865,26 @@ void PCM::generate_stream_lbr(){
 			break;
 		case 14:
 			switch(frame_count){
-				case 0: // 10A123
+				case 0: // 10A123 FC 2 COND EXH TEMP
 					tx_data[tx_offset] = measure(10,TLM_A,123);
 					break;
-				case 1: // 10A126
+				case 1: // 10A126 FC 1 RAD OUT TEMP
 					tx_data[tx_offset] = measure(10,TLM_A,126);
 					break;
-				case 2: // 10A129
+				case 2: // 10A129 FC 2 RAD OUT TEMP
 					tx_data[tx_offset] = measure(10,TLM_A,129);
 					break;
-				case 3: // 10A132
+				case 3: // 10A132 FC 3 RAD OUT TEMP
 					tx_data[tx_offset] = measure(10,TLM_A,132);
 					break;
-				case 4: // 10A135
+				case 4: // 10A135 URINE DUMP NOZZLE TEMP
 					tx_data[tx_offset] = measure(10,TLM_A,135);
 					break;
 			}
 			break;
 		case 15:
 			switch(frame_count){
-				case 0: // 10A138
+				case 0: // 10A138 TM BIAS 2.5 VDC
 					tx_data[tx_offset] = measure(10,TLM_A,138);
 					break;
 				case 1: // 10A141 EPS: H2 TK 1 QTY
@@ -2441,8 +2441,6 @@ void PCM::generate_stream_hbr(){
 					break;
 			}
 			break;
-			tx_data[tx_offset] = 0;
-			break;
 		case 20: // 12A5 SCS PITCH BODY RATE
 		case 84:
 			tx_data[tx_offset] = measure(12,TLM_A,5); 
@@ -2653,28 +2651,28 @@ void PCM::generate_stream_hbr(){
 					break;
 			}
 			break;
-		case 44: // 12A9
+		case 44: // 12A9 CM X-AXIS ACCEL
 		case 108:
 			tx_data[tx_offset] = measure(12,TLM_A,9); 
 			break;
-		case 45: // 12A10
+		case 45: // 12A10 YAW GIMBL POS 1 OR 2
 		case 109:
 			tx_data[tx_offset] = measure(12,TLM_A,10); 
 			break;
-		case 46: // 12A11
+		case 46: // 12A11 CM Y-AXIS ACCEL
 		case 110:
 			tx_data[tx_offset] = measure(12,TLM_A,11); 
 			break;
-		case 47: // 12A12
+		case 47: // 12A12 CM Z-AXIS ACCEL
 		case 111:
 			tx_data[tx_offset] = measure(12,TLM_A,12); 
 			break;
 		case 48:
 			switch(frame_count){
-				case 0: // 11A14
+				case 0: // 11A14 ECS O2 FLOW O2 SUPPLY MANF
 					tx_data[tx_offset] = measure(11,TLM_A,14);  
 					break;
-				case 1: // 11A50
+				case 1: // 11A50 USB RCVR PHASE ERR
 					tx_data[tx_offset] = measure(11,TLM_A,50); 
 					break;
 				case 2: // 11A86
