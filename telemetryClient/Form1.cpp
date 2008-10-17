@@ -96,20 +96,12 @@ void Form1::ConnectToHost(){
 };
 
 // Control disabling
-void Form1::end_lbr(){
-	if(eps_form != NULL){
-		eps_form->s11A91->Enabled = FALSE;
-		eps_form->s11A109->Enabled = FALSE;
-		eps_form->s11A93->Enabled = FALSE;
-	}
+void Form1::end_lbr()
+{
 }
 
-void Form1::end_hbr(){
-	if(eps_form != NULL){
-		eps_form->s11A91->Enabled = FALSE;
-		eps_form->s11A109->Enabled = FALSE;
-		eps_form->s11A93->Enabled = FALSE;
-	}
+void Form1::end_hbr()
+{
 }
 
 // Unscale PCM data to original value
@@ -190,6 +182,24 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 6: // 11A6 LES LOGIC BUS B VOLTS
+				if ( els_form != NULL )
+				{
+					value = unscale_data(data, 0, 40);
+					sprintf(msg,"%04.2f V",value);
+					showValue( els_form->s11A6, msg );					
+				}
+				break;
+
+			case 8: // 11A8 LES LOGIC BUS A VOLTS
+				if ( els_form != NULL )
+				{
+					value = unscale_data(data, 0, 40);
+					sprintf(msg,"%04.2f V",value);
+					showValue( els_form->s11A8, msg );						
+				}
+				break;
+
 			case 37:  // 11A37 SUIT-CABIN DELTA PRESS
 				if( ecs_form != NULL )
 				{
@@ -235,6 +245,25 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 42: // 11A42 ALPHA CT RATE CHAN 3
+				if ( tcm_form != NULL )
+				{
+					value = unscale_data(data,0.1,10000);
+					sprintf(msg,"%06.0f C/S",value);
+					showValue( tcm_form->s11A42, msg );						
+				}
+				break;
+
+			case 43: // 11A43 PROTON INTEG CT RATE
+				if ( tcm_form != NULL )
+				{
+					value = unscale_data(data, 1, 100000);
+					sprintf(msg,"%06.0f C/S",value);
+					showValue( tcm_form->s11A43, msg );						
+				}
+				break;
+
+
 			case 73: // 11A73 BAT CHARGER AMPS
 				if ( eps_form != NULL )
 				{
@@ -277,6 +306,42 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 					value = unscale_data(data, 0, 0.2);
 					sprintf(msg,"%04.3f PPH",value);
 					showValue( eps_form->s11A77, msg );
+				}
+				break;
+
+			case 78: // 11A78 FC 2 H2 FLOW
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data, 0, 0.2);
+					sprintf(msg,"%04.3f PPH",value);
+					showValue( eps_form->s11A78, msg );
+				}
+				break;
+
+			case 79: // 11A79 FC 3 H2 FLOW
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data, 0, 0.2);
+					sprintf(msg,"%04.3f PPH",value);
+					showValue( eps_form->s11A79, msg );						
+				}
+				break;
+
+			case 91: // BAT BUS A VOLTS
+				if( eps_form != NULL )
+				{
+					value = unscale_data(data,0,45);
+					sprintf(msg,"%+04.2f V",value);
+					showValue( eps_form->s11A91, msg );					
+				}
+				break;
+
+			case 93: // BAT BUS B VOLTS
+				if( eps_form != NULL )
+				{
+					value = unscale_data(data,0,45);
+					sprintf(msg,"%+04.2f V",value);
+					showValue( eps_form->s11A93, msg );					
 				}
 				break;
 
@@ -381,6 +446,33 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 					value = unscale_data(data, -10, 10);
 					sprintf(msg,"%+04.2f °",value);
 					showValue( scs_form->s12A5, msg );
+				}
+				break;
+
+			case 6: // 12A6 SCS YAW BODY RATE
+				if ( scs_form != NULL )
+				{
+					value = unscale_data(data, -10, 10);
+					sprintf(msg,"%+04.2f °",value);
+					showValue( scs_form->s12A6, msg );						
+				}
+				break;
+
+			case 7: // 12A7 SCS ROLL BODY RATE
+				if ( scs_form != NULL )
+				{
+					value = unscale_data(data, -50, 50);
+					sprintf(msg,"%+04.2f °",value);
+					showValue( scs_form->s12A7, msg );						
+				}
+				break;
+
+			case 8: // 12A8 PITCH GIMBL POS 1 OR 2
+				if ( scs_form != NULL )
+				{
+					value = unscale_data(data, -5, 5);
+					sprintf(msg,"%+04.2f °",value);
+					showValue( scs_form->s12A8, msg );						
 				}
 				break;
 
@@ -631,6 +723,37 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 			}
 			break;
 
+		case 17: // 22DP1
+			display( data, 22, TLM_DP, 1 );
+			break;
+
+		case 18: // 22DP2
+			display( data, 22, TLM_DP, 2 );
+			break;
+
+		case 19: 
+			switch (framead)
+			{
+			case 0: // 10DP1
+				display( data, 10, TLM_DP, 1 ); 
+				break;
+
+			case 1: // SRC-0
+				display( data, 0, TLM_SRC, 0 ); 
+				break;
+
+			case 2: // SRC-1
+				display( data, 0, TLM_SRC, 1 ); 
+				break;
+
+			case 3: // (Zeroes?)
+				break;
+
+			case 4: // (Zeroes?)
+				break;
+			}
+			break;
+
 		case 20: // 12A5 SCS PITCH BODY RATE
 		case 84:
 			display( data, 12, TLM_A, 5 );
@@ -638,127 +761,103 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 
 		case 21: // 12A6 SCS YAW BODY RATE
 		case 85:
-			if(scs_form != NULL)
-			{
-				value = unscale_data(data, -10, 10);
-				sprintf(msg,"%+04.2f °",value);
-				scs_form->s12A6->Enabled = TRUE;
-				scs_form->s12A6->Text = msg;						
-			} 
+			display( data, 12, TLM_A, 6 );
 			break;
 
 		case 22: // 12A7 SCS ROLL BODY RATE
 		case 86:
-			if(scs_form != NULL)
-			{
-				value = unscale_data(data, -50, 50);
-				sprintf(msg,"%+04.2f °",value);
-				scs_form->s12A7->Enabled = TRUE;
-				scs_form->s12A7->Text = msg;						
-			} 
+			display( data, 12, TLM_A, 7 );
 			break;
 
 		case 23: // 12A8 PITCH GIMBL POS 1 OR 2
 		case 87:
-			if ( scs_form != NULL )
-			{
-				value = unscale_data(data, -5, 5);
-				sprintf(msg,"%+04.2f °",value);
-				scs_form->s12A8->Enabled = TRUE;
-				scs_form->s12A8->Text = msg;						
-			}
+			display( data, 12, TLM_A, 8 );
 			break;
 
 		case 24:
 			switch(framead)
 			{
-				case 0: // 11A6 LES LOGIC BUS B VOLTS
-					if (els_form != NULL)
-					{
-						value = unscale_data(data, 0, 40);
-						sprintf(msg,"%04.2f V",value);
-						els_form->s11A6->Enabled = TRUE;
-						els_form->s11A6->Text = msg;						
-					} 
-					break;
+			case 0: // 11A6 LES LOGIC BUS B VOLTS
+				display( data, 11, TLM_A, 6 );
+				break;
 
-				case 1: // 11A42 ALPHA CT RATE CHAN 3
-					if(tcm_form != NULL){
-						value = unscale_data(data,0.1,10000);
-						sprintf(msg,"%06.0f C/S",value);
-						tcm_form->s11A42->Enabled = TRUE;
-						tcm_form->s11A42->Text = msg;						
-					}
-					break;
+			case 1: // 11A42 ALPHA CT RATE CHAN 3
+				display( data, 11, TLM_A, 42 );
+				break;
 
-				case 2: // 11A78 FC 2 H2 FLOW
-					if(eps_form != NULL)
-					{
-						value = unscale_data(data, 0, 0.2);
-						sprintf(msg,"%04.3f PPH",value);
-						eps_form->s11A78->Enabled = TRUE;
-						eps_form->s11A78->Text = msg;						
-					} 
-					break;
+			case 2: // 11A78 FC 2 H2 FLOW
+				display( data, 11, TLM_A, 78 );
+				break;
+
+			case 3: // 11A114
+				display( data, 11, TLM_A, 114 );
+				break;
+
+			case 4: // 11A150
+				display( data, 11, TLM_A, 150 ); 
+				break;
 			}
 			break;
 
 		case 25:
 			switch(framead)
 			{
-				case 1: // 11A43 PROTON INTEG CT RATE
-					if(tcm_form != NULL){
-						value = unscale_data(data, 1, 100000);
-						sprintf(msg,"%06.0f C/S",value);
-						tcm_form->s11A43->Enabled = TRUE;
-						tcm_form->s11A43->Text = msg;						
-					}
-					break;
+			case 0: // 11A7
+				display( data, 11, TLM_A, 7 ); 
+				break;
 
-				case 2: // 11A79 FC 3 H2 FLOW
-					if(eps_form != NULL)
-					{
-						value = unscale_data(data, 0, 0.2);
-						sprintf(msg,"%04.3f PPH",value);
-						eps_form->s11A79->Enabled = TRUE;
-						eps_form->s11A79->Text = msg;						
-					} 
-					break;
+			case 1: // 11A43 PROTON INTEG CT RATE
+				display( data, 11, TLM_A, 43 );
+				break;
+
+			case 2: // 11A79 FC 3 H2 FLOW
+				display( data, 11, TLM_A, 79 );
+				break;
+
+			case 3: // 11A115
+				display( data, 11, TLM_A, 115 ); 
+				break;
+
+			case 4: // 11A151
+				display( data, 11, TLM_A, 151 ); 
+				break;
 			}
 			break;
 
 		case 26:
 			switch(framead)
 			{
-				case 0: // 11A8 LES LOGIC BUS A VOLTS
-					if (els_form != NULL)
-					{
-						value = unscale_data(data, 0, 40);
-						sprintf(msg,"%04.2f V",value);
-						els_form->s11A8->Enabled = TRUE;
-						els_form->s11A8->Text = msg;						
-					} 
-					break;
+			case 0: // 11A8 LES LOGIC BUS A VOLTS
+				display( data, 11, TLM_A, 8 );
+				break;
 
-				case 2: // 11A80 FC 1 O2 FLOW
-					if (eps_form != NULL)
-					{
-						value = unscale_data(data, 0, 1.6);
-						sprintf(msg,"%04.3f PPH",value);
-						eps_form->s11A80->Enabled = TRUE;
-						eps_form->s11A80->Text = msg;						
-					} 
-					break;
+			case 1: // 11A44
+				display( data, 11, TLM_A, 44 ); 
+				break;
 
-				case 4: // 11A152 FUEL SM/ENG INTERFACE P
-					if (sps_form != NULL)
-					{
-						value = unscale_data(data, 0, 300);
-						sprintf(msg,"%04.0f PSIA",value);
-						sps_form->s11A152->Enabled = TRUE;
-						sps_form->s11A152->Text = msg;						
-					} 
-					break;
+			case 2: // 11A80 FC 1 O2 FLOW
+				if (eps_form != NULL)
+				{
+					value = unscale_data(data, 0, 1.6);
+					sprintf(msg,"%04.3f PPH",value);
+					eps_form->s11A80->Enabled = TRUE;
+					eps_form->s11A80->Text = msg;						
+				} 
+				break;
+
+			case 3: // 11A116
+				display( data, 11, TLM_A, 116 ); 
+				break;
+
+			case 4: // 11A152 FUEL SM/ENG INTERFACE P
+				if (sps_form != NULL)
+				{
+					value = unscale_data(data, 0, 300);
+					sprintf(msg,"%04.0f PSIA",value);
+					sps_form->s11A152->Enabled = TRUE;
+					sps_form->s11A152->Text = msg;						
+				} 
+				break;
 			}
 			break;
 
@@ -1095,12 +1194,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 		case 72:
 			switch(framead){
 			case 2:	
-				if(eps_form != NULL){
-					value = unscale_data(data,0,45);
-					sprintf(msg,"%+04.2f V",value);
-					eps_form->s11A91->Enabled = TRUE;
-					eps_form->s11A91->Text = msg;						
-				}
+				display( data, 11, TLM_A, 91 );
 				break;
 			}
 			break;
@@ -1116,12 +1210,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 				}
 				break;
 			case 2:
-				if(eps_form != NULL){
-					value = unscale_data(data,0,45);
-					sprintf(msg,"%+04.2f V",value);
-					eps_form->s11A93->Enabled = TRUE;
-					eps_form->s11A93->Text = msg;						
-				}
+				display( data, 11, TLM_A, 93 );
 				break;
 			}
 			break;
@@ -2776,33 +2865,19 @@ void Form1::parse_lbr(unsigned char data, int bytect){
 			break;
 		case 4:
 			switch(framect){
-				case 1:
-					if(eps_form != NULL){
-						value = unscale_data(data,0,100);
-						sprintf(msg,"%+05.2f A",value);
-						eps_form->s11A109->Enabled = TRUE;
-						eps_form->s11A109->Text = msg;						
-					}
-					break;
-				case 4:
-					if(eps_form != NULL){
-						value = unscale_data(data,0,45);
-						sprintf(msg,"%+04.2f V",value);
-						eps_form->s11A91->Enabled = TRUE;
-						eps_form->s11A91->Text = msg;						
-					}
-					break;
+			case 1:
+				display( data, 11, TLM_A, 109 );
+				break;
+
+			case 4:
+				display( data, 11, TLM_A, 91 );
+				break;
 			}
 			break;
 		case 6:
 			switch(framect){
 				case 4:
-					if(eps_form != NULL){
-						value = unscale_data(data,0,45);
-						sprintf(msg,"%+04.2f V",value);
-						eps_form->s11A93->Enabled = TRUE;
-						eps_form->s11A93->Text = msg;						
-					}
+					display( data, 11, TLM_A, 93 );
 					break;
 			}
 			break;
