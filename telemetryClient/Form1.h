@@ -126,6 +126,7 @@ namespace GroundStation
 		double unscale_data(unsigned char data,double low,double high);
 		void parse_hbr(unsigned char data, int bytect);
 		void parse_lbr(unsigned char data, int bytect);
+		void display(unsigned char data, int channel, int type, int ccode);
 
 		/// <summary>
 		/// Required method for Designer support - do not modify

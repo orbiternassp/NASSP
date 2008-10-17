@@ -17,6 +17,13 @@
 
 using namespace GroundStation;
 
+// DS20070108 Telemetry measurement types
+#define TLM_A	1
+#define TLM_DP	2
+#define TLM_DS	3
+#define TLM_E	4
+#define TLM_SRC 5
+
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
@@ -115,6 +122,51 @@ double Form1::unscale_data(unsigned char data,double low,double high){
 	return (data*step) + low;
 }
 
+void Form1::display(unsigned char data, int channel, int type, int ccode)
+{
+	char msg[256];
+	double value;
+
+	switch(type){
+	case TLM_A:  // ANALOG
+		switch(channel){
+		case 10: // S10A
+			switch(ccode){
+			}
+			break;
+
+		case 11: // S11A
+			switch(ccode){
+			}
+			break;
+
+		case 22: // S22A
+			switch(ccode){
+			case 1: // 22A1 ASTRO 1 EKG AXIS 2
+				if( crw_form != NULL)
+				{
+					value = unscale_data(data, 0.1, 0.5);
+					sprintf(msg,"%05.4f MV",value);
+					crw_form->s22A1->Enabled = TRUE;
+					crw_form->s22A1->Text = msg;						
+				}
+				break;
+
+			case 2: // 22A2 ASTRO 1 EKG AXIS 3
+				if ( crw_form != NULL )
+				{
+					value = unscale_data(data, 0.1, 0.5);
+					sprintf(msg,"%05.4f MV",value);
+					crw_form->s22A2->Enabled = TRUE;
+					crw_form->s22A2->Text = msg;						
+				}
+				break;
+			}
+			break;
+		}
+	}
+}
+
 // HBR datastream parsing
 void Form1::parse_hbr(unsigned char data, int bytect){
 	char msg[256];
@@ -156,24 +208,14 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 		case 36:
 		case 68:
 		case 100:
-			if(crw_form != NULL){
-				value = unscale_data(data, 0.1, 0.5);
-				sprintf(msg,"%05.4f MV",value);
-				crw_form->s22A1->Enabled = TRUE;
-				crw_form->s22A1->Text = msg;						
-			}
+			display( data, 22, TLM_A, 1 );
 			break;
 
 		case 5: // 22A2 ASTRO 1 EKG AXIS 3
 		case 37:
 		case 69:
 		case 101:
-			if(crw_form != NULL){
-				value = unscale_data(data, 0.1, 0.5);
-				sprintf(msg,"%05.4f MV",value);
-				crw_form->s22A2->Enabled = TRUE;
-				crw_form->s22A2->Text = msg;						
-			}
+			display( data, 22, TLM_A, 2 );
 			break;
 
 		case 6: // 22A3 ASTRO 1 EKG AXIS 1
@@ -488,13 +530,13 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 
 		case 23: // 12A8 PITCH GIMBL POS 1 OR 2
 		case 87:
-			if(scs_form != NULL)
+			if ( scs_form != NULL )
 			{
 				value = unscale_data(data, -5, 5);
 				sprintf(msg,"%+04.2f °",value);
 				scs_form->s12A8->Enabled = TRUE;
 				scs_form->s12A8->Text = msg;						
-			} 
+			}
 			break;
 
 		case 24:
@@ -840,6 +882,84 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 					}
 					break;
 			}
+			break;
+
+		case 44: // 12A9 CM X-AXIS ACCEL
+		case 108:
+			if ( gnc_form != NULL )
+			{
+				value = unscale_data(data, -2, 10);
+				sprintf(msg,"%+05.3f G",value);
+				gnc_form->s12A9->Enabled = TRUE;
+				gnc_form->s12A9->Text = msg;						
+			}
+			break;
+
+		case 45: // 12A10 YAW GIMBL POS 1 OR 2
+		case 109:
+			if ( scs_form != NULL )
+			{
+				value = unscale_data(data, -5, 5);
+				sprintf(msg,"%+04.2f °",value);
+				scs_form->s12A10->Enabled = TRUE;
+				scs_form->s12A10->Text = msg;						
+			}
+			break;
+
+		case 46: // 12A11 CM Y-AXIS ACCEL
+		case 110:
+			if ( gnc_form != NULL )
+			{
+				value = unscale_data(data, -2, 10);
+				sprintf(msg,"%+05.3f G",value);
+				gnc_form->s12A11->Enabled = TRUE;
+				gnc_form->s12A11->Text = msg;						
+			}
+			break;
+
+		case 47: // 12A12 CM Z-AXIS ACCEL
+		case 111:
+			if ( gnc_form != NULL )
+			{
+				value = unscale_data(data, -2, 10);
+				sprintf(msg,"%+05.3f G",value);
+				gnc_form->s12A12->Enabled = TRUE;
+				gnc_form->s12A12->Text = msg;						
+			}
+			break;
+
+		case 48:
+			switch(framead)
+			{
+				case 0: // 11A14 ECS O2 FLOW O2 SUPPLY MANF
+					if ( ecs_form != NULL )
+					{
+						value = unscale_data(data, 0.2, 1);
+						sprintf(msg, "%04.3f PPH", value);
+						ecs_form->s11A14->Enabled = TRUE;
+						ecs_form->s11A14->Text = msg;						
+					}
+					break;
+
+				case 1: // 11A50 USB RCVR PHASE ERR
+					if ( tcm_form != NULL )
+					{
+						value = unscale_data(data, -90000, 90000);
+						sprintf(msg,"%+05.0f Hz",value);
+						tcm_form->s11A50->Enabled = TRUE;
+						tcm_form->s11A50->Text = msg;						
+					}
+					break;
+			}
+			break;
+
+		case 51: // MAGICAL WORD 1
+			// 10A1
+			// 10A4
+			// 10A7
+			// ...
+			// 10A148
+			display( data, 10, TLM_A, 1+(framect*3) );
 			break;
 
 		case 72:
