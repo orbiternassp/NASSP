@@ -1,3 +1,29 @@
+/***************************************************************************
+  This file is part of Project Apollo - NASSP
+  Copyright 2004-2008
+
+  Telemetry Client main window
+
+  Project Apollo is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  Project Apollo is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Project Apollo; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  See http://nassp.sourceforge.net/license/ for more details.
+
+  **************************** Revision History ****************************
+  *	$Log$
+  **************************************************************************/
+
 #include "stdafx.h"
 #include "winsock2.h"
 #include "Form1.h"
@@ -2854,26 +2880,67 @@ void Form1::parse_lbr(unsigned char data, int bytect){
 		case 0: // SYNC 1
 			if(data != 05){ end_lbr(); lock_type = 0; cmc_lock_type = 0; }
 			break;
+
 		case 1: // SYNC 2
 			if(data != 0171){ end_lbr(); lock_type = 0; cmc_lock_type = 0; }
 			break;
+
 		case 2: // SYNC 3
 			if(data != 0267){ end_lbr(); lock_type = 0; cmc_lock_type = 0; }
 			break;
+
 		case 3: // FRAME COUNT
 			framect = data&077;
 			break;
-		case 4:
+
+		case 4:					
 			switch(framect){
-			case 1:
+			case 0: // 11A1 ECS: SUIT MANF ABS PRESS
+				display( data, 11, TLM_A, 1 );
+				break;
+
+			case 1: // 11A109 EPS: BAT B CURR
 				display( data, 11, TLM_A, 109 );
 				break;
 
-			case 4:
+			case 2: // 11A46 RCS: SM HE MANF C PRESS
+				display( data, 11, TLM_A, 46 );
+				break;
+
+			case 3: // 11A154 CMI: SCE NEG SUPPLY VOLTS
+				display( data, 11, TLM_A, 154 );
+				break;
+
+			case 4: // 11A91 EPS: BAT BUS A VOLTS
 				display( data, 11, TLM_A, 91 );
 				break;
 			}
 			break;
+
+		case 5:
+			switch(framect){
+			case 0: // 11A2 ECS: SUIT COMP DELTA P
+				display( data, 11, TLM_A, 2 );
+				break;
+
+			case 1: // 11A110 EPS: BAT C CURR
+				display( data, 11, TLM_A, 110 );
+				break;
+
+			case 2: // 11A47 EPS: LM HEATER CURRENT
+				display( data, 11, TLM_A, 47 );
+				break;
+
+			case 3: // 11A155 RCS: CM HE TK A TEMP
+				display( data, 11, TLM_A, 155 );
+				break;
+
+			case 4: // 11A92 RCS: SM FU MANF A PRESS
+				display( data, 11, TLM_A, 92 );
+				break;
+			}
+			break;
+
 		case 6:
 			switch(framect){
 				case 4:
