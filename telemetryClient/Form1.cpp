@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2008/10/17 04:00:47  movieman523
+  *	More LBR support.
+  *	
   *	Revision 1.12  2008/10/17 03:14:21  movieman523
   *	More low bit-rate decoding.
   *	
@@ -238,6 +241,60 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 9: // 11A9 PYRO BUS A VOLTS
+				if (els_form != NULL)
+				{
+					value = unscale_data(data, 0, 40);
+					sprintf(msg,"%04.2f V",value);
+					showValue( els_form->s11A9, msg );						
+				}
+				break;
+
+			case 10: // 11A10 SPS HE TK PRESS
+				if (sps_form != NULL)
+				{
+					value = unscale_data(data, 0, 5000);
+					sprintf(msg,"%04.0f PSIA",value);
+					showValue( sps_form->s11A10, msg );								
+				}
+				break;
+
+			case 11: // 11A11 SPS OX TK PRESS
+				if (sps_form != NULL)
+				{
+					value = unscale_data(data, 0, 250);
+					sprintf(msg,"%04.0f PSIA",value);
+					showValue( sps_form->s11A11, msg );								
+				}
+				break;
+
+			case 12: // 11A12 SPS FU TK PRESS
+				if ( sps_form != NULL )
+				{
+					value = unscale_data(data, 0, 250);
+					sprintf(msg,"%04.0f PSIA",value);
+					showValue( sps_form->s11A12, msg );								
+				}
+				break;
+
+			case 13: // 11A13 GLY ACCUM QTY
+				if ( ecs_form != NULL )
+				{
+					value = unscale_data(data, 0, 100);
+					sprintf(msg,"%05.2f %",value);
+					showValue( ecs_form->s11A13, msg );						
+				}
+				break;
+
+			case 14: // 11A14 ECS O2 FLOW O2 SUPPLY MANF
+				if ( ecs_form != NULL )
+				{
+					value = unscale_data(data, 0.2, 1);
+					sprintf(msg, "%04.3f PPH", value);
+					showValue( ecs_form->s11A14, msg );						
+				}
+				break;
+
 			case 37:  // 11A37 SUIT-CABIN DELTA PRESS
 				if( ecs_form != NULL )
 				{
@@ -301,6 +358,68 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 46: // 11A46 SM HE MANF C PRESS
+				if ( sps_form != NULL )
+				{
+					value = unscale_data(data,0,400);
+					sprintf(msg,"%04.0f PSIA",value);
+					showValue( sps_form->s11A46, msg );						
+				}
+				break;
+
+			case 47: // 11A47 LM HEATER CURRENT
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data, 0, 10);
+					sprintf(msg,"%05.2f A",value);
+					showValue( eps_form->s11A47, msg );						
+				}
+				break;
+
+			case 48: // 11A48 PCM HI LEVEL 85 PCT REF
+				if ( tcm_form != NULL )
+				{
+					value = unscale_data(data, 0, 5);
+					sprintf(msg,"%04.2f V",value);
+					showValue( tcm_form->s11A48, msg );						
+				}
+				break;
+
+			case 49: // 11A49 PCM LO LEVEL 15 PCT REF
+				if ( tcm_form != NULL )
+				{
+					value = unscale_data(data, 0, 1);
+					sprintf(msg,"%04.2f V",value);
+					showValue( tcm_form->s11A49, msg );						
+				}
+				break;
+
+			case 50: // 11A50 USB RCVR PHASE ERR
+				if ( tcm_form != NULL )
+				{
+					value = unscale_data(data, -90000, 90000);
+					sprintf(msg,"%+05.0f Hz",value);
+					showValue( tcm_form->s11A50, msg );						
+				}
+				break;
+
+			case 57: // MAIN BUS A VOLTS
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data,0,45);
+					sprintf(msg,"%+04.2f V",value);
+					showValue( eps_form->s11A57, msg );						
+				}
+				break;
+
+			case 58: // MAIN BUS B VOLTS
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data,0,45);
+					sprintf(msg,"%+04.2f V",value);
+					showValue( eps_form->s11A58, msg );						
+				}
+				break;
 
 			case 73: // 11A73 BAT CHARGER AMPS
 				if ( eps_form != NULL )
@@ -365,6 +484,51 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 80: // 11A80 FC 1 O2 FLOW
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data, 0, 1.6);
+					sprintf(msg,"%04.3f PPH",value);
+					showValue( eps_form->s11A80, msg);						
+				}
+				break;
+
+			case 81: // 11A81 FC 2 O2 FLOW
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data, 0, 1.6);
+					sprintf(msg,"%04.3f PPH",value);
+					showValue( eps_form->s11A81, msg );						
+				} 
+				break;
+
+			case 82: // 11A82 FC 3 O2 FLOW
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data, 0, 1.6);
+					sprintf(msg,"%04.3f PPH",value);
+					showValue( eps_form->s11A82, msg );						
+				}
+				break;
+
+			case 84: // 11A84 FC 2 CUR
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data,0,100);
+					sprintf(msg,"%03.2f A",value);
+					showValue( eps_form->s11A84, msg );						
+				}
+				break;
+
+			case 85: // 11A85 FC 3 CUR
+				if ( eps_form != NULL )
+				{
+					value = unscale_data(data,0,100);
+					sprintf(msg,"%03.2f A",value);
+					showValue( eps_form->s11A85, msg );						
+				}
+				break;
+
 			case 91: // BAT BUS A VOLTS
 				if( eps_form != NULL )
 				{
@@ -419,6 +583,42 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 118: // 11A118 SEC EVAP OUT LIQ TEMP
+				if ( ecs_form != NULL )
+				{
+					value = unscale_data(data, 25, 75);
+					sprintf(msg,"%05.2f °F",value);
+					showValue( ecs_form->s11A118, msg );						
+				}
+				break;
+
+			case 119: // 11A119 SENSOR EXCITATION 5V
+				if ( tcm_form != NULL )
+				{
+					value = unscale_data(data, 0, 9);
+					sprintf(msg,"%04.2f V",value);
+					showValue( tcm_form->s11A119, msg );						
+				}
+				break;
+
+			case 120: // 11A120 SENSOR EXCITATION 10V
+				if ( tcm_form != NULL )
+				{
+					value = unscale_data(data, 0, 15);
+					sprintf(msg,"%04.2f V",value);
+					showValue( tcm_form->s11A120, msg );						
+				}
+				break;
+
+			case 121: // 11A121 USB RCVR AGC VOLTAGE
+				if ( tcm_form != NULL )
+				{
+					value = unscale_data(data, -130, -50);
+					sprintf(msg,"%+04.1f DBM",value);
+					showValue( tcm_form->s11A121, msg );						
+				}
+				break;
+
 			case 147: // 11A147 AC BUS 1 PH A VOLTS
 				if ( eps_form != NULL )
 				{
@@ -434,6 +634,51 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 					value = unscale_data(data, 0, 30);
 					sprintf(msg,"%04.2f V",value);
 					showValue( tcm_form->s11A148, msg );
+				}
+				break;
+
+			case 152: // 11A152 FUEL SM/ENG INTERFACE P
+				if (sps_form != NULL)
+				{
+					value = unscale_data(data, 0, 300);
+					sprintf(msg,"%04.0f PSIA",value);
+					showValue( sps_form->s11A152, msg );						
+				}
+				break;
+
+			case 154: // 11A154 SCE NEG SUPPLY VOLTS
+				if ( tcm_form != NULL )
+				{
+					value = unscale_data(data, -30, 0);
+					sprintf(msg,"%04.2f V",value);
+					showValue( tcm_form->s11A154, msg );						
+				}
+				break;
+
+			case 155: // 11A155 CM HE TK A TEMP
+				if (sps_form != NULL)
+				{
+					value = unscale_data(data, 0, 300);
+					sprintf(msg,"%05.2f °F",value);
+					showValue( sps_form->s11A155, msg );								
+				}
+				break;
+
+			case 156: // 11A156 CM HE TK B TEMP
+				if (sps_form != NULL)
+				{
+					value = unscale_data(data, 0, 300);
+					sprintf(msg,"%05.2f °F",value);
+					showValue( sps_form->s11A156, msg );								
+				}
+				break;
+
+			case 157:
+				if ( ecs_form != NULL )
+				{
+					value = unscale_data(data, 0, 60);
+					sprintf(msg,"%04.0f PSIG",value);
+					showValue( ecs_form->s11A157, msg );						
 				}
 				break;
 			}
@@ -514,6 +759,41 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 9: // 12A9 CM X-AXIS ACCEL
+				if ( gnc_form != NULL )
+				{
+					value = unscale_data(data, -2, 10);
+					sprintf(msg,"%+05.3f G",value);
+					showValue( gnc_form->s12A9, msg );			
+				}
+				break;
+
+			case 10: // 12A10 YAW GIMBL POS 1 OR 2
+				if ( scs_form != NULL )
+				{
+					value = unscale_data(data, -5, 5);
+					sprintf(msg,"%+04.2f °",value);
+					showValue( scs_form->s12A10, msg );						
+				}
+				break;
+
+			case 11: // 12A11 CM Y-AXIS ACCEL
+				if ( gnc_form != NULL )
+				{
+					value = unscale_data(data, -2, 2);
+					sprintf(msg,"%+05.3f G",value);
+					showValue( gnc_form->s12A11, msg );						
+				}
+				break;
+
+			case 12: // 12A12 CM Z-AXIS ACCEL
+				if ( gnc_form != NULL )
+				{
+					value = unscale_data(data, -2, 2);
+					sprintf(msg,"%+05.3f G",value);
+					showValue( gnc_form->s12A12, msg );						
+				}
+				break;
 			}
 			break;
 
@@ -564,7 +844,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 // HBR datastream parsing
 void Form1::parse_hbr(unsigned char data, int bytect){
 	char msg[256];
-	double value;
+
 	switch(bytect){
 		case 0: // SYNC 1
 			if(data != 05){ end_hbr(); lock_type = 0; cmc_lock_type = 0; }
@@ -874,13 +1154,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 				break;
 
 			case 2: // 11A80 FC 1 O2 FLOW
-				if (eps_form != NULL)
-				{
-					value = unscale_data(data, 0, 1.6);
-					sprintf(msg,"%04.3f PPH",value);
-					eps_form->s11A80->Enabled = TRUE;
-					eps_form->s11A80->Text = msg;						
-				} 
+				display( data, 11, TLM_A, 80 ); 
 				break;
 
 			case 3: // 11A116
@@ -888,13 +1162,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 				break;
 
 			case 4: // 11A152 FUEL SM/ENG INTERFACE P
-				if (sps_form != NULL)
-				{
-					value = unscale_data(data, 0, 300);
-					sprintf(msg,"%04.0f PSIA",value);
-					sps_form->s11A152->Enabled = TRUE;
-					sps_form->s11A152->Text = msg;						
-				} 
+				display( data, 11, TLM_A, 152 );
 				break;
 			}
 			break;
@@ -902,42 +1170,58 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 		case 27:
 			switch(framead)
 			{
-				case 0: // 11A9 PYRO BUS A VOLTS
-					if (els_form != NULL)
-					{
-						value = unscale_data(data, 0, 40);
-						sprintf(msg,"%04.2f V",value);
-						els_form->s11A9->Enabled = TRUE;
-						els_form->s11A9->Text = msg;						
-					} 
-					break;
+			case 0: // 11A9 PYRO BUS A VOLTS
+				display( data, 11, TLM_A, 9 );
+				break;
 
-				case 2: // 11A81 FC 2 O2 FLOW
-					if (eps_form != NULL)
-					{
-						value = unscale_data(data, 0, 1.6);
-						sprintf(msg,"%04.3f PPH",value);
-						eps_form->s11A81->Enabled = TRUE;
-						eps_form->s11A81->Text = msg;						
-					} 
-					break;
+			case 1: // 11A45
+				display( data, 11, TLM_A, 45 );
+				break;
+
+			case 2: // 11A81 FC 2 O2 FLOW
+				display( data, 11, TLM_A, 81 );
+				break;
+
+			case 3: // 11A117
+				display( data, 11, TLM_A, 117 );
+				break;
+
+			case 4: // 11A153
+				display( data, 11, TLM_A, 153 );
+				break;
 			}
+			break;
+
+		case 28: // 51A1
+			display( data, 51, TLM_A, 1);
+			break;
+
+		case 29: // 51A2
+			display( data, 51, TLM_A, 2);
+			break;
+
+		case 30: // 51A3
+			display( data, 51, TLM_A, 3 ); 
 			break;
 
 		case 31: // CMC DATA WORD
 			cmc_w0 = data&0177;
 			cmc_w0 <<= 8;
 			break;
+
 		case 32: // CMC DATA WORD
 			cmc_w0 |= data&0377;
 			break;
+
 		case 33: // CMC DATA WORD
 			cmc_w1 = data&0177;
 			cmc_w1 <<= 8;
 			break;
+
 		case 34: // CMC DATA WORD
 			cmc_w1 |= data&0377;
 			break;
+
 		case 35: // CMC DATA WORD
 			parse_cmc();
 			break;
@@ -945,278 +1229,145 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 		case 40:
 			switch(framead)
 			{
-				case 0: // 11A10 SPS HE TK PRESS
-					if (sps_form != NULL)
-					{
-						value = unscale_data(data, 0, 5000);
-						sprintf(msg,"%04.0f PSIA",value);
-						sps_form->s11A10->Enabled = TRUE;
-						sps_form->s11A10->Text = msg;								
-					} 
-					break;
+			case 0: // 11A10 SPS HE TK PRESS
+				display( data, 11, TLM_A, 10 );
+				break;
 
-				case 1: // 11A46 SM HE MANF C PRESS
-					if(sps_form != NULL)
-					{
-						value = unscale_data(data,0,400);
-						sprintf(msg,"%04.0f PSIA",value);
-						sps_form->s11A46->Enabled = TRUE;
-						sps_form->s11A46->Text = msg;						
-					} 
-					break;
+			case 1: // 11A46 SM HE MANF C PRESS
+				display( data, 11, TLM_A, 46 );
+				break;
 
-				case 2: // 11A82 FC 3 O2 FLOW
-					if (eps_form != NULL)
-					{
-						value = unscale_data(data, 0, 1.6);
-						sprintf(msg,"%04.3f PPH",value);
-						eps_form->s11A82->Enabled = TRUE;
-						eps_form->s11A82->Text = msg;						
-					} 
-					break;
+			case 2: // 11A82 FC 3 O2 FLOW
+				display( data, 11, TLM_A, 82 );
+				break;
 
-				case 3: // 11A118 SEC EVAP OUT LIQ TEMP
-					if ( ecs_form != NULL )
-					{
-						value = unscale_data(data, 25, 75);
-						sprintf(msg,"%05.2f °F",value);
-						ecs_form->s11A118->Enabled = TRUE;
-						ecs_form->s11A118->Text = msg;						
-					} 
-					break;
+			case 3: // 11A118 SEC EVAP OUT LIQ TEMP
+				display( data, 11, TLM_A, 118 );
+				break;
 
-				case 4: // 11A154 SCE NEG SUPPLY VOLTS
-					if ( tcm_form != NULL )
-					{
-						value = unscale_data(data, -30, 0);
-						sprintf(msg,"%04.2f V",value);
-						tcm_form->s11A154->Enabled = TRUE;
-						tcm_form->s11A154->Text = msg;						
-					} 
-					break;
+			case 4: // 11A154 SCE NEG SUPPLY VOLTS
+				display( data, 11, TLM_A, 154 );
+				break;
 			}
 			break;
 
 		case 41:
 			switch(framead)
 			{
-				case 0: // 11A11 SPS OX TK PRESS
-					if (sps_form != NULL)
-					{
-						value = unscale_data(data, 0, 250);
-						sprintf(msg,"%04.0f PSIA",value);
-						sps_form->s11A11->Enabled = TRUE;
-						sps_form->s11A11->Text = msg;								
-					}
-					break;
+			case 0: // 11A11 SPS OX TK PRESS
+				display( data, 11, TLM_A, 11 );
+				break;
 
-				case 1: // 11A47 LM HEATER CURRENT
-					if (eps_form != NULL)
-					{
-						value = unscale_data(data, 0, 10);
-						sprintf(msg,"%05.2f A",value);
-						eps_form->s11A47->Enabled = TRUE;
-						eps_form->s11A47->Text = msg;						
-					}
+			case 1: // 11A47 LM HEATER CURRENT
+				display( data, 11, TLM_A, 47 );
+				break;
 
-				case 3: // 11A119 SENSOR EXCITATION 5V
-					if ( tcm_form != NULL )
-					{
-						value = unscale_data(data, 0, 9);
-						sprintf(msg,"%04.2f V",value);
-						tcm_form->s11A119->Enabled = TRUE;
-						tcm_form->s11A119->Text = msg;						
-					}
-					break;
+			case 2: // 11A83
+				display( data, 11, TLM_A, 83 );
+				break;
 
-				case 4: // 11A155 CM HE TK A TEMP
-					if (sps_form != NULL)
-					{
-						value = unscale_data(data, 0, 300);
-						sprintf(msg,"%05.2f °F",value);
-						sps_form->s11A155->Enabled = TRUE;
-						sps_form->s11A155->Text = msg;								
-					}
-					break;
+			case 3: // 11A119 SENSOR EXCITATION 5V
+				display( data, 11, TLM_A, 119 );
+				break;
+
+			case 4: // 11A155 CM HE TK A TEMP
+				display( data, 11, TLM_A, 155 );
+				break;
 			}
 			break;
 
 		case 42:
 			switch(framead)
 			{
-				case 0: // 11A12 SPS FU TK PRESS
-					if (sps_form != NULL)
-					{
-						value = unscale_data(data, 0, 250);
-						sprintf(msg,"%04.0f PSIA",value);
-						sps_form->s11A12->Enabled = TRUE;
-						sps_form->s11A12->Text = msg;								
-					}
-					break;
+			case 0: // 11A12 SPS FU TK PRESS
+				display( data, 11, TLM_A, 12 );
+				break;
 
-				case 1: // 11A48 PCM HI LEVEL 85 PCT REF
-					if ( tcm_form != NULL )
-					{
-						value = unscale_data(data, 0, 5);
-						sprintf(msg,"%04.2f V",value);
-						tcm_form->s11A48->Enabled = TRUE;
-						tcm_form->s11A48->Text = msg;						
-					}
-					break;
+			case 1: // 11A48 PCM HI LEVEL 85 PCT REF
+				display( data, 11, TLM_A, 48 );
+				break;
 
-				case 2: // 11A84 FC 2 CUR
-					if ( eps_form != NULL )
-					{
-						value = unscale_data(data,0,100);
-						sprintf(msg,"%03.2f A",value);
-						eps_form->s11A84->Enabled = TRUE;
-						eps_form->s11A84->Text = msg;						
-					}
-					break;
+			case 2: // 11A84 FC 2 CUR
+				display( data, 11, TLM_A, 84 );
+				break;
 
-				case 3: // 11A120 SENSOR EXCITATION 10V
-					if ( tcm_form != NULL )
-					{
-						value = unscale_data(data, 0, 15);
-						sprintf(msg,"%04.2f V",value);
-						tcm_form->s11A120->Enabled = TRUE;
-						tcm_form->s11A120->Text = msg;						
-					}
-					break;
+			case 3: // 11A120 SENSOR EXCITATION 10V
+				display( data, 11, TLM_A, 120 );
+				break;
 
-				case 4: // 11A156 CM HE TK B TEMP
-					if (sps_form != NULL)
-					{
-						value = unscale_data(data, 0, 300);
-						sprintf(msg,"%05.2f °F",value);
-						sps_form->s11A156->Enabled = TRUE;
-						sps_form->s11A156->Text = msg;								
-					}
-					break;
+			case 4: // 11A156 CM HE TK B TEMP
+				display( data, 11, TLM_A, 156 );
+				break;
 			}
 			break;
 
 		case 43:
 			switch(framead)
 			{
-				case 0: // 11A13 GLY ACCUM QTY
-					if ( ecs_form != NULL )
-					{
-						value = unscale_data(data, 0, 100);
-						sprintf(msg,"%05.2f %",value);
-						ecs_form->s11A13->Enabled = TRUE;
-						ecs_form->s11A13->Text = msg;						
-					}
-					break;
+			case 0: // 11A13 GLY ACCUM QTY
+				display( data, 11, TLM_A, 13 );
+				break;
 
-				case 1: // 11A49 PCM LO LEVEL 15 PCT REF
-					if ( tcm_form != NULL )
-					{
-						value = unscale_data(data, 0, 1);
-						sprintf(msg,"%04.2f V",value);
-						tcm_form->s11A49->Enabled = TRUE;
-						tcm_form->s11A49->Text = msg;						
-					}
-					break;
+			case 1: // 11A49 PCM LO LEVEL 15 PCT REF
+				display( data, 11, TLM_A, 49 );
+				break;
 
-				case 2: // 11A85 FC 3 CUR
-					if ( eps_form != NULL )
-					{
-						value = unscale_data(data,0,100);
-						sprintf(msg,"%03.2f A",value);
-						eps_form->s11A85->Enabled = TRUE;
-						eps_form->s11A85->Text = msg;						
-					}
-					break;
+			case 2: // 11A85 FC 3 CUR
+				display( data, 11, TLM_A, 85 );
+				break;
 
-				case 3: // 11A121 USB RCVR AGC VOLTAGE
-					if ( tcm_form != NULL )
-					{
-						value = unscale_data(data, -130, -50);
-						sprintf(msg,"%+04.1f DBM",value);
-						tcm_form->s11A121->Enabled = TRUE;
-						tcm_form->s11A121->Text = msg;						
-					}
-					break;
+			case 3: // 11A121 USB RCVR AGC VOLTAGE
+				display( data, 11, TLM_A, 121 );
+				break;
 
-				case 4: // 11A157 SEC GLY PUMP OUT PRESS
-					if ( ecs_form != NULL )
-					{
-						value = unscale_data(data, 0, 60);
-						sprintf(msg,"%04.0f PSIG",value);
-						ecs_form->s11A157->Enabled = TRUE;
-						ecs_form->s11A157->Text = msg;						
-					}
-					break;
+			case 4: // 11A157 SEC GLY PUMP OUT PRESS
+				display( data, 11, TLM_A, 157 );
+				break;
 			}
 			break;
 
 		case 44: // 12A9 CM X-AXIS ACCEL
 		case 108:
-			if ( gnc_form != NULL )
-			{
-				value = unscale_data(data, -2, 10);
-				sprintf(msg,"%+05.3f G",value);
-				gnc_form->s12A9->Enabled = TRUE;
-				gnc_form->s12A9->Text = msg;						
-			}
+			display( data, 12, TLM_A, 9 );
 			break;
 
 		case 45: // 12A10 YAW GIMBL POS 1 OR 2
 		case 109:
-			if ( scs_form != NULL )
-			{
-				value = unscale_data(data, -5, 5);
-				sprintf(msg,"%+04.2f °",value);
-				scs_form->s12A10->Enabled = TRUE;
-				scs_form->s12A10->Text = msg;						
-			}
+			display( data, 12, TLM_A, 10 );
 			break;
 
 		case 46: // 12A11 CM Y-AXIS ACCEL
 		case 110:
-			if ( gnc_form != NULL )
-			{
-				value = unscale_data(data, -2, 10);
-				sprintf(msg,"%+05.3f G",value);
-				gnc_form->s12A11->Enabled = TRUE;
-				gnc_form->s12A11->Text = msg;						
-			}
+			display( data, 12, TLM_A, 11 );
 			break;
 
 		case 47: // 12A12 CM Z-AXIS ACCEL
 		case 111:
-			if ( gnc_form != NULL )
-			{
-				value = unscale_data(data, -2, 10);
-				sprintf(msg,"%+05.3f G",value);
-				gnc_form->s12A12->Enabled = TRUE;
-				gnc_form->s12A12->Text = msg;						
-			}
+			display( data, 12, TLM_A, 12 );
 			break;
 
 		case 48:
 			switch(framead)
 			{
-				case 0: // 11A14 ECS O2 FLOW O2 SUPPLY MANF
-					if ( ecs_form != NULL )
-					{
-						value = unscale_data(data, 0.2, 1);
-						sprintf(msg, "%04.3f PPH", value);
-						ecs_form->s11A14->Enabled = TRUE;
-						ecs_form->s11A14->Text = msg;						
-					}
-					break;
+			case 0: // 11A14 ECS O2 FLOW O2 SUPPLY MANF
+				display( data, 11, TLM_A, 14 );
+				break;
 
-				case 1: // 11A50 USB RCVR PHASE ERR
-					if ( tcm_form != NULL )
-					{
-						value = unscale_data(data, -90000, 90000);
-						sprintf(msg,"%+05.0f Hz",value);
-						tcm_form->s11A50->Enabled = TRUE;
-						tcm_form->s11A50->Text = msg;						
-					}
-					break;
+			case 1: // 11A50 USB RCVR PHASE ERR
+				display( data, 11, TLM_A, 50 );
+				break;
+
+			case 2: // 11A86
+				display( data, 11, TLM_A, 86 );
+				break;
+
+			case 3: // 11A122
+				display( data, 11, TLM_A, 122 );
+				break;
+
+			case 4: // 11A158
+				display( data, 11, TLM_A, 158 );
+				break;
 			}
 			break;
 
@@ -1231,7 +1382,7 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 
 		case 72:
 			switch(framead){
-			case 2:	
+			case 2:	// BAT BUS A VOLTS
 				display( data, 11, TLM_A, 91 );
 				break;
 			}
@@ -1239,15 +1390,11 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 
 		case 74:
 			switch(framead){
-			case 1:
-				if(eps_form != NULL){
-					value = unscale_data(data,0,45);
-					sprintf(msg,"%+04.2f V",value);
-					eps_form->s11A57->Enabled = TRUE;
-					eps_form->s11A57->Text = msg;						
-				}
+			case 1: // MAIN BUS A VOLTS
+				display( data, 11, TLM_A, 57 );
 				break;
-			case 2:
+
+			case 2: // BAT BUS B VOLTS
 				display( data, 11, TLM_A, 93 );
 				break;
 			}
@@ -1255,17 +1402,11 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 
 		case 75:
 			switch(framead){
-			case 1:
-				if(eps_form != NULL){
-					value = unscale_data(data,0,45);
-					sprintf(msg,"%+04.2f V",value);
-					eps_form->s11A58->Enabled = TRUE;
-					eps_form->s11A58->Text = msg;						
-				}
+			case 1: // MAIN BUS B VOLTS
+				display( data, 11, TLM_A, 58 );
 				break;
 			}
 			break;
-
 	}
 }
 
@@ -2885,9 +3026,8 @@ char Form1::get_dsky_char(unsigned int bits){
 	}
 }
 
-void Form1::parse_lbr(unsigned char data, int bytect){
-	char msg[256];
-	double value;
+void Form1::parse_lbr(unsigned char data, int bytect)
+{
 	switch(bytect){
 		case 0: // SYNC 1
 			if(data != 05){ end_lbr(); lock_type = 0; cmc_lock_type = 0; }
