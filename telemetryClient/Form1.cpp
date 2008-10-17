@@ -122,6 +122,13 @@ double Form1::unscale_data(unsigned char data,double low,double high){
 	return (data*step) + low;
 }
 
+void Form1::showValue( System::Windows::Forms::TextBox *tb, char *msg )
+{
+	tb->Text = msg;
+	tb->Enabled = TRUE;
+	tb->ReadOnly = TRUE;
+}
+
 void Form1::display(unsigned char data, int channel, int type, int ccode)
 {
 	char msg[256];
@@ -143,7 +150,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0, 17);
 					sprintf(msg,"%03.1f PSIA",value);
-					ecs_form->s11A1->Text = msg;					
+					showValue( ecs_form->s11A1, msg );				
 				}
 				break;
 
@@ -152,7 +159,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0, 1 );
 					sprintf(msg,"%+03.2f PSID",value);
-					ecs_form->s11A2->Text = msg;						
+					showValue( ecs_form->s11A2, msg );						
 				}
 				break;
 
@@ -161,7 +168,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,60);
 					sprintf(msg,"%04.1f PSIG",value);
-					ecs_form->s11A3->Text = msg;						
+					showValue( ecs_form->s11A3, msg );
 				}
 				break;
 
@@ -170,7 +177,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 50, 1050);
 					sprintf(msg,"%04.0f PSIG",value);
-					ecs_form->s11A4->Text = msg;						
+					showValue( ecs_form->s11A4, msg );						
 				}
 				break;
 
@@ -179,7 +186,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0, 40);
 					sprintf(msg,"%04.2f V",value);
-					els_form->s11A5->Text = msg;						
+					showValue( els_form->s11A5, msg );						
 				}
 				break;
 
@@ -188,7 +195,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, -5, 5);
 					sprintf(msg,"%+03.2f IN",value);
-					ecs_form->s11A37->Text = msg;						
+					showValue( ecs_form->s11A37, msg );
 				}
 				break;
 
@@ -197,7 +204,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0.1,10000);
 					sprintf(msg,"%06.0f C/S",value);
-					tcm_form->s11A38->Text = msg;						
+					showValue( tcm_form->s11A38, msg );
 				}
 				break;
 
@@ -206,7 +213,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,400);
 					sprintf(msg,"%04.0f PSIA",value);
-					sps_form->s11A39->Text = msg;						
+					showValue( sps_form->s11A39, msg );
 				}
 				break;
 
@@ -215,7 +222,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,400);
 					sprintf(msg,"%04.0f PSIA",value);
-					sps_form->s11A40->Text = msg;						
+					showValue( sps_form->s11A40, msg );
 				}
 				break;
 
@@ -224,7 +231,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0.1,10000);
 					sprintf(msg,"%06.0f C/S",value);
-					tcm_form->s11A41->Text = msg;						
+					showValue( tcm_form->s11A41, msg );
 				}
 				break;
 
@@ -233,7 +240,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0, 5);
 					sprintf(msg,"%05.2f A",value);
-					eps_form->s11A73->Text = msg;						
+					showValue( eps_form->s11A73, msg );
 				}
 				break;
 
@@ -242,7 +249,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,100);
 					sprintf(msg,"%05.2f A",value);
-					eps_form->s11A74->Text = msg;						
+					showValue( eps_form->s11A74, msg );
 				}
 				break;
 
@@ -251,7 +258,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,45);
 					sprintf(msg,"%02.2f V",value);
-					eps_form->s11A75->Text = msg;						
+					showValue( eps_form->s11A75, msg );
 				}
 				break;
 
@@ -260,7 +267,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,100);
 					sprintf(msg,"%03.2f A",value);
-					eps_form->s11A76->Text = msg;						
+					showValue( eps_form->s11A76, msg );
 				}
 				break;
 
@@ -269,7 +276,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0, 0.2);
 					sprintf(msg,"%04.3f PPH",value);
-					eps_form->s11A77->Text = msg;						
+					showValue( eps_form->s11A77, msg );
 				}
 				break;
 
@@ -278,7 +285,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0, 100);
 					sprintf(msg,"%05.2f A",value);
-					eps_form->s11A109->Text = msg;						
+					showValue( eps_form->s11A109, msg );
 				}
 				break;
 
@@ -287,7 +294,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,100);
 					sprintf(msg,"%05.2f A",value);
-					eps_form->s11A110->Text = msg;						
+					showValue( eps_form->s11A110, msg );
 				}
 				break;
 
@@ -296,7 +303,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,400);
 					sprintf(msg,"%04.0f PSIA",value);
-					sps_form->s11A111->Text = msg;						
+					showValue( sps_form->s11A111, msg );
 				}
 				break;
 
@@ -305,7 +312,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,400);
 					sprintf(msg,"%04.0f PSIA",value);
-					sps_form->s11A112->Text = msg;						
+					showValue( sps_form->s11A112, msg );
 				}
 				break;
 
@@ -314,7 +321,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data,0,150);
 					sprintf(msg,"%03.2f V",value);
-					eps_form->s11A147->Text = msg;						
+					showValue( eps_form->s11A147, msg );
 				}
 				break;
 
@@ -323,7 +330,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0, 30);
 					sprintf(msg,"%04.2f V",value);
-					tcm_form->s11A148->Text = msg;						
+					showValue( tcm_form->s11A148, msg );
 				}
 				break;
 			}
@@ -337,7 +344,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, -2.5,2.5);
 					sprintf(msg,"%+03.2f",value);
-					gnc_form->s12A1->Text = msg;						
+					showValue( gnc_form->s12A1, msg );
 				}
 				break;
 
@@ -346,7 +353,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, -2.5,2.5);
 					sprintf(msg,"%+03.2f",value);
-					gnc_form->s12A2->Text = msg;						
+					showValue( gnc_form->s12A2, msg );
 				}
 				break;
 
@@ -355,7 +362,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, -2.5,2.5);
 					sprintf(msg,"%+03.2f",value);
-					gnc_form->s12A3->Text = msg;						
+					showValue( gnc_form->s12A3, msg );
 				}
 				break;
 
@@ -364,7 +371,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, -50, 50);
 					sprintf(msg,"%+04.2f °",value);
-					scs_form->s12A4->Text = msg;						
+					showValue( scs_form->s12A4, msg );
 				}
 				break;
 
@@ -373,7 +380,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, -10, 10);
 					sprintf(msg,"%+04.2f °",value);
-					scs_form->s12A5->Text = msg;						
+					showValue( scs_form->s12A5, msg );
 				}
 				break;
 
@@ -388,7 +395,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0.1, 0.5);
 					sprintf(msg,"%05.4f MV",value);
-					crw_form->s22A1->Text = msg;						
+					showValue( crw_form->s22A1, msg );
 				}
 				break;
 
@@ -397,7 +404,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0.1, 0.5);
 					sprintf(msg,"%05.4f MV",value);
-					crw_form->s22A2->Text = msg;						
+					showValue( crw_form->s22A2, msg );						
 				}
 				break;
 
@@ -405,8 +412,8 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				if ( crw_form != NULL )
 				{
 					value = unscale_data(data, 0.1, 0.5);
-					sprintf(msg,"%05.4f MV",value);
-					crw_form->s22A3->Text = msg;						
+					sprintf(msg,"%05.4f MV",value);	
+					showValue( crw_form->s22A3, msg );
 				}
 				break;
 
@@ -415,7 +422,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				{
 					value = unscale_data(data, 0.1, 0.5);
 					sprintf(msg,"%04.3f A",value);
-					scs_form->s22A4->Text = msg;	
+					showValue( scs_form->s22A4, msg );
 				}
 				break;
 			}

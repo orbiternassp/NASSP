@@ -128,6 +128,8 @@ namespace GroundStation
 		void parse_lbr(unsigned char data, int bytect);
 		void display(unsigned char data, int channel, int type, int ccode);
 
+		void showValue( System::Windows::Forms::TextBox *tb, char *msg );
+
 		/// <summary>
 		/// Required method for Designer support - do not modify
 		/// the contents of this method with the code editor.
