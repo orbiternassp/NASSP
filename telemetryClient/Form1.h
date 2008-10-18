@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2008/10/17 03:14:21  movieman523
+  *	More low bit-rate decoding.
+  *	
   **************************************************************************/
 
 namespace GroundStation
@@ -154,7 +157,13 @@ namespace GroundStation
 		void parse_lbr(unsigned char data, int bytect);
 		void display(unsigned char data, int channel, int type, int ccode);
 
-		void showValue( System::Windows::Forms::TextBox *tb, char *msg );
+		typedef System::Windows::Forms::TextBox textDisplay;
+
+		void showValue( textDisplay *tb, char *msg );
+		void showPercentage( textDisplay *tb, unsigned char data );
+		void showSci( textDisplay *tb, unsigned char data );
+		void showPSIA( textDisplay *tb, unsigned char data, double low, double high );
+		void showTempF( textDisplay *tb, unsigned char data, double low, double high );
 
 		/// <summary>
 		/// Required method for Designer support - do not modify

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2008/10/17 07:16:03  movieman523
+  *	More telemetry.
+  *	
   *	Revision 1.14  2008/10/17 06:18:05  movieman523
   *	Moved all decoded data to new display() method.
   *	
@@ -158,11 +161,65 @@ double Form1::unscale_data( unsigned char data, double low, double high )
 	return ( data * step ) + low;
 }
 
-void Form1::showValue( System::Windows::Forms::TextBox *tb, char *msg )
+void Form1::showValue( textDisplay *tb, char *msg )
 {
 	tb->Text = msg;
 	tb->Enabled = TRUE;
 	tb->ReadOnly = TRUE;
+}
+
+void Form1::showPercentage( textDisplay *tb, unsigned char data )
+{
+	char msg[64];
+	sprintf(msg, "%05.2f %%", unscale_data(data, 0, 100));
+	showValue( tb, msg );				
+}
+
+void Form1::showSci( textDisplay *tb, unsigned char data )
+{
+	char msg[64];
+	sprintf(msg, "%05.1f", unscale_data(data, 0, 100));
+	showValue( tb, msg );
+}
+
+void Form1::showPSIA( textDisplay *tb, unsigned char data, double low, double high )
+{
+	char msg[64];
+	char *sFormat = "%05.3f PSIA";
+	if ( high > 1000 )
+	{
+		sFormat = "%04.0f PSIA";
+	}
+	else if ( high > 100.0 )
+	{
+		sFormat = "%05.1f PSIA";
+	}
+	else if ( high > 10.0 )
+	{
+		sFormat = "%05.2f PSIA";
+	}
+
+	sprintf(msg, sFormat, unscale_data(data, low, high));
+	showValue( tb, msg );
+}
+
+void Form1::showTempF( textDisplay *tb, unsigned char data, double low, double high )
+{
+	char msg[64];
+	char *sFormat;
+
+	// If low < 0 we need the sign. If low > 0 then high must also be > 0.
+	if ( low < 0 )
+	{
+		sFormat = "%+07.2f °F";
+	}
+	else
+	{
+		sFormat = "%06.2f °F";
+	}
+
+	sprintf(msg, sFormat, unscale_data(data, low, high));
+	showValue( tb, msg );
 }
 
 void Form1::display(unsigned char data, int channel, int type, int ccode)
@@ -176,48 +233,141 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 		case 10: // S10A
 			switch(ccode)
 			{
+			case 3: // CO2 PARTIAL PRESS
+				if ( ecs_form != NULL )
+				{
+					value = unscale_data(data, 0.0, 30.0);
+					sprintf(msg,"%04.1f MM",value);
+					showValue( ecs_form->s10A3, msg );				
+				}
+				break;
+
 			case 4:	// GLY EVAP BACK PRESS
 				if ( ecs_form != NULL )
 				{
-					value = unscale_data(data, 0.05, 0.25);
-					sprintf(msg,"%04.3f PSIA",value);
-					showValue( ecs_form->s10A4, msg );				
+					showPSIA( ecs_form->s10A4, data,  0.05, 0.25 );			
+				}
+				break;
+
+			case 6:	// CABIN PRESS
+				if ( ecs_form != NULL )
+				{
+					showPSIA( ecs_form->s10A6, data,  0.0, 17.0 );					
+				}
+				break;
+
+			case 8:	// SEC EVAP OUT STEAM PRESS
+				if ( ecs_form != NULL )
+				{
+					showPSIA( ecs_form->s10A8, data,  0.5, 0.25 );			
+				}
+				break;
+
+			case 9:	// WASTE H20 QTY
+				if ( ecs_form != NULL )
+				{
+					showPercentage( ecs_form->s10A9, data );				
 				}
 				break;
 
 			case 10: // SPS VLV ACT PRESS PRI
 				if ( sps_form != NULL )
 				{
-					value = unscale_data(data, 0, 5000);
-					sprintf(msg,"%04.0f PSIA",value);
-					showValue( sps_form->s10A10, msg );								
+					showPSIA( sps_form->s10A10, data,  0.0, 5000.0 );							
+				}
+				break;
+
+			case 11: // SPS VLV ACT PRESS SEC
+				if ( sps_form != NULL )
+				{
+					showPSIA( sps_form->s10A11, data,  0.0, 5000.0 );							
+				}
+				break;
+
+			case 12: // GLY EVAP OUT TEMP
+				if ( ecs_form != NULL )
+				{
+					showTempF( ecs_form->s10A12, data,  25, 75 );
+				}
+				break;
+
+			case 14: // ENG CHAMBER PRESS
+				if ( sps_form != NULL )
+				{
+					showPSIA( sps_form->s10A14, data,  0.0, 150.0 );							
+				}
+				break;
+
+			case 15: // ECS RAD OUT TEMP
+				if ( ecs_form != NULL )
+				{
+					showTempF( ecs_form->s10A15, data,  -50, 100 );
 				}
 				break;
 
 			case 16: // HE TK TEMP
 				if ( sps_form != NULL )
 				{
-					value = unscale_data(data, -100, 200);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( sps_form->s10A16, msg );								
+					showTempF( sps_form->s10A16, data,  -100, 200 );
+				}
+				break;
+
+			case 17: // SM ENG PKG B TEMP
+				if ( sps_form != NULL )
+				{
+					showTempF( sps_form->s10A17, data,  0, 300 );							
+				}
+				break;
+
+			case 18: // CM HE TK A PRESS
+				if ( sps_form != NULL )
+				{
+					showPSIA( sps_form->s10A18, data,  0.0, 5000.0 );							
 				}
 				break;
 
 			case 19: // SM ENG PKG C TEMP
 				if ( sps_form != NULL )
 				{
-					value = unscale_data(data, 0, 300);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( sps_form->s10A19, msg );								
+					showTempF( sps_form->s10A19, data,  0, 300 );							
+				}
+				break;
+
+			case 20: // SM ENG PKG D TEMP
+				if ( sps_form != NULL )
+				{
+					showTempF( sps_form->s10A20, data,  0, 300 );							
+				}
+				break;
+
+			case 21: // CM HE TK B PRESS
+				if ( sps_form != NULL )
+				{
+					showPSIA( sps_form->s10A21, data,  0.0, 5000.0 );							
 				}
 				break;
 
 			case 22: // DOCKING PROBE TEMP
 				if ( els_form != NULL )
 				{
-					value = unscale_data(data, -100, 300);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( els_form->s10A22, msg );				
+					showTempF( els_form->s10A22, data,  -100, 300 );			
+				}
+				break;
+
+			case 24: // SM HE TK A PRESS
+				if ( sps_form != NULL )
+				{
+					showPSIA( sps_form->s10A24, data,  0.0, 5000.0 );							
+				}
+				break;
+
+			case 26:
+				break;
+
+			case 27: // SM HE TK B PRESS
+				if ( sps_form != NULL )
+				{
+					showPSIA( sps_form->s10A27, data,  0.0, 5000.0 );							
 				}
 				break;
 
@@ -225,7 +375,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				if ( sps_form != NULL )
 				{
 					value = unscale_data(data, 0, 60);
-					sprintf(msg,"%06.2f %",value);
+					sprintf(msg,"%06.2f %%",value);
 					showValue( sps_form->s10A28, msg );						
 				}
 				break;
@@ -234,7 +384,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				if ( sps_form != NULL )
 				{
 					value = unscale_data(data, 0, 60);
-					sprintf(msg,"%06.2f %",value);
+					sprintf(msg,"%06.2f %%",value);
 					showValue( sps_form->s10A31, msg );						
 				}
 				break;
@@ -242,54 +392,42 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 			case 37: // SPS VLV BODY TEMP
 				if ( sps_form != NULL )
 				{
-					value = unscale_data(data, 0, 200);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( sps_form->s10A37, msg );								
+					showTempF( sps_form->s10A37, data,  0, 200 );							
 				}
 				break;
 
 			case 49: // SPS INJECTOR FLANGE TEMP 2
 				if ( sps_form != NULL )
 				{
-					value = unscale_data(data, 0, 600);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( sps_form->s10A49, msg );								
+					showTempF( sps_form->s10A49, data,  0, 600 );							
 				}
 				break;
 
 			case 61: // NUCLEAR PARTICLE DETECTOR TEMP
 				if ( tcm_form != NULL )
 				{
-					value = unscale_data(data, -109, 140);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( tcm_form->s10A61, msg );								
+					showTempF( tcm_form->s10A61, data,  -109, 140 );							
 				}
 				break;
 
 			case 67: // FC 3 RAD IN TEMP
 				if ( eps_form != NULL )
 				{
-					value = unscale_data(data, -50, 300);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( eps_form->s10A67, msg );				
+					showTempF( eps_form->s10A67, data,  -50, 300 );		
 				}
 				break;
 
 			case 70: // SIDE HS BOND LOC 2 TEMP
 				if ( str_form != NULL )
 				{
-					value = unscale_data(data, -260, 600);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( str_form->s10A70, msg );				
+					showTempF( str_form->s10A70, data,  -260, 600 );			
 				}
 				break;
 
 			case 79: // SIDE HS BOND LOC 4 TEMP
 				if ( str_form != NULL )
 				{
-					value = unscale_data(data, -260, 600);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( str_form->s10A79, msg );				
+					showTempF( str_form->s10A79, data,  -260, 600 );			
 				}
 				break;
 
@@ -305,9 +443,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 			case 88: // INVERTER 2 TEMP
 				if ( eps_form != NULL )
 				{
-					value = unscale_data(data, 32, 248);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( eps_form->s10A88, msg );				
+					showTempF( eps_form->s10A88, data,  32, 248 );			
 				}
 				break;
 
@@ -323,138 +459,114 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 			case 100: // PRI EVAP INLET TEMP
 				if ( ecs_form != NULL )
 				{
-					value = unscale_data(data, 35, 100);
-					sprintf(msg,"%+07.2f °F",value);
-					showValue( ecs_form->s10A100, msg );				
+					showTempF( ecs_form->s10A100, data,  35, 100 );			
 				}
 				break;
 
 			case 106: // SCI EXP #4
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A106, msg );						
+					showSci( crw_form->s10A106, data );					
 				}
 				break;
 
 			case 107: // SCI EXP #5
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A107, msg );						
+					showSci( crw_form->s10A107, data );						
 				}
 				break;
 
 			case 108: // SCI EXP #1
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A108, msg );						
+					showSci( crw_form->s10A108, data );						
 				}
 				break;
 
 			case 109: // SCI EXP #6
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A109, msg );						
+					showSci( crw_form->s10A109, data );						
 				}
 				break;
 
 			case 110: // SCI EXP #7
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A110, msg );						
+					showSci( crw_form->s10A110, data );						
 				}
 				break;
 
 			case 111: // SCI EXP #2
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A111, msg );						
+					showSci( crw_form->s10A111, data );						
 				}
 				break;
 
 			case 112: // SCI EXP #8
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A112, msg );						
+					showSci( crw_form->s10A112, data );						
 				}
 				break;
 
 			case 113: // SCI EXP #9
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A113, msg );						
+					showSci( crw_form->s10A113, data );					
 				}
 				break;
 
 			case 115: // SCI EXP #10
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A115, msg );						
+					showSci( crw_form->s10A115, data );						
 				}
 				break;
 
 			case 116: // SCI EXP #11
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A116, msg );						
+					showSci( crw_form->s10A116, data );					
 				}
 				break;
 
 			case 118: // SCI EXP #12
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A118, msg );						
+					showSci( crw_form->s10A118, data );						
 				}
 				break;
 
 			case 119: // SCI EXP #13
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A119, msg );						
+					showSci( crw_form->s10A119, data );					
 				}
 				break;
 
 			case 121: // SCI EXP #14
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A121, msg );						
+					showSci( crw_form->s10A121, data );					
 				}
 				break;
 
 			case 122: // SCI EXP #15
 				if ( crw_form != NULL )
 				{
-					value = unscale_data(data, 0, 100);
-					sprintf(msg,"%05.1f",value);
-					showValue( crw_form->s10A122, msg );						
+					showSci( crw_form->s10A122, data );						
 				}
 				break;
 
+			case 136: // SM ENG PKG A TEMP
+				if ( sps_form != NULL )
+				{
+					showTempF( sps_form->s10A136, data,  0, 300 );							
+				}
+				break;
 			}
 			break;
 
@@ -464,9 +576,7 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 			case 1: // 11A1 SUIT MANF ABS PRESS
 				if ( ecs_form != NULL )
 				{
-					value = unscale_data(data, 0, 17);
-					sprintf(msg,"%03.1f PSIA",value);
-					showValue( ecs_form->s11A1, msg );				
+					showPSIA( ecs_form->s11A1, data, 0, 17);				
 				}
 				break;
 
@@ -1689,6 +1799,24 @@ void Form1::parse_hbr(unsigned char data, int bytect){
 				display( data, 11, TLM_A, 58 );
 				break;
 			}
+			break;
+
+		case 83: // MAGICAL WORD 2
+			// 10A2
+			// 10A5
+			// 10A8
+			// ...
+			// 10A149
+			display( data, 10, TLM_A, 2+(framect*3) );
+			break;
+
+		case 115: // MAGICAL WORD 3
+			// 10A3
+			// 10A6
+			// 10A9
+			// ...
+			// 10A150
+			display( data, 10, TLM_A, 3+(framect*3) );
 			break;
 	}
 }
