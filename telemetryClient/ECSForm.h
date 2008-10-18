@@ -42,7 +42,7 @@ namespace GroundStation
 			this->Hide();     // Hide instead.
 		}      		
 	private: System::Windows::Forms::Label *  label19;
-	private: System::Windows::Forms::TextBox *  s10A6;
+	public: System::Windows::Forms::TextBox *  s10A6;
 	private: System::Windows::Forms::Label *  label1;
 	private: System::Windows::Forms::Label *  label2;
 	private: System::Windows::Forms::Label *  label3;
