@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.156  2008/10/17 07:16:26  movieman523
+  *	More telemetry.
+  *	
   *	Revision 1.155  2008/10/16 07:12:10  movieman523
   *	Telemetry changes.
   *	
@@ -2766,6 +2769,27 @@ void Saturn::GetRCSStatus(int index, RCSStatus &rs)
 			rs.PackageTempF = pRcs->GetPackageTempF();
 			rs.PropellantPressurePSI = pRcs->GetPropellantPressurePSI();
 		}
+
+		return;
+	}
+
+	CMRCSPropellantSource *pRcs = 0;
+	switch ( index )
+	{
+	case RCS_CM_RING_1:
+		pRcs = &CMRCS1;
+		break;
+
+	case RCS_CM_RING_2:
+		pRcs = &CMRCS2;
+		break;
+	}
+
+	if ( pRcs )
+	{
+		rs.HeliumPressurePSI = pRcs->GetHeliumPressurePSI();
+		rs.HeliumTempF = pRcs->GetHeliumTempF();
+		rs.PropellantPressurePSI = pRcs->GetPropellantPressurePSI();
 	}
 }
 

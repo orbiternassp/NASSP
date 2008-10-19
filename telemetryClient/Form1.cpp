@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2008/10/18 07:01:29  movieman523
+  *	More telemetry and rationalisation.
+  *	
   *	Revision 1.15  2008/10/17 07:16:03  movieman523
   *	More telemetry.
   *	
@@ -168,11 +171,16 @@ void Form1::showValue( textDisplay *tb, char *msg )
 	tb->ReadOnly = TRUE;
 }
 
-void Form1::showPercentage( textDisplay *tb, unsigned char data )
+void Form1::showPercentage( textDisplay *tb, unsigned char data, double maxPercent )
 {
 	char msg[64];
-	sprintf(msg, "%05.2f %%", unscale_data(data, 0, 100));
+	sprintf(msg, "%05.2f %%", unscale_data(data, 0, maxPercent));
 	showValue( tb, msg );				
+}
+
+void Form1::showPercentage( textDisplay *tb, unsigned char data )
+{
+	showPercentage( tb, data, 100.0 );
 }
 
 void Form1::showSci( textDisplay *tb, unsigned char data )
@@ -361,31 +369,59 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
-			case 26:
+			case 26: // OX TK 1 QTY -TOTAL AUX
+				if ( sps_form )
+				{
+					showPercentage( sps_form->s10A26, data, 50.0 );
+				}
 				break;
 
 			case 27: // SM HE TK B PRESS
 				if ( sps_form != NULL )
 				{
-					showPSIA( sps_form->s10A27, data,  0.0, 5000.0 );							
+					showPSIA( sps_form->s10A27, data,  0.0, 5000.0 );
 				}
 				break;
 
 			case 28: // OX TK 2 QTY
 				if ( sps_form != NULL )
 				{
-					value = unscale_data(data, 0, 60);
-					sprintf(msg,"%06.2f %%",value);
-					showValue( sps_form->s10A28, msg );						
+					showPercentage( sps_form->s10A28, data, 60.0 );
+				}
+				break;
+
+			case 29: // FU TK 1 QTY -TOTAL AUX
+				if ( sps_form )
+				{
+					showPercentage( sps_form->s10A29, data, 50.0 );
+				}
+				break;
+
+			case 30: // SM HE TK C PRESS
+				if ( sps_form )
+				{
+					showPSIA( sps_form->s10A30, data,  0.0, 5000.0 );
 				}
 				break;
 
 			case 31: // FU TK 2 QTY
 				if ( sps_form != NULL )
 				{
-					value = unscale_data(data, 0, 60);
-					sprintf(msg,"%06.2f %%",value);
-					showValue( sps_form->s10A31, msg );						
+					showPercentage( sps_form->s10A28, data, 60.0 );
+				}
+				break;
+
+			case 33: // SM HE TK D PRESS
+				if ( sps_form )
+				{
+					showPSIA( sps_form->s10A33, data,  0.0, 5000.0 );
+				}
+				break;
+
+			case 36: // H2 TK 1 PRESS
+				if ( eps_form )
+				{
+					showPSIA( eps_form->s10A36, data,  0.0, 350.0 );
 				}
 				break;
 
@@ -396,10 +432,80 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 39: // H2 TK 2 PRESS
+				if ( eps_form )
+				{
+					showPSIA( eps_form->s10A39, data,  0.0, 350.0 );
+				}
+				break;
+
+			case 42: // O2 TK 2 QTY
+				if ( eps_form != NULL )
+				{
+					showPercentage( eps_form->s10A42, data );
+				}
+				break;
+
+			case 44: // OX LINE 1 TEMP
+				if ( sps_form != NULL )
+				{
+					showTempF( sps_form->s10A44, data,  0, 200 );							
+				}
+				break;
+
+			case 45: // SUIT AIR HX OUT TEMP
+				if ( ecs_form )
+				{
+					showTempF( ecs_form->s10A45, data,  20, 95 );
+				}
+				break;
+
+			case 47: // SPS INJECTOR FLANGE TEMP 1
+				if ( sps_form != NULL )
+				{
+					showTempF( sps_form->s10A47, data,  0, 600 );							
+				}
+				break;
+
+			case 48: // PRI RAD IN TEMP
+				if ( ecs_form != NULL )
+				{
+					showTempF( ecs_form->s10A48, data,  55, 120 );							
+				}
+				break;
+
 			case 49: // SPS INJECTOR FLANGE TEMP 2
 				if ( sps_form != NULL )
 				{
 					showTempF( sps_form->s10A49, data,  0, 600 );							
+				}
+				break;
+
+			case 51: // FC 1 COND EXH TEMP
+				if ( eps_form != NULL )
+				{
+					showTempF( eps_form->s10A51, data,  145, 250 );							
+				}
+				break;
+
+			case 54: // O2 TK 1 TEMP
+				if ( eps_form != NULL )
+				{
+					showTempF( eps_form->s10A54, data,  -325, 80 );							
+				}
+				break;
+
+			case 57: // O2 TK 2 TEMP
+				if ( eps_form != NULL )
+				{
+					showTempF( eps_form->s10A57, data,  -325, 80 );							
+				}
+				break;
+
+			case 59: // FU LINE 1 TEMP
+				if ( sps_form != NULL )
+				{
+					showTempF( sps_form->s10A59, data,  0, 200 );							
 				}
 				break;
 
@@ -410,10 +516,45 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 62: // NUCLEAR PARTICLE ANALYZER TEMP
+				if ( tcm_form != NULL )
+				{
+					showTempF( tcm_form->s10A62, data,  -109, 140 );							
+				}
+				break;
+
+			case 63: // H2 TK 2 TEMP
+				if ( eps_form != NULL )
+				{
+					showTempF( eps_form->s10A63, data,  -425, 200 );							
+				}
+				break;
+
+			case 65: // SIDE HS BOND LOC 1 TEMP
+				if ( str_form != NULL )
+				{
+					showTempF( str_form->s10A65, data,  -260, 600 );			
+				}
+				break;
+
+			case 66: // O2 TK 2 PRESS
+				if ( eps_form != NULL )
+				{
+					showPSIA( eps_form->s10A66, data,  50, 1050 );							
+				}
+				break;
+
 			case 67: // FC 3 RAD IN TEMP
 				if ( eps_form != NULL )
 				{
 					showTempF( eps_form->s10A67, data,  -50, 300 );		
+				}
+				break;
+
+			case 69: // FC 3 COND EXH TEMP
+				if ( eps_form != NULL )
+				{
+					showTempF( eps_form->s10A69, data,  145, 250 );							
 				}
 				break;
 
@@ -424,10 +565,54 @@ void Form1::display(unsigned char data, int channel, int type, int ccode)
 				}
 				break;
 
+			case 72: // FC 1 SKIN TEMP
+				if ( eps_form != NULL )
+				{
+					showTempF( eps_form->s10A72, data,  80, 550 );							
+				}
+				break;
+
+			case 74: // SIDE HS BOND LOC 3 TEMP
+				if ( str_form != NULL )
+				{
+					showTempF( str_form->s10A74, data,  -260, 600 );			
+				}
+				break;
+
+			case 75: // FC 2 SKIN TEMP
+				if ( eps_form != NULL )
+				{
+					showTempF( eps_form->s10A75, data,  80, 550 );							
+				}
+				break;
+
+			case 78: // FC 3 SKIN TEMP
+				if ( eps_form != NULL )
+				{
+					showTempF( eps_form->s10A78, data,  80, 550 );							
+				}
+				break;
+
 			case 79: // SIDE HS BOND LOC 4 TEMP
 				if ( str_form != NULL )
 				{
 					showTempF( str_form->s10A79, data,  -260, 600 );			
+				}
+				break;
+
+			case 81: // POTABLE H20 QTY
+				if ( ecs_form != NULL )
+				{
+					showPercentage( ecs_form->s10A81, data );							
+				}
+				break;
+
+			case 83: // PIPA +120 VDC
+
+			case 84: // CABIN TEMP
+				if ( ecs_form != NULL )
+				{
+					showTempF( ecs_form->s10A84, data,  40, 125 );			
 				}
 				break;
 
