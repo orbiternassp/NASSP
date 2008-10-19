@@ -24,6 +24,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2008/10/18 07:01:29  movieman523
+  *	More telemetry and rationalisation.
+  *	
   *	Revision 1.5  2008/10/17 03:14:21  movieman523
   *	More low bit-rate decoding.
   *	
@@ -161,6 +164,7 @@ namespace GroundStation
 
 		void showValue( textDisplay *tb, char *msg );
 		void showPercentage( textDisplay *tb, unsigned char data );
+		void showPercentage( textDisplay *tb, unsigned char data, double maxPercent );
 		void showSci( textDisplay *tb, unsigned char data );
 		void showPSIA( textDisplay *tb, unsigned char data, double low, double high );
 		void showTempF( textDisplay *tb, unsigned char data, double low, double high );

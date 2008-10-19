@@ -652,7 +652,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetRCSStatus( RCS_SM_QUAD_B, rcsStatus );
 							return(scale_data(rcsStatus.PackageTempF, 0, 300));
 						case 18:		// CM HE TK A PRESS
-							return(scale_data(0,0,5000));
+							sat->GetRCSStatus( RCS_CM_RING_1, rcsStatus );
+							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
 						case 19:		// SM ENG PKG C TEMP
 							sat->GetRCSStatus( RCS_SM_QUAD_C, rcsStatus );
 							return(scale_data(rcsStatus.PackageTempF, 0, 300));
@@ -661,7 +662,9 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
 							return(scale_data(rcsStatus.PackageTempF, 0, 300));
 						case 21:		// CM HE TK B PRESS
-							return(scale_data(0,0,5000));
+							sat->GetRCSStatus( RCS_CM_RING_2, rcsStatus );
+							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
+
 						case 22:		// DOCKING PROBE TEMP
 							return(scale_data(0,-100,300));
 						case 23:		// UNKNOWN - HBR ONLY
@@ -722,7 +725,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 44:		// OX LINE 1 TEMP
 							return(scale_data(0,0,200));
 						case 45:		// SUIT AIR HX OUT TEMP
-							return(scale_data(0,20,95));
+							sat->GetAtmosStatus( atm );
+							return(scale_data(atm.SuitTempF, 20, 95));
 						case 46:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 47:		// SPS INJECTOR FLANGE TEMP 1
@@ -921,13 +925,16 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetFuelCellStatus( 3, fcStatus );
 							return(scale_data(fcStatus.RadiatorTempOutF, -50, 300));
 						case 133:		// GLY EVAP OUT STEAM TEMP
-							return(scale_data(0,20,95));
+							sat->GetPrimECSCoolingStatus(pcs);
+							return(scale_data(pcs.EvaporatorOutletTempF,20,95));
 						case 134:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 135:		// URINE DUMP NOZZLE TEMP
 							return(scale_data(0,0,100));
 						case 136:		// SM ENG PKG A TEMP
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_SM_QUAD_A, rcsStatus );
+							return(scale_data(rcsStatus.PackageTempF, 0, 300));
+
 						case 137:		// BAY 3 OX TK SURFACE TEMP
 							return(scale_data(0,-100,200));
 						case 138:		// TM BIAS 2.5 VDC
@@ -1024,17 +1031,21 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 22:		// CM HE MANIF 2 PRESS
 							return(scale_data(0,0,400));
 						case 23:		// SM OX MANF A PRESS
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_SM_QUAD_A, rcsStatus );
+							return(scale_data(rcsStatus.PropellantPressurePSI, 0, 300));
 						case 24:		// SM OX MANF B PRESS
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_SM_QUAD_B, rcsStatus );
+							return(scale_data(rcsStatus.PropellantPressurePSI, 0, 300));
 						case 25:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 26:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 27:		// SM OX MANF C PRESS
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_SM_QUAD_C, rcsStatus );
+							return(scale_data(rcsStatus.PropellantPressurePSI,0,300));
 						case 28:		// SM OX MANF D PRESS
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
+							return(scale_data(rcsStatus.PropellantPressurePSI, 0, 300));
 						case 29:		// FC 1 N2 PRESS
 							return(scale_data(0,0,75));
 
@@ -1054,8 +1065,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(0);
 						case 37:		// SUIT-CABIN DELTA PRESS
 							sat->GetAtmosStatus( atm );
-							return(scale_data((atm.SuitPressureMMHG - atm.CabinPressureMMHG) / 25.4,
-								-5, 5));
+							return(scale_data((atm.SuitPressureMMHG - atm.CabinPressureMMHG) / 25.4, -5, 5));
 						case 38:		// ALPHA CT RATE CHAN 1
 							return(scale_data(0,0.1,10000));
 						case 39:		// SM HE MANF A PRESS
@@ -1330,9 +1340,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 154:		// SCE NEG SUPPLY VOLTS
 							return(scale_data(0, -30, 0));
 						case 155:		// CM HE TK A TEMP
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_CM_RING_1, rcsStatus );
+							return(scale_data(rcsStatus.HeliumTempF, 0, 300));
+
 						case 156:		// CM HE TK B TEMP
-							return(scale_data(0,0,300));
+							sat->GetRCSStatus( RCS_CM_RING_2, rcsStatus );
+							return(scale_data(rcsStatus.HeliumTempF, 0, 300));
+
 						case 157:		// SEC GLY PUMP OUT PRESS
 							return(scale_data(0,0,60));
 						case 158:		// UNKNOWN - HBR ONLY
@@ -1347,13 +1361,17 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 162:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 163:		// SM HE TK A TEMP
-							return(scale_data(0,0,100));
+							sat->GetRCSStatus( RCS_SM_QUAD_A, rcsStatus );
+							return(scale_data(rcsStatus.HeliumTempF, 0, 100));
 						case 164:		// SM HE TK B TEMP
-							return(scale_data(0,0,100));
+							sat->GetRCSStatus( RCS_SM_QUAD_B, rcsStatus );
+							return(scale_data(rcsStatus.HeliumTempF, 0, 100));
 						case 165:		// SM HE TK C TEMP
-							return(scale_data(0,0,100));
+							sat->GetRCSStatus( RCS_SM_QUAD_C, rcsStatus );
+							return(scale_data(rcsStatus.HeliumTempF, 0, 100));
 						case 166:		// SM HE TK D TEMP
-							return(scale_data(0,0,100));
+							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
+							return(scale_data(rcsStatus.HeliumTempF, 0, 100));
 						case 167:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 168:		// UNKNOWN - HBR ONLY
