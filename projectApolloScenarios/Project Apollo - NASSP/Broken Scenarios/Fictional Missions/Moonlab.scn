@@ -1,10 +1,10 @@
 BEGIN_DESC
-Moonlab. Mission to set up a Lunar Orbiting Spacestation. First Mission. To place an S-IVb orbital workshop in orbit around the Moon. Launch Time: 11:35.12, 17/09/1969
+Moonlab. Mission to set up a Lunar Orbiting Spacestation. First flight objective, to place a S-IVb orbital workshop in orbit around the Moon. Launch Time: 10:37.29 GMT, 19/09/1969. TLI takes place at GET 1:45:21. Lunar arrival should be timed for GET 70:08:22.
 END_DESC
 
 BEGIN_ENVIRONMENT
   System ProjectApollo/Sol
-  Date MJD 40481.4411112268
+  Date MJD 40483.40103032411
 END_ENVIRONMENT
 
 BEGIN_FOCUS
@@ -45,7 +45,7 @@ Enterprise:ProjectApollo/Saturn5
   MISSNTIME -3600
   TOAPO 185.2
   TOPER 185.2
-  TOHDG 104.4
+  TOHDG 84
   LANG English
   S4PL 8
   AUTOSLOW 1
