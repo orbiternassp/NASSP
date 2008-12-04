@@ -250,3 +250,44 @@ public:
 	int pa_ovr_1,pa_ovr_2;			   // PA mode override for uptelemetry channel
 };
 
+//
+// Data storage equipment. Aka data recorder.
+//
+
+/// High-bit-rate chunk holds 160 bytes.
+const unsigned int dseChunkSizeHBR = 160;
+
+/// Low-bit-rate chunk holds 80 bytes.
+const unsigned int dseChunkSizeLBR = 80;
+
+///
+/// Data storage chunk. Represents 1.5 inches of tape.
+///
+class DSEChunk
+{
+
+enum DSEChunkType
+{
+	DSEEMPTY,		/// No data, erased or not written
+	DSEHBR,			/// High bit-rate chunk (51200bps)
+	DSELBR			/// Low bit-rate chunk (1600bps)
+};
+
+public:
+	DSEChunk();
+	virtual ~DSEChunk();
+	void erase( const DSEChunkType dataType );
+
+private:
+
+	void deleteData();
+
+	DSEChunkType chunkType;			/// What type of chunk is this?
+	unsigned char *chunkData;		/// Pointer to chunk data.
+	unsigned int chunkSize;			/// Size of chunk.
+	unsigned int chunkValidBytes;	/// Number of valid bytes in the chunk.
+};
+
+///
+/// DSE holds 27,000 inches of tape, or 18,000 chunks.
+///
