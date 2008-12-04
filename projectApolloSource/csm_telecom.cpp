@@ -3670,3 +3670,61 @@ void PCM::perform_io(double simt){
 			break;			
 	}
 }
+
+DSEChunk::DSEChunk() :
+	chunkData( 0 ),
+	chunkSize( 0 ),
+	chunkValidBytes( 0 ),
+	chunkType( DSEEMPTY )
+{
+	// Nothing to do.
+}
+
+DSEChunk::~DSEChunk()
+{
+	deleteData();
+}
+
+void DSEChunk::deleteData()
+{
+	if ( chunkData )
+	{
+		delete[] chunkData;
+	}
+
+	chunkData = 0;
+	chunkSize = 0;
+	chunkValidBytes = 0;
+	chunkType = DSEEMPTY;
+}
+
+void DSEChunk::erase( const DSEChunkType dataType )
+{
+	unsigned int requiredData = 0;
+
+	switch ( dataType )
+	{
+	case DSEHBR:
+		requiredData = dseChunkSizeHBR;
+		break;
+
+	case DSELBR:
+		requiredData = dseChunkSizeLBR;
+		break;
+
+	default:
+		deleteData();
+		return;
+	}
+
+	if ( chunkSize < requiredData )
+	{
+		deleteData();
+
+		chunkData = new unsigned char[requiredData];
+		chunkSize = requiredData;
+	}
+
+	chunkType = dataType;
+	chunkValidBytes = 0;
+}
