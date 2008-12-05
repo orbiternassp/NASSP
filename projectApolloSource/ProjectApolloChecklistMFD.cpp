@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.16  2008/07/20 22:08:03  tschachim
+  *	Slightly improved checklist display.
+  *	
   *	Revision 1.15  2008/06/28 10:51:29  jasonims
   *	Updated ChecklistMFD interface to display event times.... only MISSION_TIME and LAST_ITEM_RELATIVE implemented.
   *	
@@ -643,8 +646,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			item.group = -1; 
 			item.index = CurrentStep;
 			if (conn.GetChecklistItem(&item))
-				conn.SetFlashing(item.item,true);
-			return true;
+				conn.SetFlashing(item.item, true);
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
@@ -655,7 +657,6 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 }
 void ProjectApolloChecklistMFD::Update (HDC hDC)
 {
-	char buffer[100];
 
 	static RECT ShadedBox;
 	HBRUSH hBr;
@@ -731,53 +732,14 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 						tempcolor = GetTextColor(hDC);
 						SetTextColor(hDC,RGB(225, 225, 255)); 
 						SetTextAlign (hDC, TA_LEFT);
-						temptime.x = 0;
-						temptime.y = 0;
-						temptime.z = 0;
-						switch (item.relativeEvent) {
-						case MISSION_TIME:
-							temptime.x = floor(fabs(item.time)/3600);
-							temptime.y = floor((fabs(item.time)-(temptime.x*3600))/60);
-							temptime.z = fabs(item.time)-(temptime.x*3600)-(temptime.y*60);
-							if (item.time >= 0.0){
-								sprintf(buffer, "T+%d:%02d:%02d",(int) temptime.x,(int) temptime.y,(int) temptime.z);
-							}else{
-								sprintf(buffer, "T-%d:%02d:%02d",(int) temptime.x,(int) temptime.y,(int) temptime.z);
-							}
-							line = buffer;
-							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
-							//sprintf(oapiDebugString(),"TIME: %f Hr %f Min %f Sec %f", item.time,temptime.x,temptime.y,temptime.z);
-							break;
-						case LAST_ITEM_RELATIVE:
-							temptime.y = floor((fabs(item.time)-(temptime.x*3600))/60);
-							temptime.z = fabs(item.time)-(temptime.x*3600)-(temptime.y*60);
-							if (temptime.y >= 1.0){
-								sprintf(buffer, "After %d min %02d sec",(int) temptime.y,(int) temptime.z);
-							}else{
-								sprintf(buffer, "After %d sec",(int) temptime.z);
-							}
-							line = buffer;
-							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
-							break;
-						case SECOND_STAGE_STAGING:
-							sprintf(buffer, "First Staging");
-							line = buffer;
-							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
-							break;
-						case EARTH_ORBIT_INSERTION:
-							sprintf(buffer, "Earth Orbit Insertion");
-							line = buffer;
-							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
-							break;
 
-						default:
-							sprintf(buffer, "(Unknown Event)");
-							line = buffer;
-							TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
-							break;
-						}
+						//display Current Checklist Mission Time
+						line = DisplayChecklistMissionTime(item);
+						TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
+
 						SetTextColor(hDC,tempcolor); 
 						cnt++; //go to next line to write information
+
 					}
 					//Print Step
 					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), item.text, strlen(item.text));
@@ -906,7 +868,50 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 	}
 	else if (screen == PROG_CHKLSTINFO)
 	{
+		/*
 		//TODO: Read and Display Info on current checklist step
+		SelectDefaultFont(hDC, 0);				
+		Title(hDC, "Checklist INFORMATION");
+
+		SelectDefaultPen(hDC, 1);
+		MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
+		LineTo (hDC, (int) (width * 0.95), (int) (height * 0.94));
+
+		//Following is the display loop:
+		//		Compares Lines displayed (NumChkLsts - TopStep) to Lines able to display (NLINES)
+		//		
+		TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + 0)),"PANEL INFORMATION:",18);
+		TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + 1)),"GO TO PANEL 130",15);
+
+		*/
+
+		item.group = -1; 
+		item.index = CurrentStep;
+		if (conn.GetChecklistItem(&item)){
+			SelectDefaultFont(hDC, 0);
+			Title(hDC, "Checklist Information");
+			SetTextColor(hDC,RGB(225, 225, 255)); 
+			SetTextAlign (hDC, TA_LEFT);
+			//display Current Checklist Mission Time
+			if (item.relativeEvent != NO_TIME_DEF) {
+				line = DisplayChecklistMissionTime(item);
+				TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+(0*HLINE))), line.c_str(), line.size());
+			}
+			//display Highlighted box
+			hBr = CreateSolidBrush( RGB(0, 100, 0));
+			SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0 + HLINE + .01)),(int) (width * .99), (int) (height * (LINE1 + HLINE + .01)));
+			FillRect(hDC, &ShadedBox, hBr);
+			DeleteObject(hBr);
+			SelectDefaultPen(hDC, 1);
+			MoveToEx (hDC, (int) (width * 0.05), (int) (height * 0.94), 0);
+			LineTo (hDC, (int) (width * 0.95), (int) (height * 0.94));
+			SelectDefaultFont(hDC, 0);
+			SetTextColor (hDC, RGB(0, 255, 0));
+			SetTextAlign (hDC, TA_LEFT);
+			TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + (1 * HLINE))), item.text, strlen(item.text));
+			TextOut(hDC, (int) (width * .05), (int) (height * (LINE0 + (2 * HLINE))), item.info, strlen(item.info));
+		}
+      // item is now valid, output item.info
 	}
 
 	/*
@@ -921,6 +926,52 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 	if ((item.group = -1, item.index = 3,conn.GetChecklistItem(&item)))
 		TextOut(hDC, 0, (int)(height*0.15), item.text,strlen(item.text));
 	*/
+}
+std::string ProjectApolloChecklistMFD::DisplayChecklistMissionTime (ChecklistItem item)
+{
+	char buffer[100];
+
+	temptime.x = 0;
+	temptime.y = 0;
+	temptime.z = 0;
+
+	switch (item.relativeEvent) {
+		case MISSION_TIME:
+			temptime.x = floor(fabs(item.time)/3600);
+			temptime.y = floor((fabs(item.time)-(temptime.x*3600))/60);
+			temptime.z = fabs(item.time)-(temptime.x*3600)-(temptime.y*60);
+			if (item.time >= 0.0) {
+				sprintf(buffer, "T+%d:%02d:%02d",(int) temptime.x,(int) temptime.y,(int) temptime.z);
+			} else {
+				sprintf(buffer, "T-%d:%02d:%02d",(int) temptime.x,(int) temptime.y,(int) temptime.z);
+			}
+			break;
+
+		case LAST_ITEM_RELATIVE:
+			temptime.y = floor((fabs(item.time)-(temptime.x*3600))/60);
+			temptime.z = fabs(item.time)-(temptime.x*3600)-(temptime.y*60);
+			if (temptime.y >= 1.0){
+				sprintf(buffer, "After %d min %02d sec",(int) temptime.y,(int) temptime.z);
+			} else {
+				sprintf(buffer, "After %d sec",(int) temptime.z);
+			}
+			break;
+
+		case SECOND_STAGE_STAGING:
+			sprintf(buffer, "First Staging");
+			break;
+
+		case EARTH_ORBIT_INSERTION:
+			sprintf(buffer, "Earth Orbit Insertion");
+			break;
+
+		default:
+			sprintf(buffer, "(Unknown Event)");
+			break;
+	}
+	std::string line = buffer;
+	return line;
+
 }
 void ProjectApolloChecklistMFD::WriteStatus (FILEHANDLE scn) const
 {
