@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2008/06/28 10:51:30  jasonims
+  *	Updated ChecklistMFD interface to display event times.... only MISSION_TIME and LAST_ITEM_RELATIVE implemented.
+  *	
   *	Revision 1.7  2008/06/17 16:39:07  tschachim
   *	Moved prime crew ingress to T-2h40min, bugfixes checklists.
   *	
@@ -62,19 +65,19 @@ public:
 	DWORD height;
 
 protected:
-
 	int screen;
 
 	bool MFDInit; // MFD has been initialized, including retrieving Available Checklists
 	int NumChkLsts;
 	bool ChkLstAutoOn;
 
-	std::string line;
-
 	int cnt;
 	VECTOR3 temptime; //x is hr, y is min, z is sec
-	
+	std::string line;	
+
 	int TopStep;
 	int CurrentStep;
 	int HiLghtdLine;
+
+	std::string DisplayChecklistMissionTime (ChecklistItem item);
 };
