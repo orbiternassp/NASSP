@@ -179,6 +179,103 @@
 // DS20060326 Telecommunications system objects
 class Saturn;
 
+//
+// Data storage equipment. Aka data recorder.
+//
+// Note that Apollo 15 and later used upgraded recorders which ran at half the speed with double the data density.
+//
+
+/// High-bit-rate chunk holds 160 bytes.
+const unsigned int dseChunkSizeHBR = 160;
+
+/// Low-bit-rate chunk holds 80 bytes.
+const unsigned int dseChunkSizeLBR = 80;
+
+///
+/// Data storage chunk. Represents 1.5 inches of tape.
+///
+class DSEChunk
+{
+
+enum DSEChunkType
+{
+	DSEEMPTY,		/// No data, erased or not written
+	DSEHBR,			/// High bit-rate chunk (51200bps)
+	DSELBR			/// Low bit-rate chunk (1600bps)
+};
+
+public:
+	DSEChunk();
+	virtual ~DSEChunk();
+	void Erase( const DSEChunkType dataType );
+
+private:
+
+	void deleteData();
+
+	DSEChunkType chunkType;			/// What type of chunk is this?
+	unsigned char *chunkData;		/// Pointer to chunk data.
+	unsigned int chunkSize;			/// Size of chunk.
+	unsigned int chunkValidBytes;	/// Number of valid bytes in the chunk.
+};
+
+const unsigned int tapeSize = 18000;
+
+///
+/// DSE holds 27,000 inches of tape, or 18,000 chunks.
+///
+class DSE : public e_object
+{
+enum DSEState
+{
+	STOPPED,			/// Tape is stopped
+	STARTING_PLAY,		/// Tape is accelerating to play speed
+	STARTING_RECORD,	/// Tape is accelerating to play speed
+	SLOWING_RECORD,		/// Tape is slowing to record speed
+	PLAYING,			/// Tape is playing
+	RECORDING,			/// Tape is recording
+	STOPPING,			/// Tape is stopping
+};
+
+public:
+	DSE();
+	virtual ~DSE();
+
+	///
+	/// \brief Tape motion indicator.
+	///
+	bool TapeMotion(); 
+
+	///
+	/// \brief Start tape playing.
+	///
+	void Play();
+
+	///
+	/// \brief Stop tape playing.
+	///
+	void Stop();
+
+	///
+	/// \brief Start tape recording.
+	///
+	void Record( bool hbr );
+
+	///
+	/// \brief Timestep processing.
+	///
+	void TimeStep( double simt, double simdt );
+
+protected:
+	DSEChunk tape[tapeSize];			/// Simulated tape.
+	double tapeSpeedInchesPerSecond;	/// Tape speed in inches per second.
+	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
+	double tapeMotion;					/// Tape motion from 0.0 to 1.0.
+	DSEState state;						/// Tape state.
+
+	double lastEventTime;				/// Last event time.
+};
+
 // PCM system
 class PCM {
 public:		
@@ -250,44 +347,3 @@ public:
 	int pa_ovr_1,pa_ovr_2;			   // PA mode override for uptelemetry channel
 };
 
-//
-// Data storage equipment. Aka data recorder.
-//
-
-/// High-bit-rate chunk holds 160 bytes.
-const unsigned int dseChunkSizeHBR = 160;
-
-/// Low-bit-rate chunk holds 80 bytes.
-const unsigned int dseChunkSizeLBR = 80;
-
-///
-/// Data storage chunk. Represents 1.5 inches of tape.
-///
-class DSEChunk
-{
-
-enum DSEChunkType
-{
-	DSEEMPTY,		/// No data, erased or not written
-	DSEHBR,			/// High bit-rate chunk (51200bps)
-	DSELBR			/// Low bit-rate chunk (1600bps)
-};
-
-public:
-	DSEChunk();
-	virtual ~DSEChunk();
-	void erase( const DSEChunkType dataType );
-
-private:
-
-	void deleteData();
-
-	DSEChunkType chunkType;			/// What type of chunk is this?
-	unsigned char *chunkData;		/// Pointer to chunk data.
-	unsigned int chunkSize;			/// Size of chunk.
-	unsigned int chunkValidBytes;	/// Number of valid bytes in the chunk.
-};
-
-///
-/// DSE holds 27,000 inches of tape, or 18,000 chunks.
-///

@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.285  2008/10/16 07:12:11  movieman523
+  *	Telemetry changes.
+  *	
   *	Revision 1.284  2008/10/16 02:26:17  movieman523
   *	Some more telemetry.
   *	
@@ -2090,7 +2093,7 @@ protected:
 
 	SwitchRow TelecomTBRow;
 	IndicatorSwitch PwrAmplTB;
-	IndicatorSwitch DseTapeTB;
+	DSEIndicatorSwitch DseTapeTB;
 
 	ThreePosSwitch SBandNormalXPDRSwitch;
 	ThreePosSwitch SBandNormalPwrAmpl1Switch;
@@ -2124,7 +2127,7 @@ protected:
 
 	SwitchRow TapeRecorderSwitchesRow;
 	ToggleSwitch TapeRecorder1Switch;
-	ThreePosSwitch TapeRecorder2Switch;
+	DSEPlayRecordSwitch TapeRecorder2Switch;
 	ThreePosSwitch TapeRecorder3Switch;
 
 	SwitchRow PowerSwitchesRow;
@@ -3608,6 +3611,7 @@ protected:
 	RJEC rjec;
 	ECA  eca;
 	// Telecom equipment
+	DSE  dataRecorder;
 	PCM  pcm;
 	PMP	 pmp;
 	USB  usb;

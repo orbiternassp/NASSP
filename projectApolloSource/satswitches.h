@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.33  2008/04/11 12:19:11  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.32  2008/01/25 04:39:42  lassombra
   *	All switches now handle change of state through SwitchTo function which is vitual
   *	 and is called by existing mouse and connector handling methods.
@@ -137,6 +142,7 @@ class SMRCSHeliumValve;
 class RCSPropellantValve;
 class SMRCSPropellantSource;
 class CMRCSPropellantSource;
+class DSE;
 
 class SaturnToggleSwitch : public ToggleSwitch {
 public:
@@ -840,3 +846,30 @@ public:
 protected:
 	Saturn *sat;
 };
+
+class DSEIndicatorSwitch : public IndicatorSwitch
+{
+public:
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DSE *d, bool failopen = false);
+	int GetState();
+
+protected:
+	DSE *dse;
+};
+
+class DSEThreePosSwitch : public ThreePosSwitch 
+{
+public:
+	DSEThreePosSwitch() { dse = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, DSE *d);
+
+protected:
+	DSE *dse;
+};
+
+class DSEPlayRecordSwitch : public DSEThreePosSwitch
+{
+public:
+	bool SwitchTo(int newState, bool dontspring);
+};
+

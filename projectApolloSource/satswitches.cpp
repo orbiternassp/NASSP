@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2008/04/11 12:19:08  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.36  2008/01/25 04:39:42  lassombra
   *	All switches now handle change of state through SwitchTo function which is vitual
   *	 and is called by existing mouse and connector handling methods.
@@ -2129,4 +2134,41 @@ bool MinImpulseHandcontrollerSwitch::CheckMouseClick(int event, int mx, int my) 
 	return false;
 }
 
+void DSEIndicatorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DSE *d, bool failopen)
+{
+	dse = d;
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
+}
 
+int DSEIndicatorSwitch::GetState()
+{
+	return dse->TapeMotion() ? 1 : 0;
+}
+
+void DSEThreePosSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, DSE *d)
+{
+	dse = d;
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+}
+
+bool DSEPlayRecordSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if ( ThreePosSwitch::SwitchTo(newState, dontspring) )
+	{
+		if ( IsUp() )
+		{
+			dse->Record( true );
+		}
+		else if ( IsDown() )
+		{
+			dse->Play();
+		}
+		else 
+		{
+			dse->Stop();
+		}
+
+		return true;
+	}
+	else return false;
+}

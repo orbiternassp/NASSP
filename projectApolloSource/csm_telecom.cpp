@@ -3698,7 +3698,7 @@ void DSEChunk::deleteData()
 	chunkType = DSEEMPTY;
 }
 
-void DSEChunk::erase( const DSEChunkType dataType )
+void DSEChunk::Erase( const DSEChunkType dataType )
 {
 	unsigned int requiredData = 0;
 
@@ -3727,4 +3727,129 @@ void DSEChunk::erase( const DSEChunkType dataType )
 
 	chunkType = dataType;
 	chunkValidBytes = 0;
+}
+
+DSE::DSE() :
+	tapeSpeedInchesPerSecond( 0.0 ),
+	desiredTapeSpeed( 0.0 ),
+	tapeMotion( 0.0 ),
+	state( STOPPED )
+{
+}
+
+DSE::~DSE()
+{
+}
+
+bool DSE::TapeMotion()
+{
+	switch (state)
+	{
+	case STOPPED:
+	case STARTING_PLAY:
+	case STARTING_RECORD:
+		return false;
+
+	default:
+		return true;
+	}
+}
+
+const double playSpeed = 120.0;
+const double hbrRecord = 15.0;
+const double lbrRecord = 3.75;
+
+void DSE::Play()
+{
+	if ( state != PLAYING || desiredTapeSpeed < playSpeed  )
+	{
+		desiredTapeSpeed = playSpeed;
+		state = STARTING_PLAY;
+	}
+
+	state = PLAYING;
+}
+
+void DSE::Stop()
+{
+	if ( state != STOPPED || desiredTapeSpeed > 0.0  )
+	{
+		desiredTapeSpeed = 0.0;
+		state = STOPPING;
+	}
+
+	state = STOPPED;
+}
+
+void DSE::Record( bool hbr )
+{
+	double tapeSpeed = hbr ? hbrRecord : lbrRecord;
+	if ( state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed )
+	{
+		desiredTapeSpeed = tapeSpeed;
+		
+		if ( desiredTapeSpeed > tapeSpeedInchesPerSecond )
+		{
+			state = STARTING_RECORD;
+		}
+		else if ( desiredTapeSpeed < tapeSpeedInchesPerSecond )
+		{
+			state = SLOWING_RECORD;
+		}
+		else
+		{
+			state = RECORDING;
+		}
+	}
+
+	state = RECORDING;
+}
+
+const double tapeAccel = 30.0;
+
+void DSE::TimeStep( double simt, double simdt )
+{
+	switch ( state )
+	{
+	case STARTING_PLAY:
+		tapeSpeedInchesPerSecond += tapeAccel * simdt;
+		if ( tapeSpeedInchesPerSecond >= desiredTapeSpeed )
+		{
+			tapeSpeedInchesPerSecond = desiredTapeSpeed;
+			state = PLAYING;
+		}
+		break;
+
+	case STARTING_RECORD:
+		tapeSpeedInchesPerSecond += tapeAccel * simdt;
+		if ( tapeSpeedInchesPerSecond >= desiredTapeSpeed )
+		{
+			tapeSpeedInchesPerSecond = desiredTapeSpeed;
+			state = RECORDING;
+		}
+		break;
+
+	case SLOWING_RECORD:
+		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
+		if ( tapeSpeedInchesPerSecond <= desiredTapeSpeed )
+		{
+			tapeSpeedInchesPerSecond = desiredTapeSpeed;
+			state = RECORDING;
+		}
+		break;
+
+	case STOPPING:
+		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
+		if ( tapeSpeedInchesPerSecond <= 0.0 )
+		{
+			tapeSpeedInchesPerSecond = 0.0;
+			state = STOPPED;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	lastEventTime = simt;
 }
