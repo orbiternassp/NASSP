@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.240  2008/06/27 08:25:12  jasonims
+  *	Added DualView Mode into CSMOptics allowing for a "hacked" version of Dual Line Of Sight in the actual CSMOptics.  Press V to toggle ViewMode.
+  *	
   *	Revision 1.239  2008/06/15 15:22:48  tschachim
   *	Bugfixes switch names and borders
   *	
@@ -1043,9 +1046,14 @@ bool Saturn::clbkLoadPanel (int id) {
 	HBITMAP hBmp;
 	MFDSPEC mfds_dock		=     {{1019,  784, 1238,  999}, 6, 6, 31, 31};
 
-
 	if ((id == SATPANEL_GN && !GNSplit) || (id == SATPANEL_GN_LEFT && !GNSplit) || (id == SATPANEL_GN_RIGHT && !GNSplit)) { // guidance & navigation lower equipment bay (unsplit)
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_RIGHT_CB, SATPANEL_LOWER_MAIN, SATPANEL_TELESCOPE);
@@ -1061,6 +1069,12 @@ bool Saturn::clbkLoadPanel (int id) {
 	}
 	if (id == SATPANEL_GN_LEFT && GNSplit) { // guidance & navigation lower equipment bay Left third (split)
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL_LEFT));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiSetPanelNeighbours(-1, SATPANEL_GN_CENTER, SATPANEL_LOWER_LEFT, SATPANEL_TELESCOPE);
@@ -1074,6 +1088,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_GN_CENTER && GNSplit) { // guidance & navigation lower equipment bay Center third (split)
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL_CENTER));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiSetPanelNeighbours(SATPANEL_GN_LEFT, SATPANEL_GN_RIGHT, SATPANEL_LOWER_MAIN, SATPANEL_TELESCOPE);
@@ -1089,6 +1109,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_GN_RIGHT && GNSplit) { // guidance & navigation lower equipment bay Right third (split)
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_PANEL_RIGHT));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiSetPanelNeighbours(SATPANEL_GN_CENTER, -1, SATPANEL_RIGHT_CB, SATPANEL_TELESCOPE);
@@ -1102,6 +1128,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (MainPanelSplit && id == SATPANEL_MAIN_LEFT) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_LEFT_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_MAIN_MIDDLE, SATPANEL_LEFT_RNDZ_WINDOW, SATPANEL_LOWER_LEFT);
@@ -1123,6 +1155,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (MainPanelSplit && id == SATPANEL_MAIN_MIDDLE) {
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_MIDDLE_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiSetPanelNeighbours(SATPANEL_MAIN_LEFT, SATPANEL_MAIN_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER_MAIN);
@@ -1137,6 +1175,12 @@ bool Saturn::clbkLoadPanel (int id) {
 	if (MainPanelSplit && id == SATPANEL_MAIN_RIGHT) {
 
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_RIGHT_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiSetPanelNeighbours(SATPANEL_MAIN_MIDDLE, SATPANEL_RIGHT, SATPANEL_RIGHT_RNDZ_WINDOW, SATPANEL_RIGHT_CB);
@@ -1150,6 +1194,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (!MainPanelSplit && id == SATPANEL_MAIN) { // main instrument panel
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_MAIN_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
 		oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER_MAIN);
@@ -1171,6 +1221,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_LEFT) { // left instrument panel
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (MainPanelSplit) 
@@ -1234,6 +1290,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_RIGHT) { // right instrument panel
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (MainPanelSplit) 
@@ -1308,6 +1370,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_LEFT_RNDZ_WINDOW) { // left rendezvous window
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (MainPanelSplit) 
@@ -1328,6 +1396,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_RIGHT_RNDZ_WINDOW) { // right rendezvous window
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_RNDZ_WINDOW));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (MainPanelSplit) 
@@ -1343,6 +1417,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_HATCH_WINDOW) { // hatch window
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_HATCH_WINDOW));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (MainPanelSplit) 
@@ -1356,6 +1436,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_CABIN_PRESS_PANEL) { // cabin pressurization controls panel
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_CABIN_PRESS_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiSetPanelNeighbours(-1, SATPANEL_LEFT, -1, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
@@ -1382,6 +1468,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_LOWER_LEFT) { 
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_LEFT_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (GNSplit) 
@@ -1405,6 +1497,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_LOWER_MAIN) { 
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LOWER_MAIN_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		int top, bottom;
@@ -1437,6 +1535,12 @@ bool Saturn::clbkLoadPanel (int id) {
 
 	if (id == SATPANEL_RIGHT_CB) { 
 		hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_RIGHT_CB_PANEL));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (GNSplit) 
@@ -1460,6 +1564,11 @@ bool Saturn::clbkLoadPanel (int id) {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT_WIDE));
 		} else {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_SEXTANT));
+		}
+
+		if ( !hBmp )
+		{
+			return false;
 		}
 
 		oapiSetPanelNeighbours(-1, SATPANEL_TELESCOPE, SATPANEL_GN, SATPANEL_GN);
@@ -1495,6 +1604,12 @@ bool Saturn::clbkLoadPanel (int id) {
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE_WIDE));
 		else
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_TELESCOPE));
+
+		if ( !hBmp )
+		{
+			return false;
+		}
+
 		oapiSetPanelNeighbours( SATPANEL_SEXTANT, -1, SATPANEL_GN, SATPANEL_GN);
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
@@ -2242,7 +2357,7 @@ void Saturn::SetSwitches(int panel) {
 
 	TelecomTBRow.Init(AID_TELECOMTB, MainPanel);
 	PwrAmplTB.Init( 0, 0, 23, 23, srf[SRF_INDICATOR], TelecomTBRow);
-	DseTapeTB.Init( 0,50, 23, 23, srf[SRF_INDICATOR], TelecomTBRow);
+	DseTapeTB.Init( 0,50, 23, 23, srf[SRF_INDICATOR], TelecomTBRow, &dataRecorder);
 
 	SBandAuxSwitchesRow.Init(AID_SBANDAUXSWITCHES, MainPanel);
 	SBandAuxSwitch1.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SBandAuxSwitchesRow);
@@ -2269,7 +2384,7 @@ void Saturn::SetSwitches(int panel) {
 
 	TapeRecorderSwitchesRow.Init(AID_TAPERECORDERSWITCHES, MainPanel);
 	TapeRecorder1Switch.Init( 0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], TapeRecorderSwitchesRow);
-	TapeRecorder2Switch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], TapeRecorderSwitchesRow);
+	TapeRecorder2Switch.Init(43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], TapeRecorderSwitchesRow, &dataRecorder);
 	TapeRecorder3Switch.Init(86, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], TapeRecorderSwitchesRow);
 
 	PowerSwitchesRow.Init(AID_POWERSWITCHES, MainPanel);

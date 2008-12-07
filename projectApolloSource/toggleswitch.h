@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.77  2008/05/24 17:27:22  tschachim
+  *	Added switch borders.
+  *	
   *	Revision 1.76  2008/04/11 12:01:55  tschachim
   *	Cleanup of the checklist events.
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
@@ -310,7 +313,6 @@
 class SwitchRow;
 class PanelSwitchScenarioHandler;
 class PanelSwitchCallbackInterface;
-
 
 class PanelSwitchCallbackInterface;
 ///

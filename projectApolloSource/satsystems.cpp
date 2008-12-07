@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.157  2008/10/19 16:37:36  movieman523
+  *	More telemetry.
+  *	
   *	Revision 1.156  2008/10/17 07:16:26  movieman523
   *	More telemetry.
   *	
@@ -861,6 +864,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		} 
 		pmp.TimeStep(MissionTime);
 		usb.TimeStep(MissionTime);
+		dataRecorder.TimeStep( MissionTime, simdt );
 
 		// Update Ground Data
 		//mcc.TimeStep(MissionTime);
