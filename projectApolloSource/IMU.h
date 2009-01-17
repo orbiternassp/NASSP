@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2007/04/25 18:48:58  tschachim
+  *	New PIPA implementation.
+  *	
   *	Revision 1.11  2006/12/19 15:55:54  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -171,6 +174,7 @@ protected:
 	} Orbiter;
 
 	VECTOR3 LastWeightAcceleration;
+	VECTOR3 LastGlobalVel;
 
 	PowerMerge DCPower;
 	PowerMerge DCHeaterPower;

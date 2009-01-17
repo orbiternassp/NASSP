@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2008/04/11 11:49:35  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.30  2007/12/10 17:12:56  tschachim
   *	TLI burn fixes.
   *	ISS alarm in case the IMU is unpowered.
@@ -198,6 +201,7 @@ void IMU::Init()
 	Orbiter.AttitudeReference.m33 = 0;
 
 	LastWeightAcceleration = _V(0, 0, 0);
+	LastGlobalVel = _V(0, 0, 0);
 
 	OurVessel = 0;
 	IMUHeater = 0;
@@ -432,10 +436,11 @@ void IMU::Timestep(double simt)
 		// Get current weight vector in vessel coordinates
 		VECTOR3 w;
 		OurVessel->GetWeightVector(w);
-
 		// Transform to Orbiter global and calculate weight acceleration
 		w = mul(tinv, w) / OurVessel->GetMass();
 		LastWeightAcceleration = w;
+
+		OurVessel->GetGlobalVel(LastGlobalVel);
 
 		LastTime = simt;
 		Initialized = true;
@@ -444,21 +449,22 @@ void IMU::Timestep(double simt)
 		deltaTime = (simt - LastTime);
 
 		// Calculate accelerations
-		VECTOR3 w, f;
+		VECTOR3 w, vel;
 		OurVessel->GetWeightVector(w);
-		OurVessel->GetForceVector(f);
-
 		// Transform to Orbiter global and calculate accelerations
-		f = mul(tinv, f) / OurVessel->GetMass();
 		w = mul(tinv, w) / OurVessel->GetMass();
+		OurVessel->GetGlobalVel(vel);
+		VECTOR3 dvel = (vel - LastGlobalVel) / deltaTime;
 
 		// Measurements with the 2006-P1 version showed that the average of the weight 
 		// vector of this and the last step match the force vector while in free fall
-		// The force vector matches the global velocity change of the last timestep exactly
-		VECTOR3 dw1 = w - f;
-		VECTOR3 dw2 = LastWeightAcceleration - f;	
+		// The force vector matches the global velocity change of the last timestep exactly,
+		// but isn't used because GetForceVector isn't working while docked
+		VECTOR3 dw1 = w - dvel;
+		VECTOR3 dw2 = LastWeightAcceleration - dvel;	
 		VECTOR3 accel = -(dw1 + dw2) / 2.0;
 		LastWeightAcceleration = w;
+		LastGlobalVel = vel;
 
 		// orbiter earth rotation
 		//imuState->Orbiter.Y = imuState->Orbiter.Y + (deltaTime * TwoPI / 86164.09);
@@ -768,6 +774,18 @@ void IMU::LoadState(FILEHANDLE scn)
 			sscanf(line + 3, "%lf", &flt);
 			LastWeightAcceleration.z = flt;
 		}
+		else if (!strnicmp (line, "VLX", 3)) {
+			sscanf(line + 3, "%lf", &flt);
+			LastGlobalVel.x = flt;
+		}
+		else if (!strnicmp (line, "VLY", 3)) {
+			sscanf(line + 3, "%lf", &flt);
+			LastGlobalVel.y = flt;
+		}
+		else if (!strnicmp (line, "VLZ", 3)) {
+			sscanf(line + 3, "%lf", &flt);
+			LastGlobalVel.z = flt;
+		}
 		else if (!strnicmp (line, "M11", 3)) {
 			sscanf(line + 3, "%lf", &flt);
 			Orbiter.AttitudeReference.m11 = flt;
@@ -837,6 +855,9 @@ void IMU::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "WLX", LastWeightAcceleration.x);
 	papiWriteScenario_double(scn, "WLY", LastWeightAcceleration.y);
 	papiWriteScenario_double(scn, "WLZ", LastWeightAcceleration.z);
+	papiWriteScenario_double(scn, "VLX", LastGlobalVel.x);
+	papiWriteScenario_double(scn, "VLY", LastGlobalVel.y);
+	papiWriteScenario_double(scn, "VLZ", LastGlobalVel.z);
 	papiWriteScenario_double(scn, "M11", Orbiter.AttitudeReference.m11);
 	papiWriteScenario_double(scn, "M12", Orbiter.AttitudeReference.m12);
 	papiWriteScenario_double(scn, "M13", Orbiter.AttitudeReference.m13);
