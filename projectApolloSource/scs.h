@@ -23,6 +23,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.27  2008/04/11 12:19:19  tschachim
+  *	New SM and CM RCS.
+  *	Improved abort handling.
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.26  2008/01/18 02:59:22  jasonims
   *	EMS Implementation Step 5b - Initialization bugfix!
   *	
@@ -352,7 +357,7 @@ public:
 protected:
 	bool IsPowered();
 	
-	void AccelerometerTimeStep();
+	void AccelerometerTimeStep(double simdt);
 	double xacc, xaccG, constG;
 
 	int status;
@@ -362,6 +367,7 @@ protected:
 	double MaxScrollPosition;
 	bool dVInitialized;
 	VECTOR3 lastWeight;
+	VECTOR3 lastGlobalVel;
 	double dVRangeCounter;
 	double dVTestTime;
 

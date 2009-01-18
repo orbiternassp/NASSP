@@ -22,6 +22,11 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.31  2008/04/13 12:51:32  tschachim
+  *	Don't save thruster demand for now, because the controlling devices (AGC, ECA)
+  *	doesn't store their state properly, which leads to stuck thrusters at scenario start
+  *	or at separation events.
+  *	
   *	Revision 1.30  2008/04/11 12:19:19  tschachim
   *	New SM and CM RCS.
   *	Improved abort handling.
@@ -2642,6 +2647,7 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	status = EMS_STATUS_OFF;
 	dVInitialized = false;
 	lastWeight = _V(0, 0, 0);
+	lastGlobalVel = _V(0, 0, 0);
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
@@ -2699,7 +2705,7 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 	double position;
 	double dV;
 
-	AccelerometerTimeStep();
+	AccelerometerTimeStep(simdt);
 
 	xaccG = xacc/constG;
 	dV = xacc * simdt * FPS;
@@ -2917,13 +2923,14 @@ void EMS::SystemTimestep(double simdt) {
 	}
 }
 
-void EMS::AccelerometerTimeStep() {
+void EMS::AccelerometerTimeStep(double simdt) {
 
 	VESSELSTATUS vs;
-	VECTOR3 w;
+	VECTOR3 w, vel;
 
 	sat->GetStatus(vs);
 	sat->GetWeightVector(w);
+	sat->GetGlobalVel(vel);
 
 	MATRIX3	tinv = AttitudeReference::GetRotationMatrixZ(-vs.arot.z);
 	tinv = mul(AttitudeReference::GetRotationMatrixY(-vs.arot.y), tinv);
@@ -2932,16 +2939,17 @@ void EMS::AccelerometerTimeStep() {
 
 	if (!dVInitialized) {
 		lastWeight = w;
+		lastGlobalVel = vel;
 		dVInitialized = true;
 
 	} else {
 		// Acceleration calculation, see IMU
-		VECTOR3 f;
-		sat->GetForceVector(f);
-		f = mul(tinv, f) / sat->GetMass();
-		VECTOR3 dw1 = w - f;
-		VECTOR3 dw2 = lastWeight - f;
+		VECTOR3 dvel = (vel - lastGlobalVel) / simdt;
+		VECTOR3 dw1 = w - dvel;
+		VECTOR3 dw2 = lastWeight - dvel;
 		lastWeight = w;
+		lastGlobalVel = vel;
+
 		// Transform to vessel coordinates
 		MATRIX3	t = AttitudeReference::GetRotationMatrixX(vs.arot.x);
 		t = mul(AttitudeReference::GetRotationMatrixY(vs.arot.y), t);
@@ -3171,7 +3179,8 @@ void EMS::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, EMS_START_STRING);
 	oapiWriteScenario_int(scn, "STATUS", status);
 	oapiWriteScenario_int(scn, "DVINITIALIZED", (dVInitialized ? 1 : 0));
-	oapiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
+	papiWriteScenario_vec(scn, "LASTWEIGHT", lastWeight);
+	papiWriteScenario_vec(scn, "LASTGLOBALVEL", lastGlobalVel);
 	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
 	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
 	papiWriteScenario_double(scn, "RSITARGET", RSITarget);
@@ -3200,7 +3209,9 @@ void EMS::LoadState(FILEHANDLE scn){
 			sscanf(line + 13, "%i", &i);
 			dVInitialized = (i == 1);
 		} else if (!strnicmp (line, "LASTWEIGHT", 10)) {
-			sscanf(line + 12, "%lf %lf %lf", &lastWeight.x, &lastWeight.y, &lastWeight.z);
+			sscanf(line + 10, "%lf %lf %lf", &lastWeight.x, &lastWeight.y, &lastWeight.z);
+		} else if (!strnicmp (line, "LASTGLOBALVEL", 13)) {
+			sscanf(line + 13, "%lf %lf %lf", &lastGlobalVel.x, &lastGlobalVel.y, &lastGlobalVel.z);
 		} else if (!strnicmp (line, "DVRANGECOUNTER", 14)) {
 			sscanf(line + 14, "%lf", &dVRangeCounter);
 		} else if (!strnicmp (line, "DVTESTTIME", 10)) {
