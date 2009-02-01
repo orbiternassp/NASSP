@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.25  2008/04/11 11:50:01  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.24  2008/01/16 05:52:07  movieman523
   *	Removed all dockstate code.
   *	
@@ -236,6 +239,11 @@ bool Saturn::RegisterVC()
 		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
 		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
 		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
+		
+		return true;
+
+	case SATVIEW_RIGHTDOCK: //can only control COAS and limited eye movement
+		SetCameraRotationRange(0,0,0,0);
 		
 		return true;
 
