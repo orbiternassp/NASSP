@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.15  2008/04/11 11:49:33  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.14  2008/01/22 05:22:27  movieman523
   *	Added port number to docking probe.
   *	
@@ -90,6 +93,7 @@
 #include "lvimu.h"
 
 #include "saturn.h"
+#include "papi.h"
 
 
 DockingProbe::DockingProbe(int port, Sound &capturesound, Sound &latchsound, Sound &extendsound, 
@@ -106,6 +110,8 @@ DockingProbe::DockingProbe(int port, Sound &capturesound, Sound &latchsound, Sou
 	IgnoreNextDockEvent = 0;
 	Realism = REALISM_DEFAULT;
 	ourPort = port;
+	Dockproc = 0;
+	Dockparam[0] = Dockparam[1] = Dockparam[2] = _V(0, 0, 0);
 }
 
 DockingProbe::~DockingProbe()
@@ -119,9 +125,10 @@ void DockingProbe::Extend()
 {
 	if (!Enabled) return;
 
-	ExtendingRetracting = 1;
 	if (Status != DOCKINGPROBE_STATUS_EXTENDED) {
+		ExtendingRetracting = 1;
 		if (Docked) {
+			Dockproc = 0;
 			OurVessel->Undock(ourPort);
 			UndockSound.play();
 		
@@ -142,8 +149,8 @@ void DockingProbe::Retract()
 {
 	if (!Enabled) return;
 
-	ExtendingRetracting = -1;
 	if (Status != DOCKINGPROBE_STATUS_RETRACTED) {
+		ExtendingRetracting = -1;
 		if (Docked) {
 			LatchSound.play();
 		} else {
@@ -156,6 +163,8 @@ void DockingProbe::Retract()
 void DockingProbe::DockEvent(int dock, OBJHANDLE connected) 
 
 {
+	if (Dockproc != 0) return;
+
 	if (!FirstTimeStepDone) return;
 	
 	if (IgnoreNextDockEvent > 0) {
@@ -166,15 +175,20 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 
 	if (connected == NULL) {
 		Docked = false;
+ 		DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
+		OurVessel->SetDockParams(dock, Dockparam[0], Dockparam[1], Dockparam[2]);
 	} else {
 		Docked = true;
 		if (!Enabled || Status != DOCKINGPROBE_STATUS_EXTENDED) {
 			DockFailedSound.play(NOLOOP, 200);
 			UndockNextTimestep = true;
-
 		} else {
-			Status = 0.8;
+			Status = 0.9;
 			CaptureSound.play();
+			
+			Dockproc = 1;
+ 			DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
+			OurVessel->GetDockParams(dock, Dockparam[0], Dockparam[1], Dockparam[2]);
 
 			// Retract automatically if REALISM 0
 			if (!Realism) {
@@ -202,6 +216,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		if (Status >= DOCKINGPROBE_STATUS_EXTENDED) {
 			Status = DOCKINGPROBE_STATUS_EXTENDED;
 			ExtendingRetracting = 0;
+			Dockproc = 0;
 			OurVessel->Undocking(ourPort);
 			OurVessel->SetDockingProbeMesh();
 		} else {
@@ -218,6 +233,19 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		}	
 	}
 
+	if (Dockproc == 1) {
+		UpdatePort(Dockparam[1] * 0.5, simdt);
+		Dockproc = 2;
+	} else if (Dockproc == 2) {
+		if (Status > DOCKINGPROBE_STATUS_RETRACTED) {
+			UpdatePort(Dockparam[1] * 0.5 * Status / 0.9, simdt);
+		} else {
+			UpdatePort(_V(0,0,0), simdt);
+			Dockproc = 0;
+		}
+	}
+	//sprintf(oapiDebugString(), "Docked %d Status %.3f Dockproc %d  ExtendingRetracting %d", (Docked ? 1 : 0), Status, Dockproc, ExtendingRetracting); 
+
 	// Switching logic
 	if (OurVessel->DockingProbeExtdRelSwitch.IsUp() && IsPowered()) {
 		Extend();
@@ -230,6 +258,16 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		}
 	}
 }
+
+void DockingProbe::UpdatePort(VECTOR3 off,double simdt)
+{
+ 	DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
+	OBJHANDLE v = OurVessel->GetDockStatus(dock);
+	bool b = OurVessel->Undock(ourPort); 
+	OurVessel->SetDockParams(dock, Dockparam[0] + off, Dockparam[1], Dockparam[2]);
+	if (v != NULL) OurVessel->Dock(v, ourPort, 0, 1);	///\todo Port of the docked vessel is assumed 0
+}  
+
 
 void DockingProbe::SystemTimestep(double simdt) 
 
@@ -265,9 +303,13 @@ void DockingProbe::SaveState(FILEHANDLE scn)
 
 {
 	oapiWriteLine(scn, DOCKINGPROBE_START_STRING);
-	oapiWriteScenario_int (scn, "ENABLED", Enabled);
-	oapiWriteScenario_float (scn, "STATUS", Status);
-	oapiWriteScenario_int (scn, "EXTENDINGRETRACTING", ExtendingRetracting);
+	oapiWriteScenario_int(scn, "ENABLED", Enabled);
+	oapiWriteScenario_float(scn, "STATUS", Status);
+	oapiWriteScenario_int(scn, "EXTENDINGRETRACTING", ExtendingRetracting);
+	oapiWriteScenario_int(scn, "DOCKPROC", Dockproc);
+	papiWriteScenario_vec(scn, "DOCKPARAM0", Dockparam[0]);
+	papiWriteScenario_vec(scn, "DOCKPARAM1", Dockparam[1]);
+	papiWriteScenario_vec(scn, "DOCKPARAM2", Dockparam[2]);
 	oapiWriteLine(scn, DOCKINGPROBE_END_STRING);
 }
 
@@ -291,5 +333,9 @@ void DockingProbe::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "EXTENDINGRETRACTING", 19)) {
 			sscanf (line+19, "%d", &ExtendingRetracting);
 		}
+		else if (papiReadScenario_int(line, "DOCKPROC", Dockproc));
+		else if (papiReadScenario_vec(line, "DOCKPARAM0", Dockparam[0]));
+		else if (papiReadScenario_vec(line, "DOCKPARAM1", Dockparam[1]));
+		else papiReadScenario_vec(line, "DOCKPARAM2", Dockparam[2]);
 	}
 }

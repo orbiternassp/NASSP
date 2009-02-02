@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2008/04/11 11:49:34  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.11  2008/01/22 05:22:27  movieman523
   *	Added port number to docking probe.
   *	
@@ -84,6 +87,7 @@ public:
 	bool IsDocked() { return Docked; }
 	bool IsHardDocked();
 	bool IsExtended() { return (Status == DOCKINGPROBE_STATUS_EXTENDED); };
+	bool IsRetracted() { return (Status == DOCKINGPROBE_STATUS_RETRACTED); };
 	void SetEnabled(bool e) { Enabled = e; }
 	bool IsEnabled() { return Enabled; };
 	void SetIgnoreNextDockEvent() { IgnoreNextDockEvent = 1; };
@@ -101,6 +105,7 @@ protected:
 	void DoFirstTimeStep();
 	void Extend();
 	void Retract();
+	void UpdatePort(VECTOR3 off, double simdt);
 	bool IsPowered() { return DCPower.Voltage() > SP_MIN_DCVOLTAGE; };
 
 	bool Enabled;
@@ -129,6 +134,9 @@ protected:
 	/// Docking port this probe is connected to.
 	///
 	int ourPort;
+
+	int Dockproc;
+	VECTOR3 Dockparam[3];	      
 };
 
 //
