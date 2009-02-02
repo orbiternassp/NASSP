@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.37  2008/04/11 11:49:40  tschachim
+  *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
+  *	
   *	Revision 1.36  2008/01/28 15:58:47  tschachim
   *	Bugfix EnableFocus
   *	
@@ -286,7 +289,7 @@ void LEM::SetLmVesselDockStage()
 	stage = 0;
 	bModeDocked=true;
 
-	VECTOR3 dockpos = {0.0 ,2.4, 0.0};
+	VECTOR3 dockpos = {0.0 ,2.6, 0.0};
     VECTOR3 dockdir = {0,1,0};
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
@@ -367,7 +370,8 @@ void LEM::SetLmVesselHoverStage()
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-1.85);
 	bModeHover=true;
-	VECTOR3 dockpos = {0.0 ,2.4, 0.0};
+
+	VECTOR3 dockpos = {0.0 ,2.6, 0.0};	
 	VECTOR3 dockdir = {0,1,0};
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
