@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.43  2008/05/14 21:54:02  tschachim
+  *	Fixed SLA panels orientation for the Saturn 1B, the Saturn V still needs fixing.
+  *	
   *	Revision 1.42  2008/04/11 11:50:03  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -463,7 +466,7 @@ void SIVB::SetS4b()
     ClearAttExhaustRefs();
 	HideAllMeshes();
 
-	VECTOR3 dockpos = {0,0.03, 12.4};
+	VECTOR3 dockpos = {0,0.03, 12.6};
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {-0.705,-0.705,0};
 
