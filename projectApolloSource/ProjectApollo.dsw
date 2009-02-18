@@ -3,7 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "ASTP"=".\ASTP\ASTP.dsp" - Package Owner=<4>
+Project: "ASTP"=".\build\VC6\ASTP.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -15,7 +15,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Crawler"=".\Crawler\Crawler.dsp" - Package Owner=<4>
+Project: "Crawler"=".\build\VC6\Crawler.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -27,7 +27,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "DrogueChute"=".\DrogueChute\DrogueChute.dsp" - Package Owner=<4>
+Project: "FloatBag"=".\build\VC6\FloatBag.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -39,7 +39,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "FloatBag"=".\FloatBag\FloatBag.dsp" - Package Owner=<4>
+Project: "Floodlight"=".\build\VC6\Floodlight.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -51,7 +51,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Floodlight"=".\Floodlight\Floodlight.dsp" - Package Owner=<4>
+Project: "LC34"=".\build\VC6\LC34.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -63,7 +63,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "LC34"=".\LC34\LC34.dsp" - Package Owner=<4>
+Project: "LES"=".\build\VC6\LES.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -75,7 +75,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "LES"=".\LES\LES.dsp" - Package Owner=<4>
+Project: "LRV"=".\build\VC6\LRV.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -87,7 +87,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "LRV"=".\LRV\LRV.dsp" - Package Owner=<4>
+Project: "ML"=".\build\VC6\ML.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -99,7 +99,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ML"=".\ML\ML.dsp" - Package Owner=<4>
+Project: "MSS"=".\build\VC6\MSS.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -111,7 +111,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "MSS"=".\MSS\MSS.dsp" - Package Owner=<4>
+Project: "CMChute"=".\build\VC6\CMChute.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -123,7 +123,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "MainChute"=".\MainChute\MainChute.dsp" - Package Owner=<4>
+Project: "PanelSDK"=".\build\VC6\PanelSDK.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -135,7 +135,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "PanelSDK"=".\PanelSDK\PanelSDK.dsp" - Package Owner=<4>
+Project: "ProjectApolloConfigurator"=".\build\VC6\ProjectApolloConfigurator.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -147,7 +147,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ProjectApolloConfigurator"=".\ProjectApolloConfigurator\ProjectApolloConfigurator.dsp" - Package Owner=<4>
+Project: "ProjectApolloMFD"=".\build\VC6\ProjectApolloMFD.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -159,19 +159,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "ProjectApolloMFD"=".\ProjectApolloMFD\ProjectApolloMFD.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "SAT5_LMPKD"=".\Sat5_LMPKD\Sat5_LMPKD.dsp" - Package Owner=<4>
+Project: "SAT5_LMPKD"=".\build\VC6\Sat5_LMPKD.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -186,7 +174,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "SIVb"=".\SIVb\SIVb.dsp" - Package Owner=<4>
+Project: "SIVb"=".\build\VC6\SIVb.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -201,7 +189,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Sat1Abort1"=".\Sat1Abort1\Sat1Abort1.dsp" - Package Owner=<4>
+Project: "Sat1Abort1"=".\build\VC6\Sat1Abort1.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -213,7 +201,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Sat1Abort2"=".\Sat1Abort2\Sat1Abort2.dsp" - Package Owner=<4>
+Project: "Sat1Abort2"=".\build\VC6\Sat1Abort2.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -225,7 +213,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Sat5Abort1"=".\Sat5Abort1\Sat5Abort1.dsp" - Package Owner=<4>
+Project: "Sat5Abort1"=".\build\VC6\Sat5Abort1.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -237,7 +225,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Sat5Abort2"=".\Sat5Abort2\Sat5Abort2.dsp" - Package Owner=<4>
+Project: "Sat5Abort2"=".\build\VC6\Sat5Abort2.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -249,22 +237,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Saturn1b"=".\Saturn1b\Saturn1b.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name PanelSDK
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "Saturn5NASP"=".\Saturn5NASP\Saturn5NASP.dsp" - Package Owner=<4>
+Project: "Saturn1b"=".\build\VC6\Saturn1b.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -279,7 +252,22 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Saturn5_EVA"=".\Saturn5_EVA\Saturn5_EVA.dsp" - Package Owner=<4>
+Project: "Saturn5NASP"=".\build\VC6\Saturn5NASP.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name PanelSDK
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Saturn5_EVA"=".\build\VC6\Saturn5_EVA.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -291,7 +279,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "Saturn5_LEVA"=".\Saturn5_LEVA\Saturn5_LEVA.dsp" - Package Owner=<4>
+Project: "Saturn5_LEVA"=".\build\VC6\Saturn5_LEVA.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -303,7 +291,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "VAB"=".\VAB\VAB.dsp" - Package Owner=<4>
+Project: "VAB"=".\build\VC6\VAB.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -315,7 +303,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "s1b"=".\S1b\s1b.dsp" - Package Owner=<4>
+Project: "s1b"=".\build\VC6\s1b.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -327,7 +315,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "s1c"=".\S1c\s1c.dsp" - Package Owner=<4>
+Project: "s1c"=".\build\VC6\s1c.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -339,7 +327,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "sii"=".\SII\sii.dsp" - Package Owner=<4>
+Project: "sii"=".\build\VC6\sii.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -351,7 +339,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "sm"=".\SM\sm.dsp" - Package Owner=<4>
+Project: "sm"=".\build\VC6\sm.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
