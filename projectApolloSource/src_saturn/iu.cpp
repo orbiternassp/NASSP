@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.18  2008/04/11 11:49:38  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -1958,7 +1961,7 @@ bool IUGNC::ActivateP30(VECTOR3 _rign, VECTOR3 _vign, VECTOR3 _dv, double IMJD)
 	VECTOR3 _vC = _V(0, 0, 0);
 	if (length(_vP) != 0) {
 		double ca   = ( length(crossp(_r1, _v1))*length(_dv)*Mass ) / ( dotp(_r1, _r1) * Thrust );		
-		_vC = ( Normalize(_vP) * cos(ca/2.0) + Normalize(crossp(_vP, _Y)) * sin(ca/2.0) ) * length(_vP); 
+		_vC = ( Normalize(_vP) * cos(ca/2.0) - Normalize(crossp(_vP, _Y)) * sin(ca/2.0) ) * length(_vP); 
 	}
 	_vG  = _vC + _Y * _dv.y;
 
