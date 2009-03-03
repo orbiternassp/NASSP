@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.26  2008/09/15 19:52:42  tschachim
   *	Telemetry checklist layout.
   *	
@@ -1374,6 +1377,7 @@ void ProjectApolloMFD::GetStateVector (void)
 {
 	char buffer[16];
 	char buffer2[16];
+	oapiGetObjectName(g_Data.planet, buffer, 16);
 	double mt;
 	if (!crawler)
 		mt = saturn->GetMissionTime();
@@ -1392,7 +1396,9 @@ void ProjectApolloMFD::GetStateVector (void)
 	double get = fabs(mt);
 	double a_angle = 180.0*RAD + oapiGetPlanetObliquity(g_Data.planet);
 	double b_angle = 0.0*RAD;
-	double y_angle = 180.0*RAD;
+	double y_angle;
+	if(strcmp(buffer,"Earth") == 0) { y_angle = 180.0*RAD; }
+	else { y_angle = 0.0 * RAD; }
 	q1 = _M(cos(b_angle), 0, -sin(b_angle), 0, 1, 0, sin(b_angle), 0, cos(b_angle));
 	q2 = _M(cos(y_angle), sin(y_angle), 0, -sin(y_angle), cos(y_angle), 0, 0, 0, 1);
 	q3 = _M(1, 0, 0, 0, cos(a_angle), sin(a_angle), 0, -sin(a_angle), cos(a_angle));
@@ -1408,7 +1414,6 @@ void ProjectApolloMFD::GetStateVector (void)
 	q1 = mul(q1, q2);
 	q1 = mul(q1, q3);
 	vel = tmul(q1, vel);
-	oapiGetObjectName(g_Data.planet, buffer, 16);
 	if(strcmp(buffer,"Earth") == 0) {
 		g_Data.emem[0] = 21;
 		g_Data.emem[1] = 1501;
