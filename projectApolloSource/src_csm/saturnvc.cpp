@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.26  2009/02/01 23:17:09  tschachim
   *	Bugfix
   *	
@@ -525,6 +528,9 @@ void Saturn::SetView(double offset, bool update_direction)
 
 		} else if (PanelId == SATPANEL_RIGHT_RNDZ_WINDOW) {
 			v = _V(1.022, 1.046, offset - 3.0);
+
+		} else if (PanelId == SATPANEL_HATCH_WINDOW) {
+			v = _V(0, 0, offset + 1.0);
 
 		} else {
 			v = _V(0, 0, offset - 3.0);

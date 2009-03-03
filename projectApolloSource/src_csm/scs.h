@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.28  2009/01/18 17:48:18  tschachim
   *	Bugfix for docked vessels, GetForceVector isn't working in this case.
   *	
@@ -136,7 +139,7 @@ class BMAG: public AttitudeReference {
 	
 public: 
 	BMAG();                                                                  // Cons
-	void Init(Saturn *v, e_object *dcbus, e_object *acbus, Boiler *h);		 // Initialization
+	void Init(int n, Saturn *v, e_object *dcbus, e_object *acbus, Boiler *h);		 // Initialization
 	void Timestep(double simdt);                                             // Update function
 	void SystemTimestep(double simdt);
 	void Cage(int axis);
@@ -160,8 +163,10 @@ protected:
 	VECTOR3 rates;                                                           // Detected rotation acceleration
 	VECTOR3 uncaged;														 // 0 = caged, 1 = not caged (each axis)
 	VECTOR3 targetAttitude;													 // Attitude when uncaged
+	VECTOR3 errorAttitude;												     // Body attitude error when uncaged
 	Saturn *sat;                                                             // Pointer to ship we're attached to
 	bool powered;                                                            // Data valid flag.
+	int number;																 // BMAG 1 or 2
 };
 
 
