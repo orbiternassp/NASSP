@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.32  2009/01/18 17:48:18  tschachim
   *	Bugfix for docked vessels, GetForceVector isn't working in this case.
   *	
@@ -148,6 +151,18 @@
 #include "ioChannels.h"
 #include "tracer.h"
 #include "papi.h"
+
+
+/* ATTENTION: The original implementation used an inertial attitude reference 
+   for the uncaged BMAGs. In my understanding of the AOH this is wrong, each 
+   gyro assemblies is body-mounted along a spacecraft axis. Set the define to
+   true to switch back to the original implementation.
+
+   To see the difference align the GDC to (0,0,0), uncage the pitch BMAG (ATT1/RATE2),
+   Roll 90° and look what happens when you pitch manually
+*/
+
+#define SCS_INERTIAL_BMAGS	false
 
 
 AttitudeReference::AttitudeReference() {
@@ -458,10 +473,13 @@ BMAG::BMAG() {
 	rates = _V(0,0,0);
 	uncaged = _V(0,0,0);
 	targetAttitude = _V(0,0,0);
+	errorAttitude = _V(0,0,0);
+	number = 0;
 }
 
-void BMAG::Init(Saturn *v, e_object *dcbus, e_object *acbus, Boiler *h) {
+void BMAG::Init(int n, Saturn *v, e_object *dcbus, e_object *acbus, Boiler *h) {
 	// Initialize
+	number = n;
 	sat = v;
 	dc_bus = dcbus;
 	ac_bus = acbus;
@@ -490,6 +508,33 @@ void BMAG::Timestep(double simdt) {
 
 	heater->WireTo(dc_source);	// Take DC power to heat the gyro
 	AttitudeReference::Timestep(simdt);
+
+	if (uncaged.x == 1) {
+		errorAttitude.x -= rates.z * simdt;
+		while (errorAttitude.x <= TWO_PI) errorAttitude.x += TWO_PI;
+		while (errorAttitude.x >= TWO_PI) errorAttitude.x -= TWO_PI;
+	}
+	if (uncaged.y == 1) {
+		errorAttitude.y -= rates.x * simdt;
+		while (errorAttitude.y <= TWO_PI) errorAttitude.y += TWO_PI;
+		while (errorAttitude.y >= TWO_PI) errorAttitude.y -= TWO_PI;
+	}
+	if (uncaged.z == 1) {
+		errorAttitude.z += rates.y * simdt;
+		while (errorAttitude.z <= TWO_PI) errorAttitude.z += TWO_PI;
+		while (errorAttitude.z >= TWO_PI) errorAttitude.z -= TWO_PI;
+	}
+
+/*	if (number == 1) {
+		sprintf(oapiDebugString(),"BMAG Att x %.3f y %.3f z %.3f Tar x %.3f y %.3f z %.3f Err x %.3f y %.3f z %.3f",  
+			Attitude.x * DEG, Attitude.y * DEG, Attitude.z * DEG,
+			targetAttitude.x * DEG, targetAttitude.y * DEG, targetAttitude.z * DEG,
+			(targetAttitude.x - Attitude.x) * DEG, (targetAttitude.y - Attitude.y) * DEG, (targetAttitude.z - Attitude.z) * DEG);
+
+		sprintf(oapiDebugString(),"BMAG Err x %.3f y %.3f z %.3f", 
+			errorAttitude.x * DEG, errorAttitude.y * DEG, errorAttitude.z * DEG);
+	}
+*/
 }
 
 void BMAG::SystemTimestep(double simdt) {
@@ -512,13 +557,17 @@ void BMAG::Uncage(int axis) {
 	if (uncaged.data[axis] == 0) {
 		targetAttitude.data[axis] = Attitude.data[axis];
 		uncaged.data[axis] = 1;
+
+		errorAttitude.data[axis] = 0;
 	}
 }
 
 VECTOR3 BMAG::GetAttitudeError() {
 
-	VECTOR3 err = _V(0, 0, 0);
+	if (!SCS_INERTIAL_BMAGS)
+		return errorAttitude;
 
+	VECTOR3 err = _V(0, 0, 0);
 	if (powered) 
 	{
 		if (uncaged.x == 1) 
@@ -558,6 +607,7 @@ void BMAG::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "RATESX", rates.x);
 	papiWriteScenario_double(scn, "RATESY", rates.y);
 	papiWriteScenario_double(scn, "RATESZ", rates.z);
+	papiWriteScenario_vec(scn, "ERRORATTITUDE", errorAttitude);
 	
 	AttitudeReference::SaveState(scn);
 
@@ -600,6 +650,7 @@ void BMAG::LoadState(FILEHANDLE scn){
 		else if (!strnicmp (line, "RATESZ", 6)) {
 			sscanf(line + 6, "%lf", &rates.z);
 		}
+		else if (papiReadScenario_vec(line, "ERRORATTITUDE", errorAttitude));
 		else {
 			AttitudeReference::LoadState(line);
 		}
@@ -763,13 +814,23 @@ bool GDC::AlignGDC() {
 	// Set the GDC attitude to match what's on the ASCP.
 	if (sat->EMSRollSwitch.IsDown()) {
 		if (sat->FDAIAttSetSwitch.IsDown()) {
-			SetAttitude(_V(sat->ascp.output.x * 0.017453,
-						   sat->ascp.output.y * 0.017453,
-						   sat->ascp.output.z * 0.017453)); // Degrees to radians
+			SetAttitude(_V(sat->ascp.output.x * RAD,
+						   sat->ascp.output.y * RAD,
+						   sat->ascp.output.z * RAD)); // Degrees to radians
+
+
+			// Align both BMAGs to the GDC as the GDC gets its attitude data from them
+			sat->bmag1.SetAttitude(_V(sat->ascp.output.x * RAD,
+									  sat->ascp.output.y * RAD,
+									  sat->ascp.output.z * RAD));
+
+			sat->bmag2.SetAttitude(_V(sat->ascp.output.x * RAD,
+									  sat->ascp.output.y * RAD,
+									  sat->ascp.output.z * RAD));
 			return true;
 		}
 	} else {
-		sat->ems.SetRSIRotation(sat->ascp.output.z * 0.017453);
+		sat->ems.SetRSIRotation(sat->ascp.output.z * RAD);
 	}
 	return false;	
 }
@@ -1552,6 +1613,9 @@ VECTOR3 EDA::CalcErrors(VECTOR3 target)
 VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors)
 
 {
+	if (!SCS_INERTIAL_BMAGS)
+		return errors;
+
 	VECTOR3 output_errors;
 	double input_pitch = errors.y;
 	double input_yaw = errors.z;
@@ -1994,14 +2058,11 @@ void ECA::TimeStep(double simdt) {
 		sat->rjec.SetThruster(8,0);
 	}
 	// ERROR DETERMINATION
-	VECTOR3 setting,target,errors;
+	VECTOR3 target, errors;
 	if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) {
 		// Get BMAG1 attitude errors
-		setting = sat->bmag1.GetAttitudeError();
-		// And difference from GDC attitude (plus rate)
-		target.x = setting.x + sat->gdc.rates.z;
-		target.y = setting.y + sat->gdc.rates.x;
-		target.z = setting.z - sat->gdc.rates.y; // Yaw rate points the wrong way.
+		target = sat->bmag1.GetAttitudeError();
+				
 		// Now process
 		if(target.x > 0){ // Positive Error
 			if(target.x > PI){ 
@@ -2026,6 +2087,7 @@ void ECA::TimeStep(double simdt) {
 		}
 		// Now adjust for rotation
 		errors = sat->eda.AdjustErrorsForRoll(sat->bmag1.GetAttitude(), errors);
+
 		// Create demand for rate
 		switch(sat->AttRateSwitch.GetState()){
 			case TOGGLESWITCH_UP:   // HIGH RATE
@@ -2264,7 +2326,7 @@ void ECA::TimeStep(double simdt) {
 		//	cmd_rate.x * DEG, cmd_rate.y * DEG, cmd_rate.z * DEG, 
 		//	rate_err.x * DEG, rate_err.y * DEG, rate_err.z * DEG);	
 		// sprintf(oapiDebugString(),"SCS PITCH rate %.3f cmd %.3f pseudo %.3f error %.3f", sat->gdc.rates.x * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
-		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f error %.3f", sat->gdc.rates.z * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG);
+		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f rate_err %.3f errors %.3f setting %.3f", sat->gdc.rates.z * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG, errors.x * DEG, setting.x * DEG);
 
 		//
 		// ROTATION
