@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.16  2009/02/02 19:11:59  tschachim
   *	Improved capture and retraction handling by Artlav.
   *	
@@ -264,13 +267,19 @@ void DockingProbe::TimeStep(double simt, double simdt)
 
 void DockingProbe::UpdatePort(VECTOR3 off,double simdt)
 {
+	VESSELSTATUS vs;	
+	OurVessel->GetStatus(vs);
+
  	DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
 	OBJHANDLE v = OurVessel->GetDockStatus(dock);
 	IgnoreNextDockEvent = 1;
 	bool b = OurVessel->Undock(ourPort); 
 	OurVessel->SetDockParams(dock, Dockparam[0] + off, Dockparam[1], Dockparam[2]);
 	IgnoreNextDockEvent = 1;
-	if (v != NULL) OurVessel->Dock(v, ourPort, 0, 1);	///\todo Port of the docked vessel is assumed 0
+	if (v != NULL) {
+		OurVessel->Dock(v, ourPort, 0, 1);	///\todo Port of the docked vessel is assumed 0
+	}
+	OurVessel->DefSetState(&vs);
 }  
 
 
