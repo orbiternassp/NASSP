@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/03/03 15:37:53  bluedragon8144
+  *	Fixed moon state vector angle
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -403,11 +406,7 @@ void UplinkStateVector(double simt)
 			else {
 				sprintf(debugWinsock, "Disconnected");
 				g_Data.uplinkState = 0;
-				
-				// TODO TEST
-				g_Data.statevectorReady = 0;
-				//g_Data.statevectorReady = 1;
-				
+				g_Data.statevectorReady = 0;				
 				g_Data.connStatus = 0;
 				closesocket(m_socket);
 			}
@@ -864,9 +863,6 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 		} else if (key == OAPI_KEY_U) {
 			if (saturn) {
 				if (g_Data.statevectorReady == 0 && g_Data.updateclockReady == 0) {
-					// TODO TEST
-					// GetStateVector();
-					
 					g_Data.statevectorReady = 1;
 				}
 				else if (g_Data.statevectorReady == 1) {				
@@ -1065,6 +1061,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		mt = saturn->GetMissionTime();
 	else
 		mt = crawler->GetMissionTime();
+
 	int secs = abs((int) mt);
 	int hours = (secs / 3600);
 	secs -= (hours * 3600);
@@ -1093,8 +1090,10 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), "Apoapsis Alt.:", 14);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), "Periapsis Alt.:", 15);
 
+		char planetName[255];
 		VECTOR3 vel, hvel;
 		double vvel = 0, apDist, peDist;
+
 		OBJHANDLE planet = saturn->GetGravityRef();
 		saturn->GetRelativeVel(planet, vel); 
 		if (saturn->GetHorizonAirspeedVector(hvel)) {
@@ -1102,8 +1101,15 @@ void ProjectApolloMFD::Update (HDC hDC)
 		}
 		saturn->GetApDist(apDist);
 		saturn->GetPeDist(peDist);
-		apDist -= 6.373338e6;
-		peDist -= 6.373338e6;
+
+		oapiGetObjectName(planet, planetName, 16);
+		if (strcmp(planetName, "Earth") == 0) {
+			apDist -= 6.373338e6;
+			peDist -= 6.373338e6;
+		} else {
+			apDist -= 1.73809e6;
+			peDist -= 1.73809e6;
+		}
 
 		SetTextAlign (hDC, TA_RIGHT);
 		sprintf(buffer, "%.0lfft/s", length(vel) * 3.2808399);
@@ -1372,48 +1378,59 @@ void ProjectApolloMFD::Update (HDC hDC)
 	}
 }
 
-
 void ProjectApolloMFD::GetStateVector (void)
 {
 	char buffer[16];
 	char buffer2[16];
-	oapiGetObjectName(g_Data.planet, buffer, 16);
 	double mt;
-	if (!crawler)
-		mt = saturn->GetMissionTime();
-	else
+
+	if (!crawler) {
+		mt = saturn->GetMissionTime(); 
+	} else {		  
 		mt = crawler->GetMissionTime();
-	MATRIX3 q1, q2, q3;
+	}
+
 	VECTOR3 pos, vel;
 	int n;
 	double calc_1[7];
 	double calc_2[7];
 	double calc_3[7];
+
 	g_Data.vessel->GetRelativePos(g_Data.planet, pos); 
 	g_Data.vessel->GetRelativeVel(g_Data.planet, vel);
-	pos = _V(pos.x, pos.z, -pos.y);
+
+	// Switch to nominal right-handed system
+	//
+	pos = _V(pos.x, pos.z, pos.y);
 	vel = _V(vel.x, vel.z, vel.y);
+
+	// Acquire right-handed rotation axis of the Earth
+	//
+	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
+
+	double obliquity  = oapiGetPlanetObliquity(hEarth);
+	double suntransit = oapiGetPlanetTheta(hEarth);
+	
+	VECTOR3 _lan = _V(cos(suntransit), sin(suntransit), 0);
+	VECTOR3 _rot = _V(0,0,1) * cos(obliquity) + Normalize(crossp(_V(0,0,1), _lan)) * sin(obliquity);
+	
+	if (oapiGetPlanetPeriod(hEarth)<0) _rot = -_rot;
+
+	// Reference frame
+	//
+	VECTOR3 _I = _V(1,0,0);
+	VECTOR3 _K = _rot;
+	VECTOR3 _J = Normalize(crossp(_K, _I));
+
+	// State vector corversion
+	//
+	pos = _V( dotp(pos,_I), dotp(pos,_J), dotp(pos,_K));
+	vel = _V( dotp(vel,_I), dotp(vel,_J), dotp(vel,_K));
+		
 	double get = fabs(mt);
-	double a_angle = 180.0*RAD + oapiGetPlanetObliquity(g_Data.planet);
-	double b_angle = 0.0*RAD;
-	double y_angle;
-	if(strcmp(buffer,"Earth") == 0) { y_angle = 180.0*RAD; }
-	else { y_angle = 0.0 * RAD; }
-	q1 = _M(cos(b_angle), 0, -sin(b_angle), 0, 1, 0, sin(b_angle), 0, cos(b_angle));
-	q2 = _M(cos(y_angle), sin(y_angle), 0, -sin(y_angle), cos(y_angle), 0, 0, 0, 1);
-	q3 = _M(1, 0, 0, 0, cos(a_angle), sin(a_angle), 0, -sin(a_angle), cos(a_angle));
-	q1 = mul(q1, q2);
-	q1 = mul(q1, q3);	
-	pos = tmul(q1, pos);
-	a_angle = oapiGetPlanetObliquity(g_Data.planet);
-	b_angle = 0.0*RAD;
-	y_angle = 0.0*RAD;
-	q1 = _M(cos(b_angle), 0, -sin(b_angle), 0, 1, 0, sin(b_angle), 0, cos(b_angle));
-	q2 = _M(cos(y_angle), sin(y_angle), 0, -sin(y_angle), cos(y_angle), 0, 0, 0, 1);
-	q3 = _M(1, 0, 0, 0, cos(a_angle), sin(a_angle), 0, -sin(a_angle), cos(a_angle));
-	q1 = mul(q1, q2);
-	q1 = mul(q1, q3);
-	vel = tmul(q1, vel);
+
+	oapiGetObjectName(g_Data.planet, buffer, 16);
+
 	if(strcmp(buffer,"Earth") == 0) {
 		g_Data.emem[0] = 21;
 		g_Data.emem[1] = 1501;
@@ -1423,7 +1440,7 @@ void ProjectApolloMFD::GetStateVector (void)
 			g_Data.emem[2] = 1;
 		else
 			g_Data.emem[2] = 77776;
-		calc_1[0] = -pos.x * pow(2.0, -29.0);
+		calc_1[0] = pos.x * pow(2.0, -29.0);	// Minus sign removed
 		calc_1[1] = pos.y * pow(2.0, -29.0);
 		calc_1[2] = pos.z * pow(2.0, -29.0);
 		calc_1[3] = (vel.x/100.0) * pow(2.0, -7.0);
@@ -1440,7 +1457,7 @@ void ProjectApolloMFD::GetStateVector (void)
 			g_Data.emem[2] = 2;
 		else
 			g_Data.emem[2] = 77775;
-		calc_1[0] = -pos.x * pow(2.0, -27.0);
+		calc_1[0] = pos.x * pow(2.0, -27.0);	// Minus sign removed
 		calc_1[1] = pos.y * pow(2.0, -27.0);
 		calc_1[2] = pos.z * pow(2.0, -27.0);
 		calc_1[3] = (vel.x/100.0) * pow(2.0, -5.0);
@@ -1472,6 +1489,7 @@ void ProjectApolloMFD::GetStateVector (void)
 		g_Data.emem[n+4] = irDEC2OCT(calc_2[n/2]*pow(2.0, 14.0));
 	}
 }
+
 int ProjectApolloMFD::DEC2OCT(int a)
 {
 	int base = 0;
