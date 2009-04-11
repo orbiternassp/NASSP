@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.233  2008/07/13 17:47:12  tschachim
   *	Rearranged realism levels, merged Standard and Quickstart Mode.
   *	
@@ -2970,7 +2973,7 @@ void Saturn::UpdatePayloadMass()
 		break;
 
 	case PAYLOAD_DOCKING_ADAPTER:
-		S4PL_Mass = 2000.0 + 8000.0;		// Estimate at 8,000kg of batteries plus 2,000kg docking adapter.
+		S4PL_Mass = 4700.0; // see http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2064.0
 		break;
 
 	default:
