@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/03/16 19:42:31  tschachim
+  *	New GetStateVector and bugfixes by Jarmo
+  *	
   *	Revision 1.2  2009/03/03 15:37:53  bluedragon8144
   *	Fixed moon state vector angle
   *	
@@ -145,6 +148,9 @@
 #include "MFDResource.h"
 #include "ProjectApolloMFD.h"
 
+#include <queue>
+
+
 
 // ==============================================================
 // Global variables
@@ -177,7 +183,7 @@ int g_MFDmode; // identifier for new MFD mode
 // Time to ejection when the IU is programmed
 #define IUSTARTTIME 900
 
-static struct {  // global data storage
+static struct ProjectApolloMFDData {  // global data storage
 	int prog;	
 	int progState;  
 	Saturn *progVessel;
@@ -193,6 +199,8 @@ static struct {  // global data storage
 	int statevectorReady;
 	int updateclockReady;
 	int uplinkState;
+	queue<unsigned char> uplinkBuffer;
+	double uplinkBufferSimt;
 	double missionTime;
 	OBJHANDLE planet;
 	VESSEL *vessel;
@@ -242,6 +250,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	else {
 		sprintf(debugWinsock,"Disconnected");
 	}
+	g_Data.uplinkBufferSimt = 0;
 }
 
 void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
@@ -264,88 +273,93 @@ void StopIMFDRequest() {
 		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
 }
 
-void send_agc_key(char key)
-	{
-		int bytesXmit = SOCKET_ERROR;
-		unsigned char cmdbuf[4];
-		cmdbuf[0] = 043; // VA,SA
-		switch(key) {
-			case 'V': // 11-000-101 11-010-001										
-				cmdbuf[1] = 0305;
-				cmdbuf[2] = 0321;
-				break;
-			case 'N': // 11-111-100 00-011-111
-				cmdbuf[1] = 0374;
-				cmdbuf[2] = 0037;
-				break;
-			case 'E': // 11-110-000 01-111-100
-				cmdbuf[1] = 0360;
-				cmdbuf[2] = 0174;
-				break;
-			case 'R': // 11-001-001 10-110-010
-				cmdbuf[1] = 0311;
-				cmdbuf[2] = 0262;
-				break;
-			case 'C': // 11-111-000 00-111-110
-				cmdbuf[1] = 0370;
-				cmdbuf[2] = 0076;
-				break;
-			case 'K': // 11-100-100 11-011-001
-				cmdbuf[1] = 0344;
-				cmdbuf[2] = 0331;
-				break;
-			case '+': // 11-101-000 10-111-010
-				cmdbuf[1] = 0350;
-				cmdbuf[2] = 0272;
-				break;
-			case '-': // 11-101-100 10-011-011
-				cmdbuf[1] = 0354;
-				cmdbuf[2] = 0233;
-				break;
-			case '1': // 10-000-111 11-000-001
-				cmdbuf[1] = 0207;
-				cmdbuf[2] = 0301;
-				break;
-			case '2': // 10-001-011 10-100-010
-				cmdbuf[1] = 0213;
-				cmdbuf[2] = 0242;
-				break;
-			case '3': // 10-001-111 10-000-011
-				cmdbuf[1] = 0217;
-				cmdbuf[2] = 0203;
-				break;
-			case '4': // 10-010-011 01-100-100
-				cmdbuf[1] = 0223;
-				cmdbuf[2] = 0144;
-				break;
-			case '5': // 10-010-111 01-000-101
-				cmdbuf[1] = 0227;
-				cmdbuf[2] = 0105;
-				break; 
-			case '6': // 10-011-011 00-100-110
-				cmdbuf[1] = 0233;
-				cmdbuf[2] = 0046;
-				break;
-			case '7': // 10-011-111 00-000-111
-				cmdbuf[1] = 0237;
-				cmdbuf[2] = 0007;
-				break;
-			case '8': // 10-100-010 11-101-000
-				cmdbuf[1] = 0242;
-				cmdbuf[2] = 0350;
-				break;
-			case '9': // 10-100-110 11-001-001
-				cmdbuf[1] = 0246;
-				cmdbuf[2] = 0311;
-				break;
-			case '0': // 11-000-001 11-110-000
-				cmdbuf[1] = 0301;
-				cmdbuf[2] = 0360;
-				break;
-			}
- 			bytesXmit = send(m_socket,(char *)cmdbuf,3,0);			
-		}
-void uplink_word(char * data)
+void send_agc_key(char key)	{
+
+	int bytesXmit = SOCKET_ERROR;
+	unsigned char cmdbuf[4];
+
+	cmdbuf[0] = 043; // VA,SA
+
+	switch(key) {
+		case 'V': // 11-000-101 11-010-001										
+			cmdbuf[1] = 0305;
+			cmdbuf[2] = 0321;
+			break;
+		case 'N': // 11-111-100 00-011-111
+			cmdbuf[1] = 0374;
+			cmdbuf[2] = 0037;
+			break;
+		case 'E': // 11-110-000 01-111-100
+			cmdbuf[1] = 0360;
+			cmdbuf[2] = 0174;
+			break;
+		case 'R': // 11-001-001 10-110-010
+			cmdbuf[1] = 0311;
+			cmdbuf[2] = 0262;
+			break;
+		case 'C': // 11-111-000 00-111-110
+			cmdbuf[1] = 0370;
+			cmdbuf[2] = 0076;
+			break;
+		case 'K': // 11-100-100 11-011-001
+			cmdbuf[1] = 0344;
+			cmdbuf[2] = 0331;
+			break;
+		case '+': // 11-101-000 10-111-010
+			cmdbuf[1] = 0350;
+			cmdbuf[2] = 0272;
+			break;
+		case '-': // 11-101-100 10-011-011
+			cmdbuf[1] = 0354;
+			cmdbuf[2] = 0233;
+			break;
+		case '1': // 10-000-111 11-000-001
+			cmdbuf[1] = 0207;
+			cmdbuf[2] = 0301;
+			break;
+		case '2': // 10-001-011 10-100-010
+			cmdbuf[1] = 0213;
+			cmdbuf[2] = 0242;
+			break;
+		case '3': // 10-001-111 10-000-011
+			cmdbuf[1] = 0217;
+			cmdbuf[2] = 0203;
+			break;
+		case '4': // 10-010-011 01-100-100
+			cmdbuf[1] = 0223;
+			cmdbuf[2] = 0144;
+			break;
+		case '5': // 10-010-111 01-000-101
+			cmdbuf[1] = 0227;
+			cmdbuf[2] = 0105;
+			break; 
+		case '6': // 10-011-011 00-100-110
+			cmdbuf[1] = 0233;
+			cmdbuf[2] = 0046;
+			break;
+		case '7': // 10-011-111 00-000-111
+			cmdbuf[1] = 0237;
+			cmdbuf[2] = 0007;
+			break;
+		case '8': // 10-100-010 11-101-000
+			cmdbuf[1] = 0242;
+			cmdbuf[2] = 0350;
+			break;
+		case '9': // 10-100-110 11-001-001
+			cmdbuf[1] = 0246;
+			cmdbuf[2] = 0311;
+			break;
+		case '0': // 11-000-001 11-110-000
+			cmdbuf[1] = 0301;
+			cmdbuf[2] = 0360;
+			break;
+	}
+	for (int i = 0; i < 3; i++) {
+		g_Data.uplinkBuffer.push(cmdbuf[i]);
+	}
+}
+
+void uplink_word(char *data)
 {
 	int i;
 	for(i = 5; i > (int)strlen(data); i--) {
@@ -387,8 +401,8 @@ void UplinkStateVector(double simt)
 		send_agc_key('E');
 		g_Data.missionTime = simt;
 	}
-	else {
-		if(simt > g_Data.missionTime + 1.0) {
+	else if (g_Data.connStatus == 1) {
+		if(simt > g_Data.missionTime + 0.1) {
 			if(g_Data.uplinkState < 17) {
 				sprintf(buffer, "%ld", g_Data.emem[g_Data.uplinkState]);
 				uplink_word(buffer);
@@ -404,11 +418,10 @@ void UplinkStateVector(double simt)
 				g_Data.uplinkState++;
 			}
 			else {
-				sprintf(debugWinsock, "Disconnected");
 				g_Data.uplinkState = 0;
-				g_Data.statevectorReady = 0;				
-				g_Data.connStatus = 0;
-				closesocket(m_socket);
+				// Send until queue empty, then reset statevectorReady to 0
+				// and close the socket
+				g_Data.connStatus = 2;
 			}
 		}
 	}
@@ -447,8 +460,8 @@ void UpdateClock(double simt)
 		send_agc_key('E');
 		g_Data.missionTime = simt;
 	}
-	else {
-		if(simt > g_Data.missionTime + 1.0) {
+	else if (g_Data.connStatus == 1) {
+		if(simt > g_Data.missionTime + 0.1) {
 			if(g_Data.uplinkState == 0) {
 				char sign = '+';
 				double mt = 0;
@@ -497,11 +510,10 @@ void UpdateClock(double simt)
 				g_Data.uplinkState++;
 			}
 			else if(g_Data.uplinkState == 5) {
-				sprintf(debugWinsock, "Disconnected");
 				g_Data.uplinkState = 0;
-				g_Data.updateclockReady = 0;
-				g_Data.connStatus = 0;
-				closesocket(m_socket);
+				// Send until queue empty, then reset statevectorReady to 0
+				// and close the socket
+				g_Data.connStatus = 2;
 			}
 			else {
 				g_Data.missionTime = simt;
@@ -527,13 +539,30 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 			}
    		}
 	}
+
 	if (g_Data.statevectorReady == 2) {
 		UplinkStateVector(simt);
 	}
 	if (g_Data.updateclockReady == 2) {
 		UpdateClock(simt);
 	}
-	
+
+	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
+		if (simt > g_Data.uplinkBufferSimt + 0.05) {
+			unsigned char data = g_Data.uplinkBuffer.front();
+			send(m_socket, (char *) &data, 1, 0);
+			g_Data.uplinkBuffer.pop();
+			g_Data.uplinkBufferSimt = simt;
+		}
+	} else if (g_Data.connStatus == 2 && g_Data.uplinkBuffer.size() == 0) {
+		sprintf(debugWinsock, "Disconnected");
+		g_Data.statevectorReady = 0;				
+		g_Data.updateclockReady = 0;
+		g_Data.connStatus = 0;
+		closesocket(m_socket);
+	}
+
+
 	if (g_Data.prog == PROG_IMFDTLI) {
 		switch (g_Data.progState) {
 		case PROGSTATE_TLI_START:
@@ -1303,39 +1332,39 @@ void ProjectApolloMFD::Update (HDC hDC)
 		}
 		else if(g_Data.statevectorReady == 2) {
 			SetTextAlign (hDC, TA_LEFT);
-			sprintf(buffer, "         %ld", g_Data.emem[0]);
+			sprintf(buffer, "304   %ld", g_Data.emem[0]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.4), buffer, strlen(buffer));
-			sprintf(buffer, "         %ld", g_Data.emem[1]);
+			sprintf(buffer, "305   %ld", g_Data.emem[1]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1501 %ld", g_Data.emem[2]);
+			sprintf(buffer, "306   %ld", g_Data.emem[2]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1502 %ld", g_Data.emem[3]);
+			sprintf(buffer, "307   %ld", g_Data.emem[3]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1503 %ld", g_Data.emem[4]);
+			sprintf(buffer, "310   %ld", g_Data.emem[4]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1504 %ld", g_Data.emem[5]);
+			sprintf(buffer, "311   %ld", g_Data.emem[5]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1505 %ld", g_Data.emem[6]);
+			sprintf(buffer, "312   %ld", g_Data.emem[6]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1506 %ld", g_Data.emem[7]);
+			sprintf(buffer, "313   %ld", g_Data.emem[7]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.75), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1507 %ld", g_Data.emem[8]);		
+			sprintf(buffer, "314   %ld", g_Data.emem[8]);		
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1510 %ld", g_Data.emem[9]);
+			sprintf(buffer, "315   %ld", g_Data.emem[9]);
 			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.4), buffer, strlen(buffer));		
-			sprintf(buffer, "EMEM1511 %ld", g_Data.emem[10]);
+			sprintf(buffer, "316   %ld", g_Data.emem[10]);
 			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.45), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1512 %ld", g_Data.emem[11]);
+			sprintf(buffer, "317   %ld", g_Data.emem[11]);
 			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.5), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1513 %ld", g_Data.emem[12]);
+			sprintf(buffer, "320   %ld", g_Data.emem[12]);
 			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.55), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1514 %ld", g_Data.emem[13]);
+			sprintf(buffer, "321   %ld", g_Data.emem[13]);
 			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.6), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1515 %ld", g_Data.emem[14]);
+			sprintf(buffer, "322   %ld", g_Data.emem[14]);
 			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.65), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1516 %ld", g_Data.emem[15]);
+			sprintf(buffer, "323   %ld", g_Data.emem[15]);
 			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.7), buffer, strlen(buffer));
-			sprintf(buffer, "EMEM1517 %ld", g_Data.emem[16]);
+			sprintf(buffer, "324   %ld", g_Data.emem[16]);
 			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.75), buffer, strlen(buffer));
 		}
 		SetTextAlign (hDC, TA_LEFT);
@@ -1407,9 +1436,8 @@ void ProjectApolloMFD::GetStateVector (void)
 	// Acquire right-handed rotation axis of the Earth
 	//
 	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
-
 	double obliquity  = oapiGetPlanetObliquity(hEarth);
-	double suntransit = oapiGetPlanetTheta(hEarth);
+	double suntransit = oapiGetPlanetTheta(hEarth);			// Zero by definition
 	
 	VECTOR3 _lan = _V(cos(suntransit), sin(suntransit), 0);
 	VECTOR3 _rot = _V(0,0,1) * cos(obliquity) + Normalize(crossp(_V(0,0,1), _lan)) * sin(obliquity);
