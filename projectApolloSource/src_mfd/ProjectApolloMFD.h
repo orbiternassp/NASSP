@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.10  2008/04/23 18:50:25  bluedragon8144
   *	Added telemetry window and vessel support for State Vector.  Cleaned up display.
   *	
@@ -78,19 +81,20 @@ public:
 	bool ConsumeButton (int bt, int event);
 	bool ConsumeKeyBuffered (DWORD key);
 	void Update (HDC hDC);
+	void GetStateVector (void);	
+	void IMFDP30Uplink(void);
+	void IMFDP31Uplink(void);
+	void IMFDExtDVUplink(void);
+	bool SetSource(char *rstr);
+	bool SetReferencePlanet(char *rstr);
 	bool SetCrewNumber (char *rstr);
 	bool SetPrimECSTestHeaterPower (char *rstr);
 	bool SetSecECSTestHeaterPower (char *rstr);
-	bool SetSource(char *rstr);
-	bool SetReferencePlanet(char *rstr);
 	
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
 	void StoreStatus (void) const;
 	void RecallStatus (void);
-	void GetStateVector (void);	
-	int DEC2OCT(int a);
-	int irDEC2OCT(double a);
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 protected:
