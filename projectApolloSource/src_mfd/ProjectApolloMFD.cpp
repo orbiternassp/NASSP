@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/04/28 16:05:34  tschachim
+  *	Queuing uplink data stream to prevent buffer issues.
+  *	
   *	Revision 1.3  2009/03/16 19:42:31  tschachim
   *	New GetStateVector and bugfixes by Jarmo
   *	
@@ -196,7 +199,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	char *errorMessage;
 	int emem[17];
 	int connStatus;
-	int statevectorReady;
+	int uplinkDataReady;
 	int updateclockReady;
 	int uplinkState;
 	queue<unsigned char> uplinkBuffer;
@@ -237,7 +240,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.requestMjd = 0;
 	g_Data.errorMessage = "";
 	g_Data.connStatus = 0;
-	g_Data.statevectorReady = 0;
+	g_Data.uplinkDataReady = 0;
 	g_Data.updateclockReady = 0;
 	g_Data.uplinkState = 0;
 	//Init Emem
@@ -271,6 +274,53 @@ void StopIMFDRequest() {
 	g_Data.isRequesting = false;
 	if (!g_Data.isRequestingManually)
 		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
+}
+
+int DoubleToBuffer(double x, double q, int m)
+{
+	int c=0, out=0, f=1;
+	
+	x = x * (268435456.0 / pow(2.0, fabs(q)));
+	
+	if (m) c = 0x3FFF & (((int)fabs(x))>>14);	// High word
+	else   c = 0x3FFF & ((int)fabs(x));		// Low word
+	
+	if (x<0.0) c = 0x7FFF & (~c); // Polarity change
+	
+	while (c!=0) {
+		out += (c&7) * f;
+		f*=10;	c = c>>3;
+	}
+	return out;
+}
+
+int FormIoPacket (int Channel, int Value, unsigned char *Packet)
+{
+  if (Channel < 0 || Channel > 0x1ff)
+    return (1);
+  if (Value < 0 || Value > 0x7fff)
+    return (1);
+  if (Packet == NULL)
+    return (1);
+  Packet[0] = Channel >> 3;
+  Packet[1] = 0x40 | ((Channel << 3) & 0x38) | ((Value >> 12) & 0x07);
+  Packet[2] = 0x80 | ((Value >> 6) & 0x3F);
+  Packet[3] = 0xc0 | (Value & 0x3F);
+  // All done.
+  return (0);
+}
+
+void OutputKeycode (int Keycode)
+{
+	int bytesXmit = SOCKET_ERROR;
+	unsigned char Packet[4];
+	extern int ServerSocket;
+	// In this case, we communicate keycodes to the AGC via the digital
+	// uplink rather than through the normal DSKY input channel.
+	Keycode &= 037;
+	Keycode |= ((Keycode << 10) | ((Keycode ^ 037) << 5));
+	FormIoPacket (0173, Keycode, Packet);
+	bytesXmit = send(m_socket,(char*)Packet,4,0);	
 }
 
 void send_agc_key(char key)	{
@@ -419,7 +469,7 @@ void UplinkStateVector(double simt)
 			}
 			else {
 				g_Data.uplinkState = 0;
-				// Send until queue empty, then reset statevectorReady to 0
+				// Send until queue empty, then reset uplinkDataReady to 0
 				// and close the socket
 				g_Data.connStatus = 2;
 			}
@@ -511,7 +561,7 @@ void UpdateClock(double simt)
 			}
 			else if(g_Data.uplinkState == 5) {
 				g_Data.uplinkState = 0;
-				// Send until queue empty, then reset statevectorReady to 0
+				// Send until queue empty, then reset uplinkDataReady to 0
 				// and close the socket
 				g_Data.connStatus = 2;
 			}
@@ -540,7 +590,7 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
    		}
 	}
 
-	if (g_Data.statevectorReady == 2) {
+	if (g_Data.uplinkDataReady == 2) {
 		UplinkStateVector(simt);
 	}
 	if (g_Data.updateclockReady == 2) {
@@ -556,7 +606,7 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 		}
 	} else if (g_Data.connStatus == 2 && g_Data.uplinkBuffer.size() == 0) {
 		sprintf(debugWinsock, "Disconnected");
-		g_Data.statevectorReady = 0;				
+		g_Data.uplinkDataReady = 0;				
 		g_Data.updateclockReady = 0;
 		g_Data.connStatus = 0;
 		closesocket(m_socket);
@@ -878,31 +928,31 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 		} 		
 	} else if (screen == PROG_TELE) {
 		if (key == OAPI_KEY_B) {
-			if(g_Data.statevectorReady == 0 && g_Data.updateclockReady == 0) {
+			if(g_Data.uplinkDataReady == 0 && g_Data.updateclockReady == 0) {
 				screen = PROG_NONE;
 				InvalidateDisplay();
 				InvalidateButtons();
 			} else {
-				if(g_Data.statevectorReady == 1)
-					g_Data.statevectorReady -= 1;
+				if(g_Data.uplinkDataReady == 1)
+					g_Data.uplinkDataReady -= 1;
 				if(g_Data.updateclockReady == 1)
 					g_Data.updateclockReady -= 1;
 			}
 			return true;
 		} else if (key == OAPI_KEY_U) {
 			if (saturn) {
-				if (g_Data.statevectorReady == 0 && g_Data.updateclockReady == 0) {
-					g_Data.statevectorReady = 1;
+				if (g_Data.uplinkDataReady == 0 && g_Data.updateclockReady == 0) {
+					g_Data.uplinkDataReady = 1;
 				}
-				else if (g_Data.statevectorReady == 1) {				
+				else if (g_Data.uplinkDataReady == 1) {				
 					GetStateVector();
-					g_Data.statevectorReady = 2;
+					g_Data.uplinkDataReady = 2;
 				}
 			}
 			return true;
 		} else if (key == OAPI_KEY_C) {
 			if (saturn) {
-				if (g_Data.updateclockReady == 0 && g_Data.statevectorReady == 0) {
+				if (g_Data.updateclockReady == 0 && g_Data.uplinkDataReady == 0) {
 					g_Data.updateclockReady = 1;
 				}
 				else if (g_Data.updateclockReady == 1) {
@@ -911,13 +961,13 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			}
 			return true;
 		} else if (key == OAPI_KEY_S) {
-			if(g_Data.statevectorReady == 0) {
+			if(g_Data.uplinkDataReady == 0) {
 				bool SourceInput (void *id, char *str, void *data);
 				oapiOpenInputBox("Set Source", SourceInput, 0, 20, (void*)this);
 			}
 			return true;
 		} else if (key == OAPI_KEY_R) {
-			if(g_Data.statevectorReady == 0) {
+			if(g_Data.uplinkDataReady == 0) {
 				bool ReferencePlanetInput (void *id, char *str, void *data);
 				oapiOpenInputBox("Set Reference", ReferencePlanetInput, 0, 20, (void*)this);
 			}
@@ -1311,7 +1361,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, width / 2, (int) (height * 0.3), "Telemetry", 9);
 		sprintf(buffer, "Status: %s", debugWinsock);
 		TextOut(hDC, width / 2, (int) (height * 0.35), buffer, strlen(buffer));
-		if (g_Data.statevectorReady == 1 || g_Data.updateclockReady == 1) {
+		if (g_Data.uplinkDataReady == 1 || g_Data.updateclockReady == 1) {
 			sprintf(buffer, "Checklist");
 			TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
 			SetTextAlign (hDC, TA_LEFT);
@@ -1324,13 +1374,13 @@ void ProjectApolloMFD::Update (HDC hDC)
 			sprintf(buffer, "PCM BIT RATE - HIGH (up)      3");
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), buffer, strlen(buffer));
 			SetTextAlign (hDC, TA_CENTER);
-			if (g_Data.statevectorReady == 1) 
+			if (g_Data.uplinkDataReady == 1) 
 				sprintf(buffer, "Press SV to start upload");
 			else
 				sprintf(buffer, "Press CLK to start upload");
 			TextOut(hDC, width / 2, (int) (height * 0.8), buffer, strlen(buffer));
 		}
-		else if(g_Data.statevectorReady == 2) {
+		else if(g_Data.uplinkDataReady == 2) {
 			SetTextAlign (hDC, TA_LEFT);
 			sprintf(buffer, "304   %ld", g_Data.emem[0]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.4), buffer, strlen(buffer));
@@ -1409,21 +1459,11 @@ void ProjectApolloMFD::Update (HDC hDC)
 
 void ProjectApolloMFD::GetStateVector (void)
 {
-	char buffer[16];
-	char buffer2[16];
-	double mt;
-
-	if (!crawler) {
-		mt = saturn->GetMissionTime(); 
-	} else {		  
-		mt = crawler->GetMissionTime();
-	}
-
+	double get;
 	VECTOR3 pos, vel;
-	int n;
-	double calc_1[7];
-	double calc_2[7];
-	double calc_3[7];
+
+	if (!crawler) get = fabs(saturn->GetMissionTime());
+	else		  get = fabs(crawler->GetMissionTime());
 
 	g_Data.vessel->GetRelativePos(g_Data.planet, pos); 
 	g_Data.vessel->GetRelativeVel(g_Data.planet, vel);
@@ -1434,124 +1474,82 @@ void ProjectApolloMFD::GetStateVector (void)
 	vel = _V(vel.x, vel.z, vel.y);
 
 	// Acquire right-handed rotation axis of the Earth
-	//
-	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
+	//	
+	OBJHANDLE hMoon   = oapiGetGbodyByName("Moon");
+	OBJHANDLE hEarth  = oapiGetGbodyByName("Earth");
+	
 	double obliquity  = oapiGetPlanetObliquity(hEarth);
-	double suntransit = oapiGetPlanetTheta(hEarth);			// Zero by definition
+	double suntransit = oapiGetPlanetTheta(hEarth);
 	
 	VECTOR3 _lan = _V(cos(suntransit), sin(suntransit), 0);
 	VECTOR3 _rot = _V(0,0,1) * cos(obliquity) + Normalize(crossp(_V(0,0,1), _lan)) * sin(obliquity);
 	
 	if (oapiGetPlanetPeriod(hEarth)<0) _rot = -_rot;
-
+	
 	// Reference frame
 	//
 	VECTOR3 _I = _V(1,0,0);
 	VECTOR3 _K = _rot;
 	VECTOR3 _J = Normalize(crossp(_K, _I));
 
-	// State vector corversion
-	//
 	pos = _V( dotp(pos,_I), dotp(pos,_J), dotp(pos,_K));
-	vel = _V( dotp(vel,_I), dotp(vel,_J), dotp(vel,_K));
+	vel = _V( dotp(vel,_I), dotp(vel,_J), dotp(vel,_K)) * 0.01;
+	
+	if (g_Data.planet==hMoon) {
+
+		g_Data.emem[0] = 21;
+		g_Data.emem[1] = 1501;	
+
+		if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) g_Data.emem[2] = 2;
+		else g_Data.emem[2] = 77775;	// Octal coded decimal
 		
-	double get = fabs(mt);
+		g_Data.emem[3]  = DoubleToBuffer(pos.x, 27, 1);
+		g_Data.emem[4]  = DoubleToBuffer(pos.x, 27, 0);
+		g_Data.emem[5]  = DoubleToBuffer(pos.y, 27, 1);
+		g_Data.emem[6]  = DoubleToBuffer(pos.y, 27, 0);
+		g_Data.emem[7]  = DoubleToBuffer(pos.z, 27, 1);
+		g_Data.emem[8]  = DoubleToBuffer(pos.z, 27, 0);
+		g_Data.emem[9]  = DoubleToBuffer(vel.x, 5, 1);
+		g_Data.emem[10] = DoubleToBuffer(vel.x, 5, 0);
+		g_Data.emem[11] = DoubleToBuffer(vel.y, 5, 1);
+		g_Data.emem[12] = DoubleToBuffer(vel.y, 5, 0);
+		g_Data.emem[13] = DoubleToBuffer(vel.z, 5, 1);
+		g_Data.emem[14] = DoubleToBuffer(vel.z, 5, 0);	
+		g_Data.emem[15] = DoubleToBuffer(get*100.0, 28, 1);
+		g_Data.emem[16] = DoubleToBuffer(get*100.0, 28, 0);
 
-	oapiGetObjectName(g_Data.planet, buffer, 16);
+		g_Data.uplinkDataReady = 2;
+		return;
+	}
 
-	if(strcmp(buffer,"Earth") == 0) {
+	if (g_Data.planet==hEarth) {
+
 		g_Data.emem[0] = 21;
 		g_Data.emem[1] = 1501;
-		oapiGetObjectName(g_Data.vessel->GetHandle(), buffer, 16);
-		oapiGetObjectName(oapiGetFocusObject(), buffer2, 16);
-		if(strcmp(buffer, buffer2) == 0)
-			g_Data.emem[2] = 1;
-		else
-			g_Data.emem[2] = 77776;
-		calc_1[0] = pos.x * pow(2.0, -29.0);	// Minus sign removed
-		calc_1[1] = pos.y * pow(2.0, -29.0);
-		calc_1[2] = pos.z * pow(2.0, -29.0);
-		calc_1[3] = (vel.x/100.0) * pow(2.0, -7.0);
-		calc_1[4] = (vel.y/100.0) * pow(2.0, -7.0);
-		calc_1[5] = (vel.z/100.0) * pow(2.0, -7.0);
-		calc_1[6] = (get*100.0) * pow(2.0, -28.0);
-	}
-	else if(strcmp(buffer,"Moon") == 0) {
-		g_Data.emem[0] = 21;
-		g_Data.emem[1] = 1501;
-		oapiGetObjectName(g_Data.vessel->GetHandle(), buffer, 16);
-		oapiGetObjectName(oapiGetFocusObject(), buffer2, 16);
-		if(strcmp(buffer, buffer2) == 0)
-			g_Data.emem[2] = 2;
-		else
-			g_Data.emem[2] = 77775;
-		calc_1[0] = pos.x * pow(2.0, -27.0);	// Minus sign removed
-		calc_1[1] = pos.y * pow(2.0, -27.0);
-		calc_1[2] = pos.z * pow(2.0, -27.0);
-		calc_1[3] = (vel.x/100.0) * pow(2.0, -5.0);
-		calc_1[4] = (vel.y/100.0) * pow(2.0, -5.0);
-		calc_1[5] = (vel.z/100.0) * pow(2.0, -5.0);
-		calc_1[6] = (get*100.0) * pow(2.0, -28.0); 
-	}
-	else {
-		g_Data.emem[0] = 0;
-		g_Data.emem[1] = 0;
-		g_Data.emem[2] = 0;
-		calc_1[0] = 0;
-		calc_1[1] = 0;
-		calc_1[2] = 0;
-		calc_1[3] = 0;
-		calc_1[4] = 0;
-		calc_1[5] = 0;
-		calc_1[6] = 0;
-	}
-	for(n = 0; n < 7; n++) {
-		if(calc_1[n] >= 0.0)
-			calc_2[n] = fmod(calc_1[n], pow(2.0, -14.0));
-		else
-			calc_2[n] = -fmod(-calc_1[n], pow(2.0, -14.0));
-		calc_3[n] = calc_1[n]-calc_2[n];
-	}
-	for(n = 0; n < 14; n+=2) {
-		g_Data.emem[n+3] = irDEC2OCT(calc_3[n/2]);
-		g_Data.emem[n+4] = irDEC2OCT(calc_2[n/2]*pow(2.0, 14.0));
-	}
-}
 
-int ProjectApolloMFD::DEC2OCT(int a)
-{
-	int base = 0;
-	int factor = 1;
-	while(a != 0){
-		base += (a%8)*factor;
-		factor *= 10;
-		a /= 8;
+		if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) g_Data.emem[2] = 1;
+		else g_Data.emem[2] = 77776;	// Octal coded decimal
+		
+		g_Data.emem[3]  = DoubleToBuffer(pos.x, 29, 1);
+		g_Data.emem[4]  = DoubleToBuffer(pos.x, 29, 0);
+		g_Data.emem[5]  = DoubleToBuffer(pos.y, 29, 1);
+		g_Data.emem[6]  = DoubleToBuffer(pos.y, 29, 0);
+		g_Data.emem[7]  = DoubleToBuffer(pos.z, 29, 1);
+		g_Data.emem[8]  = DoubleToBuffer(pos.z, 29, 0);
+		g_Data.emem[9]  = DoubleToBuffer(vel.x, 7, 1);
+		g_Data.emem[10] = DoubleToBuffer(vel.x, 7, 0);
+		g_Data.emem[11] = DoubleToBuffer(vel.y, 7, 1);
+		g_Data.emem[12] = DoubleToBuffer(vel.y, 7, 0);
+		g_Data.emem[13] = DoubleToBuffer(vel.z, 7, 1);
+		g_Data.emem[14] = DoubleToBuffer(vel.z, 7, 0);
+		g_Data.emem[15] = DoubleToBuffer(get*100.0, 28, 1);
+		g_Data.emem[16] = DoubleToBuffer(get*100.0, 28, 0);
+
+		g_Data.uplinkDataReady = 2;
+		return;
 	}
-	return base;
-}
-int ProjectApolloMFD::irDEC2OCT(double a)
-{
-	int oct = 0;
-	if(a < 0.0)	{
-		a*=-1.0;
-		int n = static_cast<int>(a*pow(2.0, 14.0)+0.5);
-		int bin, dec;
-		dec = 0;
-		for(double i = 0.0; i < 15.0; i++)
-		{
-			bin = n%2;
-			bin = bin*-1+1;
-			dec += bin*(int)pow(2.0, i);
-			n/=2;
-		}
-		oct = DEC2OCT(dec);
-	}
-	else
-	{
-		int n = static_cast<int>(a*pow(2.0, 14.0)+0.5);
-		oct = DEC2OCT(n);
-	}
-	return oct;
+
+	g_Data.uplinkDataReady = 0; // Abort uplink
 }
 
 void ProjectApolloMFD::WriteStatus (FILEHANDLE scn) const
