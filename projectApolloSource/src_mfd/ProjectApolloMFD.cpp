@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/05/01 18:39:37  bluedragon8144
+  *	Added P30 Uplink Button to IMFD screen, added preliminary uplink code for P31 and ExtDV (to be added to Telemetry screen)
+  *	
   *	Revision 1.5  2009/05/01 17:05:36  bluedragon8144
   *	modified state vectors calculations to Jarmonik's calculations
   *	
@@ -199,9 +202,11 @@ static struct ProjectApolloMFDData {  // global data storage
 	bool isRequesting;
 	bool isRequestingManually;
 	double requestMjd;
+	bool hasError;
 	char *errorMessage;
 	int emem[17];
 	int connStatus;
+	int uplinkDataType;
 	int uplinkDataReady;
 	int updateclockReady;
 	int uplinkBurnReady;
@@ -242,6 +247,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.isRequesting = false;
 	g_Data.isRequestingManually = false;
 	g_Data.requestMjd = 0;
+	g_Data.hasError = false;
 	g_Data.errorMessage = "";
 	g_Data.connStatus = 0;
 	g_Data.uplinkDataReady = 0;
@@ -581,7 +587,7 @@ void UpdateClock(double simt)
 	}
 }
 
-void UplinkBurnData(double simt)
+void IMFDP30Uplink(double simt)
 {
 	int bytesRecv = SOCKET_ERROR;
 	char addr[256];
@@ -729,7 +735,7 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 		UpdateClock(simt);
 	}
 	if (g_Data.uplinkBurnReady == 2 || g_Data.uplinkBurnReady == 5) {
-		UplinkBurnData(simt);
+		IMFDP30Uplink(simt);
 	}
 
 	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
@@ -876,7 +882,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	static char *labelNone[12] = {"GNC", "ECS", "IMFD", "TELE","SOCK","","","","","","","DBG"};
 	static char *labelGNC[6] = {"BCK", "DMP"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
-	static char *labelIMFD[4] = {"BCK", "REQ", "SIVB", "P30"};
+	static char *labelIMFD[6] = {"BCK", "REQ", "SIVB", "P30", "LAM", "DV"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
 	static char *labelTELE[6] = {"BCK", "SV", "CLK", "", "SRC", "REF"};
 	static char *labelSOCK[1] = {"BCK"};	
@@ -894,7 +900,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	}
 	else if (screen == PROG_IMFD) {
 		if (g_Data.progState == PROGSTATE_NONE)
-			return (bt < 4 ? labelIMFD[bt] : 0);
+			return (bt < 6 ? labelIMFD[bt] : 0);
 		else
 			return (bt < 3 ? labelIMFDTliRun[bt] : 0);
 	}
@@ -938,11 +944,13 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"Primary coolant loop test heating", 0, 'P'},
 		{"Secondary coolant loop test heating", 0, 'S'}
 	};
-	static const MFDBUTTONMENU mnuIMFD[4] = {
+	static const MFDBUTTONMENU mnuIMFD[6] = {
 		{"Back", 0, 'B'},
 		{"Toggle burn data requests", 0, 'R'},
 		{"Start S-IVB burn", 0, 'S'},
-		{"Uplink P30", 0, '0'},
+		{"Uplink P30", 0, 'P'},
+		{"Uplink Lambert Targets", 0, 'L'},
+		{"Uplink External dV", 0, 'D'}
 	};
 	static const MFDBUTTONMENU mnuIMFDTliRun[3] = {
 		{"Back", 0, 'B'},
@@ -990,7 +998,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	} else if (screen == PROG_IMFD) {
 		if (g_Data.progState == PROGSTATE_NONE) {
 			if (menu) *menu = mnuIMFD;
-			return 4;
+			return 6;
 		} else {
 			if (menu) *menu = mnuIMFDTliRun;
 			return 3;
@@ -1084,8 +1092,8 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 					g_Data.uplinkDataReady = 1;
 				}
 				else if (g_Data.uplinkDataReady == 1) {				
-					GetStateVector();
 					g_Data.uplinkDataReady = 2;
+					GetStateVector();
 				}
 			}
 			return true;
@@ -1136,23 +1144,32 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 		}
 	} else if (screen == PROG_IMFD) {
 		if (key == OAPI_KEY_B) {
-			screen = PROG_NONE;
-			InvalidateDisplay();
-			InvalidateButtons();
+			if(g_Data.uplinkDataReady == 0 && g_Data.uplinkBurnReady == 0) {
+				g_Data.hasError = false;
+				screen = PROG_NONE;
+				InvalidateDisplay();
+				InvalidateButtons();
+			} else {
+				if(g_Data.uplinkDataReady == 1)
+					g_Data.uplinkDataReady -= 1;
+				if(g_Data.uplinkBurnReady == 1)
+					g_Data.uplinkBurnReady -= 1;
+			}
 			return true;
-
 		} else if (key == OAPI_KEY_R && !g_Data.isRequestingManually) {						
 			if (!saturn->GetIMFDClient()->IsBurnDataRequesting()) {
+				g_Data.hasError = false;
 				saturn->GetIMFDClient()->StartBurnDataRequests();
 			}
 			g_Data.isRequestingManually = true;
-
+			return true;
 		} else if (key == OAPI_KEY_R && g_Data.isRequestingManually) {
-			if (!g_Data.isRequesting) {
+			if (!g_Data.isRequesting && g_Data.uplinkBurnReady == 0 && g_Data.uplinkDataReady == 0) {
+				g_Data.hasError = false;
 				saturn->GetIMFDClient()->StopBurnDataRequests();
-			}
-			g_Data.isRequestingManually = false;
-		
+				g_Data.isRequestingManually = false;
+			} 		
+			return true;
 		} else if (key == OAPI_KEY_S && g_Data.uplinkBurnReady == 0 && g_Data.progState == PROGSTATE_NONE) {
 			g_Data.prog = PROG_IMFDTLI;
 			g_Data.progState = PROGSTATE_TLI_START;
@@ -1160,7 +1177,6 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
-
 		} else if (key == OAPI_KEY_S && (g_Data.progState == PROGSTATE_TLI_WAITING || g_Data.progState == PROGSTATE_TLI_ERROR)) {
 			g_Data.prog = PROG_NONE;
 			g_Data.progState = PROGSTATE_NONE;
@@ -1168,16 +1184,64 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			InvalidateButtons();
 			return true;
-		} else if (key == OAPI_KEY_0 && g_Data.progState == PROGSTATE_NONE) {
-			if (g_Data.uplinkBurnReady == 0) {
-				g_Data.uplinkBurnReady = 1;
+		} else if (key == OAPI_KEY_P && g_Data.progState == PROGSTATE_NONE) {
+			if (g_Data.uplinkBurnReady == 0 && g_Data.uplinkDataReady == 0) {
+				if (saturn->GetIMFDClient()->IsBurnDataValid()) {
+					IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
+					if (bd.DataMJD==0.0 || !bd.p30mode || bd.impulsive) {
+						g_Data.hasError = true;
+					} else {
+						g_Data.hasError = false;
+						g_Data.uplinkBurnReady = 1;
+					}
+				} else {
+					g_Data.hasError = true;
+				}
 			} else if (g_Data.uplinkBurnReady == 1) {
 				g_Data.uplinkBurnReady = 2;
 			} else if (g_Data.uplinkBurnReady == 4) {
 				g_Data.uplinkBurnReady = 5;
 			}
 			return true;
-		} 
+		} else if (key == OAPI_KEY_L && g_Data.progState == PROGSTATE_NONE) {
+			if (g_Data.uplinkBurnReady == 0 && g_Data.uplinkDataReady == 0) {
+				if( saturn->GetIMFDClient()->IsBurnDataValid()) {
+					IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
+					if (bd.DataMJD==0.0 || bd.LAP_MJD == 0 || !bd.p30mode || bd.impulsive) {
+						g_Data.hasError = true;
+					} else {
+						g_Data.hasError = false;
+						g_Data.uplinkDataType = 1;
+						g_Data.uplinkDataReady = 1;
+					}
+				} else {
+					g_Data.hasError = true;
+				}
+			} else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == 1) {
+				g_Data.uplinkDataReady = 2;
+				IMFDLambertUplink();
+			} 
+			return true;
+		} else if (key == OAPI_KEY_D && g_Data.progState == PROGSTATE_NONE) {
+			if (g_Data.uplinkBurnReady == 0 && g_Data.uplinkDataReady == 0) {
+				if( saturn->GetIMFDClient()->IsBurnDataValid()) {
+					IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
+					if (bd.DataMJD==0.0 || !bd.p30mode || bd.impulsive) {
+						g_Data.hasError = true;
+					} else {
+						g_Data.hasError = false;
+						g_Data.uplinkDataType = 2;
+						g_Data.uplinkDataReady = 1;
+					}
+				} else {
+					g_Data.hasError = true;
+				}
+			} else if (g_Data.uplinkDataReady == 1 && g_Data.uplinkDataType == 2) {
+				g_Data.uplinkDataReady = 2;
+				IMFDExtDVUplink();
+			} 
+			return true;
+		}
 	}
 	//This program is for the socket, remove before release.
 	else if (screen == PROG_SOCK)
@@ -1225,7 +1289,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyNone[12] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_T, OAPI_KEY_S, 0, 0, 0, 0, 0, 0, OAPI_KEY_D };
 	static const DWORD btkeyGNC[2] = { OAPI_KEY_B, OAPI_KEY_D };
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
-	static const DWORD btkeyIMFD[4] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S , OAPI_KEY_0};
+	static const DWORD btkeyIMFD[6] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S , OAPI_KEY_P, OAPI_KEY_L, OAPI_KEY_D };
 	static const DWORD btkeyTELE[6] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_C, 0, OAPI_KEY_S, OAPI_KEY_R };
 	static const DWORD btkeySock[1] = { OAPI_KEY_B };	
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
@@ -1235,7 +1299,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	} else if (screen == PROG_ECS) {
 		if (bt < 4) return ConsumeKeyBuffered (btkeyECS[bt]);
 	} else if (screen == PROG_IMFD) {
-		if (bt < 4) return ConsumeKeyBuffered (btkeyIMFD[bt]);		
+		if (bt < 6) return ConsumeKeyBuffered (btkeyIMFD[bt]);		
 	} else if (screen == PROG_TELE) {
 		if (bt < 6) return ConsumeKeyBuffered (btkeyTELE[bt]);
 	}
@@ -1421,7 +1485,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		}
 		if (saturn->GetIMFDClient()->IsBurnDataValid() && g_Data.isRequestingManually) {
 			IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
-			if (bd.p30mode || bd.impulsive) {
+			if (bd.p30mode && !bd.impulsive) {
 				SetTextAlign (hDC, TA_LEFT);
 				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "GET Ignition:", 13);
 
@@ -1499,7 +1563,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 				TextOut(hDC, (int) (width * 0.5), (int) (height * 0.8), g_Data.errorMessage, strlen(g_Data.errorMessage));
 				SetTextColor (hDC, RGB(0, 255, 0));
 			}
-		} else if (g_Data.uplinkBurnReady == 1) {
+		} else if (g_Data.uplinkBurnReady == 1 || g_Data.uplinkDataReady == 1) {
 			SetTextAlign (hDC, TA_CENTER);
 			sprintf(buffer, "Checklist");
 			TextOut(hDC, width / 2, (int) (height * 0.7), buffer, strlen(buffer));
@@ -1513,7 +1577,16 @@ void ProjectApolloMFD::Update (HDC hDC)
 			sprintf(buffer, "PCM BIT RATE - HIGH (up)      3");
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.9), buffer, strlen(buffer));
 			SetTextAlign (hDC, TA_CENTER);
-			sprintf(buffer, "Press P30 to start upload");
+			if (g_Data.uplinkBurnReady == 1) {
+				sprintf(buffer, "Press P30 to start upload");
+			}
+			else {
+				if (g_Data.uplinkDataType == 1) {
+					sprintf(buffer, "Press LAM to start upload");
+				} else {
+					sprintf(buffer, "Press DV to start upload");
+				}
+			}
 			TextOut(hDC, width / 2, (int) (height * 0.95), buffer, strlen(buffer));
 		} else if (g_Data.uplinkBurnReady == 4) {
 			SetTextAlign (hDC, TA_CENTER);
@@ -1525,7 +1598,22 @@ void ProjectApolloMFD::Update (HDC hDC)
 			SetTextAlign (hDC, TA_CENTER);
 			sprintf(buffer, "Press P30 to continue upload");
 			TextOut(hDC, width / 2, (int) (height * 0.8), buffer, strlen(buffer));
-		} else {
+		} else if (g_Data.hasError) {
+			if (saturn->GetIMFDClient()->IsBurnDataValid()) {
+				IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();				
+				if (!bd.p30mode || bd.impulsive)
+					g_Data.errorMessage ="IMFD not in Off-Axis, P30 Mode";
+				else if (bd.LAP_MJD==0.0)
+					g_Data.errorMessage ="IMFD does not have Lambert Data";
+			} else {
+				g_Data.errorMessage ="IMFD data not available";
+			}
+			SetTextAlign (hDC, TA_CENTER);
+			SetTextColor (hDC, RGB(255, 0, 0));
+			TextOut(hDC, width / 2, (int) (height * 0.7), "ERROR", 5);
+			TextOut(hDC, width / 2, (int) (height * 0.75), g_Data.errorMessage, strlen(g_Data.errorMessage));
+			SetTextColor (hDC, RGB(0, 255, 0));
+		} else if (g_Data.uplinkBurnReady != 0 || g_Data.uplinkDataReady != 0) {
 			SetTextAlign (hDC, TA_CENTER);
 			TextOut(hDC, width / 2, (int) (height * 0.7), "Telemetry", 9);
 			sprintf(buffer, "Status: %s", debugWinsock);
@@ -1766,7 +1854,7 @@ void ProjectApolloMFD::IMFDExtDVUplink(void)
 	g_Data.uplinkDataReady = 2;	// go for uplink
 }
 
-void ProjectApolloMFD::IMFDP31Uplink(void)
+void ProjectApolloMFD::IMFDLambertUplink(void)
 {
 	double get;
 	IMFD_BURN_DATA bd;
