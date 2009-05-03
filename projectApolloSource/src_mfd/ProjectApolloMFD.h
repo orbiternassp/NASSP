@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/05/01 17:06:03  bluedragon8144
+  *	removed DEC2OCT and irDEC2OCT (not used anymore)
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -82,8 +85,7 @@ public:
 	bool ConsumeKeyBuffered (DWORD key);
 	void Update (HDC hDC);
 	void GetStateVector (void);	
-	void IMFDP30Uplink(void);
-	void IMFDP31Uplink(void);
+	void IMFDLambertUplink(void);
 	void IMFDExtDVUplink(void);
 	bool SetSource(char *rstr);
 	bool SetReferencePlanet(char *rstr);
