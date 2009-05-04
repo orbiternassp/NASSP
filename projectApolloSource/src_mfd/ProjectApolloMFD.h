@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/05/03 23:09:28  bluedragon8144
+  *	Changed P31 to Lambert, removed unused P30 function
+  *	
   *	Revision 1.2  2009/05/01 17:06:03  bluedragon8144
   *	removed DEC2OCT and irDEC2OCT (not used anymore)
   *	
@@ -85,8 +88,9 @@ public:
 	bool ConsumeKeyBuffered (DWORD key);
 	void Update (HDC hDC);
 	void GetStateVector (void);	
-	void IMFDLambertUplink(void);
-	void IMFDExtDVUplink(void);
+	void IMFDP30Uplink (void);
+	void IMFDP31Uplink (void);
+	void UpdateClock (void);
 	bool SetSource(char *rstr);
 	bool SetReferencePlanet(char *rstr);
 	bool SetCrewNumber (char *rstr);
