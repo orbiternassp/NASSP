@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/05/04 23:02:27  bluedragon8144
+  *	Removed old P30, renamed External dV to P30 (thanks Tschachim), renamed Lambert to P31, removed time-dependent parts of the uplink functions (they are now queued), increased emem size to 24, moved P30 and P31 to the telemetry screen, added IMFD request button to telemetry screen
+  *	
   *	Revision 1.7  2009/05/03 23:10:23  bluedragon8144
   *	Added better error handling on IMFD screen, added Lambert and External DV P27 cmc updates to IMFD screen
   *
@@ -441,7 +444,7 @@ void UplinkData(void)
 		char buffer[8];
 		m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );	
 		if ( m_socket == INVALID_SOCKET ) {
-			g_Data.updateClockReady = 0;
+			g_Data.updateDataReady = 0;
 			sprintf(debugWinsock,"ERROR AT SOCKET(): %ld", WSAGetLastError());
 			closesocket(m_socket);
 			return;
@@ -451,7 +454,7 @@ void UplinkData(void)
 		clientService.sin_addr.s_addr = inet_addr(addr);
 		clientService.sin_port = htons( 14242 );
 		if (connect( m_socket, (SOCKADDR*) &clientService, sizeof(clientService)) == SOCKET_ERROR) {
-			g_Data.updateClockReady = 0;
+			g_Data.updateDataReady = 0;
 			sprintf(debugWinsock,"FAILED TO CONNECT, ERROR %ld",WSAGetLastError());
 			closesocket(m_socket);
 			return;
@@ -1296,7 +1299,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 		}
 		if (saturn->GetIMFDClient()->IsBurnDataValid() && g_Data.isRequestingManually) {
 			IMFD_BURN_DATA bd = saturn->GetIMFDClient()->GetBurnData();
-			if (bd.p30mode || bd.impulsive) {
+			if (bd.p30mode && !bd.impulsive) {
 				SetTextAlign (hDC, TA_LEFT);
 				TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), "GET Ignition:", 13);
 
