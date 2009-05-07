@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/05/05 19:07:21  bluedragon8144
+  *	Fixed wrong change in IMFD TLI screen, fixed wrong variable assignments for uplinkData() tcp/ip errors
+  *	
   *	Revision 1.8  2009/05/04 23:02:27  bluedragon8144
   *	Removed old P30, renamed External dV to P30 (thanks Tschachim), renamed Lambert to P31, removed time-dependent parts of the uplink functions (they are now queued), increased emem size to 24, moved P30 and P31 to the telemetry screen, added IMFD request button to telemetry screen
   *	
@@ -202,14 +205,15 @@ static struct ProjectApolloMFDData {  // global data storage
 	int prog;	
 	int progState;  
 	Saturn *progVessel;
-	double nextRequestTime;
 
+	double nextRequestTime;
 	IMFD_BURN_DATA burnData;
 	bool isRequesting;
 	bool isRequestingManually;
 	double requestMjd;
 	bool hasError;
 	char *errorMessage;
+
 	int emem[24];
 	int connStatus;
 	int uplinkDataReady;
@@ -220,6 +224,8 @@ static struct ProjectApolloMFDData {  // global data storage
 	double uplinkBufferSimt;
 	OBJHANDLE planet;
 	VESSEL *vessel;
+
+	int killrot;
 } g_Data;
 
 static WSADATA wsaData;
@@ -269,6 +275,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 		sprintf(debugWinsock,"DISCONNECTED");
 	}
 	g_Data.uplinkBufferSimt = 0;
+	g_Data.killrot = 0;
 }
 
 void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
@@ -307,35 +314,6 @@ int DoubleToBuffer(double x, double q, int m)
 		f*=10;	c = c>>3;
 	}
 	return out;
-}
-
-int FormIoPacket (int Channel, int Value, unsigned char *Packet)
-{
-  if (Channel < 0 || Channel > 0x1ff)
-    return (1);
-  if (Value < 0 || Value > 0x7fff)
-    return (1);
-  if (Packet == NULL)
-    return (1);
-  Packet[0] = Channel >> 3;
-  Packet[1] = 0x40 | ((Channel << 3) & 0x38) | ((Value >> 12) & 0x07);
-  Packet[2] = 0x80 | ((Value >> 6) & 0x3F);
-  Packet[3] = 0xc0 | (Value & 0x3F);
-  // All done.
-  return (0);
-}
-
-void OutputKeycode (int Keycode)
-{
-	int bytesXmit = SOCKET_ERROR;
-	unsigned char Packet[4];
-	extern int ServerSocket;
-	// In this case, we communicate keycodes to the AGC via the digital
-	// uplink rather than through the normal DSKY input channel.
-	Keycode &= 037;
-	Keycode |= ((Keycode << 10) | ((Keycode ^ 037) << 5));
-	FormIoPacket (0173, Keycode, Packet);
-	bytesXmit = send(m_socket,(char*)Packet,4,0);	
 }
 
 void send_agc_key(char key)	{
@@ -444,7 +422,7 @@ void UplinkData(void)
 		char buffer[8];
 		m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );	
 		if ( m_socket == INVALID_SOCKET ) {
-			g_Data.updateDataReady = 0;
+			g_Data.uplinkDataReady = 0;
 			sprintf(debugWinsock,"ERROR AT SOCKET(): %ld", WSAGetLastError());
 			closesocket(m_socket);
 			return;
@@ -454,7 +432,7 @@ void UplinkData(void)
 		clientService.sin_addr.s_addr = inet_addr(addr);
 		clientService.sin_port = htons( 14242 );
 		if (connect( m_socket, (SOCKADDR*) &clientService, sizeof(clientService)) == SOCKET_ERROR) {
-			g_Data.updateDataReady = 0;
+			g_Data.uplinkDataReady = 0;
 			sprintf(debugWinsock,"FAILED TO CONNECT, ERROR %ld",WSAGetLastError());
 			closesocket(m_socket);
 			return;
@@ -652,6 +630,11 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
    			}
 		}
 	}
+
+	if (g_Data.progVessel && g_Data.killrot) {
+		g_Data.progVessel->SetAngularVel(_V(0, 0, 0));
+	}
+
 }
 
 // ==============================================================
@@ -705,7 +688,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 	//Additional button added to labelNone for testing socket work, be SURE to remove it.
 	//Additional button added at the bottom right of none for the debug string.
 	static char *labelNone[12] = {"GNC", "ECS", "IMFD", "TELE","SOCK","","","","","","","DBG"};
-	static char *labelGNC[6] = {"BCK", "DMP"};
+	static char *labelGNC[3] = {"BCK", "DMP", "KILR"};
 	static char *labelECS[4] = {"BCK", "CRW", "PRM", "SEC"};
 	static char *labelIMFDTliStop[3] = {"BCK", "REQ", "SIVB"};
 	static char *labelIMFDTliRun[3] = {"BCK", "REQ", "STP"};
@@ -718,7 +701,7 @@ char *ProjectApolloMFD::ButtonLabel (int bt)
 		return 0;
 	}
 	if (screen == PROG_GNC) {
-		return (bt < 2 ? labelGNC[bt] : 0);
+		return (bt < 3 ? labelGNC[bt] : 0);
 	}
 	else if (screen == PROG_ECS) {
 		return (bt < 4 ? labelECS[bt] : 0);
@@ -759,9 +742,11 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{0,0,0},
 		{"Debug String",0,'D'}
 	};
-	static const MFDBUTTONMENU mnuGNC[2] = {
+	static const MFDBUTTONMENU mnuGNC[3] = {
 		{"Back", 0, 'B'},
-		{"Virtual AGC core dump", 0, 'D'}
+		{"Virtual AGC core dump", 0, 'D'},
+		{"Kill rotation", 0, 'K'}
+
 	};
 	static const MFDBUTTONMENU mnuECS[4] = {
 		{"Back", 0, 'B'},
@@ -782,10 +767,10 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 	static const MFDBUTTONMENU mnuTELE[8] = {
 		{"Back", 0, 'B'},
 		{"State Vector Update", 0, 'U'},
-		{"External DV Uplink", 0, 'D'},
-		{"Lambert Target Uplink", 0, 'L'},
-		{"Source",0,'S'},
-		{"Reference Body", 0, 'R'},
+		{"P30 - External DV Uplink", 0, 'D'},
+		{"P31 - Lambert Aim Point Uplink", 0, 'L'},
+		{"Change Source",0,'S'},
+		{"Change Reference Body", 0, 'R'},
 		{"Toggle burn data requests", 0, 'I'},
 		{"Clock Update", 0, 'C'}
 	};
@@ -815,7 +800,7 @@ int ProjectApolloMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 
 	if (screen == PROG_GNC) {
 		if (menu) *menu = mnuGNC;
-		return 6; 
+		return 3; 
 	} else if (screen == PROG_ECS) {
 		if (menu) *menu = mnuECS;
 		return 4; 
@@ -895,6 +880,9 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 		} else if (key == OAPI_KEY_D) {
 			if (saturn)
 				saturn->VirtualAGCCoreDump();
+			return true;
+		} else if (key == OAPI_KEY_K) {
+			g_Data.killrot ? g_Data.killrot = 0 : g_Data.killrot = 1;				
 			return true;
 		} 		
 	} else if (screen == PROG_TELE) {
@@ -1099,7 +1087,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
 	static const DWORD btkeyNone[12] = { OAPI_KEY_G, OAPI_KEY_E, OAPI_KEY_I, OAPI_KEY_T, OAPI_KEY_S, 0, 0, 0, 0, 0, 0, OAPI_KEY_D };
-	static const DWORD btkeyGNC[2] = { OAPI_KEY_B, OAPI_KEY_D };
+	static const DWORD btkeyGNC[3] = { OAPI_KEY_B, OAPI_KEY_D, OAPI_KEY_K};
 	static const DWORD btkeyECS[4] = { OAPI_KEY_B, OAPI_KEY_C, OAPI_KEY_P, OAPI_KEY_S };
 	static const DWORD btkeyIMFD[3] = { OAPI_KEY_B, OAPI_KEY_R, OAPI_KEY_S };
 	static const DWORD btkeyTELE[8] = { OAPI_KEY_B, OAPI_KEY_U, OAPI_KEY_D, OAPI_KEY_L, OAPI_KEY_S, OAPI_KEY_R, OAPI_KEY_I, OAPI_KEY_C };
@@ -1107,7 +1095,7 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 	static const DWORD btkeyDEBUG[12] = { 0,0,0,0,0,0,0,0,0,OAPI_KEY_C,OAPI_KEY_F,OAPI_KEY_B };
 
 	if (screen == PROG_GNC) {
-		if (bt < 2) return ConsumeKeyBuffered (btkeyGNC[bt]);
+		if (bt < 3) return ConsumeKeyBuffered (btkeyGNC[bt]);
 	} else if (screen == PROG_ECS) {
 		if (bt < 4) return ConsumeKeyBuffered (btkeyECS[bt]);
 	} else if (screen == PROG_IMFD) {
@@ -1225,6 +1213,13 @@ void ProjectApolloMFD::Update (HDC hDC)
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.6), buffer, strlen(buffer));
 		sprintf(buffer, "%.1lfnm", peDist * 0.000539957);
 		TextOut(hDC, (int) (width * 0.9), (int) (height * 0.65), buffer, strlen(buffer));
+
+		if (g_Data.killrot) {
+			SetTextColor (hDC, RGB(255, 0, 0));
+			SetTextAlign (hDC, TA_CENTER);
+			TextOut(hDC, width / 2, (int) (height * 0.8), "*** KILL ROTATION ACTIVE ***", 28);
+		}
+
 	//Draw Socket details.
 	}
 	else if (screen == PROG_SOCK) {
@@ -1293,7 +1288,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 		if (g_Data.isRequestingManually && saturn->GetIMFDClient()->IsBurnDataValid()) {
 			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.35), "REQUESTING", 10);	
 		} else if ( g_Data.isRequestingManually && !saturn->GetIMFDClient()->IsBurnDataValid()) {
-			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.35), "NOT VALID", 10);	
+			SetTextColor (hDC, RGB(255, 0, 0));
+			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.35), "NO DATA", 7);	
+			SetTextColor (hDC, RGB(0, 255, 0));
 		} else {
 			TextOut(hDC, (int) (width * 0.7), (int) (height * 0.35), "NONE", 4);
 		}
@@ -1387,11 +1384,13 @@ void ProjectApolloMFD::Update (HDC hDC)
 		sprintf(buffer, "Telemetry: %s", debugWinsock);
 		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.3), "Telemetry:", 10);
 		TextOut(hDC, (int) (width * 0.6), (int) (height * 0.3), debugWinsock, strlen(debugWinsock));
-		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "IMFD Burn Data:", 16);
+		TextOut(hDC, (int) (width * 0.1), (int) (height * 0.35), "IMFD Burn Data:", 15);
 		if ( g_Data.isRequestingManually && saturn->GetIMFDClient()->IsBurnDataValid()) {
 			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "REQUESTING", 10);
 		} else if ( g_Data.isRequestingManually && !saturn->GetIMFDClient()->IsBurnDataValid()) {
-			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NOT VALID", 9);
+			SetTextColor (hDC, RGB(255, 0, 0));
+			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NO DATA", 7);	
+			SetTextColor (hDC, RGB(0, 255, 0));
 		} else {
 			TextOut(hDC, (int) (width * 0.6), (int) (height * 0.35), "NONE", 4);
 		}
@@ -1438,42 +1437,42 @@ void ProjectApolloMFD::Update (HDC hDC)
 		else if(g_Data.uplinkDataReady == 2) {
 			SetTextAlign (hDC, TA_LEFT);
 			sprintf(buffer, "304   %ld", g_Data.emem[0]);
-			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.4), buffer, strlen(buffer));
-			sprintf(buffer, "305   %ld", g_Data.emem[1]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.45), buffer, strlen(buffer));
-			sprintf(buffer, "306   %ld", g_Data.emem[2]);
+			sprintf(buffer, "305   %ld", g_Data.emem[1]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.5), buffer, strlen(buffer));
-			sprintf(buffer, "307   %ld", g_Data.emem[3]);
+			sprintf(buffer, "306   %ld", g_Data.emem[2]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.55), buffer, strlen(buffer));
-			sprintf(buffer, "310   %ld", g_Data.emem[4]);
+			sprintf(buffer, "307   %ld", g_Data.emem[3]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.6), buffer, strlen(buffer));
-			sprintf(buffer, "311   %ld", g_Data.emem[5]);
+			sprintf(buffer, "310   %ld", g_Data.emem[4]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.65), buffer, strlen(buffer));
-			sprintf(buffer, "312   %ld", g_Data.emem[6]);
+			sprintf(buffer, "311   %ld", g_Data.emem[5]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.7), buffer, strlen(buffer));
-			sprintf(buffer, "313   %ld", g_Data.emem[7]);
+			sprintf(buffer, "312   %ld", g_Data.emem[6]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.75), buffer, strlen(buffer));
-			sprintf(buffer, "314   %ld", g_Data.emem[8]);		
+			sprintf(buffer, "313   %ld", g_Data.emem[7]);
 			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.8), buffer, strlen(buffer));
+			sprintf(buffer, "314   %ld", g_Data.emem[8]);		
+			TextOut(hDC, (int) (width * 0.1), (int) (height * 0.85), buffer, strlen(buffer));
 			sprintf(buffer, "315   %ld", g_Data.emem[9]);
-			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.4), buffer, strlen(buffer));		
+			TextOut(hDC, (int) (width * 0.55), (int) (height * 0.45), buffer, strlen(buffer));		
 			if (g_Data.uplinkDataType != 1) {
 				sprintf(buffer, "316   %ld", g_Data.emem[10]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.45), buffer, strlen(buffer));
-				sprintf(buffer, "317   %ld", g_Data.emem[11]);
 				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.5), buffer, strlen(buffer));
-				sprintf(buffer, "320   %ld", g_Data.emem[12]);
+				sprintf(buffer, "317   %ld", g_Data.emem[11]);
 				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.55), buffer, strlen(buffer));
+				sprintf(buffer, "320   %ld", g_Data.emem[12]);
+				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.6), buffer, strlen(buffer));
 			}
 			if (g_Data.uplinkDataType == 0) {
 				sprintf(buffer, "321   %ld", g_Data.emem[13]);
-				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.6), buffer, strlen(buffer));
-				sprintf(buffer, "322   %ld", g_Data.emem[14]);
 				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.65), buffer, strlen(buffer));
-				sprintf(buffer, "323   %ld", g_Data.emem[15]);
+				sprintf(buffer, "322   %ld", g_Data.emem[14]);
 				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.7), buffer, strlen(buffer));
-				sprintf(buffer, "324   %ld", g_Data.emem[16]);
+				sprintf(buffer, "323   %ld", g_Data.emem[15]);
 				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.75), buffer, strlen(buffer));
+				sprintf(buffer, "324   %ld", g_Data.emem[16]);
+				TextOut(hDC, (int) (width * 0.55), (int) (height * 0.8), buffer, strlen(buffer));
 			}
 		}
 		SetTextAlign (hDC, TA_LEFT);
@@ -1518,6 +1517,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 
 void ProjectApolloMFD::GetStateVector (void)
 {
+
 	double get;
 	VECTOR3 pos, vel;
 
