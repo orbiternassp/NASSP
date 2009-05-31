@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2009/05/07 11:49:13  tschachim
+  *	Killrot, display cosmetics
+  *	
   *	Revision 1.9  2009/05/05 19:07:21  bluedragon8144
   *	Fixed wrong change in IMFD TLI screen, fixed wrong variable assignments for uplinkData() tcp/ip errors
   *	
@@ -461,8 +464,8 @@ void UplinkData(void)
 	}
 }
 
-void ProjectApolloMFD::UpdateClock(void)
-{
+void UpdateClock(void)
+{		
 	if (g_Data.connStatus == 0)
 	{
 		int bytesRecv = SOCKET_ERROR;
@@ -498,18 +501,35 @@ void ProjectApolloMFD::UpdateClock(void)
 		send_agc_key('2');
 		send_agc_key('5');
 		send_agc_key('E');
+		// reset clock
+		sprintf(buffer, "00000");		
+		send_agc_key('+');
+		uplink_word(buffer);
+		send_agc_key('+');
+		uplink_word(buffer);
+		send_agc_key('+');
+		uplink_word(buffer);		
+		// Send until queue is empty, then continue 
+		// with V55 clock update
+		g_Data.connStatus = 2;
+	} else if (g_Data.connStatus == 2) {
+		// increment clock
+		g_Data.updateClockReady = 0;
+		char buffer[8];	
+		double mt = g_Data.progVessel->GetMissionTime();
 		char sign = '+';
-		double mt = 0;
-		mt = g_Data.progVessel->GetMissionTime();
-		mt += 7.0;
-		int secs = abs((int) mt);
-		int hours = (secs / 3600);
-		secs -= (hours * 3600);
-		int minutes = (secs / 60);
-		secs -= 60 * minutes;
-		secs *= 100;
 		if (mt < 0)
 			sign = '-';
+		mt = abs(mt);
+		int hours = ( (int) mt / 3600);
+		mt -= 3600.0 * hours;
+		int minutes = ( (int) mt / 60);
+		mt -= 60.0 * minutes;
+		int secs = (int) (mt * 100.0);
+		send_agc_key('V');
+		send_agc_key('5');
+		send_agc_key('5');
+		send_agc_key('E');	
 		send_agc_key(sign);
 		sprintf(buffer, "%ld", hours);
 		uplink_word(buffer);
@@ -519,8 +539,6 @@ void ProjectApolloMFD::UpdateClock(void)
 		send_agc_key(sign);
 		sprintf(buffer, "%ld", secs);
 		uplink_word(buffer);
-		send_agc_key('K');
-		send_agc_key('R');
 		// Send until queue empty, then reset uplinkDataReady to 0
 		// and close the socket
 		g_Data.connStatus = 1;
@@ -529,7 +547,6 @@ void ProjectApolloMFD::UpdateClock(void)
 
 void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 {
-
 	// Recover if MFD was closed and TLI is in progress
 	if (g_Data.progVessel) {
 		if (g_Data.progVessel->GetIU()->IsTLIInProgress()) {
@@ -551,12 +568,16 @@ void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 			g_Data.uplinkBuffer.pop();
 			g_Data.uplinkBufferSimt = simt;
 		}
-	} else if (g_Data.connStatus == 1 && g_Data.uplinkBuffer.size() == 0) {
-		sprintf(debugWinsock, "DISCONNECTED");
-		g_Data.uplinkDataReady = 0;				
-		g_Data.updateClockReady = 0;
-		g_Data.connStatus = 0;
-		closesocket(m_socket);
+	} else if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() == 0) {
+		if (g_Data.connStatus == 1)	{
+			sprintf(debugWinsock, "DISCONNECTED");
+			g_Data.uplinkDataReady = 0;				
+			g_Data.updateClockReady = 0;
+			g_Data.connStatus = 0;
+			closesocket(m_socket);
+		} else if (g_Data.connStatus == 2 && g_Data.updateClockReady == 2) {
+			UpdateClock();
+		}
 	}
 
 
@@ -968,6 +989,7 @@ bool ProjectApolloMFD::ConsumeKeyBuffered (DWORD key)
 					g_Data.updateClockReady = 1;
 				}
 				else if (g_Data.updateClockReady == 1) {
+					g_Data.updateClockReady = 2;
 					UpdateClock();
 				}
 			}
