@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/05/04 22:59:39  bluedragon8144
+  *	Renamed external dv to P30, renamed lambert back to P31, added updateclock
+  *	
   *	Revision 1.3  2009/05/03 23:09:28  bluedragon8144
   *	Changed P31 to Lambert, removed unused P30 function
   *	
@@ -90,13 +93,12 @@ public:
 	void GetStateVector (void);	
 	void IMFDP30Uplink (void);
 	void IMFDP31Uplink (void);
-	void UpdateClock (void);
 	bool SetSource(char *rstr);
 	bool SetReferencePlanet(char *rstr);
 	bool SetCrewNumber (char *rstr);
 	bool SetPrimECSTestHeaterPower (char *rstr);
 	bool SetSecECSTestHeaterPower (char *rstr);
-	
+
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
 	void StoreStatus (void) const;
