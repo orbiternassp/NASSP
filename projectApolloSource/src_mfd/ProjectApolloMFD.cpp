@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2009/05/31 01:46:15  bluedragon8144
+  *	fixed clock update to work with new queue function for uplinking to agc
+  *	
   *	Revision 1.10  2009/05/07 11:49:13  tschachim
   *	Killrot, display cosmetics
   *	
@@ -539,6 +542,14 @@ void UpdateClock(void)
 		send_agc_key(sign);
 		sprintf(buffer, "%ld", secs);
 		uplink_word(buffer);
+
+		send_agc_key('V');
+		send_agc_key('3');
+		send_agc_key('7');
+		send_agc_key('E');
+		send_agc_key('0');
+		send_agc_key('0');
+		send_agc_key('E');
 		// Send until queue empty, then reset uplinkDataReady to 0
 		// and close the socket
 		g_Data.connStatus = 1;
