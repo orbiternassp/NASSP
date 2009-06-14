@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.4  2008/04/11 11:49:45  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -186,8 +189,8 @@ void LEVA::SetAstroStage ()
 	SetCameraOffset(_V(0,1.6,0));
 	
 	double tdph = -0.8;
-	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
-	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
+	SetTouchdownPoints (_V(0, tdph, 0.1), _V(-0.1, tdph, -0.1), _V(0.1, tdph, -0.1));
+	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 0.1), _V(-0.1, tdph, -0.1), _V(0.1, tdph, -0.1));
 	Astro = true;
 }
 
