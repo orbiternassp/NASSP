@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.16  2008/04/11 11:49:13  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -419,8 +422,8 @@ void LRV::SetRoverStage ()
 	mgtRotGauges.transform = MESHGROUP_TRANSFORM::ROTATE;
 
 	double tdph = -0.9;
-	SetTouchdownPoints(_V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3));
-	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 3), _V(-3, tdph, -3), _V(3, tdph, -3));
+	SetTouchdownPoints(_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
+	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
 
 }
 
