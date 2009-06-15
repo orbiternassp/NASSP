@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.46  2008/04/11 11:49:39  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -183,6 +186,7 @@
 #include "IMU.h"
 
 #include "LEM.h"
+#include "papi.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -1000,7 +1004,7 @@ void LEMcomputer::Prog65(double simt)
 		return;
 	}
 
-	double vsAlt = VSGetATL(OurVessel->GetHandle());
+	double vsAlt = papiGetAltitude(OurVessel);
 	if (OurVessel->GroundContact() || (vsAlt < 1.0)) {
 		ProgState++;
 		OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
@@ -1107,13 +1111,15 @@ void LEMcomputer::Prog65(double simt)
 			rbrg-=2*PI;
 		}
 		position.x=-sbdis*cos(tbrg-heading);
-	 position.y = vsAlt;
+		position.y = vsAlt;
 		position.z=sbdis*sin(tbrg-heading);
 		velocity.x=hvel*cos(cbrg-heading);
 		velocity.y=vel.y;
 		velocity.z=-hvel*sin(cbrg-heading);
+
 		sprintf(oapiDebugString(),"Forward velocity=%.1f Descent rate=%.1f Altitude=%.0f",
 			velocity.x, vel.y, CurrentAlt);
+		
 		if(LOGFILE) {
 			fprintf(outstr,"Target Lat=%.8f Lon=%.8f \n",blat*DEG, blon*DEG);
 			fprintf(outstr,"Actual Lat=%.8f Lon=%.8f \n",vlat*DEG, vlon*DEG);
@@ -1166,9 +1172,6 @@ void LEMcomputer::Prog65(double simt)
 //		yrate=-3.5+(curve*curve*3.0);
 		yrate=-2.0+(curve*curve*1.5);
 		acc.y=grav+((yrate-velocity.y)/5.0)*DELTAT;
-		
-
-
 
 // end of landing mode guidance...
 		acctot=sqrt(acc.x*acc.x+acc.y*acc.y+acc.z*acc.z);
@@ -1241,11 +1244,10 @@ void LEMcomputer::Prog66(double simt)
 		OurVessel->GetHorizonAirspeedVector(velocity);
 		cgelev=OurVessel->GetCOG_elev();
 
-		double vsAlt = VSGetATL(OurVessel->GetHandle());
+		double vsAlt = papiGetAltitude(OurVessel);
 		CurrentAlt = vsAlt;
 
-		if ( vsAlt < 1.0) { 
-
+		if (OurVessel->GroundContact() || (vsAlt < 1.0)) { 
 			OurVessel->SetEngineLevel(ENGINE_HOVER,0.0);
 			OurVessel->SetAttitudeRotLevel(zero);
 			ProgState++;

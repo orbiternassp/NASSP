@@ -22,11 +22,17 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.2  2007/12/04 20:14:24  tschachim
   *	IMFD5 communication including a new TLI for the S-IVB IU.
   *	Additional CSM panels.
   *	
   **************************************************************************/
+
+#include "CollisionSDK/CollisionSDK.h"
+
 
 // All inline functions and const variables should be static, see
 // http://www.orbitersim.com/Forum/Default.aspx?g=posts&m=172439#172439
@@ -172,4 +178,14 @@ static inline double papiCameraAperture() {
 	pfov=d;
 
 	return *pfov;
+}
+
+static inline double papiGetAltitude(VESSEL *vessel) {
+
+	char buffer[255];
+	double lon, lat, rad;
+
+	oapiGetObjectName(vessel->GetGravityRef(), buffer, 255);
+	vessel->GetEquPos(lon, lat, rad);
+	return vessel->GetAltitude() - VSGetAbsMaxElvLoc(buffer, lat, lon);
 }

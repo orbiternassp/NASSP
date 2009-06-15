@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.18  2008/04/11 11:49:10  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -116,6 +119,7 @@
 
 #include "LEM.h"
 #include "tracer.h"
+#include "papi.h"
 #include "CollisionSDK/CollisionSDK.h"
 
 #include "connector.h"
@@ -833,10 +837,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			bToggleHatch=false;
 		}
 
-		double vsAlt = VSGetATL(GetHandle());
-		if (!ContactOK && 
-		   ((vsAlt < 1.0) ||
-		    (actualALT < 5.3 && actualALT > 5.0))) {
+		double vsAlt = papiGetAltitude(this);
+		if (!ContactOK && (GroundContact() || (vsAlt < 1.0))) {
 
 #ifdef DIRECTSOUNDENABLED
 			if (!sevent.isValid())
@@ -1193,7 +1195,7 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
-	VSEnableCollisions(GetHandle());
+	VSEnableCollisions(GetHandle(),"ProjectApollo");
 	SetLmVesselDockStage();
 }
 

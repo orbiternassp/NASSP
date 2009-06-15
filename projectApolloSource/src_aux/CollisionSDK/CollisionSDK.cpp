@@ -1,5 +1,5 @@
 //############################################################################//
-//Lunosid collision detection interface calls
+//Collision system interface calls
 //Made by Artlav in 2005-2009
 //############################################################################//
 //To force orbitersdk.h to use <fstream> in any compiler version
@@ -14,7 +14,7 @@ double (__stdcall *pVSGetElvLoc)(OBJHANDLE VesselHandle,double lat,double lon,do
 double (__stdcall *pVSGetAbsElvLoc)(PCHAR PlanetName,double lat,double lon,double alt);
 double (__stdcall *pVSGetAbsMaxElvLoc)(PCHAR PlanetName,double lat,double lon);
 void   (__stdcall *pVSDisableCollisions)(OBJHANDLE VesselHandle);
-void   (__stdcall *pVSEnableCollisions)(OBJHANDLE VesselHandle);
+void   (__stdcall *pVSEnableCollisions)(OBJHANDLE VesselHandle,char *config_dir);
 //############################################################################//
 //Internal
 HMODULE tcsdkhlib;
@@ -37,7 +37,7 @@ void InitCollisionSDK()
   pVSGetAbsElvLoc=      (double(__stdcall*)(PCHAR PlanetName,double lat,double lon,double alt))         GetProcAddress(tcsdkhlib,"VSGetAbsElvLoc");
   pVSGetAbsMaxElvLoc=   (double(__stdcall*)(PCHAR PlanetName,double lat,double lon))                    GetProcAddress(tcsdkhlib,"VSGetAbsMaxElvLoc");
   pVSDisableCollisions= (void  (__stdcall*)(OBJHANDLE VesselHandle))                                    GetProcAddress(tcsdkhlib,"VSDisableCollisions");
-  pVSEnableCollisions=  (void  (__stdcall*)(OBJHANDLE VesselHandle))                                    GetProcAddress(tcsdkhlib,"VSEnableCollisions");
+  pVSEnableCollisions=  (void  (__stdcall*)(OBJHANDLE VesselHandle,char *config_dir))                   GetProcAddress(tcsdkhlib,"VSEnableCollisions");
 
   if(pVSSetTouchdownPoints==NULL|| pVSGetATL==NULL||pVSGetElvLoc==NULL||pVSGetAbsElvLoc==NULL||pVSGetAbsMaxElvLoc==NULL||pVSDisableCollisions==NULL||pVSEnableCollisions==NULL){
    //Disabled for the moment to avoid annoyances
@@ -47,7 +47,7 @@ void InitCollisionSDK()
 }
 //############################################################################//
 void VSDisableCollisions (OBJHANDLE VesselHandle)                                    {if(SetErr)return;pVSDisableCollisions (VesselHandle);}
-void VSEnableCollisions  (OBJHANDLE VesselHandle)                                    {if(SetErr)return;pVSEnableCollisions  (VesselHandle);}
+void VSEnableCollisions  (OBJHANDLE VesselHandle,char *config_dir)                   {if(SetErr)return;pVSEnableCollisions  (VesselHandle,config_dir);}
 void VSSetTouchdownPoints(OBJHANDLE VesselHandle,VECTOR3 pt1,VECTOR3 pt2,VECTOR3 pt3){if(SetErr)return;pVSSetTouchdownPoints(VesselHandle,pt1,pt2,pt3);}
 //############################################################################//
 double VSGetATL         (OBJHANDLE VesselHandle)                                 {if(SetErr)return oapiGetVesselInterface(VesselHandle)->GetAltitude();return pVSGetATL(VesselHandle);}
