@@ -294,7 +294,7 @@ void LRV::init()
 void LRV::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	TRACESETUP("clbkSetClassCaps");
-	VSEnableCollisions(GetHandle());
+	VSEnableCollisions(GetHandle(),"ProjectApollo");
 	SetRoverStage();
 }
 

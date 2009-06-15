@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.28  2008/09/04 22:01:58  tschachim
   *	Bugfix
   *	
@@ -310,7 +313,7 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
 
 	CreateAttachment(false, _V(0.0, 6.3, 0.0), _V(0, 1, 0), _V(1, 0, 0), "ML", false);
 
-	VSEnableCollisions(GetHandle());
+	VSEnableCollisions(GetHandle(),"ProjectApollo");
 	double tph = -0.01;
 	SetTouchdownPoints(_V(  0, tph,  10), _V(-10, tph, -10), _V( 10, tph, -10));
 	VSSetTouchdownPoints(GetHandle(), _V(  0, tph,  10), _V(-10, tph, -10), _V( 10, tph, -10));

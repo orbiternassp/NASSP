@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/06/14 16:20:01  tschachim
+  *	Fixed touchdown points for the new Collision SDK.
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -164,7 +167,7 @@ void LEVA::init()
 void LEVA::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	init();
-	VSEnableCollisions(GetHandle());
+	VSEnableCollisions(GetHandle(), "ProjectApollo");
 	SetAstroStage();
 }
 		 
