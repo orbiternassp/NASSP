@@ -1140,20 +1140,19 @@ IU_END
 END
 Antares:ProjectApollo/LEM
   STATUS Orbiting Moon
-  RPOS -881469.81 -68681.00 -1500432.84
-  RVEL -153.381 -27.602 142.475
-  AROT -171.86 51.39 103.04
-  VROT -0.12 0.00 0.00
-  PRPLEVEL 0:0.255 1:0.894 2:0.894
-  THLEVEL 0:0.959 1:0.959 2:0.001 9:0.001 13:0.001 14:0.001
+  RPOS -1013903.26 -74725.61 -1413020.53
+  RVEL -108.269 -13.069 132.350
+  AROT -169.48 63.79 102.73
+  PRPLEVEL 0:0.248 1:0.886 2:0.886
+  THLEVEL 0:0.578 1:0.578 2:0.001 9:0.001 13:0.001 14:0.001
   NAVFREQ 0 0 0 0
   CONFIGURATION 1
   CSWITCH 491521
   SSWITCH 0
   LPSWITCH 1069612959
   RPSWITCH 0
-  MISSNTIME 375621.269
-  MTD 375596.509
+  MISSNTIME 375752.771
+  MTD 375728.011
   ETD 0.000
   LANG English
   PANEL_ID 0
@@ -1161,31 +1160,33 @@ Antares:ProjectApollo/LEM
   APOLLONO 14
   LANDED 0
   FDAIDISABLED 0
+  DSCFUEL 8375.000
+  ASCFUEL 2345.000
   STATE 3
 DSKY_BEGIN
   PROG 63
   VERB 16
   NOUN 68
-  R1 +00135
-  R2 +00 30
-  R3 +00215
+  R1 +00094
+  R2 +00 08
+  R3 +00176
   STATE 536870912
 DSKY_END
 AGC_BEGIN
   YAAGC 0
-  BRNTIME 375153.566
-  BRNSTIME 375155.543
-  BRNETIME 375651.855
-  EVTTIME 375622.379
-  CUTFVEL 1696.430
+  BRNTIME 375244.705
+  BRNSTIME 375247.450
+  BRNETIME 375761.685
+  EVTTIME 375754.224
+  CUTFVEL 1696.492
   LALT 0.000
-  TGTDV 0.049
+  TGTDV 0.013
   PROG 63
   VERB 16
   NOUN 68
-  R1 135
-  R2 30
-  R3 215
+  R1 94
+  R2 8
+  R3 176
   EPOS 2
   EVAL 63
   EDAT 0
@@ -1195,7 +1196,7 @@ AGC_BEGIN
   R1FMT XXXXXX
   R2FMT XXX XX
   R3FMT XXXXXX
-  TGTA -440.821
+  TGTA -436.853
   TGTP 74.360
   TGTZ 270.000
   ONAME Kitty-Hawk
@@ -1206,14 +1207,15 @@ AGC_BEGIN
   EMEM0007 104
   EMEM0010 1
   EMEM0014 16
-  EMEM0016 5134106
+  EMEM0016 3456136
   EMEM0020 37777777762
   EMEM0021 142
   EMEM0022 3
-  EMEM0023 217075614
-  EMEM0025 77420
+  EMEM0023 217117562
+  EMEM0025 27606
   EMEM0030 1136654
   EMEM0031 127556
+  EMEM0074 4
   EMEM0075 1
   EMEM0110 37777770703
   EMEM0111 37777735701
@@ -1222,98 +1224,97 @@ AGC_BEGIN
   ICHAN013 28
   ICHAN024 17158
   ICHAN025 8192
-  ICHAN027 8192
   OCHAN009 2
 AGC_END
 IMU_BEGIN
-  RPX -0.055064
-  RPY 0.055615
-  RPZ -0.365856
-  GMX 1.570130
-  GMY 1.570049
-  GMZ 0.415614
-  OAX -2.999587
-  OAY 0.896842
-  OAZ 1.798318
-  LAX -2.999587
-  LAY 0.896842
-  LAZ 1.798318
-  VLX -1130.879325
-  VLY -61.570796
-  VLZ 396.096737
-  M11 -0.141110
-  M12 0.960236
-  M13 -0.240906
-  M21 0.989359
-  M22 0.128066
-  M23 -0.069054
-  M31 0.035456
-  M32 0.248086
-  M33 0.968089
-  LTM 375621.268750
+  RPX -0.487244286782
+  RPY 0.394281254549
+  RPZ -0.505046510746
+  GMX 1.531997860938
+  GMY 1.607893626687
+  GMZ 0.198849094692
+  OAX -2.958028970907
+  OAY 1.113331969828
+  OAZ 1.793035543772
+  WLX 0.946519565976
+  WLY 0.069312997900
+  WLZ 1.306930058384
+  VLX -22199.169443947849
+  VLY -48.037630493945
+  VLZ -21210.187300383346
+  M11 -0.141110000000
+  M12 0.960236000000
+  M13 -0.240906000000
+  M21 0.989359000000
+  M22 0.128066000000
+  M23 -0.069054000000
+  M31 0.035456000000
+  M32 0.248086000000
+  M33 0.968089000000
+  LTM 375752.770749737860
   STATE 7
 IMU_END
   <INTERNALS> 
-  <VERSION> 1.9.9
+  <VERSION> 1.9.10
   <HYDRAULIC> 
   </HYDRAULIC> 
   <ELECTRIC> 
       <BATTERY>  DSC_BATTERY_A 44820000.0000
       <BATTERY>  DSC_BATTERY_B 44820000.0000
-      <BATTERY>  DSC_BATTERY_C 44638556.8657
-      <BATTERY>  DSC_BATTERY_D 44638948.3215
+      <BATTERY>  DSC_BATTERY_C 44613884.5187
+      <BATTERY>  DSC_BATTERY_D 44613884.5187
       <BATTERY>  ASC_BATTERY_A 29736000.0000
       <BATTERY>  ASC_BATTERY_B 29736000.0000
       <BATTERY>  LUNAR_BATTERY 44820000.0000
-      <DC>  CDR-28V-Bus 3.0000 0 1
-      <DC>  LMP-28V-Bus 3.0000 0 1
-      <DC>  AC-Bus-A 3.0000 0 1
-      <DC>  AC-Bus-B 3.0000 0 1
+      <DC>  CDR-28V-Bus
+      <DC>  LMP-28V-Bus
+      <DC>  AC-Bus-A
+      <DC>  AC-Bus-B
   </ELECTRIC> 
   </INTERNALS> 
 PANELSWITCHES_BEGIN
-  LGC_DSKY_CB 1
-  IMU_OPR_CB 1
-  EDS_CB_LG_FLAG 1
-  EDS_CB_LOGIC_A 1
-  CDR_FDAI_AC_CB 1
-  CDR_FDAI_DC_CB 1
-  AC_B_INV_2_FEED_CB 1
-  AC_B_INV_1_FEED_CB 1
-  AC_A_INV_2_FEED_CB 1
-  AC_A_INV_1_FEED_CB 1
+  LGC_DSKY_CB 1 0
+  IMU_OPR_CB 1 0
+  EDS_CB_LG_FLAG 1 0
+  EDS_CB_LOGIC_A 1 0
+  CDR_FDAI_AC_CB 1 0
+  CDR_FDAI_DC_CB 1 0
+  AC_B_INV_2_FEED_CB 1 0
+  AC_B_INV_1_FEED_CB 1 0
+  AC_A_INV_2_FEED_CB 1 0
+  AC_A_INV_1_FEED_CB 1 0
   EDDesOxidVentTB 1
   EDDesFuelVentTB 1
   EDLGTB 0
-  EDDesOxidVent 1
-  EDDesFuelVent 1
-  EDStageRelay 0
-  EDStage 0
-  EDHePressASC 0
-  EDHePressDesStart 0
-  EDHePressRCS 0
-  EDLGDeploy 0
-  EDDesPrpIsol 0
-  EDASCHeSel 1
-  EDDesVent 0
-  EDMasterArm 0
-  CDRInverter1CB 1
-  CDRBatteryFeedTieCB2 1
-  CDRBatteryFeedTieCB1 1
-  LMPBatteryFeedTieCB2 1
-  LMPBatteryFeedTieCB1 1
-  LMPInverter2CB 1
-  EDS_CB_LOGIC_B 1
-  DSCCDRBat4LVSwitch 1
-  DSCCDRBat3LVSwitch 1
-  DSCSEBat2LVSwitch 1
-  DSCSEBat1LVSwitch 1
-  DSCCDRBat4HVSwitch 1
-  DSCCDRBat3HVSwitch 1
-  DSCSEBat2HVSwitch 1
-  DSCSEBat1HVSwitch 1
-  EPSEDVoltSelect 1
-  EPSInverterSwitch 0
+  EDDesOxidVent 1 0
+  EDDesFuelVent 1 0
+  EDStageRelay 0 0
+  EDStage 0 0
+  EDHePressASC 0 0
+  EDHePressDesStart 0 0
+  EDHePressRCS 0 0
+  EDLGDeploy 0 0
+  EDDesPrpIsol 0 0
+  EDASCHeSel 1 0
+  EDDesVent 0 0
+  EDMasterArm 0 0
+  CDRInverter1CB 1 0
+  CDRBatteryFeedTieCB2 1 0
+  CDRBatteryFeedTieCB1 1 0
+  LMPBatteryFeedTieCB2 1 0
+  LMPBatteryFeedTieCB1 1 0
+  LMPInverter2CB 1 0
+  EDS_CB_LOGIC_B 1 0
+  DSCCDRBat4LVSwitch 1 0
+  DSCCDRBat3LVSwitch 1 0
+  DSCSEBat2LVSwitch 1 0
+  DSCSEBat1LVSwitch 1 0
+  DSCCDRBat4HVSwitch 1 0
+  DSCCDRBat3HVSwitch 1 0
+  DSCSEBat2HVSwitch 1 0
+  DSCSEBat1HVSwitch 1 0
+  EPSEDVoltSelect 1 0
+  EPSInverterSwitch 0 0
   DSCBattery4TB 1
   DSCBattery3TB 1
   DSCBattery2TB 1
@@ -1331,56 +1332,56 @@ PANELSWITCHES_BEGIN
   ClycolRotary 1
   TempPressMonRotary 0
   HeliumMonRotary 0
-  RightTTCATranslSwitch 0
-  RightACA4JetSwitch 0
-  LeftTTCATranslSwitch 0
-  LeftACA4JetSwitch 0
-  ExteriorLTGSwitch 2
-  RightXPointerSwitch 1
-  FloodSwitch 1
-  SidePanelsSwitch 0
-  RCSSysQuad4Switch 1
-  RCSSysQuad3Switch 1
-  RCSSysQuad2Switch 1
-  RCSSysQuad1Switch 1
-  YawSwitch 2
-  PitchSwitch 2
-  RollSwitch 2
-  GyroTestRightSwitch 1
-  GyroTestLeftSwitch 2
-  DeadBandSwitch 0
-  SlewRateSwitch 1
-  RadarTestSwitch 2
-  LandingAntSwitch 2
-  RightACAPropSwitch 0
-  RightAttitudeMonSwitch 1
-  RightRateErrorMonSwitch 1
-  TempPressMonSwitch 2
-  QTYMonSwitch 0
-  BALCPLSwitch 1
-  ATTTranslSwitch 1
-  MANThrotSwitch 1
-  THRContSwitch 1
-  RCSMainSOVBSwitch 1
-  RCSMainSOVASwitch 1
+  RightTTCATranslSwitch 0 0
+  RightACA4JetSwitch 0 0
+  LeftTTCATranslSwitch 0 0
+  LeftACA4JetSwitch 0 0
+  ExteriorLTGSwitch 2 0
+  RightXPointerSwitch 1 0
+  FloodSwitch 1 0
+  SidePanelsSwitch 0 0
+  RCSSysQuad4Switch 1 0
+  RCSSysQuad3Switch 1 0
+  RCSSysQuad2Switch 1 0
+  RCSSysQuad1Switch 1 0
+  YawSwitch 2 0
+  PitchSwitch 2 0
+  RollSwitch 2 0
+  GyroTestRightSwitch 1 0
+  GyroTestLeftSwitch 2 0
+  DeadBandSwitch 0 0
+  SlewRateSwitch 1 0
+  RadarTestSwitch 2 0
+  LandingAntSwitch 2 0
+  RightACAPropSwitch 0 0
+  RightAttitudeMonSwitch 1 0
+  RightRateErrorMonSwitch 1 0
+  TempPressMonSwitch 2 0
+  QTYMonSwitch 0 0
+  BALCPLSwitch 1 0
+  ATTTranslSwitch 1 0
+  MANThrotSwitch 1 0
+  THRContSwitch 1 0
+  RCSMainSOVBSwitch 1 0
+  RCSMainSOVASwitch 1 0
   RCSMainSovBTB 1
   RCSMainSovATB 1
-  ACAPropSwitch 1
-  RateScaleSwitch 0
-  ShiftTruSwitch 1
-  AttitudeMonSwitch 1
-  RateErrorMonSwitch 1
-  AltRngMonSwitch 1
-  ModeSelSwitch 1
-  GuidContSwitch 1
-  LeftXPointerSwitch 1
-  IMUCageSwitch 0
-  ModeControlAGSSwitch 1
-  ModeControlPNGSSwitch 1
-  EngineDescentCommandOverrideSwitch 0
-  EngineArmSwitch 0
-  AbortStageSwitch 0
-  AbortSwitch 0
+  ACAPropSwitch 1 0
+  RateScaleSwitch 0 0
+  ShiftTruSwitch 1 0
+  AttitudeMonSwitch 1 0
+  RateErrorMonSwitch 1 0
+  AltRngMonSwitch 1 0
+  ModeSelSwitch 1 0
+  GuidContSwitch 1 0
+  LeftXPointerSwitch 1 0
+  IMUCageSwitch 0 0
+  ModeControlAGSSwitch 1 0
+  ModeControlPNGSSwitch 1 0
+  EngineDescentCommandOverrideSwitch 0 0
+  EngineArmSwitch 0 0
+  AbortStageSwitch 0 0
+  AbortSwitch 0 0
 PANELSWITCHES_END
 ECA_1_START
   INPUT_A 1.000
@@ -1395,6 +1396,12 @@ LEM_EDS_START
   SOV_A 1
   SOV_B 1
 LEM_EDS_END
+  <checklist> 
+  FILE 
+  COMPLETE 1
+  FLASHING 0
+  LASTITEMTIME -1000000000.000
+  </checklist> 
 END
 END_SHIPS
 
