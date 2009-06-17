@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/06/15 16:11:32  tschachim
+  *	New CollisionSDK.
+  *	
   *	Revision 1.2  2009/06/14 16:20:01  tschachim
   *	Fixed touchdown points for the new Collision SDK.
   *	
@@ -167,7 +170,8 @@ void LEVA::init()
 void LEVA::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	init();
-	VSEnableCollisions(GetHandle(), "ProjectApollo");
+	VSEnableCollisions(GetHandle(),"ProjectApollo");
+	VSSetCollisionFlags(GetHandle(),VSC_ONEPOINT);
 	SetAstroStage();
 }
 		 
@@ -192,8 +196,8 @@ void LEVA::SetAstroStage ()
 	SetCameraOffset(_V(0,1.6,0));
 	
 	double tdph = -0.8;
-	SetTouchdownPoints (_V(0, tdph, 0.1), _V(-0.1, tdph, -0.1), _V(0.1, tdph, -0.1));
-	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 0.1), _V(-0.1, tdph, -0.1), _V(0.1, tdph, -0.1));
+	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
+	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
 	Astro = true;
 }
 

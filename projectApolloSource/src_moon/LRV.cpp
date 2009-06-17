@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/06/15 16:11:32  tschachim
+  *	New CollisionSDK.
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -294,7 +297,8 @@ void LRV::init()
 void LRV::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	TRACESETUP("clbkSetClassCaps");
-	VSEnableCollisions(GetHandle(),"ProjectApollo");
+	VSEnableCollisions(GetHandle(),"ProjectApollo");	
+	VSSetCollisionFlags(GetHandle(),VSC_TILTING);
 	SetRoverStage();
 }
 
