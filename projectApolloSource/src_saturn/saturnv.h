@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.39  2008/04/11 12:19:18  tschachim
   *	New SM and CM RCS.
   *	Improved abort handling.
@@ -295,6 +298,8 @@ protected:
 	// and moved to somewhere more appropriate.
 	// If it's here, I don't have to wait for everything saturn-derived to rebuild if I modify it.
 
+	FILE* lvlog;									// LV Log file
+
 	int LVDC_Timebase;								// Time Base
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
 
@@ -309,6 +314,7 @@ protected:
 	
 	// These are variables that are not really part of the LVDC software.
 	double GPitch[4],GYaw[4];						// Amount of gimbal to command per thruster
+	double OPitch[4],OYaw[4];						// Previous value of above, for rate limitation
 	double RateGain,ErrorGain;						// Rate Gain and Error Gain values for gimbal control law
 	VECTOR3 AttRate;                                // Attitude Change Rate
 	VECTOR3 AttitudeError;                          // Attitude Error
@@ -316,6 +322,7 @@ protected:
 	double Position[3];								// Position
 	VECTOR3 WV;										// Gravity
 	double sinceLastIGM;							// Time since last IGM run
+	double IGMInterval;								// IGM Interval
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
 
 	// Event Times
@@ -324,24 +331,28 @@ protected:
 	double t_1;										// Backup timer for Pre-IGM pitch maneuver
 	double t_2;										// Time to initiate pitch freeze for S1C engine failure
 	double t_3;										// Constant pitch freeze for S1C engine failure prior to t_2
+	double t_3i;									// Clock time at S4B ignition
 	double t_4;										// Upper bound of validity for first segment of pitch freeze
 	double t_5;										// Upper bound of validity for second segment of pitch freeze
 	double t_6;										// Time to terminate pitch freeze after S1C engine failure
 	double dT_F;									// Period of frozen pitch in S1C
 	double T_S1,T_S2,T_S3;							// Times for Pre-IGM pitch polynomial
 	double T_LET;									// LET Jettison Time
+	double dt_LET;									// Nominal interval between S2 ignition and LET jettison
 	// IGM event times
 	double T_1;										// Time left in first-stage IGM
 	double T_2;										// Time left in second and fourth stage IGM
 	double T_3;										// Time left in third and fifth stage IGM
+	double T_4N;									// Nominal time of S4B first burn
+	double dT_LIM;									// Limit to dT_4;
 
 	// These are boolean flags that are real flags in the LVDC SOFTWARE.
-	bool Aziumuth_Inclination_Mode;					// Ground Targeting uses Azimuth to determine Inclination
-	bool Azimuth_DscNodAngle_Mode;					// Ground Targeting uses Azimuth to determine Descending Nodal Angle
+//	bool Azimuth_Inclination_Mode;					// Ground Targeting uses Azimuth to determine Inclination
+//	bool Azimuth_DscNodAngle_Mode;					// Ground Targeting uses Azimuth to determine Descending Nodal Angle
 	bool Direct_Ascent;                             // Direct Ascent Mode flag
 	bool S1C_Engine_Out;							// S1C Engine Failure Flag
 	bool HSL;										// High-Speed Loop flag
-	int  T_EO1;										// Pre-IGM Engine-Out Constant
+	int  T_EO1,T_EO2;								// Pre-IGM Engine-Out Constant
 	bool ROT;										// Rotate terminal conditions
 	int  UP;										// IGM target parameters updated
 	bool BOOST;										// Boost To Orbit
@@ -349,6 +360,15 @@ protected:
 	bool S2_BURNOUT;								// SII Burn Out
 	bool MRS;										// MR Shift
 	bool GATE;										// Logic gate for switching IGM steering
+	bool GATE0;										// Permit entry to restart preparation
+	bool GATE1;										// Permit entry to out-of-orbit targeting
+	bool GATE2;										// Permit only one pass through 1st-opportunity targeting
+	bool GATE3;										// Permit entry to IGM out-of-orbit targeting
+	bool GATE4;										// Permit only one pass through direct-staging guidance update
+	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
+	bool INH,INH1,INH2;								// Dunno yet
+	bool TU;										// Gate for processing targeting update
+	bool TU10;										// Gate for processing ten-paramemter targeting update
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	double IncFromAzPoly[6];						// Inclination-From-Azimuth polynomial
@@ -362,18 +382,24 @@ protected:
 	double tau1;									// Time to consume all fuel before S2 MRS
 	double tau2;									// Time to consume all fuel between MRS and S2 Cutoff
 	double tau3;									// Time to consume all fuel of SIVB
+	double tau3N;									// Artificial tau mode parameters
 	double Tt_T;									// Time-To-Go computed using Tt_3
 	double Tt_3;									// Estimated third or fifth stage burn time
 	double T_c;										// Coast time between S2 burnout and S4B ignition
+	double TB1;										// Time of TB1
+	double TB2;										// Time of TB2
+	double TB3;										// Time of TB3
+	double TB4;										// Time of TB4
+	double TB5;										// Time of TB5
+	double TB6;										// Time of TB6
+	double TB7;										// Time of TB7
 	double T_1c;									// Burn time of IGM first, second, and coast guidance stages
 	double eps_1;									// IGM range angle calculation selection
 	double eps_2;									// Guidance option selection time
 	double eps_3;									// Terminal condition freeze time
 	double eps_4;									// Time for cutoff logic entry
-	double ROV;										// Constant for biasing terminal-range-angle
+	double ROV,ROVs;								// Constant for biasing terminal-range-angle
 	double mu;										// Product of G and Earth's mass
-	double phi_L;									// Geodetic latitude of launch site
-	double phi_M;									// Longitude of launch site
 	double sin_phi_L;								// Geodetic latitude of launch site: sin
 	double cos_phi_L;								// Geodetic latitude of launch site: cos
 	double LS_ALT;									// Launch site radial distance from center of earth
@@ -384,12 +410,15 @@ protected:
 	double t_B1;									// Transition time for the S2 mixture ratio to shift from 5.5 to 4.7
 	double t_B3;									// Time from second S2 MRS signal
 	double t;										// Time from accelerometer reading to next steering command
-	
+	double TA1,TA2;									// Time parameters used in orbital guidance
+	double Ct;										// Time from start of 3rd or 4th stage IGM
+	double Ct_o;									// Time from use of artifical tau mode
+	double Cf;										// Constant used for S2/S4B direct staging
+	double SMCG;									// Steering misalignment correction gain
+	double TS4BS;									// Time from direct-stage interrupt to start IGM.
+	double TSMC1,TSMC2;								// Time test for steering misalignment test relative to TB3,TB4
+	double V_S2T;									// Nominal S2 cutoff velocity
 	// PAD-LOADED TABLES
-	// The documentation calls these TABLE15 and TABLE25 but doesn't define them.
-	double CORadVecTrueAn;							// True Anomaly of predicted cutoff radius vector (TABLE15 f)
-	double XferEllipseEcc[16];						// Eccentricity of desired transfer ellipse (TABLE15 e)
-	double XferEllipseVVE[16];						// Vis-Viva Energy of desired transfer ellipse (TABLE15 C3)
 	double Fx[5][4];								// Pre-IGM pitch polynomial
 	double fx[7];									// Inclination from azimuth polynomial
 	double gx[7];									// Descending Node Angle from azimuth polynomial
@@ -399,7 +428,10 @@ protected:
 	double Inclination;								// Inclination
 	double DescNodeAngle;							// Descending Node Angle -- THETA_N
 	double Azo,Azs;									// Variables for scaling the -from-azimuth polynomials
-	VECTOR3 CommandedAttitude;						// Commanded Attitude (DEGREES)
+	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS)
+	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS)
+	VECTOR3 ACommandedAttitude;						// Actual Commanded Attitude (RADIANS)
+	VECTOR3 CommandRateLimits;						// Command Rate Limits
 	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)
 	double F;										// Force in Newtons, I assume.	
 	double K_Y,K_P,D_P,D_Y;							// Intermediate variables in IGM
@@ -421,6 +453,7 @@ protected:
 	double R_T;										// Desired terminal radius
 	double V;										// Instantaneous vehicle velocity
 	double V_T;										// Desired terminal velocity
+	double V_i,V_0,V_1,V_2;							// Parameters for cutoff velocity computation
 	double ups_T;									// Desired terminal flight-path angle
 	MATRIX3 MX_A;									// Transform matrix from earth-centered plumbline to equatorial
 	MATRIX3 MX_B;									// Transform matrix from equatorial to orbital coordinates
@@ -429,19 +462,24 @@ protected:
 	MATRIX3 MX_phi_T;								// Matrix made from phi_T
 	double phi_T;									// Angle used to estimate location of terminal radius in orbital plane
 	VECTOR3 Pos4;									// Position in the orbital reference system
-	VECTOR3 PosS;									// Position in the earth-centered plumbline system. SPACE-FIXED.
+	VECTOR3 PosS;									// Position in the earth-centered plumbline system.
 	VECTOR3 DotS;									// VELOCITY in the earth-centered plumbline system
 	double ddot_X_g,ddot_Y_g,ddot_Z_g;				// Gravitation in the earth-centered plumbline system
 	double alpha_D;									// Angle from perigee to DN vector
+	bool alpha_D_op;								// Option to determine alpha_D or load it
+	bool i_op;										// Option to determine inclination or load it
+	bool theta_N_op;								// Option to determine descemdind node angle or load it
 	double G_T;										// Magnitude of desired terminal gravitational acceleration
 	double xi_T,eta_T,zeta_T;						// Desired position components in the terminal reference system
 	VECTOR3 PosXEZ;									// Position components in the terminal reference system
 	VECTOR3 DotXEZ;									// Instantaneous something
 	double deta,dxi;								// Position components to be gained in this axis
 	double dT_3;									// Correction to third or fifth stage burn time
+	double dT_4;									// Difference between nominal and actual 1st S4B burn time
+	double dTt_4;									// Limited value of above
 	double T_T;										// Time-To-Go computed using T_3
 	double tchi_y,tchi_p;							// Angles to null velocity deficiencies without regard to terminal data
-	double dot_zeta_T,dot_xi_T,dot_eta_T;			// I don't know.
+	double dot_zeta_T,dot_xi_T,dot_eta_T;			// Time derivitaves of xi/eta/zeta_T?
 	double ddot_zeta_GT,ddot_xi_GT;
 	VECTOR3 DDotXEZ_G;								// ???
 	double ddot_xi_G,ddot_eta_G,ddot_zeta_G;								
@@ -451,14 +489,24 @@ protected:
 	double X_S1,X_S2,X_S3;							// Direction cosines of the thrust vector
 	double sin_ups,cos_ups;							// Sine and cosine of upsilon (flight-path angle)
 	double dot_phi_1,dot_phi_T;						// ???
+	double dt;										// Nominal powered-flight or coast-guidance computation-cycle interval
+	double dtt_1,dtt_2;								// Used in TGO determination
+	double a_1,a_2;									// Acceleration terms used to determine TGO
+	double T_GO;									// Time before S4B shutdown
+	double T_CO;									// Predicted time of S4B shutdown, from GRR
+	double dV_B;									// Velocity cutoff bias for orbital insertion
+	double TAS;										// Time from GRR
+	double X_Zi,X_Yi;								// Generated Pitch and Yaw Command
 
 	// TABLE15 and TABLE25
-	// I never figured out exactly how this is supposed to be implemented,
-	// but I found the values at the end of the manual
+	// According to the Apollo 11 LV Trajectory manual, these were 15 and 25 point data tables
+	// dependent on time into the launch window.
 
 	double TABLE15_f;								// True anomaly of the predicted cutoff radius vector
 	double TABLE15_e;								// Eccentricity of the transfer ellipse
 	double TABLE15_C_3;								// Vis-Viva energy of desired transfer ellipse
+
+	// TABLE25 is apparently only used on direct-ascent
 
 	void lvdc_init();								// Initialization
 	void lvdc_timestep(double simt, double simdt);	// LVDC timestep call
