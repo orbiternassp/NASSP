@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/07/04 21:36:09  dseagrav
+  *	LVDC++ update
+  *	Should not break anything else
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -1968,6 +1972,7 @@ void SaturnV::lvdc_init(){
 	lvimu.Init();							// Initialize IMU
 	lvrg.Init(this);						// LV Rate Gyro Package
 	lvimu.SetVessel(this);					// set vessel pointer
+	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 	// Event times
 	T_FAIL=0;								// S1C Engine Failure time
 	T_ar=0;									// S1C Tilt Arrest Time
