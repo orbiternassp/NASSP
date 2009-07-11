@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.7  2008/04/11 11:49:05  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -109,6 +112,7 @@ void ASTP::Setup()
 	VECTOR3 dockrot = _V(-1.0, 0.0, 0);
 
 	SetDockParams(dockpos, dockdir, dockrot);
+	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 }
 
 // ==============================================================

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.17  2008/01/16 04:14:23  movieman523
   *	Rewrote docking probe separation code and moved the CSM_LEM code into a single function in the Saturn class.
   *	
@@ -942,6 +945,9 @@ protected:
 
 	OBJHANDLE hLEVA;
 	OBJHANDLE hdsc;
+
+	ATTACHMENTHANDLE hattDROGUE;
+
 	UINT stage;
 	int status;
 
