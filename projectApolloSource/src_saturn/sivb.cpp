@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.44  2009/02/02 18:51:31  tschachim
   *	Bugfix docking port position
   *	
@@ -519,6 +522,7 @@ void SIVB::SetS4b()
 	case PAYLOAD_LEM:
 		SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
 		SetDockParams(dockpos, dockdir, dockrot);
+		hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 		mass += PayloadMass;
 		break;
 
@@ -546,6 +550,7 @@ void SIVB::SetS4b()
 		dockpos = _V(0.0, 0.0, 9.1);
 		dockrot = _V(-1.0, 0.0, 0);
 		SetDockParams(dockpos, dockdir, dockrot);
+		hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 		mass += PayloadMass;
 		break;
 
@@ -564,6 +569,7 @@ void SIVB::SetS4b()
 		dockpos = _V(0.0, 0.15, 9.9);
 		dockrot = _V(-1.0, 0.0, 0);
 		SetDockParams(dockpos, dockdir, dockrot);
+		hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 		mass += PayloadMass;
 		break;
 

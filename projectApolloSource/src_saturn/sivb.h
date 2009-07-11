@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.29  2008/05/14 21:54:02  tschachim
   *	Fixed SLA panels orientation for the Saturn 1B, the Saturn V still needs fixing.
   *	
@@ -540,6 +543,8 @@ protected:
 	OBJHANDLE hs4b2;
 	OBJHANDLE hs4b3;
 	OBJHANDLE hs4b4;
+
+	ATTACHMENTHANDLE hattDROGUE;
 
 	///
 	/// \brief Instrument Unit.

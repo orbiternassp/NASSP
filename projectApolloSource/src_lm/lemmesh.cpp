@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.38  2009/02/02 18:44:55  tschachim
   *	Bugfix docking port position
   *	
@@ -296,6 +299,7 @@ void LEM::SetLmVesselDockStage()
     VECTOR3 dockdir = {0,1,0};
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
+	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
     LDGswitch=false;
 	ATT2switch=true;
@@ -378,6 +382,7 @@ void LEM::SetLmVesselHoverStage()
 	VECTOR3 dockdir = {0,1,0};
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
+	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
 
 	LDGswitch=true;
@@ -452,6 +457,7 @@ void LEM::SetLmAscentHoverStage()
 
 	VECTOR3 dockrot = {-0.7045, 0, 0.7045};
 	SetDockParams(dockpos, dockdir, dockrot);
+	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
 	LDGswitch=false;
 	AFEED1switch=true;

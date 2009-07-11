@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.13  2009/02/02 19:11:59  tschachim
   *	Improved capture and retraction handling by Artlav.
   *	
@@ -71,6 +74,24 @@
 #define DOCKINGPROBE_STATUS_RETRACTED 0
 #define DOCKINGPROBE_STATUS_EXTENDED  1
 
+#define DOCKINGPROBE_PROC_UNDOCKED 0
+#define DOCKINGPROBE_PROC_SOFTDOCKED 1
+#define DOCKINGPROBE_PROC_HARDDOCKED 2
+
+#define DOCKINGPROBE_CHARGE_PRIM1 2
+#define DOCKINGPROBE_CHARGE_PRIM2 4
+#define DOCKINGPROBE_CHARGE_SEC1 8
+#define DOCKINGPROBE_CHARGE_SEC2 16
+
+// Tolerances for detection for collision and capture
+const double COLLISION_DETECT_RANGE = 1;
+const double CAPTURE_DETECT_RANGE = 0.1;
+
+// Mathematical/Physical description
+const double DOCKINGPROBE_PROBE_LENGTH = 0.7; // NEED actual values for this!
+const double DOCKINGPROBE_DROGUE_DEPTH = 0.5; // NEED actual values for this!
+const double DOCKINGPROBE_DROGUE_ANGLE = 45.0;  // Angle of DROGUE cone NEED actual value in degrees
+
 class Saturn;
 
 
@@ -109,8 +130,10 @@ protected:
 	void Extend();
 	void Retract();
 	void UpdatePort(VECTOR3 off, double simdt);
+	double CollisionDetection(VECTOR3 prbP, VECTOR3 prbD, VECTOR3 drgV, VECTOR3 drgA);
 	bool IsPowered() { return DCPower.Voltage() > SP_MIN_DCVOLTAGE; };
 
+	int Realism;
 	bool Enabled;
 	double Status;
 	int ExtendingRetracting;
@@ -131,7 +154,21 @@ protected:
 	///
 	int IgnoreNextDockEvent;
 	PowerMerge DCPower;
-	int Realism;
+
+	///
+	/// Flag for different docking methods:
+	///    0 - Use Standard Orbiter docking handling
+	///    1 - Use Modified Orbiter by Artlav
+	///    11 - Use Advanced Capture Method with no Physics by Swatch
+	///    12 - Use Advanced Capture Method with Collision Physics by Swatch
+	///
+	enum enumDockMethod{
+		STANDARDORBITER = 0,
+		MODIFIEDORBITER = 1,
+		ADVANCED = 10,         // Only should be used internally to check if advanced methods to be used
+		ADVANCEDCAPTURE = 11,
+		ADVANCEDPHYSICS = 12
+	} DockingMethod;
 
 	///
 	/// Docking port this probe is connected to.
@@ -139,7 +176,11 @@ protected:
 	int ourPort;
 
 	int Dockproc;
-	VECTOR3 Dockparam[3];	      
+	VECTOR3 Dockparam[3];	 
+
+	ATTACHMENTHANDLE hattPROBE;
+
+	int RetractChargesUsed; //
 };
 
 //

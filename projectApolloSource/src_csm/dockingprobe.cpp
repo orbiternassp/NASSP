@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/03/14 12:01:24  tschachim
+  *	Bugfix docking handling
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -101,6 +104,39 @@
 #include "saturn.h"
 #include "papi.h"
 
+//
+// Added matrix math stuff... might need cleaning or moving or both...
+//
+
+inline MATRIX3 operator- (const MATRIX3 &a, const MATRIX3 &b)
+{
+	MATRIX3 c;
+	c.m11 = a.m11-b.m11;c.m12 = a.m12-b.m12;c.m13 = a.m13-b.m13;
+	c.m21 = a.m21-b.m21;c.m22 = a.m22-b.m22;c.m23 = a.m23-b.m23;
+	c.m31 = a.m31-b.m31;c.m32 = a.m32-b.m32;c.m33 = a.m33-b.m33;
+	return c;
+}
+
+inline MATRIX3 mul (const VECTOR3 &A, const VECTOR3 &B) // Outerproduct of two vectors is MATRIX
+{
+	MATRIX3 mat = {
+		A.x*B.x, A.x*B.y, A.x*B.z,
+		A.y*B.x, A.y*B.y, A.y*B.z,
+		A.z*B.x, A.z*B.y, A.z*B.z
+	};
+	return mat;
+}
+
+inline MATRIX3 eyemat(double i)               //Basic Matrix to be multiplied by
+{
+	MATRIX3 mat = {
+		i,0,0,
+		0,i,0,
+		0,0,i
+	};
+	return mat;
+}
+inline MATRIX3 eyemat() {return eyemat(1.0);}  //Identity Matrix
 
 DockingProbe::DockingProbe(int port, Sound &capturesound, Sound &latchsound, Sound &extendsound, 
 						   Sound &undocksound, Sound &dockfailedsound, PanelSDK &p) : 
@@ -114,10 +150,12 @@ DockingProbe::DockingProbe(int port, Sound &capturesound, Sound &latchsound, Sou
 	FirstTimeStepDone = false;
 	UndockNextTimestep = false;
 	IgnoreNextDockEvent = 0;
+	DockingMethod = MODIFIEDORBITER;
 	Realism = REALISM_DEFAULT;
 	ourPort = port;
-	Dockproc = 0;
+	Dockproc = DOCKINGPROBE_PROC_UNDOCKED;
 	Dockparam[0] = Dockparam[1] = Dockparam[2] = _V(0, 0, 0);
+	RetractChargesUsed = 0;
 }
 
 DockingProbe::~DockingProbe()
@@ -134,7 +172,7 @@ void DockingProbe::Extend()
 	if (Status != DOCKINGPROBE_STATUS_EXTENDED) {
 		ExtendingRetracting = 1;
 		if (Docked) {
-			Dockproc = 0;
+			Dockproc = DOCKINGPROBE_PROC_UNDOCKED;
 			OurVessel->Undock(ourPort);
 			UndockSound.play();
 		
@@ -177,10 +215,15 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 		return;
 	}
 
+	///
+	/// Advanced Orbiter Handling submitted by Artlav
+	///		~More realistic capture and retract
+	///
+
 	if (connected == NULL) {
 		Docked = false;
-		Dockproc = 0;
- 		DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
+		Dockproc = DOCKINGPROBE_PROC_UNDOCKED;
+		DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
 		OurVessel->SetDockParams(dock, Dockparam[0], Dockparam[1], Dockparam[2]);
 	} else {
 		Docked = true;
@@ -191,8 +234,8 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 			Status = 0.9;
 			CaptureSound.play();
 			
-			Dockproc = 1;
- 			DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
+			Dockproc = DOCKINGPROBE_PROC_SOFTDOCKED;
+			DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
 			OurVessel->GetDockParams(dock, Dockparam[0], Dockparam[1], Dockparam[2]);
 
 			// Retract automatically if REALISM 0
@@ -222,7 +265,7 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		if (Status >= DOCKINGPROBE_STATUS_EXTENDED) {
 			Status = DOCKINGPROBE_STATUS_EXTENDED;
 			ExtendingRetracting = 0;
-			Dockproc = 0;
+			Dockproc = DOCKINGPROBE_PROC_UNDOCKED;
 			OurVessel->Undocking(ourPort);
 			OurVessel->SetDockingProbeMesh();
 		} else {
@@ -239,15 +282,15 @@ void DockingProbe::TimeStep(double simt, double simdt)
 		}	
 	}
 
-	if (Dockproc == 1) {
+	if (Dockproc == DOCKINGPROBE_PROC_SOFTDOCKED) {
 		UpdatePort(Dockparam[1] * 0.5, simdt);
-		Dockproc = 2;
-	} else if (Dockproc == 2) {
+		Dockproc = DOCKINGPROBE_PROC_HARDDOCKED;
+	} else if (Dockproc == DOCKINGPROBE_PROC_HARDDOCKED) {
 		if (Status > DOCKINGPROBE_STATUS_RETRACTED) {
 			UpdatePort(Dockparam[1] * 0.5 * Status / 0.9, simdt);
 		} else {
 			UpdatePort(_V(0,0,0), simdt);
-			Dockproc = 0;
+			Dockproc = DOCKINGPROBE_PROC_UNDOCKED;
 		}
 	}
 	// sprintf(oapiDebugString(), "Docked %d Status %.3f Dockproc %d  ExtendingRetracting %d", (Docked ? 1 : 0), Status, Dockproc, ExtendingRetracting); 
@@ -259,10 +302,115 @@ void DockingProbe::TimeStep(double simt, double simdt)
 	} else if (OurVessel->DockingProbeExtdRelSwitch.IsDown()) {
 		if ((!OurVessel->DockingProbeRetractPrimSwitch.IsCenter() && OurVessel->DockProbeMnACircuitBraker.IsPowered() && OurVessel->PyroBusA.Voltage() > SP_MIN_DCVOLTAGE) ||
 			(!OurVessel->DockingProbeRetractSecSwitch.IsCenter()  && OurVessel->DockProbeMnBCircuitBraker.IsPowered() && OurVessel->PyroBusB.Voltage() > SP_MIN_DCVOLTAGE)) {
-			/// \todo Each retraction system (Prim1, Prim2, Sec1, Sec2) can only be used once 
-			Retract();
+
+			int ActiveCharges = 0;
+
+			if (OurVessel->DockingProbeRetractPrimSwitch.IsUp()) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_PRIM1;
+			if (OurVessel->DockingProbeRetractPrimSwitch.IsDown()) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_PRIM2;
+			if (OurVessel->DockingProbeRetractSecSwitch.IsUp()) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_SEC1;
+			if (OurVessel->DockingProbeRetractSecSwitch.IsDown()) ActiveCharges = ActiveCharges | DOCKINGPROBE_CHARGE_SEC2;
+
+			if ((ActiveCharges & RetractChargesUsed)!= ActiveCharges) Retract();
+
+			RetractChargesUsed = RetractChargesUsed | ActiveCharges;
+
+			sprintf(oapiDebugString(), "Charge Used: P1%d P2%d S1%d S2%d", RetractChargesUsed & DOCKINGPROBE_CHARGE_PRIM1 , RetractChargesUsed & DOCKINGPROBE_CHARGE_PRIM2 , RetractChargesUsed & DOCKINGPROBE_CHARGE_SEC1 , RetractChargesUsed & DOCKINGPROBE_CHARGE_SEC2); 
 		}
 	}
+
+	///
+	/// Begin Advanced Docking Code
+	///
+	if (DockingMethod > ADVANCED){
+		// Code that follows is largely lifted from Atlantis...
+		// Goal is to handle close proximity docking between a probe and drogue
+
+		VECTOR3 gdrgPos, gdrgDir, gprbPos, gprbDir, gvslPos, rvel, pos, dir, rot;
+		OurVessel->Local2Global (Dockparam[0],gprbPos);  //converts probe location to global
+		OurVessel->GlobalRot (Dockparam[1],gprbDir);     //rotates probe direction to global
+
+		// Search the complete vessel list for a grappling candidate.
+		// Not very scalable ...
+		for (DWORD i = 0; i < oapiGetVesselCount(); i++) {
+			OBJHANDLE hV = oapiGetVesselByIndex (i);
+			if (hV == OurVessel->GetHandle()) continue; // we don't want to grapple ourselves ...
+			oapiGetGlobalPos (hV, &gvslPos);
+			if (dist (gvslPos, gprbPos) < oapiGetSize (hV)) { // in range
+				VESSEL *v = oapiGetVesselInterface (hV);
+				DWORD nAttach = v->AttachmentCount (true);
+				for (DWORD j = 0; j < nAttach; j++) { // now scan all attachment points of the candidate
+					ATTACHMENTHANDLE hAtt = v->GetAttachmentHandle (true, j);
+					const char *id = v->GetAttachmentId (hAtt);
+					if (strncmp (id, "PADROGUE", 8)) continue; // attachment point not compatible
+					v->GetAttachmentParams (hAtt, pos, dir, rot);
+					v->Local2Global (pos, gdrgPos);  // converts found drogue position to global
+					v->GlobalRot (dir, gdrgDir);     // rotates found drogue direction to global
+					if (dist (gdrgPos, gprbPos) < COLLISION_DETECT_RANGE && DockingMethod == ADVANCEDPHYSICS) { // found one less than a meter away!
+						//  Detect if collision has happend, if so, t will return intersection point along the probe line X(t) = gprbPos + t * gprbDir
+						double t = CollisionDetection(gprbPos, gprbDir, gdrgPos, gdrgDir);	
+						//  Calculate time of penetration according to current velocity
+						OurVessel->GetRelativeVel(hV, rvel);
+						//  Determine resultant force
+
+						//APPLY rforce to DockingProbe Vessel, and APPLY -rforce to Drogue Vessel
+						return;
+					} 
+					if (dist(gdrgPos, gprbPos) < CAPTURE_DETECT_RANGE && DockingMethod > ADVANCED) {
+						// If we're within capture range, set docking port to attachment so docking can take place
+						// Originally, I would have used the Attachment features to soft dock and move the LM during retract
+						// but Artlav's docking method does this better and uses the docking port itself.
+						// Attachment is being used as a placeholder for the docking port and to identify its orientation.
+						OurVessel->GetAttachmentParams(hattPROBE, pos, dir, rot);
+						DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
+						OurVessel->SetDockParams(dock, pos, dir, rot);
+					}
+				}//for nAttach
+			}//if inRange
+		}//for nVessel
+	}
+}
+
+double DockingProbe::CollisionDetection(VECTOR3 prbP, VECTOR3 prbD, VECTOR3 drgV, VECTOR3 drgA)
+{
+	//This Function will check to see if collision has occured and 
+	//return a vector of resultant forces if collision has occured
+	//If returns 0's, no collision occured.
+
+	double t = 0.0;
+
+	VECTOR3 Del;
+	double c0,c1,c2;
+	MATRIX3 M;
+
+	M = mul(drgA, drgA) - eyemat(pow(cos(DOCKINGPROBE_DROGUE_ANGLE*PI/180),2));
+
+	Del = prbP - drgV;
+
+	c0 = dotp(mul(M,Del),Del);
+	c1 = dotp(mul(M,prbD),Del);
+	c2 = dotp(mul(M,prbD),prbD);
+	
+	if (c2 != 0){
+		double delta = c1*c1 - c0*c2;
+		if (delta < 0) {  // no real roots
+			return 0.0;
+		} else if (delta == 0) {  // tangent to cone
+			return 0.0;
+		} else { // two distinct real roots!
+			double t1 = (-c1 + pow(delta,0.5))/c2;
+			double t2 = (-c1 - pow(delta,0.5))/c2;
+			if (dotp(drgA, ((prbP + prbD * t1) - drgV)) > 0) {  // Check for proper cone solution
+				t = t1;
+			} else {
+				t = t2;
+			}
+		}
+	}
+
+	// TODO: make sure this is checking properly
+	if (t <= 0 && t >= DOCKINGPROBE_PROBE_LENGTH) return 0.0;  // if intersection does not occur in actual probe, do nothing
+
+	return t;
 }
 
 void DockingProbe::UpdatePort(VECTOR3 off,double simdt)
@@ -310,6 +458,21 @@ void DockingProbe::DoFirstTimeStep()
 	else
 	{
 		OurVessel->Undocking(ourPort);
+
+		/// jasonims:
+		///    Not sure this is where it goes, but seems logical
+		/// If advanced docking method is to be used, must prevent docking until 
+		/// it is correct.
+		if (DockingMethod > ADVANCED) {
+			// Set Attachment at same spot as DockParams
+			DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
+			// Get current Docking Port parameters
+			OurVessel->GetDockParams(dock, Dockparam[0], Dockparam[1], Dockparam[2]);
+			// Set actual dockingport direction reversed, effectively cancelling possiblity for docking accidentally.
+			OurVessel->SetDockParams(dock, Dockparam[0], -Dockparam[1], Dockparam[2]); 
+			// Using docking parameters set up an Attachment Point at docking port location
+			hattPROBE = OurVessel->CreateAttachment(false, Dockparam[0], Dockparam[1], Dockparam[2],"PAPROBE");
+		}
 	}
 }
 
@@ -321,6 +484,7 @@ void DockingProbe::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "STATUS", Status);
 	oapiWriteScenario_int(scn, "EXTENDINGRETRACTING", ExtendingRetracting);
 	oapiWriteScenario_int(scn, "DOCKPROC", Dockproc);
+	oapiWriteScenario_int(scn, "CHARGESUSED", RetractChargesUsed);
 	papiWriteScenario_vec(scn, "DOCKPARAM0", Dockparam[0]);
 	papiWriteScenario_vec(scn, "DOCKPARAM1", Dockparam[1]);
 	papiWriteScenario_vec(scn, "DOCKPARAM2", Dockparam[2]);
@@ -348,8 +512,10 @@ void DockingProbe::LoadState(FILEHANDLE scn)
 			sscanf (line+19, "%d", &ExtendingRetracting);
 		}
 		else if (papiReadScenario_int(line, "DOCKPROC", Dockproc));
+		else if (papiReadScenario_int(line, "CHARGESUSED", RetractChargesUsed));
 		else if (papiReadScenario_vec(line, "DOCKPARAM0", Dockparam[0]));
 		else if (papiReadScenario_vec(line, "DOCKPARAM1", Dockparam[1]));
 		else papiReadScenario_vec(line, "DOCKPARAM2", Dockparam[2]);
 	}
 }
+

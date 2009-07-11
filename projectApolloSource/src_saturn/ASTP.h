@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.3  2008/01/14 01:17:01  movieman523
   *	Numerous changes to move payload creation from the CSM to SIVB.
   *	
@@ -53,6 +56,8 @@ protected:
 	//
 	// No variables needed for now.
 	//
+
+	ATTACHMENTHANDLE hattDROGUE;
 
 };
 
