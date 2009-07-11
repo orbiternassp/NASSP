@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2009/06/12 10:15:47  tschachim
+  *	Added V37E00E at the end of clock update.
+  *	
   *	Revision 1.11  2009/05/31 01:46:15  bluedragon8144
   *	fixed clock update to work with new queue function for uplinking to agc
   *	
@@ -1548,9 +1551,46 @@ void ProjectApolloMFD::Update (HDC hDC)
 	}
 }
 
+// =============================================================================================
+// Convert from J2000 Ecliptic to Basic Reference Coordinate System (Earth Mean Equator of Date)
+// param mjd - Modified Julian Date of the epoch of BRCS
+
+MATRIX3 _MRx(double a) 
+{
+	double ca = cos(a), sa = sin(a);
+	return _M(1.0, 0, 0, 0, ca, sa, 0, -sa, ca);
+}
+
+MATRIX3 _MRz(double a) 
+{ 
+	double ca = cos(a), sa = sin(a); 
+	return _M(ca, sa, 0, -sa, ca, 0, 0, 0, 1.0);
+}
+
+MATRIX3 J2000EclToBRCS(double mjd)
+{
+	double t1 = (mjd - 51544.5) / 36525.0;
+	double t2 = t1*t1;
+	double t3 = t2*t1;
+
+	t1 *= 4.848136811095359e-6;
+	t2 *= 4.848136811095359e-6;
+	t3 *= 4.848136811095359e-6;
+	
+	double i = 2004.3109*t1 - 0.42665*t2 - 0.041833*t3;
+	double r = 2306.2181*t1 + 0.30188*t2 + 0.017998*t3;
+	double L = 2306.2181*t1 + 1.09468*t2 + 0.018203*t3;
+
+	double rot = -r - PI05;
+	double lan = PI05 - L;
+	double inc = i;
+	double obl = 0.40909280422;
+
+	return mul( mul(_MRz(rot),_MRx(inc)), mul(_MRz(lan),_MRx(-obl)) );
+}
+
 void ProjectApolloMFD::GetStateVector (void)
 {
-
 	double get;
 	VECTOR3 pos, vel;
 
@@ -1559,33 +1599,14 @@ void ProjectApolloMFD::GetStateVector (void)
 
 	g_Data.vessel->GetRelativePos(g_Data.planet, pos); 
 	g_Data.vessel->GetRelativeVel(g_Data.planet, vel);
+	
+	OBJHANDLE hMoon  = oapiGetGbodyByName("Moon");
+	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 
-	// Switch to nominal right-handed system
-	//
-	pos = _V(pos.x, pos.z, pos.y);
-	vel = _V(vel.x, vel.z, vel.y);
-
-	// Acquire right-handed rotation axis of the Earth
-	//	
-	OBJHANDLE hMoon   = oapiGetGbodyByName("Moon");
-	OBJHANDLE hEarth  = oapiGetGbodyByName("Earth");
+	MATRIX3 Rot = J2000EclToBRCS(40222.525);
 	
-	double obliquity  = oapiGetPlanetObliquity(hEarth);
-	double suntransit = oapiGetPlanetTheta(hEarth);
-	
-	VECTOR3 _lan = _V(cos(suntransit), sin(suntransit), 0);
-	VECTOR3 _rot = _V(0,0,1) * cos(obliquity) + Normalize(crossp(_V(0,0,1), _lan)) * sin(obliquity);
-	
-	if (oapiGetPlanetPeriod(hEarth)<0) _rot = -_rot;
-	
-	// Reference frame
-	//
-	VECTOR3 _I = _V(1,0,0);
-	VECTOR3 _K = _rot;
-	VECTOR3 _J = Normalize(crossp(_K, _I));
-
-	pos = _V( dotp(pos,_I), dotp(pos,_J), dotp(pos,_K));
-	vel = _V( dotp(vel,_I), dotp(vel,_J), dotp(vel,_K)) * 0.01;
+	pos = mul(Rot, _V(pos.x, pos.z, pos.y));
+	vel = mul(Rot, _V(vel.x, vel.z, vel.y)) * 0.01;
 	
 	if (g_Data.planet==hMoon) {
 
@@ -1704,25 +1725,16 @@ void ProjectApolloMFD::IMFDP31Uplink(void)
 	if (!crawler) get = fabs(saturn->GetMissionTime());
 	else		  get = fabs(crawler->GetMissionTime());
 
-	OBJHANDLE hEarth  = oapiGetGbodyByName("Earth");
-
 	double liftoff    = oapiGetSimMJD()-get/86400.0;
 	double getign     = (pbd->IgnMJD - liftoff) * 86400.0;
 	double delta      = (pbd->LAP_MJD - pbd->IgnMJD) * 86400.0;
 	double ecsteer    = 0.9;  // Cross-product steering constant
-	double obliquity  = oapiGetPlanetObliquity(hEarth);
 	
-	VECTOR3 _rot = _V(0,0,1) * cos(obliquity) + _V(0,1,0) * sin(obliquity);
-	
-	// Reference frame
-	//
-	VECTOR3 _I = _V(1,0,0);
-	VECTOR3 _K = _rot;
-	VECTOR3 _J = Normalize(crossp(_K, _I));
-	VECTOR3 _L = pbd->_LAP;
+	VECTOR3 _L  = pbd->_LAP;
 
-	_L = _V(_L.x, _L.z, _L.y);	// Switch to right-handed system
-	_L = _V( dotp(_L,_I), dotp(_L,_J), dotp(_L,_K));	// Translate reference frame
+	MATRIX3 Rot = J2000EclToBRCS(40222.525);
+
+	_L = mul(Rot, _V(_L.x, _L.z, _L.y));
 
 	g_Data.emem[0] = 15;
 	g_Data.emem[1] = 3412;
