@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.11  2008/01/23 01:40:08  lassombra
   *	Implemented timestep functions and event management
   *	
@@ -139,6 +142,9 @@ enum IULVMessageType
 	IULV_GET_FORCEVECTOR,					///< Get force vector
 	IULV_GET_ROTATIONMATRIX,				///< Get rotation matrix
 	IULV_GET_GLOBAL_VEL,					///< Get global vel
+	IULV_GET_PITCH,							///< Get local pitch
+	IULV_GET_BANK,							///< Get local bank
+	IULV_GET_SLIP_ANGLE,					///< Get local slip angle
 };
 
 ///
@@ -231,6 +237,10 @@ public:
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);
 	void GetRelativeVel(OBJHANDLE ref, VECTOR3 &v);
 	void GetGlobalVel(VECTOR3 &v);
+
+	double GetPitch(void);
+	double GetBank(void);
+	double GetSlipAngle(void);
 
 	OBJHANDLE GetElements(ELEMENTS &el, double &mjd_ref);
 	OBJHANDLE GetGravityRef();
