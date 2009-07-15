@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/03/01 23:41:54  tschachim
+  *	By Jarmonik: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2021.msg17533#msg17533
+  *	
   *	Revision 1.1  2009/02/18 23:21:34  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -690,14 +693,17 @@ void IU::Timestep(double simt, double simdt, double mjd)
 	GNC.PreStep(mjd, simdt);
 
 	// Attitude control
+	VECTOR3 vel;
+	OBJHANDLE hbody = lvCommandConnector.GetGravityRef();
+	lvCommandConnector.GetRelativeVel(hbody, vel);
 	if (ExternalGNC) { 
-		if (State >= 101 && State <= 200) {
-			VECTOR3 vel;
-			OBJHANDLE hbody = lvCommandConnector.GetGravityRef();
-			lvCommandConnector.GetRelativeVel(hbody, vel);
+		if (State >= 101 && State <= 200) {			
 			OrientAxis(Normalize(vel), 2, 0, (State == 200 ? 5 : 1));
 		} else if (State >= 201 && State <= 202) {
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
+		} else {
+			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
+			//OrientAxis(Normalize(vel), 2, 0, 1);
 		}
 	} else {
 		if (State >= 101 && State < 200) {
@@ -707,12 +713,16 @@ void IU::Timestep(double simt, double simdt, double mjd)
 				OrientAxis(GNC.Get_uTD(), 2, 0, 1);
 			} else {
 				lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
+				//OrientAxis(Normalize(vel), 2, 0, 1);
 			}
-		} else if (State >= 201 && State <= 202) {
+		} else if (State >= 201 && State <= 202) {			
 			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
-		}		
+		} else {
+			lvCommandConnector.SetAttitudeRotLevel(_V(0, 0, 0));
+			//OrientAxis(Normalize(vel), 2, 0, 1);
+		}
 	}
-	// sprintf(oapiDebugString(), "TLIBurnState %d State %d IgnMJD %.12f tGO %f vG x %f y %f z %f l %f Th %f", TLIBurnState, State, GNC.Get_IgnMJD(), GNC.Get_tGO(), GNC.Get_vG().x, GNC.Get_vG().y, GNC.Get_vG().z, length(GNC.Get_vG()), lvCommandConnector.GetJ2ThrustLevel()); 
+	//sprintf(oapiDebugString(), "TLIBurnState %d State %d IgnMJD %.12f tGO %f vG x %f y %f z %f l %f Th %f", TLIBurnState, State, GNC.Get_IgnMJD(), GNC.Get_tGO(), GNC.Get_vG().x, GNC.Get_vG().y, GNC.Get_vG().z, length(GNC.Get_vG()), lvCommandConnector.GetJ2ThrustLevel()); 
 }
 
 void IU::PostStep(double simt, double simdt, double mjd) {
@@ -915,12 +925,14 @@ VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
 			xa=(xa/fabs(xa))*PI-xa;
 			ya=(ya/fabs(ya))*PI-ya;
 		}
+		za=lvCommandConnector.GetBank();
+		za=(za/fabs(za))*PI-za;
 		delatt.x=ya;
 		delatt.y=-xa;
-		delatt.z=0.0;
+		delatt.z=-za;
 	}
 //	sprintf(oapiDebugString(), "norm=%.3f %.3f %.3f x=%.3f y=%.3f z=%.3f ax=%d", 
-//	norm, xa*DEG, ya*DEG, za*DEG, axis);
+//		norm, xa*DEG, ya*DEG, za*DEG, axis);
 
 
 //X axis
@@ -1048,10 +1060,9 @@ VECTOR3 IU::OrientAxis(VECTOR3 &vec, int axis, int ref, double gainFactor)
 			}
 		}
 	}
-	lvCommandConnector.SetAttitudeRotLevel(Level);
+	lvCommandConnector.SetAttitudeRotLevel(Level);	
 	return Level;
 }
-
 
 void IU::SaveState(FILEHANDLE scn)
 
@@ -1838,6 +1849,54 @@ void IUToLVCommandConnector::GetRotationMatrix(MATRIX3 &rot)
 	cm.val1.pValue = &rot;
 
 	SendMessage(cm);
+}
+
+double IUToLVCommandConnector::GetPitch()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_PITCH;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVCommandConnector::GetBank()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_BANK;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVCommandConnector::GetSlipAngle()
+
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SLIP_ANGLE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
 }
 
 
