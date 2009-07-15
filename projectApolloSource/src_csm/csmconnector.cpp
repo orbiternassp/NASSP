@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.11  2008/04/11 11:49:33  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -322,6 +325,31 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 			return true;
 		}
 		break;
+
+	case IULV_GET_PITCH:
+		if (OurVessel)
+		{	
+			m.val1.dValue = OurVessel->GetPitch();
+			return true;
+		}
+		break;
+			
+	case IULV_GET_BANK:
+		if (OurVessel)
+		{	
+			m.val1.dValue = OurVessel->GetBank();
+			return true;
+		}
+		break;
+			
+	case IULV_GET_SLIP_ANGLE:
+		if (OurVessel)
+		{	
+			m.val1.dValue = OurVessel->GetSlipAngle();
+			return true;
+		}
+		break;
+
 
 	case IULV_ACTIVATE_NAVMODE:
 		if (OurVessel)
