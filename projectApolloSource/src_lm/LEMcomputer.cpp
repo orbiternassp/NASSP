@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.39  2008/04/11 11:49:11  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -158,6 +161,7 @@
 #include "dsky.h"
 #include "IMU.h"
 #include "lemcomputer.h"
+#include "papi.h"
 
 #include "LEM.h"
 
@@ -1703,4 +1707,69 @@ void LEMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 	ResetAttitudeLevel();
 	AddAttitudeRotLevel(level);
 
+}
+
+//
+// LM Optics class code
+//
+
+LMOptics::LMOptics() {
+
+	lem = NULL;
+	OpticsShaft = 0.0;
+	OpticsReticle = 0.0;
+	ReticleMoved = 0;
+	RetDimmer = 255;
+	
+}
+
+void LMOptics::Init(LEM *vessel) {
+
+	lem = vessel;
+}
+
+void LMOptics::SystemTimestep(double simdt) {
+
+	// LEM Optics is a manual system... no power required.
+	// There were however heaters that would keep the optics from freezing or fogging.
+	// Might want to implment those...
+
+
+}
+
+void LMOptics::TimeStep(double simdt) {
+
+	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
+	sprintf(oapiDebugString(), "Optics Shaft %.2f, Optics Reticle %.2f, Moved? %d", OpticsShaft/RAD, OpticsReticle/RAD, ReticleMoved);
+	if (OpticsReticle > 2*PI) OpticsReticle -= 2*PI;
+	if (OpticsReticle < 0) OpticsReticle += 2*PI;
+
+}
+
+void LMOptics::SaveState(FILEHANDLE scn) {
+
+	oapiWriteLine(scn, LMOPTICS_START_STRING);
+	papiWriteScenario_double(scn, "OPTICSSHAFT", OpticsShaft);
+	papiWriteScenario_double(scn, "OPTICSRETICLE", OpticsReticle);
+	papiWriteScenario_double(scn, "RETDIMMER", RetDimmer);
+	oapiWriteLine(scn, LMOPTICS_END_STRING);
+}
+
+void LMOptics::LoadState(FILEHANDLE scn) {
+
+	char *line;
+
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp(line, LMOPTICS_END_STRING, sizeof(LMOPTICS_END_STRING)))
+			return;
+		else if (!strnicmp (line, "OPTICSSHAFT", 11)) {
+			sscanf (line+11, "%lf", &OpticsShaft);
+		}
+		else if (!strnicmp (line, "OPTICSRETICLE", 11)) {
+			sscanf (line+11, "%lf", &OpticsReticle);
+		}
+		else if (!strnicmp (line, "RETDIMMER", 11)) {
+			sscanf (line+11, "%lf", &RetDimmer);
+		}
+	}
 }

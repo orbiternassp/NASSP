@@ -26,7 +26,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 // Bitmap
 //
 
-IDB_LEM_AOT_VIEW        BITMAP                  "..\\Bitmaps\\alignment_optical_telescope_view.bmp"
+IDB_LEM_AOT_VIEW        BITMAP                  "..\\Bitmaps\\lem_aot_panel_wide.bmp"
 IDB_LEM_LEFT_PANEL      BITMAP                  "..\\Bitmaps\\lem_left_panel.bmp"
 IDB_LEM_RIGHT_PANEL     BITMAP                  "..\\Bitmaps\\lem_right_panel.bmp"
 IDB_LEM_RENDEZVOUS_WINDOW BITMAP                "..\\Bitmaps\\lem_rendezvous_window.bmp"

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.73  2008/04/11 11:49:42  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -308,6 +311,74 @@ void FreeGParam()
 	for (i = 0; i < 2; i++) DeleteObject (g_Param.font[i]);
 	for (i = 0; i < 4; i++) DeleteObject (g_Param.brush[i]);
 	for (i = 0; i < 4; i++) DeleteObject (g_Param.pen[i]);
+}
+
+#define RETICLE_X_CENTER 266
+#define RETICLE_Y_CENTER 266
+#define RETICLE_RADIUS   266
+#define RETICLE_SPLIT_ANGLE 0.0873 // about 5 degrees
+#define RETICLE_SCREW_NPTS 360
+
+void DrawReticle (HDC hDC, double angle, int dimmer)
+{
+	HGDIOBJ oldObj;
+	int xend,yend;
+	// Set up Dimmer Pen
+	HPEN pen = CreatePen(PS_SOLID,1,RGB(dimmer,64,64));
+	oldObj = SelectObject (hDC, pen);
+	// Draw crosshair vertical member
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle));
+	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle));
+	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle+PI));
+	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle+PI));
+	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	// Draw crosshair horizontal member
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * cos(angle));
+	yend = RETICLE_Y_CENTER + (int)(RETICLE_RADIUS * sin(angle));
+	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * cos(angle+PI));
+	yend = RETICLE_Y_CENTER + (int)(RETICLE_RADIUS * sin(angle+PI));
+	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	// Draw radial line #1
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle + RETICLE_SPLIT_ANGLE));
+	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle + RETICLE_SPLIT_ANGLE));
+	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	// Draw radial line #2
+	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle - RETICLE_SPLIT_ANGLE));
+	yend = RETICLE_Y_CENTER - (int)(RETICLE_RADIUS * cos(angle - RETICLE_SPLIT_ANGLE));
+	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
+	int i;
+	double theta,b, r;
+	b = - RETICLE_RADIUS / (2*PI);
+	POINT ScrewPt[RETICLE_SCREW_NPTS];
+	// Draw Archemedes screw #1
+	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
+		theta = 2*PI / RETICLE_SCREW_NPTS * i;
+		r = b*theta;
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)r*sin(theta+angle+RETICLE_SPLIT_ANGLE+PI);
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)r*cos(theta+angle+RETICLE_SPLIT_ANGLE+PI);
+	}
+	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
+	// Draw Archemedes screw #2
+	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
+		theta = 2*PI / RETICLE_SCREW_NPTS * i;
+		r = b*theta;
+		ScrewPt[i].x = RETICLE_X_CENTER - (int)r*sin(theta+angle-RETICLE_SPLIT_ANGLE+PI);
+		ScrewPt[i].y = RETICLE_Y_CENTER - (int)r*cos(theta+angle-RETICLE_SPLIT_ANGLE+PI);
+	}
+	Polyline (hDC, ScrewPt, RETICLE_SCREW_NPTS);
+
+	SelectObject(hDC, oldObj);
+	DeleteObject(pen);
+}
+
+void LEM::RedrawPanel_AOTReticle(SURFHANDLE surf)
+{
+	HDC hDC = oapiGetDC (surf);
+	DrawReticle (hDC, optics.OpticsReticle, optics.RetDimmer);
+	oapiReleaseDC (surf,hDC);
+
 }
 
 
@@ -1298,6 +1369,10 @@ bool LEM::clbkLoadPanel (int id) {
 
 	case LMPANEL_AOTVIEW: // LEM Alignment Optical Telescope View
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
+
+		oapiRegisterPanelArea (AID_AOT_RETICLE,                     _R( 347,  116, 881, 650),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_AOT_RETICLEKNOB,                 _R( 966, 507, 1018, 746),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_AOT_SHAFTKNOB,                   _R( 920,   0,  962, 111),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		break;
@@ -3420,6 +3495,10 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		if(CPswitch){
 			oapiBlt(surf,srf[0],0,0,0,0,145,72);
 		}
+		return true;
+
+	case AID_AOT_RETICLE:
+		RedrawPanel_AOTReticle(surf);
 		return true;
 
 	case AID_COAS:
