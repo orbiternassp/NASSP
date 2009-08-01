@@ -188,10 +188,14 @@
 #define IDB_LMDCVOLTS                                       305
 #define IDB_LMDCAMPS                                        306
 #define AID_AOT_RETICLE                                     309
-#define AID_AOT_RETICLEKNOB                                 310
-#define AID_AOT_SHAFTKNOB                                   311
-#define AID_MARKBUTTON                                      312
+#define AID_AOT_RETICLE_KNOB                                310
+#define AID_AOT_SHAFT_KNOB                                  311
+#define AID_RETICLECOUNTER                                  312
 #define AID_MARKREJECT                                      313
+#define AID_MARKXBUTTON                                     314
+#define AID_MARKYBUTTON                                     315
+#define IDB_AOT_RETICLE_KNOB                                320
+#define IDB_AOT_SHAFT_KNOB                                  321
 #define AID_FUELCELLRADIATORSINDICATORS                     403
 #define AID_FUELCELLREACTANTSSWITCHES                       410
 #define ADI_MAINBUSAINDICATORS                              411
