@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/01 19:48:33  jasonims
+  *	LM Optics Code Added, along with rudimentary Graphics for AOT.
+  *	Reticle uses GDI objects to allow realtime rotation.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -344,10 +348,11 @@ public:
 
 	LEM *lem; 										 			// Our Ship
 
-	double OpticsShaft;											// Shaft Position (can be -120, -60, 0, 60, 120, 180 degrees)
+	int OpticsShaft;											// Shaft Position (can be 0=0, 1=60, 2=120, 3=180, 4=-120, 5=-60 degrees)
 	double OpticsReticle;										// AOT Reticle rotation
 	double ReticleMoved;											// 0 is no movement detected, - is clockwise, + is counterclockwise
 	int RetDimmer;
+	int KnobTurning;
 };
 
 //

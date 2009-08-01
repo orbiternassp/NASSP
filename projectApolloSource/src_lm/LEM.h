@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/01 19:48:33  jasonims
+  *	LM Optics Code Added, along with rudimentary Graphics for AOT.
+  *	Reticle uses GDI objects to allow realtime rotation.
+  *	
   *	Revision 1.2  2009/07/11 13:40:19  jasonims
   *	DockingProbe Work
   *	
@@ -290,6 +294,8 @@ public:
 		SRF_OPTICS_HANDCONTROLLER,
 		SRF_MARK_BUTTONS,
 		SRF_THREEPOSSWITCHSMALL,
+		SRF_AOTRETICLEKNOB,
+		SRF_AOTSHAFTKNOB,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE

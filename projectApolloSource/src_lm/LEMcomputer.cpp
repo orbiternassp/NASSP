@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/01 19:48:33  jasonims
+  *	LM Optics Code Added, along with rudimentary Graphics for AOT.
+  *	Reticle uses GDI objects to allow realtime rotation.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -1716,10 +1720,11 @@ void LEMcomputer::SetAttitudeRotLevel(VECTOR3 level) {
 LMOptics::LMOptics() {
 
 	lem = NULL;
-	OpticsShaft = 0.0;
+	OpticsShaft = 3;
 	OpticsReticle = 0.0;
 	ReticleMoved = 0;
 	RetDimmer = 255;
+	KnobTurning = 0;
 	
 }
 
@@ -1740,7 +1745,7 @@ void LMOptics::SystemTimestep(double simdt) {
 void LMOptics::TimeStep(double simdt) {
 
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
-	sprintf(oapiDebugString(), "Optics Shaft %.2f, Optics Reticle %.2f, Moved? %d", OpticsShaft/RAD, OpticsReticle/RAD, ReticleMoved);
+	sprintf(oapiDebugString(), "Optics Shaft %.2f, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft/RAD, OpticsReticle/RAD, ReticleMoved, KnobTurning);
 	if (OpticsReticle > 2*PI) OpticsReticle -= 2*PI;
 	if (OpticsReticle < 0) OpticsReticle += 2*PI;
 

@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/01 19:48:33  jasonims
+  *	LM Optics Code Added, along with rudimentary Graphics for AOT.
+  *	Reticle uses GDI objects to allow realtime rotation.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -316,7 +320,7 @@ void FreeGParam()
 #define RETICLE_X_CENTER 266
 #define RETICLE_Y_CENTER 266
 #define RETICLE_RADIUS   266
-#define RETICLE_SPLIT_ANGLE 0.0873 // about 5 degrees
+#define RETICLE_SPLIT_ANGLE 0.05 // about 2.25 degrees
 #define RETICLE_SCREW_NPTS 360
 
 void DrawReticle (HDC hDC, double angle, int dimmer)
@@ -1025,6 +1029,9 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LMYAWDEGS]			= oapiCreateSurface (LOADBMP (IDB_LMYAWDEGS));
 		srf[SRF_LMPITCHDEGS]		= oapiCreateSurface (LOADBMP (IDB_LMPITCHDEGS));
 		srf[SRF_LMSIGNALSTRENGTH]	= oapiCreateSurface (LOADBMP (IDB_LMSIGNALSTRENGTH));
+		srf[SRF_AOTRETICLEKNOB]     = oapiCreateSurface (LOADBMP (IDB_AOT_RETICLE_KNOB));
+		srf[SRF_AOTSHAFTKNOB]       = oapiCreateSurface (LOADBMP (IDB_AOT_SHAFT_KNOB));
+		
 
 		//
 		// Flashing borders.
@@ -1371,10 +1378,10 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);	
 
 		oapiRegisterPanelArea (AID_AOT_RETICLE,                     _R( 347,  116, 881, 650),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,              PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_AOT_RETICLEKNOB,                 _R( 966, 507, 1018, 746),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_AOT_SHAFTKNOB,                   _R( 920,   0,  962, 111),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_AOT_RETICLE_KNOB,                 _R( 965, 506, 1030, 760),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP,             PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_AOT_SHAFT_KNOB,                   _R( 920,   0,  964, 113),  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		break;
 	}
 
@@ -2547,6 +2554,29 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
+	case AID_AOT_RETICLE_KNOB:
+		optics.ReticleMoved = 0;
+		if (my >=0 && my <= 120 ){
+			optics.ReticleMoved = 0.001 * pow(120 - my,1.25);
+			optics.KnobTurning++;
+		} else if (my >= 126 && my <= 246){
+			optics.ReticleMoved = -0.001 * pow(my-126,1.25);
+			optics.KnobTurning++;
+		}
+		if (optics.KnobTurning == 2) optics.KnobTurning = 0;
+
+		if (event & PANEL_MOUSE_UP) optics.ReticleMoved = 0;
+
+		return true;
+
+	case AID_AOT_SHAFT_KNOB:
+		if (my >=69 && my <= 111 ){
+			optics.OpticsShaft++; 
+		} else if (my >= 0 && my <= 16){
+			optics.OpticsShaft--;
+		}
+		optics.OpticsShaft = (optics.OpticsShaft+6) % 6;
+		return true;
 
 	case AID_SWITCH_JET:
 		if(event & PANEL_MOUSE_RBDOWN){
@@ -3499,6 +3529,17 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_AOT_RETICLE:
 		RedrawPanel_AOTReticle(surf);
+		return true;
+
+	case AID_AOT_RETICLE_KNOB:
+		oapiBlt(surf,srf[SRF_AOTRETICLEKNOB],0,0,optics.KnobTurning*55,0,55,246);
+		return true;
+	
+	case AID_AOT_SHAFT_KNOB:
+		oapiBlt(surf,srf[SRF_AOTSHAFTKNOB],0,0,optics.OpticsShaft*43,0,43,112);
+		
+		oapiCameraSetCockpitDir (optics.OpticsShaft*PI/3+PI/2,PI/4,true);
+
 		return true;
 
 	case AID_COAS:
