@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.26  2007/06/06 15:02:09  tschachim
   *	OrbiterSound 3.5 support, various fixes and improvements.
   *	
@@ -104,6 +107,9 @@
   *	Initial version
   *	
   **************************************************************************/
+#if !defined(_PA_LMCOMPUTER_H)
+#define _PA_LMCOMPUTER_H
+
 
 //
 // Flagword definitions. These are really intended for future
@@ -314,3 +320,42 @@ protected:
 
 
 };
+class LEM;
+
+// *** LM OPTICS ***
+// I guess this can go here; it doesn't really warrant its own file, and it's part of GNC, so...
+
+///
+/// \ingroup AGC
+/// \brief LM Optics.
+///
+class LMOptics {	
+public: 
+	LMOptics();													// Cons
+	void Init(LEM *vessel);										// Initialization
+	void TimeStep(double simdt);                                // Timestep
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+	//
+	// These should really be protected variables.
+	//
+
+	LEM *lem; 										 			// Our Ship
+
+	double OpticsShaft;											// Shaft Position (can be -120, -60, 0, 60, 120, 180 degrees)
+	double OpticsReticle;										// AOT Reticle rotation
+	double ReticleMoved;											// 0 is no movement detected, - is clockwise, + is counterclockwise
+	int RetDimmer;
+};
+
+//
+// Strings for state saving.
+//
+
+#define LMOPTICS_START_STRING "LMOPTICS_BEGIN"
+#define LMOPTICS_END_STRING   "LMOPTICS_END"
+
+
+#endif // _PA_LMCOMPUTER_H

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/07/11 13:40:19  jasonims
+  *	DockingProbe Work
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -411,6 +414,7 @@ protected:
 	void SetupEVA();
 	void SetView();
 	void RedrawPanel_Horizon (SURFHANDLE surf);
+	void RedrawPanel_AOTReticle (SURFHANDLE surf);
 	void SwitchClick();
 	void CabinFanSound();
 	void VoxSound();
@@ -967,6 +971,8 @@ protected:
 	DSKY dsky;
 	LEMcomputer agc;
 	IMU imu;
+	LMOptics optics;
+
 	MissionTimer MissionTimerDisplay;
 	LEMEventTimer EventTimerDisplay;
 
@@ -1081,6 +1087,7 @@ protected:
 	friend class LEM_EDS;
 	friend class LEMDCVoltMeter;
 	friend class LEMDCAmMeter;
+	friend class LMOptics;
 };
 
 extern void LEMLoadMeshes();

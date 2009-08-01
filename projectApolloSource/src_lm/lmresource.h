@@ -187,8 +187,9 @@
 #define AID_VSI2                                            304
 #define IDB_LMDCVOLTS                                       305
 #define IDB_LMDCAMPS                                        306
-#define AID_OPTICSCLKAREASEXT                               310
-#define AID_OPTICSCLKAREATELE                               311
+#define AID_AOT_RETICLE                                     309
+#define AID_AOT_RETICLEKNOB                                 310
+#define AID_AOT_SHAFTKNOB                                   311
 #define AID_MARKBUTTON                                      312
 #define AID_MARKREJECT                                      313
 #define AID_FUELCELLRADIATORSINDICATORS                     403

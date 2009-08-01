@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/06/15 16:11:32  tschachim
+  *	New CollisionSDK.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -609,10 +612,49 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		return 0;
 	}
 
+	if (down){
+		switch(key){
+			case OAPI_KEY_A:
+				optics.OpticsShaft += 60 * PI / 180;
+				if (optics.OpticsShaft > 2*PI)
+					optics.OpticsShaft -= 2*PI;
+				break;
+
+			case OAPI_KEY_D:
+				optics.OpticsShaft -= 60 * PI / 180;
+				if (optics.OpticsShaft < 0)
+					optics.OpticsShaft += 2*PI;
+				break;
+
+			case OAPI_KEY_W:
+				optics.ReticleMoved = 0.52;  //Fast Rate (about 30 deg/sec)
+
+				if (KEYMOD_CONTROL(keystate)) {
+					optics.ReticleMoved = 0.01;  //Slow Rate (about 0.5 deg/sec)
+				}
+				break;
+
+			case OAPI_KEY_S:
+				optics.ReticleMoved = -0.52;  //Fast Rate (about 30 deg/sec)
+
+				if (KEYMOD_CONTROL(keystate)) {
+					optics.ReticleMoved = -0.01;  //Slow Rate (about 0.5 deg/sec)
+				}
+				break;
+		}
+	}else{
+		switch(key){
+			case OAPI_KEY_W:
+			case OAPI_KEY_S:
+				optics.ReticleMoved = 0;
+				break;
+		}
+
+	}
+
 	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate) || !down) {
 		return 0; 
 	}
-
 	switch (key) {
 
 	case OAPI_KEY_K:
@@ -681,6 +723,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		agc.ChangeDescentRate(0.3077);
 		return 1;	
 	}
+
 	return 0;
 }
 
