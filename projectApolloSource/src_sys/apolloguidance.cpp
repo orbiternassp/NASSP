@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.97  2008/10/16 00:48:45  movieman523
   *	More telemetry: some of these are dummy values for now.
   *	
@@ -511,14 +514,17 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p)
 	//
 	// Virtual AGC.
 	//
-
+#ifndef AGC_SOCKET_ENABLED
 	memset(&vagc, 0, sizeof(vagc));
 	vagc.agc_clientdata = this;
 	agc_engine_init(&vagc, NULL, NULL, 0);
+#endif
 
 #ifdef _DEBUG
 	out_file = fopen("ProjectApollo AGC.log", "wt");
+#ifndef AGC_SOCKET_ENABLED
 	vagc.out_file = out_file;
+#endif
 #endif
 
 	PowerConnected = false;
@@ -1558,13 +1564,17 @@ bool ApolloGuidance::SingleTimestepPrep(double simt, double simdt){
 
 bool ApolloGuidance::SingleTimestep() {
 
+#ifndef AGC_SOCKET_ENABLED
 	agc_engine(&vagc);
+#endif
 	return TRUE;
 }
 
 void ApolloGuidance::VirtualAGCCoreDump(char *fileName) {
 
+#ifndef AGC_SOCKET_ENABLED
 	MakeCoreDump(&vagc, fileName); 
+#endif
 }
 
 bool ApolloGuidance::GenericTimestep(double simt, double simdt)
@@ -4410,6 +4420,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	// Write out any non-zero EMEM state.
 	//
 
+#ifndef AGC_SOCKET_ENABLED
 	for (i = 0; i < EMEM_ENTRIES; i++) {
 		// Always save RegZ because it's set in agc_engine_init, so we have to store 0, too
 		if (ReadMemory(i, val) && (val != 0 || i == RegZ)) {
@@ -4418,6 +4429,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 			oapiWriteScenario_string (scn, fname, str);
 		}
 	}
+#endif
 
 	//
 	// And non-zero I/O state.
@@ -5084,27 +5096,43 @@ void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, unsigned int val){
 
 // DS20060402 DOWNRUPT
 void ApolloGuidance::GenerateDownrupt(){
+#ifndef AGC_SOCKET_ENABLED
 	GenerateDOWNRUPT(&vagc);
+#endif
 }
 
 void ApolloGuidance::GenerateUprupt(){
+#ifndef AGC_SOCKET_ENABLED
 	GenerateUPRUPT(&vagc);
+#endif
 }
 
 bool ApolloGuidance::IsUpruptActive() {
 	if (!Yaagc) return false;
+#ifndef AGC_SOCKET_ENABLED
 	return (IsUPRUPTActive(&vagc) == 1);
+#else
+	return 0;
+#endif
 }
 
 // DS200608xx CH33 SWITCHES
 void ApolloGuidance::SetCh33Switches(unsigned int val){
+#ifndef AGC_SOCKET_ENABLED
 	SetCh33Bits(&vagc,val);
+#endif
 }
 
 unsigned int ApolloGuidance::GetCh33Switches(){
+#ifndef AGC_SOCKET_ENABLED
 	return vagc.Ch33Switches; 
+#else
+	return 0;
+#endif
 }
 
+
+#ifndef AGC_SOCKET_ENABLED
 // DS20060903 PINC, DINC, ETC
 int ApolloGuidance::DoPINC(int16_t *Counter){
 	return(CounterPINC(Counter));
@@ -5122,6 +5150,7 @@ int ApolloGuidance::DoDINC(int CounterNum, int16_t *Counter){
 	return(CounterDINC(&vagc,CounterNum,Counter));
 }
 
+#endif
 
 void ApolloGuidance::SetOutputChannelBit(int channel, int bit, bool val)
 
@@ -5574,6 +5603,7 @@ void ApolloGuidance::UpdateBurnTime(int R1, int R2, int R3)
 }
 
 
+#ifndef AGC_SOCKET_ENABLED
 int16_t ApolloGuidance::ConvertDecimalToAGCOctal(double x, bool highByte) 
 
 {
@@ -5615,6 +5645,7 @@ int16_t ApolloGuidance::ConvertDecimalToAGCOctal(double x, bool highByte)
 	else
 		return i;
 }
+#endif
 
 
 //
