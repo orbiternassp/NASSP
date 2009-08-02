@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.26  2008/04/15 20:46:12  lassombra
   *	Panel callback compatible callback methods implemented
   *	
@@ -147,11 +150,13 @@ void DSKY::Reset()
 	TempLight = false;
 	GimbalLockLight = false;
 	ProgLight = false;
+#ifndef AGC_SOCKET_ENABLED
 	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
 		RestartLight = true;
 	}else{
 		RestartLight = false;
 	}
+#endif
 	TrackerLight = false;
 	VelLight = false;
 	AltLight = false;
@@ -355,9 +360,11 @@ void DSKY::ResetPressed()
 	if(RestartLit()){
 		ClearRestart(); 
 	}
+#ifndef AGC_SOCKET_ENABLED
 	if(agc.Yaagc && agc.vagc.VoltageAlarm != 0){
 		agc.vagc.VoltageAlarm = 0;
 	}
+#endif
 }
 
 void DSKY::NumberPressed(int n)
@@ -429,6 +436,7 @@ void DSKY::ProcessChannel13(int val)
 	}
 
 	/// \todo Other conditions restart light
+#ifndef AGC_SOCKET_ENABLED
 	if (out_val.Bits.TestAlarms || (agc.Yaagc && agc.vagc.VoltageAlarm != 0))
 	{
 		SetRestart(true);
@@ -437,6 +445,7 @@ void DSKY::ProcessChannel13(int val)
 	{
 		SetRestart(false);
 	}
+#endif
 }
 
 void DSKY::DSKYLightBlt(SURFHANDLE surf, SURFHANDLE lights, int dstx, int dsty, bool lit, int xOffset, int yOffset)

@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.55  2008/05/02 16:46:16  tschachim
   *	Bugfixes uplink telemetry.
   *	
@@ -857,10 +860,12 @@ protected:
 	public: virtual bool IsUpruptActive();
 	public: virtual void SetCh33Switches(unsigned int val);
 	public: unsigned int GetCh33Switches();
+#ifndef AGC_SOCKET_ENABLED
 	public: virtual int DoPINC(int16_t *Counter);
 	public: virtual int DoPCDU(int16_t *Counter);
 	public: virtual int DoMCDU(int16_t *Counter);
 	public: virtual int DoDINC(int CounterNum, int16_t *Counter);
+#endif
 
 	///
 	/// \brief Set the Uplink Activity light on the DSKY.
@@ -1071,7 +1076,9 @@ protected:
 	/// \param R3 Partial time in hundredths of seconds.
 	///
 	void UpdateBurnTime(int R1, int R2, int R3);
+#ifndef AGC_SOCKET_ENABLED
 	int16_t ConvertDecimalToAGCOctal(double x, bool highByte);
+#endif
 
 	///
 	/// \brief Is the AGC in power-saving Standby mode?
