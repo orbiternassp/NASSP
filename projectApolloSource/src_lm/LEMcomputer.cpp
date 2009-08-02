@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/01 23:06:33  jasonims
+  *	LM Optics Code Cleaned Up... Panel Code added for LM Optics... Knobs activated... Counter and Computer Controls still to come.
+  *	
   *	Revision 1.2  2009/08/01 19:48:33  jasonims
   *	LM Optics Code Added, along with rudimentary Graphics for AOT.
   *	Reticle uses GDI objects to allow realtime rotation.
@@ -928,6 +931,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	// If the power is out, the computer should restart.
 	if (Yaagc && !IsPowered()){
 		// HARDWARE MUST RESTART
+#ifndef AGC_SOCKET_ENABLED
 		if(vagc.Erasable[0][05] != 04000){				
 			// Clear flip-flop based registers
 			vagc.Erasable[0][00] = 0;     // A
@@ -971,6 +975,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			vagc.VoltageAlarm = 1;
 			dsky.LightRestart();
 		}
+#endif
 		// and do nothing more.
 		return;
 	}
