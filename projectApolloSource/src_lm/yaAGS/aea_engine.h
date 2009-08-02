@@ -1,3 +1,4 @@
+#ifndef AGC_SOCKET_ENABLED
 /*
   Copyright 2005 Ronald S. Burkey <info@sandroid.org>
   
@@ -140,3 +141,5 @@ char *ShowAddressContentsAGS (ags_t *State);
 #endif
 
 #endif // AEA_ENGINE_H
+#endif
+

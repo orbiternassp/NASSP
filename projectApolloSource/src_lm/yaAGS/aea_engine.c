@@ -1,3 +1,4 @@
+#ifndef AGC_SOCKET_ENABLED
 /*
   Copyright 2005 Ronald S. Burkey <info@sandroid.org>
   
@@ -1082,3 +1083,4 @@ aea_engine (ags_t * State)
   return (MicrosecondsThisInstruction);
 }
 
+#endif
