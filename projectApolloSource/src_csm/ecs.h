@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.1  2007/07/17 14:33:16  tschachim
   *	Added entry and post landing stuff.
   *	
@@ -163,8 +166,10 @@ public:
 	O2SMSupply();
 	virtual ~O2SMSupply();
 
-	void Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, 
-		      RotationalSwitch *smv, RotationalSwitch *stv, RotationalSwitch *rpv);
+	void Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, h_Tank *o2rpo, h_Pipe *o2rpop,
+		      RotationalSwitch *smv, RotationalSwitch *stv, RotationalSwitch *rpv,
+			  CircuitBrakerSwitch *mra, CircuitBrakerSwitch *mrb, PanelSwitchItem *eo2v,
+			  PanelSwitchItem *ro2v);
 	void SystemTimestep(double simdt);
 	void Close();
 	void LoadState(char *line);
@@ -175,11 +180,21 @@ protected:
 	h_Tank *o2MainRegulator;
 	h_Tank *o2SurgeTank;
 	h_Tank *o2RepressPackage;
+	h_Tank *o2RepressPackageOutlet;
+	h_Pipe *o2RepressPackageOutletPipe;
 	RotationalSwitch *smSupplyValve;
 	RotationalSwitch *surgeTankValve;
 	RotationalSwitch *repressPackageValve;
+	CircuitBrakerSwitch *mainRegulatorASwitch;
+	CircuitBrakerSwitch *mainRegulatorBSwitch;
+	PanelSwitchItem *emergencyO2Valve;
+	PanelSwitchItem *repressO2Valve;
 
 	bool closed;
+	bool o2SMSupplyVoid;
+	bool o2MainRegulatorVoid;
+	h_substance o2SMSupplyO2;
+	h_substance o2MainRegulatorO2;
 };
 
 ///
@@ -243,13 +258,72 @@ protected:
 	int toggle;
 
 	Saturn *saturn;
-	//h_Pipe *pipe;
-	//h_Pipe *ventValve;
 	RotationalSwitch *gearBoxSelector;
 	RotationalSwitch *actuatorHandleSelector;
 	RotationalSwitch *actuatorHandleSelectorOpen;
 	RotationalSwitch *ventValveRotary;
 
+};
+
+///
+/// This class simulates the water plumbing in the CSM.
+/// \ingroup InternalSystems
+/// \brief Water Controller.
+///
+class SaturnWaterController {
+
+public:
+	SaturnWaterController();
+	virtual ~SaturnWaterController();
+
+	void Init(Saturn *s, h_Tank *pt, h_Tank *wt, h_Tank *pit, h_Tank *wit, 
+		      h_Pipe *wvp, h_Pipe *wivp);
+	void SystemTimestep(double simdt);
+	double *GetWasteWaterDumpLevelRef() { return &wasteWaterDumpLevel; }
+	double *GetUrineDumpLevelRef() { return &urineDumpLevel; }
+	void FoodPreparationWaterSwitchToggled(PanelSwitchItem *s);
+
+protected:
+	double wasteWaterDumpLevel;
+	double urineDumpLevel;
+
+	Saturn *saturn;
+	h_Tank *potableTank;
+	h_Tank *wasteTank;
+	h_Tank *potableInletTank;
+	h_Tank *wasteInletTank;
+	h_Pipe *wasteVentPipe;
+	h_Pipe *wasteInletVentPipe;
+};
+
+///
+/// This class simulates the gycol cooling loops in the CSM.
+/// \ingroup InternalSystems
+/// \brief Glycol Cooling Controller.
+///
+class SaturnGlycolCoolingController {
+
+public:
+	SaturnGlycolCoolingController();
+	virtual ~SaturnGlycolCoolingController();
+
+	void Init(Saturn *s);
+	void SystemTimestep(double simdt);
+	void GlycolEvapTempInSwitchToggled(PanelSwitchItem *s);
+	void PrimaryGlycolEvapInletTempRotaryToggled(PanelSwitchItem *s);
+	void PrimEvapSwitchesToggled(PanelSwitchItem *s);
+	void SecEvapSwitchesToggled(PanelSwitchItem *s);
+	void H2oAccumSwitchesToggled(PanelSwitchItem *s);
+	void CabinTempSwitchToggled(PanelSwitchItem *s);
+
+protected:
+	Saturn *saturn;
+
+	Boiler *suitHeater;
+	Boiler *suitCircuitHeater;
+	h_MixingPipe *evapInletMixer;
+	h_Evaporator *primEvap;
+	h_Evaporator *secEvap;
 };
 
 #endif // _PA_ECS_H

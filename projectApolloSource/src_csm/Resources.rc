@@ -175,7 +175,6 @@ IDB_OXYGEN_SURGE_TANK_VALVE                 BITMAP  "..\\Bitmaps\\csm_oxygen_sur
 IDB_GLYCOL_TO_RADIATORS_KNOB                BITMAP  "..\\Bitmaps\\csm_glycol_to_radiators_knob.bmp"
 IDB_ACCUM_ROTARY                            BITMAP  "..\\Bitmaps\\csm_accum_rotary.bmp"
 IDB_GLYCOL_ROTARY                           BITMAP  "..\\Bitmaps\\csm_glycol_rotary.bmp"
-IDB_TANK_VALVE                              BITMAP  "..\\Bitmaps\\csm_tank_valve.bmp"
 IDB_PRESS_RELIEF_VALVE                      BITMAP  "..\\Bitmaps\\csm_press_relief_valve.bmp"
 IDB_CABIN_REPRESS_VALVE                     BITMAP  "..\\Bitmaps\\csm_cabin_repress_valve.bmp"
 IDB_SELECTOR_INLET_ROTARY                   BITMAP  "..\\Bitmaps\\csm_selector_inlet_rotary.bmp"
@@ -207,6 +206,14 @@ IDB_CSM_RIGHT_RNDZ_WINDOW_WIDE              BITMAP  "..\\Bitmaps\\csm_right_rndz
 IDB_CSM_PUMP_HANDLE_ROTARY_OPEN             BITMAP  "..\\Bitmaps\\csm_pump_handle_rotary_open.bmp"
 IDB_CSM_HATCH_WINDOW_OPEN_WIDE              BITMAP  "..\\Bitmaps\\csm_hatch_window_open_wide.bmp"
 IDB_BORDER_200x300                          BITMAP  "..\\Bitmaps\\border200x300.bmp"
+IDB_BORDER_150x200                          BITMAP  "..\\Bitmaps\\border150x200.bmp"
+IDB_BORDER_240x240                          BITMAP  "..\\Bitmaps\\border240x240.bmp"
+IDB_CSM_PANEL_351_SWITCH                    BITMAP  "..\\Bitmaps\\csm_panel_351_switch.bmp"
+IDB_CSM_PANEL_600                           BITMAP  "..\\Bitmaps\\csm_panel_600.bmp"
+IDB_CSM_PANEL_600_SWITCH                    BITMAP  "..\\Bitmaps\\csm_panel_600_switch.bmp"
+IDB_CSM_PANEL_382_COVER                     BITMAP  "..\\Bitmaps\\csm_panel_382_cover.bmp"
+IDB_CSM_WASTE_DISPOSAL_ROTARY               BITMAP  "..\\Bitmaps\\csm_waste_disposal_rotary.bmp"
+
 
 
 #endif    // French (France) resources

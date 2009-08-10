@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.241  2008/12/07 18:35:21  movieman523
   *	Very basics of DSE telemetry recording: the play/record switch works but nothing else does!
   *	
@@ -814,7 +817,6 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_GLYCOL_TO_RADIATORS_KNOB]				= oapiCreateSurface (LOADBMP (IDB_GLYCOL_TO_RADIATORS_KNOB));
 	srf[SRF_ACCUM_ROTARY]							= oapiCreateSurface (LOADBMP (IDB_ACCUM_ROTARY));
 	srf[SRF_GLYCOL_ROTARY]							= oapiCreateSurface (LOADBMP (IDB_GLYCOL_ROTARY));
-	srf[SRF_TANK_VALVE]								= oapiCreateSurface (LOADBMP (IDB_TANK_VALVE));
 	srf[SRF_PRESS_RELIEF_VALVE]						= oapiCreateSurface (LOADBMP (IDB_PRESS_RELIEF_VALVE));
 	srf[SRF_CABIN_REPRESS_VALVE]					= oapiCreateSurface (LOADBMP (IDB_CABIN_REPRESS_VALVE));
 	srf[SRF_SELECTOR_INLET_ROTARY]					= oapiCreateSurface (LOADBMP (IDB_SELECTOR_INLET_ROTARY));							
@@ -831,7 +833,12 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_CSM_PUMP_HANDLE_ROTARY]					= oapiCreateSurface (LOADBMP (IDB_CSM_PUMP_HANDLE_ROTARY));
 	srf[SRF_CSM_VENT_VALVE_HANDLE]					= oapiCreateSurface (LOADBMP (IDB_CSM_VENT_VALVE_HANDLE));
 	srf[SRF_CSM_PUMP_HANDLE_ROTARY_OPEN]			= oapiCreateSurface (LOADBMP (IDB_CSM_PUMP_HANDLE_ROTARY_OPEN));
-
+	srf[SRF_CSM_PANEL_351_SWITCH]					= oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_351_SWITCH));
+	srf[SRF_CSM_PANEL_600]							= oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_600));
+	srf[SRF_CSM_PANEL_600_SWITCH]					= oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_600_SWITCH));
+	srf[SRF_CSM_PANEL_382_COVER]					= oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_382_COVER));
+	srf[SRF_CSM_WASTE_DISPOSAL_ROTARY]				= oapiCreateSurface (LOADBMP (IDB_CSM_WASTE_DISPOSAL_ROTARY));
+	
 	//
 	// Flashing borders.
 	//
@@ -876,6 +883,8 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_BORDER_200x80]			= oapiCreateSurface (LOADBMP (IDB_BORDER_200x80));
 	srf[SRF_BORDER_72x109]			= oapiCreateSurface (LOADBMP (IDB_BORDER_72x109));
 	srf[SRF_BORDER_200x300]			= oapiCreateSurface (LOADBMP (IDB_BORDER_200x300));
+	srf[SRF_BORDER_150x200]			= oapiCreateSurface (LOADBMP (IDB_BORDER_150x200));
+	srf[SRF_BORDER_240x240]			= oapiCreateSurface (LOADBMP (IDB_BORDER_240x240));
 
 	//
 	// Set color keys where appropriate.
@@ -957,7 +966,6 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_GLYCOL_TO_RADIATORS_KNOB],				g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_ACCUM_ROTARY],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_GLYCOL_ROTARY],						g_Param.col[4]);
-	oapiSetSurfaceColourKey (srf[SRF_TANK_VALVE],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_PRESS_RELIEF_VALVE],					g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CABIN_REPRESS_VALVE],					g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_SELECTOR_INLET_ROTARY],				g_Param.col[4]);							
@@ -974,6 +982,11 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PUMP_HANDLE_ROTARY],				g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_VENT_VALVE_HANDLE],				g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PUMP_HANDLE_ROTARY_OPEN],			g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_351_SWITCH],					g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_600],						g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_600_SWITCH],					g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_382_COVER],					g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_WASTE_DISPOSAL_ROTARY],			g_Param.col[4]);
 	
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1019,6 +1032,8 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_200x80],	g_Param.col[4]);	
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_72x109],	g_Param.col[4]);	
 	oapiSetSurfaceColourKey	(srf[SRF_BORDER_200x300],	g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_150x200],	g_Param.col[4]);	
+	oapiSetSurfaceColourKey	(srf[SRF_BORDER_240x240],	g_Param.col[4]);	
 
 	SetSwitches(panel);
 }
@@ -1490,6 +1505,10 @@ bool Saturn::clbkLoadPanel (int id) {
 			oapiRegisterPanelArea (AID_CSM_PUMP_HANDLE_ROTARY,			_R(1275, 534, 1515,  774), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_CSM_VENT_VALVE_HANDLE,			_R(  64, 703,  328,  967), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 			oapiRegisterPanelArea (AID_CSM_HATCH_TOGGLE,				_R(1340, 790, 1540, 1090), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+
+			oapiRegisterPanelArea (AID_CSM_HATCH_600_LEFT,				_R(   0,  636,   149, 1350), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea (AID_CSM_HATCH_600_RIGHT,				_R(1530, 1047,  1679, 1349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+
 		}
 		SetCameraDefaultDirection(_V(0.0, 0.83867, 0.544639));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1520,11 +1539,15 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CSM_DEMAND_REG_ROTARY,			_R(1163, 1438, 1233, 1508), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);					
 		oapiRegisterPanelArea (AID_GLYCOL_ROTARY,					_R( 117,  978,  189, 1050), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACCUM_ROTARY,					_R( 669, 1025,  727, 1083), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_PANEL_352,						_R(  96, 2973,  383, 3191), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_PANEL_352,						_R(  91, 2973,  390, 3200), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CABIN_REPRESS_VALVE,				_R( 612, 3096,  660, 3144), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_WATER_GLYCOL_TANKS_ROTARIES,		_R(1001, 2965, 1085, 3182), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EMERGENCY_CABIN_PRESSURE_ROTARY,	_R( 773, 3130,  838, 3195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		
+		oapiRegisterPanelArea (AID_MAIN_REGULATOR_SWITCHES,			_R(1197, 3037, 1307, 3145), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+
+		oapiRegisterPanelArea (AID_CSM_PANEL_382,					_R( 112, 1198, 112+673, 1198+369), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+
+
 		SetCameraDefaultDirection(_V(-1.0, 0.0, 0.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
@@ -1548,11 +1571,11 @@ bool Saturn::clbkLoadPanel (int id) {
 		// Panel 300/301/302/303 //
 		///////////////////////////
 		
-		oapiRegisterPanelArea (AID_SUIT_FLOW_CONTROL_LEVER_300,		_R(1356,  146, 1443,  257), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SUIT_FLOW_CONTROL_LEVER_301,		_R( 998,  146, 1085,  257), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_SUIT_FLOW_CONTROL_LEVER_302,		_R( 998,  396, 1085,  507), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CSM_SEC_CABIN_TEMP_VALVE,		_R(1105,  775, 1128,  798), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_FOOD_PREPARATION_WATER,			_R(1164, 1044, 1419, 1162), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,			PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUIT_FLOW_CONTROL_LEVER_300,		_R(1356,  146, 1443,  257), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUIT_FLOW_CONTROL_LEVER_301,		_R( 998,  146, 1085,  257), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUIT_FLOW_CONTROL_LEVER_302,		_R( 998,  396, 1085,  507), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_SEC_CABIN_TEMP_VALVE,		_R(1105,  775, 1128,  798), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_FOOD_PREPARATION_WATER,			_R(1164, 1044, 1419, 1162), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -1617,6 +1640,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_WASTE_MGMT_OVBD_DUMP,			_R(1521, 1483, 1637, 1599), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_WASTE_MGMT_BATT_VENT,			_R(1920, 1470, 2036, 1586), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_WASTE_MGMT_STOAGE_VENT,			_R(1920, 1304, 2036, 1420), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_WASTE_DISPOSAL,			    _R( 765,  738, 765+298, 738+270), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -2783,12 +2807,12 @@ void Saturn::SetSwitches(int panel) {
 	InstrumentLightingSCIEquipHatchCircuitBraker.Init(247,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], InstrumentLightingCircuitBrakersRow);
 
 	ECSCircuitBrakersRow.Init(AID_ECSCIRCUITBRAKERS, MainPanel);
-	ECSPOTH2OHTRMnACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
-	ECSPOTH2OHTRMnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
+	ECSPOTH2OHTRMnACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow, MainBusA, 5.0);
+	ECSPOTH2OHTRMnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow, MainBusB, 5.0);
 	ECSH2OAccumMnACircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
 	ECSH2OAccumMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
-	ECSTransducerWastePOTH2OMnACircuitBraker.Init(262,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
-	ECSTransducerWastePOTH2OMnBCircuitBraker.Init(300,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
+	ECSTransducerWastePOTH2OMnACircuitBraker.Init(262,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow, MainBusA, 5.0);
+	ECSTransducerWastePOTH2OMnBCircuitBraker.Init(300,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow, MainBusB, 5.0);
 	ECSTransducerPressGroup1MnACircuitBraker.Init(338,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
 	ECSTransducerPressGroup1MnBCircuitBraker.Init(376,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
 	ECSTransducerPressGroup2MnACircuitBraker.Init(432,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
@@ -3062,6 +3086,9 @@ void Saturn::SetSwitches(int panel) {
 	WasteMGMTStoageVentRotaryRow.Init(AID_WASTE_MGMT_STOAGE_VENT, MainPanel);
 	WasteMGMTStoageVentRotary.Init( 0, 0, 116, 116, srf[SRF_CSM_WASTE_MGMT_ROTARY], srf[SRF_BORDER_116x116], WasteMGMTStoageVentRotaryRow);
 	
+	WasteDisposalSwitchRow.Init(AID_CSM_WASTE_DISPOSAL, MainPanel);
+	WasteDisposalSwitch.Init( 0, 0, 298, 270, srf[SRF_CSM_WASTE_DISPOSAL_ROTARY], NULL, WasteDisposalSwitchRow);
+
 	//
 	// Panel 275
 	//
@@ -3499,13 +3526,13 @@ void Saturn::SetSwitches(int panel) {
 	///////////////
 	
 	WaterControlPanelRow.Init(AID_PANEL_352, MainPanel);
-	PressureReliefRotary.Init    (121,   0, 57, 57, srf[SRF_PRESS_RELIEF_VALVE], srf[SRF_BORDER_58x58], WaterControlPanelRow);
-	WasteTankInletRotary.Init    (  0, 171, 47, 47, srf[SRF_TANK_VALVE], srf[SRF_BORDER_47x47], WaterControlPanelRow);
-	PotableTankInletRotary.Init  (119, 171, 47, 47, srf[SRF_TANK_VALVE], srf[SRF_BORDER_47x47], WaterControlPanelRow);
-	WasteTankServicingRotary.Init(239, 170, 47, 47, srf[SRF_TANK_VALVE], srf[SRF_BORDER_47x47], WaterControlPanelRow);
+	PressureReliefRotary.Init    (126,   0, 57, 57, srf[SRF_PRESS_RELIEF_VALVE], srf[SRF_BORDER_58x58], WaterControlPanelRow);
+	WasteTankInletRotary.Init    (  0, 166, 57, 57, srf[SRF_PRESS_RELIEF_VALVE], srf[SRF_BORDER_58x58], WaterControlPanelRow);
+	PotableTankInletRotary.Init  (119, 166, 57, 57, srf[SRF_PRESS_RELIEF_VALVE], srf[SRF_BORDER_58x58], WaterControlPanelRow);
+	WasteTankServicingRotary.Init(239, 165, 57, 57, srf[SRF_PRESS_RELIEF_VALVE], srf[SRF_BORDER_58x58], WaterControlPanelRow);
 
 	///////////////
-	// Panel 251 //
+	// Panel 351 //
 	///////////////
 	
 	CabinRepressValveRotaryRow.Init(AID_CABIN_REPRESS_VALVE, MainPanel);
@@ -3518,25 +3545,52 @@ void Saturn::SetSwitches(int panel) {
 	EmergencyCabinPressureRotaryRow.Init(AID_EMERGENCY_CABIN_PRESSURE_ROTARY, MainPanel);
 	EmergencyCabinPressureRotary.Init(0, 0, 65, 65, srf[SRF_EMERGENCY_PRESS_ROTARY], srf[SRF_BORDER_65x65], EmergencyCabinPressureRotaryRow);
 
+	O2MainRegulatorSwitchesRow.Init(AID_MAIN_REGULATOR_SWITCHES, MainPanel);
+	O2MainRegulatorASwitch.Init(0,  0, 110, 29, srf[SRF_CSM_PANEL_351_SWITCH], NULL, O2MainRegulatorSwitchesRow);
+	O2MainRegulatorBSwitch.Init(0, 79, 110, 29, srf[SRF_CSM_PANEL_351_SWITCH], NULL, O2MainRegulatorSwitchesRow);
+	O2MainRegulatorBSwitch.SetOffset(220, 0);
+
+	///////////////////////////
+	// Panel 382             //
+	///////////////////////////
+
+	Panel382Row.Init(AID_CSM_PANEL_382, MainPanel);
+	EvapWaterControlPrimaryRotary.Init         (149, 229, 48, 48, srf[SRF_CABIN_REPRESS_VALVE], srf[SRF_BORDER_48x48], Panel382Row);
+	EvapWaterControlSecondaryRotary.Init       (149,  94, 48, 48, srf[SRF_CABIN_REPRESS_VALVE], srf[SRF_BORDER_48x48], Panel382Row);
+	WaterAccumulator1Rotary.Init               ( 23, 124, 48, 48, srf[SRF_CABIN_REPRESS_VALVE], srf[SRF_BORDER_48x48], Panel382Row);
+	WaterAccumulator2Rotary.Init               ( 23, 220, 48, 48, srf[SRF_CABIN_REPRESS_VALVE], srf[SRF_BORDER_48x48], Panel382Row);
+	PrimaryGlycolEvapInletTempRotary.Init      (349, 237, 31, 31, srf[SRF_GLYCOL_TO_RADIATORS_KNOB], srf[SRF_BORDER_31x31], Panel382Row);
+	SuitFlowReliefRotary.Init                  (461, 228, 31, 31, srf[SRF_GLYCOL_TO_RADIATORS_KNOB], srf[SRF_BORDER_31x31], Panel382Row);
+	SuitHeatExchangerPrimaryGlycolRotary.Init  (579, 242, 31, 31, srf[SRF_GLYCOL_TO_RADIATORS_KNOB], srf[SRF_BORDER_31x31], Panel382Row);
+	SuitHeatExchangerSecondaryGlycolRotary.Init(260, 136, 31, 31, srf[SRF_GLYCOL_TO_RADIATORS_KNOB], srf[SRF_BORDER_31x31], Panel382Row);
+
 	//
 	// SATPANEL_HATCH_WINDOW
 	//
 
 	HatchGearBoxSelectorRow.Init(AID_CSM_GEAR_BOX_ROTARY, MainPanel);
-	HatchGearBoxSelector.Init(0, 0, 240, 240, srf[SRF_CSM_GEAR_BOX_ROTARY], NULL, HatchGearBoxSelectorRow);
+	HatchGearBoxSelector.Init(0, 0, 240, 240, srf[SRF_CSM_GEAR_BOX_ROTARY], srf[SRF_BORDER_240x240], HatchGearBoxSelectorRow);
 
 	HatchActuatorHandleSelectorRow.Init(AID_CSM_PUMP_HANDLE_ROTARY, MainPanel);
-	HatchActuatorHandleSelector.Init(0, 0, 240, 240, srf[SRF_CSM_PUMP_HANDLE_ROTARY], NULL, HatchActuatorHandleSelectorRow);
+	HatchActuatorHandleSelector.Init(0, 0, 240, 240, srf[SRF_CSM_PUMP_HANDLE_ROTARY], srf[SRF_BORDER_240x240], HatchActuatorHandleSelectorRow);
 
 	HatchVentValveRotaryRow.Init(AID_CSM_VENT_VALVE_HANDLE, MainPanel);
 	HatchVentValveRotary.Init(0, 0, 264, 264, srf[SRF_CSM_VENT_VALVE_HANDLE], NULL, HatchVentValveRotaryRow);
 
 	HatchActuatorHandleSelectorOpenRow.Init(AID_CSM_PUMP_HANDLE_ROTARY_OPEN, MainPanel);
-	HatchActuatorHandleSelectorOpen.Init(0, 0, 150, 200, srf[SRF_CSM_PUMP_HANDLE_ROTARY_OPEN], NULL, HatchActuatorHandleSelectorOpenRow);
+	HatchActuatorHandleSelectorOpen.Init(0, 0, 150, 200, srf[SRF_CSM_PUMP_HANDLE_ROTARY_OPEN], srf[SRF_BORDER_150x200], HatchActuatorHandleSelectorOpenRow);
 
 	HatchToggleRow.Init(AID_CSM_HATCH_TOGGLE, MainPanel);
 	HatchToggle.Init( 0, 0, 200, 300, NULL, srf[SRF_BORDER_200x300], HatchToggleRow); 
 	HatchToggle.SetCallback(new PanelSwitchCallback<SaturnSideHatch>(&SideHatch, &SaturnSideHatch::SwitchToggled));
+
+	HatchPanel600LeftRow.Init(AID_CSM_HATCH_600_LEFT, MainPanel, &GaugePower);
+	HatchEmergencyO2ValveSwitch.Init(26, 34, 62, 129, srf[SRF_CSM_PANEL_600_SWITCH], NULL, HatchPanel600LeftRow, 186, 0);
+	HatchOxygenRepressPressMeter.Init(g_Param.pen[0], g_Param.pen[0], HatchPanel600LeftRow, this);
+	HatchOxygenRepressPressMeter.FrameSurface = srf[SRF_CSM_PANEL_600];
+
+	HatchPanel600RightRow.Init(AID_CSM_HATCH_600_RIGHT, MainPanel);
+	HatchRepressO2ValveSwitch.Init(61, 34, 62, 129, srf[SRF_CSM_PANEL_600_SWITCH], NULL, HatchPanel600RightRow, 186, 0);
 }
 
 void SetupgParam(HINSTANCE hModule) {
@@ -3554,7 +3608,7 @@ void SetupgParam(HINSTANCE hModule) {
 	g_Param.brush[1] = CreateSolidBrush (RGB(255,0,0));    // red
 	g_Param.brush[2] = CreateSolidBrush (RGB(154,154,154));  // Grey
 	g_Param.brush[3] = CreateSolidBrush (RGB(3,3,3));  // Black
-	g_Param.pen[0] = CreatePen (PS_SOLID, 1, RGB(224, 224, 224));
+	g_Param.pen[0] = CreatePen (PS_SOLID, 3, RGB(224, 224, 224));
 	g_Param.pen[1] = CreatePen (PS_SOLID, 4, RGB(  0,   0,   0));
 	g_Param.pen[2] = CreatePen (PS_SOLID, 1, RGB( 77,  77,  77));
 	g_Param.pen[3] = CreatePen (PS_SOLID, 3, RGB( 77,  77,  77));
@@ -3734,6 +3788,47 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
+	case AID_CSM_HATCH_600_LEFT:
+		if (mx <= 200 && my >= 480 && event == PANEL_MOUSE_LBDOWN) { 
+			if (hatchPanel600EnabledLeft == 0) {
+				hatchPanel600EnabledLeft = 1;
+				hatchPanel600EnabledRight = 1;
+			} else {
+				hatchPanel600EnabledLeft = -1;
+				hatchPanel600EnabledRight = -1;
+			}
+			SwitchClick();
+			return true;
+		}
+		return false;
+
+	case AID_CSM_HATCH_600_RIGHT:
+		if (mx >= 50 && my >= 200 && event == PANEL_MOUSE_LBDOWN) { 
+			if (hatchPanel600EnabledRight == 0) {
+				hatchPanel600EnabledLeft = 1;
+				hatchPanel600EnabledRight = 1;
+			} else {
+				hatchPanel600EnabledLeft = -1;
+				hatchPanel600EnabledRight = -1;
+			}
+			SwitchClick();
+			return true;
+		}
+		return false;
+
+	case AID_CSM_PANEL_382:
+		if (event == PANEL_MOUSE_LBDOWN) { 
+			if (panel382Enabled == 0) {
+				panel382Enabled = 1;
+				SwitchClick();
+			} else if (my <= 80) { 
+				panel382Enabled = 0; 
+				SwitchClick();
+			}
+			return true;
+		}
+		return false;
+
 	case AID_SWITCHTO_TELESCOPE1:
 	case AID_SWITCHTO_TELESCOPE2:
 		if (event == PANEL_MOUSE_LBDOWN) { 
@@ -3858,7 +3953,7 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
 	} else if (s == &GlycolToRadiatorsLever) {
 		if (GlycolToRadiatorsLever.IsDown()) {
-			// Radiators are bypassed
+			// Prim. radiators are bypassed
 			PrimEcsRadiatorExchanger1->SetBypassed(true);
 			PrimEcsRadiatorExchanger2->SetBypassed(true);
 		} else {
@@ -3895,96 +3990,10 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 
 	} else if (s == &EcsRadiatorsHeaterSecSwitch) {
 		int *pump = (int*) Panelsdk.GetPointerByString("ELECTRIC:SECECSRADIATORSHEATER:PUMP");
-
-		// The heat exchangers should be controlled by the GLY TO RAD SEC valve on panel 377,
-		// until we have that panel we switch them together with the heater
-		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECECSRADIATOREXCHANGER1:PUMP");
-		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECECSRADIATOREXCHANGER2:PUMP");
-
 		if (EcsRadiatorsHeaterSecSwitch.IsDown()) {
 			*pump = SP_PUMP_OFF;
-
-			*pump1 = SP_PUMP_OFF;
-			*pump2 = SP_PUMP_OFF;
 		} else {
 			*pump = SP_PUMP_AUTO;
-
-			*pump1 = SP_PUMP_ON;
-			*pump2 = SP_PUMP_ON;
-		}
-
-	} else if (s == &SuitCircuitH2oAccumAutoSwitch || s == &SuitCircuitH2oAccumOnSwitch) {
-		if (SuitCircuitH2oAccumAutoSwitch.IsCenter() && SuitCircuitH2oAccumOnSwitch.IsCenter()) {
-			SuitCompressor1->h_pumpH2o = SP_PUMP_OFF;
-			SuitCompressor2->h_pumpH2o = SP_PUMP_OFF;
-		} else {
-			SuitCompressor1->h_pumpH2o = SP_PUMP_ON;
-			SuitCompressor2->h_pumpH2o = SP_PUMP_ON;
-		}
-
-	} else if (s == &SuitCircuitHeatExchSwitch) {
-		int *pump1 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITHEATEXCHANGER:PUMP");
-		int *pump2 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITCIRCUITHEATEXCHANGER:PUMP");
-		int *pump3 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECSUITHEATEXCHANGER:PUMP");
-		int *pump4 = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECSUITCIRCUITHEATEXCHANGER:PUMP");
-
-		int *pump5 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SUITHEATER:PUMP");
-		int *pump6 = (int*) Panelsdk.GetPointerByString("ELECTRIC:SUITCIRCUITHEATER:PUMP");
-
-		if (SuitCircuitHeatExchSwitch.IsDown()) {
-			*pump1 = SP_PUMP_OFF;
-			*pump2 = SP_PUMP_OFF;
-			*pump3 = SP_PUMP_OFF;
-			*pump4 = SP_PUMP_OFF;
-
-			*pump5 = SP_PUMP_OFF;
-			*pump6 = SP_PUMP_OFF;
-
-		} else if (SuitCircuitHeatExchSwitch.IsUp()) {
-			*pump1 = SP_PUMP_AUTO;
-			*pump2 = SP_PUMP_AUTO;
-			*pump3 = SP_PUMP_AUTO;
-			*pump4 = SP_PUMP_AUTO;
-
-			*pump5 = SP_PUMP_AUTO;
-			*pump6 = SP_PUMP_AUTO;
-		}
-
-	} else if (s == &SecCoolantLoopEvapSwitch) {
-		int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPORATOR:PUMP");
-
-		if (SecCoolantLoopEvapSwitch.IsUp()) {
-			*pump = SP_PUMP_AUTO;
-		} else if (SecCoolantLoopEvapSwitch.IsCenter()) {
-			*pump = SP_PUMP_OFF;
-		} else {
-			*pump = SP_PUMP_ON;
-			*((double*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPORATOR:THROTTLE")) = 0;
-		}
-
-	} else if (s == &GlycolEvapTempInSwitch) {
-		int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLEVAPINLETTEMPVALVE:PUMP");
-
-		if (GlycolEvapTempInSwitch.IsUp())
-			*pump = SP_PUMP_AUTO;
-		else
-			*pump = SP_PUMP_ON;
-
-	} else if (s == &GlycolEvapSteamPressAutoManSwitch || s == &GlycolEvapH2oFlowSwitch) {
-		int *pump = (int*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:PUMP");
-
-		if (GlycolEvapH2oFlowSwitch.IsCenter()) {
-			*pump = SP_PUMP_OFF;
-
-		} else if (GlycolEvapH2oFlowSwitch.IsDown()) {
-			*pump = SP_PUMP_ON;
-			*((double*) Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR:THROTTLE")) = 1;
-
-		} else {
-			if (GlycolEvapSteamPressAutoManSwitch.IsUp())
-				*pump = SP_PUMP_AUTO;
-			else
-				*pump = SP_PUMP_ON;
 		}
 
 	} else if (s == &GlycolEvapSteamPressIncrDecrSwitch) {
@@ -3995,9 +4004,6 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 			*pump = SP_VALVE_OPEN;
 		else
 			*pump = SP_VALVE_NONE;
-
-	} else if (s == &CabinTempAutoManSwitch) {
-		CabinTempAutoSwitchToggled();
 
 	} else if (s == &GDCAlignButton) {
 		if (s->GetState() == 1)
@@ -4128,15 +4134,19 @@ void Saturn::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 			BatteryCharger.Charge(3);
 		else
 			BatteryCharger.Charge(0);
+	
 	} else if (s == &EMSFunctionSwitch) {
 		ems.SwitchChanged();
-	}
-}
 
-void Saturn::PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s) {
-
-	if (s == &CabinTempAutoControlSwitch) {
-		CabinTempAutoSwitchToggled();
+	} else if (s == &GlycolToRadiatorsRotary) {
+		if (GlycolToRadiatorsRotary.GetState() == 0) {
+			// Sec. radiators are bypassed, as there's no flow control we're setting pump directly
+			SecEcsRadiatorExchanger1->SetPumpOff();
+			SecEcsRadiatorExchanger2->SetPumpOff();
+		} else {
+			SecEcsRadiatorExchanger1->SetPumpOn();
+			SecEcsRadiatorExchanger2->SetPumpOn();
+		}
 	}
 }
 
@@ -4182,22 +4192,6 @@ void Saturn::FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start) {
 		*start = SP_FUELCELL_NOPURGE;
 	else if (s->IsDown())
 		*start = SP_FUELCELL_O2PURGE;
-}
-
-void Saturn::CabinTempAutoSwitchToggled() {
-
-	if (CabinTempAutoManSwitch.IsUp()) {
-		double targetTemp = 294.0 + CabinTempAutoControlSwitch.GetState() * 6.0 / 9.0;
-
-		PrimCabinHeatExchanger->tempMin = targetTemp;
-		PrimCabinHeatExchanger->tempMax = targetTemp + 0.5;
-
-		SecCabinHeatExchanger->tempMin = targetTemp;
-		SecCabinHeatExchanger->tempMax = targetTemp + 0.5;
-
-		CabinHeater->valueMin = targetTemp - 1.0;
-		CabinHeater->valueMax = targetTemp;		
-	}
 }
 
 void Saturn::PanelRefreshHatch() {
@@ -4397,6 +4391,44 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 
 	}
+
+	//
+	// Special handling for the side hatch
+	//
+
+	if (id == AID_CSM_HATCH_600_LEFT) {
+		if (hatchPanel600EnabledLeft == -1) {
+			hatchPanel600EnabledLeft = 0;
+			return true;
+		}
+		if (hatchPanel600EnabledLeft == 0) { 
+			return false;
+		}
+		oapiBlt(surf, srf[SRF_CSM_PANEL_600], 0, 0,   130, 0, 149, 302, SURF_PREDEF_CK);
+		oapiBlt(surf, srf[SRF_CSM_PANEL_600], 0, 304,   0, 0, 129, 410, SURF_PREDEF_CK);
+
+	} else 	if (id == AID_CSM_HATCH_600_RIGHT) {
+		if (hatchPanel600EnabledRight == -1) {
+			hatchPanel600EnabledRight = 0;
+			return true;
+		}
+		if (hatchPanel600EnabledRight == 0) { 
+			return false;
+		}
+		oapiBlt(surf, srf[SRF_CSM_PANEL_600], 0, 0, 280, 0, 149, 302, SURF_PREDEF_CK);
+	}
+
+	//
+	// Special handling panel 382 cover
+	//
+
+	if (id == AID_CSM_PANEL_382) {
+		if (panel382Enabled == 0) { 
+			oapiBlt(surf, srf[SRF_CSM_PANEL_382_COVER], 0, 0, 0, 0, 673, 369, SURF_PREDEF_CK);
+			return true;
+		}
+	}
+
 
 	//
 	// Process all the generic switches.
@@ -4906,6 +4938,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			dsky2.RenderKeys(surf, srf[SRF_DSKYKEY], 7, 218);
 		}
 		return true;
+
 	}
 	return false;
 }
@@ -4946,6 +4979,9 @@ void Saturn::InitSwitches() {
 
 	coasEnabled = false;
 	opticsDskyEnabled = false;
+	hatchPanel600EnabledLeft = 0;
+	hatchPanel600EnabledRight = 0;
+	panel382Enabled = 0;
 
 	MasterAlarmSwitch.Register(PSH, "MasterAlarmSwitch", TOGGLESWITCH_DOWN);
 
@@ -5524,18 +5560,34 @@ void Saturn::InitSwitches() {
 
 	PotH2oHtrSwitch.Register(PSH, "PotH2oHtrSwitch", THREEPOSSWITCH_CENTER);
 	SuitCircuitH2oAccumAutoSwitch.Register(PSH, "SuitCircuitH2oAccumAutoSwitch", THREEPOSSWITCH_CENTER);
+	SuitCircuitH2oAccumAutoSwitch.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+											  &SaturnGlycolCoolingController::H2oAccumSwitchesToggled));
 	SuitCircuitH2oAccumOnSwitch.Register(PSH, "SuitCircuitH2oAccumOnSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
+	SuitCircuitH2oAccumOnSwitch.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+											&SaturnGlycolCoolingController::H2oAccumSwitchesToggled));
 	SuitCircuitHeatExchSwitch.Register(PSH, "SuitCircuitHeatExchSwitch", THREEPOSSWITCH_CENTER);
 	SecCoolantLoopEvapSwitch.Register(PSH, "SecCoolantLoopEvapSwitch", THREEPOSSWITCH_CENTER);
+	SecCoolantLoopEvapSwitch.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+									     &SaturnGlycolCoolingController::SecEvapSwitchesToggled));
 	SecCoolantLoopPumpSwitch.Register(PSH, "SecCoolantLoopPumpSwitch", THREEPOSSWITCH_CENTER);
 	H2oQtyIndSwitch.Register(PSH, "H2oQtyIndSwitch", false);
 	GlycolEvapTempInSwitch.Register(PSH, "GlycolEvapTempInSwitch", false);
+	GlycolEvapTempInSwitch.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+		                               &SaturnGlycolCoolingController::GlycolEvapTempInSwitchToggled));
 	GlycolEvapSteamPressAutoManSwitch.Register(PSH, "GlycolEvapSteamPressAutoManSwitch", false);
+	GlycolEvapSteamPressAutoManSwitch.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+												  &SaturnGlycolCoolingController::PrimEvapSwitchesToggled));
 	GlycolEvapSteamPressIncrDecrSwitch.Register(PSH, "GlycolEvapSteamPressIncrDecrSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	GlycolEvapH2oFlowSwitch.Register(PSH, "GlycolEvapH2oFlowSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
+	GlycolEvapH2oFlowSwitch.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+									    &SaturnGlycolCoolingController::PrimEvapSwitchesToggled));
 	CabinTempAutoManSwitch.Register(PSH, "CabinTempAutoManSwitch", false);
+	CabinTempAutoManSwitch.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+									   &SaturnGlycolCoolingController::CabinTempSwitchToggled));
 
 	CabinTempAutoControlSwitch.Register(PSH, "CabinTempAutoControlSwitch", 5, 9);
+	CabinTempAutoControlSwitch.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+									       &SaturnGlycolCoolingController::CabinTempSwitchToggled));
 
 	SquelchAThumbwheel.Register(PSH, "SquelchAThumbwheel", 2, 9);
 	SquelchBThumbwheel.Register(PSH, "SquelchBThumbwheel", 2, 9);
@@ -5844,7 +5896,7 @@ void Saturn::InitSwitches() {
 
 	GlycolToRadiatorsRotary.AddPosition(0,  0);
 	GlycolToRadiatorsRotary.AddPosition(1, 90);
-	GlycolToRadiatorsRotary.Register(PSH, "GlycolToRadiatorsRotary", 1);
+	GlycolToRadiatorsRotary.Register(PSH, "GlycolToRadiatorsRotary", 0);
 
 	GlycolRotary.AddPosition(0, 90);
 	GlycolRotary.AddPosition(1,180);
@@ -5858,7 +5910,7 @@ void Saturn::InitSwitches() {
 	PressureReliefRotary.AddPosition(1,  90);
 	PressureReliefRotary.AddPosition(2, 180);
 	PressureReliefRotary.AddPosition(3, 270);
-	PressureReliefRotary.Register(PSH, "PressureReliefRotary", 2);
+	PressureReliefRotary.Register(PSH, "PressureReliefRotary", 1);
 
 	WasteTankInletRotary.AddPosition(0,  0);
 	WasteTankInletRotary.AddPosition(1, 90);
@@ -5866,7 +5918,7 @@ void Saturn::InitSwitches() {
 
 	PotableTankInletRotary.AddPosition(0,  0);
 	PotableTankInletRotary.AddPosition(1, 90);
-	PotableTankInletRotary.Register(PSH, "PotableTankInletRotary", 0);
+	PotableTankInletRotary.Register(PSH, "PotableTankInletRotary", 1);
 
 	WasteTankServicingRotary.AddPosition(0,  0);
 	WasteTankServicingRotary.AddPosition(1, 90);
@@ -5899,20 +5951,67 @@ void Saturn::InitSwitches() {
 	EmergencyCabinPressureRotary.AddPosition(3, 270);
 	EmergencyCabinPressureRotary.Register(PSH, "EmergencyCabinPressureRotary", 1);
 
+	O2MainRegulatorASwitch.Register(PSH, "O2MainRegulatorASwitch", 0);
+	O2MainRegulatorBSwitch.Register(PSH, "O2MainRegulatorBSwitch", 0);
+
+	EvapWaterControlPrimaryRotary.AddPosition(0,  0);
+	EvapWaterControlPrimaryRotary.AddPosition(1, 90);
+	EvapWaterControlPrimaryRotary.Register(PSH, "EvapWaterControlPrimaryRotary", 1);
+	EvapWaterControlPrimaryRotary.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+									          &SaturnGlycolCoolingController::PrimEvapSwitchesToggled));
+	EvapWaterControlSecondaryRotary.AddPosition(0,  0);
+	EvapWaterControlSecondaryRotary.AddPosition(1, 90);
+	EvapWaterControlSecondaryRotary.Register(PSH, "EvapWaterControlSecondaryRotary", 1);
+	EvapWaterControlSecondaryRotary.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+									            &SaturnGlycolCoolingController::SecEvapSwitchesToggled));
+
+	WaterAccumulator1Rotary.AddPosition(0, 200);
+	WaterAccumulator1Rotary.AddPosition(1, 240);
+	WaterAccumulator1Rotary.AddPosition(2, 290);
+	WaterAccumulator1Rotary.Register(PSH, "WaterAccumulator1Rotary", 2);
+	WaterAccumulator1Rotary.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+										&SaturnGlycolCoolingController::H2oAccumSwitchesToggled));
+
+	WaterAccumulator2Rotary.AddPosition(0, 200);
+	WaterAccumulator2Rotary.AddPosition(1, 240);
+	WaterAccumulator2Rotary.AddPosition(2, 290);
+	WaterAccumulator2Rotary.Register(PSH, "WaterAccumulator2Rotary", 2);
+	WaterAccumulator2Rotary.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+										&SaturnGlycolCoolingController::H2oAccumSwitchesToggled));
+
+	PrimaryGlycolEvapInletTempRotary.AddPosition(0,  90);
+	PrimaryGlycolEvapInletTempRotary.AddPosition(1, 120);
+	PrimaryGlycolEvapInletTempRotary.AddPosition(2, 150);
+	PrimaryGlycolEvapInletTempRotary.AddPosition(3, 180);
+	PrimaryGlycolEvapInletTempRotary.Register(PSH, "PrimaryGlycolEvapInletTempRotary", 0);
+	PrimaryGlycolEvapInletTempRotary.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+												 &SaturnGlycolCoolingController::PrimaryGlycolEvapInletTempRotaryToggled));
+
+	SuitFlowReliefRotary.AddPosition(0,  90);
+	SuitFlowReliefRotary.AddPosition(1, 270);
+	SuitFlowReliefRotary.Register(PSH, "SuitFlowReliefRotary", 1);
+
+	SuitHeatExchangerPrimaryGlycolRotary.AddPosition(0,   0);
+	SuitHeatExchangerPrimaryGlycolRotary.AddPosition(1, 180);
+	SuitHeatExchangerPrimaryGlycolRotary.Register(PSH, "SuitHeatExchangerPrimaryGlycolRotary", 0);
+
+	SuitHeatExchangerSecondaryGlycolRotary.AddPosition(0,  0);
+	SuitHeatExchangerSecondaryGlycolRotary.AddPosition(1, 90);
+	SuitHeatExchangerSecondaryGlycolRotary.Register(PSH, "SuitHeatExchangerSecondaryGlycolRotary", 0);
+
 	SecondaryCabinTempValve.AddPosition(0,  0);
 	SecondaryCabinTempValve.AddPosition(1,  60);
 	SecondaryCabinTempValve.AddPosition(2,  90);
 	SecondaryCabinTempValve.AddPosition(3, 150);
 	SecondaryCabinTempValve.AddPosition(4, 180);
 	SecondaryCabinTempValve.Register(PSH, "SecondaryCabinTempValve", 0);
+	SecondaryCabinTempValve.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
+										&SaturnGlycolCoolingController::CabinTempSwitchToggled));
 
-	FoodPreparationWaterHotLever.AddPosition(0,   0);
-	FoodPreparationWaterHotLever.AddPosition(1, 270);
-	FoodPreparationWaterHotLever.Register(PSH, "FoodPreparationWaterHotLever", 1);
-
-	FoodPreparationWaterColdLever.AddPosition(0,   0);
-	FoodPreparationWaterColdLever.AddPosition(1, 270);
-	FoodPreparationWaterColdLever.Register(PSH, "FoodPreparationWaterColdLever", 1);
+	FoodPreparationWaterHotLever.Register(PSH, "FoodPreparationWaterHotLever", 0, SPRINGLOADEDSWITCH_DOWN);
+	FoodPreparationWaterHotLever.SetCallback(new PanelSwitchCallback<SaturnWaterController>(&WaterController, &SaturnWaterController::FoodPreparationWaterSwitchToggled));
+	FoodPreparationWaterColdLever.Register(PSH, "FoodPreparationWaterColdLever", 0, SPRINGLOADEDSWITCH_DOWN);
+	FoodPreparationWaterColdLever.SetCallback(new PanelSwitchCallback<SaturnWaterController>(&WaterController, &SaturnWaterController::FoodPreparationWaterSwitchToggled));
 
 	LMTunnelVentValve.AddPosition(0, 300);
 	LMTunnelVentValve.AddPosition(1, 330);
@@ -5935,6 +6034,8 @@ void Saturn::InitSwitches() {
 	WasteMGMTStoageVentRotary.AddPosition(1, 180);
 	WasteMGMTStoageVentRotary.AddPosition(2, 270);
 	WasteMGMTStoageVentRotary.Register(PSH, "WasteMGMTStoageVentRotary", 1);
+
+	WasteDisposalSwitch.Register(PSH, "WasteDisposalSwitch", THREEPOSSWITCH_UP);
 		
 	OrbiterAttitudeToggle.SetActive(false);
 
@@ -6289,9 +6390,9 @@ void Saturn::InitSwitches() {
 	BatCtoBatBusBCircuitBraker.Register(PSH, "BatCtoBatBusBCircuitBraker", 0);
 	BatCCHRGCircuitBraker.Register(PSH, "BatCCHRGCircuitBraker", 1);
 
-	SuitCircuitFlow300Switch.Register(PSH, "SuitCircuitFlow300Switch", THREEPOSSWITCH_UP);
-	SuitCircuitFlow301Switch.Register(PSH, "SuitCircuitFlow301Switch", THREEPOSSWITCH_UP);
-	SuitCircuitFlow302Switch.Register(PSH, "SuitCircuitFlow302Switch", THREEPOSSWITCH_UP);
+	SuitCircuitFlow300Switch.Register(PSH, "SuitCircuitFlow300Switch", THREEPOSSWITCH_DOWN);
+	SuitCircuitFlow301Switch.Register(PSH, "SuitCircuitFlow301Switch", THREEPOSSWITCH_DOWN);
+	SuitCircuitFlow302Switch.Register(PSH, "SuitCircuitFlow302Switch", THREEPOSSWITCH_DOWN);
 
 	HatchGearBoxSelector.AddPosition(0, 60);
 	HatchGearBoxSelector.AddPosition(1, 90);
@@ -6319,4 +6420,8 @@ void Saturn::InitSwitches() {
 	HatchActuatorHandleSelectorOpen.Register(PSH, "HatchActuatorHandleSelectorOpen", 2);
 
 	HatchToggle.Register(PSH, "HatchToggle", false);
+
+	HatchEmergencyO2ValveSwitch.Register(PSH, "HatchEmergencyO2ValveSwitch", 0);
+	HatchRepressO2ValveSwitch.Register(PSH, "HatchRepressO2ValveSwitch", THREEPOSSWITCH_DOWN);
+	HatchOxygenRepressPressMeter.Register(PSH, "HatchOxygenRepressPressMeter", 0, 1200, 1, 900);
 }

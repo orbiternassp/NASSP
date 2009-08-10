@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 02:23:06  dseagrav
+  *	LEM EPS (Part 2)
+  *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -532,7 +536,6 @@ public:
 		      int xoffset = 0, int yoffset = 0);
 	void SetSize(int w, int h) { width = w; height = h; };
 	void SetPosition(int xp, int yp) { x = xp; y = yp; };
-	//virtual void SetState(bool s) { state = s; };
 	void SetOffset(int xo, int yo) {xOffset = xo; yOffset = yo; };
 	void SetSpringLoaded(int springloaded) { springLoaded = springloaded; };
 	bool IsSpringLoaded() { return (springLoaded != SPRINGLOADEDSWITCH_NONE); };
@@ -558,28 +561,6 @@ public:
 	virtual void SetState(int value); //Needed to properly process set states from toggle switches.
 	virtual void timestep(double missionTime);
 
-	//
-	// Operator overloads so we don't need to call GetState() and SetState() all
-	// the time.
-	//
-
-	//
-	// Note: now that we have integer states rather than bool states, we should stop
-	// using these operators and go back to calling GetState(). At some point I'm
-	// going to delete all of these and remove the code which uses them.
-	//
-
-/*  bool operator=(const bool b) { state = (int) b; return b; };
-	int operator=(const int b) { state = b; return state; };
-	unsigned operator=(const unsigned b) { state = b; return (unsigned)state; };
-	bool operator!() { return !GetState(); };
-	bool operator&&(const bool b) { return (GetState() && b); };
-	bool operator||(const bool b) { return (GetState() || b); };
-
-	operator bool() { return (GetState() != TOGGLESWITCH_DOWN); };
-	operator int() { return (int) GetState(); };
-	operator unsigned() { return (unsigned) GetState(); };
-*/
 protected:
 	virtual void InitSound(SoundLib *s);
 	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
@@ -639,11 +620,6 @@ public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 
-	//
-	// I don't understand why this isn't inherited properly from ToggleSwitch?
-	// Answer from the language reference:
-	// All overloaded operators except assignment (operator=) are inherited by derived classes.
-//	unsigned operator=(const unsigned b) { state = (b != 0); return (unsigned)state; };
 };
 
 ///
@@ -908,10 +884,6 @@ class PushSwitch: public ToggleSwitch {
 public:
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname = 0, bool delay = false, int delayT = 2);
 	bool CheckMouseClick(int event, int mx, int my);
-	//virtual bool SwitchTo(int newState);
-	//virtual void SetState(int value);
-
-//	int operator=(const int b) { state = b; return state; };
 
 protected:
 	virtual void InitSound(SoundLib *s);
@@ -934,8 +906,6 @@ public:
 	double Voltage();
 	double Current();
 	void DrawPower(double watts);
-
-//	int operator=(const int b) { state = b; return state; };
 
 	///
 	/// Maximum current which can be pulled through the circuit breaker before it automatically
@@ -1296,9 +1266,9 @@ public:
 	virtual void SaveState(FILEHANDLE scn);
 	virtual void LoadState(char *line);
 	int GetState();
-//	int operator=(const int b);
 	operator int();
 	virtual void SetState(int value);
+	void SoundEnabled(bool on) { soundEnabled = on; };
 
 protected:
 	int	x;
@@ -1312,6 +1282,7 @@ protected:
 	SURFHANDLE switchBorder;
 
 	Sound sclick;
+	bool soundEnabled;
 	RotationalSwitchBitmap bitmaps[RotationalSwitchBitmapCount];
 	SwitchRow *switchRow;
 
@@ -1528,7 +1499,6 @@ public:
 	virtual void PanelSwitchToggled(ToggleSwitch *s) = 0;
 	virtual void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) = 0;
 	virtual void PanelRotationalSwitchChanged(RotationalSwitch *s) = 0;
-	virtual void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s) = 0;
 };
 
 class PanelSwitches {

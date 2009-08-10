@@ -626,7 +626,6 @@
 #define IDB_BORDER_160x32									909
 #define AID_GLYCOL_ROTARY									910
 #define AID_ACCUM_ROTARY									911
-#define IDB_TANK_VALVE			    						912
 #define IDB_PRESS_RELIEF_VALVE								913
 #define IDB_BORDER_57x57									914
 #define IDB_BORDER_47x47									915
@@ -711,13 +710,25 @@
 #define AID_CSM_PUMP_HANDLE_ROTARY_OPEN                     994
 #define IDB_CSM_HATCH_WINDOW_OPEN_WIDE                      995
 #define IDB_BORDER_200x300                                  996
+#define IDB_BORDER_150x200                                  997
+#define IDB_BORDER_240x240                                  998
+#define IDB_CSM_PANEL_351_SWITCH                            999
+#define AID_MAIN_REGULATOR_SWITCHES                        1000
+#define IDB_CSM_PANEL_600                                  1001
+#define IDB_CSM_PANEL_600_SWITCH                           1002
+#define AID_CSM_HATCH_600_LEFT                             1003
+#define AID_CSM_HATCH_600_RIGHT                            1004
+#define AID_CSM_PANEL_382                                  1005
+#define IDB_CSM_PANEL_382_COVER                            1006
+#define IDB_CSM_WASTE_DISPOSAL_ROTARY                      1007
+#define AID_CSM_WASTE_DISPOSAL                             1008
 
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE                            997
+#define _APS_NEXT_RESOURCE_VALUE                            1009
 #define _APS_NEXT_COMMAND_VALUE                             40001
 #define _APS_NEXT_CONTROL_VALUE                             1000
 #define _APS_NEXT_SYMED_VALUE                               10001

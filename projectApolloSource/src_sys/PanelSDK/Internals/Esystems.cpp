@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.36  2009/01/25 23:05:12  tschachim
   *	Bugfix
   *	
@@ -1408,9 +1411,10 @@ void AtmRegen::refresh(double dt) {
 	if (h_pumpH2o) {
 		h_volume h2o_volume;
 		h2o_volume.Void();
-		h2o_volume.composition[SUBSTANCE_H2O].mass       = fanned.composition[SUBSTANCE_H2O].mass;
-		h2o_volume.composition[SUBSTANCE_H2O].vapor_mass = fanned.composition[SUBSTANCE_H2O].vapor_mass;
-		h2o_volume.composition[SUBSTANCE_H2O].Q			 = fanned.composition[SUBSTANCE_H2O].Q;
+		h2o_volume.composition[SUBSTANCE_H2O].mass = fanned.composition[SUBSTANCE_H2O].mass;		
+		h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
+		h2o_volume.GetQ(); 
+		// ... and pump it to waste valve	
 		H20waste->Flow(h2o_volume);
 
 		fanned.composition[SUBSTANCE_H2O].mass =

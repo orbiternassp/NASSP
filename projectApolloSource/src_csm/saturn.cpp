@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/04/11 19:32:51  tschachim
+  *	New DM weight by Graham
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -612,8 +615,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 
 #pragma warning ( pop ) // disable:4355
 
-{	o2fcinletFlowBuffer = 0;
-
+{	
 	//_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF|_CRTDBG_CHECK_ALWAYS_DF );
 	InitSaturnCalled = false;
 	autopilot = false;
@@ -1052,6 +1054,8 @@ void Saturn::initSaturn()
 	int i;
 
 	dyemarker = NULL;
+	wastewaterdump = NULL;
+	urinedump = NULL;
 
 	for (i = 0; i < 12; i++) {
 		cmrcsdump[i] = NULL;
@@ -1872,6 +1876,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	}
 	oapiWriteScenario_int (scn, "COASENABLED", coasEnabled);
 	oapiWriteScenario_int (scn, "OPTICSDSKYENABLED", opticsDskyEnabled);
+	oapiWriteScenario_int (scn, "HATCHPANEL600ENABLED", hatchPanel600EnabledLeft);
+	oapiWriteScenario_int (scn, "PANEL382ENABLED", panel382Enabled);
 	oapiWriteScenario_int (scn, "FOVFIXED", (FovFixed ? 1 : 0));
 	oapiWriteScenario_int (scn, "FOVEXTERNAL", FovExternal);
 	papiWriteScenario_double(scn, "FOVSAVE", FovSave);
@@ -2764,6 +2770,13 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 		else if (!strnicmp (line, "OPTICSDSKYENABLED", 17)) {
 			sscanf (line + 17, "%i", &opticsDskyEnabled);
+		}
+		else if (!strnicmp (line, "HATCHPANEL600ENABLED", 20)) {
+			sscanf (line + 20, "%i", &hatchPanel600EnabledLeft);
+			hatchPanel600EnabledRight = hatchPanel600EnabledLeft;
+		}
+		else if (!strnicmp (line, "PANEL382ENABLED", 15)) {
+			sscanf (line + 15, "%i", &panel382Enabled);
 		}
 		else if (!strnicmp (line, "FOVFIXED", 8)) {
 			sscanf (line + 8, "%i", &i);

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.34  2008/12/07 18:35:21  movieman523
   *	Very basics of DSE telemetry recording: the play/record switch works but nothing else does!
   *	
@@ -885,3 +888,9 @@ public:
 	bool SwitchTo(int newState, bool dontspring);
 };
 
+class SaturnOxygenRepressPressMeter : public SaturnRoundMeter {
+public:
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	SURFHANDLE FrameSurface;
+};

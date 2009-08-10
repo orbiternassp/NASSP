@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.286  2008/12/07 18:35:21  movieman523
   *	Very basics of DSE telemetry recording: the play/record switch works but nothing else does!
   *	
@@ -433,6 +436,7 @@ typedef struct {
 	double SuitTestFlowLBH;
 	double CabinRepressFlowLBH;
 	double EmergencyCabinRegulatorFlowLBH;
+	double O2RepressPressurePSI;
 } AtmosStatus;
 
 ///
@@ -735,7 +739,6 @@ public:
 		SRF_GLYCOL_TO_RADIATORS_KNOB,
 		SRF_ACCUM_ROTARY,
 		SRF_GLYCOL_ROTARY,
-		SRF_TANK_VALVE,
 		SRF_PRESS_RELIEF_VALVE,
 		SRF_CABIN_REPRESS_VALVE,
 		SRF_SELECTOR_INLET_ROTARY,
@@ -760,6 +763,13 @@ public:
 		SRF_CSM_VENT_VALVE_HANDLE,
 		SRF_CSM_PUMP_HANDLE_ROTARY_OPEN,
 		SRF_BORDER_200x300,
+		SRF_BORDER_150x200,
+		SRF_BORDER_240x240,
+		SRF_CSM_PANEL_351_SWITCH,
+		SRF_CSM_PANEL_600,
+		SRF_CSM_PANEL_600_SWITCH,
+		SRF_CSM_PANEL_382_COVER,
+		SRF_CSM_WASTE_DISPOSAL_ROTARY,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1149,7 +1159,6 @@ public:
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
-	void PanelThumbwheelSwitchChanged(ThumbwheelSwitch *s);
 	void PanelRefreshHatch();
 
 	// Called by Crawler/ML
@@ -1857,6 +1866,9 @@ protected:
 
 	int coasEnabled;
 	int opticsDskyEnabled;
+	int hatchPanel600EnabledLeft;
+	int hatchPanel600EnabledRight;
+	int panel382Enabled;
 
 	///
 	/// \brief Right-hand FDAI.
@@ -3283,6 +3295,9 @@ protected:
 
 	SwitchRow WasteMGMTStoageVentRotaryRow;
 	RotationalSwitch WasteMGMTStoageVentRotary;
+
+	SwitchRow WasteDisposalSwitchRow;
+	ThreePosSwitch WasteDisposalSwitch;
 	
 	///////////////////
 	// Panel 276/278 //
@@ -3317,8 +3332,8 @@ protected:
 	RotationalSwitch SecondaryCabinTempValve;
 
 	SwitchRow FoodPreparationWaterLeversRow;
-	RotationalSwitch FoodPreparationWaterHotLever;
-	RotationalSwitch FoodPreparationWaterColdLever;
+	ToggleSwitch FoodPreparationWaterHotLever;
+	ToggleSwitch FoodPreparationWaterColdLever;
 	
 	////////////////////////
 	// Panel 325/326 etc. //
@@ -3374,9 +3389,27 @@ protected:
 	SwitchRow GlycolRotaryRow;
 	RotationalSwitch GlycolRotary;
 
+	///////////////////////////
+	// Panel 382             //
+	///////////////////////////
+
+	SwitchRow Panel382Row;
+	RotationalSwitch EvapWaterControlPrimaryRotary;
+	RotationalSwitch EvapWaterControlSecondaryRotary;
+	RotationalSwitch WaterAccumulator1Rotary;
+	RotationalSwitch WaterAccumulator2Rotary;
+	RotationalSwitch PrimaryGlycolEvapInletTempRotary;
+	RotationalSwitch SuitFlowReliefRotary;
+	RotationalSwitch SuitHeatExchangerPrimaryGlycolRotary;
+	RotationalSwitch SuitHeatExchangerSecondaryGlycolRotary;
+
 	///////////////
 	// Panel 351 //
 	///////////////
+
+	SwitchRow O2MainRegulatorSwitchesRow;
+	CircuitBrakerSwitch O2MainRegulatorASwitch;
+	CircuitBrakerSwitch O2MainRegulatorBSwitch;
 
 	SwitchRow CabinRepressValveRotaryRow;
 	RotationalSwitch CabinRepressValveRotary;
@@ -3431,6 +3464,14 @@ protected:
 
 	SwitchRow HatchToggleRow;
 	PushSwitch HatchToggle;
+
+	SwitchRow HatchPanel600LeftRow;
+	ToggleSwitch HatchEmergencyO2ValveSwitch;
+	SaturnOxygenRepressPressMeter HatchOxygenRepressPressMeter;
+
+	SwitchRow HatchPanel600RightRow;
+	ThreePosSwitch HatchRepressO2ValveSwitch;
+
 
 
 	///
@@ -3757,7 +3798,11 @@ protected:
 
 	// ECS
 	h_HeatExchanger *PrimCabinHeatExchanger;
+	h_HeatExchanger *PrimSuitHeatExchanger;
+	h_HeatExchanger *PrimSuitCircuitHeatExchanger;
 	h_HeatExchanger *SecCabinHeatExchanger;
+	h_HeatExchanger *SecSuitHeatExchanger;
+	h_HeatExchanger *SecSuitCircuitHeatExchanger;
 	h_HeatExchanger *PrimEcsRadiatorExchanger1;
 	h_HeatExchanger *PrimEcsRadiatorExchanger2;
 	h_HeatExchanger *SecEcsRadiatorExchanger1;
@@ -3776,6 +3821,8 @@ protected:
 	O2SMSupply O2SMSupply;
 	CrewStatus CrewStatus;
 	SaturnSideHatch SideHatch;
+	SaturnWaterController WaterController;
+	SaturnGlycolCoolingController GlycolCoolingController;
 
 	// RHC/THC 
 	PowerMerge RHCNormalPower;
@@ -4067,7 +4114,6 @@ protected:
 	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void FuelCellPurgeSwitchToggled(ToggleSwitch *s, int *start);
 	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, int *start);
-	void CabinTempAutoSwitchToggled();
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	double SetPitchApo();
 	void SetStage(int s);
@@ -4323,6 +4369,8 @@ protected:
 	bool th_att_cm_commanded[12];
 
 	PSTREAM_HANDLE dyemarker;
+	PSTREAM_HANDLE wastewaterdump;
+	PSTREAM_HANDLE urinedump;
 	PSTREAM_HANDLE cmrcsdump[12];
 	PSTREAM_HANDLE prelaunchvent[3];
 	PSTREAM_HANDLE stagingvent[8];
@@ -4457,6 +4505,7 @@ protected:
 	double *pSuitTemp;
 	double *pSuitPressure;
 	double *pSuitReturnPressure;
+	double *pO2RepressPressure;
 	double *pCabinRegulatorFlow;
 	double *pO2DemandFlow;
 	double *pDirectO2Flow;
@@ -4534,8 +4583,8 @@ protected:
 	friend class MinImpulseHandcontrollerSwitch;
 	friend class CMRCSPropellantSource;
 	friend class DockingProbe;
-
-	double o2fcinletFlowBuffer;
+	friend class SaturnWaterController;
+	friend class SaturnGlycolCoolingController;
 };
 
 extern void BaseInit();

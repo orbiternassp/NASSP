@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.3  2008/04/11 11:49:35  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -552,29 +555,40 @@ O2SMSupply::O2SMSupply() {
 	surgeTankValve = NULL;
 	repressPackageValve = NULL;
 	closed = false;
+	o2SMSupplyVoid = false;
+	o2MainRegulatorVoid = false;
 }
 
 O2SMSupply::~O2SMSupply() {
 
 }
 
-void O2SMSupply::Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, 
-					  RotationalSwitch *smv, RotationalSwitch *stv, RotationalSwitch *rpv) {
+void O2SMSupply::Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, h_Tank *o2rpo, h_Pipe *o2rpop,
+					  RotationalSwitch *smv, RotationalSwitch *stv, RotationalSwitch *rpv,
+					  CircuitBrakerSwitch *mra, CircuitBrakerSwitch *mrb, PanelSwitchItem *eo2v,
+					  PanelSwitchItem *ro2v) {
 
 	o2SMSupply = o2sm;	
 	o2MainRegulator = o2mr;
 	o2SurgeTank = o2st;
 	o2RepressPackage = o2rp;
+	o2RepressPackageOutlet = o2rpo;
+	o2RepressPackageOutletPipe = o2rpop;
 	smSupplyValve = smv;	
 	surgeTankValve = stv;
 	repressPackageValve = rpv;
+	mainRegulatorASwitch = mra;
+	mainRegulatorBSwitch = mrb;
+	emergencyO2Valve = eo2v;
+	repressO2Valve = ro2v;
 }
 
 void O2SMSupply::SystemTimestep(double simdt) {
 
 	// Is something moving?
 	if (o2SMSupply->IN_valve.pz || o2SMSupply->OUT2_valve.pz || o2SMSupply->LEAK_valve.pz || 
-		o2SurgeTank->IN_valve.pz || o2RepressPackage->IN_valve.pz) return;
+		o2SurgeTank->IN_valve.pz || o2RepressPackage->IN_valve.pz || o2MainRegulator->IN_valve.pz ||
+		o2SurgeTank->OUT_valve.pz || o2RepressPackageOutlet->OUT_valve.pz) return;
 
 	bool allClosed = true;
 
@@ -588,7 +602,7 @@ void O2SMSupply::SystemTimestep(double simdt) {
 
 	// Surge tank
 	if (surgeTankValve->GetState() == 0) {
-		o2SMSupply->OUT2_valve.Close();	
+		o2SurgeTank->OUT_valve.Close();
 		o2SurgeTank->IN_valve.Close();
 	} else {
 		// SM supply open? 
@@ -597,7 +611,7 @@ void O2SMSupply::SystemTimestep(double simdt) {
 		} else {
 			o2SurgeTank->IN_valve.Close();
 		}
-		o2SMSupply->OUT2_valve.Open();
+		o2SurgeTank->OUT_valve.Open();
 		allClosed = false;
 	}
 
@@ -605,6 +619,7 @@ void O2SMSupply::SystemTimestep(double simdt) {
 	if (repressPackageValve->GetState() == 1) {
 		o2SMSupply->LEAK_valve.Close();	
 		o2RepressPackage->IN_valve.Close();
+		o2RepressPackage->OUT2_valve.Close();
 	} else {
 		// SM supply open? 
 		if (o2SMSupply->IN_valve.open) {
@@ -612,6 +627,7 @@ void O2SMSupply::SystemTimestep(double simdt) {
 		} else {
 			o2RepressPackage->IN_valve.Close();
 		}
+		o2RepressPackage->OUT2_valve.Open();
 		// On or Fill?
 		if (repressPackageValve->GetState() == 2) {
 			o2SMSupply->LEAK_valve.Open();
@@ -622,11 +638,55 @@ void O2SMSupply::SystemTimestep(double simdt) {
 	}
 
 	// Purge "pipe tanks" in case of no supply
+	bool mainregvoid = false;
 	if (allClosed) {
-		o2SMSupply->space.Void();
-		o2MainRegulator->space.Void();
+		if (!o2SMSupplyVoid) {
+			o2SMSupplyO2 = o2SMSupply->space.composition[SUBSTANCE_O2];
+			o2SMSupply->space.Void();
+			o2SMSupplyVoid = true;
+		}
+		mainregvoid = true;
+
 	} else {
+		if (o2SMSupplyVoid) {
+			*o2SMSupply += o2SMSupplyO2;
+			o2SMSupplyVoid = false;
+		}
 		o2SMSupply->BoilAllAndSetTemp(285);
+		// O2 main regulator
+		if (mainRegulatorASwitch->GetState() && mainRegulatorBSwitch->GetState()) {
+			o2MainRegulator->IN_valve.Close();
+			mainregvoid = true;
+
+		} else {
+			o2MainRegulator->IN_valve.Open();
+		}
+	}
+	if (mainregvoid) {
+		if (!o2MainRegulatorVoid) {
+			o2MainRegulatorO2 = o2MainRegulator->space.composition[SUBSTANCE_O2];
+			o2MainRegulator->space.Void();
+			o2MainRegulatorVoid = true;
+		}
+	} else {
+		if (o2MainRegulatorVoid) {
+			*o2MainRegulator += o2MainRegulatorO2;
+			o2MainRegulatorVoid = false;
+		}
+	}
+
+	// Repress package outlet
+	o2RepressPackageOutlet->BoilAllAndSetTemp(285);
+	if (repressO2Valve->GetState() == THREEPOSSWITCH_UP) {
+		o2RepressPackageOutlet->OUT_valve.Open();
+		o2RepressPackageOutletPipe->flowMax = 300. / LBH;	// cabin pressure 0 to 3 psi in about one minute
+	
+	} else if (emergencyO2Valve->GetState() == TOGGLESWITCH_UP)  {
+		o2RepressPackageOutlet->OUT_valve.Open();
+		o2RepressPackageOutletPipe->flowMax = 1. / LBH;		// real flow through the masks is unknown
+	
+	} else {
+		o2RepressPackageOutlet->OUT_valve.Close();
 	}
 }
 
@@ -637,17 +697,23 @@ void O2SMSupply::Close() {
 
 void O2SMSupply::LoadState(char *line) {
 
-	int i;
+	int i, j, k;
 
-	sscanf(line + 10, "%d", &i);
+	sscanf(line + 10, "%i %i %i %i %lf %lf %lf %i %lf %lf %lf", &i, &j, &k,
+		&o2SMSupplyO2.subst_type, &o2SMSupplyO2.mass , &o2SMSupplyO2.vapor_mass, &o2SMSupplyO2.Q,
+		&o2MainRegulatorO2.subst_type, &o2MainRegulatorO2.mass , &o2MainRegulatorO2.vapor_mass, &o2MainRegulatorO2.Q);
 	closed = (i != 0);
+	o2SMSupplyVoid = (j != 0);
+	o2MainRegulatorVoid = (k != 0);
 }
 
 void O2SMSupply::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i", (closed ? 1 : 0)); 
+	sprintf(buffer, "%i %i %i %i %8.4f %8.4f %8.4f %i %8.4f %8.4f %8.4f", (closed ? 1 : 0), (o2SMSupplyVoid ? 1 : 0), (o2MainRegulatorVoid ? 1 : 0),
+		o2SMSupplyO2.subst_type, o2SMSupplyO2.mass , o2SMSupplyO2.vapor_mass, o2SMSupplyO2.Q,
+		o2MainRegulatorO2.subst_type, o2MainRegulatorO2.mass , o2MainRegulatorO2.vapor_mass, o2MainRegulatorO2.Q); 
 	oapiWriteScenario_string(scn, "O2SMSUPPLY", buffer);
 }
 
@@ -868,4 +934,296 @@ void SaturnSideHatch::SaveState(FILEHANDLE scn) {
 }
 
 
+SaturnWaterController::SaturnWaterController() {
+}
 
+SaturnWaterController::~SaturnWaterController() {
+}
+
+void SaturnWaterController::Init(Saturn *s, h_Tank *pt, h_Tank *wt, h_Tank *pit, h_Tank *wit, 
+								 h_Pipe *wvp, h_Pipe *wivp) {
+	wasteWaterDumpLevel = 0;
+	urineDumpLevel = 0;
+
+	saturn = s;
+	potableTank = pt;
+	wasteTank = wt;
+	potableInletTank = pit;
+	wasteInletTank = wit;
+	wasteVentPipe = wvp;
+	wasteInletVentPipe = wivp;
+}
+
+void SaturnWaterController::SystemTimestep(double simdt) {
+
+	// Is something moving?
+	if (potableInletTank->OUT_valve.pz || potableInletTank->OUT2_valve.pz || 
+		wasteInletTank->OUT_valve.pz || potableTank->OUT_valve.pz ||
+		wasteTank->OUT_valve.pz || wasteInletTank->OUT2_valve.pz) return;
+
+	// Potable tank inlet
+	if (saturn->PotableTankInletRotary.GetState() == 0) {	// open
+		potableInletTank->OUT_valve.Open();
+		potableInletTank->OUT2_valve.Close();
+	} else {										// close
+		potableInletTank->OUT_valve.Close();
+		potableInletTank->OUT2_valve.Open();
+	}
+
+	// Waste tank inlet
+	if (saturn->WasteTankInletRotary.GetState() == 0) {	// auto
+		wasteInletTank->OUT_valve.Open();
+		if (potableTank->space.Press - wasteTank->space.Press < 4.5 / PSI) {
+			potableTank->OUT_valve.Close();
+		} else if (potableTank->space.Press - wasteTank->space.Press > 6.5 / PSI) {
+			potableTank->OUT_valve.Open();
+		}
+	} else {										// closed
+		wasteInletTank->OUT_valve.Close();			
+		potableTank->OUT_valve.Open();
+	}
+
+	// dump heaters
+	bool heaters = false;
+	if (saturn->WasteH2ODumpSwitch.IsUp() && saturn->ECSTransducerWastePOTH2OMnACircuitBraker.IsPowered()) {
+		heaters = true;
+		saturn->ECSTransducerWastePOTH2OMnACircuitBraker.DrawPower(5.7);
+	}
+	if (saturn->WasteH2ODumpSwitch.IsDown() && saturn->ECSTransducerWastePOTH2OMnBCircuitBraker.IsPowered()) {
+		heaters = true;
+		saturn->ECSTransducerWastePOTH2OMnBCircuitBraker.DrawPower(5.7);
+	}
+
+	// Pressure relief
+	if ((saturn->PressureReliefRotary.GetState() == 0 || saturn->PressureReliefRotary.GetState() == 3) && heaters) {	// dump a/b
+		wasteTank->OUT_valve.Open();
+		if (wasteInletTank->OUT_valve.open) {
+			wasteInletTank->OUT2_valve.Close();
+		} else {
+			wasteInletTank->OUT2_valve.Open();
+		}
+	} else if (saturn->PressureReliefRotary.GetState() == 1 && heaters) {	// "2"
+		if (wasteTank->space.Press < 40.0 / PSI) {
+			wasteTank->OUT_valve.Close();
+		} else if (wasteTank->space.Press > 48.0 / PSI) {
+			wasteTank->OUT_valve.Open();
+		}
+		if (wasteInletTank->OUT_valve.open) {
+			wasteInletTank->OUT2_valve.Close();
+		} else {
+			if (wasteInletTank->space.Press < 40.0 / PSI) {
+				wasteInletTank->OUT2_valve.Close();
+			} else if (wasteInletTank->space.Press > 48.0 / PSI) {
+				wasteInletTank->OUT2_valve.Open();
+			}
+		}		
+	} else {	// off or heaters off (assuming instant freezing)
+		wasteTank->OUT_valve.Close();
+		wasteInletTank->OUT2_valve.Close();
+	}
+
+	// water dump
+	wasteWaterDumpLevel = wasteVentPipe->flow / wasteVentPipe->flowMax;
+	if (wasteInletTank->OUT2_valve.open) {
+		wasteWaterDumpLevel = 0.5 * (wasteWaterDumpLevel + (wasteInletVentPipe->flow / wasteInletVentPipe->flowMax));
+	}
+
+	// Urine dump
+	urineDumpLevel = 0;
+	if (saturn->UrineDumpSwitch.IsUp() && saturn->ECSTransducerWastePOTH2OMnACircuitBraker.IsPowered()) {
+		saturn->ECSTransducerWastePOTH2OMnACircuitBraker.DrawPower(5.7);
+		if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3) {
+			urineDumpLevel = 1;
+		}
+	}
+	if (saturn->UrineDumpSwitch.IsDown() && saturn->ECSTransducerWastePOTH2OMnBCircuitBraker.IsPowered()) {
+		saturn->ECSTransducerWastePOTH2OMnBCircuitBraker.DrawPower(5.7);
+		if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3) {
+			urineDumpLevel = 1;
+		}
+	}
+
+	// potable h2o heaters
+	if (saturn->PotH2oHtrSwitch.IsUp() && saturn->ECSPOTH2OHTRMnACircuitBraker.IsPowered()) {
+		saturn->ECSPOTH2OHTRMnACircuitBraker.DrawPower(45.0);
+	}
+	if (saturn->PotH2oHtrSwitch.IsDown() && saturn->ECSPOTH2OHTRMnBCircuitBraker.IsPowered()) {
+		saturn->ECSPOTH2OHTRMnBCircuitBraker.DrawPower(45.0);
+	}
+	
+	//sprintf(oapiDebugString(), "wasteWaterDumpLevel %f", wasteWaterDumpLevel);
+}
+
+void SaturnWaterController::FoodPreparationWaterSwitchToggled(PanelSwitchItem *s) {
+
+	if (s->GetState() == TOGGLESWITCH_UP) {
+		potableTank->GetFlow(0.03);	// 1 ounce per cycle (systems handbook)
+	}
+}
+
+
+SaturnGlycolCoolingController::SaturnGlycolCoolingController() {
+}
+
+SaturnGlycolCoolingController::~SaturnGlycolCoolingController() {
+}
+
+void SaturnGlycolCoolingController::Init(Saturn *s) {
+
+	saturn = s;
+
+    suitHeater = (Boiler *) saturn->Panelsdk.GetPointerByString("ELECTRIC:SUITHEATER");
+    suitCircuitHeater = (Boiler *) saturn->Panelsdk.GetPointerByString("ELECTRIC:SUITCIRCUITHEATER");
+	evapInletMixer = (h_MixingPipe *) saturn->Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLEVAPINLETTEMPVALVE");
+	primEvap = (h_Evaporator *) saturn->Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATOR");
+	secEvap = (h_Evaporator *) saturn->Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPORATOR");
+}
+
+void SaturnGlycolCoolingController::SystemTimestep(double simdt) {
+
+	// Prim/sec suit heat exchanger
+	if (saturn->SuitCircuitHeatExchSwitch.IsDown()) {
+		saturn->SuitHeatExchangerPrimaryGlycolRotary.SetState(1);
+	
+	} else if (saturn->SuitCircuitHeatExchSwitch.IsUp()) {
+		saturn->SuitHeatExchangerPrimaryGlycolRotary.SetState(0);
+	}
+
+	if (saturn->SuitHeatExchangerPrimaryGlycolRotary.GetState() == 0) {
+		saturn->PrimSuitHeatExchanger->SetPumpAuto();
+		saturn->PrimSuitCircuitHeatExchanger->SetPumpAuto();
+	} else {
+		saturn->PrimSuitHeatExchanger->SetPumpOff();
+		saturn->PrimSuitCircuitHeatExchanger->SetPumpOff();
+	}
+
+	if (saturn->SuitHeatExchangerSecondaryGlycolRotary.GetState() == 0) {
+		saturn->SecSuitHeatExchanger->SetPumpAuto();
+		saturn->SecSuitCircuitHeatExchanger->SetPumpAuto();
+	} else {
+		saturn->SecSuitHeatExchanger->SetPumpOff();
+		saturn->SecSuitCircuitHeatExchanger->SetPumpOff();
+	}
+
+	// "Dummy" heaters are active, when either loop is active
+	if (saturn->SuitHeatExchangerPrimaryGlycolRotary.GetState() == 0 ||
+		saturn->SuitHeatExchangerSecondaryGlycolRotary.GetState() == 0) {
+		
+		suitHeater->SetPumpAuto();
+		suitCircuitHeater->SetPumpAuto();
+	} else {
+		suitHeater->SetPumpOff();
+		suitCircuitHeater->SetPumpOff();
+	}
+
+	// Prim. evaporator inlet temp
+	saturn->PrimaryGlycolEvapInletTempRotary.SoundEnabled(false);
+	if (evapInletMixer->ratio <= 0.16) {
+		saturn->PrimaryGlycolEvapInletTempRotary.SetState(0);
+	
+	} else if (evapInletMixer->ratio <= 0.5) {
+		saturn->PrimaryGlycolEvapInletTempRotary.SetState(1);
+	
+	} else if (evapInletMixer->ratio <= 0.83) {
+		saturn->PrimaryGlycolEvapInletTempRotary.SetState(2);
+	
+	} else {
+		saturn->PrimaryGlycolEvapInletTempRotary.SetState(3);	
+	} 
+	saturn->PrimaryGlycolEvapInletTempRotary.SoundEnabled(true);
+}
+
+void SaturnGlycolCoolingController::GlycolEvapTempInSwitchToggled(PanelSwitchItem *s) {
+
+	if (s->GetState() == TOGGLESWITCH_UP) {
+		evapInletMixer->SetPumpAuto();
+	} else {
+		evapInletMixer->SetPumpOn();
+	}
+}
+
+void SaturnGlycolCoolingController::PrimaryGlycolEvapInletTempRotaryToggled(PanelSwitchItem *s) {
+
+	switch (s->GetState()) {
+	case 0:
+		evapInletMixer->ratio = 0;
+		break;
+
+	case 1:
+		evapInletMixer->ratio = 0.33;
+		break;
+
+	case 2:
+		evapInletMixer->ratio = 0.66;
+		break;
+
+	case 3:
+		evapInletMixer->ratio = 1;
+		break;
+	}
+}
+
+void SaturnGlycolCoolingController::PrimEvapSwitchesToggled(PanelSwitchItem *s) {
+
+	if (saturn->GlycolEvapH2oFlowSwitch.IsCenter() || saturn->EvapWaterControlPrimaryRotary.GetState() == 0) {
+		primEvap->SetPumpOff(); 
+
+	} else if (saturn->GlycolEvapH2oFlowSwitch.IsDown()) {
+		primEvap->SetPumpOn();
+		primEvap->throttle = 1;
+
+	} else {
+		if (saturn->GlycolEvapSteamPressAutoManSwitch.IsUp())
+			primEvap->SetPumpAuto();
+		else
+			primEvap->SetPumpOn();
+	}
+}
+
+void SaturnGlycolCoolingController::SecEvapSwitchesToggled(PanelSwitchItem *s) {
+
+	if (saturn->SecCoolantLoopEvapSwitch.IsCenter() || saturn->EvapWaterControlSecondaryRotary.GetState() == 0) {
+		secEvap->SetPumpOff(); 
+	
+	} else if (saturn->SecCoolantLoopEvapSwitch.IsUp()) {
+		secEvap->SetPumpAuto(); 
+
+	} else {
+		secEvap->SetPumpOn(); 
+		secEvap->throttle = 0;
+	}
+}
+
+void SaturnGlycolCoolingController::H2oAccumSwitchesToggled(PanelSwitchItem *s) {
+
+	if (saturn->SuitCircuitH2oAccumAutoSwitch.IsCenter() && saturn->SuitCircuitH2oAccumOnSwitch.IsCenter()) {
+		saturn->SuitCompressor1->h_pumpH2o = SP_PUMP_OFF;
+		saturn->SuitCompressor2->h_pumpH2o = SP_PUMP_OFF;
+	} else if (((saturn->SuitCircuitH2oAccumAutoSwitch.IsUp() || saturn->SuitCircuitH2oAccumOnSwitch.IsUp()) && saturn->WaterAccumulator1Rotary.GetState() != 1) ||
+			   ((saturn->SuitCircuitH2oAccumAutoSwitch.IsDown() || saturn->SuitCircuitH2oAccumOnSwitch.IsDown()) && saturn->WaterAccumulator2Rotary.GetState() != 1)) {
+		saturn->SuitCompressor1->h_pumpH2o = SP_PUMP_ON;
+		saturn->SuitCompressor2->h_pumpH2o = SP_PUMP_ON;
+	} else {
+		saturn->SuitCompressor1->h_pumpH2o = SP_PUMP_OFF;
+		saturn->SuitCompressor2->h_pumpH2o = SP_PUMP_OFF;
+	}
+}
+
+void SaturnGlycolCoolingController::CabinTempSwitchToggled(PanelSwitchItem *s) {
+
+	double targetTemp = 294;
+	if (saturn->CabinTempAutoManSwitch.IsUp()) {
+		targetTemp = 294.0 + saturn->CabinTempAutoControlSwitch.GetState() * 6.0 / 9.0;
+	} else {
+		// Use the SecondaryCabinTempValve for now until there's a primary
+		targetTemp = 294.0 + (4.0 - saturn->SecondaryCabinTempValve.GetState()) * 6.0 / 4.0;
+	}
+	saturn->PrimCabinHeatExchanger->tempMin = targetTemp;
+	saturn->PrimCabinHeatExchanger->tempMax = targetTemp + 0.5;
+
+	saturn->SecCabinHeatExchanger->tempMin = targetTemp;
+	saturn->SecCabinHeatExchanger->tempMax = targetTemp + 0.5;
+
+	saturn->CabinHeater->valueMin = targetTemp - 1.0;
+	saturn->CabinHeater->valueMax = targetTemp;		
+}
