@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/01 19:48:33  jasonims
+  *	LM Optics Code Added, along with rudimentary Graphics for AOT.
+  *	Reticle uses GDI objects to allow realtime rotation.
+  *	
   *	Revision 1.2  2009/06/15 16:11:32  tschachim
   *	New CollisionSDK.
   *	
@@ -221,6 +225,10 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	
 	CDRs28VBus("CDR-28V-Bus",NULL),
 	LMPs28VBus("LMP-28V-Bus",NULL),
+	DES_CDRs28VBusA("DES-CDR-28V-BusA",NULL),
+	DES_CDRs28VBusB("DES-CDR-28V-BusB",NULL),
+	DES_LMPs28VBusA("DES-LMP-28V-BusA",NULL),
+	DES_LMPs28VBusB("DES-LMP-28V-BusB",NULL),
 	ACBusA("AC-Bus-A",NULL),
 	ACBusB("AC-Bus-B",NULL),
 	dsky(soundlib, agc, 015),
@@ -236,7 +244,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
 	imu(agc, Panelsdk)
-
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 
@@ -1146,11 +1153,29 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 			imu.LoadState(scn);
 		}
-		else if (!strnicmp (line, "ECA_1_START",sizeof("ECA_1_START"))) {
-			ECA_1.LoadState(scn,"ECA_1_END");
+		else if (!strnicmp (line, "ECA_1A_START",sizeof("ECA_1A_START"))) {
+			ECA_1a.LoadState(scn,"ECA_1A_END");
 		}
-		else if (!strnicmp (line, "ECA_2_START",sizeof("ECA_2_START"))) {
-			ECA_2.LoadState(scn,"ECA_2_END");
+		else if (!strnicmp (line, "ECA_2A_START",sizeof("ECA_2A_START"))) {
+			ECA_2a.LoadState(scn,"ECA_2A_END");
+		}
+		else if (!strnicmp (line, "ECA_1B_START",sizeof("ECA_1B_START"))) {
+			ECA_1b.LoadState(scn,"ECA_1B_END");
+		}
+		else if (!strnicmp (line, "ECA_2B_START",sizeof("ECA_2B_START"))) {
+			ECA_2b.LoadState(scn,"ECA_2B_END");
+		}
+		else if (!strnicmp (line, "ECA_3A_START",sizeof("ECA_3A_START"))) {
+			ECA_1a.LoadState(scn,"ECA_3A_END");
+		}
+		else if (!strnicmp (line, "ECA_4A_START",sizeof("ECA_4A_START"))) {
+			ECA_2a.LoadState(scn,"ECA_4A_END");
+		}
+		else if (!strnicmp (line, "ECA_3B_START",sizeof("ECA_3B_START"))) {
+			ECA_1b.LoadState(scn,"ECA_3B_END");
+		}
+		else if (!strnicmp (line, "ECA_4B_START",sizeof("ECA_4B_START"))) {
+			ECA_2b.LoadState(scn,"ECA_4B_END");
 		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);
@@ -1315,8 +1340,14 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	PSH.SaveState(scn);	
 
 	// Save ECAs
-	ECA_1.SaveState(scn,"ECA_1_START","ECA_1_END");
-	ECA_2.SaveState(scn,"ECA_2_START","ECA_2_END");
+	ECA_1a.SaveState(scn,"ECA_1A_START","ECA_1A_END");
+	ECA_1b.SaveState(scn,"ECA_1B_START","ECA_1B_END");
+	ECA_2a.SaveState(scn,"ECA_2A_START","ECA_2A_END");
+	ECA_2b.SaveState(scn,"ECA_2B_START","ECA_2B_END");
+	ECA_3a.SaveState(scn,"ECA_3A_START","ECA_3A_END");
+	ECA_3b.SaveState(scn,"ECA_3B_START","ECA_3B_END");
+	ECA_4a.SaveState(scn,"ECA_4A_START","ECA_4A_END");
+	ECA_4b.SaveState(scn,"ECA_4B_START","ECA_4B_END");
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");

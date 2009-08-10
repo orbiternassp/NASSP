@@ -697,6 +697,8 @@
 #define IDB_BORDER_200x80									975
 #define IDB_CIRCUITBRAKER_YELLOW							976
 #define IDB_BORDER_72x109									977
+#define AID_ASC_BATTERY_TALKBACKS							978
+#define AID_ASC_BATTERY_SWITCHES							979
 
 // Next default values for new objects
 //

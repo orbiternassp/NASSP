@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.12  2008/04/11 11:49:43  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -165,7 +168,7 @@ void LEMValveSwitch::CheckValve(int s)
 }
 
 void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
-							LEM_ECA *lem_eca, int src_no)
+							LEM_ECAch *lem_eca, int src_no)
 
 {
 	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
@@ -181,49 +184,25 @@ bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
 		switch(state){
 			case THREEPOSSWITCH_UP:
 				switch(srcno){
-					case 1: // HV 1
-						eca->input_a = 1;
-						if(eca->dc_source_a_tb != NULL){
- 							eca->dc_source_a_tb->SetState(1);
+					case 1: // HV
+						eca->input = 1;
+						if(eca->dc_source_tb != NULL){
+ 							eca->dc_source_tb->SetState(1);
 						}
 						break;
-					case 2: // LV 1
-						eca->input_a = 2;
-						if(eca->dc_source_a_tb != NULL){
- 							eca->dc_source_a_tb->SetState(2);
-						}
-						break;
-					case 3: // HV 2
-						eca->input_b = 1;
-						if(eca->dc_source_b_tb != NULL){
- 							eca->dc_source_b_tb->SetState(1);
-						}
-						break;
-					case 4: // LV 2
-						eca->input_b = 2;
-						if(eca->dc_source_b_tb != NULL){
- 							eca->dc_source_b_tb->SetState(2);
+					case 2: // LV
+						eca->input = 2;
+						if(eca->dc_source_tb != NULL){
+ 							eca->dc_source_tb->SetState(2);
 						}
 						break;
 				}
 				break;
 			case THREEPOSSWITCH_DOWN:
-				switch(srcno){
-					case 1: // HV 1
-					case 2: // LV 1
-						if(eca->dc_source_a_tb != NULL){
-							eca->dc_source_a_tb->SetState(0);
-						}
-						eca->input_a = 0;
-						break;
-					case 3: // HV 2
-					case 4: // LV 2
-						if(eca->dc_source_b_tb != NULL){
-							eca->dc_source_b_tb->SetState(0);
-						}
-						eca->input_b = 0;
-						break;
+				if(eca->dc_source_tb != NULL){
+					eca->dc_source_tb->SetState(0);
 				}
+				eca->input = 0;
 				break;
 		}
 
@@ -246,6 +225,66 @@ bool LEMBatterySwitch::SwitchTo(int newState)
 
 	return false;
 }
+
+// LEM Descent Dead Face Switch
+void LEMDeadFaceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s)
+{
+	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
+}
+
+bool LEMDeadFaceSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (LEMThreePosSwitch::CheckMouseClick(event, mx, my)) {
+		switch(state){
+			case THREEPOSSWITCH_UP:
+				// Connect descent stage
+				if(lem->stage < 2){
+					// Reconnect ECA outputs
+					lem->DES_LMPs28VBusA.WireTo(&lem->ECA_1a);
+					lem->DES_LMPs28VBusB.WireTo(&lem->ECA_1b);
+					lem->DES_CDRs28VBusA.WireTo(&lem->ECA_2a); 
+					lem->DES_CDRs28VBusB.WireTo(&lem->ECA_2b); 
+					// Reconnect EPS monitor stuff
+					lem->EPSMonitorSelectRotary.SetSource(1, lem->Battery1);
+					lem->EPSMonitorSelectRotary.SetSource(2, lem->Battery2);
+					lem->EPSMonitorSelectRotary.SetSource(3, lem->Battery3);
+					lem->EPSMonitorSelectRotary.SetSource(4, lem->Battery4);
+					lem->DSCBattFeedTB.SetState(1);
+				}
+				break;
+			case THREEPOSSWITCH_DOWN:
+				// Disconnect descent stage
+				lem->DES_LMPs28VBusA.Disconnect();
+				lem->DES_LMPs28VBusB.Disconnect();
+				lem->DES_CDRs28VBusA.Disconnect();
+				lem->DES_CDRs28VBusB.Disconnect();
+				lem->EPSMonitorSelectRotary.SetSource(1, NULL);
+				lem->EPSMonitorSelectRotary.SetSource(2, NULL);
+				lem->EPSMonitorSelectRotary.SetSource(3, NULL);
+				lem->EPSMonitorSelectRotary.SetSource(4, NULL);
+				lem->DSCBattFeedTB.SetState(0);
+				break;
+		}
+
+		return true;
+	}
+	
+	return false;
+}
+
+bool LEMDeadFaceSwitch::SwitchTo(int newState)
+
+{
+	sprintf(oapiDebugString(),"NewState %d",newState);
+	if (LEMThreePosSwitch::SwitchTo(newState)) {
+		// Stuff goes here later
+		return true;
+	}
+
+	return false;
+}
+
 
 // INVERTER SWITCH
 
