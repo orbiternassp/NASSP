@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/10 02:23:06  dseagrav
+  *	LEM EPS (Part 2)
+  *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
+  *	
   *	Revision 1.2  2009/08/01 19:48:33  jasonims
   *	LM Optics Code Added, along with rudimentary Graphics for AOT.
   *	Reticle uses GDI objects to allow realtime rotation.
@@ -998,7 +1002,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
 	EventTimerDisplay.Timestep(MissionTime, simdt);
 	eds.TimeStep();                                         // Do Work
-//	optics.TimeStep(simdt);									// Do Work FIXME RE-ENABLE LATER
+	optics.TimeStep(simdt);									// Do Work
 
 	// Debug tests would go here
 	
