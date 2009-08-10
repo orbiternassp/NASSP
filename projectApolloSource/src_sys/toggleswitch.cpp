@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.97  2008/05/24 17:27:22  tschachim
   *	Added switch borders.
   *	
@@ -952,12 +955,23 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 }
 
 double CircuitBrakerSwitch::Voltage()
-
 {
 	if ((state != 0) && SRC)
 		return SRC->Voltage();
 
 	return 0.0;
+}
+
+double CircuitBrakerSwitch::Current()
+{
+	if ((state != 0) && SRC && SRC->IsEnabled()) {
+		Volts = SRC->Voltage();
+		if (Volts > 0.0)
+			Amperes = (power_load / Volts);
+		else 
+			Amperes = 0.0; 
+	}
+	return Amperes;
 }
 
 void CircuitBrakerSwitch::InitSound(SoundLib *s) {
@@ -966,9 +980,13 @@ void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND);
 }
 
+// Note that this will not work properly if more than one source draws from a CB.
 void CircuitBrakerSwitch::DrawPower(double watts)
 
 {
+	// Default the power load to zero
+	power_load = 0; 
+
 	//
 	// Do nothing if the breaker is open.
 	//
@@ -986,8 +1004,7 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 		double volts = SRC->Voltage();
 		if (volts > 0.0) {
 			double amps = watts / volts;
-			if (amps > MaxAmps) {
-				// sprintf(oapiDebugString(),"CB: Break! Amps = %f MaxAmps = %f",amps,MaxAmps);
+			if (amps > MaxAmps) {				
 				state = 0;
 				SwitchToggled = true;
 
@@ -1000,6 +1017,8 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 				return;
 			}
 		}
+		
+		power_load = watts; // Make this available for reading draw across a CB from later (Used in the LM)
 		e_object::DrawPower(watts);
 	}
 }

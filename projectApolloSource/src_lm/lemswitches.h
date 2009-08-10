@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:14  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.6  2007/11/30 16:40:40  movieman523
   *	Revised LEM to use generic voltmeter and ammeter code. Note that the ED battery select switch needs to be implemented to fully support the voltmeter/ammeter now.
   *	
@@ -40,7 +43,7 @@
   **************************************************************************/
 
 class LEM;
-class LEM_ECA;
+class LEM_ECAch;
 class LEM_INV;
 
 class LEMThreePosSwitch : public ThreePosSwitch {
@@ -69,8 +72,7 @@ protected:
 class LEMBatterySwitch: public LEMThreePosSwitch {
 public:
 	LEMBatterySwitch() { eca = NULL; srcno=0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
-		LEM_ECA *lem_eca, int src_no);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, LEM_ECAch *lem_eca, int src_no);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 
@@ -78,8 +80,18 @@ protected:
 	void CheckValve(int s);
 
 	int srcno;
-	LEM_ECA *eca;
-//	IndicatorSwitch *Indicator;
+	LEM_ECAch *eca;
+};
+
+class LEMDeadFaceSwitch: public LEMThreePosSwitch {
+public:
+	LEMDeadFaceSwitch() { };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newState);
+
+protected:
+	void CheckValve(int s);
 };
 
 class LEMInverterSwitch: public LEMThreePosSwitch {

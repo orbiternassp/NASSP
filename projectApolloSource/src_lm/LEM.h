@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/01 23:06:33  jasonims
+  *	LM Optics Code Cleaned Up... Panel Code added for LM Optics... Knobs activated... Counter and Computer Controls still to come.
+  *	
   *	Revision 1.3  2009/08/01 19:48:33  jasonims
   *	LM Optics Code Added, along with rudimentary Graphics for AOT.
   *	Reticle uses GDI objects to allow realtime rotation.
@@ -125,26 +128,60 @@
 // Systems things
 
 // ELECTRICAL
-// Electrical Control Assembly
-class LEM_ECA : public e_object {
+// Electrical Control Assembly Subchannel
+class LEM_ECAch : public e_object {
 public:
-	LEM_ECA();							// Cons
-	void Init(LEM *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b); // Init
+	LEM_ECAch();								 // Cons
+	void Init(LEM *s,e_object *src); // Init
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
-	IndicatorSwitch *dc_source_a_tb;    // Pointer at TB #1
-	IndicatorSwitch *dc_source_b_tb;    // Pointer at TB #2
-	IndicatorSwitch *dc_source_c_tb;    // Pointer at TB #3 (LUNAR STAY battery for later model LM)
+	IndicatorSwitch *dc_source_tb;    // Pointer at TB
 	LEM *lem;					// Pointer at LEM
-	e_object *dc_source_hi_a;			// An ECA has four inputs - Two HV inputs, and two LV inputs.
-	e_object *dc_source_hi_b;
-	e_object *dc_source_lo_a;
-	e_object *dc_source_lo_b;
-	int input_a;                        // A-side input selector
-	int input_b;                        // B-side input selector
+	e_object *dc_source;		// Associated battery
+	int input;                  // Channel input selector
+};
+
+// Bus feed controller object
+class LEM_BusFeed : public e_object {
+public:
+	LEM_BusFeed();							// Cons
+	void Init(LEM *s,e_object *sra,e_object *srb); // Init
+	void UpdateFlow(double dt);
+	void DrawPower(double watts);
+
+	LEM *lem;					// Pointer at LEM
+	e_object *dc_source_a;		// This has two inputs.
+	e_object *dc_source_b;
+};
+
+// Voltage source item for cross-tie balancer
+class LEM_BCTSource : public e_object {
+public:
+	LEM_BCTSource();							// Cons
+	void SetVoltage(double v);
+};
+
+
+// Bus cross-tie balancer object
+class LEM_BusCrossTie : public e_object {
+public:
+	LEM_BusCrossTie();	// Cons
+	void LEM_BusCrossTie::Init(LEM *s,DCbus *sra,DCbus *srb,CircuitBrakerSwitch *cb1,CircuitBrakerSwitch *cb2,CircuitBrakerSwitch *cb3,CircuitBrakerSwitch *cb4);
+	void UpdateFlow(double dt);
+	void DrawPower(double watts);
+
+	LEM *lem;					// Pointer at LEM
+	DCbus *dc_bus_cdr;
+	DCbus *dc_bus_lmp;
+	LEM_BCTSource dc_output_cdr;
+	LEM_BCTSource dc_output_lmp;
+	CircuitBrakerSwitch *lmp_bus_cb,*lmp_bal_cb;
+	CircuitBrakerSwitch *cdr_bus_cb,*cdr_bal_cb;
+	double last_cdr_ld;
+	double last_lmp_ld;
 };
 
 // Inverter
@@ -660,9 +697,12 @@ protected:
 	CircuitBrakerSwitch LGC_DSKY_CB;
 
 	SwitchRow Panel11CB5SwitchRow;
-	// Battery feed tie breakers (ECA output breakers)
+	// Bus feed tie breakers
 	CircuitBrakerSwitch CDRBatteryFeedTieCB1;
 	CircuitBrakerSwitch CDRBatteryFeedTieCB2;
+	CircuitBrakerSwitch CDRCrossTieBusCB;
+	CircuitBrakerSwitch CDRCrossTieBalCB;
+	CircuitBrakerSwitch CDRXLunarBusTieCB;
 	// AC Inverter 1 feed
 	CircuitBrakerSwitch CDRInverter1CB;
 
@@ -879,6 +919,7 @@ protected:
 	LEMBatterySwitch DSCSEBat2HVSwitch;
 	LEMBatterySwitch DSCCDRBat3HVSwitch;
 	LEMBatterySwitch DSCCDRBat4HVSwitch;	
+	LEMDeadFaceSwitch DSCBattFeedSwitch;
 
 	SwitchRow DSCLoVoltageSwitchRow;
 	LEMBatterySwitch DSCSEBat1LVSwitch;
@@ -891,6 +932,19 @@ protected:
 	IndicatorSwitch DSCBattery2TB;
 	IndicatorSwitch DSCBattery3TB;
 	IndicatorSwitch DSCBattery4TB;
+	IndicatorSwitch DSCBattFeedTB;
+
+	SwitchRow ASCBatteryTBSwitchRow;
+	IndicatorSwitch ASCBattery5ATB;
+	IndicatorSwitch ASCBattery5BTB;
+	IndicatorSwitch ASCBattery6ATB;
+	IndicatorSwitch ASCBattery6BTB;
+
+	SwitchRow ASCBatterySwitchRow;
+	LEMBatterySwitch ASCBat5SESwitch;
+	LEMBatterySwitch ASCBat5CDRSwitch;
+	LEMBatterySwitch ASCBat6CDRSwitch;
+	LEMBatterySwitch ASCBat6SESwitch;
 
 	//
 	// Currently these are just 0-5V meters; at some point we may want
@@ -914,9 +968,12 @@ protected:
 
 	SwitchRow Panel16CB4SwitchRow;
 	CircuitBrakerSwitch LMPInverter2CB;
-	// Battery feed tie breakers (ECA output breakers)
+	// Battery feed tie breakers
 	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
 	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
+	CircuitBrakerSwitch LMPCrossTieBusCB;
+	CircuitBrakerSwitch LMPCrossTieBalCB;
+	CircuitBrakerSwitch LMPXLunarBusTieCB;
 
 	///////////////////////////
 	// LEM Rendezvous Window //
@@ -1061,9 +1118,36 @@ protected:
 	// Lunar Stay Battery
 	Battery *LunarBattery;
 
+	// Bus Tie Blocks (Not real objects)
+	LEM_BusFeed BTB_CDR_A;
+	LEM_BusFeed BTB_CDR_B;
+	LEM_BusFeed BTB_CDR_C;
+	LEM_BusFeed BTB_CDR_D;
+	LEM_BusFeed BTB_CDR_E;
+	LEM_BusFeed BTB_LMP_A;
+	LEM_BusFeed BTB_LMP_B;
+	LEM_BusFeed BTB_LMP_C;
+	LEM_BusFeed BTB_LMP_D;
+	LEM_BusFeed BTB_LMP_E;
+	
+	// Bus Cross Tie Multiplex (Not real object)
+	LEM_BusCrossTie BTC_MPX;
+
 	// ECA
-	LEM_ECA ECA_1;
-	LEM_ECA ECA_2;
+	LEM_ECAch ECA_1a; // (DESCENT stage, LMP DC bus)
+	LEM_ECAch ECA_1b; // (DESCENT stage, LMP DC bus)
+	LEM_ECAch ECA_2a; // (DESCENT stage, CDR DC bus)
+	LEM_ECAch ECA_2b; // (DESCENT stage, CDR DC bus)
+	LEM_ECAch ECA_3a; // (ASCENT  stage, LMP DC bus)
+	LEM_ECAch ECA_3b; // (ASCENT  stage, CDR DC bus)
+	LEM_ECAch ECA_4a; // (ASCENT  stage, CDR DC bus)
+	LEM_ECAch ECA_4b; // (ASCENT  stage, LMP DC bus)
+
+	// Descent stage deadface bus stubs
+	DCbus DES_CDRs28VBusA;
+	DCbus DES_CDRs28VBusB;
+	DCbus DES_LMPs28VBusA;
+	DCbus DES_LMPs28VBusB;
 
 	// CDR and LMP 28V DC busses
 	DCbus CDRs28VBus;
@@ -1094,6 +1178,8 @@ protected:
 	friend class LEMDCVoltMeter;
 	friend class LEMDCAmMeter;
 	friend class LMOptics;
+	friend class LEMDeadFaceSwitch;
+	friend class LEM_BusCrossTie;
 };
 
 extern void LEMLoadMeshes();

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.78  2008/12/07 18:35:21  movieman523
   *	Very basics of DSE telemetry recording: the play/record switch works but nothing else does!
   *	
@@ -929,6 +932,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s = 0, double amps = 30.0);
 
 	double Voltage();
+	double Current();
 	void DrawPower(double watts);
 
 //	int operator=(const int b) { state = b; return state; };

@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/01 19:48:33  jasonims
+  *	LM Optics Code Added, along with rudimentary Graphics for AOT.
+  *	Reticle uses GDI objects to allow realtime rotation.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -453,41 +457,124 @@ void LEM::SystemsInit()
 	Battery5 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_A");
 	Battery6 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B");
 	LunarBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:LUNAR_BATTERY");
+	// Batteries 1-4 and the Lunar Stay Battery are jettisoned with the descent stage.
 
 	// ECA #1 (DESCENT stage, LMP DC bus)
-	ECA_1.Init(this, Battery1, Battery2, Battery1, Battery2);
-	ECA_1.dc_source_a_tb = &DSCBattery1TB;
-	ECA_1.dc_source_a_tb->SetState(0); // Initialize to off
-	ECA_1.dc_source_b_tb = &DSCBattery2TB;
-	ECA_1.dc_source_b_tb->SetState(0);
+	ECA_1a.Init(this, Battery1);
+	ECA_1b.Init(this, Battery2);
+	ECA_1a.dc_source_tb = &DSCBattery1TB;
+	ECA_1a.dc_source_tb->SetState(0); // Initialize to off
+	ECA_1b.dc_source_tb = &DSCBattery2TB;
+	ECA_1b.dc_source_tb->SetState(0);
 
 	// ECA #2 (DESCENT stage, CDR DC bus)
-	ECA_2.Init(this, Battery3, Battery4, Battery3, Battery4);
-	ECA_2.dc_source_a_tb = &DSCBattery3TB;
-	ECA_2.dc_source_a_tb->SetState(0); 
-	ECA_2.dc_source_b_tb = &DSCBattery4TB;
-	ECA_2.dc_source_b_tb->SetState(0);
+	ECA_2a.Init(this, Battery3);
+	ECA_2b.Init(this, Battery4);
+	ECA_2a.dc_source_tb = &DSCBattery3TB;
+	ECA_2a.dc_source_tb->SetState(0); 
+	ECA_2b.dc_source_tb = &DSCBattery4TB;
+	ECA_2b.dc_source_tb->SetState(0);
+
+	// ECA #1 and #2 are JETTISONED with the descent stage.
+	// ECA #3 and #4 have no low voltage taps and can feed either bus.
+	ECA_3a.Init(this, Battery5);
+	ECA_3b.Init(this, Battery5);
+	ECA_3a.dc_source_tb = &ASCBattery5ATB;
+	ECA_3a.dc_source_tb->SetState(0); // Initialize to off
+	ECA_3b.dc_source_tb = &ASCBattery5BTB;
+	ECA_3b.dc_source_tb->SetState(0); // Initialize to off
+	ECA_4a.Init(this, Battery6);
+	ECA_4b.Init(this, Battery6);
+	ECA_4a.dc_source_tb = &ASCBattery6ATB;
+	ECA_4a.dc_source_tb->SetState(0); // Initialize to off
+	ECA_4b.dc_source_tb = &ASCBattery6BTB;
+	ECA_4b.dc_source_tb->SetState(0); // Initialize to off
+
+	// Descent Stage Deadface Bus Stubs wire to the ECAs
+	if(stage < 2){
+		DES_LMPs28VBusA.WireTo(&ECA_1a);
+		DES_LMPs28VBusB.WireTo(&ECA_1b);
+		DES_CDRs28VBusA.WireTo(&ECA_2a); 
+		DES_CDRs28VBusB.WireTo(&ECA_2b); 
+		DSCBattFeedTB.SetState(1);
+	}else{
+		DES_LMPs28VBusA.Disconnect();
+		DES_LMPs28VBusB.Disconnect();
+		DES_CDRs28VBusA.Disconnect();
+		DES_CDRs28VBusB.Disconnect();
+		DSCBattFeedTB.SetState(0);
+	}
+
+	// Bus Tie Blocks (Not real objects)
+	BTB_LMP_B.Init(this,&DES_LMPs28VBusA,&ECA_4b);
+	BTB_LMP_C.Init(this,&DES_LMPs28VBusB,&ECA_3a);
+	BTB_CDR_B.Init(this,&DES_CDRs28VBusA,&ECA_3b);
+	BTB_CDR_C.Init(this,&DES_CDRs28VBusB,&ECA_4a);
+
+	// Bus feed tie breakers are sourced from the descent busses AND from ECA 3/4
+	// via ficticious Bus Tie Blocks
+	LMPBatteryFeedTieCB1.MaxAmps = 100.0;
+	LMPBatteryFeedTieCB1.WireTo(&BTB_LMP_B);
+	LMPBatteryFeedTieCB2.MaxAmps = 100.0;
+	LMPBatteryFeedTieCB2.WireTo(&BTB_LMP_C);
+	CDRBatteryFeedTieCB1.MaxAmps = 100.0;
+	CDRBatteryFeedTieCB1.WireTo(&BTB_CDR_B);
+	CDRBatteryFeedTieCB2.MaxAmps = 100.0;
+	CDRBatteryFeedTieCB2.WireTo(&BTB_CDR_C);
+
+	// Bus Tie Blocks (Not real objects)
+	// Main busses can be fed from the ECAs via the BAT FEED TIE CBs,
+	// the other bus via the CROSS TIE BUS / CROSS TIE BAL LOADS CBs,
+	// or the CSM via the XLUNAR bus and associated etcetera.
+	BTB_CDR_A.Init(this,&CDRBatteryFeedTieCB1,&CDRBatteryFeedTieCB2); // Tie dual CBs together for CDR bus
+	BTB_LMP_A.Init(this,&LMPBatteryFeedTieCB1,&LMPBatteryFeedTieCB2); // Tie dual CBs together for LMP bus
+
+	// Bus cross-tie breakers
+	CDRCrossTieBalCB.MaxAmps = 30.0;
+	CDRCrossTieBalCB.WireTo(&CDRs28VBus);
+	CDRCrossTieBusCB.MaxAmps = 100.0;
+	CDRCrossTieBusCB.WireTo(&CDRs28VBus);
+	LMPCrossTieBalCB.MaxAmps = 30.0;
+	LMPCrossTieBalCB.WireTo(&LMPs28VBus);
+	LMPCrossTieBusCB.MaxAmps = 100.0;
+	LMPCrossTieBusCB.WireTo(&LMPs28VBus);
+
+	// Bus cross-tie setup: Wire the two busses to the multiplexer and tell it
+	// where the CBs are. The multiplexer will do the rest.
+	BTC_MPX.Init(this,&LMPs28VBus,&CDRs28VBus,&LMPCrossTieBalCB,&LMPCrossTieBusCB,&CDRCrossTieBalCB,&CDRCrossTieBusCB);
+	
+	/* The D is for Depreciated
+	BTB_CDR_D.Init(this,&CDRCrossTieBalCB,&CDRCrossTieBusCB);
+	BTB_LMP_D.Init(this,&LMPCrossTieBalCB,&LMPCrossTieBusCB);
+	*/
+
+	// At this point, the sum of bus feeds are on BTB A, and the cross-tie sources are on the mpx.
+
+	// Join cross-ties and main-ties for bus source
+	BTB_LMP_E.Init(this,&BTB_LMP_A,&BTC_MPX.dc_output_lmp);
+	BTB_CDR_E.Init(this,&BTB_CDR_A,&BTC_MPX.dc_output_cdr);
 
 	// Descent battery TBs
-	DSCBattery1TB.WireTo(&ECA_1);
-	DSCBattery2TB.WireTo(&ECA_1);
-	DSCBattery3TB.WireTo(&ECA_2);
-	DSCBattery4TB.WireTo(&ECA_2);
-
-	// ECA Output CBs
-	LMPBatteryFeedTieCB2.MaxAmps = 100.0;
-	LMPBatteryFeedTieCB2.WireTo(&ECA_1);
-	CDRBatteryFeedTieCB2.MaxAmps = 100.0;
-	CDRBatteryFeedTieCB2.WireTo(&ECA_2);
+	DSCBattery1TB.WireTo(&DES_LMPs28VBusA);
+	DSCBattery2TB.WireTo(&DES_LMPs28VBusB);
+	DSCBattery3TB.WireTo(&DES_CDRs28VBusA);
+	DSCBattery4TB.WireTo(&DES_CDRs28VBusB);
+	// Ascent battery TBs
+	ASCBattery5ATB.WireTo(&ECA_3a);
+	ASCBattery5BTB.WireTo(&ECA_3b);
+	ASCBattery6ATB.WireTo(&ECA_4a);
+	ASCBattery6BTB.WireTo(&ECA_4b);
 
 	// CDR and LMP 28V DC busses.
-	// Apparently unpowered (Wired to NULL) busses get 28V for some reason...
-	CDRs28VBus.WireTo(&CDRBatteryFeedTieCB2); 
-	LMPs28VBus.WireTo(&LMPBatteryFeedTieCB2);
+	// Wire to ficticious bus tie block
+	CDRs28VBus.WireTo(&BTB_CDR_E); 
+	LMPs28VBus.WireTo(&BTB_LMP_E);
 
 	// AC Inverter CBs
 	CDRInverter1CB.MaxAmps = 30.0;
 	CDRInverter1CB.WireTo(&CDRs28VBus);
+	LMPInverter2CB.MaxAmps = 30.0;
+	LMPInverter2CB.WireTo(&LMPs28VBus);
 	// AC Inverters
 	INV_1.dc_input = &CDRInverter1CB;	
 	INV_2.dc_input = &LMPInverter2CB; 	
@@ -549,24 +636,47 @@ void LEM::SystemsInit()
 	//
 	// HACK:
 	// Not sure where these should be wired to.
-	MissionTimerDisplay.WireTo(&ECA_1);
-	EventTimerDisplay.WireTo(&ECA_1);
+	MissionTimerDisplay.WireTo(&ECA_1a);
+	EventTimerDisplay.WireTo(&ECA_1a);
 
-	// Arrange for updates
-	Panelsdk.AddElectrical(&ECA_1, false);
-	Panelsdk.AddElectrical(&ECA_2, false);
-	
-	Panelsdk.AddElectrical(&CDRs28VBus, false);
-	Panelsdk.AddElectrical(&LMPs28VBus, false); 
-
-	Panelsdk.AddElectrical(&INV_1, false);
-	Panelsdk.AddElectrical(&INV_2, false);
-
+	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
 	Panelsdk.AddElectrical(&ACBusB, false);
-
 	Panelsdk.AddElectrical(&ACVoltsAttenuator, false);
+	Panelsdk.AddElectrical(&INV_1, false);
+	Panelsdk.AddElectrical(&INV_2, false);
+	// The multiplexer will update the main 28V busses
+	Panelsdk.AddElectrical(&BTC_MPX,false);
+	// Panelsdk.AddElectrical(&CDRs28VBus, false);
+	// Panelsdk.AddElectrical(&LMPs28VBus, false); 
+	
+	// Arrange for updates of tie points and bus balancer
+	Panelsdk.AddElectrical(&BTB_LMP_E, false);
+	Panelsdk.AddElectrical(&BTB_LMP_A, false);
+	Panelsdk.AddElectrical(&BTB_LMP_D, false);
+	Panelsdk.AddElectrical(&BTB_LMP_B, false);
+	Panelsdk.AddElectrical(&BTB_LMP_C, false);
+	Panelsdk.AddElectrical(&BTB_CDR_E, false);
+	Panelsdk.AddElectrical(&BTB_CDR_A, false);
+	Panelsdk.AddElectrical(&BTB_CDR_D, false);
+	Panelsdk.AddElectrical(&BTB_CDR_B, false);
+	Panelsdk.AddElectrical(&BTB_CDR_C, false);
 
+	// Update ECA ties
+	Panelsdk.AddElectrical(&DES_CDRs28VBusA, false);
+	Panelsdk.AddElectrical(&DES_CDRs28VBusB, false);
+	Panelsdk.AddElectrical(&DES_LMPs28VBusA, false); 
+	Panelsdk.AddElectrical(&DES_LMPs28VBusB, false); 
+
+	// Arrange for updates of ECAs
+	Panelsdk.AddElectrical(&ECA_1a, false);
+	Panelsdk.AddElectrical(&ECA_1b, false);
+	Panelsdk.AddElectrical(&ECA_2a, false);
+	Panelsdk.AddElectrical(&ECA_2b, false);
+	Panelsdk.AddElectrical(&ECA_3a, false);
+	Panelsdk.AddElectrical(&ECA_3b, false);
+	Panelsdk.AddElectrical(&ECA_4a, false);
+	Panelsdk.AddElectrical(&ECA_4b, false);
 	// EDS
 	eds.Init(this);
 
@@ -888,7 +998,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
 	EventTimerDisplay.Timestep(MissionTime, simdt);
 	eds.TimeStep();                                         // Do Work
-	optics.TimeStep(simdt);									// Do Work
+//	optics.TimeStep(simdt);									// Do Work FIXME RE-ENABLE LATER
 
 	// Debug tests would go here
 	
@@ -939,37 +1049,28 @@ bool LEM::GetValveState(int valve)
 }
 
 // SYSTEMS COMPONENTS
-
-// ELECTRICAL CONTROL ASSEMBLY
-
-LEM_ECA::LEM_ECA(){
+// ELECTRICAL CONTROL ASSEMBLY SUBCHANNEL
+LEM_ECAch::LEM_ECAch(){
 	lem = NULL;
-	dc_source_a_tb = NULL;
-	dc_source_b_tb = NULL;
-	dc_source_c_tb = NULL;
+	dc_source_tb = NULL;
 }
 
-void LEM_ECA::Init(LEM *s,e_object *hi_a,e_object *hi_b,e_object *lo_a,e_object *lo_b){
+void LEM_ECAch::Init(LEM *s,e_object *src){
 	lem = s;
-	input_a = 0;
-	input_b = 0;
-	dc_source_hi_a = hi_a;
-	dc_source_hi_b = hi_b;
-	dc_source_lo_a = lo_a;
-	dc_source_lo_b = lo_b;
+	input = 0;
+	dc_source = src;
 	Volts = 24;
 }
 
-void LEM_ECA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+void LEM_ECAch::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 
 {
 	oapiWriteLine(scn, start_str);
-	oapiWriteScenario_float(scn, "INPUT_A", input_a);
-	oapiWriteScenario_float(scn, "INPUT_B", input_b);
+	oapiWriteScenario_float(scn, "INPUT", input);
 	oapiWriteLine(scn, end_str);
 }
 
-void LEM_ECA::LoadState(FILEHANDLE scn, char *end_str)
+void LEM_ECAch::LoadState(FILEHANDLE scn, char *end_str)
 
 {
 	char *line;
@@ -979,90 +1080,109 @@ void LEM_ECA::LoadState(FILEHANDLE scn, char *end_str)
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, end_str, end_len))
 			return;
-		if (!strnicmp (line, "INPUT_A", 7)) {
+		if (!strnicmp (line, "INPUT", 7)) {
 			sscanf(line + 7, "%d", &dec);
-			input_a = dec;
-		}
-		if (!strnicmp (line, "INPUT_B", 7)) {
-			sscanf(line + 7, "%d", &dec);
-			input_b = dec;
+			input = dec;
 		}
 	}
 }
 
-void LEM_ECA::DrawPower(double watts)
+void LEM_ECAch::DrawPower(double watts){ 
+	power_load += watts;
+};
 
+void LEM_ECAch::UpdateFlow(double dt){
+	// ECA INPUTS CAN BE PARALLELED, BUT NOT IN THE SAME CHANNEL
+	// That is, Battery 1 and 2 can be on at the same time.
+	// Draw power from the source, and retake voltage, etc.
+
+	// Take power
+	switch(input){
+		case 1: // HI tap
+			if(dc_source != NULL){
+				dc_source->DrawPower(power_load); // Draw 1:1
+			}
+			break;
+		case 2: // LO tap
+			if(dc_source != NULL){
+				dc_source->DrawPower(power_load*1.06); // Draw 6% more
+			}
+			break;
+	}
+	
+	// Resupply from source
+	switch(input){
+		case 0: // NULL
+			Volts = 0;
+			Amperes = 0;
+			break;
+		case 1: // HV
+			if(dc_source != NULL){
+				Volts =   dc_source->Voltage();
+				Amperes = dc_source->Current();
+			}
+			break;
+		case 2: // LV
+			if(dc_source != NULL){
+				Volts =   (dc_source->Voltage()*0.93);
+				Amperes = dc_source->Current();
+			}
+			break;
+	}
+
+	// Reset for next pass.
+	e_object::UpdateFlow(dt);	
+}
+
+// BUS TIE BLOCK
+
+LEM_BusFeed::LEM_BusFeed(){
+	lem = NULL;
+	dc_source_a = NULL;
+	dc_source_b = NULL;
+}
+
+void LEM_BusFeed::Init(LEM *s,e_object *sra,e_object *srb){
+	lem = s;
+	dc_source_a = sra;
+	dc_source_b = srb;
+	Volts = 0;
+}
+
+void LEM_BusFeed::DrawPower(double watts)
 { 
 	power_load += watts;
 };
 
-void LEM_ECA::UpdateFlow(double dt){
-
-	// ECA INPUTS CAN BE PARALLELED, BUT NOT IN THE SAME CHANNEL
-	// That is, Battery 1 and 2 can be on at the same time, 
-	//sprintf(oapiDebugString(),"ECA Input = %d Voltage %f Load %f",input,Volts,power_load);
+void LEM_BusFeed::UpdateFlow(double dt){
+	//sprintf(oapiDebugString(),"BTO Input = %d Voltage %f Load %f",input,Volts,power_load);
 	// Draw power from the source, and retake voltage, etc.
 
 	int csrc=0;                             // Current Sources Operational
 	double PowerDrawPerSource;              // Current to draw, per source
+	double power_load_src=power_load;		// Power load when we came in
+	int cba_ok=0,cbb_ok=0;					// Circuit breaker OK flags
 	
 	// Find active sources
-	switch(input_a){
-		case 1:
-			if(dc_source_hi_a != NULL && dc_source_hi_a->Voltage() > 0){
-				csrc++;
-			}
-			break;
-		case 2:
-			if(dc_source_lo_a != NULL && dc_source_lo_a->Voltage() > 0){
-				csrc++;
-			}
-			break;
+	if(dc_source_a != NULL && dc_source_a->Voltage() > 0){
+		csrc++;
 	}
-	switch(input_b){
-		case 1:
-			if(dc_source_hi_b != NULL && dc_source_hi_b->Voltage() > 0){
-				csrc++;
-			}
-			break;
-		case 2:
-			if(dc_source_lo_b != NULL && dc_source_lo_b->Voltage() > 0){
-				csrc++;
-			}
-			break;
+	if(dc_source_b != NULL && dc_source_b->Voltage() > 0){
+		csrc++;
 	}
 	// Compute draw
 	if(csrc > 1){
-		PowerDrawPerSource = power_load/2;
+		PowerDrawPerSource = power_load_src/2;
 	}else{
-		PowerDrawPerSource = power_load;
+		PowerDrawPerSource = power_load_src;
 	}
 
 	// Now take power
-	switch(input_a){
-		case 1:
-			if(dc_source_hi_a != NULL){
-				dc_source_hi_a->DrawPower(PowerDrawPerSource); // Draw 1:1
-			}
-			break;
-		case 2:
-			if(dc_source_lo_a != NULL){
-				// Draw low
-				dc_source_hi_a->DrawPower(PowerDrawPerSource*1.06); // Draw 6% more
-			}
-			break;
+	if(dc_source_a != NULL){
+		dc_source_a->DrawPower(PowerDrawPerSource); 
 	}
-	switch(input_b){
-		case 1:
-			if(dc_source_hi_b != NULL){
-				dc_source_hi_b->DrawPower(PowerDrawPerSource); // Draw 1:1
-			}
-			break;
-		case 2:
-			if(dc_source_lo_b != NULL){
-				dc_source_hi_b->DrawPower(PowerDrawPerSource*1.06); // Draw 6% more
-			}
-			break;
+	if(dc_source_a != NULL){
+		dc_source_b->DrawPower(PowerDrawPerSource); 
 	}
 	
 	double A_Volts = 0;
@@ -1071,41 +1191,13 @@ void LEM_ECA::UpdateFlow(double dt){
 	double B_Amperes = 0;
 
 	// Resupply from source
-	switch(input_a){
-		case 0: // NULL
-			A_Volts = 0;
-			A_Amperes = 0;
-			break;
-		case 1: // HV 1
-			if(dc_source_hi_a != NULL){
-				A_Volts =   dc_source_hi_a->Voltage();
-				A_Amperes = dc_source_hi_a->Current();
-			}
-			break;
-		case 2: // LV 1
-			if(dc_source_hi_a != NULL){
-				A_Volts =   (dc_source_hi_a->Voltage()*0.93);
-				A_Amperes = dc_source_hi_a->Current();
-			}
-			break;
+	if(dc_source_a != NULL){
+		A_Volts =   dc_source_a->Voltage();
+		A_Amperes = dc_source_a->Current();
 	}
-	switch(input_b){
-		case 0: // NULL
-			B_Volts = 0;
-			B_Amperes = 0;
-			break;
-		case 1: // HV 2
-			if(dc_source_hi_b != NULL){
-				B_Volts = dc_source_hi_b->Voltage();
-				B_Amperes = dc_source_hi_b->Current();
-			}
-			break;
-		case 2: // LV 2
-			if(dc_source_hi_b != NULL){
-				B_Volts = (dc_source_hi_b->Voltage()*0.93);
-				B_Amperes = dc_source_hi_b->Current();
-			}
-			break;
+	if(dc_source_b != NULL){
+		B_Volts = dc_source_b->Voltage();
+		B_Amperes = dc_source_b->Current();
 	}
 	// Final output
 	switch(csrc){
@@ -1114,7 +1206,7 @@ void LEM_ECA::UpdateFlow(double dt){
 			Amperes = A_Amperes+B_Amperes;
 			break;
 		case 1: // SINGLE
-			if(input_a != 0){ // Only one (or no) input
+			if(A_Volts > 0){ // Only one (or no) input
 				Volts = A_Volts;
 				Amperes = A_Amperes;
 			}else{
@@ -1128,11 +1220,194 @@ void LEM_ECA::UpdateFlow(double dt){
 			break;
 	}
 
+	// if(this == &lem->BTB_CDR_D){ sprintf(oapiDebugString(),"LM_BTO: = Voltages %f %f | Load %f PS %f Output %f V",A_Volts,B_Volts,power_load,PowerDrawPerSource,Volts); }
+
 	// Reset for next pass.
-	e_object::UpdateFlow(dt);
-	
-	//sprintf(oapiDebugString(),"LM_ECA: = Inputs %d %d Voltages %f %f | Load %f Output %f V",input_a,input_b,A_Volts,B_Volts,power_load,Volts);
+	power_load -= power_load_src;	
 }
+
+// CROSS-TIE BALANCER OUTPUT SOURCE
+LEM_BCTSource::LEM_BCTSource(){
+	Volts = 0;
+}
+
+void LEM_BCTSource::SetVoltage(double v){
+	Volts = v;
+}
+
+// BUS CROSS-TIE BALANCER
+LEM_BusCrossTie::LEM_BusCrossTie(){
+	lem = NULL;
+	dc_bus_lmp = NULL;
+	dc_bus_cdr = NULL;
+	lmp_bal_cb = NULL;	lmp_bus_cb = NULL;
+	cdr_bal_cb = NULL;	cdr_bus_cb = NULL;
+	last_cdr_ld = 0;
+	last_lmp_ld = 0;
+}
+
+void LEM_BusCrossTie::Init(LEM *s,DCbus *sra,DCbus *srb,CircuitBrakerSwitch *cb1,CircuitBrakerSwitch *cb2,CircuitBrakerSwitch *cb3,CircuitBrakerSwitch *cb4){
+	lem = s;
+	dc_bus_lmp = sra;
+	dc_bus_cdr = srb;
+	lmp_bal_cb = cb1;	lmp_bus_cb = cb2;
+	cdr_bal_cb = cb3;	cdr_bus_cb = cb4;
+	dc_output_lmp.SetVoltage(0);
+	dc_output_cdr.SetVoltage(0);	
+	last_cdr_ld = 0;
+	last_lmp_ld = 0;
+}
+
+// Depreciated - Don't tie directly
+void LEM_BusCrossTie::DrawPower(double watts)
+{ 
+	power_load += watts;
+};
+
+void LEM_BusCrossTie::UpdateFlow(double dt){
+	// Voltage, load, load-share-difference
+	double cdr_v,cdr_l,cdr_ld;
+	double lmp_v,lmp_l,lmp_ld;
+	double loadshare;
+
+	lmp_v = lem->BTB_LMP_A.Voltage(); // Measure bus voltages at their A tie point, so we don't get our own output 
+	cdr_v = lem->BTB_CDR_A.Voltage(); 
+	lmp_l = dc_bus_lmp->PowerLoad();
+	cdr_l = dc_bus_cdr->PowerLoad();
+
+	// If both busses are dead or both CBs on either side are out, the output is dead.
+	if((cdr_v == 0 && lmp_v == 0) ||
+		(lmp_bus_cb->GetState() == 0 && lmp_bal_cb->GetState() == 0) || 
+		(cdr_bus_cb->GetState() == 0 && cdr_bal_cb->GetState() == 0)){ 
+		dc_output_lmp.SetVoltage(0);
+		dc_output_cdr.SetVoltage(0);
+		lem->CDRs28VBus.UpdateFlow(dt);
+		lem->LMPs28VBus.UpdateFlow(dt);
+		return;
+	}
+
+	// Compute load-share and differences.
+	if(lmp_v == 0 || cdr_v == 0){
+		// We lost power on one or both busses. Reset the stored load split.
+		last_cdr_ld = 0;
+		last_lmp_ld = 0;
+		// If one bus is powered, but the other is not,
+		// we feed the dead bus from the live one.
+		lem->CDRs28VBus.UpdateFlow(dt);
+		lem->LMPs28VBus.UpdateFlow(dt);
+		if(cdr_v == 0){
+			// Draw CDR load from LMP side and equalize voltage
+			dc_output_cdr.SetVoltage(lmp_v);
+			dc_output_lmp.SetVoltage(0);
+			dc_bus_lmp->DrawPower(cdr_l);
+			double Draw = cdr_l / lmp_v;
+			if(lmp_bus_cb->GetState() > 0){			
+				if(Draw > 100){
+					lmp_bus_cb->SetState(0);
+				}
+				if(lmp_bal_cb->GetState() > 0 && Draw > 60){
+					lmp_bal_cb->SetState(0);
+				}
+			}else{
+				if(lmp_bal_cb->GetState() > 0 && Draw > 30){
+					lmp_bal_cb->SetState(0);
+				}
+			}
+		}else{
+			// Draw LMP load from CDR side and equalize voltage
+			dc_output_lmp.SetVoltage(cdr_v);
+			dc_output_cdr.SetVoltage(0);
+			dc_bus_cdr->DrawPower(lmp_l);
+			double Draw = lmp_l / cdr_v;
+			if(cdr_bus_cb->GetState() > 0){			
+				if(Draw > 100){
+					cdr_bus_cb->SetState(0);
+				}
+				if(cdr_bal_cb->GetState() > 0 && Draw > 60){
+					cdr_bal_cb->SetState(0);
+				}
+			}else{
+				if(cdr_bal_cb->GetState() > 0 && Draw > 30){
+					cdr_bal_cb->SetState(0);
+				}
+			}
+		}
+		return;
+	}else{
+		// If both sides are powered, then one side is going to have a higher load
+		// than the other. We draw power from the low-load side to feed the high-load side.
+		// The higher-load side will probably have the lower voltage.
+		loadshare = (lmp_l+cdr_l)/2;
+		cdr_ld = loadshare - cdr_l;
+		lmp_ld = loadshare - lmp_l;			
+	}
+
+	// Are we within tolerance already?
+	if((cdr_ld < 0.000001 && cdr_ld > -0.000001) && (lmp_ld < 0.000001 && lmp_ld > -0.000001)){
+		// In this case, the busses are already balanced.
+		// Use whatever numbers we used last time.
+		cdr_ld = last_cdr_ld;
+		lmp_ld = last_lmp_ld;
+		// sprintf(oapiDebugString(),"BCT L: LMP/CDR V %f %f L %f %f | LS %f | DF %f %f",lmp_v,cdr_v,lmp_l,cdr_l,loadshare,lmp_ld,cdr_ld);
+	}else{
+		// Include what we did before
+		cdr_ld += last_cdr_ld;
+		lmp_ld += last_lmp_ld;
+		// Save this for later abuse
+		last_cdr_ld = cdr_ld;
+		last_lmp_ld = lmp_ld;
+		// sprintf(oapiDebugString(),"BCT N: LMP/CDR V %f %f L %f %f | LS %f | DF %f %f",lmp_v,cdr_v,lmp_l,cdr_l,loadshare,lmp_ld,cdr_ld);
+	}
+
+	// If this works the load on both sides should be equal, with each bus having half the total load.
+	// sprintf(oapiDebugString(),"BCT: LMP/CDR V %f %f L %f %f | LS %f | D %f %f",lmp_v,cdr_v,lmp_l,cdr_l,loadshare,lmp_ld,cdr_ld);
+
+	lem->CDRs28VBus.UpdateFlow(dt);
+	lem->LMPs28VBus.UpdateFlow(dt);
+
+	// Transfer power from the higher-voltage side
+
+	// Balance voltage
+	// dc_output_cdr.SetVoltage((cdr_v+lmp_v)/2);	
+	// dc_output_lmp.SetVoltage((cdr_v+lmp_v)/2);		
+
+	// Transfer load (works both ways)
+	dc_bus_cdr->DrawPower(cdr_ld); 
+	dc_bus_lmp->DrawPower(lmp_ld);
+	// Last thing we do is blow CBs on overcurrent.
+	// BUS TIE blows at 100 amps, BUS BAL blows at 30 amps, or 60 amps if the TIE breaker is also closed.
+	if(cdr_ld > 0){
+		double Draw = cdr_ld / cdr_v;
+		if(cdr_bus_cb->GetState() > 0){			
+			if(Draw > 100){
+				cdr_bus_cb->SetState(0);
+			}
+			if(cdr_bal_cb->GetState() > 0 && Draw > 60){
+				cdr_bal_cb->SetState(0);
+			}
+		}else{
+			if(cdr_bal_cb->GetState() > 0 && Draw > 30){
+				cdr_bal_cb->SetState(0);
+			}		
+		}
+	}
+	if(lmp_ld > 0){
+		double Draw = lmp_ld / lmp_v;
+		if(lmp_bus_cb->GetState() > 0){			
+			if(Draw > 100){
+				lmp_bus_cb->SetState(0);
+			}
+			if(lmp_bal_cb->GetState() > 0 && Draw > 60){
+				lmp_bal_cb->SetState(0);
+			}
+		}else{
+			if(lmp_bal_cb->GetState() > 0 && Draw > 30){
+				lmp_bal_cb->SetState(0);
+			}
+		}
+	}
+}
+
 
 // AC INVERTER
 
@@ -1282,6 +1557,18 @@ void LEM_EDS::TimeStep(){
 	// Interstage nut-and-bolt separation and ascent stage deadfacing
 	if(lem->status < 2){
 		if(lem->EDStage.GetState() == TOGGLESWITCH_UP){
+			// Disconnect EPS stuff
+			lem->DES_LMPs28VBusA.Disconnect();
+			lem->DES_LMPs28VBusB.Disconnect();
+			lem->DES_CDRs28VBusA.Disconnect();
+			lem->DES_CDRs28VBusB.Disconnect();
+			// Disconnect monitor select rotaries
+			lem->EPSMonitorSelectRotary.SetSource(1, NULL);
+			lem->EPSMonitorSelectRotary.SetSource(2, NULL);
+			lem->EPSMonitorSelectRotary.SetSource(3, NULL);
+			lem->EPSMonitorSelectRotary.SetSource(4, NULL);
+			// Change descent TB
+			lem->DSCBattFeedTB.SetState(0);
 			// Stage
 			lem->SeparateStage(1);
 		}
