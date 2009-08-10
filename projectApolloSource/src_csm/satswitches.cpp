@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.38  2008/12/07 18:35:21  movieman523
   *	Very basics of DSE telemetry recording: the play/record switch works but nothing else does!
   *	
@@ -2202,4 +2205,22 @@ void SuitTestSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 bool SuitTestSwitch::CheckMouseClick(int event, int mx, int my) {
 	
 	return RotationalSwitch::CheckMouseClick(event, mx + 130, my);
+}
+
+
+double SaturnOxygenRepressPressMeter::QueryValue()
+
+{
+	AtmosStatus atm;
+	Sat->GetAtmosStatus(atm);
+
+	return atm.O2RepressPressurePSI;
+}
+
+void SaturnOxygenRepressPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+
+{
+	v = 115.0 - v / 1200.0 * 50.0 ;	
+	DrawNeedle(drawSurface, 55, 440, 60.0, v * RAD);
+	oapiBlt(drawSurface, FrameSurface, 0, 413, 0, 110, 90, 30, SURF_PREDEF_CK);
 }

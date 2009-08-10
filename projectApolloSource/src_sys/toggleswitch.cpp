@@ -25,6 +25,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 02:23:06  dseagrav
+  *	LEM EPS (Part 2)
+  *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -535,12 +539,6 @@ void ToggleSwitch::InitSound(SoundLib *s) {
 
 bool ToggleSwitch::SwitchTo(int newState, bool dontspring) {
 
-	// Switch only with REALISM 0
-//	if (switchRow) {
-//		if (switchRow->panelSwitches->Realism) 
-//			return false;
-//	}
-
 	if (Active)
 	{
 		if (state != newState)
@@ -639,19 +637,6 @@ bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
 	}
-
-/*
-	if (Active && (state != OldState)) {
-		SwitchToggled = true;
-		if (switchRow) {
-			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
-		}
-		if (callback) 
-		{
-			callback->Call(this);
-		}
-	} */
 	return true;
 }
 
@@ -877,11 +862,7 @@ bool ThreePosSwitch::SwitchTo(int newState, bool dontspring)
 	}
 	return false;
 }
-/*
-void ThreePosSwitch::SetState(int value)
-{
-	SwitchTo(value);
-}*/
+
 
 //
 // Push button like switch.  Now implemented as a special case of toggle switch (springloaded and special sound)
@@ -915,20 +896,7 @@ void PushSwitch::InitSound(SoundLib *s) {
 	if (!Sclick.isValid())
 		s->LoadSound(Sclick, BUTTON_SOUND);
 }
-/*
-void PushSwitch::SwitchTo(int newState)
-{
-	if (ToggleSwitch::SwitchTo(newState))
-	{
-		ToggleSwitch::SwitchTo(0);
-		return true;
-	}
-	return false;
-}
-void PushSwitch::SetState(int value)
-{
-	SwitchTo(value);
-}*/
+
 
 //
 // Circuit braker switch.  Special case of Toggle Switch
@@ -980,10 +948,11 @@ void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND);
 }
 
-// Note that this will not work properly if more than one source draws from a CB.
 void CircuitBrakerSwitch::DrawPower(double watts)
 
 {
+	/// \todo Note that this will not work properly if more than one source draws from a CB.
+
 	// Default the power load to zero
 	power_load = 0; 
 
@@ -1891,6 +1860,7 @@ RotationalSwitch::RotationalSwitch() {
 	position = 0;
 	positionList = 0;
 	next = 0;
+	soundEnabled = true;
 
 	switchSurface = 0;
 	switchBorder = 0;
@@ -2108,15 +2078,9 @@ bool RotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool RotationalSwitch::SwitchTo(int newValue) {
 
-	// Switch only with REALISM 0
-//	if (switchRow) {
-//		if (switchRow->panelSwitches->Realism) 
-//			return false;
-//	}
-
 	if (!position || (position->GetValue() != newValue)) {
 		SetValue(newValue);
-		sclick.play();
+		if (soundEnabled) sclick.play();
 		if (switchRow) {
 			if (switchRow->panelSwitches->listener) 
 				switchRow->panelSwitches->listener->PanelRotationalSwitchChanged(this);
@@ -2145,15 +2109,6 @@ double RotationalSwitch::AngleDiff(double a1, double a2) {
 	if (diff > 180.0) diff = 360.0 - diff;
 	return diff;
 }
-
-/*int RotationalSwitch::operator=(const int b) { 
-	
-	SetValue(b);
-	if (position)
-		return position->GetValue(); 
-	else
-		return 0;
-}*/
 
 RotationalSwitch::operator int() {
 
@@ -2393,19 +2348,9 @@ bool ThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool ThumbwheelSwitch::SwitchTo(int newState) {
 
-	// Switch only with REALISM 0
-//	if (switchRow) {
-//		if (switchRow->panelSwitches->Realism) 
-//			return false;
-//	}
-
 	if (newState >= 0 && newState <= maxState && state != newState) {
 		state = newState;
 		sclick.play();
-		if (switchRow) {
-			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->PanelThumbwheelSwitchChanged(this);
-		}
 		if (callback)
 			callback->call(this);
 		return true;

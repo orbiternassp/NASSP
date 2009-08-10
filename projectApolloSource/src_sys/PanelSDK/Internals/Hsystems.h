@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.10  2008/04/11 11:50:24  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -88,8 +91,8 @@ const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4};		//K
 //base class for hydraulical objects
 class h_substance
 { public:
-    h_substance(){};
-	h_substance(int i_subst_type,double i_mass,double i_Q,float i_vapor_mass);
+    h_substance() {subst_type = 0; mass = 0; vapor_mass = 0; Q = 0;};
+	h_substance(int i_subst_type, double i_mass, double i_Q, float i_vapor_mass);
 	int subst_type;					//index of substance type
 	double mass;					// (gr)
 	double Q;						// (J) total enthalpy (NOT thermal energy)
@@ -302,6 +305,10 @@ public:
 	therm_obj *tempControl;		// Turn on evaporator if temperature of tempControl
 	double tempTurnOn;			// greater than tempTurnOn
 
+	void SetPumpOn() {h_pump = -1; };
+	void SetPumpOff() {h_pump = 0; };
+	void SetPumpAuto() {h_pump = 1; };
+
 	virtual	void refresh(double dt);	// this called at each timestep
 	virtual void* GetComponent(char *component_name);
 	virtual void Save(FILEHANDLE scn);
@@ -317,6 +324,10 @@ public:
 	h_Valve *in2;	
 	h_Valve *out;	
 	double ratio;
+
+	void SetPumpOn() {h_pump = -1; };
+	void SetPumpOff() {h_pump = 0; };
+	void SetPumpAuto() {h_pump = 1; };
 
 	virtual	void refresh(double dt);	//this called at each timestep
 	virtual void* GetComponent(char *component_name);

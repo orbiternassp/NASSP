@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.19  2008/04/11 11:50:24  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -252,58 +255,72 @@ void H_system::Load(FILEHANDLE scn) {
 				   &one, &two, &three, &four,
 				   &size1, &size2, &size3, &size4);
 			h_Tank *tank = (h_Tank*) GetSystemByName(string1);
-			tank->Load(scn);
-			tank->space.Volume = volume;
+			if (tank) {
+				tank->Load(scn);
+				tank->space.Volume = volume;
 
-			tank->IN_valve.open = one;
-			tank->OUT_valve.open = two;
-			tank->OUT2_valve.open = three;
-			tank->LEAK_valve.open = four;
+				tank->IN_valve.open = one;
+				tank->OUT_valve.open = two;
+				tank->OUT2_valve.open = three;
+				tank->LEAK_valve.open = four;
 
-			tank->IN_valve.size = size1;
-			tank->OUT_valve.size = size2;
-			tank->OUT2_valve.size = size3;
-			tank->LEAK_valve.size = size4;
+				tank->IN_valve.size = size1;
+				tank->OUT_valve.size = size2;
+				tank->OUT2_valve.size = size3;
+				tank->LEAK_valve.size = size4;
+			}
 
 		} else if (!strnicmp (line, "<RADIATOR>", 10)) {
 			sscanf(line + 10, "%s %lf %lf", string1, &temp, &length);
 			h_Radiator *rad = (h_Radiator*) GetSystemByName(string1);
-			rad->SetTemp(temp);
-			rad->rad = length;
+			if (rad) {
+				rad->SetTemp(temp);
+				rad->rad = length;
+			}
 
 		} else if (!strnicmp (line, "<CREW>", 6)) {
 			sscanf(line + 6, "%s %i", string1, &one);
 			h_crew *crew = (h_crew*) GetSystemByName(string1);
-			crew->number = one;
+			if (crew) {
+				crew->number = one;
+			}
 		
 		} else if (!strnicmp (line, "<PIPE>", 6)) {
 			sscanf(line + 6, "%s %lf %lf %lf", string1, &pmax, &pmin, &flowmax);
 			h_Pipe *pipe = (h_Pipe*) GetSystemByName(string1);
-			pipe->P_max = pmax;
-			pipe->P_min = pmin;
-			pipe->flowMax = flowmax;
+			if (pipe) {
+				pipe->P_max = pmax;
+				pipe->P_min = pmin;
+				pipe->flowMax = flowmax;
+			}
 
 		} else if (!strnicmp (line, "<EVAPORATOR>", 12)) {
 			sscanf(line + 12, "%s %i %i %lf", string1, &one, &two, &throttle);
 			h_Evaporator *evap = (h_Evaporator*) GetSystemByName(string1);
-			evap->h_pump = one;
-			evap->h_valve = two;
-			evap->throttle = throttle; 
+			if (evap) {
+				evap->h_pump = one;
+				evap->h_valve = two;
+				evap->throttle = throttle; 
+			}
 
 		} else if (!strnicmp (line, "<HEATEXCHANGER>", 15)) {
 			sscanf(line + 15, "%s %i %lf %lf %lf %i", string1, &one, &pmin, &pmax, &length, &two);
 			h_HeatExchanger *heatEx = (h_HeatExchanger*) GetSystemByName(string1);
-			heatEx->h_pump = one;
-			heatEx->tempMin = pmin;
-			heatEx->tempMax = pmax;
-			heatEx->length = length;
-			heatEx->bypassed = (two != 0);
+			if (heatEx) {
+				heatEx->h_pump = one;
+				heatEx->tempMin = pmin;
+				heatEx->tempMax = pmax;
+				heatEx->length = length;
+				heatEx->bypassed = (two != 0);
+			}
 
 		} else if (!strnicmp (line, "<MIXINGPIPE>", 12)) {
 			sscanf(line + 12, "%s %i %lf", string1, &one, &ratio);
 			h_MixingPipe *mixer = (h_MixingPipe*) GetSystemByName(string1);
-			mixer->h_pump = one;
-			mixer->ratio = ratio;
+			if (mixer) {
+				mixer->h_pump = one;
+				mixer->ratio = ratio;
+			}
 		}
 		oapiReadScenario_nextline (scn, line);
 	}
@@ -318,40 +335,43 @@ void H_system::ProcessShip(VESSEL *vessel,PROPELLANT_HANDLE ph)
 				 runner=runner->next;}
 
 }
-h_substance _substance(int s_type,double i_mass, double i_Q,float i_vm)
-{ h_substance temp(s_type,i_mass,i_Q,i_vm);
-return temp;
-};
-h_substance::h_substance(int i_subst_type,double i_mass,double i_Q,float i_vapor_mass)
-{subst_type=i_subst_type;
- mass=i_mass;Q=i_Q;vapor_mass=i_vapor_mass;
-};
-void h_substance::operator+= (h_substance add)
-{
-if (add.subst_type==subst_type){
-	mass+=add.mass;
-	Q+=add.Q;
-	vapor_mass+=add.vapor_mass;
-}
-};
 
-h_substance h_substance::operator *(float mult)
-{h_substance temp;
- temp.mass=mass*mult;
- temp.Q=Q*mult;
- temp.vapor_mass=vapor_mass*mult;
- temp.subst_type=subst_type;
- return temp;
-};
-
-void h_substance::operator -=(h_substance add)
-{
-if (add.subst_type==subst_type){
-	mass-=add.mass;
-	Q-=add.Q;
-	vapor_mass-=add.vapor_mass;
+h_substance _substance(int s_type,double i_mass, double i_Q,float i_vm) { 
+	h_substance temp(s_type,i_mass,i_Q,i_vm);
+	return temp;
 }
-};
+
+h_substance::h_substance(int i_subst_type,double i_mass,double i_Q,float i_vapor_mass) {
+	subst_type = i_subst_type;
+	mass = i_mass;
+	Q = i_Q;
+	vapor_mass = i_vapor_mass;
+}
+
+void h_substance::operator+= (h_substance add) {
+	if (add.subst_type == subst_type){
+		mass += add.mass;
+		Q += add.Q;
+		vapor_mass += add.vapor_mass;
+	}
+}
+
+h_substance h_substance::operator*(float mult) {
+	h_substance temp;
+	temp.mass = mass * mult;
+	temp.Q = Q * mult;
+	temp.vapor_mass = vapor_mass * mult;
+	temp.subst_type = subst_type;
+	return temp;
+}
+
+void h_substance::operator -=(h_substance add) {
+	if (add.subst_type == subst_type){
+		mass -= add.mass;
+		Q -= add.Q;
+		vapor_mass -= add.vapor_mass;
+	}
+}
 
 double h_substance::Condense(double dt) {
 
@@ -406,31 +426,31 @@ void h_substance::SetTemp(double _temp)
 
 //------------------------------- VOLUME CLASS ------------------------------------
 
-h_volume::h_volume()
-{
-	for (int i=0;i<MAX_SUB;i++)
-	{composition[i].subst_type=i;
-	 composition[i].mass=0;
-	 composition[i].Q=0;
-	 composition[i].vapor_mass=0;
-		};
+h_volume::h_volume() {
+	for (int i = 0; i < MAX_SUB; i++) {
+		composition[i].subst_type = i;
+		composition[i].mass = 0;
+		composition[i].Q = 0;
+		composition[i].vapor_mass = 0;
+	}
+	max_sub = 0;
+	Temp = 273;
+	Press = 0;
+	Volume = 0;
+	Q = 0;	//no energy
+}
+
+void h_volume::GetMaxSub() {
 	max_sub=0;
-	Temp=273;
-	Press=0;
-	Volume=0;
-	Q=0;	//no energy
-};
-void h_volume::GetMaxSub()
-{max_sub=0;
-	for (int i=0;i<MAX_SUB;i++)
+	for (int i = 0; i < MAX_SUB; i++)
 		if (composition[i].mass) max_sub++;
-};
-void h_volume::operator +=(h_substance add)
-{
-composition[add.subst_type]+=add;
-Q+=add.Q;
-GetMaxSub();
-};
+}
+
+void h_volume::operator +=(h_substance add) {
+	composition[add.subst_type] += add;
+	Q += add.Q;
+	GetMaxSub();
+}
 
 void h_volume::operator +=(h_volume add) {
 
@@ -554,13 +574,6 @@ void h_volume::ThermalComps(double dt) {
 
 		composition[i].p_press = R_CONST * Temp * composition[i].vapor_mass / MMASS[composition[i].subst_type] / air_volume;
 	}
-}
-
-h_volume h_Tank::GetFlow(double m, double maxMass) {
-
-	h_volume temp = space.Break(m, OUT_FLOW_MASK, maxMass);
-	mass -= temp.GetMass();  //might not be as much as requested
-	return temp;
 }
 
 void h_volume::Void()
@@ -695,6 +708,13 @@ h_Tank::~h_Tank() {
 		parent->P_thermal->RemoveThermalObject(this);
 }
 
+h_volume h_Tank::GetFlow(double m, double maxMass) {
+
+	h_volume temp = space.Break(m, OUT_FLOW_MASK, maxMass);
+	mass -= temp.GetMass();  //might not be as much as requested
+	return temp;
+}
+
 int h_Tank::Flow(h_volume block) {	//add the block to the tank
 
 	space += block;
@@ -735,21 +755,9 @@ void h_Tank::refresh(double dt) {
 
 void h_Tank::operator +=(h_substance add) { 
 	space += add;
-}
 
-h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two) { 
-
-	strcpy(name, i_name);
-	max_stage = 99;
-	type = i_type;
-	two_ways = is_two;
-	P_max = max;
-	P_min = min;
-	in = i_IN;
-	out = i_OUT;
-	open = 0;
-	flow = 0;
-	flowMax = 0;
+	mass = space.GetMass();	//get all the mass,etc..	
+	energy = space.GetQ();	//sum up Qs
 }
 
 void h_Tank::Load(FILEHANDLE scn) {
@@ -818,6 +826,21 @@ void h_Tank::BoilAllAndSetTemp(double _t) {
 
 
 //------------------------------- PIPE CLASS ------------------------------------
+
+h_Pipe::h_Pipe(char *i_name, h_Valve *i_IN, h_Valve *i_OUT, int i_type, double max, double min, int is_two) { 
+
+	strcpy(name, i_name);
+	max_stage = 99;
+	type = i_type;
+	two_ways = is_two;
+	P_max = max;
+	P_min = min;
+	in = i_IN;
+	out = i_OUT;
+	open = 0;
+	flow = 0;
+	flowMax = 0;
+}
 
 void h_Pipe::BroadcastDemision(ship_object * gonner) {
 	if ((in)&&(in->parent==gonner)) in=NULL;

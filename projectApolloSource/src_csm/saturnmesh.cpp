@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.72  2008/05/16 18:47:28  tschachim
   *	Bugfix CSM size (was larger than the S-IVB)
   *	
@@ -176,7 +179,6 @@ PARTICLESTREAMSPEC o2_venting_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
-
 static PARTICLESTREAMSPEC let_exhaust = {
 	0,		// flag
 	0.5,	// size
@@ -191,7 +193,6 @@ static PARTICLESTREAMSPEC let_exhaust = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
-
 PARTICLESTREAMSPEC dyemarker_spec = {
 	0,		// flag
 	0.15,	// size
@@ -202,6 +203,34 @@ PARTICLESTREAMSPEC dyemarker_spec = {
 	0.2,	// growthrate
 	0.2,    // atmslowdown 
 	PARTICLESTREAMSPEC::EMISSIVE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
+PARTICLESTREAMSPEC wastewaterdump_spec = {
+	0,		// flag
+	0.005,	// size
+	1000,	// rate
+	1.5,    // velocity
+	0.2,    // velocity distribution
+	100,	// lifetime
+	0.001,	// growthrate
+	0,      // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
+PARTICLESTREAMSPEC urinedump_spec = {
+	0,		// flag
+	0.005,	// size
+	1000,	// rate
+	1.5,    // velocity
+	0.2,    // velocity distribution
+	100,	// lifetime
+	0.001,	// growthrate
+	0,		// atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
 	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
@@ -632,6 +661,18 @@ void Saturn::SetCSMStage ()
 	AddRCS_CM(CM_RCS_THRUST, 34.4 - CGOffset, false);
 
 	//
+	// Waste dump streams
+	//
+
+	wastewaterdump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/WaterDump");
+	if (wastewaterdump) DelExhaustStream(wastewaterdump);
+	wastewaterdump = AddParticleStream(&wastewaterdump_spec, _V(-1.258, 1.282, 33.69 - CGOffset), _V(-0.57, 0.57, 0.59), WaterController.GetWasteWaterDumpLevelRef());
+
+	urinedump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/UrineDump");
+	if (urinedump) DelExhaustStream(urinedump);
+	urinedump = AddParticleStream(&urinedump_spec, _V(-1.358, 1.192, 33.69 - CGOffset), _V(-0.57, 0.57, 0.59), WaterController.GetUrineDumpLevelRef());
+
+	//
 	// Apollo 13 special handling
 	//
 
@@ -816,10 +857,12 @@ void Saturn::SetReentryStage ()
 	if (CMTex) SetReentryTexture(CMTex, 1e6, 5, 0.7);
 
 	// CM RCS
+	double CGOffset = 34.4;
 	if (ApexCoverAttached) {
 		AddRCS_CM(CM_RCS_THRUST);
 	} else {
 		AddRCS_CM(CM_RCS_THRUST, -1.2);
+		CGOffset += 1.2;
 	}
 
 	if (LESAttached) {
@@ -867,6 +910,18 @@ void Saturn::SetReentryStage ()
 
 	if (!DrogueS.isValid())
 		soundlib.LoadMissionSound(DrogueS, DROGUES_SOUND);
+
+	//
+	// Waste dump streams
+	//
+
+	wastewaterdump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/WaterDump");
+	if (wastewaterdump) DelExhaustStream(wastewaterdump);
+	wastewaterdump = AddParticleStream(&wastewaterdump_spec, _V(-1.258, 1.282, 33.69 - CGOffset), _V(-0.57, 0.57, 0.59), WaterController.GetWasteWaterDumpLevelRef());
+
+	urinedump_spec.tex = oapiRegisterParticleTexture("ProjectApollo/UrineDump");
+	if (urinedump) DelExhaustStream(urinedump);
+	urinedump = AddParticleStream(&urinedump_spec, _V(-1.358, 1.192, 33.69 - CGOffset), _V(-0.57, 0.57, 0.59), WaterController.GetUrineDumpLevelRef());
 }
 
 void Saturn::SetReentryMeshes() {
