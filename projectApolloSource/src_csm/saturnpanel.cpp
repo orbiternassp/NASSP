@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -5922,7 +5925,7 @@ void Saturn::InitSwitches() {
 
 	WasteTankServicingRotary.AddPosition(0,  0);
 	WasteTankServicingRotary.AddPosition(1, 90);
-	WasteTankServicingRotary.Register(PSH, "WasteTankServicingRotary", 0);
+	WasteTankServicingRotary.Register(PSH, "WasteTankServicingRotary", 1);
 
 	CabinRepressValveRotary.AddPosition(0,  90);
 	CabinRepressValveRotary.AddPosition(1, 120);
@@ -5937,13 +5940,13 @@ void Saturn::InitSwitches() {
 	SelectorInletValveRotary.AddPosition(1,  90);
 	SelectorInletValveRotary.AddPosition(2, 180);
 	SelectorInletValveRotary.AddPosition(3, 270);
-	SelectorInletValveRotary.Register(PSH, "SelectorInletValveRotary", 1);
+	SelectorInletValveRotary.Register(PSH, "SelectorInletValveRotary", 3);
 
 	SelectorOutletValveRotary.AddPosition(0,   0);
 	SelectorOutletValveRotary.AddPosition(1,  90);
 	SelectorOutletValveRotary.AddPosition(2, 180);
 	SelectorOutletValveRotary.AddPosition(3, 270);
-	SelectorOutletValveRotary.Register(PSH, "SelectorOutletValveRotary", 1);
+	SelectorOutletValveRotary.Register(PSH, "SelectorOutletValveRotary", 3);
 
 	EmergencyCabinPressureRotary.AddPosition(0,   0);
 	EmergencyCabinPressureRotary.AddPosition(1,  90);
@@ -5968,14 +5971,14 @@ void Saturn::InitSwitches() {
 	WaterAccumulator1Rotary.AddPosition(0, 200);
 	WaterAccumulator1Rotary.AddPosition(1, 240);
 	WaterAccumulator1Rotary.AddPosition(2, 290);
-	WaterAccumulator1Rotary.Register(PSH, "WaterAccumulator1Rotary", 2);
+	WaterAccumulator1Rotary.Register(PSH, "WaterAccumulator1Rotary", 0);
 	WaterAccumulator1Rotary.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
 										&SaturnGlycolCoolingController::H2oAccumSwitchesToggled));
 
 	WaterAccumulator2Rotary.AddPosition(0, 200);
 	WaterAccumulator2Rotary.AddPosition(1, 240);
 	WaterAccumulator2Rotary.AddPosition(2, 290);
-	WaterAccumulator2Rotary.Register(PSH, "WaterAccumulator2Rotary", 2);
+	WaterAccumulator2Rotary.Register(PSH, "WaterAccumulator2Rotary", 0);
 	WaterAccumulator2Rotary.SetCallback(new PanelSwitchCallback<SaturnGlycolCoolingController>(&GlycolCoolingController, 
 										&SaturnGlycolCoolingController::H2oAccumSwitchesToggled));
 

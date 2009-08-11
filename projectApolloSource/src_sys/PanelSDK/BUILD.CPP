@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.6  2008/04/11 11:50:15  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -99,20 +102,24 @@ return NULL;
 
 void BuildError(int err)
 {
-char ErrorTable[3][50]={" 01:Object name not found\n",
-						" 02:Invalid component\n",
-						" 03:Invalid number of parameters\n"
-						};
-char ert[30];
 
-sprintf(ert,"ERROR AT LINE: %i",Line_Number);
-fputs(ert,debug);
-fputs(I_line,debug);
-fputs(ErrorTable[err],debug);
+#ifdef _DEBUG
 
-// debug<<"ERROR AT LINE "<<Line_Number<<": \n";
- //debug<<I_line<<"\n\t"<<ErrorTable[err]<<'\n';
- //debug.flush();//make sure this gets to disk .. we might have to crash
+	char ErrorTable[3][50]={" 01:Object name not found\n",
+							" 02:Invalid component\n",
+							" 03:Invalid number of parameters\n"
+							};
+	char ert[30];
+
+	sprintf(ert,"ERROR AT LINE: %i",Line_Number);
+	fputs(ert,debug);
+	fputs(I_line,debug);
+	fputs(ErrorTable[err],debug);
+
+	// debug<<"ERROR AT LINE "<<Line_Number<<": \n";
+	// debug<<I_line<<"\n\t"<<ErrorTable[err]<<'\n';
+	// debug.flush();//make sure this gets to disk .. we might have to crash
+#endif
 }
 
 
@@ -216,7 +223,10 @@ int stage;
 sprintf(name,"Config\\\\%s.cfg",FileName);
 
 config_file=fopen(name,"rt");
+
+#ifdef _DEBUG
 debug=fopen("ProjectApollo PanelSDK.log","wt");
+#endif
 
 while (!feof(config_file))
 {
@@ -293,7 +303,11 @@ while (!feof(config_file))
 	//do something
 };
 fclose(config_file);
+
+#ifdef _DEBUG
 fclose(debug);
+#endif
+
 if (NumPanels) panels[0]->GDI_Init_Resources();
 THERMAL->InitThermal();
 THERMAL->v=v;
