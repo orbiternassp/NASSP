@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/11 23:49:21  tschachim
+  *	Minor fixes
+  *	
   *	Revision 1.2  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -841,6 +844,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_CSM_PANEL_600_SWITCH]					= oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_600_SWITCH));
 	srf[SRF_CSM_PANEL_382_COVER]					= oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_382_COVER));
 	srf[SRF_CSM_WASTE_DISPOSAL_ROTARY]				= oapiCreateSurface (LOADBMP (IDB_CSM_WASTE_DISPOSAL_ROTARY));
+	srf[SRF_THREEPOSSWITCH90_LEFT]					= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH90_LEFT));
 	
 	//
 	// Flashing borders.
@@ -990,6 +994,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_600_SWITCH],					g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_382_COVER],					g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_WASTE_DISPOSAL_ROTARY],			g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH90_LEFT],				g_Param.col[4]);
 	
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1579,6 +1584,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_SUIT_FLOW_CONTROL_LEVER_302,		_R( 998,  396, 1085,  507), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CSM_SEC_CABIN_TEMP_VALVE,		_R(1105,  775, 1128,  798), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FOOD_PREPARATION_WATER,			_R(1164, 1044, 1419, 1162), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_PANEL_306,					_R(1093, 1410, 1123, 1440), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
@@ -3428,7 +3434,11 @@ void Saturn::SetSwitches(int panel) {
 	FoodPreparationWaterLeversRow.Init(AID_FOOD_PREPARATION_WATER, MainPanel);
 	FoodPreparationWaterHotLever.Init (  0, 0, 118, 118, srf[SRF_CSM_FOOT_PREP_WATER_LEVER], srf[SRF_BORDER_118x118], FoodPreparationWaterLeversRow);
 	FoodPreparationWaterColdLever.Init(137, 0, 118, 118, srf[SRF_CSM_FOOT_PREP_WATER_LEVER], srf[SRF_BORDER_118x118], FoodPreparationWaterLeversRow);
-	
+
+	Panel306Row.Init(AID_CSM_PANEL_306, MainPanel);
+	/// \todo set event timer parameter when available
+	EventTimerUpDown306Switch.Init(0, 0, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x29], Panel306Row, NULL); 
+
 	/////////////////
 	// Panel 10/12 //
 	/////////////////
@@ -6015,6 +6025,9 @@ void Saturn::InitSwitches() {
 	FoodPreparationWaterHotLever.SetCallback(new PanelSwitchCallback<SaturnWaterController>(&WaterController, &SaturnWaterController::FoodPreparationWaterSwitchToggled));
 	FoodPreparationWaterColdLever.Register(PSH, "FoodPreparationWaterColdLever", 0, SPRINGLOADEDSWITCH_DOWN);
 	FoodPreparationWaterColdLever.SetCallback(new PanelSwitchCallback<SaturnWaterController>(&WaterController, &SaturnWaterController::FoodPreparationWaterSwitchToggled));
+
+	EventTimerUpDown306Switch.Register(PSH, "EventTimerUpDown306Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	EventTimerUpDown306Switch.SetSideways(true);
 
 	LMTunnelVentValve.AddPosition(0, 300);
 	LMTunnelVentValve.AddPosition(1, 330);

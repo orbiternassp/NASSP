@@ -213,6 +213,7 @@ IDB_CSM_PANEL_600                           BITMAP  "..\\Bitmaps\\csm_panel_600.
 IDB_CSM_PANEL_600_SWITCH                    BITMAP  "..\\Bitmaps\\csm_panel_600_switch.bmp"
 IDB_CSM_PANEL_382_COVER                     BITMAP  "..\\Bitmaps\\csm_panel_382_cover.bmp"
 IDB_CSM_WASTE_DISPOSAL_ROTARY               BITMAP  "..\\Bitmaps\\csm_waste_disposal_rotary.bmp"
+IDB_THREEPOSSWITCH90_LEFT                   BITMAP  "..\\Bitmaps\\threeposswitch90_left.bmp"
 
 
 
