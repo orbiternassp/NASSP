@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.2  2009/08/10 02:23:06  dseagrav
   *	LEM EPS (Part 2)
   *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
@@ -542,6 +545,7 @@ public:
 	void SetHeld(bool s) { Held = s; };
 	bool IsHeld() { return Held; };
 	void SetActive(bool s);
+	void SetSideways(bool s) { Sideways = s; };
 
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
@@ -584,6 +588,7 @@ protected:
 	bool Active;
 	bool SwitchToggled;
 	bool Held;
+	bool Sideways;
 
 	SURFHANDLE SwitchSurface;
 	SURFHANDLE BorderSurface;

@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.2  2009/08/10 02:23:06  dseagrav
   *	LEM EPS (Part 2)
   *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
@@ -474,6 +477,7 @@ ToggleSwitch::ToggleSwitch() {
 
 	Active = true;
 	Held = false;
+	Sideways = false;
 
 	delayable = false;
 	delayTime = 2;
@@ -505,7 +509,6 @@ void ToggleSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDL
 	height = h;
 	xOffset = xoffset;
 	yOffset = yoffset;
-
 	SwitchSurface = surf;
 	BorderSurface = bsurf;
 	
@@ -620,7 +623,7 @@ bool ToggleSwitch::DoCheckMouseClick(int event, int mx, int my) {
 	//
 
 	if (event == PANEL_MOUSE_LBDOWN) {
-		if (my > (y + (height / 2.0))) {
+		if ((!Sideways && my > (y + (height / 2.0))) || (Sideways && mx < (x + (width / 2.0)))) {
 			if (state != TOGGLESWITCH_DOWN) {
 				SwitchTo(TOGGLESWITCH_DOWN,true);
 				Sclick.play();
@@ -768,7 +771,7 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	// off click.
 	//
 	if (event == PANEL_MOUSE_LBDOWN) {
-		if (my > (y + (height / 2.0))) {
+		if ((!Sideways && my > (y + (height / 2.0))) || (Sideways && mx < (x + (width / 2.0)))) {
 			if (state > 0) {
 				SwitchTo(state - 1, true);
 				Sclick.play();
@@ -793,18 +796,6 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
 			SwitchTo(THREEPOSSWITCH_CENTER);
 	}
-
-/*	if (Active && (state != OldState)) {
-		SwitchToggled = true;
-		if (switchRow) {
-			if (switchRow->panelSwitches->listener) 
-				switchRow->panelSwitches->listener->PanelSwitchToggled(this);
-		}
-		if (callback) 
-		{
-			callback->Call(this);
-		}
-	}*/
 	return true;
 }
 
@@ -817,11 +808,6 @@ void ThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 bool ThreePosSwitch::SwitchTo(int newState, bool dontspring)
 
 {
-	// Switch only with REALISM 0
-//	if (switchRow) {
-//		if (switchRow->panelSwitches->Realism) 
-//			return false;
-//	}
 	if (Active)
 	{
 		if (state != newState)
@@ -3353,30 +3339,6 @@ bool EventTimerControlSwitch::SwitchTo(int newState, bool dontspring)
 //
 // Event timer up/down/reset switch.
 //
-
-/*bool EventTimerResetSwitch::CheckMouseClick(int event, int mx, int my)
-
-{
-	if (MissionTimerSwitch::CheckMouseClick(event, mx, my))
-	{
-		if (timer) {
-			if (IsUp()) {
-				timer->SetCountUp(TIMER_COUNT_NONE);
-				timer->Reset();
-				timer->SetRunning(false);
-			}
-			else if (IsCenter()) {
-				timer->SetCountUp(TIMER_COUNT_UP);
-			}
-			else if (IsDown()) {
-				timer->SetCountUp(TIMER_COUNT_DOWN);
-			}
-		}
-		return true;
-	}
-
-	return false;
-}*/
 
 bool EventTimerResetSwitch::SwitchTo(int newState, bool dontspring)
 {

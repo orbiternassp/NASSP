@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -770,6 +773,7 @@ public:
 		SRF_CSM_PANEL_600_SWITCH,
 		SRF_CSM_PANEL_382_COVER,
 		SRF_CSM_WASTE_DISPOSAL_ROTARY,
+		SRF_THREEPOSSWITCH90_LEFT,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -3335,6 +3339,10 @@ protected:
 	ToggleSwitch FoodPreparationWaterHotLever;
 	ToggleSwitch FoodPreparationWaterColdLever;
 	
+	SwitchRow Panel306Row;
+	EventTimerResetSwitch EventTimerUpDown306Switch;
+
+
 	////////////////////////
 	// Panel 325/326 etc. //
 	////////////////////////
