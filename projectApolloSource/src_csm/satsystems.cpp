@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.2  2009/03/03 18:34:28  tschachim
   *	Bugfixes BMAGs and hatch.
   *	
@@ -484,6 +487,9 @@ void Saturn::SystemsInit() {
 	FlightBusFeeder.WireToBuses(MainBusA, MainBusB);
 	FlightBus.WireTo(&FlightBusFeeder);
 	Panelsdk.AddElectrical(&FlightBus, false);
+
+	// Feeder for LM umbilical
+	LMUmbilicalFeeder.WireToBuses(&MnbLMPWR1CircuitBraker,&MnbLMPWR2CircuitBraker);
 
 	//
 	// Flight/Post Landing Bus and its feeder

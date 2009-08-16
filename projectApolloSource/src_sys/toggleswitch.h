@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/12 23:26:53  tschachim
+  *	"Sideways" toggle switch.
+  *	
   *	Revision 1.3  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -1318,7 +1321,7 @@ public:
 	IndicatorSwitch();
 	virtual ~IndicatorSwitch();
 
-	void Register(PanelSwitchScenarioHandler &scnh, char *n, bool defaultState);
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, bool failopen = false);
 	void DrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);

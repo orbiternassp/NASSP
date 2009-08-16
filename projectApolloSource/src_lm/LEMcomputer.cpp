@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/02 19:20:24  spacex15
+  *	AGC socket version reenabled
+  *	
   *	Revision 1.3  2009/08/01 23:06:33  jasonims
   *	LM Optics Code Cleaned Up... Panel Code added for LM Optics... Knobs activated... Counter and Computer Controls still to come.
   *	
@@ -1748,12 +1751,10 @@ void LMOptics::SystemTimestep(double simdt) {
 }
 
 void LMOptics::TimeStep(double simdt) {
-
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
 	sprintf(oapiDebugString(), "Optics Shaft %.2f, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft/RAD, OpticsReticle/RAD, ReticleMoved, KnobTurning);
 	if (OpticsReticle > 2*PI) OpticsReticle -= 2*PI;
 	if (OpticsReticle < 0) OpticsReticle += 2*PI;
-
 }
 
 void LMOptics::SaveState(FILEHANDLE scn) {

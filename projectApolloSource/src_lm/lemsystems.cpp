@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/10 02:26:17  dseagrav
+  *	I forgot to re-enable the optics timestep item.
+  *	
   *	Revision 1.3  2009/08/10 02:23:06  dseagrav
   *	LEM EPS (Part 2)
   *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
@@ -464,31 +467,31 @@ void LEM::SystemsInit()
 	// Batteries 1-4 and the Lunar Stay Battery are jettisoned with the descent stage.
 
 	// ECA #1 (DESCENT stage, LMP DC bus)
-	ECA_1a.Init(this, Battery1);
-	ECA_1b.Init(this, Battery2);
+	ECA_1a.Init(this, Battery1, 2); // Battery 1 starts on LV
+	ECA_1b.Init(this, Battery2, 0);
 	ECA_1a.dc_source_tb = &DSCBattery1TB;
-	ECA_1a.dc_source_tb->SetState(0); // Initialize to off
+	ECA_1a.dc_source_tb->SetState(2); // Initialize to LV
 	ECA_1b.dc_source_tb = &DSCBattery2TB;
-	ECA_1b.dc_source_tb->SetState(0);
+	ECA_1b.dc_source_tb->SetState(0); // Initialize to off
 
 	// ECA #2 (DESCENT stage, CDR DC bus)
-	ECA_2a.Init(this, Battery3);
-	ECA_2b.Init(this, Battery4);
+	ECA_2a.Init(this, Battery3, 0);
+	ECA_2b.Init(this, Battery4, 2); 
 	ECA_2a.dc_source_tb = &DSCBattery3TB;
 	ECA_2a.dc_source_tb->SetState(0); 
 	ECA_2b.dc_source_tb = &DSCBattery4TB;
-	ECA_2b.dc_source_tb->SetState(0);
+	ECA_2b.dc_source_tb->SetState(2);
 
 	// ECA #1 and #2 are JETTISONED with the descent stage.
 	// ECA #3 and #4 have no low voltage taps and can feed either bus.
-	ECA_3a.Init(this, Battery5);
-	ECA_3b.Init(this, Battery5);
+	ECA_3a.Init(this, Battery5, 0);
+	ECA_3b.Init(this, Battery5, 0);
 	ECA_3a.dc_source_tb = &ASCBattery5ATB;
 	ECA_3a.dc_source_tb->SetState(0); // Initialize to off
 	ECA_3b.dc_source_tb = &ASCBattery5BTB;
 	ECA_3b.dc_source_tb->SetState(0); // Initialize to off
-	ECA_4a.Init(this, Battery6);
-	ECA_4b.Init(this, Battery6);
+	ECA_4a.Init(this, Battery6, 0);
+	ECA_4b.Init(this, Battery6, 0);
 	ECA_4a.dc_source_tb = &ASCBattery6ATB;
 	ECA_4a.dc_source_tb->SetState(0); // Initialize to off
 	ECA_4b.dc_source_tb = &ASCBattery6BTB;
@@ -526,12 +529,18 @@ void LEM::SystemsInit()
 	CDRBatteryFeedTieCB2.MaxAmps = 100.0;
 	CDRBatteryFeedTieCB2.WireTo(&BTB_CDR_C);
 
-	// Bus Tie Blocks (Not real objects)
+	// Set up XLunar system
+	BTC_XLunar.Init(this);
+
 	// Main busses can be fed from the ECAs via the BAT FEED TIE CBs,
 	// the other bus via the CROSS TIE BUS / CROSS TIE BAL LOADS CBs,
 	// or the CSM via the XLUNAR bus and associated etcetera.
-	BTB_CDR_A.Init(this,&CDRBatteryFeedTieCB1,&CDRBatteryFeedTieCB2); // Tie dual CBs together for CDR bus
-	BTB_LMP_A.Init(this,&LMPBatteryFeedTieCB1,&LMPBatteryFeedTieCB2); // Tie dual CBs together for LMP bus
+	// At this point, we have the sum of all battery feeds on BTB D and the XLUNAR feeds on BTB A
+	BTB_CDR_D.Init(this,&CDRBatteryFeedTieCB1,&CDRBatteryFeedTieCB2); // Tie dual CBs together for CDR bus
+	BTB_LMP_D.Init(this,&LMPBatteryFeedTieCB1,&LMPBatteryFeedTieCB2); // Tie dual CBs together for LMP bus
+
+	BTB_CDR_A.Init(this,&BTB_CDR_D,&BTC_XLunar.dc_output);		      // Tie batteries and XLUNAR feed for CDR bus
+	BTB_LMP_A.Init(this,&BTB_LMP_D,NULL);							  // Not really necessary but keeps things even
 
 	// Bus cross-tie breakers
 	CDRCrossTieBalCB.MaxAmps = 30.0;
@@ -547,11 +556,6 @@ void LEM::SystemsInit()
 	// where the CBs are. The multiplexer will do the rest.
 	BTC_MPX.Init(this,&LMPs28VBus,&CDRs28VBus,&LMPCrossTieBalCB,&LMPCrossTieBusCB,&CDRCrossTieBalCB,&CDRCrossTieBusCB);
 	
-	/* The D is for Depreciated
-	BTB_CDR_D.Init(this,&CDRCrossTieBalCB,&CDRCrossTieBusCB);
-	BTB_LMP_D.Init(this,&LMPCrossTieBalCB,&LMPCrossTieBusCB);
-	*/
-
 	// At this point, the sum of bus feeds are on BTB A, and the cross-tie sources are on the mpx.
 
 	// Join cross-ties and main-ties for bus source
@@ -574,6 +578,12 @@ void LEM::SystemsInit()
 	CDRs28VBus.WireTo(&BTB_CDR_E); 
 	LMPs28VBus.WireTo(&BTB_LMP_E);
 
+	// DC voltmeter CBs
+	CDRDCBusVoltCB.MaxAmps = 2.0;
+	CDRDCBusVoltCB.WireTo(&CDRs28VBus);
+	LMPDCBusVoltCB.MaxAmps = 2.0;
+	LMPDCBusVoltCB.WireTo(&LMPs28VBus);
+
 	// AC Inverter CBs
 	CDRInverter1CB.MaxAmps = 30.0;
 	CDRInverter1CB.WireTo(&CDRs28VBus);
@@ -582,6 +592,9 @@ void LEM::SystemsInit()
 	// AC Inverters
 	INV_1.dc_input = &CDRInverter1CB;	
 	INV_2.dc_input = &LMPInverter2CB; 	
+	// AC bus voltmeter breaker
+	AC_A_BUS_VOLT_CB.MaxAmps = 2.0;
+	AC_A_BUS_VOLT_CB.WireTo(&ACBusA);
 	// AC bus input breakers
 	AC_A_INV_1_FEED_CB.MaxAmps = 5.0;
 	AC_A_INV_1_FEED_CB.WireTo(&INV_1);
@@ -598,7 +611,7 @@ void LEM::SystemsInit()
 	// Situation load will wire these to their breakers later if needed
 
 	// AC bus attenuator.
-	ACVoltsAttenuator.WireTo(&ACBusA);
+	ACVoltsAttenuator.WireTo(&AC_A_BUS_VOLT_CB);
 
 	// RCS Main Shutoff valves
 	RCSMainSovASwitch.WireTo(&CDRs28VBus);
@@ -655,16 +668,19 @@ void LEM::SystemsInit()
 	// Panelsdk.AddElectrical(&LMPs28VBus, false); 
 	
 	// Arrange for updates of tie points and bus balancer
-	Panelsdk.AddElectrical(&BTB_LMP_E, false);
-	Panelsdk.AddElectrical(&BTB_LMP_A, false);
-	Panelsdk.AddElectrical(&BTB_LMP_D, false);
-	Panelsdk.AddElectrical(&BTB_LMP_B, false);
-	Panelsdk.AddElectrical(&BTB_LMP_C, false);
+	Panelsdk.AddElectrical(&BTB_LMP_E, false); // Sum of BTB-A and bus cross-tie-balancer
+	Panelsdk.AddElectrical(&BTB_LMP_A, false); // Sum of BTB-D and XLUNAR power
+	Panelsdk.AddElectrical(&BTB_LMP_D, false); // Sum of battery feed ties
+	Panelsdk.AddElectrical(&BTB_LMP_B, false); // Sum of ascent and descent feed lines
+	Panelsdk.AddElectrical(&BTB_LMP_C, false); // Sum of ascent and descent feed lines
 	Panelsdk.AddElectrical(&BTB_CDR_E, false);
 	Panelsdk.AddElectrical(&BTB_CDR_A, false);
 	Panelsdk.AddElectrical(&BTB_CDR_D, false);
 	Panelsdk.AddElectrical(&BTB_CDR_B, false);
 	Panelsdk.AddElectrical(&BTB_CDR_C, false);
+
+	// XLUNAR source
+	Panelsdk.AddElectrical(&BTC_XLunar, false);
 
 	// Update ECA ties
 	Panelsdk.AddElectrical(&DES_CDRs28VBusA, false);
@@ -1053,15 +1069,56 @@ bool LEM::GetValveState(int valve)
 }
 
 // SYSTEMS COMPONENTS
+// UMBILICAL
+LEMPowerConnector::LEMPowerConnector(){
+	type = NO_CONNECTION;
+	connectedTo = 0;
+	csm_power_latch = 0;
+}
+
+bool LEMPowerConnector::ReceiveMessage(Connector *from, ConnectorMessage &m){
+	// This should only get messages of type 42 from the CM telling it to switch relay states
+	// on our side
+	if(from != this && m.messageType == 42){
+		// Relay Event
+		// When connected, the CSM feeds the LM via two 7.5A umbilicals. Both feed the same stuff, they are redundant.
+		// The CSM power comes in via the CDRs DC bus and returns to the CSM via the CDR and LMP XLUNAR busses.
+		// That means in order to have CSM power, you need to have either:
+		//   A: CDR XLUNAR CB closed
+		//   B: LMP XLUNAR CB closed with the bus cross-tie CBs closed.
+		// When CSM power is commanded on, it turns off the descent ECAs and prevents them from being turned back on.
+		// Ascent power is not affected.
+		// The ECA design makes it impossible to charge the LM batteries from the CSM power supply, since it prevents current from flowing backwards.
+		switch(m.val1.iValue){
+			case 0: // Disconnect				
+				csm_power_latch = -1;
+				// sprintf(oapiDebugString(),"LM/CSM Conn: Latch Reset");
+				break;
+			case 1: // Connect
+				csm_power_latch = 1;
+				// sprintf(oapiDebugString(),"LM/CSM Conn: Latch Set");
+				break;
+			default:
+				sprintf(oapiDebugString(),"LM/CSM Conn: Relay Event: Bad parameter %d",m.val1.iValue);
+				return false;
+		}
+		return true;
+	}
+	// Debug: Complain if we got garbage
+	sprintf(oapiDebugString(),"LM/CSM Conn: Bad message: Type %d parameter %d",m.messageType,m.val1.iValue);
+	return false;
+}
+
 // ELECTRICAL CONTROL ASSEMBLY SUBCHANNEL
 LEM_ECAch::LEM_ECAch(){
 	lem = NULL;
 	dc_source_tb = NULL;
+	input = -1; // Flag uninit
 }
 
-void LEM_ECAch::Init(LEM *s,e_object *src){
+void LEM_ECAch::Init(LEM *s,e_object *src,int inp){
 	lem = s;
-	input = 0;
+	if(input == -1){ input = inp; }
 	dc_source = src;
 	Volts = 24;
 }
@@ -1070,7 +1127,7 @@ void LEM_ECAch::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 
 {
 	oapiWriteLine(scn, start_str);
-	oapiWriteScenario_float(scn, "INPUT", input);
+	oapiWriteScenario_int(scn, "INPUT", input);
 	oapiWriteLine(scn, end_str);
 }
 
@@ -1084,8 +1141,8 @@ void LEM_ECAch::LoadState(FILEHANDLE scn, char *end_str)
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, end_str, end_len))
 			return;
-		if (!strnicmp (line, "INPUT", 7)) {
-			sscanf(line + 7, "%d", &dec);
+		if (!strnicmp (line, "INPUT", 5)) {
+			sscanf(line + 6, "%d", &dec);
 			input = dec;
 		}
 	}
@@ -1185,7 +1242,7 @@ void LEM_BusFeed::UpdateFlow(double dt){
 	if(dc_source_a != NULL){
 		dc_source_a->DrawPower(PowerDrawPerSource); 
 	}
-	if(dc_source_a != NULL){
+	if(dc_source_b != NULL){
 		dc_source_b->DrawPower(PowerDrawPerSource); 
 	}
 	
@@ -1229,6 +1286,83 @@ void LEM_BusFeed::UpdateFlow(double dt){
 	// Reset for next pass.
 	power_load -= power_load_src;	
 }
+
+// XLUNAR BUS MANAGER OUTPUT SOURCE
+LEM_XLBSource::LEM_XLBSource(){
+	Volts = 0;
+	enabled = true;
+}
+
+void LEM_XLBSource::SetVoltage(double v){
+	Volts = v;
+}
+
+void LEM_XLBSource::DrawPower(double watts)
+{ 
+	power_load += watts;
+};
+
+// XLUNAR BUS MANAGER
+LEM_XLBControl::LEM_XLBControl(){
+	lem = NULL;
+}
+
+void LEM_XLBControl::Init(LEM *s){
+	lem = s;
+	dc_output.SetVoltage(0);
+}
+
+// Depreciated - Don't tie directly
+void LEM_XLBControl::DrawPower(double watts)
+{ 
+	power_load += watts;
+};
+
+void LEM_XLBControl::UpdateFlow(double dt){
+	// If we have no LEM, punt
+	if(lem == NULL){ return; }
+	// Do we have power from the other side?
+	double sVoltage = lem->CSMToLEMPowerSource.Voltage();
+	// Is the CDR XLunar tie closed?
+	if(lem->CDRXLunarBusTieCB.GetState() == 1){
+		// Yes, we can put voltage on the CDR bus
+		dc_output.SetVoltage(sVoltage);
+	}else{
+		// No -- Are we tied to the LMP bus, and is the XLunar tie closed on the LMP side?
+		if(((lem->CDRCrossTieBalCB.GetState() == 1 || lem->CDRCrossTieBusCB.GetState() == 1) &&
+			(lem->LMPCrossTieBalCB.GetState() == 1 || lem->LMPCrossTieBusCB.GetState() == 1)) &&
+			lem->LMPXLunarBusTieCB.GetState() == 1){
+			// Yes, we can put voltage on the CDR bus and it get there.
+			dc_output.SetVoltage(sVoltage);
+		}else{
+			// No, we have no return path, so we have no voltage.
+			dc_output.SetVoltage(0);
+		}
+	}
+	// Handle switchery
+	switch(lem->CSMToLEMPowerConnector.csm_power_latch){
+		case 1:
+			// If the CSM latch is set, keep the descent ECAs off
+			lem->ECA_1a.input = 0; lem->ECA_1b.input = 0;
+			lem->ECA_2a.input = 0; lem->ECA_2b.input = 0;
+			break;
+		case -1:
+			// If the CSM latch is reset, turn on the LV taps on batteries 1 and 4.
+			// And reset the latch to zero
+			lem->ECA_1a.input = 2; lem->ECA_1b.input = 0;
+			lem->ECA_2a.input = 0; lem->ECA_2b.input = 2;
+			lem->CSMToLEMPowerConnector.csm_power_latch = 0;
+			break;
+	}	
+	// So then, do we have xlunar voltage?
+	if(dc_output.Voltage() > 0){
+		// Process load at our feed point
+		lem->CSMToLEMPowerSource.DrawPower(dc_output.PowerLoad());
+		// sprintf(oapiDebugString(),"Drawing %f watts from CSM",dc_output.PowerLoad());
+		dc_output.UpdateFlow(dt); // Shouldn't touch voltage since it has no SRC
+	}
+	
+};
 
 // CROSS-TIE BALANCER OUTPUT SOURCE
 LEM_BCTSource::LEM_BCTSource(){

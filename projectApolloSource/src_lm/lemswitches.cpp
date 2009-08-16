@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 02:23:06  dseagrav
+  *	LEM EPS (Part 2)
+  *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -168,32 +172,40 @@ void LEMValveSwitch::CheckValve(int s)
 }
 
 void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
-							LEM_ECAch *lem_eca, int src_no)
-
+							LEM_ECAch *lem_eca, int src_no, int asc)
 {
 	LEMThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row, s);
 
 	eca = lem_eca;
+	lem = s;
+	afl = asc;
 	srcno = src_no;
 }
 
 bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
 
 {
+	// If our associated CB has no power, do nothing.
 	if (LEMThreePosSwitch::CheckMouseClick(event, mx, my)) {
+		// Check for control power
+		if (afl == 1){
+			if(lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24){ return true; }
+		}else{
+			if(lem->CDRDesECAContCB.Voltage() < 24 && lem->LMPDesECAContCB.Voltage() < 24){ return true; }
+		}
 		switch(state){
 			case THREEPOSSWITCH_UP:
 				switch(srcno){
 					case 1: // HV
 						eca->input = 1;
 						if(eca->dc_source_tb != NULL){
- 							eca->dc_source_tb->SetState(1);
+							eca->dc_source_tb->SetState(1);
 						}
 						break;
 					case 2: // LV
 						eca->input = 2;
 						if(eca->dc_source_tb != NULL){
- 							eca->dc_source_tb->SetState(2);
+							eca->dc_source_tb->SetState(2);
 						}
 						break;
 				}
@@ -208,7 +220,6 @@ bool LEMBatterySwitch::CheckMouseClick(int event, int mx, int my)
 
 		return true;
 	}
-	
 	return false;
 }
 
@@ -239,6 +250,7 @@ bool LEMDeadFaceSwitch::CheckMouseClick(int event, int mx, int my)
 		switch(state){
 			case THREEPOSSWITCH_UP:
 				// Connect descent stage
+				if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24){ return true; }
 				if(lem->stage < 2){
 					// Reconnect ECA outputs
 					lem->DES_LMPs28VBusA.WireTo(&lem->ECA_1a);
@@ -255,6 +267,7 @@ bool LEMDeadFaceSwitch::CheckMouseClick(int event, int mx, int my)
 				break;
 			case THREEPOSSWITCH_DOWN:
 				// Disconnect descent stage
+				if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24){ return true; }
 				lem->DES_LMPs28VBusA.Disconnect();
 				lem->DES_LMPs28VBusB.Disconnect();
 				lem->DES_CDRs28VBusA.Disconnect();
@@ -265,11 +278,9 @@ bool LEMDeadFaceSwitch::CheckMouseClick(int event, int mx, int my)
 				lem->EPSMonitorSelectRotary.SetSource(4, NULL);
 				lem->DSCBattFeedTB.SetState(0);
 				break;
-		}
-
+		}		
 		return true;
-	}
-	
+	}	
 	return false;
 }
 
@@ -472,4 +483,17 @@ void LEMDCAmMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
 	v = 220-(v*2.25);
 	DrawNeedle(drawSurface, 49, 49, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 99, 98, SURF_PREDEF_CK);
+}
+
+// LEM Voltmeter-feeding CB hack
+double LEMVoltCB::Current()
+{	
+	if ((state != 0) && SRC && SRC->IsEnabled()) {
+		Volts = SRC->Voltage();
+		if (Volts > 0.0)
+			Amperes = SRC->Current();
+		else 
+			Amperes = 0.0; 
+	}
+	return Amperes;
 }

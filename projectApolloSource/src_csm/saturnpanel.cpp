@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/12 23:26:53  tschachim
+  *	"Sideways" toggle switch.
+  *	
   *	Revision 1.3  2009/08/11 23:49:21  tschachim
   *	Minor fixes
   *	
@@ -1831,7 +1834,7 @@ void Saturn::AddLeftMiddleMainPanelAreas(int offset) {
 	oapiRegisterPanelArea (AID_DOCKINGPROBESWITCHES,    					_R(1388 + offset,  256, 1509 + offset,  325), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_DOCKINGPROBEINDICATORS,      				_R(1396 + offset,  179, 1419 + offset,  229), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CSMLIGHTSWITCHES,      						_R(1518 + offset,  279, 1663 + offset,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_LMPOWERSWITCH,      							_R(1692 + offset,  279, 1726 + offset,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_LMPOWERSWITCH,      							_R(1692 + offset,  279, 1726 + offset,  308), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 
 	// Display & keyboard (DSKY), main panel uses the main DSKY.
 	oapiRegisterPanelArea (AID_DSKY_DISPLAY,								_R(1239 + offset,  589, 1344 + offset,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -2096,7 +2099,7 @@ void Saturn::SetSwitches(int panel) {
 	TunnelLightSwitch.Init(111, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
 
 	LMPowerSwitchRow.Init(AID_LMPOWERSWITCH, MainPanel);
-	LMPowerSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], LMPowerSwitchRow);
+	LMPowerSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], LMPowerSwitchRow, this);
 
 	PostLDGVentValveLeverRow.Init(AID_POSTLANDINGVENTVALVELEVER, MainPanel);
 	PostLDGVentValveLever.Init( 0, 0, 50, 158, srf[SRF_POSTLDGVENTVLVLEVER], srf[SRF_BORDER_50x158], PostLDGVentValveLeverRow);
@@ -2774,8 +2777,8 @@ void Saturn::SetSwitches(int panel) {
 	CWMnbCircuitBraker.Init(38, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], CWCircuitBrakersRow, MainBusB, 5.0);
 
 	LMPWRCircuitBrakersRow.Init(AID_LMPWRCIRCUITBRAKERS, MainPanel);
-	MnbLMPWR1CircuitBraker.Init(0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], LMPWRCircuitBrakersRow);
-	MnbLMPWR2CircuitBraker.Init(3, 78, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], LMPWRCircuitBrakersRow);
+	MnbLMPWR1CircuitBraker.Init(0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], LMPWRCircuitBrakersRow, MainBusB, 7.5);
+	MnbLMPWR2CircuitBraker.Init(3, 78, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], LMPWRCircuitBrakersRow, MainBusB, 7.5);
 
 	InverterControlCircuitBrakersRow.Init(AID_INVERTERCONTROLCIRCUITBRAKERS, MainPanel);
 	InverterControl1CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], InverterControlCircuitBrakersRow, &MnA1Switch, 70.0);
@@ -5060,7 +5063,7 @@ void Saturn::InitSwitches() {
 	RndzLightSwitch.Register(PSH, "RndzLightSwitch", THREEPOSSWITCH_CENTER);
 	TunnelLightSwitch.Register(PSH, "TunnelLightSwitch", false);
 
-	LMPowerSwitch.Register(PSH, "LMPowerSwitch", THREEPOSSWITCH_CENTER);
+	LMPowerSwitch.Register(PSH, "LMPowerSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
 
 	PostLDGVentValveLever.Register(PSH, "PostLDGVentValveLever", 1);
 
