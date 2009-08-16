@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/01 23:06:33  jasonims
+  *	LM Optics Code Cleaned Up... Panel Code added for LM Optics... Knobs activated... Counter and Computer Controls still to come.
+  *	
   *	Revision 1.2  2009/08/01 19:48:33  jasonims
   *	LM Optics Code Added, along with rudimentary Graphics for AOT.
   *	Reticle uses GDI objects to allow realtime rotation.
@@ -350,7 +353,7 @@ public:
 
 	int OpticsShaft;											// Shaft Position (can be 0=0, 1=60, 2=120, 3=180, 4=-120, 5=-60 degrees)
 	double OpticsReticle;										// AOT Reticle rotation
-	double ReticleMoved;											// 0 is no movement detected, - is clockwise, + is counterclockwise
+	double ReticleMoved;										// 0 is no movement detected, - is clockwise, + is counterclockwise
 	int RetDimmer;
 	int KnobTurning;
 };

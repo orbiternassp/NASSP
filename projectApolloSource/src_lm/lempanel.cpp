@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/10 02:23:06  dseagrav
+  *	LEM EPS (Part 2)
+  *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
+  *	
   *	Revision 1.3  2009/08/01 23:06:33  jasonims
   *	LM Optics Code Cleaned Up... Panel Code added for LM Optics... Knobs activated... Counter and Computer Controls still to come.
   *	
@@ -331,7 +335,7 @@ void DrawReticle (HDC hDC, double angle, int dimmer)
 	HGDIOBJ oldObj;
 	int xend,yend;
 	// Set up Dimmer Pen
-	HPEN pen = CreatePen(PS_SOLID,1,RGB(dimmer,64,64));
+	HPEN pen = CreatePen(PS_SOLID,2,RGB(dimmer,64,64));
 	oldObj = SelectObject (hDC, pen);
 	// Draw crosshair vertical member
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle));
@@ -547,23 +551,23 @@ void LEM::InitPanel() {
 	}
 	EPSMonitorSelectRotary.SetSource(5, Battery5);
 	EPSMonitorSelectRotary.SetSource(6, Battery6);
-	EPSMonitorSelectRotary.SetSource(7, &CDRs28VBus);
-	EPSMonitorSelectRotary.SetSource(8, &LMPs28VBus);
+	EPSMonitorSelectRotary.SetSource(7, &CDRDCBusVoltCB);
+	EPSMonitorSelectRotary.SetSource(8, &LMPDCBusVoltCB);
 	EPSMonitorSelectRotary.SetSource(9, &ACVoltsAttenuator);
 	
 	EPSMonitorSelectRotary.Register(PSH,"EPSMonitorSelectRotary",0);
 
 	EPSDCVoltMeter.Register(PSH,"EPSDCVoltMeter", 19, 42, 3);
 	EPSDCAmMeter.Register(PSH,"EPSDCAmMeter", 0, 120, 3);
-	DSCBattery1TB.Register(PSH, "DSCBattery1TB", true);
-	DSCBattery2TB.Register(PSH, "DSCBattery2TB", true);
-	DSCBattery3TB.Register(PSH, "DSCBattery3TB", true);
-	DSCBattery4TB.Register(PSH, "DSCBattery4TB", true);
-	ASCBattery5ATB.Register(PSH, "ASCBattery5ATB", true);
-	ASCBattery5BTB.Register(PSH, "ASCBattery5BTB", true);
-	ASCBattery6ATB.Register(PSH, "ASCBattery6ATB", true);
-	ASCBattery6BTB.Register(PSH, "ASCBattery6BTB", true);
-	DSCBattFeedTB.Register(PSH, "DSCBattFeedTB", true);
+	DSCBattery1TB.Register(PSH, "DSCBattery1TB", 2);
+	DSCBattery2TB.Register(PSH, "DSCBattery2TB", 0);
+	DSCBattery3TB.Register(PSH, "DSCBattery3TB", 0);
+	DSCBattery4TB.Register(PSH, "DSCBattery4TB", 2);
+	ASCBattery5ATB.Register(PSH, "ASCBattery5ATB", 0);
+	ASCBattery5BTB.Register(PSH, "ASCBattery5BTB", 0);
+	ASCBattery6ATB.Register(PSH, "ASCBattery6ATB", 0);
+	ASCBattery6BTB.Register(PSH, "ASCBattery6BTB", 0);
+	DSCBattFeedTB.Register(PSH, "DSCBattFeedTB", 1);
 	EPSInverterSwitch.Register(PSH,"EPSInverterSwitch",THREEPOSSWITCH_DOWN);
 	EPSEDVoltSelect.Register(PSH,"EPSEDVoltSelect",THREEPOSSWITCH_CENTER);
 	DSCSEBat1HVSwitch.Register(PSH, "DSCSEBat1HVSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
@@ -581,19 +585,28 @@ void LEM::InitPanel() {
 	ASCBat6SESwitch.Register(PSH, "ASCBat6SESwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
 	EDS_CB_LOGIC_B.Register(PSH,"EDS_CB_LOGIC_B",1);
-	LMPInverter2CB.Register(PSH,"LMPInverter2CB",1);
+	LMPDesECAContCB.Register(PSH, "LMPDesECAContCB", 0);
+	LMPDesECAMainCB.Register(PSH, "LMPDesECAMainCB", 1);
+	LMPAscECAContCB.Register(PSH, "LMPAscECAContCB", 0);
+	LMPAscECAMainCB.Register(PSH, "LMPAscECAMainCB", 0);
+	LMPDCBusVoltCB.Register(PSH, "LMPDCBusVoltCB", 1);
+	LMPInverter2CB.Register(PSH,"LMPInverter2CB",0);
 	LMPBatteryFeedTieCB1.Register(PSH, "LMPBatteryFeedTieCB1", 1);
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
-	LMPCrossTieBusCB.Register(PSH, "LMPCrossTieBusCB", 1);
+	LMPCrossTieBusCB.Register(PSH, "LMPCrossTieBusCB", 0);
 	LMPCrossTieBalCB.Register(PSH, "LMPCrossTieBalCB", 1);
-	LMPXLunarBusTieCB.Register(PSH, "LMPXLunarBusTieCB", 1);
+	LMPXLunarBusTieCB.Register(PSH, "LMPXLunarBusTieCB", 0);
 	CDRBatteryFeedTieCB1.Register(PSH, "CDRBatteryFeedTieCB1", 1);
 	CDRBatteryFeedTieCB2.Register(PSH, "CDRBatteryFeedTieCB2", 1);
-	CDRCrossTieBusCB.Register(PSH, "CDRCrossTieBusCB", 1);
+	CDRCrossTieBusCB.Register(PSH, "CDRCrossTieBusCB", 0);
 	CDRCrossTieBalCB.Register(PSH, "CDRCrossTieBalCB", 1);
-	CDRXLunarBusTieCB.Register(PSH, "CDRXLunarBusTieCB", 1);
-
-	CDRInverter1CB.Register(PSH,"CDRInverter1CB",1);
+	CDRXLunarBusTieCB.Register(PSH, "CDRXLunarBusTieCB", 0);
+	CDRDesECAContCB.Register(PSH, "CDRDesECAContCB", 0);
+	CDRDesECAMainCB.Register(PSH, "CDRDesECAMainCB", 1);
+	CDRAscECAContCB.Register(PSH, "CDRAscECAContCB", 0);
+	CDRAscECAMainCB.Register(PSH, "CDRAscECAMainCB", 0);
+	CDRDCBusVoltCB.Register(PSH, "CDRDCBusVoltCB", 1);
+	CDRInverter1CB.Register(PSH,"CDRInverter1CB",0);
 	
 	EDMasterArm.Register(PSH,"EDMasterArm",TOGGLESWITCH_DOWN);
 	EDDesVent.Register(PSH,"EDDesVent",TOGGLESWITCH_DOWN);
@@ -611,19 +624,20 @@ void LEM::InitPanel() {
 	EDDesFuelVentTB.Register(PSH, "EDDesFuelVentTB", true);
 	EDDesOxidVentTB.Register(PSH, "EDDesOxidVentTB", true);
 
-	AC_A_INV_1_FEED_CB.Register(PSH,"AC_A_INV_1_FEED_CB",1);
-	AC_A_INV_2_FEED_CB.Register(PSH,"AC_A_INV_2_FEED_CB",1);
-	AC_B_INV_1_FEED_CB.Register(PSH,"AC_B_INV_1_FEED_CB",1);
-	AC_B_INV_2_FEED_CB.Register(PSH,"AC_B_INV_2_FEED_CB",1);
+	AC_A_BUS_VOLT_CB.Register(PSH,"AC_A_BUS_VOLT_CB",0);
+	AC_A_INV_1_FEED_CB.Register(PSH,"AC_A_INV_1_FEED_CB",0);
+	AC_A_INV_2_FEED_CB.Register(PSH,"AC_A_INV_2_FEED_CB",0);
+	AC_B_INV_1_FEED_CB.Register(PSH,"AC_B_INV_1_FEED_CB",0);
+	AC_B_INV_2_FEED_CB.Register(PSH,"AC_B_INV_2_FEED_CB",0);
 
-	CDR_FDAI_DC_CB.Register(PSH,"CDR_FDAI_DC_CB",1);
-	CDR_FDAI_AC_CB.Register(PSH,"CDR_FDAI_AC_CB",1);
+	CDR_FDAI_DC_CB.Register(PSH,"CDR_FDAI_DC_CB",0);
+	CDR_FDAI_AC_CB.Register(PSH,"CDR_FDAI_AC_CB",0);
 
-	EDS_CB_LOGIC_A.Register(PSH,"EDS_CB_LOGIC_A",1);
-	EDS_CB_LG_FLAG.Register(PSH,"EDS_CB_LG_FLAG",1);
+	EDS_CB_LOGIC_A.Register(PSH,"EDS_CB_LOGIC_A",0);
+	EDS_CB_LG_FLAG.Register(PSH,"EDS_CB_LG_FLAG",0);
 
-	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 1);
-	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 1);
+	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 0);
+	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 0);
 
 	LEMCoas1Enabled = false;
 	LEMCoas2Enabled = true;
@@ -1585,7 +1599,13 @@ void LEM::SetSwitches(int panel) {
 			EDS_CB_LOGIC_B.Init(256, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
 			
 			Panel16CB4SwitchRow.Init(AID_LEM_P16_CB_ROW4, MainPanel);
+			LMPDCBusVoltCB.Init( 512, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 2.0);
 			LMPInverter2CB.Init( 576, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 30.0);
+			LMPAscECAMainCB.Init( 640, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 2.0);
+			LMPAscECAContCB.Init( 704, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 3.0);
+			LMPDesECAMainCB.Init( 768, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 3.0);
+			LMPDesECAContCB.Init( 832, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 5.0);
+			LMPXLunarBusTieCB.Init( 896,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 50.0);
 
 			LMPCrossTieBusCB.Init( 1019,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 100.0);
 			LMPCrossTieBalCB.Init( 1083,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 30.0);
@@ -1607,17 +1627,17 @@ void LEM::SetSwitches(int panel) {
 			EPSMonitorSelectRotary.Init(117, 17, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], EPSLeftControlArea);
 
 			DSCHiVoltageSwitchRow.Init(AID_DSC_HIGH_VOLTAGE_SWITCHES, MainPanel);
-			DSCSEBat1HVSwitch.Init( 0,  5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1a,1);
-			DSCSEBat2HVSwitch.Init( 69,  5, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1b,1);
-			DSCCDRBat3HVSwitch.Init(151,  5, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2a,1);
-			DSCCDRBat4HVSwitch.Init(220,  5, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2b,1);
+			DSCSEBat1HVSwitch.Init( 0,  5, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1a,1,0);
+			DSCSEBat2HVSwitch.Init( 69,  5, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_1b,1,0);
+			DSCCDRBat3HVSwitch.Init(151,  5, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2a,1,0);
+			DSCCDRBat4HVSwitch.Init(220,  5, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCHiVoltageSwitchRow, this,&ECA_2b,1,0);
 			DSCBattFeedSwitch.Init(291,  0, 34, 39,srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], DSCHiVoltageSwitchRow, this);
 
 			DSCLoVoltageSwitchRow.Init(AID_DSC_LOW_VOLTAGE_SWITCHES, MainPanel);
-			DSCSEBat1LVSwitch.Init( 0,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow, this,&ECA_1a,2);
-			DSCSEBat2LVSwitch.Init( 69,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_1b,2);
-			DSCCDRBat3LVSwitch.Init( 151,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_2a,2);
-			DSCCDRBat4LVSwitch.Init( 220,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_2b,2);
+			DSCSEBat1LVSwitch.Init( 0,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], DSCLoVoltageSwitchRow, this,&ECA_1a,2,0);
+			DSCSEBat2LVSwitch.Init( 69,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_1b,2,0);
+			DSCCDRBat3LVSwitch.Init( 151,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_2a,2,0);
+			DSCCDRBat4LVSwitch.Init( 220,  0, 34, 29,srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29],DSCLoVoltageSwitchRow, this,&ECA_2b,2,0);
 
 			DSCBatteryTBSwitchRow.Init(AID_DSC_BATTERY_TALKBACKS, MainPanel);
 			DSCBattery1TB.Init(0,  0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
@@ -1633,10 +1653,10 @@ void LEM::SetSwitches(int panel) {
 			ASCBattery6BTB.Init(221,0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow);
 
 			ASCBatterySwitchRow.Init(AID_ASC_BATTERY_SWITCHES, MainPanel);
-			ASCBat5SESwitch.Init ( 0,    0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_3a,1);
-			ASCBat5CDRSwitch.Init( 69,   0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_3b,1);
-			ASCBat6CDRSwitch.Init( 138,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_4a,1);
-			ASCBat6SESwitch.Init ( 221,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_4b,1);
+			ASCBat5SESwitch.Init ( 0,    0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_3a,1,1);
+			ASCBat5CDRSwitch.Init( 69,   0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_3b,1,1);
+			ASCBat6CDRSwitch.Init( 138,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_4a,1,1);
+			ASCBat6SESwitch.Init ( 221,  0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this,&ECA_4b,1,1);
 
 			ComPitchMeterRow.Init(AID_LMPITCHDEGS, MainPanel);
 			ComPitchMeter.Init(g_Param.pen[4], g_Param.pen[4], ComPitchMeterRow, 0);
@@ -1654,6 +1674,7 @@ void LEM::SetSwitches(int panel) {
 
 		case LMPANEL_LEFTPANEL:
 			Panel11CB1SwitchRow.Init(AID_LEM_P11_CB_ROW1, MainPanel);
+			AC_A_BUS_VOLT_CB.Init(829, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &ACBusA, 2.0);
 			AC_A_INV_1_FEED_CB.Init( 765, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &INV_1, 5.0);
 			AC_A_INV_2_FEED_CB.Init( 701, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &INV_2, 5.0);
 			AC_B_INV_1_FEED_CB.Init( 637, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB1SwitchRow, &INV_1, 5.0);
@@ -1677,7 +1698,13 @@ void LEM::SetSwitches(int panel) {
 			CDRCrossTieBalCB.Init( 130,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &CDRs28VBus, 30.0);
 			CDRCrossTieBusCB.Init( 194,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &CDRs28VBus, 100.0);
 
+			CDRXLunarBusTieCB.Init( 318,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &CDRs28VBus, 50.0);
+			CDRDesECAContCB.Init( 382, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &CDRs28VBus, 5.0);
+			CDRDesECAMainCB.Init( 446, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &CDRs28VBus, 3.0);
+			CDRAscECAContCB.Init( 510, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &CDRs28VBus, 3.0);
+			CDRAscECAMainCB.Init( 574, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &CDRs28VBus, 2.0);
 			CDRInverter1CB.Init( 638, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &CDRs28VBus, 30.0); 
+			CDRDCBusVoltCB.Init( 702, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &CDRs28VBus, 2.0);
 			
 			// Panel 8 is  431,916 to 1574,1258
 			Panel8SwitchRow.Init(AID_LEM_PANEL_8, MainPanel);

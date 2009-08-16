@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/10 02:23:06  dseagrav
+  *	LEM EPS (Part 2)
+  *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
+  *	
   *	Revision 1.3  2009/08/01 19:48:33  jasonims
   *	LM Optics Code Added, along with rudimentary Graphics for AOT.
   *	Reticle uses GDI objects to allow realtime rotation.
@@ -621,22 +625,32 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	if (down){
 		switch(key){
+			// Valid shaft positions should be:
+			// 000.00  00 (F) 
+			// 057.30  60 (R)
+			// 114.59 120 (Rr)
+			// 171.89 180 (CL)
+			// 229.18 240 (Lr)
+			// 286.48 300 (L)
+
 			case OAPI_KEY_A:
-				optics.OpticsShaft += 60 * PI / 180;
-				if (optics.OpticsShaft > 2*PI)
-					optics.OpticsShaft -= 2*PI;
+				optics.OpticsShaft++;
+				if(optics.OpticsShaft > 5){
+					optics.OpticsShaft = 0; // Clobber
+				}
 				break;
 
 			case OAPI_KEY_D:
-				optics.OpticsShaft -= 60 * PI / 180;
-				if (optics.OpticsShaft < 0)
-					optics.OpticsShaft += 2*PI;
+				optics.OpticsShaft--;
+				if (optics.OpticsShaft < 0){
+					optics.OpticsShaft = 5; // Clobber
+				}
 				break;
 
 			case OAPI_KEY_W:
 				optics.ReticleMoved = 0.52;  //Fast Rate (about 30 deg/sec)
 
-				if (KEYMOD_CONTROL(keystate)) {
+				if (KEYMOD_ALT(keystate)) {
 					optics.ReticleMoved = 0.01;  //Slow Rate (about 0.5 deg/sec)
 				}
 				break;
@@ -644,7 +658,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			case OAPI_KEY_S:
 				optics.ReticleMoved = -0.52;  //Fast Rate (about 30 deg/sec)
 
-				if (KEYMOD_CONTROL(keystate)) {
+				if (KEYMOD_ALT(keystate)) {
 					optics.ReticleMoved = -0.01;  //Slow Rate (about 0.5 deg/sec)
 				}
 				break;
@@ -1166,16 +1180,16 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 			ECA_2b.LoadState(scn,"ECA_2B_END");
 		}
 		else if (!strnicmp (line, "ECA_3A_START",sizeof("ECA_3A_START"))) {
-			ECA_1a.LoadState(scn,"ECA_3A_END");
+			ECA_3a.LoadState(scn,"ECA_3A_END");
 		}
 		else if (!strnicmp (line, "ECA_4A_START",sizeof("ECA_4A_START"))) {
-			ECA_2a.LoadState(scn,"ECA_4A_END");
+			ECA_4a.LoadState(scn,"ECA_4A_END");
 		}
 		else if (!strnicmp (line, "ECA_3B_START",sizeof("ECA_3B_START"))) {
-			ECA_1b.LoadState(scn,"ECA_3B_END");
+			ECA_3b.LoadState(scn,"ECA_3B_END");
 		}
 		else if (!strnicmp (line, "ECA_4B_START",sizeof("ECA_4B_START"))) {
-			ECA_2b.LoadState(scn,"ECA_4B_END");
+			ECA_4b.LoadState(scn,"ECA_4B_END");
 		}
 		else if (!strnicmp (line, "PANEL_ID", 8)) { 
 			sscanf (line+8, "%d", &PanelId);

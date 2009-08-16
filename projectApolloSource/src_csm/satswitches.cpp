@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -2223,4 +2226,67 @@ void SaturnOxygenRepressPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 	v = 115.0 - v / 1200.0 * 50.0 ;	
 	DrawNeedle(drawSurface, 55, 440, 60.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 413, 0, 110, 90, 30, SURF_PREDEF_CK);
+}
+
+// LM power switch
+void CSMLMPowerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s){
+	sat = s;
+	ThreePosSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+}
+
+bool CSMLMPowerSwitch::CheckMouseClick(int event, int mx, int my)
+
+{
+	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
+		// First -- Are we docked?
+		if(sat->dockingprobe.IsHardDocked() == false){ return true; }
+		// Umbilical connected? (Supposed to be by docking!)
+		if(sat->CSMToLEMConnector.connectedTo == NULL){ return true; }
+		ConnectorMessage msg;
+		ConnectorMessageValue mval;
+		msg.destination = LEM_CSM_POWER;		
+		msg.messageType = 42;
+		switch(state){
+			case THREEPOSSWITCH_UP:
+				// Connect the bus
+				sat->CSMToLEMPowerDrain.Enable();
+				sat->CSMToLEMPowerDrain.WireTo(&sat->LMUmbilicalFeeder);				
+				// Turn on LEM				
+				mval.iValue = 1; // Relay State 1 = Deny Descent ECA operation
+				msg.val1 = mval;
+				sat->CSMToLEMConnector.SendMessage(msg);
+				break;
+			case THREEPOSSWITCH_CENTER:
+				// Turn off LEM (but don't disconnect it)
+				sat->CSMToLEMPowerDrain.Disable();
+				sat->CSMToLEMPowerDrain.WireTo(NULL);
+				break;
+			case THREEPOSSWITCH_DOWN:
+				// Reset LEM				
+				mval.iValue = 0; // Relay State 0 = Permit Descent ECA operation
+				msg.val1 = mval;
+				sat->CSMToLEMConnector.SendMessage(msg);
+				// Ensure disconnected
+				sat->CSMToLEMPowerDrain.Disable();
+				sat->CSMToLEMPowerDrain.WireTo(NULL);
+				break;
+		}
+
+		return true;
+	}
+	return false;
+}
+
+bool CSMLMPowerSwitch::SwitchTo(int newState)
+
+{
+	sprintf(oapiDebugString(),"NewState %d",newState);
+	if (SaturnThreePosSwitch::SwitchTo(newState)) {
+		// some of these switches are spring-loaded, 
+		// so we have to use newState here
+		// CheckValve(newState);
+		return true;
+	}
+
+	return false;
 }

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -893,4 +896,15 @@ public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	SURFHANDLE FrameSurface;
+};
+
+class CSMLMPowerSwitch : public SaturnThreePosSwitch 
+{
+public:
+	CSMLMPowerSwitch() { sat = 0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
+	bool CSMLMPowerSwitch::CheckMouseClick(int event, int mx, int my);
+	bool CSMLMPowerSwitch::SwitchTo(int newState);
+protected:
+	Saturn *sat;
 };

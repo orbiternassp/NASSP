@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 02:23:06  dseagrav
+  *	LEM EPS (Part 2)
+  *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
+  *	
   *	Revision 1.1  2009/02/18 23:21:14  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -71,15 +75,16 @@ protected:
 
 class LEMBatterySwitch: public LEMThreePosSwitch {
 public:
-	LEMBatterySwitch() { eca = NULL; srcno=0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, LEM_ECAch *lem_eca, int src_no);
+	LEMBatterySwitch() { eca = NULL; lem = NULL; srcno=0; afl=0; };
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s, LEM_ECAch *lem_eca, int src_no, int asc);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool SwitchTo(int newState);
 
 protected:
 	void CheckValve(int s);
 
-	int srcno;
+	LEM *lem;
+	int srcno,afl;
 	LEM_ECAch *eca;
 };
 
@@ -108,6 +113,10 @@ protected:
 	LEM_INV *inv2;
 };
 
+// This is a CB like any other, except it lies about current across itself.
+class LEMVoltCB: public CircuitBrakerSwitch {
+	double Current();
+};
 
 class LEMValveTalkback : public IndicatorSwitch {
 public:

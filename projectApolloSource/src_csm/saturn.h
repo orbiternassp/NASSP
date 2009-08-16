@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/12 23:26:53  tschachim
+  *	"Sideways" toggle switch.
+  *	
   *	Revision 1.2  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -2120,7 +2123,7 @@ protected:
 	ToggleSwitch TunnelLightSwitch;
 
 	SwitchRow LMPowerSwitchRow;
-	ThreePosSwitch LMPowerSwitch;
+	CSMLMPowerSwitch LMPowerSwitch;
 
 	SwitchRow PostLDGVentValveLeverRow;
 	CircuitBrakerSwitch PostLDGVentValveLever;
@@ -3762,6 +3765,9 @@ protected:
 	DCbus FlightPostLandingBus;
 	NWayPowerMerge FlightPostLandingBusFeeder;
 
+	// Fake feeder for twin LM power umbilicals
+	PowerMerge LMUmbilicalFeeder;
+
 	// Inverters.
 	ACInverter *Inverter1;
 	ACInverter *Inverter2;
@@ -4593,6 +4599,7 @@ protected:
 	friend class DockingProbe;
 	friend class SaturnWaterController;
 	friend class SaturnGlycolCoolingController;
+	friend class CSMLMPowerSwitch;
 };
 
 extern void BaseInit();

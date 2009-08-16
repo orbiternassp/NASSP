@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/12 23:26:53  tschachim
+  *	"Sideways" toggle switch.
+  *	
   *	Revision 1.3  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -917,7 +920,7 @@ double CircuitBrakerSwitch::Voltage()
 }
 
 double CircuitBrakerSwitch::Current()
-{
+{	
 	if ((state != 0) && SRC && SRC->IsEnabled()) {
 		Volts = SRC->Voltage();
 		if (Volts > 0.0)
@@ -2453,7 +2456,7 @@ IndicatorSwitch::IndicatorSwitch() {
 IndicatorSwitch::~IndicatorSwitch() {
 }
 
-void IndicatorSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, bool defaultState) {
+void IndicatorSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState) {
 
 	name = n;
 	state = defaultState;

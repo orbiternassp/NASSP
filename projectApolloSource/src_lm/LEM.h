@@ -22,6 +22,10 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/08/10 02:23:06  dseagrav
+  *	LEM EPS (Part 2)
+  *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
+  *	
   *	Revision 1.4  2009/08/01 23:06:33  jasonims
   *	LM Optics Code Cleaned Up... Panel Code added for LM Optics... Knobs activated... Counter and Computer Controls still to come.
   *	
@@ -126,13 +130,42 @@
 #include "payload.h"
 
 // Systems things
-
 // ELECTRICAL
+// LEM to CSM Power Connector
+class LEMPowerConnector : public Connector
+{
+public:
+	LEMPowerConnector();
+	int csm_power_latch;
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
+// XLunar Bus Controller Voltage Source
+class LEM_XLBSource : public e_object {
+public:
+	LEM_XLBSource();							// Cons
+	void SetVoltage(double v);
+	void DrawPower(double watts);
+};
+
+
+// XLunar Bus Controller
+class LEM_XLBControl : public e_object {
+public:
+	LEM_XLBControl();	// Cons
+	void Init(LEM *s);
+	void UpdateFlow(double dt);
+	void DrawPower(double watts);
+
+	LEM *lem;					// Pointer at LEM
+	LEM_XLBSource dc_output;	// DC output
+};
+
 // Electrical Control Assembly Subchannel
 class LEM_ECAch : public e_object {
 public:
 	LEM_ECAch();								 // Cons
-	void Init(LEM *s,e_object *src); // Init
+	void Init(LEM *s,e_object *src, int inp); // Init
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -677,6 +710,7 @@ protected:
 	SwitchRow Panel11CB1SwitchRow;
 	// I have to get to these from the inverter select switch class
 	public:
+	LEMVoltCB           AC_A_BUS_VOLT_CB;
 	CircuitBrakerSwitch AC_A_INV_1_FEED_CB;
 	CircuitBrakerSwitch AC_A_INV_2_FEED_CB;
 	CircuitBrakerSwitch AC_B_INV_1_FEED_CB;
@@ -703,6 +737,12 @@ protected:
 	CircuitBrakerSwitch CDRCrossTieBusCB;
 	CircuitBrakerSwitch CDRCrossTieBalCB;
 	CircuitBrakerSwitch CDRXLunarBusTieCB;
+	// ECA control & Voltmeter
+	CircuitBrakerSwitch CDRDesECAContCB;
+	CircuitBrakerSwitch CDRDesECAMainCB;
+	CircuitBrakerSwitch CDRAscECAContCB;
+	CircuitBrakerSwitch CDRAscECAMainCB;
+	LEMVoltCB CDRDCBusVoltCB;
 	// AC Inverter 1 feed
 	CircuitBrakerSwitch CDRInverter1CB;
 
@@ -968,6 +1008,12 @@ protected:
 
 	SwitchRow Panel16CB4SwitchRow;
 	CircuitBrakerSwitch LMPInverter2CB;
+	// ECA control & Voltmeter
+	CircuitBrakerSwitch LMPDesECAContCB;
+	CircuitBrakerSwitch LMPDesECAMainCB;
+	CircuitBrakerSwitch LMPAscECAContCB;
+	CircuitBrakerSwitch LMPAscECAMainCB;
+	LEMVoltCB LMPDCBusVoltCB;
 	// Battery feed tie breakers
 	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
 	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
@@ -1092,10 +1138,9 @@ protected:
 	///
 	/// \brief Connector from LEM to CSM when docked.
 	///
-	MultiConnector LEMToCSMConnector;
-
-	PowerSourceConnectorObject CSMToLEMPowerSource;
-	Connector CSMToLEMPowerConnector;
+	MultiConnector LEMToCSMConnector;				// This carries data *FROM* CSMToLEMPowerConnector
+	LEMPowerConnector CSMToLEMPowerConnector;		// This sends data *FROM* CSMToLEMPowerSource *TO* LEMToCSMConnector
+	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
 
 	char AudioLanguage[64];
 
@@ -1132,6 +1177,9 @@ protected:
 	
 	// Bus Cross Tie Multiplex (Not real object)
 	LEM_BusCrossTie BTC_MPX;
+
+	// XLUNAR Bus Controller
+	LEM_XLBControl BTC_XLunar;
 
 	// ECA
 	LEM_ECAch ECA_1a; // (DESCENT stage, LMP DC bus)
@@ -1178,8 +1226,10 @@ protected:
 	friend class LEMDCVoltMeter;
 	friend class LEMDCAmMeter;
 	friend class LMOptics;
+	friend class LEMBatterySwitch;
 	friend class LEMDeadFaceSwitch;
 	friend class LEM_BusCrossTie;
+	friend class LEM_XLBControl;
 };
 
 extern void LEMLoadMeshes();

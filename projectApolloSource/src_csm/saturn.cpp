@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/10 14:38:03  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.2  2009/04/11 19:32:51  tschachim
   *	New DM weight by Graham
   *	
@@ -573,6 +576,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	FlightBusFeeder("Flight-Bus-Feeder",Panelsdk),
 	FlightPostLandingBus("FlightPostLanding-Bus",&FlightPostLandingBusFeeder),
 	FlightPostLandingBusFeeder("FlightPostLanding-Bus-Feeder",Panelsdk, 5),
+	LMUmbilicalFeeder("LM-Umbilical-Feeder", Panelsdk),
 	SwitchPower("Switch-Power", Panelsdk),
 	GaugePower("Gauge-Power", Panelsdk),
 	SMQuadARCS(ph_rcs0, Panelsdk),
