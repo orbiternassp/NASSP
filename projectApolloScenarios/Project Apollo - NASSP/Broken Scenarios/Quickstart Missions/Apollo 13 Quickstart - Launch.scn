@@ -62,8 +62,7 @@ Odyssey:ProjectApollo/Saturn5
   LEMN Aquarius
   AUTOSLOW 1
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
-	AUTO 1
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
   </Checklist>
 ;
 ; LM Pad values from LM7_Pad_Loads.pdf

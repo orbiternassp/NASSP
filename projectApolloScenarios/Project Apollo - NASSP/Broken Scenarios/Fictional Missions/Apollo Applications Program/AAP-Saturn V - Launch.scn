@@ -51,8 +51,7 @@ AAP-001c:ProjectApollo/Saturn5
   AUTOSLOW 1
   LEMNM LM-021
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
-    AUTO 1
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
   </Checklist>
 END
 AAP-001c-ML:ProjectApollo\ML

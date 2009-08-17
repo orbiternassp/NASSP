@@ -55,8 +55,7 @@ Apollo 504:ProjectApollo\Saturn5
   TOHDG 72
 LANG English
  <Checklist>
-    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
-    AUTO 1
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
   </Checklist>
 END
 Crawler-Transporter:ProjectApollo\Crawler

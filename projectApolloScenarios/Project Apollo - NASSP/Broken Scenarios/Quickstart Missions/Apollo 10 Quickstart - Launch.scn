@@ -56,8 +56,7 @@ Charlie-Brown:ProjectApollo/Saturn5
   LANG English
   LEMN Snoopy
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
-	AUTO 1
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
   </Checklist>
 END
 AS-505-CT:ProjectApollo\Crawler

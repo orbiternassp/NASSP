@@ -54,8 +54,7 @@ Gumdrop:ProjectApollo/Saturn5
   LANG English
   LEMN Spider
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
-	AUTO 1
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
   </Checklist>
 END
 AS-504-CT:ProjectApollo\Crawler
