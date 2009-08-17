@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.13  2009/07/11 18:59:51  tschachim
+  *	Epoch corrections by Jarmo.
+  *	
   *	Revision 1.12  2009/06/12 10:15:47  tschachim
   *	Added V37E00E at the end of clock update.
   *	
@@ -182,8 +185,8 @@
 // ==============================================================
 // Global variables
 
-HINSTANCE g_hDLL;
-int g_MFDmode; // identifier for new MFD mode
+static HINSTANCE g_hDLL;
+static int g_MFDmode; // identifier for new MFD mode
 
 
 #define PROG_NONE		0

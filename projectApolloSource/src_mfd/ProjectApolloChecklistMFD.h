@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.9  2008/12/05 13:05:47  tschachim
   *	New info screen by Coussini.
   *	
@@ -81,6 +84,7 @@ protected:
 	int TopStep;
 	int CurrentStep;
 	int HiLghtdLine;
+	HBITMAP hBmpLogo;
 
 	std::string DisplayChecklistMissionTime (ChecklistItem item);
 };

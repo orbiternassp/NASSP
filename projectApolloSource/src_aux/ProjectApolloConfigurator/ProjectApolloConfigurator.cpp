@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.15  2008/07/13 17:47:12  tschachim
   *	Rearranged realism levels, merged Standard and Quickstart Mode.
   *	
@@ -108,6 +111,7 @@ static struct {
 	int Saturn_THC;
 	int Saturn_RHCTHCToggle;
 	int Saturn_RHCTHCToggleId;
+	int Saturn_ChecklistAutoSlow;
 	int Saturn_ChecklistAutoDisabled;
 	int Saturn_OrbiterAttitudeDisabled;
 	int Saturn_SequencerSwitchLightingDisabled;
@@ -153,6 +157,8 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 12, "%i", &gParams.Saturn_FDAIDisabled);
 		} else if (!strnicmp (line, "FDAISMOOTH", 10)) {
 			sscanf (line + 10, "%i", &gParams.Saturn_FDAISmooth);
+		} else if (!strnicmp (line, "CHECKLISTAUTOSLOW", 17)) {
+			sscanf (line + 17, "%i", &gParams.Saturn_ChecklistAutoSlow);
 		} else if (!strnicmp (line, "CHECKLISTAUTODISABLED", 21)) {
 			sscanf (line + 21, "%i", &gParams.Saturn_ChecklistAutoDisabled);
 		} else if (!strnicmp (line, "ORBITERATTITUDEDISABLED", 23)) {
@@ -233,6 +239,9 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	oapiWriteLine(hFile, cbuf);
 
 	sprintf(cbuf, "FDAISMOOTH %d", gParams.Saturn_FDAISmooth);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "CHECKLISTAUTOSLOW %d", gParams.Saturn_ChecklistAutoSlow);
 	oapiWriteLine(hFile, cbuf);
 
 	sprintf(cbuf, "CHECKLISTAUTODISABLED %d", gParams.Saturn_ChecklistAutoDisabled);
@@ -370,6 +379,11 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 				}
 
 				// Quickstart Tab
+				if (SendDlgItemMessage (gParams.hDlgTabs[2], IDC_CHECK_CHECKLISTAUTOSLOW, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+					gParams.Saturn_ChecklistAutoSlow = 1;
+				} else {
+					gParams.Saturn_ChecklistAutoSlow = 0;
+				}
 				if (SendDlgItemMessage (gParams.hDlgTabs[2], IDC_CHECK_CHECKLISTAUTODISABLED, BM_GETCHECK, 0, 0) == BST_CHECKED) {
 					gParams.Saturn_ChecklistAutoDisabled = 1;
 				} else {
@@ -452,6 +466,8 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 			sprintf(buffer, "%i", gParams.Saturn_RHCTHCToggleId);
 			SendDlgItemMessage(hWnd, IDC_EDIT_RHCTHCTOGGLE, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
 		}
+
+		SendDlgItemMessage(hWnd, IDC_CHECK_CHECKLISTAUTOSLOW, BM_SETCHECK, gParams.Saturn_ChecklistAutoSlow?BST_CHECKED:BST_UNCHECKED, 0);
 
 		SendDlgItemMessage(hWnd, IDC_CHECK_CHECKLISTAUTODISABLED, BM_SETCHECK, gParams.Saturn_ChecklistAutoDisabled?BST_CHECKED:BST_UNCHECKED, 0);
 

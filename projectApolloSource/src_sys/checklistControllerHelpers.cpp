@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.11  2008/05/27 14:53:31  tschachim
   *	New event LAST_ITEM_RELATIVE, bugfixes.
   *	
@@ -101,23 +104,35 @@ void ChecklistItem::init(vector<BasicExcelCell> &cells, const vector<ChecklistGr
 		strncpy(text,cells[0].GetString(),100);
 	else
 		return;
+
 	time = cells[1].GetDouble();
+	
 	if (cells[2].GetString())
 		relativeEvent = checkEvent(cells[2].GetString());
 	else
 		relativeEvent = NO_TIME_DEF;
+	
 	if (cells[3].GetString())
-		strncpy(info,cells[3].GetString(),100);
+		strncpy(panel, cells[3].GetString(),100);
+	else if (cells[3].GetInteger() != 0) 
+		_snprintf(panel, 100, "%d", cells[3].GetInteger()); 
+	
 	if (cells[4].GetString())
-		strncpy(item,cells[4].GetString(),100);
-	position = cells[5].GetInteger();
-	automatic = (cells[6].GetInteger() != 0);
-	failEvent = -1;
+		strncpy(heading1, cells[4].GetString(),100);
+	if (cells[5].GetString())
+		strncpy(heading2, cells[5].GetString(),100);
+	if (cells[6].GetString())
+		strncpy(info, cells[6].GetString(),300);
 	if (cells[7].GetString())
+		strncpy(item, cells[7].GetString(),100);
+	position = cells[8].GetInteger();
+	automatic = (cells[9].GetInteger() != 0);
+	failEvent = -1;
+	if (cells[10].GetString())
 	{
 		for (int i = 0; i < groups.size(); i ++)
 		{
-			if (!strnicmp(cells[7].GetString(),groups[i].name,strlen(cells[7].GetString())))
+			if (!strnicmp(cells[10].GetString(),groups[i].name,strlen(cells[10].GetString())))
 				failEvent = i;
 		}
 	}
@@ -483,16 +498,19 @@ void ChecklistContainer::initSet(const ChecklistGroup &program,vector<ChecklistI
 	ChecklistItem temp;
 	for (int i = 1; i < rows; i++)
 	{
-		for (int ii = 0; ii < 8; ii++)
-		{
-			vec_temp.push_back(*(sheet->Cell(i,ii)));
+		// Ignore empty texts
+		if (sheet->Cell(i,0)->GetString() != 0) {
+			for (int ii = 0; ii < 11; ii++)
+			{
+				vec_temp.push_back(*(sheet->Cell(i,ii)));
+			}
+			temp.init(vec_temp,controller.groups);
+			temp.group = program.group;
+			temp.index = set.size();
+			set.push_back(temp);
+			vec_temp = vector<BasicExcelCell>();
+			temp = ChecklistItem();
 		}
-		temp.init(vec_temp,controller.groups);
-		temp.group = program.group;
-		temp.index = set.size();
-		set.push_back(temp);
-		vec_temp = vector<BasicExcelCell>();
-		temp = ChecklistItem();
 	}
 }
 // Todo: Verify

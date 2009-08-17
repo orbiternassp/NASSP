@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.17  2008/12/05 13:05:47  tschachim
   *	New info screen by Coussini.
   *	
@@ -68,7 +71,7 @@
 #include <stdio.h>
 #include <string>
 
-//#include "MFDResource.h"
+#include "MFDResource.h"
 #include "ProjectApolloChecklistMFD.h"
 
 #define PROG_CHKLST			0
@@ -99,7 +102,9 @@
 #define NLINES  20
 #define HLINE   .04
 
-int hMFD;
+static int hMFD;
+static HINSTANCE g_hDLL;
+
 void ProjectApolloChecklistMFDopcDLLInit (HINSTANCE hDLL)
 {
 	static char* name = "Project Apollo Checklist";
@@ -108,6 +113,7 @@ void ProjectApolloChecklistMFDopcDLLInit (HINSTANCE hDLL)
 	spec.name = name;
 	spec.msgproc = ProjectApolloChecklistMFD::MsgProc;
 	hMFD = oapiRegisterMFDMode(spec);
+	g_hDLL = hDLL;
 }
 void ProjectApolloChecklistMFDopcDLLExit (HINSTANCE hDLL)
 {
@@ -128,6 +134,8 @@ ProjectApolloChecklistMFD::ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *
 	TopStep = 0;
 	HiLghtdLine = 0;
 	//SelectedGroup = -1;
+
+	hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
 }
 
 ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
@@ -660,9 +668,14 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 }
 void ProjectApolloChecklistMFD::Update (HDC hDC)
 {
-
 	static RECT ShadedBox;
 	HBRUSH hBr;
+
+	HDC hDCTemp = CreateCompatibleDC(hDC);
+	HBITMAP hBmpTemp = (HBITMAP) SelectObject(hDCTemp, hBmpLogo);
+	StretchBlt(hDC, 1, 1, width - 2, height - 2, hDCTemp, 0, 0, 256, 256, SRCCOPY);
+	DeleteObject(hBmpTemp);
+	DeleteDC(hDCTemp);
 
 	// Retrieve Checklists
 	vector<ChecklistGroup> *temp = conn.GetChecklistList();
@@ -687,20 +700,20 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		//display AutoToggle selection box.
 		hBr = CreateSolidBrush( RGB(0, 150, 0));
 		if (!conn.ChecklistAutocomplete()){
-			SetRect(&ShadedBox,(int) (width * 0.35),(int) (height * 0.96),(int) (width * 0.47),height-1);
+			SetRect(&ShadedBox,(int) (width * 0.34),(int) (height * 0.955),(int) (width * 0.47),(int) (height*.999));
 		}else{
-			SetRect(&ShadedBox,(int) (width * 0.25),(int) (height * 0.96),(int) (width * 0.34),height-1);
+			SetRect(&ShadedBox,(int) (width * 0.24),(int) (height * 0.955),(int) (width * 0.34),(int) (height*.999));
 		}
 		FillRect(hDC, &ShadedBox, hBr);
 		SetTextColor (hDC, RGB(0, 255, 0));
 		SetTextAlign (hDC, TA_LEFT);
 		TextOut(hDC, (int) (width * .05), (int) (height * .95), " AUTO:  ON  OFF", 15);
 
-		//display flashing selection box.
+		//display flashing selection box. 
 		if (!conn.GetChecklistFlashing()){
-			SetRect(&ShadedBox,(int) (width * 0.83),(int) (height * 0.96),(int) (width * 0.95),height-1);
+			SetRect(&ShadedBox,(int) (width * 0.82),(int) (height * 0.955),(int) (width * 0.95),(int) (height*.999));
 		}else{
-			SetRect(&ShadedBox,(int) (width * 0.73),(int) (height * 0.96),(int) (width * 0.82),height-1);
+			SetRect(&ShadedBox,(int) (width * 0.72),(int) (height * 0.955),(int) (width * 0.82),(int) (height*.999));
 		}
 		FillRect(hDC, &ShadedBox, hBr);
 		DeleteObject(hBr);
@@ -711,41 +724,66 @@ void ProjectApolloChecklistMFD::Update (HDC hDC)
 		//Retrieve 15 visible checklist steps  (all are displayed on two lines)
 		//Lines 1,2,3,4,5,6,7,8,9 (index 0/1,2/3,4/5,6/7,8/9,10/11,12/13,14/15,16/17)
 		int StepCnt = 0;
+		bool linebreakpanel = false;
 		for (cnt = 0 ; cnt < 20 ; cnt++) {
 			item.group = -1;
 			item.index = CurrentStep + StepCnt;
 			if (item.index >= 0){
 				if (conn.GetChecklistItem(&item)) {
-					//display Highlighted box
-					if (StepCnt == 0) {
-						hBr = CreateSolidBrush( RGB(0, 100, 0));
-						//Check to see if step is time dependent 
-						if (item.relativeEvent != NO_TIME_DEF) {
-							SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE1 + .01)),(int) (width * .99), (int) (height * (LINE2 + .01)));
-						} else {
-							SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0 + .01)),(int) (width * .99), (int) (height * (LINE1 + .01)));
-						}
-						FillRect(hDC, &ShadedBox, hBr);
-						DeleteObject(hBr);
+
+					//Heading 1
+					if (strlen(item.heading1) > 0) {
+						if (StepCnt != 0)
+							cnt++; //go to next line
+						SetTextColor(hDC,RGB(225, 225, 255)); 
+						SetTextAlign (hDC, TA_CENTER);
+						TextOut(hDC, (int) (width * .5), (int) (height * (LINE0+cnt*HLINE)), item.heading1, strlen(item.heading1));
+						cnt++; //go to next line to write information
+					}
+
+					//Heading 2
+					if (strlen(item.heading2) > 0) {
+						if (strlen(item.heading1) > 0 || (StepCnt != 0 && !linebreakpanel))
+							cnt++; //go to next line
+						SetTextColor(hDC,RGB(225, 225, 255)); 
+						SetTextAlign (hDC, TA_LEFT);
+						TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), item.heading2, strlen(item.heading2));
+						cnt++; //go to next line to write information
 					}
 
 					//Check to see if step is time dependent and print time if so
 					if (item.relativeEvent != NO_TIME_DEF) {
-						COLORREF tempcolor;
-						tempcolor = GetTextColor(hDC);
 						SetTextColor(hDC,RGB(225, 225, 255)); 
 						SetTextAlign (hDC, TA_LEFT);
-
 						//display Current Checklist Mission Time
 						line = DisplayChecklistMissionTime(item);
 						TextOut(hDC, (int) (width * .02), (int) (height * (LINE0+cnt*HLINE)), line.c_str(), line.size());
-
-						SetTextColor(hDC,tempcolor); 
 						cnt++; //go to next line to write information
-
 					}
+
+					//Display Highlighted box
+					if (StepCnt == 0) {
+						hBr = CreateSolidBrush( RGB(0, 100, 0));
+						SetRect(&ShadedBox,(int) (width * .01),(int) (height * (LINE0+cnt*HLINE+.008)),(int) (width * .99), (int) (height * (LINE1+cnt*HLINE+.01)));
+						FillRect(hDC, &ShadedBox, hBr);
+						DeleteObject(hBr);
+					}
+
 					//Print Step
+					SetTextColor (hDC, RGB(0, 255, 0));
+					SetTextAlign (hDC, TA_LEFT);
 					TextOut(hDC, (int) (width * .05), (int) (height * (LINE0+cnt*HLINE)), item.text, strlen(item.text));
+
+					//Print panel
+					linebreakpanel = false;
+					if (strlen(item.panel) > 0) {
+						if (strlen(item.panel) + strlen(item.text) > 33) {
+							cnt++; //go to next line
+							linebreakpanel = true;
+						}
+						SetTextAlign (hDC, TA_RIGHT);
+						TextOut(hDC, (int) (width * .95), (int) (height * (LINE0+cnt*HLINE)), item.panel, strlen(item.panel));
+					}
 				}
 			}
 			StepCnt++;

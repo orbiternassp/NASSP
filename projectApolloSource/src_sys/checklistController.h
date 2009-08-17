@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.18  2008/07/13 17:47:12  tschachim
   *	Rearranged realism levels, merged Standard and Quickstart Mode.
   *	
@@ -222,6 +225,9 @@ struct ChecklistItem
 		relativeEvent = NO_TIME_DEF;
 		failEvent = -1;
 		text[0] = 0;
+		panel[0] = 0;
+		heading1[0] = 0;
+		heading2[0] = 0;
 		info[0] = 0;
 		automatic = false;
 		item[0] = 0;
@@ -273,9 +279,21 @@ struct ChecklistItem
 /// -------------------------------------------------------------
 	char text[100];
 /// -------------------------------------------------------------
+/// Panel number or description
+/// -------------------------------------------------------------
+	char panel[100];
+/// -------------------------------------------------------------
+/// Heading
+/// -------------------------------------------------------------
+	char heading1[100];
+/// -------------------------------------------------------------
+/// Subheading
+/// -------------------------------------------------------------
+	char heading2[100];
+/// -------------------------------------------------------------
 /// extra text to display when the info button is pressed.
 /// -------------------------------------------------------------
-	char info[100];
+	char info[300];
 /// -------------------------------------------------------------
 /// define whether this checklist will happen automatically in
 /// quickstart mode
@@ -468,6 +486,11 @@ public:
 /// -------------------------------------------------------------
 	bool autoExecute();
 /// -------------------------------------------------------------
+/// Set the auto execute slow setting.  This is used by the vessel
+/// to set the launchpad configuration options setting
+/// -------------------------------------------------------------
+	bool autoExecuteSlow(bool input);
+/// -------------------------------------------------------------
 /// Used to link checklist controller to a vessel, required to
 /// Allow automated checklists as well as automatic checklist
 /// selection and automatic completion detection.
@@ -511,6 +534,8 @@ private:
 	bool init(bool);
 	///This determines whether or not the checklist gets auto executed.
 	bool autoexecute;
+	///This determines the checklist execution speed.
+	bool autoexecuteSlow;
 	///Used to spawn new "program"
 	bool spawnCheck(int, bool, bool automagic = false);
 	///Connector to the panel

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.3  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -1233,6 +1236,7 @@ void Saturn::initSaturn()
 	// Quickstart Mode settings
 	//
 
+	ChecklistAutoSlow = false;
 	ChecklistAutoDisabled = false;
 	OrbiterAttitudeDisabled = false;
 	SequencerSwitchLightingDisabled = false;
@@ -2760,6 +2764,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
 			optics.LoadState(scn);
 		} 
+		else if (!strnicmp (line, "CHECKLISTAUTOSLOW", 17)) {
+			sscanf (line + 17, "%i", &i);
+			ChecklistAutoSlow = (i != 0);
+		} 
 		else if (!strnicmp (line, "CHECKLISTAUTODISABLED", 21)) {
 			sscanf (line + 21, "%i", &i);
 			ChecklistAutoDisabled = (i != 0);
@@ -2939,6 +2947,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	if (!Crewed) {
 		OrbiterAttitudeDisabled = false;
 		ChecklistAutoDisabled = false;
+		ChecklistAutoSlow = false;
 	}
 	
 	// Disable it and check some other settings when not in 
@@ -2947,9 +2956,11 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	else if (Realism) {
 		OrbiterAttitudeDisabled = true;
 		ChecklistAutoDisabled = true;
+		ChecklistAutoSlow = false;
 		SequencerSwitchLightingDisabled = true;
 	}
 	checkControl.autoExecute(!ChecklistAutoDisabled);
+	checkControl.autoExecuteSlow(ChecklistAutoSlow);
 }
 
 //
