@@ -55,8 +55,7 @@ AS-203:ProjectApollo/Saturn1B
   AUTOSLOW 1
   ATTACHSTATE 93
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
-    AUTO 1
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
   </Checklist>
   END
 LC34:ProjectApollo\LC34

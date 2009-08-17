@@ -54,8 +54,7 @@ Constitution:ProjectApollo/Saturn5
   AUTOSLOW 1
   LEMNM Valley Forge
  <Checklist>
-    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
-    AUTO 1
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
   </Checklist>
 END
 Constitution-ML:ProjectApollo\ML

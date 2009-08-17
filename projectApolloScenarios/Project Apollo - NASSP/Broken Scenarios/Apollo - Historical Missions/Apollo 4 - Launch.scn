@@ -63,8 +63,7 @@ AS-501:ProjectApollo/Saturn5
 ; The Apollo 4 CSM probably had no docking probe, TODO reference?
   HASPROBE 0
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
-    AUTO 1
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
   </Checklist>  
 END
 Crawler-Transporter:ProjectApollo\Crawler

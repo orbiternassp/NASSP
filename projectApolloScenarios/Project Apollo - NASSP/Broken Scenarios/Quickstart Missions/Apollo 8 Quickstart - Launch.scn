@@ -55,8 +55,7 @@ AS-503:ProjectApollo/Saturn5
   SIIPUT 443.45
   TCP 0.5
   <Checklist>
-    FILE Doc\Project Apollo - NASSP\Check List\Mission checklist\CSM Default Checklist.xls
-	AUTO 1
+    FILE Doc\Project Apollo - NASSP\Checklists\CSM Default Checklists.xls
   </Checklist>
 END
 AS-503-CT:ProjectApollo\Crawler
