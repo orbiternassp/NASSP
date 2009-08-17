@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.3  2009/08/12 23:26:53  tschachim
   *	"Sideways" toggle switch.
   *	
@@ -3929,6 +3932,7 @@ protected:
 	// Quickstart Mode settings
 	//
 
+	bool ChecklistAutoSlow;
 	bool ChecklistAutoDisabled;
 	bool OrbiterAttitudeDisabled;
 	bool SequencerSwitchLightingDisabled;

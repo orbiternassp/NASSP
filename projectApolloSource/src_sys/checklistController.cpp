@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.22  2008/07/13 17:47:12  tschachim
   *	Rearranged realism levels, merged Standard and Quickstart Mode.
   *	
@@ -273,6 +276,13 @@ bool ChecklistController::autoExecute(bool input)
 	return temp;
 }
 // Todo: Verify
+bool ChecklistController::autoExecuteSlow(bool input)
+{
+	bool temp = autoexecuteSlow;
+	autoexecuteSlow = input;
+	return temp;
+}
+// Todo: Verify
 bool ChecklistController::autoExecute()
 {
 	return autoexecute;
@@ -294,6 +304,7 @@ bool ChecklistController::init(bool input)
 	lastMissionTime = MINUS_INFINITY;
 	lastItemTime = MINUS_INFINITY;
 	autoexecute = false;
+	autoexecuteSlow = false;
 	playSound = false;
 
 	return true;
@@ -446,6 +457,12 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 		if (checkSound.play())
 			playSound = false;
 	}
+
+	// Flashing
+	if (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController)) {
+		conn.SetFlashing(active.sequence->item, flashing);
+	}
+
 	// Even on "non executing" timesteps, we want to allow to complete at least one checklist item
 	if (complete)
 	{
@@ -454,10 +471,14 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 			completeChecklistItem(&(*active.sequence));
 		}
 	}
+
 	//Exit if less than one second
 	if (missiontime < (lastMissionTime + 1.0))
 		return;
+	if (autoexecute && autoexecuteSlow && missiontime < (lastMissionTime + 2.0))
+		return;
 	lastMissionTime = missiontime;
+
 	//Check for groups needing spawn
 	for (int i = 0; i < groups.size(); i++)
 	{
@@ -469,21 +490,27 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 			}
 		}
 	}
-	//Do checklist items
-	if(autoexecute)
-	{
-		while (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController))
-		{
-			if (active.sequence->position < 0)
-				completeChecklistItem(&(*active.sequence));
-			else if (conn.SetState(active.sequence->item,active.sequence->position))
-				completeChecklistItem(&(*active.sequence));
-		}
-	}
 
-	// Flashing
-	if (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController)) {
-		conn.SetFlashing(active.sequence->item, flashing);
+	//Do checklist items
+	if (autoexecute)
+	{
+		if (autoexecuteSlow) {
+			if (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController))
+			{
+				if (active.sequence->position < 0)
+					completeChecklistItem(&(*active.sequence));
+				else if (conn.SetState(active.sequence->item,active.sequence->position))
+					completeChecklistItem(&(*active.sequence));
+			}
+		} else {
+			while (active.program.group != -1 && active.sequence->checkExec(lastMissionTime, active.startTime, lastItemTime, eventController))
+			{
+				if (active.sequence->position < 0)
+					completeChecklistItem(&(*active.sequence));
+				else if (conn.SetState(active.sequence->item,active.sequence->position))
+					completeChecklistItem(&(*active.sequence));
+			}
+		}
 	}
 
 	//Check for complete checklist items
