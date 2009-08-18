@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.88  2008/06/27 16:58:14  jasonims
   *	Moved DualView toggle routine to Timestep from SystemTimestep
   *	
@@ -3027,8 +3030,8 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR1)][AGC_ADDR(AGC_DAPDTR1)] = 010002;
 				vagc.Erasable[AGC_BANK(AGC_DAPDTR2)][AGC_ADDR(AGC_DAPDTR2)] = 001111;
 
-				// Synchronize clock with launch time (TEPHEM), only Apollo 7 and 8 have proper scenarios
-				if (ApolloNo == 7 || ApolloNo == 8) {
+				// Synchronize clock with launch time (TEPHEM), only Apollo 7,8 and 11 have proper scenarios
+				if (ApolloNo == 7 || ApolloNo == 8 || ApolloNo == 11) {
 					double tephem = vagc.Erasable[AGC_BANK(01710)][AGC_ADDR(01710)] + 
 									vagc.Erasable[AGC_BANK(01707)][AGC_ADDR(01707)] * pow((double) 2., (double) 14.) +
 									vagc.Erasable[AGC_BANK(01706)][AGC_ADDR(01706)] * pow((double) 2., (double) 28.);
