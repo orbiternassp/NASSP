@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/17 13:28:04  tschachim
+  *	Enhancement of ChecklistMFD
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -87,7 +90,7 @@
 // ==============================================================
 // Some global parameters
 
-#define MAX_TABNUM 3
+#define MAX_TABNUM 4
 
 // file name for storing custom parameters
 static const char *cfgfile = "ProjectApollo/Saturn5.launchpad.cfg";
@@ -115,6 +118,7 @@ static struct {
 	int Saturn_ChecklistAutoDisabled;
 	int Saturn_OrbiterAttitudeDisabled;
 	int Saturn_SequencerSwitchLightingDisabled;
+	int Saturn_MaxTimeAcceleration;
 } gParams;
 
 
@@ -167,6 +171,8 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 31, "%i", &gParams.Saturn_SequencerSwitchLightingDisabled);
 		} else if (!strnicmp (line, "GNSPLIT", 7)) {
 			sscanf (line + 7, "%i", &gParams.Saturn_GNSplit);
+		} else if (!strnicmp (line, "MAXTIMEACC", 10)) {
+			sscanf (line + 10, "%i", &gParams.Saturn_MaxTimeAcceleration);
 		}
 	}
 	oapiCloseFile (hFile, FILE_IN);
@@ -253,6 +259,9 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	sprintf(cbuf, "SEQUENCERSWITCHLIGHTINGDISABLED %d", gParams.Saturn_SequencerSwitchLightingDisabled);
 	oapiWriteLine(hFile, cbuf);
 
+	sprintf(cbuf, "MAXTIMEACC %d", gParams.Saturn_MaxTimeAcceleration);
+	oapiWriteLine(hFile, cbuf);
+
 	oapiCloseFile (hFile, FILE_OUT);
 }
 
@@ -282,6 +291,9 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 		tabitem.pszText = "Quickstart Mode";
 		SendMessage(hTab, TCM_INSERTITEM, 2, (LPARAM) &tabitem);
 
+		tabitem.pszText = "Virtual AGC";
+		SendMessage(hTab, TCM_INSERTITEM, 3, (LPARAM) &tabitem);
+
 		// set tab control display area
 		GetWindowRect(hTab, &rc);
 		TabCtrl_AdjustRect(hTab, false, &rc);
@@ -301,6 +313,10 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 		gParams.hDlgTabs[2] = CreateDialog(gParams.hInst, MAKEINTRESOURCE(IDD_PAGEQUICKSTART), hWnd, (DLGPROC) DlgProcControl);
 		MoveWindow(gParams.hDlgTabs[2], pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top, false);
 		ShowWindow(gParams.hDlgTabs[2], SW_HIDE);
+
+		gParams.hDlgTabs[3] = CreateDialog(gParams.hInst, MAKEINTRESOURCE(IDD_PAGEVIRTUALAGC), hWnd, (DLGPROC) DlgProcControl);
+		MoveWindow(gParams.hDlgTabs[3], pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top, false);
+		ShowWindow(gParams.hDlgTabs[3], SW_HIDE);
 
 		return TRUE;
 
@@ -399,6 +415,14 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 				} else {
 					gParams.Saturn_SequencerSwitchLightingDisabled = 0;
 				}
+
+				SendDlgItemMessage(gParams.hDlgTabs[3], IDC_EDIT_TIMEACC, WM_GETTEXT, 4, (LPARAM) (LPCTSTR) buffer);
+				if (sscanf(buffer, "%i", &i) == 1) {
+					gParams.Saturn_MaxTimeAcceleration = i;
+				} else {
+					gParams.Saturn_MaxTimeAcceleration = 100;
+				}
+
 				EndDialog (hWnd, 0);
 				return 0;
 
@@ -474,6 +498,9 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 		SendDlgItemMessage(hWnd, IDC_CHECK_ORBITERATTITUDEDISABLED, BM_SETCHECK, gParams.Saturn_OrbiterAttitudeDisabled?BST_CHECKED:BST_UNCHECKED, 0);
 
 		SendDlgItemMessage(hWnd, IDC_CHECK_SEQUENCERSWITCHLIGHTINGDISABLED, BM_SETCHECK, gParams.Saturn_SequencerSwitchLightingDisabled?BST_CHECKED:BST_UNCHECKED, 0);
+
+		sprintf(buffer,"%i",gParams.Saturn_MaxTimeAcceleration);
+		SendDlgItemMessage(hWnd, IDC_EDIT_TIMEACC, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
 
 		UpdateControlState(hWnd);
 		return TRUE;
