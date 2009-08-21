@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/18 20:18:31  vrouleau
+  *	Work on Apollo 11 vAGC scenarios
+  *	
   *	Revision 1.1  2009/02/18 23:20:56  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -2932,6 +2935,14 @@ void CSMcomputer::Timestep(double simt, double simdt)
 	Saturn *sat = (Saturn *) OurVessel;
 
 	if (Yaagc){
+		//
+		// Reduce time acceleration as per configured, not to jump to x100 or x1000 and freeze the simulation
+		//
+		if( sat->maxTimeAcceleration>0 )
+		{
+			if( oapiGetTimeAcceleration() > (double)sat->maxTimeAcceleration )
+				oapiSetTimeAcceleration(sat->maxTimeAcceleration);
+		}
 		//
 		// Do nothing if we have no power. (vAGC)
 		//

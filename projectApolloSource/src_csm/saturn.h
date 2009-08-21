@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/08/17 13:27:49  tschachim
+  *	Enhancement of ChecklistMFD
+  *	
   *	Revision 1.4  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -4030,6 +4033,7 @@ protected:
 	int FovExternal;
 	double FovSave;
 	double FovSaveExternal;
+	int maxTimeAcceleration;
 
 	//
 	// Virtual cockpit

@@ -7,6 +7,7 @@
 #define IDD_PAGEVISUAL                  103
 #define IDD_PAGECONTROL                 104
 #define IDD_PAGEQUICKSTART              105
+#define IDD_PAGEVIRTUALAGC              106
 #define IDC_EDIT1                       1000
 #define IDC_EDIT_RHC                    1000
 #define IDC_EDIT_THC                    1001
@@ -33,7 +34,8 @@
 #define IDC_CHECK_CHECKLISTAUTODISABLED 1021
 #define IDC_CHECK_CHECKLISTAUTOSLOW     1022
 #define IDC_CHECK_SEQUENCERSWITCHLIGHTINGDISABLED 1023
-
+#define IDC_EDIT_TIMEACC				1024
+#define IDC_STATIC_TIMEACC				1025
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
