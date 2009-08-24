@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.4  2009/08/10 02:26:17  dseagrav
   *	I forgot to re-enable the optics timestep item.
   *	
@@ -498,19 +501,7 @@ void LEM::SystemsInit()
 	ECA_4b.dc_source_tb->SetState(0); // Initialize to off
 
 	// Descent Stage Deadface Bus Stubs wire to the ECAs
-	if(stage < 2){
-		DES_LMPs28VBusA.WireTo(&ECA_1a);
-		DES_LMPs28VBusB.WireTo(&ECA_1b);
-		DES_CDRs28VBusA.WireTo(&ECA_2a); 
-		DES_CDRs28VBusB.WireTo(&ECA_2b); 
-		DSCBattFeedTB.SetState(1);
-	}else{
-		DES_LMPs28VBusA.Disconnect();
-		DES_LMPs28VBusB.Disconnect();
-		DES_CDRs28VBusA.Disconnect();
-		DES_CDRs28VBusB.Disconnect();
-		DSCBattFeedTB.SetState(0);
-	}
+	// stage is not defined here, so we can't do this.
 
 	// Bus Tie Blocks (Not real objects)
 	BTB_LMP_B.Init(this,&DES_LMPs28VBusA,&ECA_4b);
@@ -625,11 +616,26 @@ void LEM::SystemsInit()
 	agc.WirePower(&LGC_DSKY_CB,&LGC_DSKY_CB);
 	dsky.Init(&LGC_DSKY_CB);
 
+	// ASA
+	asa.Init(this);
+
 	// IMU OPERATE power (Logic DC power)
 	IMU_OPR_CB.MaxAmps = 20.0;
 	IMU_OPR_CB.WireTo(&CDRs28VBus);	
-	imu.WireToBuses(&IMU_OPR_CB, &IMU_OPR_CB, NULL);
-	// The IMU heater should be wired to something as well, but I'm not sure how it works
+	imu.WireToBuses(&IMU_OPR_CB, NULL, NULL);
+	// IMU STANDBY power (Heater DC power when not operating)
+	IMU_SBY_CB.MaxAmps = 5.0;
+	IMU_SBY_CB.WireTo(&CDRs28VBus);	
+	// Set up IMU heater stuff
+	imucase.isolation = 1.0; 
+	imucase.Area = 3165.31625; // Surface area of 12.5 inch diameter sphere in cm
+	imucase.mass = 19050;
+	imucase.SetTemp(327); 
+	imuheater.WireTo(&IMU_SBY_CB);
+	Panelsdk.AddHydraulic(&imucase);
+	Panelsdk.AddElectrical(&imuheater,false);
+	imuheater.Enable();
+	imuheater.SetPumpAuto();
 
 	// The FDAI has two CBs, AC and DC, and both are 2 amp CBs
 	// CDR FDAI
@@ -640,6 +646,23 @@ void LEM::SystemsInit()
 	// And the CDR FDAI itself	
 	fdaiLeft.WireTo(&CDR_FDAI_DC_CB,&CDR_FDAI_AC_CB);
 
+	// HEATERS
+	HTR_RR_STBY_CB.MaxAmps = 7.5;
+	HTR_RR_STBY_CB.WireTo(&CDRs28VBus);
+	HTR_LR_CB.MaxAmps = 5.0;
+	HTR_LR_CB.WireTo(&CDRs28VBus);
+	HTR_SBD_ANT_CB.MaxAmps = 5.0;
+	HTR_SBD_ANT_CB.WireTo(&LMPs28VBus);
+
+	// Landing Radar
+	LR.Init(this);
+	// Rdz Radar
+	RR.Init(this);
+
+	// COMM
+	// S-Band Steerable Ant
+	SBandSteerable.Init(this);
+
 	// EXPLOSIVE DEVICES SUPPLY CBs
 	EDS_CB_LG_FLAG.MaxAmps = 2.0;
 	EDS_CB_LG_FLAG.WireTo(&CDRs28VBus);
@@ -647,8 +670,25 @@ void LEM::SystemsInit()
 	EDS_CB_LOGIC_A.WireTo(&CDRs28VBus);
 	EDS_CB_LOGIC_B.MaxAmps = 2.0;
 	EDS_CB_LOGIC_B.WireTo(&LMPs28VBus);
+
 	// EXPLOSIVE DEVICES SYSTEMS
 	EDLGTB.WireTo(&EDS_CB_LG_FLAG);
+
+	// Lighting
+	CDR_LTG_UTIL_CB.MaxAmps = 2.0;
+	CDR_LTG_UTIL_CB.WireTo(&CDRs28VBus);
+	CDR_LTG_ANUN_DOCK_COMPNT_CB.MaxAmps = 2.0;
+	CDR_LTG_ANUN_DOCK_COMPNT_CB.WireTo(&CDRs28VBus);
+	LTG_FLOOD_CB.MaxAmps = 5.0;
+	LTG_FLOOD_CB.WireTo(&LMPs28VBus);
+
+	// STABILIZATION/CONTROL SYSTEM
+	SCS_ASA_CB.MaxAmps = 20.0;
+	SCS_ASA_CB.WireTo(&LMPs28VBus);
+
+	// ENVIRONMENTAL CONTROL SYSTEM
+	ECS_CABIN_REPRESS_CB.MaxAmps = 2.0;
+	ECS_CABIN_REPRESS_CB.WireTo(&LMPs28VBus);
 
 	//
 	// HACK:
@@ -1008,8 +1048,23 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	agc.SystemTimestep(simdt);								// Draw power
 	dsky.Timestep(MissionTime);								// Do work
 	//dsky.SystemTimestep(simdt);						    // DSKY power draw is broken.
+	asa.TimeStep(simdt);									// Do work
 	imu.Timestep(MissionTime);								// Do work
 	imu.SystemTimestep(simdt);								// Draw power
+	// Manage IMU standby heater and temperature
+	if(IMU_OPR_CB.Voltage() > 0){
+		// IMU is operating.
+		if(imuheater.h_pump != 0){ imuheater.SetPumpOff(); } // Disable standby heater if enabled
+		// FIXME: IMU Enabled-Mode Heat Generation Goes Here
+	}else{
+		// IMU is not operating.
+		if(imuheater.h_pump != 1){ imuheater.SetPumpAuto(); } // Enable standby heater if disabled.
+	}
+	// FIXME: Maintenance of IMU temperature channel bit should go here when ECS is complete
+
+	// FIXME: Draw power for lighting system.
+	// I can't find the actual power draw anywhere.
+
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
 	atca.Timestep(simdt);								    // Do Work
@@ -1019,6 +1074,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	EventTimerDisplay.Timestep(MissionTime, simdt);
 	eds.TimeStep();                                         // Do Work
 	optics.TimeStep(simdt);									// Do Work
+	LR.TimeStep(simdt);										// I don't wanna work
+	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
+	SBandSteerable.TimeStep(simdt);							// Back to work...
 
 	// Debug tests would go here
 	
@@ -1745,3 +1803,190 @@ void LEM_EDS::LoadState(FILEHANDLE scn,char *end_str){
 	}
 }
 
+// Landing Radar
+LEM_LR::LEM_LR() : antenna("LEM-LR-Antenna",_vector3(0.013, -3.0, -0.03),0.03,0.04),
+	antheater("LEM-LR-Antenna-Heater",1,NULL,35,55,0,285.9,294.2,&antenna)
+{
+	lem = NULL;
+	lastTemp = 0;
+}
+
+void LEM_LR::Init(LEM *s){
+	lem = s;
+	// Set up antenna.
+	// LR antenna is designed to operate between 0F and 185F
+	// The heater switches on if the temperature gets below +55F and turns it off again when the temperature reaches +70F
+	// Values in the constructor are name, pos, vol, isol
+	antenna.isolation = 1.0; 
+	antenna.Area = 1250; // 1250 cm
+	antenna.mass = 10000;
+	antenna.SetTemp(295.0); // 70-ish
+	lastTemp = antenna.Temp;
+	if(lem != NULL){
+		antheater.WireTo(&lem->HTR_LR_CB);
+		lem->Panelsdk.AddHydraulic(&antenna);
+		// lem->Panelsdk.AddThermal(&antenna);  // This gives nonsensical results
+		lem->Panelsdk.AddElectrical(&antheater,false);
+		antheater.Enable();
+		antheater.SetPumpAuto();
+	}
+}
+
+void LEM_LR::TimeStep(double simdt){
+	if(lem == NULL){ return; }
+	// sprintf(oapiDebugString(),"LR Antenna Temp: %f DT %f Change: %f, AH %f",antenna.Temp,simdt,(lastTemp-antenna.Temp)/simdt,antheater.pumping);
+	lastTemp = antenna.Temp;
+}
+
+void LEM_LR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+
+}
+
+void LEM_LR::LoadState(FILEHANDLE scn,char *end_str){
+
+}
+
+double LEM_LR::GetAntennaTempF(){
+
+	return(0);
+}
+
+// Rendezvous Radar
+// Position and draw numbers are just guesses!
+LEM_RR::LEM_RR() : antenna("LEM-RR-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04),
+	antheater("LEM-RR-Antenna-Heater",1,NULL,15,20,0,255,288,&antenna)
+{
+	lem = NULL;	
+}
+
+void LEM_RR::Init(LEM *s){
+	lem = s;
+	// Set up antenna.
+	// LR antenna is designed to operate between ??F and 75F
+	// The heater switches on if the temperature gets below ??F and turns it off again when the temperature reaches ??F
+	// The CWEA complains if the temperature is outside of -54F to +148F
+	// Values in the constructor are name, pos, vol, isol
+	antenna.isolation = 1.0; 
+	antenna.Area = 9187.8912; // Area of reflecting dish, probably good enough
+	antenna.mass = 10000;
+	antenna.SetTemp(255.1); 
+	if(lem != NULL){
+		antheater.WireTo(&lem->HTR_RR_STBY_CB);
+		lem->Panelsdk.AddHydraulic(&antenna);
+		lem->Panelsdk.AddElectrical(&antheater,false);
+		antheater.Enable();
+		antheater.SetPumpAuto();
+	}
+}
+
+void LEM_RR::TimeStep(double simdt){
+	if(lem == NULL){ return; }
+	// sprintf(oapiDebugString(),"RR Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
+}
+
+void LEM_RR::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+
+}
+
+void LEM_RR::LoadState(FILEHANDLE scn,char *end_str){
+
+}
+
+double LEM_RR::GetAntennaTempF(){
+
+	return(0);
+}
+
+// Abort Sensor Assembly
+LEM_ASA::LEM_ASA() : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.04),
+	heater("LEM-ASA-Heater",1,NULL,15,20,0,272,274,&hsink)
+{
+	lem = NULL;	
+}
+
+void LEM_ASA::Init(LEM *s){
+	lem = s;
+	// Therm setup
+	hsink.isolation = 1.0; 
+	hsink.Area = 975.0425; 
+	hsink.mass = 9389.36206;
+	hsink.SetTemp(270);
+	if(lem != NULL){
+		heater.WireTo(&lem->SCS_ASA_CB);
+		lem->Panelsdk.AddHydraulic(&hsink);
+		lem->Panelsdk.AddElectrical(&heater,false);
+		heater.Enable();
+		heater.SetPumpAuto();
+	}
+}
+
+void LEM_ASA::TimeStep(double simdt){
+	if(lem == NULL){ return; }
+	// AGS OFF  = ASA heaters active (OFF mode)
+	// AGS STBY = ASA fully active   (WARMUP mode, becomes OPERATE mode when temp allows)
+	// ASA OPR  = ASA fully active   (ditto)
+
+	// ASA is 11.5x8x5.125 inches and weighs 20.7 pounds
+	// ASA draws 74 watts operating? Need more info
+
+	// ASA wants to stay at 120F.
+	// Fast Warmup can get the ASA from 30F to 116F in 40 minutes.
+	// Fast Warmup is active below 116F.
+	// At 116F the Fine Warmup circuit takes over and gets to 120F and maintains it to within 0.2 degree F
+
+	// There is no information on what the "OFF" mode does other than run the ASA heaters.
+	// My guess is that some small heater keeps the ASA at 30F until standby happens.
+	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
+
+	// FIXME: ASA goes here	
+}
+
+void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+
+}
+
+void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str){
+
+}
+
+// S-Band Steerable Antenna
+LEM_SteerableAnt::LEM_SteerableAnt() : antenna("LEM-SBand-Steerable-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04),
+	antheater("LEM-SBand-Steerable-Antenna-Heater",1,NULL,40,51.7,0,233.15,255,&antenna)
+{
+	lem = NULL;	
+}
+
+void LEM_SteerableAnt::Init(LEM *s){
+	lem = s;
+	// Set up antenna.
+	// SBand antenna 51.7 watts to stay between -40F and 0F
+	antenna.isolation = 1.0; 
+	antenna.Area = 10783.0112; // Surface area of reflecting dish, probably good enough
+	antenna.mass = 10000;      // Probably the same as the RR antenna
+	antenna.SetTemp(233); 
+	if(lem != NULL){
+		antheater.WireTo(&lem->HTR_SBD_ANT_CB);
+		lem->Panelsdk.AddHydraulic(&antenna);
+		lem->Panelsdk.AddElectrical(&antheater,false);
+		antheater.Enable();
+		antheater.SetPumpAuto();
+	}
+}
+
+void LEM_SteerableAnt::TimeStep(double simdt){
+	if(lem == NULL){ return; }
+	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
+}
+
+void LEM_SteerableAnt::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+
+}
+
+void LEM_SteerableAnt::LoadState(FILEHANDLE scn,char *end_str){
+
+}
+
+double LEM_SteerableAnt::GetAntennaTempF(){
+
+	return(0);
+}

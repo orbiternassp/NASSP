@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.4  2009/08/10 02:23:06  dseagrav
   *	LEM EPS (Part 2)
   *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
@@ -584,11 +587,15 @@ void LEM::InitPanel() {
 	ASCBat6CDRSwitch.Register(PSH, "ASCBat6CDRSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	ASCBat6SESwitch.Register(PSH, "ASCBat6SESwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
+	LTG_FLOOD_CB.Register(PSH,"LTG_FLOOD_CB",1);
 	EDS_CB_LOGIC_B.Register(PSH,"EDS_CB_LOGIC_B",1);
+	SCS_ASA_CB.Register(PSH,"SCS_ASA_CB",1);
+	ECS_CABIN_REPRESS_CB.Register(PSH,"ECS_CABIN_REPRESS_CB",1);
 	LMPDesECAContCB.Register(PSH, "LMPDesECAContCB", 0);
 	LMPDesECAMainCB.Register(PSH, "LMPDesECAMainCB", 1);
 	LMPAscECAContCB.Register(PSH, "LMPAscECAContCB", 0);
 	LMPAscECAMainCB.Register(PSH, "LMPAscECAMainCB", 0);
+	HTR_SBD_ANT_CB.Register(PSH, "HTR_SBD_ANT_CB", 1);
 	LMPDCBusVoltCB.Register(PSH, "LMPDCBusVoltCB", 1);
 	LMPInverter2CB.Register(PSH,"LMPInverter2CB",0);
 	LMPBatteryFeedTieCB1.Register(PSH, "LMPBatteryFeedTieCB1", 1);
@@ -633,11 +640,17 @@ void LEM::InitPanel() {
 	CDR_FDAI_DC_CB.Register(PSH,"CDR_FDAI_DC_CB",0);
 	CDR_FDAI_AC_CB.Register(PSH,"CDR_FDAI_AC_CB",0);
 
+	HTR_RR_STBY_CB.Register(PSH,"HTR_RR_STBY_CB",1);
+	HTR_LR_CB.Register(PSH,"HTR_LR_CB",1);
+
 	EDS_CB_LOGIC_A.Register(PSH,"EDS_CB_LOGIC_A",0);
+	CDR_LTG_UTIL_CB.Register(PSH,"CDR_LTG_UTIL_CB",1);
+	CDR_LTG_ANUN_DOCK_COMPNT_CB.Register(PSH,"CDR_LTG_ANUN_DOCK_COMPNT_CB",1);
 	EDS_CB_LG_FLAG.Register(PSH,"EDS_CB_LG_FLAG",0);
 
-	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 0);
 	LGC_DSKY_CB.Register(PSH, "LGC_DSKY_CB", 0);
+	IMU_SBY_CB.Register(PSH, "IMU_SBY_CB", 1);
+	IMU_OPR_CB.Register(PSH, "IMU_OPR_CB", 0);
 
 	LEMCoas1Enabled = false;
 	LEMCoas2Enabled = true;
@@ -1405,6 +1418,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_EPS_DC_AMMETER,               _R( 110,  818, 209,  917), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_EPS_LEFT_CONTROLS,            _R( 314,  728, 542,  913), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW2,					_R( 173,  258, 1415, 290), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW3,					_R( 173,  431, 1415, 462), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_P16_CB_ROW4,					_R( 173,  604, 1415, 634), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_BATTERY_TALKBACKS,	        _R( 573,  742, 888,  765), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_DSC_HIGH_VOLTAGE_SWITCHES,	    _R( 568,  791, 895,  834), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1596,9 +1610,15 @@ void LEM::SetSwitches(int panel) {
 
 		case LMPANEL_RIGHTPANEL: // LEM Right Panel
 			Panel16CB2SwitchRow.Init(AID_LEM_P16_CB_ROW2, MainPanel);
+			LTG_FLOOD_CB.Init(0, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 5.0);
 			EDS_CB_LOGIC_B.Init(256, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 2.0);
-			
+			SCS_ASA_CB.Init(448, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB2SwitchRow, &LMPs28VBus, 20.0);
+
+			Panel16CB3SwitchRow.Init(AID_LEM_P16_CB_ROW3, MainPanel);
+			ECS_CABIN_REPRESS_CB.Init( 896,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB3SwitchRow, &LMPs28VBus, 2.0);
+
 			Panel16CB4SwitchRow.Init(AID_LEM_P16_CB_ROW4, MainPanel);
+			HTR_SBD_ANT_CB.Init( 320, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 5.0);
 			LMPDCBusVoltCB.Init( 512, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 2.0);
 			LMPInverter2CB.Init( 576, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 30.0);
 			LMPAscECAMainCB.Init( 640, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &LMPs28VBus, 2.0);
@@ -1612,7 +1632,7 @@ void LEM::SetSwitches(int panel) {
 			LMPBatteryFeedTieCB1.Init( 1147,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &BTB_LMP_B, 100.0);
 			LMPBatteryFeedTieCB2.Init( 1211,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &BTB_LMP_C, 100.0);
 			
-			EPSP14VoltMeterSwitchRow.Init(AID_LM_EPS_DC_VOLTMETER,MainPanel);
+			EPSP14VoltMeterSwitchRow.Init(AID_LM_EPS_DC_VOLTMETER,MainPanel);			
 			EPSDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14VoltMeterSwitchRow, &EPSMonitorSelectRotary);
 			EPSDCVoltMeter.SetSurface(srf[SRF_DCVOLTS], 99, 98);
 
@@ -1685,12 +1705,17 @@ void LEM::SetSwitches(int panel) {
 			CDR_FDAI_AC_CB.Init( 1214, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB2SwitchRow, &ACBusA, 2.0);
 
 			Panel11CB3SwitchRow.Init(AID_LEM_P11_CB_ROW3, MainPanel); // 184,431 to 1433,459
+			HTR_RR_STBY_CB.Init( 66, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 7.5);
+			HTR_LR_CB.Init(194, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 5.0);
 			EDS_CB_LG_FLAG.Init(1021, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 2.0);
 			EDS_CB_LOGIC_A.Init(1085, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 2.0);
+			CDR_LTG_UTIL_CB.Init(1149, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 2.0);
+			CDR_LTG_ANUN_DOCK_COMPNT_CB.Init(1213, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB3SwitchRow, &CDRs28VBus, 2.0);
 
 			Panel11CB4SwitchRow.Init(AID_LEM_P11_CB_ROW4, MainPanel);
-			IMU_OPR_CB.Init( 1342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 20.0);
 			LGC_DSKY_CB.Init( 1214,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 7.5);
+			IMU_SBY_CB.Init( 1278,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 5.0);
+			IMU_OPR_CB.Init ( 1342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB4SwitchRow, &CDRs28VBus, 20.0);
 
 			Panel11CB5SwitchRow.Init(AID_LEM_P11_CB_ROW5, MainPanel);
 			CDRBatteryFeedTieCB1.Init(  2,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel11CB5SwitchRow, &BTB_CDR_B, 100.0);
