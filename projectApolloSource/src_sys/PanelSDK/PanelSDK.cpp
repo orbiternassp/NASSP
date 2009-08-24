@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.8  2008/04/11 11:50:18  tschachim
   *	Fixed BasicExcel for VC6, reduced VS2005 warnings, bugfixes.
   *	
@@ -336,4 +339,16 @@ void PanelSDK::AddElectrical(e_object *e, bool can_delete)
 {
 	ELECTRIC->AddSystem(e);
 	e->deletable = can_delete;
+}
+
+void PanelSDK::AddHydraulic(h_object *h)
+
+{
+	HYDRAULIC->AddSystem(h);
+}
+
+void PanelSDK::AddThermal(therm_obj *t)
+
+{
+	THERMAL->AddThermalObject(t,false);
 }

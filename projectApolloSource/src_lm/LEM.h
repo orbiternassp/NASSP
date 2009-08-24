@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.5  2009/08/10 02:23:06  dseagrav
   *	LEM EPS (Part 2)
   *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
@@ -229,6 +232,19 @@ public:
 	e_object *dc_input;
 };
 
+// ABORT SENSOR ASSEMBLY (ASA)
+class LEM_ASA{
+public:
+	LEM_ASA();							// Cons
+	void Init(LEM *s); // Init
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep(double simdt);
+	LEM *lem;					// Pointer at LEM
+	h_Radiator hsink;			// Case (Connected to primary coolant loop)
+	Boiler heater;				// Heater
+};
+
 // EXPLOSIVE DEVICES SYSTEM
 class LEM_EDS{
 public:
@@ -241,6 +257,51 @@ public:
 	bool LG_Deployed;           // Landing Gear Deployed Flag	
 };
 
+// Landing Radar
+class LEM_LR{
+public:
+	LEM_LR();
+	void Init(LEM *s);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep(double simdt);
+	double GetAntennaTempF();
+	double lastTemp;
+
+	LEM *lem;					// Pointer at LEM
+	h_Radiator antenna;			// Antenna (loses heat into space)
+	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+};
+
+// Rendezvous Radar
+class LEM_RR{
+public:
+	LEM_RR();
+	void Init(LEM *s);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep(double simdt);
+	double GetAntennaTempF();
+
+	LEM *lem;					// Pointer at LEM
+	h_Radiator antenna;			// Antenna (loses heat into space)
+	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+};
+
+// S-Band Steerable Antenna
+class LEM_SteerableAnt{
+public:
+	LEM_SteerableAnt();
+	void Init(LEM *s);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+	void TimeStep(double simdt);
+	double GetAntennaTempF();
+
+	LEM *lem;					// Pointer at LEM
+	h_Radiator antenna;			// Antenna (loses heat into space)
+	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
+};
 
 ///
 /// \ingroup LEM
@@ -708,22 +769,36 @@ protected:
 	//////////////////
 
 	SwitchRow Panel11CB1SwitchRow;
-	// I have to get to these from the inverter select switch class
-	public:
 	LEMVoltCB           AC_A_BUS_VOLT_CB;
 	CircuitBrakerSwitch AC_A_INV_1_FEED_CB;
 	CircuitBrakerSwitch AC_A_INV_2_FEED_CB;
 	CircuitBrakerSwitch AC_B_INV_1_FEED_CB;
 	CircuitBrakerSwitch AC_B_INV_2_FEED_CB;
-	protected:
 
 	SwitchRow Panel11CB2SwitchRow;
 	CircuitBrakerSwitch CDR_FDAI_DC_CB;
 	CircuitBrakerSwitch CDR_FDAI_AC_CB;
 
 	SwitchRow Panel11CB3SwitchRow;
-	CircuitBrakerSwitch EDS_CB_LOGIC_A;
+	CircuitBrakerSwitch PROP_DES_HE_REG_VENT_CB;
+	CircuitBrakerSwitch HTR_RR_STBY_CB;
+	CircuitBrakerSwitch HTR_RR_OPR_CB;
+	CircuitBrakerSwitch HTR_LR_CB;
+	CircuitBrakerSwitch HTR_DOCK_WINDOW_CB;
+	CircuitBrakerSwitch HTR_AOT_CB;
+	CircuitBrakerSwitch INST_SIG_CONDR_1_CB;
+	CircuitBrakerSwitch CDR_SCS_AEA_CB;
+	CircuitBrakerSwitch CDR_SCS_ABORT_STAGE_CB;
+	CircuitBrakerSwitch CDR_SCS_ATCA_CB;
+	CircuitBrakerSwitch CDR_SCS_AELD_CB;
+	CircuitBrakerSwitch SCS_ENG_CONT_CB;
+	CircuitBrakerSwitch SCS_ATT_DIR_CONT_CB;
+	CircuitBrakerSwitch SCS_ENG_START_OVRD_CB;
+	CircuitBrakerSwitch SCS_DECA_PWR_CB;
 	CircuitBrakerSwitch EDS_CB_LG_FLAG;
+	CircuitBrakerSwitch EDS_CB_LOGIC_A;
+	CircuitBrakerSwitch CDR_LTG_UTIL_CB;
+	CircuitBrakerSwitch CDR_LTG_ANUN_DOCK_COMPNT_CB;
 
 	SwitchRow Panel11CB4SwitchRow;
 	CircuitBrakerSwitch IMU_OPR_CB;
@@ -1004,9 +1079,15 @@ protected:
 	//////////////////
 
 	SwitchRow Panel16CB2SwitchRow;
+	CircuitBrakerSwitch LTG_FLOOD_CB;
 	CircuitBrakerSwitch EDS_CB_LOGIC_B;
+	CircuitBrakerSwitch SCS_ASA_CB;
+
+	SwitchRow Panel16CB3SwitchRow;
+	CircuitBrakerSwitch ECS_CABIN_REPRESS_CB;
 
 	SwitchRow Panel16CB4SwitchRow;
+	CircuitBrakerSwitch HTR_SBD_ANT_CB;
 	CircuitBrakerSwitch LMPInverter2CB;
 	// ECA control & Voltmeter
 	CircuitBrakerSwitch LMPDesECAContCB;
@@ -1079,7 +1160,9 @@ protected:
 
 	DSKY dsky;
 	LEMcomputer agc;
-	IMU imu;
+	Boiler imuheater; // IMU Standby Heater
+	h_Radiator imucase; // IMU Case
+	IMU imu;	
 	LMOptics optics;
 
 	MissionTimer MissionTimerDisplay;
@@ -1216,9 +1299,17 @@ protected:
 
 	// GNC
 	ATCA atca;
+	LEM_LR LR;
+	LEM_RR RR;
+
+	// COMM
+	LEM_SteerableAnt SBandSteerable;
 	
 	// EDS
 	LEM_EDS eds;
+
+	// Abort Guidance System stuff
+	LEM_ASA asa;
 
 	// Friend classes
 	friend class ATCA;
@@ -1228,8 +1319,13 @@ protected:
 	friend class LMOptics;
 	friend class LEMBatterySwitch;
 	friend class LEMDeadFaceSwitch;
+	friend class LEMInverterSwitch;
 	friend class LEM_BusCrossTie;
 	friend class LEM_XLBControl;
+	friend class LEM_LR;
+	friend class LEM_RR;
+	friend class LEM_ASA;
+	friend class LEM_SteerableAnt;
 };
 
 extern void LEMLoadMeshes();

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/10 14:38:26  tschachim
+  *	ECS enhancements
+  *	
   *	Revision 1.1  2009/02/18 23:22:01  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -1449,7 +1452,11 @@ Boiler::Boiler(char *i_name, int i_pump, e_object *i_src, double heat_watts, dou
 	SRC = i_src;
 	loaded = 0;
 
-	Amperes = electric_watts / (SRC->Voltage());
+	if(SRC != NULL){
+		Amperes = electric_watts / (SRC->Voltage());
+	}else{
+		Amperes = 0;
+	}
 
 	boiler_power = heat_watts;
 	boiler_electrical_power = electric_watts;

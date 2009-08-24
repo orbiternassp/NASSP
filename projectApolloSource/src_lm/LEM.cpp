@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.4  2009/08/10 02:23:06  dseagrav
   *	LEM EPS (Part 2)
   *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
@@ -247,6 +250,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
+	imucase("LM-IMU-Case",_vector3(0.013, 3.0, 0.03),0.03,0.04),
+	imuheater("LM-IMU-Heater",1,NULL,150,53,0,326,328,&imucase),
 	imu(agc, Panelsdk)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
@@ -1241,6 +1246,22 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		stage=2;
 		SetLmAscentHoverStage();
 		break;
+	}
+
+	// Descent Stage Deadface Bus Stubs wire to the ECAs
+	// I was doing this in SystemsInit which is wrong.
+	if(stage < 2){
+		DES_LMPs28VBusA.WireTo(&ECA_1a);
+		DES_LMPs28VBusB.WireTo(&ECA_1b);
+		DES_CDRs28VBusA.WireTo(&ECA_2a); 
+		DES_CDRs28VBusB.WireTo(&ECA_2b); 
+		DSCBattFeedTB.SetState(1);
+	}else{
+		DES_LMPs28VBusA.Disconnect();
+		DES_LMPs28VBusB.Disconnect();
+		DES_CDRs28VBusA.Disconnect();
+		DES_CDRs28VBusB.Disconnect();
+		DSCBattFeedTB.SetState(0);
 	}
 
 	//

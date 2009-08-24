@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:22:01  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.21  2006/12/19 15:56:14  tschachim
   *	ECS test stuff, bugfixes.
   *	
@@ -123,6 +126,8 @@ class H_system;
 class Thermal_engine;
 class VesselMgmt;
 class e_object;
+class h_object;
+class therm_obj;
 
 ///
 /// \ingroup PanelSDK
@@ -152,6 +157,8 @@ public:
 	void SimpleTimestep(double simdt);
 	void SetStage(int stage,int load);
 	void AddElectrical(e_object *e, bool can_delete);
+	void AddHydraulic(h_object *h);
+	void AddThermal(therm_obj *t);
 
 	void Load(FILEHANDLE scn);
 	void Save(FILEHANDLE scn);
