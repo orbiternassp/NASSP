@@ -862,6 +862,10 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
 			<File
+				RelativePath="..\..\Bitmaps\abort.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Abort.bmp"
 				>
 			</File>
@@ -870,11 +874,119 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\Altimeter.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Altimeter.bmp"
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\Annonciators.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Annonciators.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\aot_reticle_knob.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\aot_shaft_knob.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\bitmap1.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border23x20.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border29x29.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border32x160.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border34x29.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border34x31.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border34x33.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border34x34.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border34x39.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border34x61.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border38x52.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border39x38.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border46x75.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border50x158.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border55x111.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border70x70.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border72x72.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border75x64.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border78x78.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border84x84.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border90x90.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\border92x40.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\circuit_breaker.bmp"
 				>
 			</File>
 			<File
@@ -886,11 +998,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\coas_lem1.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\coas_lem2.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\contact.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\contact.bmp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\digitaldisp.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\digitaldisp.bmp"
 				>
 			</File>
 			<File
@@ -906,7 +1034,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\dsky_disp.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\dsky_keys.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\dsky_keys.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\dsky_lights.bmp"
 				>
 			</File>
 			<File
@@ -918,7 +1058,35 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\ecs.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\FDAI.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\FDAI.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\FDAI_needles.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\FDAI_off_flag.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\FDAIRoll.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\FDAIRollindicator.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\Gmeter.bmp"
 				>
 			</File>
 			<File
@@ -927,6 +1095,10 @@
 			</File>
 			<File
 				RelativePath="..\..\heading.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\Horizon.bmp"
 				>
 			</File>
 			<File
@@ -1014,6 +1186,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\Indicator.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\indicators2.bmp"
 				>
 			</File>
@@ -1022,7 +1198,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\launchlight.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lem3poslever.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_aot_panel_wide.bmp"
 				>
 			</File>
 			<File
@@ -1030,7 +1214,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\lem_left_panel.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lem_left_window.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_left_window.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_lpd_window.bmp"
 				>
 			</File>
 			<File
@@ -1038,7 +1234,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\lem_main_panel.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lem_main_panel.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_pitch_degs.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_rendezvous_window.bmp"
 				>
 			</File>
 			<File
@@ -1050,7 +1258,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\lem_right_panel.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_right_window.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lem_right_window.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_signal_strength.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lem_yaw_degs.bmp"
 				>
 			</File>
 			<File
@@ -1088,11 +1312,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\LemRotationalSwitch.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lemswitch2.bmp"
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\lemswitch2.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lemswitch3.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\lemswitch3.bmp"
 				>
 			</File>
 			<File
@@ -1104,11 +1340,31 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\lights2.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\lm3posswitch.bmp"
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\LMAbortButton.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\LMAbortButton.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\LMDCAmps.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\LMDCVolts.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\LMMFDFrame.bmp"
 				>
 			</File>
 			<File
@@ -1120,6 +1376,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\lv_eng.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\masteralarm.bmp"
 				>
 			</File>
@@ -1128,7 +1388,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\masteralarmbright.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Needle1.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\needle1.bmp"
 				>
 			</File>
 			<File
@@ -1148,11 +1416,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\Pswitch.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Rot_Knob.bmp"
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\switch1.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\switch1.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\switch_lever.bmp"
 				>
 			</File>
 			<File
@@ -1164,6 +1444,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\switchup.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\switchup2.bmp"
 				>
 			</File>
@@ -1172,7 +1456,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Bitmaps\switchup3.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\threeposswitch.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\Thrustmeter.bmp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Thrustmeter.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\thumbwheel_large_fonts.bmp"
 				>
 			</File>
 		</Filter>

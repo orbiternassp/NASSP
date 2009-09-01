@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.4  2009/08/02 19:20:24  spacex15
   *	AGC socket version reenabled
   *	
@@ -1752,7 +1755,7 @@ void LMOptics::SystemTimestep(double simdt) {
 
 void LMOptics::TimeStep(double simdt) {
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
-	sprintf(oapiDebugString(), "Optics Shaft %.2f, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft/RAD, OpticsReticle/RAD, ReticleMoved, KnobTurning);
+	// sprintf(oapiDebugString(), "Optics Shaft %.2f, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft/RAD, OpticsReticle/RAD, ReticleMoved, KnobTurning);
 	if (OpticsReticle > 2*PI) OpticsReticle -= 2*PI;
 	if (OpticsReticle < 0) OpticsReticle += 2*PI;
 }

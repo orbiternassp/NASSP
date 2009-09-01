@@ -700,6 +700,17 @@
 #define AID_ASC_BATTERY_TALKBACKS							978
 #define AID_ASC_BATTERY_SWITCHES							979
 #define AID_LEM_P16_CB_ROW3                                 980
+#define AID_LEM_P16_CB_ROW1                                 981
+#define AID_MPS_REG_CONTROLS                                982
+#define AID_LEM_PANEL_5                                     983
+#define AID_RCS_ASC_FEED_TALKBACKS							984
+#define AID_RCS_ASC_FEED_SWITCHES							985
+#define AID_RCS_LGC_CMD_ENABLE_14_TALKBACKS					986
+#define AID_RCS_LGC_CMD_ENABLE_14_SWITCHES					987
+#define AID_RCS_LGC_CMD_ENABLE_23_TALKBACKS					988
+#define AID_RCS_LGC_CMD_ENABLE_23_SWITCHES					989
+#define AID_RCS_XFEED_TALKBACK								990
+#define AID_RCS_XFEED_SWITCH								991
 
 // Next default values for new objects
 //
