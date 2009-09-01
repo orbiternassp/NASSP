@@ -20,6 +20,9 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
+  **************************** Revision History ****************************
+  *	$Log$
+  *
   **************************************************************************/
 
 class LEM;
@@ -27,9 +30,9 @@ class LEM;
 class ATCA {
 	// ATTITUDE & TRANSLATION CONTROL ASSEMBLY
 public:
-	ATCA();                            // Cons
-	void Init(LEM *vessel);     // Init
-	void Timestep(double simdt);       // Timestep
+	ATCA();								// Cons
+	void Init(LEM *vessel);				// Init
+	void Timestep(double simdt);		// Timestep
 
 	LEM *lem;
 };

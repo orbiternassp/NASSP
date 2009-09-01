@@ -99,5 +99,6 @@ IDB_LMPITCHDEGS		BITMAP		"..\\Bitmaps\\lem_pitch_degs.bmp"
 IDB_LMSIGNALSTRENGTH	BITMAP		"..\\Bitmaps\\lem_signal_strength.bmp"
 IDB_AOT_RETICLE_KNOB    BITMAP          "..\\Bitmaps\\aot_reticle_knob.bmp"
 IDB_AOT_SHAFT_KNOB      BITMAP          "..\\Bitmaps\\aot_shaft_knob.bmp"
+IDB_THUMBWHEEL_LARGEFONTS BITMAP  "..\\Bitmaps\\thumbwheel_large_fonts.bmp"
 #endif    // Französisch (Frankreich) resources
 

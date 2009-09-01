@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/08/24 02:20:20  dseagrav
+  *	LM Checkpoint Commit: Adds more systems, heater power drains, fix use of stage before init
+  *	
   *	Revision 1.6  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -631,6 +634,16 @@ protected:
 	ToggleSwitch RateErrorMonSwitch;
 	ToggleSwitch AttitudeMonSwitch;
 
+	SwitchRow MPSRegControlSwitchRow;
+	IndicatorSwitch ASCHeReg1TB;
+	IndicatorSwitch ASCHeReg2TB;
+	IndicatorSwitch DESHeReg1TB;
+	IndicatorSwitch DESHeReg2TB;
+	ThreePosSwitch ASCHeReg1Switch;
+	ThreePosSwitch ASCHeReg2Switch;
+	ThreePosSwitch DESHeReg1Switch;
+	ThreePosSwitch DESHeReg2Switch;
+
 	SwitchRow FDAILowerSwitchRow;
 	ToggleSwitch ShiftTruSwitch;
 	ToggleSwitch RateScaleSwitch;
@@ -653,12 +666,56 @@ protected:
 	// LEM panel 2 //
 	/////////////////
 
+	FDAI fdaiRight;
+
 	SwitchRow RightMonitorSwitchRow;
 	ToggleSwitch RightRateErrorMonSwitch;
 	ToggleSwitch RightAttitudeMonSwitch;
 
 	SwitchRow TempPressMonRotaryRow;
 	RotationalSwitch TempPressMonRotary;
+
+	SwitchRow RCSAscFeedTBSwitchRow;
+	IndicatorSwitch RCSAscFeed1ATB;
+	IndicatorSwitch RCSAscFeed2ATB;
+	IndicatorSwitch RCSAscFeed1BTB;
+	IndicatorSwitch RCSAscFeed2BTB;
+
+	SwitchRow RCSAscFeedSwitchRow;
+	ThreePosSwitch RCSAscFeed1ASwitch;
+	ThreePosSwitch RCSAscFeed2ASwitch;
+	ThreePosSwitch RCSAscFeed1BSwitch;
+	ThreePosSwitch RCSAscFeed2BSwitch;
+
+	SwitchRow RCSQuad14TBSwitchRow;
+	IndicatorSwitch RCSQuad1ACmdEnableTB;
+	IndicatorSwitch RCSQuad4ACmdEnableTB;
+	IndicatorSwitch RCSQuad1BCmdEnableTB;
+	IndicatorSwitch RCSQuad4BCmdEnableTB;
+
+	SwitchRow RCSQuad14SwitchRow;
+	ThreePosSwitch RCSQuad1ACmdEnableSwitch;
+	ThreePosSwitch RCSQuad4ACmdEnableSwitch;
+	ThreePosSwitch RCSQuad1BCmdEnableSwitch;
+	ThreePosSwitch RCSQuad4BCmdEnableSwitch;
+
+	SwitchRow RCSQuad23TBSwitchRow;
+	IndicatorSwitch RCSQuad2ACmdEnableTB;
+	IndicatorSwitch RCSQuad3ACmdEnableTB;
+	IndicatorSwitch RCSQuad2BCmdEnableTB;
+	IndicatorSwitch RCSQuad3BCmdEnableTB;
+
+	SwitchRow RCSQuad23SwitchRow;
+	ThreePosSwitch RCSQuad2ACmdEnableSwitch;
+	ThreePosSwitch RCSQuad3ACmdEnableSwitch;
+	ThreePosSwitch RCSQuad2BCmdEnableSwitch;
+	ThreePosSwitch RCSQuad3BCmdEnableSwitch;
+
+	SwitchRow RCSXfeedTBSwitchRow;
+	IndicatorSwitch RCSXFeedTB;
+
+	SwitchRow RCSXfeedSwitchRow;
+	ThreePosSwitch RCSXFeedSwitch;
 
 	// DS20060406 RCS MAIN SHUTOFF VALVES
 	SwitchRow RCSMainSOVTBRow;
@@ -668,8 +725,6 @@ protected:
 	SwitchRow RCSMainSOVSwitchRow;
 	LEMValveSwitch RCSMainSovASwitch;
 	LEMValveSwitch RCSMainSovBSwitch;
-	LEMValveTalkback RCSMainSovATalkback;
-	LEMValveTalkback RCSMainSovBTalkback;
 
 	SwitchRow RightACAPropSwitchRow;
 	ToggleSwitch RightACAPropSwitch;
@@ -769,14 +824,45 @@ protected:
 	//////////////////
 
 	SwitchRow Panel11CB1SwitchRow;
-	LEMVoltCB           AC_A_BUS_VOLT_CB;
-	CircuitBrakerSwitch AC_A_INV_1_FEED_CB;
-	CircuitBrakerSwitch AC_A_INV_2_FEED_CB;
+	CircuitBrakerSwitch SE_WND_HTR_AC_CB;
+	CircuitBrakerSwitch HE_PQGS_PROP_DISP_AC_CB;
+	CircuitBrakerSwitch SBD_ANT_AC_CB;
+	CircuitBrakerSwitch ORDEAL_AC_CB;
+	CircuitBrakerSwitch AQS_AC_CB;
+	CircuitBrakerSwitch AOT_LAMP_ACB_CB;
+	CircuitBrakerSwitch LMP_FDAI_AC_CB;
+	CircuitBrakerSwitch NUM_LTG_AC_CB;
 	CircuitBrakerSwitch AC_B_INV_1_FEED_CB;
 	CircuitBrakerSwitch AC_B_INV_2_FEED_CB;
+	CircuitBrakerSwitch AC_A_INV_1_FEED_CB;
+	CircuitBrakerSwitch AC_A_INV_2_FEED_CB;
+	LEMVoltCB           AC_A_BUS_VOLT_CB;
+	CircuitBrakerSwitch CDR_WND_HTR_AC_CB;
+	CircuitBrakerSwitch TAPE_RCDR_AC_CB;
+	CircuitBrakerSwitch AOT_LAMP_ACA_CB;
+	CircuitBrakerSwitch RDZ_RDR_AC_CB;
+	CircuitBrakerSwitch DECA_GMBL_AC_CB;
+	CircuitBrakerSwitch INTGL_LTG_AC_CB;
 
 	SwitchRow Panel11CB2SwitchRow;
+	CircuitBrakerSwitch RCS_A_MAIN_SOV_CB;
+	CircuitBrakerSwitch RCS_A_QUAD4_TCA_CB;
+	CircuitBrakerSwitch RCS_A_QUAD3_TCA_CB;
+	CircuitBrakerSwitch RCS_A_QUAD2_TCA_CB;
+	CircuitBrakerSwitch RCS_A_QUAD1_TCA_CB;
+	CircuitBrakerSwitch RCS_A_ISOL_VLV_CB;
+	CircuitBrakerSwitch RCS_A_ASC_FEED_2_CB;
+	CircuitBrakerSwitch RCS_A_ASC_FEED_1_CB;
+	CircuitBrakerSwitch THRUST_DISP_CB;
+	CircuitBrakerSwitch MISSION_TIMER_CB;
+	CircuitBrakerSwitch CDR_XPTR_CB;
+	CircuitBrakerSwitch RNG_RT_ALT_RT_DC_CB;
+	CircuitBrakerSwitch GASTA_DC_CB;
 	CircuitBrakerSwitch CDR_FDAI_DC_CB;
+	CircuitBrakerSwitch COAS_DC_CB;
+	CircuitBrakerSwitch ORDEAL_DC_CB;
+	CircuitBrakerSwitch RNG_RT_ALT_RT_AC_CB;
+	CircuitBrakerSwitch GASTA_AC_CB;
 	CircuitBrakerSwitch CDR_FDAI_AC_CB;
 
 	SwitchRow Panel11CB3SwitchRow;
@@ -822,6 +908,24 @@ protected:
 	CircuitBrakerSwitch CDRInverter1CB;
 
 	/////////////////
+	// LEM Panel 5 //
+	/////////////////
+
+	SwitchRow Panel5SwitchRow;
+	ThreePosSwitch TimerContSwitch;
+	ThreePosSwitch TimerSlewHours;
+	ThreePosSwitch TimerSlewMinutes;
+	ThreePosSwitch TimerSlewSeconds;
+	ToggleSwitch LtgORideAnunSwitch;
+	ToggleSwitch LtgORideNumSwitch;
+	ToggleSwitch LtgORideIntegralSwitch;
+	ToggleSwitch LtgSidePanelsSwitch;
+	RotationalSwitch LtgFloodOhdFwdKnob;
+	RotationalSwitch LtgAnunNumKnob;
+	RotationalSwitch LtgIntegralKnob;
+	// There's a +X TRANSLATION button here too
+
+	/////////////////
 	// LEM Panel 8 //
 	/////////////////
 
@@ -841,6 +945,22 @@ protected:
 	IndicatorSwitch EDLGTB;
 	IndicatorSwitch EDDesFuelVentTB;
 	IndicatorSwitch EDDesOxidVentTB;
+	// Audio section
+	ThreePosSwitch CDRAudSBandSwitch;
+	ThreePosSwitch CDRAudICSSwitch;
+	ToggleSwitch CDRAudRelaySwitch;
+	ThreePosSwitch CDRAudVOXSwitch;
+	ToggleSwitch CDRAudioControlSwitch;
+	ThreePosSwitch CDRAudVHFASwitch;
+	ThreePosSwitch CDRAudVHFBSwitch;
+	ThumbwheelSwitch CDRAudSBandVol;
+	ThumbwheelSwitch CDRAudVHFAVol;
+	ThumbwheelSwitch CDRAudVHFBVol;
+	ThumbwheelSwitch CDRAudICSVol;
+	ThumbwheelSwitch CDRAudMasterVol;
+	ThumbwheelSwitch CDRAudVOXSens;
+	ThreePosSwitch CDRCOASSwitch;
+
 
 	bool RCS_Full;
 	bool Eds;
@@ -1077,6 +1197,24 @@ protected:
 	//////////////////
 	// LEM panel 16 //
 	//////////////////
+
+	SwitchRow Panel16CB1SwitchRow;
+	CircuitBrakerSwitch LMP_EVT_TMP_FDAI_DC_CB;
+	CircuitBrakerSwitch SE_XPTR_DC_CB;
+	CircuitBrakerSwitch RCS_B_ASC_FEED_1_CB;
+	CircuitBrakerSwitch RCS_B_ASC_FEED_2_CB;
+	CircuitBrakerSwitch RCS_B_ISOL_VLV_CB;
+	CircuitBrakerSwitch RCS_B_QUAD1_TCA_CB;
+	CircuitBrakerSwitch RCS_B_QUAD2_TCA_CB;
+	CircuitBrakerSwitch RCS_B_QUAD3_TCA_CB;
+	CircuitBrakerSwitch RCS_B_QUAD4_TCA_CB;
+	CircuitBrakerSwitch RCS_B_CRSFD_CB;
+	CircuitBrakerSwitch RCS_B_TEMP_PRESS_DISP_FLAGS_CB;
+	CircuitBrakerSwitch RCS_B_PQGS_DISP_CB;
+	CircuitBrakerSwitch RCS_B_MAIN_SOV_CB;
+	CircuitBrakerSwitch PROP_DISP_ENG_OVRD_LOGIC_CB;
+	CircuitBrakerSwitch PROP_PQGS_CB;
+	CircuitBrakerSwitch PROP_ASC_HE_REG_CB;
 
 	SwitchRow Panel16CB2SwitchRow;
 	CircuitBrakerSwitch LTG_FLOOD_CB;

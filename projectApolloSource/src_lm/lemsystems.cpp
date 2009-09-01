@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/08/24 02:20:20  dseagrav
+  *	LM Checkpoint Commit: Adds more systems, heater power drains, fix use of stage before init
+  *	
   *	Revision 1.5  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -564,6 +567,28 @@ void LEM::SystemsInit()
 	ASCBattery6ATB.WireTo(&ECA_4a);
 	ASCBattery6BTB.WireTo(&ECA_4b);
 
+	// ECA stuff
+	CDRAscECAContCB.MaxAmps = 3.0;
+	CDRAscECAContCB.WireTo(&CDRs28VBus);
+	CDRAscECAMainCB.MaxAmps = 2.0;
+	CDRAscECAMainCB.WireTo(&CDRs28VBus);
+	CDRDesECAContCB.MaxAmps = 5.0;
+	CDRDesECAContCB.WireTo(&CDRs28VBus);
+	CDRDesECAMainCB.MaxAmps = 3.0;
+	CDRDesECAMainCB.WireTo(&CDRs28VBus);
+	LMPAscECAContCB.MaxAmps = 3.0;
+	LMPAscECAContCB.WireTo(&LMPs28VBus);
+	LMPAscECAMainCB.MaxAmps = 2.0;
+	LMPAscECAMainCB.WireTo(&LMPs28VBus);
+	LMPDesECAContCB.MaxAmps = 5.0;
+	LMPDesECAContCB.WireTo(&LMPs28VBus);
+	LMPDesECAMainCB.MaxAmps = 3.0;
+	LMPDesECAMainCB.WireTo(&LMPs28VBus);
+
+	// RCS stuff
+	RCS_B_PQGS_DISP_CB.MaxAmps = 2.0;
+	RCS_B_PQGS_DISP_CB.WireTo(&LMPs28VBus);
+
 	// CDR and LMP 28V DC busses.
 	// Wire to ficticious bus tie block
 	CDRs28VBus.WireTo(&BTB_CDR_E); 
@@ -645,6 +670,13 @@ void LEM::SystemsInit()
 	CDR_FDAI_AC_CB.WireTo(&ACBusA);
 	// And the CDR FDAI itself	
 	fdaiLeft.WireTo(&CDR_FDAI_DC_CB,&CDR_FDAI_AC_CB);
+	// LMP FDAI stuff
+	LMP_EVT_TMP_FDAI_DC_CB.MaxAmps = 2.0;
+	LMP_EVT_TMP_FDAI_DC_CB.WireTo(&LMPs28VBus);
+	LMP_FDAI_AC_CB.MaxAmps = 2.0;
+	LMP_FDAI_AC_CB.WireTo(&ACBusB);
+	fdaiRight.WireTo(&LMP_EVT_TMP_FDAI_DC_CB,&LMP_FDAI_AC_CB);
+	EventTimerDisplay.WireTo(&LMP_EVT_TMP_FDAI_DC_CB);
 
 	// HEATERS
 	HTR_RR_STBY_CB.MaxAmps = 7.5;
@@ -690,11 +722,10 @@ void LEM::SystemsInit()
 	ECS_CABIN_REPRESS_CB.MaxAmps = 2.0;
 	ECS_CABIN_REPRESS_CB.WireTo(&LMPs28VBus);
 
-	//
-	// HACK:
-	// Not sure where these should be wired to.
-	MissionTimerDisplay.WireTo(&ECA_1a);
-	EventTimerDisplay.WireTo(&ECA_1a);
+	// Mission timer.
+	MISSION_TIMER_CB.MaxAmps = 2.0;
+	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
+	MissionTimerDisplay.WireTo(&MISSION_TIMER_CB);
 
 	// Arrange for updates of main busses, AC inverters, and the bus balancer
 	Panelsdk.AddElectrical(&ACBusA, false);
@@ -704,8 +735,6 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&INV_2, false);
 	// The multiplexer will update the main 28V busses
 	Panelsdk.AddElectrical(&BTC_MPX,false);
-	// Panelsdk.AddElectrical(&CDRs28VBus, false);
-	// Panelsdk.AddElectrical(&LMPs28VBus, false); 
 	
 	// Arrange for updates of tie points and bus balancer
 	Panelsdk.AddElectrical(&BTB_LMP_E, false); // Sum of BTB-A and bus cross-tie-balancer
@@ -737,7 +766,8 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&ECA_3b, false);
 	Panelsdk.AddElectrical(&ECA_4a, false);
 	Panelsdk.AddElectrical(&ECA_4b, false);
-	// EDS
+
+	// EDS initialization
 	eds.Init(this);
 
 	// DS20060413 Initialize joystick
@@ -1069,7 +1099,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
 	atca.Timestep(simdt);								    // Do Work
 	fdaiLeft.Timestep(MissionTime, simdt);					// Do Work
+	fdaiRight.Timestep(MissionTime, simdt);
 	fdaiLeft.SystemTimestep(simdt);							// Draw Power
+	fdaiRight.SystemTimestep(simdt);
 	MissionTimerDisplay.Timestep(MissionTime, simdt);       // These just do work
 	EventTimerDisplay.Timestep(MissionTime, simdt);
 	eds.TimeStep();                                         // Do Work
@@ -1380,7 +1412,7 @@ void LEM_XLBControl::UpdateFlow(double dt){
 	// If we have no LEM, punt
 	if(lem == NULL){ return; }
 	// Do we have power from the other side?
-	double sVoltage = lem->CSMToLEMPowerSource.Voltage();
+	double sVoltage = lem->CSMToLEMPowerSource.Voltage();	
 	// Is the CDR XLunar tie closed?
 	if(lem->CDRXLunarBusTieCB.GetState() == 1){
 		// Yes, we can put voltage on the CDR bus

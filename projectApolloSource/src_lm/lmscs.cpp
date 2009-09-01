@@ -20,6 +20,9 @@
 
   See http://nassp.sourceforge.net/license/ for more details.
 
+  **************************** Revision History ****************************
+  *	$Log$
+  *
   **************************************************************************/
 
 // To force orbitersdk.h to use <fstream> in any compiler version

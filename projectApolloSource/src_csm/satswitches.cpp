@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.2  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -2278,15 +2281,9 @@ bool CSMLMPowerSwitch::CheckMouseClick(int event, int mx, int my)
 }
 
 bool CSMLMPowerSwitch::SwitchTo(int newState)
-
 {
-	sprintf(oapiDebugString(),"NewState %d",newState);
 	if (SaturnThreePosSwitch::SwitchTo(newState)) {
-		// some of these switches are spring-loaded, 
-		// so we have to use newState here
-		// CheckValve(newState);
 		return true;
 	}
-
 	return false;
 }
