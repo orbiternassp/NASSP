@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/09/01 06:18:32  dseagrav
+  *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
+  *	
   *	Revision 1.7  2009/08/24 02:20:20  dseagrav
   *	LM Checkpoint Commit: Adds more systems, heater power drains, fix use of stage before init
   *	
@@ -1449,9 +1452,12 @@ protected:
 	// Abort Guidance System stuff
 	LEM_ASA asa;
 
+	bool isMultiThread;
+
 	// Friend classes
 	friend class ATCA;
 	friend class LEM_EDS;
+	friend class LEMcomputer;
 	friend class LEMDCVoltMeter;
 	friend class LEMDCAmMeter;
 	friend class LMOptics;

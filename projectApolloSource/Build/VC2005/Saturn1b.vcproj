@@ -925,6 +925,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src_sys\thread.cpp"
+				>
+			</File>
+			<File
 				RelativePath="../..\src_sys\toggleswitch.cpp"
 				>
 				<FileConfiguration

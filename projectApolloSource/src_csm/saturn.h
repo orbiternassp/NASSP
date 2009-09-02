@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/08/21 17:52:18  vrouleau
+  *	Added configurable MaxTimeAcceleration value to cap simulator time acceleration
+  *	
   *	Revision 1.5  2009/08/17 13:27:49  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -4034,6 +4037,7 @@ protected:
 	double FovSave;
 	double FovSaveExternal;
 	int maxTimeAcceleration;
+	bool IsMultiThread;
 
 	//
 	// Virtual cockpit
@@ -4586,6 +4590,7 @@ protected:
 	friend class RJEC;
 	friend class ECA;
 	friend class CSMcomputer; // I want this to be able to see the GDC	
+	friend class LEMcomputer; 
 	friend class PCM;         // Otherwise reading telemetry is a pain
 	friend class PMP;
 	friend class USB;

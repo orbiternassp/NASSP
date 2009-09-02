@@ -119,10 +119,13 @@ IDD_PAGEVIRTUALAGC DIALOG DISCARDABLE  0, 0, 232, 195
 STYLE DS_3DLOOK | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Time Acceleration",IDC_STATIC,7,7,219,29
-    LTEXT           "Max. vAGC Time Acceleration (0=unlimited):",IDC_STATIC_TIMEACC,13,19,140,10
-    EDITTEXT        IDC_EDIT_TIMEACC,155,17,19,13,ES_RIGHT | ES_AUTOHSCROLL | 
+    GROUPBOX        "Time Acceleration",IDC_STATIC,7,7,219,47
+    LTEXT           "Max. vAGC Time Acceleration (0=unlimited):",IDC_STATIC_TIMEACC,13,21,140,10
+    EDITTEXT        IDC_EDIT_TIMEACC,155,19,19,13,ES_RIGHT | ES_AUTOHSCROLL | 
                     ES_NUMBER
+    CONTROL         "Multi-Threading in Time Acceleration",
+                    IDC_CHECK_MULTITHREAD,"Button",
+                    BS_AUTOCHECKBOX | BS_NOTIFY | WS_TABSTOP,13,35,150,10
 
 END
 

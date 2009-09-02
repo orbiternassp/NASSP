@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/02 19:21:07  spacex15
+  *	agc socket version reenabled
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -4144,6 +4147,16 @@ void ApolloGuidance::PulsePIPA(int RegPIPA, int pulses)
 
 {
 	int i;
+	//
+	// No pulsing, Don't lock the thread mutex. Locking the mutex here slows time acceleration, like single thread.
+	// There should not be any pulsing during time acceleration anyways. i.e. no thruster firing. Still locking
+	// the mutex in case the agc does small maneuvering during time acceleration.
+	//
+	if (pulses == 0 ) 
+		return;
+
+	Lock lock(agcCycleMutex);
+
 #ifdef AGC_SOCKET_ENABLED
     int channel;
 
@@ -4168,6 +4181,7 @@ void ApolloGuidance::PulsePIPA(int RegPIPA, int pulses)
 #endif
     	}
 	}
+
 }
 
 //

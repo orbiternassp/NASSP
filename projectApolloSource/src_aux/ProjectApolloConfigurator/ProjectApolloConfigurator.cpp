@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/21 17:52:18  vrouleau
+  *	Added configurable MaxTimeAcceleration value to cap simulator time acceleration
+  *	
   *	Revision 1.2  2009/08/17 13:28:04  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -119,6 +122,7 @@ static struct {
 	int Saturn_OrbiterAttitudeDisabled;
 	int Saturn_SequencerSwitchLightingDisabled;
 	int Saturn_MaxTimeAcceleration;
+	int Saturn_MultiThread;
 } gParams;
 
 
@@ -171,9 +175,7 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 31, "%i", &gParams.Saturn_SequencerSwitchLightingDisabled);
 		} else if (!strnicmp (line, "GNSPLIT", 7)) {
 			sscanf (line + 7, "%i", &gParams.Saturn_GNSplit);
-		} else if (!strnicmp (line, "MAXTIMEACC", 10)) {
-			sscanf (line + 10, "%i", &gParams.Saturn_MaxTimeAcceleration);
-		}
+		} 
 	}
 	oapiCloseFile (hFile, FILE_IN);
 
@@ -191,6 +193,18 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 		}
 	}	
 	oapiCloseFile (hFile, FILE_IN);
+
+	// Read the virtual AGC parameters 
+	hFile = oapiOpenFile("ProjectApollo/VirtualAGC.ini", FILE_IN, CONFIG);
+	while (oapiReadScenario_nextline(hFile, line)) {
+		if (!strnicmp (line, "MAXTIMEACC", 10)) {
+			sscanf (line + 10, "%i", &gParams.Saturn_MaxTimeAcceleration);
+		} else if (!strnicmp (line, "MULTITHREAD", 11)) {
+			sscanf (line + 11, "%i", &gParams.Saturn_MultiThread);
+		}
+	}	
+	oapiCloseFile (hFile, FILE_IN);
+
 }
 
 bool ProjectApolloConfigurator::clbkOpen (HWND hLaunchpad)
@@ -225,6 +239,16 @@ int ProjectApolloConfigurator::clbkWriteConfig ()
 	
 	oapiWriteLine(hFile, "TAUTO");	// Not configurable currently
 	oapiWriteLine(hFile, "TJT");	// Not configurable currently
+
+	hFile = oapiOpenFile("ProjectApollo/VirtualAGC.ini", FILE_OUT, CONFIG);
+
+	sprintf(cbuf, "MAXTIMEACC %d", gParams.Saturn_MaxTimeAcceleration);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "MULTITHREAD %d", gParams.Saturn_MultiThread);
+	oapiWriteLine(hFile, cbuf);
+
+
 	return 0;
 }
 
@@ -257,9 +281,6 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	oapiWriteLine(hFile, cbuf);
 
 	sprintf(cbuf, "SEQUENCERSWITCHLIGHTINGDISABLED %d", gParams.Saturn_SequencerSwitchLightingDisabled);
-	oapiWriteLine(hFile, cbuf);
-
-	sprintf(cbuf, "MAXTIMEACC %d", gParams.Saturn_MaxTimeAcceleration);
 	oapiWriteLine(hFile, cbuf);
 
 	oapiCloseFile (hFile, FILE_OUT);
@@ -422,6 +443,11 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 				} else {
 					gParams.Saturn_MaxTimeAcceleration = 100;
 				}
+				if (SendDlgItemMessage (gParams.hDlgTabs[3], IDC_CHECK_MULTITHREAD, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+					gParams.Saturn_MultiThread = 1;
+				} else {
+					gParams.Saturn_MultiThread = 0;
+				}
 
 				EndDialog (hWnd, 0);
 				return 0;
@@ -501,6 +527,8 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 		sprintf(buffer,"%i",gParams.Saturn_MaxTimeAcceleration);
 		SendDlgItemMessage(hWnd, IDC_EDIT_TIMEACC, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
+
+		SendDlgItemMessage(hWnd, IDC_CHECK_MULTITHREAD, BM_SETCHECK, gParams.Saturn_MultiThread?BST_CHECKED:BST_UNCHECKED, 0);
 
 		UpdateControlState(hWnd);
 		return TRUE;

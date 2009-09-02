@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:20:56  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.28  2008/06/27 08:25:10  jasonims
   *	Added DualView Mode into CSMOptics allowing for a "hacked" version of Dual Line Of Sight in the actual CSMOptics.  Press V to toggle ViewMode.
   *	
@@ -115,6 +118,8 @@
 
 #if !defined(_PA_CSMCOMPUTER_H)
 #define _PA_CSMCOMPUTER_H
+
+#include "thread.h"
 
 // OPTICS CONFIGURATION DEFINES
 // Step values in radians.
@@ -313,6 +318,7 @@ typedef union {
 	unsigned int word;				///< Word holds the flags from the bitfield in one 32-bit value.
 } CSMOut6;
 
+class Saturn;
 class IU;
 class CSMToIUConnector;
 class CSMToSIVBControlConnector;
@@ -359,6 +365,8 @@ public:
 	void WriteMemory(unsigned int loc, int val);
 
 	void Timestep(double simt, double simdt);
+	void Run() ;
+	void agcTimestep(double simt, double simdt);
 
 	//
 	// External event handling.
@@ -659,6 +667,9 @@ protected:
 	/// \brief Connection to Saturn launch vehicle.
 	///
 	CSMToSIVBControlConnector &lv;
+
+	Saturn *sat;
+
 };
 //constants
 	const double ACONST = 0.159;

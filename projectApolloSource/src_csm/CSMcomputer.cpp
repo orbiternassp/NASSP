@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/21 17:52:18  vrouleau
+  *	Added configurable MaxTimeAcceleration value to cap simulator time acceleration
+  *	
   *	Revision 1.2  2009/08/18 20:18:31  vrouleau
   *	Work on Apollo 11 vAGC scenarios
   *	
@@ -307,6 +310,7 @@
 #include "saturn.h"
 #include "ioChannels.h"
 #include "papi.h"
+#include "thread.h"
 
 CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, PanelSDK &p, CSMToIUConnector &i, CSMToSIVBControlConnector &sivb) : 
 	ApolloGuidance(s, display, im, p), dsky2(display2), iu(i), lv(sivb)
@@ -404,6 +408,8 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, Pa
 	DNRNGERR = 0;
 	RDOT = 0;
 	VL = 0;
+
+	thread.Resume ();
 }
 
 CSMcomputer::~CSMcomputer()
@@ -2928,21 +2934,58 @@ void CSMcomputer::Prog59Pressed(int R1, int R2, int R3)
 	LightOprErr();
 }
 
+void CSMcomputer::agcTimestep(double simt, double simdt)
+{
+	// Do single timesteps to maintain sync with telemetry engine
+	SingleTimestepPrep(simt, simdt);        // Setup
+	if (LastCycled == 0) {					// Use simdt as difference if new run
+		LastCycled = (simt - simdt); 
+	}	  
+	double ThisTime = LastCycled;			// Save here
+	
+	long cycles = (long)((simt - LastCycled) / 0.00001171875);	// Get number of CPU cycles to do
+	LastCycled += (0.00001171875 * cycles);						// Preserve the remainder
+	long x = 0; 
+	while(x < cycles) {
+		SingleTimestep();
+		ThisTime += 0.00001171875;								// Add time
+		if((ThisTime - sat->pcm.last_update) > 0.00015625) {	// If a step is needed
+			sat->pcm.TimeStep(ThisTime);						// do it
+		}
+		x++;
+	}
+}
+
+void CSMcomputer::Run ()
+	{
+		while(true)
+		{
+			timeStepEvent.Wait();
+			{
+				Lock lock(agcCycleMutex);
+				agcTimestep(thread_simt,thread_simdt);
+			}
+		}
+	};
+
+
 void CSMcomputer::Timestep(double simt, double simdt)
 
 {
 	// DS20060302 For joystick stuff below
-	Saturn *sat = (Saturn *) OurVessel;
+	sat = (Saturn *) OurVessel;
 
 	if (Yaagc){
 		//
 		// Reduce time acceleration as per configured, not to jump to x100 or x1000 and freeze the simulation
 		//
+		
 		if( sat->maxTimeAcceleration>0 )
 		{
 			if( oapiGetTimeAcceleration() > (double)sat->maxTimeAcceleration )
 				oapiSetTimeAcceleration(sat->maxTimeAcceleration);
 		}
+		
 		//
 		// Do nothing if we have no power. (vAGC)
 		//
@@ -3077,24 +3120,20 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			PadLoaded = true;
 		}
 
-		// Do single timesteps to maintain sync with telemetry engine
-		SingleTimestepPrep(simt, simdt);        // Setup
-		if (LastCycled == 0) {					// Use simdt as difference if new run
-			LastCycled = (simt - simdt); 
-		}	  
-		double ThisTime = LastCycled;			// Save here
-		
-		long cycles = (long)((simt - LastCycled) / 0.00001171875);	// Get number of CPU cycles to do
-		LastCycled += (0.00001171875 * cycles);						// Preserve the remainder
-		long x = 0; 
-		while(x < cycles) {
-			SingleTimestep();
-			ThisTime += 0.00001171875;								// Add time
-			if((ThisTime - sat->pcm.last_update) > 0.00015625) {	// If a step is needed
-				sat->pcm.TimeStep(ThisTime);						// do it
-			}
-			x++;
+		//
+		// If MultiThread is enabled and the simulation is accellerated, the run vAGC in the AGC Thread,
+		// otherwise run in main thread. at x1 acceleration, it is better to run vAGC totally synchronized
+		//
+		if(sat->IsMultiThread && oapiGetTimeAcceleration() > 1.0)
+		{
+			
+			Lock lock(agcCycleMutex);
+			thread_simt = simt;
+			thread_simdt = simdt;
+			timeStepEvent.Raise();
 		}
+		else
+			agcTimestep(simt,simdt);
 
 		//
 		// Check nonspherical gravity sources
