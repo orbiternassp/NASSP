@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.3  2009/08/01 23:06:33  jasonims
   *	LM Optics Code Cleaned Up... Panel Code added for LM Optics... Knobs activated... Counter and Computer Controls still to come.
   *	
@@ -117,6 +120,7 @@
 #if !defined(_PA_LMCOMPUTER_H)
 #define _PA_LMCOMPUTER_H
 
+#include "thread.h"
 
 //
 // Flagword definitions. These are really intended for future
@@ -197,6 +201,8 @@ typedef union {
 	unsigned int word;
 } LEMFlagWord2;
 
+
+class Saturn;
 ///
 /// \ingroup AGC
 /// LEM AGC
@@ -223,6 +229,9 @@ public:
 	int GetProgRunning();
 
 	void Timestep(double simt, double simdt);
+	void Run() ;
+	void agcTimestep(double simt, double simdt);
+
 
     int  GetStatus(double *simtime,
 		                 int    *mode,
@@ -325,7 +334,7 @@ protected:
 	double timetoapproach;
 	int    flags;
 
-
+	Saturn *sat;
 };
 class LEM;
 

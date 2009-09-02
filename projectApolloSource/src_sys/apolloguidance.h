@@ -26,6 +26,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.2  2009/08/02 19:21:07  spacex15
+  *	agc socket version reenabled
+  *	
   *	Revision 1.1  2009/02/18 23:21:48  tschachim
   *	Moved files as proposed by Artlav.
   *	
@@ -212,7 +215,7 @@ class PanelSDK;
 #ifndef AGC_SOCKET_ENABLED
 #include "yaAGC/agc_engine.h"
 #endif
-
+#include "thread.h"
 //
 // Velocity in feet per second or meters per second?
 //
@@ -234,7 +237,7 @@ typedef enum MeasurementUnits
 /// This is the generic base class for an AGC, from which we derive the LEM and CSM
 /// computers.
 ///
-class ApolloGuidance
+class ApolloGuidance: public Runnable
 
 {
 public:
@@ -1453,6 +1456,10 @@ bool ApolloGuidance::ReceiveFromSocket(unsigned char packet[4]);
 	///
 	agc_t vagc;
 #endif
+	Mutex agcCycleMutex;
+	Event timeStepEvent;
+	double thread_simt;
+	double thread_simdt;
 };
 
 extern char TwoSpaceTwoFormat[];

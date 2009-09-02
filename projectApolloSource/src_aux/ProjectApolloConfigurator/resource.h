@@ -36,6 +36,7 @@
 #define IDC_CHECK_SEQUENCERSWITCHLIGHTINGDISABLED 1023
 #define IDC_EDIT_TIMEACC				1024
 #define IDC_STATIC_TIMEACC				1025
+#define IDC_CHECK_MULTITHREAD			1026
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

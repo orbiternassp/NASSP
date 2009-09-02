@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/01 06:18:32  dseagrav
+  *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
+  *	
   *	Revision 1.6  2009/08/24 02:20:20  dseagrav
   *	LM Checkpoint Commit: Adds more systems, heater power drains, fix use of stage before init
   *	
@@ -864,6 +867,29 @@ void LEM::SystemsInit()
 			}			
 		}		
 		fclose(fd);
+		fd = fopen("Config\\ProjectApollo\\VirtualAGC.INI","r");
+		if(fd != NULL) { // Did that work?
+			char dataline[256];
+			char *token;
+			char *parameter;
+			rhc_id = 0; // Trap!
+			while(!feof(fd)) {
+				fgets(dataline,256,fd); // Yes, so read a line
+				// Get a token.
+				token = strtok(dataline," \r\n");
+				if(token != NULL) {                                  // If it's not null, parse.
+					if(strncmp(token,"MULTITHREAD",11)==0){                  
+						// Get next token, which should be MULTITHREAD number
+						parameter = strtok(NULL," \r\n");
+						if(parameter != NULL){
+							isMultiThread = atoi(parameter)>1;
+						}
+					}
+				}
+			}			
+		}		
+		fclose(fd);
+
 		// Having read the configuration file, set up DirectX...	
 		hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
 		if(!FAILED(hr)){

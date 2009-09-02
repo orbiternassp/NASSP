@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.3  2009/08/10 14:38:03  tschachim
   *	ECS enhancements
   *	
@@ -844,6 +847,37 @@ void Saturn::SystemsInit() {
 			}			
 		}		
 		fclose(fd);
+
+		fd = fopen("Config\\ProjectApollo\\VirtualAGC.INI","r");
+		if(fd != NULL) { // Did that work?
+			char dataline[256];
+			char *token;
+			char *parameter;
+			rhc_id = 0; // Trap!
+			while(!feof(fd)) {
+				fgets(dataline,256,fd); // Yes, so read a line
+				// Get a token.
+				token = strtok(dataline," \r\n");
+				if(token != NULL) {                                  // If it's not null, parse.
+					if(strncmp(token,"MAXTIMEACC",10)==0){
+						// Get next token, which should be MAXTIMEACC number
+						parameter = strtok(NULL," \r\n");
+						if(parameter != NULL){ 
+							maxTimeAcceleration = atoi(parameter);
+						}
+					}
+					if(strncmp(token,"MULTITHREAD",11)==0){
+						// Get next token, which should be MULTITHREAD number
+						parameter = strtok(NULL," \r\n");
+						if(parameter != NULL){
+							IsMultiThread = atoi(parameter)!=0;
+						}
+					}
+				}
+			}			
+		}		
+		fclose(fd);
+
 		// Having read the configuration file, set up DirectX...	
 		hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
 		if(!FAILED(hr)){

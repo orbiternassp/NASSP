@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/09/01 06:18:32  dseagrav
+  *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
+  *	
   *	Revision 1.5  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -173,8 +176,11 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "IMU.h"
+#include "lvimu.h"
+#include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "papi.h"
+#include "saturn.h"
 
 #include "LEM.h"
 
@@ -217,6 +223,8 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) : Apo
 	timeafterpdi = -1.0;
 
 	InitVirtualAGC("Config/ProjectApollo/Luminary131.bin");
+
+	thread.Resume();
 }
 
 LEMcomputer::~LEMcomputer()
@@ -931,58 +939,96 @@ bool LEMcomputer::ValidateProgram(int prog)
 	return false;
 }
 
+
+void LEMcomputer::agcTimestep(double simt, double simdt)
+{
+	GenericTimestep(simt, simdt);
+}
+
+void LEMcomputer::Run ()
+{
+	while(true)
+	{
+		timeStepEvent.Wait();
+		{
+			Lock lock(agcCycleMutex);
+			agcTimestep(thread_simt,thread_simdt);
+		}
+	}
+};
+
+
 void LEMcomputer::Timestep(double simt, double simdt)
 
 {
+	LEM *lem = (LEM *) OurVessel;
 	// If the power is out, the computer should restart.
-	if (Yaagc && !IsPowered()){
+	if (Yaagc ){
 		// HARDWARE MUST RESTART
+		if( !IsPowered() ) {
 #ifndef AGC_SOCKET_ENABLED
-		if(vagc.Erasable[0][05] != 04000){				
-			// Clear flip-flop based registers
-			vagc.Erasable[0][00] = 0;     // A
-			vagc.Erasable[0][01] = 0;     // L
-			vagc.Erasable[0][02] = 0;     // Q
-			vagc.Erasable[0][03] = 0;     // EB
-			vagc.Erasable[0][04] = 0;     // FB
-			vagc.Erasable[0][05] = 04000; // Z
-			vagc.Erasable[0][06] = 0;     // BB
-			// Clear ISR flag
-			vagc.InIsr = 0;
-			// Clear interrupt requests
-			vagc.InterruptRequests[0] = 0;
-			vagc.InterruptRequests[1] = 0;
-			vagc.InterruptRequests[2] = 0;
-			vagc.InterruptRequests[3] = 0;
-			vagc.InterruptRequests[4] = 0;
-			vagc.InterruptRequests[5] = 0;
-			vagc.InterruptRequests[6] = 0;
-			vagc.InterruptRequests[7] = 0;
-			vagc.InterruptRequests[8] = 0;
-			vagc.InterruptRequests[9] = 0;
-			vagc.InterruptRequests[10] = 0;
-			// Reset cycle counter and Extracode flags
-			vagc.CycleCounter = 0;
-			vagc.ExtraCode = 0;
-			vagc.ExtraDelay = 0;
-			// No idea about the interrupts/pending/etc so we reset those
-			vagc.AllowInterrupt = 0;				  
-			vagc.PendFlag = 0;
-			vagc.PendDelay = 0;
-			// Don't disturb erasable core
-			// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
-			// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it
-			InputChannel[033] &= 017777;
-			vagc.InputChannel[033] &= 017777;				
-			OutputChannel[033] &= 017777;				
-			vagc.Ch33Switches &= 017777;
-			// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
-			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
-			vagc.VoltageAlarm = 1;
-			dsky.LightRestart();
-		}
+			if(vagc.Erasable[0][05] != 04000){				
+				// Clear flip-flop based registers
+				vagc.Erasable[0][00] = 0;     // A
+				vagc.Erasable[0][01] = 0;     // L
+				vagc.Erasable[0][02] = 0;     // Q
+				vagc.Erasable[0][03] = 0;     // EB
+				vagc.Erasable[0][04] = 0;     // FB
+				vagc.Erasable[0][05] = 04000; // Z
+				vagc.Erasable[0][06] = 0;     // BB
+				// Clear ISR flag
+				vagc.InIsr = 0;
+				// Clear interrupt requests
+				vagc.InterruptRequests[0] = 0;
+				vagc.InterruptRequests[1] = 0;
+				vagc.InterruptRequests[2] = 0;
+				vagc.InterruptRequests[3] = 0;
+				vagc.InterruptRequests[4] = 0;
+				vagc.InterruptRequests[5] = 0;
+				vagc.InterruptRequests[6] = 0;
+				vagc.InterruptRequests[7] = 0;
+				vagc.InterruptRequests[8] = 0;
+				vagc.InterruptRequests[9] = 0;
+				vagc.InterruptRequests[10] = 0;
+				// Reset cycle counter and Extracode flags
+				vagc.CycleCounter = 0;
+				vagc.ExtraCode = 0;
+				vagc.ExtraDelay = 0;
+				// No idea about the interrupts/pending/etc so we reset those
+				vagc.AllowInterrupt = 0;				  
+				vagc.PendFlag = 0;
+				vagc.PendDelay = 0;
+				// Don't disturb erasable core
+				// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
+				// Light OSCILLATOR FAILURE and CMC WARNING bits to signify power transient, and be forceful about it
+				InputChannel[033] &= 017777;
+				vagc.InputChannel[033] &= 017777;				
+				OutputChannel[033] &= 017777;				
+				vagc.Ch33Switches &= 017777;
+				// Also, simulate the operation of the VOLTAGE ALARM and light the RESTART light on the DSKY.
+				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
+				vagc.VoltageAlarm = 1;
+				dsky.LightRestart();
+			}
 #endif
-		// and do nothing more.
+			// and do nothing more.
+			return;
+		}
+		
+		//
+		// If MultiThread is enabled and the simulation is accellerated, the run vAGC in the AGC Thread,
+		// otherwise run in main thread. at x1 acceleration, it is better to run vAGC totally synchronized
+		//
+		
+		if( lem->isMultiThread && oapiGetTimeAcceleration() > 1.0)
+		{
+			Lock lock(agcCycleMutex);
+			thread_simt = simt;
+			thread_simdt = simdt;
+			timeStepEvent.Raise();
+		}
+		else
+			agcTimestep(simt,simdt);
 		return;
 	}
 	if (GenericTimestep(simt, simdt))

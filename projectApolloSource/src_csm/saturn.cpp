@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/08/21 17:52:18  vrouleau
+  *	Added configurable MaxTimeAcceleration value to cap simulator time acceleration
+  *	
   *	Revision 1.5  2009/08/17 13:27:49  tschachim
   *	Enhancement of ChecklistMFD
   *	
@@ -2806,10 +2809,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "FOVSAVE", 7)) {
 			sscanf (line + 7, "%lf", &FovSave);
 		}
-		else if (!strnicmp (line, "MAXTIMEACC", 10)) {
-			sscanf (line + 10, "%i", &maxTimeAcceleration);
 
-		}
 		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
 		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg)); 
