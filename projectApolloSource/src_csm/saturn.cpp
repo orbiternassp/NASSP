@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.6  2009/08/21 17:52:18  vrouleau
   *	Added configurable MaxTimeAcceleration value to cap simulator time acceleration
   *	
@@ -539,6 +542,56 @@ extern "C" {
 
 //extern FILE *PanelsdkLogFile;
 
+
+// DX8 callback for enumerating joysticks
+BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pSaturn)
+{
+	class Saturn * sat = (Saturn*)pSaturn; // Pointer to us
+	HRESULT hr;
+
+	if(sat->js_enabled > 1){  // Do we already have enough joysticks?
+		return DIENUM_STOP; } // If so, stop enumerating additional devices.
+
+	// Obtain an interface to the enumerated joystick.
+    hr = sat->dx8ppv->CreateDevice(pdidInstance->guidInstance, &sat->dx8_joystick[sat->js_enabled], NULL);
+	
+	if(FAILED(hr)) {              // Did that work?
+		return DIENUM_CONTINUE; } // No, keep enumerating (if there's more)
+
+	sat->js_enabled++;      // Otherwise, Next!
+	return DIENUM_CONTINUE; // and keep enumerating
+}
+
+// DX8 callback for enumerating joystick axes
+BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSaturn )
+{
+	class Saturn * sat = (Saturn*)pSaturn; // Pointer to us
+
+    if (pdidoi->guidType == GUID_ZAxis) {
+		if (sat->js_current == sat->rhc_id) {
+			sat->rhc_rzx_id = 1;
+		} else {
+			sat->thc_rzx_id = 1;
+		}
+	}
+
+    if (pdidoi->guidType == GUID_RzAxis) {
+		if (sat->js_current == sat->rhc_id) {
+			sat->rhc_rot_id = 2;
+		} else {
+			sat->thc_rot_id = 2;
+		}
+	}
+
+    if (pdidoi->guidType == GUID_POV) {
+		if (sat->js_current == sat->rhc_id) {
+			sat->rhc_pov_id = 0;
+		} else {
+			sat->thc_pov_id = 0;
+		}
+	}
+    return DIENUM_CONTINUE;
+}
 
 //
 // CAUTION: This disables the warning, which is triggered by the use of the "this" pointer in the 
@@ -2707,6 +2760,13 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "STAGE", 5)) {
 			sscanf (line+5, "%d", &stage);
 		}
+		else if (!strnicmp (line, "MAXTIMEACC", 10)) {
+			sscanf (line+10, "%d", &maxTimeAcceleration);
+		}
+		else if (!strnicmp (line, "MULTITHREAD", 10)) {
+			sscanf (line+10, "%d", &IsMultiThread);
+		}
+
 		else if (!strnicmp(line, "NOHGA", 5)) {
 			//
 			// NOHGA isn't saved in the scenario, this is solely to allow you
@@ -2809,7 +2869,55 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "FOVSAVE", 7)) {
 			sscanf (line + 7, "%lf", &FovSave);
 		}
-
+		else if (!strnicmp (line, "RHC", 3)) {
+			sscanf (line + 3, "%i", &rhc_id);
+			if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
+		}
+		else if (!strnicmp (line, "RTTID", 5)) {
+			sscanf (line + 5, "%i", &rhc_thctoggle_id);
+			if (rhc_thctoggle_id > 128){ rhc_thctoggle_id = 128; } // Be paranoid
+		}
+		else if (!strnicmp (line, "RRT", 3)) {
+			sscanf (line + 3, "%i", &rhc_rot_id);
+			if(rhc_rot_id > 2){ rhc_rot_id = 2; } // Be paranoid
+		}
+		else if (!strnicmp (line, "RSL", 3)) {
+			sscanf (line + 3, "%i", &rhc_sld_id);
+			if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
+		}
+		else if (!strnicmp (line, "RZX", 3)) {
+			sscanf (line + 3, "%i", &rhc_rzx_id);
+		}
+		else if (!strnicmp (line, "THC", 3)) {
+			sscanf (line + 3, "%i", &thc_id);
+			if(thc_id > 1){ thc_id = 1; } // Be paranoid
+		}
+		else if (!strnicmp (line, "TRT", 3)) {
+			sscanf (line + 3, "%i", &thc_rot_id);
+			if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
+		}
+		else if (!strnicmp (line, "TSL", 3)) {
+			sscanf (line + 3, "%i", &thc_sld_id);
+			if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
+		}
+		else if (!strnicmp (line, "TZX", 3)==0) {
+			thc_rzx_id = 1;
+		}
+		else if (!strnicmp (line, "RDB", 3)==0) {
+			rhc_debug = 1;
+		}
+		else if (!strnicmp (line, "TDB", 3)==0) {
+			thc_debug = 1;
+		}
+		else if (!strnicmp (line, "RAUTO", 5)==0) {
+			rhc_auto = 1;
+		}
+		else if (!strnicmp (line, "TAUTO", 5)==0) {
+			thc_auto = 1;
+		}
+		else if (!strnicmp (line, "RTT", 3)==0) {
+			rhc_thctoggle = true;
+		}
 		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
 		else if (papiReadScenario_double(line, "LMDSCFUEL", LMDescentFuelMassKg)); 
 		else if (papiReadScenario_double(line, "LMASCFUEL", LMAscentFuelMassKg)); 
@@ -2846,7 +2954,43 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		} else {
 			found = false;
 		}
+			
+
+		HRESULT         hr;
+		// Having read the configuration file, set up DirectX...	
+		hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
+		if(!FAILED(hr)){
+			int x=0;
+			// Enumerate attached joysticks until we find 2 or run out.
+			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+			if(js_enabled == 0){   // Did we get anything?			
+				dx8ppv->Release(); // No. Close down DirectInput
+				dx8ppv = NULL;     // otherwise it won't get closed later
+				sprintf(oapiDebugString(),"DX8JS: No joysticks found");
+			}else{
+				while(x < js_enabled){                                // For each joystick
+					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
+					/* Can't do this because we don't own a window.
+					dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
+						DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		  // and we don't need exclusive joystick access.
+						*/ 
+					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
+					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+
+					// Z-axis detection
+					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
+						js_current = x;
+						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+					}
+					x++;                                              // Next!
+				}
+			}
+		}else{
+			// We can't print an error message this early in initialization, so save this reason for later investigation.
+			dx8_failure = hr;
+		}
 	}
+
 	return found;
 }
 

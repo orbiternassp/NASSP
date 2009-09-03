@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.8  2009/09/01 06:18:32  dseagrav
   *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
   *	
@@ -522,6 +525,10 @@ public:
 	int thc_tjt_id;                       // Flag to use axis as TTCA THROTTLE/JETS select lever
 	int rhc_debug;						  // Flags to print debugging messages.
 	int thc_debug;
+	bool rhc_auto;						  ///< RHC Z-axis auto detection
+	bool thc_auto;						  ///< THC Z-axis auto detection
+	bool rhc_thctoggle;					  ///< Enable RHC/THC toggle
+	int rhc_thctoggle_id;				  ///< RHC button id for RHC/THC toggle
 	int rhc_pos[3];                       // RHC x/y/z positions
 	int ttca_mode;                        // TTCA Throttle/Jets Mode
 #define TTCA_MODE_THROTTLE 0
@@ -574,7 +581,7 @@ protected:
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
-
+	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
 	//
 	// Save/Load support functions.
 	//

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/08/24 02:20:20  dseagrav
+  *	LM Checkpoint Commit: Adds more systems, heater power drains, fix use of stage before init
+  *	
   *	Revision 1.5  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -225,6 +228,25 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 	}
 
 	if (vessel) delete static_cast<LEM *> (vessel);
+}
+
+// DS20060302 DX8 callback for enumerating joysticks
+BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pLEM)
+{
+	class LEM * lem = (LEM*)pLEM; // Pointer to us
+	HRESULT hr;
+
+	if(lem->js_enabled > 1){  // Do we already have enough joysticks?
+		return DIENUM_STOP; } // If so, stop enumerating additional devices.
+
+	// Obtain an interface to the enumerated joystick.
+    hr = lem->dx8ppv->CreateDevice(pdidInstance->guidInstance, &lem->dx8_joystick[lem->js_enabled], NULL);
+	
+	if(FAILED(hr)) {              // Did that work?
+		return DIENUM_CONTINUE; } // No, keep enumerating (if there's more)
+
+	lem->js_enabled++;      // Otherwise, Next!
+	return DIENUM_CONTINUE; // and keep enumerating
 }
 
 // Constructor
@@ -1300,6 +1322,103 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
 	VSEnableCollisions(GetHandle(),"ProjectApollo");
 	SetLmVesselDockStage();
+
+	//
+	// Scan the launchpad config file.
+	//
+	char *line, buffer[1000];
+
+	sprintf(buffer, "%s.launchpad.cfg", GetClassName());
+	FILEHANDLE hFile = oapiOpenFile(buffer, FILE_IN, CONFIG);
+
+	while (oapiReadScenario_nextline(hFile, line)) {
+		ProcessConfigFileLine(hFile, line);
+	}
+	oapiCloseFile(hFile, FILE_IN);
+}
+
+
+bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
+
+{
+	if (!strnicmp (line, "MULTITHREAD", 10)) {
+			sscanf (line+10, "%d", &isMultiThread);
+	}
+	else if (!strnicmp (line, "RHC", 3)) {
+			sscanf (line + 3, "%i", &rhc_id);
+			if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
+	}
+	else if (!strnicmp (line, "RTTID", 5)) {
+			sscanf (line + 5, "%i", &rhc_thctoggle_id);
+		if (rhc_thctoggle_id > 128){ rhc_thctoggle_id = 128; } // Be paranoid
+	}
+	else if (!strnicmp (line, "RRT", 3)) {
+			sscanf (line + 3, "%i", &rhc_rot_id);
+			if(rhc_rot_id > 2){ rhc_rot_id = 2; } // Be paranoid
+	}
+	else if (!strnicmp (line, "RSL", 3)) {
+			sscanf (line + 3, "%i", &rhc_sld_id);
+			if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
+	}
+	else if (!strnicmp (line, "RZX", 3)) {
+		sscanf (line + 3, "%i", &rhc_rzx_id);
+	}
+	else if (!strnicmp (line, "THC", 3)) {
+		sscanf (line + 3, "%i", &thc_id);
+		if(thc_id > 1){ thc_id = 1; } // Be paranoid
+	}
+	else if (!strnicmp (line, "TRT", 3)) {
+		sscanf (line + 3, "%i", &thc_rot_id);
+		if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
+	}
+	else if (!strnicmp (line, "TSL", 3)) {
+		sscanf (line + 3, "%i", &thc_sld_id);
+		if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
+	}
+	else if (!strnicmp (line, "TZX", 3)==0) {
+		thc_rzx_id = 1;
+	}
+	else if (!strnicmp (line, "RDB", 3)==0) {
+		rhc_debug = 1;
+	}
+	else if (!strnicmp (line, "TDB", 3)==0) {
+		thc_debug = 1;
+	}
+	else if (!strnicmp (line, "RAUTO", 5)==0) {
+		rhc_auto = 1;
+	}
+	else if (!strnicmp (line, "TAUTO", 5)==0) {
+		thc_auto = 1;
+	}
+	else if (!strnicmp (line, "RTT", 3)==0) {
+		rhc_thctoggle = true;
+	}
+	HRESULT         hr;
+
+	// Having read the configuration file, set up DirectX...	
+	hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
+	if(!FAILED(hr)){
+		int x=0;
+		// Enumerate attached joysticks until we find 2 or run out.
+		dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+		if(js_enabled == 0){   // Did we get anything?			
+			dx8ppv->Release(); // No. Close down DirectInput
+			dx8ppv = NULL;     // otherwise it won't get closed later
+			sprintf(oapiDebugString(),"DX8JS: No joysticks found");
+		}else{
+			while(x < js_enabled){                                // For each joystick
+				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
+				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
+				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+				x++;                                              // Next!
+			}
+		}
+	}else{
+		// We can't print an error message this early in initialization, so save this reason for later investigation.
+		dx8_failure = hr;
+	}
+
+	return true;
 }
 
 void LEM::SetStateEx(const void *status)

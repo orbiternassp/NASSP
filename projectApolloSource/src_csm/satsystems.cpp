@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.4  2009/08/16 03:12:38  dseagrav
   *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
   *	
@@ -257,55 +260,6 @@
 
 //FILE *PanelsdkLogFile;
 
-// DX8 callback for enumerating joysticks
-BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pSaturn)
-{
-	class Saturn * sat = (Saturn*)pSaturn; // Pointer to us
-	HRESULT hr;
-
-	if(sat->js_enabled > 1){  // Do we already have enough joysticks?
-		return DIENUM_STOP; } // If so, stop enumerating additional devices.
-
-	// Obtain an interface to the enumerated joystick.
-    hr = sat->dx8ppv->CreateDevice(pdidInstance->guidInstance, &sat->dx8_joystick[sat->js_enabled], NULL);
-	
-	if(FAILED(hr)) {              // Did that work?
-		return DIENUM_CONTINUE; } // No, keep enumerating (if there's more)
-
-	sat->js_enabled++;      // Otherwise, Next!
-	return DIENUM_CONTINUE; // and keep enumerating
-}
-
-// DX8 callback for enumerating joystick axes
-BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSaturn )
-{
-	class Saturn * sat = (Saturn*)pSaturn; // Pointer to us
-
-    if (pdidoi->guidType == GUID_ZAxis) {
-		if (sat->js_current == sat->rhc_id) {
-			sat->rhc_rzx_id = 1;
-		} else {
-			sat->thc_rzx_id = 1;
-		}
-	}
-
-    if (pdidoi->guidType == GUID_RzAxis) {
-		if (sat->js_current == sat->rhc_id) {
-			sat->rhc_rot_id = 2;
-		} else {
-			sat->thc_rot_id = 2;
-		}
-	}
-
-    if (pdidoi->guidType == GUID_POV) {
-		if (sat->js_current == sat->rhc_id) {
-			sat->rhc_pov_id = 0;
-		} else {
-			sat->thc_pov_id = 0;
-		}
-	}
-    return DIENUM_CONTINUE;
-}
 
 void Saturn::SystemsInit() {
 
@@ -730,7 +684,7 @@ void Saturn::SystemsInit() {
 	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker);
 	RHCDirect2Power.WireToBuses(&ContrDirectMnA2CircuitBraker, &ContrDirectMnB2CircuitBraker);
 	
-	HRESULT         hr;
+
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
 	rhc_rot_id = -1; // Disabled
@@ -750,167 +704,7 @@ void Saturn::SystemsInit() {
 	thc_auto = false;
 	rhc_thctoggle_pressed = false;
 
-	FILE *fd;
-	// Open configuration file
-	fd = fopen("Config\\ProjectApollo\\Joystick.INI","r");
-	if(fd != NULL){ // Did that work?
-		char dataline[256];
-		char *token;
-		char *parameter;
-		rhc_id = 0; // Trap!
-		while(!feof(fd)){
-			fgets(dataline,256,fd); // Yes, so read a line
-			// Get a token.
-			token = strtok(dataline," \r\n");
-			if(token != NULL){                                  // If it's not null, parse.
-				if(strncmp(token,"RHC",3)==0){                  // RHC address?
-					// Get next token, which should be JS number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						rhc_id = atoi(parameter);
-						if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"RRT",3)==0){                  // RHC ROTATOR address?
-					// Get next token, which should be ROTATOR number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						rhc_rot_id = atoi(parameter);
-						if(rhc_rot_id > 2){ rhc_rot_id = 2; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"RSL",3)==0){                  // RHC SLIDER address?
-					// Get next token, which should be SLIDER number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						rhc_sld_id = atoi(parameter);
-						if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"RZX",3)==0){                  // RHC Z-AXIS ENABLE?
-					rhc_rzx_id = 1;					
-				}
-				/* *** THC *** */
-				if(strncmp(token,"THC",3)==0){                  // THC address?
-					// Get next token, which should be JS number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						thc_id = atoi(parameter);
-						if(thc_id > 1){ thc_id = 1; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"TRT",3)==0){                  // THC ROTATOR address?
-					// Get next token, which should be ROTATOR number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						thc_rot_id = atoi(parameter);
-						if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"TSL",3)==0){                  // THC SLIDER address?
-					// Get next token, which should be SLIDER number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						thc_sld_id = atoi(parameter);
-						if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"TZX",3)==0){                  // THC Z-AXIS-ENABLE?
-					thc_rzx_id = 1;
-				}
-				if(strncmp(token,"RDB",3)==0){					// RHC debug					
-					rhc_debug = 1;
-				}
-				if(strncmp(token,"TDB",3)==0){					// THC debug					
-					thc_debug = 1;
-				}
-				if (!strncmp(token,"RAUTO", 4)) {				
-					rhc_auto = true;
-				}
-				if (!strncmp(token,"TAUTO", 4)) {				
-					thc_auto = true;
-				}
-				if (strncmp(token,"RTTID",5)==0){                  // RHC THC toggle button id
-					// Get next token, which should be the button id
-					parameter = strtok(NULL," \r\n");
-					if (parameter != NULL){
-						rhc_thctoggle_id = atoi(parameter);
-						if (rhc_thctoggle_id > 128){ rhc_thctoggle_id = 128; } // Be paranoid
-					}
-				} else if (strncmp(token,"RTT",3)==0){                  // RHC THC toggle 
-					// Get next token, which should be the button id
-					parameter = strtok(NULL," \r\n");
-					if (parameter != NULL){
-						rhc_thctoggle = (atoi(parameter) ? true : false);
-					}
-				}
-			}			
-		}		
-		fclose(fd);
 
-		fd = fopen("Config\\ProjectApollo\\VirtualAGC.INI","r");
-		if(fd != NULL) { // Did that work?
-			char dataline[256];
-			char *token;
-			char *parameter;
-			rhc_id = 0; // Trap!
-			while(!feof(fd)) {
-				fgets(dataline,256,fd); // Yes, so read a line
-				// Get a token.
-				token = strtok(dataline," \r\n");
-				if(token != NULL) {                                  // If it's not null, parse.
-					if(strncmp(token,"MAXTIMEACC",10)==0){
-						// Get next token, which should be MAXTIMEACC number
-						parameter = strtok(NULL," \r\n");
-						if(parameter != NULL){ 
-							maxTimeAcceleration = atoi(parameter);
-						}
-					}
-					if(strncmp(token,"MULTITHREAD",11)==0){
-						// Get next token, which should be MULTITHREAD number
-						parameter = strtok(NULL," \r\n");
-						if(parameter != NULL){
-							IsMultiThread = atoi(parameter)!=0;
-						}
-					}
-				}
-			}			
-		}		
-		fclose(fd);
-
-		// Having read the configuration file, set up DirectX...	
-		hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
-		if(!FAILED(hr)){
-			int x=0;
-			// Enumerate attached joysticks until we find 2 or run out.
-			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
-			if(js_enabled == 0){   // Did we get anything?			
-				dx8ppv->Release(); // No. Close down DirectInput
-				dx8ppv = NULL;     // otherwise it won't get closed later
-				sprintf(oapiDebugString(),"DX8JS: No joysticks found");
-			}else{
-				while(x < js_enabled){                                // For each joystick
-					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-					/* Can't do this because we don't own a window.
-					dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
-						DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		  // and we don't need exclusive joystick access.
-						*/ 
-					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
-					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-
-					// Z-axis detection
-					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
-						js_current = x;
-						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
-					}
-					x++;                                              // Next!
-				}
-			}
-		}else{
-			// We can't print an error message this early in initialization, so save this reason for later investigation.
-			dx8_failure = hr;
-		}
-	}
 }
 
 void Saturn::SetPipeMaxFlow(char *pipe, double flow) {

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.4  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.3  2009/08/21 17:52:18  vrouleau
   *	Added configurable MaxTimeAcceleration value to cap simulator time acceleration
   *	
@@ -175,14 +178,7 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 31, "%i", &gParams.Saturn_SequencerSwitchLightingDisabled);
 		} else if (!strnicmp (line, "GNSPLIT", 7)) {
 			sscanf (line + 7, "%i", &gParams.Saturn_GNSplit);
-		} 
-	}
-	oapiCloseFile (hFile, FILE_IN);
-
-	// Read the joystick parameters 
-	hFile = oapiOpenFile("ProjectApollo/Joystick.ini", FILE_IN, CONFIG);
-	while (oapiReadScenario_nextline(hFile, line)) {
-		if (!strnicmp (line, "RHC", 3)) {
+		} else if (!strnicmp (line, "RHC", 3)) {
 			sscanf (line + 3, "%i", &gParams.Saturn_RHC);
 		} else if (!strnicmp (line, "THC", 3)) {
 			sscanf (line + 3, "%i", &gParams.Saturn_THC);
@@ -190,19 +186,12 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 5, "%i", &gParams.Saturn_RHCTHCToggleId);
 		} else if (!strnicmp (line, "RTT", 3)) {
 			sscanf (line + 3, "%i", &gParams.Saturn_RHCTHCToggle);
-		}
-	}	
-	oapiCloseFile (hFile, FILE_IN);
-
-	// Read the virtual AGC parameters 
-	hFile = oapiOpenFile("ProjectApollo/VirtualAGC.ini", FILE_IN, CONFIG);
-	while (oapiReadScenario_nextline(hFile, line)) {
-		if (!strnicmp (line, "MAXTIMEACC", 10)) {
+		} else if (!strnicmp (line, "MAXTIMEACC", 10)) {
 			sscanf (line + 10, "%i", &gParams.Saturn_MaxTimeAcceleration);
 		} else if (!strnicmp (line, "MULTITHREAD", 11)) {
 			sscanf (line + 11, "%i", &gParams.Saturn_MultiThread);
 		}
-	}	
+	}
 	oapiCloseFile (hFile, FILE_IN);
 
 }
@@ -221,33 +210,7 @@ int ProjectApolloConfigurator::clbkWriteConfig ()
 	// called when orbiter needs to write its configuration to disk
 	WriteConfig(oapiOpenFile(cfgfile, FILE_OUT, CONFIG));
 	WriteConfig(oapiOpenFile("ProjectApollo/Saturn1b.launchpad.cfg", FILE_OUT, CONFIG));
-
-	// Write the joystick file
-	FILEHANDLE hFile = oapiOpenFile("ProjectApollo/Joystick.ini", FILE_OUT, CONFIG);
-	sprintf(cbuf, "RHC %d", gParams.Saturn_RHC);
-	oapiWriteLine(hFile, cbuf);
-	oapiWriteLine(hFile, "RAUTO");	// Not configurable currently
-
-	sprintf(cbuf, "RTT %d", gParams.Saturn_RHCTHCToggle);
-	oapiWriteLine(hFile, cbuf);
-	
-	sprintf(cbuf, "RTTID %d", gParams.Saturn_RHCTHCToggleId);
-	oapiWriteLine(hFile, cbuf);
-	
-	sprintf(cbuf, "THC %d", gParams.Saturn_THC);
-	oapiWriteLine(hFile, cbuf);
-	
-	oapiWriteLine(hFile, "TAUTO");	// Not configurable currently
-	oapiWriteLine(hFile, "TJT");	// Not configurable currently
-
-	hFile = oapiOpenFile("ProjectApollo/VirtualAGC.ini", FILE_OUT, CONFIG);
-
-	sprintf(cbuf, "MAXTIMEACC %d", gParams.Saturn_MaxTimeAcceleration);
-	oapiWriteLine(hFile, cbuf);
-
-	sprintf(cbuf, "MULTITHREAD %d", gParams.Saturn_MultiThread);
-	oapiWriteLine(hFile, cbuf);
-
+	WriteConfig(oapiOpenFile("ProjectApollo/LEM.launchpad.cfg", FILE_OUT, CONFIG));
 
 	return 0;
 }
@@ -281,6 +244,29 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	oapiWriteLine(hFile, cbuf);
 
 	sprintf(cbuf, "SEQUENCERSWITCHLIGHTINGDISABLED %d", gParams.Saturn_SequencerSwitchLightingDisabled);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "RHC %d", gParams.Saturn_RHC);
+	oapiWriteLine(hFile, cbuf);
+	oapiWriteLine(hFile, "RAUTO");	// Not configurable currently
+
+	sprintf(cbuf, "RTT %d", gParams.Saturn_RHCTHCToggle);
+	oapiWriteLine(hFile, cbuf);
+	
+	sprintf(cbuf, "RTTID %d", gParams.Saturn_RHCTHCToggleId);
+	oapiWriteLine(hFile, cbuf);
+	
+	sprintf(cbuf, "THC %d", gParams.Saturn_THC);
+	oapiWriteLine(hFile, cbuf);
+	
+	oapiWriteLine(hFile, "TAUTO");	// Not configurable currently
+	oapiWriteLine(hFile, "TJT");	// Not configurable currently
+
+
+    sprintf(cbuf, "MAXTIMEACC %d", gParams.Saturn_MaxTimeAcceleration);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "MULTITHREAD %d", gParams.Saturn_MultiThread);
 	oapiWriteLine(hFile, cbuf);
 
 	oapiCloseFile (hFile, FILE_OUT);

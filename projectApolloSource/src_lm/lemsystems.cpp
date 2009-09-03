@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.7  2009/09/01 06:18:32  dseagrav
   *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
   *	
@@ -438,24 +441,6 @@ bool LEM::AscentEngineArmed()
 	return (EngineArmSwitch.IsUp()); //&& !ASCHE1switch && !ASCHE2switch && ED1switch && ED6switch && ED7switch && ED8switch;
 }
 
-// DS20060302 DX8 callback for enumerating joysticks
-BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pLEM)
-{
-	class LEM * lem = (LEM*)pLEM; // Pointer to us
-	HRESULT hr;
-
-	if(lem->js_enabled > 1){  // Do we already have enough joysticks?
-		return DIENUM_STOP; } // If so, stop enumerating additional devices.
-
-	// Obtain an interface to the enumerated joystick.
-    hr = lem->dx8ppv->CreateDevice(pdidInstance->guidInstance, &lem->dx8_joystick[lem->js_enabled], NULL);
-	
-	if(FAILED(hr)) {              // Did that work?
-		return DIENUM_CONTINUE; } // No, keep enumerating (if there's more)
-
-	lem->js_enabled++;      // Otherwise, Next!
-	return DIENUM_CONTINUE; // and keep enumerating
-}
 
 void LEM::SystemsInit()
 
@@ -787,132 +772,7 @@ void LEM::SystemsInit()
 	thc_tjt_id = -1; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
-	FILE *fd;
-	// Open configuration file
-	fd = fopen("Config\\ProjectApollo\\Joystick.INI","r");
-	if(fd != NULL){ // Did that work?
-		char dataline[256];
-		char *token;
-		char *parameter;
-		rhc_id = 0; // Trap!
-		while(!feof(fd)){
-			fgets(dataline,256,fd); // Yes, so read a line
-			// Get a token.
-			token = strtok(dataline," \r\n");
-			if(token != NULL){                                  // If it's not null, parse.
-				if(strncmp(token,"RHC",3)==0){                  // RHC address?
-					// Get next token, which should be JS number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						rhc_id = atoi(parameter);
-						if(rhc_id > 1){ rhc_id = 1; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"RRT",3)==0){                  // RHC ROTATOR address?
-					// Get next token, which should be ROTATOR number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						rhc_rot_id = atoi(parameter);
-						if(rhc_rot_id > 2){ rhc_rot_id = 2; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"RSL",3)==0){                  // RHC SLIDER address?
-					// Get next token, which should be SLIDER number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						rhc_sld_id = atoi(parameter);
-						if(rhc_sld_id > 2){ rhc_sld_id = 2; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"RZX",3)==0){                  // RHC USE-Z-AXIS?
-					rhc_rzx_id = 1;
-				}
-				/* *** THC *** */
-				if(strncmp(token,"THC",3)==0){                  // THC address?
-					// Get next token, which should be JS number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						thc_id = atoi(parameter);
-						if(thc_id > 1){ thc_id = 1; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"TRT",3)==0){                  // THC ROTATOR address?
-					// Get next token, which should be ROTATOR number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						thc_rot_id = atoi(parameter);
-						if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"TSL",3)==0){                  // THC SLIDER address?
-					// Get next token, which should be SLIDER number
-					parameter = strtok(NULL," \r\n");
-					if(parameter != NULL){
-						thc_sld_id = atoi(parameter);
-						if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
-					}
-				}
-				if(strncmp(token,"TZX",3)==0){                  // THC USE-Z-AXIS?
-					thc_rzx_id = 1; 					
-				}
-				if(strncmp(token,"TJT",3)==0){                  // THC JETS/THROTTLE Z-AXIS enable
-					thc_tjt_id = 1;					
-				}
-				if(strncmp(token,"RDB",3)==0){					// RHC debug					
-					rhc_debug = 1;
-				}
-				if(strncmp(token,"TDB",3)==0){					// THC debug					
-					thc_debug = 1;
-				}
-			}			
-		}		
-		fclose(fd);
-		fd = fopen("Config\\ProjectApollo\\VirtualAGC.INI","r");
-		if(fd != NULL) { // Did that work?
-			char dataline[256];
-			char *token;
-			char *parameter;
-			rhc_id = 0; // Trap!
-			while(!feof(fd)) {
-				fgets(dataline,256,fd); // Yes, so read a line
-				// Get a token.
-				token = strtok(dataline," \r\n");
-				if(token != NULL) {                                  // If it's not null, parse.
-					if(strncmp(token,"MULTITHREAD",11)==0){                  
-						// Get next token, which should be MULTITHREAD number
-						parameter = strtok(NULL," \r\n");
-						if(parameter != NULL){
-							isMultiThread = atoi(parameter)>1;
-						}
-					}
-				}
-			}			
-		}		
-		fclose(fd);
-
-		// Having read the configuration file, set up DirectX...	
-		hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
-		if(!FAILED(hr)){
-			int x=0;
-			// Enumerate attached joysticks until we find 2 or run out.
-			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
-			if(js_enabled == 0){   // Did we get anything?			
-				dx8ppv->Release(); // No. Close down DirectInput
-				dx8ppv = NULL;     // otherwise it won't get closed later
-				sprintf(oapiDebugString(),"DX8JS: No joysticks found");
-			}else{
-				while(x < js_enabled){                                // For each joystick
-					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
-					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-					x++;                                              // Next!
-				}
-			}
-		}else{
-			// We can't print an error message this early in initialization, so save this reason for later investigation.
-			dx8_failure = hr;
-		}
-	}
+	
 	// Initialize other systems
 	atca.Init(this);
 }
