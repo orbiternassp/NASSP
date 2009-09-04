@@ -265,6 +265,10 @@ SOURCE=..\..\src_csm\sps.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src_sys\thread.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src_sys\toggleswitch.cpp
 # End Source File
 # Begin Source File
