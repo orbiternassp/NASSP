@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.8  2009/09/03 19:22:48  vrouleau
+  *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
+  *	
   *	Revision 1.7  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -2956,39 +2959,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 			
 
-		HRESULT         hr;
-		// Having read the configuration file, set up DirectX...	
-		hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
-		if(!FAILED(hr)){
-			int x=0;
-			// Enumerate attached joysticks until we find 2 or run out.
-			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
-			if(js_enabled == 0){   // Did we get anything?			
-				dx8ppv->Release(); // No. Close down DirectInput
-				dx8ppv = NULL;     // otherwise it won't get closed later
-				sprintf(oapiDebugString(),"DX8JS: No joysticks found");
-			}else{
-				while(x < js_enabled){                                // For each joystick
-					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-					/* Can't do this because we don't own a window.
-					dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
-						DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		  // and we don't need exclusive joystick access.
-						*/ 
-					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
-					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-
-					// Z-axis detection
-					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
-						js_current = x;
-						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
-					}
-					x++;                                              // Next!
-				}
-			}
-		}else{
-			// We can't print an error message this early in initialization, so save this reason for later investigation.
-			dx8_failure = hr;
-		}
 	}
 
 	return found;
@@ -4882,6 +4852,42 @@ void Saturn::GenericLoadStateSetup()
 	//
 
 	CheckSMSystemsState();
+
+	
+	HRESULT         hr;
+	// Having read the configuration file, set up DirectX...	
+	hr = DirectInput8Create(dllhandle,DIRECTINPUT_VERSION,IID_IDirectInput8,(void **)&dx8ppv,NULL); // Give us a DirectInput context
+	if(!FAILED(hr)){
+		int x=0;
+		// Enumerate attached joysticks until we find 2 or run out.
+		dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+		if(js_enabled == 0){   // Did we get anything?			
+			dx8ppv->Release(); // No. Close down DirectInput
+			dx8ppv = NULL;     // otherwise it won't get closed later
+			sprintf(oapiDebugString(),"DX8JS: No joysticks found");
+		}else{
+			while(x < js_enabled){                                // For each joystick
+				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
+				/* Can't do this because we don't own a window.
+				dx8_joystick[x]->SetCooperativeLevel(dllhandle,   // We want data all the time,
+					DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);		  // and we don't need exclusive joystick access.
+					*/ 
+				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
+				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+					// Z-axis detection
+				if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
+					js_current = x;
+					dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+				}
+				x++;                                              // Next!
+			}
+		}
+	}else{
+		// We can't print an error message this early in initialization, so save this reason for later investigation.
+		dx8_failure = hr;
+	}
+
+
 }
 
 bool Saturn::CheckForLaunchShutdown()
