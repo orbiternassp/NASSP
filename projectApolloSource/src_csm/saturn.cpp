@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/09/04 15:01:49  vrouleau
+  *	Joystick init bug fix from last commit
+  *	
   *	Revision 1.8  2009/09/03 19:22:48  vrouleau
   *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
   *	
@@ -2903,22 +2906,22 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			sscanf (line + 3, "%i", &thc_sld_id);
 			if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
 		}
-		else if (!strnicmp (line, "TZX", 3)==0) {
+		else if (!strnicmp (line, "TZX", 3)) {
 			thc_rzx_id = 1;
 		}
-		else if (!strnicmp (line, "RDB", 3)==0) {
+		else if (!strnicmp (line, "RDB", 3)) {
 			rhc_debug = 1;
 		}
-		else if (!strnicmp (line, "TDB", 3)==0) {
+		else if (!strnicmp (line, "TDB", 3)) {
 			thc_debug = 1;
 		}
-		else if (!strnicmp (line, "RAUTO", 5)==0) {
+		else if (!strnicmp (line, "RAUTO", 5)) {
 			rhc_auto = 1;
 		}
-		else if (!strnicmp (line, "TAUTO", 5)==0) {
+		else if (!strnicmp (line, "TAUTO", 5)) {
 			thc_auto = 1;
 		}
-		else if (!strnicmp (line, "RTT", 3)==0) {
+		else if (!strnicmp (line, "RTT", 3)) {
 			rhc_thctoggle = true;
 		}
 		else if (papiReadScenario_double(line, "MOONMJD", LMLandingMJD)); 
