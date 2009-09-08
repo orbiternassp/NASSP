@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/09/08 17:38:37  vrouleau
+  *	Some more config file reading bug fix.
+  *	
   *	Revision 1.8  2009/09/04 15:01:50  vrouleau
   *	Joystick init bug fix from last commit
   *	
@@ -1372,7 +1375,9 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 
 {
 	if (!strnicmp (line, "MULTITHREAD", 10)) {
-			sscanf (line+10, "%d", &isMultiThread);
+			int value;
+			sscanf (line+10, "%d", &value);
+			isMultiThread=(value>0)?true:false;
 	}
 	else if (!strnicmp (line, "RHC", 3)) {
 			sscanf (line + 3, "%i", &rhc_id);

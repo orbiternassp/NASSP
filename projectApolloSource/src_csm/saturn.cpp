@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2009/09/08 17:38:37  vrouleau
+  *	Some more config file reading bug fix.
+  *	
   *	Revision 1.9  2009/09/04 15:01:49  vrouleau
   *	Joystick init bug fix from last commit
   *	
@@ -2770,7 +2773,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			sscanf (line+10, "%d", &maxTimeAcceleration);
 		}
 		else if (!strnicmp (line, "MULTITHREAD", 10)) {
-			sscanf (line+10, "%d", &IsMultiThread);
+			int value;
+			sscanf (line+10, "%d", &value);
+			IsMultiThread=(value>0)?true:false;
 		}
 
 		else if (!strnicmp(line, "NOHGA", 5)) {
