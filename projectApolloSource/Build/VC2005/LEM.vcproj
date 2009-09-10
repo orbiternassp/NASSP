@@ -591,6 +591,14 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\src_lm\lm_ags.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src_lm\lm_telecom.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src_lm\lmscs.cpp"
 				>
 			</File>
