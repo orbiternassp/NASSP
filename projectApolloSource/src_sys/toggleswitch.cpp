@@ -25,6 +25,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.4  2009/08/12 23:26:53  tschachim
   *	"Sideways" toggle switch.
   *	
@@ -852,6 +855,138 @@ bool ThreePosSwitch::SwitchTo(int newState, bool dontspring)
 	return false;
 }
 
+//
+// Five pos switch.
+//
+
+bool FivePosSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	int OldState = state;
+
+	//
+	// Check whether it's actually in our switch region.
+	//
+
+	if (mx < x || my < y)
+		return false;
+
+	if (mx > (x + width) || my > (y + height))
+		return false;
+
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+
+	if (IsSpringLoaded())
+		SetHeld((ctrlState & 0x8000) != 0);
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+	// FIXME: This assumes the switch is 39x39px in size. Should be variable.
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (my > 24 && (mx < 30 && mx > 7)){
+			// Down
+			if(state != FIVEPOSSWITCH_DOWN){
+				SwitchTo(FIVEPOSSWITCH_DOWN, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		if(my < 10 && (mx < 30 && mx > 7)){
+			// Up
+			if (state != FIVEPOSSWITCH_UP) {
+				SwitchTo(FIVEPOSSWITCH_UP, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		if(mx > 30){
+			// Right
+			if (state != FIVEPOSSWITCH_RIGHT) {
+				SwitchTo(FIVEPOSSWITCH_RIGHT, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		if(mx < 7){
+			// Left
+			if (state != FIVEPOSSWITCH_LEFT) {
+				SwitchTo(FIVEPOSSWITCH_LEFT, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		// Otherwise
+		if (state != FIVEPOSSWITCH_CENTER) {
+			SwitchTo(FIVEPOSSWITCH_CENTER, true);
+			Sclick.play();
+		}
+	} else if (IsSpringLoaded() && event == PANEL_MOUSE_LBUP && !IsHeld()) {		
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(FIVEPOSSWITCH_DOWN,true);
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(FIVEPOSSWITCH_CENTER,true);
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(FIVEPOSSWITCH_UP,true);
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == FIVEPOSSWITCH_UP)     
+			SwitchTo(FIVEPOSSWITCH_CENTER,true);
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == FIVEPOSSWITCH_DOWN)     
+			SwitchTo(FIVEPOSSWITCH_CENTER);
+	}
+	return true;
+}
+
+void FivePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
+
+{
+	oapiBlt(DrawSurface, SwitchSurface, x, y, (state * width), 0, width, height, SURF_PREDEF_CK);
+}
+
+bool FivePosSwitch::SwitchTo(int newState, bool dontspring)
+
+{
+	if (Active)
+	{
+		if (state != newState)
+		{
+			state = newState;
+			SwitchToggled = true;
+			if (switchRow) {
+				if (switchRow->panelSwitches->listener) 
+					switchRow->panelSwitches->listener->PanelSwitchToggled(this);
+			}
+			if (callback)
+				callback->call(this);
+
+			if (IsSpringLoaded() && !dontspring && !IsHeld()) {
+				if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(FIVEPOSSWITCH_DOWN,true);
+				if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(FIVEPOSSWITCH_CENTER,true);
+				if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(FIVEPOSSWITCH_UP,true);
+
+				if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == FIVEPOSSWITCH_UP)     
+						SwitchTo(FIVEPOSSWITCH_CENTER,true);
+
+				if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == FIVEPOSSWITCH_DOWN)     
+						SwitchTo(FIVEPOSSWITCH_CENTER,true);
+			}
+			return true;
+		}
+		if (IsSpringLoaded() && !dontspring && !IsHeld()) {
+			if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   return SwitchTo(FIVEPOSSWITCH_DOWN,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER) return SwitchTo(FIVEPOSSWITCH_CENTER,true);
+			if (springLoaded == SPRINGLOADEDSWITCH_UP)     return SwitchTo(FIVEPOSSWITCH_UP,true);
+
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == FIVEPOSSWITCH_UP)     
+					return SwitchTo(FIVEPOSSWITCH_CENTER,true);
+
+			if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == FIVEPOSSWITCH_DOWN)     
+					return SwitchTo(FIVEPOSSWITCH_CENTER,true);
+		}
+	}
+	return false;
+}
 
 //
 // Push button like switch.  Now implemented as a special case of toggle switch (springloaded and special sound)
@@ -2451,6 +2586,8 @@ IndicatorSwitch::IndicatorSwitch() {
 	height = 0;
 	switchSurface = 0;
 	switchRow = 0;
+	SRC = NULL;
+
 }
 
 IndicatorSwitch::~IndicatorSwitch() {

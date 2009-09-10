@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
+# Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASTP", "Build\VC2008\ASTP.vcproj", "{BAE34D87-5EAE-491C-AE6D-73B6B1E487D2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crawler", "Build\VC2008\Crawler.vcproj", "{BAAA2ADB-0507-4E33-9E80-23CEE3B74E37}"
