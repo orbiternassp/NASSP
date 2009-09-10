@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.9  2009/09/03 19:22:48  vrouleau
+  *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
+  *	
   *	Revision 1.8  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -544,16 +547,22 @@ void LEM::SystemsInit()
 	BTB_LMP_E.Init(this,&BTB_LMP_A,&BTC_MPX.dc_output_lmp);
 	BTB_CDR_E.Init(this,&BTB_CDR_A,&BTC_MPX.dc_output_cdr);
 
+	// EPS Displays
+	EPS_DISP_CB.MaxAmps = 2.0;
+	EPS_DISP_CB.WireTo(&LMPs28VBus);
+	EPSMonitorSelectRotary.WireTo(&EPS_DISP_CB);
+
 	// Descent battery TBs
-	DSCBattery1TB.WireTo(&DES_LMPs28VBusA);
-	DSCBattery2TB.WireTo(&DES_LMPs28VBusB);
-	DSCBattery3TB.WireTo(&DES_CDRs28VBusA);
-	DSCBattery4TB.WireTo(&DES_CDRs28VBusB);
+	DSCBattery1TB.WireTo(&EPS_DISP_CB);
+	DSCBattery2TB.WireTo(&EPS_DISP_CB);
+	DSCBattery3TB.WireTo(&EPS_DISP_CB);
+	DSCBattery4TB.WireTo(&EPS_DISP_CB);
+	DSCBattFeedTB.WireTo(&EPS_DISP_CB);
 	// Ascent battery TBs
-	ASCBattery5ATB.WireTo(&ECA_3a);
-	ASCBattery5BTB.WireTo(&ECA_3b);
-	ASCBattery6ATB.WireTo(&ECA_4a);
-	ASCBattery6BTB.WireTo(&ECA_4b);
+	ASCBattery5ATB.WireTo(&EPS_DISP_CB);
+	ASCBattery5BTB.WireTo(&EPS_DISP_CB);
+	ASCBattery6ATB.WireTo(&EPS_DISP_CB);
+	ASCBattery6BTB.WireTo(&EPS_DISP_CB);
 
 	// ECA stuff
 	CDRAscECAContCB.MaxAmps = 3.0;
@@ -629,8 +638,10 @@ void LEM::SystemsInit()
 	agc.WirePower(&LGC_DSKY_CB,&LGC_DSKY_CB);
 	dsky.Init(&LGC_DSKY_CB);
 
-	// ASA
+	// AGS stuff
 	asa.Init(this);
+	aea.Init(this);
+	deda.Init(this);
 
 	// IMU OPERATE power (Logic DC power)
 	IMU_OPR_CB.MaxAmps = 20.0;
@@ -682,6 +693,45 @@ void LEM::SystemsInit()
 	// COMM
 	// S-Band Steerable Ant
 	SBandSteerable.Init(this);
+	// SBand System
+	SBand.Init(this);
+	// VHF System
+	VHF.Init(this);
+	// CBs
+	INST_SIG_CONDR_1_CB.MaxAmps = 2.0;
+	INST_SIG_CONDR_1_CB.WireTo(&CDRs28VBus);
+	INST_SIG_CONDR_2_CB.MaxAmps = 2.0;
+	INST_SIG_CONDR_2_CB.WireTo(&LMPs28VBus);
+	COMM_VHF_RCVR_A_CB.MaxAmps = 2.0;
+	COMM_VHF_RCVR_A_CB.WireTo(&CDRs28VBus);
+	COMM_VHF_XMTR_A_CB.MaxAmps = 5.0;
+	COMM_VHF_XMTR_A_CB.WireTo(&LMPs28VBus);
+	COMM_VHF_RCVR_B_CB.MaxAmps = 2.0;
+	COMM_VHF_RCVR_B_CB.WireTo(&LMPs28VBus);
+	COMM_VHF_XMTR_B_CB.MaxAmps = 5.0;
+	COMM_VHF_XMTR_B_CB.WireTo(&CDRs28VBus);
+	COMM_PRIM_SBAND_PA_CB.MaxAmps = 7.5;
+	COMM_PRIM_SBAND_PA_CB.WireTo(&LMPs28VBus);
+	COMM_PRIM_SBAND_XCVR_CB.MaxAmps = 5.0;
+	COMM_PRIM_SBAND_XCVR_CB.WireTo(&LMPs28VBus);
+	COMM_SEC_SBAND_PA_CB.MaxAmps = 7.5;
+	COMM_SEC_SBAND_PA_CB.WireTo(&CDRs28VBus);
+	COMM_SEC_SBAND_XCVR_CB.MaxAmps = 5.0;
+	COMM_SEC_SBAND_XCVR_CB.WireTo(&CDRs28VBus);
+	COMM_CDR_AUDIO_CB.MaxAmps = 2.0;
+	COMM_CDR_AUDIO_CB.WireTo(&CDRs28VBus);
+	COMM_SE_AUDIO_CB.MaxAmps = 2.0;
+	COMM_SE_AUDIO_CB.WireTo(&LMPs28VBus);
+	INST_SIG_SENSOR_CB.MaxAmps = 2.0;
+	INST_SIG_SENSOR_CB.WireTo(&LMPs28VBus);
+	INST_PCMTEA_CB.MaxAmps = 2.0;
+	INST_PCMTEA_CB.WireTo(&LMPs28VBus);
+	COMM_PMP_CB.MaxAmps = 2.0;
+	COMM_PMP_CB.WireTo(&LMPs28VBus);
+	COMM_SBAND_ANT_CB.MaxAmps = 2.0;
+	COMM_SBAND_ANT_CB.WireTo(&LMPs28VBus);
+	COMM_DISP_CB.MaxAmps = 2.0;
+	COMM_DISP_CB.WireTo(&LMPs28VBus);
 
 	// EXPLOSIVE DEVICES SUPPLY CBs
 	EDS_CB_LG_FLAG.MaxAmps = 2.0;
@@ -701,14 +751,26 @@ void LEM::SystemsInit()
 	CDR_LTG_ANUN_DOCK_COMPNT_CB.WireTo(&CDRs28VBus);
 	LTG_FLOOD_CB.MaxAmps = 5.0;
 	LTG_FLOOD_CB.WireTo(&LMPs28VBus);
+	NUM_LTG_AC_CB.MaxAmps = 2.0;
+	NUM_LTG_AC_CB.WireTo(&ACBusB);
 
-	// STABILIZATION/CONTROL SYSTEM
+	// ABORT GUIDANCE SYSTEM
 	SCS_ASA_CB.MaxAmps = 20.0;
 	SCS_ASA_CB.WireTo(&LMPs28VBus);
+	SCS_AEA_CB.MaxAmps = 10.0;
+	SCS_AEA_CB.WireTo(&LMPs28VBus);
+	CDR_SCS_AEA_CB.MaxAmps = 10.0;
+	CDR_SCS_AEA_CB.WireTo(&CDRs28VBus);
+	SCS_ATCA_AGS_CB.MaxAmps = 3.0;
+	SCS_ATCA_AGS_CB.WireTo(&LMPs28VBus);
 
 	// ENVIRONMENTAL CONTROL SYSTEM
+	ECS_DISP_CB.MaxAmps = 2.0;
+	ECS_DISP_CB.WireTo(&LMPs28VBus);
 	ECS_CABIN_REPRESS_CB.MaxAmps = 2.0;
 	ECS_CABIN_REPRESS_CB.WireTo(&LMPs28VBus);
+	ECS_GLYCOL_PUMP_2_CB.MaxAmps = 5.0;
+	ECS_GLYCOL_PUMP_2_CB.WireTo(&CDRs28VBus);
 
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
@@ -965,6 +1027,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	dsky.Timestep(MissionTime);								// Do work
 	//dsky.SystemTimestep(simdt);						    // DSKY power draw is broken.
 	asa.TimeStep(simdt);									// Do work
+	aea.TimeStep(simdt);
+	deda.TimeStep(simdt);
 	imu.Timestep(MissionTime);								// Do work
 	imu.SystemTimestep(simdt);								// Draw power
 	// Manage IMU standby heater and temperature
@@ -995,6 +1059,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	LR.TimeStep(simdt);										// I don't wanna work
 	RR.TimeStep(simdt);										// I just wanna bang on me drum all day
 	SBandSteerable.TimeStep(simdt);							// Back to work...
+	VHF.SystemTimestep(simdt);
+	SBand.SystemTimestep(simdt);
+	SBand.TimeStep(simt);
 
 	// Debug tests would go here
 	
@@ -1815,96 +1882,3 @@ double LEM_RR::GetAntennaTempF(){
 	return(0);
 }
 
-// Abort Sensor Assembly
-LEM_ASA::LEM_ASA() : hsink("LEM-ASA-HSink",_vector3(0.013, 3.0, 0.03),0.03,0.04),
-	heater("LEM-ASA-Heater",1,NULL,15,20,0,272,274,&hsink)
-{
-	lem = NULL;	
-}
-
-void LEM_ASA::Init(LEM *s){
-	lem = s;
-	// Therm setup
-	hsink.isolation = 1.0; 
-	hsink.Area = 975.0425; 
-	hsink.mass = 9389.36206;
-	hsink.SetTemp(270);
-	if(lem != NULL){
-		heater.WireTo(&lem->SCS_ASA_CB);
-		lem->Panelsdk.AddHydraulic(&hsink);
-		lem->Panelsdk.AddElectrical(&heater,false);
-		heater.Enable();
-		heater.SetPumpAuto();
-	}
-}
-
-void LEM_ASA::TimeStep(double simdt){
-	if(lem == NULL){ return; }
-	// AGS OFF  = ASA heaters active (OFF mode)
-	// AGS STBY = ASA fully active   (WARMUP mode, becomes OPERATE mode when temp allows)
-	// ASA OPR  = ASA fully active   (ditto)
-
-	// ASA is 11.5x8x5.125 inches and weighs 20.7 pounds
-	// ASA draws 74 watts operating? Need more info
-
-	// ASA wants to stay at 120F.
-	// Fast Warmup can get the ASA from 30F to 116F in 40 minutes.
-	// Fast Warmup is active below 116F.
-	// At 116F the Fine Warmup circuit takes over and gets to 120F and maintains it to within 0.2 degree F
-
-	// There is no information on what the "OFF" mode does other than run the ASA heaters.
-	// My guess is that some small heater keeps the ASA at 30F until standby happens.
-	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
-
-	// FIXME: ASA goes here	
-}
-
-void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-
-}
-
-void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str){
-
-}
-
-// S-Band Steerable Antenna
-LEM_SteerableAnt::LEM_SteerableAnt() : antenna("LEM-SBand-Steerable-Antenna",_vector3(0.013, 3.0, 0.03),0.03,0.04),
-	antheater("LEM-SBand-Steerable-Antenna-Heater",1,NULL,40,51.7,0,233.15,255,&antenna)
-{
-	lem = NULL;	
-}
-
-void LEM_SteerableAnt::Init(LEM *s){
-	lem = s;
-	// Set up antenna.
-	// SBand antenna 51.7 watts to stay between -40F and 0F
-	antenna.isolation = 1.0; 
-	antenna.Area = 10783.0112; // Surface area of reflecting dish, probably good enough
-	antenna.mass = 10000;      // Probably the same as the RR antenna
-	antenna.SetTemp(233); 
-	if(lem != NULL){
-		antheater.WireTo(&lem->HTR_SBD_ANT_CB);
-		lem->Panelsdk.AddHydraulic(&antenna);
-		lem->Panelsdk.AddElectrical(&antheater,false);
-		antheater.Enable();
-		antheater.SetPumpAuto();
-	}
-}
-
-void LEM_SteerableAnt::TimeStep(double simdt){
-	if(lem == NULL){ return; }
-	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
-}
-
-void LEM_SteerableAnt::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
-
-}
-
-void LEM_SteerableAnt::LoadState(FILEHANDLE scn,char *end_str){
-
-}
-
-double LEM_SteerableAnt::GetAntennaTempF(){
-
-	return(0);
-}

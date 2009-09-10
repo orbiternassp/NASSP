@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2009/09/08 19:46:35  vrouleau
+  *	More fixes in reading config files
+  *	
   *	Revision 1.9  2009/09/08 17:38:37  vrouleau
   *	Some more config file reading bug fix.
   *	
@@ -277,7 +280,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	EPSDCVoltMeter(20.0, 40.0, 215.0, -35.0),
 	ComPitchMeter(0.0, 5.0, 220.0, -50.0),
 	ComYawMeter(0.0, 5.0, 220.0, -50.0),
-	Panel14SignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
+	Panel12SignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
@@ -1294,6 +1297,9 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 		DES_CDRs28VBusB.Disconnect();
 		DSCBattFeedTB.SetState(0);
 	}
+	// SOVs open by default
+	SetValveState(LEM_RCS_MAIN_SOV_A,true);
+	SetValveState(LEM_RCS_MAIN_SOV_B,true);
 
 	//
 	// Pass on the mission number and realism setting to the AGC.

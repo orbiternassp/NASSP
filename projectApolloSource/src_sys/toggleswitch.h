@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.5  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.4  2009/08/12 23:26:53  tschachim
   *	"Sideways" toggle switch.
   *	
@@ -310,6 +313,12 @@
 #define THREEPOSSWITCH_DOWN		0			///< Three-position switch is down.
 #define THREEPOSSWITCH_CENTER	1			///< Three-position switch is centered.
 #define THREEPOSSWITCH_UP		2			///< Three-position switch is up.
+
+#define FIVEPOSSWITCH_DOWN		0			///< Five-position switch is down.
+#define FIVEPOSSWITCH_CENTER	1			///< Five-position switch is centered.
+#define FIVEPOSSWITCH_UP		2			///< Five-position switch is up.
+#define FIVEPOSSWITCH_LEFT		3			///< Five-position switch is left.
+#define FIVEPOSSWITCH_RIGHT		4			///< Five-position switch is right.
 
 #define GUARDEDSWITCH_UNGUARD	101			///<SetState can open a guard from this.
 #define GUARDEDSWITCH_GUARD		102			///<SetState can close a guard from this.
@@ -679,6 +688,27 @@ public:
 //	virtual void SetState(int value);
 
 //	int operator=(const int b) { state = b; return state; };
+};
+
+///
+/// Generic five-position toggle switch
+/// \brief Five position toggle switch base class.
+/// \ingroup PanelItems
+///
+
+class FivePosSwitch: public ToggleSwitch {
+
+public:
+	void DrawSwitch(SURFHANDLE DrawSurface);
+	bool CheckMouseClick(int event, int mx, int my);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+
+	bool IsDown() { return (GetState() == FIVEPOSSWITCH_DOWN); };
+	bool IsCenter() { return (GetState() == FIVEPOSSWITCH_CENTER); };
+	bool IsUp() { return (GetState() == FIVEPOSSWITCH_UP); };
+	bool IsLeft() { return (GetState() == FIVEPOSSWITCH_LEFT); };
+	bool IsRight() { return (GetState() == FIVEPOSSWITCH_RIGHT); };
+
 };
 
 ///
@@ -1490,6 +1520,7 @@ protected:
 
 	friend class ToggleSwitch;
 	friend class ThreePosSwitch;
+	friend class FivePosSwitch;
 	friend class PushSwitch;
 	friend class GuardedToggleSwitch;
 	friend class GuardedThreePosSwitch;
@@ -1544,6 +1575,7 @@ protected:
 
 	friend class ToggleSwitch;
 	friend class ThreePosSwitch;
+	friend class FivePosSwitch;
 	friend class PushSwitch;
 	friend class GuardedToggleSwitch;
 	friend class GuardedThreePosSwitch;

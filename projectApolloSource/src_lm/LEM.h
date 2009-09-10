@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.10  2009/09/03 19:22:48  vrouleau
+  *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
+  *	
   *	Revision 1.9  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -118,6 +121,9 @@
 #include "dinput.h"
 // DS20060730 Include LM SCS
 #include "lmscs.h"
+// DS20090905 Include LM AGS and telecom
+#include "lm_ags.h"
+#include "lm_telecom.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -241,19 +247,6 @@ public:
 	e_object *dc_input;
 };
 
-// ABORT SENSOR ASSEMBLY (ASA)
-class LEM_ASA{
-public:
-	LEM_ASA();							// Cons
-	void Init(LEM *s); // Init
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
-	LEM *lem;					// Pointer at LEM
-	h_Radiator hsink;			// Case (Connected to primary coolant loop)
-	Boiler heater;				// Heater
-};
-
 // EXPLOSIVE DEVICES SYSTEM
 class LEM_EDS{
 public:
@@ -286,21 +279,6 @@ public:
 class LEM_RR{
 public:
 	LEM_RR();
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
-	double GetAntennaTempF();
-
-	LEM *lem;					// Pointer at LEM
-	h_Radiator antenna;			// Antenna (loses heat into space)
-	Boiler antheater;			// Antenna Heater (puts heat back into antenna)
-};
-
-// S-Band Steerable Antenna
-class LEM_SteerableAnt{
-public:
-	LEM_SteerableAnt();
 	void Init(LEM *s);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -436,6 +414,7 @@ public:
 		SRF_THREEPOSSWITCHSMALL,
 		SRF_AOTRETICLEKNOB,
 		SRF_AOTSHAFTKNOB,
+		SRF_FIVE_POS_SWITCH,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -761,6 +740,9 @@ protected:
 	ThreePosSwitch ModeControlAGSSwitch;
     UnguardedIMUCageSwitch IMUCageSwitch;
 
+	SwitchRow EngGimbalEnableSwitchRow;
+	ToggleSwitch EngGimbalEnableSwitch;
+
 	SwitchRow RadarAntTestSwitchesRow;
 	ThreePosSwitch LandingAntSwitch;
 	ThreePosSwitch RadarTestSwitch;
@@ -809,6 +791,15 @@ protected:
 	SwitchRow ExteriorLTGSwitchRow;
 	ThreePosSwitch ExteriorLTGSwitch;
 
+	SwitchRow RadarSlewSwitchRow;
+	FivePosSwitch RadarSlewSwitch;
+
+	SwitchRow EventTimerSwitchRow;
+	ThreePosSwitch EventTimerCtlSwitch;
+	ThreePosSwitch EventTimerStartSwitch;
+	ThreePosSwitch EventTimerMinuteSwitch;
+	ThreePosSwitch EventTimerSecondSwitch;
+
 	//
 	// Currently these are just 0-5V meters; at some point we may want
 	// to change them to a different class.
@@ -816,6 +807,7 @@ protected:
 
 	SwitchRow RaderSignalStrengthMeterRow;
 	DCVoltMeter RadarSignalStrengthMeter;
+
 
 	/////////////////
 	// LEM panel 4 //
@@ -897,6 +889,24 @@ protected:
 	CircuitBrakerSwitch CDR_LTG_ANUN_DOCK_COMPNT_CB;
 
 	SwitchRow Panel11CB4SwitchRow;
+	CircuitBrakerSwitch RCS_QUAD_4_CDR_HTR_CB;
+	CircuitBrakerSwitch RCS_QUAD_3_CDR_HTR_CB;
+	CircuitBrakerSwitch RCS_QUAD_2_CDR_HTR_CB;
+	CircuitBrakerSwitch RCS_QUAD_1_CDR_HTR_CB;
+	CircuitBrakerSwitch ECS_SUIT_FAN_1_CB;
+	CircuitBrakerSwitch ECS_CABIN_FAN_1_CB;
+	CircuitBrakerSwitch ECS_GLYCOL_PUMP_2_CB;
+	CircuitBrakerSwitch ECS_GLYCOL_PUMP_1_CB;
+	CircuitBrakerSwitch ECS_GLYCOL_PUMP_AUTO_XFER_CB;
+	CircuitBrakerSwitch COMM_UP_DATA_LINK_CB;
+	CircuitBrakerSwitch COMM_SEC_SBAND_XCVR_CB;
+	CircuitBrakerSwitch COMM_SEC_SBAND_PA_CB;
+	CircuitBrakerSwitch COMM_VHF_XMTR_B_CB;
+	CircuitBrakerSwitch COMM_VHF_RCVR_A_CB;
+	CircuitBrakerSwitch COMM_CDR_AUDIO_CB;
+	CircuitBrakerSwitch PGNS_SIG_STR_DISP_CB;
+	CircuitBrakerSwitch PGNS_LDG_RDR_CB;
+	CircuitBrakerSwitch PGNS_RNDZ_RDR_CB;
 	CircuitBrakerSwitch IMU_OPR_CB;
 	CircuitBrakerSwitch IMU_SBY_CB;
 	CircuitBrakerSwitch LGC_DSKY_CB;
@@ -1190,6 +1200,70 @@ protected:
 	LEMBatterySwitch ASCBat5CDRSwitch;
 	LEMBatterySwitch ASCBat6CDRSwitch;
 	LEMBatterySwitch ASCBat6SESwitch;
+	ToggleSwitch UpDataSquelchSwitch;
+
+	SwitchRow Panel12AudioCtlSwitchRow;
+	ToggleSwitch Panel12AudioCtlSwitch;
+
+	SwitchRow Panel12UpdataLinkSwitchRow;
+	ThreePosSwitch Panel12UpdataLinkSwitch;
+
+	SwitchRow Panel12AudioControlSwitchRow;
+	ThreePosSwitch LMPAudSBandSwitch;
+	ThreePosSwitch LMPAudICSSwitch;
+	ToggleSwitch LMPAudRelaySwitch;
+	ThreePosSwitch LMPAudVOXSwitch;	
+	ThreePosSwitch LMPAudVHFASwitch;
+	ThreePosSwitch LMPAudVHFBSwitch;
+	ThumbwheelSwitch LMPAudSBandVol;
+	ThumbwheelSwitch LMPAudVHFAVol;
+	ThumbwheelSwitch LMPAudVHFBVol;
+	ThumbwheelSwitch LMPAudICSVol;
+	ThumbwheelSwitch LMPAudMasterVol;
+	ThumbwheelSwitch LMPAudVOXSens;
+
+	SwitchRow Panel12CommSwitchRow1;
+	ToggleSwitch SBandModulateSwitch;
+	ThreePosSwitch SBandXCvrSelSwitch;
+	ThreePosSwitch SBandPASelSwitch;
+	ThreePosSwitch SBandVoiceSwitch;
+	ThreePosSwitch SBandPCMSwitch;
+	ThreePosSwitch SBandRangeSwitch;
+
+	SwitchRow Panel12CommSwitchRow2;
+	ThreePosSwitch VHFAVoiceSwitch;
+	ToggleSwitch VHFARcvrSwtich;
+	ThreePosSwitch VHFBVoiceSwitch;
+	ToggleSwitch VHFBRcvrSwtich;
+	ThreePosSwitch TLMBiomedSwtich;
+	ToggleSwitch TLMBitrateSwitch;
+
+	SwitchRow Panel12CommSwitchRow3;
+	ThumbwheelSwitch VHFASquelch;
+	ThumbwheelSwitch VHFBSquelch;
+	IndicatorSwitch TapeRecorderTB;
+	ToggleSwitch TapeRecorderSwitch;
+
+	SwitchRow Panel12AntTrackModeSwitchRow;
+	ThreePosSwitch Panel12AntTrackModeSwitch;
+
+	SwitchRow Panel12SignalStrengthMeterRow;
+	DCVoltMeter Panel12SignalStrengthMeter;
+
+	SwitchRow Panel12VHFAntSelSwitchRow;
+	RotationalSwitch Panel12VHFAntSelKnob;
+
+	SwitchRow Panel12SBandAntSelSwitchRow;
+	RotationalSwitch Panel12SBandAntSelKnob;
+	
+	SwitchRow Panel12AntPitchSwitchRow;
+	RotationalSwitch Panel12AntPitchKnob;
+
+	SwitchRow Panel12AntYawSwitchRow;
+	RotationalSwitch Panel12AntYawKnob;
+
+	SwitchRow AGSOperateSwitchRow;
+	ThreePosSwitch AGSOperateSwitch;
 
 	//
 	// Currently these are just 0-5V meters; at some point we may want
@@ -1200,9 +1274,6 @@ protected:
 
 	SwitchRow ComYawMeterRow;
 	DCVoltMeter ComYawMeter;
-
-	SwitchRow Panel14SignalStrengthMeterRow;
-	DCVoltMeter Panel14SignalStrengthMeter;
 
 	//////////////////
 	// LEM panel 16 //
@@ -1228,27 +1299,65 @@ protected:
 
 	SwitchRow Panel16CB2SwitchRow;
 	CircuitBrakerSwitch LTG_FLOOD_CB;
+	CircuitBrakerSwitch LTG_TRACK_CB;
+	CircuitBrakerSwitch LTG_ANUN_DOCK_COMPNT_CB;
 	CircuitBrakerSwitch EDS_CB_LOGIC_B;
+	CircuitBrakerSwitch SCS_AEA_CB;
+	CircuitBrakerSwitch SCS_ENG_ARM_CB;
 	CircuitBrakerSwitch SCS_ASA_CB;
+	CircuitBrakerSwitch SCS_AELD_CB;
+	CircuitBrakerSwitch SCS_ATCA_CB;
+	CircuitBrakerSwitch SCS_ABORT_STAGE_CB;
+	CircuitBrakerSwitch SCS_ATCA_AGS_CB;
+	CircuitBrakerSwitch SCS_DES_ENG_OVRD_CB;
+	CircuitBrakerSwitch INST_CWEA_CB;
+	CircuitBrakerSwitch INST_SIG_SENSOR_CB;
+	CircuitBrakerSwitch INST_PCMTEA_CB;
+	CircuitBrakerSwitch INST_SIG_CONDR_2_CB;
+	CircuitBrakerSwitch ECS_SUIT_FLOW_CONT_CB;
 
 	SwitchRow Panel16CB3SwitchRow;
+	CircuitBrakerSwitch COMM_DISP_CB;
+	CircuitBrakerSwitch COMM_SE_AUDIO_CB;
+	CircuitBrakerSwitch COMM_VHF_XMTR_A_CB;
+	CircuitBrakerSwitch COMM_VHF_RCVR_B_CB;
+	CircuitBrakerSwitch COMM_PRIM_SBAND_PA_CB;
+	CircuitBrakerSwitch COMM_PRIM_SBAND_XCVR_CB;
+	CircuitBrakerSwitch COMM_SBAND_ANT_CB;
+	CircuitBrakerSwitch COMM_PMP_CB;
+	CircuitBrakerSwitch COMM_TV_CB;
+	CircuitBrakerSwitch ECS_DISP_CB;
+	CircuitBrakerSwitch ECS_GLYCOL_PUMP_SEC_CB;
+	CircuitBrakerSwitch ECS_LGC_PUMP_CB;
+	CircuitBrakerSwitch ECS_CABIN_FAN_CONT_CB;
 	CircuitBrakerSwitch ECS_CABIN_REPRESS_CB;
+	CircuitBrakerSwitch ECS_SUIT_FAN_2_CB;
+	CircuitBrakerSwitch ECS_SUIT_FAN_DP_CB;
+	CircuitBrakerSwitch ECS_DIVERT_VLV_CB;
+	CircuitBrakerSwitch ECS_CO2_SENSOR_CB;
 
 	SwitchRow Panel16CB4SwitchRow;
+	CircuitBrakerSwitch RCS_QUAD_1_LMP_HTR_CB;
+	CircuitBrakerSwitch RCS_QUAD_2_LMP_HTR_CB;
+	CircuitBrakerSwitch RCS_QUAD_3_LMP_HTR_CB;
+	CircuitBrakerSwitch RCS_QUAD_4_LMP_HTR_CB;
+	CircuitBrakerSwitch HTR_DISP_CB;
 	CircuitBrakerSwitch HTR_SBD_ANT_CB;
-	CircuitBrakerSwitch LMPInverter2CB;
-	// ECA control & Voltmeter
-	CircuitBrakerSwitch LMPDesECAContCB;
-	CircuitBrakerSwitch LMPDesECAMainCB;
-	CircuitBrakerSwitch LMPAscECAContCB;
-	CircuitBrakerSwitch LMPAscECAMainCB;
+	CircuitBrakerSwitch CAMR_SEQ_CB;
+	CircuitBrakerSwitch EPS_DISP_CB;
+	// ECA control, AC Inverter & DC Voltmeter
 	LEMVoltCB LMPDCBusVoltCB;
+	CircuitBrakerSwitch LMPInverter2CB;
+	CircuitBrakerSwitch LMPAscECAMainCB;
+	CircuitBrakerSwitch LMPAscECAContCB;
+	CircuitBrakerSwitch LMPDesECAMainCB;
+	CircuitBrakerSwitch LMPDesECAContCB;
 	// Battery feed tie breakers
-	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
-	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
+	CircuitBrakerSwitch LMPXLunarBusTieCB;
 	CircuitBrakerSwitch LMPCrossTieBusCB;
 	CircuitBrakerSwitch LMPCrossTieBalCB;
-	CircuitBrakerSwitch LMPXLunarBusTieCB;
+	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
+	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
 
 	///////////////////////////
 	// LEM Rendezvous Window //
@@ -1452,12 +1561,16 @@ protected:
 
 	// COMM
 	LEM_SteerableAnt SBandSteerable;
-	
+	LM_VHF VHF;
+	LM_SBAND SBand;
+
 	// EDS
 	LEM_EDS eds;
 
 	// Abort Guidance System stuff
 	LEM_ASA asa;
+	LEM_AEA aea;
+	LEM_DEDA deda;
 
 	bool isMultiThread;
 
@@ -1476,7 +1589,11 @@ protected:
 	friend class LEM_LR;
 	friend class LEM_RR;
 	friend class LEM_ASA;
+	friend class LEM_AEA;
+	friend class LEM_DEDA;
 	friend class LEM_SteerableAnt;
+	friend class LM_VHF;
+	friend class LM_SBAND;
 };
 
 extern void LEMLoadMeshes();

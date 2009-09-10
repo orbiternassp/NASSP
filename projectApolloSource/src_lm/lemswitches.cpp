@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.3  2009/08/16 03:12:38  dseagrav
+  *	More LM EPS work. CSM to LM power transfer implemented. Optics bugs cleared up.
+  *	
   *	Revision 1.2  2009/08/10 02:23:06  dseagrav
   *	LEM EPS (Part 2)
   *	Split ECAs into channels, Made bus cross tie system, Added ascent systems and deadface/staging logic.
