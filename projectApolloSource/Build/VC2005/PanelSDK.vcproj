@@ -81,7 +81,7 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile="../../src_sys/PanelSDK/PanelSDK.bsc"
+				OutputFile=".\Debug\PanelSDK\PanelSDK.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"

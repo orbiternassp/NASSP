@@ -178,6 +178,14 @@ SOURCE=..\..\src_lm\lemvc.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src_lm\lm_ags.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src_lm\lm_telecom.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src_lm\lmscs.cpp
 # End Source File
 # Begin Source File
