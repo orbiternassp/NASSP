@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:34  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.3  2008/05/24 17:12:30  tschachim
   *	Bugfix for Orbiter 2008
   *	
@@ -48,9 +51,11 @@
 #include "apolloguidance.h"
 #include "dsky.h"
 #include "csmcomputer.h"
+#include "lemcomputer.h"
 #include "IMU.h"
 #include "lvimu.h"
 #include "saturn.h"
+#include "LEM.h"
 #include "Crawler.h"
 #include "papi.h"
 #include <stdio.h>

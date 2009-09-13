@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.1  2009/02/18 23:21:48  tschachim
+  *	Moved files as proposed by Artlav.
+  *	
   *	Revision 1.7  2006/11/30 03:34:25  dseagrav
   *	Added basic manual optics controls
   *	
@@ -136,6 +139,31 @@ typedef union {
 	} Bits;
 	unsigned int Value;
 } ChannelValue13;
+
+///
+/// \ingroup AGCIO
+/// \brief LM AGC output channel 13.
+///
+typedef union {
+	struct {
+		unsigned RadarC:1;
+		unsigned RadarB:1;
+		unsigned RadarA:1;
+		unsigned RadarActivity:1;
+		unsigned UplinkInhibit:1;
+		unsigned BlockInlink:1;
+		unsigned DownlinkWordOrderCodeBit:1;
+		unsigned EnableRHCCounter:1;
+		unsigned ReadRHC:1;
+		unsigned TestAlarms:1;
+		unsigned EnableStandby:1;
+		unsigned ResetTrap31A:1;
+		unsigned ResetTrap31B:1;
+		unsigned ResetTrap32:1;
+		unsigned EnableT6RUPT:1;
+	} Bits;
+	unsigned int Value;
+} LMChannelValue13;
 
 ///
 /// \ingroup AGCIO

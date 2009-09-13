@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.7  2009/09/02 18:26:46  vrouleau
+  *	MultiThread support for vAGC
+  *	
   *	Revision 1.6  2009/09/01 06:18:32  dseagrav
   *	LM Checkpoint Commit. Added switches. Added history to LM SCS files. Added bitmap to LM. Added AIDs.
   *	
@@ -419,7 +422,7 @@ void LEMcomputer::DisplayNounData(int noun)
 //		double times=BurnTime-CurrentTimestep+(dmjd-mjd)*86400;
 		double Met;
 		LEM *lem = (LEM *) OurVessel;
-		lem->GetMissionTime(Met);
+		Met = lem->GetMissionTime();
 //		sprintf(oapiDebugString(),"met=%.1f",Met);
 		double times=Met+BurnStartTime-CurrentTimestep;
 		int hou=(int) (times/3600.);
@@ -438,7 +441,7 @@ void LEMcomputer::DisplayNounData(int noun)
 		{
 		double Met;
 		LEM *lem = (LEM *) OurVessel;
-		lem->GetMissionTime(Met);
+		Met = lem->GetMissionTime();
 		double times=Met+BurnStartTime-CurrentTimestep;
 		int hou=(int) (times/3600.);
 		times=(int)(times-hou*3600.);

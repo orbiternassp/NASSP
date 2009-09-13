@@ -75,7 +75,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../src_aux/dsound.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib opengl32.lib glu32.lib winmm.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib User32.lib Gdi32.lib"
+				AdditionalDependencies="../../src_aux/dsound.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib opengl32.lib glu32.lib winmm.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib User32.lib Gdi32.lib"
 				OutputFile="../../../../../Modules/ProjectApollo/LEM.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -172,7 +172,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="../../src_aux/dsound.lib wsock32.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib opengl32.lib glu32.lib winmm.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib User32.lib Gdi32.lib"
+				AdditionalDependencies="../../src_aux/dsound.lib wsock32.lib PanelSDK.lib orbiter.lib orbitersdk.lib OrbiterSoundSDK35.lib opengl32.lib glu32.lib winmm.lib ../../src_aux/dinput8.lib ../../src_aux/dxguid.lib WS2_32.lib User32.lib Gdi32.lib"
 				OutputFile="../../../../../Modules/ProjectApollo/LEM.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -882,11 +882,11 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
 			<File
-				RelativePath="..\..\Abort.bmp"
+				RelativePath="..\..\Bitmaps\abort.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\abort.bmp"
+				RelativePath="..\..\Abort.bmp"
 				>
 			</File>
 			<File
@@ -902,11 +902,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Annonciators.bmp"
+				RelativePath="..\..\Bitmaps\Annonciators.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\Annonciators.bmp"
+				RelativePath="..\..\Annonciators.bmp"
 				>
 			</File>
 			<File
@@ -1006,11 +1006,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\circuit_breaker.bmp"
+				RelativePath="..\..\Bitmaps\circuit_breaker.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\circuit_breaker.bmp"
+				RelativePath="..\..\circuit_breaker.bmp"
 				>
 			</File>
 			<File
@@ -1034,11 +1034,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\digitaldisp.bmp"
+				RelativePath="..\..\digitaldisp.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\digitaldisp.bmp"
+				RelativePath="..\..\Bitmaps\digitaldisp.bmp"
 				>
 			</File>
 			<File
@@ -1050,19 +1050,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\dsky_disp.bmp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Bitmaps\dsky_disp.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\dsky_keys.bmp"
+				RelativePath="..\..\dsky_disp.bmp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\dsky_keys.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\dsky_keys.bmp"
 				>
 			</File>
 			<File
@@ -1074,19 +1074,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\ecs.bmp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\ecs.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\FDAI.bmp"
+				RelativePath="..\..\Bitmaps\ecs.bmp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\FDAI.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\FDAI.bmp"
 				>
 			</File>
 			<File
@@ -1110,11 +1110,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Gmeter.bmp"
+				RelativePath="..\..\Bitmaps\Gmeter.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\Gmeter.bmp"
+				RelativePath="..\..\Gmeter.bmp"
 				>
 			</File>
 			<File
@@ -1234,15 +1234,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lem_left_panel.bmp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\lem_left_panel.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lem_left_window.bmp"
+				RelativePath="..\..\Bitmaps\lem_left_panel.bmp"
 				>
 			</File>
 			<File
@@ -1250,11 +1246,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lem_lpd_window.bmp"
+				RelativePath="..\..\lem_left_window.bmp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\Bitmaps\lem_lpd_window.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\lem_lpd_window.bmp"
 				>
 			</File>
 			<File
@@ -1270,15 +1270,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lem_rendezvous_window.bmp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Bitmaps\lem_rendezvous_window.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lem_right_panel.bmp"
+				RelativePath="..\..\lem_rendezvous_window.bmp"
 				>
 			</File>
 			<File
@@ -1286,11 +1282,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\lem_right_window.bmp"
+				RelativePath="..\..\Bitmaps\lem_right_panel.bmp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\Bitmaps\lem_right_window.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\lem_right_window.bmp"
 				>
 			</File>
 			<File
@@ -1332,19 +1332,19 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\LemRotationalSwitch.bmp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\LemRotationalSwitch.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lemswitch2.bmp"
+				RelativePath="..\..\Bitmaps\LemRotationalSwitch.bmp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\Bitmaps\lemswitch2.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\lemswitch2.bmp"
 				>
 			</File>
 			<File
@@ -1360,11 +1360,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lights2.bmp"
+				RelativePath="..\..\lights2.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lights2.bmp"
+				RelativePath="..\..\Bitmaps\lights2.bmp"
 				>
 			</File>
 			<File
@@ -1372,11 +1372,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\LMAbortButton.bmp"
+				RelativePath="..\..\Bitmaps\LMAbortButton.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\LMAbortButton.bmp"
+				RelativePath="..\..\LMAbortButton.bmp"
 				>
 			</File>
 			<File
@@ -1396,11 +1396,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\lv_eng.bmp"
+				RelativePath="..\..\LV_ENG.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LV_ENG.bmp"
+				RelativePath="..\..\Bitmaps\lv_eng.bmp"
 				>
 			</File>
 			<File
@@ -1408,19 +1408,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\masteralarmbright.bmp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Bitmaps\masteralarmbright.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Needle1.bmp"
+				RelativePath="..\..\masteralarmbright.bmp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\Bitmaps\needle1.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Needle1.bmp"
 				>
 			</File>
 			<File
@@ -1436,11 +1436,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\PSwitch.bmp"
+				RelativePath="..\..\Bitmaps\Pswitch.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\Pswitch.bmp"
+				RelativePath="..\..\PSwitch.bmp"
 				>
 			</File>
 			<File
@@ -1448,19 +1448,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\switch1.bmp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Bitmaps\switch1.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\switch_lever.bmp"
+				RelativePath="..\..\switch1.bmp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\switch_lever.bmp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Bitmaps\switch_lever.bmp"
 				>
 			</File>
 			<File
@@ -1476,11 +1476,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\switchup3.bmp"
+				RelativePath="..\..\Bitmaps\switchup3.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\switchup3.bmp"
+				RelativePath="..\..\switchup3.bmp"
 				>
 			</File>
 			<File
@@ -1488,11 +1488,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Thrustmeter.bmp"
+				RelativePath="..\..\Bitmaps\Thrustmeter.bmp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Bitmaps\Thrustmeter.bmp"
+				RelativePath="..\..\Thrustmeter.bmp"
 				>
 			</File>
 			<File
