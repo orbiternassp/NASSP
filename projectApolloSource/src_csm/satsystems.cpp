@@ -23,6 +23,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.6  2009/09/03 19:22:48  vrouleau
+  *	Remove usage on Joystick.ini and VirtualAGC.ini. Moved to respective .launchpag.cfg files
+  *	
   *	Revision 1.5  2009/09/02 18:26:46  vrouleau
   *	MultiThread support for vAGC
   *	
@@ -1522,9 +1525,8 @@ void Saturn::JoystickTimestep()
 			rhc_y_pos = dx8_jstate[rhc_id].lY;
 
 			// Z-axis read.
-			if (rhc_rzx_id != -1) { // Native Z-axis first
+			if (rhc_rzx_id != -1 && rhc_rot_id == -1) { // Native Z-axis first unless rot is also set
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
-
 			} else if (rhc_rot_id != -1) { // Then if this is a rotator-type axis
 				switch(rhc_rot_id) {
 					case 0:
@@ -1937,7 +1939,7 @@ void Saturn::JoystickTimestep()
 		}
 		
 		if (rhc_debug != -1) { 
-			sprintf(oapiDebugString(),"RHC: X/Y/Z = %d / %d / %d", rhc_x_pos, rhc_y_pos, rhc_rot_pos); 
+			sprintf(oapiDebugString(),"RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_x_pos, rhc_y_pos, rhc_rot_pos, rhc_rzx_id, rhc_rot_id); 
 		}
 
 		//
@@ -1978,9 +1980,8 @@ void Saturn::JoystickTimestep()
 			thc_y_pos = dx8_jstate[thc_id].lY;
 
 			// Z-axis read.
-			if (thc_rzx_id != -1) { // Native Z-axis first
+			if (thc_rzx_id != -1 && thc_rot_id == -1) { // Native Z-axis first unless rot is also set
 				thc_rot_pos = dx8_jstate[thc_id].lZ;
-			
 			} else if (thc_rot_id != -1){ // Then if this is a rotator-type axis
 				switch(thc_rot_id){
 					case 0:
