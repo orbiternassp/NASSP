@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2009/09/13 15:20:15  dseagrav
+  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
+  *	
   *	Revision 1.10  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -907,7 +910,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 			if(rhc_sld_id != -1){ // If this is a slider
 				rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
 			}
-			if(rhc_rzx_id != -1){ // If we use the native Z-axis
+			if(rhc_rzx_id != -1 && rhc_rot_id == -1){ // If we use the native Z-axis
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
 			}	
 			if(dx8_jstate[rhc_id].lX > 34028){ // Out of detent RIGHT
@@ -944,7 +947,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		}else{
 			// No JS
 		}
-		// sprintf(oapiDebugString(),"RHC: POS %d = %d",rhc_rot_pos,rhc_pos[2]);
+		// sprintf(oapiDebugString(),"RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_pos[0],rhc_pos[1],rhc_pos[2], rhc_rzx_id, rhc_rot_id); 
 		// And now the THC...
 		if(thc_id != -1 && thc_id < js_enabled){
 			// CHECK FOR POWER HERE
@@ -1000,7 +1003,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 				if(thc_sld_id != -1){ // If this is a slider
 					thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
 				}
-				if(thc_rzx_id != -1){ // If we use the native Z-axis
+				if(thc_rzx_id != -1 && thc_rot_id == -1){ // If we use the native Z-axis
 					thc_rot_pos = dx8_jstate[thc_id].lZ;
 				}
 				if(thc_rot_pos < 16384){

@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2009/09/13 15:20:14  dseagrav
+  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
+  *	
   *	Revision 1.11  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -500,10 +503,12 @@ public:
 	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
 	int rhc_sld_id;                       // ID of SLIDER axis to use for RHC Z-axis
 	int rhc_rzx_id;                       // Flag to use native Z-axis as RHC Z-axis
+	int rhc_pov_id;						  ///< ID of the cooliehat a.k.a. POV
 	int thc_id;                           // Joystick # for the THC
 	int thc_rot_id;						  // ID of ROTATOR axis to use for THC Z-axis
 	int thc_sld_id;                       // ID of SLIDER axis to use for THC Z-axis
 	int thc_rzx_id;                       // Flag to use native Z-axis as THC Z-axis	
+	int thc_pov_id;						  ///< ID of the cooliehat a.k.a. POV
 	int thc_tjt_id;                       // Flag to use axis as TTCA THROTTLE/JETS select lever
 	int rhc_debug;						  // Flags to print debugging messages.
 	int thc_debug;
@@ -516,6 +521,8 @@ public:
 #define TTCA_MODE_THROTTLE 0
 #define TTCA_MODE_JETS 1
 	int ttca_throttle_pos;                // TTCA THROTTLE-mode position
+	int js_current;
+
 
 protected:
 

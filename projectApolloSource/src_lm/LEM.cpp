@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.12  2009/09/13 15:20:14  dseagrav
+  *	LM Checkpoint Commit. Adds LM telemetry, fixed missing switch row init, initial LM support for PAMFD.
+  *	
   *	Revision 1.11  2009/09/10 02:12:37  dseagrav
   *	Added lm_ags and lm_telecom files, LM checkpoint commit.
   *	
@@ -262,6 +265,37 @@ BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* 
 
 	lem->js_enabled++;      // Otherwise, Next!
 	return DIENUM_CONTINUE; // and keep enumerating
+}
+
+// DX8 callback for enumerating joystick axes
+BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pLEM )
+{
+	class LEM * lem = (LEM*)pLEM; // Pointer to us
+
+    if (pdidoi->guidType == GUID_ZAxis) {
+		if (lem->js_current == lem->rhc_id) {
+			lem->rhc_rzx_id = 1;
+		} else {
+			lem->thc_rzx_id = 1;
+		}
+	}
+
+    if (pdidoi->guidType == GUID_RzAxis) {
+		if (lem->js_current == lem->rhc_id) {
+			lem->rhc_rot_id = 2;
+		} else {
+			lem->thc_rot_id = 2;
+		}
+	}
+
+    if (pdidoi->guidType == GUID_POV) {
+		if (lem->js_current == lem->rhc_id) {
+			lem->rhc_pov_id = 0;
+		} else {
+			lem->thc_pov_id = 0;
+		}
+	}
+    return DIENUM_CONTINUE;
 }
 
 // Constructor
@@ -1340,6 +1374,11 @@ void LEM::clbkLoadStateEx (FILEHANDLE scn, void *vs)
 				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
 				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
 				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+				// Z-axis detection
+				if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
+					js_current = x;
+					dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+				}
 				x++;                                              // Next!
 			}
 		}

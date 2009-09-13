@@ -22,6 +22,9 @@
 
   **************************** Revision History ****************************
   *	$Log$
+  *	Revision 1.11  2009/09/08 19:46:35  vrouleau
+  *	More fixes in reading config files
+  *	
   *	Revision 1.10  2009/09/08 17:38:37  vrouleau
   *	Some more config file reading bug fix.
   *	
@@ -4882,7 +4885,7 @@ void Saturn::GenericLoadStateSetup()
 					*/ 
 				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
 				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-					// Z-axis detection
+				// Z-axis detection
 				if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
 					js_current = x;
 					dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
